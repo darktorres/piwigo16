@@ -146,7 +146,15 @@ final readonly class ExtensionUpdateChecker
      */
     public function checkExtensions(): void
     {
-        $_SESSION['extensions_need_update'] = [];
+        // Built up locally (instead of writing straight into
+        // $_SESSION['extensions_need_update']) because PHPStan cannot keep a
+        // precise array shape for a superglobal offset mutated across loop
+        // iterations that also make impure calls (findIgnoredIdsByType()/
+        // unignore() below invalidate any narrowing PHPStan could otherwise
+        // track) -- the whole array is committed to the session once, after
+        // every ExtensionType's been processed.
+        /** @var array<string, array<string, string>> $extensionsNeedUpdate */
+        $extensionsNeedUpdate = [];
 
         foreach (ExtensionType::cases() as $type) {
             $pending = $this->getPendingUpdates($type);
@@ -156,6 +164,7 @@ final readonly class ExtensionUpdateChecker
 
             $ignoredForType = $this->ignoredUpdateRepo->findIgnoredIdsByType($type);
             $stillPendingIgnoredIds = [];
+            $typeNeedUpdate = [];
 
             foreach ($pending as $extId => $data) {
                 if (in_array($extId, $ignoredForType, true)) {
@@ -164,8 +173,10 @@ final readonly class ExtensionUpdateChecker
                 }
 
                 $revisionNameRaw = $data['server']['revision_name'] ?? null;
-                $_SESSION['extensions_need_update'][$type->value][$extId] = is_string($revisionNameRaw) ? $revisionNameRaw : '';
+                $typeNeedUpdate[$extId] = is_string($revisionNameRaw) ? $revisionNameRaw : '';
             }
+
+            $extensionsNeedUpdate[$type->value] = $typeNeedUpdate;
 
             // Matches the original blob-based behavior exactly: an ignored
             // id that's no longer pending (the extension caught up, or was
@@ -177,6 +188,8 @@ final readonly class ExtensionUpdateChecker
                 }
             }
         }
+
+        $_SESSION['extensions_need_update'] = $extensionsNeedUpdate;
     }
 
     /**

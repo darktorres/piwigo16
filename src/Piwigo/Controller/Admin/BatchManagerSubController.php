@@ -258,31 +258,40 @@ final class BatchManagerSubController implements AdminSubControllerInterface
 
         // filters from form
         if ($batchManagerRequest->isSubmitFilter) {
-            $_SESSION['bulk_manager_filter'] = [];
+            // Built up locally (instead of writing straight into
+            // $_SESSION['bulk_manager_filter']) for the same reason the
+            // urlFilterPresent branch below already does: PHPStan cannot
+            // keep a precise array shape for a superglobal offset mutated
+            // across many independent if-blocks and impure method calls
+            // (validate()/getTagIds() below invalidate any narrowing PHPStan
+            // could otherwise track); the whole array is committed to the
+            // session once, after every filter's been applied.
+            /** @var array<string, mixed> $bulk_manager_filter */
+            $bulk_manager_filter = [];
 
             if (isset($post['filter_prefilter_use'])) {
-                $_SESSION['bulk_manager_filter']['prefilter'] = $post['filter_prefilter'];
+                $bulk_manager_filter['prefilter'] = $post['filter_prefilter'];
 
                 if ($post['filter_prefilter'] === 'duplicates') {
                     $has_options = false;
 
                     if (isset($post['filter_duplicates_checksum'])) {
-                        $_SESSION['bulk_manager_filter']['duplicates_checksum'] = true;
+                        $bulk_manager_filter['duplicates_checksum'] = true;
                         $has_options = true;
                     }
 
                     if (isset($post['filter_duplicates_date'])) {
-                        $_SESSION['bulk_manager_filter']['duplicates_date'] = true;
+                        $bulk_manager_filter['duplicates_date'] = true;
                         $has_options = true;
                     }
 
                     if (isset($post['filter_duplicates_dimensions'])) {
-                        $_SESSION['bulk_manager_filter']['duplicates_dimensions'] = true;
+                        $bulk_manager_filter['duplicates_dimensions'] = true;
                         $has_options = true;
                     }
 
                     if (! $has_options or isset($post['filter_duplicates_filename'])) {
-                        $_SESSION['bulk_manager_filter']['duplicates_filename'] = true;
+                        $bulk_manager_filter['duplicates_filename'] = true;
                     }
                 }
             }
@@ -291,10 +300,10 @@ final class BatchManagerSubController implements AdminSubControllerInterface
                 $this->inputValidator
                     ->validate('filter_category', $post, false, ValidationPattern::ID);
 
-                $_SESSION['bulk_manager_filter']['category'] = $post['filter_category'];
+                $bulk_manager_filter['category'] = $post['filter_category'];
 
                 if (isset($post['filter_category_recursive'])) {
-                    $_SESSION['bulk_manager_filter']['category_recursive'] = true;
+                    $bulk_manager_filter['category_recursive'] = true;
                 }
             }
 
@@ -314,13 +323,13 @@ final class BatchManagerSubController implements AdminSubControllerInterface
                 // later, unrelated request (see the plain is_numeric()
                 // read further down in this same class) -- unwrap to raw
                 // ints here rather than storing TagId objects.
-                $_SESSION['bulk_manager_filter']['tags'] = array_map(
+                $bulk_manager_filter['tags'] = array_map(
                     static fn (TagId $id): int => $id->value,
                     $this->tagService->getTagIds($filter_tags, false)
                 );
 
                 if (isset($post['tag_mode']) and in_array($post['tag_mode'], ['AND', 'OR'], true)) {
-                    $_SESSION['bulk_manager_filter']['tag_mode'] = $post['tag_mode'];
+                    $bulk_manager_filter['tag_mode'] = $post['tag_mode'];
                 }
             }
 
@@ -335,43 +344,52 @@ final class BatchManagerSubController implements AdminSubControllerInterface
                 // succeeds, matching the original loose-comparison behavior.
                 $filter_level_raw = $post['filter_level'] ?? null;
                 if (is_numeric($filter_level_raw) && in_array((int) $filter_level_raw, $availablePermissionLevels, true)) {
-                    $_SESSION['bulk_manager_filter']['level'] = $post['filter_level'];
+                    $bulk_manager_filter['level'] = $post['filter_level'];
 
                     if (isset($post['filter_level_include_lower'])) {
-                        $_SESSION['bulk_manager_filter']['level_include_lower'] = true;
+                        $bulk_manager_filter['level_include_lower'] = true;
                     }
                 }
             }
 
             if (isset($post['filter_dimension_use'])) {
+                // Same reason as the urlFilterPresent branch's own $dimension
+                // local below: $bulk_manager_filter['dimension']'s value type
+                // is mixed (per the array<string, mixed> shape above), so
+                // PHPStan won't allow offset-writing into it a second level
+                // deep -- build the sub-array locally, commit it once.
+                $dimension = [];
                 foreach (['min_width', 'max_width', 'min_height', 'max_height'] as $type) {
                     if (filter_var($post['filter_dimension_' . $type], FILTER_VALIDATE_INT) !== false) {
-                        $_SESSION['bulk_manager_filter']['dimension'][$type] = $post['filter_dimension_' . $type];
+                        $dimension[$type] = $post['filter_dimension_' . $type];
                     }
                 }
                 foreach (['min_ratio', 'max_ratio'] as $type) {
                     if (filter_var($post['filter_dimension_' . $type], FILTER_VALIDATE_FLOAT) !== false) {
-                        $_SESSION['bulk_manager_filter']['dimension'][$type] = $post['filter_dimension_' . $type];
+                        $dimension[$type] = $post['filter_dimension_' . $type];
                     }
                 }
+                $bulk_manager_filter['dimension'] = $dimension;
             }
 
             if (isset($post['filter_filesize_use'])) {
+                $filesize = [];
                 foreach (['min', 'max'] as $type) {
                     if (filter_var($post['filter_filesize_' . $type], FILTER_VALIDATE_FLOAT) !== false) {
-                        $_SESSION['bulk_manager_filter']['filesize'][$type] = $post['filter_filesize_' . $type];
+                        $filesize[$type] = $post['filter_filesize_' . $type];
                     }
                 }
+                $bulk_manager_filter['filesize'] = $filesize;
             }
 
             if (isset($post['filter_search_use'])) {
-                // $_SESSION['bulk_manager_filter'] was reset to [] at the top of
-                // this block, so 'search' can't already exist here.
-                $_SESSION['bulk_manager_filter']['search'] = [];
-                $_SESSION['bulk_manager_filter']['search']['q'] = $post['q'];
+                // $bulk_manager_filter starts empty above, so 'search' can't
+                // already exist here.
+                $bulk_manager_filter['search'] = [];
+                $bulk_manager_filter['search']['q'] = $post['q'];
             }
 
-            $registerFiltersEvent = $this->eventDispatcher->dispatchChange(new BatchManagerRegisterFilters($_SESSION['bulk_manager_filter']));
+            $registerFiltersEvent = $this->eventDispatcher->dispatchChange(new BatchManagerRegisterFilters($bulk_manager_filter));
             $_SESSION['bulk_manager_filter'] = $registerFiltersEvent->bulkManagerFilter;
         }
         // filters from url

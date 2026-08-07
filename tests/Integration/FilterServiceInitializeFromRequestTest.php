@@ -206,6 +206,11 @@ final class FilterServiceInitializeFromRequestTest extends IntegrationTestCase
         self::assertTrue($this->filterState->isEnabled());
         // Recomputed (not left at the stale/absent cached value) -- the
         // check-key's user id now matches the real current user (1).
+        // The read (after initializeFromRequest()'s own impure call) is
+        // exactly the shape written above -- PHPStan can't narrow a
+        // superglobal offset across an intervening impure call, so assert
+        // the shape it's known to recompute into instead.
+        /** @var array{user: int, recent_period: int, time: int, date: string} $checkKey */
         $checkKey = $_SESSION['pwg_filter_check_key'];
         self::assertSame(1, $checkKey['user']);
         self::assertEqualsCanonicalizing([1, 2], array_keys($this->filterState->categories()));
@@ -224,6 +229,10 @@ final class FilterServiceInitializeFromRequestTest extends IntegrationTestCase
         new FilterService($this->filterState, $this->sessionService, $this->translator, LangTestFactory::get(), CurrentConfigTestFactory::get(), new EventDispatcher(), $this->conn)->initializeFromRequest(PageStateTestFactory::get(), CurrentUserTestFactory::get());
 
         self::assertTrue($this->filterState->isEnabled());
+        // Same reason as the sibling test above: assert the recomputed
+        // shape at the read site, since PHPStan can't narrow $_SESSION
+        // across initializeFromRequest()'s own impure call.
+        /** @var array{user: int, recent_period: int, time: int, date: string} $checkKey */
         $checkKey = $_SESSION['pwg_filter_check_key'];
         self::assertGreaterThan(time() - 5, $checkKey['time']);
     }

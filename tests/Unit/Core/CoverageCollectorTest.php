@@ -43,7 +43,7 @@ use Piwigo\Core\Paths;
  * showed UNTESTED. Each verified individually via a live sed-applied
  * mutation rerun (not assumed from reasoning alone):
  *
- * - 10 of them (lines 29, 33, 37, 39, and 40's whole shutdown-closure
+ * - 10 of them (lines 61, 65, 69, 71, and 72's whole shutdown-closure
  *   removal) are already genuinely killed by the two existing
  *   subprocess tests below (the `-n`-without-pcov one, and the "real
  *   deferred shutdown handler" one): each mutation either makes the
@@ -56,7 +56,7 @@ use Piwigo\Core\Paths;
  *   subprocess-invisibility as
  *   feedback_pest_mutate_invisible_to_subprocess_tests, not an
  *   unaddressed gap.
- * - 2 more (line 25's RemoveNot and line 26's RemoveEarlyReturn) need a
+ * - 2 more (line 57's RemoveNot and line 58's RemoveEarlyReturn) need a
  *   genuinely NEW subprocess test: both existing subprocess tests set
  *   testModeIsActive() to TRUE (via HTTP_X_PIWIGO_ENV), so the `if (!
  *   active)` branch's own `return;` is never even reached in either of
@@ -64,13 +64,13 @@ use Piwigo\Core\Paths;
  *   matter what the rest of the test asserts. See the dedicated new
  *   test below (testModeIsActive() genuinely false, everything else
  *   passing) added specifically to reach it.
- * - 1 more (line 30's RemoveEarlyReturn) has the same problem in
+ * - 1 more (line 62's RemoveEarlyReturn) has the same problem in
  *   reverse: both existing subprocess tests set the coverage header to
- *   '1', so line 30's `return;` (which only fires when the header is
+ *   '1', so line 62's `return;` (which only fires when the header is
  *   ABSENT or wrong) never executes there either. See the second new
  *   test below (testModeIsActive() true, coverage header genuinely
  *   absent).
- * - The remaining 2 (line 25's IfNegated and line 33's IfNegated) are
+ * - The remaining 2 (line 57's IfNegated and line 65's IfNegated) are
  *   genuinely, provably equivalent regardless of any test: both turn
  *   `if (!X)` into `if (!!X)`, and double negation is definitionally
  *   identical to the original for any boolean X -- there is no value
@@ -80,7 +80,7 @@ use Piwigo\Core\Paths;
  * Given both of the pcov-safety findings above, the first test below now triggers the real
  * activation path (both guards passing, pcov loaded) directly in-process,
  * the same way the existing two guard tests already did for the first two
- * early returns -- this is what gives lines 33 and 37 real, tool-attributed
+ * early returns -- this is what gives lines 65 and 69 real, tool-attributed
  * pcov coverage credit (reached from inside a test that itself runs under
  * an already-active outer pcov session, sidestepping the self-measurement
  * problem described below for a bare/standalone process).
@@ -89,7 +89,7 @@ use Piwigo\Core\Paths;
  * technique -- and the same reason -- as
  * tests/Unit/Core/ContainerDetectorTest.php's own `open_basedir` test):
  *
- * - `! extension_loaded('pcov')` (the `return;` at line 34): unreachable
+ * - `! extension_loaded('pcov')` (the `return;` at line 66): unreachable
  *   in THIS process (pcov is loaded for the whole Pest run, confirmed live
  *   via `php -m`), but a `php -n` subprocess genuinely never loads it,
  *   making the branch real. Exactly like ContainerDetectorTest's own
@@ -97,16 +97,16 @@ use Piwigo\Core\Paths;
  *   behaviour but can never move pcov's own coverage percentage for these
  *   lines: pcov isn't even loaded in that process, so there is no
  *   collector to attribute a hit to in the first place.
- * - Lines 42/43/47/48/50/51/52/53 (everything inside the deferred shutdown
+ * - Lines 74/75/79/80/82/83/84/85 (everything inside the deferred shutdown
  *   closure from `\pcov\waiting()` onward) are subject to a stricter,
  *   provable version of the same self-measurement problem `\pcov\start()`
  *   already has, confirmed with a direct experiment: a batch of
  *   instrumented code executed strictly AFTER `\pcov\stop()` (with no
  *   later `\pcov\start()` before it runs) showed hit=-1 (never executed,
  *   from pcov's own point of view) for every single one of its lines, even
- *   though it provably did run. Since `\pcov\stop()` (line 41) is the very
+ *   though it provably did run. Since `\pcov\stop()` (line 73) is the very
  *   first statement of that closure and nothing inside it calls
- *   `\pcov\start()` again before line 53, EVERY line from 42 onward runs
+ *   `\pcov\start()` again before line 85, EVERY line from 74 onward runs
  *   in that same permanently-uninstrumentable window -- structurally, in
  *   ANY invocation context (a live Apache worker under
  *   `composer test:coverage:web`, a bare subprocess, or even triggered
@@ -118,13 +118,13 @@ use Piwigo\Core\Paths;
  *   containing real, correctly-shaped serialized pcov data, the same
  *   format tools/coverage-merge.php's own normalizeRawLineCoverage()
  *   validates before trusting a `.raw` file).
- * - Line 44 (the `return;` inside `if ($waiting === [])`) is left without
+ * - Line 76 (the `return;` inside `if ($waiting === [])`) is left without
  *   its own dedicated trigger, not silently skipped: with THIS project's
  *   real `pcov.directory` ini setting (`src/`, confirmed identical on both
  *   the CLI and the live Apache php.ini's own conf.d pcov ini files),
  *   `$waiting` can never actually be `[]` by the time this
  *   check runs. CoverageCollector.php lives inside `pcov.directory` itself,
- *   and its own lines 39-40 (the `$dumpDir` assignment and the
+ *   and its own lines 71-72 (the `$dumpDir` assignment and the
  *   `register_shutdown_function()` call) always execute between
  *   `\pcov\start()` and `\pcov\stop()` -- confirmed directly in the
  *   subprocess test below, whose dump always contains CoverageCollector.php
@@ -156,7 +156,7 @@ test('registerIfActive is a no-op when the coverage header is absent, the real s
 });
 
 /**
- * Closes lines 33 (`if (! extension_loaded('pcov'))`) and 37
+ * Closes lines 65 (`if (! extension_loaded('pcov'))`) and 69
  * (`\pcov\start();`) with real, tool-attributed pcov coverage credit --
  * see this file's own top docblock for why triggering the real activation
  * path in-process is safe here (empirically verified, not just asserted).
@@ -170,7 +170,7 @@ test('registerIfActive reaches the real pcov activation path when both guards pa
 
     // Confirmed live for this whole suite (see this file's top docblock and
     // ContainerDetectorTest's own identical claim for a different
-    // extension) -- pcov is always loaded for this process, so line 33's
+    // extension) -- pcov is always loaded for this process, so line 65's
     // guard genuinely evaluates false and falls through to \pcov\start().
     expect(extension_loaded('pcov'))->toBeTrue();
 
@@ -194,7 +194,7 @@ test('registerIfActive reaches the real pcov activation path when both guards pa
 });
 
 /**
- * Closes line 34 (the `return;` inside `! extension_loaded('pcov')`) via a
+ * Closes line 66 (the `return;` inside `! extension_loaded('pcov')`) via a
  * genuinely separate `php -n` subprocess -- identical technique and
  * rationale to ContainerDetectorTest's own `open_basedir` subprocess test:
  * a real, independent PHP engine that never loads pcov at all, rather than
@@ -206,7 +206,7 @@ test('registerIfActive reaches the real pcov activation path when both guards pa
  * stdout marker below are what actually prove the guard fired.
  *
  * As documented in this file's own top docblock, this can never move
- * pcov's own line-coverage percentage for line 34 (pcov isn't loaded in
+ * pcov's own line-coverage percentage for line 66 (pcov isn't loaded in
  * this subprocess, so there is no collector to record a hit at all) --
  * that's a tooling gap, not evidence the branch is unexercised.
  */
@@ -245,8 +245,8 @@ test('registerIfActive returns before touching pcov when the extension is not lo
 });
 
 /**
- * Closes lines 37 (again, this time in a fresh/standalone process -- see
- * below), 42, 43, 47, 48, 50, 51, 52 and 53 by exercising the REAL deferred
+ * Closes lines 69 (again, this time in a fresh/standalone process -- see
+ * below), 74, 75, 79, 80, 82, 83, 84 and 85 by exercising the REAL deferred
  * shutdown path end to end: a genuinely separate `php` subprocess (pcov
  * loaded, both guards passing) that is deliberately left to fall off the
  * end of its own script -- exactly how a live Apache worker's request
@@ -262,10 +262,10 @@ test('registerIfActive returns before touching pcov when the extension is not lo
  * still be observing it.
  *
  * As this file's own top docblock explains in detail (with a direct,
- * independent experiment backing it), none of lines 42/43/47/48/50/51/
- * 52/53 can ever show as pcov-covered no matter how they're invoked: they
+ * independent experiment backing it), none of lines 74/75/79/80/82/83/
+ * 84/85 can ever show as pcov-covered no matter how they're invoked: they
  * all run strictly after this same closure's own `\pcov\stop()` call
- * (line 41), and pcov provably never records anything that runs after it
+ * (line 73), and pcov provably never records anything that runs after it
  * stops. This test still asserts the real, functional outcome instead --
  * a genuine dump file, correctly shaped, containing genuine pcov data.
  */
@@ -315,7 +315,7 @@ test('the real deferred shutdown handler writes a genuine per-request pcov dump 
         expect($files)->toHaveCount(1);
 
         $dumpFile = $files[0];
-        // rename()'d from a .tmp sibling at line 53 -- its mere existence
+        // rename()'d from a .tmp sibling at line 85 -- its mere existence
         // under the final .raw name (not .tmp) proves the rename() itself
         // ran, on top of everything unserialize() below proves.
         expect(str_ends_with($dumpFile, '.raw'))->toBeTrue();
@@ -337,20 +337,20 @@ test('the real deferred shutdown handler writes a genuine per-request pcov dump 
         }
 
         // CoverageCollector.php is always its own minimum \pcov\waiting()
-        // entry (see this file's top docblock) -- and its lines 74/75 (the
+        // entry (see this file's top docblock) -- and its lines 71/72 (the
         // $dumpDir assignment and the register_shutdown_function() call,
         // both executed for real between \pcov\start() and \pcov\stop() in
         // THIS subprocess) prove real, non-fabricated pcov data, not an
         // empty/placeholder array. Confirmed live via the exact same
         // subprocess technique run standalone (not assumed from reading
         // the source): pcov's own inclusive-mode report for this file
-        // shows hit=1 on lines 74/75/76/89/90 and -1 (non-instrumented,
-        // since \pcov\stop() at line 76 ends this collection window before
-        // they run) on everything from line 77 onward -- these line
+        // shows hit=1 on lines 71/72/73/86/87 and -1 (non-instrumented,
+        // since \pcov\stop() at line 73 ends this collection window before
+        // they run) on everything from line 74 onward -- these line
         // numbers must be re-verified the same way (not re-counted by eye)
         // if CoverageCollector.php's own source ever shifts again -- this
-        // exact pair has already gone stale once after an unrelated
-        // source edit, confirming the risk is real, not hypothetical.
+        // exact pair has now gone stale twice after unrelated source
+        // edits, confirming the risk is real, not hypothetical.
         //
         // Resolved via Reflection rather than hardcoded: the subprocess
         // above requires ITS OWN vendor/autoload.php (line 273's
@@ -363,15 +363,15 @@ test('the real deferred shutdown handler writes a genuine per-request pcov dump 
         expect($collectorFile)->toBeString();
         assert(is_string($collectorFile));
         expect($raw)->toHaveKey($collectorFile);
-        expect($raw[$collectorFile][74] ?? null)->toBe(1);
-        expect($raw[$collectorFile][75] ?? null)->toBe(1);
+        expect($raw[$collectorFile][71] ?? null)->toBe(1);
+        expect($raw[$collectorFile][72] ?? null)->toBe(1);
     } finally {
         exec('rm -rf ' . escapeshellarg($tmpRoot));
     }
 });
 
 /**
- * Closes line 25's RemoveNot and line 26's RemoveEarlyReturn: neither
+ * Closes line 57's RemoveNot and line 58's RemoveEarlyReturn: neither
  * mutation is observable from either subprocess test above, since both
  * of those set testModeIsActive() to true (making the `if (! active)`
  * branch's own `return;` dead code from their point of view). This
@@ -428,7 +428,7 @@ test('registerIfActive writes no dump file when test mode is genuinely not activ
 });
 
 /**
- * Closes line 30's RemoveEarlyReturn -- the mirror case of the test
+ * Closes line 62's RemoveEarlyReturn -- the mirror case of the test
  * above: testModeIsActive() true (so the coverage-header guard is the
  * only thing left standing between real code and a dump file), but the
  * coverage header itself genuinely absent this time. Confirmed live the

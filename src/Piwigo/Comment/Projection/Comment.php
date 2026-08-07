@@ -39,8 +39,11 @@ use Piwigo\Common\ValueObject\ImageId;
  * whose `com.id` column is always the table's own NOT NULL primary key --
  * a missing/invalid id can't actually occur for a real fetched row, so
  * `CommentId::from()` throwing on that (structurally impossible) case is
- * safe. `authorId` stays plain `?int`, not `UserId` -- see CommentEntity's
- * own docblock.
+ * safe. `imageId` is `ImageId`, not `?ImageId`, for the identical reason --
+ * `com.image_id` is `NOT NULL` with a real `fk_comments_image_id` FOREIGN
+ * KEY onto `piwigo_images.id` (`ON DELETE CASCADE`), so a real fetched row
+ * can't carry a missing/invalid value either. `authorId` stays plain
+ * `?int`, not `UserId` -- see CommentEntity's own docblock.
  */
 final readonly class Comment
 {
@@ -50,7 +53,7 @@ final readonly class Comment
         public ?int $authorId,
         public ?string $userEmail,
         public ?string $date,
-        public int $imageId,
+        public ImageId $imageId,
         public ?string $websiteUrl,
         public ?string $email,
         public ?string $content,
@@ -75,6 +78,14 @@ final readonly class Comment
             throw new InvalidArgumentException(sprintf('Expected a positive comment id, got %s', get_debug_type($idValue)));
         }
 
+        // `image_id` is `com.imageId`, likewise custom-Typed under DQL
+        // array hydration -- accept either shape, same as `id` above.
+        $imageIdValue = $row['image_id'] ?? null;
+        $imageId = $imageIdValue instanceof ImageId ? $imageIdValue : ImageId::tryFrom($imageIdValue);
+        if ($imageId === null) {
+            throw new InvalidArgumentException(sprintf('Expected a positive image id, got %s', get_debug_type($imageIdValue)));
+        }
+
         // `validated` is a real boolean column -- DQL array hydration
         // gives a native bool, not the 0/1 a raw DBAL driver read used to.
         $validatedValue = $row['validated'] ?? null;
@@ -86,7 +97,7 @@ final readonly class Comment
             authorId: is_numeric($row['author_id'] ?? null) ? (int) $row['author_id'] : null,
             userEmail: ($row['user_email'] ?? null) instanceof Email ? $row['user_email']->value : null,
             date: is_string($row['date'] ?? null) ? $row['date'] : null,
-            imageId: ($row['image_id'] ?? null) instanceof ImageId ? $row['image_id']->value : (is_numeric($row['image_id'] ?? null) ? (int) $row['image_id'] : 0),
+            imageId: $imageId,
             websiteUrl: is_string($row['website_url'] ?? null) ? $row['website_url'] : null,
             email: is_string($row['email'] ?? null) ? $row['email'] : null,
             content: is_string($row['content'] ?? null) ? $row['content'] : null,
@@ -107,7 +118,7 @@ final readonly class Comment
             'author_id' => $this->authorId,
             'user_email' => $this->userEmail,
             'date' => $this->date,
-            'image_id' => $this->imageId,
+            'image_id' => $this->imageId->value,
             'website_url' => $this->websiteUrl,
             'email' => $this->email,
             'content' => $this->content,

@@ -38,7 +38,7 @@ test('fromRow narrows every column to its real type', function (): void {
         ->and($comment->authorId)->toBe(3)
         ->and($comment->userEmail)->toBe('regular@example.test')
         ->and($comment->date)->toBe('2026-08-01 00:00:00')
-        ->and($comment->imageId)->toBe(2)
+        ->and($comment->imageId)->toEqual(ImageId::from(2))
         ->and($comment->websiteUrl)->toBe('http://example.test')
         ->and($comment->email)->toBe('guest@example.test')
         ->and($comment->content)->toBe('Another perspective on this photo.')
@@ -61,12 +61,10 @@ test('fromRow defaults every nullable column to null when absent, and validated 
         ->and($comment->email)->toBeNull()
         ->and($comment->content)->toBeNull()
         ->and($comment->validated)->toBeFalse();
-    // image_id (still plain int) falls back to its type's zero value,
-    // matching every other narrowing helper in this codebase -- never
-    // actually null for a real fetched row, since it's a NOT NULL DB
-    // column; this only guards a malformed/partial row. id is CommentId
-    // now and can't silently default to zero -- see the dedicated
-    // "throws when id is invalid" test below.
+    // image_id is deliberately excluded above -- it's CommentId's sibling
+    // NOT NULL FK column now, so it can't silently default to null/zero
+    // either; see the dedicated "throws when image_id is invalid" test
+    // below, matching id's own pattern.
 });
 
 test('fromRow accepts an already-hydrated CommentId instance for id, not just a raw scalar', function (): void {
@@ -112,16 +110,35 @@ test('fromRow throws with the real debug type of a non-null but invalid id', fun
         ->toThrow(InvalidArgumentException::class, 'Expected a positive comment id, got string');
 });
 
-test('fromRow defaults imageId to 0 when image_id is missing', function (): void {
-    // The "defaults every nullable column..." test above deliberately
-    // excludes image_id from the columns it nulls (its own docblock
-    // explains why: a NOT NULL DB column, never actually null for a real
-    // fetched row) -- meaning no existing test ever actually exercises
-    // this fallback, only describes it.
+test('fromRow throws when image_id is missing', function (): void {
+    // Same behavior change as id above: image_id is ImageId now, and
+    // ImageId::from(0) always throws -- the previous "silently default
+    // image_id to 0" contract is structurally impossible to keep once the
+    // field is really typed. com.image_id is the table's own NOT NULL FK
+    // column, so a missing value can't actually occur for a real fetched
+    // row.
     $row = fullCommentRow();
     $row['image_id'] = null;
 
-    expect(Comment::fromRow($row)->imageId)->toBe(0);
+    Comment::fromRow($row);
+})->throws(InvalidArgumentException::class);
+
+test('fromRow throws with the real debug type of a non-null but invalid image_id', function (): void {
+    $row = fullCommentRow();
+    $row['image_id'] = 'not-a-number';
+
+    expect(fn () => Comment::fromRow($row))
+        ->toThrow(InvalidArgumentException::class, 'Expected a positive image id, got string');
+});
+
+test('fromRow keeps an already-hydrated ImageId instance as-is', function (): void {
+    // Covers the getArrayResult() Gotcha #1 shape: a real Doctrine array
+    // hydration would already have converted image_id via ImageIdType,
+    // not left it as a raw string.
+    $row = fullCommentRow();
+    $row['image_id'] = ImageId::from(9);
+
+    expect(Comment::fromRow($row)->imageId)->toEqual(ImageId::from(9));
 });
 
 test('fromRow accepts an already-hydrated ImageId instance for image_id, not just a raw scalar', function (): void {

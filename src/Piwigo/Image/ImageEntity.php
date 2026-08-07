@@ -8,7 +8,6 @@ use Doctrine\ORM\Mapping as ORM;
 use Piwigo\Common\ValueObject\CategoryId;
 use Piwigo\Common\ValueObject\ImageId;
 use Piwigo\Common\ValueObject\Md5Sum;
-use Piwigo\Common\ValueObject\RelPath;
 use Piwigo\Common\ValueObject\UserId;
 
 /**
@@ -81,8 +80,15 @@ final class ImageEntity
         public ?string $dateMetadataUpdate,
         #[ORM\Column(name: 'rating_score', type: 'float', nullable: true)]
         public ?float $ratingScore,
-        #[ORM\Column(type: 'rel_path', length: 255)]
-        public RelPath $path,
+        // `path` is root-relative for uploaded photos, but absolute for
+        // locally site-synced photos (LocalSiteReader/
+        // SiteUpdateSubController -- galleries_url itself is seeded as an
+        // absolute path by InstallWizard), so it can't be a VO that
+        // guarantees relativity; every real consumer that resolves it to
+        // a filesystem location checks its own leading '/' first (see
+        // MetadataService::getSyncMetadata()/ImagePathHelper::getElementPath()).
+        #[ORM\Column(type: 'string', length: 255)]
+        public string $path,
         #[ORM\Column(name: 'storage_category_id', type: 'category_id', nullable: true)]
         public ?CategoryId $storageCategoryId,
         #[ORM\Column(type: 'smallint')]

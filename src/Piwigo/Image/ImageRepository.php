@@ -16,7 +16,6 @@ use Piwigo\Common\Dto\PaginatedResult;
 use Piwigo\Common\ValueObject\CategoryId;
 use Piwigo\Common\ValueObject\ImageId;
 use Piwigo\Common\ValueObject\Md5Sum;
-use Piwigo\Common\ValueObject\RelPath;
 use Piwigo\Config\ConfigEntry;
 use Piwigo\Core\Env;
 use Piwigo\Db\BatchWriter;
@@ -381,13 +380,13 @@ final class ImageRepository extends EntityRepository
      */
     public function findPathsForFileDeletion(array $imageIds): array
     {
-        // i.id/i.path are the custom `image_id`/`rel_path` Doctrine Types --
-        // a partial DQL select of a custom-typed field still hydrates
-        // through that Type, so they come back as ImageId/RelPath here,
-        // not int/string. Unwrapped below to keep this method's own
-        // documented contract (id/path feed real file-deletion logic, so
-        // silently defaulting to 0/'' on a narrowing miss would be a real
-        // data-loss risk, not just a lint nitpick).
+        // i.id is the custom `image_id` Doctrine Type -- a partial DQL
+        // select of a custom-typed field still hydrates through that
+        // Type, so it comes back as ImageId here, not int. Unwrapped
+        // below to keep this method's own documented contract (id/path
+        // feed real file-deletion logic, so silently defaulting to 0/''
+        // on a narrowing miss would be a real data-loss risk, not just a
+        // lint nitpick).
         $rows = $this->createQueryBuilder('i')
             ->select('i.id', 'i.path', 'i.representativeExt AS representative_ext')
             ->where('i.id IN (:ids)')
@@ -403,7 +402,7 @@ final class ImageRepository extends EntityRepository
 
             $result[] = [
                 'id' => $row['id'] instanceof ImageId ? $row['id']->value : (is_numeric($row['id']) ? (int) $row['id'] : 0),
-                'path' => $row['path'] instanceof RelPath ? $row['path']->value : (is_string($row['path']) ? $row['path'] : ''),
+                'path' => is_string($row['path']) ? $row['path'] : '',
                 'representative_ext' => is_string($row['representative_ext'] ?? null) ? $row['representative_ext'] : null,
             ];
         }
@@ -440,7 +439,7 @@ final class ImageRepository extends EntityRepository
 
             $result[] = [
                 'id' => $row['id'] instanceof ImageId ? $row['id']->value : (is_numeric($row['id']) ? (int) $row['id'] : 0),
-                'path' => $row['path'] instanceof RelPath ? $row['path']->value : (is_string($row['path']) ? $row['path'] : ''),
+                'path' => is_string($row['path']) ? $row['path'] : '',
                 'representative_ext' => is_string($row['representative_ext'] ?? null) ? $row['representative_ext'] : null,
                 'level' => is_numeric($row['level'] ?? null) ? (int) $row['level'] : 0,
             ];
@@ -1055,7 +1054,7 @@ final class ImageRepository extends EntityRepository
                 continue;
             }
 
-            $paths[$row['id']->value] = $row['path'] instanceof RelPath ? $row['path']->value : (is_scalar($row['path']) ? (string) $row['path'] : '');
+            $paths[$row['id']->value] = is_scalar($row['path']) ? (string) $row['path'] : '';
         }
 
         return $paths;
@@ -1087,7 +1086,7 @@ final class ImageRepository extends EntityRepository
         }
 
         return [
-            'path' => $row['path'] instanceof RelPath ? $row['path']->value : (is_string($row['path']) ? $row['path'] : ''),
+            'path' => is_string($row['path']) ? $row['path'] : '',
             'file' => is_string($row['file']) ? $row['file'] : '',
             'md5sum' => ($row['md5sum'] ?? null) instanceof Md5Sum ? $row['md5sum']->value : (is_string($row['md5sum'] ?? null) ? $row['md5sum'] : null),
             'width' => is_numeric($row['width'] ?? null) ? (int) $row['width'] : null,
@@ -1363,7 +1362,7 @@ final class ImageRepository extends EntityRepository
             if (is_array($row)) {
                 $result[] = [
                     'id' => ($row['id'] ?? null) instanceof ImageId ? $row['id']->value : ($row['id'] ?? null),
-                    'path' => ($row['path'] ?? null) instanceof RelPath ? $row['path']->value : ($row['path'] ?? null),
+                    'path' => $row['path'] ?? null,
                     'representative_ext' => $row['representative_ext'] ?? null,
                     'width' => $row['width'] ?? null,
                     'height' => $row['height'] ?? null,
@@ -1475,7 +1474,7 @@ final class ImageRepository extends EntityRepository
                 'label' => $row['label'] ?? null,
                 'filesize' => $row['filesize'] ?? null,
                 'file' => $row['file'] ?? null,
-                'path' => $row['path'] instanceof RelPath ? $row['path']->value : ($row['path'] ?? null),
+                'path' => $row['path'] ?? null,
                 'representative_ext' => $row['representative_ext'] ?? null,
             ];
         }
@@ -1551,7 +1550,7 @@ final class ImageRepository extends EntityRepository
      * ImageDerivativeController (i.php)'s own source-file-to-image-row
      * lookup.
      */
-    public function findByPath(RelPath $path): ?Image
+    public function findByPath(string $path): ?Image
     {
         $entity = $this->findOneBy([
             'path' => $path,
@@ -1766,7 +1765,7 @@ final class ImageRepository extends EntityRepository
                 $result[] = [
                     'id' => ($row['id'] ?? null) instanceof ImageId ? $row['id']->value : ($row['id'] ?? null),
                     'file' => $row['file'] ?? null,
-                    'path' => ($row['path'] ?? null) instanceof RelPath ? $row['path']->value : ($row['path'] ?? null),
+                    'path' => $row['path'] ?? null,
                     'representative_ext' => $row['representative_ext'] ?? null,
                     'width' => $row['width'] ?? null,
                     'height' => $row['height'] ?? null,
@@ -2258,7 +2257,7 @@ final class ImageRepository extends EntityRepository
     public function findDuplicatePaths(): array
     {
         return array_values(array_map(
-            static fn (mixed $v): string => $v instanceof RelPath ? $v->value : (is_scalar($v) ? (string) $v : ''),
+            static fn (mixed $v): string => is_scalar($v) ? (string) $v : '',
             $this->createQueryBuilder('i')
                 ->select('i.path')
                 ->groupBy('i.path')
@@ -2398,7 +2397,7 @@ final class ImageRepository extends EntityRepository
             return null;
         }
 
-        return $row['path'] instanceof RelPath ? $row['path']->value : (is_string($row['path']) ? $row['path'] : null);
+        return is_string($row['path']) ? $row['path'] : null;
     }
 
     /**
@@ -2425,7 +2424,7 @@ final class ImageRepository extends EntityRepository
             'id' => $row['id'] instanceof ImageId ? $row['id']->value : (is_numeric($row['id']) ? (int) $row['id'] : 0),
             'name' => is_string($row['name'] ?? null) ? $row['name'] : null,
             'representative_ext' => is_string($row['representative_ext'] ?? null) ? $row['representative_ext'] : null,
-            'path' => $row['path'] instanceof RelPath ? $row['path']->value : (is_string($row['path']) ? $row['path'] : ''),
+            'path' => is_string($row['path']) ? $row['path'] : '',
         ];
     }
 
@@ -3044,11 +3043,11 @@ final class ImageRepository extends EntityRepository
             }
 
             $id = $row['id'];
-            if (! $id instanceof ImageId || ! $row['path'] instanceof RelPath) {
+            if (! $id instanceof ImageId || ! is_string($row['path'])) {
                 continue;
             }
 
-            $byId[$id->value] = $row['path']->value;
+            $byId[$id->value] = $row['path'];
         }
 
         return $byId;
@@ -3462,7 +3461,7 @@ final class ImageRepository extends EntityRepository
             }
 
             $pathValue = $row['path'] ?? null;
-            $path = $pathValue instanceof RelPath ? $pathValue->value : (is_string($pathValue) ? $pathValue : '');
+            $path = is_string($pathValue) ? $pathValue : '';
             $dotPosition = strrpos($path, '.');
             $ext = $dotPosition === false ? $path : substr($path, $dotPosition + 1);
             $filesize = is_numeric($row['filesize'] ?? null) ? (int) $row['filesize'] : 0;

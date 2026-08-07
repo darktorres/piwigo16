@@ -10,7 +10,6 @@ use Doctrine\ORM\Query;
 use Doctrine\ORM\Query\Expr\Join;
 use Doctrine\ORM\QueryBuilder;
 use Piwigo\Common\ValueObject\ImageId;
-use Piwigo\Common\ValueObject\RelPath;
 use Piwigo\Db\SqlDialect;
 use Piwigo\Image\ImageCategoryEntity;
 use Piwigo\Image\ImageEntity;
@@ -478,7 +477,7 @@ final class CalendarRepository
             'id' => $rowId instanceof ImageId ? $rowId->value : null,
             'file' => $row['file'] ?? null,
             'representative_ext' => $row['representative_ext'] ?? null,
-            'path' => $rowPath instanceof RelPath ? $rowPath->value : null,
+            'path' => is_string($rowPath) ? $rowPath : null,
             'width' => $row['width'] ?? null,
             'height' => $row['height'] ?? null,
             'rotation' => $row['rotation'] ?? null,

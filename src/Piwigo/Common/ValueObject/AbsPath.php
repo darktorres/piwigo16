@@ -11,8 +11,7 @@ use Override;
  * Absolute POSIX filesystem path (must start with `/`).
  *
  * Used for resolved disk locations — `Paths::$root`, derivative storage,
- * upload destinations. Pairs with `RelPath`: composing an `AbsPath` with
- * a `RelPath` yields a well-formed absolute path with no traversal.
+ * upload destinations.
  *
  * Existence on disk is NOT checked here — the VO captures the *shape* of
  * a path, not its current existence (which can race).

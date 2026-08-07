@@ -9,7 +9,6 @@ use Doctrine\ORM\EntityRepository;
 use Doctrine\ORM\Query;
 use Doctrine\ORM\Query\Expr\Join;
 use Piwigo\Common\ValueObject\ImageId;
-use Piwigo\Common\ValueObject\RelPath;
 use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Core\Env;
 use Piwigo\Image\ImageCategoryEntity;
@@ -550,7 +549,7 @@ final class RateRepository extends EntityRepository
      * report query.
      *
      * Same `getArrayResult()`-hydration handling as {@see findRatingReport()}
-     * above, for both `id` (ImageId) and `path` (RelPath).
+     * above, for `id` (ImageId) -- `path` is a plain scalar column.
      *
      * @param list<int> $imageIds
      * @return list<array{id: int, name: ?string, file: string, path: string, representative_ext: ?string, level: int}>
@@ -587,7 +586,7 @@ final class RateRepository extends EntityRepository
                     'id' => ($row['id'] ?? null) instanceof ImageId ? $row['id']->value : (is_numeric($row['id'] ?? null) ? (int) $row['id'] : 0),
                     'name' => is_string($row['name'] ?? null) ? $row['name'] : null,
                     'file' => is_string($row['file'] ?? null) ? $row['file'] : '',
-                    'path' => ($row['path'] ?? null) instanceof RelPath ? $row['path']->value : (is_string($row['path'] ?? null) ? $row['path'] : ''),
+                    'path' => is_string($row['path'] ?? null) ? $row['path'] : '',
                     'representative_ext' => is_string($row['representativeExt'] ?? null) ? $row['representativeExt'] : null,
                     'level' => is_numeric($row['level'] ?? null) ? (int) $row['level'] : 0,
                 ];

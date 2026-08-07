@@ -34,7 +34,6 @@ use Piwigo\Db\Type\LangCodeType;
 use Piwigo\Db\Type\Md5SumType;
 use Piwigo\Db\Type\PermalinkType;
 use Piwigo\Db\Type\PluginIdType;
-use Piwigo\Db\Type\RelPathType;
 use Piwigo\Db\Type\TagIdType;
 use Piwigo\Db\Type\ThemeIdType;
 use Piwigo\Db\Type\UserIdType;
@@ -88,7 +87,6 @@ final class EntityManagerFactory
             'tag_id' => TagIdType::class,
             'image_id' => ImageIdType::class,
             'md5sum' => Md5SumType::class,
-            'rel_path' => RelPathType::class,
             'permalink' => PermalinkType::class,
             'theme_id' => ThemeIdType::class,
             'plugin_id' => PluginIdType::class,

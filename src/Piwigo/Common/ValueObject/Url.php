@@ -12,9 +12,8 @@ use Override;
  * `filter_var(FILTER_VALIDATE_URL)`.
  *
  * Used for derivative-image URLs, external links emitted in feeds and
- * mail, telemetry endpoints, and OpenAPI server URLs. Relative URLs
- * belong in `RelPath` (filesystem) or a separate `RelativeUrl` VO if
- * routing-level relative paths become a thing.
+ * mail, telemetry endpoints, and OpenAPI server URLs. Relative,
+ * routing-level paths are a separate concern this VO doesn't model.
  */
 final readonly class Url implements StringVo
 {

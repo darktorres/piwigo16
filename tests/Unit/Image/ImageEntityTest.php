@@ -4,12 +4,11 @@ declare(strict_types=1);
 
 use Piwigo\Common\ValueObject\CategoryId;
 use Piwigo\Common\ValueObject\Md5Sum;
-use Piwigo\Common\ValueObject\RelPath;
 use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Image\ImageEntity;
 
 /**
- * @return array{file: string, dateAvailable: ?string, dateCreation: ?string, name: ?string, comment: ?string, author: ?string, hit: int, filesize: ?int, width: ?int, height: ?int, coi: ?string, representativeExt: ?string, dateMetadataUpdate: ?string, ratingScore: ?float, path: RelPath, storageCategoryId: ?CategoryId, level: int, md5sum: ?Md5Sum, addedBy: ?UserId, rotation: ?int, latitude: ?float, longitude: ?float, lastmodified: string}
+ * @return array{file: string, dateAvailable: ?string, dateCreation: ?string, name: ?string, comment: ?string, author: ?string, hit: int, filesize: ?int, width: ?int, height: ?int, coi: ?string, representativeExt: ?string, dateMetadataUpdate: ?string, ratingScore: ?float, path: string, storageCategoryId: ?CategoryId, level: int, md5sum: ?Md5Sum, addedBy: ?UserId, rotation: ?int, latitude: ?float, longitude: ?float, lastmodified: string}
  */
 function baseImageArgs(): array
 {
@@ -28,7 +27,7 @@ function baseImageArgs(): array
         'representativeExt' => 'webp',
         'dateMetadataUpdate' => '2026-07-19',
         'ratingScore' => 4.75,
-        'path' => RelPath::from('galleries/2026/07/sunset-beach.jpg'),
+        'path' => 'galleries/2026/07/sunset-beach.jpg',
         'storageCategoryId' => CategoryId::from(9),
         'level' => 2,
         'md5sum' => Md5Sum::from('9e107d9d372bb6826bd81d3542a419d6'),
@@ -58,7 +57,7 @@ test('constructs with distinct values for every property', function (): void {
         ->and($image->representativeExt)->toBe('webp')
         ->and($image->dateMetadataUpdate)->toBe('2026-07-19')
         ->and($image->ratingScore)->toBe(4.75)
-        ->and($image->path)->toEqual(RelPath::from('galleries/2026/07/sunset-beach.jpg'))
+        ->and($image->path)->toBe('galleries/2026/07/sunset-beach.jpg')
         ->and($image->storageCategoryId)->toEqual(CategoryId::from(9))
         ->and($image->level)->toBe(2)
         ->and($image->md5sum)->toEqual(Md5Sum::from('9e107d9d372bb6826bd81d3542a419d6'))

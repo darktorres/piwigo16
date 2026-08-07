@@ -7,7 +7,6 @@ namespace Piwigo\Image\Projection;
 use Piwigo\Common\ValueObject\CategoryId;
 use Piwigo\Common\ValueObject\ImageId;
 use Piwigo\Common\ValueObject\Md5Sum;
-use Piwigo\Common\ValueObject\RelPath;
 use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Image\ImageEntity;
 
@@ -47,7 +46,7 @@ final readonly class Image
         public ?string $representativeExt,
         public ?string $dateMetadataUpdate,
         public ?float $ratingScore,
-        public RelPath $path,
+        public string $path,
         public ?CategoryId $storageCategoryId,
         public int $level,
         public ?Md5Sum $md5sum,
@@ -109,7 +108,7 @@ final readonly class Image
             representativeExt: is_string($row['representative_ext'] ?? null) ? $row['representative_ext'] : null,
             dateMetadataUpdate: is_string($row['date_metadata_update'] ?? null) ? $row['date_metadata_update'] : null,
             ratingScore: is_numeric($row['rating_score'] ?? null) ? (float) $row['rating_score'] : null,
-            path: RelPath::from(is_string($row['path'] ?? null) ? $row['path'] : ''),
+            path: is_string($row['path'] ?? null) ? $row['path'] : '',
             storageCategoryId: is_numeric($row['storage_category_id'] ?? null) ? CategoryId::from((int) $row['storage_category_id']) : null,
             level: is_numeric($row['level'] ?? null) ? (int) $row['level'] : 0,
             md5sum: is_string($row['md5sum'] ?? null) ? Md5Sum::from($row['md5sum']) : null,
@@ -147,7 +146,7 @@ final readonly class Image
             'representative_ext' => $this->representativeExt,
             'date_metadata_update' => $this->dateMetadataUpdate,
             'rating_score' => $this->ratingScore,
-            'path' => $this->path->value,
+            'path' => $this->path,
             'storage_category_id' => $this->storageCategoryId?->value,
             'level' => $this->level,
             'md5sum' => $this->md5sum?->value,

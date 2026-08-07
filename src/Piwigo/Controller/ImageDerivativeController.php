@@ -9,7 +9,6 @@ use Exception;
 use Override;
 use Piwigo\Admin\Image\PwgImage;
 use Piwigo\Common\ValueObject\ImageId;
-use Piwigo\Common\ValueObject\RelPath;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Controller\Request\ImageDerivativeRequest;
 use Piwigo\Core\CurrentLogger;
@@ -154,8 +153,7 @@ final class ImageDerivativeController implements ControllerInterface
             && ! str_contains($this->srcLocation, 'themes/')
             && ! str_contains($this->srcLocation, 'plugins/')) {
             try {
-                $srcLocationPath = RelPath::tryFrom($this->srcLocation);
-                $row = $srcLocationPath === null ? null : $imageRepo->findByPath($srcLocationPath);
+                $row = $imageRepo->findByPath($this->srcLocation);
                 if ($row === null) {
                     $this->ierror('Db file path not found', 404);
                 }

@@ -5,7 +5,6 @@ declare(strict_types=1);
 use Piwigo\Common\ValueObject\CategoryId;
 use Piwigo\Common\ValueObject\ImageId;
 use Piwigo\Common\ValueObject\Md5Sum;
-use Piwigo\Common\ValueObject\RelPath;
 use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Image\ImageEntity;
 use Piwigo\Image\Projection\Image;
@@ -33,7 +32,7 @@ function transientImageEntity(): ImageEntity
         representativeExt: null,
         dateMetadataUpdate: null,
         ratingScore: null,
-        path: RelPath::from('upload/2026/08/01/photo.jpg'),
+        path: 'upload/2026/08/01/photo.jpg',
         storageCategoryId: null,
         level: 0,
         md5sum: null,
@@ -110,7 +109,7 @@ test('fromRow narrows every column to its real type', function (): void {
         ->and($image->representativeExt)->toBe('jpg')
         ->and($image->dateMetadataUpdate)->toBe('2026-07-31')
         ->and($image->ratingScore)->toBe(4.5)
-        ->and($image->path)->toEqual(RelPath::from('upload/2026/08/01/photo.jpg'))
+        ->and($image->path)->toBe('upload/2026/08/01/photo.jpg')
         ->and($image->storageCategoryId)->toEqual(CategoryId::from(3))
         ->and($image->level)->toBe(1)
         ->and($image->md5sum)->toEqual(Md5Sum::from('d41d8cd98f00b204e9800998ecf8427e'))

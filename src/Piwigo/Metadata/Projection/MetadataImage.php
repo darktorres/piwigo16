@@ -42,7 +42,7 @@ final readonly class MetadataImage
     {
         return new self(
             id: $entity->id->value ?? 0,
-            path: $entity->path->value,
+            path: $entity->path,
             representativeExt: $entity->representativeExt,
         );
     }

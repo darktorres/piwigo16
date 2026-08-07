@@ -7,7 +7,6 @@ namespace Piwigo\Tests\Integration;
 use Override;
 use Piwigo\Common\ValueObject\CategoryId;
 use Piwigo\Common\ValueObject\ImageId;
-use Piwigo\Common\ValueObject\RelPath;
 use Piwigo\Core\Kernel;
 use LogicException;
 use Piwigo\Db\EntityManagerFactory;
@@ -170,16 +169,16 @@ final class ImageRepositoryTest extends IntegrationTestCase
             ->fetchOne();
         self::assertIsString($path);
 
-        $image = $this->repo->findByPath(RelPath::from($path));
+        $image = $this->repo->findByPath($path);
 
         self::assertInstanceOf(Image::class, $image);
         self::assertSame(1, $image->id->value);
-        self::assertSame($path, $image->path->value);
+        self::assertSame($path, $image->path);
     }
 
     public function test_find_by_path_returns_null_for_an_unknown_path(): void
     {
-        self::assertNull($this->repo->findByPath(RelPath::from('upload/does/not/exist.jpg')));
+        self::assertNull($this->repo->findByPath('upload/does/not/exist.jpg'));
     }
 
     public function test_find_by_ids_returns_typed_images_keyed_by_id(): void

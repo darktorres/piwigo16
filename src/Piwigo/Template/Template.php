@@ -1542,8 +1542,16 @@ var s,after = document.getElementsByTagName(\'script\')[document.getElementsByTa
                 // regex above), so eval() always produces a real string here.
                 // PHPStan treats variables only ever assigned inside eval()
                 // as undefined in the enclosing scope (it doesn't parse the
-                // evaluated string) -- there's no provable guard possible,
-                // this is a genuine static-analysis blind spot on eval().
+                // evaluated string) -- there's no provable guard possible.
+                // Tried the same pre-initialize-before-eval() trick that
+                // fixed get_php_str_val()'s bare `return $tmp;` above --
+                // backfires here specifically because of the isset() guard:
+                // pre-setting $tmp = null makes PHPStan conclude isset($tmp)
+                // is always false (a variable PHPStan believes always exists
+                // and is always null), so the ?: 'string cast' branch became
+                // unreachable *NEVER* instead. Confirmed empirically; this
+                // is a genuine static-analysis blind spot on eval(), not a
+                // missed narrowing opportunity.
                 // @phpstan-ignore cast.string, isset.variable, variable.undefined
                 return isset($tmp) ? (string) $tmp : '';
             },

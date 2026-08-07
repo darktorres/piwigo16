@@ -76,8 +76,8 @@ final class FeedRepositoryTest extends IntegrationTestCase
         $row = $this->repo->findById($id);
 
         self::assertNotNull($row);
-        self::assertSame(1, $row['userId']);
-        self::assertNull($row['lastCheck']);
+        self::assertSame(1, $row->userId);
+        self::assertNull($row->lastCheck);
     }
 
     public function test_find_by_id_returns_null_when_unused(): void
@@ -95,8 +95,8 @@ final class FeedRepositoryTest extends IntegrationTestCase
 
         $row = $this->repo->findById($id);
         self::assertNotNull($row);
-        self::assertNotNull($row['lastCheck']);
-        self::assertSame($lastCheck->format('Y-m-d H:i:s'), $row['lastCheck']->format('Y-m-d H:i:s'));
+        self::assertNotNull($row->lastCheck);
+        self::assertSame($lastCheck->format('Y-m-d H:i:s'), $row->lastCheck->format('Y-m-d H:i:s'));
     }
 
     public function test_update_last_check_on_an_unknown_id_is_a_silent_no_op(): void

@@ -84,9 +84,9 @@ final class FeedController implements ControllerInterface
             if ($feed_row === null) {
                 $htmlRenderer->pageNotFound($this->redirectService, $this->lang->t('Unknown feed identifier'));
             }
-            $feed_last_check = $feed_row['lastCheck'];
-            if ($feed_row['userId'] !== $this->currentUser->get()->id->value) { // new user
-                $feed_owner = $this->userService->buildUser(UserId::from($feed_row['userId']));
+            $feed_last_check = $feed_row->lastCheck;
+            if ($feed_row->userId !== $this->currentUser->get()->id->value) { // new user
+                $feed_owner = $this->userService->buildUser(UserId::from($feed_row->userId));
                 // The feed is per-user-token, so this request's "current user"
                 // genuinely becomes the feed owner, not the real session user.
                 $this->currentUser->set(User::fromUserArray($feed_owner));

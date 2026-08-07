@@ -7,6 +7,7 @@ namespace Piwigo\Feed;
 use DateTimeImmutable;
 use Doctrine\ORM\EntityRepository;
 use Piwigo\Common\ValueObject\UserId;
+use Piwigo\Feed\Projection\FeedInfo;
 
 /**
  * Persistence layer for the per-user RSS feed identifier domain.
@@ -30,17 +31,12 @@ final class FeedRepository extends EntityRepository
     /**
      * Returns the owning user id and last-check timestamp for a feed
      * identifier, or null if the identifier doesn't exist.
-     *
-     * @return array{userId: int, lastCheck: ?DateTimeImmutable}|null
      */
-    public function findById(string $id): ?array
+    public function findById(string $id): ?FeedInfo
     {
         $entity = $this->find($id);
 
-        return $entity === null ? null : [
-            'userId' => $entity->userId->value,
-            'lastCheck' => $entity->lastCheck,
-        ];
+        return $entity === null ? null : new FeedInfo($entity->userId->value, $entity->lastCheck);
     }
 
     /**

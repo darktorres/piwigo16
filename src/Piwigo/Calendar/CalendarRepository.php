@@ -9,6 +9,8 @@ use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Query;
 use Doctrine\ORM\Query\Expr\Join;
 use Doctrine\ORM\QueryBuilder;
+use Piwigo\Common\ValueObject\ImageId;
+use Piwigo\Common\ValueObject\RelPath;
 use Piwigo\Db\SqlDialect;
 use Piwigo\Image\ImageCategoryEntity;
 use Piwigo\Image\ImageEntity;
@@ -450,13 +452,18 @@ final class CalendarRepository
             return null;
         }
 
-        $imageId = is_numeric($picked['id'] ?? null) ? (int) $picked['id'] : 0;
+        // `i.id` (ImageEntity's own ImageId-typed column) array-hydrates
+        // as an ImageId instance, not a scalar.
+        $pickedId = $picked['id'] ?? null;
+        if (! $pickedId instanceof ImageId) {
+            return null;
+        }
 
         $row = $this->em->createQueryBuilder()
             ->select('i.id', 'i.file', 'i.representativeExt AS representative_ext', 'i.path', 'i.width', 'i.height', 'i.rotation')
             ->from(ImageEntity::class, 'i')
             ->where('i.id = :id')
-            ->setParameter('id', $imageId)
+            ->setParameter('id', $pickedId)
             ->getQuery()
             ->getOneOrNullResult(Query::HYDRATE_ARRAY);
 
@@ -464,11 +471,14 @@ final class CalendarRepository
             return null;
         }
 
+        $rowId = $row['id'] ?? null;
+        $rowPath = $row['path'] ?? null;
+
         return [
-            'id' => $row['id'] ?? null,
+            'id' => $rowId instanceof ImageId ? $rowId->value : null,
             'file' => $row['file'] ?? null,
             'representative_ext' => $row['representative_ext'] ?? null,
-            'path' => $row['path'] ?? null,
+            'path' => $rowPath instanceof RelPath ? $rowPath->value : null,
             'width' => $row['width'] ?? null,
             'height' => $row['height'] ?? null,
             'rotation' => $row['rotation'] ?? null,

@@ -8,7 +8,6 @@ use Override;
 use Doctrine\DBAL\Connection;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Config\ConfigLoader;
-use Piwigo\Config\CurrentConfig;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Core\Env;
 use Piwigo\Db\DbConnection;

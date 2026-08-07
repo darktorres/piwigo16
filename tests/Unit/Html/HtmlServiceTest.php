@@ -20,7 +20,6 @@ use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Users\UserStatus;
 use Piwigo\Http\ResponseReadyException;
 use RuntimeException;
-use Piwigo\Config\CurrentConfig;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\ProcessCache;
@@ -41,7 +40,6 @@ use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Tests\Support\EventDispatcherTestFactory;
 use Piwigo\Template\CurrentTemplate;
 use Piwigo\Tests\Support\KernelContainerOverride;
-use Piwigo\Users\CurrentUser;
 use Piwigo\Tests\Support\CurrentUserTestFactory;
 
 beforeEach(function (): void {

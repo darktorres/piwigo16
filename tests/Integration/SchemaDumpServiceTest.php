@@ -6,7 +6,6 @@ namespace Piwigo\Tests\Integration;
 
 use Override;
 use Piwigo\Config\ConfigLoader;
-use Piwigo\Config\CurrentConfig;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\SchemaDumpService;

@@ -10,7 +10,6 @@ use Piwigo\Tests\Support\CurrentPathsTestFactory;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Paths;
 use Piwigo\Event\Admin\TabsheetBeforeSelect;
-use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Tests\Support\EventDispatcherTestFactory;
 use Piwigo\Template\CurrentTemplate;
 

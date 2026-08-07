@@ -5,7 +5,6 @@ declare(strict_types=1);
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Paths;
 use Piwigo\Event\Template\SetStatusHeader;
-use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Tests\Support\EventDispatcherTestFactory;
 use Piwigo\Ws\PwgError;
 

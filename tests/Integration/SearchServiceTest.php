@@ -10,15 +10,12 @@ namespace Piwigo\Tests\Integration {
     use Piwigo\Tests\Support\CurrentPathsTestFactory;
     use Piwigo\Core\FilterState;
     use Piwigo\Core\Kernel;
-    use Piwigo\Core\PageState;
     use Piwigo\Tests\Support\PageStateTestFactory;
     use Piwigo\Core\ProcessCache;
     use Piwigo\Db\EntityManagerFactory;
     use Piwigo\Auth\AccessLevelChecker;
     use Piwigo\Group\GroupEntity;
-    use Piwigo\Core\Lang;
     use Piwigo\Tests\Support\LangTestFactory;
-    use Piwigo\Lang\Translator;
     use Piwigo\Tests\Support\TranslatorTestFactory;
     use Piwigo\Tests\Support\HtmlServiceTestFactory;
     use Piwigo\Core\CurrentLogger;
@@ -56,7 +53,6 @@ namespace Piwigo\Tests\Integration {
     use Piwigo\Search\SearchService;
     use Piwigo\Session\SessionEntity;
     use Piwigo\Session\SessionService;
-    use Piwigo\Users\CurrentUser;
     use Piwigo\Tests\Support\CurrentUserTestFactory;
     use Piwigo\Users\User;
 

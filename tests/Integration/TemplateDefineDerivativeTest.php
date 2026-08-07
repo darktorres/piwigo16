@@ -6,19 +6,15 @@ namespace Piwigo\Tests\Integration;
 
 use Override;
 use Piwigo\PluginConfig\EventDispatcher;
-use Piwigo\Config\CurrentConfig;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Tests\Support\TemplateTestFactory;
 use Piwigo\Config\ConfigLoader;
 use Piwigo\Config\ConfigService;
-use Piwigo\Config\CurrentConfigService;
 use Piwigo\Tests\Support\CurrentConfigServiceTestFactory;
 use Piwigo\Http\ResponseReadyException;
 use Piwigo\Image\DerivativeParams;
-use Piwigo\Image\ImageStdParams;
 use Piwigo\Tests\Support\ImageStdParamsTestFactory;
 use Piwigo\Template\Template;
-use Piwigo\Users\CurrentUser;
 use Piwigo\Tests\Support\CurrentUserTestFactory;
 
 /**

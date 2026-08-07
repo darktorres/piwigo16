@@ -2,11 +2,8 @@
 
 declare(strict_types=1);
 
-use Piwigo\Core\Lang;
 use Piwigo\Tests\Support\LangTestFactory;
-use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Tests\Support\EventDispatcherTestFactory;
-use Piwigo\Core\PageState;
 use Piwigo\Tests\Support\PageStateTestFactory;
 use Piwigo\Template\CurrentTemplate;
 use Piwigo\Users\UserService;
@@ -17,7 +14,6 @@ use Piwigo\Admin\Integrity\Event\ListCheckIntegrity;
 use Piwigo\Admin\Integrity\IntegrityIgnoredAnomalyEntity;
 use Piwigo\Admin\Integrity\IntegrityIgnoredAnomalyRepository;
 use Piwigo\Config\ConfigLoader;
-use Piwigo\Config\CurrentConfig;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Paths;

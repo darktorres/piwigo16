@@ -12,7 +12,6 @@ namespace Piwigo\Tests\Integration {
     use Piwigo\Core\Kernel;
     use LogicException;
     use Piwigo\Core\FilterState;
-    use Piwigo\Core\Lang;
     use Piwigo\Tests\Support\LangTestFactory;
     use Piwigo\Auth\AccessLevelChecker;
     use Piwigo\Db\EntityManagerFactory;
@@ -32,7 +31,6 @@ namespace Piwigo\Tests\Integration {
     use Piwigo\Notification\NotificationService;
     use Piwigo\Permission\PermissionRepository;
     use Piwigo\Permission\PermissionService;
-    use Piwigo\Users\CurrentUser;
     use Piwigo\Tests\Support\CurrentUserTestFactory;
     use Piwigo\Users\User;
     use Piwigo\Users\UserStatus;

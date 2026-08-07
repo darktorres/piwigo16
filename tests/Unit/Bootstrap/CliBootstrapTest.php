@@ -3,10 +3,8 @@
 declare(strict_types=1);
 
 use Piwigo\Core\ShutdownHandler;
-use Piwigo\Users\CurrentUser;
 use Piwigo\Tests\Support\CurrentUserTestFactory;
 use Piwigo\Users\UserStatus;
-use Piwigo\Config\CurrentConfigService;
 use Piwigo\Tests\Support\CurrentConfigServiceTestFactory;
 use Piwigo\Bootstrap\CliBootstrap;
 use Piwigo\Config\ConfigService;

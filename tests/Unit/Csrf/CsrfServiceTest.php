@@ -2,7 +2,6 @@
 
 declare(strict_types=1);
 
-use Piwigo\Config\CurrentConfig;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Csrf\CsrfService;
 

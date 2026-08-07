@@ -11,10 +11,8 @@ namespace Piwigo\Tests\Integration {
     use Piwigo\Core\Kernel;
     use Piwigo\Core\FilterState;
     use Piwigo\Db\EntityManagerFactory;
-    use Piwigo\Core\Lang;
     use Piwigo\Tests\Support\LangTestFactory;
     use Piwigo\Group\GroupEntity;
-    use Piwigo\Lang\Translator;
     use Piwigo\Tests\Support\TranslatorTestFactory;
     use Error;
     use Piwigo\Tests\Support\UrlServiceTestFactory;
@@ -27,19 +25,16 @@ namespace Piwigo\Tests\Integration {
     use Piwigo\Config\CurrentConfig;
     use Piwigo\Tests\Support\CurrentConfigTestFactory;
     use Piwigo\Config\ConfigLoader;
-    use Piwigo\Config\CurrentConfigService;
     use Piwigo\Tests\Support\CurrentConfigServiceTestFactory;
     use Piwigo\Core\ActivityLoggerInterface;
     use Piwigo\Tests\Support\CurrentPathsTestFactory;
     use Piwigo\Core\HtmlRenderingInterface;
-    use Piwigo\Core\PageState;
     use Piwigo\Tests\Support\PageStateTestFactory;
     use Piwigo\Core\RedirectServiceInterface;
     use Piwigo\Db\DbConnection;
     use Piwigo\Db\Tables;
     use Piwigo\Event\Album\GetCategoryPreferredImageOrders;
     use Piwigo\Event\Site\DeleteSite;
-    use Piwigo\Image\ImageStdParams;
     use Piwigo\Tests\Support\ImageStdParamsTestFactory;
     use Piwigo\Permission\PermissionRepository;
     use Piwigo\Permission\PermissionService;
@@ -47,7 +42,6 @@ namespace Piwigo\Tests\Integration {
     use Piwigo\Tests\Support\EventDispatcherTestFactory;
     use Piwigo\Session\SessionEntity;
     use Piwigo\Session\SessionService;
-    use Piwigo\Users\CurrentUser;
     use Piwigo\Tests\Support\CurrentUserTestFactory;
     use Piwigo\Users\User;
 

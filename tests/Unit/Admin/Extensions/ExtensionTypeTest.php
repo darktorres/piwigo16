@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 use Piwigo\Admin\PluginLoader;
 use Piwigo\Admin\Extensions\ExtensionType;
-use Piwigo\Config\CurrentConfig;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Core\ActivitySystem;
 use Piwigo\Tests\Support\CurrentPathsTestFactory;

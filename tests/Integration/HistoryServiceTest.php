@@ -16,7 +16,6 @@ use Piwigo\Config\ConfigLoader;
 use Piwigo\Config\ConfigService;
 use Piwigo\Core\CurrentLogger;
 use Piwigo\Core\Logger;
-use Piwigo\Core\PageState;
 use Piwigo\Tests\Support\PageStateTestFactory;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
@@ -24,7 +23,6 @@ use Piwigo\Db\Tables;
 use Piwigo\History\HistoryEntity;
 use Piwigo\History\HistoryRepository;
 use Piwigo\History\HistoryService;
-use Piwigo\Users\CurrentUser;
 use Piwigo\Tests\Support\CurrentUserTestFactory;
 use Piwigo\Users\User;
 

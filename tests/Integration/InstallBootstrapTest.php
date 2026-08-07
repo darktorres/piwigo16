@@ -8,7 +8,6 @@ use Override;
 use LogicException;
 use Piwigo\Bootstrap\InstallBootstrap;
 use Piwigo\Config\ConfigService;
-use Piwigo\Config\CurrentConfigService;
 use Piwigo\Tests\Support\CurrentConfigServiceTestFactory;
 use Piwigo\Tests\Support\CurrentPathsTestFactory;
 use Piwigo\Core\ErrorCollector;

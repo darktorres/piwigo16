@@ -14,10 +14,8 @@ use Piwigo\Config\ConfigLoader;
 use Piwigo\Config\ConfigService;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
-use Piwigo\Config\CurrentConfigService;
 use Piwigo\Tests\Support\CurrentConfigServiceTestFactory;
 use Piwigo\Tests\Support\CurrentPathsTestFactory;
-use Piwigo\Core\PageState;
 use Piwigo\Tests\Support\PageStateTestFactory;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Paths;
@@ -28,7 +26,6 @@ use Piwigo\Page\PageTailRenderer;
 use Piwigo\Session\SessionEntity;
 use Piwigo\Session\SessionService;
 use Piwigo\Template\CurrentTemplate;
-use Piwigo\Users\CurrentUser;
 use Piwigo\Tests\Support\CurrentUserTestFactory;
 use Piwigo\Users\User;
 

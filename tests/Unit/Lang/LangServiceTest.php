@@ -7,7 +7,6 @@ use Piwigo\Core\InstallationFlag;
 use Piwigo\Core\Lang;
 use Piwigo\Core\Paths;
 use Piwigo\Lang\LangService;
-use Piwigo\Lang\Translator;
 use Piwigo\Tests\Support\TranslatorTestFactory;
 
 /**

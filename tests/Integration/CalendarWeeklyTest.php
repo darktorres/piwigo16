@@ -6,7 +6,6 @@ namespace Piwigo\Tests\Integration {
 
 use Override;
 use Piwigo\Db\EntityManagerFactory;
-use Piwigo\Image\ImageStdParams;
 use Piwigo\Tests\Support\ImageStdParamsTestFactory;
 use Piwigo\Tests\Support\TemplateTestFactory;
 use Piwigo\Core\UrlServiceInterface;
@@ -18,14 +17,11 @@ use Piwigo\Calendar\CalendarQueryScope;
 use Piwigo\Calendar\CalendarRepository;
 use Piwigo\Calendar\CalendarWeekly;
 use Piwigo\Config\ConfigLoader;
-use Piwigo\Config\CurrentConfig;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Tests\Support\CurrentPathsTestFactory;
-use Piwigo\Core\Lang;
 use Piwigo\Tests\Support\LangTestFactory;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
-use Piwigo\Lang\Translator;
 use Piwigo\Tests\Support\TranslatorTestFactory;
 use Piwigo\Permission\SqlCondition;
 

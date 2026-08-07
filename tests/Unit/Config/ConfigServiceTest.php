@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 use Doctrine\DBAL\DriverManager;
 use Piwigo\PluginConfig\EventDispatcher;
-use Piwigo\Config\CurrentConfig;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Config\ConfigEntry;
 use Piwigo\Config\ConfigService;

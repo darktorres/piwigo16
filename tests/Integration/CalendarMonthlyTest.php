@@ -18,9 +18,7 @@ use Piwigo\Calendar\CalendarQueryScope;
 use Piwigo\Calendar\CalendarRepository;
 use Piwigo\Config\ConfigLoader;
 use Piwigo\Config\ConfigService;
-use Piwigo\Config\CurrentConfig;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
-use Piwigo\Core\Lang;
 use Piwigo\Tests\Support\LangTestFactory;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
@@ -28,7 +26,6 @@ use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Tests\Support\ImageStdParamsTestFactory;
 use Piwigo\Image\SrcImage;
-use Piwigo\Lang\Translator;
 use Piwigo\Tests\Support\TranslatorTestFactory;
 use Piwigo\Permission\SqlCondition;
 

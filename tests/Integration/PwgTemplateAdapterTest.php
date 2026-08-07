@@ -6,18 +6,13 @@ namespace Piwigo\Tests\Integration;
 
 use Override;
 use Piwigo\PluginConfig\EventDispatcher;
-use Piwigo\Config\CurrentConfig;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
-use Piwigo\Image\ImageStdParams;
 use Piwigo\Tests\Support\ImageStdParamsTestFactory;
-use Piwigo\Core\Lang;
 use Piwigo\Tests\Support\LangTestFactory;
-use Piwigo\Lang\Translator;
 use Piwigo\Tests\Support\TranslatorTestFactory;
 use Piwigo\Config\ConfigEntry;
 use Piwigo\Config\ConfigLoader;
 use Piwigo\Config\ConfigService;
-use Piwigo\Config\CurrentConfigService;
 use Piwigo\Tests\Support\CurrentConfigServiceTestFactory;
 use Piwigo\Core\Kernel;
 use Piwigo\Db\DbConnection;

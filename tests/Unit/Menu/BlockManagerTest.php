@@ -2,13 +2,11 @@
 
 declare(strict_types=1);
 
-use Piwigo\Config\CurrentConfig;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Event\BlockManager\BlockManagerPrepareDisplay;
 use Piwigo\Menu\BlockManager;
 use Piwigo\Menu\DisplayBlock;
 use Piwigo\Menu\RegisteredBlock;
-use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Tests\Support\EventDispatcherTestFactory;
 use Piwigo\Template\CurrentTemplate;
 

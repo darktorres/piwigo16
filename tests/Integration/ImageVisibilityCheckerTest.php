@@ -10,7 +10,6 @@ use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Permission\ImageVisibilityChecker;
 use Piwigo\Permission\PermissionRepository;
-use Piwigo\Users\CurrentUser;
 use Piwigo\Tests\Support\CurrentUserTestFactory;
 use Piwigo\Users\User;
 

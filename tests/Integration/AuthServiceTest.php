@@ -19,10 +19,8 @@ namespace Piwigo\Tests\Integration {
     use Piwigo\Activity\ActivityEntity;
     use Piwigo\Tests\Support\HtmlServiceTestFactory;
     use Piwigo\Config\DeploymentPolicy;
-    use Piwigo\Core\PageState;
     use Piwigo\Tests\Support\PageStateTestFactory;
     use Piwigo\Mail\MailService;
-    use Piwigo\Core\Lang;
     use Piwigo\Tests\Support\LangTestFactory;
     use Piwigo\Tests\Support\UrlServiceTestFactory;
     use Doctrine\DBAL\Connection;
@@ -42,11 +40,9 @@ namespace Piwigo\Tests\Integration {
     use Piwigo\Db\Tables;
     use Piwigo\Event\User\TryLogUser;
     use Piwigo\Http\ResponseReadyException;
-    use Piwigo\PluginConfig\EventDispatcher;
     use Piwigo\Tests\Support\EventDispatcherTestFactory;
     use Piwigo\Session\SessionEntity;
     use Piwigo\Session\SessionService;
-    use Piwigo\Users\CurrentUser;
     use Piwigo\Tests\Support\CurrentUserTestFactory;
     use Piwigo\Users\User;
     use Piwigo\Users\UserStatus;

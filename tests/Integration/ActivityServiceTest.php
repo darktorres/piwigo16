@@ -22,7 +22,6 @@ use Piwigo\Core\ActivitySystem;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Db\Tables;
-use Piwigo\Users\CurrentUser;
 use Piwigo\Tests\Support\CurrentUserTestFactory;
 use Piwigo\Users\User;
 

@@ -2,9 +2,7 @@
 
 declare(strict_types=1);
 
-use Piwigo\Core\Lang;
 use Piwigo\Tests\Support\LangTestFactory;
-use Piwigo\Config\CurrentConfig;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Controller\Admin\IntroSubController;
 use Piwigo\Tests\Support\CurrentPathsTestFactory;

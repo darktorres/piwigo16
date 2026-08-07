@@ -12,15 +12,12 @@ use Doctrine\DBAL\Connection;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Tests\Support\CurrentPathsTestFactory;
-use Piwigo\Core\Lang;
 use Piwigo\Tests\Support\LangTestFactory;
 use Piwigo\Core\ThemeCatalog;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
 use Piwigo\Event\Lifecycle\GetPwgThemes;
-use Piwigo\Lang\Translator;
 use Piwigo\Tests\Support\TranslatorTestFactory;
-use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Tests\Support\EventDispatcherTestFactory;
 
 /**

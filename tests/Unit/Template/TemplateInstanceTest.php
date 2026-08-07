@@ -7,9 +7,7 @@ use Piwigo\Url\RootPathOverride;
 use Smarty\Smarty;
 use Piwigo\Template\CssLoader;
 use Piwigo\Tests\Support\TemplateTestFactory;
-use Piwigo\Lang\Translator;
 use Piwigo\Tests\Support\TranslatorTestFactory;
-use Piwigo\Config\CurrentConfigService;
 use Piwigo\Tests\Support\CurrentConfigServiceTestFactory;
 use Piwigo\Tests\Support\KernelContainerOverride;
 use Piwigo\Core\AdminContext;
@@ -22,18 +20,15 @@ use Piwigo\Core\AppInfo;
 use Piwigo\Tests\Support\CurrentPathsTestFactory;
 use Piwigo\Core\ErrorCollector;
 use Piwigo\Core\Kernel;
-use Piwigo\Core\Lang;
 use Piwigo\Tests\Support\LangTestFactory;
 use Piwigo\Core\Paths;
 use Piwigo\Core\ProcessCache;
 use Piwigo\Http\ResponseReadyException;
-use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Tests\Support\EventDispatcherTestFactory;
 use Piwigo\Template\Event\CombinedCss;
 use Piwigo\Template\Event\CombinedScript;
 use Piwigo\Template\PwgTemplateAdapter;
 use Piwigo\Template\Template;
-use Piwigo\Users\CurrentUser;
 use Piwigo\Tests\Support\CurrentUserTestFactory;
 
 /**

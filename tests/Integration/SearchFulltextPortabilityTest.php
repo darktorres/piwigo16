@@ -6,10 +6,8 @@ namespace Piwigo\Tests\Integration;
 
 use Override;
 use Piwigo\Users\UserService;
-use Piwigo\Core\Lang;
 use Piwigo\Tests\Support\LangTestFactory;
 use Piwigo\Users\UserRepository;
-use Piwigo\Config\CurrentConfig;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Group\GroupEntity;
 use Piwigo\Activity\ActivityService;
@@ -22,7 +20,6 @@ use Piwigo\Core\ProcessCache;
 use Piwigo\Core\FilterState;
 use LogicException;
 use Piwigo\Auth\AccessLevelChecker;
-use Piwigo\Lang\Translator;
 use Piwigo\Tests\Support\TranslatorTestFactory;
 use Piwigo\Core\CurrentLogger;
 use Piwigo\Db\Tables;
@@ -39,7 +36,6 @@ use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Mail\MailService;
 use Piwigo\Permission\PermissionRepository;
 use Piwigo\Permission\PermissionService;
-use Piwigo\Core\PageState;
 use Piwigo\Tests\Support\PageStateTestFactory;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Tests\Support\EventDispatcherTestFactory;
@@ -48,7 +44,6 @@ use Piwigo\Search\SearchRepository;
 use Piwigo\Search\SearchService;
 use Piwigo\Session\SessionEntity;
 use Piwigo\Session\SessionService;
-use Piwigo\Users\CurrentUser;
 use Piwigo\Tests\Support\CurrentUserTestFactory;
 
 /**

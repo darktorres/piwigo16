@@ -17,7 +17,6 @@ use Piwigo\Config\CurrentConfig;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Core\ActivitySystem;
 use Piwigo\Core\Kernel;
-use Piwigo\Core\PageState;
 use Piwigo\Tests\Support\PageStateTestFactory;
 use Piwigo\Core\Paths;
 use Piwigo\Core\WsContext;

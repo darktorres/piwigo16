@@ -3,7 +3,6 @@
 declare(strict_types=1);
 
 use Piwigo\Auth\EphemeralKeyService;
-use Piwigo\Config\CurrentConfig;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
 
 beforeEach(function (): void {

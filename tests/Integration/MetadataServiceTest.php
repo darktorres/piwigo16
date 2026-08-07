@@ -16,12 +16,9 @@ namespace Piwigo\Tests\Integration {
     use Override;
     use Piwigo\Core\Kernel;
     use LogicException;
-    use Piwigo\Core\Lang;
     use Piwigo\Tests\Support\LangTestFactory;
     use Piwigo\Db\EntityManagerFactory;
-    use Piwigo\PluginConfig\EventDispatcher;
     use Piwigo\Tests\Support\EventDispatcherTestFactory;
-    use Piwigo\Users\CurrentUser;
     use Piwigo\Tests\Support\CurrentUserTestFactory;
     use Piwigo\Tests\Support\SessionServiceTestFactory;
     use Piwigo\Core\FilterState;

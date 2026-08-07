@@ -10,7 +10,6 @@ namespace Piwigo\Tests\Integration {
     use LogicException;
     use Piwigo\Core\CurrentLogger;
     use Piwigo\Core\FilterState;
-    use Piwigo\Core\Lang;
     use Piwigo\Tests\Support\LangTestFactory;
     use Piwigo\Db\EntityManagerFactory;
     use Piwigo\Tag\TagEntity;
@@ -37,10 +36,8 @@ namespace Piwigo\Tests\Integration {
     use Piwigo\Event\Tag\RenderTagUrl;
     use Piwigo\Permission\PermissionRepository;
     use Piwigo\Permission\PermissionService;
-    use Piwigo\PluginConfig\EventDispatcher;
     use Piwigo\Tests\Support\EventDispatcherTestFactory;
     use Piwigo\Tag\TagService;
-    use Piwigo\Users\CurrentUser;
     use Piwigo\Tests\Support\CurrentUserTestFactory;
     use Piwigo\Users\User;
     use Piwigo\Users\UserStatus;

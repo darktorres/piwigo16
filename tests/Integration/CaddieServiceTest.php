@@ -13,7 +13,6 @@ use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\ConfigLoader;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
-use Piwigo\Users\CurrentUser;
 use Piwigo\Tests\Support\CurrentUserTestFactory;
 use Piwigo\Users\User;
 

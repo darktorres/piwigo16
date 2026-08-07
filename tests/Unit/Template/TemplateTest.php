@@ -4,13 +4,10 @@ declare(strict_types=1);
 
 use Piwigo\Tests\Support\TemplateTestFactory;
 use Smarty\Smarty;
-use Piwigo\Config\CurrentConfig;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Core\Kernel;
-use Piwigo\Core\Lang;
 use Piwigo\Tests\Support\LangTestFactory;
 use Piwigo\Core\Paths;
-use Piwigo\Lang\Translator;
 use Piwigo\Tests\Support\TranslatorTestFactory;
 use Piwigo\Template\Template;
 

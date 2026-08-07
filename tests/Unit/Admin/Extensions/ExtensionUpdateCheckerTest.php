@@ -18,7 +18,6 @@ use Piwigo\Config\CurrentConfig;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Core\FilesystemHelper;
 use Piwigo\Core\Kernel;
-use Piwigo\Core\Lang;
 use Piwigo\Tests\Support\LangTestFactory;
 use Piwigo\Tests\Support\CurrentPathsTestFactory;
 use Piwigo\PluginConfig\EventDispatcher;

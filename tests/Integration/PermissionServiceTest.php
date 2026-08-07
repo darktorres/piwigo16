@@ -16,7 +16,6 @@ namespace Piwigo\Tests\Integration {
     use Piwigo\Core\FilterState;
     use Piwigo\Db\EntityManagerFactory;
     use Piwigo\Group\GroupEntity;
-    use Piwigo\Users\CurrentUser;
     use Piwigo\Tests\Support\CurrentUserTestFactory;
     use Doctrine\DBAL\Connection;
 

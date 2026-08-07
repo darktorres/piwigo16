@@ -6,14 +6,12 @@ namespace Piwigo\Tests\Unit\Image;
 
 use RuntimeException;
 use Exception;
-use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Tests\Support\EventDispatcherTestFactory;
 use Error;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Image\ImageEntity;
 use Piwigo\Db\Tables;
-use Piwigo\Config\CurrentConfig;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Tests\Support\CurrentPathsTestFactory;
 use Piwigo\Core\CurrentThemeConfProvider;

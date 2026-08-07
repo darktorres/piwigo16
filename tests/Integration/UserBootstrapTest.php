@@ -5,17 +5,14 @@ declare(strict_types=1);
 namespace Piwigo\Tests\Integration;
 
 use Override;
-use Piwigo\Config\CurrentConfig;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Users\UserService;
 use LogicException;
 use Piwigo\Auth\AccessLevelChecker;
-use Piwigo\Core\Lang;
 use Piwigo\Tests\Support\LangTestFactory;
 use Piwigo\Tests\Support\UrlServiceTestFactory;
 use Piwigo\Tests\Support\HtmlServiceTestFactory;
 use Piwigo\Auth\UserFailedLoginEntity;
-use Piwigo\Core\PageState;
 use Piwigo\Tests\Support\PageStateTestFactory;
 use Doctrine\DBAL\Connection;
 use Piwigo\Activity\ActivityEntity;
@@ -29,7 +26,6 @@ use Piwigo\Bootstrap\RedirectService;
 use Piwigo\Bootstrap\UserBootstrap;
 use Piwigo\Config\ConfigLoader;
 use Piwigo\Config\ConfigService;
-use Piwigo\Config\CurrentConfigService;
 use Piwigo\Tests\Support\CurrentConfigServiceTestFactory;
 use Piwigo\Config\DeploymentPolicy;
 use Piwigo\Core\ApiKeyRequestFlag;
@@ -44,7 +40,6 @@ use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Tests\Support\EventDispatcherTestFactory;
 use Piwigo\Session\SessionEntity;
 use Piwigo\Session\SessionService;
-use Piwigo\Users\CurrentUser;
 use Piwigo\Tests\Support\CurrentUserTestFactory;
 
 /**

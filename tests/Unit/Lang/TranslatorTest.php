@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 use Gettext\Translation;
 use Gettext\Translations;
-use Piwigo\Config\CurrentConfig;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Lang\Translator;
 

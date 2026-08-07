@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
-use Piwigo\Config\CurrentConfig;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Nyholm\Psr7\Factory\Psr17Factory;
 use Piwigo\Http\HttpClientNetworkException;

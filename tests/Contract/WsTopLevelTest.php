@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Piwigo\Tests\Contract;
 
 use Override;
-use Piwigo\Image\ImageStdParams;
 use Piwigo\Tests\Support\ImageStdParamsTestFactory;
 use Piwigo\Core\Kernel;
 use Piwigo\Bootstrap\InfrastructureAccessor;

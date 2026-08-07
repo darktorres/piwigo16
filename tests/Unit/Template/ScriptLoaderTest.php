@@ -5,14 +5,12 @@ declare(strict_types=1);
 use Piwigo\Auth\AccessLevelChecker;
 use Piwigo\Core\ErrorCollector;
 use Piwigo\Http\ResponseReadyException;
-use Piwigo\Config\CurrentConfig;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Paths;
 use Piwigo\Template\Script;
 use Piwigo\Template\ScriptLoader;
 use Piwigo\Tests\Support\KernelContainerOverride;
-use Piwigo\Users\CurrentUser;
 use Piwigo\Tests\Support\CurrentUserTestFactory;
 
 // Most of this file inspects/invokes ScriptLoader's private state and

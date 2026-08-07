@@ -5,10 +5,8 @@ declare(strict_types=1);
 namespace Piwigo\Tests\Unit\Url;
 
 use Piwigo\Tests\Support\UrlServiceTestFactory;
-use Piwigo\Users\CurrentUser;
 use Piwigo\Tests\Support\CurrentUserTestFactory;
 use Piwigo\Users\User;
-use Piwigo\Config\CurrentConfig;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Config\DeploymentPolicy;
 use Piwigo\Core\Kernel;

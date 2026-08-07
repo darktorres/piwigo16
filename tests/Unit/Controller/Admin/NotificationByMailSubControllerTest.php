@@ -3,10 +3,8 @@
 declare(strict_types=1);
 
 use Piwigo\Controller\Admin\NotificationByMailSubController;
-use Piwigo\Core\PageState;
 use Piwigo\Tests\Support\PageStateTestFactory;
 use Piwigo\Core\TimingHelper;
-use Piwigo\Lang\Translator;
 use Piwigo\Tests\Support\TranslatorTestFactory;
 use Piwigo\Mail\NotificationByMailSender;
 

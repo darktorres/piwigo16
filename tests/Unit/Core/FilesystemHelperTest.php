@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\Paths;
-use Piwigo\Config\CurrentConfig;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Core\FilesystemHelper;
 use Piwigo\Core\HtmlRenderingInterface;

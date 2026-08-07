@@ -2,7 +2,6 @@
 
 declare(strict_types=1);
 
-use Piwigo\Core\PageState;
 use Piwigo\Tests\Support\PageStateTestFactory;
 use Piwigo\Core\TimingHelper;
 

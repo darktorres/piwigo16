@@ -5,18 +5,14 @@ declare(strict_types=1);
 use Piwigo\Tests\Support\UrlServiceTestFactory;
 use Piwigo\Admin\Extensions\ExtensionScanner;
 use Piwigo\Admin\Extensions\ExtensionType;
-use Piwigo\Config\CurrentConfig;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Config\ConfigLoader;
 use Piwigo\Tests\Support\CurrentPathsTestFactory;
 use Piwigo\Core\FilesystemHelper;
-use Piwigo\Core\Lang;
 use Piwigo\Tests\Support\LangTestFactory;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Paths;
-use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Tests\Support\EventDispatcherTestFactory;
-use Piwigo\Users\CurrentUser;
 use Piwigo\Tests\Support\CurrentUserTestFactory;
 use Piwigo\Users\User;
 

@@ -4,12 +4,10 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Unit\Image;
 
-use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Tests\Support\EventDispatcherTestFactory;
 use Error;
 use Exception;
 use Piwigo\Image\WatermarkParams;
-use Piwigo\Config\CurrentConfig;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Tests\Support\CurrentPathsTestFactory;
 use Piwigo\Core\Kernel;

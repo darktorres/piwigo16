@@ -8,7 +8,6 @@ use LogicException;
 use InvalidArgumentException;
 use Piwigo\Auth\PwgTOTP;
 use Piwigo\Common\ValueObject\UserId;
-use Piwigo\Users\CurrentUser;
 use Piwigo\Tests\Support\CurrentUserTestFactory;
 use Piwigo\Users\User;
 use Piwigo\Users\UserStatus;

@@ -5,7 +5,6 @@ declare(strict_types=1);
 use Piwigo\Core\DateHelper;
 use Piwigo\Core\DefaultLanguageProviderInterface;
 use Piwigo\Core\Kernel;
-use Piwigo\Core\Lang;
 use Piwigo\Tests\Support\LangTestFactory;
 use Piwigo\Core\Paths;
 

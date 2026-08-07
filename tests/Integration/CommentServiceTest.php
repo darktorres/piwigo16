@@ -8,9 +8,7 @@ namespace Piwigo\Tests\Integration {
     use LogicException;
     use RuntimeException;
     use Piwigo\Core\Kernel;
-    use Piwigo\Core\PageState;
     use Piwigo\Tests\Support\PageStateTestFactory;
-    use Piwigo\Core\Lang;
     use Piwigo\Tests\Support\LangTestFactory;
     use Piwigo\Db\EntityManagerFactory;
     use Piwigo\Comment\CommentEntity;
@@ -34,7 +32,6 @@ namespace Piwigo\Tests\Integration {
     use Piwigo\Db\Tables;
     use Piwigo\Event\User\UserCommentCheck;
     use Piwigo\Mail\MailService;
-    use Piwigo\Users\CurrentUser;
     use Piwigo\Tests\Support\CurrentUserTestFactory;
     use Piwigo\Users\User;
     use Piwigo\Users\UserStatus;

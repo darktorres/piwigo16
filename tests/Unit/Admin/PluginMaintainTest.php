@@ -9,7 +9,6 @@ use Piwigo\Core\Kernel;
 use Piwigo\Core\Paths;
 use Piwigo\Core\WsContext;
 use Piwigo\Tests\Support\KernelContainerOverride;
-use Piwigo\Users\CurrentUser;
 use Piwigo\Tests\Support\CurrentUserTestFactory;
 use Piwigo\Users\User;
 use Piwigo\Users\UserStatus;

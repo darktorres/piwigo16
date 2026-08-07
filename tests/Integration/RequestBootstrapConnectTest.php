@@ -10,7 +10,6 @@ use Doctrine\DBAL\Connection;
 use Piwigo\Bootstrap\RequestBootstrap;
 use Piwigo\Config\ConfigLoader;
 use Piwigo\Config\ConfigService;
-use Piwigo\Config\CurrentConfig;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Core\ActivitySystem;
 use Piwigo\Core\AppInfo;

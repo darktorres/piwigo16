@@ -13,7 +13,6 @@ namespace Piwigo\Tests\Integration {
     use Piwigo\Users\UserService;
     use Piwigo\Core\WsContext;
     use Piwigo\Auth\AccessControl;
-    use Piwigo\Core\Lang;
     use Piwigo\Tests\Support\LangTestFactory;
     use Piwigo\Tests\Support\UrlServiceTestFactory;
     use Piwigo\PluginConfig\EventDispatcher;

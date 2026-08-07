@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 
+use Piwigo\Template\Template;
+
 $themeconf = [
     'name' => 'standard_pages',
     'parent' => 'default',
@@ -22,11 +24,11 @@ $themeconf = [
 // inherited scope, so a `$this` property read here would report as
 // undefined even though it works at runtime).
 $theme_template_vars = [
-    'STD_PGS_SELECTED_SKIN' => \Piwigo\Template\Template::currentConfig()->standardPagesSelectedSkin(),
-    'STD_PGS_SELECTED_LOGO' => \Piwigo\Template\Template::currentConfig()->standardPagesSelectedLogo(),
+    'STD_PGS_SELECTED_SKIN' => Template::currentConfig()->standardPagesSelectedSkin(),
+    'STD_PGS_SELECTED_LOGO' => Template::currentConfig()->standardPagesSelectedLogo(),
     // Former `$page['gallery_title'] ?? CurrentConfig::galleryTitle()` --
     // nothing writes $page['gallery_title'] anywhere anymore (confirmed
     // via a repo-wide grep), so the fallback always won in practice
     // already.
-    'GALLERY_TITLE' => \Piwigo\Template\Template::currentConfig()->galleryTitle(),
+    'GALLERY_TITLE' => Template::currentConfig()->galleryTitle(),
 ];

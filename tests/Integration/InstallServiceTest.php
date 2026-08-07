@@ -15,17 +15,14 @@ use Piwigo\Config\ConfigLoader;
 use Piwigo\Config\ConfigService;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
-use Piwigo\Config\CurrentConfigService;
 use Piwigo\Tests\Support\CurrentConfigServiceTestFactory;
 use Piwigo\Core\AppInfo;
 use Piwigo\Tests\Support\CurrentPathsTestFactory;
 use Piwigo\Core\Kernel;
-use Piwigo\Core\Lang;
 use Piwigo\Tests\Support\LangTestFactory;
 use Piwigo\Db\DbConnection;
 use Piwigo\Tests\Support\DbCredentialsTestFactory;
 use Piwigo\Db\Tables;
-use Piwigo\Users\CurrentUser;
 use Piwigo\Tests\Support\CurrentUserTestFactory;
 
 /**

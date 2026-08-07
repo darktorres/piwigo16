@@ -28,7 +28,6 @@ use Piwigo\Core\CurrentLogger;
 use LogicException;
 use Piwigo\Config\ConfigEntry;
 use Piwigo\Config\ConfigRepository;
-use Piwigo\Config\CurrentConfigService;
 use Piwigo\Tests\Support\CurrentConfigServiceTestFactory;
 use Piwigo\Config\ConfigService;
 use Piwigo\Config\CurrentConfig;

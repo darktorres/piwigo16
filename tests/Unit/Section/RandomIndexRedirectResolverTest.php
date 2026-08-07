@@ -3,11 +3,9 @@
 declare(strict_types=1);
 
 use Piwigo\Common\ValueObject\UserId;
-use Piwigo\Config\CurrentConfig;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Auth\AccessLevelChecker;
 use Piwigo\Section\RandomIndexRedirectResolver;
-use Piwigo\Users\CurrentUser;
 use Piwigo\Tests\Support\CurrentUserTestFactory;
 use Piwigo\Users\User;
 use Piwigo\Users\UserStatus;

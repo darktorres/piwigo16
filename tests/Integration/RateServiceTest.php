@@ -26,10 +26,8 @@ namespace Piwigo\Tests\Integration {
     use Piwigo\Db\DbConnection;
     use Piwigo\Db\Tables;
     use Piwigo\Event\Picture\UpdateRatingScore;
-    use Piwigo\PluginConfig\EventDispatcher;
     use Piwigo\Tests\Support\EventDispatcherTestFactory;
     use Piwigo\Rate\RateService;
-    use Piwigo\Users\CurrentUser;
     use Piwigo\Tests\Support\CurrentUserTestFactory;
     use Piwigo\Users\User;
 

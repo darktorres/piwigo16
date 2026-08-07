@@ -3,10 +3,8 @@
 declare(strict_types=1);
 
 use Piwigo\Tests\Support\TemplateTestFactory;
-use Piwigo\Core\Lang;
 use Piwigo\Tests\Support\LangTestFactory;
 use Piwigo\PluginConfig\EventDispatcher;
-use Piwigo\Users\CurrentUser;
 use Piwigo\Tests\Support\CurrentUserTestFactory;
 use Piwigo\Tests\Support\SessionServiceTestFactory;
 use Piwigo\Core\FilterState;

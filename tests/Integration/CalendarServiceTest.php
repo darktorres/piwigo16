@@ -11,10 +11,8 @@ namespace Piwigo\Tests\Integration {
     use Piwigo\Core\FilterState;
     use Piwigo\Db\EntityManagerFactory;
     use Piwigo\Group\GroupEntity;
-    use Piwigo\Core\Lang;
     use Piwigo\Tests\Support\LangTestFactory;
     use Piwigo\PluginConfig\EventDispatcher;
-    use Piwigo\Lang\Translator;
     use Piwigo\Tests\Support\TranslatorTestFactory;
     use Doctrine\DBAL\Connection;
     use Piwigo\Category\CategoryRepository;
@@ -26,7 +24,6 @@ namespace Piwigo\Tests\Integration {
     use Piwigo\Db\DbConnection;
     use Piwigo\Permission\PermissionRepository;
     use Piwigo\Permission\PermissionService;
-    use Piwigo\Users\CurrentUser;
     use Piwigo\Tests\Support\CurrentUserTestFactory;
     use Piwigo\Users\User;
 

@@ -6,9 +6,7 @@ namespace Piwigo\Tests\Integration;
 
 use Override;
 use LogicException;
-use Piwigo\Core\Lang;
 use Piwigo\Tests\Support\LangTestFactory;
-use Piwigo\Config\CurrentConfigService;
 use Piwigo\Tests\Support\CurrentConfigServiceTestFactory;
 use Piwigo\Validation\InputValidator;
 use Piwigo\Core\AdminContext;
@@ -17,7 +15,6 @@ use Piwigo\Core\PageState;
 use Piwigo\Config\DeploymentPolicy;
 use Piwigo\Core\ProcessCache;
 use Piwigo\Template\CurrentTemplate;
-use Piwigo\Users\CurrentUser;
 use Piwigo\Tests\Support\CurrentUserTestFactory;
 use ReflectionProperty;
 use mysqli_result;

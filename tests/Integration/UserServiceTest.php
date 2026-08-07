@@ -19,7 +19,6 @@ namespace Piwigo\Tests\Integration {
     use Piwigo\Common\ValueObject\Email;
     use Piwigo\Tests\Support\UrlServiceTestFactory;
     use Piwigo\Users\User;
-    use Piwigo\Core\PageState;
     use Piwigo\Tests\Support\PageStateTestFactory;
     use ReflectionProperty;
     use Exception;
@@ -31,9 +30,7 @@ namespace Piwigo\Tests\Integration {
     use Piwigo\Config\CurrentConfig;
     use Piwigo\Tests\Support\CurrentConfigTestFactory;
     use Piwigo\Config\ConfigLoader;
-    use Piwigo\Config\CurrentConfigService;
     use Piwigo\Tests\Support\CurrentConfigServiceTestFactory;
-    use Piwigo\Core\Lang;
     use Piwigo\Tests\Support\LangTestFactory;
     use Piwigo\Core\WsError;
     use Piwigo\Db\DbConnection;
@@ -43,7 +40,6 @@ namespace Piwigo\Tests\Integration {
     use Piwigo\Permission\SqlCondition;
     use Piwigo\Session\SessionEntity;
     use Piwigo\Session\SessionService;
-    use Piwigo\Users\CurrentUser;
     use Piwigo\Tests\Support\CurrentUserTestFactory;
     use Piwigo\Users\UserRepository;
     use Piwigo\Users\UserService;

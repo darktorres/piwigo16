@@ -113,6 +113,31 @@ final class PwgSessionTest extends IntegrationTestCase
         }
     }
 
+    public function test_write_when_the_underlying_write_fails_catches_the_error_and_returns_false(): void
+    {
+        // Composite session id (remote-addr hash prefix + this id)
+        // exceeds the sessions table's real VARCHAR(50) primary key -- a
+        // genuine DB-level constraint violation, not a mock.
+        self::assertFalse($this->pwgSession->write(str_repeat('x', 60), 'data'));
+    }
+
+    public function test_write_when_the_underlying_write_fails_and_current_logger_is_not_initialised_still_returns_false_instead_of_throwing(): void
+    {
+        // Real bug found live via a full composer test:integration run:
+        // write()'s own fallback logging used to call
+        // CurrentLogger::get() unconditionally inside its catch block --
+        // if CurrentLogger isn't initialised at the exact moment PHP's
+        // own deferred session auto-close fires this method (see this
+        // class's own docblock), that fallback ->get() itself threw,
+        // escaping uncaught exactly the way this whole try/catch exists
+        // to prevent.
+        $currentLogger = Kernel::container()->get(CurrentLogger::class);
+        self::assertInstanceOf(CurrentLogger::class, $currentLogger);
+        $currentLogger->reset();
+
+        self::assertFalse($this->pwgSession->write(str_repeat('x', 60), 'data'));
+    }
+
     public function test_write_then_destroy_removes_the_session_row(): void
     {
         $sessionId = 'ct-session-destroy-' . bin2hex(random_bytes(4));

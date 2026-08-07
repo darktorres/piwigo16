@@ -62,8 +62,20 @@ final class PwgSession implements SessionHandlerInterface
             return $this->service
                 ->sessionWrite($id, $data);
         } catch (Throwable $e) {
-            $this->currentLogger->get()
-                ->warn('PwgSession::write() failed: ' . $e->getMessage());
+            // This method's own PHP-shutdown-driven invocation path (see
+            // this method's own docblock) can fire after the request's
+            // CurrentLogger has already gone out of scope -- confirmed
+            // live via a full composer test:integration run, where a
+            // deferred session auto-close landed inside a *later* test's
+            // window after the earlier test's own teardown had already
+            // reset it, and this fallback ->get() itself threw
+            // "CurrentLogger not initialised", escaping uncaught exactly
+            // the way this whole try/catch exists to prevent. A failed
+            // best-effort log write is strictly better than that.
+            if ($this->currentLogger->isInitialized()) {
+                $this->currentLogger->get()
+                    ->warn('PwgSession::write() failed: ' . $e->getMessage());
+            }
 
             return false;
         }

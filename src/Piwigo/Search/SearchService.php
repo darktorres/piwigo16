@@ -12,6 +12,7 @@ use Piwigo\Activity\ActivityService;
 use Piwigo\Auth\AccessLevelChecker;
 use Piwigo\Cache\CachePools;
 use Piwigo\Category\CategoryService;
+use Piwigo\Common\Enum\Section;
 use Piwigo\Common\ValueObject\TagId;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\DeploymentPolicy;
@@ -189,7 +190,7 @@ final readonly class SearchService
      * @param int|null $resolvedSearchId in/out; set to the resolved
      *   search id when $section === 'search', left untouched otherwise
      */
-    public function getValidatedSearchInfo(int|string $candidate, ?string $section, ?int &$resolvedSearchId = null): ?Search
+    public function getValidatedSearchInfo(int|string $candidate, ?Section $section, ?int &$resolvedSearchId = null): ?Search
     {
         $clausePattern = self::getSearchIdPattern($candidate);
         if ($clausePattern === null) {
@@ -203,7 +204,7 @@ final readonly class SearchService
                 $this->htmlRenderer->fatalError('this search is not reachable with its id, need the search_uuid instead');
             }
 
-            if ($section === 'search') {
+            if ($section === Section::Search) {
                 $resolvedSearchId = $search->id;
             }
         }
@@ -235,7 +236,7 @@ final readonly class SearchService
      * @param int|null $resolvedSearchId in/out, see getValidatedSearchInfo()
      * @return array<string, mixed>|false
      */
-    public function getValidatedSearchArray(int|string $searchId, ?string $section, ?int &$resolvedSearchId = null): array|false
+    public function getValidatedSearchArray(int|string $searchId, ?Section $section, ?int &$resolvedSearchId = null): array|false
     {
         $search = $this->getValidatedSearchInfo($searchId, $section, $resolvedSearchId);
         if ($search === null) {

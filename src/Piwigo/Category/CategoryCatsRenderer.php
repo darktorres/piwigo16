@@ -6,6 +6,7 @@ namespace Piwigo\Category;
 
 use DateTimeImmutable;
 use Piwigo\Cache\CachePools;
+use Piwigo\Common\Enum\Section;
 use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\CurrentLogger;
@@ -89,7 +90,7 @@ final readonly class CategoryCatsRenderer
      *
      * @param array<string, mixed>|null $category
      */
-    public function render(string $section, ?array $category, int $startcat): void
+    public function render(Section $section, ?array $category, int $startcat): void
     {
         $logger = $this->currentLogger->get();
         $template = $this->template;
@@ -101,7 +102,7 @@ final readonly class CategoryCatsRenderer
 
         $user = $this->currentUser->get();
         $userId = $user->id;
-        $isRecentCats = $section === 'recent_cats';
+        $isRecentCats = $section === Section::RecentCats;
 
         $tree = $treeCache->getForUser($user->rawAttributes);
 

@@ -15,6 +15,7 @@ use Piwigo\Auth\AccessLevelChecker;
 use Piwigo\Cache\CachePools;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Category\CategoryService;
+use Piwigo\Common\Enum\Section;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\FilterState;
 use Piwigo\Core\HtmlRenderingInterface;
@@ -75,7 +76,7 @@ final readonly class CalendarRenderer
      *   date tokens as parsed from the URL
      */
     public function render(
-        string $section,
+        Section $section,
         ?array $category,
         array $items,
         string $chronologyField,
@@ -95,7 +96,7 @@ final readonly class CalendarRenderer
             new CategoryService($this->lang, new CategoryRepository(EntityManagerFactory::build($conn), $this->currentConfig), $permissionService, $this->currentConfig, $this->eventDispatcher, $this->translator, $accessLevelChecker)
         );
 
-        if ($section === 'categories') { // we will regenerate the items by including subcats elements
+        if ($section === Section::Categories) { // we will regenerate the items by including subcats elements
             $items = [];
 
             $category_id = isset($category['id'])
@@ -293,7 +294,7 @@ final readonly class CalendarRenderer
                 );
             }
 
-            if ($section === 'categories' && $category === null
+            if ($section === Section::Categories && $category === null
               && (count($page_chronology_date) === 0
                     or ($page_chronology_date[0] === 'any' && count($page_chronology_date) === 1))
             ) {

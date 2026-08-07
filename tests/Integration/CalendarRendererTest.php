@@ -17,6 +17,7 @@ use Doctrine\DBAL\Connection;
 use Piwigo\Cache\CachePools;
 use Piwigo\Calendar\CalendarBase;
 use Piwigo\Calendar\CalendarRenderer;
+use Piwigo\Common\Enum\Section;
 use Piwigo\Config\ConfigLoader;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Tests\Support\CurrentPathsTestFactory;
@@ -171,7 +172,7 @@ final class CalendarRendererTest extends IntegrationTestCase
         $renderer = $this->makeRenderer();
 
         $result = $renderer->render(
-            section: 'items',
+            section: Section::ListView,
             category: null,
             items: [3, 1, 5, 2, 4],
             chronologyField: 'posted',
@@ -204,7 +205,7 @@ final class CalendarRendererTest extends IntegrationTestCase
         $renderer = $this->makeRenderer();
 
         $result = $renderer->render(
-            section: 'items',
+            section: Section::ListView,
             category: null,
             items: [1, 2, 3, 4, 5],
             chronologyField: 'posted',
@@ -228,7 +229,7 @@ final class CalendarRendererTest extends IntegrationTestCase
         $renderer = $this->makeRenderer();
 
         $result = $renderer->render(
-            section: 'items',
+            section: Section::ListView,
             category: null,
             items: [],
             chronologyField: 'posted',
@@ -265,7 +266,7 @@ final class CalendarRendererTest extends IntegrationTestCase
         $renderer = new CalendarRenderer(LangTestFactory::get(), $this->htmlService, $template, $this->urlService, CurrentUserTestFactory::get(), CurrentConfigTestFactory::get(), EventDispatcherTestFactory::get(), TranslatorTestFactory::get(), new FilterState(), ImageStdParamsTestFactory::get(), PageStateTestFactory::get());
 
         $result = $renderer->render(
-            section: 'items',
+            section: Section::ListView,
             category: null,
             items: [1, 2, 3, 4, 5],
             chronologyField: 'posted',
@@ -311,7 +312,7 @@ final class CalendarRendererTest extends IntegrationTestCase
         $renderer = new CalendarRenderer(LangTestFactory::get(), $this->htmlService, $template, $this->urlService, CurrentUserTestFactory::get(), CurrentConfigTestFactory::get(), EventDispatcherTestFactory::get(), TranslatorTestFactory::get(), new FilterState(), ImageStdParamsTestFactory::get(), PageStateTestFactory::get());
 
         $result = $renderer->render(
-            section: 'items',
+            section: Section::ListView,
             category: null,
             items: [1, 2, 3, 4, 5],
             chronologyField: 'posted',
@@ -351,7 +352,7 @@ final class CalendarRendererTest extends IntegrationTestCase
         $renderer = $this->makeRenderer();
 
         $result = $renderer->render(
-            section: 'categories',
+            section: Section::Categories,
             category: null,
             items: ['this list must be ignored'],
             chronologyField: 'posted',
@@ -381,7 +382,7 @@ final class CalendarRendererTest extends IntegrationTestCase
         CachePools::calendarNav()->clear();
 
         $render = fn () => $this->makeRenderer()->render(
-            section: 'categories',
+            section: Section::Categories,
             category: null,
             items: [],
             chronologyField: 'posted',
@@ -419,7 +420,7 @@ final class CalendarRendererTest extends IntegrationTestCase
     public function test_super_order_by_ignores_the_small_period_ascending_override(): void
     {
         $ascending = $this->makeRenderer()->render(
-            section: 'items',
+            section: Section::ListView,
             category: null,
             items: [1, 2, 3, 4, 5],
             chronologyField: 'posted',
@@ -431,7 +432,7 @@ final class CalendarRendererTest extends IntegrationTestCase
         self::assertSame([1, 2], $ascending->items);
 
         $descending = $this->makeRenderer()->render(
-            section: 'items',
+            section: Section::ListView,
             category: null,
             items: [1, 2, 3, 4, 5],
             chronologyField: 'posted',
@@ -453,7 +454,7 @@ final class CalendarRendererTest extends IntegrationTestCase
     public function test_render_returns_early_for_a_categories_section_with_no_visible_subcategories(): void
     {
         $result = $this->makeRenderer()->render(
-            section: 'categories',
+            section: Section::Categories,
             category: ['id' => 999999],
             items: [],
             chronologyField: 'posted',
@@ -476,7 +477,7 @@ final class CalendarRendererTest extends IntegrationTestCase
     public function test_render_truncates_chronology_date_to_at_most_three_components(): void
     {
         $result = $this->makeRenderer()->render(
-            section: 'items',
+            section: Section::ListView,
             category: null,
             items: [1, 2, 3, 4, 5],
             chronologyField: 'posted',
@@ -498,7 +499,7 @@ final class CalendarRendererTest extends IntegrationTestCase
     public function test_render_discards_any_and_everything_after_it_in_calendar_view(): void
     {
         $result = $this->makeRenderer()->render(
-            section: 'items',
+            section: Section::ListView,
             category: null,
             items: [1, 2, 3, 4, 5],
             chronologyField: 'posted',
@@ -519,7 +520,7 @@ final class CalendarRendererTest extends IntegrationTestCase
     public function test_render_keeps_a_literal_any_component_in_list_view(): void
     {
         $result = $this->makeRenderer()->render(
-            section: 'items',
+            section: Section::ListView,
             category: null,
             items: [1, 2, 3, 4, 5],
             chronologyField: 'posted',
@@ -541,7 +542,7 @@ final class CalendarRendererTest extends IntegrationTestCase
     public function test_render_truncates_chronology_date_at_an_empty_string_component(): void
     {
         $result = $this->makeRenderer()->render(
-            section: 'items',
+            section: Section::ListView,
             category: null,
             items: [1, 2, 3, 4, 5],
             chronologyField: 'posted',
@@ -563,7 +564,7 @@ final class CalendarRendererTest extends IntegrationTestCase
     public function test_render_drops_the_last_component_when_every_component_is_any(): void
     {
         $result = $this->makeRenderer()->render(
-            section: 'items',
+            section: Section::ListView,
             category: null,
             items: [1, 2, 3, 4, 5],
             chronologyField: 'posted',

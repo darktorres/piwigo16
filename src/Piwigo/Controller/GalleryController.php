@@ -12,6 +12,7 @@ use Piwigo\Caddie\CaddieService;
 use Piwigo\Category\CategoryCatsRenderer;
 use Piwigo\Category\CategoryDefaultRenderer;
 use Piwigo\Category\CategoryService;
+use Piwigo\Common\Enum\Section;
 use Piwigo\Config\ConfigService;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\DeploymentPolicy;
@@ -225,7 +226,7 @@ final class GalleryController implements ControllerInterface
             );
         }
 
-        if ($this->currentConfig->indexFlatIcon() and ! $section_context->flat and $section_context->section === 'categories') {
+        if ($this->currentConfig->indexFlatIcon() and ! $section_context->flat and $section_context->section === Section::Categories) {
             $template->assign(
                 'U_MODE_FLAT',
                 $urlService->duplicateIndexUrl([
@@ -279,7 +280,7 @@ final class GalleryController implements ControllerInterface
 
         $resolved_search_id = $this->searchFilterRenderer->render($section_context);
 
-        if ($section_context->section === 'categories' and $section_context->category !== null and $section_context->combinedCategories === null) {
+        if ($section_context->section === Section::Categories and $section_context->category !== null and $section_context->combinedCategories === null) {
             $template->assign(
                 [
                     'SEARCH_IN_SET_BUTTON' => $this->currentConfig->indexSearchInSetButton(),
@@ -407,7 +408,7 @@ final class GalleryController implements ControllerInterface
             );
         }
 
-        if ($section_context->section === 'search' and $page_start === 0 and
+        if ($section_context->section === Section::Search and $page_start === 0 and
             $section_context->chronologyField === null and $section_context->qsearchDetails !== []) {
             $qsearchDetails = $section_context->qsearchDetails;
 
@@ -452,8 +453,8 @@ final class GalleryController implements ControllerInterface
         // image order
         if ($this->currentConfig->indexSortOrderInput()
             and count($page_items) > 0
-            and $section_context->section !== 'most_visited'
-            and $section_context->section !== 'best_rated') {
+            and $section_context->section !== Section::MostVisited
+            and $section_context->section !== Section::BestRated) {
             $preferred_image_orders = $categoryService->getPreferredImageOrders();
             $order_idx = $this->sessionService->getSessionVar('image_order', 0);
 
@@ -510,7 +511,7 @@ final class GalleryController implements ControllerInterface
         if ($page_start === 0
           and ! $section_context->flat
           and $section_context->chronologyField === null
-          and ($section_context->section === 'recent_cats' or $section_context->section === 'categories')
+          and ($section_context->section === Section::RecentCats or $section_context->section === Section::Categories)
           and ($section_context->category === null or $categoryCountCategories === null or $categoryCountCategories > 0)
         ) {
             $this->categoryCatsRenderer->render($section_context->section, $section_context->category, $section_context->startcat);
@@ -599,7 +600,7 @@ final class GalleryController implements ControllerInterface
         // ------------------------------------------------ log informations
         $this->historyService
             ->logVisit(
-                section: $section_context->section,
+                section: $section_context->section->value,
                 category: $section_context->category,
                 tagIds: $section_context->tagIds,
                 searchId: $resolved_search_id,

@@ -18,6 +18,7 @@ use Piwigo\Caddie\CaddieService;
 use Piwigo\Category\CategoryService;
 use Piwigo\Comment\CommentEntity;
 use Piwigo\Comment\CommentService;
+use Piwigo\Common\Enum\Section;
 use Piwigo\Common\ValueObject\CommentId;
 use Piwigo\Common\ValueObject\ImageId;
 use Piwigo\Config\ConfigService;
@@ -246,7 +247,7 @@ final class PictureController implements ControllerInterface
                         );
                 }
                 $page_section = $section_context->section;
-                if ($page_section === 'categories' and $page_category === null) {// flat view - all items
+                if ($page_section === Section::Categories and $page_category === null) {// flat view - all items
                     $this->htmlService
                         ->accessDenied($this->redirectService);
                 } else {// try to see if we can access it differently
@@ -258,7 +259,7 @@ final class PictureController implements ControllerInterface
                         $this->htmlService
                             ->accessDenied($this->redirectService);
                     } else {
-                        if ($page_section === 'best_rated') {
+                        if ($page_section === Section::BestRated) {
                             $rank_of[$image_id] = count($items);
                             $items[] = $image_id;
                             $section_context = $section_context->withItems($items);
@@ -291,7 +292,7 @@ final class PictureController implements ControllerInterface
                             // already accepts one) is the fix; the separate
                             // setStatusHeader() call is dropped as dead
                             // weight, not left in as a no-op.
-                            $this->redirectService->redirectHttp($url, $page_section === 'recent_pics' ? 301 : 302);
+                            $this->redirectService->redirectHttp($url, $page_section === Section::RecentPics ? 301 : 302);
                         }
                     }
                 }
@@ -403,7 +404,7 @@ final class PictureController implements ControllerInterface
 
                     $this->userService->removeFavorite($user->id, $image_id);
 
-                    if ($section_context->section === 'favorites') {
+                    if ($section_context->section === Section::Favorites) {
                         $this->redirectService->redirect($url_up);
                     } else {
                         $this->redirectService->redirect($url_self);
@@ -946,7 +947,7 @@ final class PictureController implements ControllerInterface
             [
                 'SECTION_TITLE' => $section_context->sectionTitle,
                 'PHOTO' => $title_nb,
-                'IS_HOME' => ($section_context->section === 'categories' and $page_category === null),
+                'IS_HOME' => ($section_context->section === Section::Categories and $page_category === null),
 
                 'LEVEL_SEPARATOR' => $this->currentConfig->levelSeparator(),
 
@@ -1261,7 +1262,7 @@ final class PictureController implements ControllerInterface
             ->logVisit(
                 is_numeric($current_image_id) ? (int) $current_image_id : null,
                 'picture',
-                section: $section_context->section,
+                section: $section_context->section->value,
                 category: $section_context->category,
                 tagIds: $section_context->tagIds,
             );

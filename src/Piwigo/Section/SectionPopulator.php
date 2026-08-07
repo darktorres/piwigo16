@@ -9,6 +9,7 @@ use Piwigo\Auth\AccessLevelChecker;
 use Piwigo\Cache\CachePools;
 use Piwigo\Calendar\CalendarRenderer;
 use Piwigo\Category\CategoryService;
+use Piwigo\Common\Enum\Section;
 use Piwigo\Common\ValueObject\IpAddress;
 use Piwigo\Common\ValueObject\TagId;
 use Piwigo\Config\CurrentConfig;
@@ -118,7 +119,7 @@ final readonly class SectionPopulator
         $page = array_merge($page, $url_parse->parsed);
 
         if (! isset($page['section'])) {
-            $page['section'] = 'categories';
+            $page['section'] = Section::Categories;
 
             switch (PageFilterHelper::scriptBasename($this->currentConfig)) {
                 case 'picture':
@@ -162,10 +163,15 @@ final readonly class SectionPopulator
         // method. PHPStan proves the offset always exists at this point now
         // that parseWellKnownParamsUrl()'s return shape is precise (it never
         // sets 'section' -- see that method's own docblock).
-        $section = is_string($page['section']) ? $page['section'] : '';
+        //
+        // $page['section'] is always a real Section enum case by this
+        // point -- every assignment site (UrlService::parseSectionUrl()'s
+        // own 9 literal branches, and this method's own default a few
+        // lines above) sets the enum case directly, never a raw string.
+        $section = $page['section'] instanceof Section ? $page['section'] : Section::Categories;
 
         // access a picture only by id, file or id-file without given section
-        if (PageFilterHelper::scriptBasename($this->currentConfig) === 'picture' and $section === 'categories' and
+        if (PageFilterHelper::scriptBasename($this->currentConfig) === 'picture' and $section === Section::Categories and
               ! isset($page['category']) and ! isset($page['chronology_field'])) {
             $page['flat'] = true;
         }
@@ -177,7 +183,7 @@ final readonly class SectionPopulator
         // if flat mode is active, we must consider the image set as a standard set
         // and not as a category set because we can't use the #image_category.rank :
         // displayed images are not directly linked to the displayed category
-        if ($section === 'categories' and ! isset($page['flat'])) {
+        if ($section === Section::Categories and ! isset($page['flat'])) {
             $order_by = $this->currentConfig->orderByInsideCategory();
         }
 
@@ -261,7 +267,7 @@ final readonly class SectionPopulator
         // +-----------------------------------------------------------------------+
         // |                              category                                 |
         // +-----------------------------------------------------------------------+
-        if ($section === 'categories') {
+        if ($section === Section::Categories) {
             if (isset($page['combined_categories'])) {
                 /** @var list<array<string, mixed>> $combined_categories_for_title */
                 $combined_categories_for_title = is_array($page['combined_categories']) ? array_values(array_filter($page['combined_categories'], is_array(...))) : [];
@@ -404,7 +410,7 @@ final readonly class SectionPopulator
             // +-----------------------------------------------------------------------+
             // |                            tags section                               |
             // +-----------------------------------------------------------------------+
-            if ($section === 'tags') {
+            if ($section === Section::Tags) {
                 // parse_section_url() (functions_url.inc.php) always sets 'tags'
                 // alongside 'section' => 'tags'
                 assert(isset($page['tags']));
@@ -452,7 +458,7 @@ final readonly class SectionPopulator
             // +-----------------------------------------------------------------------+
             // |                           search section                              |
             // +-----------------------------------------------------------------------+
-            elseif ($section === 'search') {
+            elseif ($section === Section::Search) {
                 // parse_section_url() (functions_url.inc.php) always sets 'search'
                 // alongside 'section' => 'search'; 'super_order_by' is genuinely
                 // optional (SearchService::getSearchResults()'s 2nd param is ?bool)
@@ -483,7 +489,7 @@ final readonly class SectionPopulator
             // +-----------------------------------------------------------------------+
             // |                           favorite section                            |
             // +-----------------------------------------------------------------------+
-            elseif ($section === 'favorites') {
+            elseif ($section === Section::Favorites) {
                 $this->userService->checkUserFavorites();
 
                 $page = array_merge(
@@ -535,7 +541,7 @@ final readonly class SectionPopulator
             // +-----------------------------------------------------------------------+
             // |                       recent pictures section                         |
             // +-----------------------------------------------------------------------+
-            elseif ($section === 'recent_pics') {
+            elseif ($section === Section::RecentPics) {
                 if (! isset($page['super_order_by'])) {
                     $order_by = str_replace(
                         'ORDER BY ',
@@ -570,7 +576,7 @@ final readonly class SectionPopulator
             // +-----------------------------------------------------------------------+
             // |                 recently updated categories section                   |
             // +-----------------------------------------------------------------------+
-            elseif ($section === 'recent_cats') {
+            elseif ($section === Section::RecentCats) {
                 $page = array_merge(
                     $page,
                     [
@@ -584,7 +590,7 @@ final readonly class SectionPopulator
             // +-----------------------------------------------------------------------+
             // |                        most visited section                           |
             // +-----------------------------------------------------------------------+
-            elseif ($section === 'most_visited') {
+            elseif ($section === Section::MostVisited) {
                 $page['super_order_by'] = true;
 
                 $top_number = $this->currentConfig->topNumber();
@@ -603,7 +609,7 @@ final readonly class SectionPopulator
             // +-----------------------------------------------------------------------+
             // |                          best rated section                           |
             // +-----------------------------------------------------------------------+
-            elseif ($section === 'best_rated') {
+            elseif ($section === Section::BestRated) {
                 $page['super_order_by'] = true;
 
                 $top_number = $this->currentConfig->topNumber();
@@ -622,7 +628,7 @@ final readonly class SectionPopulator
             // +-----------------------------------------------------------------------+
             // |                             list section                              |
             // +-----------------------------------------------------------------------+
-            elseif ($section === 'list') {
+            elseif ($section === Section::ListView) {
                 // parse_section_url() (functions_url.inc.php) always sets 'list'
                 // (a dummy [-1] or a real id list) alongside 'section' => 'list'
                 assert(isset($page['list']));
@@ -683,16 +689,18 @@ final readonly class SectionPopulator
         }
 
         // title update
-        if (isset($page['title'])) {
-            $gallery_home_url = $this->urlService->getGalleryHomeUrl();
-            $page['section_title'] = '<a href="' . $gallery_home_url . '">' . $this->lang->t('Home') . '</a>';
-            $title_value = is_string($page['title']) ? $page['title'] : '';
-            if ($title_value !== '' && $title_value !== '0') {
-                $level_separator = $this->currentConfig->levelSeparator();
-                $page['section_title'] .= $level_separator . $title_value;
-            } else {
-                $page['title'] = $page['section_title'];
-            }
+        //
+        // Every real $section branch above unconditionally sets
+        // $page['title'] to a real string, so PHPStan proves it's always
+        // set by this point.
+        $gallery_home_url = $this->urlService->getGalleryHomeUrl();
+        $page['section_title'] = '<a href="' . $gallery_home_url . '">' . $this->lang->t('Home') . '</a>';
+        $title_value = $page['title'];
+        if ($title_value !== '' && $title_value !== '0') {
+            $level_separator = $this->currentConfig->levelSeparator();
+            $page['section_title'] .= $level_separator . $title_value;
+        } else {
+            $page['title'] = $page['section_title'];
         }
 
         // add meta robots noindex, nofollow to avoid unnecesary robot crawls.
@@ -701,7 +709,7 @@ final readonly class SectionPopulator
         $this->pageState->setMetaRobots(self::computeMetaRobots($page, $filter_enabled));
 
         // see if we need a redirect because of a permalink
-        if ($section === 'categories' and $page_category !== null and ! isset($page['combined_categories'])) {
+        if ($section === Section::Categories and $page_category !== null and ! isset($page['combined_categories'])) {
             $hit_by = is_array($page['hit_by'] ?? null) ? $page['hit_by'] : [];
             $hit_by_cat_url_name = $hit_by['cat_url_name'] ?? null;
             $hit_by_cat_url_name = is_string($hit_by_cat_url_name) ? $hit_by_cat_url_name : null;
@@ -739,10 +747,10 @@ final readonly class SectionPopulator
         $body_classes = [];
         $body_data = [];
 
-        array_push($body_classes, 'section-' . $section);
-        $body_data['section'] = $page['section'];
+        array_push($body_classes, 'section-' . $section->value);
+        $body_data['section'] = $section->value;
 
-        if ($section === 'categories' && $page_category !== null) {
+        if ($section === Section::Categories && $page_category !== null) {
             $body_category_id = (string) $page_category['id'];
             array_push($body_classes, 'category-' . $body_category_id);
             $body_data['category_id'] = $body_category_id;
@@ -799,7 +807,8 @@ final readonly class SectionPopulator
      */
     private static function buildSectionContext(array $page): SectionContext
     {
-        $section = is_string($page['section'] ?? null) ? $page['section'] : 'categories';
+        $section = $page['section'] ?? null;
+        $section = $section instanceof Section ? $section : Section::Categories;
 
         $category = null;
         if (isset($page['category']) and is_array($page['category'])) {
@@ -873,18 +882,19 @@ final readonly class SectionPopulator
     public static function computeMetaRobots(array $page, bool $filterEnabled): array
     {
         $meta_robots = [];
-        $section = is_string($page['section'] ?? null) ? $page['section'] : '';
+        $section = $page['section'] ?? null;
+        $section = $section instanceof Section ? $section : null;
 
         if (
             isset($page['chronology_field'])
             or (isset($page['flat']) and isset($page['category']))
-            or $section === 'list' or $section === 'recent_pics'
+            or $section === Section::ListView or $section === Section::RecentPics
         ) {
             $meta_robots = [
                 'noindex' => 1,
                 'nofollow' => 1,
             ];
-        } elseif ($section === 'tags') {
+        } elseif ($section === Section::Tags) {
             $page_tag_ids = $page['tag_ids'] ?? null;
             if (is_countable($page_tag_ids) and count($page_tag_ids) > 1) {
                 $meta_robots = [
@@ -892,14 +902,14 @@ final readonly class SectionPopulator
                     'nofollow' => 1,
                 ];
             }
-        } elseif ($section === 'recent_cats') {
+        } elseif ($section === Section::RecentCats) {
             $meta_robots['noindex'] = 1;
-        } elseif ($section === 'search') {
+        } elseif ($section === Section::Search) {
             $meta_robots = [
                 'noindex' => 1,
                 'nofollow' => 1,
             ];
-        } elseif ($section === 'categories' and isset($page['combined_categories'])) {
+        } elseif ($section === Section::Categories and isset($page['combined_categories'])) {
             $meta_robots = [
                 'noindex' => 1,
                 'nofollow' => 1,

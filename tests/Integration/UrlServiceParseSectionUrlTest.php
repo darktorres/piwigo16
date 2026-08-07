@@ -10,6 +10,7 @@ use Piwigo\Core\Kernel;
 use LogicException;
 use Piwigo\Tests\Support\UrlServiceTestFactory;
 use Doctrine\DBAL\Connection;
+use Piwigo\Common\Enum\Section;
 use Piwigo\Config\ConfigLoader;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\HtmlRenderingInterface;
@@ -215,7 +216,7 @@ final class UrlServiceParseSectionUrlTest extends IntegrationTestCase
         $i = 0;
         $page = $this->service()->parseSectionUrl(['category', '1'], $i, $this->redirect());
 
-        self::assertSame('categories', $page['section']);
+        self::assertSame(Section::Categories, $page['section']);
         self::assertIsArray($page['category']);
         self::assertSame(1, $page['category']['id']);
         self::assertSame(2, $i);
@@ -347,7 +348,7 @@ final class UrlServiceParseSectionUrlTest extends IntegrationTestCase
         $i = 0;
         $page = $this->service()->parseSectionUrl(['tags', '1'], $i, $this->redirect());
 
-        self::assertSame('tags', $page['section']);
+        self::assertSame(Section::Tags, $page['section']);
         self::assertIsArray($page['tags']);
         self::assertCount(1, $page['tags']);
         $tag0 = $page['tags'][0];
@@ -366,7 +367,7 @@ final class UrlServiceParseSectionUrlTest extends IntegrationTestCase
         $i = 0;
         $page = $this->service()->parseSectionUrl(['tags', 'nature'], $i, $this->redirect());
 
-        self::assertSame('tags', $page['section']);
+        self::assertSame(Section::Tags, $page['section']);
         self::assertIsArray($page['tags']);
         self::assertCount(1, $page['tags']);
         $tag0 = $page['tags'][0];

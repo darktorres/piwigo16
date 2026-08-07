@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Category;
 
 use Piwigo\Category\Request\CategorySlideshowRequest;
+use Piwigo\Common\Enum\Section;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\CommentCounterInterface;
 use Piwigo\Core\HtmlRenderingInterface;
@@ -69,7 +70,7 @@ final readonly class CategoryDefaultRenderer
      *
      * @param list<int|string> $items
      */
-    public function render(array $items, int $start, int $nbImagePage, string $section): ?string
+    public function render(array $items, int $start, int $nbImagePage, Section $section): ?string
     {
         $template = $this->template;
 
@@ -187,7 +188,7 @@ final readonly class CategoryDefaultRenderer
             }
 
             switch ($section) {
-                case 'best_rated':
+                case Section::BestRated:
                     // `rating_score` is a native DBAL float|null, never a
                     // string/int -- P17-23 gap-closure found live: the
                     // original `is_string(...) || is_int(...)` guard
@@ -202,7 +203,7 @@ final readonly class CategoryDefaultRenderer
                     $name = '(' . ($ratingScore !== null ? (string) $ratingScore : '') . ') ' . $name;
                     break;
 
-                case 'most_visited':
+                case Section::MostVisited:
                     if (! (bool) $this->currentUser->get()->rawAttributes['show_nb_hits']) {
                         $name = '(' . $row['hit'] . ') ' . $name;
                     }

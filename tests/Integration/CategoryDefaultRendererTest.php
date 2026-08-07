@@ -16,6 +16,7 @@ use Piwigo\Tests\Support\TemplateTestFactory;
 use Error;
 use Doctrine\DBAL\Connection;
 use Piwigo\Category\CategoryDefaultRenderer;
+use Piwigo\Common\Enum\Section;
 use Piwigo\Comment\CommentEntity;
 use Piwigo\Comment\CommentRepository;
 use Piwigo\Config\CurrentConfig;
@@ -179,7 +180,7 @@ final class CategoryDefaultRendererTest extends IntegrationTestCase
         // Deliberately out of numeric order: rank 0 => id 3, rank 1 => id 1,
         // rank 2 => id 2 -- a real transposition bug (e.g. sorting by id
         // instead of by rank) would produce a different order here.
-        $this->renderer->render([3, 1, 2], 0, 3, '');
+        $this->renderer->render([3, 1, 2], 0, 3, Section::Categories);
 
         $html = $this->renderedThumbnailsHtml();
         $posPhoto3 = strpos($html, 'Photo 3');
@@ -198,7 +199,7 @@ final class CategoryDefaultRendererTest extends IntegrationTestCase
         $this->seedUser(showNbHits: false, showNbComments: false);
         $urlService = UrlServiceTestFactory::build();
 
-        $slideshowUrl = $this->renderer->render([3, 1, 2], 0, 3, '');
+        $slideshowUrl = $this->renderer->render([3, 1, 2], 0, 3, Section::Categories);
 
         // The first-ranked picture after sorting is id=3 (rank 0) --
         // duplicatePictureUrl()/addUrlParams() are the same real UrlService
@@ -219,7 +220,7 @@ final class CategoryDefaultRendererTest extends IntegrationTestCase
 
         // start=99 is past the end of a 1-item selection -> array_slice()
         // yields an empty selection.
-        $slideshowUrl = $this->renderer->render([3], 99, 3, '');
+        $slideshowUrl = $this->renderer->render([3], 99, 3, Section::Categories);
 
         self::assertNull($slideshowUrl);
         $html = $this->renderedThumbnailsHtml();
@@ -233,7 +234,7 @@ final class CategoryDefaultRendererTest extends IntegrationTestCase
         $this->seedUser(showNbHits: false, showNbComments: false);
 
         // id=3's real fixture rating_score is 5.00 -> (string) 5.0 is '5'.
-        $this->renderer->render([3], 0, 1, 'best_rated');
+        $this->renderer->render([3], 0, 1, Section::BestRated);
 
         $html = $this->renderedThumbnailsHtml();
         self::assertStringContainsString('(5) Photo 3', $html);
@@ -250,7 +251,7 @@ final class CategoryDefaultRendererTest extends IntegrationTestCase
         // must reflect that exact value, not just "not blank".
         $this->setImageHit(3, 17);
 
-        $this->renderer->render([3], 0, 1, 'most_visited');
+        $this->renderer->render([3], 0, 1, Section::MostVisited);
 
         $html = $this->renderedThumbnailsHtml();
         self::assertStringContainsString('(17) Photo 3', $html);
@@ -266,8 +267,9 @@ final class CategoryDefaultRendererTest extends IntegrationTestCase
         $this->setImageHit(3, 17);
 
         // show_nb_hits=true makes thumbnails.tpl assign+display NB_HITS via
-        // the "translate_dec" modifier.
-        $this->renderer->render([3], 0, 1, 'most_visited');
+        // the "translate_dec" modifier (fixed bug: it used to call the
+        // deprecated $pwg->l10n_dec() method directly).
+        $this->renderer->render([3], 0, 1, Section::MostVisited);
 
         $html = $this->renderedThumbnailsHtml();
         self::assertStringNotContainsString('(17) Photo 3', $html);
@@ -290,7 +292,7 @@ final class CategoryDefaultRendererTest extends IntegrationTestCase
 
         try {
             $this->seedUser(showNbHits: false, showNbComments: false);
-            $this->renderer->render([3, 1, 2], 0, 3, '');
+            $this->renderer->render([3, 1, 2], 0, 3, Section::Categories);
         } finally {
             EventDispatcherTestFactory::get()->reset();
         }
@@ -303,7 +305,7 @@ final class CategoryDefaultRendererTest extends IntegrationTestCase
         // fixture: image id 3 has exactly one comment (id 3), already
         // validated -- activate_comments is 'true' in the fixture config,
         // so countValidatedByImageIds() reaches this real row.
-        $this->renderer->render([3], 0, 1, '');
+        $this->renderer->render([3], 0, 1, Section::Categories);
 
         $html = $this->renderedThumbnailsHtml();
         // thumbnails.tpl renders NB_COMMENTS via the "translate_dec"

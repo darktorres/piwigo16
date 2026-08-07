@@ -23,6 +23,7 @@ use Piwigo\Core\Kernel;
 use Piwigo\Menu\Event\BlockManagerRegisterBlocks;
 use Piwigo\Menu\MenubarRenderer;
 use Piwigo\Tests\Support\EventDispatcherTestFactory;
+use Piwigo\Common\Enum\Section;
 use Piwigo\Section\SectionContext;
 use Piwigo\Section\SectionContextRegistry;
 use Piwigo\Session\SessionService;
@@ -158,7 +159,7 @@ final class MenubarRendererTest extends IntegrationTestCase
     public function test_render_escapes_the_query_search_value_for_a_search_section(): void
     {
         $this->sectionContextRegistry->set(new SectionContext(
-            section: 'search',
+            section: Section::Search,
             qsearchDetails: ['q' => '<script>alert(1)</script>'],
         ));
 
@@ -169,7 +170,7 @@ final class MenubarRendererTest extends IntegrationTestCase
 
     public function test_render_does_not_assign_query_search_outside_a_search_section(): void
     {
-        $this->sectionContextRegistry->set(new SectionContext(section: 'categories'));
+        $this->sectionContextRegistry->set(new SectionContext(section: Section::Categories));
 
         $this->renderer->render(LangTestFactory::get(), new AccessLevelChecker(CurrentUserTestFactory::get(), CurrentConfigTestFactory::get()), $this->urlService, $this->filterState, $this->sectionContextRegistry, $this->sessionService, new DeploymentPolicy(), CurrentUserTestFactory::get(), CurrentTemplate::current(), CurrentConfigTestFactory::get(), EventDispatcherTestFactory::get(), TranslatorTestFactory::get(), new CurrentLogger());
 
@@ -216,7 +217,7 @@ final class MenubarRendererTest extends IntegrationTestCase
     public function test_render_related_categories_shows_a_common_category_not_excluded(): void
     {
         $this->sectionContextRegistry->set(new SectionContext(
-            section: 'categories',
+            section: Section::Categories,
             items: [1, 4],
             category: ['id' => 1, 'name' => 'Sample Album', 'permalink' => null],
             combinedCategories: null,
@@ -242,7 +243,7 @@ final class MenubarRendererTest extends IntegrationTestCase
     public function test_render_related_categories_excludes_ids_from_combined_categories(): void
     {
         $this->sectionContextRegistry->set(new SectionContext(
-            section: 'categories',
+            section: Section::Categories,
             items: [1, 4],
             category: ['id' => 1, 'name' => 'Sample Album', 'permalink' => null],
             combinedCategories: [['id' => 2, 'name' => 'Nested Sub Album', 'permalink' => null]],

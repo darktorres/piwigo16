@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Piwigo\Section;
 
+use Piwigo\Common\Enum\Section;
+
 /**
  * Immutable value object holding the full gallery-navigation context for
  * the current request -- built once by SectionPopulator::populate() and
@@ -26,7 +28,7 @@ final readonly class SectionContext
      * @param list<int|string> $chronologyDate
      */
     public function __construct(
-        public string $section = 'categories',
+        public Section $section = Section::Categories,
         public string $sectionUrl = '',
         public string $rootPath = '',
         public int|string|null $imageId = null,
@@ -113,7 +115,7 @@ final readonly class SectionContext
     public function toUrlParams(): array
     {
         $params = [
-            'section' => $this->section,
+            'section' => $this->section->value,
         ];
 
         if ($this->sectionUrl !== '') {

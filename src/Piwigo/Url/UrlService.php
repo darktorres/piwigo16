@@ -13,6 +13,7 @@ use Piwigo\Auth\AccessLevelChecker;
 use Piwigo\Auth\CookieService;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Category\CategoryService;
+use Piwigo\Common\Enum\Section;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\DeploymentPolicy;
 use Piwigo\Core\CurrentLogger;
@@ -674,7 +675,7 @@ final class UrlService implements UrlServiceInterface
     {
         $page = [];
         if (isset($tokens[$nextToken]) and str_starts_with($tokens[$nextToken], 'categor')) {
-            $page['section'] = 'categories';
+            $page['section'] = Section::Categories;
             $nextToken++;
 
             $loop_counter = 0;
@@ -792,7 +793,7 @@ final class UrlService implements UrlServiceInterface
                 $page['combined_categories'] = $combined_categories;
             }
         } elseif (($tokens[$nextToken] ?? null) === 'tags') {
-            $page['section'] = 'tags';
+            $page['section'] = Section::Tags;
             $page['tags'] = [];
 
             $nextToken++;
@@ -828,22 +829,22 @@ final class UrlService implements UrlServiceInterface
                 $this->htmlRenderer->pageNotFound($redirectService, $this->lang->t('Requested tag does not exist'), $this->getRootUrl() . 'tags.php');
             }
         } elseif (($tokens[$nextToken] ?? null) === 'favorites') {
-            $page['section'] = 'favorites';
+            $page['section'] = Section::Favorites;
             $nextToken++;
         } elseif (($tokens[$nextToken] ?? null) === 'most_visited') {
-            $page['section'] = 'most_visited';
+            $page['section'] = Section::MostVisited;
             $nextToken++;
         } elseif (($tokens[$nextToken] ?? null) === 'best_rated') {
-            $page['section'] = 'best_rated';
+            $page['section'] = Section::BestRated;
             $nextToken++;
         } elseif (($tokens[$nextToken] ?? null) === 'recent_pics') {
-            $page['section'] = 'recent_pics';
+            $page['section'] = Section::RecentPics;
             $nextToken++;
         } elseif (($tokens[$nextToken] ?? null) === 'recent_cats') {
-            $page['section'] = 'recent_cats';
+            $page['section'] = Section::RecentCats;
             $nextToken++;
         } elseif (($tokens[$nextToken] ?? null) === 'search') {
-            $page['section'] = 'search';
+            $page['section'] = Section::Search;
             $nextToken++;
 
             preg_match('/^(psk-\d{8}-[a-zA-Z0-9]{10})$/', ($tokens[$nextToken] ?? ''), $matches);
@@ -856,7 +857,7 @@ final class UrlService implements UrlServiceInterface
             $page['search'] = $matches[1];
             $nextToken++;
         } elseif (($tokens[$nextToken] ?? null) === 'list') {
-            $page['section'] = 'list';
+            $page['section'] = Section::ListView;
             $nextToken++;
 
             $page['list'] = [];

@@ -13,6 +13,7 @@ use Piwigo\Core\Kernel;
 use Piwigo\Core\Paths;
 use Piwigo\Core\RequestMountDepth;
 use Piwigo\Core\WsContext;
+use Piwigo\Common\Enum\Section;
 use Piwigo\Section\SectionContext;
 use Piwigo\Section\SectionContextRegistry;
 use Piwigo\Tests\Support\KernelContainerOverride;
@@ -615,7 +616,7 @@ test('makeIndexUrl falls back to the absolute root URL when no params add anythi
 });
 
 test('paramsForDuplication seeds params from the current section context', function (): void {
-    urlServiceTestSectionContextRegistry()->set(new SectionContext(section: 'tags'));
+    urlServiceTestSectionContextRegistry()->set(new SectionContext(section: Section::Tags));
     $service = UrlServiceTestFactory::build();
 
     $params = $service->paramsForDuplication([], []);
@@ -624,7 +625,7 @@ test('paramsForDuplication seeds params from the current section context', funct
 });
 
 test('paramsForDuplication removes listed keys and applies redefinitions', function (): void {
-    urlServiceTestSectionContextRegistry()->set(new SectionContext(section: 'tags', start: 20));
+    urlServiceTestSectionContextRegistry()->set(new SectionContext(section: Section::Tags, start: 20));
     $service = UrlServiceTestFactory::build();
 
     $params = $service->paramsForDuplication(['section' => 'categories'], ['start']);
@@ -1035,11 +1036,19 @@ test('parseSectionUrl recognizes the favorites/most_visited/best_rated/recent_pi
     $service = UrlServiceTestFactory::build();
     $redirect = new UrlServiceTestRedirectService();
 
-    foreach (['favorites', 'most_visited', 'best_rated', 'recent_pics', 'recent_cats'] as $token) {
+    $expectedSectionFor = [
+        'favorites' => Section::Favorites,
+        'most_visited' => Section::MostVisited,
+        'best_rated' => Section::BestRated,
+        'recent_pics' => Section::RecentPics,
+        'recent_cats' => Section::RecentCats,
+    ];
+
+    foreach ($expectedSectionFor as $token => $expectedSection) {
         $i = 0;
         $page = $service->parseSectionUrl([$token], $i, $redirect);
 
-        expect($page['section'])->toBe($token)
+        expect($page['section'])->toBe($expectedSection)
             ->and($i)->toBe(1);
     }
 });
@@ -1050,7 +1059,7 @@ test('parseSectionUrl parses a valid psk-formatted search token', function (): v
 
     $page = $service->parseSectionUrl(['search', 'psk-20260101-abcdefghij'], $i, new UrlServiceTestRedirectService());
 
-    expect($page['section'])->toBe('search')
+    expect($page['section'])->toBe(Section::Search)
         ->and($page['search'])->toBe('psk-20260101-abcdefghij')
         ->and($i)->toBe(2);
 });
@@ -1078,7 +1087,7 @@ test('parseSectionUrl defaults an empty list token to the dummy [-1] element', f
 
     $page = $service->parseSectionUrl(['list', ''], $i, new UrlServiceTestRedirectService());
 
-    expect($page['section'])->toBe('list')
+    expect($page['section'])->toBe(Section::ListView)
         ->and($page['list'])->toBe([-1]);
 });
 
@@ -1209,7 +1218,7 @@ test('parseSectionUrl enters the categories section for a token starting with "c
             // the DB.
             $page = $service->parseSectionUrl(['category'], $i, new UrlServiceTestRedirectService());
 
-            expect($page)->toBe(['section' => 'categories'])
+            expect($page)->toBe(['section' => Section::Categories])
                 ->and($i)->toBe(1);
         }
     );

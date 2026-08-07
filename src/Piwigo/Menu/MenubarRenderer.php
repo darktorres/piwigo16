@@ -10,6 +10,7 @@ use Piwigo\Auth\AccessLevelChecker;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Category\CategoryService;
 use Piwigo\Comment\AvailableCommentsCounter;
+use Piwigo\Common\Enum\Section;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\DeploymentPolicy;
 use Piwigo\Core\AccessLevel;
@@ -84,7 +85,7 @@ final class MenubarRenderer
         }
         $menu->prepare_display();
 
-        if ($section_context !== null && $section_context->section === 'search' && $section_context->qsearchDetails !== []) {
+        if ($section_context !== null && $section_context->section === Section::Search && $section_context->qsearchDetails !== []) {
             $qsearch_q = $section_context->qsearchDetails['q'] ?? '';
             $qsearch_q = is_string($qsearch_q) ? $qsearch_q : '';
             $template->assign('QUERY_SEARCH', htmlspecialchars($qsearch_q));

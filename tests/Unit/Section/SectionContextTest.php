@@ -2,12 +2,13 @@
 
 declare(strict_types=1);
 
+use Piwigo\Common\Enum\Section;
 use Piwigo\Section\SectionContext;
 
 test('constructor defaults match a categories-section homepage-shaped context', function (): void {
     $context = new SectionContext();
 
-    expect($context->section)->toBe('categories')
+    expect($context->section)->toBe(Section::Categories)
         ->and($context->sectionUrl)->toBe('')
         ->and($context->rootPath)->toBe('')
         ->and($context->imageId)->toBeNull()
@@ -38,7 +39,7 @@ test('constructor defaults match a categories-section homepage-shaped context', 
 
 test('constructor assigns every property as given', function (): void {
     $context = new SectionContext(
-        section: 'tags',
+        section: Section::Tags,
         sectionUrl: '/tags/1-nature',
         rootPath: '../',
         imageId: null,
@@ -67,7 +68,7 @@ test('constructor assigns every property as given', function (): void {
         sectionTitle: '<a href="/">Home</a> / Tags',
     );
 
-    expect($context->section)->toBe('tags')
+    expect($context->section)->toBe(Section::Tags)
         ->and($context->sectionUrl)->toBe('/tags/1-nature')
         ->and($context->rootPath)->toBe('../')
         ->and($context->items)->toBe([10, 11, 12])
@@ -81,7 +82,7 @@ test('constructor assigns every property as given', function (): void {
 
 test('constructor accepts a picture page image id and file slug', function (): void {
     $context = new SectionContext(
-        section: 'categories',
+        section: Section::Categories,
         imageId: '42',
         imageFile: 'my-photo',
     );
@@ -92,7 +93,7 @@ test('constructor accepts a picture page image id and file slug', function (): v
 
 test('constructor accepts a category and combined-categories shape', function (): void {
     $context = new SectionContext(
-        section: 'categories',
+        section: Section::Categories,
         category: ['id' => 12, 'name' => 'Holidays'],
         combinedCategories: [['id' => 13, 'name' => 'Summer']],
     );
@@ -103,7 +104,7 @@ test('constructor accepts a category and combined-categories shape', function ()
 
 test('withItems returns a new instance with only the item list replaced', function (): void {
     $context = new SectionContext(
-        section: 'best_rated',
+        section: Section::BestRated,
         items: [1, 2, 3],
         start: 10,
         title: 'Best rated',
@@ -114,7 +115,7 @@ test('withItems returns a new instance with only the item list replaced', functi
     expect($updated)->not->toBe($context)
         ->and($updated->items)->toBe([1, 2, 3, 42])
         ->and($context->items)->toBe([1, 2, 3])
-        ->and($updated->section)->toBe('best_rated')
+        ->and($updated->section)->toBe(Section::BestRated)
         ->and($updated->start)->toBe(10)
         ->and($updated->title)->toBe('Best rated');
 });
@@ -127,7 +128,7 @@ test('toUrlParams omits every field left at its default value', function (): voi
 
 test('toUrlParams includes only the fields that differ from their default', function (): void {
     $context = new SectionContext(
-        section: 'categories',
+        section: Section::Categories,
         sectionUrl: '/category/12-holidays',
         rootPath: '../',
         imageId: '42',

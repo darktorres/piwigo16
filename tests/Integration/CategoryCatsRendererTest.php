@@ -20,6 +20,7 @@ use Piwigo\Core\DateHelper;
 use Error;
 use Doctrine\DBAL\Connection;
 use Piwigo\Cache\CachePools;
+use Piwigo\Common\Enum\Section;
 use Piwigo\Category\CategoryCatsRenderer;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Category\CategoryService;
@@ -263,7 +264,7 @@ final class CategoryCatsRendererTest extends IntegrationTestCase
     {
         $this->seedUser();
 
-        $this->renderer->render('', null, 0);
+        $this->renderer->render(Section::Categories, null, 0);
 
         $html = $this->renderedCategoriesHtml();
         self::assertStringContainsString('Sample Album', $html);
@@ -283,7 +284,7 @@ final class CategoryCatsRendererTest extends IntegrationTestCase
             // isRecentCategory() ever runs, so this proves the category
             // never reaches the recency check at all, regardless of
             // whether cat 1/2 themselves qualify as "recent".
-            $this->renderer->render('recent_cats', null, 0);
+            $this->renderer->render(Section::RecentCats, null, 0);
 
             $html = $this->renderedCategoriesHtml();
             self::assertStringNotContainsString('Empty Recent Test', $html);
@@ -333,7 +334,7 @@ final class CategoryCatsRendererTest extends IntegrationTestCase
             // Primes CachePools::categoryTree()'s per-user 'tree_*' entry
             // (300s TTL, not cleared again until this test's own tearDown)
             // with a snapshot that includes the new category.
-            $this->renderer->render('', null, 0);
+            $this->renderer->render(Section::Categories, null, 0);
             self::assertStringContainsString('Toctou Probe Album', $this->renderedCategoriesHtml());
 
             // Deleted from the live DB *without* touching the cache --
@@ -345,7 +346,7 @@ final class CategoryCatsRendererTest extends IntegrationTestCase
 
             // Must not throw/warn, and the real, still-existing category
             // must still render normally around the now-vanished one.
-            $this->renderer->render('', null, 0);
+            $this->renderer->render(Section::Categories, null, 0);
             $html = $this->renderedCategoriesHtml();
             self::assertStringNotContainsString('Toctou Probe Album', $html);
             self::assertStringContainsString('Sample Album', $html);
@@ -365,7 +366,7 @@ final class CategoryCatsRendererTest extends IntegrationTestCase
         $this->conn->executeStatement('UPDATE ' . Tables::categories() . ' SET representative_picture_id = NULL WHERE id = 2');
 
         try {
-            $this->renderer->render('', ['id' => 1], 0);
+            $this->renderer->render(Section::Categories, ['id' => 1], 0);
 
             $item = CachePools::categoryTree()->getItem('repr_1_2');
             self::assertTrue($item->isHit());
@@ -384,7 +385,7 @@ final class CategoryCatsRendererTest extends IntegrationTestCase
         $this->conn->executeStatement('UPDATE ' . Tables::categories() . ' SET representative_picture_id = NULL WHERE id = 1');
 
         try {
-            $this->renderer->render('', null, 0);
+            $this->renderer->render(Section::Categories, null, 0);
 
             // category 2 (the only sub-category) has exactly one
             // representative_picture_id set (4) -- the only possible match.
@@ -405,7 +406,7 @@ final class CategoryCatsRendererTest extends IntegrationTestCase
         $this->conn->executeStatement('UPDATE ' . Tables::categories() . ' SET representative_picture_id = NULL WHERE id = 2');
 
         try {
-            $this->renderer->render('', ['id' => 1], 0);
+            $this->renderer->render(Section::Categories, ['id' => 1], 0);
 
             $html = $this->renderedCategoriesHtml();
             self::assertStringNotContainsString('Nested Sub Album', $html);
@@ -428,7 +429,7 @@ final class CategoryCatsRendererTest extends IntegrationTestCase
         $this->conn->executeStatement("UPDATE " . Tables::images() . " SET date_creation = '2021-03-10 08:00:00' WHERE id = 1");
 
         try {
-            $this->renderer->render('', null, 0);
+            $this->renderer->render(Section::Categories, null, 0);
 
             $expected = DateHelper::formatFromto('2021-03-10 08:00:00', '2021-03-10 08:00:00');
             $html = $this->renderedCategoriesHtml();
@@ -450,7 +451,7 @@ final class CategoryCatsRendererTest extends IntegrationTestCase
         $this->conn->executeStatement('UPDATE ' . Tables::images() . ' SET level = 5 WHERE id = 4');
 
         try {
-            $this->renderer->render('', ['id' => 1], 0);
+            $this->renderer->render(Section::Categories, ['id' => 1], 0);
 
             // category 2's real representative (4) is too high-level;
             // image 5 (also directly in category 2, not excluded) is the
@@ -471,7 +472,7 @@ final class CategoryCatsRendererTest extends IntegrationTestCase
         $this->conn->executeStatement('UPDATE ' . Tables::images() . ' SET level = 5 WHERE id = 4');
 
         try {
-            $this->renderer->render('', ['id' => 1], 0);
+            $this->renderer->render(Section::Categories, ['id' => 1], 0);
 
             $item = CachePools::categoryTree()->getItem('repr_1_2');
             self::assertTrue($item->isHit());
@@ -488,7 +489,7 @@ final class CategoryCatsRendererTest extends IntegrationTestCase
         // category 1's images post-rollup.
         $this->filterUpdater->forceCountImagesZeroFor[] = 1;
 
-        $this->renderer->render('', null, 0);
+        $this->renderer->render(Section::Categories, null, 0);
 
         $html = $this->renderedCategoriesHtml();
         self::assertStringNotContainsString('Sample Album', $html);
@@ -507,7 +508,7 @@ final class CategoryCatsRendererTest extends IntegrationTestCase
         $this->expectExceptionMessage('must return an instance of');
 
         try {
-            $this->renderer->render('', null, 0);
+            $this->renderer->render(Section::Categories, null, 0);
         } finally {
             EventDispatcherTestFactory::get()->reset();
         }

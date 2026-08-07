@@ -6,6 +6,7 @@ namespace Piwigo\Tests\Integration;
 
 use Override;
 use Piwigo\Auth\AccessLevelChecker;
+use Piwigo\Common\Enum\Section;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Tests\Support\EventDispatcherTestFactory;
 use Piwigo\Db\EntityManagerFactory;
@@ -253,7 +254,7 @@ final class SectionPopulatorTest extends IntegrationTestCase
 
         $ctx = $this->sectionContextRegistry->current();
         self::assertNotNull($ctx);
-        self::assertSame('categories', $ctx->section);
+        self::assertSame(Section::Categories, $ctx->section);
         self::assertTrue($ctx->flat);
         self::assertNull($ctx->category);
     }
@@ -293,7 +294,7 @@ final class SectionPopulatorTest extends IntegrationTestCase
         self::assertSame('script_basename "somethingelse" unknown', $caughtMessage);
         $ctx = $this->sectionContextRegistry->current();
         self::assertNotNull($ctx);
-        self::assertSame('categories', $ctx->section);
+        self::assertSame(Section::Categories, $ctx->section);
     }
 
     public function test_populate_clears_an_incompatible_session_image_order(): void
@@ -389,7 +390,7 @@ final class SectionPopulatorTest extends IntegrationTestCase
 
         $ctx = $this->sectionContextRegistry->current();
         self::assertNotNull($ctx);
-        self::assertSame('search', $ctx->section);
+        self::assertSame(Section::Search, $ctx->section);
         // getQuickSearchResultsNoCache()'s own 'qs' shape always adds
         // matching_tags/matching_cats/unmatched_terms alongside 'q'.
         self::assertSame([
@@ -414,7 +415,7 @@ final class SectionPopulatorTest extends IntegrationTestCase
 
         $ctx = $this->sectionContextRegistry->current();
         self::assertNotNull($ctx);
-        self::assertSame('favorites', $ctx->section);
+        self::assertSame(Section::Favorites, $ctx->section);
         // user 1's own 3 favorited images (1, 3, 5).
         self::assertCount(3, $ctx->items);
         $favoriteVar = CurrentTemplate::current()->get()->get_template_vars('favorite');
@@ -456,7 +457,7 @@ final class SectionPopulatorTest extends IntegrationTestCase
 
         $ctx = $this->sectionContextRegistry->current();
         self::assertNotNull($ctx);
-        self::assertSame('recent_pics', $ctx->section);
+        self::assertSame(Section::RecentPics, $ctx->section);
         self::assertStringContainsString('Recent photos', strip_tags($ctx->title));
     }
 
@@ -469,7 +470,7 @@ final class SectionPopulatorTest extends IntegrationTestCase
 
         $ctx = $this->sectionContextRegistry->current();
         self::assertNotNull($ctx);
-        self::assertSame('most_visited', $ctx->section);
+        self::assertSame(Section::MostVisited, $ctx->section);
         self::assertTrue($ctx->superOrderBy);
         self::assertStringContainsString('Most visited', strip_tags($ctx->title));
     }
@@ -483,7 +484,7 @@ final class SectionPopulatorTest extends IntegrationTestCase
 
         $ctx = $this->sectionContextRegistry->current();
         self::assertNotNull($ctx);
-        self::assertSame('best_rated', $ctx->section);
+        self::assertSame(Section::BestRated, $ctx->section);
         self::assertTrue($ctx->superOrderBy);
         self::assertStringContainsString('Best rated', strip_tags($ctx->title));
     }
@@ -497,7 +498,7 @@ final class SectionPopulatorTest extends IntegrationTestCase
 
         $ctx = $this->sectionContextRegistry->current();
         self::assertNotNull($ctx);
-        self::assertSame('list', $ctx->section);
+        self::assertSame(Section::ListView, $ctx->section);
         // parseWellKnownParamsUrl()'s own list-token parsing explode()s
         // the raw URL segment -- these stay strings, never cast to int.
         self::assertSame(['1', '2', '3'], $ctx->list);

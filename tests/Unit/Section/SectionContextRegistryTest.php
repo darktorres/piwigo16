@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Piwigo\Common\Enum\Section;
 use Piwigo\Section\SectionContext;
 use Piwigo\Section\SectionContextRegistry;
 
@@ -17,7 +18,7 @@ test('current returns null before anything is set', function (): void {
 
 test('set stores the context and current returns the same instance', function (): void {
     $registry = new SectionContextRegistry();
-    $context = new SectionContext(section: 'categories', rootPath: '../');
+    $context = new SectionContext(section: Section::Categories, rootPath: '../');
 
     $registry->set($context);
 
@@ -26,8 +27,8 @@ test('set stores the context and current returns the same instance', function ()
 
 test('set overwrites a previously stored context', function (): void {
     $registry = new SectionContextRegistry();
-    $first = new SectionContext(section: 'categories', rootPath: '../');
-    $second = new SectionContext(section: 'tags', rootPath: '../../');
+    $first = new SectionContext(section: Section::Categories, rootPath: '../');
+    $second = new SectionContext(section: Section::Tags, rootPath: '../../');
 
     $registry->set($first);
     $registry->set($second);
@@ -37,7 +38,7 @@ test('set overwrites a previously stored context', function (): void {
 
 test('reset clears the stored context', function (): void {
     $registry = new SectionContextRegistry();
-    $registry->set(new SectionContext(section: 'categories', rootPath: '../'));
+    $registry->set(new SectionContext(section: Section::Categories, rootPath: '../'));
 
     $registry->reset();
 

@@ -10,6 +10,7 @@ use Piwigo\Auth\AccessControl;
 use Piwigo\Cache\CachePools;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Category\Projection\Category;
+use Piwigo\Common\Enum\Section;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\CurrentLogger;
 use Piwigo\Core\DateHelper;
@@ -119,7 +120,7 @@ final readonly class SearchFilterRenderer
         // instead -- see that class's search-section handling). As
         // Piwigo 14 will still be able to show an old quicksearch
         // result, we must check this condition too.
-        if ($page['section'] !== 'search' || $page['search_details'] === []) {
+        if ($page['section'] !== Section::Search || $page['search_details'] === []) {
             return null;
         }
 

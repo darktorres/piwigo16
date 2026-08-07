@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Piwigo\Event\Picture;
 
+use Piwigo\Common\ValueObject\ImageId;
+
 /**
  * Typed event for the legacy `allow_increment_element_hit_count`
  * filter. No handler is registered for it anywhere today. Carries
@@ -15,6 +17,6 @@ final readonly class AllowIncrementElementHitCount
 {
     public function __construct(
         public bool $incHitCount,
-        public int $imageId,
+        public ImageId $imageId,
     ) {}
 }

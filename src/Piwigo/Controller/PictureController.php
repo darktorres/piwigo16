@@ -587,7 +587,7 @@ final class PictureController implements ControllerInterface
         }
 
         // don't increment if adding a comment
-        if ($this->eventDispatcher->dispatchChange(new AllowIncrementElementHitCount($inc_hit_count, $image_id))->incHitCount) {
+        if ($this->eventDispatcher->dispatchChange(new AllowIncrementElementHitCount($inc_hit_count, ImageId::from($image_id)))->incHitCount) {
             EntityManagerFactory::build($conn)->getRepository(ImageEntity::class)
                 ->incrementVisitCounter(ImageId::from($image_id));
         }

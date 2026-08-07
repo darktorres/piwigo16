@@ -86,7 +86,7 @@ final class CategoryRepositoryTest extends IntegrationTestCase
         $cat = $this->repo->findById(1);
 
         self::assertInstanceOf(Category::class, $cat);
-        self::assertSame(1, $cat->id);
+        self::assertEquals(CategoryId::from(1), $cat->id);
         self::assertSame('Sample Album', $cat->name);
     }
 

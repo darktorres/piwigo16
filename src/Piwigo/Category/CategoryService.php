@@ -276,9 +276,9 @@ final readonly class CategoryService
         if (count($upperIds) === 1) {
             $result['upper_names'] = [
                 [
-                    'id' => $cat->id,
+                    'id' => $cat->id->value,
                     'name' => $cat->name,
-                    'permalink' => $cat->permalink,
+                    'permalink' => $cat->permalink?->value,
                 ],
             ];
         } else {

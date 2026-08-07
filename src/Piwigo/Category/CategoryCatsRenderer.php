@@ -162,7 +162,7 @@ final readonly class CategoryCatsRenderer
         // array_merge() below, which a readonly object can't participate in.
         $fullById = [];
         foreach ($categoryRepo->findFullCategoriesByIds($catIds) as $full) {
-            $fullById[$full->id] = $full->toArray();
+            $fullById[$full->id->value] = $full->toArray();
         }
 
         $categories = [];

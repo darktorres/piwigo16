@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Category\Projection;
 
+use InvalidArgumentException;
 use Piwigo\Category\CategoryEntity;
 use Piwigo\Category\CategoryStatus;
 use Piwigo\Common\ValueObject\CategoryId;
@@ -30,11 +31,23 @@ use Piwigo\Common\ValueObject\Permalink;
  * consumer today (`DateHelper::formatDate()`/`timeSince()`, raw SQL
  * comparisons) already expects the raw DB DATETIME string form, same
  * reasoning as {@see \Piwigo\Image\Projection\Image}.
+ *
+ * `id` is `CategoryId`, not `?CategoryId` (Phase 4) -- `categories.id` is
+ * `NOT NULL AUTO_INCREMENT`, and this projection's own 2 real producers
+ * ({@see \Piwigo\Category\CategoryRepository::findById()}/
+ * `findFullCategoriesByIds()`) only ever wrap an already-persisted,
+ * already-fetched entity/row, so a missing/invalid id can't actually
+ * occur here, same reasoning as {@see \Piwigo\Comment\Projection\Comment}'s
+ * `id`. `CategoryEntity::$id` itself stays `?CategoryId` (Phase 3) --
+ * that nullability reflects "not yet persisted", a state this projection
+ * never represents. `permalink` stays `?Permalink` -- `categories.
+ * permalink` is a genuinely nullable business column (not every album has
+ * one).
  */
 final readonly class Category
 {
     public function __construct(
-        public int $id,
+        public CategoryId $id,
         public string $name,
         public ?int $idUppercat,
         public ?string $comment,
@@ -48,14 +61,19 @@ final readonly class Category
         public bool $commentable,
         public ?string $globalRank,
         public ?string $imageOrder,
-        public ?string $permalink,
+        public ?Permalink $permalink,
         public string $lastmodified,
     ) {}
 
     public static function fromEntity(CategoryEntity $entity): self
     {
+        $id = $entity->id;
+        if ($id === null) {
+            throw new InvalidArgumentException('Category::fromEntity(): entity has no id (not yet persisted)');
+        }
+
         return new self(
-            id: $entity->id->value ?? 0,
+            id: $id,
             name: $entity->name,
             idUppercat: $entity->idUppercat,
             comment: $entity->comment,
@@ -69,7 +87,7 @@ final readonly class Category
             commentable: $entity->commentable,
             globalRank: $entity->globalRank,
             imageOrder: $entity->imageOrder,
-            permalink: $entity->permalink?->value,
+            permalink: $entity->permalink,
             lastmodified: $entity->lastmodified,
         );
     }
@@ -79,11 +97,17 @@ final readonly class Category
      */
     public static function fromRow(array $row): self
     {
-        $id = $row['id'] ?? null;
-        $permalink = $row['permalink'] ?? null;
+        $idValue = $row['id'] ?? null;
+        $id = $idValue instanceof CategoryId ? $idValue : CategoryId::tryFrom($idValue);
+        if ($id === null) {
+            throw new InvalidArgumentException(sprintf('Expected a positive category id, got %s', get_debug_type($idValue)));
+        }
+
+        $permalinkValue = $row['permalink'] ?? null;
+        $permalink = $permalinkValue instanceof Permalink ? $permalinkValue : Permalink::tryFrom($permalinkValue);
 
         return new self(
-            id: $id instanceof CategoryId ? $id->value : (is_numeric($id) ? (int) $id : 0),
+            id: $id,
             name: is_string($row['name'] ?? null) ? $row['name'] : '',
             idUppercat: is_numeric($row['id_uppercat'] ?? null) ? (int) $row['id_uppercat'] : null,
             comment: is_string($row['comment'] ?? null) ? $row['comment'] : null,
@@ -97,7 +121,7 @@ final readonly class Category
             commentable: is_numeric($row['commentable'] ?? null) ? (bool) (int) $row['commentable'] : true,
             globalRank: is_string($row['global_rank'] ?? null) ? $row['global_rank'] : null,
             imageOrder: is_string($row['image_order'] ?? null) ? $row['image_order'] : null,
-            permalink: $permalink instanceof Permalink ? $permalink->value : (is_string($permalink) ? $permalink : null),
+            permalink: $permalink,
             lastmodified: is_string($row['lastmodified'] ?? null) ? $row['lastmodified'] : '',
         );
     }
@@ -128,7 +152,7 @@ final readonly class Category
     public function toArray(): array
     {
         return [
-            'id' => $this->id,
+            'id' => $this->id->value,
             'name' => $this->name,
             'id_uppercat' => $this->idUppercat,
             'comment' => $this->comment,
@@ -142,7 +166,7 @@ final readonly class Category
             'commentable' => $this->commentable,
             'global_rank' => $this->globalRank,
             'image_order' => $this->imageOrder,
-            'permalink' => $this->permalink,
+            'permalink' => $this->permalink?->value,
             'lastmodified' => $this->lastmodified,
         ];
     }

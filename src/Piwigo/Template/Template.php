@@ -1321,6 +1321,11 @@ var s,after = document.getElementsByTagName(\'script\')[document.getElementsByTa
     {
         $ret = '';
         if ($script->is_remote(self::urlService())) {
+            // is_remote() can only return true via a real urlIsRemote($this
+            // ->path) call, which it early-returns false before reaching
+            // whenever $this->path is null -- so path is provably non-null
+            // here.
+            assert($script->path !== null);
             $ret = $script->path;
         } else {
             $ret = self::urlService()->getRootUrl() . $script->path;

@@ -15,10 +15,7 @@ use Piwigo\Core\UrlServiceInterface;
 
 class Combinable
 {
-    /**
-     * @var string
-     */
-    public $path;
+    public ?string $path = null;
 
     /**
      * @var bool
@@ -53,6 +50,13 @@ class Combinable
 
     public function is_remote(UrlServiceInterface $urlService): bool
     {
+        // A combinable with no path yet (set_path()'s own null/empty no-op,
+        // not yet filled in by ScriptLoader::fill_well_known()) has nothing
+        // to be remote about.
+        if ($this->path === null) {
+            return false;
+        }
+
         return $urlService->urlIsRemote($this->path) || str_starts_with($this->path, '//');
     }
 }

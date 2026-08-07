@@ -86,6 +86,14 @@ final class FileCombiner
         $key = $ini_key;
 
         foreach ($this->combinables as $combinable) {
+            if ($combinable->path === null) {
+                // Same defensive "warn and omit" contract
+                // ScriptLoader::get_head_scripts() already applies to a
+                // never-resolved path -- there's nothing to combine or
+                // pass through for an entry with no file at all.
+                trigger_error("Combinable {$combinable->id} has an undefined path", E_USER_WARNING);
+                continue;
+            }
             if ($combinable->is_remote($this->urlService)) {
                 $this->flush_pending($result, $pending, $key, $force);
                 $key = $ini_key;
@@ -172,6 +180,12 @@ final class FileCombiner
      */
     private function process_combinable($combinable, bool $return_content, bool $force, string &$header): ?string
     {
+        // Both real call sites only ever pass an item already drawn from
+        // $pending, which combine()'s own loop above never adds a
+        // null-path combinable to (see its own "undefined path" warn-and-
+        // skip branch).
+        assert($combinable->path !== null);
+
         if ($combinable->is_template) {
             // Only ever read below when $return_content is false (where
             // it's also assigned) -- $return_content doesn't change value

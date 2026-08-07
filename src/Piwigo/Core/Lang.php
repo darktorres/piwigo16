@@ -318,8 +318,15 @@ final class Lang
         // (array_unique()/implode() below need string-castable elements, not
         // just an array container).
         $languages = [];
-        if (! in_array($options['language'] ?? null, [null, '0', ''], true)) { // explicit language
-            $languages[] = $options['language'];
+        $languageOption = $options['language'] ?? null;
+        // is_string() first (not folded into the in_array() below) so a
+        // loosely-typed caller passing bool/int/array for 'language' -- the
+        // whole reason this codebase's array-shape docblocks can't just
+        // declare it `string` -- is excluded the same way false/0/[] are,
+        // without needing every non-string PHP type spelled out in the
+        // sentinel list itself.
+        if (is_string($languageOption) && ! in_array($languageOption, ['0', ''], true)) { // explicit language
+            $languages[] = $languageOption;
         }
         $current_user_language = $this->defaultLanguageProvider?->getCurrentLanguage();
         if (! in_array($current_user_language, [null, ''], true)) { // use language

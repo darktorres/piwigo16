@@ -288,7 +288,7 @@ final class BatchManagerUnitPageRenderer
                 $category_info = $this->categoryService->getCategoryInfo($filter_category_id);
 
                 $order_by = $this->currentConfig->orderByInsideCategory();
-                $category_image_order = $category_info !== null ? ($category_info['image_order'] ?? null) : null;
+                $category_image_order = $category_info !== null ? $category_info['image_order'] : null;
                 if (is_string($category_image_order) && $category_image_order !== '') {
                     $order_by = ' ORDER BY ' . $category_image_order;
                 }
@@ -465,7 +465,7 @@ final class BatchManagerUnitPageRenderer
                             'U_EDIT' => $this->urlService->getRootUrl() . 'admin.php?page=photo-' . $row_id_str,
                             'NAME' => htmlspecialchars($row_name),
                             'AUTHOR' => htmlspecialchars($row_author),
-                            'LEVEL' => ($row['level'] ?? '') !== '' && ($row['level'] ?? null) !== '0' ? ($row['level'] ?? '0') : '0',
+                            'LEVEL' => ($row['level'] ?? '') !== '' && $row['level'] !== '0' ? ($row['level'] ?? '0') : '0',
                             'DESCRIPTION' => htmlspecialchars($row_comment),
                             'DATE_CREATION' => $row['date_creation'],
                             'TAGS' => $tag_selection,

@@ -580,7 +580,7 @@ final class PwgCategories
                 // as int against $image_id rather than the
                 // (always-mismatched) string, or every row would be
                 // flagged "changed" here.
-                $cached_representative_id = is_numeric($row['user_representative_picture_id'] ?? null)
+                $cached_representative_id = is_numeric($row['user_representative_picture_id'])
                     ? (int) $row['user_representative_picture_id']
                     : null;
 
@@ -965,7 +965,7 @@ final class PwgCategories
             }
         }
 
-        if (! in_array($params['visible'], [null, ''], true)
+        if (! in_array($params['visible'], [null], true)
             and filter_var($params['visible'], FILTER_VALIDATE_BOOLEAN) !== $category->visible) {
             $categoryService->setCatVisible([$params['category_id']], $params['visible']);
         }

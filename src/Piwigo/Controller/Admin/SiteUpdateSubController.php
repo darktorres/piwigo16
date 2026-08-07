@@ -430,7 +430,7 @@ final class SiteUpdateSubController implements AdminSubControllerInterface
                     $category_up = [];
                     foreach ($inserts as $category) {
                         $category_ids[] = $category['id'];
-                        if (! in_array($category['id_uppercat'] ?? null, [null, false, 0, '0', '', []], true)) {
+                        if (! in_array($category['id_uppercat'] ?? null, [null, 0, '0', ''], true)) {
                             $category_up[] = $category['id_uppercat'];
                         }
                     }

@@ -365,7 +365,7 @@ final class BatchManagerGlobalPageRenderer
                 if (isset($post['remove_date_creation']) || ($post['date_creation'] ?? '') === '') {
                     $date_creation = null;
                 } else {
-                    $date_creation = is_string($post['date_creation'] ?? null) ? $post['date_creation'] : null;
+                    $date_creation = is_string($post['date_creation']) ? $post['date_creation'] : null;
                 }
 
                 $imageService->updateTextFieldForImages($collection, ImageTextField::DateCreation, $date_creation);
@@ -581,7 +581,7 @@ final class BatchManagerGlobalPageRenderer
                 $category_info = $this->categoryService->getCategoryInfo($filter_category_id);
 
                 $order_by = $this->currentConfig->orderByInsideCategory();
-                $category_image_order = $category_info !== null ? ($category_info['image_order'] ?? null) : null;
+                $category_image_order = $category_info !== null ? $category_info['image_order'] : null;
                 if (is_string($category_image_order) && $category_image_order !== '') {
                     $order_by = ' ORDER BY ' . $category_image_order;
                 }

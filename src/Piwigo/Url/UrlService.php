@@ -253,7 +253,7 @@ final class UrlService implements UrlServiceInterface
      */
     private function configuredHost(): ?string
     {
-        $gallery_url = $this->currentConfig->galleryUrl() ?? null;
+        $gallery_url = $this->currentConfig->galleryUrl();
         if (! is_string($gallery_url) || $gallery_url === '') {
             return null;
         }
@@ -1020,7 +1020,7 @@ final class UrlService implements UrlServiceInterface
     #[Override]
     public function getGalleryHomeUrl(): string
     {
-        $gallery_url = $this->currentConfig->galleryUrl() ?? null;
+        $gallery_url = $this->currentConfig->galleryUrl();
         if (is_string($gallery_url) && $gallery_url !== '') {
             if ($this->urlIsRemote($gallery_url) or $gallery_url[0] === '/') {
                 return $gallery_url;

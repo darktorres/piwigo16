@@ -11,6 +11,7 @@ use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Query\Expr\Join;
 use Doctrine\ORM\QueryBuilder;
 use Piwigo\Category\CategoryEntity;
+use Piwigo\Common\ValueObject\ImageId;
 use Piwigo\Image\ImageCategoryEntity;
 use Piwigo\Image\ImageEntity;
 use Piwigo\Permission\SqlCondition;
@@ -188,6 +189,12 @@ final class SearchRepository
      * generics express) -- re-keys each row's columns to string here, once,
      * for every generic row-returning method below.
      *
+     * `i.id` (ImageEntity's own ImageId-typed column, selected raw by
+     * findDistinctImageRows()) array-hydrates as an ImageId instance, not
+     * a scalar -- unwrapped generically rather than naming the 'id' key
+     * specifically, since a future extra $selectExprs entry could
+     * plausibly select another ImageId-typed expression too.
+     *
      * @param  array<mixed>  $rows
      * @return list<array<string, mixed>>
      */
@@ -199,7 +206,12 @@ final class SearchRepository
                 continue;
             }
 
-            $result[] = array_combine(array_map(strval(...), array_keys($row)), array_values($row));
+            $unwrapped = array_map(
+                static fn (mixed $value): mixed => $value instanceof ImageId ? $value->value : $value,
+                $row
+            );
+
+            $result[] = array_combine(array_map(strval(...), array_keys($unwrapped)), array_values($unwrapped));
         }
 
         return $result;

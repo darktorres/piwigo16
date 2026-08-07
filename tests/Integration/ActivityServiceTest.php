@@ -13,6 +13,7 @@ use Piwigo\Activity\Projection\UserActivityLogEntry;
 use Doctrine\DBAL\Connection;
 use Piwigo\Activity\ActivityRepository;
 use Piwigo\Activity\ActivityService;
+use Piwigo\Common\ValueObject\SqlDateTime;
 use Piwigo\Config\ConfigLoader;
 use Piwigo\Core\ActivitySystem;
 use Piwigo\Db\DbConnection;
@@ -595,7 +596,7 @@ final class ActivityServiceTest extends IntegrationTestCase
                 'performedBy' => null,
                 'sessionIdx' => 'sess-1',
                 'ipAddress' => null,
-                'occuredOn' => '2026-07-10 00:00:00',
+                'occuredOn' => SqlDateTime::from('2026-07-10 00:00:00'),
                 'details' => ['from_version' => '16.0.0', 'to_version' => '17.0.0'],
                 'userAgent' => null,
             ],

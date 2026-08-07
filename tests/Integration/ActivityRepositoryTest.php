@@ -14,6 +14,7 @@ use Piwigo\Activity\ActivityListCriteria;
 use Piwigo\Activity\ActivityRepository;
 use Piwigo\Activity\Projection\SystemActivityLogEntry;
 use Piwigo\Common\ValueObject\IpAddress;
+use Piwigo\Common\ValueObject\SqlDateTime;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\ConfigLoader;
 use Piwigo\Core\ActivitySystem;
@@ -78,7 +79,7 @@ final class ActivityRepositoryTest extends IntegrationTestCase
                     'performedBy' => 1,
                     'sessionIdx' => 'sess-1',
                     'ipAddress' => IpAddress::from('10.0.0.1'),
-                    'occuredOn' => '2026-07-12 00:00:00',
+                    'occuredOn' => SqlDateTime::from('2026-07-12 00:00:00'),
                     'details' => [],
                     'userAgent' => 'test-agent',
                 ],
@@ -89,7 +90,7 @@ final class ActivityRepositoryTest extends IntegrationTestCase
                     'performedBy' => 1,
                     'sessionIdx' => 'sess-1',
                     'ipAddress' => null,
-                    'occuredOn' => '2026-07-12 00:00:01',
+                    'occuredOn' => SqlDateTime::from('2026-07-12 00:00:01'),
                     'details' => [],
                     'userAgent' => null,
                 ],
@@ -224,7 +225,7 @@ final class ActivityRepositoryTest extends IntegrationTestCase
             'performedBy' => 1,
             'sessionIdx' => 'sess-1',
             'ipAddress' => null,
-            'occuredOn' => '2026-07-12 00:00:00',
+            'occuredOn' => SqlDateTime::from('2026-07-12 00:00:00'),
             'details' => [],
             'userAgent' => null,
         ]]);
@@ -258,7 +259,7 @@ final class ActivityRepositoryTest extends IntegrationTestCase
             'performedBy' => null,
             'sessionIdx' => 'sess-1',
             'ipAddress' => null,
-            'occuredOn' => '2026-07-12 00:00:00',
+            'occuredOn' => SqlDateTime::from('2026-07-12 00:00:00'),
             'details' => [],
             'userAgent' => null,
         ]]);
@@ -392,7 +393,7 @@ final class ActivityRepositoryTest extends IntegrationTestCase
             'performedBy' => 1,
             'sessionIdx' => 'sess-1',
             'ipAddress' => null,
-            'occuredOn' => '2026-07-12 00:00:00',
+            'occuredOn' => SqlDateTime::from('2026-07-12 00:00:00'),
             'details' => [],
             'userAgent' => null,
         ]]);
@@ -430,7 +431,7 @@ final class ActivityRepositoryTest extends IntegrationTestCase
             'performedBy' => null,
             'sessionIdx' => 'sess-1',
             'ipAddress' => null,
-            'occuredOn' => '2026-07-12 00:00:00',
+            'occuredOn' => SqlDateTime::from('2026-07-12 00:00:00'),
             'details' => [],
             'userAgent' => null,
         ]]);
@@ -470,7 +471,7 @@ final class ActivityRepositoryTest extends IntegrationTestCase
                 'performedBy' => null,
                 'sessionIdx' => 'sess-1',
                 'ipAddress' => null,
-                'occuredOn' => '2026-07-10 00:00:00',
+                'occuredOn' => SqlDateTime::from('2026-07-10 00:00:00'),
                 'details' => ['from_version' => '16.0.0', 'to_version' => '17.0.0'],
                 'userAgent' => null,
             ],
@@ -481,7 +482,7 @@ final class ActivityRepositoryTest extends IntegrationTestCase
                 'performedBy' => null,
                 'sessionIdx' => 'sess-1',
                 'ipAddress' => null,
-                'occuredOn' => '2026-07-11 00:00:00',
+                'occuredOn' => SqlDateTime::from('2026-07-11 00:00:00'),
                 'details' => ['from_version' => '17.0.0', 'to_version' => '17.0.1'],
                 'userAgent' => null,
             ],
@@ -530,7 +531,7 @@ final class ActivityRepositoryTest extends IntegrationTestCase
                 'performedBy' => null,
                 'sessionIdx' => 'sess-1',
                 'ipAddress' => null,
-                'occuredOn' => '2026-07-10 00:00:00',
+                'occuredOn' => SqlDateTime::from('2026-07-10 00:00:00'),
                 'details' => [],
                 'userAgent' => null,
             ],
@@ -541,7 +542,7 @@ final class ActivityRepositoryTest extends IntegrationTestCase
                 'performedBy' => null,
                 'sessionIdx' => 'sess-1',
                 'ipAddress' => null,
-                'occuredOn' => '2026-07-10 00:00:01',
+                'occuredOn' => SqlDateTime::from('2026-07-10 00:00:01'),
                 'details' => [],
                 'userAgent' => null,
             ],
@@ -575,7 +576,7 @@ final class ActivityRepositoryTest extends IntegrationTestCase
                 'performedBy' => 1,
                 'sessionIdx' => 'sess-1',
                 'ipAddress' => null,
-                'occuredOn' => '2026-07-10 00:00:00',
+                'occuredOn' => SqlDateTime::from('2026-07-10 00:00:00'),
                 'details' => [],
                 'userAgent' => 'PiwigoRepoTestAgent/1.0',
             ],
@@ -586,7 +587,7 @@ final class ActivityRepositoryTest extends IntegrationTestCase
                 'performedBy' => 1,
                 'sessionIdx' => 'sess-1',
                 'ipAddress' => null,
-                'occuredOn' => '2026-07-11 00:00:00',
+                'occuredOn' => SqlDateTime::from('2026-07-11 00:00:00'),
                 'details' => [],
                 'userAgent' => 'PiwigoRepoTestAgent/1.0',
             ],
@@ -599,7 +600,7 @@ final class ActivityRepositoryTest extends IntegrationTestCase
                 'performedBy' => 1,
                 'sessionIdx' => 'sess-1',
                 'ipAddress' => null,
-                'occuredOn' => '2026-07-12 00:00:00',
+                'occuredOn' => SqlDateTime::from('2026-07-12 00:00:00'),
                 'details' => [],
                 'userAgent' => 'Mozilla/5.0 (a real browser)',
             ],

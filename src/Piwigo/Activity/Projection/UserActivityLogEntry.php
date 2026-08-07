@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Activity\Projection;
 
 use Piwigo\Common\ValueObject\IpAddress;
+use Piwigo\Common\ValueObject\SqlDateTime;
 use Piwigo\Common\ValueObject\UserId;
 
 /**
@@ -50,7 +51,9 @@ final readonly class UserActivityLogEntry
             objectId: is_numeric($row['object_id'] ?? null) ? (int) $row['object_id'] : 0,
             action: is_string($row['action'] ?? null) ? $row['action'] : '',
             ipAddress: is_string($row['ip_address'] ?? null) ? IpAddress::tryFrom($row['ip_address']) : null,
-            occuredOn: is_string($row['occured_on'] ?? null) ? $row['occured_on'] : '',
+            occuredOn: ($row['occured_on'] ?? null) instanceof SqlDateTime
+                ? $row['occured_on']->value
+                : (is_string($row['occured_on'] ?? null) ? $row['occured_on'] : ''),
             details: is_string($row['details'] ?? null) ? $row['details'] : null,
             username: is_string($row['username'] ?? null) ? $row['username'] : '',
         );

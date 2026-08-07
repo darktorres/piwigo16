@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Activity\Projection;
 
+use Piwigo\Common\ValueObject\SqlDateTime;
 use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Common\ValueObject\Username;
 
@@ -51,7 +52,9 @@ final readonly class SystemActivityLogEntry
             performedBy: ($row['performed_by'] ?? null) instanceof UserId ? $row['performed_by']->value : null,
             objectId: is_numeric($row['object_id'] ?? null) ? (int) $row['object_id'] : 0,
             action: is_string($row['action'] ?? null) ? $row['action'] : '',
-            occuredOn: is_string($row['occured_on'] ?? null) ? $row['occured_on'] : '',
+            occuredOn: ($row['occured_on'] ?? null) instanceof SqlDateTime
+                ? $row['occured_on']->value
+                : (is_string($row['occured_on'] ?? null) ? $row['occured_on'] : ''),
             details: is_array($row['details'] ?? null)
                 ? array_filter($row['details'], is_string(...), ARRAY_FILTER_USE_KEY)
                 : null,

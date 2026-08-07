@@ -23,6 +23,7 @@ use Piwigo\Category\CategoryService;
 use Piwigo\Comment\CommentService;
 use Piwigo\Common\ValueObject\ImageId;
 use Piwigo\Common\ValueObject\IpAddress;
+use Piwigo\Common\ValueObject\SqlDateTime;
 use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Config\ConfigService;
 use Piwigo\Config\CurrentConfig;
@@ -559,7 +560,7 @@ final class PwgCore
         $date_min_raw = $param['date_min'];
         $date_max_raw = $param['date_max'];
         if (! in_array($date_min_raw, [null, ''], true)) {
-            // is_valid_mysql_datetime() above already validated date_min; a
+            // is_valid_sql_datetime() above already validated date_min; a
             // valid Y-m-d[ H:i:s] string always parses
             $min_date = date_create($date_min_raw);
             assert($min_date !== false);
@@ -618,13 +619,14 @@ final class PwgCore
                     // array<string, mixed> straight from DQL array
                     // hydration -- narrow every field used below once,
                     // here, instead of scattering is_scalar()/is_string()
-                    // guards through the rest of this loop. ip_address and
-                    // details are real typed values now (an IpAddress VO
-                    // and an already-decoded array respectively, per
-                    // Doctrine's own custom-Type/json-Type conversion --
-                    // see that method's own docblock), not raw strings, so
-                    // they're narrowed differently from the plain-scalar
-                    // columns below.
+                    // guards through the rest of this loop. ip_address,
+                    // occured_on, and details are real typed values now (an
+                    // IpAddress VO, a SqlDateTime VO, and an
+                    // already-decoded array respectively, per Doctrine's
+                    // own custom-Type/json-Type conversion -- see that
+                    // method's own docblock), not raw strings, so they're
+                    // narrowed differently from the plain-scalar columns
+                    // below.
                     $row_session_idx = is_scalar($row['session_idx']) ? (string) $row['session_idx'] : '';
                     $row_object = is_scalar($row['object']) ? (string) $row['object'] : '';
                     $row_action = is_scalar($row['action']) ? (string) $row['action'] : '';
@@ -632,7 +634,7 @@ final class PwgCore
                     $row_ip_address = $row['ip_address'] instanceof IpAddress ? $row['ip_address']->value : null;
                     $row_performed_by = $row['performed_by'] instanceof UserId ? (string) $row['performed_by']->value : null;
                     $row_details = is_array($row['details'] ?? null) ? $row['details'] : [];
-                    $row_occured_on = is_scalar($row['occured_on']) ? (string) $row['occured_on'] : '';
+                    $row_occured_on = $row['occured_on'] instanceof SqlDateTime ? $row['occured_on']->value : '';
 
                     $line_key = $row_session_idx . '~' . $row_object . '~' . $row_action . '~'; // idx~photo~add
 

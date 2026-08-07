@@ -13,6 +13,7 @@ use Piwigo\Activity\Projection\SystemActivityLogEntry;
 use Piwigo\Activity\Projection\UserActivityLogEntry;
 use Piwigo\Auth\LoginActivityLookupInterface;
 use Piwigo\Common\ValueObject\IpAddress;
+use Piwigo\Common\ValueObject\SqlDateTime;
 use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Common\ValueObject\Username;
 use Piwigo\Core\ActivitySystem;
@@ -65,7 +66,7 @@ final class ActivityRepository extends EntityRepository implements LoginActivity
      *   performedBy: ?int,
      *   sessionIdx: string,
      *   ipAddress: ?IpAddress,
-     *   occuredOn: string,
+     *   occuredOn: SqlDateTime,
      *   details: array<string, mixed>,
      *   userAgent: ?string,
      * }> $rows
@@ -132,14 +133,14 @@ final class ActivityRepository extends EntityRepository implements LoginActivity
     {
         return $this->findOneBy([], [
             'activityId' => 'ASC',
-        ])?->occuredOn;
+        ])?->occuredOn->value;
     }
 
     public function findMaxOccuredOn(): ?string
     {
         return $this->findOneBy([], [
             'activityId' => 'DESC',
-        ])?->occuredOn;
+        ])?->occuredOn->value;
     }
 
     /**
@@ -152,7 +153,7 @@ final class ActivityRepository extends EntityRepository implements LoginActivity
             'objectId' => $objectId,
             'object' => $object,
             'action' => $action,
-        ])?->occuredOn;
+        ])?->occuredOn->value;
     }
 
     /**
@@ -312,8 +313,9 @@ final class ActivityRepository extends EntityRepository implements LoginActivity
      *
      * Returned rows carry whatever type each `ActivityEntity` column
      * really is under DQL array hydration -- `ip_address` is an
-     * `IpAddress` VO (not a raw string), `details` is an already-decoded
-     * `array` (not a raw JSON string).
+     * `IpAddress` VO, `occured_on` is a `SqlDateTime` VO (neither is a
+     * raw string), `details` is an already-decoded `array` (not a raw
+     * JSON string).
      *
      * @return list<array<string, mixed>>
      */
@@ -431,7 +433,7 @@ final class ActivityRepository extends EntityRepository implements LoginActivity
                 continue;
             }
 
-            $occuredOn = is_string($row['occured_on'] ?? null) ? $row['occured_on'] : '';
+            $occuredOn = ($row['occured_on'] ?? null) instanceof SqlDateTime ? $row['occured_on']->value : '';
             $object = is_string($row['object'] ?? null) ? $row['object'] : '';
             $action = is_string($row['action'] ?? null) ? $row['action'] : '';
             $activityDay = substr($occuredOn, 0, 10);
@@ -480,9 +482,11 @@ final class ActivityRepository extends EntityRepository implements LoginActivity
             // byte-identically.
             $encodedDetails = is_array($details) ? json_encode($details) : false;
 
+            $occuredOn = is_array($row) ? ($row['occured_on'] ?? null) : null;
+
             $history[] = [
                 'action' => is_array($row) && is_string($row['action']) ? $row['action'] : '',
-                'occured_on' => is_array($row) && is_string($row['occured_on'] ?? null) ? $row['occured_on'] : null,
+                'occured_on' => $occuredOn instanceof SqlDateTime ? $occuredOn->value : null,
                 'details' => $encodedDetails === false ? null : $encodedDetails,
             ];
         }
@@ -545,8 +549,12 @@ final class ActivityRepository extends EntityRepository implements LoginActivity
             static fn (array $row): array => [
                 'user_agent' => is_string($row['user_agent']) ? $row['user_agent'] : null,
                 'counter' => $row['counter'],
-                'first_encounter' => $row['first_encounter'],
-                'last_encounter' => $row['last_encounter'],
+                // MIN()/MAX() around a custom-Typed column don't get the
+                // column's own Type applied during hydration (confirmed
+                // live) -- these come back as plain driver strings, not
+                // SqlDateTime instances, unlike a bare `a.occuredOn` select.
+                'first_encounter' => is_string($row['first_encounter']) ? $row['first_encounter'] : null,
+                'last_encounter' => is_string($row['last_encounter']) ? $row['last_encounter'] : null,
             ],
             $rows
         );

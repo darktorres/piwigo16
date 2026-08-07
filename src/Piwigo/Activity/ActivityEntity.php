@@ -6,17 +6,17 @@ namespace Piwigo\Activity;
 
 use Doctrine\ORM\Mapping as ORM;
 use Piwigo\Common\ValueObject\IpAddress;
+use Piwigo\Common\ValueObject\SqlDateTime;
 use Piwigo\Common\ValueObject\UserId;
 
 /**
  * Maps the `activity` table (`piwigo_activity` once
  * Piwigo\Db\TablePrefixListener applies db_prefix at metadata-load time).
- * `occuredOn` stays plain string, not \DateTimeImmutable -- every real
- * reader (findMinOccuredOn/findMaxOccuredOn/the CSV export) wants the raw
- * DB DATETIME string form, same reasoning as every other domain's own
- * projection. `details` maps as native Doctrine `json` -- no
- * round-trip-fidelity requirement forces a raw-string exception here,
- * unlike Audit\AuditLogEntity's hash-chain columns.
+ * `occuredOn` is `SqlDateTime`-typed (Phase 5) -- every real write path
+ * traces to an `Env::now()`-derived value. `details` maps as native
+ * Doctrine `json` -- no round-trip-fidelity requirement forces a
+ * raw-string exception here, unlike Audit\AuditLogEntity's hash-chain
+ * columns.
  */
 #[ORM\Entity(repositoryClass: ActivityRepository::class)]
 #[ORM\Table(name: 'activity')]
@@ -40,8 +40,8 @@ final class ActivityEntity
         public string $sessionIdx,
         #[ORM\Column(name: 'ip_address', type: 'ip_address', length: 50, nullable: true)]
         public ?IpAddress $ipAddress,
-        #[ORM\Column(name: 'occured_on', type: 'string', length: 19)]
-        public string $occuredOn,
+        #[ORM\Column(name: 'occured_on', type: 'sql_datetime', length: 19)]
+        public SqlDateTime $occuredOn,
         /**
          * @var array<string, mixed>|null
          */

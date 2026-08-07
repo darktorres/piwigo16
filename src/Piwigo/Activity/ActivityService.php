@@ -9,6 +9,7 @@ use Override;
 use Piwigo\Activity\Projection\UserActivityLogEntry;
 use Piwigo\Activity\Request\ActivityContextRequest;
 use Piwigo\Common\ValueObject\IpAddress;
+use Piwigo\Common\ValueObject\SqlDateTime;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\ActivityLoggerInterface;
 use Piwigo\Core\Env;
@@ -163,8 +164,8 @@ final readonly class ActivityService implements ActivityLoggerInterface
         // this respects the frozen test-mode clock the same way other
         // Env::now() call sites already do -- real behavior outside test
         // mode is unaffected.
-        $occuredOn = Env::now()
-            ->format('Y-m-d H:i:s');
+        $occuredOn = SqlDateTime::from(Env::now()
+            ->format('Y-m-d H:i:s'));
 
         $rows = [];
         foreach ($objectIds as $loopObjectId) {

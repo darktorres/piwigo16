@@ -81,8 +81,8 @@ test('OldPermalink::fromEntity copies every field straight through', function ()
         hit: 12,
     ));
 
-    expect($permalink->catId)->toBe(4);
-    expect($permalink->permalink)->toBe('old-album-name');
+    expect($permalink->catId)->toEqual(CategoryId::from(4));
+    expect($permalink->permalink)->toEqual(Permalink::from('old-album-name'));
     expect($permalink->dateDeleted)->toBe('2026-07-01 00:00:00');
     expect($permalink->lastHit)->toBe('2026-07-15 12:00:00');
     expect($permalink->hit)->toBe(12);
@@ -103,8 +103,8 @@ test('OldPermalink::fromEntity leaves null dateDeleted/lastHit as null', functio
 
 test('OldPermalink::toArray round-trips every field', function (): void {
     $permalink = new OldPermalink(
-        catId: 1,
-        permalink: 'my-album',
+        catId: CategoryId::from(1),
+        permalink: Permalink::from('my-album'),
         dateDeleted: null,
         lastHit: null,
         hit: 0,

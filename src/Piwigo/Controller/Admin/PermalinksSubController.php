@@ -147,7 +147,7 @@ final class PermalinksSubController implements AdminSubControllerInterface
                 $this->urlService->addUrlParams(
                     $url_del_base,
                     [
-                        'delete_permanent' => $permalinkRow->permalink,
+                        'delete_permanent' => $permalinkRow->permalink->value,
                         'pwg_token' => $pwg_token,
                     ]
                 );

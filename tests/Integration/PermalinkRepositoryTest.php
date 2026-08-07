@@ -172,7 +172,7 @@ final class PermalinkRepositoryTest extends IntegrationTestCase
 
         try {
             $rows = $this->repo->findAllOrderedBy(OldPermalinkSortField::Permalink);
-            $permalinks = array_map(static fn ($row) => $row->permalink, $rows);
+            $permalinks = array_map(static fn ($row) => $row->permalink->value, $rows);
 
             $lowIndex = array_search($lowSlug, $permalinks, true);
             $highIndex = array_search($highSlug, $permalinks, true);

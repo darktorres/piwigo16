@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Piwigo\Permalink\Projection;
 
+use Piwigo\Common\ValueObject\CategoryId;
+use Piwigo\Common\ValueObject\Permalink;
 use Piwigo\Permalink\OldPermalinkEntity;
 
 /**
@@ -18,8 +20,8 @@ use Piwigo\Permalink\OldPermalinkEntity;
 final readonly class OldPermalink
 {
     public function __construct(
-        public int $catId,
-        public string $permalink,
+        public CategoryId $catId,
+        public Permalink $permalink,
         public ?string $dateDeleted,
         public ?string $lastHit,
         public int $hit,
@@ -33,16 +35,15 @@ final readonly class OldPermalink
      * properties are already typed, so no defensive casting is needed
      * the way `fromRow()`'s own untyped raw-array input required.
      *
-     * `catId`/`permalink` unwrap `->value` -- the entity's own properties
-     * are `CategoryId`/`Permalink` VOs (see the entity's own docblock),
-     * but this projection stays plain `int`/`string` by design, matching
-     * the rest of this codebase's Projection classes.
+     * `catId`/`permalink` keep the entity's own `CategoryId`/`Permalink`
+     * VOs (Phase 4) -- `toArray()` is this projection's real unwrap
+     * boundary now.
      */
     public static function fromEntity(OldPermalinkEntity $entity): self
     {
         return new self(
-            catId: $entity->catId->value,
-            permalink: $entity->permalink->value,
+            catId: $entity->catId,
+            permalink: $entity->permalink,
             dateDeleted: $entity->dateDeleted,
             lastHit: $entity->lastHit,
             hit: $entity->hit,
@@ -55,8 +56,8 @@ final readonly class OldPermalink
     public function toArray(): array
     {
         return [
-            'cat_id' => $this->catId,
-            'permalink' => $this->permalink,
+            'cat_id' => $this->catId->value,
+            'permalink' => $this->permalink->value,
             'date_deleted' => $this->dateDeleted,
             'last_hit' => $this->lastHit,
             'hit' => $this->hit,

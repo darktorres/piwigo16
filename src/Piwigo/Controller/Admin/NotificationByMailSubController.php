@@ -155,13 +155,13 @@ final class NotificationByMailSubController implements AdminSubControllerInterfa
                     $updated_param_count = 0;
                     // Update param
                     foreach ($this->configService->getParamsAndValuesLike('nbm\\_%') as $nbm_user) {
-                        if ($nbm_user['param'] === '') {
+                        if ($nbm_user->param === '') {
                             continue;
                         }
-                        if (isset($post[$nbm_user['param']])) {
-                            $post_value = $post[$nbm_user['param']];
+                        if (isset($post[$nbm_user->param])) {
+                            $post_value = $post[$nbm_user->param];
                             $value = is_string($post_value) ? $post_value : '';
-                            $this->configService->confUpdateParam($nbm_user['param'], $value, true);
+                            $this->configService->confUpdateParam($nbm_user->param, $value, true);
                             $updated_param_count++;
                         }
                     }

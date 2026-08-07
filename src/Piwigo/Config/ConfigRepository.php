@@ -7,6 +7,7 @@ namespace Piwigo\Config;
 use Doctrine\DBAL\Exception\UniqueConstraintViolationException;
 use Doctrine\ORM\AbstractQuery;
 use Doctrine\ORM\EntityRepository;
+use Piwigo\Config\Projection\ConfigParamValue;
 use Piwigo\Db\BatchWriter;
 use Piwigo\Db\Tables;
 
@@ -103,7 +104,7 @@ final class ConfigRepository extends EntityRepository
      * SQL LIKE pattern, e.g. `nbm\_%`) -- Controller\Admin\
      * NotificationByMailSubController's own "every nbm_* setting" sweep.
      *
-     * @return list<array{param: string, value: ?string}>
+     * @return list<ConfigParamValue>
      */
     public function findParamsAndValuesLike(string $likePattern): array
     {
@@ -120,10 +121,10 @@ final class ConfigRepository extends EntityRepository
                 continue;
             }
 
-            $result[] = [
-                'param' => is_string($row['param'] ?? null) ? $row['param'] : '',
-                'value' => is_string($row['value'] ?? null) ? $row['value'] : null,
-            ];
+            $result[] = new ConfigParamValue(
+                param: is_string($row['param'] ?? null) ? $row['param'] : '',
+                value: is_string($row['value'] ?? null) ? $row['value'] : null,
+            );
         }
 
         return $result;

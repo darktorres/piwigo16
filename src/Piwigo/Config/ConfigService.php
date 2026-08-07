@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Config;
 
 use Piwigo\Cache\CachePools;
+use Piwigo\Config\Projection\ConfigParamValue;
 use Piwigo\Event\Lifecycle\LoadConf;
 use Piwigo\PluginConfig\EventDispatcher;
 use ReflectionMethod;
@@ -573,7 +574,7 @@ final readonly class ConfigService
     }
 
     /**
-     * @return list<array{param: string, value: ?string}>
+     * @return list<ConfigParamValue>
      */
     public function getParamsAndValuesLike(string $likePattern): array
     {

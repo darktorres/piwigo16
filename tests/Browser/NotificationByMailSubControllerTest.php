@@ -18,13 +18,14 @@ use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
  * check_key 'ghijkl9876543210', disabled) -- real, restorable state to
  * drive the subscribe/unsubscribe/send actions without needing new users.
  *
- * handle()'s own `if ($nbm_user['param'] === '') { continue; }` guard
+ * handle()'s own `if ($nbm_user->param === '') { continue; }` guard
  * (~line 160, inside the 'param' tab's config-save loop) is unreachable
  * via any real request: `$nbm_user` comes straight from
  * ConfigService::getParamsAndValuesLike(), whose own
  * ConfigRepository::findParamsAndValuesLike() already defensively coerces
  * a non-string `param` column value to `''` (`is_string($row['param']) ?
- * ... : ''`) -- but `config.param` is that table's own VARCHAR PRIMARY
+ * ... : ''`, applied when building the ConfigParamValue DTO) -- but
+ * `config.param` is that table's own VARCHAR PRIMARY
  * KEY, so a real row's `param` is both never NULL and never actually the
  * empty string (Doctrine/PDO also always returns VARCHAR columns as PHP
  * strings to begin with). That inner fallback -- and therefore this

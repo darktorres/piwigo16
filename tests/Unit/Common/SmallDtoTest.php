@@ -6,7 +6,9 @@ use Piwigo\Admin\Category\CreateCategoryResult;
 use Piwigo\Common\Dto\PaginatedResult;
 use Piwigo\Common\Dto\UserGroupPair;
 use Piwigo\Common\ValueObject\CategoryId;
+use Piwigo\Common\ValueObject\GroupId;
 use Piwigo\Common\ValueObject\Permalink;
+use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Permalink\OldPermalinkEntity;
 use Piwigo\Permalink\Projection\OldPermalink;
 
@@ -25,16 +27,13 @@ use Piwigo\Permalink\Projection\OldPermalink;
 test('UserGroupPair::fromRow narrows a full real row', function (): void {
     $pair = UserGroupPair::fromRow(['user_id' => '3', 'group_id' => '7']);
 
-    expect($pair->userId)->toBe(3);
-    expect($pair->groupId)->toBe(7);
+    expect($pair->userId)->toEqual(UserId::from(3));
+    expect($pair->groupId)->toEqual(GroupId::from(7));
 });
 
-test('UserGroupPair::fromRow falls back to 0 for a missing/malformed row', function (): void {
-    $pair = UserGroupPair::fromRow([]);
-
-    expect($pair->userId)->toBe(0);
-    expect($pair->groupId)->toBe(0);
-});
+test('UserGroupPair::fromRow throws for a missing/malformed row', function (): void {
+    UserGroupPair::fromRow([]);
+})->throws(InvalidArgumentException::class);
 
 test('CreateCategoryResult::failure carries the error message with no category id', function (): void {
     $result = CreateCategoryResult::failure('This name already exists');

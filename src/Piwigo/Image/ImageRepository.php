@@ -17,6 +17,7 @@ use Piwigo\Common\ValueObject\CategoryId;
 use Piwigo\Common\ValueObject\ImageId;
 use Piwigo\Common\ValueObject\Md5Sum;
 use Piwigo\Common\ValueObject\Permalink;
+use Piwigo\Common\ValueObject\SqlDateTime;
 use Piwigo\Config\ConfigEntry;
 use Piwigo\Core\Env;
 use Piwigo\Db\BatchWriter;
@@ -170,7 +171,7 @@ final class ImageRepository extends EntityRepository
         }
 
         if ($dateCreation !== null) {
-            $entity->dateCreation = $dateCreation;
+            $entity->dateCreation = SqlDateTime::from($dateCreation);
         }
 
         $this->getEntityManager()
@@ -695,7 +696,7 @@ final class ImageRepository extends EntityRepository
 
         $dateAvailable = $row['date_available'];
 
-        return is_scalar($dateAvailable) ? (string) $dateAvailable : null;
+        return $dateAvailable instanceof SqlDateTime ? $dateAvailable->value : null;
     }
 
     /**
@@ -1247,7 +1248,7 @@ final class ImageRepository extends EntityRepository
 
         $dateAvailable = $row['date_available'];
 
-        return is_string($dateAvailable) ? $dateAvailable : null;
+        return $dateAvailable instanceof SqlDateTime ? $dateAvailable->value : null;
     }
 
     public function countImagesInCategories(): int
@@ -2063,7 +2064,7 @@ final class ImageRepository extends EntityRepository
             if (is_array($row)) {
                 $result[] = [
                     'id' => ($row['id'] ?? null) instanceof ImageId ? $row['id']->value : ($row['id'] ?? null),
-                    'date_creation' => $row['date_creation'] ?? null,
+                    'date_creation' => ($row['date_creation'] ?? null) instanceof SqlDateTime ? $row['date_creation']->value : null,
                 ];
             }
         }
@@ -3368,7 +3369,7 @@ final class ImageRepository extends EntityRepository
 
         $value = $row['date_available'];
 
-        return is_string($value) ? $value : null;
+        return $value instanceof SqlDateTime ? $value->value : null;
     }
 
     /**
@@ -3417,7 +3418,8 @@ final class ImageRepository extends EntityRepository
             }
 
             $addMethod = ($row['storage_category_id'] ?? null) === null ? 'api' : 'sync';
-            $dateAvailable = is_string($row['date_available'] ?? null) ? $row['date_available'] : null;
+            $dateAvailableRaw = $row['date_available'] ?? null;
+            $dateAvailable = $dateAvailableRaw instanceof SqlDateTime ? $dateAvailableRaw->value : null;
 
             if (! isset($byMethod[$addMethod])) {
                 $byMethod[$addMethod] = [

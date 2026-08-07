@@ -26,8 +26,10 @@ use Piwigo\Image\ImageEntity;
  * `string` here (this Projection's own convention) -- every real
  * consumer today (`DateHelper::formatDate()`/`timeSince()`, raw SQL
  * comparisons) already expects the raw DB DATETIME string form.
- * `ImageEntity::$lastmodified` itself is `SqlDateTime`-typed (Phase 5) --
- * `fromEntity()` unwraps `->value`.
+ * `ImageEntity::$lastmodified`/`$dateAvailable`/`$dateCreation` are all
+ * `SqlDateTime`-typed (Phase 5; the latter two via the graceful
+ * `sql_datetime_graceful` Type, see that entity's own docblock) --
+ * `fromEntity()` unwraps `->value`/`?->value` for all 3.
  */
 final readonly class Image
 {
@@ -63,8 +65,8 @@ final readonly class Image
         return new self(
             id: $entity->id ?? throw new \LogicException('ImageEntity::$id is only null before persist; fromEntity() expects an already-persisted entity'),
             file: $entity->file,
-            dateAvailable: $entity->dateAvailable,
-            dateCreation: $entity->dateCreation,
+            dateAvailable: $entity->dateAvailable?->value,
+            dateCreation: $entity->dateCreation?->value,
             name: $entity->name,
             comment: $entity->comment,
             author: $entity->author,

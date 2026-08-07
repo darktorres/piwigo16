@@ -9,14 +9,14 @@ use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Image\ImageEntity;
 
 /**
- * @return array{file: string, dateAvailable: ?string, dateCreation: ?string, name: ?string, comment: ?string, author: ?string, hit: int, filesize: ?int, width: ?int, height: ?int, coi: ?string, representativeExt: ?string, dateMetadataUpdate: ?string, ratingScore: ?float, path: string, storageCategoryId: ?CategoryId, level: int, md5sum: ?Md5Sum, addedBy: ?UserId, rotation: ?int, latitude: ?float, longitude: ?float, lastmodified: SqlDateTime}
+ * @return array{file: string, dateAvailable: ?SqlDateTime, dateCreation: ?SqlDateTime, name: ?string, comment: ?string, author: ?string, hit: int, filesize: ?int, width: ?int, height: ?int, coi: ?string, representativeExt: ?string, dateMetadataUpdate: ?string, ratingScore: ?float, path: string, storageCategoryId: ?CategoryId, level: int, md5sum: ?Md5Sum, addedBy: ?UserId, rotation: ?int, latitude: ?float, longitude: ?float, lastmodified: SqlDateTime}
  */
 function baseImageArgs(): array
 {
     return [
         'file' => 'sunset-beach.jpg',
-        'dateAvailable' => '2026-07-20 09:15:00',
-        'dateCreation' => '2026-07-18 16:42:30',
+        'dateAvailable' => SqlDateTime::from('2026-07-20 09:15:00'),
+        'dateCreation' => SqlDateTime::from('2026-07-18 16:42:30'),
         'name' => 'Sunset at the beach',
         'comment' => 'Golden hour shot from the pier',
         'author' => 'jane.doe',
@@ -45,8 +45,8 @@ test('constructs with distinct values for every property', function (): void {
 
     expect($image->id)->toBeNull()
         ->and($image->file)->toBe('sunset-beach.jpg')
-        ->and($image->dateAvailable)->toBe('2026-07-20 09:15:00')
-        ->and($image->dateCreation)->toBe('2026-07-18 16:42:30')
+        ->and($image->dateAvailable)->toEqual(SqlDateTime::from('2026-07-20 09:15:00'))
+        ->and($image->dateCreation)->toEqual(SqlDateTime::from('2026-07-18 16:42:30'))
         ->and($image->name)->toBe('Sunset at the beach')
         ->and($image->comment)->toBe('Golden hour shot from the pier')
         ->and($image->author)->toBe('jane.doe')

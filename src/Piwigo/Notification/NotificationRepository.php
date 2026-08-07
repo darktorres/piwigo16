@@ -14,6 +14,7 @@ use InvalidArgumentException;
 use Piwigo\Category\CategoryEntity;
 use Piwigo\Comment\CommentEntity;
 use Piwigo\Common\ValueObject\NumericId;
+use Piwigo\Common\ValueObject\SqlDateTime;
 use Piwigo\Image\ImageCategoryEntity;
 use Piwigo\Image\ImageEntity;
 use Piwigo\Image\Projection\Image;
@@ -190,8 +191,10 @@ final class NotificationRepository
                 continue;
             }
 
+            $dateAvailableRaw = $row['dateAvailable'] ?? null;
+
             $result[] = [
-                'date_available' => is_string($row['dateAvailable'] ?? null) ? $row['dateAvailable'] : null,
+                'date_available' => $dateAvailableRaw instanceof SqlDateTime ? $dateAvailableRaw->value : null,
                 'nb_elements' => is_numeric($row['nb_elements']) ? (int) $row['nb_elements'] : 0,
                 'nb_cats' => is_numeric($row['nb_cats']) ? (int) $row['nb_cats'] : 0,
             ];

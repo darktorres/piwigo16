@@ -13,28 +13,49 @@ use Piwigo\Common\ValueObject\UserId;
 
 /**
  * Maps the `images` table (`piwigo_images` once Piwigo\Db\TablePrefixListener
- * applies db_prefix at metadata-load time). `dateAvailable`/`dateCreation`/
- * `dateMetadataUpdate` stay plain ?string, not \DateTimeImmutable --
- * matches Image\Projection\Image's own already-documented decision (every
- * real consumer wants the raw DB DATETIME string form).
+ * applies db_prefix at metadata-load time). `dateMetadataUpdate` stays
+ * plain ?string, not a VO -- matches Image\Projection\Image's own
+ * already-documented decision (every real consumer wants the raw DB
+ * DATETIME string form, and unlike `dateAvailable`/`dateCreation` below,
+ * no real code anywhere reads this column back through the entity).
  *
- * Re-examined fresh during the typed-primitives adoption campaign
- * (Common\ValueObject\SqlDate/SqlDateTime now exist): traced every
- * real consumer of these 3 properties and found none do arithmetic or
- * typed comparison -- Image\Projection\Image::fromArray()/toArray() just
- * round-trip the raw string unchanged for template/JSON output.
- * SqlDateTime::from() would add real construction-time calendar
- * validation, which is a behavior change with legacy-data risk (a
- * pre-existing MySQL zero-date row would throw on hydration, not just on
- * a new write) for zero real benefit given how these fields are actually
- * consumed. Decision reaffirmed, not revisited again without new
- * information.
+ * `dateAvailable`/`dateCreation` are `SqlDateTime`-typed via the
+ * `sql_datetime_graceful` Doctrine Type ({@see
+ * \Piwigo\Db\Type\GracefulSqlDateTimeType}), not the strict
+ * `sql_datetime` every other Phase 5 column uses. Re-examined during the
+ * typed-primitives adoption campaign and reaffirmed "stays plain string"
+ * at the time -- revisited again with new information found tracing
+ * every real write path for the VO/DTO typing campaign:
+ * `Metadata\MetadataService::getSyncExifData()` (line ~335) contains
+ * real, live production code checking for a MySQL zero-date
+ * ('0000-00-00 00:00:00') sentinel when syncing EXIF data, confirming
+ * this isn't hypothetical -- a pre-existing row can carry a value
+ * `SqlDateTime::from()`'s calendar-round-trip validation would reject.
+ * That write path already normalizes the sentinel to `null` before
+ * persisting, so *new* writes are safe, but existing rows aren't
+ * guaranteed clean, hence the graceful (tryFrom()-based, null-on-failure)
+ * read side rather than the strict Type.
  *
- * `lastmodified` doesn't share that risk and is `SqlDateTime`-typed
- * (Phase 5) -- `NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE
- * CURRENT_TIMESTAMP` means the DB server always populates a real,
- * well-formed timestamp for it (unlike the 3 EXIF/IPTC-sourced columns
- * above, which can carry a genuine pre-existing zero-date sentinel).
+ * The one real entity-level write path,
+ * {@see \Piwigo\Image\ImageRepository::updateDescriptiveFields()}, DOES
+ * use the strict `SqlDateTime::from()` (not `tryFrom()`) before
+ * assignment -- deliberately not softened to match the graceful read
+ * side. Unlike `Users\UserListCriteria::$minRegister`/`$maxRegister`
+ * (blocked on adding upstream WS validation first, no DB-level backstop
+ * at all), `date_creation`/`date_available` are real `datetime`/
+ * `timestamp` columns (not VARCHAR) even under the pre-VO `string`
+ * Doctrine mapping -- the DB driver itself already rejects or silently
+ * zero-dates a malformed value on write today, so moving that same
+ * rejection earlier (a clear PHP exception instead of a DB-level error
+ * or silent corruption) is not a new regression at the WS boundary
+ * (`Ws\PwgImages`'s 3 `date_creation` call sites), just an earlier,
+ * clearer failure of a write that was never actually safe.
+ *
+ * `lastmodified` doesn't share the zero-date risk and is strict-typed
+ * (`sql_datetime`, Phase 5) -- `NOT NULL DEFAULT CURRENT_TIMESTAMP ON
+ * UPDATE CURRENT_TIMESTAMP` means the DB server always populates a real,
+ * well-formed timestamp for it (unlike `dateAvailable`/`dateCreation`,
+ * which are nullable and EXIF/IPTC-sourced).
  * `new ImageEntity(...)` is never constructed in PHP anywhere in this
  * codebase (every real image row is inserted via raw DBAL) -- the 2 real
  * DQL `UPDATE ... SET i.lastmodified = ...` sites both bind a plain
@@ -65,10 +86,10 @@ final class ImageEntity
     public function __construct(
         #[ORM\Column(type: 'string', length: 255)]
         public string $file,
-        #[ORM\Column(name: 'date_available', type: 'string', length: 19, nullable: true)]
-        public ?string $dateAvailable,
-        #[ORM\Column(name: 'date_creation', type: 'string', length: 19, nullable: true)]
-        public ?string $dateCreation,
+        #[ORM\Column(name: 'date_available', type: 'sql_datetime_graceful', length: 19, nullable: true)]
+        public ?SqlDateTime $dateAvailable,
+        #[ORM\Column(name: 'date_creation', type: 'sql_datetime_graceful', length: 19, nullable: true)]
+        public ?SqlDateTime $dateCreation,
         #[ORM\Column(type: 'string', length: 255, nullable: true)]
         public ?string $name,
         #[ORM\Column(type: 'text', nullable: true)]

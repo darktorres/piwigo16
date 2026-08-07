@@ -3198,7 +3198,8 @@ final class CategoryRepository
 
             $count++;
 
-            $dateAvailable = is_string($row['date_available'] ?? null) ? $row['date_available'] : null;
+            $dateAvailableRaw = $row['date_available'] ?? null;
+            $dateAvailable = $dateAvailableRaw instanceof SqlDateTime ? $dateAvailableRaw->value : null;
             if ($dateAvailable === null) {
                 continue;
             }

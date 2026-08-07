@@ -8,10 +8,12 @@ use Piwigo\Common\ValueObject\CategoryId;
 use Piwigo\Common\ValueObject\CommentId;
 use Piwigo\Common\ValueObject\GroupId;
 use Piwigo\Common\ValueObject\IpAddress;
+use Piwigo\Common\ValueObject\SqlDateTime;
 use Piwigo\Common\ValueObject\TagId;
 use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Db\Type\CategoryIdType;
 use Piwigo\Db\Type\CommentIdType;
+use Piwigo\Db\Type\GracefulSqlDateTimeType;
 use Piwigo\Db\Type\GroupIdType;
 use Piwigo\Db\Type\IpAddressType;
 use Piwigo\Db\Type\TagIdType;
@@ -108,3 +110,39 @@ test('IpAddressType declares a string SQL column and binding type', function ():
         ->toBe($platform->getStringTypeDeclarationSQL(['length' => 45]));
     expect($type->getBindingType())->toBe(ParameterType::STRING);
 });
+
+test('GracefulSqlDateTimeType converts a real DB string to a SqlDateTime and back', function (): void {
+    $type = new GracefulSqlDateTimeType();
+    $platform = new MySQLPlatform();
+
+    expect($type->convertToPHPValue('2026-08-01 12:00:00', $platform))->toEqual(SqlDateTime::from('2026-08-01 12:00:00'));
+    expect($type->convertToPHPValue(null, $platform))->toBeNull();
+
+    expect($type->convertToDatabaseValue(SqlDateTime::from('2026-08-01 12:00:00'), $platform))->toBe('2026-08-01 12:00:00');
+    expect($type->convertToDatabaseValue(null, $platform))->toBeNull();
+});
+
+test('GracefulSqlDateTimeType returns null instead of throwing for a MySQL zero-date sentinel', function (): void {
+    $type = new GracefulSqlDateTimeType();
+
+    expect($type->convertToPHPValue('0000-00-00 00:00:00', new MySQLPlatform()))->toBeNull();
+});
+
+test('GracefulSqlDateTimeType returns null instead of throwing for any other unparseable non-null value', function (): void {
+    $type = new GracefulSqlDateTimeType();
+
+    expect($type->convertToPHPValue('not-a-date', new MySQLPlatform()))->toBeNull();
+    expect($type->convertToPHPValue('2026-02-30 00:00:00', new MySQLPlatform()))->toBeNull();
+});
+
+test('GracefulSqlDateTimeType rejects a non-string value from the DB driver', function (): void {
+    $type = new GracefulSqlDateTimeType();
+
+    $type->convertToPHPValue(12345, new MySQLPlatform());
+})->throws(InvalidArgumentException::class, 'Expected string from the DB driver, got int');
+
+test('GracefulSqlDateTimeType rejects a non-VO value being written to the DB', function (): void {
+    $type = new GracefulSqlDateTimeType();
+
+    $type->convertToDatabaseValue('2026-08-01 12:00:00', new MySQLPlatform());
+})->throws(InvalidArgumentException::class);

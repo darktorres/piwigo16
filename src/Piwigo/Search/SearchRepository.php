@@ -209,7 +209,10 @@ final class SearchRepository
             }
 
             $unwrapped = array_map(
-                static fn (mixed $value): mixed => $value instanceof ImageId ? $value->value : $value,
+                static fn (mixed $value): mixed => match (true) {
+                    $value instanceof ImageId, $value instanceof SqlDateTime => $value->value,
+                    default => $value,
+                },
                 $row
             );
 

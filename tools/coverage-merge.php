@@ -12,19 +12,21 @@ require __DIR__ . '/../vendor/autoload.php';
 use SebastianBergmann\CodeCoverage\CodeCoverage;
 use SebastianBergmann\CodeCoverage\Data\RawCodeCoverageData;
 use SebastianBergmann\CodeCoverage\Driver\Selector;
+use SebastianBergmann\CodeCoverage\Exception as CodeCoverageException;
 use SebastianBergmann\CodeCoverage\Filter;
 use SebastianBergmann\CodeCoverage\Report\Html\Facade as HtmlReport;
 use SebastianBergmann\CodeCoverage\Report\Text;
 use SebastianBergmann\CodeCoverage\Report\Thresholds;
+use SebastianBergmann\CodeCoverage\Serialization\Unserializer;
 use SebastianBergmann\FileIterator\Facade as FileIteratorFacade;
 
 /**
  * Validates that an unserialize()'d pcov dump really is the
- * array<string, array<int, int>> shape RawCodeCoverageData::
- * fromXdebugWithoutPathCoverage() requires, rather than trusting whatever
- * a .raw file on disk happens to contain.
+ * array<non-empty-string, array<int<1, max>, int>> shape
+ * RawCodeCoverageData::fromLineCoverage() requires, rather than trusting
+ * whatever a .raw file on disk happens to contain.
  *
- * @return array<string, array<int, int>>|null
+ * @return array<non-empty-string, array<int<1, max>, int>>|null
  */
 function normalizeRawLineCoverage(mixed $raw): ?array
 {
@@ -34,13 +36,13 @@ function normalizeRawLineCoverage(mixed $raw): ?array
 
     $normalized = [];
     foreach ($raw as $file => $lines) {
-        if (! is_string($file) || ! is_array($lines)) {
+        if (! is_string($file) || $file === '' || ! is_array($lines)) {
             return null;
         }
 
         $normalizedLines = [];
         foreach ($lines as $line => $status) {
-            if (! is_int($line) || ! is_int($status)) {
+            if (! is_int($line) || $line < 1 || ! is_int($status)) {
                 return null;
             }
 
@@ -56,11 +58,11 @@ function normalizeRawLineCoverage(mixed $raw): ?array
 /**
  * Merges every coverage source this project can produce into one report:
  * CLI --coverage-php dumps (Unit+Arch, Integration -- passed as argv paths,
- * each a PHP file returning a real CodeCoverage object, see
- * SebastianBergmann\CodeCoverage\Report\PHP::process()) plus every
- * per-request raw pcov dump Piwigo\Core\CoverageCollector wrote under
- * _data/coverage-raw/web/*.raw while Contract/Browser tests drove the live
- * Apache instance.
+ * each a metadata-wrapped array written by
+ * SebastianBergmann\CodeCoverage\Serialization\Serializer, loaded back via
+ * its Unserializer counterpart) plus every per-request raw pcov dump
+ * Piwigo\Core\CoverageCollector wrote under _data/coverage-raw/web/*.raw
+ * while Contract/Browser tests drove the live Apache instance.
  *
  * Usage: php tools/coverage-merge.php [unit-arch.cov] [integration.cov] ...
  */
@@ -83,26 +85,59 @@ foreach ($webFiles as $i => $file) {
         continue;
     }
 
-    $coverage->append(RawCodeCoverageData::fromXdebugWithoutPathCoverage($lineCoverage), 'web-' . $i);
+    $coverage->append(RawCodeCoverageData::fromLineCoverage($lineCoverage), 'web-' . $i);
 }
 
+$unserializer = new Unserializer();
 foreach (array_slice($argv ?? [], 1) as $cliDumpPath) {
-    if (! is_file($cliDumpPath)) {
+    if ($cliDumpPath === '' || ! is_file($cliDumpPath)) {
         fwrite(STDERR, "coverage-merge.php: skipping missing file {$cliDumpPath}\n");
         continue;
     }
 
-    $loaded = require $cliDumpPath;
-    if (! $loaded instanceof CodeCoverage) {
-        fwrite(STDERR, "coverage-merge.php: {$cliDumpPath} did not return a CodeCoverage instance, skipping\n");
+    try {
+        $loaded = $unserializer->unserialize($cliDumpPath);
+    } catch (CodeCoverageException $e) {
+        fwrite(STDERR, "coverage-merge.php: {$cliDumpPath}: {$e->getMessage()}, skipping\n");
         continue;
     }
 
-    $coverage->merge($loaded);
+    // Serializer::serialize() runs every covered file through
+    // PathReducer::reduce() first, rewriting absolute paths down to a
+    // common-prefix-stripped relative form (returned here as basePath) for
+    // a portable dump -- Unserializer has no inverse step, so the loaded
+    // ProcessedCodeCoverageData's own file keys are still relative at this
+    // point. Restoring them to real absolute paths before merging is
+    // required: merging as-is silently DOUBLED the file count in this
+    // dataset (844 -> 1688, confirmed live) instead of unioning by path,
+    // because the relative keys never matched our own absolute-path-keyed
+    // accumulator's existing entries for the same files.
+    if ($loaded['basePath'] !== '') {
+        foreach ($loaded['codeCoverage']->coveredFiles() as $relativeFile) {
+            $loaded['codeCoverage']->renameFile($relativeFile, $loaded['basePath'] . DIRECTORY_SEPARATOR . $relativeFile);
+        }
+    }
+
+    // --coverage-php dumps a metadata-wrapped array now, not a ready-to-use
+    // CodeCoverage instance -- CodeCoverage::merge() needs private access
+    // to $that->filter()/$that->data/$that->getTests() it can only get on
+    // a real CodeCoverage, and there's no public constructor path back to
+    // one from serialized data alone (CodeCoverage::__construct() requires
+    // a live Driver). Merging the raw ProcessedCodeCoverageData directly
+    // via CodeCoverage's own public getData()/merge() pair is the same
+    // operation the library's own Serialization\Merger class performs
+    // internally. testResults (per-test size/status/time metadata) has no
+    // public merge point on CodeCoverage from outside the class, so it's
+    // not carried over for argv-provided dumps -- only affects per-test
+    // attribution for files covered solely by these dumps, not the
+    // coverage percentages themselves, which come from the merged data.
+    $coverage->getData()
+        ->merge($loaded['codeCoverage']);
 }
 
 echo count($webFiles) . " web request dump(s) merged.\n\n";
-echo (new Text(Thresholds::default(), showUncoveredFiles: true))->process($coverage);
+$report = $coverage->getReport();
+echo (new Text(Thresholds::default(), true))->process($report);
 
-(new HtmlReport())->process($coverage, $htmlDir);
+(new HtmlReport())->process($report, $htmlDir);
 echo "\nHTML report written to {$htmlDir}\n";

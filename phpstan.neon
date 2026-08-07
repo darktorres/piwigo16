@@ -156,9 +156,20 @@ parameters:
         -
             identifier: offsetAccess.nonOffsetAccessible
             path: tests/Unit/Lang/TranslatorTest.php
+        # Same root cause once more: $this->expectErrorLog() (a real,
+        # protected PHPUnit\Framework\TestCase method, added so PHPUnit's
+        # own error_log() capture prints nothing for tests that
+        # deliberately trigger HtmlService::fatalError()/
+        # ErrorCollector::recordFatal() -- see those tests' own $this->
+        # expectErrorLog() calls) is unresolvable through Pest's $this
+        # for the exact same reason $this->createStub() is above.
         -
             identifier: method.notFound
-            path: tests/Unit/Db/TablePrefixListenerTest.php
+            paths:
+                - tests/Unit/Db/TablePrefixListenerTest.php
+                - tests/Unit/Html/HtmlServiceTest.php
+                - tests/Unit/Template/ScriptLoaderTest.php
+                - tests/Unit/Template/TemplateInstanceTest.php
         -
             identifier: method.nonObject
             paths:
@@ -176,18 +187,37 @@ parameters:
             identifier: classConstant.internalClass
             path: tests/Unit/SmokeTest.php
         # RawCodeCoverageData is entirely @internal upstream, but its
-        # fromXdebugWithoutPathCoverage() static factory is the only way
-        # (public or otherwise) to turn a raw pcov/xdebug-format coverage
-        # array into what CodeCoverage::append() requires -- it's exactly
-        # how the library's own PcovDriver::stop()/XdebugDriver::stop()
-        # build one, just called from outside the package because our raw
-        # array was captured by a *separate* PHP process (a live web
-        # request, via Piwigo\Core\CoverageCollector's own pcov\collect()
-        # call) and handed to this merge script as a serialized .raw dump
-        # rather than produced by a driver running in-process. Same
-        # tooling/visibility mismatch as the Pest entries above -- not
-        # fixable in application code since we don't control the
-        # library's docblocks.
+        # fromLineCoverage() static factory is the only way (public or
+        # otherwise) to turn a raw pcov/xdebug-format coverage array into
+        # what CodeCoverage::append() requires -- it's exactly how the
+        # library's own PcovDriver::stop()/XdebugDriver::stop() build one,
+        # just called from outside the package because our raw array was
+        # captured by a *separate* PHP process (a live web request, via
+        # Piwigo\Core\CoverageCollector's own pcov\collect() call) and
+        # handed to this merge script as a serialized .raw dump rather
+        # than produced by a driver running in-process. Same tooling/
+        # visibility mismatch as the Pest entries above -- not fixable in
+        # application code since we don't control the library's docblocks.
         -
             identifier: staticMethod.internalClass
+            path: tools/coverage-merge.php
+        # Same root cause, two more identifiers: Report\Text and
+        # Report\Html\Facade are also entirely @internal upstream, but
+        # their constructors + process() methods are the only public way
+        # to turn a CodeCoverage::getReport() Directory into the text/HTML
+        # output this script writes -- there's no non-internal API for
+        # either report format.
+        -
+            identifier: method.internalClass
+            path: tools/coverage-merge.php
+        -
+            identifier: new.internalClass
+            path: tools/coverage-merge.php
+        # Same root cause, method-level rather than class-level: unlike
+        # Text/Html\Facade, CodeCoverage itself isn't @internal, but its
+        # getReport() method individually is -- and it's the only way to
+        # turn a CodeCoverage into the Directory that both report classes'
+        # process() methods require above.
+        -
+            identifier: method.internal
             path: tools/coverage-merge.php

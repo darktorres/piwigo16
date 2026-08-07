@@ -7,6 +7,7 @@ namespace Piwigo\Users\Projection;
 use InvalidArgumentException;
 use Piwigo\Common\ValueObject\LangCode;
 use Piwigo\Common\ValueObject\UserId;
+use Piwigo\Core\AppInfo;
 use Piwigo\Core\ArrayHelper;
 use Piwigo\Users\UserInfoEntity;
 
@@ -49,7 +50,7 @@ final readonly class UserInfo
         public UserId $userId,
         public int $nbImagePage,
         public string $status,
-        public string $language,
+        public LangCode $language,
         public bool $expand,
         public bool $showNbComments,
         public bool $showNbHits,
@@ -82,7 +83,9 @@ final readonly class UserInfo
             userId: $userId,
             nbImagePage: is_numeric($row['nb_image_page'] ?? null) ? (int) $row['nb_image_page'] : 0,
             status: is_string($row['status'] ?? null) ? $row['status'] : 'guest',
-            language: ($row['language'] ?? null) instanceof LangCode ? $row['language']->value : (is_string($row['language'] ?? null) ? $row['language'] : ''),
+            language: ($row['language'] ?? null) instanceof LangCode
+                ? $row['language']
+                : (LangCode::tryFrom($row['language'] ?? null) ?? LangCode::from(AppInfo::DEFAULT_LANGUAGE)),
             expand: (bool) ($row['expand'] ?? false),
             showNbComments: (bool) ($row['show_nb_comments'] ?? false),
             showNbHits: (bool) ($row['show_nb_hits'] ?? false),
@@ -108,7 +111,7 @@ final readonly class UserInfo
             userId: $entity->userId,
             nbImagePage: $entity->nbImagePage,
             status: $entity->status->value,
-            language: $entity->language->value,
+            language: $entity->language,
             expand: $entity->expand,
             showNbComments: $entity->showNbComments,
             showNbHits: $entity->showNbHits,
@@ -139,7 +142,7 @@ final readonly class UserInfo
             'user_id' => $this->userId->value,
             'nb_image_page' => $this->nbImagePage,
             'status' => $this->status,
-            'language' => $this->language,
+            'language' => $this->language->value,
             'expand' => $this->expand,
             'show_nb_comments' => $this->showNbComments,
             'show_nb_hits' => $this->showNbHits,

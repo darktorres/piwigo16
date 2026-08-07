@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Piwigo\Common\ValueObject\LangCode;
+use Piwigo\Core\AppInfo;
 use Piwigo\Users\Projection\UserInfo;
 
 /**
@@ -38,7 +39,7 @@ test('fromRow narrows a real DB row into typed properties, decoding JSON prefere
     expect($info->userId->value)->toBe(5);
     expect($info->nbImagePage)->toBe(20);
     expect($info->status)->toBe('normal');
-    expect($info->language)->toBe('en_UK');
+    expect($info->language)->toEqual(LangCode::from('en_UK'));
     expect($info->expand)->toBeTrue();
     expect($info->showNbComments)->toBeFalse();
     expect($info->showNbHits)->toBeTrue();
@@ -61,7 +62,7 @@ test('fromRow falls back to safe defaults for every field except user_id', funct
     expect($info->userId->value)->toBe(7);
     expect($info->nbImagePage)->toBe(0);
     expect($info->status)->toBe('guest');
-    expect($info->language)->toBe('');
+    expect($info->language)->toEqual(LangCode::from(AppInfo::DEFAULT_LANGUAGE));
     expect($info->expand)->toBeFalse();
     expect($info->showNbComments)->toBeFalse();
     expect($info->showNbHits)->toBeFalse();
@@ -76,21 +77,22 @@ test('fromRow falls back to safe defaults for every field except user_id', funct
     expect($info->preferences)->toBeNull();
 });
 
-test('fromRow unwraps a real LangCode instance for language into its plain string value', function (): void {
+test('fromRow passes a real LangCode instance for language straight through', function (): void {
     // Kills line 85's CoalesceRemoveLeft (`($row['language'] ?? null)
     // instanceof LangCode` -> `null instanceof LangCode`) and
     // InstanceOfToFalse (the same expression -> literal `false`): both
     // mutants make the instanceof check unconditionally false, so a real
-    // LangCode row value would wrongly fall through to the is_string()
-    // branch (false, since it's an object) and default to '' instead of
-    // the LangCode's own value. Every other fixture in this file passes a
-    // plain string for 'language', so nothing else exercises this branch.
+    // LangCode row value would wrongly fall through to the tryFrom()
+    // branch (false, since it's an object, not a string) and default to
+    // AppInfo::DEFAULT_LANGUAGE instead of the row's own LangCode. Every
+    // other fixture in this file passes a plain string for 'language', so
+    // nothing else exercises this branch.
     $info = UserInfo::fromRow([
         'user_id' => 1,
         'language' => LangCode::from('fr_FR'),
     ]);
 
-    expect($info->language)->toBe('fr_FR');
+    expect($info->language)->toEqual(LangCode::from('fr_FR'));
 });
 
 test('fromRow reads a truthy show_nb_comments value, not just the coalesce fallback', function (): void {
@@ -110,6 +112,21 @@ test('fromRow drops non-string preference keys after decoding JSON', function ()
     ]);
 
     expect($info->preferences)->toBe(['valid_key' => 'v']);
+});
+
+test('fromRow keeps an already-hydrated LangCode instance as-is', function (): void {
+    // Covers the getArrayResult() Gotcha #1 shape: a real Doctrine array
+    // hydration would already have converted `language` via LangCodeType,
+    // not left it as a raw string.
+    $info = UserInfo::fromRow(['user_id' => 1, 'language' => LangCode::from('fr_FR')]);
+
+    expect($info->language)->toEqual(LangCode::from('fr_FR'));
+});
+
+test('fromRow falls back to the default language for an invalid raw string', function (): void {
+    $info = UserInfo::fromRow(['user_id' => 1, 'language' => 'not-a-lang-code']);
+
+    expect($info->language)->toEqual(LangCode::from(AppInfo::DEFAULT_LANGUAGE));
 });
 
 test('fromRow throws for a missing or invalid user_id', function (): void {

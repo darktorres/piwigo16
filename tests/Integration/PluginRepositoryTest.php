@@ -9,6 +9,7 @@ use Piwigo\Core\Kernel;
 use LogicException;
 use Piwigo\Db\EntityManagerFactory;
 use Piwigo\PluginConfig\PluginEntity;
+use Piwigo\PluginConfig\Projection\Plugin;
 use Doctrine\DBAL\Connection;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\ConfigLoader;
@@ -84,7 +85,7 @@ final class PluginRepositoryTest extends IntegrationTestCase
     {
         $plugins = $this->repo->getDbPlugins('active');
 
-        self::assertSame(['c13y', 'o-brien'], array_column($plugins, 'id'));
+        self::assertSame(['c13y', 'o-brien'], array_map(static fn (Plugin $p): string => $p->id->value, $plugins));
     }
 
     public function test_get_db_plugins_filters_by_id(): void
@@ -107,7 +108,7 @@ final class PluginRepositoryTest extends IntegrationTestCase
         $plugins = $this->repo->getDbPlugins('', 'o-brien');
 
         self::assertCount(1, $plugins);
-        self::assertSame('o-brien', $plugins[0]->id);
+        self::assertSame('o-brien', $plugins[0]->id->value);
     }
 
     public function test_get_db_plugins_filters_by_a_malformed_id_finds_nothing(): void

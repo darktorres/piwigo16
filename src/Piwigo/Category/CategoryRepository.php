@@ -1064,7 +1064,7 @@ final class CategoryRepository
         $em->createQueryBuilder()
             ->delete(UserAccessEntity::class, 'ua')
             ->where('ua.catId IN (:ids)')
-            ->setParameter('ids', $ids)
+            ->setParameter('ids', $ids, ArrayParameterType::INTEGER)
             ->getQuery()
             ->execute();
         $em->clear();
@@ -1119,8 +1119,8 @@ final class CategoryRepository
             ->delete(UserAccessEntity::class, 'ua')
             ->where('ua.userId IN (:userIds)')
             ->andWhere('ua.catId IN (:catIds)')
-            ->setParameter('userIds', $userIds)
-            ->setParameter('catIds', $catIds)
+            ->setParameter('userIds', $userIds, ArrayParameterType::INTEGER)
+            ->setParameter('catIds', $catIds, ArrayParameterType::INTEGER)
             ->getQuery()
             ->execute();
         $em->clear();
@@ -1543,9 +1543,9 @@ final class CategoryRepository
     /**
      * @return list<int>
      *
-     * $catId takes CategoryId directly, unwrapped to ->value here since
-     * UserAccessEntity::$catId/$userId are still plain int (see
-     * PermissionRepository's own equivalent docblock note).
+     * UserAccessEntity::$catId/$userId are VO-typed -- binds the
+     * CategoryId VO directly and unwraps ->value on the returned UserId,
+     * matching findAccessGroupIds()'s own pattern.
      */
     public function findAccessUserIds(CategoryId $catId): array
     {
@@ -1554,11 +1554,11 @@ final class CategoryRepository
             ->select('ua')
             ->from(UserAccessEntity::class, 'ua')
             ->where('ua.catId = :catId')
-            ->setParameter('catId', $catId->value)
+            ->setParameter('catId', $catId)
             ->getQuery()
             ->getResult();
 
-        return array_map(static fn (UserAccessEntity $ua): int => $ua->userId, $entities);
+        return array_map(static fn (UserAccessEntity $ua): int => $ua->userId->value, $entities);
     }
 
     /**
@@ -2210,18 +2210,30 @@ final class CategoryRepository
      * ({@see UserAccessEntity}, no declared association to CategoryEntity,
      * so joined via an explicit `Join::WITH` condition, same shape as
      * {@see \Piwigo\Group\GroupRepository::getAccessibleCategoryIdsForUser()}'s
-     * own precedent). UserAccessEntity's own userId/catId are plain ints
-     * (no custom Doctrine Type), unlike GroupAccessEntity below.
+     * own precedent).
+     *
+     * UserAccessEntity::$userId/$catId are VO-typed. $userId stays a raw
+     * int at this public boundary -- its one real caller
+     * (Admin\UserPermPageRenderer) reaches it from a URL param validated
+     * only by is_numeric() (not a positive-int guarantee). tryFrom(), not
+     * from(): a malformed value can never match a real user_access row
+     * either way, so it short-circuits to "no private categories" instead
+     * of throwing.
      */
     public function findPrivateCategoriesGrantedToUser(int $userId, array $groupAuthorizedCatIds = []): array
     {
+        $userIdVo = UserId::tryFrom($userId);
+        if ($userIdVo === null) {
+            return [];
+        }
+
         $qb = $this->em->getRepository(CategoryEntity::class)->createQueryBuilder('c')
             ->select('c.id', 'c.name', 'c.uppercats', 'c.globalRank AS global_rank')
             ->innerJoin(UserAccessEntity::class, 'ua', Join::WITH, 'ua.catId = c.id')
             ->where('c.status = :status')
             ->andWhere('ua.userId = :userId')
             ->setParameter('status', 'private')
-            ->setParameter('userId', $userId);
+            ->setParameter('userId', $userIdVo);
 
         if ($groupAuthorizedCatIds !== []) {
             $qb->andWhere($qb->expr()->notIn('ua.catId', ':groupAuthorized'))
@@ -2958,16 +2970,26 @@ final class CategoryRepository
      * ({@see UserAccessEntity}), joined via explicit `Join::WITH`. Only
      * `c.id` is selected (plain int), same reasoning as
      * {@see findPrivateCategoryIdsGrantedToGroup()} above.
+     *
+     * Same UserId::tryFrom() boundary-safety reasoning as
+     * {@see findPrivateCategoriesGrantedToUser()} above -- this method's
+     * own real caller reaches it via the identical Admin\UserPermPageRenderer
+     * URL param.
      */
     public function findPrivateCategoryIdsGrantedToUser(int $userId, array $excludeCategoryIds): array
     {
+        $userIdVo = UserId::tryFrom($userId);
+        if ($userIdVo === null) {
+            return [];
+        }
+
         $qb = $this->em->getRepository(CategoryEntity::class)->createQueryBuilder('c')
             ->select('c.id')
             ->innerJoin(UserAccessEntity::class, 'ua', Join::WITH, 'ua.catId = c.id')
             ->where('c.status = :status')
             ->andWhere('ua.userId = :userId')
             ->setParameter('status', 'private')
-            ->setParameter('userId', $userId);
+            ->setParameter('userId', $userIdVo);
 
         if ($excludeCategoryIds !== []) {
             $qb->andWhere($qb->expr()->notIn('ua.catId', ':excludeCategoryIds'))

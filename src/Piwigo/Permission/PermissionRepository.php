@@ -98,6 +98,12 @@ final readonly class PermissionRepository
 
     /**
      * @return list<int>
+     *
+     * $userId wraps via UserId::from() -- this method's only real caller,
+     * PermissionService::getForbiddenCategories(), is always reached with
+     * an already-authenticated real user's own id (via its 2 real
+     * cache-wrapper callers, EffectiveForbiddenCategoriesCache/
+     * ForbiddenCategoriesCache), unlike deleteUserAccess() below.
      */
     public function findDirectlyAuthorizedCategoryIds(int $userId): array
     {
@@ -105,7 +111,7 @@ final readonly class PermissionRepository
             ->select('ua.catId')
             ->from(UserAccessEntity::class, 'ua')
             ->where('ua.userId = :userId')
-            ->setParameter('userId', $userId)
+            ->setParameter('userId', UserId::from($userId))
             ->getQuery()
             ->getSingleColumnResult();
 
@@ -116,6 +122,14 @@ final readonly class PermissionRepository
      * Deletes direct user-category access rows.
      *
      * @param list<int> $catIds
+     *
+     * UserId::tryFrom(), not from() -- this method's only real caller
+     * (PermissionService::removeUserAccess(), from
+     * Admin\UserPermPageRenderer) reaches it with a URL param validated
+     * only by is_numeric() (not a positive-int guarantee); a malformed
+     * value can never match a real user_access row either way, so it's a
+     * silent no-op instead of throwing, matching this method's own
+     * existing "no-op for no catIds" contract just above.
      */
     public function deleteUserAccess(int $userId, array $catIds): void
     {
@@ -123,12 +137,17 @@ final readonly class PermissionRepository
             return;
         }
 
+        $userIdVo = UserId::tryFrom($userId);
+        if ($userIdVo === null) {
+            return;
+        }
+
         $this->em->createQueryBuilder()
             ->delete(UserAccessEntity::class, 'ua')
             ->where('ua.userId = :userId')
             ->andWhere('ua.catId IN (:catIds)')
-            ->setParameter('userId', $userId)
-            ->setParameter('catIds', $catIds)
+            ->setParameter('userId', $userIdVo)
+            ->setParameter('catIds', $catIds, ArrayParameterType::INTEGER)
             ->getQuery()
             ->execute();
         $this->em->clear();
@@ -242,10 +261,10 @@ final readonly class PermissionRepository
 
         $grouped = [];
         foreach ($rows as $row) {
-            if (! is_array($row) || ! is_numeric($row['catId'] ?? null) || ! is_numeric($row['userId'] ?? null)) {
+            if (! is_array($row) || ! $row['catId'] instanceof CategoryId || ! $row['userId'] instanceof UserId) {
                 continue;
             }
-            $grouped[(int) $row['catId']][] = (int) $row['userId'];
+            $grouped[$row['catId']->value][] = $row['userId']->value;
         }
 
         return $grouped;
@@ -369,12 +388,12 @@ final readonly class PermissionRepository
 
         $result = [];
         foreach ($rows as $row) {
-            if (! is_array($row) || ! is_numeric($row['userId'] ?? null) || ! is_numeric($row['catId'] ?? null)) {
+            if (! is_array($row) || ! $row['userId'] instanceof UserId || ! $row['catId'] instanceof CategoryId) {
                 continue;
             }
             $result[] = [
-                'user_id' => (int) $row['userId'],
-                'cat_id' => (int) $row['catId'],
+                'user_id' => $row['userId']->value,
+                'cat_id' => $row['catId']->value,
             ];
         }
 

@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Piwigo\Config;
 
-use LogicException;
 use Piwigo\Common\Enum\SortOrder;
 use Piwigo\Core\AppInfo;
 use Piwigo\Core\Env;

@@ -292,7 +292,7 @@ final class PictureCommentRenderer
 
             $userEmail = $currentUser->get()
                 ->email;
-            $userEmailEmpty = $userEmail === '' || $userEmail === '0';
+            $userEmailEmpty = $userEmail === null;
 
             $tplVar = [
                 'F_ACTION' => $url_self,

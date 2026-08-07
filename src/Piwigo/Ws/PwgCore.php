@@ -469,7 +469,7 @@ final class PwgCore
 
         $currentUser = $this->currentUser->get();
         $res = [];
-        $res['username'] = $this->accessControl->isAGuest() ? 'guest' : stripslashes($currentUser->username);
+        $res['username'] = $this->accessControl->isAGuest() ? 'guest' : stripslashes($currentUser->username->value ?? '');
         $res['status'] = $currentUser->status->value;
         $res['theme'] = $currentUser->theme;
         $res['language'] = $currentUser->language;

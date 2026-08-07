@@ -513,7 +513,7 @@ final class RequestBootstrap
             // username), so only the localized-username case needs a
             // second sync; the non-guest path never mutates CurrentUser
             // again after initialize()'s own sync.
-            self::currentUser()->set(self::currentUser()->get()->withUsername(self::lang()->t('guest')));
+            self::currentUser()->set(self::currentUser()->get()->withUsername(Username::from(self::lang()->t('guest'))));
         }
 
         $pageState = self::pageState();

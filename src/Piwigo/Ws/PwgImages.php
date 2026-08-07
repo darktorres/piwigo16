@@ -523,7 +523,7 @@ final class PwgImages
             )
         ) {
             $username = $this->currentUser->get()
-                ->username;
+                ->username->value ?? '';
             $comment_post_data['author'] = stripslashes($username);
             $comment_post_data['key'] = new EphemeralKeyService($this->currentConfig)->generate(2, (string) $params['image_id']);
         }

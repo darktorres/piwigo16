@@ -17,8 +17,8 @@ function seedCurrentUserStatus(UserStatus $status): void
 {
     CurrentUserTestFactory::get()->set(new User(
         id: UserId::from(1),
-        username: '',
-        email: '',
+        username: null,
+        email: null,
         language: '',
         theme: '',
         status: $status,

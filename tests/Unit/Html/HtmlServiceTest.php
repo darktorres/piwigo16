@@ -17,6 +17,7 @@ use FilesystemIterator;
 use SplFileInfo;
 use Piwigo\Users\User;
 use Piwigo\Common\ValueObject\UserId;
+use Piwigo\Common\ValueObject\Username;
 use Piwigo\Users\UserStatus;
 use Piwigo\Http\ResponseReadyException;
 use RuntimeException;
@@ -1394,8 +1395,8 @@ test('accessDenied renders a 401 page instead of redirecting when a real (non-gu
     // CurrentUser is required to reach this branch at all.
     CurrentUserTestFactory::get()->set(new User(
         id: UserId::from(1),
-        username: 'alice',
-        email: '',
+        username: Username::from('alice'),
+        email: null,
         language: '',
         theme: '',
         status: UserStatus::Normal,

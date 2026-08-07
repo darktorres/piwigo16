@@ -6,6 +6,7 @@ namespace Piwigo\Tests\Integration {
 
     use Override;
     use Piwigo\Auth\AccessLevelChecker;
+    use Piwigo\Common\ValueObject\Username;
     use Piwigo\Core\Kernel;
     use LogicException;
     use Piwigo\Core\CurrentLogger;
@@ -183,8 +184,8 @@ namespace Piwigo\Tests\Integration {
         {
             CurrentUserTestFactory::get()->set(new User(
                 id: UserId::from(2),
-                username: 'fixture_guest',
-                email: '',
+                username: Username::from('fixture_guest'),
+                email: null,
                 language: '',
                 theme: '',
                 status: UserStatus::Guest,
@@ -378,8 +379,8 @@ namespace Piwigo\Tests\Integration {
         {
             CurrentUserTestFactory::get()->set(new User(
                 id: UserId::from(2),
-                username: 'fixture_guest',
-                email: '',
+                username: Username::from('fixture_guest'),
+                email: null,
                 language: '',
                 theme: '',
                 status: UserStatus::Guest,

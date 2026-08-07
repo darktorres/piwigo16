@@ -17,7 +17,9 @@ use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Bootstrap\PresentationAccessor;
 use Piwigo\Tests\Support\UrlServiceTestFactory;
 use Piwigo\Mail\MailService;
+use Piwigo\Common\ValueObject\Email;
 use Piwigo\Common\ValueObject\UserId;
+use Piwigo\Common\ValueObject\Username;
 use Doctrine\DBAL\Connection;
 use Piwigo\Auth\EphemeralKeyService;
 use Piwigo\Comment\CommentRepository;
@@ -889,8 +891,8 @@ final class PictureCommentRendererTest extends IntegrationTestCase
     {
         CurrentUserTestFactory::get()->set(new User(
             id: UserId::from($id),
-            username: 'fixture_user_' . $id,
-            email: $email,
+            username: Username::from('fixture_user_' . $id),
+            email: Email::tryFrom($email),
             language: '',
             theme: '',
             status: $status,

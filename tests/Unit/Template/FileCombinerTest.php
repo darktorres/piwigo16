@@ -6,6 +6,7 @@ use Piwigo\Tests\Support\UrlServiceTestFactory;
 use Piwigo\Tests\Support\TemplateTestFactory;
 use Piwigo\Auth\AccessLevelChecker;
 use Piwigo\Common\ValueObject\UserId;
+use Piwigo\Common\ValueObject\Username;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Paths;
@@ -73,8 +74,8 @@ function setAdminUser(): void
 {
     CurrentUserTestFactory::get()->set(new User(
         id: UserId::from(2),
-        username: 'admin',
-        email: '',
+        username: Username::from('admin'),
+        email: null,
         language: 'en_UK',
         theme: 'modus',
         status: UserStatus::Admin,

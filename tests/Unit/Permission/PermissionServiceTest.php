@@ -6,6 +6,7 @@ use Piwigo\Auth\AccessLevelChecker;
 use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Group\GroupEntity;
 use Piwigo\Common\ValueObject\UserId;
+use Piwigo\Common\ValueObject\Username;
 use Piwigo\Core\Paths;
 use Piwigo\Permission\SqlCondition;
 use Doctrine\DBAL\ArrayParameterType;
@@ -70,8 +71,8 @@ function seedPermissionUser(string $forbiddenCategories = '', int $level = 0, st
 {
     CurrentUserTestFactory::get()->set(new User(
         id: UserId::from(1),
-        username: 'torres',
-        email: '',
+        username: Username::from('torres'),
+        email: null,
         language: '',
         theme: '',
         status: UserStatus::Normal,
@@ -102,8 +103,8 @@ function seedPermissionUserRaw(array $rawAttributes): void
 {
     CurrentUserTestFactory::get()->set(new User(
         id: UserId::from(1),
-        username: 'torres',
-        email: '',
+        username: Username::from('torres'),
+        email: null,
         language: '',
         theme: '',
         status: UserStatus::Normal,

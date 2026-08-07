@@ -222,7 +222,7 @@ final readonly class CommentService
             }
         } else {
             $user = $this->currentUser->get();
-            $comm['author'] = addslashes($user->username);
+            $comm['author'] = addslashes($user->username->value ?? '');
             $comm['author_id'] = $user->id->value;
         }
 
@@ -262,8 +262,8 @@ final readonly class CommentService
         if (self::emptyValue($comm['email'] ?? null)) {
             $currentUserEmail = $this->currentUser->get()
                 ->email;
-            if (! self::emptyValue($currentUserEmail)) {
-                $comm['email'] = $currentUserEmail;
+            if ($currentUserEmail !== null) {
+                $comm['email'] = $currentUserEmail->value;
             } elseif ($this->currentConfig->commentsEmailMandatory()) {
                 $infos[] = $this->lang->t('Email address is missing. Please specify an email address.');
                 $commentAction = 'reject';
@@ -425,7 +425,7 @@ final readonly class CommentService
     public function updateComment(array $comment, string $postKey): string
     {
         $username = $this->currentUser->get()
-            ->username;
+            ->username->value ?? '';
 
         $imageIdRaw = is_scalar($comment['image_id'] ?? null) ? (string) $comment['image_id'] : '';
 

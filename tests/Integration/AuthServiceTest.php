@@ -33,6 +33,7 @@ namespace Piwigo\Tests\Integration {
     use Piwigo\Auth\PasswordRepository;
     use Piwigo\Auth\PasswordService;
     use Piwigo\Common\ValueObject\UserId;
+    use Piwigo\Common\ValueObject\Username;
     use Piwigo\Config\CurrentConfig;
     use Piwigo\Tests\Support\CurrentConfigTestFactory;
     use Piwigo\Config\ConfigLoader;
@@ -240,8 +241,8 @@ namespace Piwigo\Tests\Integration {
             // exercise directly.
             CurrentUserTestFactory::get()->set(new User(
                 id: UserId::from(1),
-                username: 'fixture_admin',
-                email: '',
+                username: Username::from('fixture_admin'),
+                email: null,
                 language: 'en_UK',
                 theme: '',
                 status: UserStatus::Webmaster,
@@ -279,8 +280,8 @@ namespace Piwigo\Tests\Integration {
         {
             CurrentUserTestFactory::get()->set(new User(
                 id: UserId::from(1),
-                username: 'fixture_admin',
-                email: '',
+                username: Username::from('fixture_admin'),
+                email: null,
                 language: 'en_UK',
                 theme: '',
                 status: UserStatus::Webmaster,
@@ -320,8 +321,8 @@ namespace Piwigo\Tests\Integration {
 
             CurrentUserTestFactory::get()->set(new User(
                 id: UserId::from(1),
-                username: 'fixture_admin',
-                email: '',
+                username: Username::from('fixture_admin'),
+                email: null,
                 language: 'en_UK',
                 theme: '',
                 status: UserStatus::Webmaster,

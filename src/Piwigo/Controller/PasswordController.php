@@ -524,13 +524,13 @@ final class PasswordController implements ControllerInterface
         $targetUser = $this->currentUser->get();
         $_SESSION['valid_reset_password_code'] = [
             'user_id' => $user_id->value,
-            'username' => $targetUser->username,
-            'email' => $targetUser->email,
+            'username' => $targetUser->username?->value,
+            'email' => $targetUser->email?->value,
             'language' => $targetUser->language,
         ];
         $status = $targetUser->status->value;
-        $has_no_email = $targetUser->email === '';
-        $this->username = $targetUser->username;
+        $has_no_email = $targetUser->email === null;
+        $this->username = $targetUser->username?->value;
         $this->currentUser->set($saveCurrentUser);
 
         // fallback check: don't send mail when user is guest, generic or

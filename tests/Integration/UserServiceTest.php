@@ -701,8 +701,8 @@ namespace Piwigo\Tests\Integration {
         {
             CurrentUserTestFactory::get()->set(new User(
                 id: UserId::from(1),
-                username: 'torres',
-                email: '',
+                username: Username::from('torres'),
+                email: null,
                 language: '',
                 theme: '',
                 status: UserStatus::Normal,

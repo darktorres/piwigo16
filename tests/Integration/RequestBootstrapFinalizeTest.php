@@ -9,7 +9,9 @@ use Piwigo\Core\Kernel;
 use LogicException;
 use Piwigo\Tests\Support\UrlServiceTestFactory;
 use Piwigo\Bootstrap\RequestBootstrap;
+use Piwigo\Common\ValueObject\Email;
 use Piwigo\Common\ValueObject\UserId;
+use Piwigo\Common\ValueObject\Username;
 use Piwigo\Config\ConfigLoader;
 use Piwigo\Config\ConfigService;
 use Piwigo\Config\CurrentConfig;
@@ -71,8 +73,8 @@ final class RequestBootstrapFinalizeTest extends IntegrationTestCase
 
         CurrentUserTestFactory::get()->set(new User(
             id: UserId::from(3),
-            username: 'regular_user',
-            email: 'regular@example.test',
+            username: Username::from('regular_user'),
+            email: Email::from('regular@example.test'),
             language: 'en_UK',
             theme: 'default',
             status: UserStatus::Normal,
@@ -163,8 +165,8 @@ final class RequestBootstrapFinalizeTest extends IntegrationTestCase
     {
         CurrentUserTestFactory::get()->set(new User(
             id: UserId::from(2),
-            username: 'guest',
-            email: '',
+            username: Username::from('guest'),
+            email: null,
             language: 'en_UK',
             theme: 'default',
             status: UserStatus::Guest,

@@ -95,8 +95,8 @@ beforeEach(function (): void {
     Kernel::boot(Paths::fromRoot(sys_get_temp_dir()));
     CurrentUserTestFactory::get()->set(new User(
         id: UserId::from(1),
-        username: '',
-        email: '',
+        username: null,
+        email: null,
         language: '',
         theme: '',
         status: UserStatus::Normal,
@@ -201,8 +201,8 @@ test('buildInnerSql falls back to a forced 1 = 1 condition when no permission cl
     // visible_images/forbidden_images fallthrough case).
     CurrentUserTestFactory::get()->set(new User(
         id: UserId::from(1),
-        username: '',
-        email: '',
+        username: null,
+        email: null,
         language: '',
         theme: '',
         status: UserStatus::Normal,
@@ -229,8 +229,8 @@ test('buildInnerSql falls back to a forced 1 = 1 condition when no permission cl
 test('buildInnerSql composes forbidden/visible categories and images into the WHERE clause', function (): void {
     CurrentUserTestFactory::get()->set(new User(
         id: UserId::from(1),
-        username: '',
-        email: '',
+        username: null,
+        email: null,
         language: '',
         theme: '',
         status: UserStatus::Normal,

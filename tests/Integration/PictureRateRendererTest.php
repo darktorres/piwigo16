@@ -13,6 +13,7 @@ use Piwigo\Tests\Support\TemplateTestFactory;
 use Piwigo\Auth\AccessControl;
 use Piwigo\Tests\Support\UrlServiceTestFactory;
 use Piwigo\Common\ValueObject\UserId;
+use Piwigo\Common\ValueObject\Username;
 use Doctrine\DBAL\Connection;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
@@ -123,8 +124,8 @@ final class PictureRateRendererTest extends IntegrationTestCase
 
         CurrentUserTestFactory::get()->set(new User(
             id: UserId::from(3),
-            username: 'fixture_user_3',
-            email: '',
+            username: Username::from('fixture_user_3'),
+            email: null,
             language: '',
             theme: '',
             status: UserStatus::Normal,
@@ -160,8 +161,8 @@ final class PictureRateRendererTest extends IntegrationTestCase
 
         CurrentUserTestFactory::get()->set(new User(
             id: UserId::from(2),
-            username: 'guest',
-            email: '',
+            username: Username::from('guest'),
+            email: null,
             language: '',
             theme: '',
             status: UserStatus::Guest,

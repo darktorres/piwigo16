@@ -37,6 +37,7 @@ use Piwigo\Category\CategoryService;
 use Piwigo\Tag\TagService;
 use Piwigo\Users\User;
 use Piwigo\Common\ValueObject\UserId;
+use Piwigo\Common\ValueObject\Username;
 use Piwigo\Users\UserStatus;
 use Piwigo\Tag\TagEntity;
 use Piwigo\Core\CurrentLogger;
@@ -223,8 +224,8 @@ final class MaintenanceActionDispatcherTest extends IntegrationTestCase
         $currentUser = new CurrentUser(new CurrentConfig());
         $currentUser->set(new User(
             id: UserId::from(2),
-            username: 'maintenance-action-dispatcher-test-tag-service-user',
-            email: '',
+            username: Username::from('maintenance-action-dispatcher-test-tag-service-user'),
+            email: null,
             language: '',
             theme: '',
             status: UserStatus::Normal,

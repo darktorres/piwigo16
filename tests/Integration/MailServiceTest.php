@@ -20,6 +20,7 @@ use Doctrine\DBAL\Connection;
 use Piwigo\Activity\ActivityEntity;
 use Piwigo\Activity\ActivityService;
 use Piwigo\Common\ValueObject\UserId;
+use Piwigo\Common\ValueObject\Username;
 use Piwigo\Config\ConfigEntry;
 use Piwigo\Config\ConfigLoader;
 use Piwigo\Config\ConfigService;
@@ -442,8 +443,8 @@ final class MailServiceTest extends IntegrationTestCase
         // fopen() warning, not just the expected "Mailer Error" one.
         CurrentUserTestFactory::get()->set(new User(
             id: UserId::from(1),
-            username: 'nonexistent-subdir/evil',
-            email: '',
+            username: Username::from('nonexistent-subdir/evil'),
+            email: null,
             language: 'en_UK',
             theme: '',
             status: UserStatus::Normal,

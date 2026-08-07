@@ -658,7 +658,7 @@ final class MailService implements MailerInterface
         $tplVars = [];
         if ($sendTechnicalDetails) {
             $username = $this->currentUser->get()
-                ->username;
+                ->username->value ?? '';
             $tplVars['TECHNICAL'] = [
                 'username' => stripslashes($username),
                 'ip' => IpAddress::fromRemoteAddr()->value ?? '',
@@ -1176,7 +1176,7 @@ final class MailService implements MailerInterface
         $dir = $this->paths->root . $dataLocation . 'tmp';
         if (FilesystemHelper::mkgetdir($dir, $this->currentConfig, FilesystemHelper::MKGETDIR_DEFAULT & ~FilesystemHelper::MKGETDIR_DIE_ON_ERROR)) {
             $username = $this->currentUser->get()
-                ->username;
+                ->username->value ?? '';
             $langCode = $this->lang->langInfo()['code'] ?? null;
             $langCode = is_string($langCode) ? $langCode : '';
 

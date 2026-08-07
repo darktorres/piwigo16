@@ -35,8 +35,8 @@ function seedAccessControlUser(UserStatus $status, int $id = 1): CurrentUser
     $currentUser = new CurrentUser(new CurrentConfig());
     $currentUser->set(new User(
         id: UserId::from($id),
-        username: '',
-        email: '',
+        username: null,
+        email: null,
         language: '',
         theme: '',
         status: $status,

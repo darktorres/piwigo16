@@ -8,6 +8,7 @@ use LogicException;
 use InvalidArgumentException;
 use Piwigo\Auth\PwgTOTP;
 use Piwigo\Common\ValueObject\UserId;
+use Piwigo\Common\ValueObject\Username;
 use Piwigo\Tests\Support\CurrentUserTestFactory;
 use Piwigo\Users\User;
 use Piwigo\Users\UserStatus;
@@ -198,8 +199,8 @@ test('verifyCode checks the full inclusive [-check_interval, +check_interval] ra
 test('getOtpAuthUrl builds an otpauth:// url from the current user and a scheme-stripped-of-trailing-slash root url', function (): void {
     CurrentUserTestFactory::get()->set(new User(
         id: UserId::from(9),
-        username: 'totp_user',
-        email: '',
+        username: Username::from('totp_user'),
+        email: null,
         language: '',
         theme: '',
         status: UserStatus::Normal,
@@ -220,8 +221,8 @@ test('getOtpAuthUrl builds an otpauth:// url from the current user and a scheme-
 test('getQrCode returns a base64 PNG data uri encoding the same otpauth url as getOtpAuthUrl', function (): void {
     CurrentUserTestFactory::get()->set(new User(
         id: UserId::from(9),
-        username: 'totp_user',
-        email: '',
+        username: Username::from('totp_user'),
+        email: null,
         language: '',
         theme: '',
         status: UserStatus::Normal,

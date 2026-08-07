@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Piwigo\Common\ValueObject\UserId;
+use Piwigo\Common\ValueObject\Username;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Core\AppInfo;
@@ -43,8 +44,8 @@ test('attachGlobals seeds a guest user', function (): void {
     $user = $currentUser->get();
 
     expect($user->status)->toBe(UserStatus::Guest)
-        ->and($user->username)->toBe('')
-        ->and($user->email)->toBe('')
+        ->and($user->username)->toBeNull()
+        ->and($user->email)->toBeNull()
         ->and($user->enabledHigh)->toBeFalse()
         ->and($user->language)->toBe(AppInfo::DEFAULT_LANGUAGE)
         ->and($user->theme)->toBe(AppInfo::DEFAULT_TEMPLATE)
@@ -54,8 +55,8 @@ test('attachGlobals seeds a guest user', function (): void {
 test('attachGlobals is idempotent -- does not clobber a real set() user', function (): void {
     $real = new User(
         id: UserId::from(42),
-        username: 'alice',
-        email: '',
+        username: Username::from('alice'),
+        email: null,
         language: 'fr_FR',
         theme: 'modus',
         status: UserStatus::Admin,

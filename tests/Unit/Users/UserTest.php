@@ -2,7 +2,9 @@
 
 declare(strict_types=1);
 
+use Piwigo\Common\ValueObject\Email;
 use Piwigo\Common\ValueObject\UserId;
+use Piwigo\Common\ValueObject\Username;
 use Piwigo\Users\User;
 use Piwigo\Users\UserStatus;
 
@@ -21,8 +23,8 @@ test('fromUserArray coerces a real legacy $user row', function (): void {
     ]);
 
     expect($user->id->value)->toBe(7)
-        ->and($user->username)->toBe('alice')
-        ->and($user->email)->toBe('alice@example.com')
+        ->and($user->username)->toEqual(Username::from('alice'))
+        ->and($user->email)->toEqual(Email::from('alice@example.com'))
         ->and($user->language)->toBe('en_UK')
         ->and($user->theme)->toBe('modus')
         ->and($user->status)->toBe(UserStatus::Admin)
@@ -34,15 +36,15 @@ test('fromUserArray coerces a real legacy $user row', function (): void {
 });
 
 test('fromUserArray throws on a missing/malformed id', function (): void {
-    User::fromUserArray([]);
+    User::fromUserArray(['username' => 'alice']);
 })->throws(InvalidArgumentException::class);
 
 test('fromUserArray degrades safely on a missing/malformed non-id field', function (): void {
     $user = User::fromUserArray(['id' => 7]);
 
     expect($user->id->value)->toBe(7)
-        ->and($user->username)->toBe('')
-        ->and($user->email)->toBe('')
+        ->and($user->username)->toBeNull()
+        ->and($user->email)->toBeNull()
         ->and($user->language)->toBe('')
         ->and($user->theme)->toBe('')
         ->and($user->status)->toBe(UserStatus::Guest)
@@ -61,8 +63,8 @@ test('fromUserArray falls back to Guest for an unrecognized status value', funct
 test('withLanguage returns a new immutable instance, original is untouched', function (): void {
     $original = new User(
         id: UserId::from(1),
-        username: 'bob',
-        email: '',
+        username: Username::from('bob'),
+        email: null,
         language: 'en_UK',
         theme: 'modus',
         status: UserStatus::Normal,
@@ -79,25 +81,25 @@ test('withLanguage returns a new immutable instance, original is untouched', fun
 test('withUsername returns a new immutable instance', function (): void {
     $original = new User(
         id: UserId::from(1),
-        username: 'bob',
-        email: '',
+        username: Username::from('bob'),
+        email: null,
         language: 'en_UK',
         theme: 'modus',
         status: UserStatus::Normal,
         enabledHigh: false,
     );
 
-    $updated = $original->withUsername('robert');
+    $updated = $original->withUsername(Username::from('robert'));
 
-    expect($updated->username)->toBe('robert')
-        ->and($original->username)->toBe('bob');
+    expect($updated->username)->toEqual(Username::from('robert'))
+        ->and($original->username)->toEqual(Username::from('bob'));
 });
 
 test('withLevel returns a new immutable instance and syncs rawAttributes', function (): void {
     $original = new User(
         id: UserId::from(1),
-        username: 'bob',
-        email: '',
+        username: Username::from('bob'),
+        email: null,
         language: 'en_UK',
         theme: 'modus',
         status: UserStatus::Normal,
@@ -118,8 +120,8 @@ test('withLevel returns a new immutable instance and syncs rawAttributes', funct
 test('withEnabledHigh returns a new immutable instance and syncs rawAttributes', function (): void {
     $original = new User(
         id: UserId::from(1),
-        username: 'bob',
-        email: '',
+        username: Username::from('bob'),
+        email: null,
         language: 'en_UK',
         theme: 'modus',
         status: UserStatus::Normal,
@@ -138,8 +140,8 @@ test('withEnabledHigh returns a new immutable instance and syncs rawAttributes',
 test('withRawAttribute adds a key without disturbing the rest of the array', function (): void {
     $original = new User(
         id: UserId::from(1),
-        username: 'bob',
-        email: '',
+        username: Username::from('bob'),
+        email: null,
         language: 'en_UK',
         theme: 'modus',
         status: UserStatus::Normal,

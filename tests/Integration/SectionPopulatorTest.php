@@ -7,6 +7,8 @@ namespace Piwigo\Tests\Integration;
 use Override;
 use Piwigo\Auth\AccessLevelChecker;
 use Piwigo\Common\Enum\Section;
+use Piwigo\Common\ValueObject\Email;
+use Piwigo\Common\ValueObject\Username;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Tests\Support\EventDispatcherTestFactory;
 use Piwigo\Db\EntityManagerFactory;
@@ -223,8 +225,8 @@ final class SectionPopulatorTest extends IntegrationTestCase
     {
         CurrentUserTestFactory::get()->set(new User(
             id: UserId::from(3),
-            username: 'regular_user',
-            email: 'regular@example.test',
+            username: Username::from('regular_user'),
+            email: Email::from('regular@example.test'),
             language: 'en_UK',
             theme: 'default',
             status: UserStatus::Normal,
@@ -236,8 +238,8 @@ final class SectionPopulatorTest extends IntegrationTestCase
     {
         CurrentUserTestFactory::get()->set(new User(
             id: UserId::from(1),
-            username: 'fixture_admin',
-            email: 'fixture_admin@example.test',
+            username: Username::from('fixture_admin'),
+            email: Email::from('fixture_admin@example.test'),
             language: 'en_UK',
             theme: 'default',
             status: UserStatus::Admin,

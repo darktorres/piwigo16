@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use Piwigo\Tests\Support\TemplateTestFactory;
 use Piwigo\Common\ValueObject\UserId;
+use Piwigo\Common\ValueObject\Username;
 use Piwigo\Tests\Support\UrlServiceTestFactory;
 use Piwigo\Mail\MailService;
 use Piwigo\Tests\Support\LangTestFactory;
@@ -80,8 +81,8 @@ beforeEach(function (): void {
     CurrentTemplate::current()->set($template);
     CurrentUserTestFactory::get()->set(new User(
         id: UserId::from(1),
-        username: 'torres',
-        email: '',
+        username: Username::from('torres'),
+        email: null,
         language: '',
         theme: '',
         status: UserStatus::Normal,
@@ -174,8 +175,8 @@ test('render only counts the first commentable related category then stops (`bre
     // distinguishes the two.
     CurrentUserTestFactory::get()->set(new User(
         id: UserId::from(1),
-        username: '',
-        email: '',
+        username: null,
+        email: null,
         language: '',
         theme: '',
         status: UserStatus::Guest,
@@ -239,8 +240,8 @@ test('render rejects a posted comment as "ugly spammer" when no related category
 test('render rejects a posted comment as "Session expired" for a guest when comments_forall is off', function (): void {
     CurrentUserTestFactory::get()->set(new User(
         id: UserId::from(1),
-        username: '',
-        email: '',
+        username: null,
+        email: null,
         language: '',
         theme: '',
         status: UserStatus::Guest,
@@ -271,8 +272,8 @@ test('render rejects a posted comment as "Session expired" for a guest when comm
 test('render lets a guest post a comment when comments_forall is on', function (): void {
     CurrentUserTestFactory::get()->set(new User(
         id: UserId::from(1),
-        username: '',
-        email: '',
+        username: null,
+        email: null,
         language: '',
         theme: '',
         status: UserStatus::Guest,

@@ -5,6 +5,7 @@ declare(strict_types=1);
 use Piwigo\Admin\PluginMaintain;
 use Piwigo\Auth\AccessControl;
 use Piwigo\Common\ValueObject\UserId;
+use Piwigo\Common\ValueObject\Username;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Paths;
 use Piwigo\Core\WsContext;
@@ -50,8 +51,8 @@ function pluginMaintainSetUserStatus(UserStatus $status): void
 {
     CurrentUserTestFactory::get()->set(new User(
         id: UserId::from(1),
-        username: 'plugin-maintain-test-user',
-        email: '',
+        username: Username::from('plugin-maintain-test-user'),
+        email: null,
         language: '',
         theme: '',
         status: $status,

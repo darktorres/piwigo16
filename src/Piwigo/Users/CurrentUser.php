@@ -49,8 +49,8 @@ final class CurrentUser
     {
         $this->user ??= new User(
             id: UserId::from($this->currentConfig->guestId()),
-            username: '',
-            email: '',
+            username: null,
+            email: null,
             language: AppInfo::DEFAULT_LANGUAGE,
             theme: AppInfo::DEFAULT_TEMPLATE,
             status: UserStatus::Guest,

@@ -116,7 +116,7 @@ final class FeedController implements ControllerInterface
         $conf_gallery_title = $this->currentConfig->galleryTitle();
         $conf_rss_feed_author = $this->currentConfig->rssReedAuthor();
         $user_username = $this->currentUser->get()
-            ->username;
+            ->username->value ?? '';
 
         $rss_title = $conf_gallery_title . ' (as ' . stripslashes($user_username) . ')';
         $rss_link = $this->urlService->getGalleryHomeUrl();

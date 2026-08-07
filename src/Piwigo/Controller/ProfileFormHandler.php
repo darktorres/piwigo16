@@ -399,8 +399,8 @@ final class ProfileFormHandler
 
         $current_user_email = $this->currentUser->get()
             ->email;
-        $email_notifications_infos = $current_user_email !== '' ?
-          $this->lang->t('The email <em>%s</em> will be used to notify you when your API key is about to expire.', $current_user_email)
+        $email_notifications_infos = $current_user_email !== null ?
+          $this->lang->t('The email <em>%s</em> will be used to notify you when your API key is about to expire.', $current_user_email->value)
           : $this->lang->t('You have no email address, so you will not be notified when your API key is about to expire.');
         $template->assign('API_EMAIL_INFOS', $email_notifications_infos);
 

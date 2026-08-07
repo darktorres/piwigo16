@@ -375,7 +375,7 @@ final class MenubarRenderer
             }
         } else {
             $username = $currentUser->get()
-                ->username;
+                ->username->value ?? '';
             $template->assign('USERNAME', stripslashes($username));
             if ($accessLevelChecker->isAuthorizeStatus(AccessLevel::Classic)) {
                 $template->assign('U_PROFILE', $urlService->getRootUrl() . 'profile.php');

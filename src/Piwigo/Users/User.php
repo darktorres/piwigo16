@@ -5,7 +5,9 @@ declare(strict_types=1);
 namespace Piwigo\Users;
 
 use InvalidArgumentException;
+use Piwigo\Common\ValueObject\Email;
 use Piwigo\Common\ValueObject\UserId;
+use Piwigo\Common\ValueObject\Username;
 
 /**
  * Typed user entity. `rawAttributes` carries the full legacy `$user`
@@ -36,8 +38,8 @@ final readonly class User
      */
     public function __construct(
         public UserId $id,
-        public string $username,
-        public string $email,
+        public ?Username $username,
+        public ?Email $email,
         public string $language,
         public string $theme,
         public UserStatus $status,
@@ -64,8 +66,8 @@ final readonly class User
 
         return new self(
             id: $id,
-            username: is_string($row['username'] ?? null) ? $row['username'] : '',
-            email: is_string($row['email'] ?? null) ? $row['email'] : '',
+            username: Username::tryFrom($row['username'] ?? null),
+            email: Email::tryFrom($row['email'] ?? null),
             language: is_string($row['language'] ?? null) ? $row['language'] : '',
             theme: is_string($row['theme'] ?? null) ? $row['theme'] : '',
             status: is_string($status) ? (UserStatus::tryFrom($status) ?? UserStatus::Guest) : UserStatus::Guest,
@@ -90,8 +92,8 @@ final readonly class User
     {
         return array_merge($this->rawAttributes, [
             'id' => $this->id->value,
-            'username' => $this->username,
-            'email' => $this->email,
+            'username' => $this->username?->value,
+            'email' => $this->email?->value,
             'language' => $this->language,
             'theme' => $this->theme,
             'status' => $this->status->value,
@@ -123,10 +125,10 @@ final readonly class User
         );
     }
 
-    public function withUsername(string $username): self
+    public function withUsername(Username $username): self
     {
         $rawAttributes = $this->rawAttributes;
-        $rawAttributes['username'] = $username;
+        $rawAttributes['username'] = $username->value;
 
         return new self(
             id: $this->id,

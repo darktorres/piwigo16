@@ -6,8 +6,10 @@ use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\ArrayParameterType;
 use Piwigo\Common\ValueObject\CategoryId;
 use Piwigo\Common\ValueObject\ImageId;
+use Piwigo\Db\AdvisorySessionLock;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
+use Piwigo\Db\SqlDialect;
 use Piwigo\Db\Tables;
 use Piwigo\Image\ImageEntity;
 use Piwigo\Image\ImageRepository;
@@ -38,21 +40,21 @@ function imageRepositoryTestRepo(): ImageRepository
  * emptyLounge() tests. Under --parallel, Pest runs separate test FILES
  * as separate worker processes concurrently, so a test here and a test
  * there can genuinely race on this one row. Same lock name as
- * ImageServiceTest.php's own identical helper -- MySQL's GET_LOCK()/
- * RELEASE_LOCK() are server-wide, not connection-local, so they
- * serialize both files' tests against each other for real.
+ * ImageServiceTest.php's own identical helper -- both MySQL's GET_LOCK()/
+ * RELEASE_LOCK() and Postgres' pg_try_advisory_lock()/pg_advisory_unlock()
+ * (via Db\AdvisorySessionLock) are server-wide, not connection-local, so
+ * they serialize both files' tests against each other for real.
  */
 function imageRepositoryTestAcquireEmptyLoungeDbLock(Connection $conn): void
 {
-    $acquired = $conn->fetchOne("SELECT GET_LOCK('piwigo17-unit-tests-empty_lounge_running', 10)");
-    if (! is_numeric($acquired) || (int) $acquired !== 1) {
+    if (! AdvisorySessionLock::acquire($conn, 'piwigo17-unit-tests-empty_lounge_running', 10)) {
         throw new RuntimeException('Could not acquire the empty_lounge_running test lock within 10s -- a concurrent test run may be stuck.');
     }
 }
 
 function imageRepositoryTestReleaseEmptyLoungeDbLock(Connection $conn): void
 {
-    $conn->executeStatement("SELECT RELEASE_LOCK('piwigo17-unit-tests-empty_lounge_running')");
+    AdvisorySessionLock::release($conn, 'piwigo17-unit-tests-empty_lounge_running');
 }
 
 /**
@@ -376,8 +378,9 @@ test('findMaxRanksByCategory returns the real int max rank for a category with r
     $conn->executeStatement("INSERT INTO " . Tables::categories() . " (name) VALUES ('mutation-sweep-max-rank-category')");
     $categoryId = (int) $conn->lastInsertId();
     $imageId = imageRepositoryTestInsertImage('upload/2026/07/max-rank-test.jpg');
+    $rankColumn = $conn->getDatabasePlatform()->quoteSingleIdentifier('rank');
     $conn->createQueryBuilder()->insert(Tables::imageCategory())
-        ->values(['image_id' => ':i', 'category_id' => ':c', '`rank`' => ':r'])
+        ->values(['image_id' => ':i', 'category_id' => ':c', $rankColumn => ':r'])
         ->setParameter('i', $imageId)->setParameter('c', $categoryId)->setParameter('r', 7)->executeStatement();
 
     try {
@@ -407,7 +410,9 @@ test('massInsertImageCategory persists every real row it is given', function ():
             ['image_id' => $imageId, 'category_id' => 1, 'rank' => 3],
         ]);
 
-        $rank = DbConnection::build()->fetchOne('SELECT `rank` FROM ' . Tables::imageCategory() . " WHERE image_id = {$imageId} AND category_id = 1");
+        $conn = DbConnection::build();
+        $rankColumn = $conn->getDatabasePlatform()->quoteSingleIdentifier('rank');
+        $rank = $conn->fetchOne('SELECT ' . $rankColumn . ' FROM ' . Tables::imageCategory() . " WHERE image_id = {$imageId} AND category_id = 1");
         expect($rank)->toBe(3);
         $refetched = $repo->find(ImageId::from(1));
         expect($refetched)->not->toBe($cached);
@@ -602,7 +607,7 @@ test('findIdsVisibleInCategoriesRecentlyAvailable returns real ints for a recent
         ->executeStatement();
 
     try {
-        $result = imageRepositoryTestRepo()->findIdsVisibleInCategoriesRecentlyAvailable('1', 'DATE_SUB(NOW(), INTERVAL 1 YEAR)');
+        $result = imageRepositoryTestRepo()->findIdsVisibleInCategoriesRecentlyAvailable('1', SqlDialect::getRecentPeriodExpression(365));
 
         // Category 1 already holds the fixture's own images too (real
         // production data, not something this test controls) -- assert

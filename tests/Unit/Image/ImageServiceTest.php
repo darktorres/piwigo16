@@ -34,7 +34,9 @@ use Piwigo\Tests\Support\CurrentConfigServiceTestFactory;
 use Piwigo\Config\ConfigService;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
+use Piwigo\Db\AdvisorySessionLock;
 use Piwigo\Db\DbConnection;
+use Piwigo\Db\SqlDialect;
 use Piwigo\Event\Album\EmptyLounge;
 use Piwigo\Event\Picture\BeginDeleteElements;
 use Piwigo\Event\Picture\DeleteElements;
@@ -878,9 +880,10 @@ test('associateImagesToCategories() treats a numeric-string image id as already 
     // turning this test into an uncaught exception under the mutation.
     [$conn, $repo] = imageServiceTestConnAndRepo();
     $imageId = imageServiceTestInsertImage($conn, 'upload/2026/07/existingassoc.jpg');
+    $rankColumn = $conn->getDatabasePlatform()->quoteSingleIdentifier('rank');
     $conn->createQueryBuilder()
         ->insert(Tables::imageCategory())
-        ->values(['image_id' => ':imageId', 'category_id' => ':categoryId', '`rank`' => ':rank'])
+        ->values(['image_id' => ':imageId', 'category_id' => ':categoryId', $rankColumn => ':rank'])
         ->setParameter('imageId', $imageId)
         ->setParameter('categoryId', 1)
         ->setParameter('rank', 1)
@@ -891,7 +894,7 @@ test('associateImagesToCategories() treats a numeric-string image id as already 
 
         expect($service->associateImagesToCategories([(string) $imageId], [1]))->toBeNull();
 
-        $rows = $conn->fetchAllAssociative('SELECT `rank` FROM ' . Tables::imageCategory() . ' WHERE image_id = ' . $imageId . ' AND category_id = 1');
+        $rows = $conn->fetchAllAssociative('SELECT ' . $rankColumn . ' FROM ' . Tables::imageCategory() . ' WHERE image_id = ' . $imageId . ' AND category_id = 1');
         expect($rows)->toHaveCount(1);
         expect($rows[0]['rank'])->toBe(1);
     } finally {
@@ -905,7 +908,7 @@ test('moveImagesToCategories() returns false for an empty image list, and treats
     $imageId = imageServiceTestInsertImage($conn, 'upload/2026/07/mover.jpg');
     $conn->createQueryBuilder()
         ->insert(Tables::imageCategory())
-        ->values(['image_id' => ':imageId', 'category_id' => ':categoryId', '`rank`' => ':rank'])
+        ->values(['image_id' => ':imageId', 'category_id' => ':categoryId', $conn->getDatabasePlatform()->quoteSingleIdentifier('rank') => ':rank'])
         ->setParameter('imageId', $imageId)
         ->setParameter('categoryId', 1)
         ->setParameter('rank', 1)
@@ -966,7 +969,7 @@ test('associateImagesToCategories() initializes a brand new category\'s starting
         expect($service->associateImagesToCategories([$imageId], [$categoryId]))->toBeNull();
 
         expect($capturedWarnings)->toBe([]);
-        $rank = $conn->fetchOne('SELECT `rank` FROM ' . Tables::imageCategory() . ' WHERE image_id = ' . $imageId . ' AND category_id = ' . $categoryId);
+        $rank = $conn->fetchOne('SELECT ' . $conn->getDatabasePlatform()->quoteSingleIdentifier('rank') . ' FROM ' . Tables::imageCategory() . ' WHERE image_id = ' . $imageId . ' AND category_id = ' . $categoryId);
         expect($rank)->toBe(1);
         $representative = $conn->fetchOne('SELECT representative_picture_id FROM ' . Tables::categories() . ' WHERE id = ' . $categoryId);
         expect($representative)->toBe($imageId);
@@ -1132,22 +1135,22 @@ test('getImageInfos() delegates a fatal error to HtmlRenderingInterface when die
  * FILES as separate worker processes concurrently, so two such tests in
  * different files can genuinely race on this one row (caught live: one
  * test's row got deleted out from under another's in-flight assertion).
- * MySQL's GET_LOCK()/RELEASE_LOCK() are server-wide, not
- * connection-local, so they serialize these tests across worker
- * processes for real -- unlike a PHP-level mutex, which would only
- * cover a single process.
+ * Both MySQL's GET_LOCK()/RELEASE_LOCK() and Postgres'
+ * pg_try_advisory_lock()/pg_advisory_unlock() (via Db\AdvisorySessionLock)
+ * are server-wide, not connection-local, so they serialize these tests
+ * across worker processes for real -- unlike a PHP-level mutex, which
+ * would only cover a single process.
  */
 function imageServiceTestAcquireEmptyLoungeDbLock(Connection $conn): void
 {
-    $acquired = $conn->fetchOne("SELECT GET_LOCK('piwigo17-unit-tests-empty_lounge_running', 10)");
-    if (! is_numeric($acquired) || (int) $acquired !== 1) {
+    if (! AdvisorySessionLock::acquire($conn, 'piwigo17-unit-tests-empty_lounge_running', 10)) {
         throw new RuntimeException('Could not acquire the empty_lounge_running test lock within 10s -- a concurrent test run may be stuck.');
     }
 }
 
 function imageServiceTestReleaseEmptyLoungeDbLock(Connection $conn): void
 {
-    $conn->executeStatement("SELECT RELEASE_LOCK('piwigo17-unit-tests-empty_lounge_running')");
+    AdvisorySessionLock::release($conn, 'piwigo17-unit-tests-empty_lounge_running');
 }
 
 /**
@@ -1753,7 +1756,7 @@ test('getIdsByFilenameInCategory() delegates straight through to the repository'
     $imageId = imageServiceTestInsertImage($conn, 'upload/2026/07/filenameincat.jpg');
     $conn->createQueryBuilder()
         ->insert(Tables::imageCategory())
-        ->values(['image_id' => ':imageId', 'category_id' => ':categoryId', '`rank`' => ':rank'])
+        ->values(['image_id' => ':imageId', 'category_id' => ':categoryId', $conn->getDatabasePlatform()->quoteSingleIdentifier('rank') => ':rank'])
         ->setParameter('imageId', $imageId)
         ->setParameter('categoryId', 1)
         ->setParameter('rank', 1)
@@ -1776,7 +1779,7 @@ test('getIdsVisibleInCategoriesRecentlyAvailable() delegates straight through to
     $conn->executeStatement('UPDATE ' . Tables::images() . ' SET date_available = NOW() WHERE id = ?', [$imageId]);
     $conn->createQueryBuilder()
         ->insert(Tables::imageCategory())
-        ->values(['image_id' => ':imageId', 'category_id' => ':categoryId', '`rank`' => ':rank'])
+        ->values(['image_id' => ':imageId', 'category_id' => ':categoryId', $conn->getDatabasePlatform()->quoteSingleIdentifier('rank') => ':rank'])
         ->setParameter('imageId', $imageId)
         ->setParameter('categoryId', 1)
         ->setParameter('rank', 1)
@@ -1785,7 +1788,7 @@ test('getIdsVisibleInCategoriesRecentlyAvailable() delegates straight through to
     try {
         $service = imageServiceTestNewService($repo, $conn);
 
-        $result = $service->getIdsVisibleInCategoriesRecentlyAvailable('1', 'DATE_SUB(NOW(), INTERVAL 1 DAY)');
+        $result = $service->getIdsVisibleInCategoriesRecentlyAvailable('1', SqlDialect::getRecentPeriodExpression(1));
 
         expect($result)->toContain($imageId);
     } finally {

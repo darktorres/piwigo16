@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Tests\Integration;
 
 use Override;
+use Piwigo\Common\ValueObject\Username;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Users\UserService;
 use LogicException;
@@ -168,7 +169,7 @@ final class UserBootstrapTest extends IntegrationTestCase
         try {
             $this->bootstrap(deploymentPolicy: new DeploymentPolicy(apacheAuthentication: true))->initialize();
 
-            self::assertSame($remoteUser, CurrentUserTestFactory::get()->get()->username);
+            self::assertEquals(Username::from($remoteUser), CurrentUserTestFactory::get()->get()->username);
             $row = $this->conn->fetchAssociative(
                 'SELECT id, username FROM piwigo_users WHERE username = ?',
                 [$remoteUser]
@@ -189,7 +190,7 @@ final class UserBootstrapTest extends IntegrationTestCase
 
         $this->bootstrap(deploymentPolicy: new DeploymentPolicy(apacheAuthentication: true))->initialize();
 
-        self::assertSame('regular_user', CurrentUserTestFactory::get()->get()->username);
+        self::assertEquals(Username::from('regular_user'), CurrentUserTestFactory::get()->get()->username);
         // No 2nd row was created for an account that already exists.
         $count = $this->conn->fetchOne(
             'SELECT COUNT(*) FROM piwigo_users WHERE username = ?',

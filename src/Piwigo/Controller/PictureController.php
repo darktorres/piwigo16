@@ -1244,7 +1244,7 @@ final class PictureController implements ControllerInterface
         $refresh_str = isset($refresh) && is_numeric($refresh) ? (string) $refresh : null;
         /** @var string|null $url_link */
         new PageHeaderRenderer()
-            ->render($title, $this->eventDispatcher, $this->pageState, $this->currentTemplate, $this->currentConfig, $refresh_str, $url_link ?? null);
+            ->render($title, $this->eventDispatcher, $this->pageState, $this->currentTemplate, $this->currentConfig, $refresh_str, $url_link);
         $this->eventDispatcher->dispatchNotify(new LocEndPicture());
         $this->htmlService
             ->flushPageMessages();

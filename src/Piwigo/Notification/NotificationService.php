@@ -201,7 +201,7 @@ final readonly class NotificationService
 
         $result = [];
         foreach ($dates as $date) {
-            $dateAvailable = $date['date_available'] ?? null;
+            $dateAvailable = $date['date_available'];
             $dateAvailable = is_string($dateAvailable) ? $dateAvailable : '';
 
             if ($maxElements > 0) {

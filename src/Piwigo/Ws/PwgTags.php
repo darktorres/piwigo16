@@ -190,7 +190,7 @@ final class PwgTags
                     }
                 }
                 foreach (['file', 'name', 'comment', 'date_creation', 'date_available'] as $k) {
-                    $image[$k] = $row[$k] ?? null;
+                    $image[$k] = $row[$k];
                 }
 
                 $nameEvent = $this->eventDispatcher->dispatchChange(new RenderElementName(is_string($image['name']) ? $image['name'] : '', __FUNCTION__));

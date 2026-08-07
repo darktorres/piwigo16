@@ -207,9 +207,16 @@ final readonly class AuthService
             session_start();
         }
         $_SESSION['pwg_uid'] = (int) $userId;
+        // Captured into a local before dispatchNotify()'s own impure call --
+        // PHPStan can't keep a narrowed type for a superglobal offset read
+        // after an intervening impure call (matches the same root cause
+        // Controller\Admin\BatchManagerSubController's own resolveSessionFilter()
+        // and Admin\Extensions\ExtensionUpdateChecker::checkExtensions()
+        // already document).
+        $pwgUid = $_SESSION['pwg_uid'];
 
-        $this->eventDispatcher->dispatchNotify(new UserLogin($_SESSION['pwg_uid']));
-        $this->activityLogger->record('user', $_SESSION['pwg_uid'], 'login');
+        $this->eventDispatcher->dispatchNotify(new UserLogin($pwgUid));
+        $this->activityLogger->record('user', $pwgUid, 'login');
     }
 
     /**

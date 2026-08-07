@@ -74,7 +74,7 @@ final readonly class PhotosAddDirectRequest
             // $mandatory is read) can never trigger on this call.
             $inputValidator
                 ->validate('formats', $get, false, ValidationPattern::ID, false);
-            $formats_raw = $get['formats'] ?? null;
+            $formats_raw = $get['formats'];
             $formats_id = is_string($formats_raw) ? $formats_raw : '';
         }
 

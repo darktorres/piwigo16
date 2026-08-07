@@ -203,6 +203,7 @@ final class UserBootstrap
             // a strict regex ([a-z0-9]{30} or pkid-... only), so it can't
             // contain anything needing SQL escaping in the first place.
             $auth_header = $_SERVER['HTTP_X_PIWIGO_API'];
+            assert(is_string($auth_header));
 
             if ((bool) $auth_header) {
                 $authenticate = $authService->authKeyLogin($auth_header, true);

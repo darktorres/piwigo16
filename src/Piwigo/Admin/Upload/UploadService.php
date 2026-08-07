@@ -714,7 +714,7 @@ final class UploadService
         }
 
         $xml = preg_replace('/<!DOCTYPE[^>]*>/i', '', $xml);
-        if ($xml === null) {
+        if ($xml === null || $xml === '') {
             return;
         }
 

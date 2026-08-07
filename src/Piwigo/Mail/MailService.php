@@ -377,7 +377,7 @@ final class MailService implements MailerInterface
             'smtp_host' => $smtpHost,
             'smtp_user' => $this->currentConfig->smtpUser(),
             'smtp_password' => $this->currentConfig->smtpPassword(),
-            'smtp_secure' => is_string($this->currentConfig->smtpSecure() ?? null) ? $this->currentConfig->smtpSecure() : null,
+            'smtp_secure' => is_string($this->currentConfig->smtpSecure()) ? $this->currentConfig->smtpSecure() : null,
             'email_webmaster' => $this->getMailSenderEmail(),
             'name_webmaster' => $this->getMailSenderName(),
         ];

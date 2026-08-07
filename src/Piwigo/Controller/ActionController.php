@@ -153,7 +153,7 @@ final class ActionController implements ControllerInterface
                 $file = ImagePathHelper::getElementPath($element_info, $this->urlService, $this->paths);
                 break;
             case 'r':
-                $representative_ext = $element_info['representative_ext'] ?? null;
+                $representative_ext = $element_info['representative_ext'];
                 // images.representative_ext is nullable in the schema
                 // (only set when a custom representative image exists) --
                 // a genuine missing value means there is no representative

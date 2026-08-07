@@ -1072,7 +1072,7 @@ final class ConfigurationSubController implements AdminSubControllerInterface
 
         // step 3 - save data
         if (count($errors) === 0 && count($derivative_errors) === 0) {
-            $resize_quality_post = $post['resize_quality'] ?? null;
+            $resize_quality_post = $post['resize_quality'];
             $resize_quality = is_numeric($resize_quality_post) ? intval($resize_quality_post) : 0;
             $quality_changed = $this->imageStdParams->get_quality() !== $resize_quality;
             $this->imageStdParams->set_quality($resize_quality);

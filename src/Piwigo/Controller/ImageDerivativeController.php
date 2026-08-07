@@ -521,7 +521,7 @@ final class ImageDerivativeController implements ControllerInterface
         // cookiePath() (SCRIPT_NAME/REDIRECT_URL-based) -- no URL-depth
         // computation of any kind is needed, in either URL style below.
         if ($this->currentConfig->questionMarkInUrls() === false and
-             isset($_SERVER['PATH_INFO']) and ! in_array($_SERVER['PATH_INFO'], [null, false, 0, '0', '', []], true)) {
+             isset($_SERVER['PATH_INFO']) and ! in_array($_SERVER['PATH_INFO'], [false, 0, '0', '', []], true)) {
             $req = $_SERVER['PATH_INFO'];
             // PHPStan types superglobal reads as mixed; PATH_INFO is only ever
             // populated by the web server as a string (verified via the isset()

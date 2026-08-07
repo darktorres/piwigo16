@@ -335,7 +335,7 @@ final readonly class ImageService
                 continue;
             }
 
-            $representativeExt = $row['representative_ext'] ?? null;
+            $representativeExt = $row['representative_ext'];
             $representativeExt = is_string($representativeExt) && $representativeExt !== '' ? $representativeExt : null;
 
             $files = [];

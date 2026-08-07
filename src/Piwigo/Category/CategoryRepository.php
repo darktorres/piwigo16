@@ -210,7 +210,7 @@ final class CategoryRepository
         return [
             'id' => is_numeric($row['id']) ? (int) $row['id'] : 0,
             'name' => is_string($row['name']) ? $row['name'] : '',
-            'permalink' => is_string($row['permalink'] ?? null) ? $row['permalink'] : null,
+            'permalink' => is_string($row['permalink']) ? $row['permalink'] : null,
         ];
     }
 

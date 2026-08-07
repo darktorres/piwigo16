@@ -116,7 +116,7 @@ final class ElementSetRanksPageRenderer
                 for ($i = 0; $i < 3; $i++) {
                     $order_value = $post_image_order[$i] ?? null;
                     if (is_string($order_value) && $order_value !== '' && in_array($order_value, array_keys($sort_fields), true)) {
-                        if (! in_array($image_order, [null, ''], true)) {
+                        if ($image_order !== null) {
                             $image_order .= ',';
                         }
                         $image_order .= $order_value;

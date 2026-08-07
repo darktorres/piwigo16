@@ -284,7 +284,7 @@ final class StatsPageRenderer
         foreach ($data as $value) {
             $str = self::getDateObject($value)
                 ->format($date_format);
-            $nb_pages = $value['nb_pages'] ?? null;
+            $nb_pages = $value['nb_pages'];
             if (isset($result[$str]) && is_numeric($nb_pages)) {
                 $result[$str] += (int) $nb_pages;
             }

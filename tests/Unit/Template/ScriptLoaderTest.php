@@ -3,11 +3,16 @@
 declare(strict_types=1);
 
 use Piwigo\Auth\AccessLevelChecker;
+use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\ErrorCollector;
+use Piwigo\Core\HtmlRenderingInterface;
+use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Http\ResponseReadyException;
+use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Paths;
+use Piwigo\Template\CurrentTemplate;
 use Piwigo\Template\Script;
 use Piwigo\Template\ScriptLoader;
 use Piwigo\Tests\Support\KernelContainerOverride;
@@ -202,6 +207,72 @@ test('urlService() throws when no URL service has been set', function (): void {
 
     expect(fn () => $loader->get_head_scripts(new AccessLevelChecker(CurrentUserTestFactory::get(), CurrentConfigTestFactory::get())))
         ->toThrow(RuntimeException::class, 'ScriptLoader: no URL service set (RequestBootstrap not run yet?)');
+});
+
+test('htmlRenderer throws when the container returns an unexpected type', function (): void {
+    // Same "Container returned an unexpected type" shape as
+    // PresentationAccessorTest.php's own coverage, applied here via
+    // Reflection since htmlRenderer() is private (and an instance method,
+    // not a static accessor) -- KernelContainerOverride::withWrongTypeFor()
+    // rebinds HtmlRenderingInterface::class to a plain stdClass inside a
+    // real (booted) container, tripping the `instanceof` guard.
+    $loader = new ScriptLoader();
+    $method = new ReflectionMethod(ScriptLoader::class, 'htmlRenderer');
+
+    expect(fn () => KernelContainerOverride::withWrongTypeFor(
+        HtmlRenderingInterface::class,
+        static fn () => $method->invoke($loader)
+    ))->toThrow(LogicException::class, 'Container returned an unexpected type for ' . HtmlRenderingInterface::class);
+});
+
+test('urlService() throws when the container returns an unexpected type', function (): void {
+    // Distinct from "urlService() throws when no URL service has been set"
+    // above -- that one exercises the `! Kernel::isBooted()` guard.
+    // KernelContainerOverride::with() marks Kernel booted, so this reaches
+    // urlService()'s OTHER guard, the `instanceof` check right after the
+    // container resolve (both guards happen to share the same message).
+    $method = new ReflectionMethod(ScriptLoader::class, 'urlService');
+
+    expect(fn () => KernelContainerOverride::withWrongTypeFor(
+        UrlServiceInterface::class,
+        static fn () => $method->invoke(null)
+    ))->toThrow(RuntimeException::class, 'ScriptLoader: no URL service set (RequestBootstrap not run yet?)');
+});
+
+test('eventDispatcher() throws when the container returns an unexpected type', function (): void {
+    $method = new ReflectionMethod(ScriptLoader::class, 'eventDispatcher');
+
+    expect(fn () => KernelContainerOverride::withWrongTypeFor(
+        EventDispatcher::class,
+        static fn () => $method->invoke(null)
+    ))->toThrow(RuntimeException::class, 'ScriptLoader: no EventDispatcher set (RequestBootstrap not run yet?)');
+});
+
+test('currentTemplate() throws when the container returns an unexpected type', function (): void {
+    $method = new ReflectionMethod(ScriptLoader::class, 'currentTemplate');
+
+    expect(fn () => KernelContainerOverride::withWrongTypeFor(
+        CurrentTemplate::class,
+        static fn () => $method->invoke(null)
+    ))->toThrow(RuntimeException::class, 'ScriptLoader: no CurrentTemplate set (RequestBootstrap not run yet?)');
+});
+
+test('currentConfig() throws when the container returns an unexpected type', function (): void {
+    $method = new ReflectionMethod(ScriptLoader::class, 'currentConfig');
+
+    expect(fn () => KernelContainerOverride::withWrongTypeFor(
+        CurrentConfig::class,
+        static fn () => $method->invoke(null)
+    ))->toThrow(RuntimeException::class, 'ScriptLoader: no CurrentConfig set (RequestBootstrap not run yet?)');
+});
+
+test('paths() throws when the container returns an unexpected type', function (): void {
+    $method = new ReflectionMethod(ScriptLoader::class, 'paths');
+
+    expect(fn () => KernelContainerOverride::withWrongTypeFor(
+        Paths::class,
+        static fn () => $method->invoke(null)
+    ))->toThrow(RuntimeException::class, 'ScriptLoader: no Paths set (RequestBootstrap not run yet?)');
 });
 
 test('add_inline downgrades a load_mode=2 dependency to load_mode=1', function (): void {

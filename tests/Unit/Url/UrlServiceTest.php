@@ -9,15 +9,20 @@ use Piwigo\Tests\Support\CurrentUserTestFactory;
 use Piwigo\Users\User;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Config\DeploymentPolicy;
+use Piwigo\Core\FilterState;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Paths;
 use Piwigo\Core\RequestMountDepth;
 use Piwigo\Core\WsContext;
 use Piwigo\Common\Enum\Section;
+use Piwigo\Lang\Translator;
 use Piwigo\Section\SectionContext;
 use Piwigo\Section\SectionContextRegistry;
 use Piwigo\Tests\Support\KernelContainerOverride;
 use Piwigo\Url\RootPathOverride;
+use Piwigo\Url\UrlService;
+use LogicException;
+use ReflectionMethod;
 use ReflectionProperty;
 use RuntimeException;
 
@@ -1412,4 +1417,65 @@ test('getUserFavorites returns early for a guest without ever touching the datab
             expect($conn)->toBeNull();
         }
     );
+});
+
+test('filterState() returns the container-shared instance once Kernel has booted', function (): void {
+    $containerFilterState = Kernel::container()->get(FilterState::class);
+    if (! $containerFilterState instanceof FilterState) {
+        throw new LogicException('Container returned an unexpected type for ' . FilterState::class);
+    }
+
+    $service = UrlServiceTestFactory::build();
+    $method = new ReflectionMethod(UrlService::class, 'filterState');
+
+    expect($method->invoke($service))->toBe($containerFilterState);
+});
+
+test('filterState() throws when the container returns an unexpected type', function (): void {
+    KernelContainerOverride::withWrongTypeFor(FilterState::class, function (): void {
+        $service = UrlServiceTestFactory::build();
+        $method = new ReflectionMethod(UrlService::class, 'filterState');
+
+        expect(fn () => $method->invoke($service))
+            ->toThrow(LogicException::class, 'Container returned an unexpected type for ' . FilterState::class);
+    });
+});
+
+test('translator() throws when the container returns an unexpected type', function (): void {
+    KernelContainerOverride::withWrongTypeFor(Translator::class, function (): void {
+        $service = UrlServiceTestFactory::build();
+        $method = new ReflectionMethod(UrlService::class, 'translator');
+
+        expect(fn () => $method->invoke($service))
+            ->toThrow(LogicException::class, 'Container returned an unexpected type for ' . Translator::class);
+    });
+});
+
+test('getAbsoluteRootUrl defaults the auto-detected port to 80 when SERVER_PORT is set but not numeric', function (): void {
+    CurrentConfigTestFactory::get()->setUrlPort('auto');
+    $_SERVER['HTTP_HOST'] = 'gallery.example.test';
+    $_SERVER['SERVER_PORT'] = 'not-numeric';
+    $service = UrlServiceTestFactory::build();
+
+    expect($service->getAbsoluteRootUrl())->toBe('http://gallery.example.test/piwigo/');
+});
+
+test('parseSectionUrl advances nextToken past the tags token itself before scanning for tag identifiers', function (): void {
+    // A chronology-prefixed token right after 'tags' stops the tag-scanning
+    // loop on its very first check, leaving both requested-id arrays empty
+    // -- badRequest() throws before TagService/the DB are ever touched,
+    // same as the "rejects a bare tags token" test above. What this test
+    // actually isolates is the by-ref $i value left behind: it must reflect
+    // nextToken having advanced past the 'tags' token itself (to 1), not an
+    // un-advanced or wrong-direction value.
+    $service = UrlServiceTestFactory::build(new UrlServiceTestHtmlRenderer());
+    $i = 0;
+
+    try {
+        $service->parseSectionUrl(['tags', 'created-monthly-2026'], $i, new UrlServiceTestRedirectService());
+    } catch (RuntimeException) {
+        // Expected -- see comment above.
+    }
+
+    expect($i)->toBe(1);
 });

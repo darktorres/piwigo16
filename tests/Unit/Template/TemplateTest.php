@@ -2,7 +2,17 @@
 
 declare(strict_types=1);
 
+use Piwigo\Common\ValueObject\UserId;
+use Piwigo\Core\HtmlRenderingInterface;
+use Piwigo\Core\Lang;
+use Piwigo\Core\UrlServiceInterface;
+use Piwigo\Lang\Translator;
+use Piwigo\Template\CurrentTemplate;
+use Piwigo\Tests\Support\CurrentUserTestFactory;
+use Piwigo\Tests\Support\KernelContainerOverride;
 use Piwigo\Tests\Support\TemplateTestFactory;
+use Piwigo\Users\User;
+use Piwigo\Users\UserStatus;
 use Smarty\Smarty;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Core\Kernel;
@@ -50,11 +60,71 @@ beforeEach(function (): void {
 });
 
 afterEach(function (): void {
+    CurrentUserTestFactory::get()->reset();
     LangTestFactory::get()->reset();
     TranslatorTestFactory::get()->reset();
     CurrentConfigTestFactory::get()->reset();
     Kernel::reset();
 });
+
+/**
+ * Local to this file (deliberately not shared with
+ * TemplateInstanceTest.php's own `template_instance_test_rrmdir()`,
+ * which would collide as a duplicate global function declaration if both
+ * files were ever loaded together) -- recursively removes a temp theme
+ * fixture directory tree created by a single test.
+ */
+function template_test_rrmdir(string $dir): void
+{
+    if (! is_dir($dir)) {
+        return;
+    }
+    $nodes = scandir($dir);
+    foreach ($nodes !== false ? $nodes : [] as $node) {
+        if ($node === '.' || $node === '..') {
+            continue;
+        }
+        $path = $dir . '/' . $node;
+        is_dir($path) ? template_test_rrmdir($path) : unlink($path);
+    }
+    rmdir($dir);
+}
+
+/**
+ * Narrows Template::get_template_vars('themes')'s mixed return (same
+ * shape TemplateInstanceTest.php's own template_instance_test_themes()
+ * narrows) down to the list of per-theme arrays set_theme() itself always
+ * appends.
+ *
+ * @return list<array<string, mixed>>
+ */
+function template_test_themes(Template $t): array
+{
+    $themes = $t->get_template_vars('themes');
+    if (! is_array($themes) || ! array_is_list($themes)) {
+        throw new RuntimeException('Expected themes to be a list, got ' . get_debug_type($themes));
+    }
+
+    $narrowed = [];
+    foreach ($themes as $theme) {
+        if (! is_array($theme)) {
+            throw new RuntimeException('Expected a theme entry array, got ' . get_debug_type($theme));
+        }
+
+        $assoc = [];
+        foreach ($theme as $key => $value) {
+            if (! is_string($key)) {
+                throw new RuntimeException('Expected a string-keyed array, found key ' . get_debug_type($key));
+            }
+
+            $assoc[$key] = $value;
+        }
+
+        $narrowed[] = $assoc;
+    }
+
+    return $narrowed;
+}
 
 test('get_php_str_val evaluates a single-quoted PHP string literal', function (): void {
     expect(Template::get_php_str_val("'hello world'"))->toBe('hello world');
@@ -211,4 +281,218 @@ test('prefilter_white_space strips leading whitespace before every recognized ta
 
     $expected = "{if x}\n{/if}\n{foreach x}\n{/foreach}\n{section x}\n{/section}\n{footer_script}\n{/footer_script}\n{include x}\n{else}\n{combine_script x}\n{html_head}\nEND\n";
     expect($result)->toBe($expected);
+});
+
+// --- constructor-registered is_admin/is_classic_user modifier defaults -----
+//
+// Smarty always calls a piped `|is_admin`/`|is_classic_user` modifier with
+// the piped value as its one argument, so these closures' own `$userStatus
+// = ''` default is unreachable through ordinary `{$x|is_admin}` template
+// syntax -- but the closures themselves are real, directly reachable PHP
+// values via Smarty's own public `registered_plugins` property (already
+// established as a legitimate access path by
+// TemplateInstanceTest.php:420), so calling the registered closure
+// directly with zero arguments exercises that default exactly like any
+// other real caller reaching it (AccessLevelChecker::getUserStatus()'s own
+// `$userStatus === ''` branch falls back to the real current user).
+
+test('constructor registers an is_admin modifier that reads the current user\'s own status when called with no argument', function (): void {
+    CurrentUserTestFactory::get()->set(new User(
+        id: UserId::from(7),
+        username: 'admin-user',
+        email: '',
+        language: 'en_GB',
+        theme: 'dummy',
+        status: UserStatus::Admin,
+        enabledHigh: false,
+    ));
+
+    $t = TemplateTestFactory::build();
+    // Smarty's own @var array docblock on $registered_plugins (vendor/
+    // smarty/smarty/src/Smarty.php) doesn't specify the real nested shape
+    // -- registerPlugin() always stores [callback, cacheable] pairs keyed
+    // by [type][name].
+    /** @var array<string, array<string, array{0: callable, 1: bool}>> $registeredPlugins */
+    $registeredPlugins = $t->smarty->registered_plugins;
+    $isAdmin = $registeredPlugins['modifier']['is_admin'][0];
+
+    expect($isAdmin())->toBeTrue();
+});
+
+test('constructor registers an is_classic_user modifier that reads the current user\'s own status when called with no argument', function (): void {
+    CurrentUserTestFactory::get()->set(new User(
+        id: UserId::from(8),
+        username: 'normal-user',
+        email: '',
+        language: 'en_GB',
+        theme: 'dummy',
+        status: UserStatus::Normal,
+        enabledHigh: false,
+    ));
+
+    $t = TemplateTestFactory::build();
+    /** @var array<string, array<string, array{0: callable, 1: bool}>> $registeredPlugins */
+    $registeredPlugins = $t->smarty->registered_plugins;
+    $isClassicUser = $registeredPlugins['modifier']['is_classic_user'][0];
+
+    expect($isClassicUser())->toBeTrue();
+});
+
+// --- container-resolver LogicException guards -------------------------------
+//
+// Every real Kernel::container()->get(X::class) call in config/container.php
+// legitimately produces a real instance of X -- these `!$x instanceof X`
+// guards only fire on container misconfiguration, reproduced here via
+// KernelContainerOverride's own established "rebind one class to a plain
+// stdClass" seam (already the precedent for this exact
+// "Container returned an unexpected type for" shape, see e.g.
+// tests/Unit/Bootstrap/InfrastructureAccessorTest.php). Each test restores
+// a real Kernel::boot() afterward -- KernelContainerOverride::with()'s own
+// `finally` leaves Kernel unbooted once the exception propagates out past
+// it, and this file's own shared afterEach (LangTestFactory::get()->reset()
+// in particular, which has no pre-boot fallback) requires a booted Kernel.
+
+test('urlService resolver throws when the container returns an unexpected type', function (): void {
+    expect(static fn (): mixed => KernelContainerOverride::with(
+        [
+            Paths::class => Paths::fromRoot(sys_get_temp_dir()),
+            UrlServiceInterface::class => new stdClass(),
+        ],
+        static function (): void {
+            CurrentConfigTestFactory::get()->setDataDirChecked('1');
+            TemplateTestFactory::build();
+        }
+    ))->toThrow(LogicException::class, 'Container returned an unexpected type for ' . UrlServiceInterface::class);
+
+    Kernel::boot(Paths::fromRoot(sys_get_temp_dir()));
+    CurrentConfigTestFactory::get()->setDataDirChecked('1');
+});
+
+test('lang resolver throws when the container returns an unexpected type', function (): void {
+    expect(static fn (): mixed => KernelContainerOverride::with(
+        [Lang::class => new stdClass()],
+        static fn (): Lang => Template::lang()
+    ))->toThrow(LogicException::class, 'Container returned an unexpected type for ' . Lang::class);
+
+    Kernel::boot(Paths::fromRoot(sys_get_temp_dir()));
+    CurrentConfigTestFactory::get()->setDataDirChecked('1');
+});
+
+test('translator resolver throws when the container returns an unexpected type', function (): void {
+    expect(static fn (): mixed => KernelContainerOverride::with(
+        [
+            Paths::class => Paths::fromRoot(sys_get_temp_dir()),
+            Translator::class => new stdClass(),
+        ],
+        static function (): void {
+            CurrentConfigTestFactory::get()->setDataDirChecked('1');
+            TemplateTestFactory::build();
+        }
+    ))->toThrow(LogicException::class, 'Container returned an unexpected type for ' . Translator::class);
+
+    Kernel::boot(Paths::fromRoot(sys_get_temp_dir()));
+    CurrentConfigTestFactory::get()->setDataDirChecked('1');
+});
+
+test('htmlRenderer resolver throws when the container returns an unexpected type', function (): void {
+    $t = TemplateTestFactory::build();
+
+    expect(static fn (): mixed => KernelContainerOverride::with(
+        [HtmlRenderingInterface::class => new stdClass()],
+        static fn (): ?string => $t->parse('no-such-handle')
+    ))->toThrow(LogicException::class, 'Container returned an unexpected type for ' . HtmlRenderingInterface::class);
+
+    Kernel::boot(Paths::fromRoot(sys_get_temp_dir()));
+    CurrentConfigTestFactory::get()->setDataDirChecked('1');
+});
+
+test('currentTemplate resolver throws when the container returns an unexpected type', function (): void {
+    $t = TemplateTestFactory::build();
+
+    // currentTemplate()'s own docblock: its only real caller is
+    // finalizeOutput()'s cssLoader->get_css() call, whose own first
+    // argument (self::urlService(), evaluated before currentTemplate())
+    // transitively resolves HtmlService -- which independently needs
+    // CurrentTemplate as a natively-typed constructor param -- so going
+    // through finalizeOutput() (confirmed live via a full stack trace)
+    // trips PHP's own TypeError on THAT unrelated construction first,
+    // before this method's own manual instanceof guard ever runs.
+    // Invoking the private currentTemplate() directly is the only way to
+    // reach its own guard in isolation.
+    $currentTemplateMethod = new ReflectionMethod(Template::class, 'currentTemplate');
+
+    expect(static fn (): mixed => KernelContainerOverride::with(
+        [CurrentTemplate::class => new stdClass()],
+        static fn (): mixed => $currentTemplateMethod->invoke($t)
+    ))->toThrow(LogicException::class, 'Container returned an unexpected type for ' . CurrentTemplate::class);
+
+    Kernel::boot(Paths::fromRoot(sys_get_temp_dir()));
+    CurrentConfigTestFactory::get()->setDataDirChecked('1');
+});
+
+// --- set_theme: load_parent_css / load_parent_local_head propagation --------
+
+test('set_theme lets a parent theme\'s own load_parent_css/load_parent_local_head themeconf keys override the caller-passed load flags', function (): void {
+    $root = sys_get_temp_dir() . '/piwigo-template-test-' . bin2hex(random_bytes(8));
+    $parentDir = $root . '/gap-parent';
+    $childDir = $root . '/gap-child';
+    mkdir($parentDir, 0o777, true);
+    mkdir($childDir, 0o777, true);
+    file_put_contents($parentDir . '/local_head.tpl', 'x');
+    file_put_contents(
+        $parentDir . '/themeconf.inc.php',
+        "<?php\n\$themeconf = ['local_head' => 'local_head.tpl'];\n"
+    );
+    file_put_contents(
+        $childDir . '/themeconf.inc.php',
+        "<?php\n\$themeconf = ['parent' => 'gap-parent', 'load_parent_css' => false, 'load_parent_local_head' => false, 'local_head' => ''];\n"
+    );
+
+    $t = TemplateTestFactory::build();
+    // Default load_css/load_local_head are both true -- the child
+    // themeconf's own load_parent_css=false/load_parent_local_head=false
+    // must win over those caller-passed defaults for the recursive
+    // parent-theme call.
+    $t->set_theme($root, 'gap-child', 'template');
+
+    $themes = template_test_themes($t);
+    expect($themes)->toHaveCount(2);
+    // The parent's own set_theme() call (and therefore its own
+    // smarty->append('themes', ...)) runs during the child's recursive
+    // call, before the child appends its own entry -- so the parent's
+    // entry comes first.
+    expect($themes[0]['id'])->toBe('gap-parent');
+    // A CoalesceRemoveLeft or TernaryNegated mutation on either
+    // load_parent_css or load_parent_local_head makes this recursive call
+    // receive the caller's own load_css/load_local_head (both true)
+    // instead of the themeconf-forced false.
+    expect($themes[0]['load_css'])->toBeFalse();
+    expect($themes[0])->not->toHaveKey('local_head');
+    expect($themes[1]['id'])->toBe('gap-child');
+    expect($themes[1]['load_css'])->toBeTrue();
+
+    template_test_rrmdir($root);
+});
+
+// --- load_themeconf caching ---------------------------------------------------
+
+test('load_themeconf caches the computed themeconf so a second call for the same directory does not re-include a changed file', function (): void {
+    $root = sys_get_temp_dir() . '/piwigo-template-test-' . bin2hex(random_bytes(8));
+    $themeDir = $root . '/cache-theme';
+    mkdir($themeDir, 0o777, true);
+    file_put_contents($themeDir . '/themeconf.inc.php', "<?php\n\$themeconf = ['marker' => 'first'];\n");
+
+    $t = TemplateTestFactory::build();
+
+    $first = $t->load_themeconf($themeDir);
+    // If load_themeconf() genuinely cached the first computed result under
+    // this exact directory's cache key, a changed file on disk must never
+    // be observed by a second call for the same directory.
+    file_put_contents($themeDir . '/themeconf.inc.php', "<?php\n\$themeconf = ['marker' => 'second'];\n");
+    $second = $t->load_themeconf($themeDir);
+
+    expect($first['marker'])->toBe('first');
+    expect($second['marker'])->toBe('first');
+
+    template_test_rrmdir($root);
 });

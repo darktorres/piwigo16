@@ -22,7 +22,9 @@ use Piwigo\Http\ResponseReadyException;
 use RuntimeException;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Core\Kernel;
+use Piwigo\Core\Lang;
 use Piwigo\Core\ProcessCache;
+use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Event\Picture\GetElementUrl;
 use Piwigo\Event\Picture\GetThumbnailTitle;
 use Piwigo\Event\Picture\RenderElementDescription;
@@ -101,6 +103,36 @@ function htmlServiceTestRootPathOverride(): RootPathOverride
 
     return $rootPathOverride;
 }
+
+test('lang() throws when the container returns an unexpected type for Lang', function (): void {
+    // Kills line 141's InstanceOfToTrue -- lang() is a private,
+    // container-resolving helper (same shape as urlService() below); its
+    // own guard can only ever fire when the container's real binding for
+    // Lang::class resolves to something other than a Lang instance,
+    // something that never legitimately happens through Kernel::boot()'s
+    // own public API. getThumbnailTitle()'s own "%d visits" detail is
+    // the simplest public entry point that reaches lang() without also
+    // touching urlService().
+    KernelContainerOverride::withWrongTypeFor(Lang::class, static function (): void {
+        $service = HtmlServiceTestFactory::build();
+        $service->getThumbnailTitle(['hit' => 5], 'My Photo');
+    });
+})->throws(LogicException::class, 'Container returned an unexpected type for ' . Lang::class);
+
+test('urlService() throws when the container returns an unexpected type for UrlServiceInterface', function (): void {
+    // Kills line 182's InstanceOfToTrue -- urlService() is a private,
+    // container-resolving helper; same "never legitimately happens
+    // through Kernel::boot()'s own public API" reasoning as lang()'s own
+    // sibling test above. getSrcImageUrlProtectionHandler() is the
+    // simplest public entry point that reaches urlService() without also
+    // needing lang().
+    $srcImage = new SrcImage(['id' => 7, 'path' => 'upload/2026/07/photo.jpg', 'file' => 'photo.jpg']);
+
+    KernelContainerOverride::withWrongTypeFor(UrlServiceInterface::class, static function () use ($srcImage): void {
+        $service = HtmlServiceTestFactory::build();
+        $service->getSrcImageUrlProtectionHandler(new GetSrcImageUrl('ignored-input-url', $srcImage));
+    });
+})->throws(LogicException::class, 'Container returned an unexpected type for ' . UrlServiceInterface::class);
 
 test('renderCommentContent escapes html and linkifies bare URLs', function (): void {
     $service = HtmlServiceTestFactory::build();
@@ -928,6 +960,20 @@ test('getCatDisplayName builds one link per category, in order, when url is an e
     );
 });
 
+test('getCatDisplayName defaults a non-string category name to empty string before dispatching the rename event', function (): void {
+    // Kills line 215's EmptyStringToNotEmpty ($cat['name'] fallback fed
+    // into the RenderCategoryName event). With no handler registered,
+    // dispatchChange() passes its input straight through, so the final
+    // output IS the fallback value -- with $url null, output is just the
+    // (unlinked) name itself, an exact-value assertion the mutant's
+    // literal placeholder can't satisfy.
+    $service = HtmlServiceTestFactory::build();
+
+    $result = $service->getCatDisplayName([['id' => 1, 'name' => 42]], null);
+
+    expect($result)->toBe('');
+});
+
 test('getCatDisplayNameCache joins multiple names with a <span>-wrapped separator, and only between them', function (): void {
     // Kills line 201's FalseToTrue -- the getCatDisplayNameCache()
     // sibling of getCatDisplayName()'s own line 118 finding above, same
@@ -941,6 +987,21 @@ test('getCatDisplayNameCache joins multiple names with a <span>-wrapped separato
     $result = $service->getCatDisplayNameCache('3,7', null);
 
     expect($result)->toBe('Nature<span> / </span>Portraits');
+});
+
+test('getCatDisplayNameCache defaults a non-string category name to empty string before dispatching the rename event', function (): void {
+    // Kills line 292's EmptyStringToNotEmpty ($cat['name'] fallback fed
+    // into the RenderCategoryName event) -- same "no handler, output IS
+    // the fallback" reasoning as getCatDisplayName()'s own sibling test
+    // above. With $url null, output is just the (unlinked) name itself.
+    htmlServiceTestProcessCache()->set('cat_names', [
+        '3' => ['id' => 3, 'name' => 42, 'permalink' => null],
+    ]);
+    $service = HtmlServiceTestFactory::build();
+
+    $result = $service->getCatDisplayNameCache('3', null);
+
+    expect($result)->toBe('');
 });
 
 test('getCatDisplayNameCache injects an auth param and wraps the whole chain in a single link with a class when singleLink is set', function (): void {

@@ -224,3 +224,41 @@ test('processObsoleteList does nothing when the list file exists but is empty', 
     expect(file_exists($root . 'keep.php'))->toBeTrue();
     expect(file_exists($root . 'obsolete.list'))->toBeTrue();
 });
+
+test('processObsoleteList returns cleanly when file() itself fails despite file_exists() being true', function (): void {
+    // Kills line 411's FalseToTrue (`$oldFiles === true` instead of
+    // `=== false`): file()'s own return type is array|false, so it can
+    // never actually equal true -- the mutant's check can never match a
+    // real read failure and would fall through to `$oldFiles[] = $file;`
+    // on a plain boolean (a "scalar value as array" warning) followed by
+    // `foreach ($oldFiles as ...)` (a "must be of type array|object"
+    // warning), instead of real code's single, immediate file()-open
+    // warning and early return. An unreadable (but still existing) list
+    // file makes file_exists() report true (existence, not readability)
+    // while file() itself fails -- same chmod(0o000) + captured-warnings
+    // technique as DerivativeCacheServiceTest's/DerivativeImageTest's own
+    // use of it, since this project's phpunit.xml.dist (failOnWarning)
+    // would otherwise convert any of these into a failure outright rather
+    // than a countable, assertable signal.
+    $root = core_update_service_test_marker() . '/';
+    file_put_contents($root . 'keep.php', 'still here');
+    file_put_contents($root . 'obsolete.list', "stale.php\n");
+    chmod($root . 'obsolete.list', 0o000);
+
+    $warnings = [];
+    set_error_handler(function (int $errno, string $errstr) use (&$warnings): bool {
+        $warnings[] = $errstr;
+
+        return true;
+    });
+    try {
+        core_update_service_process_obsolete_list(core_update_service_at($root), 'obsolete.list');
+    } finally {
+        restore_error_handler();
+        chmod($root . 'obsolete.list', 0o644);
+    }
+
+    expect($warnings)->toHaveCount(1);
+    expect(file_exists($root . 'keep.php'))->toBeTrue();
+    expect(file_exists($root . 'obsolete.list'))->toBeTrue();
+});

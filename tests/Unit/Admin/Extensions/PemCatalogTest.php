@@ -93,6 +93,13 @@ test('compareByName string-casts a real scalar extension_name instead of compari
     // an already-string value is invisible -- an int forces it to matter
     // (strtolower()/strcmp() both require a real string argument).
     expect(PemCatalog::compareByName(['extension_name' => 20], ['extension_name' => '3']))->toBeLessThan(0);
+    // Real gap, found via mutation testing: the case above only forces
+    // $a's own (string) cast (a separate line/mutation from $b's) --
+    // this file declares strict_types=1, so a removed cast on $b leaves
+    // a real int flowing into strtolower(), which throws a TypeError
+    // rather than silently comparing wrong. $a stays a plain string here
+    // to isolate $b's own cast.
+    expect(PemCatalog::compareByName(['extension_name' => 'apple'], ['extension_name' => 20]))->toBeGreaterThan(0);
 });
 
 test('compareByAuthor sorts case-insensitively by author_name, falling back to compareByName on a tie', function (): void {
@@ -112,6 +119,12 @@ test('compareByAuthor falls back to an empty author for a non-scalar author_name
 
 test('compareByAuthor string-casts a real scalar author_name instead of comparing it raw', function (): void {
     expect(PemCatalog::compareByAuthor(['author_name' => 20, 'extension_name' => 'x'], ['author_name' => '3', 'extension_name' => 'x']))->toBeLessThan(0);
+    // Real gap, found via mutation testing: same "$a's cast alone can't
+    // prove $b's separate cast line" reasoning as compareByName above --
+    // $a stays a plain string here so only $b's removed (string) cast
+    // can be what forces strcasecmp()'s real int-vs-string TypeError
+    // under strict_types=1.
+    expect(PemCatalog::compareByAuthor(['author_name' => 'apple', 'extension_name' => 'x'], ['author_name' => 20, 'extension_name' => 'x']))->toBeGreaterThan(0);
 });
 
 test('compareByDownloads sorts descending, most downloaded first', function (): void {
@@ -138,6 +151,23 @@ test('getLocallyMergedExtensions parses the real install/obsolete_extensions.lis
     expect($merged)->toHaveCount(13);
     expect($merged[411])->toBe('pwg_images_addSimple');
     expect($merged[286])->toBe('admin_multi_view');
+});
+
+test('getLocallyMergedExtensions reads the paths->root-prefixed file, not a bare CWD-relative one', function (): void {
+    // Real gap, found via mutation testing: a ConcatRemoveLeft mutation
+    // that drops $this->paths->root entirely leaves a bare
+    // 'install/obsolete_extensions.list', which is CWD-relative rather
+    // than root-relative. A Paths root that genuinely differs from the
+    // process's working directory is the only way to tell the two
+    // apart -- the fixture list below has content the real, committed
+    // install/obsolete_extensions.list does not.
+    $root = pem_catalog_test_marker();
+    mkdir($root . '/install', 0o777, true);
+    file_put_contents($root . '/install/obsolete_extensions.list', "999:fixture_only_extension\n");
+
+    $catalog = new PemCatalog(new ZipExtractor(), new CurrentLogger(), new CurrentUser(new CurrentConfig()), Paths::fromRoot($root), new CurrentConfig());
+
+    expect($catalog->getLocallyMergedExtensions())->toBe([999 => 'fixture_only_extension']);
 });
 
 function pem_catalog_delete_obsolete_files(ExtensionType $type, string $extractPath): void

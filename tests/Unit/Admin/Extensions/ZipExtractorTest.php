@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use PHPUnit\Framework\Assert;
 use Piwigo\Admin\Extensions\ZipExtractor;
 use Piwigo\Config\CurrentConfig;
 
@@ -444,6 +445,443 @@ test('extract strips a leading "./" from destPath before writing', function (): 
 
     expect($result)->not->toBeNull();
     expect(file_get_contents(zip_extractor_test_marker() . '/extracted/main.inc.php'))->toBe('<?php // main');
+});
+
+test('extract rejects an archive whose total uncompressed size is exactly one byte over MAX_UNCOMPRESSED_BYTES', function (): void {
+    // Real gap, found via mutation testing: DecrementInteger on the
+    // accumulator's `= 0` initializer (`= -1`) shifts every running total
+    // down by exactly one byte, so it takes exactly
+    // MAX_UNCOMPRESSED_BYTES + 1 real bytes -- not the "525,000,000 over"
+    // test's huge margin, nor the "exactly MAX" boundary test's exact
+    // match -- to distinguish a correct `0` starting point from the
+    // wrong `-1` one.
+    $archive = zip_extractor_test_marker() . '/size-boundary-plus-one.zip';
+    $bigFile = zip_extractor_test_marker() . '/big-boundary-plus-one.bin';
+
+    $size = 500 * 1024 * 1024 + 1;
+    $handle = fopen($bigFile, 'wb');
+    if ($handle === false) {
+        throw new RuntimeException('Could not open ' . $bigFile . ' for writing');
+    }
+    fseek($handle, $size - 1);
+    fwrite($handle, "\0");
+    fclose($handle);
+
+    $zip = new ZipArchive();
+    $zip->open($archive, ZipArchive::CREATE);
+    $zip->addFile($bigFile, 'big.bin');
+    $zip->close();
+    unlink($bigFile);
+    $dest = zip_extractor_test_marker() . '/extracted';
+
+    $result = new ZipExtractor()->extract($archive, $dest, '.', new CurrentConfig());
+
+    expect($result)->toBeNull();
+    expect(is_dir($dest))->toBeFalse();
+});
+
+test('extract with a bare "." removePrefix does not strip any entry name, even one that looks like a prefix match', function (): void {
+    // Real gap, found via mutation testing: EmptyStringToNotEmpty on the
+    // `$removePrefix = '';` assignment inside the `=== '.'` branch
+    // replaces it with pest-plugin-mutate's own fixed placeholder text
+    // ('PEST Mutator was here!', confirmed deterministic across this
+    // codebase -- see e.g. SessionServiceTest.php's own docblock). A
+    // normal archive (no entry coincidentally named after that
+    // placeholder) can't tell the two apart, since "stripping" a prefix
+    // that matches nothing is a no-op either way -- so this deliberately
+    // uses an entry whose name starts with that exact literal to prove
+    // no entry ever gets treated as prefixed once '.' has collapsed to
+    // ''.
+    $archive = zip_extractor_test_marker() . '/a.zip';
+    zip_extractor_build_archive($archive, [
+        'PEST Mutator was here!/main.inc.php' => '<?php // main',
+    ]);
+    $dest = zip_extractor_test_marker() . '/extracted';
+
+    $result = new ZipExtractor()->extract($archive, $dest, '.', new CurrentConfig());
+
+    expect($result)->toBe([
+        [
+            'filename' => $dest . '/PEST Mutator was here!/main.inc.php',
+            'stored_filename' => 'PEST Mutator was here!/main.inc.php',
+            'status' => 'ok',
+        ],
+    ]);
+    expect(file_get_contents($dest . '/PEST Mutator was here!/main.inc.php'))->toBe('<?php // main');
+});
+
+test('extract does not double a removePrefix that already ends with a trailing slash', function (): void {
+    // Real gap, found via mutation testing: BooleanAndToBooleanOr and
+    // StrEndsWithToStrStartsWith on `$removePrefix !== '' && !
+    // str_ends_with($removePrefix, '/')` both only diverge from the
+    // correct code when removePrefix is passed in already ending with
+    // '/' -- in every other case they happen to append the same slash
+    // the correct code would. With a trailing slash already present, the
+    // correct code leaves removePrefix alone; either mutant appends one
+    // more, corrupting it to a double slash that no real entry name can
+    // ever start with.
+    $archive = zip_extractor_test_marker() . '/a.zip';
+    zip_extractor_build_archive($archive, [
+        'plugin_id/main.inc.php' => '<?php // main',
+    ]);
+    $dest = zip_extractor_test_marker() . '/extracted';
+
+    $result = new ZipExtractor()->extract($archive, $dest, 'plugin_id/', new CurrentConfig());
+
+    expect($result)->toBe([
+        [
+            'filename' => $dest . '/main.inc.php',
+            'stored_filename' => 'plugin_id/main.inc.php',
+            'status' => 'ok',
+        ],
+    ]);
+    expect(file_get_contents($dest . '/main.inc.php'))->toBe('<?php // main');
+});
+
+test('extract strips exactly the two-character "./" prefix from destPath, not just the leading dot', function (): void {
+    // Real gap, found via mutation testing: DecrementInteger on
+    // `substr($destPath, 2)` (-> `substr($destPath, 1)`) leaves a stray
+    // leading slash in destPath. Since zip_extractor_test_marker()
+    // itself starts with '/', prefixing it with './' produces a raw
+    // destPath with a doubled '/' right after the dot -- and on Linux a
+    // leading "//" and a leading "/" resolve to the identical real file,
+    // so file-content assertions alone can't tell substr(..., 2) from
+    // the wrong substr(..., 1) apart. The RAW (never normalized)
+    // 'filename' string in the result, by contrast, does differ.
+    $archive = zip_extractor_test_marker() . '/a.zip';
+    zip_extractor_build_archive($archive, [
+        'plugin_id/main.inc.php' => '<?php // main',
+    ]);
+    $dest = './' . zip_extractor_test_marker() . '/extracted';
+
+    $result = new ZipExtractor()->extract($archive, $dest, 'plugin_id', new CurrentConfig());
+
+    expect($result)->toBe([
+        [
+            'filename' => zip_extractor_test_marker() . '/extracted/main.inc.php',
+            'stored_filename' => 'plugin_id/main.inc.php',
+            'status' => 'ok',
+        ],
+    ]);
+});
+
+test('extract strips a trailing slash from destPath before joining entry names onto it', function (): void {
+    // Real gap, found via mutation testing: UnwrapRtrim on `$destPath =
+    // rtrim($destPath, '/');` removes the rtrim() entirely. As with the
+    // "./" test above, a doubled trailing/joining slash resolves to the
+    // identical real file on Linux, so this asserts on the exact
+    // 'filename' string rather than just file content.
+    $archive = zip_extractor_test_marker() . '/a.zip';
+    zip_extractor_build_archive($archive, [
+        'plugin_id/main.inc.php' => '<?php // main',
+    ]);
+    $dest = zip_extractor_test_marker() . '/extracted/';
+
+    $result = new ZipExtractor()->extract($archive, $dest, 'plugin_id', new CurrentConfig());
+
+    expect($result)->toBe([
+        [
+            'filename' => zip_extractor_test_marker() . '/extracted/main.inc.php',
+            'stored_filename' => 'plugin_id/main.inc.php',
+            'status' => 'ok',
+        ],
+    ]);
+});
+
+test('extract does not strip removePrefix from an entry whose stored name does not actually start with it', function (): void {
+    // Real gap, found via mutation testing: BooleanAndToBooleanOr on
+    // `$removePrefix !== '' && str_starts_with($storedName,
+    // $removePrefix)` -- with a non-empty removePrefix, the `||` mutant
+    // short-circuits to true from the first operand alone, so EVERY
+    // entry gets `substr($storedName, strlen($removePrefix))` applied
+    // regardless of whether it actually starts with removePrefix,
+    // mangling any entry that doesn't share the prefix.
+    $archive = zip_extractor_test_marker() . '/a.zip';
+    zip_extractor_build_archive($archive, [
+        'plugin_id/main.inc.php' => '<?php // main',
+        'unrelated/readme.txt' => 'not part of the plugin',
+    ]);
+    $dest = zip_extractor_test_marker() . '/extracted';
+
+    $result = new ZipExtractor()->extract($archive, $dest, 'plugin_id', new CurrentConfig());
+
+    expect($result)->toBe([
+        [
+            'filename' => $dest . '/main.inc.php',
+            'stored_filename' => 'plugin_id/main.inc.php',
+            'status' => 'ok',
+        ],
+        [
+            'filename' => $dest . '/unrelated/readme.txt',
+            'stored_filename' => 'unrelated/readme.txt',
+            'status' => 'ok',
+        ],
+    ]);
+    expect(file_get_contents($dest . '/main.inc.php'))->toBe('<?php // main');
+    expect(file_get_contents($dest . '/unrelated/readme.txt'))->toBe('not part of the plugin');
+});
+
+test('extract rejects an entry that resolves to a sibling directory sharing destPath as a string prefix', function (): void {
+    // Real gap, found via mutation testing: ConcatRemoveRight on the
+    // zip-slip guard's `str_starts_with($normalizedFilename,
+    // $normalizedDestPath . '/')` drops the '/' boundary -- without it,
+    // an entry resolving to ".../extracted-evil/hack.php" would pass a
+    // bare string-prefix check against ".../extracted" (since
+    // "extracted-evil" literally starts with "extracted"), even though
+    // "extracted-evil" is a completely different, sibling directory, not
+    // really inside destPath at all.
+    $archive = zip_extractor_test_marker() . '/evil3.zip';
+    zip_extractor_build_archive($archive, [
+        'plugin_id/../extracted-evil/hack.php' => '<?php // escaped',
+    ]);
+    $dest = zip_extractor_test_marker() . '/extracted';
+    $siblingEscapePath = zip_extractor_test_marker() . '/extracted-evil/hack.php';
+
+    $result = new ZipExtractor()->extract($archive, $dest, 'plugin_id', new CurrentConfig());
+
+    expect($result)->toBeNull();
+    expect(file_exists($siblingEscapePath))->toBeFalse();
+});
+
+test('extract continues processing later entries after marking one as already_a_directory', function (): void {
+    // Real gap, found via mutation testing: ContinueToBreak on the
+    // already_a_directory branch's `continue` -- the sibling existing
+    // test's already_a_directory entry happens to be LAST in its
+    // archive, so continue vs break produce the same result there.
+    $archive = zip_extractor_test_marker() . '/a.zip';
+    zip_extractor_build_archive($archive, [
+        'plugin_id/foo/' => '',
+        'plugin_id/foo' => 'should not be written',
+        'plugin_id/after.txt' => 'still extracted',
+    ]);
+    $dest = zip_extractor_test_marker() . '/extracted';
+
+    $result = new ZipExtractor()->extract($archive, $dest, 'plugin_id', new CurrentConfig());
+
+    expect($result)->toBe([
+        [
+            'filename' => $dest . '/foo/',
+            'stored_filename' => 'plugin_id/foo/',
+            'status' => 'ok',
+        ],
+        [
+            'filename' => $dest . '/foo',
+            'stored_filename' => 'plugin_id/foo',
+            'status' => 'already_a_directory',
+        ],
+        [
+            'filename' => $dest . '/after.txt',
+            'stored_filename' => 'plugin_id/after.txt',
+            'status' => 'ok',
+        ],
+    ]);
+    expect(file_get_contents($dest . '/after.txt'))->toBe('still extracted');
+});
+
+test('extract does not create a destination file when the archive entry itself cannot be read as a stream', function (): void {
+    // Real gap, found via mutation testing: two FalseToTrue mutants on
+    // `$dest = $source !== false ? @fopen($filename, 'wb') : false;`
+    // (`!== true` and the else-arm `: true`) and an IfNegated mutant on
+    // `if (is_resource($source)) { fclose($source); }` all require a
+    // genuinely-reachable `$source === false` to distinguish -- getStream()
+    // returns false for an AES-encrypted entry when no password was set
+    // (extract() never calls setPassword()), confirmed live: a real,
+    // naturally-occurring case, not a mock.
+    $archive = zip_extractor_test_marker() . '/encrypted.zip';
+    $zip = new ZipArchive();
+    $zip->open($archive, ZipArchive::CREATE);
+    $zip->addFromString('plugin_id/secret.txt', 'top secret contents');
+    $zip->setEncryptionName('plugin_id/secret.txt', ZipArchive::EM_AES_256, 'correct-password');
+    $zip->close();
+    $dest = zip_extractor_test_marker() . '/extracted';
+
+    $result = new ZipExtractor()->extract($archive, $dest, 'plugin_id', new CurrentConfig());
+
+    expect($result)->toBe([
+        [
+            'filename' => $dest . '/secret.txt',
+            'stored_filename' => 'plugin_id/secret.txt',
+            'status' => 'write_error',
+        ],
+    ]);
+    expect(file_exists($dest . '/secret.txt'))->toBeFalse();
+});
+
+test('extract continues processing later entries after a write_error result', function (): void {
+    // Real gap, found via mutation testing: ContinueToBreak on the
+    // write_error branch's `continue`. Reuses the encrypted-entry
+    // technique above to reach write_error without any filesystem
+    // permission trickery.
+    $archive = zip_extractor_test_marker() . '/mixed.zip';
+    $zip = new ZipArchive();
+    $zip->open($archive, ZipArchive::CREATE);
+    $zip->addFromString('plugin_id/secret.txt', 'top secret contents');
+    $zip->setEncryptionName('plugin_id/secret.txt', ZipArchive::EM_AES_256, 'correct-password');
+    $zip->addFromString('plugin_id/after.txt', 'still extracted');
+    $zip->close();
+    $dest = zip_extractor_test_marker() . '/extracted';
+
+    $result = new ZipExtractor()->extract($archive, $dest, 'plugin_id', new CurrentConfig());
+
+    expect($result)->toBe([
+        [
+            'filename' => $dest . '/secret.txt',
+            'stored_filename' => 'plugin_id/secret.txt',
+            'status' => 'write_error',
+        ],
+        [
+            'filename' => $dest . '/after.txt',
+            'stored_filename' => 'plugin_id/after.txt',
+            'status' => 'ok',
+        ],
+    ]);
+    expect(file_get_contents($dest . '/after.txt'))->toBe('still extracted');
+});
+
+test('extract sets each extracted file\'s mtime to the archive entry\'s stored mtime', function (): void {
+    // Real gap, found via mutation testing: RemoveFunctionCall on
+    // `touch($filename, $stat['mtime']);`. A fixed, clearly-not-"now"
+    // mtime is used (rather than relying on the archive's own
+    // just-created timestamp, which could coincidentally be within a
+    // second of "now" either way) -- confirmed live that
+    // ZipArchive::setMtimeName()/statIndex() round-trip this exact
+    // integer with no DOS-time rounding.
+    $archive = zip_extractor_test_marker() . '/a.zip';
+    $zip = new ZipArchive();
+    $zip->open($archive, ZipArchive::CREATE);
+    $zip->addFromString('plugin_id/main.inc.php', '<?php // main');
+    $fixedMtime = mktime(12, 0, 0, 6, 15, 2001);
+    Assert::assertIsInt($fixedMtime);
+    $zip->setMtimeName('plugin_id/main.inc.php', $fixedMtime);
+    $zip->close();
+    $dest = zip_extractor_test_marker() . '/extracted';
+
+    $result = new ZipExtractor()->extract($archive, $dest, 'plugin_id', new CurrentConfig());
+
+    expect($result)->not->toBeNull();
+    expect(filemtime($dest . '/main.inc.php'))->toBe($fixedMtime);
+});
+
+test('extract rejects a zip-slip entry that escapes destPath through a "./.." segment sequence', function (): void {
+    // Real gap, found via mutation testing: normalizePath()'s `$segment
+    // === '' || $segment === '.'` guard must skip BOTH kinds of no-op
+    // segment so a later '..' pops a REAL ancestor directory, not the
+    // no-op placeholder itself -- otherwise "extracted/./../evil.txt"
+    // (which really means "escape extracted/ into its parent") gets
+    // miscomputed as staying safely inside destPath, because the '..'
+    // ends up popping the '.' instead of 'extracted'.
+    $archive = zip_extractor_test_marker() . '/evil4.zip';
+    zip_extractor_build_archive($archive, [
+        'plugin_id/./../evil.txt' => '<?php // escaped',
+    ]);
+    $dest = zip_extractor_test_marker() . '/extracted';
+
+    $result = new ZipExtractor()->extract($archive, $dest, 'plugin_id', new CurrentConfig());
+
+    expect($result)->toBeNull();
+    expect(file_exists(zip_extractor_test_marker() . '/evil.txt'))->toBeFalse();
+    expect(file_exists($dest . '/evil.txt'))->toBeFalse();
+});
+
+test('extract rejects a zip-slip entry that escapes destPath through a doubled "/" segment sequence', function (): void {
+    // Real gap, found via mutation testing: normalizePath()'s `$segment
+    // === ''` half of the same guard must ALSO skip the segment produced
+    // by a doubled '/' -- otherwise a later '..' pops that empty
+    // placeholder instead of a REAL ancestor directory, letting an entry
+    // like "plugin_id//../evil.txt" (stripped to "/../evil.txt") wrongly
+    // resolve as staying inside destPath.
+    $archive = zip_extractor_test_marker() . '/evil5.zip';
+    zip_extractor_build_archive($archive, [
+        'plugin_id//../evil.txt' => '<?php // escaped',
+    ]);
+    $dest = zip_extractor_test_marker() . '/extracted';
+
+    $result = new ZipExtractor()->extract($archive, $dest, 'plugin_id', new CurrentConfig());
+
+    expect($result)->toBeNull();
+    expect(file_exists(zip_extractor_test_marker() . '/evil.txt'))->toBeFalse();
+    expect(file_exists($dest . '/evil.txt'))->toBeFalse();
+});
+
+test('extract rejects a zip-slip entry that escapes destPath through a single ".." segment', function (): void {
+    // Real gap, found via mutation testing: IfNegated and
+    // IdenticalToNotIdentical both invert `if ($segment === '..')`
+    // identically -- under either mutant, EVERY non-'..' segment
+    // triggers an (empty-array, harmless no-op) pop instead of being
+    // pushed, while '..' segments themselves get pushed as literal
+    // strings and later popped by the FOLLOWING segment. For a destPath
+    // with no '..' of its own, this makes normalizePath() degenerate to
+    // a constant '/' for any path whose '..' count is exactly cancelled
+    // out by later segments -- exactly what "plugin_id/../evil.txt"
+    // produces, silently defeating the zip-slip guard (both sides
+    // collapse to the same '/').
+    $archive = zip_extractor_test_marker() . '/evil6.zip';
+    zip_extractor_build_archive($archive, [
+        'plugin_id/../evil.txt' => '<?php // escaped',
+    ]);
+    $dest = zip_extractor_test_marker() . '/extracted';
+
+    $result = new ZipExtractor()->extract($archive, $dest, 'plugin_id', new CurrentConfig());
+
+    expect($result)->toBeNull();
+    expect(file_exists(zip_extractor_test_marker() . '/evil.txt'))->toBeFalse();
+});
+
+test('extract accepts an entry whose stored path uses ".." to reference a sibling within destPath', function (): void {
+    // Real gap, found via mutation testing: ArrayPopToArrayShift on the
+    // '..' handler -- normalizePath() must remove the MOST RECENTLY
+    // pushed segment (the nearest enclosing directory), not the FIRST
+    // one ever pushed, or an entry like "subdir/../other.txt" (a normal,
+    // harmless way of referring to a file next to "subdir", still fully
+    // inside destPath) gets its real ancestor segments corrupted and is
+    // wrongly rejected as an escape. The 'subdir/' directory entry is
+    // listed first so it physically exists before the ".."-containing
+    // file entry is resolved, keeping this test independent of any
+    // recursive-mkdir-with-a-literal-".."-segment edge case.
+    $archive = zip_extractor_test_marker() . '/a.zip';
+    zip_extractor_build_archive($archive, [
+        'plugin_id/subdir/' => '',
+        'plugin_id/subdir/../other.txt' => '<?php // other',
+    ]);
+    $dest = zip_extractor_test_marker() . '/extracted';
+
+    $result = new ZipExtractor()->extract($archive, $dest, 'plugin_id', new CurrentConfig());
+
+    expect($result)->toBe([
+        [
+            'filename' => $dest . '/subdir/',
+            'stored_filename' => 'plugin_id/subdir/',
+            'status' => 'ok',
+        ],
+        [
+            'filename' => $dest . '/subdir/../other.txt',
+            'stored_filename' => 'plugin_id/subdir/../other.txt',
+            'status' => 'ok',
+        ],
+    ]);
+    expect(file_get_contents($dest . '/other.txt'))->toBe('<?php // other');
+});
+
+test('extract rejects a zip-slip entry that escapes destPath through consecutive ".." segments after a real one', function (): void {
+    // Real gap, found via mutation testing: ContinueToBreak on the '..'
+    // handler exits normalizePath()'s whole segment loop after popping
+    // for just the FIRST '..' it sees, instead of moving on to evaluate
+    // the REST of the path -- so "a/../../evil.txt" (a genuine two-level
+    // escape once fully resolved) gets silently truncated right after
+    // absorbing the first '..' against the harmless 'a' segment, landing
+    // exactly back on destPath itself and passing the containment check
+    // before the SECOND '..' (the one that actually escapes) is ever
+    // reached.
+    $archive = zip_extractor_test_marker() . '/evil7.zip';
+    zip_extractor_build_archive($archive, [
+        'plugin_id/a/../../evil.txt' => '<?php // escaped',
+    ]);
+    $dest = zip_extractor_test_marker() . '/extracted';
+
+    $result = new ZipExtractor()->extract($archive, $dest, 'plugin_id', new CurrentConfig());
+
+    expect($result)->toBeNull();
+    expect(file_exists(zip_extractor_test_marker() . '/evil.txt'))->toBeFalse();
 });
 
 // ZipExtractor::listFilenames()/extract() each guard `$zip->statIndex($i)

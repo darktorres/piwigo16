@@ -8,12 +8,14 @@ use Piwigo\Admin\Extensions\ExtensionType;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Config\ConfigLoader;
 use Piwigo\Tests\Support\CurrentPathsTestFactory;
+use Piwigo\Core\AppInfo;
 use Piwigo\Core\FilesystemHelper;
 use Piwigo\Tests\Support\LangTestFactory;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Paths;
 use Piwigo\Tests\Support\EventDispatcherTestFactory;
 use Piwigo\Tests\Support\CurrentUserTestFactory;
+use Piwigo\Url\RootPathOverride;
 use Piwigo\Users\User;
 
 // ExtensionType::scanDirectory() hardcodes real app paths (PluginLoader::pluginsPath()/
@@ -574,6 +576,504 @@ test('scan does not append an empty, whitespace-only X-Piwigo-Country to the lan
 
         expect($found)->toHaveKey('blank_country_lang')
             ->and($found['blank_country_lang']['name'])->toBe('Blank Country Language');
+    } finally {
+        FilesystemHelper::deltree($root);
+    }
+});
+
+// ---------------------------------------------------------------------
+// Below: second mutation-testing pass. Same fixture-root/no-DB-bootstrap
+// technique as the section above.
+
+test('scan sorts languages by name via nameCompare, not raw directory listing order', function (): void {
+    // Real gap, found via mutation testing: `if ($type === ExtensionType::Language)`
+    // gates the uasort()/nameCompare() call -- neither of this file's
+    // existing language tests scans more than one language whose name
+    // ordering could differ from its directory-listing order, so nothing
+    // ever told "sorted by name" from "left in whatever order readdir()
+    // happened to return". Directory ids are deliberately the *opposite*
+    // alphabetical order from their own "X-Piwigo-Language-Name" values,
+    // so an unsorted result can't coincidentally match this test's
+    // expected order.
+    $root = extensionScannerFixtureRoot();
+    try {
+        mkdir($root . 'language/mmm_dir', 0o777, true);
+        file_put_contents($root . 'language/mmm_dir/common.po', <<<PO
+            msgid ""
+            msgstr ""
+            "X-Piwigo-Language-Name: Bravo Language\\n"
+
+            PO);
+        mkdir($root . 'language/aaa_dir', 0o777, true);
+        file_put_contents($root . 'language/aaa_dir/common.po', <<<PO
+            msgid ""
+            msgstr ""
+            "X-Piwigo-Language-Name: Charlie Language\\n"
+
+            PO);
+        mkdir($root . 'language/zzz_dir', 0o777, true);
+        file_put_contents($root . 'language/zzz_dir/common.po', <<<PO
+            msgid ""
+            msgstr ""
+            "X-Piwigo-Language-Name: Alpha Language\\n"
+
+            PO);
+
+        $found = new ExtensionScanner()->scan(ExtensionType::Language, UrlServiceTestFactory::build(), LangTestFactory::get(), CurrentPathsTestFactory::get(), CurrentUserTestFactory::get(), EventDispatcherTestFactory::get(), CurrentConfigTestFactory::get(), 'utf-8');
+
+        expect(array_keys($found))->toBe(['zzz_dir', 'mmm_dir', 'aaa_dir']);
+    } finally {
+        FilesystemHelper::deltree($root);
+    }
+});
+
+test('scan rejects a plugin directory that is a symlink even when its target is a real directory', function (): void {
+    // Real gap, found via mutation testing: `!is_dir($path) || is_link($path) || ...`
+    // -- a symlink pointing at a real directory satisfies is_dir() too (it
+    // follows the link), so the is_link() rejection has to be checked
+    // independently of is_dir(), not gated behind it.
+    $root = extensionScannerFixtureRoot();
+    $linkPath = $root . 'plugins/symlinked_plugin';
+    try {
+        $targetDir = $root . 'plugins/real_target_plugin';
+        mkdir($targetDir, 0o777, true);
+        file_put_contents($targetDir . '/main.inc.php', "<?php\n/*\nPlugin Name: Real Target\n*/\n");
+        symlink($targetDir, $linkPath);
+
+        $found = new ExtensionScanner()->scan(ExtensionType::Plugin, UrlServiceTestFactory::build(), LangTestFactory::get(), CurrentPathsTestFactory::get(), CurrentUserTestFactory::get(), EventDispatcherTestFactory::get(), CurrentConfigTestFactory::get());
+
+        expect($found)->not->toHaveKey('symlinked_plugin')
+            ->and($found)->toHaveKey('real_target_plugin');
+    } finally {
+        // Removed before deltree() walks it -- FilesystemHelper::deltree()
+        // follows is_dir() (which a directory symlink satisfies) and then
+        // calls plain rmdir() on it, which fails (and warns) for a
+        // symlink on Linux.
+        @unlink($linkPath);
+        FilesystemHelper::deltree($root);
+    }
+});
+
+test('scan only reads the first 2048 bytes of a plugin main.inc.php header block', function (): void {
+    // Real gap, found via mutation testing: file_get_contents()'s own
+    // offset (0) and length (2048) arguments -- every other plugin
+    // fixture's header block sits well within that window, so nothing
+    // ever told the exact (offset=0, length=2048) read from an
+    // off-by-one on either argument. Pads the file so a 10-char value
+    // straddles byte 2047/2048: only the real, exact window captures
+    // precisely the first 8 of its characters.
+    $root = extensionScannerFixtureRoot();
+    try {
+        $dir = $root . 'plugins/byte_boundary_plugin';
+        mkdir($dir, 0o777, true);
+        $prefix = "<?php\n/*\n";
+        $label = 'Plugin Name: ';
+        $valueStart = 2040;
+        $padding = str_repeat('X', $valueStart - strlen($prefix) - strlen($label));
+        $value = '0123456789';
+        file_put_contents($dir . '/main.inc.php', $prefix . $padding . $label . $value . "\n*/\n");
+
+        $found = new ExtensionScanner()->scan(ExtensionType::Plugin, UrlServiceTestFactory::build(), LangTestFactory::get(), CurrentPathsTestFactory::get(), CurrentUserTestFactory::get(), EventDispatcherTestFactory::get(), CurrentConfigTestFactory::get());
+
+        expect($found)->toHaveKey('byte_boundary_plugin')
+            ->and($found['byte_boundary_plugin']['name'])->toBe('01234567');
+    } finally {
+        FilesystemHelper::deltree($root);
+    }
+});
+
+test('scan gates hasSettings on a case-insensitive "webmaster" marker, not just the lowercase literal', function (): void {
+    // Real gap, found via mutation testing: strtolower($val[1]) === 'webmaster'
+    // -- every existing webmaster-gated fixture already writes the header
+    // in lowercase ("Has Settings: webmaster"), which can't tell a real
+    // strtolower() from a removed one. The regex's own [Ww]ebmaster class
+    // allows a capitalized "Webmaster" too; only a case-insensitive
+    // comparison correctly keeps it gated for a non-webmaster user.
+    $root = extensionScannerFixtureRoot();
+    try {
+        $dir = $root . 'plugins/capitalized_webmaster_plugin';
+        mkdir($dir, 0o777, true);
+        file_put_contents($dir . '/main.inc.php', "<?php\n/*\nPlugin Name: Capitalized\nHas Settings: Webmaster\n*/\n");
+        CurrentUserTestFactory::get()->set(User::fromUserArray(['id' => 3, 'status' => 'normal']));
+
+        $found = new ExtensionScanner()->scan(ExtensionType::Plugin, UrlServiceTestFactory::build(), LangTestFactory::get(), CurrentPathsTestFactory::get(), CurrentUserTestFactory::get(), EventDispatcherTestFactory::get(), CurrentConfigTestFactory::get());
+
+        expect($found)->toHaveKey('capitalized_webmaster_plugin')
+            ->and($found['capitalized_webmaster_plugin']['hasSettings'])->toBeFalse();
+    } finally {
+        FilesystemHelper::deltree($root);
+    }
+});
+
+test('scan skips a theme directory with no themeconf.inc.php', function (): void {
+    // Real gap, found via mutation testing: `!is_dir($path) || !file_exists(...)`
+    // -- unlike the equivalent plugin test, nothing exercised a theme
+    // directory that exists but is missing its own marker file.
+    $root = extensionScannerFixtureRoot();
+    try {
+        mkdir($root . 'themes/no_conf_theme', 0o777, true);
+
+        $found = new ExtensionScanner()->scan(ExtensionType::Theme, UrlServiceTestFactory::build(), LangTestFactory::get(), CurrentPathsTestFactory::get(), CurrentUserTestFactory::get(), EventDispatcherTestFactory::get(), CurrentConfigTestFactory::get());
+
+        expect($found)->not->toHaveKey('no_conf_theme');
+    } finally {
+        FilesystemHelper::deltree($root);
+    }
+});
+
+test('scan falls back to the header Description when Lang::load() returns an empty plugin description.txt', function (): void {
+    // Real gap, found via mutation testing: is_string($desc) && $desc !== ''
+    // -- every plugin fixture with a description.txt writes real,
+    // non-empty content, so nothing ever exercised the empty-string case
+    // (an empty description.txt genuinely returns '' from Lang::load(),
+    // not false -- it's a plain file_get_contents() read under the
+    // 'return' option).
+    $root = extensionScannerFixtureRoot();
+    try {
+        $dir = $root . 'plugins/empty_desc_plugin';
+        mkdir($dir, 0o777, true);
+        file_put_contents($dir . '/main.inc.php', "<?php\n/*\nPlugin Name: Empty Desc\nDescription: Header fallback description\n*/\n");
+        mkdir($dir . '/language/en_UK', 0o777, true);
+        file_put_contents($dir . '/language/en_UK/description.txt', '');
+
+        $found = new ExtensionScanner()->scan(ExtensionType::Plugin, UrlServiceTestFactory::build(), LangTestFactory::get(), CurrentPathsTestFactory::get(), CurrentUserTestFactory::get(), EventDispatcherTestFactory::get(), CurrentConfigTestFactory::get());
+
+        expect($found)->toHaveKey('empty_desc_plugin')
+            ->and($found['empty_desc_plugin']['description'])->toBe('Header fallback description');
+    } finally {
+        FilesystemHelper::deltree($root);
+    }
+});
+
+test('scan trims whitespace from a lang-loaded plugin description', function (): void {
+    // Real gap, found via mutation testing: trim($desc) -- the shared
+    // extensionScannerFixturePlugin() helper's description.txt content has
+    // no surrounding whitespace, so trim() never had anything to strip.
+    $root = extensionScannerFixtureRoot();
+    try {
+        $dir = $root . 'plugins/padded_desc_plugin';
+        mkdir($dir, 0o777, true);
+        file_put_contents($dir . '/main.inc.php', "<?php\n/*\nPlugin Name: Padded Desc\n*/\n");
+        mkdir($dir . '/language/en_UK', 0o777, true);
+        file_put_contents($dir . '/language/en_UK/description.txt', "  Padded lang-loaded description  \n");
+
+        $found = new ExtensionScanner()->scan(ExtensionType::Plugin, UrlServiceTestFactory::build(), LangTestFactory::get(), CurrentPathsTestFactory::get(), CurrentUserTestFactory::get(), EventDispatcherTestFactory::get(), CurrentConfigTestFactory::get());
+
+        expect($found)->toHaveKey('padded_desc_plugin')
+            ->and($found['padded_desc_plugin']['description'])->toBe('Padded lang-loaded description');
+    } finally {
+        FilesystemHelper::deltree($root);
+    }
+});
+
+test('scan falls back to the header Description when Lang::load() returns an empty theme description.txt', function (): void {
+    $root = extensionScannerFixtureRoot();
+    try {
+        $dir = $root . 'themes/empty_desc_theme';
+        mkdir($dir, 0o777, true);
+        file_put_contents($dir . '/themeconf.inc.php', "<?php\n/*\nTheme Name: Empty Desc Theme\nDescription: Theme header fallback description\n*/\n");
+        mkdir($dir . '/language/en_UK', 0o777, true);
+        file_put_contents($dir . '/language/en_UK/description.txt', '');
+        file_put_contents($dir . '/screenshot.png', 'fixture');
+
+        $found = new ExtensionScanner()->scan(ExtensionType::Theme, UrlServiceTestFactory::build(), LangTestFactory::get(), CurrentPathsTestFactory::get(), CurrentUserTestFactory::get(), EventDispatcherTestFactory::get(), CurrentConfigTestFactory::get());
+
+        expect($found)->toHaveKey('empty_desc_theme')
+            ->and($found['empty_desc_theme']['description'])->toBe('Theme header fallback description');
+    } finally {
+        FilesystemHelper::deltree($root);
+    }
+});
+
+test('scan trims whitespace from a lang-loaded theme description', function (): void {
+    $root = extensionScannerFixtureRoot();
+    try {
+        $dir = $root . 'themes/padded_desc_theme';
+        mkdir($dir, 0o777, true);
+        file_put_contents($dir . '/themeconf.inc.php', "<?php\n/*\nTheme Name: Padded Desc Theme\n*/\n");
+        mkdir($dir . '/language/en_UK', 0o777, true);
+        file_put_contents($dir . '/language/en_UK/description.txt', "  Padded theme lang-loaded description  \n");
+        file_put_contents($dir . '/screenshot.png', 'fixture');
+
+        $found = new ExtensionScanner()->scan(ExtensionType::Theme, UrlServiceTestFactory::build(), LangTestFactory::get(), CurrentPathsTestFactory::get(), CurrentUserTestFactory::get(), EventDispatcherTestFactory::get(), CurrentConfigTestFactory::get());
+
+        expect($found)->toHaveKey('padded_desc_theme')
+            ->and($found['padded_desc_theme']['description'])->toBe('Padded theme lang-loaded description');
+    } finally {
+        FilesystemHelper::deltree($root);
+    }
+});
+
+test('scan reports activable/mobile/use_standard_pages as false, not just non-empty, for an explicitly false theme_conf', function (): void {
+    // Real gap, found via mutation testing: SqlDialect::getBoolean($val[1])
+    // -- the only "fully populated" theme fixture in this file sets all 3
+    // flags to true, and SqlDialect::getBoolean()'s own (bool) cast
+    // fallback treats *any* non-"false" non-empty string as true --
+    // including $val[0] (the entire regex match, e.g. "'activable' =>
+    // false", which is non-empty and isn't literally the word "false")
+    // -- so a true-only fixture can't tell $val[1] (the captured
+    // "true"/"false" word alone) apart from $val[0]; only an
+    // explicitly-false fixture can.
+    $root = extensionScannerFixtureRoot();
+    try {
+        $dir = $root . 'themes/false_flags_theme';
+        mkdir($dir, 0o777, true);
+        file_put_contents($dir . '/themeconf.inc.php', <<<PHP
+            <?php
+            /*
+            Theme Name: False Flags Theme
+            */
+            \$theme_conf = array(
+                'activable' => false,
+                'mobile' => false,
+                'use_standard_pages' => false,
+            );
+            PHP);
+        file_put_contents($dir . '/screenshot.png', 'fixture');
+
+        $found = new ExtensionScanner()->scan(ExtensionType::Theme, UrlServiceTestFactory::build(), LangTestFactory::get(), CurrentPathsTestFactory::get(), CurrentUserTestFactory::get(), EventDispatcherTestFactory::get(), CurrentConfigTestFactory::get());
+
+        expect($found)->toHaveKey('false_flags_theme');
+        $theme = $found['false_flags_theme'];
+        expect($theme['activable'])->toBeFalse()
+            ->and($theme['mobile'])->toBeFalse()
+            ->and($theme['use_standard_pages'])->toBeFalse();
+    } finally {
+        FilesystemHelper::deltree($root);
+    }
+});
+
+test('scan omits admin_uri for a theme with no admin/admin.inc.php', function (): void {
+    // Real gap, found via mutation testing: file_exists($path . '/admin/admin.inc.php')
+    // -- both existing fixtures that create an 'admin/' subdirectory
+    // (padded_header_theme, headerless_theme) never assert admin_uri's
+    // *absence*, so a mutant that checks file_exists($path) (the theme's
+    // own directory, which always exists once we're this far) instead of
+    // the specific marker file goes unnoticed.
+    $root = extensionScannerFixtureRoot();
+    try {
+        $dir = $root . 'themes/no_admin_theme';
+        mkdir($dir, 0o777, true);
+        file_put_contents($dir . '/themeconf.inc.php', "<?php\n/*\nTheme Name: No Admin Theme\n*/\n");
+        file_put_contents($dir . '/screenshot.png', 'fixture');
+
+        $found = new ExtensionScanner()->scan(ExtensionType::Theme, UrlServiceTestFactory::build(), LangTestFactory::get(), CurrentPathsTestFactory::get(), CurrentUserTestFactory::get(), EventDispatcherTestFactory::get(), CurrentConfigTestFactory::get());
+
+        expect($found)->toHaveKey('no_admin_theme')
+            ->and($found['no_admin_theme'])->not->toHaveKey('admin_uri');
+    } finally {
+        FilesystemHelper::deltree($root);
+    }
+});
+
+test('scan prefixes admin_uri with the real root url, not just the relative admin.php path', function (): void {
+    // Real gap, found via mutation testing: $urlService->getRootUrl() . 'admin.php?...'
+    // -- the existing "full_fixture_theme" test's own toContain() check is
+    // deliberately a substring match (its own comment explains why: the
+    // untouched RootPathOverride/SectionContextRegistry state makes
+    // getRootUrl() return '' in that bare setup), which can't tell a
+    // missing prefix from a present-but-empty one. Seeding
+    // RootPathOverride directly makes getRootUrl() return a known,
+    // non-empty value here, so the prefix is actually observable.
+    $root = extensionScannerFixtureRoot();
+    try {
+        $dir = $root . 'themes/admin_uri_theme';
+        mkdir($dir . '/admin', 0o777, true);
+        file_put_contents($dir . '/themeconf.inc.php', "<?php\n/*\nTheme Name: Admin Uri Theme\n*/\n");
+        file_put_contents($dir . '/admin/admin.inc.php', '<?php // fixture admin page, only its existence matters');
+        file_put_contents($dir . '/screenshot.png', 'fixture');
+
+        $rootPathOverride = new RootPathOverride();
+        $rootPathOverride->push('https://example.com/piwigo/');
+        $urlService = UrlServiceTestFactory::build(rootPathOverride: $rootPathOverride);
+
+        $found = new ExtensionScanner()->scan(ExtensionType::Theme, $urlService, LangTestFactory::get(), CurrentPathsTestFactory::get(), CurrentUserTestFactory::get(), EventDispatcherTestFactory::get(), CurrentConfigTestFactory::get());
+
+        expect($found)->toHaveKey('admin_uri_theme')
+            ->and($found['admin_uri_theme']['admin_uri'])->toBe('https://example.com/piwigo/admin.php?page=theme&amp;theme=admin_uri_theme');
+    } finally {
+        FilesystemHelper::deltree($root);
+    }
+});
+
+test('scan reconstructs a multi-line theme_conf value by rejoining file() lines without inserting a separator', function (): void {
+    // Real gap, found via mutation testing: implode('', $lines) -- every
+    // other theme fixture's header/config values sit entirely on a single
+    // physical line, so nothing tells a real empty-glue join from a
+    // non-empty one: inserted glue text lands strictly *between* file()
+    // lines, and every `.+`-based header pattern already stops at its own
+    // line's trailing \n regardless of what follows it. The 'parent'
+    // field's own pattern instead uses `[^"\']+`, which -- unlike `.` --
+    // DOES cross real newlines, so a value deliberately split across 2
+    // file() lines (inside its own quotes) is the one place a wrong
+    // separator actually lands inside the captured group itself.
+    $root = extensionScannerFixtureRoot();
+    try {
+        $dir = $root . 'themes/multiline_parent_theme';
+        mkdir($dir, 0o777, true);
+        file_put_contents($dir . '/themeconf.inc.php', "<?php\n/*\nTheme Name: Multiline Parent Theme\n*/\n\$theme_conf = array(\n    'parent' => 'parent_theme\n_id',\n);\n");
+        file_put_contents($dir . '/screenshot.png', 'fixture');
+
+        $found = new ExtensionScanner()->scan(ExtensionType::Theme, UrlServiceTestFactory::build(), LangTestFactory::get(), CurrentPathsTestFactory::get(), CurrentUserTestFactory::get(), EventDispatcherTestFactory::get(), CurrentConfigTestFactory::get());
+
+        expect($found)->toHaveKey('multiline_parent_theme')
+            ->and($found['multiline_parent_theme']['parent'])->toBe("parent_theme\n_id");
+    } finally {
+        FilesystemHelper::deltree($root);
+    }
+});
+
+test('scan rejects a language directory that is a symlink even when its target is a real directory', function (): void {
+    // Real gap, found via mutation testing: `!is_dir($path) || is_link($path) || ...`
+    // -- language's own guard has the exact same is_link()-gated-behind-
+    // is_dir() shape as the plugin guard above, and needs the same real,
+    // non-mocked symlink to distinguish.
+    $root = extensionScannerFixtureRoot();
+    $linkPath = $root . 'language/symlinked_lang';
+    try {
+        $targetDir = $root . 'language/real_target_lang';
+        mkdir($targetDir, 0o777, true);
+        file_put_contents($targetDir . '/common.po', <<<PO
+            msgid ""
+            msgstr ""
+            "X-Piwigo-Language-Name: Real Target Lang\\n"
+
+            PO);
+        symlink($targetDir, $linkPath);
+
+        $found = new ExtensionScanner()->scan(ExtensionType::Language, UrlServiceTestFactory::build(), LangTestFactory::get(), CurrentPathsTestFactory::get(), CurrentUserTestFactory::get(), EventDispatcherTestFactory::get(), CurrentConfigTestFactory::get(), 'utf-8');
+
+        expect($found)->not->toHaveKey('symlinked_lang')
+            ->and($found)->toHaveKey('real_target_lang');
+    } finally {
+        @unlink($linkPath);
+        FilesystemHelper::deltree($root);
+    }
+});
+
+test('scan actually uses the caller-supplied targetCharset, not just CharsetHelper::getPwgCharset()', function (): void {
+    // Real gap, found via mutation testing: `$targetCharset ?? CharsetHelper::getPwgCharset()`
+    // -- every existing language test passes 'utf-8' as $targetCharset,
+    // which is also exactly what CharsetHelper::getPwgCharset() itself
+    // returns by default (PWG_CHARSET is never defined in this test suite
+    // -- see CharsetHelperTest's own docblock), so nothing can tell a real
+    // caller-supplied charset from the ignored-argument fallback.
+    // Converting to iso-8859-1 -- a charset getPwgCharset() would never
+    // return here -- actually changes the name's bytes, unlike an
+    // identity utf-8-to-utf-8 "conversion".
+    $root = extensionScannerFixtureRoot();
+    $poFile = $root . 'language/iso_charset_lang/common.po';
+    try {
+        mkdir($root . 'language/iso_charset_lang', 0o777, true);
+        file_put_contents($poFile, <<<PO
+            msgid ""
+            msgstr ""
+            "X-Piwigo-Language-Name: café\\n"
+
+            PO);
+
+        $found = new ExtensionScanner()->scan(ExtensionType::Language, UrlServiceTestFactory::build(), LangTestFactory::get(), CurrentPathsTestFactory::get(), CurrentUserTestFactory::get(), EventDispatcherTestFactory::get(), CurrentConfigTestFactory::get(), 'iso-8859-1');
+
+        expect($found)->toHaveKey('iso_charset_lang')
+            // Not an exact literal: htmlspecialchars()'s own UTF-8
+            // decoding of the now-iso-8859-1-encoded byte for 'é'
+            // (ENT_SUBSTITUTE's exact replacement) isn't what's under
+            // test here -- only that the conversion demonstrably
+            // happened at all, changing the bytes away from the
+            // untouched, still-valid-UTF-8 'café'.
+            ->and($found['iso_charset_lang']['name'])->not->toBe('café')
+            ->and($found['iso_charset_lang']['name'])->toStartWith('caf');
+    } finally {
+        FilesystemHelper::deltree($root);
+    }
+});
+
+test('scan defaults uri/author for a language whose common.po has no matching Language-Name header', function (): void {
+    // Real gap, found via mutation testing: every other language fixture's
+    // common.po carries an "X-Piwigo-Language-Name" header, so nothing
+    // ever exercised the initial $language = [...] default array itself
+    // ('name'/'code' default to the directory id, 'version' to
+    // AppInfo::VERSION, 'uri'/'author' stay '' -- scanLanguage() never
+    // sets either from any header).
+    $root = extensionScannerFixtureRoot();
+    try {
+        mkdir($root . 'language/headerless_lang', 0o777, true);
+        file_put_contents($root . 'language/headerless_lang/common.po', "msgid \"\"\nmsgstr \"\"\n");
+
+        $found = new ExtensionScanner()->scan(ExtensionType::Language, UrlServiceTestFactory::build(), LangTestFactory::get(), CurrentPathsTestFactory::get(), CurrentUserTestFactory::get(), EventDispatcherTestFactory::get(), CurrentConfigTestFactory::get(), 'utf-8');
+
+        expect($found)->toHaveKey('headerless_lang');
+        $language = $found['headerless_lang'];
+        expect($language['name'])->toBe('headerless_lang')
+            ->and($language['code'])->toBe('headerless_lang')
+            ->and($language['version'])->toBe(AppInfo::VERSION)
+            ->and($language['uri'])->toBe('')
+            ->and($language['author'])->toBe('');
+    } finally {
+        FilesystemHelper::deltree($root);
+    }
+});
+
+test('scan does not corrupt language name/country when charset conversion fails for an unrecognized target charset', function (): void {
+    // Real gap, found via mutation testing: `if ($converted !== false)` /
+    // `if ($convertedCountry !== false)` -- every existing language test
+    // passes 'utf-8' as $targetCharset, which CharsetHelper::convertCharset()
+    // short-circuits as an identity no-op (source === dest, never returns
+    // false), so nothing ever exercised what real conversion *failure*
+    // does. A deliberately unrecognized target charset routes into
+    // CharsetHelper's own iconv() fallback branch, which genuinely
+    // returns false (with a real E_WARNING, suppressed the same way as
+    // this file's other unreadable-file tests) -- the real, correct code
+    // must then keep the already-trimmed, unconverted value rather than
+    // overwriting it with that `false` (which would otherwise blow up
+    // array_map(htmlspecialchars(...), ...) under strict_types). The
+    // padding on both header values also exercises trim() on each.
+    $root = extensionScannerFixtureRoot();
+    $poFile = $root . 'language/bogus_charset_lang/common.po';
+    try {
+        mkdir($root . 'language/bogus_charset_lang', 0o777, true);
+        file_put_contents($poFile, <<<PO
+            msgid ""
+            msgstr ""
+            "X-Piwigo-Language-Name:   Padded Language Name   \\n"
+            "X-Piwigo-Country:   Padded Country   \\n"
+
+            PO);
+
+        set_error_handler(static fn (): bool => true, E_WARNING);
+        try {
+            $found = new ExtensionScanner()->scan(ExtensionType::Language, UrlServiceTestFactory::build(), LangTestFactory::get(), CurrentPathsTestFactory::get(), CurrentUserTestFactory::get(), EventDispatcherTestFactory::get(), CurrentConfigTestFactory::get(), 'totally-bogus-charset-xyz');
+        } finally {
+            restore_error_handler();
+        }
+
+        expect($found)->toHaveKey('bogus_charset_lang')
+            ->and($found['bogus_charset_lang']['name'])->toBe('Padded Language Name (Padded Country)');
+    } finally {
+        FilesystemHelper::deltree($root);
+    }
+});
+
+test('scan escapes special HTML characters in a language name', function (): void {
+    // Real gap, found via mutation testing: array_map(htmlspecialchars(...), $language)
+    // -- the existing "escapes special HTML characters" test above only
+    // covers scanPlugin()'s own htmlspecialchars() pass, not
+    // scanLanguage()'s separate one.
+    $root = extensionScannerFixtureRoot();
+    $poFile = $root . 'language/xss_lang/common.po';
+    try {
+        mkdir($root . 'language/xss_lang', 0o777, true);
+        file_put_contents($poFile, <<<PO
+            msgid ""
+            msgstr ""
+            "X-Piwigo-Language-Name: <script>alert(1)</script> & "Quoted"\\n"
+
+            PO);
+
+        $found = new ExtensionScanner()->scan(ExtensionType::Language, UrlServiceTestFactory::build(), LangTestFactory::get(), CurrentPathsTestFactory::get(), CurrentUserTestFactory::get(), EventDispatcherTestFactory::get(), CurrentConfigTestFactory::get(), 'utf-8');
+
+        expect($found)->toHaveKey('xss_lang')
+            ->and($found['xss_lang']['name'])->toBe('&lt;script&gt;alert(1)&lt;/script&gt; &amp; &quot;Quoted&quot;');
     } finally {
         FilesystemHelper::deltree($root);
     }

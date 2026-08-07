@@ -43,6 +43,12 @@ use Piwigo\Tests\Support\EventDispatcherTestFactory;
 use Piwigo\Storage\StorageRegistry;
 use Piwigo\Url\UrlService;
 use Piwigo\Users\CurrentUser;
+use ReflectionMethod;
+use Piwigo\Tests\Support\KernelContainerOverride;
+use Piwigo\Image\ImageStdParams;
+use Piwigo\Db\AdvisorySessionLock;
+use Piwigo\Config\ConfigEntry;
+use Exception;
 
 /**
  * Real, minimal fake for SrcImage::setThemeConfProvider() -- only reached
@@ -1088,5 +1094,829 @@ final class UploadServiceTest extends IntegrationTestCase
 
         self::assertNull($result);
         self::assertFileDoesNotExist($this->marker . '/pwg_representative/broken.jpg');
+    }
+
+    // === Mutation-testing gap closures below ===
+
+    private function newService(): UploadService
+    {
+        return new UploadService(LangTestFactory::get(), $this->currentLogger, $this->storageRegistry, EventDispatcherTestFactory::get(), $this->configService, $this->entityManager, $this->activityService, $this->metadataService, $this->imageService, $this->currentConfig, $this->wsContext, $this->currentUser, CurrentPathsTestFactory::get(), DbCredentialsTestFactory::get());
+    }
+
+    /**
+     * Real gap: the `continue` inside saveUploadFormConfig()'s own
+     * PHPStan-narrowing guard (whose only realistically-triggerable clause
+     * is `! is_scalar($value)`, per that method's own comment) must skip
+     * only the current field and keep the loop going, not abort every
+     * field after it.
+     */
+    public function test_saveUploadFormConfig_keeps_processing_a_later_field_after_skipping_a_non_scalar_one(): void
+    {
+        $service = $this->newService();
+        $errors = [];
+        $formErrors = [];
+
+        $result = $service->saveUploadFormConfig(
+            ['original_resize_maxwidth' => ['not', 'scalar'], 'original_resize_maxheight' => '1500'],
+            $errors,
+            $formErrors
+        );
+
+        try {
+            self::assertTrue($result);
+            self::assertSame([], $errors);
+
+            $stored = $this->conn->fetchOne("SELECT value FROM " . Tables::config() . " WHERE param = 'original_resize_maxheight'");
+            self::assertSame('1500', $stored, 'the field after the skipped non-scalar one must still be processed and persisted, not abandoned by a wrongly-broken loop');
+        } finally {
+            $this->conn->executeStatement("UPDATE " . Tables::config() . " SET value = '2016' WHERE param = 'original_resize_maxheight'");
+            $this->entityManager->clear();
+        }
+    }
+
+    /**
+     * Real gap: saveUploadFormConfig()'s own massUpdateValues() call writes
+     * through a completely separate, throwaway EntityManager
+     * (EntityManagerFactory::build(DbConnection::build())), never touching
+     * $this->entityManager's own identity map -- only the explicit
+     * `$this->entityManager->clear()` call right after evicts any
+     * already-cached, now-stale ConfigEntry so a later find() re-queries
+     * instead of returning the pre-write copy.
+     */
+    public function test_saveUploadFormConfig_clears_the_injected_entity_managers_identity_map_after_a_successful_write(): void
+    {
+        $this->conn->executeStatement("UPDATE " . Tables::config() . " SET value = '2016' WHERE param = 'original_resize_maxheight'");
+        $this->entityManager->clear();
+
+        // Populates $this->entityManager's own identity map with the
+        // pre-write value -- find() checks that identity map FIRST, before
+        // ever issuing a fresh query, so this is the only way to observe
+        // whether the write path's own clear() call genuinely ran.
+        $before = $this->entityManager->find(ConfigEntry::class, 'original_resize_maxheight');
+        self::assertInstanceOf(ConfigEntry::class, $before);
+        self::assertSame('2016', $before->value);
+
+        $service = $this->newService();
+        $errors = [];
+        $formErrors = [];
+
+        try {
+            $result = $service->saveUploadFormConfig(['original_resize_maxheight' => '1500'], $errors, $formErrors);
+
+            self::assertTrue($result);
+            self::assertSame([], $errors);
+
+            $after = $this->entityManager->find(ConfigEntry::class, 'original_resize_maxheight');
+            self::assertInstanceOf(ConfigEntry::class, $after);
+            self::assertSame('1500', $after->value, 'entityManager->clear() must genuinely evict the stale cached entity so this find() re-queries instead of returning the pre-write identity-map copy');
+        } finally {
+            $this->conn->executeStatement("UPDATE " . Tables::config() . " SET value = '2016' WHERE param = 'original_resize_maxheight'");
+            $this->entityManager->clear();
+        }
+    }
+
+    /**
+     * Real, observable gap: addUploadedFile() html-escapes
+     * $original_filename before it's ever used (stored into
+     * `file`/`name`) -- a raw, un-escaped filename containing HTML
+     * metacharacters would be a stored-XSS vector wherever that column is
+     * later rendered.
+     */
+    public function test_addUploadedFile_html_escapes_the_original_filename_before_storing_it(): void
+    {
+        $source = $this->marker . '/escape-test.png';
+        $this->makeImage($source, 'png', 12, 9);
+
+        $rawFilename = 'a & b <script>.png';
+        $imageId = $this->newService()->addUploadedFile($source, $this->urlService, $rawFilename);
+        $id = $imageId;
+        $this->imageIdsToDelete[] = $id;
+
+        $row = $this->fetchImageRow($id);
+        self::assertSame(htmlspecialchars($rawFilename), $row['file']);
+        self::assertNotSame($rawFilename, $row['file'], 'the raw, unescaped filename must never reach storage verbatim when it contains HTML metacharacters');
+    }
+
+    /**
+     * Real gap: `! isset($image_id) and $this->currentConfig->
+     * uploadDetectDuplicate()` -- an `or` here would make the whole
+     * duplicate-detection block (including its own short-circuit "already
+     * exists, return the OTHER image's id" branch) run even on the UPDATE
+     * branch (image_id given) whenever detection is merely enabled,
+     * wrongly hijacking a legitimate update into returning some unrelated
+     * existing image's id instead.
+     */
+    public function test_addUploadedFile_never_runs_duplicate_detection_on_the_update_branch_even_with_detection_enabled(): void
+    {
+        CurrentConfigTestFactory::get()->setUploadDetectDuplicate(true);
+        try {
+            $service = $this->newService();
+
+            $first = $this->marker . '/dupguard-first.png';
+            $this->makeImage($first, 'png', 12, 9);
+            $id = $service->addUploadedFile($first, $this->urlService, 'dupguard-first.png');
+            $this->imageIdsToDelete[] = $id;
+
+            $second = $this->marker . '/dupguard-second.png';
+            file_put_contents($second, 'irrelevant bytes for the update branch');
+
+            // The given original_md5sum deliberately matches fixture image
+            // #1 (see this class's own docblock) -- if the
+            // duplicate-detection block wrongly ran here, it would
+            // short-circuit and return image #1's id instead of genuinely
+            // updating $id.
+            $result = $service->addUploadedFile(
+                $second,
+                $this->urlService,
+                'dupguard-second.png',
+                image_id: $id,
+                original_md5sum: '2e7ee450c4a4cffe42945205029782b9',
+            );
+
+            self::assertSame($id, $result, 'updating an existing photo must never be hijacked into the duplicate-detection short-circuit, even with detection enabled');
+            // Image #1's own row (the same fixture-photo-1.jpg other
+            // duplicate-detection tests in this class rely on) must be
+            // completely untouched -- the short-circuit's own unlink()
+            // never ran.
+            $image1Row = $this->fetchImageRow(1);
+            self::assertSame('2e7ee450c4a4cffe42945205029782b9', $image1Row['md5sum']);
+        } finally {
+            CurrentConfigTestFactory::get()->setUploadDetectDuplicate(true);
+        }
+    }
+
+    /**
+     * Mirrors addUploadedFile()'s own private duplicate-detection
+     * lock-name formula exactly (see that method's own comment right
+     * above its `$dup_detect_lock_name` computation).
+     */
+    private function dupDetectLockName(string $md5sum): string
+    {
+        return 'piwigo_iud_' . sha1($this->dbPrefix . ':' . $md5sum);
+    }
+
+    /**
+     * Spawns a real, separate OS process that acquires $lockName, sleeps
+     * briefly, then releases it -- same genuine, separate-session
+     * technique as tests/Contract/WsImagesUploadConcurrencyTest.php's own
+     * spawnBackgroundLockHolderThatInsertsThenReleases(), pared down to a
+     * bare acquire-sleep-release.
+     *
+     * @return array{0: resource, 1: array<int, resource>}
+     */
+    private function spawnBackgroundLockHolder(string $lockName): array
+    {
+        if ($this->dbDriver === 'pgsql') {
+            $key = AdvisorySessionLock::key($lockName);
+            $sql = sprintf(
+                "SET lock_timeout = '5s'; SELECT pg_advisory_lock(%d); SELECT pg_sleep(0.3); SELECT pg_advisory_unlock(%d);",
+                $key,
+                $key,
+            );
+            $cmd = ['psql', '-U' . $this->dbUser, '-h' . $this->dbHost, '-d' . $this->dbName, '-q', '-t', '-c', $sql];
+            $env = $this->dbPass !== '' ? array_merge(getenv(), ['PGPASSWORD' => $this->dbPass]) : null;
+        } else {
+            $sql = sprintf(
+                "SELECT GET_LOCK('%s', 5); SELECT SLEEP(0.3); SELECT RELEASE_LOCK('%s');",
+                $lockName,
+                $lockName,
+            );
+            $cmd = ['mysql', '-u' . $this->dbUser];
+            if ($this->dbPass !== '') {
+                $cmd[] = '-p' . $this->dbPass;
+            }
+            $cmd[] = str_starts_with($this->dbHost, '/') ? '--socket=' . $this->dbHost : '-h' . $this->dbHost;
+            $cmd[] = $this->dbName;
+            $cmd[] = '-e';
+            $cmd[] = $sql;
+            $env = null;
+        }
+
+        $descriptors = [1 => ['pipe', 'w'], 2 => ['pipe', 'w']];
+        $proc = proc_open($cmd, $descriptors, $pipes, null, $env);
+        self::assertIsResource($proc, 'proc_open failed for the background lock-holder process');
+
+        return [$proc, $pipes];
+    }
+
+    /**
+     * Real gap: the duplicate-detection lock name is built from
+     * `$this->dbCredentials->prefix . ':' . $md5sum`, hashed and prefixed
+     * with 'piwigo_iud_' -- a wrong formula (dropped prefix, dropped
+     * separator, swapped operand order, or a hardcoded literal with no
+     * per-md5sum hashing at all) would let two genuinely concurrent
+     * duplicate uploads of the SAME file race past each other
+     * uncontended, defeating the whole point of the lock. A real,
+     * separate connection holding the EXACT documented lock name for a
+     * short window is the only way to prove addUploadedFile() computes
+     * that same name: it can only genuinely block on (and then unblock
+     * promptly once released) a name it independently computed
+     * identically.
+     */
+    public function test_addUploadedFile_computes_the_duplicate_detection_lock_name_from_the_documented_prefix_and_md5sum_formula(): void
+    {
+        CurrentConfigTestFactory::get()->setUploadDetectDuplicate(true);
+
+        $source = $this->marker . '/lock-name-probe.png';
+        $this->makeImage($source, 'png', 10, 8);
+        $md5sum = md5_file($source);
+        self::assertIsString($md5sum);
+
+        $lockName = $this->dupDetectLockName($md5sum);
+        [$proc, $pipes] = $this->spawnBackgroundLockHolder($lockName);
+
+        try {
+            // A head start for the background process to actually acquire
+            // the lock before our own call reaches it.
+            usleep(50_000);
+
+            $start = microtime(true);
+            $imageId = $this->newService()->addUploadedFile($source, $this->urlService, 'lock-name-probe.png', original_md5sum: $md5sum);
+            $elapsed = microtime(true) - $start;
+            $this->imageIdsToDelete[] = $imageId;
+
+            self::assertGreaterThan(0.15, $elapsed, 'must have genuinely blocked on the exact same held lock name computed from the documented formula, not raced past it');
+            self::assertLessThan(10.0, $elapsed, 'must unblock promptly once the background process releases, not wait anywhere near the full 30s production timeout');
+        } finally {
+            $stdout = stream_get_contents($pipes[1]);
+            $stderr = stream_get_contents($pipes[2]);
+            $exit = proc_close($proc);
+            self::assertSame(0, $exit, "background lock-holder process failed. stdout=[{$stdout}] stderr=[{$stderr}]");
+        }
+    }
+
+    /**
+     * Real gap: `count($images_found) > 0` -- a `0` result (no genuine
+     * duplicate) must NOT be treated as found. Under a `>= 0`/`> -1`
+     * mutant this branch wrongly reads `$images_found[0]` on an empty
+     * array (an undefined-array-key warning under this suite's
+     * failOnWarning), or -- were that warning somehow not fatal -- would
+     * short-circuit-return instead of performing a genuine new-photo
+     * insert.
+     */
+    public function test_addUploadedFile_does_not_treat_zero_duplicate_matches_as_a_duplicate(): void
+    {
+        $source = $this->marker . '/no-duplicate.png';
+        $this->makeImage($source, 'png', 11, 7);
+
+        $countBefore = $this->countRows('SELECT COUNT(*) FROM ' . Tables::images());
+
+        $imageId = $this->newService()->addUploadedFile($source, $this->urlService, 'no-duplicate.png');
+        $this->imageIdsToDelete[] = $imageId;
+
+        $countAfter = $this->countRows('SELECT COUNT(*) FROM ' . Tables::images());
+        self::assertSame($countBefore + 1, $countAfter, 'a genuinely new photo (zero real duplicate matches) must be INSERTed, not short-circuited');
+        self::assertFileDoesNotExist($source);
+    }
+
+    /**
+     * Real gap: sanitizeSvgIfNeeded()'s own initial `return;` (for a
+     * finfo_type that doesn't match the SVG whitelist) must short-circuit
+     * BEFORE the file is ever read/parsed/re-serialized -- a non-XML
+     * fixture can't distinguish this (it would also bail out later, via
+     * the loadXML()-failure guard, leaving the file untouched either
+     * way), so this uses genuinely well-formed XML that DOMDocument's own
+     * saveXML() would reformat (single- to double-quoted attribute) if it
+     * were ever actually parsed and re-serialized.
+     */
+    public function test_sanitizeSvgIfNeeded_returns_before_ever_reading_the_file_for_a_non_matching_finfo_type(): void
+    {
+        $path = $this->marker . '/mismatched-type.xml';
+        $original = "<root attr='value'/>";
+        file_put_contents($path, $original);
+
+        $service = $this->newService();
+        $method = new ReflectionMethod($service, 'sanitizeSvgIfNeeded');
+        $method->invoke($service, $path, 'image/jpeg');
+
+        self::assertSame($original, file_get_contents($path), 'a non-matching finfo_type must return immediately, before any read/parse/re-serialize could reformat the file');
+    }
+
+    /**
+     * Real gap: `libxml_use_internal_errors($previous_use_errors);`
+     * restores the PRIOR internal-errors setting -- without it, internal
+     * error handling leaks on (true) for the rest of the process, which
+     * `libxml_use_internal_errors()` (queried with no argument) can
+     * observe directly.
+     */
+    public function test_sanitizeSvgIfNeeded_restores_the_prior_libxml_use_internal_errors_setting_afterward(): void
+    {
+        $path = $this->marker . '/restore-libxml.svg';
+        file_put_contents($path, '<svg xmlns="http://www.w3.org/2000/svg"><circle r="5"/></svg>');
+
+        $previous = libxml_use_internal_errors(false);
+        try {
+            $service = $this->newService();
+            $method = new ReflectionMethod($service, 'sanitizeSvgIfNeeded');
+            $method->invoke($service, $path, 'image/svg+xml');
+
+            self::assertFalse(libxml_use_internal_errors(), 'must restore the prior (false) internal-errors setting, not leave it permanently toggled on for the rest of the process');
+        } finally {
+            libxml_use_internal_errors($previous);
+        }
+    }
+
+    private function readonlyDir(): string
+    {
+        $dir = $this->marker . '/readonly-' . bin2hex(random_bytes(4));
+        mkdir($dir, 0o777, true);
+        chmod($dir, 0o555);
+
+        return $dir;
+    }
+
+    /**
+     * Real gap: strtolower() before the in_array() extension check on all
+     * 5 ext_imagick handlers -- without it, a real, common uppercase
+     * extension (e.g. many camera/OS uploads produce '.PDF') would
+     * silently fail to dispatch to any of them.
+     */
+    public function test_the_5_ext_imagick_handlers_recognize_an_uppercase_extension_case_insensitively(): void
+    {
+        $dir = $this->readonlyDir();
+        // mkdir() on a permission-denied directory emits a real PHP
+        // warning that phpunit.xml's failOnWarning="true" would otherwise
+        // turn into a failure right at the call site.
+        set_error_handler(static fn (): bool => true);
+        try {
+            foreach ([
+                [UploadService::uploadFilePdf(...), 'document.PDF'],
+                [UploadService::uploadFileHeic(...), 'photo.HEIC'],
+                [UploadService::uploadFileTiff(...), 'photo.TIFF'],
+                [UploadService::uploadFilePsd(...), 'layered.PSD'],
+                [UploadService::uploadFileEps(...), 'vector.EPS'],
+            ] as [$handler, $filename]) {
+                $threw = null;
+                try {
+                    $this->uploadFileExt($handler, null, $dir . '/' . $filename);
+                } catch (ImageProcessingException $e) {
+                    $threw = $e;
+                }
+                self::assertNotNull($threw, "expected {$filename} to be recognized case-insensitively and reach prepareDirectoryStatic()");
+            }
+        } finally {
+            restore_error_handler();
+            chmod($dir, 0o777);
+        }
+    }
+
+    /**
+     * Real gap: uploadFileTiff()'s whitelist is `['tif', 'tiff']` -- a
+     * bare '.tif' (distinct from '.tiff') must also be recognized.
+     */
+    public function test_uploadFileTiff_also_recognizes_the_bare_tif_extension_not_just_tiff(): void
+    {
+        $dir = $this->readonlyDir();
+        set_error_handler(static fn (): bool => true);
+        try {
+            $threw = null;
+            try {
+                $this->uploadFileExt(UploadService::uploadFileTiff(...), null, $dir . '/photo.tif');
+            } catch (ImageProcessingException $e) {
+                $threw = $e;
+            }
+            self::assertNotNull($threw, 'a bare .tif extension (not just .tiff) must also be recognized');
+        } finally {
+            restore_error_handler();
+            chmod($dir, 0o777);
+        }
+    }
+
+    private function makeSamplePng(string $path): void
+    {
+        $exec = 'convert -size 30x30 xc:blue ' . escapeshellarg($path) . ' 2>&1';
+        exec($exec, $out, $status);
+        if ($status !== 0) {
+            self::markTestSkipped('ImageMagick convert failed to build a sample PNG: ' . implode("\n", $out));
+        }
+    }
+
+    private function convertSample(string $sourcePng, string $destPath): void
+    {
+        $exec = 'convert ' . escapeshellarg($sourcePng) . ' ' . escapeshellarg($destPath) . ' 2>&1';
+        exec($exec, $out, $status);
+        if ($status !== 0) {
+            self::markTestSkipped("ImageMagick convert failed to build {$destPath}: " . implode("\n", $out));
+        }
+    }
+
+    /**
+     * ImageMagick decodes arbitrary content by magic bytes regardless of a
+     * misleading extension, but has no HEIC encode delegate in this
+     * environment -- same technique as tests/Unit/Admin/Upload/
+     * UploadServiceTest.php's own upload_service_make_fake_heic().
+     */
+    private function makeFakeHeic(string $path): void
+    {
+        $realPng = $path . '.real.png';
+        $this->makeSamplePng($realPng);
+        rename($realPng, $path);
+    }
+
+    private function realExtImagickDir(): string
+    {
+        exec('command -v magick 2>/dev/null', $out, $status);
+        if ($status !== 0 || ! isset($out[0]) || $out[0] === '') {
+            $out = [];
+            exec('command -v convert 2>/dev/null', $out, $status);
+        }
+        self::assertSame(0, $status, 'no working magick/convert binary found on PATH in this environment');
+        self::assertNotEmpty($out, 'command -v produced no output');
+
+        return rtrim(dirname($out[0]), '/') . '/';
+    }
+
+    /**
+     * Real gap: `escapeshellarg($ext_imagick_dir) . PwgImage::
+     * get_ext_imagick_command()` -- a bogus configured dir must genuinely
+     * be prepended into the exec() command (making the whole invocation
+     * fail, since a slash-containing command name bypasses PATH lookup
+     * entirely), not silently dropped in favor of a bare, PATH-resolved
+     * command name that would still find the real system binary.
+     * uploadFileTiff()/uploadFilePsd() always extract a representative
+     * extension string regardless of whether the file was actually
+     * produced, so their own real conversion failure is checked via real
+     * on-disk file existence, not via their return value.
+     */
+    public function test_the_5_ext_imagick_handlers_use_the_configured_dir_prefix_rather_than_a_bare_path_lookup(): void
+    {
+        $bogusDir = sys_get_temp_dir() . '/definitely-not-a-real-imagick-dir-' . bin2hex(random_bytes(4)) . '/';
+        CurrentConfigTestFactory::get()->setExtImagickDir($bogusDir);
+        try {
+            $dir = $this->marker;
+
+            $pdfPng = $dir . '/dirbogus-pdf-src.png';
+            $this->makeSamplePng($pdfPng);
+            $pdf = $dir . '/dirbogus.pdf';
+            $this->convertSample($pdfPng, $pdf);
+            self::assertNull($this->uploadFileExt(UploadService::uploadFilePdf(...), null, $pdf), 'a bogus configured ext_imagick dir must genuinely be prepended to the exec() command, not silently dropped in favor of a bare PATH lookup');
+
+            $heic = $dir . '/dirbogus.heic';
+            $this->makeFakeHeic($heic);
+            self::assertNull($this->uploadFileExt(UploadService::uploadFileHeic(...), null, $heic));
+
+            $epsPng = $dir . '/dirbogus-eps-src.png';
+            $this->makeSamplePng($epsPng);
+            $eps = $dir . '/dirbogus.eps';
+            $this->convertSample($epsPng, $eps);
+            self::assertNull($this->uploadFileExt(UploadService::uploadFileEps(...), null, $eps));
+
+            $tiffPng = $dir . '/dirbogus-tiff-src.png';
+            $this->makeSamplePng($tiffPng);
+            $tiff = $dir . '/dirbogus.tiff';
+            $this->convertSample($tiffPng, $tiff);
+            $this->uploadFileExt(UploadService::uploadFileTiff(...), null, $tiff);
+            self::assertFileDoesNotExist($dir . '/pwg_representative/dirbogus.' . $this->currentConfig->tiffRepresentativeExt());
+
+            $psdPng = $dir . '/dirbogus-psd-src.png';
+            $this->makeSamplePng($psdPng);
+            $psd = $dir . '/dirbogus.psd';
+            $this->convertSample($psdPng, $psd);
+            $this->uploadFileExt(UploadService::uploadFilePsd(...), null, $psd);
+            self::assertFileDoesNotExist($dir . '/pwg_representative/dirbogus.png');
+        } finally {
+            CurrentConfigTestFactory::get()->setExtImagickDir('');
+        }
+    }
+
+    /**
+     * Real gap: same construction, opposite direction -- with a REAL,
+     * working ext_imagick dir configured (this project's own tests never
+     * set a non-default, non-empty extImagickDir anywhere else, so the
+     * concatenation ORDER has never actually been exercised with a real
+     * value before), the dir must come BEFORE the command name
+     * (`escapeshellarg($dir) . command`), not after it -- a swapped order
+     * concatenates into a single, nonexistent shell word (e.g.
+     * `convert'/usr/bin/'`), failing every conversion even though the
+     * configured dir is genuinely correct.
+     */
+    public function test_the_5_ext_imagick_handlers_prepend_the_configured_dir_before_the_command_name_not_after(): void
+    {
+        $realDir = $this->realExtImagickDir();
+        CurrentConfigTestFactory::get()->setExtImagickDir($realDir);
+        try {
+            $dir = $this->marker;
+
+            $pdfPng = $dir . '/dirreal-pdf-src.png';
+            $this->makeSamplePng($pdfPng);
+            $pdf = $dir . '/dirreal.pdf';
+            $this->convertSample($pdfPng, $pdf);
+            self::assertSame('jpg', $this->uploadFileExt(UploadService::uploadFilePdf(...), null, $pdf), 'the configured dir must be prepended before the command name, not appended after it, or the resulting shell word never resolves to a real executable');
+
+            $heic = $dir . '/dirreal.heic';
+            $this->makeFakeHeic($heic);
+            self::assertSame('jpg', $this->uploadFileExt(UploadService::uploadFileHeic(...), null, $heic));
+
+            $epsPng = $dir . '/dirreal-eps-src.png';
+            $this->makeSamplePng($epsPng);
+            $eps = $dir . '/dirreal.eps';
+            $this->convertSample($epsPng, $eps);
+            self::assertSame('png', $this->uploadFileExt(UploadService::uploadFileEps(...), null, $eps));
+
+            $tiffPng = $dir . '/dirreal-tiff-src.png';
+            $this->makeSamplePng($tiffPng);
+            $tiff = $dir . '/dirreal.tiff';
+            $this->convertSample($tiffPng, $tiff);
+            $this->uploadFileExt(UploadService::uploadFileTiff(...), null, $tiff);
+            self::assertFileExists($dir . '/pwg_representative/dirreal.' . $this->currentConfig->tiffRepresentativeExt());
+
+            $psdPng = $dir . '/dirreal-psd-src.png';
+            $this->makeSamplePng($psdPng);
+            $psd = $dir . '/dirreal.psd';
+            $this->convertSample($psdPng, $psd);
+            $this->uploadFileExt(UploadService::uploadFilePsd(...), null, $psd);
+            self::assertFileExists($dir . '/pwg_representative/dirreal.png');
+        } finally {
+            CurrentConfigTestFactory::get()->setExtImagickDir('');
+        }
+    }
+
+    /**
+     * Real gap: `escapeshellarg((string) realpath($file_path) . '[0]')`
+     * -- the trailing '[0]' ImageMagick page-selector limits the PDF
+     * conversion to its first page. uploadFilePdf() has no per-page-split
+     * rename fallback (unlike uploadFileTiff()/uploadFilePsd()), so
+     * dropping '[0]' on a real multi-page PDF makes ImageMagick emit
+     * per-page-suffixed files instead of the exact expected filename,
+     * which file_exists() then never finds.
+     */
+    public function test_uploadFilePdf_converts_only_the_first_page_via_the_0_page_selector(): void
+    {
+        $frame1 = $this->marker . '/pdf-frame1.png';
+        $frame2 = $this->marker . '/pdf-frame2.png';
+        $this->makeImage($frame1, 'png', 20, 20);
+        $this->makeImage($frame2, 'png', 20, 20);
+
+        $pdf = $this->marker . '/multi-page.pdf';
+        $cmd = 'convert ' . escapeshellarg($frame1) . ' ' . escapeshellarg($frame2) . ' ' . escapeshellarg($pdf) . ' 2>&1';
+        exec($cmd, $out, $status);
+        if ($status !== 0) {
+            self::markTestSkipped('ImageMagick convert failed to build a multi-page PDF fixture: ' . implode("\n", $out));
+        }
+
+        $result = $this->uploadFileExt(UploadService::uploadFilePdf(...), null, $pdf);
+
+        self::assertSame('jpg', $result, 'the [0] page selector must limit conversion to a single page, not fall through to a per-page-suffixed filename that never matches the expected path');
+        $representativePath = $this->marker . '/pwg_representative/multi-page.jpg';
+        self::assertFileExists($representativePath);
+        // Only the first frame's page was rendered -- no per-page sibling
+        // was ever produced.
+        self::assertFileDoesNotExist($this->marker . '/pwg_representative/multi-page-0.jpg');
+    }
+
+    /**
+     * Real gap: `-resize "' . $w . 'x' . $h . '>"'` -- checked via the
+     * exact logged exec string (uploadFileHeic() logs its own $exec),
+     * rather than a real oversized conversion: any dropped/reordered
+     * fragment breaks this exact substring.
+     */
+    public function test_uploadFileHeic_builds_the_resize_geometry_from_the_exact_optimal_width_and_height(): void
+    {
+        $method = new ReflectionMethod(UploadService::class, 'getOptimalDimensionsForRepresentative');
+        /** @var array{0: int, 1: int} $dims */
+        $dims = $method->invoke(null);
+        [$maxW, $maxH] = $dims;
+
+        $logDir = $this->marker . '/heic-geometry-logs';
+        mkdir($logDir, 0o777, true);
+        $this->currentLogger->set(new Logger(['severity' => Logger::INFO, 'directory' => $logDir, 'filename' => 'heic-geometry.log']));
+
+        try {
+            $heic = $this->marker . '/geometry-check.heic';
+            $this->makeFakeHeic($heic);
+
+            $this->uploadFileExt(UploadService::uploadFileHeic(...), null, $heic);
+
+            $logged = file_get_contents($logDir . '/heic-geometry.log');
+            self::assertIsString($logged);
+            self::assertStringContainsString('-resize "' . $maxW . 'x' . $maxH . '>"', $logged, 'the -resize geometry must be built from exactly $w . \'x\' . $h . \'>\', with no dropped or reordered fragment');
+        } finally {
+            $this->currentLogger->set(new Logger(['severity' => Logger::OFF]));
+        }
+    }
+
+    /**
+     * Real gap: uploadFileTiff()'s hardcoded `-quality 98` flag only when
+     * `$representative_ext === 'jpg'` -- proven via a real file-size
+     * comparison against an independent baseline (the SAME TIFF converted
+     * directly with NO quality flag at all, i.e. ImageMagick's own
+     * unconfigured JPEG default, well under 98), mirroring this file's
+     * own "uploadFilePdf actually applies pdfJpgQuality" test's proven
+     * technique.
+     */
+    public function test_uploadFileTiff_applies_the_hardcoded_quality_98_flag_only_when_representative_ext_is_jpg(): void
+    {
+        CurrentConfigTestFactory::get()->setTiffRepresentativeExt('jpg');
+        try {
+            $dir = $this->marker;
+            $png = $dir . '/tiff-quality-src.png';
+            $exec = 'convert -size 400x400 plasma: ' . escapeshellarg($png) . ' 2>&1';
+            exec($exec, $out, $status);
+            if ($status !== 0) {
+                self::markTestSkipped('ImageMagick convert failed to build the plasma source: ' . implode("\n", $out));
+            }
+            $tiff = $dir . '/tiff-quality.tiff';
+            $this->convertSample($png, $tiff);
+
+            // Independent baseline: the same TIFF converted directly, with
+            // no -quality flag at all.
+            $baseline = $dir . '/tiff-quality-baseline.jpg';
+            $this->convertSample($tiff, $baseline);
+            $baselineSize = filesize($baseline);
+            if ($baselineSize === false) {
+                throw new RuntimeException('filesize (baseline) failed');
+            }
+
+            $result = $this->uploadFileExt(UploadService::uploadFileTiff(...), null, $tiff);
+            self::assertSame('jpg', $result);
+            $producedPath = $dir . '/pwg_representative/tiff-quality.jpg';
+            $producedSize = filesize($producedPath);
+            if ($producedSize === false) {
+                throw new RuntimeException('filesize (produced) failed');
+            }
+
+            self::assertGreaterThan($baselineSize, $producedSize, 'the hardcoded -quality 98 flag must produce a larger, higher-quality file than ImageMagick\'s own unconfigured default');
+        } finally {
+            CurrentConfigTestFactory::get()->setTiffRepresentativeExt('png');
+        }
+    }
+
+    /**
+     * Real gap: `throw new Exception(__METHOD__ . '(): filesize()
+     * failed for ' . $path);` -- pwgImageInfos() has no Integration-level
+     * test at all yet; this checks the FULL message, including the
+     * __METHOD__ prefix a bare substring check would miss.
+     */
+    public function test_pwgImageInfos_throws_with_the_exact_method_prefixed_message_when_filesize_fails(): void
+    {
+        $service = $this->newService();
+        $missing = $this->marker . '/does-not-exist-at-all-integration.jpg';
+
+        set_error_handler(static fn (): bool => true);
+        try {
+            $threw = null;
+            try {
+                $service->pwgImageInfos($missing);
+            } catch (Exception $e) {
+                $threw = $e;
+            }
+            self::assertNotNull($threw);
+            self::assertSame(
+                'Piwigo\Admin\Upload\UploadService::pwgImageInfos(): filesize() failed for ' . $missing,
+                $threw->getMessage()
+            );
+        } finally {
+            restore_error_handler();
+        }
+    }
+
+    /**
+     * Real gap: `$filesize = floor($filesize_bytes / 1024);` --
+     * distinguishes floor() from round() and from dividing by 1023/1025.
+     */
+    public function test_pwgImageInfos_computes_the_exact_floor_of_bytes_over_1024_for_filesize(): void
+    {
+        $path = $this->marker . '/pwgimageinfos-filesize.png';
+        $this->makeImage($path, 'png', 33, 17);
+
+        $infos = $this->newService()->pwgImageInfos($path);
+        $realBytes = filesize($path);
+        if ($realBytes === false) {
+            throw new RuntimeException('filesize failed');
+        }
+
+        self::assertSame(floor($realBytes / 1024), $infos['filesize']);
+    }
+
+    /**
+     * Real gap: `@chmod($upload_dir, 0777);` -- a narrower 0776 mode still
+     * satisfies is_writable() from the owning user's own perspective
+     * (only the OTHER-execute bit differs), so this checks the exact raw
+     * permission bits instead.
+     */
+    public function test_readyForUploadMessage_chmods_an_unwritable_existing_directory_to_exactly_0777(): void
+    {
+        $root = $this->marker . '/ready-root/';
+        mkdir($root . 'upload', 0o777, true);
+        chmod($root . 'upload', 0o555);
+        CurrentConfigTestFactory::get()->setUploadDir('upload/');
+
+        try {
+            $service = new UploadService(LangTestFactory::get(), $this->currentLogger, $this->storageRegistry, EventDispatcherTestFactory::get(), $this->configService, $this->entityManager, $this->activityService, $this->metadataService, $this->imageService, $this->currentConfig, $this->wsContext, $this->currentUser, Paths::fromRoot($root), DbCredentialsTestFactory::get());
+
+            $message = $service->readyForUploadMessage();
+
+            self::assertNull($message);
+            self::assertSame(0o777, fileperms($root . 'upload') & 0o777, 'the recovery chmod() must set exactly 0777, not a narrower mode that happens to still satisfy is_writable() from the owning user\'s own perspective');
+        } finally {
+            chmod($root . 'upload', 0o777);
+        }
+    }
+
+    /**
+     * Real gap: prepareDirectoryStatic()'s own `@chmod($directory,
+     * 0777);` recovery -- same "exact raw bits, not just is_writable()"
+     * reasoning as the readyForUploadMessage() test above.
+     */
+    public function test_prepareDirectoryStatic_fixes_an_existing_unwritable_directory_to_exactly_0777(): void
+    {
+        $dir = $this->marker . '/prep-perm-check';
+        mkdir($dir, 0o777, true);
+        chmod($dir, 0o555);
+
+        $method = new ReflectionMethod(UploadService::class, 'prepareDirectoryStatic');
+        $method->invoke(null, $dir);
+
+        self::assertSame(0o777, fileperms($dir) & 0o777);
+    }
+
+    /**
+     * Real gap: the `umask(0000)` / `mkdir($directory, 0777, ...)` pair --
+     * either a non-zero umask value or a narrower requested mkdir() mode
+     * would silently produce a directory with less than the full 0777
+     * this method's own docblock says it must guarantee.
+     */
+    public function test_prepareDirectoryStatic_creates_a_new_directory_with_exactly_0777_regardless_of_process_umask(): void
+    {
+        $dir = $this->marker . '/new-dir-perm-check';
+        self::assertDirectoryDoesNotExist($dir);
+
+        $method = new ReflectionMethod(UploadService::class, 'prepareDirectoryStatic');
+        $method->invoke(null, $dir);
+
+        self::assertDirectoryExists($dir);
+        self::assertSame(0o777, fileperms($dir) & 0o777, 'mkdir() must genuinely produce mode 0777 -- the umask(0)/restore pair around it exists precisely to prevent the process umask from narrowing this');
+    }
+
+    /**
+     * Real gap ("Real bug" class already fixed once elsewhere in this
+     * exact codebase, see this method's own source comment): the
+     * `umask($umask);` restore -- without it, the process-wide umask
+     * would stay permanently zeroed for the rest of this test process.
+     */
+    public function test_prepareDirectoryStatic_restores_the_process_umask_afterward_instead_of_leaving_it_at_zero(): void
+    {
+        $originalUmask = umask();
+        // A known, deliberately non-zero baseline first, so the
+        // "restored" assertion below can't pass by coincidence if this
+        // process's own baseline umask already happened to be 0.
+        umask(0o022);
+
+        try {
+            $dir = $this->marker . '/umask-restore-check';
+            $method = new ReflectionMethod(UploadService::class, 'prepareDirectoryStatic');
+            $method->invoke(null, $dir);
+
+            self::assertSame(0o022, umask(), 'prepareDirectoryStatic() must restore the process umask it temporarily zeroed, not leave it corrupted at 0 for the rest of the process');
+        } finally {
+            umask($originalUmask);
+        }
+    }
+
+    /**
+     * Real gap: currentLogger()/imageStdParams()/currentConfig()'s own
+     * "Container returned an unexpected type" guards -- normally
+     * unreachable through Kernel::boot()'s real public API, but directly
+     * exercisable via KernelContainerOverride::withWrongTypeFor(), the
+     * same test-only seam this project's own Bootstrap\*Accessor suites
+     * already use for the identical pattern.
+     */
+    public function test_the_3_static_container_accessors_throw_when_the_container_returns_an_unexpected_type(): void
+    {
+        KernelContainerOverride::withWrongTypeFor(CurrentLogger::class, static function (): void {
+            $method = new ReflectionMethod(UploadService::class, 'currentLogger');
+            $threw = null;
+            try {
+                $method->invoke(null);
+            } catch (LogicException $e) {
+                $threw = $e;
+            }
+            self::assertNotNull($threw);
+            self::assertStringContainsString('Container returned an unexpected type for ' . CurrentLogger::class, $threw->getMessage());
+        });
+
+        KernelContainerOverride::withWrongTypeFor(ImageStdParams::class, static function (): void {
+            $method = new ReflectionMethod(UploadService::class, 'imageStdParams');
+            $threw = null;
+            try {
+                $method->invoke(null);
+            } catch (LogicException $e) {
+                $threw = $e;
+            }
+            self::assertNotNull($threw);
+            self::assertStringContainsString('Container returned an unexpected type for ' . ImageStdParams::class, $threw->getMessage());
+        });
+
+        KernelContainerOverride::withWrongTypeFor(CurrentConfig::class, static function (): void {
+            $method = new ReflectionMethod(UploadService::class, 'currentConfig');
+            $threw = null;
+            try {
+                $method->invoke(null);
+            } catch (LogicException $e) {
+                $threw = $e;
+            }
+            self::assertNotNull($threw);
+            self::assertStringContainsString('Container returned an unexpected type for ' . CurrentConfig::class, $threw->getMessage());
+        });
     }
 }

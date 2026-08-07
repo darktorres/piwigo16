@@ -46,6 +46,7 @@ namespace Piwigo\Tests\Integration {
     use Piwigo\Session\SessionEntity;
     use Piwigo\Session\SessionService;
     use Piwigo\Users\CurrentUser;
+    use Piwigo\Tests\Support\CurrentUserTestFactory;
     use Piwigo\Users\User;
     use Piwigo\Users\UserStatus;
 
@@ -145,7 +146,7 @@ namespace Piwigo\Tests\Integration {
                 new SessionService(EntityManagerFactory::build(DbConnection::build())->getRepository(SessionEntity::class),CurrentConfig::current()),
                 EventDispatcherTestFactory::get(),
                 PageStateTestFactory::get(),
-                CurrentUser::current(),
+                CurrentUserTestFactory::get(),
                 CurrentConfig::current(),
                 CurrentPathsTestFactory::get(),
             );
@@ -240,7 +241,7 @@ namespace Piwigo\Tests\Integration {
             // but $_COOKIE is untyped -- logUser() defends against it
             // before touching any session/cookie code, so this is safe to
             // exercise directly.
-            CurrentUser::current()->set(new User(
+            CurrentUserTestFactory::get()->set(new User(
                 id: UserId::from(1),
                 username: 'fixture_admin',
                 email: '',
@@ -279,7 +280,7 @@ namespace Piwigo\Tests\Integration {
 
         public function test_log_user_treats_an_unrecognised_language_code_as_a_hacking_attempt(): void
         {
-            CurrentUser::current()->set(new User(
+            CurrentUserTestFactory::get()->set(new User(
                 id: UserId::from(1),
                 username: 'fixture_admin',
                 email: '',
@@ -320,7 +321,7 @@ namespace Piwigo\Tests\Integration {
                 "INSERT INTO " . Tables::languages() . " (id, version, name) VALUES ('fr_FR', '16.3.0', 'Francais')"
             );
 
-            CurrentUser::current()->set(new User(
+            CurrentUserTestFactory::get()->set(new User(
                 id: UserId::from(1),
                 username: 'fixture_admin',
                 email: '',

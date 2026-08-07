@@ -50,6 +50,7 @@ use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Tests\Support\EventDispatcherTestFactory;
 use Piwigo\Template\Template;
 use Piwigo\Users\CurrentUser;
+use Piwigo\Tests\Support\CurrentUserTestFactory;
 use Piwigo\Users\User;
 
 /**
@@ -175,12 +176,12 @@ final class CategoryCatsRendererTest extends IntegrationTestCase
             throw new LogicException('Container returned an unexpected type for ' . FilterState::class);
         }
 
-        $accessLevelChecker = new AccessLevelChecker(CurrentUser::current(), CurrentConfig::current());
+        $accessLevelChecker = new AccessLevelChecker(CurrentUserTestFactory::get(), CurrentConfig::current());
         $permissionService = new PermissionService(
             new PermissionRepository($em),
             $em->getRepository(GroupEntity::class),
             $categoryRepo,
-            CurrentUser::current(),
+            CurrentUserTestFactory::get(),
             $filterState,
             $accessLevelChecker
         );
@@ -223,7 +224,7 @@ final class CategoryCatsRendererTest extends IntegrationTestCase
             $currentLogger,
             EventDispatcherTestFactory::get(),
             ImageStdParamsTestFactory::get(),
-            CurrentUser::current(),
+            CurrentUserTestFactory::get(),
             CurrentConfig::current(),
             LangTestFactory::get(),
             $processCache,
@@ -244,7 +245,7 @@ final class CategoryCatsRendererTest extends IntegrationTestCase
      */
     private function seedUser(array $overrides = []): void
     {
-        CurrentUser::current()->set(User::fromUserArray(array_merge([
+        CurrentUserTestFactory::get()->set(User::fromUserArray(array_merge([
             'id' => 1,
             'level' => 0,
             'forbidden_categories' => '',
@@ -277,7 +278,7 @@ final class CategoryCatsRendererTest extends IntegrationTestCase
     public function test_render_recent_cats_excludes_a_category_with_zero_images(): void
     {
         $this->seedUser();
-        $result = $this->categoryService->createVirtualCategory('Empty Recent Test', new CategoryCatsRendererFakeActivityLogger(), CurrentUser::current());
+        $result = $this->categoryService->createVirtualCategory('Empty Recent Test', new CategoryCatsRendererFakeActivityLogger(), CurrentUserTestFactory::get());
         $newIdRaw = $result['id'] ?? null;
         self::assertTrue(is_numeric($newIdRaw));
         $newId = (int) $newIdRaw;
@@ -304,7 +305,7 @@ final class CategoryCatsRendererTest extends IntegrationTestCase
         // count_images > 0 -- unlike createVirtualCategory()'s own
         // zero-image "Empty Recent Test" sibling above (which never gets
         // anywhere near findFullCategoriesByIds() at all).
-        $result = $this->categoryService->createVirtualCategory('Toctou Probe Album', new CategoryCatsRendererFakeActivityLogger(), CurrentUser::current());
+        $result = $this->categoryService->createVirtualCategory('Toctou Probe Album', new CategoryCatsRendererFakeActivityLogger(), CurrentUserTestFactory::get());
         $newIdRaw = $result['id'] ?? null;
         self::assertTrue(is_numeric($newIdRaw));
         $newId = (int) $newIdRaw;

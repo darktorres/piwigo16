@@ -47,6 +47,7 @@ namespace Piwigo\Tests\Integration {
     use Piwigo\Session\SessionEntity;
     use Piwigo\Session\SessionService;
     use Piwigo\Users\CurrentUser;
+    use Piwigo\Tests\Support\CurrentUserTestFactory;
     use Piwigo\Users\User;
 
 /**
@@ -244,14 +245,14 @@ final class CategoryServiceTest extends IntegrationTestCase
         $this->service = new CategoryService(
             LangTestFactory::get(),
             $this->repo,
-            new PermissionService(new PermissionRepository(EntityManagerFactory::build($this->conn)), EntityManagerFactory::build($this->conn)->getRepository(GroupEntity::class), new CategoryRepository(EntityManagerFactory::build($this->conn), $currentConfig), CurrentUser::current(), $filterState, new AccessLevelChecker(CurrentUser::current(), $currentConfig)),
+            new PermissionService(new PermissionRepository(EntityManagerFactory::build($this->conn)), EntityManagerFactory::build($this->conn)->getRepository(GroupEntity::class), new CategoryRepository(EntityManagerFactory::build($this->conn), $currentConfig), CurrentUserTestFactory::get(), $filterState, new AccessLevelChecker(CurrentUserTestFactory::get(), $currentConfig)),
             CurrentConfig::current(),
             EventDispatcherTestFactory::get(),
             TranslatorTestFactory::get(),
-            new AccessLevelChecker(CurrentUser::current(), $currentConfig)
+            new AccessLevelChecker(CurrentUserTestFactory::get(), $currentConfig)
         );
 
-        CurrentUser::current()->set(User::fromUserArray(['id' => 1]));
+        CurrentUserTestFactory::get()->set(User::fromUserArray(['id' => 1]));
         $currentConfig->setRateEnabled(true);
         // getCategoryRepresentantProperties()'s own DerivativeImage::thumb_url()/
         // url() calls need a real, populated ImageStdParams type map --
@@ -335,7 +336,7 @@ final class CategoryServiceTest extends IntegrationTestCase
 
     public function test_get_preferred_image_orders_returns_the_fixed_option_list(): void
     {
-        CurrentUser::current()->set(User::fromUserArray(['id' => 1, 'status' => 'normal']));
+        CurrentUserTestFactory::get()->set(User::fromUserArray(['id' => 1, 'status' => 'normal']));
 
         $orders = $this->service->getPreferredImageOrders();
 
@@ -348,7 +349,7 @@ final class CategoryServiceTest extends IntegrationTestCase
 
     public function test_get_preferred_image_orders_permissions_option_visible_to_admin(): void
     {
-        CurrentUser::current()->set(User::fromUserArray(['id' => 1, 'status' => 'admin']));
+        CurrentUserTestFactory::get()->set(User::fromUserArray(['id' => 1, 'status' => 'admin']));
 
         $orders = $this->service->getPreferredImageOrders();
 
@@ -521,7 +522,7 @@ final class CategoryServiceTest extends IntegrationTestCase
         // exercising usePermissions=true with a genuinely non-empty
         // condition is what catches the andWhere() double-AND-wrap bug
         // that an empty (guest-default) CurrentUser silently skips.
-        CurrentUser::current()->set(User::fromUserArray(self::realisticUserGlobal()));
+        CurrentUserTestFactory::get()->set(User::fromUserArray(self::realisticUserGlobal()));
 
         $ids = $this->service->getImageIdsForCategories([1], 'AND', true);
         sort($ids);
@@ -531,7 +532,7 @@ final class CategoryServiceTest extends IntegrationTestCase
 
     public function test_get_common_categories_with_permissions_builds_valid_sql(): void
     {
-        CurrentUser::current()->set(User::fromUserArray(self::realisticUserGlobal()));
+        CurrentUserTestFactory::get()->set(User::fromUserArray(self::realisticUserGlobal()));
 
         $common = $this->service->getCommonCategories([1, 2, 3], null, [4, 5], true);
 
@@ -543,7 +544,7 @@ final class CategoryServiceTest extends IntegrationTestCase
         // getRelatedCategoriesMenu() always calls getCommonCategories()
         // with usePermissions defaulted to true internally -- this is the
         // real menubar.inc.php code path the bug above was caught on.
-        CurrentUser::current()->set(User::fromUserArray(self::realisticUserGlobal()));
+        CurrentUserTestFactory::get()->set(User::fromUserArray(self::realisticUserGlobal()));
 
         $cats = $this->service->getRelatedCategoriesMenu([1, 2, 3], []);
 
@@ -689,12 +690,12 @@ final class CategoryServiceTest extends IntegrationTestCase
 
     public function test_check_restrictions_denies_access_to_a_forbidden_category(): void
     {
-        CurrentUser::current()->set(User::fromUserArray(['id' => 1, 'forbidden_categories' => '2,5']));
+        CurrentUserTestFactory::get()->set(User::fromUserArray(['id' => 1, 'forbidden_categories' => '2,5']));
 
         $this->expectException(RuntimeException::class);
         $this->expectExceptionMessage('CATEGORY_SERVICE_ACCESS_DENIED_MARKER');
 
-        $this->service->checkRestrictions(2, new CategoryServiceFakeHtmlRendererDeniesAccess(), new CategoryServiceFakeRedirectServiceNeverCalled(), CurrentUser::current());
+        $this->service->checkRestrictions(2, new CategoryServiceFakeHtmlRendererDeniesAccess(), new CategoryServiceFakeRedirectServiceNeverCalled(), CurrentUserTestFactory::get());
     }
 
     public function test_get_subcat_ids_warns_and_skips_a_non_numeric_id(): void
@@ -782,7 +783,7 @@ final class CategoryServiceTest extends IntegrationTestCase
         $activityLogger = new CategoryServiceFakeActivityLogger();
         $urlService = UrlServiceTestFactory::build();
 
-        $result = $this->service->createVirtualCategory('Orphan Diff Temp', $activityLogger, CurrentUser::current());
+        $result = $this->service->createVirtualCategory('Orphan Diff Temp', $activityLogger, CurrentUserTestFactory::get());
         $tempIdRaw = $result['id'] ?? null;
         self::assertTrue(is_numeric($tempIdRaw));
         $tempId = (int) $tempIdRaw;
@@ -831,7 +832,7 @@ final class CategoryServiceTest extends IntegrationTestCase
         self::assertTrue(is_numeric($rawSiteId));
         $siteId = (int) $rawSiteId;
 
-        $categoryId = $this->service->createVirtualCategory('Site Delete Temp', new CategoryServiceFakeActivityLogger(), CurrentUser::current())['id'] ?? null;
+        $categoryId = $this->service->createVirtualCategory('Site Delete Temp', new CategoryServiceFakeActivityLogger(), CurrentUserTestFactory::get())['id'] ?? null;
         self::assertTrue(is_numeric($categoryId));
         $this->conn->executeStatement('UPDATE ' . Tables::categories() . ' SET site_id = ? WHERE id = ?', [$siteId, $categoryId]);
 
@@ -1138,7 +1139,7 @@ final class CategoryServiceTest extends IntegrationTestCase
 
     public function test_create_virtual_category_returns_an_error_when_the_parent_does_not_exist(): void
     {
-        $result = $this->service->createVirtualCategory('Orphan Parent Test', new CategoryServiceFakeActivityLogger(), CurrentUser::current(), 999999);
+        $result = $this->service->createVirtualCategory('Orphan Parent Test', new CategoryServiceFakeActivityLogger(), CurrentUserTestFactory::get(), 999999);
 
         self::assertSame(['error' => 'The parent album does not exist'], $result);
     }
@@ -1153,7 +1154,7 @@ final class CategoryServiceTest extends IntegrationTestCase
         $this->conn->executeStatement("UPDATE " . Tables::categories() . " SET visible = {$falseLiteral} WHERE id = 1");
 
         try {
-            $result = $this->service->createVirtualCategory('Invisible Child Test', new CategoryServiceFakeActivityLogger(), CurrentUser::current(), 1);
+            $result = $this->service->createVirtualCategory('Invisible Child Test', new CategoryServiceFakeActivityLogger(), CurrentUserTestFactory::get(), 1);
             $newIdRaw = $result['id'] ?? null;
             self::assertTrue(is_numeric($newIdRaw));
             $newId = (int) $newIdRaw;
@@ -1179,7 +1180,7 @@ final class CategoryServiceTest extends IntegrationTestCase
         $this->conn->executeStatement('INSERT INTO ' . Tables::userAccess() . ' (user_id, cat_id) VALUES (3, 1)');
 
         try {
-            $result = $this->service->createVirtualCategory('Inherited Child Test', new CategoryServiceFakeActivityLogger(), CurrentUser::current(), 1, ['inherit' => true]);
+            $result = $this->service->createVirtualCategory('Inherited Child Test', new CategoryServiceFakeActivityLogger(), CurrentUserTestFactory::get(), 1, ['inherit' => true]);
             $newIdRaw = $result['id'] ?? null;
             self::assertTrue(is_numeric($newIdRaw));
             $newId = (int) $newIdRaw;
@@ -1333,7 +1334,7 @@ final class CategoryServiceTest extends IntegrationTestCase
         $privateParent = $this->service->createVirtualCategory(
             'ct_move_private_parent_' . uniqid(),
             $activityLogger,
-            CurrentUser::current(),
+            CurrentUserTestFactory::get(),
             null,
             ['status' => 'private']
         );
@@ -1366,7 +1367,7 @@ final class CategoryServiceTest extends IntegrationTestCase
         $currentConfig->setNewcatDefaultPosition('last');
 
         try {
-            $result = $this->service->createVirtualCategory('ct_last_position_' . uniqid(), new CategoryServiceFakeActivityLogger(), CurrentUser::current());
+            $result = $this->service->createVirtualCategory('ct_last_position_' . uniqid(), new CategoryServiceFakeActivityLogger(), CurrentUserTestFactory::get());
             $newIdRaw = $result['id'] ?? null;
             self::assertTrue(is_numeric($newIdRaw));
             $newId = (int) $newIdRaw;

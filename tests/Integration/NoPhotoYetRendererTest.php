@@ -47,6 +47,7 @@ use Piwigo\Page\NoPhotoYetRenderer;
 use Piwigo\Session\SessionEntity;
 use Piwigo\Session\SessionService;
 use Piwigo\Users\CurrentUser;
+use Piwigo\Tests\Support\CurrentUserTestFactory;
 use Piwigo\Users\User;
 
 /**
@@ -136,13 +137,13 @@ final class NoPhotoYetRendererTest extends IntegrationTestCase
         if (! $mailer instanceof MailService) {
             throw new LogicException('Container returned an unexpected type for ' . MailService::class);
         }
-        $this->renderer = new NoPhotoYetRenderer(LangTestFactory::get(), new AccessLevelChecker(CurrentUser::current(), CurrentConfig::current()), EntityManagerFactory::build($this->conn)->getRepository(ImageEntity::class), new ConfigService($this->buildConfigRepository(), new EventDispatcher(), CurrentConfig::current()), new RedirectService(LangTestFactory::get(), $userService, new EventDispatcher(), new PageState()), UrlServiceTestFactory::build(), Paths::fromRoot(dirname(__DIR__, 2)), new AdminContext(), new SessionService(EntityManagerFactory::build($this->conn)->getRepository(SessionEntity::class),CurrentConfig::current()), new EventDispatcher(), new DeploymentPolicy(), CurrentUser::current(), CurrentTemplate::current(), $mailer, CurrentConfig::current(), new PageState(), new ErrorCollector(new DeploymentPolicy(), Paths::fromRoot(dirname(__DIR__, 2))), new ProcessCache(), CurrentConfigServiceTestFactory::get(), PresentationAccessor::htmlService(), new InstallationFlag());
+        $this->renderer = new NoPhotoYetRenderer(LangTestFactory::get(), new AccessLevelChecker(CurrentUserTestFactory::get(), CurrentConfig::current()), EntityManagerFactory::build($this->conn)->getRepository(ImageEntity::class), new ConfigService($this->buildConfigRepository(), new EventDispatcher(), CurrentConfig::current()), new RedirectService(LangTestFactory::get(), $userService, new EventDispatcher(), new PageState()), UrlServiceTestFactory::build(), Paths::fromRoot(dirname(__DIR__, 2)), new AdminContext(), new SessionService(EntityManagerFactory::build($this->conn)->getRepository(SessionEntity::class),CurrentConfig::current()), new EventDispatcher(), new DeploymentPolicy(), CurrentUserTestFactory::get(), CurrentTemplate::current(), $mailer, CurrentConfig::current(), new PageState(), new ErrorCollector(new DeploymentPolicy(), Paths::fromRoot(dirname(__DIR__, 2))), new ProcessCache(), CurrentConfigServiceTestFactory::get(), PresentationAccessor::htmlService(), new InstallationFlag());
 
         // NoPhotoYetRenderer calls Piwigo\Auth\AccessControl::isAGuest()/
         // isAdmin() directly (real class methods), which read
         // Piwigo\Users\CurrentUser (Legacy Coupling Retirement Track A
         // batch A3).
-        CurrentUser::current()->set(User::fromUserArray(['id' => 2, 'status' => 'guest', 'username' => 'fixture_guest']));
+        CurrentUserTestFactory::get()->set(User::fromUserArray(['id' => 2, 'status' => 'guest', 'username' => 'fixture_guest']));
         unset($_SESSION['no_photo_yet']);
     }
 

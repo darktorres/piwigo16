@@ -235,31 +235,16 @@ test('Kernel::container() is only called from src/Piwigo/Bootstrap/', function (
     $repoRoot = __DIR__ . '/../..';
 
     $shimAllowedFiles = [
-        '/src/Piwigo/Core/InstallationFlag.php',
-        '/src/Piwigo/Core/ProcessCache.php',
         '/src/Piwigo/Admin/Upload/UploadService.php',
-        '/src/Piwigo/Section/SectionContextRegistry.php',
-        '/src/Piwigo/Core/ErrorCollector.php',
-        '/src/Piwigo/Core/RequestMountDepth.php',
-        '/src/Piwigo/Core/WsContext.php',
-        '/src/Piwigo/Core/AdminContext.php',
-        '/src/Piwigo/Validation/InputValidator.php',
         '/src/Piwigo/Core/FilesystemHelper.php',
-        '/src/Piwigo/Core/CurrentPaths.php',
         '/src/Piwigo/Core/UniqueExecLock.php',
-        '/src/Piwigo/Db/DbCredentials.php',
         '/src/Piwigo/Db/DbConnection.php',
         '/src/Piwigo/Db/EntityManagerFactory.php',
         '/src/Piwigo/Db/Tables.php',
         '/src/Piwigo/Session/SessionService.php',
         '/src/Piwigo/Lang/Translator.php',
         '/src/Piwigo/PluginConfig/EventDispatcher.php',
-        '/src/Piwigo/Config/DeploymentPolicy.php',
-        '/src/Piwigo/Image/ImageStdParams.php',
-        '/src/Piwigo/Core/PageState.php',
-        '/src/Piwigo/Users/CurrentUser.php',
         '/src/Piwigo/Template/CurrentTemplate.php',
-        '/src/Piwigo/Config/CurrentConfigService.php',
         '/src/Piwigo/Image/SrcImage.php',
         '/src/Piwigo/Image/DerivativeImage.php',
         '/src/Piwigo/Template/ScriptLoader.php',
@@ -270,7 +255,6 @@ test('Kernel::container() is only called from src/Piwigo/Bootstrap/', function (
         '/src/Piwigo/Mail/MailService.php',
         '/src/Piwigo/Url/UrlService.php',
         '/src/Piwigo/Auth/AccessControl.php',
-        '/src/Piwigo/Core/Lang.php',
         '/src/Piwigo/Config/CurrentConfig.php',
         '/src/Piwigo/Users/UserService.php',
         '/src/Piwigo/Category/CategoryService.php',
@@ -439,7 +423,7 @@ test('CurrentConfig::current() transitional bridge has a shrinking, known allow-
     // Admin/Upload/UploadService.php's own uploadFileXxx() static event
     // handlers (uploadFilePdf/Heic/Tiff/Psd/Eps -- the same permanent
     // EventDispatcher-dedup-sensitive handlers documented above and in
-    // the CurrentUser::current() allow-list's own comments, and formerly
+    // the CurrentUserTestFactory::get() allow-list's own comments, and formerly
     // in this file's own CurrentLogger::getStatic() allow-list before it
     // closed in sub-phase 12F-1); is_ext_imagick() is called internally by
     // get_library() with no arguments, so it must keep the identical
@@ -749,88 +733,17 @@ test('CurrentUser::reset() is only called from tests/', function (): void {
     expect(describeCallSites($hits))->toBe([]);
 });
 
-test('CurrentUser::current() transitional bridge has a shrinking, known allow-list', function (): void {
-    // Singleton/service-locator elimination campaign, Phase 5: current()
-    // kept its original name (no `Static` suffix, matching PageState/
-    // ImageStdParams/DeploymentPolicy/DbCredentials's own precedent -- no
-    // competing real instance method to disambiguate from). Every phase
-    // that converts one more of these files to constructor-injected
-    // CurrentUser should remove it from the allow-list below.
-    // AccessControl.php itself now constructor-injects
-    // CurrentUser for real (Phase 7), so it's off this allow-list --
-    // AccessControl::current() itself was fully deleted in Phase 12
-    // sub-phase 12B, its own former dedicated allow-list test along with
-    // it. MetadataService.php is Phase-6-entangled (dozens of manual
-    // construction sites). Mail/MailService.php, Url/UrlService.php, and
-    // Html/HtmlService.php itself all closed this shim in Phase 11
-    // sub-phase 11E -- real constructor injection (UrlService.php's own
-    // removal from this allow-list was a real, previously-unrecorded gap
-    // in this comment, found live while closing HtmlService.php).
-    // WsHelper.php itself took real constructor injection during Phase 11
-    // sub-phase 11A (every Ws/Pwg*.php file + WsDefaultMethods.php itself
-    // closed out this shim during Phase 10). Phase 12 sub-phase 12A:
-    // Comment/CommentService.php removed -- its own getNbAvailableComments()
-    // (the sole reason it was here) was extracted into
-    // Comment/AvailableCommentsCounter.php, which takes CurrentUser via
-    // real constructor injection instead.
-    // Activity/ActivityService.php closed this shim in Phase 11 sub-phase
-    // 11G -- its own huge real construction-site count (dozens of literal
-    // `new ActivityService(...)` calls, especially in tests) made a
-    // required constructor param too high a blast radius, so record() now
-    // resolves CurrentUser via its own private lazy currentUser() helper
-    // instead. Admin/Extensions/PemCatalog.php, Auth/PwgTOTP.php, and
-    // Caddie/CaddieService.php also closed this shim -- PemCatalog.php
-    // took CurrentUser as a real required constructor param (13 real
-    // construction sites, small enough blast radius); PwgTOTP.php/
-    // CaddieService.php are fully static, no `$this` anywhere, so their
-    // one real method each (getOtpAuthUrl()/getQrCode(),
-    // fillCurrentUserCaddie()) takes it as an explicit parameter instead,
-    // matching this campaign's own established NOCTOR precedent.
-    // InstallWizard.php closed this shim in Phase 11 sub-phase 11K -- its
-    // 6 real sites (including 3 real mutations: attachGlobals()/set()/
-    // markRealUserResolved()) took a real constructor param like every
-    // other collaborator; unlike DeploymentPolicy/CurrentTemplate, a
-    // throwaway instance in tests genuinely broke (PreferencesService/
-    // UserService constructed elsewhere in the same request still read
-    // back the container-shared instance's own .set() state), so its own
-    // Integration test keeps passing the real CurrentUser::current()
-    // value, not a fresh one. Permission/PermissionService.php and
-    // Metadata/MetadataService.php both closed this shim in Phase 11
-    // sub-phase 11G -- real constructor injection. Sub-phase 12B:
-    // public/random.php closed too -- it's already past
-    // RequestBootstrap::bootEntryPoint()'s own Kernel::boot() call at this
-    // point (the former "raw entry-shell, no container yet" reasoning was
-    // stale/never re-verified), same as every other RequestBootstrap::x()
-    // public accessor it already uses on the very same lines; now uses
-    // RequestBootstrap::currentUser() instead. Admin/Install/
-    // InstallService.php closed too -- its 4 static methods now take
-    // CurrentUser (among others) as a real explicit param from their sole
-    // caller, InstallWizard, which already held one. Sub-phase 12D:
-    // Admin/Extensions/ExtensionScanner.php closed too -- scan()/
-    // scanTheme() are real instance methods (just on a class with no
-    // constructor), so EventDispatcher/CurrentUser/CurrentConfig thread
-    // through as explicit params instead (NOCTOR shape), rippled through
-    // every real caller (13 production files +
-    // ExtensionLifecycle.php/ExtensionUpdateChecker.php, both of which
-    // also call scan() internally and needed the same 3 params added to
-    // their own constructors).
-    $repoRoot = __DIR__ . '/../..';
-
-    $allowedFiles = [
-    ];
-
-    $hits = [
-        ...findCallSitesOutsideComments($repoRoot . '/src/Piwigo', 'CurrentUser::current('),
-        ...findCallSitesOutsideComments($repoRoot . '/public', 'CurrentUser::current('),
-    ];
-
-    $disallowed = array_values(array_filter(
-        $hits,
-        static fn (array $hit): bool => ! array_any($allowedFiles, static fn (string $allowed): bool => str_ends_with($hit['path'], $allowed))
-    ));
-
-    expect(describeCallSites($disallowed))->toBe([]);
-});
+// Singleton/service-locator elimination campaign: CurrentUser::current()
+// itself is fully deleted (Phase 12 sub-phase 12F-11) -- its former
+// "transitional bridge has a shrinking, known allow-list" test lived here.
+// The class itself survives (get()/set()/attachGlobals()/reset()/etc. are
+// all still real, live instance methods with their own dedicated arch
+// tests elsewhere in this file) -- only the static shim accessor is gone.
+// Every production caller had already converted to real constructor
+// injection or an explicit NOCTOR param well before this sub-phase (see
+// git history on this test for the full former allow-list narrative);
+// 12F-11 only had test call sites left to migrate, to a new
+// CurrentUserTestFactory in tests/Support/.
 
 // Singleton/service-locator elimination campaign: AccessControl::current()
 // itself is fully deleted (Phase 12 sub-phase 12B) -- its former

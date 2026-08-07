@@ -86,7 +86,7 @@ final readonly class ImageService
      * established precedent.
      *
      * Falls back to a fresh, disconnected instance when `Kernel::boot()`
-     * hasn't run, matching `CurrentUser::current()`'s own established
+     * hasn't run, matching `CurrentUser::current()`'s own former
      * graceful degradation -- this class's own PermissionService
      * construction below never actually reads it back out on
      * updateCategory()'s call path, same "throwaway, never actually read"

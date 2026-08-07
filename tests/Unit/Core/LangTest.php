@@ -1099,7 +1099,7 @@ test('current() resolves the real container-shared instance once Kernel::boot() 
     expect(LangTestFactory::get())->toBe($instance);
 });
 
-test('current() throws when Kernel has not been booted -- no memoized pre-boot fallback, unlike e.g. CurrentUser::current()', function (): void {
+test('current() throws when Kernel has not been booted -- no memoized pre-boot fallback, unlike e.g. CurrentUserTestFactory::get()', function (): void {
     expect(fn () => LangTestFactory::get())
         ->toThrow(LogicException::class, 'Kernel not booted — call Kernel::boot() first.');
 });

@@ -61,6 +61,7 @@ use Piwigo\Tag\TagService;
 use Piwigo\Template\CurrentTemplate;
 use Piwigo\Template\Template;
 use Piwigo\Users\CurrentUser;
+use Piwigo\Tests\Support\CurrentUserTestFactory;
 use Piwigo\Users\User;
 use Piwigo\Users\UserService;
 use Piwigo\Users\UserStatus;
@@ -145,15 +146,15 @@ final class SectionPopulatorTest extends IntegrationTestCase
         $em = EntityManagerFactory::build($this->conn);
         $categoryRepo = new CategoryRepository($em, CurrentConfig::current());
         $this->filterState = new FilterState();
-        $accessLevelChecker = new AccessLevelChecker(CurrentUser::current(), CurrentConfig::current());
-        $this->permissionService = new PermissionService(new PermissionRepository($em), $em->getRepository(GroupEntity::class), $categoryRepo, CurrentUser::current(), $this->filterState, $accessLevelChecker);
+        $accessLevelChecker = new AccessLevelChecker(CurrentUserTestFactory::get(), CurrentConfig::current());
+        $this->permissionService = new PermissionService(new PermissionRepository($em), $em->getRepository(GroupEntity::class), $categoryRepo, CurrentUserTestFactory::get(), $this->filterState, $accessLevelChecker);
         $this->categoryService = new CategoryService(LangTestFactory::get(), $categoryRepo, $this->permissionService, CurrentConfig::current(), new EventDispatcher(), TranslatorTestFactory::get(), $accessLevelChecker);
         $this->sessionService = new SessionService($em->getRepository(SessionEntity::class),CurrentConfig::current());
-        $this->tagService = new TagService(LangTestFactory::get(), $em->getRepository(TagEntity::class), $this->permissionService, new ActivityService($em->getRepository(ActivityEntity::class)), new EventDispatcher(), CurrentUser::current(), CurrentConfig::current(), new CurrentLogger(), $this->sessionService);
+        $this->tagService = new TagService(LangTestFactory::get(), $em->getRepository(TagEntity::class), $this->permissionService, new ActivityService($em->getRepository(ActivityEntity::class)), new EventDispatcher(), CurrentUserTestFactory::get(), CurrentConfig::current(), new CurrentLogger(), $this->sessionService);
         $mailer = Kernel::container()->get(MailService::class);
         self::assertInstanceOf(MailService::class, $mailer);
-        $this->userService = new UserService(LangTestFactory::get(), new UserRepository($em, new EventDispatcher(), CurrentConfig::current()), $em->getRepository(GroupEntity::class), $mailer, new ActivityService($em->getRepository(ActivityEntity::class)), HtmlServiceTestFactory::build(), $this->conn, $this->sessionService, new EventDispatcher(), new DeploymentPolicy(), CurrentUser::current(), CurrentConfig::current(), new InstallationFlag(), new ProcessCache(), CurrentPathsTestFactory::get());
-        $this->searchService = new SearchService(new AccessLevelChecker(CurrentUser::current(), CurrentConfig::current()), new SearchRepository($em), $this->permissionService, $this->categoryService, $mailer, HtmlServiceTestFactory::build(), new RedirectService(LangTestFactory::get(), $this->userService, EventDispatcherTestFactory::get(), PageStateTestFactory::get()), $this->sessionService, new EventDispatcher(), CurrentUser::current(), LangTestFactory::get(), CurrentConfig::current(), new CurrentLogger(), new DeploymentPolicy(), CurrentPathsTestFactory::get(), $this->tagService);
+        $this->userService = new UserService(LangTestFactory::get(), new UserRepository($em, new EventDispatcher(), CurrentConfig::current()), $em->getRepository(GroupEntity::class), $mailer, new ActivityService($em->getRepository(ActivityEntity::class)), HtmlServiceTestFactory::build(), $this->conn, $this->sessionService, new EventDispatcher(), new DeploymentPolicy(), CurrentUserTestFactory::get(), CurrentConfig::current(), new InstallationFlag(), new ProcessCache(), CurrentPathsTestFactory::get());
+        $this->searchService = new SearchService(new AccessLevelChecker(CurrentUserTestFactory::get(), CurrentConfig::current()), new SearchRepository($em), $this->permissionService, $this->categoryService, $mailer, HtmlServiceTestFactory::build(), new RedirectService(LangTestFactory::get(), $this->userService, EventDispatcherTestFactory::get(), PageStateTestFactory::get()), $this->sessionService, new EventDispatcher(), CurrentUserTestFactory::get(), LangTestFactory::get(), CurrentConfig::current(), new CurrentLogger(), new DeploymentPolicy(), CurrentPathsTestFactory::get(), $this->tagService);
         $this->sectionRepo = new SectionRepository($em);
         $this->currentLogger = new CurrentLogger();
         $this->currentLogger->set(new Logger(['severity' => Logger::OFF]));
@@ -180,7 +181,7 @@ final class SectionPopulatorTest extends IntegrationTestCase
     {
         unset($_SERVER['PATH_INFO'], $_SERVER['SCRIPT_NAME'], $_SERVER['SCRIPT_FILENAME'], $_SERVER['PHP_SELF']);
         unset($_SESSION['pwg_image_order'], $_GET['action']);
-        CurrentUser::current()->reset();
+        CurrentUserTestFactory::get()->reset();
         CurrentTemplate::current()->reset();
         PageStateTestFactory::get()->reset();
         $currentConfig = Kernel::container()->get(CurrentConfig::class);
@@ -200,7 +201,7 @@ final class SectionPopulatorTest extends IntegrationTestCase
     {
         return new SectionPopulator(
             LangTestFactory::get(),
-            new AccessLevelChecker(CurrentUser::current(), CurrentConfig::current()),
+            new AccessLevelChecker(CurrentUserTestFactory::get(), CurrentConfig::current()),
             HtmlServiceTestFactory::build(),
             CurrentTemplate::current()->get(),
             $this->sectionRepo,
@@ -218,7 +219,7 @@ final class SectionPopulatorTest extends IntegrationTestCase
             $this->sessionService,
             new EventDispatcher(),
             PageStateTestFactory::get(),
-            CurrentUser::current(),
+            CurrentUserTestFactory::get(),
             CurrentConfig::current(),
             TranslatorTestFactory::get(),
             ImageStdParamsTestFactory::get(),
@@ -227,7 +228,7 @@ final class SectionPopulatorTest extends IntegrationTestCase
 
     private function setRegularUser(): void
     {
-        CurrentUser::current()->set(new User(
+        CurrentUserTestFactory::get()->set(new User(
             id: UserId::from(3),
             username: 'regular_user',
             email: 'regular@example.test',
@@ -240,7 +241,7 @@ final class SectionPopulatorTest extends IntegrationTestCase
 
     private function setAdminUser(): void
     {
-        CurrentUser::current()->set(new User(
+        CurrentUserTestFactory::get()->set(new User(
             id: UserId::from(1),
             username: 'fixture_admin',
             email: 'fixture_admin@example.test',

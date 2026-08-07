@@ -27,6 +27,7 @@ use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Tests\Support\EventDispatcherTestFactory;
 use Piwigo\Session\SessionService;
 use Piwigo\Users\CurrentUser;
+use Piwigo\Tests\Support\CurrentUserTestFactory;
 use Piwigo\Users\User;
 
 /**
@@ -241,7 +242,7 @@ afterEach(function (): void {
     if (Kernel::isBooted()) {
         LangTestFactory::get()->reset();
     }
-    CurrentUser::current()->reset();
+    CurrentUserTestFactory::get()->reset();
     // The switchLangTo() tests below genuinely load real .po translations
     // (e.g. de_DE's real admin.po) into the Translator singleton -- a real
     // bug found while investigating a cross-file leak: without this, e.g.
@@ -1493,12 +1494,12 @@ test('mail returns false and logs a Mailer Error when the real Transport rejects
 
 test('switchLangTo pushes the current language and translations, switchLangBack fully restores them (not just CurrentUser::language)', function (): void {
     Kernel::boot(Paths::fromRoot(dirname(__DIR__, 3) . '/'));
-    CurrentUser::current()->set(User::fromUserArray(['id' => 1, 'username' => 'tester', 'status' => 'normal', 'language' => 'en_UK']));
+    CurrentUserTestFactory::get()->set(User::fromUserArray(['id' => 1, 'username' => 'tester', 'status' => 'normal', 'language' => 'en_UK']));
     LangTestFactory::get()->setLangInfo(['code' => 'en_UK_marker']);
     $service = mail_service_test_build();
 
     $service->switchLangTo('fr_FR');
-    expect(CurrentUser::current()->get()->language)->toBe('fr_FR');
+    expect(CurrentUserTestFactory::get()->get()->language)->toBe('fr_FR');
     expect(LangTestFactory::get()->langInfo()['code'] ?? null)->toBe('fr');
 
     $service->switchLangBack();
@@ -1508,13 +1509,13 @@ test('switchLangTo pushes the current language and translations, switchLangBack 
     // call above would skip saving *this* test's own original lang_info
     // snapshot (considering it "already initialised"), so switchLangBack()
     // would have nothing real to restore it from.
-    expect(CurrentUser::current()->get()->language)->toBe('en_UK');
+    expect(CurrentUserTestFactory::get()->get()->language)->toBe('en_UK');
     expect(LangTestFactory::get()->langInfo()['code'] ?? null)->toBe('en_UK_marker');
 });
 
 test('switchLangTo resets lang_info/the translation dictionary before reloading, rather than merging fresh data on top of stale state', function (): void {
     Kernel::boot(Paths::fromRoot(dirname(__DIR__, 3) . '/'));
-    CurrentUser::current()->set(User::fromUserArray(['id' => 1, 'username' => 'tester', 'status' => 'normal', 'language' => 'en_UK']));
+    CurrentUserTestFactory::get()->set(User::fromUserArray(['id' => 1, 'username' => 'tester', 'status' => 'normal', 'language' => 'en_UK']));
     // Neither key below is ever set by a real language file -- if they
     // survive switchLangTo('fr_FR'), the reset (not the reload itself)
     // was skipped: Lang::load()'s own internal array_merge($old, $fresh)
@@ -1531,7 +1532,7 @@ test('switchLangTo resets lang_info/the translation dictionary before reloading,
 
 test('switchLangTo fires the loading_lang event while reloading a language for the first time', function (): void {
     Kernel::boot(Paths::fromRoot(dirname(__DIR__, 3) . '/'));
-    CurrentUser::current()->set(User::fromUserArray(['id' => 1, 'username' => 'tester', 'status' => 'normal', 'language' => 'en_UK']));
+    CurrentUserTestFactory::get()->set(User::fromUserArray(['id' => 1, 'username' => 'tester', 'status' => 'normal', 'language' => 'en_UK']));
     $service = mail_service_test_build();
 
     $fired = false;
@@ -1553,23 +1554,23 @@ test('switchLangTo/switchLangBack nest in real LIFO order across more than one p
     // round trip can't distinguish pop (LIFO) from shift (FIFO) since
     // there's only one element either way -- this needs two nested pushes.
     Kernel::boot(Paths::fromRoot(dirname(__DIR__, 3) . '/'));
-    CurrentUser::current()->set(User::fromUserArray(['id' => 1, 'username' => 'tester', 'status' => 'normal', 'language' => 'en_UK']));
+    CurrentUserTestFactory::get()->set(User::fromUserArray(['id' => 1, 'username' => 'tester', 'status' => 'normal', 'language' => 'en_UK']));
     $service = mail_service_test_build();
 
     $service->switchLangTo('fr_FR');
     $service->switchLangTo('de_DE');
-    expect(CurrentUser::current()->get()->language)->toBe('de_DE');
+    expect(CurrentUserTestFactory::get()->get()->language)->toBe('de_DE');
 
     $service->switchLangBack();
-    expect(CurrentUser::current()->get()->language)->toBe('fr_FR');
+    expect(CurrentUserTestFactory::get()->get()->language)->toBe('fr_FR');
 
     $service->switchLangBack();
-    expect(CurrentUser::current()->get()->language)->toBe('en_UK');
+    expect(CurrentUserTestFactory::get()->get()->language)->toBe('en_UK');
 });
 
 test('switchLangTo reuses its own cache for a language already switched to once, without reloading language files again', function (): void {
     Kernel::boot(Paths::fromRoot(dirname(__DIR__, 3) . '/'));
-    CurrentUser::current()->set(User::fromUserArray(['id' => 1, 'username' => 'tester', 'status' => 'normal', 'language' => 'en_UK']));
+    CurrentUserTestFactory::get()->set(User::fromUserArray(['id' => 1, 'username' => 'tester', 'status' => 'normal', 'language' => 'en_UK']));
     $service = mail_service_test_build();
     $service->switchLangTo('fr_FR');
     $service->switchLangBack();
@@ -1600,25 +1601,25 @@ test('switchLangTo only ever snapshots the ORIGINAL starting language once per r
     // widened the guard (re-snapshotting on every distinct language)
     // can't slip through unnoticed.
     Kernel::boot(Paths::fromRoot(dirname(__DIR__, 3) . '/'));
-    CurrentUser::current()->set(User::fromUserArray(['id' => 1, 'username' => 'tester', 'status' => 'normal', 'language' => 'en_UK']));
+    CurrentUserTestFactory::get()->set(User::fromUserArray(['id' => 1, 'username' => 'tester', 'status' => 'normal', 'language' => 'en_UK']));
     $service = mail_service_test_build();
 
     LangTestFactory::get()->setLangInfo(['code' => 'marker-en']);
     $service->switchLangTo('fr_FR');
     $service->switchLangBack();
 
-    CurrentUser::current()->updateLanguage('de_DE');
+    CurrentUserTestFactory::get()->updateLanguage('de_DE');
     LangTestFactory::get()->setLangInfo(['code' => 'marker-de']);
     $service->switchLangTo('es_ES');
     $service->switchLangBack();
 
     expect(LangTestFactory::get()->langInfo()['code'] ?? null)->not->toBe('marker-de');
-    expect(CurrentUser::current()->get()->language)->toBe('de_DE');
+    expect(CurrentUserTestFactory::get()->get()->language)->toBe('de_DE');
 });
 
 test('switchLangTo replays every plugin language file already loaded this request, in the newly-switched-to language', function (): void {
     Kernel::boot(Paths::fromRoot(dirname(__DIR__, 3) . '/'));
-    CurrentUser::current()->set(User::fromUserArray(['id' => 1, 'username' => 'tester', 'status' => 'normal', 'language' => 'en_UK']));
+    CurrentUserTestFactory::get()->set(User::fromUserArray(['id' => 1, 'username' => 'tester', 'status' => 'normal', 'language' => 'en_UK']));
     $dir = sys_get_temp_dir() . '/piwigo-mailservice-plugin-test-' . getmypid() . '/';
 
     try {

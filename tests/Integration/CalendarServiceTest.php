@@ -26,6 +26,7 @@ namespace Piwigo\Tests\Integration {
     use Piwigo\Permission\PermissionRepository;
     use Piwigo\Permission\PermissionService;
     use Piwigo\Users\CurrentUser;
+    use Piwigo\Tests\Support\CurrentUserTestFactory;
     use Piwigo\Users\User;
 
 /**
@@ -67,13 +68,13 @@ final class CalendarServiceTest extends IntegrationTestCase
         }
 
         $this->conn = DbConnection::build();
-        $accessLevelChecker = new AccessLevelChecker(CurrentUser::current(), $currentConfig);
+        $accessLevelChecker = new AccessLevelChecker(CurrentUserTestFactory::get(), $currentConfig);
         $this->service = new CalendarService(
-            new PermissionService(new PermissionRepository(EntityManagerFactory::build($this->conn)), EntityManagerFactory::build($this->conn)->getRepository(GroupEntity::class), new CategoryRepository(EntityManagerFactory::build($this->conn), $currentConfig), CurrentUser::current(), $filterState, $accessLevelChecker),
+            new PermissionService(new PermissionRepository(EntityManagerFactory::build($this->conn)), EntityManagerFactory::build($this->conn)->getRepository(GroupEntity::class), new CategoryRepository(EntityManagerFactory::build($this->conn), $currentConfig), CurrentUserTestFactory::get(), $filterState, $accessLevelChecker),
             new CategoryService(
                 LangTestFactory::get(),
                 new CategoryRepository(EntityManagerFactory::build($this->conn), $currentConfig),
-                new PermissionService(new PermissionRepository(EntityManagerFactory::build($this->conn)), EntityManagerFactory::build($this->conn)->getRepository(GroupEntity::class), new CategoryRepository(EntityManagerFactory::build($this->conn), $currentConfig), CurrentUser::current(), $filterState, $accessLevelChecker),
+                new PermissionService(new PermissionRepository(EntityManagerFactory::build($this->conn)), EntityManagerFactory::build($this->conn)->getRepository(GroupEntity::class), new CategoryRepository(EntityManagerFactory::build($this->conn), $currentConfig), CurrentUserTestFactory::get(), $filterState, $accessLevelChecker),
                 CurrentConfig::current(),
                 new EventDispatcher(),
                 TranslatorTestFactory::get(),
@@ -86,7 +87,7 @@ final class CalendarServiceTest extends IntegrationTestCase
         // forbidden_images fallthrough build a malformed 'level <=' fragment
         // with no right-hand value, same gotcha documented in
         // CategoryServiceTest/SearchServiceTest.
-        CurrentUser::current()->set(User::fromUserArray([
+        CurrentUserTestFactory::get()->set(User::fromUserArray([
             'id' => 1,
             'forbidden_categories' => '0',
             'level' => '0',

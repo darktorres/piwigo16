@@ -25,6 +25,7 @@ use Piwigo\Db\DbConnection;
 use Piwigo\Tests\Support\DbCredentialsTestFactory;
 use Piwigo\Db\Tables;
 use Piwigo\Users\CurrentUser;
+use Piwigo\Tests\Support\CurrentUserTestFactory;
 
 /**
  * InstallService is a bag of static helpers pulled verbatim out of the
@@ -331,7 +332,7 @@ final class InstallServiceTest extends IntegrationTestCase
         try {
             $this->conn->executeStatement('DELETE FROM ' . Tables::themes());
 
-            InstallService::activateCoreThemes(LangTestFactory::get(), CurrentUser::current(), CurrentConfigServiceTestFactory::get(), CurrentConfig::current(), CurrentPathsTestFactory::get(), EventDispatcherTestFactory::get());
+            InstallService::activateCoreThemes(LangTestFactory::get(), CurrentUserTestFactory::get(), CurrentConfigServiceTestFactory::get(), CurrentConfig::current(), CurrentPathsTestFactory::get(), EventDispatcherTestFactory::get());
 
             self::assertFalse($this->conn->fetchAssociative('SELECT id FROM ' . Tables::themes() . ' WHERE id = ' . $this->conn->quote($themeId)));
             self::assertSame(0, $this->fetchOneInt($this->conn->fetchOne('SELECT COUNT(*) FROM ' . Tables::themes())));
@@ -357,7 +358,7 @@ final class InstallServiceTest extends IntegrationTestCase
         try {
             $this->conn->executeStatement('DELETE FROM ' . Tables::themes());
 
-            InstallService::activateCoreThemes(LangTestFactory::get(), CurrentUser::current(), CurrentConfigServiceTestFactory::get(), CurrentConfig::current(), CurrentPathsTestFactory::get(), EventDispatcherTestFactory::get());
+            InstallService::activateCoreThemes(LangTestFactory::get(), CurrentUserTestFactory::get(), CurrentConfigServiceTestFactory::get(), CurrentConfig::current(), CurrentPathsTestFactory::get(), EventDispatcherTestFactory::get());
 
             self::assertSame(0, $this->fetchOneInt($this->conn->fetchOne('SELECT COUNT(*) FROM ' . Tables::themes())));
         } finally {
@@ -380,7 +381,7 @@ final class InstallServiceTest extends IntegrationTestCase
         // even a directory with real scannable plugins would still insert
         // nothing; a truly empty scan directory is the simplest honest way
         // to exercise the same real "no-op by design" behavior.
-        InstallService::activateCorePlugins(LangTestFactory::get(), CurrentPathsTestFactory::get(), CurrentUser::current(), EventDispatcherTestFactory::get(), CurrentConfig::current());
+        InstallService::activateCorePlugins(LangTestFactory::get(), CurrentPathsTestFactory::get(), CurrentUserTestFactory::get(), EventDispatcherTestFactory::get(), CurrentConfig::current());
 
         $after = $this->fetchOneInt($this->conn->fetchOne('SELECT COUNT(*) FROM ' . Tables::plugins()));
         self::assertSame($before, $after);

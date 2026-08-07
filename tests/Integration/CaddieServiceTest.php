@@ -14,6 +14,7 @@ use Piwigo\Config\ConfigLoader;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
 use Piwigo\Users\CurrentUser;
+use Piwigo\Tests\Support\CurrentUserTestFactory;
 use Piwigo\Users\User;
 
 /**
@@ -65,20 +66,20 @@ final class CaddieServiceTest extends IntegrationTestCase
 
     public function test_fill_current_user_caddie_inserts_rows_for_the_current_user_id(): void
     {
-        CurrentUser::current()->set(User::fromUserArray(['id' => 3]));
+        CurrentUserTestFactory::get()->set(User::fromUserArray(['id' => 3]));
 
-        CaddieService::fillCurrentUserCaddie([2, 4, 1], CurrentUser::current());
+        CaddieService::fillCurrentUserCaddie([2, 4, 1], CurrentUserTestFactory::get());
 
         self::assertSame([1, 2, 4], $this->fetchElementIds(3));
     }
 
     public function test_fill_current_user_caddie_scopes_to_whichever_user_is_current(): void
     {
-        CurrentUser::current()->set(User::fromUserArray(['id' => 1]));
-        CaddieService::fillCurrentUserCaddie([5], CurrentUser::current());
+        CurrentUserTestFactory::get()->set(User::fromUserArray(['id' => 1]));
+        CaddieService::fillCurrentUserCaddie([5], CurrentUserTestFactory::get());
 
-        CurrentUser::current()->set(User::fromUserArray(['id' => 4]));
-        CaddieService::fillCurrentUserCaddie([2, 3], CurrentUser::current());
+        CurrentUserTestFactory::get()->set(User::fromUserArray(['id' => 4]));
+        CaddieService::fillCurrentUserCaddie([2, 3], CurrentUserTestFactory::get());
 
         self::assertSame([5], $this->fetchElementIds(1), 'user 1 must only have its own element');
         self::assertSame([2, 3], $this->fetchElementIds(4), 'user 4 must only have its own elements');
@@ -86,9 +87,9 @@ final class CaddieServiceTest extends IntegrationTestCase
 
     public function test_fill_current_user_caddie_does_nothing_for_an_empty_element_list(): void
     {
-        CurrentUser::current()->set(User::fromUserArray(['id' => 3]));
+        CurrentUserTestFactory::get()->set(User::fromUserArray(['id' => 3]));
 
-        CaddieService::fillCurrentUserCaddie([], CurrentUser::current());
+        CaddieService::fillCurrentUserCaddie([], CurrentUserTestFactory::get());
 
         self::assertSame([], $this->fetchElementIds(3));
     }

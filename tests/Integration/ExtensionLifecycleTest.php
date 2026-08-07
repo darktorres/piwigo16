@@ -42,6 +42,7 @@ namespace Piwigo\Tests\Integration {
     use Piwigo\Db\Tables;
     use Piwigo\Html\HtmlService;
     use Piwigo\Users\CurrentUser;
+    use Piwigo\Tests\Support\CurrentUserTestFactory;
     use Piwigo\Users\User;
 
     /**
@@ -123,8 +124,8 @@ namespace Piwigo\Tests\Integration {
             // production value so the real filesystem check runs against
             // the real themes/ dir.
             $currentConfig->setThemesDir(CurrentPathsTestFactory::get()->root . 'themes');
-            CurrentUser::current()->set(User::fromUserArray(['id' => 1]));
-            CurrentUser::current()->markRealUserResolved();
+            CurrentUserTestFactory::get()->set(User::fromUserArray(['id' => 1]));
+            CurrentUserTestFactory::get()->markRealUserResolved();
             unset($_REQUEST['method'], $_REQUEST['action']);
             $_SERVER['SCRIPT_NAME'] = '/admin.php';
         }

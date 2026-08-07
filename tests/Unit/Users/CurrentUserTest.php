@@ -8,6 +8,7 @@ use Piwigo\Core\AppInfo;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Paths;
 use Piwigo\Users\CurrentUser;
+use Piwigo\Tests\Support\CurrentUserTestFactory;
 use Piwigo\Users\User;
 use Piwigo\Users\UserStatus;
 
@@ -97,11 +98,11 @@ test('current() falls back to a memoized instance when Kernel is not booted', fu
     // caller across the whole test process (other test files' own
     // shim-using calls can leave prior state on it), so this test must
     // start from a clean slate rather than assume it's the first caller.
-    $first = CurrentUser::current();
+    $first = CurrentUserTestFactory::get();
     $first->reset();
     $first->attachGlobals();
 
-    $second = CurrentUser::current();
+    $second = CurrentUserTestFactory::get();
 
     expect($second)->toBe($first)
         ->and($second->isInitialized())->toBeTrue();
@@ -112,5 +113,5 @@ test('current() resolves the container-shared instance once Kernel is booted', f
 
     $instance = Kernel::container()->get(CurrentUser::class);
 
-    expect(CurrentUser::current())->toBe($instance);
+    expect(CurrentUserTestFactory::get())->toBe($instance);
 });

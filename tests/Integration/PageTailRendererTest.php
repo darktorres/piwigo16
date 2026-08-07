@@ -28,6 +28,7 @@ use Piwigo\Session\SessionEntity;
 use Piwigo\Session\SessionService;
 use Piwigo\Template\CurrentTemplate;
 use Piwigo\Users\CurrentUser;
+use Piwigo\Tests\Support\CurrentUserTestFactory;
 use Piwigo\Users\User;
 
 /**
@@ -75,12 +76,12 @@ final class PageTailRendererTest extends IntegrationTestCase
         // RequestBootstrap-only wiring this test never boots.
         CurrentTemplate::current()->set(TemplateTestFactory::build(CurrentPathsTestFactory::get()->root . 'themes', 'default'));
 
-        CurrentUser::current()->set(User::fromUserArray(['id' => 2, 'status' => 'guest', 'username' => 'fixture_guest']));
+        CurrentUserTestFactory::get()->set(User::fromUserArray(['id' => 2, 'status' => 'guest', 'username' => 'fixture_guest']));
 
         $_SESSION = [];
 
         $this->renderer = new PageTailRenderer(
-            new AccessLevelChecker(CurrentUser::current(), CurrentConfig::current()),
+            new AccessLevelChecker(CurrentUserTestFactory::get(), CurrentConfig::current()),
             new class implements TelemetrySenderInterface {
                 public function send(): void
                 {
@@ -103,7 +104,7 @@ final class PageTailRendererTest extends IntegrationTestCase
     {
         CurrentTemplate::current()->reset();
         PageStateTestFactory::get()->reset();
-        CurrentUser::current()->reset();
+        CurrentUserTestFactory::get()->reset();
         $_SESSION = [];
         parent::tearDown();
     }

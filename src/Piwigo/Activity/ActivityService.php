@@ -37,7 +37,7 @@ final readonly class ActivityService implements ActivityLoggerInterface
 
     /**
      * Container resolve, not a constructor property -- used only inside
-     * record()'s own internal CurrentUser::current() read below. A
+     * record()'s own internal wasRealUserResolved() read below. A
      * required constructor param here would ripple across this class's
      * own huge real construction-site count (dozens of literal `new
      * ActivityService(...)` calls across the codebase, especially in test
@@ -45,7 +45,7 @@ final readonly class ActivityService implements ActivityLoggerInterface
      * this session (singleton/service-locator elimination campaign, Phase
      * 11 sub-phase 11G). Falls back to a fresh, unmemoized instance when
      * Kernel::boot() hasn't run, matching CurrentUser::current()'s own
-     * identical pre-boot fallback.
+     * former identical pre-boot fallback.
      */
     private function currentUser(): CurrentUser
     {

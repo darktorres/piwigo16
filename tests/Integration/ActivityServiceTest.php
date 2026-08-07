@@ -23,6 +23,7 @@ use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Db\Tables;
 use Piwigo\Users\CurrentUser;
+use Piwigo\Tests\Support\CurrentUserTestFactory;
 use Piwigo\Users\User;
 
 final class ActivityServiceTest extends IntegrationTestCase
@@ -54,8 +55,8 @@ final class ActivityServiceTest extends IntegrationTestCase
         ConfigLoader::applyEnvOverrides();
 
         $currentConfig->setPhpExtensionInUrls(false);
-        CurrentUser::current()->set(User::fromUserArray(['id' => 1]));
-        CurrentUser::current()->markRealUserResolved();
+        CurrentUserTestFactory::get()->set(User::fromUserArray(['id' => 1]));
+        CurrentUserTestFactory::get()->markRealUserResolved();
         unset($_REQUEST['method'], $_REQUEST['action'], $_GET['page'], $_POST['destination_tag'], $_SESSION['connected_with']);
         $_SERVER['SCRIPT_NAME'] = '/some/script.php';
 
@@ -227,8 +228,8 @@ final class ActivityServiceTest extends IntegrationTestCase
     public function test_record_uses_the_object_id_as_performed_by_on_logout(): void
     {
         // should be ignored for logout
-        CurrentUser::current()->set(User::fromUserArray(['id' => 999999]));
-        CurrentUser::current()->markRealUserResolved();
+        CurrentUserTestFactory::get()->set(User::fromUserArray(['id' => 999999]));
+        CurrentUserTestFactory::get()->markRealUserResolved();
 
         $this->service->record('test-logout', 1, 'logout');
 
@@ -244,8 +245,8 @@ final class ActivityServiceTest extends IntegrationTestCase
 
     public function test_record_uses_the_current_user_as_performed_by_otherwise(): void
     {
-        CurrentUser::current()->set(User::fromUserArray(['id' => 3]));
-        CurrentUser::current()->markRealUserResolved();
+        CurrentUserTestFactory::get()->set(User::fromUserArray(['id' => 3]));
+        CurrentUserTestFactory::get()->markRealUserResolved();
 
         $this->service->record('test-performer', 999, 'add');
 
@@ -440,12 +441,12 @@ final class ActivityServiceTest extends IntegrationTestCase
         // comment) threw a real ForeignKeyConstraintViolationException on
         // every such write, since 0 is never a valid user id
         // (AUTO_INCREMENT starts at 1) -- this test would have failed with
-        // that exception before the fix. CurrentUser::current()->isInitialized() is
+        // that exception before the fix. CurrentUserTestFactory::get()->isInitialized() is
         // always true by this point (setUp() already called
-        // CurrentUser::current()->set()) -- resetRealUserResolvedFlag() is what
+        // CurrentUserTestFactory::get()->set()) -- resetRealUserResolvedFlag() is what
         // simulates "no real user resolved this request" now (Legacy
         // Coupling Retirement Phase 8, 8h).
-        CurrentUser::current()->resetRealUserResolvedFlag();
+        CurrentUserTestFactory::get()->resetRealUserResolvedFlag();
 
         $this->service->record('test-no-user', 1, 'add');
 

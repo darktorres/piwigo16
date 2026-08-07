@@ -19,6 +19,7 @@ use Piwigo\Core\FilterState;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Group\GroupEntity;
 use Piwigo\Users\CurrentUser;
+use Piwigo\Tests\Support\CurrentUserTestFactory;
 use Piwigo\Caddie\CaddieEntity;
 use Piwigo\Users\UserRepository;
 use Piwigo\Tests\Support\HtmlServiceTestFactory;
@@ -100,7 +101,7 @@ final class FilterResolverTest extends IntegrationTestCase
         if (! $filterState instanceof FilterState) {
             throw new LogicException('Container returned an unexpected type for ' . FilterState::class);
         }
-        $accessLevelChecker = new AccessLevelChecker(CurrentUser::current(), CurrentConfig::current());
+        $accessLevelChecker = new AccessLevelChecker(CurrentUserTestFactory::get(), CurrentConfig::current());
         $categoryService = new CategoryService(
             LangTestFactory::get(),
             new CategoryRepository($em, CurrentConfig::current()),
@@ -108,7 +109,7 @@ final class FilterResolverTest extends IntegrationTestCase
                 new PermissionRepository($em),
                 $em->getRepository(GroupEntity::class),
                 new CategoryRepository($em, CurrentConfig::current()),
-                CurrentUser::current(),
+                CurrentUserTestFactory::get(),
                 $filterState,
                 $accessLevelChecker,
             ),
@@ -131,7 +132,7 @@ final class FilterResolverTest extends IntegrationTestCase
             $sessionService,
             new EventDispatcher(),
             new DeploymentPolicy(),
-            CurrentUser::current(),
+            CurrentUserTestFactory::get(),
             CurrentConfig::current(),
             new InstallationFlag(),
             new ProcessCache(),

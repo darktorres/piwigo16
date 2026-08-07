@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use Piwigo\Core\CurrentLogger;
 use Piwigo\Users\CurrentUser;
+use Piwigo\Tests\Support\CurrentUserTestFactory;
 use Piwigo\Tests\Support\UrlServiceTestFactory;
 use Piwigo\Admin\Extensions\ExtensionIgnoredUpdateEntity;
 use Piwigo\Admin\Extensions\ExtensionIgnoredUpdateRepository;
@@ -129,7 +130,7 @@ function extensionUpdateChecker(): ExtensionUpdateChecker
     // getMissingExtensions() threads both into
     // ExtensionScanner::scan()'s own NOCTOR-shaped params, which need the
     // real, shared CurrentConfig::current() (reflecting this file's own
-    // beforeEach()-booted fixture Paths) and CurrentUser::current() --
+    // beforeEach()-booted fixture Paths) and CurrentUserTestFactory::get() --
     // not a fresh, disconnected instance -- for scan()'s own themesDir()
     // lookup and PreferencesService::getParam() admin_theme fallback to
     // resolve correctly. Found live: a fresh CurrentConfig here silently
@@ -147,7 +148,7 @@ function extensionUpdateChecker(): ExtensionUpdateChecker
         UrlServiceTestFactory::build(),
         $repo,
         CurrentPathsTestFactory::get(),
-        CurrentUser::current(),
+        CurrentUserTestFactory::get(),
         new EventDispatcher(),
         CurrentConfig::current(),
     );

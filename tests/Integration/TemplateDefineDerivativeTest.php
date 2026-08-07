@@ -18,6 +18,7 @@ use Piwigo\Image\ImageStdParams;
 use Piwigo\Tests\Support\ImageStdParamsTestFactory;
 use Piwigo\Template\Template;
 use Piwigo\Users\CurrentUser;
+use Piwigo\Tests\Support\CurrentUserTestFactory;
 
 /**
  * Piwigo\Template\Template::func_define_derivative() -- the single
@@ -52,7 +53,7 @@ final class TemplateDefineDerivativeTest extends IntegrationTestCase
         ConfigLoader::applyEnvOverrides();
         CurrentConfigServiceTestFactory::get()->set(new ConfigService($this->buildConfigRepository(), new EventDispatcher(), CurrentConfig::current()));
         ImageStdParamsTestFactory::get()->load_from_db();
-        CurrentUser::current()->attachGlobals();
+        CurrentUserTestFactory::get()->attachGlobals();
 
         $this->template = TemplateTestFactory::build();
     }
@@ -60,7 +61,7 @@ final class TemplateDefineDerivativeTest extends IntegrationTestCase
     #[Override]
     protected function tearDown(): void
     {
-        CurrentUser::current()->reset();
+        CurrentUserTestFactory::get()->reset();
         parent::tearDown();
     }
 

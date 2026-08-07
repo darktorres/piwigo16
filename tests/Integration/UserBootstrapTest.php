@@ -44,6 +44,7 @@ use Piwigo\Tests\Support\EventDispatcherTestFactory;
 use Piwigo\Session\SessionEntity;
 use Piwigo\Session\SessionService;
 use Piwigo\Users\CurrentUser;
+use Piwigo\Tests\Support\CurrentUserTestFactory;
 
 /**
  * Piwigo\Bootstrap\UserBootstrap::initialize() -- most of this method is
@@ -134,7 +135,7 @@ final class UserBootstrapTest extends IntegrationTestCase
         unset($_SESSION['connected_with'], $_SESSION['pwg_uid']);
 
         EventDispatcherTestFactory::get()->reset();
-        CurrentUser::current()->reset();
+        CurrentUserTestFactory::get()->reset();
         Kernel::reset();
         parent::tearDown();
     }
@@ -159,7 +160,7 @@ final class UserBootstrapTest extends IntegrationTestCase
         // exit() and is deliberately left uncovered here (see this class's
         // own docblock) -- never actually read, so a fresh, never-set()
         // instance is fine.
-        return new UserBootstrap(new AccessLevelChecker(CurrentUser::current(), CurrentConfig::current()), new RedirectService(LangTestFactory::get(), $this->userService(), EventDispatcherTestFactory::get(), PageStateTestFactory::get()), UrlServiceTestFactory::build(), new ApiKeyRequestFlag(), new CurrentLogger(), $wsContext ?? new WsContext(), $deploymentPolicy ?? new DeploymentPolicy());
+        return new UserBootstrap(new AccessLevelChecker(CurrentUserTestFactory::get(), CurrentConfig::current()), new RedirectService(LangTestFactory::get(), $this->userService(), EventDispatcherTestFactory::get(), PageStateTestFactory::get()), UrlServiceTestFactory::build(), new ApiKeyRequestFlag(), new CurrentLogger(), $wsContext ?? new WsContext(), $deploymentPolicy ?? new DeploymentPolicy());
     }
 
     public function test_initialize_auto_registers_a_new_local_account_for_an_unknown_apache_remote_user(): void
@@ -173,7 +174,7 @@ final class UserBootstrapTest extends IntegrationTestCase
         try {
             $this->bootstrap(deploymentPolicy: new DeploymentPolicy(apacheAuthentication: true))->initialize();
 
-            self::assertSame($remoteUser, CurrentUser::current()->get()->username);
+            self::assertSame($remoteUser, CurrentUserTestFactory::get()->get()->username);
             $row = $this->conn->fetchAssociative(
                 'SELECT id, username FROM piwigo_users WHERE username = ?',
                 [$remoteUser]
@@ -194,7 +195,7 @@ final class UserBootstrapTest extends IntegrationTestCase
 
         $this->bootstrap(deploymentPolicy: new DeploymentPolicy(apacheAuthentication: true))->initialize();
 
-        self::assertSame('regular_user', CurrentUser::current()->get()->username);
+        self::assertSame('regular_user', CurrentUserTestFactory::get()->get()->username);
         // No 2nd row was created for an account that already exists.
         $count = $this->conn->fetchOne(
             'SELECT COUNT(*) FROM piwigo_users WHERE username = ?',
@@ -216,7 +217,7 @@ final class UserBootstrapTest extends IntegrationTestCase
         // key never resolves to a real user.
         $this->bootstrap()->initialize();
 
-        self::assertSame(CurrentConfig::current()->guestId(), CurrentUser::current()->get()->id->value);
+        self::assertSame(CurrentConfig::current()->guestId(), CurrentUserTestFactory::get()->get()->id->value);
     }
 
     public function test_initialize_logs_in_via_ws_uploadAsync_and_marks_the_session_connected_with(): void
@@ -244,7 +245,7 @@ final class UserBootstrapTest extends IntegrationTestCase
             new SessionService(EntityManagerFactory::build($this->conn)->getRepository(SessionEntity::class),CurrentConfig::current()),
             EventDispatcherTestFactory::get(),
             PageStateTestFactory::get(),
-            CurrentUser::current(),
+            CurrentUserTestFactory::get(),
             CurrentConfig::current(),
             CurrentPathsTestFactory::get(),
         )->pwgLogin(...));

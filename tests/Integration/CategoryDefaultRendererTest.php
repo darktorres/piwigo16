@@ -39,6 +39,7 @@ use Piwigo\Session\SessionEntity;
 use Piwigo\Session\SessionService;
 use Piwigo\Template\Template;
 use Piwigo\Users\CurrentUser;
+use Piwigo\Tests\Support\CurrentUserTestFactory;
 use Piwigo\Users\User;
 
 /**
@@ -127,7 +128,7 @@ final class CategoryDefaultRendererTest extends IntegrationTestCase
             throw new LogicException('Container returned an unexpected type for ' . ProcessCache::class);
         }
 
-        $this->renderer = new CategoryDefaultRenderer($htmlService, $this->buildTemplate(), $imageRepo, $commentRepo, $urlService, new SessionService($em->getRepository(SessionEntity::class), CurrentConfig::current()), EventDispatcherTestFactory::get(), ImageStdParamsTestFactory::get(), CurrentUser::current(), CurrentConfig::current(), LangTestFactory::get(), $processCache, PageStateTestFactory::get());
+        $this->renderer = new CategoryDefaultRenderer($htmlService, $this->buildTemplate(), $imageRepo, $commentRepo, $urlService, new SessionService($em->getRepository(SessionEntity::class), CurrentConfig::current()), EventDispatcherTestFactory::get(), ImageStdParamsTestFactory::get(), CurrentUserTestFactory::get(), CurrentConfig::current(), LangTestFactory::get(), $processCache, PageStateTestFactory::get());
     }
 
     #[Override]
@@ -159,7 +160,7 @@ final class CategoryDefaultRendererTest extends IntegrationTestCase
 
     private function seedUser(bool $showNbHits, bool $showNbComments): void
     {
-        CurrentUser::current()->set(User::fromUserArray([
+        CurrentUserTestFactory::get()->set(User::fromUserArray([
             'id' => 3,
             'username' => 'fixture_regular_user',
             'status' => 'normal',

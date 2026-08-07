@@ -14,6 +14,7 @@ use Piwigo\Tests\Support\LangTestFactory;
 use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Group\GroupEntity;
 use Piwigo\Users\CurrentUser;
+use Piwigo\Tests\Support\CurrentUserTestFactory;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Lang\Translator;
 use Piwigo\Tests\Support\TranslatorTestFactory;
@@ -86,11 +87,11 @@ final class CategoryTreeCacheTest extends IntegrationTestCase
             new CategoryService(
                 LangTestFactory::get(),
                 new CategoryRepository(EntityManagerFactory::build($this->conn), $currentConfig),
-                new PermissionService(new PermissionRepository(EntityManagerFactory::build($this->conn)), EntityManagerFactory::build($this->conn)->getRepository(GroupEntity::class), new CategoryRepository(EntityManagerFactory::build($this->conn), $currentConfig), CurrentUser::current(), $filterState, new AccessLevelChecker(CurrentUser::current(), $currentConfig)),
+                new PermissionService(new PermissionRepository(EntityManagerFactory::build($this->conn)), EntityManagerFactory::build($this->conn)->getRepository(GroupEntity::class), new CategoryRepository(EntityManagerFactory::build($this->conn), $currentConfig), CurrentUserTestFactory::get(), $filterState, new AccessLevelChecker(CurrentUserTestFactory::get(), $currentConfig)),
                 CurrentConfig::current(),
                 new EventDispatcher(),
                 TranslatorTestFactory::get(),
-                new AccessLevelChecker(CurrentUser::current(), $currentConfig)
+                new AccessLevelChecker(CurrentUserTestFactory::get(), $currentConfig)
             ),
             new CategoryRepository(EntityManagerFactory::build($this->conn), $currentConfig),
             $this->pool

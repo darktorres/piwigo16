@@ -33,6 +33,7 @@ use Piwigo\Template\Event\CombinedScript;
 use Piwigo\Template\PwgTemplateAdapter;
 use Piwigo\Template\Template;
 use Piwigo\Users\CurrentUser;
+use Piwigo\Tests\Support\CurrentUserTestFactory;
 
 /**
  * Template::urlService() now resolves the container-shared UrlServiceInterface
@@ -235,19 +236,19 @@ beforeEach(function (): void {
     // (Phase 3) is itself a pure shim reading Paths::class straight out of
     // that same container, so this one Kernel::boot() call establishes both.
     Kernel::boot(Paths::fromRoot($root));
-    // Booted first (above) -- CurrentConfig::current()/CurrentUser::current()
+    // Booted first (above) -- CurrentConfig::current()/CurrentUserTestFactory::get()
     // must resolve the container-shared instance, not the memoized pre-boot
     // fallback, or these seeds are invisible to every later current()->get()
     // call (Phase 5 execution finding, same pitfall Translator/EventDispatcher
     // already hit).
     CurrentConfig::current()->setDataLocation('data/');
     CurrentConfig::current()->setDataDirChecked('1');
-    CurrentUser::current()->attachGlobals();
+    CurrentUserTestFactory::get()->attachGlobals();
 });
 
 afterEach(function (): void {
     template_instance_test_rrmdir(is_string($this->root) ? $this->root : '');
-    CurrentUser::current()->reset();
+    CurrentUserTestFactory::get()->reset();
     CurrentConfig::current()->reset();
     EventDispatcherTestFactory::get()->reset();
     Kernel::reset();
@@ -1971,7 +1972,7 @@ test('finalizeOutput clears the CSS loader so a second call does not re-emit alr
 
 test('finalizeOutput does not reprocess the combined-scripts tag once did_head is already true', function (): void {
     $t = TemplateTestFactory::build();
-    $t->scriptLoader->get_head_scripts(new AccessLevelChecker(CurrentUser::current(), CurrentConfig::current()));
+    $t->scriptLoader->get_head_scripts(new AccessLevelChecker(CurrentUserTestFactory::get(), CurrentConfig::current()));
     $t->output = Template::COMBINED_SCRIPTS_TAG;
 
     $result = $t->fetchOutput();

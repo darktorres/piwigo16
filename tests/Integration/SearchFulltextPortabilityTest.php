@@ -48,6 +48,7 @@ use Piwigo\Search\SearchService;
 use Piwigo\Session\SessionEntity;
 use Piwigo\Session\SessionService;
 use Piwigo\Users\CurrentUser;
+use Piwigo\Tests\Support\CurrentUserTestFactory;
 
 /**
  * Covers qsearchGetTextTokenSearchSql()'s real per-platform FULLTEXT/
@@ -91,22 +92,22 @@ final class SearchFulltextPortabilityTest extends IntegrationTestCase
 
         $mailer = Kernel::container()->get(MailService::class);
         self::assertInstanceOf(MailService::class, $mailer);
-        $userService = new UserService(LangTestFactory::get(), new UserRepository($this->em, EventDispatcherTestFactory::get(), CurrentConfig::current()), $this->em->getRepository(GroupEntity::class), $mailer, new ActivityService($this->em->getRepository(ActivityEntity::class)), HtmlServiceTestFactory::build(), $this->conn, new SessionService($this->em->getRepository(SessionEntity::class), CurrentConfig::current()), EventDispatcherTestFactory::get(), new DeploymentPolicy(), CurrentUser::current(), CurrentConfig::current(), new InstallationFlag(), new ProcessCache(), CurrentPathsTestFactory::get());
+        $userService = new UserService(LangTestFactory::get(), new UserRepository($this->em, EventDispatcherTestFactory::get(), CurrentConfig::current()), $this->em->getRepository(GroupEntity::class), $mailer, new ActivityService($this->em->getRepository(ActivityEntity::class)), HtmlServiceTestFactory::build(), $this->conn, new SessionService($this->em->getRepository(SessionEntity::class), CurrentConfig::current()), EventDispatcherTestFactory::get(), new DeploymentPolicy(), CurrentUserTestFactory::get(), CurrentConfig::current(), new InstallationFlag(), new ProcessCache(), CurrentPathsTestFactory::get());
 
         $filterState = Kernel::container()->get(FilterState::class);
         if (! $filterState instanceof FilterState) {
             throw new LogicException('Container returned an unexpected type for ' . FilterState::class);
         }
 
-        $accessLevelChecker = new AccessLevelChecker(CurrentUser::current(), CurrentConfig::current());
+        $accessLevelChecker = new AccessLevelChecker(CurrentUserTestFactory::get(), CurrentConfig::current());
         $this->service = new SearchService(
             $accessLevelChecker,
             $repo,
-            new PermissionService(new PermissionRepository($this->em), $this->em->getRepository(GroupEntity::class), new CategoryRepository($this->em, CurrentConfig::current()), CurrentUser::current(), $filterState, $accessLevelChecker),
+            new PermissionService(new PermissionRepository($this->em), $this->em->getRepository(GroupEntity::class), new CategoryRepository($this->em, CurrentConfig::current()), CurrentUserTestFactory::get(), $filterState, $accessLevelChecker),
             new CategoryService(
                 LangTestFactory::get(),
                 new CategoryRepository($this->em, CurrentConfig::current()),
-                new PermissionService(new PermissionRepository($this->em), $this->em->getRepository(GroupEntity::class), new CategoryRepository($this->em, CurrentConfig::current()), CurrentUser::current(), $filterState, $accessLevelChecker),
+                new PermissionService(new PermissionRepository($this->em), $this->em->getRepository(GroupEntity::class), new CategoryRepository($this->em, CurrentConfig::current()), CurrentUserTestFactory::get(), $filterState, $accessLevelChecker),
                 CurrentConfig::current(),
                 new EventDispatcher(),
                 TranslatorTestFactory::get(),
@@ -117,7 +118,7 @@ final class SearchFulltextPortabilityTest extends IntegrationTestCase
             new RedirectService(LangTestFactory::get(), $userService, EventDispatcherTestFactory::get(), PageStateTestFactory::get()),
             new SessionService($this->em->getRepository(SessionEntity::class), CurrentConfig::current()),
             EventDispatcherTestFactory::get(),
-            CurrentUser::current(),
+            CurrentUserTestFactory::get(),
             LangTestFactory::get(),
             CurrentConfig::current(),
             new CurrentLogger(),

@@ -12,6 +12,7 @@ use Piwigo\Core\FilterState;
 use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Group\GroupEntity;
 use Piwigo\Users\CurrentUser;
+use Piwigo\Tests\Support\CurrentUserTestFactory;
 use Doctrine\DBAL\Connection;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Config\ConfigLoader;
@@ -70,9 +71,9 @@ final class ForbiddenCategoriesCacheTest extends IntegrationTestCase
                 new PermissionRepository(EntityManagerFactory::build($this->conn)),
                 EntityManagerFactory::build($this->conn)->getRepository(GroupEntity::class),
                 new CategoryRepository(EntityManagerFactory::build($this->conn), $currentConfig),
-                CurrentUser::current(),
+                CurrentUserTestFactory::get(),
                 $filterState,
-                new AccessLevelChecker(CurrentUser::current(), $currentConfig),
+                new AccessLevelChecker(CurrentUserTestFactory::get(), $currentConfig),
             ),
             $this->pool,
         );

@@ -32,6 +32,7 @@ use Piwigo\Html\HtmlService;
 use Piwigo\Lang\Translator;
 use Piwigo\Tests\Support\TranslatorTestFactory;
 use Piwigo\Users\CurrentUser;
+use Piwigo\Tests\Support\CurrentUserTestFactory;
 use Piwigo\Users\User;
 
 function calendar_renderer_test_rrmdir(string $dir): void
@@ -105,7 +106,7 @@ final class CalendarRendererTest extends IntegrationTestCase
         // Matches CalendarServiceTest's own fixture shape/guaranteed-shape
         // rationale: getSqlConditionFandF()'s forbidden_images fallthrough
         // needs a complete row, not just a partial one.
-        CurrentUser::current()->set(User::fromUserArray([
+        CurrentUserTestFactory::get()->set(User::fromUserArray([
             'id' => 1,
             'forbidden_categories' => '0',
             'level' => '0',
@@ -135,7 +136,7 @@ final class CalendarRendererTest extends IntegrationTestCase
 
     private function makeRenderer(): CalendarRenderer
     {
-        return new CalendarRenderer(LangTestFactory::get(), $this->htmlService, TemplateTestFactory::build(), $this->urlService, CurrentUser::current(), CurrentConfig::current(), EventDispatcherTestFactory::get(), TranslatorTestFactory::get(), new FilterState(), ImageStdParamsTestFactory::get(), PageStateTestFactory::get());
+        return new CalendarRenderer(LangTestFactory::get(), $this->htmlService, TemplateTestFactory::build(), $this->urlService, CurrentUserTestFactory::get(), CurrentConfig::current(), EventDispatcherTestFactory::get(), TranslatorTestFactory::get(), new FilterState(), ImageStdParamsTestFactory::get(), PageStateTestFactory::get());
     }
 
     /**
@@ -268,7 +269,7 @@ final class CalendarRendererTest extends IntegrationTestCase
     public function test_render_groups_multiple_years_and_months_for_the_default_monthly_calendar_view(): void
     {
         $template = TemplateTestFactory::build();
-        $renderer = new CalendarRenderer(LangTestFactory::get(), $this->htmlService, $template, $this->urlService, CurrentUser::current(), CurrentConfig::current(), EventDispatcherTestFactory::get(), TranslatorTestFactory::get(), new FilterState(), ImageStdParamsTestFactory::get(), PageStateTestFactory::get());
+        $renderer = new CalendarRenderer(LangTestFactory::get(), $this->htmlService, $template, $this->urlService, CurrentUserTestFactory::get(), CurrentConfig::current(), EventDispatcherTestFactory::get(), TranslatorTestFactory::get(), new FilterState(), ImageStdParamsTestFactory::get(), PageStateTestFactory::get());
 
         $result = $renderer->render(
             section: 'items',
@@ -316,7 +317,7 @@ final class CalendarRendererTest extends IntegrationTestCase
     public function test_render_normalizes_chronology_date_to_ints_and_next_prev_navigation_still_works(): void
     {
         $template = TemplateTestFactory::build();
-        $renderer = new CalendarRenderer(LangTestFactory::get(), $this->htmlService, $template, $this->urlService, CurrentUser::current(), CurrentConfig::current(), EventDispatcherTestFactory::get(), TranslatorTestFactory::get(), new FilterState(), ImageStdParamsTestFactory::get(), PageStateTestFactory::get());
+        $renderer = new CalendarRenderer(LangTestFactory::get(), $this->htmlService, $template, $this->urlService, CurrentUserTestFactory::get(), CurrentConfig::current(), EventDispatcherTestFactory::get(), TranslatorTestFactory::get(), new FilterState(), ImageStdParamsTestFactory::get(), PageStateTestFactory::get());
 
         $result = $renderer->render(
             section: 'items',
@@ -404,7 +405,7 @@ final class CalendarRendererTest extends IntegrationTestCase
             $first = $render();
             self::assertSame([5, 4, 3, 2, 1], $first->items);
 
-            CurrentUser::current()->set(User::fromUserArray([
+            CurrentUserTestFactory::get()->set(User::fromUserArray([
                 'id' => 1,
                 'forbidden_categories' => '2',
                 'level' => '0',

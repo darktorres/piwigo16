@@ -6,6 +6,7 @@ use Piwigo\Core\CurrentLogger;
 use Piwigo\Core\Logger;
 use Piwigo\Activity\ActivityEntity;
 use Piwigo\Users\CurrentUser;
+use Piwigo\Tests\Support\CurrentUserTestFactory;
 use Piwigo\Tests\Support\UrlServiceTestFactory;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Activity\ActivityService;
@@ -250,7 +251,7 @@ function fsThemeEntry(array $overrides = []): array
  * elimination campaign, Phase 12 sub-phase 12D: missingParentTheme()/
  * getChildrenThemes() now thread $this->currentConfig/$this->currentUser
  * into ExtensionScanner::scan()'s own NOCTOR-shaped params) -- both must
- * be the real, shared CurrentConfig::current()/CurrentUser::current()
+ * be the real, shared CurrentConfig::current()/CurrentUserTestFactory::get()
  * instances (not a fresh, disconnected one) so scan()'s directory lookup
  * actually sees this file's own beforeEach()-configured fixture
  * setThemesDir(), not CurrentConfig's own unrelated default. Found live:
@@ -276,7 +277,7 @@ function themesInstalledLifecycle(): ExtensionLifecycle
         throw new LogicException('Container returned an unexpected type');
     }
 
-    return new ExtensionLifecycle(LangTestFactory::get(), $repo, new PemCatalog(new ZipExtractor(), $currentLogger, new CurrentUser(new CurrentConfig()), CurrentPathsTestFactory::get(), new CurrentConfig()), UrlServiceTestFactory::build(), new ConfigService($configRepo, new EventDispatcher(), new CurrentConfig()), $pluginMigrationRepo, new ActivityService($activityRepo), themesInstalledLifecycleUserService(), HtmlServiceTestFactory::build(), CurrentConfig::current(), $wsContext, $accessControl, CurrentPathsTestFactory::get(), CurrentUser::current(), new EventDispatcher());
+    return new ExtensionLifecycle(LangTestFactory::get(), $repo, new PemCatalog(new ZipExtractor(), $currentLogger, new CurrentUser(new CurrentConfig()), CurrentPathsTestFactory::get(), new CurrentConfig()), UrlServiceTestFactory::build(), new ConfigService($configRepo, new EventDispatcher(), new CurrentConfig()), $pluginMigrationRepo, new ActivityService($activityRepo), themesInstalledLifecycleUserService(), HtmlServiceTestFactory::build(), CurrentConfig::current(), $wsContext, $accessControl, CurrentPathsTestFactory::get(), CurrentUserTestFactory::get(), new EventDispatcher());
 }
 
 /**

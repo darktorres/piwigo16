@@ -10,6 +10,7 @@ use Piwigo\Core\Paths;
 use Piwigo\Core\WsContext;
 use Piwigo\Tests\Support\KernelContainerOverride;
 use Piwigo\Users\CurrentUser;
+use Piwigo\Tests\Support\CurrentUserTestFactory;
 use Piwigo\Users\User;
 use Piwigo\Users\UserStatus;
 
@@ -39,16 +40,16 @@ use Piwigo\Users\UserStatus;
  * alone.
  */
 beforeEach(function (): void {
-    CurrentUser::current()->reset();
+    CurrentUserTestFactory::get()->reset();
 });
 
 afterEach(function (): void {
-    CurrentUser::current()->reset();
+    CurrentUserTestFactory::get()->reset();
 });
 
 function pluginMaintainSetUserStatus(UserStatus $status): void
 {
-    CurrentUser::current()->set(new User(
+    CurrentUserTestFactory::get()->set(new User(
         id: UserId::from(1),
         username: 'plugin-maintain-test-user',
         email: '',
@@ -83,7 +84,7 @@ test('autoUpdate() triggers its deprecation warning for an admin user outside a 
     try {
         // AccessControl::current() (Phase 7 of the singleton/service-locator
         // elimination campaign) has no memoized pre-boot fallback, unlike
-        // CurrentUser::current() -- a real, resolvable container is now
+        // CurrentUserTestFactory::get() -- a real, resolvable container is now
         // required for every test reaching autoUpdate(), not just the
         // WS-context one. The user status must be seeded INSIDE the
         // callback, once the container exists (Phase 5 execution finding,
@@ -169,7 +170,7 @@ test('autoUpdate() stays silent for an admin user inside an active WS request', 
         // tears it back down.
         // The user status must be seeded INSIDE the callback, once the
         // container exists -- seeding beforehand only reaches the pre-boot
-        // memoized CurrentUser::current() fallback, which is a different
+        // memoized CurrentUserTestFactory::get() fallback, which is a different
         // instance from the one AccessControl::isAdmin() resolves once
         // Kernel is booted here (Phase 5 execution finding, same pitfall
         // Translator/EventDispatcher already hit).

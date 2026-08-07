@@ -29,6 +29,7 @@ namespace Piwigo\Tests\Integration {
     use Piwigo\Tests\Support\EventDispatcherTestFactory;
     use Piwigo\Rate\RateService;
     use Piwigo\Users\CurrentUser;
+    use Piwigo\Tests\Support\CurrentUserTestFactory;
     use Piwigo\Users\User;
 
     final class RateServiceTest extends IntegrationTestCase
@@ -63,7 +64,7 @@ namespace Piwigo\Tests\Integration {
             $currentConfig->setRateAnonymous(true);
             $currentConfig->setRateItems([0, 1, 2, 3, 4, 5]);
             $currentConfig->setGuestAccess(true);
-            CurrentUser::current()->set(User::fromUserArray(['id' => 3, 'status' => 'normal']));
+            CurrentUserTestFactory::get()->set(User::fromUserArray(['id' => 3, 'status' => 'normal']));
             $_SERVER['REMOTE_ADDR'] = '10.20.30.40';
             unset($_COOKIE['pwg_anonymous_rater']);
 
@@ -72,7 +73,7 @@ namespace Piwigo\Tests\Integration {
             if (! $accessControl instanceof AccessControl) {
                 throw new LogicException('Container returned an unexpected type for ' . AccessControl::class);
             }
-            $this->service = new RateService($accessControl, EntityManagerFactory::build($this->conn)->getRepository(RateEntity::class), new CookieService(), EventDispatcherTestFactory::get(), CurrentUser::current(), CurrentConfig::current());
+            $this->service = new RateService($accessControl, EntityManagerFactory::build($this->conn)->getRepository(RateEntity::class), new CookieService(), EventDispatcherTestFactory::get(), CurrentUserTestFactory::get(), CurrentConfig::current());
         }
 
         public function test_rate_returns_false_for_a_null_rate(): void
@@ -108,7 +109,7 @@ namespace Piwigo\Tests\Integration {
                 throw new LogicException('Container returned an unexpected type for ' . CurrentConfig::class);
             }
             $currentConfig->setRateAnonymous(false);
-            CurrentUser::current()->set(User::fromUserArray(['id' => 2, 'status' => 'guest']));
+            CurrentUserTestFactory::get()->set(User::fromUserArray(['id' => 2, 'status' => 'guest']));
 
             self::assertFalse($this->service->rate(5, 3));
         }
@@ -161,7 +162,7 @@ namespace Piwigo\Tests\Integration {
 
         public function test_rate_for_an_anonymous_user_sets_the_cookie_and_records_the_ip(): void
         {
-            CurrentUser::current()->set(User::fromUserArray(['id' => 2, 'status' => 'guest']));
+            CurrentUserTestFactory::get()->set(User::fromUserArray(['id' => 2, 'status' => 'guest']));
 
             try {
                 $result = $this->service->rate(5, 3);
@@ -233,7 +234,7 @@ namespace Piwigo\Tests\Integration {
          */
         public function test_rate_for_a_returning_anonymous_user_deletes_the_stale_duplicate_before_reassigning(): void
         {
-            CurrentUser::current()->set(User::fromUserArray(['id' => 2, 'status' => 'guest']));
+            CurrentUserTestFactory::get()->set(User::fromUserArray(['id' => 2, 'status' => 'guest']));
             $_COOKIE['pwg_anonymous_rater'] = '99.99.99';
 
             $this->conn->insert(Tables::rate(), ['element_id' => 4, 'user_id' => 2, 'anonymous_id' => '99.99.99', 'rate' => 2, 'date' => '2026-08-01']);

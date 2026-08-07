@@ -10,6 +10,7 @@ use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Tests\Support\ImageStdParamsTestFactory;
 use Piwigo\Users\CurrentUser;
+use Piwigo\Tests\Support\CurrentUserTestFactory;
 use Doctrine\DBAL\Connection;
 use Piwigo\Bootstrap\PresentationAccessor;
 use Piwigo\Config\ConfigEntry;
@@ -225,10 +226,10 @@ final class NotificationByMailSenderTest extends IntegrationTestCase
         // (singleton/service-locator elimination campaign, Phase 5 --
         // CurrentUser is now rebuilt fresh per container, not a true
         // process-global survivor) -- without reseeding here, any
-        // CurrentUser::current()->get() reached from the fresh sender
+        // CurrentUserTestFactory::get()->get() reached from the fresh sender
         // (e.g. via AccessControl) throws "not initialised" against this
         // now-unseeded container.
-        CurrentUser::current()->attachGlobals();
+        CurrentUserTestFactory::get()->attachGlobals();
         // Kernel::reset() also discards the container-shared CurrentConfig
         // instance (singleton/service-locator elimination campaign, Phase
         // 9 -- CurrentConfig is now rebuilt fresh per container too, back

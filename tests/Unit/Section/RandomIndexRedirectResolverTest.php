@@ -7,6 +7,7 @@ use Piwigo\Config\CurrentConfig;
 use Piwigo\Auth\AccessLevelChecker;
 use Piwigo\Section\RandomIndexRedirectResolver;
 use Piwigo\Users\CurrentUser;
+use Piwigo\Tests\Support\CurrentUserTestFactory;
 use Piwigo\Users\User;
 use Piwigo\Users\UserStatus;
 
@@ -18,7 +19,7 @@ use Piwigo\Users\UserStatus;
 // this test's old $GLOBALS['user'] stub.
 function seedCurrentUserStatus(UserStatus $status): void
 {
-    CurrentUser::current()->set(new User(
+    CurrentUserTestFactory::get()->set(new User(
         id: UserId::from(1),
         username: '',
         email: '',
@@ -38,7 +39,7 @@ function seedCurrentUserStatus(UserStatus $status): void
  */
 function randomIndexRedirectResolverTestAccessLevelChecker(): AccessLevelChecker
 {
-    return new AccessLevelChecker(CurrentUser::current(), CurrentConfig::current());
+    return new AccessLevelChecker(CurrentUserTestFactory::get(), CurrentConfig::current());
 }
 
 beforeEach(function (): void {
@@ -46,7 +47,7 @@ beforeEach(function (): void {
 });
 
 afterEach(function (): void {
-    CurrentUser::current()->reset();
+    CurrentUserTestFactory::get()->reset();
 });
 
 test('resolveCandidates matches an empty-string condition', function (): void {

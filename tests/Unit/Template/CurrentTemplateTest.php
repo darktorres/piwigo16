@@ -86,8 +86,8 @@ test('reset clears the published instance so get throws again', function (): voi
 
 test('current() falls back to a memoized instance when Kernel is not booted', function (): void {
     // Memoized (not fresh-per-call), same reasoning as
-    // CurrentUser::current() (and formerly EventDispatcher::get()/
-    // Translator::get(), closed in sub-phases 12F-6/12F-9): a caller that writes
+    // CurrentUserTestFactory::get() (and formerly EventDispatcher::get()/
+    // Translator::get(), closed in sub-phases 12F-6/12F-9/12F-11): a caller that writes
     // via current() in one call and reads via current() in a later call
     // must see the same instance, or the write would be lost. Kernel is
     // already booted by this file's own beforeEach() (real Template

@@ -27,6 +27,7 @@ use Piwigo\Rate\RateRepository;
 use Piwigo\Template\CurrentTemplate;
 use Piwigo\Url\UrlService;
 use Piwigo\Users\CurrentUser;
+use Piwigo\Tests\Support\CurrentUserTestFactory;
 use Piwigo\Users\User;
 use Piwigo\Users\UserStatus;
 
@@ -86,14 +87,14 @@ final class PictureRateRendererTest extends IntegrationTestCase
         if (! $accessControl instanceof AccessControl) {
             throw new LogicException('Container returned an unexpected type for ' . AccessControl::class);
         }
-        $this->renderer = new PictureRateRenderer($accessControl, $this->repo, CurrentUser::current(), CurrentTemplate::current(), CurrentConfig::current());
+        $this->renderer = new PictureRateRenderer($accessControl, $this->repo, CurrentUserTestFactory::get(), CurrentTemplate::current(), CurrentConfig::current());
     }
 
     #[Override]
     protected function tearDown(): void
     {
         CurrentTemplate::current()->reset();
-        CurrentUser::current()->reset();
+        CurrentUserTestFactory::get()->reset();
         $this->conn->executeStatement('DELETE FROM ' . Tables::rate() . ' WHERE element_id = 1');
         parent::tearDown();
     }
@@ -121,7 +122,7 @@ final class PictureRateRendererTest extends IntegrationTestCase
         // 3 real votes (5, 3, 4) on image 1 -- count=3, average=4.0.
         $this->conn->executeStatement("INSERT INTO " . Tables::rate() . " (user_id, element_id, anonymous_id, rate) VALUES (1, 1, '', 5), (3, 1, '', 3), (4, 1, '', 4)");
 
-        CurrentUser::current()->set(new User(
+        CurrentUserTestFactory::get()->set(new User(
             id: UserId::from(3),
             username: 'fixture_user_3',
             email: '',
@@ -158,7 +159,7 @@ final class PictureRateRendererTest extends IntegrationTestCase
         // the exact anonymous_id shape render() itself computes.
         $this->conn->executeStatement("INSERT INTO " . Tables::rate() . " (user_id, element_id, anonymous_id, rate) VALUES (2, 1, '203.0.113', 5)");
 
-        CurrentUser::current()->set(new User(
+        CurrentUserTestFactory::get()->set(new User(
             id: UserId::from(2),
             username: 'guest',
             email: '',

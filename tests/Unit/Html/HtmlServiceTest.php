@@ -41,6 +41,7 @@ use Piwigo\Tests\Support\EventDispatcherTestFactory;
 use Piwigo\Template\CurrentTemplate;
 use Piwigo\Tests\Support\KernelContainerOverride;
 use Piwigo\Users\CurrentUser;
+use Piwigo\Tests\Support\CurrentUserTestFactory;
 
 beforeEach(function (): void {
     // ProcessCache/ErrorCollector are both real required constructor
@@ -56,14 +57,14 @@ beforeEach(function (): void {
     if ($processCache instanceof ProcessCache) {
         $processCache->reset();
     }
-    CurrentUser::current()->reset();
+    CurrentUserTestFactory::get()->reset();
     CurrentTemplate::current()->reset();
     CurrentConfig::current()->reset();
 });
 
 afterEach(function (): void {
     Kernel::reset();
-    CurrentUser::current()->reset();
+    CurrentUserTestFactory::get()->reset();
     CurrentTemplate::current()->reset();
     CurrentConfig::current()->reset();
 });
@@ -1329,7 +1330,7 @@ test('accessDenied renders a 401 page instead of redirecting when a real (non-gu
     // CurrentUser at all, so isInitialized() alone is already false and
     // can't distinguish the second condition. A real, non-guest
     // CurrentUser is required to reach this branch at all.
-    CurrentUser::current()->set(new User(
+    CurrentUserTestFactory::get()->set(new User(
         id: UserId::from(1),
         username: 'alice',
         email: '',

@@ -12,6 +12,7 @@ use Piwigo\Core\FilterState;
 use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Group\GroupEntity;
 use Piwigo\Users\CurrentUser;
+use Piwigo\Tests\Support\CurrentUserTestFactory;
 use Piwigo\Core\Lang;
 use Piwigo\Tests\Support\LangTestFactory;
 use Piwigo\Core\PageState;
@@ -168,12 +169,12 @@ final class CategoryAdminServiceTest extends IntegrationTestCase
         }
 
         $this->conn = DbConnection::build();
-        $accessLevelChecker = new AccessLevelChecker(CurrentUser::current(), CurrentConfig::current());
+        $accessLevelChecker = new AccessLevelChecker(CurrentUserTestFactory::get(), CurrentConfig::current());
         $permissionService = new PermissionService(
             new PermissionRepository(EntityManagerFactory::build($this->conn)),
             EntityManagerFactory::build($this->conn)->getRepository(GroupEntity::class),
             new CategoryRepository(EntityManagerFactory::build($this->conn), CurrentConfig::current()),
-            CurrentUser::current(),
+            CurrentUserTestFactory::get(),
             $filterState,
             $accessLevelChecker
         );
@@ -403,7 +404,7 @@ final class CategoryAdminServiceTest extends IntegrationTestCase
 
     public function test_create_virtual_category_rejects_a_blank_name(): void
     {
-        $result = $this->service->createVirtualCategory('   ', new CategoryAdminServiceFakeActivityLogger(), CurrentUser::current());
+        $result = $this->service->createVirtualCategory('   ', new CategoryAdminServiceFakeActivityLogger(), CurrentUserTestFactory::get());
 
         self::assertFalse($result->success);
         self::assertNotNull($result->message);
@@ -412,7 +413,7 @@ final class CategoryAdminServiceTest extends IntegrationTestCase
 
     public function test_create_virtual_category_creates_a_real_row(): void
     {
-        $result = $this->service->createVirtualCategory('Integration Test Album', new CategoryAdminServiceFakeActivityLogger(), CurrentUser::current());
+        $result = $this->service->createVirtualCategory('Integration Test Album', new CategoryAdminServiceFakeActivityLogger(), CurrentUserTestFactory::get());
 
         self::assertTrue($result->success);
         self::assertNotNull($result->categoryId);

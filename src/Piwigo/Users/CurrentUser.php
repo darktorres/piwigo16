@@ -8,22 +8,10 @@ use LogicException;
 use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\AppInfo;
-use Piwigo\Core\Kernel;
 
 /**
  * Container-shared instance holding the authenticated-user-for-this-request
  * state (singleton/service-locator elimination campaign, Phase 5).
- *
- * `current()` is a memoized `@deprecated` transitional bridge for callers
- * not yet converted to constructor injection -- same "load once, read/write
- * many times per request" reasoning as `Translator`/`EventDispatcher`/
- * `PageState`/`ImageStdParams`: the not-booted fallback is memoized
- * (`self::$fallback ??= new self()`), not fresh-per-call, so a caller that
- * writes via `current()` in one call and reads via `current()` in a later
- * call sees the same instance. This also preserves `get()`'s existing
- * throw-if-uninitialized semantics exactly: a fresh fallback instance's
- * `$user` starts `null`, same as the pre-conversion static's own
- * `self::$instance`.
  *
  * `attachGlobals()` is called by `RequestBootstrap::finalize()`/
  * `bootConfigOnly()`/`CliBootstrap::buildApplication()` -- NOT from
@@ -33,8 +21,6 @@ use Piwigo\Core\Kernel;
  */
 final class CurrentUser
 {
-    private static ?self $fallback = null;
-
     private ?User $user = null;
 
     public function __construct(
@@ -54,20 +40,6 @@ final class CurrentUser
      * not the guest id.
      */
     private bool $realUserResolved = false;
-
-    public static function current(): self
-    {
-        if (Kernel::isBooted()) {
-            $instance = Kernel::container()->get(self::class);
-            if (! $instance instanceof self) {
-                throw new LogicException('Container returned an unexpected type for ' . self::class);
-            }
-
-            return $instance;
-        }
-
-        return self::$fallback ??= new self(new CurrentConfig());
-    }
 
     /**
      * Initialises the instance with an empty guest user if not already

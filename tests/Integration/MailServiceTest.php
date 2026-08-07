@@ -42,6 +42,7 @@ use Piwigo\Tests\Support\EventDispatcherTestFactory;
 use Piwigo\Session\SessionEntity;
 use Piwigo\Session\SessionService;
 use Piwigo\Users\CurrentUser;
+use Piwigo\Tests\Support\CurrentUserTestFactory;
 use Piwigo\Users\User;
 use Piwigo\Users\UserService;
 use Piwigo\Users\UserStatus;
@@ -142,13 +143,13 @@ final class MailServiceTest extends IntegrationTestCase
         $currentConfig = CurrentConfig::current();
         $currentConfig->setSmtpHost('');
         $currentConfig->setDebugMail(false);
-        // CurrentUser::current()->attachGlobals() is a lazy-init `??=` -- once
-        // setCurrentUserToFixtureAdmin() has called CurrentUser::current()->set(),
+        // CurrentUserTestFactory::get()->attachGlobals() is a lazy-init `??=` -- once
+        // setCurrentUserToFixtureAdmin() has called CurrentUserTestFactory::get()->set(),
         // attachGlobals() alone is a no-op (self::$instance is already
         // non-null) and the webmaster identity would leak into every
         // later test in this file/process. reset() first is required.
-        CurrentUser::current()->reset();
-        CurrentUser::current()->attachGlobals();
+        CurrentUserTestFactory::get()->reset();
+        CurrentUserTestFactory::get()->attachGlobals();
         Kernel::reset();
         parent::tearDown();
     }
@@ -171,7 +172,7 @@ final class MailServiceTest extends IntegrationTestCase
             new SessionService(EntityManagerFactory::build($this->conn)->getRepository(SessionEntity::class),CurrentConfig::current()),
             new EventDispatcher(),
             new DeploymentPolicy(),
-            CurrentUser::current(),
+            CurrentUserTestFactory::get(),
             CurrentConfig::current(),
             new InstallationFlag(),
             new ProcessCache(),
@@ -210,7 +211,7 @@ final class MailServiceTest extends IntegrationTestCase
     private function setCurrentUserToFixtureAdmin(): void
     {
         $data = $this->buildUserService()->buildUser(UserId::from(1));
-        CurrentUser::current()->set(User::fromUserArray($data));
+        CurrentUserTestFactory::get()->set(User::fromUserArray($data));
     }
 
     /**
@@ -395,7 +396,7 @@ final class MailServiceTest extends IntegrationTestCase
         // it fails, exercising the "file couldn't be opened" early return.
         // suppressMailerWarning() below also swallows the resulting
         // fopen() warning, not just the expected "Mailer Error" one.
-        CurrentUser::current()->set(new User(
+        CurrentUserTestFactory::get()->set(new User(
             id: UserId::from(1),
             username: 'nonexistent-subdir/evil',
             email: '',

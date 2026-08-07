@@ -40,6 +40,7 @@ namespace Piwigo\Tests\Integration {
     use Piwigo\Tests\Support\EventDispatcherTestFactory;
     use Piwigo\Tag\TagService;
     use Piwigo\Users\CurrentUser;
+    use Piwigo\Tests\Support\CurrentUserTestFactory;
     use Piwigo\Users\User;
     use Piwigo\Users\UserStatus;
 
@@ -84,14 +85,14 @@ namespace Piwigo\Tests\Integration {
             }
 
             $this->conn = DbConnection::build();
-            $this->service = new TagService(LangTestFactory::get(), EntityManagerFactory::build($this->conn)->getRepository(TagEntity::class), new PermissionService(new PermissionRepository(EntityManagerFactory::build($this->conn)), EntityManagerFactory::build($this->conn)->getRepository(GroupEntity::class), new CategoryRepository(EntityManagerFactory::build($this->conn), $currentConfig), CurrentUser::current(), $filterState, new AccessLevelChecker(CurrentUser::current(), $currentConfig)), new ActivityService(EntityManagerFactory::build($this->conn)->getRepository(ActivityEntity::class)), EventDispatcherTestFactory::get(), CurrentUser::current(), CurrentConfig::current(), $currentLogger, new SessionService(EntityManagerFactory::build($this->conn)->getRepository(SessionEntity::class), CurrentConfig::current()));
+            $this->service = new TagService(LangTestFactory::get(), EntityManagerFactory::build($this->conn)->getRepository(TagEntity::class), new PermissionService(new PermissionRepository(EntityManagerFactory::build($this->conn)), EntityManagerFactory::build($this->conn)->getRepository(GroupEntity::class), new CategoryRepository(EntityManagerFactory::build($this->conn), $currentConfig), CurrentUserTestFactory::get(), $filterState, new AccessLevelChecker(CurrentUserTestFactory::get(), $currentConfig)), new ActivityService(EntityManagerFactory::build($this->conn)->getRepository(ActivityEntity::class)), EventDispatcherTestFactory::get(), CurrentUserTestFactory::get(), CurrentConfig::current(), $currentLogger, new SessionService(EntityManagerFactory::build($this->conn)->getRepository(SessionEntity::class), CurrentConfig::current()));
         }
 
         #[Override]
         protected function tearDown(): void
         {
             CachePools::tagCloud()->clear();
-            CurrentUser::current()->reset();
+            CurrentUserTestFactory::get()->reset();
             parent::tearDown();
         }
 
@@ -181,7 +182,7 @@ namespace Piwigo\Tests\Integration {
          */
         public function test_get_available_tags_with_no_filter_caches_the_result_via_cache_pools_tag_cloud(): void
         {
-            CurrentUser::current()->set(new User(
+            CurrentUserTestFactory::get()->set(new User(
                 id: UserId::from(2),
                 username: 'fixture_guest',
                 email: '',
@@ -376,7 +377,7 @@ namespace Piwigo\Tests\Integration {
          */
         public function test_get_available_tags_skips_a_tag_absent_from_the_counters_once_past_the_1000_id_threshold(): void
         {
-            CurrentUser::current()->set(new User(
+            CurrentUserTestFactory::get()->set(new User(
                 id: UserId::from(2),
                 username: 'fixture_guest',
                 email: '',

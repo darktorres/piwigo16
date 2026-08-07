@@ -22,6 +22,7 @@ use Piwigo\Tests\Support\TranslatorTestFactory;
 use Piwigo\Permission\PermissionRepository;
 use Piwigo\Permission\PermissionService;
 use Piwigo\Users\CurrentUser;
+use Piwigo\Tests\Support\CurrentUserTestFactory;
 use Piwigo\Users\User;
 use Piwigo\Users\UserStatus;
 
@@ -46,9 +47,9 @@ function makePermissionService(): PermissionService
         new PermissionRepository(EntityManagerFactory::build($conn)),
         EntityManagerFactory::build($conn)->getRepository(GroupEntity::class),
         new CategoryRepository(EntityManagerFactory::build($conn), CurrentConfig::current()),
-        CurrentUser::current(),
+        CurrentUserTestFactory::get(),
         $filterState,
-        new AccessLevelChecker(CurrentUser::current(), CurrentConfig::current()),
+        new AccessLevelChecker(CurrentUserTestFactory::get(), CurrentConfig::current()),
     );
 }
 
@@ -71,7 +72,7 @@ function seedFilterState(bool $enabled, string $visibleCategories = '', string $
 
 function seedPermissionUser(string $forbiddenCategories = '', int $level = 0, string $imageAccessType = '', string $imageAccessList = ''): void
 {
-    CurrentUser::current()->set(new User(
+    CurrentUserTestFactory::get()->set(new User(
         id: UserId::from(1),
         username: 'torres',
         email: '',
@@ -103,7 +104,7 @@ function seedPermissionUser(string $forbiddenCategories = '', int $level = 0, st
  */
 function seedPermissionUserRaw(array $rawAttributes): void
 {
-    CurrentUser::current()->set(new User(
+    CurrentUserTestFactory::get()->set(new User(
         id: UserId::from(1),
         username: 'torres',
         email: '',
@@ -127,7 +128,7 @@ beforeEach(function (): void {
 });
 
 afterEach(function (): void {
-    CurrentUser::current()->reset();
+    CurrentUserTestFactory::get()->reset();
     CurrentConfig::current()->reset();
     LangTestFactory::get()->reset();
     TranslatorTestFactory::get()->reset();

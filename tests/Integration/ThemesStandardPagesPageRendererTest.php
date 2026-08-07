@@ -16,6 +16,7 @@ use Piwigo\Core\PageState;
 use Piwigo\Tests\Support\PageStateTestFactory;
 use Piwigo\Tests\Support\HtmlServiceTestFactory;
 use Piwigo\Users\CurrentUser;
+use Piwigo\Tests\Support\CurrentUserTestFactory;
 use RuntimeException;
 use Piwigo\Db\DbConnection;
 use Piwigo\Admin\ThemesStandardPagesPageRenderer;
@@ -314,7 +315,7 @@ final class ThemesStandardPagesPageRendererTest extends IntegrationTestCase
             HtmlServiceTestFactory::build(),
             CurrentConfig::current(),
             CurrentPathsTestFactory::get(),
-            CurrentUser::current(),
+            CurrentUserTestFactory::get(),
             EventDispatcherTestFactory::get(),
         );
     }
@@ -348,7 +349,7 @@ final class ThemesStandardPagesPageRendererTest extends IntegrationTestCase
         // 5) -- without reseeding here, AccessControl::isWebmaster() (read
         // by this renderer) throws "not initialised" against this fresh,
         // unseeded container.
-        CurrentUser::current()->attachGlobals();
+        CurrentUserTestFactory::get()->attachGlobals();
         // Same reasoning again -- Kernel::reset() also discards the
         // container-shared CurrentConfigService instance setUp()'s own
         // set() call populated; without reseeding here, Template's own

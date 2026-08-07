@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use Piwigo\Core\ShutdownHandler;
 use Piwigo\Users\CurrentUser;
+use Piwigo\Tests\Support\CurrentUserTestFactory;
 use Piwigo\Users\UserStatus;
 use Piwigo\Config\CurrentConfigService;
 use Piwigo\Tests\Support\CurrentConfigServiceTestFactory;
@@ -62,13 +63,13 @@ test('the built Application also exposes the Console built-in commands', functio
 });
 
 test('buildApplication attaches a real CurrentUser (guest) globally', function (): void {
-    CurrentUser::current()->reset();
+    CurrentUserTestFactory::get()->reset();
 
     CliBootstrap::buildApplication();
 
-    expect(CurrentUser::current()->get()->status)->toBe(UserStatus::Guest);
+    expect(CurrentUserTestFactory::get()->get()->status)->toBe(UserStatus::Guest);
 
-    CurrentUser::current()->reset();
+    CurrentUserTestFactory::get()->reset();
 });
 
 test('buildApplication initializes CurrentConfigService with a real, resolved ConfigService', function (): void {

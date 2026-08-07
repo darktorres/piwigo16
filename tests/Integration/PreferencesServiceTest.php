@@ -16,6 +16,7 @@ use Piwigo\Config\ConfigLoader;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
 use Piwigo\Users\CurrentUser;
+use Piwigo\Tests\Support\CurrentUserTestFactory;
 use Piwigo\Users\PreferencesService;
 use Piwigo\Users\User;
 use Piwigo\Users\UserRepository;
@@ -49,9 +50,9 @@ final class PreferencesServiceTest extends IntegrationTestCase
         ConfigLoader::applyEnvOverrides();
 
         $this->conn = DbConnection::build();
-        $this->service = new PreferencesService(new UserRepository(EntityManagerFactory::build($this->conn), EventDispatcherTestFactory::get(), $currentConfig), CurrentUser::current());
+        $this->service = new PreferencesService(new UserRepository(EntityManagerFactory::build($this->conn), EventDispatcherTestFactory::get(), $currentConfig), CurrentUserTestFactory::get());
 
-        CurrentUser::current()->set(User::fromUserArray(['id' => 1, 'preferences' => []]));
+        CurrentUserTestFactory::get()->set(User::fromUserArray(['id' => 1, 'preferences' => []]));
     }
 
     #[Override]
@@ -67,7 +68,7 @@ final class PreferencesServiceTest extends IntegrationTestCase
 
         self::assertSame('dark', $this->service->getParam('theme'));
 
-        self::assertSame('dark', CurrentUser::current()->get()->preferences['theme']);
+        self::assertSame('dark', CurrentUserTestFactory::get()->get()->preferences['theme']);
     }
 
     public function test_update_param_persists_to_the_database(): void

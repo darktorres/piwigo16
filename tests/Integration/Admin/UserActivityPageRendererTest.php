@@ -36,6 +36,7 @@ use Piwigo\Template\CurrentTemplate;
 use Piwigo\Tests\Integration\IntegrationTestCase;
 use Piwigo\Url\UrlService;
 use Piwigo\Users\CurrentUser;
+use Piwigo\Tests\Support\CurrentUserTestFactory;
 use Piwigo\Users\User;
 
 /**
@@ -57,7 +58,7 @@ use Piwigo\Users\User;
  * "no injection point over HTTP" cases.
  *
  * render() is called directly here instead, with CurrentUser faked
- * straight to an admin User (CurrentUser::current()->set(), not a real
+ * straight to an admin User (CurrentUserTestFactory::get()->set(), not a real
  * AuthService login) -- no activity row is written by that, unlike a
  * genuine loginAsAdmin() POST. The real fixture's own 17 non-'system' rows
  * (piwigo_activity ids 3-19) are snapshotted and deleted for the
@@ -90,7 +91,7 @@ final class UserActivityPageRendererTest extends IntegrationTestCase
 
         // Real admin identity without a real login -- see this file's own
         // docblock for why a genuine loginAsAdmin() can't be used here.
-        CurrentUser::current()->set(User::fromUserArray([
+        CurrentUserTestFactory::get()->set(User::fromUserArray([
             'id' => 1,
             'status' => 'admin',
             'username' => 'fixture_admin',

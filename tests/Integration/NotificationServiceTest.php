@@ -32,6 +32,7 @@ namespace Piwigo\Tests\Integration {
     use Piwigo\Permission\PermissionRepository;
     use Piwigo\Permission\PermissionService;
     use Piwigo\Users\CurrentUser;
+    use Piwigo\Tests\Support\CurrentUserTestFactory;
     use Piwigo\Users\User;
     use Piwigo\Users\UserStatus;
 
@@ -87,7 +88,7 @@ final class NotificationServiceTest extends IntegrationTestCase
             $this->conn->executeStatement('UPDATE ' . Tables::userInfos() . " SET registration_date = '2026-07-07 05:02:38' WHERE user_id IN (3, 4)");
         }
 
-        CurrentUser::current()->set(User::fromUserArray([
+        CurrentUserTestFactory::get()->set(User::fromUserArray([
             'id' => 1,
             'status' => 'normal',
             'cache_update_time' => '2026-07-07 05:02:38',
@@ -104,13 +105,13 @@ final class NotificationServiceTest extends IntegrationTestCase
 
         $this->service = new NotificationService(
             LangTestFactory::get(),
-            new AccessLevelChecker(CurrentUser::current(), $currentConfig),
+            new AccessLevelChecker(CurrentUserTestFactory::get(), $currentConfig),
             new NotificationRepository(EntityManagerFactory::build($this->conn)),
-            new PermissionService(new PermissionRepository(EntityManagerFactory::build($this->conn)), EntityManagerFactory::build($this->conn)->getRepository(GroupEntity::class), new CategoryRepository(EntityManagerFactory::build($this->conn), $currentConfig), CurrentUser::current(), $filterState, new AccessLevelChecker(CurrentUser::current(), $currentConfig)),
+            new PermissionService(new PermissionRepository(EntityManagerFactory::build($this->conn)), EntityManagerFactory::build($this->conn)->getRepository(GroupEntity::class), new CategoryRepository(EntityManagerFactory::build($this->conn), $currentConfig), CurrentUserTestFactory::get(), $filterState, new AccessLevelChecker(CurrentUserTestFactory::get(), $currentConfig)),
             HtmlServiceTestFactory::build(),
             UrlServiceTestFactory::build(),
             new Translator(CurrentConfig::current()),
-            CurrentUser::current(),
+            CurrentUserTestFactory::get(),
         );
     }
 
@@ -256,14 +257,14 @@ final class NotificationServiceTest extends IntegrationTestCase
 
     public function test_news_exists_is_true_when_new_elements_exist(): void
     {
-        CurrentUser::current()->set(CurrentUser::current()->get()->withStatus(UserStatus::Normal));
+        CurrentUserTestFactory::get()->set(CurrentUserTestFactory::get()->get()->withStatus(UserStatus::Normal));
 
         self::assertTrue($this->service->newsExists('2026-07-07 05:02:36', '2026-07-07 05:02:38'));
     }
 
     public function test_news_exists_is_false_for_an_empty_window(): void
     {
-        CurrentUser::current()->set(CurrentUser::current()->get()->withStatus(UserStatus::Normal));
+        CurrentUserTestFactory::get()->set(CurrentUserTestFactory::get()->get()->withStatus(UserStatus::Normal));
 
         self::assertFalse($this->service->newsExists('2026-07-08 00:00:00', '2026-07-09 00:00:00'));
     }
@@ -282,10 +283,10 @@ final class NotificationServiceTest extends IntegrationTestCase
             ['test author', '127.0.0.9', 'pending test comment']
         );
 
-        CurrentUser::current()->set(CurrentUser::current()->get()->withStatus(UserStatus::Normal));
+        CurrentUserTestFactory::get()->set(CurrentUserTestFactory::get()->get()->withStatus(UserStatus::Normal));
         self::assertFalse($this->service->newsExists('2026-07-31 00:00:00', '2026-08-02 00:00:00'));
 
-        CurrentUser::current()->set(CurrentUser::current()->get()->withStatus(UserStatus::Admin));
+        CurrentUserTestFactory::get()->set(CurrentUserTestFactory::get()->get()->withStatus(UserStatus::Admin));
         self::assertTrue($this->service->newsExists('2026-07-31 00:00:00', '2026-08-02 00:00:00'));
 
         $this->conn->executeStatement("DELETE FROM " . Tables::comments() . " WHERE author = 'test author'");
@@ -329,7 +330,7 @@ final class NotificationServiceTest extends IntegrationTestCase
 
     public function test_news_appends_the_auth_key_to_every_generated_url(): void
     {
-        CurrentUser::current()->set(CurrentUser::current()->get()->withStatus(UserStatus::Normal));
+        CurrentUserTestFactory::get()->set(CurrentUserTestFactory::get()->get()->withStatus(UserStatus::Normal));
 
         // This window has new elements, updated categories, and new
         // comments all firing at once (see the elements/categories/
@@ -350,7 +351,7 @@ final class NotificationServiceTest extends IntegrationTestCase
 
     public function test_news_omits_the_auth_param_entirely_when_no_auth_key_is_given(): void
     {
-        CurrentUser::current()->set(CurrentUser::current()->get()->withStatus(UserStatus::Normal));
+        CurrentUserTestFactory::get()->set(CurrentUserTestFactory::get()->get()->withStatus(UserStatus::Normal));
 
         $news = $this->service->news(
             '2026-07-07 05:02:36',

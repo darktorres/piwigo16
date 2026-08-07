@@ -34,6 +34,7 @@ use Piwigo\Tests\Support\EventDispatcherTestFactory;
 use Piwigo\Template\CurrentTemplate;
 use Piwigo\Tests\Integration\IntegrationTestCase;
 use Piwigo\Users\CurrentUser;
+use Piwigo\Tests\Support\CurrentUserTestFactory;
 use Piwigo\Users\User;
 
 /**
@@ -88,7 +89,7 @@ final class ThemesInstalledPageRendererTest extends IntegrationTestCase
         // process (same reasoning as CategoryAdminServiceTest's own setUp()).
         Kernel::boot();
 
-        CurrentUser::current()->set(User::fromUserArray([
+        CurrentUserTestFactory::get()->set(User::fromUserArray([
             'id' => 1,
             'status' => 'webmaster',
             'username' => 'fixture_admin',
@@ -126,7 +127,7 @@ final class ThemesInstalledPageRendererTest extends IntegrationTestCase
         if (! $accessControl instanceof AccessControl) {
             throw new LogicException('Container returned an unexpected type for ' . AccessControl::class);
         }
-        $this->renderer = new ThemesInstalledPageRenderer(LangTestFactory::get(), $accessControl, new RedirectService(LangTestFactory::get(), $userService, new EventDispatcher(), PageStateTestFactory::get()), $urlService, $this->configService, $currentLogger, new EventDispatcher(), PageStateTestFactory::get(), CurrentTemplate::current(), $activityService, $userService, HtmlServiceTestFactory::build(), CurrentConfig::current(), $wsContext, CurrentUser::current(), CurrentPathsTestFactory::get());
+        $this->renderer = new ThemesInstalledPageRenderer(LangTestFactory::get(), $accessControl, new RedirectService(LangTestFactory::get(), $userService, new EventDispatcher(), PageStateTestFactory::get()), $urlService, $this->configService, $currentLogger, new EventDispatcher(), PageStateTestFactory::get(), CurrentTemplate::current(), $activityService, $userService, HtmlServiceTestFactory::build(), CurrentConfig::current(), $wsContext, CurrentUserTestFactory::get(), CurrentPathsTestFactory::get());
 
         $this->fixtureRoot = sys_get_temp_dir() . '/piwigo-themes-installed-integration-' . bin2hex(random_bytes(6)) . '/';
         mkdir($this->fixtureRoot . 'themes', 0o777, true);

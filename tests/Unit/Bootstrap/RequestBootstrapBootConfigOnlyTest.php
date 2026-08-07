@@ -24,6 +24,7 @@ use Piwigo\Lang\Translator;
 use Piwigo\Tests\Support\TranslatorTestFactory;
 use Piwigo\Tests\Support\KernelContainerOverride;
 use Piwigo\Users\CurrentUser;
+use Piwigo\Tests\Support\CurrentUserTestFactory;
 use Sentry\SentrySdk;
 
 /**
@@ -43,7 +44,7 @@ use Sentry\SentrySdk;
 beforeEach(function (): void {
     Kernel::reset();
     CurrentConfig::current()->reset();
-    CurrentUser::current()->reset();
+    CurrentUserTestFactory::get()->reset();
     // Legacy Coupling Retirement Phase 8, 8d: bootConfigOnly() now reuses
     // an already-set CurrentConfigService instead of always resolving+
     // loading its own -- without this reset, a set() left over from an
@@ -52,7 +53,7 @@ beforeEach(function (): void {
     CurrentConfigServiceTestFactory::get()->reset();
     // No LangTestFactory::get()->reset() here (unlike afterEach below): Lang, since
     // the singleton/service-locator elimination campaign's Phase 8, has no
-    // memoized pre-boot fallback the way CurrentUser::current()/
+    // memoized pre-boot fallback the way CurrentUserTestFactory::get()/
     // CurrentConfigServiceTestFactory::get() do -- see its own docblock -- and
     // Kernel::reset() just above already tore down whatever container (and
     // whatever Lang instance lived in it) the previous test left behind.
@@ -66,7 +67,7 @@ beforeEach(function (): void {
 
 afterEach(function (): void {
     CurrentConfig::current()->reset();
-    CurrentUser::current()->reset();
+    CurrentUserTestFactory::get()->reset();
     CurrentConfigServiceTestFactory::get()->reset();
     // LangTestFactory::get() has no memoized pre-boot fallback (see beforeEach's
     // own comment above), so it must resolve -- and get reset -- while the
@@ -128,7 +129,7 @@ test('bootConfigOnly merges DB-persisted config overrides into CurrentConfig (P2
 test('bootConfigOnly attaches a guest CurrentUser', function (): void {
     RequestBootstrap::bootConfigOnly(Paths::fromRoot(sys_get_temp_dir()));
 
-    expect(CurrentUser::current()->isInitialized())->toBeTrue();
+    expect(CurrentUserTestFactory::get()->isInitialized())->toBeTrue();
 });
 
 test('bootConfigOnly initializes Sentry when SENTRY_DSN is set', function (): void {

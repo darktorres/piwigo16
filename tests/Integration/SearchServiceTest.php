@@ -56,6 +56,7 @@ namespace Piwigo\Tests\Integration {
     use Piwigo\Session\SessionEntity;
     use Piwigo\Session\SessionService;
     use Piwigo\Users\CurrentUser;
+    use Piwigo\Tests\Support\CurrentUserTestFactory;
     use Piwigo\Users\User;
 
 /**
@@ -293,7 +294,7 @@ final class SearchServiceTest extends IntegrationTestCase
         $this->conn = DbConnection::build();
         $this->repo = new SearchRepository(EntityManagerFactory::build($this->conn));
 
-        CurrentUser::current()->set(User::fromUserArray(self::realisticUserGlobal()));
+        CurrentUserTestFactory::get()->set(User::fromUserArray(self::realisticUserGlobal()));
         $currentConfig->setDefaultFiltersViews(null);
         $currentConfig->setFiltersViews([
             'expert' => ['access' => 'everybody'],
@@ -316,15 +317,15 @@ final class SearchServiceTest extends IntegrationTestCase
         $currentConfig->setQuickSearchIncludeSubAlbums(false);
         $currentConfig->setRateEnabled(true);
 
-        $accessLevelChecker = new AccessLevelChecker(CurrentUser::current(), CurrentConfig::current());
+        $accessLevelChecker = new AccessLevelChecker(CurrentUserTestFactory::get(), CurrentConfig::current());
         $this->service = new SearchService(
             $accessLevelChecker,
             $this->repo,
-            new PermissionService(new PermissionRepository(EntityManagerFactory::build($this->conn)), EntityManagerFactory::build($this->conn)->getRepository(GroupEntity::class), new CategoryRepository(EntityManagerFactory::build($this->conn), CurrentConfig::current()), CurrentUser::current(), $this->filterState(), $accessLevelChecker),
+            new PermissionService(new PermissionRepository(EntityManagerFactory::build($this->conn)), EntityManagerFactory::build($this->conn)->getRepository(GroupEntity::class), new CategoryRepository(EntityManagerFactory::build($this->conn), CurrentConfig::current()), CurrentUserTestFactory::get(), $this->filterState(), $accessLevelChecker),
             new CategoryService(
                 LangTestFactory::get(),
                 new CategoryRepository(EntityManagerFactory::build($this->conn), CurrentConfig::current()),
-                new PermissionService(new PermissionRepository(EntityManagerFactory::build($this->conn)), EntityManagerFactory::build($this->conn)->getRepository(GroupEntity::class), new CategoryRepository(EntityManagerFactory::build($this->conn), CurrentConfig::current()), CurrentUser::current(), $this->filterState(), $accessLevelChecker),
+                new PermissionService(new PermissionRepository(EntityManagerFactory::build($this->conn)), EntityManagerFactory::build($this->conn)->getRepository(GroupEntity::class), new CategoryRepository(EntityManagerFactory::build($this->conn), CurrentConfig::current()), CurrentUserTestFactory::get(), $this->filterState(), $accessLevelChecker),
                 CurrentConfig::current(),
                 new EventDispatcher(),
                 TranslatorTestFactory::get(),
@@ -334,7 +335,7 @@ final class SearchServiceTest extends IntegrationTestCase
             HtmlServiceTestFactory::build(),
             new RedirectService(LangTestFactory::get(), $this->userService(), EventDispatcherTestFactory::get(), PageStateTestFactory::get()),
             new SessionService(EntityManagerFactory::build($this->conn)->getRepository(SessionEntity::class),CurrentConfig::current()), EventDispatcherTestFactory::get(),
-            CurrentUser::current(),
+            CurrentUserTestFactory::get(),
             LangTestFactory::get(),
             CurrentConfig::current(),
             new CurrentLogger(),
@@ -384,16 +385,16 @@ final class SearchServiceTest extends IntegrationTestCase
      */
     private function makeService(SearchRepository $repo, HtmlRenderingInterface $htmlRenderer): SearchService
     {
-        $accessLevelChecker = new AccessLevelChecker(CurrentUser::current(), CurrentConfig::current());
+        $accessLevelChecker = new AccessLevelChecker(CurrentUserTestFactory::get(), CurrentConfig::current());
 
         return new SearchService(
             $accessLevelChecker,
             $repo,
-            new PermissionService(new PermissionRepository(EntityManagerFactory::build($this->conn)), EntityManagerFactory::build($this->conn)->getRepository(GroupEntity::class), new CategoryRepository(EntityManagerFactory::build($this->conn), CurrentConfig::current()), CurrentUser::current(), $this->filterState(), $accessLevelChecker),
+            new PermissionService(new PermissionRepository(EntityManagerFactory::build($this->conn)), EntityManagerFactory::build($this->conn)->getRepository(GroupEntity::class), new CategoryRepository(EntityManagerFactory::build($this->conn), CurrentConfig::current()), CurrentUserTestFactory::get(), $this->filterState(), $accessLevelChecker),
             new CategoryService(
                 LangTestFactory::get(),
                 new CategoryRepository(EntityManagerFactory::build($this->conn), CurrentConfig::current()),
-                new PermissionService(new PermissionRepository(EntityManagerFactory::build($this->conn)), EntityManagerFactory::build($this->conn)->getRepository(GroupEntity::class), new CategoryRepository(EntityManagerFactory::build($this->conn), CurrentConfig::current()), CurrentUser::current(), $this->filterState(), $accessLevelChecker),
+                new PermissionService(new PermissionRepository(EntityManagerFactory::build($this->conn)), EntityManagerFactory::build($this->conn)->getRepository(GroupEntity::class), new CategoryRepository(EntityManagerFactory::build($this->conn), CurrentConfig::current()), CurrentUserTestFactory::get(), $this->filterState(), $accessLevelChecker),
                 CurrentConfig::current(),
                 new EventDispatcher(),
                 TranslatorTestFactory::get(),
@@ -403,7 +404,7 @@ final class SearchServiceTest extends IntegrationTestCase
             $htmlRenderer,
             new RedirectService(LangTestFactory::get(), $this->userService(), EventDispatcherTestFactory::get(), PageStateTestFactory::get()),
             new SessionService(EntityManagerFactory::build($this->conn)->getRepository(SessionEntity::class),CurrentConfig::current()), EventDispatcherTestFactory::get(),
-            CurrentUser::current(),
+            CurrentUserTestFactory::get(),
             LangTestFactory::get(),
             CurrentConfig::current(),
             new CurrentLogger(),
@@ -881,7 +882,7 @@ final class SearchServiceTest extends IntegrationTestCase
         // Same search as above, but with category 2 marked forbidden for
         // this user -- proves the NOT IN (...) replacement actually
         // excludes it, not just that it's syntactically present.
-        CurrentUser::current()->set(User::fromUserArray(array_merge(self::realisticUserGlobal(), ['forbidden_categories' => '2'])));
+        CurrentUserTestFactory::get()->set(User::fromUserArray(array_merge(self::realisticUserGlobal(), ['forbidden_categories' => '2'])));
 
         $results = $this->service->getQuickSearchResultsNoCache('Nested', []);
 

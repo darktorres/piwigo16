@@ -11,6 +11,7 @@ use Piwigo\Group\GroupEntity;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Activity\ActivityEntity;
 use Piwigo\Users\CurrentUser;
+use Piwigo\Tests\Support\CurrentUserTestFactory;
 use InvalidArgumentException;
 use Doctrine\DBAL\Connection;
 use Piwigo\Activity\ActivityService;
@@ -88,7 +89,7 @@ final class GroupServiceTest extends IntegrationTestCase
         $this->repo = EntityManagerFactory::build($this->conn)->getRepository(GroupEntity::class);
         $auditRepo = EntityManagerFactory::build()->getRepository(AuditLogEntity::class);
         $this->configService = new ConfigService($this->buildConfigRepository(), new EventDispatcher(), CurrentConfig::current());
-        $this->service = new GroupService($this->repo, new ActivityService(EntityManagerFactory::build($this->conn)->getRepository(ActivityEntity::class)), new AuditService($auditRepo), $this->configService, new EventDispatcher(), CurrentUser::current(), CurrentConfig::current());
+        $this->service = new GroupService($this->repo, new ActivityService(EntityManagerFactory::build($this->conn)->getRepository(ActivityEntity::class)), new AuditService($auditRepo), $this->configService, new EventDispatcher(), CurrentUserTestFactory::get(), CurrentConfig::current());
 
         // Only addAccess()/duplicate()/merge() need this (see class docblock)
         // -- PermissionCacheInvalidator::invalidate() -> its own private

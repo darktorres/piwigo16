@@ -25,6 +25,7 @@ use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Tests\Support\EventDispatcherTestFactory;
 use Piwigo\Template\CurrentTemplate;
 use Piwigo\Users\CurrentUser;
+use Piwigo\Tests\Support\CurrentUserTestFactory;
 use Piwigo\Users\User;
 use Piwigo\Users\UserStatus;
 
@@ -76,7 +77,7 @@ final class RequestBootstrapFinalizeTest extends IntegrationTestCase
         // footer.tpl (reached via CurrentTemplate's parse()) needs this --
         // same as PageTailTest/RedirectServiceTest's own identical setup.
 
-        CurrentUser::current()->set(new User(
+        CurrentUserTestFactory::get()->set(new User(
             id: UserId::from(3),
             username: 'regular_user',
             email: 'regular@example.test',
@@ -90,7 +91,7 @@ final class RequestBootstrapFinalizeTest extends IntegrationTestCase
     #[Override]
     protected function tearDown(): void
     {
-        CurrentUser::current()->reset();
+        CurrentUserTestFactory::get()->reset();
         CurrentTemplate::current()->reset();
         EventDispatcherTestFactory::get()->reset();
         PageStateTestFactory::get()->reset();
@@ -168,7 +169,7 @@ final class RequestBootstrapFinalizeTest extends IntegrationTestCase
 
     public function test_finalize_adds_a_header_warning_when_guest_must_be_guest_is_flagged(): void
     {
-        CurrentUser::current()->set(new User(
+        CurrentUserTestFactory::get()->set(new User(
             id: UserId::from(2),
             username: 'guest',
             email: '',

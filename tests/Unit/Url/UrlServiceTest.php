@@ -6,6 +6,7 @@ namespace Piwigo\Tests\Unit\Url;
 
 use Piwigo\Tests\Support\UrlServiceTestFactory;
 use Piwigo\Users\CurrentUser;
+use Piwigo\Tests\Support\CurrentUserTestFactory;
 use Piwigo\Users\User;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\DeploymentPolicy;
@@ -1180,7 +1181,7 @@ test('embellishUrl leaves a /../ segment unresolved when there is no preceding s
 
 test('getUserFavorites returns an empty array for a guest', function (): void {
     // getUserFavorites() reaches AccessControl::current()->isAGuest()
-    // (UrlService.php's own guard) -- unlike CurrentUser::current(),
+    // (UrlService.php's own guard) -- unlike CurrentUserTestFactory::get(),
     // AccessControl::current() has no pre-boot memoized fallback
     // (singleton/service-locator elimination campaign, Phase 7), so a real
     // booted Kernel is required here now. The user status must be seeded
@@ -1189,7 +1190,7 @@ test('getUserFavorites returns an empty array for a guest', function (): void {
     KernelContainerOverride::with(
         [Paths::class => Paths::fromRoot(sys_get_temp_dir())],
         static function (): void {
-            CurrentUser::current()->set(User::fromUserArray(['id' => 2, 'status' => 'guest']));
+            CurrentUserTestFactory::get()->set(User::fromUserArray(['id' => 2, 'status' => 'guest']));
 
             $service = UrlServiceTestFactory::build();
 
@@ -1399,7 +1400,7 @@ test('getUserFavorites returns early for a guest without ever touching the datab
     KernelContainerOverride::with(
         [Paths::class => Paths::fromRoot(sys_get_temp_dir())],
         static function (): void {
-            CurrentUser::current()->set(User::fromUserArray(['id' => 2, 'status' => 'guest']));
+            CurrentUserTestFactory::get()->set(User::fromUserArray(['id' => 2, 'status' => 'guest']));
 
             $service = UrlServiceTestFactory::build();
 

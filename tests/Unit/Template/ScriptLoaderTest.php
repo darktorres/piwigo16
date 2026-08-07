@@ -12,6 +12,7 @@ use Piwigo\Template\Script;
 use Piwigo\Template\ScriptLoader;
 use Piwigo\Tests\Support\KernelContainerOverride;
 use Piwigo\Users\CurrentUser;
+use Piwigo\Tests\Support\CurrentUserTestFactory;
 
 // Most of this file inspects/invokes ScriptLoader's private state and
 // methods via reflection for precise control over dependency graphs and
@@ -25,11 +26,11 @@ use Piwigo\Users\CurrentUser;
 // real against real files under an isolated Paths root.
 
 beforeEach(function (): void {
-    CurrentUser::current()->attachGlobals();
+    CurrentUserTestFactory::get()->attachGlobals();
 });
 
 afterEach(function (): void {
-    CurrentUser::current()->reset();
+    CurrentUserTestFactory::get()->reset();
     Kernel::reset();
 });
 
@@ -204,7 +205,7 @@ test('urlService() throws when no URL service has been set', function (): void {
     // exactly like before Phase 7.
     $loader = new ScriptLoader();
 
-    expect(fn () => $loader->get_head_scripts(new AccessLevelChecker(CurrentUser::current(), CurrentConfig::current())))
+    expect(fn () => $loader->get_head_scripts(new AccessLevelChecker(CurrentUserTestFactory::get(), CurrentConfig::current())))
         ->toThrow(RuntimeException::class, 'ScriptLoader: no URL service set (RequestBootstrap not run yet?)');
 });
 
@@ -411,7 +412,7 @@ test('get_head_scripts warns and excludes a script whose path was explicitly set
     // path was assigned directly (bypassing set_path()), covering the
     // second element of the [null, ''] in_array() check on its own.
     Kernel::boot(Paths::fromRoot(sys_get_temp_dir()));
-    CurrentUser::current()->attachGlobals();
+    CurrentUserTestFactory::get()->attachGlobals();
 
     $loader = new ScriptLoader();
     $loader->add('empty-path-script', 0, [], 'themes/default/js/foo.js');
@@ -424,7 +425,7 @@ test('get_head_scripts warns and excludes a script whose path was explicitly set
         return true;
     }, E_USER_WARNING);
     try {
-        $head = $loader->get_head_scripts(new AccessLevelChecker(CurrentUser::current(), CurrentConfig::current()));
+        $head = $loader->get_head_scripts(new AccessLevelChecker(CurrentUserTestFactory::get(), CurrentConfig::current()));
     } finally {
         restore_error_handler();
     }
@@ -452,7 +453,7 @@ test('get_footer_scripts runs check_load_dep when the head has not been written 
     file_put_contents($root . '/themes/default/js/a.js', 'var a=1;');
     file_put_contents($root . '/themes/default/js/b.js', 'var b=1;');
     Kernel::boot(Paths::fromRoot($root));
-    CurrentUser::current()->attachGlobals();
+    CurrentUserTestFactory::get()->attachGlobals();
     CurrentConfig::current()->setDataLocation('_data/');
     CurrentConfig::current()->setDataDirChecked('1');
     CurrentConfig::current()->setTemplateCombineFiles(false);
@@ -462,7 +463,7 @@ test('get_footer_scripts runs check_load_dep when the head has not been written 
     $loader->add('dependent', 2, ['precedent'], 'themes/default/js/b.js');
 
     try {
-        $loader->get_footer_scripts(new AccessLevelChecker(CurrentUser::current(), CurrentConfig::current()));
+        $loader->get_footer_scripts(new AccessLevelChecker(CurrentUserTestFactory::get(), CurrentConfig::current()));
 
         expect(scriptLoaderRegistered($loader)['precedent']->load_mode)->toBe(1);
     } finally {
@@ -477,7 +478,7 @@ test('get_footer_scripts skips check_load_dep when the head was already written 
     file_put_contents($root . '/themes/default/js/a.js', 'var a=1;');
     file_put_contents($root . '/themes/default/js/b.js', 'var b=1;');
     Kernel::boot(Paths::fromRoot($root));
-    CurrentUser::current()->attachGlobals();
+    CurrentUserTestFactory::get()->attachGlobals();
     CurrentConfig::current()->setDataLocation('_data/');
     CurrentConfig::current()->setDataDirChecked('1');
     CurrentConfig::current()->setTemplateCombineFiles(false);
@@ -491,7 +492,7 @@ test('get_footer_scripts skips check_load_dep when the head was already written 
     new ReflectionProperty($loader, 'did_head')->setValue($loader, true);
 
     try {
-        $loader->get_footer_scripts(new AccessLevelChecker(CurrentUser::current(), CurrentConfig::current()));
+        $loader->get_footer_scripts(new AccessLevelChecker(CurrentUserTestFactory::get(), CurrentConfig::current()));
 
         expect(scriptLoaderRegistered($loader)['precedent']->load_mode)->toBe(2);
     } finally {
@@ -504,14 +505,14 @@ test('get_footer_scripts marks did_footer, which then makes add_inline warn', fu
     $root = sys_get_temp_dir() . '/piwigo-scriptloader-didfooter-' . bin2hex(random_bytes(8));
     mkdir($root, 0o777, true);
     Kernel::boot(Paths::fromRoot($root));
-    CurrentUser::current()->attachGlobals();
+    CurrentUserTestFactory::get()->attachGlobals();
     CurrentConfig::current()->setDataLocation('_data/');
     CurrentConfig::current()->setDataDirChecked('1');
 
     $loader = new ScriptLoader();
 
     try {
-        $loader->get_footer_scripts(new AccessLevelChecker(CurrentUser::current(), CurrentConfig::current()));
+        $loader->get_footer_scripts(new AccessLevelChecker(CurrentUserTestFactory::get(), CurrentConfig::current()));
 
         $caught = null;
         set_error_handler(static function (int $errno, string $errstr) use (&$caught): bool {
@@ -539,7 +540,7 @@ test('get_footer_scripts separates sync (load_mode=1) and async (load_mode=2) sc
     file_put_contents($root . '/themes/default/js/sync.js', 'var s=1;');
     file_put_contents($root . '/themes/default/js/async.js', 'var a=1;');
     Kernel::boot(Paths::fromRoot($root));
-    CurrentUser::current()->attachGlobals();
+    CurrentUserTestFactory::get()->attachGlobals();
     CurrentConfig::current()->setDataLocation('_data/');
     CurrentConfig::current()->setDataDirChecked('1');
     CurrentConfig::current()->setTemplateCombineFiles(false);
@@ -549,7 +550,7 @@ test('get_footer_scripts separates sync (load_mode=1) and async (load_mode=2) sc
     $loader->add('async-script', 2, [], 'themes/default/js/async.js');
 
     try {
-        [$sync, $async] = $loader->get_footer_scripts(new AccessLevelChecker(CurrentUser::current(), CurrentConfig::current()));
+        [$sync, $async] = $loader->get_footer_scripts(new AccessLevelChecker(CurrentUserTestFactory::get(), CurrentConfig::current()));
 
         expect($sync)->toHaveCount(1)
             ->and($sync[0]->id)->toBe('sync-script')
@@ -567,7 +568,7 @@ test('get_footer_scripts excludes scripts already claimed by get_head_scripts', 
     file_put_contents($root . '/themes/default/js/head.js', 'var h=1;');
     file_put_contents($root . '/themes/default/js/footer.js', 'var f=1;');
     Kernel::boot(Paths::fromRoot($root));
-    CurrentUser::current()->attachGlobals();
+    CurrentUserTestFactory::get()->attachGlobals();
     CurrentConfig::current()->setDataLocation('_data/');
     CurrentConfig::current()->setDataDirChecked('1');
     CurrentConfig::current()->setTemplateCombineFiles(false);
@@ -577,8 +578,8 @@ test('get_footer_scripts excludes scripts already claimed by get_head_scripts', 
     $loader->add('footer-script', 1, [], 'themes/default/js/footer.js');
 
     try {
-        $loader->get_head_scripts(new AccessLevelChecker(CurrentUser::current(), CurrentConfig::current()));
-        [$sync] = $loader->get_footer_scripts(new AccessLevelChecker(CurrentUser::current(), CurrentConfig::current()));
+        $loader->get_head_scripts(new AccessLevelChecker(CurrentUserTestFactory::get(), CurrentConfig::current()));
+        [$sync] = $loader->get_footer_scripts(new AccessLevelChecker(CurrentUserTestFactory::get(), CurrentConfig::current()));
 
         expect($sync)->toHaveCount(1)
             ->and($sync[0]->id)->toBe('footer-script');
@@ -597,14 +598,14 @@ test('get_head_scripts runs check_load_dep before sorting, downgrading an async 
     // container's own (different) shared instance, and get_head_scripts()
     // below reads CurrentConfig via that container instance.
     CurrentConfig::current()->setTemplateCombineFiles(false);
-    CurrentUser::current()->attachGlobals();
+    CurrentUserTestFactory::get()->attachGlobals();
 
     $loader = new ScriptLoader();
     $loader->add('precedent', 2, [], 'themes/default/js/a.js');
     $loader->add('dependent', 2, ['precedent'], 'themes/default/js/b.js');
 
     try {
-        $loader->get_head_scripts(new AccessLevelChecker(CurrentUser::current(), CurrentConfig::current()));
+        $loader->get_head_scripts(new AccessLevelChecker(CurrentUserTestFactory::get(), CurrentConfig::current()));
 
         expect(scriptLoaderRegistered($loader)['precedent']->load_mode)->toBe(1);
     } finally {
@@ -618,7 +619,7 @@ test('get_head_scripts computes and uses each script\'s topological order to sor
     file_put_contents($root . '/themes/default/js/base.js', 'var base=1;');
     file_put_contents($root . '/themes/default/js/dep.js', 'var dep=1;');
     Kernel::boot(Paths::fromRoot($root));
-    CurrentUser::current()->attachGlobals();
+    CurrentUserTestFactory::get()->attachGlobals();
     CurrentConfig::current()->setDataLocation('_data/');
     CurrentConfig::current()->setDataDirChecked('1');
     CurrentConfig::current()->setTemplateCombineFiles(false);
@@ -630,7 +631,7 @@ test('get_head_scripts computes and uses each script\'s topological order to sor
     $loader->add('base', 0, [], 'themes/default/js/base.js');
 
     try {
-        $loader->get_head_scripts(new AccessLevelChecker(CurrentUser::current(), CurrentConfig::current()));
+        $loader->get_head_scripts(new AccessLevelChecker(CurrentUserTestFactory::get(), CurrentConfig::current()));
 
         $ids = array_keys(scriptLoaderRegistered($loader));
         $basePos = array_search('base', $ids, true);
@@ -658,7 +659,7 @@ test('cmp_by_mode_and_order sorts a remote script before a same-mode, same-order
     mkdir($root . '/themes/default/js', 0o777, true);
     file_put_contents($root . '/themes/default/js/local.js', 'var a=1;');
     Kernel::boot(Paths::fromRoot($root));
-    CurrentUser::current()->attachGlobals();
+    CurrentUserTestFactory::get()->attachGlobals();
     CurrentConfig::current()->setDataLocation('_data/');
     CurrentConfig::current()->setDataDirChecked('1');
     CurrentConfig::current()->setTemplateCombineFiles(false);
@@ -667,12 +668,12 @@ test('cmp_by_mode_and_order sorts a remote script before a same-mode, same-order
         $remoteFirst = new ScriptLoader();
         $remoteFirst->add('remote-script', 0, [], 'https://cdn.example.com/remote.js');
         $remoteFirst->add('local-script', 0, [], 'themes/default/js/local.js');
-        $headA = $remoteFirst->get_head_scripts(new AccessLevelChecker(CurrentUser::current(), CurrentConfig::current()));
+        $headA = $remoteFirst->get_head_scripts(new AccessLevelChecker(CurrentUserTestFactory::get(), CurrentConfig::current()));
 
         $localFirst = new ScriptLoader();
         $localFirst->add('local-script', 0, [], 'themes/default/js/local.js');
         $localFirst->add('remote-script', 0, [], 'https://cdn.example.com/remote.js');
-        $headB = $localFirst->get_head_scripts(new AccessLevelChecker(CurrentUser::current(), CurrentConfig::current()));
+        $headB = $localFirst->get_head_scripts(new AccessLevelChecker(CurrentUserTestFactory::get(), CurrentConfig::current()));
 
         expect(array_map(fn ($s) => $s->id, $headA))->toBe(['remote-script', 'local-script'])
             ->and(array_map(fn ($s) => $s->id, $headB))->toBe(['remote-script', 'local-script']);
@@ -688,7 +689,7 @@ test('get_head_scripts collects every mode=0 script up to (not including) the fi
     file_put_contents($root . '/themes/default/js/head.js', 'var h=1;');
     file_put_contents($root . '/themes/default/js/footer.js', 'var f=1;');
     Kernel::boot(Paths::fromRoot($root));
-    CurrentUser::current()->attachGlobals();
+    CurrentUserTestFactory::get()->attachGlobals();
     CurrentConfig::current()->setDataLocation('_data/');
     CurrentConfig::current()->setDataDirChecked('1');
     CurrentConfig::current()->setTemplateCombineFiles(false);
@@ -698,7 +699,7 @@ test('get_head_scripts collects every mode=0 script up to (not including) the fi
     $loader->add('footer-script', 1, [], 'themes/default/js/footer.js');
 
     try {
-        $head = $loader->get_head_scripts(new AccessLevelChecker(CurrentUser::current(), CurrentConfig::current()));
+        $head = $loader->get_head_scripts(new AccessLevelChecker(CurrentUserTestFactory::get(), CurrentConfig::current()));
 
         expect($head)->toHaveCount(1)
             ->and($head[0]->id)->toBe('head-script');
@@ -716,7 +717,7 @@ test('get_head_scripts warns and excludes a head-mode script whose path was neve
     // TypeError inside FileCombiner::combine() (is_remote() calling
     // urlIsRemote(null)) instead of hitting this warning at all.
     Kernel::boot(Paths::fromRoot(sys_get_temp_dir()));
-    CurrentUser::current()->attachGlobals();
+    CurrentUserTestFactory::get()->attachGlobals();
 
     $loader = new ScriptLoader();
     $loader->add('no-path-script', 0, [], null);
@@ -728,7 +729,7 @@ test('get_head_scripts warns and excludes a head-mode script whose path was neve
         return true;
     }, E_USER_WARNING);
     try {
-        $head = $loader->get_head_scripts(new AccessLevelChecker(CurrentUser::current(), CurrentConfig::current()));
+        $head = $loader->get_head_scripts(new AccessLevelChecker(CurrentUserTestFactory::get(), CurrentConfig::current()));
     } finally {
         restore_error_handler();
     }
@@ -739,11 +740,11 @@ test('get_head_scripts warns and excludes a head-mode script whose path was neve
 
 test('get_head_scripts marks did_head, which then makes a subsequent head-mode add() warn', function (): void {
     Kernel::boot(Paths::fromRoot(sys_get_temp_dir()));
-    CurrentUser::current()->attachGlobals();
+    CurrentUserTestFactory::get()->attachGlobals();
 
     $loader = new ScriptLoader();
 
-    $loader->get_head_scripts(new AccessLevelChecker(CurrentUser::current(), CurrentConfig::current()));
+    $loader->get_head_scripts(new AccessLevelChecker(CurrentUserTestFactory::get(), CurrentConfig::current()));
 
     $caught = null;
     set_error_handler(static function (int $errno, string $errstr) use (&$caught): bool {
@@ -766,7 +767,7 @@ test('get_footer_scripts sorts within the same load_mode by topological order to
     file_put_contents($root . '/themes/default/js/base.js', 'var base=1;');
     file_put_contents($root . '/themes/default/js/dep.js', 'var dep=1;');
     Kernel::boot(Paths::fromRoot($root));
-    CurrentUser::current()->attachGlobals();
+    CurrentUserTestFactory::get()->attachGlobals();
     CurrentConfig::current()->setDataLocation('_data/');
     CurrentConfig::current()->setDataDirChecked('1');
     CurrentConfig::current()->setTemplateCombineFiles(false);
@@ -776,7 +777,7 @@ test('get_footer_scripts sorts within the same load_mode by topological order to
     $loader->add('base', 1, [], 'themes/default/js/base.js');
 
     try {
-        [$sync] = $loader->get_footer_scripts(new AccessLevelChecker(CurrentUser::current(), CurrentConfig::current()));
+        [$sync] = $loader->get_footer_scripts(new AccessLevelChecker(CurrentUserTestFactory::get(), CurrentConfig::current()));
 
         expect($sync)->toHaveCount(2)
             ->and($sync[0]->id)->toBe('base')
@@ -793,7 +794,7 @@ test('get_footer_scripts excludes mode=0 scripts even when get_head_scripts was 
     file_put_contents($root . '/themes/default/js/head.js', 'var h=1;');
     file_put_contents($root . '/themes/default/js/footer.js', 'var f=1;');
     Kernel::boot(Paths::fromRoot($root));
-    CurrentUser::current()->attachGlobals();
+    CurrentUserTestFactory::get()->attachGlobals();
     CurrentConfig::current()->setDataLocation('_data/');
     CurrentConfig::current()->setDataDirChecked('1');
     CurrentConfig::current()->setTemplateCombineFiles(false);
@@ -806,7 +807,7 @@ test('get_footer_scripts excludes mode=0 scripts even when get_head_scripts was 
         // get_head_scripts() is never called -- head_done_scripts stays
         // empty, so $todo would include the mode=0 script too if it
         // weren't filtered back out by its own load_mode>0 check.
-        [$sync] = $loader->get_footer_scripts(new AccessLevelChecker(CurrentUser::current(), CurrentConfig::current()));
+        [$sync] = $loader->get_footer_scripts(new AccessLevelChecker(CurrentUserTestFactory::get(), CurrentConfig::current()));
 
         expect($sync)->toHaveCount(1)
             ->and($sync[0]->id)->toBe('footer-script');
@@ -1033,7 +1034,7 @@ test('compute_script_topological_order fatal-errors exactly one level past the r
     // factory now needs a DeploymentPolicy, whose own factory needs Paths
     // to autowire (Phase 4).
     Kernel::boot(Paths::fromRoot(sys_get_temp_dir()));
-    CurrentUser::current()->attachGlobals();
+    CurrentUserTestFactory::get()->attachGlobals();
     $errorCollector = Kernel::container()->get(ErrorCollector::class);
     if (! $errorCollector instanceof ErrorCollector) {
         throw new LogicException('Container returned an unexpected type for ' . ErrorCollector::class);

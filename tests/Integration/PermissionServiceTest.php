@@ -17,6 +17,7 @@ namespace Piwigo\Tests\Integration {
     use Piwigo\Db\EntityManagerFactory;
     use Piwigo\Group\GroupEntity;
     use Piwigo\Users\CurrentUser;
+    use Piwigo\Tests\Support\CurrentUserTestFactory;
     use Doctrine\DBAL\Connection;
 
 use Piwigo\Category\CategoryRepository;
@@ -64,7 +65,7 @@ use Piwigo\Category\CategoryRepository;
             $this->service = new PermissionService(
                 new PermissionRepository(EntityManagerFactory::build($this->conn)),
                 EntityManagerFactory::build($this->conn)->getRepository(GroupEntity::class)
-            , new CategoryRepository(EntityManagerFactory::build($this->conn), $currentConfig), CurrentUser::current(), $filterState, new AccessLevelChecker(CurrentUser::current(), $currentConfig));
+            , new CategoryRepository(EntityManagerFactory::build($this->conn), $currentConfig), CurrentUserTestFactory::get(), $filterState, new AccessLevelChecker(CurrentUserTestFactory::get(), $currentConfig));
         }
 
         #[Override]

@@ -17,6 +17,7 @@ use Piwigo\Auth\AccessLevelChecker;
 use Piwigo\Tests\Unit\Auth\AccessControlTestFakeHtmlRendererDeniesAccess;
 use Piwigo\Tests\Unit\Auth\AccessControlTestFakeRedirectServiceNeverCalled;
 use Piwigo\Users\CurrentUser;
+use Piwigo\Tests\Support\CurrentUserTestFactory;
 use Piwigo\Rate\RateEntity;
 use Piwigo\Auth\CookieService;
 use Piwigo\Users\UserService;
@@ -191,9 +192,9 @@ final class MaintenanceActionDispatcherTest extends IntegrationTestCase
             new PermissionRepository(EntityManagerFactory::build($conn)),
             EntityManagerFactory::build($conn)->getRepository(GroupEntity::class),
             new CategoryRepository(EntityManagerFactory::build($conn), CurrentConfig::current()),
-            CurrentUser::current(),
+            CurrentUserTestFactory::get(),
             new FilterState(),
-            new AccessLevelChecker(CurrentUser::current(), CurrentConfig::current()),
+            new AccessLevelChecker(CurrentUserTestFactory::get(), CurrentConfig::current()),
         );
     }
 
@@ -211,7 +212,7 @@ final class MaintenanceActionDispatcherTest extends IntegrationTestCase
             CurrentConfig::current(),
             new EventDispatcher(),
             TranslatorTestFactory::get(),
-            new AccessLevelChecker(CurrentUser::current(), CurrentConfig::current()),
+            new AccessLevelChecker(CurrentUserTestFactory::get(), CurrentConfig::current()),
         );
     }
 

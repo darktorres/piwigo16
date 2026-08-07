@@ -24,6 +24,7 @@ use Piwigo\Db\Tables;
 use Piwigo\Permission\PermissionRepository;
 use Piwigo\Permission\PermissionService;
 use Piwigo\Users\CurrentUser;
+use Piwigo\Tests\Support\CurrentUserTestFactory;
 use Piwigo\Users\User;
 use Piwigo\Users\UserStatus;
 
@@ -56,12 +57,12 @@ function makeCalendarService(): CalendarService
     if (! $filterState instanceof FilterState) {
         throw new LogicException('Container returned an unexpected type for ' . FilterState::class);
     }
-    $accessLevelChecker = new AccessLevelChecker(CurrentUser::current(), CurrentConfig::current());
+    $accessLevelChecker = new AccessLevelChecker(CurrentUserTestFactory::get(), CurrentConfig::current());
     $permissionService = new PermissionService(
         new PermissionRepository(EntityManagerFactory::build($conn)),
         EntityManagerFactory::build($conn)->getRepository(GroupEntity::class),
         new CategoryRepository(EntityManagerFactory::build($conn), CurrentConfig::current()),
-        CurrentUser::current(),
+        CurrentUserTestFactory::get(),
         $filterState,
         $accessLevelChecker,
     );
@@ -100,7 +101,7 @@ beforeEach(function (): void {
     // container to resolve it at all, same recipe as UploadServiceTest's own
     // beforeEach()'s Kernel::boot(Paths::fromRoot(...)) call.
     Kernel::boot(Paths::fromRoot(sys_get_temp_dir()));
-    CurrentUser::current()->set(new User(
+    CurrentUserTestFactory::get()->set(new User(
         id: UserId::from(1),
         username: '',
         email: '',
@@ -112,7 +113,7 @@ beforeEach(function (): void {
 });
 
 afterEach(function (): void {
-    CurrentUser::current()->reset();
+    CurrentUserTestFactory::get()->reset();
     Kernel::reset();
 });
 
@@ -188,7 +189,7 @@ test('buildInnerSql falls back to a forced 1 = 1 condition when no permission cl
     // image_access_list empties every one of the 3 conditions passed
     // here (see PermissionService::getSqlConditionFandF()'s own
     // visible_images/forbidden_images fallthrough case).
-    CurrentUser::current()->set(new User(
+    CurrentUserTestFactory::get()->set(new User(
         id: UserId::from(1),
         username: '',
         email: '',
@@ -216,7 +217,7 @@ test('buildInnerSql falls back to a forced 1 = 1 condition when no permission cl
 });
 
 test('buildInnerSql composes forbidden/visible categories and images into the WHERE clause', function (): void {
-    CurrentUser::current()->set(new User(
+    CurrentUserTestFactory::get()->set(new User(
         id: UserId::from(1),
         username: '',
         email: '',

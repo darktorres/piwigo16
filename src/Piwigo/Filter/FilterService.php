@@ -229,12 +229,12 @@ final class FilterService implements FilterUpdaterInterface
                 ));
             }
 
-            $filter_visible_categories = $filter['visible_categories'] ?? null;
-            $filter_visible_images = $filter['visible_images'] ?? null;
+            $filter_visible_categories = $filter['visible_categories'];
+            $filter_visible_images = $filter['visible_images'];
             // Guards against a corrupted/stale session unserialize() result
             // (see FilterState::$categories' own docblock) -- non-array
             // rows are dropped rather than trusted.
-            $filter_categories_raw = $filter['categories'] ?? null;
+            $filter_categories_raw = $filter['categories'];
             $filter_categories = is_array($filter_categories_raw) ? array_filter($filter_categories_raw, is_array(...)) : [];
             $this->filterState->set(
                 true,

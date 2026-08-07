@@ -318,7 +318,7 @@ final class Lang
         // (array_unique()/implode() below need string-castable elements, not
         // just an array container).
         $languages = [];
-        if (! in_array($options['language'] ?? null, [null, false, 0, '0', '', []], true)) { // explicit language
+        if (! in_array($options['language'] ?? null, [null, '0', ''], true)) { // explicit language
             $languages[] = $options['language'];
         }
         $current_user_language = $this->defaultLanguageProvider?->getCurrentLanguage();

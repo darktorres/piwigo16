@@ -309,7 +309,7 @@ final readonly class SectionPopulator
                 )
             ) {
                 if ($page_category !== null) {
-                    $image_order_raw = $page_category['image_order'] ?? null;
+                    $image_order_raw = $page_category['image_order'];
                     $image_order_is_set = is_string($image_order_raw) && $image_order_raw !== '' && $image_order_raw !== '0';
                     if ($image_order_is_set and ! isset($page['super_order_by'])) {
                         $order_by = ' ORDER BY ' . $image_order_raw;
@@ -660,7 +660,7 @@ final readonly class SectionPopulator
             // unlike $page['items'] below, no further element filtering is
             // needed.
             $calendar_date = is_array($page['chronology_date'] ?? null) ? $page['chronology_date'] : [];
-            $calendar_items_raw = is_array($page['items'] ?? null) ? $page['items'] : [];
+            $calendar_items_raw = is_array($page['items']) ? $page['items'] : [];
             $calendar_items = array_values(array_filter($calendar_items_raw, static fn (mixed $v): bool => is_int($v) || is_string($v)));
 
             $calendar_result = new CalendarRenderer($this->lang, $this->htmlRenderer, $this->template, $this->urlService, $this->currentUser, $this->currentConfig, $this->eventDispatcher, $this->translator, $this->filterState, $this->imageStdParams, $this->pageState)
@@ -708,7 +708,7 @@ final readonly class SectionPopulator
             $hit_by_cat_permalink = $hit_by['cat_permalink'] ?? null;
             $hit_by_cat_permalink = is_string($hit_by_cat_permalink) ? $hit_by_cat_permalink : null;
             $category_url_style = $this->currentConfig->categoryUrlStyle();
-            $category_permalink = is_string($page_category['permalink'] ?? null) ? $page_category['permalink'] : null;
+            $category_permalink = is_string($page_category['permalink']) ? $page_category['permalink'] : null;
             $category_name = $page_category['name'];
             $expected_cat_url_name = StringHelper::str2url($category_name);
 

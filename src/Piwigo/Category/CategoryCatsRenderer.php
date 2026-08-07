@@ -115,7 +115,7 @@ final readonly class CategoryCatsRenderer
                     return false;
                 }
 
-                $dateLast = is_string($row['date_last'] ?? null) ? $row['date_last'] : null;
+                $dateLast = is_string($row['date_last']) ? $row['date_last'] : null;
 
                 return CategoryService::isRecentCategory($dateLast, $recentPeriod, $lastPhotoDate, $now);
             });
@@ -188,8 +188,8 @@ final readonly class CategoryCatsRenderer
                 'count_categories' => $row['count_categories'],
             ]);
 
-            $maxDateLast = $merged['max_date_last'] ?? null;
-            $dateLast = $merged['date_last'] ?? null;
+            $maxDateLast = $merged['max_date_last'];
+            $dateLast = $merged['date_last'];
             $merged['is_child_date_last'] = ($maxDateLast !== null && $dateLast !== null) ? ($maxDateLast > $dateLast) : false;
 
             $cachedRepresentative = $this->getCachedRepresentative($reprPool, $userId, $catId);
@@ -272,7 +272,7 @@ final readonly class CategoryCatsRenderer
                     // * set it as the representative_picture_id for the category
 
                     foreach ($categories as &$category) {
-                        $categoryRepresentativePictureId = $category['representative_picture_id'] ?? null;
+                        $categoryRepresentativePictureId = $category['representative_picture_id'];
                         // Docs/PLAN.md gap-closure, 2026-07-23: found live
                         // while retyping ImageRepository::findByIds() -- PHP
                         // canonicalises a numeric string array key ('5') back to an

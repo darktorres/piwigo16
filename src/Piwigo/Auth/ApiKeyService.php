@@ -171,7 +171,7 @@ final readonly class ApiKeyService
 
         $available = [];
         foreach ($api_keys as $api_key) {
-            if (! $api_key['is_expired'] && in_array($api_key['revoked_on'], [null, false, 0, '0', '', []], true)) {
+            if (! $api_key['is_expired'] && in_array($api_key['revoked_on'], [null, '0', ''], true)) {
                 $available[] = $api_key;
             }
         }

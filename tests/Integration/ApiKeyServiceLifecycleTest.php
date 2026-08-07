@@ -15,6 +15,9 @@ use Piwigo\Auth\ApiKeyRepository;
 use Piwigo\Auth\ApiKeyService;
 use Piwigo\Auth\PasswordRepository;
 use Piwigo\Auth\PasswordService;
+use Piwigo\Common\ValueObject\Email;
+use Piwigo\Common\ValueObject\Username;
+use Piwigo\Config\CurrentConfig;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Config\ConfigLoader;
 use Piwigo\Core\MailerInterface;
@@ -217,7 +220,7 @@ final class ApiKeyServiceLifecycleTest extends IntegrationTestCase
             CurrentConfigTestFactory::get(),
         );
 
-        $result = $service->notifyExpiration('fixture_admin', 'fixture_admin@example.test', 5);
+        $result = $service->notifyExpiration(Username::from('fixture_admin'), Email::from('fixture_admin@example.test'), 5);
 
         self::assertTrue($result);
         self::assertCount(1, $mailer->calls);
@@ -241,7 +244,7 @@ final class ApiKeyServiceLifecycleTest extends IntegrationTestCase
             CurrentConfigTestFactory::get(),
         );
 
-        $result = $service->notifyExpiration('fixture_admin', 'fixture_admin@example.test', 1);
+        $result = $service->notifyExpiration(Username::from('fixture_admin'), Email::from('fixture_admin@example.test'), 1);
 
         self::assertTrue($result);
         $content = $mailer->calls[0]['args']['content'];

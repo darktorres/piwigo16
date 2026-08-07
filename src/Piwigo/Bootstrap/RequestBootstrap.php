@@ -27,6 +27,8 @@ use Piwigo\Auth\PasswordService;
 use Piwigo\Auth\UserFailedLoginEntity;
 use Piwigo\Comment\CommentEntity;
 use Piwigo\Comment\CommentService;
+use Piwigo\Common\ValueObject\Email;
+use Piwigo\Common\ValueObject\Username;
 use Piwigo\Config\ConfigLoader;
 use Piwigo\Config\ConfigService;
 use Piwigo\Config\CurrentConfig;
@@ -528,8 +530,8 @@ final class RequestBootstrap
         // check if we need to notified user about api_key expiration
         $notify_api_key_expiration = $pageState->notifyApiKeyExpiration;
         if ($notify_api_key_expiration !== null) {
-            $notify_username = self::currentUser()->get()->username;
-            $notify_email = self::currentUser()->get()->email;
+            $notify_username = Username::from(self::currentUser()->get()->username);
+            $notify_email = Email::from(self::currentUser()->get()->email);
             $apiKeyRepo = new ApiKeyRepository(EntityManagerFactory::build($conn));
             $is_mail_send = new ApiKeyService(self::lang(), self::mailService(), $apiKeyRepo, self::passwordService($conn), self::urlService(), self::sessionService(), self::currentConfig())
                 ->notifyExpiration($notify_username, $notify_email, $notify_api_key_expiration['days_left']);

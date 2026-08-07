@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Piwigo\Auth;
 
 use Exception;
+use Piwigo\Common\ValueObject\Email;
+use Piwigo\Common\ValueObject\Username;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\DateHelper;
 use Piwigo\Core\Env;
@@ -191,14 +193,14 @@ final readonly class ApiKeyService
     /**
      * Notify a user when their api key is about to expire.
      */
-    public function notifyExpiration(string $username, string $email, int $daysLeft): bool
+    public function notifyExpiration(Username $username, Email $email, int $daysLeft): bool
     {
 
         $days_left_str = $daysLeft <= 1 ?
           $this->lang->t('Your API key will expire in %d day.', $daysLeft)
           : $this->lang->t('Your API key will expire in %d days.', $daysLeft);
 
-        $message = '<p style="margin: 20px 0">' . $this->lang->t('Hello %s,', $username) . '</p>';
+        $message = '<p style="margin: 20px 0">' . $this->lang->t('Hello %s,', $username->value) . '</p>';
         $message .= '<p style="margin: 20px 0">' . $days_left_str . '</p>';
         $message .= '<p style="margin: 20px 0">' . $this->lang->t('To continue using the API, please renew your key before it expires.') . '</p>';
         $message .= '<p style="margin: 20px 0">' . $this->lang->t('You can manage your API keys in your <a href="%s">account settings.</a>', $this->urlService->getAbsoluteRootUrl() . 'profile.php') . '</p>';
@@ -206,7 +208,7 @@ final readonly class ApiKeyService
         $gallery_title = $this->currentConfig->galleryTitle();
 
         return $this->mailer->mail(
-            $email,
+            $email->value,
             [
                 'subject' => '[' . $gallery_title . '] ' . $this->lang->t('Your API key will expire soon'),
                 'content' => $message,

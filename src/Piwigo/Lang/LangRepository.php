@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Lang;
 
 use Doctrine\ORM\EntityRepository;
+use Piwigo\Lang\Projection\LanguageListing;
 
 /**
  * Persistence layer for LangService's own single read: the `languages`
@@ -19,7 +20,7 @@ final class LangRepository extends EntityRepository
      * returns list<LanguageEntity>, an incompatible override this class's
      * own array-of-rows shape can't satisfy.
      *
-     * @return list<array{id: string, name: string}>
+     * @return list<LanguageListing>
      */
     public function findAllRows(): array
     {
@@ -34,10 +35,7 @@ final class LangRepository extends EntityRepository
             // filter -- `name` is nullable in the schema, and a row with
             // no name was never surfaced to callers.
             if ($entity->name !== null) {
-                $result[] = [
-                    'id' => $entity->id->value,
-                    'name' => $entity->name,
-                ];
+                $result[] = new LanguageListing($entity->id->value, $entity->name);
             }
         }
 

@@ -11,6 +11,7 @@ use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Db\Tables;
 use Piwigo\Lang\LangRepository;
 use Piwigo\Lang\LanguageEntity;
+use Piwigo\Lang\Projection\LanguageListing;
 
 /**
  * Piwigo\Lang\LangRepository -- had no dedicated test file (see
@@ -47,7 +48,7 @@ final class LangRepositoryTest extends IntegrationTestCase
     {
         $rows = $this->repo->findAllRows();
 
-        self::assertSame([['id' => 'en_UK', 'name' => 'English (Great Britain)']], $rows);
+        self::assertEquals([new LanguageListing('en_UK', 'English (Great Britain)')], $rows);
     }
 
     public function test_find_all_rows_excludes_a_row_with_a_null_name(): void
@@ -59,7 +60,7 @@ final class LangRepositoryTest extends IntegrationTestCase
         try {
             $rows = $this->repo->findAllRows();
 
-            self::assertSame([['id' => 'en_UK', 'name' => 'English (Great Britain)']], $rows);
+            self::assertEquals([new LanguageListing('en_UK', 'English (Great Britain)')], $rows);
         } finally {
             $this->conn->executeStatement("DELETE FROM " . Tables::languages() . " WHERE id = 'zz_NM'");
         }
@@ -74,8 +75,8 @@ final class LangRepositoryTest extends IntegrationTestCase
         try {
             $rows = $this->repo->findAllRows();
 
-            self::assertSame(
-                [['id' => 'zz_AA', 'name' => 'AAA First'], ['id' => 'en_UK', 'name' => 'English (Great Britain)']],
+            self::assertEquals(
+                [new LanguageListing('zz_AA', 'AAA First'), new LanguageListing('en_UK', 'English (Great Britain)')],
                 $rows
             );
         } finally {

@@ -78,8 +78,8 @@ final readonly class LangService
 
         $languages = [];
         foreach ($repo->findAllRows() as $row) {
-            if (is_dir($paths->root . 'language/' . $row['id'])) {
-                $languages[$row['id']] = $row['name'];
+            if (is_dir($paths->root . 'language/' . $row->id)) {
+                $languages[$row->id] = $row->name;
             }
         }
 

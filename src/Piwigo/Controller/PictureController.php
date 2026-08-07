@@ -415,15 +415,17 @@ final class PictureController implements ControllerInterface
 
                     if ($this->accessControl->isAdmin() and $page_category !== null) {
                         $representative_category_id = $page_category['id'] ?? null;
-                        $representative_category_id = is_numeric($representative_category_id) ? (int) $representative_category_id : 0;
-                        $this->categoryService->setRepresentativeImage($representative_category_id, $image_id);
-                        $this->entityManager->clear();
-                        $this->activityService->record('album', $representative_category_id, 'edit', [
-                            'action' => $pictureRequest->action,
-                            'image_id' => $image_id,
-                        ]);
+                        $representative_category_id = is_numeric($representative_category_id) ? (int) $representative_category_id : null;
+                        if ($representative_category_id !== null) {
+                            $this->categoryService->setRepresentativeImage($representative_category_id, $image_id);
+                            $this->entityManager->clear();
+                            $this->activityService->record('album', $representative_category_id, 'edit', [
+                                'action' => $pictureRequest->action,
+                                'image_id' => $image_id,
+                            ]);
 
-                        PermissionCacheInvalidator::invalidate();
+                            PermissionCacheInvalidator::invalidate();
+                        }
                     }
 
                     $this->redirectService->redirect($url_self);

@@ -9,6 +9,7 @@ use Piwigo\Category\CategoryEntity;
 use Piwigo\Category\CategoryStatus;
 use Piwigo\Common\ValueObject\CategoryId;
 use Piwigo\Common\ValueObject\Permalink;
+use Piwigo\Common\ValueObject\SqlDateTime;
 
 /**
  * Typed row shape for `piwigo_categories` (P17-23 Stage 1b, Category domain
@@ -27,10 +28,13 @@ use Piwigo\Common\ValueObject\Permalink;
  * place to finish that conversion to a real PHP `bool` once, rather than
  * leaving every consumer to re-cast `(bool) $row['commentable']` itself.
  *
- * `lastmodified` stays `string`, not `\DateTimeImmutable` -- every real
- * consumer today (`DateHelper::formatDate()`/`timeSince()`, raw SQL
- * comparisons) already expects the raw DB DATETIME string form, same
- * reasoning as {@see \Piwigo\Image\Projection\Image}.
+ * `lastmodified` stays `string` here (this Projection's own convention)
+ * -- every real consumer today (`DateHelper::formatDate()`/`timeSince()`,
+ * raw SQL comparisons) already expects the raw DB DATETIME string form,
+ * same reasoning as {@see \Piwigo\Image\Projection\Image}.
+ * `CategoryEntity::$lastmodified` itself is `SqlDateTime`-typed (Phase 5)
+ * -- `fromEntity()` unwraps `->value`, `fromRow()` accepts either a real
+ * instance (a `getArrayResult()`-hydrated row) or a raw string.
  *
  * `id` is `CategoryId`, not `?CategoryId` (Phase 4) -- `categories.id` is
  * `NOT NULL AUTO_INCREMENT`, and this projection's own 2 real producers
@@ -88,7 +92,7 @@ final readonly class Category
             globalRank: $entity->globalRank,
             imageOrder: $entity->imageOrder,
             permalink: $entity->permalink,
-            lastmodified: $entity->lastmodified,
+            lastmodified: $entity->lastmodified->value,
         );
     }
 
@@ -122,7 +126,9 @@ final readonly class Category
             globalRank: is_string($row['global_rank'] ?? null) ? $row['global_rank'] : null,
             imageOrder: is_string($row['image_order'] ?? null) ? $row['image_order'] : null,
             permalink: $permalink,
-            lastmodified: is_string($row['lastmodified'] ?? null) ? $row['lastmodified'] : '',
+            lastmodified: ($row['lastmodified'] ?? null) instanceof SqlDateTime
+                ? $row['lastmodified']->value
+                : (is_string($row['lastmodified'] ?? null) ? $row['lastmodified'] : ''),
         );
     }
 

@@ -110,7 +110,9 @@ final readonly class UserInfo
                 ? $row['last_visit']->value
                 : (is_string($row['last_visit'] ?? null) ? $row['last_visit'] : null),
             lastVisitFromHistory: (bool) ($row['last_visit_from_history'] ?? false),
-            lastmodified: is_string($row['lastmodified'] ?? null) ? $row['lastmodified'] : '',
+            lastmodified: ($row['lastmodified'] ?? null) instanceof SqlDateTime
+                ? $row['lastmodified']->value
+                : (is_string($row['lastmodified'] ?? null) ? $row['lastmodified'] : ''),
             preferences: is_string($preferencesRaw)
                 ? array_filter(ArrayHelper::safeJsonDecode($preferencesRaw), is_string(...), ARRAY_FILTER_USE_KEY)
                 : null,
@@ -136,7 +138,7 @@ final readonly class UserInfo
             activationKeyExpire: $entity->activationKeyExpire?->value,
             lastVisit: $entity->lastVisit?->value,
             lastVisitFromHistory: $entity->lastVisitFromHistory,
-            lastmodified: $entity->lastmodified,
+            lastmodified: $entity->lastmodified->value,
             preferences: $entity->preferences,
         );
     }

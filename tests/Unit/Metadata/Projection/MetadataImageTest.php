@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Piwigo\Common\ValueObject\ImageId;
+use Piwigo\Common\ValueObject\SqlDateTime;
 use Piwigo\Image\ImageEntity;
 use Piwigo\Metadata\Projection\MetadataImage;
 
@@ -37,7 +38,7 @@ function metadataImageTestEntity(?string $representativeExt = 'jpg'): ImageEntit
         rotation: null,
         latitude: null,
         longitude: null,
-        lastmodified: '2026-08-01 12:00:00',
+        lastmodified: SqlDateTime::from('2026-08-01 12:00:00'),
     );
     $entity->id = ImageId::from(42);
 

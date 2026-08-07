@@ -7,6 +7,7 @@ use Piwigo\Category\CategoryStatus;
 use Piwigo\Category\Projection\Category;
 use Piwigo\Common\ValueObject\CategoryId;
 use Piwigo\Common\ValueObject\Permalink;
+use Piwigo\Common\ValueObject\SqlDateTime;
 
 /**
  * @return CategoryEntity
@@ -28,7 +29,7 @@ function fullCategoryEntity(): CategoryEntity
         globalRank: '1.2',
         imageOrder: 'name ASC',
         permalink: Permalink::from('sample-album'),
-        lastmodified: '2026-08-01 00:00:00',
+        lastmodified: SqlDateTime::from('2026-08-01 00:00:00'),
     );
     $entity->id = CategoryId::from(3);
 

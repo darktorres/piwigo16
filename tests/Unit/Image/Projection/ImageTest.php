@@ -5,6 +5,7 @@ declare(strict_types=1);
 use Piwigo\Common\ValueObject\CategoryId;
 use Piwigo\Common\ValueObject\ImageId;
 use Piwigo\Common\ValueObject\Md5Sum;
+use Piwigo\Common\ValueObject\SqlDateTime;
 use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Image\ImageEntity;
 use Piwigo\Image\Projection\Image;
@@ -40,7 +41,7 @@ function transientImageEntity(): ImageEntity
         rotation: null,
         latitude: null,
         longitude: null,
-        lastmodified: '2026-08-01 12:00:00',
+        lastmodified: SqlDateTime::from('2026-08-01 12:00:00'),
     );
 }
 

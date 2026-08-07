@@ -10,6 +10,7 @@ use Doctrine\DBAL\Query\QueryBuilder;
 use Doctrine\ORM\EntityRepository;
 use Doctrine\ORM\Query\Expr\Join;
 use Piwigo\Common\ValueObject\ImageId;
+use Piwigo\Common\ValueObject\SqlDateTime;
 use Piwigo\Common\ValueObject\TagId;
 use Piwigo\Core\Env;
 use Piwigo\Db\BatchWriter;
@@ -245,7 +246,7 @@ final class TagRepository extends EntityRepository
                 'id' => $tag->id instanceof TagId ? $tag->id->value : 0,
                 'name' => $tag->name,
                 'url_name' => $tag->urlName,
-                'lastmodified' => $tag->lastmodified,
+                'lastmodified' => $tag->lastmodified->value,
                 'counter' => $row['counter'],
             ];
         }
@@ -640,7 +641,7 @@ final class TagRepository extends EntityRepository
         // lastmodified set explicitly rather than left to the schema's own
         // DEFAULT CURRENT_TIMESTAMP, which reads the real DB-server clock --
         // invisible to Env::now()'s PIWIGO_TEST_NOW freeze.
-        $entity = new TagEntity($name, $urlName, Env::now()->format('Y-m-d H:i:s'));
+        $entity = new TagEntity($name, $urlName, SqlDateTime::from(Env::now()->format('Y-m-d H:i:s')));
 
         $em = $this->getEntityManager();
         $em->persist($entity);
@@ -1022,7 +1023,7 @@ final class TagRepository extends EntityRepository
     {
         assert($entity->id !== null);
 
-        return new Tag($entity->id, $entity->name, $entity->urlName, $entity->lastmodified);
+        return new Tag($entity->id, $entity->name, $entity->urlName, $entity->lastmodified->value);
     }
 
     /**

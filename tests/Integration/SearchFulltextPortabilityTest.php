@@ -28,6 +28,7 @@ use Doctrine\ORM\EntityManagerInterface;
 use Piwigo\Bootstrap\RedirectService;
 use Piwigo\Category\CategoryEntity;
 use Piwigo\Common\ValueObject\CategoryId;
+use Piwigo\Common\ValueObject\SqlDateTime;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Category\CategoryService;
 use Piwigo\Category\CategoryStatus;
@@ -150,7 +151,7 @@ final class SearchFulltextPortabilityTest extends IntegrationTestCase
             globalRank: null,
             imageOrder: null,
             permalink: null,
-            lastmodified: '2026-08-01 00:00:00',
+            lastmodified: SqlDateTime::from('2026-08-01 00:00:00'),
         );
         $this->em->persist($category);
         $this->em->flush();

@@ -15,6 +15,7 @@ use Piwigo\Common\Dto\PaginatedResult;
 use Piwigo\Common\ValueObject\CategoryId;
 use Piwigo\Common\ValueObject\GroupId;
 use Piwigo\Common\ValueObject\Permalink;
+use Piwigo\Common\ValueObject\SqlDateTime;
 use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Db\BatchWriter;
@@ -3090,7 +3091,9 @@ final class CategoryRepository
      * @return list<array<string, mixed>>
      *
      * Item 14 DQL audit: converted to real DQL -- single-table,
-     * unconditional select, all columns plain-typed.
+     * unconditional select. `id`/`status`/`lastmodified` are all
+     * custom-Typed (`CategoryId`/`CategoryStatus`/`SqlDateTime`), so the
+     * row mapper below unwraps each via `instanceof` (Gotcha #1).
      */
     public function findAllForAlbumTree(): array
     {
@@ -3107,6 +3110,7 @@ final class CategoryRepository
 
             $id = $row['id'] ?? null;
             $status = $row['status'] ?? null;
+            $lastmodified = $row['lastmodified'] ?? null;
             $result[] = [
                 'id' => $id instanceof CategoryId ? $id->value : $id,
                 'name' => $row['name'] ?? null,
@@ -3114,7 +3118,7 @@ final class CategoryRepository
                 'status' => $status instanceof CategoryStatus ? $status->value : $status,
                 'visible' => $row['visible'] ?? null,
                 'uppercats' => $row['uppercats'] ?? null,
-                'lastmodified' => $row['lastmodified'] ?? null,
+                'lastmodified' => $lastmodified instanceof SqlDateTime ? $lastmodified->value : $lastmodified,
             ];
         }
 

@@ -7,6 +7,7 @@ namespace Piwigo\Image\Projection;
 use Piwigo\Common\ValueObject\CategoryId;
 use Piwigo\Common\ValueObject\ImageId;
 use Piwigo\Common\ValueObject\Md5Sum;
+use Piwigo\Common\ValueObject\SqlDateTime;
 use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Image\ImageEntity;
 
@@ -22,11 +23,11 @@ use Piwigo\Image\ImageEntity;
  * scope here) rather than a real accessor object.
  *
  * `dateAvailable`/`dateCreation`/`dateMetadataUpdate`/`lastmodified` stay
- * `string`, not `\DateTimeImmutable` -- every real consumer today
- * (`DateHelper::formatDate()`/`timeSince()`, raw SQL comparisons) already
- * expects the raw DB DATETIME string form; converting only these 4 fields
- * to real date objects while every call site still wants a string would
- * just move the casting instead of removing it.
+ * `string` here (this Projection's own convention) -- every real
+ * consumer today (`DateHelper::formatDate()`/`timeSince()`, raw SQL
+ * comparisons) already expects the raw DB DATETIME string form.
+ * `ImageEntity::$lastmodified` itself is `SqlDateTime`-typed (Phase 5) --
+ * `fromEntity()` unwraps `->value`.
  */
 final readonly class Image
 {
@@ -83,7 +84,7 @@ final readonly class Image
             rotation: $entity->rotation,
             latitude: $entity->latitude,
             longitude: $entity->longitude,
-            lastmodified: $entity->lastmodified,
+            lastmodified: $entity->lastmodified->value,
         );
     }
 

@@ -7,12 +7,17 @@ namespace Piwigo\Category;
 use Doctrine\ORM\Mapping as ORM;
 use Piwigo\Common\ValueObject\CategoryId;
 use Piwigo\Common\ValueObject\Permalink;
+use Piwigo\Common\ValueObject\SqlDateTime;
 
 /**
  * Maps the `categories` table (`piwigo_categories` once
  * Piwigo\Db\TablePrefixListener applies db_prefix at metadata-load time).
- * `lastmodified` stays plain string, not \DateTimeImmutable -- matches
- * Category\Projection\Category's own already-documented decision.
+ * `lastmodified` is `SqlDateTime`-typed (Phase 5) -- `NOT NULL DEFAULT
+ * CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP` means the DB server
+ * always populates a real, well-formed timestamp. `new CategoryEntity(...)`
+ * is never constructed in PHP anywhere in this codebase (every real
+ * category row is inserted via raw DBAL). `Category\Projection\Category`
+ * keeps its own plain-string `lastmodified` convention.
  *
  * `status` is `CategoryStatus` (native Doctrine `enumType` column), same
  * gotcha as `Piwigo\Users\UserInfoEntity::$status`: `enumType` hydration
@@ -89,7 +94,7 @@ final class CategoryEntity
         public ?string $imageOrder,
         #[ORM\Column(type: 'permalink', length: 64, nullable: true)]
         public ?Permalink $permalink,
-        #[ORM\Column(type: 'string', length: 19)]
-        public string $lastmodified,
+        #[ORM\Column(type: 'sql_datetime', length: 19)]
+        public SqlDateTime $lastmodified,
     ) {}
 }

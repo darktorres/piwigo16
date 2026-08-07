@@ -4,11 +4,12 @@ declare(strict_types=1);
 
 use Piwigo\Common\ValueObject\CategoryId;
 use Piwigo\Common\ValueObject\Md5Sum;
+use Piwigo\Common\ValueObject\SqlDateTime;
 use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Image\ImageEntity;
 
 /**
- * @return array{file: string, dateAvailable: ?string, dateCreation: ?string, name: ?string, comment: ?string, author: ?string, hit: int, filesize: ?int, width: ?int, height: ?int, coi: ?string, representativeExt: ?string, dateMetadataUpdate: ?string, ratingScore: ?float, path: string, storageCategoryId: ?CategoryId, level: int, md5sum: ?Md5Sum, addedBy: ?UserId, rotation: ?int, latitude: ?float, longitude: ?float, lastmodified: string}
+ * @return array{file: string, dateAvailable: ?string, dateCreation: ?string, name: ?string, comment: ?string, author: ?string, hit: int, filesize: ?int, width: ?int, height: ?int, coi: ?string, representativeExt: ?string, dateMetadataUpdate: ?string, ratingScore: ?float, path: string, storageCategoryId: ?CategoryId, level: int, md5sum: ?Md5Sum, addedBy: ?UserId, rotation: ?int, latitude: ?float, longitude: ?float, lastmodified: SqlDateTime}
  */
 function baseImageArgs(): array
 {
@@ -35,7 +36,7 @@ function baseImageArgs(): array
         'rotation' => 3,
         'latitude' => 43.2965,
         'longitude' => 5.3698,
-        'lastmodified' => '2026-07-26 08:00:00',
+        'lastmodified' => SqlDateTime::from('2026-07-26 08:00:00'),
     ];
 }
 
@@ -65,7 +66,7 @@ test('constructs with distinct values for every property', function (): void {
         ->and($image->rotation)->toBe(3)
         ->and($image->latitude)->toBe(43.2965)
         ->and($image->longitude)->toBe(5.3698)
-        ->and($image->lastmodified)->toBe('2026-07-26 08:00:00');
+        ->and($image->lastmodified)->toEqual(SqlDateTime::from('2026-07-26 08:00:00'));
 });
 
 test('id is never assignable through the constructor, always starts null', function (): void {

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Tag\Projection;
 
 use InvalidArgumentException;
+use Piwigo\Common\ValueObject\SqlDateTime;
 use Piwigo\Common\ValueObject\TagId;
 
 /**
@@ -25,9 +26,12 @@ use Piwigo\Common\ValueObject\TagId;
  * `getAvailableTags()`, which widen the row with a derived `counter`
  * *after* narrowing it through this projection, not before.
  *
- * `lastmodified` stays `string`, not `\DateTimeImmutable` -- no real
- * consumer today needs anything but the raw DB DATETIME string form, same
- * reasoning as {@see \Piwigo\Image\Projection\Image}.
+ * `lastmodified` stays `string` here (this Projection's own convention)
+ * -- no real consumer today needs anything but the raw DB DATETIME
+ * string form, same reasoning as {@see \Piwigo\Image\Projection\Image}.
+ * `TagEntity::$lastmodified` itself is `SqlDateTime`-typed (Phase 5) --
+ * `fromRow()` accepts either a real instance or a raw string, even
+ * though it has no real caller today.
  *
  * `id` is `TagId`, not `?TagId` -- `fromRow()` itself has zero real
  * callers (every real caller goes through {@see \Piwigo\Tag\TagRepository}'s
@@ -58,7 +62,9 @@ final readonly class Tag
             id: $id,
             name: is_string($row['name'] ?? null) ? $row['name'] : '',
             urlName: is_string($row['url_name'] ?? null) ? $row['url_name'] : '',
-            lastmodified: is_string($row['lastmodified'] ?? null) ? $row['lastmodified'] : '',
+            lastmodified: ($row['lastmodified'] ?? null) instanceof SqlDateTime
+                ? $row['lastmodified']->value
+                : (is_string($row['lastmodified'] ?? null) ? $row['lastmodified'] : ''),
         );
     }
 

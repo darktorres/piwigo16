@@ -8,19 +8,19 @@ use Doctrine\ORM\Mapping as ORM;
 use Piwigo\Common\ValueObject\CategoryId;
 use Piwigo\Common\ValueObject\ImageId;
 use Piwigo\Common\ValueObject\Md5Sum;
+use Piwigo\Common\ValueObject\SqlDateTime;
 use Piwigo\Common\ValueObject\UserId;
 
 /**
  * Maps the `images` table (`piwigo_images` once Piwigo\Db\TablePrefixListener
  * applies db_prefix at metadata-load time). `dateAvailable`/`dateCreation`/
- * `dateMetadataUpdate`/`lastmodified` stay plain ?string/string, not
- * \DateTimeImmutable -- matches Image\Projection\Image's own
- * already-documented decision (every real consumer wants the raw DB
- * DATETIME string form).
+ * `dateMetadataUpdate` stay plain ?string, not \DateTimeImmutable --
+ * matches Image\Projection\Image's own already-documented decision (every
+ * real consumer wants the raw DB DATETIME string form).
  *
  * Re-examined fresh during the typed-primitives adoption campaign
  * (Common\ValueObject\SqlDate/SqlDateTime now exist): traced every
- * real consumer of these 4 properties and found none do arithmetic or
+ * real consumer of these 3 properties and found none do arithmetic or
  * typed comparison -- Image\Projection\Image::fromArray()/toArray() just
  * round-trip the raw string unchanged for template/JSON output.
  * SqlDateTime::from() would add real construction-time calendar
@@ -29,6 +29,17 @@ use Piwigo\Common\ValueObject\UserId;
  * a new write) for zero real benefit given how these fields are actually
  * consumed. Decision reaffirmed, not revisited again without new
  * information.
+ *
+ * `lastmodified` doesn't share that risk and is `SqlDateTime`-typed
+ * (Phase 5) -- `NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE
+ * CURRENT_TIMESTAMP` means the DB server always populates a real,
+ * well-formed timestamp for it (unlike the 3 EXIF/IPTC-sourced columns
+ * above, which can carry a genuine pre-existing zero-date sentinel).
+ * `new ImageEntity(...)` is never constructed in PHP anywhere in this
+ * codebase (every real image row is inserted via raw DBAL) -- the 2 real
+ * DQL `UPDATE ... SET i.lastmodified = ...` sites both bind a plain
+ * string, which works against a custom-Typed column regardless (confirmed
+ * live throughout this phase).
  *
  * The single-row-by-id ImageRepository methods
  * (findById/findByPath/updateCoi/updateRotation/updateDimensions) go
@@ -103,7 +114,7 @@ final class ImageEntity
         public ?float $latitude,
         #[ORM\Column(type: 'float', nullable: true)]
         public ?float $longitude,
-        #[ORM\Column(type: 'string', length: 19)]
-        public string $lastmodified,
+        #[ORM\Column(type: 'sql_datetime', length: 19)]
+        public SqlDateTime $lastmodified,
     ) {}
 }

@@ -500,7 +500,7 @@ final class UserRepository implements WebmasterMailProviderInterface
             activationKeyExpire: SqlDateTime::tryFrom($row['activation_key_expire'] ?? null),
             lastVisit: SqlDateTime::tryFrom($row['last_visit'] ?? null),
             lastVisitFromHistory: (bool) ($row['last_visit_from_history'] ?? false),
-            lastmodified: is_string($row['lastmodified'] ?? null) ? $row['lastmodified'] : Env::now()->format('Y-m-d H:i:s'),
+            lastmodified: SqlDateTime::tryFrom($row['lastmodified'] ?? null) ?? SqlDateTime::from(Env::now()->format('Y-m-d H:i:s')),
             preferences: is_array($preferencesRaw) ? array_filter($preferencesRaw, is_string(...), ARRAY_FILTER_USE_KEY) : null,
         );
     }
@@ -912,7 +912,7 @@ final class UserRepository implements WebmasterMailProviderInterface
             'activation_key_expire' => $userInfo->activationKeyExpire?->value,
             'last_visit' => $userInfo->lastVisit?->value,
             'last_visit_from_history' => $userInfo->lastVisitFromHistory,
-            'lastmodified' => $userInfo->lastmodified,
+            'lastmodified' => $userInfo->lastmodified->value,
             'preferences' => $userInfo->preferences,
             'theme_name' => $themeName,
         ];

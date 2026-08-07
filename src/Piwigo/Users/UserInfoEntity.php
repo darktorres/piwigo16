@@ -46,8 +46,11 @@ use Piwigo\Common\ValueObject\UserId;
  * (`UserRepository::buildUserInfoEntity()`, `AuthRepository::
  * setActivationKey()`/`clearActivationKey()`) traces to an
  * `Env::now()`-derived or caller-supplied-and-validated value.
+ * `lastmodified` is `SqlDateTime`-typed too -- `NOT NULL DEFAULT
+ * CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP` means the DB server
+ * always populates a real, well-formed timestamp.
  * `Users\Projection\UserInfo` keeps its own plain-string convention for
- * all 3. `preferences` maps as native Doctrine `json` (the column
+ * all 4. `preferences` maps as native Doctrine `json` (the column
  * really is JSON, unlike Config\ConfigEntry's still-text `value` column) --
  * no round-trip-fidelity requirement forces a raw-string exception here,
  * unlike Audit\AuditLogEntity's hash-chain columns.
@@ -101,8 +104,8 @@ final class UserInfoEntity
         public ?SqlDateTime $lastVisit,
         #[ORM\Column(name: 'last_visit_from_history', type: 'boolean')]
         public bool $lastVisitFromHistory,
-        #[ORM\Column(type: 'string', length: 19)]
-        public string $lastmodified,
+        #[ORM\Column(type: 'sql_datetime', length: 19)]
+        public SqlDateTime $lastmodified,
         /**
          * @var array<string, mixed>|null
          */

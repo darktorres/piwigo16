@@ -7,6 +7,7 @@ namespace Piwigo\Permalink;
 use Doctrine\ORM\Mapping as ORM;
 use Piwigo\Common\ValueObject\CategoryId;
 use Piwigo\Common\ValueObject\Permalink;
+use Piwigo\Common\ValueObject\SqlDateTime;
 
 /**
  * Maps the `old_permalinks` table (`piwigo_old_permalinks` once
@@ -31,7 +32,12 @@ use Piwigo\Common\ValueObject\Permalink;
  * `old_permalinks` at once, each with its own identity map and no way
  * for a write through one to invalidate a cached read through the
  * other; it has been removed. `catId`/`permalink` both use their own
- * custom Doctrine Types.
+ * custom Doctrine Types. `dateDeleted` is `SqlDateTime`-typed (Phase 5)
+ * -- both real write paths (`markOldPermalinkDeleted()`/
+ * `insertOldPermalinkDeleted()`) trace to an `Env::now()`-derived value.
+ * `lastHit` stays plain `?string` -- never written by any real code path
+ * today (checked every assignment site), flagged separately as
+ * possibly-dead functionality.
  */
 #[ORM\Entity]
 #[ORM\Table(name: 'old_permalinks')]
@@ -43,8 +49,8 @@ final class OldPermalinkEntity
         public Permalink $permalink,
         #[ORM\Column(name: 'cat_id', type: 'category_id')]
         public CategoryId $catId,
-        #[ORM\Column(name: 'date_deleted', type: 'string', length: 19, nullable: true)]
-        public ?string $dateDeleted,
+        #[ORM\Column(name: 'date_deleted', type: 'sql_datetime', length: 19, nullable: true)]
+        public ?SqlDateTime $dateDeleted,
         #[ORM\Column(name: 'last_hit', type: 'string', length: 19, nullable: true)]
         public ?string $lastHit,
         #[ORM\Column(type: 'integer')]

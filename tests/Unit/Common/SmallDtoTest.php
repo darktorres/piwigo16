@@ -8,6 +8,7 @@ use Piwigo\Common\Dto\UserGroupPair;
 use Piwigo\Common\ValueObject\CategoryId;
 use Piwigo\Common\ValueObject\GroupId;
 use Piwigo\Common\ValueObject\Permalink;
+use Piwigo\Common\ValueObject\SqlDateTime;
 use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Permalink\OldPermalinkEntity;
 use Piwigo\Permalink\Projection\OldPermalink;
@@ -76,7 +77,7 @@ test('OldPermalink::fromEntity copies every field straight through', function ()
     $permalink = OldPermalink::fromEntity(new OldPermalinkEntity(
         permalink: Permalink::from('old-album-name'),
         catId: CategoryId::from(4),
-        dateDeleted: '2026-07-01 00:00:00',
+        dateDeleted: SqlDateTime::from('2026-07-01 00:00:00'),
         lastHit: '2026-07-15 12:00:00',
         hit: 12,
     ));

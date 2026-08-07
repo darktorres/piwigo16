@@ -12,6 +12,7 @@ use Piwigo\Category\CategoryEntity;
 use Piwigo\Category\OldPermalinkLookupInterface;
 use Piwigo\Common\ValueObject\CategoryId;
 use Piwigo\Common\ValueObject\Permalink;
+use Piwigo\Common\ValueObject\SqlDateTime;
 use Piwigo\Core\Env;
 use Piwigo\Permalink\Projection\OldPermalink;
 
@@ -188,7 +189,7 @@ final readonly class PermalinkRepository implements OldPermalinkLookupInterface
         $this->em->persist(new OldPermalinkEntity(
             permalink: Permalink::from($permalink),
             catId: CategoryId::from($catId),
-            dateDeleted: Env::now()->format('Y-m-d H:i:s'),
+            dateDeleted: SqlDateTime::from(Env::now()->format('Y-m-d H:i:s')),
             lastHit: null,
             hit: 0,
         ));

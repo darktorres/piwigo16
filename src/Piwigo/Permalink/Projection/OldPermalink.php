@@ -13,9 +13,11 @@ use Piwigo\Permalink\OldPermalinkEntity;
  * domain -- `docs/PLAN.md`'s own "7 Entity types, 73 projection
  * shapes" reference), built from {@see \Piwigo\Permalink\OldPermalinkEntity}.
  *
- * `dateDeleted` stays `?string` -- Permalink domain Stage 1a already
- * dropped its 1970-01-01 sentinel default (every real write already sets
- * it explicitly).
+ * `dateDeleted` stays `?string` here (this Projection's own convention)
+ * -- Permalink domain Stage 1a already dropped its 1970-01-01 sentinel
+ * default (every real write already sets it explicitly).
+ * `OldPermalinkEntity::$dateDeleted` itself is `SqlDateTime`-typed
+ * (Phase 5) -- `fromEntity()` unwraps `->value`.
  */
 final readonly class OldPermalink
 {
@@ -44,7 +46,7 @@ final readonly class OldPermalink
         return new self(
             catId: $entity->catId,
             permalink: $entity->permalink,
-            dateDeleted: $entity->dateDeleted,
+            dateDeleted: $entity->dateDeleted?->value,
             lastHit: $entity->lastHit,
             hit: $entity->hit,
         );

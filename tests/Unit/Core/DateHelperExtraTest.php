@@ -7,6 +7,7 @@ use Piwigo\Core\DefaultLanguageProviderInterface;
 use Piwigo\Core\Kernel;
 use Piwigo\Tests\Support\LangTestFactory;
 use Piwigo\Core\Paths;
+use Piwigo\Tests\Support\TranslatorTestFactory;
 
 /**
  * formatFromto()/formatDate() go through IntlDateFormatter, using
@@ -318,6 +319,42 @@ test('formatDate uses the current user\'s own language as the ICU locale, not al
     expect(DateHelper::formatDate('2024-06-15'))->toBe('samedi 15 juin 2024');
 });
 
+/**
+ * Kills line 44's IfNegated and line 50's RemoveEarlyReturn: while
+ * Kernel is booted (this file's own beforeEach), translator() must
+ * resolve the real container-shared Translator -- the exact instance
+ * TranslatorTestFactory::get() also returns, per its own docblock --
+ * not DateHelper's private $translatorFallback (a separate, never-
+ * loaded, memoized `new Translator(new CurrentConfig())`). Both
+ * mutations independently reroute the booted-Kernel case onto that
+ * untouched fallback instead: IfNegated by taking the else branch
+ * outright, RemoveEarlyReturn by discarding `return $translator;` (so
+ * the fallthrough `return self::$translatorFallback ??= ...;` still
+ * fires even after resolving the real one). Loading a distinctive
+ * plural translation onto the container-shared instance and expecting
+ * it in timeSince()'s output only passes when the real, resolved
+ * instance is actually the one consulted.
+ */
+test('translator() resolves the real container-shared Translator, not its own private pre-boot fallback, once Kernel is booted', function (): void {
+    $poFile = sys_get_temp_dir() . '/piwigo-po-test-' . bin2hex(random_bytes(8)) . '.po';
+    file_put_contents($poFile, <<<'PO'
+        msgid ""
+        msgstr ""
+        "Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+        msgid "%d hour"
+        msgid_plural "%d hours"
+        msgstr[0] "%d HOUR-CUSTOM"
+        msgstr[1] "%d HOURS-CUSTOM"
+        PO);
+
+    TranslatorTestFactory::get()->load('en', $poFile);
+
+    expect(DateHelper::timeSince('2026-07-31 23:00:00', stop: 'hour'))->toBe('1 HOUR-CUSTOM ago');
+
+    unlink($poFile);
+});
+
 test('timeSince with only_last_unit stops at the first non-zero chunk once it reaches the requested $stop unit', function (): void {
     // tests/.env.test freezes Env::now() at 2026-08-01 00:00:00 -- against
     // that clock, 2023-01-15 10:00:00 is exactly a 3-year-and-change diff,
@@ -397,20 +434,48 @@ test('timeSince stops at exactly the requested $stop unit among several non-zero
 });
 
 /**
- * A mutation-testing sweep found the ENTIRE `if ($print !== '' && $i >=
- * $j) { break; }` check inside the only_last_unit branch (lines 257-258
- * -- textually identical to, but a different copy of, line 244's own
- * check in the default branch above) is confirmed-equivalent, verified
- * live via a temporary sed-applied `if (false) { break; }`: the
- * enclosing `while ($print === '' && ...)` loop already terminates on
- * the very next condition check as soon as $print becomes non-empty
- * (the only_last_unit branch uses a plain `=` assignment, not `.=`, so
- * nothing after the loop depends on $i's own final value either) --
- * this inner break changes nothing regardless of $stop, confirmed
- * against 4 different scenarios (single-unit, mid-loop-advance,
- * multi-non-zero-chunk, and a zero-valued $stop position) all producing
- * byte-identical output with the break permanently disabled.
+ * A mutation-testing sweep found part of the `if ($print !== '' && $i
+ * >= $j) { break; }` check inside the only_last_unit branch (lines
+ * 297-298 -- textually identical to, but a different copy of, line
+ * 244's own check in the default branch above) confirmed-equivalent,
+ * verified live via a temporary sed-applied `if (false) { break; }`
+ * (BreakToContinue has the same disabling effect: `continue` skips the
+ * loop body's trailing `$i++` and jumps straight back to the enclosing
+ * `while ($print === '' && ...)`'s own condition, which already exits
+ * on the very next check once $print is non-empty -- nothing after the
+ * loop reads $i's own final value): the enclosing while loop's own
+ * condition already terminates the search as soon as $print becomes
+ * non-empty, so disabling the inner break outright, or only shifting
+ * *when* (not *whether*) it fires while $print is ALREADY non-empty
+ * (GreaterOrEqualToGreater/GreaterOrEqualToSmaller on `$i >= $j`),
+ * changes nothing regardless of $stop -- confirmed against 4 different
+ * scenarios (single-unit, mid-loop-advance, multi-non-zero-chunk, and
+ * a zero-valued $stop position).
+ *
+ * That reasoning does NOT extend to a mutation that makes the break
+ * fire EARLY, while $print is still genuinely '' (this loop's own
+ * search for the first non-zero chunk not yet done) -- see the
+ * dedicated test below for the 3 mutations (NotIdenticalToIdentical,
+ * BooleanAndToBooleanOr, EmptyStringToNotEmpty on the `$print !== ''`
+ * half of the check) that do exactly that.
  */
+test('timeSince(only_last_unit) does not stop early on a zero-valued chunk sitting at exactly the $stop position', function (): void {
+    // $stop: 'day' points $j at index 3; the diff here is a clean 0
+    // days / 5 hours (day is zero, hour is the first real non-zero
+    // chunk, one position later) -- the one shape that tells the real
+    // `$print !== '' && $i >= $j` apart from 3 mutations that drop or
+    // invert the `$print !== ''` half (NotIdenticalToIdentical =>
+    // `$print === ''`; BooleanAndToBooleanOr => `|| $i >= $j`;
+    // EmptyStringToNotEmpty => comparing against a placeholder instead
+    // of ''): all 3 make the check true purely from `$i >= $j` at i=3
+    // (day, still genuinely '') and break the loop right there with
+    // $print never set, producing ' ago' -- the unmutated check
+    // correctly requires $print to be non-empty too, so the search
+    // continues one more chunk to the real first non-zero value (hour).
+    expect(DateHelper::timeSince('2026-07-31 19:00:00', stop: 'day', only_last_unit: true))
+        ->toBe('5 hours ago');
+});
+
 test('timeSince(only_last_unit) picks the correct singular/plural unit name, not a stray mutated format string', function (): void {
     // Kills line 255's ConcatRemoveLeft/ConcatRemoveRight/ConcatSwitchSides
     // on the singular '%d ' . $name format string -- only reachable with

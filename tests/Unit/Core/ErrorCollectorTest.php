@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\DeploymentPolicy;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Paths;
@@ -176,6 +177,36 @@ test('writeTestErrorsLog appends the entry directly when _data/logs/ already exi
 
         $logPath = $root . '_data/logs/test_errors.log';
         expect(file_get_contents($logPath))->toBe("[WARNING] first in file.php:1\n[NOTICE] second in file.php:2\n");
+    } finally {
+        Kernel::reset();
+        exec('rm -rf ' . escapeshellarg($root));
+    }
+});
+
+test('currentConfig resolves the container-shared CurrentConfig instance when Kernel is booted, not a disconnected fresh one', function (): void {
+    // Kills IfNegated on the `if (Kernel::isBooted())` guard -- negated,
+    // it would skip the container-resolution branch even while booted and
+    // fall straight to the bottom `return new CurrentConfig()` -- and
+    // kills RemoveEarlyReturn on `return $instance;` -- removed, the same
+    // container-resolved $instance would fall through to that same bottom
+    // `new CurrentConfig()` instead of actually being returned. Both
+    // mutants hand back a brand-new, disconnected CurrentConfig instance
+    // instead of the container-shared one PHP-DI already cached -- object
+    // identity (toBe(), not toEqual()) is the only assertion that
+    // distinguishes "the real container instance" from "a fresh look-alike
+    // with the same default property values".
+    $root = sys_get_temp_dir() . '/piwigo-error-collector-currentconfig-' . bin2hex(random_bytes(8)) . '/';
+    mkdir($root);
+
+    try {
+        Kernel::boot(Paths::fromRoot($root));
+        $containerInstance = Kernel::container()->get(CurrentConfig::class);
+        expect($containerInstance)->toBeInstanceOf(CurrentConfig::class);
+
+        $method = new ReflectionMethod(ErrorCollector::class, 'currentConfig');
+        $resolved = $method->invoke(null);
+
+        expect($resolved)->toBe($containerInstance);
     } finally {
         Kernel::reset();
         exec('rm -rf ' . escapeshellarg($root));
@@ -477,4 +508,93 @@ test('flush leaves a non-empty buffer untouched when headers are already sent', 
     // otherwise mutates $this->collected: it is byte-for-byte identical
     // to what was seeded either way.
     expect($errorCollector->collected())->toBe($seeded);
+});
+
+/**
+ * Closes a real gap the test above deliberately cannot: it never pins
+ * down WHICH of the guard's two operands actually made the early return
+ * fire, so a broken guard that still happens to return early for some
+ * other reason would sail through untouched. This test forces a single,
+ * known state (headers already sent, buffer non-empty) in an isolated
+ * subprocess and observes whether header() actually got called at all.
+ *
+ * Under the CLI SAPI, header()'s own arguments are never retrievable --
+ * headers_list() stays an empty array even right after a successful call
+ * (confirmed live) -- so the header-emission loop's internal string
+ * building (substr bounds, the "$i + 1" numbering, str_replace's
+ * newline-stripping char list, etc.) has no observable trace here at all
+ * and is out of reach for any Unit test in this repo; only the guard
+ * itself -- whether header() got invoked in the first place -- is
+ * reachable, via the one observable side effect calling header() has
+ * under CLI: PHP raises E_WARNING "Cannot modify header information" if,
+ * and only if, headers_sent() is already true at call time (confirmed
+ * live; header() itself never flips headers_sent() -- only real prior
+ * output does, which is why this script echoes something first).
+ */
+test('flush never calls header() when headers are already sent, even with a non-empty buffer', function (): void {
+    // Kills the `if (Kernel::isBooted())`-guard's sibling on this class --
+    // IfNegated on `if ($this->collected === [] || headers_sent())`: negated,
+    // with collected non-empty and headers_sent() forced true, the guard
+    // would wrongly skip the early return and fall into the header loop.
+    // Also kills BooleanOrToBooleanAnd (`&&` in place of `||`): with
+    // collected non-empty, `false && true` is false, so that mutant skips
+    // the early return the exact same way. Both mutants call the real
+    // header() at least once (`X-PHP-Error-1: ...` at minimum); the
+    // correct guard calls it zero times.
+    $autoloadPath = dirname(__DIR__, 3) . '/vendor/autoload.php';
+    expect(is_file($autoloadPath))->toBeTrue();
+    $marker = sys_get_temp_dir() . '/piwigo-error-collector-headerssent-' . bin2hex(random_bytes(8)) . '.json';
+
+    $script = '<?php' . "\n"
+        . 'require ' . var_export($autoloadPath, true) . ";\n"
+        . "echo 'forces headers_sent() to true before ErrorCollector ever runs';\n"
+        . "\$errorCollector = new \\Piwigo\\Core\\ErrorCollector(new \\Piwigo\\Config\\DeploymentPolicy(), \\Piwigo\\Core\\Paths::fromRoot(sys_get_temp_dir()));\n"
+        . "\$prop = new ReflectionProperty(\\Piwigo\\Core\\ErrorCollector::class, 'collected');\n"
+        . "\$prop->setValue(\$errorCollector, ['[WARNING] foo in bar.php:1', '[NOTICE] baz in qux.php:2']);\n"
+        . "\$sentBeforeFlush = headers_sent();\n"
+        . "\$headerCalls = 0;\n"
+        . "set_error_handler(function () use (&\$headerCalls): bool {\n"
+        . "    \$headerCalls++;\n"
+        . "    return true;\n"
+        . "});\n"
+        . "\$method = new ReflectionMethod(\\Piwigo\\Core\\ErrorCollector::class, 'flush');\n"
+        . "\$method->invoke(\$errorCollector);\n"
+        . "restore_error_handler();\n"
+        . 'file_put_contents(' . var_export($marker, true) . ", json_encode(['sentBeforeFlush' => \$sentBeforeFlush, 'headerCalls' => \$headerCalls]));\n";
+
+    $scriptFile = sys_get_temp_dir() . '/piwigo-error-collector-headerssent-script-' . bin2hex(random_bytes(8)) . '.php';
+    file_put_contents($scriptFile, $script);
+
+    $descriptors = [
+        0 => ['file', '/dev/null', 'r'],
+        1 => ['pipe', 'w'],
+        2 => ['pipe', 'w'],
+    ];
+    $proc = proc_open([PHP_BINARY, $scriptFile], $descriptors, $pipes);
+    expect($proc)->toBeResource();
+    if ($proc === false) {
+        throw new RuntimeException('proc_open failed');
+    }
+
+    $stdout = stream_get_contents($pipes[1]);
+    fclose($pipes[1]);
+    $stderr = stream_get_contents($pipes[2]);
+    fclose($pipes[2]);
+    $exit = proc_close($proc);
+    @unlink($scriptFile);
+
+    try {
+        expect($exit)->toBe(0, 'ErrorCollector headers-sent subprocess exited non-zero: stdout=' . $stdout . ' stderr=' . $stderr)
+            ->and(file_exists($marker))->toBeTrue();
+
+        /** @var array{sentBeforeFlush: bool, headerCalls: int} $result */
+        $result = json_decode((string) file_get_contents($marker), true);
+        // Sanity check on the forcing technique itself -- if this is ever
+        // false, the test below would pass for the wrong reason (the real
+        // early-return guard never even got exercised as intended).
+        expect($result['sentBeforeFlush'])->toBeTrue()
+            ->and($result['headerCalls'])->toBe(0);
+    } finally {
+        @unlink($marker);
+    }
 });

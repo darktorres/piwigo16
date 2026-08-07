@@ -177,6 +177,50 @@ test('cookiePath repeats ../ exactly once per mount depth level, not just once',
     });
 });
 
+test('cookiePath throws when the container returns an unexpected type for RequestMountDepth', function (): void {
+    $_SERVER['SCRIPT_NAME'] = '/piwigo/index.php';
+
+    KernelContainerOverride::withWrongTypeFor(
+        RequestMountDepth::class,
+        static fn () => new CookieService()->cookiePath()
+    );
+})->throws(LogicException::class, 'Container returned an unexpected type for ' . RequestMountDepth::class);
+
+test('cookiePath requires both the redirect-vs-path-info mismatch and the suffix match, not just one', function (): void {
+    // The 3-clause `and` chain (path_info !== '', REDIRECT_URL !== PATH_INFO,
+    // str_ends_with(redirect_url, path_info)) collapses to the *same* final
+    // cookiePath() result whenever path_info is '' (a 0-length substr() is a
+    // no-op) -- so REDIRECT_URL === PATH_INFO (an identical, non-empty
+    // string) is the only input shape where the middle clause's truth value
+    // actually changes the outcome: str_ends_with(X, X) is trivially true,
+    // so with REDIRECT_URL === PATH_INFO the first and third clauses are
+    // already true and only the (real, `!==`) middle clause keeps the whole
+    // condition false. A version with `or` instead of `and` anywhere in the
+    // chain, or with the `?? null` on the right side of `!==` dropped
+    // (making that side unconditionally null, which a set REDIRECT_URL can
+    // never equal), makes the condition wrongly true here.
+    $_SERVER['REDIRECT_URL'] = '/foo/bar';
+    $_SERVER['PATH_INFO'] = '/foo/bar';
+
+    expect(new CookieService()->cookiePath())->toBe('/foo/');
+});
+
+test('setCookieVar casts a scalar non-string value to a string before handing it to setcookie()', function (): void {
+    // is_scalar($value) is true for int/float/bool too, not just string --
+    // the (string) cast must actually run, not just be gated behind
+    // is_scalar(), otherwise a raw int would reach setcookie()'s own
+    // `string $value` parameter, and this file's strict_types=1 makes that
+    // call-site type-strict even for a built-in function: an unconverted
+    // int would throw a TypeError instead of silently coercing.
+    $_SERVER['SCRIPT_NAME'] = '/piwigo/index.php';
+    $service = new CookieService();
+
+    $result = $service->setCookieVar('intpref', 42);
+
+    expect($result)->toBeTrue();
+    expect($service->getCookieVar('intpref'))->toBe(42);
+});
+
 test('cookiePath normalizes back to the real app root when the entry file is one directory deeper', function (): void {
     // admin/popuphelp.php's own shape: SCRIPT_NAME resolves the containing
     // directory to '/piwigo/admin/', and RequestMountDepth (set by that

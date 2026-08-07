@@ -726,3 +726,166 @@ test('load does not mirror a plural original when msgstr[1] is explicitly empty'
 
     expect($this->translator->mirroredStrings())->not->toHaveKey('DeltaPlural');
 });
+
+// load()'s own docblock documents the whole caching mechanism: the cache
+// key folds in the PO file's own mtime, so a second load() of the SAME
+// (path, mtime) pair should reuse the CachePools::translations() pool
+// entry instead of reparsing -- none of that (pool selection at line 129,
+// the null-safe getItem() and cache-key concatenation at line 130, the
+// isHit() check at line 132, the cached-mirror foreach at line 143, the
+// early return at line 147, the item!==null save guard at line 161, and
+// the actual pool->save() call at line 168) is exercised by any test
+// above, since none of them ever inspect a SECOND, independent Translator
+// instance's state after re-loading the exact same (path, mtime) pair.
+// This test forces a genuine cache round trip through the real,
+// filesystem-backed CachePools::translations() pool (this repo has no
+// ext-apcu, so CacheFactory auto-detects the filesystem adapter): load()
+// once (a real cache miss, since $this->poFile's own random suffix is
+// unique to this test run), then overwrite the file with DIFFERENT
+// content while forcing filemtime() back to the exact value the first
+// call cached its key under (touch() after file_put_contents(), which
+// would otherwise bump mtime to "now") -- a fresh Translator instance
+// loading that same (path, mtime) pair a second time can only see the
+// original, cached translation if the whole chain above actually ran. If
+// any single link were skipped (pool forced null, isHit() bypassed, the
+// cache-hit branch's own return removed so it falls through to a fresh
+// parse, the mirror foreach dropped, or the save on the first load's
+// miss skipped or never persisted), this test would observe the file's
+// real, changed on-disk content instead.
+test('load reuses a cached parse across independent Translator instances for the same path and mtime', function (): void {
+    file_put_contents((is_string($this->poFile) ? $this->poFile : ''), <<<'PO'
+        msgid ""
+        msgstr ""
+        "Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+        msgid "CacheKey"
+        msgstr "OriginalValue"
+        PO);
+
+    $this->translator->load('en', (is_string($this->poFile) ? $this->poFile : ''));
+
+    $mtime = filemtime((is_string($this->poFile) ? $this->poFile : ''));
+    if ($mtime === false) {
+        throw new RuntimeException('expected filemtime() to succeed on a file this test just wrote');
+    }
+
+    file_put_contents((is_string($this->poFile) ? $this->poFile : ''), <<<'PO'
+        msgid ""
+        msgstr ""
+        "Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+        msgid "CacheKey"
+        msgstr "NewValue"
+        PO);
+    touch((is_string($this->poFile) ? $this->poFile : ''), $mtime);
+
+    $second = new Translator(CurrentConfigTestFactory::get());
+    $second->load('en', (is_string($this->poFile) ? $this->poFile : ''));
+
+    expect($second->translate('CacheKey'))->toBe('OriginalValue');
+
+    $mirror = $second->mirroredStrings();
+    expect($mirror)->toHaveKey('CacheKey')
+        ->and($mirror['CacheKey'])->toBe('OriginalValue');
+});
+
+// Same cache mechanism as the test above, isolating line 130's own
+// ConcatRemoveRight mutation that drops $mtime from the key entirely
+// (`md5($poFile . '_')`): that mutant would make EVERY load() of this
+// same path share one cache entry forever, regardless of mtime -- exactly
+// the staleness load()'s own docblock says folding in mtime prevents.
+// Unlike the test above (which forces the SAME mtime to prove a cache hit
+// happens at all), this one lets mtime change naturally between two
+// load() calls on the same path and asserts the edit is not missed.
+test("load's cache key busts on a real mtime change, not just staying pinned to the file path", function (): void {
+    file_put_contents((is_string($this->poFile) ? $this->poFile : ''), <<<'PO'
+        msgid ""
+        msgstr ""
+        "Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+        msgid "BustKey"
+        msgstr "First"
+        PO);
+
+    $this->translator->load('en', (is_string($this->poFile) ? $this->poFile : ''));
+
+    $firstMtime = filemtime((is_string($this->poFile) ? $this->poFile : ''));
+    if ($firstMtime === false) {
+        throw new RuntimeException('expected filemtime() to succeed on a file this test just wrote');
+    }
+
+    file_put_contents((is_string($this->poFile) ? $this->poFile : ''), <<<'PO'
+        msgid ""
+        msgstr ""
+        "Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+        msgid "BustKey"
+        msgstr "Second"
+        PO);
+    touch((is_string($this->poFile) ? $this->poFile : ''), $firstMtime + 1000);
+
+    $second = new Translator(CurrentConfigTestFactory::get());
+    $second->load('en', (is_string($this->poFile) ? $this->poFile : ''));
+
+    expect($second->translate('BustKey'))->toBe('Second');
+});
+
+// Isolates line 130's own separator between $poFile and $mtime
+// (ConcatRemoveRight dropping it, and ConcatSwitchSides moving it to a
+// leading '_' with $poFile and $mtime still bare-concatenated against
+// each other): without a real separator between the two, two DIFFERENT
+// (path, mtime) pairs can hash to the SAME cache key purely because one
+// file's trailing digit(s) plus its mtime spell out the same characters
+// as the other file's own (shorter) trailing digit plus its (longer)
+// mtime. $fileA/$fileB below are deliberately chosen so "$fileA" . "23"
+// and "$fileB" . "3" are the exact same string, while "$fileA" . "_23"
+// and "$fileB" . "_3" are not -- the real `$poFile . '_' . $mtime`
+// formula never collides here; a bare-concatenation (or
+// leading-underscore-only) formula does.
+//
+// (line 130's remaining ConcatSwitchSides variant -- `$mtime . ($poFile .
+// '_')`, mtime FIRST -- is confirmed-equivalent instead: every real
+// $poFile this class ever receives is an absolute filesystem path
+// starting with '/', a character that can never appear inside $mtime's
+// own pure-digit string, so the mtime/path boundary stays unambiguously
+// self-delimiting without needing the separator at all, for any real
+// (int $mtime, absolute-path $poFile) pair -- unlike the path-then-mtime
+// order this test isolates, where a path's own trailing characters CAN
+// legitimately be digits.)
+test("load's cache key needs a real separator between the file path and mtime, not just their bare concatenation", function (): void {
+    $prefix = sys_get_temp_dir() . '/piwigo-po-collide-' . bin2hex(random_bytes(6)) . '-';
+    $fileA = $prefix . '1';
+    $fileB = $prefix . '12';
+
+    file_put_contents($fileA, <<<'PO'
+        msgid ""
+        msgstr ""
+        "Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+        msgid "CollideKey"
+        msgstr "FromFileA"
+        PO);
+    touch($fileA, 23);
+
+    file_put_contents($fileB, <<<'PO'
+        msgid ""
+        msgstr ""
+        "Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+        msgid "CollideKey"
+        msgstr "FromFileB"
+        PO);
+    touch($fileB, 3);
+
+    try {
+        $this->translator->load('en', $fileA);
+
+        $second = new Translator(CurrentConfigTestFactory::get());
+        $second->load('en', $fileB);
+
+        expect($second->translate('CollideKey'))->toBe('FromFileB');
+    } finally {
+        unlink($fileA);
+        unlink($fileB);
+    }
+});

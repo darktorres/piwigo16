@@ -1247,6 +1247,73 @@ final class CategoryServiceTest extends IntegrationTestCase
         }
     }
 
+    public function test_update_category_with_the_default_all_scopes_to_every_category(): void
+    {
+        // Proves the `$ids === 'all'` branch really builds a `1=1`
+        // WHERE (matching every category), not just a single one --
+        // both categories 1 and 2 get a dangling representative_picture_id,
+        // and 'all' must clear (then re-pick, allowRandomRepresentative
+        // defaults to false) both of them, not just whichever one a
+        // narrower scalar/array branch would have hit.
+        $this->disableForeignKeyChecks($this->conn);
+        $this->conn->executeStatement('UPDATE ' . Tables::categories() . ' SET representative_picture_id = 999999 WHERE id IN (1, 2)');
+        $this->enableForeignKeyChecks($this->conn);
+
+        try {
+            $result = $this->service->updateCategory('all');
+
+            self::assertNull($result);
+
+            $repIds = $this->conn->fetchFirstColumn(
+                'SELECT representative_picture_id FROM ' . Tables::categories() . ' WHERE id IN (1, 2) ORDER BY id'
+            );
+            foreach ($repIds as $repId) {
+                self::assertNotSame(999999, is_numeric($repId) ? (int) $repId : null);
+            }
+        } finally {
+            $this->conn->executeStatement('UPDATE ' . Tables::categories() . ' SET representative_picture_id = 1 WHERE id = 1');
+            $this->conn->executeStatement('UPDATE ' . Tables::categories() . ' SET representative_picture_id = 4 WHERE id = 2');
+        }
+    }
+
+    public function test_update_category_with_an_empty_array_returns_false(): void
+    {
+        // The array branch's own `count($ids) === 0` early-return guard --
+        // never reaches the wrong-representative sweep below it.
+        self::assertFalse($this->service->updateCategory([]));
+    }
+
+    public function test_update_category_with_a_non_integer_id_string_is_intval_cast_before_binding(): void
+    {
+        // A real caller (ws_functions/pwg.images.php, per this method's
+        // own docblock) never sends a decimal string, but '2.9' proves
+        // every array element is actually intval()-cast to a clean int
+        // before it reaches the query -- Doctrine\DBAL\Driver\PgSQL\Statement::
+        // bindValue() passes ArrayParameterType::INTEGER values straight
+        // through uncoerced to pg_send_execute(), so a raw '2.9' text
+        // value bound against an integer column would fail outright
+        // rather than scoping cleanly to category 2.
+        $this->disableForeignKeyChecks($this->conn);
+        $this->conn->executeStatement('UPDATE ' . Tables::categories() . ' SET representative_picture_id = 999999 WHERE id = 2');
+        $this->enableForeignKeyChecks($this->conn);
+
+        try {
+            $result = $this->service->updateCategory(['2.9']);
+
+            self::assertNull($result);
+
+            $repId = $this->conn->createQueryBuilder()
+                ->select('representative_picture_id')
+                ->from(Tables::categories())
+                ->where('id = 2')
+                ->executeQuery()
+                ->fetchOne();
+            self::assertNotSame(999999, is_numeric($repId) ? (int) $repId : null);
+        } finally {
+            $this->conn->executeStatement('UPDATE ' . Tables::categories() . ' SET representative_picture_id = 4 WHERE id = 2');
+        }
+    }
+
     public function test_set_cat_visible_with_unlock_child_unlocks_descendant_categories_too(): void
     {
         // visible is a genuine boolean column -- bare `0`/`1` literals in

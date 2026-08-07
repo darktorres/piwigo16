@@ -1688,6 +1688,7 @@ test('emptyLounge() returns null when a different, still-fresh execution already
         } finally {
             $conn->executeStatement("DELETE FROM " . Tables::config() . " WHERE param = 'empty_lounge_running'");
             CurrentConfigTestFactory::get()->reset();
+            Kernel::reset();
         }
     } finally {
         imageServiceTestReleaseEmptyLoungeDbLock($conn);

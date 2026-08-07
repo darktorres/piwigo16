@@ -48,22 +48,21 @@ final class PluginRepositoryTest extends IntegrationTestCase
         $this->repo = EntityManagerFactory::build($this->conn)->getRepository(PluginEntity::class);
 
         // the fixture ships an empty plugins table -- seed it directly so
-        // getDbPlugins()'s filters have something real to select against;
-        // a plugin id containing a quote proves the bound-parameter fix
-        // (the original built `id="' . $id . '"` via raw concatenation).
-        // pgsql support pass: real bug found live -- backslash-escaping a
-        // literal quote (\') is MySQL's own dialect extension, not
-        // portable. PostgreSQL's default standard_conforming_strings=on
-        // has no backslash-escape handling in a plain string literal at
-        // all, so `'o\'brien'` parses as the complete string `o\`
-        // immediately followed by the bareword `brien` -- "syntax error
-        // at or near 'brien'". SQL-standard doubled-quote escaping ('')
-        // works identically on both platforms.
+        // getDbPlugins()'s filters have something real to select against.
+        //
+        // The 3rd row is a still-edge-case-y (hyphenated) but
+        // PluginId-valid id -- PluginEntity::$id's own charset
+        // ([a-zA-Z0-9_-] only, matching real PEM manifest ids) can never
+        // contain a quote, so a bound-parameter injection attempt is
+        // closed at construction time, not just at the bind; the
+        // malformed-input-safety property is covered by
+        // test_get_db_plugins_filters_by_a_malformed_id_finds_nothing()
+        // below instead.
         $this->conn->executeStatement(
             "INSERT INTO " . Tables::plugins() . " (id, state, version) VALUES
              ('c13y', 'active', '2.1'),
              ('nut2', 'inactive', '1.0'),
-             ('o''brien', 'active', '3.0')"
+             ('o-brien', 'active', '3.0')"
         );
     }
 
@@ -85,7 +84,7 @@ final class PluginRepositoryTest extends IntegrationTestCase
     {
         $plugins = $this->repo->getDbPlugins('active');
 
-        self::assertSame(['c13y', "o'brien"], array_column($plugins, 'id'));
+        self::assertSame(['c13y', 'o-brien'], array_column($plugins, 'id'));
     }
 
     public function test_get_db_plugins_filters_by_id(): void
@@ -103,12 +102,23 @@ final class PluginRepositoryTest extends IntegrationTestCase
         self::assertSame([], $plugins);
     }
 
-    public function test_get_db_plugins_handles_an_id_containing_a_quote_safely(): void
+    public function test_get_db_plugins_filters_by_an_id_containing_a_hyphen(): void
     {
-        $plugins = $this->repo->getDbPlugins('', "o'brien");
+        $plugins = $this->repo->getDbPlugins('', 'o-brien');
 
         self::assertCount(1, $plugins);
-        self::assertSame("o'brien", $plugins[0]->id);
+        self::assertSame('o-brien', $plugins[0]->id);
+    }
+
+    public function test_get_db_plugins_filters_by_a_malformed_id_finds_nothing(): void
+    {
+        // A quote can never be part of a real PluginId (charset
+        // [a-zA-Z0-9_-] only) -- must return an empty, graceful result
+        // rather than throwing, same "no real row could ever match"
+        // reasoning as an unknown-but-well-formed id.
+        $plugins = $this->repo->getDbPlugins('', "o'brien");
+
+        self::assertSame([], $plugins);
     }
 
     public function test_update_version_persists_the_new_version(): void

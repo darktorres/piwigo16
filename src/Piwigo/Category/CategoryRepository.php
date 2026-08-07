@@ -3465,19 +3465,19 @@ final class CategoryRepository
      * $catId), or none at all (recursive with no $catId -- matches the
      * original, which added nothing to $where in that case).
      */
-    private function categoryScopeCondition(?int $catId, bool $recursive): SqlCondition
+    private function categoryScopeCondition(?CategoryId $catId, bool $recursive): SqlCondition
     {
         if (! $recursive) {
-            if ($catId !== null && $catId > 0) {
+            if ($catId !== null) {
                 return new SqlCondition('(id_uppercat = :catId OR id = :catId)', [
-                    'catId' => $catId,
+                    'catId' => $catId->value,
                 ]);
             }
 
             return new SqlCondition('id_uppercat IS NULL');
         }
 
-        if ($catId !== null && $catId > 0) {
+        if ($catId !== null) {
             // Item 16 (AbstractPlatform adoption): the real per-platform
             // operator (MySQL/MariaDB: RLIKE) rather than a hardcoded
             // 'REGEXP' dialect constant. No longer static since this
@@ -3496,7 +3496,7 @@ final class CategoryRepository
             $regexOperator = $platform instanceof PostgreSQLPlatform ? '~' : $platform->getRegexpExpression();
 
             return new SqlCondition('uppercats ' . $regexOperator . ' :catUppercatsLike', [
-                'catUppercatsLike' => '(^|,)' . $catId . '(,|$)',
+                'catUppercatsLike' => '(^|,)' . $catId->value . '(,|$)',
             ]);
         }
 

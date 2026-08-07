@@ -448,9 +448,10 @@ final class PwgCategories
         }
 
         $search_term = (isset($params['search']) and $params['search'] !== '') ? $params['search'] : null;
+        $catIdVo = CategoryId::tryFrom($params['cat_id']);
 
         $criteria = new CategoryListCriteria(
-            catId: $params['cat_id'] > 0 ? $params['cat_id'] : null,
+            catId: $catIdVo,
             recursive: $params['recursive'],
             forbiddenCategoryIds: $forbiddenCategoryIds,
             publicOnly: $publicOnly,
@@ -461,13 +462,13 @@ final class PwgCategories
             $search_term,
             $this->currentConfig->linkedAlbumSearchLimit(),
             $params['limit'],
-            $params['cat_id'] > 0
+            $catIdVo !== null
         );
         $rows = $paginated_cats->rows;
 
         if (isset($params['limit'])) {
             $result_count = $paginated_cats->total ?? 0;
-            if ($params['cat_id'] > 0) {
+            if ($catIdVo !== null) {
                 --$result_count;
             }
             $output['limit'] = [
@@ -721,7 +722,7 @@ final class PwgCategories
         // pwg_db_real_escape_string
 
         $criteria = new CategoryAdminListCriteria(
-            catId: $params['cat_id'] > 0 ? $params['cat_id'] : null,
+            catId: CategoryId::tryFrom($params['cat_id']),
             recursive: $params['recursive'],
         );
 

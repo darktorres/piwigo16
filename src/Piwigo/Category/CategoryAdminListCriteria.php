@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Piwigo\Category;
 
+use Piwigo\Common\ValueObject\CategoryId;
+
 /**
  * Further SQL-modernization audit, Item 13: replaces the `list<string>
  * $where` `Ws\PwgCategories::getAdminList()` used to build -- a `1=1`
@@ -15,7 +17,7 @@ namespace Piwigo\Category;
 final readonly class CategoryAdminListCriteria
 {
     public function __construct(
-        public ?int $catId,
+        public ?CategoryId $catId,
         public bool $recursive,
     ) {}
 }

@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Piwigo\Category;
 
+use Piwigo\Common\ValueObject\CategoryId;
+
 /**
  * Further SQL-modernization audit, Item 13: replaces the `list<string>
  * $where` `Ws\PwgCategories::getList()` used to build -- exactly one of 3
@@ -22,7 +24,7 @@ final readonly class CategoryListCriteria
      * @param  list<int>  $forbiddenCategoryIds
      */
     public function __construct(
-        public ?int $catId,
+        public ?CategoryId $catId,
         public bool $recursive,
         public array $forbiddenCategoryIds,
         public bool $publicOnly,

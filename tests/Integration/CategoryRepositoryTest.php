@@ -917,7 +917,7 @@ final class CategoryRepositoryTest extends IntegrationTestCase
 
     public function test_find_list_for_ws_matches_a_category_and_its_direct_children_when_recursive_is_false_and_cat_id_is_set(): void
     {
-        $criteria = new CategoryListCriteria(catId: 1, recursive: false, forbiddenCategoryIds: [], publicOnly: false);
+        $criteria = new CategoryListCriteria(catId: CategoryId::from(1), recursive: false, forbiddenCategoryIds: [], publicOnly: false);
 
         $result = $this->repo->findListForWs($criteria, null, 10, null, false);
 
@@ -928,7 +928,7 @@ final class CategoryRepositoryTest extends IntegrationTestCase
 
     public function test_find_list_for_ws_matches_the_full_subtree_when_recursive(): void
     {
-        $criteria = new CategoryListCriteria(catId: 1, recursive: true, forbiddenCategoryIds: [], publicOnly: false);
+        $criteria = new CategoryListCriteria(catId: CategoryId::from(1), recursive: true, forbiddenCategoryIds: [], publicOnly: false);
 
         $result = $this->repo->findListForWs($criteria, null, 10, null, false);
 
@@ -988,7 +988,7 @@ final class CategoryRepositoryTest extends IntegrationTestCase
 
     public function test_find_admin_list_for_ws_matches_the_full_subtree_when_recursive(): void
     {
-        $criteria = new CategoryAdminListCriteria(catId: 1, recursive: true);
+        $criteria = new CategoryAdminListCriteria(catId: CategoryId::from(1), recursive: true);
 
         $result = $this->repo->findAdminListForWs($criteria, null, 10);
 

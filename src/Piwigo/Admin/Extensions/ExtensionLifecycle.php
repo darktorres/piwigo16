@@ -12,6 +12,7 @@ use Piwigo\Admin\PluginLoader;
 use Piwigo\Admin\PluginMaintain;
 use Piwigo\Admin\ThemeMaintain;
 use Piwigo\Auth\AccessControl;
+use Piwigo\Common\ValueObject\PluginId;
 use Piwigo\Config\ConfigService;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\ActivitySystem;
@@ -150,7 +151,7 @@ final readonly class ExtensionLifecycle
 
                 if ($errors === []) {
                     $this->repo->insertPlugin($id, $fsVersion);
-                    $this->pluginMigrationRepo->record($id, $fsVersion, Env::now()->format('Y-m-d H:i:s'));
+                    $this->pluginMigrationRepo->record(PluginId::from($id), $fsVersion, Env::now()->format('Y-m-d H:i:s'));
                 } else {
                     $activityDetails['result'] = 'error';
                 }
@@ -187,7 +188,7 @@ final readonly class ExtensionLifecycle
 
                     if ($newVersion !== 'auto') {
                         $this->repo->updateVersion(ExtensionType::Plugin, $id, $newVersion);
-                        $this->pluginMigrationRepo->record($id, $newVersion, Env::now()->format('Y-m-d H:i:s'));
+                        $this->pluginMigrationRepo->record(PluginId::from($id), $newVersion, Env::now()->format('Y-m-d H:i:s'));
                     }
                 } else {
                     $activityDetails['result'] = 'error';

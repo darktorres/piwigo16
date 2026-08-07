@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Admin\Extensions;
 
 use Doctrine\ORM\EntityRepository;
+use Piwigo\Common\ValueObject\PluginId;
 
 /**
  * Persistence layer for `plugin_migrations`. Composite (plugin_id,
@@ -19,7 +20,7 @@ use Doctrine\ORM\EntityRepository;
  */
 final class PluginMigrationRepository extends EntityRepository
 {
-    public function record(string $pluginId, string $version, string $executedAt): void
+    public function record(PluginId $pluginId, string $version, string $executedAt): void
     {
         $em = $this->getEntityManager();
 

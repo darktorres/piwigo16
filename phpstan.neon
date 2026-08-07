@@ -241,3 +241,34 @@ parameters:
         -
             identifier: method.internal
             path: tools/coverage-merge.php
+        # $test is the Pest test case ($this from inside a test() closure).
+        # Pest mixes pest-plugin-browser's Browsable trait (visit(), etc.)
+        # into its generated test case class at runtime via its own plugin
+        # loader (Plugin::uses(Browsable::class) in the plugin's
+        # Autoload.php) -- there is no interface or base class PHPStan can
+        # see this through. Checked for a real fix instead of just
+        # suppressing: neither pestphp/pest nor pestphp/pest-plugin-browser
+        # ships a PHPStan extension describing this (pestphp/pest's own
+        # extension.neon only registers Pest\PHPStan\
+        # HigherOrderExpectationTypeExtension, which covers
+        # expect()->toBe()-style fluent chains, not plugin-mixed test case
+        # methods) -- nothing to wire in. Confirmed by grepping every real
+        # call site of visit()/visitPwg()/asAdmin() in this repo: $test is
+        # always $this from directly inside a Pest test() closure.
+        -
+            identifier: method.notFound
+            path: tests/Browser/Helpers/BrowserTestHelpers.php
+        # nativePage()/clickWithTimeout() deliberately reach into
+        # pest-plugin-browser's @internal Page/GuessLocator classes via
+        # reflection -- there's no public API to bypass its ~1s-per-attempt
+        # assertion-retry wrap for one-shot operations (navigate()/
+        # content()) or to pass a custom click timeout (see this file's own
+        # nativePage()/clickWithTimeout() docblocks for the full, empirically
+        # -confirmed justification). Same class of deliberate @internal-API
+        # use as the coverage-merge.php entries above.
+        -
+            identifiers:
+                - return.internalClass
+                - instanceof.internalClass
+                - new.internalClass
+            path: tests/Browser/Helpers/BrowserTestHelpers.php

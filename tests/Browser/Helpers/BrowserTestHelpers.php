@@ -119,18 +119,13 @@ final class BrowserTestHelpers
      * Visits a path against the configured base URL, in test mode.
      *
      * $test is the Pest test case ($this from inside a test() closure).
-     * Pest mixes pest-plugin-browser's Browsable trait (visit(), etc.)
-     * into its generated test case class at runtime via its own plugin
-     * loader (Plugin::uses(Browsable::class) in the plugin's Autoload.php)
-     * — there is no interface or base class PHPStan can see this
-     * through, and this project doesn't wire in Pest's own PHPStan
-     * extension (which understands its plugin system). Confirmed by
-     * grepping every real call site of visit()/visitPwg() in this repo:
-     * $test is always $this from directly inside a Pest test() closure.
+     * See phpstan.neon's own method.notFound entry for this file for why
+     * PHPStan can't resolve $test->visit() here. Confirmed by grepping
+     * every real call site of visit()/visitPwg() in this repo: $test is
+     * always $this from directly inside a Pest test() closure.
      */
     public static function visitPwg(object $test, string $path): Webpage|PendingAwaitablePage|AwaitableWebpage
     {
-        // @phpstan-ignore method.notFound
         $result = $test->visit(self::baseUrl() . $path, self::testModeOptions());
 
         if (
@@ -338,15 +333,15 @@ final class BrowserTestHelpers
      * the 3 page wrapper types, via the same reflection technique
      * rawWebpage() uses -- shared so clickWithTimeout() below (which needs
      * a raw Locator, not a Webpage) doesn't duplicate the union-unwrapping
-     * logic.
+     * logic. See phpstan.neon's own internalClass entry for this file for
+     * why reaching into pest-plugin-browser's @internal Page class here is
+     * deliberate, not a mistake.
      */
-    // @phpstan-ignore return.internalClass
     private static function nativePage(Webpage|PendingAwaitablePage|AwaitableWebpage $page): Page
     {
         if ($page instanceof Webpage) {
             $property = new ReflectionProperty(Webpage::class, 'page');
 
-            // @phpstan-ignore instanceof.internalClass
             if (!($rawPage = $property->getValue($page)) instanceof Page) {
                 throw new ExpectationFailedException(
                     'Could not extract the underlying Page from Webpage — '
@@ -381,10 +376,6 @@ final class BrowserTestHelpers
         $property = new ReflectionProperty(AwaitableWebpage::class, 'page');
         $rawPage = $property->getValue($page);
 
-        // This whole helper exists to reach into pest-plugin-browser's
-        // internals via reflection (see the surrounding comments); checking
-        // against its internal Page type is the point, not a mistake.
-        // @phpstan-ignore instanceof.internalClass
         if (!$rawPage instanceof Page) {
             throw new ExpectationFailedException(
                 'Could not extract the underlying Page from AwaitableWebpage — '
@@ -417,7 +408,6 @@ final class BrowserTestHelpers
         string $text,
         int $timeoutMs = 30_000
     ): void {
-        // @phpstan-ignore new.internalClass
         (new GuessLocator(self::nativePage($page)))
             ->for($text)
             ->click(['timeout' => $timeoutMs]);
@@ -791,7 +781,6 @@ final class BrowserTestHelpers
             'origins' => [],
         ];
 
-        // @phpstan-ignore method.notFound
         $result = $test->visit(self::baseUrl() . $path, $options);
 
         if (

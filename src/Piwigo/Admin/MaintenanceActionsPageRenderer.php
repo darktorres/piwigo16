@@ -11,6 +11,7 @@ use Piwigo\Admin\Maintenance\DbMaintenanceRepository;
 use Piwigo\Admin\Maintenance\FilesystemIntegrityChecker;
 use Piwigo\Admin\Maintenance\MaintenanceActionDispatcher;
 use Piwigo\Admin\Maintenance\Request\MaintenanceActionRequest;
+use Piwigo\Admin\Projection\MaintenanceActionsPageContext;
 use Piwigo\Auth\AccessControl;
 use Piwigo\Cache\PersistentCache;
 use Piwigo\Category\CategoryService;
@@ -141,42 +142,8 @@ final class MaintenanceActionsPageRenderer
             }
         }
 
-        $template->assign(
-            [
-                'maint_actions' => $maintActions,
-                'U_MAINT_CATEGORIES' => sprintf($url_format, 'categories'),
-                'U_MAINT_IMAGES' => sprintf($url_format, 'images'),
-                'U_MAINT_ORPHAN_TAGS' => sprintf($url_format, 'delete_orphan_tags'),
-                'U_MAINT_USER_CACHE' => sprintf($url_format, 'user_cache'),
-                'U_MAINT_HISTORY_DETAIL' => sprintf($url_format, 'history_detail'),
-                'U_MAINT_HISTORY_SUMMARY' => sprintf($url_format, 'history_summary'),
-                'U_MAINT_SESSIONS' => sprintf($url_format, 'sessions'),
-                'U_MAINT_FEEDS' => sprintf($url_format, 'feeds'),
-                'U_MAINT_DATABASE' => sprintf($url_format, 'database'),
-                'U_MAINT_C13Y' => sprintf($url_format, 'c13y'),
-                'U_MAINT_SEARCH' => sprintf($url_format, 'search'),
-                'U_MAINT_COMPILED_TEMPLATES' => sprintf($url_format, 'compiled-templates'),
-                'U_MAINT_DERIVATIVES' => sprintf($url_format, 'derivatives'),
-                'purge_derivatives' => $purge_urls,
-                'U_HELP' => $this->urlService->getRootUrl() . 'admin/popuphelp.php?page=maintenance',
-
-                'PHPWG_URL' => AppInfo::URL,
-                'PWG_VERSION' => AppInfo::VERSION,
-                'U_CHECK_UPGRADE' => sprintf($url_format, 'check_upgrade'),
-                'OS' => PHP_OS,
-                'PHP_VERSION' => PHP_VERSION,
-                'DB_ENGINE' => 'MySQL',
-                'DB_VERSION' => $db_version,
-                'U_PHPINFO' => sprintf($url_format, 'phpinfo'),
-                'PHP_DATATIME' => $php_current_timestamp,
-                'DB_DATATIME' => $db_current_date,
-                'pwg_token' => $pwg_token,
-                'cache_sizes' => $cache_sizes,
-                'time_elapsed_since_last_calc' => $time_elapsed_since_last_calc,
-            ]
-        );
-
         // graphics library
+        $graphics_library = null;
         switch (PwgImage::get_library()) {
             case 'ext_imagick':
                 $library = 'External ImageMagick';
@@ -187,7 +154,7 @@ final class MaintenanceActionsPageRenderer
                 if ((bool) preg_match('/Version: ImageMagick (\d+\.\d+\.\d+-?\d*)/', $returnarray_line0, $match)) {
                     $library .= ' ' . $match[1];
                 }
-                $template->assign('GRAPHICS_LIBRARY', $library);
+                $graphics_library = $library;
                 break;
 
             case 'imagick':
@@ -196,44 +163,34 @@ final class MaintenanceActionsPageRenderer
                 if ((bool) preg_match('/ImageMagick \d+\.\d+\.\d+-?\d*/', $version['versionString'], $match)) {
                     $library = $match[0];
                 }
-                $template->assign('GRAPHICS_LIBRARY', $library);
+                $graphics_library = $library;
                 break;
 
             case 'gd':
                 $gd_info = gd_info();
                 $gd_version = $gd_info['GD Version'] ?? null;
                 $gd_version = is_string($gd_version) ? $gd_version : '';
-                $template->assign('GRAPHICS_LIBRARY', 'GD ' . $gd_version);
+                $graphics_library = 'GD ' . $gd_version;
                 break;
         }
 
+        $maint_unlock_gallery = null;
+        $maint_lock_gallery = null;
         if ($this->currentConfig->galleryLocked()) {
-            $template->assign(
-                [
-                    'U_MAINT_UNLOCK_GALLERY' => sprintf($url_format, 'unlock_gallery'),
-                ]
-            );
+            $maint_unlock_gallery = sprintf($url_format, 'unlock_gallery');
         } else {
-            $template->assign(
-                [
-                    'U_MAINT_LOCK_GALLERY' => sprintf($url_format, 'lock_gallery'),
-                ]
-            );
+            $maint_lock_gallery = sprintf($url_format, 'lock_gallery');
         }
 
         $db_maintenance = $this->dbMaintenanceRepository;
         $nb_lounge = $db_maintenance->countLoungeItems();
 
+        $u_empty_lounge = null;
+        $lounge_counter = null;
         if ($nb_lounge > 0) {
-            $template->assign(
-                [
-                    'U_EMPTY_LOUNGE' => sprintf($url_format, 'empty_lounge'),
-                    'LOUNGE_COUNTER' => $nb_lounge,
-                ]
-            );
+            $u_empty_lounge = sprintf($url_format, 'empty_lounge');
+            $lounge_counter = $nb_lounge;
         }
-
-        $template->assign('isWebmaster', ($this->accessControl->isWebmaster()) ? 1 : 0);
 
         // +-------------------------------------------------------------------+
         // | Define advanced features                                              |
@@ -242,7 +199,44 @@ final class MaintenanceActionsPageRenderer
         // $advanced_features is array of array composed of CAPTION & URL
         $advanced_features_event = $this->eventDispatcher->dispatchChange(new GetAdminAdvancedFeaturesLinks([]));
 
-        $template->assign('advanced_features', $advanced_features_event->advancedFeatures);
+        $template->assignContext(new MaintenanceActionsPageContext(
+            maintActions: $maintActions,
+            maintCategories: sprintf($url_format, 'categories'),
+            maintImages: sprintf($url_format, 'images'),
+            maintOrphanTags: sprintf($url_format, 'delete_orphan_tags'),
+            maintUserCache: sprintf($url_format, 'user_cache'),
+            maintHistoryDetail: sprintf($url_format, 'history_detail'),
+            maintHistorySummary: sprintf($url_format, 'history_summary'),
+            maintSessions: sprintf($url_format, 'sessions'),
+            maintFeeds: sprintf($url_format, 'feeds'),
+            maintDatabase: sprintf($url_format, 'database'),
+            maintC13y: sprintf($url_format, 'c13y'),
+            maintSearch: sprintf($url_format, 'search'),
+            maintCompiledTemplates: sprintf($url_format, 'compiled-templates'),
+            maintDerivatives: sprintf($url_format, 'derivatives'),
+            purgeDerivatives: $purge_urls,
+            helpUrl: $this->urlService->getRootUrl() . 'admin/popuphelp.php?page=maintenance',
+            phpwgUrl: AppInfo::URL,
+            pwgVersion: AppInfo::VERSION,
+            checkUpgradeUrl: sprintf($url_format, 'check_upgrade'),
+            os: PHP_OS,
+            phpVersion: PHP_VERSION,
+            dbEngine: 'MySQL',
+            dbVersion: $db_version,
+            phpinfoUrl: sprintf($url_format, 'phpinfo'),
+            phpCurrentTimestamp: $php_current_timestamp,
+            dbCurrentDate: $db_current_date,
+            pwgToken: $pwg_token,
+            cacheSizes: $cache_sizes,
+            timeElapsedSinceLastCalc: $time_elapsed_since_last_calc,
+            graphicsLibrary: $graphics_library,
+            maintUnlockGallery: $maint_unlock_gallery,
+            maintLockGallery: $maint_lock_gallery,
+            uEmptyLounge: $u_empty_lounge,
+            loungeCounter: $lounge_counter,
+            isWebmaster: ($this->accessControl->isWebmaster()) ? 1 : 0,
+            advancedFeatures: $advanced_features_event->advancedFeatures,
+        ));
 
         // +-------------------------------------------------------------------+
         // |                           sending html code                           |

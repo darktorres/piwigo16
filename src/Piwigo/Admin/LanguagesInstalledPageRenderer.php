@@ -12,6 +12,7 @@ use Piwigo\Admin\Extensions\ExtensionType;
 use Piwigo\Admin\Extensions\PemCatalog;
 use Piwigo\Admin\Extensions\PluginMigrationEntity;
 use Piwigo\Admin\Extensions\ZipExtractor;
+use Piwigo\Admin\Projection\LanguagesInstalledPageContext;
 use Piwigo\Admin\Request\LanguagesInstalledActionRequest;
 use Piwigo\Auth\AccessControl;
 use Piwigo\Config\ConfigService;
@@ -153,11 +154,6 @@ final class LanguagesInstalledPageRenderer
             }
         }
 
-        $template->assign(
-            [
-                'languages' => $tpl_languages,
-            ]
-        );
         $template->append('language_states', 'active');
         $template->append('language_states', 'inactive');
 
@@ -171,9 +167,12 @@ final class LanguagesInstalledPageRenderer
             $extension_repository->delete(ExtensionType::Language, $language_id);
         }
 
-        $template->assign('isWebmaster', ($this->accessControl->isWebmaster()) ? 1 : 0);
-        $template->assign('ADMIN_PAGE_TITLE', $this->lang->t('Languages'));
-        $template->assign('CONF_ENABLE_EXTENSIONS_INSTALL', $this->currentConfig->enableExtensionsInstall());
+        $template->assignContext(new LanguagesInstalledPageContext(
+            languages: $tpl_languages,
+            isWebmaster: $this->accessControl->isWebmaster(),
+            adminPageTitle: $this->lang->t('Languages'),
+            enableExtensionsInstall: $this->currentConfig->enableExtensionsInstall(),
+        ));
 
         $template->assign_var_from_handle('ADMIN_CONTENT', 'languages');
     }

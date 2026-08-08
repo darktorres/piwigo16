@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin;
 
+use Piwigo\Admin\Projection\PictureCoiPageContext;
 use Piwigo\Admin\Request\PictureCoiRequest;
 use Piwigo\Auth\AccessControl;
 use Piwigo\Config\CurrentConfig;
@@ -91,16 +92,15 @@ final class PictureCoiPageRenderer
             $uid = '';
         }
 
-        $tpl_var = [
-            'TITLE' => $htmlRenderer->renderElementName($row),
-            'ALT' => $row['file'],
-            'U_IMG' => DerivativeImage::url(ImageStdParams::LARGE, $row),
-        ];
+        $title = $htmlRenderer->renderElementName($row);
+        $alt = $row['file'];
+        $imgUrl = DerivativeImage::url(ImageStdParams::LARGE, $row);
 
         $coi_raw = $row['coi'];
         $row_coi = is_string($coi_raw) ? $coi_raw : '';
+        $coi = null;
         if ($row_coi !== '' && $row_coi !== '0') {
-            $tpl_var['coi'] = [
+            $coi = [
                 'l' => DerivativeUrlCodec::charToFraction($row_coi[0]),
                 't' => DerivativeUrlCodec::charToFraction($row_coi[1]),
                 'r' => DerivativeUrlCodec::charToFraction($row_coi[2]),
@@ -118,7 +118,12 @@ final class PictureCoiPageRenderer
             }
         }
 
-        $template->assign($tpl_var);
+        $template->assignContext(new PictureCoiPageContext(
+            title: $title,
+            alt: $alt,
+            imgUrl: $imgUrl,
+            coi: $coi,
+        ));
         $template->set_filename('picture_coi', 'picture_coi.tpl');
 
         $template->assign_var_from_handle('ADMIN_CONTENT', 'picture_coi');

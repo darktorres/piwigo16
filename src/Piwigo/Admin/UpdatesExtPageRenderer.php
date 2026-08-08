@@ -6,6 +6,7 @@ namespace Piwigo\Admin;
 
 use Piwigo\Admin\Extensions\ExtensionType;
 use Piwigo\Admin\Extensions\ExtensionUpdateChecker;
+use Piwigo\Admin\Projection\UpdatesExtPageContext;
 use Piwigo\Auth\AccessControl;
 use Piwigo\Bootstrap\RequestBootstrap;
 use Piwigo\Config\ConfigService;
@@ -154,13 +155,16 @@ final class UpdatesExtPageRenderer
             return;
         }
 
-        $template->assign('UPDATES_EXTENSION', $updates_extension);
-        $template->assign('SHOW_RESET', $show_reset);
-        $template->assign('PWG_TOKEN', new CsrfService($currentConfig)->getToken());
-        $template->assign('EXT_TYPE', $pageSlug === 'updates' ? 'extensions' : $pageSlug);
-        $template->assign('isWebmaster', ($accessControl->isWebmaster()) ? 1 : 0);
+        $template->assignContext(new UpdatesExtPageContext(
+            updatesExtension: $updates_extension,
+            showReset: $show_reset,
+            pwgToken: new CsrfService($currentConfig)
+                ->getToken(),
+            extType: $pageSlug === 'updates' ? 'extensions' : $pageSlug,
+            isWebmaster: ($accessControl->isWebmaster()) ? 1 : 0,
+            adminPageTitle: $lang->t('Updates'),
+        ));
         $template->set_filename('plugin_admin_content', 'updates_ext.tpl');
         $template->assign_var_from_handle('ADMIN_CONTENT', 'plugin_admin_content');
-        $template->assign('ADMIN_PAGE_TITLE', $lang->t('Updates'));
     }
 }

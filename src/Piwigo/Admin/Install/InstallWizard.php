@@ -24,6 +24,8 @@ use Piwigo\Admin\Extensions\ExtensionType;
 use Piwigo\Admin\Extensions\PemCatalog;
 use Piwigo\Admin\Extensions\PluginMigrationEntity;
 use Piwigo\Admin\Extensions\ZipExtractor;
+use Piwigo\Admin\Install\Projection\InstallConfigFailurePageContext;
+use Piwigo\Admin\Install\Projection\InstallRenderPageContext;
 use Piwigo\Admin\Install\Request\InstallWizardRequest;
 use Piwigo\Auth\AccessLevelChecker;
 use Piwigo\Auth\AuthRepository;
@@ -576,13 +578,11 @@ define(\'DB_COLLATE\', \'\');
                     @fclose($fh);
                 }
 
-                $this->template->assign(
-                    [
-                        'config_creation_failed' => true,
-                        'config_url' => 'install.php?dl=' . $tmp_filename,
-                        'config_file_content' => $file_content,
-                    ]
-                );
+                $this->template->assignContext(new InstallConfigFailurePageContext(
+                    configCreationFailed: true,
+                    configUrl: 'install.php?dl=' . $tmp_filename,
+                    configFileContent: $file_content,
+                ));
             } else {
                 @fputs($fp, $file_content, strlen($file_content));
                 @fclose($fp);
@@ -744,37 +744,19 @@ define(\'DB_COLLATE\', \'\');
         $template = $this->template;
 
         $languages_options = [];
+        $language_selection = null;
         foreach ($this->fsLanguages as $language_code => $fs_language) {
             if ($this->language === $language_code) {
-                $template->assign('language_selection', $language_code);
+                $language_selection = $language_code;
             }
             $fs_language_name = $fs_language['name'] ?? null;
             $languages_options[$language_code] = is_string($fs_language_name) ? $fs_language_name : $language_code;
         }
-        $template->assign('language_options', $languages_options);
-
-        $template->assign(
-            [
-                'T_CONTENT_ENCODING' => 'utf-8',
-                'RELEASE' => AppInfo::VERSION,
-                'F_ACTION' => 'install.php?language=' . $this->language,
-                'F_DB_HOST' => $this->dbhost,
-                'F_DB_USER' => $this->dbuser,
-                'F_DB_NAME' => $this->dbname,
-                'F_DB_PREFIX' => $this->prefixeTable,
-                'F_DB_DRIVER' => $this->dblayer,
-                'F_DB_PORT' => $this->dbport,
-                'F_ADMIN' => $this->adminName,
-                'F_ADMIN_EMAIL' => $this->adminMail,
-                'EMAIL' => '<span class="adminEmail">' . $this->adminMail . '</span>',
-                'F_NEWSLETTER_SUBSCRIBE' => $this->isNewsletterSubscribe,
-                'L_INSTALL_HELP' => $this->lang->t('Need help ? Ask your question on <a href="%s">Piwigo message board</a>.', AppInfo::URL . '/forum'),
-            ]
-        );
 
         // -------------------------------------------- errors & infos display
+        $install_value = null;
         if ($this->step === 1) {
-            $template->assign('install', true);
+            $install_value = true;
         } else {
             // Only reached once performInstall() (step 2) already ran
             // successfully with this same connection.
@@ -903,13 +885,27 @@ define(\'DB_COLLATE\', \'\');
                     );
             }
         }
-        if (count($this->errors) !== 0) {
-            $template->assign('errors', $this->errors);
-        }
-
-        if (count($this->infos) !== 0) {
-            $template->assign('infos', $this->infos);
-        }
+        $template->assignContext(new InstallRenderPageContext(
+            languageSelection: $language_selection,
+            languageOptions: $languages_options,
+            tContentEncoding: 'utf-8',
+            release: AppInfo::VERSION,
+            fAction: 'install.php?language=' . $this->language,
+            fDbHost: $this->dbhost,
+            fDbUser: $this->dbuser,
+            fDbName: $this->dbname,
+            fDbPrefix: $this->prefixeTable,
+            fDbDriver: $this->dblayer,
+            fDbPort: $this->dbport,
+            fAdmin: $this->adminName,
+            fAdminEmail: $this->adminMail,
+            email: '<span class="adminEmail">' . $this->adminMail . '</span>',
+            fNewsletterSubscribe: $this->isNewsletterSubscribe,
+            lInstallHelp: $this->lang->t('Need help ? Ask your question on <a href="%s">Piwigo message board</a>.', AppInfo::URL . '/forum'),
+            install: $install_value,
+            errors: count($this->errors) !== 0 ? $this->errors : null,
+            infos: count($this->infos) !== 0 ? $this->infos : null,
+        ));
 
         // ------------------------------------------------- html code display
         $template->pparse('install');

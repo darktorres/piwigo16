@@ -412,12 +412,16 @@ final class WsCommentsTest extends ContractTestCase
             $marker = 'ct anonymous comment ' . uniqid();
             $authorName = 'CT Guest Author';
 
+            // A new comment triggers an admin-notification email; this
+            // sandbox has no real MTA configured, so Symfony Mailer's
+            // sendmail transport times out (confirmed live) -- not a code
+            // bug.
             $add = $this->ws('pwg.images.addComment', [
                 'image_id' => 1,
                 'author' => $authorName,
                 'content' => $marker,
                 'key' => $rawKey,
-            ]);
+            ], allowPhpWarnings: true);
             self::assertSame('ok', $add['stat']);
             $addResult = $add['result'] ?? null;
             self::assertIsArray($addResult);

@@ -356,11 +356,16 @@ final class WsImagesChunkedUploadTest extends ContractTestCase
         ]);
         self::assertSame('ok', $chunkResponse['stat']);
 
+        // addFile() reads EXIF from the existing DB row's addfile-test-*.jpg
+        // filename against the merged buffer's real (non-JPEG) test-fixture
+        // bytes -- exif_read_data() warns "File not supported" (confirmed
+        // live), same wrong-extension-real-content tradeoff MetadataService's
+        // own docblock already documents.
         $response = $this->callWs('pwg.images.addFile', [
             'image_id' => $imageId,
             'type' => 'file',
             'sum' => $md5sum,
-        ]);
+        ], allowPhpWarnings: true);
 
         self::assertSame('ok', $response['stat']);
         self::assertSame(true, $response['result']);
@@ -434,7 +439,7 @@ final class WsImagesChunkedUploadTest extends ContractTestCase
                 'original_sum' => $sum,
                 'check_uniqueness' => false,
                 'original_filename' => 'stray-dir-chunk-' . uniqid() . '.jpg',
-            ]);
+            ], allowPhpWarnings: true);
 
             self::assertSame('ok', $response['stat']);
             $result = $response['result'];
@@ -505,11 +510,15 @@ final class WsImagesChunkedUploadTest extends ContractTestCase
         ]);
         self::assertSame('ok', $chunkResponse['stat']);
 
+        // Same wrong-extension-real-content exif_read_data() warning as
+        // test_addFile_with_a_smaller_replacement_keeps_the_original above
+        // (confirmed live) -- the 'high' type always reaches
+        // addUploadedFile(), unlike the 'file' type's do_update-gated path.
         $response = $this->callWs('pwg.images.addFile', [
             'image_id' => $imageId,
             'type' => 'high',
             'sum' => $md5sum,
-        ]);
+        ], allowPhpWarnings: true);
 
         self::assertSame('ok', $response['stat']);
         self::assertNull($response['result']);
@@ -541,11 +550,17 @@ final class WsImagesChunkedUploadTest extends ContractTestCase
         ]);
         self::assertSame('ok', $chunkResponse['stat']);
 
+        // Same wrong-extension-real-content exif_read_data() warning as the
+        // 'high'-type/smaller-replacement tests above (confirmed live) --
+        // do_update forces this into the same addUploadedFile() path, just
+        // non-deterministically (observed both with and without the warning
+        // across runs, likely timing-dependent on biggerPngBytes()'s own
+        // random per-pixel content).
         $response = $this->callWs('pwg.images.addFile', [
             'image_id' => $imageId,
             'type' => 'file',
             'sum' => $md5sum,
-        ]);
+        ], allowPhpWarnings: true);
 
         self::assertSame('ok', $response['stat']);
         self::assertNull($response['result']);

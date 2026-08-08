@@ -79,9 +79,9 @@ abstract class ContractTestCase extends IntegrationTestCase
      * @param array<string, mixed> $params
      * @return array<string, mixed>
      */
-    protected function ws(string $method, array $params = []): array
+    protected function ws(string $method, array $params = [], bool $allowPhpWarnings = false): array
     {
-        return $this->callWs($method, $params);
+        return $this->callWs($method, $params, $allowPhpWarnings);
     }
 
     /** Establishes an admin session on the current cookie jar via pwg.session.login. */
@@ -149,11 +149,11 @@ abstract class ContractTestCase extends IntegrationTestCase
      * @param array<string, mixed> $params
      * @return array<string, mixed>
      */
-    protected function wsAdmin(string $method, array $params = []): array
+    protected function wsAdmin(string $method, array $params = [], bool $allowPhpWarnings = false): array
     {
         $this->loginAsAdmin();
 
-        return $this->callWs($method, $params);
+        return $this->callWs($method, $params, $allowPhpWarnings);
     }
 
     /**
@@ -212,7 +212,7 @@ abstract class ContractTestCase extends IntegrationTestCase
      * @param array<string, mixed> $params
      * @return array<string, mixed>
      */
-    protected function callWs(string $method, array $params): array
+    protected function callWs(string $method, array $params, bool $allowPhpWarnings = false): array
     {
         $url = $this->baseUrl . '/ws.php?format=json';
 
@@ -221,6 +221,7 @@ abstract class ContractTestCase extends IntegrationTestCase
 
         $userAgent = self::USER_AGENT;
         $cookieJar = $this->cookieJar();
+        $responseHeaders = [];
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
         curl_setopt($ch, CURLOPT_POST, true);
         curl_setopt($ch, CURLOPT_USERAGENT, $userAgent);
@@ -228,6 +229,7 @@ abstract class ContractTestCase extends IntegrationTestCase
         curl_setopt($ch, CURLOPT_COOKIEJAR, $cookieJar);
         curl_setopt($ch, CURLOPT_COOKIEFILE, $cookieJar);
         curl_setopt($ch, CURLOPT_HTTPHEADER, $this->testHeader());
+        curl_setopt($ch, CURLOPT_HEADERFUNCTION, self::collectHeaderInto($responseHeaders));
 
         $body   = curl_exec($ch);
         $status = curl_getinfo($ch, CURLINFO_HTTP_CODE);
@@ -235,6 +237,10 @@ abstract class ContractTestCase extends IntegrationTestCase
 
         self::assertIsString($body, sprintf('WS call to %s returned no body', $method));
         self::assertLessThan(500, $status, sprintf('WS %s returned server error HTTP %d: %s', $method, $status, $body));
+
+        if (! $allowPhpWarnings) {
+            self::assertNoPhpErrorHeaders($responseHeaders, $method);
+        }
 
         $decoded = json_decode($body, true);
         self::assertIsArray($decoded, sprintf('WS %s response is not valid JSON (HTTP %d): %s', $method, $status, $body));
@@ -244,6 +250,49 @@ abstract class ContractTestCase extends IntegrationTestCase
         // string-keyed.
         /** @var array<string, mixed> $decoded */
         return $decoded;
+    }
+
+    /**
+     * Builds a CURLOPT_HEADERFUNCTION callback that appends every raw
+     * response header line curl reads into $sink (by reference), for
+     * assertNoPhpErrorHeaders() to inspect afterwards. Must return the
+     * consumed byte count -- returning anything else aborts the transfer.
+     * @param list<string> $sink
+     */
+    private static function collectHeaderInto(array &$sink): \Closure
+    {
+        return static function (\CurlHandle $ch, string $headerLine) use (&$sink): int {
+            $sink[] = $headerLine;
+
+            return strlen($headerLine);
+        };
+    }
+
+    /**
+     * Fails if the response carried any X-PHP-Error-N header --
+     * Piwigo\Core\ErrorCollector's real, working mechanism for surfacing a
+     * PHP warning/notice/deprecation raised by the separate Apache/PHP
+     * process ws.php runs in, invisible to PHPUnit's own in-process
+     * failOnWarning/failOnDeprecation gate. Reads the SAME response the WS
+     * call itself returned -- unlike IntegrationTestCase::assertNoPhpErrors(),
+     * which drains ErrorCollector via a separate follow-up request and so
+     * can never see a prior request's (per-request, not static) buffer.
+     * @param list<string> $headers
+     */
+    private static function assertNoPhpErrorHeaders(array $headers, string $method): void
+    {
+        $errors = [];
+        foreach ($headers as $header) {
+            if (preg_match('/^X-PHP-Error-\d+:\s*(.+)$/i', trim($header), $matches) === 1) {
+                $errors[] = $matches[1];
+            }
+        }
+
+        self::assertSame(
+            [],
+            $errors,
+            sprintf("WS %s triggered %d server-side PHP warning(s)/deprecation(s):\n%s", $method, count($errors), implode("\n", $errors))
+        );
     }
 
     /**
@@ -285,13 +334,14 @@ abstract class ContractTestCase extends IntegrationTestCase
      * @param array<string, mixed> $params
      * @return array<string, mixed>
      */
-    protected function callWsAllowingServerError(string $method, array $params): array
+    protected function callWsAllowingServerError(string $method, array $params, bool $allowPhpWarnings = false): array
     {
         $url = $this->baseUrl . '/ws.php?format=json';
         $ch = curl_init($url);
         self::assertNotFalse($ch);
 
         $cookieJar = $this->cookieJar();
+        $responseHeaders = [];
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
         curl_setopt($ch, CURLOPT_POST, true);
         curl_setopt($ch, CURLOPT_USERAGENT, self::USER_AGENT);
@@ -299,11 +349,15 @@ abstract class ContractTestCase extends IntegrationTestCase
         curl_setopt($ch, CURLOPT_COOKIEJAR, $cookieJar);
         curl_setopt($ch, CURLOPT_COOKIEFILE, $cookieJar);
         curl_setopt($ch, CURLOPT_HTTPHEADER, $this->testHeader());
+        curl_setopt($ch, CURLOPT_HEADERFUNCTION, self::collectHeaderInto($responseHeaders));
 
         $body = curl_exec($ch);
         unset($ch);
 
         self::assertIsString($body);
+        if (! $allowPhpWarnings) {
+            self::assertNoPhpErrorHeaders($responseHeaders, $method);
+        }
         $decoded = json_decode($body, true);
         self::assertIsArray($decoded);
         /** @var array<string, mixed> $decoded */

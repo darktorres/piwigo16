@@ -483,10 +483,14 @@ final class WsImagesMaintenanceTest extends ContractTestCase
         chmod($formatDir, 0o555);
 
         try {
+            // formatsDelete()'s own unlink() failure path deliberately
+            // trigger_error()s an E_USER_WARNING as its own failure-signaling
+            // mechanism (see PwgImages.php) -- that's this test's whole
+            // point, not a bug.
             $response = $this->callWs('pwg.images.formats.delete', [
                 'format_id' => $formatId,
                 'pwg_token' => $this->pwgToken(),
-            ]);
+            ], allowPhpWarnings: true);
 
             self::assertSame('ok', $response['stat']);
             self::assertSame(false, $response['result']);

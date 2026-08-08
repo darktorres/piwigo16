@@ -79,7 +79,11 @@ final class WsImagesGetInfoAndCommentTest extends ContractTestCase
     {
         $imageId = $this->insertOrphanImage();
 
-        $response = $this->ws('pwg.images.getInfo', ['image_id' => $imageId]);
+        // An orphan photo (DB row, no backing file) is the whole point of
+        // this fixture -- SrcImage::get_size()'s getimagesize() call warns
+        // "Failed to open stream" on the deliberately-missing file
+        // (confirmed live, before the permission check below even runs).
+        $response = $this->ws('pwg.images.getInfo', ['image_id' => $imageId], allowPhpWarnings: true);
 
         self::assertSame('fail', $response['stat']);
         self::assertSame(401, $response['err']);
@@ -90,7 +94,9 @@ final class WsImagesGetInfoAndCommentTest extends ContractTestCase
     {
         $imageId = $this->insertOrphanImage();
 
-        $response = $this->wsAdmin('pwg.images.getInfo', ['image_id' => $imageId]);
+        // Same deliberately-missing-file getimagesize() warning as the
+        // guest variant above.
+        $response = $this->wsAdmin('pwg.images.getInfo', ['image_id' => $imageId], allowPhpWarnings: true);
 
         self::assertSame('ok', $response['stat']);
         $result = $response['result'];
@@ -218,13 +224,16 @@ final class WsImagesGetInfoAndCommentTest extends ContractTestCase
 
         sleep(3);
 
+        // A moderated comment triggers an admin-notification email; this
+        // sandbox has no real MTA configured, so Symfony Mailer's sendmail
+        // transport times out (confirmed live) -- not a code bug.
         $content = 'Moderated comment ' . uniqid();
         $response = $this->callWs('pwg.images.addComment', [
             'image_id' => 1,
             'author' => $username,
             'content' => $content,
             'key' => $key,
-        ]);
+        ], allowPhpWarnings: true);
 
         self::assertSame('ok', $response['stat']);
         $commentResult = $response['result'];

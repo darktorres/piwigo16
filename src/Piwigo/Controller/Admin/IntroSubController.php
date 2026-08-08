@@ -19,6 +19,7 @@ use Piwigo\Admin\Tabsheet;
 use Piwigo\Category\CategoryService;
 use Piwigo\Comment\CommentService;
 use Piwigo\Config\CurrentConfig;
+use Piwigo\Controller\Admin\Projection\IntroPageContext;
 use Piwigo\Controller\Admin\Request\IntroActionRequest;
 use Piwigo\Core\AppInfo;
 use Piwigo\Core\CurrentLogger;
@@ -187,6 +188,9 @@ final class IntroSubController implements AdminSubControllerInterface
             'intro' => 'intro.tpl',
         ]);
 
+        $newsletter_email = null;
+        $newsletter_subscribe_base_url = null;
+        $newsletter_old_newsletters_url = null;
         if ($this->currentConfig->showNewsletterSubscription() and ($this->preferencesService->getShowNewsletterSubscription() ?? true)) {
             $register_date = (new UserRepository(EntityManagerFactory::build($conn), $this->eventDispatcher, $this->currentConfig))
                 ->findEarliestRegistrationDate();
@@ -200,13 +204,9 @@ final class IntroSubController implements AdminSubControllerInterface
                 $user = $this->currentUser->get();
                 $user_language = $user->language->value;
 
-                $template->assign(
-                    [
-                        'EMAIL' => $user->email,
-                        'SUBSCRIBE_BASE_URL' => AdminUiHelper::getNewsletterSubscribeBaseUrl($user_language),
-                        'OLD_NEWSLETTERS_URL' => AdminUiHelper::getOldNewslettersBaseUrl($user_language),
-                    ]
-                );
+                $newsletter_email = $user->email?->value;
+                $newsletter_subscribe_base_url = AdminUiHelper::getNewsletterSubscribeBaseUrl($user_language);
+                $newsletter_old_newsletters_url = AdminUiHelper::getOldNewslettersBaseUrl($user_language);
             }
 
         }
@@ -222,28 +222,7 @@ final class IntroSubController implements AdminSubControllerInterface
             $du_decimals = 0;
         }
 
-        $template->assign(
-            [
-                'NB_PHOTOS' => $stats->nbPhotos,
-                'NB_ALBUMS' => $stats->nbCategories,
-                'NB_TAGS' => $stats->nbTags,
-                'NB_IMAGE_TAG' => $stats->nbImageTag,
-                'NB_USERS' => $stats->nbUsers,
-                'NB_GROUPS' => $stats->nbGroups,
-                'NB_RATES' => $stats->nbRates,
-                'NB_VIEWS' => AdminUiHelper::numberFormatHumanReadable($nb_views),
-                'NB_PLUGINS' => count($this->loadedPlugins->get()),
-                'STORAGE_USED' => str_replace(' ', '&nbsp;', $this->lang->t('%sGB', number_format($du_gb, $du_decimals))),
-                'U_QUICK_SYNC' => $this->urlService->getRootUrl() . 'admin.php?page=site_update&amp;site=1&amp;quick_sync=1&amp;pwg_token=' . new CsrfService($this->currentConfig)->getToken(),
-                'CHECK_FOR_UPDATES' => $this->currentConfig->dashboardCheckForUpdates(),
-            ]
-        );
-
-        if ($this->currentConfig->activateComments()) {
-            $template->assign('NB_COMMENTS', $this->commentService->countAll());
-        } else {
-            $template->assign('NB_COMMENTS', 0);
-        }
+        $nb_comments = $this->currentConfig->activateComments() ? $this->commentService->countAll() : 0;
 
         if ($this->currentConfig->showPiwigoLatestNews()) {
             $latest_news = self::getLatestNews($this->lang, $this->currentConfig, $this->paths);
@@ -449,12 +428,6 @@ final class IntroSubController implements AdminSubControllerInterface
             $chart_data[$chart_w][$chart_d] = $size;
         }
 
-        // Assign data for the template
-        $template->assign('ACTIVITY_WEEK_NUMBER', $week_number);
-        $template->assign('ACTIVITY_LAST_WEEKS', $activity_last_weeks);
-        $template->assign('ACTIVITY_CHART_DATA', $chart_data);
-        $template->assign('ACTIVITY_CHART_NUMBER_SIZES', $size);
-
         $lang_days = $this->lang->days();
 
         $day_labels = [];
@@ -464,7 +437,6 @@ final class IntroSubController implements AdminSubControllerInterface
             $day_name = is_string($day_name) ? $day_name : '';
             $day_labels[] = mb_substr($day_name, 0, 3);
         }
-        $template->assign('DAY_LABELS', $day_labels);
 
         // +-----------------------------------------------------------------------+
         // |                           get storage data                            |
@@ -551,8 +523,31 @@ final class IntroSubController implements AdminSubControllerInterface
         }
 
         // Pass data to HTML
-        $template->assign('STORAGE_TOTAL', $total_storage);
-        $template->assign('STORAGE_CHART_DATA', $data_storage);
+        $template->assignContext(new IntroPageContext(
+            email: $newsletter_email,
+            subscribeBaseUrl: $newsletter_subscribe_base_url,
+            oldNewslettersUrl: $newsletter_old_newsletters_url,
+            nbPhotos: $stats->nbPhotos,
+            nbAlbums: $stats->nbCategories,
+            nbTags: $stats->nbTags,
+            nbImageTag: $stats->nbImageTag,
+            nbUsers: $stats->nbUsers,
+            nbGroups: $stats->nbGroups,
+            nbRates: $stats->nbRates,
+            nbViews: AdminUiHelper::numberFormatHumanReadable($nb_views),
+            nbPlugins: count($this->loadedPlugins->get()),
+            storageUsed: str_replace(' ', '&nbsp;', $this->lang->t('%sGB', number_format($du_gb, $du_decimals))),
+            uQuickSync: $this->urlService->getRootUrl() . 'admin.php?page=site_update&amp;site=1&amp;quick_sync=1&amp;pwg_token=' . new CsrfService($this->currentConfig)->getToken(),
+            checkForUpdates: $this->currentConfig->dashboardCheckForUpdates(),
+            nbComments: $nb_comments,
+            activityWeekNumber: $week_number,
+            activityLastWeeks: $activity_last_weeks,
+            activityChartData: $chart_data,
+            activityChartNumberSizes: $size,
+            dayLabels: $day_labels,
+            storageTotal: $total_storage,
+            storageChartData: $data_storage,
+        ));
 
         // +-----------------------------------------------------------------------+
         // |                           sending html code                           |

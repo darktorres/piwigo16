@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin;
 
+use Piwigo\Admin\Projection\TagsPageContext;
 use Piwigo\Admin\Request\TagsActionRequest;
 use Piwigo\Auth\AccessControl;
 use Piwigo\Config\CurrentConfig;
@@ -64,14 +65,6 @@ final class TagsPageRenderer
             'tags' => 'tags.tpl',
         ]);
 
-        $template->assign(
-            [
-                'F_ACTION' => $this->urlService->getRootUrl() . 'admin.php?page=tags',
-                'PWG_TOKEN' => new CsrfService($this->currentConfig)
-                    ->getToken(),
-            ]
-        );
-
         $warning_tags = '';
 
         $orphan_tags = $tagService->getOrphanTags();
@@ -105,19 +98,12 @@ final class TagsPageRenderer
             $orphan_tag_names_array .= '"]';
         }
 
-        $template->assign(
-            [
-                'orphan_tag_names_array' => $orphan_tag_names_array,
-                'warning_tags' => $warning_tags,
-            ]
-        );
-
         $message_tags = '';
         if (isset($_SESSION['message_tags'])) {
-            $message_tags = $_SESSION['message_tags'];
+            $message_tags_raw = $_SESSION['message_tags'];
+            $message_tags = is_string($message_tags_raw) ? $message_tags_raw : '';
             unset($_SESSION['message_tags']);
         }
-        $template->assign('message_tags', $message_tags);
 
         $per_page = 100;
 
@@ -154,15 +140,19 @@ final class TagsPageRenderer
         }
         usort($all_tags, $this->htmlRenderer->tagAlphaCompare(...));
 
-        $template->assign(
-            [
-                'first_tags' => array_slice($all_tags, 0, $per_page),
-                'data' => $all_tags,
-                'total' => count($all_tags),
-                'per_page' => $per_page,
-                'ADMIN_PAGE_TITLE' => $this->lang->t('Tags'),
-            ]
-        );
+        $template->assignContext(new TagsPageContext(
+            formAction: $this->urlService->getRootUrl() . 'admin.php?page=tags',
+            pwgToken: new CsrfService($this->currentConfig)
+                ->getToken(),
+            orphanTagNamesArray: $orphan_tag_names_array,
+            warningTags: $warning_tags,
+            messageTags: $message_tags,
+            firstTags: array_slice($all_tags, 0, $per_page),
+            data: $all_tags,
+            total: count($all_tags),
+            perPage: $per_page,
+            adminPageTitle: $this->lang->t('Tags'),
+        ));
 
         $template->assign_var_from_handle('ADMIN_CONTENT', 'tags');
     }

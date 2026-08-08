@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin;
 
+use Piwigo\Admin\Projection\HelpPageContext;
 use Piwigo\Admin\Request\HelpSectionRequest;
 use Piwigo\Auth\AccessControl;
 use Piwigo\Core\AccessLevel;
@@ -42,18 +43,18 @@ final class HelpPageRenderer
             'help' => 'help.tpl',
         ]);
 
-        $template->assign(
+        $help_content_raw = $lang->load(
+            'help/help_' . $tabsheet->selected . '.html',
+            '',
             [
-                'HELP_CONTENT' => $lang->load(
-                    'help/help_' . $tabsheet->selected . '.html',
-                    '',
-                    [
-                        'return' => true,
-                    ]
-                ),
-                'HELP_SECTION_TITLE' => $tabsheet->sheets[$tabsheet->selected]->caption,
+                'return' => true,
             ]
         );
+
+        $template->assignContext(new HelpPageContext(
+            helpContent: is_string($help_content_raw) ? $help_content_raw : '',
+            helpSectionTitle: $tabsheet->sheets[$tabsheet->selected]->caption,
+        ));
 
         $user_language = $currentUser->get()
             ->language->value;

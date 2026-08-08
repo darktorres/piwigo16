@@ -21,6 +21,10 @@ use Piwigo\Core\TimingHelper;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Permission\PermissionService;
 use Piwigo\Permission\SqlCondition;
+use Piwigo\Search\Projection\SearchAlbumsFoundPageContext;
+use Piwigo\Search\Projection\SearchDateFilterPageContext;
+use Piwigo\Search\Projection\SearchFilterPageContext;
+use Piwigo\Search\Projection\SearchTagsFoundPageContext;
 use Piwigo\Section\SectionContext;
 use Piwigo\Tag\TagService;
 use Piwigo\Users\CurrentUser;
@@ -111,8 +115,6 @@ final readonly class SearchFilterRenderer
         /** @var array<string, array<string, mixed>> $filtersViews */
         $filtersViews = array_filter($filtersViewsRaw, is_array(...));
 
-        $template->assign('display_filter', $filtersViews);
-
         // we add the search_details emptiness check in this condition
         // because it only applies to regular search, not the legacy
         // qsearch (SectionContext::searchDetails stays [] whenever
@@ -138,6 +140,17 @@ final readonly class SearchFilterRenderer
 
         $userId = (string) $this->currentUser->get()
             ->id->value;
+
+        $tags = null;
+        $authors = null;
+        $addedBy = null;
+        $fullname_of_json = null;
+        $filetypes = null;
+        $rating = null;
+        $filesize = null;
+        $ratios = null;
+        $height = null;
+        $width = null;
 
         $langMonth = $this->lang->months();
 
@@ -256,7 +269,7 @@ final readonly class SearchFilterRenderer
                 }
             }
 
-            $template->assign('TAGS', $filterTags);
+            $tags = $filterTags;
 
             $filterTagIds = count($filterTags) > 0 ? $extractTagIds($filterTags) : [];
 
@@ -307,8 +320,6 @@ final readonly class SearchFilterRenderer
                     $authorNames[] = $authorName;
                 }
             }
-            $template->assign('AUTHORS', $authors);
-
             if (! is_array($searchFields['author'])) {
                 $searchFields['author'] = [];
             }
@@ -427,8 +438,6 @@ final readonly class SearchFilterRenderer
                 }
             }
 
-            $template->assign('ADDED_BY', $addedBy);
-
             $addedByIds = [];
             if (is_array($searchFields['added_by'])) {
                 foreach ($searchFields['added_by'] as $addedByWord) {
@@ -493,7 +502,7 @@ final readonly class SearchFilterRenderer
                     $fullnameOf[$row->id->value] = strip_tags($catDisplayName);
                 }
 
-                $template->assign('fullname_of', json_encode($fullnameOf));
+                $fullname_of_json = json_encode($fullnameOf);
 
                 if (! is_array($searchFields['cat'])) {
                     $searchFields['cat'] = [];
@@ -554,9 +563,9 @@ final readonly class SearchFilterRenderer
                     $exts[$ext] = $filteredExts[$ext] ?? 0;
                 }
 
-                $template->assign('FILETYPES', $exts);
+                $filetypes = $exts;
             } else {
-                $template->assign('FILETYPES', $allExts);
+                $filetypes = $allExts;
             }
         } elseif (isset($searchFields['filetypes'])) {
             unset($searchFields['filetypes']);
@@ -564,7 +573,7 @@ final readonly class SearchFilterRenderer
 
         // For rating
         if ($this->currentConfig->rateEnabled()) {
-            $template->assign('SHOW_FILTER_RATINGS', true);
+            $show_filter_ratings = true;
 
             if (isset($searchFields['ratings']) and (bool) $displayFilters['rating']['access']) {
                 $filterCondition = $this->getClauseForFilter('ratings', $page);
@@ -604,12 +613,12 @@ final readonly class SearchFilterRenderer
                         $this->cacheSet($cacheKey, $ratings);
                     }
                 }
-                $template->assign('RATING', $ratings);
+                $rating = $ratings;
             } elseif (isset($searchFields['ratings'])) {
                 unset($searchFields['ratings']);
             }
         } else {
-            $template->assign('SHOW_FILTER_RATINGS', false);
+            $show_filter_ratings = false;
             if (isset($searchFields['ratings'])) {
                 unset($searchFields['ratings']);
             }
@@ -662,7 +671,6 @@ final readonly class SearchFilterRenderer
                 ],
             ];
 
-            $template->assign('FILESIZE', $filesize);
         } elseif (isset($searchFields['filesize_min']) && isset($searchFields['filesize_max']) and ! ((bool) $displayFilters['file_size']['access'])) {
             unset($searchFields['filesize_min']);
             unset($searchFields['filesize_max']);
@@ -718,7 +726,6 @@ final readonly class SearchFilterRenderer
                     $this->cacheSet($cacheKey, $ratios);
                 }
             }
-            $template->assign('RATIOS', $ratios);
         } elseif (isset($searchFields['ratios'])) {
             unset($searchFields['ratios']);
         }
@@ -765,7 +772,6 @@ final readonly class SearchFilterRenderer
                 ],
             ];
 
-            $template->assign('HEIGHT', $height);
         } elseif (isset($searchFields['height_min']) && isset($searchFields['height_max']) and ! ((bool) $displayFilters['height']['access'])) {
             unset($searchFields['height_min']);
             unset($searchFields['height_max']);
@@ -813,18 +819,30 @@ final readonly class SearchFilterRenderer
                 ],
             ];
 
-            $template->assign('WIDTH', $width);
         } elseif (isset($searchFields['width_min']) && isset($searchFields['width_max']) and ! ((bool) $displayFilters['width']['access'])) {
             unset($searchFields['width_min']);
             unset($searchFields['width_max']);
         }
 
-        $template->assign(
-            [
-                'GP' => json_encode($mySearch),
-                'SEARCH_ID' => $page['search'],
-            ]
-        );
+        $search_id = $page['search'] ?? null;
+        $search_id = is_string($search_id) ? $search_id : null;
+
+        $template->assignContext(new SearchFilterPageContext(
+            displayFilter: $filtersViews,
+            tags: $tags,
+            authors: $authors,
+            addedBy: $addedBy,
+            fullnameOf: $fullname_of_json,
+            filetypes: $filetypes,
+            showFilterRatings: $show_filter_ratings,
+            rating: $rating,
+            filesize: $filesize,
+            ratios: $ratios,
+            height: $height,
+            width: $width,
+            gp: json_encode($mySearch),
+            searchId: $search_id,
+        ));
 
         // $page['search_details'] is already known array here (guarded above).
         $pageStart = $page['start'] ?? null;
@@ -902,7 +920,7 @@ final readonly class SearchFilterRenderer
         }
 
         if (count($albumsFound) > 0) {
-            $template->assign('ALBUMS_FOUND', $albumsFound);
+            $template->assignContext(new SearchAlbumsFoundPageContext($albumsFound));
         }
     }
 
@@ -961,7 +979,7 @@ final readonly class SearchFilterRenderer
         }
 
         if (count($tagsFound) > 0) {
-            $template->assign('TAGS_FOUND', $tagsFound);
+            $template->assignContext(new SearchTagsFoundPageContext($tagsFound));
         }
     }
 
@@ -976,6 +994,8 @@ final readonly class SearchFilterRenderer
      *   `i.dateCreation`)
      * @param array<string, string> $labelForThreshold keyed by threshold id
      *   (e.g. '24h', '7d'), in display order
+     * @param 'LIST_DATE_POSTED'|'LIST_DATE_CREATED' $listTemplateVar
+     * @param 'DATE_POSTED'|'DATE_CREATED' $counterTemplateVar
      * @param array<string, mixed> $page see render()'s own docblock
      */
     private function renderDateFilter(
@@ -1108,8 +1128,12 @@ final readonly class SearchFilterRenderer
         }
         krsort($listOfDates);
 
-        $template->assign($listTemplateVar, $listOfDates);
-        $template->assign($counterTemplateVar, $counters);
+        $template->assignContext(new SearchDateFilterPageContext(
+            listKey: $listTemplateVar,
+            counterKey: $counterTemplateVar,
+            listOfDates: $listOfDates,
+            counters: $counters,
+        ));
     }
 
     private function intervalForThreshold(string $threshold): string

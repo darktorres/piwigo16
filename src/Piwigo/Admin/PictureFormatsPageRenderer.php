@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin;
 
+use Piwigo\Admin\Projection\PictureFormatsPageContext;
 use Piwigo\Admin\Request\PictureFormatsImageIdRequest;
 use Piwigo\Auth\AccessControl;
 use Piwigo\Config\CurrentConfig;
@@ -64,13 +65,13 @@ final class PictureFormatsPageRenderer
             $formats[] = $format;
         }
 
-        $template->assign([
-            'ADD_FORMATS_URL' => $urlService->getRootUrl() . 'admin.php?page=photos_add&formats=' . $image_id,
-            'IMG_SQUARE_SRC' => DerivativeImage::url($imageStdParams->get_by_type(ImageStdParams::SQUARE), $image),
-            'FORMATS' => $formats,
-            'PWG_TOKEN' => new CsrfService($currentConfig)
+        $template->assignContext(new PictureFormatsPageContext(
+            addFormatsUrl: $urlService->getRootUrl() . 'admin.php?page=photos_add&formats=' . $image_id,
+            imgSquareSrc: DerivativeImage::url($imageStdParams->get_by_type(ImageStdParams::SQUARE), $image),
+            formats: $formats,
+            pwgToken: new CsrfService($currentConfig)
                 ->getToken(),
-        ]);
+        ));
 
         $template->set_filename('picture_formats', 'picture_formats.tpl');
 

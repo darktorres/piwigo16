@@ -6,8 +6,6 @@ namespace Piwigo\Admin\Extensions;
 
 use LogicException;
 use Piwigo\Activity\ActivityService;
-use Piwigo\Admin\DummyPluginMaintain;
-use Piwigo\Admin\DummyThemeMaintain;
 use Piwigo\Admin\PluginLoader;
 use Piwigo\Admin\PluginMaintain;
 use Piwigo\Admin\ThemeMaintain;
@@ -541,7 +539,7 @@ final readonly class ExtensionLifecycle
             }
         }
 
-        return new DummyPluginMaintain($pluginId, $this->wsContext, $this->accessControl);
+        return new PluginMaintain($pluginId, $this->wsContext, $this->accessControl);
     }
 
     private function buildThemeMaintain(string $themeId): ThemeMaintain
@@ -561,7 +559,7 @@ final readonly class ExtensionLifecycle
             }
         }
 
-        return new DummyThemeMaintain($themeId);
+        return new ThemeMaintain($themeId);
     }
 
     private function stringOrDefault(mixed $value, string $default): string

@@ -31,8 +31,7 @@ class PluginMaintain
     /**
      * @param string $plugin_version
      * @param array<int, string> $errors - used to return error messages
-     * @return mixed - matches DummyPluginMaintain::install()'s committed native
-     *   `mixed` return; kept docblock-only here (not native) since a native
+     * @return mixed - kept docblock-only here (not native) since a native
      *   return type on this base class would break any real third-party plugin
      *   maintain.class.php subclass whose own override declares no return type
      *   at all (verified empirically: PHP fatals on such a mismatch)
@@ -72,11 +71,9 @@ class PluginMaintain
      * @param string $old_version
      * @param string $new_version
      * @param array<int, string> $errors - used to return error messages
-     * matches DummyPluginMaintain::update()'s committed native `void`
-     * return; written as the phpstan-only variant of the return tag below
-     * because ECS's phpdoc_no_empty_return fixer strips the generic form
-     * of that tag, which would leave this method's return type undeclared
-     * again
+     * written as the phpstan-only variant of the return tag below because
+     * ECS's phpdoc_no_empty_return fixer strips the generic form of that
+     * tag, which would leave this method's return type undeclared again
      * @phpstan-return void
      */
     public function update($old_version, $new_version, &$errors = []) {}

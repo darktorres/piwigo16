@@ -186,26 +186,6 @@ parameters:
         -
             identifier: classConstant.internalClass
             path: tests/Unit/SmokeTest.php
-        # Each is_callable('theme_*'/'plugin_*') call checks for a bare
-        # function dynamically defined by a theme's/plugin's own
-        # maintain.inc.php (include_once'd in ExtensionLifecycle from a path
-        # outside this codebase, e.g. themes/some-theme/admin/maintain.inc.php
-        # -- the specific theme/plugin is only known at runtime). PHPStan can
-        # only ever see one of two states for a userland function symbol --
-        # "known to exist" (declared via a stub/scan file, which then makes
-        # is_callable() always-true) or "not known to exist" (this case,
-        # always-false) -- confirmed empirically (see commit history): there
-        # is no PHPStan mechanism to express "conditionally declared by
-        # unanalyzed external code," which is the real runtime contract here.
-        # Same class of tooling/visibility mismatch as the Pest and
-        # php-code-coverage entries above -- not fixable in application code.
-        -
-            identifiers:
-                - function.impossibleType
-                - function.notFound
-            paths:
-                - src/Piwigo/Admin/DummyPluginMaintain.php
-                - src/Piwigo/Admin/DummyThemeMaintain.php
         # RawCodeCoverageData is entirely @internal upstream, but its
         # fromLineCoverage() static factory is the only way (public or
         # otherwise) to turn a raw pcov/xdebug-format coverage array into

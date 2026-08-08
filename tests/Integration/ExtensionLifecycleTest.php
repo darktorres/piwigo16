@@ -22,9 +22,7 @@ namespace Piwigo\Tests\Integration {
     use Piwigo\Admin\PluginLoader;
     use ReflectionMethod;
     use Piwigo\Admin\PluginMaintain;
-    use Piwigo\Admin\DummyPluginMaintain;
     use Piwigo\Admin\ThemeMaintain;
-    use Piwigo\Admin\DummyThemeMaintain;
     use Doctrine\DBAL\Connection;
     use Piwigo\Admin\Extensions\ExtensionLifecycle;
     use Piwigo\Admin\Extensions\ExtensionRepository;
@@ -52,8 +50,9 @@ namespace Piwigo\Tests\Integration {
      * this class -- see ExtensionLifecycle's own docblock). Every test id
      * used for plugin/theme actions is a synthetic, never-installed-on-disk
      * id with no 'parent' key set, so buildPluginMaintain()/
-     * buildThemeMaintain() always fall back to the Dummy*_maintain no-op
-     * classes and deltree() always receives a non-existent path (a real,
+     * buildThemeMaintain() always fall back to the PluginMaintain/
+     * ThemeMaintain base no-op classes and deltree() always receives a
+     * non-existent path (a real,
      * safe no-op -- confirmed via direct read of deltree()) -- this suite
      * never touches the real plugins/themes/language directories.
      */
@@ -790,7 +789,6 @@ PHP);
                 $maintain = $method->invoke($this->lifecycle, $id);
 
                 self::assertInstanceOf(PluginMaintain::class, $maintain);
-                self::assertNotInstanceOf(DummyPluginMaintain::class, $maintain);
             } finally {
                 $this->removePluginDir($id);
             }
@@ -824,7 +822,6 @@ PHP);
                 $maintain = $method->invoke($this->lifecycle, $id);
 
                 self::assertInstanceOf(PluginMaintain::class, $maintain);
-                self::assertNotInstanceOf(DummyPluginMaintain::class, $maintain);
             } finally {
                 $this->removePluginDir($id);
             }
@@ -860,7 +857,6 @@ PHP);
                 $maintain = $method->invoke($this->lifecycle, $id);
 
                 self::assertInstanceOf(ThemeMaintain::class, $maintain);
-                self::assertNotInstanceOf(DummyThemeMaintain::class, $maintain);
             } finally {
                 $this->removeThemeDir($id);
             }
@@ -928,11 +924,11 @@ PHP);
             // dbRow === null (never activated via performAction()) AND
             // fsEntry !== null AND no child theme depends on it -- the one
             // real success path through performThemeAction()'s 'delete'
-            // case, reaching buildThemeMaintain()/PluginMaintain::delete()
-            // (falls back to DummyThemeMaintain -- no maintain.inc.php
-            // written here) and the real FilesystemHelper::deltree() call
-            // against the real on-disk theme directory writeThemeConf()
-            // below just created.
+            // case, reaching buildThemeMaintain()/ThemeMaintain::delete()
+            // (falls back to the ThemeMaintain base no-op -- no
+            // maintain.inc.php written here) and the real
+            // FilesystemHelper::deltree() call against the real on-disk
+            // theme directory writeThemeConf() below just created.
             $id = $this->themeIdNoHyphens();
             $this->writeThemeConf($id, ['name' => 'On Disk Theme']);
 
@@ -1043,8 +1039,9 @@ PHP);
             // reaching the actual call site instead of only its callees.
             // buildThemeMaintain() (called later in this same 'deactivate'
             // flow) tolerates the relative value fine either way: a failed
-            // file_exists() there just falls back to DummyThemeMaintain, a
-            // real, already-exercised no-op path elsewhere in this suite.
+            // file_exists() there just falls back to the ThemeMaintain
+            // base no-op, a real, already-exercised path elsewhere in
+            // this suite.
             $currentConfig = CurrentConfigTestFactory::get();
             $currentConfig->setThemesDir('themes');
 

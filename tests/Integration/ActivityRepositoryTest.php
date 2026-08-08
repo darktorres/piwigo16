@@ -18,6 +18,7 @@ use Piwigo\Activity\Projection\SystemActivityLogEntry;
 use Piwigo\Activity\Projection\UserAgentBreakdown;
 use Piwigo\Common\ValueObject\IpAddress;
 use Piwigo\Common\ValueObject\SqlDateTime;
+use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\ConfigLoader;
 use Piwigo\Core\ActivitySystem;
@@ -657,8 +658,8 @@ final class ActivityRepositoryTest extends IntegrationTestCase
         // Every fixture row shares the same 2026-08-01 03:00:00 timestamp
         // (see this class's own docblock) -- a range excluding it must
         // return nothing, one including it must return every non-system row.
-        $excluding = $this->repo->findPaginated(new ActivityListCriteria(maxDate: '2026-07-31 00:00:00'), 100, 0);
-        $including = $this->repo->findPaginated(new ActivityListCriteria(minDate: '2026-08-01 00:00:00', maxDate: '2026-08-01 23:59:59'), 100, 0);
+        $excluding = $this->repo->findPaginated(new ActivityListCriteria(maxDate: SqlDateTime::from('2026-07-31 00:00:00')), 100, 0);
+        $including = $this->repo->findPaginated(new ActivityListCriteria(minDate: SqlDateTime::from('2026-08-01 00:00:00'), maxDate: SqlDateTime::from('2026-08-01 23:59:59')), 100, 0);
 
         self::assertSame([], $excluding);
         self::assertCount(17, $including);
@@ -678,7 +679,7 @@ final class ActivityRepositoryTest extends IntegrationTestCase
     {
         // activity_id 3/4 are 'login' rows with object_id=1 (fixture_admin's
         // own id) -- adminIds: [1] must keep them, unlike 'none'.
-        $rows = $this->repo->findPaginated(new ActivityListCriteria(connectionsMode: 'admins_only', adminIds: [1]), 100, 0);
+        $rows = $this->repo->findPaginated(new ActivityListCriteria(connectionsMode: 'admins_only', adminIds: [UserId::from(1)]), 100, 0);
 
         self::assertCount(17, $rows);
         $logins = array_values(array_filter($rows, static fn (PaginatedActivityRow $row): bool => $row->action === 'login'));
@@ -691,7 +692,7 @@ final class ActivityRepositoryTest extends IntegrationTestCase
         // match -- NOT (action IN (login,logout) AND objectId NOT IN
         // (999)) must exclude them here, unlike the adminIds: [1] case
         // above.
-        $rows = $this->repo->findPaginated(new ActivityListCriteria(connectionsMode: 'admins_only', adminIds: [999]), 100, 0);
+        $rows = $this->repo->findPaginated(new ActivityListCriteria(connectionsMode: 'admins_only', adminIds: [UserId::from(999)]), 100, 0);
 
         self::assertCount(15, $rows);
         foreach ($rows as $row) {

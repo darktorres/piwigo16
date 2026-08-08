@@ -348,7 +348,7 @@ final class ActivityRepository extends EntityRepository implements LoginActivity
         $criteriaObj = Criteria::create();
 
         if ($criteria->performedBy !== null) {
-            $criteriaObj->andWhere($expr->eq('performedBy', UserId::from($criteria->performedBy)));
+            $criteriaObj->andWhere($expr->eq('performedBy', $criteria->performedBy));
         }
 
         if ($criteria->action !== null) {
@@ -376,7 +376,7 @@ final class ActivityRepository extends EntityRepository implements LoginActivity
         } elseif ($criteria->connectionsMode === 'admins_only') {
             $criteriaObj->andWhere($expr->not($expr->andX(
                 $expr->in('action', ['login', 'logout']),
-                $expr->notIn('objectId', $criteria->adminIds),
+                $expr->notIn('objectId', array_map(static fn (UserId $id): int => $id->value, $criteria->adminIds)),
             )));
         }
 

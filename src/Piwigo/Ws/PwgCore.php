@@ -22,6 +22,7 @@ use Piwigo\Caddie\CaddieEntity;
 use Piwigo\Category\CategoryService;
 use Piwigo\Comment\CommentService;
 use Piwigo\Common\ValueObject\ImageId;
+use Piwigo\Common\ValueObject\SqlDateTime;
 use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Config\ConfigService;
 use Piwigo\Config\CurrentConfig;
@@ -585,16 +586,15 @@ final class PwgCore
         $connections_mode = $this->currentConfig->activityDisplayConnections();
         $admin_ids = [];
         if ($connections_mode === 'admins_only') {
-            $admin_id_objects = (new UserRepository(EntityManagerFactory::build(DbConnection::build()), $this->eventDispatcher, $this->currentConfig))->findAdminIds();
-            $admin_ids = array_map(static fn (UserId $id): int => $id->value, $admin_id_objects);
+            $admin_ids = (new UserRepository(EntityManagerFactory::build(DbConnection::build()), $this->eventDispatcher, $this->currentConfig))->findAdminIds();
         }
 
         $criteria = new ActivityListCriteria(
-            performedBy: $param['uid'],
+            performedBy: $param['uid'] !== null ? UserId::from($param['uid']) : null,
             action: is_string($param['action']) ? $param['action'] : null,
             object: is_string($param['object']) ? $param['object'] : null,
-            minDate: ! in_array($date_min_raw, [null, ''], true) ? $min : null,
-            maxDate: ! in_array($date_max_raw, [null, ''], true) ? $max : null,
+            minDate: ! in_array($date_min_raw, [null, ''], true) ? SqlDateTime::from($min) : null,
+            maxDate: ! in_array($date_max_raw, [null, ''], true) ? SqlDateTime::from($max) : null,
             objectId: ($param['id'] !== null and $param['id'] !== 0) ? $param['id'] : null,
             connectionsMode: $connections_mode,
             adminIds: $admin_ids,

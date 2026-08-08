@@ -10,6 +10,7 @@ use Piwigo\Admin\Maintenance\DbMaintenanceRepository;
 use Piwigo\Admin\Maintenance\FilesystemIntegrityChecker;
 use Piwigo\Admin\Maintenance\MaintenanceActionDispatcher;
 use Piwigo\Admin\Maintenance\Request\MaintenanceActionRequest;
+use Piwigo\Admin\Projection\MaintenanceEnvPageContext;
 use Piwigo\Cache\PersistentCache;
 use Piwigo\Category\CategoryService;
 use Piwigo\Config\ConfigService;
@@ -124,68 +125,24 @@ final class MaintenanceEnvPageRenderer
             $time_elapsed_since_last_calc = DateHelper::timeSince($cache_sizes[3]['value'], 'year');
         }
 
-        $template->assign(
-            [
-                'U_MAINT_CATEGORIES' => sprintf($url_format, 'categories'),
-                'U_MAINT_IMAGES' => sprintf($url_format, 'images'),
-                'U_MAINT_ORPHAN_TAGS' => sprintf($url_format, 'delete_orphan_tags'),
-                'U_MAINT_USER_CACHE' => sprintf($url_format, 'user_cache'),
-                'U_MAINT_HISTORY_DETAIL' => sprintf($url_format, 'history_detail'),
-                'U_MAINT_HISTORY_SUMMARY' => sprintf($url_format, 'history_summary'),
-                'U_MAINT_SESSIONS' => sprintf($url_format, 'sessions'),
-                'U_MAINT_FEEDS' => sprintf($url_format, 'feeds'),
-                'U_MAINT_DATABASE' => sprintf($url_format, 'database'),
-                'U_MAINT_C13Y' => sprintf($url_format, 'c13y'),
-                'U_MAINT_SEARCH' => sprintf($url_format, 'search'),
-                'U_MAINT_COMPILED_TEMPLATES' => sprintf($url_format, 'compiled-templates'),
-                'U_MAINT_DERIVATIVES' => sprintf($url_format, 'derivatives'),
-                'purge_derivatives' => $purge_urls,
-                'U_HELP' => $this->urlService->getRootUrl() . 'admin/popuphelp.php?page=maintenance',
-
-                'PHPWG_URL' => AppInfo::URL,
-                'PWG_VERSION' => AppInfo::VERSION,
-                'U_CHECK_UPGRADE' => sprintf($url_format, 'check_upgrade'),
-                'OS' => PHP_OS,
-                'CONTAINER_INFO' => $container_name . ($container_version !== null && $container_version !== '' ? ' ' . $container_version : ''),
-                'PHP_VERSION' => PHP_VERSION,
-                'DB_ENGINE' => 'MySQL',
-                'DB_VERSION' => $db_version,
-                'U_PHPINFO' => sprintf($url_format, 'phpinfo'),
-                'PHP_DATATIME' => $php_current_timestamp,
-                'DB_DATATIME' => $db_current_date,
-                'cache_sizes' => $cache_sizes,
-                'time_elapsed_since_last_calc' => $time_elapsed_since_last_calc,
-            ]
-        );
-
         // graphics library
         $graphics_library = PwgImage::get_graphics_library_label();
-        if ($graphics_library !== '') {
-            $template->assign('GRAPHICS_LIBRARY', $graphics_library);
-        }
+        $graphics_library_value = $graphics_library !== '' ? $graphics_library : null;
 
+        $maint_unlock_gallery = null;
+        $maint_lock_gallery = null;
         if ($this->currentConfig->galleryLocked()) {
-            $template->assign(
-                [
-                    'U_MAINT_UNLOCK_GALLERY' => sprintf($url_format, 'unlock_gallery'),
-                ]
-            );
+            $maint_unlock_gallery = sprintf($url_format, 'unlock_gallery');
         } else {
-            $template->assign(
-                [
-                    'U_MAINT_LOCK_GALLERY' => sprintf($url_format, 'lock_gallery'),
-                ]
-            );
+            $maint_lock_gallery = sprintf($url_format, 'lock_gallery');
         }
 
+        $installed_on_value = null;
+        $installed_since_value = null;
         $installed_on = $this->installationStats->getInstallationDate();
         if (is_string($installed_on) && $installed_on !== '') {
-            $template->assign(
-                [
-                    'INSTALLED_ON' => DateHelper::formatDate($installed_on, ['day', 'month', 'year']),
-                    'INSTALLED_SINCE' => DateHelper::timeSince($installed_on, 'day'),
-                ]
-            );
+            $installed_on_value = DateHelper::formatDate($installed_on, ['day', 'month', 'year']);
+            $installed_since_value = DateHelper::timeSince($installed_on, 'day');
         }
 
         // +-------------------------------------------------------------------+
@@ -195,7 +152,42 @@ final class MaintenanceEnvPageRenderer
         // $advanced_features is array of array composed of CAPTION & URL
         $advanced_features_event = $this->eventDispatcher->dispatchChange(new GetAdminAdvancedFeaturesLinks([]));
 
-        $template->assign('advanced_features', $advanced_features_event->advancedFeatures);
+        $template->assignContext(new MaintenanceEnvPageContext(
+            maintCategories: sprintf($url_format, 'categories'),
+            maintImages: sprintf($url_format, 'images'),
+            maintOrphanTags: sprintf($url_format, 'delete_orphan_tags'),
+            maintUserCache: sprintf($url_format, 'user_cache'),
+            maintHistoryDetail: sprintf($url_format, 'history_detail'),
+            maintHistorySummary: sprintf($url_format, 'history_summary'),
+            maintSessions: sprintf($url_format, 'sessions'),
+            maintFeeds: sprintf($url_format, 'feeds'),
+            maintDatabase: sprintf($url_format, 'database'),
+            maintC13y: sprintf($url_format, 'c13y'),
+            maintSearch: sprintf($url_format, 'search'),
+            maintCompiledTemplates: sprintf($url_format, 'compiled-templates'),
+            maintDerivatives: sprintf($url_format, 'derivatives'),
+            purgeDerivatives: $purge_urls,
+            helpUrl: $this->urlService->getRootUrl() . 'admin/popuphelp.php?page=maintenance',
+            phpwgUrl: AppInfo::URL,
+            pwgVersion: AppInfo::VERSION,
+            checkUpgradeUrl: sprintf($url_format, 'check_upgrade'),
+            os: PHP_OS,
+            containerInfo: $container_name . ($container_version !== null && $container_version !== '' ? ' ' . $container_version : ''),
+            phpVersion: PHP_VERSION,
+            dbEngine: 'MySQL',
+            dbVersion: $db_version,
+            phpinfoUrl: sprintf($url_format, 'phpinfo'),
+            phpCurrentTimestamp: $php_current_timestamp,
+            dbCurrentDate: $db_current_date,
+            cacheSizes: $cache_sizes,
+            timeElapsedSinceLastCalc: $time_elapsed_since_last_calc,
+            graphicsLibrary: $graphics_library_value,
+            maintUnlockGallery: $maint_unlock_gallery,
+            maintLockGallery: $maint_lock_gallery,
+            installedOn: $installed_on_value,
+            installedSince: $installed_since_value,
+            advancedFeatures: $advanced_features_event->advancedFeatures,
+        ));
 
         // +-------------------------------------------------------------------+
         // |                           sending html code                           |

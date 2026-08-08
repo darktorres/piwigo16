@@ -24,9 +24,9 @@ final class DeviceHelper
      */
     public static function getDevice(SessionService $sessionService): string
     {
-        $device = $sessionService->getSessionVar('device');
+        $device = $sessionService->getDeviceVar();
 
-        if (! is_string($device)) {
+        if ($device === null) {
             // No UA-sniffing library (removed, no replacement — see
             // docs/REFERENCE.md's ADR-0021): the v17
             // responsive CSS (P33) removes the need for a separate mobile theme
@@ -58,8 +58,7 @@ final class DeviceHelper
             $is_mobile_theme = SqlDialect::getBoolean($mobileThemeRequest->mobileRaw);
             $sessionService->setSessionVar('mobile_theme', $is_mobile_theme);
         } else {
-            $session_mobile_theme = $sessionService->getSessionVar('mobile_theme');
-            $is_mobile_theme = is_bool($session_mobile_theme) ? $session_mobile_theme : null;
+            $is_mobile_theme = $sessionService->getMobileThemeVar();
         }
 
         if ($is_mobile_theme === null) {

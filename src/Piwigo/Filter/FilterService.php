@@ -91,32 +91,23 @@ final class FilterService implements FilterUpdaterInterface
                   $filter_get_param !== null
                   && preg_match('/^start-recent-(\d+)$/', $filter_get_param, $filter['matches']) === 1;
             } else {
-                $filter['enabled'] = $this->sessionService->getSessionVar('filter_enabled', false);
+                $filter['enabled'] = $this->sessionService->getFilterEnabled();
             }
         } else {
             $filter['enabled'] = false;
         }
 
-        if ((bool) $filter['enabled']) {
-            $filter_key = $this->sessionService->getSessionVar('filter_check_key', [
+        if ($filter['enabled']) {
+            // Session data is only ever written below by this same method,
+            // but guard against a missing/corrupted session value
+            // defensively -- getFilterCheckKey() itself returns null for
+            // anything that isn't a real array carrying all 4 keys.
+            $filter_key = $this->sessionService->getFilterCheckKey() ?? [
                 'user' => 0,
                 'recent_period' => -1,
                 'time' => 0,
                 'date' => '',
-            ]);
-            if (
-                ! is_array($filter_key)
-                || ! isset($filter_key['user'], $filter_key['recent_period'], $filter_key['time'], $filter_key['date'])
-            ) {
-                // Session data is only ever written below by this same method,
-                // but guard against a missing/corrupted session value defensively.
-                $filter_key = [
-                    'user' => 0,
-                    'recent_period' => -1,
-                    'time' => 0,
-                    'date' => '',
-                ];
-            }
+            ];
 
             // $filter['matches'] was populated by preg_match()'s by-reference
             // $matches parameter above -- that call re-widens PHPStan's prior
@@ -141,7 +132,7 @@ final class FilterService implements FilterUpdaterInterface
 
             if (
                 // New filter
-                ! (bool) $this->sessionService->getSessionVar('filter_enabled', false) or
+                ! $this->sessionService->getFilterEnabled() or
                 // Gap-closure Stage 4a (docs/plan/gap-closure-p0-p23.md):
                 // replaces the deleted `user_cache.cache_update_time`-keyed
                 // immediate-invalidation check with the same 30s staleness
@@ -215,10 +206,10 @@ final class FilterService implements FilterUpdaterInterface
                 $this->sessionService->setSessionVar('filter_visible_images', $filter['visible_images']);
             } else {
                 // Read only data
-                $serialized_categories = $this->sessionService->getSessionVar('filter_categories', serialize([]));
-                $filter['categories'] = is_string($serialized_categories) ? unserialize($serialized_categories) : [];
-                $filter['visible_categories'] = $this->sessionService->getSessionVar('filter_visible_categories', '');
-                $filter['visible_images'] = $this->sessionService->getSessionVar('filter_visible_images', '');
+                $serialized_categories = $this->sessionService->getFilterCategoriesSerialized() ?? serialize([]);
+                $filter['categories'] = unserialize($serialized_categories);
+                $filter['visible_categories'] = $this->sessionService->getFilterVisibleCategories() ?? '';
+                $filter['visible_images'] = $this->sessionService->getFilterVisibleImages() ?? '';
             }
             unset($filter_key);
             if ((bool) PageFilterHelper::getFilterPageValue($this->currentConfig, 'add_notes')) {
@@ -238,12 +229,12 @@ final class FilterService implements FilterUpdaterInterface
             $filter_categories = is_array($filter_categories_raw) ? array_filter($filter_categories_raw, is_array(...)) : [];
             $this->filterState->set(
                 true,
-                is_scalar($filter_visible_categories) ? (string) $filter_visible_categories : '',
-                is_scalar($filter_visible_images) ? (string) $filter_visible_images : '',
+                (string) $filter_visible_categories,
+                (string) $filter_visible_images,
                 $filter_categories
             );
         } else {
-            if ((bool) $this->sessionService->getSessionVar('filter_enabled', false)) {
+            if ($this->sessionService->getFilterEnabled()) {
                 $this->sessionService->unsetSessionVar('filter_enabled');
                 $this->sessionService->unsetSessionVar('filter_check_key');
                 $this->sessionService->unsetSessionVar('filter_categories');

@@ -10,12 +10,12 @@ use Piwigo\Session\SessionEntity;
 use Piwigo\Session\SessionService;
 
 /**
- * getSessionVar()/setSessionVar() read/write $_SESSION directly (no real
- * session_start() needed in a CLI test process). getDevice()/mobileTheme()
- * take SessionService/CurrentConfig as explicit params, so this file
- * builds a real SessionService directly -- its SessionRepository is
- * unused by either method here, only needs a live DB connection,
- * available via tests/bootstrap.php's env loading.
+ * getDeviceVar()/getMobileThemeVar()/setSessionVar() read/write $_SESSION
+ * directly (no real session_start() needed in a CLI test process).
+ * getDevice()/mobileTheme() take SessionService/CurrentConfig as explicit
+ * params, so this file builds a real SessionService directly -- its
+ * SessionRepository is unused by either method here, only needs a live DB
+ * connection, available via tests/bootstrap.php's env loading.
  */
 function deviceHelperTestSessionService(): SessionService
 {

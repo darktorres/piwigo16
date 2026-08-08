@@ -187,13 +187,8 @@ final readonly class SectionPopulator
             $order_by = $this->currentConfig->orderByInsideCategory();
         }
 
-        if ($this->sessionService->getSessionVar('image_order', 0) > 0) {
-            $image_order_id = $this->sessionService->getSessionVar('image_order');
-            // getSessionVar() is declared to return mixed; index.php is the
-            // only writer of the 'image_order' session var and always stores an
-            // int, but that isn't visible through the session accessor's signature
-            $image_order_id = is_numeric($image_order_id) ? (int) $image_order_id : -1;
-
+        $image_order_id = $this->sessionService->getImageOrder() ?? 0;
+        if ($image_order_id > 0) {
             $orders = $this->categoryService->getPreferredImageOrders();
 
             // the current session stored image_order might be not compatible with

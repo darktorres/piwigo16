@@ -185,8 +185,7 @@ final class PluginsNewPageRenderer
 
         if ($server_plugins !== null) {
             /* order plugins */
-            $session_order = $this->sessionService->getSessionVar('plugins_new_order');
-            $order_selected = is_string($session_order) && $session_order !== '' ? $session_order : 'date';
+            $order_selected = $this->sessionService->getPluginsNewOrder() ?? 'date';
             $template->assign('order_selected', $order_selected);
 
             match ($order_selected) {

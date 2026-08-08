@@ -176,8 +176,7 @@ final class PictureCommentRenderer
             if ($getCommentsOrder !== null && $getCommentsOrder !== '' && $getCommentsOrder !== '0' && in_array(strtoupper($getCommentsOrder), [SortOrder::Asc->value, SortOrder::Desc->value], true)) {
                 $sessionService->setSessionVar('comments_order', $getCommentsOrder);
             }
-            $commentsOrder = $sessionService->getSessionVar('comments_order', $currentConfig->commentsOrder());
-            $commentsOrder = is_string($commentsOrder) ? $commentsOrder : SortOrder::Asc->value;
+            $commentsOrder = $sessionService->getCommentsOrder() ?? $currentConfig->commentsOrder();
 
             $template->assign([
                 'COMMENTS_ORDER_URL' => $urlService->addUrlParams($urlService->duplicatePictureUrl(), [

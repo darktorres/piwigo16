@@ -57,8 +57,8 @@ it('toggles show_details on via the URL param and persists it across a later pla
     $page->assertNoJavaScriptErrors();
 
     // A later visit with no show_details param at all must still reflect
-    // the persisted session value (SessionService::getSessionVar()), not
-    // silently reset to the false default.
+    // the persisted session value (SessionService::getPluginsShowDetails()),
+    // not silently reset to the false default.
     $page = H::navigateOk($page, '/admin.php?page=plugins');
     $page->assertNoJavaScriptErrors();
 });

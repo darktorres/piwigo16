@@ -456,7 +456,7 @@ final class GalleryController implements ControllerInterface
             and $section_context->section !== Section::MostVisited
             and $section_context->section !== Section::BestRated) {
             $preferred_image_orders = $categoryService->getPreferredImageOrders();
-            $order_idx = $this->sessionService->getSessionVar('image_order', 0);
+            $order_idx = $this->sessionService->getImageOrder() ?? 0;
 
             // get first order field and direction
             $order_by = $this->currentConfig->orderBy();
@@ -487,7 +487,7 @@ final class GalleryController implements ControllerInterface
                     $tpl_orders[$order_id] = [
                         'DISPLAY' => $order[0],
                         'URL' => $url . $order_id,
-                        'SELECTED' => (is_scalar($order_idx) ? (string) $order_idx : '') === (string) $order_id,
+                        'SELECTED' => (string) $order_idx === (string) $order_id,
                     ];
                 }
             }

@@ -62,10 +62,8 @@ final class PluginsInstalledPageRenderer
             $show_details = $pluginsDisplay->showDetails;
 
             $sessionService->setSessionVar('plugins_show_details', $show_details);
-        } elseif ($sessionService->getSessionVar('plugins_show_details') !== null) {
-            $show_details = $sessionService->getSessionVar('plugins_show_details');
         } else {
-            $show_details = false;
+            $show_details = $sessionService->getPluginsShowDetails() ?? false;
         }
 
         $base_url = $urlService->getRootUrl() . 'admin.php?page=' . $pageSlug;

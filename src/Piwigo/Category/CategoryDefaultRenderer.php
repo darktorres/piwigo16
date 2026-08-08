@@ -213,8 +213,7 @@ final readonly class CategoryDefaultRenderer
             $tplThumbnailsVar[] = $tplVar;
         }
 
-        $indexDeriv = $this->sessionService->getSessionVar('index_deriv', ImageStdParams::THUMB);
-        $indexDeriv = is_string($indexDeriv) ? $indexDeriv : ImageStdParams::THUMB;
+        $indexDeriv = $this->sessionService->getIndexDeriv() ?? ImageStdParams::THUMB;
 
         $template->assign([
             'derivative_params' => $this->eventDispatcher->dispatchChange(new GetIndexDerivativeParams($this->imageStdParams->get_by_type($indexDeriv)))

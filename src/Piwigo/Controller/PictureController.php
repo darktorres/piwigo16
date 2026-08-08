@@ -304,7 +304,7 @@ final class PictureController implements ControllerInterface
 
         // There is cookie, so we must handle it at the beginning
         if ($pictureRequest->metadataPresent) {
-            if ($this->sessionService->getSessionVar('show_metadata') === null) {
+            if (! $this->sessionService->isShowMetadataEnabled()) {
                 $this->sessionService->setSessionVar('show_metadata', 1);
             } else {
                 $this->sessionService->unsetSessionVar('show_metadata');
@@ -578,8 +578,7 @@ final class PictureController implements ControllerInterface
         } else {
             // don't increment counter if comming from the same picture
             // (actions)
-            $referer_image_id = $this->sessionService->getSessionVar('referer_image_id', 0);
-            if (is_numeric($referer_image_id) and (int) $referer_image_id === $image_id) {
+            if ($this->sessionService->getRefererImageId() === $image_id) {
                 $inc_hit_count = false;
             }
             $this->sessionService->setSessionVar('referer_image_id', $image_id);
@@ -1195,10 +1194,7 @@ final class PictureController implements ControllerInterface
             and $picture['next']['src_image']->is_original()
             and $template->get_template_vars('U_PREFETCH') === null
             and ! str_contains($http_user_agent, 'Chrome/')) {
-            $prefetch_deriv_type = $this->sessionService->getSessionVar('picture_deriv', $this->currentConfig->derivativeDefaultSize());
-            if (! is_string($prefetch_deriv_type)) {
-                $prefetch_deriv_type = ImageStdParams::MEDIUM;
-            }
+            $prefetch_deriv_type = $this->sessionService->getPictureDeriv() ?? $this->currentConfig->derivativeDefaultSize();
             $template->assign(
                 'U_PREFETCH',
                 $picture['next']['derivatives'][$prefetch_deriv_type]->get_url()
@@ -1225,7 +1221,7 @@ final class PictureController implements ControllerInterface
             new PictureCommentRenderer()
                 ->render($this->lang, new AccessLevelChecker($this->currentUser, $this->currentConfig), $edit_comment, $image_id, $section_context->start, $urlService, $related_categories, $url_self, $this->sessionService, $this->eventDispatcher, $this->pageState, $this->currentUser, $this->currentTemplate, $this->currentConfig, $this->mailer, $this->htmlService);
         }
-        if ($metadata_showable and $this->sessionService->getSessionVar('show_metadata') !== null) {
+        if ($metadata_showable and $this->sessionService->isShowMetadataEnabled()) {
             new PictureMetadataRenderer()
                 ->render($this->lang, $picture, $this->currentLogger, $this->eventDispatcher, $this->currentTemplate, $this->currentConfig, $this->currentUser, $this->sessionService, $this->filterState, $this->paths);
         }
@@ -1306,10 +1302,7 @@ final class PictureController implements ControllerInterface
                     ->cookiePath(),
             ]);
         }
-        $deriv_type = $this->sessionService->getSessionVar('picture_deriv', $this->currentConfig->derivativeDefaultSize());
-        if (! is_string($deriv_type)) {
-            $deriv_type = ImageStdParams::MEDIUM;
-        }
+        $deriv_type = $this->sessionService->getPictureDeriv() ?? $this->currentConfig->derivativeDefaultSize();
         $selected_derivative = $element_info['derivatives'][$deriv_type];
 
         $unique_derivatives = [];

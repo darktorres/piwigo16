@@ -754,7 +754,7 @@ it('toggles the show_metadata session flag on repeated ?metadata visits without 
     $imageId = H::uploadPhotoViaApi($image, $albumId, 'Metadata Toggle Photo');
     @unlink($image);
 
-    // First visit: getSessionVar('show_metadata') is null -> sets it to 1.
+    // First visit: isShowMetadataEnabled() is false -> sets it to 1.
     $page = H::navigateOk($page, '/picture.php?/' . $imageId . '/category/' . $albumId . '&metadata');
     $page->assertNoJavaScriptErrors();
     // Second visit, same session: no longer null -> unsets it. Neither
@@ -1959,12 +1959,13 @@ it('wraps around to the first photo via meta-refresh when a repeating slideshow 
 });
 
 it('falls back to the medium derivative size, without warnings, when the picture_deriv session value is corrupted to a non-string', function (): void {
-    // SessionService::getSessionVar('picture_deriv', ...) itself never
-    // legitimately stores anything but a real string -- the only writer,
+    // SessionService::getPictureDeriv() itself never legitimately returns
+    // anything but a real string or null -- the only writer,
     // defaultPictureContent()'s own $_COOKIE['picture_deriv'] handling,
     // already guards with is_string() before calling setSessionVar(), and
-    // CurrentConfig::derivativeDefaultSize() (the getSessionVar() default
-    // arg used when nothing was ever stored) is declared `string`. So
+    // CurrentConfig::derivativeDefaultSize() (the `?? ...` fallback every
+    // real caller applies when getPictureDeriv() returns null) is declared
+    // `string`. So
     // PictureController's own `! is_string($deriv_type)` fallback (in
     // BOTH __invoke()'s own prefetch block and defaultPictureContent()
     // itself) can only be reached through a genuinely corrupted session

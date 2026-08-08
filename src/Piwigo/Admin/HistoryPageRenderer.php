@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin;
 
+use Piwigo\Admin\Projection\HistoryPageContext;
 use Piwigo\Admin\Request\HistoryFilterRequest;
 use Piwigo\Auth\AccessControl;
 use Piwigo\Auth\CookieService;
@@ -65,13 +66,6 @@ final class HistoryPageRenderer
         $tabsheet->select($pageSlug, $eventDispatcher);
         $tabsheet->assign($currentTemplate);
 
-        $template->assign(
-            [
-                'F_ACTION' => $urlService->getRootUrl() . 'admin.php?page=history',
-                'API_METHOD' => 'ws.php?format=json&method=pwg.history.search',
-            ]
-        );
-
         $form = [];
 
         // by default, at page load, we want the selected date to be the current
@@ -100,21 +94,20 @@ final class HistoryPageRenderer
             $form_param['user_id'] = $form_param['user_name'] === null ? -1 : $form_param['user_id'];
         }
 
-        $template->assign(
-            [
-                'USER_ID' => $form_param['user_id'],
-                'USER_NAME' => $form_param['user_name'] ?? null,
-                'IMAGE_ID' => $form_param['image_id'],
-                'IP' => $form_param['ip'],
-                'START' => $form['start'],
-                'END' => $form['end'],
-            ]
-        );
-
-        $template->assign('display_thumbnails', $display_thumbnails);
-        $template->assign('display_thumbnail_selected', $form['display_thumbnail']);
-        $template->assign('guest_id', $currentConfig->guestId());
-        $template->assign('ADMIN_PAGE_TITLE', $lang->t('History'));
+        $template->assignContext(new HistoryPageContext(
+            fAction: $urlService->getRootUrl() . 'admin.php?page=history',
+            apiMethod: 'ws.php?format=json&method=pwg.history.search',
+            userId: $form_param['user_id'],
+            userName: $form_param['user_name'] ?? null,
+            imageId: is_string($form_param['image_id']) || is_int($form_param['image_id']) ? (string) $form_param['image_id'] : '',
+            ip: is_string($form_param['ip']) || is_int($form_param['ip']) ? (string) $form_param['ip'] : '',
+            start: $form['start'],
+            end: $form['end'],
+            displayThumbnails: $display_thumbnails,
+            displayThumbnailSelected: $form['display_thumbnail'],
+            guestId: $currentConfig->guestId(),
+            adminPageTitle: $lang->t('History'),
+        ));
 
         $template->assign_var_from_handle('ADMIN_CONTENT', 'history');
     }

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin;
 
+use Piwigo\Admin\Projection\AlbumNotificationPageContext;
 use Piwigo\Admin\Request\AlbumNotificationSubmitRequest;
 use Piwigo\Auth\AuthService;
 use Piwigo\Category\CategoryService;
@@ -74,6 +75,7 @@ final class AlbumNotificationPageRenderer
         /** @var array<string, mixed> $page */
         $page = [];
         $template = $this->currentTemplate->get();
+        $save_success = null;
 
         // +-------------------------------------------------------------------+
         // |                       variable initialization                     |
@@ -203,11 +205,7 @@ final class AlbumNotificationPageRenderer
                 $message = $this->translator->plural('%d mail was sent.', '%d mails were sent.', count($users));
                 $message .= ' (' . implode(', ', $usernames) . ')';
 
-                $template->assign(
-                    [
-                        'save_success' => $message,
-                    ]
-                );
+                $save_success = $message;
             } elseif ($albumNotificationSubmit->who === 'group' and ! in_array($albumNotificationSubmit->group, [null, false, 0, '0', '', []], true)) {
                 // AlbumNotificationSubmitRequest::fromArray() already validated
                 // (fatal_errors, never returns) that group matches
@@ -221,11 +219,7 @@ final class AlbumNotificationPageRenderer
 
                 $group_name = $this->groupService->getName(GroupId::from($group_id));
 
-                $template->assign(
-                    [
-                        'save_success' => $this->lang->t('An information email was sent to group "%s"', $group_name),
-                    ]
-                );
+                $save_success = $this->lang->t('An information email was sent to group "%s"', $group_name);
             }
 
             $this->urlService->unsetMakeFullUrl();
@@ -243,33 +237,24 @@ final class AlbumNotificationPageRenderer
         // array<string, mixed>).
         $page_cat = $page['cat'];
 
-        $template->assign(
-            [
-                'CATEGORIES_NAV' => trim(
-                    $this->htmlService
-                        ->getCatDisplayNameFromId(
-                            $page_cat,
-                            'admin.php?page=album-'
-                        )
-                ),
-                'F_ACTION' => $admin_album_base_url . '-notification',
-                'PWG_TOKEN' => new CsrfService($this->currentConfig)
-                    ->getToken(),
-            ]
+        $categories_nav = trim(
+            $this->htmlService
+                ->getCatDisplayNameFromId(
+                    $page_cat,
+                    'admin.php?page=album-'
+                )
         );
 
         // auth_key_duration is a plain int config value (see
         // include/config_default.inc.php).
         $auth_key_duration = $this->currentConfig->authKeyDuration();
         $auth_key_duration_num = $auth_key_duration;
+        $auth_key_duration_value = null;
         if ($auth_key_duration_num > 0) {
             $auth_key_since = strtotime('now -' . $auth_key_duration_num . ' second');
             // the relative time expression above is always syntactically valid
             assert($auth_key_since !== false);
-            $template->assign(
-                'auth_key_duration',
-                DateHelper::timeSince($auth_key_since, 'second', null, false)
-            );
+            $auth_key_duration_value = DateHelper::timeSince($auth_key_since, 'second', null, false);
         }
 
         // +-------------------------------------------------------------------+
@@ -284,12 +269,15 @@ final class AlbumNotificationPageRenderer
         // groups at all, so the "private album" branch below can safely read it
         // unconditionally instead of guarding on definedness.
         $group_ids = [];
+        $no_group_in_gallery = null;
+        $permission_url = null;
+        $group_mail_options = null;
 
         if (count($all_group_ids) === 0) {
-            $template->assign('no_group_in_gallery', true);
+            $no_group_in_gallery = true;
         } else {
             if ($category['status'] === 'private') {
-                $template->assign('permission_url', $admin_album_base_url . '-permissions');
+                $permission_url = $admin_album_base_url . '-permissions';
 
                 $group_ids = $this->categoryService->getAccessGroupIds(CategoryId::from($category_id));
             } else {
@@ -297,10 +285,7 @@ final class AlbumNotificationPageRenderer
             }
 
             if (count($group_ids) > 0) {
-                $template->assign(
-                    'group_mail_options',
-                    $this->groupService->getNamesByIds($group_ids)
-                );
+                $group_mail_options = $this->groupService->getNamesByIds($group_ids);
             }
         }
 
@@ -331,11 +316,23 @@ final class AlbumNotificationPageRenderer
             $user_ids = $all_user_ids;
         }
 
+        $user_options = null;
         if (count($user_ids) > 0) {
-            $users = $this->userService->getUsernamesByIds(array_values($user_ids));
-
-            $template->assign('user_options', $users);
+            $user_options = $this->userService->getUsernamesByIds(array_values($user_ids));
         }
+
+        $template->assignContext(new AlbumNotificationPageContext(
+            saveSuccess: $save_success,
+            categoriesNav: $categories_nav,
+            fAction: $admin_album_base_url . '-notification',
+            pwgToken: new CsrfService($this->currentConfig)
+                ->getToken(),
+            authKeyDuration: $auth_key_duration_value,
+            noGroupInGallery: $no_group_in_gallery,
+            permissionUrl: $permission_url,
+            groupMailOptions: $group_mail_options,
+            userOptions: $user_options,
+        ));
 
         // +-------------------------------------------------------------------+
         // |                           sending html code                       |

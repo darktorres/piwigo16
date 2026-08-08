@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin\BatchManager;
 
+use Piwigo\Admin\BatchManager\Projection\FilterPanelPageContext;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\Lang;
 use Piwigo\Core\PageState;
@@ -115,36 +116,12 @@ final class FilterPanelRenderer
         // Sort prefilters by localized name.
         usort($prefilters, self::compareByName(...));
 
-        $template->assign(
-            [
-                'conf_checksum_compute_blocksize' => $currentConfig->checksumComputeBlocksize(),
-                'prefilters' => $prefilters,
-                'filter' => $bulk_manager_filter,
-                'selection' => $collection,
-                'all_elements' => $catElementsId,
-                'START' => $pageStart,
-                'PWG_TOKEN' => new CsrfService($currentConfig)
-                    ->getToken(),
-                'U_DISPLAY' => $baseUrl . $urlService->getQueryStringDiff(['display']),
-                'F_ACTION' => $baseUrl . $urlService->getQueryStringDiff(['cat', 'start', 'tag', 'filter']),
-                'ADMIN_PAGE_TITLE' => $lang->t('Batch Manager'),
-            ]
-        );
-
         // AdminShell is the sole writer of this value, computed once per
         // admin request and shared by both this filter panel and
         // Controller\Admin\SiteUpdateSubController's own save-error notice,
         // hence PageState rather than a per-caller param.
         $no_md5sum_number = $pageState->noMd5sumNumber;
-        if ($no_md5sum_number !== null) {
-            $template->assign(
-                [
-                    'NB_NO_MD5SUM' => $no_md5sum_number,
-                ]
-            );
-        } else {
-            $template->assign('NB_NO_MD5SUM', '');
-        }
+        $nb_no_md5sum = $no_md5sum_number ?? '';
 
         // privacy level
         $available_permission_levels = $currentConfig->availablePermissionLevels();
@@ -157,13 +134,7 @@ final class FilterPanelRenderer
                 $level_options[$level] = $lang->t('Everybody');
             }
         }
-        $template->assign(
-            [
-                'filter_level_options' => $level_options,
-                'filter_level_options_selected' => $bulk_manager_filter['level']
-                  ?? 0,
-            ]
-        );
+        $filter_level_options_selected = $bulk_manager_filter['level'] ?? 0;
 
         // tags
         $filter_tags = [];
@@ -178,8 +149,6 @@ final class FilterPanelRenderer
                 );
         }
 
-        $template->assign('filter_tags', $filter_tags);
-
         // in the filter box, which category to select by default
         $selected_category = null;
         $selected_category_name = '';
@@ -189,9 +158,6 @@ final class FilterPanelRenderer
             $selected_category_name = $htmlService
                 ->getCatDisplayNameFromId($selected_category);
         }
-
-        $template->assign('filter_category_selected_name', strip_tags($selected_category_name));
-        $template->assign('filter_category_selected', $selected_category);
 
         // Dissociate from a category : categories listed for dissociation can only
         // represent virtual links. We can't create orphans. Links to physical
@@ -209,7 +175,26 @@ final class FilterPanelRenderer
             );
         }
 
-        $template->assign('associated_categories', $associated_categories);
+        $template->assignContext(new FilterPanelPageContext(
+            confChecksumComputeBlocksize: $currentConfig->checksumComputeBlocksize(),
+            prefilters: $prefilters,
+            filter: $bulk_manager_filter,
+            selection: $collection,
+            allElements: $catElementsId,
+            start: $pageStart,
+            pwgToken: new CsrfService($currentConfig)
+                ->getToken(),
+            uDisplay: $baseUrl . $urlService->getQueryStringDiff(['display']),
+            fAction: $baseUrl . $urlService->getQueryStringDiff(['cat', 'start', 'tag', 'filter']),
+            adminPageTitle: $lang->t('Batch Manager'),
+            nbNoMd5sum: $nb_no_md5sum,
+            filterLevelOptions: $level_options,
+            filterLevelOptionsSelected: $filter_level_options_selected,
+            filterTags: $filter_tags,
+            filterCategorySelectedName: strip_tags($selected_category_name),
+            filterCategorySelected: $selected_category,
+            associatedCategories: $associated_categories,
+        ));
 
         $lang->load('help_quick_search.lang');
     }

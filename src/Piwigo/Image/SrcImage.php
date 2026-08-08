@@ -183,7 +183,7 @@ final class SrcImage
         // than trusting the schema at the type-check level.
         $this->id = is_numeric($infos['id']) ? (int) $infos['id'] : 0;
         $path = is_string($infos['path']) ? $infos['path'] : '';
-        $file = is_string($infos['file']) ? $infos['file'] : null;
+        $file = is_string($infos['file'] ?? null) ? $infos['file'] : null;
         $ext = strtolower(StringHelper::getExtension($path));
         $infos['file_ext'] = @strtolower(StringHelper::getExtension($file));
         $infos['path_ext'] = $ext;

@@ -324,7 +324,7 @@ final class PwgUsers
                 $cur_user_id = $cur_user['id'];
                 $users_id_arr[] = $cur_user_id;
 
-                $cur_user_registration_date = is_string($cur_user['registration_date']) ? $cur_user['registration_date'] : null;
+                $cur_user_registration_date = is_string($cur_user['registration_date'] ?? null) ? $cur_user['registration_date'] : null;
 
                 if (isset($display_flags['registration_date_string'])) {
                     $users[$cur_user_id]['registration_date_string'] = DateHelper::formatDate($cur_user_registration_date ?? false, ['day', 'month', 'year']);

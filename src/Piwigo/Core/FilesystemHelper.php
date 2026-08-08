@@ -156,9 +156,12 @@ final class FilesystemHelper
             // calling mkdir() avoids a PHP-level warning on the deterministic
             // permission-denied case; a concurrent creation of the same
             // directory by another process is still handled below by the
-            // is_dir() re-check, same as before.
+            // is_dir() re-check, same as before. @-suppressed: that race
+            // (another request wins EEXIST between the is_dir() check above
+            // and this mkdir() call) is real and already treated as success,
+            // not an error -- the native warning would just be noise.
             $mkd = is_writable(self::nearestExistingAncestor($dir))
-                && mkdir($dir, $chmod_value, ((bool) ($flags & self::MKGETDIR_RECURSIVE)) ? true : false);
+                && @mkdir($dir, $chmod_value, ((bool) ($flags & self::MKGETDIR_RECURSIVE)) ? true : false);
             umask($umask);
             // Retest existence on mkdir() failure: concurrent requests (e.g.
             // parallel i.php derivative generations on a cold cache) race to

@@ -12,6 +12,7 @@ declare(strict_types=1);
 namespace Piwigo\Calendar;
 
 use Override;
+use Piwigo\Calendar\Projection\CalendarMonthlyCalendarPageContext;
 use Piwigo\Calendar\Projection\RandomImageForDay;
 use Piwigo\Core\TemplateInterface;
 use Piwigo\Image\DerivativeImage;
@@ -65,7 +66,7 @@ final class CalendarMonthly extends CalendarBase
             $nb_date_parts = count($this->chronology_date);
             if ($nb_date_parts === 0) {// case A: no year given - display all years+months
                 if ($this->build_global_calendar($tpl_var)) {
-                    $template->assign('chronology_calendar', $tpl_var);
+                    $template->assignContext(new CalendarMonthlyCalendarPageContext($tpl_var));
                     return true;
                 }
             }
@@ -76,7 +77,7 @@ final class CalendarMonthly extends CalendarBase
             $nb_date_parts = count($this->chronology_date);
             if ($nb_date_parts === 1) {// case B: year given - display all days in given year
                 if ($this->build_year_calendar($tpl_var)) {
-                    $template->assign('chronology_calendar', $tpl_var);
+                    $template->assignContext(new CalendarMonthlyCalendarPageContext($tpl_var));
                     $this->build_nav_bar(self::CYEAR, null, $template); // years
                     return true;
                 }
@@ -87,7 +88,7 @@ final class CalendarMonthly extends CalendarBase
             $nb_date_parts = count($this->chronology_date);
             if ($nb_date_parts === 2) {// case C: year+month given - display a nice month calendar
                 if ($this->build_month_calendar($tpl_var)) {
-                    $template->assign('chronology_calendar', $tpl_var);
+                    $template->assignContext(new CalendarMonthlyCalendarPageContext($tpl_var));
                 }
                 $this->build_next_prev($template);
                 return true;

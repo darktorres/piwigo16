@@ -15,6 +15,7 @@ use Piwigo\Admin\UpdatesExtPageRenderer;
 use Piwigo\Auth\AccessControl;
 use Piwigo\Config\ConfigService;
 use Piwigo\Config\CurrentConfig;
+use Piwigo\Controller\Admin\Projection\LanguagesSubControllerPageContext;
 use Piwigo\Controller\Admin\Request\ExtensionTabRequest;
 use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\Lang;
@@ -82,7 +83,7 @@ final class LanguagesSubController implements AdminSubControllerInterface
         if ($tab === 'update') {
             new UpdatesExtPageRenderer()
                 ->render($this->lang, $this->accessControl, 'languages', $this->urlService, $this->configService, $this->pageState, $this->currentTemplate, $this->extensionUpdateChecker, $this->htmlRenderer, $this->currentConfig);
-            $template->assign('ADMIN_PAGE_TITLE', $this->lang->t('Languages'));
+            $template->assignContext(new LanguagesSubControllerPageContext(adminPageTitle: $this->lang->t('Languages')));
         } elseif ($tab === 'new') {
             $this->languagesNewPageRenderer
                 ->render('languages', $tab);

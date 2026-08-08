@@ -15,6 +15,7 @@ use Piwigo\Event\Lifecycle\LocAfterPageHeader;
 use Piwigo\Event\Location\LocBeginPageHeader;
 use Piwigo\Event\Location\LocEndPageHeader;
 use Piwigo\Event\Template\RenderPageBanner;
+use Piwigo\Page\Projection\PageHeaderPageContext;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Template\CurrentTemplate;
 
@@ -84,40 +85,12 @@ final class PageHeaderRenderer
         $conf_gallery_title = $currentConfig->galleryTitle();
         $page_banner = $pageState->pageBanner ?? $currentConfig->pageBanner();
 
-        $template->assign(
-            [
-                'GALLERY_TITLE' => $conf_gallery_title,
-
-                'PAGE_BANNER' => $eventDispatcher->dispatchChange(new RenderPageBanner(
-                    str_replace(
-                        '%gallery_title%',
-                        $conf_gallery_title,
-                        $page_banner
-                    )
-                ))->banner,
-
-                'BODY_ID' => $pageState->bodyId,
-
-                'CONTENT_ENCODING' => CharsetHelper::getPwgCharset(),
-                'PAGE_TITLE' => strip_tags($title),
-
-                'U_HOME' => self::urlService()->getGalleryHomeUrl(),
-
-                'LEVEL_SEPARATOR' => $currentConfig->levelSeparator(),
-
-                'SHOW_MOBILE_APP_BANNER' => $show_mobile_app_banner,
-
-                'BODY_CLASSES' => $pageState->bodyClasses,
-
-                'BODY_DATA' => json_encode($pageState->bodyData),
-            ]
-        );
+        $bodyDataJson = json_encode($pageState->bodyData);
+        $bodyDataJson = is_string($bodyDataJson) ? $bodyDataJson : '{}';
 
         // Header notes
         $header_notes = $pageState->headerNotes;
-        if (! self::emptyValue($header_notes)) {
-            $template->assign('header_notes', $header_notes);
-        }
+        $headerNotesValue = self::emptyValue($header_notes) ? null : $header_notes;
 
         if (! $currentConfig->metaRef()) {
             $pageState->setMetaRobotsFlag('noindex');
@@ -132,23 +105,40 @@ final class PageHeaderRenderer
                   . '">'
             );
         }
-        if (! isset($pageState->metaRobots['noindex'])) {
-            $template->assign('meta_ref', 1);
-        }
+        $metaRef = isset($pageState->metaRobots['noindex']) ? null : 1;
 
         // refresh
         $refresh_numeric = $refresh !== null && is_numeric($refresh) ? $refresh : null;
+        $pageRefresh = null;
         if ($refresh_numeric !== null and intval($refresh_numeric) >= 0
             and $urlLink !== null) {
-            $template->assign(
-                [
-                    'page_refresh' => [
-                        'TIME' => $refresh_numeric,
-                        'U_REFRESH' => $urlLink,
-                    ],
-                ]
-            );
+            $pageRefresh = [
+                'TIME' => $refresh_numeric,
+                'U_REFRESH' => $urlLink,
+            ];
         }
+
+        $template->assignContext(new PageHeaderPageContext(
+            galleryTitle: $conf_gallery_title,
+            pageBanner: $eventDispatcher->dispatchChange(new RenderPageBanner(
+                str_replace(
+                    '%gallery_title%',
+                    $conf_gallery_title,
+                    $page_banner
+                )
+            ))->banner,
+            bodyId: $pageState->bodyId,
+            contentEncoding: CharsetHelper::getPwgCharset(),
+            pageTitle: strip_tags($title),
+            homeUrl: self::urlService()->getGalleryHomeUrl(),
+            levelSeparator: $currentConfig->levelSeparator(),
+            showMobileAppBanner: $show_mobile_app_banner,
+            bodyClasses: $pageState->bodyClasses,
+            bodyData: $bodyDataJson,
+            headerNotes: $headerNotesValue,
+            metaRef: $metaRef,
+            pageRefresh: $pageRefresh,
+        ));
 
         $eventDispatcher->dispatchNotify(new LocEndPageHeader());
 

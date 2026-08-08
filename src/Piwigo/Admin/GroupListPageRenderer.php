@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin;
 
+use Piwigo\Admin\Projection\GroupListPageContext;
 use Piwigo\Admin\Request\GroupListActionRequest;
 use Piwigo\Auth\AccessControl;
 use Piwigo\Config\CurrentConfig;
@@ -59,15 +60,6 @@ final class GroupListPageRenderer
             'group_list' => 'group_list.tpl',
         ]);
 
-        $template->assign(
-            [
-                'F_ADD_ACTION' => $this->urlService->getRootUrl() . 'admin.php?page=group_list',
-                'PWG_TOKEN' => new CsrfService($this->currentConfig)
-                    ->getToken(),
-                'CACHE_KEYS' => AdminUiHelper::getAdminClientCacheKeys($this->urlService, ['groups', 'users']),
-            ]
-        );
-
         $group_repo = EntityManagerFactory::build(DbConnection::build())->getRepository(GroupEntity::class);
         $groups = $group_repo->findAllBasic();
 
@@ -105,7 +97,13 @@ final class GroupListPageRenderer
             $group_counter++;
         }
 
-        $template->assign('ADMIN_PAGE_TITLE', $this->lang->t('Groups') . ' <span class="badge-number">' . $group_counter . '</span>');
+        $template->assignContext(new GroupListPageContext(
+            addAction: $this->urlService->getRootUrl() . 'admin.php?page=group_list',
+            pwgToken: new CsrfService($this->currentConfig)
+                ->getToken(),
+            cacheKeys: AdminUiHelper::getAdminClientCacheKeys($this->urlService, ['groups', 'users']),
+            adminPageTitle: $this->lang->t('Groups') . ' <span class="badge-number">' . $group_counter . '</span>',
+        ));
 
         $template->assign_var_from_handle('ADMIN_CONTENT', 'group_list');
     }

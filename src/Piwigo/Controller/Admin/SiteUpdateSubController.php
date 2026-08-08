@@ -15,6 +15,11 @@ use Piwigo\Caddie\CaddieService;
 use Piwigo\Category\CategoryService;
 use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Config\CurrentConfig;
+use Piwigo\Controller\Admin\Projection\SiteUpdateIntroductionPageContext;
+use Piwigo\Controller\Admin\Projection\SiteUpdateMetadataResultPageContext;
+use Piwigo\Controller\Admin\Projection\SiteUpdatePageContext;
+use Piwigo\Controller\Admin\Projection\SiteUpdateSaveErrorPageContext;
+use Piwigo\Controller\Admin\Projection\SiteUpdateSyncResultPageContext;
 use Piwigo\Controller\Admin\Request\SiteUpdateRequest;
 use Piwigo\Core\CurrentLogger;
 use Piwigo\Core\Env;
@@ -191,11 +196,9 @@ final class SiteUpdateSubController implements AdminSubControllerInterface
         }
 
         if ($this->pageState->noMd5sumNumber !== null) {
-            $template->assign(
-                [
-                    'save_error' => '<a href="admin.php?page=batch_manager&amp;filter=prefilter-no_sync_md5sum">' . $this->lang->t('Some checksums are missing.') . '<i class="icon-right"></i></a>',
-                ]
-            );
+            $template->assignContext(new SiteUpdateSaveErrorPageContext(
+                saveError: '<a href="admin.php?page=batch_manager&amp;filter=prefilter-no_sync_md5sum">' . $this->lang->t('Some checksums are missing.') . '<i class="icon-right"></i></a>',
+            ));
 
         }
 
@@ -828,17 +831,14 @@ final class SiteUpdateSubController implements AdminSubControllerInterface
         // +-----------------------------------------------------------------------+
         if (isset($post['submit'])
             and ($post['sync'] === 'dirs' or $post['sync'] === 'files')) {
-            $template->assign(
-                'update_result',
-                [
-                    'NB_NEW_CATEGORIES' => $counts['new_categories'],
-                    'NB_DEL_CATEGORIES' => $counts['del_categories'],
-                    'NB_NEW_ELEMENTS' => $counts['new_elements'],
-                    'NB_DEL_ELEMENTS' => $counts['del_elements'],
-                    'NB_UPD_ELEMENTS' => $counts['upd_elements'],
-                    'NB_ERRORS' => count($errors),
-                ]
-            );
+            $template->assignContext(new SiteUpdateSyncResultPageContext(
+                newCategories: $counts['new_categories'],
+                delCategories: $counts['del_categories'],
+                newElements: $counts['new_elements'],
+                delElements: $counts['del_elements'],
+                updElements: $counts['upd_elements'],
+                errors: count($errors),
+            ));
         }
 
         // +-----------------------------------------------------------------------+
@@ -936,14 +936,11 @@ final class SiteUpdateSubController implements AdminSubControllerInterface
               . TimingHelper::getElapsedTime($start, TimingHelper::getMoment())
               . ' -->');
 
-            $template->assign(
-                'metadata_result',
-                [
-                    'NB_ELEMENTS_DONE' => count($datas),
-                    'NB_ELEMENTS_CANDIDATES' => count($files),
-                    'NB_ERRORS' => count($errors),
-                ]
-            );
+            $template->assignContext(new SiteUpdateMetadataResultPageContext(
+                elementsDone: count($datas),
+                elementsCandidates: count($files),
+                errors: count($errors),
+            ));
         }
 
         // +-----------------------------------------------------------------------+
@@ -961,19 +958,17 @@ final class SiteUpdateSubController implements AdminSubControllerInterface
         // used from files for synchronization
         $used_metadata = implode(', ', $site_reader->get_metadata_attributes());
 
-        $template->assign(
-            [
-                'SITE_URL' => $site_url,
-                'U_SITE_MANAGER' => $this->urlService->getRootUrl() . 'admin.php?page=site_manager',
-                'L_RESULT_UPDATE' => $result_title . $this->lang->t('Search for new images in the directories'),
-                'L_RESULT_METADATA' => $result_title . $this->lang->t('Metadata synchronization results'),
-                'METADATA_LIST' => $used_metadata,
-                'U_HELP' => $this->urlService->getRootUrl() . 'admin/popuphelp.php?page=synchronize',
-                'ADMIN_PAGE_TITLE' => $this->lang->t('Synchronize'),
-                'PWG_TOKEN' => new CsrfService($this->currentConfig)
-                    ->getToken(),
-            ]
-        );
+        $template->assignContext(new SiteUpdatePageContext(
+            siteUrl: $site_url,
+            siteManagerUrl: $this->urlService->getRootUrl() . 'admin.php?page=site_manager',
+            resultUpdateLabel: $result_title . $this->lang->t('Search for new images in the directories'),
+            resultMetadataLabel: $result_title . $this->lang->t('Metadata synchronization results'),
+            metadataList: $used_metadata,
+            helpUrl: $this->urlService->getRootUrl() . 'admin/popuphelp.php?page=synchronize',
+            adminPageTitle: $this->lang->t('Synchronize'),
+            pwgToken: new CsrfService($this->currentConfig)
+                ->getToken(),
+        ));
 
         // +-----------------------------------------------------------------------+
         // |                        introduction : choices                         |
@@ -984,16 +979,13 @@ final class SiteUpdateSubController implements AdminSubControllerInterface
                 $privacy_level_selected = (int) $post['privacy_level'];
             }
 
-            $tpl_introduction = [
-                'sync' => $post['sync'],
-                'sync_meta' => isset($post['sync_meta']) ? true : false,
-                'display_info' => isset($post['display_info']) and $post['display_info'] === '1',
-                'add_to_caddie' => isset($post['add_to_caddie']) and $post['add_to_caddie'] === '1',
-                'subcats_included' => isset($post['subcats-included']) and $post['subcats-included'] === '1',
-                'privacy_level_selected' => $privacy_level_selected,
-                'meta_all' => isset($post['meta_all']) ? true : false,
-                'meta_empty_overrides' => isset($post['meta_empty_overrides']) ? true : false,
-            ];
+            $sync_value = is_string($post['sync'] ?? null) ? $post['sync'] : 'dirs';
+            $sync_meta_value = isset($post['sync_meta']);
+            $display_info_value = isset($post['display_info']) && $post['display_info'] === '1';
+            $add_to_caddie_value = isset($post['add_to_caddie']) && $post['add_to_caddie'] === '1';
+            $subcats_included_value = isset($post['subcats-included']) && $post['subcats-included'] === '1';
+            $meta_all_value = isset($post['meta_all']);
+            $meta_empty_overrides_value = isset($post['meta_empty_overrides']);
 
             if (isset($post['cat']) and is_numeric($post['cat'])) {
                 $cat_selected = [$post['cat']];
@@ -1001,28 +993,34 @@ final class SiteUpdateSubController implements AdminSubControllerInterface
                 $cat_selected = [];
             }
         } else {
-            $tpl_introduction = [
-                'sync' => 'dirs',
-                'sync_meta' => true,
-                'display_info' => false,
-                'add_to_caddie' => false,
-                'subcats_included' => true,
-                'privacy_level_selected' => 0,
-                'meta_all' => false,
-                'meta_empty_overrides' => false,
-            ];
+            $sync_value = 'dirs';
+            $sync_meta_value = true;
+            $display_info_value = false;
+            $add_to_caddie_value = false;
+            $subcats_included_value = true;
+            $privacy_level_selected = 0;
+            $meta_all_value = false;
+            $meta_empty_overrides_value = false;
 
             $cat_selected = [];
 
             if ($siteUpdateRequest->catId !== null) {
                 $cat_selected = [$siteUpdateRequest->catId];
-                $tpl_introduction['sync'] = 'files';
+                $sync_value = 'files';
             }
         }
 
-        $tpl_introduction['privacy_level_options'] = PermissionService::getPrivacyLevelOptions($this->currentConfig, $this->lang);
-
-        $template->assign('introduction', $tpl_introduction);
+        $template->assignContext(new SiteUpdateIntroductionPageContext(
+            sync: $sync_value,
+            syncMeta: $sync_meta_value,
+            displayInfo: $display_info_value,
+            addToCaddie: $add_to_caddie_value,
+            subcatsIncluded: $subcats_included_value,
+            privacyLevelSelected: $privacy_level_selected,
+            metaAll: $meta_all_value,
+            metaEmptyOverrides: $meta_empty_overrides_value,
+            privacyLevelOptions: PermissionService::getPrivacyLevelOptions($this->currentConfig, $this->lang),
+        ));
 
         $this->categoryService->displaySelectBySite(
             $site_id,

@@ -231,9 +231,9 @@ final class Version20260804122301 extends AbstractMigration
             'auth_key varchar(255) NOT NULL, ' .
             'apikey_secret varchar(255) DEFAULT NULL, ' .
             'user_id integer NOT NULL, ' .
-            'created_on timestamp NOT NULL, ' .
+            'created_on timestamp(0) NOT NULL, ' .
             'duration bigint DEFAULT NULL, ' .
-            'expired_on timestamp NOT NULL, ' .
+            'expired_on timestamp(0) NOT NULL, ' .
             'apikey_name varchar(100) DEFAULT NULL, ' .
             'key_type varchar(40) DEFAULT NULL, ' .
             'revoked_on timestamp DEFAULT NULL, ' .
@@ -283,12 +283,12 @@ final class Version20260804122301 extends AbstractMigration
             'show_nb_hits boolean NOT NULL DEFAULT false, ' .
             'recent_period smallint NOT NULL DEFAULT 7, ' .
             "theme varchar(255) NOT NULL DEFAULT 'modus', " .
-            'registration_date timestamp DEFAULT NULL, ' .
+            'registration_date timestamp(0) DEFAULT NULL, ' .
             'enabled_high boolean NOT NULL DEFAULT true, ' .
             'level smallint NOT NULL DEFAULT 0, ' .
             'activation_key varchar(255) DEFAULT NULL, ' .
-            'activation_key_expire timestamp DEFAULT NULL, ' .
-            'last_visit timestamp DEFAULT NULL, ' .
+            'activation_key_expire timestamp(0) DEFAULT NULL, ' .
+            'last_visit timestamp(0) DEFAULT NULL, ' .
             'last_visit_from_history boolean NOT NULL DEFAULT false, ' .
             'lastmodified timestamp(0) NOT NULL DEFAULT now(), ' .
             'preferences jsonb DEFAULT NULL, ' .

@@ -9,6 +9,7 @@ use Piwigo\Admin\Extensions\ExtensionScanner;
 use Piwigo\Admin\Extensions\ExtensionType;
 use Piwigo\Admin\Extensions\PemCatalog;
 use Piwigo\Admin\Extensions\ZipExtractor;
+use Piwigo\Admin\Projection\PluginsInstalledPageContext;
 use Piwigo\Admin\Request\PluginsInstalledDisplayRequest;
 use Piwigo\Auth\AccessControl;
 use Piwigo\Bootstrap\RequestBootstrap;
@@ -241,20 +242,18 @@ final class PluginsInstalledPageRenderer
             $template->append('plugin_states', 'missing');
         }
 
-        $template->assign(
-            [
-                'plugins' => $tpl_plugins,
-                'count_types_plugins' => $count_types_plugins,
-                'PWG_TOKEN' => $pwg_token,
-                'base_url' => $base_url,
-                'show_details' => $show_details,
-                'max_inactive_before_hide' => $pluginsDisplay->showInactive ? 999 : 8,
-                'isWebmaster' => ($accessControl->isWebmaster()) ? 1 : 0,
-                'ADMIN_PAGE_TITLE' => $lang->t('Plugins'),
-                'view_selector' => $preferencesService->getPluginManagerView() ?? 'classic',
-                'CONF_ENABLE_EXTENSIONS_INSTALL' => $currentConfig->enableExtensionsInstall(),
-            ]
-        );
+        $template->assignContext(new PluginsInstalledPageContext(
+            plugins: $tpl_plugins,
+            countTypesPlugins: $count_types_plugins,
+            pwgToken: $pwg_token,
+            baseUrl: $base_url,
+            showDetails: $show_details,
+            maxInactiveBeforeHide: $pluginsDisplay->showInactive ? 999 : 8,
+            isWebmaster: $accessControl->isWebmaster(),
+            adminPageTitle: $lang->t('Plugins'),
+            viewSelector: $preferencesService->getPluginManagerView() ?? 'classic',
+            enableExtensionsInstall: $currentConfig->enableExtensionsInstall(),
+        ));
 
         $template->assign_var_from_handle('ADMIN_CONTENT', 'plugins');
     }

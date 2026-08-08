@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin;
 
+use Piwigo\Admin\Projection\GroupPermPageContext;
 use Piwigo\Admin\Request\GroupPermSubmitRequest;
 use Piwigo\Audit\AuditService;
 use Piwigo\Auth\AccessControl;
@@ -125,21 +126,20 @@ final class GroupPermPageRenderer
             ]
         );
 
-        $template->assign(
-            [
-                'TITLE' => $this->lang->t(
-                    'Manage permissions for group "%s"',
-                    EntityManagerFactory::build($conn)->getRepository(GroupEntity::class)
-                        ->findName($groupId) ?? false
-                ),
-                'L_CAT_OPTIONS_TRUE' => $this->lang->t('Authorized'),
-                'L_CAT_OPTIONS_FALSE' => $this->lang->t('Forbidden'),
-
-                'F_ACTION' => $this->urlService->getRootUrl() .
-                    'admin.php?page=group_perm&amp;group_id=' .
-                    $groupId->value,
-            ]
-        );
+        $template->assignContext(new GroupPermPageContext(
+            title: $this->lang->t(
+                'Manage permissions for group "%s"',
+                EntityManagerFactory::build($conn)->getRepository(GroupEntity::class)
+                    ->findName($groupId) ?? false
+            ),
+            catOptionsTrueLabel: $this->lang->t('Authorized'),
+            catOptionsFalseLabel: $this->lang->t('Forbidden'),
+            formAction: $this->urlService->getRootUrl() .
+                'admin.php?page=group_perm&amp;group_id=' .
+                $groupId->value,
+            pwgToken: new CsrfService($this->currentConfig)
+                ->getToken(),
+        ));
 
         // only private categories are listed
         $categoryService->displaySelectPrivateGrantedToGroup($groupId->value, 'category_option_true', $this->htmlRenderer, $template);
@@ -147,8 +147,6 @@ final class GroupPermPageRenderer
         $authorized_ids = array_map(strval(...), $categoryService->getPrivateCategoryIdsGrantedToGroup($groupId->value));
 
         $categoryService->displaySelectPrivateExcluding($authorized_ids, 'category_option_false', $this->htmlRenderer, $template);
-
-        $template->assign('PWG_TOKEN', new CsrfService($this->currentConfig)->getToken());
 
         $template->assign_var_from_handle('DOUBLE_SELECT', 'double_select');
         $template->assign_var_from_handle('ADMIN_CONTENT', 'group_perm');

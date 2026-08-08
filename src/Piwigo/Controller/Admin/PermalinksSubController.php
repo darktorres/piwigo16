@@ -10,6 +10,7 @@ use Piwigo\Admin\CoreTabsContext;
 use Piwigo\Admin\Tabsheet;
 use Piwigo\Category\CategoryService;
 use Piwigo\Config\CurrentConfig;
+use Piwigo\Controller\Admin\Projection\PermalinksPageContext;
 use Piwigo\Controller\Admin\Request\PermalinksRequest;
 use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\Lang;
@@ -86,11 +87,6 @@ final class PermalinksSubController implements AdminSubControllerInterface
         $tabsheet->assign($this->currentTemplate);
 
         $nb_cats = $this->categoryService->countAllCategories();
-        $template->assign(
-            [
-                'nb_cats' => $nb_cats,
-            ]
-        );
 
         $this->categoryService->displaySelectForPermalinks($selected_cat, 'categories', $htmlRenderer, $template);
 
@@ -98,7 +94,7 @@ final class PermalinksSubController implements AdminSubControllerInterface
             ->getToken();
 
         // --- generate display of active permalinks -----------------------------------
-        $sort_by = $this->parseSortVariables(
+        $sortResult = $this->parseSortVariables(
             ['id', 'name', 'permalink'],
             'name',
             'psf',
@@ -107,6 +103,8 @@ final class PermalinksSubController implements AdminSubControllerInterface
             $permalinksRequest->psfPresent,
             $permalinksRequest->psf
         );
+        $sort_by = $sortResult['active'];
+        $sortHeaders = $sortResult['headers'];
 
         $order_by_column = ($sort_by[0] === 'id' or $sort_by[0] === 'permalink') ? $sort_by[0] : null;
         $categories = [];
@@ -118,11 +116,10 @@ final class PermalinksSubController implements AdminSubControllerInterface
         if ($sort_by[0] === 'name') {
             usort($categories, CategoryService::compareByGlobalRank(...));
         }
-        $template->assign('permalinks', $categories);
 
         // --- generate display of old permalinks --------------------------------------
 
-        $sort_by = $this->parseSortVariables(
+        $sortResult = $this->parseSortVariables(
             ['cat_id', 'permalink', 'date_deleted', 'last_hit', 'hit'],
             null,
             'dpsf',
@@ -132,6 +129,8 @@ final class PermalinksSubController implements AdminSubControllerInterface
             $permalinksRequest->dpsf,
             '#old_permalinks'
         );
+        $sort_by = $sortResult['active'];
+        $oldSortHeaders = $sortResult['headers'];
 
         $url_del_base = $this->urlService->getRootUrl() . 'admin.php?page=permalinks';
         $sortField = count($sort_by) > 0 ? OldPermalinkSortField::fromToken($sort_by[0]) : null;
@@ -150,12 +149,22 @@ final class PermalinksSubController implements AdminSubControllerInterface
             $deleted_permalinks[] = $row;
         }
 
-        $template->assign([
-            'PWG_TOKEN' => $pwg_token,
-            'U_HELP' => $this->urlService->getRootUrl() . 'admin/popuphelp.php?page=permalinks',
-            'deleted_permalinks' => $deleted_permalinks,
-            'ADMIN_PAGE_TITLE' => $this->lang->t('Albums'),
-        ]);
+        $template->assignContext(new PermalinksPageContext(
+            nbCats: $nb_cats,
+            sortId: $sortHeaders['SORT_ID'],
+            sortName: $sortHeaders['SORT_NAME'],
+            sortPermalink: $sortHeaders['SORT_PERMALINK'],
+            permalinks: $categories,
+            sortOldCatId: $oldSortHeaders['SORT_OLD_CAT_ID'],
+            sortOldPermalink: $oldSortHeaders['SORT_OLD_PERMALINK'],
+            sortOldDateDeleted: $oldSortHeaders['SORT_OLD_DATE_DELETED'],
+            sortOldLastHit: $oldSortHeaders['SORT_OLD_LAST_HIT'],
+            sortOldHit: $oldSortHeaders['SORT_OLD_HIT'],
+            pwgToken: $pwg_token,
+            helpUrl: $this->urlService->getRootUrl() . 'admin/popuphelp.php?page=permalinks',
+            deletedPermalinks: $deleted_permalinks,
+            adminPageTitle: $this->lang->t('Albums'),
+        ));
 
         $template->assign_var_from_handle('ADMIN_CONTENT', 'permalinks');
     }
@@ -163,7 +172,7 @@ final class PermalinksSubController implements AdminSubControllerInterface
     /**
      * @param array<int, string> $sortable_by
      * @param array<int, string> $get_rejects
-     * @return array<int, string>
+     * @return array{active: array<int, string>, headers: array<string, string>}
      */
     private function parseSortVariables(
         array $sortable_by,
@@ -175,8 +184,6 @@ final class PermalinksSubController implements AdminSubControllerInterface
         ?string $sort_param_value,
         string $anchor = ''
     ): array {
-        $template = $this->currentTemplate->get();
-
         $request_uri = $_SERVER['REQUEST_URI'] ?? '';
         $request_uri = is_string($request_uri) ? $request_uri : '';
         $url_components = parse_url($request_uri);
@@ -202,6 +209,7 @@ final class PermalinksSubController implements AdminSubControllerInterface
         }
 
         $ret = [];
+        $headers = [];
         foreach ($sortable_by as $field) {
             $url = $base_url;
             $disp = '↓';
@@ -219,11 +227,12 @@ final class PermalinksSubController implements AdminSubControllerInterface
                 $ret[] = $field;
                 $disp = '<em>' . $disp . '</em>';
             }
-            $template->assign(
-                $template_var . strtoupper($field),
-                '<a href="' . $url . $anchor . '" title="' . $this->lang->t('Sort order') . '">' . $disp . '</a>'
-            );
+            $headers[$template_var . strtoupper($field)] =
+                '<a href="' . $url . $anchor . '" title="' . $this->lang->t('Sort order') . '">' . $disp . '</a>';
         }
-        return $ret;
+        return [
+            'active' => $ret,
+            'headers' => $headers,
+        ];
     }
 }

@@ -12,6 +12,7 @@ use Piwigo\Admin\Extensions\ExtensionType;
 use Piwigo\Admin\Extensions\PemCatalog;
 use Piwigo\Admin\Extensions\PluginMigrationEntity;
 use Piwigo\Admin\Extensions\ZipExtractor;
+use Piwigo\Admin\Projection\ThemesInstalledPageContext;
 use Piwigo\Admin\Request\ThemesInstalledActionRequest;
 use Piwigo\Auth\AccessControl;
 use Piwigo\Config\ConfigService;
@@ -143,22 +144,18 @@ final class ThemesInstalledPageRenderer
         $pwg_token = new CsrfService($this->currentConfig)
             ->getToken();
 
-        $template->assign(
-            [
-                'activate_baseurl' => $base_url . '&amp;action=activate&amp;pwg_token=' . $pwg_token . '&amp;theme=',
-                'deactivate_baseurl' => $base_url . '&amp;action=deactivate&amp;pwg_token=' . $pwg_token . '&amp;theme=',
-                'set_default_baseurl' => $base_url . '&amp;action=set_default&amp;pwg_token=' . $pwg_token . '&amp;theme=',
-                'delete_baseurl' => $base_url . '&amp;action=delete&amp;pwg_token=' . $pwg_token . '&amp;theme=',
-
-                'tpl_themes' => $tpl_themes,
-            ]
-        );
-
         $this->eventDispatcher->dispatchNotify(new LocEndThemesInstalled());
 
-        $template->assign('isWebmaster', ($this->accessControl->isWebmaster()) ? 1 : 0);
-        $template->assign('ADMIN_PAGE_TITLE', $this->lang->t('Themes'));
-        $template->assign('CONF_ENABLE_EXTENSIONS_INSTALL', $this->currentConfig->enableExtensionsInstall());
+        $template->assignContext(new ThemesInstalledPageContext(
+            activateBaseUrl: $base_url . '&amp;action=activate&amp;pwg_token=' . $pwg_token . '&amp;theme=',
+            deactivateBaseUrl: $base_url . '&amp;action=deactivate&amp;pwg_token=' . $pwg_token . '&amp;theme=',
+            setDefaultBaseUrl: $base_url . '&amp;action=set_default&amp;pwg_token=' . $pwg_token . '&amp;theme=',
+            deleteBaseUrl: $base_url . '&amp;action=delete&amp;pwg_token=' . $pwg_token . '&amp;theme=',
+            tplThemes: $tpl_themes,
+            isWebmaster: $this->accessControl->isWebmaster(),
+            adminPageTitle: $this->lang->t('Themes'),
+            enableExtensionsInstall: $this->currentConfig->enableExtensionsInstall(),
+        ));
 
         $template->set_filenames([
             'themes' => 'themes_installed.tpl',

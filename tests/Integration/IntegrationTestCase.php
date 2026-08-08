@@ -360,8 +360,33 @@ abstract class IntegrationTestCase extends TestCase
         // deferring to a tearDown() that will find it already severed
         // ("terminating connection due to administrator command",
         // confirmed live via a real cross-test-file reproduction).
+        //
+        // This early close can still lose the race: a *different*,
+        // interleaving test's own `WITH (FORCE)` drop can have already
+        // severed the connection behind *this* stale session's
+        // PwgSession/EntityManager before this method ever runs (confirmed
+        // live via a real full-suite reproduction, traced down to a
+        // Doctrine\DBAL\Exception\ConnectionLost -- "terminating
+        // connection due to administrator command" -- thrown from
+        // UnitOfWork::commit()'s own beginTransaction() call). This
+        // write's own success or failure is moot either way: the very
+        // next statement drops (and recreates) the whole database,
+        // discarding whatever row it would have touched. PwgSession::
+        // write() already catches that exception and correctly returns
+        // false per SessionHandlerInterface's contract, but PHP's own
+        // session module then raises a native E_WARNING for the
+        // handler-reported failure -- `@` does not suppress it from
+        // Pest/PHPUnit's own error handler (confirmed live: it still
+        // converts to a test warning even under `@`), so swap in a
+        // no-op handler for the duration of this one call instead.
         if ($this->dbDriver === 'pgsql' && session_status() === \PHP_SESSION_ACTIVE) {
-            session_write_close();
+            set_error_handler(static fn (): bool => true);
+
+            try {
+                session_write_close();
+            } finally {
+                restore_error_handler();
+            }
         }
 
         if ($this->dbDriver === 'pgsql') {

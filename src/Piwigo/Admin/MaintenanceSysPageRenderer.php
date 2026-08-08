@@ -6,6 +6,7 @@ namespace Piwigo\Admin;
 
 use Piwigo\Activity\ActivityEntity;
 use Piwigo\Admin\Maintenance\ActivityLogEntryFormatter;
+use Piwigo\Admin\Projection\MaintenanceSysPageContext;
 use Piwigo\Admin\Request\MaintenanceSysMethodRequest;
 use Piwigo\Auth\AccessControl;
 use Piwigo\Config\CurrentConfig;
@@ -70,7 +71,7 @@ final class MaintenanceSysPageRenderer
         // |                             template init                             |
         // +-------------------------------------------------------------------+
 
-        $template->assign('isWebmaster', ($accessControl->isWebmaster()) ? 1 : 0);
+        $template->assignContext(new MaintenanceSysPageContext(isWebmaster: $accessControl->isWebmaster()));
         $template->set_filenames([
             'maintenance' => 'maintenance_sys.tpl',
         ]);

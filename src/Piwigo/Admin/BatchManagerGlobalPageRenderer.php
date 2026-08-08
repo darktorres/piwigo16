@@ -7,6 +7,7 @@ namespace Piwigo\Admin;
 use Doctrine\ORM\EntityManagerInterface;
 use Piwigo\Activity\ActivityService;
 use Piwigo\Admin\BatchManager\FilterPanelRenderer;
+use Piwigo\Admin\Projection\BatchManagerGlobalPageContext;
 use Piwigo\Admin\Request\BatchManagerGlobalRequest;
 use Piwigo\Cache\PermissionCacheInvalidator;
 use Piwigo\Caddie\CaddieEntity;
@@ -482,41 +483,29 @@ final class BatchManagerGlobalPageRenderer
         // +-------------------------------------------------------------------+
         // |                            caddie options                             |
         // +-------------------------------------------------------------------+
-        $template->assign('IN_CADDIE', $prefilter_value === 'caddie');
+        $in_caddie = $prefilter_value === 'caddie';
 
         // +-------------------------------------------------------------------+
         // |                           global mode form                            |
         // +-------------------------------------------------------------------+
 
+        $associated_tags = null;
         if (count($cat_elements_id) > 0) {
             // remove tags
-            $template->assign('associated_tags', $this->tagService
-                ->getCommonTags($cat_elements_id, -1, $this->htmlRenderer));
+            $associated_tags = $this->tagService
+                ->getCommonTags($cat_elements_id, -1, $this->htmlRenderer);
         }
 
         // creation date
-        $template->assign(
-            'DATE_CREATION',
-            ($post['date_creation'] ?? '') === '' ? date('Y-m-d') . ' 00:00:00' : $post['date_creation']
-        );
+        $post_date_creation = $post['date_creation'] ?? '';
+        $date_creation = $post_date_creation === '' ? date('Y-m-d') . ' 00:00:00' : (is_string($post_date_creation) ? $post_date_creation : '');
 
         // image level options
-        $template->assign(
-            [
-                'level_options' => PermissionService::getPrivacyLevelOptions($this->currentConfig, $this->lang),
-                'level_options_selected' => 0,
-            ]
-        );
+        $level_options = PermissionService::getPrivacyLevelOptions($this->currentConfig, $this->lang);
 
         // metadata
         $site_reader = new LocalSiteReader('./', $this->currentConfig, new MetadataService($this->lang, new MetadataRepository(EntityManagerFactory::build(DbConnection::build())), $this->currentLogger, $this->eventDispatcher, $this->currentConfig, $this->currentUser, $this->sessionService, $this->filterState, $this->paths));
         $used_metadata = implode(', ', $site_reader->get_metadata_attributes());
-
-        $template->assign(
-            [
-                'used_metadata' => $used_metadata,
-            ]
-        );
 
         // derivatives
         $del_deriv_map = [];
@@ -525,12 +514,6 @@ final class BatchManagerGlobalPageRenderer
         }
         $gen_deriv_map = $del_deriv_map;
         $del_deriv_map[ImageStdParams::CUSTOM] = $this->lang->t(ImageStdParams::CUSTOM);
-        $template->assign(
-            [
-                'del_derivatives_types' => $del_deriv_map,
-                'generate_derivatives_types' => $gen_deriv_map,
-            ]
-        );
 
         // +-------------------------------------------------------------------+
         // |                        global mode thumbnails                         |
@@ -550,11 +533,12 @@ final class BatchManagerGlobalPageRenderer
         }
 
         $nb_thumbs_page = 0;
+        $nav_bar = null;
+        $thumb_params = null;
 
         if (count($cat_elements_id) > 0) {
             $nav_bar = new PaginationService($this->currentConfig)
                 ->createNavigationBar($base_url . $this->urlService->getQueryStringDiff(['start']), count($cat_elements_id), $page_start, $nb_images);
-            $template->assign('navbar', $nav_bar);
 
             $is_category = false;
             $filter_category_id = 0;
@@ -619,14 +603,23 @@ final class BatchManagerGlobalPageRenderer
                     )
                 );
             }
-            $template->assign('thumb_params', $thumb_params);
         }
 
-        $template->assign([
-            'nb_thumbs_page' => $nb_thumbs_page,
-            'nb_thumbs_set' => count($cat_elements_id),
-            'CACHE_KEYS' => AdminUiHelper::getAdminClientCacheKeys($this->urlService, ['tags', 'categories']),
-        ]);
+        $template->assignContext(new BatchManagerGlobalPageContext(
+            inCaddie: $in_caddie,
+            associatedTags: $associated_tags,
+            dateCreation: $date_creation,
+            levelOptions: $level_options,
+            levelOptionsSelected: 0,
+            usedMetadata: $used_metadata,
+            delDerivativesTypes: $del_deriv_map,
+            generateDerivativesTypes: $gen_deriv_map,
+            navbar: $nav_bar,
+            thumbParams: $thumb_params,
+            nbThumbsPage: $nb_thumbs_page,
+            nbThumbsSet: count($cat_elements_id),
+            cacheKeys: AdminUiHelper::getAdminClientCacheKeys($this->urlService, ['tags', 'categories']),
+        ));
 
         $this->eventDispatcher->dispatchNotify(new LocEndElementSetGlobal());
 

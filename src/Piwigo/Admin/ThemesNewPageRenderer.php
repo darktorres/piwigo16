@@ -9,6 +9,7 @@ use Piwigo\Admin\Extensions\ExtensionScanner;
 use Piwigo\Admin\Extensions\ExtensionType;
 use Piwigo\Admin\Extensions\PemCatalog;
 use Piwigo\Admin\Extensions\ZipExtractor;
+use Piwigo\Admin\Projection\ThemesNewPageContext;
 use Piwigo\Admin\Request\ThemesNewInstallRequest;
 use Piwigo\Auth\AccessControl;
 use Piwigo\Config\CurrentConfig;
@@ -196,11 +197,10 @@ final class ThemesNewPageRenderer
         }
 
         $admin_theme_pref = $this->preferencesService->getAdminThemePref() ?? $this->currentConfig->adminTheme();
-        $template->assign(
-            'default_screenshot',
-            $this->urlService->getRootUrl() . 'themes/admin/' . $admin_theme_pref . '/images/missing_screenshot.png'
-        );
-        $template->assign('ADMIN_PAGE_TITLE', $this->lang->t('Themes'));
+        $template->assignContext(new ThemesNewPageContext(
+            defaultScreenshot: $this->urlService->getRootUrl() . 'themes/admin/' . $admin_theme_pref . '/images/missing_screenshot.png',
+            adminPageTitle: $this->lang->t('Themes'),
+        ));
 
         $template->assign_var_from_handle('ADMIN_CONTENT', 'themes');
     }

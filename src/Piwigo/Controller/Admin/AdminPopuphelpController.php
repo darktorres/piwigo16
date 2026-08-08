@@ -8,6 +8,8 @@ use Override;
 use Piwigo\Auth\AccessControl;
 use Piwigo\Bootstrap\PageTail;
 use Piwigo\Config\CurrentConfig;
+use Piwigo\Controller\Admin\Projection\AdminPopuphelpPlaceholdersPageContext;
+use Piwigo\Controller\Projection\PopuphelpPageContext;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\Lang;
 use Piwigo\Core\PageState;
@@ -73,15 +75,7 @@ final class AdminPopuphelpController implements ControllerInterface
             ]);
 
             // set required template variables to avoid "Undefined array key" with PHP 8
-            $template->assign(
-                [
-                    'U_RETURN' => '',
-                    'USERNAME' => '',
-                    'U_FAQ' => '',
-                    'U_CHANGE_THEME' => '',
-                    'U_LOGOUT' => '',
-                ]
-            );
+            $template->assignContext(new AdminPopuphelpPlaceholdersPageContext());
 
             new PageHeaderRenderer()
                 ->render($title, $this->eventDispatcher, $this->pageState, $this->currentTemplate, $this->currentConfig);
@@ -107,11 +101,7 @@ final class AdminPopuphelpController implements ControllerInterface
             ->content;
 
         $template->set_filename('popuphelp', 'popuphelp.tpl');
-        $template->assign(
-            [
-                'HELP_CONTENT' => $help_content,
-            ]
-        );
+        $template->assignContext(new PopuphelpPageContext(helpContent: $help_content));
 
         if ($output === 'content_only') {
             return ResponseFactory::html($help_content);

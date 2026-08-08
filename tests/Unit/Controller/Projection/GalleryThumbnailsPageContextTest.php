@@ -4,40 +4,58 @@ declare(strict_types=1);
 
 use Piwigo\Controller\Projection\GalleryThumbnailsPageContext;
 
-$makeContext = fn (array $overrides = []): GalleryThumbnailsPageContext => new GalleryThumbnailsPageContext(
-    ...array_merge(
-        [
-            'searchInSetButton' => null,
-            'searchInSetAction' => null,
-            'searchInSetUrl' => null,
-            'combinableTags' => null,
-            'uEdit' => null,
-            'uCaddie' => null,
-            'categorySearchResults' => null,
-            'noSearchResults' => null,
-            'imageOrders' => null,
-            'contentDescription' => null,
-            'uSlideshow' => null,
-            'relatedTagsAction' => null,
-            'relatedTags' => null,
-        ],
-        $overrides
-    )
-);
+/**
+ * @param list<array<string, mixed>>|null $combinableTags
+ * @param list<string>|null $categorySearchResults
+ * @param list<string>|null $noSearchResults
+ * @param array<int, array<string, mixed>>|null $imageOrders
+ * @param list<array<string, mixed>>|null $relatedTags
+ */
+function makeGalleryThumbnailsPageContextForTest(
+    ?bool $searchInSetButton = null,
+    ?string $searchInSetAction = null,
+    ?string $searchInSetUrl = null,
+    ?array $combinableTags = null,
+    ?string $uEdit = null,
+    ?string $uCaddie = null,
+    ?array $categorySearchResults = null,
+    ?array $noSearchResults = null,
+    ?array $imageOrders = null,
+    ?string $contentDescription = null,
+    ?string $uSlideshow = null,
+    ?bool $relatedTagsAction = null,
+    ?array $relatedTags = null,
+): GalleryThumbnailsPageContext {
+    return new GalleryThumbnailsPageContext(
+        searchInSetButton: $searchInSetButton,
+        searchInSetAction: $searchInSetAction,
+        searchInSetUrl: $searchInSetUrl,
+        combinableTags: $combinableTags,
+        uEdit: $uEdit,
+        uCaddie: $uCaddie,
+        categorySearchResults: $categorySearchResults,
+        noSearchResults: $noSearchResults,
+        imageOrders: $imageOrders,
+        contentDescription: $contentDescription,
+        uSlideshow: $uSlideshow,
+        relatedTagsAction: $relatedTagsAction,
+        relatedTags: $relatedTags,
+    );
+}
 
-test('toArray omits every optional key when null', function () use ($makeContext): void {
-    $result = $makeContext()->toArray();
+test('toArray omits every optional key when null', function (): void {
+    $result = makeGalleryThumbnailsPageContextForTest()->toArray();
 
     expect($result)->toBe([]);
 });
 
-test('toArray includes the search-in-set-for-tags quartet together', function () use ($makeContext): void {
-    $result = $makeContext([
-        'searchInSetButton' => true,
-        'searchInSetAction' => 'action.php',
-        'searchInSetUrl' => '/search.php?tag_id=1,2',
-        'combinableTags' => [['id' => 1, 'name' => 'sunset']],
-    ])->toArray();
+test('toArray includes the search-in-set-for-tags quartet together', function (): void {
+    $result = makeGalleryThumbnailsPageContextForTest(
+        searchInSetButton: true,
+        searchInSetAction: 'action.php',
+        searchInSetUrl: '/search.php?tag_id=1,2',
+        combinableTags: [['id' => 1, 'name' => 'sunset']],
+    )->toArray();
 
     expect($result['SEARCH_IN_SET_BUTTON'])->toBeTrue()
         ->and($result['SEARCH_IN_SET_ACTION'])->toBe('action.php')
@@ -45,16 +63,16 @@ test('toArray includes the search-in-set-for-tags quartet together', function ()
         ->and($result['COMBINABLE_TAGS'])->toBe([['id' => 1, 'name' => 'sunset']]);
 });
 
-test('toArray includes every other optional key when set', function () use ($makeContext): void {
-    $result = $makeContext([
-        'uEdit' => '/admin.php?page=album-1',
-        'uCaddie' => '/index.php?caddie=1',
-        'categorySearchResults' => ['Holidays'],
-        'noSearchResults' => ['balloon'],
-        'imageOrders' => [0 => ['DISPLAY' => 'Default', 'URL' => '/index.php?image_order=0', 'SELECTED' => true]],
-        'contentDescription' => 'A gallery of holidays',
-        'uSlideshow' => '/index.php?slideshow',
-    ])->toArray();
+test('toArray includes every other optional key when set', function (): void {
+    $result = makeGalleryThumbnailsPageContextForTest(
+        uEdit: '/admin.php?page=album-1',
+        uCaddie: '/index.php?caddie=1',
+        categorySearchResults: ['Holidays'],
+        noSearchResults: ['balloon'],
+        imageOrders: [0 => ['DISPLAY' => 'Default', 'URL' => '/index.php?image_order=0', 'SELECTED' => true]],
+        contentDescription: 'A gallery of holidays',
+        uSlideshow: '/index.php?slideshow',
+    )->toArray();
 
     expect($result['U_EDIT'])->toBe('/admin.php?page=album-1')
         ->and($result['U_CADDIE'])->toBe('/index.php?caddie=1')
@@ -65,11 +83,11 @@ test('toArray includes every other optional key when set', function () use ($mak
         ->and($result['U_SLIDESHOW'])->toBe('/index.php?slideshow');
 });
 
-test('toArray includes RELATED_TAGS_ACTION and RELATED_TAGS together, even when the action is false', function () use ($makeContext): void {
-    $result = $makeContext([
-        'relatedTagsAction' => false,
-        'relatedTags' => [],
-    ])->toArray();
+test('toArray includes RELATED_TAGS_ACTION and RELATED_TAGS together, even when the action is false', function (): void {
+    $result = makeGalleryThumbnailsPageContextForTest(
+        relatedTagsAction: false,
+        relatedTags: [],
+    )->toArray();
 
     expect($result['RELATED_TAGS_ACTION'])->toBeFalse()
         ->and($result['RELATED_TAGS'])->toBe([]);

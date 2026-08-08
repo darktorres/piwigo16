@@ -25,6 +25,7 @@ use Piwigo\Auth\EphemeralKeyService;
 use Piwigo\Auth\PasswordRepository;
 use Piwigo\Auth\PasswordService;
 use Piwigo\Auth\UserFailedLoginEntity;
+use Piwigo\Bootstrap\Projection\HeaderMessagesPageContext;
 use Piwigo\Comment\CommentEntity;
 use Piwigo\Comment\CommentService;
 use Piwigo\Common\ValueObject\Email;
@@ -609,7 +610,7 @@ final class RequestBootstrap
         }
 
         if ($pageState->headerMessages !== []) {
-            $template->assign('header_msgs', $pageState->headerMessages);
+            $template->assignContext(new HeaderMessagesPageContext($pageState->headerMessages));
             $pageState->headerMessages = [];
         }
 

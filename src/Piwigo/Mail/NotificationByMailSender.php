@@ -18,6 +18,9 @@ use Piwigo\Db\SqlDialect;
 use Piwigo\Db\Tables;
 use Piwigo\Event\Mail\NbmRenderGlobalCustomizeMailContent;
 use Piwigo\Lang\Translator;
+use Piwigo\Mail\Projection\NbmMailContentPageContext;
+use Piwigo\Mail\Projection\NbmNewsMailContext;
+use Piwigo\Mail\Projection\NbmSubscribeActionMailContext;
 use Piwigo\Notification\Event\NbmRenderUserCustomizeMailContent;
 use Piwigo\Notification\NotificationByMailService;
 use Piwigo\Notification\NotificationService;
@@ -291,21 +294,17 @@ final class NotificationByMailSender
         $mailTemplate = $this->mailTemplate ?? $this->mailer
             ->getMailTemplate($emailFormat);
 
-        $mailTemplate->assign(
-            [
-                'USERNAME' => stripslashes($nbmUser->username),
-
-                'SEND_AS_NAME' => $this->sendAsName,
-
-                'UNSUBSCRIBE_LINK' => $this->urlService->addUrlParams($galleryHomeUrlStr . '/nbm.php', [
-                    'unsubscribe' => $nbmUser->checkKey,
-                ]),
-                'SUBSCRIBE_LINK' => $this->urlService->addUrlParams($galleryHomeUrlStr . '/nbm.php', [
-                    'subscribe' => $nbmUser->checkKey,
-                ]),
-                'CONTACT_EMAIL' => $this->sendAsMailAddress,
-            ]
-        );
+        $mailTemplate->assignContext(new NbmMailContentPageContext(
+            username: stripslashes($nbmUser->username),
+            sendAsName: $this->sendAsName,
+            unsubscribeLink: $this->urlService->addUrlParams($galleryHomeUrlStr . '/nbm.php', [
+                'unsubscribe' => $nbmUser->checkKey,
+            ]),
+            subscribeLink: $this->urlService->addUrlParams($galleryHomeUrlStr . '/nbm.php', [
+                'subscribe' => $nbmUser->checkKey,
+            ]),
+            contactEmail: $this->sendAsMailAddress,
+        ));
 
         $this->urlService->unsetMakeFullUrl();
     }
@@ -371,13 +370,11 @@ final class NotificationByMailSender
                     $mailTemplate = $this->mailTemplate ?? $this->mailer
                         ->getMailTemplate($emailFormat);
 
-                    $mailTemplate->assign(
-                        [
-                            $sectionActionBy => true,
-                            'GOTO_GALLERY_TITLE' => $galleryTitle,
-                            'GOTO_GALLERY_URL' => $this->urlService->getGalleryHomeUrl(),
-                        ]
-                    );
+                    $mailTemplate->assignContext(new NbmSubscribeActionMailContext(
+                        sectionActionBy: $sectionActionBy,
+                        galleryTitle: $galleryTitle,
+                        galleryUrl: $this->urlService->getGalleryHomeUrl(),
+                    ));
 
                     $sendAsMailFormatted = $this->sendAsMailFormatted ?? '';
 
@@ -562,37 +559,26 @@ final class NotificationByMailSender
                                 // Assign current var for nbm mail
                                 $this->assignVarsNbmMailContent($nbmUser);
 
+                                $content_new_elements_between = null;
+                                $content_new_elements_single = null;
                                 if ($nbmUser->lastSend !== null) {
-                                    $mailTemplate->assign(
-                                        'content_new_elements_between',
-                                        [
-                                            'DATE_BETWEEN_1' => $nbmUser->lastSend,
-                                            'DATE_BETWEEN_2' => $dbnow,
-                                        ]
-                                    );
+                                    $content_new_elements_between = [
+                                        'DATE_BETWEEN_1' => $nbmUser->lastSend,
+                                        'DATE_BETWEEN_2' => $dbnow,
+                                    ];
                                 } else {
-                                    $mailTemplate->assign(
-                                        'content_new_elements_single',
-                                        [
-                                            'DATE_SINGLE' => $dbnow,
-                                        ]
-                                    );
+                                    $content_new_elements_single = [
+                                        'DATE_SINGLE' => $dbnow,
+                                    ];
                                 }
 
-                                if ($nbmSendDetailedContent) {
-                                    $mailTemplate->assign('global_new_lines', $news);
-                                }
+                                $global_new_lines = $nbmSendDetailedContent ? $news : null;
 
                                 $nbmUserCustomizeMailContent =
                                   $this->eventDispatcher->dispatchChange(
                                       new NbmRenderUserCustomizeMailContent($customizeMailContent, $nbmUser)
                                   )->customizeMailContent;
-                                if (! in_array($nbmUserCustomizeMailContent, ['0', ''], true)) {
-                                    $mailTemplate->assign(
-                                        'custom_mail_content',
-                                        $nbmUserCustomizeMailContent
-                                    );
-                                }
+                                $custom_mail_content = ! in_array($nbmUserCustomizeMailContent, ['0', ''], true) ? $nbmUserCustomizeMailContent : null;
 
                                 $nbmSendRecentPostDates = $this->currentConfig->nbmSendRecentPostDates();
                                 if ($nbmSendHtmlMail and $nbmSendRecentPostDates) {
@@ -621,13 +607,15 @@ final class NotificationByMailSender
                                 }
 
                                 $galleryHomeUrl = $this->urlService->getGalleryHomeUrl();
-                                $mailTemplate->assign(
-                                    [
-                                        'GOTO_GALLERY_TITLE' => $galleryTitle,
-                                        'GOTO_GALLERY_URL' => $this->urlService->addUrlParams($galleryHomeUrl, $addUrlParams),
-                                        'SEND_AS_NAME' => $this->sendAsName,
-                                    ]
-                                );
+                                $mailTemplate->assignContext(new NbmNewsMailContext(
+                                    contentNewElementsBetween: $content_new_elements_between,
+                                    contentNewElementsSingle: $content_new_elements_single,
+                                    globalNewLines: $global_new_lines,
+                                    customMailContent: $custom_mail_content,
+                                    galleryTitle: $galleryTitle,
+                                    galleryUrl: $this->urlService->addUrlParams($galleryHomeUrl, $addUrlParams),
+                                    sendAsName: $this->sendAsName,
+                                ));
 
                                 $mailArgs = [
                                     'from' => $this->sendAsMailFormatted ?? '',

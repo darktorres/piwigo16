@@ -12,11 +12,15 @@ use Piwigo\Core\RequestMountDepth;
  * Piwigo's own "pwg_*" cookie storage -- distinct from the session cookie,
  * used for auto-login and small persisted UI preferences.
  *
- * setCookieVar()/getCookieVar() stay mixed by design: $_COOKIE itself is
- * PHP-untyped (a crafted `cookie[]=a&cookie[]=b` request header parses into
- * a nested array, same as $_GET/$_POST), not just "every real caller
- * happens to pass a string" -- narrowing here would misrepresent
- * attacker-controlled input as trusted.
+ * setCookieVar() stays mixed by design: $_COOKIE itself is PHP-untyped (a
+ * crafted `cookie[]=a&cookie[]=b` request header parses into a nested
+ * array, same as $_GET/$_POST), not just "every real caller happens to
+ * pass a string" -- narrowing here would misrepresent attacker-controlled
+ * input as trusted. P17-23 Phase 9: the generic `getCookieVar()` reader is
+ * gone -- its 2 real callers each get a named, correctly-narrowed accessor
+ * below instead (`getDisplayThumbnailPref()`/`getAnonymousRaterId()`),
+ * narrowing at the one call site that actually knows what shape it expects
+ * rather than trusting a runtime key name.
  */
 final class CookieService
 {
@@ -184,12 +188,28 @@ final class CookieService
     }
 
     /**
-     * Retrieves the value of a persistent variable in pwg cookie.
-     *
-     * @see setCookieVar()
+     * `Admin\HistoryPageRenderer`'s own "hoverbox by default" UI
+     * preference -- narrowed to `?string` here (unlike the removed generic
+     * `getCookieVar()`) since this one name always holds a specific,
+     * caller-known shape; the caller still supplies its own fallback
+     * (`?? 'no_display_thumbnail'`) since that default is display-context,
+     * not a fact about the cookie itself.
      */
-    public function getCookieVar(string $var, mixed $default = null): mixed
+    public function getDisplayThumbnailPref(): ?string
     {
-        return $_COOKIE['pwg_' . $var] ?? $default;
+        $value = $_COOKIE['pwg_display_thumbnail'] ?? null;
+
+        return is_string($value) ? $value : null;
+    }
+
+    /**
+     * `Rate\RateService`'s own anonymous-rater tracking cookie, used to
+     * detect an IP change/reassign an anonymous voter's existing ratings.
+     */
+    public function getAnonymousRaterId(): ?string
+    {
+        $value = $_COOKIE['pwg_anonymous_rater'] ?? null;
+
+        return is_string($value) ? $value : null;
     }
 }

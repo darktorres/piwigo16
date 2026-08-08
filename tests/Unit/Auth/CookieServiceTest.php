@@ -44,14 +44,13 @@ test('cookiePath strips the PATH_INFO suffix from REDIRECT_URL before deriving t
     expect(new CookieService()->cookiePath())->toBe('/piwigo/');
 });
 
-test('setCookieVar then getCookieVar round-trips through $_COOKIE', function (): void {
+test('setCookieVar writes the pwg_-prefixed key into $_COOKIE', function (): void {
     $_SERVER['SCRIPT_NAME'] = '/piwigo/index.php';
     $service = new CookieService();
 
     $service->setCookieVar('rememberme', 'yes');
 
-    expect($_COOKIE['pwg_rememberme'] ?? null)->toBe('yes')
-        ->and($service->getCookieVar('rememberme'))->toBe('yes');
+    expect($_COOKIE['pwg_rememberme'] ?? null)->toBe('yes');
 });
 
 test('setCookieVar with null value clears the cookie', function (): void {
@@ -61,13 +60,7 @@ test('setCookieVar with null value clears the cookie', function (): void {
 
     $service->setCookieVar('rememberme', null);
 
-    expect($service->getCookieVar('rememberme', 'gone'))->toBe('gone');
-});
-
-test('getCookieVar returns the default when unset', function (): void {
-    unset($_COOKIE['pwg_missing']);
-
-    expect(new CookieService()->getCookieVar('missing', 'fallback'))->toBe('fallback');
+    expect(isset($_COOKIE['pwg_rememberme']))->toBeFalse();
 });
 
 test('setCookieVar clears the cookie when expire is 0, even with a non-null value', function (): void {
@@ -79,7 +72,7 @@ test('setCookieVar clears the cookie when expire is 0, even with a non-null valu
 
     $service->setCookieVar('rememberme', 'ignored-because-expire-is-0', 0);
 
-    expect(new CookieService()->getCookieVar('rememberme', 'gone'))->toBe('gone');
+    expect(isset($_COOKIE['pwg_rememberme']))->toBeFalse();
 });
 
 test('setCookieVar treats a non-numeric expire as absent, defaulting to a far-future expiry', function (): void {
@@ -94,7 +87,7 @@ test('setCookieVar treats a non-numeric expire as absent, defaulting to a far-fu
     $result = $service->setCookieVar('sessionpref', 'value', null);
 
     expect($result)->toBeTrue();
-    expect($service->getCookieVar('sessionpref'))->toBe('value');
+    expect($_COOKIE['pwg_sessionpref'] ?? null)->toBe('value');
 });
 
 test('setCookieVar does not throw for a non-scalar value', function (): void {
@@ -111,8 +104,44 @@ test('setCookieVar does not throw for a non-scalar value', function (): void {
 
     expect($result)->toBeTrue();
     // $_COOKIE itself mirrors the raw, unstringified value (a separate
-    // assignment from the setcookie() wire value).
-    expect($service->getCookieVar('arraypref'))->toBe(['not', 'scalar']);
+    // assignment from the setcookie() wire value) -- checked directly,
+    // not through an accessor: both real named readers (P17-23 Phase 9)
+    // narrow to ?string, so they can't observe this non-scalar shape.
+    expect($_COOKIE['pwg_arraypref'] ?? null)->toBe(['not', 'scalar']);
+});
+
+test('getDisplayThumbnailPref returns null when the cookie is unset', function (): void {
+    unset($_COOKIE['pwg_display_thumbnail']);
+
+    expect(new CookieService()->getDisplayThumbnailPref())->toBeNull();
+});
+
+test('getDisplayThumbnailPref returns the raw cookie value when set', function (): void {
+    $_COOKIE['pwg_display_thumbnail'] = 'no_display_thumbnail';
+
+    expect(new CookieService()->getDisplayThumbnailPref())->toBe('no_display_thumbnail');
+});
+
+test('getDisplayThumbnailPref narrows a non-string cookie value to null', function (): void {
+    // Same $_COOKIE-can-hold-a-nested-array shape as the setCookieVar
+    // non-scalar test above (a crafted `cookie[pwg_display_thumbnail][]=x`
+    // request header) -- must not leak the array back out as if it were a
+    // real preference string.
+    $_COOKIE['pwg_display_thumbnail'] = ['not', 'scalar'];
+
+    expect(new CookieService()->getDisplayThumbnailPref())->toBeNull();
+});
+
+test('getAnonymousRaterId returns null when the cookie is unset', function (): void {
+    unset($_COOKIE['pwg_anonymous_rater']);
+
+    expect(new CookieService()->getAnonymousRaterId())->toBeNull();
+});
+
+test('getAnonymousRaterId returns the raw cookie value when set', function (): void {
+    $_COOKIE['pwg_anonymous_rater'] = '10.0.0.1';
+
+    expect(new CookieService()->getAnonymousRaterId())->toBe('10.0.0.1');
 });
 
 test('cookiePath does not throw when PATH_INFO is present but not a string', function (): void {

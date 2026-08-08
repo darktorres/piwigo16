@@ -81,7 +81,7 @@ final class HistoryPageRenderer
         // Hoverbox by default
         $form['display_thumbnail'] =
           new CookieService()
-              ->getCookieVar('display_thumbnail', 'no_display_thumbnail');
+              ->getDisplayThumbnailPref() ?? 'no_display_thumbnail';
 
         $form_param = [];
         $form_param['ip'] = $historyFilter->ip;

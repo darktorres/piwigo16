@@ -14,6 +14,7 @@ namespace Piwigo\Admin\Image;
 use Exception;
 use Imagick;
 use LogicException;
+use Override;
 use Piwigo\Admin\Image\Projection\ResizeCrop;
 use Piwigo\Admin\Image\Projection\ResizeDimensions;
 use Piwigo\Admin\Image\Projection\ResizeResult;
@@ -26,7 +27,7 @@ use Piwigo\Core\TimingHelper;
 use Piwigo\Event\Lifecycle\LoadImageLibrary;
 use Piwigo\PluginConfig\EventDispatcher;
 
-final class PwgImage
+final class PwgImage implements ImageInterface
 {
     /**
      * @var ImageInterface|null null until either a 'load_image_library'
@@ -85,60 +86,70 @@ final class PwgImage
     // one-liners here give real signature checking for the exact same
     // public surface real callers already use (e.g. tests/Unit/Admin/
     // Image/PwgImageTest.php's `$img->get_width()`).
+    #[Override]
     public function get_width(): int|float
     {
         return $this->getImage()
             ->get_width();
     }
 
+    #[Override]
     public function get_height(): int|float
     {
         return $this->getImage()
             ->get_height();
     }
 
+    #[Override]
     public function set_compression_quality(int $quality): bool
     {
         return $this->getImage()
             ->set_compression_quality($quality);
     }
 
+    #[Override]
     public function crop(int|float $width, int|float $height, int|float $x, int|float $y): bool
     {
         return $this->getImage()
             ->crop($width, $height, $x, $y);
     }
 
+    #[Override]
     public function strip(): bool
     {
         return $this->getImage()
             ->strip();
     }
 
+    #[Override]
     public function rotate(int|float $rotation): bool
     {
         return $this->getImage()
             ->rotate($rotation);
     }
 
+    #[Override]
     public function resize(int|float $width, int|float $height): bool
     {
         return $this->getImage()
             ->resize($width, $height);
     }
 
+    #[Override]
     public function sharpen(int|float $amount): bool
     {
         return $this->getImage()
             ->sharpen($amount);
     }
 
+    #[Override]
     public function compose(self $overlay, int|float $x, int|float $y, int|float $opacity): bool
     {
         return $this->getImage()
             ->compose($overlay, $x, $y, $opacity);
     }
 
+    #[Override]
     public function write(string $destination_filepath): bool
     {
         return $this->getImage()

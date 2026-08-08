@@ -13,6 +13,7 @@ use Piwigo\Admin\MaintenanceSysPageRenderer;
 use Piwigo\Admin\Tabsheet;
 use Piwigo\Auth\AccessControl;
 use Piwigo\Config\CurrentConfig;
+use Piwigo\Controller\Admin\Projection\MaintenanceSubControllerPageContext;
 use Piwigo\Controller\Admin\Request\MaintenanceDispatchRequest;
 use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\Lang;
@@ -171,10 +172,6 @@ final class MaintenanceSubController implements AdminSubControllerInterface
                 ->render($maintActions);
         }
 
-        $template->assign(
-            [
-                'ADMIN_PAGE_TITLE' => $this->lang->t('Maintenance'),
-            ]
-        );
+        $template->assignContext(new MaintenanceSubControllerPageContext(adminPageTitle: $this->lang->t('Maintenance')));
     }
 }

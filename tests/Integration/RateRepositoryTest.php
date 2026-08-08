@@ -10,6 +10,11 @@ use LogicException;
 use Piwigo\Common\ValueObject\ImageId;
 use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Db\EntityManagerFactory;
+use Piwigo\Rate\Projection\ImageThumbInfo;
+use Piwigo\Rate\Projection\RaterInfo;
+use Piwigo\Rate\Projection\RateSummary;
+use Piwigo\Rate\Projection\RateSummaryForElement;
+use Piwigo\Rate\Projection\RatingReportRow;
 use Piwigo\Rate\RateEntity;
 use Doctrine\DBAL\Connection;
 use Piwigo\Config\CurrentConfig;
@@ -168,9 +173,9 @@ final class RateRepositoryTest extends IntegrationTestCase
         $summaries = $this->repo->findRateSummaries();
 
         // element 1: rates 5 (user 1) + 4 (user 3)
-        self::assertSame(['rcount' => 2, 'rsum' => 9.0], $summaries[1]);
+        self::assertEquals(new RateSummary(2, 9.0), $summaries[1]);
         // element 2: rate 3 (user 4)
-        self::assertSame(['rcount' => 1, 'rsum' => 3.0], $summaries[2]);
+        self::assertEquals(new RateSummary(1, 3.0), $summaries[2]);
         // element 5 has no rate at all
         self::assertArrayNotHasKey(5, $summaries);
     }
@@ -324,16 +329,16 @@ final class RateRepositoryTest extends IntegrationTestCase
         self::assertCount(4, $rows);
         $byId = [];
         foreach ($rows as $row) {
-            $byId[$row['id']] = $row;
+            $byId[$row->id] = $row;
         }
 
-        self::assertSame(4.5, $byId[1]['score']);
-        self::assertSame(4.5, $byId[1]['avg_rates']);
-        self::assertSame(2, $byId[1]['nb_rates']);
-        self::assertSame(9.0, $byId[1]['sum_rates']);
+        self::assertSame(4.5, $byId[1]->score);
+        self::assertSame(4.5, $byId[1]->avgRates);
+        self::assertSame(2, $byId[1]->nbRates);
+        self::assertSame(9.0, $byId[1]->sumRates);
 
-        self::assertSame(1, $byId[3]['nb_rates']);
-        self::assertSame(5.0, $byId[3]['sum_rates']);
+        self::assertSame(1, $byId[3]->nbRates);
+        self::assertSame(5.0, $byId[3]->sumRates);
     }
 
     public function test_find_rating_report_filters_by_category(): void
@@ -341,7 +346,7 @@ final class RateRepositoryTest extends IntegrationTestCase
         $rows = $this->repo->findRatingReport(null, false, [2], 'i.id ASC', 10, 0);
 
         self::assertCount(1, $rows);
-        self::assertSame(4, $rows[0]['id']);
+        self::assertSame(4, $rows[0]->id);
     }
 
     public function test_find_rating_report_orders_and_paginates(): void
@@ -349,7 +354,7 @@ final class RateRepositoryTest extends IntegrationTestCase
         $rows = $this->repo->findRatingReport(null, false, [], 'sum_rates', 2, 0);
 
         self::assertCount(2, $rows);
-        self::assertSame([1, 3], array_column($rows, 'id'));
+        self::assertSame([1, 3], array_map(static fn (RatingReportRow $r): int => $r->id, $rows));
     }
 
     public function test_find_rate_rows_for_element(): void
@@ -378,11 +383,11 @@ final class RateRepositoryTest extends IntegrationTestCase
         self::assertCount(4, $users);
         $byId = [];
         foreach ($users as $user) {
-            $byId[$user['id']] = $user;
+            $byId[$user->id] = $user;
         }
 
-        self::assertSame(['id' => 1, 'name' => 'fixture_admin', 'status' => 'webmaster'], $byId[1]);
-        self::assertSame(['id' => 2, 'name' => 'guest', 'status' => 'guest'], $byId[2]);
+        self::assertEquals(new RaterInfo(1, 'fixture_admin', 'webmaster'), $byId[1]);
+        self::assertEquals(new RaterInfo(2, 'guest', 'guest'), $byId[2]);
     }
 
     public function test_find_all_rates_ordered_by_date_desc_matches_the_fixture(): void
@@ -403,11 +408,11 @@ final class RateRepositoryTest extends IntegrationTestCase
         self::assertCount(2, $rows);
         $byId = [];
         foreach ($rows as $row) {
-            $byId[$row['id']] = $row;
+            $byId[$row->id] = $row;
         }
 
-        self::assertSame('Photo 1', $byId[1]['name']);
-        self::assertSame('fixture-photo-4.jpg', $byId[4]['file']);
+        self::assertSame('Photo 1', $byId[1]->name);
+        self::assertSame('fixture-photo-4.jpg', $byId[4]->file);
     }
 
     public function test_find_image_thumb_info_by_ids_is_a_no_op_for_empty_ids(): void
@@ -439,7 +444,7 @@ final class RateRepositoryTest extends IntegrationTestCase
      */
     public function test_find_rate_summary_for_element_matches_the_fixture(): void
     {
-        self::assertSame(['count' => 2, 'average' => 4.5], $this->repo->findRateSummaryForElement(ImageId::from(1)));
+        self::assertEquals(new RateSummaryForElement(2, 4.5), $this->repo->findRateSummaryForElement(ImageId::from(1)));
     }
 
     /**
@@ -451,7 +456,7 @@ final class RateRepositoryTest extends IntegrationTestCase
      */
     public function test_find_rate_summary_for_element_is_zero_for_an_unrated_element(): void
     {
-        self::assertSame(['count' => 0, 'average' => null], $this->repo->findRateSummaryForElement(ImageId::from(5)));
+        self::assertEquals(new RateSummaryForElement(0, null), $this->repo->findRateSummaryForElement(ImageId::from(5)));
     }
 
     public function test_find_user_rate_returns_the_users_own_rate(): void

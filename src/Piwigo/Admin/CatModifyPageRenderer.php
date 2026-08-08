@@ -187,15 +187,13 @@ final class CatModifyPageRenderer
             );
 
             $row = $categoryService->getPhotoCountAndDateRange($category_id);
-            $image_count = $row[0] ?? null;
-            $min_date = $row[1] ?? null;
-            $max_date = $row[2] ?? null;
+            $image_count = $row->count;
             // date_available is a NOT NULL column but the driver still types every
             // fetched value as string|null; format_date()'s phpDoc param forbids
             // null, so fall back to false (its "no date" sentinel) if that ever
             // isn't the case.
-            $min_date = is_string($min_date) ? $min_date : false;
-            $max_date = is_string($max_date) ? $max_date : false;
+            $min_date = $row->minDate ?? false;
+            $max_date = $row->maxDate ?? false;
 
             if ($min_date === $max_date) {
                 $info_title = $lang->t(

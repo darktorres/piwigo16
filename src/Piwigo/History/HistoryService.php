@@ -13,6 +13,7 @@ use Piwigo\Core\CurrentLogger;
 use Piwigo\Core\PageState;
 use Piwigo\Event\Picture\PwgLogAllowed;
 use Piwigo\Event\Picture\PwgLogUpdateLastVisit;
+use Piwigo\History\Projection\HistorySummaryRow;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Users\CurrentUser;
 
@@ -293,7 +294,7 @@ final readonly class HistoryService
         $rows = $this->repo->search($dateAfter, $dateBefore, $imageTypes, $types, $userId, $imageId, $imageIdsFromFilename, $ip);
 
         foreach ($rows as $row) {
-            $data[] = $row;
+            $data[] = $row->toArray();
         }
 
         return $data;
@@ -329,29 +330,29 @@ final readonly class HistoryService
 
         foreach ($groups as $i => $group) {
             $timeKeys = [
-                substr($group['date'], 0, 4), // yyyy
-                substr($group['date'], 0, 7), // yyyy-mm
-                substr($group['date'], 0, 10), // yyyy-mm-dd
-                sprintf('%s-%02u', $group['date'], $group['hour']), // yyyy-mm-dd-hh
+                substr($group->date, 0, 4), // yyyy
+                substr($group->date, 0, 7), // yyyy-mm
+                substr($group->date, 0, 10), // yyyy-mm-dd
+                sprintf('%s-%02u', $group->date, $group->hour), // yyyy-mm-dd-hh
             ];
 
             foreach ($timeKeys as $timeKey) {
                 if (! isset($needUpdate[$timeKey])) {
                     $needUpdate[$timeKey] = [
                         'nbPages' => 0,
-                        'historyIdFrom' => $group['minId'],
-                        'historyIdTo' => $group['maxId'],
+                        'historyIdFrom' => $group->minId,
+                        'historyIdTo' => $group->maxId,
                     ];
                 }
 
-                $needUpdate[$timeKey]['nbPages'] += $group['nbPages'];
+                $needUpdate[$timeKey]['nbPages'] += $group->nbPages;
 
-                if ($group['minId'] < $needUpdate[$timeKey]['historyIdFrom']) {
-                    $needUpdate[$timeKey]['historyIdFrom'] = $group['minId'];
+                if ($group->minId < $needUpdate[$timeKey]['historyIdFrom']) {
+                    $needUpdate[$timeKey]['historyIdFrom'] = $group->minId;
                 }
 
-                if ($group['maxId'] > $needUpdate[$timeKey]['historyIdTo']) {
-                    $needUpdate[$timeKey]['historyIdTo'] = $group['maxId'];
+                if ($group->maxId > $needUpdate[$timeKey]['historyIdTo']) {
+                    $needUpdate[$timeKey]['historyIdTo'] = $group->maxId;
                 }
             }
 
@@ -478,27 +479,36 @@ final readonly class HistoryService
     }
 
     /**
-     * @return list<array{year: int|string, month: int|string|null, day: int|string|null, hour: int|string|null, nb_pages: int|string|null}>
+     * @return list<array{year: int, month: ?int, day: ?int, hour: ?int, nb_pages: int}>
      */
     public function getLastByType(string $type, int $limit): array
     {
-        return $this->repo->findLastByType($type, $limit);
+        return array_map(
+            static fn (HistorySummaryRow $row): array => $row->toArray(),
+            $this->repo->findLastByType($type, $limit)
+        );
     }
 
     /**
-     * @return list<array{year: int|string, month: int|string|null, day: int|string|null, hour: int|string|null, nb_pages: int|string|null}>
+     * @return list<array{year: int, month: ?int, day: ?int, hour: ?int, nb_pages: int}>
      */
     public function getMonthlyRows(?int $limit): array
     {
-        return $this->repo->findMonthlyRows($limit);
+        return array_map(
+            static fn (HistorySummaryRow $row): array => $row->toArray(),
+            $this->repo->findMonthlyRows($limit)
+        );
     }
 
     /**
-     * @return list<array{year: int|string, month: int|string|null, day: int|string|null, hour: int|string|null, nb_pages: int|string|null}>
+     * @return list<array{year: int, month: ?int, day: ?int, hour: ?int, nb_pages: int}>
      */
     public function getDailyRowsForMonths(int $year1, int $month1, int $year2, int $month2, int $year3, int $month3): array
     {
-        return $this->repo->findDailyRowsForMonths($year1, $month1, $year2, $month2, $year3, $month3);
+        return array_map(
+            static fn (HistorySummaryRow $row): array => $row->toArray(),
+            $this->repo->findDailyRowsForMonths($year1, $month1, $year2, $month2, $year3, $month3)
+        );
     }
 
     public function getAverageDailyPageViewsSince(int $year, int $previousYear, int $afterMonth): ?float

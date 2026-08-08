@@ -402,8 +402,8 @@ final readonly class CategoryCatsRenderer
                     $categoryIdKey = $category['id'];
                     $categoryIdKey = (is_string($categoryIdKey) or is_int($categoryIdKey)) ? $categoryIdKey : 0;
                     if (isset($datesOfCategory[$categoryIdKey])) {
-                        $from = $datesOfCategory[$categoryIdKey]['from'];
-                        $to = $datesOfCategory[$categoryIdKey]['to'];
+                        $from = $datesOfCategory[$categoryIdKey]->from;
+                        $to = $datesOfCategory[$categoryIdKey]->to;
                         $to = is_string($to) ? $to : '';
 
                         if (is_string($from) && $from !== '') {

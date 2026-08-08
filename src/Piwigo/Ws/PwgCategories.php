@@ -193,7 +193,7 @@ final class PwgCategories
 
         $cats = [];
         foreach ($this->categoryService->getIdsAndImageOrderWithConditions($catConditions) as $row) {
-            $cats[$row['id']] = $row;
+            $cats[$row->id] = $row;
         }
 
         // -------------------------------------------------------- get the images
@@ -215,9 +215,9 @@ final class PwgCategories
             $order_by = $this->wsHelper->stdImageSqlOrder($params, 'i.');
             if ($order_by === ''
                   and count($params['cat_id']) === 1
-                  and isset($cats[$params['cat_id'][0]]['image_order'])
+                  and ($cats[$params['cat_id'][0]]->imageOrder ?? null) !== null
             ) {
-                $order_by = $cats[$params['cat_id'][0]]['image_order'];
+                $order_by = $cats[$params['cat_id'][0]]->imageOrder;
             }
             $order_by = $order_by === '' ? $this->currentConfig->orderBy() : 'ORDER BY ' . $order_by;
             $favorite_ids = $urlService->getUserFavorites();
@@ -273,8 +273,8 @@ final class PwgCategories
                 );
                 $categories_of_image = [];
                 foreach ($image_category_rows as $image_category_row) {
-                    $category_ids[] = $image_category_row['category_id'];
-                    $categories_of_image[$image_category_row['image_id']][] = $image_category_row['category_id'];
+                    $category_ids[] = $image_category_row->categoryId;
+                    $categories_of_image[$image_category_row->imageId][] = $image_category_row->categoryId;
                 }
 
                 $details_for_category = [];
@@ -615,8 +615,8 @@ final class PwgCategories
             $new_image_ids = [];
 
             foreach ($this->imageService->getPathsAndLevelForIds($image_ids) as $row) {
-                if ($row['level'] <= $currentUser->level) {
-                    $thumbnail_src_of[$row['id']] = DerivativeImage::url($params['thumbnail_size'], $row);
+                if ($row->level <= $currentUser->level) {
+                    $thumbnail_src_of[$row->id] = DerivativeImage::url($params['thumbnail_size'], $row->toArray());
                 } else {
                     // problem: we must not display the thumbnail of a photo which has a
                     // higher privacy level than user privacy level
@@ -626,7 +626,7 @@ final class PwgCategories
                     // * register it at user_representative_picture_id
                     // * set it as the representative_picture_id for the category
                     foreach ($categories as &$category) {
-                        if ($row['id'] === $category['representative_picture_id']) {
+                        if ($row->id === $category['representative_picture_id']) {
                             // searching a random representant among elements in sub-categories
                             $image_id = $categoryService->getRandomImageInCategory($category);
 
@@ -649,7 +649,7 @@ final class PwgCategories
 
             if (count($new_image_ids) > 0) {
                 foreach ($this->imageService->getPathsForFileDeletion($new_image_ids) as $row) {
-                    $thumbnail_src_of[$row['id']] = DerivativeImage::url($params['thumbnail_size'], $row);
+                    $thumbnail_src_of[$row->id] = DerivativeImage::url($params['thumbnail_size'], $row->toArray());
                 }
             }
         }
@@ -884,7 +884,7 @@ final class PwgCategories
         }
 
         $category = $categories[0];
-        $parent_id = ($category['id_uppercat'] !== null && $category['id_uppercat'] !== 0) ? $category['id_uppercat'] : null;
+        $parent_id = ($category->idUppercat !== null && $category->idUppercat !== 0) ? $category->idUppercat : null;
 
         // check the number of category given by the user
         if (count($params['category_id']) > 1) {
@@ -1247,13 +1247,13 @@ final class PwgCategories
         $update_cat_ids = [];
 
         foreach ($this->categoryService->getMoveDetailsByIds($category_ids) as $row) {
-            $row_id = $row['id'];
+            $row_id = $row->id;
             $categories_in_db[$row_id] = $row;
-            $update_cat_ids = array_merge($update_cat_ids, array_slice(explode(',', $row['uppercats']), 0, -1));
+            $update_cat_ids = array_merge($update_cat_ids, array_slice(explode(',', $row->uppercats), 0, -1));
 
             // we break on error at first physical category detected
-            if (! in_array($row['dir'], [null, '', '0'], true)) {
-                $moveNameEvent = $this->eventDispatcher->dispatchChange(new RenderCategoryName($row['name'], 'ws_categories_move'));
+            if (! in_array($row->dir, [null, '', '0'], true)) {
+                $moveNameEvent = $this->eventDispatcher->dispatchChange(new RenderCategoryName($row->name, 'ws_categories_move'));
                 $row_name = strip_tags($moveNameEvent->categoryName);
 
                 return new PwgError(

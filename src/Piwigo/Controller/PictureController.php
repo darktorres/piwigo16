@@ -216,18 +216,14 @@ final class PictureController implements ControllerInterface
                         $this->urlService->duplicateIndexUrl()
                     );
             }
-            $row_level = $row['level'];
             $user_level = $user->level;
-            if ((is_numeric($row_level) ? (int) $row_level : 0) > $user_level) {
+            if ($row->level > $user_level) {
                 $this->htmlService
                     ->accessDenied($this->redirectService);
             }
 
-            $row_id = $row['id'];
-            assert(is_string($row_id)); // images.id is the NOT NULL primary key
-            $image_id = (int) $row_id;
-            $row_file = $row['file'];
-            $image_file = is_string($row_file) ? $row_file : null;
+            $image_id = $row->id->value;
+            $image_file = $row->file;
             if (! isset($rank_of[$image_id])) {// the image can still be non accessible (filter/cat perm) and/or not in the set
                 // FilterState::visibleImages() always returns a string; if
                 // the filter has not been initialized yet, there is no

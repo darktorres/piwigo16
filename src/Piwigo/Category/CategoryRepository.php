@@ -10,7 +10,32 @@ use Doctrine\DBAL\Platforms\PostgreSQLPlatform;
 use Doctrine\DBAL\Query\QueryBuilder;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Query\Expr\Join;
+use Piwigo\Category\Projection\ActivePermalinkRow;
 use Piwigo\Category\Projection\Category;
+use Piwigo\Category\Projection\CategoryAdminListForWsRow;
+use Piwigo\Category\Projection\CategoryAlbumTreeRow;
+use Piwigo\Category\Projection\CategoryChildRow;
+use Piwigo\Category\Projection\CategoryDateRange;
+use Piwigo\Category\Projection\CategoryFulldirRow;
+use Piwigo\Category\Projection\CategoryGroupAuthorizationRow;
+use Piwigo\Category\Projection\CategoryIdImageOrder;
+use Piwigo\Category\Projection\CategoryIdNamePermalink;
+use Piwigo\Category\Projection\CategoryIdNameUppercat;
+use Piwigo\Category\Projection\CategoryIdNameUppercatsRank;
+use Piwigo\Category\Projection\CategoryIdStatus;
+use Piwigo\Category\Projection\CategoryListForWsRow;
+use Piwigo\Category\Projection\CategoryListingRow;
+use Piwigo\Category\Projection\CategoryMoveDetailRow;
+use Piwigo\Category\Projection\CategoryMoveRow;
+use Piwigo\Category\Projection\CategoryNextRankByParentRow;
+use Piwigo\Category\Projection\CategoryPermalinkDisplayRow;
+use Piwigo\Category\Projection\CategoryRankInfoRow;
+use Piwigo\Category\Projection\CategoryRankUpdateRow;
+use Piwigo\Category\Projection\CategorySyncCandidateRow;
+use Piwigo\Category\Projection\CategoryUppercatsCounter;
+use Piwigo\Category\Projection\ComputedCategoryRollupRow;
+use Piwigo\Category\Projection\ParentCategoryForCreate;
+use Piwigo\Category\Projection\PhotoCountDateRange;
 use Piwigo\Common\Dto\PaginatedResult;
 use Piwigo\Common\ValueObject\CategoryId;
 use Piwigo\Common\ValueObject\GroupId;
@@ -25,6 +50,7 @@ use Piwigo\Group\GroupAccessEntity;
 use Piwigo\Group\UserGroupEntity;
 use Piwigo\Image\ImageCategoryEntity;
 use Piwigo\Image\ImageEntity;
+use Piwigo\Image\OrderByClause;
 use Piwigo\Image\PhotoSortField;
 use Piwigo\Permission\PermissionCriteria;
 use Piwigo\Permission\SqlCondition;
@@ -125,7 +151,7 @@ final class CategoryRepository
 
     /**
      * @param  list<int>  $ids
-     * @return array<int, array{id: int, name: string, permalink: ?string}> keyed by id
+     * @return array<int, CategoryIdNamePermalink> keyed by id
      *
      * Item 14 DQL audit: converted to real DQL -- single-table, static WHERE,
      * no join DQL can't express. `c.id`/`c.permalink` are now custom-Typed
@@ -151,11 +177,11 @@ final class CategoryRepository
                 continue;
             }
 
-            $byId[$row['id']->value] = [
-                'id' => $row['id']->value,
-                'name' => is_string($row['name'] ?? null) ? $row['name'] : '',
-                'permalink' => ($row['permalink'] ?? null) instanceof Permalink ? $row['permalink']->value : null,
-            ];
+            $byId[$row['id']->value] = new CategoryIdNamePermalink(
+                id: $row['id']->value,
+                name: is_string($row['name'] ?? null) ? $row['name'] : '',
+                permalink: ($row['permalink'] ?? null) instanceof Permalink ? $row['permalink']->value : null,
+            );
         }
 
         return $byId;
@@ -165,7 +191,7 @@ final class CategoryRepository
      * Every category's id/name/permalink, unfiltered -- HtmlService::
      * getCatDisplayNameCache()'s own breadcrumb-rendering cache warm-up.
      *
-     * @return array<int, array{id: int, name: string, permalink: ?string}> keyed by id
+     * @return array<int, CategoryIdNamePermalink> keyed by id
      *
      * Item 14 DQL audit: converted to real DQL -- single-table, unconditional
      * select. `c.id`/`c.permalink` are custom-Typed -- see this class's own
@@ -184,11 +210,11 @@ final class CategoryRepository
                 continue;
             }
 
-            $byId[$row['id']->value] = [
-                'id' => $row['id']->value,
-                'name' => is_string($row['name'] ?? null) ? $row['name'] : '',
-                'permalink' => ($row['permalink'] ?? null) instanceof Permalink ? $row['permalink']->value : null,
-            ];
+            $byId[$row['id']->value] = new CategoryIdNamePermalink(
+                id: $row['id']->value,
+                name: is_string($row['name'] ?? null) ? $row['name'] : '',
+                permalink: ($row['permalink'] ?? null) instanceof Permalink ? $row['permalink']->value : null,
+            );
         }
 
         return $byId;
@@ -200,14 +226,14 @@ final class CategoryRepository
      * the response URL" lookup. Unlike findAllIdNamePermalink() above
      * (every row, cache warm-up), this is a single-id lookup.
      *
-     * @return ?array{id: int, name: string, permalink: ?string}
+     * @return ?CategoryIdNamePermalink
      *
      * Item 14 DQL audit: converted to real DQL -- single-table, id is the PK
      * so at most one row can match (no NonUniqueResultException risk, no
      * setMaxResults() needed). `c.id`/`c.permalink` are custom-Typed -- see
      * this class's own Gotcha #1 note above.
      */
-    public function findIdNamePermalinkById(int $id): ?array
+    public function findIdNamePermalinkById(int $id): ?CategoryIdNamePermalink
     {
         $rows = $this->em->getRepository(CategoryEntity::class)->createQueryBuilder('c')
             ->select('c.id', 'c.name', 'c.permalink')
@@ -223,11 +249,11 @@ final class CategoryRepository
         /** @var array{id: mixed, name: mixed, permalink: mixed} $row */
         $row = $rows[0];
 
-        return [
-            'id' => $row['id'] instanceof CategoryId ? $row['id']->value : 0,
-            'name' => is_string($row['name']) ? $row['name'] : '',
-            'permalink' => $row['permalink'] instanceof Permalink ? $row['permalink']->value : null,
-        ];
+        return new CategoryIdNamePermalink(
+            id: $row['id'] instanceof CategoryId ? $row['id']->value : 0,
+            name: is_string($row['name']) ? $row['name'] : '',
+            permalink: $row['permalink'] instanceof Permalink ? $row['permalink']->value : null,
+        );
     }
 
     /**
@@ -349,7 +375,7 @@ final class CategoryRepository
      * (CategoryService::compareByRank()) -- CategoryService/CategoryTreeCache
      * themselves never read it.
      *
-     * @return list<array{cat_id: int, id_uppercat: ?int, global_rank: ?string, rank: ?int, date_last: ?string, nb_images: int}>
+     * @return list<ComputedCategoryRollupRow>
      *
      * `image_category` is mapped ({@see \Piwigo\Image\ImageCategoryEntity}),
      * but this method stays on DBAL for two real blockers: a dynamic
@@ -394,14 +420,14 @@ final class CategoryRepository
         }
 
         return array_map(
-            static fn (array $row): array => [
-                'cat_id' => is_numeric($row['cat_id']) ? (int) $row['cat_id'] : 0,
-                'id_uppercat' => is_numeric($row['id_uppercat'] ?? null) ? (int) $row['id_uppercat'] : null,
-                'global_rank' => is_string($row['global_rank'] ?? null) ? $row['global_rank'] : null,
-                'rank' => is_numeric($row['rank'] ?? null) ? (int) $row['rank'] : null,
-                'date_last' => is_string($row['date_last'] ?? null) ? $row['date_last'] : null,
-                'nb_images' => is_numeric($row['nb_images']) ? (int) $row['nb_images'] : 0,
-            ],
+            static fn (array $row): ComputedCategoryRollupRow => new ComputedCategoryRollupRow(
+                catId: is_numeric($row['cat_id']) ? (int) $row['cat_id'] : 0,
+                idUppercat: is_numeric($row['id_uppercat'] ?? null) ? (int) $row['id_uppercat'] : null,
+                globalRank: is_string($row['global_rank'] ?? null) ? $row['global_rank'] : null,
+                rank: is_numeric($row['rank'] ?? null) ? (int) $row['rank'] : null,
+                dateLast: is_string($row['date_last'] ?? null) ? $row['date_last'] : null,
+                nbImages: is_numeric($row['nb_images']) ? (int) $row['nb_images'] : 0,
+            ),
             $qb->executeQuery()
                 ->fetchAllAssociative()
         );
@@ -518,7 +544,7 @@ final class CategoryRepository
      * config value to begin with -- is each call site's own decision; see
      * that method's own docblock).
      *
-     * @return list<array{property: string, dir: 'ASC'|'DESC'}>|null
+     * @return list<OrderByClause>|null
      */
     private function resolveDqlOrderBy(string $imageAlias, ?string $imageCategoryAlias): ?array
     {
@@ -531,7 +557,7 @@ final class CategoryRepository
 
     /**
      * @param  list<int>  $catIds
-     * @param  list<array{property: string, dir: 'ASC'|'DESC'}>  $dqlOrderBy
+     * @param  list<OrderByClause>  $dqlOrderBy
      * @return list<int>
      */
     private function findImageIdsForCategoriesViaDql(
@@ -562,7 +588,7 @@ final class CategoryRepository
         }
 
         foreach ($dqlOrderBy as $entry) {
-            if ($entry['property'] === 'ic.rank') {
+            if ($entry->property === 'ic.rank') {
                 // Needed alongside `i.id` for MySQL's ONLY_FULL_GROUP_BY --
                 // sound only because resolveDqlOrderBy() above never offers
                 // this property when count($catIds) > 1, so `ic.rank` is
@@ -572,7 +598,7 @@ final class CategoryRepository
                 $qb->addGroupBy('ic.rank');
             }
 
-            $qb->addOrderBy($entry['property'], $entry['dir']);
+            $qb->addOrderBy($entry->property, $entry->dir);
         }
 
         $ids = $qb->getQuery()
@@ -587,7 +613,7 @@ final class CategoryRepository
     /**
      * @param  list<int>  $itemIds
      * @param  list<int>  $excludedCatIds
-     * @return array<int, array{id: int, uppercats: string, counter: int}> keyed by id
+     * @return array<int, CategoryUppercatsCounter> keyed by id
      *
      * SQL-modernization audit, Item 14 Sub-phase C1: converted to a typed
      * {@see PermissionCriteria} -- the one real caller applies
@@ -644,11 +670,11 @@ final class CategoryRepository
             }
 
             $id = $row['id']->value;
-            $byId[$id] = [
-                'id' => $id,
-                'uppercats' => is_string($row['uppercats'] ?? null) ? $row['uppercats'] : '',
-                'counter' => is_numeric($row['counter'] ?? null) ? (int) $row['counter'] : 0,
-            ];
+            $byId[$id] = new CategoryUppercatsCounter(
+                id: $id,
+                uppercats: is_string($row['uppercats'] ?? null) ? $row['uppercats'] : '',
+                counter: is_numeric($row['counter'] ?? null) ? (int) $row['counter'] : 0,
+            );
         }
 
         return $byId;
@@ -660,7 +686,7 @@ final class CategoryRepository
      * findFullCategoriesByIds()'s own docblock.
      *
      * @param  list<int>  $ids
-     * @return list<array{id: int, name: string, permalink: ?string, id_uppercat: ?int, uppercats: string, global_rank: ?string}>
+     * @return list<CategoryListingRow>
      *
      * Item 14 DQL audit: converted to real DQL -- single-table, static WHERE.
      * `c.id`/`c.permalink` are custom-Typed -- see this class's own Gotcha
@@ -685,14 +711,14 @@ final class CategoryRepository
                 continue;
             }
 
-            $result[] = [
-                'id' => $row['id']->value,
-                'name' => is_string($row['name'] ?? null) ? $row['name'] : '',
-                'permalink' => ($row['permalink'] ?? null) instanceof Permalink ? $row['permalink']->value : null,
-                'id_uppercat' => is_numeric($row['id_uppercat'] ?? null) ? (int) $row['id_uppercat'] : null,
-                'uppercats' => is_string($row['uppercats'] ?? null) ? $row['uppercats'] : '',
-                'global_rank' => is_string($row['global_rank'] ?? null) ? $row['global_rank'] : null,
-            ];
+            $result[] = new CategoryListingRow(
+                id: $row['id']->value,
+                name: is_string($row['name'] ?? null) ? $row['name'] : '',
+                permalink: ($row['permalink'] ?? null) instanceof Permalink ? $row['permalink']->value : null,
+                idUppercat: is_numeric($row['id_uppercat'] ?? null) ? (int) $row['id_uppercat'] : null,
+                uppercats: is_string($row['uppercats'] ?? null) ? $row['uppercats'] : '',
+                globalRank: is_string($row['global_rank'] ?? null) ? $row['global_rank'] : null,
+            );
         }
 
         return $result;
@@ -1239,7 +1265,7 @@ final class CategoryRepository
      * parent, distinct from `global_rank`) is carried through purely for
      * that method's own rank-change detection.
      *
-     * @return list<array{id: int, id_uppercat: ?int, uppercats: string, rank: ?int, global_rank: ?string}>
+     * @return list<CategoryRankUpdateRow>
      *
      * Item 14 DQL audit: converted to real DQL -- single-table, unconditional
      * select/order, all columns plain-typed.
@@ -1260,13 +1286,13 @@ final class CategoryRepository
                 continue;
             }
 
-            $result[] = [
-                'id' => $row['id']->value,
-                'id_uppercat' => is_numeric($row['id_uppercat'] ?? null) ? (int) $row['id_uppercat'] : null,
-                'uppercats' => is_string($row['uppercats'] ?? null) ? $row['uppercats'] : '',
-                'rank' => is_numeric($row['rank'] ?? null) ? (int) $row['rank'] : null,
-                'global_rank' => is_string($row['global_rank'] ?? null) ? $row['global_rank'] : null,
-            ];
+            $result[] = new CategoryRankUpdateRow(
+                id: $row['id']->value,
+                idUppercat: is_numeric($row['id_uppercat'] ?? null) ? (int) $row['id_uppercat'] : null,
+                uppercats: is_string($row['uppercats'] ?? null) ? $row['uppercats'] : '',
+                rank: is_numeric($row['rank'] ?? null) ? (int) $row['rank'] : null,
+                globalRank: is_string($row['global_rank'] ?? null) ? $row['global_rank'] : null,
+            );
         }
 
         return $result;
@@ -1373,7 +1399,7 @@ final class CategoryRepository
 
     /**
      * @param  list<int>  $ids
-     * @return array<int, array{id: int, status: string}> keyed by id
+     * @return array<int, CategoryIdStatus> keyed by id
      *
      * Item 14 DQL audit: converted to real DQL -- single-table, static
      * WHERE. `c.id` is now custom-Typed (`category_id`) -- `$row['id']`
@@ -1401,10 +1427,10 @@ final class CategoryRepository
                 continue;
             }
 
-            $byId[$row['id']->value] = [
-                'id' => $row['id']->value,
-                'status' => $row['status']->value,
-            ];
+            $byId[$row['id']->value] = new CategoryIdStatus(
+                id: $row['id']->value,
+                status: $row['status']->value,
+            );
         }
 
         return $byId;
@@ -1698,7 +1724,7 @@ final class CategoryRepository
 
     /**
      * @param  array<int>  $ids  real callers don't guarantee a list
-     * @return list<array{id: int, uppercats: string, site_id: ?int}>
+     * @return list<CategoryFulldirRow>
      *
      * Item 14 DQL audit: converted to real DQL -- single-table, static
      * WHERE. `c.id` is custom-Typed (`category_id`) -- see this class's
@@ -1724,11 +1750,11 @@ final class CategoryRepository
                 continue;
             }
 
-            $result[] = [
-                'id' => $row['id']->value,
-                'uppercats' => is_string($row['uppercats'] ?? null) ? $row['uppercats'] : '',
-                'site_id' => is_numeric($row['site_id'] ?? null) ? (int) $row['site_id'] : null,
-            ];
+            $result[] = new CategoryFulldirRow(
+                id: $row['id']->value,
+                uppercats: is_string($row['uppercats'] ?? null) ? $row['uppercats'] : '',
+                siteId: is_numeric($row['site_id'] ?? null) ? (int) $row['site_id'] : null,
+            );
         }
 
         return $result;
@@ -1813,7 +1839,7 @@ final class CategoryRepository
 
     /**
      * @param  array<int>  $ids  real callers don't guarantee a list
-     * @return list<array{id: int, id_uppercat: ?int, status: string, uppercats: string}>
+     * @return list<CategoryMoveRow>
      *
      * Item 14 DQL audit: converted to real DQL -- single-table, static
      * WHERE, all 4 columns plain-typed.
@@ -1833,12 +1859,12 @@ final class CategoryRepository
                 continue;
             }
 
-            $result[] = [
-                'id' => $row['id']->value,
-                'id_uppercat' => is_numeric($row['id_uppercat'] ?? null) ? (int) $row['id_uppercat'] : null,
-                'status' => ($row['status'] ?? null) instanceof CategoryStatus ? $row['status']->value : '',
-                'uppercats' => is_string($row['uppercats'] ?? null) ? $row['uppercats'] : '',
-            ];
+            $result[] = new CategoryMoveRow(
+                id: $row['id']->value,
+                idUppercat: is_numeric($row['id_uppercat'] ?? null) ? (int) $row['id_uppercat'] : null,
+                status: ($row['status'] ?? null) instanceof CategoryStatus ? $row['status']->value : '',
+                uppercats: is_string($row['uppercats'] ?? null) ? $row['uppercats'] : '',
+            );
         }
 
         return $result;
@@ -1925,15 +1951,14 @@ final class CategoryRepository
     }
 
     /**
-     * @return array{id: int, uppercats: string, global_rank: string, visible: int, status: string}|null
+     * @return ParentCategoryForCreate|null
      *
      * Item 14 DQL audit: converted to real DQL -- single-table, id is the
      * PK. `visible` is a real bool column on CategoryEntity now (DQL
      * hydrates it as bool, not the raw driver value the original DBAL
-     * fetchAssociative() row shape assumed) -- cast back to int explicitly
-     * to preserve this method's own documented `visible: int` contract.
+     * fetchAssociative() row shape assumed).
      */
-    public function findParentCategoryForCreate(int|string $parentId): ?array
+    public function findParentCategoryForCreate(int|string $parentId): ?ParentCategoryForCreate
     {
         $rows = $this->em->getRepository(CategoryEntity::class)->createQueryBuilder('c')
             ->select('c.id', 'c.uppercats', 'c.globalRank AS global_rank', 'c.visible', 'c.status')
@@ -1951,13 +1976,13 @@ final class CategoryRepository
             return null;
         }
 
-        return [
-            'id' => $row['id']->value,
-            'uppercats' => is_string($row['uppercats'] ?? null) ? $row['uppercats'] : '',
-            'global_rank' => is_string($row['global_rank'] ?? null) ? $row['global_rank'] : '',
-            'visible' => (bool) ($row['visible'] ?? false) ? 1 : 0,
-            'status' => ($row['status'] ?? null) instanceof CategoryStatus ? $row['status']->value : '',
-        ];
+        return new ParentCategoryForCreate(
+            id: $row['id']->value,
+            uppercats: is_string($row['uppercats'] ?? null) ? $row['uppercats'] : '',
+            globalRank: is_string($row['global_rank'] ?? null) ? $row['global_rank'] : '',
+            visible: (bool) ($row['visible'] ?? false),
+            status: ($row['status'] ?? null) instanceof CategoryStatus ? $row['status']->value : '',
+        );
     }
 
     /**
@@ -1978,7 +2003,7 @@ final class CategoryRepository
      * `findIdNameUppercatsRankByCondition()` raw-SQL-fragment helper this
      * replaces is gone; nothing else called it.
      *
-     * @return list<array<string, mixed>>
+     * @return list<CategoryIdNameUppercatsRank>
      */
     public function findByCommentable(bool $commentable): array
     {
@@ -1991,7 +2016,7 @@ final class CategoryRepository
     }
 
     /**
-     * @return list<array<string, mixed>>
+     * @return list<CategoryIdNameUppercatsRank>
      */
     public function findByVisible(bool $visible): array
     {
@@ -2004,7 +2029,7 @@ final class CategoryRepository
     }
 
     /**
-     * @return list<array<string, mixed>>
+     * @return list<CategoryIdNameUppercatsRank>
      */
     public function findByStatus(string $status): array
     {
@@ -2018,28 +2043,25 @@ final class CategoryRepository
 
     /**
      * @param  array<mixed>  $rows
-     * @return list<array<string, mixed>>
+     * @return list<CategoryIdNameUppercatsRank>
      *
      * `c.id` is custom-Typed (`category_id`) -- see this class's own
-     * Gotcha #1 note above. Unwrapped to a plain int here so every one
-     * of this helper's 8 real callers keeps returning the same
-     * `id: int`-shaped row it always did.
+     * Gotcha #1 note above.
      */
     private static function narrowIdNameUppercatsRankRows(array $rows): array
     {
         $result = [];
         foreach ($rows as $row) {
-            if (! is_array($row)) {
+            if (! is_array($row) || ! ($row['id'] ?? null) instanceof CategoryId) {
                 continue;
             }
 
-            $id = $row['id'] ?? null;
-            $result[] = [
-                'id' => $id instanceof CategoryId ? $id->value : $id,
-                'name' => $row['name'] ?? null,
-                'uppercats' => $row['uppercats'] ?? null,
-                'global_rank' => $row['global_rank'] ?? null,
-            ];
+            $result[] = new CategoryIdNameUppercatsRank(
+                id: $row['id']->value,
+                name: is_string($row['name'] ?? null) ? $row['name'] : '',
+                uppercats: is_string($row['uppercats'] ?? null) ? $row['uppercats'] : '',
+                globalRank: is_string($row['global_rank'] ?? null) ? $row['global_rank'] : null,
+            );
         }
 
         return $result;
@@ -2052,7 +2074,7 @@ final class CategoryRepository
      * that owns at least one image but has none picked as representative
      * yet), not just true/false of the same predicate.
      *
-     * @return list<array<string, mixed>>
+     * @return list<CategoryIdNameUppercatsRank>
      *
      * `image_category` is mapped ({@see \Piwigo\Image\ImageCategoryEntity});
      * both branches use real DQL. The false branch's join has no declared
@@ -2083,7 +2105,7 @@ final class CategoryRepository
      * user's own group memberships ($groupAuthorizedCatIds).
      *
      * @param list<string> $groupAuthorizedCatIds
-     * @return list<array<string, mixed>>
+     * @return list<CategoryIdNameUppercatsRank>
      *
      * Item 14 DQL audit: converted to real DQL -- `user_access` is mapped
      * ({@see UserAccessEntity}, no declared association to CategoryEntity,
@@ -2129,7 +2151,7 @@ final class CategoryRepository
      * joined via group_access instead -- groups have no "authorized via
      * another group" concept, so there's no exclusion-list parameter here.
      *
-     * @return list<array<string, mixed>>
+     * @return list<CategoryIdNameUppercatsRank>
      *
      * `group_access` is mapped ({@see GroupAccessEntity}), joined via an
      * explicit `Join::WITH` condition (same precedent as
@@ -2171,7 +2193,7 @@ final class CategoryRepository
      * logically identical to one `NOT IN` over their union.
      *
      * @param list<string> $excludeCatIds
-     * @return list<array<string, mixed>>
+     * @return list<CategoryIdNameUppercatsRank>
      *
      * Item 14 DQL audit: converted to real DQL -- single-table, static
      * WHERE plus an optional NOT IN.
@@ -2197,7 +2219,7 @@ final class CategoryRepository
      * Controller\CommentsController's own "search by album" category
      * listing -- permission-filtered, no other condition.
      *
-     * @return list<array<string, mixed>>
+     * @return list<CategoryIdNameUppercatsRank>
      *
      * SQL-modernization audit, Item 14 Sub-phase B3 re-investigation: this
      * method's own sole real caller ({@see \Piwigo\Controller\
@@ -2247,7 +2269,7 @@ final class CategoryRepository
      * more than 2 arguments (confirmed against
      * `vendor/doctrine/orm/.../ConcatFunction.php`) covers the rest.
      *
-     * @return list<array<string, mixed>>
+     * @return list<CategoryPermalinkDisplayRow>
      */
     public function findAllForPermalinksDisplay(): array
     {
@@ -2264,19 +2286,18 @@ final class CategoryRepository
 
         $result = [];
         foreach ($rows as $row) {
-            if (! is_array($row)) {
+            if (! is_array($row) || ! ($row['id'] ?? null) instanceof CategoryId) {
                 continue;
             }
 
-            $id = $row['id'] ?? null;
             $permalink = $row['permalink'] ?? null;
-            $result[] = [
-                'id' => $id instanceof CategoryId ? $id->value : $id,
-                'permalink' => $permalink instanceof Permalink ? $permalink->value : $permalink,
-                'name' => $row['name'] ?? null,
-                'uppercats' => $row['uppercats'] ?? null,
-                'global_rank' => $row['global_rank'] ?? null,
-            ];
+            $result[] = new CategoryPermalinkDisplayRow(
+                id: $row['id']->value,
+                permalink: $permalink instanceof Permalink ? $permalink->value : null,
+                name: is_string($row['name'] ?? null) ? $row['name'] : '',
+                uppercats: is_string($row['uppercats'] ?? null) ? $row['uppercats'] : '',
+                globalRank: is_string($row['global_rank'] ?? null) ? $row['global_rank'] : null,
+            );
         }
 
         return $result;
@@ -2286,7 +2307,7 @@ final class CategoryRepository
      * Controller\Admin\SiteUpdateSubController's own per-site category
      * listing.
      *
-     * @return list<array<string, mixed>>
+     * @return list<CategoryIdNameUppercatsRank>
      *
      * Item 14 DQL audit: converted to real DQL -- single-table, static
      * WHERE.
@@ -2571,7 +2592,7 @@ final class CategoryRepository
      * "from/to" date-range display, gated by `CurrentConfig::displayFromto()`).
      *
      * @param  list<int>  $categoryIds
-     * @return array<int, array{from: ?string, to: ?string}> keyed by category id
+     * @return array<int, CategoryDateRange> keyed by category id
      *   -- PHP auto-coerces a numeric string array key to int regardless of
      *   how it's written, so `int` (not `string`) is the real runtime key
      *   type.
@@ -2617,10 +2638,10 @@ final class CategoryRepository
             $categoryId = $row['categoryId'] ?? null;
             $categoryIdInt = $categoryId instanceof CategoryId ? $categoryId->value : (is_numeric($categoryId) ? (int) $categoryId : null);
             if ($categoryIdInt !== null) {
-                $byId[$categoryIdInt] = [
-                    'from' => is_scalar($row['from_date'] ?? null) ? (string) $row['from_date'] : null,
-                    'to' => is_scalar($row['to_date'] ?? null) ? (string) $row['to_date'] : null,
-                ];
+                $byId[$categoryIdInt] = new CategoryDateRange(
+                    from: is_scalar($row['from_date'] ?? null) ? (string) $row['from_date'] : null,
+                    to: is_scalar($row['to_date'] ?? null) ? (string) $row['to_date'] : null,
+                );
             }
         }
 
@@ -2797,15 +2818,13 @@ final class CategoryRepository
      * because of a group" display, deduplicated across every group the
      * user belongs to.
      *
-     * @return list<array<string, mixed>>
+     * @return list<CategoryGroupAuthorizationRow>
      *
      * Item 14 DQL audit: converted to real DQL -- `user_group`/
      * `group_access` are both mapped ({@see UserGroupEntity}/
      * {@see GroupAccessEntity}), chained via two explicit `Join::WITH`
      * conditions. `c.id AS cat_id` is now custom-Typed (`category_id`) --
-     * see this class's own Gotcha #1 note above; unwrapped below to keep
-     * this method's own real caller's `is_int()/is_string()` narrowing
-     * working unchanged.
+     * see this class's own Gotcha #1 note above.
      */
     public function findCategoriesAuthorizedViaGroupsForUser(int $userId): array
     {
@@ -2823,16 +2842,15 @@ final class CategoryRepository
 
         $result = [];
         foreach ($rows as $row) {
-            if (! is_array($row)) {
+            if (! is_array($row) || ! ($row['cat_id'] ?? null) instanceof CategoryId) {
                 continue;
             }
 
-            $catId = $row['cat_id'] ?? null;
-            $result[] = [
-                'cat_id' => $catId instanceof CategoryId ? $catId->value : $catId,
-                'uppercats' => $row['uppercats'] ?? null,
-                'global_rank' => $row['global_rank'] ?? null,
-            ];
+            $result[] = new CategoryGroupAuthorizationRow(
+                catId: $row['cat_id']->value,
+                uppercats: is_string($row['uppercats'] ?? null) ? $row['uppercats'] : '',
+                globalRank: is_string($row['global_rank'] ?? null) ? $row['global_rank'] : null,
+            );
         }
 
         return $result;
@@ -2909,7 +2927,7 @@ final class CategoryRepository
      * Direct children of $parentId (or every root category when null),
      * ordered by rank -- Admin\CatListPageRenderer's own album listing.
      *
-     * @return list<array<string, mixed>>
+     * @return list<CategoryChildRow>
      *
      * Item 14 DQL audit: converted to real DQL -- single-table; $parentId
      * toggles between two fixed DQL conditions (not a dynamic column name).
@@ -2929,21 +2947,20 @@ final class CategoryRepository
 
         $result = [];
         foreach ($qb->getQuery()->getArrayResult() as $row) {
-            if (! is_array($row)) {
+            if (! is_array($row) || ! ($row['id'] ?? null) instanceof CategoryId) {
                 continue;
             }
 
-            $id = $row['id'] ?? null;
             $permalink = $row['permalink'] ?? null;
             $status = $row['status'] ?? null;
-            $result[] = [
-                'id' => $id instanceof CategoryId ? $id->value : $id,
-                'name' => $row['name'] ?? null,
-                'permalink' => $permalink instanceof Permalink ? $permalink->value : $permalink,
-                'dir' => $row['dir'] ?? null,
-                'rank' => $row['rank'] ?? null,
-                'status' => $status instanceof CategoryStatus ? $status->value : $status,
-            ];
+            $result[] = new CategoryChildRow(
+                id: $row['id']->value,
+                name: is_string($row['name'] ?? null) ? $row['name'] : '',
+                permalink: $permalink instanceof Permalink ? $permalink->value : null,
+                dir: is_string($row['dir'] ?? null) ? $row['dir'] : null,
+                rank: is_numeric($row['rank'] ?? null) ? (int) $row['rank'] : null,
+                status: $status instanceof CategoryStatus ? $status->value : '',
+            );
         }
 
         return $result;
@@ -3053,7 +3070,7 @@ final class CategoryRepository
      * own auto-order sort-and-save step.
      *
      * @param list<string> $categoryIds
-     * @return list<array<string, mixed>>
+     * @return list<CategoryIdNameUppercat>
      *
      * Item 14 DQL audit: converted to real DQL -- single-table, static
      * WHERE, all 3 columns plain-typed.
@@ -3069,16 +3086,15 @@ final class CategoryRepository
 
         $result = [];
         foreach ($rows as $row) {
-            if (! is_array($row)) {
+            if (! is_array($row) || ! ($row['id'] ?? null) instanceof CategoryId) {
                 continue;
             }
 
-            $id = $row['id'] ?? null;
-            $result[] = [
-                'id' => $id instanceof CategoryId ? $id->value : $id,
-                'name' => $row['name'] ?? null,
-                'id_uppercat' => $row['id_uppercat'] ?? null,
-            ];
+            $result[] = new CategoryIdNameUppercat(
+                id: $row['id']->value,
+                name: is_string($row['name'] ?? null) ? $row['name'] : '',
+                idUppercat: is_numeric($row['id_uppercat'] ?? null) ? (int) $row['id_uppercat'] : null,
+            );
         }
 
         return $result;
@@ -3088,7 +3104,7 @@ final class CategoryRepository
      * Every category's id/name/rank/status/visible/uppercats/lastmodified
      * -- Admin\AlbumsPageRenderer's own full album-tree listing.
      *
-     * @return list<array<string, mixed>>
+     * @return list<CategoryAlbumTreeRow>
      *
      * Item 14 DQL audit: converted to real DQL -- single-table,
      * unconditional select. `id`/`status`/`lastmodified` are all
@@ -3104,22 +3120,21 @@ final class CategoryRepository
 
         $result = [];
         foreach ($rows as $row) {
-            if (! is_array($row)) {
+            if (! is_array($row) || ! ($row['id'] ?? null) instanceof CategoryId) {
                 continue;
             }
 
-            $id = $row['id'] ?? null;
             $status = $row['status'] ?? null;
             $lastmodified = $row['lastmodified'] ?? null;
-            $result[] = [
-                'id' => $id instanceof CategoryId ? $id->value : $id,
-                'name' => $row['name'] ?? null,
-                'rank' => $row['rank'] ?? null,
-                'status' => $status instanceof CategoryStatus ? $status->value : $status,
-                'visible' => $row['visible'] ?? null,
-                'uppercats' => $row['uppercats'] ?? null,
-                'lastmodified' => $lastmodified instanceof SqlDateTime ? $lastmodified->value : $lastmodified,
-            ];
+            $result[] = new CategoryAlbumTreeRow(
+                id: $row['id']->value,
+                name: is_string($row['name'] ?? null) ? $row['name'] : '',
+                rank: is_numeric($row['rank'] ?? null) ? (int) $row['rank'] : null,
+                status: $status instanceof CategoryStatus ? $status->value : '',
+                visible: (bool) ($row['visible'] ?? false),
+                uppercats: is_string($row['uppercats'] ?? null) ? $row['uppercats'] : '',
+                lastmodified: $lastmodified instanceof SqlDateTime ? $lastmodified->value : '',
+            );
         }
 
         return $result;
@@ -3156,26 +3171,20 @@ final class CategoryRepository
      * images -- Admin\CatModifyPageRenderer's own "this album contains N
      * photos, added between X and Y" summary.
      *
-     * @return list<mixed>
+     * @return PhotoCountDateRange
      *
      * SQL-modernization audit, Item 14 Sub-phase B5 Tier 2: converted to
      * real DQL -- `image_category` is mapped
      * ({@see \Piwigo\Image\ImageCategoryEntity}), and its remaining two
      * blockers are resolved by fetching raw rows and computing in PHP
      * instead: MySQL's `DATE()` has no portable DQL equivalent, and the
-     * caller's positional `[count, min, max]` shape doesn't need DQL's
-     * named field selects at all once the aggregation itself moves to PHP.
+     * caller's `count`/`min`/`max` shape doesn't need DQL's named field
+     * selects at all once the aggregation itself moves to PHP.
      * `dateAvailable` is a `Y-m-d H:i:s` string, so
      * `substr($dateAvailable, 0, 10)` reproduces `DATE(date_available)`'s
-     * output exactly. Return type narrowed from `list|false` to `list` --
-     * `false` was only ever reachable under the original driver-level
-     * `fetchNumeric()` returning zero rows, which an aggregate query
-     * without GROUP BY never does; this PHP-side rewrite has no equivalent
-     * "zero rows" case at all, so the caller's own defensive
-     * `$row === false` check ({@see \Piwigo\Admin\CatModifyPageRenderer})
-     * is updated to match.
+     * output exactly.
      */
-    public function findPhotoCountAndDateRange(int $categoryId): array
+    public function findPhotoCountAndDateRange(int $categoryId): PhotoCountDateRange
     {
         $rows = $this->em
             ->createQueryBuilder()
@@ -3214,7 +3223,7 @@ final class CategoryRepository
             }
         }
 
-        return [$count, $minDate, $maxDate];
+        return new PhotoCountDateRange($count, $minDate, $maxDate);
     }
 
     /**
@@ -3294,7 +3303,7 @@ final class CategoryRepository
      * $orderByColumn now carries just the column name (or null), and this
      * method decides the DQL `orderBy()` call itself.
      *
-     * @return list<array<string, mixed>>
+     * @return list<ActivePermalinkRow>
      */
     public function findActivePermalinksList(?string $orderByColumn): array
     {
@@ -3313,18 +3322,17 @@ final class CategoryRepository
 
         $result = [];
         foreach ($rows as $row) {
-            if (! is_array($row)) {
+            if (! is_array($row) || ! ($row['id'] ?? null) instanceof CategoryId) {
                 continue;
             }
 
-            $id = $row['id'] ?? null;
             $permalink = $row['permalink'] ?? null;
-            $result[] = [
-                'id' => $id instanceof CategoryId ? $id->value : $id,
-                'permalink' => $permalink instanceof Permalink ? $permalink->value : $permalink,
-                'uppercats' => $row['uppercats'] ?? null,
-                'global_rank' => $row['global_rank'] ?? null,
-            ];
+            $result[] = new ActivePermalinkRow(
+                id: $row['id']->value,
+                permalink: $permalink instanceof Permalink ? $permalink->value : null,
+                uppercats: is_string($row['uppercats'] ?? null) ? $row['uppercats'] : '',
+                globalRank: is_string($row['global_rank'] ?? null) ? $row['global_rank'] : null,
+            );
         }
 
         return $result;
@@ -3410,7 +3418,7 @@ final class CategoryRepository
      * fetching images for" step.
      *
      * @param  list<SqlCondition>  $conditions
-     * @return list<array{id: int, image_order: ?string}>
+     * @return list<CategoryIdImageOrder>
      *
      * $conditions is a list of caller-built SqlCondition fragments (its
      * one real caller combines a dynamically-sized per-`cat_id` OR-chain
@@ -3454,10 +3462,10 @@ final class CategoryRepository
                 continue;
             }
 
-            $result[] = [
-                'id' => $row['id']->value,
-                'image_order' => is_string($row['imageOrder'] ?? null) ? $row['imageOrder'] : null,
-            ];
+            $result[] = new CategoryIdImageOrder(
+                id: $row['id']->value,
+                imageOrder: is_string($row['imageOrder'] ?? null) ? $row['imageOrder'] : null,
+            );
         }
 
         return $result;
@@ -3518,7 +3526,7 @@ final class CategoryRepository
      * (single-category scope), to detect "more remain" without a second
      * query. The total is only computed when $limit !== null.
      *
-     * @return PaginatedResult<array<string, mixed>>
+     * @return PaginatedResult<CategoryListForWsRow>
      *
      * Computes the total via `COUNT(*) OVER() AS total_count` in the same
      * query as the row data (no `DISTINCT`/`GROUP BY` here, so the window
@@ -3608,14 +3616,9 @@ final class CategoryRepository
         $total = null;
         if ($limit !== null) {
             $total = $rows !== [] && is_numeric($rows[0]['total_count'] ?? null) ? (int) $rows[0]['total_count'] : 0;
-            $rows = array_map(static function (array $row): array {
-                unset($row['total_count']);
-
-                return $row;
-            }, $rows);
         }
 
-        return new PaginatedResult($rows, $total);
+        return new PaginatedResult(array_map(CategoryListForWsRow::fromRow(...), $rows), $total);
     }
 
     /**
@@ -3624,7 +3627,7 @@ final class CategoryRepository
      * at all -- this WS method is admin-only). Always computes the total,
      * unlike {@see findListForWs()}'s own $limit-gated fetch.
      *
-     * @return PaginatedResult<array<string, mixed>>
+     * @return PaginatedResult<CategoryAdminListForWsRow>
      *
      * Computes the total the same way as {@see findListForWs()} above
      * (`COUNT(*) OVER() AS total_count`) -- no `DISTINCT`/`GROUP BY` here
@@ -3660,13 +3663,8 @@ final class CategoryRepository
 
         $rows = $conn->fetchAllAssociative($sql, $params, $types);
         $total = $rows !== [] && is_numeric($rows[0]['total_count'] ?? null) ? (int) $rows[0]['total_count'] : 0;
-        $rows = array_map(static function (array $row): array {
-            unset($row['total_count']);
 
-            return $row;
-        }, $rows);
-
-        return new PaginatedResult($rows, $total);
+        return new PaginatedResult(array_map(CategoryAdminListForWsRow::fromRow(...), $rows), $total);
     }
 
     /**
@@ -3715,7 +3713,7 @@ final class CategoryRepository
      * needs afterward.
      *
      * @param  list<int>  $ids
-     * @return list<array{id: int, id_uppercat: ?int, rank: ?int}>
+     * @return list<CategoryRankInfoRow>
      *
      * Item 14 DQL audit: converted to real DQL -- single-table, static
      * WHERE, all 3 columns plain-typed.
@@ -3739,11 +3737,11 @@ final class CategoryRepository
                 continue;
             }
 
-            $result[] = [
-                'id' => $row['id']->value,
-                'id_uppercat' => is_numeric($row['id_uppercat'] ?? null) ? (int) $row['id_uppercat'] : null,
-                'rank' => is_numeric($row['rank'] ?? null) ? (int) $row['rank'] : null,
-            ];
+            $result[] = new CategoryRankInfoRow(
+                id: $row['id']->value,
+                idUppercat: is_numeric($row['id_uppercat'] ?? null) ? (int) $row['id_uppercat'] : null,
+                rank: is_numeric($row['rank'] ?? null) ? (int) $row['rank'] : null,
+            );
         }
 
         return $result;
@@ -3822,7 +3820,7 @@ final class CategoryRepository
      * id/id_uppercat/status/uppercats, for a different real caller).
      *
      * @param  list<int>  $ids
-     * @return list<array{id: int, name: string, dir: ?string, uppercats: string}>
+     * @return list<CategoryMoveDetailRow>
      *
      * Item 14 DQL audit: converted to real DQL -- single-table, static
      * WHERE, all 4 columns plain-typed.
@@ -3846,12 +3844,12 @@ final class CategoryRepository
                 continue;
             }
 
-            $result[] = [
-                'id' => $row['id']->value,
-                'name' => is_string($row['name'] ?? null) ? $row['name'] : '',
-                'dir' => is_string($row['dir'] ?? null) ? $row['dir'] : null,
-                'uppercats' => is_string($row['uppercats'] ?? null) ? $row['uppercats'] : '',
-            ];
+            $result[] = new CategoryMoveDetailRow(
+                id: $row['id']->value,
+                name: is_string($row['name'] ?? null) ? $row['name'] : '',
+                dir: is_string($row['dir'] ?? null) ? $row['dir'] : null,
+                uppercats: is_string($row['uppercats'] ?? null) ? $row['uppercats'] : '',
+            );
         }
 
         return $result;
@@ -3896,7 +3894,7 @@ final class CategoryRepository
      * B5 Tier 1) {@see findSubcategoryIds()} already established for the
      * exact same `uppercats REGEXP '(^|,)ID(,|$)'` pattern.
      *
-     * @return list<array<string, mixed>>
+     * @return list<CategorySyncCandidateRow>
      */
     public function findSyncCandidatesForSite(int $siteId, ?int $catId, bool $recursive): array
     {
@@ -3921,19 +3919,18 @@ final class CategoryRepository
 
         $result = [];
         foreach ($rows as $row) {
-            if (! is_array($row)) {
+            if (! is_array($row) || ! ($row['id'] ?? null) instanceof CategoryId) {
                 continue;
             }
 
-            $id = $row['id'] ?? null;
             $status = $row['status'] ?? null;
-            $result[] = [
-                'id' => $id instanceof CategoryId ? $id->value : $id,
-                'uppercats' => $row['uppercats'] ?? null,
-                'global_rank' => $row['global_rank'] ?? null,
-                'status' => $status instanceof CategoryStatus ? $status->value : $status,
-                'visible' => $row['visible'] ?? null,
-            ];
+            $result[] = new CategorySyncCandidateRow(
+                id: $row['id']->value,
+                uppercats: is_string($row['uppercats'] ?? null) ? $row['uppercats'] : '',
+                globalRank: is_string($row['global_rank'] ?? null) ? $row['global_rank'] : null,
+                status: $status instanceof CategoryStatus ? $status->value : '',
+                visible: (bool) ($row['visible'] ?? false),
+            );
         }
 
         return $result;
@@ -3966,7 +3963,7 @@ final class CategoryRepository
      * SiteUpdateSubController's own "does this parent already have
      * sub-categories, and if so what's the next free rank" step.
      *
-     * @return list<array<string, mixed>>
+     * @return list<CategoryNextRankByParentRow>
      *
      * Item 14 DQL audit: converted to real DQL -- single-table; MAX()+1 is
      * a standard DQL aggregate/arithmetic expression.
@@ -3985,10 +3982,12 @@ final class CategoryRepository
                 continue;
             }
 
-            $result[] = [
-                'id_uppercat' => $row['id_uppercat'] ?? null,
-                'next_rank' => $row['next_rank'] ?? null,
-            ];
+            $idUppercat = $row['id_uppercat'] ?? null;
+            $nextRank = $row['next_rank'] ?? null;
+            $result[] = new CategoryNextRankByParentRow(
+                idUppercat: is_numeric($idUppercat) ? (int) $idUppercat : null,
+                nextRank: is_numeric($nextRank) ? (int) $nextRank : null,
+            );
         }
 
         return $result;

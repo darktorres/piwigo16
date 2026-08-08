@@ -335,8 +335,8 @@ final class PhotosAddDirectPageRenderer
             $mostRecentCategoryInfo = EntityManagerFactory::build($conn)->getRepository(ImageEntity::class)
                 ->findMostRecentImageCategoryInfo();
             if ($mostRecentCategoryInfo !== null) {
-                $selected_category = [$mostRecentCategoryInfo['category_id']];
-                $uppercats = $mostRecentCategoryInfo['uppercats'];
+                $selected_category = [$mostRecentCategoryInfo->categoryId];
+                $uppercats = $mostRecentCategoryInfo->uppercats;
                 $selected_category_name = $htmlRenderer->getCatDisplayNameCache($uppercats, null);
                 $template->assign('selected_category_name', $selected_category_name);
             }

@@ -13,6 +13,7 @@ use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Event\Picture\UpdateRatingScore;
 use Piwigo\PluginConfig\EventDispatcher;
+use Piwigo\Rate\Projection\RateSummaryForElement;
 use Piwigo\Users\CurrentUser;
 
 /**
@@ -139,8 +140,8 @@ final readonly class RateService
         $allRatesAvg = 0.0;
         $itemRatecountAvg = 0.0;
         foreach ($byItem as $summary) {
-            $allRatesCount += $summary['rcount'];
-            $allRatesAvg += $summary['rsum'];
+            $allRatesCount += $summary->rcount;
+            $allRatesAvg += $summary->rsum;
         }
 
         if ($allRatesCount > 0) {
@@ -151,13 +152,13 @@ final readonly class RateService
         $return = null;
         $updates = [];
         foreach ($byItem as $id => $summary) {
-            $score = ($itemRatecountAvg * $allRatesAvg + $summary['rsum']) / ($itemRatecountAvg + (float) $summary['rcount']);
+            $score = ($itemRatecountAvg * $allRatesAvg + $summary->rsum) / ($itemRatecountAvg + (float) $summary->rcount);
             $score = round($score, 2);
             if ($id === $elementId) {
                 $return = [
                     'score' => $score,
-                    'average' => round($summary['rsum'] / (float) $summary['rcount'], 2),
-                    'count' => $summary['rcount'],
+                    'average' => round($summary->rsum / (float) $summary->rcount, 2),
+                    'count' => $summary->rcount,
                 ];
             }
 
@@ -191,10 +192,7 @@ final readonly class RateService
         return $this->repo->countRatesForElement($elementId);
     }
 
-    /**
-     * @return array{count: int, average: ?float}
-     */
-    public function getRateSummaryForElement(ImageId $elementId): array
+    public function getRateSummaryForElement(ImageId $elementId): RateSummaryForElement
     {
         return $this->repo->findRateSummaryForElement($elementId);
     }

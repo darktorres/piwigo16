@@ -12,6 +12,7 @@ declare(strict_types=1);
 namespace Piwigo\Calendar;
 
 use Override;
+use Piwigo\Calendar\Projection\RandomImageForDay;
 use Piwigo\Core\TemplateInterface;
 use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\ImageStdParams;
@@ -426,14 +427,11 @@ final class CalendarMonthly extends CalendarBase
             // $day came from the grouped count query above, which only
             // includes days with at least one image, so this LIMIT 1
             // query always finds a row
-            assert(is_array($row));
-            $derivative = new DerivativeImage(ImageStdParams::SQUARE, new SrcImage($row), $this->currentConfig);
+            assert($row instanceof RandomImageForDay);
+            $derivative = new DerivativeImage(ImageStdParams::SQUARE, new SrcImage($row->toArray()), $this->currentConfig);
             $items[$day]['derivative'] = $derivative;
-            $items[$day]['file'] = $row['file'];
-            // dow is DAYOFWEEK(date_field)-1, a numeric SQL expression, so
-            // it comes back as a numeric string (never null: the row is
-            // guaranteed to exist and date_field is filtered NOT NULL above)
-            $items[$day]['dow'] = is_numeric($row['dow']) ? (int) $row['dow'] : 0;
+            $items[$day]['file'] = $row->file;
+            $items[$day]['dow'] = $row->dow;
         }
 
         if ($items !== []) {
@@ -502,7 +500,7 @@ final class CalendarMonthly extends CalendarBase
                           'NB_ELEMENTS' => $items[$day]['nb_images'],
                           'IMAGE' => $items[$day]['derivative']->get_url(),
                           'U_IMG_LINK' => $url,
-                          'IMAGE_ALT' => $items[$day]['file'] ?? null,
+                          'IMAGE_ALT' => $items[$day]['file'],
                       ];
                 }
             }

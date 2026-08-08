@@ -22,8 +22,6 @@ use Piwigo\Caddie\CaddieEntity;
 use Piwigo\Category\CategoryService;
 use Piwigo\Comment\CommentService;
 use Piwigo\Common\ValueObject\ImageId;
-use Piwigo\Common\ValueObject\IpAddress;
-use Piwigo\Common\ValueObject\SqlDateTime;
 use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Config\ConfigService;
 use Piwigo\Config\CurrentConfig;
@@ -135,8 +133,8 @@ final class PwgCore
 
         $max_urls = $params['max_urls'];
         $next_id_and_count = $this->imageService->getNextIdAndCount();
-        $max_id = $next_id_and_count['nextId'];
-        $image_count = $next_id_and_count['count'];
+        $max_id = $next_id_and_count->nextId;
+        $image_count = $next_id_and_count->count;
 
         if ($image_count === 0) {
             return [];
@@ -165,8 +163,8 @@ final class PwgCore
             $is_last = count($rows) < $qlimit;
 
             foreach ($rows as $image_row) {
-                $start_id = is_numeric($image_row['id']) ? (int) $image_row['id'] : 0;
-                $src_image = new SrcImage($image_row);
+                $start_id = $image_row->id;
+                $src_image = new SrcImage($image_row->toArray());
                 if ($src_image->is_mimetype()) {
                     continue;
                 }
@@ -615,26 +613,18 @@ final class PwgCore
                 if (count($output_lines) < $page_size) {
                     $page_offset++;
 
-                    // ActivityRepository::findPaginated()'s rows are
-                    // array<string, mixed> straight from DQL array
-                    // hydration -- narrow every field used below once,
-                    // here, instead of scattering is_scalar()/is_string()
-                    // guards through the rest of this loop. ip_address,
-                    // occured_on, and details are real typed values now (an
-                    // IpAddress VO, a SqlDateTime VO, and an
-                    // already-decoded array respectively, per Doctrine's
-                    // own custom-Type/json-Type conversion -- see that
-                    // method's own docblock), not raw strings, so they're
-                    // narrowed differently from the plain-scalar columns
-                    // below.
-                    $row_session_idx = is_scalar($row['session_idx']) ? (string) $row['session_idx'] : '';
-                    $row_object = is_scalar($row['object']) ? (string) $row['object'] : '';
-                    $row_action = is_scalar($row['action']) ? (string) $row['action'] : '';
-                    $row_object_id = is_scalar($row['object_id']) ? (string) $row['object_id'] : null;
-                    $row_ip_address = $row['ip_address'] instanceof IpAddress ? $row['ip_address']->value : null;
-                    $row_performed_by = $row['performed_by'] instanceof UserId ? (string) $row['performed_by']->value : null;
-                    $row_details = is_array($row['details'] ?? null) ? $row['details'] : [];
-                    $row_occured_on = $row['occured_on'] instanceof SqlDateTime ? $row['occured_on']->value : '';
+                    // ActivityRepository::findPaginated() now returns
+                    // PaginatedActivityRow -- every field below reads its
+                    // typed property directly, no per-field narrowing
+                    // needed (the DTO already guarantees each real type).
+                    $row_session_idx = $row->sessionIdx;
+                    $row_object = $row->object;
+                    $row_action = $row->action;
+                    $row_object_id = (string) $row->objectId;
+                    $row_ip_address = $row->ipAddress?->value;
+                    $row_performed_by = $row->performedBy !== null ? (string) $row->performedBy->value : null;
+                    $row_details = $row->details ?? [];
+                    $row_occured_on = $row->occuredOn->value;
 
                     $line_key = $row_session_idx . '~' . $row_object . '~' . $row_action . '~'; // idx~photo~add
 
@@ -664,8 +654,8 @@ final class PwgCore
                         $details = $row_details;
                         $detailsType = null;
 
-                        if (isset($row['user_agent'])) {
-                            $details['agent'] = $row['user_agent'];
+                        if ($row->userAgent !== null) {
+                            $details['agent'] = $row->userAgent;
                         }
 
                         if (isset($details['method'])) {
@@ -695,7 +685,7 @@ final class PwgCore
                         if ($row_performed_by !== null) {
                             $user_ids[$row_performed_by] = 1;
                         }
-                        if ($row_object === 'user' and $row_object_id !== null) {
+                        if ($row_object === 'user') {
                             $user_ids[$row_object_id] = 1;
                         }
 
@@ -718,10 +708,11 @@ final class PwgCore
         foreach ($output_lines as $idx => $output_line) {
             if (($output_line['object'] ?? null) === 'user') {
                 foreach ($output_line['object_id'] as $user_id) {
-                    if (! is_string($user_id)) {
-                        continue;
-                    }
-
+                    // Inside this loop, PHPStan can't prove 'details' still
+                    // exists on every iteration (the loop itself
+                    // conditionally rewrites $output_lines[$idx]['details']
+                    // below) -- the ?? [] fallback is genuinely needed here,
+                    // unlike the read just after this loop.
                     $details = $output_lines[$idx]['details'] ?? [];
 
                     $users = $details['users'] ?? [];
@@ -734,11 +725,9 @@ final class PwgCore
                     $output_lines[$idx]['details'] = $details;
                 }
 
-                $details = $output_lines[$idx]['details'] ?? [];
-                if (isset($details['users']) and is_array($details['users'])) {
-                    $details['users_string'] = implode(', ', array_filter($details['users'], is_string(...)));
-                    $output_lines[$idx]['details'] = $details;
-                }
+                $details = $output_lines[$idx]['details'];
+                $details['users_string'] = implode(', ', array_filter($details['users'], is_string(...)));
+                $output_lines[$idx]['details'] = $details;
             }
 
             $user_id_val = $output_lines[$idx]['user_id'] ?? null;

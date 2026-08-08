@@ -137,24 +137,24 @@ final class RatingPageRenderer
 
         $template->assign('images', []);
         foreach ($images as $image) {
-            $thumbnail_src = DerivativeImage::thumb_url($image);
+            $thumbnail_src = DerivativeImage::thumb_url($image->toArray());
 
-            $image_url = $urlService->getRootUrl() . 'admin.php?page=photo-' . $image['id'];
+            $image_url = $urlService->getRootUrl() . 'admin.php?page=photo-' . $image->id;
 
-            $rates = $rate_repository->findRateRowsForElement(ImageId::from($image['id']));
+            $rates = $rate_repository->findRateRowsForElement(ImageId::from($image->id));
             $nb_rates = count($rates);
 
             $tpl_image =
               [
-                  'id' => $image['id'],
+                  'id' => $image->id,
                   'U_THUMB' => $thumbnail_src,
                   'U_URL' => $image_url,
-                  'SCORE_RATE' => $image['score'],
-                  'AVG_RATE' => $image['avg_rates'],
-                  'SUM_RATE' => $image['sum_rates'],
-                  'NB_RATES' => $image['nb_rates'],
+                  'SCORE_RATE' => $image->score,
+                  'AVG_RATE' => $image->avgRates,
+                  'SUM_RATE' => $image->sumRates,
+                  'NB_RATES' => $image->nbRates,
                   'NB_RATES_TOTAL' => $nb_rates,
-                  'FILE' => $image['file'],
+                  'FILE' => $image->file,
                   'rates' => [],
               ];
 

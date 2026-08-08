@@ -17,6 +17,7 @@ use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Db\Tables;
 use Piwigo\Permission\PermissionCriteria;
+use Piwigo\Tag\Projection\ImageTagLink;
 use Piwigo\Tag\TagEntity;
 use Piwigo\Tag\TagRepository;
 
@@ -120,7 +121,7 @@ final class TagRepositoryTest extends IntegrationTestCase
         $rows = $this->repo->findTagIdsByImageIds([1, 2]);
 
         $pairs = array_map(
-            static fn (array $row): string => $row['image_id'] . ':' . $row['tag_id']->value,
+            static fn (ImageTagLink $row): string => $row->imageId . ':' . $row->tagId->value,
             $rows
         );
         sort($pairs);
@@ -246,7 +247,7 @@ final class TagRepositoryTest extends IntegrationTestCase
 
             $remaining = $this->repo->findTagIdsByImageIds([4]);
             self::assertCount(1, $remaining);
-            self::assertSame(2, $remaining[0]['tag_id']->value);
+            self::assertSame(2, $remaining[0]->tagId->value);
         } finally {
             $this->conn->delete(Tables::imageTag(), ['image_id' => 4, 'tag_id' => 2]);
         }

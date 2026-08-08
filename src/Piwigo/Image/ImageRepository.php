@@ -23,8 +23,22 @@ use Piwigo\Core\Env;
 use Piwigo\Db\BatchWriter;
 use Piwigo\Db\SqlDialect;
 use Piwigo\Db\Tables;
+use Piwigo\Image\Projection\AddMethodBreakdown;
+use Piwigo\Image\Projection\ExtensionBreakdown;
+use Piwigo\Image\Projection\FormatCountSum;
 use Piwigo\Image\Projection\Image;
+use Piwigo\Image\Projection\ImageCategoryLink;
 use Piwigo\Image\Projection\ImageFormat;
+use Piwigo\Image\Projection\ImageIdExt;
+use Piwigo\Image\Projection\ImageIdFile;
+use Piwigo\Image\Projection\ImageLookupRow;
+use Piwigo\Image\Projection\MissingDerivativeRow;
+use Piwigo\Image\Projection\MostRecentCategoryInfo;
+use Piwigo\Image\Projection\NextIdCount;
+use Piwigo\Image\Projection\PathRepresentativeExt;
+use Piwigo\Image\Projection\PathRepresentativeExtLevel;
+use Piwigo\Image\Projection\UploadInfo;
+use Piwigo\Image\Projection\UploadResultInfo;
 use Piwigo\Permission\PermissionCriteria;
 use Piwigo\Permission\SqlCondition;
 
@@ -180,7 +194,7 @@ final class ImageRepository extends EntityRepository
 
     /**
      * @param array<int, int|string> $imageIds
-     * @return list<array{image_id: int, ext: string}>
+     * @return list<ImageIdExt>
      */
     public function findFormatsByImageIds(array $imageIds): array
     {
@@ -202,10 +216,10 @@ final class ImageRepository extends EntityRepository
             ->getResult();
 
         return array_map(
-            static fn (array $row): array => [
-                'image_id' => $row['image_id'] instanceof ImageId ? $row['image_id']->value : (is_numeric($row['image_id']) ? (int) $row['image_id'] : 0),
-                'ext' => $row['ext'],
-            ],
+            static fn (array $row): ImageIdExt => new ImageIdExt(
+                $row['image_id'] instanceof ImageId ? $row['image_id']->value : (is_numeric($row['image_id']) ? (int) $row['image_id'] : 0),
+                $row['ext'],
+            ),
             $rows
         );
     }
@@ -283,7 +297,7 @@ final class ImageRepository extends EntityRepository
      * deleting them via deleteFormatsByIds() below.
      *
      * @param list<int> $formatIds
-     * @return list<array{image_id: int, ext: string}>
+     * @return list<ImageIdExt>
      */
     public function findImageIdsAndExtsByFormatIds(array $formatIds): array
     {
@@ -306,10 +320,10 @@ final class ImageRepository extends EntityRepository
             ->getResult();
 
         return array_map(
-            static fn (array $row): array => [
-                'image_id' => $row['image_id'] instanceof ImageId ? $row['image_id']->value : (is_numeric($row['image_id']) ? (int) $row['image_id'] : 0),
-                'ext' => $row['ext'],
-            ],
+            static fn (array $row): ImageIdExt => new ImageIdExt(
+                $row['image_id'] instanceof ImageId ? $row['image_id']->value : (is_numeric($row['image_id']) ? (int) $row['image_id'] : 0),
+                $row['ext'],
+            ),
             $rows
         );
     }
@@ -378,7 +392,7 @@ final class ImageRepository extends EntityRepository
 
     /**
      * @param array<int, int|string> $imageIds
-     * @return list<array{id: int, path: string, representative_ext: ?string}>
+     * @return list<PathRepresentativeExt>
      */
     public function findPathsForFileDeletion(array $imageIds): array
     {
@@ -402,11 +416,11 @@ final class ImageRepository extends EntityRepository
                 continue;
             }
 
-            $result[] = [
-                'id' => $row['id'] instanceof ImageId ? $row['id']->value : (is_numeric($row['id']) ? (int) $row['id'] : 0),
-                'path' => is_string($row['path']) ? $row['path'] : '',
-                'representative_ext' => is_string($row['representative_ext'] ?? null) ? $row['representative_ext'] : null,
-            ];
+            $result[] = new PathRepresentativeExt(
+                id: $row['id'] instanceof ImageId ? $row['id']->value : (is_numeric($row['id']) ? (int) $row['id'] : 0),
+                path: is_string($row['path']) ? $row['path'] : '',
+                representativeExt: is_string($row['representative_ext'] ?? null) ? $row['representative_ext'] : null,
+            );
         }
 
         return $result;
@@ -418,7 +432,7 @@ final class ImageRepository extends EntityRepository
      * allow this thumbnail" check.
      *
      * @param  list<int>  $imageIds
-     * @return list<array{id: int, path: string, representative_ext: ?string, level: int}>
+     * @return list<PathRepresentativeExtLevel>
      */
     public function findPathsAndLevelForIds(array $imageIds): array
     {
@@ -439,12 +453,12 @@ final class ImageRepository extends EntityRepository
                 continue;
             }
 
-            $result[] = [
-                'id' => $row['id'] instanceof ImageId ? $row['id']->value : (is_numeric($row['id']) ? (int) $row['id'] : 0),
-                'path' => is_string($row['path']) ? $row['path'] : '',
-                'representative_ext' => is_string($row['representative_ext'] ?? null) ? $row['representative_ext'] : null,
-                'level' => is_numeric($row['level'] ?? null) ? (int) $row['level'] : 0,
-            ];
+            $result[] = new PathRepresentativeExtLevel(
+                id: $row['id'] instanceof ImageId ? $row['id']->value : (is_numeric($row['id']) ? (int) $row['id'] : 0),
+                path: is_string($row['path']) ? $row['path'] : '',
+                representativeExt: is_string($row['representative_ext'] ?? null) ? $row['representative_ext'] : null,
+                level: is_numeric($row['level'] ?? null) ? (int) $row['level'] : 0,
+            );
         }
 
         return $result;
@@ -644,7 +658,7 @@ final class ImageRepository extends EntityRepository
     }
 
     /**
-     * @return list<array{image_id: int, category_id: int}>
+     * @return list<ImageCategoryLink>
      */
     public function findLoungeRows(): array
     {
@@ -658,10 +672,7 @@ final class ImageRepository extends EntityRepository
             ->getResult();
 
         return array_map(
-            static fn (LoungeEntity $l): array => [
-                'image_id' => $l->imageId->value,
-                'category_id' => $l->categoryId->value,
-            ],
+            static fn (LoungeEntity $l): ImageCategoryLink => new ImageCategoryLink($l->imageId->value, $l->categoryId->value),
             $entities
         );
     }
@@ -1070,10 +1081,8 @@ final class ImageRepository extends EntityRepository
      * setMaxResults(1) is paired with getOneOrNullResult() even though the
      * WHERE is on the primary key -- getOneOrNullResult() throws if more
      * than one row matches.
-     *
-     * @return ?array{path: string, file: string, md5sum: ?string, width: ?int, height: ?int, filesize: ?int}
      */
-    public function findUploadInfoById(ImageId $imageId): ?array
+    public function findUploadInfoById(ImageId $imageId): ?UploadInfo
     {
         $row = $this->createQueryBuilder('i')
             ->select('i.path', 'i.file', 'i.md5sum', 'i.width', 'i.height', 'i.filesize')
@@ -1087,14 +1096,14 @@ final class ImageRepository extends EntityRepository
             return null;
         }
 
-        return [
-            'path' => is_string($row['path']) ? $row['path'] : '',
-            'file' => is_string($row['file']) ? $row['file'] : '',
-            'md5sum' => ($row['md5sum'] ?? null) instanceof Md5Sum ? $row['md5sum']->value : (is_string($row['md5sum'] ?? null) ? $row['md5sum'] : null),
-            'width' => is_numeric($row['width'] ?? null) ? (int) $row['width'] : null,
-            'height' => is_numeric($row['height'] ?? null) ? (int) $row['height'] : null,
-            'filesize' => is_numeric($row['filesize'] ?? null) ? (int) $row['filesize'] : null,
-        ];
+        return new UploadInfo(
+            path: is_string($row['path']) ? $row['path'] : '',
+            file: is_string($row['file']) ? $row['file'] : '',
+            md5sum: ($row['md5sum'] ?? null) instanceof Md5Sum ? $row['md5sum']->value : (is_string($row['md5sum'] ?? null) ? $row['md5sum'] : null),
+            width: is_numeric($row['width'] ?? null) ? (int) $row['width'] : null,
+            height: is_numeric($row['height'] ?? null) ? (int) $row['height'] : null,
+            filesize: is_numeric($row['filesize'] ?? null) ? (int) $row['filesize'] : null,
+        );
     }
 
     /**
@@ -1150,10 +1159,8 @@ final class ImageRepository extends EntityRepository
      * Row count and total `filesize` across every generated format file --
      * Admin\InstallationStats's own "nb_formats"/"formats_disk_usage"
      * summary figures.
-     *
-     * @return array{count: int, sum: int}
      */
-    public function countAndSumFormats(): array
+    public function countAndSumFormats(): FormatCountSum
     {
         $row = $this->getEntityManager()
             ->createQueryBuilder()
@@ -1163,16 +1170,13 @@ final class ImageRepository extends EntityRepository
             ->getSingleResult();
 
         if (! is_array($row)) {
-            return [
-                'count' => 0,
-                'sum' => 0,
-            ];
+            return new FormatCountSum(0, 0);
         }
 
-        return [
-            'count' => is_numeric($row['cnt'] ?? null) ? (int) $row['cnt'] : 0,
-            'sum' => is_numeric($row['total'] ?? null) ? (int) $row['total'] : 0,
-        ];
+        return new FormatCountSum(
+            count: is_numeric($row['cnt'] ?? null) ? (int) $row['cnt'] : 0,
+            sum: is_numeric($row['total'] ?? null) ? (int) $row['total'] : 0,
+        );
     }
 
     /**
@@ -1180,7 +1184,7 @@ final class ImageRepository extends EntityRepository
      * formatsSearchImage()'s own "build a filename-without-extension index
      * of every photo" scan.
      *
-     * @return list<array{id: int, file: string}>
+     * @return list<ImageIdFile>
      */
     public function findAllIdsAndFiles(): array
     {
@@ -1190,10 +1194,10 @@ final class ImageRepository extends EntityRepository
                 continue;
             }
 
-            $result[] = [
-                'id' => $row['id'] instanceof ImageId ? $row['id']->value : (is_numeric($row['id']) ? (int) $row['id'] : 0),
-                'file' => is_string($row['file']) ? $row['file'] : '',
-            ];
+            $result[] = new ImageIdFile(
+                id: $row['id'] instanceof ImageId ? $row['id']->value : (is_numeric($row['id']) ? (int) $row['id'] : 0),
+                file: is_string($row['file']) ? $row['file'] : '',
+            );
         }
 
         return $result;
@@ -1204,7 +1208,7 @@ final class ImageRepository extends EntityRepository
      * formatsSearchImage()'s own "which formats already exist per image"
      * scan.
      *
-     * @return list<array{image_id: int, ext: string}>
+     * @return list<ImageIdExt>
      */
     public function findAllImageIdsAndExts(): array
     {
@@ -1219,10 +1223,10 @@ final class ImageRepository extends EntityRepository
                 continue;
             }
 
-            $result[] = [
-                'image_id' => $row['image_id'] instanceof ImageId ? $row['image_id']->value : (is_numeric($row['image_id']) ? (int) $row['image_id'] : 0),
-                'ext' => is_string($row['ext']) ? $row['ext'] : '',
-            ];
+            $result[] = new ImageIdExt(
+                imageId: $row['image_id'] instanceof ImageId ? $row['image_id']->value : (is_numeric($row['image_id']) ? (int) $row['image_id'] : 0),
+                ext: is_string($row['ext']) ? $row['ext'] : '',
+            );
         }
 
         return $result;
@@ -1303,10 +1307,8 @@ final class ImageRepository extends EntityRepository
      * Ws\PwgCore::getMissingDerivatives()'s own pagination-cursor
      * bootstrap (same MAX(id)+1 shape as {@see findNextId()} above, plus
      * COUNT(*) for the "nothing to do" early exit).
-     *
-     * @return array{nextId: int, count: int}
      */
-    public function findNextIdAndCount(): array
+    public function findNextIdAndCount(): NextIdCount
     {
         $row = $this->createQueryBuilder('i')
             ->select('MAX(i.id) + 1 AS nextId', 'COUNT(i.id) AS cnt')
@@ -1314,16 +1316,13 @@ final class ImageRepository extends EntityRepository
             ->getSingleResult();
 
         if (! is_array($row)) {
-            return [
-                'nextId' => 0,
-                'count' => 0,
-            ];
+            return new NextIdCount(0, 0);
         }
 
-        return [
-            'nextId' => is_numeric($row['nextId'] ?? null) ? (int) $row['nextId'] : 0,
-            'count' => is_numeric($row['cnt']) ? (int) $row['cnt'] : 0,
-        ];
+        return new NextIdCount(
+            nextId: is_numeric($row['nextId'] ?? null) ? (int) $row['nextId'] : 0,
+            count: is_numeric($row['cnt']) ? (int) $row['cnt'] : 0,
+        );
     }
 
     /**
@@ -1334,7 +1333,7 @@ final class ImageRepository extends EntityRepository
      * {@see applyImageFilterCriteria()} against this method's own `i`
      * alias.
      *
-     * @return list<array{id: mixed, path: mixed, representative_ext: mixed, width: mixed, height: mixed, rotation: mixed}>
+     * @return list<MissingDerivativeRow>
      */
     public function findForMissingDerivatives(MissingDerivativesCriteria $criteria, int $startId, int $limit): array
     {
@@ -1362,14 +1361,14 @@ final class ImageRepository extends EntityRepository
         $result = [];
         foreach ($rows as $row) {
             if (is_array($row)) {
-                $result[] = [
-                    'id' => ($row['id'] ?? null) instanceof ImageId ? $row['id']->value : ($row['id'] ?? null),
-                    'path' => $row['path'] ?? null,
-                    'representative_ext' => $row['representative_ext'] ?? null,
-                    'width' => $row['width'] ?? null,
-                    'height' => $row['height'] ?? null,
-                    'rotation' => $row['rotation'] ?? null,
-                ];
+                $result[] = new MissingDerivativeRow(
+                    id: ($row['id'] ?? null) instanceof ImageId ? $row['id']->value : (is_numeric($row['id'] ?? null) ? (int) $row['id'] : 0),
+                    path: is_string($row['path'] ?? null) ? $row['path'] : null,
+                    representativeExt: is_string($row['representative_ext'] ?? null) ? $row['representative_ext'] : null,
+                    width: is_numeric($row['width'] ?? null) ? (int) $row['width'] : null,
+                    height: is_numeric($row['height'] ?? null) ? (int) $row['height'] : null,
+                    rotation: is_numeric($row['rotation'] ?? null) ? (int) $row['rotation'] : null,
+                );
             }
         }
 
@@ -1894,10 +1893,8 @@ final class ImageRepository extends EntityRepository
      *
      * The selected `ic.categoryId` hydrates as a real {@see CategoryId}
      * under array hydration.
-     *
-     * @return array{category_id: int|string, uppercats: string}|null
      */
-    public function findMostRecentImageCategoryInfo(): ?array
+    public function findMostRecentImageCategoryInfo(): ?MostRecentCategoryInfo
     {
         $row = $this->createQueryBuilder('i')
             ->select('ic.categoryId', 'c.uppercats')
@@ -1918,10 +1915,7 @@ final class ImageRepository extends EntityRepository
             return null;
         }
 
-        return [
-            'category_id' => $categoryId->value,
-            'uppercats' => $uppercats,
-        ];
+        return new MostRecentCategoryInfo($categoryId->value, $uppercats);
     }
 
     /**
@@ -2324,10 +2318,8 @@ final class ImageRepository extends EntityRepository
      * only neutralizes LIKE wildcards, not SQL quote characters, so
      * $imageFile must always be bound as a parameter here, never spliced
      * into the query.
-     *
-     * @return array<string, mixed>|false
      */
-    public function findByIdOrFilePattern(int $imageId, ?string $imageFile): array|false
+    public function findByIdOrFilePattern(int $imageId, ?string $imageFile): ImageLookupRow|false
     {
         $qb = $this->createQueryBuilder('i')
             ->select('i.id', 'i.file', 'i.level')
@@ -2345,15 +2337,16 @@ final class ImageRepository extends EntityRepository
         $row = $qb->getQuery()
             ->getOneOrNullResult(Query::HYDRATE_ARRAY);
 
-        if (! is_array($row)) {
+        if (! is_array($row) || ! ($row['id'] ?? null) instanceof ImageId || ! is_string($row['file'] ?? null)
+            || ! is_numeric($row['level'] ?? null)) {
             return false;
         }
 
-        return [
-            'id' => ($row['id'] ?? null) instanceof ImageId ? $row['id']->value : ($row['id'] ?? null),
-            'file' => $row['file'] ?? null,
-            'level' => $row['level'] ?? null,
-        ];
+        return new ImageLookupRow(
+            id: $row['id'],
+            file: $row['file'],
+            level: (int) $row['level'],
+        );
     }
 
     /**
@@ -2406,10 +2399,8 @@ final class ImageRepository extends EntityRepository
      * id/name/representative_ext/path for $imageId -- Ws\PwgImages::
      * upload()'s own "what does the just-uploaded/replaced photo look
      * like" lookup, used to build the response's thumbnail URLs.
-     *
-     * @return ?array{id: int, name: ?string, representative_ext: ?string, path: string}
      */
-    public function findUploadResultInfoById(ImageId $imageId): ?array
+    public function findUploadResultInfoById(ImageId $imageId): ?UploadResultInfo
     {
         $row = $this->createQueryBuilder('i')
             ->select('i.id', 'i.name', 'i.representativeExt AS representative_ext', 'i.path')
@@ -2422,12 +2413,12 @@ final class ImageRepository extends EntityRepository
             return null;
         }
 
-        return [
-            'id' => $row['id'] instanceof ImageId ? $row['id']->value : (is_numeric($row['id']) ? (int) $row['id'] : 0),
-            'name' => is_string($row['name'] ?? null) ? $row['name'] : null,
-            'representative_ext' => is_string($row['representative_ext'] ?? null) ? $row['representative_ext'] : null,
-            'path' => is_string($row['path']) ? $row['path'] : '',
-        ];
+        return new UploadResultInfo(
+            id: $row['id'] instanceof ImageId ? $row['id']->value : (is_numeric($row['id']) ? (int) $row['id'] : 0),
+            name: is_string($row['name'] ?? null) ? $row['name'] : null,
+            representativeExt: is_string($row['representative_ext'] ?? null) ? $row['representative_ext'] : null,
+            path: is_string($row['path']) ? $row['path'] : '',
+        );
     }
 
     /**
@@ -2976,7 +2967,7 @@ final class ImageRepository extends EntityRepository
      * {@see CategoryId} VO, unwrapped below.
      *
      * @param  list<int>  $imageIds
-     * @return list<array{image_id: int, category_id: int}>
+     * @return list<ImageCategoryLink>
      */
     public function findCategoryLinksForImageIdsWithCondition(array $imageIds, PermissionCriteria $criteria): array
     {
@@ -2999,10 +2990,10 @@ final class ImageRepository extends EntityRepository
                 continue;
             }
 
-            $result[] = [
-                'image_id' => $row['imageId'] instanceof ImageId ? $row['imageId']->value : (is_numeric($row['imageId']) ? (int) $row['imageId'] : 0),
-                'category_id' => $row['categoryId'] instanceof CategoryId ? $row['categoryId']->value : (is_numeric($row['categoryId']) ? (int) $row['categoryId'] : 0),
-            ];
+            $result[] = new ImageCategoryLink(
+                imageId: $row['imageId'] instanceof ImageId ? $row['imageId']->value : (is_numeric($row['imageId']) ? (int) $row['imageId'] : 0),
+                categoryId: $row['categoryId'] instanceof CategoryId ? $row['categoryId']->value : (is_numeric($row['categoryId']) ? (int) $row['categoryId'] : 0),
+            );
         }
 
         return $result;
@@ -3402,7 +3393,7 @@ final class ImageRepository extends EntityRepository
      * `Y-m-d H:i:s` strings, so a plain PHP string comparison reproduces
      * MAX()'s ordering exactly.
      *
-     * @return list<array{add_method: string, last_added_on: ?string, nb_files: int}>
+     * @return list<AddMethodBreakdown>
      */
     public function findAddMethodBreakdown(): array
     {
@@ -3411,7 +3402,13 @@ final class ImageRepository extends EntityRepository
             ->getQuery()
             ->getArrayResult();
 
-        $byMethod = [];
+        // Accumulated in 2 parallel mutable maps (AddMethodBreakdown
+        // itself is readonly, so the running nb_files count / last_added_on
+        // max can't be mutated in place on an already-constructed instance)
+        // -- the DTOs themselves are only built once, in the final loop
+        // below.
+        $nbFilesByMethod = [];
+        $lastAddedOnByMethod = [];
         foreach ($rows as $row) {
             if (! is_array($row)) {
                 continue;
@@ -3421,22 +3418,20 @@ final class ImageRepository extends EntityRepository
             $dateAvailableRaw = $row['date_available'] ?? null;
             $dateAvailable = $dateAvailableRaw instanceof SqlDateTime ? $dateAvailableRaw->value : null;
 
-            if (! isset($byMethod[$addMethod])) {
-                $byMethod[$addMethod] = [
-                    'add_method' => $addMethod,
-                    'last_added_on' => null,
-                    'nb_files' => 0,
-                ];
-            }
+            $nbFilesByMethod[$addMethod] = ($nbFilesByMethod[$addMethod] ?? 0) + 1;
 
-            $byMethod[$addMethod]['nb_files']++;
-
-            if ($dateAvailable !== null && ($byMethod[$addMethod]['last_added_on'] === null || $dateAvailable > $byMethod[$addMethod]['last_added_on'])) {
-                $byMethod[$addMethod]['last_added_on'] = $dateAvailable;
+            $currentLastAddedOn = $lastAddedOnByMethod[$addMethod] ?? null;
+            if ($dateAvailable !== null && ($currentLastAddedOn === null || $dateAvailable > $currentLastAddedOn)) {
+                $lastAddedOnByMethod[$addMethod] = $dateAvailable;
             }
         }
 
-        return array_values($byMethod);
+        $result = [];
+        foreach ($nbFilesByMethod as $addMethod => $nbFiles) {
+            $result[] = new AddMethodBreakdown($addMethod, $lastAddedOnByMethod[$addMethod] ?? null, $nbFiles);
+        }
+
+        return $result;
     }
 
     /**
@@ -3455,7 +3450,7 @@ final class ImageRepository extends EntityRepository
      * {@see \Piwigo\Core\StringHelper::getExtension()}, which returns
      * `''` for the no-dot case instead.
      *
-     * @return list<array{ext: string, counter: int, filesize: int}>
+     * @return list<ExtensionBreakdown>
      */
     public function findExtensionBreakdown(): array
     {
@@ -3464,7 +3459,11 @@ final class ImageRepository extends EntityRepository
             ->getQuery()
             ->getArrayResult();
 
-        $byExtension = [];
+        // Accumulated in 2 parallel mutable maps -- see
+        // findAddMethodBreakdown()'s own docblock for why (ExtensionBreakdown
+        // is readonly too).
+        $counterByExt = [];
+        $filesizeByExt = [];
         foreach ($rows as $row) {
             if (! is_array($row)) {
                 continue;
@@ -3476,19 +3475,21 @@ final class ImageRepository extends EntityRepository
             $ext = $dotPosition === false ? $path : substr($path, $dotPosition + 1);
             $filesize = is_numeric($row['filesize'] ?? null) ? (int) $row['filesize'] : 0;
 
-            if (! isset($byExtension[$ext])) {
-                $byExtension[$ext] = [
-                    'ext' => $ext,
-                    'counter' => 0,
-                    'filesize' => 0,
-                ];
+            if (! isset($counterByExt[$ext])) {
+                $counterByExt[$ext] = 0;
+                $filesizeByExt[$ext] = 0;
             }
 
-            $byExtension[$ext]['counter']++;
-            $byExtension[$ext]['filesize'] += $filesize;
+            $counterByExt[$ext]++;
+            $filesizeByExt[$ext] += $filesize;
         }
 
-        return array_values($byExtension);
+        $result = [];
+        foreach ($counterByExt as $ext => $counter) {
+            $result[] = new ExtensionBreakdown($ext, $counter, $filesizeByExt[$ext]);
+        }
+
+        return $result;
     }
 
     /**
@@ -3499,7 +3500,7 @@ final class ImageRepository extends EntityRepository
      * sibling, `ext` here is a real column (not a SUBSTRING_INDEX()-derived
      * alias), so this one groups directly in DQL.
      *
-     * @return list<array{ext: string, counter: int, filesize: int}>
+     * @return list<ExtensionBreakdown>
      */
     public function findFormatExtensionBreakdown(): array
     {
@@ -3517,11 +3518,11 @@ final class ImageRepository extends EntityRepository
                 continue;
             }
 
-            $result[] = [
-                'ext' => is_string($row['ext']) ? $row['ext'] : '',
-                'counter' => is_numeric($row['counter']) ? (int) $row['counter'] : 0,
-                'filesize' => is_numeric($row['filesize']) ? (int) $row['filesize'] : 0,
-            ];
+            $result[] = new ExtensionBreakdown(
+                ext: is_string($row['ext']) ? $row['ext'] : '',
+                counter: is_numeric($row['counter']) ? (int) $row['counter'] : 0,
+                filesize: is_numeric($row['filesize']) ? (int) $row['filesize'] : 0,
+            );
         }
 
         return $result;

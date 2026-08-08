@@ -87,9 +87,9 @@ final class UserRepositoryTest extends IntegrationTestCase
         $found = $this->repo->findByUsernameCaseInsensitive('FIXTURE_ADMIN');
 
         self::assertNotNull($found);
-        self::assertSame('1', $found['id']);
-        self::assertSame('fixture_admin', $found['username']);
-        self::assertSame('fixture_admin@example.test', $found['email']);
+        self::assertSame(1, $found->id->value);
+        self::assertSame('fixture_admin', $found->username);
+        self::assertSame('fixture_admin@example.test', $found->email);
     }
 
     public function test_find_by_username_case_insensitive_returns_null_when_missing(): void

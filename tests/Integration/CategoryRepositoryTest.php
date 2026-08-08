@@ -15,6 +15,7 @@ namespace Piwigo\Tests\Integration {
     use Piwigo\Category\CategoryRefDateField;
     use Piwigo\Category\CategoryRepository;
     use Piwigo\Category\Projection\Category;
+    use Piwigo\Category\Projection\ComputedCategoryRollupRow;
     use Piwigo\Common\ValueObject\CategoryId;
     use Piwigo\Config\CurrentConfig;
     use Piwigo\Tests\Support\CurrentConfigTestFactory;
@@ -99,8 +100,8 @@ final class CategoryRepositoryTest extends IntegrationTestCase
     {
         $names = $this->repo->findNamesByIds([1, 2]);
 
-        self::assertSame('Sample Album', $names['1']['name']);
-        self::assertSame('Nested Sub Album', $names['2']['name']);
+        self::assertSame('Sample Album', $names['1']->name);
+        self::assertSame('Nested Sub Album', $names['2']->name);
     }
 
     public function test_find_names_by_ids_returns_empty_for_no_ids(): void
@@ -177,20 +178,20 @@ final class CategoryRepositoryTest extends IntegrationTestCase
 
         $byId = [];
         foreach ($rows as $row) {
-            $byId[$row['cat_id']] = $row;
+            $byId[$row->catId] = $row;
         }
 
         // nb_images is a COUNT() aggregate -- comes back as native int under
         // this project's mysqli driver config.
-        self::assertSame(3, $byId['1']['nb_images']);
-        self::assertSame(2, $byId['2']['nb_images']);
+        self::assertSame(3, $byId['1']->nbImages);
+        self::assertSame(2, $byId['2']->nbImages);
     }
 
     public function test_find_computed_categories_rollup_excludes_forbidden_categories(): void
     {
         $rows = $this->repo->findComputedCategoriesRollup(0, null, '2');
 
-        $ids = array_column($rows, 'cat_id');
+        $ids = array_map(static fn (ComputedCategoryRollupRow $row): int => $row->catId, $rows);
         self::assertNotContains(2, $ids);
         self::assertContains(1, $ids);
     }
@@ -205,11 +206,11 @@ final class CategoryRepositoryTest extends IntegrationTestCase
 
         $byId = [];
         foreach ($rows as $row) {
-            $byId[$row['cat_id']] = $row;
+            $byId[$row->catId] = $row;
         }
 
         self::assertArrayHasKey('1', $byId);
-        self::assertSame(0, $byId['1']['nb_images']);
+        self::assertSame(0, $byId['1']->nbImages);
     }
 
     public function test_find_image_ids_for_categories_returns_images_in_category(): void
@@ -298,7 +299,7 @@ final class CategoryRepositoryTest extends IntegrationTestCase
     {
         $common = $this->repo->findCommonCategories([1, 2, 3], null, [], self::noPermissionRestriction());
 
-        self::assertSame(3, $common['1']['counter']);
+        self::assertSame(3, $common['1']->counter);
     }
 
     public function test_find_common_categories_returns_empty_for_no_items(): void
@@ -323,11 +324,11 @@ final class CategoryRepositoryTest extends IntegrationTestCase
 
         $byId = [];
         foreach ($rows as $row) {
-            $byId[$row['cat_id']] = $row;
+            $byId[$row->catId] = $row;
         }
 
-        self::assertArrayHasKey('rank', $byId['1']);
-        self::assertArrayHasKey('rank', $byId['2']);
+        self::assertInstanceOf(ComputedCategoryRollupRow::class, $byId['1']);
+        self::assertInstanceOf(ComputedCategoryRollupRow::class, $byId['2']);
     }
 
     public function test_find_full_categories_by_ids_returns_every_column(): void
@@ -610,8 +611,8 @@ final class CategoryRepositoryTest extends IntegrationTestCase
             self::assertCount(1, $range);
             $entry = array_values($range)[0];
 
-            self::assertSame('2019-06-15 10:00:00', $entry['from']);
-            self::assertSame('2019-06-15 10:00:00', $entry['to']);
+            self::assertSame('2019-06-15 10:00:00', $entry->from);
+            self::assertSame('2019-06-15 10:00:00', $entry->to);
         } finally {
             $this->conn->executeStatement('UPDATE ' . Tables::images() . ' SET date_creation = NULL WHERE id = 2');
         }
@@ -830,7 +831,7 @@ final class CategoryRepositoryTest extends IntegrationTestCase
         // group 1 grants cat 1 and cat 2, group 2 grants cat 1 -- cat 1 is
         // reachable via both memberships, so this also confirms the
         // ->distinct() actually dedupes.
-        $ids = array_column($this->repo->findCategoriesAuthorizedViaGroupsForUser(3), 'cat_id');
+        $ids = array_column($this->repo->findCategoriesAuthorizedViaGroupsForUser(3), 'catId');
         sort($ids);
 
         self::assertSame([1, 2], $ids);
@@ -864,16 +865,14 @@ final class CategoryRepositoryTest extends IntegrationTestCase
 
         $byId = [];
         foreach ($rows as $row) {
-            $id = $row['id'];
-            self::assertTrue(is_int($id) || is_string($id));
-            $byId[$id] = $row;
+            $byId[$row->id] = $row;
         }
 
         // Both fixture categories have permalink NULL, so the CONCAT's IF()
         // branch appends nothing (no trailing checkmark).
-        self::assertSame('1 - Sample Album', $byId[1]['name']);
-        self::assertSame('2 - Nested Sub Album', $byId[2]['name']);
-        self::assertNull($byId[1]['permalink']);
+        self::assertSame('1 - Sample Album', $byId[1]->name);
+        self::assertSame('2 - Nested Sub Album', $byId[2]->name);
+        self::assertNull($byId[1]->permalink);
     }
 
     public function test_find_all_for_permalinks_display_appends_a_checkmark_when_permalink_is_set(): void
@@ -884,9 +883,9 @@ final class CategoryRepositoryTest extends IntegrationTestCase
             $rows = $this->repo->findAllForPermalinksDisplay();
 
             $byId = array_column($rows, null, 'id');
-            self::assertSame('1 - Sample Album &radic;', $byId[1]['name']);
-            self::assertSame('sample-album', $byId[1]['permalink']);
-            self::assertSame('2 - Nested Sub Album', $byId[2]['name']);
+            self::assertSame('1 - Sample Album &radic;', $byId[1]->name);
+            self::assertSame('sample-album', $byId[1]->permalink);
+            self::assertSame('2 - Nested Sub Album', $byId[2]->name);
         } finally {
             $this->conn->executeStatement('UPDATE ' . Tables::categories() . ' SET permalink = NULL WHERE id = 1');
         }
@@ -1047,20 +1046,18 @@ final class CategoryRepositoryTest extends IntegrationTestCase
         // elsewhere), so min and max both resolve to that same date.
         $row = $this->repo->findPhotoCountAndDateRange(1);
 
-        self::assertNotFalse($row);
-        self::assertSame(3, $row[0]);
-        self::assertSame('2026-08-01', $row[1]);
-        self::assertSame('2026-08-01', $row[2]);
+        self::assertSame(3, $row->count);
+        self::assertSame('2026-08-01', $row->minDate);
+        self::assertSame('2026-08-01', $row->maxDate);
     }
 
     public function test_find_photo_count_and_date_range_is_zero_for_a_category_without_images(): void
     {
         $row = $this->repo->findPhotoCountAndDateRange(999);
 
-        self::assertNotFalse($row);
-        self::assertSame(0, $row[0]);
-        self::assertNull($row[1]);
-        self::assertNull($row[2]);
+        self::assertSame(0, $row->count);
+        self::assertNull($row->minDate);
+        self::assertNull($row->maxDate);
     }
 
     public function test_find_distinct_image_ids_in_categories_returns_the_linked_images(): void

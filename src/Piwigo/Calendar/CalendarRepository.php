@@ -9,6 +9,7 @@ use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Query;
 use Doctrine\ORM\Query\Expr\Join;
 use Doctrine\ORM\QueryBuilder;
+use Piwigo\Calendar\Projection\RandomImageForDay;
 use Piwigo\Common\ValueObject\ImageId;
 use Piwigo\Db\SqlDialect;
 use Piwigo\Image\ImageCategoryEntity;
@@ -96,7 +97,7 @@ final class CalendarRepository
                     ->groupBy('i.id');
                 self::applyCondition($qb, $dqlDateWhere);
                 foreach ($dqlOrderBy as $entry) {
-                    $qb->addOrderBy($entry['property'], $entry['dir']);
+                    $qb->addOrderBy($entry->property, $entry->dir);
                 }
 
                 $ids = $qb->getQuery()
@@ -433,10 +434,8 @@ final class CalendarRepository
      * selected columns (id/file/representative_ext/path/width/height/
      * rotation) are plain scalar-typed on `ImageEntity`, no custom
      * Doctrine Type to unwrap.
-     *
-     * @return array<string, mixed>|null
      */
-    public function findRandomImageForDay(string $dateFieldDql, CalendarQueryScope $scope, SqlCondition $dateWhere): ?array
+    public function findRandomImageForDay(string $dateFieldDql, CalendarQueryScope $scope, SqlCondition $dateWhere): ?RandomImageForDay
     {
         $qb = $this->baseQueryBuilder($scope)
             ->select('i.id AS id', "(DAYOFWEEK({$dateFieldDql}) - 1) AS dow")
@@ -466,22 +465,26 @@ final class CalendarRepository
             ->getQuery()
             ->getOneOrNullResult(Query::HYDRATE_ARRAY);
 
-        if (! is_array($row)) {
+        if (! is_array($row) || ! ($row['id'] ?? null) instanceof ImageId || ! is_string($row['file'] ?? null)
+            || ! is_string($row['path'] ?? null)) {
             return null;
         }
 
-        $rowId = $row['id'] ?? null;
-        $rowPath = $row['path'] ?? null;
+        $dow = $picked['dow'] ?? null;
+        $representativeExt = $row['representative_ext'] ?? null;
+        $width = $row['width'] ?? null;
+        $height = $row['height'] ?? null;
+        $rotation = $row['rotation'] ?? null;
 
-        return [
-            'id' => $rowId instanceof ImageId ? $rowId->value : null,
-            'file' => $row['file'] ?? null,
-            'representative_ext' => $row['representative_ext'] ?? null,
-            'path' => is_string($rowPath) ? $rowPath : null,
-            'width' => $row['width'] ?? null,
-            'height' => $row['height'] ?? null,
-            'rotation' => $row['rotation'] ?? null,
-            'dow' => $picked['dow'] ?? null,
-        ];
+        return new RandomImageForDay(
+            id: $row['id']->value,
+            file: $row['file'],
+            representativeExt: is_string($representativeExt) ? $representativeExt : null,
+            path: $row['path'],
+            width: is_int($width) ? $width : null,
+            height: is_int($height) ? $height : null,
+            rotation: is_int($rotation) ? $rotation : null,
+            dow: is_numeric($dow) ? (int) $dow : 0,
+        );
     }
 }

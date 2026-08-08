@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Admin;
 
 use Piwigo\Activity\ActivityService;
+use Piwigo\Activity\Projection\ActionCount;
 use Piwigo\Admin\Request\UserActivityRequest;
 use Piwigo\Auth\AccessControl;
 use Piwigo\Category\CategoryService;
@@ -173,10 +174,13 @@ final class UserActivityPageRenderer
             'value' => $additional_filt_value,
         ]);
 
-        $actions = $activity_service->getActionCounts($additional_filt_type !== false ? $additional_filt_type : null);
-        foreach ($actions as &$action) {
-            $action['value'] = $action['object'] . '/' . $action['action'];
-        }
+        $actions = array_map(
+            static fn (ActionCount $action): array => [
+                ...$action->toArray(),
+                'value' => $action->object . '/' . $action->action,
+            ],
+            $activity_service->getActionCounts($additional_filt_type !== false ? $additional_filt_type : null)
+        );
 
         $template->assign('ACTIONS', $actions);
 

@@ -15,6 +15,7 @@ use Piwigo\Config\ConfigLoader;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
 use Piwigo\Notification\NotificationRepository;
+use Piwigo\Notification\Projection\RecentCategoryForDate;
 use Piwigo\Permission\SqlCondition;
 
 /**
@@ -184,14 +185,14 @@ final class NotificationRepositoryTest extends IntegrationTestCase
         self::assertCount(3, $dates);
         $byDate = [];
         foreach ($dates as $row) {
-            $dateAvailable = $row['date_available'];
+            $dateAvailable = $row->dateAvailable;
             if (is_string($dateAvailable)) {
                 $byDate[$dateAvailable] = $row;
             }
         }
 
-        self::assertSame(2, $byDate['2026-07-07 05:02:36']['nb_elements']);
-        self::assertSame(1, $byDate['2026-07-07 05:02:38']['nb_elements']);
+        self::assertSame(2, $byDate['2026-07-07 05:02:36']->nbElements);
+        self::assertSame(1, $byDate['2026-07-07 05:02:38']->nbElements);
     }
 
     public function test_find_recent_elements_for_date_returns_matching_rows(): void
@@ -241,7 +242,6 @@ final class NotificationRepositoryTest extends IntegrationTestCase
         $rows = $this->repo->findRecentCategoriesForDate(new SqlCondition('1 = 1'), '2026-07-07 05:02:36', 10);
 
         self::assertNotSame([], $rows);
-        self::assertArrayHasKey('uppercats', $rows[0]);
-        self::assertArrayHasKey('img_count', $rows[0]);
+        self::assertInstanceOf(RecentCategoryForDate::class, $rows[0]);
     }
 }

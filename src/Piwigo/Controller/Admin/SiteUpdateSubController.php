@@ -269,15 +269,14 @@ final class SiteUpdateSubController implements AdminSubControllerInterface
                 $extra_cat_id = (int) $post['cat'];
                 $extra_recursive = isset($post['subcats-included']) && $post['subcats-included'] === '1';
             }
-            // getSyncCandidatesForSite()'s declared return type is under-typed
-            // (array<int|string, mixed>) — each row is really id/uppercats/
+            // getSyncCandidatesForSite()'s own row shape is id/uppercats/
             // global_rank/status/visible, but this same array is later reused
             // (below) to hold freshly-inserted categories keyed by their new
             // int id, whose entries additionally carry an int 'parent' and int
-            // 'id'/'rank'/'global_rank' fields. array<string, mixed> is the
-            // honest common shape for both origins; individual fields are
-            // narrowed with is_string()/is_int() at each point of use below.
-            /** @var array<int|string, array<string, mixed>> $db_categories */
+            // 'id'/'rank'/'global_rank' fields -- PHPStan's own flow analysis
+            // merges both shapes into a union from here on, so individual
+            // fields still need narrowing/defensive reads at each point of use
+            // below.
             $db_categories = array_column($this->categoryService->getSyncCandidatesForSite($site_id, $extra_cat_id, $extra_recursive), null, 'id');
 
             // get categort full directories in an array for comparison with file
@@ -311,18 +310,11 @@ final class SiteUpdateSubController implements AdminSubControllerInterface
             // let's see if some categories already have some sub-categories...
             foreach ($this->categoryService->getNextRanksByParent() as $row) {
                 // for the id_uppercat NULL, we write 'NULL' and not the empty string
-                if (! isset($row['id_uppercat']) or $row['id_uppercat'] === '') {
-                    $row['id_uppercat'] = 'NULL';
-                }
-                // next_rank is a computed "MAX(`rank`)+1" aggregate, always a
-                // positive numeric string; fall back to the same default used above
-                // for categories without any sub-category yet.
-                $row_next_rank = $row['next_rank'];
-                $row_id_uppercat = $row['id_uppercat'];
-                if (! is_int($row_id_uppercat) && ! is_string($row_id_uppercat)) {
-                    continue;
-                }
-                $next_rank[$row_id_uppercat] = is_numeric($row_next_rank) ? (int) $row_next_rank : 1;
+                $row_id_uppercat = $row['id_uppercat'] ?? 'NULL';
+                // next_rank is a computed "MAX(`rank`)+1" aggregate; fall back to
+                // the same default used above for categories without any
+                // sub-category yet.
+                $next_rank[$row_id_uppercat] = $row['next_rank'] ?? 1;
             }
 
             // next category id available
@@ -383,7 +375,7 @@ final class SiteUpdateSubController implements AdminSubControllerInterface
                         if ($db_categories[$parent]['status'] === 'private') {
                             $insert['status'] = 'private';
                         }
-                        if (! (bool) $db_categories[$parent]['visible']) {
+                        if (! $db_categories[$parent]['visible']) {
                             $insert['visible'] = false;
                         }
                     } else {

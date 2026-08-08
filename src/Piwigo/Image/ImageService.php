@@ -30,6 +30,19 @@ use Piwigo\Event\Album\EmptyLounge;
 use Piwigo\Event\Picture\BeginDeleteElements;
 use Piwigo\Event\Picture\DeleteElements;
 use Piwigo\Group\GroupEntity;
+use Piwigo\Image\Projection\AddMethodBreakdown;
+use Piwigo\Image\Projection\ExtensionBreakdown;
+use Piwigo\Image\Projection\FormatCountSum;
+use Piwigo\Image\Projection\ImageCategoryLink;
+use Piwigo\Image\Projection\ImageIdExt;
+use Piwigo\Image\Projection\ImageIdFile;
+use Piwigo\Image\Projection\ImageLookupRow;
+use Piwigo\Image\Projection\MissingDerivativeRow;
+use Piwigo\Image\Projection\NextIdCount;
+use Piwigo\Image\Projection\PathRepresentativeExt;
+use Piwigo\Image\Projection\PathRepresentativeExtLevel;
+use Piwigo\Image\Projection\UploadInfo;
+use Piwigo\Image\Projection\UploadResultInfo;
 use Piwigo\Image\Request\EmptyLoungeRequest;
 use Piwigo\Lang\Translator;
 use Piwigo\Permission\PermissionCriteria;
@@ -318,8 +331,8 @@ final readonly class ImageService
 
         $formatsOf = [];
         foreach ($this->repo->findFormatsByImageIds($ids) as $row) {
-            $formatImageId = $row['image_id'];
-            $ext = $row['ext'];
+            $formatImageId = $row->imageId;
+            $ext = $row->ext;
 
             if (! isset($formatsOf[$formatImageId])) {
                 $formatsOf[$formatImageId] = [];
@@ -330,18 +343,18 @@ final readonly class ImageService
 
         $newIds = [];
         foreach ($this->repo->findPathsForFileDeletion($ids) as $row) {
-            $rowId = $row['id'];
-            $rowPath = $row['path'];
+            $rowId = $row->id;
+            $rowPath = $row->path;
 
             if ($urlService->urlIsRemote($rowPath)) {
                 continue;
             }
 
-            $representativeExt = $row['representative_ext'];
+            $representativeExt = $row->representativeExt;
             $representativeExt = is_string($representativeExt) && $representativeExt !== '' ? $representativeExt : null;
 
             $files = [];
-            $files[] = ImagePathHelper::getElementPath($row, $urlService, $this->paths);
+            $files[] = ImagePathHelper::getElementPath($row->toArray(), $urlService, $this->paths);
 
             if ($representativeExt !== null) {
                 $files[] = ImagePathHelper::originalToRepresentative($files[0], $representativeExt);
@@ -490,8 +503,8 @@ final readonly class ImageService
 
         $images = [];
         foreach ($rows as $idx => $row) {
-            $rowImageId = $row['image_id'];
-            $rowCategoryId = $row['category_id'];
+            $rowImageId = $row->imageId;
+            $rowCategoryId = $row->categoryId;
 
             if ($rowImageId > $maxImageId) {
                 $maxImageId = $rowImageId;
@@ -499,7 +512,7 @@ final readonly class ImageService
 
             $images[] = $rowImageId;
 
-            if (! isset($rows[$idx + 1]) or $rows[$idx + 1]['category_id'] !== $row['category_id']) {
+            if (! isset($rows[$idx + 1]) or $rows[$idx + 1]->categoryId !== $row->categoryId) {
                 // if we're at the end of the loop OR if category changes
                 $this->associateImagesToCategories($images, [$rowCategoryId]);
                 $images = [];
@@ -518,9 +531,11 @@ final readonly class ImageService
 
         $logger->debug(__FUNCTION__ . ', exec=' . $execId . ', ends');
 
-        $this->eventDispatcher->dispatchNotify(new EmptyLounge($rows));
+        $rowArrays = array_map(static fn (ImageCategoryLink $row): array => $row->toArray(), $rows);
 
-        return $rows;
+        $this->eventDispatcher->dispatchNotify(new EmptyLounge($rowArrays));
+
+        return $rowArrays;
     }
 
     /**
@@ -716,7 +731,7 @@ final readonly class ImageService
 
     /**
      * @param array<int, int|string> $ids
-     * @return list<array{id: int, path: string, representative_ext: ?string}>
+     * @return list<PathRepresentativeExt>
      */
     public function getPathsForFileDeletion(array $ids): array
     {
@@ -725,7 +740,7 @@ final readonly class ImageService
 
     /**
      * @param  list<int>  $ids
-     * @return list<array{id: int, path: string, representative_ext: ?string, level: int}>
+     * @return list<PathRepresentativeExtLevel>
      */
     public function getPathsAndLevelForIds(array $ids): array
     {
@@ -1013,10 +1028,7 @@ final readonly class ImageService
         return $image->toArray();
     }
 
-    /**
-     * @return array<string, mixed>|false
-     */
-    public function findByIdOrFilePattern(int $imageId, ?string $imageFile): array|false
+    public function findByIdOrFilePattern(int $imageId, ?string $imageFile): ImageLookupRow|false
     {
         return $this->repo->findByIdOrFilePattern($imageId, $imageFile);
     }
@@ -1101,7 +1113,7 @@ final readonly class ImageService
 
     /**
      * @param array<int, int|string> $ids
-     * @return list<array{id: int, path: string, representative_ext: ?string}>
+     * @return list<PathRepresentativeExt>
      */
     public function getPathsForIds(array $ids): array
     {
@@ -1134,10 +1146,7 @@ final readonly class ImageService
         return $this->repo->sumFilesize();
     }
 
-    /**
-     * @return array{count: int, sum: int}
-     */
-    public function getFormatCountAndSize(): array
+    public function getFormatCountAndSize(): FormatCountSum
     {
         return $this->repo->countAndSumFormats();
     }
@@ -1148,7 +1157,7 @@ final readonly class ImageService
     }
 
     /**
-     * @return list<array{id: int, file: string}>
+     * @return list<ImageIdFile>
      */
     public function getAllIdsAndFiles(): array
     {
@@ -1156,7 +1165,7 @@ final readonly class ImageService
     }
 
     /**
-     * @return list<array{image_id: int, ext: string}>
+     * @return list<ImageIdExt>
      */
     public function getAllImageIdsAndExts(): array
     {
@@ -1173,16 +1182,13 @@ final readonly class ImageService
         return $this->repo->findMinDateAvailable();
     }
 
-    /**
-     * @return array{nextId: int, count: int}
-     */
-    public function getNextIdAndCount(): array
+    public function getNextIdAndCount(): NextIdCount
     {
         return $this->repo->findNextIdAndCount();
     }
 
     /**
-     * @return list<array{id: mixed, path: mixed, representative_ext: mixed, width: mixed, height: mixed, rotation: mixed}>
+     * @return list<MissingDerivativeRow>
      */
     public function getForMissingDerivatives(MissingDerivativesCriteria $criteria, int $startId, int $limit): array
     {
@@ -1217,10 +1223,7 @@ final readonly class ImageService
         return $this->repo->findExistingIds($ids);
     }
 
-    /**
-     * @return ?array{path: string, file: string, md5sum: ?string, width: ?int, height: ?int, filesize: ?int}
-     */
-    public function getUploadInfoById(ImageId $imageId): ?array
+    public function getUploadInfoById(ImageId $imageId): ?UploadInfo
     {
         return $this->repo->findUploadInfoById($imageId);
     }
@@ -1243,10 +1246,7 @@ final readonly class ImageService
         return $this->repo->findIdsByFilenameInCategory($filename, $categoryId);
     }
 
-    /**
-     * @return ?array{id: int, name: ?string, representative_ext: ?string, path: string}
-     */
-    public function getUploadResultInfoById(ImageId $imageId): ?array
+    public function getUploadResultInfoById(ImageId $imageId): ?UploadResultInfo
     {
         return $this->repo->findUploadResultInfoById($imageId);
     }
@@ -1299,7 +1299,7 @@ final readonly class ImageService
 
     /**
      * @param  list<int>  $imageIds
-     * @return list<array{image_id: int, category_id: int}>
+     * @return list<ImageCategoryLink>
      */
     public function getCategoryLinksForImageIdsWithCondition(array $imageIds, PermissionCriteria $criteria): array
     {
@@ -1330,7 +1330,7 @@ final readonly class ImageService
 
     /**
      * @param list<int> $formatIds
-     * @return list<array{image_id: int, ext: string}>
+     * @return list<ImageIdExt>
      */
     public function getImageIdsAndExtsByFormatIds(array $formatIds): array
     {
@@ -1409,7 +1409,7 @@ final readonly class ImageService
     }
 
     /**
-     * @return list<array{add_method: string, last_added_on: ?string, nb_files: int}>
+     * @return list<AddMethodBreakdown>
      */
     public function getAddMethodBreakdown(): array
     {
@@ -1417,7 +1417,7 @@ final readonly class ImageService
     }
 
     /**
-     * @return list<array{ext: string, counter: int, filesize: int}>
+     * @return list<ExtensionBreakdown>
      */
     public function getExtensionBreakdown(): array
     {
@@ -1425,7 +1425,7 @@ final readonly class ImageService
     }
 
     /**
-     * @return list<array{ext: string, counter: int, filesize: int}>
+     * @return list<ExtensionBreakdown>
      */
     public function getFormatExtensionBreakdown(): array
     {

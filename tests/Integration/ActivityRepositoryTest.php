@@ -12,7 +12,10 @@ use Piwigo\Activity\ActivityEntity;
 use Doctrine\DBAL\Connection;
 use Piwigo\Activity\ActivityListCriteria;
 use Piwigo\Activity\ActivityRepository;
+use Piwigo\Activity\Projection\PaginatedActivityRow;
+use Piwigo\Activity\Projection\SystemActionCount;
 use Piwigo\Activity\Projection\SystemActivityLogEntry;
+use Piwigo\Activity\Projection\UserAgentBreakdown;
 use Piwigo\Common\ValueObject\IpAddress;
 use Piwigo\Common\ValueObject\SqlDateTime;
 use Piwigo\Config\CurrentConfig;
@@ -329,7 +332,7 @@ final class ActivityRepositoryTest extends IntegrationTestCase
 
         $byObject = [];
         foreach ($counts as $row) {
-            $byObject[$row['object']] = ($byObject[$row['object']] ?? 0) + $row['counter'];
+            $byObject[$row->object] = ($byObject[$row->object] ?? 0) + $row->counter;
         }
 
         // user: 2 logins (activity_id 3,4) + 2 adds (15,16) = 4
@@ -345,9 +348,9 @@ final class ActivityRepositoryTest extends IntegrationTestCase
         $counts = $this->repo->findActionCounts('tag');
 
         self::assertCount(1, $counts);
-        self::assertSame('tag', $counts[0]['object']);
-        self::assertSame('add', $counts[0]['action']);
-        self::assertSame(3, $counts[0]['counter']);
+        self::assertSame('tag', $counts[0]->object);
+        self::assertSame('add', $counts[0]->action);
+        self::assertSame(3, $counts[0]->counter);
     }
 
     public function test_find_user_object_log_with_usernames(): void
@@ -493,24 +496,24 @@ final class ActivityRepositoryTest extends IntegrationTestCase
 
             self::assertCount(2, $rows, 'only the 2 Core update/autoupdate rows just inserted should match');
 
-            self::assertSame('update', $rows[0]['action']);
-            self::assertSame('2026-07-10 00:00:00', $rows[0]['occured_on']);
-            self::assertIsString($rows[0]['details']);
+            self::assertSame('update', $rows[0]->action);
+            self::assertSame('2026-07-10 00:00:00', $rows[0]->occuredOn);
+            self::assertIsString($rows[0]->details);
             // MySQL's JSON column type reorders object members (by key
             // length, then lexicographically) independent of the original
             // insertion order -- ksort() both sides, matching this
             // codebase's own established convention for this gotcha (see
             // tests/Contract/WsImagesFilteredSearchTest.php's docblock).
             $expectedDetails = ['from_version' => '16.0.0', 'to_version' => '17.0.0'];
-            $actualDetails = json_decode($rows[0]['details'], true);
+            $actualDetails = json_decode($rows[0]->details, true);
             ksort($expectedDetails);
             self::assertIsArray($actualDetails);
             ksort($actualDetails);
             self::assertSame($expectedDetails, $actualDetails);
 
             // oldest first (ORDER BY activity_id ASC)
-            self::assertSame('autoupdate', $rows[1]['action']);
-            self::assertSame('2026-07-11 00:00:00', $rows[1]['occured_on']);
+            self::assertSame('autoupdate', $rows[1]->action);
+            self::assertSame('2026-07-11 00:00:00', $rows[1]->occuredOn);
         } finally {
             $this->conn->executeStatement(
                 "DELETE FROM " . Tables::activity() . " WHERE object = 'system' AND action IN ('update', 'autoupdate') AND object_id = " . ActivitySystem::Core
@@ -553,12 +556,12 @@ final class ActivityRepositoryTest extends IntegrationTestCase
 
             $matching = array_values(array_filter(
                 $rows,
-                static fn (array $row): bool => $row['object_id'] === ActivitySystem::Plugin && $row['action'] === 'install'
+                static fn (SystemActionCount $row): bool => $row->objectId === ActivitySystem::Plugin && $row->action === 'install'
             ));
 
             self::assertCount(1, $matching, 'the 2 rows just inserted must collapse into a single grouped bucket');
-            self::assertSame('system', $matching[0]['object']);
-            self::assertSame(2, $matching[0]['counter']);
+            self::assertSame('system', $matching[0]->object);
+            self::assertSame(2, $matching[0]->counter);
         } finally {
             $this->conn->executeStatement(
                 "DELETE FROM " . Tables::activity() . " WHERE object = 'system' AND action = 'install' AND object_id = " . ActivitySystem::Plugin
@@ -610,15 +613,15 @@ final class ActivityRepositoryTest extends IntegrationTestCase
             $rows = $this->repo->findUserAgentBreakdown();
 
             foreach ($rows as $row) {
-                self::assertFalse(str_starts_with($row['user_agent'] ?? '', 'Mozilla/5'), 'browser traffic must be excluded');
+                self::assertFalse(str_starts_with($row->userAgent ?? '', 'Mozilla/5'), 'browser traffic must be excluded');
             }
 
-            $matching = array_values(array_filter($rows, static fn (array $row): bool => $row['user_agent'] === 'PiwigoRepoTestAgent/1.0'));
+            $matching = array_values(array_filter($rows, static fn (UserAgentBreakdown $row): bool => $row->userAgent === 'PiwigoRepoTestAgent/1.0'));
 
             self::assertCount(1, $matching);
-            self::assertSame(2, $matching[0]['counter']);
-            self::assertSame('2026-07-10 00:00:00', $matching[0]['first_encounter']);
-            self::assertSame('2026-07-11 00:00:00', $matching[0]['last_encounter']);
+            self::assertSame(2, $matching[0]->counter);
+            self::assertSame('2026-07-10 00:00:00', $matching[0]->firstEncounter);
+            self::assertSame('2026-07-11 00:00:00', $matching[0]->lastEncounter);
         } finally {
             $this->conn->executeStatement("DELETE FROM " . Tables::activity() . " WHERE object = 'disposable'");
         }
@@ -635,7 +638,7 @@ final class ActivityRepositoryTest extends IntegrationTestCase
 
         self::assertCount(3, $rows);
         foreach ($rows as $row) {
-            self::assertSame('tag', $row['object']);
+            self::assertSame('tag', $row->object);
         }
     }
 
@@ -645,7 +648,7 @@ final class ActivityRepositoryTest extends IntegrationTestCase
 
         self::assertCount(17, $rows);
         foreach ($rows as $row) {
-            self::assertNotSame('system', $row['object']);
+            self::assertNotSame('system', $row->object);
         }
     }
 
@@ -667,7 +670,7 @@ final class ActivityRepositoryTest extends IntegrationTestCase
 
         self::assertCount(15, $rows);
         foreach ($rows as $row) {
-            self::assertNotSame('login', $row['action']);
+            self::assertNotSame('login', $row->action);
         }
     }
 
@@ -678,7 +681,7 @@ final class ActivityRepositoryTest extends IntegrationTestCase
         $rows = $this->repo->findPaginated(new ActivityListCriteria(connectionsMode: 'admins_only', adminIds: [1]), 100, 0);
 
         self::assertCount(17, $rows);
-        $logins = array_values(array_filter($rows, static fn (array $row): bool => $row['action'] === 'login'));
+        $logins = array_values(array_filter($rows, static fn (PaginatedActivityRow $row): bool => $row->action === 'login'));
         self::assertCount(2, $logins);
     }
 
@@ -692,7 +695,7 @@ final class ActivityRepositoryTest extends IntegrationTestCase
 
         self::assertCount(15, $rows);
         foreach ($rows as $row) {
-            self::assertNotSame('login', $row['action']);
+            self::assertNotSame('login', $row->action);
         }
     }
 }

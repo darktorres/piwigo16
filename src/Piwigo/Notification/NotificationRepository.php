@@ -18,6 +18,8 @@ use Piwigo\Common\ValueObject\SqlDateTime;
 use Piwigo\Image\ImageCategoryEntity;
 use Piwigo\Image\ImageEntity;
 use Piwigo\Image\Projection\Image;
+use Piwigo\Notification\Projection\RecentCategoryForDate;
+use Piwigo\Notification\Projection\RecentPostDate;
 use Piwigo\Permission\SqlCondition;
 use Piwigo\Users\UserInfoEntity;
 
@@ -169,7 +171,7 @@ final class NotificationRepository
     }
 
     /**
-     * @return list<array{date_available: ?string, nb_elements: int, nb_cats: int}>
+     * @return list<RecentPostDate>
      */
     public function findRecentPostDates(SqlCondition $restrictCondition, int $maxDates): array
     {
@@ -193,11 +195,11 @@ final class NotificationRepository
 
             $dateAvailableRaw = $row['dateAvailable'] ?? null;
 
-            $result[] = [
-                'date_available' => $dateAvailableRaw instanceof SqlDateTime ? $dateAvailableRaw->value : null,
-                'nb_elements' => is_numeric($row['nb_elements']) ? (int) $row['nb_elements'] : 0,
-                'nb_cats' => is_numeric($row['nb_cats']) ? (int) $row['nb_cats'] : 0,
-            ];
+            $result[] = new RecentPostDate(
+                dateAvailable: $dateAvailableRaw instanceof SqlDateTime ? $dateAvailableRaw->value : null,
+                nbElements: is_numeric($row['nb_elements']) ? (int) $row['nb_elements'] : 0,
+                nbCats: is_numeric($row['nb_cats']) ? (int) $row['nb_cats'] : 0,
+            );
         }
 
         return $result;
@@ -278,7 +280,7 @@ final class NotificationRepository
     }
 
     /**
-     * @return list<array{uppercats: string, img_count: int}>
+     * @return list<RecentCategoryForDate>
      */
     public function findRecentCategoriesForDate(SqlCondition $restrictCondition, string $dateAvailable, int $maxCats): array
     {
@@ -304,10 +306,10 @@ final class NotificationRepository
                 continue;
             }
 
-            $result[] = [
-                'uppercats' => is_string($row['uppercats']) ? $row['uppercats'] : '',
-                'img_count' => is_numeric($row['img_count']) ? (int) $row['img_count'] : 0,
-            ];
+            $result[] = new RecentCategoryForDate(
+                uppercats: is_string($row['uppercats']) ? $row['uppercats'] : '',
+                imgCount: is_numeric($row['img_count']) ? (int) $row['img_count'] : 0,
+            );
         }
 
         return $result;

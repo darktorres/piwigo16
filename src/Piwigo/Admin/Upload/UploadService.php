@@ -350,7 +350,7 @@ final class UploadService
                 // this photo already exists, we update it
                 $existing_paths = $this->imageService->getPathsForIds([$image_id]);
                 foreach ($existing_paths as $row) {
-                    $file_path = $row['path'];
+                    $file_path = $row->path;
                 }
 
                 if (! isset($file_path)) {
@@ -792,7 +792,7 @@ final class UploadService
             throw new ImageProcessingException('[' . __METHOD__ . '] this photo does not exist in the database');
         }
 
-        $image_0_path = $images[0]['path'];
+        $image_0_path = $images[0]->path;
         $format_path = dirname($image_0_path) . '/pwg_format/';
         $format_path .= StringHelper::getFilenameWoExtension(basename($image_0_path));
         $format_path .= '.' . $format_ext;

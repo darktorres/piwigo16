@@ -430,10 +430,10 @@ final class BatchManagerGlobalPageRenderer
             } elseif ($action === 'delete_derivatives' && isset($post['del_derivatives_type']) && is_array($post['del_derivatives_type']) && count($post['del_derivatives_type']) > 0) {
                 foreach ($imageService->getPathsForFileDeletion($collection) as $info) {
                     $derivative_infos = [
-                        'path' => $info['path'],
+                        'path' => $info->path,
                     ];
-                    if ($info['representative_ext'] !== null && $info['representative_ext'] !== '') {
-                        $derivative_infos['representative_ext'] = $info['representative_ext'];
+                    if ($info->representativeExt !== null && $info->representativeExt !== '') {
+                        $derivative_infos['representative_ext'] = $info->representativeExt;
                     }
                     foreach ($post['del_derivatives_type'] as $type) {
                         if (is_string($type)) {

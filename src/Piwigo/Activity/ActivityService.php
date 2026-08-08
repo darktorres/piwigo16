@@ -6,7 +6,13 @@ namespace Piwigo\Activity;
 
 use LogicException;
 use Override;
+use Piwigo\Activity\Projection\ActionCount;
+use Piwigo\Activity\Projection\CoreUpdateHistoryRow;
+use Piwigo\Activity\Projection\DailyActionCount;
+use Piwigo\Activity\Projection\PaginatedActivityRow;
+use Piwigo\Activity\Projection\SystemActionCount;
 use Piwigo\Activity\Projection\UserActivityLogEntry;
+use Piwigo\Activity\Projection\UserAgentBreakdown;
 use Piwigo\Activity\Request\ActivityContextRequest;
 use Piwigo\Common\ValueObject\IpAddress;
 use Piwigo\Common\ValueObject\SqlDateTime;
@@ -231,7 +237,7 @@ final readonly class ActivityService implements ActivityLoggerInterface
     }
 
     /**
-     * @return list<array{object: string, action: string, counter: int}>
+     * @return list<ActionCount>
      */
     public function getActionCounts(?string $objectFilter): array
     {
@@ -247,7 +253,7 @@ final readonly class ActivityService implements ActivityLoggerInterface
     }
 
     /**
-     * @return list<array<string, mixed>>
+     * @return list<PaginatedActivityRow>
      */
     public function getPaginated(ActivityListCriteria $criteria, int $limit, int $offset): array
     {
@@ -255,7 +261,7 @@ final readonly class ActivityService implements ActivityLoggerInterface
     }
 
     /**
-     * @return list<array{activity_day: string, object: string, action: string, counter: int}>
+     * @return list<DailyActionCount>
      */
     public function getDailyActionCountsSince(string $sinceDate): array
     {
@@ -263,7 +269,7 @@ final readonly class ActivityService implements ActivityLoggerInterface
     }
 
     /**
-     * @return list<array{action: string, occured_on: ?string, details: ?string}>
+     * @return list<CoreUpdateHistoryRow>
      */
     public function getCoreUpdateHistory(): array
     {
@@ -271,7 +277,7 @@ final readonly class ActivityService implements ActivityLoggerInterface
     }
 
     /**
-     * @return list<array{object: string, object_id: int, action: string, counter: int}>
+     * @return list<SystemActionCount>
      */
     public function getSystemActionCountsByObjectId(): array
     {
@@ -279,7 +285,7 @@ final readonly class ActivityService implements ActivityLoggerInterface
     }
 
     /**
-     * @return list<array{user_agent: ?string, counter: int, first_encounter: ?string, last_encounter: ?string}>
+     * @return list<UserAgentBreakdown>
      */
     public function getUserAgentBreakdown(): array
     {

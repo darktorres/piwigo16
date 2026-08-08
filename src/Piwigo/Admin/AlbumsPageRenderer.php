@@ -123,14 +123,11 @@ final class AlbumsPageRenderer
             }
 
             foreach ($categoryService->getIdsNamesUppercatsForIds($category_ids) as $cat_row) {
-                $nameEvent = $eventDispatcher->dispatchChange(new RenderCategoryName(is_string($cat_row['name']) ? $cat_row['name'] : '', 'admin_cat_list'));
+                $nameEvent = $eventDispatcher->dispatchChange(new RenderCategoryName($cat_row['name'], 'admin_cat_list'));
                 $cat_row['name'] = $nameEvent->categoryName;
 
                 if ($order_by_date) {
-                    // id is Tables::categories()'s NOT NULL primary key.
-                    $cat_row_id = $cat_row['id'];
-                    assert(is_int($cat_row_id) || is_string($cat_row_id));
-                    $sort[] = $ref_dates[$cat_row_id];
+                    $sort[] = $ref_dates[$cat_row['id']];
                 } else {
                     $sort[] = StringHelper::removeAccents($cat_row['name']);
                 }
@@ -202,8 +199,7 @@ final class AlbumsPageRenderer
             // value (trigger_change()'s return) into one offset of a generic
             // array<string, string|null> would otherwise widen every other key's
             // inferred type to mixed for the rest of this iteration.
-            $album_uppercats = $album['uppercats'];
-            $parents = explode(',', is_scalar($album_uppercats) ? (string) $album_uppercats : '');
+            $parents = explode(',', $album['uppercats']);
             $the_place = &$associatedTree[strval($parents[0])];
             if (! is_array($the_place)) {
                 // Matches PHP's own null-to-array autovivification on the offset
@@ -224,10 +220,9 @@ final class AlbumsPageRenderer
                 /** @var array<string, mixed> $the_place */
             }
 
-            $nameEvent = $eventDispatcher->dispatchChange(new RenderCategoryName(is_string($album['name']) ? $album['name'] : '', 'admin_cat_list'));
+            $nameEvent = $eventDispatcher->dispatchChange(new RenderCategoryName($album['name'], 'admin_cat_list'));
             $album['name'] = $nameEvent->categoryName;
-            $album_lastmodified = $album['lastmodified'];
-            $album['lastmodified'] = DateHelper::timeSince(is_scalar($album_lastmodified) ? (string) $album_lastmodified : '', 'year');
+            $album['lastmodified'] = DateHelper::timeSince($album['lastmodified'], 'year');
 
             $the_place['cat'] = $album;
         }

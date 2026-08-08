@@ -50,8 +50,8 @@ final class InstallationStats
         $nb_views = $this->historyService->getTotalPageViews();
         $images_disk_usage = $this->imageService->getTotalFilesize();
         $format_stats = $this->imageService->getFormatCountAndSize();
-        $nb_formats = $format_stats['count'];
-        $formats_disk_usage = $format_stats['sum'];
+        $nb_formats = $format_stats->count;
+        $formats_disk_usage = $format_stats->sum;
 
         return [
             'nb_photos' => $nb_photos,

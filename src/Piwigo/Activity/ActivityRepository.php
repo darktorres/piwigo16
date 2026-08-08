@@ -9,8 +9,14 @@ use Doctrine\DBAL\ParameterType;
 use Doctrine\ORM\EntityRepository;
 use Doctrine\ORM\Query\Expr\Join;
 use Override;
+use Piwigo\Activity\Projection\ActionCount;
+use Piwigo\Activity\Projection\CoreUpdateHistoryRow;
+use Piwigo\Activity\Projection\DailyActionCount;
+use Piwigo\Activity\Projection\PaginatedActivityRow;
+use Piwigo\Activity\Projection\SystemActionCount;
 use Piwigo\Activity\Projection\SystemActivityLogEntry;
 use Piwigo\Activity\Projection\UserActivityLogEntry;
+use Piwigo\Activity\Projection\UserAgentBreakdown;
 use Piwigo\Auth\LoginActivityLookupInterface;
 use Piwigo\Common\ValueObject\IpAddress;
 use Piwigo\Common\ValueObject\SqlDateTime;
@@ -160,7 +166,7 @@ final class ActivityRepository extends EntityRepository implements LoginActivity
      * Number of logged actions per (object, action) pair, excluding
      * object='system' and optionally restricted to a single object type.
      *
-     * @return list<array{object: string, action: string, counter: int}>
+     * @return list<ActionCount>
      */
     public function findActionCounts(?string $objectFilter): array
     {
@@ -179,11 +185,11 @@ final class ActivityRepository extends EntityRepository implements LoginActivity
             ->getResult();
 
         return array_map(
-            static fn (array $row): array => [
-                'object' => $row['object'],
-                'action' => $row['action'],
-                'counter' => $row['counter'],
-            ],
+            static fn (array $row): ActionCount => new ActionCount(
+                object: $row['object'],
+                action: $row['action'],
+                counter: $row['counter'],
+            ),
             $rows
         );
     }
@@ -317,7 +323,7 @@ final class ActivityRepository extends EntityRepository implements LoginActivity
      * raw string), `details` is an already-decoded `array` (not a raw
      * JSON string).
      *
-     * @return list<array<string, mixed>>
+     * @return list<PaginatedActivityRow>
      */
     public function findPaginated(ActivityListCriteria $criteria, int $limit, int $offset): array
     {
@@ -381,21 +387,28 @@ final class ActivityRepository extends EntityRepository implements LoginActivity
 
         $result = [];
         foreach ($rows as $row) {
-            if (! is_array($row)) {
+            if (! is_array($row) || ! is_string($row['object'] ?? null) || ! is_int($row['object_id'] ?? null)
+                || ! is_string($row['action'] ?? null) || ! is_string($row['session_idx'] ?? null)
+                || ! $row['occured_on'] instanceof SqlDateTime) {
                 continue;
             }
 
-            $result[] = [
-                'performed_by' => $row['performed_by'] ?? null,
-                'object' => $row['object'] ?? null,
-                'object_id' => $row['object_id'] ?? null,
-                'action' => $row['action'] ?? null,
-                'session_idx' => $row['session_idx'] ?? null,
-                'ip_address' => $row['ip_address'] ?? null,
-                'occured_on' => $row['occured_on'] ?? null,
-                'details' => $row['details'] ?? null,
-                'user_agent' => $row['user_agent'] ?? null,
-            ];
+            $performedBy = $row['performed_by'] ?? null;
+            $ipAddress = $row['ip_address'] ?? null;
+            $userAgent = $row['user_agent'] ?? null;
+            $details = $row['details'] ?? null;
+
+            $result[] = new PaginatedActivityRow(
+                performedBy: $performedBy instanceof UserId ? $performedBy : null,
+                object: $row['object'],
+                objectId: $row['object_id'],
+                action: $row['action'],
+                sessionIdx: $row['session_idx'],
+                ipAddress: $ipAddress instanceof IpAddress ? $ipAddress : null,
+                occuredOn: $row['occured_on'],
+                details: is_array($details) ? array_filter($details, is_string(...), ARRAY_FILTER_USE_KEY) : null,
+                userAgent: is_string($userAgent) ? $userAgent : null,
+            );
         }
 
         return $result;
@@ -416,7 +429,7 @@ final class ActivityRepository extends EntityRepository implements LoginActivity
      * (`ActivityEntity`'s own `length: 19`), so `substr($occuredOn, 0, 10)`
      * reproduces `DATE_FORMAT(..., '%Y-%m-%d')`'s output exactly.
      *
-     * @return list<array{activity_day: string, object: string, action: string, counter: int}>
+     * @return list<DailyActionCount>
      */
     public function findDailyActionCountsSince(string $sinceDate): array
     {
@@ -427,7 +440,11 @@ final class ActivityRepository extends EntityRepository implements LoginActivity
             ->getQuery()
             ->getArrayResult();
 
-        $byKey = [];
+        // DailyActionCount is readonly, so the running counter is tracked
+        // in a parallel mutable array keyed the same way, and DTOs are
+        // only constructed in the final loop below.
+        $counterByKey = [];
+        $fieldsByKey = [];
         foreach ($rows as $row) {
             if (! is_array($row)) {
                 continue;
@@ -440,16 +457,21 @@ final class ActivityRepository extends EntityRepository implements LoginActivity
 
             $key = $activityDay . "\0" . $object . "\0" . $action;
 
-            $byKey[$key] ??= [
-                'activity_day' => $activityDay,
-                'object' => $object,
-                'action' => $action,
-                'counter' => 0,
-            ];
-            $byKey[$key]['counter']++;
+            $fieldsByKey[$key] ??= [$activityDay, $object, $action];
+            $counterByKey[$key] = ($counterByKey[$key] ?? 0) + 1;
         }
 
-        return array_values($byKey);
+        $result = [];
+        foreach ($fieldsByKey as $key => [$activityDay, $object, $action]) {
+            $result[] = new DailyActionCount(
+                activityDay: $activityDay,
+                object: $object,
+                action: $action,
+                counter: $counterByKey[$key],
+            );
+        }
+
+        return $result;
     }
 
     /**
@@ -458,7 +480,7 @@ final class ActivityRepository extends EntityRepository implements LoginActivity
      * oldest first -- Admin\PiwigoInfosSender's own "version upgrade
      * history" telemetry field.
      *
-     * @return list<array{action: string, occured_on: ?string, details: ?string}>
+     * @return list<CoreUpdateHistoryRow>
      */
     public function findCoreUpdateHistory(): array
     {
@@ -476,7 +498,7 @@ final class ActivityRepository extends EntityRepository implements LoginActivity
         foreach ($rows as $row) {
             $details = is_array($row) ? ($row['details'] ?? null) : null;
             // DQL array hydration decodes the json-typed `details` column
-            // into a PHP array; re-encode explicitly to keep this method's
+            // into a PHP array; re-encode explicitly to keep this DTO's
             // own `?string` contract -- PiwigoInfosSender's consumer only
             // needs it to round-trip through json_decode(), not
             // byte-identically.
@@ -484,11 +506,11 @@ final class ActivityRepository extends EntityRepository implements LoginActivity
 
             $occuredOn = is_array($row) ? ($row['occured_on'] ?? null) : null;
 
-            $history[] = [
-                'action' => is_array($row) && is_string($row['action']) ? $row['action'] : '',
-                'occured_on' => $occuredOn instanceof SqlDateTime ? $occuredOn->value : null,
-                'details' => $encodedDetails === false ? null : $encodedDetails,
-            ];
+            $history[] = new CoreUpdateHistoryRow(
+                action: is_array($row) && is_string($row['action']) ? $row['action'] : '',
+                occuredOn: $occuredOn instanceof SqlDateTime ? $occuredOn->value : null,
+                details: $encodedDetails === false ? null : $encodedDetails,
+            );
         }
 
         return $history;
@@ -502,7 +524,7 @@ final class ActivityRepository extends EntityRepository implements LoginActivity
      * `object`/`object_id`/`action` are all non-nullable columns, so
      * unlike {@see countByUser()}, no null-key filtering is needed here.
      *
-     * @return list<array{object: string, object_id: int, action: string, counter: int}>
+     * @return list<SystemActionCount>
      */
     public function findSystemActionCountsByObjectId(): array
     {
@@ -514,12 +536,12 @@ final class ActivityRepository extends EntityRepository implements LoginActivity
             ->getResult();
 
         return array_map(
-            static fn (array $row): array => [
-                'object' => $row['object'],
-                'object_id' => $row['object_id'],
-                'action' => $row['action'],
-                'counter' => $row['counter'],
-            ],
+            static fn (array $row): SystemActionCount => new SystemActionCount(
+                object: $row['object'],
+                objectId: $row['object_id'],
+                action: $row['action'],
+                counter: $row['counter'],
+            ),
             $rows
         );
     }
@@ -534,7 +556,7 @@ final class ActivityRepository extends EntityRepository implements LoginActivity
      * NULL, not TRUE), so the row-mapping below stays defensive only for
      * phpstan-doctrine's own static type, not a real runtime case.
      *
-     * @return list<array{user_agent: ?string, counter: int, first_encounter: ?string, last_encounter: ?string}>
+     * @return list<UserAgentBreakdown>
      */
     public function findUserAgentBreakdown(): array
     {
@@ -546,16 +568,16 @@ final class ActivityRepository extends EntityRepository implements LoginActivity
             ->getResult();
 
         return array_map(
-            static fn (array $row): array => [
-                'user_agent' => is_string($row['user_agent']) ? $row['user_agent'] : null,
-                'counter' => $row['counter'],
+            static fn (array $row): UserAgentBreakdown => new UserAgentBreakdown(
+                userAgent: is_string($row['user_agent']) ? $row['user_agent'] : null,
+                counter: $row['counter'],
                 // MIN()/MAX() around a custom-Typed column don't get the
                 // column's own Type applied during hydration (confirmed
                 // live) -- these come back as plain driver strings, not
                 // SqlDateTime instances, unlike a bare `a.occuredOn` select.
-                'first_encounter' => is_string($row['first_encounter']) ? $row['first_encounter'] : null,
-                'last_encounter' => is_string($row['last_encounter']) ? $row['last_encounter'] : null,
-            ],
+                firstEncounter: is_string($row['first_encounter']) ? $row['first_encounter'] : null,
+                lastEncounter: is_string($row['last_encounter']) ? $row['last_encounter'] : null,
+            ),
             $rows
         );
     }

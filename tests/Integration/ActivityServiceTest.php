@@ -9,7 +9,10 @@ use Piwigo\Core\Kernel;
 use Piwigo\Config\CurrentConfig;
 use LogicException;
 use Piwigo\Activity\ActivityEntity;
+use Piwigo\Activity\Projection\CoreUpdateHistoryRow;
+use Piwigo\Activity\Projection\SystemActionCount;
 use Piwigo\Activity\Projection\UserActivityLogEntry;
+use Piwigo\Activity\Projection\UserAgentBreakdown;
 use Doctrine\DBAL\Connection;
 use Piwigo\Activity\ActivityRepository;
 use Piwigo\Activity\ActivityService;
@@ -548,18 +551,18 @@ final class ActivityServiceTest extends IntegrationTestCase
 
         $activate = array_values(array_filter(
             $rows,
-            static fn (array $row): bool => $row['object_id'] === 3 && $row['action'] === 'activate'
+            static fn (SystemActionCount $row): bool => $row->objectId === 3 && $row->action === 'activate'
         ));
         self::assertCount(1, $activate);
-        self::assertSame('system', $activate[0]['object']);
-        self::assertSame(1, $activate[0]['counter']);
+        self::assertSame('system', $activate[0]->object);
+        self::assertSame(1, $activate[0]->counter);
 
         $install = array_values(array_filter(
             $rows,
-            static fn (array $row): bool => $row['object_id'] === 1 && $row['action'] === 'install'
+            static fn (SystemActionCount $row): bool => $row->objectId === 1 && $row->action === 'install'
         ));
         self::assertCount(1, $install);
-        self::assertSame(1, $install[0]['counter']);
+        self::assertSame(1, $install[0]->counter);
     }
 
     public function test_get_user_agent_breakdown_delegates_to_the_repository(): void
@@ -573,10 +576,10 @@ final class ActivityServiceTest extends IntegrationTestCase
 
         $matching = array_values(array_filter(
             $rows,
-            static fn (array $row): bool => $row['user_agent'] === 'PiwigoFixtureRegen/1.0'
+            static fn (UserAgentBreakdown $row): bool => $row->userAgent === 'PiwigoFixtureRegen/1.0'
         ));
         self::assertCount(1, $matching);
-        self::assertSame(2, $matching[0]['counter']);
+        self::assertSame(2, $matching[0]->counter);
     }
 
     public function test_get_core_update_history_delegates_to_the_repository(): void
@@ -605,17 +608,17 @@ final class ActivityServiceTest extends IntegrationTestCase
         try {
             $rows = $this->service->getCoreUpdateHistory();
 
-            $matching = array_values(array_filter($rows, static fn (array $row): bool => $row['action'] === 'update'));
+            $matching = array_values(array_filter($rows, static fn (CoreUpdateHistoryRow $row): bool => $row->action === 'update'));
             self::assertCount(1, $matching);
-            self::assertSame('2026-07-10 00:00:00', $matching[0]['occured_on']);
-            self::assertIsString($matching[0]['details']);
+            self::assertSame('2026-07-10 00:00:00', $matching[0]->occuredOn);
+            self::assertIsString($matching[0]->details);
             // MySQL's JSON column type reorders object members (by key
             // length, then lexicographically) independent of the original
             // insertion order -- ksort() both sides, matching this
             // codebase's own established convention for this gotcha (see
             // tests/Contract/WsImagesFilteredSearchTest.php's docblock).
             $expectedDetails = ['from_version' => '16.0.0', 'to_version' => '17.0.0'];
-            $actualDetails = json_decode($matching[0]['details'], true);
+            $actualDetails = json_decode($matching[0]->details, true);
             ksort($expectedDetails);
             self::assertIsArray($actualDetails);
             ksort($actualDetails);

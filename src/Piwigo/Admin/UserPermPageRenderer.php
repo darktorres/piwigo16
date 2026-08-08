@@ -114,17 +114,11 @@ final class UserPermPageRenderer
             $cats = [];
             foreach ($group_rows as $row) {
                 $cats[] = $row;
-                if (is_int($row['cat_id']) || is_string($row['cat_id'])) {
-                    $group_authorized[] = (string) $row['cat_id'];
-                }
+                $group_authorized[] = (string) $row['cat_id'];
             }
             usort($cats, CategoryService::compareByGlobalRank(...));
 
             foreach ($cats as $category) {
-                if ($category['uppercats'] === null || ! is_string($category['uppercats'])) {
-                    continue;
-                }
-
                 $template->append(
                     'categories_because_of_groups',
                     $htmlRenderer->getCatDisplayNameCache($category['uppercats'], null)

@@ -31,12 +31,18 @@ use Piwigo\Event\Mail\GetWebmasterMailAddress;
 use Piwigo\Group\UserGroupEntity;
 use Piwigo\Image\ImageCategoryEntity;
 use Piwigo\Image\ImageEntity;
+use Piwigo\Image\OrderByClause;
 use Piwigo\Image\PhotoSortField;
 use Piwigo\Permission\PermissionCriteria;
 use Piwigo\Permission\SqlCondition;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Users\Projection\ActivationKeyRow;
+use Piwigo\Users\Projection\BasicUserRow;
+use Piwigo\Users\Projection\NotificationRecipient;
 use Piwigo\Users\Projection\UserInfo;
+use Piwigo\Users\Projection\UserInfoWithThemeName;
+use Piwigo\Users\Projection\UsernameById;
+use Piwigo\Users\Projection\UsernameLookup;
 use RuntimeException;
 
 /**
@@ -222,18 +228,17 @@ final class UserRepository implements WebmasterMailProviderInterface
     }
 
     /**
-     * @return array{id: string, username: string, email: string}|null the
-     *   account matching $login (case-insensitive) or, when none matches,
-     *   the account matching $email -- used both to look up an existing
-     *   account for the SEC-31 duplicate-registration notice, and for the
-     *   password.php-style "find by username or email" flow.
+     * The account matching $username (case-insensitive), or null when none
+     * matches -- {@see \Piwigo\Users\UserService::
+     * notifyExistingAccountOfDuplicateRegistration()}'s real (and only)
+     * consumer, the SEC-31 duplicate-registration notice.
      *
      * SQL-modernization audit, Item 14 Sub-phase C4: converted to real
      * DQL -- `users` is now mapped ({@see UserEntity}); the multi-auth
      * column indirection this used to take as `$idColumn`/`$usernameColumn`/
      * `$emailColumn` parameters is gone (see this class's own docblock).
      */
-    public function findByUsernameCaseInsensitive(string $username): ?array
+    public function findByUsernameCaseInsensitive(string $username): ?UsernameLookup
     {
         $row = $this->em
             ->createQueryBuilder()
@@ -245,19 +250,18 @@ final class UserRepository implements WebmasterMailProviderInterface
             ->getQuery()
             ->getOneOrNullResult(Query::HYDRATE_ARRAY);
 
-        if (! is_array($row)) {
+        if (! is_array($row) || ! ($row['id'] ?? null) instanceof UserId) {
             return null;
         }
 
-        $id = $row['id'] ?? null;
         $username = $row['username'] ?? null;
         $email = $row['email'] ?? null;
 
-        return [
-            'id' => $id instanceof UserId ? (string) $id->value : '',
-            'username' => $username instanceof Username ? $username->value : '',
-            'email' => $email instanceof Email ? $email->value : '',
-        ];
+        return new UsernameLookup(
+            id: $row['id'],
+            username: $username instanceof Username ? $username->value : '',
+            email: $email instanceof Email ? $email->value : '',
+        );
     }
 
     /**
@@ -789,18 +793,9 @@ final class UserRepository implements WebmasterMailProviderInterface
      * not selecting the custom-Typed column at all).
      *
      * SQL-modernization audit, Item 14 Sub-phase C4: converted to real
-     * DQL -- `users` is now mapped ({@see UserEntity}). Declared
-     * `array<string, mixed>`, not the more precise shape this method's own
-     * literal return would otherwise infer -- UserService::getUserData()
-     * array_merge()s this with a second, loosely-typed row and reads
-     * several keys neither row declares (preferences/status, from the
-     * `user_infos` half); a precise shape here would make PHPStan treat
-     * those as possibly-missing after the merge, which isn't a new risk
-     * this conversion introduces.
-     *
-     * @return array<string, mixed>|false
+     * DQL -- `users` is now mapped ({@see UserEntity}).
      */
-    public function fetchBasicUserRow(UserId $userId): array|false
+    public function fetchBasicUserRow(UserId $userId): BasicUserRow|false
     {
         $row = $this->em
             ->createQueryBuilder()
@@ -818,12 +813,12 @@ final class UserRepository implements WebmasterMailProviderInterface
         $username = $row['username'] ?? null;
         $email = $row['email'] ?? null;
 
-        return [
-            'id' => $userId->value,
-            'username' => $username instanceof Username ? $username->value : '',
-            'password' => is_string($row['password'] ?? null) ? $row['password'] : null,
-            'email' => $email instanceof Email ? $email->value : null,
-        ];
+        return new BasicUserRow(
+            id: $userId,
+            username: $username instanceof Username ? $username->value : '',
+            password: is_string($row['password'] ?? null) ? $row['password'] : null,
+            email: $email instanceof Email ? $email->value : null,
+        );
     }
 
     /**
@@ -873,9 +868,12 @@ final class UserRepository implements WebmasterMailProviderInterface
      * the raw DBAL row gave a native tinyint `getUserData()` had to
      * explicitly re-cast.
      *
-     * @return array<string, mixed>|false
+     * The full row itself is a plain {@see UserInfo::fromEntity()} build
+     * (this method already selects the whole entity) plus the joined
+     * theme name -- {@see UserInfoWithThemeName} wraps the two rather than
+     * duplicating UserInfo's 18 fields into a second, parallel DTO.
      */
-    public function fetchUserInfosWithThemeName(UserId $userId): array|false
+    public function fetchUserInfosWithThemeName(UserId $userId): UserInfoWithThemeName|false
     {
         $row = $this->em
             ->createQueryBuilder()
@@ -891,31 +889,12 @@ final class UserRepository implements WebmasterMailProviderInterface
             return false;
         }
 
-        $userInfo = $row[0];
         $themeName = $row['theme_name'] ?? null;
-        $themeName = is_string($themeName) ? $themeName : null;
 
-        return [
-            'user_id' => $userInfo->userId->value,
-            'nb_image_page' => $userInfo->nbImagePage,
-            'status' => $userInfo->status->value,
-            'language' => $userInfo->language->value,
-            'expand' => $userInfo->expand,
-            'show_nb_comments' => $userInfo->showNbComments,
-            'show_nb_hits' => $userInfo->showNbHits,
-            'recent_period' => $userInfo->recentPeriod,
-            'theme' => $userInfo->theme,
-            'registration_date' => $userInfo->registrationDate?->value,
-            'enabled_high' => $userInfo->enabledHigh,
-            'level' => $userInfo->level,
-            'activation_key' => $userInfo->activationKey,
-            'activation_key_expire' => $userInfo->activationKeyExpire?->value,
-            'last_visit' => $userInfo->lastVisit?->value,
-            'last_visit_from_history' => $userInfo->lastVisitFromHistory,
-            'lastmodified' => $userInfo->lastmodified->value,
-            'preferences' => $userInfo->preferences,
-            'theme_name' => $themeName,
-        ];
+        return new UserInfoWithThemeName(
+            userInfo: UserInfo::fromEntity($row[0]),
+            themeName: is_string($themeName) ? $themeName : null,
+        );
     }
 
     /**
@@ -1124,7 +1103,7 @@ final class UserRepository implements WebmasterMailProviderInterface
                 $criteria->maxLevelCondition('i.level'),
             ));
             foreach ($dqlOrderBy as $entry) {
-                $qb->addOrderBy($entry['property'], $entry['dir']);
+                $qb->addOrderBy($entry->property, $entry->dir);
             }
 
             $ids = $qb->getQuery()
@@ -1179,7 +1158,7 @@ final class UserRepository implements WebmasterMailProviderInterface
     }
 
     /**
-     * @return list<array{property: string, dir: 'ASC'|'DESC'}>|null
+     * @return list<OrderByClause>|null
      */
     private function resolveFavoritesDqlOrderBy(string $orderBySql): ?array
     {
@@ -1303,8 +1282,9 @@ final class UserRepository implements WebmasterMailProviderInterface
      * Bulk `user_infos` field update -- UserService::checkAndSaveUserInfos()'s
      * own dynamic-fields branch (nb_image_page/language/recent_period/etc,
      * whichever the caller actually changed), applied to every id in
-     * $userIds at once. $updates stays a raw column => scalar-value map,
-     * same dynamic-column reasoning as fetchBasicUserRow() above.
+     * $userIds at once. $updates stays a raw column => scalar-value map --
+     * the caller composes it from whichever fields actually changed, a
+     * genuinely dynamic key set, not a fixed row shape.
      *
      * Item 15 audit: `$updates`'s keys are now validated against
      * {@see UserInfoField}'s bounded enum before reaching the `set()`
@@ -1858,7 +1838,7 @@ final class UserRepository implements WebmasterMailProviderInterface
      * plain scalar there).
      *
      * @param  list<int|string>  $userIds
-     * @return list<array<string, mixed>>
+     * @return list<NotificationRecipient>
      */
     public function findNotificationRecipientsByIds(array $userIds): array
     {
@@ -1882,21 +1862,19 @@ final class UserRepository implements WebmasterMailProviderInterface
                 continue;
             }
 
-            $userId = $row['user_id'] ?? null;
-
-            $result[] = [
-                'user_id' => $userId instanceof UserId ? $userId->value : null,
+            $result[] = new NotificationRecipient(
+                userId: ($row['user_id'] ?? null) instanceof UserId ? $row['user_id'] : null,
                 // `status` is UserStatus (enumType-mapped) -- array
                 // hydration returns a real instance, unwrapped to
                 // `.value` here.
-                'status' => ($row['status'] ?? null) instanceof UserStatus ? $row['status']->value : null,
+                status: ($row['status'] ?? null) instanceof UserStatus ? $row['status']->value : null,
                 // `language` is LangCode-typed -- array hydration returns
                 // a real instance, unwrapped to `.value` here, same
                 // reasoning as `status`.
-                'language' => ($row['language'] ?? null) instanceof LangCode ? $row['language']->value : null,
-                'email' => ($row['email'] ?? null) instanceof Email ? $row['email']->value : null,
-                'username' => ($row['username'] ?? null) instanceof Username ? $row['username']->value : null,
-            ];
+                language: ($row['language'] ?? null) instanceof LangCode ? $row['language']->value : null,
+                email: ($row['email'] ?? null) instanceof Email ? $row['email']->value : null,
+                username: ($row['username'] ?? null) instanceof Username ? $row['username']->value : null,
+            );
         }
 
         return $result;
@@ -1914,7 +1892,7 @@ final class UserRepository implements WebmasterMailProviderInterface
      * {@see findNotificationRecipientsByIds()} above.
      *
      * @param list<string> $userIds
-     * @return list<array<string, mixed>>
+     * @return list<UsernameById>
      */
     public function findUsernamesByIds(array $userIds): array
     {
@@ -1940,10 +1918,10 @@ final class UserRepository implements WebmasterMailProviderInterface
             $id = $row['id'] ?? null;
             $username = $row['username'] ?? null;
 
-            $result[] = [
-                'username' => $username instanceof Username ? $username->value : null,
-                'id' => $id instanceof UserId ? $id->value : null,
-            ];
+            $result[] = new UsernameById(
+                id: $id instanceof UserId ? $id : null,
+                username: $username instanceof Username ? $username->value : null,
+            );
         }
 
         return $result;

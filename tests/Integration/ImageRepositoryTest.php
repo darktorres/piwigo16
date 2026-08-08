@@ -24,7 +24,11 @@ use Piwigo\Image\ImageTextField;
 use Piwigo\Image\ImageUniquenessColumn;
 use Piwigo\Image\MissingDerivativesCriteria;
 use Piwigo\Image\Projection\Image;
+use Piwigo\Image\Projection\ImageCategoryLink;
 use Piwigo\Image\Projection\ImageFormat;
+use Piwigo\Image\Projection\ImageLookupRow;
+use Piwigo\Image\Projection\MissingDerivativeRow;
+use Piwigo\Image\Projection\MostRecentCategoryInfo;
 use Piwigo\Permission\PermissionCriteria;
 use Piwigo\Permission\SqlCondition;
 
@@ -775,8 +779,8 @@ final class ImageRepositoryTest extends IntegrationTestCase
         // linked" without this test. Fixture: image 5 (the highest id
         // with an image_category link) is in category 2, whose
         // uppercats is '1,2'.
-        self::assertSame(
-            ['category_id' => 2, 'uppercats' => '1,2'],
+        self::assertEquals(
+            new MostRecentCategoryInfo(2, '1,2'),
             $this->repo->findMostRecentImageCategoryInfo()
         );
     }
@@ -846,18 +850,18 @@ final class ImageRepositoryTest extends IntegrationTestCase
 
             $breakdown = $this->repo->findAddMethodBreakdown();
 
-            $byMethod = array_column($breakdown, null, 'add_method');
+            $byMethod = array_column($breakdown, null, 'addMethod');
             self::assertArrayHasKey('sync', $byMethod);
             self::assertArrayHasKey('api', $byMethod);
-            self::assertSame(1, $byMethod['sync']['nb_files']);
-            self::assertSame(4, $byMethod['api']['nb_files']);
+            self::assertSame(1, $byMethod['sync']->nbFiles);
+            self::assertSame(4, $byMethod['api']->nbFiles);
             // Every fixture image shares the same date_available, so both
             // groups' MAX(date_available) resolves to that same value --
             // proves the is_string($row['last_added_on'] ?? null) branch
             // maps a real, non-null value rather than only being exercised
             // by the null-coalescing default.
-            self::assertSame('2026-08-01 00:00:00', $byMethod['sync']['last_added_on']);
-            self::assertSame('2026-08-01 00:00:00', $byMethod['api']['last_added_on']);
+            self::assertSame('2026-08-01 00:00:00', $byMethod['sync']->lastAddedOn);
+            self::assertSame('2026-08-01 00:00:00', $byMethod['api']->lastAddedOn);
         } finally {
             $this->conn->executeStatement('UPDATE ' . Tables::images() . ' SET storage_category_id = NULL WHERE id = 1');
         }
@@ -915,16 +919,16 @@ final class ImageRepositoryTest extends IntegrationTestCase
     {
         $row = $this->repo->findByIdOrFilePattern(1, null);
 
-        self::assertIsArray($row);
-        self::assertSame('fixture-photo-1.jpg', $row['file']);
+        self::assertInstanceOf(ImageLookupRow::class, $row);
+        self::assertSame('fixture-photo-1.jpg', $row->file);
     }
 
     public function test_find_by_id_or_file_pattern_matches_by_file_pattern(): void
     {
         $row = $this->repo->findByIdOrFilePattern(0, 'fixture-photo-2');
 
-        self::assertIsArray($row);
-        self::assertSame(2, $row['id']);
+        self::assertInstanceOf(ImageLookupRow::class, $row);
+        self::assertSame(2, $row->id->value);
     }
 
     public function test_find_by_id_or_file_pattern_returns_false_for_no_match(): void
@@ -1153,7 +1157,7 @@ final class ImageRepositoryTest extends IntegrationTestCase
     {
         $rows = $this->repo->findCategoryLinksForImageIdsWithCondition([1, 2], self::noPermissionRestriction());
 
-        $pairs = array_map(static fn (array $row): string => $row['image_id'] . ':' . $row['category_id'], $rows);
+        $pairs = array_map(static fn (ImageCategoryLink $row): string => $row->imageId . ':' . $row->categoryId, $rows);
         sort($pairs);
 
         self::assertSame(['1:1', '2:1'], $pairs);
@@ -1173,7 +1177,7 @@ final class ImageRepositoryTest extends IntegrationTestCase
         $rows = $this->repo->findForMissingDerivatives($criteria, 999_999, 10);
 
         self::assertCount(1, $rows);
-        self::assertSame(3, $rows[0]['id']);
+        self::assertSame(3, $rows[0]->id);
     }
 
     public function test_find_for_missing_derivatives_filters_by_ids(): void
@@ -1181,7 +1185,7 @@ final class ImageRepositoryTest extends IntegrationTestCase
         $criteria = new MissingDerivativesCriteria(new ImageFilterCriteria(), [2, 3]);
         $rows = $this->repo->findForMissingDerivatives($criteria, 999_999, 10);
 
-        $ids = array_map(static fn (array $row): int => is_numeric($row['id']) ? (int) $row['id'] : 0, $rows);
+        $ids = array_map(static fn (MissingDerivativeRow $row): int => $row->id, $rows);
         sort($ids);
         self::assertSame([2, 3], $ids);
     }
@@ -1429,8 +1433,8 @@ final class ImageRepositoryTest extends IntegrationTestCase
         try {
             $this->conn->insert(Tables::lounge(), ['image_id' => 1, 'category_id' => 2]);
 
-            self::assertSame(
-                [['image_id' => 1, 'category_id' => 2]],
+            self::assertEquals(
+                [new ImageCategoryLink(1, 2)],
                 $this->repo->findLoungeRows()
             );
         } finally {

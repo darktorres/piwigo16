@@ -15,7 +15,12 @@ use Piwigo\Common\ValueObject\Username;
 use Piwigo\Core\Env;
 use Piwigo\Image\ImageCategoryEntity;
 use Piwigo\Image\ImageEntity;
+use Piwigo\Rate\Projection\ImageThumbInfo;
 use Piwigo\Rate\Projection\Rate;
+use Piwigo\Rate\Projection\RaterInfo;
+use Piwigo\Rate\Projection\RateSummary;
+use Piwigo\Rate\Projection\RateSummaryForElement;
+use Piwigo\Rate\Projection\RatingReportRow;
 use Piwigo\Users\UserEntity;
 use Piwigo\Users\UserInfoEntity;
 use Piwigo\Users\UserStatus;
@@ -135,7 +140,7 @@ final class RateRepository extends EntityRepository
     /**
      * Every element with at least one rate, its rate count and sum.
      *
-     * @return array<int, array{rcount: int, rsum: float}>
+     * @return array<int, RateSummary>
      */
     public function findRateSummaries(): array
     {
@@ -156,10 +161,10 @@ final class RateRepository extends EntityRepository
                 continue;
             }
 
-            $byItem[$elementId->value] = [
-                'rcount' => is_numeric($row['rcount'] ?? null) ? (int) $row['rcount'] : 0,
-                'rsum' => is_numeric($row['rsum'] ?? null) ? (float) $row['rsum'] : 0.0,
-            ];
+            $byItem[$elementId->value] = new RateSummary(
+                rcount: is_numeric($row['rcount'] ?? null) ? (int) $row['rcount'] : 0,
+                rsum: is_numeric($row['rsum'] ?? null) ? (float) $row['rsum'] : 0.0,
+            );
         }
 
         return $byItem;
@@ -325,7 +330,7 @@ final class RateRepository extends EntityRepository
      *   always picked from the admin page's own fixed allowlist array,
      *   never from raw user input; any other value leaves the query
      *   unordered
-     * @return list<array{id: int, path: string, file: string, representative_ext: ?string, score: ?float, recently_rated: ?string, avg_rates: ?float, nb_rates: int, sum_rates: float}>
+     * @return list<RatingReportRow>
      */
     public function findRatingReport(?UserId $filterUserId, bool $excludeFilterUser, array $categoryIds, string $orderBy, int $limit, int $offset): array
     {
@@ -382,17 +387,17 @@ final class RateRepository extends EntityRepository
 
             $avgRates = is_numeric($row['avg_rates'] ?? null) ? round((float) $row['avg_rates'], 2) : null;
 
-            $result[] = [
-                'id' => ($row['id'] ?? null) instanceof ImageId ? $row['id']->value : (is_numeric($row['id'] ?? null) ? (int) $row['id'] : 0),
-                'path' => is_string($row['path'] ?? null) ? $row['path'] : '',
-                'file' => is_string($row['file'] ?? null) ? $row['file'] : '',
-                'representative_ext' => is_string($row['representative_ext'] ?? null) ? $row['representative_ext'] : null,
-                'score' => is_numeric($row['score'] ?? null) ? (float) $row['score'] : null,
-                'recently_rated' => is_string($row['recently_rated'] ?? null) ? $row['recently_rated'] : null,
-                'avg_rates' => $avgRates,
-                'nb_rates' => is_numeric($row['nb_rates'] ?? null) ? (int) $row['nb_rates'] : 0,
-                'sum_rates' => is_numeric($row['sum_rates'] ?? null) ? (float) $row['sum_rates'] : 0.0,
-            ];
+            $result[] = new RatingReportRow(
+                id: ($row['id'] ?? null) instanceof ImageId ? $row['id']->value : (is_numeric($row['id'] ?? null) ? (int) $row['id'] : 0),
+                path: is_string($row['path'] ?? null) ? $row['path'] : '',
+                file: is_string($row['file'] ?? null) ? $row['file'] : '',
+                representativeExt: is_string($row['representative_ext'] ?? null) ? $row['representative_ext'] : null,
+                score: is_numeric($row['score'] ?? null) ? (float) $row['score'] : null,
+                recentlyRated: is_string($row['recently_rated'] ?? null) ? $row['recently_rated'] : null,
+                avgRates: $avgRates,
+                nbRates: is_numeric($row['nb_rates'] ?? null) ? (int) $row['nb_rates'] : 0,
+                sumRates: is_numeric($row['sum_rates'] ?? null) ? (float) $row['sum_rates'] : 0.0,
+            );
         }
 
         return $result;
@@ -489,7 +494,7 @@ final class RateRepository extends EntityRepository
      * status (used by the page to decide whether to render them as an
      * anonymous rater).
      *
-     * @return list<array{id: int, name: string, status: string}>
+     * @return list<RaterInfo>
      */
     public function findUsersWithStatusByIdUsername(): array
     {
@@ -509,14 +514,14 @@ final class RateRepository extends EntityRepository
 
             $name = $row['name'] ?? null;
 
-            $result[] = [
-                'id' => $row['id']->value,
-                'name' => $name instanceof Username ? $name->value : '',
+            $result[] = new RaterInfo(
+                id: $row['id']->value,
+                name: $name instanceof Username ? $name->value : '',
                 // `ui.status` (UserInfoEntity::$status) is enumType-mapped
                 // -- array hydration returns a real UserStatus instance for
                 // it, not a raw string.
-                'status' => ($row['status'] ?? null) instanceof UserStatus ? $row['status']->value : '',
-            ];
+                status: ($row['status'] ?? null) instanceof UserStatus ? $row['status']->value : '',
+            );
         }
 
         return $result;
@@ -557,7 +562,7 @@ final class RateRepository extends EntityRepository
      * above, for `id` (ImageId) -- `path` is a plain scalar column.
      *
      * @param list<int> $imageIds
-     * @return list<array{id: int, name: ?string, file: string, path: string, representative_ext: ?string, level: int}>
+     * @return list<ImageThumbInfo>
      */
     public function findImageThumbInfoByIds(array $imageIds): array
     {
@@ -575,26 +580,19 @@ final class RateRepository extends EntityRepository
             ->getArrayResult();
 
         return array_values(array_map(
-            static function (mixed $row): array {
+            static function (mixed $row): ImageThumbInfo {
                 if (! is_array($row)) {
-                    return [
-                        'id' => 0,
-                        'name' => null,
-                        'file' => '',
-                        'path' => '',
-                        'representative_ext' => null,
-                        'level' => 0,
-                    ];
+                    return new ImageThumbInfo(0, null, '', '', null, 0);
                 }
 
-                return [
-                    'id' => ($row['id'] ?? null) instanceof ImageId ? $row['id']->value : (is_numeric($row['id'] ?? null) ? (int) $row['id'] : 0),
-                    'name' => is_string($row['name'] ?? null) ? $row['name'] : null,
-                    'file' => is_string($row['file'] ?? null) ? $row['file'] : '',
-                    'path' => is_string($row['path'] ?? null) ? $row['path'] : '',
-                    'representative_ext' => is_string($row['representativeExt'] ?? null) ? $row['representativeExt'] : null,
-                    'level' => is_numeric($row['level'] ?? null) ? (int) $row['level'] : 0,
-                ];
+                return new ImageThumbInfo(
+                    id: ($row['id'] ?? null) instanceof ImageId ? $row['id']->value : (is_numeric($row['id'] ?? null) ? (int) $row['id'] : 0),
+                    name: is_string($row['name'] ?? null) ? $row['name'] : null,
+                    file: is_string($row['file'] ?? null) ? $row['file'] : '',
+                    path: is_string($row['path'] ?? null) ? $row['path'] : '',
+                    representativeExt: is_string($row['representativeExt'] ?? null) ? $row['representativeExt'] : null,
+                    level: is_numeric($row['level'] ?? null) ? (int) $row['level'] : 0,
+                );
             },
             $rows
         ));
@@ -656,10 +654,8 @@ final class RateRepository extends EntityRepository
      * query with no GROUP BY always returns exactly one row (count 0 /
      * average NULL for zero matching `rate` rows), so there's no
      * getOneOrNullResult()/NonUniqueResultException concern here.
-     *
-     * @return array{count: int, average: ?float}
      */
-    public function findRateSummaryForElement(ImageId $elementId): array
+    public function findRateSummaryForElement(ImageId $elementId): RateSummaryForElement
     {
         $row = $this->createQueryBuilder('r')
             ->select('COUNT(r.rate) AS count', 'AVG(r.rate) AS average')
@@ -669,16 +665,13 @@ final class RateRepository extends EntityRepository
             ->getOneOrNullResult(Query::HYDRATE_ARRAY);
 
         if (! is_array($row)) {
-            return [
-                'count' => 0,
-                'average' => null,
-            ];
+            return new RateSummaryForElement(0, null);
         }
 
-        return [
-            'count' => is_numeric($row['count']) ? (int) $row['count'] : 0,
-            'average' => is_numeric($row['average']) ? round((float) $row['average'], 2) : null,
-        ];
+        return new RateSummaryForElement(
+            count: is_numeric($row['count']) ? (int) $row['count'] : 0,
+            average: is_numeric($row['average']) ? round((float) $row['average'], 2) : null,
+        );
     }
 
     /**

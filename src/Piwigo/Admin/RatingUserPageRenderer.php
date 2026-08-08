@@ -43,9 +43,9 @@ final class RatingUserPageRenderer
 
         $users_by_id = [];
         foreach ($rate_repository->findUsersWithStatusByIdUsername() as $u) {
-            $users_by_id[$u['id']] = [
-                'name' => $u['name'],
-                'anon' => ! $accessControl->isAuthorizeStatus(AccessLevel::Classic, $u['status']),
+            $users_by_id[$u->id] = [
+                'name' => $u->name,
+                'anon' => ! $accessControl->isAuthorizeStatus(AccessLevel::Classic, $u->status),
             ];
         }
 
@@ -99,11 +99,11 @@ final class RatingUserPageRenderer
         if (count($image_ids) > 0) {
             $params = $imageStdParams->get_by_type(ImageStdParams::SQUARE);
             foreach ($rate_repository->findImageThumbInfoByIds(array_keys($image_ids)) as $thumb_row) {
-                $image_urls[$thumb_row['id']] = [
-                    'tn' => DerivativeImage::url($params, $thumb_row),
+                $image_urls[$thumb_row->id] = [
+                    'tn' => DerivativeImage::url($params, $thumb_row->toArray()),
                     'page' => $urlService->makePictureUrl([
-                        'image_id' => $thumb_row['id'],
-                        'image_file' => $thumb_row['file'],
+                        'image_id' => $thumb_row->id,
+                        'image_file' => $thumb_row->file,
                     ]),
                 ];
             }

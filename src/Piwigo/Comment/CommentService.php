@@ -6,7 +6,9 @@ namespace Piwigo\Comment;
 
 use Piwigo\Auth\AccessLevelChecker;
 use Piwigo\Auth\EphemeralKeyService;
+use Piwigo\Comment\Projection\CommentDateRange;
 use Piwigo\Comment\Projection\CommentSummary;
+use Piwigo\Comment\Projection\CommentSummaryCounts;
 use Piwigo\Common\Dto\PaginatedResult;
 use Piwigo\Common\ValueObject\CommentId;
 use Piwigo\Common\ValueObject\ImageId;
@@ -71,10 +73,7 @@ final readonly class CommentService
         return $this->repo->findAllWithConditions($whereClauses, $sortByColumn, $sortOrder, $limit, $offset);
     }
 
-    /**
-     * @return array{all_comments: mixed, validated: mixed, pending: mixed}|null
-     */
-    public function getSummaryCounts(CommentApiCriteria $criteria): ?array
+    public function getSummaryCounts(CommentApiCriteria $criteria): ?CommentSummaryCounts
     {
         return $this->repo->findSummaryCounts($criteria);
     }
@@ -90,10 +89,7 @@ final readonly class CommentService
         return $this->repo->findListForAdminWs($criteria, $offset, $limit);
     }
 
-    /**
-     * @return array{started_at: mixed, ended_at: mixed}|null
-     */
-    public function getDateRange(CommentApiCriteria $criteria): ?array
+    public function getDateRange(CommentApiCriteria $criteria): ?CommentDateRange
     {
         return $this->repo->findDateRange($criteria);
     }

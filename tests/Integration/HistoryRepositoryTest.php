@@ -113,11 +113,11 @@ final class HistoryRepositoryTest extends IntegrationTestCase
             $groups = $this->repo->findGroupedCountsSince(0, null);
 
             self::assertCount(2, $groups);
-            self::assertSame('2026-07-12', $groups[0]['date']);
-            self::assertSame(3, $groups[0]['hour']);
-            self::assertSame(2, $groups[0]['nbPages']);
-            self::assertSame(4, $groups[1]['hour']);
-            self::assertSame(1, $groups[1]['nbPages']);
+            self::assertSame('2026-07-12', $groups[0]->date);
+            self::assertSame(3, $groups[0]->hour);
+            self::assertSame(2, $groups[0]->nbPages);
+            self::assertSame(4, $groups[1]->hour);
+            self::assertSame(1, $groups[1]->nbPages);
         } finally {
             $this->clearHistory();
         }
@@ -132,7 +132,7 @@ final class HistoryRepositoryTest extends IntegrationTestCase
             $groups = $this->repo->findGroupedCountsSince(0, $id1);
 
             self::assertCount(1, $groups);
-            self::assertSame(3, $groups[0]['hour']);
+            self::assertSame(3, $groups[0]->hour);
         } finally {
             $this->clearHistory();
         }
@@ -243,7 +243,7 @@ final class HistoryRepositoryTest extends IntegrationTestCase
             $rows = $this->repo->search(null, null, null, [], 1, null, null, null);
 
             self::assertCount(1, $rows);
-            self::assertSame(1, $rows[0]['user_id']);
+            self::assertSame(1, $rows[0]->userId);
         } finally {
             $this->clearHistory();
         }
@@ -286,7 +286,7 @@ final class HistoryRepositoryTest extends IntegrationTestCase
             $rows = $this->repo->search(null, null, null, [], null, null, null, '127.%');
 
             self::assertCount(1, $rows);
-            self::assertSame('127.0.0.1', $rows[0]['IP']);
+            self::assertSame('127.0.0.1', $rows[0]->ip);
         } finally {
             $this->clearHistory();
         }
@@ -311,17 +311,17 @@ final class HistoryRepositoryTest extends IntegrationTestCase
         try {
             $hours = $this->repo->findLastByType('hour', 10);
             self::assertCount(3, $hours);
-            self::assertSame(4, $hours[0]['hour']);
-            self::assertSame(3, $hours[1]['hour']);
-            self::assertSame(2, $hours[2]['hour']);
+            self::assertSame(4, $hours[0]->hour);
+            self::assertSame(3, $hours[1]->hour);
+            self::assertSame(2, $hours[2]->hour);
 
             $limited = $this->repo->findLastByType('hour', 1);
             self::assertCount(1, $limited);
 
             $default = $this->repo->findLastByType('year', 10);
             self::assertCount(1, $default);
-            self::assertSame(2026, $default[0]['year']);
-            self::assertNull($default[0]['month']);
+            self::assertSame(2026, $default[0]->year);
+            self::assertNull($default[0]->month);
         } finally {
             $this->clearSummary();
         }
@@ -336,8 +336,8 @@ final class HistoryRepositoryTest extends IntegrationTestCase
         try {
             $rows = $this->repo->findMonthlyRows(null);
             self::assertCount(2, $rows);
-            self::assertSame(2026, $rows[0]['year']);
-            self::assertSame(2025, $rows[1]['year']);
+            self::assertSame(2026, $rows[0]->year);
+            self::assertSame(2025, $rows[1]->year);
 
             self::assertCount(1, $this->repo->findMonthlyRows(1));
         } finally {

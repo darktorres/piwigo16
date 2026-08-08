@@ -491,8 +491,8 @@ final class PwgImages
 
             assert(is_numeric($rating_score_raw));
             $rating['score'] = (float) $rating_score_raw;
-            $rating['average'] = $rate_summary['average'] ?? 0.0;
-            $rating['count'] = $rate_summary['count'];
+            $rating['average'] = $rate_summary->average ?? 0.0;
+            $rating['count'] = $rate_summary->count;
         }
 
         // ---------------------------------------------------------- related comments
@@ -1205,13 +1205,13 @@ final class PwgImages
         // this legacy chunked-upload flow locates buffered chunks by md5sum, so
         // it cannot proceed for a photo that has none (e.g. added before the
         // md5sum feature was enabled, see pwg.images.setMd5sum).
-        if (! is_string($image['md5sum'])) {
+        if (! is_string($image->md5sum)) {
             return new PwgError(500, '[ws_images_addFile] image_id ' . $params['image_id'] . ' has no md5sum');
         }
 
         // since Piwigo 2.4 and derivatives, we do not take the imported "thumb" into account
         if ($params['type'] === 'thumb') {
-            $this->removeChunks($image['md5sum'], $params['type']);
+            $this->removeChunks($image->md5sum, $params['type']);
             return true;
         }
 
@@ -1222,9 +1222,9 @@ final class PwgImages
         }
 
         $upload_dir_conf = $this->paths->root . $this->currentConfig->uploadDir();
-        $file_path = $upload_dir_conf . '/buffer/' . $image['md5sum'] . '-original';
+        $file_path = $upload_dir_conf . '/buffer/' . $image->md5sum . '-original';
 
-        $this->mergeChunks($file_path, $image['md5sum'], $original_type);
+        $this->mergeChunks($file_path, $image->md5sum, $original_type);
         chmod($file_path, 0644);
 
         // if we receive the "file", we only update the original if the "file" is
@@ -1235,8 +1235,9 @@ final class PwgImages
             $infos = $this->uploadService
                 ->pwgImageInfos($file_path);
 
+            $imageArr = $image->toArray();
             foreach (['width', 'height', 'filesize'] as $image_info) {
-                if ($infos[$image_info] > $image[$image_info]) {
+                if ($infos[$image_info] > $imageArr[$image_info]) {
                     $do_update = true;
                 }
             }
@@ -1251,11 +1252,11 @@ final class PwgImages
             ->addUploadedFile(
                 $file_path,
                 $this->urlService,
-                $image['file'],
+                $image->file,
                 null,
                 null,
                 $params['image_id'],
-                $image['md5sum'], // we force the md5sum to remain the same
+                $image->md5sum, // we force the md5sum to remain the same
                 $service
             );
 
@@ -1738,9 +1739,9 @@ final class PwgImages
 
             return [
                 'image_id' => $image_id,
-                'src' => DerivativeImage::thumb_url($image_infos),
-                'square_src' => DerivativeImage::url($this->imageStdParams->get_by_type(ImageStdParams::SQUARE), $image_infos),
-                'name' => $image_infos['name'],
+                'src' => DerivativeImage::thumb_url($image_infos->toArray()),
+                'square_src' => DerivativeImage::url($this->imageStdParams->get_by_type(ImageStdParams::SQUARE), $image_infos->toArray()),
+                'name' => $image_infos->name,
                 'category' => [
                     'id' => $params['category'][0],
                     'nb_photos' => $nb_photos_in_category + $nb_photos_lounge,
@@ -2105,8 +2106,8 @@ final class PwgImages
         $unique_filenames_db = [];
 
         foreach ($this->imageService->getAllIdsAndFiles() as $row) {
-            $filename_wo_ext = StringHelper::getFilenameWoExtension($row['file']);
-            @$unique_filenames_db[$filename_wo_ext][] = $row['id'];
+            $filename_wo_ext = StringHelper::getFilenameWoExtension($row->file);
+            @$unique_filenames_db[$filename_wo_ext][] = $row->id;
         }
 
         // we want "long" format extensions first to match "cmyk.jpg" before "jpg" for example
@@ -2118,8 +2119,8 @@ final class PwgImages
 
         $format_db = [];
         foreach ($this->imageService->getAllImageIdsAndExts() as $row) {
-            $format_image_id = $row['image_id'];
-            @$format_db[$format_image_id][] = $row['ext'];
+            $format_image_id = $row->imageId;
+            @$format_db[$format_image_id][] = $row->ext;
         }
 
         $result = [];
@@ -2220,12 +2221,12 @@ final class PwgImages
         $ok = true;
 
         foreach ($this->imageService->getImageIdsAndExtsByFormatIds($format_ids) as $row) {
-            if (! isset($formats_of[$row['image_id']])) {
-                $image_ids[] = $row['image_id'];
-                $formats_of[$row['image_id']] = [];
+            if (! isset($formats_of[$row->imageId])) {
+                $image_ids[] = $row->imageId;
+                $formats_of[$row->imageId] = [];
             }
 
-            $formats_of[$row['image_id']][] = $row['ext'];
+            $formats_of[$row->imageId][] = $row->ext;
         }
 
         if (count($image_ids) === 0) {
@@ -2234,15 +2235,15 @@ final class PwgImages
 
         $urlService = $this->urlService;
         foreach ($this->imageService->getPathsForFileDeletion($image_ids) as $image_row) {
-            if ($urlService->urlIsRemote($image_row['path'])) {
+            if ($urlService->urlIsRemote($image_row->path)) {
                 continue;
             }
 
             $files = [];
-            $image_path = ImagePathHelper::getElementPath($image_row, $urlService, $this->paths);
+            $image_path = ImagePathHelper::getElementPath($image_row->toArray(), $urlService, $this->paths);
 
-            if (isset($formats_of[$image_row['id']])) {
-                foreach ($formats_of[$image_row['id']] as $format_ext) {
+            if (isset($formats_of[$image_row->id])) {
+                foreach ($formats_of[$image_row->id] as $format_ext) {
                     $files[] = ImagePathHelper::originalToFormat($image_path, $format_ext);
                 }
             }

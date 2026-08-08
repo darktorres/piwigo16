@@ -9,6 +9,7 @@ use Piwigo\Common\ValueObject\CategoryId;
 use Piwigo\Common\ValueObject\ImageId;
 use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Image\ImageEntity;
+use Piwigo\Image\Projection\AddMethodBreakdown;
 use Piwigo\Activity\ActivityService;
 use Piwigo\Activity\ActivityEntity;
 use Piwigo\Tests\Support\SessionServiceTestFactory;
@@ -2028,7 +2029,7 @@ test('getAddMethodBreakdown() delegates straight through to the repository, grou
     // wrong, not merely untested.
     expect($result)->not->toBeEmpty();
     foreach ($result as $row) {
-        expect($row)->toHaveKeys(['add_method', 'last_added_on', 'nb_files']);
-        expect(in_array($row['add_method'], ['api', 'sync'], true))->toBeTrue();
+        expect($row)->toBeInstanceOf(AddMethodBreakdown::class);
+        expect(in_array($row->addMethod, ['api', 'sync'], true))->toBeTrue();
     }
 });

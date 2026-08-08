@@ -63,6 +63,7 @@ use Piwigo\Permission\SqlCondition;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Session\SessionService;
 use Piwigo\Users\Projection\ActivationKeyRow;
+use Piwigo\Users\Projection\NotificationRecipient;
 use Piwigo\Validation\InputValidator;
 use SensitiveParameter;
 
@@ -277,7 +278,7 @@ final readonly class UserService implements DefaultLanguageProviderInterface
      * own "who uploaded each of these photos" lookup.
      *
      * @param list<string> $userIds
-     * @return array<int|string, string>
+     * @return array<int, string>
      */
     public function getUsernamesByIds(array $userIds): array
     {
@@ -285,10 +286,8 @@ final readonly class UserService implements DefaultLanguageProviderInterface
 
         $usernames = [];
         foreach ($rows as $row) {
-            $id = $row['id'];
-            $username = $row['username'];
-            if ((is_int($id) || is_string($id)) && is_string($username)) {
-                $usernames[$id] = $username;
+            if ($row->id !== null && $row->username !== null) {
+                $usernames[$row->id->value] = $row->username;
             }
         }
 
@@ -598,14 +597,14 @@ final readonly class UserService implements DefaultLanguageProviderInterface
     private function notifyExistingAccountOfDuplicateRegistration(string $login, ?string $mailAddress): void
     {
         $existing = $this->repo->findByUsernameCaseInsensitive($login);
-        if ($existing === null || $existing['email'] === '' || ! InputValidator::checkEmailFormat($existing['email'])) {
+        if ($existing === null || $existing->email === '' || ! InputValidator::checkEmailFormat($existing->email)) {
             return;
         }
 
         $gallery_title = $this->currentConfig->galleryTitle();
 
         $this->mailer->mail(
-            $existing['email'],
+            $existing->email,
             [
                 'subject' => '[' . $gallery_title . '] ' . $this->lang->t('Registration'),
                 'content' => $this->lang->args([
@@ -761,7 +760,7 @@ final readonly class UserService implements DefaultLanguageProviderInterface
         }
 
         // then merge basic + additional user data
-        $userdata = array_merge($row, $user_infos_row);
+        $userdata = array_merge($row->toArray(), $user_infos_row->toArray());
 
         foreach ($userdata as &$value) {
             // If the field is true or false, the variable is transformed into a boolean value.
@@ -802,9 +801,7 @@ final readonly class UserService implements DefaultLanguageProviderInterface
         // gate to match its own accepted type is the real fix, not adding
         // a second decode path.
         $preferences_raw = $userdata['preferences'];
-        $preferences = ! self::emptyValue($preferences_raw) && (is_array($preferences_raw) || is_string($preferences_raw))
-            ? ArrayHelper::safeJsonDecode($preferences_raw)
-            : [];
+        $preferences = $preferences_raw !== null ? ArrayHelper::safeJsonDecode($preferences_raw) : [];
 
         // No lock/wait mechanism coordinates computation of this
         // snapshot -- a deliberate tradeoff, not an oversight. Every real
@@ -816,13 +813,7 @@ final readonly class UserService implements DefaultLanguageProviderInterface
         // independently recompute the cheap permission snapshot rather
         // than one computing while others wait.
         $effective_status = $userdata['status'];
-        assert(is_string($effective_status));
-        $effective_level_raw = $userdata['level'] ?? '0';
-        // DBAL returns user_infos.level (a tinyint column) as a native
-        // int, not the mysqli-style string this file's own older $level
-        // reads elsewhere assumed -- EffectiveForbiddenCategoriesCache
-        // accepts either.
-        $effective_level = is_int($effective_level_raw) || is_string($effective_level_raw) ? $effective_level_raw : '0';
+        $effective_level = $userdata['level'];
 
         $effective = new EffectiveForbiddenCategoriesCache(
             $this->accessLevelChecker(),
@@ -1716,7 +1707,7 @@ final readonly class UserService implements DefaultLanguageProviderInterface
 
     /**
      * @param  list<int|string>  $userIds
-     * @return list<array<string, mixed>>
+     * @return list<NotificationRecipient>
      */
     public function getNotificationRecipientsByIds(array $userIds): array
     {

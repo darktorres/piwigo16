@@ -67,8 +67,8 @@ final class PictureRateRenderer
             assert(is_numeric($picture_current_id));
 
             $summary = $this->repo->findRateSummaryForElement(ImageId::from((int) $picture_current_id));
-            $rate_summary['count'] = $summary['count'];
-            $rate_summary['average'] = $summary['average'];
+            $rate_summary['count'] = $summary->count;
+            $rate_summary['average'] = $summary->average;
         }
         $template->assign('rate_summary', $rate_summary);
 

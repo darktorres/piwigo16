@@ -155,18 +155,17 @@ final class AlbumNotificationPageRenderer
 
                 foreach ($users as $u) {
                     // user_infos.user_id is the row's own key column; a
-                    // non-numeric value would mean a corrupt join, so skip this
+                    // missing value would mean a corrupt join, so skip this
                     // user rather than pass a fabricated id to create_user_auth_key().
-                    if (! is_numeric($u['user_id'])) {
+                    if ($u->userId === null) {
                         continue;
                     }
 
-                    $u_username = is_string($u['username']) ? $u['username'] : '';
+                    $u_username = $u->username ?? '';
                     $usernames[] = $u_username;
 
-                    $u_status = is_string($u['status']) ? $u['status'] : null;
                     $authkey = $this->authService
-                        ->createUserAuthKey((int) $u['user_id'], $u_status);
+                        ->createUserAuthKey($u->userId->value, $u->status);
 
                     $user_tpl = $tpl;
 
@@ -190,8 +189,8 @@ final class AlbumNotificationPageRenderer
                         $user_args['auth_key'] = $authkey['auth_key'];
                     }
 
-                    $user_language = is_string($u['language']) ? $u['language'] : $this->userService->getDefaultLanguage();
-                    $user_email = is_string($u['email']) ? $u['email'] : '';
+                    $user_language = $u->language ?? $this->userService->getDefaultLanguage();
+                    $user_email = $u->email ?? '';
 
                     $this->mailService
                         ->switchLangTo($user_language);

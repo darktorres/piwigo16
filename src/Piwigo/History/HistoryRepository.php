@@ -18,8 +18,11 @@ use Piwigo\Common\ValueObject\SqlTime;
 use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Core\Env;
 use Piwigo\Db\Tables;
+use Piwigo\History\Projection\GroupedCountSince;
+use Piwigo\History\Projection\HistorySearchRow;
 use Piwigo\History\Projection\HistorySummaryCount;
 use Piwigo\History\Projection\HistorySummaryCursor;
+use Piwigo\History\Projection\HistorySummaryRow;
 use Piwigo\Image\ImageEntity;
 use Piwigo\Users\UserInfoEntity;
 
@@ -169,7 +172,7 @@ final class HistoryRepository extends EntityRepository implements LastVisitLooku
      * One row per (date, hour) bucket with at least one history line in
      * ]$minId, $maxId].
      *
-     * @return list<array{date: string, hour: int, minId: int, maxId: int, nbPages: int}>
+     * @return list<GroupedCountSince>
      */
     public function findGroupedCountsSince(int $minId, ?int $maxId): array
     {
@@ -186,7 +189,14 @@ final class HistoryRepository extends EntityRepository implements LastVisitLooku
         $rows = $qb->getQuery()
             ->getArrayResult();
 
-        $byKey = [];
+        // Accumulated in parallel mutable maps -- see
+        // ImageRepository::findAddMethodBreakdown()'s own docblock for why
+        // (GroupedCountSince is readonly too).
+        $dateByKey = [];
+        $hourByKey = [];
+        $minIdByKey = [];
+        $maxIdByKey = [];
+        $nbPagesByKey = [];
         foreach ($rows as $row) {
             if (! is_array($row)) {
                 continue;
@@ -199,25 +209,27 @@ final class HistoryRepository extends EntityRepository implements LastVisitLooku
 
             $key = $date . "\0" . $hour;
 
-            if (! isset($byKey[$key])) {
-                $byKey[$key] = [
-                    'date' => $date,
-                    'hour' => $hour,
-                    'minId' => $id,
-                    'maxId' => $id,
-                    'nbPages' => 0,
-                ];
+            if (! isset($nbPagesByKey[$key])) {
+                $dateByKey[$key] = $date;
+                $hourByKey[$key] = $hour;
+                $minIdByKey[$key] = $id;
+                $maxIdByKey[$key] = $id;
+                $nbPagesByKey[$key] = 0;
             }
 
-            $byKey[$key]['minId'] = min($byKey[$key]['minId'], $id);
-            $byKey[$key]['maxId'] = max($byKey[$key]['maxId'], $id);
-            $byKey[$key]['nbPages']++;
+            $minIdByKey[$key] = min($minIdByKey[$key], $id);
+            $maxIdByKey[$key] = max($maxIdByKey[$key], $id);
+            $nbPagesByKey[$key]++;
         }
 
-        $result = array_values($byKey);
+        $result = [];
+        foreach ($nbPagesByKey as $key => $nbPages) {
+            $result[] = new GroupedCountSince($dateByKey[$key], $hourByKey[$key], $minIdByKey[$key], $maxIdByKey[$key], $nbPages);
+        }
+
         usort(
             $result,
-            static fn (array $a, array $b): int => [$a['date'], $a['hour']] <=> [$b['date'], $b['hour']]
+            static fn (GroupedCountSince $a, GroupedCountSince $b): int => [$a->date, $a->hour] <=> [$b->date, $b->hour]
         );
 
         return $result;
@@ -397,7 +409,7 @@ final class HistoryRepository extends EntityRepository implements LastVisitLooku
      * first -- Admin\StatsPageRenderer's own chart-data query, one real
      * caller, page-specific view-shaping (not a general-purpose finder).
      *
-     * @return list<array{year: int|string, month: int|string|null, day: int|string|null, hour: int|string|null, nb_pages: int|string|null}>
+     * @return list<HistorySummaryRow>
      */
     public function findLastByType(string $type, int $limit): array
     {
@@ -433,9 +445,14 @@ final class HistoryRepository extends EntityRepository implements LastVisitLooku
                 ->orderBy('hs.year', 'DESC'),
         };
 
-        /** @var list<array{year: int|string, month: int|string|null, day: int|string|null, hour: int|string|null, nb_pages: int|string|null}> */
-        return $qb->getQuery()
-            ->getArrayResult();
+        $result = [];
+        foreach ($qb->getQuery()->getArrayResult() as $row) {
+            if (is_array($row)) {
+                $result[] = HistorySummaryRow::fromRow(array_filter($row, is_string(...), ARRAY_FILTER_USE_KEY));
+            }
+        }
+
+        return $result;
     }
 
     /**
@@ -447,7 +464,7 @@ final class HistoryRepository extends EntityRepository implements LastVisitLooku
      * at $limit -- Admin\StatsPageRenderer's own "compare years" chart
      * data, one real caller.
      *
-     * @return list<array{year: int|string, month: int|string|null, day: int|string|null, hour: int|string|null, nb_pages: int|string|null}>
+     * @return list<HistorySummaryRow>
      */
     public function findMonthlyRows(?int $limit): array
     {
@@ -464,9 +481,14 @@ final class HistoryRepository extends EntityRepository implements LastVisitLooku
             $qb->setMaxResults($limit);
         }
 
-        /** @var list<array{year: int|string, month: int|string|null, day: int|string|null, hour: int|string|null, nb_pages: int|string|null}> */
-        return $qb->getQuery()
-            ->getArrayResult();
+        $result = [];
+        foreach ($qb->getQuery()->getArrayResult() as $row) {
+            if (is_array($row)) {
+                $result[] = HistorySummaryRow::fromRow(array_filter($row, is_string(...), ARRAY_FILTER_USE_KEY));
+            }
+        }
+
+        return $result;
     }
 
     /**
@@ -479,12 +501,11 @@ final class HistoryRepository extends EntityRepository implements LastVisitLooku
      * StatsPageRenderer::getMonthStats()'s own "recent months" chart data,
      * one real caller.
      *
-     * @return list<array{year: int|string, month: int|string|null, day: int|string|null, hour: int|string|null, nb_pages: int|string|null}>
+     * @return list<HistorySummaryRow>
      */
     public function findDailyRowsForMonths(int $year1, int $month1, int $year2, int $month2, int $year3, int $month3): array
     {
-        /** @var list<array{year: int|string, month: int|string|null, day: int|string|null, hour: int|string|null, nb_pages: int|string|null}> */
-        return $this->getEntityManager()
+        $rows = $this->getEntityManager()
             ->createQueryBuilder()
             ->select('hs.year', 'hs.month', 'hs.day', 'hs.hour', 'hs.nbPages AS nb_pages')
             ->from(HistorySummaryEntity::class, 'hs')
@@ -501,6 +522,15 @@ final class HistoryRepository extends EntityRepository implements LastVisitLooku
             ->setParameter('month3', $month3)
             ->getQuery()
             ->getArrayResult();
+
+        $result = [];
+        foreach ($rows as $row) {
+            if (is_array($row)) {
+                $result[] = HistorySummaryRow::fromRow(array_filter($row, is_string(...), ARRAY_FILTER_USE_KEY));
+            }
+        }
+
+        return $result;
     }
 
     /**
@@ -637,7 +667,7 @@ final class HistoryRepository extends EntityRepository implements LastVisitLooku
      * @param list<string> $types every possible image_type value + 'none'
      *   (matched against a NULL image_type)
      * @param ?list<int> $imageIdsFromFilename
-     * @return list<array{date: ?string, time: string, user_id: int, IP: string, section: ?string, category_id: ?int, search_id: ?int, tag_ids: ?string, image_id: ?int, image_type: ?string}>
+     * @return list<HistorySearchRow>
      */
     public function search(
         ?string $dateAfter,
@@ -714,18 +744,18 @@ final class HistoryRepository extends EntityRepository implements LastVisitLooku
                 continue;
             }
 
-            $results[] = [
-                'date' => ($row['date'] ?? null) instanceof SqlDate ? $row['date']->value : null,
-                'time' => ($row['time'] ?? null) instanceof SqlTime ? $row['time']->value : '',
-                'user_id' => ($row['userId'] ?? null) instanceof UserId ? $row['userId']->value : (is_numeric($row['userId'] ?? null) ? (int) $row['userId'] : 0),
-                'IP' => ($row['ip'] ?? null) instanceof IpAddress ? $row['ip']->value : '',
-                'section' => is_string($row['section'] ?? null) ? $row['section'] : null,
-                'category_id' => ($row['categoryId'] ?? null) instanceof CategoryId ? $row['categoryId']->value : (is_numeric($row['categoryId'] ?? null) ? (int) $row['categoryId'] : null),
-                'search_id' => is_numeric($row['searchId'] ?? null) ? (int) $row['searchId'] : null,
-                'tag_ids' => is_string($row['tagIds'] ?? null) ? $row['tagIds'] : null,
-                'image_id' => ($row['imageId'] ?? null) instanceof ImageId ? $row['imageId']->value : (is_numeric($row['imageId'] ?? null) ? (int) $row['imageId'] : null),
-                'image_type' => ($row['imageType'] ?? null) instanceof HistoryImageType ? $row['imageType']->value : null,
-            ];
+            $results[] = new HistorySearchRow(
+                date: ($row['date'] ?? null) instanceof SqlDate ? $row['date']->value : null,
+                time: ($row['time'] ?? null) instanceof SqlTime ? $row['time']->value : '',
+                userId: ($row['userId'] ?? null) instanceof UserId ? $row['userId']->value : (is_numeric($row['userId'] ?? null) ? (int) $row['userId'] : 0),
+                ip: ($row['ip'] ?? null) instanceof IpAddress ? $row['ip']->value : '',
+                section: is_string($row['section'] ?? null) ? $row['section'] : null,
+                categoryId: ($row['categoryId'] ?? null) instanceof CategoryId ? $row['categoryId']->value : (is_numeric($row['categoryId'] ?? null) ? (int) $row['categoryId'] : null),
+                searchId: is_numeric($row['searchId'] ?? null) ? (int) $row['searchId'] : null,
+                tagIds: is_string($row['tagIds'] ?? null) ? $row['tagIds'] : null,
+                imageId: ($row['imageId'] ?? null) instanceof ImageId ? $row['imageId']->value : (is_numeric($row['imageId'] ?? null) ? (int) $row['imageId'] : null),
+                imageType: ($row['imageType'] ?? null) instanceof HistoryImageType ? $row['imageType']->value : null,
+            );
         }
 
         return $results;

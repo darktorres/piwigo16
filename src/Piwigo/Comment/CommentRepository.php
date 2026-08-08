@@ -13,7 +13,9 @@ use Doctrine\ORM\Query;
 use Doctrine\ORM\Query\Expr\Join;
 use Override;
 use Piwigo\Comment\Projection\Comment;
+use Piwigo\Comment\Projection\CommentDateRange;
 use Piwigo\Comment\Projection\CommentSummary;
+use Piwigo\Comment\Projection\CommentSummaryCounts;
 use Piwigo\Common\Dto\PaginatedResult;
 use Piwigo\Common\ValueObject\CommentId;
 use Piwigo\Common\ValueObject\ImageId;
@@ -806,10 +808,8 @@ final class CommentRepository extends EntityRepository implements CommentCounter
      * Uses the standard DQL `SUM(CASE WHEN ... THEN 1 ELSE 0 END)` idiom
      * in place of MySQL's `sum(validated = 1)`/`sum(validated = 0)`
      * boolean-expression-as-integer shorthand.
-     *
-     * @return array{all_comments: mixed, validated: mixed, pending: mixed}|null
      */
-    public function findSummaryCounts(CommentApiCriteria $criteria): ?array
+    public function findSummaryCounts(CommentApiCriteria $criteria): ?CommentSummaryCounts
     {
         $qb = $this->createQueryBuilder('c')
             ->select(
@@ -827,11 +827,11 @@ final class CommentRepository extends EntityRepository implements CommentCounter
             return null;
         }
 
-        return [
-            'all_comments' => $row['all_comments'],
-            'validated' => $row['validated'],
-            'pending' => $row['pending'],
-        ];
+        return new CommentSummaryCounts(
+            allComments: is_numeric($row['all_comments'] ?? null) ? (int) $row['all_comments'] : 0,
+            validated: is_numeric($row['validated'] ?? null) ? (int) $row['validated'] : 0,
+            pending: is_numeric($row['pending'] ?? null) ? (int) $row['pending'] : 0,
+        );
     }
 
     /**
@@ -890,10 +890,8 @@ final class CommentRepository extends EntityRepository implements CommentCounter
      * getList()'s own "filters" date range. MIN()/MAX() are standard DQL
      * functions, so this is straightforward once
      * {@see applyApiConditionsWithStatus()} builds the condition set.
-     *
-     * @return array{started_at: mixed, ended_at: mixed}|null
      */
-    public function findDateRange(CommentApiCriteria $criteria): ?array
+    public function findDateRange(CommentApiCriteria $criteria): ?CommentDateRange
     {
         $qb = $this->createQueryBuilder('c')
             ->select('MIN(c.date) AS started_at', 'MAX(c.date) AS ended_at');
@@ -907,10 +905,10 @@ final class CommentRepository extends EntityRepository implements CommentCounter
             return null;
         }
 
-        return [
-            'started_at' => $row['started_at'],
-            'ended_at' => $row['ended_at'],
-        ];
+        return new CommentDateRange(
+            startedAt: is_string($row['started_at'] ?? null) ? $row['started_at'] : null,
+            endedAt: is_string($row['ended_at'] ?? null) ? $row['ended_at'] : null,
+        );
     }
 
     /**

@@ -320,7 +320,7 @@ final class IntroSubController implements AdminSubControllerInterface
 
             foreach ($activity_actions as $action) {
                 // set the time to 12:00 (midday) so that it doesn't goes to previous/next day due to timezone offset
-                $day_date = new DateTime($action['activity_day'] . ' 12:00:00');
+                $day_date = new DateTime($action->activityDay . ' 12:00:00');
 
                 $week = 0;
                 for ($i = 0; $i < $nb_weeks; $i++) {
@@ -330,10 +330,10 @@ final class IntroSubController implements AdminSubControllerInterface
                 }
                 $day_nb = $day_date->format('N');
 
-                $activity_counter = $action['counter'];
+                $activity_counter = $action->counter;
 
-                $action_object = $action['object'];
-                $action_action = $action['action'];
+                $action_object = $action->object;
+                $action_action = $action->action;
 
                 $activity_last_weeks[$week][$day_nb]['details'][ucfirst($action_object)][ucfirst($action_action)] = $activity_counter;
 
@@ -480,7 +480,7 @@ final class IntroSubController implements AdminSubControllerInterface
         $imageService = $this->imageService;
 
         foreach ($imageService->getExtensionBreakdown() as $ext_details) {
-            $ext = $ext_details['ext'];
+            $ext = $ext_details->ext;
             $type = null;
             if (in_array(strtolower($ext), $picture_ext, true)) {
                 $type = 'Photos';
@@ -490,8 +490,8 @@ final class IntroSubController implements AdminSubControllerInterface
                 $type = 'Other';
             }
 
-            $ext_filesize = (float) $ext_details['filesize'];
-            $ext_counter = $ext_details['counter'];
+            $ext_filesize = (float) $ext_details->filesize;
+            $ext_counter = $ext_details->counter;
 
             $current_filesize = $data_storage[$type]['total']['filesize'] ?? 0;
             $current_filesize = is_numeric($current_filesize) ? (float) $current_filesize : 0.0;
@@ -509,11 +509,11 @@ final class IntroSubController implements AdminSubControllerInterface
 
         // Select files from format table
         foreach ($imageService->getFormatExtensionBreakdown() as $ext_details) {
-            $ext = $ext_details['ext'];
+            $ext = $ext_details->ext;
             $type = 'Formats';
 
-            $ext_filesize = (float) $ext_details['filesize'];
-            $ext_counter = $ext_details['counter'];
+            $ext_filesize = (float) $ext_details->filesize;
+            $ext_counter = $ext_details->counter;
 
             $current_filesize = $data_storage[$type]['total']['filesize'] ?? 0;
             $current_filesize = is_numeric($current_filesize) ? (float) $current_filesize : 0.0;

@@ -10,6 +10,24 @@ use Exception;
 use LogicException;
 use Piwigo\Auth\AccessLevelChecker;
 use Piwigo\Cache\CachePools;
+use Piwigo\Category\Projection\ActivePermalinkRow;
+use Piwigo\Category\Projection\CategoryAdminListForWsRow;
+use Piwigo\Category\Projection\CategoryAlbumTreeRow;
+use Piwigo\Category\Projection\CategoryChildRow;
+use Piwigo\Category\Projection\CategoryGroupAuthorizationRow;
+use Piwigo\Category\Projection\CategoryIdImageOrder;
+use Piwigo\Category\Projection\CategoryIdNamePermalink;
+use Piwigo\Category\Projection\CategoryIdNameUppercat;
+use Piwigo\Category\Projection\CategoryIdNameUppercatsRank;
+use Piwigo\Category\Projection\CategoryListForWsRow;
+use Piwigo\Category\Projection\CategoryListingRow;
+use Piwigo\Category\Projection\CategoryMoveDetailRow;
+use Piwigo\Category\Projection\CategoryNextRankByParentRow;
+use Piwigo\Category\Projection\CategoryPermalinkDisplayRow;
+use Piwigo\Category\Projection\CategoryRankInfoRow;
+use Piwigo\Category\Projection\CategorySyncCandidateRow;
+use Piwigo\Category\Projection\CategoryUppercatsCounter;
+use Piwigo\Category\Projection\PhotoCountDateRange;
 use Piwigo\Common\Dto\PaginatedResult;
 use Piwigo\Common\ValueObject\CategoryId;
 use Piwigo\Common\ValueObject\ImageId;
@@ -288,7 +306,7 @@ final readonly class CategoryService
             foreach ($upperIds as $upperId) {
                 $upperIdInt = (int) $upperId;
                 if (isset($names[$upperIdInt])) {
-                    $result['upper_names'][] = $names[$upperIdInt];
+                    $result['upper_names'][] = $names[$upperIdInt]->toArray();
                 }
             }
         }
@@ -451,24 +469,21 @@ final readonly class CategoryService
         $lastPhotoDate = null;
         $cats = [];
         foreach ($rows as $row) {
-            $catId = $row['cat_id'];
-            $idUppercat = $row['id_uppercat'];
-            $nbImages = $row['nb_images'];
-            $dateLast = $row['date_last'];
+            $catId = $row->catId;
+            $nbImages = $row->nbImages;
+            $dateLast = $row->dateLast;
 
-            $row['cat_id'] = $catId;
-            $row['id_uppercat'] = $idUppercat;
-            $row['nb_images'] = $nbImages;
-            $row['user_id'] = $userdata['id'];
-            $row['nb_categories'] = 0;
-            $row['count_categories'] = 0;
-            $row['count_images'] = $nbImages;
-            $row['max_date_last'] = $dateLast;
+            $catRow = $row->toArray();
+            $catRow['user_id'] = $userdata['id'];
+            $catRow['nb_categories'] = 0;
+            $catRow['count_categories'] = 0;
+            $catRow['count_images'] = $nbImages;
+            $catRow['max_date_last'] = $dateLast;
             if ($dateLast !== null && ($lastPhotoDate === null || $dateLast > $lastPhotoDate)) {
                 $lastPhotoDate = $dateLast;
             }
 
-            $cats[$catId] = $row;
+            $cats[$catId] = $catRow;
         }
 
         uasort($cats, self::compareByGlobalRank(...));
@@ -586,7 +601,10 @@ final readonly class CategoryService
             ? $this->permissionService->getPermissionCriteria()
             : new PermissionCriteria(null, null, null, null, null, null);
 
-        return $this->repo->findCommonCategories($items, $max, $excludedCatIds, $criteria);
+        return array_map(
+            static fn (CategoryUppercatsCounter $row): array => $row->toArray(),
+            $this->repo->findCommonCategories($items, $max, $excludedCatIds, $criteria)
+        );
     }
 
     /**
@@ -619,7 +637,10 @@ final readonly class CategoryService
             }
         }
 
-        $cats = $this->repo->findCategoriesByIds(array_map(intval(...), array_keys($catIds)));
+        $cats = array_map(
+            static fn (CategoryListingRow $row): array => $row->toArray(),
+            $this->repo->findCategoriesByIds(array_map(intval(...), array_keys($catIds)))
+        );
         usort($cats, self::compareByGlobalRank(...));
 
         $indexOfCat = [];
@@ -890,7 +911,13 @@ final readonly class CategoryService
      */
     public function displaySelectByCommentable(bool $commentable, string $blockname, HtmlRenderingInterface $htmlRenderer, TemplateInterface $template): void
     {
-        $this->sortAndDisplaySelectCategories($this->repo->findByCommentable($commentable), [], $blockname, $htmlRenderer, $template);
+        $this->sortAndDisplaySelectCategories(
+            array_map(static fn (CategoryIdNameUppercatsRank $row): array => $row->toArray(), $this->repo->findByCommentable($commentable)),
+            [],
+            $blockname,
+            $htmlRenderer,
+            $template
+        );
     }
 
     /**
@@ -898,7 +925,13 @@ final readonly class CategoryService
      */
     public function displaySelectByVisible(bool $visible, string $blockname, HtmlRenderingInterface $htmlRenderer, TemplateInterface $template): void
     {
-        $this->sortAndDisplaySelectCategories($this->repo->findByVisible($visible), [], $blockname, $htmlRenderer, $template);
+        $this->sortAndDisplaySelectCategories(
+            array_map(static fn (CategoryIdNameUppercatsRank $row): array => $row->toArray(), $this->repo->findByVisible($visible)),
+            [],
+            $blockname,
+            $htmlRenderer,
+            $template
+        );
     }
 
     /**
@@ -907,7 +940,13 @@ final readonly class CategoryService
      */
     public function displaySelectByStatus(string $status, string $blockname, HtmlRenderingInterface $htmlRenderer, TemplateInterface $template): void
     {
-        $this->sortAndDisplaySelectCategories($this->repo->findByStatus($status), [], $blockname, $htmlRenderer, $template);
+        $this->sortAndDisplaySelectCategories(
+            array_map(static fn (CategoryIdNameUppercatsRank $row): array => $row->toArray(), $this->repo->findByStatus($status)),
+            [],
+            $blockname,
+            $htmlRenderer,
+            $template
+        );
     }
 
     /**
@@ -915,7 +954,13 @@ final readonly class CategoryService
      */
     public function displaySelectByRepresentativePresence(bool $hasRepresentative, string $blockname, HtmlRenderingInterface $htmlRenderer, TemplateInterface $template): void
     {
-        $this->sortAndDisplaySelectCategories($this->repo->findByRepresentativePresence($hasRepresentative), [], $blockname, $htmlRenderer, $template);
+        $this->sortAndDisplaySelectCategories(
+            array_map(static fn (CategoryIdNameUppercatsRank $row): array => $row->toArray(), $this->repo->findByRepresentativePresence($hasRepresentative)),
+            [],
+            $blockname,
+            $htmlRenderer,
+            $template
+        );
     }
 
     /**
@@ -925,7 +970,13 @@ final readonly class CategoryService
      */
     public function displaySelectPrivateGrantedToUser(int $userId, array $groupAuthorizedCatIds, string $blockname, HtmlRenderingInterface $htmlRenderer, TemplateInterface $template): void
     {
-        $this->sortAndDisplaySelectCategories($this->repo->findPrivateCategoriesGrantedToUser($userId, $groupAuthorizedCatIds), [], $blockname, $htmlRenderer, $template);
+        $this->sortAndDisplaySelectCategories(
+            array_map(static fn (CategoryIdNameUppercatsRank $row): array => $row->toArray(), $this->repo->findPrivateCategoriesGrantedToUser($userId, $groupAuthorizedCatIds)),
+            [],
+            $blockname,
+            $htmlRenderer,
+            $template
+        );
     }
 
     /**
@@ -933,7 +984,13 @@ final readonly class CategoryService
      */
     public function displaySelectPrivateGrantedToGroup(int $groupId, string $blockname, HtmlRenderingInterface $htmlRenderer, TemplateInterface $template): void
     {
-        $this->sortAndDisplaySelectCategories($this->repo->findPrivateCategoriesGrantedToGroup($groupId), [], $blockname, $htmlRenderer, $template);
+        $this->sortAndDisplaySelectCategories(
+            array_map(static fn (CategoryIdNameUppercatsRank $row): array => $row->toArray(), $this->repo->findPrivateCategoriesGrantedToGroup($groupId)),
+            [],
+            $blockname,
+            $htmlRenderer,
+            $template
+        );
     }
 
     /**
@@ -944,7 +1001,13 @@ final readonly class CategoryService
      */
     public function displaySelectPrivateExcluding(array $excludeCatIds, string $blockname, HtmlRenderingInterface $htmlRenderer, TemplateInterface $template): void
     {
-        $this->sortAndDisplaySelectCategories($this->repo->findPrivateCategoriesExcluding($excludeCatIds), [], $blockname, $htmlRenderer, $template);
+        $this->sortAndDisplaySelectCategories(
+            array_map(static fn (CategoryIdNameUppercatsRank $row): array => $row->toArray(), $this->repo->findPrivateCategoriesExcluding($excludeCatIds)),
+            [],
+            $blockname,
+            $htmlRenderer,
+            $template
+        );
     }
 
     /**
@@ -954,7 +1017,13 @@ final readonly class CategoryService
      */
     public function displaySelectByCondition(PermissionCriteria $criteria, array $selecteds, string $blockname, HtmlRenderingInterface $htmlRenderer, TemplateInterface $template): void
     {
-        $this->sortAndDisplaySelectCategories($this->repo->findIdNameUppercatsRank($criteria), $selecteds, $blockname, $htmlRenderer, $template);
+        $this->sortAndDisplaySelectCategories(
+            array_map(static fn (CategoryIdNameUppercatsRank $row): array => $row->toArray(), $this->repo->findIdNameUppercatsRank($criteria)),
+            $selecteds,
+            $blockname,
+            $htmlRenderer,
+            $template
+        );
     }
 
     /**
@@ -964,7 +1033,14 @@ final readonly class CategoryService
      */
     public function displaySelectForPermalinks(array $selecteds, string $blockname, HtmlRenderingInterface $htmlRenderer, TemplateInterface $template): void
     {
-        $this->sortAndDisplaySelectCategories($this->repo->findAllForPermalinksDisplay(), $selecteds, $blockname, $htmlRenderer, $template, false);
+        $this->sortAndDisplaySelectCategories(
+            array_map(static fn (CategoryPermalinkDisplayRow $row): array => $row->toArray(), $this->repo->findAllForPermalinksDisplay()),
+            $selecteds,
+            $blockname,
+            $htmlRenderer,
+            $template,
+            false
+        );
     }
 
     /**
@@ -974,7 +1050,14 @@ final readonly class CategoryService
      */
     public function displaySelectBySite(int $siteId, array $selecteds, string $blockname, HtmlRenderingInterface $htmlRenderer, TemplateInterface $template): void
     {
-        $this->sortAndDisplaySelectCategories($this->repo->findIdNameUppercatsRankBySite($siteId), $selecteds, $blockname, $htmlRenderer, $template, false);
+        $this->sortAndDisplaySelectCategories(
+            array_map(static fn (CategoryIdNameUppercatsRank $row): array => $row->toArray(), $this->repo->findIdNameUppercatsRankBySite($siteId)),
+            $selecteds,
+            $blockname,
+            $htmlRenderer,
+            $template,
+            false
+        );
     }
 
     /**
@@ -1259,16 +1342,16 @@ final readonly class CategoryService
         $currentUppercat = null;
 
         foreach ($rows as $row) {
-            $rowIdUppercat = is_scalar($row['id_uppercat']) ? (string) $row['id_uppercat'] : null;
+            $rowIdUppercat = $row->idUppercat !== null ? (string) $row->idUppercat : null;
             if ($rowIdUppercat !== $currentUppercat) {
                 $currentRank = 0;
                 $currentUppercat = $rowIdUppercat;
             }
             ++$currentRank;
 
-            $rowId = $row['id'];
-            $rowUppercats = $row['uppercats'];
-            $rowRank = $row['rank'];
+            $rowId = $row->id;
+            $rowUppercats = $row->uppercats;
+            $rowRank = $row->rank;
             // rank is a NOT NULL column in the categories table.
             assert(is_int($rowRank));
 
@@ -1276,7 +1359,7 @@ final readonly class CategoryService
               [
                   'rank' => $currentRank,
                   'rank_changed' => $currentRank !== $rowRank,
-                  'global_rank' => $row['global_rank'],
+                  'global_rank' => $row->globalRank,
                   'uppercats' => $rowUppercats,
               ];
             $catMap[$rowId] = $cat;
@@ -1456,7 +1539,10 @@ final readonly class CategoryService
             $topCategories = [];
             $parentIds = [];
 
-            $allCategories = $this->repo->findCategoriesByIds(array_values(array_map(intval(...), $categories)));
+            $allCategories = array_map(
+                static fn (CategoryListingRow $row): array => $row->toArray(),
+                $this->repo->findCategoriesByIds(array_values(array_map(intval(...), $categories)))
+            );
             usort($allCategories, self::compareByGlobalRank(...));
 
             foreach ($allCategories as $cat) {
@@ -1504,7 +1590,7 @@ final readonly class CategoryService
                 $topCategoryHasParent = $topCategoryIdUppercat !== null && $topCategoryIdUppercat !== 0;
                 if ($topCategoryHasParent) {
                     $parentCatId = $topCategoryIdUppercat;
-                    if (isset($parentCats[$parentCatId]) && $parentCats[$parentCatId]['status'] === CategoryStatus::Private->value) {
+                    if (isset($parentCats[$parentCatId]) && $parentCats[$parentCatId]->status === CategoryStatus::Private->value) {
                         $refCatId = $parentCatId;
                     }
                 }
@@ -1686,9 +1772,9 @@ final readonly class CategoryService
 
         $catFulldirs = [];
         foreach ($categories as $category) {
-            $catId = $category['id'];
-            $siteId = $category['site_id'];
-            $categoryUppercats = $category['uppercats'];
+            $catId = $category->id;
+            $siteId = $category->siteId;
+            $categoryUppercats = $category->uppercats;
             // site_id is always populated when a category is created
             // (defaults to the local site).
             assert(is_numeric($siteId));
@@ -1716,8 +1802,7 @@ final readonly class CategoryService
             // columns this method never reads -- shared with updateGlobalRank()
             // rather than adding a near-duplicate id/id_uppercat/uppercats-only
             // query.
-            $id = $row['id'];
-            $catMap[$id] = $row;
+            $catMap[$row->id] = $row;
         }
 
         $datas = [];
@@ -1727,12 +1812,12 @@ final readonly class CategoryService
             $uppercat = $id;
             while ((bool) $uppercat) {
                 $upperList[] = $uppercat;
-                $nextUppercat = $catMap[$uppercat]['id_uppercat'] ?? null;
+                $nextUppercat = $catMap[$uppercat]->idUppercat ?? null;
                 $uppercat = is_int($nextUppercat) ? $nextUppercat : null;
             }
 
             $newUppercats = implode(',', array_reverse($upperList));
-            $catUppercats = $cat['uppercats'];
+            $catUppercats = $cat->uppercats;
             if ($newUppercats !== $catUppercats) {
                 $datas[] = [
                     'id' => $id,
@@ -1773,17 +1858,13 @@ final readonly class CategoryService
 
         $categories = [];
         foreach ($this->repo->findCategoriesForMove($categoryIds) as $row) {
-            $rowId = $row['id'];
-            $rowUppercats = $row['uppercats'];
+            $rowHasParent = $row->idUppercat !== null && $row->idUppercat !== 0;
 
-            $rowIdUppercat = $row['id_uppercat'];
-            $rowHasParent = $rowIdUppercat !== null && $rowIdUppercat !== 0;
-
-            $categories[$rowId] =
+            $categories[$row->id] =
               [
-                  'parent' => $rowHasParent ? $rowIdUppercat : 'NULL',
-                  'status' => $row['status'],
-                  'uppercats' => $rowUppercats,
+                  'parent' => $rowHasParent ? $row->idUppercat : 'NULL',
+                  'status' => $row->status,
+                  'uppercats' => $row->uppercats,
               ];
         }
 
@@ -1906,24 +1987,24 @@ final readonly class CategoryService
                 ];
             }
 
-            $insert['id_uppercat'] = $parent['id'];
-            $insert['global_rank'] = $parent['global_rank'] . '.' . $insert['rank'];
+            $insert['id_uppercat'] = $parent->id;
+            $insert['global_rank'] = $parent->globalRank . '.' . $insert['rank'];
 
             // at creation, must a category be visible or not ? Warning : if the
             // parent category is invisible, the category is automatically create
             // invisible. (invisible = locked)
-            if (! (bool) $parent['visible']) {
+            if (! $parent->visible) {
                 $insert['visible'] = false;
             }
 
             // at creation, must a category be public or private ? Warning : if the
             // parent category is private, the category is automatically create
             // private.
-            if ($parent['status'] === CategoryStatus::Private->value) {
+            if ($parent->status === CategoryStatus::Private->value) {
                 $insert['status'] = CategoryStatus::Private->value;
             }
 
-            $uppercatsPrefix = $parent['uppercats'] . ',';
+            $uppercatsPrefix = $parent->uppercats . ',';
         } else {
             $uppercatsPrefix = '';
         }
@@ -2043,11 +2124,14 @@ final readonly class CategoryService
     }
 
     /**
-     * @return list<array<string, mixed>>
+     * @return list<array{cat_id: int, uppercats: string, global_rank: ?string}>
      */
     public function getCategoriesAuthorizedViaGroupsForUser(int $userId): array
     {
-        return $this->repo->findCategoriesAuthorizedViaGroupsForUser($userId);
+        return array_map(
+            static fn (CategoryGroupAuthorizationRow $row): array => $row->toArray(),
+            $this->repo->findCategoriesAuthorizedViaGroupsForUser($userId)
+        );
     }
 
     /**
@@ -2056,7 +2140,10 @@ final readonly class CategoryService
      */
     public function getCategoriesByIds(array $ids): array
     {
-        return $this->repo->findCategoriesByIds($ids);
+        return array_map(
+            static fn (CategoryListingRow $row): array => $row->toArray(),
+            $this->repo->findCategoriesByIds($ids)
+        );
     }
 
     /**
@@ -2100,11 +2187,14 @@ final readonly class CategoryService
     }
 
     /**
-     * @return list<array<string, mixed>>
+     * @return list<array{id: int, name: string, permalink: ?string, dir: ?string, rank: ?int, status: string}>
      */
     public function getChildrenOfParent(?int $parentId): array
     {
-        return $this->repo->findChildrenOfParent($parentId);
+        return array_map(
+            static fn (CategoryChildRow $row): array => $row->toArray(),
+            $this->repo->findChildrenOfParent($parentId)
+        );
     }
 
     /**
@@ -2133,19 +2223,25 @@ final readonly class CategoryService
 
     /**
      * @param list<string> $categoryIds
-     * @return list<array<string, mixed>>
+     * @return list<array{id: int, name: string, id_uppercat: ?int}>
      */
     public function getIdsNamesUppercatsForIds(array $categoryIds): array
     {
-        return $this->repo->findIdsNamesUppercatsForIds($categoryIds);
+        return array_map(
+            static fn (CategoryIdNameUppercat $row): array => $row->toArray(),
+            $this->repo->findIdsNamesUppercatsForIds($categoryIds)
+        );
     }
 
     /**
-     * @return list<array<string, mixed>>
+     * @return list<array{id: int, name: string, rank: ?int, status: string, visible: bool, uppercats: string, lastmodified: string}>
      */
     public function getAllForAlbumTree(): array
     {
-        return $this->repo->findAllForAlbumTree();
+        return array_map(
+            static fn (CategoryAlbumTreeRow $row): array => $row->toArray(),
+            $this->repo->findAllForAlbumTree()
+        );
     }
 
     public function hasImages(int $categoryId): bool
@@ -2153,10 +2249,7 @@ final readonly class CategoryService
         return $this->repo->hasImages($categoryId);
     }
 
-    /**
-     * @return list<mixed>
-     */
-    public function getPhotoCountAndDateRange(int $categoryId): array
+    public function getPhotoCountAndDateRange(int $categoryId): PhotoCountDateRange
     {
         return $this->repo->findPhotoCountAndDateRange($categoryId);
     }
@@ -2190,11 +2283,14 @@ final readonly class CategoryService
     }
 
     /**
-     * @return list<array<string, mixed>>
+     * @return list<array{id: int, permalink: ?string, uppercats: string, global_rank: ?string}>
      */
     public function getActivePermalinksList(?string $orderByColumn): array
     {
-        return $this->repo->findActivePermalinksList($orderByColumn);
+        return array_map(
+            static fn (ActivePermalinkRow $row): array => $row->toArray(),
+            $this->repo->findActivePermalinksList($orderByColumn)
+        );
     }
 
     public function existsAndNotForbidden(int $catId, string $forbiddenCategoriesCsv): bool
@@ -2211,7 +2307,10 @@ final readonly class CategoryService
      */
     public function getNamesByIds(array $ids): array
     {
-        return $this->repo->findNamesByIds($ids);
+        return array_map(
+            static fn (CategoryIdNamePermalink $row): array => $row->toArray(),
+            $this->repo->findNamesByIds($ids)
+        );
     }
 
     public function existsById(int $id): bool
@@ -2238,12 +2337,12 @@ final readonly class CategoryService
      */
     public function getIdNamePermalinkById(int $id): ?array
     {
-        return $this->repo->findIdNamePermalinkById($id);
+        return $this->repo->findIdNamePermalinkById($id)?->toArray();
     }
 
     /**
      * @param  list<SqlCondition>  $conditions
-     * @return list<array{id: int, image_order: ?string}>
+     * @return list<CategoryIdImageOrder>
      */
     public function getIdsAndImageOrderWithConditions(array $conditions): array
     {
@@ -2260,7 +2359,12 @@ final readonly class CategoryService
         ?int $limit,
         bool $limitPlusOne
     ): PaginatedResult {
-        return $this->repo->findListForWs($criteria, $searchTerm, $searchLimit, $limit, $limitPlusOne);
+        $result = $this->repo->findListForWs($criteria, $searchTerm, $searchLimit, $limit, $limitPlusOne);
+
+        return new PaginatedResult(
+            array_map(static fn (CategoryListForWsRow $row): array => $row->toArray(), $result->rows),
+            $result->total
+        );
     }
 
     /**
@@ -2268,7 +2372,12 @@ final readonly class CategoryService
      */
     public function getAdminListForWs(CategoryAdminListCriteria $criteria, ?string $searchTerm, int $searchLimit): PaginatedResult
     {
-        return $this->repo->findAdminListForWs($criteria, $searchTerm, $searchLimit);
+        $result = $this->repo->findAdminListForWs($criteria, $searchTerm, $searchLimit);
+
+        return new PaginatedResult(
+            array_map(static fn (CategoryAdminListForWsRow $row): array => $row->toArray(), $result->rows),
+            $result->total
+        );
     }
 
     /**
@@ -2282,7 +2391,7 @@ final readonly class CategoryService
 
     /**
      * @param  list<int>  $ids
-     * @return list<array{id: int, id_uppercat: ?int, rank: ?int}>
+     * @return list<CategoryRankInfoRow>
      */
     public function getRankInfoByIds(array $ids): array
     {
@@ -2307,7 +2416,7 @@ final readonly class CategoryService
 
     /**
      * @param  list<int>  $ids
-     * @return list<array{id: int, name: string, dir: ?string, uppercats: string}>
+     * @return list<CategoryMoveDetailRow>
      */
     public function getMoveDetailsByIds(array $ids): array
     {
@@ -2365,11 +2474,14 @@ final readonly class CategoryService
     }
 
     /**
-     * @return list<array<string, mixed>>
+     * @return list<array{id: int, uppercats: string, global_rank: ?string, status: string, visible: bool}>
      */
     public function getSyncCandidatesForSite(int $siteId, ?int $catId, bool $recursive): array
     {
-        return $this->repo->findSyncCandidatesForSite($siteId, $catId, $recursive);
+        return array_map(
+            static fn (CategorySyncCandidateRow $row): array => $row->toArray(),
+            $this->repo->findSyncCandidatesForSite($siteId, $catId, $recursive)
+        );
     }
 
     /**
@@ -2381,10 +2493,13 @@ final readonly class CategoryService
     }
 
     /**
-     * @return list<array<string, mixed>>
+     * @return list<array{id_uppercat: ?int, next_rank: ?int}>
      */
     public function getNextRanksByParent(): array
     {
-        return $this->repo->findNextRanksByParent();
+        return array_map(
+            static fn (CategoryNextRankByParentRow $row): array => $row->toArray(),
+            $this->repo->findNextRanksByParent()
+        );
     }
 }

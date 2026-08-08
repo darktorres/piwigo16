@@ -249,7 +249,7 @@ enum PhotoSortField
      * {@see \Piwigo\Calendar\CalendarRenderer::render()}'s own
      * date-field-prepended fragment) is each call site's own decision.
      *
-     * @return list<array{property: string, dir: 'ASC'|'DESC'}>|null
+     * @return list<OrderByClause>|null
      */
     public static function resolveDqlOrderBy(string $orderBySql, string $imageAlias, ?string $imageCategoryAlias = null): ?array
     {
@@ -265,10 +265,7 @@ enum PhotoSortField
                 return null;
             }
 
-            $entries[] = [
-                'property' => $property,
-                'dir' => $entry['dir'],
-            ];
+            $entries[] = new OrderByClause($property, $entry['dir']);
         }
 
         return $entries;

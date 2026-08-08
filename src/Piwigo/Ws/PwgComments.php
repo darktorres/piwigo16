@@ -127,18 +127,15 @@ final class PwgComments
         if ($summary === null) {
             return new PwgError(500, 'Unable to compute comments summary');
         }
-        // count(*)/sum(...) results are typed string|null by the driver; they
-        // are always numeric here (count/sum of a non-empty aggregate), but
-        // fall back to 0 rather than assume it.
-        $total_comments = is_numeric($summary['all_comments']) ? (int) $summary['all_comments'] : 0;
+        $total_comments = $summary->allComments;
 
         switch ($params['status']) {
             case 'pending':
-                $total_comments = is_numeric($summary['pending']) ? (int) $summary['pending'] : 0;
+                $total_comments = $summary->pending;
                 break;
 
             case 'validated':
-                $total_comments = is_numeric($summary['validated']) ? (int) $summary['validated'] : 0;
+                $total_comments = $summary->validated;
                 break;
         }
 
@@ -213,12 +210,16 @@ final class PwgComments
         $nb_authors_in = $this->commentService->getAuthorCounts($criteria);
 
         return [
-            'summary' => $summary,
+            'summary' => [
+                'all_comments' => $summary->allComments,
+                'validated' => $summary->validated,
+                'pending' => $summary->pending,
+            ],
             'comments' => $list,
             'filters' => [
                 'nb_authors' => $nb_authors_in,
-                'started_at' => $dates['started_at'],
-                'ended_at' => $dates['ended_at'],
+                'started_at' => $dates->startedAt,
+                'ended_at' => $dates->endedAt,
             ],
             'paging' => [
                 'page' => $params['page'],

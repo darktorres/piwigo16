@@ -111,11 +111,7 @@ final class PermalinksSubController implements AdminSubControllerInterface
         $order_by_column = ($sort_by[0] === 'id' or $sort_by[0] === 'permalink') ? $sort_by[0] : null;
         $categories = [];
         foreach ($this->categoryService->getActivePermalinksList($order_by_column) as $row) {
-            // uppercats is NOT NULL in the schema; is_string() is a defensive
-            // narrowing of the driver's generic string|null column type, not a
-            // documented nullability.
-            $uppercats = is_string($row['uppercats']) ? $row['uppercats'] : '';
-            $row['name'] = $htmlRenderer->getCatDisplayNameCache($uppercats);
+            $row['name'] = $htmlRenderer->getCatDisplayNameCache($row['uppercats']);
             $categories[] = $row;
         }
 

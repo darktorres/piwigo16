@@ -13,6 +13,8 @@ use Piwigo\Db\SqlDialect;
 use Piwigo\Db\Tables;
 use Piwigo\Image\ImageEntity;
 use Piwigo\Image\ImageRepository;
+use Piwigo\Image\Projection\ImageCategoryLink;
+use Piwigo\Image\Projection\PathRepresentativeExt;
 
 /**
  * Piwigo\Image\ImageRepository -- direct Unit-suite coverage for the
@@ -138,11 +140,9 @@ test('findPathsForFileDeletion returns id as a real int and path as a real strin
     try {
         $result = imageRepositoryTestRepo()->findPathsForFileDeletion([$imageId]);
 
-        expect($result)->toBe([[
-            'id' => $imageId,
-            'path' => 'upload/2026/07/del-test.jpg',
-            'representative_ext' => null,
-        ]]);
+        expect($result)->toEqual([
+            new PathRepresentativeExt($imageId, 'upload/2026/07/del-test.jpg', null),
+        ]);
     } finally {
         imageRepositoryTestDeleteImage($imageId);
     }
@@ -175,9 +175,9 @@ test('findLoungeRows returns image_id/category_id as real ints, ordered by categ
 
         // ORDER BY category_id ASC, image_id ASC -- both rows share
         // category 1, so imageA (the lower id) sorts first.
-        expect($result)->toBe([
-            ['image_id' => $imageA, 'category_id' => 1],
-            ['image_id' => $imageB, 'category_id' => 1],
+        expect($result)->toEqual([
+            new ImageCategoryLink($imageA, 1),
+            new ImageCategoryLink($imageB, 1),
         ]);
     } finally {
         $conn->createQueryBuilder()->delete(Tables::lounge())->where('image_id IN (:ids)')
@@ -634,7 +634,7 @@ test('findAddMethodBreakdown reports real string/int columns for at least one re
 
     $api = null;
     foreach ($result as $row) {
-        if ($row['add_method'] === 'api') {
+        if ($row->addMethod === 'api') {
             $api = $row;
         }
     }
@@ -642,9 +642,9 @@ test('findAddMethodBreakdown reports real string/int columns for at least one re
     if ($api === null) {
         throw new RuntimeException('expected at least one real "api" add_method row');
     }
-    expect($api['nb_files'])->toBeInt();
-    expect($api['nb_files'])->toBeGreaterThanOrEqual(5);
-    expect($api['last_added_on'])->toBeString();
+    expect($api->nbFiles)->toBeInt();
+    expect($api->nbFiles)->toBeGreaterThanOrEqual(5);
+    expect($api->lastAddedOn)->toBeString();
 });
 
 test('deleteNonStorageCategoryLinks clears the identity map after a raw write outside the ORM', function (): void {

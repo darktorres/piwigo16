@@ -19,8 +19,10 @@ use Piwigo\Image\ImageCategoryEntity;
 use Piwigo\Image\ImageFilterCriteria;
 use Piwigo\Permission\PermissionCriteria;
 use Piwigo\Permission\SqlCondition;
+use Piwigo\Tag\Projection\ImageTagLink;
 use Piwigo\Tag\Projection\Tag;
 use Piwigo\Tag\Projection\TagBrief;
+use Piwigo\Tag\Projection\TagIdName;
 
 /**
  * Persistence layer for the tag domain, including Tag+Image+Category
@@ -211,6 +213,24 @@ final class TagRepository extends EntityRepository
      * 'counter' => int]` under default `getResult()` hydration -- live
      * DQL-probed against the real fixture, not assumed.
      *
+     * Stays a raw array shape, deliberately -- re-verified fresh for the
+     * Phase 6 DTO-promotion sweep (not just deferring to the stale
+     * precedent {@see \Piwigo\Group\Projection\Group}'s own docblock once
+     * cited, which turned out to be wrong once actually checked; see
+     * {@see \Piwigo\Group\Projection\GroupListing} for that correction).
+     * `TagService::getCommonTags()` (the one real caller) mutates
+     * `$row['name']` in place after a `RenderTagName` event dispatch, then
+     * `array_merge()`s the result with `TagService::getAvailableTags()`'s
+     * own separately-cached, differently-sourced rows of this exact same
+     * shape (`SearchFilterRenderer::render()`'s own "force missing tags
+     * into the list" fallback) -- two independently-built, mutated,
+     * merged row streams feeding one combined list across 6 real call
+     * sites (WS responses and Smarty template assignments both). A safe
+     * conversion needs `getAvailableTags()`'s own row-building/caching
+     * converted in the same pass, which is a Tag-domain-wide, not
+     * single-method, change -- out of scope for this repository-layer
+     * promotion pass.
+     *
      * @param list<int> $items
      * @param list<int> $excludedTagIds
      * @return list<array{id: int, name: string, url_name: string, lastmodified: string, counter: int}>
@@ -399,7 +419,7 @@ final class TagRepository extends EntityRepository
 
     /**
      * @param array<int, int|string> $imageIds
-     * @return list<array{image_id: int, tag_id: TagId}>
+     * @return list<ImageTagLink>
      */
     public function findTagIdsByImageIds(array $imageIds): array
     {
@@ -417,10 +437,7 @@ final class TagRepository extends EntityRepository
             ->getResult();
 
         return array_map(
-            static fn (ImageTagEntity $it): array => [
-                'image_id' => $it->imageId->value,
-                'tag_id' => $it->tagId,
-            ],
+            static fn (ImageTagEntity $it): ImageTagLink => new ImageTagLink($it->imageId->value, $it->tagId),
             $entities,
         );
     }
@@ -722,7 +739,7 @@ final class TagRepository extends EntityRepository
      * `is_numeric()` check would otherwise silently default a `TagId`
      * object to 0 rather than using its real value.
      *
-     * @return list<array{id: int, name: string}>
+     * @return list<TagIdName>
      */
     public function findTagsForImage(ImageId $imageId): array
     {
@@ -765,7 +782,7 @@ final class TagRepository extends EntityRepository
      * throughout, so this reads t.id explicitly instead.
      *
      * @param  list<int>  $ids
-     * @return list<array{id: int, name: string}>
+     * @return list<TagIdName>
      */
     public function findTagsByIds(array $ids): array
     {
@@ -791,10 +808,10 @@ final class TagRepository extends EntityRepository
                 continue;
             }
 
-            $tags[] = [
-                'id' => $id->value,
-                'name' => is_string($row['name'] ?? null) ? $row['name'] : '',
-            ];
+            $tags[] = new TagIdName(
+                id: $id->value,
+                name: is_string($row['name'] ?? null) ? $row['name'] : '',
+            );
         }
 
         return $tags;
@@ -802,14 +819,13 @@ final class TagRepository extends EntityRepository
 
     /**
      * @param  array<string, mixed>  $row
-     * @return array{id: int, name: string}
      */
-    private static function toIdNameRow(array $row): array
+    private static function toIdNameRow(array $row): TagIdName
     {
-        return [
-            'id' => is_numeric($row['id']) ? (int) $row['id'] : 0,
-            'name' => is_string($row['name']) ? $row['name'] : '',
-        ];
+        return new TagIdName(
+            id: is_numeric($row['id']) ? (int) $row['id'] : 0,
+            name: is_string($row['name']) ? $row['name'] : '',
+        );
     }
 
     /**

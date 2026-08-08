@@ -31,6 +31,7 @@ use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Session\SessionService;
 use Piwigo\Tag\Projection\Tag;
 use Piwigo\Tag\Projection\TagBrief;
+use Piwigo\Tag\Projection\TagIdName;
 use Piwigo\Users\CurrentUser;
 
 /**
@@ -643,7 +644,7 @@ final readonly class TagService
 
         $tagsOf = array_fill_keys($imageIds, []);
         foreach ($this->repo->findTagIdsByImageIds($imageIds) as $imageTag) {
-            $tagsOf[$imageTag['image_id']][] = $imageTag['tag_id'];
+            $tagsOf[$imageTag->imageId][] = $imageTag->tagId;
         }
 
         return $tagsOf;
@@ -720,7 +721,7 @@ final readonly class TagService
      * method per real query shape below (ids are surrounded by ~~, for
      * getTagIds()).
      *
-     * @param  list<array{id: int, name: string}>  $rows
+     * @param  list<TagIdName>  $rows
      * @param  bool  $onlyUserLanguage  if true, only local name is returned for
      *    multilingual tags (if ExtendedDescription plugin is active)
      * @return array<int, array{name: string, id: string}>
@@ -731,10 +732,10 @@ final readonly class TagService
         $altlist = [];
 
         foreach ($rows as $row) {
-            $rawName = $row['name'];
-            $listNameEvent = $this->eventDispatcher->dispatchChange(new RenderTagName($rawName, $row));
+            $rawName = $row->name;
+            $listNameEvent = $this->eventDispatcher->dispatchChange(new RenderTagName($rawName, $row->toArray()));
             $name = $listNameEvent->tagName;
-            $rowId = (string) $row['id'];
+            $rowId = (string) $row->id;
 
             $taglist[] = [
                 'name' => $name,

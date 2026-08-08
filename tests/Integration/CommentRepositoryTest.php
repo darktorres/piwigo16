@@ -449,9 +449,9 @@ final class CommentRepositoryTest extends IntegrationTestCase
         $summary = $this->repo->findSummaryCounts(new CommentApiCriteria(search: $marker));
 
         self::assertNotNull($summary);
-        self::assertSame(2, is_numeric($summary['all_comments']) ? (int) $summary['all_comments'] : null);
-        self::assertSame(1, is_numeric($summary['validated']) ? (int) $summary['validated'] : null);
-        self::assertSame(1, is_numeric($summary['pending']) ? (int) $summary['pending'] : null);
+        self::assertSame(2, $summary->allComments);
+        self::assertSame(1, $summary->validated);
+        self::assertSame(1, $summary->pending);
     }
 
     public function test_find_summary_counts_ignores_status_and_always_reports_the_full_split(): void
@@ -468,9 +468,9 @@ final class CommentRepositoryTest extends IntegrationTestCase
         $summary = $this->repo->findSummaryCounts(new CommentApiCriteria(search: $marker, status: 'validated'));
 
         self::assertNotNull($summary);
-        self::assertSame(2, is_numeric($summary['all_comments']) ? (int) $summary['all_comments'] : null);
-        self::assertSame(1, is_numeric($summary['validated']) ? (int) $summary['validated'] : null);
-        self::assertSame(1, is_numeric($summary['pending']) ? (int) $summary['pending'] : null);
+        self::assertSame(2, $summary->allComments);
+        self::assertSame(1, $summary->validated);
+        self::assertSame(1, $summary->pending);
     }
 
     public function test_find_list_for_admin_ws_returns_joined_rows_with_username_and_status(): void
@@ -506,8 +506,8 @@ final class CommentRepositoryTest extends IntegrationTestCase
         $range = $this->repo->findDateRange(new CommentApiCriteria(search: $marker));
 
         self::assertNotNull($range);
-        self::assertNotNull($range['started_at']);
-        self::assertSame($range['started_at'], $range['ended_at']);
+        self::assertNotNull($range->startedAt);
+        self::assertSame($range->startedAt, $range->endedAt);
     }
 
     public function test_find_author_counts_groups_by_author_id(): void

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Unit\Html;
 
+use Piwigo\Category\Projection\CategoryIdNamePermalink;
 use Piwigo\Core\Paths;
 use LogicException;
 use Piwigo\Url\RootPathOverride;
@@ -981,8 +982,8 @@ test('getCatDisplayNameCache joins multiple names with a <span>-wrapped separato
     // sibling of getCatDisplayName()'s own line 118 finding above, same
     // "only visible with 2+ categories" gap.
     htmlServiceTestProcessCache()->set('cat_names', [
-        '3' => ['id' => 3, 'name' => 'Nature', 'permalink' => null],
-        '7' => ['id' => 7, 'name' => 'Portraits', 'permalink' => null],
+        '3' => new CategoryIdNamePermalink(3, 'Nature', null),
+        '7' => new CategoryIdNamePermalink(7, 'Portraits', null),
     ]);
     $service = HtmlServiceTestFactory::build();
 
@@ -1008,7 +1009,7 @@ test('getCatDisplayNameCache defaults a non-string category name to empty string
 
 test('getCatDisplayNameCache injects an auth param and wraps the whole chain in a single link with a class when singleLink is set', function (): void {
     htmlServiceTestProcessCache()->set('cat_names', [
-        '3' => ['id' => 3, 'name' => 'Nature', 'permalink' => null],
+        '3' => new CategoryIdNamePermalink(3, 'Nature', null),
     ]);
     $service = HtmlServiceTestFactory::build();
 
@@ -1027,8 +1028,8 @@ test('getCatDisplayNameCache\'s singleLink href uses the LAST uppercats id, pref
     // the opening `<a href="..."` fragment).
     htmlServiceTestRootPathOverride()->push('/gallery/');
     htmlServiceTestProcessCache()->set('cat_names', [
-        '3' => ['id' => 3, 'name' => 'Nature', 'permalink' => null],
-        '7' => ['id' => 7, 'name' => 'Portraits', 'permalink' => null],
+        '3' => new CategoryIdNamePermalink(3, 'Nature', null),
+        '7' => new CategoryIdNamePermalink(7, 'Portraits', null),
     ]);
     $service = HtmlServiceTestFactory::build();
 
@@ -1043,7 +1044,7 @@ test('getCatDisplayNameCache\'s singleLink href uses the LAST uppercats id, pref
 
 test('getCatDisplayNameCache throws when a render_category_name handler returns something other than a RenderCategoryName instance', function (): void {
     htmlServiceTestProcessCache()->set('cat_names', [
-        '5' => ['id' => 5, 'name' => 'Landscape', 'permalink' => null],
+        '5' => new CategoryIdNamePermalink(5, 'Landscape', null),
     ]);
     // See RenderElementName's own sibling test above for why this uses
     // addEventHandler(), not addTypedHandler().

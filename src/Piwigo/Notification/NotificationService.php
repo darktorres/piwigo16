@@ -11,6 +11,7 @@ use Piwigo\Core\Lang;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Image\DerivativeImage;
 use Piwigo\Lang\Translator;
+use Piwigo\Notification\Projection\RecentCategoryForDate;
 use Piwigo\Permission\PermissionService;
 use Piwigo\Permission\SqlCondition;
 use Piwigo\Users\CurrentUser;
@@ -201,18 +202,22 @@ final readonly class NotificationService
 
         $result = [];
         foreach ($dates as $date) {
-            $dateAvailable = $date['date_available'];
-            $dateAvailable = is_string($dateAvailable) ? $dateAvailable : '';
+            $dateAvailable = $date->dateAvailable ?? '';
+
+            $row = $date->toArray();
 
             if ($maxElements > 0) {
-                $date['elements'] = $this->repo->findRecentElementsForDate($restrictCondition, $dateAvailable, $maxElements);
+                $row['elements'] = $this->repo->findRecentElementsForDate($restrictCondition, $dateAvailable, $maxElements);
             }
 
             if ($maxCats > 0) {
-                $date['categories'] = $this->repo->findRecentCategoriesForDate($restrictCondition, $dateAvailable, $maxCats);
+                $row['categories'] = array_map(
+                    static fn (RecentCategoryForDate $category): array => $category->toArray(),
+                    $this->repo->findRecentCategoriesForDate($restrictCondition, $dateAvailable, $maxCats)
+                );
             }
 
-            $result[] = $date;
+            $result[] = $row;
         }
 
         $cacheItem->set($result);

@@ -9,6 +9,7 @@ use Override;
 use Piwigo\Auth\AccessLevelChecker;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Category\CategoryService;
+use Piwigo\Category\Projection\CategoryIdNamePermalink;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\ErrorCollector;
 use Piwigo\Core\FilterState;
@@ -287,7 +288,7 @@ final class HtmlService implements HtmlRenderingInterface
         $is_first = true;
         foreach (explode(',', $uppercats) as $category_id) {
             $cat = $cat_names[$category_id] ?? null;
-            $cat = is_array($cat) ? $cat : [];
+            $cat = $cat instanceof CategoryIdNamePermalink ? $cat->toArray() : [];
 
             $nameEvent = $this->eventDispatcher->dispatchChange(new RenderCategoryName(is_string($cat['name'] ?? null) ? $cat['name'] : '', 'get_cat_display_name_cache'));
             $cat['name'] = $nameEvent->categoryName;

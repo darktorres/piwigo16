@@ -203,7 +203,6 @@ final class StatsPageRenderer
             (int) $date_last_year->format('Y'),
             (int) $date_last_year->format('n')
         ) as $value) {
-            /** @var array{year: int|string, month: int|string|null, day: int|string|null, hour: int|string|null, nb_pages: int|string|null} $value */
             $date = self::getDateObject($value);
             @$months[$date->format('Y/m/1')][] = $value;
         }

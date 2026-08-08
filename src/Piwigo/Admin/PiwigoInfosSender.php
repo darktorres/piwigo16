@@ -157,21 +157,21 @@ final class PiwigoInfosSender implements TelemetrySenderInterface
                 // slow SQL query, but necessary if you have files added by sync
                 $filesAddedBy = [];
                 foreach ($imageService->getAddMethodBreakdown() as $addMethodRow) {
-                    $filesAddedBy[$addMethodRow['add_method']] = $addMethodRow;
+                    $filesAddedBy[$addMethodRow->addMethod] = $addMethodRow;
                 }
 
                 // storage_category_id IS NOT NULL matched at least one row
                 // above, so the 'sync' group is always present here.
-                $piwigoInfos['general_stats']['nb_photos_synced'] = $filesAddedBy['sync']['nb_files'];
-                $piwigoInfos['general_stats']['last_photo_synced'] = $filesAddedBy['sync']['last_added_on'];
+                $piwigoInfos['general_stats']['nb_photos_synced'] = $filesAddedBy['sync']->nbFiles;
+                $piwigoInfos['general_stats']['last_photo_synced'] = $filesAddedBy['sync']->lastAddedOn;
 
                 $methodOfLastPhoto = 'sync';
-                $apiLastAddedStr = $filesAddedBy['api']['last_added_on'] ?? '';
-                $syncLastAddedStr = $filesAddedBy['sync']['last_added_on'] ?? '';
+                $apiLastAddedStr = $filesAddedBy['api']->lastAddedOn ?? '';
+                $syncLastAddedStr = $filesAddedBy['sync']->lastAddedOn ?? '';
                 if (isset($filesAddedBy['api']) and strtotime($apiLastAddedStr) > strtotime($syncLastAddedStr)) {
                     $methodOfLastPhoto = 'api';
                 }
-                $piwigoInfos['general_stats']['last_photo'] = $filesAddedBy[$methodOfLastPhoto]['last_added_on'];
+                $piwigoInfos['general_stats']['last_photo'] = $filesAddedBy[$methodOfLastPhoto]->lastAddedOn;
             } else {
                 // much faster SQL query, but valid only if you do not use sync to add photos
                 $mostRecentDateAvailable = $imageService->getMostRecentDateAvailable();
@@ -182,7 +182,7 @@ final class PiwigoInfosSender implements TelemetrySenderInterface
 
             $piwigoInfos['file_extensions'] = [];
             foreach ($imageService->getExtensionBreakdown() as $extRow) {
-                $piwigoInfos['file_extensions'][$extRow['ext']] = $extRow;
+                $piwigoInfos['file_extensions'][$extRow->ext] = $extRow->toArray();
             }
         }
 
@@ -382,8 +382,8 @@ final class PiwigoInfosSender implements TelemetrySenderInterface
         // separate local accumulator for the same reason as $themesUsage above.
         $nbActivities = 0;
         foreach ($this->activityService->getActionCounts(null) as $activity) {
-            $nbActivities += $activity['counter'];
-            $piwigoActivitiesFlat[$activity['object']][$activity['action']] = $activity['counter'];
+            $nbActivities += $activity->counter;
+            $piwigoActivitiesFlat[$activity->object][$activity->action] = $activity->counter;
         }
 
         $labelForSystemObjectId = [
@@ -395,28 +395,32 @@ final class PiwigoInfosSender implements TelemetrySenderInterface
         /** @var array<string, array<string, array<string, int>>> $piwigoActivitiesSystem */
         $piwigoActivitiesSystem = [];
         foreach ($this->activityService->getSystemActionCountsByObjectId() as $activity) {
-            $label = $labelForSystemObjectId[$activity['object_id']] ?? 'undefined';
-            $piwigoActivitiesSystem[$activity['object']][$label][$activity['action']] = $activity['counter'];
+            $label = $labelForSystemObjectId[$activity->objectId] ?? 'undefined';
+            $piwigoActivitiesSystem[$activity->object][$label][$activity->action] = $activity->counter;
         }
         $piwigoInfos['activities'] = $piwigoActivitiesFlat + $piwigoActivitiesSystem;
         $piwigoInfos['general_stats']['nb_activities'] = $nbActivities;
 
         $updates = $this->activityService->getCoreUpdateHistory();
         foreach ($updates as $update) {
-            $updateDetails = $update['details'];
-            if (! is_string($updateDetails)) {
+            $updateDetails = $update->details;
+            if ($updateDetails === null) {
                 continue;
             }
 
-            $details = ArrayHelper::safeUnserialize($updateDetails);
-            if (! is_array($details)) {
-                continue;
-            }
+            // `details` round-trips through ActivityRepository::
+            // findCoreUpdateHistory()'s own json_encode() re-serialization
+            // (the entity's real column Type is Doctrine's `json`) --
+            // decoded here with safeJsonDecode(), not
+            // safeUnserialize() (a stale PHP unserialize() call that
+            // predates the column becoming JSON-typed and would silently
+            // fail against every real row).
+            $details = ArrayHelper::safeJsonDecode($updateDetails);
 
             if (isset($details['from_version']) and isset($details['to_version'])) {
                 @$piwigoInfos['updates'][] = [
-                    'action' => $update['action'],
-                    'occured_on' => $update['occured_on'],
+                    'action' => $update->action,
+                    'occured_on' => $update->occuredOn,
                     'from_version' => $details['from_version'],
                     'to_version' => $details['to_version'],
                 ];
@@ -450,7 +454,7 @@ final class PiwigoInfosSender implements TelemetrySenderInterface
         ];
 
         foreach ($activities as $activity) {
-            $activity_user_agent = $activity['user_agent'] ?? '';
+            $activity_user_agent = $activity->userAgent ?? '';
             foreach ($appsPattern as $appName => $pattern) {
                 if ((bool) preg_match($pattern, $activity_user_agent)) {
                     // $apps is written with a dynamic ($appName) key, so PHPStan
@@ -459,20 +463,20 @@ final class PiwigoInfosSender implements TelemetrySenderInterface
                     // bare-casting.
                     $currentCounter = $apps[$appName]['counter'] ?? 0;
                     $currentCounter = is_numeric($currentCounter) ? (int) $currentCounter : 0;
-                    $apps[$appName]['counter'] = $currentCounter + $activity['counter'];
+                    $apps[$appName]['counter'] = $currentCounter + $activity->counter;
 
-                    $activityFirstEncounter = $activity['first_encounter'] ?? '';
+                    $activityFirstEncounter = $activity->firstEncounter ?? '';
                     $knownFirstEncounter = $apps[$appName]['first_encounter'] ?? null;
                     $knownFirstEncounter = is_string($knownFirstEncounter) ? $knownFirstEncounter : null;
                     if ($knownFirstEncounter === null or strtotime($knownFirstEncounter) > strtotime($activityFirstEncounter)) {
-                        $apps[$appName]['first_encounter'] = $activity['first_encounter'];
+                        $apps[$appName]['first_encounter'] = $activity->firstEncounter;
                     }
 
-                    $activityLastEncounter = $activity['last_encounter'] ?? '';
+                    $activityLastEncounter = $activity->lastEncounter ?? '';
                     $knownLastEncounter = $apps[$appName]['last_encounter'] ?? null;
                     $knownLastEncounter = is_string($knownLastEncounter) ? $knownLastEncounter : null;
                     if ($knownLastEncounter === null or strtotime($knownLastEncounter) < strtotime($activityLastEncounter)) {
-                        $apps[$appName]['last_encounter'] = $activity['last_encounter'];
+                        $apps[$appName]['last_encounter'] = $activity->lastEncounter;
                     }
                 }
             }

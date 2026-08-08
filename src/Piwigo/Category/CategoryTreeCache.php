@@ -69,7 +69,7 @@ final readonly class CategoryTreeCache
                 // transaction), skip rather than emit a row with no name.
                 continue;
             }
-            $merged[$catId] = array_merge($row, $names[$catId], [
+            $merged[$catId] = array_merge($row, $names[$catId]->toArray(), [
                 'id' => $catId,
             ]);
         }

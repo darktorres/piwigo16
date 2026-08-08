@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Piwigo\Db\DbCredentials;
+use Piwigo\Image\OrderByClause;
 use Piwigo\Image\PhotoSortField;
 
 /**
@@ -160,10 +161,10 @@ test('dqlOrderProperty resolves Rank against the image_category alias when given
 });
 
 test('resolveDqlOrderBy parses and maps a multi-field fragment in one step', function (): void {
-    expect(PhotoSortField::resolveDqlOrderBy('ORDER BY date_available DESC, file ASC, id ASC', 'i'))->toBe([
-        ['property' => 'i.dateAvailable', 'dir' => 'DESC'],
-        ['property' => 'i.file', 'dir' => 'ASC'],
-        ['property' => 'i.id', 'dir' => 'ASC'],
+    expect(PhotoSortField::resolveDqlOrderBy('ORDER BY date_available DESC, file ASC, id ASC', 'i'))->toEqual([
+        new OrderByClause('i.dateAvailable', 'DESC'),
+        new OrderByClause('i.file', 'ASC'),
+        new OrderByClause('i.id', 'ASC'),
     ]);
 });
 
@@ -177,7 +178,7 @@ test('resolveDqlOrderBy returns null when an entry has no property path in this 
 });
 
 test('resolveDqlOrderBy resolves Rank when an image_category alias is supplied', function (): void {
-    expect(PhotoSortField::resolveDqlOrderBy('ORDER BY `rank` ASC', 'i', 'ic'))->toBe([
-        ['property' => 'ic.rank', 'dir' => 'ASC'],
+    expect(PhotoSortField::resolveDqlOrderBy('ORDER BY `rank` ASC', 'i', 'ic'))->toEqual([
+        new OrderByClause('ic.rank', 'ASC'),
     ]);
 });

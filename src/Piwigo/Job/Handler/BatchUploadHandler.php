@@ -65,7 +65,7 @@ final class BatchUploadHandler
                 $job->originalFilename,
                 $job->categories,
                 $job->level,
-                $job->imageId,
+                $job->imageId?->value,
                 $job->originalMd5sum,
             );
     }

@@ -2,10 +2,11 @@
 
 declare(strict_types=1);
 
+use Piwigo\Common\ValueObject\ImageId;
 use Piwigo\Job\BatchUploadJob;
 
 /**
- * @return array{sourceFilepath: string, originalFilename: ?string, categories: ?list<int>, level: ?int, imageId: ?int, originalMd5sum: ?string}
+ * @return array{sourceFilepath: string, originalFilename: ?string, categories: ?list<int>, level: ?int, imageId: ?ImageId, originalMd5sum: ?string}
  */
 function baseBatchUploadJobArgs(): array
 {
@@ -14,7 +15,7 @@ function baseBatchUploadJobArgs(): array
         'originalFilename' => 'family-picnic.jpg',
         'categories' => [12, 45, 7],
         'level' => 4,
-        'imageId' => 231,
+        'imageId' => ImageId::from(231),
         'originalMd5sum' => '9e107d9d372bb6826bd81d3542a419d6',
     ];
 }
@@ -26,7 +27,7 @@ test('constructs with distinct values for every property', function (): void {
         ->and($job->originalFilename)->toBe('family-picnic.jpg')
         ->and($job->categories)->toBe([12, 45, 7])
         ->and($job->level)->toBe(4)
-        ->and($job->imageId)->toBe(231)
+        ->and($job->imageId)->toEqual(ImageId::from(231))
         ->and($job->originalMd5sum)->toBe('9e107d9d372bb6826bd81d3542a419d6');
 });
 

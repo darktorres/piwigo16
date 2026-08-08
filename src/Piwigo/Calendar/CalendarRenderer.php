@@ -13,6 +13,7 @@ namespace Piwigo\Calendar;
 
 use Piwigo\Auth\AccessLevelChecker;
 use Piwigo\Cache\CachePools;
+use Piwigo\Calendar\Projection\CalendarChronologyPageContext;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Category\CategoryService;
 use Piwigo\Common\Enum\Section;
@@ -222,7 +223,6 @@ final readonly class CalendarRenderer
             }
 
             $comment = '';
-            $template->assign('FILE_CHRONOLOGY_VIEW', 'month_calendar.tpl');
 
             foreach ($styles as $style => $style_data) {
                 foreach ($views as $view) {
@@ -267,12 +267,10 @@ final readonly class CalendarRenderer
             $calendar_title = '<a href="' . $url . '">'
                 . $fields[$chronologyField]['label'] . '</a>';
             $calendar_title .= $calendar->get_display_name();
-            $template->assign(
-                'chronology',
-                [
-                    'TITLE' => $calendar_title,
-                ]
-            );
+            $template->assignContext(new CalendarChronologyPageContext(
+                fileChronologyView: 'month_calendar.tpl',
+                chronologyTitle: $calendar_title,
+            ));
         } // end category calling
 
         if ($must_show_list) {

@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin\BatchManager;
 
+use Piwigo\Admin\BatchManager\Projection\DimensionFilter;
+use Piwigo\Admin\BatchManager\Projection\DuplicateFieldFlags;
+use Piwigo\Admin\BatchManager\Projection\FilesizeFilter;
 use Piwigo\Caddie\CaddieRepository;
 use Piwigo\Category\CategoryService;
 use Piwigo\Common\ValueObject\CategoryId;
@@ -29,11 +32,15 @@ use Piwigo\Users\UserService;
  * getImageIdsForTags(), get_quick_search_results_no_cache()) -- those stay
  * called directly from the admin page glue.
  *
- * `array<string, mixed> $bulkFilter`/`$dimension`/`$filesize` throughout
- * this class are `$_SESSION['bulk_manager_filter']` (or a sub-array of
- * it), itself built from raw `$_GET`/`$_POST` upstream in
- * BatchManagerSubController. Every real read below narrows defensively
- * (`isset()` + `is_numeric()`).
+ * P17-23 Phase 8: the 3 genuinely fixed-shape filter dimensions this class
+ * reads (duplicates flags, dimension bounds, filesize bounds) are now
+ * {@see DuplicateFieldFlags}/{@see DimensionFilter}/{@see FilesizeFilter}
+ * value objects, built by the one real caller
+ * (`BatchManagerSubController::computeCurrentSet()`) from the raw,
+ * still-untyped `$_SESSION['bulk_manager_filter']` session bag -- that bag
+ * itself stays a raw array (it's genuinely plugin-extensible, via
+ * BatchManagerRegisterFilters/BatchManagerUrlFilter), this class just no
+ * longer needs to see more of it than these 3 fixed shapes.
  */
 final readonly class FilterResolver
 {
@@ -50,10 +57,14 @@ final readonly class FilterResolver
      * by an existing free function or a plugin hook) -- the caller decides
      * what null means for its own prefilter value.
      *
-     * @param array<string, mixed> $bulkFilter
+     * $isOnlyFilterActive replaces the old `count($bulkFilter) === 1`
+     * check -- "all_photos" only runs when the prefilter is the sole
+     * active session filter key, a fact only the caller (which still holds
+     * the raw session bag) can determine.
+     *
      * @return list<int>|null
      */
-    public function resolvePrefilter(string $prefilter, array $bulkFilter, UserId $userId, string $orderBy): ?array
+    public function resolvePrefilter(string $prefilter, DuplicateFieldFlags $duplicateFlags, bool $isOnlyFilterActive, UserId $userId, string $orderBy): ?array
     {
         return match ($prefilter) {
             'caddie' => $this->caddiePhotoIds($userId),
@@ -61,8 +72,8 @@ final readonly class FilterResolver
             'last_import' => $this->lastImportPhotoIds(),
             'no_virtual_album' => $this->noVirtualAlbumPhotoIds(),
             'no_tag' => $this->noTagPhotoIds(),
-            'duplicates' => $this->duplicatePhotoIds($this->duplicateFieldsFromFilter($bulkFilter)),
-            'all_photos' => count($bulkFilter) === 1 ? $this->allPhotoIds($orderBy) : null,
+            'duplicates' => $this->duplicatePhotoIds($this->duplicateFieldsFromFilter($duplicateFlags)),
+            'all_photos' => $isOnlyFilterActive ? $this->allPhotoIds($orderBy) : null,
             default => null,
         };
     }
@@ -147,22 +158,21 @@ final readonly class FilterResolver
      * ordering), so exposing this avoids computing it twice from two
      * different places.
      *
-     * @param array<string, mixed> $bulkFilter
      * @return list<ImageDuplicateField>
      */
-    public function duplicateFieldsFromFilter(array $bulkFilter): array
+    public function duplicateFieldsFromFilter(DuplicateFieldFlags $flags): array
     {
         $fields = [];
-        if (isset($bulkFilter['duplicates_filename'])) {
+        if ($flags->filename) {
             $fields[] = ImageDuplicateField::File;
         }
-        if (isset($bulkFilter['duplicates_checksum'])) {
+        if ($flags->checksum) {
             $fields[] = ImageDuplicateField::Md5sum;
         }
-        if (isset($bulkFilter['duplicates_date'])) {
+        if ($flags->date) {
             $fields[] = ImageDuplicateField::DateCreation;
         }
-        if (isset($bulkFilter['duplicates_dimensions'])) {
+        if ($flags->dimensions) {
             $fields[] = ImageDuplicateField::Width;
             $fields[] = ImageDuplicateField::Height;
         }
@@ -221,29 +231,32 @@ final readonly class FilterResolver
      * here instead (skip this filter dimension entirely) avoids ever
      * building that malformed query.
      *
-     * @param array<string, mixed> $dimension
      * @return list<int>|null
      */
-    public function dimensionPhotoIds(array $dimension, string $orderBy): ?array
+    public function dimensionPhotoIds(DimensionFilter $dimension, string $orderBy): ?array
     {
+        if ($dimension->isEmpty()) {
+            return null;
+        }
+
         $where = [];
         $params = [];
 
-        if (isset($dimension['min_width']) && is_numeric($dimension['min_width'])) {
+        if ($dimension->minWidth !== null) {
             $where[] = 'width >= :min_width';
-            $params['min_width'] = (int) $dimension['min_width'];
+            $params['min_width'] = $dimension->minWidth;
         }
-        if (isset($dimension['max_width']) && is_numeric($dimension['max_width'])) {
+        if ($dimension->maxWidth !== null) {
             $where[] = 'width <= :max_width';
-            $params['max_width'] = (int) $dimension['max_width'];
+            $params['max_width'] = $dimension->maxWidth;
         }
-        if (isset($dimension['min_height']) && is_numeric($dimension['min_height'])) {
+        if ($dimension->minHeight !== null) {
             $where[] = 'height >= :min_height';
-            $params['min_height'] = (int) $dimension['min_height'];
+            $params['min_height'] = $dimension->minHeight;
         }
-        if (isset($dimension['max_height']) && is_numeric($dimension['max_height'])) {
+        if ($dimension->maxHeight !== null) {
             $where[] = 'height <= :max_height';
-            $params['max_height'] = (int) $dimension['max_height'];
+            $params['max_height'] = $dimension->maxHeight;
         }
         // pgsql support pass: real bug found live -- width/height are
         // both plain integer columns. MySQL's `/` always computes in
@@ -262,33 +275,32 @@ final readonly class FilterResolver
         // zero divisor, but Postgres raises a real "division by zero"
         // error instead, confirmed live via SearchService's own identical
         // ratio-bucket clause.
-        if (isset($dimension['min_ratio']) && is_numeric($dimension['min_ratio'])) {
+        if ($dimension->minRatio !== null) {
             $where[] = 'width * 1.0 / NULLIF(height, 0) >= :min_ratio';
-            $params['min_ratio'] = (float) $dimension['min_ratio'];
+            $params['min_ratio'] = $dimension->minRatio;
         }
-        if (isset($dimension['max_ratio']) && is_numeric($dimension['max_ratio'])) {
+        if ($dimension->maxRatio !== null) {
             // max_ratio is a floor value, so must be a bit increased.
             $where[] = 'width * 1.0 / NULLIF(height, 0) < :max_ratio';
-            $params['max_ratio'] = (float) $dimension['max_ratio'] + 0.01;
-        }
-
-        if ($where === []) {
-            return null;
+            $params['max_ratio'] = $dimension->maxRatio + 0.01;
         }
 
         return $this->imageService->getIdsWithConditions($where, $params, $orderBy);
     }
 
     /**
-     * @param array<string, mixed> $filesize
      * @return list<int>|null
      */
-    public function filesizePhotoIds(array $filesize, string $orderBy): ?array
+    public function filesizePhotoIds(FilesizeFilter $filesize, string $orderBy): ?array
     {
+        if ($filesize->isEmpty()) {
+            return null;
+        }
+
         $where = [];
         $params = [];
 
-        if (isset($filesize['min']) && is_numeric($filesize['min'])) {
+        if ($filesize->min !== null) {
             // to counter the effect of converting kB to mB and rounding, go
             // slightly lower for the minimum value.
             //
@@ -305,18 +317,14 @@ final readonly class FilterResolver
             // this changes no real match outcome for a whole-number
             // filesize value.
             $where[] = 'filesize >= :min_filesize';
-            $params['min_filesize'] = (int) floor(((float) $filesize['min'] - 0.1) * 1024.0);
+            $params['min_filesize'] = (int) floor(($filesize->min - 0.1) * 1024.0);
         }
-        if (isset($filesize['max']) && is_numeric($filesize['max'])) {
+        if ($filesize->max !== null) {
             // to counter the effect of converting kB to mB and rounding, go
             // slightly higher for the maximum value. Same real pgsql bug
             // as min_filesize above -- ceil() only ever widens the margin.
             $where[] = 'filesize <= :max_filesize';
-            $params['max_filesize'] = (int) ceil(((float) $filesize['max'] + 0.1) * 1024.0);
-        }
-
-        if ($where === []) {
-            return null;
+            $params['max_filesize'] = (int) ceil(($filesize->max + 0.1) * 1024.0);
         }
 
         return $this->imageService->getIdsWithConditions($where, $params, $orderBy);

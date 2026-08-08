@@ -8,6 +8,9 @@ use Doctrine\ORM\EntityManagerInterface;
 use Override;
 use Piwigo\Activity\ActivityService;
 use Piwigo\Admin\BatchManager\FilterResolver;
+use Piwigo\Admin\BatchManager\Projection\DimensionFilter;
+use Piwigo\Admin\BatchManager\Projection\DuplicateFieldFlags;
+use Piwigo\Admin\BatchManager\Projection\FilesizeFilter;
 use Piwigo\Admin\BatchManagerGlobalPageRenderer;
 use Piwigo\Admin\BatchManagerUnitPageRenderer;
 use Piwigo\Admin\CoreTabs;
@@ -561,9 +564,10 @@ final class BatchManagerSubController implements AdminSubControllerInterface
         $filter_sets = [];
         if (isset($bulkFilter['prefilter']) && is_string($bulkFilter['prefilter'])) {
             $prefilter = $bulkFilter['prefilter'];
+            $duplicateFlags = DuplicateFieldFlags::fromBulkFilter($bulkFilter);
 
             if ($prefilter === 'duplicates') {
-                $duplicatesOnFields = $filterResolver->duplicateFieldsFromFilter($bulkFilter);
+                $duplicatesOnFields = $filterResolver->duplicateFieldsFromFilter($duplicateFlags);
             }
 
             $prefilter_result = match ($prefilter) {
@@ -571,7 +575,7 @@ final class BatchManagerSubController implements AdminSubControllerInterface
                 // ImageService methods -- not duplicated into FilterResolver.
                 'no_album' => $this->imageService->getOrphans(),
                 'no_sync_md5sum' => $this->imageService->getPhotosNoMd5sum(),
-                default => $filterResolver->resolvePrefilter($prefilter, $bulkFilter, $userId, $confOrderBy),
+                default => $filterResolver->resolvePrefilter($prefilter, $duplicateFlags, count($bulkFilter) === 1, $userId, $confOrderBy),
             };
 
             if ($prefilter_result !== null) {
@@ -639,7 +643,7 @@ final class BatchManagerSubController implements AdminSubControllerInterface
                     $filter_dimension[$dimension_key] = $dimension_value;
                 }
             }
-            $dimension_ids = $filterResolver->dimensionPhotoIds($filter_dimension, $confOrderBy);
+            $dimension_ids = $filterResolver->dimensionPhotoIds(DimensionFilter::fromArray($filter_dimension), $confOrderBy);
             if ($dimension_ids !== null) {
                 $filter_sets[] = $dimension_ids;
             }
@@ -652,7 +656,7 @@ final class BatchManagerSubController implements AdminSubControllerInterface
                     $filter_filesize[$filesize_key] = $filesize_value;
                 }
             }
-            $filesize_ids = $filterResolver->filesizePhotoIds($filter_filesize, $confOrderBy);
+            $filesize_ids = $filterResolver->filesizePhotoIds(FilesizeFilter::fromArray($filter_filesize), $confOrderBy);
             if ($filesize_ids !== null) {
                 $filter_sets[] = $filesize_ids;
             }

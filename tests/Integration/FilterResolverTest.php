@@ -27,6 +27,9 @@ use Piwigo\Core\ProcessCache;
 use Doctrine\DBAL\Connection;
 use Piwigo\Activity\ActivityService;
 use Piwigo\Admin\BatchManager\FilterResolver;
+use Piwigo\Admin\BatchManager\Projection\DimensionFilter;
+use Piwigo\Admin\BatchManager\Projection\DuplicateFieldFlags;
+use Piwigo\Admin\BatchManager\Projection\FilesizeFilter;
 use Piwigo\Common\ValueObject\CategoryId;
 use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Category\CategoryService;
@@ -144,14 +147,14 @@ final class FilterResolverTest extends IntegrationTestCase
 
     public function test_resolve_prefilter_favorites_returns_the_users_favorite_image_ids(): void
     {
-        $ids = $this->resolver->resolvePrefilter('favorites', ['prefilter' => 'favorites'], UserId::from(1), '');
+        $ids = $this->resolver->resolvePrefilter('favorites', new DuplicateFieldFlags(), true, UserId::from(1), '');
 
         self::assertSame([1, 3, 5], $ids);
     }
 
     public function test_resolve_prefilter_favorites_returns_empty_for_a_user_with_no_favorites(): void
     {
-        $ids = $this->resolver->resolvePrefilter('favorites', ['prefilter' => 'favorites'], UserId::from(999999), '');
+        $ids = $this->resolver->resolvePrefilter('favorites', new DuplicateFieldFlags(), true, UserId::from(999999), '');
 
         self::assertSame([], $ids);
     }
@@ -166,7 +169,7 @@ final class FilterResolverTest extends IntegrationTestCase
             ->executeStatement();
 
         try {
-            $ids = $this->resolver->resolvePrefilter('caddie', ['prefilter' => 'caddie'], UserId::from(1), '');
+            $ids = $this->resolver->resolvePrefilter('caddie', new DuplicateFieldFlags(), true, UserId::from(1), '');
 
             self::assertSame([2], $ids);
         } finally {
@@ -180,14 +183,14 @@ final class FilterResolverTest extends IntegrationTestCase
 
     public function test_resolve_prefilter_no_tag_returns_only_untagged_images(): void
     {
-        $ids = $this->resolver->resolvePrefilter('no_tag', ['prefilter' => 'no_tag'], UserId::from(1), '');
+        $ids = $this->resolver->resolvePrefilter('no_tag', new DuplicateFieldFlags(), true, UserId::from(1), '');
 
         self::assertSame([4, 5], $ids);
     }
 
     public function test_resolve_prefilter_all_photos_returns_every_image_only_when_it_is_the_sole_filter(): void
     {
-        $ids = $this->resolver->resolvePrefilter('all_photos', ['prefilter' => 'all_photos'], UserId::from(1), '');
+        $ids = $this->resolver->resolvePrefilter('all_photos', new DuplicateFieldFlags(), true, UserId::from(1), '');
 
         self::assertSame([1, 2, 3, 4, 5], $ids);
     }
@@ -196,7 +199,8 @@ final class FilterResolverTest extends IntegrationTestCase
     {
         $ids = $this->resolver->resolvePrefilter(
             'all_photos',
-            ['prefilter' => 'all_photos', 'category' => 1],
+            new DuplicateFieldFlags(),
+            false,
             UserId::from(1),
             ''
         );
@@ -206,9 +210,9 @@ final class FilterResolverTest extends IntegrationTestCase
 
     public function test_resolve_prefilter_returns_null_for_prefilters_handled_elsewhere(): void
     {
-        self::assertNull($this->resolver->resolvePrefilter('no_album', [], UserId::from(1), ''));
-        self::assertNull($this->resolver->resolvePrefilter('no_sync_md5sum', [], UserId::from(1), ''));
-        self::assertNull($this->resolver->resolvePrefilter('some_plugin_prefilter', [], UserId::from(1), ''));
+        self::assertNull($this->resolver->resolvePrefilter('no_album', new DuplicateFieldFlags(), false, UserId::from(1), ''));
+        self::assertNull($this->resolver->resolvePrefilter('no_sync_md5sum', new DuplicateFieldFlags(), false, UserId::from(1), ''));
+        self::assertNull($this->resolver->resolvePrefilter('some_plugin_prefilter', new DuplicateFieldFlags(), false, UserId::from(1), ''));
     }
 
     public function test_duplicate_photo_ids_groups_every_fixture_image_by_shared_dimensions(): void
@@ -230,7 +234,8 @@ final class FilterResolverTest extends IntegrationTestCase
         // never finds a duplicate pair.
         $ids = $this->resolver->resolvePrefilter(
             'duplicates',
-            ['prefilter' => 'duplicates', 'duplicates_checksum' => true],
+            new DuplicateFieldFlags(checksum: true),
+            false,
             UserId::from(1),
             ''
         );
@@ -273,14 +278,14 @@ final class FilterResolverTest extends IntegrationTestCase
 
     public function test_dimension_photo_ids_filters_by_a_real_bound(): void
     {
-        $ids = $this->resolver->dimensionPhotoIds(['min_width' => 200], '');
+        $ids = $this->resolver->dimensionPhotoIds(new DimensionFilter(minWidth: 200), '');
 
         self::assertSame([1, 2, 3, 4, 5], $ids);
     }
 
     public function test_dimension_photo_ids_excludes_everything_above_the_fixtures_width(): void
     {
-        $ids = $this->resolver->dimensionPhotoIds(['min_width' => 9999], '');
+        $ids = $this->resolver->dimensionPhotoIds(new DimensionFilter(minWidth: 9999), '');
 
         self::assertSame([], $ids);
     }
@@ -292,25 +297,25 @@ final class FilterResolverTest extends IntegrationTestCase
         // $bulkFilter['dimension'] set to an empty array, which the legacy
         // code turned into a malformed "WHERE  ORDER BY ..." query. This
         // must return null (skip the filter), never build that query.
-        self::assertNull($this->resolver->dimensionPhotoIds([], ''));
+        self::assertNull($this->resolver->dimensionPhotoIds(new DimensionFilter(), ''));
     }
 
     public function test_filesize_photo_ids_filters_by_a_real_bound(): void
     {
         // filesize is stored in KB; every fixture image is 1 KB.
-        $ids = $this->resolver->filesizePhotoIds(['min' => 0], '');
+        $ids = $this->resolver->filesizePhotoIds(new FilesizeFilter(min: 0.0), '');
 
         self::assertSame([1, 2, 3, 4, 5], $ids);
     }
 
     public function test_filesize_photo_ids_excludes_everything_above_the_fixtures_size(): void
     {
-        self::assertSame([], $this->resolver->filesizePhotoIds(['min' => 999], ''));
+        self::assertSame([], $this->resolver->filesizePhotoIds(new FilesizeFilter(min: 999.0), ''));
     }
 
     public function test_filesize_photo_ids_returns_null_for_no_valid_bounds(): void
     {
-        self::assertNull($this->resolver->filesizePhotoIds([], ''));
+        self::assertNull($this->resolver->filesizePhotoIds(new FilesizeFilter(), ''));
     }
 
     public function test_resolve_prefilter_last_import_returns_empty_when_the_images_table_is_empty(): void
@@ -323,7 +328,7 @@ final class FilterResolverTest extends IntegrationTestCase
         try {
             $this->conn->executeStatement('DELETE FROM ' . Tables::images());
 
-            $ids = $this->resolver->resolvePrefilter('last_import', ['prefilter' => 'last_import'], UserId::from(1), '');
+            $ids = $this->resolver->resolvePrefilter('last_import', new DuplicateFieldFlags(), true, UserId::from(1), '');
 
             self::assertSame([], $ids);
         } finally {
@@ -354,7 +359,7 @@ final class FilterResolverTest extends IntegrationTestCase
         $excludedId = (int) $this->conn->lastInsertId();
 
         try {
-            $ids = $this->resolver->resolvePrefilter('last_import', ['prefilter' => 'last_import'], UserId::from(1), '');
+            $ids = $this->resolver->resolvePrefilter('last_import', new DuplicateFieldFlags(), true, UserId::from(1), '');
             self::assertNotNull($ids);
             sort($ids);
 
@@ -403,7 +408,7 @@ final class FilterResolverTest extends IntegrationTestCase
         );
 
         try {
-            $ids = $this->resolver->resolvePrefilter('no_virtual_album', ['prefilter' => 'no_virtual_album'], UserId::from(1), '');
+            $ids = $this->resolver->resolvePrefilter('no_virtual_album', new DuplicateFieldFlags(), true, UserId::from(1), '');
 
             // The fixture's own 5 images are all linked only to virtual
             // categories (1 and 2, both dir IS NULL), so the full result is
@@ -443,7 +448,7 @@ final class FilterResolverTest extends IntegrationTestCase
         );
 
         try {
-            $ids = $this->resolver->resolvePrefilter('no_virtual_album', ['prefilter' => 'no_virtual_album'], UserId::from(1), '');
+            $ids = $this->resolver->resolvePrefilter('no_virtual_album', new DuplicateFieldFlags(), true, UserId::from(1), '');
             self::assertNotNull($ids);
             sort($ids);
 

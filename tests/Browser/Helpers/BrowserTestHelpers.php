@@ -53,19 +53,33 @@ final class BrowserTestHelpers
      * response body. Mirrors what 16.x-v2's strict-assertions.ts checked —
      * Notice/Deprecated/Stack trace/Throwable are as diagnostic as a fatal.
      *
+     * 'Internal Server Error' is this app's own ExceptionHandlerMiddleware
+     * output for any unhandled exception -- deliberately generic (no stack
+     * trace leaked to the client), so none of the raw-PHP-error patterns
+     * above ever match it. Without this entry, gotoOk()/assertNoServerErrors()
+     * silently passes on a bare 500, and the test proceeds to interact with
+     * form fields that don't exist on that page -- fill()/click() (wrapped
+     * in pest-plugin-browser's own retry-until-true semantics, see
+     * clickWithTimeout()'s docblock) then retry for the full outer timeout
+     * instead of failing fast. Confirmed live: PasswordControllerTest's own
+     * "rejects a reset submission whose passwords do not match" test hit
+     * exactly this gap and stalled for 60+ seconds instead of failing
+     * immediately.
+     *
      * @return array<string, non-empty-string>
      */
     private static function serverErrorPatterns(): array
     {
         return [
-            'Fatal error'       => '/Fatal error/i',
-            'Parse error'       => '/Parse error/i',
-            'Warning:'          => '/\bWarning:\s/',
-            'Notice:'           => '/\bNotice:\s/',
-            'Deprecated:'       => '/\bDeprecated:\s/',
-            'Strict Standards:' => '/\bStrict Standards:\s/',
-            'Stack trace:'      => '/Stack trace:/',
-            'Uncaught'          => '/\bUncaught\s/',
+            'Fatal error'            => '/Fatal error/i',
+            'Parse error'            => '/Parse error/i',
+            'Warning:'               => '/\bWarning:\s/',
+            'Notice:'                => '/\bNotice:\s/',
+            'Deprecated:'            => '/\bDeprecated:\s/',
+            'Strict Standards:'      => '/\bStrict Standards:\s/',
+            'Stack trace:'           => '/Stack trace:/',
+            'Uncaught'               => '/\bUncaught\s/',
+            'Internal Server Error'  => '/Internal Server Error/',
         ];
     }
 

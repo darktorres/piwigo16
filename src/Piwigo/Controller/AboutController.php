@@ -10,6 +10,7 @@ use Piwigo\Auth\AccessLevelChecker;
 use Piwigo\Bootstrap\PageTail;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\DeploymentPolicy;
+use Piwigo\Controller\Projection\AboutPageContext;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\CurrentLogger;
 use Piwigo\Core\FilterState;
@@ -85,9 +86,9 @@ final class AboutController implements ControllerInterface
 
         $template->set_filename('about', 'about.tpl');
 
-        $template->assign('ABOUT_MESSAGE', $this->lang->load('about.html', '', [
+        $about_message_raw = $this->lang->load('about.html', '', [
             'return' => true,
-        ]));
+        ]);
 
         $user_theme = $this->currentUser->get()
             ->theme;
@@ -95,9 +96,11 @@ final class AboutController implements ControllerInterface
         $theme_about = $this->lang->load('about.html', $this->currentConfig->themesPath() . $user_theme . '/', [
             'return' => true,
         ]);
-        if ($theme_about !== false) {
-            $template->assign('THEME_ABOUT', $theme_about);
-        }
+
+        $template->assignContext(new AboutPageContext(
+            aboutMessage: is_string($about_message_raw) ? $about_message_raw : '',
+            themeAbout: is_string($theme_about) ? $theme_about : null,
+        ));
 
         $themeconf = $template->get_template_vars('themeconf');
         $themeconf = is_array($themeconf) ? $themeconf : [];

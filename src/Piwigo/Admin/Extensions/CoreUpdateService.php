@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Admin\Extensions;
 
 use Piwigo\Activity\ActivityService;
+use Piwigo\Admin\Extensions\Projection\NewVersionsInfo;
 use Piwigo\Cache\PermissionCacheInvalidator;
 use Piwigo\Config\ConfigService;
 use Piwigo\Config\CurrentConfig;
@@ -70,30 +71,15 @@ final readonly class CoreUpdateService
         }
     }
 
-    /**
-     * @return array{
-     *   'piwigo.org-checked': bool,
-     *   is_dev: bool,
-     *   minor?: string,
-     *   major?: string,
-     *   minor_php?: string,
-     *   major_php?: string,
-     * }
-     */
-    public function getPiwigoNewVersions(): array
+    public function getPiwigoNewVersions(): NewVersionsInfo
     {
-
-        $newVersions = [
-            'piwigo.org-checked' => false,
-            'is_dev' => true,
-        ];
-
-        [$env, $buildVersion] = ContainerDetector::detect();
+        $containerInfo = ContainerDetector::detect();
+        $env = $containerInfo->type;
+        $buildVersion = $containerInfo->version;
         if (! (bool) preg_match('/^(\d+\.\d+)\.(\d+)$/', AppInfo::VERSION)) {
-            return $newVersions;
+            return new NewVersionsInfo(piwigoOrgChecked: false, isDev: true);
         }
 
-        $newVersions['is_dev'] = false;
         $actualBranch = VersionHelper::getBranchFromVersion($env === 'Official' ? substr((string) $buildVersion, 0, -1) : AppInfo::VERSION);
 
         $url = AppInfo::URL . '/download/all_versions.php';
@@ -104,25 +90,29 @@ final readonly class CoreUpdateService
         $url .= '&origin_hash=' . sha1($secretKey . $this->urlService->getAbsoluteRootUrl());
 
         if (! is_string($result = @HttpClientService::fetch($url, $this->currentConfig))) {
-            return $newVersions;
+            return new NewVersionsInfo(piwigoOrgChecked: false, isDev: false);
         }
 
         $allVersions = explode("\n", $result);
-        $newVersions['piwigo.org-checked'] = true;
         $lastVersion = trim($allVersions[0]);
+
+        $minor = null;
+        $major = null;
+        $minorPhp = null;
+        $majorPhp = null;
 
         if ($env === 'Official') {
             if ($this->containerVersionCompare($buildVersion, $lastVersion) === -1) {
                 $lastBranch = VersionHelper::getBranchFromVersion(substr($lastVersion, 0, -1));
                 if ($lastBranch === $actualBranch) {
-                    $newVersions['minor'] = $lastVersion;
+                    $minor = $lastVersion;
                 } else {
-                    $newVersions['major'] = $lastVersion;
+                    $major = $lastVersion;
                     foreach ($allVersions as $version) {
                         $branch = VersionHelper::getBranchFromVersion(substr($version, 0, -1));
                         if ($branch === $actualBranch) {
                             if ($this->containerVersionCompare($buildVersion, $version) === -1) {
-                                $newVersions['minor'] = $version;
+                                $minor = $version;
                             }
                             break;
                         }
@@ -130,7 +120,7 @@ final readonly class CoreUpdateService
                 }
             }
 
-            return $newVersions;
+            return new NewVersionsInfo(piwigoOrgChecked: true, isDev: false, minor: $minor, major: $major);
         }
 
         [$lastVersionNumber, $lastVersionPhp] = explode('/', trim($allVersions[0]));
@@ -139,11 +129,11 @@ final readonly class CoreUpdateService
             $lastBranch = VersionHelper::getBranchFromVersion($lastVersionNumber);
 
             if ($lastBranch === $actualBranch) {
-                $newVersions['minor'] = $lastVersionNumber;
-                $newVersions['minor_php'] = $lastVersionPhp;
+                $minor = $lastVersionNumber;
+                $minorPhp = $lastVersionPhp;
             } else {
-                $newVersions['major'] = $lastVersionNumber;
-                $newVersions['major_php'] = $lastVersionPhp;
+                $major = $lastVersionNumber;
+                $majorPhp = $lastVersionPhp;
 
                 foreach ($allVersions as $version) {
                     [$versionNumber, $versionPhp] = explode('/', trim($version));
@@ -151,8 +141,8 @@ final readonly class CoreUpdateService
 
                     if ($branch === $actualBranch) {
                         if (version_compare(AppInfo::VERSION, $versionNumber, '<')) {
-                            $newVersions['minor'] = $versionNumber;
-                            $newVersions['minor_php'] = $versionPhp;
+                            $minor = $versionNumber;
+                            $minorPhp = $versionPhp;
                         }
                         break;
                     }
@@ -160,7 +150,7 @@ final readonly class CoreUpdateService
             }
         }
 
-        return $newVersions;
+        return new NewVersionsInfo(piwigoOrgChecked: true, isDev: false, minor: $minor, major: $major, minorPhp: $minorPhp, majorPhp: $majorPhp);
     }
 
     /**
@@ -176,15 +166,15 @@ final readonly class CoreUpdateService
         $newVersions = $this->getPiwigoNewVersions();
         $this->configService->confUpdateParam('update_notify_last_check', date('c'));
 
-        if ($newVersions['is_dev']) {
+        if ($newVersions->isDev) {
             return;
         }
 
-        $matchingNewVersions = array_intersect_key(
-            $newVersions,
-            array_fill_keys(['minor', 'major'], 1)
+        $matchingNewVersions = array_filter(
+            [$newVersions->major, $newVersions->minor],
+            static fn (?string $v): bool => $v !== null
         );
-        $newVersionsString = join(' & ', array_filter($matchingNewVersions, is_string(...)));
+        $newVersionsString = join(' & ', $matchingNewVersions);
 
         if ($newVersionsString === '') {
             return;
@@ -338,21 +328,21 @@ final readonly class CoreUpdateService
 
         $error = '';
         foreach ($result as $extract) {
-            if (! in_array($extract['status'], ['ok', 'filtered', 'already_a_directory'], true)) {
-                if (@chmod($this->paths->root . $extract['filename'], 0777)
+            if (! in_array($extract->status, ['ok', 'filtered', 'already_a_directory'], true)) {
+                if (@chmod($this->paths->root . $extract->filename, 0777)
                   and ($res = $this->zipExtractor->extract(
                       $filename,
                       $this->paths->root,
                       $removePath,
                       $this->currentConfig,
                       0755,
-                      $removePath . '/' . $extract['filename']
+                      $removePath . '/' . $extract->filename
                   )) !== null
-                  and isset($res[0]['status'])
-                  and $res[0]['status'] === 'ok') {
+                  and isset($res[0])
+                  and $res[0]->status === 'ok') {
                     continue;
                 }
-                $error .= $extract['filename'] . ': ' . $extract['status'] . "\n";
+                $error .= $extract->filename . ': ' . $extract->status . "\n";
             }
         }
 

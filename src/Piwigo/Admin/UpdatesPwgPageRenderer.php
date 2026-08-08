@@ -65,7 +65,9 @@ final class UpdatesPwgPageRenderer
         2 = upgrade on same branch
         3 = upgrade on different branch
         */
-        [$ct_env, $ct_build_version] = ContainerDetector::detect();
+        $containerInfo = ContainerDetector::detect();
+        $ct_env = $containerInfo->type;
+        $ct_build_version = $containerInfo->version;
 
         $updatesPwgRequest = UpdatesPwgRequest::fromGlobals($ct_env, $this->inputValidator);
         $step = $updatesPwgRequest->step;
@@ -85,19 +87,19 @@ final class UpdatesPwgPageRenderer
         // |                                Step 0                                 |
         // +-----------------------------------------------------------------------+
         if ($step === 0) {
-            if (isset($new_versions['minor']) and isset($new_versions['major'])) {
+            if ($new_versions->minor !== null and $new_versions->major !== null) {
                 $step = 1;
-                $upgrade_to = $new_versions['major'];
-            } elseif (isset($new_versions['minor'])) {
+                $upgrade_to = $new_versions->major;
+            } elseif ($new_versions->minor !== null) {
                 $step = 2;
-                $upgrade_to = $new_versions['minor'];
-            } elseif (isset($new_versions['major'])) {
+                $upgrade_to = $new_versions->minor;
+            } elseif ($new_versions->major !== null) {
                 $step = 3;
-                $upgrade_to = $new_versions['major'];
+                $upgrade_to = $new_versions->major;
             }
 
-            $template->assign('CHECK_VERSION', $new_versions['piwigo.org-checked']);
-            $template->assign('DEV_VERSION', $new_versions['is_dev']);
+            $template->assign('CHECK_VERSION', $new_versions->piwigoOrgChecked);
+            $template->assign('DEV_VERSION', $new_versions->isDev);
         }
 
         // +-----------------------------------------------------------------------+
@@ -136,12 +138,12 @@ final class UpdatesPwgPageRenderer
         // | Check for requirements                                                |
         // +-----------------------------------------------------------------------+
 
-        if (isset($new_versions['minor_php']) and version_compare(PHP_VERSION, $new_versions['minor_php'], '<')) {
-            $template->assign('MINOR_RELEASE_PHP_REQUIRED', $new_versions['minor_php']);
+        if ($new_versions->minorPhp !== null and version_compare(PHP_VERSION, $new_versions->minorPhp, '<')) {
+            $template->assign('MINOR_RELEASE_PHP_REQUIRED', $new_versions->minorPhp);
         }
 
-        if (isset($new_versions['major_php']) and version_compare(PHP_VERSION, $new_versions['major_php'], '<')) {
-            $template->assign('MAJOR_RELEASE_PHP_REQUIRED', $new_versions['major_php']);
+        if ($new_versions->majorPhp !== null and version_compare(PHP_VERSION, $new_versions->majorPhp, '<')) {
+            $template->assign('MAJOR_RELEASE_PHP_REQUIRED', $new_versions->majorPhp);
         }
 
         // +-----------------------------------------------------------------------+
@@ -162,27 +164,27 @@ final class UpdatesPwgPageRenderer
             ]
         );
 
-        if (isset($new_versions['minor'])) {
+        if ($new_versions->minor !== null) {
             $template->assign(
                 [
-                    'MINOR_VERSION' => $new_versions['minor'],
+                    'MINOR_VERSION' => $new_versions->minor,
                     'MINOR_RELEASE_URL' => (
                         ($ct_env === 'Official')
-                    ? 'https://github.com/Piwigo/piwigo-docker/wiki/Changelog#' . preg_replace('/\./', '', $new_versions['minor'])
-                    : AppInfo::URL . '/releases/' . $new_versions['minor']
+                    ? 'https://github.com/Piwigo/piwigo-docker/wiki/Changelog#' . preg_replace('/\./', '', $new_versions->minor)
+                    : AppInfo::URL . '/releases/' . $new_versions->minor
                     ),
                 ]
             );
         }
 
-        if (isset($new_versions['major'])) {
+        if ($new_versions->major !== null) {
             $template->assign(
                 [
-                    'MAJOR_VERSION' => $new_versions['major'],
+                    'MAJOR_VERSION' => $new_versions->major,
                     'MAJOR_RELEASE_URL' => AppInfo::URL . '/releases/' .
-                      (($ct_env === 'Official') ? substr($new_versions['major'], 0, -1) : $new_versions['major']),
-                    'MAJOR_DOCKER_RELEASE_URL' => 'https://github.com/Piwigo/piwigo-docker/wiki/Changelog#' . preg_replace('/\./', '', $new_versions['major']),
-                    'MAJOR_VERSION_PWG' => preg_replace('/[a-z]$/', '', $new_versions['major']), // Remove container build ver
+                      (($ct_env === 'Official') ? substr($new_versions->major, 0, -1) : $new_versions->major),
+                    'MAJOR_DOCKER_RELEASE_URL' => 'https://github.com/Piwigo/piwigo-docker/wiki/Changelog#' . preg_replace('/\./', '', $new_versions->major),
+                    'MAJOR_VERSION_PWG' => preg_replace('/[a-z]$/', '', $new_versions->major), // Remove container build ver
                 ]
             );
         }

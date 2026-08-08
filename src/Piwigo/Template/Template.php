@@ -1275,7 +1275,7 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
             return self::COMBINED_SCRIPTS_TAG;
         } else {
             $scripts = $this->scriptLoader->get_footer_scripts($this->accessLevelChecker);
-            foreach ($scripts[0] as $script) {
+            foreach ($scripts->sync as $script) {
                 $content[] =
                   '<script type="text/javascript" src="'
                   . $this->make_script_src($script)
@@ -1288,11 +1288,11 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
                 $content[] = '//]]></script>';
             }
 
-            if ((bool) count($scripts[1])) {
+            if ((bool) count($scripts->async)) {
                 $content[] = '<script type="text/javascript">';
                 $content[] = '(function() {
 var s,after = document.getElementsByTagName(\'script\')[document.getElementsByTagName(\'script\').length-1];';
-                foreach ($scripts[1] as $id => $script) {
+                foreach ($scripts->async as $script) {
                     $content[] =
                       's=document.createElement(\'script\'); s.type=\'text/javascript\'; s.async=true; s.src=\''
                       . $this->make_script_src($script)

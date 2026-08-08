@@ -46,6 +46,8 @@ use Piwigo\Event\Mail\BeforeSendMail;
 use Piwigo\Event\Mail\RenderLostPasswordMailContent;
 use Piwigo\Group\GroupEntity;
 use Piwigo\Lang\Translator;
+use Piwigo\Mail\Projection\EmailRecipient;
+use Piwigo\Mail\Projection\MailContent;
 use Piwigo\Mail\Projection\MailRecipient;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Session\SessionService;
@@ -408,32 +410,25 @@ final class MailService implements MailerInterface
      * Returns the email and the name from a formatted address.
      *
      * @param string|array<int|string, mixed> $input if an array, must contain email[, name]
-     * @return array{email: string, name: string}
      */
-    public function unformatEmail(string|array $input): array
+    public function unformatEmail(string|array $input): EmailRecipient
     {
         if (is_array($input)) {
             if (! isset($input['email']) || ! is_string($input['email'])) {
                 throw new InvalidArgumentException(__METHOD__ . '(): array input must contain a string "email" key');
             }
 
-            return [
-                'email' => $input['email'],
-                'name' => isset($input['name']) && is_string($input['name']) ? $input['name'] : '',
-            ];
+            return new EmailRecipient(
+                $input['email'],
+                isset($input['name']) && is_string($input['name']) ? $input['name'] : ''
+            );
         }
 
         if (preg_match('/(.*)<(.*)>.*/', $input, $matches) === 1) {
-            return [
-                'email' => trim($matches[2]),
-                'name' => trim($matches[1]),
-            ];
+            return new EmailRecipient(trim($matches[2]), trim($matches[1]));
         }
 
-        return [
-            'email' => trim($input),
-            'name' => '',
-        ];
+        return new EmailRecipient(trim($input), '');
     }
 
     /**
@@ -444,7 +439,7 @@ final class MailService implements MailerInterface
      * shapes above), not a single reusable contract, and every shape is
      * validated internally before use.
      *
-     * @return list<array{email: string, name: string}>
+     * @return list<EmailRecipient>
      */
     public function getCleanRecipientsList(mixed $data): array
     {
@@ -460,10 +455,7 @@ final class MailService implements MailerInterface
                 $keys = array_keys($data);
                 if (is_int($keys[0])) { // simple array of emails
                     foreach ($data as $item) {
-                        $entries[] = [
-                            'email' => trim(is_scalar($item) ? (string) $item : ''),
-                            'name' => '',
-                        ];
+                        $entries[] = new EmailRecipient(trim(is_scalar($item) ? (string) $item : ''), '');
                     }
                 } else { // hashmap of one recipient
                     /** @var array<int|string, mixed> $data */
@@ -474,10 +466,7 @@ final class MailService implements MailerInterface
                     if (is_array($item) || is_string($item)) {
                         $entries[] = $this->unformatEmail($item);
                     } else {
-                        $entries[] = [
-                            'email' => is_scalar($item) ? trim((string) $item) : '',
-                            'name' => '',
-                        ];
+                        $entries[] = new EmailRecipient(is_scalar($item) ? trim((string) $item) : '', '');
                     }
                 }
             }
@@ -491,10 +480,10 @@ final class MailService implements MailerInterface
         $existing = [];
         $result = [];
         foreach ($entries as $entry) {
-            if (isset($existing[$entry['email']])) {
+            if (isset($existing[$entry->email])) {
                 continue;
             }
-            $existing[$entry['email']] = true;
+            $existing[$entry->email] = true;
             $result[] = $entry;
         }
 
@@ -849,7 +838,7 @@ final class MailService implements MailerInterface
         $email = new Email();
 
         foreach ($this->getCleanRecipientsList($to) as $recipient) {
-            $email->addTo(new Address($recipient['email'], $recipient['name']));
+            $email->addTo(new Address($recipient->email, $recipient->name));
         }
 
         // Compute root_path in order to have a complete path.
@@ -857,16 +846,16 @@ final class MailService implements MailerInterface
             ->setMakeFullUrl();
 
         if (! isset($args['from']) || self::emptyValue($args['from'])) {
-            $from = [
-                'email' => is_string($confMail['email_webmaster']) ? $confMail['email_webmaster'] : '',
-                'name' => is_string($confMail['name_webmaster']) ? $confMail['name_webmaster'] : '',
-            ];
+            $from = new EmailRecipient(
+                is_string($confMail['email_webmaster']) ? $confMail['email_webmaster'] : '',
+                is_string($confMail['name_webmaster']) ? $confMail['name_webmaster'] : ''
+            );
         } else {
             $from = $this->unformatEmail($args['from']);
         }
-        $email->from(new Address($from['email'], $from['name']));
-        $replyToMail = $args['reply_to_mail_address'] ?? $from['email'];
-        $replyToName = $args['reply_to_name'] ?? $from['name'];
+        $email->from(new Address($from->email, $from->name));
+        $replyToMail = $args['reply_to_mail_address'] ?? $from->email;
+        $replyToName = $args['reply_to_name'] ?? $from->name;
         $email->replyTo(new Address($replyToMail, $replyToName));
 
         // Subject.
@@ -879,20 +868,17 @@ final class MailService implements MailerInterface
         // Cc.
         if (isset($args['Cc']) && ! self::emptyValue($args['Cc'])) {
             foreach ($this->getCleanRecipientsList($args['Cc']) as $recipient) {
-                $email->addCc(new Address($recipient['email'], $recipient['name']));
+                $email->addCc(new Address($recipient->email, $recipient->name));
             }
         }
 
         // Bcc.
         $bcc = $this->getCleanRecipientsList($args['Bcc'] ?? null);
         if ($confMail['send_bcc_mail_webmaster'] === true) {
-            $bcc[] = [
-                'email' => $this->webmasterMailAddress(),
-                'name' => '',
-            ];
+            $bcc[] = new EmailRecipient($this->webmasterMailAddress(), '');
         }
         foreach ($bcc as $recipient) {
-            $email->addBcc(new Address($recipient['email'], $recipient['name']));
+            $email->addBcc(new Address($recipient->email, $recipient->name));
         }
 
         // Theme.
@@ -1198,10 +1184,8 @@ final class MailService implements MailerInterface
 
     /**
      * Generates the reset-password mail content.
-     *
-     * @return array{subject: string, content: string, content_format: string}
      */
-    public function generateResetPasswordMail(string $username, string $passwordLink, string $galleryTitle, string $remainingTime): array
+    public function generateResetPasswordMail(string $username, string $passwordLink, string $galleryTitle, string $remainingTime): MailContent
     {
         $this->urlService
             ->setMakeFullUrl();
@@ -1222,19 +1206,17 @@ final class MailService implements MailerInterface
         $message = $this->eventDispatcher->dispatchChange(new RenderLostPasswordMailContent($message))
             ->message;
 
-        return [
-            'subject' => '[' . $galleryTitle . '] ' . $this->lang->t('Password Reset'),
-            'content' => $message,
-            'content_format' => 'text/html',
-        ];
+        return new MailContent(
+            '[' . $galleryTitle . '] ' . $this->lang->t('Password Reset'),
+            $message,
+            'text/html',
+        );
     }
 
     /**
      * Generates the set-password mail content.
-     *
-     * @return array{subject: string, content: string, content_format: string}
      */
-    public function generateSetPasswordMail(string $username, string $setPasswordLink, string $galleryTitle, string $remainingTime): array
+    public function generateSetPasswordMail(string $username, string $setPasswordLink, string $galleryTitle, string $remainingTime): MailContent
     {
         $this->urlService
             ->setMakeFullUrl();
@@ -1255,19 +1237,17 @@ final class MailService implements MailerInterface
         $message = $this->eventDispatcher->dispatchChange(new RenderLostPasswordMailContent($message))
             ->message;
 
-        return [
-            'subject' => $this->lang->t('Welcome to %s', $galleryTitle),
-            'content' => $message,
-            'content_format' => 'text/html',
-        ];
+        return new MailContent(
+            $this->lang->t('Welcome to %s', $galleryTitle),
+            $message,
+            'text/html',
+        );
     }
 
     /**
      * Generates the user-code-verification mail content.
-     *
-     * @return array{subject: string, content: string, content_format: string}
      */
-    public function generateCodeVerificationMail(string $code): array
+    public function generateCodeVerificationMail(string $code): MailContent
     {
         $this->urlService
             ->setMakeFullUrl();
@@ -1281,19 +1261,17 @@ final class MailService implements MailerInterface
 
         $galleryTitle = $this->currentConfig->galleryTitle();
 
-        return [
-            'subject' => '[' . $galleryTitle . '] ' . $this->lang->t('Your verification code'),
-            'content' => $message,
-            'content_format' => 'text/html',
-        ];
+        return new MailContent(
+            '[' . $galleryTitle . '] ' . $this->lang->t('Your verification code'),
+            $message,
+            'text/html',
+        );
     }
 
     /**
      * Generates the reset-password-success mail content.
-     *
-     * @return array{subject: string, content: string, content_format: string}
      */
-    public function generateSuccessResetPasswordMail(string $username, int $nbOfApikeys): array
+    public function generateSuccessResetPasswordMail(string $username, int $nbOfApikeys): MailContent
     {
         $this->urlService
             ->setMakeFullUrl();
@@ -1320,10 +1298,10 @@ final class MailService implements MailerInterface
 
         $galleryTitle = $this->currentConfig->galleryTitle();
 
-        return [
-            'subject' => '[' . $galleryTitle . '] ' . $this->lang->t('Your password has been reset'),
-            'content' => $message,
-            'content_format' => 'text/html',
-        ];
+        return new MailContent(
+            '[' . $galleryTitle . '] ' . $this->lang->t('Your password has been reset'),
+            $message,
+            'text/html',
+        );
     }
 }

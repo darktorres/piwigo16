@@ -616,7 +616,9 @@ test('get_footer_scripts separates sync (load_mode=1) and async (load_mode=2) sc
     $loader->add('async-script', 2, [], 'themes/default/js/async.js');
 
     try {
-        [$sync, $async] = $loader->get_footer_scripts(new AccessLevelChecker(CurrentUserTestFactory::get(), CurrentConfigTestFactory::get()));
+        $footerScripts = $loader->get_footer_scripts(new AccessLevelChecker(CurrentUserTestFactory::get(), CurrentConfigTestFactory::get()));
+        $sync = $footerScripts->sync;
+        $async = $footerScripts->async;
 
         expect($sync)->toHaveCount(1)
             ->and($sync[0]->id)->toBe('sync-script')
@@ -645,7 +647,7 @@ test('get_footer_scripts excludes scripts already claimed by get_head_scripts', 
 
     try {
         $loader->get_head_scripts(new AccessLevelChecker(CurrentUserTestFactory::get(), CurrentConfigTestFactory::get()));
-        [$sync] = $loader->get_footer_scripts(new AccessLevelChecker(CurrentUserTestFactory::get(), CurrentConfigTestFactory::get()));
+        $sync = $loader->get_footer_scripts(new AccessLevelChecker(CurrentUserTestFactory::get(), CurrentConfigTestFactory::get()))->sync;
 
         expect($sync)->toHaveCount(1)
             ->and($sync[0]->id)->toBe('footer-script');
@@ -843,7 +845,7 @@ test('get_footer_scripts sorts within the same load_mode by topological order to
     $loader->add('base', 1, [], 'themes/default/js/base.js');
 
     try {
-        [$sync] = $loader->get_footer_scripts(new AccessLevelChecker(CurrentUserTestFactory::get(), CurrentConfigTestFactory::get()));
+        $sync = $loader->get_footer_scripts(new AccessLevelChecker(CurrentUserTestFactory::get(), CurrentConfigTestFactory::get()))->sync;
 
         expect($sync)->toHaveCount(2)
             ->and($sync[0]->id)->toBe('base')
@@ -873,7 +875,7 @@ test('get_footer_scripts excludes mode=0 scripts even when get_head_scripts was 
         // get_head_scripts() is never called -- head_done_scripts stays
         // empty, so $todo would include the mode=0 script too if it
         // weren't filtered back out by its own load_mode>0 check.
-        [$sync] = $loader->get_footer_scripts(new AccessLevelChecker(CurrentUserTestFactory::get(), CurrentConfigTestFactory::get()));
+        $sync = $loader->get_footer_scripts(new AccessLevelChecker(CurrentUserTestFactory::get(), CurrentConfigTestFactory::get()))->sync;
 
         expect($sync)->toHaveCount(1)
             ->and($sync[0]->id)->toBe('footer-script');

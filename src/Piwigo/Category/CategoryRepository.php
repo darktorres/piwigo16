@@ -1185,7 +1185,9 @@ final class CategoryRepository
         $entityClassAndProperty = $target->entityClassAndProperty();
 
         if ($entityClassAndProperty === null) {
-            [$table, $column] = $target->tableAndColumn();
+            $tableAndColumn = $target->tableAndColumn();
+            $table = $tableAndColumn->table;
+            $column = $tableAndColumn->column;
             $categoriesTable = Tables::categories();
 
             return array_values(array_unique(array_map(static fn (mixed $v): string => is_scalar($v) ? (string) $v : '', $this->em->getConnection()->executeQuery(<<<SQL
@@ -1197,7 +1199,8 @@ final class CategoryRepository
                 SQL)->fetchFirstColumn())));
         }
 
-        [$entityClass, $property] = $entityClassAndProperty;
+        $entityClass = $entityClassAndProperty->entityClass;
+        $property = $entityClassAndProperty->property;
 
         $values = $this->em
             ->createQueryBuilder()
@@ -1228,7 +1231,9 @@ final class CategoryRepository
         $entityClassAndProperty = $target->entityClassAndProperty();
 
         if ($entityClassAndProperty === null) {
-            [$table, $column] = $target->tableAndColumn();
+            $tableAndColumn = $target->tableAndColumn();
+            $table = $tableAndColumn->table;
+            $column = $tableAndColumn->column;
 
             $this->em
                 ->getConnection()
@@ -1246,7 +1251,8 @@ final class CategoryRepository
             return;
         }
 
-        [$entityClass, $property] = $entityClassAndProperty;
+        $entityClass = $entityClassAndProperty->entityClass;
+        $property = $entityClassAndProperty->property;
         $em = $this->em;
 
         $em->createQueryBuilder()
@@ -1492,7 +1498,9 @@ final class CategoryRepository
      */
     public function deleteInconsistentAccess(CategoryAccessTarget $target, array $keepIds, array $catIds): void
     {
-        [$entityClass, $fieldProperty] = $target->entityClassAndFieldProperty();
+        $entityClassAndFieldProperty = $target->entityClassAndFieldProperty();
+        $entityClass = $entityClassAndFieldProperty->entityClass;
+        $fieldProperty = $entityClassAndFieldProperty->property;
 
         $em = $this->em;
         $em->createQueryBuilder()

@@ -305,7 +305,7 @@ final class CategoryServiceTest extends IntegrationTestCase
         $info = $this->service->getCategoryInfo(1);
 
         self::assertNotNull($info);
-        self::assertSame([['id' => 1, 'name' => 'Sample Album', 'permalink' => null]], $info['upper_names']);
+        self::assertSame([['id' => 1, 'name' => 'Sample Album', 'permalink' => null]], $info->upperNames);
     }
 
     public function test_get_category_info_resolves_upper_names_for_a_nested_category(): void
@@ -313,7 +313,7 @@ final class CategoryServiceTest extends IntegrationTestCase
         $info = $this->service->getCategoryInfo(2);
 
         self::assertNotNull($info);
-        $upperNames = $info['upper_names'];
+        $upperNames = $info->upperNames;
         self::assertCount(2, $upperNames);
         $first = $upperNames[0];
         $second = $upperNames[1];
@@ -326,7 +326,7 @@ final class CategoryServiceTest extends IntegrationTestCase
         $info = $this->service->getCategoryInfo(1);
 
         self::assertNotNull($info);
-        self::assertTrue($info['visible']);
+        self::assertTrue($info->visible);
     }
 
     public function test_get_preferred_image_orders_returns_the_fixed_option_list(): void
@@ -779,7 +779,7 @@ final class CategoryServiceTest extends IntegrationTestCase
         $urlService = UrlServiceTestFactory::build();
 
         $result = $this->service->createVirtualCategory('Orphan Diff Temp', $activityLogger, CurrentUserTestFactory::get());
-        $tempIdRaw = $result['id'] ?? null;
+        $tempIdRaw = $result->id;
         self::assertTrue(is_numeric($tempIdRaw));
         $tempId = (int) $tempIdRaw;
 
@@ -827,7 +827,7 @@ final class CategoryServiceTest extends IntegrationTestCase
         self::assertTrue(is_numeric($rawSiteId));
         $siteId = (int) $rawSiteId;
 
-        $categoryId = $this->service->createVirtualCategory('Site Delete Temp', new CategoryServiceFakeActivityLogger(), CurrentUserTestFactory::get())['id'] ?? null;
+        $categoryId = $this->service->createVirtualCategory('Site Delete Temp', new CategoryServiceFakeActivityLogger(), CurrentUserTestFactory::get())->id;
         self::assertTrue(is_numeric($categoryId));
         $this->conn->executeStatement('UPDATE ' . Tables::categories() . ' SET site_id = ? WHERE id = ?', [$siteId, $categoryId]);
 
@@ -1134,7 +1134,7 @@ final class CategoryServiceTest extends IntegrationTestCase
     {
         $result = $this->service->createVirtualCategory('Orphan Parent Test', new CategoryServiceFakeActivityLogger(), CurrentUserTestFactory::get(), 999999);
 
-        self::assertSame(['error' => 'The parent album does not exist'], $result);
+        self::assertSame('The parent album does not exist', $result->error);
     }
 
     public function test_create_virtual_category_inherits_invisibility_from_an_invisible_parent(): void
@@ -1148,7 +1148,7 @@ final class CategoryServiceTest extends IntegrationTestCase
 
         try {
             $result = $this->service->createVirtualCategory('Invisible Child Test', new CategoryServiceFakeActivityLogger(), CurrentUserTestFactory::get(), 1);
-            $newIdRaw = $result['id'] ?? null;
+            $newIdRaw = $result->id;
             self::assertTrue(is_numeric($newIdRaw));
             $newId = (int) $newIdRaw;
 
@@ -1174,7 +1174,7 @@ final class CategoryServiceTest extends IntegrationTestCase
 
         try {
             $result = $this->service->createVirtualCategory('Inherited Child Test', new CategoryServiceFakeActivityLogger(), CurrentUserTestFactory::get(), 1, ['inherit' => true]);
-            $newIdRaw = $result['id'] ?? null;
+            $newIdRaw = $result->id;
             self::assertTrue(is_numeric($newIdRaw));
             $newId = (int) $newIdRaw;
 
@@ -1398,7 +1398,7 @@ final class CategoryServiceTest extends IntegrationTestCase
             null,
             ['status' => 'private']
         );
-        $privateParentIdRaw = $privateParent['id'] ?? null;
+        $privateParentIdRaw = $privateParent->id;
         self::assertTrue(is_numeric($privateParentIdRaw));
         $privateParentId = (int) $privateParentIdRaw;
 
@@ -1428,7 +1428,7 @@ final class CategoryServiceTest extends IntegrationTestCase
 
         try {
             $result = $this->service->createVirtualCategory('ct_last_position_' . uniqid(), new CategoryServiceFakeActivityLogger(), CurrentUserTestFactory::get());
-            $newIdRaw = $result['id'] ?? null;
+            $newIdRaw = $result->id;
             self::assertTrue(is_numeric($newIdRaw));
             $newId = (int) $newIdRaw;
 

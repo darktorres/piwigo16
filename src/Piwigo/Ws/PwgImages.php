@@ -1236,10 +1236,10 @@ final class PwgImages
                 ->pwgImageInfos($file_path);
 
             $imageArr = $image->toArray();
-            foreach (['width', 'height', 'filesize'] as $image_info) {
-                if ($infos[$image_info] > $imageArr[$image_info]) {
-                    $do_update = true;
-                }
+            if ($infos->width > $imageArr['width']
+                || $infos->height > $imageArr['height']
+                || $infos->filesize > $imageArr['filesize']) {
+                $do_update = true;
             }
 
             if (! $do_update) {

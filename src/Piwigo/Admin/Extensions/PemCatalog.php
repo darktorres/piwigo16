@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin\Extensions;
 
+use Piwigo\Admin\Extensions\Projection\ExtractionResult;
 use Piwigo\Bootstrap\RequestBootstrap;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\AppInfo;
@@ -283,20 +284,15 @@ final readonly class PemCatalog
      * $scanDirectory, locating the extension root by searching for
      * $type->markerFilename() inside the archive (mirrors extract_plugin_files()/
      * extract_theme_files()/extract_language_files()'s identical shape).
-     *
-     * @return array{status: string, id: string|null}
      */
-    public function extractArchive(ExtensionType $type, string $action, string $revision, string $dest): array
+    public function extractArchive(ExtensionType $type, string $action, string $revision, string $dest): ExtractionResult
     {
         $logger = $this->currentLogger->get();
 
         $scanDirectory = $type->scanDirectory($this->paths, $this->currentConfig);
         $archive = tempnam($scanDirectory, 'zip');
         if ($archive === false) {
-            return [
-                'status' => 'temp_path_error',
-                'id' => null,
-            ];
+            return new ExtractionResult('temp_path_error', null);
         }
 
         $pemBaseUrl = RequestBootstrap::pemUrl();
@@ -350,8 +346,8 @@ final readonly class PemCatalog
                         if ($result !== null) {
                             $status = 'ok';
                             foreach ($result as $file) {
-                                if ($file['stored_filename'] === $mainFilepath) {
-                                    $status = $file['status'];
+                                if ($file->storedFilename === $mainFilepath) {
+                                    $status = $file->status;
                                     break;
                                 }
                             }
@@ -368,10 +364,7 @@ final readonly class PemCatalog
 
         @unlink($archive);
 
-        return [
-            'status' => $status,
-            'id' => $extensionId,
-        ];
+        return new ExtractionResult($status, $extensionId);
     }
 
     private function deleteObsoleteFiles(ExtensionType $type, string $extractPath, Logger $logger): void

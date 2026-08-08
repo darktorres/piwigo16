@@ -32,7 +32,7 @@ final class SchemaDumpCommand extends Command
             return Command::FAILURE;
         }
 
-        $output->writeln("Wrote {$result['path']} (detected provider: {$result['label']})");
+        $output->writeln("Wrote {$result->path} (detected provider: {$result->label})");
 
         return Command::SUCCESS;
     }

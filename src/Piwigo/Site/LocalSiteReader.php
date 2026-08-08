@@ -27,6 +27,7 @@ use Piwigo\Metadata\MetadataService;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Session\SessionEntity;
 use Piwigo\Session\SessionService;
+use Piwigo\Site\Projection\ElementUpdateAttributes;
 use Piwigo\Users\CurrentUser;
 
 // provides data for site synchronization from the local file system
@@ -222,13 +223,8 @@ final class LocalSiteReader
         return ['representative_ext'];
     }
 
-    /**
-     * @return array{representative_ext: ?string}
-     */
-    public function get_element_update_attributes(string $file): array
+    public function get_element_update_attributes(string $file): ElementUpdateAttributes
     {
-        $data = [];
-
         $filename = basename($file);
         $extension = StringHelper::getExtension($filename);
 
@@ -239,8 +235,7 @@ final class LocalSiteReader
             $representative_ext = $this->get_representative_ext($dirname, $filename_wo_ext);
         }
 
-        $data['representative_ext'] = $representative_ext;
-        return $data;
+        return new ElementUpdateAttributes($representative_ext);
     }
 
     // returns the name of the attributes that are supported for

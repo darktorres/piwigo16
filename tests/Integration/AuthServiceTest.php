@@ -708,12 +708,12 @@ namespace Piwigo\Tests\Integration {
             // Tamper the last char of the 40-char plain secret so it no
             // longer password_verify()s against the stored hash, while
             // keeping the combined key's own format regex satisfied.
-            $tamperedSecret = substr($created['apikey_secret'], 0, -1) . (str_ends_with($created['apikey_secret'], 'a') ? 'b' : 'a');
+            $tamperedSecret = substr($created->apikeySecret, 0, -1) . (str_ends_with($created->apikeySecret, 'a') ? 'b' : 'a');
 
             try {
-                self::assertFalse($this->service->authKeyLogin($created['auth_key'] . ':' . $tamperedSecret));
+                self::assertFalse($this->service->authKeyLogin($created->authKey . ':' . $tamperedSecret));
             } finally {
-                $this->conn->executeStatement('DELETE FROM ' . Tables::userAuthKeys() . ' WHERE auth_key = ?', [$created['auth_key']]);
+                $this->conn->executeStatement('DELETE FROM ' . Tables::userAuthKeys() . ' WHERE auth_key = ?', [$created->authKey]);
             }
         }
 
@@ -731,13 +731,13 @@ namespace Piwigo\Tests\Integration {
                 CurrentConfigTestFactory::get(),
             );
             $created = $apiKeyService->create(4, 30, 'Revoked Test Key');
-            $revoked = $apiKeyService->revoke(4, $created['auth_key']);
+            $revoked = $apiKeyService->revoke(4, $created->authKey);
             self::assertTrue($revoked);
 
             try {
-                self::assertFalse($this->service->authKeyLogin($created['auth_key'] . ':' . $created['apikey_secret']));
+                self::assertFalse($this->service->authKeyLogin($created->authKey . ':' . $created->apikeySecret));
             } finally {
-                $this->conn->executeStatement('DELETE FROM ' . Tables::userAuthKeys() . ' WHERE auth_key = ?', [$created['auth_key']]);
+                $this->conn->executeStatement('DELETE FROM ' . Tables::userAuthKeys() . ' WHERE auth_key = ?', [$created->authKey]);
             }
         }
 

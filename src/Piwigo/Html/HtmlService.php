@@ -357,7 +357,7 @@ final class HtmlService implements HtmlRenderingInterface
         )->getCategoryInfo($catId);
         // $catId isn't existence-validated by callers (WS/URL param) -- a
         // stale/forged id falls back to an empty breadcrumb.
-        $upper_names = $cat_info['upper_names'] ?? [];
+        $upper_names = $cat_info->upperNames ?? [];
         return $this->getCatDisplayName($upper_names, $url);
     }
 

@@ -8,6 +8,9 @@ use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Admin\Image\ImageInterface;
 use Piwigo\Admin\Image\ImageProcessingException;
 use Piwigo\Admin\Image\PwgImage;
+use Piwigo\Admin\Image\Projection\ResizeCrop;
+use Piwigo\Admin\Image\Projection\ResizeDimensions;
+use Piwigo\Admin\Image\Projection\WebpInfo;
 use Piwigo\Core\CurrentLogger;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Paths;
@@ -286,7 +289,7 @@ test('construct accepts an uppercase file extension case-insensitively', functio
 test('get_resize_dimensions leaves dimensions unchanged when both fit within the max bounds', function (): void {
     $result = PwgImage::get_resize_dimensions(100, 100, 200, 200);
 
-    expect($result)->toBe(['width' => 100, 'height' => 100]);
+    expect($result)->toEqual(new ResizeDimensions(100, 100));
 });
 
 test('get_resize_dimensions scales down on the width-bound side', function (): void {
@@ -297,7 +300,7 @@ test('get_resize_dimensions scales down on the width-bound side', function (): v
     // round() always returns float in PHP -- $max_width itself passes
     // through unrounded (still the plain int param), but the derived side
     // is always a real float, never coerced back to int.
-    expect($result)->toBe(['width' => 400, 'height' => 200.0]);
+    expect($result)->toEqual(new ResizeDimensions(400, 200.0));
 });
 
 test('get_resize_dimensions scales down on the height-bound side', function (): void {
@@ -305,7 +308,7 @@ test('get_resize_dimensions scales down on the height-bound side', function (): 
     // max_height, width derived from ratio_height.
     $result = PwgImage::get_resize_dimensions(400, 800, 400, 400);
 
-    expect($result)->toBe(['width' => 200.0, 'height' => 400]);
+    expect($result)->toEqual(new ResizeDimensions(200.0, 400));
 });
 
 test('get_resize_dimensions rounds (not floors) the width-bound side when the fraction is >= 0.5', function (): void {
@@ -315,13 +318,13 @@ test('get_resize_dimensions rounds (not floors) the width-bound side when the fr
     // value to 200.5, where round() (201) and floor() (200) differ.
     $result = PwgImage::get_resize_dimensions(800, 401, 400, 400);
 
-    expect($result)->toBe(['width' => 400, 'height' => 201.0]);
+    expect($result)->toEqual(new ResizeDimensions(400, 201.0));
 });
 
 test('get_resize_dimensions rounds (not floors) the height-bound side when the fraction is >= 0.5', function (): void {
     $result = PwgImage::get_resize_dimensions(401, 800, 400, 400);
 
-    expect($result)->toBe(['width' => 201.0, 'height' => 400]);
+    expect($result)->toEqual(new ResizeDimensions(201.0, 400));
 });
 
 test('get_resize_dimensions crops a portrait image against a landscape-ish max, swapping max dimensions via follow_orientation', function (): void {
@@ -332,11 +335,7 @@ test('get_resize_dimensions crops a portrait image against a landscape-ish max, 
     // int params).
     $result = PwgImage::get_resize_dimensions(100, 300, 160, 120, null, true, true);
 
-    expect($result)->toBe([
-        'width' => 100,
-        'height' => 133.0,
-        'crop' => ['width' => 100, 'height' => 133.0, 'x' => 0, 'y' => 84.0],
-    ]);
+    expect($result)->toEqual(new ResizeDimensions(100, 133.0, new ResizeCrop(100, 133.0, 0, 84.0)));
 });
 
 test('get_resize_dimensions crops a landscape image, selecting the destWidth/x-crop branch', function (): void {
@@ -346,11 +345,7 @@ test('get_resize_dimensions crops a landscape image, selecting the destWidth/x-c
     // untouched ints).
     $result = PwgImage::get_resize_dimensions(300, 100, 200, 200, null, true);
 
-    expect($result)->toBe([
-        'width' => 100.0,
-        'height' => 100,
-        'crop' => ['width' => 100.0, 'height' => 100, 'x' => 100.0, 'y' => 0],
-    ]);
+    expect($result)->toEqual(new ResizeDimensions(100.0, 100, new ResizeCrop(100.0, 100, 100.0, 0)));
 });
 
 test('get_resize_dimensions rounds (not floors) the destHeight/y crop math when the fraction is >= 0.5', function (): void {
@@ -361,11 +356,7 @@ test('get_resize_dimensions rounds (not floors) the destHeight/y crop math when 
     // round() (135/83) and floor() (134/82) genuinely differ.
     $result = PwgImage::get_resize_dimensions(101, 300, 160, 120, null, true, true);
 
-    expect($result)->toBe([
-        'width' => 101,
-        'height' => 135.0,
-        'crop' => ['width' => 101, 'height' => 135.0, 'x' => 0, 'y' => 83.0],
-    ]);
+    expect($result)->toEqual(new ResizeDimensions(101, 135.0, new ResizeCrop(101, 135.0, 0, 83.0)));
 });
 
 test('get_resize_dimensions rounds (not floors) the destWidth/x crop math when the fraction is >= 0.5', function (): void {
@@ -375,11 +366,7 @@ test('get_resize_dimensions rounds (not floors) the destWidth/x crop math when t
     // (135/83) and floor() (134/82) genuinely differ.
     $result = PwgImage::get_resize_dimensions(300, 101, 200, 150, null, true);
 
-    expect($result)->toBe([
-        'width' => 135.0,
-        'height' => 101,
-        'crop' => ['width' => 135.0, 'height' => 101, 'x' => 83.0, 'y' => 0],
-    ]);
+    expect($result)->toEqual(new ResizeDimensions(135.0, 101, new ResizeCrop(135.0, 101, 83.0, 0)));
 });
 
 test('get_resize_dimensions does not swap max dimensions for a square (tied width/height) image', function (): void {
@@ -389,11 +376,7 @@ test('get_resize_dimensions does not swap max dimensions for a square (tied widt
     // vs. not-swapped outcome genuinely different.
     $result = PwgImage::get_resize_dimensions(200, 200, 160, 120, null, true);
 
-    expect($result)->toBe([
-        'width' => 160,
-        'height' => 120.0,
-        'crop' => ['width' => 200, 'height' => 150.0, 'x' => 0, 'y' => 25.0],
-    ]);
+    expect($result)->toEqual(new ResizeDimensions(160, 120.0, new ResizeCrop(200, 150.0, 0, 25.0)));
 });
 
 test('get_resize_dimensions swaps width/height for a 90-degree rotation before and after computing the max-size fit', function (): void {
@@ -402,7 +385,7 @@ test('get_resize_dimensions swaps width/height for a 90-degree rotation before a
     // Pre-swap: destination_width=$max_width (int, unchanged), destination_
     // height=round(...) (float); the post-computation rotate_for_dimensions
     // swap then puts that float first.
-    expect($result)->toBe(['width' => 25.0, 'height' => 50]);
+    expect($result)->toEqual(new ResizeDimensions(25.0, 50));
 });
 
 test('get_resize_dimensions swaps width/height for a 270-degree rotation too, not just 90', function (): void {
@@ -577,11 +560,7 @@ test('webp_info detects the simple lossy VP8 format', function (): void {
     $path = pwgImageTestMarker() . '/lossy.webp';
     file_put_contents($path, 'RIFF' . "\x00\x00\x00\x00" . 'WEBP' . 'VP8' . ' ' . str_repeat("\x00", 9));
 
-    expect(PwgImage::webp_info($path))->toBe([
-        'type' => 'VP8',
-        'has-animation' => false,
-        'has-transparent' => false,
-    ]);
+    expect(PwgImage::webp_info($path))->toEqual(new WebpInfo('VP8', false, false));
 });
 
 test('webp_info detects a transparent lossless VP8L format', function (): void {
@@ -589,11 +568,7 @@ test('webp_info detects a transparent lossless VP8L format', function (): void {
     $buf = 'RIFF' . "\x00\x00\x00\x00" . 'WEBP' . 'VP8' . 'L' . str_repeat("\x00", 8) . chr(0x10);
     file_put_contents($path, $buf);
 
-    expect(PwgImage::webp_info($path))->toBe([
-        'type' => 'VP8L',
-        'has-animation' => false,
-        'has-transparent' => true,
-    ]);
+    expect(PwgImage::webp_info($path))->toEqual(new WebpInfo('VP8L', false, true));
 });
 
 test('webp_info detects a non-transparent lossless VP8L format', function (): void {
@@ -601,11 +576,7 @@ test('webp_info detects a non-transparent lossless VP8L format', function (): vo
     $buf = 'RIFF' . "\x00\x00\x00\x00" . 'WEBP' . 'VP8' . 'L' . str_repeat("\x00", 8) . chr(0x00);
     file_put_contents($path, $buf);
 
-    expect(PwgImage::webp_info($path))->toBe([
-        'type' => 'VP8L',
-        'has-animation' => false,
-        'has-transparent' => false,
-    ]);
+    expect(PwgImage::webp_info($path))->toEqual(new WebpInfo('VP8L', false, false));
 });
 
 test('webp_info detects an animated, transparent extended VP8X format', function (): void {
@@ -613,11 +584,7 @@ test('webp_info detects an animated, transparent extended VP8X format', function
     $buf = 'RIFF' . "\x00\x00\x00\x00" . 'WEBP' . 'VP8' . 'X' . str_repeat("\x00", 4) . chr(0x12) . str_repeat("\x00", 4);
     file_put_contents($path, $buf);
 
-    expect(PwgImage::webp_info($path))->toBe([
-        'type' => 'VP8X',
-        'has-animation' => true,
-        'has-transparent' => true,
-    ]);
+    expect(PwgImage::webp_info($path))->toEqual(new WebpInfo('VP8X', true, true));
 });
 
 test('webp_info detects an extended VP8X format that is animated but not transparent', function (): void {
@@ -630,11 +597,7 @@ test('webp_info detects an extended VP8X format that is animated but not transpa
     $buf = 'RIFF' . "\x00\x00\x00\x00" . 'WEBP' . 'VP8' . 'X' . str_repeat("\x00", 4) . chr(0x02) . str_repeat("\x00", 4);
     file_put_contents($path, $buf);
 
-    expect(PwgImage::webp_info($path))->toBe([
-        'type' => 'VP8X',
-        'has-animation' => true,
-        'has-transparent' => false,
-    ]);
+    expect(PwgImage::webp_info($path))->toEqual(new WebpInfo('VP8X', true, false));
 });
 
 test('webp_info correctly reports no transparency for a VP8L flags byte with an adjacent, unrelated bit set', function (): void {
@@ -677,11 +640,7 @@ test('webp_info detects an extended VP8X format that is transparent but not anim
     $buf = 'RIFF' . "\x00\x00\x00\x00" . 'WEBP' . 'VP8' . 'X' . str_repeat("\x00", 4) . chr(0x10) . str_repeat("\x00", 4);
     file_put_contents($path, $buf);
 
-    expect(PwgImage::webp_info($path))->toBe([
-        'type' => 'VP8X',
-        'has-animation' => false,
-        'has-transparent' => true,
-    ]);
+    expect(PwgImage::webp_info($path))->toEqual(new WebpInfo('VP8X', false, true));
 });
 
 test('webp_info throws for a file that is not a real WEBP container', function (): void {
@@ -848,8 +807,8 @@ test('pwg_resize copies the source unchanged when it already fits within the max
     $img = pwgImageTestMake($source, 'gd');
     $result = $img->pwg_resize($dest, 200, 200, 90, automatic_rotation: false);
 
-    expect($result['width'])->toBe(40);
-    expect($result['height'])->toBe(30);
+    expect($result->width)->toBe(40);
+    expect($result->height)->toBe(30);
     expect(file_exists($dest))->toBeTrue();
     $destSize = getimagesize($dest);
     if ($destSize === false) {
@@ -860,12 +819,12 @@ test('pwg_resize copies the source unchanged when it already fits within the max
     // Real gap, found via mutation testing: no existing pwg_resize test
     // ever checked source/destination/size/library -- only width/height
     // and the destination file's own existence.
-    expect($result['source'])->toBe($source)
-        ->and($result['destination'])->toBe($dest)
-        ->and($result['library'])->toBe('gd')
-        ->and($result['size'])->toEndWith(' KB')
-        ->and((float) $result['size'])->toBeGreaterThanOrEqual(0.0)
-        ->and($result['time'])->toEndWith(' ms');
+    expect($result->source)->toBe($source)
+        ->and($result->destination)->toBe($dest)
+        ->and($result->library)->toBe('gd')
+        ->and($result->size)->toEndWith(' KB')
+        ->and((float) $result->size)->toBeGreaterThanOrEqual(0.0)
+        ->and($result->time)->toEndWith(' ms');
     // Real gap, found via mutation testing: the "already fits" branch's own
     // condition (line 180, 4 float casts + the === itself) and its early
     // return (line 183) were all untested -- every mutation there still
@@ -892,8 +851,8 @@ test('pwg_resize scales a real oversized image down and writes the resized desti
 
     // ratio_width(4) > ratio_height(2) -> width pinned to max_width(100),
     // height derived: round(200/4) = 50.
-    expect($result['width'])->toBe(100);
-    expect($result['height'])->toBe(50.0);
+    expect($result->width)->toBe(100);
+    expect($result->height)->toBe(50.0);
     $destSize = getimagesize($dest);
     if ($destSize === false) {
         throw new RuntimeException('getimagesize failed');
@@ -914,8 +873,8 @@ test('pwg_resize crops a mismatched-aspect image before resizing', function (): 
     $img = pwgImageTestMake($source, 'gd');
     $result = $img->pwg_resize($dest, 100, 100, 85, automatic_rotation: false, crop: true);
 
-    expect($result['width'])->toBe(100.0);
-    expect($result['height'])->toBe(100);
+    expect($result->width)->toBe(100.0);
+    expect($result->height)->toBe(100);
     $destSize = getimagesize($dest);
     if ($destSize === false) {
         throw new RuntimeException('getimagesize failed');
@@ -937,8 +896,8 @@ test('pwg_resize rotates the destination when the source carries a real EXIF ori
     // so this genuinely exercises resize() + rotate() + write(), not the
     // early copy() shortcut.
     expect(file_exists($dest))->toBeTrue();
-    expect($result['time'])->toBeString();
-    expect($result['time'])->toEndWith(' ms');
+    expect($result->time)->toBeString();
+    expect($result->time)->toEndWith(' ms');
 });
 
 test('pwg_resize calls only set_compression_quality/resize/write when strip/crop/rotation are all off', function (): void {

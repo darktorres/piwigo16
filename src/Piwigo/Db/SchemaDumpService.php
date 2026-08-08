@@ -7,6 +7,7 @@ namespace Piwigo\Db;
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\Platforms\AbstractMySQLPlatform;
 use Doctrine\DBAL\Platforms\PostgreSQLPlatform;
+use Piwigo\Db\Projection\SchemaDumpResult;
 use RuntimeException;
 use Symfony\Component\Process\Process;
 
@@ -50,10 +51,7 @@ final readonly class SchemaDumpService
         private Connection $connection,
     ) {}
 
-    /**
-     * @return array{label: string, path: string}
-     */
-    public function dump(): array
+    public function dump(): SchemaDumpResult
     {
         $label = $this->detectLabel();
         $credentials = DbCredentials::fromEnv();
@@ -67,10 +65,7 @@ final readonly class SchemaDumpService
         $outputPath = dirname(__DIR__, 3) . '/install/piwigo_structure-' . $label . '.sql';
         file_put_contents($outputPath, $normalized);
 
-        return [
-            'label' => $label,
-            'path' => $outputPath,
-        ];
+        return new SchemaDumpResult($label, $outputPath);
     }
 
     private function detectLabel(): string

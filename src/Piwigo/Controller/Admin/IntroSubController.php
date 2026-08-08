@@ -213,8 +213,8 @@ final class IntroSubController implements AdminSubControllerInterface
 
         $stats = $this->installationStats->getGeneralStatistics();
 
-        $disk_usage = (float) $stats['disk_usage'];
-        $nb_views = (float) $stats['nb_views'];
+        $disk_usage = (float) $stats->diskUsage;
+        $nb_views = (float) $stats->nbViews;
 
         $du_decimals = 1;
         $du_gb = $disk_usage / (1024.0 * 1024.0);
@@ -224,13 +224,13 @@ final class IntroSubController implements AdminSubControllerInterface
 
         $template->assign(
             [
-                'NB_PHOTOS' => $stats['nb_photos'],
-                'NB_ALBUMS' => $stats['nb_categories'],
-                'NB_TAGS' => $stats['nb_tags'],
-                'NB_IMAGE_TAG' => $stats['nb_image_tag'],
-                'NB_USERS' => $stats['nb_users'],
-                'NB_GROUPS' => $stats['nb_groups'],
-                'NB_RATES' => $stats['nb_rates'],
+                'NB_PHOTOS' => $stats->nbPhotos,
+                'NB_ALBUMS' => $stats->nbCategories,
+                'NB_TAGS' => $stats->nbTags,
+                'NB_IMAGE_TAG' => $stats->nbImageTag,
+                'NB_USERS' => $stats->nbUsers,
+                'NB_GROUPS' => $stats->nbGroups,
+                'NB_RATES' => $stats->nbRates,
                 'NB_VIEWS' => AdminUiHelper::numberFormatHumanReadable($nb_views),
                 'NB_PLUGINS' => count($this->loadedPlugins->get()),
                 'STORAGE_USED' => str_replace(' ', '&nbsp;', $this->lang->t('%sGB', number_format($du_gb, $du_decimals))),

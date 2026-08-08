@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin\Maintenance;
 
+use Piwigo\Admin\Maintenance\Projection\ServerInfo;
+
 /**
  * SEC-22: replaces the 2 raw phpinfo() call sites (admin/maintenance_actions.php,
  * admin/maintenance_env.php -- both gated behind AccessLevel::Administrator
@@ -31,16 +33,7 @@ final class ServerInfoService
         'display_errors',
     ];
 
-    /**
-     * @return array{
-     *   php_version: string,
-     *   sapi: string,
-     *   os: string,
-     *   extensions: list<string>,
-     *   ini: array<string, string>,
-     * }
-     */
-    public function curatedInfo(): array
+    public function curatedInfo(): ServerInfo
     {
         $extensions = get_loaded_extensions();
         sort($extensions);
@@ -58,13 +51,13 @@ final class ServerInfoService
             $ini[$setting] = $value === false ? '' : $value;
         }
 
-        return [
-            'php_version' => PHP_VERSION,
-            'sapi' => PHP_SAPI,
-            'os' => PHP_OS,
-            'extensions' => $extensions,
-            'ini' => $ini,
-        ];
+        return new ServerInfo(
+            phpVersion: PHP_VERSION,
+            sapi: PHP_SAPI,
+            os: PHP_OS,
+            extensions: $extensions,
+            ini: $ini,
+        );
     }
 
     /**
@@ -88,15 +81,15 @@ final class ServerInfoService
         // *values* on the other hand are genuinely attacker/operator
         // -influenceable (e.g. `display_errors` accepts an arbitrary
         // ini_set() string) and are covered by a real escaping test.
-        $html .= '<tr><th>PHP version</th><td>' . htmlspecialchars($info['php_version']) . '</td></tr>';
-        $html .= '<tr><th>SAPI</th><td>' . htmlspecialchars($info['sapi']) . '</td></tr>';
-        $html .= '<tr><th>OS</th><td>' . htmlspecialchars($info['os']) . '</td></tr>';
-        foreach ($info['ini'] as $setting => $value) {
+        $html .= '<tr><th>PHP version</th><td>' . htmlspecialchars($info->phpVersion) . '</td></tr>';
+        $html .= '<tr><th>SAPI</th><td>' . htmlspecialchars($info->sapi) . '</td></tr>';
+        $html .= '<tr><th>OS</th><td>' . htmlspecialchars($info->os) . '</td></tr>';
+        foreach ($info->ini as $setting => $value) {
             $html .= '<tr><th>' . htmlspecialchars($setting) . '</th><td>' . htmlspecialchars($value) . '</td></tr>';
         }
         $html .= '</table>';
         $html .= '<h2>Loaded extensions</h2><ul>';
-        foreach ($info['extensions'] as $extension) {
+        foreach ($info->extensions as $extension) {
             $html .= '<li>' . htmlspecialchars($extension) . '</li>';
         }
         $html .= '</ul></body></html>';

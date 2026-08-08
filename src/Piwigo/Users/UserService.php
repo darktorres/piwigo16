@@ -63,7 +63,9 @@ use Piwigo\Permission\SqlCondition;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Session\SessionService;
 use Piwigo\Users\Projection\ActivationKeyRow;
+use Piwigo\Users\Projection\DefaultUserInfo;
 use Piwigo\Users\Projection\NotificationRecipient;
+use Piwigo\Users\Projection\RegistrationOutcome;
 use Piwigo\Validation\InputValidator;
 use SensitiveParameter;
 
@@ -318,10 +320,6 @@ final readonly class UserService implements DefaultLanguageProviderInterface
      * auto-login when `duplicateUsername` is true (do not look the user
      * back up by username and log them into what may be someone else's
      * account).
-     *
-     * @return array{userId: int|null, errors: list<string>, duplicateUsername: bool}
-     *   errors is real, showable validation errors -- never includes a
-     *   duplicate-login message
      */
     public function registerUser(
         string $login,
@@ -331,7 +329,7 @@ final readonly class UserService implements DefaultLanguageProviderInterface
         UrlServiceInterface $urlService,
         bool $notifyAdmin = true,
         bool $notifyUser = false
-    ): array {
+    ): RegistrationOutcome {
 
         $errors = [];
         $duplicateUsername = false;
@@ -388,11 +386,7 @@ final readonly class UserService implements DefaultLanguageProviderInterface
                 $this->notifyExistingAccountOfDuplicateRegistration($login, $mailAddress);
             }
 
-            return [
-                'userId' => null,
-                'errors' => $errors,
-                'duplicateUsername' => $duplicateUsername,
-            ];
+            return new RegistrationOutcome(userId: null, errors: $errors, duplicateUsername: $duplicateUsername);
         }
 
         // $errors is empty here, so $loginUsername is guaranteed non-null --
@@ -454,11 +448,7 @@ final readonly class UserService implements DefaultLanguageProviderInterface
 
         $this->activityLogger->record('user', $userId->value, 'add');
 
-        return [
-            'userId' => $userId->value,
-            'errors' => [],
-            'duplicateUsername' => false,
-        ];
+        return new RegistrationOutcome(userId: $userId->value, errors: [], duplicateUsername: false);
     }
 
     /**
@@ -472,10 +462,7 @@ final readonly class UserService implements DefaultLanguageProviderInterface
             return;
         }
 
-        $defaultUser = $this->getDefaultUserInfo();
-        if ($defaultUser === false) {
-            $defaultUser = [];
-        }
+        $defaultUser = $this->getDefaultUserInfo()?->toArray() ?? [];
 
         if ($overrideValues !== null) {
             $defaultUser = array_merge($defaultUser, $overrideValues);
@@ -538,10 +525,9 @@ final readonly class UserService implements DefaultLanguageProviderInterface
      * (user_id/status/registration_date/last_visit/last_visit_from_history
      * -- caller-specific, re-added by createUserInfos() itself).
      *
-     * @return array{nb_image_page: int, language: string, expand: bool, show_nb_comments: bool, show_nb_hits: bool, recent_period: int, theme: string, enabled_high: bool, level: int, activation_key: ?string, activation_key_expire: ?string, lastmodified: string, preferences: array<string, mixed>|null}|false false if the default user row
-     *   doesn't exist
+     * Null if the default user row doesn't exist.
      */
-    public function getDefaultUserInfo(): array|false
+    public function getDefaultUserInfo(): ?DefaultUserInfo
     {
         // Reads the just-computed value directly rather than a
         // set()-then-get() round trip through $this->processCache.
@@ -563,7 +549,7 @@ final readonly class UserService implements DefaultLanguageProviderInterface
         }
 
         if (! is_array($defaultUserCached)) {
-            return false;
+            return null;
         }
 
         // Used to take a $convertStr param, converting expand/
@@ -573,8 +559,12 @@ final readonly class UserService implements DefaultLanguageProviderInterface
         // {@see \Piwigo\Users\Projection\UserInfo::fromRow()} already
         // returns those 4 as real bool, once, before this array is even
         // cached, so there's nothing left to conditionally convert.
-        /** @var array{nb_image_page: int, language: string, expand: bool, show_nb_comments: bool, show_nb_hits: bool, recent_period: int, theme: string, enabled_high: bool, level: int, activation_key: ?string, activation_key_expire: ?string, lastmodified: string, preferences: array<string, mixed>|null} $defaultUserCached */
-        return $defaultUserCached;
+        // DefaultUserInfo::fromArray() itself narrows every field
+        // defensively -- $defaultUserCached (process-cache-backed) isn't
+        // trusted to match any particular shape beyond "is an array".
+        $stringKeyed = array_filter($defaultUserCached, is_string(...), ARRAY_FILTER_USE_KEY);
+
+        return DefaultUserInfo::fromArray($stringKeyed);
     }
 
     /**
@@ -586,8 +576,8 @@ final readonly class UserService implements DefaultLanguageProviderInterface
      */
     public function getDefaultUserValue(string $valueName, mixed $default): mixed
     {
-        $defaultUser = $this->getDefaultUserInfo();
-        if ($defaultUser === false || self::emptyValue($defaultUser[$valueName] ?? null)) {
+        $defaultUser = $this->getDefaultUserInfo()?->toArray();
+        if ($defaultUser === null || self::emptyValue($defaultUser[$valueName] ?? null)) {
             return $default;
         }
 
@@ -823,15 +813,15 @@ final readonly class UserService implements DefaultLanguageProviderInterface
             CachePools::effectivePermissions()
         )->getForUser($userId->value, $effective_status, $effective_level);
 
-        $userdata['forbidden_categories'] = $effective['forbiddenCategories'];
-        $userdata['image_access_type'] = $effective['imageAccessType'];
-        $userdata['image_access_list'] = $effective['imageAccessList'];
-        $userdata['nb_total_images'] = $effective['nbTotalImages'];
+        $userdata['forbidden_categories'] = $effective->forbiddenCategories;
+        $userdata['image_access_type'] = $effective->imageAccessType;
+        $userdata['image_access_list'] = $effective->imageAccessList;
+        $userdata['nb_total_images'] = $effective->nbTotalImages;
         // Gap-closure Stage 4e: Filter\FilterService's own separate,
         // differently-scoped (recent-period-filtered) last_photo_date
         // computation is untouched -- see EffectiveForbiddenCategoriesCache's
         // own docblock for why these aren't the same value.
-        $userdata['last_photo_date'] = $effective['lastPhotoDate'];
+        $userdata['last_photo_date'] = $effective->lastPhotoDate;
 
         $userdata['preferences'] = $preferences;
 

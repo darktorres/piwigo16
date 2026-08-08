@@ -776,7 +776,7 @@ final class UrlService implements UrlServiceInterface
                 if ($result === null) {
                     $this->htmlRenderer->pageNotFound($redirectService, $this->lang->t('Requested album does not exist'));
                 }
-                $page['category'] = $result;
+                $page['category'] = $result->toArray();
             }
 
             if ($combined_category_ids !== []) {
@@ -788,7 +788,7 @@ final class UrlService implements UrlServiceInterface
                         $this->htmlRenderer->pageNotFound($redirectService, $this->lang->t('Requested album does not exist'));
                     }
 
-                    $combined_categories[] = $result;
+                    $combined_categories[] = $result->toArray();
                 }
 
                 $page['combined_categories'] = $combined_categories;

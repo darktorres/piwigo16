@@ -13,6 +13,7 @@ use Piwigo\Tests\Support\UrlServiceTestFactory;
 use Doctrine\DBAL\Connection;
 use Piwigo\Auth\ApiKeyRepository;
 use Piwigo\Auth\ApiKeyService;
+use Piwigo\Auth\Projection\ApiKeySummary;
 use Piwigo\Auth\PasswordRepository;
 use Piwigo\Auth\PasswordService;
 use Piwigo\Common\ValueObject\Email;
@@ -143,7 +144,7 @@ final class ApiKeyServiceLifecycleTest extends IntegrationTestCase
         // 4 is fixture user 'power_user' -- countByAuthKeyAndUser() scopes
         // by (auth_key, user_id) together, so a real key looked up under
         // the wrong owner is indistinguishable from a nonexistent one.
-        $result = $this->service->revoke(4, $created['auth_key']);
+        $result = $this->service->revoke(4, $created->authKey);
 
         self::assertSame('API Key not found', $result);
     }
@@ -159,13 +160,13 @@ final class ApiKeyServiceLifecycleTest extends IntegrationTestCase
     {
         $created = $this->service->create($this->userId, 30, 'Original Name');
 
-        $result = $this->service->edit($this->userId, $created['auth_key'], 'Renamed Key');
+        $result = $this->service->edit($this->userId, $created->authKey, 'Renamed Key');
 
         self::assertTrue($result);
 
         $available = $this->service->getAvailable($this->userId);
         self::assertIsArray($available);
-        self::assertSame('Renamed Key', $available[0]['apikey_name']);
+        self::assertSame('Renamed Key', $available[0]->apikeyName);
     }
 
     public function test_get_reports_an_hours_only_expiration_message_for_a_key_expiring_within_the_same_day(): void
@@ -176,16 +177,16 @@ final class ApiKeyServiceLifecycleTest extends IntegrationTestCase
         // hours branch fires, not the days one.
         $this->conn->executeStatement(
             'UPDATE ' . Tables::userAuthKeys() . " SET expired_on = '2026-08-01 03:00:00' WHERE auth_key = ?",
-            [$created['auth_key']]
+            [$created->authKey]
         );
         $this->em->clear();
 
         $keys = $this->service->get($this->userId);
         self::assertIsArray($keys);
-        $key = self::findKeyByAuthKey($keys, $created['auth_key']);
+        $key = self::findKeyByAuthKey($keys, $created->authKey);
 
-        self::assertFalse($key['is_expired']);
-        self::assertSame('3 hours', $key['expiration']);
+        self::assertFalse($key->isExpired);
+        self::assertSame('3 hours', $key->expiration);
     }
 
     public function test_get_reports_a_minutes_only_expiration_message_for_a_key_expiring_within_the_hour(): void
@@ -195,16 +196,16 @@ final class ApiKeyServiceLifecycleTest extends IntegrationTestCase
         // ->days and ->h stay 0, so the minutes branch fires.
         $this->conn->executeStatement(
             'UPDATE ' . Tables::userAuthKeys() . " SET expired_on = '2026-08-01 00:45:00' WHERE auth_key = ?",
-            [$created['auth_key']]
+            [$created->authKey]
         );
         $this->em->clear();
 
         $keys = $this->service->get($this->userId);
         self::assertIsArray($keys);
-        $key = self::findKeyByAuthKey($keys, $created['auth_key']);
+        $key = self::findKeyByAuthKey($keys, $created->authKey);
 
-        self::assertFalse($key['is_expired']);
-        self::assertSame('45 minutes', $key['expiration']);
+        self::assertFalse($key->isExpired);
+        self::assertSame('45 minutes', $key->expiration);
     }
 
     public function test_notify_expiration_uses_the_plural_days_wording_when_more_than_one_day_remains(): void
@@ -253,13 +254,12 @@ final class ApiKeyServiceLifecycleTest extends IntegrationTestCase
     }
 
     /**
-     * @param list<array{auth_key: string, expiration: string, is_expired: bool, ...}> $keys
-     * @return array{auth_key: string, expiration: string, is_expired: bool, ...}
+     * @param list<ApiKeySummary> $keys
      */
-    private static function findKeyByAuthKey(array $keys, string $authKey): array
+    private static function findKeyByAuthKey(array $keys, string $authKey): ApiKeySummary
     {
         foreach ($keys as $key) {
-            if ($key['auth_key'] === $authKey) {
+            if ($key->authKey === $authKey) {
                 return $key;
             }
         }

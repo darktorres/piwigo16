@@ -41,6 +41,7 @@ use Piwigo\Image\Projection\MissingDerivativeRow;
 use Piwigo\Image\Projection\NextIdCount;
 use Piwigo\Image\Projection\PathRepresentativeExt;
 use Piwigo\Image\Projection\PathRepresentativeExtLevel;
+use Piwigo\Image\Projection\SlideshowParams;
 use Piwigo\Image\Projection\UploadInfo;
 use Piwigo\Image\Projection\UploadResultInfo;
 use Piwigo\Image\Request\EmptyLoungeRequest;
@@ -202,17 +203,13 @@ final readonly class ImageService
         );
     }
 
-    /**
-     * @return array{period: int, repeat: bool, play: bool}
-     */
-    public function getDefaultSlideshowParams(): array
+    public function getDefaultSlideshowParams(): SlideshowParams
     {
-
-        return [
-            'period' => $this->currentConfig->slideshowPeriod(),
-            'repeat' => $this->currentConfig->slideshowRepeat(),
-            'play' => true,
-        ];
+        return new SlideshowParams(
+            period: $this->currentConfig->slideshowPeriod(),
+            repeat: $this->currentConfig->slideshowRepeat(),
+            play: true,
+        );
     }
 
     /**
@@ -245,7 +242,8 @@ final readonly class ImageService
      */
     public function decodeSlideshowParams(?string $encodeParams = null): array
     {
-        $result = $this->getDefaultSlideshowParams();
+        $result = $this->getDefaultSlideshowParams()
+            ->toArray();
 
         if ($encodeParams !== null && is_numeric($encodeParams)) {
             $result['period'] = $encodeParams;
@@ -279,7 +277,7 @@ final readonly class ImageService
         // the regex-matched flags as bool|string); filter defensively so
         // array_diff_assoc() only ever compares string-castable values.
         $corrected = array_filter($this->correctSlideshowParams($decodeParams), is_scalar(...));
-        $defaults = array_filter($this->getDefaultSlideshowParams(), is_scalar(...));
+        $defaults = array_filter($this->getDefaultSlideshowParams()->toArray(), is_scalar(...));
         $params = array_diff_assoc($corrected, $defaults);
         $result = '';
 

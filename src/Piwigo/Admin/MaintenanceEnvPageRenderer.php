@@ -109,7 +109,9 @@ final class MaintenanceEnvPageRenderer
         $db_version = $dbInfo->version();
         $db_current_date = $dbInfo->currentDateTime();
 
-        [$container_name, $container_version] = ContainerDetector::detect();
+        $containerInfo = ContainerDetector::detect();
+        $container_name = $containerInfo->type;
+        $container_version = $containerInfo->version;
 
         if (! in_array($container_name, ['Official', 'none'], true)) {
             $container_name = '(unofficial) ' . $container_name;

@@ -98,13 +98,13 @@ final class ApiKeyServiceGetAvailableTest extends IntegrationTestCase
 
         self::assertIsArray($available);
         self::assertCount(1, $available);
-        self::assertSame($created['auth_key'], $available[0]['auth_key']);
+        self::assertSame($created->authKey, $available[0]->authKey);
     }
 
     public function test_getAvailable_excludes_a_revoked_key(): void
     {
         $created = $this->service->create($this->userId, 30, 'Revoked Key');
-        $revokeResult = $this->service->revoke($this->userId, $created['auth_key']);
+        $revokeResult = $this->service->revoke($this->userId, $created->authKey);
         self::assertTrue($revokeResult);
 
         self::assertFalse($this->service->getAvailable($this->userId));
@@ -121,7 +121,7 @@ final class ApiKeyServiceGetAvailableTest extends IntegrationTestCase
         $created = $this->service->create($this->userId, 30, 'Expired Key');
         $this->conn->executeStatement(
             'UPDATE ' . Tables::userAuthKeys() . " SET expired_on = '2000-01-01 00:00:00' WHERE auth_key = ?",
-            [$created['auth_key']]
+            [$created->authKey]
         );
         // insert() persisted+flushed this row through the ORM, so the raw
         // DBAL UPDATE above leaves a stale entity in the identity map --
@@ -138,16 +138,16 @@ final class ApiKeyServiceGetAvailableTest extends IntegrationTestCase
         $expired = $this->service->create($this->userId, 30, 'Mixed Expired Key');
         $this->conn->executeStatement(
             'UPDATE ' . Tables::userAuthKeys() . " SET expired_on = '2000-01-01 00:00:00' WHERE auth_key = ?",
-            [$expired['auth_key']]
+            [$expired->authKey]
         );
         $this->em->clear();
         $revoked = $this->service->create($this->userId, 30, 'Mixed Revoked Key');
-        $this->service->revoke($this->userId, $revoked['auth_key']);
+        $this->service->revoke($this->userId, $revoked->authKey);
 
         $result = $this->service->getAvailable($this->userId);
 
         self::assertIsArray($result);
         self::assertCount(1, $result);
-        self::assertSame($available['auth_key'], $result[0]['auth_key']);
+        self::assertSame($available->authKey, $result[0]->authKey);
     }
 }

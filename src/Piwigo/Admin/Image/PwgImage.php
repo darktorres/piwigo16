@@ -14,6 +14,10 @@ namespace Piwigo\Admin\Image;
 use Exception;
 use Imagick;
 use LogicException;
+use Piwigo\Admin\Image\Projection\ResizeCrop;
+use Piwigo\Admin\Image\Projection\ResizeDimensions;
+use Piwigo\Admin\Image\Projection\ResizeResult;
+use Piwigo\Admin\Image\Projection\WebpInfo;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\CurrentLogger;
 use Piwigo\Core\Kernel;
@@ -157,10 +161,7 @@ final class PwgImage
     }
 
     // Piwigo resize function
-    /**
-     * @return array{source: string, destination: string, width: int|float, height: int|float, size: string, time: string|null, library: string|false}
-     */
-    public function pwg_resize(string $destination_filepath, int $max_width, int $max_height, int $quality, bool $automatic_rotation = true, bool $strip_metadata = false, bool $crop = false, bool $follow_orientation = true): array
+    public function pwg_resize(string $destination_filepath, int $max_width, int $max_height, int $quality, bool $automatic_rotation = true, bool $strip_metadata = false, bool $crop = false, bool $follow_orientation = true): ResizeResult
     {
         $starttime = TimingHelper::getMoment();
         $image = $this->getImage();
@@ -177,10 +178,10 @@ final class PwgImage
 
         // testing on height is useless in theory: if width is unchanged, there
         // should be no resize, because width/height ratio is not modified.
-        if ((float) $resize_dimensions['width'] === (float) $source_width and (float) $resize_dimensions['height'] === (float) $source_height) {
+        if ((float) $resize_dimensions->width === (float) $source_width and (float) $resize_dimensions->height === (float) $source_height) {
             // the image doesn't need any resize! We just copy it to the destination
             copy($this->source_filepath, $destination_filepath);
-            return $this->get_resize_result($destination_filepath, $resize_dimensions['width'], $resize_dimensions['height'], $starttime);
+            return $this->get_resize_result($destination_filepath, $resize_dimensions->width, $resize_dimensions->height, $starttime);
         }
 
         $image->set_compression_quality($quality);
@@ -190,11 +191,11 @@ final class PwgImage
             $image->strip();
         }
 
-        if (isset($resize_dimensions['crop'])) {
-            $image->crop($resize_dimensions['crop']['width'], $resize_dimensions['crop']['height'], $resize_dimensions['crop']['x'], $resize_dimensions['crop']['y']);
+        if ($resize_dimensions->crop !== null) {
+            $image->crop($resize_dimensions->crop->width, $resize_dimensions->crop->height, $resize_dimensions->crop->x, $resize_dimensions->crop->y);
         }
 
-        $image->resize($resize_dimensions['width'], $resize_dimensions['height']);
+        $image->resize($resize_dimensions->width, $resize_dimensions->height);
 
         if ($rotation !== null && $rotation !== 0) {
             $image->rotate($rotation);
@@ -203,13 +204,10 @@ final class PwgImage
         $image->write($destination_filepath);
 
         // everything should be OK if we are here!
-        return $this->get_resize_result($destination_filepath, $resize_dimensions['width'], $resize_dimensions['height'], $starttime);
+        return $this->get_resize_result($destination_filepath, $resize_dimensions->width, $resize_dimensions->height, $starttime);
     }
 
-    /**
-     * @return array{width: int|float, height: int|float, crop?: array{width: int|float, height: int|float, x: int|float, y: int|float}}
-     */
-    public static function get_resize_dimensions(int|float $width, int|float $height, int $max_width, int $max_height, ?int $rotation = null, bool $crop = false, bool $follow_orientation = true): array
+    public static function get_resize_dimensions(int|float $width, int|float $height, int $max_width, int $max_height, ?int $rotation = null, bool $crop = false, bool $follow_orientation = true): ResizeDimensions
     {
         $rotate_for_dimensions = false;
         if (isset($rotation) and in_array(abs($rotation), [90, 270], true)) {
@@ -265,26 +263,15 @@ final class PwgImage
             [$destination_width, $destination_height] = [$destination_height, $destination_width];
         }
 
-        $result = [
-            'width' => $destination_width,
-            'height' => $destination_height,
-        ];
-
+        $cropResult = null;
         if ($crop and ((bool) $x or (bool) $y)) {
-            $result['crop'] = [
-                'width' => $width,
-                'height' => $height,
-                'x' => $x,
-                'y' => $y,
-            ];
+            $cropResult = new ResizeCrop($width, $height, $x, $y);
         }
-        return $result;
+
+        return new ResizeDimensions($destination_width, $destination_height, $cropResult);
     }
 
-    /**
-     * @return array{type: string, has-animation: bool, has-transparent: bool}
-     */
-    public static function webp_info(string $source_filepath): array
+    public static function webp_info(string $source_filepath): WebpInfo
     {
         // function based on https://stackoverflow.com/questions/61221874/detect-if-a-webp-image-is-transparent-in-php
         //
@@ -312,27 +299,15 @@ final class PwgImage
                 throw new Exception('webp_info(): not a valid webp image');
             case $buf[15] === ' ':
                 // Simple File Format (Lossy)
-                return [
-                    'type' => 'VP8',
-                    'has-animation' => false,
-                    'has-transparent' => false,
-                ];
+                return new WebpInfo('VP8', false, false);
 
             case $buf[15] === 'L':
                 // Simple File Format (Lossless)
-                return [
-                    'type' => 'VP8L',
-                    'has-animation' => false,
-                    'has-transparent' => (bool) (ord($buf[24]) & 0x00000010),
-                ];
+                return new WebpInfo('VP8L', false, (bool) (ord($buf[24]) & 0x00000010));
 
             case $buf[15] === 'X':
                 // Extended File Format
-                return [
-                    'type' => 'VP8X',
-                    'has-animation' => (bool) (ord($buf[20]) & 0x00000002),
-                    'has-transparent' => (bool) (ord($buf[20]) & 0x00000010),
-                ];
+                return new WebpInfo('VP8X', (bool) (ord($buf[20]) & 0x00000002), (bool) (ord($buf[20]) & 0x00000010));
 
             default:
                 throw new Exception('webp_info(): could not detect webp type');
@@ -440,24 +415,21 @@ final class PwgImage
         return $matrix;
     }
 
-    /**
-     * @return array{source: string, destination: string, width: int|float, height: int|float, size: string, time: string|null, library: string|false}
-     */
-    private function get_resize_result(string $destination_filepath, int|float $width, int|float $height, ?float $time = null): array
+    private function get_resize_result(string $destination_filepath, int|float $width, int|float $height, ?float $time = null): ResizeResult
     {
         // this is purely diagnostic/log output -- fall back to 0 KB rather
         // than throwing if the destination somehow isn't readable.
         $destination_filesize = filesize($destination_filepath);
         $destination_filesize = $destination_filesize !== false ? $destination_filesize : 0;
-        return [
-            'source' => $this->source_filepath,
-            'destination' => $destination_filepath,
-            'width' => $width,
-            'height' => $height,
-            'size' => (string) floor($destination_filesize / 1024) . ' KB',
-            'time' => ((bool) $time) ? number_format((TimingHelper::getMoment() - $time) * 1000.0, 2, '.', ' ') . ' ms' : null,
-            'library' => $this->library,
-        ];
+        return new ResizeResult(
+            source: $this->source_filepath,
+            destination: $destination_filepath,
+            width: $width,
+            height: $height,
+            size: (string) floor($destination_filesize / 1024) . ' KB',
+            time: ((bool) $time) ? number_format((TimingHelper::getMoment() - $time) * 1000.0, 2, '.', ' ') . ' ms' : null,
+            library: $this->library,
+        );
     }
 
     public static function is_imagick(): bool

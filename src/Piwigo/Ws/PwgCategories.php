@@ -856,13 +856,18 @@ final class PwgCategories
             $options
         );
 
-        if (isset($creation_output['error'])) {
-            return new PwgError(500, $creation_output['error']);
+        if ($creation_output->error !== null) {
+            return new PwgError(500, $creation_output->error);
         }
 
         PermissionCacheInvalidator::invalidate();
 
-        return $creation_output;
+        // success()'s own contract guarantees info/id are non-null whenever
+        // error is null.
+        return [
+            'info' => (string) $creation_output->info,
+            'id' => $creation_output->id ?? 0,
+        ];
     }
 
     /**

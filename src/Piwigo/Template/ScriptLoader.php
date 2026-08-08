@@ -19,6 +19,7 @@ use Piwigo\Core\Kernel;
 use Piwigo\Core\Paths;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\PluginConfig\EventDispatcher;
+use Piwigo\Template\Projection\FooterScripts;
 use RuntimeException;
 
 final class ScriptLoader
@@ -299,10 +300,8 @@ final class ScriptLoader
 
     /**
      * Returns combined scripts loaded in footer.
-     *
-     * @return array{0: Combinable[], 1: Combinable[]}
      */
-    public function get_footer_scripts(AccessLevelChecker $accessLevelChecker): array
+    public function get_footer_scripts(AccessLevelChecker $accessLevelChecker): FooterScripts
     {
         if (! $this->did_head) {
             self::check_load_dep($this->registered_scripts);
@@ -329,7 +328,7 @@ final class ScriptLoader
                 $result[$script->load_mode - 1][$id] = $script;
             }
         }
-        return [$this->do_combine($result[0], 1, $accessLevelChecker), $this->do_combine($result[1], 2, $accessLevelChecker)];
+        return new FooterScripts($this->do_combine($result[0], 1, $accessLevelChecker), $this->do_combine($result[1], 2, $accessLevelChecker));
     }
 
     /**

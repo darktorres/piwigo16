@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin;
 
+use Piwigo\Admin\Projection\GeneralStatistics;
 use Piwigo\Category\CategoryService;
 use Piwigo\Group\GroupService;
 use Piwigo\History\HistoryService;
@@ -31,13 +32,7 @@ final class InstallationStats
         private GroupService $groupService,
     ) {}
 
-    /**
-     * @return array{nb_photos: int, nb_categories: int, nb_tags: int,
-     *   nb_image_tag: int, nb_users: int, nb_admins: int, nb_groups: int,
-     *   nb_rates: int, nb_views: int, disk_usage: int, nb_formats: int,
-     *   formats_disk_usage: int}
-     */
-    public function getGeneralStatistics(): array
+    public function getGeneralStatistics(): GeneralStatistics
     {
         $nb_photos = $this->imageService->getTotalImageCount();
         $nb_categories = $this->categoryService->countAllCategories();
@@ -53,20 +48,20 @@ final class InstallationStats
         $nb_formats = $format_stats->count;
         $formats_disk_usage = $format_stats->sum;
 
-        return [
-            'nb_photos' => $nb_photos,
-            'nb_categories' => $nb_categories,
-            'nb_tags' => $nb_tags,
-            'nb_image_tag' => $nb_image_tag,
-            'nb_users' => $nb_users,
-            'nb_admins' => $nb_admins,
-            'nb_groups' => $nb_groups,
-            'nb_rates' => $nb_rates,
-            'nb_views' => $nb_views,
-            'disk_usage' => $images_disk_usage + $formats_disk_usage,
-            'nb_formats' => $nb_formats,
-            'formats_disk_usage' => $formats_disk_usage,
-        ];
+        return new GeneralStatistics(
+            nbPhotos: $nb_photos,
+            nbCategories: $nb_categories,
+            nbTags: $nb_tags,
+            nbImageTag: $nb_image_tag,
+            nbUsers: $nb_users,
+            nbAdmins: $nb_admins,
+            nbGroups: $nb_groups,
+            nbRates: $nb_rates,
+            nbViews: $nb_views,
+            diskUsage: $images_disk_usage + $formats_disk_usage,
+            nbFormats: $nb_formats,
+            formatsDiskUsage: $formats_disk_usage,
+        );
     }
 
     /**

@@ -38,6 +38,7 @@ namespace Piwigo\Tests\Integration {
     use Piwigo\Event\Picture\FormatExifData;
     use Piwigo\Metadata\MetadataRepository;
     use Piwigo\Metadata\MetadataService;
+    use Piwigo\Metadata\Projection\SvgDimensions;
 
 final class MetadataServiceTest extends IntegrationTestCase
 {
@@ -901,7 +902,7 @@ final class MetadataServiceTest extends IntegrationTestCase
 
         $result = $method->invoke($this->service, $path);
 
-        self::assertSame([200, 150], $result);
+        self::assertEquals(new SvgDimensions(200, 150), $result);
     }
 
     public function test_parse_svg_dimensions_defaults_to_zero_for_a_malformed_viewbox(): void
@@ -915,7 +916,7 @@ final class MetadataServiceTest extends IntegrationTestCase
 
         $result = $method->invoke($this->service, $path);
 
-        self::assertSame([0, 0], $result);
+        self::assertEquals(new SvgDimensions(0, 0), $result);
     }
 
     public function test_parse_svg_dimensions_returns_null_for_an_unreadable_file(): void

@@ -6,6 +6,7 @@ namespace Piwigo\Permission;
 
 use Piwigo\Auth\AccessLevelChecker;
 use Piwigo\Category\CategoryService;
+use Piwigo\Permission\Projection\EffectivePermissionsSnapshot;
 use Psr\Cache\CacheItemPoolInterface;
 
 /**
@@ -64,30 +65,14 @@ final readonly class EffectiveForbiddenCategoriesCache
      * @param  int|string  $level  `user_infos.level` as returned by DBAL: a
      *   native int for this tinyint column; the parameter also accepts a
      *   numeric string since not every caller passes the DBAL-native type.
-     * @return array{forbiddenCategories: string, imageAccessType: string, imageAccessList: string, nbTotalImages: string, lastPhotoDate: ?string}
      */
-    public function getForUser(int $userId, string $userStatus, int|string $level): array
+    public function getForUser(int $userId, string $userStatus, int|string $level): EffectivePermissionsSnapshot
     {
         $item = $this->pool->getItem('effective_' . $userId);
         if ($item->isHit()) {
             $cached = $item->get();
-            if (
-                is_array($cached)
-                && isset($cached['forbiddenCategories'], $cached['imageAccessType'], $cached['imageAccessList'], $cached['nbTotalImages'])
-                && array_key_exists('lastPhotoDate', $cached)
-                && is_string($cached['forbiddenCategories'])
-                && is_string($cached['imageAccessType'])
-                && is_string($cached['imageAccessList'])
-                && is_string($cached['nbTotalImages'])
-                && ($cached['lastPhotoDate'] === null || is_string($cached['lastPhotoDate']))
-            ) {
-                return [
-                    'forbiddenCategories' => $cached['forbiddenCategories'],
-                    'imageAccessType' => $cached['imageAccessType'],
-                    'imageAccessList' => $cached['imageAccessList'],
-                    'nbTotalImages' => $cached['nbTotalImages'],
-                    'lastPhotoDate' => $cached['lastPhotoDate'],
-                ];
+            if ($cached instanceof EffectivePermissionsSnapshot) {
+                return $cached;
             }
         }
 
@@ -99,10 +84,7 @@ final readonly class EffectiveForbiddenCategoriesCache
         return $result;
     }
 
-    /**
-     * @return array{forbiddenCategories: string, imageAccessType: string, imageAccessList: string, nbTotalImages: string, lastPhotoDate: ?string}
-     */
-    private function compute(int $userId, string $userStatus, int|string $level): array
+    private function compute(int $userId, string $userStatus, int|string $level): EffectivePermissionsSnapshot
     {
         $structuralForbidden = $this->permissionService->getForbiddenCategories($userId, $userStatus);
 
@@ -147,12 +129,12 @@ final readonly class EffectiveForbiddenCategoriesCache
 
         $lastPhotoDate = $computedCategories['lastPhotoDate'];
 
-        return [
-            'forbiddenCategories' => $effectiveForbidden,
-            'imageAccessType' => $imageAccessType,
-            'imageAccessList' => $imageAccessList,
-            'nbTotalImages' => $nbTotalImages,
-            'lastPhotoDate' => $lastPhotoDate,
-        ];
+        return new EffectivePermissionsSnapshot(
+            forbiddenCategories: $effectiveForbidden,
+            imageAccessType: $imageAccessType,
+            imageAccessList: $imageAccessList,
+            nbTotalImages: $nbTotalImages,
+            lastPhotoDate: $lastPhotoDate,
+        );
     }
 }

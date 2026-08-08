@@ -51,7 +51,7 @@ final class HelpPageRenderer
                         'return' => true,
                     ]
                 ),
-                'HELP_SECTION_TITLE' => $tabsheet->sheets[$tabsheet->selected]['caption'],
+                'HELP_SECTION_TITLE' => $tabsheet->sheets[$tabsheet->selected]->caption,
             ]
         );
 

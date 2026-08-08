@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use PHPUnit\Framework\Assert;
+use Piwigo\Admin\Extensions\Projection\ExtractedFileEntry;
 use Piwigo\Admin\Extensions\ZipExtractor;
 use Piwigo\Config\CurrentConfig;
 
@@ -178,17 +179,9 @@ test('extract marks the directory entry that exactly matches removePrefix as fil
 
     $result = new ZipExtractor()->extract($archive, $dest, 'plugin_id', new CurrentConfig());
 
-    expect($result)->toBe([
-        [
-            'filename' => 'plugin_id/',
-            'stored_filename' => 'plugin_id/',
-            'status' => 'filtered',
-        ],
-        [
-            'filename' => $dest . '/main.inc.php',
-            'stored_filename' => 'plugin_id/main.inc.php',
-            'status' => 'ok',
-        ],
+    expect($result)->toEqual([
+        new ExtractedFileEntry('plugin_id/', 'plugin_id/', 'filtered'),
+        new ExtractedFileEntry($dest . '/main.inc.php', 'plugin_id/main.inc.php', 'ok'),
     ]);
     expect(is_dir($dest . '/plugin_id'))->toBeFalse();
     expect(file_get_contents($dest . '/main.inc.php'))->toBe('<?php // main');
@@ -204,17 +197,9 @@ test('extract recursively creates a nested directory entry and lists it with ok 
 
     $result = new ZipExtractor()->extract($archive, $dest, 'plugin_id', new CurrentConfig());
 
-    expect($result)->toBe([
-        [
-            'filename' => $dest . '/assets/img/',
-            'stored_filename' => 'plugin_id/assets/img/',
-            'status' => 'ok',
-        ],
-        [
-            'filename' => $dest . '/assets/img/logo.png',
-            'stored_filename' => 'plugin_id/assets/img/logo.png',
-            'status' => 'ok',
-        ],
+    expect($result)->toEqual([
+        new ExtractedFileEntry($dest . '/assets/img/', 'plugin_id/assets/img/', 'ok'),
+        new ExtractedFileEntry($dest . '/assets/img/logo.png', 'plugin_id/assets/img/logo.png', 'ok'),
     ]);
     expect(is_dir($dest . '/assets/img'))->toBeTrue();
     expect(file_get_contents($dest . '/assets/img/logo.png'))->toBe('PNGDATA');
@@ -233,17 +218,9 @@ test('extract marks a file entry as already_a_directory when its target path was
 
     $result = new ZipExtractor()->extract($archive, $dest, 'plugin_id', new CurrentConfig());
 
-    expect($result)->toBe([
-        [
-            'filename' => $dest . '/foo/',
-            'stored_filename' => 'plugin_id/foo/',
-            'status' => 'ok',
-        ],
-        [
-            'filename' => $dest . '/foo',
-            'stored_filename' => 'plugin_id/foo',
-            'status' => 'already_a_directory',
-        ],
+    expect($result)->toEqual([
+        new ExtractedFileEntry($dest . '/foo/', 'plugin_id/foo/', 'ok'),
+        new ExtractedFileEntry($dest . '/foo', 'plugin_id/foo', 'already_a_directory'),
     ]);
     expect(is_dir($dest . '/foo'))->toBeTrue();
     expect(is_file($dest . '/foo'))->toBeFalse();
@@ -260,12 +237,8 @@ test('extract overwrites an existing destination file with the archive contents'
 
     $result = new ZipExtractor()->extract($archive, $dest, 'plugin_id', new CurrentConfig());
 
-    expect($result)->toBe([
-        [
-            'filename' => $dest . '/main.inc.php',
-            'stored_filename' => 'plugin_id/main.inc.php',
-            'status' => 'ok',
-        ],
+    expect($result)->toEqual([
+        new ExtractedFileEntry($dest . '/main.inc.php', 'plugin_id/main.inc.php', 'ok'),
     ]);
     expect(file_get_contents($dest . '/main.inc.php'))->toBe('<?php // new');
 });
@@ -292,12 +265,8 @@ test('extract records a write_error result and leaves the file unwritten when th
         restore_error_handler();
     }
 
-    expect($result)->toBe([
-        [
-            'filename' => $dest . '/main.inc.php',
-            'stored_filename' => 'plugin_id/main.inc.php',
-            'status' => 'write_error',
-        ],
+    expect($result)->toEqual([
+        new ExtractedFileEntry($dest . '/main.inc.php', 'plugin_id/main.inc.php', 'write_error'),
     ]);
     expect(file_exists($dest . '/main.inc.php'))->toBeFalse();
 });

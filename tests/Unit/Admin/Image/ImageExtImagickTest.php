@@ -312,7 +312,7 @@ test('construct throws when an animated webp is too short for getimagesize to re
 
     $path = imageExtImagickTestMarker() . '/truncated-animated.webp';
     imageExtImagickTestMakeTruncatedAnimatedWebp($path);
-    expect(PwgImage::webp_info($path)['has-animation'])->toBeTrue();
+    expect(PwgImage::webp_info($path)->hasAnimation)->toBeTrue();
     expect(getimagesize($path))->toBeFalse();
 
     expect(fn () => imageExtImagickTestMake($path))

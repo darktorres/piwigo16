@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Piwigo\Config\CurrentConfig;
+use Piwigo\Site\Projection\ElementUpdateAttributes;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Site\LocalSiteReader;
 
@@ -210,17 +211,13 @@ test('get_element_update_attributes finds a representative extension for a non-p
 
     $reader = new LocalSiteReader($this->root, $this->currentConfig);
 
-    expect($reader->get_element_update_attributes($this->root . '/document.pdf'))->toBe([
-        'representative_ext' => 'gif',
-    ]);
+    expect($reader->get_element_update_attributes($this->root . '/document.pdf'))->toEqual(new ElementUpdateAttributes('gif'));
 });
 
 test('get_element_update_attributes returns a null representative extension for a picture element', function (): void {
     $reader = new LocalSiteReader($this->root, $this->currentConfig);
 
-    expect($reader->get_element_update_attributes($this->root . '/photo.png'))->toBe([
-        'representative_ext' => null,
-    ]);
+    expect($reader->get_element_update_attributes($this->root . '/photo.png'))->toEqual(new ElementUpdateAttributes(null));
 });
 
 test('get_representative_ext returns the first matching picture extension found under pwg_representative', function (): void {

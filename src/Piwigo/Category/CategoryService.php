@@ -14,11 +14,13 @@ use Piwigo\Category\Projection\ActivePermalinkRow;
 use Piwigo\Category\Projection\CategoryAdminListForWsRow;
 use Piwigo\Category\Projection\CategoryAlbumTreeRow;
 use Piwigo\Category\Projection\CategoryChildRow;
+use Piwigo\Category\Projection\CategoryCreateOutcome;
 use Piwigo\Category\Projection\CategoryGroupAuthorizationRow;
 use Piwigo\Category\Projection\CategoryIdImageOrder;
 use Piwigo\Category\Projection\CategoryIdNamePermalink;
 use Piwigo\Category\Projection\CategoryIdNameUppercat;
 use Piwigo\Category\Projection\CategoryIdNameUppercatsRank;
+use Piwigo\Category\Projection\CategoryInfo;
 use Piwigo\Category\Projection\CategoryListForWsRow;
 use Piwigo\Category\Projection\CategoryListingRow;
 use Piwigo\Category\Projection\CategoryMoveDetailRow;
@@ -267,14 +269,7 @@ final readonly class CategoryService
         );
     }
 
-    /**
-     * @return array{id: int, name: string, id_uppercat: ?int, comment: ?string,
-     *   dir: ?string, rank: ?int, status: string, site_id: ?int, visible: bool,
-     *   representative_picture_id: ?int, uppercats: string, commentable: bool,
-     *   global_rank: ?string, image_order: ?string, permalink: ?string, lastmodified: string,
-     *   upper_names: list<array{id: int, name: string, permalink: ?string}>}|null
-     */
-    public function getCategoryInfo(int $id): ?array
+    public function getCategoryInfo(int $id): ?CategoryInfo
     {
         $cat = $this->repo->findById($id);
         if ($cat === null) {
@@ -288,11 +283,9 @@ final readonly class CategoryService
         // along with the retype (CategoryServiceTest::
         // test_get_category_info_coerces_true_false_string_columns_to_bool()
         // still covers this, against the projection now).
-        $result = $cat->toArray();
-
         $upperIds = explode(',', $cat->uppercats);
         if (count($upperIds) === 1) {
-            $result['upper_names'] = [
+            $upperNames = [
                 [
                     'id' => $cat->id->value,
                     'name' => $cat->name,
@@ -302,16 +295,34 @@ final readonly class CategoryService
         } else {
             $names = $this->repo->findNamesByIds(array_map(intval(...), $upperIds));
 
-            $result['upper_names'] = [];
+            $upperNames = [];
             foreach ($upperIds as $upperId) {
                 $upperIdInt = (int) $upperId;
                 if (isset($names[$upperIdInt])) {
-                    $result['upper_names'][] = $names[$upperIdInt]->toArray();
+                    $upperNames[] = $names[$upperIdInt]->toArray();
                 }
             }
         }
 
-        return $result;
+        return new CategoryInfo(
+            id: $cat->id->value,
+            name: $cat->name,
+            idUppercat: $cat->idUppercat,
+            comment: $cat->comment,
+            dir: $cat->dir,
+            rank: $cat->rank,
+            status: $cat->status,
+            siteId: $cat->siteId,
+            visible: $cat->visible,
+            representativePictureId: $cat->representativePictureId,
+            uppercats: $cat->uppercats,
+            commentable: $cat->commentable,
+            globalRank: $cat->globalRank,
+            imageOrder: $cat->imageOrder,
+            permalink: $cat->permalink?->value,
+            lastmodified: $cat->lastmodified,
+            upperNames: $upperNames,
+        );
     }
 
     /**
@@ -1917,16 +1928,13 @@ final readonly class CategoryService
      *   passes a raw, unvalidated $_GET['parent_id'] string
      * @param array{commentable?: mixed, visible?: mixed, status?: mixed, comment?: mixed, inherit?: mixed} $options
      *   values are validated internally (is_bool()/==), not trusted from callers
-     * @return array{error: string}|array{info: string, id: int|string}
      */
-    public function createVirtualCategory(string $categoryName, ActivityLoggerInterface $activityLogger, CurrentUser $currentUser, int|string|null $parentId = null, array $options = []): array
+    public function createVirtualCategory(string $categoryName, ActivityLoggerInterface $activityLogger, CurrentUser $currentUser, int|string|null $parentId = null, array $options = []): CategoryCreateOutcome
     {
 
         // is the given category name only containing blank spaces ?
         if ((bool) preg_match('/^\s*$/', $categoryName)) {
-            return [
-                'error' => $this->lang->t('The name of an album must not be empty'),
-            ];
+            return CategoryCreateOutcome::failure($this->lang->t('The name of an album must not be empty'));
         }
 
         $rank = 0;
@@ -1982,9 +1990,7 @@ final readonly class CategoryService
         if (! $parentIdIsEmpty && is_numeric($parentId)) {
             $parent = $this->repo->findParentCategoryForCreate($parentId);
             if ($parent === null) {
-                return [
-                    'error' => $this->lang->t('The parent album does not exist'),
-                ];
+                return CategoryCreateOutcome::failure($this->lang->t('The parent album does not exist'));
             }
 
             $insert['id_uppercat'] = $parent->id;
@@ -2057,10 +2063,7 @@ final readonly class CategoryService
         ], $insert)));
         $activityLogger->record('album', $insertedId, 'add');
 
-        return [
-            'info' => $this->lang->t('Album added'),
-            'id' => $insertedId,
-        ];
+        return CategoryCreateOutcome::success($this->lang->t('Album added'), $insertedId);
     }
 
     /**

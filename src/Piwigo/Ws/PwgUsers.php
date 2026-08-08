@@ -17,6 +17,7 @@ use Piwigo\Auth\AccessControl;
 use Piwigo\Auth\ApiKeyService;
 use Piwigo\Auth\AuthService;
 use Piwigo\Auth\PasswordService;
+use Piwigo\Auth\Projection\ApiKeySummary;
 use Piwigo\Common\ValueObject\ImageId;
 use Piwigo\Common\ValueObject\SqlDateTime;
 use Piwigo\Common\ValueObject\UserId;
@@ -469,12 +470,12 @@ final class PwgUsers
                 false // $params['send_password_by_mail']
             );
 
-        $errors = $result['errors'];
-        if ($result['duplicateUsername']) {
+        $errors = $result->errors;
+        if ($result->duplicateUsername) {
             array_unshift($errors, $this->lang->t('this login is already used'));
         }
 
-        $user_id = $result['userId'] ?? false;
+        $user_id = $result->userId ?? false;
 
         if (! (bool) $user_id) {
             return new PwgError(WsError::INVALID_PARAM, $errors[0] ?? '');
@@ -908,7 +909,7 @@ final class PwgUsers
                     ->generateResetPasswordMail($user_lost_username, $generate_link['password_link'], $gallery_title, $generate_link['time_validation']);
             }
             // Here we remove the display of errors because they prevent the response from being parsed
-            if (@$this->mailService->mail($user_lost_email, $email_params)) {
+            if (@$this->mailService->mail($user_lost_email, $email_params->toArray())) {
                 $send_by_mail_response = 'Mail sent at : ' . $user_lost_email;
             } else {
                 $send_by_mail_response = false;
@@ -1006,7 +1007,7 @@ final class PwgUsers
 
         $logger->info('[api_key][user_id=' . $user_id . '][action=create][key_name=' . $params['key_name'] . ']');
 
-        return $secret;
+        return $secret->toArray();
     }
 
     /**
@@ -1119,6 +1120,6 @@ final class PwgUsers
             ->id->value;
         $api_keys = $this->apiKeyService->get($user_id);
 
-        return ((bool) $api_keys) ? $api_keys : $this->lang->t('No API key found');
+        return ((bool) $api_keys) ? array_map(static fn (ApiKeySummary $key): array => $key->toArray(), $api_keys) : $this->lang->t('No API key found');
     }
 }

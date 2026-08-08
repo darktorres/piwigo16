@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Piwigo\Tests\Support\TemplateTestFactory;
+use Piwigo\Admin\Projection\TabSheetEntry;
 use Piwigo\Admin\Tabsheet;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
@@ -88,11 +89,11 @@ test('add succeeds for a new tab name and fails for a duplicate one', function (
     $tabsheet = new Tabsheet();
 
     expect($tabsheet->add('general', 'General', '/admin.php?page=general'))->toBeTrue();
-    expect($tabsheet->sheets)->toBe(['general' => ['caption' => 'General', 'url' => '/admin.php?page=general']]);
+    expect($tabsheet->sheets)->toEqual(['general' => new TabSheetEntry('General', '/admin.php?page=general')]);
 
     expect($tabsheet->add('general', 'General Again', '/admin.php?page=general2'))->toBeFalse();
     // The failed add must not have overwritten the original entry.
-    expect($tabsheet->sheets['general'])->toBe(['caption' => 'General', 'url' => '/admin.php?page=general']);
+    expect($tabsheet->sheets['general'])->toEqual(new TabSheetEntry('General', '/admin.php?page=general'));
 });
 
 test('add with selected=true marks that tab as the selected one', function (): void {
@@ -109,7 +110,7 @@ test('delete removes an existing tab and returns true, or returns false for an u
     $tabsheet->add('advanced', 'Advanced', '/advanced');
 
     expect($tabsheet->delete('general'))->toBeTrue();
-    expect($tabsheet->sheets)->toBe(['advanced' => ['caption' => 'Advanced', 'url' => '/advanced']]);
+    expect($tabsheet->sheets)->toEqual(['advanced' => new TabSheetEntry('Advanced', '/advanced')]);
 
     expect($tabsheet->delete('not-a-real-tab'))->toBeFalse();
 });
@@ -140,7 +141,7 @@ test('select picks the requested tab when it exists', function (): void {
     $tabsheet->select('advanced', EventDispatcherTestFactory::get());
 
     expect($tabsheet->selected)->toBe('advanced');
-    expect($tabsheet->get_selected())->toBe(['caption' => 'Advanced', 'url' => '/advanced']);
+    expect($tabsheet->get_selected())->toEqual(new TabSheetEntry('Advanced', '/advanced'));
 });
 
 test('select falls back to the first remaining tab when the requested name does not exist', function (): void {
@@ -171,9 +172,9 @@ test('select applies a tabsheet_before_select handler that filters and appends t
 
         $tabsheet->select('added-by-handler', EventDispatcherTestFactory::get());
 
-        expect($tabsheet->sheets)->toBe([
-            'kept' => ['caption' => 'Kept', 'url' => '/kept'],
-            'added-by-handler' => ['caption' => 'Added', 'url' => '/added'],
+        expect($tabsheet->sheets)->toEqual([
+            'kept' => new TabSheetEntry('Kept', '/kept'),
+            'added-by-handler' => new TabSheetEntry('Added', '/added'),
         ]);
         expect($tabsheet->selected)->toBe('added-by-handler');
     } finally {
@@ -198,7 +199,7 @@ test('select discards a handler-returned entry that does not match the expected 
 
         $tabsheet->select('general', EventDispatcherTestFactory::get());
 
-        expect($tabsheet->sheets)->toBe(['general' => ['caption' => 'General', 'url' => '/general']]);
+        expect($tabsheet->sheets)->toEqual(['general' => new TabSheetEntry('General', '/general')]);
     } finally {
         EventDispatcherTestFactory::get()->removeEventHandler(TabsheetBeforeSelect::class, $handler);
     }
@@ -225,7 +226,7 @@ test('select discards a well-shaped sheet entry keyed by an int, not just a malf
 
         $tabsheet->select('general', EventDispatcherTestFactory::get());
 
-        expect($tabsheet->sheets)->toBe(['general' => ['caption' => 'General', 'url' => '/general']]);
+        expect($tabsheet->sheets)->toEqual(['general' => new TabSheetEntry('General', '/general')]);
     } finally {
         EventDispatcherTestFactory::get()->removeEventHandler(TabsheetBeforeSelect::class, $handler);
     }

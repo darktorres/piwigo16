@@ -288,7 +288,7 @@ final class BatchManagerGlobalPageRenderer
                         $first_associate_category = reset($associate_categories);
                         if ($first_associate_category !== false) {
                             $category_info = $this->categoryService->getCategoryInfo($first_associate_category);
-                            if (($category_info['dir'] ?? '') === '') {
+                            if (($category_info->dir ?? '') === '') {
                                 $redirect = true;
                             }
                         }
@@ -308,7 +308,7 @@ final class BatchManagerGlobalPageRenderer
                 } elseif ($prefilter_value === 'no_virtual_album') {
                     if ($move_category !== null) {
                         $category_info = $this->categoryService->getCategoryInfo($move_category);
-                        if (($category_info['dir'] ?? '') === '') {
+                        if (($category_info->dir ?? '') === '') {
                             $redirect = true;
                         }
                     }
@@ -581,7 +581,7 @@ final class BatchManagerGlobalPageRenderer
                 $category_info = $this->categoryService->getCategoryInfo($filter_category_id);
 
                 $order_by = $this->currentConfig->orderByInsideCategory();
-                $category_image_order = $category_info !== null ? $category_info['image_order'] : null;
+                $category_image_order = $category_info !== null ? $category_info->imageOrder : null;
                 if (is_string($category_image_order) && $category_image_order !== '') {
                     $order_by = ' ORDER BY ' . $category_image_order;
                 }

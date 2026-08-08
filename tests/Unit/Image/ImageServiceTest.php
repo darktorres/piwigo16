@@ -10,6 +10,7 @@ use Piwigo\Common\ValueObject\ImageId;
 use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Image\ImageEntity;
 use Piwigo\Image\Projection\AddMethodBreakdown;
+use Piwigo\Image\Projection\SlideshowParams;
 use Piwigo\Activity\ActivityService;
 use Piwigo\Activity\ActivityEntity;
 use Piwigo\Tests\Support\SessionServiceTestFactory;
@@ -189,9 +190,7 @@ test('currentConfigService() throws when the container returns an unexpected typ
 test('getDefaultSlideshowParams reads conf', function (): void {
     $params = new ImageService(imageServiceTestLang(), EntityManagerFactory::build(DbConnection::build())->getRepository(ImageEntity::class), new ActivityService(EntityManagerFactory::build(DbConnection::build())->getRepository(ActivityEntity::class)), SessionServiceTestFactory::get(), EventDispatcherTestFactory::get(), CurrentConfigTestFactory::get(), TranslatorTestFactory::get(), Paths::fromRoot(sys_get_temp_dir()))->getDefaultSlideshowParams();
 
-    expect($params['period'])->toBe(4)
-        ->and($params['repeat'])->toBeTrue()
-        ->and($params['play'])->toBeTrue();
+    expect($params)->toEqual(new SlideshowParams(period: 4, repeat: true, play: true));
 });
 
 test('correctSlideshowParams clamps below the minimum', function (): void {
@@ -252,7 +251,7 @@ test('encodeSlideshowParams round-trips a non-default period', function (): void
 test('encodeSlideshowParams omits default values', function (): void {
     $service = new ImageService(imageServiceTestLang(), EntityManagerFactory::build(DbConnection::build())->getRepository(ImageEntity::class), new ActivityService(EntityManagerFactory::build(DbConnection::build())->getRepository(ActivityEntity::class)), SessionServiceTestFactory::get(), EventDispatcherTestFactory::get(), CurrentConfigTestFactory::get(), TranslatorTestFactory::get(), Paths::fromRoot(sys_get_temp_dir()));
 
-    expect($service->encodeSlideshowParams($service->getDefaultSlideshowParams()))->toBe('');
+    expect($service->encodeSlideshowParams($service->getDefaultSlideshowParams()->toArray()))->toBe('');
 });
 
 test('encodeSlideshowParams encodes a changed boolean', function (): void {

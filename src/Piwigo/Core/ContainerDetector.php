@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Piwigo\Core;
 
+use Piwigo\Core\Projection\ContainerInfo;
+
 final class ContainerDetector
 {
     /**
@@ -17,10 +19,8 @@ final class ContainerDetector
      *  ('Official', <VersionCode>)       => PHP is running in an official container
      *  ('LinuxServer.io', <VersionCode>) => PHP is running in a LinuxServer container
      *  ('Unknown', null)                 => PHP is running in a non-identified container
-     *
-     * @return array{0: string, 1: ?string}
      */
-    public static function detect(): array
+    public static function detect(): ContainerInfo
     {
         // Check if OS is Linux and PHP doesn't restrict opening files
         $open_basedir = ini_get('open_basedir');
@@ -29,7 +29,7 @@ final class ContainerDetector
             if (file_exists('/proc/2/sched')) { // Check if PID2 exist
                 $file = file_get_contents('/proc/2/sched'); // Read PID2 name
                 if ($file !== false && str_starts_with($file, 'kthreadd')) { // If PID 2 is kthreadd PHP is not running in a container
-                    return ['none', null];
+                    return new ContainerInfo('none', null);
                 }
             }
 
@@ -46,7 +46,7 @@ final class ContainerDetector
                     if (preg_match('/^Build Version (.*)$/', $file_lines[count($file_lines) - 1], $matches) === 1) {
                         $container_version = $matches[1];
                     }
-                    return ['Official', $container_version];
+                    return new ContainerInfo('Official', $container_version);
                 }
             }
             // Check for LinuxServer tagfile
@@ -57,14 +57,14 @@ final class ContainerDetector
                     if (preg_match('/version:\s*(.*)$/', $file_lines[0], $matches) === 1) {
                         $container_version = $matches[1];
                     }
-                    return ['LinuxServer.io', $container_version];
+                    return new ContainerInfo('LinuxServer.io', $container_version);
                 }
             }
             // If no tagfile are found, default to unknown
-            return ['Unknown', null];
+            return new ContainerInfo('Unknown', null);
         } else {
             // If the OS is not Linux or PHP basedir are enforced, assume PHP is not in a container
-            return ['none', null];
+            return new ContainerInfo('none', null);
         }
     }
 }

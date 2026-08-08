@@ -800,7 +800,7 @@ final class SiteUpdateSubController implements AdminSubControllerInterface
 
                 $datas = [];
                 foreach ($files as $id => $file) {
-                    $data = $site_reader->get_element_update_attributes($file['path']);
+                    $data = $site_reader->get_element_update_attributes($file['path'])->toArray();
                     $data['id'] = $id;
                     $datas[] = $data;
                 } // end foreach file

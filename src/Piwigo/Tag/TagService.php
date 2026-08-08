@@ -31,6 +31,7 @@ use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Session\SessionService;
 use Piwigo\Tag\Projection\Tag;
 use Piwigo\Tag\Projection\TagBrief;
+use Piwigo\Tag\Projection\TagCreateOutcome;
 use Piwigo\Tag\Projection\TagIdName;
 use Piwigo\Users\CurrentUser;
 
@@ -688,10 +689,8 @@ final readonly class TagService
 
     /**
      * Create a new tag.
-     *
-     * @return array{info: string, id: int}|array{error: string}
      */
-    public function createTag(string $tagName): array
+    public function createTag(string $tagName): TagCreateOutcome
     {
         // clean the tag, no html/js allowed in tag name
         $tagName = strip_tags($tagName);
@@ -703,15 +702,10 @@ final readonly class TagService
 
             $insertedId = $this->repo->insert($tagName, $urlName);
 
-            return [
-                'info' => $this->lang->t('Tag "%s" was added', stripslashes($tagName)),
-                'id' => $insertedId->value,
-            ];
+            return TagCreateOutcome::success($this->lang->t('Tag "%s" was added', stripslashes($tagName)), $insertedId->value);
         }
 
-        return [
-            'error' => $this->lang->t('Tag "%s" already exists', stripslashes($tagName)),
-        ];
+        return TagCreateOutcome::failure($this->lang->t('Tag "%s" already exists', stripslashes($tagName)));
     }
 
     /**

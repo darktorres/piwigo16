@@ -323,7 +323,7 @@ final class PwgExtensions
             $extension_name = $fsThemesBefore[$extension_id]['name'] ?? $extension_id;
 
             $extraction = $pemCatalog->extractArchive(ExtensionType::Theme, 'upgrade', $revision, $extension_id);
-            $upgrade_status = $extraction['status'];
+            $upgrade_status = $extraction->status;
 
             $activity_details = [
                 'theme_id' => $extension_id,
@@ -340,7 +340,7 @@ final class PwgExtensions
             $this->activityService->record('system', ActivitySystem::Theme, 'update', $activity_details);
         } elseif ($type === ExtensionType::Language) {
             $extraction = $pemCatalog->extractArchive(ExtensionType::Language, 'upgrade', $revision, $extension_id);
-            $upgrade_status = $extraction['status'];
+            $upgrade_status = $extraction->status;
             $extension_name = $scanner->scan(ExtensionType::Language, $urlService, $this->lang, $this->paths, $this->currentUser, $this->eventDispatcher, $this->currentConfig)[$extension_id]['name'] ?? $extension_id;
         } else {
             // Unreachable: $type is derived from $params['type'], already

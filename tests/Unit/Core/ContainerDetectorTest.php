@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Piwigo\Core\ContainerDetector;
+use Piwigo\Core\Projection\ContainerInfo;
 
 /**
  * Piwigo\Core\ContainerDetector::detect() -- had zero dedicated coverage
@@ -87,7 +88,7 @@ test('detect returns [\'none\', null] in this real, non-containerized Linux envi
     expect(file_exists('/proc/2/sched'))->toBeTrue();
     expect(str_starts_with((string) file_get_contents('/proc/2/sched'), 'kthreadd'))->toBeTrue();
 
-    expect(ContainerDetector::detect())->toBe(['none', null]);
+    expect(ContainerDetector::detect())->toEqual(new ContainerInfo('none', null));
 });
 
 /**
@@ -148,7 +149,7 @@ test('detect returns [\'none\', null] via the else branch when open_basedir is g
     $exit = proc_close($proc);
 
     expect($exit)->toBe(0, 'ContainerDetector subprocess failed: ' . ($stderr === false ? '(no stderr)' : $stderr));
-    expect(json_decode((string) $stdout, true))->toBe(['none', null]);
+    expect(json_decode((string) $stdout, true))->toBe(['type' => 'none', 'version' => null]);
 });
 
 /**
@@ -159,8 +160,11 @@ test('detect returns [\'none\', null] via the else branch when open_basedir is g
  * need the project root on that same open_basedir to load the
  * autoloader, and only one open_basedir value can be active at a time.
  * Instead: start the subprocess with NO open_basedir restriction, force
- * the class to autoload (so its file is already loaded before any
- * restriction exists), then `ini_set('open_basedir', '0')` from within
+ * both ContainerDetector and its ContainerInfo return type to autoload
+ * (so both files are already loaded before any restriction exists --
+ * ContainerInfo is only referenced inside detect()'s own method body, so
+ * autoloading ContainerDetector alone doesn't pull it in), then
+ * `ini_set('open_basedir', '0')` from within
  * that same throwaway subprocess -- a real ini_set() tightening a
  * previously-unset value, not a mock, and since the subprocess exits
  * immediately after this can never leak into the shared PHPUnit process
@@ -188,6 +192,7 @@ test('detect returns [\'Unknown\', null] when open_basedir is the literal string
 
     $script = 'require ' . var_export($autoloadPath, true) . ';'
         . 'class_exists(\Piwigo\Core\ContainerDetector::class);'
+        . 'class_exists(\Piwigo\Core\Projection\ContainerInfo::class);'
         . "ini_set('open_basedir', '0');"
         . 'echo json_encode(\Piwigo\Core\ContainerDetector::detect());';
 
@@ -214,7 +219,7 @@ test('detect returns [\'Unknown\', null] when open_basedir is the literal string
     $exit = proc_close($proc);
 
     expect($exit)->toBe(0, 'ContainerDetector subprocess failed: ' . ($stderr === false ? '(no stderr)' : $stderr));
-    expect(json_decode((string) $stdout, true))->toBe(['Unknown', null]);
+    expect(json_decode((string) $stdout, true))->toBe(['type' => 'Unknown', 'version' => null]);
 });
 
 /**

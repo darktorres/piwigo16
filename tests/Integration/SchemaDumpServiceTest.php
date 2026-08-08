@@ -71,17 +71,17 @@ final class SchemaDumpServiceTest extends IntegrationTestCase
 
         $result = $service->dump();
 
-        self::assertSame($this->dbDriver === 'pgsql' ? 'pgsql' : 'mysql', $result['label']);
-        self::assertFileExists($result['path']);
+        self::assertSame($this->dbDriver === 'pgsql' ? 'pgsql' : 'mysql', $result->label);
+        self::assertFileExists($result->path);
 
-        $content = (string) file_get_contents($result['path']);
+        $content = (string) file_get_contents($result->path);
         self::assertStringContainsString('CREATE TABLE', $content);
         self::assertStringNotContainsString('migration_versions', $content);
         self::assertStringNotContainsString('GTID_PURGED', $content);
         self::assertStringNotContainsString('AUTO_INCREMENT=', $content);
 
         $second = $service->dump();
-        $secondContent = (string) file_get_contents($second['path']);
+        $secondContent = (string) file_get_contents($second->path);
         self::assertSame($content, $secondContent, 'schema:dump output must be deterministic across runs');
     }
 }

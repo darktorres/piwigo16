@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Backup;
 
 use InvalidArgumentException;
+use Piwigo\Backup\Projection\BackupManifest;
 use Piwigo\Core\ShutdownHandler;
 use Piwigo\Db\DbCredentials;
 use RuntimeException;
@@ -122,7 +123,7 @@ final readonly class BackupService
             $this->restoreDatabase(DbCredentials::fromEnv(), $targetDatabase, $dbDump);
 
             $galleriesTar = $workDir . '/galleries.tar';
-            if (is_file($galleriesTar) && in_array('galleries.tar', $manifest['included'], true)) {
+            if (is_file($galleriesTar) && in_array('galleries.tar', $manifest->included, true)) {
                 $this->runProcess(['tar', 'xf', $galleriesTar, '-C', $this->repoRoot], 'restore galleries/');
             }
         } finally {
@@ -130,10 +131,7 @@ final readonly class BackupService
         }
     }
 
-    /**
-     * @return array{created_at: string, db_prefix: string, included: list<string>}
-     */
-    private function readManifest(string $workDir, string $archivePath): array
+    private function readManifest(string $workDir, string $archivePath): BackupManifest
     {
         $manifestPath = $workDir . '/manifest.json';
         if (! is_file($manifestPath)) {
@@ -153,11 +151,7 @@ final readonly class BackupService
         /** @var list<string> $included */
         $included = array_values(array_filter($decoded['included'], is_string(...)));
 
-        return [
-            'created_at' => $decoded['created_at'],
-            'db_prefix' => $decoded['db_prefix'],
-            'included' => $included,
-        ];
+        return new BackupManifest($decoded['created_at'], $decoded['db_prefix'], $included);
     }
 
     private function dumpDatabase(DbCredentials $credentials, string $outputPath): void

@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Piwigo\Auth;
 
 use Exception;
+use Piwigo\Auth\Projection\ApiKeyCreated;
+use Piwigo\Auth\Projection\ApiKeySummary;
 use Piwigo\Common\ValueObject\Email;
 use Piwigo\Common\ValueObject\Username;
 use Piwigo\Config\CurrentConfig;
@@ -36,23 +38,21 @@ final readonly class ApiKeyService
         private readonly CurrentConfig $currentConfig,
     ) {}
 
-    /**
-     * @return array{auth_key: string, apikey_secret: string, apikey_name: string, user_id: int, created_on: string, duration: int, key_type: string, expired_on: string}
-     */
-    public function create(int $userId, int $duration, string $keyName): array
+    public function create(int $userId, int $duration, string $keyName): ApiKeyCreated
     {
         $key_id = 'pkid-' . date('Ymd') . '-' . $this->sessionService->generateKey(20);
         $key_secret = $this->sessionService->generateKey(40);
 
         $now = Env::now();
         $expiration = (clone $now)->modify('+' . ($duration * 60 * 60 * 24) . ' seconds')->format('Y-m-d H:i:s');
+        $createdOn = $now->format('Y-m-d H:i:s');
 
         $key = [
             'auth_key' => $key_id,
             'apikey_secret' => $this->passwordService->hash($key_secret),
             'apikey_name' => $keyName,
             'user_id' => $userId,
-            'created_on' => $now->format('Y-m-d H:i:s'),
+            'created_on' => $createdOn,
             'duration' => $duration,
             'key_type' => 'api_key',
             'expired_on' => $expiration,
@@ -60,8 +60,16 @@ final readonly class ApiKeyService
 
         $this->repo->insert($key);
 
-        $key['apikey_secret'] = $key_secret;
-        return $key;
+        return new ApiKeyCreated(
+            authKey: $key_id,
+            apikeySecret: $key_secret,
+            apikeyName: $keyName,
+            userId: $userId,
+            createdOn: $createdOn,
+            duration: $duration,
+            keyType: 'api_key',
+            expiredOn: $expiration,
+        );
     }
 
     public function revoke(int $userId, string $pkid): string|true
@@ -87,7 +95,7 @@ final readonly class ApiKeyService
     }
 
     /**
-     * @return false|list<array{auth_key: string, apikey_secret: string, apikey_name: string, created_on: string, duration: ?int, expired_on: string, revoked_on: ?string, last_used_on: ?string, last_notified_on: ?string, created_on_format: string, expired_on_format: string, last_used_on_since: string, is_expired: bool, expiration: string, expired_on_since: string, revoked_on_since: ?string, revoked_on_message: ?string}>
+     * @return false|list<ApiKeySummary>
      */
     public function get(int $userId): false|array
     {
@@ -100,24 +108,20 @@ final readonly class ApiKeyService
 
         $results = [];
         foreach ($api_keys as $api_key_row) {
-            $api_key = $api_key_row->toArray();
-            $api_key['apikey_secret'] = str_repeat('*', 40);
-            unset($api_key['auth_key_id'], $api_key['user_id'], $api_key['key_type']);
-
-            $api_key['apikey_name'] = stripslashes($api_key_row->apikeyName ?? '');
+            $apikey_name = stripslashes($api_key_row->apikeyName ?? '');
 
             // created_on/expired_on are real NOT NULL columns -- Projection\
             // ApiKey::fromRow() already guarantees a string, no assert() needed.
             $created_on = $api_key_row->createdOn;
-            $api_key['created_on_format'] = DateHelper::formatDate($created_on, ['day', 'month', 'year']);
+            $created_on_format = DateHelper::formatDate($created_on, ['day', 'month', 'year']);
 
             $expired_on_raw = $api_key_row->expiredOn;
-            $api_key['expired_on_format'] = DateHelper::formatDate($expired_on_raw, ['day', 'month', 'year']);
+            $expired_on_format = DateHelper::formatDate($expired_on_raw, ['day', 'month', 'year']);
 
             $revoked_on = $api_key_row->revokedOn;
 
             $last_used_on = $api_key_row->lastUsedOn;
-            $api_key['last_used_on_since'] =
+            $last_used_on_since =
               $last_used_on !== null
               ? DateHelper::timeSince($last_used_on, 'day')
               : $this->lang->t('Never');
@@ -128,40 +132,58 @@ final readonly class ApiKeyService
                 throw new Exception('ApiKeyService::get(): str2DateTime() failed on a DB-stored date');
             }
 
-            $api_key['is_expired'] = $expired_on < $now;
-            if ($api_key['is_expired']) {
-                $api_key['expiration'] = $this->lang->t('Expired');
+            $is_expired = $expired_on < $now;
+            if ($is_expired) {
+                $expiration = $this->lang->t('Expired');
             } else {
                 $diff = DateHelper::dateDiff($now, $expired_on);
                 if ($diff->days > 0) {
-                    $api_key['expiration'] = $this->lang->t('%d days', $diff->days);
+                    $expiration = $this->lang->t('%d days', $diff->days);
                 } elseif ($diff->h > 0) {
-                    $api_key['expiration'] = $this->lang->t('%d hours', $diff->h);
+                    $expiration = $this->lang->t('%d hours', $diff->h);
                 } else {
-                    $api_key['expiration'] = $this->lang->t('%d minutes', $diff->i);
+                    $expiration = $this->lang->t('%d minutes', $diff->i);
                 }
             }
 
-            $api_key['expired_on_since'] = DateHelper::timeSince($expired_on_raw, 'day');
+            $expired_on_since = DateHelper::timeSince($expired_on_raw, 'day');
 
-            $api_key['revoked_on_since'] =
+            $revoked_on_since =
               (bool) $revoked_on
               ? DateHelper::timeSince($revoked_on, 'day')
               : null;
 
-            $api_key['revoked_on_message'] =
+            $revoked_on_message =
               (bool) $revoked_on
               ? $this->lang->t('This API key was manually revoked on %s', DateHelper::formatDate($revoked_on, ['day', 'month', 'year']))
               : null;
 
-            $results[] = $api_key;
+            $results[] = new ApiKeySummary(
+                authKey: $api_key_row->authKey,
+                apikeySecret: str_repeat('*', 40),
+                apikeyName: $apikey_name,
+                createdOn: $created_on,
+                duration: $api_key_row->duration,
+                expiredOn: $expired_on_raw,
+                revokedOn: $revoked_on,
+                lastUsedOn: $last_used_on,
+                lastNotifiedOn: $api_key_row->lastNotifiedOn,
+                createdOnFormat: $created_on_format,
+                expiredOnFormat: $expired_on_format,
+                lastUsedOnSince: $last_used_on_since,
+                isExpired: $is_expired,
+                expiration: $expiration,
+                expiredOnSince: $expired_on_since,
+                revokedOnSince: $revoked_on_since,
+                revokedOnMessage: $revoked_on_message,
+            );
         }
 
         return $results;
     }
 
     /**
-     * @return list<array{auth_key: string, apikey_secret: string, apikey_name: string, created_on: string, duration: ?int, expired_on: string, revoked_on: ?string, last_used_on: ?string, last_notified_on: ?string, created_on_format: string, expired_on_format: string, last_used_on_since: string, is_expired: bool, expiration: string, expired_on_since: string, revoked_on_since: ?string, revoked_on_message: ?string}>|false
+     * @return list<ApiKeySummary>|false
      */
     public function getAvailable(int $userId): array|false
     {
@@ -173,7 +195,7 @@ final readonly class ApiKeyService
 
         $available = [];
         foreach ($api_keys as $api_key) {
-            if (! $api_key['is_expired'] && in_array($api_key['revoked_on'], [null, '0', ''], true)) {
+            if (! $api_key->isExpired && in_array($api_key->revokedOn, [null, '0', ''], true)) {
                 $available[] = $api_key;
             }
         }

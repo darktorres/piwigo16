@@ -1315,7 +1315,9 @@ final class UserRepository implements WebmasterMailProviderInterface
                 throw new InvalidArgumentException("Unknown user_infos field: {$field}");
             }
             assert(is_scalar($value));
-            [$property, $isBoolean] = $fieldEnum->dqlPropertyAndIsBoolean();
+            $dqlPropertyFlag = $fieldEnum->dqlPropertyAndIsBoolean();
+            $property = $dqlPropertyFlag->property;
+            $isBoolean = $dqlPropertyFlag->isBoolean;
             $placeholder = 'v_' . $field;
             $boundValue = match (true) {
                 $isBoolean => (bool) $value,

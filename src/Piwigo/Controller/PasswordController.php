@@ -396,7 +396,7 @@ final class PasswordController implements ControllerInterface
         // provably a non-empty string here.
         if (! $skip_mail) {
             $this->mailService
-                ->mail($email, $template_mail);
+                ->mail($email, $template_mail->toArray());
         }
         $this->mailService
             ->switchLangBack();
@@ -641,7 +641,7 @@ final class PasswordController implements ControllerInterface
             // guarantees this is a non-empty string.
             $reset_email = $reset_session_email;
             $this->mailService
-                ->mail($reset_email, $template_mail);
+                ->mail($reset_email, $template_mail->toArray());
 
             $this->mailService
                 ->switchLangBack();

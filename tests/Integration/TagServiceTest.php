@@ -600,7 +600,7 @@ namespace Piwigo\Tests\Integration {
 
         public function test_create_tag_returns_an_error_for_an_existing_name(): void
         {
-            self::assertSame(['error' => 'Tag "nature" already exists'], $this->service->createTag('nature'));
+            self::assertSame('Tag "nature" already exists', $this->service->createTag('nature')->error);
         }
 
         // --- getTagListForImage() --------------------------------------------------

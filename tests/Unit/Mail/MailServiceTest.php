@@ -25,6 +25,8 @@ use Piwigo\Lang\Translator;
 use Piwigo\Tests\Support\TranslatorTestFactory;
 use Piwigo\Mail\MailRecipientRepositoryInterface;
 use Piwigo\Mail\MailService;
+use Piwigo\Mail\Projection\EmailRecipient;
+use Piwigo\Mail\Projection\MailContent;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Tests\Support\EventDispatcherTestFactory;
 use Piwigo\Session\SessionService;
@@ -310,52 +312,37 @@ test('getMailSenderEmail falls back to the webmaster address when mail_sender_em
 test('unformatEmail parses a "name <email>" string', function (): void {
     $service = mail_service_test_build();
 
-    expect($service->unformatEmail('Jane Doe <jane@example.test>'))->toBe([
-        'email' => 'jane@example.test',
-        'name' => 'Jane Doe',
-    ]);
+    expect($service->unformatEmail('Jane Doe <jane@example.test>'))->toEqual(new EmailRecipient('jane@example.test', 'Jane Doe'));
 });
 
 test('unformatEmail trims surrounding whitespace from both the parsed email and name', function (): void {
     $service = mail_service_test_build();
 
-    expect($service->unformatEmail('  Jane Doe  <  jane@example.test  >'))->toBe([
-        'email' => 'jane@example.test',
-        'name' => 'Jane Doe',
-    ]);
+    expect($service->unformatEmail('  Jane Doe  <  jane@example.test  >'))->toEqual(new EmailRecipient('jane@example.test', 'Jane Doe'));
 });
 
 test('unformatEmail trims surrounding whitespace from a bare email string', function (): void {
     $service = mail_service_test_build();
 
-    expect($service->unformatEmail('  jane@example.test  '))->toBe([
-        'email' => 'jane@example.test',
-        'name' => '',
-    ]);
+    expect($service->unformatEmail('  jane@example.test  '))->toEqual(new EmailRecipient('jane@example.test', ''));
 });
 
 test('unformatEmail treats a bare email string as email with no name', function (): void {
     $service = mail_service_test_build();
 
-    expect($service->unformatEmail('jane@example.test'))->toBe([
-        'email' => 'jane@example.test',
-        'name' => '',
-    ]);
+    expect($service->unformatEmail('jane@example.test'))->toEqual(new EmailRecipient('jane@example.test', ''));
 });
 
 test('unformatEmail accepts an array input with email and name keys', function (): void {
     $service = mail_service_test_build();
 
-    expect($service->unformatEmail(['email' => 'jane@example.test', 'name' => 'Jane']))->toBe([
-        'email' => 'jane@example.test',
-        'name' => 'Jane',
-    ]);
+    expect($service->unformatEmail(['email' => 'jane@example.test', 'name' => 'Jane']))->toEqual(new EmailRecipient('jane@example.test', 'Jane'));
 });
 
 test('unformatEmail throws on an array input missing the email key, with the exact real method name in the message', function (): void {
     $service = mail_service_test_build();
 
-    expect(fn (): array => $service->unformatEmail(['name' => 'Jane']))
+    expect(fn (): EmailRecipient => $service->unformatEmail(['name' => 'Jane']))
         ->toThrow(InvalidArgumentException::class, 'Piwigo\Mail\MailService::unformatEmail(): array input must contain a string "email" key');
 });
 
@@ -370,9 +357,9 @@ test('getCleanRecipientsList returns an empty list for empty input', function ()
 test('getCleanRecipientsList parses a comma-separated string', function (): void {
     $service = mail_service_test_build();
 
-    expect($service->getCleanRecipientsList('a@test.com,Bob <b@test.com>'))->toBe([
-        ['email' => 'a@test.com', 'name' => ''],
-        ['email' => 'b@test.com', 'name' => 'Bob'],
+    expect($service->getCleanRecipientsList('a@test.com,Bob <b@test.com>'))->toEqual([
+        new EmailRecipient('a@test.com', ''),
+        new EmailRecipient('b@test.com', 'Bob'),
     ]);
 });
 
@@ -385,8 +372,8 @@ test('getCleanRecipientsList returns an empty list for a literal int 0, matching
 test('getCleanRecipientsList deduplicates by email', function (): void {
     $service = mail_service_test_build();
 
-    expect($service->getCleanRecipientsList('a@test.com,a@test.com'))->toBe([
-        ['email' => 'a@test.com', 'name' => ''],
+    expect($service->getCleanRecipientsList('a@test.com,a@test.com'))->toEqual([
+        new EmailRecipient('a@test.com', ''),
     ]);
 });
 
@@ -400,26 +387,26 @@ test('getCleanRecipientsList keeps every entry after a duplicate in the middle o
     // here is write-only and unobservable either way.
     $service = mail_service_test_build();
 
-    expect($service->getCleanRecipientsList('a@test.com,a@test.com,b@test.com'))->toBe([
-        ['email' => 'a@test.com', 'name' => ''],
-        ['email' => 'b@test.com', 'name' => ''],
+    expect($service->getCleanRecipientsList('a@test.com,a@test.com,b@test.com'))->toEqual([
+        new EmailRecipient('a@test.com', ''),
+        new EmailRecipient('b@test.com', ''),
     ]);
 });
 
 test('getCleanRecipientsList accepts a plain array of emails', function (): void {
     $service = mail_service_test_build();
 
-    expect($service->getCleanRecipientsList(['a@test.com', 'b@test.com']))->toBe([
-        ['email' => 'a@test.com', 'name' => ''],
-        ['email' => 'b@test.com', 'name' => ''],
+    expect($service->getCleanRecipientsList(['a@test.com', 'b@test.com']))->toEqual([
+        new EmailRecipient('a@test.com', ''),
+        new EmailRecipient('b@test.com', ''),
     ]);
 });
 
 test('getCleanRecipientsList trims whitespace from a plain array of emails', function (): void {
     $service = mail_service_test_build();
 
-    expect($service->getCleanRecipientsList(['  a@test.com  ']))->toBe([
-        ['email' => 'a@test.com', 'name' => ''],
+    expect($service->getCleanRecipientsList(['  a@test.com  ']))->toEqual([
+        new EmailRecipient('a@test.com', ''),
     ]);
 });
 
@@ -428,9 +415,9 @@ test('getCleanRecipientsList string-casts a non-string scalar item inside a plai
     // own strict_types=1 and throw a TypeError instead of formatting it.
     $service = mail_service_test_build();
 
-    expect($service->getCleanRecipientsList(['a@test.com', 42]))->toBe([
-        ['email' => 'a@test.com', 'name' => ''],
-        ['email' => '42', 'name' => ''],
+    expect($service->getCleanRecipientsList(['a@test.com', 42]))->toEqual([
+        new EmailRecipient('a@test.com', ''),
+        new EmailRecipient('42', ''),
     ]);
 });
 
@@ -444,26 +431,26 @@ test('getCleanRecipientsList decides "simple array of emails" vs "hashmap" from 
     // 'email', a string) it would instead treat the whole array as ONE
     // hashmap recipient via unformatEmail(), silently dropping the first
     // entry -- these two behaviors produce different counts.
-    expect($service->getCleanRecipientsList(['a@test.com', 'email' => 'b@test.com']))->toBe([
-        ['email' => 'a@test.com', 'name' => ''],
-        ['email' => 'b@test.com', 'name' => ''],
+    expect($service->getCleanRecipientsList(['a@test.com', 'email' => 'b@test.com']))->toEqual([
+        new EmailRecipient('a@test.com', ''),
+        new EmailRecipient('b@test.com', ''),
     ]);
 });
 
 test('getCleanRecipientsList falls back to an empty email for a non-scalar item inside a plain array', function (): void {
     $service = mail_service_test_build();
 
-    expect($service->getCleanRecipientsList(['a@test.com', null]))->toBe([
-        ['email' => 'a@test.com', 'name' => ''],
-        ['email' => '', 'name' => ''],
+    expect($service->getCleanRecipientsList(['a@test.com', null]))->toEqual([
+        new EmailRecipient('a@test.com', ''),
+        new EmailRecipient('', ''),
     ]);
 });
 
 test('getCleanRecipientsList accepts a single hashmap recipient', function (): void {
     $service = mail_service_test_build();
 
-    expect($service->getCleanRecipientsList(['email' => 'a@test.com', 'name' => 'A']))->toBe([
-        ['email' => 'a@test.com', 'name' => 'A'],
+    expect($service->getCleanRecipientsList(['email' => 'a@test.com', 'name' => 'A']))->toEqual([
+        new EmailRecipient('a@test.com', 'A'),
     ]);
 });
 
@@ -474,27 +461,27 @@ test('getCleanRecipientsList falls back to a scalar-cast email for a non-array, 
     // branch; the second item (a bare int) is neither an array nor a
     // string, so it takes the scalar-cast fallback instead of
     // unformatEmail().
-    expect($service->getCleanRecipientsList([['email' => 'a@test.com'], 42]))->toBe([
-        ['email' => 'a@test.com', 'name' => ''],
-        ['email' => '42', 'name' => ''],
+    expect($service->getCleanRecipientsList([['email' => 'a@test.com'], 42]))->toEqual([
+        new EmailRecipient('a@test.com', ''),
+        new EmailRecipient('42', ''),
     ]);
 });
 
 test('getCleanRecipientsList trims a whitespace-padded scalar item inside an array of hashmaps', function (): void {
     $service = mail_service_test_build();
 
-    expect($service->getCleanRecipientsList([['email' => 'a@test.com'], '  99  ']))->toBe([
-        ['email' => 'a@test.com', 'name' => ''],
-        ['email' => '99', 'name' => ''],
+    expect($service->getCleanRecipientsList([['email' => 'a@test.com'], '  99  ']))->toEqual([
+        new EmailRecipient('a@test.com', ''),
+        new EmailRecipient('99', ''),
     ]);
 });
 
 test('getCleanRecipientsList falls back to an empty email for a non-scalar item inside an array of hashmaps', function (): void {
     $service = mail_service_test_build();
 
-    expect($service->getCleanRecipientsList([['email' => 'a@test.com'], null]))->toBe([
-        ['email' => 'a@test.com', 'name' => ''],
-        ['email' => '', 'name' => ''],
+    expect($service->getCleanRecipientsList([['email' => 'a@test.com'], null]))->toEqual([
+        new EmailRecipient('a@test.com', ''),
+        new EmailRecipient('', ''),
     ]);
 });
 
@@ -506,8 +493,8 @@ test('getCleanRecipientsList falls back to a single, empty-email recipient for a
     // genuinely reachable non-scalar, non-array PHP value here is an
     // object, which the final `else` branch's own is_scalar() fallback (as
     // opposed to a hard TypeError) exists to absorb.
-    expect($service->getCleanRecipientsList(new stdClass()))->toBe([
-        ['email' => '', 'name' => ''],
+    expect($service->getCleanRecipientsList(new stdClass()))->toEqual([
+        new EmailRecipient('', ''),
     ]);
 });
 
@@ -516,8 +503,8 @@ test('getCleanRecipientsList string-casts a non-array, non-string scalar $data b
     // file's own strict_types=1 and throw a TypeError instead.
     $service = mail_service_test_build();
 
-    expect($service->getCleanRecipientsList(42))->toBe([
-        ['email' => '42', 'name' => ''],
+    expect($service->getCleanRecipientsList(42))->toEqual([
+        new EmailRecipient('42', ''),
     ]);
 });
 
@@ -644,11 +631,11 @@ test('generateResetPasswordMail builds an HTML mail with the reset link and gall
 
     $mail = $service->generateResetPasswordMail('jane', 'https://example.test/password.php?key=abc', 'My Gallery', '2 hours');
 
-    expect($mail['subject'])->toBe('[My Gallery] Password Reset');
-    expect($mail['content_format'])->toBe('text/html');
-    expect($mail['content'])->toContain('jane');
-    expect($mail['content'])->toContain('https://example.test/password.php?key=abc');
-    expect($mail['content'])->toContain('2 hours');
+    expect($mail->subject)->toBe('[My Gallery] Password Reset');
+    expect($mail->contentFormat)->toBe('text/html');
+    expect($mail->content)->toContain('jane');
+    expect($mail->content)->toContain('https://example.test/password.php?key=abc');
+    expect($mail->content)->toContain('2 hours');
 });
 
 test('generateSetPasswordMail builds an HTML mail with the activation link and a welcome subject', function (): void {
@@ -657,11 +644,11 @@ test('generateSetPasswordMail builds an HTML mail with the activation link and a
 
     $mail = $service->generateSetPasswordMail('jane', 'https://example.test/password.php?key=xyz', 'My Gallery', '48 hours');
 
-    expect($mail['subject'])->toBe('Welcome to My Gallery');
-    expect($mail['content_format'])->toBe('text/html');
-    expect($mail['content'])->toContain('jane');
-    expect($mail['content'])->toContain('https://example.test/password.php?key=xyz');
-    expect($mail['content'])->toContain('48 hours');
+    expect($mail->subject)->toBe('Welcome to My Gallery');
+    expect($mail->contentFormat)->toBe('text/html');
+    expect($mail->content)->toContain('jane');
+    expect($mail->content)->toContain('https://example.test/password.php?key=xyz');
+    expect($mail->content)->toContain('48 hours');
 });
 
 test('generateCodeVerificationMail embeds the raw verification code and the current gallery title', function (): void {
@@ -671,9 +658,9 @@ test('generateCodeVerificationMail embeds the raw verification code and the curr
 
     $mail = $service->generateCodeVerificationMail('482913');
 
-    expect($mail['subject'])->toBe('[My Gallery] Your verification code');
-    expect($mail['content_format'])->toBe('text/html');
-    expect($mail['content'])->toContain('482913');
+    expect($mail->subject)->toBe('[My Gallery] Your verification code');
+    expect($mail->contentFormat)->toBe('text/html');
+    expect($mail->content)->toContain('482913');
 });
 
 test('generateSuccessResetPasswordMail omits the API-key-revocation notice when there are no API keys', function (): void {
@@ -682,8 +669,8 @@ test('generateSuccessResetPasswordMail omits the API-key-revocation notice when 
 
     $mail = $service->generateSuccessResetPasswordMail('jane', 0);
 
-    expect($mail['content'])->toContain('Hello jane,');
-    expect($mail['content'])->not->toContain('API keys');
+    expect($mail->content)->toContain('Hello jane,');
+    expect($mail->content)->not->toContain('API keys');
 });
 
 test('generateSuccessResetPasswordMail includes the API-key-revocation notice with the real key count when there are some', function (): void {
@@ -692,8 +679,8 @@ test('generateSuccessResetPasswordMail includes the API-key-revocation notice wi
 
     $mail = $service->generateSuccessResetPasswordMail('jane', 3);
 
-    expect($mail['content'])->toContain('Hello jane,');
-    expect($mail['content'])->toContain('3 API keys');
+    expect($mail->content)->toContain('Hello jane,');
+    expect($mail->content)->toContain('3 API keys');
 });
 
 // The 4 generate*Mail tests below assert the exact, full concatenated
@@ -708,9 +695,9 @@ test('generateResetPasswordMail assembles the exact HTML content, in order, from
 
     $mail = $service->generateResetPasswordMail('jane', 'https://example.test/password.php?key=abc', 'My Gallery', '2 hours');
 
-    expect($mail['subject'])->toBe('[My Gallery] Password Reset');
-    expect($mail['content_format'])->toBe('text/html');
-    expect($mail['content'])->toBe(
+    expect($mail->subject)->toBe('[My Gallery] Password Reset');
+    expect($mail->contentFormat)->toBe('text/html');
+    expect($mail->content)->toBe(
         '<p style="margin: 20px 0">Someone requested that the password be reset for the following user account: jane</p>'
         . '<p style="margin: 20px 0">To reset your password, visit the following address: <a href="https://example.test/password.php?key=abc">Change my password</a></p>'
         . '<p style="text-align: center; font-size: 70%;">https://example.test/password.php?key=abc</p>'
@@ -744,7 +731,7 @@ test('generateResetPasswordMail uses the render_lost_password_mail_content handl
         EventDispatcherTestFactory::get()->removeEventHandler(RenderLostPasswordMailContent::class, $handler);
     }
 
-    expect($mail['content'])->toBe('REPLACED CONTENT');
+    expect($mail->content)->toBe('REPLACED CONTENT');
 });
 
 test('generateSetPasswordMail assembles the exact HTML content, in order, from every concatenated piece', function (): void {
@@ -753,9 +740,9 @@ test('generateSetPasswordMail assembles the exact HTML content, in order, from e
 
     $mail = $service->generateSetPasswordMail('jane', 'https://example.test/password.php?key=xyz', 'My Gallery', '48 hours');
 
-    expect($mail['subject'])->toBe('Welcome to My Gallery');
-    expect($mail['content_format'])->toBe('text/html');
-    expect($mail['content'])->toBe(
+    expect($mail->subject)->toBe('Welcome to My Gallery');
+    expect($mail->contentFormat)->toBe('text/html');
+    expect($mail->content)->toBe(
         '<p style="margin: 20px 0">A photo library administrator has created the following account for you: jane</p>'
         . '<p style="margin: 20px 0">To set your password, visit the following address: <a href="https://example.test/password.php?key=xyz">Activate</a></p>'
         . '<p style="text-align: center; font-size: 70%; margin: 20px 0;">https://example.test/password.php?key=xyz</p>'
@@ -775,7 +762,7 @@ test('generateSetPasswordMail uses the render_lost_password_mail_content handler
         EventDispatcherTestFactory::get()->removeEventHandler(RenderLostPasswordMailContent::class, $handler);
     }
 
-    expect($mail['content'])->toBe('REPLACED CONTENT');
+    expect($mail->content)->toBe('REPLACED CONTENT');
 });
 
 test('generateCodeVerificationMail assembles the exact HTML content, in order, from every concatenated piece', function (): void {
@@ -785,9 +772,9 @@ test('generateCodeVerificationMail assembles the exact HTML content, in order, f
 
     $mail = $service->generateCodeVerificationMail('482913');
 
-    expect($mail['subject'])->toBe('[My Gallery] Your verification code');
-    expect($mail['content_format'])->toBe('text/html');
-    expect($mail['content'])->toBe(
+    expect($mail->subject)->toBe('[My Gallery] Your verification code');
+    expect($mail->contentFormat)->toBe('text/html');
+    expect($mail->content)->toBe(
         '<p style="margin: 20px 0">Here is your verification code: <br /><span style="font-size: 16px">482913</span></p>'
         . '<p style="margin: 20px 0;">If this was a mistake, just ignore this email and nothing will happen.</p>'
     );
@@ -799,9 +786,9 @@ test('generateSuccessResetPasswordMail assembles the exact HTML content with no 
 
     $mail = $service->generateSuccessResetPasswordMail('jane', 0);
 
-    expect($mail['subject'])->toBe('[Piwigo] Your password has been reset');
-    expect($mail['content_format'])->toBe('text/html');
-    expect($mail['content'])->toBe(
+    expect($mail->subject)->toBe('[Piwigo] Your password has been reset');
+    expect($mail->contentFormat)->toBe('text/html');
+    expect($mail->content)->toBe(
         '<p style="margin-top: 20px;">Hello jane,</p>'
         . '<p style="margin-bottom: 20px;">Your password was successfully reset.</p>'
         . '<p>If this wasn\'t you, please change your password immediately or contact your webmaster.</p>'
@@ -814,7 +801,7 @@ test('generateSuccessResetPasswordMail includes the API-key-revocation notice at
 
     $mail = $service->generateSuccessResetPasswordMail('jane', 1);
 
-    expect($mail['content'])->toContain('1 API keys');
+    expect($mail->content)->toContain('1 API keys');
 });
 
 // generateResetPasswordMail/generateSetPasswordMail/generateCodeVerificationMail's
@@ -851,7 +838,7 @@ test('generateSuccessResetPasswordMail assembles the exact HTML content, in orde
 
     $mail = $service->generateSuccessResetPasswordMail('jane', 3);
 
-    expect($mail['content'])->toBe(
+    expect($mail->content)->toBe(
         '<p style="margin-top: 20px;">Hello jane,</p>'
         . '<p style="margin-bottom: 20px;">Your password was successfully reset.</p>'
         . '<p>If this wasn\'t you, please change your password immediately or contact your webmaster.</p>'

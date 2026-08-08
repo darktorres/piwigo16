@@ -159,8 +159,8 @@ final class RegisterController implements ControllerInterface
                         true,
                         $registerSubmit->sendPasswordByMail
                     );
-                $registration_errors = $registration_result['errors'];
-                $new_user_id = $registration_result['userId'];
+                $registration_errors = $registration_result->errors;
+                $new_user_id = $registration_result->userId;
 
                 // [SEC-57] Only a real new account is audit-logged -- a
                 // duplicate username (userId: null) never reaches here, same

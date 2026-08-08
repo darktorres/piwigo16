@@ -120,11 +120,11 @@ final class EffectiveForbiddenCategoriesCacheTest extends IntegrationTestCase
     {
         $result = $this->cache->getForUser(2, 'normal', '0');
 
-        self::assertSame('0', $result['forbiddenCategories']);
-        self::assertSame('NOT IN', $result['imageAccessType']);
-        self::assertSame('0', $result['imageAccessList']);
-        self::assertSame('5', $result['nbTotalImages']);
-        self::assertSame('2026-08-01 00:00:00', $result['lastPhotoDate']);
+        self::assertSame('0', $result->forbiddenCategories);
+        self::assertSame('NOT IN', $result->imageAccessType);
+        self::assertSame('0', $result->imageAccessList);
+        self::assertSame('5', $result->nbTotalImages);
+        self::assertSame('2026-08-01 00:00:00', $result->lastPhotoDate);
     }
 
     public function test_get_for_user_reflects_a_structurally_forbidden_category(): void
@@ -133,10 +133,10 @@ final class EffectiveForbiddenCategoriesCacheTest extends IntegrationTestCase
 
         $result = $this->cache->getForUser(2, 'normal', '0');
 
-        self::assertSame('1', $result['forbiddenCategories']);
+        self::assertSame('1', $result->forbiddenCategories);
         // category 1's own 3 images are excluded from the total, leaving
         // only category 2's 2.
-        self::assertSame('2', $result['nbTotalImages']);
+        self::assertSame('2', $result->nbTotalImages);
     }
 
     /**
@@ -153,7 +153,7 @@ final class EffectiveForbiddenCategoriesCacheTest extends IntegrationTestCase
 
         try {
             $before = $this->cache->getForUser(2, 'normal', '0');
-            self::assertSame('2026-08-01 00:00:00', $before['lastPhotoDate'], 'category 2 (unmutated) should still be the most recent');
+            self::assertSame('2026-08-01 00:00:00', $before->lastPhotoDate, 'category 2 (unmutated) should still be the most recent');
 
             $this->conn->executeStatement('UPDATE ' . Tables::categories() . " SET status = 'private' WHERE id = 2");
 
@@ -172,7 +172,7 @@ final class EffectiveForbiddenCategoriesCacheTest extends IntegrationTestCase
                 new ArrayAdapter(),
             );
             $after = $afterCache->getForUser(2, 'normal', '0');
-            self::assertSame('2020-01-01 00:00:00', $after['lastPhotoDate'], "once category 2 is forbidden, only category 1's backdated images remain visible");
+            self::assertSame('2020-01-01 00:00:00', $after->lastPhotoDate, "once category 2 is forbidden, only category 1's backdated images remain visible");
         } finally {
             $this->conn->executeStatement(
                 "UPDATE " . Tables::images() . " SET date_available = '2026-08-01 00:00:00' WHERE id IN (1, 2, 3)"
@@ -207,7 +207,7 @@ final class EffectiveForbiddenCategoriesCacheTest extends IntegrationTestCase
             // bare '' -- '0' is its own baked-in sentinel for "nothing
             // forbidden" (see that method's own comment), so the widened
             // value appends onto '0', not onto an empty string.
-            self::assertSame('0,' . $emptyId, $result['forbiddenCategories']);
+            self::assertSame('0,' . $emptyId, $result->forbiddenCategories);
 
             // Admins never get the feature-1053 widening -- a fresh pool
             // entry (different user id) proves this is the status gate,
@@ -217,8 +217,8 @@ final class EffectiveForbiddenCategoriesCacheTest extends IntegrationTestCase
             // legacy code's own real behavior, so admins still get a real
             // value even though the widening loop itself never runs for them.
             $adminResult = $this->cache->getForUser(999, 'admin', '0');
-            self::assertSame('0', $adminResult['forbiddenCategories']);
-            self::assertSame('2026-08-01 00:00:00', $adminResult['lastPhotoDate']);
+            self::assertSame('0', $adminResult->forbiddenCategories);
+            self::assertSame('2026-08-01 00:00:00', $adminResult->lastPhotoDate);
         } finally {
             $this->conn->executeStatement('DELETE FROM ' . Tables::categories() . ' WHERE id = ' . $emptyId);
         }
@@ -227,12 +227,12 @@ final class EffectiveForbiddenCategoriesCacheTest extends IntegrationTestCase
     public function test_get_for_user_serves_a_cache_hit_without_reflecting_a_db_change(): void
     {
         $first = $this->cache->getForUser(2, 'normal', '0');
-        self::assertSame('0', $first['forbiddenCategories']);
+        self::assertSame('0', $first->forbiddenCategories);
 
         $this->conn->executeStatement('UPDATE ' . Tables::categories() . " SET status = 'private' WHERE id = 1");
 
         $second = $this->cache->getForUser(2, 'normal', '0');
-        self::assertSame($first, $second, 'a cache hit must not re-query the DB');
+        self::assertEquals($first, $second, 'a cache hit must not re-query the DB');
     }
 
     public function test_get_for_user_uses_a_separate_cache_entry_per_user(): void
@@ -240,12 +240,12 @@ final class EffectiveForbiddenCategoriesCacheTest extends IntegrationTestCase
         $this->conn->executeStatement('UPDATE ' . Tables::categories() . " SET status = 'private' WHERE id = 1");
 
         $forUser2 = $this->cache->getForUser(2, 'normal', '0');
-        self::assertSame('1', $forUser2['forbiddenCategories']);
+        self::assertSame('1', $forUser2->forbiddenCategories);
 
         // Fixture: user 1 is a member of group 1 ("Editors"), which has
         // group_access to cat 1 -- not forbidden for this user, so a
         // shared cache entry would incorrectly return '1' here too.
         $forUser1 = $this->cache->getForUser(1, 'normal', '0');
-        self::assertSame('0', $forUser1['forbiddenCategories']);
+        self::assertSame('0', $forUser1->forbiddenCategories);
     }
 }

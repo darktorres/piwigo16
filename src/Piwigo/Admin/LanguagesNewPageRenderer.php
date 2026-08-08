@@ -118,16 +118,16 @@ final class LanguagesNewPageRenderer
                 $revision = $languagesNewInstall->revision;
 
                 $extraction = $pem_catalog->extractArchive(ExtensionType::Language, 'install', $revision, '');
-                $install_status = $extraction['status'];
+                $install_status = $extraction->status;
 
                 // extract_language_files() legacy quirk: a successful install
                 // auto-activates the new language immediately (languages have no
                 // separate "installed but inactive" state) -- reproduced here since
                 // PemCatalog::extractArchive() only extracts, it doesn't know about
                 // the lifecycle state machine.
-                if ($install_status === 'ok' && $extraction['id'] !== null) {
-                    $fs_language_entry = $extension_scanner->scan(ExtensionType::Language, $this->urlService, $this->lang, $this->paths, $this->currentUser, $this->eventDispatcher, $this->currentConfig)[$extraction['id']] ?? null;
-                    $extension_lifecycle->performAction(ExtensionType::Language, 'activate', $extraction['id'], $fs_language_entry);
+                if ($install_status === 'ok' && $extraction->id !== null) {
+                    $fs_language_entry = $extension_scanner->scan(ExtensionType::Language, $this->urlService, $this->lang, $this->paths, $this->currentUser, $this->eventDispatcher, $this->currentConfig)[$extraction->id] ?? null;
+                    $extension_lifecycle->performAction(ExtensionType::Language, 'activate', $extraction->id, $fs_language_entry);
                 }
 
                 $this->redirectService->redirect($base_url . '&installstatus=' . $install_status);

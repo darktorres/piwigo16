@@ -48,13 +48,13 @@ final class CategoryAdminService
     {
         $result = $this->categoryService->createVirtualCategory($name, $activityLogger, $currentUser, $parentId, $options);
 
-        if (isset($result['error'])) {
-            return CreateCategoryResult::failure($result['error']);
+        if ($result->error !== null) {
+            return CreateCategoryResult::failure($result->error);
         }
 
         return CreateCategoryResult::success(
-            $result['info'],
-            CategoryId::from((int) $result['id'])
+            (string) $result->info,
+            CategoryId::from((int) $result->id)
         );
     }
 
@@ -254,6 +254,6 @@ final class CategoryAdminService
                 ->pageNotFound($redirectService, 'Requested album does not exist');
         }
 
-        $this->categoryService->updateImageOrderForDescendants($catInfo['uppercats'] . ',', $imageOrder);
+        $this->categoryService->updateImageOrderForDescendants($catInfo->uppercats . ',', $imageOrder);
     }
 }

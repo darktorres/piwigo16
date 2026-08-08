@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Piwigo\Users;
 
+use Piwigo\Users\Projection\DqlPropertyFlag;
+
 /**
  * Item 15 Sub-item D: {@see UserRepository::updateInfosForUsers()}'s
  * `$updates` map keys, enumerated -- re-derived fresh against all 3 real
@@ -58,20 +60,20 @@ enum UserInfoField
     }
 
     /**
-     * @return array{0: string, 1: bool} [DQL property path against UserInfoEntity, whether the column is boolean-typed]
+     * [DQL property path against UserInfoEntity, whether the column is boolean-typed]
      */
-    public function dqlPropertyAndIsBoolean(): array
+    public function dqlPropertyAndIsBoolean(): DqlPropertyFlag
     {
         return match ($this) {
-            self::Level => ['level', false],
-            self::Language => ['language', false],
-            self::Theme => ['theme', false],
-            self::NbImagePage => ['nbImagePage', false],
-            self::RecentPeriod => ['recentPeriod', false],
-            self::Expand => ['expand', true],
-            self::ShowNbComments => ['showNbComments', true],
-            self::ShowNbHits => ['showNbHits', true],
-            self::EnabledHigh => ['enabledHigh', true],
+            self::Level => new DqlPropertyFlag('level', false),
+            self::Language => new DqlPropertyFlag('language', false),
+            self::Theme => new DqlPropertyFlag('theme', false),
+            self::NbImagePage => new DqlPropertyFlag('nbImagePage', false),
+            self::RecentPeriod => new DqlPropertyFlag('recentPeriod', false),
+            self::Expand => new DqlPropertyFlag('expand', true),
+            self::ShowNbComments => new DqlPropertyFlag('showNbComments', true),
+            self::ShowNbHits => new DqlPropertyFlag('showNbHits', true),
+            self::EnabledHigh => new DqlPropertyFlag('enabledHigh', true),
         };
     }
 }

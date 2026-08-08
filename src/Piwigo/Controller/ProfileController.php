@@ -155,7 +155,7 @@ final class ProfileController implements ControllerInterface
         // leaks into the DEFAULT_USER_VALUES template assignment below,
         // matching this method's own original raw-query column list.
         $default_user = $this->userService->getDefaultUserInfo();
-        $default_user = is_array($default_user) ? array_intersect_key($default_user, array_flip($fields)) : [];
+        $default_user = $default_user !== null ? array_intersect_key($default_user->toArray(), array_flip($fields)) : [];
 
         // profile.tpl's inline JS (preferencesDefaultValues) interpolates
         // these bare/unquoted, relying on the *old* enum('true','false')

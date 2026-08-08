@@ -175,7 +175,7 @@ final readonly class ExtensionLifecycle
                 // update()), which is out of this phase's scope to also
                 // migrate.
                 $extraction = $this->pemCatalog->extractArchive(ExtensionType::Plugin, 'upgrade', $options['revision'], $id);
-                $errors[0] = $extraction['status'];
+                $errors[0] = $extraction->status;
 
                 if ($errors[0] === 'ok') {
                     $newFsEntry = new ExtensionScanner()

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Category;
 
+use Piwigo\Category\Projection\DqlPropertyTarget;
 use Piwigo\Group\GroupAccessEntity;
 
 /**
@@ -26,13 +27,13 @@ enum CategoryAccessTarget
     case GroupAccess;
 
     /**
-     * @return array{0: class-string, 1: string} [entity class, DQL property path for the user_id/group_id "keep" column]
+     * [entity class, DQL property path for the user_id/group_id "keep" column]
      */
-    public function entityClassAndFieldProperty(): array
+    public function entityClassAndFieldProperty(): DqlPropertyTarget
     {
         return match ($this) {
-            self::UserAccess => [UserAccessEntity::class, 'userId'],
-            self::GroupAccess => [GroupAccessEntity::class, 'groupId'],
+            self::UserAccess => new DqlPropertyTarget(UserAccessEntity::class, 'userId'),
+            self::GroupAccess => new DqlPropertyTarget(GroupAccessEntity::class, 'groupId'),
         };
     }
 }

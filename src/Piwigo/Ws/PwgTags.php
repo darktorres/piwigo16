@@ -262,12 +262,14 @@ final class PwgTags
     {
         $creation_output = $this->tagService->createTag($params['name']);
 
-        if (isset($creation_output['error'])) {
-            return new PwgError(WsError::INVALID_PARAM, $creation_output['error']);
+        if ($creation_output->error !== null) {
+            return new PwgError(WsError::INVALID_PARAM, $creation_output->error);
         }
 
-        $creation_id = $creation_output['id'];
-        $creation_info = $creation_output['info'];
+        // success()'s own contract guarantees info/id are non-null whenever
+        // error is null (just checked above).
+        $creation_id = $creation_output->id ?? 0;
+        $creation_info = $creation_output->info ?? '';
 
         $this->activityService->record('tag', $creation_id, 'add');
 

@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin;
 
+use Piwigo\Admin\Projection\TabSheetEntry;
 use Piwigo\Event\Admin\TabsheetBeforeSelect;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Template\CurrentTemplate;
@@ -18,7 +19,7 @@ use Piwigo\Template\CurrentTemplate;
 final class Tabsheet
 {
     /**
-     * @var array<string, array{caption: string, url: string}>
+     * @var array<string, TabSheetEntry>
      */
     public $sheets;
 
@@ -59,10 +60,7 @@ final class Tabsheet
     public function add(string $name, string $caption, string $url, bool $selected = false): bool
     {
         if (! isset($this->sheets[$name])) {
-            $this->sheets[$name] = [
-                'caption' => $caption,
-                'url' => $url,
-            ];
+            $this->sheets[$name] = new TabSheetEntry($caption, $url);
             if ($selected) {
                 $this->selected = $name;
             }
@@ -94,19 +92,23 @@ final class Tabsheet
     {
         $event = $eventDispatcher->dispatchChange(new TabsheetBeforeSelect($this->sheets, $this->uniqid));
         // 'tabsheet_before_select' handlers are documented to filter/append to
-        // the array<string, array{caption: string, url: string}> $sheets they
-        // receive and return the same shape, but TabsheetBeforeSelect::$sheets
-        // itself is only loosely typed array<mixed> (a misbehaving third-party
-        // handler could populate it with anything) -- rebuild it defensively
-        // instead of trusting it, keeping only entries that match this
-        // property's real declared shape (string key, caption/url strings).
+        // the array<string, TabSheetEntry> $sheets they receive and return
+        // the same shape, but TabsheetBeforeSelect::$sheets itself is only
+        // loosely typed array<mixed> (a misbehaving third-party handler
+        // could populate it with anything, including a legacy raw
+        // array{caption,url} entry instead of a real TabSheetEntry) --
+        // rebuild it defensively instead of trusting it, keeping only
+        // entries that match this property's real declared shape (string
+        // key, a TabSheetEntry or an equivalent caption/url array).
         $filtered_sheets = [];
         foreach ($event->sheets as $sheet_name => $sheet) {
-            if (is_string($sheet_name) && is_array($sheet) && isset($sheet['caption'], $sheet['url']) && is_string($sheet['caption']) && is_string($sheet['url'])) {
-                $filtered_sheets[$sheet_name] = [
-                    'caption' => $sheet['caption'],
-                    'url' => $sheet['url'],
-                ];
+            if (! is_string($sheet_name)) {
+                continue;
+            }
+            if ($sheet instanceof TabSheetEntry) {
+                $filtered_sheets[$sheet_name] = $sheet;
+            } elseif (is_array($sheet) && isset($sheet['caption'], $sheet['url']) && is_string($sheet['caption']) && is_string($sheet['url'])) {
+                $filtered_sheets[$sheet_name] = new TabSheetEntry($sheet['caption'], $sheet['url']);
             }
         }
         $this->sheets = $filtered_sheets;
@@ -137,10 +139,8 @@ final class Tabsheet
 
     /**
      * returns properties of selected tab
-     *
-     * @return array{caption: string, url: string}|null
      */
-    public function get_selected(): ?array
+    public function get_selected(): ?TabSheetEntry
     {
         if ($this->selected !== '') {
             return $this->sheets[$this->selected];
@@ -160,7 +160,7 @@ final class Tabsheet
         $template = $currentTemplate->get();
 
         $template->set_filename('tabsheet', 'tabsheet.tpl');
-        $template->assign('tabsheet', $this->sheets);
+        $template->assign('tabsheet', array_map(static fn (TabSheetEntry $entry): array => $entry->toArray(), $this->sheets));
         $template->assign('tabsheet_selected', $this->selected);
 
         $selected_tab = $this->get_selected();
@@ -168,7 +168,7 @@ final class Tabsheet
         if (isset($selected_tab)) {
             $template->assign(
                 [
-                    $this->titlename => '[' . $selected_tab['caption'] . ']',
+                    $this->titlename => '[' . $selected_tab->caption . ']',
                 ]
             );
         }

@@ -179,7 +179,8 @@ final class UserBootstrap
                         throw new LogicException('Container returned an unexpected type for ' . UrlServiceInterface::class);
                     }
                     $user['id'] = $userService
-                        ->registerUser($remote_user, '', '', $urlService, false)['userId'] ?? false;
+                        ->registerUser($remote_user, '', '', $urlService, false)
+                        ->userId ?? false;
                 }
             }
         }

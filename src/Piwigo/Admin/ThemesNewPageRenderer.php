@@ -99,8 +99,8 @@ final class ThemesNewPageRenderer
                     ->checkOrFail($this->htmlRenderer, $this->redirectService);
 
                 $extraction = $pem_catalog->extractArchive(ExtensionType::Theme, 'install', $themesNewInstall->revision, $themesNewInstall->extension);
-                $install_status = $extraction['status'];
-                $theme_id = $extraction['id'];
+                $install_status = $extraction->status;
+                $theme_id = $extraction->id;
 
                 $this->redirectService->redirect($base_url . '&installstatus=' . $install_status . '&theme_id=' . $theme_id);
             }

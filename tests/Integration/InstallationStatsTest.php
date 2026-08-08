@@ -43,7 +43,7 @@ function installation_stats_test_make(): InstallationStats
 }
 
 test('getGeneralStatistics returns the full known shape with non-negative integer values', function (): void {
-    $stats = installation_stats_test_make()->getGeneralStatistics();
+    $stats = installation_stats_test_make()->getGeneralStatistics()->toArray();
 
     expect(array_keys($stats))->toBe([
         'nb_photos', 'nb_categories', 'nb_tags', 'nb_image_tag', 'nb_users',
@@ -77,8 +77,8 @@ test('getGeneralStatistics reflects a real, freshly-inserted category and tag as
     try {
         $after = installation_stats_test_make()->getGeneralStatistics();
 
-        expect($after['nb_categories'])->toBe($before['nb_categories'] + 1);
-        expect($after['nb_tags'])->toBe($before['nb_tags'] + 1);
+        expect($after->nbCategories)->toBe($before->nbCategories + 1);
+        expect($after->nbTags)->toBe($before->nbTags + 1);
     } finally {
         $conn->executeStatement('DELETE FROM ' . Tables::tags() . ' WHERE id = ' . $tagId);
         $conn->executeStatement('DELETE FROM ' . Tables::categories() . ' WHERE id = ' . $categoryId);
@@ -105,10 +105,10 @@ test('getGeneralStatistics sums image filesize plus format filesize into disk_us
     try {
         $after = installation_stats_test_make()->getGeneralStatistics();
 
-        expect($after['nb_photos'])->toBe($before['nb_photos'] + 1);
-        expect($after['nb_formats'])->toBe($before['nb_formats'] + 1);
-        expect($after['formats_disk_usage'])->toBe($before['formats_disk_usage'] + 6789);
-        expect($after['disk_usage'])->toBe($before['disk_usage'] + 12345 + 6789);
+        expect($after->nbPhotos)->toBe($before->nbPhotos + 1);
+        expect($after->nbFormats)->toBe($before->nbFormats + 1);
+        expect($after->formatsDiskUsage)->toBe($before->formatsDiskUsage + 6789);
+        expect($after->diskUsage)->toBe($before->diskUsage + 12345 + 6789);
     } finally {
         $conn->executeStatement(sprintf('DELETE FROM %simage_format WHERE image_id = %d', $prefix, $imageId));
         $conn->executeStatement('DELETE FROM ' . Tables::images() . ' WHERE id = ' . $imageId);

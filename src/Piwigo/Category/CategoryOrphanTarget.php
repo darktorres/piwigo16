@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Piwigo\Category;
 
+use Piwigo\Category\Projection\DqlPropertyTarget;
+use Piwigo\Category\Projection\TableColumnTarget;
 use Piwigo\Db\Tables;
 use Piwigo\Group\GroupAccessEntity;
 use Piwigo\Image\ImageCategoryEntity;
@@ -34,28 +36,26 @@ enum CategoryOrphanTarget
     case GroupAccess;
     case OldPermalinks;
 
-    /**
-     * @return array{0: string, 1: string} [table, column]
-     */
-    public function tableAndColumn(): array
+    public function tableAndColumn(): TableColumnTarget
     {
         return match ($this) {
-            self::ImageCategory => [Tables::imageCategory(), 'category_id'],
-            self::UserAccess => [Tables::userAccess(), 'cat_id'],
-            self::GroupAccess => [Tables::groupAccess(), 'cat_id'],
-            self::OldPermalinks => [Tables::oldPermalinks(), 'cat_id'],
+            self::ImageCategory => new TableColumnTarget(Tables::imageCategory(), 'category_id'),
+            self::UserAccess => new TableColumnTarget(Tables::userAccess(), 'cat_id'),
+            self::GroupAccess => new TableColumnTarget(Tables::groupAccess(), 'cat_id'),
+            self::OldPermalinks => new TableColumnTarget(Tables::oldPermalinks(), 'cat_id'),
         };
     }
 
     /**
-     * @return array{0: class-string, 1: string}|null [entity class, DQL property path for the category-id column], or null for OldPermalinks (see this enum's own docblock)
+     * [entity class, DQL property path for the category-id column], or
+     * null for OldPermalinks (see this enum's own docblock)
      */
-    public function entityClassAndProperty(): ?array
+    public function entityClassAndProperty(): ?DqlPropertyTarget
     {
         return match ($this) {
-            self::ImageCategory => [ImageCategoryEntity::class, 'categoryId'],
-            self::UserAccess => [UserAccessEntity::class, 'catId'],
-            self::GroupAccess => [GroupAccessEntity::class, 'catId'],
+            self::ImageCategory => new DqlPropertyTarget(ImageCategoryEntity::class, 'categoryId'),
+            self::UserAccess => new DqlPropertyTarget(UserAccessEntity::class, 'catId'),
+            self::GroupAccess => new DqlPropertyTarget(GroupAccessEntity::class, 'catId'),
             self::OldPermalinks => null,
         };
     }

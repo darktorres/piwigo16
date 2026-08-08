@@ -7,6 +7,7 @@ namespace Piwigo\Controller;
 use JsonException;
 use Override;
 use Piwigo\Auth\AccessControl;
+use Piwigo\Controller\Projection\WebVitalMetric;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Http\ControllerInterface;
 use Piwigo\Http\ResponseFactory;
@@ -44,16 +45,13 @@ final readonly class VitalsController implements ControllerInterface
 
         $metric = $this->parseMetric((string) $request->getBody());
         if ($metric !== null) {
-            $this->logger->info('web_vitals.metric', $metric);
+            $this->logger->info('web_vitals.metric', $metric->toArray());
         }
 
         return ResponseFactory::text('', 204);
     }
 
-    /**
-     * @return array{name: string, value: float, id: string, rating: string, url: string}|null
-     */
-    private function parseMetric(string $rawBody): ?array
+    private function parseMetric(string $rawBody): ?WebVitalMetric
     {
         if ($rawBody === '') {
             return null;
@@ -85,12 +83,6 @@ final readonly class VitalsController implements ControllerInterface
             return null;
         }
 
-        return [
-            'name' => $name,
-            'value' => (float) $value,
-            'id' => $id,
-            'rating' => $rating,
-            'url' => $url,
-        ];
+        return new WebVitalMetric($name, (float) $value, $id, $rating, $url);
     }
 }

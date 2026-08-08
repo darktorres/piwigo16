@@ -98,8 +98,8 @@ final class PluginsNewPageRenderer
                     ->checkOrFail($this->htmlRenderer, $this->redirectService);
 
                 $extraction = $pem_catalog->extractArchive(ExtensionType::Plugin, 'install', $pluginsNewRequest->revision, $pluginsNewRequest->extension);
-                $install_status = $extraction['status'];
-                $plugin_id = $extraction['id'];
+                $install_status = $extraction->status;
+                $plugin_id = $extraction->id;
 
                 $this->redirectService->redirect($base_url . '&installstatus=' . $install_status . '&plugin_id=' . $plugin_id);
             }

@@ -22,6 +22,7 @@ use Piwigo\Event\Picture\FormatExifData;
 use Piwigo\Group\GroupEntity;
 use Piwigo\Image\ImagePathHelper;
 use Piwigo\Metadata\Projection\MetadataImage;
+use Piwigo\Metadata\Projection\SvgDimensions;
 use Piwigo\Permission\PermissionRepository;
 use Piwigo\Permission\PermissionService;
 use Piwigo\PluginConfig\EventDispatcher;
@@ -447,7 +448,8 @@ final readonly class MetadataService
                 if (in_array($mimeType, ['image/svg+xml', 'image/svg'], true)) {
                     $svgSize = $this->parseSvgDimensions($file);
                     if ($svgSize !== null) {
-                        [$infos['width'], $infos['height']] = $svgSize;
+                        $infos['width'] = $svgSize->width;
+                        $infos['height'] = $svgSize->height;
                     }
                 }
 
@@ -493,10 +495,8 @@ final readonly class MetadataService
      * independent of the running libxml2 version's own external-entity
      * defaults) and never passes `LIBXML_NOENT`/`LIBXML_DTDLOAD` (the
      * flags that would re-enable entity substitution).
-     *
-     * @return array{0: int, 1: int}|null
      */
-    private function parseSvgDimensions(string $file): ?array
+    private function parseSvgDimensions(string $file): ?SvgDimensions
     {
         $xml = file_get_contents($file);
         if ($xml === false) {
@@ -535,7 +535,7 @@ final readonly class MetadataService
             ? (int) $heightAttr
             : (int) round((float) ($viewBox[3] ?? 0));
 
-        return [$width, $height];
+        return new SvgDimensions($width, $height);
     }
 
     /**

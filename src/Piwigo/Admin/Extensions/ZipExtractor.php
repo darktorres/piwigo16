@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin\Extensions;
 
+use Piwigo\Admin\Extensions\Projection\ExtractedFileEntry;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\FilesystemHelper;
 use ZipArchive;
@@ -66,7 +67,7 @@ final class ZipExtractor
      * entry whose stored name is absolute or contains a null byte, or any
      * entry whose resolved destination would fall outside $destPath.
      *
-     * @return list<array{filename: string, stored_filename: string, status: string}>|null
+     * @return list<ExtractedFileEntry>|null
      */
     public function extract(
         string $archive,
@@ -138,11 +139,7 @@ final class ZipExtractor
             }
 
             if ($removePrefix !== '' && $storedName === $removePrefix) {
-                $result[] = [
-                    'filename' => $storedName,
-                    'stored_filename' => $storedName,
-                    'status' => 'filtered',
-                ];
+                $result[] = new ExtractedFileEntry($storedName, $storedName, 'filtered');
                 continue;
             }
 
@@ -167,20 +164,12 @@ final class ZipExtractor
 
             if ($isDir) {
                 FilesystemHelper::mkgetdir($filename, $currentConfig, FilesystemHelper::MKGETDIR_RECURSIVE);
-                $result[] = [
-                    'filename' => $filename,
-                    'stored_filename' => $storedName,
-                    'status' => 'ok',
-                ];
+                $result[] = new ExtractedFileEntry($filename, $storedName, 'ok');
                 continue;
             }
 
             if (is_dir($filename)) {
-                $result[] = [
-                    'filename' => $filename,
-                    'stored_filename' => $storedName,
-                    'status' => 'already_a_directory',
-                ];
+                $result[] = new ExtractedFileEntry($filename, $storedName, 'already_a_directory');
                 continue;
             }
 
@@ -192,11 +181,7 @@ final class ZipExtractor
                 if (is_resource($source)) {
                     fclose($source);
                 }
-                $result[] = [
-                    'filename' => $filename,
-                    'stored_filename' => $storedName,
-                    'status' => 'write_error',
-                ];
+                $result[] = new ExtractedFileEntry($filename, $storedName, 'write_error');
                 continue;
             }
 
@@ -208,11 +193,7 @@ final class ZipExtractor
                 @chmod($filename, $chmod);
             }
 
-            $result[] = [
-                'filename' => $filename,
-                'stored_filename' => $storedName,
-                'status' => 'ok',
-            ];
+            $result[] = new ExtractedFileEntry($filename, $storedName, 'ok');
         }
         $zip->close();
 

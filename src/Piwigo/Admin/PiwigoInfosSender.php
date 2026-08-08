@@ -123,7 +123,7 @@ final class PiwigoInfosSender implements TelemetrySenderInterface
             $this->configService->confUpdateParam('send_piwigo_infos_origin_hash', sha1(random_bytes(1000)), true);
         }
 
-        [$containerType, $containerVersion] = ContainerDetector::detect();
+        $containerInfo = ContainerDetector::detect();
 
         $piwigoInfos = [
             'origin_hash' => $this->currentConfig->sendPiwigoInfosOriginHash(),
@@ -131,14 +131,15 @@ final class PiwigoInfosSender implements TelemetrySenderInterface
                 'php_version' => PHP_VERSION,
                 'piwigo_version' => AppInfo::VERSION,
                 'os_version' => PHP_OS,
-                'container_type' => $containerType,
-                'container_version' => $containerVersion,
+                'container_type' => $containerInfo->type,
+                'container_version' => $containerInfo->version,
                 'db_version' => $dbInfo->version(),
                 'php_datetime' => date('Y-m-d H:i:s'),
                 'db_datetime' => $dbCurrentDate,
                 'graphics_library' => PwgImage::get_graphics_library(),
             ],
-            'general_stats' => $this->installationStats->getGeneralStatistics(),
+            'general_stats' => $this->installationStats->getGeneralStatistics()
+                ->toArray(),
         ];
 
         // convert disk_usage from kB to mB

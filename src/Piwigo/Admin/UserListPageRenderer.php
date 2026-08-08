@@ -76,7 +76,7 @@ final class UserListPageRenderer
         ]);
 
         $default_user = $userService->getDefaultUserInfo();
-        if (! is_array($default_user)) {
+        if ($default_user === null) {
             $htmlRenderer
                 ->fatalError('Default user not found');
         }
@@ -125,8 +125,8 @@ final class UserListPageRenderer
                 'U_HISTORY' => $urlService->getRootUrl() . 'admin.php?page=history&filter_user_id=',
                 'PWG_TOKEN' => new CsrfService($currentConfig)
                     ->getToken(),
-                'NB_IMAGE_PAGE' => $default_user['nb_image_page'],
-                'RECENT_PERIOD' => $default_user['recent_period'],
+                'NB_IMAGE_PAGE' => $default_user->nbImagePage,
+                'RECENT_PERIOD' => $default_user->recentPeriod,
                 'theme_options' => ThemeCatalog::getPwgThemes($eventDispatcher, $paths, $currentConfig, $lang),
                 'theme_selected' => $userService->getDefaultTheme(),
                 'language_options' => LangService::getLanguages($paths),
@@ -196,7 +196,7 @@ final class UserListPageRenderer
         }
 
         $template->assign('level_options', $level_options);
-        $template->assign('level_selected', $default_user['level']);
+        $template->assign('level_selected', $default_user->level);
         $template->assign('nb_users_by_level', $nb_users_by_level);
 
         $groups_arr_id = [];

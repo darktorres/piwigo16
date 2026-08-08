@@ -18,6 +18,7 @@ namespace Piwigo\Tests\Integration {
     use Piwigo\Common\ValueObject\Username;
     use Piwigo\Common\ValueObject\Email;
     use Piwigo\Tests\Support\UrlServiceTestFactory;
+    use Piwigo\Users\Projection\DefaultUserInfo;
     use Piwigo\Users\User;
     use Piwigo\Tests\Support\PageStateTestFactory;
     use ReflectionProperty;
@@ -204,7 +205,7 @@ namespace Piwigo\Tests\Integration {
         public function test_get_default_user_info_and_value(): void
         {
             $info = $this->service->getDefaultUserInfo();
-            self::assertIsArray($info);
+            self::assertInstanceOf(DefaultUserInfo::class, $info);
 
             $language = $this->service->getDefaultUserValue('language', 'fallback');
             self::assertNotSame('fallback', $language);
@@ -214,9 +215,9 @@ namespace Piwigo\Tests\Integration {
         {
             $result = $this->service->registerUser('', 'password123', null, UrlServiceTestFactory::build());
 
-            self::assertNull($result['userId']);
-            self::assertNotSame([], $result['errors']);
-            self::assertFalse($result['duplicateUsername']);
+            self::assertNull($result->userId);
+            self::assertNotSame([], $result->errors);
+            self::assertFalse($result->duplicateUsername);
         }
 
         public function test_register_user_sets_duplicate_username_without_revealing_it_in_errors(): void
@@ -225,9 +226,9 @@ namespace Piwigo\Tests\Integration {
             // account notice email is never attempted here.
             $result = $this->service->registerUser('guest', 'password123', null, UrlServiceTestFactory::build());
 
-            self::assertNull($result['userId']);
-            self::assertTrue($result['duplicateUsername']);
-            self::assertSame([], $result['errors'], 'the duplicate-login message must never appear in errors');
+            self::assertNull($result->userId);
+            self::assertTrue($result->duplicateUsername);
+            self::assertSame([], $result->errors, 'the duplicate-login message must never appear in errors');
         }
 
         public function test_register_user_duplicate_username_does_not_insert_a_new_row(): void
@@ -265,8 +266,8 @@ namespace Piwigo\Tests\Integration {
             $login = 'p18-regression-' . bin2hex(random_bytes(4));
             $result = $this->service->registerUser($login, 'password123', null, UrlServiceTestFactory::build());
 
-            self::assertNotNull($result['userId']);
-            $userId = $result['userId'];
+            self::assertNotNull($result->userId);
+            $userId = $result->userId;
 
             $members = $groupRepo->findMemberUserIds($defaultGroupId);
             self::assertSame([$userId], array_map(static fn (UserId $id): int => $id->value, $members));
@@ -815,11 +816,11 @@ namespace Piwigo\Tests\Integration {
                 // registration -- notifyAdminsOfNewRegistration() never
                 // checks/propagates mailNotificationAdmins()'s own return
                 // value.
-                self::assertNotNull($result['userId']);
-                self::assertSame([], $result['errors']);
+                self::assertNotNull($result->userId);
+                self::assertSame([], $result->errors);
             } finally {
-                if ($result['userId'] !== null) {
-                    $this->conn->executeStatement('DELETE FROM ' . Tables::users() . ' WHERE id = ?', [$result['userId']]);
+                if ($result->userId !== null) {
+                    $this->conn->executeStatement('DELETE FROM ' . Tables::users() . ' WHERE id = ?', [$result->userId]);
                 }
             }
         }
@@ -845,11 +846,11 @@ namespace Piwigo\Tests\Integration {
             }
 
             try {
-                self::assertNotNull($result['userId']);
-                self::assertSame([], $result['errors']);
+                self::assertNotNull($result->userId);
+                self::assertSame([], $result->errors);
             } finally {
-                if ($result['userId'] !== null) {
-                    $this->conn->executeStatement('DELETE FROM ' . Tables::users() . ' WHERE id = ?', [$result['userId']]);
+                if ($result->userId !== null) {
+                    $this->conn->executeStatement('DELETE FROM ' . Tables::users() . ' WHERE id = ?', [$result->userId]);
                 }
             }
         }
@@ -868,8 +869,8 @@ namespace Piwigo\Tests\Integration {
                 UrlServiceTestFactory::build()
             );
 
-            self::assertNull($result['userId']);
-            self::assertSame([LangTestFactory::get()->t('login mustn\'t end with a space character')], $result['errors']);
+            self::assertNull($result->userId);
+            self::assertSame([LangTestFactory::get()->t('login mustn\'t end with a space character')], $result->errors);
         }
 
         public function test_register_user_rejects_a_login_starting_with_a_space(): void
@@ -881,8 +882,8 @@ namespace Piwigo\Tests\Integration {
                 UrlServiceTestFactory::build()
             );
 
-            self::assertNull($result['userId']);
-            self::assertSame([LangTestFactory::get()->t('login mustn\'t start with a space character')], $result['errors']);
+            self::assertNull($result->userId);
+            self::assertSame([LangTestFactory::get()->t('login mustn\'t start with a space character')], $result->errors);
         }
 
         public function test_register_user_rejects_a_login_with_html_tags(): void
@@ -894,8 +895,8 @@ namespace Piwigo\Tests\Integration {
                 UrlServiceTestFactory::build()
             );
 
-            self::assertNull($result['userId']);
-            self::assertSame([LangTestFactory::get()->t('html tags are not allowed in login')], $result['errors']);
+            self::assertNull($result->userId);
+            self::assertSame([LangTestFactory::get()->t('html tags are not allowed in login')], $result->errors);
         }
 
         public function test_register_user_rejects_an_invalid_mail_address(): void
@@ -907,8 +908,8 @@ namespace Piwigo\Tests\Integration {
                 UrlServiceTestFactory::build()
             );
 
-            self::assertNull($result['userId']);
-            self::assertCount(1, $result['errors']);
+            self::assertNull($result->userId);
+            self::assertCount(1, $result->errors);
         }
 
         public function test_register_user_marks_duplicate_when_insensitive_case_logon_matches_an_existing_login(): void
@@ -924,9 +925,9 @@ namespace Piwigo\Tests\Integration {
 
             $result = $this->service->registerUser('GUEST', 'password123', null, UrlServiceTestFactory::build());
 
-            self::assertNull($result['userId']);
-            self::assertTrue($result['duplicateUsername']);
-            self::assertSame([], $result['errors']);
+            self::assertNull($result->userId);
+            self::assertTrue($result->duplicateUsername);
+            self::assertSame([], $result->errors);
         }
 
         public function test_create_user_infos_does_nothing_for_an_empty_user_id_list(): void

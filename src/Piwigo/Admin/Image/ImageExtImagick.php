@@ -58,7 +58,7 @@ final class ImageExtImagick implements ImageInterface
         if (strtolower(StringHelper::getExtension($this->source_filepath)) === 'webp') {
             $webp_info = PwgImage::webp_info($this->source_filepath);
 
-            if ($webp_info['has-animation']) {
+            if ($webp_info->hasAnimation) {
                 $this->is_animated_webp = true;
 
                 // ImageMagick "identify" returns the list of width x height for each

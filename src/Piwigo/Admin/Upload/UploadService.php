@@ -16,6 +16,7 @@ use LogicException;
 use Piwigo\Activity\ActivityService;
 use Piwigo\Admin\Image\ImageProcessingException;
 use Piwigo\Admin\Image\PwgImage;
+use Piwigo\Admin\Upload\Projection\ImageDimensionsInfo;
 use Piwigo\Cache\PermissionCacheInvalidator;
 use Piwigo\Common\ValueObject\ImageId;
 use Piwigo\Config\ConfigEntry;
@@ -551,9 +552,9 @@ final class UploadService
             if (isset($image_id)) {
                 $update = [
                     'file' => $original_filename ?? basename($file_path),
-                    'filesize' => $file_infos['filesize'],
-                    'width' => $file_infos['width'],
-                    'height' => $file_infos['height'],
+                    'filesize' => $file_infos->filesize,
+                    'width' => $file_infos->width,
+                    'height' => $file_infos->height,
                     'md5sum' => $md5sum,
                     'added_by' => $this->currentUser->get()
                         ->id->value,
@@ -581,9 +582,9 @@ final class UploadService
                     // have produced for a single INSERT.
                     'lastmodified' => $dbnow,
                     'path' => preg_replace('#^' . preg_quote($this->paths->root) . '#', '', $file_path),
-                    'filesize' => $file_infos['filesize'],
-                    'width' => $file_infos['width'],
-                    'height' => $file_infos['height'],
+                    'filesize' => $file_infos->filesize,
+                    'width' => $file_infos->width,
+                    'height' => $file_infos->height,
                     'md5sum' => $md5sum,
                     'added_by' => $this->currentUser->get()
                         ->id->value,
@@ -828,10 +829,10 @@ final class UploadService
         $insert = [
             'image_id' => $format_of,
             'ext' => $format_ext,
-            'filesize' => $file_infos['filesize'],
+            'filesize' => $file_infos->filesize,
         ];
 
-        $filesize = (int) $file_infos['filesize'];
+        $filesize = (int) $file_infos->filesize;
 
         $existing_format_id = $this->imageService->getFormatIdByImageAndExt(ImageId::from((int) $format_of), $format_ext);
         if ($existing_format_id !== null) {
@@ -1494,10 +1495,7 @@ final class UploadService
             || $value === [];
     }
 
-    /**
-     * @return array{width: ?int, height: ?int, filesize: float}
-     */
-    public function pwgImageInfos(string $path): array
+    public function pwgImageInfos(string $path): ImageDimensionsInfo
     {
         $image_size = getimagesize($path);
         // Not decodable as an image at all (e.g. a non-picture file
@@ -1520,11 +1518,7 @@ final class UploadService
         }
         $filesize = floor($filesize_bytes / 1024);
 
-        return [
-            'width' => $width,
-            'height' => $height,
-            'filesize' => $filesize,
-        ];
+        return new ImageDimensionsInfo($width, $height, $filesize);
     }
 
     /**

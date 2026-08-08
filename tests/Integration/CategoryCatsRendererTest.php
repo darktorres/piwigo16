@@ -275,7 +275,7 @@ final class CategoryCatsRendererTest extends IntegrationTestCase
     {
         $this->seedUser();
         $result = $this->categoryService->createVirtualCategory('Empty Recent Test', new CategoryCatsRendererFakeActivityLogger(), CurrentUserTestFactory::get());
-        $newIdRaw = $result['id'] ?? null;
+        $newIdRaw = $result->id;
         self::assertTrue(is_numeric($newIdRaw));
         $newId = (int) $newIdRaw;
 
@@ -302,7 +302,7 @@ final class CategoryCatsRendererTest extends IntegrationTestCase
         // zero-image "Empty Recent Test" sibling above (which never gets
         // anywhere near findFullCategoriesByIds() at all).
         $result = $this->categoryService->createVirtualCategory('Toctou Probe Album', new CategoryCatsRendererFakeActivityLogger(), CurrentUserTestFactory::get());
-        $newIdRaw = $result['id'] ?? null;
+        $newIdRaw = $result->id;
         self::assertTrue(is_numeric($newIdRaw));
         $newId = (int) $newIdRaw;
 

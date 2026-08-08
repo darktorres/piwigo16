@@ -55,29 +55,29 @@ final class PwgPermissions
 
         // direct users
         foreach ($this->permissionService->getDirectUserAccessRows($cat_ids_filter) as $row) {
-            $cat_id = $row['cat_id'];
+            $cat_id = $row->catId;
             if (! isset($perms[$cat_id])) {
                 $perms[$cat_id]['id'] = $cat_id;
             }
-            $perms[$cat_id]['users'][] = $row['user_id'];
+            $perms[$cat_id]['users'][] = $row->userId;
         }
 
         // indirect users
         foreach ($this->permissionService->getIndirectUserAccessRows($cat_ids_filter) as $row) {
-            $cat_id = $row['cat_id'];
+            $cat_id = $row->catId;
             if (! isset($perms[$cat_id])) {
                 $perms[$cat_id]['id'] = $cat_id;
             }
-            $perms[$cat_id]['users_indirect'][] = $row['user_id'];
+            $perms[$cat_id]['users_indirect'][] = $row->userId;
         }
 
         // groups
         foreach ($this->permissionService->getGroupAccessRows($cat_ids_filter) as $row) {
-            $cat_id = $row['cat_id'];
+            $cat_id = $row->catId;
             if (! isset($perms[$cat_id])) {
                 $perms[$cat_id]['id'] = $cat_id;
             }
-            $perms[$cat_id]['groups'][] = $row['group_id'];
+            $perms[$cat_id]['groups'][] = $row->groupId;
         }
 
         // filter by group and user

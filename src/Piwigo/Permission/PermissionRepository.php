@@ -21,6 +21,8 @@ use Piwigo\Group\GroupAccessEntity;
 use Piwigo\Group\UserGroupEntity;
 use Piwigo\Image\ImageCategoryEntity;
 use Piwigo\Image\ImageEntity;
+use Piwigo\Permission\Projection\GroupAccessRow;
+use Piwigo\Permission\Projection\UserAccessRow;
 use UnexpectedValueException;
 
 /**
@@ -370,7 +372,7 @@ final readonly class PermissionRepository
      * users" block.
      *
      * @param  list<int>  $catIds
-     * @return list<array{user_id: int, cat_id: int}>
+     * @return list<UserAccessRow>
      */
     public function findDirectUserAccessRows(array $catIds): array
     {
@@ -391,10 +393,7 @@ final readonly class PermissionRepository
             if (! is_array($row) || ! $row['userId'] instanceof UserId || ! $row['catId'] instanceof CategoryId) {
                 continue;
             }
-            $result[] = [
-                'user_id' => $row['userId']->value,
-                'cat_id' => $row['catId']->value,
-            ];
+            $result[] = new UserAccessRow($row['userId']->value, $row['catId']->value);
         }
 
         return $result;
@@ -406,7 +405,7 @@ final readonly class PermissionRepository
      * getList()'s own "indirect users" block.
      *
      * @param  list<int>  $catIds
-     * @return list<array{user_id: int, cat_id: int}>
+     * @return list<UserAccessRow>
      */
     public function findIndirectUserAccessRows(array $catIds): array
     {
@@ -428,10 +427,7 @@ final readonly class PermissionRepository
             if (! is_array($row) || ! $row['userId'] instanceof UserId || ! $row['catId'] instanceof CategoryId) {
                 continue;
             }
-            $result[] = [
-                'user_id' => $row['userId']->value,
-                'cat_id' => $row['catId']->value,
-            ];
+            $result[] = new UserAccessRow($row['userId']->value, $row['catId']->value);
         }
 
         return $result;
@@ -443,7 +439,7 @@ final readonly class PermissionRepository
      * block.
      *
      * @param  list<int>  $catIds
-     * @return list<array{group_id: int, cat_id: int}>
+     * @return list<GroupAccessRow>
      */
     public function findGroupAccessRows(array $catIds): array
     {
@@ -464,10 +460,7 @@ final readonly class PermissionRepository
             if (! is_array($row) || ! $row['groupId'] instanceof GroupId || ! $row['catId'] instanceof CategoryId) {
                 continue;
             }
-            $result[] = [
-                'group_id' => $row['groupId']->value,
-                'cat_id' => $row['catId']->value,
-            ];
+            $result[] = new GroupAccessRow($row['groupId']->value, $row['catId']->value);
         }
 
         return $result;

@@ -12,6 +12,7 @@ declare(strict_types=1);
 namespace Piwigo\Ws;
 
 use InvalidArgumentException;
+use LogicException;
 use Piwigo\Audit\AuditService;
 use Piwigo\Cache\PermissionCacheInvalidator;
 use Piwigo\Common\ValueObject\GroupId;
@@ -87,9 +88,10 @@ final class PwgGroups
      * @param array{name: string, is_default: bool, ...} $params name has no
      *   'default' key -- mandatory, always present. is_default: non-null
      *   bool default, WsParamType::BOOL -- always present.
-     * @return mixed PwgError, or the result of the pwg.groups.getList invocation
+     * @return PwgError|array<array-key, mixed> PwgError, or the result of
+     *   the pwg.groups.getList invocation
      */
-    public function add(array $params, PwgServer &$service): mixed
+    public function add(array $params, PwgServer &$service): PwgError|array
     {
         $name = strip_tags(stripslashes($params['name']));
 
@@ -107,9 +109,9 @@ final class PwgGroups
                 'name' => $name,
             ]);
 
-        return $service->invoke('pwg.groups.getList', [
+        return $this->narrowGetListResult($service->invoke('pwg.groups.getList', [
             'group_id' => $inserted_id->value,
-        ]);
+        ]));
     }
 
     /**
@@ -145,9 +147,10 @@ final class PwgGroups
      *   group_id/pwg_token: no 'default' key -- mandatory, always present,
      *   WsParamType::ID guarantees a plain int for group_id. name/is_default:
      *   WsParamFlag::OPTIONAL with no 'default' key -- may be entirely absent.
-     * @return mixed PwgError, or the result of the pwg.groups.getList invocation
+     * @return PwgError|array<array-key, mixed> PwgError, or the result of
+     *   the pwg.groups.getList invocation
      */
-    public function setInfo(array $params, PwgServer &$service): mixed
+    public function setInfo(array $params, PwgServer &$service): PwgError|array
     {
         if (new CsrfService($this->currentConfig)->getToken() !== $params['pwg_token']) {
             return new PwgError(403, 'Invalid security token');
@@ -168,9 +171,9 @@ final class PwgGroups
             return new PwgError(WsError::INVALID_PARAM, $e->getMessage());
         }
 
-        return $service->invoke('pwg.groups.getList', [
+        return $this->narrowGetListResult($service->invoke('pwg.groups.getList', [
             'group_id' => $params['group_id'],
-        ]);
+        ]));
     }
 
     /**
@@ -181,9 +184,10 @@ final class PwgGroups
      *   none has a 'default' key -- all mandatory, always present; group_id:
      *   WsParamType::ID guarantees a plain int; user_id: FORCE_ARRAY always
      *   coerces to a list of positive ints.
-     * @return mixed PwgError, or the result of the pwg.groups.getList invocation
+     * @return PwgError|array<array-key, mixed> PwgError, or the result of
+     *   the pwg.groups.getList invocation
      */
-    public function addUser(array $params, PwgServer &$service): mixed
+    public function addUser(array $params, PwgServer &$service): PwgError|array
     {
         if (new CsrfService($this->currentConfig)->getToken() !== $params['pwg_token']) {
             return new PwgError(403, 'Invalid security token');
@@ -194,9 +198,9 @@ final class PwgGroups
             return new PwgError(WsError::INVALID_PARAM, 'This group does not exist.');
         }
 
-        return $service->invoke('pwg.groups.getList', [
+        return $this->narrowGetListResult($service->invoke('pwg.groups.getList', [
             'group_id' => $params['group_id'],
-        ]);
+        ]));
     }
 
     /**
@@ -242,9 +246,10 @@ final class PwgGroups
      * @param array{group_id: int, copy_name: string, pwg_token: string, ...} $params
      *   none has a 'default' key -- all mandatory, always present,
      *   WsParamType::ID guarantees a plain int for group_id.
-     * @return mixed PwgError, or the result of the pwg.groups.getList invocation
+     * @return PwgError|array<array-key, mixed> PwgError, or the result of
+     *   the pwg.groups.getList invocation
      */
-    public function duplicate(array $params, PwgServer &$service): mixed
+    public function duplicate(array $params, PwgServer &$service): PwgError|array
     {
         if (new CsrfService($this->currentConfig)->getToken() !== $params['pwg_token']) {
             return new PwgError(403, 'Invalid security token');
@@ -256,9 +261,9 @@ final class PwgGroups
             return new PwgError(WsError::INVALID_PARAM, $e->getMessage());
         }
 
-        return $service->invoke('pwg.groups.getList', [
+        return $this->narrowGetListResult($service->invoke('pwg.groups.getList', [
             'group_id' => $inserted_id->value,
-        ]);
+        ]));
     }
 
     /**
@@ -269,9 +274,10 @@ final class PwgGroups
      *   none has a 'default' key -- all mandatory, always present; group_id:
      *   WsParamType::ID guarantees a plain int; user_id: FORCE_ARRAY always
      *   coerces to a list of positive ints.
-     * @return mixed PwgError, or the result of the pwg.groups.getList invocation
+     * @return PwgError|array<array-key, mixed> PwgError, or the result of
+     *   the pwg.groups.getList invocation
      */
-    public function deleteUser(array $params, PwgServer &$service): mixed
+    public function deleteUser(array $params, PwgServer &$service): PwgError|array
     {
         if (new CsrfService($this->currentConfig)->getToken() !== $params['pwg_token']) {
             return new PwgError(403, 'Invalid security token');
@@ -282,8 +288,33 @@ final class PwgGroups
             return new PwgError(WsError::INVALID_PARAM, 'This group does not exist.');
         }
 
-        return $service->invoke('pwg.groups.getList', [
+        return $this->narrowGetListResult($service->invoke('pwg.groups.getList', [
             'group_id' => $params['group_id'],
-        ]);
+        ]));
+    }
+
+    /**
+     * $service->invoke() is a genuine string-keyed dynamic dispatcher (see
+     * PwgServer's own class docblock) -- its declared return type is
+     * `mixed` by design. This narrows it to the real shape this specific
+     * sub-invocation (always 'pwg.groups.getList', which itself really
+     * does return PwgError|array{paging: PwgNamedStruct, groups: PwgNamedArray})
+     * is known to return, the same "resolve, narrow, or throw" idiom
+     * already used throughout this codebase for other statically-
+     * unknowable-but-really-fixed-shape values (e.g. PwgImage::
+     * currentConfig()'s container resolve). Kept as a plain (non-sealed)
+     * `array` here -- unlike getList() itself, this method never literally
+     * constructs the array, only narrows an already-built one, so PHPStan
+     * can't verify the sealed shape from this call site alone.
+     *
+     * @return PwgError|array<array-key, mixed>
+     */
+    private function narrowGetListResult(mixed $result): PwgError|array
+    {
+        if (! $result instanceof PwgError && ! is_array($result)) {
+            throw new LogicException('pwg.groups.getList returned an unexpected type');
+        }
+
+        return $result;
     }
 }

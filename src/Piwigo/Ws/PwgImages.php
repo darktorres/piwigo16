@@ -13,6 +13,7 @@ namespace Piwigo\Ws;
 
 use Doctrine\ORM\EntityManagerInterface;
 use Exception;
+use LogicException;
 use Piwigo\Activity\ActivityService;
 use Piwigo\Admin\Upload\UploadService;
 use Piwigo\Auth\AccessControl;
@@ -1768,13 +1769,12 @@ final class PwgImages
      *    date_creation/tag_ids: no WS_TYPE flag, null default -- string|null.
      *    level: WsParamType::INT|POSITIVE, default 0 (non-null) -- always int.
      *    image_id: WsParamType::ID, null default -- int|null.
-     *
-     * Return type genuinely can't be narrower than mixed: the success path
-     * forwards $service->invoke('pwg.images.getInfo', ...)'s own result --
-     * same PwgServer::invoke() by-name-dispatcher rationale as
-     * Ws\PwgUsers::add()/setInfo().
+     * @return PwgError|array<array-key, mixed> PwgError, an in-progress
+     *   {message: string} status while chunks are still arriving, or the
+     *   result of the pwg.images.getInfo invocation once the upload is
+     *   complete
      */
-    public function uploadAsync(array $params, PwgServer &$service): mixed
+    public function uploadAsync(array $params, PwgServer &$service): PwgError|array
     {
         $logger = $this->currentLogger->get();
 
@@ -2014,9 +2014,23 @@ final class PwgImages
             }
         }
 
-        return $service->invoke('pwg.images.getInfo', [
+        $result = $service->invoke('pwg.images.getInfo', [
             'image_id' => $image_id,
         ]);
+        // $service->invoke() is a genuine string-keyed dynamic dispatcher
+        // (see PwgServer's own class docblock) -- its declared return type
+        // is `mixed` by design. This narrows it to the real shape this
+        // specific sub-invocation (always 'pwg.images.getInfo', which
+        // itself really does return PwgError|array<string, mixed>) is
+        // known to return, the same "resolve, narrow, or throw" idiom
+        // already used throughout this codebase for other statically-
+        // unknowable-but-really-fixed-shape values (e.g. PwgImage::
+        // currentConfig()'s container resolve).
+        if (! $result instanceof PwgError && ! is_array($result)) {
+            throw new LogicException('pwg.images.getInfo returned an unexpected type');
+        }
+
+        return $result;
     }
 
     /**

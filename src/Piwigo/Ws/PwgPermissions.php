@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Ws;
 
+use LogicException;
 use Piwigo\Category\CategoryService;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\WsError;
@@ -124,13 +125,17 @@ final class PwgPermissions
      *   same FORCE_ARRAY coercion when present. recursive: non-null bool
      *   default, WsParamType::BOOL -- always present. pwg_token: no 'default'
      *   key -- mandatory, always present.
-     * @return mixed PwgError, or the result of the pwg.permissions.getList invocation
+     * @return PwgError|array<array-key, mixed> PwgError, or the result of the
+     *   pwg.permissions.getList invocation (really always
+     *   array{categories: PwgNamedArray} at runtime, but narrowGetListResult()
+     *   can't prove the sealed shape from a re-narrowed value, only that
+     *   it's a real array)
      *
      * `recursive` is passed directly as the `$applyOnSub` argument to
      * PermissionService::addPermissionOnCategory() -- this WS method has no
      * `$_POST` state of its own.
      */
-    public function add(array $params, PwgServer &$service): mixed
+    public function add(array $params, PwgServer &$service): PwgError|array
     {
         if (new CsrfService($this->currentConfig)->getToken() !== $params['pwg_token']) {
             return new PwgError(403, 'Invalid security token');
@@ -162,9 +167,9 @@ final class PwgPermissions
                 ->addPermissionOnCategory($params['cat_id'], $params['user_id'], $params['recursive']);
         }
 
-        return $service->invoke('pwg.permissions.getList', [
+        return $this->narrowGetListResult($service->invoke('pwg.permissions.getList', [
             'cat_id' => $params['cat_id'],
-        ]);
+        ]));
     }
 
     /**
@@ -176,9 +181,13 @@ final class PwgPermissions
      *   FORCE_ARRAY always coerces cat_id to a list of positive ints.
      *   group_id/user_id: WsParamFlag::OPTIONAL with no 'default' key -- may be
      *   entirely absent, same FORCE_ARRAY coercion when present.
-     * @return mixed PwgError, or the result of the pwg.permissions.getList invocation
+     * @return PwgError|array<array-key, mixed> PwgError, or the result of the
+     *   pwg.permissions.getList invocation (really always
+     *   array{categories: PwgNamedArray} at runtime, but narrowGetListResult()
+     *   can't prove the sealed shape from a re-narrowed value, only that
+     *   it's a real array)
      */
-    public function remove(array $params, PwgServer &$service): mixed
+    public function remove(array $params, PwgServer &$service): PwgError|array
     {
         if (new CsrfService($this->currentConfig)->getToken() !== $params['pwg_token']) {
             return new PwgError(403, 'Invalid security token');
@@ -194,8 +203,33 @@ final class PwgPermissions
             $this->categoryService->denyUserAccess($params['user_id'], $cat_ids);
         }
 
-        return $service->invoke('pwg.permissions.getList', [
+        return $this->narrowGetListResult($service->invoke('pwg.permissions.getList', [
             'cat_id' => $params['cat_id'],
-        ]);
+        ]));
+    }
+
+    /**
+     * $service->invoke() is a genuine string-keyed dynamic dispatcher (see
+     * PwgServer's own class docblock) -- its declared return type is
+     * `mixed` by design. This narrows it to the real shape this specific
+     * sub-invocation (always 'pwg.permissions.getList', which itself
+     * really does return PwgError|array{categories: PwgNamedArray}) is
+     * known to return, the same "resolve, narrow, or throw" idiom already
+     * used throughout this codebase for other statically-unknowable-but-
+     * really-fixed-shape values (e.g. PwgImage::currentConfig()'s
+     * container resolve). Kept as a plain (non-sealed) `array` here --
+     * unlike getList() itself, this method never literally constructs the
+     * array, only narrows an already-built one, so PHPStan can't verify
+     * the sealed `array{categories: ...}` shape from this call site alone.
+     *
+     * @return PwgError|array<array-key, mixed>
+     */
+    private function narrowGetListResult(mixed $result): PwgError|array
+    {
+        if (! $result instanceof PwgError && ! is_array($result)) {
+            throw new LogicException('pwg.permissions.getList returned an unexpected type');
+        }
+
+        return $result;
     }
 }

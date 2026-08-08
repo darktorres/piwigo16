@@ -12,6 +12,7 @@ declare(strict_types=1);
 namespace Piwigo\Ws;
 
 use InvalidArgumentException;
+use LogicException;
 use Piwigo\Activity\ActivityEntity;
 use Piwigo\Auth\AccessControl;
 use Piwigo\Auth\ApiKeyService;
@@ -420,13 +421,10 @@ final class PwgUsers
      *   default, no 'type' flag -- always present, string|null.
      *   password_confirm: WsParamFlag::OPTIONAL with no 'default' key -- may be
      *   entirely absent.
-     *
-     * Return type genuinely can't be narrower than mixed: the success path
-     * forwards $service->invoke('pwg.users.getList', ...)'s own result,
-     * and PwgServer::invoke() is itself a generic by-name dispatcher across
-     * every registered WS method, each with its own distinct return shape.
+     * @return PwgError|array<int|string, mixed> PwgError, or the result of
+     *   the pwg.users.getList invocation
      */
-    public function add(array $params, PwgServer &$service): mixed
+    public function add(array $params, PwgServer &$service): PwgError|array
     {
         if (new CsrfService($this->currentConfig)->getToken() !== $params['pwg_token']) {
             return new PwgError(403, 'Invalid security token');
@@ -481,9 +479,9 @@ final class PwgUsers
             return new PwgError(WsError::INVALID_PARAM, $errors[0] ?? '');
         }
 
-        return $service->invoke('pwg.users.getList', [
+        return $this->narrowGetListResult($service->invoke('pwg.users.getList', [
             'user_id' => $user_id,
-        ]);
+        ]));
     }
 
     /**
@@ -573,11 +571,10 @@ final class PwgUsers
      *   other key: WsParamFlag::OPTIONAL with no 'default' key -- may be entirely
      *   absent; group_id: WsParamType::INT only (no POSITIVE) since -1 is a valid
      *   value ("dissociate from all groups").
-     *
-     * Return type genuinely can't be narrower than mixed -- same
-     * invoke()-forwarding rationale as add() above.
+     * @return PwgError|array<int|string, mixed> PwgError, or the result of
+     *   the pwg.users.getList invocation
      */
-    public function setInfo(array $params, PwgServer &$service): mixed
+    public function setInfo(array $params, PwgServer &$service): PwgError|array
     {
         if (new CsrfService($this->currentConfig)->getToken() !== $params['pwg_token']) {
             return new PwgError(403, 'Invalid security token');
@@ -599,10 +596,31 @@ final class PwgUsers
 
         $updated_infos = is_array($updated_users['infos'] ?? null) ? $updated_users['infos'] : [];
 
-        return $service->invoke('pwg.users.getList', [
+        return $this->narrowGetListResult($service->invoke('pwg.users.getList', [
             'user_id' => $updated_users['user_id'],
             'display' => 'basics,' . implode(',', array_keys($updated_infos)),
-        ]);
+        ]));
+    }
+
+    /**
+     * $service->invoke() is a genuine string-keyed dynamic dispatcher (see
+     * PwgServer's own class docblock) -- its declared return type is
+     * `mixed` by design. This narrows it to the real shape this specific
+     * sub-invocation (always 'pwg.users.getList', which itself really
+     * does return PwgError|array<int|string, mixed>) is known to return,
+     * the same "resolve, narrow, or throw" idiom already used throughout
+     * this codebase for other statically-unknowable-but-really-fixed-shape
+     * values (e.g. PwgImage::currentConfig()'s container resolve).
+     *
+     * @return PwgError|array<int|string, mixed>
+     */
+    private function narrowGetListResult(mixed $result): PwgError|array
+    {
+        if (! $result instanceof PwgError && ! is_array($result)) {
+            throw new LogicException('pwg.users.getList returned an unexpected type');
+        }
+
+        return $result;
     }
 
     /**

@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Piwigo\Admin;
 
 use Piwigo\Admin\Category\CategoryAdminService;
+use Piwigo\Admin\Projection\ElementSetRanksHeaderPageContext;
+use Piwigo\Admin\Projection\ElementSetRanksSaveSuccessPageContext;
 use Piwigo\Admin\Request\ElementSetRanksRequest;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Common\ValueObject\CategoryId;
@@ -130,11 +132,7 @@ final class ElementSetRanksPageRenderer
             }
             $this->categoryAdminService->saveImageOrder($category_id, $image_order, $elementSetRanksRequest->isImageOrderSubcats, $this->redirectService);
 
-            $template->assign(
-                [
-                    'save_success' => $message,
-                ]
-            );
+            $template->assignContext(new ElementSetRanksSaveSuccessPageContext($message));
         }
 
         // +-------------------------------------------------------------------+
@@ -164,15 +162,6 @@ final class ElementSetRanksPageRenderer
         $navigation = $htmlRenderer->getCatDisplayNameCache(
             $category->uppercats,
             $this->urlService->getRootUrl() . 'admin.php?page=album-'
-        );
-
-        $template->assign(
-            [
-                'CATEGORIES_NAV' => preg_replace('# {2,}#', ' ', (string) preg_replace("#(\r\n|\n\r|\n|\r)#", ' ', $navigation)),
-                'F_ACTION' => $base_url . $this->urlService->getQueryStringDiff([]),
-                'PWG_TOKEN' => new CsrfService($this->currentConfig)
-                    ->getToken(),
-            ]
         );
 
         // +-------------------------------------------------------------------+
@@ -208,8 +197,6 @@ final class ElementSetRanksPageRenderer
             }
         }
         // image order management
-        $template->assign('image_order_options', $sort_fields);
-
         $image_order = explode(',', $category->imageOrder ?? '');
 
         for ($i = 0; $i < 3; $i++) { // 3 fields
@@ -220,7 +207,14 @@ final class ElementSetRanksPageRenderer
             }
         }
 
-        $template->assign('image_order_choice', $image_order_choice);
+        $template->assignContext(new ElementSetRanksHeaderPageContext(
+            categoriesNav: (string) preg_replace('# {2,}#', ' ', (string) preg_replace("#(\r\n|\n\r|\n|\r)#", ' ', $navigation)),
+            formAction: $base_url . $this->urlService->getQueryStringDiff([]),
+            pwgToken: new CsrfService($this->currentConfig)
+                ->getToken(),
+            imageOrderOptions: $sort_fields,
+            imageOrderChoice: $image_order_choice,
+        ));
 
         // +-------------------------------------------------------------------+
         // |                          sending html code                        |

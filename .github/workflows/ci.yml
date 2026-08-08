@@ -83,9 +83,10 @@ jobs:
           restore-keys: ${{ runner.os }}-phpstan-
       - run: vendor/bin/phpstan analyse --no-progress
 
-  # Psalm is not gated in CI (see docs/REFERENCE.md's ADR-0026) — its
-  # global-function-resolution scanner doesn't hold up at this codebase's
-  # scale/style (non-namespaced procedural legacy code).
+  # Psalm was never gated in CI (see docs/REFERENCE.md's "Psalm gating is
+  # moot, not just paused" decision) — its global-function-resolution
+  # scanner didn't hold up at this codebase's scale/style (non-namespaced
+  # procedural legacy code), and the dependency itself is gone now anyway.
 
   rector:
     name: Rector (dry-run, non-blocking)
@@ -354,8 +355,9 @@ jobs:
   # ── DB-backed suites ─────────────────────────────────────────────────────
 
   # Proves the real install-via-Migrations path (bin/piwigo migrations:migrate)
-  # and the schema:dump drift guard across all 3 providers in ADR-0003's
-  # matrix. mysql/mariadb legs stay lean (Unit/Db, Unit/Config, Arch smoke +
+  # and the schema:dump drift guard across all 3 providers in
+  # docs/REFERENCE.md's "hard-required bleeding-edge stack" decision's
+  # provider matrix. mysql/mariadb legs stay lean (Unit/Db, Unit/Config, Arch smoke +
   # migrate + schema-drift check) since MySQL is already comprehensively
   # covered by the integration/contract/browser jobs below; MariaDB has no
   # other CI coverage at all, but this job's own smoke+migration proof is
@@ -413,7 +415,8 @@ jobs:
         with:
           php-version: "8.5"
           coverage: none
-          # pgsql (native driver, matching ADR-0021's mysqli-not-pdo_mysql
+          # pgsql (native driver, matching docs/REFERENCE.md's
+          # native-platform-first library policy and its mysqli-not-pdo_mysql
           # precedent) added on top of the standard set -- unused but
           # harmless on the mysql/mariadb legs.
           extensions: ${{ env.PHP_EXTENSIONS }},pgsql

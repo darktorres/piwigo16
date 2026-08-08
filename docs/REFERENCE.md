@@ -13,32 +13,50 @@ history of how this codebase got here).
 
 ### Namespace tree and layers
 
-Every first-party class lives under `src/Piwigo\*`, PSR-4 autoloaded. 49
-top-level namespace directories today (confirmed via direct listing),
-each explicitly assigned to one of 6 layers in `deptrac.yaml` (no
-catch-all regex — a new namespace has to be deliberately placed). `L0Data`
-additionally reserves 3 namespace names (`Common`/`Event`/`Exception`)
-that don't exist as directories at all yet — real reservations, not a
-miscount, but not equally inert: `Common` specifically was meant to hold a
-real typed-primitives layer (path/id/email value objects, domain enums,
-generic DTOs) per the original plan's own P19 scope, and its total absence
-is a genuine, previously-undocumented gap — see `docs/PLAN.md`'s P19
-section for the full finding, found this round. `Event`/`Exception` have no
-equivalent finding attached (not separately investigated to the same
-depth):
+Every first-party class lives under `src/Piwigo\*`, PSR-4 autoloaded. 52
+top-level namespace directories today (confirmed via direct listing,
+re-verified this pass — up from 49), each explicitly assigned to one of 6
+layers in `deptrac.yaml`, with one live gap in that "no catch-all regex"
+claim: **`Migrations`** (4 real Doctrine migration classes,
+`src/Piwigo\Migrations\Version*`) matches no layer collector at all —
+confirmed by reading `deptrac.yaml` directly, not just running the tool.
+`L0Data`'s reserved names are **no longer an accurate description** —
+`Common` and `Event` both shipped for real since this doc was last
+verified: `Common` now holds the typed-primitives layer the original plan's
+P19 scope called for (`Common\ValueObject` — 19 files, `UserId`/`Email`/
+`TagId`/`CategoryId`/etc.; `Common\Dto` — `PaginatedResult`/
+`UserGroupPair`; `Common\Enum` — `Section`/`SortOrder`), closing the gap
+this doc previously flagged as "genuine, previously-undocumented" (see
+`docs/PLAN.md`'s typed-primitives campaign entry — done as of 2026-08-07).
+`Event` now holds 138 typed event classes across 13 sub-namespaces
+(`Location`, `Picture`, `Admin`, `Search`, `BlockManager`, `Lifecycle`,
+`Album`, `Tag`, `Ws`, `User`, `Mail`, `Site`, `Template`) — the shared home
+for most of Track B's ~156 typed events; a handful of others (e.g.
+`Ws\Event\WsAddMethods`) deliberately live under their own domain
+namespace instead, where a first-party class they carry (like `PwgServer`)
+would otherwise create an illegal upward dependency from L0Data — see
+that class's own docblock. `Exception` is still genuinely empty, no
+directory on disk.
 
 | Layer | Namespaces |
 | --- | --- |
 | **L4 Integration** | `Admin` (+ `Admin\Image`, `Admin\Integrity`), `Bootstrap`, `Command`, `Controller`, `Job`, `Ws` (+ `Ws\Encoder`, `Ws\Protocol`) |
-| **L3 Presentation** | `Html`, `Http` (+ `Http\Middleware`), `Mail`, `Menu`, `Page`, `Picture`, `Routing`, `Template`; reserves `Asset`/`Listener` (not directories yet, same as L0Data's reserved names) |
-| **L2b Extended Domain** | `Activity`, `Caddie`, `Calendar`, `Comment`, `Csrf`, `Feed`, `Filter`, `History`, `Metadata`, `Notification`, `Permalink`, `PluginConfig\PluginRepository`, `Rate`, `Search`, `Section`, `Site`, `Telemetry`, `Url` |
+| **L3 Presentation** | `Html`, `Http` (+ `Http\Middleware`), `Mail`, `Menu`, `Page`, `Picture`, `Routing`, `Template`; reserves `Asset`/`Listener` (not directories yet, same as L0Data's `Exception` reservation) |
+| **L2b Extended Domain** | `Activity`, `Caddie`, `Calendar`, `Comment`, `Csrf`, `Feed`, `Filter`, `History`, `Metadata`, `Notification`, `Permalink`, `PluginConfig\PluginRepository` (+ `PluginEntity`/`Projection\Plugin`), `Rate`, `Search`, `Section`, `Site`, `Telemetry`, `Url` |
 | **L2a Core Domain** | `Auth`, `Category`, `Group`, `Image`, `Permission`, `Tag`, `Users` |
-| **L1 Infrastructure** | `Audit`, `Backup`, `Cache`, `Config`, `Core`, `Db`, `Lang`, `PluginConfig\EventDispatcher`, `Session`, `Storage`, `Validation` |
-| **L0 Data** | `Common`, `Event`, `Exception` (reserved, no classes yet) |
+| **L1 Infrastructure** | `Audit`, `Backup`, `Cache`, `Config`, `Core`, `Db`, `Lang`, `PluginConfig\EventDispatcher` (+ `EventHandler`), `Session`, `Storage`, `Validation` |
+| **L0 Data** | `Common` (real, 23 files — see above), `Event` (real, 138 files — see above), `Exception` (still reserved, no classes yet) |
+| *(uncovered)* | `Migrations` — 4 real classes, matches no collector; not currently flagged as a violation only because nothing else in the layer graph depends on them |
 
 Each layer may depend only on itself or a layer below it. **0 violations,
-no `skip_violations` entries** — `vendor/bin/deptrac analyse` runs
-unconditionally in CI (`deptrac` job), genuinely blocking.
+no `skip_violations` entries — re-confirmed live this pass**
+(`vendor/bin/deptrac analyse --no-cache`: `Violations 0, Skipped
+violations 0, Uncovered 1658, Allowed 7367`); `vendor/bin/deptrac analyse`
+runs unconditionally in CI (`deptrac` job), genuinely blocking. The 1658
+"Uncovered" figure includes the `Migrations` gap above among others —
+deptrac's own terminology for a dependency edge it can't check because
+one side has no assigned layer, distinct from a violation (a checked edge
+that breaks the rules).
 
 `deptrac.yaml`'s own inline comments are the authoritative record of *why*
 each namespace landed where it did (real dependency edges found via
@@ -96,7 +114,7 @@ through the new kernel.
 `Piwigo\Core\Container::build()` wraps `DI\ContainerBuilder` loading
 `config/container.php` — PHP-DI autowires by default (a constructor with
 only class-typed params needs zero container entry); `config/container.php`
-has 33 explicit entries today, for interface bindings
+has 44 explicit entries today (re-counted this pass, up from 33), for interface bindings
 (`CacheItemPoolInterface`, `Psr\SimpleCache\CacheInterface`,
 `Psr\Log\LoggerInterface`, `MailerInterface`, `ActivityLoggerInterface`,
 `FilterUpdaterInterface`, `HtmlRenderingInterface`, `TemplateInterface`,
@@ -123,7 +141,11 @@ if loaded, else filesystem, when unset). Both `CacheItemPoolInterface` and
 Coexists with two separate legacy mechanisms `bin/piwigo cache:clear`
 deliberately does **not** touch: `Piwigo\Cache\PersistentCache`
 (`_data/cache/*.cache` files, still real — used by
-`MaintenanceActionDispatcher` via `CurrentPersistentCache::get()`) and the
+`MaintenanceActionDispatcher`, constructor-injected directly as a plain
+`?PersistentCache` — no `CurrentPersistentCache` class exists anymore;
+this doc's prior reference to one is stale, likely predating the
+singleton/DI elimination campaign converting it to plain constructor
+injection like everything else that campaign touched) and the
 legacy Smarty compiled-template files (`_data/templates_c/*.tpl.php`,
 separate from the Latte compiled-template cache `cache:clear` does purge).
 `cache:clear` only purges what the new infrastructure owns: the Latte
@@ -153,29 +175,49 @@ Kernel/DI container as the HTTP path and resolves each command in
 registered cleanup callbacks — `Piwigo\Backup\BackupService` uses this so
 an interrupted `backup:create`/`restore` doesn't leave temp files behind.
 
-Current commands: `cache:clear`, `backup:create`, `backup:restore <file>
+Current commands, re-verified against `config/commands.php` and a live
+`bin/piwigo list` run this pass — 4 more than this doc previously
+tracked: `cache:clear`, `backup:create`, `backup:restore <file>
 --force [--database=NAME]`, `user:list`, `maintenance:orphan-tags`,
-`maintenance:purge-history`, `maintenance:purge-sessions`.
+`maintenance:purge-history`, `maintenance:purge-sessions`,
+`maintenance:purge-failed-logins`, `maintenance:repair-db`,
+`migrations:migrate`, `schema:dump`.
 
-**Known gap**: `maintenance:repair-db` doesn't exist. The backing logic
-(`Piwigo\Admin\Maintenance\DbMaintenanceRepository::repairOptimizeAllTables()`)
-is real and works, but is only ever called from the admin web UI
-(`MaintenanceActionDispatcher`) — the CLI wrapper was planned early
-alongside the other 3 `maintenance:*` commands but never built. See
-`docs/PLAN.md`'s gap-closure record for the full history.
+**Previously-tracked gap, now closed**: `maintenance:repair-db` was
+missing as of this doc's last verification; it's real now
+(`Piwigo\Command\MaintenanceRepairDbCommand`, backed by the same
+`DbMaintenanceRepository::repairOptimizeAllTables()` the admin web UI
+already used) — `config/commands.php`'s own comment confirms all 4
+originally-planned `maintenance:*` commands are registered as of the
+same pass that added `maintenance:purge-failed-logins`. See
+`docs/PLAN.md`'s gap-closure record for the original finding.
+`migrations:migrate` (Doctrine's own command) and `schema:dump`
+(`Piwigo\Command\SchemaDumpCommand`) are both new since this doc's
+Doctrine Migrations status was last checked too — see "What's genuinely
+not built yet" below, which was flatly wrong on this point.
 
 ### What's genuinely not built yet
 
 - **FrankenPHP worker mode** — `docker/Caddyfile` runs plain `php_server`
   (classic per-request execution). The app boots FrankenPHP as its runtime,
-  but not in worker mode (app kept booted in memory across requests) —
-  `ADR-0013` decided to build this, it hasn't happened. See "Known gaps"
-  below.
-- **Doctrine Migrations** — replaced entirely by one static
-  `install/piwigo_structure-mysql.sql` (a later decision reversed the
-  original plan; see `ADR-0002`'s amendment below).
+  but not in worker mode (app kept booted in memory across requests) — the
+  "FrankenPHP worker-mode runtime, Apache as fallback" decision (see "Key
+  design decisions" below) decided to build this, it hasn't happened. See
+  "Known gaps" below.
+- ~~Doctrine Migrations~~ — **stale, removed from this list.** This doc
+  previously said Migrations were "replaced entirely by one static
+  `install/piwigo_structure-mysql.sql`" — true at one point (a real
+  reversal of the original plan), but since reinstated for real: 4
+  live `Piwigo\Migrations\Version*` classes, a working
+  `bin/piwigo migrations:migrate` command, and `install/
+  piwigo_structure-{mysql,pgsql}.sql` regenerated *from* migrations by
+  `schema:dump` rather than hand-maintained. This doc's own "Clean fork,
+  no in-place upgrade from upstream Piwigo" section below already
+  documented the reinstatement correctly — this bullet just never got
+  updated to match, a real internal contradiction within this same file
+  until this pass. See that section below for the full detail.
 - **`bin/piwigo import:legacy`** — the one-way legacy-install migration
-  tool `ADR-0002` describes doesn't exist yet.
+  tool described by the "Clean fork" decision below doesn't exist yet.
 - **opcache.preload** — `config/preload.php` exists and lists hot classes,
   but isn't enabled in any shipped `php.ini`; this is left as a
   deployment-time optimization, not something CI/local dev needs.
@@ -229,7 +271,8 @@ Compose, or via Helm.
 ### The image
 
 `docker build --target production .` — FrankenPHP (Caddy + PHP 8.5, per
-`ADR-0013`). `docker build --target production-apache .` is the fallback
+the "FrankenPHP worker-mode runtime, Apache as fallback" decision below).
+`docker build --target production-apache .` is the fallback
 for hosts needing classic Apache/`mod_rewrite`. Both listen on `:80` as
 non-root `www-data`; FrankenPHP/Caddy wants `CAP_NET_BIND_SERVICE` at
 startup regardless of which port it ends up binding, so there's no
@@ -373,15 +416,18 @@ file needs to exist inside the image.
 
 ### Requirements
 
-- PHP 8.5 (`ext-calendar`, `ext-ctype`, `ext-curl`, `ext-dom`,
-  `ext-fileinfo`, `ext-filter`, `ext-gd`, `ext-iconv`, `ext-intl`,
-  `ext-libxml`, `ext-mbstring`, `ext-mysqli`, `ext-openssl`, `ext-pcntl`,
-  `ext-pgsql`, `ext-session`, `ext-simplexml`, `ext-zip`, `ext-zlib`;
-  `pcov` for coverage)
+- PHP 8.5 (`ext-calendar`, `ext-ctype`, `ext-curl`, `ext-dom`, `ext-exif`,
+  `ext-fileinfo`, `ext-filter`, `ext-gd`, `ext-iconv`, `ext-imagick`,
+  `ext-imap`, `ext-intl`, `ext-libxml`, `ext-mbstring`, `ext-mysqli`,
+  `ext-openssl`, `ext-pcntl`, `ext-pgsql`, `ext-session`, `ext-simplexml`,
+  `ext-zip`, `ext-zlib` — re-verified against `composer.json` this pass,
+  which added `ext-exif`/`ext-imagick`/`ext-imap` since this doc was last
+  checked; `pcov` for coverage)
 - Composer 2.x
 - Node 24, bun, [`just`](https://github.com/casey/just)
-- MySQL 9.7 (or MariaDB 12.x / PostgreSQL 18 — see `ADR-0003`'s provider
-  matrix, real and working via `PIWIGO_DB_DRIVER=pgsql`/`mysqli`, not just
+- MySQL 9.7 (or MariaDB 12.x / PostgreSQL 18 — see the "hard-required
+  bleeding-edge stack" decision's provider matrix below, real and working
+  via `PIWIGO_DB_DRIVER=pgsql`/`mysqli`, not just
   a target — the `db-multi-provider` CI job runs the full Integration/
   Contract/Browser suites against a real PostgreSQL 18 service container
   on every push) + a webserver serving this checkout, for anything beyond
@@ -416,8 +462,7 @@ fails on any drift between that snapshot and what a fresh
 | --- | --- |
 | `composer test` | Pest `Unit`+`Arch` — fast, no DB/webserver |
 | `composer analyse:phpstan` | PHPStan — the sole **blocking** static-analysis gate |
-| `composer analyse:psalm` | Psalm — manual only, not gated (see `ADR-0026`) |
-| `composer analyse` | Both of the above together |
+| `composer analyse` | Alias for `analyse:phpstan` — `analyse:psalm` doesn't exist anymore; Psalm was fully dropped as a dependency 2026-08-07, not just left non-gating (see "Psalm gating is moot, not just paused" below) |
 | `composer lint:php` | ECS in check mode — **still not blocking** (see CI below) |
 | `composer require-checker` | Composer-require-checker |
 | `composer unused` | Composer-unused |
@@ -437,10 +482,18 @@ fails on any drift between that snapshot and what a fresh
 
 PHPStan has **no baseline file** (`phpstan-baseline.neon` was deleted once
 the codebase reached a clean run — CI runs `phpstan analyse` with zero
-suppressions). Psalm's `psalm-baseline.xml` is also gone from the repo,
-even though `psalm.xml` and the `vimeo/psalm` dependency stay (per
-`ADR-0026`'s "dormant, not deleted" intent for the tool itself — the
-baseline specifically didn't survive).
+suppressions). **Psalm is gone entirely, not just dormant — re-checked
+this pass, a real change since this doc's last verification.**
+`vimeo/psalm` was fully dropped from `composer.json`
+(`c7a5b8366a`, 2026-08-07, "update composer packages, bump pest ecosystem
+to v5"): the Pest 5 bump needed PHPUnit ^13.2 → `sebastian/diff` ^9.0,
+which conflicts with Psalm 6.x's own cap of `sebastian/diff` ^8.0, and
+Psalm has no stable v7 yet. That commit's own message: "Psalm was
+already non-gating here (not wired into CI, superseded by
+PHPStan/ECS/deptrac), so dropping it unblocks the bump." `vendor/bin/psalm`
+no longer exists. Only `psalm.xml` (the config file) survives, now fully
+orphaned — no installed tool reads it. See "Psalm gating is moot, not
+just paused" below for the full detail.
 
 ### Tests
 
@@ -473,19 +526,23 @@ pristine DB before running** — none depend on run order or on
 
 **Contract tests**: `tests/Contract/ContractTestCase` drives the WS API
 over curl, validating against JSON Schema files in `tests/Contract/schemas/`.
-21 `Ws*Test` classes lock the legacy WS response shapes for as long as the
-WS API exists — a later phase (not yet started) removes it in favor of a
-REST `/api/v1` and retires these in favor of REST contract tests.
+39 `Ws*Test` classes (re-counted this pass, up from 21 — the WS surface
+kept growing test coverage: upload chunking/concurrency/gap-handling,
+per-method mutation-vs-read splits, alternate/REST format tests, etc.)
+lock the legacy WS response shapes for as long as the WS API exists — a
+later phase (not yet started) removes it in favor of a REST `/api/v1`
+and retires these in favor of REST contract tests.
 
-**Browser tests**: 40 files in `tests/Browser/` (38 E2E flows, plus the
-two special-purpose files below) via `pestphp/pest-plugin-browser`.
-`tests/Browser/Helpers/BrowserTestHelpers.php` centralizes the shared
-patterns (`visitPwg()`/`loginAsAdmin()`, `navigateOk()`, `wsCall()`,
-`uploadPhotoViaApi()`).
+**Browser tests**: 94 files in `tests/Browser/` (re-counted this pass, up
+from 40 — 92 E2E flows, plus the two special-purpose files below) via
+`pestphp/pest-plugin-browser`. `tests/Browser/Helpers/BrowserTestHelpers.php`
+centralizes the shared patterns (`visitPwg()`/`loginAsAdmin()`,
+`navigateOk()`, `wsCall()`, `uploadPhotoViaApi()`).
 
-**Visual regression**: `tests/Browser/VisualRegressionTest.php` — 35
-screenshot baselines (33 routes iterated in a data-driven loop + 2
-standalone tests, `picture-1` and `admin-photo-editor`) via Pest's native
+**Visual regression**: `tests/Browser/VisualRegressionTest.php` — 34
+screenshot baselines (re-counted this pass, was 35: 32 routes iterated in
+a data-driven loop + 2 standalone tests, `picture-1` and
+`admin-photo-editor`) via Pest's native
 `assertScreenshotMatches()`
 (`tests/.pest/snapshots/`). **Must run in isolation** —
 `composer test:visual`, never bundled with CRUD-mutating Browser tests
@@ -542,18 +599,28 @@ concluding it's real — never dismiss (or accept) a failure on sight.
 ### CI
 
 `.github/workflows/ci.yml` runs on every push/PR (docs-only changes
-excluded via `paths-ignore`). Current job list (29 jobs): `pest`, `ecs`,
-`phpstan`, `rector`, `coverage`, `audit`, `deptrac`, `require-checker`,
-`composer-unused`, `phpbench`, `vitest`, `eslint`, `stylelint`, `knip`,
-`size-limit`, `k6-load` (no-op until a load-test track lands), `commitlint`,
-`actionlint`, `test-file-inventory`, `integration`, `contract`, `browser`,
+excluded via `paths-ignore`). Current job list, re-parsed from the
+workflow YAML directly this pass (30 jobs, not 29 — `db-multi-provider`
+was missing from this enumeration even though this doc's own
+Requirements section and "hard-required bleeding-edge stack" decision
+already describe what it does): `pest`,
+`ecs`, `phpstan`, `rector`, `coverage`, `audit`, `deptrac`,
+`require-checker`, `composer-unused`, `phpbench`, `vitest`, `eslint`,
+`stylelint`, `knip`, `size-limit`, `k6-load` (no-op until a load-test
+track lands), `commitlint`, `actionlint`, `test-file-inventory`,
+`db-multi-provider`, `integration`, `contract`, `browser`,
 `install-flow`, `visual-regression`, `restore-drill`, `lighthouse`,
 `sbom`, `apache-deny-rules`, `container-deny-rules`.
 
 Separate workflow files, independent of `ci.yml`: `osv-scanner.yml`/
 `scorecard.yml` (SEC-52/SEC-64, weekly + push/PR), `release-please.yml`
-(targets `17.x-rewrite` explicitly — this repo's actual GitHub default
-branch, `16.x-rewrite`, is an unrelated earlier rewrite lineage),
+(targets `17.x-rewrite` explicitly, pinned rather than relying on the
+default branch per that workflow's own comment — re-checked this pass:
+the GitHub default branch is now `17.x-rewrite` itself, confirmed via
+`gh repo view`/`git ls-remote --symref origin HEAD`, so this doc's prior
+claim that the default branch was the unrelated `16.x-rewrite` lineage
+is stale; the pin is still correct defensive practice regardless of
+which branch is currently default),
 `release-image.yml` (image build + signing, on release only).
 
 **Known gap, not just doc staleness**: `ecs` and `rector` are still
@@ -561,10 +628,14 @@ branch, `16.x-rewrite`, is an unrelated earlier rewrite lineage),
 saying so "until P5" — but the phase that comment refers to completed long
 ago (fold-in note: verify P5's real completion status in `docs/PLAN.md`
 before treating this as settled; the CI file itself hasn't been revisited
-to make either job blocking since). Likewise, `ADR-0026` says Psalm gating
-resumes "once P6 and P17-P23... have moved enough of the codebase" into
-namespaced classes — both are done, but Psalm gating hasn't been
-reconsidered since. Three separate instances of the same pattern: a
+to make either job blocking since). The "Psalm gating resumes once P6
+and P17-P23 land" deferral (from the "Psalm gating is moot, not just
+paused" decision below) is now moot rather than just unmet-but-still-open
+— re-verified this pass: Psalm was dropped as a dependency entirely on
+2026-08-07 (a real dependency conflict with the Pest 5 bump, not a
+reconsideration of the gating decision itself — see Tools above and
+"Key design decisions" below), so there's no tool left to gate. Two
+separate instances of the same pattern remain live (`ecs`/`rector`): a
 phase-conditioned deferral whose condition has since been met, never
 revisited.
 
@@ -702,86 +773,83 @@ storage at least daily. Full recovery: rebuild/pull the image at the last
 known-good tag, restore the database, restore the volumes from offsite,
 redeploy.
 
-## Architecture Decision Records
+## Key design decisions
 
-New ADRs follow a standard template (status/context/decision/consequences)
-— see any entry below for the shape. Six real decisions on record, all
-`Accepted`; two (`ADR-0013`, `ADR-0026`) have a real amendment against
-current state; `ADR-0002`/`ADR-0003` carry historical/status notes that no
-longer represent a divergence — all noted inline:
+The numbered `ADR-XXXX`/`docs/adr/*.md` scheme this project used to
+follow is retired — those files were folded into this doc during the
+2026-07-26 consolidation and never re-created, so a numeric citation
+no longer resolves to anything a reader can open. The decisions
+themselves are still real; they're just described here directly, by
+name, with no number attached. (Source comments elsewhere in the
+codebase that still say "ADR-0021" or similar are stale references to
+this retired scheme — cross-check the description here, not the
+number.)
 
-**ADR-0001 — Pest 4 replaces PHPUnit.** Sole PHP test framework, including
-browser E2E via `pest-plugin-browser`. Vitest stays, separately, for
-TypeScript unit tests. Still accurate.
+**Pest is the sole PHP test framework**, including browser E2E via
+`pest-plugin-browser`. Vitest stays, separately, for TypeScript unit
+tests. `composer.json` pins `pestphp/pest: ^5.0` (bumped from 4,
+2026-08-07, `c7a5b8366a`, the same commit that dropped Psalm — see
+below).
 
-**ADR-0002 — Clean fork, no in-place upgrade from upstream Piwigo.**
-Existing installs adopt v17 via a one-time `bin/piwigo import:legacy`
-migration (not built yet — see Architecture → "What's genuinely not built
-yet" above), not a rolling upgrade. The no-in-place-upgrade-from-upstream
-decision itself still holds. *History, not a current amendment*: the
-ADR's own text says version-to-version upgrades within v17 "use Doctrine
-Migrations" — that mechanism was later replaced by one static
-`install/piwigo_structure-mysql.sql` file, then reinstated for real (the
-pgsql-support pass) as the actual live mechanism both a fresh install and
-an existing install's own upgrade path run through
-(`bin/piwigo migrations:migrate`) — matching the ADR's own original text
-again, not diverging from it. `install/piwigo_structure-{mysql,pgsql}.sql`
+**Clean fork, no in-place upgrade from upstream Piwigo.** Existing
+installs adopt v17 via a one-time `bin/piwigo import:legacy` migration
+(not built yet — see Architecture → "What's genuinely not built yet"
+above), not a rolling upgrade. Version-to-version upgrades *within* v17
+run through Doctrine Migrations (`bin/piwigo migrations:migrate`) — the
+real, live mechanism both a fresh install and an existing install's own
+upgrade path use today (this mechanism was at one point replaced by a
+single static `install/piwigo_structure-mysql.sql` file, then
+reinstated for real during the pgsql-support pass — a real detour, not
+a current divergence). `install/piwigo_structure-{mysql,pgsql}.sql`
 still exist, now as generated, human-reviewable schema snapshots + a CI
 drift guard (`bin/piwigo schema:dump`), not the install-time source of
 truth.
 
-**ADR-0003 — Hard-required bleeding-edge stack, no capability gating.**
-PHP 8.5, MySQL 9.7 (MariaDB 12.x / PostgreSQL 18 in the provider matrix),
-Node 24 — hard requirements, no version-compatibility shims. *History, not
-a current amendment*: the provider matrix's MariaDB/PostgreSQL half was
-originally just a target, not yet reachable (the install wizard was
-hardcoded to MySQL only). Now real and working — `PIWIGO_DB_DRIVER=pgsql`/
-`mysqli`, a driver field in the install form, and the `db-multi-provider`
-CI job exercising all 3 providers on every push (see Development →
-Requirements above). Re-verify at any point this drifts, since it's an
-explicitly fast-moving target by design.
+**Hard-required bleeding-edge stack, no capability gating.** PHP 8.5,
+MySQL 9.7 (MariaDB 12.x / PostgreSQL 18 in the provider matrix), Node
+24 — hard requirements, no version-compatibility shims. The
+MariaDB/PostgreSQL half of the provider matrix was originally just a
+target (the install wizard was hardcoded to MySQL only); it's now real
+and working — `PIWIGO_DB_DRIVER=pgsql`/`mysqli`, a driver field in the
+install form, and the `db-multi-provider` CI job exercising all 3
+providers on every push (see Development → Requirements above).
+Re-verify at any point this drifts, since it's an explicitly
+fast-moving target by design.
 
-**ADR-0013 — FrankenPHP worker-mode runtime.** Decided: FrankenPHP (Caddy
-+ PHP 8.5) in worker mode as the primary production runtime, Apache/
-`mod_rewrite` as a fallback stage. *Amendment*: only half-built. FrankenPHP
-is the runtime in production images, but not in worker mode —
-`docker/Caddyfile` still uses plain per-request `php_server`. The
+**FrankenPHP worker-mode runtime, Apache as fallback.** Decided:
+FrankenPHP (Caddy + PHP 8.5) in worker mode as the primary production
+runtime, Apache/`mod_rewrite` as a fallback stage. Only half-built:
+FrankenPHP is the runtime in production images, but not in worker mode
+— `docker/Caddyfile` still uses plain per-request `php_server`. The
 Apache-fallback half of the decision is fully built and current.
 
-**ADR-0021 — Native-platform-first library policy.** Prefer browser/
-PHP-native features and the already-adopted Symfony/Doctrine layer over
-vendored/third-party libraries. Historical decision record for a specific
-library-swap batch — still accurate as a record of what happened, and the
-policy itself is invoked again (not re-litigated) whenever a later phase
-finds its own vendored/legacy surface to replace.
+**Native-platform-first library policy.** Prefer browser/PHP-native
+features and the already-adopted Symfony/Doctrine layer over
+vendored/third-party libraries. Record of a specific library-swap
+batch — still accurate as a record of what happened, and the policy
+itself is invoked again (not re-litigated) whenever a later phase finds
+its own vendored/legacy surface to replace.
 
-**ADR-0026 — Pause Psalm gating until after typed/namespaced
-refactoring.** PHPStan is the sole blocking static-analysis gate; Psalm's
-global-function-resolution scanner didn't hold up against a large,
-non-namespaced procedural codebase. Decided to resume "once P6 (PSR-4
-namespace migration) and the P17-P23 service-layer refactoring" land.
-*Amendment*: both have landed, but Psalm gating hasn't been reconsidered
-since — an open decision, not a doc staleness issue (see Development → CI
-above). Also: `psalm-baseline.xml`, which this ADR says "stays in the repo
-(dormant, not deleted)," is in fact gone — only `psalm.xml` and the
-`vimeo/psalm` dependency itself survived.
+**Psalm gating is moot, not just paused.** Psalm was never wired into
+CI as a blocking gate (superseded by PHPStan/ECS/deptrac); the original
+plan was to revisit that once PSR-4 namespace migration and the
+service-layer refactoring landed — both have, but gating was never
+reconsidered, because `vimeo/psalm` was fully dropped from
+`composer.json` entirely on 2026-08-07 (real dependency conflict with
+the Pest 5 bump, not a reconsideration of the gating decision — see
+Development → CI above), so there is no tool left to gate.
+`psalm-baseline.xml` is gone, and so is the `vimeo/psalm` dependency
+itself — only the orphaned `psalm.xml` config file survives, read by no
+installed tool.
 
-**Referenced but never written**: three ADR numbers are cited but no such
-file ever existed in `docs/adr/` — not a casualty of this consolidation,
-confirmed by checking git history before this merge. `ADR-0025` (the
-legacy-import tool's design) — re-verified this round: no current file
-under `src/Piwigo/` cites it at all (an earlier pass of this doc wrongly
-attributed the citation to `src/Piwigo/Auth/PasswordService.php`, which
-actually cites the real `ADR-0002`, not `ADR-0025` — corrected here).
-`ADR-0025` was only ever cited in two now-deleted planning files, recoverable
-from git history — the original `PLAN-REPLAY.md` and, checked this round,
-`ADR-0002`'s own original file (`docs/adr/0002-clean-fork-no-inplace-upgrade.md`,
-"a one-way `bin/piwigo import:legacy` tool (see [ADR-0025]...)") — never in
-live source.
-`ADR-0007`/`ADR-0008` (the image-derivative fast-path decision,
-"`bootMinimal`") — cited in `src/Piwigo/Permission/ImageVisibilityChecker.php`
-as already "settled," but see "What's genuinely not built yet" above: the
-decision these numbers supposedly recorded was only half-implemented, and
-the record of the decision itself doesn't exist as a file. If ADR
-numbering matters going forward, these three gaps are worth closing
-directly rather than continuing to cite phantom files.
+**Two decisions were cited by number in source but never had a written
+record**, even back when the numbered scheme was still in use — not a
+casualty of the 2026-07-26 consolidation, confirmed by checking git
+history before that merge: the legacy-import tool's design (`bin/piwigo
+import:legacy`, described under "Clean fork" above) and the
+image-derivative fast-path decision (`ImageVisibilityChecker`/
+`PermissionRepository::isImageOutsideForbiddenCategories()` forbidding
+live permission recomputation on that path, described under Architecture
+→ "What's genuinely not built yet" above). Both decisions are covered in
+this doc's own prose already; nothing further to close now that the
+numbering scheme itself is retired.

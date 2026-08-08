@@ -131,12 +131,12 @@ directly against the codebase:
 
 - **FrankenPHP worker mode** (SEC-60, a P7 gap found in the 2026-07-13
   audit) — `docker/Caddyfile` still plain `php_server`, no `worker` block.
-- **Legacy import tool** (`bin/piwigo import:legacy`, `ADR-0002`) — no
-  `import:legacy`/`ImportLegacy` reference anywhere. Cited elsewhere as
-  "ADR-0025," which — like ADR-0007/0008 for the image-derivative fast
-  path — was never actually written; see `docs/REFERENCE.md`'s ADR
-  section for the full list of phantom ADR citations found during this
-  consolidation.
+- **Legacy import tool** (`bin/piwigo import:legacy`, described by
+  `docs/REFERENCE.md`'s "Clean fork, no in-place upgrade from upstream
+  Piwigo" decision) — no `import:legacy`/`ImportLegacy` reference
+  anywhere. (The numbered `ADR-XXXX` scheme this tool used to be cited
+  under is retired — see `docs/REFERENCE.md`'s "Key design decisions"
+  section.)
 
 ## Conventions (carried forward unchanged)
 
@@ -203,7 +203,8 @@ the live details (image signing, hardening, web root isolation).
 **P5 — Composer + Rector + PHPStan (PHP modernization).** By far the
 largest single phase by commit count (653) — whole-codebase ECS `--fix`,
 PHPStan bleeding-edge rules applied file-by-file across the legacy tree,
-vendored third-party library replacement (`ADR-0021`: PHPMailer → Symfony
+vendored third-party library replacement (docs/REFERENCE.md's
+native-platform-first library policy: PHPMailer → Symfony
 Mailer, Emogrifier → `pelago/emogrifier`, phpqrcode → `endroid/qr-code`,
 vendored Smarty → `smarty/smarty`, phpass → native `password_hash()`,
 `mdetect.php` dropped with no replacement). **Real correction landed
@@ -211,10 +212,12 @@ here, not a doc fix**: Psalm's global-function-resolution scanner broke
 down against the still-non-namespaced legacy codebase at this scale —
 investigated properly (ruled out cache staleness, parallel-worker races),
 concluded it's a real tool limitation at this codebase's shape, not a bug
-in the code. Psalm gating paused (`ADR-0026`) — PHPStan remains the sole
-blocking static-analysis gate. *(See `docs/REFERENCE.md`'s CI section:
-`ADR-0026`'s own resume condition — P6 + P17–P23 done — has since been
-met, but gating hasn't been reconsidered.)*
+in the code. Psalm gating paused — PHPStan remains the sole
+blocking static-analysis gate. *(See `docs/REFERENCE.md`'s "Psalm
+gating is moot, not just paused" decision and its CI section: the
+original resume condition — P6 + P17–P23 done — has since been
+met, but gating hasn't been reconsidered, and is now moot anyway since
+Psalm was dropped as a dependency entirely.)*
 
 **P6 — PSR-4 namespace migration.** Extracted every first-party `class`/
 `interface` declaration living inside `include/`/`admin/include/`
@@ -473,7 +476,8 @@ path), backed by `Bootstrap\InstallBootstrap` + `Admin\Install\InstallWizard`
 instead — a legitimate different architecture, not a miss. `Upgrade`/
 `UpgradeFeed` genuinely were never built, on any branch history for this
 fork: no route, no controller, confirmed absent from `config/routes.php`.
-Consistent with `ADR-0002`'s "no in-place upgrade" stance and the later
+Consistent with docs/REFERENCE.md's "clean fork, no in-place upgrade"
+stance and the later
 deletion of the entire `DbPatch`/`VersionUpgrade` chain (see P23's
 gap-closure list below) — there's no upgrade mechanism left to drive an
 `Upgrade`/`UpgradeFeed` controller, so their absence is a real, consistent
@@ -785,7 +789,8 @@ since, not just historical**: the entire `DbPatch`/`VersionUpgrade`
 subsystem (153 files) was deleted outright the following day (`8224f23a3`,
 "delete the legacy in-place upgrade chain (Stage 0)"), confirmed gone from
 the working tree — it contradicted the project's own "clean fork, no
-in-place upgrade" design (`ADR-0002`) and had been carried over mechanically
+in-place upgrade" design (docs/REFERENCE.md's "Key design decisions")
+and had been carried over mechanically
 during porting before anyone caught the conflict. The bound-parameter fix
 above is moot, not a currently-live improvement to point to. One workstream
 (C3, the `die()`/`exit()`/`: never`-return request-lifecycle architecture)
@@ -823,11 +828,16 @@ forward anywhere until now:
   the sibling method `generateSetPasswordMail()` does this correctly.
   Cosmetic (malformed HTML in one transactional email), not
   security-relevant, but a genuine, still-unfixed bug in a real user flow.
-- **`psalm.xml` (1143 lines, confirmed still that size) is still a live
-  dependency** (`vimeo/psalm` still in `composer.json`) despite Psalm
-  gating being paused since P5/`ADR-0026` — the review's proposal to
-  delete both outright (not "shrink," since nothing runs Psalm to verify
-  which suppressions are still needed) hasn't been acted on either way.
+- **Superseded, not just historical**: this finding said `psalm.xml`
+  (1143 lines at review time) and `vimeo/psalm` were both still a live
+  dependency despite Psalm gating being paused since P5, and proposed
+  deleting both outright. Re-verified this round: `vimeo/psalm` was
+  fully dropped from `composer.json` on 2026-08-07 (a real dependency
+  conflict with the Pest 5 bump — see docs/REFERENCE.md's "Psalm gating
+  is moot, not just paused" decision), so half the proposal happened on
+  its own. Only the orphaned `psalm.xml` config file remains, read by
+  no installed tool — the one piece of the original finding still
+  genuinely open.
 - **TODO/FIXME/HACK/XXX markers in `src/Piwigo/`**: 50 today (was 46 at
   review time), still uninventoried as a set — 2 concrete ones the review
   triaged (`DerivativeParams::is_identity()`'s docblock,
@@ -892,7 +902,8 @@ service-locator anti-pattern (~55 classes across three shapes, plus the
 entire `Piwigo\Ws\*` static-dispatch layer as its own Phase 10) to
 constructor-injected DI. Real motivation beyond style: SEC-60 ("Worker-mode
 request isolation") needs no process-persistent static state, and
-FrankenPHP worker mode (`ADR-0013`) is a committed-to future direction
+FrankenPHP worker mode (docs/REFERENCE.md's "FrankenPHP worker-mode
+runtime, Apache as fallback" decision) is a committed-to future direction
 incompatible with it as-is. Mechanism: a transitional `@deprecated`-tagged
 static shim for callers not yet converted per class, tracked via a
 shrinking arch-test allow-list, with a hard "zero shims remain" gate --
@@ -1285,15 +1296,21 @@ future documentation or admin page that touches it.
 
 ## Migration path
 
-Clean fork, no in-place upgrade from an existing Piwigo install (`ADR-0002`).
-`InstallWizard` creates the schema directly from a single, hand-maintained,
-already-final-shape `install/piwigo_structure-mysql.sql` — no Doctrine
-Migrations, no per-version migration files (the original design, reversed
-2026-07-24 before any real install existed). There is currently no
-version-to-version upgrade mechanism for a *shipped* install, since
-nothing has shipped yet — open design work for whenever it's actually
-needed. Adopting from an existing Piwigo install is meant to go through
-`bin/piwigo import:legacy` — not built yet (status table above).
+Clean fork, no in-place upgrade from an existing Piwigo install
+(docs/REFERENCE.md's "Key design decisions"). **Superseded, not just
+historical**: this section used to say schema came from a single,
+hand-maintained `install/piwigo_structure-mysql.sql` with no Doctrine
+Migrations (the original design, reversed 2026-07-24 before any real
+install existed) — that was itself reversed again during the
+pgsql-support pass. Doctrine Migrations (`bin/piwigo migrations:migrate`)
+are the real, live mechanism today, for both a fresh install and a
+version-to-version upgrade of an existing v17 install;
+`install/piwigo_structure-{mysql,pgsql}.sql` are now generated,
+human-reviewable snapshots regenerated *from* migrations by
+`bin/piwigo schema:dump`, not the install-time source of truth (see
+docs/REFERENCE.md's Architecture and "Key design decisions" sections).
+Adopting from an existing *pre-v17* Piwigo install is meant to go
+through `bin/piwigo import:legacy` — not built yet (status table above).
 
 ## Verification (final end-state gate, not current status)
 
@@ -1324,9 +1341,11 @@ bunx commitlint --from origin/16.x --to HEAD
 k6 run tests/Load/*.js                      # non-blocking, tests/Load/ doesn't exist yet
 ```
 
-**Not in this list anymore**: `vendor/bin/psalm` (gating paused, `ADR-0026`
-— its resume condition has been met but gating hasn't been reconsidered,
-see `docs/REFERENCE.md`), `composer lint:latte`/`precompile:templates`
+**Not in this list anymore**: `vendor/bin/psalm` (gating was paused, its
+resume condition was later met but gating was never reconsidered — moot
+now anyway, since `vimeo/psalm` was fully dropped as a dependency
+2026-08-07; see `docs/REFERENCE.md`'s "Psalm gating is moot, not just
+paused" decision), `composer lint:latte`/`precompile:templates`
 (P31 hasn't started, Smarty is still the template engine), `tools/plan-lint`
 (deleted along with `docs/plan/manifest.yaml` in this consolidation).
 

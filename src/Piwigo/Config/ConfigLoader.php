@@ -13,7 +13,8 @@ use ReflectionProperty;
  * Deliberately does NOT own env-FILE loading (no loadEnv(), no TestMode
  * class) -- unlike the reference implementation, which pulls in
  * vlucas/phpdotenv + its own Piwigo\Config\TestMode. This project already
- * has a working, ADR-0021-compliant mechanism built on the already-adopted
+ * has a working mechanism, compliant with docs/REFERENCE.md's
+ * native-platform-first library policy, built on the already-adopted
  * symfony/dotenv: Piwigo\Core\Env::loadEnvFile(), called by every real
  * entry point before Config/Kernel ever boot. applyEnvOverrides() below
  * just reads the already-loaded getenv() values.

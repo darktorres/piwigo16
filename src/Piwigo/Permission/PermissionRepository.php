@@ -345,7 +345,8 @@ final readonly class PermissionRepository
      * Whether $imageId belongs to any category NOT in $forbiddenCategoryIds
      * -- ImageVisibilityChecker's [SEC-33] fast-path check. Deliberately
      * just this one cheap query against already-computed forbidden-category
-     * ids, never a PermissionService call: ADR-0007/0008 forbids live
+     * ids, never a PermissionService call: the image-derivative fast-path
+     * decision (docs/REFERENCE.md's "Key design decisions") forbids live
      * permission recomputation on this path (see ImageVisibilityChecker's
      * own docblock).
      *

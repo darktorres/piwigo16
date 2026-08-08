@@ -25,7 +25,8 @@ use Piwigo\Db\Tables;
  * migration -- rehashing it to bcrypt on successful verify. The old MD5/
  * $conf['pass_convert'] fallback (bridging from *upstream* Piwigo's
  * pre-2.5 format) is gone: this fork has no in-place upgrade from
- * upstream (docs/REFERENCE.md's ADR-0002).
+ * upstream (docs/REFERENCE.md's "Clean fork, no in-place upgrade from
+ * upstream Piwigo" decision).
  *
  * Moved from tests/Unit/PasswordHashTest.php (a standalone-stub-loaded
  * Unit test against the free functions) once those functions became thin

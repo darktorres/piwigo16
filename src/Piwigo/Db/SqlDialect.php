@@ -36,10 +36,10 @@ final class SqlDialect
      * (`DROP DATABASE ... WITH (FORCE)`, verified live this session as
      * genuinely needed by IntegrationTestCase::resetDatabase() and
      * unavailable before Postgres 13), not an arbitrary/aspirational
-     * number -- same "loose sanity floor, not a strict ADR-0003-matching
-     * gate" philosophy `REQUIRED_MYSQL_VERSION` above already has (that
-     * constant's own 5.0.0 is far below this codebase's real MySQL 9.7
-     * target too).
+     * number -- same "loose sanity floor, not a strict
+     * hard-required-stack-matching gate" philosophy `REQUIRED_MYSQL_VERSION`
+     * above already has (that constant's own 5.0.0 is far below this
+     * codebase's real MySQL 9.7 target too).
      */
     public const string REQUIRED_POSTGRES_VERSION = '13.0';
 

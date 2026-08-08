@@ -63,10 +63,10 @@ final class DbConnection
      * at the build() call site.
      *
      * Native drivers only (mysqli, pgsql) -- not pdo_mysql/pdo_pgsql,
-     * matching ADR-0021's native-platform-first policy and the precedent
-     * already set by mysqli. MariaDB speaks the same wire protocol as
-     * MySQL, so it shares the mysqli branch; there is no separate
-     * 'mariadb' driver value.
+     * matching docs/REFERENCE.md's native-platform-first library policy
+     * and the precedent already set by mysqli. MariaDB speaks the same
+     * wire protocol as MySQL, so it shares the mysqli branch; there is no
+     * separate 'mariadb' driver value.
      *
      * @return array{driver: 'mysqli', user: string, password: string, dbname: string, charset: string, driverOptions: array<int, bool>, host?: string, unix_socket?: string, port?: int}|array{driver: 'pgsql', user: string, password: string, dbname: string, host: string, port?: int}
      */

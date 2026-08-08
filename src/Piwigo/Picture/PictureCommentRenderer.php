@@ -27,6 +27,9 @@ use Piwigo\Event\Template\RenderCommentContent;
 use Piwigo\Event\User\UserCommentInsertion;
 use Piwigo\Http\ResponseFactory;
 use Piwigo\Http\ResponseReadyException;
+use Piwigo\Picture\Projection\PictureCommentAddPageContext;
+use Piwigo\Picture\Projection\PictureCommentListPageContext;
+use Piwigo\Picture\Projection\PictureCommentsOrderPageContext;
 use Piwigo\Picture\Request\PictureCommentSubmitRequest;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Session\SessionService;
@@ -162,13 +165,10 @@ final class PictureCommentRenderer
         $navigationBar = new PaginationService($currentConfig)
             ->createNavigationBar($urlService->duplicatePictureUrl([], ['start']), $nbComments, $start, $nbCommentPage, true);
 
-        $template->assign(
-            [
-                'COMMENT_COUNT' => $nbComments,
-                'navbar' => $navigationBar,
-                'comments' => [],
-            ]
-        );
+        $template->assignContext(new PictureCommentListPageContext(
+            commentCount: $nbComments,
+            navbar: $navigationBar,
+        ));
 
         if ($nbComments > 0) {
             // comments order (get, session, conf)
@@ -178,12 +178,12 @@ final class PictureCommentRenderer
             }
             $commentsOrder = $sessionService->getCommentsOrder() ?? $currentConfig->commentsOrder();
 
-            $template->assign([
-                'COMMENTS_ORDER_URL' => $urlService->addUrlParams($urlService->duplicatePictureUrl(), [
+            $template->assignContext(new PictureCommentsOrderPageContext(
+                orderUrl: $urlService->addUrlParams($urlService->duplicatePictureUrl(), [
                     'comments_order' => ($commentsOrder === SortOrder::Asc->value ? SortOrder::Desc->value : SortOrder::Asc->value),
                 ]),
-                'COMMENTS_ORDER_TITLE' => $commentsOrder === SortOrder::Asc->value ? $lang->t('Show latest comments first') : $lang->t('Show oldest comments first'),
-            ]);
+                orderTitle: $commentsOrder === SortOrder::Asc->value ? $lang->t('Show latest comments first') : $lang->t('Show oldest comments first'),
+            ));
 
             $rows = $commentRepository->findForImage(
                 ImageId::from($imageId),
@@ -318,7 +318,7 @@ final class PictureCommentRenderer
                     $tplVar[strtoupper($k)] = $postValue !== null ? htmlspecialchars(stripslashes($postValue)) : '';
                 }
             }
-            $template->assign('comment_add', $tplVar);
+            $template->assignContext(new PictureCommentAddPageContext($tplVar));
         }
         $template->set_filenames([
             'comment_list' => 'comment_list.tpl',

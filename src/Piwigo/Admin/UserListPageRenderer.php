@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin;
 
+use Piwigo\Admin\Projection\UserListPageContext;
 use Piwigo\Admin\Request\UserListFilterRequest;
 use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Config\CurrentConfig;
@@ -57,19 +58,7 @@ final class UserListPageRenderer
             ];
         }
 
-        $template->assign('groups_for_filter', $groups_for_filter);
-
         $register_dates = $userService->getDistinctRegistrationYearMonths();
-
-        $template->assign('register_dates', implode(',', $register_dates));
-
-        $template->assign(
-            [
-                'ADMIN_PAGE_TITLE' => $lang->t('Users'),
-                'ACTIVATE_COMMENTS' => $currentConfig->activateComments(),
-                'Double_Password' => $currentConfig->doublePasswordTypeInAdmin(),
-            ]
-        );
 
         $template->set_filenames([
             'user_list' => 'user_list.tpl',
@@ -120,36 +109,6 @@ final class UserListPageRenderer
         $protected_users = array_map(strval(...), array_filter($protected_users, is_scalar(...)));
         $password_protected_users = array_map(strval(...), array_filter($password_protected_users, is_scalar(...)));
 
-        $template->assign(
-            [
-                'U_HISTORY' => $urlService->getRootUrl() . 'admin.php?page=history&filter_user_id=',
-                'PWG_TOKEN' => new CsrfService($currentConfig)
-                    ->getToken(),
-                'NB_IMAGE_PAGE' => $default_user->nbImagePage,
-                'RECENT_PERIOD' => $default_user->recentPeriod,
-                'theme_options' => ThemeCatalog::getPwgThemes($eventDispatcher, $paths, $currentConfig, $lang),
-                'theme_selected' => $userService->getDefaultTheme(),
-                'language_options' => LangService::getLanguages($paths),
-                'language_selected' => $userService->getDefaultLanguage(),
-                'association_options' => $groups,
-                'protected_users' => implode(',', array_unique($protected_users)),
-                'password_protected_users' => implode(',', array_unique($password_protected_users)),
-                'guest_user' => $guest_id,
-                'filter_group' => $userListFilter->groupId,
-                'search_input' => $userListFilter->userSearchInput,
-                'connected_user' => $currentUser->get()
-                    ->id->value,
-                'connected_user_status' => $currentUser->get()
-                    ->status->value,
-                'owner' => $webmaster_id,
-                'owner_username' => $owner_username,
-            ]
-        );
-
-        if ($userListFilter->showAddUser) {
-            $template->assign('show_add_user', true);
-        }
-
         // Status options
         $label_of_status = [];
         foreach (UserStatus::cases() as $userStatus) {
@@ -174,11 +133,6 @@ final class UserListPageRenderer
             unset($pref_status_options['admin']);
         }
 
-        $template->assign('label_of_status', $label_of_status);
-        $template->assign('pref_status_options', $pref_status_options);
-        $template->assign('pref_status_selected', 'normal');
-        $template->assign('nb_users_by_status', $nb_users_by_status);
-
         // user level options
         $available_permission_levels = $currentConfig->availablePermissionLevels();
 
@@ -195,10 +149,6 @@ final class UserListPageRenderer
             ];
         }
 
-        $template->assign('level_options', $level_options);
-        $template->assign('level_selected', $default_user->level);
-        $template->assign('nb_users_by_level', $nb_users_by_level);
-
         $groups_arr_id = [];
         $groups_arr_name = [];
         foreach ($groupService->getAllBasic() as $group) {
@@ -206,24 +156,61 @@ final class UserListPageRenderer
             $groups_arr_id[] = (string) $group->id->value;
         }
 
-        $template->assign('groups_arr_id', implode(',', $groups_arr_id));
-        $template->assign('groups_arr_name', implode(',', $groups_arr_name));
-        $template->assign('guest_id', $guest_id);
-
         $view_selector = $preferencesService->getUserManagerView() ?? 'line';
-        $template->assign('view_selector', $view_selector);
 
         if ($view_selector === 'line') {
             // Show 5 users by default
-            $template->assign('pagination', $preferencesService->getUserManagerPagination() ?? 5);
+            $pagination = $preferencesService->getUserManagerPagination() ?? 5;
         } else {
             // Show 10 users by default
-            $template->assign('pagination', $preferencesService->getUserManagerPagination() ?? 10);
+            $pagination = $preferencesService->getUserManagerPagination() ?? 10;
         }
 
         if (self::webmasterIdIsLocal($paths)) {
             $pageState->addWarning($lang->t('You have specified <i>$conf[\'webmaster_id\']</i> in your local configuration file, this parameter in deprecated, please remove it!'));
         }
+
+        $template->assignContext(new UserListPageContext(
+            groupsForFilter: $groups_for_filter,
+            registerDates: implode(',', $register_dates),
+            adminPageTitle: $lang->t('Users'),
+            activateComments: $currentConfig->activateComments(),
+            doublePassword: $currentConfig->doublePasswordTypeInAdmin(),
+            uHistory: $urlService->getRootUrl() . 'admin.php?page=history&filter_user_id=',
+            pwgToken: new CsrfService($currentConfig)
+                ->getToken(),
+            nbImagePage: $default_user->nbImagePage,
+            recentPeriod: $default_user->recentPeriod,
+            themeOptions: ThemeCatalog::getPwgThemes($eventDispatcher, $paths, $currentConfig, $lang),
+            themeSelected: $userService->getDefaultTheme(),
+            languageOptions: LangService::getLanguages($paths),
+            languageSelected: $userService->getDefaultLanguage(),
+            associationOptions: $groups,
+            protectedUsers: implode(',', array_unique($protected_users)),
+            passwordProtectedUsers: implode(',', array_unique($password_protected_users)),
+            guestUser: $guest_id,
+            filterGroup: $userListFilter->groupId,
+            searchInput: $userListFilter->userSearchInput,
+            connectedUser: $currentUser->get()
+                ->id->value,
+            connectedUserStatus: $currentUser->get()
+                ->status->value,
+            owner: $webmaster_id,
+            ownerUsername: $owner_username,
+            showAddUser: $userListFilter->showAddUser,
+            labelOfStatus: $label_of_status,
+            prefStatusOptions: $pref_status_options,
+            prefStatusSelected: 'normal',
+            nbUsersByStatus: $nb_users_by_status,
+            levelOptions: $level_options,
+            levelSelected: $default_user->level,
+            nbUsersByLevel: $nb_users_by_level,
+            groupsArrId: implode(',', $groups_arr_id),
+            groupsArrName: implode(',', $groups_arr_name),
+            guestId: $guest_id,
+            viewSelector: $view_selector,
+            pagination: $pagination,
+        ));
 
         $template->assign_var_from_handle('ADMIN_CONTENT', 'user_list');
     }

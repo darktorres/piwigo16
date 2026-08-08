@@ -11,6 +11,7 @@ use Piwigo\Admin\CoreTabsContext;
 use Piwigo\Admin\Tabsheet;
 use Piwigo\Category\CategoryService;
 use Piwigo\Config\CurrentConfig;
+use Piwigo\Controller\Admin\Projection\SiteManagerSubControllerPageContext;
 use Piwigo\Controller\Admin\Request\SiteManagerRequest;
 use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\Lang;
@@ -160,14 +161,12 @@ final class SiteManagerSubController implements AdminSubControllerInterface
             }
         }
 
-        $template->assign(
-            [
-                'F_ACTION' => $this->urlService->getRootUrl() . 'admin.php' . $this->urlService->getQueryStringDiff(['action', 'site', 'pwg_token']),
-                'PWG_TOKEN' => new CsrfService($this->currentConfig)
-                    ->getToken(),
-                'ADMIN_PAGE_TITLE' => $this->lang->t('Synchronize'),
-            ]
-        );
+        $template->assignContext(new SiteManagerSubControllerPageContext(
+            formAction: $this->urlService->getRootUrl() . 'admin.php' . $this->urlService->getQueryStringDiff(['action', 'site', 'pwg_token']),
+            pwgToken: new CsrfService($this->currentConfig)
+                ->getToken(),
+            adminPageTitle: $this->lang->t('Synchronize'),
+        ));
 
         $sites_detail = EntityManagerFactory::build($conn)->getRepository(SiteEntity::class)
             ->findCategoryAndImageCountsBySite();

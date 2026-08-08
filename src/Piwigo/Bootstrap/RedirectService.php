@@ -7,6 +7,7 @@ namespace Piwigo\Bootstrap;
 use LogicException;
 use Override;
 use Piwigo\Auth\AccessLevelChecker;
+use Piwigo\Bootstrap\Projection\RedirectHtmlPageContext;
 use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\CurrentConfigService;
@@ -216,7 +217,7 @@ final class RedirectService implements RedirectServiceInterface
         $template->set_filenames([
             'redirect' => 'redirect.tpl',
         ]);
-        $template->assign('REDIRECT_MSG', $msg);
+        $template->assignContext(new RedirectHtmlPageContext(redirectMsg: $msg));
 
         $template->parse('redirect');
 

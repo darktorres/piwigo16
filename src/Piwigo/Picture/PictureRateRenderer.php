@@ -10,6 +10,8 @@ use Piwigo\Common\ValueObject\IpAddress;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\UrlServiceInterface;
+use Piwigo\Picture\Projection\PictureRateSummaryPageContext;
+use Piwigo\Picture\Projection\PictureRatingFormPageContext;
 use Piwigo\Rate\RateRepository;
 use Piwigo\Template\CurrentTemplate;
 use Piwigo\Users\CurrentUser;
@@ -70,7 +72,7 @@ final class PictureRateRenderer
             $rate_summary['count'] = $summary->count;
             $rate_summary['average'] = $summary->average;
         }
-        $template->assign('rate_summary', $rate_summary);
+        $template->assignContext(new PictureRateSummaryPageContext($rate_summary));
 
         $user_rate = null;
         if ($this->currentConfig->rateAnonymous() or $this->accessControl->isAuthorizeStatus(AccessLevel::Classic)) {
@@ -92,19 +94,16 @@ final class PictureRateRenderer
                 $user_rate = $this->repo->findUserRate($rate_image_id, $rate_user_id, $anonymous_id);
             }
 
-            $template->assign(
-                'rating',
-                [
-                    'F_ACTION' => $urlService->addUrlParams(
-                        $url_self,
-                        [
-                            'action' => 'rate',
-                        ]
-                    ),
-                    'USER_RATE' => $user_rate,
-                    'marks' => $this->currentConfig->rateItems(),
-                ]
-            );
+            $template->assignContext(new PictureRatingFormPageContext(
+                formAction: $urlService->addUrlParams(
+                    $url_self,
+                    [
+                        'action' => 'rate',
+                    ]
+                ),
+                userRate: $user_rate,
+                marks: $this->currentConfig->rateItems(),
+            ));
         }
     }
 }

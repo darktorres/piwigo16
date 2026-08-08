@@ -8,6 +8,7 @@ use Override;
 use Piwigo\Auth\AccessControl;
 use Piwigo\Bootstrap\PageTail;
 use Piwigo\Config\CurrentConfig;
+use Piwigo\Controller\Projection\PopuphelpPageContext;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\Lang;
 use Piwigo\Core\PageState;
@@ -93,9 +94,7 @@ final class PopuphelpController implements ControllerInterface
             ->content;
 
         $template->set_filename('popuphelp', 'popuphelp.tpl');
-        $template->assign([
-            'HELP_CONTENT' => $help_content,
-        ]);
+        $template->assignContext(new PopuphelpPageContext(helpContent: $help_content));
 
         $template->parse('popuphelp', false);
 

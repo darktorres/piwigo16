@@ -6,7 +6,9 @@ namespace Piwigo\Category;
 
 use DateTimeImmutable;
 use Piwigo\Cache\CachePools;
+use Piwigo\Category\Projection\RandomImageCategoryQuery;
 use Piwigo\Common\Enum\Section;
+use Piwigo\Common\ValueObject\CategoryId;
 use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\CurrentLogger;
@@ -204,7 +206,11 @@ final readonly class CategoryCatsRenderer
             } elseif ($representativePictureIdSet) { // if a representative picture is set, it has priority
                 $imageId = $representativePictureId;
             } elseif ($this->currentConfig->allowRandomRepresentative()) { // searching a random representant among elements in sub-categories
-                $imageId = $categoryService->getRandomImageInCategory($merged);
+                $imageId = $categoryService->getRandomImageInCategory(new RandomImageCategoryQuery(
+                    id: CategoryId::from($catId),
+                    uppercats: $merged['uppercats'],
+                    countImages: $merged['count_images'],
+                ));
             } elseif ($merged['count_categories'] > 0 and $merged['count_images'] > 0) { // at this point, count_images should always be >0 (used as condition above)
                 // searching a random representant among representant of sub-categories
                 $uppercats = $merged['uppercats'];
@@ -287,7 +293,11 @@ final readonly class CategoryCatsRenderer
                         // substitute picked -- silently missing, not swapped.
                         if ((string) $imageRowId === $categoryRepresentativePictureId) {
                             // searching a random representant among elements in sub-categories
-                            $newImageIdRaw = $categoryService->getRandomImageInCategory($category);
+                            $newImageIdRaw = $categoryService->getRandomImageInCategory(new RandomImageCategoryQuery(
+                                id: CategoryId::from($category['id']),
+                                uppercats: $category['uppercats'],
+                                countImages: $category['count_images'],
+                            ));
                             $newImageId = $newImageIdRaw !== null ? (string) $newImageIdRaw : null;
 
                             if ($newImageId !== null and ! in_array($newImageId, $imageIds, true)) {

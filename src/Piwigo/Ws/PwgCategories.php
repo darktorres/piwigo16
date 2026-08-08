@@ -22,6 +22,7 @@ use Piwigo\Category\CategoryListCriteria;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Category\CategoryService;
 use Piwigo\Category\CategoryTreeCache;
+use Piwigo\Category\Projection\RandomImageCategoryQuery;
 use Piwigo\Common\ValueObject\CategoryId;
 use Piwigo\Common\ValueObject\ImageId;
 use Piwigo\Common\ValueObject\UserId;
@@ -557,7 +558,14 @@ final class PwgCategories
                 $image_id = $row['representative_picture_id'];
             } elseif ($this->currentConfig->allowRandomRepresentative()) {
                 // searching a random representant among elements in sub-categories
-                $image_id = $categoryService->getRandomImageInCategory($row);
+                $catIdVoForRandom = CategoryId::tryFrom($catId);
+                $image_id = $catIdVoForRandom !== null
+                    ? $categoryService->getRandomImageInCategory(new RandomImageCategoryQuery(
+                        id: $catIdVoForRandom,
+                        uppercats: $row['uppercats'],
+                        countImages: $row['count_images'],
+                    ))
+                    : null;
             } else { // searching a random representant among representant of sub-categories
                 if ($row['count_categories'] > 0 and $row['count_images'] > 0) {
                     // Same query as CategoryCatsRenderer's own identical
@@ -628,13 +636,20 @@ final class PwgCategories
                     foreach ($categories as &$category) {
                         if ($row->id === $category['representative_picture_id']) {
                             // searching a random representant among elements in sub-categories
-                            $image_id = $categoryService->getRandomImageInCategory($category);
+                            $category_id = $category['id'];
+                            $categoryIdVoForRandom = is_int($category_id) ? CategoryId::tryFrom($category_id) : null;
+                            $image_id = $categoryIdVoForRandom !== null
+                                ? $categoryService->getRandomImageInCategory(new RandomImageCategoryQuery(
+                                    id: $categoryIdVoForRandom,
+                                    uppercats: $category['uppercats'],
+                                    countImages: $category['count_images'],
+                                ))
+                                : null;
 
                             if (isset($image_id) and ! in_array($image_id, $image_ids, true)) {
                                 $new_image_ids[] = $image_id;
                             }
                             if ($this->currentConfig->representativeCacheOnLevel()) {
-                                $category_id = $category['id'];
                                 if (is_int($category_id)) {
                                     $user_representative_updates_for[$category_id] = $image_id;
                                 }

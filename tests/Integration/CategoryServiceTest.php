@@ -21,6 +21,7 @@ namespace Piwigo\Tests\Integration {
     use Doctrine\DBAL\Connection;
     use Piwigo\Category\CategoryRepository;
     use Piwigo\Category\CategoryService;
+    use Piwigo\Category\Projection\RandomImageCategoryQuery;
     use Piwigo\Permalink\PermalinkRepository;
     use Piwigo\Common\ValueObject\CategoryId;
     use Piwigo\Config\ConfigService;
@@ -396,20 +397,20 @@ final class CategoryServiceTest extends IntegrationTestCase
 
     public function test_get_random_image_in_category_returns_null_for_an_empty_category(): void
     {
-        self::assertNull($this->service->getRandomImageInCategory([
-            'id' => 1,
-            'uppercats' => '1',
-            'count_images' => 0,
-        ]));
+        self::assertNull($this->service->getRandomImageInCategory(new RandomImageCategoryQuery(
+            id: CategoryId::from(1),
+            uppercats: '1',
+            countImages: 0,
+        )));
     }
 
     public function test_get_random_image_in_category_returns_an_image_id(): void
     {
-        $imageId = $this->service->getRandomImageInCategory([
-            'id' => 1,
-            'uppercats' => '1',
-            'count_images' => 3,
-        ], false);
+        $imageId = $this->service->getRandomImageInCategory(new RandomImageCategoryQuery(
+            id: CategoryId::from(1),
+            uppercats: '1',
+            countImages: 3,
+        ), false);
 
         self::assertContains($imageId, [1, 2, 3]);
     }

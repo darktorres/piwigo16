@@ -30,6 +30,7 @@ use Piwigo\Category\Projection\CategoryRankInfoRow;
 use Piwigo\Category\Projection\CategorySyncCandidateRow;
 use Piwigo\Category\Projection\CategoryUppercatsCounter;
 use Piwigo\Category\Projection\PhotoCountDateRange;
+use Piwigo\Category\Projection\RandomImageCategoryQuery;
 use Piwigo\Common\Dto\PaginatedResult;
 use Piwigo\Common\ValueObject\CategoryId;
 use Piwigo\Common\ValueObject\ImageId;
@@ -437,30 +438,18 @@ final readonly class CategoryService
     }
 
     /**
-     * Same cross-domain generic-row-reader rationale as
-     * compareByGlobalRank() -- 4 real call sites across CategoryCatsRenderer
-     * and Ws\PwgCategories pass differently-sourced category rows (tree-
-     * cache rows, WS param arrays); only id/uppercats/count_images are
-     * read, defensively.
-     *
-     * @param  array<string, mixed>  $category  (at least id, uppercats, count_images)
+     * P17-23 Phase 8: the 4 real callers (`CategoryCatsRenderer`,
+     * `Ws\PwgCategories`) build {@see RandomImageCategoryQuery} explicitly
+     * from their own differently-sourced category row -- see that DTO's
+     * docblock.
      */
-    public function getRandomImageInCategory(array $category, bool $recursive = true): ?int
+    public function getRandomImageInCategory(RandomImageCategoryQuery $query, bool $recursive = true): ?int
     {
-        $countImages = $category['count_images'] ?? null;
-        if (! is_numeric($countImages) || (int) $countImages <= 0) {
+        if ($query->countImages <= 0) {
             return null;
         }
 
-        $catId = $category['id'];
-        $catId = is_numeric($catId) ? (int) $catId : null;
-        if ($catId === null) {
-            return null;
-        }
-        $uppercats = $category['uppercats'];
-        $uppercats = is_string($uppercats) ? $uppercats : '';
-
-        return $this->repo->findRandomImageId($catId, $uppercats, $recursive, $this->permissionService->getPermissionCriteria());
+        return $this->repo->findRandomImageId($query->id->value, $query->uppercats, $recursive, $this->permissionService->getPermissionCriteria());
     }
 
     /**

@@ -10,6 +10,7 @@ use Piwigo\Admin\Extensions\ExtensionScanner;
 use Piwigo\Admin\Extensions\ExtensionType;
 use Piwigo\Admin\Extensions\PemCatalog;
 use Piwigo\Admin\Extensions\ZipExtractor;
+use Piwigo\Admin\Projection\PluginsNewPageContext;
 use Piwigo\Admin\Request\PluginsNewRequest;
 use Piwigo\Auth\AccessControl;
 use Piwigo\Bootstrap\RequestBootstrap;
@@ -147,16 +148,13 @@ final class PluginsNewPageRenderer
         }
 
         // ---------------------------------------------------------------Order options
-        $template->assign(
-            'order_options',
-            [
-                'date' => $this->lang->t('Post date'),
-                'revision' => $this->lang->t('Last revisions'),
-                'name' => $this->lang->t('Name'),
-                'author' => $this->lang->t('Author'),
-                'downloads' => $this->lang->t('Number of downloads'),
-            ]
-        );
+        $order_options = [
+            'date' => $this->lang->t('Post date'),
+            'revision' => $this->lang->t('Last revisions'),
+            'name' => $this->lang->t('Name'),
+            'author' => $this->lang->t('Author'),
+            'downloads' => $this->lang->t('Number of downloads'),
+        ];
 
         // +-----------------------------------------------------------------------+
         // |                     start template output                             |
@@ -183,10 +181,10 @@ final class PluginsNewPageRenderer
         $versions_to_check = $pem_catalog->getVersionsToCheck(ExtensionType::Plugin, $beta_test);
         $server_plugins = $versions_to_check === [] ? [] : $pem_catalog->getServerExtensions(ExtensionType::Plugin, $fs_plugin_ids, true, $beta_test);
 
+        $order_selected = null;
         if ($server_plugins !== null) {
             /* order plugins */
             $order_selected = $this->sessionService->getPluginsNewOrder() ?? 'date';
-            $template->assign('order_selected', $order_selected);
 
             match ($order_selected) {
                 'revision' => usort($server_plugins, PemCatalog::compareByRevisionDate(...)),
@@ -282,11 +280,19 @@ final class PluginsNewPageRenderer
             $this->pageState->addError($this->lang->t('Can\'t connect to server.'));
         }
 
+        $beta_url = null;
         if (! $beta_test and (bool) preg_match('/(beta|RC)/', AppInfo::VERSION)) {
-            $template->assign('BETA_URL', $base_url . '&amp;beta-test=true');
+            $beta_url = $base_url . '&amp;beta-test=true';
         }
-        $template->assign('ADMIN_PAGE_TITLE', $this->lang->t('Plugins'));
-        $template->assign('BETA_TEST', $beta_test);
+
+        $template->assignContext(new PluginsNewPageContext(
+            orderOptions: $order_options,
+            orderSelected: $order_selected,
+            betaUrl: $beta_url,
+            adminPageTitle: $this->lang->t('Plugins'),
+            betaTest: $beta_test,
+        ));
+
         $template->assign_var_from_handle('ADMIN_CONTENT', 'plugins');
     }
 }

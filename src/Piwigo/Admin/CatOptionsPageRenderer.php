@@ -6,6 +6,7 @@ namespace Piwigo\Admin;
 
 use Piwigo\Activity\ActivityService;
 use Piwigo\Admin\Category\CategoryAdminService;
+use Piwigo\Admin\Projection\CatOptionsPageContext;
 use Piwigo\Admin\Request\CatOptionsRequest;
 use Piwigo\Auth\AccessControl;
 use Piwigo\Category\CategoryService;
@@ -79,13 +80,6 @@ final class CatOptionsPageRenderer
         $section = $catOptionsRequest->section;
         $base_url = $this->urlService->getRootUrl() . 'admin.php?page=cat_options&amp;section=';
 
-        $template->assign(
-            [
-                'U_HELP' => $this->urlService->getRootUrl() . 'admin/popuphelp.php?page=cat_options',
-                'F_ACTION' => $base_url . $section,
-            ]
-        );
-
         // CoreTabs::setContext() must be called with linkStart before
         // Tabsheet renders this page's tab strip, or the tabs render with
         // broken relative hrefs.
@@ -129,13 +123,6 @@ final class CatOptionsPageRenderer
                 $this->lang->t('randomly represented'),
             ],
         };
-        $template->assign(
-            [
-                'L_SECTION' => $l_section,
-                'L_CAT_OPTIONS_TRUE' => $l_true,
-                'L_CAT_OPTIONS_FALSE' => $l_false,
-            ]
-        );
         $categoryService = $this->categoryService;
         $htmlService = $this->htmlRenderer;
         if ($section === 'comments') {
@@ -153,8 +140,16 @@ final class CatOptionsPageRenderer
             $categoryService->displaySelectByRepresentativePresence(true, 'category_option_true', $htmlService, $template);
             $categoryService->displaySelectByRepresentativePresence(false, 'category_option_false', $htmlService, $template);
         }
-        $template->assign('PWG_TOKEN', new CsrfService($this->currentConfig)->getToken());
-        $template->assign('ADMIN_PAGE_TITLE', $this->lang->t('Properties of abums'));
+        $template->assignContext(new CatOptionsPageContext(
+            helpUrl: $this->urlService->getRootUrl() . 'admin/popuphelp.php?page=cat_options',
+            formAction: $base_url . $section,
+            section: $l_section,
+            catOptionsTrueLabel: $l_true,
+            catOptionsFalseLabel: $l_false,
+            pwgToken: new CsrfService($this->currentConfig)
+                ->getToken(),
+            adminPageTitle: $this->lang->t('Properties of abums'),
+        ));
 
         $template->assign_var_from_handle('DOUBLE_SELECT', 'double_select');
         $template->assign_var_from_handle('ADMIN_CONTENT', 'cat_options');

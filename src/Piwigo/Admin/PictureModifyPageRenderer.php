@@ -6,6 +6,7 @@ namespace Piwigo\Admin;
 
 use Doctrine\ORM\EntityManagerInterface;
 use Piwigo\Activity\ActivityService;
+use Piwigo\Admin\Projection\PictureModifyPageContext;
 use Piwigo\Admin\Request\PictureModifyRequest;
 use Piwigo\Auth\AccessControl;
 use Piwigo\Auth\AccessLevelChecker;
@@ -165,6 +166,7 @@ final class PictureModifyPageRenderer
         // --------------------------------------------------------- update informations
         /** @var array<string, mixed> $data */
         $data = [];
+        $save_success = null;
         if ($pictureModifyRequest->isSubmitted) {
             new CsrfService($this->currentConfig)
                 ->checkOrFail($this->htmlRenderer, $this->redirectService);
@@ -244,11 +246,7 @@ final class PictureModifyPageRenderer
 
             $represented_albums = $represent_categories;
 
-            $template->assign(
-                [
-                    'save_success' => $this->lang->t('Photo informations updated'),
-                ]
-            );
+            $save_success = $this->lang->t('Photo informations updated');
 
             $this->activityService
                 ->record('photo', $image_id, 'edit');
@@ -309,42 +307,22 @@ final class PictureModifyPageRenderer
         $post_comment = $pictureModifyRequest->commentField;
         $comment_value = $post_comment !== null ? stripslashes($post_comment) : (is_string($row['comment'] ?? null) && $row['comment'] !== '' ? $row['comment'] : '');
 
-        $template->assign(
-            [
-                'tag_selection' => $tag_selection,
-                'U_DOWNLOAD' => 'action.php?id=' . $image_id . '&amp;part=e&amp;pwg_token=' . new CsrfService($this->currentConfig)->getToken(),
-                'U_SYNC' => $admin_url_start . '&amp;sync_metadata=1&amp;pwg_token=' . new CsrfService($this->currentConfig)->getToken(),
-                'U_DELETE' => $admin_url_start . '&amp;delete=1&amp;pwg_token=' . new CsrfService($this->currentConfig)->getToken(),
-                'U_HISTORY' => $this->urlService->getRootUrl() . 'admin.php?page=history&amp;filter_image_id=' . $image_id,
-                'U_ACTIVITY' => $this->urlService->getRootUrl() . 'admin.php?page=user_activity&photo=' . $image_id,
-
-                'PATH' => $row['path'],
-
-                'TN_SRC' => DerivativeImage::url(ImageStdParams::MEDIUM, $src_image),
-                'FILE_SRC' => DerivativeImage::url(ImageStdParams::LARGE, $src_image),
-
-                'NAME' => $name_value,
-
-                'TITLE' => $htmlRenderer->renderElementName($row),
-
-                'DIMENSIONS' => (is_scalar($row['width']) ? (string) $row['width'] : '') . ' * ' . (is_scalar($row['height']) ? (string) $row['height'] : ''),
-
-                'FORMAT' => ($row['width'] >= $row['height']) ? 1 : 0, // 0:horizontal, 1:vertical
-
-                'FILESIZE' => (is_scalar($row['filesize']) ? (string) $row['filesize'] : '') . ' KB',
-
-                'REGISTRATION_DATE' => DateHelper::formatDate(is_string($row['date_available']) || is_int($row['date_available']) ? $row['date_available'] : false),
-
-                'AUTHOR' => htmlspecialchars($author_value),
-
-                'DATE_CREATION' => $row['date_creation'],
-
-                'DESCRIPTION' => htmlspecialchars($comment_value),
-
-                'F_ACTION' => $this->urlService->getRootUrl() . 'admin.php'
-                    . $this->urlService->getQueryStringDiff(['sync_metadata']),
-            ]
-        );
+        $u_download = 'action.php?id=' . $image_id . '&amp;part=e&amp;pwg_token=' . new CsrfService($this->currentConfig)->getToken();
+        $u_sync = $admin_url_start . '&amp;sync_metadata=1&amp;pwg_token=' . new CsrfService($this->currentConfig)->getToken();
+        $u_delete = $admin_url_start . '&amp;delete=1&amp;pwg_token=' . new CsrfService($this->currentConfig)->getToken();
+        $u_history = $this->urlService->getRootUrl() . 'admin.php?page=history&amp;filter_image_id=' . $image_id;
+        $u_activity = $this->urlService->getRootUrl() . 'admin.php?page=user_activity&photo=' . $image_id;
+        $path = $row['path'];
+        $tn_src = DerivativeImage::url(ImageStdParams::MEDIUM, $src_image);
+        $file_src = DerivativeImage::url(ImageStdParams::LARGE, $src_image);
+        $title = $htmlRenderer->renderElementName($row);
+        $dimensions = (is_scalar($row['width']) ? (string) $row['width'] : '') . ' * ' . (is_scalar($row['height']) ? (string) $row['height'] : '');
+        $format_flag = ($row['width'] >= $row['height']) ? 1 : 0; // 0:horizontal, 1:vertical
+        $filesize = (is_scalar($row['filesize']) ? (string) $row['filesize'] : '') . ' KB';
+        $registration_date = DateHelper::formatDate(is_string($row['date_available']) || is_int($row['date_available']) ? $row['date_available'] : false);
+        $date_creation = $row['date_creation'];
+        $f_action = $this->urlService->getRootUrl() . 'admin.php'
+            . $this->urlService->getQueryStringDiff(['sync_metadata']);
 
         $added_by = 'N/A';
         $row_added_by = UserId::tryFrom($row['added_by']);
@@ -388,26 +366,21 @@ final class PictureModifyPageRenderer
             $intro_vars['formats'] = $this->lang->t('Formats: %s', implode(', ', $format_strings));
         }
 
-        $template->assign('INTRO', $intro_vars);
-
         $row_path = is_string($row['path']) ? $row['path'] : null;
         $picture_ext = $this->currentConfig->pictureExtensions();
+        $u_coi = null;
         if (in_array(StringHelper::getExtension($row_path), $picture_ext, true)) {
-            $template->assign('U_COI', $this->urlService->getRootUrl() . 'admin.php?page=picture_coi&amp;image_id=' . $image_id);
+            $u_coi = $this->urlService->getRootUrl() . 'admin.php?page=picture_coi&amp;image_id=' . $image_id;
         }
 
         // image level options
         $selected_level = $pictureModifyRequest->postLevel ?? $row['level'];
-        $template->assign(
-            [
-                'level_options' => PermissionService::getPrivacyLevelOptions($this->currentConfig, $this->lang),
-                'level_options_selected' => [$selected_level],
-            ]
-        );
+        $level_options = PermissionService::getPrivacyLevelOptions($this->currentConfig, $this->lang);
 
         // categories
         $related_categories = [];
         $related_categories_ids = [];
+        $storage_category = null;
 
         foreach ($imageService->getCategoryLinksForImage(ImageId::from($image_id)) as $cat_row) {
             $raw_row_category_id = $cat_row['category_id'];
@@ -421,7 +394,7 @@ final class PictureModifyPageRenderer
               );
 
             if ($row_category_id === $storage_category_id) {
-                $template->assign('STORAGE_CATEGORY', $name);
+                $storage_category = $name;
             }
 
             $related_categories[$row_category_id] = [
@@ -430,9 +403,6 @@ final class PictureModifyPageRenderer
             ];
             $related_categories_ids[] = $row_category_id;
         }
-
-        $template->assign('related_categories', $related_categories);
-        $template->assign('related_categories_ids', $related_categories_ids);
 
         // jump to link
         //
@@ -448,10 +418,11 @@ final class PictureModifyPageRenderer
             $image_level = (int) $page['image']['level'];
         }
 
+        $u_jumpto = null;
         if ((bool) ($custom_context = $this->userService->getEditContext($image_id))) {
-            $template->assign('U_JUMPTO', $this->urlService->makePictureUrl([
+            $u_jumpto = $this->urlService->makePictureUrl([
                 'image_id' => $image_id,
-            ]) . '/' . $custom_context);
+            ]) . '/' . $custom_context;
         } elseif ($this->currentUser->get()->level >= $image_level) {
             $authorized_category_ids = array_map(
                 strval(...),
@@ -481,21 +452,49 @@ final class PictureModifyPageRenderer
                     ]
                 );
 
-                $template->assign('U_JUMPTO', $url_img);
+                $u_jumpto = $url_img;
             }
         }
 
         // associate to albums
         $associated_albums = $imageService->getAssociatedCategoryIds(ImageId::from($image_id));
 
-        $template->assign([
-            'associated_albums' => $associated_albums,
-            'represented_albums' => $represented_albums,
-            'STORAGE_ALBUM' => $storage_category_id,
-            'CACHE_KEYS' => AdminUiHelper::getAdminClientCacheKeys($this->urlService, ['tags', 'categories']),
-            'PWG_TOKEN' => new CsrfService($this->currentConfig)
+        $template->assignContext(new PictureModifyPageContext(
+            saveSuccess: $save_success,
+            tagSelection: $tag_selection,
+            uDownload: $u_download,
+            uSync: $u_sync,
+            uDelete: $u_delete,
+            uHistory: $u_history,
+            uActivity: $u_activity,
+            path: $path,
+            tnSrc: $tn_src,
+            fileSrc: $file_src,
+            name: $name_value,
+            title: $title,
+            dimensions: $dimensions,
+            format: $format_flag,
+            filesize: $filesize,
+            registrationDate: $registration_date,
+            author: htmlspecialchars($author_value),
+            dateCreation: $date_creation,
+            description: htmlspecialchars($comment_value),
+            fAction: $f_action,
+            introVars: $intro_vars,
+            uCoi: $u_coi,
+            levelOptions: $level_options,
+            levelOptionsSelected: [$selected_level],
+            storageCategory: $storage_category,
+            relatedCategories: $related_categories,
+            relatedCategoriesIds: $related_categories_ids,
+            uJumpto: $u_jumpto,
+            associatedAlbums: $associated_albums,
+            representedAlbums: $represented_albums,
+            storageAlbum: $storage_category_id,
+            cacheKeys: AdminUiHelper::getAdminClientCacheKeys($this->urlService, ['tags', 'categories']),
+            pwgToken: new CsrfService($this->currentConfig)
                 ->getToken(),
-        ]);
+        ));
 
         $this->eventDispatcher->dispatchNotify(new LocEndPictureModify());
 

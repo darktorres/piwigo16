@@ -11,8 +11,8 @@ this file's status table replaces its role, independently re-derived from
 `git log`/live code rather than copied from the manifest, which had drifted
 badly (P24 marked `planned` despite 271 landed commits).
 
-`17.x-rewrite` replays `16.x-rewrite`'s modernization in 34 strictly-sequential
-backbone phases (P0–P33, grouped into 10 epochs A–J — every backend phase
+`17.x-rewrite` replays `16.x-rewrite`'s modernization in 33 strictly-sequential
+backbone phases (P0–P32, grouped into 10 epochs A–J — every backend phase
 sequenced before every frontend phase), rebuilt from
 `origin/16.x` rather than upgraded in place. Dual-purpose: a *replay* of
 work with a reference implementation on `16.x-rewrite`, plus *greenfield*
@@ -32,9 +32,9 @@ the table correctly:
   2026-08-03) instead of diverging from it, as an earlier pass of this doc
   did (leaving it an unnumbered `—` status-table row). The *original*
   plan's P24 ("Vite + TypeScript conversion") is unaffected in scope but
-  renumbered **P30**, moved after every backend phase so all frontend work
+  renumbered **P29**, moved after every backend phase so all frontend work
   sequences last — see the Phase detail section below for the current
-  P24–P33 order. What actually landed under the `p24` tag (plus, not
+  P24–P32 order. What actually landed under the `p24` tag (plus, not
   `(p24)`-tagged but the same post-P23 remediation effort in substance, a
   SQL bound-parameter sweep and the still-running singleton/DI elimination
   campaign): retiring the `$GLOBALS`/static-bridge coupling, migrating ~27
@@ -46,21 +46,43 @@ the table correctly:
   (`legacy-coupling-retirement.md`, `gap-closure-p0-p23.md`) at the time,
   under the `p24` tag as a matter of sequencing convenience ("whatever
   comes after P23"). See the P24 section below for the real work.
-- **P25, renumbered P31, as originally defined** ("Inline JS extraction +
+- **P25, renumbered P30, as originally defined** ("Inline JS extraction +
   `any` reduction") — not started. The 52 `(p25)`-tagged commits are PHP
   `mixed`-type elimination (Phase 1–2, by domain module), continued
   directly into the `(p27)`-tagged work covered next. Unrelated to the
-  original P25 (now P31) scope.
-- **P27, renumbered P26, as originally defined** ("Type correctness +
-  mixed elimination") — this one actually matches: the 89 `(p27)`-tagged
-  commits continue the same mixed-elimination effort (Phase 4: replacing
-  ambient `$_POST`/`$_GET` superglobal reads with typed Request DTOs) plus
-  real security fixes found along the way (SQL injection, request-array
-  scope). Counts as real, substantial progress against its own original
-  definition (now P26).
-- **P32, renumbered P29** — 1 commit landed (`chore(p32): delete doc/`),
-  not the phase's full "layer decoupling + repository restructure" scope.
-  A narrow, unrelated cleanup borrowed the tag.
+  original P25 (now P30) scope.
+- **The original plan's P27** ("Type correctness + mixed elimination")
+  — the 89 `(p27)`-tagged commits continue the same mixed-elimination
+  effort (Phase 4: replacing ambient `$_POST`/`$_GET` superglobal reads
+  with typed Request DTOs) plus real security fixes found along the way
+  (SQL injection, request-array scope). Real, substantial progress
+  against its own original definition. Briefly carried its own
+  standalone number in this doc (P26, after the P25→P30 renumbering
+  above); **merged into P24 instead** as of this pass — it's
+  fundamentally the same class of work as P24's own remediation
+  sub-tracks (superglobal/raw-array-offset access, type correctness
+  beyond what P0–P23 shipped), not a separable phase in its own right.
+  See the P24 section below for the merged content.
+
+**This merge frees up a number, cascading a shift through every phase
+after it in this document's own (already-once-renumbered) scheme — not
+the original plan's numbers, this document's own P27 onward**: this
+doc's P27 "Security" → **P26**; P28 "Plugin/Theme contracts" → **P27**;
+P29 "Layer decoupling" → **P28**; P30 "Vite + TypeScript" → **P29**; P31
+"Inline JS extraction" → **P30**; P32 "Template migration" → **P31**;
+P33 "CSS modernization" → **P32**. Every "renumbered P##" note in this
+section and the table below already reflects the new numbers, not the
+old ones — re-derived at the time of this merge, not left for a reader
+to compute.
+- **P32 (old scheme), renumbered P28 (current)** — 1 commit landed
+  (`chore(p32): delete doc/`), not the phase's full "layer decoupling +
+  repository restructure" scope. A narrow, unrelated cleanup borrowed
+  the tag. (The "P32" in the commit tag itself refers to a still-older,
+  pre-consolidation numbering for this same phase, coincidentally
+  matching today's *different* P32 — CSS modernization, after this
+  pass's own renumbering (Template migration, the phase that number
+  meant just before this pass, is now P31) — don't conflate any of the
+  three. See that entry's own note in Epoch I below.)
 
 Where the table below says "diverged," this is what it means: re-verify
 against the phase's own section, don't assume the commit count maps
@@ -94,16 +116,15 @@ cleanly onto the original scope.
 | P21 | Admin controller migration | Done | 4 |
 | P22 | Frontend controller migration | Done | 7 |
 | P23 | Legacy deletion & cleanup | Done, 2 gaps found in later audit (see below) | 123 |
-| P24 | Post-P23 remediation & hardening (globals/DBAL/event/l10n coupling retirement, coverage + mutation-testing hardening, SQL bound-parameter sweep, singleton/DI elimination) | In progress — remediation sub-tracks done, 2 gaps found (see below); singleton/DI campaign **complete** (Phases 0–12F, zero shims remain) | 405 `(p24)` + 16 `(sql)` + 74 `(di)`/`(lang)` |
+| P24 | Post-P23 remediation & hardening (globals/DBAL/event/l10n coupling retirement, coverage + mutation-testing hardening, SQL bound-parameter sweep, singleton/DI elimination, type correctness + mixed elimination + superglobal/array-offset access — the original plan's P27, merged in, see above) | In progress — remediation sub-tracks done, 2 gaps found (see below); singleton/DI campaign **complete** (Phases 0–12F, zero shims remain); type-correctness/mixed-elimination sub-track real progress (Request DTO migration, Phase 4), not complete | 405 `(p24)` + 16 `(sql)` + 74 `(di)`/`(lang)` + 89 `(p27)` |
 | P25 | REST resource layer + OpenAPI (WS API removed) | Not started | 0 |
-| P26 | Type correctness + mixed elimination | Real progress (Request DTO migration, Phase 4) | 89 |
-| P27 | Security hardening | Not started | 0 |
-| P28 | Plugin / Theme contracts + bundled extensions | Not started | 0 |
-| P29 | Layer decoupling + repository restructure | Not started (1 unrelated commit borrowed the tag — `doc/` cleanup) | 1 |
-| P30 | Vite + TypeScript conversion | **Not started** | 0 |
-| P31 | Inline JS extraction + `any` reduction | **Not started** (mixed-elimination work landed instead, see above) | 0 |
-| P32 | Template migration (Smarty → Latte) + asset pipeline | Not started | 0 |
-| P33 | CSS modernization + Tailwind | Not started | 0 |
+| P26 | Security hardening | Not started | 0 |
+| P27 | Plugin / Theme contracts + bundled extensions | Not started | 0 |
+| P28 | Layer decoupling + repository restructure | Not started (1 unrelated commit borrowed the tag — `doc/` cleanup) | 1 |
+| P29 | Vite + TypeScript conversion | **Not started** | 0 |
+| P30 | Inline JS extraction + `any` reduction | **Not started** (mixed-elimination work landed under P24 instead, see above) | 0 |
+| P31 | Template migration (Smarty → Latte) + asset pipeline | Not started | 0 |
+| P32 | CSS modernization + Tailwind | Not started | 0 |
 
 Two adjacent, non-phase-numbered tracks, both confirmed **not started**
 directly against the codebase:
@@ -261,7 +282,7 @@ TTL) was never built — `CacheFactory` produced one generic pool, zero real
 consumers besides `CacheClearCommand`. Load-bearing for P23's own
 cache-table-rationalization gate. **Fixed** in the pre-P23 remediation
 pass — `CachePools` built on top of `CacheFactory`; `rate_limiter`
-specifically stays unbuilt (genuinely P27 scope, no consumer exists yet).
+specifically stays unbuilt (genuinely P26 scope, no consumer exists yet).
 Messenger itself is now real and wired (`config/messenger.php`, 5
 `Piwigo\Job\*` classes + handlers) — see `docs/REFERENCE.md`.
 
@@ -457,9 +478,9 @@ deletion of the entire `DbPatch`/`VersionUpgrade` chain (see P23's
 gap-closure list below) — there's no upgrade mechanism left to drive an
 `Upgrade`/`UpgradeFeed` controller, so their absence is a real, consistent
 consequence of that design decision, not an oversight. Render via Smarty,
-collecting an engine-agnostic `$vars` array (P32's future Latte swap is
+collecting an engine-agnostic `$vars` array (P31's future Latte swap is
 meant to be a one-line render-call change per controller, not a rewrite —
-P32 hasn't started). **Real gap found** (2026-07-13 audit): `GalleryController` only
+P31 hasn't started). **Real gap found** (2026-07-13 audit): `GalleryController` only
 relocated `include/section_init.inc.php`'s `include()` call site into the
 controller — the ~450 lines of raw SQL logic P20's own docblock said
 belonged here (`$page['items']`, favorites, next/prev navigation) was
@@ -490,7 +511,7 @@ documented ways**, not silently:
 - Root entry points (`admin.php`, `picture.php`, etc.) were kept as thin
   shells rather than collapsed into one front controller — this fork
   keeps Piwigo's original URL surface. Since relocated into `public/` as
-  part of web-root isolation (originally P29 scope, pulled forward).
+  part of web-root isolation (originally P28 scope, pulled forward).
 - The `$GLOBALS`/static-bridge retirement bullets in the original P23
   plan were audited and **deliberately not executed in P23 itself** — the
   plan's premise ("zero callers remain after `include/` deletion") didn't
@@ -606,7 +627,7 @@ below) are not. Formalizes the informal `(p24)` commit-tag convention (405 commi
 as of 2026-08-03, up from 271 when this doc's status table was last
 written) as this doc's own real P24, rather than leaving it an unnumbered
 status-table row diverging from the commit tags. Not the original plan's
-P24 ("Vite + TypeScript conversion," still not started, renumbered **P30**
+P24 ("Vite + TypeScript conversion," still not started, renumbered **P29**
 — see "Real status vs. commit-tag labels" above). What actually happened
 under `feat(p24)`/`fix(p24)`/`test(p24)`/`docs(p24)`-tagged commits is the
 post-P23 remediation work several phase sections above already promised —
@@ -692,8 +713,9 @@ re-counted at 240) retargeted onto `EventDispatcher::get()->addEventHandler()`/
 `triggerChange()`/`triggerNotify()` directly. Track B's actual point —
 typed event objects (`SomeEvent` classes, `dispatchNotify()`/
 `dispatchChange()`) replacing the bare-string-keyed dispatch — then
-shipped across 12 domain batches (all 155 real events, including the
-7-event WS-protocol-lifecycle group originally deferred behind P25).
+shipped across 12 domain batches (156 real events today, later grown
+from the 155 first shipped, including the 7-event WS-protocol-lifecycle
+group originally deferred behind P25).
 `EventDispatcher.php` now exposes `addTypedHandler()`/`dispatchChange()`/
 `dispatchNotify()` alongside the original string-keyed methods (kept only
 for `'trigger'`, its own permanent internal meta-notification channel). A
@@ -702,6 +724,35 @@ sites outside that one name. Delivered in 14 commits
 (`25d8709bc0`..`6dd1034422`, Foundation + 12 domain batches + wrap-up);
 full commit-level history is in `git log`, the plan doc itself was
 deleted once the work landed.
+
+**Follow-up recommendation, not yet actioned: replace the hand-rolled
+`EventDispatcher` with Symfony's, independent of and before P27.** Found
+while grounding P27's design against a reference implementation that
+uses Symfony's `EventDispatcher`/PSR-14 (see Epoch I's P27 entry below)
+— compared the two directly rather than assuming Symfony's is simply
+better. Two of the three differences found (this fork's own priority
+order runs ascending/lower-first where Symfony runs descending/
+higher-first; no stoppable-event mechanism exists at all, confirmed by
+grep) are real gaps, but checked before recommending anything: zero real
+`addTypedHandler`/`addEventHandler` call sites in `src/Piwigo` pass a
+non-default priority today, so neither gap currently affects any shipped
+behavior — this is a safe window to fix that would close once real
+plugins exist and start relying on priority ordering. The lazy-listener-
+resolution difference the reference's own container wiring demonstrates
+turned out not to be a dispatcher-class limitation at all — it's how
+`RequestBootstrap.php` happens to call it (3 of 23 real registrations
+there eagerly construct a one-off service regardless of whether the
+event ever fires; fixable in place, no library swap needed). The
+strongest actual case: this fork's `EventDispatcher` implements **no
+interface at all**, not `Psr\EventDispatcher\EventDispatcherInterface`
+— a real inconsistency against this codebase's own pattern of
+PSR-conforming elsewhere (PSR-11/PSR-7/PSR-15/PSR-3, all in active use).
+Not even a new dependency: `composer.lock` already resolves both
+`symfony/event-dispatcher` and `psr/event-dispatcher` transitively,
+unused for this purpose. Recommendation: switch onto Symfony's
+`EventDispatcher` via the PSR-14 interface as its own standalone item,
+not gated on P27 — `dispatchNotify()`/`dispatchChange()` survive as thin
+typed wrappers over Symfony's own `dispatch()`.
 
 **Track C — `l10n()`/`get_root_url()` retarget.** Done and verified —
 `Lang/functions.php`/`Url/functions.php`/`Category/functions.php`/
@@ -861,7 +912,138 @@ the one principled DI root every system needs. Full per-class detail
 (shim design, real bugs found along the way, test-suite fallout per
 class) lives in the campaign's own plan files, not reproduced here.
 
-### Epoch G — REST/OpenAPI + Types (P25–P26)
+**Typed-context/VO/DTO campaign — typed template contexts sub-campaign
+complete, 2026-08-08, 87 `feat(template)`-tagged commits.** This
+sub-campaign has its own internal phase numbering in its own plan file
+(unrelated to this doc's P0–P32 backbone numbers — its "Phase 13" is not
+this doc's `P13`); referred to here only by what it did, not that
+number. Every one of the 96 files calling `Template::assign()` with a
+real (non-excluded) key converted to `final readonly class
+FooPageContext implements TemplatePageContext` + a single
+`$template->assignContext(new FooPageContext(...))` call. Confirmed
+live: zero real `Template::assign()` calls with a string/array key
+remain in `src/Piwigo` (126 shipped `TemplatePageContext` classes
+total); 4 sites carry an explicit `// Not a Phase 13 TemplatePageContext
+candidate` comment (that sub-campaign's own internal phase-number label,
+quoted verbatim from the real source comment, not this doc's numbering)
+and are correctly excluded — the assign *key* itself is caller-chosen or
+per-instance-mutable, not a fixed page var (`Calendar/CalendarBase.php`,
+`Category/CategoryService.php`, `Html/HtmlService.php`,
+`Admin/Tabsheet.php`).
+
+**Quality gap found by a full follow-up audit, not yet fixed**: the
+campaign's own convention (one flat `readonly` class, every var an
+independently-nullable property) is wrong whenever fields are actually
+correlated (always null together, always set together, or represent a
+real alternative) — a flat bag lets a caller construct combinations that
+can never really happen. A systematic audit of all 32 shipped classes
+with 2+ nullable constructor properties (the necessary precondition for
+this pattern; the other 94 shipped classes are excluded by construction)
+found **18 real violations**, none fixed since being found (confirmed
+via `git log` per file) — including one class (`UpdatesPwgPageContext`)
+whose own docblock actively claims "every optional field here is
+genuinely optional," which is false. Full per-file fix specs (sub-VO/
+variant-interface shape for each) live in the campaign's own plan file,
+not reproduced here.
+
+**Type correctness + mixed elimination sub-track** (the original plan's
+P27; briefly its own standalone phase in this doc as P26, **merged into
+P24 as of this pass** — see "Real status vs. commit-tag labels" above
+for why). **Real, substantial progress** on its own original
+definition. 89 `(p27)`-tagged commits: continuing the mixed-elimination
+sweep from the `p25`-tagged work (Phase 4), replacing ambient `$_POST`/
+`$_GET` superglobal reads across dozens of controllers/sub-controllers
+with typed Request DTOs (one per action/param cluster —
+`PluginSectionRequest` and many more), plus real bugs found and fixed
+along the way (a SQL injection via a raw `cat_id` superglobal read in
+the cat-modify renderer; a stale `$_POST` dead write in
+`AlbumSubController`; comment rejection-reason tracking moved off
+`$_POST` onto `PageState`; a new SEC-40 arch-test gate locking in "no
+raw superglobal reads outside a Request DTO" going forward). The SEC-40
+arch test itself is still live and passing
+(`tests/Arch/StructuralTest.php`, no longer literally containing the
+string "SEC-40" in its own text — that label now only persists
+informally in ~78 Request DTO docblocks and this doc — a naming drift,
+not a functional gap). Not complete — no claim of "0 remaining" has
+been verified — but real, ongoing, and aligned with its own stated
+goal.
+
+**Remaining `mixed` gap, re-measured (superseding an earlier, now-stale
+snapshot).** Total raw `mixed` token count keeps climbing with new code
+(1491 today) — the wrong metric on its own, since a large, legitimate
+by-design residual will always exist (DBAL scalar-narrowing closures,
+`ValueObject::tryFrom()`, `Db/Type::convert*()` vendor-dictated
+signatures, the WS RPC layer's arbitrary protocol params, PSR-3
+`LoggerInterface` context, and more — see the campaign's own plan file
+for the full by-design inventory). The per-module Projection-wiring gap
+(a repository/service method still declaring `array<string, mixed>`
+where a sibling typed Projection already exists) is real but uneven —
+re-checked the highest-`mixed`-count repositories directly:
+`CategoryRepository`/`CategoryService` are **substantially already
+fixed** (`findCategoriesByIds()`/`findFullCategoriesByIds()` already
+return typed Projections; most of the remaining `mixed` there is the
+already-accepted narrowing-closure pattern). `ImageRepository`/
+`ImageService` and `UserRepository` still have the gap for real — no
+Projection-wiring work has reached them yet, confirmed by direct read.
+`CommentRepository`/`TagRepository`/`GroupRepository` are
+near-resolved (3 occurrences each, plausibly by-design, unconfirmed).
+`SearchRepository`'s count grew since it was last checked (7 → 17) —
+genuinely unexplained, worth a fresh single-file look before anything
+else. `Ws` (12 of 17 files besides `PwgCore`), `Admin` (27 of 32
+files), `Core` (13 of 14 files), and `Controller` (10 of 11 files) are
+still entirely unaudited for this pattern.
+
+**Direct continuation of this sub-track's own goal, not yet started as
+its own tracked work: superglobal/array-offset access beyond `$_POST`/
+`$_GET`/`$_REQUEST`/`$_FILES`.** Three further pockets, same "typed
+accessor over raw offset access" discipline SEC-40 already established:
+
+1. **Prerequisite — wire `admin.php` through the shared PSR-7
+   pipeline.** `public/index.php` calls `RequestPipeline::handle(...)`;
+   `public/admin.php` calls `RequestBootstrap::bootEntryPoint($paths,
+   isAdmin: true)` then instantiates `AdminShell` directly — no
+   `RequestPipeline`, confirmed still true. `AdminShell::run()`'s own
+   docblock states this explicitly ("AdminShell has no PSR-7
+   [pipeline]"). Independently corroborated by this doc's own
+   SEC-42 line below (`/admin*` bypasses standard middleware, from the
+   CSRF angle). `Http\ControllerInterface`, `RedirectServiceInterface`'s
+   `ResponseReadyException` pattern, and the string-returning
+   `Template::parse()`/`PageTail::renderToString()` siblings this fix
+   needs already exist — this is a real, scoped, tractable prerequisite,
+   not a rediscovery of Workstream C3's full scope.
+2. **`$_SESSION`/`$_SERVER`/`$_COOKIE`** — 168/68/18 real direct-access
+   sites (40/30/8 files) outside any designated typed home, re-counted
+   directly (the `$_SESSION` count has grown, not shrunk, since first
+   scoped). `Session\Session` already exists as a designated growth
+   point (still genuinely empty — "no in-tree code reads typed session
+   state yet") and is already threaded through
+   `Http\Middleware\SessionMiddleware`; `Core\CurrentServerRequest`
+   would be a new sibling in the `Current*` singleton family;
+   `Auth\CookieService` is already the right home for `$_COOKIE`. Real
+   open design question: `SessionService` *itself* already has 15 named
+   accessors for a different, non-overlapping slice of `$_SESSION`
+   state (the `filter_*`/`device`/`mobile_theme` family) — whether new
+   session keys become more named `SessionService` accessors (the
+   pattern actually shipped for that half) or populate the still-empty
+   `Session` VO (a different, parallel pattern) isn't resolved.
+3. **WS method `$params` arrays** — 97 methods across 11 `Ws/Pwg*.php`
+   files take a raw `array $params` indexed by string key, with zero
+   typed accessors; each already has a full param-type schema at its
+   `addMethod()` registration site in `WsDefaultMethods.php`, a
+   ready-made scaffold for one `{Method}Params` DTO per method.
+4. **Raw DBAL row arrays** consumed by string-keyed offset — real, but
+   its own prior sizing document (a now-deleted `docs/plan/` file) can
+   no longer be checked against source; needs a fresh count before
+   scoping. A second, previously-uncounted sub-population exists beyond
+   the repository layer: roughly two-thirds of the files doing this are
+   Page Renderers/Controllers/`Ws/Pwg*.php` classes running raw SQL
+   inline, not repositories at all.
+
+Full per-item detail, exact reader-file lists, and the deptrac
+constraint on where new `Session`-exposed VOs may legally live all live
+in the campaign's own plan file, not reproduced here.
+
+### Epoch G — REST/OpenAPI (P25)
 
 **P25 — REST resource layer + OpenAPI, legacy WS API removed** (`/api/v1`
 as the sole API, ETag/304, `Link` pagination, a generated typed TS client;
@@ -871,82 +1053,149 @@ tests, the whole `Ws/` namespace, and every `l10n()`/URL-retarget note
 above that explicitly deferred a WS-specific event/function pending this
 phase are all still waiting on it.
 
-**P26 — Type correctness + mixed elimination.** **Real, substantial
-progress** — this is the one post-P23 phase where the commit-tag label
-matches its original definition. 89 commits: continuing the mixed-elimination
-sweep from the `p25`-tagged work (Phase 4), replacing ambient `$_POST`/
-`$_GET` superglobal reads across dozens of controllers/sub-controllers with
-typed Request DTOs (one per action/param cluster — `PluginSectionRequest`
-and many more), plus real bugs found and fixed along the way (a SQL
-injection via a raw `cat_id` superglobal read in the cat-modify renderer;
-a stale `$_POST` dead write in `AlbumSubController`; comment
-rejection-reason tracking moved off `$_POST` onto `PageState`; a new
-SEC-40 arch-test gate locking in "no raw superglobal reads outside a
-Request DTO" going forward). Not complete — no claim of "0 remaining" has
-been verified — but real, ongoing, and aligned with its own stated goal.
+### Epoch H — Security (P26) — not started
 
-### Epoch H — Security (P27) — not started
-
-**P27 — Security hardening** (WebAuthn/passkeys, OIDC SSO, nonce-based
-CSP, COOP/COEP, CSP reporting). Depends on P26. Not started — `rate_limiter`
-(the one P11 cache pool deliberately left unbuilt, "genuinely P27 scope")
+**P26 — Security hardening** (WebAuthn/passkeys, OIDC SSO, nonce-based
+CSP, COOP/COEP, CSP reporting). Depends on P24 (the original plan's P27,
+"Type correctness + mixed elimination," merged there — see "Real status
+vs. commit-tag labels" above). Not started — `rate_limiter`
+(the one P11 cache pool deliberately left unbuilt, "genuinely P26 scope")
 is the clearest concrete marker that this phase hasn't begun.
 
-### Epoch I — Plugins/Layering/Repo-restructure (P28–P29) — not started
+### Epoch I — Plugins/Layering/Repo-restructure (P27–P28) — not started
 
-**P28 — Plugin / Theme contracts + bundled extensions + decomposition**
+**P27 — Plugin / Theme contracts + bundled extensions + decomposition**
 (`PluginInterface`/`ThemeInterface`, JSON-schema manifests, 16
 Listener/Subscriber classes, migrating 7 bundled extensions, OpenAPI spec
-generation, outbound webhooks). **Not started** — but its typed-event-object
-piece shipped early, independent of the rest: Track B (above) already
-built all 155 typed event classes and the `dispatchChange()`/
-`dispatchNotify()`/`addTypedHandler()` dispatch mechanism, ahead of and
-outside P28. What's left here is wiring those classes to a real plugin
-registration surface — P28's own documented design ties them to
-`PluginInterface::subscribedEvents()`, which doesn't exist yet.
+generation, outbound webhooks). **Not started as code**, but a full
+preliminary design pass has been done — real-world-grounded, not
+speculative — and the god-class-decomposition prerequisite the original
+plan called for is already done. Track B's own typed-event-object piece
+shipped early and independent of the rest: **156** typed event classes
+(re-counted; earlier passes of this doc undercounted at 155) plus the
+`dispatchChange()`/`dispatchNotify()`/`addTypedHandler()` mechanism,
+ahead of and outside P27.
 
-**P29 — Layer decoupling + repository restructure** (drive the Deptrac
+*Survey grounding*: every real plugin in the sibling `../piwigo16-plugins`
+catalog (~400 extensions) and every real theme in `../piwigo16-themes`
+(113 files) were read to ground the design in actual usage rather than
+guessing. 162 distinct legacy plugin events found in the wild; every one
+of the top ~12 by real frequency already has a shipped 1:1 typed event
+class — the events themselves don't need inventing, only a real
+plugin/theme registration surface wired onto dispatch machinery that
+already exists. `ws_add_methods` (the WS extensibility hook) turns out
+to already be just another typed event (`Ws/Event/WsAddMethods.php`,
+carrying a live `PwgServer`) — no separate WS plugin API needs
+designing. The 7 "bundled extensions" the original plan named
+(AdminTools, LocalFilesEditor, TakeATour, language_switch, elegant,
+modus, smartpocket) are all confirmed to exist in the sibling catalogs,
+version-pinned in lockstep with a specific core release.
+
+*Reference-implementation verdict*: a sibling repo
+(`../piwigo16-rewrite`, a more advanced fork than the one holding this
+plan's own original prose) actually built `PluginInterface`/
+`ThemeInterface`/`PluginRegistry`/`ThemeRegistry` — real code, read in
+full and traced call-site by call-site, not taken at face value.
+Verdict: real, reusable prior art for the JSON manifest shape and
+Doctrine-migrations-per-plugin design, but the interface design itself
+doesn't hold up — both interfaces were written in one commit, never
+touched again, and their own test helper's docblock admits "unused
+inside this repository — there are no in-tree plugins yet." Traced every
+call site of `getId()`/`getVersion()`/`getName()`/`getParentId()`/
+`loadParentCss()`/`getAssetDir()`/`getLocalHeadTemplate()`: zero, across
+the whole codebase — every real consumer reads the same data from the
+manifest DTO instead, meaning the same facts are captured twice for no
+operational reason. Once those dead methods are dropped,
+`PluginInterface` and `ThemeInterface` reduce to an identical shape,
+overturning that reference's own "keep them separate" design. Its
+`boot(ContainerInterface $container)` hands a plugin the entire,
+unrestricted app container (confirmed: no scoped binding exists) and
+directly contradicts this fork's own established precedent for
+plugin-facing classes (`Admin/PluginMaintain.php`'s constructor takes 2
+narrow, named collaborators, never the container). PSR-4 autoloading is
+parsed into the manifest but never actually wired — confirmed
+unimplemented even there.
+
+*Recommended design, adapted rather than copied*: one shared
+`PluginConfig\ExtensionInterface` for plugins and themes (not two — see
+the dead-method finding above), a narrow `ExtensionContext` SDK object
+passed to `boot()` instead of the raw container (its full accessor list
+is sized from a frequency survey of what real plugins actually call —
+`template()`, `config()`, `currentUser()`, `lang()`, `url()`,
+`redirect()`, a namespaced `session()` store, and
+`dispatchNotify()`/`dispatchChange()` for a plugin publishing its own
+events to sibling plugins), no raw DB access at all (every real
+`pwg_query()` use case sampled — core-table reads, permission-filtered
+joins, config storage, plugin-owned schema/joins — already maps onto
+existing typed repositories, `ConfigService`, and ordinary
+Doctrine-entities-per-plugin; one real plugin's own code comment admits
+using raw SQL specifically "to bypass permission checks," a concrete
+argument against ever exposing it), core-data reads routed through
+new purpose-built read-only facades per domain rather than the existing
+105-method `CategoryService`/`ImageService` classes directly (most of
+those methods take other internal collaborators as parameters and many
+are unrestricted mutations — not a safe surface to expose whole), and a
+separate, shared "extensions" `EntityManager` (not the core one, and not
+one per plugin) so a metadata error in one plugin's entity can't take
+down every other active plugin's data access. JSON manifest format kept
+from the reference design; `opis/json-schema` and `composer/semver` are
+already resolved in `composer.lock` as transitive dependencies, nothing
+new to introduce. `PluginMaintain`/`ThemeMaintain` (already shipped,
+deliberately loosely-typed for 3rd-party back-compat) read as staging
+classes meant to be absorbed into the new interface's lifecycle methods,
+not permanent siblings. Full design detail, exact accessor signatures,
+and the still-open per-method facade-surface question live in the
+campaign's own plan file, not reproduced here. See Track B's own entry
+above for a related but explicitly **not** `P27`-scoped finding
+(`EventDispatcher` should move onto Symfony's, independent of and before
+this phase).
+
+**P28 — Layer decoupling + repository restructure** (drive the Deptrac
 ratchet to zero cross-cutting residue, then the repository restructure —
 web-root isolation, `public/` entry point, formerly its own phase). The
 web-root-isolation half was pulled forward and is done (see
 `docs/REFERENCE.md`'s Deployment section — `public/` is the real document
 root today). The 1 commit actually tagged `p32` (`chore(p32): delete doc/`)
 is an unrelated, narrow cleanup that borrowed the (old P32) tag, not phase
-work. Layer decoupling itself: not started (though Deptrac already reports
-0 violations today — whether that's "P29's ratchet reaching zero" or just
-"no violations have accumulated yet" hasn't been separately verified).
+work — that "P32" is a still-older, pre-consolidation number for this same
+phase, unrelated to and coincidentally matching this doc's own *current*
+P32 (Epoch J's CSS modernization phase, below); see "Real status vs.
+commit-tag labels" above for the same note. Layer decoupling itself: not
+started (though Deptrac already reports 0 violations today — whether
+that's "this phase's ratchet reaching zero" or just "no violations have
+accumulated yet" hasn't been separately verified).
 
-### Epoch J — Frontend (P30–P33) — not started as originally scoped
+### Epoch J — Frontend (P29–P32) — not started as originally scoped
 
 Sequenced after every backend phase above (Epochs G–I) so all frontend work
 lands last — see "Real status vs. commit-tag labels" for why these carry
 higher numbers than the backend phases that logically precede them.
 
-**P30 — Vite + TypeScript conversion** (real Vite entries beyond the
+**P29 — Vite + TypeScript conversion** (real Vite entries beyond the
 `noop`/`vitals` placeholders, JS → TS, jQuery removed entirely, a Lit
 component catalog). **Not started.** `vite.config.ts` still has only 2
 entries.
 
-**P31 — Inline JS extraction + `any` reduction** (`{footer_script}` inline
+**P30 — Inline JS extraction + `any` reduction** (`{footer_script}` inline
 blocks → real `.ts` modules, `getPageData<T>()`, TypeScript `any` driven to
 zero, real bundle budgets). **Not started** as originally scoped — the 52
 commits tagged `p25` are the PHP-side mixed-elimination work covered under
 Epoch F's P24 above, unrelated to this phase's actual frontend scope.
 
-**P32 — Template migration + asset pipeline** (Smarty → Latte →
+**P31 — Template migration + asset pipeline** (Smarty → Latte →
 `ViteManifest`, `<picture>` AVIF/WebP, ThumbHash placeholders). Not
 started — every controller still renders through Smarty; the one-line
 Latte render-call swap P22 set up for is still just potential energy.
-Depends on P30 for the Vite manifest its asset pipeline reads.
+Depends on P29 for the Vite manifest its asset pipeline reads.
 
-**P33 — CSS modernization + Tailwind** (dark mode, `@container` queries,
-`@layer` cascade). Not started — depends on P32's Latte templates existing
+**P32 — CSS modernization + Tailwind** (dark mode, `@container` queries,
+`@layer` cascade). Not started — depends on P31's Latte templates existing
 for Tailwind's `@source` scanning.
 
-## Greenfield tracks (T3, cuttable — outside the P0–P33 backbone)
+## Greenfield tracks (T3, cuttable — outside the P0–P32 backbone)
 
 T3·WEB (PWA, View Transitions, Speculation Rules, JSON-LD, SRI, resource
-hints — depends on P30/P32/P33), T3·AI (depends on P19/P25), and T3·RIDERS
+hints — depends on P29/P31/P32), T3·AI (depends on P19/P25), and T3·RIDERS
 (CQRS, libvips/HEIC, vector/CLIP search, tus uploads, webhooks, Fibers,
 Mercure, passkeys, OIDC, soft delete — each hosted on its own backbone
 phase) are all entirely cuttable, never gate a backbone commit, and are
@@ -968,7 +1217,7 @@ phase sections. If a specific comparison from that table is needed, it's
 recoverable from git history (`docs/PLAN-REPLAY.md` as it existed before
 this consolidation).
 
-## Execution approach for remaining phases (P24–P33)
+## Execution approach for remaining phases (P24–P32)
 
 Still the governing process for whoever picks up P24+:
 
@@ -984,18 +1233,18 @@ Still the governing process for whoever picks up P24+:
 6. **Documentation: extend `docs/REFERENCE.md`/`docs/PLAN.md`'s existing
    sections, don't create a new per-phase doc file.** The original plan
    (recovered from git history) had each remaining phase spinning up its
-   own doc (`docs/FRONTEND.md` at P30, `docs/API.md` at P25,
-   `docs/SECURITY.md` at P27, `docs/PLUGINS.md`/`docs/EVENTS.md`/JSON
-   schemas at P28, `docs/STRUCTURE.md` at P29, `docs/AI.md` for T3·AI) —
+   own doc (`docs/FRONTEND.md` at P29, `docs/API.md` at P25,
+   `docs/SECURITY.md` at P26, `docs/PLUGINS.md`/`docs/EVENTS.md`/JSON
+   schemas at P27, `docs/STRUCTURE.md` at P28, `docs/AI.md` for T3·AI) —
    that plan predates this consolidation and is superseded by its whole
    premise (18 drifting files reduced to 2). A future P24+ contributor
    should add a Development/Deployment subsection or a new phase entry,
    not reintroduce the fragmentation this consolidation just closed.
 
-**Risk register** (highest blast-radius remaining phases): P32 (Smarty →
+**Risk register** (highest blast-radius remaining phases): P31 (Smarty →
 Latte across ~140 templates) risks visual regressions — mitigated by the
 committed VR baselines + a11y gate + per-template review, same mechanism
-already in daily use. P28 (plugin/theme contracts, god-class decomposition)
+already in daily use. P27 (plugin/theme contracts, god-class decomposition)
 breaks external extensions by design — an accepted product decision, not
 an oversight; in-tree callers migrate in the same phase. Cross-cutting:
 MySQL 9.x is a non-LTS line — pin the exact server version, hedge via the
@@ -1078,7 +1327,7 @@ k6 run tests/Load/*.js                      # non-blocking, tests/Load/ doesn't 
 **Not in this list anymore**: `vendor/bin/psalm` (gating paused, `ADR-0026`
 — its resume condition has been met but gating hasn't been reconsidered,
 see `docs/REFERENCE.md`), `composer lint:latte`/`precompile:templates`
-(P32 hasn't started, Smarty is still the template engine), `tools/plan-lint`
+(P31 hasn't started, Smarty is still the template engine), `tools/plan-lint`
 (deleted along with `docs/plan/manifest.yaml` in this consolidation).
 
 **Real consequence of that last deletion, not just a doc note**: the
@@ -1128,7 +1377,7 @@ which means this consolidation directly verified it in code.
 | SEC-22 | P21 | Replace `phpinfo()` with curated server info | Done |
 | SEC-23 | P17 | SSRF hardening for the HTTP client | Done |
 | SEC-24 | P17 | Remove local-file read fallback in the HTTP client | Done |
-| SEC-25 | P18 | Session fixation: regenerate on privilege escalation | Done (P27 was meant to verify further; P27 not started, so only the P18 half is confirmed) |
+| SEC-25 | P18 | Session fixation: regenerate on privilege escalation | Done (P26 was meant to verify further; P26 not started, so only the P18 half is confirmed) |
 | SEC-26 | P16 | Validate locale before `include` in `LangService` | Done (confirmed — see Epoch D) |
 | SEC-27 | P18 | Auto-login key HMAC sha1→sha256 + `hash_equals()` | Done |
 | SEC-28 | P18 | `EphemeralKeyService` HMAC md5→sha256 + `hash_equals()` | Done |
@@ -1143,30 +1392,30 @@ which means this consolidation directly verified it in code.
 | SEC-37 | P25 | No object dumps in the REST error path | **Not started** (P25) |
 | SEC-38 | P25 | REST route authorization middleware | **Not started** (P25) |
 | SEC-39 | P25 | Validate `Content-Type: application/json` on REST bodies | **Not started** (P25) |
-| SEC-40 | P26 | Request DTOs as a hard input-validation gate | Real progress — see P26 above (not "0 remaining" verified) |
-| SEC-41 | P27 | Password hashing → Argon2id | **Not started** (P27) |
-| SEC-42 | P27 | CSRF middleware: remove `/admin*` exemption | **Not started** (P27) |
-| SEC-43 | P27 | No `Access-Control-Allow-Origin: *` on the OpenAPI spec endpoint | **Not started** (P27, depends on P25) |
-| SEC-44 | P27 | API rate limiting + rate-limit headers | **Not started** (P27; the `rate_limiter` cache pool is deliberately unbuilt pending this) |
-| SEC-45 | P27 | CSP violation reporting | **Not started** (P27) |
-| SEC-46 | P27 | Cross-Origin Isolation (COOP/COEP) | **Not started** (P27) |
-| SEC-47 | P27 | `Vary: Cookie` on permission-dependent responses | **Not started** (P27) |
-| SEC-48 | P32 | Default `allow_html_descriptions` to `false` | **Not started** (P32) |
-| SEC-49 | P28 | Remove `eval_visible` (plugin-facing half of SEC-15) | **Not started** (P28) |
+| SEC-40 | P24 | Request DTOs as a hard input-validation gate | Real progress — see P24 above (not "0 remaining" verified) |
+| SEC-41 | P26 | Password hashing → Argon2id | **Not started** (P26) |
+| SEC-42 | P26 | CSRF middleware: remove `/admin*` exemption | **Not started** (P26) |
+| SEC-43 | P26 | No `Access-Control-Allow-Origin: *` on the OpenAPI spec endpoint | **Not started** (P26, depends on P25) |
+| SEC-44 | P26 | API rate limiting + rate-limit headers | **Not started** (P26; the `rate_limiter` cache pool is deliberately unbuilt pending this) |
+| SEC-45 | P26 | CSP violation reporting | **Not started** (P26) |
+| SEC-46 | P26 | Cross-Origin Isolation (COOP/COEP) | **Not started** (P26) |
+| SEC-47 | P26 | `Vary: Cookie` on permission-dependent responses | **Not started** (P26) |
+| SEC-48 | P31 | Default `allow_html_descriptions` to `false` | **Not started** (P31) |
+| SEC-49 | P27 | Remove `eval_visible` (plugin-facing half of SEC-15) | **Not started** (P27) |
 | SEC-50 | P3 | CycloneDX SBOM generated as a CI artifact | Done (confirmed — `sbom` job in current CI list) |
 | SEC-51 | P3 | Pin GitHub Actions to commit SHAs | Done |
 | SEC-52 | P3 | OSV-Scanner over lockfiles in CI | Done |
 | SEC-53 | P3 | SLSA build provenance + attestations | Done |
 | SEC-54 | P4 | Sign container images + release artifacts (cosign/sigstore) | Done (confirmed — see `docs/REFERENCE.md`'s Deployment section) |
-| SEC-55 | P27 | OIDC SSO: PKCE + state/nonce + ID-token validation | **Not started** (P27) |
-| SEC-56 | P18 | GDPR data-subject endpoints behind re-auth + rate limit | **Not started** — `PrivacyService` doesn't exist (its REST exposure is P25/P32 scope, but the backend itself was P18 scope and isn't built either) |
+| SEC-55 | P26 | OIDC SSO: PKCE + state/nonce + ID-token validation | **Not started** (P26) |
+| SEC-56 | P18 | GDPR data-subject endpoints behind re-auth + rate limit | **Not started** — `PrivacyService` doesn't exist (its REST exposure is P25/P31 scope, but the backend itself was P18 scope and isn't built either) |
 | SEC-57 | P15 | Append-only / tamper-evident audit log | Done — `Piwigo\Audit\*` is real (see Epoch D) |
 | SEC-58 | P11 | Feature-flag changes authz-gated + audited | Partial — `FeatureFlag` is read-only by design, no mutation path exists yet to protect (a deliberate, documented non-gap, not an oversight) |
 | SEC-59 | T3·AI | MCP server: scoped read-only tokens | **Not started** (T3·AI, cuttable) |
 | SEC-60 | P7 | Worker-mode request isolation | **Not started** — see `docs/REFERENCE.md`'s "not built yet"; this is the FrankenPHP worker mode gap |
 | SEC-61 | P11 | Mercure topic authorization | **Not started** (T3 rider, hosted on P11) |
-| SEC-62 | P27 | Trusted Types | **Not started** (P27) |
-| SEC-63 | P27 | Fetch Metadata isolation | **Not started** (P27) |
+| SEC-62 | P26 | Trusted Types | **Not started** (P26) |
+| SEC-63 | P26 | Fetch Metadata isolation | **Not started** (P26) |
 | SEC-64 | P3 | OpenSSF Scorecard | Done |
 | SEC-65 | P25 | API `Idempotency-Key` replay store | **Not started** (P25) |
 
@@ -1178,7 +1427,7 @@ above already carries per-item status: every threat maps to at least one
 not mitigations, and intentionally don't appear in any threat row.
 Mitigations that aren't numbered items at all (nonce-based CSP, the PSR-18
 SSRF guard, DB-level account locking, dual passwords) belong to
-not-yet-started phases (P27) the same as their numbered siblings.
+not-yet-started phases (P26) the same as their numbered siblings.
 
 **Secrets & key management** (still accurate, not phase-dependent): DB
 credentials and the application `secret_key` live in `.env`, never
@@ -1187,6 +1436,6 @@ web-served. A single `secret_key` derives the HMACs for CSRF tokens
 **rotating it invalidates all three at once**, forcing re-login
 repo-wide; see `docs/REFERENCE.md`'s Secret rotation section. DB password
 rotation via MySQL dual passwords (`ALTER USER ... RETAIN CURRENT
-PASSWORD`) is P27 scope, not yet built — today's rotation path is the
+PASSWORD`) is P26 scope, not yet built — today's rotation path is the
 simpler "update env, roll deployment" sequence `docs/REFERENCE.md`
 documents.

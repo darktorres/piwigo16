@@ -15,6 +15,7 @@ use Piwigo\Config\CurrentConfig;
 use Piwigo\Event\BlockManager\BlockManagerApply;
 use Piwigo\Event\BlockManager\BlockManagerPrepareDisplay;
 use Piwigo\Menu\Event\BlockManagerRegisterBlocks;
+use Piwigo\Menu\Projection\MenubarBlocksPageContext;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Template\CurrentTemplate;
 
@@ -189,7 +190,7 @@ final class BlockManager
             }
         }
         $this->sort_blocks();
-        $template->assign('blocks', $this->display_blocks);
+        $template->assignContext(new MenubarBlocksPageContext($this->display_blocks));
         $template->assign_var_from_handle($var, 'menubar');
     }
 }

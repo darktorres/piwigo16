@@ -24,6 +24,8 @@ use Piwigo\Common\ValueObject\ImageId;
 use Piwigo\Config\ConfigService;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\DeploymentPolicy;
+use Piwigo\Controller\Projection\PictureContentPageContext;
+use Piwigo\Controller\Projection\PicturePageContext;
 use Piwigo\Controller\Request\PictureRequest;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\CurrentLogger;
@@ -788,21 +790,19 @@ final class PictureController implements ControllerInterface
             ->picture;
 
         // ---------------------------------------------------- navigation management
+        $nav = [];
         foreach (['first', 'previous', 'next', 'last', 'current'] as $which_image) {
             if (isset($picture[$which_image])) {
-                $template->assign(
-                    $which_image,
-                    array_merge(
-                        $picture[$which_image],
-                        [
-                            // Params slideshow was transmit to
-                            // navigation buttons
-                            'U_IMG' => $urlService->addUrlParams(
-                                $picture[$which_image]['url'],
-                                $slideshow_url_params
-                            ),
-                        ]
-                    )
+                $nav[$which_image] = array_merge(
+                    $picture[$which_image],
+                    [
+                        // Params slideshow was transmit to
+                        // navigation buttons
+                        'U_IMG' => $urlService->addUrlParams(
+                            $picture[$which_image]['url'],
+                            $slideshow_url_params
+                        ),
+                    ]
                 );
             }
         }
@@ -861,15 +861,14 @@ final class PictureController implements ControllerInterface
             }
         }
 
+        $u_slideshow_stop = null;
+        $u_slideshow_start = null;
+
         if ($slideshow) {
             $tpl_slideshow = [];
 
             // slideshow end
-            $template->assign(
-                [
-                    'U_SLIDESHOW_STOP' => $picture['current']['url'],
-                ]
-            );
+            $u_slideshow_stop = $picture['current']['url'];
 
             foreach (['repeat', 'play'] as $p) {
                 $var_name =
@@ -926,104 +925,93 @@ final class PictureController implements ControllerInterface
                           );
                 }
             }
-            $template->assign('slideshow', $tpl_slideshow);
+            $slideshow_nav = $tpl_slideshow;
         } elseif ($this->currentConfig->pictureSlideShowIcon()) {
-            $template->assign(
+            $u_slideshow_start = $urlService->addUrlParams(
+                $picture['current']['url'],
                 [
-                    'U_SLIDESHOW_START' => $urlService->addUrlParams(
-                        $picture['current']['url'],
-                        [
-                            'slideshow' => '',
-                        ]
-                    ),
+                    'slideshow' => '',
                 ]
             );
         }
 
-        $template->assign(
-            [
-                'SECTION_TITLE' => $section_context->sectionTitle,
-                'PHOTO' => $title_nb,
-                'IS_HOME' => ($section_context->section === Section::Categories and $page_category === null),
+        $section_title = $section_context->sectionTitle;
+        $photo = $title_nb;
+        $is_home = $section_context->section === Section::Categories && $page_category === null;
+        $level_separator = $this->currentConfig->levelSeparator();
+        $display_nav_buttons = $this->currentConfig->pictureNavigationIcons();
+        $display_nav_thumb = $this->currentConfig->pictureNavigationThumb();
 
-                'LEVEL_SEPARATOR' => $this->currentConfig->levelSeparator(),
-
-                'U_UP' => $url_up,
-                'DISPLAY_NAV_BUTTONS' => $this->currentConfig->pictureNavigationIcons(),
-                'DISPLAY_NAV_THUMB' => $this->currentConfig->pictureNavigationThumb(),
-            ]
-        );
-
+        $u_metadata = null;
         if ($this->currentConfig->pictureMetadataIcon()) {
-            $template->assign('U_METADATA', $url_metadata);
+            $u_metadata = $url_metadata;
         }
 
         // -------------------------------------------------- upper menu management
 
         // admin links
+        $u_set_as_representative = null;
+        $u_photo_admin = null;
+        $u_caddie = null;
+
         if ($this->accessControl->isAdmin()) {
             if ($page_category !== null and $this->currentConfig->pictureRepresentativeIcon()) {
-                $template->assign(
+                $u_set_as_representative = $urlService->addUrlParams(
+                    $url_self,
                     [
-                        'U_SET_AS_REPRESENTATIVE' => $urlService->addUrlParams(
-                            $url_self,
-                            [
-                                'action' => 'set_as_representative',
-                            ]
-                        ),
+                        'action' => 'set_as_representative',
                     ]
                 );
             }
 
             if ($this->currentConfig->pictureEditIcon()) {
-                $template->assign('U_PHOTO_ADMIN', $urlService->getRootUrl() . 'admin.php?page=photo-' . $image_id);
+                $u_photo_admin = $urlService->getRootUrl() . 'admin.php?page=photo-' . $image_id;
             }
 
             if ($this->currentConfig->pictureCaddieIcon()) {
-                $template->assign(
-                    'U_CADDIE',
-                    $urlService->addUrlParams($url_self, [
-                        'action' => 'add_to_caddie',
-                    ])
-                );
+                $u_caddie = $urlService->addUrlParams($url_self, [
+                    'action' => 'add_to_caddie',
+                ]);
             }
 
         }
 
         // favorite manipulation
+        $favorite = null;
         if (! $this->accessControl->isAGuest() and $this->currentConfig->pictureFavoriteIcon()) {
             // verify if the picture is already in the favorite of the
             // user
             $is_favorite = $this->userService->isFavorite($user->id, $image_id);
 
-            $template->assign(
-                'favorite',
-                [
-                    'IS_FAVORITE' => $is_favorite,
-                    'U_FAVORITE' => $urlService->addUrlParams(
-                        $url_self,
-                        [
-                            'action' => ! $is_favorite ? 'add_to_favorites' : 'remove_from_favorites',
-                        ]
-                    ),
-                ]
-            );
+            $favorite = [
+                'IS_FAVORITE' => $is_favorite,
+                'U_FAVORITE' => $urlService->addUrlParams(
+                    $url_self,
+                    [
+                        'action' => ! $is_favorite ? 'add_to_favorites' : 'remove_from_favorites',
+                    ]
+                ),
+            ];
         }
 
         // ------------------------------------------------------ picture information
-        $infos = [];
+        $info_author = null;
+        $info_creation_date = null;
+        $info_dimensions = null;
+        $info_filesize = null;
+        $comment_img = null;
 
         // legend
         $current_comment = $picture['current']['comment'] ?? null;
         if (is_string($current_comment) && $current_comment !== '' && $current_comment !== '0') {
             $descriptionEvent = $this->eventDispatcher->dispatchChange(new RenderElementDescription($current_comment, 'picture_page_element_description'));
-            $template->assign('COMMENT_IMG', $descriptionEvent->elementDescription);
+            $comment_img = $descriptionEvent->elementDescription;
         }
 
         // author
         $current_author = $picture['current']['author'] ?? null;
         if (is_string($current_author) && $current_author !== '' && $current_author !== '0') {
-            $infos['INFO_AUTHOR'] = $picture['current']['author'];
+            $info_author = $picture['current']['author'];
         }
 
         // creation date
@@ -1038,7 +1026,7 @@ final class PictureController implements ControllerInterface
                     'chronology_date' => explode('-', substr($date_creation, 0, 10)),
                 ]
             );
-            $infos['INFO_CREATION_DATE'] =
+            $info_creation_date =
               '<a href="' . $url . '" rel="nofollow">' . $val . '</a>';
         }
 
@@ -1055,28 +1043,27 @@ final class PictureController implements ControllerInterface
                 ),
             ]
         );
-        $infos['INFO_POSTED_DATE'] = '<a href="' . $url . '" rel="nofollow">' . $val . '</a>';
+        $info_posted_date = '<a href="' . $url . '" rel="nofollow">' . $val . '</a>';
 
         // size in pixels
         if ($picture['current']['src_image']->is_original() and isset($picture['current']['width'])) {
-            $infos['INFO_DIMENSIONS'] =
+            $info_dimensions =
               $picture['current']['width'] . '*' . $picture['current']['height'];
         }
 
         // filesize
         $current_filesize = $picture['current']['filesize'] ?? null;
         if (is_numeric($current_filesize) && (float) $current_filesize !== 0.0) {
-            $infos['INFO_FILESIZE'] = $this->lang->t('%d Kb', $picture['current']['filesize']);
+            $info_filesize = $this->lang->t('%d Kb', $picture['current']['filesize']);
         }
 
         // number of visits
-        $infos['INFO_VISITS'] = $picture['current']['hit'];
+        $info_visits = $picture['current']['hit'];
 
         // file
-        $infos['INFO_FILE'] = $picture['current']['file'];
+        $info_file = $picture['current']['file'];
 
-        $template->assign($infos);
-        $template->assign('display_info', $this->currentConfig->pictureInformations());
+        $display_info = $this->currentConfig->pictureInformations();
 
         // related tags
         $tags = $this->tagService
@@ -1157,36 +1144,36 @@ final class PictureController implements ControllerInterface
             }
         }
 
+        $pdf_viewer_filesize_threshold = null;
+        $pdf_nb_pages = null;
+
         if (in_array(strtolower(StringHelper::getExtension($picture['current']['file'])), ['pdf'], true)) {
-            $pdf_viewer_filesize_threshold = $this->currentConfig->pdfViewerFilesizeThreshold();
-            $template->assign(
-                [
-                    'PDF_VIEWER_FILESIZE_THRESHOLD' => $pdf_viewer_filesize_threshold * 1024,
-                    // Real bug, found while adding coverage for this branch:
-                    // $picture['current']['path'] is the raw images.path
-                    // column, root-relative (e.g. 'upload/2026/07/x.pdf'),
-                    // same as every other real filesystem read of this
-                    // column elsewhere in this codebase (e.g. SrcImage::
-                    // get_path()'s own `self::paths()->root .
-                    // $this->rel_path`). countPdfPages() calls is_file()/
-                    // is_readable() on whatever path it's given with no
-                    // root of its own, so passing the bare relative path
-                    // resolves against the PHP process's cwd -- the
-                    // directory of the executing front-controller script
-                    // (public/) under a real Apache/mod_php request, one
-                    // level below the real upload root -- silently
-                    // returning false (never a real page count) on every
-                    // live request; confirmed live via a real PDF upload.
-                    'PDF_NB_PAGES' => $this->imageService
-                        ->countPdfPages($this->paths->root . $picture['current']['path']),
-                ]
-            );
+            $pdf_viewer_filesize_threshold = $this->currentConfig->pdfViewerFilesizeThreshold() * 1024;
+            // Real bug, found while adding coverage for this branch:
+            // $picture['current']['path'] is the raw images.path
+            // column, root-relative (e.g. 'upload/2026/07/x.pdf'),
+            // same as every other real filesystem read of this
+            // column elsewhere in this codebase (e.g. SrcImage::
+            // get_path()'s own `self::paths()->root .
+            // $this->rel_path`). countPdfPages() calls is_file()/
+            // is_readable() on whatever path it's given with no
+            // root of its own, so passing the bare relative path
+            // resolves against the PHP process's cwd -- the
+            // directory of the executing front-controller script
+            // (public/) under a real Apache/mod_php request, one
+            // level below the real upload root -- silently
+            // returning false (never a real page count) on every
+            // live request; confirmed live via a real PDF upload.
+            $pdf_nb_pages = $this->imageService
+                ->countPdfPages($this->paths->root . $picture['current']['path']);
         }
 
         // maybe someone wants a special display (call it before
         // page_header so that they can add stylesheets)
         $contentEvent = $this->eventDispatcher->dispatchChange(new RenderElementContent('', $picture['current']));
-        $template->assign('ELEMENT_CONTENT', $contentEvent->content);
+        $element_content = $contentEvent->content;
+
+        $u_prefetch = null;
 
         $http_user_agent = $_SERVER['HTTP_USER_AGENT'] ?? '';
         $http_user_agent = is_string($http_user_agent) ? $http_user_agent : '';
@@ -1195,21 +1182,52 @@ final class PictureController implements ControllerInterface
             and $template->get_template_vars('U_PREFETCH') === null
             and ! str_contains($http_user_agent, 'Chrome/')) {
             $prefetch_deriv_type = $this->sessionService->getPictureDeriv() ?? $this->currentConfig->derivativeDefaultSize();
-            $template->assign(
-                'U_PREFETCH',
-                $picture['next']['derivatives'][$prefetch_deriv_type]->get_url()
-            );
+            $u_prefetch = $picture['next']['derivatives'][$prefetch_deriv_type]->get_url();
         }
 
-        $template->assign(
-            'U_CANONICAL',
-            $urlService->makePictureUrl(
-                [
-                    'image_id' => $picture['current']['id'],
-                    'image_file' => $picture['current']['file'],
-                ]
-            )
+        $u_canonical = $urlService->makePictureUrl(
+            [
+                'image_id' => $picture['current']['id'],
+                'image_file' => $picture['current']['file'],
+            ]
         );
+
+        $template->assignContext(new PicturePageContext(
+            navFirst: $nav['first'] ?? null,
+            navPrevious: $nav['previous'] ?? null,
+            navNext: $nav['next'] ?? null,
+            navLast: $nav['last'] ?? null,
+            navCurrent: $nav['current'] ?? null,
+            uSlideshowStop: $u_slideshow_stop,
+            slideshowNav: $slideshow_nav ?? null,
+            uSlideshowStart: $u_slideshow_start,
+            sectionTitle: $section_title,
+            photo: $photo,
+            isHome: $is_home,
+            levelSeparator: $level_separator,
+            uUp: $url_up,
+            displayNavButtons: $display_nav_buttons,
+            displayNavThumb: $display_nav_thumb,
+            uMetadata: $u_metadata,
+            uSetAsRepresentative: $u_set_as_representative,
+            uPhotoAdmin: $u_photo_admin,
+            uCaddie: $u_caddie,
+            favorite: $favorite,
+            commentImg: $comment_img,
+            infoAuthor: $info_author,
+            infoCreationDate: $info_creation_date,
+            infoPostedDate: $info_posted_date,
+            infoDimensions: $info_dimensions,
+            infoFilesize: $info_filesize,
+            infoVisits: $info_visits,
+            infoFile: $info_file,
+            displayInfo: $display_info,
+            pdfViewerFilesizeThreshold: $pdf_viewer_filesize_threshold,
+            pdfNbPages: $pdf_nb_pages,
+            elementContent: $element_content,
+            uPrefetch: $u_prefetch,
+            uCanonical: $u_canonical,
+        ));
 
         // +-------------------------------------------------------------+
         // |                          sub pages                           |
@@ -1331,8 +1349,9 @@ final class PictureController implements ControllerInterface
 
         $template = $this->currentTemplate->get();
 
+        $u_original = null;
         if ($show_original and isset($element_info['element_url'])) {
-            $template->assign('U_ORIGINAL', $element_info['element_url']);
+            $u_original = $element_info['element_url'];
         }
 
         $template->append('current', [
@@ -1346,13 +1365,12 @@ final class PictureController implements ControllerInterface
             ]
         );
 
-        $template->assign(
-            [
-                'ALT_IMG' => $element_info['file'],
-                'COOKIE_PATH' => new CookieService()
-                    ->cookiePath(),
-            ]
-        );
+        $template->assignContext(new PictureContentPageContext(
+            uOriginal: $u_original,
+            altImg: $element_info['file'],
+            cookiePath: new CookieService()
+                ->cookiePath(),
+        ));
         $event->content = $template->parse('default_content', true);
 
         return $event;

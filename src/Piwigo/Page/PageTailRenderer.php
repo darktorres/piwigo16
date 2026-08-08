@@ -16,6 +16,7 @@ use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Event\Location\LocBeginPageTail;
 use Piwigo\Event\Location\LocEndPageTail;
+use Piwigo\Page\Projection\PageTailPageContext;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Session\SessionService;
 use Piwigo\Template\CurrentTemplate;
@@ -87,24 +88,11 @@ final readonly class PageTailRenderer
 
         $this->eventDispatcher->dispatchNotify(new LocBeginPageTail());
 
-        $template->assign(
-            [
-                'VERSION' => $this->currentConfig->showVersion() ? AppInfo::VERSION : '',
-                'PHPWG_URL' => AppInfo::URL,
-                // web-vitals RUM beacon (docs/PLAN.md P1, item 11b) --
-                // fixed, non-hashed filename (vite.config.ts), so no
-                // manifest.json lookup is needed to reference it.
-                'VITALS_SCRIPT_URL' => $this->urlService->getRootUrl() . 'dist/vitals.js',
-            ]
-        );
-
         // --------------------------------------------------------------------- contact
 
+        $contactMail = null;
         if (! $this->accessLevelChecker->isAGuest()) {
-            $template->assign(
-                'CONTACT_MAIL',
-                (new UserRepository(EntityManagerFactory::build(DbConnection::build()), $this->eventDispatcher, $this->currentConfig))->getWebmasterMailAddress()
-            );
+            $contactMail = (new UserRepository(EntityManagerFactory::build(DbConnection::build()), $this->eventDispatcher, $this->currentConfig))->getWebmasterMailAddress();
         }
 
         $this->telemetrySender->send();
@@ -134,21 +122,29 @@ final readonly class PageTailRenderer
             );
         }
 
-        $template->assign('debug', $debug_vars);
-
         // ------------------------------------------------------------- mobile version
+        $toggleMobileThemeUrl = null;
         if (! self::emptyValue($this->currentConfig->mobilTheme()) && (DeviceHelper::getDevice($this->sessionService) !== 'desktop' || DeviceHelper::mobileTheme($this->sessionService, $this->currentConfig))) {
             $request_uri = $_SERVER['REQUEST_URI'] ?? '';
-            $template->assign(
-                'TOGGLE_MOBILE_THEME_URL',
-                $this->urlService->addUrlParams(
-                    htmlspecialchars(is_string($request_uri) ? $request_uri : ''),
-                    [
-                        'mobile' => DeviceHelper::mobileTheme($this->sessionService, $this->currentConfig) ? 'false' : 'true',
-                    ]
-                )
+            $toggleMobileThemeUrl = $this->urlService->addUrlParams(
+                htmlspecialchars(is_string($request_uri) ? $request_uri : ''),
+                [
+                    'mobile' => DeviceHelper::mobileTheme($this->sessionService, $this->currentConfig) ? 'false' : 'true',
+                ]
             );
         }
+
+        $template->assignContext(new PageTailPageContext(
+            version: $this->currentConfig->showVersion() ? AppInfo::VERSION : '',
+            phpwgUrl: AppInfo::URL,
+            // web-vitals RUM beacon (docs/PLAN.md P1, item 11b) -- fixed,
+            // non-hashed filename (vite.config.ts), so no manifest.json
+            // lookup is needed to reference it.
+            vitalsScriptUrl: $this->urlService->getRootUrl() . 'dist/vitals.js',
+            contactMail: $contactMail,
+            debug: $debug_vars,
+            toggleMobileThemeUrl: $toggleMobileThemeUrl,
+        ));
 
         $this->eventDispatcher->dispatchNotify(new LocEndPageTail());
         //

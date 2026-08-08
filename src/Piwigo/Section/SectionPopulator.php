@@ -32,6 +32,7 @@ use Piwigo\Permission\PermissionService;
 use Piwigo\Permission\SqlCondition;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Search\SearchService;
+use Piwigo\Section\Projection\SectionFavoritePageContext;
 use Piwigo\Section\Request\FavoritesActionRequest;
 use Piwigo\Session\SessionService;
 use Piwigo\Tag\TagService;
@@ -517,19 +518,16 @@ final readonly class SectionPopulator
                     );
 
                     if (count($page['items']) > 0) {
-                        $template->assign(
-                            'favorite',
-                            [
-                                'U_FAVORITE' => $this->urlService->addUrlParams(
-                                    $this->urlService->makeIndexUrl([
-                                        'section' => 'favorites',
-                                    ]),
-                                    [
-                                        'action' => 'remove_all_from_favorites',
-                                    ]
-                                ),
-                            ]
-                        );
+                        $template->assignContext(new SectionFavoritePageContext(
+                            removeAllUrl: $this->urlService->addUrlParams(
+                                $this->urlService->makeIndexUrl([
+                                    'section' => 'favorites',
+                                ]),
+                                [
+                                    'action' => 'remove_all_from_favorites',
+                                ]
+                            ),
+                        ));
                     }
                 }
             }

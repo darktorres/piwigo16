@@ -30,6 +30,7 @@ use Piwigo\Core\PageState;
 use Piwigo\Core\Paths;
 use Piwigo\Core\ProcessCache;
 use Piwigo\Core\TemplateInterface;
+use Piwigo\Core\TemplatePageContext;
 use Piwigo\Core\ThemeConfProviderInterface;
 use Piwigo\Core\TimingHelper;
 use Piwigo\Core\UrlServiceInterface;
@@ -705,6 +706,12 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
     public function assign($tpl_var, $value = null): void
     {
         $this->smarty->assign($tpl_var, $value);
+    }
+
+    #[Override]
+    public function assignContext(TemplatePageContext $context): void
+    {
+        $this->assign($context->toArray());
     }
 
     /**

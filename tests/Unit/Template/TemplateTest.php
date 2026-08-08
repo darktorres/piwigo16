@@ -16,6 +16,7 @@ use Piwigo\Users\UserStatus;
 use Smarty\Smarty;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Core\Kernel;
+use Piwigo\Core\TemplatePageContext;
 use Piwigo\Tests\Support\LangTestFactory;
 use Piwigo\Core\Paths;
 use Piwigo\Tests\Support\TranslatorTestFactory;
@@ -125,6 +126,21 @@ function template_test_themes(Template $t): array
 
     return $narrowed;
 }
+
+test('assignContext flattens a TemplatePageContext to individually-assigned template vars', function (): void {
+    $template = TemplateTestFactory::build();
+    $context = new class () implements TemplatePageContext {
+        public function toArray(): array
+        {
+            return ['FOO' => 'bar', 'baz' => 42];
+        }
+    };
+
+    $template->assignContext($context);
+
+    expect($template->get_template_vars('FOO'))->toBe('bar')
+        ->and($template->get_template_vars('baz'))->toBe(42);
+});
 
 test('get_php_str_val evaluates a single-quoted PHP string literal', function (): void {
     expect(Template::get_php_str_val("'hello world'"))->toBe('hello world');

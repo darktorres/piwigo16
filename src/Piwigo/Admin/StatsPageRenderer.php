@@ -7,6 +7,7 @@ namespace Piwigo\Admin;
 use DateInterval;
 use DateTime;
 use InvalidArgumentException;
+use Piwigo\Admin\Projection\StatsPageContext;
 use Piwigo\Auth\AccessControl;
 use Piwigo\Config\ConfigService;
 use Piwigo\Config\CurrentConfig;
@@ -65,13 +66,6 @@ final class StatsPageRenderer
 
         $base_url = $urlService->getRootUrl() . 'admin.php?page=history';
 
-        $template->assign(
-            [
-                'U_HELP' => $urlService->getRootUrl() . 'admin/popuphelp.php?page=history',
-                'F_ACTION' => $base_url,
-            ]
-        );
-
         $actual_date = new DateTime();
         $actual_date->add(new DateInterval('PT1S'));
 
@@ -127,18 +121,20 @@ final class StatsPageRenderer
         // unreachable from this call site, not dead code to resurrect here.
         $stat_compare_year_displayed = $currentConfig->statCompareYearDisplayed();
 
-        $template->assign([
-            'compareYears' => self::getMonthOfLastYears($historyService, $stat_compare_year_displayed),
-            'monthStats' => self::getMonthStats($historyService),
-            'lastHours' => $last_hours,
-            'lastDays' => $last_days,
-            'lastMonths' => $last_months,
-            'lastYears' => $last_years,
-            'langCode' => $currentUser->get()
-                ->language->value,
-            'month_labels' => join('~', array_filter($lang_month, is_string(...))),
-            'ADMIN_PAGE_TITLE' => $lang->t('History'),
-        ]);
+        $template->assignContext(new StatsPageContext(
+            helpUrl: $urlService->getRootUrl() . 'admin/popuphelp.php?page=history',
+            formAction: $base_url,
+            compareYears: self::getMonthOfLastYears($historyService, $stat_compare_year_displayed),
+            monthStats: self::getMonthStats($historyService),
+            lastHours: $last_hours,
+            lastDays: $last_days,
+            lastMonths: $last_months,
+            lastYears: $last_years,
+            langCode: $currentUser->get()
+                ->language,
+            monthLabels: join('~', array_filter($lang_month, is_string(...))),
+            adminPageTitle: $lang->t('History'),
+        ));
 
         $template->assign_var_from_handle('ADMIN_CONTENT', 'stats');
     }

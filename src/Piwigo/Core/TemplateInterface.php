@@ -37,6 +37,17 @@ interface TemplateInterface
      */
     public function assign(string|array $tpl_var, mixed $value = null): void;
 
+    /**
+     * Assigns every variable a typed `TemplatePageContext` carries in one
+     * call -- PHP has no real method overloading, so this is a distinct
+     * method rather than a literal `assign()` overload, but it plays that
+     * role at every real call site: a page/renderer builds one typed
+     * context object instead of a loose sequence of individual assign()
+     * calls, and this is the one place that flattens it down to the flat
+     * array Smarty itself requires.
+     */
+    public function assignContext(TemplatePageContext $context): void;
+
     public function append(string $tpl_var, mixed $value = null, bool $merge = false): void;
 
     public function assign_var_from_handle(string $varname, string $handle): bool;

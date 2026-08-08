@@ -6,6 +6,8 @@ namespace Piwigo\Category;
 
 use DateTimeImmutable;
 use Piwigo\Cache\CachePools;
+use Piwigo\Category\Projection\CategoryCatsNavbarPageContext;
+use Piwigo\Category\Projection\CategoryCatsPageContext;
 use Piwigo\Category\Projection\RandomImageCategoryQuery;
 use Piwigo\Common\Enum\Section;
 use Piwigo\Common\ValueObject\CategoryId;
@@ -431,11 +433,11 @@ final readonly class CategoryCatsRenderer
             $derivativeParams = $this->eventDispatcher->dispatchChange(new GetIndexAlbumDerivativeParams($this->imageStdParams->get_by_type(ImageStdParams::THUMB)))->params;
             $tplThumbnailsVarSelection = $this->eventDispatcher->dispatchChange(new LocEndIndexCategoryThumbnails($tplThumbnailsVarSelection))
                 ->tplThumbnailsVar;
-            $template->assign([
-                'maxRequests' => $this->currentConfig->maxRequests(),
-                'category_thumbnails' => $tplThumbnailsVarSelection,
-                'derivative_params' => $derivativeParams,
-            ]);
+            $template->assignContext(new CategoryCatsPageContext(
+                maxRequests: $this->currentConfig->maxRequests(),
+                categoryThumbnails: $tplThumbnailsVarSelection,
+                derivativeParams: $derivativeParams,
+            ));
 
             $template->assign_var_from_handle('CATEGORIES', 'index_category_thumbnails');
 
@@ -449,7 +451,7 @@ final readonly class CategoryCatsRenderer
                     ->createNavigationBar($this->urlService->duplicateIndexUrl([], ['startcat']), $totalCategories, $startcat, $nbCategoriesPage, true, 'startcat');
             }
 
-            $template->assign('cats_navbar', $catsNavigationBar);
+            $template->assignContext(new CategoryCatsNavbarPageContext($catsNavigationBar));
         }
 
         TimingHelper::debug('end CategoryCatsRenderer::render()', $this->pageState);

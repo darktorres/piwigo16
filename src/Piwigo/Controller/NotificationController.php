@@ -10,6 +10,7 @@ use Piwigo\Auth\AccessLevelChecker;
 use Piwigo\Bootstrap\PageTail;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\DeploymentPolicy;
+use Piwigo\Controller\Projection\NotificationPageContext;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\CurrentLogger;
 use Piwigo\Core\FilterState;
@@ -104,12 +105,10 @@ final class NotificationController implements ControllerInterface
             'notification' => 'notification.tpl',
         ]);
 
-        $template->assign(
-            [
-                'U_FEED' => $feed_url,
-                'U_FEED_IMAGE_ONLY' => $feed_image_only_url,
-            ]
-        );
+        $template->assignContext(new NotificationPageContext(
+            feedUrl: $feed_url,
+            feedImageOnlyUrl: $feed_image_only_url,
+        ));
 
         $themeconf = $template->get_template_vars('themeconf');
         $themeconf = is_array($themeconf) ? $themeconf : [];

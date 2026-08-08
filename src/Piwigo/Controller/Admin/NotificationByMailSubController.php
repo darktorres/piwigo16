@@ -11,6 +11,10 @@ use Piwigo\Admin\Tabsheet;
 use Piwigo\Auth\AccessControl;
 use Piwigo\Config\ConfigService;
 use Piwigo\Config\CurrentConfig;
+use Piwigo\Controller\Admin\Projection\NotificationByMailFramePageContext;
+use Piwigo\Controller\Admin\Projection\NotificationByMailParamPageContext;
+use Piwigo\Controller\Admin\Projection\NotificationByMailSendPageContext;
+use Piwigo\Controller\Admin\Projection\NotificationByMailSubscribePageContext;
 use Piwigo\Controller\Admin\Request\NotificationByMailRequest;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\DateHelper;
@@ -109,6 +113,7 @@ final class NotificationByMailSubController implements AdminSubControllerInterfa
         $base_url = $this->urlService->getRootUrl() . 'admin.php';
         $this->coreTabs->setContext(new CoreTabsContext(baseUrl: $base_url));
         $must_repost = false;
+        $save_success = null;
 
         // +-----------------------------------------------------------------------+
         // | Check Access and exit when user status is not ok                      |
@@ -166,14 +171,10 @@ final class NotificationByMailSubController implements AdminSubControllerInterfa
                         }
                     }
 
-                    $template->assign(
-                        [
-                            'save_success' => $this->translator->plural(
-                                '%d parameter was updated.',
-                                '%d parameters were updated.',
-                                $updated_param_count
-                            ),
-                        ]
+                    $save_success = $this->translator->plural(
+                        '%d parameter was updated.',
+                        '%d parameters were updated.',
+                        $updated_param_count
                     );
                 }
 
@@ -216,15 +217,6 @@ final class NotificationByMailSubController implements AdminSubControllerInterfa
             ]
         );
 
-        $template->assign(
-            [
-                'PWG_TOKEN' => new CsrfService($this->currentConfig)
-                    ->getToken(),
-                'U_HELP' => $this->urlService->getRootUrl() . 'admin/popuphelp.php?page=notification_by_mail',
-                'F_ACTION' => $base_url . $this->urlService->getQueryStringDiff([]),
-            ]
-        );
-
         if ($this->accessControl->isAuthorizeStatus(AccessLevel::Webmaster)) {
             // TabSheet
             $tabsheet = new Tabsheet();
@@ -233,6 +225,7 @@ final class NotificationByMailSubController implements AdminSubControllerInterfa
             $tabsheet->assign($this->currentTemplate);
         }
 
+        $repost_submit_name_value = null;
         if ($must_repost) {
             // Get name of submit button
             $repost_submit_name = '';
@@ -244,34 +237,22 @@ final class NotificationByMailSubController implements AdminSubControllerInterfa
                 $repost_submit_name = 'send_submit';
             }
 
-            $template->assign('REPOST_SUBMIT_NAME', $repost_submit_name);
+            $repost_submit_name_value = $repost_submit_name;
         }
 
         switch ($page_mode) {
             case 'param':
 
-                $template->assign(
-                    $page_mode,
-                    [
-                        'SEND_HTML_MAIL' => $this->currentConfig->nbmSendHtmlMail(),
-                        'SEND_MAIL_AS' => $this->currentConfig->nbmSendMailAs(),
-                        'SEND_DETAILED_CONTENT' => $this->currentConfig->nbmSendDetailedContent(),
-                        'COMPLEMENTARY_MAIL_CONTENT' => $this->currentConfig->nbmComplementaryMailContent(),
-                        'SEND_RECENT_POST_DATES' => $this->currentConfig->nbmSendRecentPostDates(),
-                    ]
-                );
+                $template->assignContext(new NotificationByMailParamPageContext(
+                    sendHtmlMail: $this->currentConfig->nbmSendHtmlMail(),
+                    sendMailAs: $this->currentConfig->nbmSendMailAs(),
+                    sendDetailedContent: $this->currentConfig->nbmSendDetailedContent(),
+                    complementaryMailContent: $this->currentConfig->nbmComplementaryMailContent(),
+                    sendRecentPostDates: $this->currentConfig->nbmSendRecentPostDates(),
+                ));
                 break;
 
             case 'subscribe':
-
-                $template->assign($page_mode, true);
-
-                $template->assign(
-                    [
-                        'L_CAT_OPTIONS_TRUE' => $this->lang->t('Subscribed'),
-                        'L_CAT_OPTIONS_FALSE' => $this->lang->t('Unsubscribed'),
-                    ]
-                );
 
                 $data_users = $nbmSender->getUserNotifications('subscribe');
 
@@ -292,14 +273,14 @@ final class NotificationByMailSubController implements AdminSubControllerInterfa
                         }
                     }
                 }
-                $template->assign(
-                    [
-                        'category_option_true' => $opt_true,
-                        'category_option_true_selected' => $opt_true_selected,
-                        'category_option_false' => $opt_false,
-                        'category_option_false_selected' => $opt_false_selected,
-                    ]
-                );
+                $template->assignContext(new NotificationByMailSubscribePageContext(
+                    lCatOptionsTrue: $this->lang->t('Subscribed'),
+                    lCatOptionsFalse: $this->lang->t('Unsubscribed'),
+                    categoryOptionTrue: $opt_true,
+                    categoryOptionTrueSelected: $opt_true_selected,
+                    categoryOptionFalse: $opt_false,
+                    categoryOptionFalseSelected: $opt_false_selected,
+                ));
                 $template->assign_var_from_handle('DOUBLE_SELECT', 'double_select');
                 break;
 
@@ -340,27 +321,37 @@ final class NotificationByMailSubController implements AdminSubControllerInterfa
                         }
                     }
                 }
-                $template->assign($page_mode, $tpl_var);
-
                 // auth_key_duration is a plain int config value (see
                 // include/config_default.inc.php).
                 $auth_key_duration = $this->currentConfig->authKeyDuration();
                 $auth_key_duration_num = $auth_key_duration;
+                $auth_key_duration_value = null;
                 if ($auth_key_duration_num > 0) {
                     $auth_key_since = strtotime('now -' . $auth_key_duration_num . ' second');
                     // the relative time expression above is always syntactically valid
                     assert($auth_key_since !== false);
-                    $template->assign(
-                        'auth_key_duration',
-                        DateHelper::timeSince($auth_key_since, 'second', null, false)
-                    );
+                    $auth_key_duration_value = DateHelper::timeSince($auth_key_since, 'second', null, false);
                 }
+
+                $template->assignContext(new NotificationByMailSendPageContext(
+                    users: $tpl_var['users'],
+                    customizeMailContent: $tpl_var['CUSTOMIZE_MAIL_CONTENT'],
+                    authKeyDuration: $auth_key_duration_value,
+                ));
 
                 break;
 
         }
 
-        $template->assign('ADMIN_PAGE_TITLE', $this->lang->t('Send mail to users'));
+        $template->assignContext(new NotificationByMailFramePageContext(
+            saveSuccess: $save_success,
+            pwgToken: new CsrfService($this->currentConfig)
+                ->getToken(),
+            helpUrl: $this->urlService->getRootUrl() . 'admin/popuphelp.php?page=notification_by_mail',
+            fAction: $base_url . $this->urlService->getQueryStringDiff([]),
+            repostSubmitName: $repost_submit_name_value,
+            adminPageTitle: $this->lang->t('Send mail to users'),
+        ));
 
         // +-----------------------------------------------------------------------+
         // | Sending html code                                                     |

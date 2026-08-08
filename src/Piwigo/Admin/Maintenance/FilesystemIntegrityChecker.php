@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin\Maintenance;
 
+use Piwigo\Bootstrap\Projection\HeaderMessagesPageContext;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\CurrentConfigService;
 use Piwigo\Core\Lang;
@@ -116,12 +117,9 @@ final class FilesystemIntegrityChecker
             if (! file_exists($this->paths->root . $path)) {
                 $template = $this->currentTemplate->get();
 
-                $template->assign(
-                    'header_msgs',
-                    [
-                        $this->lang->t('Some photos are missing from your file system. Details provided by plugin Check Uploads'),
-                    ]
-                );
+                $template->assignContext(new HeaderMessagesPageContext([
+                    $this->lang->t('Some photos are missing from your file system. Details provided by plugin Check Uploads'),
+                ]));
 
                 return;
             }
@@ -133,12 +131,9 @@ final class FilesystemIntegrityChecker
         if (count($duplicate_paths) > 0) {
             $template = $this->currentTemplate->get();
 
-            $template->assign(
-                'header_msgs',
-                [
-                    $this->lang->t('We have found %d duplicate paths. Details provided by plugin Check Uploads', count($duplicate_paths)),
-                ]
-            );
+            $template->assignContext(new HeaderMessagesPageContext([
+                $this->lang->t('We have found %d duplicate paths. Details provided by plugin Check Uploads', count($duplicate_paths)),
+            ]));
 
             return;
         }

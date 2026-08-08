@@ -6,6 +6,7 @@ namespace Piwigo\Admin;
 
 use Piwigo\Admin\Extensions\ExtensionScanner;
 use Piwigo\Admin\Extensions\ExtensionType;
+use Piwigo\Admin\Projection\ThemesStandardPagesPageContext;
 use Piwigo\Admin\Request\ThemesStandardPagesSubmitRequest;
 use Piwigo\Auth\AccessControl;
 use Piwigo\Config\ConfigService;
@@ -107,6 +108,7 @@ final class ThemesStandardPagesPageRenderer
         }
 
         // Handle logo upload, allow png, jpg and svg
+        $save_error = null;
         if ($stdPagesSubmit->logoTmpName !== null) {
             $std_pgs_logo_tmp_name = $stdPagesSubmit->logoTmpName;
 
@@ -123,11 +125,7 @@ final class ThemesStandardPagesPageRenderer
             ];
 
             if (! is_string($mime_type) || ! isset($allowed_mimes[$mime_type])) {
-                $template->assign(
-                    [
-                        'save_error' => 'Invalid image file.',
-                    ]
-                );
+                $save_error = 'Invalid image file.';
             } else {
                 $upload_dir = $this->paths->siteLocal . 'logo';
                 if (FilesystemHelper::mkgetdir($upload_dir, $this->currentConfig, FilesystemHelper::MKGETDIR_DEFAULT & ~FilesystemHelper::MKGETDIR_DIE_ON_ERROR)) {
@@ -160,20 +158,12 @@ final class ThemesStandardPagesPageRenderer
                         fclose($logo_stream);
                         $this->configService->confUpdateParam('standard_pages_selected_logo_path', $relative_path, true);
                     } else {
-                        $template->assign(
-                            [
-                                'save_error' => "{$upload_dir}/{$logo_filename} " . $this->lang->t('no write access'),
-                            ]
-                        );
+                        $save_error = "{$upload_dir}/{$logo_filename} " . $this->lang->t('no write access');
                     }
                 } else {
-                    $template->assign(
-                        [
-                            'save_error' => sprintf(
-                                $this->lang->t('Add write access to the "%s" directory'),
-                                $upload_dir
-                            ),
-                        ]
+                    $save_error = sprintf(
+                        $this->lang->t('Add write access to the "%s" directory'),
+                        $upload_dir
                     );
                 }
             }
@@ -208,28 +198,25 @@ final class ThemesStandardPagesPageRenderer
             : null;
 
         // Send all info to template
-        $template->assign(
-            [
-                'use_standard_pages' => $this->currentConfig->useStandardPages(),
-                'std_pgs_selected_logo' => $this->currentConfig->standardPagesSelectedLogo(),
-                'std_pgs_logo_options' => $std_pgs_logo_options,
-                'std_pgs_selected_skin' => $this->currentConfig->standardPagesSelectedSkin(),
-                'std_pgs_skin_options' => $std_pgs_skin_options,
-                'is_standard_pages_used' => $is_standard_pages_used,
-                'standard_pages_used_by' => $standard_pages_used_by,
-                'std_pgs_selected_logo_path' => $std_pgs_selected_logo_path,
-                'PWG_TOKEN' => new CsrfService($this->currentConfig)
-                    ->getToken(),
-            ]
-        );
-
-        $template->assign('isWebmaster', ($this->accessControl->isWebmaster()) ? 1 : 0);
+        $template->assignContext(new ThemesStandardPagesPageContext(
+            useStandardPages: $this->currentConfig->useStandardPages(),
+            stdPgsSelectedLogo: $this->currentConfig->standardPagesSelectedLogo(),
+            stdPgsLogoOptions: $std_pgs_logo_options,
+            stdPgsSelectedSkin: $this->currentConfig->standardPagesSelectedSkin(),
+            stdPgsSkinOptions: $std_pgs_skin_options,
+            isStandardPagesUsed: $is_standard_pages_used,
+            standardPagesUsedBy: $standard_pages_used_by,
+            stdPgsSelectedLogoPath: $std_pgs_selected_logo_path,
+            pwgToken: new CsrfService($this->currentConfig)
+                ->getToken(),
+            isWebmaster: ($this->accessControl->isWebmaster()) ? 1 : 0,
+            adminPageTitle: $this->lang->t('Themes'),
+            saveError: $save_error,
+        ));
 
         $template->set_filenames([
             'themes' => 'themes_standard_pages.tpl',
         ]);
-
-        $template->assign('ADMIN_PAGE_TITLE', $this->lang->t('Themes'));
 
         $template->assign_var_from_handle('ADMIN_CONTENT', 'themes');
     }

@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin;
 
+use Piwigo\Admin\Projection\MenubarPageContext;
+use Piwigo\Admin\Projection\MenubarSaveSuccessPageContext;
 use Piwigo\Admin\Request\MenubarSubmitRequest;
 use Piwigo\Auth\AccessControl;
 use Piwigo\Cache\CachePools;
@@ -103,11 +105,7 @@ final class MenubarPageRenderer
             // write happened to clear the pool.
             CachePools::config()->clear();
 
-            $template->assign(
-                [
-                    'save_success' => $lang->t('Order of menubar items has been updated successfully.'),
-                ]
-            );
+            $template->assignContext(new MenubarSaveSuccessPageContext($lang->t('Order of menubar items has been updated successfully.')));
         }
 
         self::makeConsecutive($mb_conf);
@@ -123,12 +121,11 @@ final class MenubarPageRenderer
         }
 
         $action = $urlService->getRootUrl() . 'admin.php?page=menubar';
-        $template->assign([
-            'F_ACTION' => $action,
-        ]);
-
-        $template->assign('isWebmaster', $accessControl->isWebmaster() ? 1 : 0);
-        $template->assign('ADMIN_PAGE_TITLE', $lang->t('Menu Management'));
+        $template->assignContext(new MenubarPageContext(
+            formAction: $action,
+            isWebmaster: $accessControl->isWebmaster(),
+            adminPageTitle: $lang->t('Menu Management'),
+        ));
 
         $template->set_filename('menubar_admin_content', 'menubar.tpl');
         $template->assign_var_from_handle('ADMIN_CONTENT', 'menubar_admin_content');

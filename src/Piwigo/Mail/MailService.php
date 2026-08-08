@@ -48,7 +48,10 @@ use Piwigo\Group\GroupEntity;
 use Piwigo\Lang\Translator;
 use Piwigo\Mail\Projection\EmailRecipient;
 use Piwigo\Mail\Projection\MailContent;
+use Piwigo\Mail\Projection\MailHeaderPageContext;
 use Piwigo\Mail\Projection\MailRecipient;
+use Piwigo\Mail\Projection\MailRuntimeTemplatePageContext;
+use Piwigo\Mail\Projection\MailTitlePageContext;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Session\SessionService;
 use Piwigo\Template\Template;
@@ -955,17 +958,15 @@ final class MailService implements MailerInterface
                 $galleryHomeUrl = $this->urlService
                     ->getGalleryHomeUrl();
 
-                $template->assign(
-                    [
-                        'GALLERY_URL' => $this->urlService
-                            ->addUrlParams($galleryHomeUrl, $addUrlParams),
-                        'GALLERY_TITLE' => $this->currentConfig->galleryTitle(),
-                        'VERSION' => $this->currentConfig->showVersion() ? AppInfo::VERSION : '',
-                        'PHPWG_URL' => AppInfo::URL,
-                        'CONTENT_ENCODING' => CharsetHelper::getPwgCharset(),
-                        'CONTACT_MAIL' => $confMail['email_webmaster'],
-                    ]
-                );
+                $template->assignContext(new MailHeaderPageContext(
+                    galleryUrl: $this->urlService
+                        ->addUrlParams($galleryHomeUrl, $addUrlParams),
+                    galleryTitle: $this->currentConfig->galleryTitle(),
+                    version: $this->currentConfig->showVersion() ? AppInfo::VERSION : '',
+                    phpwgUrl: AppInfo::URL,
+                    contentEncoding: CharsetHelper::getPwgCharset(),
+                    contactMail: is_string($confMail['email_webmaster']) ? $confMail['email_webmaster'] : '',
+                ));
 
                 if ($contentType === 'text/html') {
                     if ($template->smarty->templateExists('global-mail-css.tpl')) {
@@ -981,12 +982,10 @@ final class MailService implements MailerInterface
             }
 
             $template = $this->templateCache[$cacheKey]['theme'];
-            $template->assign(
-                [
-                    'MAIL_TITLE' => $args['mail_title'],
-                    'MAIL_SUBTITLE' => $args['mail_subtitle'],
-                ]
-            );
+            $template->assignContext(new MailTitlePageContext(
+                mailTitle: $args['mail_title'],
+                mailSubtitle: $args['mail_subtitle'],
+            ));
 
             // Header.
             $contents[$contentType] = $template->parse('mail_header', true);
@@ -1021,10 +1020,10 @@ final class MailService implements MailerInterface
                 }
                 if ($template->smarty->templateExists($tpl['filename'] . '.tpl')) {
                     $template->set_filename($tpl['filename'], $tpl['filename'] . '.tpl');
-                    if (isset($tpl['assign']) && ! self::emptyValue($tpl['assign'])) {
-                        $template->assign($tpl['assign']);
-                    }
-                    $template->assign('CONTENT', $mailContent);
+                    $template->assignContext(new MailRuntimeTemplatePageContext(
+                        extra: (isset($tpl['assign']) && ! self::emptyValue($tpl['assign'])) ? $tpl['assign'] : [],
+                        content: $mailContent,
+                    ));
                     $contents[$contentType] .= $template->parse($tpl['filename'], true);
                 } else {
                     $contents[$contentType] .= $mailContent;

@@ -13,6 +13,7 @@ use Piwigo\Bootstrap\PageTail;
 use Piwigo\Common\ValueObject\LangCode;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\DeploymentPolicy;
+use Piwigo\Controller\Projection\IdentificationPageContext;
 use Piwigo\Controller\Request\IdentificationSubmitRequest;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\CurrentLogger;
@@ -174,21 +175,14 @@ final class IdentificationController implements ControllerInterface
             'identification' => 'identification.tpl',
         ]);
 
-        $template->assign(
-            [
-                'U_REDIRECT' => $redirect_to,
-
-                'F_LOGIN_ACTION' => $urlService->getRootUrl() . 'identification.php',
-                'authorize_remembering' => $this->currentConfig->authorizeRemembering(),
-            ]
-        );
-
+        $register = null;
         if (! $this->currentConfig->galleryLocked() && $this->currentConfig->allowUserRegistration()) {
-            $template->assign('U_REGISTER', $urlService->getRootUrl() . 'register.php');
+            $register = $urlService->getRootUrl() . 'register.php';
         }
 
+        $lost_password = null;
         if (! $this->currentConfig->galleryLocked()) {
-            $template->assign('U_LOST_PASSWORD', $urlService->getRootUrl() . 'password.php');
+            $lost_password = $urlService->getRootUrl() . 'password.php';
         }
 
         $themeconf = $template->get_template_vars('themeconf');
@@ -223,19 +217,23 @@ final class IdentificationController implements ControllerInterface
             $language_options[$language_code] = $language_name;
         }
 
-        $template->assign([
-            'language_options' => $language_options,
-            'current_language' => $this->currentUser->get()
-                ->language->value,
-        ]);
-
         if (str_starts_with($this->currentUser->get()->language->value, 'fr')) {
             $help_link = 'https://upstream.example.invalid/help/fr/';
         } else {
             $help_link = 'https://upstream.example.invalid/help/';
         }
 
-        $template->assign('HELP_LINK', $help_link);
+        $template->assignContext(new IdentificationPageContext(
+            redirect: $redirect_to,
+            loginAction: $urlService->getRootUrl() . 'identification.php',
+            authorizeRemembering: $this->currentConfig->authorizeRemembering(),
+            register: $register,
+            lostPassword: $lost_password,
+            languageOptions: $language_options,
+            currentLanguage: $this->currentUser->get()
+                ->language->value,
+            helpLink: $help_link,
+        ));
 
         new PageHeaderRenderer()
             ->render($title, $this->eventDispatcher, $this->pageState, $this->currentTemplate, $this->currentConfig);

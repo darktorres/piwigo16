@@ -762,21 +762,28 @@ final class PictureController implements ControllerInterface
          * PicturePicturesData::$picture is deliberately loose
          * (array<mixed>, matching the reference) -- restate the shape a
          * well-behaved plugin is expected to preserve: one images-table
-         * row (string|null columns) per navigation slot, plus the
+         * row (matching Image\Projection\Image::toArray()'s own real,
+         * authoritative return shape -- id/hit/width/height/filesize are
+         * genuinely typed int|null there, not the string|null a raw DB
+         * row would have; this docblock previously claimed the latter,
+         * a stale mismatch real enough to hide a live bug: PicturePageContext
+         * ::$infoVisits expects a string, and PHPStan trusted this
+         * docblock's wrong `hit: string` claim instead of flagging the
+         * real int flowing in uncast) per navigation slot, plus the
          * computed fields set on $row above.
          *
          * @var array<string, array{
-         *     id: string,
+         *     id: int,
          *     file: string,
          *     path: string,
          *     comment: string|null,
          *     author: string|null,
          *     date_creation: string|null,
-         *     date_available: string,
-         *     width: string|null,
-         *     height: string|null,
-         *     hit: string,
-         *     filesize: string|null,
+         *     date_available: string|null,
+         *     width: int|null,
+         *     height: int|null,
+         *     hit: int,
+         *     filesize: int|null,
          *     src_image: SrcImage,
          *     derivatives: array<string, DerivativeImage>,
          *     url: string,
@@ -815,7 +822,6 @@ final class PictureController implements ControllerInterface
 
             if ($this->currentConfig->isFormatsEnabled()) {
                 $picture_id = $picture['current']['id'];
-                $picture_id = is_numeric($picture_id) ? (int) $picture_id : 0;
                 $formats = array_map(
                     static fn (ImageFormat $format): array => $format->toArray(),
                     EntityManagerFactory::build($conn)->getRepository(ImageEntity::class)
@@ -1030,20 +1036,29 @@ final class PictureController implements ControllerInterface
               '<a href="' . $url . '" rel="nofollow">' . $val . '</a>';
         }
 
-        // date of availability
-        $val = DateHelper::formatDate($picture['current']['date_available']);
-        $url = $urlService->makeIndexUrl(
-            [
-                'chronology_field' => 'posted',
-                'chronology_style' => 'monthly',
-                'chronology_view' => 'list',
-                'chronology_date' => explode(
-                    '-',
-                    substr($picture['current']['date_available'], 0, 10)
-                ),
-            ]
-        );
-        $info_posted_date = '<a href="' . $url . '" rel="nofollow">' . $val . '</a>';
+        // date of availability -- date_available is nullable at the type
+        // level (ImageEntity's own docblock: graceful read-side null on a
+        // corrupted/zero-date legacy row), even though it's practically
+        // always present; PicturePageContext::$infoPostedDate stays a
+        // required string (this info row is unconditional in picture.tpl,
+        // unlike the optional INFO_CREATION_DATE above), so fall back to
+        // an empty string on that rare corrupted-data case instead of
+        // feeding formatDate()/substr() a null.
+        $date_available = $picture['current']['date_available'];
+        if (is_string($date_available) && $date_available !== '' && $date_available !== '0') {
+            $val = DateHelper::formatDate($date_available);
+            $url = $urlService->makeIndexUrl(
+                [
+                    'chronology_field' => 'posted',
+                    'chronology_style' => 'monthly',
+                    'chronology_view' => 'list',
+                    'chronology_date' => explode('-', substr($date_available, 0, 10)),
+                ]
+            );
+            $info_posted_date = '<a href="' . $url . '" rel="nofollow">' . $val . '</a>';
+        } else {
+            $info_posted_date = '';
+        }
 
         // size in pixels
         if ($picture['current']['src_image']->is_original() and isset($picture['current']['width'])) {
@@ -1057,8 +1072,16 @@ final class PictureController implements ControllerInterface
             $info_filesize = $this->lang->t('%d Kb', $picture['current']['filesize']);
         }
 
-        // number of visits
-        $info_visits = $picture['current']['hit'];
+        // number of visits -- ImageEntity::$hit is a real int
+        // (src/Piwigo/Image/ImageEntity.php:100); PicturePageContext::
+        // $infoVisits is a pre-formatted display string like its
+        // info_dimensions/info_filesize siblings above, so this needs
+        // the same explicit stringification they get implicitly from
+        // their own string-returning sources (real bug found live: a
+        // real picture.php request threw
+        // "PicturePageContext::__construct(): Argument #27 ($infoVisits)
+        // must be of type string, int given").
+        $info_visits = (string) $picture['current']['hit'];
 
         // file
         $info_file = $picture['current']['file'];
@@ -1272,7 +1295,7 @@ final class PictureController implements ControllerInterface
         $current_image_id = $picture['current']['id'];
         $this->historyService
             ->logVisit(
-                is_numeric($current_image_id) ? (int) $current_image_id : null,
+                $current_image_id,
                 'picture',
                 section: $section_context->section->value,
                 category: $section_context->category,
@@ -1354,7 +1377,24 @@ final class PictureController implements ControllerInterface
             $u_original = $element_info['element_url'];
         }
 
+        // Real bug found live: this listener fires from the
+        // dispatchChange() call in __invoke() *before* that method's own
+        // later assignContext(new PicturePageContext(...)) ever assigns
+        // the full $picture['current'] data (TITLE_ESC, id, file, ...)
+        // onto the 'current' template variable. picture_content.tpl is
+        // parsed right here, synchronously, so at parse time 'current'
+        // only had whatever an earlier, unrelated append() happened to
+        // add -- picture_content.tpl's own {$current.TITLE_ESC} read
+        // then hit "Undefined array key" (confirmed live via a real
+        // picture.php request under this test env, which turns any PHP
+        // warning into a 500). $element_info *is* $picture['current']
+        // (see this method's own docblock), so merging it in here gives
+        // this fragment's own render the same data the outer page will
+        // eventually get -- __invoke()'s later assignContext() call is a
+        // full replace, not a merge, so this doesn't affect what the
+        // outer picture.tpl itself ends up seeing.
         $template->append('current', [
+            ...$element_info,
             'selected_derivative' => $selected_derivative,
             'unique_derivatives' => $unique_derivatives,
         ], true);

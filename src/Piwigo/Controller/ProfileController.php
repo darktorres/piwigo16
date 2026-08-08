@@ -15,6 +15,7 @@ use Piwigo\Bootstrap\PageTail;
 use Piwigo\Common\ValueObject\LangCode;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\DeploymentPolicy;
+use Piwigo\Controller\Projection\ProfilePageContext;
 use Piwigo\Controller\Request\ProfileActionRequest;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\AdminContext;
@@ -172,8 +173,6 @@ final class ProfileController implements ControllerInterface
                 $default_user_for_template[$k] = SqlDialect::getBoolean($default_user_for_template[$k]) ? 'true' : 'false';
             }
         }
-        $template->assign('DEFAULT_USER_VALUES', $default_user_for_template);
-
         // Reset to default (Guest) custom settings
         if ($profileAction->resetToDefault) {
             $userdata = array_merge($userdata, $default_user);
@@ -223,12 +222,6 @@ final class ProfileController implements ControllerInterface
             $language_options[$language_code] = $language_name;
         }
 
-        $template->assign([
-            'language_options' => $language_options,
-            'language_selection' => $this->currentUser->get()
-                ->language->value,
-        ]);
-
         // Get link to doc
         if (str_starts_with($this->currentUser->get()->language->value, 'fr')) {
             $help_link = 'https://upstream.example.invalid/help/fr/';
@@ -236,7 +229,13 @@ final class ProfileController implements ControllerInterface
             $help_link = 'https://upstream.example.invalid/help/';
         }
 
-        $template->assign('HELP_LINK', $help_link);
+        $template->assignContext(new ProfilePageContext(
+            defaultUserValues: $default_user_for_template,
+            languageOptions: $language_options,
+            languageSelection: $this->currentUser->get()
+                ->language,
+            helpLink: $help_link,
+        ));
 
         $this->eventDispatcher->dispatchNotify(new LocEndProfile());
         $this->htmlService

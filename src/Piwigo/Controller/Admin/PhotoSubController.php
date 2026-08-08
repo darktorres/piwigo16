@@ -13,6 +13,7 @@ use Piwigo\Admin\PictureModifyPageRenderer;
 use Piwigo\Admin\Tabsheet;
 use Piwigo\Auth\AccessControl;
 use Piwigo\Config\CurrentConfig;
+use Piwigo\Controller\Admin\Projection\PhotoSubControllerPageContext;
 use Piwigo\Controller\Admin\Request\PhotoDispatchRequest;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\HtmlRenderingInterface;
@@ -82,11 +83,9 @@ final class PhotoSubController implements AdminSubControllerInterface
         $tabsheet->select($tab, $this->eventDispatcher);
         $tabsheet->assign($this->currentTemplate);
 
-        $template->assign(
-            [
-                'ADMIN_PAGE_TITLE' => $this->lang->t('Edit photo') . ' <span class="image-id">#' . $get_image_id . '</span>',
-            ]
-        );
+        $template->assignContext(new PhotoSubControllerPageContext(
+            adminPageTitle: $this->lang->t('Edit photo') . ' <span class="image-id">#' . $get_image_id . '</span>',
+        ));
 
         if ($tab === 'properties') {
             $this->pictureModifyPageRenderer

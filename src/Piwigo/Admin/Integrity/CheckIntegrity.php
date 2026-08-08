@@ -14,6 +14,7 @@ namespace Piwigo\Admin\Integrity;
 use LogicException;
 use Piwigo\Admin\AdminUiHelper;
 use Piwigo\Admin\Integrity\Event\ListCheckIntegrity;
+use Piwigo\Admin\Integrity\Projection\CheckIntegrityPageContext;
 use Piwigo\Admin\Integrity\Request\C13yTreatmentRequest;
 use Piwigo\Core\AppInfo;
 use Piwigo\Core\Env;
@@ -260,8 +261,10 @@ final class CheckIntegrity
                 $template->append('c13y_list', $c13y_display);
             }
 
-            $template->assign('c13y_show_submit_automatic_correction', $submit_automatic_correction);
-            $template->assign('c13y_show_submit_ignore', $submit_ignore);
+            $template->assignContext(new CheckIntegrityPageContext(
+                showSubmitAutomaticCorrection: $submit_automatic_correction,
+                showSubmitIgnore: $submit_ignore,
+            ));
 
             $template->concat('ADMIN_CONTENT', $template->parse('check_integrity', true));
 

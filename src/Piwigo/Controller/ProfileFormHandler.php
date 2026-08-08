@@ -16,6 +16,7 @@ use Piwigo\Common\ValueObject\Email;
 use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Common\ValueObject\Username;
 use Piwigo\Config\CurrentConfig;
+use Piwigo\Controller\Projection\ProfilePageContext;
 use Piwigo\Controller\Request\ProfileFormSubmitRequest;
 use Piwigo\Core\AdminContext;
 use Piwigo\Core\DateHelper;
@@ -323,54 +324,32 @@ final class ProfileFormHandler
     {
         $template = $this->currentTemplate->get();
 
-        $template->assign(
-            'radio_options',
-            [
-                'true' => $this->lang->t('Yes'),
-                'false' => $this->lang->t('No'),
-            ]
-        );
+        $radio_options = [
+            'true' => $this->lang->t('Yes'),
+            'false' => $this->lang->t('No'),
+        ];
 
-        $template->assign(
-            [
-                $template_prefixe . 'USERNAME' => stripslashes(is_string($userdata['username']) ? $userdata['username'] : ''),
-                $template_prefixe . 'EMAIL' => @$userdata['email'],
-                $template_prefixe . 'ALLOW_USER_CUSTOMIZATION' => $this->currentConfig->allowUserCustomization(),
-                $template_prefixe . 'ACTIVATE_COMMENTS' => $this->currentConfig->activateComments(),
-                $template_prefixe . 'NB_IMAGE_PAGE' => $userdata['nb_image_page'],
-                $template_prefixe . 'RECENT_PERIOD' => $userdata['recent_period'],
-                $template_prefixe . 'EXPAND' => (bool) $userdata['expand'] ? 'true' : 'false',
-                $template_prefixe . 'NB_COMMENTS' => (bool) $userdata['show_nb_comments'] ? 'true' : 'false',
-                $template_prefixe . 'NB_HITS' => (bool) $userdata['show_nb_hits'] ? 'true' : 'false',
-                $template_prefixe . 'REDIRECT' => $url_redirect,
-                $template_prefixe . 'F_ACTION' => $url_action,
-            ]
-        );
-
-        $template->assign('template_selection', $userdata['theme']);
-        $template->assign('template_options', ThemeCatalog::getPwgThemes($this->eventDispatcher, $this->paths, $this->currentConfig, $this->lang));
+        $template_selection = $userdata['theme'];
+        $template_options = ThemeCatalog::getPwgThemes($this->eventDispatcher, $this->paths, $this->currentConfig, $this->lang);
 
         $profileFormSubmitRequest = ProfileFormSubmitRequest::fromGlobals();
 
+        $language_selection = null;
         $language_options = [];
         foreach (LangService::getLanguages($this->paths) as $language_code => $language_name) {
             if ($profileFormSubmitRequest->isSubmitPresent or (is_string($userdata['language']) and $userdata['language'] === $language_code)) {
-                $template->assign('language_selection', $language_code);
+                $language_selection = $language_code;
             }
             $language_options[$language_code] = $language_name;
         }
 
-        $template->assign('language_options', $language_options);
-
         $special_user = in_array($userdata['id'], [$this->currentConfig->guestId(), $this->currentConfig->defaultUserId()], true);
-        $template->assign('SPECIAL_USER', $special_user);
-        $template->assign('IN_ADMIN', $this->adminContext->isActive());
 
         // api key expiration choice
         $conn = DbConnection::build();
         $sqlDialectExecutor = new SqlDialectExecutor($conn);
         $dbnow_str = $sqlDialectExecutor->fetchTomorrow();
-        $template->assign('API_CURRENT_DATE', explode(' ', $dbnow_str)[0]);
+        $api_current_date = explode(' ', $dbnow_str)[0];
 
         $display_duration = [];
         $has_custom = false;
@@ -393,20 +372,43 @@ final class ProfileFormHandler
         if ($has_custom) {
             $display_duration['custom'] = $this->lang->t('Custom date');
         }
-        $template->assign('API_EXPIRATION', $display_duration);
-        $template->assign('API_SELECTED_EXPIRATION', array_key_first($display_duration));
-        $template->assign('API_CAN_MANAGE', 'pwg_ui' === ($_SESSION['connected_with'] ?? null));
 
         $current_user_email = $this->currentUser->get()
             ->email;
         $email_notifications_infos = $current_user_email !== null ?
           $this->lang->t('The email <em>%s</em> will be used to notify you when your API key is about to expire.', $current_user_email->value)
           : $this->lang->t('You have no email address, so you will not be notified when your API key is about to expire.');
-        $template->assign('API_EMAIL_INFOS', $email_notifications_infos);
 
         // allow plugins to add their own form data to content
         $this->eventDispatcher->dispatchNotify(new LoadProfileInTemplate($userdata));
 
-        $template->assign('PWG_TOKEN', new CsrfService($this->currentConfig)->getToken());
+        $template->assignContext(new ProfilePageContext(
+            templatePrefixe: $template_prefixe ?? '',
+            username: stripslashes(is_string($userdata['username']) ? $userdata['username'] : ''),
+            email: @$userdata['email'],
+            allowUserCustomization: $this->currentConfig->allowUserCustomization(),
+            activateComments: $this->currentConfig->activateComments(),
+            nbImagePage: $userdata['nb_image_page'],
+            recentPeriod: $userdata['recent_period'],
+            expand: (bool) $userdata['expand'] ? 'true' : 'false',
+            nbComments: (bool) $userdata['show_nb_comments'] ? 'true' : 'false',
+            nbHits: (bool) $userdata['show_nb_hits'] ? 'true' : 'false',
+            redirect: $url_redirect,
+            fAction: $url_action,
+            radioOptions: $radio_options,
+            templateSelection: $template_selection,
+            templateOptions: $template_options,
+            languageSelection: $language_selection,
+            languageOptions: $language_options,
+            specialUser: $special_user,
+            inAdmin: $this->adminContext->isActive(),
+            apiCurrentDate: $api_current_date,
+            apiExpiration: $display_duration,
+            apiSelectedExpiration: array_key_first($display_duration),
+            apiCanManage: 'pwg_ui' === ($_SESSION['connected_with'] ?? null),
+            apiEmailInfos: $email_notifications_infos,
+            pwgToken: new CsrfService($this->currentConfig)
+                ->getToken(),
+        ));
     }
 }

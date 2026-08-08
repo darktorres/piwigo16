@@ -16,7 +16,7 @@ use Piwigo\Common\ValueObject\Email;
 use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Common\ValueObject\Username;
 use Piwigo\Config\CurrentConfig;
-use Piwigo\Controller\Projection\ProfilePageContext;
+use Piwigo\Controller\Projection\ProfileFormPageContext;
 use Piwigo\Controller\Request\ProfileFormSubmitRequest;
 use Piwigo\Core\AdminContext;
 use Piwigo\Core\DateHelper;
@@ -382,7 +382,7 @@ final class ProfileFormHandler
         // allow plugins to add their own form data to content
         $this->eventDispatcher->dispatchNotify(new LoadProfileInTemplate($userdata));
 
-        $template->assignContext(new ProfilePageContext(
+        $template->assignContext(new ProfileFormPageContext(
             templatePrefixe: $template_prefixe ?? '',
             username: stripslashes(is_string($userdata['username']) ? $userdata['username'] : ''),
             email: @$userdata['email'],

@@ -187,7 +187,7 @@ final class IntroSubController implements AdminSubControllerInterface
             'intro' => 'intro.tpl',
         ]);
 
-        if ($this->currentConfig->showNewsletterSubscription() and (bool) $this->preferencesService->getParam('show_newsletter_subscription', true)) {
+        if ($this->currentConfig->showNewsletterSubscription() and ($this->preferencesService->getShowNewsletterSubscription() ?? true)) {
             $register_date = (new UserRepository(EntityManagerFactory::build($conn), $this->eventDispatcher, $this->currentConfig))
                 ->findEarliestRegistrationDate();
             $nb_cats = $this->categoryService->countAllCategories();

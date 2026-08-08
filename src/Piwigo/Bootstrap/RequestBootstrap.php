@@ -554,14 +554,8 @@ final class RequestBootstrap
 
         // template instance
         if (self::adminContext()->isActive()) {// Admin template
-            // getParam() has no return type declaration (its own value
-            // comes from CurrentUser::get()->preferences[$param], an
-            // untyped array<string, mixed>), so its return is inferred as
-            // mixed; narrow to the same CurrentConfig::adminTheme() fallback
-            // already passed as the default value.
             $admin_theme = new PreferencesService(new UserRepository(EntityManagerFactory::build($conn), self::eventDispatcher(), self::currentConfig()), self::currentUser())
-                ->getParam('admin_theme', self::currentConfig()->adminTheme());
-            $admin_theme = is_string($admin_theme) ? $admin_theme : self::currentConfig()->adminTheme();
+                ->getAdminThemePref() ?? self::currentConfig()->adminTheme();
             $template = new Template(self::currentConfig(), self::lang(), self::adminContext(), self::eventDispatcher(), self::pageState(), self::errorCollector(), self::processCache(), self::currentConfigService(), self::paths(), self::accessLevelChecker(), self::sessionService(), self::paths()->root . 'themes/admin', $admin_theme);
         } else { // Classic template
             $theme = self::currentUser()->get()->theme;

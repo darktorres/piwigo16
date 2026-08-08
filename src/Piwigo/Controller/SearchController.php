@@ -113,9 +113,7 @@ final class SearchController implements ControllerInterface
         if ($this->accessControl->isAGuest() or $this->accessControl->isGeneric() or ! (bool) $last_filters_conf) {
             $fields = $default_fields;
         } else {
-            $raw_fields = $this->preferencesService
-                ->getParam('gallery_search_filters', $default_fields);
-            $fields = is_array($raw_fields) ? $raw_fields : $default_fields;
+            $fields = $this->preferencesService->getGallerySearchFilters() ?? $default_fields;
         }
 
         $searchQuery = SearchQueryRequest::fromGlobals($this->inputValidator);

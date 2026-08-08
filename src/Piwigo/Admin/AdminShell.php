@@ -164,9 +164,8 @@ final class AdminShell
         // theme changer
         if ($adminShellRequest->changeThemePresent) {
             $admin_themes = ['roma', 'clear'];
-            $admin_theme_param = $this->preferencesService
-                ->getParam('admin_theme', $this->currentConfig->adminTheme());
-            $admin_theme_array = [is_string($admin_theme_param) ? $admin_theme_param : $this->currentConfig->adminTheme()];
+            $admin_theme_param = $this->preferencesService->getAdminThemePref() ?? $this->currentConfig->adminTheme();
+            $admin_theme_array = [$admin_theme_param];
             $result = array_diff(
                 $admin_themes,
                 $admin_theme_array

@@ -130,4 +130,118 @@ final class PreferencesServiceTest extends IntegrationTestCase
 
         self::assertSame(1, $this->service->getParam('a'));
     }
+
+    public function test_get_admin_theme_pref_returns_null_when_unset(): void
+    {
+        self::assertNull($this->service->getAdminThemePref());
+    }
+
+    public function test_get_admin_theme_pref_returns_the_stored_string(): void
+    {
+        $this->service->updateParam('admin_theme', 'clear');
+
+        self::assertSame('clear', $this->service->getAdminThemePref());
+    }
+
+    public function test_get_admin_theme_pref_narrows_a_non_string_value_to_null(): void
+    {
+        $this->service->updateParam('admin_theme', ['not', 'scalar']);
+
+        self::assertNull($this->service->getAdminThemePref());
+    }
+
+    public function test_get_user_manager_view_returns_null_when_unset(): void
+    {
+        self::assertNull($this->service->getUserManagerView());
+    }
+
+    public function test_get_user_manager_view_returns_the_stored_string(): void
+    {
+        $this->service->updateParam('user-manager-view', 'thumbnails');
+
+        self::assertSame('thumbnails', $this->service->getUserManagerView());
+    }
+
+    public function test_get_user_manager_pagination_returns_null_when_unset(): void
+    {
+        self::assertNull($this->service->getUserManagerPagination());
+    }
+
+    public function test_get_user_manager_pagination_returns_the_stored_value_as_int(): void
+    {
+        $this->service->updateParam('user-manager-pagination', 20);
+
+        self::assertSame(20, $this->service->getUserManagerPagination());
+    }
+
+    public function test_get_user_manager_pagination_narrows_a_non_numeric_value_to_null(): void
+    {
+        $this->service->updateParam('user-manager-pagination', 'not-a-number');
+
+        self::assertNull($this->service->getUserManagerPagination());
+    }
+
+    public function test_get_plugin_manager_view_returns_null_when_unset(): void
+    {
+        self::assertNull($this->service->getPluginManagerView());
+    }
+
+    public function test_get_plugin_manager_view_returns_the_stored_string(): void
+    {
+        $this->service->updateParam('plugin-manager-view', 'thumbnails');
+
+        self::assertSame('thumbnails', $this->service->getPluginManagerView());
+    }
+
+    public function test_get_promote_mobile_apps_returns_null_when_unset(): void
+    {
+        self::assertNull($this->service->getPromoteMobileApps());
+    }
+
+    public function test_get_promote_mobile_apps_returns_false_when_explicitly_stored_false(): void
+    {
+        // Explicitly false must surface as false, not be treated as
+        // "absent" and silently replaced by a caller's `?? true` default.
+        $this->service->updateParam('promote-mobile-apps', false);
+
+        self::assertFalse($this->service->getPromoteMobileApps());
+    }
+
+    public function test_get_promote_mobile_apps_casts_a_truthy_value_to_true(): void
+    {
+        $this->service->updateParam('promote-mobile-apps', 1);
+
+        self::assertTrue($this->service->getPromoteMobileApps());
+    }
+
+    public function test_get_show_newsletter_subscription_returns_null_when_unset(): void
+    {
+        self::assertNull($this->service->getShowNewsletterSubscription());
+    }
+
+    public function test_get_show_newsletter_subscription_returns_false_when_explicitly_stored_false(): void
+    {
+        $this->service->updateParam('show_newsletter_subscription', false);
+
+        self::assertFalse($this->service->getShowNewsletterSubscription());
+    }
+
+    public function test_get_gallery_search_filters_returns_null_when_unset(): void
+    {
+        self::assertNull($this->service->getGallerySearchFilters());
+    }
+
+    public function test_get_gallery_search_filters_returns_the_stored_array(): void
+    {
+        $this->service->updateParam('gallery_search_filters', ['tags', 'allwords']);
+
+        self::assertSame(['tags', 'allwords'], $this->service->getGallerySearchFilters());
+    }
+
+    public function test_get_gallery_search_filters_narrows_a_non_array_value_to_null(): void
+    {
+        $this->service->updateParam('gallery_search_filters', 'not-an-array');
+
+        self::assertNull($this->service->getGallerySearchFilters());
+    }
 }

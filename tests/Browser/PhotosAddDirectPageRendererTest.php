@@ -196,14 +196,14 @@ it('skips the mobile-app-promotion computation entirely once the user has dismis
         $page = H::navigateOk($page, '/admin.php?page=photos_add');
         $page->assertNoJavaScriptErrors();
 
-        // Can't tell this branch apart from the default (getParam() default
-        // true) one by rendered content alone: the fixture never has 3
-        // albums + 30 photos (see this class's own render() comment), so
-        // PROMOTE_MOBILE_APPS ends up false either way and the
+        // Can't tell this branch apart from the default (getPromoteMobileApps()
+        // ?? true, true) one by rendered content alone: the fixture never
+        // has 3 albums + 30 photos (see this class's own render() comment),
+        // so PROMOTE_MOBILE_APPS ends up false either way and the
         // {if $PROMOTE_MOBILE_APPS} block in photos_add_direct.tpl is
         // absent regardless. What this test actually proves is the
-        // `getParam('promote-mobile-apps', true) === false` short-circuit
-        // itself -- the real behavioral difference is that render() skips
+        // `getPromoteMobileApps() ?? true === false` short-circuit itself
+        // -- the real behavioral difference is that render() skips
         // findEarliestRegistrationDate()/countAllCategories()/
         // countAllImages() entirely rather than computing and discarding a
         // false result, which a clean (no server error) page load with the
@@ -214,7 +214,7 @@ it('skips the mobile-app-promotion computation entirely once the user has dismis
         // No pwg.users.preferences.delete WS method exists to unset the key
         // outright -- setting it back to the literal default (true) is
         // behaviorally identical to the pristine unset state, since
-        // getParam()'s own default is also true.
+        // getPromoteMobileApps() ?? true's own default is also true.
         H::wsCall($page, 'pwg.users.preferences.set', ['param' => 'promote-mobile-apps', 'value' => 'true']);
     }
 });

@@ -253,8 +253,7 @@ final class PluginsInstalledPageRenderer
                 'max_inactive_before_hide' => $pluginsDisplay->showInactive ? 999 : 8,
                 'isWebmaster' => ($accessControl->isWebmaster()) ? 1 : 0,
                 'ADMIN_PAGE_TITLE' => $lang->t('Plugins'),
-                'view_selector' => $preferencesService
-                    ->getParam('plugin-manager-view', 'classic'),
+                'view_selector' => $preferencesService->getPluginManagerView() ?? 'classic',
                 'CONF_ENABLE_EXTENSIONS_INSTALL' => $currentConfig->enableExtensionsInstall(),
             ]
         );

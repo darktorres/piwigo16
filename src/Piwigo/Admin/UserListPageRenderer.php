@@ -210,14 +210,15 @@ final class UserListPageRenderer
         $template->assign('groups_arr_name', implode(',', $groups_arr_name));
         $template->assign('guest_id', $guest_id);
 
-        $template->assign('view_selector', $preferencesService->getParam('user-manager-view', 'line'));
+        $view_selector = $preferencesService->getUserManagerView() ?? 'line';
+        $template->assign('view_selector', $view_selector);
 
-        if ($preferencesService->getParam('user-manager-view', 'line') === 'line') {
+        if ($view_selector === 'line') {
             // Show 5 users by default
-            $template->assign('pagination', $preferencesService->getParam('user-manager-pagination', 5));
+            $template->assign('pagination', $preferencesService->getUserManagerPagination() ?? 5);
         } else {
             // Show 10 users by default
-            $template->assign('pagination', $preferencesService->getParam('user-manager-pagination', 10));
+            $template->assign('pagination', $preferencesService->getUserManagerPagination() ?? 10);
         }
 
         if (self::webmasterIdIsLocal($paths)) {

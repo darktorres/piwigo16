@@ -195,10 +195,10 @@ final class ThemesNewPageRenderer
             $this->pageState->addError($this->lang->t('Can\'t connect to server.'));
         }
 
-        $admin_theme_pref = $this->preferencesService->getParam('admin_theme', $this->currentConfig->adminTheme());
+        $admin_theme_pref = $this->preferencesService->getAdminThemePref() ?? $this->currentConfig->adminTheme();
         $template->assign(
             'default_screenshot',
-            $this->urlService->getRootUrl() . 'themes/admin/' . (is_string($admin_theme_pref) ? $admin_theme_pref : $this->currentConfig->adminTheme()) . '/images/missing_screenshot.png'
+            $this->urlService->getRootUrl() . 'themes/admin/' . $admin_theme_pref . '/images/missing_screenshot.png'
         );
         $template->assign('ADMIN_PAGE_TITLE', $this->lang->t('Themes'));
 

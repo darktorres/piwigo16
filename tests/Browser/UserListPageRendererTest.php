@@ -185,9 +185,9 @@ it('defaults to line-view pagination of 5 for an admin with no saved view prefer
         $page = H::loginAsAdmin($this);
         $page = H::navigateOk($page, '/admin.php?page=user_list');
 
-        // getParam('user-manager-view', 'line') defaults to 'line' when
-        // unset -> the 'line' branch's own default pagination value (5)
-        // applies; both are rendered verbatim into a JS const.
+        // getUserManagerView() ?? 'line' defaults to 'line' when unset ->
+        // the 'line' branch's own default pagination value (5) applies;
+        // both are rendered verbatim into a JS const.
         $page->assertSourceHas("const view_selector = 'line';");
         $page->assertSourceHas("const pagination = '5';");
     } finally {

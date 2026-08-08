@@ -63,7 +63,7 @@ use Piwigo\Db\EntityManagerFactory;
 // resolve against the real, git-tracked themes/ directory this
 // project ships (whatever the test runner's cwd happens to be), and
 // ExtensionScanner::scanTheme() falls back to a real
-// Piwigo\Users\PreferencesService(...)->getParam() DB read whenever a
+// Piwigo\Users\PreferencesService(...)->getAdminThemePref() DB read whenever a
 // theme directory has no screenshot.png (true of themes/default/ here) --
 // a hidden DB dependency getMissingExtensions() would otherwise trip
 // over purely as a side effect of iterating ExtensionType::cases().
@@ -154,7 +154,7 @@ function extensionUpdateChecker(): ExtensionUpdateChecker
     // real, shared CurrentConfigTestFactory::get() (reflecting this file's own
     // beforeEach()-booted fixture Paths) and CurrentUserTestFactory::get() --
     // not a fresh, disconnected instance -- for scan()'s own themesDir()
-    // lookup and PreferencesService::getParam() admin_theme fallback to
+    // lookup and PreferencesService::getAdminThemePref() fallback to
     // resolve correctly. Found live: a fresh CurrentConfig here silently
     // pointed scan() at the real project themes/ directory instead of
     // the disposable fixture root, and a fresh, never-.set() CurrentUser

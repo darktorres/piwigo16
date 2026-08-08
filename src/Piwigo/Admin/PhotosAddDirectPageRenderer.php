@@ -122,7 +122,7 @@ final class PhotosAddDirectPageRenderer
             $this->redirectService->redirect($this->urlService->getRootUrl() . 'admin.php?page=batch_manager&filter=prefilter-caddie');
         }
 
-        if ((bool) $this->preferencesService->getParam('promote-mobile-apps', true)) {
+        if ($this->preferencesService->getPromoteMobileApps() ?? true) {
             $register_date = (new UserRepository(EntityManagerFactory::build($conn), $this->eventDispatcher, $this->currentConfig))
                 ->findEarliestRegistrationDate();
             $nb_cats = new CategoryRepository(EntityManagerFactory::build($conn), $this->currentConfig)

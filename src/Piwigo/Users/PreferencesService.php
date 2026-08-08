@@ -66,9 +66,107 @@ final readonly class PreferencesService
         $this->save();
     }
 
+    /**
+     * P17-23 Phase 9: stays for the one genuinely dynamic real caller
+     * (`Admin\AdminShell`'s `'show_whats_new_' . $majorVersion`, a
+     * runtime-built key) -- every other real call site now has its own
+     * named, correctly-narrowed accessor below instead of re-checking
+     * `is_string()`/`is_array()`/casting to bool on this method's own
+     * `mixed` return.
+     */
     public function getParam(string $param, mixed $default = null): mixed
     {
         return $this->currentUser->get()
             ->preferences[$param] ?? $default;
+    }
+
+    /**
+     * `admin_theme` -- 4 real callers, all falling back to
+     * `CurrentConfig::adminTheme()` when unset or not a string.
+     */
+    public function getAdminThemePref(): ?string
+    {
+        $value = $this->currentUser->get()
+            ->preferences['admin_theme'] ?? null;
+
+        return is_string($value) ? $value : null;
+    }
+
+    /**
+     * `user-manager-view` -- `Admin\UserListPageRenderer`'s "line" vs
+     * other layout choice.
+     */
+    public function getUserManagerView(): ?string
+    {
+        $value = $this->currentUser->get()
+            ->preferences['user-manager-view'] ?? null;
+
+        return is_string($value) ? $value : null;
+    }
+
+    /**
+     * `user-manager-pagination` -- `Admin\UserListPageRenderer`'s own real
+     * caller applies 2 different fallbacks (5 for the "line" view, 10
+     * otherwise) depending on `getUserManagerView()`, so this stays
+     * nullable rather than baking in either one.
+     */
+    public function getUserManagerPagination(): ?int
+    {
+        $value = $this->currentUser->get()
+            ->preferences['user-manager-pagination'] ?? null;
+
+        return is_numeric($value) ? (int) $value : null;
+    }
+
+    /**
+     * `plugin-manager-view` -- `Admin\PluginsInstalledPageRenderer`'s
+     * "classic" vs other layout choice.
+     */
+    public function getPluginManagerView(): ?string
+    {
+        $value = $this->currentUser->get()
+            ->preferences['plugin-manager-view'] ?? null;
+
+        return is_string($value) ? $value : null;
+    }
+
+    /**
+     * `promote-mobile-apps` -- null only when the key is genuinely absent
+     * (matching the removed `getParam()` call's own `?? true` semantics);
+     * a present-but-falsy stored value (e.g. `false`/`0`) still surfaces
+     * as `false`, not silently replaced by the caller's default.
+     */
+    public function getPromoteMobileApps(): ?bool
+    {
+        $preferences = $this->currentUser->get()
+            ->preferences;
+
+        return array_key_exists('promote-mobile-apps', $preferences) ? (bool) $preferences['promote-mobile-apps'] : null;
+    }
+
+    /**
+     * `show_newsletter_subscription` -- same "null only when genuinely
+     * absent" contract as {@see getPromoteMobileApps()}.
+     */
+    public function getShowNewsletterSubscription(): ?bool
+    {
+        $preferences = $this->currentUser->get()
+            ->preferences;
+
+        return array_key_exists('show_newsletter_subscription', $preferences) ? (bool) $preferences['show_newsletter_subscription'] : null;
+    }
+
+    /**
+     * `gallery_search_filters` -- `Controller\SearchController`'s saved
+     * filter-field selection.
+     *
+     * @return array<array-key, mixed>|null
+     */
+    public function getGallerySearchFilters(): ?array
+    {
+        $value = $this->currentUser->get()
+            ->preferences['gallery_search_filters'] ?? null;
+
+        return is_array($value) ? $value : null;
     }
 }

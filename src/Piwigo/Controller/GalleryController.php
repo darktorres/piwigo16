@@ -16,6 +16,8 @@ use Piwigo\Common\Enum\Section;
 use Piwigo\Config\ConfigService;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\DeploymentPolicy;
+use Piwigo\Controller\Projection\GalleryPageContext;
+use Piwigo\Controller\Projection\GalleryThumbnailsPageContext;
 use Piwigo\Controller\Request\GalleryDisplayRequest;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\CurrentLogger;
@@ -174,8 +176,6 @@ final class GalleryController implements ControllerInterface
                 ->createNavigationBar($urlService->duplicateIndexUrl([], ['start']), count($page_items), $page_start, $page_nb_image_page, true, 'start');
         }
 
-        $template->assign('thumb_navbar', $navigationBar);
-
         // caddie filling :-)
         if ($galleryDisplay->hasCaddie) {
             CaddieService::fillCurrentUserCaddie($page_items, $this->currentUser);
@@ -193,19 +193,15 @@ final class GalleryController implements ControllerInterface
                 'start' => $start,
             ]);
         }
-        $template->assign('U_CANONICAL', $canonical_url);
-
         // Standard Pages
         // Some themes will want to use standard pages so this will let
         // them know
-        $template->assign('use_standard_pages', $this->currentConfig->useStandardPages());
+        $use_standard_pages = $this->currentConfig->useStandardPages();
 
         // -------------------------------------------------- page title
         $title = $section_context->title;
         $template_title = $section_context->sectionTitle;
         $nb_items = count($page_items);
-        $template->assign('TITLE', $template_title);
-        $template->assign('NB_ITEMS', $nb_items);
 
         // -------------------------------------------------- menubar
         $categoryCountCategories = new MenubarRenderer()
@@ -219,21 +215,20 @@ final class GalleryController implements ControllerInterface
         // ------------------------------------------------- template init
         $this->pageState->setBodyId('theCategoryPage');
 
+        $u_mode_normal = null;
         if ($section_context->flat or $section_context->chronologyField !== null) {
-            $template->assign(
-                'U_MODE_NORMAL',
-                $urlService->duplicateIndexUrl([], ['chronology_field', 'start', 'flat'])
-            );
+            $u_mode_normal = $urlService->duplicateIndexUrl([], ['chronology_field', 'start', 'flat']);
         }
 
+        $u_mode_flat = null;
         if ($this->currentConfig->indexFlatIcon() and ! $section_context->flat and $section_context->section === Section::Categories) {
-            $template->assign(
-                'U_MODE_FLAT',
-                $urlService->duplicateIndexUrl([
-                    'flat' => '',
-                ], ['start', 'chronology_field'])
-            );
+            $u_mode_flat = $urlService->duplicateIndexUrl([
+                'flat' => '',
+            ], ['start', 'chronology_field']);
         }
+
+        $u_mode_created = null;
+        $u_mode_posted = null;
 
         if ($section_context->chronologyField === null) {
             $chronology_params = [
@@ -242,17 +237,11 @@ final class GalleryController implements ControllerInterface
                 'chronology_view' => 'list',
             ];
             if ($this->currentConfig->indexCreatedDateIcon()) {
-                $template->assign(
-                    'U_MODE_CREATED',
-                    $urlService->duplicateIndexUrl($chronology_params, ['start', 'flat'])
-                );
+                $u_mode_created = $urlService->duplicateIndexUrl($chronology_params, ['start', 'flat']);
             }
             if ($this->currentConfig->indexPostedDateIcon()) {
                 $chronology_params['chronology_field'] = 'posted';
-                $template->assign(
-                    'U_MODE_POSTED',
-                    $urlService->duplicateIndexUrl($chronology_params, ['start', 'flat'])
-                );
+                $u_mode_posted = $urlService->duplicateIndexUrl($chronology_params, ['start', 'flat']);
             }
         } else {
             if ($section_context->chronologyField === 'created') {
@@ -271,26 +260,28 @@ final class GalleryController implements ControllerInterface
                     ],
                     ['chronology_date', 'start', 'flat']
                 );
-                $template->assign(
-                    'U_MODE_' . strtoupper($chronology_field),
-                    $url
-                );
+                if ($chronology_field === 'created') {
+                    $u_mode_created = $url;
+                } else {
+                    $u_mode_posted = $url;
+                }
             }
         }
 
         $resolved_search_id = $this->searchFilterRenderer->render($section_context);
 
+        $search_in_set_button = null;
+        $search_in_set_action = null;
+        $search_in_set_url = null;
+
         if ($section_context->section === Section::Categories and $section_context->category !== null and $section_context->combinedCategories === null) {
-            $template->assign(
-                [
-                    'SEARCH_IN_SET_BUTTON' => $this->currentConfig->indexSearchInSetButton(),
-                    'SEARCH_IN_SET_ACTION' => $this->currentConfig->indexSearchInSetAction(),
-                    'SEARCH_IN_SET_URL' => $urlService->getRootUrl() . 'search.php?cat_id=' . (is_numeric($section_context->category['id'] ?? null) ? (int) $section_context->category['id'] : 0),
-                ]
-            );
+            $search_in_set_button = $this->currentConfig->indexSearchInSetButton();
+            $search_in_set_action = $this->currentConfig->indexSearchInSetAction();
+            $search_in_set_url = $urlService->getRootUrl() . 'search.php?cat_id=' . (is_numeric($section_context->category['id'] ?? null) ? (int) $section_context->category['id'] : 0);
         }
 
         $bodyData = $this->pageState->bodyData;
+        $related_tags = [];
         if (isset($bodyData['tag_ids']) and is_array($bodyData['tag_ids'])) {
             // get tags for related tags "button", with the
             // possibility to combine them
@@ -371,42 +362,56 @@ final class GalleryController implements ControllerInterface
                 ];
             }
 
-            $template->assign(
-                [
-                    'SELECT_RELATED_TAGS' => $selected_related_tags_info,
-                ]
-            );
+            $select_related_tags = $selected_related_tags_info;
+        }
 
+        $template->assignContext(new GalleryPageContext(
+            thumbNavbar: $navigationBar,
+            uCanonical: $canonical_url,
+            useStandardPages: $use_standard_pages,
+            title: $template_title,
+            nbItems: $nb_items,
+            uModeNormal: $u_mode_normal,
+            uModeFlat: $u_mode_flat,
+            uModeCreated: $u_mode_created,
+            uModePosted: $u_mode_posted,
+            searchInSetButton: $search_in_set_button,
+            searchInSetAction: $search_in_set_action,
+            searchInSetUrl: $search_in_set_url,
+            selectRelatedTags: $select_related_tags ?? null,
+        ));
+
+        $search_in_set_button_tags = null;
+        $search_in_set_action_tags = null;
+        $search_in_set_url_tags = null;
+        $combinable_tags = null;
+
+        if (isset($bodyData['tag_ids']) and is_array($bodyData['tag_ids'])) {
             $template->set_filename('selected_tags', 'include/selected_tags.inc.tpl');
             $template->assign_var_from_handle('SELECTED_TAGS_TEMPLATE', 'selected_tags');
 
             $body_data_tag_ids = array_values(array_filter($bodyData['tag_ids'], is_scalar(...)));
 
-            $template->assign(
-                [
-                    'SEARCH_IN_SET_BUTTON' => $this->currentConfig->indexSearchInSetButton(),
-                    'SEARCH_IN_SET_ACTION' => $this->currentConfig->indexSearchInSetAction(),
-                    'SEARCH_IN_SET_URL' => $urlService->getRootUrl() . 'search.php?tag_id=' . implode(',', $body_data_tag_ids),
-                    'COMBINABLE_TAGS' => $related_tags,
-                ]
-            );
+            $search_in_set_button_tags = $this->currentConfig->indexSearchInSetButton();
+            $search_in_set_action_tags = $this->currentConfig->indexSearchInSetAction();
+            $search_in_set_url_tags = $urlService->getRootUrl() . 'search.php?tag_id=' . implode(',', $body_data_tag_ids);
+            $combinable_tags = $related_tags;
         }
 
+        $u_edit = null;
         if ($section_context->category !== null and $this->accessControl->isAdmin() and $this->currentConfig->indexEditIcon()) {
-            $template->assign(
-                'U_EDIT',
-                $urlService->getRootUrl() . 'admin.php?page=album-' . (is_numeric($section_context->category['id'] ?? null) ? (int) $section_context->category['id'] : 0)
-            );
+            $u_edit = $urlService->getRootUrl() . 'admin.php?page=album-' . (is_numeric($section_context->category['id'] ?? null) ? (int) $section_context->category['id'] : 0);
         }
 
+        $u_caddie = null;
         if ($this->accessControl->isAdmin() and $page_items !== [] and $this->currentConfig->indexCaddieIcon()) {
-            $template->assign(
-                'U_CADDIE',
-                $urlService->addUrlParams($urlService->duplicateIndexUrl(), [
-                    'caddie' => 1,
-                ])
-            );
+            $u_caddie = $urlService->addUrlParams($urlService->duplicateIndexUrl(), [
+                'caddie' => 1,
+            ]);
         }
+
+        $category_search_results = null;
+        $no_search_results = null;
 
         if ($section_context->section === Section::Search and $page_start === 0 and
             $section_context->chronologyField === null and $section_context->qsearchDetails !== []) {
@@ -425,7 +430,7 @@ final class GalleryController implements ControllerInterface
                 foreach ($cats as $cat) {
                     $hints[] = $this->htmlService->getCatDisplayName([$cat], '');
                 }
-                $template->assign('category_search_results', $hints);
+                $category_search_results = $hints;
             }
 
             $matching_tags = is_array($qsearchDetails['matching_tags'] ?? null) ? array_values(array_filter($qsearchDetails['matching_tags'], is_array(...))) : [];
@@ -445,12 +450,13 @@ final class GalleryController implements ControllerInterface
                 if (is_array($unmatched_terms) && $unmatched_terms !== []) {
                     /** @var list<string> $unmatched_terms */
                     $unmatched_terms = array_values(array_filter($unmatched_terms, is_string(...)));
-                    $template->assign('no_search_results', array_map(htmlspecialchars(...), $unmatched_terms));
+                    $no_search_results = array_map(htmlspecialchars(...), $unmatched_terms);
                 }
             }
         }
 
         // image order
+        $image_orders = null;
         if ($this->currentConfig->indexSortOrderInput()
             and count($page_items) > 0
             and $section_context->section !== Section::MostVisited
@@ -493,14 +499,15 @@ final class GalleryController implements ControllerInterface
             }
 
             $tpl_orders[0]['SELECTED'] = ! $order_selected; // unselect "Default" if another one is selected
-            $template->assign('image_orders', $tpl_orders);
+            $image_orders = $tpl_orders;
         }
 
         // category comment
         $page_comment = $section_context->comment;
         $page_comment_present = $page_comment !== '' && $page_comment !== '0';
+        $content_description = null;
         if (($page_start === 0 or $this->currentConfig->albumDescriptionOnAllPages()) and $section_context->chronologyField === null and $page_comment_present) {
-            $template->assign('CONTENT_DESCRIPTION', $section_context->comment);
+            $content_description = $section_context->comment;
         }
 
         if ($section_context->category !== null and $categoryCountCategories === 0) {// count_categories might be computed by menubar - if the case unassign flat link if no sub albums
@@ -552,11 +559,12 @@ final class GalleryController implements ControllerInterface
         // execute after init thumbs in order to have all picture
         // informations
         $slideshow_url_present = is_string($slideshow_url) && $slideshow_url !== '' && $slideshow_url !== '0';
+        $u_slideshow = null;
         if ($slideshow_url_present) {
             if ($galleryDisplay->hasSlideshow) {
                 $redirectService->redirect($slideshow_url);
             } elseif ($this->currentConfig->indexSlideShowIcon()) {
-                $template->assign('U_SLIDESHOW', $slideshow_url);
+                $u_slideshow = $slideshow_url;
             }
         }
 
@@ -564,6 +572,8 @@ final class GalleryController implements ControllerInterface
         // tags page
         // Fill related tags action
         $body_data_section = $this->pageState->bodyData['section'] ?? null;
+        $related_tags_action = null;
+        $related_tags_list = null;
         if ($page_items !== [] and $body_data_section !== 'tags') {
             $selection = array_slice($page_items, $page_start, $page_nb_image_page);
             $tags = $tagService->addLevelToTags($tagService->getCommonTags($selection, $this->currentConfig->contentTagCloudItemsNumber(), $this->htmlService));
@@ -580,13 +590,25 @@ final class GalleryController implements ControllerInterface
                 );
             }
 
-            $template->assign(
-                [
-                    'RELATED_TAGS_ACTION' => $related_tags !== [],
-                    'RELATED_TAGS' => $related_tags,
-                ]
-            );
+            $related_tags_action = $related_tags !== [];
+            $related_tags_list = $related_tags;
         }
+
+        $template->assignContext(new GalleryThumbnailsPageContext(
+            searchInSetButton: $search_in_set_button_tags,
+            searchInSetAction: $search_in_set_action_tags,
+            searchInSetUrl: $search_in_set_url_tags,
+            combinableTags: $combinable_tags,
+            uEdit: $u_edit,
+            uCaddie: $u_caddie,
+            categorySearchResults: $category_search_results,
+            noSearchResults: $no_search_results,
+            imageOrders: $image_orders,
+            contentDescription: $content_description,
+            uSlideshow: $u_slideshow,
+            relatedTagsAction: $related_tags_action,
+            relatedTags: $related_tags_list,
+        ));
 
         // ---------------------------------------------------------- end
         new PageHeaderRenderer()

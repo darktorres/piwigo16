@@ -17,6 +17,7 @@ use Piwigo\Common\ValueObject\SqlDateTime;
 use Piwigo\Image\ImageCategoryEntity;
 use Piwigo\Image\ImageEntity;
 use Piwigo\Permission\SqlCondition;
+use Piwigo\Search\Projection\CategoryIdUppercats;
 use Piwigo\Search\Projection\Search;
 
 /**
@@ -346,7 +347,7 @@ final class SearchRepository
      * (Gotcha #1) returns a real `CategoryId` instance for it, unwrapped
      * below -- see `CategoryEntity`'s own docblock.
      *
-     * @return list<array{id: int, uppercats: string}>
+     * @return list<CategoryIdUppercats>
      */
     public function findCategoryIdsAndUppercats(SqlCondition $condition): array
     {
@@ -364,10 +365,7 @@ final class SearchRepository
                 continue;
             }
 
-            $result[] = [
-                'id' => $row['id']->value,
-                'uppercats' => $row['uppercats'],
-            ];
+            $result[] = new CategoryIdUppercats($row['id'], $row['uppercats']);
         }
 
         return $result;

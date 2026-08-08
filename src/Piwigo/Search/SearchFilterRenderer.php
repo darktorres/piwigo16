@@ -486,11 +486,11 @@ final readonly class SearchFilterRenderer
                     // way (this array is JSON-encoded for a JS-consumed
                     // autocomplete label, not rendered as a link).
                     $catDisplayName = $this->htmlRenderer->getCatDisplayNameCache(
-                        $row['uppercats'],
+                        $row->uppercats,
                         'admin.php?page=album-'
                     );
 
-                    $fullnameOf[$row['id']] = strip_tags($catDisplayName);
+                    $fullnameOf[$row->id->value] = strip_tags($catDisplayName);
                 }
 
                 $template->assign('fullname_of', json_encode($fullnameOf));

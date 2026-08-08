@@ -14,7 +14,9 @@ use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\ConfigLoader;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
+use Piwigo\Common\ValueObject\CategoryId;
 use Piwigo\Permission\SqlCondition;
+use Piwigo\Search\Projection\CategoryIdUppercats;
 use Piwigo\Search\SearchRepository;
 
 /**
@@ -253,11 +255,11 @@ final class SearchRepositoryTest extends IntegrationTestCase
             new SqlCondition('c.id IN (:ids)', ['ids' => [1, 2]], ['ids' => ArrayParameterType::INTEGER]),
         );
 
-        usort($rows, static fn (array $a, array $b): int => $a['id'] <=> $b['id']);
+        usort($rows, static fn (CategoryIdUppercats $a, CategoryIdUppercats $b): int => $a->id->value <=> $b->id->value);
 
-        self::assertSame([
-            ['id' => 1, 'uppercats' => '1'],
-            ['id' => 2, 'uppercats' => '1,2'],
+        self::assertEquals([
+            new CategoryIdUppercats(CategoryId::from(1), '1'),
+            new CategoryIdUppercats(CategoryId::from(2), '1,2'),
         ], $rows);
     }
 

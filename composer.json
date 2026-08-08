@@ -161,6 +161,9 @@
       "smarty/smarty": {
         "Fix TemplateBase::$compile_id's @var docblock (string) contradicting its own `= null` default and setCompileId()'s real usage -- confirmed by reading the class itself; no native property type declared, so PHPStan trusts the wrong docblock": "patches/smarty-smarty-5.8.4-compile-id-nullable-docblock.patch",
         "Fix Smarty::unregisterFilter()'s @param docblock typo `callback|string` (not a real PHP/PHPStan type -- resolves to the unrelated class Smarty\\callback) to the real accepted type `callable|string`, matching its own _getFilterName() implementation": "patches/smarty-smarty-5.8.4-unregisterfilter-callable-docblock.patch"
+      },
+      "doctrine/dbal": {
+        "Fix Driver\\PgSQL\\Statement::__destruct() unconditionally running a DEALLOCATE cleanup query even when the connection's transaction was already aborted by an earlier failed query -- PostgreSQL rejects every subsequent command in an aborted transaction, so the DEALLOCATE itself fails with 'current transaction is aborted, commands ignored until end of transaction block', surfacing as a spurious PHP warning during exception unwinding, strictly before any higher-level rollback (e.g. Doctrine ORM UnitOfWork::commit()'s own finally block) gets a chance to run. Guards with pg_transaction_status(), which requires a preceding pg_connection_busy() call to avoid reading a stale ACTIVE status (confirmed via live reproduction against a real aborted transaction) -- see doctrine/dbal#5893, which added the destructor with no aborted-transaction handling and no known upstream fix": "patches/doctrine-dbal-4.4.4-pgsql-statement-skip-deallocate-on-aborted-transaction.patch"
       }
     },
     "phpstan/extension-installer": {

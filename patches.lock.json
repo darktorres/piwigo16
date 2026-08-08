@@ -1,5 +1,5 @@
 {
-    "_hash": "a04317ba0b25504ebae817b8261df1b1963c038631794e49d891c46662244587",
+    "_hash": "007dbf21d4d31e5092825a88db82e60690eda3839b874e2b587f5fec82023a36",
     "patches": {
         "pestphp/pest-plugin-browser": [
             {
@@ -71,6 +71,18 @@
                 "description": "Fix Smarty::unregisterFilter()'s @param docblock typo `callback|string` (not a real PHP/PHPStan type -- resolves to the unrelated class Smarty\\callback) to the real accepted type `callable|string`, matching its own _getFilterName() implementation",
                 "url": "patches/smarty-smarty-5.8.4-unregisterfilter-callable-docblock.patch",
                 "sha256": "e66da71b52acf578048c05c54bcedbcdf75bd84c6827a64dd23fa395cd1983ba",
+                "depth": 1,
+                "extra": {
+                    "provenance": "root"
+                }
+            }
+        ],
+        "doctrine/dbal": [
+            {
+                "package": "doctrine/dbal",
+                "description": "Fix Driver\\PgSQL\\Statement::__destruct() unconditionally running a DEALLOCATE cleanup query even when the connection's transaction was already aborted by an earlier failed query -- PostgreSQL rejects every subsequent command in an aborted transaction, so the DEALLOCATE itself fails with 'current transaction is aborted, commands ignored until end of transaction block', surfacing as a spurious PHP warning during exception unwinding, strictly before any higher-level rollback (e.g. Doctrine ORM UnitOfWork::commit()'s own finally block) gets a chance to run. Guards with pg_transaction_status(), which requires a preceding pg_connection_busy() call to avoid reading a stale ACTIVE status (confirmed via live reproduction against a real aborted transaction) -- see doctrine/dbal#5893, which added the destructor with no aborted-transaction handling and no known upstream fix",
+                "url": "patches/doctrine-dbal-4.4.4-pgsql-statement-skip-deallocate-on-aborted-transaction.patch",
+                "sha256": "2764074b3f5ed5bce33b9e2590d1903ea3bb8a1fdbac4c4b7c743805bbfa604f",
                 "depth": 1,
                 "extra": {
                     "provenance": "root"

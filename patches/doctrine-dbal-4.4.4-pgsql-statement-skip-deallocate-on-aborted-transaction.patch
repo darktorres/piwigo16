@@ -1,0 +1,43 @@
+--- a/src/Driver/PgSQL/Statement.php
++++ b/src/Driver/PgSQL/Statement.php
+@@ -12,6 +12,7 @@
+ use function assert;
+ use function is_resource;
+ use function ksort;
++use function pg_connection_busy;
+ use function pg_escape_bytea;
+ use function pg_escape_identifier;
+ use function pg_get_result;
+@@ -19,6 +20,7 @@
+ use function pg_query;
+ use function pg_result_error;
+ use function pg_send_execute;
++use function pg_transaction_status;
+ use function stream_get_contents;
+
+ final class Statement implements StatementInterface
+@@ -44,6 +46,24 @@
+             return;
+         }
+
++        // pg_transaction_status() reports a stale ACTIVE status here
++        // unless something first prompts libpq to process the pending
++        // server response -- pg_connection_busy() does exactly that as
++        // a side effect. Without this, a transaction aborted by an
++        // earlier failed query (a real, common case: any caller that
++        // catches a query exception and lets this Statement go out of
++        // scope during unwinding) makes this DEALLOCATE call itself
++        // fail with "current transaction is aborted, commands ignored
++        // until end of transaction block" -- skip it in that case,
++        // since PostgreSQL discards every prepared statement anyway
++        // once the connection closes.
++        pg_connection_busy($this->connection);
++
++        $status = pg_transaction_status($this->connection);
++        if ($status === PGSQL_TRANSACTION_INERROR || $status === PGSQL_TRANSACTION_UNKNOWN) {
++            return;
++        }
++
+         @pg_query(
+             $this->connection,
+             'DEALLOCATE ' . pg_escape_identifier($this->connection, $this->name),

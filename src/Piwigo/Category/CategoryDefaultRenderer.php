@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Category;
 
+use Piwigo\Category\Projection\CategoryDefaultThumbnailsPageContext;
 use Piwigo\Category\Request\CategorySlideshowRequest;
 use Piwigo\Common\Enum\Section;
 use Piwigo\Config\CurrentConfig;
@@ -215,15 +216,15 @@ final readonly class CategoryDefaultRenderer
 
         $indexDeriv = $this->sessionService->getIndexDeriv() ?? ImageStdParams::THUMB;
 
-        $template->assign([
-            'derivative_params' => $this->eventDispatcher->dispatchChange(new GetIndexDerivativeParams($this->imageStdParams->get_by_type($indexDeriv)))
-                ->params,
-            'maxRequests' => $this->currentConfig->maxRequests(),
-            'SHOW_THUMBNAIL_CAPTION' => $this->currentConfig->showThumbnailCaption(),
-        ]);
         $tplThumbnailsVar = $this->eventDispatcher->dispatchChange(new LocEndIndexThumbnails($tplThumbnailsVar, $pictures))
             ->tplThumbnailsVar;
-        $template->assign('thumbnails', $tplThumbnailsVar);
+        $template->assignContext(new CategoryDefaultThumbnailsPageContext(
+            derivativeParams: $this->eventDispatcher->dispatchChange(new GetIndexDerivativeParams($this->imageStdParams->get_by_type($indexDeriv)))
+                ->params,
+            maxRequests: $this->currentConfig->maxRequests(),
+            showThumbnailCaption: $this->currentConfig->showThumbnailCaption(),
+            thumbnails: $tplThumbnailsVar,
+        ));
 
         $template->assign_var_from_handle('THUMBNAILS', 'index_thumbnails');
         unset($pictures, $selection, $tplThumbnailsVar);

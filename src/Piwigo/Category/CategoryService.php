@@ -878,6 +878,11 @@ final readonly class CategoryService
             }
         }
 
+        // Not a Phase 13 TemplatePageContext candidate: $blockname is a
+        // real caller-chosen key (this method's own public $blockname
+        // param, called with a different literal at every real call
+        // site) -- same "shared cross-cutting utility with a
+        // caller-chosen key" shape as HtmlService::flushMessageMode().
         $template->assign($blockname, $tplCats);
         $template->assign($blockname . '_selected', $selecteds);
     }

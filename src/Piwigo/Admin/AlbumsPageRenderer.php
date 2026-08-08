@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Admin;
 
 use Piwigo\Admin\Category\CategoryAdminService;
+use Piwigo\Admin\Projection\AlbumsPageContext;
 use Piwigo\Admin\Request\AlbumsRequest;
 use Piwigo\Category\CategoryRefDateAggregate;
 use Piwigo\Category\CategoryRefDateField;
@@ -62,11 +63,6 @@ final class AlbumsPageRenderer
         $tabsheet->assign($currentTemplate);
 
         $nb_cats = $categoryService->countAllCategories();
-        $template->assign(
-            [
-                'nb_cats' => $nb_cats,
-            ]
-        );
 
         // +-------------------------------------------------------------------+
         // |                         categories auto order                     |
@@ -150,25 +146,12 @@ final class AlbumsPageRenderer
             $open_cat = $albumsRequest->rawId;
         }
 
-        $template->assign('open_cat', $open_cat);
+        $open_cat_value = is_int($open_cat) || is_string($open_cat) ? (string) $open_cat : '';
 
         // +-------------------------------------------------------------------+
         // |                       template initialization                     |
         // +-------------------------------------------------------------------+
         $template->set_filename('albums', 'albums.tpl');
-
-        $template->assign(
-            [
-                'F_ACTION' => $urlService->getRootUrl() . 'admin.php?page=albums',
-            ]
-        );
-
-        $template->assign('delay_before_autoOpen', $currentConfig->albumMoveDelayBeforeAutoOpening());
-
-        // Known limitation: site-wide only -- Users\PreferencesService
-        // could support a real per-user override of the default new-album
-        // position, but none exists today.
-        $template->assign('POS_PREF', $currentConfig->newcatDefaultPosition());
 
         // +-------------------------------------------------------------------+
         // |                          Album display                            |
@@ -261,16 +244,22 @@ final class AlbumsPageRenderer
             $nb_sub_photos[$cat_id] = $nb_photos;
         }
 
-        $template->assign(
-            [
-                'album_data' => self::assocToOrderedTree($associatedTree, $nb_photos_in, $nb_sub_photos, $is_forbidden),
-                'PWG_TOKEN' => new CsrfService($currentConfig)
-                    ->getToken(),
-                'nb_albums' => count($allAlbum),
-                'ADMIN_PAGE_TITLE' => $lang->t('Albums'),
-                'light_album_manager' => ($albums_counter > $currentConfig->lightAlbumManagerThreshold()) ? 1 : 0,
-            ]
-        );
+        $template->assignContext(new AlbumsPageContext(
+            nbCats: $nb_cats,
+            openCat: $open_cat_value,
+            fAction: $urlService->getRootUrl() . 'admin.php?page=albums',
+            delayBeforeAutoOpen: $currentConfig->albumMoveDelayBeforeAutoOpening(),
+            // Known limitation: site-wide only -- Users\PreferencesService
+            // could support a real per-user override of the default
+            // new-album position, but none exists today.
+            posPref: $currentConfig->newcatDefaultPosition(),
+            albumData: self::assocToOrderedTree($associatedTree, $nb_photos_in, $nb_sub_photos, $is_forbidden),
+            pwgToken: new CsrfService($currentConfig)
+                ->getToken(),
+            nbAlbums: count($allAlbum),
+            adminPageTitle: $lang->t('Albums'),
+            lightAlbumManager: ($albums_counter > $currentConfig->lightAlbumManagerThreshold()) ? 1 : 0,
+        ));
 
         // +-------------------------------------------------------------------+
         // |                          sending html code                        |

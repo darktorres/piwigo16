@@ -16,6 +16,7 @@ use Piwigo\Admin\UpdatesExtPageRenderer;
 use Piwigo\Auth\AccessControl;
 use Piwigo\Config\ConfigService;
 use Piwigo\Config\CurrentConfig;
+use Piwigo\Controller\Admin\Projection\ThemesSubControllerPageContext;
 use Piwigo\Controller\Admin\Request\ExtensionTabRequest;
 use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\Lang;
@@ -87,7 +88,7 @@ final class ThemesSubController implements AdminSubControllerInterface
         if ($tab === 'update') {
             new UpdatesExtPageRenderer()
                 ->render($this->lang, $this->accessControl, 'themes', $this->urlService, $this->configService, $this->pageState, $this->currentTemplate, $this->extensionUpdateChecker, $this->htmlRenderer, $this->currentConfig);
-            $template->assign('ADMIN_PAGE_TITLE', $this->lang->t('Themes'));
+            $template->assignContext(new ThemesSubControllerPageContext(adminPageTitle: $this->lang->t('Themes')));
         } elseif ($tab === 'new') {
             $this->themesNewPageRenderer
                 ->render('themes', $tab);

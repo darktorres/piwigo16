@@ -16,6 +16,7 @@ use Piwigo\Admin\Tabsheet;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Category\CategoryService;
 use Piwigo\Config\CurrentConfig;
+use Piwigo\Controller\Admin\Projection\AlbumSubControllerPageContext;
 use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\Lang;
 use Piwigo\Core\PageState;
@@ -94,10 +95,10 @@ final class AlbumSubController implements AdminSubControllerInterface
         $nameEvent = $this->eventDispatcher->dispatchChange(new RenderCategoryName($category['name'], 'get_cat_display_name_cache'));
         $category_name = $nameEvent->categoryName;
         $category_id_display = (string) $category['id'];
-        $template->assign([
-            'ADMIN_PAGE_TITLE' => $this->lang->t('Edit album') . ' <strong>' . $category_name . '</strong>',
-            'ADMIN_PAGE_OBJECT_ID' => '#' . $category_id_display,
-        ]);
+        $template->assignContext(new AlbumSubControllerPageContext(
+            adminPageTitle: $this->lang->t('Edit album') . ' <strong>' . $category_name . '</strong>',
+            adminPageObjectId: '#' . $category_id_display,
+        ));
 
         if ($tab === 'properties') {
             new CatModifyPageRenderer()

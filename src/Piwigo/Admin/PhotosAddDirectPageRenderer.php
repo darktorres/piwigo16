@@ -8,6 +8,8 @@ use Doctrine\DBAL\Connection;
 use Doctrine\ORM\EntityManagerInterface;
 use Piwigo\Activity\ActivityService;
 use Piwigo\Admin\Image\PwgImage;
+use Piwigo\Admin\Projection\PhotosAddDirectPageContext;
+use Piwigo\Admin\Projection\PhotosAddDirectUploadFormPageContext;
 use Piwigo\Admin\Request\PhotosAddDirectRequest;
 use Piwigo\Admin\Upload\UploadService;
 use Piwigo\Caddie\CaddieEntity;
@@ -139,12 +141,10 @@ final class PhotosAddDirectPageRenderer
             $two_weeks_ago = (clone Env::now())
                 ->modify('-2 weeks');
             $register_date_str = $register_date ?? '';
-            $template->assign('PROMOTE_MOBILE_APPS', (strtotime($register_date_str) < $two_weeks_ago->getTimestamp() and $nb_cats >= 3 and $nb_images >= 30));
+            $promote_mobile_apps = strtotime($register_date_str) < $two_weeks_ago->getTimestamp() && $nb_cats >= 3 && $nb_images >= 30;
         } else {
-            $template->assign('PROMOTE_MOBILE_APPS', false);
+            $promote_mobile_apps = false;
         }
-
-        $template->assign('PHPWG_URL', AppInfo::URL);
 
         // +-------------------------------------------------------------------+
         // |                             Formats Mode                          |
@@ -211,16 +211,18 @@ final class PhotosAddDirectPageRenderer
 
         $conf_format_ext = $this->currentConfig->formatExtensions();
 
-        $template->assign([
-            'ENABLE_FORMATS' => $this->currentConfig->isFormatsEnabled(),
-            'DISPLAY_FORMATS' => $display_formats,
-            'HAVE_FORMATS_ORIGINAL' => $have_formats_original,
-            'FORMATS_ORIGINAL_INFO' => $formats_original_info,
-            'FORMATS_EXT_INFO' => $formats_ext_info,
-            'SWITCH_FORMAT_MODE_URL' => $this->urlService->getRootUrl() . 'admin.php?page=photos_add' . ($display_formats ? '' : '&formats'),
-            'format_ext' => implode(',', array_filter($conf_format_ext, is_string(...))),
-            'str_format_ext' => implode(', ', array_filter($conf_format_ext, is_string(...))),
-        ]);
+        $template->assignContext(new PhotosAddDirectPageContext(
+            promoteMobileApps: $promote_mobile_apps,
+            phpwgUrl: AppInfo::URL,
+            enableFormats: $this->currentConfig->isFormatsEnabled(),
+            displayFormats: $display_formats,
+            haveFormatsOriginal: $have_formats_original,
+            formatsOriginalInfo: $formats_original_info,
+            formatsExtInfo: $formats_ext_info,
+            switchFormatModeUrl: $this->urlService->getRootUrl() . 'admin.php?page=photos_add' . ($display_formats ? '' : '&formats'),
+            formatExt: implode(',', array_filter($conf_format_ext, is_string(...))),
+            strFormatExt: implode(', ', array_filter($conf_format_ext, is_string(...))),
+        ));
 
         $template->assign_var_from_handle('ADMIN_CONTENT', 'photos_add');
     }
@@ -244,14 +246,14 @@ final class PhotosAddDirectPageRenderer
         // | Photo selection                                                    |
         // +-------------------------------------------------------------------+
 
-        $template->assign(
-            [
-                'F_ADD_ACTION' => self::baseUrl($this->urlService),
-                'chunk_size' => $this->currentConfig->uploadFormChunkSize(),
-                'max_file_size' => $this->currentConfig->uploadFormMaxFileSize(),
-                'ADMIN_PAGE_TITLE' => $this->lang->t('Upload Photos'),
-            ]
-        );
+        $f_add_action = self::baseUrl($this->urlService);
+        $chunk_size = $this->currentConfig->uploadFormChunkSize();
+        $max_file_size = $this->currentConfig->uploadFormMaxFileSize();
+        $admin_page_title = $this->lang->t('Upload Photos');
+
+        $max_upload_width_ctx = null;
+        $max_upload_height_ctx = null;
+        $max_upload_resolution_ctx = null;
 
         // what is the maximum number of pixels permitted by the memory_limit?
         if (PwgImage::get_library() === 'gd') {
@@ -271,43 +273,30 @@ final class PhotosAddDirectPageRenderer
 
             // no need to display a limitation warning if the limitation is huge like 20MP
             if ($max_upload_resolution < 25) {
-                $template->assign(
-                    [
-                        'max_upload_width' => $max_upload_width,
-                        'max_upload_height' => $max_upload_height,
-                        'max_upload_resolution' => $max_upload_resolution,
-                    ]
-                );
+                $max_upload_width_ctx = $max_upload_width;
+                $max_upload_height_ctx = $max_upload_height;
+                $max_upload_resolution_ctx = $max_upload_resolution;
             }
         }
 
+        $original_resize_maxwidth = null;
+        $original_resize_maxheight = null;
+
         // warn the user if the picture will be resized after upload
         if ($this->currentConfig->originalResize()) {
-            $template->assign(
-                [
-                    'original_resize_maxwidth' => $this->currentConfig->originalResizeMaxwidth(),
-                    'original_resize_maxheight' => $this->currentConfig->originalResizeMaxheight(),
-                ]
-            );
+            $original_resize_maxwidth = $this->currentConfig->originalResizeMaxwidth();
+            $original_resize_maxheight = $this->currentConfig->originalResizeMaxheight();
         }
 
-        $template->assign(
-            [
-                'form_action' => self::baseUrl($this->urlService),
-                'pwg_token' => new CsrfService($this->currentConfig)
-                    ->getToken(),
-            ]
-        );
+        $form_action = self::baseUrl($this->urlService);
+        $pwg_token = new CsrfService($this->currentConfig)
+            ->getToken();
 
         $upload_extensions = ($this->currentConfig->uploadFormAllTypes()) ? $this->currentConfig->fileExtensions() : $this->currentConfig->pictureExtensions();
         $unique_exts = array_unique(array_map(strtolower(...), $upload_extensions));
 
-        $template->assign(
-            [
-                'upload_file_types' => implode(', ', $unique_exts),
-                'file_exts' => implode(',', $unique_exts),
-            ]
-        );
+        $upload_file_types = implode(', ', $unique_exts);
+        $file_exts = implode(',', $unique_exts);
 
         // +-------------------------------------------------------------------+
         // | Categories                                                         |
@@ -315,6 +304,8 @@ final class PhotosAddDirectPageRenderer
 
         // we need to know the category in which the last photo was added
         $selected_category = [];
+        $add_to_album = null;
+        $selected_category_name = null;
 
         if ($photosAddDirectRequest->albumPresent) {
             // set the category from get url or ...
@@ -326,7 +317,7 @@ final class PhotosAddDirectPageRenderer
             if ($album_id !== null && $uppercats !== null) {
                 $selected_category = [$album_id];
 
-                $template->assign('ADD_TO_ALBUM', $htmlRenderer->getCatDisplayNameCache($uppercats, null));
+                $add_to_album = $htmlRenderer->getCatDisplayNameCache($uppercats, null);
             } else {
                 $htmlRenderer->fatalError('[Hacking attempt] the album id = "' . ($album_id ?? '') . '" is not valid');
             }
@@ -338,26 +329,17 @@ final class PhotosAddDirectPageRenderer
                 $selected_category = [$mostRecentCategoryInfo->categoryId];
                 $uppercats = $mostRecentCategoryInfo->uppercats;
                 $selected_category_name = $htmlRenderer->getCatDisplayNameCache($uppercats, null);
-                $template->assign('selected_category_name', $selected_category_name);
             }
         }
-
-        // existing album
-        $template->assign('selected_category', $selected_category);
 
         // how many existing albums?
         $nb_albums = new CategoryRepository(EntityManagerFactory::build($conn), $this->currentConfig)
             ->countAllCategories();
-        $template->assign('NB_ALBUMS', $nb_albums);
 
         // image level options
         $selected_level = $photosAddDirectRequest->postLevel;
-        $template->assign(
-            [
-                'level_options' => PermissionService::getPrivacyLevelOptions($this->currentConfig, $this->lang),
-                'level_options_selected' => [$selected_level],
-            ]
-        );
+        $level_options = PermissionService::getPrivacyLevelOptions($this->currentConfig, $this->lang);
+        $level_options_selected = [$selected_level];
 
         // +-------------------------------------------------------------------+
         // | Setup errors/warnings                                              |
@@ -375,20 +357,20 @@ final class PhotosAddDirectPageRenderer
             $setup_errors[] = $this->lang->t('GD library is missing');
         }
 
-        $template->assign([
-            'setup_errors' => $setup_errors,
-            'CACHE_KEYS' => AdminUiHelper::getAdminClientCacheKeys($this->urlService, ['categories']),
-        ]);
+        $cache_keys = AdminUiHelper::getAdminClientCacheKeys($this->urlService, ['categories']);
 
         // Warnings
         if ($photosAddDirectRequest->hideWarningsPresent) {
             $_SESSION['upload_hide_warnings'] = true;
         }
 
+        $setup_warnings = null;
+        $hide_warnings_link = null;
+
         if (! isset($_SESSION['upload_hide_warnings'])) {
             $setup_warnings = [];
 
-            if ($this->currentConfig->useExif() and ! function_exists('exif_read_data')) {
+            if ($this->currentConfig->useExif() && ! function_exists('exif_read_data')) {
                 $setup_warnings[] = $this->lang->t('Exif extension not available, admin should disable exif use');
             }
 
@@ -412,12 +394,33 @@ final class PhotosAddDirectPageRenderer
                 );
             }
 
-            $template->assign(
-                [
-                    'setup_warnings' => $setup_warnings,
-                    'hide_warnings_link' => self::baseUrl($this->urlService) . '&amp;hide_warnings=1',
-                ]
-            );
+            $hide_warnings_link = self::baseUrl($this->urlService) . '&amp;hide_warnings=1';
         }
+
+        $template->assignContext(new PhotosAddDirectUploadFormPageContext(
+            fAddAction: $f_add_action,
+            chunkSize: $chunk_size,
+            maxFileSize: $max_file_size,
+            adminPageTitle: $admin_page_title,
+            maxUploadWidth: $max_upload_width_ctx,
+            maxUploadHeight: $max_upload_height_ctx,
+            maxUploadResolution: $max_upload_resolution_ctx,
+            originalResizeMaxwidth: $original_resize_maxwidth,
+            originalResizeMaxheight: $original_resize_maxheight,
+            formAction: $form_action,
+            pwgToken: $pwg_token,
+            uploadFileTypes: $upload_file_types,
+            fileExts: $file_exts,
+            addToAlbum: $add_to_album,
+            selectedCategoryName: $selected_category_name,
+            selectedCategory: $selected_category,
+            nbAlbums: $nb_albums,
+            levelOptions: $level_options,
+            levelOptionsSelected: $level_options_selected,
+            setupErrors: $setup_errors,
+            cacheKeys: $cache_keys,
+            setupWarnings: $setup_warnings,
+            hideWarningsLink: $hide_warnings_link,
+        ));
     }
 }

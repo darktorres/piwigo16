@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin;
 
+use Piwigo\Admin\Projection\RatingPageContext;
 use Piwigo\Admin\Request\RatingRequest;
 use Piwigo\Auth\AccessControl;
 use Piwigo\Category\CategoryService;
@@ -81,17 +82,8 @@ final class RatingPageRenderer
 
         $template->set_filename('rating', 'rating.tpl');
 
-        $template->assign(
-            [
-                'navbar' => new PaginationService($currentConfig)
-                    ->createNavigationBar($urlService->getRootUrl() . 'admin.php' . $urlService->getQueryStringDiff(['start', 'del']), $nb_images, $start, $elements_per_page),
-                'F_ACTION' => $urlService->getRootUrl() . 'admin.php',
-                'DISPLAY' => $elements_per_page,
-                'NB_ELEMENTS' => $nb_elements,
-                'category' => ($ratingRequest->catPresent ? [$ratingRequest->catRaw] : []),
-                'CACHE_KEYS' => AdminUiHelper::getAdminClientCacheKeys($urlService, ['categories']),
-            ]
-        );
+        $navbar = new PaginationService($currentConfig)
+            ->createNavigationBar($urlService->getRootUrl() . 'admin.php' . $urlService->getQueryStringDiff(['start', 'del']), $nb_images, $start, $elements_per_page);
 
         $available_order_by = [
             [$lang->t('Rate date'), 'recently_rated'],
@@ -114,17 +106,11 @@ final class RatingPageRenderer
                 $available_order_by[$i][0]
             );
         }
-        $template->assign('order_by_options_selected', [$order_by_index]);
-
         $user_options = [
             'all' => $lang->t('all'),
             'user' => $lang->t('Users'),
             'guest' => $lang->t('Guests'),
         ];
-
-        $template->assign('user_options', $user_options);
-        $template->assign('user_options_selected', [$ratingRequest->usersRaw]);
-        $template->assign('ADMIN_PAGE_TITLE', $lang->t('Rating'));
 
         $images = $rate_repository->findRatingReport(
             $filterUserId,
@@ -135,7 +121,19 @@ final class RatingPageRenderer
             $start
         );
 
-        $template->assign('images', []);
+        $template->assignContext(new RatingPageContext(
+            navbar: $navbar,
+            fAction: $urlService->getRootUrl() . 'admin.php',
+            display: $elements_per_page,
+            nbElements: $nb_elements,
+            category: $ratingRequest->catPresent ? [$ratingRequest->catRaw] : [],
+            cacheKeys: AdminUiHelper::getAdminClientCacheKeys($urlService, ['categories']),
+            orderByOptionsSelected: [$order_by_index],
+            userOptions: $user_options,
+            userOptionsSelected: [$ratingRequest->usersRaw],
+            adminPageTitle: $lang->t('Rating'),
+        ));
+
         foreach ($images as $image) {
             $thumbnail_src = DerivativeImage::thumb_url($image->toArray());
 

@@ -17,6 +17,7 @@ use Piwigo\Comment\CommentService;
 use Piwigo\Common\ValueObject\CommentId;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\DeploymentPolicy;
+use Piwigo\Controller\Projection\CommentsPageContext;
 use Piwigo\Controller\Request\CommentsRequest;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\CurrentLogger;
@@ -415,14 +416,6 @@ final class CommentsController implements ControllerInterface
         $keyword_param = $commentsRequest->keywordDisplay;
         $author_param = $commentsRequest->authorDisplay;
 
-        $template->assign(
-            [
-                'F_ACTION' => $this->urlService->getRootUrl() . 'comments.php',
-                'F_KEYWORD' => $keyword_param !== null ? htmlspecialchars(stripslashes($keyword_param)) : '',
-                'F_AUTHOR' => $author_param !== null ? htmlspecialchars(stripslashes($author_param)) : '',
-            ]
-        );
-
         // +---------------------------------------------------------------+
         // |                      form construction                        |
         // +---------------------------------------------------------------+
@@ -434,29 +427,17 @@ final class CommentsController implements ControllerInterface
             ->displaySelectByCondition($this->permissionService->getPermissionCriteria(), [$commentsRequest->catDisplay], $blockname, $this->htmlService, $template);
 
         // Filter on recent comments...
-        $tpl_var = [];
+        $since_options_tpl = [];
         foreach ($since_options as $id => $option) {
-            $tpl_var[$id] = $option['label'];
+            $since_options_tpl[$id] = $option['label'];
         }
-        $template->assign('since_options', $tpl_var);
-        $template->assign('since_options_selected', $since);
-
-        // Sort by
-        $template->assign('sort_by_options', $sort_by);
-        $template->assign('sort_by_options_selected', $sort_by_value);
-
-        // Sorting order
-        $template->assign('sort_order_options', $sort_order);
-        $template->assign('sort_order_options_selected', $sort_order_value);
 
         // Number of items
         $blockname = 'items_number_option';
-        $tpl_var = [];
+        $item_number_options = [];
         foreach ($items_number as $option) {
-            $tpl_var[$option] = is_numeric($option) ? $option : $this->lang->t($option);
+            $item_number_options[$option] = is_numeric($option) ? $option : $this->lang->t($option);
         }
-        $template->assign('item_number_options', $tpl_var);
-        $template->assign('item_number_options_selected', $selected_items_number);
 
         // +---------------------------------------------------------------+
         // |                        navigation bar                         |
@@ -504,8 +485,6 @@ final class CommentsController implements ControllerInterface
 
         $navbar = new PaginationService($this->currentConfig)
             ->createNavigationBar($url, $counter, $start, $items_number_for_navbar);
-
-        $template->assign('navbar', $navbar);
 
         if (count($comments) > 0) {
             // retrieving element informations
@@ -648,7 +627,22 @@ final class CommentsController implements ControllerInterface
         }
 
         $derivative_params = $this->eventDispatcher->dispatchChange(new GetCommentsDerivativeParams($this->imageStdParams->get_by_type(ImageStdParams::THUMB)))->params;
-        $template->assign('comment_derivative_params', $derivative_params);
+
+        $template->assignContext(new CommentsPageContext(
+            fAction: $this->urlService->getRootUrl() . 'comments.php',
+            fKeyword: $keyword_param !== null ? htmlspecialchars(stripslashes($keyword_param)) : '',
+            fAuthor: $author_param !== null ? htmlspecialchars(stripslashes($author_param)) : '',
+            sinceOptions: $since_options_tpl,
+            sinceOptionsSelected: $since,
+            sortByOptions: $sort_by,
+            sortByOptionsSelected: $sort_by_value,
+            sortOrderOptions: $sort_order,
+            sortOrderOptionsSelected: $sort_order_value,
+            itemNumberOptions: $item_number_options,
+            itemNumberOptionsSelected: $selected_items_number,
+            navbar: $navbar,
+            commentDerivativeParams: $derivative_params,
+        ));
 
         // include menubar
         $themeconf = $template->get_template_vars('themeconf');

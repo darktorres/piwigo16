@@ -15,6 +15,7 @@ use Piwigo\Admin\UpdatesExtPageRenderer;
 use Piwigo\Auth\AccessControl;
 use Piwigo\Config\ConfigService;
 use Piwigo\Config\CurrentConfig;
+use Piwigo\Controller\Admin\Projection\PluginsSubControllerPageContext;
 use Piwigo\Controller\Admin\Request\ExtensionTabRequest;
 use Piwigo\Core\CurrentLogger;
 use Piwigo\Core\HtmlRenderingInterface;
@@ -90,7 +91,7 @@ final class PluginsSubController implements AdminSubControllerInterface
         if ($tab === 'update') {
             new UpdatesExtPageRenderer()
                 ->render($this->lang, $this->accessControl, 'plugins', $this->urlService, $this->configService, $this->pageState, $this->currentTemplate, $this->extensionUpdateChecker, $this->htmlRenderer, $this->currentConfig);
-            $template->assign('ADMIN_PAGE_TITLE', $this->lang->t('Plugins'));
+            $template->assignContext(new PluginsSubControllerPageContext(adminPageTitle: $this->lang->t('Plugins')));
         } elseif ($tab === 'new') {
             $this->pluginsNewPageRenderer
                 ->render('plugins', $tab);

@@ -22,6 +22,8 @@ use Piwigo\Common\ValueObject\CategoryId;
 use Piwigo\Common\ValueObject\TagId;
 use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Config\CurrentConfig;
+use Piwigo\Controller\Admin\Projection\BatchManagerFilterOptionsPageContext;
+use Piwigo\Controller\Admin\Projection\BatchManagerNoSearchResultsPageContext;
 use Piwigo\Controller\Admin\Request\BatchManagerRequest;
 use Piwigo\Core\CurrentLogger;
 use Piwigo\Core\FilterState;
@@ -175,13 +177,14 @@ final class BatchManagerSubController implements AdminSubControllerInterface
         // |                              dimensions                               |
         // +-------------------------------------------------------------------+
 
-        $template->assign('dimensions', $this->computeDimensionOptions($bulk_filter));
-
         // +-------------------------------------------------------------------+
         // | filesize                                                              |
         // +-------------------------------------------------------------------+
 
-        $template->assign('filesize', $this->computeFilesizeOptions($bulk_filter));
+        $template->assignContext(new BatchManagerFilterOptionsPageContext(
+            dimensions: $this->computeDimensionOptions($bulk_filter),
+            filesize: $this->computeFilesizeOptions($bulk_filter),
+        ));
 
         // +-------------------------------------------------------------------+
         // |                         open specific mode                            |
@@ -675,7 +678,7 @@ final class BatchManagerSubController implements AdminSubControllerInterface
             $res_items = $res['items'];
             if (count($res_items) > 0 && is_array($res['qs']['unmatched_terms'] ?? null) && count($res['qs']['unmatched_terms']) > 0) {
                 $unmatched_terms = array_filter($res['qs']['unmatched_terms'], is_string(...));
-                $template->assign('no_search_results', array_map(htmlspecialchars(...), $unmatched_terms));
+                $template->assignContext(new BatchManagerNoSearchResultsPageContext(array_values(array_map(htmlspecialchars(...), $unmatched_terms))));
             }
             $filter_sets[] = $res_items;
         }

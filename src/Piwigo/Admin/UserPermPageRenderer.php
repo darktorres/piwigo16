@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin;
 
+use Piwigo\Admin\Projection\UserPermPageContext;
 use Piwigo\Admin\Request\UserPermSubmitRequest;
 use Piwigo\Auth\AccessControl;
 use Piwigo\Category\CategoryService;
@@ -89,21 +90,20 @@ final class UserPermPageRenderer
             ]
         );
 
-        $template->assign(
-            [
-                'TITLE' => $this->lang->t(
-                    'Manage permissions for user "%s"',
-                    $this->userService
-                        ->getUsername(UserId::from($user_id))->value ?? ''
-                ),
-                'L_CAT_OPTIONS_TRUE' => $this->lang->t('Authorized'),
-                'L_CAT_OPTIONS_FALSE' => $this->lang->t('Forbidden'),
-
-                'F_ACTION' => $this->urlService->getRootUrl() .
-                    'admin.php?page=user_perm' .
-                    '&amp;user_id=' . $user_id,
-            ]
-        );
+        $template->assignContext(new UserPermPageContext(
+            title: $this->lang->t(
+                'Manage permissions for user "%s"',
+                $this->userService
+                    ->getUsername(UserId::from($user_id))->value ?? ''
+            ),
+            catOptionsTrueLabel: $this->lang->t('Authorized'),
+            catOptionsFalseLabel: $this->lang->t('Forbidden'),
+            formAction: $this->urlService->getRootUrl() .
+                'admin.php?page=user_perm' .
+                '&amp;user_id=' . $user_id,
+            pwgToken: new CsrfService($this->currentConfig)
+                ->getToken(),
+        ));
 
         // retrieve category ids authorized to the groups the user belongs to
         $group_authorized = [];
@@ -135,8 +135,6 @@ final class UserPermPageRenderer
         );
 
         $categoryService->displaySelectPrivateExcluding([...$authorized_ids, ...$group_authorized], 'category_option_false', $htmlRenderer, $template);
-
-        $template->assign('PWG_TOKEN', new CsrfService($this->currentConfig)->getToken());
 
         $template->assign_var_from_handle('DOUBLE_SELECT', 'double_select');
         $template->assign_var_from_handle('ADMIN_CONTENT', 'user_perm');

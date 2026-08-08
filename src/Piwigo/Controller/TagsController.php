@@ -10,6 +10,7 @@ use Piwigo\Auth\AccessLevelChecker;
 use Piwigo\Bootstrap\PageTail;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\DeploymentPolicy;
+use Piwigo\Controller\Projection\TagsDisplayModePageContext;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\CharsetHelper;
 use Piwigo\Core\CurrentLogger;
@@ -90,14 +91,11 @@ final class TagsController implements ControllerInterface
             $display_mode = $displayModeParam;
         }
 
-        foreach (['cloud', 'letters'] as $mode) {
-            $template->assign(
-                'U_' . strtoupper($mode),
-                $urlService->getRootUrl() . 'tags.php' . ($default_display_mode === $mode ? '' : '?display_mode=' . $mode)
-            );
-        }
-
-        $template->assign('display_mode', $display_mode);
+        $template->assignContext(new TagsDisplayModePageContext(
+            cloudUrl: $urlService->getRootUrl() . 'tags.php' . ($default_display_mode === 'cloud' ? '' : '?display_mode=cloud'),
+            lettersUrl: $urlService->getRootUrl() . 'tags.php' . ($default_display_mode === 'letters' ? '' : '?display_mode=letters'),
+            displayMode: $display_mode,
+        ));
 
         $conn = DbConnection::build();
         $tagService = $this->tagService;

@@ -14,6 +14,9 @@ namespace Piwigo\Ws;
 use Piwigo\Comment\CommentApiCriteria;
 use Piwigo\Comment\CommentService;
 use Piwigo\Common\ValueObject\CommentId;
+use Piwigo\Common\ValueObject\ImageId;
+use Piwigo\Common\ValueObject\SqlDateTime;
+use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\DateHelper;
 use Piwigo\Core\Lang;
@@ -88,8 +91,8 @@ final class PwgComments
         // (which can't emit SQL metacharacters), so none of these are
         // live injection risks; the search term is bound as a real
         // parameter rather than relying on escaping.
-        $authorId = (isset($params['author_id']) and $params['author_id'] !== 0) ? $params['author_id'] : null;
-        $imageId = (isset($params['image_id']) and $params['image_id'] !== 0) ? $params['image_id'] : null;
+        $authorId = (isset($params['author_id']) and $params['author_id'] !== 0) ? UserId::from($params['author_id']) : null;
+        $imageId = (isset($params['image_id']) and $params['image_id'] !== 0) ? ImageId::from($params['image_id']) : null;
 
         $minDate = null;
         if (! in_array($params['f_min_date'], [null, ''], true)) {
@@ -97,7 +100,7 @@ final class PwgComments
             if ($min_date === false) {
                 return new PwgError(401, 'Invalid f_min_date');
             }
-            $minDate = date_format($min_date, 'Y-m-d 00:00:00');
+            $minDate = SqlDateTime::from(date_format($min_date, 'Y-m-d 00:00:00'));
         }
 
         $maxDate = null;
@@ -106,7 +109,7 @@ final class PwgComments
             if ($max_date === false) {
                 return new PwgError(401, 'Invalid f_max_date');
             }
-            $maxDate = date_format($max_date, 'Y-m-d 23:59:59');
+            $maxDate = SqlDateTime::from(date_format($max_date, 'Y-m-d 23:59:59'));
         }
 
         $criteria = new CommentApiCriteria(

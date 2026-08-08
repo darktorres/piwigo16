@@ -4,6 +4,10 @@ declare(strict_types=1);
 
 namespace Piwigo\Comment;
 
+use Piwigo\Common\ValueObject\ImageId;
+use Piwigo\Common\ValueObject\SqlDateTime;
+use Piwigo\Common\ValueObject\UserId;
+
 /**
  * Further SQL-modernization audit, Item 13: replaces the ad hoc
  * `list<SqlCondition> $whereClauses` (plus a string-keyed 'author_id'
@@ -15,18 +19,24 @@ namespace Piwigo\Comment;
  * the original's `unset($where_clauses['author_id'])` array-key
  * convention with real, readable per-method code.
  *
- * $minDate/$maxDate are already `Y-m-d H:i:s`-formatted by the caller
- * (`date_format($dateTime, ...)` can't emit SQL metacharacters) -- this
- * class carries them as opaque strings, same as the original `SqlCondition`
- * values did.
+ * P17-23 Phase 8: $authorId/$imageId/$minDate/$maxDate are real VOs, not
+ * raw scalars -- the one real caller (`Ws\PwgComments::getList()`) already
+ * has WsParamType::ID-guaranteed ints and date_format()-produced
+ * `Y-m-d H:i:s` strings, so building the VOs there (instead of at every
+ * consumption site) is a pure typing win. `CommentEntity::$authorId`
+ * itself deliberately stays plain `?int` (see that entity's own
+ * docblock -- Stage A-IP's cross-domain foreign-key-column scope
+ * boundary), so `CommentRepository`'s DQL consumer still unwraps
+ * `->value` there; `$imageId`/`$minDate`/`$maxDate` compare directly
+ * against already-VO-typed entity columns, no unwrap needed on that path.
  */
 final readonly class CommentApiCriteria
 {
     public function __construct(
-        public ?int $authorId = null,
-        public ?int $imageId = null,
-        public ?string $minDate = null,
-        public ?string $maxDate = null,
+        public ?UserId $authorId = null,
+        public ?ImageId $imageId = null,
+        public ?SqlDateTime $minDate = null,
+        public ?SqlDateTime $maxDate = null,
         public ?string $search = null,
         public string $status = 'all',
     ) {}

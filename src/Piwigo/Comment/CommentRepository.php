@@ -314,17 +314,17 @@ final class CommentRepository extends EntityRepository implements CommentCounter
 
         $conditions = [new SqlCondition('1=1')];
 
-        if ($includeAuthorId && $criteria->authorId !== null && $criteria->authorId !== 0) {
+        if ($includeAuthorId && $criteria->authorId !== null) {
             $conditions[] = new SqlCondition('author_id = :authorId', [
-                'authorId' => $criteria->authorId,
+                'authorId' => $criteria->authorId->value,
             ], [
                 'authorId' => ParameterType::INTEGER,
             ]);
         }
 
-        if ($criteria->imageId !== null && $criteria->imageId !== 0) {
+        if ($criteria->imageId !== null) {
             $conditions[] = new SqlCondition('image_id = :imageId', [
-                'imageId' => $criteria->imageId,
+                'imageId' => $criteria->imageId->value,
             ], [
                 'imageId' => ParameterType::INTEGER,
             ]);
@@ -332,7 +332,7 @@ final class CommentRepository extends EntityRepository implements CommentCounter
 
         if ($criteria->minDate !== null) {
             $conditions[] = new SqlCondition('date >= :minDate', [
-                'minDate' => $criteria->minDate,
+                'minDate' => $criteria->minDate->value,
             ], [
                 'minDate' => ParameterType::STRING,
             ]);
@@ -340,7 +340,7 @@ final class CommentRepository extends EntityRepository implements CommentCounter
 
         if ($criteria->maxDate !== null) {
             $conditions[] = new SqlCondition('date <= :maxDate', [
-                'maxDate' => $criteria->maxDate,
+                'maxDate' => $criteria->maxDate->value,
             ], [
                 'maxDate' => ParameterType::STRING,
             ]);
@@ -427,12 +427,12 @@ final class CommentRepository extends EntityRepository implements CommentCounter
 
         $criteriaObj = Criteria::create();
 
-        if ($includeAuthorId && $criteria->authorId !== null && $criteria->authorId !== 0) {
-            $criteriaObj->andWhere($expr->eq('authorId', $criteria->authorId));
+        if ($includeAuthorId && $criteria->authorId !== null) {
+            $criteriaObj->andWhere($expr->eq('authorId', $criteria->authorId->value));
         }
 
-        if ($criteria->imageId !== null && $criteria->imageId !== 0) {
-            $criteriaObj->andWhere($expr->eq('imageId', ImageId::from($criteria->imageId)));
+        if ($criteria->imageId !== null) {
+            $criteriaObj->andWhere($expr->eq('imageId', $criteria->imageId));
         }
 
         if ($criteria->minDate !== null) {

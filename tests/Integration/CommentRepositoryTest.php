@@ -16,6 +16,7 @@ use Piwigo\Comment\CommentApiCriteria;
 use Piwigo\Comment\CommentRepository;
 use Piwigo\Common\ValueObject\CommentId;
 use Piwigo\Common\ValueObject\ImageId;
+use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\ConfigLoader;
 use Piwigo\Db\DbConnection;
@@ -542,7 +543,7 @@ final class CommentRepositoryTest extends IntegrationTestCase
 
         // authorId: 1 would, if honored, exclude author_id=3's row --
         // findAuthorCounts() must still report both.
-        $rows = $this->repo->findAuthorCounts(new CommentApiCriteria(authorId: 1, imageId: 5));
+        $rows = $this->repo->findAuthorCounts(new CommentApiCriteria(authorId: UserId::from(1), imageId: ImageId::from(5)));
 
         $authorIds = array_map(
             static fn (array $row): ?int => is_numeric($row['author_id']) ? (int) $row['author_id'] : null,

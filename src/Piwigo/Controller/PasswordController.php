@@ -19,6 +19,7 @@ use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Common\ValueObject\Username;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\DeploymentPolicy;
+use Piwigo\Controller\Projection\PasswordPageContext;
 use Piwigo\Controller\Request\PasswordRequest;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\CurrentLogger;
@@ -153,6 +154,7 @@ final class PasswordController implements ControllerInterface
 
         // --------------------------------------------------------- key and action
         $first_login = false;
+        $key_value = null;
 
         // a connected user can't reset the password from a mail
         $key = $this->request->key;
@@ -167,7 +169,7 @@ final class PasswordController implements ControllerInterface
                 $userdata = $this->userService->getUserData(UserId::from($user_id));
                 $userdata_username = $userdata['username'] ?? null;
                 $this->username = is_string($userdata_username) ? $userdata_username : '';
-                $template->assign('key', $key);
+                $key_value = $key;
                 $first_login = $this->authService->hasAlreadyLoggedIn($user_id, EntityManagerFactory::build($conn)->getRepository(ActivityEntity::class));
 
                 if ($this->action === null) {
@@ -230,15 +232,17 @@ final class PasswordController implements ControllerInterface
         // straight into PageHeaderRenderer::render() below) -- no other
         // file reads $GLOBALS['title']. Plain local, not global.
         $title = $this->lang->t('Password Reset');
+        $username_or_email_value = null;
+        $is_first_login_value = null;
         if ($action === 'lost') {
             $title = $this->lang->t('Forgot your password?');
 
             if ($this->request->usernameOrEmailPresent) {
-                $template->assign('username_or_email', htmlspecialchars(stripslashes($this->request->usernameOrEmail)));
+                $username_or_email_value = htmlspecialchars(stripslashes($this->request->usernameOrEmail));
             }
         } elseif ($action === 'reset' and $first_login) {
             $title = $this->lang->t('Welcome');
-            $template->assign('is_first_login', true);
+            $is_first_login_value = true;
         }
 
         $this->pageState->setBodyId('thePasswordPage');
@@ -246,17 +250,6 @@ final class PasswordController implements ControllerInterface
         $template->set_filenames([
             'password' => 'password.tpl',
         ]);
-        $template->assign(
-            [
-                'title' => $title,
-                'form_action' => $urlService->getRootUrl() . 'password.php',
-                'action' => $action,
-                'username' => $username ?? $this->currentUser->get()
-                    ->username,
-                'PWG_TOKEN' => new CsrfService($this->currentConfig)
-                    ->getToken(),
-            ]
-        );
 
         $themeconf = $template->get_template_vars('themeconf');
         $themeconf = is_array($themeconf) ? $themeconf : [];
@@ -286,19 +279,28 @@ final class PasswordController implements ControllerInterface
             $language_options[$language_code] = $language_name;
         }
 
-        $template->assign([
-            'language_options' => $language_options,
-            'current_language' => $this->currentUser->get()
-                ->language->value,
-        ]);
-
         if (str_starts_with($this->currentUser->get()->language->value, 'fr')) {
             $help_link = 'https://upstream.example.invalid/help/fr/';
         } else {
             $help_link = 'https://upstream.example.invalid/help/';
         }
 
-        $template->assign('HELP_LINK', $help_link);
+        $template->assignContext(new PasswordPageContext(
+            key: $key_value,
+            usernameOrEmail: $username_or_email_value,
+            isFirstLogin: $is_first_login_value,
+            title: $title,
+            formAction: $urlService->getRootUrl() . 'password.php',
+            action: $action,
+            username: $username ?? $this->currentUser->get()
+                ->username?->value,
+            pwgToken: new CsrfService($this->currentConfig)
+                ->getToken(),
+            languageOptions: $language_options,
+            currentLanguage: $this->currentUser->get()
+                ->language->value,
+            helpLink: $help_link,
+        ));
 
         new PageHeaderRenderer()
             ->render($title, $this->eventDispatcher, $this->pageState, $this->currentTemplate, $this->currentConfig);

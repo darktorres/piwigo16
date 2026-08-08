@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Admin;
 
 use Piwigo\Admin\Category\CategoryAdminService;
+use Piwigo\Admin\Projection\CatPermPageContext;
 use Piwigo\Admin\Request\CatPermSubmitRequest;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\Lang;
@@ -75,6 +76,7 @@ final class CatPermPageRenderer
         // |                           form submission                         |
         // +-------------------------------------------------------------------+
 
+        $save_success = null;
         $catPermSubmit = CatPermSubmitRequest::fromGlobals();
         if ($catPermSubmit->isSubmitted) {
             new CsrfService($this->currentConfig)
@@ -90,11 +92,7 @@ final class CatPermPageRenderer
             $this->categoryAdminService->setCategoryPermissions($page['cat'], $current_status, $post_status, $apply_on_sub, $post_groups, $post_users);
             $category['status'] = $post_status;
 
-            $template->assign(
-                [
-                    'save_success' => $this->lang->t('Album updated successfully'),
-                ]
-            );
+            $save_success = $this->lang->t('Album updated successfully');
         }
 
         // +-------------------------------------------------------------------+
@@ -103,18 +101,11 @@ final class CatPermPageRenderer
 
         $template->set_filename('cat_perm', 'cat_perm.tpl');
 
-        $template->assign(
-            [
-                'CATEGORIES_NAV' => $this->htmlService
-                    ->getCatDisplayNameFromId(
-                        $page['cat'],
-                        'admin.php?page=album-'
-                    ),
-                'U_HELP' => $this->urlService->getRootUrl() . 'admin/popuphelp.php?page=cat_perm',
-                'F_ACTION' => $admin_album_base_url . '-permissions',
-                'private' => ($category['status'] === 'private'),
-            ]
-        );
+        $categories_nav = $this->htmlService
+            ->getCatDisplayNameFromId(
+                $page['cat'],
+                'admin.php?page=album-'
+            );
 
         // +-------------------------------------------------------------------+
         // |                          form construction                        |
@@ -127,21 +118,18 @@ final class CatPermPageRenderer
         foreach ($this->groupService->getAllBasic() as $g) {
             $groups[$g->id->value] = $g->name;
         }
-        $template->assign('groups', $groups);
 
         // groups granted to access the category
         $permissionRepository = new PermissionRepository(EntityManagerFactory::build($conn));
         $cat_id = $page['cat'];
         $group_granted_ids = $permissionRepository->findGrantedGroupIdsByCategory([$cat_id])[$cat_id] ?? [];
-        $template->assign('groups_selected', $group_granted_ids);
 
         // users...
         $users = $this->userService->getAllUsernamesById();
-        $template->assign('users', $users);
 
         $user_granted_direct_ids = $permissionRepository->findGrantedUserIdsByCategory([$cat_id])[$cat_id] ?? [];
-        $template->assign('users_selected', $user_granted_direct_ids);
 
+        $nb_users_granted_indirect = null;
         $user_granted_indirect_ids = [];
         if (count($group_granted_ids) > 0) {
             $granted_groups = [];
@@ -177,7 +165,7 @@ final class CatPermPageRenderer
                 $user_granted_direct_ids
             );
 
-            $template->assign('nb_users_granted_indirect', count($user_granted_indirect_ids));
+            $nb_users_granted_indirect = count($user_granted_indirect_ids);
 
             foreach ($granted_groups as $group_id => $group_users) {
                 $group_usernames = [];
@@ -202,12 +190,22 @@ final class CatPermPageRenderer
         // +-------------------------------------------------------------------+
         // |                           sending html code                       |
         // +-------------------------------------------------------------------+
-        $template->assign([
-            'PWG_TOKEN' => new CsrfService($this->currentConfig)
+        $template->assignContext(new CatPermPageContext(
+            saveSuccess: $save_success,
+            categoriesNav: $categories_nav,
+            helpUrl: $this->urlService->getRootUrl() . 'admin/popuphelp.php?page=cat_perm',
+            fAction: $admin_album_base_url . '-permissions',
+            private: ($category['status'] === 'private'),
+            groups: $groups,
+            groupsSelected: $group_granted_ids,
+            users: $users,
+            usersSelected: $user_granted_direct_ids,
+            nbUsersGrantedIndirect: $nb_users_granted_indirect,
+            pwgToken: new CsrfService($this->currentConfig)
                 ->getToken(),
-            'INHERIT' => $this->currentConfig->inheritanceByDefault(),
-            'CACHE_KEYS' => AdminUiHelper::getAdminClientCacheKeys($this->urlService, ['groups', 'users']),
-        ]);
+            inherit: $this->currentConfig->inheritanceByDefault(),
+            cacheKeys: AdminUiHelper::getAdminClientCacheKeys($this->urlService, ['groups', 'users']),
+        ));
 
         $template->assign_var_from_handle('ADMIN_CONTENT', 'cat_perm');
     }

@@ -6,6 +6,7 @@ namespace Piwigo\Admin;
 
 use Piwigo\Admin\Extensions\CoreUpdateService;
 use Piwigo\Admin\Extensions\ExtensionUpdateChecker;
+use Piwigo\Admin\Projection\UpdatesPwgPageContext;
 use Piwigo\Admin\Request\UpdatesPwgRequest;
 use Piwigo\Auth\AccessControl;
 use Piwigo\Config\CurrentConfig;
@@ -73,11 +74,11 @@ final class UpdatesPwgPageRenderer
         $step = $updatesPwgRequest->step;
         $upgrade_to = $updatesPwgRequest->upgradeTo;
 
+        $container_version = null;
+        $docker_update_guide_url = null;
         if ($ct_env === 'Official') {
-            $template->assign([
-                'CONTAINER_VERSION' => $ct_build_version,
-                'DOCKER_UPDATE_GUIDE_URL' => AppInfo::URL . '/guide-update-docker',
-            ]);
+            $container_version = $ct_build_version;
+            $docker_update_guide_url = AppInfo::URL . '/guide-update-docker';
         }
 
         $core_update_service = $this->coreUpdateService;
@@ -86,6 +87,8 @@ final class UpdatesPwgPageRenderer
         // +-----------------------------------------------------------------------+
         // |                                Step 0                                 |
         // +-----------------------------------------------------------------------+
+        $check_version = null;
+        $dev_version = null;
         if ($step === 0) {
             if ($new_versions->minor !== null and $new_versions->major !== null) {
                 $step = 1;
@@ -98,8 +101,8 @@ final class UpdatesPwgPageRenderer
                 $upgrade_to = $new_versions->major;
             }
 
-            $template->assign('CHECK_VERSION', $new_versions->piwigoOrgChecked);
-            $template->assign('DEV_VERSION', $new_versions->isDev);
+            $check_version = $new_versions->piwigoOrgChecked;
+            $dev_version = $new_versions->isDev;
         }
 
         // +-----------------------------------------------------------------------+
@@ -123,6 +126,7 @@ final class UpdatesPwgPageRenderer
         // +-----------------------------------------------------------------------+
         // |                                Step 3                                 |
         // +-----------------------------------------------------------------------+
+        $missing = null;
         if ($step === 3 and $this->accessControl->isWebmaster()) {
             if ($updatesPwgRequest->isUpgradeSubmitted) {
                 new CsrfService($this->currentConfig)
@@ -131,19 +135,21 @@ final class UpdatesPwgPageRenderer
             }
 
             $extension_update_checker = $this->extensionUpdateChecker;
-            $template->assign('missing', $extension_update_checker->getMissingExtensions($upgrade_to));
+            $missing = $extension_update_checker->getMissingExtensions($upgrade_to);
         }
 
         // +-----------------------------------------------------------------------+
         // | Check for requirements                                                |
         // +-----------------------------------------------------------------------+
 
+        $minor_release_php_required = null;
         if ($new_versions->minorPhp !== null and version_compare(PHP_VERSION, $new_versions->minorPhp, '<')) {
-            $template->assign('MINOR_RELEASE_PHP_REQUIRED', $new_versions->minorPhp);
+            $minor_release_php_required = $new_versions->minorPhp;
         }
 
+        $major_release_php_required = null;
         if ($new_versions->majorPhp !== null and version_compare(PHP_VERSION, $new_versions->majorPhp, '<')) {
-            $template->assign('MAJOR_RELEASE_PHP_REQUIRED', $new_versions->majorPhp);
+            $major_release_php_required = $new_versions->majorPhp;
         }
 
         // +-----------------------------------------------------------------------+
@@ -154,42 +160,48 @@ final class UpdatesPwgPageRenderer
             $this->pageState->addWarning(str_replace('%s', $this->lang->t('user_status_webmaster'), $this->lang->t('%s status is required to edit parameters.')));
         }
 
-        $template->assign(
-            [
-                'STEP' => $step,
-                'PIWIGO_CURRENT_VERSION' => $this->pageState->updatedVersion ?? AppInfo::VERSION,
-                'UPGRADE_TO' => $upgrade_to,
-                'PWG_TOKEN' => new CsrfService($this->currentConfig)
-                    ->getToken(),
-            ]
-        );
-
+        $minor_version = null;
+        $minor_release_url = null;
         if ($new_versions->minor !== null) {
-            $template->assign(
-                [
-                    'MINOR_VERSION' => $new_versions->minor,
-                    'MINOR_RELEASE_URL' => (
-                        ($ct_env === 'Official')
-                    ? 'https://github.com/Piwigo/piwigo-docker/wiki/Changelog#' . preg_replace('/\./', '', $new_versions->minor)
-                    : AppInfo::URL . '/releases/' . $new_versions->minor
-                    ),
-                ]
-            );
+            $minor_version = $new_versions->minor;
+            $minor_release_url = ($ct_env === 'Official')
+                ? 'https://github.com/Piwigo/piwigo-docker/wiki/Changelog#' . preg_replace('/\./', '', $new_versions->minor)
+                : AppInfo::URL . '/releases/' . $new_versions->minor;
         }
 
+        $major_version = null;
+        $major_release_url = null;
+        $major_docker_release_url = null;
+        $major_version_pwg = null;
         if ($new_versions->major !== null) {
-            $template->assign(
-                [
-                    'MAJOR_VERSION' => $new_versions->major,
-                    'MAJOR_RELEASE_URL' => AppInfo::URL . '/releases/' .
-                      (($ct_env === 'Official') ? substr($new_versions->major, 0, -1) : $new_versions->major),
-                    'MAJOR_DOCKER_RELEASE_URL' => 'https://github.com/Piwigo/piwigo-docker/wiki/Changelog#' . preg_replace('/\./', '', $new_versions->major),
-                    'MAJOR_VERSION_PWG' => preg_replace('/[a-z]$/', '', $new_versions->major), // Remove container build ver
-                ]
-            );
+            $major_version = $new_versions->major;
+            $major_release_url = AppInfo::URL . '/releases/' .
+              (($ct_env === 'Official') ? substr($new_versions->major, 0, -1) : $new_versions->major);
+            $major_docker_release_url = 'https://github.com/Piwigo/piwigo-docker/wiki/Changelog#' . preg_replace('/\./', '', $new_versions->major);
+            $major_version_pwg = preg_replace('/[a-z]$/', '', $new_versions->major); // Remove container build ver
         }
 
-        $template->assign('ADMIN_PAGE_TITLE', $this->lang->t('Updates'));
+        $template->assignContext(new UpdatesPwgPageContext(
+            containerVersion: $container_version,
+            dockerUpdateGuideUrl: $docker_update_guide_url,
+            checkVersion: $check_version,
+            devVersion: $dev_version,
+            missing: $missing,
+            minorReleasePhpRequired: $minor_release_php_required,
+            majorReleasePhpRequired: $major_release_php_required,
+            step: $step,
+            piwigoCurrentVersion: $this->pageState->updatedVersion ?? AppInfo::VERSION,
+            upgradeTo: $upgrade_to,
+            pwgToken: new CsrfService($this->currentConfig)
+                ->getToken(),
+            minorVersion: $minor_version,
+            minorReleaseUrl: $minor_release_url,
+            majorVersion: $major_version,
+            majorReleaseUrl: $major_release_url,
+            majorDockerReleaseUrl: $major_docker_release_url,
+            majorVersionPwg: $major_version_pwg,
+            adminPageTitle: $this->lang->t('Updates'),
+        ));
         $template->set_filename('plugin_admin_content', 'updates_pwg.tpl');
         $template->assign_var_from_handle('ADMIN_CONTENT', 'plugin_admin_content');
     }

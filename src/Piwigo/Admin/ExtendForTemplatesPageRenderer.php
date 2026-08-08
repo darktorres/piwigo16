@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin;
 
+use Piwigo\Admin\Projection\ExtendForTemplatesPageContext;
 use Piwigo\Admin\Request\ExtendForTemplatesSubmitRequest;
 use Piwigo\Auth\AccessControl;
 use Piwigo\Category\CategoryService;
@@ -177,11 +178,10 @@ final class ExtendForTemplatesPageRenderer
             'extend_for_templates' => 'extend_for_templates.tpl',
         ]);
 
-        $template->assign(
-            [
-                'U_HELP' => $urlService->getRootUrl() . 'admin/popuphelp.php?page=extend_for_templates',
-            ]
-        );
+        $template->assignContext(new ExtendForTemplatesPageContext(
+            helpUrl: $urlService->getRootUrl() . 'admin/popuphelp.php?page=extend_for_templates',
+            adminPageTitle: $lang->t('Extend for templates'),
+        ));
         ksort($tpl_extension);
         foreach ($tpl_extension as $file => $conditions) {
             $handle = $conditions[0];
@@ -201,7 +201,6 @@ final class ExtendForTemplatesPageRenderer
                 ]
             );
         }
-        $template->assign('ADMIN_PAGE_TITLE', $lang->t('Extend for templates'));
 
         $template->assign_var_from_handle('ADMIN_CONTENT', 'extend_for_templates');
     }

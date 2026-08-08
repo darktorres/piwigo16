@@ -12,6 +12,7 @@ declare(strict_types=1);
 namespace Piwigo\Admin;
 
 use Piwigo\Admin\Projection\TabSheetEntry;
+use Piwigo\Admin\Projection\TabsheetPageContext;
 use Piwigo\Event\Admin\TabsheetBeforeSelect;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Template\CurrentTemplate;
@@ -160,12 +161,17 @@ final class Tabsheet
         $template = $currentTemplate->get();
 
         $template->set_filename('tabsheet', 'tabsheet.tpl');
-        $template->assign('tabsheet', array_map(static fn (TabSheetEntry $entry): array => $entry->toArray(), $this->sheets));
-        $template->assign('tabsheet_selected', $this->selected);
+        $template->assignContext(new TabsheetPageContext(
+            sheets: array_map(static fn (TabSheetEntry $entry): array => $entry->toArray(), $this->sheets),
+            selected: $this->selected,
+        ));
 
         $selected_tab = $this->get_selected();
 
         if (isset($selected_tab)) {
+            // Not a Phase 13 TemplatePageContext candidate: $this->titlename
+            // is a real, per-instance mutable property (set_titlename()) --
+            // a genuinely dynamic key, not a fixed page var.
             $template->assign(
                 [
                     $this->titlename => '[' . $selected_tab->caption . ']',

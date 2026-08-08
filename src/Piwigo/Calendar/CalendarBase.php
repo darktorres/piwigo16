@@ -461,6 +461,13 @@ abstract class CalendarBase
             // every write to 'chronology_navigation_bars' (build_nav_bar()
             // above, and the append() below) stores a list of arrays, so
             // narrow with is_array() rather than trusting the signature.
+            //
+            // Not a Phase 13 TemplatePageContext candidate: this assign()
+            // is a read-modify-write patch on a var already incrementally
+            // built by build_nav_bar()'s own append() calls (real
+            // cross-method shared mutable state, not one page's own fixed
+            // var set) -- there is no fixed "this page's context" to
+            // model here.
             $existing = $template->get_template_vars('chronology_navigation_bars');
             if (is_array($existing) && $existing !== []) {
                 $last_index = count($existing) - 1;

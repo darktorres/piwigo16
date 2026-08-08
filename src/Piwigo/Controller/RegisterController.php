@@ -15,6 +15,7 @@ use Piwigo\Common\ValueObject\LangCode;
 use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\DeploymentPolicy;
+use Piwigo\Controller\Projection\RegisterPageContext;
 use Piwigo\Controller\Request\RegisterSubmitRequest;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\CurrentLogger;
@@ -241,15 +242,6 @@ final class RegisterController implements ControllerInterface
         $template->set_filenames([
             'register' => 'register.tpl',
         ]);
-        $template->assign([
-            'U_HOME' => $urlService->makeIndexUrl(),
-            'F_KEY' => $registration_post_key,
-            'F_ACTION' => 'register.php',
-            'F_LOGIN' => $login,
-            'F_EMAIL' => $email,
-            'obligatory_user_mail_address' => $this->currentConfig->obligatoryUserMailAddress(),
-        ]);
-
         $themeconf = $template->get_template_vars('themeconf');
         $hide_menu_on = is_array($themeconf) ? ($themeconf['hide_menu_on'] ?? null) : null;
         if (! is_array($hide_menu_on) or ! in_array('theRegisterPage', $hide_menu_on, true)) {
@@ -281,19 +273,24 @@ final class RegisterController implements ControllerInterface
             $language_options[$language_code] = $language_name;
         }
 
-        $template->assign([
-            'language_options' => $language_options,
-            'current_language' => $this->currentUser->get()
-                ->language->value,
-        ]);
-
         if (str_starts_with($this->currentUser->get()->language->value, 'fr')) {
             $help_link = 'https://upstream.example.invalid/help/fr/';
         } else {
             $help_link = 'https://upstream.example.invalid/help/';
         }
 
-        $template->assign('HELP_LINK', $help_link);
+        $template->assignContext(new RegisterPageContext(
+            homeUrl: $urlService->makeIndexUrl(),
+            formKey: $registration_post_key,
+            formAction: 'register.php',
+            formLogin: $login,
+            formEmail: $email,
+            obligatoryUserMailAddress: $this->currentConfig->obligatoryUserMailAddress(),
+            languageOptions: $language_options,
+            currentLanguage: $this->currentUser->get()
+                ->language,
+            helpLink: $help_link,
+        ));
 
         new PageHeaderRenderer()
             ->render($title, $this->eventDispatcher, $this->pageState, $this->currentTemplate, $this->currentConfig);

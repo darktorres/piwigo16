@@ -579,6 +579,36 @@ final class WsHistoryTest extends ContractTestCase
         self::assertSame('2', $line['IMAGEID']);
     }
 
+    /**
+     * Real bug found live: a real browser client always sends every
+     * current_param key, including image_id as the literal empty string
+     * when no image filter is active (history.tpl's own `image_id: {if
+     * isset($IMAGE_ID)}"{$IMAGE_ID}"{else}""{/if}`) -- unlike this test
+     * suite's own wsAdmin() helper, which (like the other tests in this
+     * file) simply omits the key entirely when unused, so this exact
+     * client shape was never covered before. PwgServer::checkType()
+     * deliberately skips its own int/positive coercion for an
+     * empty-string param, so '' reached historySearch()'s old `!== 0`
+     * guard unconverted, got persisted as image_id: 0 via intval(''),
+     * and HistoryRepository::search() later threw
+     * "ImageId must be a positive integer, got 0" -- a genuine,
+     * always-triggered 500 on admin.php?page=history's default,
+     * unfiltered search (confirmed live via a real Playwright
+     * reproduction), not a test-only edge case.
+     */
+    public function test_historySearch_with_an_empty_string_image_id_does_not_throw(): void
+    {
+        $this->enableHistoryForAdmin();
+        $this->wsAdmin('pwg.history.log', ['image_id' => 1]);
+
+        $response = $this->wsAdmin('pwg.history.search', ['image_id' => '']);
+
+        self::assertSame('ok', $response['stat']);
+        $result = $response['result'];
+        self::assertIsArray($result);
+        self::assertIsArray($result['lines']);
+    }
+
     public function test_historySearch_filters_by_types(): void
     {
         $this->enableHistoryForAdmin();

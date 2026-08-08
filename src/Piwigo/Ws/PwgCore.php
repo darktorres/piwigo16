@@ -820,15 +820,21 @@ final class PwgCore
      * API method
      * Returns lines of an history search
      * @since 13
-     * @param array{start: string|null, end: string|null, types: array<int, string>, user_id: int|string, image_id: int|null, filename: string|null, ip: string|null, display_thumbnail: string, pageNumber: int|null, ...} $param
+     * @param array{start: string|null, end: string|null, types: array<int, string>, user_id: int|string, image_id: int|string|null, filename: string|null, ip: string|null, display_thumbnail: string, pageNumber: int|null, ...} $param
      *    start/end/filename/ip: no WS_TYPE flag, null default -- string|null.
      *    types: WsParamFlag::FORCE_ARRAY, non-null array default, no WS_TYPE flag
      *    -- always an array (never coerced element-wise). user_id: no
      *    WS_TYPE flag, non-null int default (-1) -- int if the default is
      *    used, otherwise the raw uncoerced request string. image_id:
-     *    WsParamType::ID, null default -- int|null. display_thumbnail: no
-     *    WS_TYPE flag, non-null string default -- always string.
-     *    pageNumber: WsParamType::INT|POSITIVE, null default -- int|null.
+     *    WsParamType::ID, null default -- int|null in principle, but
+     *    PwgServer::checkType()'s own int/positive coercion deliberately
+     *    skips an empty-string param (`elseif ($param !== '')`), so the
+     *    real, uncoerced string '' also reaches here whenever a caller
+     *    sends the key with no value (a real browser client, unlike a WS
+     *    caller that just omits the key entirely -- confirmed live).
+     *    display_thumbnail: no WS_TYPE flag, non-null string default --
+     *    always string. pageNumber: WsParamType::INT|POSITIVE, null
+     *    default -- int|null.
      * @return array<string, mixed>
      */
     public function historySearch(array $param, PwgServer &$service): array
@@ -884,8 +890,21 @@ final class PwgCore
         // user
         $search['fields']['user'] = intval($param['user_id']);
 
-        // image
-        if ($param['image_id'] !== null and $param['image_id'] !== 0) {
+        // image -- PwgServer::checkType() deliberately skips its own
+        // int/positive coercion for an empty-string param (its own
+        // `elseif ($param !== '')` guard), so a real browser client that
+        // always sends every key (history.tpl's own `image_id: {if
+        // isset($IMAGE_ID)}"{$IMAGE_ID}"{else}""{/if}`, unlike a WS caller
+        // that just omits the key) reaches this method with the literal
+        // string ''. The old `!== 0` check missed that case (only the
+        // sibling filename/ip checks below already excluded '' too),
+        // so intval('') = 0 got stored into $search['fields']['image_id']
+        // and persisted -- HistoryRepository::search() later reads it back
+        // as a real, non-null 0 and calls ImageId::from(0), which throws
+        // (confirmed live: this was a genuine, always-triggered 500 on
+        // admin.php?page=history's default, unfiltered search, not a test-only
+        // issue).
+        if (! in_array($param['image_id'], [null, '', 0], true)) {
             $search['fields']['image_id'] = intval($param['image_id']);
         }
 

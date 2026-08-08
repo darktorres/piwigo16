@@ -395,7 +395,7 @@ test('get_resize_dimensions swaps width/height for a 270-degree rotation too, no
     // stop swapping for 270, which none of the existing tests would catch.
     $result = PwgImage::get_resize_dimensions(100, 200, 50, 100, 270, false);
 
-    expect($result)->toBe(['width' => 25.0, 'height' => 50]);
+    expect($result)->toEqual(new ResizeDimensions(25.0, 50));
 });
 
 test('get_resize_dimensions applies neither crop offset when dest_ratio exactly equals img_ratio', function (): void {
@@ -415,8 +415,7 @@ test('get_resize_dimensions applies neither crop offset when dest_ratio exactly 
     // boundary. Provably inert, not an untested gap.
     $result = PwgImage::get_resize_dimensions(200, 100, 100, 50, null, true);
 
-    expect($result)->toBe(['width' => 100, 'height' => 50.0]);
-    expect($result)->not->toHaveKey('crop');
+    expect($result)->toEqual(new ResizeDimensions(100, 50.0));
 });
 
 test('get_resize_dimensions rounds (not ceils) the destWidth/destHeight crop-branch math when the fraction is below 0.5', function (): void {
@@ -437,11 +436,7 @@ test('get_resize_dimensions rounds (not ceils) the destWidth/destHeight crop-bra
     // = 104 (round and floor agree; ceil would give 105).
     $result = PwgImage::get_resize_dimensions(300, 100, 101, 97, null, true);
 
-    expect($result)->toBe([
-        'width' => 101.0,
-        'height' => 97,
-        'crop' => ['width' => 104.0, 'height' => 100, 'x' => 98.0, 'y' => 0],
-    ]);
+    expect($result)->toEqual(new ResizeDimensions(101.0, 97, new ResizeCrop(104.0, 100, 98.0, 0)));
 });
 
 test('get_resize_dimensions rounds (not ceils) the final destination_width when the max-size-exceeded fraction is below 0.5', function (): void {
@@ -456,7 +451,7 @@ test('get_resize_dimensions rounds (not ceils) the final destination_width when 
     // (not hand-derived) before asserting.
     $result = PwgImage::get_resize_dimensions(203, 100, 100, 48, null, false);
 
-    expect($result['width'])->toBe(97.0);
+    expect($result->width)->toBe(97.0);
 });
 
 test('get_resize_dimensions rounds (not ceils) the final destination_height when the max-size-exceeded fraction is below 0.5', function (): void {
@@ -469,7 +464,7 @@ test('get_resize_dimensions rounds (not ceils) the final destination_height when
     // 98). Verified directly against the real function before asserting.
     $result = PwgImage::get_resize_dimensions(100, 203, 48, 100, null, false);
 
-    expect($result['height'])->toBe(97.0);
+    expect($result->height)->toBe(97.0);
 });
 
 test('get_rotation_code_from_angle maps every known angle, treating null the same as 0', function (): void {
@@ -612,11 +607,7 @@ test('webp_info correctly reports no transparency for a VP8L flags byte with an 
     $buf = 'RIFF' . "\x00\x00\x00\x00" . 'WEBP' . 'VP8' . 'L' . str_repeat("\x00", 8) . chr(0x01);
     file_put_contents($path, $buf);
 
-    expect(PwgImage::webp_info($path))->toBe([
-        'type' => 'VP8L',
-        'has-animation' => false,
-        'has-transparent' => false,
-    ]);
+    expect(PwgImage::webp_info($path))->toEqual(new WebpInfo('VP8L', false, false));
 });
 
 test('webp_info correctly reports no animation or transparency for a VP8X flags byte with an adjacent, unrelated bit set', function (): void {
@@ -628,11 +619,7 @@ test('webp_info correctly reports no animation or transparency for a VP8X flags 
     $buf = 'RIFF' . "\x00\x00\x00\x00" . 'WEBP' . 'VP8' . 'X' . str_repeat("\x00", 4) . chr(0x01) . str_repeat("\x00", 4);
     file_put_contents($path, $buf);
 
-    expect(PwgImage::webp_info($path))->toBe([
-        'type' => 'VP8X',
-        'has-animation' => false,
-        'has-transparent' => false,
-    ]);
+    expect(PwgImage::webp_info($path))->toEqual(new WebpInfo('VP8X', false, false));
 });
 
 test('webp_info detects an extended VP8X format that is transparent but not animated', function (): void {

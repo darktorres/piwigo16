@@ -2,7 +2,9 @@
 
 declare(strict_types=1);
 
+use Piwigo\Common\ValueObject\LangCode;
 use Piwigo\Common\ValueObject\UserId;
+use Piwigo\Common\ValueObject\Username;
 use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\Lang;
 use Piwigo\Core\UrlServiceInterface;
@@ -315,9 +317,9 @@ test('prefilter_white_space strips leading whitespace before every recognized ta
 test('constructor registers an is_admin modifier that reads the current user\'s own status when called with no argument', function (): void {
     CurrentUserTestFactory::get()->set(new User(
         id: UserId::from(7),
-        username: 'admin-user',
-        email: '',
-        language: 'en_GB',
+        username: Username::from('admin-user'),
+        email: null,
+        language: LangCode::from('en_GB'),
         theme: 'dummy',
         status: UserStatus::Admin,
         enabledHigh: false,
@@ -338,9 +340,9 @@ test('constructor registers an is_admin modifier that reads the current user\'s 
 test('constructor registers an is_classic_user modifier that reads the current user\'s own status when called with no argument', function (): void {
     CurrentUserTestFactory::get()->set(new User(
         id: UserId::from(8),
-        username: 'normal-user',
-        email: '',
-        language: 'en_GB',
+        username: Username::from('normal-user'),
+        email: null,
+        language: LangCode::from('en_GB'),
         theme: 'dummy',
         status: UserStatus::Normal,
         enabledHigh: false,

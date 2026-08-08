@@ -469,12 +469,8 @@ test('extract with a bare "." removePrefix does not strip any entry name, even o
 
     $result = new ZipExtractor()->extract($archive, $dest, '.', new CurrentConfig());
 
-    expect($result)->toBe([
-        [
-            'filename' => $dest . '/PEST Mutator was here!/main.inc.php',
-            'stored_filename' => 'PEST Mutator was here!/main.inc.php',
-            'status' => 'ok',
-        ],
+    expect($result)->toEqual([
+        new ExtractedFileEntry($dest . '/PEST Mutator was here!/main.inc.php', 'PEST Mutator was here!/main.inc.php', 'ok'),
     ]);
     expect(file_get_contents($dest . '/PEST Mutator was here!/main.inc.php'))->toBe('<?php // main');
 });
@@ -497,12 +493,8 @@ test('extract does not double a removePrefix that already ends with a trailing s
 
     $result = new ZipExtractor()->extract($archive, $dest, 'plugin_id/', new CurrentConfig());
 
-    expect($result)->toBe([
-        [
-            'filename' => $dest . '/main.inc.php',
-            'stored_filename' => 'plugin_id/main.inc.php',
-            'status' => 'ok',
-        ],
+    expect($result)->toEqual([
+        new ExtractedFileEntry($dest . '/main.inc.php', 'plugin_id/main.inc.php', 'ok'),
     ]);
     expect(file_get_contents($dest . '/main.inc.php'))->toBe('<?php // main');
 });
@@ -525,12 +517,8 @@ test('extract strips exactly the two-character "./" prefix from destPath, not ju
 
     $result = new ZipExtractor()->extract($archive, $dest, 'plugin_id', new CurrentConfig());
 
-    expect($result)->toBe([
-        [
-            'filename' => zip_extractor_test_marker() . '/extracted/main.inc.php',
-            'stored_filename' => 'plugin_id/main.inc.php',
-            'status' => 'ok',
-        ],
+    expect($result)->toEqual([
+        new ExtractedFileEntry(zip_extractor_test_marker() . '/extracted/main.inc.php', 'plugin_id/main.inc.php', 'ok'),
     ]);
 });
 
@@ -548,12 +536,8 @@ test('extract strips a trailing slash from destPath before joining entry names o
 
     $result = new ZipExtractor()->extract($archive, $dest, 'plugin_id', new CurrentConfig());
 
-    expect($result)->toBe([
-        [
-            'filename' => zip_extractor_test_marker() . '/extracted/main.inc.php',
-            'stored_filename' => 'plugin_id/main.inc.php',
-            'status' => 'ok',
-        ],
+    expect($result)->toEqual([
+        new ExtractedFileEntry(zip_extractor_test_marker() . '/extracted/main.inc.php', 'plugin_id/main.inc.php', 'ok'),
     ]);
 });
 
@@ -574,17 +558,9 @@ test('extract does not strip removePrefix from an entry whose stored name does n
 
     $result = new ZipExtractor()->extract($archive, $dest, 'plugin_id', new CurrentConfig());
 
-    expect($result)->toBe([
-        [
-            'filename' => $dest . '/main.inc.php',
-            'stored_filename' => 'plugin_id/main.inc.php',
-            'status' => 'ok',
-        ],
-        [
-            'filename' => $dest . '/unrelated/readme.txt',
-            'stored_filename' => 'unrelated/readme.txt',
-            'status' => 'ok',
-        ],
+    expect($result)->toEqual([
+        new ExtractedFileEntry($dest . '/main.inc.php', 'plugin_id/main.inc.php', 'ok'),
+        new ExtractedFileEntry($dest . '/unrelated/readme.txt', 'unrelated/readme.txt', 'ok'),
     ]);
     expect(file_get_contents($dest . '/main.inc.php'))->toBe('<?php // main');
     expect(file_get_contents($dest . '/unrelated/readme.txt'))->toBe('not part of the plugin');
@@ -627,22 +603,10 @@ test('extract continues processing later entries after marking one as already_a_
 
     $result = new ZipExtractor()->extract($archive, $dest, 'plugin_id', new CurrentConfig());
 
-    expect($result)->toBe([
-        [
-            'filename' => $dest . '/foo/',
-            'stored_filename' => 'plugin_id/foo/',
-            'status' => 'ok',
-        ],
-        [
-            'filename' => $dest . '/foo',
-            'stored_filename' => 'plugin_id/foo',
-            'status' => 'already_a_directory',
-        ],
-        [
-            'filename' => $dest . '/after.txt',
-            'stored_filename' => 'plugin_id/after.txt',
-            'status' => 'ok',
-        ],
+    expect($result)->toEqual([
+        new ExtractedFileEntry($dest . '/foo/', 'plugin_id/foo/', 'ok'),
+        new ExtractedFileEntry($dest . '/foo', 'plugin_id/foo', 'already_a_directory'),
+        new ExtractedFileEntry($dest . '/after.txt', 'plugin_id/after.txt', 'ok'),
     ]);
     expect(file_get_contents($dest . '/after.txt'))->toBe('still extracted');
 });
@@ -666,12 +630,8 @@ test('extract does not create a destination file when the archive entry itself c
 
     $result = new ZipExtractor()->extract($archive, $dest, 'plugin_id', new CurrentConfig());
 
-    expect($result)->toBe([
-        [
-            'filename' => $dest . '/secret.txt',
-            'stored_filename' => 'plugin_id/secret.txt',
-            'status' => 'write_error',
-        ],
+    expect($result)->toEqual([
+        new ExtractedFileEntry($dest . '/secret.txt', 'plugin_id/secret.txt', 'write_error'),
     ]);
     expect(file_exists($dest . '/secret.txt'))->toBeFalse();
 });
@@ -692,17 +652,9 @@ test('extract continues processing later entries after a write_error result', fu
 
     $result = new ZipExtractor()->extract($archive, $dest, 'plugin_id', new CurrentConfig());
 
-    expect($result)->toBe([
-        [
-            'filename' => $dest . '/secret.txt',
-            'stored_filename' => 'plugin_id/secret.txt',
-            'status' => 'write_error',
-        ],
-        [
-            'filename' => $dest . '/after.txt',
-            'stored_filename' => 'plugin_id/after.txt',
-            'status' => 'ok',
-        ],
+    expect($result)->toEqual([
+        new ExtractedFileEntry($dest . '/secret.txt', 'plugin_id/secret.txt', 'write_error'),
+        new ExtractedFileEntry($dest . '/after.txt', 'plugin_id/after.txt', 'ok'),
     ]);
     expect(file_get_contents($dest . '/after.txt'))->toBe('still extracted');
 });
@@ -816,17 +768,9 @@ test('extract accepts an entry whose stored path uses ".." to reference a siblin
 
     $result = new ZipExtractor()->extract($archive, $dest, 'plugin_id', new CurrentConfig());
 
-    expect($result)->toBe([
-        [
-            'filename' => $dest . '/subdir/',
-            'stored_filename' => 'plugin_id/subdir/',
-            'status' => 'ok',
-        ],
-        [
-            'filename' => $dest . '/subdir/../other.txt',
-            'stored_filename' => 'plugin_id/subdir/../other.txt',
-            'status' => 'ok',
-        ],
+    expect($result)->toEqual([
+        new ExtractedFileEntry($dest . '/subdir/', 'plugin_id/subdir/', 'ok'),
+        new ExtractedFileEntry($dest . '/subdir/../other.txt', 'plugin_id/subdir/../other.txt', 'ok'),
     ]);
     expect(file_get_contents($dest . '/other.txt'))->toBe('<?php // other');
 });

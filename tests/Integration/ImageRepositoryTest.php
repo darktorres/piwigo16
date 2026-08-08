@@ -901,8 +901,8 @@ final class ImageRepositoryTest extends IntegrationTestCase
             // string-keyed shape, and it's never JSON-encoded anywhere --
             // so this test only needs the by-add_method values below, not
             // a separate list-shape assertion.
-            $byMethod = array_column($breakdown, null, 'add_method');
-            self::assertSame('2030-01-01 00:00:00', $byMethod['api']['last_added_on']);
+            $byMethod = array_column($breakdown, null, 'addMethod');
+            self::assertSame('2030-01-01 00:00:00', $byMethod['api']->lastAddedOn);
         } finally {
             $this->conn->rollBack();
         }

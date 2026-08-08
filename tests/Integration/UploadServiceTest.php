@@ -1785,7 +1785,7 @@ final class UploadServiceTest extends IntegrationTestCase
             throw new RuntimeException('filesize failed');
         }
 
-        self::assertSame(floor($realBytes / 1024), $infos['filesize']);
+        self::assertSame(floor($realBytes / 1024), $infos->filesize);
     }
 
     /**

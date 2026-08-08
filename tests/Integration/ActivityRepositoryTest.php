@@ -139,7 +139,7 @@ final class ActivityRepositoryTest extends IntegrationTestCase
                 'performedBy' => 1,
                 'sessionIdx' => 'sess-1',
                 'ipAddress' => null,
-                'occuredOn' => '2026-07-12 00:00:00',
+                'occuredOn' => SqlDateTime::from('2026-07-12 00:00:00'),
                 'details' => [],
                 'userAgent' => null,
             ]]);
@@ -167,7 +167,7 @@ final class ActivityRepositoryTest extends IntegrationTestCase
                 'performedBy' => 1,
                 'sessionIdx' => 'sess-1',
                 'ipAddress' => null,
-                'occuredOn' => '2026-07-12 00:00:00',
+                'occuredOn' => SqlDateTime::from('2026-07-12 00:00:00'),
                 'details' => [],
                 'userAgent' => null,
             ]]);
@@ -195,7 +195,7 @@ final class ActivityRepositoryTest extends IntegrationTestCase
                 'performedBy' => 1,
                 'sessionIdx' => 'sess-1',
                 'ipAddress' => null,
-                'occuredOn' => '2026-07-12 00:00:00',
+                'occuredOn' => SqlDateTime::from('2026-07-12 00:00:00'),
                 'details' => [],
                 'userAgent' => null,
             ]]);
@@ -301,7 +301,7 @@ final class ActivityRepositoryTest extends IntegrationTestCase
             'performedBy' => null,
             'sessionIdx' => 'sess-1',
             'ipAddress' => null,
-            'occuredOn' => '2026-07-15 00:00:00',
+            'occuredOn' => SqlDateTime::from('2026-07-15 00:00:00'),
             'details' => [],
             'userAgent' => null,
         ]]);

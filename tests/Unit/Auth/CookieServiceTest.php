@@ -240,14 +240,19 @@ test('setCookieVar casts a scalar non-string value to a string before handing it
     // is_scalar(), otherwise a raw int would reach setcookie()'s own
     // `string $value` parameter, and this file's strict_types=1 makes that
     // call-site type-strict even for a built-in function: an unconverted
-    // int would throw a TypeError instead of silently coercing.
+    // int would throw a TypeError instead of silently coercing. That cast
+    // only feeds the setcookie() wire value though, which isn't
+    // independently observable in a CLI test process (same reasoning as
+    // the non-scalar test above) -- this only proves the cast path doesn't
+    // throw, checked via $_COOKIE directly (no more generic accessor to
+    // read back through, since P17-23 Phase 9 removed getCookieVar()).
     $_SERVER['SCRIPT_NAME'] = '/piwigo/index.php';
     $service = new CookieService();
 
     $result = $service->setCookieVar('intpref', 42);
 
     expect($result)->toBeTrue();
-    expect($service->getCookieVar('intpref'))->toBe(42);
+    expect($_COOKIE['pwg_intpref'] ?? null)->toBe(42);
 });
 
 test('cookiePath normalizes back to the real app root when the entry file is one directory deeper', function (): void {

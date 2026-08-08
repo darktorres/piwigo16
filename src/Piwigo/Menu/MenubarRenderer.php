@@ -24,6 +24,7 @@ use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Filter\FilterService;
 use Piwigo\Group\GroupEntity;
 use Piwigo\Lang\Translator;
+use Piwigo\Menu\Projection\MenubarIdentificationPageContext;
 use Piwigo\Permission\PermissionRepository;
 use Piwigo\Permission\PermissionService;
 use Piwigo\PluginConfig\EventDispatcher;
@@ -85,10 +86,11 @@ final class MenubarRenderer
         }
         $menu->prepare_display();
 
+        $query_search = null;
         if ($section_context !== null && $section_context->section === Section::Search && $section_context->qsearchDetails !== []) {
             $qsearch_q = $section_context->qsearchDetails['q'] ?? '';
             $qsearch_q = is_string($qsearch_q) ? $qsearch_q : '';
-            $template->assign('QUERY_SEARCH', htmlspecialchars($qsearch_q));
+            $query_search = htmlspecialchars($qsearch_q);
         }
 
         // --------------------------------------------------------------- external links
@@ -129,24 +131,20 @@ final class MenubarRenderer
         // -------------------------------------------------------------- categories
         $block = $menu->get_block('mbCategories');
         // ------------------------------------------------------------------------ filter
+        $u_stop_filter = null;
+        $u_start_filter = null;
         if ($currentConfig->menubarFilterIcon() and ! self::emptyValue($currentConfig->filterPages()) and (bool) PageFilterHelper::getFilterPageValue($currentConfig, 'used')) {
             if ($filterState->isEnabled()) {
-                $template->assign(
-                    'U_STOP_FILTER',
-                    $urlService->addUrlParams($urlService->makeIndexUrl([]), [
-                        'filter' => 'stop',
-                    ])
-                );
+                $u_stop_filter = $urlService->addUrlParams($urlService->makeIndexUrl([]), [
+                    'filter' => 'stop',
+                ]);
             } else {
                 $recent_period = $currentUser->get()
                     ->rawAttributes['recent_period'] ?? null;
                 $recent_period = is_numeric($recent_period) ? (int) $recent_period : (is_string($recent_period) ? $recent_period : 0);
-                $template->assign(
-                    'U_START_FILTER',
-                    $urlService->addUrlParams($urlService->makeIndexUrl([]), [
-                        'filter' => 'start-recent-' . $recent_period,
-                    ])
-                );
+                $u_start_filter = $urlService->addUrlParams($urlService->makeIndexUrl([]), [
+                    'filter' => 'start-recent-' . $recent_period,
+                ]);
             }
         }
 
@@ -362,37 +360,56 @@ final class MenubarRenderer
         }
 
         // --------------------------------------------------------------- identification
+        $u_login = null;
+        $u_lost_password = null;
+        $authorize_remembering = null;
+        $u_register = null;
+        $username_value = null;
+        $u_profile = null;
+        $u_logout = null;
+        $u_admin = null;
         if ($accessLevelChecker->isAGuest()) {
-            $template->assign(
-                [
-                    'U_LOGIN' => $urlService->getRootUrl() . 'identification.php',
-                    'U_LOST_PASSWORD' => $urlService->getRootUrl() . 'password.php',
-                    'AUTHORIZE_REMEMBERING' => $currentConfig->authorizeRemembering(),
-                ]
-            );
+            $u_login = $urlService->getRootUrl() . 'identification.php';
+            $u_lost_password = $urlService->getRootUrl() . 'password.php';
+            $authorize_remembering = $currentConfig->authorizeRemembering();
             if ($currentConfig->allowUserRegistration()) {
-                $template->assign('U_REGISTER', $urlService->getRootUrl() . 'register.php');
+                $u_register = $urlService->getRootUrl() . 'register.php';
             }
         } else {
             $username = $currentUser->get()
                 ->username->value ?? '';
-            $template->assign('USERNAME', stripslashes($username));
+            $username_value = stripslashes($username);
             if ($accessLevelChecker->isAuthorizeStatus(AccessLevel::Classic)) {
-                $template->assign('U_PROFILE', $urlService->getRootUrl() . 'profile.php');
+                $u_profile = $urlService->getRootUrl() . 'profile.php';
             }
 
             // the logout link has no meaning with Apache authentication : it is not
             // possible to logout with this kind of authentication.
             if (! $deploymentPolicy->apacheAuthentication) {
-                $template->assign('U_LOGOUT', $urlService->getRootUrl() . '?act=logout');
+                $u_logout = $urlService->getRootUrl() . '?act=logout';
             }
             if ($accessLevelChecker->isAdmin()) {
-                $template->assign('U_ADMIN', $urlService->getRootUrl() . 'admin.php');
+                $u_admin = $urlService->getRootUrl() . 'admin.php';
             }
         }
         if (($block = $menu->get_block('mbIdentification')) !== null) {
             $block->template = 'menubar_identification.tpl';
         }
+
+        $template->assignContext(new MenubarIdentificationPageContext(
+            querySearch: $query_search,
+            uStopFilter: $u_stop_filter,
+            uStartFilter: $u_start_filter,
+            uLogin: $u_login,
+            uLostPassword: $u_lost_password,
+            authorizeRemembering: $authorize_remembering,
+            uRegister: $u_register,
+            username: $username_value,
+            uProfile: $u_profile,
+            uLogout: $u_logout,
+            uAdmin: $u_admin,
+        ));
+
         $menu->apply('MENUBAR', 'menubar.tpl');
 
         return $categoryCountCategories;

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin;
 
+use Piwigo\Admin\Projection\PhotosAddApplicationsPageContext;
 use Piwigo\Core\Lang;
 use Piwigo\Template\CurrentTemplate;
 
@@ -17,7 +18,7 @@ final class PhotosAddApplicationsPageRenderer
     {
         $template = $currentTemplate->get();
 
-        $template->assign('ADMIN_PAGE_TITLE', $lang->t('Upload Photos'));
+        $template->assignContext(new PhotosAddApplicationsPageContext(adminPageTitle: $lang->t('Upload Photos')));
 
         $template->assign_var_from_handle('ADMIN_CONTENT', 'photos_add');
     }

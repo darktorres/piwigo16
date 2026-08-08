@@ -1,0 +1,58 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Piwigo\Admin\Projection;
+
+use Override;
+use Piwigo\Core\TemplatePageContext;
+
+/**
+ * The template variable set assigned by
+ * {@see \Piwigo\Admin\RatingUserPageRenderer::render()}. `$ratings`/
+ * `$imageUrls` stay loose row shapes: `$ratings` is the same genuinely
+ * dynamic, incrementally-accumulated-across-3-mutation-points shape
+ * documented on this file's own `avgCompare()`/`countCompare()`/etc.
+ * comparators, not a fixed structural shape worth minting its own DTO
+ * for here.
+ */
+final readonly class RatingUserPageContext implements TemplatePageContext
+{
+    /**
+     * @param list<int> $availableRates
+     * @param array<string, array<string, mixed>> $ratings
+     * @param array<int, array{tn: string, page: string}> $imageUrls
+     */
+    public function __construct(
+        public int $orderByIndex,
+        public string $formAction,
+        public int $minRates,
+        public int $consensusTopNumber,
+        public array $availableRates,
+        public array $ratings,
+        public array $imageUrls,
+        public int $tnWidth,
+        public int $nbElements,
+        public string $adminPageTitle,
+    ) {}
+
+    /**
+     * @return array<string, mixed>
+     */
+    #[Override]
+    public function toArray(): array
+    {
+        return [
+            'order_by_options_selected' => [$this->orderByIndex],
+            'F_ACTION' => $this->formAction,
+            'F_MIN_RATES' => $this->minRates,
+            'CONSENSUS_TOP_NUMBER' => $this->consensusTopNumber,
+            'available_rates' => $this->availableRates,
+            'ratings' => $this->ratings,
+            'image_urls' => $this->imageUrls,
+            'TN_WIDTH' => $this->tnWidth,
+            'NB_ELEMENTS' => $this->nbElements,
+            'ADMIN_PAGE_TITLE' => $this->adminPageTitle,
+        ];
+    }
+}

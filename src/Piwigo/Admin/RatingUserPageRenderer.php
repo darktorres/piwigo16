@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin;
 
+use Piwigo\Admin\Projection\RatingUserPageContext;
 use Piwigo\Admin\Request\RatingUserFilterRequest;
 use Piwigo\Auth\AccessControl;
 use Piwigo\Config\CurrentConfig;
@@ -186,23 +187,22 @@ final class RatingUserPageRenderer
                 $available_order_by[$i][0]
             );
         }
-        $template->assign('order_by_options_selected', [$order_by_index]);
-
         uasort($by_user_ratings, $available_order_by[$order_by_index][1]);
 
         $nb_elements = $rate_repository->countAllRates();
 
-        $template->assign([
-            'F_ACTION' => $urlService->getRootUrl() . 'admin.php',
-            'F_MIN_RATES' => $filter_min_rates,
-            'CONSENSUS_TOP_NUMBER' => $consensus_top_number,
-            'available_rates' => $currentConfig->rateItems(),
-            'ratings' => $by_user_ratings,
-            'image_urls' => $image_urls,
-            'TN_WIDTH' => $imageStdParams->get_by_type(ImageStdParams::SQUARE)->sizing->ideal_size[0],
-            'NB_ELEMENTS' => $nb_elements,
-            'ADMIN_PAGE_TITLE' => $lang->t('Rating'),
-        ]);
+        $template->assignContext(new RatingUserPageContext(
+            orderByIndex: $order_by_index,
+            formAction: $urlService->getRootUrl() . 'admin.php',
+            minRates: $filter_min_rates,
+            consensusTopNumber: $consensus_top_number,
+            availableRates: $currentConfig->rateItems(),
+            ratings: $by_user_ratings,
+            imageUrls: $image_urls,
+            tnWidth: $imageStdParams->get_by_type(ImageStdParams::SQUARE)->sizing->ideal_size[0],
+            nbElements: $nb_elements,
+            adminPageTitle: $lang->t('Rating'),
+        ));
         $template->set_filename('rating', 'rating_user.tpl');
         $template->assign_var_from_handle('ADMIN_CONTENT', 'rating');
     }

@@ -6,6 +6,9 @@ namespace Piwigo\Admin;
 
 use Piwigo\Activity\ActivityService;
 use Piwigo\Admin\Category\CategoryAdminService;
+use Piwigo\Admin\Projection\CatListCategoriesPageContext;
+use Piwigo\Admin\Projection\CatListHeaderPageContext;
+use Piwigo\Admin\Projection\CatListNbCatsPageContext;
 use Piwigo\Admin\Request\CatListRequest;
 use Piwigo\Cache\PermissionCacheInvalidator;
 use Piwigo\Category\CategoryService;
@@ -111,11 +114,7 @@ final class CatListPageRenderer
         $tabsheet->assign($this->currentTemplate);
 
         $nb_cats = $categoryService->countAllCategories();
-        $template->assign(
-            [
-                'nb_cats' => $nb_cats,
-            ]
-        );
+        $template->assignContext(new CatListNbCatsPageContext($nb_cats));
 
         // +-------------------------------------------------------------------+
         // |                    virtual categories management                  |
@@ -190,15 +189,15 @@ final class CatListPageRenderer
         }
         $sort_orders_checked = array_keys($sort_orders);
 
-        $template->assign([
-            'ADMIN_PAGE_TITLE' => $this->lang->t('Album list management'),
-            'CATEGORIES_NAV' => preg_replace('# {2,}#', ' ', (string) preg_replace("#(\r\n|\n\r|\n|\r)#", ' ', $navigation)),
-            'F_ACTION' => $form_action,
-            'PWG_TOKEN' => new CsrfService($this->currentConfig)
+        $template->assignContext(new CatListHeaderPageContext(
+            adminPageTitle: $this->lang->t('Album list management'),
+            categoriesNav: (string) preg_replace('# {2,}#', ' ', (string) preg_replace("#(\r\n|\n\r|\n|\r)#", ' ', $navigation)),
+            formAction: $form_action,
+            pwgToken: new CsrfService($this->currentConfig)
                 ->getToken(),
-            'sort_orders' => $sort_orders,
-            'sort_order_checked' => array_shift($sort_orders_checked),
-        ]);
+            sortOrders: $sort_orders,
+            sortOrderChecked: array_shift($sort_orders_checked),
+        ));
 
         // +-------------------------------------------------------------------+
         // |                          Categories display                       |
@@ -242,15 +241,11 @@ final class CatListPageRenderer
             }
         }
 
-        $template->assign('categories', []);
         $base_url = $this->urlService->getRootUrl() . 'admin.php?page=';
 
-        if ($parent_id !== null) {
-            $template->assign(
-                'PARENT_EDIT',
-                $base_url . 'album-' . $parent_id
-            );
-        }
+        $template->assignContext(new CatListCategoriesPageContext(
+            parentEditUrl: $parent_id !== null ? $base_url . 'album-' . $parent_id : null,
+        ));
 
         foreach ($categories as $category) {
             $cat_id = (int) $category['id'];

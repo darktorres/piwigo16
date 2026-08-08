@@ -7,6 +7,7 @@ namespace Piwigo\Admin;
 use Doctrine\ORM\EntityManagerInterface;
 use Piwigo\Activity\ActivityService;
 use Piwigo\Admin\BatchManager\FilterPanelRenderer;
+use Piwigo\Admin\Projection\BatchManagerUnitPageContext;
 use Piwigo\Admin\Request\BatchManagerUnitRequest;
 use Piwigo\Cache\CachePools;
 use Piwigo\Cache\PermissionCacheInvalidator;
@@ -212,17 +213,6 @@ final class BatchManagerUnitPageRenderer
 
         $base_url = $this->urlService->getRootUrl() . 'admin.php';
 
-        $template->assign(
-            [
-
-                'U_ELEMENTS_PAGE' => $base_url . $this->urlService->getQueryStringDiff(['display', 'start']),
-                'level_options' => PermissionService::getPrivacyLevelOptions($this->currentConfig, $this->lang),
-                'ADMIN_PAGE_TITLE' => $this->lang->t('Batch Manager'),
-                'PWG_TOKEN' => new CsrfService($this->currentConfig)
-                    ->getToken(),
-            ]
-        );
-
         // $catElementsId is a list of scalar image ids; narrowed once here
         // for every use below (including the FilterPanelRenderer call).
         $cat_elements_id = array_filter($catElementsId, is_scalar(...));
@@ -234,8 +224,6 @@ final class BatchManagerUnitPageRenderer
         // |                        global mode thumbnails                         |
         // +-------------------------------------------------------------------+
 
-        $template->assign('ACTIVE_PLUGINS', array_keys($this->loadedPlugins->get()));
-
         // how many items to display on this page
         if ($batchManagerUnitRequest->displayRequested) {
             // \Piwigo\Config\ConfigDb::confUpdateParam('batch_manager_images_per_page_unit' , intval($_GET['display']));
@@ -246,16 +234,16 @@ final class BatchManagerUnitPageRenderer
         } else {
             $nb_images = 5;
         }
-        $template->assign('per_page', $nb_images);
+
+        $nav_bar = null;
+        $element_ids_value = null;
+        $storage_category = null;
 
         if (count($cat_elements_id) > 0) {
             $page_nb_images = $nb_images;
 
             $nav_bar = new PaginationService($this->currentConfig)
                 ->createNavigationBar($base_url . $this->urlService->getQueryStringDiff(['start']), count($cat_elements_id), $page_start, $page_nb_images);
-            $template->assign([
-                'navbar' => $nav_bar,
-            ]);
 
             $element_ids = [];
 
@@ -381,7 +369,7 @@ final class BatchManagerUnitPageRenderer
                       );
 
                     if ($item_category_id_int === $storage_category_id) {
-                        $template->assign('STORAGE_CATEGORY', $name);
+                        $storage_category = $name;
                     }
 
                     $related_categories[$item_category_id] = [
@@ -499,14 +487,22 @@ final class BatchManagerUnitPageRenderer
                 );
             }
 
-            $template->assign([
-                'ELEMENT_IDS' => implode(',', $element_ids),
-            ]);
+            $element_ids_value = implode(',', $element_ids);
         }
 
-        $template->assign([
-            'CACHE_KEYS' => AdminUiHelper::getAdminClientCacheKeys($this->urlService, ['tags', 'categories']),
-        ]);
+        $template->assignContext(new BatchManagerUnitPageContext(
+            uElementsPage: $base_url . $this->urlService->getQueryStringDiff(['display', 'start']),
+            levelOptions: PermissionService::getPrivacyLevelOptions($this->currentConfig, $this->lang),
+            adminPageTitle: $this->lang->t('Batch Manager'),
+            pwgToken: new CsrfService($this->currentConfig)
+                ->getToken(),
+            activePlugins: array_keys($this->loadedPlugins->get()),
+            perPage: $nb_images,
+            navbar: $nav_bar,
+            storageCategory: $storage_category,
+            elementIds: $element_ids_value,
+            cacheKeys: AdminUiHelper::getAdminClientCacheKeys($this->urlService, ['tags', 'categories']),
+        ));
 
         $this->eventDispatcher->dispatchNotify(new LocEndElementSetUnit());
 

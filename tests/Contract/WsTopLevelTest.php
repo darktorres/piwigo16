@@ -210,8 +210,11 @@ final class WsTopLevelTest extends ContractTestCase
         // file at regen time and genuinely differs between
         // piwigo-17.0.sql and piwigo-17.0-pgsql.sql (separate,
         // independent install+upload runs) -- same real gap already
-        // fixed in NotificationRepositoryTest.
-        $expectedHash = $this->dbDriver === 'pgsql' ? '2e7eba7a' : '2e7ed018';
+        // fixed in NotificationRepositoryTest. Re-verified against the
+        // current piwigo-17.0-pgsql.sql fixture (a later regen changes
+        // this value every time, since UploadService picks the suffix via
+        // random_bytes()).
+        $expectedHash = $this->dbDriver === 'pgsql' ? '2e7e7413' : '2e7ed018';
         $response = $this->wsAdmin('pwg.getMissingDerivatives', ['ids' => [1], 'max_urls' => 5000]);
 
         self::assertSame('ok', $response['stat']);

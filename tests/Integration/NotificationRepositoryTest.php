@@ -224,14 +224,14 @@ final class NotificationRepositoryTest extends IntegrationTestCase
         self::assertSame('fixture-photo-1.jpg', $byId[1]['file']);
         self::assertSame(
             $this->dbDriver === 'pgsql'
-                ? 'upload/2026/08/01/20260801000000-2e7eba7a.jpg'
+                ? 'upload/2026/08/01/20260801000000-2e7e7413.jpg'
                 : 'upload/2026/08/01/20260801000000-2e7ed018.jpg',
             $byId[1]['path']
         );
         self::assertSame('fixture-photo-2.jpg', $byId[2]['file']);
         self::assertSame(
             $this->dbDriver === 'pgsql'
-                ? 'upload/2026/08/01/20260801000000-4a01513b.jpg'
+                ? 'upload/2026/08/01/20260801000000-4a018b9e.jpg'
                 : 'upload/2026/08/01/20260801000000-4a01786c.jpg',
             $byId[2]['path']
         );

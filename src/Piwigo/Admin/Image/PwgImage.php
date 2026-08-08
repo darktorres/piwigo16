@@ -518,9 +518,11 @@ final class PwgImage
         }
 
         $imagick_dir = self::currentConfig()->extImagickDir();
-        // [SEC-16] see the escapeshellarg() note above.
+        // [SEC-16] see the escapeshellarg() note above. "< /dev/null" --
+        // same stdin-hang guard as ImageExtImagick's own identify/convert
+        // calls.
         $returnarray = [];
-        @exec(escapeshellarg($imagick_dir) . self::get_ext_imagick_command() . ' -version', $returnarray);
+        @exec(escapeshellarg($imagick_dir) . self::get_ext_imagick_command() . ' -version < /dev/null', $returnarray);
         if (isset($returnarray[0]) && $returnarray[0] !== '' && $returnarray[0] !== '0' and (bool) preg_match('/ImageMagick/i', $returnarray[0])) {
             if ((bool) preg_match('/Version: ImageMagick (\d+\.\d+\.\d+-?\d*)/', $returnarray[0], $match)) {
                 self::$ext_imagick_version = $match[1];

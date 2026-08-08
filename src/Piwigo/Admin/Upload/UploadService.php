@@ -907,7 +907,11 @@ final class UploadService
             $exec .= ' -quality ' . (string) $jpg_quality;
         }
         $exec .= ' ' . escapeshellarg($representative_file_path);
-        $exec .= ' 2>&1';
+        // "< /dev/null" -- same stdin-hang guard as ImageExtImagick's own
+        // identify/convert calls (a vanished source realpath() quotes to
+        // an empty escapeshellarg(), and the CLI may fall back to reading
+        // stdin instead of failing fast).
+        $exec .= ' < /dev/null 2>&1';
         @exec($exec, $returnarray);
 
         // Return the extension (if successful) or false (if failed)
@@ -960,7 +964,11 @@ final class UploadService
         $exec .= ' ' . escapeshellarg((string) realpath($file_path));
         $exec .= ' -sampling-factor 4:2:0 -quality 85 -interlace JPEG -colorspace sRGB -auto-orient +repage -resize "' . $w . 'x' . $h . '>"';
         $exec .= ' ' . escapeshellarg($representative_file_path);
-        $exec .= ' 2>&1';
+        // "< /dev/null" -- same stdin-hang guard as ImageExtImagick's own
+        // identify/convert calls (a vanished source realpath() quotes to
+        // an empty escapeshellarg(), and the CLI may fall back to reading
+        // stdin instead of failing fast).
+        $exec .= ' < /dev/null 2>&1';
 
         $logger->info(__METHOD__ . ', exec = ' . $exec);
 
@@ -1037,7 +1045,11 @@ final class UploadService
         }
         $exec .= ' ' . escapeshellarg($dest_dirname_realpath . '/' . $dest['basename']);
 
-        $exec .= ' 2>&1';
+        // "< /dev/null" -- same stdin-hang guard as ImageExtImagick's own
+        // identify/convert calls (a vanished source realpath() quotes to
+        // an empty escapeshellarg(), and the CLI may fall back to reading
+        // stdin instead of failing fast).
+        $exec .= ' < /dev/null 2>&1';
         @exec($exec, $returnarray);
 
         // sometimes ImageMagick creates file-0.jpg (full size) + file-1.jpg
@@ -1098,7 +1110,7 @@ final class UploadService
         // [SEC-16] escapeshellarg() on the video path -- the original
         // single-quoted it manually, which never escapes an embedded `'`.
         $O = [];
-        exec('ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 ' . escapeshellarg($file_path), $O, $S);
+        exec('ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 ' . escapeshellarg($file_path) . ' < /dev/null', $O, $S);
 
         if (isset($O[0]) && $O[0] !== '') {
             $second = min(floor((float) $O[0] * 10.0) / 10.0, 2);
@@ -1119,7 +1131,7 @@ final class UploadService
         $ffmpeg .= ' ' . escapeshellarg($representative_file_path); // Output file
 
         $FO = [];
-        @exec($ffmpeg . ' 2>&1', $FO, $FS);
+        @exec($ffmpeg . ' < /dev/null 2>&1', $FO, $FS);
         if (isset($FO[0]) && $FO[0] !== '') {
             $logger->debug(__METHOD__ . ', Tried ' . $ffmpeg);
             $logger->debug($FO[0]);
@@ -1130,7 +1142,7 @@ final class UploadService
             // Let's try with avconv if ffmpeg unavailable
             $avconv = str_replace('ffmpeg', 'avconv', $ffmpeg);
             $AO = [];
-            @exec($avconv . ' 2>&1', $AO, $AS);
+            @exec($avconv . ' < /dev/null 2>&1', $AO, $AS);
 
             if (isset($AO[0]) && $AO[0] !== '') {
                 $logger->debug(__METHOD__ . ', Tried ' . $avconv);
@@ -1204,7 +1216,11 @@ final class UploadService
         }
         $exec .= ' ' . escapeshellarg($dest_dirname_realpath . '/' . $dest['basename']);
 
-        $exec .= ' 2>&1';
+        // "< /dev/null" -- same stdin-hang guard as ImageExtImagick's own
+        // identify/convert calls (a vanished source realpath() quotes to
+        // an empty escapeshellarg(), and the CLI may fall back to reading
+        // stdin instead of failing fast).
+        $exec .= ' < /dev/null 2>&1';
         $logger->info(__METHOD__ . ', exec = ' . $exec);
         @exec($exec, $returnarray);
 
@@ -1273,7 +1289,11 @@ final class UploadService
         $exec .= ' -density 300';
         $exec .= ' -resize 2048x2048';
         $exec .= ' ' . escapeshellarg($representative_file_path);
-        $exec .= ' 2>&1';
+        // "< /dev/null" -- same stdin-hang guard as ImageExtImagick's own
+        // identify/convert calls (a vanished source realpath() quotes to
+        // an empty escapeshellarg(), and the CLI may fall back to reading
+        // stdin instead of failing fast).
+        $exec .= ' < /dev/null 2>&1';
         $logger->info(__METHOD__ . ', $exec = ' . $exec);
         @exec($exec, $returnarray);
 

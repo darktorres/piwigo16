@@ -77,8 +77,17 @@ final class ImageExtImagick implements ImageInterface
         // [SEC-16] escapeshellarg() on both the dir prefix and the real
         // file path -- the naive '"' . ... . '"' quoting this replaces
         // never escaped an embedded '"' or shell metacharacter in the path.
+        //
+        // "< /dev/null" keeps identify from ever blocking on stdin -- a
+        // vanished/unreadable source path makes escapeshellarg() quote an
+        // empty string, and identify treats a missing filename as "read
+        // the image from stdin" instead of failing fast; without this
+        // redirect, a process whose own stdin is left open (confirmed live
+        // under pest-plugin-mutate's worker harness, unlike a normal CLI
+        // run) hangs here indefinitely instead of reaching the
+        // Corrupt-image exception below.
         $command = escapeshellarg($this->imagickdir) . 'identify -format "%wx%h" '
-            . escapeshellarg((string) realpath($this->source_filepath));
+            . escapeshellarg((string) realpath($this->source_filepath)) . ' < /dev/null';
         $returnarray = [];
         @exec($command, $returnarray);
         if (! isset($returnarray[0]) || $returnarray[0] === '' || $returnarray[0] === '0' or ! (bool) preg_match('/^(\d+)x(\d+)$/', $returnarray[0], $match)) {
@@ -249,7 +258,9 @@ final class ImageExtImagick implements ImageInterface
         if ($dest_dirname_realpath === false) {
             throw new Exception("write(): unable to resolve directory {$dest['dirname']}");
         }
-        $exec .= ' ' . escapeshellarg($dest_dirname_realpath . '/' . $dest['basename']) . ' 2>&1';
+        // "< /dev/null" -- same stdin-hang guard as construct()'s own
+        // identify call above.
+        $exec .= ' ' . escapeshellarg($dest_dirname_realpath . '/' . $dest['basename']) . ' < /dev/null 2>&1';
         $logger->debug($exec, 'i.php');
         @exec($exec, $returnarray);
 

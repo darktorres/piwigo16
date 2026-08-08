@@ -206,9 +206,7 @@ namespace Piwigo\Tests\Integration {
         {
             $info = $this->service->getDefaultUserInfo();
             self::assertInstanceOf(DefaultUserInfo::class, $info);
-
-            $language = $this->service->getDefaultUserValue('language', 'fallback');
-            self::assertNotSame('fallback', $language);
+            self::assertNotSame('', $info->language);
         }
 
         public function test_register_user_rejects_an_empty_login(): void
@@ -988,14 +986,6 @@ namespace Piwigo\Tests\Integration {
             }
         }
 
-        public function test_get_default_user_value_returns_the_fallback_for_an_empty_field(): void
-        {
-            // Guest (the configured default user, id 2) has NULL
-            // preferences in the fixture -- an "empty" value per
-            // UserService::emptyValue()'s own null branch.
-            self::assertSame('fallback-value', $this->service->getDefaultUserValue('preferences', 'fallback-value'));
-        }
-
         public function test_build_user_forces_guest_status_for_the_configured_guest_id(): void
         {
             $this->conn->executeStatement("UPDATE " . Tables::userInfos() . " SET status = 'normal' WHERE user_id = 2");
@@ -1256,11 +1246,12 @@ namespace Piwigo\Tests\Integration {
         {
             // $this->processCache (the same instance $this->service was
             // constructed with) is a plain per-request memoization cell --
-            // getDefaultTheme() defensively re-checks is_string() on
-            // whatever getDefaultUserValue('theme', ...) hands back rather
-            // than trusting the docblock-only array shape. Poisoning the
-            // cache with a non-string 'theme' value is the only way to
-            // reach that guard: without it, ThemeCatalog::
+            // DefaultUserInfo::fromArray() (read via getDefaultUserInfo())
+            // narrows a non-string cached 'theme' value to '' rather than
+            // trusting the docblock-only array shape, and getDefaultTheme()
+            // itself falls back to AppInfo::DEFAULT_TEMPLATE for that empty
+            // string. Poisoning the cache with a non-string 'theme' value is
+            // the only way to reach that guard: without it, ThemeCatalog::
             // checkThemeInstalled() (a strictly-typed string param) would
             // receive an int and fatal with a TypeError.
             $this->processCache->set('default_user', [

@@ -567,23 +567,6 @@ final readonly class UserService implements DefaultLanguageProviderInterface
         return DefaultUserInfo::fromArray($stringKeyed);
     }
 
-    /**
-     * Generic dynamic-key reader over getDefaultUserInfo()'s own now-typed
-     * shape -- $valueName is a runtime key name, so the real value type
-     * varies per call (both real callers request 'theme'/'language',
-     * always strings, but the method itself isn't limited to those 2
-     * keys), same rationale as ConfigService::confGetParam().
-     */
-    public function getDefaultUserValue(string $valueName, mixed $default): mixed
-    {
-        $defaultUser = $this->getDefaultUserInfo()?->toArray();
-        if ($defaultUser === null || self::emptyValue($defaultUser[$valueName] ?? null)) {
-            return $default;
-        }
-
-        return $defaultUser[$valueName];
-    }
-
     private function notifyExistingAccountOfDuplicateRegistration(string $login, ?string $mailAddress): void
     {
         $existing = $this->repo->findByUsernameCaseInsensitive($login);
@@ -951,8 +934,8 @@ final readonly class UserService implements DefaultLanguageProviderInterface
      */
     public function getDefaultTheme(): string
     {
-        $theme = $this->getDefaultUserValue('theme', AppInfo::DEFAULT_TEMPLATE);
-        if (! is_string($theme)) {
+        $theme = $this->getDefaultUserInfo()?->theme;
+        if ($theme === null || $theme === '' || $theme === '0') {
             $theme = AppInfo::DEFAULT_TEMPLATE;
         }
         if (ThemeCatalog::checkThemeInstalled($theme, $this->paths, $this->currentConfig)) {
@@ -970,8 +953,8 @@ final readonly class UserService implements DefaultLanguageProviderInterface
     #[Override]
     public function getDefaultLanguage(): string
     {
-        $language = $this->getDefaultUserValue('language', AppInfo::DEFAULT_LANGUAGE);
-        return is_string($language) ? $language : AppInfo::DEFAULT_LANGUAGE;
+        $language = $this->getDefaultUserInfo()?->language;
+        return ($language === null || $language === '' || $language === '0') ? AppInfo::DEFAULT_LANGUAGE : $language;
     }
 
     /**

@@ -19,6 +19,15 @@ use Piwigo\Auth\PasswordService;
 use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Config\ConfigService;
 use Piwigo\Config\CurrentConfig;
+use Piwigo\Controller\Admin\Projection\ConfigurationCommentsPageContext;
+use Piwigo\Controller\Admin\Projection\ConfigurationDefaultPageContext;
+use Piwigo\Controller\Admin\Projection\ConfigurationMainPageContext;
+use Piwigo\Controller\Admin\Projection\ConfigurationPageContext;
+use Piwigo\Controller\Admin\Projection\ConfigurationSearchTabPageContext;
+use Piwigo\Controller\Admin\Projection\ConfigurationSizesPageContext;
+use Piwigo\Controller\Admin\Projection\ConfigurationSizesTabPageContext;
+use Piwigo\Controller\Admin\Projection\ConfigurationWatermarkPageContext;
+use Piwigo\Controller\Admin\Projection\ConfigurationWatermarkTabPageContext;
 use Piwigo\Controller\Admin\Request\ConfigurationRequest;
 use Piwigo\Controller\ProfileFormHandler;
 use Piwigo\Core\ActivitySystem;
@@ -282,6 +291,8 @@ final class ConfigurationSubController implements AdminSubControllerInterface
         // overridden values; both stay within this one handle() call.
         $post = $configurationRequest->post;
 
+        $save_success = null;
+
         // ------------------------------ verification and registration of modifications
         if ($configurationRequest->isSubmitted) {
             new CsrfService($this->currentConfig)
@@ -458,11 +469,7 @@ final class ConfigurationSubController implements AdminSubControllerInterface
                         $this->configService->confUpdateParam($param_name, $value);
                     }
                 }
-                $template->assign(
-                    [
-                        'save_success' => $this->lang->t('Your configuration settings are saved'),
-                    ]
-                );
+                $save_success = $this->lang->t('Your configuration settings are saved');
 
                 $this->activityService->record('system', ActivitySystem::Core, 'config', [
                     'config_section' => $page['section'],
@@ -485,11 +492,7 @@ final class ConfigurationSubController implements AdminSubControllerInterface
             // reset conf
             $this->configService->loadConfFromDb();
 
-            $template->assign(
-                [
-                    'save_success' => $this->lang->t('Your configuration settings are saved'),
-                ]
-            );
+            $save_success = $this->lang->t('Your configuration settings are saved');
 
             $this->activityService->record('system', ActivitySystem::Core, 'config', [
                 'config_section' => $page['section'],
@@ -516,14 +519,9 @@ final class ConfigurationSubController implements AdminSubControllerInterface
         $action = $this->urlService->getRootUrl() . 'admin.php?page=configuration';
         $action .= '&amp;section=' . $page_section;
 
-        $template->assign(
-            [
-                'U_HELP' => $this->urlService->getRootUrl() . 'admin/popuphelp.php?page=configuration',
-                'PWG_TOKEN' => new CsrfService($this->currentConfig)
-                    ->getToken(),
-                'F_ACTION' => $action,
-            ]
-        );
+        $u_help = $this->urlService->getRootUrl() . 'admin/popuphelp.php?page=configuration';
+        $pwg_token = new CsrfService($this->currentConfig)
+            ->getToken();
 
         switch ($page['section']) {
             case 'main':
@@ -532,9 +530,10 @@ final class ConfigurationSubController implements AdminSubControllerInterface
                     $this->pageState->addWarning($this->lang->t('You have specified <i>$conf[\'order_by\']</i> in your local configuration file, this parameter in deprecated, please remove it or rename it into <i>$conf[\'order_by_custom\']</i> !'));
                 }
 
+                $order_by_is_custom = null;
                 if ($this->currentConfig->orderByCustom() !== null or $this->currentConfig->orderByInsideCategoryCustom() !== null) {
                     $order_by = [''];
-                    $template->assign('ORDER_BY_IS_CUSTOM', true);
+                    $order_by_is_custom = true;
                 } else {
                     $out = [];
                     $order_by = trim($this->currentConfig->orderByInsideCategory());
@@ -547,25 +546,22 @@ final class ConfigurationSubController implements AdminSubControllerInterface
                 $conf_email_admin_on_new_user = $this->currentConfig->emailAdminOnNewUser();
                 $lang_day = $this->lang->days();
 
-                $template->assign(
-                    'main',
-                    [
-                        'CONF_GALLERY_TITLE' => htmlspecialchars($conf_gallery_title),
-                        'CONF_PAGE_BANNER' => htmlspecialchars($conf_page_banner),
-                        'week_starts_on_options' => [
-                            'sunday' => $lang_day[0] ?? '',
-                            'monday' => $lang_day[1] ?? '',
-                        ],
-                        'week_starts_on_options_selected' => $this->currentConfig->weekStartsOn(),
-                        'mail_theme' => $this->currentConfig->mailTheme(),
-                        'mail_theme_options' => $mail_themes,
-                        'order_by' => $order_by,
-                        'order_by_options' => $sort_fields,
-                        'email_admin_on_new_user' => $conf_email_admin_on_new_user !== 'none',
-                        'email_admin_on_new_user_filter' => in_array($conf_email_admin_on_new_user, ['none', 'all'], true) ? 'all' : 'group',
-                        'email_admin_on_new_user_filter_group' => ((bool) preg_match('/^group:(\d+)$/', $conf_email_admin_on_new_user, $matches)) ? $matches[1] : -1,
-                    ]
-                );
+                $main = [
+                    'CONF_GALLERY_TITLE' => htmlspecialchars($conf_gallery_title),
+                    'CONF_PAGE_BANNER' => htmlspecialchars($conf_page_banner),
+                    'week_starts_on_options' => [
+                        'sunday' => $lang_day[0] ?? '',
+                        'monday' => $lang_day[1] ?? '',
+                    ],
+                    'week_starts_on_options_selected' => $this->currentConfig->weekStartsOn(),
+                    'mail_theme' => $this->currentConfig->mailTheme(),
+                    'mail_theme_options' => $mail_themes,
+                    'order_by' => $order_by,
+                    'order_by_options' => $sort_fields,
+                    'email_admin_on_new_user' => $conf_email_admin_on_new_user !== 'none',
+                    'email_admin_on_new_user_filter' => in_array($conf_email_admin_on_new_user, ['none', 'all'], true) ? 'all' : 'group',
+                    'email_admin_on_new_user_filter_group' => ((bool) preg_match('/^group:(\d+)$/', $conf_email_admin_on_new_user, $matches)) ? $matches[1] : -1,
+                ];
 
                 // list of groups
                 $groups = [];
@@ -574,11 +570,11 @@ final class ConfigurationSubController implements AdminSubControllerInterface
                 }
                 natcasesort($groups);
 
-                $template->assign(
-                    [
-                        'group_options' => $groups,
-                    ]
-                );
+                $template->assignContext(new ConfigurationMainPageContext(
+                    orderByIsCustom: $order_by_is_custom,
+                    main: $main,
+                    groupOptions: $groups,
+                ));
 
                 foreach ($main_checkboxes as $checkbox) {
                     $template->append(
@@ -593,14 +589,11 @@ final class ConfigurationSubController implements AdminSubControllerInterface
 
             case 'comments':
 
-                $template->assign(
-                    'comments',
-                    [
-                        'NB_COMMENTS_PAGE' => $this->currentConfig->nbCommentPage(),
-                        'comments_order' => $this->currentConfig->commentsOrder(),
-                        'comments_order_options' => $comments_order,
-                    ]
-                );
+                $template->assignContext(new ConfigurationCommentsPageContext([
+                    'NB_COMMENTS_PAGE' => $this->currentConfig->nbCommentPage(),
+                    'comments_order' => $this->currentConfig->commentsOrder(),
+                    'comments_order_options' => $comments_order,
+                ]));
 
                 foreach ($comments_checkboxes as $checkbox) {
                     $template->append(
@@ -634,7 +627,7 @@ final class ConfigurationSubController implements AdminSubControllerInterface
                     $edit_user,
                     'GUEST_'
                 );
-                $template->assign('default', []);
+                $template->assignContext(new ConfigurationDefaultPageContext());
                 break;
 
             case 'display':
@@ -664,15 +657,17 @@ final class ConfigurationSubController implements AdminSubControllerInterface
                 // when submitting the form and an error remains
                 if (! $this->sizesLoadedInTpl) {
                     $is_gd = (PwgImage::get_library() === 'gd') ? true : false;
-                    $template->assign('is_gd', $is_gd);
-                    $template->assign(
-                        'sizes',
-                        [
+                    $template->assignContext(new ConfigurationSizesTabPageContext(
+                        isGd: $is_gd,
+                        sizes: [
                             'original_resize_maxwidth' => $this->currentConfig->originalResizeMaxwidth(),
                             'original_resize_maxheight' => $this->currentConfig->originalResizeMaxheight(),
                             'original_resize_quality' => $this->currentConfig->originalResizeQuality(),
-                        ]
-                    );
+                        ],
+                        derivatives: null,
+                        resizeQuality: null,
+                        customDerivatives: null,
+                    ));
 
                     foreach ($sizes_checkboxes as $checkbox) {
                         $template->append(
@@ -715,15 +710,22 @@ final class ConfigurationSubController implements AdminSubControllerInterface
                         }
                         $tpl_vars[$type] = $tpl_var;
                     }
-                    $template->assign('derivatives', $tpl_vars);
-                    $template->assign('resize_quality', $this->imageStdParams->get_quality());
+                    $derivatives = $tpl_vars;
+                    $resize_quality = $this->imageStdParams->get_quality();
 
                     $tpl_vars = [];
                     $now = time();
                     foreach ($this->imageStdParams->get_custom_timestamps() as $custom => $time) {
                         $tpl_vars[$custom] = ($now - $time <= 24 * 3600) ? $this->lang->t('today') : DateHelper::timeSince($time, 'day');
                     }
-                    $template->assign('custom_derivatives', $tpl_vars);
+
+                    $template->assignContext(new ConfigurationSizesTabPageContext(
+                        isGd: null,
+                        sizes: null,
+                        derivatives: $derivatives,
+                        resizeQuality: $resize_quality,
+                        customDerivatives: $tpl_vars,
+                    ));
                 }
 
                 break;
@@ -749,8 +751,7 @@ final class ConfigurationSubController implements AdminSubControllerInterface
                     $display = basename($file);
                     $watermark_filemap[$file] = $display;
                 }
-                $template->assign('watermark_files', $watermark_filemap);
-
+                $watermark = null;
                 if ($template->get_template_vars('watermark') === null) {
                     $wm = $this->imageStdParams->get_watermark();
 
@@ -775,39 +776,46 @@ final class ConfigurationSubController implements AdminSubControllerInterface
                         $position = 'custom';
                     }
 
-                    $template->assign(
-                        'watermark',
-                        [
-                            'file' => $wm->file,
-                            'minw' => $wm->min_size[0],
-                            'minh' => $wm->min_size[1],
-                            'xpos' => $wm->xpos,
-                            'ypos' => $wm->ypos,
-                            'xrepeat' => $wm->xrepeat,
-                            'yrepeat' => $wm->yrepeat,
-                            'opacity' => $wm->opacity,
-                            'position' => $position,
-                        ]
-                    );
+                    $watermark = [
+                        'file' => $wm->file,
+                        'minw' => $wm->min_size[0],
+                        'minh' => $wm->min_size[1],
+                        'xpos' => $wm->xpos,
+                        'ypos' => $wm->ypos,
+                        'xrepeat' => $wm->xrepeat,
+                        'yrepeat' => $wm->yrepeat,
+                        'opacity' => $wm->opacity,
+                        'position' => $position,
+                    ];
                 }
+
+                $template->assignContext(new ConfigurationWatermarkTabPageContext(
+                    watermarkFiles: $watermark_filemap,
+                    watermark: $watermark,
+                ));
 
                 break;
 
             case 'search':
 
-                $template->assign(
-                    'search',
-                    [
+                $template->assignContext(new ConfigurationSearchTabPageContext(
+                    search: [
                         'filters_views' => $this->currentConfig->filtersViews() ?? [],
                         'filters_names' => $filters_names_checkboxes,
                     ],
-                );
-                $template->assign('SHOW_FILTER_RATINGS', $this->currentConfig->rateEnabled());
+                    showFilterRatings: $this->currentConfig->rateEnabled(),
+                ));
 
         }
 
-        $template->assign('isWebmaster', ($this->accessControl->isWebmaster()) ? 1 : 0);
-        $template->assign('ADMIN_PAGE_TITLE', $this->lang->t('Configuration'));
+        $template->assignContext(new ConfigurationPageContext(
+            saveSuccess: $save_success,
+            uHelp: $u_help,
+            pwgToken: $pwg_token,
+            fAction: $action,
+            isWebmaster: ($this->accessControl->isWebmaster()) ? 1 : 0,
+            adminPageTitle: $this->lang->t('Configuration'),
+        ));
 
         // ----------------------------------------------------------- sending html code
         $template->assign_var_from_handle('ADMIN_CONTENT', 'config');
@@ -1159,11 +1167,12 @@ final class ConfigurationSubController implements AdminSubControllerInterface
                     ->clearDerivativeCache($changed_types);
             }
 
-            $template->assign(
-                [
-                    'save_success' => $this->lang->t('Your configuration settings are saved'),
-                ]
-            );
+            $template->assignContext(new ConfigurationSizesPageContext(
+                saveSuccess: $this->lang->t('Your configuration settings are saved'),
+                derivatives: null,
+                ferrors: null,
+                resizeQuality: null,
+            ));
 
             $this->activityService->record('system', ActivitySystem::Core, 'config', [
                 'config_section' => 'sizes',
@@ -1181,9 +1190,12 @@ final class ConfigurationSubController implements AdminSubControllerInterface
                 }
             }
 
-            $template->assign('derivatives', $pderivatives);
-            $template->assign('ferrors', $errors + $derivative_errors);
-            $template->assign('resize_quality', $post['resize_quality']);
+            $template->assignContext(new ConfigurationSizesPageContext(
+                saveSuccess: null,
+                derivatives: $pderivatives,
+                ferrors: $errors + $derivative_errors,
+                resizeQuality: $post['resize_quality'],
+            ));
             $this->sizesLoadedInTpl = true;
         }
     }
@@ -1409,18 +1421,21 @@ final class ConfigurationSubController implements AdminSubControllerInterface
                     ->clearDerivativeCache($changed_types);
             }
 
-            $template->assign(
-                [
-                    'save_success' => $this->lang->t('Your configuration settings are saved'),
-                ]
-            );
+            $template->assignContext(new ConfigurationWatermarkPageContext(
+                saveSuccess: $this->lang->t('Your configuration settings are saved'),
+                watermark: null,
+                ferrors: null,
+            ));
 
             $this->activityService->record('system', ActivitySystem::Core, 'config', [
                 'config_section' => 'watermark',
             ]);
         } else {
-            $template->assign('watermark', $pwatermark);
-            $template->assign('ferrors', $errors);
+            $template->assignContext(new ConfigurationWatermarkPageContext(
+                saveSuccess: null,
+                watermark: $pwatermark,
+                ferrors: $errors,
+            ));
         }
     }
 

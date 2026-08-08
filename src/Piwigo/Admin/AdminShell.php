@@ -12,6 +12,8 @@ declare(strict_types=1);
 namespace Piwigo\Admin;
 
 use Piwigo\Admin\Maintenance\FilesystemIntegrityChecker;
+use Piwigo\Admin\Projection\AdminShellFramePageContext;
+use Piwigo\Admin\Projection\AdminShellPostDispatchPageContext;
 use Piwigo\Admin\Request\AdminShellRequest;
 use Piwigo\Auth\AccessControl;
 use Piwigo\Bootstrap\AdminDispatcher;
@@ -283,57 +285,21 @@ final class AdminShell
             'admin' => 'admin.tpl',
         ]);
 
-        $template->assign(
-            [
-                'USERNAME' => $this->currentUser->get()
-                    ->username,
-                'ENABLE_SYNCHRONIZATION' => $this->currentConfig->enableSynchronization(),
-                'U_SITE_MANAGER' => $link_start . 'site_manager',
-                'U_HISTORY_STAT' => $link_start . 'stats&amp;year=' . date('Y') . '&amp;month=' . date('n'),
-                'U_FAQ' => $link_start . 'help',
-                'U_MAINTENANCE' => $link_start . 'maintenance',
-                'U_NOTIFICATION_BY_MAIL' => $link_start . 'notification_by_mail',
-                'U_CONFIG_GENERAL' => $link_start . 'configuration',
-                'U_CONFIG_DISPLAY' => $conf_link . 'default',
-                'U_CONFIG_EXTENTS' => $link_start . 'extend_for_templates',
-                'U_CONFIG_MENUBAR' => $link_start . 'menubar',
-                'U_CONFIG_LANGUAGES' => $link_start . 'languages',
-                'U_CONFIG_THEMES' => $link_start . 'themes',
-                'U_CATEGORIES' => $link_start . 'cat_list',
-                'U_ALBUMS' => $link_start . 'albums',
-                'U_CAT_OPTIONS' => $link_start . 'cat_options',
-                'U_CAT_UPDATE' => $link_start . 'site_update&amp;site=1',
-                'U_RATING' => $link_start . 'rating',
-                'U_RECENT_SET' => $link_start . 'batch_manager&amp;filter=prefilter-last_import',
-                'U_BATCH' => $link_start . 'batch_manager',
-                'U_TAGS' => $link_start . 'tags',
-                'U_USERS' => $link_start . 'user_list',
-                'U_GROUPS' => $link_start . 'group_list',
-                'U_RETURN' => $this->urlService->getGalleryHomeUrl(),
-                'U_ADMIN' => $this->urlService->getRootUrl() . 'admin.php',
-                'U_LOGOUT' => $this->urlService->getRootUrl() . 'index.php?act=logout',
-                'U_PLUGINS' => $link_start . 'plugins',
-                'U_ADD_PHOTOS' => $link_start . 'photos_add',
-                'U_CHANGE_THEME' => $change_theme_url,
-                'ADMIN_PAGE_TITLE' => 'Piwigo Administration Page',
-                'ADMIN_PAGE_OBJECT_ID' => '',
-                'U_SHOW_TEMPLATE_TAB' => $this->currentConfig->showTemplateInSideMenu(),
-                'SHOW_RATING' => $this->currentConfig->rateEnabled(),
-            ]
-        );
-
+        $u_updates = null;
         if ($this->currentConfig->enableCoreUpdate()) {
-            $template->assign('U_UPDATES', $link_start . 'updates');
+            $u_updates = $link_start . 'updates';
         }
 
+        $u_comments = null;
+        $nb_pending_comments = null;
         if ($this->currentConfig->activateComments()) {
-            $template->assign('U_COMMENTS', $link_start . 'comments');
+            $u_comments = $link_start . 'comments';
 
             // pending comments
             $nb_comments = $this->commentService->countUnvalidated();
 
             if ($nb_comments > 0) {
-                $template->assign('NB_PENDING_COMMENTS', $nb_comments);
+                $nb_pending_comments = $nb_comments;
                 $this->pageState->setNbPendingComments($nb_comments);
             }
         }
@@ -344,19 +310,10 @@ final class AdminShell
         $nb_photos_in_caddie = count(EntityManagerFactory::build($conn)->getRepository(CaddieEntity::class)->findElementIdsForUser($user_id));
 
         if ($nb_photos_in_caddie > 0) {
-            $template->assign(
-                [
-                    'NB_PHOTOS_IN_CADDIE' => $nb_photos_in_caddie,
-                    'U_CADDIE' => $link_start . 'batch_manager&amp;filter=prefilter-caddie',
-                ]
-            );
+            $u_caddie = $link_start . 'batch_manager&amp;filter=prefilter-caddie';
         } else {
-            $template->assign(
-                [
-                    'NB_PHOTOS_IN_CADDIE' => 0,
-                    'U_CADDIE' => '',
-                ]
-            );
+            $nb_photos_in_caddie = 0;
+            $u_caddie = '';
         }
 
         // any photos with no md5sum ?
@@ -381,12 +338,7 @@ final class AdminShell
         $this->pageState->setNbPhotosTotal($nb_photos_total);
         $this->pageState->setNbOrphans($nb_orphans);
 
-        $template->assign(
-            [
-                'NB_ORPHANS' => $nb_orphans,
-                'U_ORPHANS' => $link_start . 'batch_manager&amp;filter=prefilter-no_album',
-            ]
-        );
+        $u_orphans = $link_start . 'batch_manager&amp;filter=prefilter-no_album';
 
         // +-------------------------------------------------------------------+
         // | Refresh permissions                                               |
@@ -484,15 +436,54 @@ final class AdminShell
             $display_bell = true;
         }
 
-        $template->assign(
-            [
-                'SHOW_WHATS_NEW' => $show_whats_new,
-                'WHATS_NEW_MAJOR_VERSION' => $whats_new_major_version,
-                'RELEASE_NOTE_URL' => $release_note_url,
-                'WHATS_NEW_IMGS' => $whats_new_imgs,
-                'DISPLAY_BELL' => $display_bell,
-            ]
-        );
+        $template->assignContext(new AdminShellFramePageContext(
+            username: $this->currentUser->get()
+                ->username?->value,
+            enableSynchronization: $this->currentConfig->enableSynchronization(),
+            uSiteManager: $link_start . 'site_manager',
+            uHistoryStat: $link_start . 'stats&amp;year=' . date('Y') . '&amp;month=' . date('n'),
+            uFaq: $link_start . 'help',
+            uMaintenance: $link_start . 'maintenance',
+            uNotificationByMail: $link_start . 'notification_by_mail',
+            uConfigGeneral: $link_start . 'configuration',
+            uConfigDisplay: $conf_link . 'default',
+            uConfigExtents: $link_start . 'extend_for_templates',
+            uConfigMenubar: $link_start . 'menubar',
+            uConfigLanguages: $link_start . 'languages',
+            uConfigThemes: $link_start . 'themes',
+            uCategories: $link_start . 'cat_list',
+            uAlbums: $link_start . 'albums',
+            uCatOptions: $link_start . 'cat_options',
+            uCatUpdate: $link_start . 'site_update&amp;site=1',
+            uRating: $link_start . 'rating',
+            uRecentSet: $link_start . 'batch_manager&amp;filter=prefilter-last_import',
+            uBatch: $link_start . 'batch_manager',
+            uTags: $link_start . 'tags',
+            uUsers: $link_start . 'user_list',
+            uGroups: $link_start . 'group_list',
+            uReturn: $this->urlService->getGalleryHomeUrl(),
+            uAdmin: $this->urlService->getRootUrl() . 'admin.php',
+            uLogout: $this->urlService->getRootUrl() . 'index.php?act=logout',
+            uPlugins: $link_start . 'plugins',
+            uAddPhotos: $link_start . 'photos_add',
+            uChangeTheme: $change_theme_url,
+            adminPageTitle: 'Piwigo Administration Page',
+            adminPageObjectId: '',
+            uShowTemplateTab: $this->currentConfig->showTemplateInSideMenu(),
+            showRating: $this->currentConfig->rateEnabled(),
+            uUpdates: $u_updates,
+            uComments: $u_comments,
+            nbPendingComments: $nb_pending_comments,
+            nbPhotosInCaddie: $nb_photos_in_caddie,
+            uCaddie: $u_caddie,
+            nbOrphans: $nb_orphans,
+            uOrphans: $u_orphans,
+            showWhatsNew: $show_whats_new,
+            whatsNewMajorVersion: $whats_new_major_version,
+            releaseNoteUrl: $release_note_url,
+            whatsNewImgs: $whats_new_imgs,
+            displayBell: $display_bell,
+        ));
 
         // +-------------------------------------------------------------------+
         // | Include specific page                                             |
@@ -504,14 +495,15 @@ final class AdminShell
         // (getQueryParams()/getParsedBody()), not $_GET/$_POST directly.
         AdminDispatcher::dispatch($page_slug, RequestFactory::fromGlobals());
 
-        $template->assign('ACTIVE_MENU', AdminUiHelper::getActiveMenu($page_slug));
-
         // +-------------------------------------------------------------------+
         // | Sending html code                                                 |
         // +-------------------------------------------------------------------+
 
         // Add the Piwigo Official menu
-        $template->assign('pwgmenu', AdminUiHelper::pwgUrl());
+        $template->assignContext(new AdminShellPostDispatchPageContext(
+            activeMenu: AdminUiHelper::getActiveMenu($page_slug),
+            pwgmenu: AdminUiHelper::pwgUrl(),
+        ));
 
         new PageHeaderRenderer()
             ->render($title, $this->eventDispatcher, $this->pageState, $this->currentTemplate, $this->currentConfig);

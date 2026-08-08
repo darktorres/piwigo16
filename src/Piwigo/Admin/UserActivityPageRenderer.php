@@ -6,6 +6,7 @@ namespace Piwigo\Admin;
 
 use Piwigo\Activity\ActivityService;
 use Piwigo\Activity\Projection\ActionCount;
+use Piwigo\Admin\Projection\UserActivityPageContext;
 use Piwigo\Admin\Request\UserActivityRequest;
 use Piwigo\Auth\AccessControl;
 use Piwigo\Category\CategoryService;
@@ -89,14 +90,6 @@ final class UserActivityPageRenderer
         }
 
         $template->set_filename('user_activity', 'user_activity.tpl');
-        $template->assign('ADMIN_PAGE_TITLE', $lang->t('Users'));
-
-        $template->assign([
-            'PWG_TOKEN' => new CsrfService($currentConfig)
-                ->getToken(),
-            'INHERIT' => $currentConfig->inheritanceByDefault(),
-            'CACHE_KEYS' => AdminUiHelper::getAdminClientCacheKeys($urlService, ['users']),
-        ]);
 
         $nb_lines_for_user = $activity_service->getCountByUser();
 
@@ -118,21 +111,15 @@ final class UserActivityPageRenderer
                 ]
             );
         }
-        $template->assign('ulist', $filterable_users);
-
         $nb_users = $userService->getTotalUserCount();
-        $template->assign('nb_users', $nb_users);
 
         $min_date = $activity_service->getMinOccuredOn();
         $max_date = $activity_service->getMaxOccuredOn();
 
-        $template->assign(
-            'ACTIVITY_DATES',
-            [
-                'min' => ($min_date === null || $min_date === '') ? '' : substr($min_date, 0, 10),
-                'max' => ($max_date === null || $max_date === '') ? '' : substr($max_date, 0, 10),
-            ]
-        );
+        $activity_dates = [
+            'min' => ($min_date === null || $min_date === '') ? '' : substr($min_date, 0, 10),
+            'max' => ($max_date === null || $max_date === '') ? '' : substr($max_date, 0, 10),
+        ];
 
         $additional_filt_type = false;
         $additional_filt_name = null;
@@ -161,18 +148,12 @@ final class UserActivityPageRenderer
                 }
 
                 $additional_filt_type = $filter_key;
-                $additional_filt_name = $name;
+                $additional_filt_name = is_string($name) ? $name : null;
                 $additional_filt_value = $filter_value;
 
                 break;
             }
         }
-
-        $template->assign('ADDITIONAL_FILT', [
-            'type' => $additional_filt_type,
-            'name' => $additional_filt_name,
-            'value' => $additional_filt_value,
-        ]);
 
         $actions = array_map(
             static fn (ActionCount $action): array => [
@@ -182,7 +163,20 @@ final class UserActivityPageRenderer
             $activity_service->getActionCounts($additional_filt_type !== false ? $additional_filt_type : null)
         );
 
-        $template->assign('ACTIONS', $actions);
+        $template->assignContext(new UserActivityPageContext(
+            adminPageTitle: $lang->t('Users'),
+            pwgToken: new CsrfService($currentConfig)
+                ->getToken(),
+            inherit: $currentConfig->inheritanceByDefault(),
+            cacheKeys: AdminUiHelper::getAdminClientCacheKeys($urlService, ['users']),
+            ulist: $filterable_users,
+            nbUsers: $nb_users,
+            activityDates: $activity_dates,
+            additionalFiltType: $additional_filt_type,
+            additionalFiltName: $additional_filt_name,
+            additionalFiltValue: $additional_filt_value,
+            actions: $actions,
+        ));
 
         $template->assign_var_from_handle('ADMIN_CONTENT', 'user_activity');
     }

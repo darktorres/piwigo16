@@ -12,6 +12,7 @@ use Piwigo\Admin\Extensions\ExtensionType;
 use Piwigo\Admin\Extensions\PemCatalog;
 use Piwigo\Admin\Extensions\PluginMigrationEntity;
 use Piwigo\Admin\Extensions\ZipExtractor;
+use Piwigo\Admin\Projection\LanguagesNewPageContext;
 use Piwigo\Admin\Request\LanguagesNewInstallRequest;
 use Piwigo\Auth\AccessControl;
 use Piwigo\Bootstrap\RequestBootstrap;
@@ -203,8 +204,10 @@ final class LanguagesNewPageRenderer
         } else {
             $this->pageState->addError($this->lang->t('Can\'t connect to server.'));
         }
-        $template->assign('ADMIN_PAGE_TITLE', $this->lang->t('Languages'));
-        $template->assign('isWebmaster', ($this->accessControl->isWebmaster()) ? 1 : 0);
+        $template->assignContext(new LanguagesNewPageContext(
+            adminPageTitle: $this->lang->t('Languages'),
+            isWebmaster: $this->accessControl->isWebmaster(),
+        ));
 
         $template->assign_var_from_handle('ADMIN_CONTENT', 'languages');
     }

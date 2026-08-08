@@ -952,6 +952,12 @@ final class HtmlService implements HtmlRenderingInterface
             unset($_SESSION['page_' . $mode]);
         }
 
+        // Not a Phase 13 TemplatePageContext candidate: $mode is a real
+        // caller-chosen key (5 real call sites across flushPageMessages()/
+        // flushKeyedErrors(), 'errors' shared by both with 2 genuinely
+        // different value shapes per this method's own docblock) -- a
+        // shared cross-cutting utility called from every controller, not
+        // one page's own fixed var set.
         if ($messages !== []) {
             $template->assign($mode, $messages);
         }

@@ -6,6 +6,7 @@ namespace Piwigo\Admin;
 
 use Exception;
 use Piwigo\Activity\ActivityService;
+use Piwigo\Admin\Projection\CatModifyPageContext;
 use Piwigo\Category\CategoryService;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\DateHelper;
@@ -147,44 +148,25 @@ final class CatModifyPageRenderer
         // We show or hide this warning in JS
         $pageState->addWarning($lang->t('This album is currently locked, visible only to administrators.') . '<span class="icon-cone unlock-album">' . $lang->t('Unlock it') . '</span>');
 
-        $template->assign(
+        $categories_nav = (string) preg_replace('# {2,}#', ' ', (string) preg_replace("#(\r\n|\n\r|\n|\r)#", ' ', $navigation));
+        $categories_parent_nav = (string) preg_replace('# {2,}#', ' ', (string) preg_replace("#(\r\n|\n\r|\n|\r)#", ' ', $parent_navigation));
+        $u_jumpto = $urlService->makeIndexUrl(
             [
-                'CATEGORIES_NAV' => preg_replace('# {2,}#', ' ', (string) preg_replace("#(\r\n|\n\r|\n|\r)#", ' ', $navigation)),
-                'CATEGORIES_PARENT_NAV' => preg_replace('# {2,}#', ' ', (string) preg_replace("#(\r\n|\n\r|\n|\r)#", ' ', $parent_navigation)),
-                'PARENT_CAT_ID' => $category_id_uppercat !== '' ? $category_id_uppercat : 0,
-                'CAT_ID' => $category_id,
-                'CAT_NAME' => @htmlspecialchars(is_string($category['name']) ? $category['name'] : ''),
-                'CAT_COMMENT' => @htmlspecialchars(is_string($category['comment']) ? $category['comment'] : ''),
-                'IS_VISIBLE' => SqlDialect::booleanToString((bool) $category['visible']),
-                'CAT_ADMIN_ACCESS' => $categoryService->catAdminAccess($category_id, $currentUser),
-
-                'U_DELETE' => $base_url . 'albums',
-
-                'U_JUMPTO' => $urlService->makeIndexUrl(
-                    [
-                        'category' => $category,
-                    ]
-                ),
-
-                'U_ADD_PHOTOS_ALBUM' => $base_url . 'photos_add&amp;album=' . $category_id,
-                'U_CHILDREN' => $cat_list_url . '&amp;parent_id=' . $category_id,
-                'U_MOVE' => $base_url . 'albums&amp;parent_id=' . $category_id,
-                'U_ACTIVITY' => $urlService->getRootUrl() . 'admin.php?page=user_activity&album=' . $category_id,
+                'category' => $category,
             ]
         );
 
+        $cat_commentable = null;
         if ($currentConfig->activateComments()) {
-            $template->assign('CAT_COMMENTABLE', SqlDialect::booleanToString((bool) $category['commentable']));
+            $cat_commentable = SqlDialect::booleanToString((bool) $category['commentable']);
         }
 
         // manage album elements link
         $image_count = 0;
         $info_title = '';
+        $u_manage_elements = null;
         if ($category['has_images']) {
-            $template->assign(
-                'U_MANAGE_ELEMENTS',
-                $base_url . 'batch_manager&amp;filter=album-' . $category_id
-            );
+            $u_manage_elements = $base_url . 'batch_manager&amp;filter=album-' . $category_id;
 
             $row = $categoryService->getPhotoCountAndDateRange($category_id);
             $image_count = $row->count;
@@ -213,13 +195,6 @@ final class CatModifyPageRenderer
         }
         $info_photos = $lang->t('%d photos', $image_count);
 
-        $template->assign(
-            [
-                'INFO_PHOTO' => $info_photos,
-                'INFO_TITLE' => $info_title,
-            ]
-        );
-
         // total number of images under this category (including sub-categories)
         $image_ids_recursive = $categoryService->getDistinctImageIdsInCategories($subcat_ids);
 
@@ -229,72 +204,55 @@ final class CatModifyPageRenderer
         $occured_on = $activityService
             ->getOccuredOnForObject($category_id, 'album', 'add');
 
+        $info_creation_since = null;
+        $info_creation = null;
         if ($occured_on !== null) {
-            $template->assign(
-                [
-                    'INFO_CREATION_SINCE' => DateHelper::timeSince($occured_on, 'day', $format = null, $with_text = true, $with_week = true, $only_last_unit = true),
-                    'INFO_CREATION' => DateHelper::formatDate($occured_on, ['day', 'month', 'year']),
-                ]
-            );
+            $info_creation_since = DateHelper::timeSince($occured_on, 'day', $format = null, $with_text = true, $with_week = true, $only_last_unit = true);
+            $info_creation = DateHelper::formatDate($occured_on, ['day', 'month', 'year']);
         }
 
         // Sub Albums
         $nb_direct_sub = count($categoryService->getChildrenOfParent($category_id));
 
-        $template->assign(
-            [
-                'INFO_DIRECT_SUB' => $lang->t(
-                    '%d sub-albums',
-                    $nb_direct_sub
-                ),
-            ]
+        $info_direct_sub = $lang->t(
+            '%d sub-albums',
+            $nb_direct_sub
         );
 
         // lastmodified is a NOT NULL DATETIME column, but the driver still types
         // every fetched value as string|null; narrow with real fallbacks (matching
         // the min_date/max_date/occured_on pattern above) rather than assuming.
         $category_lastmodified = is_string($category['lastmodified']) ? $category['lastmodified'] : null;
-        $template->assign(
-            [
-                'INFO_ID' => $lang->t('Numeric identifier : %d', $category_id),
-                'INFO_LAST_MODIFIED_SINCE' => DateHelper::timeSince($category_lastmodified ?? '', 'minute', $format = null, $with_text = true, $with_week = true, $only_last_unit = true),
-                'INFO_LAST_MODIFIED' => DateHelper::formatDate($category_lastmodified ?? false, ['day', 'month', 'year']),
-                'INFO_IMAGES_RECURSIVE' => $lang->t(
-                    '%d including sub-albums',
-                    $category['nb_images_recursive']
-                ),
-                'INFO_SUBCATS' => $lang->t(
-                    '%d in whole branch',
-                    $category['nb_subcats']
-                ),
-
-                'NB_SUBCATS' => $category['nb_subcats'],
-            ]
+        $info_id = $lang->t('Numeric identifier : %d', $category_id);
+        $info_last_modified_since = DateHelper::timeSince($category_lastmodified ?? '', 'minute', $format = null, $with_text = true, $with_week = true, $only_last_unit = true);
+        $info_last_modified = DateHelper::formatDate($category_lastmodified ?? false, ['day', 'month', 'year']);
+        $info_images_recursive = $lang->t(
+            '%d including sub-albums',
+            $category['nb_images_recursive']
+        );
+        $info_subcats = $lang->t(
+            '%d in whole branch',
+            $category['nb_subcats']
         );
 
-        $template->assign([
-            'U_MANAGE_RANKS' => $base_url . 'element_set_ranks&amp;cat_id=' . $category_id,
-            'CACHE_KEYS' => AdminUiHelper::getAdminClientCacheKeys($urlService, ['categories']),
-        ]);
+        $u_manage_ranks = $base_url . 'element_set_ranks&amp;cat_id=' . $category_id;
+        $cache_keys = AdminUiHelper::getAdminClientCacheKeys($urlService, ['categories']);
 
+        $cat_full_dir = null;
+        $cat_dir_name = null;
+        $cat_min_dir = null;
+        $u_sync = null;
         if (! (bool) $category['is_virtual']) {
             $category['cat_full_dir'] = $this->getCompleteDir($category_id, $categoryService);
             $category_full_dir = preg_replace('/\/$/', '', $category['cat_full_dir']);
-            $template->assign(
-                [
-                    'CAT_FULL_DIR' => $category_full_dir,
-                ]
-            );
-            $template->assign('CAT_DIR_NAME', basename((string) $category_full_dir));
-            $template->assign('CAT_MIN_DIR', $this->getMinLocalDir($category_full_dir));
+            $cat_full_dir = $category_full_dir;
+            $cat_dir_name = basename((string) $category_full_dir);
+            $cat_min_dir = $this->getMinLocalDir($category_full_dir);
 
             if ($currentConfig->enableSynchronization()) {
                 $category_site_id = $category['site_id'];
                 $category_site_id = (is_int($category_site_id) || is_string($category_site_id)) ? $category_site_id : '';
-                $template->assign(
-                    'U_SYNC',
-                    $base_url . 'site_update&amp;site=' . $category_site_id . '&amp;cat_id=' . $category_id
-                );
+                $u_sync = $base_url . 'site_update&amp;site=' . $category_site_id . '&amp;cat_id=' . $category_id;
             }
 
         }
@@ -307,6 +265,7 @@ final class CatModifyPageRenderer
         // rather than assuming string|null.
         $category_representative_picture_id_raw = $category['representative_picture_id'];
         $category_representative_picture_id = (is_int($category_representative_picture_id_raw) || is_string($category_representative_picture_id_raw)) ? $category_representative_picture_id_raw : 0;
+        $representant = null;
         if ($category['has_images'] or ! in_array($category_representative_picture_id, [0, '0', ''], true)) {
             $tpl_representant = [];
 
@@ -330,14 +289,53 @@ final class CatModifyPageRenderer
                 or ! $category['has_images']) {
                 $tpl_representant['ALLOW_DELETE'] = true;
             }
-            $template->assign('representant', $tpl_representant);
+            $representant = $tpl_representant;
         }
 
+        $parent_category = null;
         if ((bool) $category['is_virtual']) {
-            $template->assign('parent_category', $category_id_uppercat === '' ? [] : [$category_id_uppercat]);
+            $parent_category = $category_id_uppercat === '' ? [] : [$category_id_uppercat];
         }
 
-        $template->assign('PWG_TOKEN', new CsrfService($currentConfig)->getToken());
+        $template->assignContext(new CatModifyPageContext(
+            categoriesNav: $categories_nav,
+            categoriesParentNav: $categories_parent_nav,
+            parentCatId: $category_id_uppercat !== '' ? $category_id_uppercat : 0,
+            catId: $category_id,
+            catName: @htmlspecialchars(is_string($category['name']) ? $category['name'] : ''),
+            catComment: @htmlspecialchars(is_string($category['comment']) ? $category['comment'] : ''),
+            isVisible: SqlDialect::booleanToString((bool) $category['visible']),
+            catAdminAccess: $categoryService->catAdminAccess($category_id, $currentUser),
+            uDelete: $base_url . 'albums',
+            uJumpto: $u_jumpto,
+            uAddPhotosAlbum: $base_url . 'photos_add&amp;album=' . $category_id,
+            uChildren: $cat_list_url . '&amp;parent_id=' . $category_id,
+            uMove: $base_url . 'albums&amp;parent_id=' . $category_id,
+            uActivity: $urlService->getRootUrl() . 'admin.php?page=user_activity&album=' . $category_id,
+            catCommentable: $cat_commentable,
+            uManageElements: $u_manage_elements,
+            infoPhoto: $info_photos,
+            infoTitle: $info_title,
+            infoCreationSince: $info_creation_since,
+            infoCreation: $info_creation,
+            infoDirectSub: $info_direct_sub,
+            infoId: $info_id,
+            infoLastModifiedSince: $info_last_modified_since,
+            infoLastModified: $info_last_modified,
+            infoImagesRecursive: $info_images_recursive,
+            infoSubcats: $info_subcats,
+            nbSubcats: $category['nb_subcats'],
+            uManageRanks: $u_manage_ranks,
+            cacheKeys: $cache_keys,
+            catFullDir: $cat_full_dir,
+            catDirName: $cat_dir_name,
+            catMinDir: $cat_min_dir,
+            uSync: $u_sync,
+            representant: $representant,
+            parentCategory: $parent_category,
+            pwgToken: new CsrfService($currentConfig)
+                ->getToken(),
+        ));
 
         $eventDispatcher->dispatchNotify(new LocEndCatModify());
 

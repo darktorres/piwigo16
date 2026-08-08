@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin;
 
+use Piwigo\Admin\Projection\CommentsPageContext;
 use Piwigo\Auth\AccessControl;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\AccessLevel;
@@ -30,14 +31,6 @@ final class CommentsPageRenderer
             'comments' => 'comments.tpl',
         ]);
 
-        $template->assign(
-            [
-                'F_ACTION' => $urlService->getRootUrl() . 'admin.php?page=comments',
-                'PWG_TOKEN' => new CsrfService($currentConfig)
-                    ->getToken(),
-            ]
-        );
-
         // CoreTabs::setContext() must be called with myBaseUrl here so this
         // page's tab strip renders correct admin.php?page=... hrefs instead
         // of broken relative ones.
@@ -47,7 +40,12 @@ final class CommentsPageRenderer
         $tabsheet->select('', $eventDispatcher);
         $tabsheet->assign($currentTemplate);
 
-        $template->assign('ADMIN_PAGE_TITLE', $lang->t('User comments'));
+        $template->assignContext(new CommentsPageContext(
+            formAction: $urlService->getRootUrl() . 'admin.php?page=comments',
+            pwgToken: new CsrfService($currentConfig)
+                ->getToken(),
+            adminPageTitle: $lang->t('User comments'),
+        ));
 
         $template->assign_var_from_handle('ADMIN_CONTENT', 'comments');
     }

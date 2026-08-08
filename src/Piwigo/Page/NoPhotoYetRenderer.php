@@ -29,6 +29,8 @@ use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Event\Location\LocEndNoPhotoYet;
 use Piwigo\Group\GroupEntity;
 use Piwigo\Image\ImageRepository;
+use Piwigo\Page\Projection\NoPhotoYetAdminPageContext;
+use Piwigo\Page\Projection\NoPhotoYetGuestPageContext;
 use Piwigo\Page\Request\NoPhotoYetRequest;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Session\SessionService;
@@ -122,26 +124,22 @@ final readonly class NoPhotoYetRenderer
                         $url = $this->urlService->getRootUrl() . $url;
                     }
 
-                    $template->assign(
-                        [
-                            'step' => 2,
-                            'intro' => $this->lang->t(
-                                'Hello %s, your Piwigo photo gallery is empty!',
-                                $this->currentUser->get()
-                                    ->username
-                            ),
-                            'next_step_url' => $url,
-                            'deactivate_url' => $this->urlService->getRootUrl() . '?no_photo_yet=deactivate',
-                        ]
-                    );
+                    $template->assignContext(new NoPhotoYetAdminPageContext(
+                        step: 2,
+                        intro: $this->lang->t(
+                            'Hello %s, your Piwigo photo gallery is empty!',
+                            $this->currentUser->get()
+                                ->username
+                        ),
+                        nextStepUrl: $url,
+                        deactivateUrl: $this->urlService->getRootUrl() . '?no_photo_yet=deactivate',
+                    ));
                 } else {
-                    $template->assign(
-                        [
-                            'step' => 1,
-                            'U_LOGIN' => 'identification.php',
-                            'deactivate_url' => $this->urlService->getRootUrl() . '?no_photo_yet=browse',
-                        ]
-                    );
+                    $template->assignContext(new NoPhotoYetGuestPageContext(
+                        step: 1,
+                        loginUrl: 'identification.php',
+                        deactivateUrl: $this->urlService->getRootUrl() . '?no_photo_yet=browse',
+                    ));
                 }
 
                 $this->eventDispatcher->dispatchNotify(new LocEndNoPhotoYet());

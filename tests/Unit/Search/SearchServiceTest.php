@@ -286,20 +286,27 @@ function searchServiceTestMailService(): MailService
 }
 
 /**
- * Same dependency graph as makeService()/beforeEach()'s own default
- * service below, but with a caller-supplied $repo (for forcing an
- * internal collision retry) and/or HtmlRenderingInterface (for observing
- * the fatalError()/badRequest() gates without a real header()+exit()
- * redirect).
+ * Same dependency graph as beforeEach()'s own default service below,
+ * with a caller-supplied HtmlRenderingInterface (for observing the
+ * fatalError()/badRequest() gates without a real header()+exit()
+ * redirect). Builds its own $repo off the SAME connection as every
+ * other collaborator here, deliberately -- not a separate
+ * searchServiceTestRepo() call: composer test's own parallel runner
+ * put this file's 100+ tests worth of DriverException("Too many
+ * connections") failures under real load, confirmed live as this
+ * exact duplication (a 2nd, separate DbConnection::build() call per
+ * searchServiceTestService() invocation, on top of every test's own
+ * direct searchServiceTestConn()/searchServiceTestRepo() calls for
+ * setup/cleanup).
  */
-function searchServiceTestMakeService(SearchRepository $repo, HtmlRenderingInterface $htmlRenderer): SearchService
+function searchServiceTestMakeService(HtmlRenderingInterface $htmlRenderer): SearchService
 {
     $conn = searchServiceTestConn();
     $accessLevelChecker = new AccessLevelChecker(CurrentUserTestFactory::get(), CurrentConfigTestFactory::get());
 
     return new SearchService(
         $accessLevelChecker,
-        $repo,
+        new SearchRepository(EntityManagerFactory::build($conn)),
         new PermissionService(new PermissionRepository(EntityManagerFactory::build($conn)), EntityManagerFactory::build($conn)->getRepository(GroupEntity::class), new CategoryRepository(EntityManagerFactory::build($conn), CurrentConfigTestFactory::get()), CurrentUserTestFactory::get(), searchServiceTestFilterState(), $accessLevelChecker),
         new CategoryService(
             LangTestFactory::get(),
@@ -326,12 +333,12 @@ function searchServiceTestMakeService(SearchRepository $repo, HtmlRenderingInter
 
 function searchServiceTestService(): SearchService
 {
-    return searchServiceTestMakeService(searchServiceTestRepo(), HtmlServiceTestFactory::build());
+    return searchServiceTestMakeService(HtmlServiceTestFactory::build());
 }
 
 function searchServiceTestServiceWithRenderer(HtmlRenderingInterface $htmlRenderer): SearchService
 {
-    return searchServiceTestMakeService(searchServiceTestRepo(), $htmlRenderer);
+    return searchServiceTestMakeService($htmlRenderer);
 }
 
 /**
@@ -402,12 +409,23 @@ beforeEach(function (): void {
 afterEach(function (): void {
     // insertSavedSearch() calls below use literal 'psk-2026...' uuids
     // (matching the Integration original's own hardcoded style) plus
-    // getAvailableSearchUuid()'s own real 'psk-'-prefixed generated
-    // ones -- this whole DB is shared/persistent across the Unit suite
-    // (and across every pest --mutate re-execution), unlike a real
-    // Integration run's own per-class resetDatabase(), so leftover rows
-    // accumulate without this cleanup.
-    searchServiceTestConn()->executeStatement("DELETE FROM " . Tables::search() . " WHERE search_uuid LIKE 'psk-%'");
+    // getAvailableSearchUuid()'s own real 'psk-{8-digit date}-{10 chars}'
+    // generated ones -- this whole DB is shared/persistent across the
+    // Unit suite (and across every pest --mutate re-execution), unlike a
+    // real Integration run's own per-class resetDatabase(), so leftover
+    // rows accumulate without this cleanup.
+    //
+    // REGEXP '^psk-[0-9]{8}-', not a broader `LIKE 'psk-%'` -- confirmed
+    // live: composer test's own parallel runner puts this file and
+    // SearchRepositoryTest.php in different worker processes against the
+    // SAME real, shared DB, and a `LIKE 'psk-%'` here matched (and
+    // deleted) that file's own still-in-flight 'psk-rt...'-shaped rows
+    // mid-test, causing real, intermittent getSearchArray()/
+    // getSearchInfo() failures in THIS file. Every real row this file's
+    // own tests ever produce is genuinely date-shaped (either a literal
+    // 'psk-2026...' or the real generator's own output), so this narrower
+    // pattern loses no real coverage.
+    searchServiceTestConn()->executeStatement("DELETE FROM " . Tables::search() . " WHERE search_uuid REGEXP '^psk-[0-9]{8}-'");
     CachePools::searchResults()->clear();
     CurrentUserTestFactory::get()->reset();
     CurrentConfigTestFactory::get()->reset();

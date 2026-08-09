@@ -57,13 +57,29 @@ function searchTestUuid(): string
     // suite's DB persists across runs (no per-class fixture reload the
     // way IntegrationTestCase gets), so a fixed uuid collides with a
     // leftover row from an earlier run instead of a fresh insert.
-    // search_uuid is a real, 23-char-max column -- 'psk-' (4) + 18 hex
-    // chars (9 random bytes) fits with no room left for a label.
-    return 'psk-' . bin2hex(random_bytes(9));
+    // search_uuid is a real, 23-char-max column -- 'psk-rt' (6) + 16 hex
+    // chars (8 random bytes) fits with no room left for more.
+    //
+    // 'rt' immediately after 'psk-' (not a digit) is deliberate, not
+    // decorative: SearchServiceTest.php's own real production-shaped
+    // uuids ('psk-{8-digit date}-{10 chars}', both hand-written literals
+    // and SearchService::getAvailableSearchUuid()'s own real output)
+    // start matching this file's OWN cleanup pattern below whenever it
+    // was the broader `LIKE 'psk-%'` -- composer test's parallel runner
+    // puts different test FILES in different worker processes against
+    // the SAME real, shared DB, so one file's afterEach() firing mid-way
+    // through another file's still-in-flight insert-then-read-back test
+    // silently deleted the other's row before it could be read.
+    // Confirmed live: this collision produced real, intermittent
+    // failures in SearchServiceTest.php's own getSearchArray()/
+    // getSearchInfo() tests. A structurally distinct shape (never
+    // digit-8-then-hyphen at this position) makes both files' own
+    // patterns mutually exclusive regardless of run order.
+    return 'psk-rt' . bin2hex(random_bytes(8));
 }
 
 afterEach(function (): void {
-    DbConnection::build()->executeStatement("DELETE FROM " . Tables::search() . " WHERE search_uuid LIKE 'psk-%'");
+    DbConnection::build()->executeStatement("DELETE FROM " . Tables::search() . " WHERE search_uuid LIKE 'psk-rt%'");
 });
 
 test('findSavedSearchByUuid() returns null for no match', function (): void {

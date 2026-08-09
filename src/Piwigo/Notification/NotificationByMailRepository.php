@@ -24,8 +24,8 @@ use Piwigo\Users\UserInfoEntity;
  * own and stays procedural, same "$page/$template glue stays in the
  * free-function delegate" split as every other P19 domain.
  *
- * Item 15 Sub-item E: converted to real DQL against
- * {@see UserMailNotificationEntity}. `Notification` is `L2bExtendedDomain`;
+ * Real DQL against {@see UserMailNotificationEntity}.
+ * `Notification` is `L2bExtendedDomain`;
  * `Users` is `L2aCoreDomain` -- a downward dependency, not a
  * `deleteSiteRow`-class layer violation.
  *
@@ -50,22 +50,18 @@ final class NotificationByMailRepository extends EntityRepository
      * original's unescaped `'\'' . $s . '\''` string-literal quoting.
      * `NotificationByMailSender::quoteCheckKeyList()` used to reproduce
      * that same unescaped quoting for {@see deleteByCheckKeys()}'s own
-     * now-former "already-quoted" input -- removed in the SQL-modernization
-     * pass (its only real caller), see that method's own docblock.
+     * now-former "already-quoted" input -- removed (its only real
+     * caller), see that method's own docblock.
      *
-     * SQL-modernization audit, Item 14 Sub-phase C4: dropped the
-     * `$usernameField`/`$emailField`/`$idField` multi-auth column-name
-     * params -- `users`'s columns are now fixed
-     * ({@see \Piwigo\Users\UserEntity}), see this repository's own class
-     * docblock note.
+     * `users`'s columns are fixed ({@see \Piwigo\Users\UserEntity}).
      *
-     * Item 15 audit: converted to real DQL -- `$enabledFilterValue`'s one
-     * real caller ({@see \Piwigo\Notification\NotificationByMailService::
-     * getUserNotifications()}) only ever passes `''`, `'0'`, or `'1'`
-     * (already normalized via `SqlDialect::booleanToInt()`), so binding it
-     * against `n.enabled`'s DQL `boolean` type is safe (`(bool) '0'` is
-     * `false`, `(bool) '1'` is `true` -- PHP's own string-to-bool
-     * coercion for these 2 specific literals).
+     * `$enabledFilterValue`'s one real caller ({@see \Piwigo\Notification\
+     * NotificationByMailService::getUserNotifications()}) only ever
+     * passes `''`, `'0'`, or `'1'` (already normalized via
+     * `SqlDialect::booleanToInt()`), so binding it against `n.enabled`'s
+     * DQL `boolean` type is safe (`(bool) '0'` is `false`, `(bool) '1'`
+     * is `true` -- PHP's own string-to-bool coercion for these 2
+     * specific literals).
      *
      * @param  list<string>  $checkKeyList
      * @return list<UserMailNotification>
@@ -134,17 +130,12 @@ final class NotificationByMailRepository extends EntityRepository
      * Controller\Admin\NotificationByMailSubController::
      * insertNewDataUserMailNotification()'s own pre-sync cleanup, so
      * `WHERE email IS NOT NULL` below can't false-negative on a
-     * whitespace-only address.
-     *
-     * SQL-modernization audit, Item 14 Sub-phase C4: dropped the
-     * `$emailColumn` multi-auth column-name param -- see
+     * whitespace-only address. No multi-auth column-name param -- see
      * {@see findUserNotifications()}'s own docblock.
-     */
-    /**
-     * Item 15 audit: converted to real DQL -- `users` is mapped
-     * ({@see UserEntity}), and DQL's built-in `TRIM()` function is
-     * portable, same default both-sides-whitespace semantics as the
-     * original raw SQL's bare `TRIM(mail_address)`.
+     *
+     * `users` is mapped ({@see UserEntity}), and DQL's built-in `TRIM()`
+     * function is portable, same default both-sides-whitespace semantics
+     * as the original raw SQL's bare `TRIM(mail_address)`.
      */
     public function nullifyBlankEmails(): void
     {
@@ -164,13 +155,11 @@ final class NotificationByMailRepository extends EntityRepository
      * NotificationByMailSubController's own "which users need a fresh
      * subscription row" step.
      *
-     * SQL-modernization audit, Item 14 Sub-phase C4: dropped the
-     * `$idColumn`/`$usernameColumn`/`$emailColumn` multi-auth column-name
-     * params -- see {@see findUserNotifications()}'s own docblock.
+     * No multi-auth column-name params -- see
+     * {@see findUserNotifications()}'s own docblock.
      *
-     * Item 15 audit: converted to real DQL -- the anti-join uses
-     * `Join::WITH` (no formal ORM association between `UserEntity`/
-     * `UserMailNotificationEntity`), same established pattern as
+     * The anti-join uses `Join::WITH` (no formal ORM association between
+     * `UserEntity`/`UserMailNotificationEntity`), same pattern as
      * {@see \Piwigo\Tag\TagRepository::findOrphanTags()}.
      *
      * @return list<array<string, mixed>>
@@ -210,22 +199,21 @@ final class NotificationByMailRepository extends EntityRepository
     /**
      * Deletes rows by check_key.
      *
-     * SQL-modernization audit: $checkKeyList used to arrive already
-     * quoted by NotificationByMailSender::quoteCheckKeyList() (`'\'' . $s
-     * . '\''`, manual wrapping with zero escaping) and get spliced
-     * straight into the query text -- its own docblock said "$checkKeyList
-     * may come straight from $_POST", which would have made this a real
-     * SQL injection had that path ever been live. Traced the one real
-     * caller (Controller\Admin\NotificationByMailSubController::
-     * insertNewDataUserMailNotification()): its $check_key_list is always
-     * server-generated (NotificationByMailSender::findAvailableCheckKey()),
-     * never $_POST, so not exploitable today -- but the construction
-     * style itself is exactly this initiative's target regardless.
-     * quoteCheckKeyList() had this as its only real caller; removed
-     * entirely rather than left as unused dead code, and this method now
-     * takes plain, unquoted check keys and binds them.
-     *
-     * Item 15 audit: converted to real DQL.
+     * $checkKeyList is bound, not quoted -- the original construction
+     * quoted it via NotificationByMailSender::quoteCheckKeyList()
+     * (`'\'' . $s . '\''`, manual wrapping with zero escaping) and
+     * spliced it straight into the query text; its own docblock said
+     * "$checkKeyList may come straight from $_POST", which would have
+     * made this a real SQL injection had that path ever been live. The
+     * one real caller (Controller\Admin\NotificationByMailSubController::
+     * insertNewDataUserMailNotification()) always generates
+     * $check_key_list server-side
+     * (NotificationByMailSender::findAvailableCheckKey()), never from
+     * $_POST, so it was not exploitable in practice -- but the
+     * construction style itself was still worth fixing.
+     * quoteCheckKeyList() had this as its only real caller and was
+     * removed entirely; this method now takes plain, unquoted check keys
+     * and binds them.
      *
      * @param  list<string>  $checkKeyList
      */

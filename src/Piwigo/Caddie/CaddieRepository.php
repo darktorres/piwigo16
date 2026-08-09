@@ -16,8 +16,8 @@ use Piwigo\Db\Tables;
  * Persistence layer for the caddie domain: `caddie` (a per-user
  * "shopping basket" of image ids, added from fill_caddie()/ws_caddie_add()).
  *
- * Item 15 Sub-item E: converted to real DQL against {@see CaddieEntity} --
- * `addElements()` stays on plain DBAL (a bound, portable `INSERT` via
+ * Real DQL against {@see CaddieEntity} -- `addElements()` stays on
+ * plain DBAL (a bound, portable `INSERT` via
  * `Connection::insert()`, no MySQL-specific `IGNORE` syntax, duplicate
  * rows and nonexistent `element_id`s alike caught as
  * {@see \Doctrine\DBAL\Exception\ConstraintViolationException} per
@@ -37,18 +37,15 @@ final class CaddieRepository extends EntityRepository
      * the new ones" two-step, without needing the extra SELECT. Returns
      * the number of elements actually newly added.
      *
-     * Item 15 audit, re-verified: the plan's own text suggested a
-     * "find-or-persist" ORM rewrite here, matching
+     * Stays on raw DBAL, matching
      * {@see \Piwigo\Group\GroupRepository::addMembers()}'s own identical
-     * shape -- but that method's own Item 14 audit already settled this
-     * exact question and rejected it: ORM `persist()`/`flush()` has no
+     * shape and settled precedent: ORM `persist()`/`flush()` has no
      * `INSERT IGNORE` equivalent at all, and a find-then-persist two-step
      * introduces a real TOCTOU race (a concurrent request inserting
      * between the existence check and the insert) that the atomic
-     * `INSERT IGNORE` doesn't have. Stays on raw DBAL, matching
-     * `addMembers()`'s own settled precedent exactly.
+     * `INSERT IGNORE` doesn't have.
      *
-     * Item 16C: catches {@see ConstraintViolationException}, not just
+     * Catches {@see ConstraintViolationException}, not just
      * {@see \Doctrine\DBAL\Exception\UniqueConstraintViolationException}
      * -- confirmed via a real test (`addElements() silently skips a
      * nonexistent image id`) that `INSERT IGNORE`'s tolerance here covers
@@ -122,10 +119,9 @@ final class CaddieRepository extends EntityRepository
      * PhotosAddDirectPageRenderer's own "batch" action, unlike
      * addElements() above which only ever adds on top of what's there.
      *
-     * Item 15 audit: the DELETE half converted to real DQL; the INSERT
-     * half stays on {@see \Piwigo\Db\BatchWriter} permanently (kept per
-     * the user's explicit choice, same as every other bulk-write call
-     * site in this plan).
+     * The DELETE half is real DQL; the INSERT half stays on
+     * {@see \Piwigo\Db\BatchWriter} permanently, same as every other
+     * bulk-write call site in this codebase.
      *
      * @param list<int> $elementIds
      */
@@ -160,8 +156,6 @@ final class CaddieRepository extends EntityRepository
      * Removes only the given elements from $userId's caddie --
      * Admin\BatchManagerGlobalPageRenderer's own "remove_from_caddie"
      * action, unlike replaceForUser() above which clears everything.
-     *
-     * Item 15 audit: converted to real DQL.
      *
      * @param list<int> $elementIds
      */

@@ -36,8 +36,7 @@ use Piwigo\Db\Type\UsernameType;
 
 /**
  * Piwigo\Db\Type\* -- the Doctrine custom Type classes mapping VOs
- * directly onto DB columns, had zero dedicated coverage (see
- * /home/torres/.claude/plans/piped-enchanting-spark.md, Wave 1). Their
+ * directly onto DB columns, had zero dedicated coverage. Their
  * *happy-path* conversion logic is already exercised on essentially every
  * ORM query touching a UserId/CommentId/GroupId/CategoryId/TagId/
  * IpAddress-typed column across the whole Integration suite -- this

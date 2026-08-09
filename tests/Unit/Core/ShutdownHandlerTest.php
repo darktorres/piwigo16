@@ -114,9 +114,8 @@ test('reset() clears registered callbacks', function (): void {
  * asynchronously during its own usleep(), so the marker file never
  * gets written and the exit code is never 143). `pest --mutate`'s own
  * scan still reports both as UNTESTED regardless -- the same
- * proc_open() subprocess-invisibility documented in
- * feedback_pest_mutate_invisible_to_subprocess_tests, not an
- * unaddressed gap.
+ * proc_open() subprocess-invisibility every subprocess-based test in
+ * this suite runs into, not an unaddressed gap.
  */
 test('a real SIGTERM signal delivered to a subprocess runs its registered callback, then exits 143', function (): void {
     // The real signal handler's own closure body (runAll(); exit(143);)

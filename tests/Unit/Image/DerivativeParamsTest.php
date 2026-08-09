@@ -10,8 +10,7 @@ use Piwigo\Image\WatermarkParams;
 
 /**
  * Piwigo\Image\DerivativeParams -- will_watermark() (partial) and
- * add_url_tokens() (fully) were uncovered (see /home/torres/.claude/plans/
- * piped-enchanting-spark.md, Wave 1); the rest is covered here too for a
+ * add_url_tokens() (fully) were uncovered; the rest is covered here too for a
  * complete, direct pass over this small, pure-logic-except-one-static-read
  * class.
  */

@@ -24,9 +24,8 @@ test('emit sends the response body', function (): void {
 
 // The comment above is only half right: headers_sent() is live-confirmed to
 // actually be FALSE inside a Pest test body (a throwaway probe dumped it
-// directly -- see feedback_session_start_works_under_pest_cli.md for the
-// same "don't trust a CLI-limitation comment without re-verifying" lesson
-// applying here too), so emit()'s `! headers_sent()` branch genuinely does
+// directly -- the same "don't trust a CLI-limitation comment without
+// re-verifying" lesson applies here too), so emit()'s `! headers_sent()` branch genuinely does
 // run. What's still true is that header()/headers_list() themselves are
 // no-ops under CLI SAPI (confirmed live: headers_list() stays empty even
 // after a real header() call) -- so *that* half is closed instead via a
@@ -199,6 +198,5 @@ test('emit\'s first header value replaces the SAPI\'s own default header of the 
  * same pass either way): with nothing preceding it to replace, the
  * $replace flag has no observable effect, matching the same finding
  * already made for HtmlService::setStatusHeader() (see
- * feedback_pest_mutate_invisible_to_subprocess_tests.md and
  * HtmlServiceTest.php's own setStatusHeader real-server tests).
  */

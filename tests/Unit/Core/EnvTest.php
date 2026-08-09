@@ -228,9 +228,8 @@ test('mergeIntoEnvFile treats an unreadable existing file as having no prior lin
     // fixture file look like it doesn't exist at all under is_file()
     // (line 145), so real code skips the file()/foreach() branch
     // entirely and the mutation on line 147 never even executes --
-    // this is a tool blindness, not equivalence (see
-    // feedback_pest_mutate_invisible_to_subprocess_tests memory, now
-    // generalized to cover this second, distinct root cause).
+    // this is a tool blindness, not equivalence: a second, distinct
+    // root cause of the same proc_open() subprocess-invisibility class.
     // 0000 permissions (not merely unreadable-by-others, which this
     // sandboxed environment's own capability-based bypass tolerates for
     // some operations -- see FilesystemHelperTest.php's own documented

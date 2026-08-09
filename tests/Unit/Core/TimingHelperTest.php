@@ -6,8 +6,7 @@ use Piwigo\Tests\Support\PageStateTestFactory;
 use Piwigo\Core\TimingHelper;
 
 /**
- * Piwigo\Core\TimingHelper -- had zero dedicated coverage (see
- * /home/torres/.claude/plans/piped-enchanting-spark.md, Wave 1).
+ * Piwigo\Core\TimingHelper -- had zero dedicated coverage.
  * getElapsedTime() is deterministic (plain float subtraction); getMoment()/
  * microSeconds()/debug() all read the real wall clock, so those are
  * asserted on shape/format rather than an exact value to avoid timing

@@ -80,8 +80,8 @@ test('build() uses the given connection, not a freshly built one', function (): 
  * across 3 separate live reruns -- yet `pest --mutate`'s own scan
  * reports it UNTESTED consistently, even after the fix that killed
  * line 47's sibling RemoveNot mutation on the very same guard. Distinct
- * from the already-documented proc_open() subprocess-invisibility
- * blind spot (feedback_pest_mutate_invisible_to_subprocess_tests) --
+ * from the proc_open() subprocess-invisibility blind spot documented
+ * elsewhere in this suite --
  * no subprocess is involved here; root cause not identified, only the
  * discrepancy between the tool's report and directly-observed real
  * behavior.

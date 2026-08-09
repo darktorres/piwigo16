@@ -9,8 +9,7 @@ use Piwigo\Http\HttpClientSsrfException;
 /**
  * Piwigo\Http\HttpClientSsrfException/HttpClientNetworkException --
  * HttpClientServiceTest already exercises both being thrown, but never
- * calls getRequest() (see /home/torres/.claude/plans/piped-enchanting-
- * spark.md, Wave 1).
+ * calls getRequest().
  */
 test('HttpClientSsrfException exposes the request that triggered it', function (): void {
     $request = new Request('GET', 'https://example.test/');

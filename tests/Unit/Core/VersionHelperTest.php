@@ -5,8 +5,7 @@ declare(strict_types=1);
 use Piwigo\Core\VersionHelper;
 
 /**
- * Piwigo\Core\VersionHelper -- had zero dedicated coverage (see
- * /home/torres/.claude/plans/piped-enchanting-spark.md, Wave 1).
+ * Piwigo\Core\VersionHelper -- had zero dedicated coverage.
  */
 test('safeVersionCompare returns the raw -1/0/1 result when no operator is given', function (): void {
     expect(VersionHelper::safeVersionCompare('1.0.0', '1.0.1'))->toBe(-1);

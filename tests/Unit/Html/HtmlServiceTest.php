@@ -11,6 +11,7 @@ use Piwigo\Url\RootPathOverride;
 use Piwigo\Tests\Support\HtmlServiceTestFactory;
 use Error;
 use Piwigo\Tests\Support\UrlServiceTestFactory;
+use Piwigo\Tests\Support\PageStateTestFactory;
 use Piwigo\Tests\Support\TemplateTestFactory;
 use RecursiveIteratorIterator;
 use RecursiveDirectoryIterator;
@@ -1761,4 +1762,113 @@ test('setStatusHeader actually calls header(), not a no-op, for a real request',
         unlink($docRoot . '/index.php');
         rmdir($docRoot);
     }
+});
+
+/**
+ * flushPageMessages()/flushKeyedErrors() had zero real test coverage
+ * before this campaign's own conversion of their raw
+ * Template::assign() calls to assignContext(new PageMessagesContext(...))
+ * -- these exercise the real, live behavior end to end, not just the
+ * DTO's own toArray() (see PageMessagesContextTest.php for that).
+ */
+test('flushPageMessages assigns only the non-empty PageState fields', function (): void {
+    CurrentConfigTestFactory::get()->setDataDirChecked('1');
+    CurrentTemplate::current()->set(TemplateTestFactory::build());
+    PageStateTestFactory::get()->reset();
+    PageStateTestFactory::get()->addError('Something went wrong');
+    PageStateTestFactory::get()->addInfo('Saved successfully');
+
+    HtmlServiceTestFactory::build()->flushPageMessages();
+
+    $template = CurrentTemplate::current()->get();
+    expect($template->get_template_vars('errors'))->toBe(['Something went wrong'])
+        ->and($template->get_template_vars('infos'))->toBe(['Saved successfully'])
+        ->and($template->get_template_vars('warnings'))->toBeNull()
+        ->and($template->get_template_vars('messages'))->toBeNull();
+});
+
+test('flushPageMessages does nothing when a page refresh is already assigned', function (): void {
+    CurrentConfigTestFactory::get()->setDataDirChecked('1');
+    CurrentTemplate::current()->set(TemplateTestFactory::build());
+    PageStateTestFactory::get()->reset();
+    PageStateTestFactory::get()->addError('Should not appear');
+    CurrentTemplate::current()->get()->assign('page_refresh', ['TIME' => '5', 'U_REFRESH' => '/next']);
+
+    HtmlServiceTestFactory::build()->flushPageMessages();
+
+    expect(CurrentTemplate::current()->get()->get_template_vars('errors'))->toBeNull();
+});
+
+test('flushPageMessages merges in and clears the session flash channel', function (): void {
+    CurrentConfigTestFactory::get()->setDataDirChecked('1');
+    CurrentTemplate::current()->set(TemplateTestFactory::build());
+    PageStateTestFactory::get()->reset();
+    PageStateTestFactory::get()->addError('Live error');
+    $_SESSION['page_errors'] = ['Flashed error'];
+
+    try {
+        HtmlServiceTestFactory::build()->flushPageMessages();
+
+        expect(CurrentTemplate::current()->get()->get_template_vars('errors'))->toBe(['Live error', 'Flashed error'])
+            ->and($_SESSION)->not->toHaveKey('page_errors');
+    } finally {
+        unset($_SESSION['page_errors']);
+    }
+});
+
+test('flushPageMessages filters out non string session flash values defensively', function (): void {
+    CurrentConfigTestFactory::get()->setDataDirChecked('1');
+    CurrentTemplate::current()->set(TemplateTestFactory::build());
+    PageStateTestFactory::get()->reset();
+    $_SESSION['page_infos'] = ['Real info', 42, null];
+
+    try {
+        HtmlServiceTestFactory::build()->flushPageMessages();
+
+        expect(CurrentTemplate::current()->get()->get_template_vars('infos'))->toBe(['Real info']);
+    } finally {
+        unset($_SESSION['page_infos']);
+    }
+});
+
+test('flushKeyedErrors assigns the keyed error bag under errors', function (): void {
+    CurrentConfigTestFactory::get()->setDataDirChecked('1');
+    CurrentTemplate::current()->set(TemplateTestFactory::build());
+
+    HtmlServiceTestFactory::build()->flushKeyedErrors(['login_page_error' => 'Invalid username or password!']);
+
+    expect(CurrentTemplate::current()->get()->get_template_vars('errors'))->toBe(['login_page_error' => 'Invalid username or password!']);
+});
+
+test('flushKeyedErrors does nothing for an empty error bag', function (): void {
+    CurrentConfigTestFactory::get()->setDataDirChecked('1');
+    CurrentTemplate::current()->set(TemplateTestFactory::build());
+
+    HtmlServiceTestFactory::build()->flushKeyedErrors([]);
+
+    expect(CurrentTemplate::current()->get()->get_template_vars('errors'))->toBeNull();
+});
+
+/**
+ * The real production pattern (IdentificationController/RegisterController/
+ * PasswordController): flushPageMessages() runs first, flushKeyedErrors()
+ * second, both in the same request. Confirms assignContext()'s own
+ * partial-hashmap merge composes them correctly: the 2nd call's non-null
+ * `errors` overwrites the 1st's, while its null infos/warnings/messages
+ * fields leave the 1st call's own values untouched.
+ */
+test('flushPageMessages then flushKeyedErrors overwrites errors but leaves infos untouched', function (): void {
+    CurrentConfigTestFactory::get()->setDataDirChecked('1');
+    CurrentTemplate::current()->set(TemplateTestFactory::build());
+    PageStateTestFactory::get()->reset();
+    PageStateTestFactory::get()->addError('Generic page error');
+    PageStateTestFactory::get()->addInfo('Some info');
+
+    $service = HtmlServiceTestFactory::build();
+    $service->flushPageMessages();
+    $service->flushKeyedErrors(['login_page_error' => 'Invalid username or password!']);
+
+    $template = CurrentTemplate::current()->get();
+    expect($template->get_template_vars('errors'))->toBe(['login_page_error' => 'Invalid username or password!'])
+        ->and($template->get_template_vars('infos'))->toBe(['Some info']);
 });

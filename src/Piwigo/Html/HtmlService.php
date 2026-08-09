@@ -33,6 +33,7 @@ use Piwigo\Event\Template\RenderCategoryName;
 use Piwigo\Event\Template\RenderCommentContent;
 use Piwigo\Event\Template\SetStatusHeader;
 use Piwigo\Group\GroupEntity;
+use Piwigo\Html\Projection\PageMessagesContext;
 use Piwigo\Http\ResponseFactory;
 use Piwigo\Http\ResponseReadyException;
 use Piwigo\Image\Event\GetSrcImageUrl;
@@ -902,65 +903,76 @@ final class HtmlService implements HtmlRenderingInterface
         $template = $this->currentTemplate->get();
         if ($template->get_template_vars('page_refresh') === null) {
             $pageState = $this->pageState;
-            $this->flushMessageMode('errors', $pageState->errors, $template);
-            $this->flushMessageMode('infos', $pageState->infos, $template);
-            $this->flushMessageMode('warnings', $pageState->warnings, $template);
-            $this->flushMessageMode('messages', $pageState->messages, $template);
+            $template->assignContext(new PageMessagesContext(
+                errors: $this->flushMessageMode('errors', $pageState->errors),
+                infos: $this->flushMessageMode('infos', $pageState->infos),
+                warnings: $this->flushMessageMode('warnings', $pageState->warnings),
+                messages: $this->flushMessageMode('messages', $pageState->messages),
+            ));
         }
     }
 
     /**
-     * Sends a controller-local, field-keyed error map (e.g.
-     * ['login_page_error' => '...'], read by specific key in
-     * identification.tpl/register.tpl/password.tpl) to the template --
-     * a different shape than PageState::$errors' plain list<string>, so it
-     * doesn't live on PageState (see IdentificationController/
-     * RegisterController/PasswordController). Merges with the same
-     * $_SESSION['page_errors'] flash channel as flushPageMessages(), so
-     * calling both in the same request is safe.
+     * Sends a controller-local, string-keyed error map (e.g.
+     * ['login_page_error' => '...']) to the template -- a different
+     * shape than PageState::$errors' plain list<string>, so it doesn't
+     * live on PageState (see IdentificationController/RegisterController/
+     * PasswordController). Merges with the same $_SESSION['page_errors']
+     * flash channel as flushPageMessages(), so calling both in the same
+     * request is safe.
      *
-     * $keyedErrors' values are genuinely arbitrary by design -- each
-     * controller (IdentificationController/RegisterController/
-     * PasswordController) defines its own field-keyed error messages.
+     * $keyedErrors' own keys exist so each controller can overwrite its
+     * own named error slot (e.g. re-assigning 'login_page_error' rather
+     * than accumulating duplicates) -- confirmed live, not assumed, that
+     * no template anywhere reads `$errors` by specific key (a full-repo
+     * grep of every theme template found none); every real consumer
+     * (`infos_errors.tpl`'s own `{foreach from=$errors item=error}`)
+     * reads values only, so the keys never actually reach the rendered
+     * page. Every real value across every real call site
+     * (Identification/Register/PasswordController) is a translated
+     * string, not genuinely arbitrary.
      *
-     * @param array<string, mixed> $keyedErrors
+     * @param array<string, string> $keyedErrors
      */
     public function flushKeyedErrors(array $keyedErrors): void
     {
         $template = $this->currentTemplate->get();
         if ($template->get_template_vars('page_refresh') === null) {
-            $this->flushMessageMode('errors', $keyedErrors, $template);
+            $template->assignContext(new PageMessagesContext(
+                errors: $this->flushMessageMode('errors', $keyedErrors),
+                infos: null,
+                warnings: null,
+                messages: null,
+            ));
         }
     }
 
     /**
      * $messages is either PageState's own list<string> (from
-     * flushPageMessages()) or flushKeyedErrors()'s own arbitrary-valued
-     * keyed bag -- genuinely dual-shaped, not narrowable to one.
+     * flushPageMessages()) or flushKeyedErrors()'s own string-keyed error
+     * bag -- genuinely array<array-key, string> either way (verified live
+     * against every real PageState field declaration and every real
+     * flushKeyedErrors() call site, not assumed), not a vague mixed value
+     * type. $_SESSION['page_*'] is likewise always a plain list<string>
+     * in practice -- every real writer elsewhere in the codebase
+     * (comments.php, picture.php, admin/batch_manager*.php, ...) guards
+     * with is_array() before pushing a translated string -- but it still
+     * crosses a superglobal boundary PHPStan can't see through, so its
+     * elements are narrowed defensively here (array_filter(is_string()))
+     * rather than trusted.
      *
-     * @param array<int|string, mixed> $messages
+     * @param array<array-key, string> $messages
+     * @return array<array-key, string>|null
      */
-    private function flushMessageMode(string $mode, array $messages, Template $template): void
+    private function flushMessageMode(string $mode, array $messages): ?array
     {
-        // Every writer of $_SESSION['page_*'] elsewhere in the codebase
-        // (comments.php, picture.php, admin/batch_manager*.php, ...)
-        // guards with is_array() before appending, so this mirrors that
-        // same invariant instead of trusting the superglobal's mixed
-        // element type.
-        if (isset($_SESSION['page_' . $mode]) and is_array($_SESSION['page_' . $mode])) {
-            $messages = array_merge($messages, $_SESSION['page_' . $mode]);
-            unset($_SESSION['page_' . $mode]);
+        $session_key = 'page_' . $mode;
+        if (isset($_SESSION[$session_key]) and is_array($_SESSION[$session_key])) {
+            $messages = array_merge($messages, array_filter($_SESSION[$session_key], is_string(...)));
+            unset($_SESSION[$session_key]);
         }
 
-        // Not a Phase 13 TemplatePageContext candidate: $mode is a real
-        // caller-chosen key (5 real call sites across flushPageMessages()/
-        // flushKeyedErrors(), 'errors' shared by both with 2 genuinely
-        // different value shapes per this method's own docblock) -- a
-        // shared cross-cutting utility called from every controller, not
-        // one page's own fixed var set.
-        if ($messages !== []) {
-            $template->assign($mode, $messages);
-        }
+        return $messages !== [] ? $messages : null;
     }
 
     /**

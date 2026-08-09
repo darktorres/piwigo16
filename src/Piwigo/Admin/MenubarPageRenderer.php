@@ -53,7 +53,7 @@ final class MenubarPageRenderer
         // codebase (confirmed by grepping every `new BlockManager(...)`
         // call site) -- a real CurrentConfig property instead of the
         // former dynamic 'blk_' . $id bag key. Already decoded -- no
-        // manual unserialize() needed (gap-closure Stage 1a-bis item 1).
+        // manual unserialize() needed.
         $mb_conf = $currentConfig->blkMenubar() ?? [];
 
         // $mb_conf comes from DB-stored config, so its element types are

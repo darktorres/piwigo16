@@ -637,8 +637,8 @@ define(\'DB_COLLATE\', \'\');
             $this->prefixeTable,
         );
 
-        // gap-closure Stage 1a-bis item 5: config.value is JSON now --
-        // json_encode() the value (not the bare hex string) so
+        // config.value is JSON -- json_encode() the value (not the bare
+        // hex string) so
         // ConfigService::hydrate()'s json_decode() read side gets back a
         // real string instead of failing to parse it.
         $secretKeyJson = json_encode(sha1(random_bytes(1000)));

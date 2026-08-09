@@ -32,9 +32,9 @@ use Symfony\Component\Console\Output\OutputInterface;
  * passes no override, so production still resolves the real path.
  * basenameGuard() is a second, independent layer on top of that: even
  * with the real hardcoded path, a corrupted computation (a bug, or -- as
- * happened for real during this project's own P24 mutation-testing
- * rollout -- a test deliberately running mutated production code) must
- * not be able to walk this delete up to the project root or beyond.
+ * happened for real during mutation testing -- a test deliberately
+ * running mutated production code) must not be able to walk this delete
+ * up to the project root or beyond.
  */
 #[AsCommand(name: 'cache:clear', description: 'Purge the Latte compiled-template cache and the PSR-6 cache pool')]
 final class CacheClearCommand extends Command

@@ -7,7 +7,7 @@ namespace Piwigo\Admin\Image;
 use RuntimeException;
 
 /**
- * P23 Stage 1e: replaces the 17 real die() calls across
+ * Replaces the 17 real die() calls across
  * ImageGd.php/PwgImage.php/ImageExtImagick.php/Admin\Upload\UploadService.php
  * (mid-request image-processing/upload failures -- corrupt image, missing
  * library, unsupported/forbidden file type, directory creation/write

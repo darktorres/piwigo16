@@ -29,10 +29,9 @@ use Piwigo\Core\Paths;
  *
  * Originally lived alongside the frozen DbPatch/VersionUpgrade classes
  * (both needed the identical layering mid-migration) -- moved here once
- * that whole chain was deleted (gap-closure Stage 1a-bis: the in-place
- * upgrade chain contradicted this codebase's own documented "no in-place
- * upgrade" architecture), since InstallWizard is now its only real
- * caller.
+ * that whole chain was deleted (the in-place upgrade chain contradicted
+ * this codebase's own documented "no in-place upgrade" architecture),
+ * since InstallWizard is now its only real caller.
  */
 final class LegacyFileConf
 {

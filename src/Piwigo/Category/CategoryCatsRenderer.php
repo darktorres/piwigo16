@@ -161,7 +161,7 @@ final readonly class CategoryCatsRenderer
             $catIds[] = $row['cat_id'];
         }
 
-        // findFullCategoriesByIds() (P17-23 Stage 1b) returns typed Category
+        // findFullCategoriesByIds() returns typed Category
         // projections -- unboxed to array here since $fullById feeds
         // array_merge() below, which a readonly object can't participate in.
         $fullById = [];

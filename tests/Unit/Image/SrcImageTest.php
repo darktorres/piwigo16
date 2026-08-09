@@ -348,8 +348,13 @@ test('get_size() re-reads real dimensions from disk when width/height columns ar
     srcImageTestMakePng($root . '/upload/2026/07/synced-later.png', 33, 22);
 
     try {
+        // A nonexistent id, not the real fixture image 1 -- get_size()'s
+        // own lazy-read path also persists back onto ImageRepository
+        // (updateDimensions()), which silently no-ops for an id with no
+        // matching row instead of corrupting a real fixture row this
+        // test doesn't otherwise care about.
         $src = new SrcImage([
-            'id' => 1,
+            'id' => 999999,
             'path' => 'upload/2026/07/synced-later.png',
             'file' => 'synced-later.png',
             'width' => null,
@@ -460,8 +465,11 @@ test('constructor never reads $infos[\'height\'] when only width is present, lea
     srcImageTestMakePng($root . '/upload/2026/07/width-only.png', 55, 44);
 
     try {
+        // A nonexistent id, not the real fixture image 1 -- same
+        // ImageRepository::updateDimensions() side-effect concern as the
+        // sibling test above.
         $src = new SrcImage([
-            'id' => 1,
+            'id' => 999999,
             'path' => 'upload/2026/07/width-only.png',
             'file' => 'width-only.png',
             'width' => 300,

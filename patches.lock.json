@@ -1,5 +1,5 @@
 {
-    "_hash": "29227bda2d36ee51629ff12c1ebad8715cd4ca85bda4c8db4bd3f26307eed065",
+    "_hash": "f44bf79da8cfe7530abd578a43e8f5a8ba4d02c940afe329b019fd34891b3b77",
     "patches": {
         "pestphp/pest-plugin-browser": [
             {
@@ -81,6 +81,16 @@
                 "description": "Fix Smarty::unregisterFilter()'s @param docblock typo `callback|string` (not a real PHP/PHPStan type -- resolves to the unrelated class Smarty\\callback) to the real accepted type `callable|string`, matching its own _getFilterName() implementation",
                 "url": "patches/smarty-smarty-5.8.4-unregisterfilter-callable-docblock.patch",
                 "sha256": "e66da71b52acf578048c05c54bcedbcdf75bd84c6827a64dd23fa395cd1983ba",
+                "depth": 1,
+                "extra": {
+                    "provenance": "root"
+                }
+            },
+            {
+                "package": "smarty/smarty",
+                "description": "Fix Smarty::$error_reporting's @var docblock (int) contradicting its own `= null` default -- only ever set to an int by the constructor when template debugging is off, so it genuinely stays null when debugging is on (confirmed by reading the constructor + TemplateInstanceTest.php's own already-passing coverage of both branches); same class of bug as $compile_id above",
+                "url": "patches/smarty-smarty-5.8.4-error-reporting-nullable-docblock.patch",
+                "sha256": "dc88e4822dd2459afda20ead0cfedaaba6218f5ff1adcb977833629779e92c11",
                 "depth": 1,
                 "extra": {
                     "provenance": "root"

@@ -110,6 +110,16 @@ final class UserPermPageRenderer
             }
         }
 
+        // only private categories are listed
+        $categoryOptionTrue = $categoryService->displaySelectPrivateGrantedToUser($user_id, $group_authorized, $htmlRenderer);
+
+        $authorized_ids = array_map(
+            strval(...),
+            $categoryService->getPrivateCategoryIdsGrantedToUser($user_id, array_map(intval(...), $group_authorized))
+        );
+
+        $categoryOptionFalse = $categoryService->displaySelectPrivateExcluding([...$authorized_ids, ...$group_authorized], $htmlRenderer);
+
         $template->assignContext(new UserPermPageContext(
             title: $this->lang->t(
                 'Manage permissions for user "%s"',
@@ -124,17 +134,9 @@ final class UserPermPageRenderer
             pwgToken: new CsrfService($this->currentConfig)
                 ->getToken(),
             categoriesBecauseOfGroups: $categories_because_of_groups,
+            categoryOptionTrue: $categoryOptionTrue,
+            categoryOptionFalse: $categoryOptionFalse,
         ));
-
-        // only private categories are listed
-        $categoryService->displaySelectPrivateGrantedToUser($user_id, $group_authorized, 'category_option_true', $htmlRenderer, $template);
-
-        $authorized_ids = array_map(
-            strval(...),
-            $categoryService->getPrivateCategoryIdsGrantedToUser($user_id, array_map(intval(...), $group_authorized))
-        );
-
-        $categoryService->displaySelectPrivateExcluding([...$authorized_ids, ...$group_authorized], 'category_option_false', $htmlRenderer, $template);
 
         $template->assign_var_from_handle('DOUBLE_SELECT', 'double_select');
         $template->assign_var_from_handle('ADMIN_CONTENT', 'user_perm');

@@ -27,6 +27,7 @@ use Piwigo\Category\Projection\CategoryMoveDetailRow;
 use Piwigo\Category\Projection\CategoryNextRankByParentRow;
 use Piwigo\Category\Projection\CategoryPermalinkDisplayRow;
 use Piwigo\Category\Projection\CategoryRankInfoRow;
+use Piwigo\Category\Projection\CategorySelectOptions;
 use Piwigo\Category\Projection\CategorySyncCandidateRow;
 use Piwigo\Category\Projection\CategoryUppercatsCounter;
 use Piwigo\Category\Projection\PhotoCountDateRange;
@@ -48,7 +49,6 @@ use Piwigo\Core\Paths;
 use Piwigo\Core\ProcessCache;
 use Piwigo\Core\RecentIconResolver;
 use Piwigo\Core\RedirectServiceInterface;
-use Piwigo\Core\TemplateInterface;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
@@ -831,27 +831,23 @@ final readonly class CategoryService
     }
 
     /**
-     * Assign a template var useable with {html_options} from a list of
-     * categories.
+     * Builds an {html_options}-ready shape from a list of categories.
      *
      * Same cross-domain generic-row-reader rationale as
      * compareByGlobalRank() for $categories; $selecteds is passed straight
-     * to Template::assign(), matching that method's own by-design
-     * arbitrary-value contract.
+     * through, matching this method's own by-design arbitrary-value
+     * contract.
      *
      * @param array<int, array<string, mixed>> $categories (at least id,name,global_rank,uppercats for each)
      * @param array<int, mixed> $selecteds
-     * @param string $blockname variable name in template
      * @param bool $fullname full breadcrumb or not
      */
     public function displaySelectCategories(
         array $categories,
         array $selecteds,
-        string $blockname,
         HtmlRenderingInterface $htmlRenderer,
-        TemplateInterface $template,
         bool $fullname = true
-    ): void {
+    ): CategorySelectOptions {
         $tplCats = [];
         foreach ($categories as $category) {
             if ($fullname) {
@@ -878,13 +874,7 @@ final readonly class CategoryService
             }
         }
 
-        // Not a Phase 13 TemplatePageContext candidate: $blockname is a
-        // real caller-chosen key (this method's own public $blockname
-        // param, called with a different literal at every real call
-        // site) -- same "shared cross-cutting utility with a
-        // caller-chosen key" shape as HtmlService::flushMessageMode().
-        $template->assign($blockname, $tplCats);
-        $template->assign($blockname . '_selected', $selecteds);
+        return new CategorySelectOptions($tplCats, $selecteds);
     }
 
     /**
@@ -902,40 +892,34 @@ final readonly class CategoryService
     private function sortAndDisplaySelectCategories(
         array $categories,
         array $selecteds,
-        string $blockname,
         HtmlRenderingInterface $htmlRenderer,
-        TemplateInterface $template,
         bool $fullname = true
-    ): void {
+    ): CategorySelectOptions {
         usort($categories, self::compareByGlobalRank(...));
-        $this->displaySelectCategories($categories, $selecteds, $blockname, $htmlRenderer, $template, $fullname);
+        return $this->displaySelectCategories($categories, $selecteds, $htmlRenderer, $fullname);
     }
 
     /**
      * Admin\CatOptionsPageRenderer's own "commentable" toggle section.
      */
-    public function displaySelectByCommentable(bool $commentable, string $blockname, HtmlRenderingInterface $htmlRenderer, TemplateInterface $template): void
+    public function displaySelectByCommentable(bool $commentable, HtmlRenderingInterface $htmlRenderer): CategorySelectOptions
     {
-        $this->sortAndDisplaySelectCategories(
+        return $this->sortAndDisplaySelectCategories(
             array_map(static fn (CategoryIdNameUppercatsRank $row): array => $row->toArray(), $this->repo->findByCommentable($commentable)),
             [],
-            $blockname,
-            $htmlRenderer,
-            $template
+            $htmlRenderer
         );
     }
 
     /**
      * Admin\CatOptionsPageRenderer's own "visible" toggle section.
      */
-    public function displaySelectByVisible(bool $visible, string $blockname, HtmlRenderingInterface $htmlRenderer, TemplateInterface $template): void
+    public function displaySelectByVisible(bool $visible, HtmlRenderingInterface $htmlRenderer): CategorySelectOptions
     {
-        $this->sortAndDisplaySelectCategories(
+        return $this->sortAndDisplaySelectCategories(
             array_map(static fn (CategoryIdNameUppercatsRank $row): array => $row->toArray(), $this->repo->findByVisible($visible)),
             [],
-            $blockname,
-            $htmlRenderer,
-            $template
+            $htmlRenderer
         );
     }
 
@@ -943,28 +927,24 @@ final readonly class CategoryService
      * Admin\CatOptionsPageRenderer's own "status" (public/private) toggle
      * section.
      */
-    public function displaySelectByStatus(string $status, string $blockname, HtmlRenderingInterface $htmlRenderer, TemplateInterface $template): void
+    public function displaySelectByStatus(string $status, HtmlRenderingInterface $htmlRenderer): CategorySelectOptions
     {
-        $this->sortAndDisplaySelectCategories(
+        return $this->sortAndDisplaySelectCategories(
             array_map(static fn (CategoryIdNameUppercatsRank $row): array => $row->toArray(), $this->repo->findByStatus($status)),
             [],
-            $blockname,
-            $htmlRenderer,
-            $template
+            $htmlRenderer
         );
     }
 
     /**
      * Admin\CatOptionsPageRenderer's own "representative" toggle section.
      */
-    public function displaySelectByRepresentativePresence(bool $hasRepresentative, string $blockname, HtmlRenderingInterface $htmlRenderer, TemplateInterface $template): void
+    public function displaySelectByRepresentativePresence(bool $hasRepresentative, HtmlRenderingInterface $htmlRenderer): CategorySelectOptions
     {
-        $this->sortAndDisplaySelectCategories(
+        return $this->sortAndDisplaySelectCategories(
             array_map(static fn (CategoryIdNameUppercatsRank $row): array => $row->toArray(), $this->repo->findByRepresentativePresence($hasRepresentative)),
             [],
-            $blockname,
-            $htmlRenderer,
-            $template
+            $htmlRenderer
         );
     }
 
@@ -973,28 +953,24 @@ final readonly class CategoryService
      *
      * @param  list<string>  $groupAuthorizedCatIds
      */
-    public function displaySelectPrivateGrantedToUser(int $userId, array $groupAuthorizedCatIds, string $blockname, HtmlRenderingInterface $htmlRenderer, TemplateInterface $template): void
+    public function displaySelectPrivateGrantedToUser(int $userId, array $groupAuthorizedCatIds, HtmlRenderingInterface $htmlRenderer): CategorySelectOptions
     {
-        $this->sortAndDisplaySelectCategories(
+        return $this->sortAndDisplaySelectCategories(
             array_map(static fn (CategoryIdNameUppercatsRank $row): array => $row->toArray(), $this->repo->findPrivateCategoriesGrantedToUser($userId, $groupAuthorizedCatIds)),
             [],
-            $blockname,
-            $htmlRenderer,
-            $template
+            $htmlRenderer
         );
     }
 
     /**
      * Admin\GroupPermPageRenderer's own "category options: authorized" list.
      */
-    public function displaySelectPrivateGrantedToGroup(int $groupId, string $blockname, HtmlRenderingInterface $htmlRenderer, TemplateInterface $template): void
+    public function displaySelectPrivateGrantedToGroup(int $groupId, HtmlRenderingInterface $htmlRenderer): CategorySelectOptions
     {
-        $this->sortAndDisplaySelectCategories(
+        return $this->sortAndDisplaySelectCategories(
             array_map(static fn (CategoryIdNameUppercatsRank $row): array => $row->toArray(), $this->repo->findPrivateCategoriesGrantedToGroup($groupId)),
             [],
-            $blockname,
-            $htmlRenderer,
-            $template
+            $htmlRenderer
         );
     }
 
@@ -1004,14 +980,12 @@ final readonly class CategoryService
      *
      * @param  list<string>  $excludeCatIds
      */
-    public function displaySelectPrivateExcluding(array $excludeCatIds, string $blockname, HtmlRenderingInterface $htmlRenderer, TemplateInterface $template): void
+    public function displaySelectPrivateExcluding(array $excludeCatIds, HtmlRenderingInterface $htmlRenderer): CategorySelectOptions
     {
-        $this->sortAndDisplaySelectCategories(
+        return $this->sortAndDisplaySelectCategories(
             array_map(static fn (CategoryIdNameUppercatsRank $row): array => $row->toArray(), $this->repo->findPrivateCategoriesExcluding($excludeCatIds)),
             [],
-            $blockname,
-            $htmlRenderer,
-            $template
+            $htmlRenderer
         );
     }
 
@@ -1020,14 +994,12 @@ final readonly class CategoryService
      *
      * @param  array<int, mixed>  $selecteds
      */
-    public function displaySelectByCondition(PermissionCriteria $criteria, array $selecteds, string $blockname, HtmlRenderingInterface $htmlRenderer, TemplateInterface $template): void
+    public function displaySelectByCondition(PermissionCriteria $criteria, array $selecteds, HtmlRenderingInterface $htmlRenderer): CategorySelectOptions
     {
-        $this->sortAndDisplaySelectCategories(
+        return $this->sortAndDisplaySelectCategories(
             array_map(static fn (CategoryIdNameUppercatsRank $row): array => $row->toArray(), $this->repo->findIdNameUppercatsRank($criteria)),
             $selecteds,
-            $blockname,
-            $htmlRenderer,
-            $template
+            $htmlRenderer
         );
     }
 
@@ -1036,14 +1008,12 @@ final readonly class CategoryService
      *
      * @param  array<int, mixed>  $selecteds
      */
-    public function displaySelectForPermalinks(array $selecteds, string $blockname, HtmlRenderingInterface $htmlRenderer, TemplateInterface $template): void
+    public function displaySelectForPermalinks(array $selecteds, HtmlRenderingInterface $htmlRenderer): CategorySelectOptions
     {
-        $this->sortAndDisplaySelectCategories(
+        return $this->sortAndDisplaySelectCategories(
             array_map(static fn (CategoryPermalinkDisplayRow $row): array => $row->toArray(), $this->repo->findAllForPermalinksDisplay()),
             $selecteds,
-            $blockname,
             $htmlRenderer,
-            $template,
             false
         );
     }
@@ -1053,14 +1023,12 @@ final readonly class CategoryService
      *
      * @param  array<int, mixed>  $selecteds
      */
-    public function displaySelectBySite(int $siteId, array $selecteds, string $blockname, HtmlRenderingInterface $htmlRenderer, TemplateInterface $template): void
+    public function displaySelectBySite(int $siteId, array $selecteds, HtmlRenderingInterface $htmlRenderer): CategorySelectOptions
     {
-        $this->sortAndDisplaySelectCategories(
+        return $this->sortAndDisplaySelectCategories(
             array_map(static fn (CategoryIdNameUppercatsRank $row): array => $row->toArray(), $this->repo->findIdNameUppercatsRankBySite($siteId)),
             $selecteds,
-            $blockname,
             $htmlRenderer,
-            $template,
             false
         );
     }

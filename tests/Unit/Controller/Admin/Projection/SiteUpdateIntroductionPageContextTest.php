@@ -2,9 +2,10 @@
 
 declare(strict_types=1);
 
+use Piwigo\Category\Projection\CategorySelectOptions;
 use Piwigo\Controller\Admin\Projection\SiteUpdateIntroductionPageContext;
 
-test('toArray nests every property under introduction', function (): void {
+test('toArray nests every property under introduction, and includes category_options at the top level', function (): void {
     $context = new SiteUpdateIntroductionPageContext(
         sync: 'files',
         syncMeta: true,
@@ -15,6 +16,7 @@ test('toArray nests every property under introduction', function (): void {
         metaAll: true,
         metaEmptyOverrides: false,
         privacyLevelOptions: [0 => 'Everybody', 2 => 'Level 2'],
+        categoryOptions: new CategorySelectOptions(options: [3 => 'Holidays'], selected: [3]),
     );
 
     expect($context->toArray())->toBe([
@@ -29,5 +31,7 @@ test('toArray nests every property under introduction', function (): void {
             'meta_empty_overrides' => false,
             'privacy_level_options' => [0 => 'Everybody', 2 => 'Level 2'],
         ],
+        'category_options' => [3 => 'Holidays'],
+        'category_options_selected' => [3],
     ]);
 });

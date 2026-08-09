@@ -5,12 +5,16 @@ declare(strict_types=1);
 namespace Piwigo\Controller\Admin\Projection;
 
 use Override;
+use Piwigo\Category\Projection\CategorySelectOptions;
 use Piwigo\Core\TemplatePageContext;
 
 /**
  * The template variable assigned by
  * {@see \Piwigo\Controller\Admin\SiteUpdateSubController::handle()}'s own
- * "introduction : choices" block.
+ * "introduction : choices" block. `$categoryOptions` is
+ * {@see \Piwigo\Category\CategoryService}'s own formerly-directly-assigned
+ * `category_options`/`category_options_selected` pair -- top-level keys,
+ * not nested under `introduction` like the rest of this context.
  */
 final readonly class SiteUpdateIntroductionPageContext implements TemplatePageContext
 {
@@ -27,6 +31,7 @@ final readonly class SiteUpdateIntroductionPageContext implements TemplatePageCo
         public bool $metaAll,
         public bool $metaEmptyOverrides,
         public array $privacyLevelOptions,
+        public CategorySelectOptions $categoryOptions,
     ) {}
 
     /**
@@ -47,6 +52,8 @@ final readonly class SiteUpdateIntroductionPageContext implements TemplatePageCo
                 'meta_empty_overrides' => $this->metaEmptyOverrides,
                 'privacy_level_options' => $this->privacyLevelOptions,
             ],
+            'category_options' => $this->categoryOptions->options,
+            'category_options_selected' => $this->categoryOptions->selected,
         ];
     }
 }

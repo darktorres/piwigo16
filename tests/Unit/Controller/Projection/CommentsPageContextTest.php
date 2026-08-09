@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Piwigo\Category\Projection\CategorySelectOptions;
 use Piwigo\Controller\Projection\CommentsPageContext;
 use Piwigo\Image\DerivativeParams;
 use Piwigo\Image\SizingParams;
@@ -24,6 +25,7 @@ test('toArray flattens every property to its real Smarty template variable name'
         navbar: ['NB_PAGE' => 3],
         commentDerivativeParams: $derivativeParams,
         comments: [['ID' => 5, 'AUTHOR' => 'jane']],
+        categoriesOptions: new CategorySelectOptions(options: [1 => 'Holidays'], selected: [1]),
     );
 
     expect($context->toArray())->toBe([
@@ -41,6 +43,8 @@ test('toArray flattens every property to its real Smarty template variable name'
         'navbar' => ['NB_PAGE' => 3],
         'comment_derivative_params' => $derivativeParams,
         'comments' => [['ID' => 5, 'AUTHOR' => 'jane']],
+        'categories' => [1 => 'Holidays'],
+        'categories_selected' => [1],
     ]);
 });
 
@@ -62,6 +66,7 @@ test('toArray includes an empty comments list (not omitted)', function (): void 
         navbar: [],
         commentDerivativeParams: $derivativeParams,
         comments: [],
+        categoriesOptions: new CategorySelectOptions(options: [], selected: []),
     );
 
     expect($context->toArray()['comments'])->toBe([]);

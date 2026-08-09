@@ -126,6 +126,13 @@ final class GroupPermPageRenderer
             ]
         );
 
+        // only private categories are listed
+        $categoryOptionTrue = $categoryService->displaySelectPrivateGrantedToGroup($groupId->value, $this->htmlRenderer);
+
+        $authorized_ids = array_map(strval(...), $categoryService->getPrivateCategoryIdsGrantedToGroup($groupId->value));
+
+        $categoryOptionFalse = $categoryService->displaySelectPrivateExcluding($authorized_ids, $this->htmlRenderer);
+
         $template->assignContext(new GroupPermPageContext(
             title: $this->lang->t(
                 'Manage permissions for group "%s"',
@@ -139,14 +146,9 @@ final class GroupPermPageRenderer
                 $groupId->value,
             pwgToken: new CsrfService($this->currentConfig)
                 ->getToken(),
+            categoryOptionTrue: $categoryOptionTrue,
+            categoryOptionFalse: $categoryOptionFalse,
         ));
-
-        // only private categories are listed
-        $categoryService->displaySelectPrivateGrantedToGroup($groupId->value, 'category_option_true', $this->htmlRenderer, $template);
-
-        $authorized_ids = array_map(strval(...), $categoryService->getPrivateCategoryIdsGrantedToGroup($groupId->value));
-
-        $categoryService->displaySelectPrivateExcluding($authorized_ids, 'category_option_false', $this->htmlRenderer, $template);
 
         $template->assign_var_from_handle('DOUBLE_SELECT', 'double_select');
         $template->assign_var_from_handle('ADMIN_CONTENT', 'group_perm');

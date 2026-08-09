@@ -126,19 +126,19 @@ final class CatOptionsPageRenderer
         $categoryService = $this->categoryService;
         $htmlService = $this->htmlRenderer;
         if ($section === 'comments') {
-            $categoryService->displaySelectByCommentable(true, 'category_option_true', $htmlService, $template);
-            $categoryService->displaySelectByCommentable(false, 'category_option_false', $htmlService, $template);
+            $categoryOptionTrue = $categoryService->displaySelectByCommentable(true, $htmlService);
+            $categoryOptionFalse = $categoryService->displaySelectByCommentable(false, $htmlService);
         } elseif ($section === 'visible') {
-            $categoryService->displaySelectByVisible(true, 'category_option_true', $htmlService, $template);
-            $categoryService->displaySelectByVisible(false, 'category_option_false', $htmlService, $template);
+            $categoryOptionTrue = $categoryService->displaySelectByVisible(true, $htmlService);
+            $categoryOptionFalse = $categoryService->displaySelectByVisible(false, $htmlService);
         } elseif ($section === 'status') {
-            $categoryService->displaySelectByStatus('public', 'category_option_true', $htmlService, $template);
-            $categoryService->displaySelectByStatus('private', 'category_option_false', $htmlService, $template);
+            $categoryOptionTrue = $categoryService->displaySelectByStatus('public', $htmlService);
+            $categoryOptionFalse = $categoryService->displaySelectByStatus('private', $htmlService);
         } else {
             // 'representative' is the only value that can still reach here --
             // same guard as the label match() above.
-            $categoryService->displaySelectByRepresentativePresence(true, 'category_option_true', $htmlService, $template);
-            $categoryService->displaySelectByRepresentativePresence(false, 'category_option_false', $htmlService, $template);
+            $categoryOptionTrue = $categoryService->displaySelectByRepresentativePresence(true, $htmlService);
+            $categoryOptionFalse = $categoryService->displaySelectByRepresentativePresence(false, $htmlService);
         }
         $template->assignContext(new CatOptionsPageContext(
             helpUrl: $this->urlService->getRootUrl() . 'admin/popuphelp.php?page=cat_options',
@@ -149,6 +149,8 @@ final class CatOptionsPageRenderer
             pwgToken: new CsrfService($this->currentConfig)
                 ->getToken(),
             adminPageTitle: $this->lang->t('Properties of abums'),
+            categoryOptionTrue: $categoryOptionTrue,
+            categoryOptionFalse: $categoryOptionFalse,
         ));
 
         $template->assign_var_from_handle('DOUBLE_SELECT', 'double_select');

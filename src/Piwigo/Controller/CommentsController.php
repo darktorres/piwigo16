@@ -421,10 +421,8 @@ final class CommentsController implements ControllerInterface
         // +---------------------------------------------------------------+
 
         // Search in a particular category
-        $blockname = 'categories';
-
-        $this->categoryService
-            ->displaySelectByCondition($this->permissionService->getPermissionCriteria(), [$commentsRequest->catDisplay], $blockname, $this->htmlService, $template);
+        $categoriesOptions = $this->categoryService
+            ->displaySelectByCondition($this->permissionService->getPermissionCriteria(), [$commentsRequest->catDisplay], $this->htmlService);
 
         // Filter on recent comments...
         $since_options_tpl = [];
@@ -644,6 +642,7 @@ final class CommentsController implements ControllerInterface
             navbar: $navbar,
             commentDerivativeParams: $derivative_params,
             comments: $tpl_comments,
+            categoriesOptions: $categoriesOptions,
         ));
 
         // include menubar

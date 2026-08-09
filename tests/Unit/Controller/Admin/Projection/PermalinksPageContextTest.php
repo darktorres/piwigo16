@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Piwigo\Category\Projection\CategorySelectOptions;
 use Piwigo\Controller\Admin\Projection\PermalinksPageContext;
 
 test('toArray flattens every property to its real Smarty template variable name', function (): void {
@@ -20,6 +21,7 @@ test('toArray flattens every property to its real Smarty template variable name'
         helpUrl: '/admin/popuphelp.php?page=permalinks',
         deletedPermalinks: [['cat_id' => 2, 'permalink' => 'old']],
         adminPageTitle: 'Albums',
+        categoriesOptions: new CategorySelectOptions(options: [1 => 'Holidays'], selected: [1]),
     );
 
     expect($context->toArray())->toBe([
@@ -37,5 +39,7 @@ test('toArray flattens every property to its real Smarty template variable name'
         'U_HELP' => '/admin/popuphelp.php?page=permalinks',
         'deleted_permalinks' => [['cat_id' => 2, 'permalink' => 'old']],
         'ADMIN_PAGE_TITLE' => 'Albums',
+        'categories' => [1 => 'Holidays'],
+        'categories_selected' => [1],
     ]);
 });

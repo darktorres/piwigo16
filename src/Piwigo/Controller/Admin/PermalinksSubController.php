@@ -88,7 +88,7 @@ final class PermalinksSubController implements AdminSubControllerInterface
 
         $nb_cats = $this->categoryService->countAllCategories();
 
-        $this->categoryService->displaySelectForPermalinks($selected_cat, 'categories', $htmlRenderer, $template);
+        $categories_options = $this->categoryService->displaySelectForPermalinks($selected_cat, $htmlRenderer);
 
         $pwg_token = new CsrfService($this->currentConfig)
             ->getToken();
@@ -164,6 +164,7 @@ final class PermalinksSubController implements AdminSubControllerInterface
             helpUrl: $this->urlService->getRootUrl() . 'admin/popuphelp.php?page=permalinks',
             deletedPermalinks: $deleted_permalinks,
             adminPageTitle: $this->lang->t('Albums'),
+            categoriesOptions: $categories_options,
         ));
 
         $template->assign_var_from_handle('ADMIN_CONTENT', 'permalinks');

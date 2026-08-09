@@ -1026,6 +1026,12 @@ final class SiteUpdateSubController implements AdminSubControllerInterface
             }
         }
 
+        $categoryOptions = $this->categoryService->displaySelectBySite(
+            $site_id,
+            $cat_selected,
+            $this->htmlRenderer,
+        );
+
         $template->assignContext(new SiteUpdateIntroductionPageContext(
             sync: $sync_value,
             syncMeta: $sync_meta_value,
@@ -1036,15 +1042,8 @@ final class SiteUpdateSubController implements AdminSubControllerInterface
             metaAll: $meta_all_value,
             metaEmptyOverrides: $meta_empty_overrides_value,
             privacyLevelOptions: PermissionService::getPrivacyLevelOptions($this->currentConfig, $this->lang),
+            categoryOptions: $categoryOptions,
         ));
-
-        $this->categoryService->displaySelectBySite(
-            $site_id,
-            $cat_selected,
-            'category_options',
-            $this->htmlRenderer,
-            $template,
-        );
 
         $sync_errors = [];
         $sync_error_captions = [];

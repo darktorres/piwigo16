@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Controller\Projection;
 
 use Override;
+use Piwigo\Category\Projection\CategorySelectOptions;
 use Piwigo\Core\TemplatePageContext;
 use Piwigo\Image\DerivativeParams;
 
@@ -12,7 +13,9 @@ use Piwigo\Image\DerivativeParams;
  * The template variable set assigned by
  * {@see \Piwigo\Controller\CommentsController::__invoke()}. `$comments`
  * is always included (even empty) since `comment_list.tpl`'s own
- * `{foreach from=$comments}` has no guard around it.
+ * `{foreach from=$comments}` has no guard around it. `$categoriesOptions`
+ * is {@see \Piwigo\Category\CategoryService}'s own formerly-directly-assigned
+ * `categories`/`categories_selected` pair.
  */
 final readonly class CommentsPageContext implements TemplatePageContext
 {
@@ -39,6 +42,7 @@ final readonly class CommentsPageContext implements TemplatePageContext
         public array $navbar,
         public DerivativeParams $commentDerivativeParams,
         public array $comments,
+        public CategorySelectOptions $categoriesOptions,
     ) {}
 
     /**
@@ -62,6 +66,8 @@ final readonly class CommentsPageContext implements TemplatePageContext
             'navbar' => $this->navbar,
             'comment_derivative_params' => $this->commentDerivativeParams,
             'comments' => $this->comments,
+            'categories' => $this->categoriesOptions->options,
+            'categories_selected' => $this->categoriesOptions->selected,
         ];
     }
 }

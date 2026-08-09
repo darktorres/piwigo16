@@ -14,7 +14,9 @@ use Piwigo\Core\TemplatePageContext;
  * dynamic, incrementally-accumulated-across-3-mutation-points shape
  * documented on this file's own `avgCompare()`/`countCompare()`/etc.
  * comparators, not a fixed structural shape worth minting its own DTO
- * for here.
+ * for here. `$orderByOptions` is always included -- `rating_user.tpl`
+ * reads `order_by_options` via an unguarded `{html_options}`, matching
+ * the original code's own unconditional loop.
  */
 final readonly class RatingUserPageContext implements TemplatePageContext
 {
@@ -22,6 +24,7 @@ final readonly class RatingUserPageContext implements TemplatePageContext
      * @param list<int> $availableRates
      * @param array<string, array<string, mixed>> $ratings
      * @param array<int, array{tn: string, page: string}> $imageUrls
+     * @param list<string> $orderByOptions
      */
     public function __construct(
         public int $orderByIndex,
@@ -34,6 +37,7 @@ final readonly class RatingUserPageContext implements TemplatePageContext
         public int $tnWidth,
         public int $nbElements,
         public string $adminPageTitle,
+        public array $orderByOptions,
     ) {}
 
     /**
@@ -53,6 +57,7 @@ final readonly class RatingUserPageContext implements TemplatePageContext
             'TN_WIDTH' => $this->tnWidth,
             'NB_ELEMENTS' => $this->nbElements,
             'ADMIN_PAGE_TITLE' => $this->adminPageTitle,
+            'order_by_options' => $this->orderByOptions,
         ];
     }
 }

@@ -243,9 +243,7 @@ final class CatListPageRenderer
 
         $base_url = $this->urlService->getRootUrl() . 'admin.php?page=';
 
-        $template->assignContext(new CatListCategoriesPageContext(
-            parentEditUrl: $parent_id !== null ? $base_url . 'album-' . $parent_id : null,
-        ));
+        $tpl_categories = [];
 
         foreach ($categories as $category) {
             $cat_id = (int) $category['id'];
@@ -291,8 +289,13 @@ final class CatListPageRenderer
                 }
             }
 
-            $template->append('categories', $tpl_cat);
+            $tpl_categories[] = $tpl_cat;
         }
+
+        $template->assignContext(new CatListCategoriesPageContext(
+            parentEditUrl: $parent_id !== null ? $base_url . 'album-' . $parent_id : null,
+            categories: $tpl_categories,
+        ));
 
         $this->eventDispatcher->dispatchNotify(new LocEndCatList());
 

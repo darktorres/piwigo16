@@ -16,6 +16,7 @@ test('toArray flattens every property to its real Smarty template variable name'
         tnWidth: 120,
         nbElements: 42,
         adminPageTitle: 'Rating',
+        orderByOptions: ['Average rate', 'Number of rates'],
     );
 
     expect($context->toArray())->toBe([
@@ -29,5 +30,6 @@ test('toArray flattens every property to its real Smarty template variable name'
         'TN_WIDTH' => 120,
         'NB_ELEMENTS' => 42,
         'ADMIN_PAGE_TITLE' => 'Rating',
+        'order_by_options' => ['Average rate', 'Number of rates'],
     ]);
 });

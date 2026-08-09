@@ -178,29 +178,30 @@ final class ExtendForTemplatesPageRenderer
             'extend_for_templates' => 'extend_for_templates.tpl',
         ]);
 
-        $template->assignContext(new ExtendForTemplatesPageContext(
-            helpUrl: $urlService->getRootUrl() . 'admin/popuphelp.php?page=extend_for_templates',
-            adminPageTitle: $lang->t('Extend for templates'),
-        ));
         ksort($tpl_extension);
+        $extents = null;
         foreach ($tpl_extension as $file => $conditions) {
             $handle = $conditions[0];
             $url_keyword = $conditions[1];
             $bound_tpl = $conditions[2];
 
-            $template->append(
-                'extents',
-                [
-                    'replacer' => $file,
-                    'url_parameter' => $relevant_parameters,
-                    'original_tpl' => array_keys($eligible_templates),
-                    'bound_tpl' => $available_templates,
-                    'selected_tpl' => $flip_templates[$handle],
-                    'selected_url' => $url_keyword,
-                    'selected_bound' => $bound_tpl,
-                ]
-            );
+            $extents ??= [];
+            $extents[] = [
+                'replacer' => $file,
+                'url_parameter' => $relevant_parameters,
+                'original_tpl' => array_keys($eligible_templates),
+                'bound_tpl' => $available_templates,
+                'selected_tpl' => $flip_templates[$handle],
+                'selected_url' => $url_keyword,
+                'selected_bound' => $bound_tpl,
+            ];
         }
+
+        $template->assignContext(new ExtendForTemplatesPageContext(
+            helpUrl: $urlService->getRootUrl() . 'admin/popuphelp.php?page=extend_for_templates',
+            adminPageTitle: $lang->t('Extend for templates'),
+            extents: $extents,
+        ));
 
         $template->assign_var_from_handle('ADMIN_CONTENT', 'extend_for_templates');
     }

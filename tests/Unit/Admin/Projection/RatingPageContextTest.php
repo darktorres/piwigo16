@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 use Piwigo\Admin\Projection\RatingPageContext;
 
-test('toArray flattens every property to its real Smarty template variable name, and seeds images empty', function (): void {
+test('toArray flattens every property to its real Smarty template variable name', function (): void {
     $context = new RatingPageContext(
         navbar: ['NB_PAGE' => 3],
         fAction: '/admin.php',
@@ -16,6 +16,8 @@ test('toArray flattens every property to its real Smarty template variable name,
         userOptions: ['all' => 'all', 'user' => 'Users', 'guest' => 'Guests'],
         userOptionsSelected: ['all'],
         adminPageTitle: 'Rating',
+        orderByOptions: ['Rate date', 'Rating score'],
+        images: [['id' => 5, 'FILE' => 'photo.jpg']],
     );
 
     expect($context->toArray())->toBe([
@@ -29,6 +31,27 @@ test('toArray flattens every property to its real Smarty template variable name,
         'user_options' => ['all' => 'all', 'user' => 'Users', 'guest' => 'Guests'],
         'user_options_selected' => ['all'],
         'ADMIN_PAGE_TITLE' => 'Rating',
-        'images' => [],
+        'order_by_options' => ['Rate date', 'Rating score'],
+        'images' => [['id' => 5, 'FILE' => 'photo.jpg']],
     ]);
+});
+
+test('toArray includes empty order_by_options/images lists (not omitted)', function (): void {
+    $context = new RatingPageContext(
+        navbar: [],
+        fAction: '/admin.php',
+        display: 20,
+        nbElements: 0,
+        category: [],
+        cacheKeys: [],
+        orderByOptionsSelected: [],
+        userOptions: [],
+        userOptionsSelected: [],
+        adminPageTitle: 'Rating',
+        orderByOptions: [],
+        images: [],
+    );
+
+    expect($context->toArray()['order_by_options'])->toBe([])
+        ->and($context->toArray()['images'])->toBe([]);
 });

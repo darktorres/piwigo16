@@ -165,6 +165,7 @@ final class ThemesNewPageRenderer
         }
         $server_themes = $pem_catalog->getServerExtensions(ExtensionType::Theme, $fs_theme_ids, true);
 
+        $new_themes = [];
         if ($server_themes !== null) { // only new themes
             foreach ($server_themes as $theme) {
                 // server_themes entries come from an untyped unserialize() of a
@@ -182,15 +183,12 @@ final class ThemesNewPageRenderer
                   . '&amp;pwg_token=' . new CsrfService($this->currentConfig)->getToken()
                 ;
 
-                $template->append(
-                    'new_themes',
-                    [
-                        'name' => $theme['extension_name'],
-                        'thumbnail' => (key_exists('thumbnail_src', $theme)) ? $theme['thumbnail_src'] : '',
-                        'screenshot' => (key_exists('screenshot_url', $theme)) ? $theme['screenshot_url'] : '',
-                        'install_url' => $url_auto_install,
-                    ]
-                );
+                $new_themes[] = [
+                    'name' => $theme['extension_name'],
+                    'thumbnail' => (key_exists('thumbnail_src', $theme)) ? $theme['thumbnail_src'] : '',
+                    'screenshot' => (key_exists('screenshot_url', $theme)) ? $theme['screenshot_url'] : '',
+                    'install_url' => $url_auto_install,
+                ];
             }
         } else {
             $this->pageState->addError($this->lang->t('Can\'t connect to server.'));
@@ -200,6 +198,7 @@ final class ThemesNewPageRenderer
         $template->assignContext(new ThemesNewPageContext(
             defaultScreenshot: $this->urlService->getRootUrl() . 'themes/admin/' . $admin_theme_pref . '/images/missing_screenshot.png',
             adminPageTitle: $this->lang->t('Themes'),
+            newThemes: $new_themes,
         ));
 
         $template->assign_var_from_handle('ADMIN_CONTENT', 'themes');

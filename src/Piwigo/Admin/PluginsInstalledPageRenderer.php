@@ -216,11 +216,10 @@ final class PluginsInstalledPageRenderer
             $tpl_plugins[] = $tpl_plugin;
         }
 
-        $template->append('plugin_states', 'active');
-        $template->append('plugin_states', 'inactive');
+        $plugin_states = ['active', 'inactive'];
 
         if ($merged_plugins) {
-            $template->append('plugin_states', 'merged');
+            $plugin_states[] = 'merged';
         }
 
         $missing_plugin_ids = array_diff(
@@ -239,7 +238,7 @@ final class PluginsInstalledPageRenderer
                 ];
                 $count_types_plugins['missing']++;
             }
-            $template->append('plugin_states', 'missing');
+            $plugin_states[] = 'missing';
         }
 
         $template->assignContext(new PluginsInstalledPageContext(
@@ -253,6 +252,7 @@ final class PluginsInstalledPageRenderer
             adminPageTitle: $lang->t('Plugins'),
             viewSelector: $preferencesService->getPluginManagerView() ?? 'classic',
             enableExtensionsInstall: $currentConfig->enableExtensionsInstall(),
+            pluginStates: $plugin_states,
         ));
 
         $template->assign_var_from_handle('ADMIN_CONTENT', 'plugins');

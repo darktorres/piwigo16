@@ -238,6 +238,7 @@ final class BatchManagerUnitPageRenderer
         $nav_bar = null;
         $element_ids_value = null;
         $storage_category = null;
+        $elements = [];
 
         if (count($cat_elements_id) > 0) {
             $page_nb_images = $nb_images;
@@ -442,8 +443,7 @@ final class BatchManagerUnitPageRenderer
                 $row_added_by_raw = $row['added_by'] ?? null;
                 $row_added_by = (is_int($row_added_by_raw) || is_string($row_added_by_raw)) ? $row_added_by_raw : null;
 
-                $template->append(
-                    'elements',
+                $elements[] =
                     array_merge(
                         $row,
                         [
@@ -483,8 +483,7 @@ final class BatchManagerUnitPageRenderer
                             'level_options_selected' => [$selected_level],
 
                         ]
-                    )
-                );
+                    );
             }
 
             $element_ids_value = implode(',', $element_ids);
@@ -502,6 +501,7 @@ final class BatchManagerUnitPageRenderer
             storageCategory: $storage_category,
             elementIds: $element_ids_value,
             cacheKeys: AdminUiHelper::getAdminClientCacheKeys($this->urlService, ['tags', 'categories']),
+            elements: $elements,
         ));
 
         $this->eventDispatcher->dispatchNotify(new LocEndElementSetUnit());

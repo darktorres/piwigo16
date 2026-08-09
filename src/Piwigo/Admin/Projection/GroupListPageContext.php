@@ -9,18 +9,22 @@ use Piwigo\Core\TemplatePageContext;
 
 /**
  * The template variable set assigned by
- * {@see \Piwigo\Admin\GroupListPageRenderer::render()}.
+ * {@see \Piwigo\Admin\GroupListPageRenderer::render()}. `$groups` is
+ * always included (even empty) since `group_list.tpl` reads it with
+ * `{if not empty($groups)}`, not `isset()`.
  */
 final readonly class GroupListPageContext implements TemplatePageContext
 {
     /**
      * @param array<array-key, string> $cacheKeys
+     * @param list<array<string, mixed>> $groups
      */
     public function __construct(
         public string $addAction,
         public string $pwgToken,
         public array $cacheKeys,
         public string $adminPageTitle,
+        public array $groups,
     ) {}
 
     /**
@@ -34,6 +38,7 @@ final readonly class GroupListPageContext implements TemplatePageContext
             'PWG_TOKEN' => $this->pwgToken,
             'CACHE_KEYS' => $this->cacheKeys,
             'ADMIN_PAGE_TITLE' => $this->adminPageTitle,
+            'groups' => $this->groups,
         ];
     }
 }

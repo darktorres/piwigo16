@@ -9,10 +9,11 @@ use Piwigo\Core\TemplatePageContext;
 
 /**
  * The template variable set assigned by
- * {@see \Piwigo\Admin\RatingPageRenderer::render()}. `images` is seeded
- * empty here -- the renderer's own rating-report loop populates it
- * afterward via `Template::append('images', ...)`, a separate call this
- * context intentionally doesn't own.
+ * {@see \Piwigo\Admin\RatingPageRenderer::render()}. `$orderByOptions`
+ * and `$images` are both always included -- `rating.tpl` reads
+ * `order_by_options` via an unguarded `{html_options}` and `images` via
+ * an unguarded `{foreach}`, both matching the original code's own
+ * unconditional loops.
  */
 final readonly class RatingPageContext implements TemplatePageContext
 {
@@ -23,6 +24,8 @@ final readonly class RatingPageContext implements TemplatePageContext
      * @param list<int> $orderByOptionsSelected
      * @param array<string, string> $userOptions
      * @param list<mixed> $userOptionsSelected
+     * @param list<string> $orderByOptions
+     * @param list<array<string, mixed>> $images
      */
     public function __construct(
         public array $navbar,
@@ -35,6 +38,8 @@ final readonly class RatingPageContext implements TemplatePageContext
         public array $userOptions,
         public array $userOptionsSelected,
         public string $adminPageTitle,
+        public array $orderByOptions,
+        public array $images,
     ) {}
 
     /**
@@ -54,7 +59,8 @@ final readonly class RatingPageContext implements TemplatePageContext
             'user_options' => $this->userOptions,
             'user_options_selected' => $this->userOptionsSelected,
             'ADMIN_PAGE_TITLE' => $this->adminPageTitle,
-            'images' => [],
+            'order_by_options' => $this->orderByOptions,
+            'images' => $this->images,
         ];
     }
 }

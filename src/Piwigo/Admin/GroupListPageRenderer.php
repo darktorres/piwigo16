@@ -70,29 +70,27 @@ final class GroupListPageRenderer
         $toggle_is_default_url = $admin_url . 'group_list&amp;toggle_is_default=';
 
         $group_counter = 0;
+        $tpl_groups = [];
 
         foreach ($groups as $row) {
             $members = $group_repo->findMemberUsernames($row->id);
 
-            $template->append(
-                'groups',
-                [
-                    'NAME' => $row->name,
-                    // Explicit ->value, not relying on GroupId's Stringable
-                    // -- Smarty templates elsewhere in this page do real
-                    // arithmetic on ID (group_list.tpl's `$group.ID%5`),
-                    // which would TypeError against a bare VO object.
-                    'ID' => $row->id->value,
-                    'IS_DEFAULT' => ($row->isDefault ? ' [' . $this->lang->t('default') . ']' : ''),
-                    'NB_MEMBERS' => count($members),
-                    'L_MEMBERS' => implode(' <span class="userSeparator">&middot;</span> ', $members),
-                    'MEMBERS' => $this->translator->plural('%d member', '%d members', count($members)),
-                    'U_DELETE' => $del_url . $row->id->value . '&amp;pwg_token=' . new CsrfService($this->currentConfig)->getToken(),
-                    'U_PERM' => $perm_url . $row->id->value,
-                    'U_USERS' => $users_url . $row->id->value,
-                    'U_ISDEFAULT' => $toggle_is_default_url . $row->id->value . '&amp;pwg_token=' . new CsrfService($this->currentConfig)->getToken(),
-                ]
-            );
+            $tpl_groups[] = [
+                'NAME' => $row->name,
+                // Explicit ->value, not relying on GroupId's Stringable
+                // -- Smarty templates elsewhere in this page do real
+                // arithmetic on ID (group_list.tpl's `$group.ID%5`),
+                // which would TypeError against a bare VO object.
+                'ID' => $row->id->value,
+                'IS_DEFAULT' => ($row->isDefault ? ' [' . $this->lang->t('default') . ']' : ''),
+                'NB_MEMBERS' => count($members),
+                'L_MEMBERS' => implode(' <span class="userSeparator">&middot;</span> ', $members),
+                'MEMBERS' => $this->translator->plural('%d member', '%d members', count($members)),
+                'U_DELETE' => $del_url . $row->id->value . '&amp;pwg_token=' . new CsrfService($this->currentConfig)->getToken(),
+                'U_PERM' => $perm_url . $row->id->value,
+                'U_USERS' => $users_url . $row->id->value,
+                'U_ISDEFAULT' => $toggle_is_default_url . $row->id->value . '&amp;pwg_token=' . new CsrfService($this->currentConfig)->getToken(),
+            ];
 
             $group_counter++;
         }
@@ -103,6 +101,7 @@ final class GroupListPageRenderer
                 ->getToken(),
             cacheKeys: AdminUiHelper::getAdminClientCacheKeys($this->urlService, ['groups', 'users']),
             adminPageTitle: $this->lang->t('Groups') . ' <span class="badge-number">' . $group_counter . '</span>',
+            groups: $tpl_groups,
         ));
 
         $template->assign_var_from_handle('ADMIN_CONTENT', 'group_list');

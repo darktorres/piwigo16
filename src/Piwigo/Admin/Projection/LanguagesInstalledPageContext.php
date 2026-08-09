@@ -10,6 +10,10 @@ use Piwigo\Core\TemplatePageContext;
 /**
  * The template variable set assigned by
  * {@see \Piwigo\Admin\LanguagesInstalledPageRenderer::render()}.
+ * `language_states` is a fixed, compile-time-constant list (the original
+ * code's own 2 unconditional `Template::append()` calls never varied
+ * per-request) -- hardcoded directly in `toArray()` below instead of
+ * being threaded through the constructor.
  */
 final readonly class LanguagesInstalledPageContext implements TemplatePageContext
 {
@@ -34,6 +38,7 @@ final readonly class LanguagesInstalledPageContext implements TemplatePageContex
             'isWebmaster' => $this->isWebmaster ? 1 : 0,
             'ADMIN_PAGE_TITLE' => $this->adminPageTitle,
             'CONF_ENABLE_EXTENSIONS_INSTALL' => $this->enableExtensionsInstall,
+            'language_states' => ['active', 'inactive'],
         ];
     }
 }

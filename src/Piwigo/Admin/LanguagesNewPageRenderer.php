@@ -162,6 +162,8 @@ final class LanguagesNewPageRenderer
         }
         $server_languages = $pem_catalog->getServerExtensions(ExtensionType::Language, $fs_language_ids, true);
 
+        $tpl_languages = [];
+
         if ($server_languages !== null) {
             $pem_base_url = RequestBootstrap::pemUrl();
 
@@ -189,7 +191,7 @@ final class LanguagesNewPageRenderer
                   . '&amp;pwg_token=' . new CsrfService($this->currentConfig)->getToken()
                 ;
 
-                $template->append('languages', [
+                $tpl_languages[] = [
                     'EXT_NAME' => $language['extension_name'],
                     'EXT_DESC' => $language['extension_description'],
                     'EXT_URL' => $pem_base_url . '/extension_view.php?eid=' . $extension_id,
@@ -199,7 +201,7 @@ final class LanguagesNewPageRenderer
                     'AUTHOR' => $language['author_name'],
                     'URL_INSTALL' => $url_auto_install,
                     'URL_DOWNLOAD' => $download_url . '&amp;origin=piwigo_download',
-                ]);
+                ];
             }
         } else {
             $this->pageState->addError($this->lang->t('Can\'t connect to server.'));
@@ -207,6 +209,7 @@ final class LanguagesNewPageRenderer
         $template->assignContext(new LanguagesNewPageContext(
             adminPageTitle: $this->lang->t('Languages'),
             isWebmaster: $this->accessControl->isWebmaster(),
+            languages: $tpl_languages,
         ));
 
         $template->assign_var_from_handle('ADMIN_CONTENT', 'languages');

@@ -100,11 +100,9 @@ final class RatingPageRenderer
             $order_by_index = 0;
         }
 
+        $order_by_options = [];
         for ($i = 0; $i < count($available_order_by); $i++) {
-            $template->append(
-                'order_by_options',
-                $available_order_by[$i][0]
-            );
+            $order_by_options[] = $available_order_by[$i][0];
         }
         $user_options = [
             'all' => $lang->t('all'),
@@ -121,19 +119,7 @@ final class RatingPageRenderer
             $start
         );
 
-        $template->assignContext(new RatingPageContext(
-            navbar: $navbar,
-            fAction: $urlService->getRootUrl() . 'admin.php',
-            display: $elements_per_page,
-            nbElements: $nb_elements,
-            category: $ratingRequest->catPresent ? [$ratingRequest->catRaw] : [],
-            cacheKeys: AdminUiHelper::getAdminClientCacheKeys($urlService, ['categories']),
-            orderByOptionsSelected: [$order_by_index],
-            userOptions: $user_options,
-            userOptionsSelected: [$ratingRequest->usersRaw],
-            adminPageTitle: $lang->t('Rating'),
-        ));
-
+        $tpl_images = [];
         foreach ($images as $image) {
             $thumbnail_src = DerivativeImage::thumb_url($image->toArray());
 
@@ -171,8 +157,23 @@ final class RatingPageRenderer
                     'USER' => $user_rate,
                 ];
             }
-            $template->append('images', $tpl_image);
+            $tpl_images[] = $tpl_image;
         }
+
+        $template->assignContext(new RatingPageContext(
+            navbar: $navbar,
+            fAction: $urlService->getRootUrl() . 'admin.php',
+            display: $elements_per_page,
+            nbElements: $nb_elements,
+            category: $ratingRequest->catPresent ? [$ratingRequest->catRaw] : [],
+            cacheKeys: AdminUiHelper::getAdminClientCacheKeys($urlService, ['categories']),
+            orderByOptionsSelected: [$order_by_index],
+            userOptions: $user_options,
+            userOptionsSelected: [$ratingRequest->usersRaw],
+            adminPageTitle: $lang->t('Rating'),
+            orderByOptions: $order_by_options,
+            images: $tpl_images,
+        ));
 
         $template->assign_var_from_handle('ADMIN_CONTENT', 'rating');
     }

@@ -535,6 +535,7 @@ final class BatchManagerGlobalPageRenderer
         $nb_thumbs_page = 0;
         $nav_bar = null;
         $thumb_params = null;
+        $thumbnails = [];
 
         if (count($cat_elements_id) > 0) {
             $nav_bar = new PaginationService($this->currentConfig)
@@ -590,17 +591,14 @@ final class BatchManagerGlobalPageRenderer
                 $ttitle .= '<br>' . $row_width . '&times;' . $row_height . ' pixels, ' . sprintf('%.2f', $row_filesize / 1024.0) . 'MB';
 
                 $row_id = is_scalar($row['id']) ? (string) $row['id'] : '';
-                $template->append(
-                    'thumbnails',
-                    array_merge(
-                        $row,
-                        [
-                            'thumb' => new DerivativeImage($thumb_params, $src_image, $this->currentConfig),
-                            'TITLE' => $ttitle,
-                            'FILE_SRC' => DerivativeImage::url(ImageStdParams::LARGE, $src_image),
-                            'U_EDIT' => $this->urlService->getRootUrl() . 'admin.php?page=photo-' . $row_id,
-                        ]
-                    )
+                $thumbnails[] = array_merge(
+                    $row,
+                    [
+                        'thumb' => new DerivativeImage($thumb_params, $src_image, $this->currentConfig),
+                        'TITLE' => $ttitle,
+                        'FILE_SRC' => DerivativeImage::url(ImageStdParams::LARGE, $src_image),
+                        'U_EDIT' => $this->urlService->getRootUrl() . 'admin.php?page=photo-' . $row_id,
+                    ]
                 );
             }
         }
@@ -619,6 +617,7 @@ final class BatchManagerGlobalPageRenderer
             nbThumbsPage: $nb_thumbs_page,
             nbThumbsSet: count($cat_elements_id),
             cacheKeys: AdminUiHelper::getAdminClientCacheKeys($this->urlService, ['tags', 'categories']),
+            thumbnails: $thumbnails,
         ));
 
         $this->eventDispatcher->dispatchNotify(new LocEndElementSetGlobal());

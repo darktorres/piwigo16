@@ -208,6 +208,8 @@ final class CheckIntegrity
                 'check_integrity' => 'check_integrity.tpl',
             ]);
 
+            $c13y_do_check = null;
+            $c13y_list = [];
             foreach ($this->retrieve_list as $i => $c13y) {
                 $can_select = false;
                 $c13y_display = [
@@ -237,7 +239,8 @@ final class CheckIntegrity
                             }
                         } elseif ($c13y['is_callable']) {
                             $c13y_display['show_correction_fct'] = true;
-                            $template->append('c13y_do_check', $c13y['id']);
+                            $c13y_do_check ??= [];
+                            $c13y_do_check[] = $c13y['id'];
                             $submit_automatic_correction = true;
                             $can_select = true;
                         } else {
@@ -258,12 +261,14 @@ final class CheckIntegrity
                     $submit_ignore = true;
                 }
 
-                $template->append('c13y_list', $c13y_display);
+                $c13y_list[] = $c13y_display;
             }
 
             $template->assignContext(new CheckIntegrityPageContext(
                 showSubmitAutomaticCorrection: $submit_automatic_correction,
                 showSubmitIgnore: $submit_ignore,
+                c13yList: $c13y_list,
+                c13yDoCheck: $c13y_do_check,
             ));
 
             $template->concat('ADMIN_CONTENT', $template->parse('check_integrity', true));

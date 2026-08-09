@@ -90,6 +90,26 @@ final class UserPermPageRenderer
             ]
         );
 
+        // retrieve category ids authorized to the groups the user belongs to
+        $group_authorized = [];
+        $categories_because_of_groups = null;
+
+        $group_rows = $categoryService->getCategoriesAuthorizedViaGroupsForUser($user_id);
+
+        if (count($group_rows) > 0) {
+            $cats = [];
+            foreach ($group_rows as $row) {
+                $cats[] = $row;
+                $group_authorized[] = (string) $row['cat_id'];
+            }
+            usort($cats, CategoryService::compareByGlobalRank(...));
+
+            $categories_because_of_groups = [];
+            foreach ($cats as $category) {
+                $categories_because_of_groups[] = $htmlRenderer->getCatDisplayNameCache($category['uppercats'], null);
+            }
+        }
+
         $template->assignContext(new UserPermPageContext(
             title: $this->lang->t(
                 'Manage permissions for user "%s"',
@@ -103,28 +123,8 @@ final class UserPermPageRenderer
                 '&amp;user_id=' . $user_id,
             pwgToken: new CsrfService($this->currentConfig)
                 ->getToken(),
+            categoriesBecauseOfGroups: $categories_because_of_groups,
         ));
-
-        // retrieve category ids authorized to the groups the user belongs to
-        $group_authorized = [];
-
-        $group_rows = $categoryService->getCategoriesAuthorizedViaGroupsForUser($user_id);
-
-        if (count($group_rows) > 0) {
-            $cats = [];
-            foreach ($group_rows as $row) {
-                $cats[] = $row;
-                $group_authorized[] = (string) $row['cat_id'];
-            }
-            usort($cats, CategoryService::compareByGlobalRank(...));
-
-            foreach ($cats as $category) {
-                $template->append(
-                    'categories_because_of_groups',
-                    $htmlRenderer->getCatDisplayNameCache($category['uppercats'], null)
-                );
-            }
-        }
 
         // only private categories are listed
         $categoryService->displaySelectPrivateGrantedToUser($user_id, $group_authorized, 'category_option_true', $htmlRenderer, $template);

@@ -19,6 +19,7 @@ test('toArray flattens every fixed property, and omits associated_tags/navbar/th
         nbThumbsPage: 0,
         nbThumbsSet: 0,
         cacheKeys: ['tags' => 'x', 'categories' => 'y'],
+        thumbnails: [],
     );
 
     expect($context->toArray())->toBe([
@@ -32,6 +33,7 @@ test('toArray flattens every fixed property, and omits associated_tags/navbar/th
         'nb_thumbs_page' => 0,
         'nb_thumbs_set' => 0,
         'CACHE_KEYS' => ['tags' => 'x', 'categories' => 'y'],
+        'thumbnails' => [],
     ]);
 });
 
@@ -50,6 +52,7 @@ test('toArray includes associated_tags/navbar when set', function (): void {
         nbThumbsPage: 10,
         nbThumbsSet: 42,
         cacheKeys: [],
+        thumbnails: [['id' => 5, 'TITLE' => 'Sunset']],
     );
 
     $result = $context->toArray();
@@ -57,5 +60,6 @@ test('toArray includes associated_tags/navbar when set', function (): void {
     expect($result['IN_CADDIE'])->toBeTrue()
         ->and($result['associated_tags'])->toBe([['id' => 1, 'name' => 'sunset', 'url_name' => 'sunset', 'lastmodified' => '2026-08-08', 'counter' => 3]])
         ->and($result['navbar'])->toBe(['NB_PAGE' => 3])
+        ->and($result['thumbnails'])->toBe([['id' => 5, 'TITLE' => 'Sunset']])
         ->and($result)->not->toHaveKey('thumb_params');
 });

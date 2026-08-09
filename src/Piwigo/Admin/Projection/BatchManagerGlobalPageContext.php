@@ -15,6 +15,9 @@ use Piwigo\Image\DerivativeParams;
  * optional -- the original code only ever assigns those template keys
  * inside its own `count($cat_elements_id) > 0` branch, omitted here (not
  * present as a null value) to match that exact original behavior.
+ * `$thumbnails` is always included (even empty) since
+ * `batch_manager_global.tpl` reads it with `{if !empty($thumbnails)}`,
+ * not `isset()`.
  */
 final readonly class BatchManagerGlobalPageContext implements TemplatePageContext
 {
@@ -25,6 +28,7 @@ final readonly class BatchManagerGlobalPageContext implements TemplatePageContex
      * @param array<string, string> $generateDerivativesTypes
      * @param array{CURRENT_PAGE?: float, URL_FIRST?: string, URL_PREV?: string, URL_NEXT?: string, URL_LAST?: string, pages?: array<int, string>, NB_PAGE?: int}|null $navbar
      * @param array<array-key, string> $cacheKeys
+     * @param list<array<string, mixed>> $thumbnails
      */
     public function __construct(
         public bool $inCaddie,
@@ -40,6 +44,7 @@ final readonly class BatchManagerGlobalPageContext implements TemplatePageContex
         public int $nbThumbsPage,
         public int $nbThumbsSet,
         public array $cacheKeys,
+        public array $thumbnails,
     ) {}
 
     /**
@@ -59,6 +64,7 @@ final readonly class BatchManagerGlobalPageContext implements TemplatePageContex
             'nb_thumbs_page' => $this->nbThumbsPage,
             'nb_thumbs_set' => $this->nbThumbsSet,
             'CACHE_KEYS' => $this->cacheKeys,
+            'thumbnails' => $this->thumbnails,
         ];
 
         if ($this->associatedTags !== null) {

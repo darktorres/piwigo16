@@ -182,6 +182,7 @@ final class PluginsNewPageRenderer
         $server_plugins = $versions_to_check === [] ? [] : $pem_catalog->getServerExtensions(ExtensionType::Plugin, $fs_plugin_ids, true, $beta_test);
 
         $order_selected = null;
+        $tpl_plugins = [];
         if ($server_plugins !== null) {
             /* order plugins */
             $order_selected = $this->sessionService->getPluginsNewOrder() ?? 'date';
@@ -256,7 +257,7 @@ final class PluginsNewPageRenderer
                 }
                 // Between 6 month and 3 years : certification = 1
 
-                $template->append('plugins', [
+                $tpl_plugins[] = [
                     'ID' => $plugin['extension_id'],
                     'EXT_NAME' => $plugin['extension_name'],
                     'EXT_URL' => $pem_base_url . '/extension_view.php?eid=' . $extension_id,
@@ -273,7 +274,7 @@ final class PluginsNewPageRenderer
                     'NB_RATINGS' => $plugin['nb_ratings'],
                     'SCREENSHOT' => (key_exists('screenshot_url', $plugin)) ? $plugin['screenshot_url'] : '',
                     'TAGS' => $plugin['tags'],
-                ]);
+                ];
             }
 
         } else {
@@ -291,6 +292,7 @@ final class PluginsNewPageRenderer
             betaUrl: $beta_url,
             adminPageTitle: $this->lang->t('Plugins'),
             betaTest: $beta_test,
+            plugins: $tpl_plugins,
         ));
 
         $template->assign_var_from_handle('ADMIN_CONTENT', 'plugins');

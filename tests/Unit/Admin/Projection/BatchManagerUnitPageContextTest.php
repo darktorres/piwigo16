@@ -16,6 +16,7 @@ test('toArray flattens every fixed property, and omits navbar/STORAGE_CATEGORY/E
         storageCategory: null,
         elementIds: null,
         cacheKeys: ['tags' => 'x', 'categories' => 'y'],
+        elements: [],
     );
 
     expect($context->toArray())->toBe([
@@ -25,6 +26,7 @@ test('toArray flattens every fixed property, and omits navbar/STORAGE_CATEGORY/E
         'PWG_TOKEN' => 'abc123',
         'ACTIVE_PLUGINS' => ['foo'],
         'per_page' => 5,
+        'elements' => [],
         'CACHE_KEYS' => ['tags' => 'x', 'categories' => 'y'],
     ]);
 });
@@ -41,6 +43,7 @@ test('toArray includes navbar/STORAGE_CATEGORY/ELEMENT_IDS when set', function (
         storageCategory: 'Holidays',
         elementIds: '1,2,3',
         cacheKeys: ['tags' => 'x', 'categories' => 'y'],
+        elements: [['ID' => '5', 'TITLE' => 'Sunset']],
     );
 
     expect($context->toArray())->toBe([
@@ -50,6 +53,7 @@ test('toArray includes navbar/STORAGE_CATEGORY/ELEMENT_IDS when set', function (
         'PWG_TOKEN' => 'abc123',
         'ACTIVE_PLUGINS' => ['foo'],
         'per_page' => 5,
+        'elements' => [['ID' => '5', 'TITLE' => 'Sunset']],
         'navbar' => ['NB_PAGE' => 3],
         'STORAGE_CATEGORY' => 'Holidays',
         'ELEMENT_IDS' => '1,2,3',

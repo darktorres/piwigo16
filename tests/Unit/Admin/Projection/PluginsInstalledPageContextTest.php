@@ -16,6 +16,7 @@ test('toArray flattens every property to its real Smarty template variable name,
         adminPageTitle: 'Plugins',
         viewSelector: 'classic',
         enableExtensionsInstall: false,
+        pluginStates: ['active', 'inactive', 'merged'],
     );
 
     expect($context->toArray())->toBe([
@@ -29,6 +30,7 @@ test('toArray flattens every property to its real Smarty template variable name,
         'ADMIN_PAGE_TITLE' => 'Plugins',
         'view_selector' => 'classic',
         'CONF_ENABLE_EXTENSIONS_INSTALL' => false,
+        'plugin_states' => ['active', 'inactive', 'merged'],
     ]);
 });
 
@@ -44,6 +46,7 @@ test('toArray casts isWebmaster false to 0', function (): void {
         adminPageTitle: '',
         viewSelector: 'classic',
         enableExtensionsInstall: true,
+        pluginStates: ['active', 'inactive'],
     );
 
     expect($context->toArray()['isWebmaster'])->toBe(0);

@@ -110,14 +110,12 @@ final class MenubarPageRenderer
 
         self::makeConsecutive($mb_conf);
 
+        $blocks = [];
         foreach ($mb_conf as $id => $pos) {
-            $template->append(
-                'blocks',
-                [
-                    'pos' => $pos / 5,
-                    'reg' => $reg_blocks[$id],
-                ]
-            );
+            $blocks[] = [
+                'pos' => $pos / 5,
+                'reg' => $reg_blocks[$id],
+            ];
         }
 
         $action = $urlService->getRootUrl() . 'admin.php?page=menubar';
@@ -125,6 +123,7 @@ final class MenubarPageRenderer
             formAction: $action,
             isWebmaster: $accessControl->isWebmaster(),
             adminPageTitle: $lang->t('Menu Management'),
+            blocks: $blocks,
         ));
 
         $template->set_filename('menubar_admin_content', 'menubar.tpl');

@@ -154,9 +154,6 @@ final class LanguagesInstalledPageRenderer
             }
         }
 
-        $template->append('language_states', 'active');
-        $template->append('language_states', 'inactive');
-
         $missing_language_ids = array_diff(
             array_keys($db_languages),
             array_keys($fs_languages)

@@ -130,8 +130,10 @@ final class CatPermPageRenderer
         $user_granted_direct_ids = $permissionRepository->findGrantedUserIdsByCategory([$cat_id])[$cat_id] ?? [];
 
         $nb_users_granted_indirect = null;
+        $user_granted_indirect_groups = null;
         $user_granted_indirect_ids = [];
         if (count($group_granted_ids) > 0) {
+            $user_granted_indirect_groups = [];
             $granted_groups = [];
 
             foreach ($this->groupService->getMembersByGroupIds($group_granted_ids) as $row) {
@@ -177,13 +179,10 @@ final class CatPermPageRenderer
                     }
                 }
 
-                $template->append(
-                    'user_granted_indirect_groups',
-                    [
-                        'group_name' => $groups[$group_id],
-                        'group_users' => implode(', ', $group_usernames),
-                    ]
-                );
+                $user_granted_indirect_groups[] = [
+                    'group_name' => $groups[$group_id],
+                    'group_users' => implode(', ', $group_usernames),
+                ];
             }
         }
 
@@ -205,6 +204,7 @@ final class CatPermPageRenderer
                 ->getToken(),
             inherit: $this->currentConfig->inheritanceByDefault(),
             cacheKeys: AdminUiHelper::getAdminClientCacheKeys($this->urlService, ['groups', 'users']),
+            userGrantedIndirectGroups: $user_granted_indirect_groups,
         ));
 
         $template->assign_var_from_handle('ADMIN_CONTENT', 'cat_perm');

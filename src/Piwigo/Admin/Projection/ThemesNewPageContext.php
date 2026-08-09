@@ -9,13 +9,19 @@ use Piwigo\Core\TemplatePageContext;
 
 /**
  * The template variable set assigned by
- * {@see \Piwigo\Admin\ThemesNewPageRenderer::render()}.
+ * {@see \Piwigo\Admin\ThemesNewPageRenderer::render()}. `$newThemes` is
+ * always included (even empty) since `themes_new.tpl` reads it with
+ * `{if not empty($new_themes)}`, not `isset()`.
  */
 final readonly class ThemesNewPageContext implements TemplatePageContext
 {
+    /**
+     * @param list<array<string, mixed>> $newThemes
+     */
     public function __construct(
         public string $defaultScreenshot,
         public string $adminPageTitle,
+        public array $newThemes,
     ) {}
 
     /**
@@ -27,6 +33,7 @@ final readonly class ThemesNewPageContext implements TemplatePageContext
         return [
             'default_screenshot' => $this->defaultScreenshot,
             'ADMIN_PAGE_TITLE' => $this->adminPageTitle,
+            'new_themes' => $this->newThemes,
         ];
     }
 }

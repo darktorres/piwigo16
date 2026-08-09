@@ -168,6 +168,8 @@ final class ElementSetRanksPageRenderer
         // |                              thumbnails                           |
         // +-------------------------------------------------------------------+
 
+        $thumbnails = [];
+
         $thumbnail_rows = EntityManagerFactory::build($conn)->getRepository(ImageEntity::class)
             ->findThumbnailRowsForCategoryOrderedByRank(CategoryId::from($category_id));
         if (count($thumbnail_rows) > 0) {
@@ -184,27 +186,21 @@ final class ElementSetRanksPageRenderer
                     $thumbnail_name = str_replace('_', ' ', $file_wo_ext);
                 }
                 $current_rank++;
-                $template->append(
-                    'thumbnails',
-                    [
-                        'ID' => $row['id'],
-                        'NAME' => $thumbnail_name,
-                        'TN_SRC' => $derivative->get_url(),
-                        'RANK' => $current_rank * 10,
-                        'SIZE' => $derivative->get_size(),
-                    ]
-                );
+                $thumbnails[] = [
+                    'ID' => $row['id'],
+                    'NAME' => $thumbnail_name,
+                    'TN_SRC' => $derivative->get_url(),
+                    'RANK' => $current_rank * 10,
+                    'SIZE' => $derivative->get_size(),
+                ];
             }
         }
         // image order management
         $image_order = explode(',', $category->imageOrder ?? '');
 
+        $image_order_tpl = [];
         for ($i = 0; $i < 3; $i++) { // 3 fields
-            if (isset($image_order[$i])) {
-                $template->append('image_order', $image_order[$i]);
-            } else {
-                $template->append('image_order', '');
-            }
+            $image_order_tpl[] = $image_order[$i] ?? '';
         }
 
         $template->assignContext(new ElementSetRanksHeaderPageContext(
@@ -214,6 +210,8 @@ final class ElementSetRanksPageRenderer
                 ->getToken(),
             imageOrderOptions: $sort_fields,
             imageOrderChoice: $image_order_choice,
+            thumbnails: $thumbnails,
+            imageOrder: $image_order_tpl,
         ));
 
         // +-------------------------------------------------------------------+

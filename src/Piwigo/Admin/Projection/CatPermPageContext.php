@@ -9,11 +9,15 @@ use Piwigo\Core\TemplatePageContext;
 
 /**
  * The template variable set assigned by
- * {@see \Piwigo\Admin\CatPermPageRenderer::render()}. `$saveSuccess` and
- * `$nbUsersGrantedIndirect` are genuinely optional -- the original code
- * only ever assigns those 2 template keys under their own runtime
- * condition, omitted here (not present as a null value) to match that
- * exact original behavior.
+ * {@see \Piwigo\Admin\CatPermPageRenderer::render()}. `$saveSuccess`,
+ * `$nbUsersGrantedIndirect`, and `$userGrantedIndirectGroups` are
+ * genuinely optional -- the original code only ever assigns those
+ * template keys under their own runtime condition (the latter two share
+ * the same `count($group_granted_ids) > 0` branch), omitted here (not
+ * present as a null value) to match that exact original behavior --
+ * `cat_perm.tpl` itself only ever reads `$user_granted_indirect_groups`
+ * inside its own `{if isset($nb_users_granted_indirect) && ... > 0}`
+ * guard anyway.
  */
 final readonly class CatPermPageContext implements TemplatePageContext
 {
@@ -23,6 +27,7 @@ final readonly class CatPermPageContext implements TemplatePageContext
      * @param array<int|string, mixed> $users
      * @param list<int> $usersSelected
      * @param array<array-key, string> $cacheKeys
+     * @param list<array{group_name: string, group_users: string}>|null $userGrantedIndirectGroups
      */
     public function __construct(
         public ?string $saveSuccess,
@@ -38,6 +43,7 @@ final readonly class CatPermPageContext implements TemplatePageContext
         public string $pwgToken,
         public bool $inherit,
         public array $cacheKeys,
+        public ?array $userGrantedIndirectGroups,
     ) {}
 
     /**
@@ -66,6 +72,10 @@ final readonly class CatPermPageContext implements TemplatePageContext
 
         if ($this->nbUsersGrantedIndirect !== null) {
             $result['nb_users_granted_indirect'] = $this->nbUsersGrantedIndirect;
+        }
+
+        if ($this->userGrantedIndirectGroups !== null) {
+            $result['user_granted_indirect_groups'] = $this->userGrantedIndirectGroups;
         }
 
         return $result;

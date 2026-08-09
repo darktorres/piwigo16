@@ -181,11 +181,9 @@ final class RatingUserPageRenderer
             $order_by_index = $ratingFilter->orderBy;
         }
 
+        $order_by_options = [];
         for ($i = 0; $i < count($available_order_by); $i++) {
-            $template->append(
-                'order_by_options',
-                $available_order_by[$i][0]
-            );
+            $order_by_options[] = $available_order_by[$i][0];
         }
         uasort($by_user_ratings, $available_order_by[$order_by_index][1]);
 
@@ -202,6 +200,7 @@ final class RatingUserPageRenderer
             tnWidth: $imageStdParams->get_by_type(ImageStdParams::SQUARE)->sizing->ideal_size[0],
             nbElements: $nb_elements,
             adminPageTitle: $lang->t('Rating'),
+            orderByOptions: $order_by_options,
         ));
         $template->set_filename('rating', 'rating_user.tpl');
         $template->assign_var_from_handle('ADMIN_CONTENT', 'rating');

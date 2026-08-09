@@ -18,7 +18,9 @@ use Piwigo\Core\TemplatePageContext;
  * the whole per-image loop (last write wins), and `batch_manager_unit.tpl`
  * never actually reads `$STORAGE_CATEGORY` (confirmed by direct read) --
  * kept here anyway as a faithful 1:1 port of the original assign() call,
- * not removed as an out-of-scope dead-code cleanup.
+ * not removed as an out-of-scope dead-code cleanup. `$elements` is
+ * always included (even empty) since `batch_manager_unit.tpl` reads it
+ * with `{if !empty($elements)}`, not `isset()`.
  */
 final readonly class BatchManagerUnitPageContext implements TemplatePageContext
 {
@@ -27,6 +29,7 @@ final readonly class BatchManagerUnitPageContext implements TemplatePageContext
      * @param list<string> $activePlugins
      * @param array{CURRENT_PAGE?: float, URL_FIRST?: string, URL_PREV?: string, URL_NEXT?: string, URL_LAST?: string, pages?: array<int, string>, NB_PAGE?: int}|null $navbar
      * @param array<array-key, string> $cacheKeys
+     * @param list<array<string, mixed>> $elements
      */
     public function __construct(
         public string $uElementsPage,
@@ -39,6 +42,7 @@ final readonly class BatchManagerUnitPageContext implements TemplatePageContext
         public ?string $storageCategory,
         public ?string $elementIds,
         public array $cacheKeys,
+        public array $elements,
     ) {}
 
     /**
@@ -54,6 +58,7 @@ final readonly class BatchManagerUnitPageContext implements TemplatePageContext
             'PWG_TOKEN' => $this->pwgToken,
             'ACTIVE_PLUGINS' => $this->activePlugins,
             'per_page' => $this->perPage,
+            'elements' => $this->elements,
         ];
 
         if ($this->navbar !== null) {

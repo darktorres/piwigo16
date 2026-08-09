@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 use Piwigo\Admin\Projection\CatPermPageContext;
 
-test('toArray flattens every fixed property, and omits save_success/nb_users_granted_indirect when null', function (): void {
+test('toArray flattens every fixed property, and omits save_success/nb_users_granted_indirect/user_granted_indirect_groups when null', function (): void {
     $context = new CatPermPageContext(
         saveSuccess: null,
         categoriesNav: 'Home / Holidays',
@@ -19,6 +19,7 @@ test('toArray flattens every fixed property, and omits save_success/nb_users_gra
         pwgToken: 'abc123',
         inherit: true,
         cacheKeys: ['groups' => 'x', 'users' => 'y'],
+        userGrantedIndirectGroups: null,
     );
 
     expect($context->toArray())->toBe([
@@ -36,7 +37,7 @@ test('toArray flattens every fixed property, and omits save_success/nb_users_gra
     ]);
 });
 
-test('toArray includes save_success/nb_users_granted_indirect when set', function (): void {
+test('toArray includes save_success/nb_users_granted_indirect/user_granted_indirect_groups when set', function (): void {
     $context = new CatPermPageContext(
         saveSuccess: 'Album updated successfully',
         categoriesNav: 'Home / Holidays',
@@ -51,10 +52,12 @@ test('toArray includes save_success/nb_users_granted_indirect when set', functio
         pwgToken: 'abc123',
         inherit: false,
         cacheKeys: [],
+        userGrantedIndirectGroups: [['group_name' => 'Family', 'group_users' => 'jane, joe']],
     );
 
     $result = $context->toArray();
 
     expect($result['save_success'])->toBe('Album updated successfully')
-        ->and($result['nb_users_granted_indirect'])->toBe(3);
+        ->and($result['nb_users_granted_indirect'])->toBe(3)
+        ->and($result['user_granted_indirect_groups'])->toBe([['group_name' => 'Family', 'group_users' => 'jane, joe']]);
 });

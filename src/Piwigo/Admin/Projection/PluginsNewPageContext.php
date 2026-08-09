@@ -14,12 +14,15 @@ use Piwigo\Core\TemplatePageContext;
  * assigns those 2 template keys under their own runtime condition
  * (a successful PEM catalog fetch, a non-beta stable version), omitted
  * here (not present as a null value) to match that exact original
- * behavior.
+ * behavior. `$plugins` is always included (even empty) since
+ * `plugins_new.tpl` reads it with `{if not empty($plugins)}`, not
+ * `isset()`.
  */
 final readonly class PluginsNewPageContext implements TemplatePageContext
 {
     /**
      * @param array<string, string> $orderOptions
+     * @param list<array<string, mixed>> $plugins
      */
     public function __construct(
         public array $orderOptions,
@@ -27,6 +30,7 @@ final readonly class PluginsNewPageContext implements TemplatePageContext
         public ?string $betaUrl,
         public string $adminPageTitle,
         public bool $betaTest,
+        public array $plugins,
     ) {}
 
     /**
@@ -39,6 +43,7 @@ final readonly class PluginsNewPageContext implements TemplatePageContext
             'order_options' => $this->orderOptions,
             'ADMIN_PAGE_TITLE' => $this->adminPageTitle,
             'BETA_TEST' => $this->betaTest,
+            'plugins' => $this->plugins,
         ];
 
         if ($this->orderSelected !== null) {

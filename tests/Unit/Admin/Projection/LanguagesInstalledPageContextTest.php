@@ -17,5 +17,6 @@ test('toArray flattens every property to its real Smarty template variable name,
         'isWebmaster' => 1,
         'ADMIN_PAGE_TITLE' => 'Languages',
         'CONF_ENABLE_EXTENSIONS_INSTALL' => false,
+        'language_states' => ['active', 'inactive'],
     ]);
 });

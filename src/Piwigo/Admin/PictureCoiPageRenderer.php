@@ -108,13 +108,14 @@ final class PictureCoiPageRenderer
             ];
         }
 
+        $cropped_derivatives = [];
         foreach ($this->imageStdParams->get_defined_type_map() as $params) {
             if ($params->sizing->max_crop !== 0.0) {
                 $derivative = new DerivativeImage($params, new SrcImage($row), $this->currentConfig);
-                $template->append('cropped_derivatives', [
+                $cropped_derivatives[] = [
                     'U_IMG' => $derivative->get_url() . $uid,
                     'HTM_SIZE' => $derivative->get_size_htm(),
-                ]);
+                ];
             }
         }
 
@@ -123,6 +124,7 @@ final class PictureCoiPageRenderer
             alt: $alt,
             imgUrl: $imgUrl,
             coi: $coi,
+            croppedDerivatives: $cropped_derivatives,
         ));
         $template->set_filename('picture_coi', 'picture_coi.tpl');
 

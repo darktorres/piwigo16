@@ -18,7 +18,7 @@ use Psr\Http\Message\ServerRequestInterface;
 /**
  * Replaces admin/comments.php (page slug "comments") -- pure page/template
  * glue, no data access of its own (comment moderation itself is a client-side
- * ws.php/AJAX flow against the existing CommentService, P18).
+ * ws.php/AJAX flow against the existing CommentService).
  */
 final class CommentsSubController implements AdminSubControllerInterface
 {

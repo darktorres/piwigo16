@@ -20,16 +20,16 @@ use Psr\Http\Message\ServerRequestInterface;
 
 /**
  * Replaces admin/theme.php's own body (page slug "theme"), folded directly
- * into this controller (P23 sub-batch 6i-2) -- validates the requested
+ * into this controller -- validates the requested
  * theme id against ExtensionScanner's own scan (already migrated off the
- * legacy themes.class.php god-class in a prior pass), then dynamically
+ * legacy themes.class.php god-class), then dynamically
  * includes that theme's own admin/admin.inc.php. No other real caller of
  * admin/theme.php exists (confirmed via grep) -- admin.php's own routing
  * already gates this page behind check_status(AccessLevel::Administrator)
  * before dispatch, so the shell's own (redundant) copy of that check is
- * dropped here, same precedent as every prior sub-batch's shell fold.
+ * dropped here.
  *
- * P26/SEC-40: $_GET['theme'] parsing/validation extracted into
+ * $_GET['theme'] parsing/validation is extracted into
  * Request\ThemeIdRequest -- see that class's own docblock.
  */
 final class ThemeSubController implements AdminSubControllerInterface

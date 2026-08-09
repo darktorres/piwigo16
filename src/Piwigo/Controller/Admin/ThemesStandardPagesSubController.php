@@ -11,7 +11,7 @@ use Psr\Http\Message\ServerRequestInterface;
 /**
  * Replaces admin/themes_standard_pages.php (page slug
  * "themes_standard_pages") -- a flat page, pure delegate onto the shared
- * Piwigo\Admin\ThemesStandardPagesPageRenderer (P23 sub-batch 6i-2), which
+ * Piwigo\Admin\ThemesStandardPagesPageRenderer, which
  * this page slug's own render() call shares with ThemesSubController's
  * "standard_pages" tab -- both routes reach the same renderer, which
  * CSRF-gates its `confUpdateParam()` calls via

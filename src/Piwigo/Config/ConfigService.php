@@ -581,19 +581,9 @@ final readonly class ConfigService
         return $this->repo->findParamsAndValuesLike($likePattern);
     }
 
-    public function insertIgnoreRawValue(string $param, string $value): void
-    {
-        $this->repo->insertIgnoreRawValue($param, $value);
-    }
-
     public function findRawValue(string $param): string|false
     {
         return $this->repo->findRawValue($param);
-    }
-
-    public function countByParam(string $param): int
-    {
-        return $this->repo->countByParam($param);
     }
 
     /**

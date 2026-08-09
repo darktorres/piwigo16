@@ -326,14 +326,6 @@ final class MailService implements MailerInterface
      */
     private array $switchLangLanguages = [];
 
-    public function reset(): void
-    {
-        $this->templateCache = [];
-        $this->switchLangInitialised = false;
-        $this->switchLangStack = [];
-        $this->switchLangLanguages = [];
-    }
-
     /**
      * Matches empty()'s exact truthiness semantics as a real strict
      * comparison (PHPStan forbids empty() itself) -- used throughout this

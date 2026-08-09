@@ -102,3 +102,24 @@ parameters:
             # it never matches the live reflector's persistent schema.
             identifier: dba.syntaxError
             path: tests/Integration/BatchWriterTest.php
+        -
+            # shipmonk/dead-code-detector has no usage provider for this
+            # codebase's own event-dispatch/plugin-hook system
+            # (Piwigo\PluginConfig\EventDispatcher) the way it does for
+            # Symfony/Laravel/Nette's -- these typed event DTOs are public
+            # payload data for a plugin extension-point system (see
+            # project memory: all plugins get rewritten against this new
+            # typed-event surface), not internal state. Every one of these
+            # classes already carries its own docblock, written during the
+            # dedicated typed-event conversion, stating plainly whether it
+            # has a real handler today -- "never read in-tree" is the
+            # correct, documented, intentional state for a
+            # notify/filter-style hook with no listener yet, not dead
+            # code. Spot-checked several: UserLogin (dispatched nowhere
+            # yet), DeleteCategories (dispatched by CategoryService, zero
+            # listeners), UploadImageResize (dead-but-harmless legacy
+            # registration, already documented) -- all consistent with
+            # this being the whole directory's own architecture, not
+            # per-class bugs.
+            identifier: shipmonk.deadProperty.neverRead
+            path: '*/Event/*'

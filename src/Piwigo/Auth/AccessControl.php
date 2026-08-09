@@ -27,11 +27,6 @@ final class AccessControl
         return $this->accessLevelChecker->getUserStatus($userStatus);
     }
 
-    public function getAccessTypeStatus(string $userStatus = ''): int
-    {
-        return $this->accessLevelChecker->getAccessTypeStatus($userStatus);
-    }
-
     public function isAuthorizeStatus(int $accessType, string $userStatus = ''): bool
     {
         return $this->accessLevelChecker->isAuthorizeStatus($accessType, $userStatus);

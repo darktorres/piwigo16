@@ -26,8 +26,6 @@ use Piwigo\Core\Env;
  */
 final class SqlDialect
 {
-    public const string DB_ENGINE = 'MySQL';
-
     public const string REQUIRED_MYSQL_VERSION = '5.0.0';
 
     /**

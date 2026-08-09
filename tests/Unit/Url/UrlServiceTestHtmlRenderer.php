@@ -11,8 +11,6 @@ use RuntimeException;
 
 final class UrlServiceTestHtmlRenderer implements HtmlRenderingInterface
 {
-    public ?string $lastMessage = null;
-
     #[Override]
     public function getCatDisplayName(array $catInformations, ?string $url = ''): string
     {
@@ -46,24 +44,18 @@ final class UrlServiceTestHtmlRenderer implements HtmlRenderingInterface
     #[Override]
     public function badRequest(RedirectServiceInterface $redirectService, string $msg, ?string $alternateUrl = null): never
     {
-        $this->lastMessage = $msg;
-
         throw new RuntimeException('badRequest: ' . $msg);
     }
 
     #[Override]
     public function pageNotFound(RedirectServiceInterface $redirectService, ?string $msg, ?string $alternateUrl = null): never
     {
-        $this->lastMessage = $msg;
-
         throw new RuntimeException('pageNotFound: ' . $msg);
     }
 
     #[Override]
     public function fatalError(string $msg, ?string $title = null, bool $showTrace = true): never
     {
-        $this->lastMessage = $msg;
-
         throw new RuntimeException('fatalError: ' . $msg);
     }
 

@@ -22,28 +22,4 @@ final readonly class NewVersionsInfo
         public ?string $minorPhp = null,
         public ?string $majorPhp = null,
     ) {}
-
-    /**
-     * @return array{'piwigo.org-checked': bool, is_dev: bool, minor?: string, major?: string, minor_php?: string, major_php?: string}
-     */
-    public function toArray(): array
-    {
-        $result = [
-            'piwigo.org-checked' => $this->piwigoOrgChecked,
-            'is_dev' => $this->isDev,
-        ];
-        if ($this->minor !== null) {
-            $result['minor'] = $this->minor;
-        }
-        if ($this->major !== null) {
-            $result['major'] = $this->major;
-        }
-        if ($this->minorPhp !== null) {
-            $result['minor_php'] = $this->minorPhp;
-        }
-        if ($this->majorPhp !== null) {
-            $result['major_php'] = $this->majorPhp;
-        }
-        return $result;
-    }
 }

@@ -45,11 +45,6 @@ final readonly class ExtensionUpdateChecker
         private CurrentConfig $currentConfig,
     ) {}
 
-    public function isIgnored(ExtensionType $type, string $extensionId): bool
-    {
-        return $this->ignoredUpdateRepo->isIgnored($type, $extensionId);
-    }
-
     /**
      * @return list<string>
      */

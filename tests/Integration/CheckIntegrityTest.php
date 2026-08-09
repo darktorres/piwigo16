@@ -70,11 +70,17 @@ final class CheckIntegrityTest extends IntegrationTestCase
         }
     }
 
+    // Only ever invoked indirectly: self::class . '::fakeCorrectionSucceeds'
+    // below is stored as a callable string in $queuedAnomalies and
+    // dispatched via CheckIntegrity's own correction_fct mechanism, which
+    // static analysis can't trace back to this declaration.
+    // @phpstan-ignore shipmonk.deadMethod
     public static function fakeCorrectionSucceeds(): bool
     {
         return true;
     }
 
+    // @phpstan-ignore shipmonk.deadMethod
     public static function fakeCorrectionFails(): bool
     {
         return false;

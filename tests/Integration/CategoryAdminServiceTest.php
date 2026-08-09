@@ -71,11 +71,7 @@ final class CategoryAdminServiceFakeActivityLogger implements ActivityLoggerInte
  */
 final class CategoryAdminServiceFakeCapturingRedirectService implements RedirectServiceInterface
 {
-    public ?string $capturedUrl = null;
-
     public ?string $capturedMsg = null;
-
-    public ?int $capturedRefreshTime = null;
 
     public ?int $capturedStatus = null;
 
@@ -88,9 +84,7 @@ final class CategoryAdminServiceFakeCapturingRedirectService implements Redirect
     #[Override]
     public function redirectHtml(string $url, string $msg = '', int $refresh_time = 0, int $status = 200): never
     {
-        $this->capturedUrl = $url;
         $this->capturedMsg = $msg;
-        $this->capturedRefreshTime = $refresh_time;
         $this->capturedStatus = $status;
         throw new RuntimeException('CATEGORY_ADMIN_SERVICE_TEST_PAGE_NOT_FOUND_MARKER');
     }

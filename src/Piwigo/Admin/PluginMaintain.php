@@ -23,6 +23,12 @@ class PluginMaintain
      * @param string $plugin_id
      */
     public function __construct(
+        // protected, not private: this base class exists for real
+        // third-party plugin maintain.class.php subclasses to extend (see
+        // install()'s own docblock) -- $plugin_id is read via $this-> from
+        // such a subclass, invisible to in-tree static analysis since no
+        // subclass exists in this codebase yet.
+        // @phpstan-ignore shipmonk.deadProperty.neverRead
         protected $plugin_id,
         private readonly WsContext $wsContext,
         private readonly AccessControl $accessControl,

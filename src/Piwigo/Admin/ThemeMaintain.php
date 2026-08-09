@@ -20,6 +20,9 @@ class ThemeMaintain
      * @param string $theme_id
      */
     public function __construct(
+        // Same "real third-party subclass reads this via $this->" reasoning
+        // as PluginMaintain::$plugin_id (see that class).
+        // @phpstan-ignore shipmonk.deadProperty.neverRead
         protected $theme_id
     ) {}
 

@@ -46,6 +46,7 @@ final class DisplayBlock
      * @var string|null never assigned by any in-tree caller today -- stays
      *   at its default null (see BlockManager::apply()'s own null check).
      */
+    // @phpstan-ignore shipmonk.deadProperty.neverWritten
     public $raw_content;
 
     /**
@@ -54,6 +55,7 @@ final class DisplayBlock
      *
      * @var mixed
      */
+    // @phpstan-ignore shipmonk.deadProperty.neverWritten
     public $id;
 
     /**

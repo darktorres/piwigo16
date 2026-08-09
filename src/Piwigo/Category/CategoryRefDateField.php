@@ -13,25 +13,20 @@ namespace Piwigo\Category;
  * allowlist) down to exactly these 2 values, confirmed via a fresh trace
  * before converting.
  *
- * Item 16I: {@see dqlProperty()} added -- the original "stays on DBAL,
- * DQL aggregates take a fixed property path, closing the string->enum
- * gap doesn't need the extra DQL-rewrite risk on top" reasoning was a
- * "not worth it" call, not a real structural blocker; re-scoped and
- * converted since the per-case dispatch this needs is exactly as simple
- * as {@see column()} already is.
+ * Item 16I: {@see dqlProperty()} added and `findRefDatesByCategoryIds()`
+ * converted to real DQL -- the original "stays on DBAL, DQL aggregates
+ * take a fixed property path, closing the string->enum gap doesn't need
+ * the extra DQL-rewrite risk on top" reasoning was a "not worth it" call,
+ * not a real structural blocker; re-scoped and converted since the
+ * per-case dispatch this needs is exactly as simple as the raw-SQL
+ * column-name variant this replaced. (That raw-SQL variant, `column()`,
+ * was deleted once dqlProperty() took over its one real caller -- found
+ * as genuinely dead by shipmonk/dead-code-detector.)
  */
 enum CategoryRefDateField
 {
     case DateCreation;
     case DateAvailable;
-
-    public function column(): string
-    {
-        return match ($this) {
-            self::DateCreation => 'date_creation',
-            self::DateAvailable => 'date_available',
-        };
-    }
 
     /**
      * DQL property path against the `i` (ImageEntity) alias

@@ -893,9 +893,6 @@ final class CalendarMonthlyTest extends IntegrationTestCase
  */
 final class CalendarMonthlyTestFakeUrlService implements UrlServiceInterface
 {
-    /** @var list<array{redefined: array<string, mixed>, removed: array<int, string>}> */
-    public array $calls = [];
-
     #[Override]
     public function getRootUrl(): string
     {
@@ -923,8 +920,6 @@ final class CalendarMonthlyTestFakeUrlService implements UrlServiceInterface
     #[Override]
     public function duplicateIndexUrl(array $redefined = [], array $removed = []): string
     {
-        $this->calls[] = ['redefined' => $redefined, 'removed' => $removed];
-
         return '/fake-index?' . json_encode($redefined) . '|removed=' . json_encode($removed);
     }
 

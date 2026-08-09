@@ -6,7 +6,6 @@ namespace Piwigo\Permission;
 
 use Doctrine\DBAL\ArrayParameterType;
 use Doctrine\DBAL\ParameterType;
-use Doctrine\DBAL\Query\Expression\ExpressionBuilder;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Query\Expr\Join;
 use Piwigo\Category\CategoryEntity;
@@ -36,11 +35,9 @@ use UnexpectedValueException;
  * rather than being resolved via getRepository(), same shape as
  * Auth\AuthRepository.
  *
- * Every method here uses real DQL except `expressionBuilder()` (a
- * permanent raw-DBAL boundary for the quicksearch token evaluator, see
- * `SearchService::getQuickSearchResultsNoCache()`) and
- * `massInsertUserAccess()` (`INSERT IGNORE` via `BatchWriter`, which
- * `persist()`+`flush()` has no equivalent for).
+ * Every method here uses real DQL except `massInsertUserAccess()`
+ * (`INSERT IGNORE` via `BatchWriter`, which `persist()`+`flush()` has no
+ * equivalent for).
  * `findGrantedGroupIdsByCategory()`/`findGroupAccessRows()`/
  * `findIndirectUserAccessRows()` use `getArrayResult()` rather than
  * `getSingleColumnResult()` specifically because `getArrayResult()`
@@ -54,17 +51,6 @@ final readonly class PermissionRepository
     public function __construct(
         private EntityManagerInterface $em,
     ) {}
-
-    /**
-     * Exposes this repository's own `Doctrine\DBAL\Query\Expression\
-     * ExpressionBuilder` so callers can compose SQL-condition fragments
-     * via typed method calls instead of hand-typed string concatenation.
-     */
-    public function expressionBuilder(): ExpressionBuilder
-    {
-        return $this->em->getConnection()
-            ->createExpressionBuilder();
-    }
 
     /**
      * @return list<int>

@@ -60,9 +60,9 @@ final class ConfigRepository extends EntityRepository
      * UploadService::saveUploadFormConfig()'s own "apply every validated
      * upload-setting field at once" step.
      *
-     * Item 14 DQL audit: stays on DBAL -- bulk multi-row UPDATE via
-     * BatchWriter, not a DQL-vs-DBAL question at all (ORM persist()/flush()
-     * writes one row per entity, not a bulk statement).
+     * Stays on DBAL -- bulk multi-row UPDATE via BatchWriter, not a
+     * DQL-vs-DBAL question at all (ORM persist()/flush() writes one row
+     * per entity, not a bulk statement).
      *
      * @param list<array{param: string, value: mixed}> $updates
      */
@@ -162,9 +162,9 @@ final class ConfigRepository extends EntityRepository
      * token straight through, which passed silently when `value` was
      * still a plain `text` column but is genuinely invalid JSON now.
      *
-     * Item 14 DQL audit: stays on DBAL -- DQL has no INSERT support at
-     * all, and this method's whole reason to exist is the atomic
-     * insert-if-absent guarantee that only bypassing the ORM provides.
+     * Stays on DBAL -- DQL has no INSERT support at all, and this
+     * method's whole reason to exist is the atomic insert-if-absent
+     * guarantee that only bypassing the ORM provides.
      */
     public function insertIgnoreRawValue(string $param, string $value): void
     {

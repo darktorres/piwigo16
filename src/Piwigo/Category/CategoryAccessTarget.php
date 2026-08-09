@@ -8,15 +8,15 @@ use Piwigo\Category\Projection\DqlPropertyTarget;
 use Piwigo\Group\GroupAccessEntity;
 
 /**
- * Item 15 Sub-item D: {@see CategoryRepository::deleteInconsistentAccess()}'s
- * `$table`/`$field` pair, enumerated -- {@see CategoryService}'s own fixed
+ * {@see CategoryRepository::deleteInconsistentAccess()}'s `$table`/
+ * `$field` pair, enumerated -- {@see CategoryService}'s own fixed
  * `[Tables::userAccess() => 'user_id', Tables::groupAccess() => 'group_id']`
- * map, confirmed via a fresh grep before converting.
+ * map.
  *
- * Item 16I: converted to real DQL via {@see entityClassAndFieldProperty()}
- * -- same "getSingleColumnResult()/IN (:values) with ArrayParameterType::
- * INTEGER both sidestep the custom-Type mismatch" empirical finding as
- * {@see CategoryOrphanTarget}'s own re-audit. Both target entities'
+ * {@see entityClassAndFieldProperty()} maps each case to real DQL --
+ * `getSingleColumnResult()`/`IN (:values)` with
+ * `ArrayParameterType::INTEGER` both sidestep the custom-Type mismatch,
+ * same finding as {@see CategoryOrphanTarget}. Both target entities'
  * category-id column is named `catId` (no per-case dispatch needed for
  * that half); only the `user_id`/`group_id` "keep" field genuinely
  * varies per case.

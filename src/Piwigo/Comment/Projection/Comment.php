@@ -63,10 +63,10 @@ final readonly class Comment
 
     /**
      * @param array<array-key, mixed> $row a {@see \Piwigo\Comment\CommentRepository::findForImage()}
-     *   row -- straight from DQL array hydration since Item 14 Sub-phase
-     *   C4 (Doctrine's own `getArrayResult()` return type is bare
-     *   `mixed[]`, so this can't be declared `array<string, mixed>` the
-     *   way DBAL's own `fetchAllAssociative()` rows could)
+     *   row -- straight from DQL array hydration (Doctrine's own
+     *   `getArrayResult()` return type is bare `mixed[]`, so this can't
+     *   be declared `array<string, mixed>` the way DBAL's own
+     *   `fetchAllAssociative()` rows could)
      */
     public static function fromRow(array $row): self
     {

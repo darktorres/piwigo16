@@ -2374,10 +2374,7 @@ final class ImageRepository extends EntityRepository
     /**
      * `path` for $imageId, or null if it doesn't exist -- Ws\PwgImages::
      * checkFiles()'s own "does the client's local file match ours" lookup.
-     */
-    /**
-     * Item 14 DQL audit: converted to real DQL -- single-table, static
-     * WHERE on the primary key.
+     * Real DQL -- single-table, static WHERE on the primary key.
      */
     public function findPathById(ImageId $imageId): ?string
     {
@@ -2916,10 +2913,7 @@ final class ImageRepository extends EntityRepository
     /**
      * Whether an image with this id exists -- Ws\PwgCategories::
      * setRepresentative()'s own existence check.
-     */
-    /**
-     * Item 14 DQL audit: converted to real DQL -- single-table, static
-     * WHERE on the primary key.
+     * Real DQL -- single-table, static WHERE on the primary key.
      */
     public function existsById(ImageId $id): bool
     {

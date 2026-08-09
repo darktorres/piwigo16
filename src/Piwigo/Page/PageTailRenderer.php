@@ -137,7 +137,7 @@ final readonly class PageTailRenderer
         $template->assignContext(new PageTailPageContext(
             version: $this->currentConfig->showVersion() ? AppInfo::VERSION : '',
             phpwgUrl: AppInfo::URL,
-            // web-vitals RUM beacon (docs/PLAN.md P1, item 11b) -- fixed,
+            // web-vitals RUM beacon -- fixed,
             // non-hashed filename (vite.config.ts), so no manifest.json
             // lookup is needed to reference it.
             vitalsScriptUrl: $this->urlService->getRootUrl() . 'dist/vitals.js',

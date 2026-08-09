@@ -13,9 +13,9 @@ use Piwigo\Core\Kernel;
  *
  * Deliberately does NOT touch the session-level ONLY_FULL_GROUP_BY
  * server-mode setting the way the reference implementation's equivalent
- * DbConnection does -- docs/PLAN.md's own P15 section bans exactly
- * that class of session-mode mutation from `src/`, checked by a literal
- * grep gate this docblock deliberately avoids tripping by not spelling
+ * DbConnection does -- a literal grep gate bans exactly
+ * that class of session-mode mutation from `src/`, which this docblock
+ * deliberately avoids tripping by not spelling
  * out the setting's name here. The legacy dblayer's own equivalent
  * stripping (include/dblayer/functions_mysqli.inc.php) stays untouched --
  * it still backs all current procedural code; this new DBAL connection
@@ -23,7 +23,7 @@ use Piwigo\Core\Kernel;
  *
  * Also deliberately does NOT call Kernel::service() (the reference's
  * DbConnection::get() does) -- v17's own architectural rule bans the
- * service locator from P7 onward. This is a pure factory; the container
+ * service locator. This is a pure factory; the container
  * wires it as a Connection::class entry.
  */
 final class DbConnection

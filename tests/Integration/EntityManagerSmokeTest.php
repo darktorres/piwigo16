@@ -16,8 +16,7 @@ use Piwigo\Core\Kernel;
 /**
  * The ORM stack (EntityManager, attribute-mapped entities,
  * TablePrefixListener) is genuinely new and unproven in this codebase --
- * the reference implementation never built it (see docs/PLAN.md's P14
- * section). This is the phase's own
+ * the reference implementation never built it. This is the
  * "does it actually work, resolved through the real container, not a
  * hand-built EntityManager" proof.
  */

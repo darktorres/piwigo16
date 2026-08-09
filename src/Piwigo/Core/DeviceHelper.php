@@ -29,7 +29,7 @@ final class DeviceHelper
         if ($device === null) {
             // No UA-sniffing library (removed, no replacement — see
             // docs/REFERENCE.md's native-platform-first library policy): the
-            // v17 responsive CSS (P32) removes the need for a separate mobile
+            // v17 responsive CSS removes the need for a separate mobile
             // theme via device detection. mobileTheme() still honors an
             // explicit ?mobile=1/0 override independent of this default.
             $device = 'desktop';

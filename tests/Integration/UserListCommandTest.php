@@ -11,9 +11,8 @@ use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Tester\CommandTester;
 
 /**
- * New CLI-only capability (no web equivalent) -- see
- * docs/PLAN.md's P12 section ("CLI tool + backup/restore +
- * graceful shutdown"). Reads via a raw `mysql`/`psql` client shell-out, so
+ * New CLI-only capability (no web equivalent). Reads via a raw
+ * `mysql`/`psql` client shell-out, so
  * this needs a real DB, hence Integration tier rather than Unit.
  */
 final class UserListCommandTest extends IntegrationTestCase

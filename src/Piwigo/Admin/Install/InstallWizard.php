@@ -538,7 +538,7 @@ final class InstallWizard
         $this->dbCredentials->reload();
 
         // Also write legacy database.inc.php in prod mode so upgrade.php and other
-        // not-yet-migrated scripts keep working (see docs/PLAN.md P13).
+        // not-yet-migrated scripts keep working.
         if (! Env::testModeIsActive() && count($this->errors) === 0) {
             $file_content = '<?php
 $conf[\'dblayer\'] = \'' . $this->dblayer . '\';

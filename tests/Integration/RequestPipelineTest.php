@@ -15,7 +15,7 @@ use Piwigo\Tests\Support\KernelContainerOverride;
 
 /**
  * Confirms RequestPipeline::handle() runs the real pipeline end-to-end.
- * config/routes.php now has real routes (P22) and every root frontend file
+ * config/routes.php now has real routes and every root frontend file
  * (about.php first, the rest incrementally) actually calls this for live
  * traffic -- an unmatched path (used throughout this file) still correctly
  * 404s, same as before any routes existed. A real registered route
@@ -25,7 +25,7 @@ use Piwigo\Tests\Support\KernelContainerOverride;
  * only a real HTTP request through Apache -- or
  * RequestBootstrap::bootEntryPoint() itself -- provides; live-curl
  * verification against the real instance is
- * the actual end-to-end proof for that (see docs/PLAN.md's P22 section).
+ * the actual end-to-end proof for that.
  *
  * handle()'s own local `$notFound` RequestHandlerInterface (its
  * `->handle()` body returning the literal 'Not Found' 404) is

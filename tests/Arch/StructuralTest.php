@@ -1362,7 +1362,7 @@ test('src/Piwigo/ contains no ->smarty->assign()/->smarty->append() reach-around
 });
 
 test('every tools/*.php script guards against non-CLI execution (SEC-02)', function (): void {
-    // docs/PLAN.md finding #16: tools/build-config-accessors.php
+    // tools/build-config-accessors.php
     // had no PHP_SAPI guard and would run its logic (regenerating
     // src/Piwigo/Config/Config.php) under any calling context -- not
     // web-reachable today (tools/ isn't among public/'s symlinks), but a

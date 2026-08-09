@@ -439,10 +439,9 @@ final readonly class CategoryService
     }
 
     /**
-     * P17-23 Phase 8: the 4 real callers (`CategoryCatsRenderer`,
-     * `Ws\PwgCategories`) build {@see RandomImageCategoryQuery} explicitly
-     * from their own differently-sourced category row -- see that DTO's
-     * docblock.
+     * The 4 real callers (`CategoryCatsRenderer`, `Ws\PwgCategories`)
+     * build {@see RandomImageCategoryQuery} explicitly from their own
+     * differently-sourced category row -- see that DTO's docblock.
      */
     public function getRandomImageInCategory(RandomImageCategoryQuery $query, bool $recursive = true): ?int
     {
@@ -879,10 +878,7 @@ final readonly class CategoryService
     }
 
     /**
-     * Further SQL-modernization audit, Item 9: displaySelectCatWrapper()
-     * (a caller-built-query wrapper around the now-deleted
-     * CategoryRepository::fetchCallerBuiltQuery()) replaced with one
-     * typed display method per real query shape below, each just
+     * One typed display method per real query shape below, each just
      * fetching its own typed rows then sharing this same sort+display
      * tail -- same as displaySelectCategories() but categories are
      * ordered by rank first.
@@ -1092,7 +1088,7 @@ final readonly class CategoryService
     /**
      * Deletes a site and its primary categories.
      *
-     * Item 16E: the site's own `sites` row is deleted by a real listener
+     * The site's own `sites` row is deleted by a real listener
      * on {@see DeleteSite}, registered in {@see \Piwigo\Bootstrap\RequestBootstrap}
      * -- `Category` (`L2aCoreDomain`) can't depend on `Site`
      * (`L2bExtendedDomain`) directly (`deptrac.yaml` only allows downward
@@ -1721,7 +1717,7 @@ final readonly class CategoryService
     /**
      * Returns the fulldir for each given category id.
      *
-     * Item 16F: $siteGalleriesUrlLookup is an explicit parameter, not
+     * $siteGalleriesUrlLookup is an explicit parameter, not
      * constructor-injected -- same "only the methods that actually need
      * it take it" reasoning as this class's own ActivityLoggerInterface
      * parameters (see this class's own constructor docblock).

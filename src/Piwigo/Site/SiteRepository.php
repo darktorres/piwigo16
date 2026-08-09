@@ -43,9 +43,9 @@ final class SiteRepository extends EntityRepository implements SiteGalleriesUrlL
     }
 
     /**
-     * Item 16E: real DQL replacement for {@see \Piwigo\Category\
-     * CategoryRepository::deleteSiteRow()} (removed the same commit) --
-     * that method existed only because `Category` (`L2aCoreDomain`)
+     * Real DQL replacement for {@see \Piwigo\Category\
+     * CategoryRepository::deleteSiteRow()} (removed) -- that method
+     * existed only because `Category` (`L2aCoreDomain`)
      * can't depend on `Site` (`L2bExtendedDomain`) directly; the delete
      * itself is trivial once it lives in the domain that actually owns
      * the table. {@see \Piwigo\Category\CategoryService::deleteSite()}
@@ -98,7 +98,7 @@ final class SiteRepository extends EntityRepository implements SiteGalleriesUrlL
     }
 
     /**
-     * Item 16F: real DQL replacement for the raw DBAL read
+     * Real DQL replacement for the raw DBAL read
      * {@see \Piwigo\Category\CategoryRepository::findSiteGalleriesUrls()}
      * used to do directly -- `Category` (`L2aCoreDomain`) can't depend on
      * `Site` (`L2bExtendedDomain`), so {@see \Piwigo\Category\CategoryService::getFulldirs()}
@@ -128,7 +128,7 @@ final class SiteRepository extends EntityRepository implements SiteGalleriesUrlL
     }
 
     /**
-     * Item 16F: real DQL replacement for the raw DBAL read
+     * Real DQL replacement for the raw DBAL read
      * {@see \Piwigo\Category\CategoryRepository::findGalleriesUrlForCategory()}
      * used to do directly -- same reasoning as {@see findAllGalleriesUrls()}
      * above. `Site` (`L2bExtendedDomain`) CAN depend downward on
@@ -178,7 +178,7 @@ final class SiteRepository extends EntityRepository implements SiteGalleriesUrlL
      */
     public function findCategoryAndImageCountsBySite(): array
     {
-        // Item 14 DQL audit: converted. Neither `categories` nor `images` has
+        // Neither `categories` nor `images` has
         // an ORM association between them (storage_category_id is a plain
         // int column, not a mapped ManyToOne), so the join is expressed as
         // an arbitrary cross-entity DQL JOIN ... WITH, same pattern already

@@ -8,9 +8,8 @@ use InvalidArgumentException;
 use Piwigo\Common\ValueObject\TagId;
 
 /**
- * Narrow `(id, name)` row shape for {@see \Piwigo\Tag\TagRepository::findOrphanTags()}
- * -- P24 gap-closure, Tag domain (16.x-rewrite's own `TagBrief`, matching
- * shape). Real caller: {@see \Piwigo\Admin\TagsPageRenderer}'s orphan-tag
+ * Narrow `(id, name)` row shape for {@see \Piwigo\Tag\TagRepository::findOrphanTags()}.
+ * Real caller: {@see \Piwigo\Admin\TagsPageRenderer}'s orphan-tag
  * listing/deletion flow.
  */
 final readonly class TagBrief

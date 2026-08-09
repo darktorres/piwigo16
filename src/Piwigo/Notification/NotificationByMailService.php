@@ -58,9 +58,8 @@ final readonly class NotificationByMailService
         // passes `! $is_subscribe` (a bool) as this parameter.
         $hasFilter = is_bool($enabledFilterValue) ? $enabledFilterValue : $enabledFilterValue !== '';
 
-        // enabled is a real tinyint(1) column now (UserMailNotification
-        // domain Stage 1a) -- a numeric string, not the old
-        // enum('true','false') string; findUserNotifications() binds
+        // enabled is a real tinyint(1) column -- a numeric string, not
+        // the old enum('true','false') string; findUserNotifications() binds
         // this straight through as a query parameter.
         $enabledFilterString = '';
         if ($hasFilter) {

@@ -267,7 +267,7 @@ final readonly class TagService
         $condition = $this->permissionService->getPermissionCriteria();
 
         if ($usePersistentCache) {
-            // CachePools::tagCloud() (P23 Stage 1d) replaces the older
+            // CachePools::tagCloud() replaces the older
             // CurrentPersistentCache mechanism -- a fixed 300s TTL instead
             // of the previous cacheUpdateTime-keyed immediate invalidation,
             // same accepted staleness tradeoff CategoryTreeCache's own

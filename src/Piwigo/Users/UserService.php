@@ -166,10 +166,9 @@ final readonly class UserService implements DefaultLanguageProviderInterface
     }
 
     /**
-     * Same reasoning as permissionService() above -- gap-closure Stage 4b
-     * (docs/plan/gap-closure-p0-p23.md) added a 2nd `new CategoryService(new
-     * CategoryRepository($this->conn), $this->permissionService())` call to
-     * this file's own getUserData(), repeating the existing one verbatim.
+     * Same reasoning as permissionService() above -- the same
+     * CategoryService recipe was repeated verbatim in this file's own
+     * getUserData().
      */
     private function categoryService(): CategoryService
     {
@@ -555,7 +554,7 @@ final readonly class UserService implements DefaultLanguageProviderInterface
         // Used to take a $convertStr param, converting expand/
         // show_nb_comments/show_nb_hits/enabled_high from the table's own
         // enum('true','false') string form via a generic `$value ===
-        // 'true'` scan -- retired along with the Stage 1a retype:
+        // 'true'` scan -- retired:
         // {@see \Piwigo\Users\Projection\UserInfo::fromRow()} already
         // returns those 4 as real bool, once, before this array is even
         // cached, so there's nothing left to conditionally convert.

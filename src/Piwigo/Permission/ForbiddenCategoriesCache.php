@@ -7,8 +7,8 @@ namespace Piwigo\Permission;
 use Psr\Cache\CacheItemPoolInterface;
 
 /**
- * Per-user cached wrapper around PermissionService::getForbiddenCategories()
- * (P23 Stage 1d, wiring CachePools::permissions()). 30s TTL ({@see
+ * Per-user cached wrapper around PermissionService::getForbiddenCategories(),
+ * wiring CachePools::permissions(). 30s TTL ({@see
  * \Piwigo\Cache\CachePools::permissions()}) means a permission change
  * (revoking a category, editing a group) becomes visible well within one
  * user session, long enough to avoid recomputing the multi-query
@@ -23,7 +23,7 @@ use Psr\Cache\CacheItemPoolInterface;
  * Not used by `UserService::getUserData()` -- that method gets its own
  * `forbidden_categories` value from {@see EffectiveForbiddenCategoriesCache}
  * (the *effective* value) instead; `user_cache` itself is no longer written
- * by anything as of gap-closure Stage 4g.
+ * by anything.
  */
 final readonly class ForbiddenCategoriesCache
 {

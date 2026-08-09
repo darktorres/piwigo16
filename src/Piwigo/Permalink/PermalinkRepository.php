@@ -144,7 +144,7 @@ final readonly class PermalinkRepository implements OldPermalinkLookupInterface
      * Marks an existing old-permalink row (cat_id, permalink) as deleted
      * now. The timestamp is PHP-computed via {@see Env::now()} (stays
      * PIWIGO_TEST_NOW-aware for deterministic tests) rather than a raw
-     * SQL NOW() -- same pattern used throughout this campaign.
+     * SQL NOW().
      *
      * `$permalink` wraps via `Permalink::from()`, not `tryFrom()` --
      * unlike findOldCategoryId(), this method's only real caller

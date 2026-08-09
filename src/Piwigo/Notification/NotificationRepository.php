@@ -140,8 +140,8 @@ final class NotificationRepository
         }
 
         if ($type === 'unvalidated_comments') {
-            // comments.validated is a real tinyint(1) column (Comment
-            // domain Stage 1a) -- a numeric literal, not the old
+            // comments.validated is a real tinyint(1) column -- a
+            // numeric literal, not the old
             // enum('true','false') string; MySQL's non-numeric-string-to-
             // int coercion would otherwise silently convert 'false' to 0
             // too, matching every row instead of filtering to unvalidated

@@ -105,7 +105,11 @@ final class PictureCommentRendererTest extends IntegrationTestCase
         // directory that file lives in (same root shape every real
         // Template() call site uses, e.g. RequestBootstrap.php:568).
         CurrentTemplate::current()->set(TemplateTestFactory::build(CurrentPathsTestFactory::get()->root . 'themes', 'default'));
-        session_id('fixed-test-session-id'); // CsrfService::getToken() needs a session id, not a running session.
+        // A literal id here would collide across concurrent worktrees sharing
+        // one machine-wide /var/lib/php/sessions directory (see
+        // Tests\Unit\Csrf\CsrfServiceTest's own docblock) -- CsrfService::getToken()
+        // just needs a session id, not a running session, so any unique value works.
+        session_id(uniqid('picture-comment-test-', true));
         unset($_POST['content']);
     }
 

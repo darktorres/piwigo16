@@ -227,6 +227,60 @@ campaign instead had to track by hand via a shrinking arch-test
 allow-list. Fix: design the real Rector rule set P5's own comment
 promised, and add `phpstan/phpstan-deprecation-rules` to `phpstan.neon`.
 
+**Direct consequence of the Rector gap above: every PHP 7.1/8.3/8.4/8.5
+language feature with a real candidate site is still unadopted.** A full
+sweep of every 7.x/8.x language feature against real usage found every
+7.0–8.3 feature either heavily used or correctly not applicable (no fit,
+or superseded by a later feature this codebase already uses instead) —
+genuine, ongoing modernization discipline that stops dead exactly at the
+version Rector's own `php85` set is commented out. Real, scoped candidates
+found:
+
+- **Multi-catch (PHP 7.1)** — `Http\HttpClientService.php:245-247`:
+  `catch (ClientExceptionInterface)`/`catch (InvalidArgumentException)`
+  both do exactly `return null;`, the second with a long comment
+  explaining why an `InvalidArgumentException` from URL parsing deserves
+  the same graceful handling as a `ClientExceptionInterface` from network
+  I/O — merge into one `catch (ClientExceptionInterface|InvalidArgumentException)`.
+  The only real candidate found; every other multi-`catch` site in this
+  codebase has genuinely different per-type handling (checked all 4 files
+  with adjacent `catch` blocks) or a deliberate rethrow-vs-swallow split
+  that must stay separate (`Controller\ImageDerivativeController.php`'s
+  `ResponseReadyException` rethrow past a broader `Exception` catch is
+  security-critical — a real anonymous request for a private album's
+  derivative was served instead of denied when this ordering broke once).
+- **`json_validate()` (PHP 8.3)** — not yet audited for real candidates:
+  any `json_decode($x) !== null`-only-for-validity check (never using the
+  decoded value) is a direct replacement.
+- **Property hooks + asymmetric visibility (PHP 8.4)** —
+  `Config\CurrentConfig`'s 294 properties are each a private property +
+  named getter + named setter (5225 lines total) purely because callers
+  use method-call syntax (`$config->activateComments()`) everywhere, not
+  property access. Adopting either feature needs two things resolved
+  first, not just a mechanical rewrite: (1) the call-site convention
+  changes project-wide to `$config->activateComments`, and (2)
+  `ConfigService::confUpdateParam()`'s external `ReflectionMethod`-based
+  write path (`CurrentConfig::set{Property}()`) needs retargeting at
+  hooks instead of methods (PHP 8.4's reflection API supports this, just
+  a different call than what's used today).
+- **`array_find`/`array_any`/`array_all`/`array_find_key` (PHP 8.4)** —
+  not yet audited for real candidates: likely `foreach`+`break` and
+  `array_filter()`+count-check patterns across the domain services would
+  simplify.
+- **Native `#[\Deprecated]` attribute (PHP 8.4)** — not a current fix (the
+  singleton/DI campaign's docblock-`@deprecated` convention is fully
+  retired, zero shims remain), but the better default if a transitional
+  shim is ever needed again — real IDE/static-analysis visibility a
+  docblock tag doesn't give.
+- **`array_first()`/`array_last()` (PHP 8.5)** — not yet audited for real
+  candidates: `reset($arr)`/`end($arr)`/`$arr[0]`/`$arr[count($arr) - 1]`
+  patterns are the direct replacement target.
+- **`#[\NoDiscard]` (PHP 8.5)** — not yet audited for real candidates: a
+  method returning a validation result or a `bool` success flag that a
+  caller could silently ignore is the fit.
+- **Pipe operator `\|>` (PHP 8.5)** — 34 real call sites with 3+ levels of
+  nested function calls found (candidate pool, not individually read yet).
+
 **P6 — PSR-4 namespace migration.** Extracted every first-party `class`/
 `interface` declaration living inside `include/`/`admin/include/`
 procedural files into `src/Piwigo/`, `Piwigo\` namespace prefix — 66

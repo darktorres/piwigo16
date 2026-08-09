@@ -6,7 +6,7 @@ namespace Piwigo\Ws\Request;
 
 /**
  * Validated `$_FILES[$key]` shape for PwgImages::addSimple()/upload()/
- * uploadAsync() -- P26/SEC-40 Request DTO. `PwgServer::invoke()`'s own
+ * uploadAsync(). `PwgServer::invoke()`'s own
  * `call_user_func_array($method['callback'], [$params, &$this])` dispatch
  * (confirmed by reading it directly) calls every `Ws\*` method with
  * exactly those 2 fixed arguments, so `$_FILES` can't be threaded in as

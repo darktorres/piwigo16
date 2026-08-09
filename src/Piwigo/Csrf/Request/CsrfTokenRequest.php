@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Piwigo\Csrf\Request;
 
 /**
- * Validated `$_REQUEST['pwg_token']` shape for CsrfService::check() --
- * P26/SEC-40 Request DTO. `check()` has no parameters and is called from
+ * Validated `$_REQUEST['pwg_token']` shape for CsrfService::check().
+ * `check()` has no parameters and is called from
  * dozens of controllers via checkOrFail(), so this is constructed inside
  * check() itself rather than threaded through every one of its callers.
  *

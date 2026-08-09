@@ -9,7 +9,7 @@ use Piwigo\Validation\InputValidator;
 
 /**
  * Validated `$_GET`/`$_POST` shape for IdentificationController::__invoke()
- * (replaces identification.php) -- P26/SEC-40 Request DTO.
+ * (replaces identification.php).
  *
  * `postRedirectDecoded` replaces the original's own
  * `$_POST['redirect_decoded'] = urldecode($_POST['redirect'])` write-then-

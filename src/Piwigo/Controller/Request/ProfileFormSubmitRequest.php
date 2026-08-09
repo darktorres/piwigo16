@@ -6,7 +6,7 @@ namespace Piwigo\Controller\Request;
 
 /**
  * Validated `$_POST` shape for ProfileFormHandler::saveFromPost()/
- * loadIntoTemplate() -- P26/SEC-40 Request DTO.
+ * loadIntoTemplate().
  *
  * `post` retains the raw `$_POST` array. `saveFromPost()`'s own
  * "special user" (guest/default user) and "not in admin context"

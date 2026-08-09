@@ -5,8 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Core\Request;
 
 /**
- * Validated `$_GET['mobile']` shape for DeviceHelper::mobileTheme() --
- * P26/SEC-40 Request DTO.
+ * Validated `$_GET['mobile']` shape for DeviceHelper::mobileTheme().
  *
  * `mobileRaw` stays `mixed`, matching `SqlDialect::getBoolean(mixed
  * $input): bool`'s own by-design generic coercion signature (same

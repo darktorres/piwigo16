@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Piwigo\Ws\Request;
 
 /**
- * Validated `$_REQUEST['tag_list']` shape for PwgImages::setInfo() --
- * P26/SEC-40 Request DTO. Temporary batch-manager-unit-mode-only field,
+ * Validated `$_REQUEST['tag_list']` shape for PwgImages::setInfo().
+ * Temporary batch-manager-unit-mode-only field,
  * not meant for external API use (see the call site's own docblock) --
  * `items` retains every raw element, even non-string ones, matching the
  * original's own per-element `is_string($tag_candidate) ? $tag_candidate

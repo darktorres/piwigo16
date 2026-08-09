@@ -653,10 +653,26 @@ test('deleteNonStorageCategoryLinks clears the identity map after a raw write ou
     $cached = $repo->find(ImageId::from(1));
     expect($cached)->not->toBeNull();
 
-    $repo->deleteNonStorageCategoryLinks([1], []);
+    // Fixture image 1's own storage_category_id is NULL and no
+    // $categories keep-list is passed here, so both of the method's own
+    // exclusion guards are skipped -- this really does delete image 1's
+    // real fixture image_category row (id=1, category_id=1, rank=1), not
+    // just a throwaway one. Restore it, or every other Unit test that
+    // reads image 1's real category membership (findTopRatedImageIds()
+    // and friends in SectionRepositoryTest.php) breaks.
+    try {
+        $repo->deleteNonStorageCategoryLinks([1], []);
 
-    $refetched = $repo->find(ImageId::from(1));
-    expect($refetched)->not->toBe($cached);
+        $refetched = $repo->find(ImageId::from(1));
+        expect($refetched)->not->toBe($cached);
+    } finally {
+        $conn = DbConnection::build();
+        $exists = $conn->fetchOne('SELECT COUNT(*) FROM ' . Tables::imageCategory() . ' WHERE image_id = 1 AND category_id = 1');
+        if (! is_numeric($exists) || (int) $exists === 0) {
+            $rankColumn = $conn->getDatabasePlatform()->quoteSingleIdentifier('rank');
+            $conn->executeStatement('INSERT INTO ' . Tables::imageCategory() . " (image_id, category_id, {$rankColumn}) VALUES (1, 1, 1)");
+        }
+    }
 });
 
 test('deleteNonStorageCategoryLinks spares the image\'s own storage_category_id link', function (): void {

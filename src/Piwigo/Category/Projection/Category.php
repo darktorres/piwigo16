@@ -12,9 +12,8 @@ use Piwigo\Common\ValueObject\Permalink;
 use Piwigo\Common\ValueObject\SqlDateTime;
 
 /**
- * Typed row shape for `piwigo_categories` (P17-23 Stage 1b, Category domain
- * -- `docs/PLAN.md`'s own "7 Entity types, 73 projection shapes"
- * reference). `fromRow()` centralises the `is_string($row['x']) ? ... :
+ * Typed row shape for `piwigo_categories`. `fromRow()` centralises the
+ * `is_string($row['x']) ? ... :
  * default` narrowing every {@see \Piwigo\Category\CategoryRepository}
  * caller used to duplicate for itself; `toArray()` hands that
  * already-narrowed data back out as a precisely-shaped array for consumers

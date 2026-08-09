@@ -7,9 +7,8 @@ namespace Piwigo\PluginConfig\Projection;
 use Piwigo\Common\ValueObject\PluginId;
 
 /**
- * Typed row shape for `piwigo_plugins` (P17-23 Stage 1b, PluginConfig
- * domain -- `docs/PLAN.md`'s own "7 Entity types, 73 projection
- * shapes" reference). {@see \Piwigo\PluginConfig\PluginRepository}'s
+ * Typed row shape for `piwigo_plugins`.
+ * {@see \Piwigo\PluginConfig\PluginRepository}'s
  * `getDbPlugins()` builds this straight from `PluginEntity`'s
  * already-typed properties.
  *

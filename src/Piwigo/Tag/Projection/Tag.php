@@ -9,9 +9,8 @@ use Piwigo\Common\ValueObject\SqlDateTime;
 use Piwigo\Common\ValueObject\TagId;
 
 /**
- * Typed row shape for `piwigo_tags` (P17-23 Stage 1b, Tag domain --
- * `docs/PLAN.md`'s own "7 Entity types, 73 projection shapes"
- * reference). `fromRow()` centralises the `is_string($row['x']) ? ... :
+ * Typed row shape for `piwigo_tags`. `fromRow()` centralises the
+ * `is_string($row['x']) ? ... :
  * default` narrowing every {@see \Piwigo\Tag\TagRepository} caller used to
  * duplicate for itself, same shape as {@see \Piwigo\Category\Projection\Category}.
  *

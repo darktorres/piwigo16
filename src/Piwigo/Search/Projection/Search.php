@@ -8,9 +8,8 @@ use Piwigo\Common\ValueObject\SqlDateTime;
 use Piwigo\Core\ArrayHelper;
 
 /**
- * Typed row shape for `piwigo_search` (P17-23 Stage 1b, Search domain --
- * `docs/PLAN.md`'s own "7 Entity types, 73 projection shapes"
- * reference). `fromRow()` centralises the `is_string($row['x']) ? ... :
+ * Typed row shape for `piwigo_search`. `fromRow()` centralises the
+ * `is_string($row['x']) ? ... :
  * default` narrowing {@see \Piwigo\Search\SearchService}'s own callers
  * used to do inline, same shape as {@see \Piwigo\Category\Projection\Category}.
  *
@@ -26,7 +25,7 @@ use Piwigo\Core\ArrayHelper;
  * -hydrated row) or a raw string.
  *
  * `rules` is `?array`, decoded here via `json_decode()` -- the column is
- * JSON (gap-closure Stage 1a-bis item 2), so every real consumer reads an
+ * JSON, so every real consumer reads an
  * already-decoded value instead of hand-rolling `unserialize()`/
  * `json_decode()` itself. Every writer ({@see
  * \Piwigo\Search\SearchService::saveSearch()}'s own `array<string, mixed>

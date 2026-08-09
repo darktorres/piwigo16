@@ -11,9 +11,8 @@ use Piwigo\Common\ValueObject\ImageId;
 use Piwigo\Common\ValueObject\SqlDateTime;
 
 /**
- * Typed row shape for `piwigo_comments` (P17-23 Stage 1b, Comment domain --
- * `docs/PLAN.md`'s own "7 Entity types, 73 projection shapes"
- * reference). `fromRow()` centralises the `is_string($row['x']) ? ... :
+ * Typed row shape for `piwigo_comments`. `fromRow()` centralises the
+ * `is_string($row['x']) ? ... :
  * default` narrowing {@see \Piwigo\Picture\PictureCommentRenderer}'s own
  * render() loop used to duplicate for itself, same shape as
  * {@see \Piwigo\Category\Projection\Category}.

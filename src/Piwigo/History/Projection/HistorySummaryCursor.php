@@ -7,7 +7,7 @@ namespace Piwigo\History\Projection;
 /**
  * Typed row shape for
  * {@see \Piwigo\History\HistoryRepository::findLastSummaryWithHistoryIdTo()}
- * (P17-23 Stage 1b, History domain) -- the most recently summarized
+ * -- the most recently summarized
  * `history_summary` row that has a `history_id_to` cursor, used by
  * {@see \Piwigo\History\HistoryService::summarize()} to resume from where
  * the last summarization run left off.

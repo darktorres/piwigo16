@@ -10,8 +10,8 @@ use Piwigo\Image\ImageEntity;
  * Typed row shape shared by
  * {@see \Piwigo\Metadata\MetadataRepository::findImagesByIds()} and
  * {@see \Piwigo\Metadata\MetadataRepository::findImagesByStorageCategoryIds()}
- * (P17-23 Stage 1b, Metadata domain) -- both select the exact same
- * `id`/`path`/`representative_ext` triple from `piwigo_images`.
+ * -- both select the exact same `id`/`path`/`representative_ext` triple
+ * from `piwigo_images`.
  *
  * `toArray()` is the real consumer shape here, not `fromEntity()`'s own
  * typed properties: both {@see \Piwigo\Metadata\MetadataService::syncMetadata()}

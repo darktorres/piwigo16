@@ -9,15 +9,14 @@ use Piwigo\Common\ValueObject\ImageId;
 use Piwigo\Common\ValueObject\UserId;
 
 /**
- * Typed row shape for `piwigo_rate` (P17-23 Stage 1b, Rate domain --
- * `docs/PLAN.md`'s own "7 Entity types, 73 projection shapes"
- * reference). `fromRow()` centralises the `is_string($row['x']) ? ... :
+ * Typed row shape for `piwigo_rate`. `fromRow()` centralises the
+ * `is_string($row['x']) ? ... :
  * default` narrowing {@see \Piwigo\Rate\RateRepository}'s own private
  * `toRateRow()` array-shape helper used to provide, same shape as
  * {@see \Piwigo\Category\Projection\Category}.
  *
- * `date` stays `?string`, not `\DateTimeImmutable` -- Rate domain Stage 1a
- * dropped its 1970-01-01 sentinel default (every real insert already sets
+ * `date` stays `?string`, not `\DateTimeImmutable` -- there is no
+ * 1970-01-01 sentinel default (every real insert already sets
  * it explicitly via `RateRepository::insertRate()`), and every real
  * consumer already expects the raw DB DATE string form, same reasoning as
  * {@see \Piwigo\Image\Projection\Image}.

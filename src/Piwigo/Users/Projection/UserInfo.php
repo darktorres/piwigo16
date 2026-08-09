@@ -13,9 +13,8 @@ use Piwigo\Core\ArrayHelper;
 use Piwigo\Users\UserInfoEntity;
 
 /**
- * Typed row shape for `piwigo_user_infos` (P17-23 Stage 1b, User domain --
- * `docs/PLAN.md`'s own "7 Entity types, 73 projection shapes"
- * reference). `fromRow()` centralises the `is_string($row['x']) ? ... :
+ * Typed row shape for `piwigo_user_infos`. `fromRow()` centralises the
+ * `is_string($row['x']) ? ... :
  * default` narrowing every {@see \Piwigo\Users\UserRepository} caller used
  * to duplicate for itself, same shape as
  * {@see \Piwigo\Category\Projection\Category}.
@@ -30,8 +29,7 @@ use Piwigo\Users\UserInfoEntity;
  *
  * `expand`/`show_nb_comments`/`show_nb_hits`/`enabled_high`/
  * `last_visit_from_history` are real `bool` here, not the raw tinyint the
- * column now stores -- User domain Stage 1a already made them a genuine
- * boolean column; a repository-layer projection is the correct place to
+ * column now stores -- a repository-layer projection is the correct place to
  * finish that conversion to a real PHP `bool` once.
  *
  * `registration_date`/`last_visit`/`activation_key_expire` stay `?string`
@@ -43,8 +41,8 @@ use Piwigo\Users\UserInfoEntity;
  * `fromRow()` accepts either a real instance (a `getArrayResult()`
  * -hydrated row) or a raw string. `activation_key` stays `?string` at the
  * entity level too (not a datetime column). `preferences` is `?array`, decoded
- * via `ArrayHelper::safeJsonDecode()` -- the column is JSON (gap-closure
- * Stage 1a-bis item 3), matching {@see \Piwigo\Users\User::fromUserArray()}'s
+ * via `ArrayHelper::safeJsonDecode()` -- the column is JSON, matching
+ * {@see \Piwigo\Users\User::fromUserArray()}'s
  * own already-decoded-array expectation for the same data.
  */
 final readonly class UserInfo

@@ -12,9 +12,8 @@ use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Image\ImageEntity;
 
 /**
- * Typed row shape for `piwigo_images` (P17-23 Stage 1b, Image domain --
- * `docs/PLAN.md`'s own "7 Entity types, 73 projection shapes"
- * reference). `fromRow()` centralises the `is_string($row['x']) ? ... :
+ * Typed row shape for `piwigo_images`. `fromRow()` centralises the
+ * `is_string($row['x']) ? ... :
  * default` narrowing every {@see \Piwigo\Image\ImageRepository} caller used
  * to duplicate for itself; `toArray()` hands that already-narrowed data
  * back out as a precisely-shaped array for the handful of consumers that

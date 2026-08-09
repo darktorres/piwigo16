@@ -7,7 +7,7 @@ namespace Piwigo\History\Projection;
 /**
  * Typed row shape for
  * {@see \Piwigo\History\HistoryRepository::findSummaryRowsForHierarchy()}
- * (P17-23 Stage 1b, History domain) -- an existing `history_summary` row
+ * -- an existing `history_summary` row
  * anywhere in a year[/month[/day[/hour]]] hierarchy, used by
  * {@see \Piwigo\History\HistoryService::summarize()} to decide whether a
  * bucket needs an UPDATE (this row exists) or an INSERT (it doesn't).

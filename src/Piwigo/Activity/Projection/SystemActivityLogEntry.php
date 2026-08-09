@@ -10,9 +10,8 @@ use Piwigo\Common\ValueObject\Username;
 
 /**
  * Typed row shape for
- * {@see \Piwigo\Activity\ActivityRepository::findSystemObjectLogWithUsernames()}
- * (P17-23 Stage 1b, Activity domain -- `docs/PLAN.md`'s own "7 Entity
- * types, 73 projection shapes" reference). Not a plain `piwigo_activity` row
+ * {@see \Piwigo\Activity\ActivityRepository::findSystemObjectLogWithUsernames()}.
+ * Not a plain `piwigo_activity` row
  * -- a `LEFT JOIN` onto `piwigo_users` (`username`, nullable: NULL
  * `performed_by` renders as "System" instead of a real username) plus a
  * narrower column list than the table has (no `object`/`session_idx`/

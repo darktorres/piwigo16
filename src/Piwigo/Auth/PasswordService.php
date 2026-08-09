@@ -78,7 +78,7 @@ final readonly class PasswordService
     /**
      * Verifies a password against a legacy phpass ($P$/$H$-prefixed) hash.
      * Minimal extraction of the vendored phpass library's core check
-     * algorithm (include/passwordhash.class.php, removed in this commit) --
+     * algorithm (include/passwordhash.class.php, no longer vendored) --
      * kept only long enough to rehash existing installs' passwords forward
      * to bcrypt in verify(); never used to generate new hashes.
      * @see http://www.openwall.com/phpass/ (public domain, Solar Designer)

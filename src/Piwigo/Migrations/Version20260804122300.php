@@ -60,7 +60,7 @@ use Piwigo\Db\DbCredentials;
  *   UPDATE` trigger per affected table -- the real gap the reverted prior
  *   attempt left unbuilt ("no application code targets a non-MySQL/
  *   MariaDB connection today" was its own stated reason; no longer true
- *   once this plan lands).
+ *   once Postgres support lands).
  * - `FULLTEXT KEY ... WITH PARSER ngram` -> a generated `tsvector` column
  *   (`'simple'` text search config -- whitespace/punctuation tokenizer,
  *   no stemming/stopwords, the closest behavioral match to ngram's

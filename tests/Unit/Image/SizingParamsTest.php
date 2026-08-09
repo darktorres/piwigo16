@@ -157,8 +157,8 @@ test('compute crops vertically when the height ratio exceeds the width ratio', f
  * float (ImageRect's own return type), so PHP promotes every one of
  * these divisions/multiplications to float the moment either operand
  * is float, regardless of which side carries the explicit (float) cast
- * -- same rule already established for ImageRect.php/DerivativeImage.php
- * this sweep. Also confirmed-equivalent: line 108's and line 115's
+ * -- same rule already established for ImageRect.php/DerivativeImage.php.
+ * Also confirmed-equivalent: line 108's and line 115's
  * RemoveIntegerCast (the (int) cast on crop_h()/crop_v()'s own $pixels
  * argument) -- that parameter is untyped, and ImageRect's own crop
  * methods already do float arithmetic on it internally regardless of

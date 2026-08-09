@@ -80,7 +80,7 @@ test('microSeconds puts the real timestamp first and the real leading 6 fraction
  * PageStateTestFactory::get()->requestStart, ...)` -- PHP's own `-` operator
  * already coerces a numeric string operand to a number identically to
  * an explicit cast (the same cast-redundant-with-implicit-operator-
- * coercion pattern already established elsewhere in this sweep).
+ * coercion pattern already established elsewhere in this test suite).
  * Confirmed live: every test in this file passes identically with the
  * cast removed.
  */

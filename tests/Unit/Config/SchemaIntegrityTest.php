@@ -131,13 +131,13 @@ test('every setter trivially assigns its own property, minus the documented allo
 });
 
 // config.value is JSON-typed (see ConfigService::encode()/hydrate()).
-// This sweep confirms every scalar/array-typed property's own
+// This test confirms every scalar/array-typed property's own
 // compiled-in default survives a real encode()-then-hydrate() round
 // trip, catching the same class of bug two real call sites had: a value
 // of the wrong PHP type for its target property (e.g. a real int for a
 // ?string-typed property) is caught instead of silently coerced.
 // encode() is a pure static (no CurrentConfig state involved); hydrate()
-// is an instance method, so this sweep builds one throwaway CurrentConfig
+// is an instance method, so this test builds one throwaway CurrentConfig
 // + ConfigService pair up front and invokes every getter/setter/hydrate()
 // call against that same pair -- hydrate() never touches the DB (it only
 // calls a CurrentConfig setter via reflection), so no Kernel::boot() is

@@ -44,7 +44,7 @@ test('formatDateLegacy renders only the requested components, in day/month/year 
 });
 
 /**
- * Also confirmed-equivalent this sweep (both verified live via temporary
+ * Also confirmed-equivalent (both verified live via temporary
  * sed-applied mutations, full suite unaffected): a ConcatEqualToEqual on
  * the day_name append (`$print .= ... ` -> `$print = ...`) -- day_name
  * is unconditionally the FIRST of the 5 possible $show contributors in
@@ -284,7 +284,7 @@ test('formatFromto returns the untranslated "N/A" key when either date is unpars
 });
 
 /**
- * Also confirmed-equivalent this sweep (both verified live via temporary
+ * Also confirmed-equivalent (both verified live via temporary
  * sed-applied mutations, full suite unaffected, in this php-intl-loaded
  * environment): a RemoveArrayItem dropping 'day' from formatDate()'s own
  * default $show list -- the IntlDateFormatter branch below only ever
@@ -380,7 +380,7 @@ test('timeSince with only_last_unit advances past leading zero chunks to a real,
 });
 
 /**
- * Also confirmed-equivalent this sweep (verified live via a temporary
+ * Also confirmed-equivalent (verified live via a temporary
  * sed-applied mutation, checked against the multi-segment "2 months 2
  * weeks 2 days 13 hours ago" scenario below): a ConcatSwitchSides on
  * line 292's `' ' . self::translator()->plural(...)` -> `plural(...) .

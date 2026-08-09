@@ -91,7 +91,7 @@ test('a second drain after a first returns empty', function (): void {
  * body (E_ERROR/E_PARSE/E_CORE_ERROR/E_COMPILE_ERROR) -- was believed
  * unreachable for the same reason (producing one of those 4 types for real
  * means crashing the interpreter, which would kill whatever process runs
- * it) until this sweep found the same escape hatch this file's sibling
+ * it). Reachable via the same escape hatch this file's sibling
  * ShutdownHandlerTest.php uses for its own SIGTERM-exit(143) branch: crash
  * a genuinely separate PHP subprocess instead of this shared worker. See
  * the dedicated subprocess test further down.
@@ -214,12 +214,12 @@ test('currentConfig resolves the container-shared CurrentConfig instance when Ke
 });
 
 /**
- * New finding this sweep, applying to every subprocess-based test in
+ * Applies to every subprocess-based test in
  * this file (including the pre-existing E_ERROR/OOM test above): a real
  * `pest --mutate` run cannot credit ANY of them with killing a mutant on
  * line 174, even though each is independently, empirically verified
  * (via a temporary sed-applied mutation + a standalone `php -r`/subprocess
- * run, matching this whole sweep's own established technique) to
+ * run) to
  * genuinely distinguish real from mutated behavior. Root cause: pest's
  * mutation harness swaps in the mutated source only within its own
  * controlling PHP process's special test-run mechanism -- a `proc_open()`-

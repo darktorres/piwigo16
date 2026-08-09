@@ -81,7 +81,7 @@ test('safeVersionCompare lowercases a single trailing letter before taking its o
  * string subject with these fixed, non-`u`-modifier patterns never
  * realistically returns null) -- the same defensive
  * PHPStan-satisfying-cast-with-no-reachable-null-case pattern already
- * established elsewhere in this sweep. Confirmed live: every test in
+ * established elsewhere in this test suite. Confirmed live: every test in
  * this file passes identically with each cast removed.
  *
  * Also confirmed-equivalent: line 31's BooleanOrToBooleanAnd (`$op ===

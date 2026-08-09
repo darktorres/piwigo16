@@ -285,8 +285,7 @@ final class MailService implements MailerInterface
      * moment both sides used their own zero-arg default. A private method
      * building a fresh instance keeps the exact same behavior every call
      * site already had (a fresh `new self()` passed as UserService's own
-     * $mailer, not $this) -- was repeated verbatim at 2 call sites (Phase
-     * 1k DI-chain audit).
+     * $mailer, not $this) -- was repeated verbatim at 2 call sites.
      */
     private function userService(): UserService
     {

@@ -118,7 +118,7 @@ test('a specific -eu exception pluralizes with s, overriding the generic -eu/-ea
 
 test('émeu and the ém-prefixed consonant group pluralize correctly, not via the generic fallback', function (): void {
     // Regression test for a real, confirmed data-corruption bug (found
-    // 2026-08-01 during the mutation sweep): the 'é' in 'émeu' and 'ém'
+    // during the mutation sweep): the 'é' in 'émeu' and 'ém'
     // had been replaced by a literal U+FFFD REPLACEMENT CHARACTER in the
     // regex alternations above (confirmed via hexdump -- genuine byte
     // corruption, not a display artifact), silently making the 'émeu'/

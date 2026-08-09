@@ -371,7 +371,7 @@ test('createNavigationBar builds an exact URL_PREV/URL_NEXT/URL_LAST when nbElem
  * ($next < $last ? ...)` instead of `. (string) (...)`) -- string
  * concatenation already coerces an operand to string identically to
  * an explicit cast, the same "cast redundant with implicit operator
- * coercion" pattern already established elsewhere in this sweep,
+ * coercion" pattern already established elsewhere in this test suite,
  * confirmed live here too. And line 84's SmallerToSmallerOrEqual (`<=`
  * instead of `<`): the ternary's two branches are only reachable with
  * different results when $next actually differs from $last; at the

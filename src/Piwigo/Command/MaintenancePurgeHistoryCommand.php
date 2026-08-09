@@ -14,9 +14,8 @@ use Symfony\Component\Console\Output\OutputInterface;
 /**
  * CLI wrapper for the admin/maintenance_actions.php "Purge history"
  * actions -- purges both the detail and summary tables via
- * DbMaintenanceRepository, which already existed (built P21) but had zero
- * real callers until this command (found during a 2026-07-13 audit of P12's
- * never-built maintenance:* commands).
+ * DbMaintenanceRepository, which already existed but had zero
+ * real callers until this command.
  */
 #[AsCommand(name: 'maintenance:purge-history', description: 'Purge history detail and summary data')]
 final class MaintenancePurgeHistoryCommand extends Command

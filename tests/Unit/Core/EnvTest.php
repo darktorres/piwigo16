@@ -143,7 +143,7 @@ test('loadEnvFile is a safe no-op when the resolved env file does not exist', fu
 });
 
 /**
- * Confirmed-equivalent this sweep (verified live via a temporary
+ * Confirmed-equivalent (verified live via a temporary
  * sed-applied mutation): line 108's UnwrapRtrim, dropping the
  * `rtrim($root, '/\\')` call -- a root with a trailing slash still
  * resolves to the same real file on this filesystem either way (a
@@ -287,7 +287,7 @@ test('mergeIntoEnvFile drops an existing line whose key extraction genuinely fai
 });
 
 /**
- * Also confirmed-equivalent this sweep (both verified live via
+ * Also confirmed-equivalent (both verified live via
  * temporary sed-applied mutations against a fresh-file merge): line
  * 155's DecrementInteger/IncrementInteger (bin2hex(random_bytes(4))'s
  * own byte count -- any length still produces a working, unique-enough

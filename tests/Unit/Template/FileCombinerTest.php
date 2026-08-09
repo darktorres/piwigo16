@@ -167,7 +167,7 @@ test('computeForce is false for an admin JS combine with no cache-busting header
 });
 
 /**
- * Confirmed-equivalent this sweep, verified live via a temporary
+ * Confirmed-equivalent, verified live via a temporary
  * sed-applied mutation plus a standalone script targeting the exact
  * scenario this class's own mutation-testing report suggested (an admin
  * combining with HTTP_PRAGMA's value starting with "no-cache" -- the
@@ -271,7 +271,7 @@ test('combine flushes pending items before appending a remote combinable, preser
 // file_get_contents()) ---
 
 /**
- * Confirmed-equivalent this sweep, verified live via temporary
+ * Confirmed-equivalent, verified live via temporary
  * sed-applied mutations plus a standalone script exercising every
  * scalar shape combine()'s own multi-item cache key can realistically
  * carry (int 7/0/-3, bool true/false, float 1.5, and this class's own
@@ -460,7 +460,7 @@ test('add merges an array of combinables', function (): void {
 });
 
 /**
- * Confirmed-equivalent this sweep (both verified live via temporary
+ * Confirmed-equivalent (both verified live via temporary
  * sed-applied mutations against this file's own existing suite): line
  * 46's own RemoveBooleanCast on `while ((bool) ($file = readdir($dir)))`
  * -- same redundant-cast-in-boolean-context pattern already documented
@@ -552,7 +552,7 @@ function invokeProcessCombinable(FileCombiner $combiner, Combinable $combinable,
 }
 
 /**
- * Confirmed-equivalent this sweep, verified live via temporary
+ * Confirmed-equivalent, verified live via temporary
  * sed-applied mutations (each including a real reproduction script that
  * exercises the exact scenario, run against both the mutated and
  * original source to confirm byte-identical output):
@@ -919,7 +919,7 @@ test('process_css throws when a combined_css_postfilter listener returns somethi
 })->throws(Error::class, 'must return an instance of');
 
 /**
- * Confirmed-equivalent this sweep, verified live via temporary
+ * Confirmed-equivalent, verified live via temporary
  * sed-applied mutations against this file's own existing suite:
  *
  * - Both RemoveBooleanCast mutations on `if ((bool) preg_match_all(...))`

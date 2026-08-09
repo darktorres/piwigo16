@@ -600,7 +600,7 @@ test('deltree actually renames an undeletable directory into the trash path when
 });
 
 /**
- * Also confirmed-equivalent this sweep (both verified live via
+ * Also confirmed-equivalent (both verified live via
  * temporary sed-applied mutations against this file's own existing
  * suite): line 251's own RemoveBooleanCast (redundant, same `while`-
  * context coercion pattern as the mkgetdir() cluster above) and
@@ -666,7 +666,7 @@ test('getCacheSizeDerivatives accumulates multiple files sharing the same size c
 });
 
 /**
- * Not chased further this sweep, both confirmed-equivalent for every
+ * Not chased further -- both confirmed-equivalent for every
  * realistic input (verified live via temporary sed-applied mutations):
  * line 287's FalseToTrue/DecrementInteger/IncrementInteger, guarding
  * `filesize() === false` -- a broken symlink (the only realistic way a

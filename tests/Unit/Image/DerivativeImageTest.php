@@ -772,7 +772,7 @@ test('build() never substitutes a same-size candidate whose max_crop does not ma
     // into build() with identical parameters every time -- an infinite
     // recursion, not a clean pass/fail, so this case is deliberately
     // NOT hand-verified via the live sed-and-rerun technique used
-    // elsewhere in this sweep (unlike a real assertion mismatch, there
+    // elsewhere in this test suite (unlike a real assertion mismatch, there
     // is no safe bounded way to trigger it without risking a hung
     // process) -- accepted as a real, reasoned-through kill instead.
     //

@@ -8,8 +8,7 @@ use Piwigo\Core\Kernel;
 use Piwigo\Tests\Support\KernelContainerOverride;
 
 /**
- * Piwigo\Bootstrap\InfrastructureAccessor -- had zero dedicated coverage
- * (see /home/torres/.claude/plans/piped-enchanting-spark.md, Wave 1).
+ * Piwigo\Bootstrap\InfrastructureAccessor -- had zero dedicated coverage.
  * Same "lazy container binding, no real DB connection needed to resolve
  * it" shape as ExtendedDomainAccessorTest's own accessors -- Doctrine's
  * Connection/EntityManager are lazy until a query actually runs.

@@ -15,8 +15,7 @@ use Piwigo\Permalink\Projection\OldPermalink;
 
 /**
  * A handful of small DTO/projection classes that had zero dedicated
- * coverage (see /home/torres/.claude/plans/piped-enchanting-spark.md,
- * Wave 1) but carry real narrowing/named-constructor logic worth a
+ * coverage but carry real narrowing/named-constructor logic worth a
  * direct test, unlike their pure-data-holder siblings (NotificationChannelConfig,
  * the Sensitive attribute) which have no behavior beyond constructor
  * assignment. PaginatedResult is the same "no behavior" shape but is

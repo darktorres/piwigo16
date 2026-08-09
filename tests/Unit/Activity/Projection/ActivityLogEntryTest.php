@@ -8,8 +8,7 @@ use Piwigo\Common\ValueObject\UserId;
 
 /**
  * Piwigo\Activity\Projection\UserActivityLogEntry/SystemActivityLogEntry
- * -- had zero dedicated coverage for fromRow()/toArray() (see
- * /home/torres/.claude/plans/piped-enchanting-spark.md, Wave 1); the
+ * -- had zero dedicated coverage for fromRow()/toArray(); the
  * existing ActivityLogEntryFormatterTest only ever constructs these via
  * their plain constructor, never fromRow().
  */

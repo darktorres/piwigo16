@@ -5,8 +5,7 @@ declare(strict_types=1);
 use Piwigo\Core\CharsetHelper;
 
 /**
- * Piwigo\Core\CharsetHelper -- had zero dedicated coverage (see
- * /home/torres/.claude/plans/piped-enchanting-spark.md, Wave 1).
+ * Piwigo\Core\CharsetHelper -- had zero dedicated coverage.
  *
  * getPwgCharset()'s `defined('PWG_CHARSET')` branch is deliberately NOT
  * exercised here: PWG_CHARSET is only ever define()'d as a string embedded

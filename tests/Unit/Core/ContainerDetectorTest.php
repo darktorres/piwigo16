@@ -6,8 +6,7 @@ use Piwigo\Core\ContainerDetector;
 use Piwigo\Core\Projection\ContainerInfo;
 
 /**
- * Piwigo\Core\ContainerDetector::detect() -- had zero dedicated coverage
- * (see /home/torres/.claude/plans/piped-enchanting-spark.md, Wave 1).
+ * Piwigo\Core\ContainerDetector::detect() -- had zero dedicated coverage.
  * Every branch reads hard-coded absolute filesystem paths (/proc/2/sched,
  * /var/www/html/piwigo-docker.info, /build_version) and PHP_OS/
  * ini_get('open_basedir') directly -- no injection seam exists, and
@@ -64,8 +63,8 @@ use Piwigo\Core\Projection\ContainerInfo;
  *   blocks /proc/2/sched and both tagfile reads, cascading to
  *   ['Unknown', null] instead of the correct ['none', null]. `pest
  *   --mutate` cannot see this: it's the exact same proc_open()
- *   subprocess-invisibility documented in
- *   feedback_pest_mutate_invisible_to_subprocess_tests -- verified but
+ *   subprocess-invisibility every subprocess-based test in this suite
+ *   runs into -- verified but
  *   permanently untestable via that tool, not an unaddressed gap.
  * - 9 more are killed by a NEW subprocess test added below, using
  *   open_basedir='0' (the third sentinel this code explicitly checks

@@ -7,14 +7,12 @@ use Piwigo\Core\Paths;
 
 /**
  * Piwigo\Core\CoverageCollector::registerIfActive() -- had zero dedicated
- * coverage (see /home/torres/.claude/plans/piped-enchanting-spark.md,
- * Wave 1). A later coverage-gap sweep re-flagged the remaining 12 lines
+ * coverage for the remaining 12 lines
  * (the `! extension_loaded('pcov')` guard and everything from
- * `\pcov\start()` onward) as closable and re-investigated the concerns
- * this docblock used to raise about them, with concrete, empirical
+ * `\pcov\start()` onward), closed with concrete, empirical
  * findings (a throwaway `php -r` harness, `pcov\start()`/`stop()`/
  * `waiting()`/`collect()` called directly, output inspected byte for
- * byte) rather than re-asserting the same caution unverified:
+ * byte) rather than reasoning about them unverified:
  *
  * - A nested `\pcov\start()` call (i.e. one issued while pcov is ALREADY
  *   collecting -- exactly what happens when this method runs from inside
@@ -39,7 +37,7 @@ use Piwigo\Core\Paths;
  *   this method registers is a guaranteed no-op by the time it actually
  *   runs -- it can't collide with anything.
  *
- * Mutation-testing sweep (batch 18, 2026-08-01): 14 mutations initially
+ * 14 mutations initially
  * showed UNTESTED. Each verified individually via a live sed-applied
  * mutation rerun (not assumed from reasoning alone):
  *
@@ -53,9 +51,8 @@ use Piwigo\Core\Paths;
  *   real code correctly skips it), and the shutdown-handler test's own
  *   `is_dir()`/`glob()`/`unserialize()` assertions catch every one of
  *   these. `pest --mutate` can't see it: the same proc_open()
- *   subprocess-invisibility as
- *   feedback_pest_mutate_invisible_to_subprocess_tests, not an
- *   unaddressed gap.
+ *   subprocess-invisibility every subprocess-based test in this suite
+ *   runs into, not an unaddressed gap.
  * - 2 more (line 57's RemoveNot and line 58's RemoveEarlyReturn) need a
  *   genuinely NEW subprocess test: both existing subprocess tests set
  *   testModeIsActive() to TRUE (via HTTP_X_PIWIGO_ENV), so the `if (!

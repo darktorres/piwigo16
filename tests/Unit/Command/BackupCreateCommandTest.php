@@ -7,16 +7,15 @@ use Piwigo\Command\BackupCreateCommand;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Tester\CommandTester;
 
-// Had zero dedicated coverage (see /home/torres/.claude/plans/
-// piped-enchanting-spark.md, Wave 1). Same "don't re-drive the real
+// Had zero dedicated coverage. Same "don't re-drive the real
 // backup pipeline here" reasoning as BackupRestoreCommandTest's own
 // docblock -- the real create() success path is
 // tests/Integration/BackupServiceTest.php's job. This only proves the
 // command wires through to BackupService::create() and formats both exit
 // codes correctly, forcing the failure branch deterministically by
-// pointing PIWIGO_DB_PORT at a closed local port (same trick already
-// established this session for a fast, real connection-refused failure,
-// confirmed live: mysqldump against 127.0.0.1:1 fails in ~20ms, not a
+// pointing PIWIGO_DB_PORT at a closed local port (a fast, real
+// connection-refused failure, confirmed live: mysqldump against
+// 127.0.0.1:1 fails in ~20ms, not a
 // hang) rather than mocking BackupService (a concrete class, no seam for
 // a fake).
 

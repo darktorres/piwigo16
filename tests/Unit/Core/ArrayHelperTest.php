@@ -5,8 +5,7 @@ declare(strict_types=1);
 use Piwigo\Core\ArrayHelper;
 
 /**
- * Piwigo\Core\ArrayHelper -- had zero dedicated coverage (see
- * /home/torres/.claude/plans/piped-enchanting-spark.md, Wave 1) despite
+ * Piwigo\Core\ArrayHelper -- had zero dedicated coverage despite
  * safeJsonDecode()/safeUnserialize() being used constantly throughout the
  * codebase (every real caller passes a string, so the array-passthrough
  * branch of each was never hit; prependAppendArrayItems() is genuinely

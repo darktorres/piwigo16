@@ -292,8 +292,8 @@ final class UploadService
 
         // we only try to detect duplicate on a new image, not when updating an existing image
         //
-        // Further SQL-modernization audit, Item 1: this is a second,
-        // independent duplicate-detection mechanism from add()'s own
+        // This is a second, independent duplicate-detection mechanism
+        // from add()'s own
         // check_uniqueness (different config flag, different resolution --
         // merge into the existing image rather than reject), with the
         // identical check-then-insert TOCTOU shape. Covered by its own

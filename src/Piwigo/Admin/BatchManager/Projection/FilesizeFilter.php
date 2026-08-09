@@ -6,8 +6,7 @@ namespace Piwigo\Admin\BatchManager\Projection;
 
 /**
  * {@see \Piwigo\Admin\BatchManager\FilterResolver::filesizePhotoIds()}'s
- * parameter object (P17-23 Phase 8, "cross-domain generic-row-reader"
- * elimination) -- `$_SESSION['bulk_manager_filter']['filesize']`'s 2
+ * parameter object -- `$_SESSION['bulk_manager_filter']['filesize']`'s 2
  * optional bounds (kB). The one real caller (`BatchManagerSubController::
  * computeCurrentSet()`) builds this via {@see self::fromArray()} from the
  * session sub-array it already has raw access to. {@see self::isEmpty()}

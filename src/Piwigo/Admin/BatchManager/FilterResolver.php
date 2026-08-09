@@ -32,8 +32,8 @@ use Piwigo\Users\UserService;
  * getImageIdsForTags(), get_quick_search_results_no_cache()) -- those stay
  * called directly from the admin page glue.
  *
- * P17-23 Phase 8: the 3 genuinely fixed-shape filter dimensions this class
- * reads (duplicates flags, dimension bounds, filesize bounds) are now
+ * The 3 genuinely fixed-shape filter dimensions this class reads
+ * (duplicates flags, dimension bounds, filesize bounds) are
  * {@see DuplicateFieldFlags}/{@see DimensionFilter}/{@see FilesizeFilter}
  * value objects, built by the one real caller
  * (`BatchManagerSubController::computeCurrentSet()`) from the raw,

@@ -6,8 +6,7 @@ namespace Piwigo\Admin\BatchManager\Projection;
 
 /**
  * {@see \Piwigo\Admin\BatchManager\FilterResolver::duplicateFieldsFromFilter()}/
- * `resolvePrefilter()`'s "duplicates" branch parameter object (P17-23
- * Phase 8, "cross-domain generic-row-reader" elimination). The 4 flags
+ * `resolvePrefilter()`'s "duplicates" branch parameter object. The 4 flags
  * are presence-only booleans from `$_SESSION['bulk_manager_filter']`
  * (`duplicates_filename`/`duplicates_checksum`/`duplicates_date`/
  * `duplicates_dimensions`) -- the caller (`BatchManagerSubController::

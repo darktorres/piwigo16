@@ -355,15 +355,34 @@ test('findAllOrderedBy() sorts by a column whose order genuinely differs from th
 });
 
 test('findAllOrderedBy() with a null sort field leaves the natural order untouched', function (): void {
+    // Filters both reads down to 2 slugs this test itself controls, not
+    // a bare full-table comparison -- 2 back-to-back reads with no
+    // write of their own in between is a small window, but composer
+    // test's own parallel runner means a concurrent writer (e.g.
+    // PermalinkServiceTest.php's own insertOldPermalinkDeleted() calls)
+    // landing in that window would otherwise make the 2 reads
+    // genuinely, correctly differ for reasons unrelated to what this
+    // test is actually about.
     $repo = permalinkRepoTest();
+    $slugA = permalinkRepoTestSlug('aaa-p17-unit-null-sort-');
+    $slugB = permalinkRepoTestSlug('zzz-p17-unit-null-sort-');
+    $repo->insertOldPermalinkDeleted(1, $slugA);
+    $repo->insertOldPermalinkDeleted(1, $slugB);
 
-    $unsorted = $repo->findAllOrderedBy(null);
-    $sorted = $repo->findAllOrderedBy(OldPermalinkSortField::Permalink);
+    try {
+        $filter = static fn (OldPermalink $row): bool => in_array($row->permalink->value, [$slugA, $slugB], true);
 
-    // Both must contain the same real 'old-sample-album' fixture row --
-    // a null sort field just skips the orderBy() call, not the query.
-    expect(array_map(static fn ($row) => $row->permalink->value, $unsorted))
-        ->toBe(array_map(static fn ($row) => $row->permalink->value, $sorted));
+        $unsorted = array_values(array_filter($repo->findAllOrderedBy(null), $filter));
+        $sorted = array_values(array_filter($repo->findAllOrderedBy(OldPermalinkSortField::Permalink), $filter));
+
+        // A null sort field just skips the orderBy() call, not the
+        // query -- both reads must still find the same 2 rows.
+        expect(array_map(static fn ($row) => $row->permalink->value, $unsorted))
+            ->toBe(array_map(static fn ($row) => $row->permalink->value, $sorted));
+    } finally {
+        $repo->deleteOldPermalink(1, $slugA);
+        $repo->deleteOldPermalink(1, $slugB);
+    }
 });
 
 test('findPermalinkMatches() finds old and current permalinks', function (): void {
@@ -427,14 +446,24 @@ test('deleteOldPermalinksForCategories() removes only rows for the given categor
 });
 
 test('deleteOldPermalinksForCategories() is a no-op for no ids', function (): void {
-    // Compares before/after rather than asserting an absolute row count
-    // -- this table's exact row count depends on what else is currently
-    // sharing the fixture DB, not just this file's own fixture baseline.
-    $conn = DbConnection::build();
-    $before = $conn->createQueryBuilder()->select('COUNT(*) AS c')->from(Tables::oldPermalinks())->executeQuery()->fetchOne();
+    // A real, targeted row -- not a global COUNT(*) before/after
+    // comparison (this table's own real row count depends on what else
+    // is concurrently sharing the fixture DB under composer test's own
+    // parallel runner, matching PermalinkServiceTest.php's own
+    // insertOldPermalinkDeleted() calls elsewhere; a bare aggregate
+    // count is sensitive to ANY row appearing/disappearing anywhere in
+    // the table, regardless of how well-namespaced its own value is.
+    // Confirmed live: this exact test produced a real, intermittent
+    // "1 is identical to 2"-shaped failure from that race).
+    $repo = permalinkRepoTest();
+    $slug = permalinkRepoTestSlug();
+    $repo->insertOldPermalinkDeleted(2, $slug);
 
-    permalinkRepoTest()->deleteOldPermalinksForCategories([]);
+    try {
+        $repo->deleteOldPermalinksForCategories([]);
 
-    $after = $conn->createQueryBuilder()->select('COUNT(*) AS c')->from(Tables::oldPermalinks())->executeQuery()->fetchOne();
-    expect($after)->toBe($before);
+        expect($repo->findOldCategoryId($slug))->toBe(2);
+    } finally {
+        $repo->deleteOldPermalink(2, $slug);
+    }
 });

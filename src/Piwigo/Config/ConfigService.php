@@ -471,13 +471,19 @@ final readonly class ConfigService
             $propertyName = self::KEY_TO_PROPERTY[$param] ?? null;
             if ($propertyName !== null) {
                 $property = new ReflectionProperty(CurrentConfig::class, $propertyName);
-                // recentPostDates's own type is NotificationConfig, not the
-                // raw array a caller passes here -- same coercion hydrate()
-                // needs below.
-                $property->setValue(
-                    $this->currentConfig,
-                    $propertyName === 'recentPostDates' ? NotificationConfig::fromArray(is_array($value) ? $value : []) : $value,
-                );
+                // recentPostDates/filtersViews/updateNotifyLastNotification/
+                // cacheSizes are all VO-typed, not the raw array a caller
+                // passes here -- same coercion hydrate() needs below.
+                // recentPostDates itself is non-nullable, so it always
+                // builds from (possibly empty) array data; the other 3 are
+                // nullable and pass a genuine null value straight through.
+                $property->setValue($this->currentConfig, match ($propertyName) {
+                    'recentPostDates' => NotificationConfig::fromArray(is_array($value) ? $value : []),
+                    'filtersViews' => $value === null ? null : FilterViewsSelection::fromArray(is_array($value) ? $value : []),
+                    'updateNotifyLastNotification' => $value === null ? null : UpdateNotification::fromArray(is_array($value) ? $value : []),
+                    'cacheSizes' => $value === null ? null : CacheSizesSnapshot::fromArray(is_array($value) ? $value : []),
+                    default => $value,
+                });
             }
         }
     }
@@ -497,8 +503,8 @@ final readonly class ConfigService
                 continue;
             }
 
-            if (in_array($propertyName, ['chmodValue', 'recentPostDates'], true)) {
-                // Both are fully-hooked properties (get + set) -- Reflection
+            if (in_array($propertyName, ['chmodValue', 'recentPostDates', 'defaultFiltersViews', 'filterPages'], true)) {
+                // All 4 are fully-hooked properties (get + set) -- Reflection
                 // reports no usable default for those (see CurrentConfig's
                 // own reset()), so "deleted" means nulling the private
                 // backing field directly, which their own get hook already
@@ -571,6 +577,23 @@ final readonly class ConfigService
             // NotificationConfig, so the raw decoded array is coerced here
             // instead of inside CurrentConfig.
             $property->setValue($this->currentConfig, NotificationConfig::fromArray(is_array($decoded) ? $decoded : []));
+
+            return;
+        }
+
+        // filtersViews/updateNotifyLastNotification/cacheSizes are all
+        // VO-typed (not array), and none of the 3 has a `set` hook of its
+        // own (see CurrentConfig's own docblocks) -- the raw decoded array
+        // is coerced here, same reasoning as recentPostDates above. A real
+        // `null` $raw was already handled by the generic branch above this
+        // one, so $decoded is always non-null past this point.
+        if (in_array($propertyName, ['filtersViews', 'updateNotifyLastNotification', 'cacheSizes'], true)) {
+            $value = is_array($decoded) ? $decoded : [];
+            $property->setValue($this->currentConfig, match ($propertyName) {
+                'filtersViews' => FilterViewsSelection::fromArray($value),
+                'updateNotifyLastNotification' => UpdateNotification::fromArray($value),
+                default => CacheSizesSnapshot::fromArray($value),
+            });
 
             return;
         }

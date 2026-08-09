@@ -29,7 +29,6 @@ use Piwigo\Db\Type\CategoryIdType;
 use Piwigo\Db\Type\CommentIdType;
 use Piwigo\Db\Type\EmailType;
 use Piwigo\Db\Type\GracefulIpAddressType;
-use Piwigo\Db\Type\GracefulSqlDateTimeType;
 use Piwigo\Db\Type\GroupIdType;
 use Piwigo\Db\Type\ImageIdType;
 use Piwigo\Db\Type\IpAddressType;
@@ -120,7 +119,6 @@ final class EntityManagerFactory
             'username' => UsernameType::class,
             'sql_date' => SqlDateType::class,
             'sql_datetime' => SqlDateTimeType::class,
-            'sql_datetime_graceful' => GracefulSqlDateTimeType::class,
             'sql_time' => SqlTimeType::class,
         ] as $name => $class) {
             if (! Type::hasType($name)) {

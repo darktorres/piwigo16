@@ -19,28 +19,25 @@ use Piwigo\Common\ValueObject\UserId;
  * DATETIME string form, and unlike `dateAvailable`/`dateCreation` below,
  * no real code anywhere reads this column back through the entity).
  *
- * `dateAvailable`/`dateCreation` are `SqlDateTime`-typed via the
- * `sql_datetime_graceful` Doctrine Type ({@see
- * \Piwigo\Db\Type\GracefulSqlDateTimeType}), not the strict
- * `sql_datetime` every other Phase 5 column uses. Re-examined during the
- * typed-primitives adoption campaign and reaffirmed "stays plain string"
- * at the time -- revisited again with new information found tracing
- * every real write path for the VO/DTO typing campaign:
- * `Metadata\MetadataService::getSyncExifData()` (line ~335) contains
- * real, live production code checking for a MySQL zero-date
- * ('0000-00-00 00:00:00') sentinel when syncing EXIF data, confirming
- * this isn't hypothetical -- a pre-existing row can carry a value
- * `SqlDateTime::from()`'s calendar-round-trip validation would reject.
- * That write path already normalizes the sentinel to `null` before
- * persisting, so *new* writes are safe, but existing rows aren't
- * guaranteed clean, hence the graceful (tryFrom()-based, null-on-failure)
- * read side rather than the strict Type.
+ * `dateAvailable`/`dateCreation` are `SqlDateTime`-typed via the strict
+ * `sql_datetime` Doctrine Type, same as `lastmodified` below. They used
+ * to go through a lenient `sql_datetime_graceful` Type instead
+ * (`Db\Type\GracefulSqlDateTimeType`, since deleted), added when tracing
+ * every real write path for the VO/DTO typing campaign turned up
+ * `Metadata\MetadataService::getSyncExifData()` (line ~335) confirming a
+ * pre-existing row could carry a real MySQL zero-date
+ * ('0000-00-00 00:00:00') sentinel that `SqlDateTime::from()`'s
+ * calendar-round-trip validation would reject. That Type only protected
+ * the narrow ORM `find()` read path though -- most real reads
+ * (`Controller\PictureController`, most of `ImageRepository`) go
+ * through raw DBAL and were never covered by it. Migration
+ * `Version20260809083506` backfills every surviving sentinel to real
+ * `NULL` instead, closing the gap for every consumer at once.
  *
  * The one real entity-level write path,
- * {@see \Piwigo\Image\ImageRepository::updateDescriptiveFields()}, DOES
- * use the strict `SqlDateTime::from()` (not `tryFrom()`) before
- * assignment -- deliberately not softened to match the graceful read
- * side. Unlike `Users\UserListCriteria::$minRegister`/`$maxRegister`
+ * {@see \Piwigo\Image\ImageRepository::updateDescriptiveFields()}, has
+ * always used the strict `SqlDateTime::from()` (not `tryFrom()`) before
+ * assignment. Unlike `Users\UserListCriteria::$minRegister`/`$maxRegister`
  * (blocked on adding upstream WS validation first, no DB-level backstop
  * at all), `date_creation`/`date_available` are real `datetime`/
  * `timestamp` columns (not VARCHAR) even under the pre-VO `string`
@@ -86,9 +83,9 @@ final class ImageEntity
     public function __construct(
         #[ORM\Column(type: 'string', length: 255)]
         public string $file,
-        #[ORM\Column(name: 'date_available', type: 'sql_datetime_graceful', length: 19, nullable: true)]
+        #[ORM\Column(name: 'date_available', type: 'sql_datetime', length: 19, nullable: true)]
         public ?SqlDateTime $dateAvailable,
-        #[ORM\Column(name: 'date_creation', type: 'sql_datetime_graceful', length: 19, nullable: true)]
+        #[ORM\Column(name: 'date_creation', type: 'sql_datetime', length: 19, nullable: true)]
         public ?SqlDateTime $dateCreation,
         #[ORM\Column(type: 'string', length: 255, nullable: true)]
         public ?string $name,

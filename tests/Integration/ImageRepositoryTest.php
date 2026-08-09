@@ -508,35 +508,6 @@ final class ImageRepositoryTest extends IntegrationTestCase
         }
     }
 
-    /**
-     * The one confirmed-risky case the graceful `sql_datetime_graceful`
-     * Doctrine Type ({@see \Piwigo\Db\Type\GracefulSqlDateTimeType})
-     * exists for: a real, pre-existing MySQL zero-date
-     * ('0000-00-00 00:00:00') sentinel in legacy EXIF/IPTC-synced data
-     * (see {@see \Piwigo\Image\ImageEntity}'s own docblock). PostgreSQL
-     * has no equivalent sentinel at all -- confirmed live,
-     * `'0000-00-00 00:00:00'::timestamp` throws a real "date/time field
-     * value out of range" error at the SQL level, so there is no raw row
-     * to seed on that driver.
-     */
-    public function test_find_by_id_gracefully_returns_null_date_creation_for_a_legacy_mysql_zero_date_row(): void
-    {
-        if ($this->dbDriver === 'pgsql') {
-            self::markTestSkipped("PostgreSQL rejects '0000-00-00 00:00:00' as an invalid timestamp outright -- this legacy sentinel can only ever exist in real MySQL data.");
-        }
-
-        try {
-            $this->conn->executeStatement("UPDATE " . Tables::images() . " SET date_creation = '0000-00-00 00:00:00' WHERE id = 1");
-
-            $image = $this->repo->findById(ImageId::from(1));
-
-            self::assertNotNull($image);
-            self::assertNull($image->dateCreation);
-        } finally {
-            $this->conn->executeStatement('UPDATE ' . Tables::images() . ' SET date_creation = NULL WHERE id = 1');
-        }
-    }
-
     public function test_update_format_filesize_updates_an_existing_format(): void
     {
         $formatId = $this->insertFormat(1, 'webp', 100);

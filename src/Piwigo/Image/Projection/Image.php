@@ -27,9 +27,9 @@ use Piwigo\Image\ImageEntity;
  * consumer today (`DateHelper::formatDate()`/`timeSince()`, raw SQL
  * comparisons) already expects the raw DB DATETIME string form.
  * `ImageEntity::$lastmodified`/`$dateAvailable`/`$dateCreation` are all
- * `SqlDateTime`-typed (Phase 5; the latter two via the graceful
- * `sql_datetime_graceful` Type, see that entity's own docblock) --
- * `fromEntity()` unwraps `->value`/`?->value` for all 3.
+ * `SqlDateTime`-typed (Phase 5, all 3 via the strict `sql_datetime`
+ * Type -- see that entity's own docblock) -- `fromEntity()` unwraps
+ * `->value`/`?->value` for all 3.
  */
 final readonly class Image
 {

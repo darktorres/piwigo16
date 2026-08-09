@@ -1046,14 +1046,16 @@ final class PictureController implements ControllerInterface
               '<a href="' . $url . '" rel="nofollow">' . $val . '</a>';
         }
 
-        // date of availability -- date_available is nullable at the type
-        // level (ImageEntity's own docblock: graceful read-side null on a
-        // corrupted/zero-date legacy row), even though it's practically
-        // always present; PicturePageContext::$infoPostedDate stays a
-        // required string (this info row is unconditional in picture.tpl,
-        // unlike the optional INFO_CREATION_DATE above), so fall back to
-        // an empty string on that rare corrupted-data case instead of
-        // feeding formatDate()/substr() a null.
+        // date of availability -- date_available is nullable (a photo can
+        // simply lack EXIF/IPTC date info); PicturePageContext::$infoPostedDate
+        // stays a required string (this info row is unconditional in
+        // picture.tpl, unlike the optional INFO_CREATION_DATE above), so
+        // fall back to an empty string instead of feeding formatDate()/
+        // substr() a null. $picture['current'] comes from a raw DBAL row
+        // here, not ImageEntity, so this was never protected by the former
+        // Db\Type\GracefulSqlDateTimeType anyway -- Version20260809083506
+        // backfilled the only other historical risk (a raw MySQL zero-date
+        // sentinel) to real NULL at the data source instead.
         $date_available = $picture['current']['date_available'];
         if (is_string($date_available) && $date_available !== '' && $date_available !== '0') {
             $val = DateHelper::formatDate($date_available);

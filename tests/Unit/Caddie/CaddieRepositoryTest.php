@@ -18,7 +18,23 @@ use Piwigo\Db\Tables;
  * ImageRepositoryTest.php pattern. caddie is empty in the fixture and
  * only 4 real (FK-valid) user ids exist, so -- same reasoning as the
  * Integration original -- each test cleans up its own rows via
- * try/finally instead of relying on disjoint user ids for isolation.
+ * try/finally instead of relying on disjoint user ids for
+ * INTRA-file isolation.
+ *
+ * User ids 1/2 only, deliberately, never 3/4 -- composer test's own
+ * parallel runner puts this file and CaddieServiceTest.php in
+ * different worker processes against the SAME real, shared DB
+ * (matching the exact SearchServiceTest.php/SearchRepositoryTest.php
+ * collision found and fixed this same session), and both files used
+ * to draw from the same 4-user pool with no cross-file coordination.
+ * Confirmed live: this produced real, intermittent addElements()/
+ * findElementIdsForUser() failures here whenever CaddieServiceTest.php's
+ * own concurrently-running fillCurrentUserCaddie() tests happened to
+ * write to (or clear) the same user id at the same moment. The 2 files
+ * now partition the only 4 real ids -- this file owns 1/2,
+ * CaddieServiceTest.php owns 3/4 -- so no shared row can ever be
+ * touched by both at once, regardless of run order or worker
+ * scheduling.
  *
  * 8 confirmed-equivalent mutations (3 distinct root causes), not
  * individually tested:
@@ -41,10 +57,8 @@ use Piwigo\Db\Tables;
 function caddieTestRepo(): CaddieRepository
 {
     $conn = DbConnection::build();
-    $repo = EntityManagerFactory::build($conn)->getRepository(CaddieEntity::class);
-    expect($repo)->toBeInstanceOf(CaddieRepository::class);
 
-    return $repo;
+    return EntityManagerFactory::build($conn)->getRepository(CaddieEntity::class);
 }
 
 /**
@@ -59,10 +73,8 @@ function caddieTestRepo(): CaddieRepository
 function caddieTestRepoWithEm(): array
 {
     $em = EntityManagerFactory::build(DbConnection::build());
-    $repo = $em->getRepository(CaddieEntity::class);
-    expect($repo)->toBeInstanceOf(CaddieRepository::class);
 
-    return [$repo, $em];
+    return [$em->getRepository(CaddieEntity::class), $em];
 }
 
 function caddieTestClear(Connection $conn, int $userId): void
@@ -109,19 +121,19 @@ test('addElements() skips elements already in the caddie', function (): void {
 
     try {
         $repo = caddieTestRepo();
-        $repo->addElements(3, [1, 2]);
+        $repo->addElements(2, [1, 2]);
 
-        $added = $repo->addElements(3, [2, 3, 4]);
+        $added = $repo->addElements(2, [2, 3, 4]);
 
         expect($added)->toBe(2)
-            ->and(caddieTestFetchElementIds($conn, 3))->toBe([1, 2, 3, 4]);
+            ->and(caddieTestFetchElementIds($conn, 2))->toBe([1, 2, 3, 4]);
     } finally {
-        caddieTestClear($conn, 3);
+        caddieTestClear($conn, 2);
     }
 });
 
 test('addElements() returns zero for an empty list', function (): void {
-    expect(caddieTestRepo()->addElements(4, []))->toBe(0);
+    expect(caddieTestRepo()->addElements(2, []))->toBe(0);
 });
 
 test('addElements() silently skips a nonexistent image id', function (): void {
@@ -139,13 +151,13 @@ test('addElements() scopes to the given user', function (): void {
     try {
         $repo = caddieTestRepo();
         $repo->addElements(1, [1]);
-        $repo->addElements(3, [1]);
+        $repo->addElements(2, [1]);
 
         expect(caddieTestFetchElementIds($conn, 1))->toBe([1])
-            ->and(caddieTestFetchElementIds($conn, 3))->toBe([1]);
+            ->and(caddieTestFetchElementIds($conn, 2))->toBe([1]);
     } finally {
         caddieTestClear($conn, 1);
-        caddieTestClear($conn, 3);
+        caddieTestClear($conn, 2);
     }
 });
 
@@ -188,18 +200,18 @@ test('findElementIdsForUser() returns only that user\'s own elements', function 
     try {
         $repo = caddieTestRepo();
         $repo->addElements(1, [1, 2]);
-        $repo->addElements(3, [3]);
+        $repo->addElements(2, [3]);
 
         expect($repo->findElementIdsForUser(1))->toBe([1, 2])
-            ->and($repo->findElementIdsForUser(3))->toBe([3]);
+            ->and($repo->findElementIdsForUser(2))->toBe([3]);
     } finally {
         caddieTestClear($conn, 1);
-        caddieTestClear($conn, 3);
+        caddieTestClear($conn, 2);
     }
 });
 
 test('findElementIdsForUser() returns empty for a user with no caddie', function (): void {
-    expect(caddieTestRepo()->findElementIdsForUser(4))->toBe([]);
+    expect(caddieTestRepo()->findElementIdsForUser(2))->toBe([]);
 });
 
 test('replaceForUser() empties the existing caddie then inserts the new elements', function (): void {

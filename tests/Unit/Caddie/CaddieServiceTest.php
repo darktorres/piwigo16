@@ -18,6 +18,15 @@ use Piwigo\Users\User;
  * Piwigo\Users\CurrentUser singleton (CurrentUserTestFactory has a
  * pre-boot fallback, no Kernel::boot() needed) to prove it reads the
  * *current* user's id, not a hardcoded/mixed-up one.
+ *
+ * User ids 3/4 only, deliberately, never 1/2 -- see
+ * CaddieRepositoryTest.php's own docblock for why: composer test's
+ * parallel runner puts these 2 files in different worker processes
+ * against the same real, shared DB, and both used to draw from the
+ * same 4-real-user pool with no cross-file coordination, producing
+ * real, intermittent failures in both files. The 2 files now partition
+ * the only 4 real (FK-valid) ids -- this file owns 3/4,
+ * CaddieRepositoryTest.php owns 1/2.
  */
 function caddieServiceTestClear(Connection $conn, int $userId): void
 {
@@ -63,16 +72,16 @@ test('fillCurrentUserCaddie() scopes to whichever user is current', function ():
     $conn = DbConnection::build();
 
     try {
-        CurrentUserTestFactory::get()->set(User::fromUserArray(['id' => 1]));
+        CurrentUserTestFactory::get()->set(User::fromUserArray(['id' => 3]));
         CaddieService::fillCurrentUserCaddie([5], CurrentUserTestFactory::get());
 
         CurrentUserTestFactory::get()->set(User::fromUserArray(['id' => 4]));
         CaddieService::fillCurrentUserCaddie([2, 3], CurrentUserTestFactory::get());
 
-        expect(caddieServiceTestFetchElementIds($conn, 1))->toBe([5])
+        expect(caddieServiceTestFetchElementIds($conn, 3))->toBe([5])
             ->and(caddieServiceTestFetchElementIds($conn, 4))->toBe([2, 3]);
     } finally {
-        caddieServiceTestClear($conn, 1);
+        caddieServiceTestClear($conn, 3);
         caddieServiceTestClear($conn, 4);
     }
 });

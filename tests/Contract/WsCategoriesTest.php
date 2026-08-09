@@ -174,13 +174,11 @@ final class WsCategoriesTest extends ContractTestCase
     }
 
     /**
-     * Gap-closure Stage 4h (docs/plan/gap-closure-p0-p23.md): getList()'s
-     * `public: true` branch now computes the guest identity's forbidden
-     * categories via UserService::getUserData() (replacing a
-     * user_cache_categories JOIN) -- new code with no prior direct
-     * coverage. A private album must not appear here even though the
-     * caller is authenticated as admin, since `public: true` intentionally
-     * asks "what would an anonymous visitor see."
+     * getList()'s `public: true` branch computes the guest identity's
+     * forbidden categories via UserService::getUserData(). A private
+     * album must not appear here even though the caller is authenticated
+     * as admin, since `public: true` intentionally asks "what would an
+     * anonymous visitor see."
      */
     public function test_getList_public_true_excludes_a_private_album(): void
     {
@@ -208,11 +206,10 @@ final class WsCategoriesTest extends ContractTestCase
     }
 
     /**
-     * Gap-closure Stage 4h: getList()'s "normal" (authenticated,
-     * non-admin) branch now reads CurrentUser::forbiddenCategories
-     * directly (replacing the same JOIN) -- also new code with no prior
-     * direct coverage. regular_user has no explicit grant on the private
-     * album created above, so it must stay hidden.
+     * getList()'s "normal" (authenticated, non-admin) branch reads
+     * CurrentUser::forbiddenCategories directly. regular_user has no
+     * explicit grant on the private album created above, so it must
+     * stay hidden.
      */
     public function test_getList_as_regular_user_excludes_a_private_album_without_access(): void
     {
@@ -480,7 +477,7 @@ final class WsCategoriesTest extends ContractTestCase
     }
 
     /**
-     * Gap-closure: when a category has no directly-set representative
+     * When a category has no directly-set representative
      * (neither a cached user override nor a real representative_picture_id
      * column value) and allowRandomRepresentative() is false (the default),
      * getList() falls back to searching sub-categories for a representative
@@ -557,7 +554,7 @@ final class WsCategoriesTest extends ContractTestCase
     }
 
     /**
-     * Gap-closure: a representative image whose privacy level exceeds the
+     * A representative image whose privacy level exceeds the
      * viewing user's own level must not be shown to that user -- getList()
      * substitutes a random lower-level image from the same category
      * instead (management-of-album-thumbnail block).

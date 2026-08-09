@@ -12,7 +12,7 @@ use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
  * Not exercised: the `Lang::has('format ' . $ext)` translated-label
  * override -- confirmed via a direct grep across every locale's .po
  * catalog under `language/` in this repo (not just en_UK), and against
- * the reference `/home/torres/piwigo16-rewrite` branch too, that no
+ * the reference implementation (16.x-rewrite) too, that no
  * `"format XXX"` msgid is defined anywhere. Always evaluates false; the
  * plain `strtoupper($ext)` label is the only reachable outcome with any
  * real translation data this project ships.

@@ -63,7 +63,7 @@ use Piwigo\Tests\Support\CurrentUserTestFactory;
  * both end in a bare `exit()`/`exit;` -- genuinely unsafe to invoke from
  * this shared PHPUnit/Pest process (same "don't exercise what would kill
  * the test" reasoning as NoPhotoYetRendererTest's own documented
- * exclusion) -- confirmed via this session's own live investigation (a
+ * exclusion) -- confirmed via a live investigation (a
  * deliberately-wrong password against the uploadAsync branch below really
  * does terminate the invoking PHP process), left uncovered.
  *

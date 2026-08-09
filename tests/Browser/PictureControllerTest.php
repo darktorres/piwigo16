@@ -410,8 +410,8 @@ it("edits a comment's own content via the edit_comment action, validating it as 
     // Raw curl throughout (not H::adminPost()'s in-browser fetch(manual)):
     // a successful edit takes the 'validate' branch, which issues a real
     // redirect() -- fetch(manual)'s own Response.status is always the
-    // spec's opaque 0 for a redirect, never the real 302 (confirmed
-    // elsewhere this session), so FOLLOWLOCATION is required to observe
+    // spec's opaque 0 for a redirect, never the real 302,
+    // so FOLLOWLOCATION is required to observe
     // the real final status. Matches "delete_comment succeeds for an
     // anonymous comment"'s own raw-curl login pattern above.
     $cookieJar = tempnam(sys_get_temp_dir(), 'pwg_browser_editcomment_');
@@ -631,8 +631,7 @@ it('rates a photo via the rate action', function (): void {
 
         // The action's own success path ends in RedirectServiceInterface::
         // redirect() -- adminPost() uses fetch(..., {redirect:'manual'}), so a
-        // real 30x comes back as an opaque status 0, not the real code (see
-        // this session's own feedback_fetch_manual_redirect_status_zero memory).
+        // real 30x comes back as an opaque status 0, not the real code.
         $result = H::adminPost($page, '/picture.php?/' . $imageId . '/category/' . $albumId . '&action=rate', [
             'rate' => '4',
         ]);
@@ -730,7 +729,7 @@ it('rejects an edit_comment submission whose key is used before its 2-second min
     // flushMessageMode() reads `$_SESSION['page_' . $mode]` generically
     // (not the literal string 'page_errors'), which a plain repo-wide grep
     // for that literal string misses -- confirmed live, and the same
-    // mechanism this session's own PasswordController fix (a873f5ca7d)
+    // mechanism PasswordController's own fix (a873f5ca7d)
     // relies on for its own page_errors flash. Since 'reject' never
     // redirects, this same response (not a follow-up one) is what
     // flushPageMessages() renders it into.
@@ -1531,7 +1530,7 @@ it('flashes an admin-authorization message via the session when a non-admin\'s c
         // HtmlService::flushMessageMode() -- which reads
         // `$_SESSION['page_' . $mode]` generically, not the literal string
         // 'page_infos' -- actually surfaces this on the next page, the
-        // same mechanism this session's own PasswordController fix
+        // same mechanism PasswordController's own fix
         // (a873f5ca7d) relies on for its own $_SESSION['page_errors']
         // flash. $url_self (the real redirect target, computed early in
         // __invoke() as a bare duplicatePictureUrl(), before the

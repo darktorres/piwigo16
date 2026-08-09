@@ -259,8 +259,7 @@ final class RequestBootstrapConnectTest extends IntegrationTestCase
         // install test above), so CurrentConfig::piwigoInstalledVersion()
         // reads that stale, already-current value instead of the '16.0.0'
         // just written -- the version-differs branch never triggers, and
-        // the DB is never restamped. See
-        // feedback_entitymanagerfactory_not_memoized_needs_accessor.
+        // the DB is never restamped.
         InfrastructureAccessor::entityManager()->clear();
 
         try {

@@ -174,7 +174,7 @@ final readonly class SchemaDumpService
                 // back) carry a freshly-random token on every single dump
                 // -- confirmed live by dumping twice in a row and diffing.
                 // Not schema content at all, and the single biggest
-                // non-determinism source found this session.
+                // non-determinism source in a schema dump.
                 return ! str_starts_with($trimmed, '-- Dumped from database version')
                     && ! str_starts_with($trimmed, '-- Dumped by pg_dump version')
                     && ! str_starts_with($trimmed, '\\restrict ')

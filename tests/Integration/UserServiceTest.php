@@ -1229,7 +1229,7 @@ namespace Piwigo\Tests\Integration {
         {
             // The fixture's own piwigo_themes table is empty (confirmed
             // live -- same fact SizingParams/ThemeCatalog tests elsewhere
-            // this session already established), so once the configured
+            // in this suite already establish), so once the configured
             // default user's own theme also fails checkThemeInstalled(),
             // there's no installed theme left to fall back to at all --
             // the method's own final, hardcoded 'default' literal.

@@ -65,7 +65,7 @@ use Piwigo\Db\DbCredentials;
  *   (`'simple'` text search config -- whitespace/punctuation tokenizer,
  *   no stemming/stopwords, the closest behavioral match to ngram's
  *   language-agnostic, non-stemmed matching) + a `GIN` index. Verified
- *   live this session: insert -> generated column computes correctly ->
+ *   live: insert -> generated column computes correctly ->
  *   both a plain `to_tsquery()` match and a `term:*` prefix-match query
  *   work against it.
  * - MySQL tolerates the same bare index name (`lastmodified`) reused

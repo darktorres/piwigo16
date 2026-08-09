@@ -178,7 +178,7 @@ abstract class IntegrationTestCase extends TestCase
         file_put_contents(dirname(__DIR__, 2) . '/_data/logs/test_errors.log', '');
         // ConfigService::allRowsFromCacheOrDb()'s cache is real,
         // cross-process-persistent storage in this environment -- ext-apcu
-        // isn't installed here (confirmed elsewhere this session), so
+        // isn't installed here, so
         // CachePools::config() falls back to FilesystemAdapter, real files
         // under _data/cache/ visible to both this PHPUnit/Pest process and
         // any real Apache/FrankenPHP worker serving Browser-test HTTP

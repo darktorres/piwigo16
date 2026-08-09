@@ -89,7 +89,7 @@ test('a short word (<=4 chars) never reaches the er2ing branch', function (): vo
 });
 
 /**
- * Exhaustive-table-verification pass (mutation-sweep gap closure): for
+ * Exhaustive-table-verification pass: for
  * every array entry pest --mutate flagged as an untested RemoveArrayItem
  * (or an UnwrapArrayReverse/UnwrapStrtolower/EmptyStringToNotEmpty on
  * these tables), the test below uses a real word that specifically

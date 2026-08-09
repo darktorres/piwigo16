@@ -115,7 +115,7 @@ beforeEach(function (): void {
 });
 
 afterEach(function (): void {
-    lsrRrmdir(is_string($this->root) ? $this->root : '');
+    lsrRrmdir($this->root);
     CurrentConfigTestFactory::get()->reset();
 });
 

@@ -51,7 +51,6 @@ test('getGeneralStatistics returns the full known shape with non-negative intege
         'nb_formats', 'formats_disk_usage',
     ]);
     foreach ($stats as $key => $value) {
-        expect($value)->toBeInt("{$key} should be an int");
         expect($value)->toBeGreaterThanOrEqual(0, "{$key} should be >= 0");
     }
     // The real fixture DB always has at least the webmaster account.

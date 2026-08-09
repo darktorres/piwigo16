@@ -41,6 +41,5 @@ test('validateRequired throws when a required key is missing', function (): void
 test('validateRequired passes when every required key is set', function (): void {
     CurrentConfigTestFactory::get()->setSecretKey('a-real-secret');
 
-    ConfigLoader::validateRequired(CurrentConfigTestFactory::get()); // should not throw
-    expect(true)->toBeTrue();
+    expect(static fn () => ConfigLoader::validateRequired(CurrentConfigTestFactory::get()))->not->toThrow(Throwable::class);
 });

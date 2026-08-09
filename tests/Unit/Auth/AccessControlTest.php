@@ -120,9 +120,7 @@ test('a guest without guest_access configured is below Guest level, and generic 
 });
 
 test('checkStatus does nothing when the current user meets the required access level', function (): void {
-    accessControlTestMake(UserStatus::Admin)->checkStatus(AccessLevel::Classic);
-
-    expect(true)->toBeTrue();
+    expect(static fn () => accessControlTestMake(UserStatus::Admin)->checkStatus(AccessLevel::Classic))->not->toThrow(Throwable::class);
 });
 
 /**

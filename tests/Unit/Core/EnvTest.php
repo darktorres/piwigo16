@@ -39,7 +39,7 @@ beforeEach(function (): void {
 });
 
 afterEach(function (): void {
-    envTestRrmdir(is_string($this->root) ? $this->root : '');
+    envTestRrmdir($this->root);
 });
 
 test('testModeHeader returns null for a malformed header value, not the raw string', function (): void {
@@ -139,9 +139,7 @@ test('now falls back to a real clock when PIWIGO_TEST_NOW is explicitly empty', 
 test('loadEnvFile is a safe no-op when the resolved env file does not exist', function (): void {
     // No .env.test file exists under this fresh, empty root -- loadEnvFile()
     // must return without ever constructing a Dotenv instance.
-    Env::loadEnvFile(is_string($this->root) ? $this->root : '');
-
-    expect(true)->toBeTrue(); // reaching here without error is the assertion
+    expect(fn () => Env::loadEnvFile($this->root))->not->toThrow(Throwable::class);
 });
 
 /**
@@ -157,7 +155,7 @@ test('loadEnvFile actually loads the resolved env file into the process environm
     // Kills line 109's own concat mutants (ConcatRemoveLeft/Right x2
     // each): any of them builds the wrong path, so the real file at
     // "$root/.env.test" would never be found and loaded.
-    $root = is_string($this->root) ? $this->root : '';
+    $root = $this->root;
     file_put_contents($root . '/.env.test', "ENV_TEST_LOAD_CHECK=loaded\n");
 
     Env::loadEnvFile($root);

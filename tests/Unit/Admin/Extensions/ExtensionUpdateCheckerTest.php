@@ -161,7 +161,6 @@ function extensionUpdateChecker(): ExtensionUpdateChecker
     // threw once scan() actually reached a real theme with no
     // screenshot.png.
     $repo = EntityManagerFactory::build(DbConnection::build())->getRepository(ExtensionIgnoredUpdateEntity::class);
-    expect($repo)->toBeInstanceOf(ExtensionIgnoredUpdateRepository::class);
 
     return new ExtensionUpdateChecker(
         LangTestFactory::get(),

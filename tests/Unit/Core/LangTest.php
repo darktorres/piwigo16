@@ -270,7 +270,7 @@ beforeEach(function (): void {
 });
 
 afterEach(function (): void {
-    langTestRrmdir(is_string($this->langRoot) ? $this->langRoot : '');
+    langTestRrmdir($this->langRoot);
     // Only the current() bridge tests below actually boot the Kernel, but
     // reset()ing unconditionally (matching PageStateTest.php and every
     // other facade's own test file) is cheap and guarantees a booted
@@ -1082,7 +1082,7 @@ test('poHeadersToLangInfo omits keys whose header is absent or explicitly empty'
 });
 
 test('current() resolves the real container-shared instance once Kernel::boot() has run', function (): void {
-    Kernel::boot(Paths::fromRoot(is_string($this->langRoot) ? $this->langRoot : sys_get_temp_dir()));
+    Kernel::boot(Paths::fromRoot($this->langRoot));
 
     $instance = Kernel::container()->get(Lang::class);
 

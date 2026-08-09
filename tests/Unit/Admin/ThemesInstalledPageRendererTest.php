@@ -263,7 +263,6 @@ function themesInstalledLifecycle(): ExtensionLifecycle
     $repo = new ExtensionRepository(EntityManagerFactory::build($conn));
     $configRepo = EntityManagerFactory::build($conn)->getRepository(ConfigEntry::class);
     $pluginMigrationRepo = EntityManagerFactory::build($conn)->getRepository(PluginMigrationEntity::class);
-    expect($pluginMigrationRepo)->toBeInstanceOf(PluginMigrationRepository::class);
 
     $currentLogger = new CurrentLogger();
     $currentLogger->set(new Logger(['severity' => Logger::OFF]));

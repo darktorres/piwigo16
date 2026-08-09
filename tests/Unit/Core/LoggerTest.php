@@ -50,7 +50,7 @@ beforeEach(function (): void {
 });
 
 afterEach(function (): void {
-    loggerTestRrmdir(is_string($this->root) ? $this->root : '');
+    loggerTestRrmdir($this->root);
 });
 
 test('accepts severity as a string code, converting it to the matching level constant', function (): void {

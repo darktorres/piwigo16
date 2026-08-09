@@ -50,9 +50,6 @@ test('an exception dictionary entry mapped to the empty string yields no variant
     // directly proves the guard suppresses an empty-string match instead
     // of appending it to the result.
     $inflector = $this->inflector;
-    if (! $inflector instanceof Inflector_fr) {
-        throw new RuntimeException('Expected inflector to be set');
-    }
 
     $prop = new ReflectionProperty(Inflector_fr::class, 'exceptions');
     $exceptions = $prop->getValue($inflector);

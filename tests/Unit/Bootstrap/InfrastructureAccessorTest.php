@@ -26,7 +26,6 @@ afterEach(function (): void {
 test('entityManager resolves the container\'s own single EntityManagerInterface instance', function (): void {
     $em = InfrastructureAccessor::entityManager();
 
-    expect($em)->toBeInstanceOf(EntityManagerInterface::class);
     // The whole point (see this class's own docblock): every caller
     // shares ONE instance per request/container, not a fresh one per
     // call -- distinct from EntityManagerFactory::build()'s own

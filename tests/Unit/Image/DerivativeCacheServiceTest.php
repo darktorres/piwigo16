@@ -380,12 +380,10 @@ test('clearDerivativeCache does nothing, without throwing, when the derivatives 
 
     set_error_handler(static fn (): bool => true);
     try {
-        new DerivativeCacheService(CurrentConfigTestFactory::get(), CurrentPathsTestFactory::get())->clearDerivativeCache('thumb');
+        expect(static fn () => new DerivativeCacheService(CurrentConfigTestFactory::get(), CurrentPathsTestFactory::get())->clearDerivativeCache('thumb'))->not->toThrow(Throwable::class);
     } finally {
         restore_error_handler();
     }
-
-    expect(true)->toBeTrue();
 });
 
 test('clearDerivativeCache never removes the derivatives root directory itself, even once every year-folder is emptied out', function (): void {

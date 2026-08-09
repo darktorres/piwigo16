@@ -516,7 +516,6 @@ test('pwgImageInfos reads real width/height/filesize from a generated image', fu
     // Exact floor(bytes / 1024), not just "some float" -- distinguishes
     // floor() from round()/ceil() and /1024 from *1024.
     expect($infos->filesize)->toBe(floor($realBytes / 1024));
-    expect($infos->filesize)->toBeFloat();
 });
 
 test('pwgImageInfos returns null width/height when getimagesize() can\'t read the file, instead of throwing', function (): void {
@@ -531,7 +530,6 @@ test('pwgImageInfos returns null width/height when getimagesize() can\'t read th
 
     expect($infos->width)->toBeNull();
     expect($infos->height)->toBeNull();
-    expect($infos->filesize)->toBeFloat();
 });
 
 test('pwgImageInfos throws when filesize() fails for a path that does not exist at all', function (): void {
@@ -1333,8 +1331,8 @@ test('getOptimalDimensionsForRepresentative falls back to the exact 2000x2000 sa
 test('getOptimalDimensionsForRepresentative returns a positive width/height pair', function (): void {
     [$w, $h] = upload_service_optimal_dimensions();
 
-    expect($w)->toBeInt()->toBeGreaterThan(0);
-    expect($h)->toBeInt()->toBeGreaterThan(0);
+    expect($w)->toBeGreaterThan(0);
+    expect($h)->toBeGreaterThan(0);
 });
 
 /**

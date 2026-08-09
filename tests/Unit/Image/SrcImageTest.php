@@ -615,7 +615,6 @@ test('get_size() persists the real, correctly-ordered width/height back onto the
     // their own correct column, not swapped or duplicated.
     $conn = DbConnection::build();
     $repo = EntityManagerFactory::build($conn)->getRepository(ImageEntity::class);
-    expect($repo)->toBeInstanceOf(ImageRepository::class);
 
     $conn->createQueryBuilder()
         ->insert(Tables::images())

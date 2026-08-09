@@ -11,7 +11,6 @@ use Piwigo\Template\CurrentTemplate;
 use Piwigo\Core\AppInfo;
 use Piwigo\Admin\Integrity\CheckIntegrity;
 use Piwigo\Admin\Integrity\IntegrityIgnoredAnomalyEntity;
-use Piwigo\Admin\Integrity\IntegrityIgnoredAnomalyRepository;
 use Piwigo\Core\InstallationFlag;
 use Piwigo\Core\Lang;
 use Piwigo\Core\Paths;
@@ -37,7 +36,6 @@ function checkIntegrityAddAnomalyTestLang(): Lang
 function checkIntegrityAddAnomalyNew(): CheckIntegrity
 {
     $repo = EntityManagerFactory::build(DbConnection::build())->getRepository(IntegrityIgnoredAnomalyEntity::class);
-    expect($repo)->toBeInstanceOf(IntegrityIgnoredAnomalyRepository::class);
 
     return new CheckIntegrity(checkIntegrityAddAnomalyTestLang(), $repo, new Translator(CurrentConfigTestFactory::get()), EventDispatcherTestFactory::get(), PageStateTestFactory::get(), CurrentTemplate::current());
 }

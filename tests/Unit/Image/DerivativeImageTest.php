@@ -369,8 +369,6 @@ test('get_all() coerces a plain info array into a SrcImage and keys the result b
         ]);
 
         expect(array_keys($all))->toBe(['square']);
-        expect($all['square'])->toBeInstanceOf(DerivativeImage::class);
-        expect($all['square']->src_image)->toBeInstanceOf(SrcImage::class);
         expect($all['square']->src_image->id)->toBe(7);
         expect($all['square']->src_image->rel_path)->toBe('upload/2026/07/photo.jpg');
     } finally {

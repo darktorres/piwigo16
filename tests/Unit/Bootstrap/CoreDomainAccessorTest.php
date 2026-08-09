@@ -29,7 +29,11 @@ afterEach(function (): void {
 test('userService resolves a real UserService from the container', function (): void {
     Kernel::boot(Paths::fromRoot(sys_get_temp_dir()));
 
-    expect(CoreDomainAccessor::userService())->toBeInstanceOf(UserService::class);
+    // userService()'s own return type already guarantees the resolved
+    // instance's class (a mismatch would throw a TypeError first) -- what's
+    // actually under test is that the call doesn't hit its internal
+    // "Container returned an unexpected type" guard.
+    expect(static fn () => CoreDomainAccessor::userService())->not->toThrow(Throwable::class);
 });
 
 test('userService throws when the container returns an unexpected type', function (): void {
@@ -42,7 +46,10 @@ test('userService throws when the container returns an unexpected type', functio
 test('imageService resolves a real ImageService from the container', function (): void {
     Kernel::boot(Paths::fromRoot(sys_get_temp_dir()));
 
-    expect(CoreDomainAccessor::imageService())->toBeInstanceOf(ImageService::class);
+    // Same rationale as userService() above: the return type already
+    // guarantees the class, so the real thing under test is that this
+    // doesn't hit the internal "unexpected type" guard.
+    expect(static fn () => CoreDomainAccessor::imageService())->not->toThrow(Throwable::class);
 });
 
 test('imageService throws when the container returns an unexpected type', function (): void {

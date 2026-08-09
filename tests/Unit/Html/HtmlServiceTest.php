@@ -24,6 +24,7 @@ use Piwigo\Common\ValueObject\Username;
 use Piwigo\Users\UserStatus;
 use Piwigo\Http\ResponseReadyException;
 use RuntimeException;
+use Throwable;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Lang;
@@ -450,9 +451,9 @@ test('fatalError throws a 500 response, not a neighboring status code', function
 test('setStatusHeader sends the well-known reason phrase for a known code', function (): void {
     $service = HtmlServiceTestFactory::build();
 
-    $service->setStatusHeader(404);
-
-    expect(true)->toBeTrue(); // real assertion is the absence of a fatal/warning; header() is a no-op under CLI SAPI
+    // real assertion is the absence of a fatal/warning; header() is a
+    // no-op under CLI SAPI
+    expect(static fn () => $service->setStatusHeader(404))->not->toThrow(Throwable::class);
 });
 
 test('renderCategoryLiteralDescription strips disallowed tag markup but keeps their content and the allow-list', function (): void {
@@ -1229,14 +1230,16 @@ test('getCombinedCategoriesContentTitle folds every other category into combined
 test('setStatusHeader accepts every well-known status code and the default fallback without a fatal/warning', function (): void {
     $service = HtmlServiceTestFactory::build();
 
-    foreach ([200, 301, 302, 304, 400, 401, 403, 500, 501, 503] as $code) {
-        $service->setStatusHeader($code);
-    }
-    // Unrecognized code, no explicit $text -- exercises the match's
-    // `default => $text` arm (still the already-empty '' at that point).
-    $service->setStatusHeader(999);
-
-    expect(true)->toBeTrue(); // header() is a no-op under CLI SAPI; absence of a fatal/warning is the real assertion
+    // header() is a no-op under CLI SAPI; absence of a fatal/warning is
+    // the real assertion.
+    expect(static function () use ($service): void {
+        foreach ([200, 301, 302, 304, 400, 401, 403, 500, 501, 503] as $code) {
+            $service->setStatusHeader($code);
+        }
+        // Unrecognized code, no explicit $text -- exercises the match's
+        // `default => $text` arm (still the already-empty '' at that point).
+        $service->setStatusHeader(999);
+    })->not->toThrow(Throwable::class);
 });
 
 test('setStatusHeader resolves the exact well-known reason phrase for every known code', function (): void {

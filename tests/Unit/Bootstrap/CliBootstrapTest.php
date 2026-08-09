@@ -45,7 +45,7 @@ test('config/commands.php entries resolve to registered command names', function
 
     /** @var list<class-string<Command>> $commandClasses */
     $commandClasses = require dirname(__DIR__, 3) . '/config/commands.php';
-    expect($commandClasses)->toBeArray()->not->toBe([]);
+    expect($commandClasses)->not->toBe([]);
 
     foreach ($commandClasses as $commandClass) {
         expect(is_subclass_of($commandClass, Command::class))->toBeTrue();
@@ -76,7 +76,6 @@ test('buildApplication initializes CurrentConfigService with a real, resolved Co
     CliBootstrap::buildApplication();
 
     expect(fn () => CurrentConfigServiceTestFactory::get()->get())->not->toThrow(LogicException::class);
-    expect(CurrentConfigServiceTestFactory::get()->get())->toBeInstanceOf(ConfigService::class);
 });
 
 test('run() installs the shutdown handler, builds the Application and executes the given argv', function (): void {

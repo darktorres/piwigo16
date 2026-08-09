@@ -9,5 +9,6 @@ it('runs on PHP 8.5+', function (): void {
 });
 
 it('Pest is loaded', function (): void {
+    // @phpstan-ignore classConstant.internalClass
     expect(class_exists(TestCall::class))->toBeTrue();
 });

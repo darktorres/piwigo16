@@ -8,8 +8,7 @@ use Piwigo\Users\Projection\BasicUserRow;
 test('constructs with distinct values for every property', function (): void {
     $row = new BasicUserRow(UserId::from(3), 'fixture_admin', 'hash', 'admin@example.com');
 
-    expect($row->id)->toBeInstanceOf(UserId::class)
-        ->and($row->id->value)->toBe(3)
+    expect($row->id->value)->toBe(3)
         ->and($row->username)->toBe('fixture_admin')
         ->and($row->password)->toBe('hash')
         ->and($row->email)->toBe('admin@example.com');

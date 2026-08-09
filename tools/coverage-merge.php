@@ -85,6 +85,7 @@ foreach ($webFiles as $i => $file) {
         continue;
     }
 
+    // @phpstan-ignore staticMethod.internalClass
     $coverage->append(RawCodeCoverageData::fromLineCoverage($lineCoverage), 'web-' . $i);
 }
 
@@ -113,7 +114,9 @@ foreach (array_slice($argv ?? [], 1) as $cliDumpPath) {
     // because the relative keys never matched our own absolute-path-keyed
     // accumulator's existing entries for the same files.
     if ($loaded['basePath'] !== '') {
+        // @phpstan-ignore method.internalClass
         foreach ($loaded['codeCoverage']->coveredFiles() as $relativeFile) {
+            // @phpstan-ignore method.internalClass
             $loaded['codeCoverage']->renameFile($relativeFile, $loaded['basePath'] . DIRECTORY_SEPARATOR . $relativeFile);
         }
     }
@@ -131,13 +134,17 @@ foreach (array_slice($argv ?? [], 1) as $cliDumpPath) {
     // not carried over for argv-provided dumps -- only affects per-test
     // attribution for files covered solely by these dumps, not the
     // coverage percentages themselves, which come from the merged data.
+    // @phpstan-ignore method.internalClass
     $coverage->getData()
         ->merge($loaded['codeCoverage']);
 }
 
 echo count($webFiles) . " web request dump(s) merged.\n\n";
+// @phpstan-ignore method.internal
 $report = $coverage->getReport();
+// @phpstan-ignore new.internalClass, method.internalClass, method.internalClass
 echo (new Text(Thresholds::default(), true))->process($report);
 
+// @phpstan-ignore new.internalClass, method.internalClass, method.internalClass
 (new HtmlReport())->process($report, $htmlDir);
 echo "\nHTML report written to {$htmlDir}\n";

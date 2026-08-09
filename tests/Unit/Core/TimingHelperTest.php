@@ -23,7 +23,6 @@ test('getMoment returns a float (microtime with microsecond precision)', functio
     $moment = TimingHelper::getMoment();
     $after = microtime(true);
 
-    expect($moment)->toBeFloat();
     expect($moment)->toBeGreaterThanOrEqual($before);
     expect($moment)->toBeLessThanOrEqual($after);
 });

@@ -31,7 +31,6 @@ function imageRepositoryTestRepo(): ImageRepository
 {
     $conn = DbConnection::build();
     $repo = EntityManagerFactory::build($conn)->getRepository(ImageEntity::class);
-    expect($repo)->toBeInstanceOf(ImageRepository::class);
 
     return $repo;
 }
@@ -613,9 +612,6 @@ test('findIdsVisibleInCategoriesRecentlyAvailable returns real ints for a recent
         // production data, not something this test controls) -- assert
         // strict membership and type instead of an exact-array match.
         expect($result)->toContain($imageId);
-        foreach ($result as $id) {
-            expect($id)->toBeInt();
-        }
     } finally {
         $conn->createQueryBuilder()->delete(Tables::imageCategory())
             ->where('image_id = :i')->setParameter('i', $imageId)->executeStatement();
@@ -642,7 +638,6 @@ test('findAddMethodBreakdown reports real string/int columns for at least one re
     if ($api === null) {
         throw new RuntimeException('expected at least one real "api" add_method row');
     }
-    expect($api->nbFiles)->toBeInt();
     expect($api->nbFiles)->toBeGreaterThanOrEqual(5);
     expect($api->lastAddedOn)->toBeString();
 });

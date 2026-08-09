@@ -240,7 +240,7 @@ beforeEach(function (): void {
 });
 
 afterEach(function (): void {
-    template_instance_test_rrmdir(is_string($this->root) ? $this->root : '');
+    template_instance_test_rrmdir($this->root);
     CurrentUserTestFactory::get()->reset();
     CurrentConfigTestFactory::get()->reset();
     EventDispatcherTestFactory::get()->reset();
@@ -735,8 +735,7 @@ test('set_theme merges themeconf directly into the flat "themeconf" template var
     $t->set_theme($root, 'merge-theme', 'template');
 
     $tc = template_instance_test_assoc($t->get_template_vars('themeconf'));
-    expect($tc)->toBeArray()
-        ->and($tc['marker'] ?? null)->toBe('flat-merge-check')
+    expect($tc['marker'] ?? null)->toBe('flat-merge-check')
         ->and($tc)->not->toHaveKey(0);
 });
 
@@ -1015,6 +1014,10 @@ test('assign_var_from_handle assigns the parsed handle output (returned, not ech
 
     $result = $t->assign_var_from_handle('greeting', 'partial');
 
+    // assign_var_from_handle()'s only return statement is a hardcoded
+    // `return true;`, so PHPStan can already prove this -- but the return
+    // value is part of this test's own stated contract (see its name).
+    // @phpstan-ignore pest.expectation.redundant
     expect($result)->toBeTrue()
         ->and($t->get_template_vars('greeting'))->toBe('Hello World');
 });

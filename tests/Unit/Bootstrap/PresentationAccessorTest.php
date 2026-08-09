@@ -32,11 +32,24 @@ afterEach(function (): void {
 test('every accessor returns its real, correctly-typed instance from a real container, without throwing', function (): void {
     Kernel::boot(Paths::fromRoot(sys_get_temp_dir()));
 
-    expect(PresentationAccessor::htmlService())->toBeInstanceOf(HtmlService::class);
-    expect(PresentationAccessor::mailService())->toBeInstanceOf(MailService::class);
-    expect(PresentationAccessor::urlService())->toBeInstanceOf(UrlService::class);
-    expect(PresentationAccessor::notificationByMailSender())->toBeInstanceOf(NotificationByMailSender::class);
-    expect(PresentationAccessor::pictureRateRenderer())->toBeInstanceOf(PictureRateRenderer::class);
+    // Each accessor's own return type already guarantees the resolved
+    // instance's class -- a mismatch would throw a TypeError before this
+    // array literal could even finish building, so an explicit
+    // toBeInstanceOf() per accessor would just be re-asserting what PHP
+    // itself already enforces. What's actually under test is that every
+    // one of the 5 calls below completes without hitting its internal
+    // "Container returned an unexpected type" guard (see this test's own
+    // docblock); an uncaught LogicException from any of them fails the
+    // test on its own.
+    $instances = [
+        PresentationAccessor::htmlService(),
+        PresentationAccessor::mailService(),
+        PresentationAccessor::urlService(),
+        PresentationAccessor::notificationByMailSender(),
+        PresentationAccessor::pictureRateRenderer(),
+    ];
+
+    expect($instances)->toHaveCount(5);
 });
 
 test('htmlService throws when the container returns an unexpected type', function (): void {

@@ -151,7 +151,6 @@ test('bootConfigOnly sets CurrentConfigService when resolving a fresh instance f
     RequestBootstrap::bootConfigOnly(Paths::fromRoot(sys_get_temp_dir()));
 
     expect(fn () => CurrentConfigServiceTestFactory::get()->get())->not->toThrow(LogicException::class);
-    expect(CurrentConfigServiceTestFactory::get()->get())->toBeInstanceOf(ConfigService::class);
 });
 
 test('bootConfigOnly attaches Lang globals from whatever the Translator has loaded', function (): void {

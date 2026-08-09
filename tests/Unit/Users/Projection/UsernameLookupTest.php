@@ -8,8 +8,7 @@ use Piwigo\Users\Projection\UsernameLookup;
 test('constructs with distinct values for every property', function (): void {
     $row = new UsernameLookup(UserId::from(1), 'fixture_admin', 'fixture_admin@example.test');
 
-    expect($row->id)->toBeInstanceOf(UserId::class)
-        ->and($row->id->value)->toBe(1)
+    expect($row->id->value)->toBe(1)
         ->and($row->username)->toBe('fixture_admin')
         ->and($row->email)->toBe('fixture_admin@example.test');
 });

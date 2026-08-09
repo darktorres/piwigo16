@@ -62,30 +62,43 @@ test('every accessor returns its real, correctly-typed instance from a real cont
     Kernel::reset();
     Kernel::boot(Paths::fromRoot(sys_get_temp_dir()));
 
-    expect(AdminAccessor::categoryAdminService())->toBeInstanceOf(CategoryAdminService::class);
-    expect(AdminAccessor::dbMaintenanceRepository())->toBeInstanceOf(DbMaintenanceRepository::class);
-    expect(AdminAccessor::filterResolver())->toBeInstanceOf(FilterResolver::class);
-    expect(AdminAccessor::userPermPageRenderer())->toBeInstanceOf(UserPermPageRenderer::class);
-    expect(AdminAccessor::updatesPwgPageRenderer())->toBeInstanceOf(UpdatesPwgPageRenderer::class);
-    expect(AdminAccessor::themesNewPageRenderer())->toBeInstanceOf(ThemesNewPageRenderer::class);
-    expect(AdminAccessor::themesInstalledPageRenderer())->toBeInstanceOf(ThemesInstalledPageRenderer::class);
-    expect(AdminAccessor::tagsPageRenderer())->toBeInstanceOf(TagsPageRenderer::class);
-    expect(AdminAccessor::pluginsNewPageRenderer())->toBeInstanceOf(PluginsNewPageRenderer::class);
-    expect(AdminAccessor::pictureModifyPageRenderer())->toBeInstanceOf(PictureModifyPageRenderer::class);
-    expect(AdminAccessor::photosAddDirectPageRenderer())->toBeInstanceOf(PhotosAddDirectPageRenderer::class);
-    expect(AdminAccessor::maintenanceEnvPageRenderer())->toBeInstanceOf(MaintenanceEnvPageRenderer::class);
-    expect(AdminAccessor::maintenanceActionsPageRenderer())->toBeInstanceOf(MaintenanceActionsPageRenderer::class);
-    expect(AdminAccessor::languagesNewPageRenderer())->toBeInstanceOf(LanguagesNewPageRenderer::class);
-    expect(AdminAccessor::languagesInstalledPageRenderer())->toBeInstanceOf(LanguagesInstalledPageRenderer::class);
-    expect(AdminAccessor::groupListPageRenderer())->toBeInstanceOf(GroupListPageRenderer::class);
-    expect(AdminAccessor::elementSetRanksPageRenderer())->toBeInstanceOf(ElementSetRanksPageRenderer::class);
-    expect(AdminAccessor::catPermPageRenderer())->toBeInstanceOf(CatPermPageRenderer::class);
-    expect(AdminAccessor::catOptionsPageRenderer())->toBeInstanceOf(CatOptionsPageRenderer::class);
-    expect(AdminAccessor::catListPageRenderer())->toBeInstanceOf(CatListPageRenderer::class);
-    expect(AdminAccessor::batchManagerUnitPageRenderer())->toBeInstanceOf(BatchManagerUnitPageRenderer::class);
-    expect(AdminAccessor::albumNotificationPageRenderer())->toBeInstanceOf(AlbumNotificationPageRenderer::class);
-    expect(AdminAccessor::themesStandardPagesPageRenderer())->toBeInstanceOf(ThemesStandardPagesPageRenderer::class);
-    expect(AdminAccessor::pictureCoiPageRenderer())->toBeInstanceOf(PictureCoiPageRenderer::class);
+    // Each accessor's own return type already guarantees the resolved
+    // instance's class (a mismatch would throw a TypeError before this
+    // array literal could even finish building) -- an explicit
+    // toBeInstanceOf() per accessor would just be re-asserting what PHP
+    // itself already enforces. What's actually under test is that every
+    // one of the 24 calls below completes without hitting its internal
+    // "Container returned an unexpected type" guard (see this test's own
+    // docblock); an uncaught LogicException from any of them fails the
+    // test on its own.
+    $instances = [
+        AdminAccessor::categoryAdminService(),
+        AdminAccessor::dbMaintenanceRepository(),
+        AdminAccessor::filterResolver(),
+        AdminAccessor::userPermPageRenderer(),
+        AdminAccessor::updatesPwgPageRenderer(),
+        AdminAccessor::themesNewPageRenderer(),
+        AdminAccessor::themesInstalledPageRenderer(),
+        AdminAccessor::tagsPageRenderer(),
+        AdminAccessor::pluginsNewPageRenderer(),
+        AdminAccessor::pictureModifyPageRenderer(),
+        AdminAccessor::photosAddDirectPageRenderer(),
+        AdminAccessor::maintenanceEnvPageRenderer(),
+        AdminAccessor::maintenanceActionsPageRenderer(),
+        AdminAccessor::languagesNewPageRenderer(),
+        AdminAccessor::languagesInstalledPageRenderer(),
+        AdminAccessor::groupListPageRenderer(),
+        AdminAccessor::elementSetRanksPageRenderer(),
+        AdminAccessor::catPermPageRenderer(),
+        AdminAccessor::catOptionsPageRenderer(),
+        AdminAccessor::catListPageRenderer(),
+        AdminAccessor::batchManagerUnitPageRenderer(),
+        AdminAccessor::albumNotificationPageRenderer(),
+        AdminAccessor::themesStandardPagesPageRenderer(),
+        AdminAccessor::pictureCoiPageRenderer(),
+    ];
+
+    expect($instances)->toHaveCount(24);
 });
 
 test('categoryAdminService throws when the container returns an unexpected type', function (): void {

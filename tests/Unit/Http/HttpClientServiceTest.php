@@ -349,8 +349,7 @@ test('requestRaw returns Symfony\'s own response type, applies the same SSRF gua
 
     $response = $service->requestRaw('GET', 'https://93.184.216.34/raw', ['User-Agent' => 'Piwigo'], '');
 
-    expect($response)->toBeInstanceOf(Symfony\Contracts\HttpClient\ResponseInterface::class)
-        ->and($response->getStatusCode())->toBe(200)
+    expect($response->getStatusCode())->toBe(200)
         ->and($response->getContent(false))->toBe('raw body')
         ->and($seenHeaders)->toContain('User-Agent: Piwigo');
 });

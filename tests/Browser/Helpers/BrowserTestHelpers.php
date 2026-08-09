@@ -140,6 +140,7 @@ final class BrowserTestHelpers
      */
     public static function visitPwg(object $test, string $path): Webpage|PendingAwaitablePage|AwaitableWebpage
     {
+        // @phpstan-ignore method.notFound
         $result = $test->visit(self::baseUrl() . $path, self::testModeOptions());
 
         if (
@@ -347,15 +348,17 @@ final class BrowserTestHelpers
      * the 3 page wrapper types, via the same reflection technique
      * rawWebpage() uses -- shared so clickWithTimeout() below (which needs
      * a raw Locator, not a Webpage) doesn't duplicate the union-unwrapping
-     * logic. See phpstan.neon's own internalClass entry for this file for
-     * why reaching into pest-plugin-browser's @internal Page class here is
-     * deliberate, not a mistake.
+     * logic. Reaching into pest-plugin-browser's @internal Page class here
+     * is deliberate, not a mistake -- pest-plugin-browser ships no PHPStan
+     * extension of its own, and there's no public API for this.
      */
+    // @phpstan-ignore return.internalClass
     private static function nativePage(Webpage|PendingAwaitablePage|AwaitableWebpage $page): Page
     {
         if ($page instanceof Webpage) {
             $property = new ReflectionProperty(Webpage::class, 'page');
 
+            // @phpstan-ignore instanceof.internalClass
             if (!($rawPage = $property->getValue($page)) instanceof Page) {
                 throw new ExpectationFailedException(
                     'Could not extract the underlying Page from Webpage — '
@@ -390,6 +393,7 @@ final class BrowserTestHelpers
         $property = new ReflectionProperty(AwaitableWebpage::class, 'page');
         $rawPage = $property->getValue($page);
 
+        // @phpstan-ignore instanceof.internalClass
         if (!$rawPage instanceof Page) {
             throw new ExpectationFailedException(
                 'Could not extract the underlying Page from AwaitableWebpage — '
@@ -422,6 +426,7 @@ final class BrowserTestHelpers
         string $text,
         int $timeoutMs = 30_000
     ): void {
+        // @phpstan-ignore new.internalClass, method.internalClass
         (new GuessLocator(self::nativePage($page)))
             ->for($text)
             ->click(['timeout' => $timeoutMs]);
@@ -795,6 +800,7 @@ final class BrowserTestHelpers
             'origins' => [],
         ];
 
+        // @phpstan-ignore method.notFound
         $result = $test->visit(self::baseUrl() . $path, $options);
 
         if (

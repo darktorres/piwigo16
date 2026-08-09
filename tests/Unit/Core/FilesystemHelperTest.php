@@ -152,7 +152,7 @@ beforeEach(function (): void {
 });
 
 afterEach(function (): void {
-    filesystemHelperTestRrmdir(is_string($this->root) ? $this->root : '');
+    filesystemHelperTestRrmdir($this->root);
     CurrentConfigTestFactory::get()->reset();
 });
 

@@ -108,7 +108,6 @@ test('redirectHttp throws ResponseReadyException with a 302 redirect to the give
         $exception = $e;
     }
 
-    expect($exception)->toBeInstanceOf(ResponseReadyException::class);
     $response = $exception->response();
     expect($response->getStatusCode())->toBe(302);
     expect($response->getHeaderLine('Location'))->toBe('http://example.test/target.php');
@@ -123,6 +122,5 @@ test('redirectHttp html_entity_decode()s the URL before redirecting', function (
         $exception = $e;
     }
 
-    expect($exception)->toBeInstanceOf(ResponseReadyException::class);
     expect($exception->response()->getHeaderLine('Location'))->toBe('http://example.test/target.php?a=1&b=2');
 });

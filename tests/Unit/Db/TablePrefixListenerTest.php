@@ -18,12 +18,18 @@ use Piwigo\Db\TablePrefixListener;
  * covered here directly against a bare ClassMetadata, with a PHPUnit stub
  * EntityManagerInterface since loadClassMetadata() never calls
  * getObjectManager().
+ *
+ * $this->createStub() (flagged staticMethod.dynamicCall below, 4x) can't
+ * be changed to self::createStub() -- confirmed live: Pest's test()
+ * closures have no real class scope, so self:: inside one is an
+ * outOfClass.self error, not just a style nit.
  */
 test('loadClassMetadata prefixes a bare table name', function (): void {
     $credentials = new DbCredentials(host: 'localhost', user: '', password: '', database: '', prefix: 'piwigo_');
 
     $metadata = new ClassMetadata('Piwigo\\Tests\\Fixtures\\FakeEntity');
     $metadata->setPrimaryTable(['name' => 'sessions']);
+    // @phpstan-ignore staticMethod.dynamicCall
     $args = new LoadClassMetadataEventArgs($metadata, $this->createStub(EntityManagerInterface::class));
 
     new TablePrefixListener($credentials)->loadClassMetadata($args);
@@ -42,6 +48,7 @@ test('loadClassMetadata leaves the table name untouched when the configured pref
 
     $metadata = new ClassMetadata('Piwigo\\Tests\\Fixtures\\FakeEntity');
     $metadata->setPrimaryTable(['name' => 'sessions']);
+    // @phpstan-ignore staticMethod.dynamicCall
     $args = new LoadClassMetadataEventArgs($metadata, $this->createStub(EntityManagerInterface::class));
 
     new TablePrefixListener($credentials)->loadClassMetadata($args);
@@ -54,6 +61,7 @@ test('loadClassMetadata leaves an already-prefixed table name untouched (idempot
 
     $metadata = new ClassMetadata('Piwigo\\Tests\\Fixtures\\FakeEntity');
     $metadata->setPrimaryTable(['name' => 'piwigo_sessions']);
+    // @phpstan-ignore staticMethod.dynamicCall
     $args = new LoadClassMetadataEventArgs($metadata, $this->createStub(EntityManagerInterface::class));
 
     new TablePrefixListener($credentials)->loadClassMetadata($args);
@@ -66,6 +74,7 @@ test('loadClassMetadata applies a custom, non-default prefix', function (): void
 
     $metadata = new ClassMetadata('Piwigo\\Tests\\Fixtures\\FakeEntity');
     $metadata->setPrimaryTable(['name' => 'sessions']);
+    // @phpstan-ignore staticMethod.dynamicCall
     $args = new LoadClassMetadataEventArgs($metadata, $this->createStub(EntityManagerInterface::class));
 
     new TablePrefixListener($credentials)->loadClassMetadata($args);

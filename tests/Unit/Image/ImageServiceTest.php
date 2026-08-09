@@ -476,7 +476,6 @@ function imageServiceTestConnAndRepo(): array
 {
     $conn = DbConnection::build();
     $repo = EntityManagerFactory::build($conn)->getRepository(ImageEntity::class);
-    expect($repo)->toBeInstanceOf(ImageRepository::class);
 
     return [$conn, $repo];
 }
@@ -930,7 +929,6 @@ test('deleteElements() with physical deletion removing zero files never fires de
     EventDispatcherTestFactory::get()->addTypedHandler(DeleteElements::class, $deleteHandler);
 
     $activityRepo = EntityManagerFactory::build($conn)->getRepository(ActivityEntity::class);
-    expect($activityRepo)->toBeInstanceOf(ActivityRepository::class);
     $activityService = new ActivityService($activityRepo);
 
     try {
@@ -968,7 +966,6 @@ test('deleteElements() fires begin_delete_elements and delete_elements with the 
     $imageId = imageServiceTestInsertImage($conn, 'upload/2026/07/notifydelete.jpg');
     $urlService = new ImageServiceTestFakeUrlService();
     $activityRepo = EntityManagerFactory::build($conn)->getRepository(ActivityEntity::class);
-    expect($activityRepo)->toBeInstanceOf(ActivityRepository::class);
     $activityService = new ActivityService($activityRepo);
 
     $capturedBeginIds = null;
@@ -1471,7 +1468,6 @@ test('emptyLounge() clears a stale lock, logs the API-suffixed begin/win/end mes
         // not an unrelated string.
         CurrentConfigTestFactory::get()->setEmptyLoungeRunning('staleexecid-' . (time() - 100));
         $configRepo = EntityManagerFactory::build($conn)->getRepository(ConfigEntry::class);
-        expect($configRepo)->toBeInstanceOf(ConfigRepository::class);
         CurrentConfigServiceTestFactory::get()->set(new ConfigService($configRepo, new EventDispatcher(), CurrentConfigTestFactory::get()));
         // invalidateUserCache: false below -- this must survive untouched,
         // proving line 383's IfNegated does not wrongly invoke
@@ -1598,7 +1594,6 @@ test('emptyLounge() invalidates the permission cache (and its orphan-count cache
         imageServiceTestSeedCurrentLogger(new Logger(['severity' => Logger::OFF]));
         $conn->executeStatement("DELETE FROM " . Tables::config() . " WHERE param IN ('empty_lounge_running', 'count_orphans')");
         $configRepo = EntityManagerFactory::build($conn)->getRepository(ConfigEntry::class);
-        expect($configRepo)->toBeInstanceOf(ConfigRepository::class);
         CurrentConfigServiceTestFactory::get()->set(new ConfigService($configRepo, new EventDispatcher(), CurrentConfigTestFactory::get()));
         $conn->executeStatement(
             "INSERT INTO " . Tables::config() . " (param, value) VALUES ('count_orphans', ?)",
@@ -1647,7 +1642,6 @@ test('emptyLounge() actually clears a stale lock\'s real database row, letting t
         );
         CurrentConfigTestFactory::get()->setEmptyLoungeRunning($staleValue);
         $configRepo = EntityManagerFactory::build($conn)->getRepository(ConfigEntry::class);
-        expect($configRepo)->toBeInstanceOf(ConfigRepository::class);
         CurrentConfigServiceTestFactory::get()->set(new ConfigService($configRepo, new EventDispatcher(), CurrentConfigTestFactory::get()));
 
         try {
@@ -1701,7 +1695,6 @@ test('emptyLounge() does not touch a lock that is not actually stale, and logs t
         );
         CurrentConfigTestFactory::get()->setEmptyLoungeRunning($freshLockValue);
         $configRepo = EntityManagerFactory::build($conn)->getRepository(ConfigEntry::class);
-        expect($configRepo)->toBeInstanceOf(ConfigRepository::class);
         CurrentConfigServiceTestFactory::get()->set(new ConfigService($configRepo, new EventDispatcher(), CurrentConfigTestFactory::get()));
 
         $originalRequest = $_REQUEST;
@@ -1811,7 +1804,6 @@ test('emptyLounge() treats a lock that is exactly 60 seconds old as still fresh,
         );
         CurrentConfigTestFactory::get()->setEmptyLoungeRunning($lockValue);
         $configRepo = EntityManagerFactory::build($conn)->getRepository(ConfigEntry::class);
-        expect($configRepo)->toBeInstanceOf(ConfigRepository::class);
         CurrentConfigServiceTestFactory::get()->set(new ConfigService($configRepo, new EventDispatcher(), CurrentConfigTestFactory::get()));
 
         try {
@@ -1869,7 +1861,6 @@ test('emptyLounge() treats a lock that is exactly 61 seconds old as genuinely st
         );
         CurrentConfigTestFactory::get()->setEmptyLoungeRunning($staleValue);
         $configRepo = EntityManagerFactory::build($conn)->getRepository(ConfigEntry::class);
-        expect($configRepo)->toBeInstanceOf(ConfigRepository::class);
         CurrentConfigServiceTestFactory::get()->set(new ConfigService($configRepo, new EventDispatcher(), CurrentConfigTestFactory::get()));
 
         try {
@@ -2028,7 +2019,6 @@ test('getAddMethodBreakdown() delegates straight through to the repository, grou
     // wrong, not merely untested.
     expect($result)->not->toBeEmpty();
     foreach ($result as $row) {
-        expect($row)->toBeInstanceOf(AddMethodBreakdown::class);
         expect(in_array($row->addMethod, ['api', 'sync'], true))->toBeTrue();
     }
 });

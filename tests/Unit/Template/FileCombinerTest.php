@@ -512,14 +512,11 @@ test('clear_combined_files returns without error when the combined dir does not 
 
     set_error_handler(static fn (): bool => true);
     try {
-        FileCombiner::clear_combined_files(CurrentConfigTestFactory::get(), Paths::fromRoot($root));
-        $ranToCompletion = true;
+        expect(static fn () => FileCombiner::clear_combined_files(CurrentConfigTestFactory::get(), Paths::fromRoot($root)))->not->toThrow(Throwable::class);
     } finally {
         restore_error_handler();
         Kernel::reset();
     }
-
-    expect($ranToCompletion)->toBeTrue();
 });
 
 // --- process_combinable()'s is_template branch (cache-hit/cache-miss,

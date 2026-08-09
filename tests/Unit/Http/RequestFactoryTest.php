@@ -3,7 +3,6 @@
 declare(strict_types=1);
 
 use Piwigo\Http\RequestFactory;
-use Psr\Http\Message\ServerRequestInterface;
 
 test('fromGlobals builds a PSR-7 ServerRequest from superglobals', function (): void {
     $_SERVER['REQUEST_METHOD']  = 'GET';
@@ -14,7 +13,6 @@ test('fromGlobals builds a PSR-7 ServerRequest from superglobals', function (): 
 
     $request = RequestFactory::fromGlobals();
 
-    expect($request)->toBeInstanceOf(ServerRequestInterface::class);
     expect($request->getMethod())->toBe('GET');
     expect((string) $request->getUri())->toContain('/index.php');
     expect($request->getQueryParams())->toBe(['foo' => 'bar']);

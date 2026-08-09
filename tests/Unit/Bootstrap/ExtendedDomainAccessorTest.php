@@ -30,7 +30,11 @@ afterEach(function (): void {
 test('activityService resolves a real ActivityService from the container', function (): void {
     Kernel::boot(Paths::fromRoot(sys_get_temp_dir()));
 
-    expect(ExtendedDomainAccessor::activityService())->toBeInstanceOf(ActivityService::class);
+    // activityService()'s own return type already guarantees the resolved
+    // instance's class (a mismatch would throw a TypeError first) -- what's
+    // actually under test is that the call doesn't hit its internal
+    // "Container returned an unexpected type" guard.
+    expect(static fn () => ExtendedDomainAccessor::activityService())->not->toThrow(Throwable::class);
 });
 
 test('activityService throws when the container returns an unexpected type', function (): void {
@@ -43,7 +47,10 @@ test('activityService throws when the container returns an unexpected type', fun
 test('metadataService resolves a real MetadataService from the container', function (): void {
     Kernel::boot(Paths::fromRoot(sys_get_temp_dir()));
 
-    expect(ExtendedDomainAccessor::metadataService())->toBeInstanceOf(MetadataService::class);
+    // Same rationale as activityService() above: the return type already
+    // guarantees the class, so the real thing under test is that this
+    // doesn't hit the internal "unexpected type" guard.
+    expect(static fn () => ExtendedDomainAccessor::metadataService())->not->toThrow(Throwable::class);
 });
 
 test('metadataService throws when the container returns an unexpected type', function (): void {

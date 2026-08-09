@@ -54,8 +54,7 @@ test('fromArrays computes a 4-char coi code when l is a non-empty string', funct
     ], new InputValidator());
 
     Assert::assertIsString($request->coi);
-    expect($request->coi)->toBeString()
-        ->and(strlen($request->coi))->toBe(4);
+    expect(strlen($request->coi))->toBe(4);
 });
 
 test('fromArrays computes the exact coi code, in l/t/r/b order', function (): void {

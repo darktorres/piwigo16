@@ -5,12 +5,15 @@ declare(strict_types=1);
 use DI\Definition\Exception\InvalidDefinition;
 use Piwigo\Core\Container;
 use Piwigo\Core\Paths;
-use Psr\Container\ContainerInterface;
 
 use function DI\factory;
 
 test('build returns a ContainerInterface', function (): void {
-    expect(Container::build())->toBeInstanceOf(ContainerInterface::class);
+    // Container::build()'s own return type already guarantees the
+    // instance's class -- what's actually meaningful to verify is that
+    // building with no overrides (config/container.php's real
+    // definitions, PHP-DI's own autowiring) completes without throwing.
+    expect(static fn () => Container::build())->not->toThrow(Throwable::class);
 });
 
 test('build with no overrides leaves an unbound interface unresolved', function (): void {

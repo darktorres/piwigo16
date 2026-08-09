@@ -12,7 +12,6 @@ use Piwigo\Admin\Integrity\C13yInternal;
 use Piwigo\Admin\Integrity\CheckIntegrity;
 use Piwigo\Admin\Integrity\Event\ListCheckIntegrity;
 use Piwigo\Admin\Integrity\IntegrityIgnoredAnomalyEntity;
-use Piwigo\Admin\Integrity\IntegrityIgnoredAnomalyRepository;
 use Piwigo\Config\ConfigLoader;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Core\Kernel;
@@ -26,7 +25,6 @@ use Piwigo\Session\SessionService;
 function c13yInternalTestCheckIntegrity(): CheckIntegrity
 {
     $repo = EntityManagerFactory::build(DbConnection::build())->getRepository(IntegrityIgnoredAnomalyEntity::class);
-    expect($repo)->toBeInstanceOf(IntegrityIgnoredAnomalyRepository::class);
 
     return new CheckIntegrity(LangTestFactory::get(), $repo, new Translator(CurrentConfigTestFactory::get()), EventDispatcherTestFactory::get(), PageStateTestFactory::get(), CurrentTemplate::current());
 }

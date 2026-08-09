@@ -51,8 +51,7 @@ test('a custom array accessor coerces and falls back to its hardcoded default', 
 test('the recentPostDates custom accessor returns a NotificationConfig VO', function (): void {
     $config = CurrentConfigTestFactory::get()->recentPostDates();
 
-    expect($config)->toBeInstanceOf(NotificationConfig::class)
-        ->and($config->rss->maxDates)->toBe(5)
+    expect($config->rss->maxDates)->toBe(5)
         ->and($config->nbm->maxCats)->toBe(9);
 });
 

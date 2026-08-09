@@ -137,6 +137,12 @@ test('generateKey only ever contains alphanumeric characters', function (): void
 test('sessionOpen and sessionClose always return true', function (): void {
     $service = makeSessionService();
 
+    // Both methods are declared to return the literal type `true`, so
+    // PHPStan can already prove these calls return true -- but that
+    // literal return type is itself the SessionHandlerInterface contract
+    // this test guards; loosening either signature back to plain `bool`
+    // would make this assertion meaningful again.
+    // @phpstan-ignore pest.expectation.redundant
     expect($service->sessionOpen())->toBeTrue()
         ->and($service->sessionClose())->toBeTrue();
 });
@@ -292,9 +298,16 @@ test('sessionWrite short-circuits to true without touching the repository when t
     $service = makeSessionService();
     Kernel::boot();
     $flag = Kernel::container()->get(ApiKeyRequestFlag::class);
-    expect($flag)->toBeInstanceOf(ApiKeyRequestFlag::class);
+    if (! $flag instanceof ApiKeyRequestFlag) {
+        throw new LogicException('Container returned an unexpected type for ' . ApiKeyRequestFlag::class);
+    }
     $flag->activate();
 
+    // sessionWrite()'s literal `true` return type makes this assertion
+    // provably redundant to PHPStan -- but per this test's own docblock
+    // above, reaching this line at all (rather than erroring out on an
+    // unreachable DB connection) is the real thing under test.
+    // @phpstan-ignore pest.expectation.redundant
     expect($service->sessionWrite('some-session-id', 'some-data'))->toBeTrue();
 });
 

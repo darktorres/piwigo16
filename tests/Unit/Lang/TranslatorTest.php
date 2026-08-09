@@ -17,8 +17,8 @@ beforeEach(function (): void {
 
 afterEach(function (): void {
     CurrentConfigTestFactory::get()->reset();
-    if (file_exists((is_string($this->poFile) ? $this->poFile : ''))) {
-        unlink((is_string($this->poFile) ? $this->poFile : ''));
+    if (file_exists($this->poFile)) {
+        unlink($this->poFile);
     }
 });
 
@@ -27,7 +27,7 @@ test('translate returns the original key when no PO file is loaded', function ()
 });
 
 test('load parses a PO file and translate resolves the matching string', function (): void {
-    file_put_contents((is_string($this->poFile) ? $this->poFile : ''), <<<'PO'
+    file_put_contents($this->poFile, <<<'PO'
         msgid ""
         msgstr ""
         "Plural-Forms: nplurals=2; plural=(n != 1);\n"
@@ -36,7 +36,7 @@ test('load parses a PO file and translate resolves the matching string', functio
         msgstr "Bonjour"
         PO);
 
-    $this->translator->load('fr', (is_string($this->poFile) ? $this->poFile : ''));
+    $this->translator->load('fr', $this->poFile);
 
     expect($this->translator->translate('Hello'))->toBe('Bonjour');
 });
@@ -48,7 +48,7 @@ test('translate falls back to the mirrored string map for keys with no PO entry'
 });
 
 test('translate applies sprintf-style args', function (): void {
-    file_put_contents((is_string($this->poFile) ? $this->poFile : ''), <<<'PO'
+    file_put_contents($this->poFile, <<<'PO'
         msgid ""
         msgstr ""
         "Plural-Forms: nplurals=2; plural=(n != 1);\n"
@@ -57,7 +57,7 @@ test('translate applies sprintf-style args', function (): void {
         msgstr "Bonjour %s"
         PO);
 
-    $this->translator->load('fr', (is_string($this->poFile) ? $this->poFile : ''));
+    $this->translator->load('fr', $this->poFile);
 
     expect($this->translator->translate('Hello %s', 'World'))->toBe('Bonjour World');
 });
@@ -74,7 +74,7 @@ test('translate applies sprintf-style args', function (): void {
 // plural() tests below that hit the $args === [] path -- passed unchanged,
 // restored byte-identical (diff clean).
 test('plural picks the correct form for a 2-form language', function (): void {
-    file_put_contents((is_string($this->poFile) ? $this->poFile : ''), <<<'PO'
+    file_put_contents($this->poFile, <<<'PO'
         msgid ""
         msgstr ""
         "Plural-Forms: nplurals=2; plural=(n != 1);\n"
@@ -85,7 +85,7 @@ test('plural picks the correct form for a 2-form language', function (): void {
         msgstr[1] "%d photos"
         PO);
 
-    $this->translator->load('en', (is_string($this->poFile) ? $this->poFile : ''));
+    $this->translator->load('en', $this->poFile);
 
     expect($this->translator->plural('%d photo', '%d photos', 1))->toBe('1 photo')
         ->and($this->translator->plural('%d photo', '%d photos', 5))->toBe('5 photos');
@@ -113,7 +113,7 @@ test('plural picks the correct form for a 2-form language', function (): void {
 // below, which exercises the multi-element `[$singularForm, ...]` branch
 // -- all passed unchanged each time, restored byte-identical (diff clean).
 test('plural picks the correct form for a 3-form language (Russian-style rule)', function (): void {
-    file_put_contents((is_string($this->poFile) ? $this->poFile : ''), <<<'PO'
+    file_put_contents($this->poFile, <<<'PO'
         msgid ""
         msgstr ""
         "Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n%10<=4 && (n%100<12 || n%100>14) ? 1 : 2);\n"
@@ -125,7 +125,7 @@ test('plural picks the correct form for a 3-form language (Russian-style rule)',
         msgstr[2] "%d photo-many"
         PO);
 
-    $this->translator->load('ru', (is_string($this->poFile) ? $this->poFile : ''));
+    $this->translator->load('ru', $this->poFile);
 
     expect($this->translator->plural('%d photo', '%d photos', 1))->toBe('1 photo-one')
         ->and($this->translator->plural('%d photo', '%d photos', 2))->toBe('2 photo-few')
@@ -133,7 +133,7 @@ test('plural picks the correct form for a 3-form language (Russian-style rule)',
 });
 
 test('load mirrors translations into mirroredStrings(), translate()\'s own fallback', function (): void {
-    file_put_contents((is_string($this->poFile) ? $this->poFile : ''), <<<'PO'
+    file_put_contents($this->poFile, <<<'PO'
         msgid ""
         msgstr ""
         "Plural-Forms: nplurals=2; plural=(n != 1);\n"
@@ -147,7 +147,7 @@ test('load mirrors translations into mirroredStrings(), translate()\'s own fallb
         msgstr[1] "%d photos"
         PO);
 
-    $this->translator->load('fr', (is_string($this->poFile) ? $this->poFile : ''));
+    $this->translator->load('fr', $this->poFile);
 
     $mirror = $this->translator->mirroredStrings();
     expect($mirror['Hello'])->toBe('Bonjour')
@@ -228,7 +228,7 @@ test('restoreFrom() copies a snapshot instance\'s translation state onto this in
 });
 
 test('plural applies sprintf-style args after the count', function (): void {
-    file_put_contents((is_string($this->poFile) ? $this->poFile : ''), <<<'PO'
+    file_put_contents($this->poFile, <<<'PO'
         msgid ""
         msgstr ""
         "Plural-Forms: nplurals=2; plural=(n != 1);\n"
@@ -239,7 +239,7 @@ test('plural applies sprintf-style args after the count', function (): void {
         msgstr[1] "%d photos by %s"
         PO);
 
-    $this->translator->load('en', (is_string($this->poFile) ? $this->poFile : ''));
+    $this->translator->load('en', $this->poFile);
 
     expect($this->translator->plural('%d photo by %s', '%d photos by %s', 1, 'Alice'))->toBe('1 photo by Alice')
         ->and($this->translator->plural('%d photo by %s', '%d photos by %s', 3, 'Bob'))->toBe('3 photos by Bob');
@@ -272,7 +272,7 @@ test('plural applies sprintf-style args after the count', function (): void {
 // each site in turn with a Python-applied AST-equivalent edit, reran this
 // whole file, both passed unchanged, restored byte-identical (diff clean).
 test('load skips a context-tagged entry whose msgid is empty', function (): void {
-    file_put_contents((is_string($this->poFile) ? $this->poFile : ''), <<<'PO'
+    file_put_contents($this->poFile, <<<'PO'
         msgid ""
         msgstr ""
         "Plural-Forms: nplurals=2; plural=(n != 1);\n"
@@ -285,7 +285,7 @@ test('load skips a context-tagged entry whose msgid is empty', function (): void
         msgstr "Bonjour"
         PO);
 
-    $this->translator->load('fr', (is_string($this->poFile) ? $this->poFile : ''));
+    $this->translator->load('fr', $this->poFile);
 
     $mirror = $this->translator->mirroredStrings();
     expect($mirror)->not->toHaveKey('')
@@ -320,7 +320,7 @@ test('translate does not warn about a missing key when the key itself is empty',
 // stops being null, flips the ternary to the (string) cast branch, and
 // hits the same "Array to string conversion" leak.
 test('translate maps a non-scalar arg to an empty string instead of leaking it into vsprintf', function (): void {
-    file_put_contents((is_string($this->poFile) ? $this->poFile : ''), <<<'PO'
+    file_put_contents($this->poFile, <<<'PO'
         msgid ""
         msgstr ""
         "Plural-Forms: nplurals=2; plural=(n != 1);\n"
@@ -329,14 +329,14 @@ test('translate maps a non-scalar arg to an empty string instead of leaking it i
         msgstr "Bonjour %s"
         PO);
 
-    $this->translator->load('fr', (is_string($this->poFile) ? $this->poFile : ''));
+    $this->translator->load('fr', $this->poFile);
 
     expect($this->translator->translate('Hello %s', ['nested']))->toBe('Bonjour ');
 });
 
 // Same mapping, same reasoning, for plural()'s own copy of the closure.
 test('plural maps a non-scalar arg to an empty string instead of leaking it into vsprintf', function (): void {
-    file_put_contents((is_string($this->poFile) ? $this->poFile : ''), <<<'PO'
+    file_put_contents($this->poFile, <<<'PO'
         msgid ""
         msgstr ""
         "Plural-Forms: nplurals=2; plural=(n != 1);\n"
@@ -347,7 +347,7 @@ test('plural maps a non-scalar arg to an empty string instead of leaking it into
         msgstr[1] "%d photos by %s"
         PO);
 
-    $this->translator->load('en', (is_string($this->poFile) ? $this->poFile : ''));
+    $this->translator->load('en', $this->poFile);
 
     expect($this->translator->plural('%d photo by %s', '%d photos by %s', 3, ['nested']))->toBe('3 photos by ');
 });
@@ -359,7 +359,7 @@ test('plural maps a non-scalar arg to an empty string instead of leaking it into
 // returning a non-string scalar (e.g. this int arg) straight from the
 // `mixed` ternary branch would throw a TypeError instead of coercing.
 test('plural casts a non-string scalar arg to string instead of returning it raw', function (): void {
-    file_put_contents((is_string($this->poFile) ? $this->poFile : ''), <<<'PO'
+    file_put_contents($this->poFile, <<<'PO'
         msgid ""
         msgstr ""
         "Plural-Forms: nplurals=2; plural=(n != 1);\n"
@@ -370,7 +370,7 @@ test('plural casts a non-string scalar arg to string instead of returning it raw
         msgstr[1] "%d items of size %s"
         PO);
 
-    $this->translator->load('en', (is_string($this->poFile) ? $this->poFile : ''));
+    $this->translator->load('en', $this->poFile);
 
     expect($this->translator->plural('%d item(s) of size %s', '%d items of size %s', 3, 42))->toBe('3 items of size 42');
 });
@@ -426,7 +426,7 @@ test('toDictionaryEntry defaults the domain entry to an empty string when the PO
 // context). If CoalesceRemoveLeft forced $context to always be '', the
 // second entry would overwrite the first in the same '' bucket instead.
 test('load keeps a context-tagged translation out of the context-less bucket translate() actually reads', function (): void {
-    file_put_contents((is_string($this->poFile) ? $this->poFile : ''), <<<'PO'
+    file_put_contents($this->poFile, <<<'PO'
         msgid ""
         msgstr ""
         "Plural-Forms: nplurals=2; plural=(n != 1);\n"
@@ -439,7 +439,7 @@ test('load keeps a context-tagged translation out of the context-less bucket tra
         msgstr "WithContext"
         PO);
 
-    $this->translator->load('fr', (is_string($this->poFile) ? $this->poFile : ''));
+    $this->translator->load('fr', $this->poFile);
 
     expect($this->translator->translate('Duplicate'))->toBe('NoContext');
 });
@@ -452,7 +452,7 @@ test('load keeps a context-tagged translation out of the context-less bucket tra
 // the untranslated original. Also confirms mirror()'s own sibling guard
 // (line 252's `$str !== null`) keeps this same null out of the mirror.
 test('load treats a PO entry with no msgstr line as untranslated, in both the dictionary and the mirror', function (): void {
-    file_put_contents((is_string($this->poFile) ? $this->poFile : ''), <<<'PO'
+    file_put_contents($this->poFile, <<<'PO'
         msgid ""
         msgstr ""
         "Plural-Forms: nplurals=2; plural=(n != 1);\n"
@@ -460,7 +460,7 @@ test('load treats a PO entry with no msgstr line as untranslated, in both the di
         msgid "NoMsgstr"
         PO);
 
-    $this->translator->load('en', (is_string($this->poFile) ? $this->poFile : ''));
+    $this->translator->load('en', $this->poFile);
 
     expect($this->translator->translate('NoMsgstr'))->toBe('NoMsgstr')
         ->and($this->translator->mirroredStrings())->not->toHaveKey('NoMsgstr');
@@ -471,7 +471,7 @@ test('load treats a PO entry with no msgstr line as untranslated, in both the di
 // msgstr -- distinct from the NoMsgstr case above, which covers the
 // `$str !== null` half.
 test('load does not mirror an explicitly empty translation', function (): void {
-    file_put_contents((is_string($this->poFile) ? $this->poFile : ''), <<<'PO'
+    file_put_contents($this->poFile, <<<'PO'
         msgid ""
         msgstr ""
         "Plural-Forms: nplurals=2; plural=(n != 1);\n"
@@ -480,7 +480,7 @@ test('load does not mirror an explicitly empty translation', function (): void {
         msgstr ""
         PO);
 
-    $this->translator->load('en', (is_string($this->poFile) ? $this->poFile : ''));
+    $this->translator->load('en', $this->poFile);
 
     expect($this->translator->mirroredStrings())->not->toHaveKey('EmptyTranslation');
 });
@@ -494,7 +494,7 @@ test('load does not mirror an explicitly empty translation', function (): void {
 // n=2 (plural index 1) then falls through to plural()'s own $plural
 // fallback param, not the PO's msgstr[1].
 test('plural ignores a msgstr[1] translation when no msgid_plural was declared', function (): void {
-    file_put_contents((is_string($this->poFile) ? $this->poFile : ''), <<<'PO'
+    file_put_contents($this->poFile, <<<'PO'
         msgid ""
         msgstr ""
         "Plural-Forms: nplurals=2; plural=(n != 1);\n"
@@ -504,7 +504,7 @@ test('plural ignores a msgstr[1] translation when no msgid_plural was declared',
         msgstr[1] "ShouldNotAppear"
         PO);
 
-    $this->translator->load('en', (is_string($this->poFile) ? $this->poFile : ''));
+    $this->translator->load('en', $this->poFile);
 
     expect($this->translator->plural('OddOne', 'fallback text', 2))->toBe('fallback text');
 });
@@ -513,7 +513,7 @@ test('plural ignores a msgstr[1] translation when no msgid_plural was declared',
 // than absent -- isolates the `$plural !== ''` half of line 210's
 // condition from the `$plural !== null` half the test above covers.
 test('plural ignores a msgstr[1] translation when msgid_plural is explicitly empty', function (): void {
-    file_put_contents((is_string($this->poFile) ? $this->poFile : ''), <<<'PO'
+    file_put_contents($this->poFile, <<<'PO'
         msgid ""
         msgstr ""
         "Plural-Forms: nplurals=2; plural=(n != 1);\n"
@@ -524,7 +524,7 @@ test('plural ignores a msgstr[1] translation when msgid_plural is explicitly emp
         msgstr[1] "ShouldNotAppearEither"
         PO);
 
-    $this->translator->load('en', (is_string($this->poFile) ? $this->poFile : ''));
+    $this->translator->load('en', $this->poFile);
 
     expect($this->translator->plural('EmptyPluralOne', 'fallback text2', 2))->toBe('fallback text2');
 });
@@ -537,7 +537,7 @@ test('plural ignores a msgstr[1] translation when msgid_plural is explicitly emp
 // index 0, and ngettext() would fall through to plural()'s own fallback
 // param instead of the real translation.
 test('plural resolves a singular-only translation directly from the dictionary (bypasses the mirror fallback)', function (): void {
-    file_put_contents((is_string($this->poFile) ? $this->poFile : ''), <<<'PO'
+    file_put_contents($this->poFile, <<<'PO'
         msgid ""
         msgstr ""
         "Plural-Forms: nplurals=2; plural=(n != 1);\n"
@@ -546,7 +546,7 @@ test('plural resolves a singular-only translation directly from the dictionary (
         msgstr "SoloTranslated"
         PO);
 
-    $this->translator->load('en', (is_string($this->poFile) ? $this->poFile : ''));
+    $this->translator->load('en', $this->poFile);
 
     expect($this->translator->plural('Solo', 'unused-plural-fallback', 1))->toBe('SoloTranslated');
 });
@@ -565,7 +565,7 @@ test('plural resolves a singular-only translation directly from the dictionary (
 test("load keeps a second PO file's explicit X-Domain out of the default lookup domain", function (): void {
     $secondPoFile = sys_get_temp_dir() . '/piwigo-po-test-' . bin2hex(random_bytes(8)) . '.po';
 
-    file_put_contents((is_string($this->poFile) ? $this->poFile : ''), <<<'PO'
+    file_put_contents($this->poFile, <<<'PO'
         msgid ""
         msgstr ""
         "Plural-Forms: nplurals=2; plural=(n != 1);\n"
@@ -584,7 +584,7 @@ test("load keeps a second PO file's explicit X-Domain out of the default lookup 
         msgstr "SecondVal"
         PO);
 
-    $this->translator->load('en', (is_string($this->poFile) ? $this->poFile : ''));
+    $this->translator->load('en', $this->poFile);
     $this->translator->load('en', $secondPoFile);
 
     expect($this->translator->plural('SecondKey', 'fallback-text', 1))->toBe('SecondKey');
@@ -609,7 +609,7 @@ test("load keeps a second PO file's explicit X-Domain out of the default lookup 
 // the real index also happens to be 0, confirmed live (an earlier
 // "piwigo_month_0"-only fixture didn't kill this mutation at line 258).
 test("load reassembles piwigo_day_N/piwigo_month_N entries into mirroredStrings()'s nested day/month arrays", function (): void {
-    file_put_contents((is_string($this->poFile) ? $this->poFile : ''), <<<'PO'
+    file_put_contents($this->poFile, <<<'PO'
         msgid ""
         msgstr ""
         "Plural-Forms: nplurals=2; plural=(n != 1);\n"
@@ -624,7 +624,7 @@ test("load reassembles piwigo_day_N/piwigo_month_N entries into mirroredStrings(
         msgstr "June"
         PO);
 
-    $this->translator->load('en', (is_string($this->poFile) ? $this->poFile : ''));
+    $this->translator->load('en', $this->poFile);
 
     $mirror = $this->translator->mirroredStrings();
     expect($mirror['day'])->toBe([0 => 'Sunday', 1 => 'Monday'])
@@ -649,7 +649,7 @@ test("load reassembles piwigo_day_N/piwigo_month_N entries into mirroredStrings(
 // (PHP-coerced) '' key. BooleanAndToBooleanOr on that first `&&` would
 // let `null !== ''` (true) carry the whole chain instead.
 test('load does not mirror a plural translation when no msgid_plural was declared', function (): void {
-    file_put_contents((is_string($this->poFile) ? $this->poFile : ''), <<<'PO'
+    file_put_contents($this->poFile, <<<'PO'
         msgid ""
         msgstr ""
         "Plural-Forms: nplurals=2; plural=(n != 1);\n"
@@ -659,7 +659,7 @@ test('load does not mirror a plural translation when no msgid_plural was declare
         msgstr[1] "AlphaPluralForm"
         PO);
 
-    $this->translator->load('en', (is_string($this->poFile) ? $this->poFile : ''));
+    $this->translator->load('en', $this->poFile);
 
     expect($this->translator->mirroredStrings())->not->toHaveKey('');
 });
@@ -668,7 +668,7 @@ test('load does not mirror a plural translation when no msgid_plural was declare
 // explicitly empty msgid_plural, rather than an absent one) from the
 // `!== null` half the test above covers.
 test('load does not mirror a plural translation when msgid_plural is explicitly empty', function (): void {
-    file_put_contents((is_string($this->poFile) ? $this->poFile : ''), <<<'PO'
+    file_put_contents($this->poFile, <<<'PO'
         msgid ""
         msgstr ""
         "Plural-Forms: nplurals=2; plural=(n != 1);\n"
@@ -679,7 +679,7 @@ test('load does not mirror a plural translation when msgid_plural is explicitly 
         msgstr[1] "BetaPluralForm"
         PO);
 
-    $this->translator->load('en', (is_string($this->poFile) ? $this->poFile : ''));
+    $this->translator->load('en', $this->poFile);
 
     expect($this->translator->mirroredStrings())->not->toHaveKey('');
 });
@@ -692,7 +692,7 @@ test('load does not mirror a plural translation when msgid_plural is explicitly 
 // translatePlural()'s own `string ...$translations` variadic type, so
 // only the null case can distinguish AND from OR here).
 test('load does not mirror a plural original when no msgstr[1] was declared', function (): void {
-    file_put_contents((is_string($this->poFile) ? $this->poFile : ''), <<<'PO'
+    file_put_contents($this->poFile, <<<'PO'
         msgid ""
         msgstr ""
         "Plural-Forms: nplurals=2; plural=(n != 1);\n"
@@ -702,7 +702,7 @@ test('load does not mirror a plural original when no msgstr[1] was declared', fu
         msgstr "GammaTranslated"
         PO);
 
-    $this->translator->load('en', (is_string($this->poFile) ? $this->poFile : ''));
+    $this->translator->load('en', $this->poFile);
 
     expect($this->translator->mirroredStrings())->not->toHaveKey('GammaPlural');
 });
@@ -711,7 +711,7 @@ test('load does not mirror a plural original when no msgstr[1] was declared', fu
 // (an explicitly empty msgstr[1]) from the null half the test above
 // covers.
 test('load does not mirror a plural original when msgstr[1] is explicitly empty', function (): void {
-    file_put_contents((is_string($this->poFile) ? $this->poFile : ''), <<<'PO'
+    file_put_contents($this->poFile, <<<'PO'
         msgid ""
         msgstr ""
         "Plural-Forms: nplurals=2; plural=(n != 1);\n"
@@ -722,7 +722,7 @@ test('load does not mirror a plural original when msgstr[1] is explicitly empty'
         msgstr[1] ""
         PO);
 
-    $this->translator->load('en', (is_string($this->poFile) ? $this->poFile : ''));
+    $this->translator->load('en', $this->poFile);
 
     expect($this->translator->mirroredStrings())->not->toHaveKey('DeltaPlural');
 });
@@ -753,7 +753,7 @@ test('load does not mirror a plural original when msgstr[1] is explicitly empty'
 // miss skipped or never persisted), this test would observe the file's
 // real, changed on-disk content instead.
 test('load reuses a cached parse across independent Translator instances for the same path and mtime', function (): void {
-    file_put_contents((is_string($this->poFile) ? $this->poFile : ''), <<<'PO'
+    file_put_contents($this->poFile, <<<'PO'
         msgid ""
         msgstr ""
         "Plural-Forms: nplurals=2; plural=(n != 1);\n"
@@ -762,14 +762,14 @@ test('load reuses a cached parse across independent Translator instances for the
         msgstr "OriginalValue"
         PO);
 
-    $this->translator->load('en', (is_string($this->poFile) ? $this->poFile : ''));
+    $this->translator->load('en', $this->poFile);
 
-    $mtime = filemtime((is_string($this->poFile) ? $this->poFile : ''));
+    $mtime = filemtime($this->poFile);
     if ($mtime === false) {
         throw new RuntimeException('expected filemtime() to succeed on a file this test just wrote');
     }
 
-    file_put_contents((is_string($this->poFile) ? $this->poFile : ''), <<<'PO'
+    file_put_contents($this->poFile, <<<'PO'
         msgid ""
         msgstr ""
         "Plural-Forms: nplurals=2; plural=(n != 1);\n"
@@ -777,10 +777,10 @@ test('load reuses a cached parse across independent Translator instances for the
         msgid "CacheKey"
         msgstr "NewValue"
         PO);
-    touch((is_string($this->poFile) ? $this->poFile : ''), $mtime);
+    touch($this->poFile, $mtime);
 
     $second = new Translator(CurrentConfigTestFactory::get());
-    $second->load('en', (is_string($this->poFile) ? $this->poFile : ''));
+    $second->load('en', $this->poFile);
 
     expect($second->translate('CacheKey'))->toBe('OriginalValue');
 
@@ -798,7 +798,7 @@ test('load reuses a cached parse across independent Translator instances for the
 // happens at all), this one lets mtime change naturally between two
 // load() calls on the same path and asserts the edit is not missed.
 test("load's cache key busts on a real mtime change, not just staying pinned to the file path", function (): void {
-    file_put_contents((is_string($this->poFile) ? $this->poFile : ''), <<<'PO'
+    file_put_contents($this->poFile, <<<'PO'
         msgid ""
         msgstr ""
         "Plural-Forms: nplurals=2; plural=(n != 1);\n"
@@ -807,14 +807,14 @@ test("load's cache key busts on a real mtime change, not just staying pinned to 
         msgstr "First"
         PO);
 
-    $this->translator->load('en', (is_string($this->poFile) ? $this->poFile : ''));
+    $this->translator->load('en', $this->poFile);
 
-    $firstMtime = filemtime((is_string($this->poFile) ? $this->poFile : ''));
+    $firstMtime = filemtime($this->poFile);
     if ($firstMtime === false) {
         throw new RuntimeException('expected filemtime() to succeed on a file this test just wrote');
     }
 
-    file_put_contents((is_string($this->poFile) ? $this->poFile : ''), <<<'PO'
+    file_put_contents($this->poFile, <<<'PO'
         msgid ""
         msgstr ""
         "Plural-Forms: nplurals=2; plural=(n != 1);\n"
@@ -822,10 +822,10 @@ test("load's cache key busts on a real mtime change, not just staying pinned to 
         msgid "BustKey"
         msgstr "Second"
         PO);
-    touch((is_string($this->poFile) ? $this->poFile : ''), $firstMtime + 1000);
+    touch($this->poFile, $firstMtime + 1000);
 
     $second = new Translator(CurrentConfigTestFactory::get());
-    $second->load('en', (is_string($this->poFile) ? $this->poFile : ''));
+    $second->load('en', $this->poFile);
 
     expect($second->translate('BustKey'))->toBe('Second');
 });

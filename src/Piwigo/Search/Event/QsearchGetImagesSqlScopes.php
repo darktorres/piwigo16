@@ -15,13 +15,11 @@ use Piwigo\Search\QSingleToken;
  * real `Piwigo\Search\QSingleToken`/`QExpression` instances -- deptrac's
  * L0Data layer may depend on nothing.
  *
- * SQL-modernization audit, Item 16K: `$clauses` retyped from loose
- * `array<mixed>` (the one real consumer used to defensively filter each
- * element via `is_string()`) to `list<QsearchClause>` -- a forward API
- * design change, not a live migration (zero real in-tree listeners exist
- * today, confirmed via a fresh grep), consistent with v17.0 already
- * breaking every PEM extension contract. See {@see QsearchClause}'s own
- * docblock for why this is a real fix, not just a type.
+ * `$clauses` is `list<QsearchClause>`, not a loose `array<mixed>` --
+ * zero real in-tree listeners exist today, consistent with v17.0
+ * already breaking every PEM extension contract. See
+ * {@see QsearchClause}'s own docblock for why this is a real fix, not
+ * just a type.
  */
 final readonly class QsearchGetImagesSqlScopes
 {

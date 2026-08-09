@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Piwigo\Search;
 
 /**
- * SQL-modernization audit, Item 16K: typed replacement for the raw string
- * entries {@see \Piwigo\Search\Event\QsearchGetImagesSqlScopes}'s own
+ * Typed replacement for the raw string entries
+ * {@see \Piwigo\Search\Event\QsearchGetImagesSqlScopes}'s own
  * `$clauses` payload used to carry -- a boolean SQL fragment
  * ({@see \Piwigo\Search\SearchRepository::findIdsByClause()}'s own
  * `$whereSql`, OR-joined against every other scope's clause) plus its own

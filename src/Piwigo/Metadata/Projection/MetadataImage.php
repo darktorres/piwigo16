@@ -32,11 +32,9 @@ final readonly class MetadataImage
     ) {}
 
     /**
-     * Further SQL-modernization audit, Item 16A: replaces the former raw-row
-     * `fromRow()` now that {@see \Piwigo\Metadata\MetadataRepository}'s own
-     * 2 real callers both went DQL -- `ImageEntity::$id`/`$path`/
-     * `$representativeExt` are already typed, so no defensive casting is
-     * needed here the way `fromRow()`'s own untyped raw-array input required.
+     * `ImageEntity::$id`/`$path`/`$representativeExt` are already typed,
+     * so no defensive casting is needed here the way a raw-array row
+     * would require.
      */
     public static function fromEntity(ImageEntity $entity): self
     {

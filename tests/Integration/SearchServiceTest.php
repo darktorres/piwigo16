@@ -532,7 +532,7 @@ final class SearchServiceTest extends IntegrationTestCase
 
         try {
             $this->expectException(Exception::class);
-            $this->expectExceptionMessage('splitAllwords(): preg_split() failed');
+            $this->expectExceptionMessageIsOrContains('splitAllwords(): preg_split() failed');
 
             SearchService::splitAllwords('nature travel');
         } finally {
@@ -1008,7 +1008,7 @@ final class SearchServiceTest extends IntegrationTestCase
 
         try {
             $this->expectException(Exception::class);
-            $this->expectExceptionMessage('qsearchGetTextTokenSearchSql(): preg_split() failed');
+            $this->expectExceptionMessageIsOrContains('qsearchGetTextTokenSearchSql(): preg_split() failed');
 
             $this->service->qsearchGetTextTokenSearchSql(new QSingleToken('hello-world', 0, null), ['name']);
         } finally {
@@ -1407,7 +1407,7 @@ final class SearchServiceTest extends IntegrationTestCase
         EventDispatcherTestFactory::get()->addEventHandler(QsearchGetScopes::class, $handler);
 
         $this->expectException(Error::class);
-        $this->expectExceptionMessage('must return an instance of');
+        $this->expectExceptionMessageIsOrContains('must return an instance of');
 
         try {
             $this->service->getQuickSearchResultsNoCache('family', []);
@@ -1501,7 +1501,7 @@ final class SearchServiceTest extends IntegrationTestCase
         $service = $this->makeServiceWithRenderer(new FatalSignalHtmlRenderer());
 
         $this->expectException(RuntimeException::class);
-        $this->expectExceptionMessage('fatalError: Invalid search identifier');
+        $this->expectExceptionMessageIsOrContains('fatalError: Invalid search identifier');
 
         $service->getValidatedSearchInfo('not-a-valid-identifier', null);
     }
@@ -1513,7 +1513,7 @@ final class SearchServiceTest extends IntegrationTestCase
         $service = $this->makeServiceWithRenderer(new FatalSignalHtmlRenderer());
 
         $this->expectException(RuntimeException::class);
-        $this->expectExceptionMessage('fatalError: this search is not reachable with its id, need the search_uuid instead');
+        $this->expectExceptionMessageIsOrContains('fatalError: this search is not reachable with its id, need the search_uuid instead');
 
         $service->getValidatedSearchInfo((string) $id, null);
     }
@@ -1523,7 +1523,7 @@ final class SearchServiceTest extends IntegrationTestCase
         $service = $this->makeServiceWithRenderer(new FatalSignalHtmlRenderer());
 
         $this->expectException(RuntimeException::class);
-        $this->expectExceptionMessage('badRequest: this search identifier does not exist');
+        $this->expectExceptionMessageIsOrContains('badRequest: this search identifier does not exist');
 
         // getSearchIdPattern()'s own search_uuid regex requires exactly 10
         // alphanumeric chars after the date ('doesnotexist' is 12) --
@@ -1539,7 +1539,7 @@ final class SearchServiceTest extends IntegrationTestCase
         $service = $this->makeServiceWithRenderer(new FatalSignalHtmlRenderer());
 
         $this->expectException(RuntimeException::class);
-        $this->expectExceptionMessage('badRequest: this search identifier does not exist');
+        $this->expectExceptionMessageIsOrContains('badRequest: this search identifier does not exist');
 
         $service->getSearchResults('psk-20260712-doesnotexist', null);
     }
@@ -1571,7 +1571,7 @@ final class SearchServiceTest extends IntegrationTestCase
 
         try {
             $this->expectException(LogicException::class);
-            $this->expectExceptionMessage('Inflector_zz does not implement InflectorInterface');
+            $this->expectExceptionMessageIsOrContains('Inflector_zz does not implement InflectorInterface');
 
             $this->service->getQuickSearchResultsNoCache('nature', []);
         } finally {

@@ -1109,7 +1109,7 @@ namespace Piwigo\Tests\Integration {
         public function test_get_user_data_throws_for_a_user_id_absent_from_the_users_table(): void
         {
             $this->expectException(Exception::class);
-            $this->expectExceptionMessage('UserService::getUserData(): no such user_id 88888888');
+            $this->expectExceptionMessageIsOrContains('UserService::getUserData(): no such user_id 88888888');
 
             $this->service->getUserData(UserId::from(88888888));
         }
@@ -1123,7 +1123,7 @@ namespace Piwigo\Tests\Integration {
 
             try {
                 $this->expectException(Exception::class);
-                $this->expectExceptionMessage('UserService::getUserData(): user_infos fetch failed for user_id ' . $tempId);
+                $this->expectExceptionMessageIsOrContains('UserService::getUserData(): user_infos fetch failed for user_id ' . $tempId);
 
                 $this->service->getUserData(UserId::from($tempId));
             } finally {

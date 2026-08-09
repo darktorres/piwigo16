@@ -440,7 +440,7 @@ final class InstallWizardTest extends IntegrationTestCase
         file_put_contents($this->paths->local . 'config/config.inc.php', "<?php\n\$conf['data_location'] = 12345;\n");
 
         $this->expectException(LogicException::class);
-        $this->expectExceptionMessage("Invalid \$conf['data_location'] configuration: expected a string.");
+        $this->expectExceptionMessageIsOrContains("Invalid \$conf['data_location'] configuration: expected a string.");
 
         KernelContainerOverride::with([Paths::class => $this->paths], function (): void {
             new InstallWizard(LangTestFactory::get(), 'itest_', $this->paths, DbCredentialsTestFactory::get(), CurrentConfigServiceTestFactory::get(), CurrentConfigTestFactory::get(), new InputValidator(), new AdminContext(), new EventDispatcher(), new PageState(), new ErrorCollector(new DeploymentPolicy(), $this->paths), new ProcessCache(), new DeploymentPolicy(), new CurrentTemplate(), CurrentUserTestFactory::get());
@@ -607,7 +607,7 @@ final class InstallWizardTest extends IntegrationTestCase
         // conn defaults to null until analyzeForm() runs -- never called here.
 
         $this->expectException(LogicException::class);
-        $this->expectExceptionMessage('performInstall() called before a successful analyzeForm() connection.');
+        $this->expectExceptionMessageIsOrContains('performInstall() called before a successful analyzeForm() connection.');
 
         $wizard->performInstall();
     }
@@ -1403,7 +1403,7 @@ final class InstallWizardTest extends IntegrationTestCase
         new ReflectionProperty($wizard, 'step')->setValue($wizard, 2);
 
         $this->expectException(LogicException::class);
-        $this->expectExceptionMessage('render() reached step 2 before a successful analyzeForm() connection.');
+        $this->expectExceptionMessageIsOrContains('render() reached step 2 before a successful analyzeForm() connection.');
 
         $wizard->render();
     }

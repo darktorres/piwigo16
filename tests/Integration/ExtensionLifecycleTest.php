@@ -664,7 +664,7 @@ namespace Piwigo\Tests\Integration {
         public function test_plugin_update_without_a_revision_option_throws(): void
         {
             $this->expectException(LogicException::class);
-            $this->expectExceptionMessage("performPluginAction('update'): missing 'revision' option");
+            $this->expectExceptionMessageIsOrContains("performPluginAction('update'): missing 'revision' option");
 
             $this->lifecycle->performAction(ExtensionType::Plugin, 'update', $this->pluginId(), ['version' => '1.0'], []);
         }
@@ -804,7 +804,7 @@ PHP);
                 $method = new ReflectionMethod($this->lifecycle, 'buildPluginMaintain');
 
                 $this->expectException(LogicException::class);
-                $this->expectExceptionMessage("buildPluginMaintain(): {$classname} does not extend PluginMaintain");
+                $this->expectExceptionMessageIsOrContains("buildPluginMaintain(): {$classname} does not extend PluginMaintain");
 
                 $method->invoke($this->lifecycle, $id);
             } finally {
@@ -837,7 +837,7 @@ PHP);
                 $method = new ReflectionMethod($this->lifecycle, 'buildPluginMaintain');
 
                 $this->expectException(LogicException::class);
-                $this->expectExceptionMessage("buildPluginMaintain(): {$classname} does not extend PluginMaintain");
+                $this->expectExceptionMessageIsOrContains("buildPluginMaintain(): {$classname} does not extend PluginMaintain");
 
                 $method->invoke($this->lifecycle, $id);
             } finally {
@@ -871,7 +871,7 @@ PHP);
                 $method = new ReflectionMethod($this->lifecycle, 'buildThemeMaintain');
 
                 $this->expectException(LogicException::class);
-                $this->expectExceptionMessage("buildThemeMaintain(): {$id}_maintain does not extend ThemeMaintain");
+                $this->expectExceptionMessageIsOrContains("buildThemeMaintain(): {$id}_maintain does not extend ThemeMaintain");
 
                 $method->invoke($this->lifecycle, $id);
             } finally {

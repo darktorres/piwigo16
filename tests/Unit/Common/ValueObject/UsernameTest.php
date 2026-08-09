@@ -70,7 +70,7 @@ final class UsernameTest extends StringVoContract
         $tooLong = str_repeat('a', 101);
 
         $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage("Username exceeds 100 chars: '{$tooLong}'");
+        $this->expectExceptionMessageIsOrContains("Username exceeds 100 chars: '{$tooLong}'");
         Username::from($tooLong);
     }
 }

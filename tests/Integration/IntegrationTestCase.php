@@ -732,7 +732,6 @@ abstract class IntegrationTestCase extends TestCase
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
         curl_setopt($ch, CURLOPT_HTTPHEADER, $this->testHeader());
         $body = curl_exec($ch);
-        curl_close($ch);
 
         self::assertIsString($body, 'GET /__test/errors did not return a body');
         $data = json_decode($body, true, flags: JSON_THROW_ON_ERROR);

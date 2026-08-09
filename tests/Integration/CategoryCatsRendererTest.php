@@ -505,7 +505,7 @@ final class CategoryCatsRendererTest extends IntegrationTestCase
         EventDispatcherTestFactory::get()->addEventHandler(RenderCategoryName::class, static fn (): int => 42);
 
         $this->expectException(Error::class);
-        $this->expectExceptionMessage('must return an instance of');
+        $this->expectExceptionMessageIsOrContains('must return an instance of');
 
         try {
             $this->renderer->render(Section::Categories, null, 0);

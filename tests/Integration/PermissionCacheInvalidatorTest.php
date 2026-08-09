@@ -100,7 +100,7 @@ final class PermissionCacheInvalidatorTest extends IntegrationTestCase
     public function test_invalidate_throws_when_the_container_returns_an_unexpected_type_for_current_config_service(): void
     {
         $this->expectException(LogicException::class);
-        $this->expectExceptionMessage('Container returned an unexpected type for ' . CurrentConfigService::class);
+        $this->expectExceptionMessageIsOrContains('Container returned an unexpected type for ' . CurrentConfigService::class);
 
         KernelContainerOverride::withWrongTypeFor(
             CurrentConfigService::class,

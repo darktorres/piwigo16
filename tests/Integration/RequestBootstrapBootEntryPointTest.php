@@ -133,7 +133,7 @@ final class RequestBootstrapBootEntryPointTest extends IntegrationTestCase
         $paths = Paths::fromRoot(dirname(__DIR__, 2));
 
         $this->expectException(LogicException::class);
-        $this->expectExceptionMessage('Container returned an unexpected type for ' . ConfigService::class);
+        $this->expectExceptionMessageIsOrContains('Container returned an unexpected type for ' . ConfigService::class);
 
         // KernelContainerOverride::with()'s own finally already guarantees
         // Kernel::reset() regardless of the exception below, so no

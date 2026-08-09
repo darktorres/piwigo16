@@ -74,7 +74,7 @@ $htmlDir = $root . '/_data/coverage-raw/html';
 $filter = new Filter();
 $filter->includeFiles((new FileIteratorFacade())->getFilesAsArray($srcDir, '.php'));
 
-$coverage = new CodeCoverage((new Selector())->forLineCoverage($filter), $filter);
+$coverage = new CodeCoverage((new Selector())->select($filter), $filter);
 
 $webFiles = is_dir($webDumpDir) ? glob($webDumpDir . '/*.raw') : [];
 $webFiles = $webFiles !== false ? $webFiles : [];

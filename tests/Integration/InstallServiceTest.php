@@ -158,7 +158,7 @@ final class InstallServiceTest extends IntegrationTestCase
         set_error_handler(static fn (): bool => true);
         try {
             $this->expectException(RuntimeException::class);
-            $this->expectExceptionMessage('Unable to read SQL file: ' . $missing);
+            $this->expectExceptionMessageIsOrContains('Unable to read SQL file: ' . $missing);
 
             InstallService::executeSqlfile($this->conn, $missing, 'PREFIX_', 'itest_');
         } finally {

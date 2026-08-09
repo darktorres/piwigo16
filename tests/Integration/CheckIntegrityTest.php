@@ -312,7 +312,7 @@ final class CheckIntegrityTest extends IntegrationTestCase
         ];
 
         $this->expectException(LogicException::class);
-        $this->expectExceptionMessage("\$c13y['ignored'] cannot be false");
+        $this->expectExceptionMessageIsOrContains("\$c13y['ignored'] cannot be false");
 
         $c13y->display();
     }

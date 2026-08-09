@@ -8,6 +8,8 @@ use Override;
 use Doctrine\Migrations\Version\Version;
 use Piwigo\Migrations\UpgradePathProbe\Version00000000000002;
 use Doctrine\DBAL\Connection;
+use Doctrine\DBAL\Schema\Column;
+use Doctrine\DBAL\Schema\Name\UnqualifiedName;
 use Doctrine\Migrations\Configuration\EntityManager\ExistingEntityManager;
 use Doctrine\Migrations\Configuration\Migration\ConfigurationArray;
 use Doctrine\Migrations\DependencyFactory;
@@ -70,6 +72,9 @@ final class MigrationUpgradePathTest extends IntegrationTestCase
      * fixture file (only buildDependencyFactory()/runMigrate() below
      * trigger that), so the class doesn't exist yet at this point.
      */
+    /**
+     * @return non-empty-string
+     */
     private function probeTable(): string
     {
         return DbCredentials::fromEnv()->prefix . 'migration_upgrade_probe';
@@ -105,6 +110,22 @@ final class MigrationUpgradePathTest extends IntegrationTestCase
         return new MigrateCommand($dependencyFactory)->run($input, new BufferedOutput());
     }
 
+    /**
+     * @param non-empty-string $tableName
+     * @return list<string>
+     */
+    private function columnNames(string $tableName): array
+    {
+        $columns = $this->conn->createSchemaManager()->introspectTableColumnsByUnquotedName($tableName);
+
+        return array_map(static function (Column $column): string {
+            $objectName = $column->getObjectName();
+            self::assertInstanceOf(UnqualifiedName::class, $objectName);
+
+            return $objectName->getIdentifier()->getValue();
+        }, $columns);
+    }
+
     public function test_migrate_applies_only_the_delta_against_an_already_migrated_database(): void
     {
         $dependencyFactory = $this->buildDependencyFactory();
@@ -112,9 +133,9 @@ final class MigrationUpgradePathTest extends IntegrationTestCase
         $firstExitCode = $this->runMigrate($dependencyFactory, Version00000000000001::class);
         self::assertSame(0, $firstExitCode);
 
-        $columnsAfterFirstRun = $this->conn->createSchemaManager()->listTableColumns($this->probeTable());
-        self::assertArrayHasKey('id', $columnsAfterFirstRun);
-        self::assertArrayNotHasKey('probe_value', $columnsAfterFirstRun);
+        $columnsAfterFirstRun = $this->columnNames($this->probeTable());
+        self::assertContains('id', $columnsAfterFirstRun);
+        self::assertNotContains('probe_value', $columnsAfterFirstRun);
 
         $executedAfterFirstRun = $dependencyFactory->getMetadataStorage()->getExecutedMigrations();
         self::assertCount(1, $executedAfterFirstRun);
@@ -128,8 +149,8 @@ final class MigrationUpgradePathTest extends IntegrationTestCase
         $secondExitCode = $this->runMigrate($dependencyFactory, 'latest');
         self::assertSame(0, $secondExitCode);
 
-        $columnsAfterSecondRun = $this->conn->createSchemaManager()->listTableColumns($this->probeTable());
-        self::assertArrayHasKey('probe_value', $columnsAfterSecondRun);
+        $columnsAfterSecondRun = $this->columnNames($this->probeTable());
+        self::assertContains('probe_value', $columnsAfterSecondRun);
 
         $executedAfterSecondRun = $dependencyFactory->getMetadataStorage()->getExecutedMigrations();
         self::assertCount(2, $executedAfterSecondRun);

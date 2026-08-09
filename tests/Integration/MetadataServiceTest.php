@@ -606,7 +606,7 @@ final class MetadataServiceTest extends IntegrationTestCase
         EventDispatcherTestFactory::get()->addEventHandler(FormatExifData::class, $handler);
 
         $this->expectException(Error::class);
-        $this->expectExceptionMessage('must return an instance of');
+        $this->expectExceptionMessageIsOrContains('must return an instance of');
 
         set_error_handler(static fn (): bool => true);
         try {

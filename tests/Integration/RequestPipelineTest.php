@@ -71,7 +71,7 @@ final class RequestPipelineTest extends TestCase
     public function test_handle_throws_when_the_container_returns_an_unexpected_type_for_a_middleware(): void
     {
         $this->expectException(LogicException::class);
-        $this->expectExceptionMessage(
+        $this->expectExceptionMessageIsOrContains(
             "Container returned an unexpected type for '" . ExceptionHandlerMiddleware::class . "'."
         );
 

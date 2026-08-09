@@ -68,7 +68,7 @@ final class EmailTest extends StringVoContract
         $tooLong = str_repeat('a', 256);
 
         $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage("Email exceeds 255 chars: '{$tooLong}'");
+        $this->expectExceptionMessageIsOrContains("Email exceeds 255 chars: '{$tooLong}'");
         Email::from($tooLong);
     }
 
@@ -85,7 +85,7 @@ final class EmailTest extends StringVoContract
         self::assertSame(255, strlen($atBoundary));
 
         $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage("Invalid email address: '{$atBoundary}'");
+        $this->expectExceptionMessageIsOrContains("Invalid email address: '{$atBoundary}'");
         Email::from($atBoundary);
     }
 

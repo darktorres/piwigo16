@@ -61,7 +61,7 @@ final class PermalinkTest extends StringVoContract
         // least one char), so a mutated `$value === ''` would still
         // throw, just with the *other* message.
         $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage('Permalink must not be empty');
+        $this->expectExceptionMessageIsOrContains('Permalink must not be empty');
         Permalink::from('');
     }
 
@@ -82,7 +82,7 @@ final class PermalinkTest extends StringVoContract
         $tooLong = str_repeat('a', 65);
 
         $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage("Permalink exceeds 64 chars: '{$tooLong}'");
+        $this->expectExceptionMessageIsOrContains("Permalink exceeds 64 chars: '{$tooLong}'");
         Permalink::from($tooLong);
     }
 }

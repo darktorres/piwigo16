@@ -288,7 +288,7 @@ final class CategoryDefaultRendererTest extends IntegrationTestCase
         EventDispatcherTestFactory::get()->addEventHandler(LocIndexThumbnailsSelection::class, static fn (): int => 42);
 
         $this->expectException(Error::class);
-        $this->expectExceptionMessage('must return an instance of');
+        $this->expectExceptionMessageIsOrContains('must return an instance of');
 
         try {
             $this->seedUser(showNbHits: false, showNbComments: false);

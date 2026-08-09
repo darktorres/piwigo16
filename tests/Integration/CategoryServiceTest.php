@@ -556,7 +556,7 @@ final class CategoryServiceTest extends IntegrationTestCase
         EventDispatcherTestFactory::get()->addEventHandler(GetCategoryPreferredImageOrders::class, static fn (): string => 'not-an-array');
 
         $this->expectException(Error::class);
-        $this->expectExceptionMessage('must return an instance of');
+        $this->expectExceptionMessageIsOrContains('must return an instance of');
 
         try {
             $this->service->getPreferredImageOrders();
@@ -689,7 +689,7 @@ final class CategoryServiceTest extends IntegrationTestCase
         CurrentUserTestFactory::get()->set(User::fromUserArray(['id' => 1, 'forbidden_categories' => '2,5']));
 
         $this->expectException(RuntimeException::class);
-        $this->expectExceptionMessage('CATEGORY_SERVICE_ACCESS_DENIED_MARKER');
+        $this->expectExceptionMessageIsOrContains('CATEGORY_SERVICE_ACCESS_DENIED_MARKER');
 
         $this->service->checkRestrictions(2, new CategoryServiceFakeHtmlRendererDeniesAccess(), new CategoryServiceFakeRedirectServiceNeverCalled(), CurrentUserTestFactory::get());
     }
@@ -1071,7 +1071,7 @@ final class CategoryServiceTest extends IntegrationTestCase
     public function test_get_category_representant_properties_throws_for_a_missing_image(): void
     {
         $this->expectException(Exception::class);
-        $this->expectExceptionMessage('getCategoryRepresentantProperties(): image 999999 does not exist (stale representative_picture_id?)');
+        $this->expectExceptionMessageIsOrContains('getCategoryRepresentantProperties(): image 999999 does not exist (stale representative_picture_id?)');
 
         $this->service->getCategoryRepresentantProperties(999999, UrlServiceTestFactory::build());
     }

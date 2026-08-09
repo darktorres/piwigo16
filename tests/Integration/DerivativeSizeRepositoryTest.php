@@ -92,7 +92,7 @@ final class DerivativeSizeRepositoryTest extends IntegrationTestCase
     public function test_sync_enabled_throws_when_given_an_entity_that_is_not_actually_enabled(): void
     {
         $this->expectException(LogicException::class);
-        $this->expectExceptionMessage('syncPartition(): every entity must already have enabled=1');
+        $this->expectExceptionMessageIsOrContains('syncPartition(): every entity must already have enabled=1');
 
         $this->repo->syncEnabled([$this->newSize('p17-test-mismatch', enabled: 0)]);
     }
@@ -100,7 +100,7 @@ final class DerivativeSizeRepositoryTest extends IntegrationTestCase
     public function test_sync_disabled_throws_when_given_an_entity_that_is_actually_enabled(): void
     {
         $this->expectException(LogicException::class);
-        $this->expectExceptionMessage('syncPartition(): every entity must already have enabled=0');
+        $this->expectExceptionMessageIsOrContains('syncPartition(): every entity must already have enabled=0');
 
         $this->repo->syncDisabled([$this->newSize('p17-test-mismatch', enabled: 1)]);
     }

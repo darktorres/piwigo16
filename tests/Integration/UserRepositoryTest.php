@@ -390,7 +390,7 @@ final class UserRepositoryTest extends IntegrationTestCase
     public function test_update_infos_for_users_rejects_an_unknown_field(): void
     {
         $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage('Unknown user_infos field: not_a_real_field');
+        $this->expectExceptionMessageIsOrContains('Unknown user_infos field: not_a_real_field');
 
         $this->repo->updateInfosForUsers([UserId::from(1)], ['not_a_real_field' => 'x']);
     }

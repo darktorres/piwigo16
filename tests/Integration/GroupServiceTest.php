@@ -101,7 +101,7 @@ final class GroupServiceTest extends IntegrationTestCase
     public function test_create_rejects_an_already_used_name(): void
     {
         $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage('This name is already used by another group.');
+        $this->expectExceptionMessageIsOrContains('This name is already used by another group.');
 
         $this->service->create('Editors', false);
     }
@@ -109,7 +109,7 @@ final class GroupServiceTest extends IntegrationTestCase
     public function test_create_rejects_an_empty_name(): void
     {
         $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage('Name field must not be empty');
+        $this->expectExceptionMessageIsOrContains('Name field must not be empty');
 
         $this->service->create('   ', false);
     }
@@ -117,7 +117,7 @@ final class GroupServiceTest extends IntegrationTestCase
     public function test_duplicate_rejects_an_already_used_copy_name(): void
     {
         $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage('This name is already used by another group.');
+        $this->expectExceptionMessageIsOrContains('This name is already used by another group.');
 
         $this->service->duplicate(GroupId::from(1), 'Editors');
     }
@@ -125,7 +125,7 @@ final class GroupServiceTest extends IntegrationTestCase
     public function test_duplicate_rejects_a_missing_source_group(): void
     {
         $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage('This group does not exist.');
+        $this->expectExceptionMessageIsOrContains('This group does not exist.');
 
         $this->service->duplicate(GroupId::from(999999), 'p18-test-' . bin2hex(random_bytes(4)));
     }
@@ -133,7 +133,7 @@ final class GroupServiceTest extends IntegrationTestCase
     public function test_update_rejects_an_empty_name(): void
     {
         $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage('Name field must not be empty');
+        $this->expectExceptionMessageIsOrContains('Name field must not be empty');
 
         $this->service->update(GroupId::from(1), ['name' => '   ']);
     }
@@ -141,7 +141,7 @@ final class GroupServiceTest extends IntegrationTestCase
     public function test_update_rejects_a_missing_group(): void
     {
         $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage('This group does not exist.');
+        $this->expectExceptionMessageIsOrContains('This group does not exist.');
 
         $this->service->update(GroupId::from(999999), ['name' => 'Anything']);
     }
@@ -149,7 +149,7 @@ final class GroupServiceTest extends IntegrationTestCase
     public function test_update_rejects_an_already_used_name(): void
     {
         $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage('This name is already used by another group.');
+        $this->expectExceptionMessageIsOrContains('This name is already used by another group.');
 
         $this->service->update(GroupId::from(1), ['name' => 'Reviewers']);
     }

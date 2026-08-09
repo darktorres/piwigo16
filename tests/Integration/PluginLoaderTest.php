@@ -320,7 +320,7 @@ PHP);
         );
 
         $this->expectException(LogicException::class);
-        $this->expectExceptionMessage("PluginLoader::autoupdatePlugin(): {$classname} does not extend PluginMaintain");
+        $this->expectExceptionMessageIsOrContains("PluginLoader::autoupdatePlugin(): {$classname} does not extend PluginMaintain");
 
         KernelContainerOverride::with([Paths::class => Paths::fromRoot($root)], function (): void {
             PluginLoader::loadPlugins($this->loadedPlugins, new EventDispatcher(), $this->activityService, CurrentConfigTestFactory::get(), $this->wsContext(), $this->accessControl(), PageStateTestFactory::get(), CurrentPathsTestFactory::get());

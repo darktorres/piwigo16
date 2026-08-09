@@ -1006,7 +1006,7 @@ namespace Piwigo\Tests\Integration {
             $service = $this->serviceWithHtmlRenderer(new CommentServiceFakeHtmlRendererThrowsOnFatalError());
 
             $this->expectException(RuntimeException::class);
-            $this->expectExceptionMessage('COMMENT_SERVICE_FATAL_ERROR_MARKER: Unknown comment identifier');
+            $this->expectExceptionMessageIsOrContains('COMMENT_SERVICE_FATAL_ERROR_MARKER: Unknown comment identifier');
 
             $service->getCommentAuthorId(CommentId::from(999999));
         }

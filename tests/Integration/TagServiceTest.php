@@ -516,7 +516,7 @@ namespace Piwigo\Tests\Integration {
             EventDispatcherTestFactory::get()->addEventHandler(RenderTagUrl::class, static fn (): int => 42);
 
             $this->expectException(Error::class);
-            $this->expectExceptionMessage('must return an instance of');
+            $this->expectExceptionMessageIsOrContains('must return an instance of');
 
             try {
                 $this->service->tagIdFromTagName($name);

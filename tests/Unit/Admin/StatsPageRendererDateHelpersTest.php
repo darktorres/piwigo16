@@ -90,7 +90,7 @@ final class StatsPageRendererDateHelpersTest extends TestCase
         // also proves the fallback isn't some non-empty placeholder (which
         // would embed extra characters between the dashes).
         $this->expectException(DateMalformedStringException::class);
-        $this->expectExceptionMessage('(2026-)');
+        $this->expectExceptionMessageIsOrContains('(2026-)');
 
         StatsPageRenderer::getDateObject([
             'year' => '2026',
@@ -103,7 +103,7 @@ final class StatsPageRendererDateHelpersTest extends TestCase
     public function test_get_date_object_rejects_a_non_numeric_day(): void
     {
         $this->expectException(DateMalformedStringException::class);
-        $this->expectExceptionMessage('(2026-3-)');
+        $this->expectExceptionMessageIsOrContains('(2026-3-)');
 
         StatsPageRenderer::getDateObject([
             'year' => '2026',
@@ -116,7 +116,7 @@ final class StatsPageRendererDateHelpersTest extends TestCase
     public function test_get_date_object_rejects_a_non_numeric_hour(): void
     {
         $this->expectException(DateMalformedStringException::class);
-        $this->expectExceptionMessage('(2026-3-17 :00)');
+        $this->expectExceptionMessageIsOrContains('(2026-3-17 :00)');
 
         StatsPageRenderer::getDateObject([
             'year' => '2026',
@@ -227,7 +227,7 @@ final class StatsPageRendererDateHelpersTest extends TestCase
     public function test_set_missing_values_rejects_an_invalid_unit(): void
     {
         self::expectException(InvalidArgumentException::class);
-        self::expectExceptionMessage('Invalid unit: fortnight');
+        self::expectExceptionMessageIsOrContains('Invalid unit: fortnight');
 
         StatsPageRenderer::setMissingValues(
             'fortnight',

@@ -211,7 +211,7 @@ final class InstallBootstrapTest extends IntegrationTestCase
         Kernel::reset();
 
         $this->expectException(LogicException::class);
-        $this->expectExceptionMessage('Kernel not booted');
+        $this->expectExceptionMessageIsOrContains('Kernel not booted');
 
         InstallBootstrap::activateConfigService();
     }
@@ -219,7 +219,7 @@ final class InstallBootstrapTest extends IntegrationTestCase
     public function test_activateConfigService_throws_when_the_container_returns_an_unexpected_type(): void
     {
         $this->expectException(LogicException::class);
-        $this->expectExceptionMessage('Container returned an unexpected type for ' . ConfigService::class);
+        $this->expectExceptionMessageIsOrContains('Container returned an unexpected type for ' . ConfigService::class);
 
         KernelContainerOverride::withWrongTypeFor(
             ConfigService::class,

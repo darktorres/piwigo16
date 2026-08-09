@@ -90,19 +90,29 @@ final class PwgTemplateAdapterTest extends IntegrationTestCase
         }
     }
 
+    // l10n()/l10n_dec()/sprintf() are #[Deprecated] on PwgTemplateAdapter
+    // itself -- kept as working back-compat shims for legacy .tpl files
+    // that call them directly instead of the newer translate/translate_dec/
+    // sprintf Smarty modifiers (see suppressDeprecation()'s own docblock
+    // above for why the runtime E_DEPRECATED also needs swallowing). These
+    // tests deliberately exercise the deprecated shims, not an oversight.
     public function test_l10n_returns_the_key_untranslated_when_no_translation_exists(): void
     {
+        // @phpstan-ignore method.deprecated
         self::assertSame('Hello', $this->suppressDeprecation(fn () => $this->adapter->l10n('Hello')));
     }
 
     public function test_l10n_dec_selects_the_singular_or_plural_form(): void
     {
+        // @phpstan-ignore method.deprecated
         self::assertSame('1 item', $this->suppressDeprecation(fn () => $this->adapter->l10n_dec('%d item', '%d items', 1)));
+        // @phpstan-ignore method.deprecated
         self::assertSame('3 items', $this->suppressDeprecation(fn () => $this->adapter->l10n_dec('%d item', '%d items', 3)));
     }
 
     public function test_sprintf_delegates_to_the_real_sprintf(): void
     {
+        // @phpstan-ignore method.deprecated
         self::assertSame('x-5', $this->suppressDeprecation(fn () => $this->adapter->sprintf('%s-%d', 'x', 5)));
     }
 

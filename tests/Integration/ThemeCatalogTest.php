@@ -148,7 +148,7 @@ final class ThemeCatalogTest extends IntegrationTestCase
         EventDispatcherTestFactory::get()->addEventHandler(GetPwgThemes::class, static fn (): ?string => null);
 
         $this->expectException(Error::class);
-        $this->expectExceptionMessage('must return an instance of');
+        $this->expectExceptionMessageIsOrContains('must return an instance of');
 
         try {
             ThemeCatalog::getPwgThemes(EventDispatcherTestFactory::get(), CurrentPathsTestFactory::get(), CurrentConfigTestFactory::get(), LangTestFactory::get());

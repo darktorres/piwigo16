@@ -22,7 +22,7 @@ use Piwigo\Users\UserInfoEntity;
  * else there (the `$env_nbm`/`$page`/mail-template "workflow" lifecycle:
  * begin/set/unset/end, counters, message pushing) has no DB access of its
  * own and stays procedural, same "$page/$template glue stays in the
- * free-function delegate" split as every other P19 domain.
+ * free-function delegate" split as every other domain.
  *
  * Real DQL against {@see UserMailNotificationEntity}.
  * `Notification` is `L2bExtendedDomain`;

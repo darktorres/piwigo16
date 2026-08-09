@@ -16,7 +16,7 @@ use Piwigo\Session\SessionService;
  * deptrac.yaml's own note on that placement) and this domain's own
  * L2bExtendedDomain layer may not depend on it, same "call the
  * not-yet-injectable cross-layer capability as a free function
- * (`pwg_mail()`)" shape already established for Comment/Users in P18 --
+ * (`pwg_mail()`)" shape already established for Comment/Users --
  * the one real `pwg_mail()` call site
  * (`do_subscribe_unsubscribe_notification_by_mail()`) stays procedural.
  */

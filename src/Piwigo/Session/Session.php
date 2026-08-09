@@ -8,7 +8,7 @@ namespace Piwigo\Session;
  * Typed, request-scoped session value object. Starts genuinely empty --
  * zero typed slots -- growing one slot at a time only when a later phase
  * migrates a piece of code off raw $_SESSION[...] access. Same growth
- * discipline as config/container.php (P8) and config/routes.php (P9),
+ * discipline as config/container.php and config/routes.php,
  * applied to a VO instead of a config array.
  *
  * Nothing currently reads typed session state (no service layer exists

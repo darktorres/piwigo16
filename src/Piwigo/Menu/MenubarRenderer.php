@@ -50,8 +50,8 @@ use Piwigo\Users\CurrentUser;
  * The `eval($url_data['eval_visible'])` call for the external-links block
  * is preserved unmodified -- the reference doc's own fix for this
  * (replacing the plugin `eval_visible` contract with a Closure-based
- * visibility API) targets `PluginInterface`, which doesn't exist until
- * P28 (SEC-49). Not this phase's job.
+ * visibility API) targets `PluginInterface`, which doesn't exist yet
+ * (SEC-49). Not yet built.
  */
 final class MenubarRenderer
 {

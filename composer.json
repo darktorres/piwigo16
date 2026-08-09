@@ -105,7 +105,7 @@
     "analyse": [
       "@analyse:phpstan"
     ],
-    "test": "@php vendor/bin/pest --testsuite Unit,Arch",
+    "test": "@php vendor/bin/pest --testsuite Unit,Arch --parallel",
     "test:coverage": "@php vendor/bin/pest --testsuite Unit,Arch --coverage-php _data/coverage-raw/unit-arch.cov",
     "test:coverage:integration": "@php vendor/bin/pest --testsuite Integration --coverage-php _data/coverage-raw/integration.cov",
     "test:integration": "@php vendor/bin/pest --testsuite Integration",

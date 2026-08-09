@@ -409,7 +409,7 @@ final class MaintenanceActionDispatcherTest extends IntegrationTestCase
         }
 
         $raw = $this->conn->fetchOne("SELECT value FROM " . Tables::config() . " WHERE param = 'gallery_locked'");
-        self::assertSame(true, json_decode(is_scalar($raw) ? (string) $raw : ''));
+        self::assertTrue(json_decode(is_scalar($raw) ? (string) $raw : ''));
 
         $this->conn->executeStatement("DELETE FROM " . Tables::config() . " WHERE param = 'gallery_locked'");
     }
@@ -423,7 +423,7 @@ final class MaintenanceActionDispatcherTest extends IntegrationTestCase
         }
 
         $raw = $this->conn->fetchOne("SELECT value FROM " . Tables::config() . " WHERE param = 'gallery_locked'");
-        self::assertSame(false, json_decode(is_scalar($raw) ? (string) $raw : ''));
+        self::assertFalse(json_decode(is_scalar($raw) ? (string) $raw : ''));
         // $_SESSION['page_infos'] here has no reader anywhere in src/Piwigo
         // (confirmed via full-repo grep) -- exercised for coverage credit
         // without asserting on a visible effect that doesn't exist.
@@ -603,7 +603,11 @@ final class MaintenanceActionDispatcherTest extends IntegrationTestCase
         try {
             $this->dispatcher->dispatch('compiled-templates');
             self::fail('Expected HtmlRenderingInterface::fatalError() to throw ResponseReadyException');
-        } catch (ResponseReadyException) {
+        } catch (ResponseReadyException $e) {
+            // fatalError()'s own real throw site always carries a 500
+            // response (see its own docblock) -- confirms this is really
+            // its fatal-error path, not some other ResponseReadyException.
+            self::assertSame(500, $e->response()->getStatusCode());
         } finally {
             restore_error_handler();
         }

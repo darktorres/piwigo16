@@ -1082,7 +1082,6 @@ final class CategoryServiceTest extends IntegrationTestCase
 
         $props = $this->service->getCategoryRepresentantProperties(1, $urlService);
 
-        self::assertArrayHasKey('src', $props);
         self::assertSame($urlService->getRootUrl() . 'admin.php?page=photo-1', $props['url']);
     }
 

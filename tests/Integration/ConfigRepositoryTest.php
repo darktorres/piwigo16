@@ -65,7 +65,6 @@ final class ConfigRepositoryTest extends IntegrationTestCase
         $this->em->getEventManager()->addEventListener(Events::loadClassMetadata, new TablePrefixListener(DbCredentialsTestFactory::get()));
 
         $repo = $this->em->getRepository(ConfigEntry::class);
-        self::assertInstanceOf(ConfigRepository::class, $repo);
         $this->repo = $repo;
     }
 
@@ -287,7 +286,6 @@ final class ConfigRepositoryTest extends IntegrationTestCase
         $em->getEventManager()->addEventListener(Events::loadClassMetadata, new TablePrefixListener(DbCredentialsTestFactory::get()));
 
         $repo = $em->getRepository(ConfigEntry::class);
-        self::assertInstanceOf(ConfigRepository::class, $repo);
 
         return $repo;
     }

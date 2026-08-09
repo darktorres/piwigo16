@@ -336,7 +336,7 @@ final class WsImagesChunkedUploadTest extends ContractTestCase
         ]);
 
         self::assertSame('ok', $response['stat']);
-        self::assertSame(true, $response['result']);
+        self::assertTrue($response['result']);
     }
 
     public function test_addFile_with_a_smaller_replacement_keeps_the_original(): void
@@ -368,7 +368,7 @@ final class WsImagesChunkedUploadTest extends ContractTestCase
         ], allowPhpWarnings: true);
 
         self::assertSame('ok', $response['stat']);
-        self::assertSame(true, $response['result']);
+        self::assertTrue($response['result']);
 
         $bufferPath = dirname(__DIR__, 2) . '/upload/buffer/' . $md5sum . '-original';
         self::assertFileDoesNotExist($bufferPath);

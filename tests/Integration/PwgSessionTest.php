@@ -62,7 +62,6 @@ final class PwgSessionTest extends IntegrationTestCase
 
         $conn = DbConnection::build();
         $repo = EntityManagerFactory::build($conn)->getRepository(SessionEntity::class);
-        self::assertInstanceOf(SessionRepository::class, $repo);
 
         $currentConfig = Kernel::container()->get(CurrentConfig::class);
         if (! $currentConfig instanceof CurrentConfig) {

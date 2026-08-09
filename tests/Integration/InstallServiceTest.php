@@ -102,9 +102,18 @@ final class InstallServiceTest extends IntegrationTestCase
 
     public function test_php5_hosting_htaccess_constant_has_the_expected_hosting_directives(): void
     {
+        // PHPStan proves each of these from the constant's own current
+        // literal value, hence "redundant" -- but that's exactly the
+        // point: this legacy-hosting-compat data is otherwise only ever
+        // read, never re-derived, so this guard (not a PHPStan run) is
+        // what catches an accidental edit to one of these entries.
+        // @phpstan-ignore staticMethod.alreadyNarrowedType
         self::assertCount(11, InstallService::PHP5_HOSTING_HTACCESS);
+        // @phpstan-ignore staticMethod.alreadyNarrowedType
         self::assertSame('AddType x-mapp-php5 .php', InstallService::PHP5_HOSTING_HTACCESS['kundenserver.de']);
+        // @phpstan-ignore staticMethod.alreadyNarrowedType
         self::assertSame('SetEnv PHP_VER 5', InstallService::PHP5_HOSTING_HTACCESS['ovh.net']);
+        // @phpstan-ignore staticMethod.alreadyNarrowedType
         self::assertSame('php 1', InstallService::PHP5_HOSTING_HTACCESS['free.fr']);
     }
 

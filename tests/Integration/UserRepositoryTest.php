@@ -456,7 +456,7 @@ final class UserRepositoryTest extends IntegrationTestCase
 
         $normalized = [];
         foreach ($byId as $id => $username) {
-            $normalized[(string) $id] = $username;
+            $normalized[$id] = $username;
         }
         ksort($normalized);
 

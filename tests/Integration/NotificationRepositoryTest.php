@@ -242,6 +242,5 @@ final class NotificationRepositoryTest extends IntegrationTestCase
         $rows = $this->repo->findRecentCategoriesForDate(new SqlCondition('1 = 1'), '2026-07-07 05:02:36', 10);
 
         self::assertNotSame([], $rows);
-        self::assertInstanceOf(RecentCategoryForDate::class, $rows[0]);
     }
 }

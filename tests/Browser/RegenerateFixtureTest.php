@@ -53,6 +53,7 @@ final class RegenerateFixtureTest extends IntegrationTestCase
     #[Override]
     protected function setUp(): void
     {
+        parent::setUp();
         $this->setUpConnectionFromEnv();
         $this->requireBaseUrl();
 
@@ -67,6 +68,7 @@ final class RegenerateFixtureTest extends IntegrationTestCase
         if ($this->cookieJar !== '' && file_exists($this->cookieJar)) {
             unlink($this->cookieJar);
         }
+        parent::tearDown();
     }
 
     /** Returns the path to the per-test cookie jar (for raw curl calls). */

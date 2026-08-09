@@ -40,7 +40,6 @@ final class LangRepositoryTest extends IntegrationTestCase
 
         $this->conn = DbConnection::build();
         $repo = EntityManagerFactory::build($this->conn)->getRepository(LanguageEntity::class);
-        self::assertInstanceOf(LangRepository::class, $repo);
         $this->repo = $repo;
     }
 

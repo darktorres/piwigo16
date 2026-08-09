@@ -166,7 +166,6 @@ final class CategoryCatsRendererTest extends IntegrationTestCase
         $em = EntityManagerFactory::build($this->conn);
         $categoryRepo = new CategoryRepository($em, $currentConfig);
         $imageRepo = $em->getRepository(ImageEntity::class);
-        self::assertInstanceOf(ImageRepository::class, $imageRepo);
 
         $filterState = Kernel::container()->get(FilterState::class);
         if (! $filterState instanceof FilterState) {

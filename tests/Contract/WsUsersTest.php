@@ -348,7 +348,7 @@ final class WsUsersTest extends ContractTestCase
         self::assertSame('ok', $limited['stat']);
         $result = $limited['result'];
         self::assertIsArray($result);
-        self::assertSame(1, count($this->extractUsers($limited)));
+        self::assertCount(1, $this->extractUsers($limited));
         self::assertArrayHasKey('total_count', $result);
         $totalCount = $result['total_count'];
         self::assertIsInt($totalCount);

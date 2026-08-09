@@ -353,7 +353,6 @@ final class HistoryServiceTest extends IntegrationTestCase
     public function test_log_visit_widens_the_section_enum_for_a_brand_new_section(): void
     {
         $repo = EntityManagerFactory::build($this->conn)->getRepository(HistoryEntity::class);
-        self::assertInstanceOf(HistoryRepository::class, $repo);
         $originalOptions = $repo->getSectionEnumOptions();
         self::assertNotContains('my_custom_section', $originalOptions);
 

@@ -273,7 +273,6 @@ abstract class IntegrationTestCase extends TestCase
         $this->configEntityManager = $em;
 
         $repo = $em->getRepository(ConfigEntry::class);
-        self::assertInstanceOf(ConfigRepository::class, $repo);
 
         return $repo;
     }

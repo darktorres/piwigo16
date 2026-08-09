@@ -55,6 +55,7 @@ final class PermalinkRepositoryTest extends IntegrationTestCase
         // hit=42, last_hit='2026-08-01 00:00:00') after any test that
         // mutates it.
         $this->conn->executeStatement("UPDATE " . Tables::oldPermalinks() . " SET hit = 42, last_hit = '2026-08-01 00:00:00' WHERE permalink = 'old-sample-album'");
+        parent::tearDown();
     }
 
     public function test_set_then_find_category_id_by_permalink_round_trips(): void

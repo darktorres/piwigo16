@@ -20,7 +20,6 @@ use Piwigo\Validation\InputValidator;
 use Throwable;
 use PHPUnit\Framework\TestCase;
 use Piwigo\Core\Kernel;
-use Psr\Container\ContainerInterface;
 
 /**
  * Boots the Kernel, then iterates and resolves every entry defined in
@@ -36,12 +35,6 @@ final class ContainerSmokeTest extends TestCase
     protected function tearDown(): void
     {
         Kernel::reset();
-    }
-
-    public function test_boot_produces_a_working_container(): void
-    {
-        Kernel::boot();
-        self::assertInstanceOf(ContainerInterface::class, Kernel::container());
     }
 
     /**

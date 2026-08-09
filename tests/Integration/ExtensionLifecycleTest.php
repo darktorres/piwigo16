@@ -97,7 +97,6 @@ namespace Piwigo\Tests\Integration {
             $this->conn = DbConnection::build();
             $this->repo = new ExtensionRepository(EntityManagerFactory::build($this->conn));
             $pluginMigrationRepo = EntityManagerFactory::build($this->conn)->getRepository(PluginMigrationEntity::class);
-            self::assertInstanceOf(PluginMigrationRepository::class, $pluginMigrationRepo);
             $this->pluginMigrationRepo = $pluginMigrationRepo;
             $currentLogger = new CurrentLogger();
             $currentLogger->set(new Logger(['severity' => Logger::OFF]));

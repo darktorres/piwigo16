@@ -81,6 +81,10 @@ final class PwgTemplateAdapterTest extends IntegrationTestCase
     {
         $derivative = $this->adapter->derivative('thumb', $this->fakeImageInfos());
 
+        // derivative()'s own return type already guarantees the class --
+        // what's actually under test is that building one from real image
+        // info doesn't throw.
+        // @phpstan-ignore staticMethod.alreadyNarrowedType
         self::assertInstanceOf(DerivativeImage::class, $derivative);
     }
 

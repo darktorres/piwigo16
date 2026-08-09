@@ -164,6 +164,11 @@ final class PasswordServiceTest extends IntegrationTestCase
         // from the "wrong length" case above (real phpass hashes always
         // use one of those 2 prefixes).
         $wrongPrefixHash = '$Q$5testsalt/.6ES3kLR5L.kwZkBtHpD/';
+        // Not testing verifyLegacyPhpass() -- testing this fixture itself:
+        // if a future edit changes its length, it would silently start
+        // exercising the "wrong length" branch from the test above instead
+        // of the "wrong prefix" branch this test is named for.
+        // @phpstan-ignore staticMethod.alreadyNarrowedType
         self::assertSame(34, strlen($wrongPrefixHash));
 
         self::assertFalse($this->service->verifyLegacyPhpass('legacyPhpassPassw0rd!', $wrongPrefixHash));
@@ -175,6 +180,8 @@ final class PasswordServiceTest extends IntegrationTestCase
         // log2 character) is '.' -- itoa64 index 0, below the 7-30 valid
         // range real phpass costs use.
         $outOfRangeCostHash = '$P$.testsalt/.6ES3kLR5L.kwZkBtHpD/';
+        // Same fixture-integrity rationale as the wrong-prefix test above.
+        // @phpstan-ignore staticMethod.alreadyNarrowedType
         self::assertSame(34, strlen($outOfRangeCostHash));
 
         self::assertFalse($this->service->verifyLegacyPhpass('legacyPhpassPassw0rd!', $outOfRangeCostHash));

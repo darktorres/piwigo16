@@ -408,7 +408,7 @@ final class WsImagesMaintenanceTest extends ContractTestCase
         ]);
 
         self::assertSame('ok', $response['stat']);
-        self::assertSame(true, $response['result']);
+        self::assertTrue($response['result']);
 
         $remaining = $this->conn->fetchOne(
             'SELECT COUNT(*) FROM ' . Tables::imageFormat() . ' WHERE format_id = ?',
@@ -439,7 +439,7 @@ final class WsImagesMaintenanceTest extends ContractTestCase
         // UrlService::urlIsRemote() 'continue's past the physical-unlink
         // attempt for this row entirely -- $ok stays true, and the format
         // row is still deleted from the DB below regardless.
-        self::assertSame(true, $response['result']);
+        self::assertTrue($response['result']);
 
         $remaining = $this->conn->fetchOne(
             'SELECT COUNT(*) FROM ' . Tables::imageFormat() . ' WHERE format_id = ?',
@@ -493,7 +493,7 @@ final class WsImagesMaintenanceTest extends ContractTestCase
             ], allowPhpWarnings: true);
 
             self::assertSame('ok', $response['stat']);
-            self::assertSame(false, $response['result']);
+            self::assertFalse($response['result']);
 
             // The format row is still deleted from the DB even though the
             // physical file deletion failed -- formatsDelete()'s own

@@ -8,7 +8,6 @@ use Override;
 use Piwigo\Core\Kernel;
 use LogicException;
 use Doctrine\DBAL\Schema\Column;
-use Doctrine\DBAL\Schema\Name\UnqualifiedName;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Tools\SchemaValidator;
 use Piwigo\Config\CurrentConfig;
@@ -101,7 +100,6 @@ final class SchemaParityTest extends IntegrationTestCase
         $columns = $sm->introspectTableColumnsByUnquotedName($tableName);
         $columnNames = array_map(static function (Column $column): string {
             $objectName = $column->getObjectName();
-            self::assertInstanceOf(UnqualifiedName::class, $objectName);
             return $objectName->getIdentifier()->getValue();
         }, $columns);
 

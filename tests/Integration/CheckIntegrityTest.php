@@ -132,7 +132,6 @@ final class CheckIntegrityTest extends IntegrationTestCase
     private function buildIntegrityRepo(): IntegrityIgnoredAnomalyRepository
     {
         $repo = EntityManagerFactory::build(DbConnection::build())->getRepository(IntegrityIgnoredAnomalyEntity::class);
-        self::assertInstanceOf(IntegrityIgnoredAnomalyRepository::class, $repo);
 
         return $repo;
     }

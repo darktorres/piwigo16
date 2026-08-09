@@ -103,9 +103,7 @@ final class CategoryDefaultRendererTest extends IntegrationTestCase
         $this->conn = DbConnection::build();
         $em = EntityManagerFactory::build($this->conn);
         $imageRepo = $em->getRepository(ImageEntity::class);
-        self::assertInstanceOf(ImageRepository::class, $imageRepo);
         $commentRepo = $em->getRepository(CommentEntity::class);
-        self::assertInstanceOf(CommentRepository::class, $commentRepo);
 
         $htmlService = HtmlServiceTestFactory::build();
         // thumbnails.tpl's own {assign var=derivative

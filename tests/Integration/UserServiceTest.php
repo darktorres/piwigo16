@@ -1151,8 +1151,8 @@ namespace Piwigo\Tests\Integration {
                 $trueData = $this->service->getUserData(UserId::from($trueId));
                 $falseData = $this->service->getUserData(UserId::from($falseId));
 
-                self::assertSame(true, $trueData['username']);
-                self::assertSame(false, $falseData['username']);
+                self::assertTrue($trueData['username']);
+                self::assertFalse($falseData['username']);
             } finally {
                 $this->conn->executeStatement('DELETE FROM ' . Tables::users() . ' WHERE id IN (?, ?)', [$trueId, $falseId]);
             }

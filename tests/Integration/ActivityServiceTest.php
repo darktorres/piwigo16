@@ -533,7 +533,6 @@ final class ActivityServiceTest extends IntegrationTestCase
         // asserts directly against the repository.
         self::assertCount(4, $rows);
         foreach ($rows as $row) {
-            self::assertInstanceOf(UserActivityLogEntry::class, $row);
             self::assertSame('user', $row->object);
             self::assertSame('fixture_admin', $row->username);
         }
@@ -590,7 +589,6 @@ final class ActivityServiceTest extends IntegrationTestCase
         // via the repository, same technique/shape as
         // ActivityRepositoryTest::test_find_core_update_history_filters_by_object_and_actions().
         $repo = EntityManagerFactory::build($this->conn)->getRepository(ActivityEntity::class);
-        self::assertInstanceOf(ActivityRepository::class, $repo);
         $repo->insertMany([
             [
                 'object' => 'system',

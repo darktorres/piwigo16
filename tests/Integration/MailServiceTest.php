@@ -133,7 +133,6 @@ final class MailServiceTest extends IntegrationTestCase
 
         $this->conn = DbConnection::build();
         $repo = EntityManagerFactory::build($this->conn)->getRepository(ConfigEntry::class);
-        self::assertInstanceOf(ConfigRepository::class, $repo);
         $configService = new ConfigService($repo, new EventDispatcher(), CurrentConfigTestFactory::get());
         CurrentConfigServiceTestFactory::get()->set($configService);
         $configService->loadConfFromDb();

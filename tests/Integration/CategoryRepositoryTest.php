@@ -15,6 +15,7 @@ namespace Piwigo\Tests\Integration {
     use Piwigo\Category\CategoryRefDateField;
     use Piwigo\Category\CategoryRepository;
     use Piwigo\Category\Projection\Category;
+    use Piwigo\Category\Projection\CategoryIdNameUppercatsRank;
     use Piwigo\Category\Projection\ComputedCategoryRollupRow;
     use Piwigo\Common\ValueObject\CategoryId;
     use Piwigo\Config\CurrentConfig;
@@ -327,8 +328,8 @@ final class CategoryRepositoryTest extends IntegrationTestCase
             $byId[$row->catId] = $row;
         }
 
-        self::assertInstanceOf(ComputedCategoryRollupRow::class, $byId['1']);
-        self::assertInstanceOf(ComputedCategoryRollupRow::class, $byId['2']);
+        self::assertArrayHasKey('1', $byId);
+        self::assertArrayHasKey('2', $byId);
     }
 
     public function test_find_full_categories_by_ids_returns_every_column(): void
@@ -337,7 +338,6 @@ final class CategoryRepositoryTest extends IntegrationTestCase
 
         self::assertCount(1, $cats);
         $cat = $cats[0];
-        self::assertInstanceOf(Category::class, $cat);
         self::assertSame('Sample Album', $cat->name);
         // uppercats/rank/representativePictureId are real `categories`
         // columns findCategoriesByIds()'s own narrower 6-column contract
@@ -899,7 +899,13 @@ final class CategoryRepositoryTest extends IntegrationTestCase
         try {
             $this->conn->executeStatement('UPDATE ' . Tables::categories() . ' SET site_id = 1 WHERE id = 1');
 
-            self::assertSame([1], array_column($this->repo->findIdNameUppercatsRankBySite(1), 'id'));
+            $rows = $this->repo->findIdNameUppercatsRankBySite(1);
+            // PHPStan treats this same method+args call as returning the
+            // same value as the empty-result assertion above -- it can't
+            // see that the real UPDATE just above changed what the live DB
+            // returns between the two calls.
+            // @phpstan-ignore return.type, staticMethod.impossibleType
+            self::assertSame([1], array_map(static fn (CategoryIdNameUppercatsRank $row): int => $row->id, $rows));
         } finally {
             $this->conn->executeStatement('UPDATE ' . Tables::categories() . ' SET site_id = NULL WHERE id = 1');
         }

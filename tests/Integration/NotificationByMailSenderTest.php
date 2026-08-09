@@ -115,7 +115,6 @@ final class NotificationByMailSenderTest extends IntegrationTestCase
 
         $conn = DbConnection::build();
         $repo = EntityManagerFactory::build($conn)->getRepository(ConfigEntry::class);
-        self::assertInstanceOf(ConfigRepository::class, $repo);
         $configService = new ConfigService($repo, new EventDispatcher(), CurrentConfigTestFactory::get());
         CurrentConfigServiceTestFactory::get()->set($configService);
         // sendMailNotifications()'s recent-post-dates block builds real
@@ -380,7 +379,6 @@ final class NotificationByMailSenderTest extends IntegrationTestCase
         $result = $this->sender->sendMailNotifications('list_to_send', [$this->user1OriginalRow['check_key']]);
 
         self::assertCount(1, $result);
-        self::assertInstanceOf(UserMailNotification::class, $result[0]);
         self::assertSame($this->user1OriginalRow['check_key'], $result[0]->checkKey);
         self::assertSame([], PageStateTestFactory::get()->errors);
     }
@@ -409,7 +407,6 @@ final class NotificationByMailSenderTest extends IntegrationTestCase
         $result = $this->sender->sendMailNotifications('list_to_send', [$this->user1OriginalRow['check_key']]);
 
         self::assertCount(1, $result);
-        self::assertInstanceOf(UserMailNotification::class, $result[0]);
         self::assertSame($this->user1OriginalRow['check_key'], $result[0]->checkKey);
     }
 

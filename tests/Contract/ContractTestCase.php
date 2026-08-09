@@ -39,6 +39,7 @@ abstract class ContractTestCase extends IntegrationTestCase
     #[Override]
     protected function setUp(): void
     {
+        parent::setUp();
         $this->setUpConnectionFromEnv();
         $this->requireBaseUrl();
 
@@ -60,6 +61,7 @@ abstract class ContractTestCase extends IntegrationTestCase
         if ($this->cookieJar !== '' && file_exists($this->cookieJar)) {
             unlink($this->cookieJar);
         }
+        parent::tearDown();
     }
 
     /**

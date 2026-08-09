@@ -9,7 +9,6 @@ use Doctrine\Migrations\Version\Version;
 use Piwigo\Migrations\UpgradePathProbe\Version00000000000002;
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\Schema\Column;
-use Doctrine\DBAL\Schema\Name\UnqualifiedName;
 use Doctrine\Migrations\Configuration\EntityManager\ExistingEntityManager;
 use Doctrine\Migrations\Configuration\Migration\ConfigurationArray;
 use Doctrine\Migrations\DependencyFactory;
@@ -120,7 +119,6 @@ final class MigrationUpgradePathTest extends IntegrationTestCase
 
         return array_map(static function (Column $column): string {
             $objectName = $column->getObjectName();
-            self::assertInstanceOf(UnqualifiedName::class, $objectName);
 
             return $objectName->getIdentifier()->getValue();
         }, $columns);

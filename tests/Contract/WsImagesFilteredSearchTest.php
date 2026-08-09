@@ -56,7 +56,7 @@ final class WsImagesFilteredSearchTest extends ContractTestCase
         return $searchId;
     }
 
-    /** @return array<string, mixed> */
+    /** @return array<array-key, mixed> */
     private function fetchRules(string $searchUuid): array
     {
         $raw = $this->conn->fetchOne(
@@ -66,13 +66,13 @@ final class WsImagesFilteredSearchTest extends ContractTestCase
         self::assertIsString($raw, 'no piwigo_search row for uuid ' . $searchUuid);
         $decoded = json_decode($raw, true, flags: JSON_THROW_ON_ERROR);
         self::assertIsArray($decoded);
-        /** @var array<string, mixed> $decoded */
+
         return $decoded;
     }
 
     /**
      * Fetches the `fields` sub-array of a persisted search's rules.
-     * @return array<string, mixed>
+     * @return array<array-key, mixed>
      */
     private function fetchFields(string $searchUuid): array
     {
@@ -94,18 +94,18 @@ final class WsImagesFilteredSearchTest extends ContractTestCase
     }
 
     /**
-     * @param array<string, mixed> $data
-     * @return array<string, mixed>
+     * @param array<array-key, mixed> $data
+     * @return array<array-key, mixed>
      */
     private static function arrayField(array $data, string $key): array
     {
         $value = $data[$key] ?? null;
         self::assertIsArray($value, "expected array key '{$key}'");
-        /** @var array<string, mixed> $value */
+
         return $value;
     }
 
-    /** @param array<string, mixed> $data */
+    /** @param array<array-key, mixed> $data */
     private static function stringField(array $data, string $key): string
     {
         $value = $data[$key] ?? null;
@@ -121,7 +121,7 @@ final class WsImagesFilteredSearchTest extends ContractTestCase
      * still-exact-value comparisons don't depend on that internal, storage
      * engine detail.
      * @param array<string, mixed> $expected
-     * @param array<string, mixed> $actual
+     * @param array<array-key, mixed> $actual
      */
     private static function assertSameKeysAndValues(array $expected, array $actual): void
     {
@@ -139,7 +139,7 @@ final class WsImagesFilteredSearchTest extends ContractTestCase
         self::assertIsArray($result);
         /** @var array<string, mixed> $result */
         self::assertMatchesRegularExpression('/^psk-\d{8}-[a-zA-Z0-9]{10}$/', $searchId);
-        self::assertSame(true, str_contains(self::stringField($result, 'search_url'), $searchId));
+        self::assertTrue(str_contains(self::stringField($result, 'search_url'), $searchId));
 
         $rules = $this->fetchRules($searchId);
         self::assertSame(

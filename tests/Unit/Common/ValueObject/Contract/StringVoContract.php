@@ -28,7 +28,7 @@ abstract class StringVoContract extends TestCase
     abstract protected static function validSample(): string;
 
     /** @return iterable<string, array{string}> Sample inputs the VO must reject. */
-    abstract protected static function invalidSamples(): iterable;
+    abstract public static function invalidSamples(): iterable;
 
     /**
      * A different StringVo implementation whose own from() accepts this

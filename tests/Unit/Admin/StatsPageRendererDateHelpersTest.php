@@ -79,6 +79,10 @@ final class StatsPageRendererDateHelpersTest extends TestCase
             'hour' => null,
         ]);
 
+        // getDateObject()'s own return type already guarantees the class --
+        // what's actually under test is the surprising behavior documented
+        // above: this malformed input doesn't throw.
+        // @phpstan-ignore staticMethod.alreadyNarrowedType
         self::assertInstanceOf(DateTime::class, $date);
     }
 

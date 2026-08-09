@@ -240,7 +240,7 @@ final class WsImagesGetInfoAndCommentTest extends ContractTestCase
         self::assertIsArray($commentResult);
         $comment = $commentResult['comment'];
         self::assertIsArray($comment);
-        self::assertSame(false, $comment['validation']);
+        self::assertFalse($comment['validation']);
 
         $validated = $this->conn->fetchOne(
             'SELECT validated FROM ' . Tables::comments() . ' WHERE content = ?',

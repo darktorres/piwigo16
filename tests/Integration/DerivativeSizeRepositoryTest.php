@@ -59,7 +59,6 @@ final class DerivativeSizeRepositoryTest extends IntegrationTestCase
         $this->originalRows = $this->conn->fetchAllAssociative('SELECT * FROM ' . Tables::derivativeSize());
 
         $repo = EntityManagerFactory::build($this->conn)->getRepository(DerivativeSizeEntity::class);
-        self::assertInstanceOf(DerivativeSizeRepository::class, $repo);
         $this->repo = $repo;
     }
 

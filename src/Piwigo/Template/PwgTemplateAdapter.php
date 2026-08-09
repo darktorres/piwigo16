@@ -11,39 +11,15 @@ declare(strict_types=1);
 
 namespace Piwigo\Template;
 
-use Deprecated;
 use Piwigo\Config\CurrentConfig;
-use Piwigo\Core\Lang;
 use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\SrcImage;
-use Piwigo\Lang\Translator;
 
 final class PwgTemplateAdapter
 {
     public function __construct(
-        private readonly Lang $lang,
-        private readonly Translator $translator,
         private readonly CurrentConfig $currentConfig,
     ) {}
-
-    #[Deprecated(message: 'use "translate" modifier')]
-    public function l10n(string $text): string
-    {
-        return $this->lang->t($text);
-    }
-
-    #[Deprecated(message: 'use "translate_dec" modifier')]
-    public function l10n_dec(string $s, string $p, int $v): string
-    {
-        return $this->translator->plural($s, $p, $v);
-    }
-
-    #[Deprecated(message: 'use "translate" or "sprintf" modifier')]
-    public function sprintf(): mixed
-    {
-        $args = func_get_args();
-        return call_user_func_array(sprintf(...), $args);
-    }
 
     /**
      * @param string $type

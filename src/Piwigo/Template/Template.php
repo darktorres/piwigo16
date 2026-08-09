@@ -35,7 +35,6 @@ use Piwigo\Core\ThemeConfProviderInterface;
 use Piwigo\Core\TimingHelper;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Image\ImageStdParams;
-use Piwigo\Lang\Translator;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Session\SessionService;
 use Piwigo\Template\Event\CombinedCss;
@@ -233,7 +232,7 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
 
         $this->smarty->setCompileDir($compile_dir);
 
-        $this->smarty->assign('pwg', new PwgTemplateAdapter($this->lang, $this->translator(), $this->currentConfig));
+        $this->smarty->assign('pwg', new PwgTemplateAdapter($this->currentConfig));
         $this->smarty->registerPlugin('modifiercompiler', 'translate', $this->modcompiler_translate(...));
         $this->smarty->registerPlugin('modifiercompiler', 'translate_dec', $this->modcompiler_translate_dec(...));
         $this->smarty->registerPlugin('modifier', 'sprintf', 'sprintf');
@@ -381,23 +380,6 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
         }
 
         return $currentConfig;
-    }
-
-    /**
-     * Container resolve, not a constructor property -- used only inside
-     * this class's own one `new PwgTemplateAdapter(...)` construction
-     * above. A required constructor param here would ripple across this
-     * class's own many real construction sites for the sake of a single
-     * internal caller.
-     */
-    private function translator(): Translator
-    {
-        $translator = Kernel::container()->get(Translator::class);
-        if (! $translator instanceof Translator) {
-            throw new LogicException('Container returned an unexpected type for ' . Translator::class);
-        }
-
-        return $translator;
     }
 
     /**

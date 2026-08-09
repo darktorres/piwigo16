@@ -8,7 +8,6 @@ use Piwigo\Common\ValueObject\Username;
 use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\Lang;
 use Piwigo\Core\UrlServiceInterface;
-use Piwigo\Lang\Translator;
 use Piwigo\Template\CurrentTemplate;
 use Piwigo\Tests\Support\CurrentUserTestFactory;
 use Piwigo\Tests\Support\KernelContainerOverride;
@@ -391,22 +390,6 @@ test('lang resolver throws when the container returns an unexpected type', funct
         [Lang::class => new stdClass()],
         static fn (): Lang => Template::lang()
     ))->toThrow(LogicException::class, 'Container returned an unexpected type for ' . Lang::class);
-
-    Kernel::boot(Paths::fromRoot(sys_get_temp_dir()));
-    CurrentConfigTestFactory::get()->setDataDirChecked('1');
-});
-
-test('translator resolver throws when the container returns an unexpected type', function (): void {
-    expect(static fn (): mixed => KernelContainerOverride::with(
-        [
-            Paths::class => Paths::fromRoot(sys_get_temp_dir()),
-            Translator::class => new stdClass(),
-        ],
-        static function (): void {
-            CurrentConfigTestFactory::get()->setDataDirChecked('1');
-            TemplateTestFactory::build();
-        }
-    ))->toThrow(LogicException::class, 'Container returned an unexpected type for ' . Translator::class);
 
     Kernel::boot(Paths::fromRoot(sys_get_temp_dir()));
     CurrentConfigTestFactory::get()->setDataDirChecked('1');

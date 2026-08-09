@@ -8,8 +8,6 @@ use Override;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Tests\Support\ImageStdParamsTestFactory;
-use Piwigo\Tests\Support\LangTestFactory;
-use Piwigo\Tests\Support\TranslatorTestFactory;
 use Piwigo\Config\ConfigEntry;
 use Piwigo\Config\ConfigLoader;
 use Piwigo\Config\ConfigService;
@@ -22,15 +20,12 @@ use Piwigo\Template\PwgTemplateAdapter;
 
 /**
  * Piwigo\Template\PwgTemplateAdapter -- the Smarty-registered object behind
- * `l10n`/`l10n_dec`/`sprintf`/`derivative`/`derivative_url` template-modifier
- * calls; had zero dedicated coverage (see /home/torres/.claude/plans/
- * piped-enchanting-spark.md, Wave 1). Every real method is `#[\Deprecated]`
- * (phpunit.xml's own `failOnDeprecation="true"` would otherwise fail any
- * direct call), and derivative()/derivative_url() need the same real
- * DB-backed ImageStdParams/DerivativeImage::setUrlService() wiring already
- * established this session (see NotificationByMailSenderTest/
- * MailServiceTest's own docblocks) -- placed in Integration, not Unit, for
- * that reason, even though 3 of the 5 methods are otherwise pure.
+ * `derivative`/`derivative_url` template calls; had zero dedicated coverage
+ * (see /home/torres/.claude/plans/piped-enchanting-spark.md, Wave 1). Both
+ * need the same real DB-backed ImageStdParams/DerivativeImage::
+ * setUrlService() wiring already established this session (see
+ * NotificationByMailSenderTest/MailServiceTest's own docblocks) -- placed in
+ * Integration, not Unit, for that reason.
  */
 final class PwgTemplateAdapterTest extends IntegrationTestCase
 {
@@ -61,7 +56,7 @@ final class PwgTemplateAdapterTest extends IntegrationTestCase
         $configService->loadConfFromDb();
         ImageStdParamsTestFactory::get()->load_from_db();
 
-        $this->adapter = new PwgTemplateAdapter(LangTestFactory::get(), TranslatorTestFactory::get(), CurrentConfigTestFactory::get());
+        $this->adapter = new PwgTemplateAdapter(CurrentConfigTestFactory::get());
     }
 
     #[Override]
@@ -69,51 +64,6 @@ final class PwgTemplateAdapterTest extends IntegrationTestCase
     {
         Kernel::reset();
         parent::tearDown();
-    }
-
-    /**
-     * These 3 methods carry real, deliberate #[\Deprecated] attributes --
-     * a plain @ does NOT stop PHPUnit's ErrorHandler from surfacing the
-     * resulting notice regardless (confirmed: @ only affects
-     * error_reporting(), not whether the handler chain runs), so a real
-     * no-op error handler for the duration of the one expected-to-warn
-     * call is the only reliable way to swallow it, matching ImageGdTest's
-     * own established pattern.
-     */
-    private function suppressDeprecation(callable $fn): mixed
-    {
-        set_error_handler(static fn (): bool => true);
-        try {
-            return $fn();
-        } finally {
-            restore_error_handler();
-        }
-    }
-
-    // l10n()/l10n_dec()/sprintf() are #[Deprecated] on PwgTemplateAdapter
-    // itself -- kept as working back-compat shims for legacy .tpl files
-    // that call them directly instead of the newer translate/translate_dec/
-    // sprintf Smarty modifiers (see suppressDeprecation()'s own docblock
-    // above for why the runtime E_DEPRECATED also needs swallowing). These
-    // tests deliberately exercise the deprecated shims, not an oversight.
-    public function test_l10n_returns_the_key_untranslated_when_no_translation_exists(): void
-    {
-        // @phpstan-ignore method.deprecated
-        self::assertSame('Hello', $this->suppressDeprecation(fn () => $this->adapter->l10n('Hello')));
-    }
-
-    public function test_l10n_dec_selects_the_singular_or_plural_form(): void
-    {
-        // @phpstan-ignore method.deprecated
-        self::assertSame('1 item', $this->suppressDeprecation(fn () => $this->adapter->l10n_dec('%d item', '%d items', 1)));
-        // @phpstan-ignore method.deprecated
-        self::assertSame('3 items', $this->suppressDeprecation(fn () => $this->adapter->l10n_dec('%d item', '%d items', 3)));
-    }
-
-    public function test_sprintf_delegates_to_the_real_sprintf(): void
-    {
-        // @phpstan-ignore method.deprecated
-        self::assertSame('x-5', $this->suppressDeprecation(fn () => $this->adapter->sprintf('%s-%d', 'x', 5)));
     }
 
     /** @return array<string, mixed> */

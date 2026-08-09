@@ -14,8 +14,8 @@ use Symfony\Component\Console\Output\OutputInterface;
 /**
  * CLI wrapper for the admin/maintenance_actions.php "Purge sessions"
  * action -- deletes sessions belonging to a since-deleted user id, via
- * DbMaintenanceRepository::purgeSessionsForDeletedUsers() (built P21, zero
- * real callers until this command).
+ * DbMaintenanceRepository::purgeSessionsForDeletedUsers() (already existed,
+ * zero real callers until this command).
  */
 #[AsCommand(name: 'maintenance:purge-sessions', description: 'Purge sessions belonging to since-deleted users')]
 final class MaintenancePurgeSessionsCommand extends Command

@@ -7,8 +7,8 @@ namespace Piwigo\Category;
 use Psr\Cache\CacheItemPoolInterface;
 
 /**
- * Per-user cached replacement for `user_cache_categories`'s row set (P23
- * batch 3b) -- `CategoryService::getComputedCategories()`'s rollup
+ * Per-user cached replacement for `user_cache_categories`'s row set --
+ * `CategoryService::getComputedCategories()`'s rollup
  * (`nb_images`/`count_images`/`count_categories`/`max_date_last`, permission-
  * filtered) merged with `CategoryRepository::findNamesByIds()`'s
  * `name`/`permalink` (fetched *only* for the cat_ids that survived the
@@ -26,7 +26,7 @@ use Psr\Cache\CacheItemPoolInterface;
  * created/renamed category can take up to 5 minutes to appear/update in the
  * category menu -- a real, user-visible behavior change from the previous
  * `user_cache.need_update`-flagged (effectively immediate) invalidation,
- * accepted as part of P23's cache-table-rationalization design.
+ * accepted as part of this cache-table-rationalization design.
  */
 final readonly class CategoryTreeCache
 {

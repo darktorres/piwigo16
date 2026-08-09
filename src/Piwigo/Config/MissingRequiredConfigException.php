@@ -9,6 +9,6 @@ use RuntimeException;
 /**
  * Thrown by ConfigLoader::validateRequired() when a SCHEMA key marked
  * 'required' => true has no value after defaults + env overrides + (once
- * P14 lands) DB merge.
+ * DB merging is added).
  */
 final class MissingRequiredConfigException extends RuntimeException {}

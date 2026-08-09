@@ -24,9 +24,7 @@ final class ImageServiceTestFailedOpenStreamWrapper
      * dynamic-property-creation deprecation the moment the engine
      * assigns it.
      */
-    // shipmonk/dead-code-detector's StreamWrapperUsageProvider tracks
-    // reflective method calls the streams engine makes, but not this
-    // engine-managed $context property assignment -- see class docblock.
+    // Engine-managed, not tracked by the tool's StreamWrapperUsageProvider.
     // @phpstan-ignore shipmonk.deadProperty.neverRead
     public mixed $context = null;
 

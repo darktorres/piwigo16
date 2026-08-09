@@ -158,10 +158,8 @@ abstract class CalendarBase
      *
      * @return bool false indicates that thumbnails where not included
      */
-    // Called via CalendarRenderer.php's own CalendarBase-typed $calendar
-    // variable (polymorphic dispatch to CalendarMonthly/CalendarWeekly's
-    // real overrides) -- shipmonk/dead-code-detector doesn't trace a call
-    // on the abstract declaration's own supertype back to it.
+    // Called via CalendarRenderer.php's CalendarBase-typed $calendar --
+    // polymorphic dispatch the tool doesn't trace back to this declaration.
     // @phpstan-ignore shipmonk.deadMethod
     abstract public function generate_category_content(TemplateInterface $template);
 

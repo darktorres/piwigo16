@@ -39,7 +39,7 @@ use Piwigo\Users\UserInfoEntity;
  * expects the raw DB DATETIME string form, same reasoning as
  * {@see \Piwigo\Image\Projection\Image}. `UserInfoEntity`'s own
  * `$registrationDate`/`$activationKeyExpire`/`$lastVisit` are
- * `SqlDateTime`-typed (Phase 5) -- `fromEntity()` unwraps `->value`,
+ * `SqlDateTime`-typed -- `fromEntity()` unwraps `->value`,
  * `fromRow()` accepts either a real instance (a `getArrayResult()`
  * -hydrated row) or a raw string. `activation_key` stays `?string` at the
  * entity level too (not a datetime column). `preferences` is `?array`, decoded

@@ -42,7 +42,7 @@ use Piwigo\Common\ValueObject\UserId;
  * column, so no caller constructing a `setParameter('status', ...)`
  * needs to account for it.
  * `registration_date`/`activation_key_expire`/`last_visit` are
- * `SqlDateTime`-typed (Phase 5) -- every real write path
+ * `SqlDateTime`-typed -- every real write path
  * (`UserRepository::buildUserInfoEntity()`, `AuthRepository::
  * setActivationKey()`/`clearActivationKey()`) traces to an
  * `Env::now()`-derived or caller-supplied-and-validated value.

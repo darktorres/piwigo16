@@ -12,7 +12,7 @@ use Piwigo\Common\ValueObject\UserId;
 /**
  * Maps the `activity` table (`piwigo_activity` once
  * Piwigo\Db\TablePrefixListener applies db_prefix at metadata-load time).
- * `occuredOn` is `SqlDateTime`-typed (Phase 5) -- every real write path
+ * `occuredOn` is `SqlDateTime`-typed -- every real write path
  * traces to an `Env::now()`-derived value. `details` maps as native
  * Doctrine `json` -- no round-trip-fidelity requirement forces a
  * raw-string exception here, unlike Audit\AuditLogEntity's hash-chain

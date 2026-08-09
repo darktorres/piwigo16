@@ -139,10 +139,8 @@ final class InstallServiceTest extends IntegrationTestCase
 
             // The DROP TABLE line was skipped -- the table (and its row)
             // must still exist.
-            // itest_gizmo is created moments earlier by executeSqlfile()
-            // above from an inline, throwaway SQL file -- it never exists
-            // in the persistent schema staabm/phpstan-dba's live reflector
-            // inspects, so it always reports "table does not exist" here.
+            // itest_gizmo only exists via executeSqlfile() above, not in
+            // the live reflector's persistent schema.
             // @phpstan-ignore dba.syntaxError
             $row = $this->conn->fetchAssociative('SELECT id, label FROM itest_gizmo WHERE id = 42');
             self::assertIsArray($row);

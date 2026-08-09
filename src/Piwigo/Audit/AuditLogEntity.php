@@ -17,7 +17,7 @@ use Piwigo\Common\ValueObject\SqlDateTime;
  * MySQL's JSON column gives back, see AuditService::canonicalJson()'s own
  * docblock); Doctrine's `json` type would decode on read and re-encode a
  * PHP value on write, corrupting an already-encoded string handed to it.
- * `created_at` is `SqlDateTime`-typed (Phase 5) -- the one real write
+ * `created_at` is `SqlDateTime`-typed -- the one real write
  * path traces to an `Env::now()`-derived value. This is orthogonal to the
  * hash chain: `AuditService::computeHash()` hashes the plain `Y-m-d H:i:s`
  * string directly (never re-reads it off this entity), and `SqlDateTime`'s

@@ -51,9 +51,7 @@ abstract class PersistentCache
      * @param-out mixed $value
      * @return bool false if the $key is not found in cache ($value is not modified in this case)
      */
-    // Only purge() has a real caller today (the maintenance "clear cache"
-    // action) -- get()/set() are the real cache read/write contract this
-    // class exists for, kept alongside it, not speculative extra API.
+    // Only purge() has a real caller today; get()/set() are still the real cache contract.
     // @phpstan-ignore shipmonk.deadMethod
     abstract public function get($key, mixed &$value);
 

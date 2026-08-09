@@ -12,8 +12,8 @@ use Piwigo\Common\ValueObject\UserId;
 /**
  * Maps the `rate` table (`piwigo_rate` once Piwigo\Db\TablePrefixListener
  * applies db_prefix at metadata-load time) -- composite PK (element_id,
- * user_id, anonymous_id). `date` is `SqlDate`-typed (Phase 5, a real
- * `DATE` column, not `DATETIME` -- `length: 10` was already the tell) --
+ * user_id, anonymous_id). `date` is `SqlDate`-typed (a real `DATE`
+ * column, not `DATETIME` -- `length: 10` is the tell) --
  * the one real write path (`insertRate()`) traces to an
  * `Env::now()`-derived value. `Rate\Projection\Rate` keeps its own
  * plain-string `date` convention.

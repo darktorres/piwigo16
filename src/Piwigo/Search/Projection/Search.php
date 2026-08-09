@@ -21,8 +21,8 @@ use Piwigo\Core\ArrayHelper;
  * table's projection).
  *
  * `createdOn` stays `?string` here (this Projection's own convention) --
- * `SavedSearchEntity::$createdOn` itself is `SqlDateTime`-typed (Phase 5),
- * so `fromRow()` accepts either a real instance (a `getArrayResult()`
+ * `SavedSearchEntity::$createdOn` itself is `SqlDateTime`-typed, so
+ * `fromRow()` accepts either a real instance (a `getArrayResult()`
  * -hydrated row) or a raw string.
  *
  * `rules` is `?array`, decoded here via `json_decode()` -- the column is

@@ -12,7 +12,7 @@ use Piwigo\Common\ValueObject\SqlDateTime;
 /**
  * Maps the `comments` table (`piwigo_comments` once
  * Piwigo\Db\TablePrefixListener applies db_prefix at metadata-load time).
- * `date`/`validationDate` are `SqlDateTime`-typed (Phase 5) -- both real
+ * `date`/`validationDate` are `SqlDateTime`-typed -- both real
  * write paths (`CommentRepository::insert()`/`update()`/`validate()`)
  * trace to an `Env::now()`-derived value. `validated`
  * is a real boolean column (Comment domain Stage 1a). `author_id` stays

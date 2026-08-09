@@ -733,9 +733,7 @@ abstract class IntegrationTestCase extends TestCase
      * Requires PIWIGO_BASE_URL, same as every other real-HTTP-request helper
      * on this class.
      */
-    // Not yet adopted by any subclass -- protected shared test
-    // infrastructure, ready for the next real-HTTP-request test that
-    // wants it.
+    // Not yet adopted by any subclass.
     // @phpstan-ignore shipmonk.deadMethod
     protected function assertNoPhpErrors(): void
     {

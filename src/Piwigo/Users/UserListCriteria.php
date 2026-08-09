@@ -8,15 +8,9 @@ use Piwigo\Common\ValueObject\SqlDateTime;
 use Piwigo\Common\ValueObject\UserId;
 
 /**
- * Further SQL-modernization audit, Item 13: replaces the ad hoc
- * `list<string> $whereClauses` (each fragment glued via `implode(' AND ',
- * ...)`, bound values tracked in a separately-passed `$params`/`$types`
- * pair) `Ws\PwgUsers::getList()` used to build -- a `1=1` base plus a
- * chain of independently-optional conditions, each appended only when its
- * corresponding `$params` key was present. Every field here is null when
- * its filter wasn't requested, matching that same "appended only when
- * present" semantics -- `UserRepository::findListForWs()` decides for
- * itself, per field, whether to add a condition.
+ * Every field here is null when its filter wasn't requested --
+ * `UserRepository::findListForWs()` decides for itself, per field,
+ * whether to add a condition.
  *
  * $filter/$filteredGroupIds are two separate pieces of the original's one
  * `filter` concept: $filter is the raw (unwrapped) search term matched
@@ -27,8 +21,8 @@ use Piwigo\Common\ValueObject\UserId;
  * repository's own persistence layer should do, so the caller resolves it
  * first and hands over just the ids.
  *
- * $minRegister/$maxRegister are `SqlDateTime`-typed (Phase 5 typed-VO
- * campaign) -- `Ws\PwgUsers::getList()` validates the raw `min_register`/
+ * $minRegister/$maxRegister are `SqlDateTime`-typed --
+ * `Ws\PwgUsers::getList()` validates the raw `min_register`/
  * `max_register` WS params through `SqlDateTime::from()` itself (a real
  * PwgError on an invalid calendar date, e.g. `min_register=9999-13-99`,
  * which the WS layer's own shape-only regex doesn't catch) before ever

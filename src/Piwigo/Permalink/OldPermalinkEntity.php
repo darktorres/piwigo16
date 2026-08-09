@@ -17,13 +17,10 @@ use Piwigo\Common\ValueObject\SqlDateTime;
  * `install/piwigo_structure-mysql.sql`), not an auto-increment surrogate
  * id, same "application-assigned string id" shape as `Feed\FeedEntity`.
  *
- * Further SQL-modernization audit, Item 16B: newly mapped -- this table
- * was deliberately never entity-mapped anywhere in the campaign until
- * now (see the former {@see \Piwigo\Permalink\PermalinkRepository} class
- * docblock, since corrected). No dedicated `repositoryClass` -- unlike
- * most entities, this one is queried from `Permalink\PermalinkRepository`
- * alongside the unrelated `Category\CategoryEntity` reads that repository
- * already owns, not resolved via `$em->getRepository()`.
+ * No dedicated `repositoryClass` -- unlike most entities, this one is
+ * queried from `Permalink\PermalinkRepository` alongside the unrelated
+ * `Category\CategoryEntity` reads that repository already owns, not
+ * resolved via `$em->getRepository()`.
  *
  * The sole Doctrine entity mapped to this table -- a duplicate,
  * `Piwigo\Category\OldPermalinkEntity`, used to map this exact same
@@ -32,8 +29,8 @@ use Piwigo\Common\ValueObject\SqlDateTime;
  * `old_permalinks` at once, each with its own identity map and no way
  * for a write through one to invalidate a cached read through the
  * other; it has been removed. `catId`/`permalink` both use their own
- * custom Doctrine Types. `dateDeleted` is `SqlDateTime`-typed (Phase 5)
- * -- both real write paths (`markOldPermalinkDeleted()`/
+ * custom Doctrine Types. `dateDeleted` is `SqlDateTime`-typed -- both
+ * real write paths (`markOldPermalinkDeleted()`/
  * `insertOldPermalinkDeleted()`) trace to an `Env::now()`-derived value.
  * `lastHit` stays plain `?string` -- never written by any real code path
  * today (checked every assignment site), flagged separately as

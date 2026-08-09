@@ -20,7 +20,7 @@ use Piwigo\Common\ValueObject\SqlDateTime;
  *
  * `date` stays `?string`, not `SqlDateTime`, at the DTO level -- this
  * Projection's own convention (matches `Comment\Projection\Comment::$date`).
- * `CommentEntity::$date` itself is `SqlDateTime`-typed (Phase 5) --
+ * `CommentEntity::$date` itself is `SqlDateTime`-typed --
  * `findSummariesForImage()` (this class's one real caller, which builds
  * this DTO directly rather than through `fromRow()`) already unwraps it
  * the same way `fromRow()` does here, for the same `getArrayResult()`

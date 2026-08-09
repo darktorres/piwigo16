@@ -29,7 +29,7 @@ use Piwigo\Users\UserStatus;
  * `userId` narrowing checks `instanceof UserId` rather than `is_scalar()`
  * (which would always be false and silently break every real login
  * through this security-sensitive path). `UserAuthKeyEntity::$expiredOn`
- * is `SqlDateTime`-typed too (Phase 5) -- `expiredOn` narrows the same way.
+ * is `SqlDateTime`-typed too -- `expiredOn` narrows the same way.
  */
 final readonly class AuthKeyDetails
 {

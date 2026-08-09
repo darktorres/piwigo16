@@ -29,7 +29,7 @@ use Piwigo\Common\ValueObject\TagId;
  * `lastmodified` stays `string` here (this Projection's own convention)
  * -- no real consumer today needs anything but the raw DB DATETIME
  * string form, same reasoning as {@see \Piwigo\Image\Projection\Image}.
- * `TagEntity::$lastmodified` itself is `SqlDateTime`-typed (Phase 5) --
+ * `TagEntity::$lastmodified` itself is `SqlDateTime`-typed --
  * `fromRow()` accepts either a real instance or a raw string, even
  * though it has no real caller today.
  *

@@ -36,20 +36,17 @@ final class SqlDialectExecutor
      * server-side for dialect consistency -- Core\RecentIconResolver's own
      * "is this photo/comment/category recent" comparison baseline.
      *
-     * $period tightened to `int` alongside SqlDialect::
-     * getRecentPeriodExpression()'s own signature (SQL-modernization
-     * audit) -- this method's only real caller already passes a genuine
-     * `int`.
+     * $period is `int`, matching SqlDialect::
+     * getRecentPeriodExpression()'s own signature -- this method's only
+     * real caller already passes a genuine `int`.
      */
     public function fetchRecentCutoffDate(int $period, string $date = 'CURRENT_DATE'): string
     {
         // $recentPeriodExpr's own $date-quoting defect lives inside
         // SqlDialect::getRecentPeriodExpression() itself, not here -- see
-        // that method's own docblock (SQL-modernization audit finding,
-        // tracked for its 2 real non-default-$date callers' own staged
-        // conversion). This method's only real caller never passes $date,
-        // so the quoting branch never triggers here in practice; nothing
-        // for this heredoc itself to fix.
+        // that method's own docblock. This method's only real caller
+        // never passes $date, so the quoting branch never triggers here
+        // in practice; nothing for this heredoc itself to fix.
         $recentPeriodExpr = SqlDialect::getRecentPeriodExpression($period, $date);
         $value = $this->conn->fetchOne(<<<SQL
             SELECT {$recentPeriodExpr}
@@ -61,8 +58,8 @@ final class SqlDialectExecutor
     /**
      * NOW() + 1 day, computed server-side -- Controller\
      * ProfileFormHandler::loadIntoTemplate()'s own default API-key
-     * expiration date. SQL-modernization audit: verified, no interpolation
-     * of any kind -- a fixed literal expression, nothing to bind.
+     * expiration date. No interpolation of any kind -- a fixed literal
+     * expression, nothing to bind.
      */
     public function fetchTomorrow(): string
     {
@@ -70,15 +67,9 @@ final class SqlDialectExecutor
             ? 'NOW() + make_interval(days => 1)'
             : 'ADDDATE(NOW(), INTERVAL 1 DAY)';
 
-        // staabm/phpstan-dba resolves both of $expr's possible literal
-        // values and validates each against the one live DB its bootstrap
-        // connects to (tests/phpstan-dba-bootstrap.php, driven by
-        // .env.test -- currently pgsql). The MySQL-flavored ADDDATE()
-        // branch above necessarily fails against a Postgres connection
-        // (and vice versa) -- both branches are real and correct for their
-        // own engine, already verified by this method's own platform
-        // check; this is a single-connection blind spot in the tool, not
-        // a bug in either branch.
+        // staabm/phpstan-dba only validates against one live connection,
+        // so the branch for the other engine always fails here -- both are
+        // correct for their own platform.
         // @phpstan-ignore dba.syntaxError
         $value = $this->conn->fetchOne('SELECT ' . $expr);
 
@@ -99,9 +90,9 @@ final class SqlDialectExecutor
             return [];
         }
 
-        // SQL-modernization audit: the day count is real caller-supplied
-        // data (Controller\ProfileFormHandler's own $conf['api_key_duration']
-        // list) -- was spliced directly into INTERVAL {$day} DAY; now bound.
+        // The day count is real caller-supplied data (Controller\
+        // ProfileFormHandler's own $conf['api_key_duration'] list), bound
+        // rather than spliced into INTERVAL {$day} DAY.
         // The column alias stays interpolated: SQL has no bound-placeholder
         // syntax for identifier/alias position, and $day is a real `int`
         // (not attacker-controlled string content) by the time it reaches

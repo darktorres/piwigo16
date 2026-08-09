@@ -21,7 +21,7 @@ use Piwigo\Common\ValueObject\UserId;
  * `NOT NULL` columns (unlike most other domains' own now-nullable
  * timestamp columns), so `fromRow()`'s own fallback default is a
  * defensive floor, not an expected real value. `UserAuthKeyEntity`'s own
- * `$createdOn`/`$expiredOn` are `SqlDateTime`-typed (Phase 5) --
+ * `$createdOn`/`$expiredOn` are `SqlDateTime`-typed --
  * `fromEntity()` unwraps `->value`, `fromRow()` accepts either a real
  * `SqlDateTime` instance (a `getArrayResult()`-hydrated row) or a raw
  * string.

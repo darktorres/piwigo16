@@ -15,7 +15,7 @@ use Piwigo\Common\ValueObject\TagId;
  * TIMESTAMP (DB-managed ON UPDATE CURRENT_TIMESTAMP -- set explicitly to
  * Env::now() on insert() only, matching pre-ORM behavior; never touched on
  * any update method since none exists). `lastmodified` is
- * `SqlDateTime`-typed (Phase 5) -- matches Tag\Projection\Tag's own
+ * `SqlDateTime`-typed -- matches Tag\Projection\Tag's own
  * plain-string convention at the DTO level ("no real consumer needs
  * anything but the raw DB DATETIME string form").
  *

@@ -20,7 +20,7 @@ use Piwigo\Common\ValueObject\SqlDateTime;
  * `users` domain and a self-FK respectively, same "foreign-key-shaped
  * column into an un-VO'd domain stays raw" call as
  * {@see \Piwigo\Comment\CommentEntity::$authorId}. `createdOn` is
- * `SqlDateTime`-typed (Phase 5) -- nullable for `Ws\PwgCore::
+ * `SqlDateTime`-typed -- nullable for `Ws\PwgCore::
  * historySearch()`'s ephemeral, metadata-less inserts (no user-facing
  * permalink, never forked); `SearchService::saveSearch()`'s own real
  * inserts trace to an `Env::now()`-derived value. `rules` maps as native Doctrine

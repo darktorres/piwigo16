@@ -9,15 +9,13 @@ use Piwigo\Common\ValueObject\Permalink;
 use Piwigo\Permalink\OldPermalinkEntity;
 
 /**
- * Typed row shape for `piwigo_old_permalinks` (P17-23 Stage 1b, Permalink
- * domain -- `docs/PLAN.md`'s own "7 Entity types, 73 projection
- * shapes" reference), built from {@see \Piwigo\Permalink\OldPermalinkEntity}.
+ * Typed row shape for `piwigo_old_permalinks`, built from
+ * {@see \Piwigo\Permalink\OldPermalinkEntity}.
  *
- * `dateDeleted` stays `?string` here (this Projection's own convention)
- * -- Permalink domain Stage 1a already dropped its 1970-01-01 sentinel
- * default (every real write already sets it explicitly).
- * `OldPermalinkEntity::$dateDeleted` itself is `SqlDateTime`-typed
- * (Phase 5) -- `fromEntity()` unwraps `->value`.
+ * `dateDeleted` stays `?string` here (this Projection's own convention) --
+ * every real write already sets it explicitly, no 1970-01-01 sentinel
+ * default. `OldPermalinkEntity::$dateDeleted` itself is `SqlDateTime`-typed
+ * -- `fromEntity()` unwraps `->value`.
  */
 final readonly class OldPermalink
 {
@@ -30,16 +28,10 @@ final readonly class OldPermalink
     ) {}
 
     /**
-     * Further SQL-modernization audit, Item 16B: replaces the former
-     * raw-row `fromRow()` now that {@see \Piwigo\Permalink\
-     * PermalinkRepository}'s own one real caller
-     * (`findAllOrderedBy()`) went DQL -- `OldPermalinkEntity`'s own
-     * properties are already typed, so no defensive casting is needed
-     * the way `fromRow()`'s own untyped raw-array input required.
-     *
-     * `catId`/`permalink` keep the entity's own `CategoryId`/`Permalink`
-     * VOs (Phase 4) -- `toArray()` is this projection's real unwrap
-     * boundary now.
+     * `OldPermalinkEntity`'s own properties are already typed, so no
+     * defensive casting is needed. `catId`/`permalink` keep the entity's
+     * own `CategoryId`/`Permalink` VOs -- `toArray()` is this projection's
+     * real unwrap boundary.
      */
     public static function fromEntity(OldPermalinkEntity $entity): self
     {

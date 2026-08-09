@@ -20,7 +20,7 @@ use Piwigo\Common\ValueObject\UserId;
  * matching Group\UserGroupEntity/GroupAccessEntity's own no-owner
  * precedent. `created_on`/`expired_on` are genuine NOT NULL columns
  * (unlike every other datetime-shaped column here) and are `SqlDateTime`-
- * typed (Phase 5) -- both real construction sites (AuthRepository::
+ * typed -- both real construction sites (AuthRepository::
  * insertAuthKey()/ApiKeyRepository::insert()) trace to an
  * Env::now()-derived value. Every other datetime column stays plain
  * ?string, not \DateTimeImmutable, matching Auth\Projection\ApiKey's own

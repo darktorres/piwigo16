@@ -52,11 +52,7 @@ interface TemplateInterface
      * Mirrors assign()'s own arbitrary-value contract -- returns whatever
      * was assigned, unmodified.
      */
-    // Called extensively via TemplateInterface-typed variables throughout
-    // src/ and tests/ (Template::get_template_vars() is the real
-    // implementation) -- shipmonk/dead-code-detector doesn't trace a call
-    // on an interface method's own declaration back to it, same blind
-    // spot as CalendarBase::generate_category_content().
+    // Same blind spot as CalendarBase::generate_category_content() -- heavily used, just not traced through the interface.
     // @phpstan-ignore shipmonk.deadMethod
     public function get_template_vars(?string $tpl_var = null): mixed;
 }

@@ -49,7 +49,7 @@ use Piwigo\Common\ValueObject\UserId;
  * clearer failure of a write that was never actually safe.
  *
  * `lastmodified` doesn't share the zero-date risk and is strict-typed
- * (`sql_datetime`, Phase 5) -- `NOT NULL DEFAULT CURRENT_TIMESTAMP ON
+ * (`sql_datetime`) -- `NOT NULL DEFAULT CURRENT_TIMESTAMP ON
  * UPDATE CURRENT_TIMESTAMP` means the DB server always populates a real,
  * well-formed timestamp for it (unlike `dateAvailable`/`dateCreation`,
  * which are nullable and EXIF/IPTC-sourced).

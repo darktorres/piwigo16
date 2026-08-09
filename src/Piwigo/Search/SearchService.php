@@ -1409,16 +1409,9 @@ final readonly class SearchService
                     $qsr->cat_iids[$crt->idx],
                     $qsr->tag_iids[$crt->idx]
                 ));
-                // A token that matched a real tag/category name -- even
-                // one with zero images attached right now -- still
-                // qualifies as a recognized search term; only a token
-                // that matched nothing at all belongs in $ignoredTerms.
-                // cat_ids/tag_ids are qsearchGetCategories()/
-                // qsearchGetTags()'s own parallel "matched name" lists,
-                // structurally identical to each other (found missing via
-                // shipmonk/dead-code-detector flagging $qsr->cat_ids as
-                // never read -- this was the real, single read site it
-                // was missing).
+                // A token matching a real tag/category name with zero
+                // images still qualifies; only a token matching nothing
+                // belongs in $ignoredTerms.
                 $crtQualifies = count($crtIds) > 0 || count($qsr->tag_ids[$crt->idx]) > 0 || count($qsr->cat_ids[$crt->idx]) > 0;
                 $crtIgnoredTerms = $crtQualifies ? [] : [(string) $crt];
             } else {

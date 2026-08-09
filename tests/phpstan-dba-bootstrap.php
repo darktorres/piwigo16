@@ -9,22 +9,11 @@ use staabm\PHPStanDba\QueryReflection\PdoPgSqlQueryReflector;
 use staabm\PHPStanDba\QueryReflection\QueryReflection;
 use staabm\PHPStanDba\QueryReflection\RuntimeConfiguration;
 
-// phpstan-dba's query reflector -- validates raw SQL literals (DBAL
-// QueryBuilder ->executeQuery()/->executeStatement() strings) against a
-// real database's live schema. Opens the same .env.test connection
-// tests/phpstan-object-manager.php already uses for phpstan-doctrine's DQL
-// platform detection -- one live DB, not a second ad hoc one.
-//
-// PDO (not mysqli/pgsql) purely because phpstan-dba only ships PDO-backed
-// reflectors for these two engines -- DbConnection.php's own "native
-// drivers only, not pdo_*" policy governs src/ runtime code, not this
-// analysis-time tool (see composer.json's require-dev ext-pdo/
-// ext-pdo_mysql/ext-pdo_pgsql, deliberately kept out of the real require
-// block for the same reason).
-//
-// Write queries (INSERT/UPDATE/DELETE/REPLACE) are validated via EXPLAIN,
-// never actually executed -- see RuntimeConfiguration's own
-// analyzeWriteQueries() docblock and QueryReflection::validateQueryString().
+// phpstan-dba's query reflector -- validates raw SQL literals against a
+// real database's live schema, same .env.test connection as
+// tests/phpstan-object-manager.php. Uses PDO, not mysqli/pgsql: phpstan-dba
+// only ships PDO-backed reflectors; DbConnection.php's "native drivers
+// only" policy governs src/ runtime code, not this analysis-time tool.
 
 require __DIR__ . '/../vendor/autoload.php';
 

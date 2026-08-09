@@ -545,8 +545,7 @@ final class CommentsController implements ControllerInterface
                     $email = $comment_email;
                 }
 
-                // comments.date is nullable now (Comment domain Stage 1a
-                // dropped its 1970-01-01 sentinel default) -- every real
+                // comments.date is nullable -- every real
                 // insert still sets it explicitly, but formatDate()'s own
                 // `false` "no date" sentinel is the correct fallback,
                 // matching PwgComments::getList()'s own identical guard

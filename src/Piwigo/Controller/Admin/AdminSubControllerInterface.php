@@ -12,10 +12,9 @@ use Psr\Http\Message\ServerRequestInterface;
  * injected PSR-7 request (SEC-19), not $_GET/$_POST directly. Still
  * mutates the legacy `global $template`/`$page` bridges to render its
  * output -- same "keep page/template glue on the legacy bridge, inject
- * only real domain services" split every P17-20 renderer already uses
- * (e.g. Piwigo\Menu\MenubarRenderer); the $GLOBALS bridges were already
- * retired in P24 (Track A) -- Smarty rendering itself is the part still
- * deferred, to P32, not this phase's job.
+ * only real domain services" split other renderers already use
+ * (e.g. Piwigo\Menu\MenubarRenderer). Smarty rendering itself is the
+ * part still deferred, not yet wired through DI.
  */
 interface AdminSubControllerInterface
 {

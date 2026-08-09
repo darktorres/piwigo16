@@ -11,12 +11,7 @@ use Piwigo\Common\ValueObject\SqlDateTime;
 /**
  * Typed row shape for {@see \Piwigo\Ws\PwgImages::getInfo()}'s own
  * "related comments" block (`pwg.images.getInfo`'s `SELECT id, date,
- * author, content FROM comments ...`) -- P24 gap-closure, Comment domain
- * (16.x-rewrite's own `CommentSummary`, 4 missing projections found
- * against that reference; this is the only one of the 4 with a real,
- * live, retrofittable call site in 17.x-rewrite -- see the Stage A1 plan
- * notes for why `AdminListingRow`/`AuthorCount`/`RecentCommentRow` aren't
- * built here).
+ * author, content FROM comments ...`).
  *
  * `date` stays `?string`, not `SqlDateTime`, at the DTO level -- this
  * Projection's own convention (matches `Comment\Projection\Comment::$date`).

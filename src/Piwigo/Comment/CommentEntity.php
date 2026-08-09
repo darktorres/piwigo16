@@ -15,12 +15,10 @@ use Piwigo\Common\ValueObject\SqlDateTime;
  * `date`/`validationDate` are `SqlDateTime`-typed -- both real
  * write paths (`CommentRepository::insert()`/`update()`/`validate()`)
  * trace to an `Env::now()`-derived value. `validated`
- * is a real boolean column (Comment domain Stage 1a). `author_id` stays
- * plain ?int -- Stage A1 only types this domain's own CommentId; UserId
+ * is a real boolean column. `author_id` stays plain ?int -- UserId
  * propagation across every other domain's foreign-key-shaped column
  * (this one, Audit\AuditLogEntity::$actorId, Activity\ActivityEntity::
- * $performedBy, ...) is deliberately out of scope here, same call made
- * for those two in Stage A-IP.
+ * $performedBy, ...) is deliberately out of scope here.
  *
  * `id`'s `comment_id` column type is a custom Doctrine Type
  * ({@see \Piwigo\Db\Type\CommentIdType}, registered in

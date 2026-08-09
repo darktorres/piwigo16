@@ -416,7 +416,7 @@ final class ImageDerivativeController implements ControllerInterface
      * already exists on disk, any request for an image belonging exclusively
      * to categories the current visitor cannot see -- a plain
      * CurrentUser::forbiddenCategories property read, never recomputing
-     * permissions live (gap-closure Stage 4g: no query at all any more, see
+     * permissions live (no query at all, see
      * ImageVisibilityChecker's own docblock). The visibility decision itself
      * lives in Piwigo\Permission\ImageVisibilityChecker; CurrentUser is
      * already resolved by RequestBootstrap::connect() ->

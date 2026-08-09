@@ -8,17 +8,13 @@ use Piwigo\Core\Kernel;
 
 /**
  * Table-name resolution for procedural code that writes raw SQL outside a
- * repository -- deferred at P14 ("no real consumer yet"), finished here now
- * that P16's 52-`define()` retirement gives it 34 real callers (one per
- * origin table's legacy TABLE_NAME constant). Also covers the 7 new P15
- * tables, which never had legacy constants but complete the utility for
- * future P17-23 callers -- cheap to include now; the class has 39 static
- * methods, 2 short of the reference's final 41-method shape.
+ * repository -- one static method per origin table's legacy TABLE_NAME
+ * constant, plus a few for newer tables that never had legacy constants.
  *
  * ORM repositories never need this -- they address tables via entity
  * mapping (`#[ORM\Table(name: ...)]`, prefix applied by
- * Piwigo\Db\TablePrefixListener). Deleted alongside the `AbstractRepository`
- * DBAL shim in P23 when `include/` is removed.
+ * Piwigo\Db\TablePrefixListener). Will be deleted alongside the
+ * `AbstractRepository` DBAL shim once `include/` is removed.
  */
 final class Tables
 {

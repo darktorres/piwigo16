@@ -88,7 +88,7 @@ final class SqlDialect
 
     /**
      * Returns int 1 or 0 if the given var is boolean, for the columns
-     * User domain Stage 1a retyped from enum('true','false') to
+     * retyped from enum('true','false') to
      * tinyint(1) (enabled_high/expand/last_visit_from_history/
      * show_nb_comments/show_nb_hits) -- booleanToString()'s 'true'/
      * 'false' strings are non-numeric and strict SQL mode rejects them

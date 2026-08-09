@@ -165,7 +165,7 @@ final class NotificationRepositoryTest extends IntegrationTestCase
         // A restrict fragment that excludes every image_category row --
         // proves it's actually appended to the query, not ignored. DQL
         // property path (ic.categoryId), not the raw SQL column name --
-        // see NotificationRepository's own Item 15G docblock.
+        // see NotificationRepository's own docblock.
         $count = $this->repo->countByType('new_elements', null, null, new SqlCondition('ic.categoryId = -1'));
 
         self::assertSame(0, $count);
@@ -203,10 +203,9 @@ final class NotificationRepositoryTest extends IntegrationTestCase
         sort($ids);
         self::assertSame([1, 2], $ids);
 
-        // Item 16H: the full-row-by-id fetch converted from a raw
-        // SELECT * to a DQL ImageEntity fetch mapped back through
-        // Image\Projection\Image::fromEntity()->toArray() -- confirms
-        // the real snake_case keys DerivativeImage::thumb_url()/
+        // The full-row-by-id fetch is a DQL ImageEntity fetch mapped
+        // back through Image\Projection\Image::fromEntity()->toArray()
+        // -- confirms the real snake_case keys DerivativeImage::thumb_url()/
         // SrcImage's own constructor read are actually present, not
         // just 'id'.
         $byId = [];

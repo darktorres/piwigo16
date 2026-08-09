@@ -198,10 +198,8 @@ final class SearchRepositoryTest extends IntegrationTestCase
     }
 
     /**
-     * Further SQL-modernization audit, Item 15H: `queryRows()`/
-     * `queryKeyedColumn()`/`queryColumn()` retired once
-     * `SearchFilterRenderer`'s own filter-sidebar blocks (their only real
-     * callers) converted to the 4 typed DQL methods below.
+     * `SearchFilterRenderer`'s own filter-sidebar blocks are the only
+     * real callers of the 4 typed DQL methods below.
      */
     public function test_count_images_grouped_by_returns_counts_ordered_desc(): void
     {

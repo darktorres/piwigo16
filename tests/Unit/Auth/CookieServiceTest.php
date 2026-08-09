@@ -105,8 +105,8 @@ test('setCookieVar does not throw for a non-scalar value', function (): void {
     expect($result)->toBeTrue();
     // $_COOKIE itself mirrors the raw, unstringified value (a separate
     // assignment from the setcookie() wire value) -- checked directly,
-    // not through an accessor: both real named readers (P17-23 Phase 9)
-    // narrow to ?string, so they can't observe this non-scalar shape.
+    // not through an accessor: both real named readers narrow to
+    // ?string, so they can't observe this non-scalar shape.
     expect($_COOKIE['pwg_arraypref'] ?? null)->toBe(['not', 'scalar']);
 });
 
@@ -244,8 +244,8 @@ test('setCookieVar casts a scalar non-string value to a string before handing it
     // only feeds the setcookie() wire value though, which isn't
     // independently observable in a CLI test process (same reasoning as
     // the non-scalar test above) -- this only proves the cast path doesn't
-    // throw, checked via $_COOKIE directly (no more generic accessor to
-    // read back through, since P17-23 Phase 9 removed getCookieVar()).
+    // throw, checked via $_COOKIE directly (there is no generic accessor
+    // to read back through).
     $_SERVER['SCRIPT_NAME'] = '/piwigo/index.php';
     $service = new CookieService();
 

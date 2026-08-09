@@ -102,8 +102,8 @@ final class NotificationByMailRepositoryTest extends IntegrationTestCase
     {
         $rows = $this->repo->findUserNotifications('subscribe', [], '');
 
-        // UserMailNotification::fromRow() narrows user_id to a real UserId
-        // (Phase 4), replacing the legacy \Piwigo\Db\MysqliDb::fetchAssoc()-style
+        // UserMailNotification::fromRow() narrows user_id to a real
+        // UserId, unlike the legacy \Piwigo\Db\MysqliDb::fetchAssoc()-style
         // "everything comes back as string|null" convention every other
         // domain's own Projection has already moved away from.
         self::assertEquals(UserId::from(1), $rows[0]->userId);
@@ -123,13 +123,11 @@ final class NotificationByMailRepositoryTest extends IntegrationTestCase
     }
 
     /**
-     * SQL-modernization audit regression: check keys used to reach this
-     * method already quote-wrapped by NotificationByMailSender::
-     * quoteCheckKeyList() (`'\'' . $s . '\''`, zero escaping) and get
-     * spliced into the query text -- now bound, and quoteCheckKeyList()
-     * itself is gone (this was its only real caller). A check_key
-     * containing a literal single quote would have broken the old manual
-     * wrapping; confirms it deletes correctly instead.
+     * check_key values are bound, not quoted -- a check_key containing a
+     * literal single quote would have broken the old manual
+     * `'\'' . $s . '\''`-style wrapping this method used to receive from
+     * NotificationByMailSender::quoteCheckKeyList() (now removed);
+     * confirms it deletes correctly instead.
      */
     public function test_delete_by_check_keys_removes_a_key_containing_a_single_quote(): void
     {

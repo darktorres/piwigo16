@@ -273,7 +273,7 @@ Request format: ' . @$this->_requestFormat . ' Response format: ' . @$this->_res
     }
 
     /**
-     * P26/SEC-40: a minimal, single-fact by-design reader (the current
+     * A minimal, single-fact by-design reader (the current
      * request's HTTP method), same shape as
      * Piwigo\Http\RequestFactory::fromGlobals()'s own sole legitimate
      * superglobal read -- reused by 2 real call sites

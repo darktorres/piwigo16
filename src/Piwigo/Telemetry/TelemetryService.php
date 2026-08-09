@@ -25,7 +25,7 @@ use Piwigo\Users\UserEntity;
  * contents of any row. Genuinely greenfield -- no procedural predecessor
  * exists in this codebase. Sending the payload anywhere is out of scope
  * here; this only assembles it (same "build small and real, don't
- * over-engineer a greenfield delta" discipline as P18's AuditService).
+ * over-engineer a greenfield delta" discipline as AuditService).
  *
  * Goes straight to ConfigRepository rather than ConfigService/CurrentConfig::,
  * since resolveInstallId()'s get-or-create must read/write the real DB

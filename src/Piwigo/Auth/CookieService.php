@@ -16,9 +16,9 @@ use Piwigo\Core\RequestMountDepth;
  * crafted `cookie[]=a&cookie[]=b` request header parses into a nested
  * array, same as $_GET/$_POST), not just "every real caller happens to
  * pass a string" -- narrowing here would misrepresent attacker-controlled
- * input as trusted. P17-23 Phase 9: the generic `getCookieVar()` reader is
- * gone -- its 2 real callers each get a named, correctly-narrowed accessor
- * below instead (`getDisplayThumbnailPref()`/`getAnonymousRaterId()`),
+ * input as trusted. There is no generic `getCookieVar()` reader -- the 2
+ * real callers each get a named, correctly-narrowed accessor below
+ * instead (`getDisplayThumbnailPref()`/`getAnonymousRaterId()`),
  * narrowing at the one call site that actually knows what shape it expects
  * rather than trusting a runtime key name.
  */

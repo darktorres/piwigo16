@@ -188,8 +188,8 @@ final class CommentsController implements ControllerInterface
         // number of items to display
         $selected_items_number = $commentsRequest->itemsNumber;
 
-        // SQL-modernization audit: $whereClauses is now list<SqlCondition>,
-        // not list<string> -- the author/keyword filters below used to
+        // $whereClauses is list<SqlCondition>, not list<string> -- the
+        // author/keyword filters below used to
         // splice raw, unvalidated $_GET content directly into the query
         // (manual '...\'' . $x . '\'...' quote-wrapping, no escaping or
         // binding at all) -- a real, live, guest-reachable SQL injection

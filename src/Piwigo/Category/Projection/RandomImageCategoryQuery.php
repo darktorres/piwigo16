@@ -8,8 +8,7 @@ use Piwigo\Common\ValueObject\CategoryId;
 
 /**
  * {@see \Piwigo\Category\CategoryService::getRandomImageInCategory()}'s
- * parameter object (P17-23 Phase 8, "cross-domain generic-row-reader"
- * elimination). The 4 real callers (`CategoryCatsRenderer`,
+ * parameter object. The 4 real callers (`CategoryCatsRenderer`,
  * `Ws\PwgCategories`) each build this from a differently-sourced row (a
  * tree-cache rollup merge, a WS listing row) that already carries or can
  * trivially extract these 3 fields -- four pipelines that never got

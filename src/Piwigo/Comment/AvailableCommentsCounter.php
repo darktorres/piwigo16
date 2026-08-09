@@ -43,12 +43,12 @@ final class AvailableCommentsCounter
         $currentUser = $this->currentUser->get();
 
         if (! isset($currentUser->rawAttributes['nb_available_comments'])) {
-            // Item 16I: countAvailableWithConditions() converted to real
-            // DQL -- condition fragments now reference DQL property
-            // paths (com.validated/ic.categoryId/ic.imageId), not raw
-            // column names, same convention already established
-            // throughout the codebase (e.g. Tag\TagRepository's own
-            // PermissionCriteria consumers).
+            // countAvailableWithConditions() is real DQL -- condition
+            // fragments reference DQL property paths
+            // (com.validated/ic.categoryId/ic.imageId), not raw column
+            // names, same convention already established throughout the
+            // codebase (e.g. Tag\TagRepository's own PermissionCriteria
+            // consumers).
             $where = [];
             if (! $this->accessLevelChecker->isAdmin()) {
                 $where[] = new SqlCondition('com.validated = true');

@@ -56,11 +56,11 @@ final class StatsPageRenderer
 
         $accessControl->checkStatus(AccessLevel::Administrator);
 
-        // Gap-closure Stage 4j (docs/plan/gap-closure-p0-p23.md): bounded to
-        // match HistoryService::logVisit()'s own self-triggered summarize()
-        // call -- an unbounded call here would rescan the entire remaining
-        // `history` table in one request right after an admin uses the
-        // Maintenance page's "Purge history summary" action.
+        // Bounded to match HistoryService::logVisit()'s own
+        // self-triggered summarize() call -- an unbounded call here
+        // would rescan the entire remaining `history` table in one
+        // request right after an admin uses the Maintenance page's
+        // "Purge history summary" action.
         $historyService
             ->summarize(50000);
 

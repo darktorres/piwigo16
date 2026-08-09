@@ -12,8 +12,8 @@ use Piwigo\Users\UserEntity;
  * Persistence layer for the password domain's one write: rehashing a
  * legacy phpass hash forward to bcrypt on successful verify.
  *
- * Item 15 audit: converted to real DQL against {@see UserEntity} --
- * `UserEntity` deliberately has no `repositoryClass` of its own (its own
+ * Real DQL against {@see UserEntity} -- `UserEntity` deliberately has no
+ * `repositoryClass` of its own (its own
  * docblock: queried directly by whichever repository needs it -- `users`
  * is a shared entity with no single owner, same shape as
  * {@see \Piwigo\Image\ImageCategoryEntity}), so this class takes

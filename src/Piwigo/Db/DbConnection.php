@@ -16,10 +16,11 @@ use Piwigo\Core\Kernel;
  * DbConnection does -- a literal grep gate bans exactly
  * that class of session-mode mutation from `src/`, which this docblock
  * deliberately avoids tripping by not spelling
- * out the setting's name here. The legacy dblayer's own equivalent
- * stripping (include/dblayer/functions_mysqli.inc.php) stays untouched --
- * it still backs all current procedural code; this new DBAL connection
- * just doesn't add a second one.
+ * out the setting's name here. Unlike the reference implementation, this
+ * repo carries no legacy procedural dblayer to fall back on -- every
+ * caller was rewritten instead to stay valid under the strict, unmodified
+ * session mode (see e.g. SearchService, SectionPopulator,
+ * CategoryRepository, CalendarRepository, CommentRepository).
  *
  * Also deliberately does NOT call Kernel::service() (the reference's
  * DbConnection::get() does) -- v17's own architectural rule bans the

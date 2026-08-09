@@ -424,7 +424,7 @@ test('timeSince skips a zero-valued $stop chunk, continuing to the first real no
 test('timeSince stops at exactly the requested $stop unit among several non-zero chunks, not earlier or later', function (): void {
     // Exercises line 244's own boundary shape (same check as line 257's
     // below, but in the default !only_last_unit foreach loop, which had
-    // no untested mutants left by the time this batch started -- kept
+    // no untested mutants left -- kept
     // as a real regression test, not credited with killing anything
     // new): with month/week/day/hour/minute/second ALL non-zero, only
     // the real `$print !== '' && $i >= $j` shape stops the accumulation

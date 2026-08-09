@@ -41,9 +41,9 @@ use Symfony\Component\Messenger\Envelope;
  * that was passed in) exercises the real method bodies directly.
  * getConnectionNames() (`['default' => 'default']`) is deliberately left
  * alone even though the same seam reaches it too -- it's a pure
- * scalar-literal array, the OPcache-constant-folding pattern this whole
- * coverage pass's scoping already treats as a non-gap (see this batch's
- * own artifact caveat), unlike getConnections()'s `['default' =>
+ * scalar-literal array, subject to the OPcache-constant-folding pattern
+ * that produces a false mutation-coverage gap rather than a real one,
+ * unlike getConnections()'s `['default' =>
  * $this->connection]`, which embeds a variable and is never folded.
  */
 beforeEach(function (): void {

@@ -35,7 +35,7 @@ use Piwigo\Permission\SqlCondition;
  * `protected`/abstract on the base class) through CalendarMonthly, its
  * only sibling-tested concrete subclass alongside CalendarWeeklyTest --
  * CalendarBase itself is abstract and has no other real construction
- * site, exactly as this batch's own instructions describe.
+ * site.
  *
  * The fixture's 5 images all share one `date_available`/`date_creation`
  * (see CalendarRepositoryTest's own docblock) -- deliberately too little

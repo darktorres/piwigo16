@@ -69,7 +69,7 @@ $routes = [
     // scheme) -- not exercised by the "(applications)" route above,
     // which uses the real tab name directly.
     'admin photos_add (ploader alias)' => '/admin.php?page=photos_add&section=ploader',
-    // Albums batch: cat_list is the one page in this batch with no
+    // Albums pages: cat_list is the one page in this group with no
     // prior Browser coverage anywhere (albums/album/cat_options already
     // covered by AdminSmokeTest/AlbumTreeTest/ConsoleCleanTest/
     // VisualRegressionTest); tab=notification exercises AlbumSubController's
@@ -77,15 +77,15 @@ $routes = [
     // VisualRegressionTest routes above.
     'admin cat_list'                  => '/admin.php?page=cat_list',
     'admin album (notification tab)'  => '/admin.php?page=album&cat_id=1&tab=notification',
-    // Config batch: configuration is already covered by ConsoleCleanTest/
-    // VisualRegressionTest; the other 7 pages in this batch have no prior
+    // Config pages: configuration is already covered by ConsoleCleanTest/
+    // VisualRegressionTest; the other 7 pages in this group have no prior
     // Browser coverage anywhere.
     'admin extend_for_templates'      => '/admin.php?page=extend_for_templates',
     'admin menubar'                   => '/admin.php?page=menubar',
     'admin site_manager'              => '/admin.php?page=site_manager',
     'admin site_update'               => '/admin.php?page=site_update&site=1',
     'admin themes_standard_pages'     => '/admin.php?page=themes_standard_pages',
-    // Extension-tabs batch: plugins/themes/languages/updates and their
+    // Extension-tabs pages: plugins/themes/languages/updates and their
     // "new"/"update" tabs had no Browser coverage at all (not even a plain
     // GET) -- each dispatches to a distinct PageRenderer per
     // PluginsSubController/ThemesSubController/LanguagesSubController/

@@ -11,7 +11,7 @@ use Piwigo\Calendar\CalendarRenderResult;
  * its own docblock) -- no methods beyond the constructor, so there is
  * nothing DB-backed to exercise here. Kept under tests/Integration/
  * (rather than tests/Unit/) to match every other Calendar class's test
- * location, per this batch's own convention.
+ * location.
  */
 final class CalendarRenderResultTest extends IntegrationTestCase
 {

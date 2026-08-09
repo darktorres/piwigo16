@@ -150,8 +150,7 @@ final class WsCommentsTest extends ContractTestCase
     public function test_userComments_getList_filters_by_pending_status(): void
     {
         // fixture comment id 5 (image 4) is the only pending (validated=0)
-        // comment -- confirmed live via a direct DB read while writing an
-        // earlier PwgImages test in this same batch.
+        // comment -- confirmed live via a direct DB read.
         $response = $this->wsAdmin('pwg.userComments.getList', [
             'per_page' => 10, 'page' => 0, 'status' => 'pending',
         ]);

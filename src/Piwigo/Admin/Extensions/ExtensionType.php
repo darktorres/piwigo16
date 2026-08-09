@@ -96,8 +96,8 @@ enum ExtensionType: string
             // been silently matching nothing since that migration, which is
             // why languages_installed.php/languages_new.php render an empty
             // list against a live fixture -- languages.class.php itself is
-            // untouched (bug predates this phase; not otherwise exercised
-            // end-to-end before this batch's live verification).
+            // untouched (a pre-existing bug, not otherwise exercised
+            // end-to-end until now).
             self::Language => 'common.po',
         };
     }

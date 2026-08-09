@@ -75,14 +75,14 @@ final class UpdatesExtPageRenderer
         // call across every type in $this->types, whereas ExtensionUpdateChecker
         // (built on PemCatalog, shared with the plugins/themes/languages listing
         // pages) makes one categorized call per type -- an intentional consequence
-        // of this batch's "one generic service per concern" decision. Both end up
+        // of the "one generic service per concern" decision. Both end up
         // asking PEM for the same core-branch version list per category, so the
         // rendered "needs update" outcome is expected to be identical; only the
         // number/shape of outbound PEM requests differs.
         $show_reset = false;
         $updates_extension = []; // The array of the updates of a type of extension is stored in $updates_extension[type]
         // updates.class.php's own get_server_extensions() shares ONE PEM call
-        // across every type, so it's an all-or-nothing success -- since this batch
+        // across every type, so it's an all-or-nothing success -- since ExtensionUpdateChecker
         // makes one call per type instead, require every type to succeed to match
         // that same all-or-nothing outcome, rather than silently degrading to a
         // partial result no legacy code path could ever produce.

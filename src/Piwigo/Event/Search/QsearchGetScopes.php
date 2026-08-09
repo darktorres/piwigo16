@@ -12,9 +12,9 @@ namespace Piwigo\Event\Search;
  * element via `instanceof QSearchScope`, a real plugin can hand back a
  * malformed shape, and a precise element type would make PHPStan treat
  * that filter as dead code (same reasoning as GetAdminPluginMenuLinks/
- * GetBatchManagerPrefilters from the Admin/Integrity/Upload batch). Also
+ * GetBatchManagerPrefilters from the Admin/Integrity/Upload events). Also
  * avoids needing the `Piwigo\Search\Event\` namespace override every
- * other event in this batch needs -- a loose `array<mixed>` carries no
+ * other event under `Piwigo\Event\Search\` needs -- a loose `array<mixed>` carries no
  * first-party type for deptrac to see.
  */
 final readonly class QsearchGetScopes

@@ -27,28 +27,14 @@ namespace Piwigo\Core;
 interface TemplateInterface
 {
     /**
-     * $value/$tpl_var's hashmap values are genuinely arbitrary by design --
-     * matches Smarty's own `assign($tpl_var, $value = null)` signature,
-     * the same category as PwgResponseEncoder's generic serialization
-     * boundary: any PHP value a caller wants a template to render.
-     *
-     * @param string|array<string, mixed> $tpl_var can be a var name or a hashmap of variables
-     *    (in this case, do not use the _$value_ parameter)
-     */
-    public function assign(string|array $tpl_var, mixed $value = null): void;
-
-    /**
      * Assigns every variable a typed `TemplatePageContext` carries in one
-     * call -- PHP has no real method overloading, so this is a distinct
-     * method rather than a literal `assign()` overload, but it plays that
-     * role at every real call site: a page/renderer builds one typed
-     * context object instead of a loose sequence of individual assign()
-     * calls, and this is the one place that flattens it down to the flat
-     * array Smarty itself requires.
+     * call -- the one, sole way any L1/L2a/L2b/L3 caller ever writes into
+     * the current request's template (`assign()`/`append()` were removed
+     * entirely once the last real caller of either was converted to this;
+     * see `tests/Arch/StructuralTest.php` for the guard against a bare
+     * `$template->smarty->assign()`/`append()` reach-around).
      */
     public function assignContext(TemplatePageContext $context): void;
-
-    public function append(string $tpl_var, mixed $value = null, bool $merge = false): void;
 
     public function assign_var_from_handle(string $varname, string $handle): bool;
 

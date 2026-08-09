@@ -35,7 +35,7 @@ final class FilterPanelRenderer
      * branches in the 2 real callers (an all-null placeholder array sized
      * by a photo count, a narrowed list<string> of ids, or a raw
      * $_POST['selection']/session array) -- this method never reads its
-     * elements, only hands the whole thing to `$template->assign()` as the
+     * elements, only hands the whole thing to `assignContext()` as the
      * 'selection' Smarty variable, so there's no real narrowing to do
      * beyond array<mixed>.
      *

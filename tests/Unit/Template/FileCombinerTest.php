@@ -858,7 +858,7 @@ test('process_combinable returns rendered content directly for a template combin
 
     try {
         $template = TemplateTestFactory::build();
-        $template->assign('value', 42);
+        $template->smarty->assign('value', 42);
         CurrentTemplate::current()->set($template);
         $combinable = new Combinable('foo-js', 'themes/default/js/foo.js');
         $combinable->is_template = true;

@@ -36,7 +36,7 @@ use Psr\Http\Message\ServerRequestInterface;
  * Renders the about page: no POST handling, no redirects.
  *
  * Nothing in this render chain echoes -- PageHeaderRenderer/MenubarRenderer
- * only ever call $template->assign()/parse($handle, true) internally,
+ * only ever call $template->assignContext()/parse($handle, true) internally,
  * $template->parse('about', false) accumulates into Template's own
  * $output buffer, and PageTail::renderToString() drains that whole buffer
  * (header + about content + tail) as one string. See

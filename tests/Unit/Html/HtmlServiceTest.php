@@ -1130,7 +1130,7 @@ test('getCombinedCategoriesContentTitle uses the current template\'s real icon_d
         CurrentConfigTestFactory::get()->setDataDirChecked('1');
 
         $template = TemplateTestFactory::build();
-        $template->assign('themeconf', ['icon_dir' => '/my-theme/icons']);
+        $template->smarty->assign('themeconf', ['icon_dir' => '/my-theme/icons']);
         CurrentTemplate::current()->set($template);
         // A non-empty root url is required to kill line 576's
         // ConcatRemoveRight (drops getRootUrl() from the src entirely) and
@@ -1792,7 +1792,7 @@ test('flushPageMessages does nothing when a page refresh is already assigned', f
     CurrentTemplate::current()->set(TemplateTestFactory::build());
     PageStateTestFactory::get()->reset();
     PageStateTestFactory::get()->addError('Should not appear');
-    CurrentTemplate::current()->get()->assign('page_refresh', ['TIME' => '5', 'U_REFRESH' => '/next']);
+    CurrentTemplate::current()->get()->smarty->assign('page_refresh', ['TIME' => '5', 'U_REFRESH' => '/next']);
 
     HtmlServiceTestFactory::build()->flushPageMessages();
 

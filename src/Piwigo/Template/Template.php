@@ -694,30 +694,16 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
         return $filename;
     }
 
-    /**
-     * Assigns a template variable.
-     * @see http://www.smarty.net/manual/en/api.assign.php
-     *
-     * @param string|array<string, mixed> $tpl_var can be a var name or a hashmap of variables
-     *    (in this case, do not use the _$value_ parameter)
-     * @param mixed $value
-     */
-    #[Override]
-    public function assign($tpl_var, $value = null): void
-    {
-        $this->smarty->assign($tpl_var, $value);
-    }
-
     #[Override]
     public function assignContext(TemplatePageContext $context): void
     {
-        $this->assign($context->toArray());
+        $this->smarty->assign($context->toArray());
     }
 
     /**
      * Defines _$varname_ as the compiled result of _$handle_.
      * This can be used to effectively include a template in another template.
-     * This is equivalent to assign($varname, $this->parse($handle, true)).
+     * This is equivalent to $this->smarty->assign($varname, $this->parse($handle, true)).
      *
      * @param string $varname
      * @return true
@@ -725,22 +711,8 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
     #[Override]
     public function assign_var_from_handle($varname, string $handle): bool
     {
-        $this->assign($varname, $this->parse($handle, true));
+        $this->smarty->assign($varname, $this->parse($handle, true));
         return true;
-    }
-
-    /**
-     * Appends a new value in a template array variable, the variable is created if needed.
-     * @see http://www.smarty.net/manual/en/api.append.php
-     *
-     * @param string $tpl_var
-     * @param mixed $value
-     * @param bool $merge
-     */
-    #[Override]
-    public function append($tpl_var, $value = null, $merge = false): void
-    {
-        $this->smarty->append($tpl_var, $value, $merge);
     }
 
     /**
@@ -752,7 +724,7 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
     public function concat($tpl_var, $value): void
     {
         $current = $this->smarty->getTemplateVars($tpl_var);
-        $this->assign(
+        $this->smarty->assign(
             $tpl_var,
             (is_string($current) ? $current : '') . $value
         );
@@ -1647,7 +1619,7 @@ var s,after = document.getElementsByTagName(\'script\')[document.getElementsByTa
             // a no-op, so no need to guard the common case where it's unset.
             $theme_template_vars = [];
             include $dir . '/themeconf.inc.php';
-            $this->assign($theme_template_vars);
+            $this->smarty->assign($theme_template_vars);
             // Put themeconf in cache
             $this->processCache->set($cache_key, $themeconf);
 
@@ -1697,7 +1669,7 @@ var s,after = document.getElementsByTagName(\'script\')[document.getElementsByTa
             foreach ($this->picture_buttons as $k => $row) {
                 $buttons = array_merge($buttons, $row);
             }
-            $this->assign('PLUGIN_PICTURE_BUTTONS', $buttons);
+            $this->smarty->assign('PLUGIN_PICTURE_BUTTONS', $buttons);
 
             // only for PHP 5.3
             // $this->assign('PLUGIN_PICTURE_BUTTONS',
@@ -1720,7 +1692,7 @@ var s,after = document.getElementsByTagName(\'script\')[document.getElementsByTa
             foreach ($this->index_buttons as $k => $row) {
                 $buttons = array_merge($buttons, $row);
             }
-            $this->assign('PLUGIN_INDEX_BUTTONS', $buttons);
+            $this->smarty->assign('PLUGIN_INDEX_BUTTONS', $buttons);
 
             // only for PHP 5.3
             // $this->assign('PLUGIN_INDEX_BUTTONS',

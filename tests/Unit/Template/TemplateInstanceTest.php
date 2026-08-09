@@ -1011,7 +1011,7 @@ test('assign_var_from_handle assigns the parsed handle output (returned, not ech
     file_put_contents($tplDir . 'partial.tpl', 'Hello {$name}');
     $t->set_template_dir($tplDir);
     $t->set_filename('partial', 'partial.tpl');
-    $t->assign('name', 'World');
+    $t->smarty->assign('name', 'World');
 
     $result = $t->assign_var_from_handle('greeting', 'partial');
 
@@ -1021,7 +1021,7 @@ test('assign_var_from_handle assigns the parsed handle output (returned, not ech
 
 test('clear_assign removes a previously assigned template variable', function (): void {
     $t = TemplateTestFactory::build();
-    $t->assign('foo', 'bar');
+    $t->smarty->assign('foo', 'bar');
 
     $t->clear_assign('foo');
 
@@ -1171,7 +1171,7 @@ test('concat appends to an existing string template variable', function (): void
 
 test('concat treats a non-string existing value as an empty prefix', function (): void {
     $t = TemplateTestFactory::build();
-    $t->assign('counter', 42);
+    $t->smarty->assign('counter', 42);
     $t->concat('counter', 'suffix');
 
     expect($t->get_template_vars('counter'))->toBe('suffix');

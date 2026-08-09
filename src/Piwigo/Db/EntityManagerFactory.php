@@ -44,6 +44,7 @@ use Piwigo\Db\Type\TagIdType;
 use Piwigo\Db\Type\ThemeIdType;
 use Piwigo\Db\Type\UserIdType;
 use Piwigo\Db\Type\UsernameType;
+use Psr\Cache\CacheItemPoolInterface;
 
 /**
  * Factory for a Doctrine ORM EntityManager -- the ORM counterpart to
@@ -80,7 +81,23 @@ final class EntityManagerFactory
         return DbCredentials::fromEnv();
     }
 
-    public static function build(?Connection $conn = null): EntityManagerInterface
+    /**
+     * $cache overrides the default CachePools::doctrineMetadata() pool --
+     * DqlPlatformQueryTestFactory's own real reason to need this: that
+     * default pool backs Doctrine's *query* cache too (ORMSetup::
+     * createConfig() calls setQueryCache() with the same instance passed
+     * to setMetadataCache()), keyed by the DQL string itself, not by
+     * anything DqlFunction-file-specific -- a test that builds the same
+     * DQL string twice across two separate PHP processes (e.g. a mutate
+     * run mutating Piwigo\Db\DqlFunction\* between runs) would silently
+     * keep getting the *first* process's compiled SQL back from
+     * `_data/cache/` on disk, never re-invoking the mutated getSql() at
+     * all. Confirmed live: editing a DqlFunction class's getSql() to
+     * return a hardcoded sentinel string had zero effect on a repeated
+     * identical DQL query's generated SQL until this pool's on-disk
+     * files were deleted.
+     */
+    public static function build(?Connection $conn = null, ?CacheItemPoolInterface $cache = null): EntityManagerInterface
     {
         // Guarded by hasType() since this factory is deliberately not
         // memoized (called fresh per-request/per-test) and addType()
@@ -133,7 +150,7 @@ final class EntityManagerFactory
         $config = ORMSetup::createAttributeMetadataConfig(
             paths: [dirname(__DIR__)],
             isDevMode: true,
-            cache: CachePools::doctrineMetadata(self::entityMtimeHash() . '.' . md5(self::dbCredentials()->prefix)),
+            cache: $cache ?? CachePools::doctrineMetadata(self::entityMtimeHash() . '.' . md5(self::dbCredentials()->prefix)),
         );
         $config->enableNativeLazyObjects(true);
         $config->addCustomStringFunction('REGEXP', RegexpFunction::class);

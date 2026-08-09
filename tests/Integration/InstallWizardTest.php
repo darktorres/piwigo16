@@ -1023,7 +1023,7 @@ final class InstallWizardTest extends IntegrationTestCase
     }
 
     /**
-     * Line-coverage gap-closure companion to the valid-dl test above: this
+     * Companion to the valid-dl test above: this
      * exact branch's own `$fileContent = '';` fallback (see boot()'s own
      * inline comment right above it) handles file_get_contents() genuinely
      * failing on a file that DOES exist (a permissions issue, a race) --

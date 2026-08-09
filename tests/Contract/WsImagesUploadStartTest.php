@@ -18,9 +18,9 @@ use Piwigo\Db\Tables;
  * format_of/update_mode branches, all above source line 1660). This is a
  * deliberately narrow split from WsUploadTest.php/WsImagesUploadGapsTest.php
  * (which already cover upload()'s "happy path" and its tail past line 1660
- * -- category/lounge handling, the final response shape) to keep two
- * parallel coverage-gap-closure passes on the same source file from editing
- * the same test files at the same time.
+ * -- category/lounge handling, the final response shape) to keep parallel
+ * test-writing passes on the same source file from editing the same test
+ * files at the same time.
  *
  * Every scenario below is deliberately steered to fail (or format_of-return)
  * *before* reaching upload()'s own "new photo" UploadService::addUploadedFile()
@@ -40,7 +40,7 @@ use Piwigo\Db\Tables;
  * request with zero $_FILES entries) -- there's no legitimate way to make
  * either fopen() call fail without an actual OS-level fault or a race
  * condition, matching the class of "confirmed-infeasible" defensive guards
- * documented across this same coverage-gap-closure pass (e.g.
+ * documented across this same test-writing pass (e.g.
  * WsImagesChunkedUploadTest's mergeChunks() unlink-failure note).
  */
 final class WsImagesUploadStartTest extends ContractTestCase

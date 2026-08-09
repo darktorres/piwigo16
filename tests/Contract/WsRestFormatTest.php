@@ -77,8 +77,8 @@ final class WsRestFormatTest extends ContractTestCase
         self::assertMatchesRegularExpression('/<name>msizes<\/name>\s*<value>.*<square>\d+<\/square>.*<\/value>/s', $body);
         self::assertMatchesRegularExpression('/<name>msizes<\/name>\s*<value>.*<all>\d+<\/all>.*<\/value>/s', $body);
 
-        // Real bug fixed during the coverage-gap-closure pass (see
-        // PwgCore::getCacheSize()'s own docblock): tsizes/msizes/cache_size
+        // Real bug fixed (see PwgCore::getCacheSize()'s own docblock):
+        // tsizes/msizes/cache_size
         // used to `du`/scan CurrentConfig::dataLocation() ('_data/') as a
         // bare relative path, which resolves against the front-controller
         // script's own cwd (public/) under a real Apache request -- an

@@ -227,9 +227,9 @@ final class UserListPageRenderer
         // showing the "please remove it" deprecation warning below. The
         // former config_default.inc.php happened to never set
         // local_dir_site/webmaster_id either, so this always was, and
-        // stays, a bare local-file-only read -- "nothing is frozen"
-        // gap-closure (2026-07-22) caught this as a real near-miss bug
-        // while retiring config_default.inc.php (a naive CurrentConfig::
+        // stays, a bare local-file-only read. Retiring
+        // config_default.inc.php caught this as a real near-miss bug
+        // (a naive CurrentConfig::
         // defaultsArray()-first rewrite would have made this warning fire
         // unconditionally, since webmaster_id does have a real SCHEMA
         // default now). Note the deliberate absence of `global $conf;`

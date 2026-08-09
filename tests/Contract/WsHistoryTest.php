@@ -997,8 +997,7 @@ final class WsHistoryTest extends ContractTestCase
 
     /**
      * historySearch()'s `EventDispatcherTestFactory::get()->dispatchChange(new
-     * GetHistory([], ...))` fails loud now (Track B typed-event-object gap
-     * closure, WS batch): a GetHistory handler that returns something other
+     * GetHistory([], ...))` fails loud now: a GetHistory handler that returns something other
      * than a GetHistory instance makes dispatchChange() throw \Error,
      * rather than the old triggerChange()'s silent "narrow to [] on a
      * non-array return" fallback this test used to assert. historyGet()

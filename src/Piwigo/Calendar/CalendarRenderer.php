@@ -224,6 +224,7 @@ final readonly class CalendarRenderer
 
             $comment = '';
 
+            $chronology_views = null;
             foreach ($styles as $style => $style_data) {
                 foreach ($views as $view) {
                     if ($style_data['view_calendar'] or $view !== CalendarBase::CAL_VIEW_CALENDAR) {
@@ -249,14 +250,12 @@ final readonly class CalendarRenderer
                             $selected = true;
                         }
 
-                        $template->append(
-                            'chronology_views',
-                            [
-                                'VALUE' => $url,
-                                'CONTENT' => $this->lang->t('chronology_' . $style . '_' . $view),
-                                'SELECTED' => $selected,
-                            ]
-                        );
+                        $chronology_views ??= [];
+                        $chronology_views[] = [
+                            'VALUE' => $url,
+                            'CONTENT' => $this->lang->t('chronology_' . $style . '_' . $view),
+                            'SELECTED' => $selected,
+                        ];
                     }
                 }
             }
@@ -271,6 +270,7 @@ final readonly class CalendarRenderer
                 fileChronologyView: 'month_calendar.tpl',
                 chronologyTitle: $calendar_title,
                 chronologyNavigationBars: $calendar->getChronologyNavigationBars(),
+                chronologyViews: $chronology_views,
             ));
         } // end category calling
 

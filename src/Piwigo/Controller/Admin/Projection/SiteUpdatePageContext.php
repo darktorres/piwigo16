@@ -10,10 +10,19 @@ use Piwigo\Core\TemplatePageContext;
 /**
  * The template variable set assigned by
  * {@see \Piwigo\Controller\Admin\SiteUpdateSubController::handle()}'s own
- * "template initialization" block.
+ * "template initialization" block. `$footerElements` is genuinely
+ * optional -- accumulated across this method's own several independently
+ * -gated sync stages (dirs/files/metadata), each of which may or may not
+ * run in a given request; omitted here (not present as an empty-array
+ * value) to match `footer.tpl`'s own `{if isset($footer_elements)}`
+ * guard exactly, same as the original code's own "never appended, stays
+ * unset" behavior when zero stages ran.
  */
 final readonly class SiteUpdatePageContext implements TemplatePageContext
 {
+    /**
+     * @param list<string>|null $footerElements
+     */
     public function __construct(
         public string $siteUrl,
         public string $siteManagerUrl,
@@ -23,6 +32,7 @@ final readonly class SiteUpdatePageContext implements TemplatePageContext
         public string $helpUrl,
         public string $adminPageTitle,
         public string $pwgToken,
+        public ?array $footerElements,
     ) {}
 
     /**
@@ -31,7 +41,7 @@ final readonly class SiteUpdatePageContext implements TemplatePageContext
     #[Override]
     public function toArray(): array
     {
-        return [
+        $result = [
             'SITE_URL' => $this->siteUrl,
             'U_SITE_MANAGER' => $this->siteManagerUrl,
             'L_RESULT_UPDATE' => $this->resultUpdateLabel,
@@ -41,5 +51,11 @@ final readonly class SiteUpdatePageContext implements TemplatePageContext
             'ADMIN_PAGE_TITLE' => $this->adminPageTitle,
             'PWG_TOKEN' => $this->pwgToken,
         ];
+
+        if ($this->footerElements !== null) {
+            $result['footer_elements'] = $this->footerElements;
+        }
+
+        return $result;
     }
 }

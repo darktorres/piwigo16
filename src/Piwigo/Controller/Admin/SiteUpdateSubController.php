@@ -19,6 +19,7 @@ use Piwigo\Controller\Admin\Projection\SiteUpdateIntroductionPageContext;
 use Piwigo\Controller\Admin\Projection\SiteUpdateMetadataResultPageContext;
 use Piwigo\Controller\Admin\Projection\SiteUpdatePageContext;
 use Piwigo\Controller\Admin\Projection\SiteUpdateSaveErrorPageContext;
+use Piwigo\Controller\Admin\Projection\SiteUpdateSyncErrorsPageContext;
 use Piwigo\Controller\Admin\Projection\SiteUpdateSyncResultPageContext;
 use Piwigo\Controller\Admin\Request\SiteUpdateRequest;
 use Piwigo\Core\CurrentLogger;
@@ -201,6 +202,16 @@ final class SiteUpdateSubController implements AdminSubControllerInterface
             ));
 
         }
+
+        // `footer_elements` accumulates real cross-branch shared state (a
+        // debug/timing trace built up across this method's own several
+        // sequential, independently-gated sync stages -- dirs/files/
+        // metadata) -- not genuinely progressive/AJAX-polled (confirmed:
+        // no flush()/ob_flush()/echo anywhere in this class), so every
+        // stage's own message is read back once, together, by the single
+        // unconditional SiteUpdatePageContext assign near the end of this
+        // method.
+        $footer_elements = null;
 
         // +-----------------------------------------------------------------------+
         // | tabs                                                                  |
@@ -519,9 +530,9 @@ final class SiteUpdateSubController implements AdminSubControllerInterface
                 $counts['del_categories'] = count($to_delete);
             }
 
-            $template->append('footer_elements', '<!-- scanning dirs : '
+            $footer_elements = ['<!-- scanning dirs : '
               . TimingHelper::getElapsedTime($start, TimingHelper::getMoment())
-              . ' -->');
+              . ' -->'];
         }
         // +-----------------------------------------------------------------------+
         // |                           files / elements                            |
@@ -533,9 +544,10 @@ final class SiteUpdateSubController implements AdminSubControllerInterface
 
             $fs = $site_reader->get_elements($basedir);
 
-            $template->append('footer_elements', '<!-- get_elements: '
+            $footer_elements ??= [];
+            $footer_elements[] = '<!-- get_elements: '
               . TimingHelper::getElapsedTime($start, TimingHelper::getMoment())
-              . ' -->');
+              . ' -->';
 
             $cat_ids = array_values(array_diff(array_keys($db_categories), $to_delete));
 
@@ -750,9 +762,9 @@ final class SiteUpdateSubController implements AdminSubControllerInterface
                 $counts['del_elements'] = count($to_delete_elements);
             }
 
-            $template->append('footer_elements', '<!-- scanning files : '
+            $footer_elements[] = '<!-- scanning files : '
               . TimingHelper::getElapsedTime($start_files, TimingHelper::getMoment())
-              . ' -->');
+              . ' -->';
         }
 
         // +-----------------------------------------------------------------------+
@@ -766,14 +778,15 @@ final class SiteUpdateSubController implements AdminSubControllerInterface
 
                 $start = TimingHelper::getMoment();
                 $syncCategoryService->updateCategory('all');
-                $template->append('footer_elements', '<!-- update_category(all) : '
+                $footer_elements ??= [];
+                $footer_elements[] = '<!-- update_category(all) : '
                   . TimingHelper::getElapsedTime($start, TimingHelper::getMoment())
-                  . ' -->');
+                  . ' -->';
                 $start = TimingHelper::getMoment();
                 $syncCategoryService->updateGlobalRank();
-                $template->append('footer_elements', '<!-- ordering categories : '
+                $footer_elements[] = '<!-- ordering categories : '
                   . TimingHelper::getElapsedTime($start, TimingHelper::getMoment())
-                  . ' -->');
+                  . ' -->';
             }
 
             if ($post['sync'] === 'files') {
@@ -796,9 +809,10 @@ final class SiteUpdateSubController implements AdminSubControllerInterface
                         $opts['recursive'],
                         false
                     );
-                $template->append('footer_elements', '<!-- get_filelist : '
+                $footer_elements ??= [];
+                $footer_elements[] = '<!-- get_filelist : '
                   . TimingHelper::getElapsedTime($start, TimingHelper::getMoment())
-                  . ' -->');
+                  . ' -->';
                 $start = TimingHelper::getMoment();
 
                 $datas = [];
@@ -820,9 +834,9 @@ final class SiteUpdateSubController implements AdminSubControllerInterface
                         );
                     $this->entityManager->clear();
                 }
-                $template->append('footer_elements', '<!-- update files : '
+                $footer_elements[] = '<!-- update files : '
                   . TimingHelper::getElapsedTime($start, TimingHelper::getMoment())
-                  . ' -->');
+                  . ' -->';
             }// end if sync files
         }
 
@@ -870,9 +884,10 @@ final class SiteUpdateSubController implements AdminSubControllerInterface
                     $opts['only_new']
                 );
 
-            $template->append('footer_elements', '<!-- get_filelist : '
+            $footer_elements ??= [];
+            $footer_elements[] = '<!-- get_filelist : '
               . TimingHelper::getElapsedTime($start, TimingHelper::getMoment())
-              . ' -->');
+              . ' -->';
 
             $start = TimingHelper::getMoment();
             $datas = [];
@@ -932,9 +947,9 @@ final class SiteUpdateSubController implements AdminSubControllerInterface
                 $tagService->setTagsOf($tags_of);
             }
 
-            $template->append('footer_elements', '<!-- metadata update : '
+            $footer_elements[] = '<!-- metadata update : '
               . TimingHelper::getElapsedTime($start, TimingHelper::getMoment())
-              . ' -->');
+              . ' -->';
 
             $template->assignContext(new SiteUpdateMetadataResultPageContext(
                 elementsDone: count($datas),
@@ -968,6 +983,7 @@ final class SiteUpdateSubController implements AdminSubControllerInterface
             adminPageTitle: $this->lang->t('Synchronize'),
             pwgToken: new CsrfService($this->currentConfig)
                 ->getToken(),
+            footerElements: $footer_elements,
         ));
 
         // +-----------------------------------------------------------------------+
@@ -1030,41 +1046,41 @@ final class SiteUpdateSubController implements AdminSubControllerInterface
             $template,
         );
 
+        $sync_errors = [];
+        $sync_error_captions = [];
         if (count($errors) > 0) {
             foreach ($errors as $error) {
-                $template->append(
-                    'sync_errors',
-                    [
-                        'ELEMENT' => $error['path'],
-                        'LABEL' => $error['type'] . ' (' . $error_labels[$error['type']][0] . ')',
-                    ]
-                );
+                $sync_errors[] = [
+                    'ELEMENT' => $error['path'],
+                    'LABEL' => $error['type'] . ' (' . $error_labels[$error['type']][0] . ')',
+                ];
             }
 
             foreach ($error_labels as $error_type => $error_description) {
-                $template->append(
-                    'sync_error_captions',
-                    [
-                        'TYPE' => $error_type,
-                        'LABEL' => $error_description[1],
-                    ]
-                );
+                $sync_error_captions[] = [
+                    'TYPE' => $error_type,
+                    'LABEL' => $error_description[1],
+                ];
             }
         }
 
+        $sync_infos = [];
         if (count($infos) > 0
             and isset($post['display_info'])
             and $post['display_info'] === '1') {
             foreach ($infos as $info) {
-                $template->append(
-                    'sync_infos',
-                    [
-                        'ELEMENT' => $info['path'],
-                        'LABEL' => $info['info'],
-                    ]
-                );
+                $sync_infos[] = [
+                    'ELEMENT' => $info['path'],
+                    'LABEL' => $info['info'],
+                ];
             }
         }
+
+        $template->assignContext(new SiteUpdateSyncErrorsPageContext(
+            syncErrors: $sync_errors,
+            syncErrorCaptions: $sync_error_captions,
+            syncInfos: $sync_infos,
+        ));
 
         // +-----------------------------------------------------------------------+
         // |                          sending html code                            |

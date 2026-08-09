@@ -10,10 +10,10 @@ use Piwigo\Core\TemplatePageContext;
 /**
  * The template variable set assigned by the `'comments'` case of
  * {@see \Piwigo\Controller\Admin\ConfigurationSubController::handle()}'s
- * own render-time `switch`. Constructed immediately at that case's
- * original position, for the same "a later `Template::append()` loop
- * needs this key already live" reason documented on
- * {@see ConfigurationMainPageContext}.
+ * own render-time `switch`. `$comments`'s own checkbox values (formerly
+ * a separate `Template::append($tpl_var, ..., merge: true)` loop) are
+ * merged into the plain PHP `$comments` array before construction
+ * instead, same as {@see ConfigurationMainPageContext}.
  */
 final readonly class ConfigurationCommentsPageContext implements TemplatePageContext
 {

@@ -17,10 +17,13 @@ use Piwigo\Core\TemplatePageContext;
  * {@see GalleryPageContext}'s own "viewing one category" trio (mutually
  * exclusive in practice; each context independently gates its own copy,
  * preserving the original's last-write-wins behavior on the rare case
- * both conditions are true). `$noSearchResults` is only ever assigned
- * here via a real `assign()` call; the sibling `append()`-based branch
- * for the same template key stays a raw, untouched `Template::append()`
- * call (a different mechanism, out of scope for this conversion).
+ * both conditions are true). `$noSearchResults` is set from either of
+ * 2 mutually-exclusive branches now (a real single-element-list literal
+ * in the "zero results" branch, or the `array_map()`'d unmatched-terms
+ * list in the other) -- both funnel into this same field, no more
+ * separate raw `Template::append()` call. `$tagSearchResults`/
+ * `$imageDerivatives` are always included (even empty) since
+ * `index.tpl` reads both with `{if !empty(...)}`, not `isset()`.
  */
 final readonly class GalleryThumbnailsPageContext implements TemplatePageContext
 {
@@ -30,6 +33,8 @@ final readonly class GalleryThumbnailsPageContext implements TemplatePageContext
      * @param list<string>|null $noSearchResults
      * @param array<int, array<string, mixed>>|null $imageOrders
      * @param list<array<string, mixed>>|null $relatedTags
+     * @param list<array<string, mixed>> $tagSearchResults
+     * @param list<array{DISPLAY: string, URL: string, SELECTED: bool}> $imageDerivatives
      */
     public function __construct(
         public ?bool $searchInSetButton,
@@ -45,6 +50,8 @@ final readonly class GalleryThumbnailsPageContext implements TemplatePageContext
         public ?string $uSlideshow,
         public ?bool $relatedTagsAction,
         public ?array $relatedTags,
+        public array $tagSearchResults,
+        public array $imageDerivatives,
     ) {}
 
     /**
@@ -53,7 +60,10 @@ final readonly class GalleryThumbnailsPageContext implements TemplatePageContext
     #[Override]
     public function toArray(): array
     {
-        $result = [];
+        $result = [
+            'tag_search_results' => $this->tagSearchResults,
+            'image_derivatives' => $this->imageDerivatives,
+        ];
 
         if ($this->searchInSetButton !== null) {
             $result['SEARCH_IN_SET_BUTTON'] = $this->searchInSetButton;

@@ -486,6 +486,7 @@ final class CommentsController implements ControllerInterface
         $navbar = new PaginationService($this->currentConfig)
             ->createNavigationBar($url, $counter, $start, $items_number_for_navbar);
 
+        $tpl_comments = [];
         if (count($comments) > 0) {
             // retrieving element informations
             $elements = array_map(
@@ -622,7 +623,7 @@ final class CommentsController implements ControllerInterface
                         );
                     }
                 }
-                $template->append('comments', $tpl_comment);
+                $tpl_comments[] = $tpl_comment;
             }
         }
 
@@ -642,6 +643,7 @@ final class CommentsController implements ControllerInterface
             itemNumberOptionsSelected: $selected_items_number,
             navbar: $navbar,
             commentDerivativeParams: $derivative_params,
+            comments: $tpl_comments,
         ));
 
         // include menubar

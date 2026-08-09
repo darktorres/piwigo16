@@ -161,16 +161,10 @@ final class SiteManagerSubController implements AdminSubControllerInterface
             }
         }
 
-        $template->assignContext(new SiteManagerSubControllerPageContext(
-            formAction: $this->urlService->getRootUrl() . 'admin.php' . $this->urlService->getQueryStringDiff(['action', 'site', 'pwg_token']),
-            pwgToken: new CsrfService($this->currentConfig)
-                ->getToken(),
-            adminPageTitle: $this->lang->t('Synchronize'),
-        ));
-
         $sites_detail = EntityManagerFactory::build($conn)->getRepository(SiteEntity::class)
             ->findCategoryAndImageCountsBySite();
 
+        $tpl_sites = [];
         foreach (EntityManagerFactory::build($conn)->getRepository(SiteEntity::class)->findAllSites() as $row) {
             $id = (string) $row->id;
             $id_int = $row->id;
@@ -202,8 +196,16 @@ final class SiteManagerSubController implements AdminSubControllerInterface
             // $plugin_links is array of array composed of U_HREF, U_HINT & U_CAPTION
             $tpl_var['plugin_links'] = $this->eventDispatcher->dispatchChange(new GetAdminsSiteLinks([], $id, $is_remote))->pluginLinks;
 
-            $template->append('sites', $tpl_var);
+            $tpl_sites[] = $tpl_var;
         }
+
+        $template->assignContext(new SiteManagerSubControllerPageContext(
+            formAction: $this->urlService->getRootUrl() . 'admin.php' . $this->urlService->getQueryStringDiff(['action', 'site', 'pwg_token']),
+            pwgToken: new CsrfService($this->currentConfig)
+                ->getToken(),
+            adminPageTitle: $this->lang->t('Synchronize'),
+            sites: $tpl_sites,
+        ));
 
         $template->assign_var_from_handle('ADMIN_CONTENT', 'site_manager');
     }

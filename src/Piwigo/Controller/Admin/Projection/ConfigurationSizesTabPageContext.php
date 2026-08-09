@@ -13,11 +13,15 @@ use Piwigo\Core\TemplatePageContext;
  * own render-time `switch` -- distinct from {@see
  * ConfigurationSizesPageContext}, which is `processSizes()`'s own POST
  * handler context. Constructed via 2 separate calls at that case's own
- * 2 real positions: `$isGd`/`$sizes` immediately (a later
- * `Template::append()` loop needs `sizes` already live, same reason
- * documented on {@see ConfigurationMainPageContext}), then
- * `$derivatives`/`$resizeQuality`/`$customDerivatives` after that loop
- * (no such constraint applies to them).
+ * 2 real positions: `$isGd`/`$sizes` immediately (`$sizes`'s own
+ * checkbox values, formerly a separate `Template::append($tpl_var, ...,
+ * merge: true)` loop, are merged into the plain PHP `$sizes` array
+ * before this first construction instead), then
+ * `$derivatives`/`$resizeQuality`/`$customDerivatives` in a second call
+ * once those are computed -- the two calls' own `toArray()` keys never
+ * overlap, so the second one's `assignContext()` never wipes the
+ * first's (verified live against Smarty's own `assign()` merge
+ * semantics, not assumed).
  */
 final readonly class ConfigurationSizesTabPageContext implements TemplatePageContext
 {

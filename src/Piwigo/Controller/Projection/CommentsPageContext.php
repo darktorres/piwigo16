@@ -10,7 +10,9 @@ use Piwigo\Image\DerivativeParams;
 
 /**
  * The template variable set assigned by
- * {@see \Piwigo\Controller\CommentsController::__invoke()}.
+ * {@see \Piwigo\Controller\CommentsController::__invoke()}. `$comments`
+ * is always included (even empty) since `comment_list.tpl`'s own
+ * `{foreach from=$comments}` has no guard around it.
  */
 final readonly class CommentsPageContext implements TemplatePageContext
 {
@@ -20,6 +22,7 @@ final readonly class CommentsPageContext implements TemplatePageContext
      * @param array<string, string> $sortOrderOptions
      * @param array<int|string, int|string> $itemNumberOptions
      * @param array{CURRENT_PAGE?: float, URL_FIRST?: string, URL_PREV?: string, URL_NEXT?: string, URL_LAST?: string, pages?: array<int, string>, NB_PAGE?: int} $navbar
+     * @param list<array<string, mixed>> $comments
      */
     public function __construct(
         public string $fAction,
@@ -35,6 +38,7 @@ final readonly class CommentsPageContext implements TemplatePageContext
         public int|string $itemNumberOptionsSelected,
         public array $navbar,
         public DerivativeParams $commentDerivativeParams,
+        public array $comments,
     ) {}
 
     /**
@@ -57,6 +61,7 @@ final readonly class CommentsPageContext implements TemplatePageContext
             'item_number_options_selected' => $this->itemNumberOptionsSelected,
             'navbar' => $this->navbar,
             'comment_derivative_params' => $this->commentDerivativeParams,
+            'comments' => $this->comments,
         ];
     }
 }

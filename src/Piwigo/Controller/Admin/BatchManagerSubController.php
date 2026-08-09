@@ -24,6 +24,7 @@ use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Controller\Admin\Projection\BatchManagerFilterOptionsPageContext;
 use Piwigo\Controller\Admin\Projection\BatchManagerNoSearchResultsPageContext;
+use Piwigo\Controller\Admin\Projection\BatchManagerSearchDebugPageContext;
 use Piwigo\Controller\Admin\Request\BatchManagerRequest;
 use Piwigo\Core\CurrentLogger;
 use Piwigo\Core\FilterState;
@@ -674,7 +675,7 @@ final class BatchManagerSubController implements AdminSubControllerInterface
             ]);
             $res_debug = $res['debug'];
             unset($res['debug']);
-            $template->append('footer_elements', implode("\n", $res_debug));
+            $template->assignContext(new BatchManagerSearchDebugPageContext(implode("\n", $res_debug)));
             $res_items = $res['items'];
             if (count($res_items) > 0 && is_array($res['qs']['unmatched_terms'] ?? null) && count($res['qs']['unmatched_terms']) > 0) {
                 $unmatched_terms = array_filter($res['qs']['unmatched_terms'], is_string(...));

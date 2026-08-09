@@ -10,6 +10,8 @@ use Piwigo\Controller\Projection\GalleryThumbnailsPageContext;
  * @param list<string>|null $noSearchResults
  * @param array<int, array<string, mixed>>|null $imageOrders
  * @param list<array<string, mixed>>|null $relatedTags
+ * @param list<array<string, mixed>> $tagSearchResults
+ * @param list<array{DISPLAY: string, URL: string, SELECTED: bool}> $imageDerivatives
  */
 function makeGalleryThumbnailsPageContextForTest(
     ?bool $searchInSetButton = null,
@@ -25,6 +27,8 @@ function makeGalleryThumbnailsPageContextForTest(
     ?string $uSlideshow = null,
     ?bool $relatedTagsAction = null,
     ?array $relatedTags = null,
+    array $tagSearchResults = [],
+    array $imageDerivatives = [],
 ): GalleryThumbnailsPageContext {
     return new GalleryThumbnailsPageContext(
         searchInSetButton: $searchInSetButton,
@@ -40,13 +44,25 @@ function makeGalleryThumbnailsPageContextForTest(
         uSlideshow: $uSlideshow,
         relatedTagsAction: $relatedTagsAction,
         relatedTags: $relatedTags,
+        tagSearchResults: $tagSearchResults,
+        imageDerivatives: $imageDerivatives,
     );
 }
 
-test('toArray omits every optional key when null', function (): void {
+test('toArray omits every optional key when null, but always includes tag_search_results/image_derivatives', function (): void {
     $result = makeGalleryThumbnailsPageContextForTest()->toArray();
 
-    expect($result)->toBe([]);
+    expect($result)->toBe(['tag_search_results' => [], 'image_derivatives' => []]);
+});
+
+test('toArray includes real tag_search_results/image_derivatives when set', function (): void {
+    $result = makeGalleryThumbnailsPageContextForTest(
+        tagSearchResults: [['id' => 1, 'name' => 'sunset', 'URL' => '/index.php?/tags/1']],
+        imageDerivatives: [['DISPLAY' => 'Small', 'URL' => '/index.php?display=SM', 'SELECTED' => true]],
+    )->toArray();
+
+    expect($result['tag_search_results'])->toBe([['id' => 1, 'name' => 'sunset', 'URL' => '/index.php?/tags/1']])
+        ->and($result['image_derivatives'])->toBe([['DISPLAY' => 'Small', 'URL' => '/index.php?display=SM', 'SELECTED' => true]]);
 });
 
 test('toArray includes the search-in-set-for-tags quartet together', function (): void {

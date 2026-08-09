@@ -17,17 +17,23 @@ use Piwigo\Core\TemplatePageContext;
  * that call returns via
  * {@see \Piwigo\Calendar\CalendarBase::getChronologyNavigationBars()} --
  * always included (not optional) since the .tpl checks it with
- * `{if !empty(...)}`, not `isset()`.
+ * `{if !empty(...)}`, not `isset()`. `$chronologyViews` is genuinely
+ * optional -- the original code's own nested style/view loop only
+ * appends when at least one style/view combination passes its own
+ * `view_calendar` gate, omitted here (not present as a null value) to
+ * match `index.tpl`'s own `{if isset($chronology_views)}` guard exactly.
  */
 final readonly class CalendarChronologyPageContext implements TemplatePageContext
 {
     /**
      * @param list<array<string, mixed>> $chronologyNavigationBars
+     * @param list<array{VALUE: string, CONTENT: string, SELECTED: bool}>|null $chronologyViews
      */
     public function __construct(
         public string $fileChronologyView,
         public string $chronologyTitle,
         public array $chronologyNavigationBars,
+        public ?array $chronologyViews,
     ) {}
 
     /**
@@ -36,12 +42,18 @@ final readonly class CalendarChronologyPageContext implements TemplatePageContex
     #[Override]
     public function toArray(): array
     {
-        return [
+        $result = [
             'FILE_CHRONOLOGY_VIEW' => $this->fileChronologyView,
             'chronology' => [
                 'TITLE' => $this->chronologyTitle,
             ],
             'chronology_navigation_bars' => $this->chronologyNavigationBars,
         ];
+
+        if ($this->chronologyViews !== null) {
+            $result['chronology_views'] = $this->chronologyViews;
+        }
+
+        return $result;
     }
 }

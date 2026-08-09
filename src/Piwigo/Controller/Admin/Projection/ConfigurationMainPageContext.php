@@ -10,14 +10,11 @@ use Piwigo\Core\TemplatePageContext;
 /**
  * The template variable set assigned by the `'main'` case of
  * {@see \Piwigo\Controller\Admin\ConfigurationSubController::handle()}'s
- * own render-time `switch`. Constructed immediately at that case's
- * original position (not deferred to {@see ConfigurationPageContext}'s
- * end-of-method batch): `handle()` immediately follows with a
- * `Template::append()` loop that adds each checkbox's value into the
- * `main` key this context just assigned -- `append()` is a different
- * mechanism, out of scope for conversion, but it only works correctly
- * if `main` already has a real value in the live template by the time
- * it runs.
+ * own render-time `switch`. `$main`'s own checkbox values (formerly a
+ * separate `Template::append($tpl_var, ..., merge: true)` loop run right
+ * after this context was constructed) are merged into the plain PHP
+ * `$main` array before construction instead, so this is the one and
+ * only write to the `main` template key.
  */
 final readonly class ConfigurationMainPageContext implements TemplatePageContext
 {

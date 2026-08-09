@@ -10,6 +10,7 @@ test('toArray omits every key when all fields are null', function (): void {
         derivatives: null,
         ferrors: null,
         resizeQuality: null,
+        sizes: null,
     );
 
     expect($context->toArray())->toBe([]);
@@ -21,6 +22,7 @@ test('toArray includes save_success alone on the success branch', function (): v
         derivatives: null,
         ferrors: null,
         resizeQuality: null,
+        sizes: null,
     );
 
     expect($context->toArray())->toBe([
@@ -28,12 +30,13 @@ test('toArray includes save_success alone on the success branch', function (): v
     ]);
 });
 
-test('toArray includes derivatives, ferrors and resize_quality together on the error branch', function (): void {
+test('toArray includes derivatives, ferrors, resize_quality and sizes together on the error branch', function (): void {
     $context = new ConfigurationSizesPageContext(
         saveSuccess: null,
         derivatives: ['square' => ['w' => '100']],
         ferrors: ['resize_quality' => '[50..98]'],
         resizeQuality: '150',
+        sizes: ['original_resize_maxwidth' => '2000'],
     );
 
     $result = $context->toArray();
@@ -41,5 +44,18 @@ test('toArray includes derivatives, ferrors and resize_quality together on the e
     expect($result)->not->toHaveKey('save_success')
         ->and($result['derivatives'])->toBe(['square' => ['w' => '100']])
         ->and($result['ferrors'])->toBe(['resize_quality' => '[50..98]'])
-        ->and($result['resize_quality'])->toBe('150');
+        ->and($result['resize_quality'])->toBe('150')
+        ->and($result['sizes'])->toBe(['original_resize_maxwidth' => '2000']);
+});
+
+test('toArray omits sizes when null even while derivatives is set', function (): void {
+    $context = new ConfigurationSizesPageContext(
+        saveSuccess: null,
+        derivatives: [],
+        ferrors: [],
+        resizeQuality: '90',
+        sizes: null,
+    );
+
+    expect($context->toArray())->not->toHaveKey('sizes');
 });

@@ -21,6 +21,7 @@ use Piwigo\Config\ConfigService;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Controller\Admin\Projection\ConfigurationCommentsPageContext;
 use Piwigo\Controller\Admin\Projection\ConfigurationDefaultPageContext;
+use Piwigo\Controller\Admin\Projection\ConfigurationDisplayTabPageContext;
 use Piwigo\Controller\Admin\Projection\ConfigurationMainPageContext;
 use Piwigo\Controller\Admin\Projection\ConfigurationPageContext;
 use Piwigo\Controller\Admin\Projection\ConfigurationSearchTabPageContext;
@@ -570,40 +571,30 @@ final class ConfigurationSubController implements AdminSubControllerInterface
                 }
                 natcasesort($groups);
 
+                foreach ($main_checkboxes as $checkbox) {
+                    $main[$checkbox] = $this->checkboxValue($checkbox);
+                }
+
                 $template->assignContext(new ConfigurationMainPageContext(
                     orderByIsCustom: $order_by_is_custom,
                     main: $main,
                     groupOptions: $groups,
                 ));
-
-                foreach ($main_checkboxes as $checkbox) {
-                    $template->append(
-                        'main',
-                        [
-                            $checkbox => $this->checkboxValue($checkbox),
-                        ],
-                        true
-                    );
-                }
                 break;
 
             case 'comments':
 
-                $template->assignContext(new ConfigurationCommentsPageContext([
+                $comments = [
                     'NB_COMMENTS_PAGE' => $this->currentConfig->nbCommentPage(),
                     'comments_order' => $this->currentConfig->commentsOrder(),
                     'comments_order_options' => $comments_order,
-                ]));
+                ];
 
                 foreach ($comments_checkboxes as $checkbox) {
-                    $template->append(
-                        'comments',
-                        [
-                            $checkbox => $this->checkboxValue($checkbox),
-                        ],
-                        true
-                    );
+                    $comments[$checkbox] = $this->checkboxValue($checkbox);
                 }
+
+                $template->assignContext(new ConfigurationCommentsPageContext($comments));
                 break;
 
             case 'default':
@@ -632,23 +623,14 @@ final class ConfigurationSubController implements AdminSubControllerInterface
 
             case 'display':
 
+                $display = [];
                 foreach ($display_checkboxes as $checkbox) {
-                    $template->append(
-                        'display',
-                        [
-                            $checkbox => $this->checkboxValue($checkbox),
-                        ],
-                        true
-                    );
+                    $display[$checkbox] = $this->checkboxValue($checkbox);
                 }
-                $template->append(
-                    'display',
-                    [
-                        'picture_informations' => $this->currentConfig->pictureInformations(),
-                        'NB_CATEGORIES_PAGE' => $this->currentConfig->nbCategoriesPage(),
-                    ],
-                    true
-                );
+                $display['picture_informations'] = $this->currentConfig->pictureInformations();
+                $display['NB_CATEGORIES_PAGE'] = $this->currentConfig->nbCategoriesPage();
+
+                $template->assignContext(new ConfigurationDisplayTabPageContext($display));
                 break;
 
             case 'sizes':
@@ -657,27 +639,23 @@ final class ConfigurationSubController implements AdminSubControllerInterface
                 // when submitting the form and an error remains
                 if (! $this->sizesLoadedInTpl) {
                     $is_gd = (PwgImage::get_library() === 'gd') ? true : false;
+
+                    $sizes = [
+                        'original_resize_maxwidth' => $this->currentConfig->originalResizeMaxwidth(),
+                        'original_resize_maxheight' => $this->currentConfig->originalResizeMaxheight(),
+                        'original_resize_quality' => $this->currentConfig->originalResizeQuality(),
+                    ];
+                    foreach ($sizes_checkboxes as $checkbox) {
+                        $sizes[$checkbox] = $this->checkboxValue($checkbox);
+                    }
+
                     $template->assignContext(new ConfigurationSizesTabPageContext(
                         isGd: $is_gd,
-                        sizes: [
-                            'original_resize_maxwidth' => $this->currentConfig->originalResizeMaxwidth(),
-                            'original_resize_maxheight' => $this->currentConfig->originalResizeMaxheight(),
-                            'original_resize_quality' => $this->currentConfig->originalResizeQuality(),
-                        ],
+                        sizes: $sizes,
                         derivatives: null,
                         resizeQuality: null,
                         customDerivatives: null,
                     ));
-
-                    foreach ($sizes_checkboxes as $checkbox) {
-                        $template->append(
-                            'sizes',
-                            [
-                                $checkbox => $this->checkboxValue($checkbox),
-                            ],
-                            true
-                        );
-                    }
 
                     // derivatives = multiple size
                     $enabled = $this->imageStdParams->get_defined_type_map();
@@ -1172,21 +1150,18 @@ final class ConfigurationSubController implements AdminSubControllerInterface
                 derivatives: null,
                 ferrors: null,
                 resizeQuality: null,
+                sizes: null,
             ));
 
             $this->activityService->record('system', ActivitySystem::Core, 'config', [
                 'config_section' => 'sizes',
             ]);
         } else {
+            $sizes = null;
             foreach ($original_fields as $field) {
                 if (isset($post[$field]) && is_string($post[$field])) {
-                    $template->append(
-                        'sizes',
-                        [
-                            $field => strip_tags($post[$field]), // strip_tags prevents from XSS attempt
-                        ],
-                        true
-                    );
+                    $sizes ??= [];
+                    $sizes[$field] = strip_tags($post[$field]); // strip_tags prevents from XSS attempt
                 }
             }
 
@@ -1195,6 +1170,7 @@ final class ConfigurationSubController implements AdminSubControllerInterface
                 derivatives: $pderivatives,
                 ferrors: $errors + $derivative_errors,
                 resizeQuality: $post['resize_quality'],
+                sizes: $sizes,
             ));
             $this->sizesLoadedInTpl = true;
         }

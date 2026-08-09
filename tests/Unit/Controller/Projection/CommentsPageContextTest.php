@@ -23,6 +23,7 @@ test('toArray flattens every property to its real Smarty template variable name'
         itemNumberOptionsSelected: 20,
         navbar: ['NB_PAGE' => 3],
         commentDerivativeParams: $derivativeParams,
+        comments: [['ID' => 5, 'AUTHOR' => 'jane']],
     );
 
     expect($context->toArray())->toBe([
@@ -39,5 +40,29 @@ test('toArray flattens every property to its real Smarty template variable name'
         'item_number_options_selected' => 20,
         'navbar' => ['NB_PAGE' => 3],
         'comment_derivative_params' => $derivativeParams,
+        'comments' => [['ID' => 5, 'AUTHOR' => 'jane']],
     ]);
+});
+
+test('toArray includes an empty comments list (not omitted)', function (): void {
+    $derivativeParams = new DerivativeParams(new SizingParams([100, 100]));
+
+    $context = new CommentsPageContext(
+        fAction: '/comments.php',
+        fKeyword: '',
+        fAuthor: '',
+        sinceOptions: [],
+        sinceOptionsSelected: 0,
+        sortByOptions: [],
+        sortByOptionsSelected: 'date',
+        sortOrderOptions: [],
+        sortOrderOptionsSelected: 'DESC',
+        itemNumberOptions: [],
+        itemNumberOptionsSelected: 20,
+        navbar: [],
+        commentDerivativeParams: $derivativeParams,
+        comments: [],
+    );
+
+    expect($context->toArray()['comments'])->toBe([]);
 });

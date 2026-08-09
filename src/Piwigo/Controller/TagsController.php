@@ -91,11 +91,8 @@ final class TagsController implements ControllerInterface
             $display_mode = $displayModeParam;
         }
 
-        $template->assignContext(new TagsDisplayModePageContext(
-            cloudUrl: $urlService->getRootUrl() . 'tags.php' . ($default_display_mode === 'cloud' ? '' : '?display_mode=cloud'),
-            lettersUrl: $urlService->getRootUrl() . 'tags.php' . ($default_display_mode === 'letters' ? '' : '?display_mode=letters'),
-            displayMode: $display_mode,
-        ));
+        $tpl_letters = null;
+        $tpl_tags = null;
 
         $conn = DbConnection::build();
         $tagService = $this->tagService;
@@ -138,10 +135,8 @@ final class TagsController implements ControllerInterface
 
                     $letter['TITLE'] = $current_letter;
 
-                    $template->append(
-                        'letters',
-                        $letter
-                    );
+                    $tpl_letters ??= [];
+                    $tpl_letters[] = $letter;
 
                     $current_letter = $tag_letter;
                     $letter = [
@@ -169,10 +164,8 @@ final class TagsController implements ControllerInterface
             // legacy file's own defensive unset() here was dead code.
             if (count($letter['tags']) > 0) {
                 $letter['TITLE'] = $current_letter;
-                $template->append(
-                    'letters',
-                    $letter
-                );
+                $tpl_letters ??= [];
+                $tpl_letters[] = $letter;
             }
         } else {
             // we want only the first most represented tags, so we sort
@@ -189,21 +182,27 @@ final class TagsController implements ControllerInterface
             usort($tags, $this->htmlService->tagAlphaCompare(...));
 
             foreach ($tags as $tag) {
-                $template->append(
-                    'tags',
-                    array_merge(
-                        $tag,
-                        [
-                            'URL' => $urlService->makeIndexUrl(
-                                [
-                                    'tags' => [$tag],
-                                ]
-                            ),
-                        ]
-                    )
+                $tpl_tags ??= [];
+                $tpl_tags[] = array_merge(
+                    $tag,
+                    [
+                        'URL' => $urlService->makeIndexUrl(
+                            [
+                                'tags' => [$tag],
+                            ]
+                        ),
+                    ]
                 );
             }
         }
+
+        $template->assignContext(new TagsDisplayModePageContext(
+            cloudUrl: $urlService->getRootUrl() . 'tags.php' . ($default_display_mode === 'cloud' ? '' : '?display_mode=cloud'),
+            lettersUrl: $urlService->getRootUrl() . 'tags.php' . ($default_display_mode === 'letters' ? '' : '?display_mode=letters'),
+            displayMode: $display_mode,
+            letters: $tpl_letters,
+            tags: $tpl_tags,
+        ));
 
         $themeconf = $template->get_template_vars('themeconf');
         $themeconf = is_array($themeconf) ? $themeconf : [];

@@ -412,6 +412,7 @@ final class GalleryController implements ControllerInterface
 
         $category_search_results = null;
         $no_search_results = null;
+        $tag_search_results = [];
 
         if ($section_context->section === Section::Search and $page_start === 0 and
             $section_context->chronologyField === null and $section_context->qsearchDetails !== []) {
@@ -439,12 +440,12 @@ final class GalleryController implements ControllerInterface
                 $tag['URL'] = $urlService->makeIndexUrl([
                     'tags' => [$tag],
                 ]);
-                $template->append('tag_search_results', $tag);
+                $tag_search_results[] = $tag;
             }
 
             if ($page_items === []) {
                 $search_query = $qsearchDetails['q'] ?? null;
-                $template->append('no_search_results', htmlspecialchars(is_string($search_query) ? $search_query : ''));
+                $no_search_results = [htmlspecialchars(is_string($search_query) ? $search_query : '')];
             } else {
                 $unmatched_terms = $qsearchDetails['unmatched_terms'] ?? null;
                 if (is_array($unmatched_terms) && $unmatched_terms !== []) {
@@ -524,6 +525,7 @@ final class GalleryController implements ControllerInterface
             $this->categoryCatsRenderer->render($section_context->section, $section_context->category, $section_context->startcat);
         }
 
+        $image_derivatives = [];
         $slideshow_url = null;
         if ($page_items !== []) {
             $slideshow_url = $this->categoryDefaultRenderer->render($page_items, $page_start, $page_nb_image_page, $section_context->section);
@@ -543,14 +545,11 @@ final class GalleryController implements ControllerInterface
                 unset($type_map[ImageStdParams::XXLARGE], $type_map[ImageStdParams::XLARGE]);
 
                 foreach ($type_map as $params) {
-                    $template->append(
-                        'image_derivatives',
-                        [
-                            'DISPLAY' => $this->lang->t($params->type),
-                            'URL' => $url . $params->type,
-                            'SELECTED' => $params->type === $selected_type,
-                        ]
-                    );
+                    $image_derivatives[] = [
+                        'DISPLAY' => $this->lang->t($params->type),
+                        'URL' => $url . $params->type,
+                        'SELECTED' => $params->type === $selected_type,
+                    ];
                 }
             }
         }
@@ -608,6 +607,8 @@ final class GalleryController implements ControllerInterface
             uSlideshow: $u_slideshow,
             relatedTagsAction: $related_tags_action,
             relatedTags: $related_tags_list,
+            tagSearchResults: $tag_search_results,
+            imageDerivatives: $image_derivatives,
         ));
 
         // ---------------------------------------------------------- end

@@ -33,6 +33,7 @@ use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Csrf\CsrfService;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
+use Piwigo\Db\NoMatchSentinel;
 use Piwigo\Db\SqlDialect;
 use Piwigo\Event\Location\LocBeginComments;
 use Piwigo\Event\Location\LocEndComments;
@@ -203,7 +204,7 @@ final class CommentsController implements ControllerInterface
         if ($cat_id !== null) {
             $category_ids = $this->categoryService->getSubcatIds([$cat_id]);
             if ($category_ids === []) {
-                $category_ids = [-1];
+                $category_ids = [NoMatchSentinel::ID];
             }
 
             $whereClauses[] = new SqlCondition(

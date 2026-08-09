@@ -623,7 +623,8 @@ final readonly class SectionPopulator
             // +-----------------------------------------------------------------------+
             elseif ($section === Section::ListView) {
                 // parse_section_url() (functions_url.inc.php) always sets 'list'
-                // (a dummy [-1] or a real id list) alongside 'section' => 'list'
+                // (a dummy [Db\NoMatchSentinel::ID] or a real id list)
+                // alongside 'section' => 'list'
                 assert(isset($page['list']));
                 $list_ids_raw = is_array($page['list']) ? array_filter($page['list'], is_scalar(...)) : [];
                 $list_ids = array_values(array_map(strval(...), $list_ids_raw));

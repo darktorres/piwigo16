@@ -52,6 +52,7 @@ use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
+use Piwigo\Db\NoMatchSentinel;
 use Piwigo\Event\Album\CreateVirtualCategory;
 use Piwigo\Event\Album\DeleteCategories;
 use Piwigo\Event\Album\GetCategoryPreferredImageOrders;
@@ -1577,7 +1578,7 @@ final readonly class CategoryService
                         : $this->repo->findAccessGroupIds(CategoryId::from($refCatId));
 
                     if (count($refAccess) === 0) {
-                        $refAccess[] = -1;
+                        $refAccess[] = NoMatchSentinel::ID;
                     }
 
                     // step 3, remove the inconsistant permissions from sub-albums

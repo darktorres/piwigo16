@@ -28,6 +28,7 @@ use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Core\WsContext;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
+use Piwigo\Db\NoMatchSentinel;
 use Piwigo\Group\GroupEntity;
 use Piwigo\Lang\Translator;
 use Piwigo\Permalink\PermalinkRepository;
@@ -866,7 +867,7 @@ final class UrlService implements UrlServiceInterface
             // No pictures
             if (! isset($tokens[$nextToken]) || $tokens[$nextToken] === '') {
                 // Add dummy element list
-                $page['list'][] = -1;
+                $page['list'][] = NoMatchSentinel::ID;
             }
             // With pictures list
             else {

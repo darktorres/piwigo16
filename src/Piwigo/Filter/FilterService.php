@@ -17,6 +17,7 @@ use Piwigo\Core\PageFilterHelper;
 use Piwigo\Core\PageState;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
+use Piwigo\Db\NoMatchSentinel;
 use Piwigo\Db\SqlDialect;
 use Piwigo\Filter\Request\RecentFilterRequest;
 use Piwigo\Group\GroupEntity;
@@ -177,11 +178,11 @@ final class FilterService implements FilterUpdaterInterface
                 $filter['visible_categories'] = implode(',', array_keys($filter['categories']));
                 if ($filter['visible_categories'] === '') {
                     // Must be not empty
-                    $filter['visible_categories'] = -1;
+                    $filter['visible_categories'] = NoMatchSentinel::ID;
                 }
 
                 // $filter['visible_categories'] is always non-empty here: either a
-                // non-empty string (from the implode() above) or the literal -1
+                // non-empty string (from the implode() above) or the NoMatchSentinel::ID
                 // fallback set right above when that implode() was empty.
                 $recentPeriodExpr = SqlDialect::getRecentPeriodExpression($filter_recent_period);
                 $visibleCategoriesCsv = is_string($filter['visible_categories']) ? $filter['visible_categories'] : (string) $filter['visible_categories'];
@@ -195,7 +196,7 @@ final class FilterService implements FilterUpdaterInterface
 
                 if ($filter['visible_images'] === '') {
                     // Must be not empty
-                    $filter['visible_images'] = -1;
+                    $filter['visible_images'] = NoMatchSentinel::ID;
                 }
 
                 // Save filter data on session

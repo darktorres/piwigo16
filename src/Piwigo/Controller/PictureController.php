@@ -41,6 +41,7 @@ use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Csrf\CsrfService;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
+use Piwigo\Db\NoMatchSentinel;
 use Piwigo\Event\Location\LocBeginPicture;
 use Piwigo\Event\Location\LocEndPicture;
 use Piwigo\Event\Picture\AllowIncrementElementHitCount;
@@ -229,13 +230,13 @@ final class PictureController implements ControllerInterface
             if (! isset($rank_of[$image_id])) {// the image can still be non accessible (filter/cat perm) and/or not in the set
                 // FilterState::visibleImages() always returns a string; if
                 // the filter has not been initialized yet, there is no
-                // restriction (fallback to ''). '-1' is a sentinel meaning
-                // "the filter computed an empty visible-images list" (see
-                // FilterService's own "Must be not empty" comment), not a
-                // real id to match against, so it is excluded explicitly
-                // alongside ''.
+                // restriction (fallback to ''). NoMatchSentinel::ID_STRING
+                // means "the filter computed an empty visible-images list"
+                // (see FilterService's own "Must be not empty" comment),
+                // not a real id to match against, so it is excluded
+                // explicitly alongside ''.
                 $visible_images = $this->filterState->isInitialized() ? $this->filterState->visibleImages() : '';
-                if ($visible_images !== '' && $visible_images !== '-1' &&
+                if ($visible_images !== '' && $visible_images !== NoMatchSentinel::ID_STRING &&
                   ! in_array((string) $image_id, explode(',', $visible_images), true)) {
                     $this->htmlService
                         ->pageNotFound(

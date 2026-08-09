@@ -3299,10 +3299,11 @@ final class ImageRepository extends EntityRepository
     /**
      * Distinct image ids linked to any category in $categoryIdsCsv (an
      * already-built comma-separated category id list, or the literal
-     * "-1" sentinel meaning "none"), added on/after $recentPeriodExpr (an
-     * already-built SqlDialect date expression) -- Filter\FilterService's
-     * own recent-content filter computation. Same "caller composes
-     * trusted fragments" contract as findWithConditionsPaginated() above.
+     * {@see \Piwigo\Db\NoMatchSentinel::ID_STRING} meaning "none"), added
+     * on/after $recentPeriodExpr (an already-built SqlDialect date
+     * expression) -- Filter\FilterService's own recent-content filter
+     * computation. Same "caller composes trusted fragments" contract as
+     * findWithConditionsPaginated() above.
      *
      * Stays on DBAL -- $recentPeriodExpr is a caller-composed raw SQL
      * date-arithmetic fragment, spliced directly into the WHERE clause;

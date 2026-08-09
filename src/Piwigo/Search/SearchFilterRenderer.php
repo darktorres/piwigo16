@@ -19,6 +19,7 @@ use Piwigo\Core\Lang;
 use Piwigo\Core\TemplateInterface;
 use Piwigo\Core\TimingHelper;
 use Piwigo\Core\UrlServiceInterface;
+use Piwigo\Db\NoMatchSentinel;
 use Piwigo\Permission\PermissionService;
 use Piwigo\Permission\SqlCondition;
 use Piwigo\Search\Projection\SearchAlbumsFoundPageContext;
@@ -189,7 +190,7 @@ final readonly class SearchFilterRenderer
         // we want filters to be filled with values related to current items
         // ONLY IF we have some filters filled
         if ((bool) $page['search_details']['has_filters_filled']) {
-            $searchItems = [-1];
+            $searchItems = [NoMatchSentinel::ID];
             if ($page['items'] !== []) {
                 $searchItems = $page['items'];
             }
@@ -1271,7 +1272,7 @@ final readonly class SearchFilterRenderer
             $logger->debug($debugMsg);
 
             if ($otherFiltersItems === []) {
-                $otherFiltersItems = [-1];
+                $otherFiltersItems = [NoMatchSentinel::ID];
             }
 
             // write the whole 'search_details' structure back at once (rather

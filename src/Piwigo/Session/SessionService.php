@@ -235,10 +235,11 @@ final class SessionService
 
     /**
      * `filter_visible_categories` -- Filter\FilterService writes either an
-     * imploded CSV string or the literal sentinel int `-1` (see that
-     * class's own "must be not empty" comment) -- `is_scalar()` narrowing
-     * (not `is_string()`) preserves that sentinel as `"-1"` instead of
-     * discarding it as a wrong type.
+     * imploded CSV string or the literal {@see \Piwigo\Db\NoMatchSentinel::ID}
+     * (see that class's own "must be not empty" comment) -- `is_scalar()`
+     * narrowing (not `is_string()`) preserves that sentinel as
+     * {@see \Piwigo\Db\NoMatchSentinel::ID_STRING} instead of discarding
+     * it as a wrong type.
      */
     public function getFilterVisibleCategories(): ?string
     {
@@ -248,8 +249,8 @@ final class SessionService
     }
 
     /**
-     * `filter_visible_images` -- same `-1`-sentinel-preserving contract as
-     * {@see getFilterVisibleCategories()}.
+     * `filter_visible_images` -- same {@see \Piwigo\Db\NoMatchSentinel}-preserving
+     * contract as {@see getFilterVisibleCategories()}.
      */
     public function getFilterVisibleImages(): ?string
     {

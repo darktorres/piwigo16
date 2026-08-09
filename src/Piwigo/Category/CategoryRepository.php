@@ -1486,8 +1486,8 @@ final class CategoryRepository
 
     /**
      * @param  list<int>  $keepIds  a non-empty list is guaranteed by the
-     *   caller (-1 is substituted when no reference access exists, matching
-     *   the original's own `$ref_access[] = -1;` sentinel)
+     *   caller ({@see \Piwigo\Db\NoMatchSentinel::ID} is substituted when
+     *   no reference access exists)
      * @param  list<int>  $catIds
      *
      * Item 15 audit: `$table`/`$field` converted from arbitrary runtime

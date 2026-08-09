@@ -270,16 +270,13 @@ final class InstallServiceTest extends IntegrationTestCase
     // installDbConnect()'s "your MySQL version is too old" throw (its own
     // line 131, guarding `version_compare($version, SqlDialect::
     // REQUIRED_MYSQL_VERSION, '<')`) is left uncovered: REQUIRED_MYSQL_VERSION
-    // is '5.0.0' (a `public const string`, immutable -- no seam to lower
+    // is '8.4.10' (a `public const string`, immutable -- no seam to lower
     // it from a test), and installDbConnect() builds its own Connection
     // internally via DbConnection::build() (which resolves DbCredentials
-    // via its own private dbCredentials() helper) with no
-    // parameter to substitute a fake one reporting an old `SELECT
-    // VERSION()` result. Reaching this branch for real would need an
-    // actual MySQL/MariaDB server built before 5.0 (released 2005)
-    // reachable from this environment, which doesn't exist here; every
-    // real server this suite (or any real deployment) can connect to
-    // reports a modern version well above the floor.
+    // via its own private dbCredentials() helper) with no parameter to
+    // substitute a fake one reporting an older `SELECT VERSION()` result.
+    // This environment's real server is pinned to that exact floor, so it
+    // can never itself report a version below it.
 
     // ------------------------------------------------------ activateCoreThemes
 

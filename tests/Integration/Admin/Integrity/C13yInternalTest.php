@@ -104,8 +104,9 @@ test('c13y_exif adds no anomaly when exif_read_data() is available', function ()
 // satisfy from inside a real Composer-installed run -- there is no config
 // knob or fixture that flips this without editing the constant itself
 // (not a bug, so out of this pass's scope). SqlDialect::
-// REQUIRED_MYSQL_VERSION ('5.0.0') is equally unreachable against any DB
-// actually usable by this app. c13y_exif()'s branch is the exact same
+// REQUIRED_MYSQL_VERSION ('8.4.10') is equally unreachable here: this
+// environment's real MySQL server is pinned to that exact floor, so it
+// can never report a version below it. c13y_exif()'s branch is the exact same
 // "verified untestable without breaking a real runtime guarantee" shape
 // tests/Integration/MetadataServiceTest.php already documents for its own
 // exif_read_data() guard: function_exists() can't be forced to lie about

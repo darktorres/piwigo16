@@ -26,20 +26,15 @@ use Piwigo\Core\Env;
  */
 final class SqlDialect
 {
-    public const string REQUIRED_MYSQL_VERSION = '5.0.0';
+    /**
+     * Pinned to the exact validated MySQL version, not just its window-functions floor (8.0.0).
+     */
+    public const string REQUIRED_MYSQL_VERSION = '8.4.10';
 
     /**
-     * pgsql support pass: 13.0 specifically -- the real, discovered floor
-     * for a feature this codebase actually depends on
-     * (`DROP DATABASE ... WITH (FORCE)`, verified live this session as
-     * genuinely needed by IntegrationTestCase::resetDatabase() and
-     * unavailable before Postgres 13), not an arbitrary/aspirational
-     * number -- same "loose sanity floor, not a strict
-     * hard-required-stack-matching gate" philosophy `REQUIRED_MYSQL_VERSION`
-     * above already has (that constant's own 5.0.0 is far below this
-     * codebase's real MySQL 9.7 target too).
+     * Pinned to the exact validated PostgreSQL version, not just its `DROP DATABASE ... WITH (FORCE)` floor (13.0).
      */
-    public const string REQUIRED_POSTGRES_VERSION = '13.0';
+    public const string REQUIRED_POSTGRES_VERSION = '18.4';
 
     /**
      * pgsql support pass: real bug found live -- callers building a raw

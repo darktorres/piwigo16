@@ -1684,18 +1684,46 @@ final class CurrentConfig
      * way `ConfigService::encode()` encodes it; the read side is a plain
      * `hydrate()`-driven `json_decode()`, with no manual unserialize()
      * anywhere.
-     * @var array<mixed>|null
+     * @var array<string, int>|null
      */
-    public ?array $blkMenubar = null;
+    public ?array $blkMenubar = null {
+        /**
+         * @param array<mixed>|null $value
+         */
+        set(?array $value) {
+            $this->blkMenubar = $value === null ? null : self::sanitizeBlkMenubar($value);
+        }
+    }
+
+    /**
+     * Non-numeric entries are dropped, not coerced to 0 -- Menu\BlockManager's
+     * own missing-key fallback (`$idx * 50`) then applies the same way it
+     * already does for an absent key, instead of a coerced 0 being
+     * misread as "explicitly hidden" (`$pos > 0` gates visibility).
+     *
+     * @param array<mixed> $value
+     * @return array<string, int>
+     */
+    private static function sanitizeBlkMenubar(array $value): array
+    {
+        $result = [];
+        foreach ($value as $key => $val) {
+            if (is_string($key) && is_numeric($val)) {
+                $result[$key] = (int) $val;
+            }
+        }
+        return $result;
+    }
 
     // === cache_sizes ===
     /**
-     * Serialized [name, value] rows of cache-directory sizes computed by the
-     * maintenance page, cached to avoid recomputing on every dashboard/
-     * maintenance load.
-     * @var array<mixed>|null
+     * Cache-directory sizes computed by the maintenance page, cached to
+     * avoid recomputing on every dashboard/maintenance load. No `set` hook
+     * needed -- ConfigService::hydrate()'s special case builds the VO via
+     * CacheSizesSnapshot::fromArray() before assignment, same as
+     * recentPostDates.
      */
-    public private(set) ?array $cacheSizes = null;
+    public private(set) ?CacheSizesSnapshot $cacheSizes = null;
 
     // === chmod_value ===
     /**
@@ -1800,36 +1828,53 @@ final class CurrentConfig
     /**
      * Factory-default search-filter definitions (access level + default-on
      * state per filter key); seeds the 'filters_views' DB row on first use and
-     * drives the search filters admin page.
-     * @var array<string, array{access: string, default: bool}>
+     * drives the search filters admin page. A property default can't call
+     * `new` directly, so the real default is built lazily on first read via
+     * the private backing field below, same pattern as chmodValue/
+     * recentPostDates.
+     * @var array<string, FilterViewDefinition>|null
      */
-    public array $defaultFiltersViews = self::DEFAULT_FILTERS_VIEWS {
+    private ?array $defaultFiltersViewsStorage = null;
+
+    /**
+     * @var array<string, FilterViewDefinition>
+     */
+    public array $defaultFiltersViews {
+        get => $this->defaultFiltersViewsStorage ??= self::buildDefaultFiltersViews();
         /**
          * @param array<mixed>|null $value
          */
         set(?array $value) {
-            $this->defaultFiltersViews = self::sanitizeDefaultFiltersViews($value);
+            $this->defaultFiltersViewsStorage = self::sanitizeDefaultFiltersViews($value);
         }
     }
 
     /**
+     * @return array<string, FilterViewDefinition>
+     */
+    private static function buildDefaultFiltersViews(): array
+    {
+        $result = [];
+        foreach (self::DEFAULT_FILTERS_VIEWS as $key => $entry) {
+            $result[$key] = new FilterViewDefinition(access: $entry['access'], default: $entry['default']);
+        }
+        return $result;
+    }
+
+    /**
      * @param array<mixed>|null $value
-     * @return array<string, array{access: string, default: bool}>
+     * @return array<string, FilterViewDefinition>
      */
     private static function sanitizeDefaultFiltersViews(?array $value): array
     {
+        $defaults = self::buildDefaultFiltersViews();
         if ($value === null) {
-            return self::DEFAULT_FILTERS_VIEWS;
+            return $defaults;
         }
         $result = [];
-        foreach (self::DEFAULT_FILTERS_VIEWS as $key => $defaultEntry) {
+        foreach ($defaults as $key => $defaultEntry) {
             $entry = $value[$key] ?? null;
-            $result[$key] = is_array($entry) && is_string($entry['access'] ?? null) && is_bool($entry['default'] ?? null)
-                ? [
-                    'access' => $entry['access'],
-                    'default' => $entry['default'],
-                ]
-                : $defaultEntry;
+            $result[$key] = (is_array($entry) ? FilterViewDefinition::tryFromArray($entry) : null) ?? $defaultEntry;
         }
         return $result;
     }
@@ -1844,11 +1889,36 @@ final class CurrentConfig
 
     // === extents_for_templates ===
     /**
-     * Comma-separated list of template file extensions recognised by the
-     * theme engine.
-     * @var array<mixed>
+     * Per-template-file handle/URL-keyword/theme overrides applied by
+     * Template::set_extents() -- keyed by template filename.
+     * @var array<string, TemplateExtension>
      */
-    public array $extentsForTemplates = [];
+    public array $extentsForTemplates = [] {
+        /**
+         * @param array<mixed> $value
+         */
+        set(array $value) {
+            $this->extentsForTemplates = self::sanitizeExtentsForTemplates($value);
+        }
+    }
+
+    /**
+     * @param array<mixed> $value
+     * @return array<string, TemplateExtension>
+     */
+    private static function sanitizeExtentsForTemplates(array $value): array
+    {
+        $result = [];
+        foreach ($value as $key => $entry) {
+            if (is_string($key) && is_array($entry)) {
+                $extension = TemplateExtension::tryFromArray($entry);
+                if ($extension !== null) {
+                    $result[$key] = $extension;
+                }
+            }
+        }
+        return $result;
+    }
 
     // === file_ext ===
     /**
@@ -1931,19 +2001,67 @@ final class CurrentConfig
     ];
 
     /**
-     * Pages on which the tag/date filter UI is displayed.
-     * @var array<string, array<string, bool>>
+     * Pages on which the tag/date filter UI is displayed. A property
+     * default can't call `new` directly, so the real default is built
+     * lazily on first read via the private backing field below, same
+     * pattern as chmodValue/recentPostDates.
+     * @var array<string, PageFilterFlags>|null
      */
-    public array $filterPages = self::DEFAULT_FILTER_PAGES;
+    private ?array $filterPagesStorage = null;
+
+    /**
+     * @var array<string, PageFilterFlags>
+     */
+    public array $filterPages {
+        get => $this->filterPagesStorage ??= self::buildDefaultFilterPages();
+        /**
+         * @param array<mixed>|null $value
+         */
+        set(?array $value) {
+            $this->filterPagesStorage = self::sanitizeFilterPages($value);
+        }
+    }
+
+    /**
+     * @return array<string, PageFilterFlags>
+     */
+    private static function buildDefaultFilterPages(): array
+    {
+        $result = [];
+        foreach (self::DEFAULT_FILTER_PAGES as $key => $entry) {
+            $result[$key] = PageFilterFlags::fromArray($entry);
+        }
+        return $result;
+    }
+
+    /**
+     * @param array<mixed>|null $value
+     * @return array<string, PageFilterFlags>
+     */
+    private static function sanitizeFilterPages(?array $value): array
+    {
+        if ($value === null) {
+            return self::buildDefaultFilterPages();
+        }
+        $result = [];
+        foreach ($value as $key => $entry) {
+            if (is_string($key) && is_array($entry)) {
+                $result[$key] = PageFilterFlags::fromArray($entry);
+            }
+        }
+        return $result;
+    }
 
     // === filters_views ===
     /**
      * Admin-customized search-filter definitions, lazily seeded from
      * 'default_filters_views' the first time the search filters admin page is
-     * saved. Absent (falls back to defaultFiltersViews()) until then.
-     * @var array<mixed>|null
+     * saved. Absent (falls back to defaultFiltersViews) until then. No `set`
+     * hook needed -- ConfigService::hydrate()'s special case builds the VO
+     * via FilterViewsSelection::fromArray() before assignment, same as
+     * recentPostDates.
      */
-    public ?array $filtersViews = null;
+    public ?FilterViewsSelection $filtersViews = null;
 
     // === format_ext ===
     /**
@@ -2009,10 +2127,32 @@ final class CurrentConfig
 
     // === links ===
     /**
-     * Additional navigation links shown in the gallery menu.
-     * @var array<mixed>
+     * Additional navigation links shown in the gallery menu, keyed by URL.
+     * @var array<string, MenuLink>
      */
-    public array $links = [];
+    public array $links = [] {
+        /**
+         * @param array<mixed> $value
+         */
+        set(array $value) {
+            $this->links = self::sanitizeLinks($value);
+        }
+    }
+
+    /**
+     * @param array<mixed> $value
+     * @return array<string, MenuLink>
+     */
+    private static function sanitizeLinks(array $value): array
+    {
+        $result = [];
+        foreach ($value as $key => $entry) {
+            if (is_string($key) && (is_array($entry) || is_string($entry))) {
+                $result[$key] = MenuLink::fromArray($entry);
+            }
+        }
+        return $result;
+    }
 
     // === metadata_keyword_separator_regex ===
     /**
@@ -2277,30 +2417,13 @@ final class CurrentConfig
 
     // === update_notify_last_notification ===
     /**
-     * Serialized {version, notified_on} of the last update-availability
-     * notification shown to the admin. Genuine absence before the first
-     * check.
-     * @var array{version?: mixed, notified_on?: mixed}|null
+     * The last update-availability notification shown to the admin.
+     * Genuine absence before the first check. No `set` hook needed --
+     * ConfigService::hydrate()'s special case builds the VO via
+     * UpdateNotification::fromArray() before assignment, same as
+     * recentPostDates.
      */
-    public ?array $updateNotifyLastNotification = null {
-        /**
-         * @param array<mixed>|null $value
-         */
-        set(?array $value) {
-            if ($value === null) {
-                $this->updateNotifyLastNotification = null;
-                return;
-            }
-            $result = [];
-            if (array_key_exists('version', $value)) {
-                $result['version'] = $value['version'];
-            }
-            if (array_key_exists('notified_on', $value)) {
-                $result['notified_on'] = $value['notified_on'];
-            }
-            $this->updateNotifyLastNotification = $result;
-        }
-    }
+    public ?UpdateNotification $updateNotifyLastNotification = null;
 
     // === use_exif_mapping ===
     /**
@@ -2413,11 +2536,13 @@ final class CurrentConfig
         foreach ($reflection->getProperties() as $property) {
             // isStatic() filters the class's own static properties (none
             // today, kept defensively). chmodValueStorage/
-            // recentPostDatesStorage are private implementation detail
-            // behind their own public virtual property (chmodValue/
-            // recentPostDates) -- reported under that name via the loop
-            // below instead, not duplicated here.
-            if ($property->isStatic() || in_array($property->getName(), ['chmodValueStorage', 'recentPostDatesStorage'], true)) {
+            // recentPostDatesStorage/defaultFiltersViewsStorage/
+            // filterPagesStorage are private implementation detail behind
+            // their own public virtual property (chmodValue/
+            // recentPostDates/defaultFiltersViews/filterPages) -- reported
+            // under that name via the loop below instead, not duplicated
+            // here.
+            if ($property->isStatic() || in_array($property->getName(), ['chmodValueStorage', 'recentPostDatesStorage', 'defaultFiltersViewsStorage', 'filterPagesStorage'], true)) {
                 continue;
             }
             $value = $property->getValue($this);
@@ -2465,11 +2590,11 @@ final class CurrentConfig
      * equivalent guard on Kernel's and ShutdownHandler's own
      * test-isolation reset methods. Restores every property to its own
      * declared default, reflectively. chmodValueStorage/
-     * recentPostDatesStorage have no declared default of their own (their
-     * public virtual property is fully hooked, so Reflection reports no
-     * usable default for it) -- nulling the backing field directly
-     * restores the same "not explicitly set" state their own get hook
-     * already treats as the default.
+     * recentPostDatesStorage/defaultFiltersViewsStorage/filterPagesStorage
+     * have no declared default of their own (their public virtual property
+     * is fully hooked, so Reflection reports no usable default for it) --
+     * nulling the backing field directly restores the same "not explicitly
+     * set" state their own get hook already treats as the default.
      */
     public function reset(): void
     {
@@ -2479,20 +2604,20 @@ final class CurrentConfig
                 continue;
             }
             $name = $property->getName();
-            if (in_array($name, ['chmodValueStorage', 'recentPostDatesStorage'], true)) {
+            if (in_array($name, ['chmodValueStorage', 'recentPostDatesStorage', 'defaultFiltersViewsStorage', 'filterPagesStorage'], true)) {
                 $property->setValue($this, null);
                 continue;
             }
-            // chmodValue/recentPostDates themselves: already reset via
-            // their own backing field above -- their `set` hook only
-            // accepts a real int/NotificationConfig, not the null
-            // getDefaultValue() would otherwise try to pass it (see
-            // verified fact #6 in the conversion plan: a fully get+set
-            // hooked property reports no usable default). themesPath/
-            // combinedDir/derivativeDir have no backing state of their
-            // own at all -- get-only, computed from themesDir/
-            // dataLocation, which reset normally on their own turn.
-            if (in_array($name, ['chmodValue', 'recentPostDates', 'themesPath', 'combinedDir', 'derivativeDir'], true)) {
+            // chmodValue/recentPostDates/defaultFiltersViews/filterPages
+            // themselves: already reset via their own backing field above
+            // -- their `set` hook only accepts a real
+            // int/NotificationConfig/array, not the null getDefaultValue()
+            // would otherwise try to pass it (a fully get+set hooked
+            // property reports no usable default). themesPath/combinedDir/
+            // derivativeDir have no backing state of their own at all --
+            // get-only, computed from themesDir/dataLocation, which reset
+            // normally on their own turn.
+            if (in_array($name, ['chmodValue', 'recentPostDates', 'defaultFiltersViews', 'filterPages', 'themesPath', 'combinedDir', 'derivativeDir'], true)) {
                 continue;
             }
             $property->setValue($this, $property->getDefaultValue());

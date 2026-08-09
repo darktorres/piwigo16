@@ -59,8 +59,7 @@ use Symfony\Component\Mime\Email;
  * mailGroup()/mail()/sendMailTest() -- the real DB-backed, network-touching
  * methods this class's own MailServiceTest (Unit suite) deliberately
  * doesn't reach (that file only exercises pure helpers -- formatEmail(),
- * unformatEmail(), getCleanRecipientsList(), etc). See
- * /home/torres/.claude/plans/piped-enchanting-spark.md, Wave 1.
+ * unformatEmail(), getCleanRecipientsList(), etc).
  *
  * Same deterministic-delivery-failure trick as
  * NotificationByMailSenderTest (see that class's own docblock for the full

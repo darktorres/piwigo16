@@ -12,8 +12,7 @@ use Piwigo\Db\Tables;
 
 /**
  * Ws\PwgImages::setInfo() (pwg.images.setInfo) -- had zero dedicated test
- * coverage (see /home/torres/.claude/plans/piped-enchanting-spark.md, Wave
- * 1): single_value_mode (fill_if_empty/replace/invalid),
+ * coverage: single_value_mode (fill_if_empty/replace/invalid),
  * multiple_value_mode (append/replace/invalid) for tag_ids, the categories
  * relation param (which delegates to the private addImageCategoryRelations()),
  * and the allow_html_descriptions-gated strip_tags() branch.
@@ -197,8 +196,7 @@ final class WsImagesSetInfoTest extends ContractTestCase
     // 'date_creation']` array-literal's own opening-line statement (~2312)
     // shows as "uncovered" in raw line-coverage despite every test above
     // reaching and exercising it -- a known OPcache constant-array-folding
-    // artifact (see MEMORY.md feedback_opcache_constant_array_folding_coverage_artifact.md):
-    // a pure-literal array with no variables gets folded at compile time,
+    // artifact: a pure-literal array with no variables gets folded at compile time,
     // so Xdebug can't attribute a real hit to that source line. Not a real
     // gap; no test added for it here.
 

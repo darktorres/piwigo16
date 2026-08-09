@@ -11,8 +11,7 @@ use Piwigo\Db\Tables;
 
 /**
  * Ws\PwgImages::filteredSearchCreate() (`pwg.images.filteredSearch.create`) --
- * was 0/154 lines covered (Wave 1 of the coverage-gap closure plan, see
- * /home/torres/.claude/plans/piped-enchanting-spark.md). Pure request
+ * was 0/154 lines covered. Pure request
  * validation + Search\SearchRepository::insertSearch() persistence, no file
  * I/O -- every branch is reachable through the WS route itself, so
  * assertions read back the persisted `rules` JSON column directly rather

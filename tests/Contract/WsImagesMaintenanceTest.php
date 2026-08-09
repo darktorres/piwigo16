@@ -10,8 +10,7 @@ use Piwigo\Db\DbConnection;
 use Piwigo\Db\Tables;
 
 /**
- * Ws\PwgImages maintenance/format methods (Wave 1 of the coverage-gap
- * closure plan, see /home/torres/.claude/plans/piped-enchanting-spark.md):
+ * Ws\PwgImages maintenance/format methods:
  * setMd5sum (0/13), syncMetadata (0/34), deleteOrphans (0/11),
  * formats.delete (0/57), formats.searchImage (0/59), checkFiles (0/25) --
  * all admin_only + post_only, all reachable through the real WS route.

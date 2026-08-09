@@ -28,8 +28,7 @@ use Piwigo\Session\SessionService;
  * PasswordController's password-reset-success email flow, whose own
  * Browser tests only ever exercise a fixture user with zero API keys (the
  * common case), so the "at least one key exists, some available/expired/
- * revoked" filtering loop itself was never exercised (see
- * /home/torres/.claude/plans/piped-enchanting-spark.md, Wave 1). Hits the
+ * revoked" filtering loop itself was never exercised. Hits the
  * real service/repository directly rather than the full password-reset
  * flow -- much less setup for the same branch coverage.
  */

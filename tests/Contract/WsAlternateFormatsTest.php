@@ -28,8 +28,7 @@ use Piwigo\Db\Tables;
  *    below, but stays flagged as a coverage gap regardless -- a bare
  *    literal array (`[0, 1, 2, 4, 8]`) on its own line is exactly this
  *    project's own documented "OPcache constant-array-folding coverage
- *    artifact" precedent (see that feedback file / MEMORY.md); not a real
- *    gap.
+ *    artifact" precedent; not a real gap.
  */
 final class WsAlternateFormatsTest extends ContractTestCase
 {

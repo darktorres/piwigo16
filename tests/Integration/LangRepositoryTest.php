@@ -14,8 +14,7 @@ use Piwigo\Lang\LanguageEntity;
 use Piwigo\Lang\Projection\LanguageListing;
 
 /**
- * Piwigo\Lang\LangRepository -- had no dedicated test file (see
- * /home/torres/.claude/plans/piped-enchanting-spark.md, Wave 1); only
+ * Piwigo\Lang\LangRepository -- had no dedicated test file; only
  * ever exercised indirectly through LangService::getLanguages().
  */
 final class LangRepositoryTest extends IntegrationTestCase

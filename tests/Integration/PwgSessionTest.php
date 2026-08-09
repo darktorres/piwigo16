@@ -18,8 +18,7 @@ use Piwigo\Session\SessionService;
 
 /**
  * Piwigo\Session\PwgSession -- the SessionHandlerInterface adapter
- * registered via session_set_save_handler(), had zero dedicated coverage
- * (see /home/torres/.claude/plans/piped-enchanting-spark.md, Wave 1).
+ * registered via session_set_save_handler(), had zero dedicated coverage.
  * SessionServiceTest (Unit suite) deliberately only covers the
  * DB-independent methods (an unreachable db_host, by design); the real
  * DB-backed sessionRead()/sessionWrite()/sessionDestroy()/sessionGc()

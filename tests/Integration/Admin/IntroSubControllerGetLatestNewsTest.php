@@ -11,8 +11,7 @@ use Piwigo\Core\Paths;
 
 /**
  * Piwigo\Controller\Admin\IntroSubController::getLatestNews() -- had zero
- * coverage (see /home/torres/.claude/plans/piped-enchanting-spark.md, Wave
- * 1). Private, so reached via ReflectionMethod; the live-fetch branch
+ * coverage. Private, so reached via ReflectionMethod; the live-fetch branch
  * (HttpClientService::fetch() against the real piwigo.org news endpoint) is
  * deliberately NOT exercised here -- an automated test making a real
  * outbound HTTP call to a third-party service would be flaky by

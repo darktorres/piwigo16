@@ -20,10 +20,9 @@ use Piwigo\Template\PwgTemplateAdapter;
 
 /**
  * Piwigo\Template\PwgTemplateAdapter -- the Smarty-registered object behind
- * `derivative`/`derivative_url` template calls; had zero dedicated coverage
- * (see /home/torres/.claude/plans/piped-enchanting-spark.md, Wave 1). Both
- * need the same real DB-backed ImageStdParams/DerivativeImage::
- * setUrlService() wiring already established this session (see
+ * `derivative`/`derivative_url` template calls; had zero dedicated coverage.
+ * Both need the same real DB-backed ImageStdParams/DerivativeImage::
+ * setUrlService() wiring (see
  * NotificationByMailSenderTest/MailServiceTest's own docblocks) -- placed in
  * Integration, not Unit, for that reason.
  */

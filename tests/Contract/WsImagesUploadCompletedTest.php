@@ -11,8 +11,7 @@ use Piwigo\Db\Tables;
 
 /**
  * Ws\PwgImages::uploadCompleted() (pwg.images.uploadCompleted) -- had zero
- * dedicated test coverage (see /home/torres/.claude/plans/piped-enchanting-
- * spark.md, Wave 1). admin_only, CSRF-token-gated; notifies the caller the
+ * dedicated test coverage. admin_only, CSRF-token-gated; notifies the caller the
  * lounge should be emptied and returns the target category's fresh photo
  * count.
  *

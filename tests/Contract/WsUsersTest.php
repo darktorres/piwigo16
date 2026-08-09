@@ -310,9 +310,8 @@ final class WsUsersTest extends ContractTestCase
     // coverage despite every 'basics'/'all'-display test in this file
     // reaching and exercising it (that branch is unconditional once
     // `$params['display'] !== 'none'`, which every such test satisfies) --
-    // a known OPcache constant-array-folding artifact (see MEMORY.md
-    // feedback_opcache_constant_array_folding_coverage_artifact.md, and
-    // the identical pattern already documented in
+    // a known OPcache constant-array-folding artifact (the identical
+    // pattern already documented in
     // WsImagesSetInfoTest::test_setInfo_file_param_is_forbidden_on_synchronized_photos's
     // own preceding comment): a pure-literal array with no variables gets
     // folded at compile time, so line-based coverage can't attribute a

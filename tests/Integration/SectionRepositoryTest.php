@@ -13,8 +13,7 @@ use Piwigo\Permission\SqlCondition;
 use Piwigo\Section\SectionRepository;
 
 /**
- * Piwigo\Section\SectionRepository -- had no dedicated test file (see
- * /home/torres/.claude/plans/piped-enchanting-spark.md, Wave 1); only
+ * Piwigo\Section\SectionRepository -- had no dedicated test file; only
  * ever exercised indirectly through SectionPopulator/SectionInitializer's
  * own hand-built SQL. Same direct-repository-method pattern as
  * SearchRepositoryTest's own sibling class.

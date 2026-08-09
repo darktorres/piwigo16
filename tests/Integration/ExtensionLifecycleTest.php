@@ -677,11 +677,10 @@ namespace Piwigo\Tests\Integration {
             // actually returning status 'ok', which itself requires the
             // static, non-injectable HttpClientService::fetchToFile() to
             // succeed against a real PEM server -- PemCatalog is `final
-            // readonly` (no interface, no fake-able seam) and is already on
-            // this effort's own documented skip list (see
+            // readonly` (no interface, no fake-able seam) and shares the
+            // same documented "no fake-able seam" limitation as
             // HttpClientServiceTest's and PemCatalogTest's own identical
-            // "no fake-able seam" limitation). That 'ok'-branch body is not
-            // chased here.
+            // note. That 'ok'-branch body is not chased here.
             //
             // The extraction ATTEMPT itself and its non-'ok' ELSE branch
             // ARE reachable deterministically and offline, though: pointing

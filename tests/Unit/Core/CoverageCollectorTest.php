@@ -138,7 +138,7 @@ test('registerIfActive is a no-op when test mode is not active', function (): vo
     unset($_SERVER['HTTP_X_PIWIGO_ENV']);
 
     try {
-        expect(static fn () => CoverageCollector::registerIfActive(Paths::fromRoot('/home/torres/piwigo17-rewrite')))->not->toThrow(Throwable::class);
+        expect(static fn () => CoverageCollector::registerIfActive(Paths::fromRoot('/tmp/piwigo-coverage-collector-test')))->not->toThrow(Throwable::class);
     } finally {
         if ($header !== null) {
             $_SERVER['HTTP_X_PIWIGO_ENV'] = $header;
@@ -149,7 +149,7 @@ test('registerIfActive is a no-op when test mode is not active', function (): vo
 test('registerIfActive is a no-op when the coverage header is absent, the real state of every non-coverage test run', function (): void {
     expect($_SERVER['HTTP_X_PIWIGO_COVERAGE'] ?? null)->not->toBe('1');
 
-    expect(static fn () => CoverageCollector::registerIfActive(Paths::fromRoot('/home/torres/piwigo17-rewrite')))->not->toThrow(Throwable::class);
+    expect(static fn () => CoverageCollector::registerIfActive(Paths::fromRoot('/tmp/piwigo-coverage-collector-test')))->not->toThrow(Throwable::class);
 });
 
 /**
@@ -179,7 +179,7 @@ test('registerIfActive reaches the real pcov activation path when both guards pa
         // register_shutdown_function() callback got queued. That queued
         // callback is a guaranteed no-op by the time this whole Pest
         // process actually shuts down (also documented above).
-        expect(static fn () => CoverageCollector::registerIfActive(Paths::fromRoot('/home/torres/piwigo17-rewrite')))->not->toThrow(Throwable::class);
+        expect(static fn () => CoverageCollector::registerIfActive(Paths::fromRoot('/tmp/piwigo-coverage-collector-test')))->not->toThrow(Throwable::class);
     } finally {
         if ($originalCoverageHeader === null) {
             unset($_SERVER['HTTP_X_PIWIGO_COVERAGE']);

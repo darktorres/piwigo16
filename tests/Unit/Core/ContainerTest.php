@@ -55,7 +55,7 @@ test('build without a $paths argument does not register a Paths definition at al
 });
 
 test('build with a $paths argument registers it so Paths::class resolves to that same instance', function (): void {
-    $paths = Paths::fromRoot('/home/torres/piwigo17-rewrite');
+    $paths = Paths::fromRoot('/tmp/piwigo-container-test');
 
     $container = Container::build(paths: $paths);
 

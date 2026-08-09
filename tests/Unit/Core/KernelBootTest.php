@@ -55,7 +55,7 @@ test('reset also resets CurrentPaths, not just its own booted/container state', 
     // live container -- proves Kernel::reset() nulling the container is
     // enough on its own to make CurrentPathsTestFactory::get() throw again
     // too, with no separate cascade call needed.
-    Kernel::boot(Paths::fromRoot('/home/torres/piwigo17-rewrite'));
+    Kernel::boot(Paths::fromRoot('/tmp/piwigo-kernel-boot-test'));
     // Confirms the baseline works before reset -- proves the throw below
     // is really caused by reset(), not some pre-existing issue.
     expect(static fn () => CurrentPathsTestFactory::get())->not->toThrow(LogicException::class);

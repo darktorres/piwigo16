@@ -192,10 +192,9 @@ final class HistoryRepositoryTest extends IntegrationTestCase
 
     public function test_sum_page_views_sums_only_year_only_rows(): void
     {
-        // Item 14 DQL audit re-audit (Item 14 Sub-phase B2): had zero
-        // existing coverage. month IS NULL is summarize()'s own
-        // "whole year" rollup row -- the month-level row below must not
-        // also get counted, or the sum would double.
+        // month IS NULL is summarize()'s own "whole year" rollup row --
+        // the month-level row below must not also get counted, or the
+        // sum would double.
         $this->insertSummary(2026, null, null, null, 100, 1, 50);
         $this->insertSummary(2027, null, null, null, 25, 51, 60);
         $this->insertSummary(2026, 7, null, null, 999, 1, 30);
@@ -293,13 +292,11 @@ final class HistoryRepositoryTest extends IntegrationTestCase
     }
 
     /**
-     * SQL-modernization audit: findLastByType()/findMonthlyRows()/
-     * findDailyRowsForMonths()/findAverageDailyPageViewsSince() had zero
-     * direct coverage before this pass -- Admin\StatsPageRenderer is
-     * their one real caller, and its own Browser test
-     * (tests/Browser/StatsPageRendererTest.php) can't run in this
-     * worktree (Playwright isn't installed here), so this closes what
-     * would otherwise be a real gap for these 4 converted methods.
+     * findLastByType()/findMonthlyRows()/findDailyRowsForMonths()/
+     * findAverageDailyPageViewsSince() are covered directly here --
+     * Admin\StatsPageRenderer is their one real caller, and its own
+     * Browser test (tests/Browser/StatsPageRendererTest.php) can't run
+     * in this worktree (Playwright isn't installed here).
      */
     public function test_find_last_by_type_filters_and_orders_per_hierarchy_level(): void
     {
@@ -468,9 +465,6 @@ final class HistoryRepositoryTest extends IntegrationTestCase
         $this->conn->executeStatement('DELETE FROM ' . Tables::historySummary());
     }
 
-    /**
-     * Item 15 audit: had zero existing coverage.
-     */
     public function test_update_last_visit_now_sets_last_visit_on_the_real_user_infos_row(): void
     {
         $before = $this->conn->createQueryBuilder()

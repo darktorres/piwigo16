@@ -8,19 +8,18 @@ use Doctrine\DBAL\ParameterType;
 use Piwigo\Permission\SqlCondition;
 
 /**
- * SQL-modernization audit, Item 14 Sub-phase C3: typed replacement for
+ * Typed replacement for
  * {@see \Piwigo\Ws\WsHelper::stdImageSqlFilterCriteria()}'s own former raw
  * `Piwigo\Permission\SqlCondition` return -- the shared "f_*" range-filter
  * set merged into every WS method that exposes generic image filtering
  * (`pwg.images.search`, `pwg.categories.getImages`,
- * `pwg.getMissingDerivatives`, `pwg.tags.getImages`), confirmed exactly 11
- * fields by reading that method's own former full body: 5 simple numeric
+ * `pwg.getMissingDerivatives`, `pwg.tags.getImages`): 5 simple numeric
  * range pairs (rate/hit/ratio, each min+max), 1 upper-bound-only level
  * check, and 2 date range pairs (available/created). Every field null =
  * "no restriction on this dimension" -- each consuming repository method
  * applies only the ones actually set, same "each repository translates its
- * own subset" pattern {@see \Piwigo\Permission\PermissionCriteria} (Item 14
- * Sub-phase C1) also uses.
+ * own subset" pattern {@see \Piwigo\Permission\PermissionCriteria} also
+ * uses.
  */
 final readonly class ImageFilterCriteria
 {

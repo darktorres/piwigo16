@@ -8,33 +8,75 @@ use Piwigo\Config\CurrentConfig;
 use Piwigo\Db\EntityManagerFactory;
 use Piwigo\PluginConfig\EventDispatcher;
 
-// Guards the property <-> accessor contract on Piwigo\Config\CurrentConfig:
-// every config-value property has a same-named getter and setter, and
-// every getter/setter genuinely reads/writes its own property rather than
-// a computed value -- minus a small allow-list for framework methods and
-// the 2 properties with a real, documented reason to compute instead of
-// trivially return/assign (see their own docblocks: chmodValue's
-// SAPI-dependent fallback, recentPostDates's can't-`new`-in-a-property-
-// default lazy build).
+// Guards the property contract on Piwigo\Config\CurrentConfig: every
+// config-value property is publicly readable, write access matches an
+// explicit private(set) allow-list, and a `get`/`set` hook exists only on
+// the documented properties that carry real logic beyond a plain
+// pass-through.
 //
-// CurrentConfig's config-key properties/accessors are instance members
-// (not static). This file's own reflection filters out the class's one
-// remaining static property (the `current()` shim's memoized $fallback,
-// not a config key) and invokes getters/setters against a real instance.
+// CurrentConfig's config-key properties are instance members (not static).
+// This file's own reflection filters those out, plus the 2 private backing
+// fields (chmodValueStorage/recentPostDatesStorage) behind chmodValue/
+// recentPostDates -- implementation detail of those 2 hooked properties,
+// not config keys of their own.
 
-const SCHEMA_INTEGRITY_METHOD_ALLOW_LIST = [
-    // Bulk readers / test helpers
-    'dumpForLog', 'defaultsArray', 'reset',
-    // Composed accessors -- no property of their own, just composition
-    // over existing accessors (themesDir()/dataLocation()).
-    'themesPath', 'combinedDir', 'derivativeDir',
-    // Transitional bridge (see CurrentConfig's own class docblock) --
-    // resolves the container-shared instance, not a property of its own.
-    'current',
+const SCHEMA_INTEGRITY_BACKING_FIELDS = ['chmodValueStorage', 'recentPostDatesStorage'];
+
+const SCHEMA_INTEGRITY_STATIC_METHOD_ALLOW_LIST = [
+    // Bulk/legacy-bridge helper -- a small hand-picked snapshot, not backed
+    // by any single property.
+    'defaultsArray',
 ];
 
-const SCHEMA_INTEGRITY_TRIVIAL_BODY_ALLOW_LIST = [
-    'chmodValue', 'recentPostDates',
+// Never written from outside CurrentConfig today -- see the property-hooks
+// conversion this file's own tests below enforce. A property landing here
+// is a deliberate encapsulation decision, not an accident; keep this list
+// and CurrentConfig.php in sync by hand (no schema/generator to run, same
+// as adding a new property).
+const SCHEMA_INTEGRITY_PRIVATE_SET_LIST = [
+    'activityDisplayConnections', 'addCacheToStorageChart', 'adminTheme', 'albumDescriptionOnAllPages', 'albumMoveDelayBeforeAutoOpening',
+    'allowHtmlDescriptions', 'allowUserCustomization', 'allowUserRegistration', 'allowWebServices', 'authorizeRemembering',
+    'batchManagerImagesPerPageGlobal', 'batchManagerImagesPerPageUnit', 'cacheBackend', 'cacheDefaultTtl', 'cacheNamespace',
+    'cacheRedisUrl', 'cacheSizes', 'calendarShowAny', 'calendarShowEmpty', 'checksumComputeBlocksize',
+    'commentsOrder', 'commentsPageNbComments', 'contentTagCloudItemsNumber', 'dashboardActivityNbWeeks', 'dashboardCheckForUpdates',
+    'derivativeDefaultSize', 'derivativesStripMetadataThreshold', 'dieOnSqlError', 'doublePasswordTypeInAdmin', 'ffmpegDir',
+    'fsQuickCheckLastCheck', 'fullTagCloudItemsNumber', 'historyAdmin', 'historyGuest', 'indexCaddieIcon',
+    'indexCreatedDateIcon', 'indexEditIcon', 'indexFlatIcon', 'indexNewIcon', 'indexPostedDateIcon',
+    'indexSearchInSetAction', 'indexSearchInSetButton', 'indexSizesIcon', 'indexSlideShowIcon', 'indexSortOrderInput',
+    'inheritanceByDefault', 'lastMajorUpdate', 'levelSeparator', 'lightAlbumManagerThreshold', 'lightSlideshow',
+    'linkedAlbumSearchLimit', 'logArchiveDays', 'logDir', 'logLevel', 'loginLockoutDurationMinutes',
+    'loginLockoutWindowMinutes', 'maxRequests', 'menubarTagCloudContent', 'menubarTagCloudItemsNumber', 'nbCategoriesPage',
+    'nbLogsPage', 'nbmDefaultValueUserEnabled', 'nbmSendHtmlMail', 'nbmSendRecentPostDates', 'newcatDefaultCommentable',
+    'newcatDefaultStatus', 'newcatDefaultVisible', 'noPhotoYet', 'noPhotoYetUrl', 'pageBanner',
+    'passwordActivationDuration', 'passwordResetCodeDuration', 'passwordResetDuration', 'pdfRepresentativeExt', 'pdfViewerFilesizeThreshold',
+    'pemLanguagesCategory', 'pemPluginsCategory', 'pemThemesCategory', 'pictureCaddieIcon', 'pictureDownloadIcon',
+    'pictureEditIcon', 'pictureFavoriteIcon', 'pictureMenu', 'pictureMetadataIcon', 'pictureNavigationIcons',
+    'pictureNavigationThumb', 'pictureRepresentativeIcon', 'pictureSizesIcon', 'pictureSlideShowIcon', 'piwigoInstalledVersion',
+    'relatedAlbumsDisplayLimit', 'relatedAlbumsMaximumItemsToCompute', 'rememberMeLength', 'rememberMeName', 'representativeCacheOnLevel',
+    'representativeCacheOnSubcats', 'rssReedAuthor', 'sendPiwigoInfosLastNotice', 'sendPiwigoInfosOriginHash', 'sendPiwigoInfosPeriod',
+    'sendPiwigoInfosUpdateUrl', 'sessionGcProbability', 'sessionName', 'sessionSaveHandler', 'sessionUseCookies',
+    'sessionUseOnlyCookies', 'sessionUseTransSid', 'showMobileAppBannerInAdmin', 'showMobileAppBannerInGallery', 'showNewsletterSubscription',
+    'showPiwigoLatestNews', 'showTemplateInSideMenu', 'showThumbnailCaption', 'slideshowPeriodStep', 'standardPagesSelectedLogo',
+    'standardPagesSelectedLogoPath', 'standardPagesSelectedSkin', 'statCompareYearDisplayed', 'tagLettersColumnNumber', 'tagsDefaultDisplayMode',
+    'templateForceCompile', 'topNumber', 'trustedProxies', 'uniquenessMode', 'updateNotifyReminderPeriod',
+    'uploadFormAutomaticRotation', 'uploadFormChunkSize', 'uploadFormMaxFileSize', 'wsMaxImagesPerPage', 'wsMaxUsersPerPage',
+];
+
+// The only properties whose get/set carries real logic (sanitization, a
+// SAPI-dependent default, a lazily-built value object) instead of a plain
+// pass-through -- see CurrentConfig.php's own per-property docblocks. Also
+// includes the 3 get-only computed properties (themesPath/combinedDir/
+// derivativeDir) -- not config keys of their own, but real hooked
+// properties all the same (a `get` hook computing a derived value, no
+// `set` at all).
+const SCHEMA_INTEGRITY_HOOKED_LIST = [
+    'apiKeyDuration', 'apiKeyForbiddenMethods', 'availablePermissionLevels', 'chmodValue',
+    'combinedDir', 'defaultFiltersViews', 'derivativeDir', 'fileExtensions',
+    'formatExtensions', 'headerNotes', 'historySectionsCache', 'metadataKeywordSeparatorRegex',
+    'pictureExtensions', 'pictureInformations', 'randomIndexRedirect', 'rateItems',
+    'recentPostDates', 'showExifFields', 'showIptcMapping', 'syncCharsRegex',
+    'syncExcludeFolders', 'themesPath', 'updateNotifyLastNotification', 'useExifMapping',
+    'useIptcMapping',
 ];
 
 /**
@@ -45,38 +87,44 @@ function schemaIntegrityConfigProperties(): array
     $reflection = new ReflectionClass(CurrentConfig::class);
 
     return array_values(array_filter(
-        $reflection->getProperties(ReflectionProperty::IS_PRIVATE),
-        static fn (ReflectionProperty $property): bool => ! $property->isStatic(),
+        $reflection->getProperties(),
+        static fn (ReflectionProperty $property): bool => ! $property->isStatic()
+            && ! in_array($property->getName(), SCHEMA_INTEGRITY_BACKING_FIELDS, true),
     ));
 }
 
-function schemaIntegrityMethodBody(ReflectionMethod $method): string
+function schemaIntegrityHookBody(ReflectionMethod $hook): string
 {
-    $sourceLines = file((string) $method->getFileName());
+    $sourceLines = file((string) $hook->getFileName());
     if ($sourceLines === false) {
-        throw new RuntimeException('Unable to read ' . $method->getFileName());
+        throw new RuntimeException('Unable to read ' . $hook->getFileName());
     }
-    $start = $method->getStartLine();
-    $end = $method->getEndLine();
+    $start = $hook->getStartLine();
+    $end = $hook->getEndLine();
     if ($start === false || $end === false) {
-        throw new RuntimeException("Unable to determine source lines for {$method->getName()}().");
+        throw new RuntimeException('Unable to determine source lines for a property hook.');
     }
 
-    // getStartLine() is the signature line, getStartLine()+1 is the opening
-    // `{`, getEndLine() is the closing `}` -- body lines are strictly
-    // between the brace lines.
-    return trim(implode('', array_slice($sourceLines, $start + 1, max(0, $end - $start - 2))));
+    // Unlike a regular method in this codebase's own style (signature line,
+    // then a `{` on its own line), a hook's opening brace/arrow sits on the
+    // signature line itself -- getStartLine() is that combined header line,
+    // so the body starts one line later than a method-shaped slice would
+    // put it.
+    return trim(implode('', array_slice($sourceLines, $start, max(0, $end - $start - 1))));
 }
 
-test('every property has a same-named getter and a setNamed setter', function (): void {
+test('every config property is publicly readable, and write access matches the documented private(set) list', function (): void {
     foreach (schemaIntegrityConfigProperties() as $property) {
         $name = $property->getName();
-        expect(method_exists(CurrentConfig::class, $name))
-            ->toBeTrue("Property CurrentConfig::\${$name} has no matching CurrentConfig::{$name}() getter.");
+        expect($property->isPublic())->toBeTrue("CurrentConfig::\${$name} must be publicly readable.");
 
-        $setter = 'set' . ucfirst($name);
-        expect(method_exists(CurrentConfig::class, $setter))
-            ->toBeTrue("Property CurrentConfig::\${$name} has no matching CurrentConfig::{$setter}() setter.");
+        $shouldBePrivateSet = in_array($name, SCHEMA_INTEGRITY_PRIVATE_SET_LIST, true);
+        expect($property->isPrivateSet())->toBe(
+            $shouldBePrivateSet,
+            $shouldBePrivateSet
+                ? "CurrentConfig::\${$name} is on SCHEMA_INTEGRITY_PRIVATE_SET_LIST but isn't private(set)."
+                : "CurrentConfig::\${$name} is private(set) but isn't on SCHEMA_INTEGRITY_PRIVATE_SET_LIST.",
+        );
     }
 });
 
@@ -90,61 +138,62 @@ test('every public zero-arg static method not backed by a property is on the all
             continue;
         }
         $name = $method->getName();
-        if (in_array($name, $propertyNames, true) || in_array($name, SCHEMA_INTEGRITY_METHOD_ALLOW_LIST, true)) {
+        if (in_array($name, $propertyNames, true) || in_array($name, SCHEMA_INTEGRITY_STATIC_METHOD_ALLOW_LIST, true)) {
             continue;
         }
         $unlisted[] = $name;
     }
 
-    expect($unlisted)->toBe([], 'Public static zero-arg method(s) have no matching property and aren\'t on SCHEMA_INTEGRITY_METHOD_ALLOW_LIST: ' . implode(', ', $unlisted));
+    expect($unlisted)->toBe([], 'Public static zero-arg method(s) have no matching property and aren\'t on SCHEMA_INTEGRITY_STATIC_METHOD_ALLOW_LIST: ' . implode(', ', $unlisted));
 });
 
-test('every getter trivially returns its own property, minus the documented allow-list', function (): void {
+test('hooks exist only on the documented properties, and each one writes its own state', function (): void {
     foreach (schemaIntegrityConfigProperties() as $property) {
         $name = $property->getName();
-        if (in_array($name, SCHEMA_INTEGRITY_TRIVIAL_BODY_ALLOW_LIST, true)) {
-            continue;
-        }
-        $body = schemaIntegrityMethodBody(new ReflectionMethod(CurrentConfig::class, $name));
-        expect($body)->toBe("return \$this->{$name};", "CurrentConfig::{$name}() does more than trivially return its own property.");
-    }
-});
+        $shouldHaveHooks = in_array($name, SCHEMA_INTEGRITY_HOOKED_LIST, true);
+        expect($property->hasHooks())->toBe(
+            $shouldHaveHooks,
+            $shouldHaveHooks
+                ? "CurrentConfig::\${$name} is on SCHEMA_INTEGRITY_HOOKED_LIST but has no hooks."
+                : "CurrentConfig::\${$name} has hooks but isn't on SCHEMA_INTEGRITY_HOOKED_LIST -- a plain property should have no room for hidden logic.",
+        );
 
-test('every setter trivially assigns its own property, minus the documented allow-list', function (): void {
-    foreach (schemaIntegrityConfigProperties() as $property) {
-        $name = $property->getName();
-        if (in_array($name, SCHEMA_INTEGRITY_TRIVIAL_BODY_ALLOW_LIST, true)) {
+        if (! $shouldHaveHooks) {
             continue;
         }
-        $setter = 'set' . ucfirst($name);
-        $body = schemaIntegrityMethodBody(new ReflectionMethod(CurrentConfig::class, $setter));
-        if ($body === "\$this->{$name} = \$value;") {
+
+        $hooks = $property->getHooks();
+        if (! isset($hooks['set'])) {
             continue;
         }
-        // The 38 custom-shaped properties' setters validate/normalize
-        // $value before assigning -- still real, just not a bare
-        // one-liner. Confirm it's a genuine write to the right property,
-        // not a silent no-op or a write to the wrong one.
-        expect(str_contains($body, "\$this->{$name} ="))
-            ->toBeTrue("CurrentConfig::{$setter}() doesn't assign CurrentConfig::\${$name}.");
+        $body = schemaIntegrityHookBody($hooks['set']);
+        // chmodValue/recentPostDates write their own private backing field
+        // (chmodValueStorage/recentPostDatesStorage), not $this->{name}
+        // directly -- see CurrentConfig's own docblocks for why (a fully
+        // hooked property can't hold its own storage under its own name).
+        $expectedTarget = in_array($name, ['chmodValue', 'recentPostDates'], true) ? "{$name}Storage" : $name;
+        expect(str_contains($body, "\$this->{$expectedTarget}"))
+            ->toBeTrue("CurrentConfig::\${$name}'s set hook doesn't write to its own state.");
     }
 });
 
 // config.value is JSON-typed (see ConfigService::encode()/hydrate()).
-// This test confirms every scalar/array-typed property's own
-// compiled-in default survives a real encode()-then-hydrate() round
-// trip, catching the same class of bug two real call sites had: a value
-// of the wrong PHP type for its target property (e.g. a real int for a
-// ?string-typed property) is caught instead of silently coerced.
+// This test confirms every scalar/array-typed property's own compiled-in
+// default survives a real encode()-then-hydrate() round trip, catching the
+// same class of bug two real call sites had: a value of the wrong PHP type
+// for its target property (e.g. a real int for a ?string-typed property)
+// is caught instead of silently coerced.
 // encode() is a pure static (no CurrentConfig state involved); hydrate()
 // is an instance method, so this test builds one throwaway CurrentConfig
-// + ConfigService pair up front and invokes every getter/setter/hydrate()
-// call against that same pair -- hydrate() never touches the DB (it only
-// calls a CurrentConfig setter via reflection), so no Kernel::boot() is
+// + ConfigService pair up front and invokes every property/hydrate() call
+// against that same pair -- hydrate() never touches the DB (it only
+// writes a CurrentConfig property via reflection), so no Kernel::boot() is
 // needed. Skips: keys not in KEY_TO_PROPERTY (property has no DB-backed
-// key, e.g. computed/lazy properties), union/object-typed setters (no
-// single generic round-trip contract), and a null default (encode()/
-// hydrate() both take a separate, already-covered branch for null).
+// key, e.g. computed properties), non-scalar/array-typed properties (no
+// single generic round-trip contract -- also how chmodValue/
+// recentPostDates opt out, via hasDefaultValue()/type name respectively),
+// and a null default (encode()/hydrate() both take a separate,
+// already-covered branch for null).
 test('every scalar/array-typed property survives a real encode()/hydrate() round trip', function (): void {
     $keyToProperty = new ReflectionClass(ConfigService::class)->getConstant('KEY_TO_PROPERTY');
     if (! is_array($keyToProperty)) {
@@ -177,10 +226,8 @@ test('every scalar/array-typed property survives a real encode()/hydrate() round
                 continue;
             }
 
-            $setter = new ReflectionMethod(CurrentConfig::class, 'set' . ucfirst($name));
-            $paramTypeName = $setter->getParameters()[0]->getType() instanceof ReflectionNamedType
-                ? $setter->getParameters()[0]->getType()->getName()
-                : null;
+            $paramType = $property->getType();
+            $paramTypeName = $paramType instanceof ReflectionNamedType ? $paramType->getName() : null;
             if (! in_array($paramTypeName, ['bool', 'int', 'float', 'string', 'array'], true)) {
                 continue;
             }
@@ -193,14 +240,13 @@ test('every scalar/array-typed property survives a real encode()/hydrate() round
                 continue;
             }
 
-            $getter = new ReflectionMethod(CurrentConfig::class, $name);
-            $originalValues[$name] = $getter->invoke($currentConfig);
+            $originalValues[$name] = $property->getValue($currentConfig);
 
             $encoded = $encode->invoke(null, $key, $original);
             expect($encoded)->toBeString("ConfigService::encode() returned null for config key '{$key}''s non-null default.");
 
             $hydrate->invoke($configService, $key, $encoded);
-            $roundTripped = $getter->invoke($currentConfig);
+            $roundTripped = $property->getValue($currentConfig);
 
             expect($roundTripped)->toEqual($original, "CurrentConfig::\${$name} (config key '{$key}') did not round-trip through ConfigService::encode()/hydrate(): expected " . var_export($original, true) . ', got ' . var_export($roundTripped, true) . '.');
             $checked++;
@@ -209,7 +255,7 @@ test('every scalar/array-typed property survives a real encode()/hydrate() round
         expect($checked)->toBeGreaterThan(0, 'The round-trip sweep skipped every property -- check its skip conditions.');
     } finally {
         foreach ($originalValues as $name => $value) {
-            new ReflectionMethod(CurrentConfig::class, 'set' . ucfirst($name))->invoke($currentConfig, $value);
+            new ReflectionProperty(CurrentConfig::class, $name)->setValue($currentConfig, $value);
         }
     }
 });

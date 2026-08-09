@@ -8,21 +8,21 @@ use Piwigo\Cache\CachePools;
 use Piwigo\Config\Projection\ConfigParamValue;
 use Piwigo\Event\Lifecycle\LoadConf;
 use Piwigo\PluginConfig\EventDispatcher;
-use ReflectionMethod;
 use ReflectionNamedType;
 use ReflectionProperty;
 use RuntimeException;
 
 /**
  * The DI/Doctrine-backed config persistence layer -- the real writer
- * behind Piwigo\Config\CurrentConfig. CurrentConfig is the static typed
- * read layer (one property per key) and in-memory-only write via its own
- * named setters; Piwigo\Config\ConfigService (this class) is the DI/
- * Doctrine-backed persistence layer for every real writer --
- * constructor-injected where a class can be container-built, or reached
- * via Piwigo\Config\CurrentConfigService::get() otherwise (static
- * utilities, throwaway-constructed classes, and every pre-container
- * bootstrap/install call site).
+ * behind Piwigo\Config\CurrentConfig. CurrentConfig is the typed read layer
+ * (one real property per key -- plain, `private(set)`, or hooked -- no
+ * separate getter/setter methods) and in-memory-only write via that same
+ * property; Piwigo\Config\ConfigService (this class) is the DI/Doctrine-
+ * backed persistence layer for every real writer -- constructor-injected
+ * where a class can be container-built, or reached via
+ * Piwigo\Config\CurrentConfigService::get() otherwise (static utilities,
+ * throwaway-constructed classes, and every pre-container bootstrap/install
+ * call site).
  *
  * `value` is a real JSON column -- encode()/hydrate() below
  * json_encode()/json_decode() every value uniformly. No addslashes() --
@@ -38,10 +38,10 @@ final readonly class ConfigService
      * cache.backend -> cacheBackend, ...) -- loadConfFromDb() looks up each
      * real config row's param here to find its property. Adding a new
      * CurrentConfig property that should load from the DB needs one line
-     * here too, same as adding its property + getter + setter by hand. A
-     * param with no entry here is a genuinely dynamic/unschematized key
-     * (e.g. upload_user_access) -- confGetParam() reads those straight
-     * from the repository instead.
+     * here too, same as adding its property by hand. A param with no entry
+     * here is a genuinely dynamic/unschematized key (e.g.
+     * upload_user_access) -- confGetParam() reads those straight from the
+     * repository instead.
      *
      * @var array<string, string>
      */
@@ -362,8 +362,8 @@ final readonly class ConfigService
     {
         $propertyName = self::KEY_TO_PROPERTY[$param] ?? null;
         if ($propertyName !== null) {
-            $value = new ReflectionMethod(CurrentConfig::class, $propertyName)->invoke($this->currentConfig);
-            /** @var array<mixed>|string|int|float|bool|NotificationConfig|null $value every mapped property getter's declared return type */
+            $value = new ReflectionProperty(CurrentConfig::class, $propertyName)->getValue($this->currentConfig);
+            /** @var array<mixed>|string|int|float|bool|NotificationConfig|null $value every mapped property's declared type */
 
             return $value ?? $defaultValue;
         }
@@ -470,7 +470,14 @@ final readonly class ConfigService
         if ($updateGlobal) {
             $propertyName = self::KEY_TO_PROPERTY[$param] ?? null;
             if ($propertyName !== null) {
-                new ReflectionMethod(CurrentConfig::class, 'set' . ucfirst($propertyName))->invoke($this->currentConfig, $value);
+                $property = new ReflectionProperty(CurrentConfig::class, $propertyName);
+                // recentPostDates's own type is NotificationConfig, not the
+                // raw array a caller passes here -- same coercion hydrate()
+                // needs below.
+                $property->setValue(
+                    $this->currentConfig,
+                    $propertyName === 'recentPostDates' ? NotificationConfig::fromArray(is_array($value) ? $value : []) : $value,
+                );
             }
         }
     }
@@ -489,14 +496,25 @@ final readonly class ConfigService
             if ($propertyName === null) {
                 continue;
             }
+
+            if (in_array($propertyName, ['chmodValue', 'recentPostDates'], true)) {
+                // Both are fully-hooked properties (get + set) -- Reflection
+                // reports no usable default for those (see CurrentConfig's
+                // own reset()), so "deleted" means nulling the private
+                // backing field directly, which their own get hook already
+                // treats as "not explicitly set."
+                new ReflectionProperty(CurrentConfig::class, $propertyName . 'Storage')
+                    ->setValue($this->currentConfig, null);
+                continue;
+            }
+
             // "Deleted" means back to the property's own declared default
             // (usually null for the nullable-string presence-marker
             // cluster, but a real non-null default for e.g.
             // disabledDerivatives's [] -- resetting those to null would
             // violate their own non-nullable type).
             $property = new ReflectionProperty(CurrentConfig::class, $propertyName);
-            new ReflectionMethod(CurrentConfig::class, 'set' . ucfirst($propertyName))
-                ->invoke($this->currentConfig, $property->getDefaultValue());
+            $property->setValue($this->currentConfig, $property->getDefaultValue());
         }
     }
 
@@ -519,11 +537,10 @@ final readonly class ConfigService
 
     /**
      * Bridges one real config-table row into its matching CurrentConfig
-     * property, via that property's own setter -- reuses each setter's
-     * existing shape validation/normalization rather than duplicating it
-     * here. This is the one place that decodes a raw DB JSON value into a
-     * property's exact native PHP type; every real setter can otherwise
-     * assume it's always called with an already-correctly-shaped value.
+     * property. This is the one place that decodes a raw DB JSON value into
+     * a property's exact native PHP type; every hooked property's own `set`
+     * hook can otherwise assume it's always called with an
+     * already-correctly-shaped value.
      */
     private function hydrate(string $param, ?string $raw): void
     {
@@ -532,14 +549,13 @@ final readonly class ConfigService
             return;
         }
 
-        $setter = new ReflectionMethod(CurrentConfig::class, 'set' . ucfirst($propertyName));
-        $paramType = $setter->getParameters()[0]
-            ->getType();
+        $property = new ReflectionProperty(CurrentConfig::class, $propertyName);
+        $paramType = $property->getType();
         $paramTypeName = $paramType instanceof ReflectionNamedType ? $paramType->getName() : null;
 
         if ($raw === null) {
             if ($paramType?->allowsNull() === true) {
-                $setter->invoke($this->currentConfig, null);
+                $property->setValue($this->currentConfig, null);
             }
 
             return;
@@ -547,22 +563,28 @@ final readonly class ConfigService
 
         $decoded = json_decode($raw, true);
 
+        if ($propertyName === 'recentPostDates') {
+            // recentPostDates's own declared type is NotificationConfig, not
+            // array -- getName() above already returned that (a single
+            // ReflectionNamedType, not a union), so it never hits the
+            // generic match() below. Its own `set` hook only accepts a real
+            // NotificationConfig, so the raw decoded array is coerced here
+            // instead of inside CurrentConfig.
+            $property->setValue($this->currentConfig, NotificationConfig::fromArray(is_array($decoded) ? $decoded : []));
+
+            return;
+        }
+
         $value = match ($paramTypeName) {
             'bool' => is_bool($decoded) ? $decoded : false,
             'int' => is_int($decoded) ? $decoded : 0,
             'float' => is_float($decoded) || is_int($decoded) ? (float) $decoded : 0.0,
             'string' => is_string($decoded) ? $decoded : '',
             'array' => is_array($decoded) ? $decoded : [],
-            // Union/object-typed setters (recentPostDates's
-            // NotificationConfig by way of its own array-accepting setter
-            // -- getName() above already returned null, since it isn't a
-            // single ReflectionNamedType) get the decoded value as-is;
-            // each such setter already knows how to handle it (see
-            // CurrentConfig's own "custom-shaped properties" section).
             default => $decoded,
         };
 
-        $setter->invoke($this->currentConfig, $value);
+        $property->setValue($this->currentConfig, $value);
     }
 
     /**

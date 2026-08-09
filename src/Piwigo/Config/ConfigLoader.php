@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Piwigo\Config;
 
 use ReflectionClass;
-use ReflectionProperty;
 
 /**
  * Boot-time orchestration for CurrentConfig.
@@ -64,7 +63,7 @@ final class ConfigLoader
     public static function validateRequired(CurrentConfig $currentConfig): void
     {
         $reflection = new ReflectionClass($currentConfig);
-        foreach ($reflection->getProperties(ReflectionProperty::IS_PRIVATE) as $property) {
+        foreach ($reflection->getProperties() as $property) {
             if ($property->isStatic()) {
                 continue;
             }

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Admin\Projection;
 
 use Override;
+use Piwigo\Config\CacheSizesSnapshot;
 use Piwigo\Core\TemplatePageContext;
 
 /**
@@ -22,7 +23,6 @@ final readonly class MaintenanceActionsPageContext implements TemplatePageContex
     /**
      * @param array<string, array{icon: string, label: string}> $maintActions
      * @param array<string, string> $purgeDerivatives
-     * @param array<mixed>|null $cacheSizes
      * @param array<mixed> $advancedFeatures
      */
     public function __construct(
@@ -53,7 +53,7 @@ final readonly class MaintenanceActionsPageContext implements TemplatePageContex
         public string $phpCurrentTimestamp,
         public ?string $dbCurrentDate,
         public string $pwgToken,
-        public ?array $cacheSizes,
+        public ?CacheSizesSnapshot $cacheSizes,
         public ?string $timeElapsedSinceLastCalc,
         public ?string $graphicsLibrary,
         public ?string $maintUnlockGallery,

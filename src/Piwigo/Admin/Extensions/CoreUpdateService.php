@@ -185,9 +185,8 @@ final readonly class CoreUpdateService
         if ($lastNotificationSetting === null) {
             $notify = true;
         } else {
-            $lastNotificationData = $lastNotificationSetting;
-            $lastNotification = $lastNotificationData['notified_on'] ?? null;
-            $lastNotificationVersion = $lastNotificationData['version'] ?? null;
+            $lastNotification = $lastNotificationSetting->notifiedOn;
+            $lastNotificationVersion = $lastNotificationSetting->version;
 
             $reminderPeriodRaw = $this->currentConfig->updateNotifyReminderPeriod;
             $reminderPeriod = $reminderPeriodRaw;

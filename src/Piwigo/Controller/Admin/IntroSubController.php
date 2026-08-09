@@ -505,12 +505,8 @@ final class IntroSubController implements AdminSubControllerInterface
         if ($this->currentConfig->addCacheToStorageChart) {
             $cache_sizes = $this->currentConfig->cacheSizes;
 
-            if (is_array($cache_sizes)) {
-                $cache_size_zero = $cache_sizes[0] ?? null;
-                $cache_size_value = is_array($cache_size_zero) ? ($cache_size_zero['value'] ?? null) : null;
-                if (is_numeric($cache_size_value)) {
-                    @$data_storage['Cache']['total']['filesize'] = (float) $cache_size_value / 1024.0;
-                }
+            if ($cache_sizes !== null && $cache_sizes->cacheSize !== null) {
+                @$data_storage['Cache']['total']['filesize'] = $cache_sizes->cacheSize / 1024.0;
             }
         }
 

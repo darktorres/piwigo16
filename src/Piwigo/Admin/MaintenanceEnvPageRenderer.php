@@ -120,10 +120,9 @@ final class MaintenanceEnvPageRenderer
 
         $cache_sizes = $this->currentConfig->cacheSizes;
 
-        $time_elapsed_since_last_calc = null;
-        if ($cache_sizes !== null && is_array($cache_sizes[3] ?? null) && (is_string($cache_sizes[3]['value'] ?? null) || is_int($cache_sizes[3]['value'] ?? null))) {
-            $time_elapsed_since_last_calc = DateHelper::timeSince($cache_sizes[3]['value'], 'year');
-        }
+        $time_elapsed_since_last_calc = $cache_sizes !== null
+            ? DateHelper::timeSince($cache_sizes->lastDateCalc, 'year')
+            : null;
 
         // graphics library
         $graphics_library = PwgImage::get_graphics_library_label();

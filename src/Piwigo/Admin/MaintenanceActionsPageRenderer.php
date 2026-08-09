@@ -122,25 +122,13 @@ final class MaintenanceActionsPageRenderer
         $db_version = $dbInfo->version();
         $db_current_date = $dbInfo->currentDateTime();
 
-        // \Piwigo\Config\CurrentConfig::cacheSizes() is a serialized 4-row [name, value] list produced by
-        // ws_getCacheSize() (cache_size, msizes, tsizes, last_date_calc); row 3's
-        // value is the last_date_calc date string used for time_since().
-        // Real bug found via PHPStan: CurrentConfig::cacheSizes() already unserializes
-        // internally and returns array|null, so the is_string()/unserialize()
-        // dance that used to live here was permanently dead -- $cache_sizes was
-        // always null, meaning $time_elapsed_since_last_calc below never
-        // actually populated.
+        // CurrentConfig::cacheSizes is a decoded CacheSizesSnapshot produced
+        // by ws_getCacheSize() (cache_size, msizes, tsizes, last_date_calc);
+        // lastDateCalc is the date string used for time_since().
         $cache_sizes = $this->currentConfig->cacheSizes;
-        $time_elapsed_since_last_calc = null;
-        if ($cache_sizes !== null) {
-            $last_calc_row = $cache_sizes[3] ?? null;
-            if (is_array($last_calc_row)) {
-                $last_calc_value = $last_calc_row['value'] ?? null;
-                if (is_int($last_calc_value) || is_string($last_calc_value)) {
-                    $time_elapsed_since_last_calc = DateHelper::timeSince($last_calc_value, 'year');
-                }
-            }
-        }
+        $time_elapsed_since_last_calc = $cache_sizes !== null
+            ? DateHelper::timeSince($cache_sizes->lastDateCalc, 'year')
+            : null;
 
         // graphics library
         $graphics_library = null;

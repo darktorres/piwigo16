@@ -27,8 +27,7 @@ use Piwigo\Validation\InputValidator;
  * page, pure delegate. The page's own bulk comments/visible/status/
  * representative toggling already calls
  * Piwigo\Admin\Category\CategoryAdminService::setCategoryOption()
- * (consolidating 8 switch-case branches into one parameterized method,
- * P21).
+ * (consolidating 8 switch-case branches into one parameterized method).
  */
 final class CatOptionsPageRenderer
 {

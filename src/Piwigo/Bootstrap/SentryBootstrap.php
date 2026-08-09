@@ -11,7 +11,7 @@ use function Sentry\init;
  * is configured -- defense in depth on top of the SDK's own internal guard
  * (Transport\HttpTransport::send() checks getDsn() === null before any
  * network I/O; verified directly in the installed vendor/sentry/sentry
- * source, not assumed). Reads env vars via plain getenv() -- P2's
+ * source, not assumed). Reads env vars via plain getenv() --
  * pwg_load_env_file() (include/env.inc.php, called from common.inc.php)
  * already populates them via symfony/dotenv's usePutenv() before this
  * class's own init() runs (as RequestBootstrap::bootEntryPoint()'s first

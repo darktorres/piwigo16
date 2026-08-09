@@ -28,9 +28,9 @@ use Piwigo\Users\CurrentUser;
 use Piwigo\Validation\InputValidator;
 
 /**
- * Ported from admin/group_perm.php (page slug "group_perm"). Already used
- * GroupService/AuditService (P18) directly for its own group-category
- * permission grant/deny before this batch; nothing new to extract.
+ * Ported from admin/group_perm.php (page slug "group_perm"). Already uses
+ * GroupService/AuditService directly for its own group-category
+ * permission grant/deny; nothing new to extract.
  */
 final class GroupPermPageRenderer
 {

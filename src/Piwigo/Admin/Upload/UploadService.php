@@ -697,7 +697,7 @@ final class UploadService
      * storage -- the caller already confirmed the extension matches the
      * MIME type; this closes the remaining "genuinely-named .svg with
      * embedded script" stored-XSS gap. Same safe-parsing shape as
-     * MetadataService::parseSvgDimensions() (P19, SEC-20): strip
+     * MetadataService::parseSvgDimensions() (SEC-20): strip
      * <!DOCTYPE> first, then DOMDocument with LIBXML_NONET so no external
      * entity/network fetch can happen during parsing. A file that fails to
      * parse as XML is left untouched (finfo already confirmed it isn't a
@@ -894,7 +894,7 @@ final class UploadService
 
         $ext_imagick_dir = self::currentConfig()->extImagickDir();
         // [SEC-16] escapeshellarg() on the dir prefix and both real paths
-        // below -- same pattern P19 established in PwgImage.php/
+        // below -- same pattern established in PwgImage.php/
         // ImageExtImagick.php; the original never escaped an embedded
         // '"' or shell metacharacter in either path.
         $exec = escapeshellarg($ext_imagick_dir) . PwgImage::get_ext_imagick_command();

@@ -325,7 +325,7 @@ abstract class IntegrationTestCase extends TestCase
     }
 
     /**
-     * pgsql support pass: generalized from resetDatabase()'s own former
+     * Generalized from resetDatabase()'s own former
      * $this->dbName-only body so scratch-database-using tests (backup/
      * restore round-trips, which deliberately restore into their own
      * disposable database rather than the shared fixture one) can reuse
@@ -498,7 +498,7 @@ abstract class IntegrationTestCase extends TestCase
     }
 
     /**
-     * pgsql support pass: `tests/Fixtures/piwigo-17.0-pgsql.sql` is a
+     * `tests/Fixtures/piwigo-17.0-pgsql.sql` is a
      * plain-SQL `pg_dump` (schema + data, same shape
      * Piwigo\Db\SchemaDumpService's own schema-only dump uses) -- `psql
      * -f` loads it directly, no `pg_restore`/custom-format machinery
@@ -626,7 +626,7 @@ abstract class IntegrationTestCase extends TestCase
     }
 
     /**
-     * pgsql support pass: several real Integration/Contract tests
+     * Several real Integration/Contract tests
      * temporarily disable FK enforcement to reproduce an orphaned-row
      * state no normal write path can ever produce on its own (e.g. a
      * bulk import/migration that ran with checks off) -- MySQL's own
@@ -682,7 +682,7 @@ abstract class IntegrationTestCase extends TestCase
     }
 
     /**
-     * pgsql support pass: the same raw, driver-native low-level escape
+     * The same raw, driver-native low-level escape
      * hatch newMysqli() already gives MySQL-targeted tests, for the
      * (currently only internal, see resetDatabase()/settleDatabase())
      * pgsql-targeted equivalent.
@@ -759,7 +759,7 @@ abstract class IntegrationTestCase extends TestCase
     }
 
     /**
-     * pgsql support pass: was hardcoded to a raw mysqli connection --
+     * Was hardcoded to a raw mysqli connection --
      * DbConnection::build()'s portable DBAL Connection handles a single
      * scalar fetch identically on both platforms, no raw driver dispatch
      * needed for a plain SELECT. Every real caller queries a numeric

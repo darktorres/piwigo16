@@ -293,7 +293,7 @@ final class CommentsController implements ControllerInterface
 
         // which status to filter on ?
         if (! $this->accessControl->isAdmin()) {
-            // pgsql support pass: real bug found live -- comments.validated
+            // Real bug found live -- comments.validated
             // is a genuine `boolean` column on Postgres (not the
             // smallint-with-integer-range convention this codebase uses
             // elsewhere), so the bare `validated=1` literal that's valid

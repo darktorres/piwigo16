@@ -8,7 +8,7 @@ use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\Platforms\PostgreSQLPlatform;
 
 /**
- * pgsql support pass: shared MySQL `GET_LOCK()`/`RELEASE_LOCK()` <->
+ * Shared MySQL `GET_LOCK()`/`RELEASE_LOCK()` <->
  * Postgres `pg_try_advisory_lock()`/`pg_advisory_unlock()` translation,
  * extracted from `Piwigo\Core\UniqueExecLock` (its own docblock has the
  * full research trail: reentrancy per session, the `unpack('J', ...)`

@@ -56,7 +56,7 @@ final class InstallServiceTest extends IntegrationTestCase
         parent::setUp();
         $this->setUpConnectionFromEnv();
 
-        // pgsql support pass: real bug found live -- PIWIGO_DB_DRIVER/
+        // Real bug found live -- PIWIGO_DB_DRIVER/
         // PIWIGO_DB_PORT were both missing here, defeating this exact
         // list's own stated purpose above: installDbConnect() calls here
         // (this class's real subject) mutate the real process env via

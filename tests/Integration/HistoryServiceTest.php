@@ -424,7 +424,7 @@ final class HistoryServiceTest extends IntegrationTestCase
         $this->insertHistoryLine(1, '2026-07-12', '03:00:00');
         self::assertNull($this->fetchSummaryNbPages(2026, 7, 12, null));
 
-        // pgsql support pass: real bug found live -- `ALTER TABLE ...
+        // Real bug found live -- `ALTER TABLE ...
         // AUTO_INCREMENT = n` is MySQL-only syntax ("syntax error at or
         // near 'AUTO_INCREMENT'"). Postgres's identity mechanism is a
         // real sequence object, not a per-table counter -- setval() with

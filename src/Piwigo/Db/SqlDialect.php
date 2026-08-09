@@ -37,7 +37,7 @@ final class SqlDialect
     public const string REQUIRED_POSTGRES_VERSION = '18.4';
 
     /**
-     * pgsql support pass: real bug found live -- callers building a raw
+     * Real bug found live -- callers building a raw
      * SQL fragment from this (not DQL, which already has its own portable
      * {@see \Piwigo\Db\DqlFunction\RandFunction}) always got the literal
      * MySQL name, so a real WS "sort by random" request (via

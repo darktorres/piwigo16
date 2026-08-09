@@ -106,7 +106,7 @@ final readonly class ImageFilterCriteria
             $clauses[] = $tblPrefix . 'date_creation < :imgFilterMaxDateCreated';
             $parameters['imgFilterMaxDateCreated'] = $this->maxDateCreated;
         }
-        // pgsql support pass: real bug found live -- width/height are
+        // Real bug found live -- width/height are
         // plain integer columns, and while MySQL's `/` operator always
         // computes in decimal context, PostgreSQL's `/` on two integer
         // operands truncates to an integer (same real bug already fixed

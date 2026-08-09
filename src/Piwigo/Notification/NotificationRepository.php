@@ -228,7 +228,7 @@ final class NotificationRepository
      */
     public function findRecentElementsForDate(SqlCondition $restrictCondition, string $dateAvailable, int $maxElements): array
     {
-        // pgsql support pass: real bug found live -- Postgres requires
+        // Real bug found live -- Postgres requires
         // every ORDER BY expression to appear in the SELECT list for a
         // SELECT DISTINCT query ("for SELECT DISTINCT, ORDER BY
         // expressions must appear in select list"), which RAND()/

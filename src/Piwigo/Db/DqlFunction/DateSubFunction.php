@@ -24,7 +24,7 @@ use Override;
  * before the built-in one in Doctrine's own parser) with a genuinely
  * portable getSql().
  *
- * pgsql support pass: real bug found live -- the built-in resolves to
+ * Real bug found live -- the built-in resolves to
  * `Doctrine\DBAL\Platforms\PostgreSQLPlatform::getDateArithmeticIntervalExpression()`'s
  * `(date_expr - interval_expr)`, with no explicit cast on $date_expr.
  * Against a real column reference that's fine (already typed by the

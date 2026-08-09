@@ -302,7 +302,7 @@ abstract class ContractTestCase extends IntegrationTestCase
      * every Contract test file that seeds a config flag before exercising
      * a WS method needs exactly this upsert shape.
      *
-     * pgsql support pass: real bug found live -- `ON DUPLICATE KEY UPDATE`
+     * Real bug found live -- `ON DUPLICATE KEY UPDATE`
      * is MySQL-only syntax ("syntax error at or near 'DUPLICATE'"),
      * repeated identically (raw SQL, independently) across 11 different
      * Contract test files. Consolidated into this one shared, portable

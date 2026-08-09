@@ -18,7 +18,7 @@ use Doctrine\DBAL\Platforms\PostgreSQLPlatform;
  * instead, rather than each hand-rolling `DbConnection::build()->fetchOne('SELECT
  * ' . ...)` inline.
  *
- * pgsql support pass: `fetchTomorrow()`/`fetchFutureDatesFor()` branch on
+ * `fetchTomorrow()`/`fetchFutureDatesFor()` branch on
  * `$this->conn->getDatabasePlatform()` directly (a real Connection is
  * already available here, unlike `SqlDialect`'s own static methods) --
  * `ADDDATE(NOW(), INTERVAL n DAY)` has no Postgres equivalent, `NOW() +

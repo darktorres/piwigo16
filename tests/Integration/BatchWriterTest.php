@@ -51,7 +51,7 @@ final class BatchWriterTest extends IntegrationTestCase
 
         $this->conn = DbConnection::build();
         $this->conn->executeStatement('DROP TABLE IF EXISTS ' . self::TABLE);
-        // pgsql support pass: real bug found live -- `UNIQUE KEY
+        // Real bug found live -- `UNIQUE KEY
         // uniq_name (...)` is MySQL's own inline-table-constraint
         // shorthand, and `ENGINE=InnoDB` doesn't exist as a concept on
         // Postgres at all ("syntax error at or near 'KEY'"). The

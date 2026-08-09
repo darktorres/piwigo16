@@ -432,7 +432,7 @@ final class WsCategoriesMutationTest extends ContractTestCase
     /**
      * `visible`/`commentable` are genuine boolean columns -- native bool
      * on Postgres, numeric on MySQL (same recurring raw-fetch
-     * normalization gap fixed throughout this pgsql support pass).
+     * normalization gap fixed elsewhere in this file).
      */
     private function fetchCategoryBoolColumn(string $column, int $categoryId): int
     {
@@ -899,7 +899,7 @@ final class WsCategoriesMutationTest extends ContractTestCase
         $prefix = 'ct_orphans_bulk_' . uniqid() . '_';
 
         try {
-            // pgsql support pass: real bug found live -- a bound
+            // Real bug found live -- a bound
             // parameter appearing only inside a function call argument
             // (CONCAT(?, n)) gives Postgres nothing to infer its type
             // from ("could not determine data type of parameter $1"),

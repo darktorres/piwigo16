@@ -199,7 +199,7 @@ final class InstallWizardTest extends IntegrationTestCase
         Kernel::reset();
         $this->setUpConnectionFromEnv();
 
-        // pgsql support pass: real bug found live -- PIWIGO_DB_DRIVER/
+        // Real bug found live -- PIWIGO_DB_DRIVER/
         // PIWIGO_DB_PORT were both missing from this list, so boot()'s own
         // real DbCredentials::seed() call (every real test here reaches
         // it via analyzeForm()/boot(), submitting no explicit 'dbdriver'

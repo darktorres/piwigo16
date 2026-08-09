@@ -1133,7 +1133,7 @@ final class UserRepository implements WebmasterMailProviderInterface
     }
 
     /**
-     * pgsql support pass: real bug found live -- $orderBySql is raw,
+     * Real bug found live -- $orderBySql is raw,
      * sysadmin-settable SQL text (order_by/order_by_custom, or a plain
      * "ORDER BY RAND()" fallback both real callers and this class's own
      * unparseable-order-by test fixture use), commonly containing the

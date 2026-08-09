@@ -81,7 +81,7 @@ final class RegenerateFixtureTest extends IntegrationTestCase
     }
 
     /**
-     * pgsql support pass: this test's own real, direct (raw, unbound)
+     * This test's own real, direct (raw, unbound)
      * INSERT statements below need a per-connection-type dispatch --
      * unlike every other real caller in this codebase (which goes
      * through Doctrine DBAL, already portable), this file's own seed

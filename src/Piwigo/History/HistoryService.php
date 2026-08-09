@@ -169,7 +169,7 @@ final readonly class HistoryService
 
             $this->currentConfig->setHistorySectionsCache($historySectionsCache);
 
-            // pgsql support pass: real bug found live -- a case-insensitive
+            // Real bug found live -- a case-insensitive
             // match used to store $pageSection verbatim, relying on MySQL's
             // own ENUM-column side effect (inserting a value that matches
             // an enum member case-insensitively is silently stored/read

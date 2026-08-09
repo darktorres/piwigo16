@@ -50,11 +50,6 @@ final class ImageExtImagick implements ImageInterface
         $imagick_dir = $this->currentConfig->extImagickDir();
         $this->imagickdir = $imagick_dir;
 
-        $script_filename = $_SERVER['SCRIPT_FILENAME'] ?? null;
-        if (is_string($script_filename) && str_starts_with($script_filename, '/kunden/')) {  // 1and1
-            @putenv('MAGICK_THREAD_LIMIT=1');
-        }
-
         if (strtolower(StringHelper::getExtension($this->source_filepath)) === 'webp') {
             $webp_info = PwgImage::webp_info($this->source_filepath);
 

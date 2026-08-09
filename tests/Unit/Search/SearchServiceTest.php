@@ -498,34 +498,59 @@ test('saveSearch() persists the rules under a fresh uuid and returns a matching 
     // session). 2 real production callers (Ws\PwgImages::
     // filteredSearchCreate(), Controller\SearchController) depend on
     // its own [uuid, url] contract.
-    $rules = ['q' => 'nature'];
+    //
+    // saveSearch() also unconditionally calls
+    // PreferencesService::updateParam() for a real (non-guest,
+    // non-generic) user like this file's own default -- every test
+    // below that calls it saves/restores user_infos.preferences for
+    // that reason, not just the one test dedicated to that behavior
+    // itself. Confirmed the hard way: this file's own 2 earlier drafts
+    // of this test and the forkedFrom test below silently corrupted
+    // user_id=1's real preferences column for the rest of the suite.
+    $conn = searchServiceTestConn();
+    $originalPreferences = $conn->fetchOne('SELECT preferences FROM ' . Tables::userInfos() . ' WHERE user_id = 1');
 
-    [$uuid, $url] = searchServiceTestService()->saveSearch($rules, UrlServiceTestFactory::build());
+    try {
+        $rules = ['q' => 'nature'];
 
-    expect($uuid)->toMatch('/^psk-\d{8}-[a-z0-9]{10}$/i')
-        ->and($url)->toContain($uuid);
+        [$uuid, $url] = searchServiceTestService()->saveSearch($rules, UrlServiceTestFactory::build());
 
-    $info = searchServiceTestService()->getSearchInfo($uuid);
-    if ($info === null) {
-        throw new LogicException('expected a persisted Search row, got null');
+        expect($uuid)->toMatch('/^psk-\d{8}-[a-z0-9]{10}$/i')
+            ->and($url)->toContain($uuid);
+
+        $info = searchServiceTestService()->getSearchInfo($uuid);
+        if ($info === null) {
+            throw new LogicException('expected a persisted Search row, got null');
+        }
+
+        expect($info->rules)->toBe($rules)
+            ->and($info->createdBy)->toBe(1)
+            ->and($info->forkedFrom)->toBeNull();
+    } finally {
+        $conn->executeStatement('UPDATE ' . Tables::userInfos() . ' SET preferences = ? WHERE user_id = 1', [$originalPreferences]);
     }
-
-    expect($info->rules)->toBe($rules)
-        ->and($info->createdBy)->toBe(1)
-        ->and($info->forkedFrom)->toBeNull();
 });
 
 test('saveSearch() threads a real forkedFrom id into the persisted row', function (): void {
-    $originalId = searchServiceTestRepo()->insertSavedSearch(['q' => 'nature'], '2026-07-12 00:00:00', 1, 'psk-20260712-forkorigin', null);
+    // Same saveSearch()-always-writes-preferences reasoning as the
+    // sibling test above.
+    $conn = searchServiceTestConn();
+    $originalPreferences = $conn->fetchOne('SELECT preferences FROM ' . Tables::userInfos() . ' WHERE user_id = 1');
 
-    [$uuid] = searchServiceTestService()->saveSearch(['q' => 'nature refined'], UrlServiceTestFactory::build(), $originalId);
+    try {
+        $originalId = searchServiceTestRepo()->insertSavedSearch(['q' => 'nature'], '2026-07-12 00:00:00', 1, 'psk-20260712-forkorigin', null);
 
-    $info = searchServiceTestService()->getSearchInfo($uuid);
-    if ($info === null) {
-        throw new LogicException('expected a persisted Search row, got null');
+        [$uuid] = searchServiceTestService()->saveSearch(['q' => 'nature refined'], UrlServiceTestFactory::build(), $originalId);
+
+        $info = searchServiceTestService()->getSearchInfo($uuid);
+        if ($info === null) {
+            throw new LogicException('expected a persisted Search row, got null');
+        }
+
+        expect($info->forkedFrom)->toBe($originalId);
+    } finally {
+        $conn->executeStatement('UPDATE ' . Tables::userInfos() . ' SET preferences = ? WHERE user_id = 1', [$originalPreferences]);
     }
-
-    expect($info->forkedFrom)->toBe($originalId);
 });
 
 test('saveSearch() updates the current user\'s gallery_search_filters preference for a real registered user', function (): void {
@@ -862,6 +887,16 @@ test('getRegularSearchResults() date_created custom range', function (): void {
     // cal_days_in_month() concat would still likely be caught by a
     // grosser malformed-date failure, without this test being
     // sensitive to the exact day-30-vs-31 edge itself.
+    //
+    // The plain '2023'/'2022-05' entries below (matching no ymd prefix,
+    // contributing no subcondition of their own) exist only to make the
+    // 'm'/'d' branches' own `! isset($customDates['y' . $year])`/
+    // `! isset($customDates['m' . $year . '-' . $month])` exclusion
+    // checks observable: a ConcatRemoveLeft mutation stripping the
+    // 'y'/'m' prefix off that lookup key would otherwise still miss
+    // ('y2023'/'m2022-05' are absent either way) -- these bare entries
+    // populate the UN-prefixed key instead, so only a real, correct
+    // prefix concat avoids colliding with them.
     $conn = searchServiceTestConn();
     $conn->executeStatement("UPDATE " . Tables::images() . " SET date_creation = '2024-03-15 12:00:00' WHERE id = 1");
     $conn->executeStatement("UPDATE " . Tables::images() . " SET date_creation = '2023-06-10 00:00:00' WHERE id = 2");
@@ -874,7 +909,7 @@ test('getRegularSearchResults() date_created custom range', function (): void {
         // prefix shapes plus the mixed-type $custom array-building loop.
         $search = ['fields' => ['date_created' => [
             'preset' => 'custom',
-            'custom' => ['y2024', 'm2023-06', 'd2022-05-15', 20250101],
+            'custom' => ['y2024', 'm2023-06', 'd2022-05-15', 20250101, '2023', '2022-05'],
         ]]];
         $results = searchServiceTestService()->getRegularSearchResults($search);
 
@@ -924,6 +959,36 @@ test('getRegularSearchResults() filters by filesize range', function (): void {
         ->and($results['search_details']['has_filters_filled'])->toBeTrue();
 });
 
+test('getRegularSearchResults() treats a null or zero min/max as "not set" for filesize/height/width, independently', function (string $minKey, string $maxKey, mixed $minValue, mixed $maxValue): void {
+    // filesize/height/width each gate on a 4-term chain
+    // (`$minRaw !== null && $minRaw !== 0 && $maxRaw !== null &&
+    // $maxRaw !== 0`) -- the sibling "filters by X" tests above only
+    // ever supply real non-null, non-zero values for both bounds, so
+    // none of these 4 terms' own independent effect (as opposed to the
+    // whole chain being true or false together) was ever provable.
+    // Every fixture image would otherwise match (width/height 200x150,
+    // filesize 1), so a missing/zero bound must suppress the filter
+    // entirely, not just narrow the range.
+    $search = ['fields' => [$minKey => $minValue, $maxKey => $maxValue]];
+
+    $results = searchServiceTestService()->getRegularSearchResults($search);
+
+    expect($results['search_details']['has_filters_filled'])->toBeFalse();
+})->with([
+    'filesize_min null' => ['filesize_min', 'filesize_max', null, 2],
+    'filesize_min zero' => ['filesize_min', 'filesize_max', 0, 2],
+    'filesize_max null' => ['filesize_min', 'filesize_max', 1, null],
+    'filesize_max zero' => ['filesize_min', 'filesize_max', 1, 0],
+    'height_min null' => ['height_min', 'height_max', null, 300],
+    'height_min zero' => ['height_min', 'height_max', 0, 300],
+    'height_max null' => ['height_min', 'height_max', 100, null],
+    'height_max zero' => ['height_min', 'height_max', 100, 0],
+    'width_min null' => ['width_min', 'width_max', null, 300],
+    'width_min zero' => ['width_min', 'width_max', 0, 300],
+    'width_max null' => ['width_min', 'width_max', 100, null],
+    'width_max zero' => ['width_min', 'width_max', 100, 0],
+]);
+
 test('getRegularSearchResults() allwords matches by album title', function (): void {
     // 'Nested' matches category 2's name ("Nested Sub Album", images 4
     // and 5) -- exercises searchAllwords()'s category-name matching
@@ -962,6 +1027,33 @@ test('getQuickSearchResultsNoCache() finds a tag-named match', function (): void
     $results = searchServiceTestService()->getQuickSearchResultsNoCache('family', []);
 
     expect($results['items'])->toBe([1]);
+});
+
+test('getQuickSearchResultsNoCache() widens a match via the default-language Inflector\'s real word variants', function (): void {
+    // Every OTHER test in this file exercises the Inflector-loading
+    // machinery only incidentally (via its own default 'en' language)
+    // without ever observing that a generated variant actually reaches
+    // the query -- confirmed live: Inflector_en::get_variants('nature')
+    // really does return ['natures']. A throwaway 'natures' tag (only
+    // reachable via the variant, not the literal search term 'nature')
+    // proves qsearchGetTextTokenSearchSql()'s own `array_merge([term],
+    // variants)` step actually widens the match, not just that the
+    // Inflector class loads without throwing.
+    $conn = searchServiceTestConn();
+    $conn->executeStatement("INSERT INTO " . Tables::tags() . " (name, url_name, lastmodified) VALUES ('natures', 'natures', NOW())");
+    $tagId = (int) $conn->lastInsertId();
+    $conn->executeStatement('INSERT INTO ' . Tables::imageTag() . ' (image_id, tag_id) VALUES (4, ?)', [$tagId]);
+
+    try {
+        $results = searchServiceTestService()->getQuickSearchResultsNoCache('nature', []);
+
+        $items = $results['items'];
+        sort($items);
+        expect($items)->toBe([1, 2, 3, 4]);
+    } finally {
+        $conn->executeStatement('DELETE FROM ' . Tables::imageTag() . ' WHERE tag_id = ?', [$tagId]);
+        $conn->executeStatement('DELETE FROM ' . Tables::tags() . ' WHERE id = ?', [$tagId]);
+    }
 });
 
 test('getQuickSearchResultsNoCache() returns empty for no match', function (): void {
@@ -1468,6 +1560,37 @@ test('qsearchGetTags() narrows 2 adjacent short, non-wildcarded, non-quoted term
     }
 });
 
+test('getQuickSearchResultsNoCache() excludes a matched tag from the display list when its own term is too short in a multi-term search', function (): void {
+    // qsearchGetTags()'s own $positiveIds accumulation (which
+    // ultimately narrows $qsr->all_tags, exposed as
+    // $results['qs']['matching_tags']) needs strlen(term) > 2 OR the
+    // search is single-token OR the token is scoped/wildcarded/quoted
+    // -- every OTHER multi-term test in this file only ever combines
+    // already-long terms, so this 4-term OR's own first branch was
+    // never independently provable. A 2-char exact tag name ('ab') in
+    // a 2-token search satisfies none of the 4 conditions, so it must
+    // be found (a real, valid tag match) yet excluded from the display
+    // list -- unlike 'family', long enough to qualify on its own.
+    $conn = searchServiceTestConn();
+    $conn->executeStatement("INSERT INTO " . Tables::tags() . " (name, url_name, lastmodified) VALUES ('ab', 'ab', NOW())");
+    $tagId = (int) $conn->lastInsertId();
+    $conn->executeStatement('INSERT INTO ' . Tables::imageTag() . ' (image_id, tag_id) VALUES (4, ?)', [$tagId]);
+
+    try {
+        $results = searchServiceTestService()->getQuickSearchResultsNoCache('ab family', []);
+
+        $matchingTags = $results['qs']['matching_tags'] ?? null;
+        if (! is_array($matchingTags)) {
+            throw new LogicException('expected matching_tags to be an array, got ' . get_debug_type($matchingTags));
+        }
+
+        expect(array_column($matchingTags, 'name'))->toBe(['family']);
+    } finally {
+        $conn->executeStatement('DELETE FROM ' . Tables::imageTag() . ' WHERE tag_id = ?', [$tagId]);
+        $conn->executeStatement('DELETE FROM ' . Tables::tags() . ' WHERE id = ?', [$tagId]);
+    }
+});
+
 test('getQuickSearchResultsNoCache() narrows two adjacent short terms to a shared tag match', function (): void {
     // "dog" (<=3 chars) is too short for a real fixture tag -- insert a
     // temporary one so 2 adjacent short terms genuinely share a match,
@@ -1523,6 +1646,30 @@ test('qsearchGetCategories() narrows 2 adjacent short, non-wildcarded, non-quote
     } finally {
         $conn->executeStatement('DELETE FROM ' . Tables::imageCategory() . ' WHERE category_id IN (?, ?, ?)', [$catA, $catB, $catAB]);
         $conn->executeStatement('DELETE FROM ' . Tables::categories() . ' WHERE id IN (?, ?, ?)', [$catA, $catB, $catAB]);
+    }
+});
+
+test('getQuickSearchResultsNoCache() excludes a matched category from the display list when its own term is too short in a multi-term search', function (): void {
+    // Same rationale as qsearchGetTags()'s own analogous test above --
+    // qsearchGetCategories()'s own $positiveIds accumulation
+    // (narrowing $qsr->all_cats / $results['qs']['matching_cats']) has
+    // the identical 4-term OR gate. A 2-char exact category name ('ab')
+    // in a 2-token search satisfies none of the 4 conditions.
+    $conn = searchServiceTestConn();
+    $conn->executeStatement("INSERT INTO " . Tables::categories() . " (name) VALUES ('ab')");
+    $catId = (int) $conn->lastInsertId();
+
+    try {
+        $results = searchServiceTestService()->getQuickSearchResultsNoCache('ab Sample', []);
+
+        $matchingCats = $results['qs']['matching_cats'] ?? null;
+        if (! is_array($matchingCats)) {
+            throw new LogicException('expected matching_cats to be an array, got ' . get_debug_type($matchingCats));
+        }
+
+        expect(array_column($matchingCats, 'name'))->toBe(['Sample Album']);
+    } finally {
+        $conn->executeStatement('DELETE FROM ' . Tables::categories() . ' WHERE id = ?', [$catId]);
     }
 });
 

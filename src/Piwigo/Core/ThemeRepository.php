@@ -11,13 +11,9 @@ use Piwigo\Core\Projection\ThemeListing;
 /**
  * Persistence layer for the `themes` table's own id/name listing below.
  *
- * Item 15 audit: converted to real DQL against {@see ThemeEntity} --
- * `themes` itself is entity-mapped (added in Item 14 Sub-phase B1 for
- * `Users\UserRepository`'s own DQL conversions), and this class's own
- * former docblock claim that it had "no other real caller to share an
- * entity-based repository with" was about needing a *shared* repository,
- * not about DQL itself being unreachable -- `EntityRepository<ThemeEntity>`
- * needs no other caller to be worth using here.
+ * Real DQL against {@see ThemeEntity} -- `themes` itself is
+ * entity-mapped. `EntityRepository<ThemeEntity>` needs no other caller
+ * to be worth using here.
  *
  * @extends EntityRepository<ThemeEntity>
  */

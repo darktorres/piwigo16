@@ -204,14 +204,11 @@ final class CommentRepository extends EntityRepository implements CommentCounter
      * also matching the $anonymousIdPrefix.* anonymous_id pattern) within
      * the last $antiFloodSeconds seconds. Used by the anti-flood check.
      *
-     * Item 14 DQL audit, corrected: the original note claimed
-     * `SUBDATE(..., INTERVAL ... SECOND)` had no native DQL function --
-     * wrong. `DATE_SUB(date, interval, unit)` is a real, built-in DQL
-     * function (compiling through `AbstractPlatform::
+     * `DATE_SUB(date, interval, unit)` is a real, built-in DQL function
+     * (compiling through `AbstractPlatform::
      * getDateSubSecondsExpression()`, genuinely portable per-platform,
      * not MySQL-specific), just spelled with a different argument order
-     * than MySQL's own `SUBDATE(date, INTERVAL n unit)` syntax. Converted
-     * to real DQL.
+     * than MySQL's own `SUBDATE(date, INTERVAL n unit)` syntax.
      */
     public function countRecentComments(int $authorId, ?string $anonymousIdPrefix, int $antiFloodSeconds): int
     {
@@ -580,8 +577,8 @@ final class CommentRepository extends EntityRepository implements CommentCounter
     }
 
     /**
-     * Further SQL-modernization audit, Item 14: converted to real DQL --
-     * single-table, static WHERE/GROUP BY, no join DQL can't express.
+     * Real DQL -- single-table, static WHERE/GROUP BY, no join DQL can't
+     * express.
      * `imageId` uses the `image_id` custom Doctrine Type, so the selected
      * `c.imageId` hydrates as a real {@see ImageId} under
      * `getArrayResult()`, unwrapped below.

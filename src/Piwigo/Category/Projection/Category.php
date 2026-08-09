@@ -32,17 +32,17 @@ use Piwigo\Common\ValueObject\SqlDateTime;
  * -- every real consumer today (`DateHelper::formatDate()`/`timeSince()`,
  * raw SQL comparisons) already expects the raw DB DATETIME string form,
  * same reasoning as {@see \Piwigo\Image\Projection\Image}.
- * `CategoryEntity::$lastmodified` itself is `SqlDateTime`-typed (Phase 5)
+ * `CategoryEntity::$lastmodified` itself is `SqlDateTime`-typed
  * -- `fromEntity()` unwraps `->value`, `fromRow()` accepts either a real
  * instance (a `getArrayResult()`-hydrated row) or a raw string.
  *
- * `id` is `CategoryId`, not `?CategoryId` (Phase 4) -- `categories.id` is
+ * `id` is `CategoryId`, not `?CategoryId` -- `categories.id` is
  * `NOT NULL AUTO_INCREMENT`, and this projection's own 2 real producers
  * ({@see \Piwigo\Category\CategoryRepository::findById()}/
  * `findFullCategoriesByIds()`) only ever wrap an already-persisted,
  * already-fetched entity/row, so a missing/invalid id can't actually
  * occur here, same reasoning as {@see \Piwigo\Comment\Projection\Comment}'s
- * `id`. `CategoryEntity::$id` itself stays `?CategoryId` (Phase 3) --
+ * `id`. `CategoryEntity::$id` itself stays `?CategoryId` --
  * that nullability reflects "not yet persisted", a state this projection
  * never represents. `permalink` stays `?Permalink` -- `categories.
  * permalink` is a genuinely nullable business column (not every album has

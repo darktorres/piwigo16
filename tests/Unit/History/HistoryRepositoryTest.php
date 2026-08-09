@@ -83,10 +83,7 @@ use Piwigo\Users\UserInfoEntity;
  */
 function historyTestRepo(): HistoryRepository
 {
-    $repo = EntityManagerFactory::build(DbConnection::build())->getRepository(HistoryEntity::class);
-    expect($repo)->toBeInstanceOf(HistoryRepository::class);
-
-    return $repo;
+    return EntityManagerFactory::build(DbConnection::build())->getRepository(HistoryEntity::class);
 }
 
 /**
@@ -100,10 +97,8 @@ function historyTestRepo(): HistoryRepository
 function historyTestRepoWithEm(): array
 {
     $em = EntityManagerFactory::build(DbConnection::build());
-    $repo = $em->getRepository(HistoryEntity::class);
-    expect($repo)->toBeInstanceOf(HistoryRepository::class);
 
-    return [$repo, $em];
+    return [$em->getRepository(HistoryEntity::class), $em];
 }
 
 function historyTestInsertLine(int $userId, string $date, string $time): int
@@ -585,13 +580,25 @@ test('search() maps every optional column when a row actually has them populated
     // maps a genuinely non-null value correctly, not just its null
     // fallback.
     $conn = DbConnection::build();
-    $id = historyTestInsertLine(1, '2026-07-12', '03:00:00');
-    $conn->executeStatement(
-        'UPDATE ' . Tables::history() . " SET section = 'categories', category_id = 1, search_id = 5, tag_ids = '1,2,3', image_id = 1, image_type = 'picture' WHERE id = ?",
-        [$id]
-    );
+    // A real, test-owned piwigo_search row -- history.search_id has a
+    // real `fk_search_search_created_by`-adjacent FK onto piwigo_search.id
+    // (ON DELETE SET NULL, but INSERT/UPDATE still enforces the row
+    // exists). A hardcoded literal id here isn't safe: piwigo_search is
+    // real, shared, high-churn state written by every SearchRepositoryTest.php/
+    // SearchServiceTest.php test in this same suite, so any specific id
+    // is only ever transiently occupied -- confirmed live (a genuine
+    // ForeignKeyConstraintViolationException when the literal id this
+    // test used to hardcode wasn't currently occupied).
+    $conn->executeStatement('INSERT INTO ' . Tables::search() . ' (search_uuid) VALUES (NULL)');
+    $searchId = (int) $conn->lastInsertId();
 
     try {
+        $id = historyTestInsertLine(1, '2026-07-12', '03:00:00');
+        $conn->executeStatement(
+            'UPDATE ' . Tables::history() . " SET section = 'categories', category_id = 1, search_id = ?, tag_ids = '1,2,3', image_id = 1, image_type = 'picture' WHERE id = ?",
+            [$searchId, $id]
+        );
+
         $rows = historyTestRepo()->search(null, null, null, [], null, null, null, null);
 
         expect($rows)->toHaveCount(1);
@@ -600,12 +607,13 @@ test('search() maps every optional column when a row actually has them populated
             ->and($row->time)->toBe('03:00:00')
             ->and($row->section)->toBe('categories')
             ->and($row->categoryId)->toBe(1)
-            ->and($row->searchId)->toBe(5)
+            ->and($row->searchId)->toBe($searchId)
             ->and($row->tagIds)->toBe('1,2,3')
             ->and($row->imageId)->toBe(1)
             ->and($row->imageType)->toBe('picture');
     } finally {
         historyTestClearHistory();
+        $conn->executeStatement('DELETE FROM ' . Tables::search() . ' WHERE id = ?', [$searchId]);
     }
 });
 

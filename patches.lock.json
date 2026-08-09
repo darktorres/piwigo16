@@ -1,5 +1,5 @@
 {
-    "_hash": "007dbf21d4d31e5092825a88db82e60690eda3839b874e2b587f5fec82023a36",
+    "_hash": "29227bda2d36ee51629ff12c1ebad8715cd4ca85bda4c8db4bd3f26307eed065",
     "patches": {
         "pestphp/pest-plugin-browser": [
             {
@@ -27,6 +27,16 @@
                 "description": "Fix Execution::resetAssertions() passing Assert::class instead of null as ReflectionProperty::setValue()'s first argument for a static property (PHP 8.1 deprecation)",
                 "url": "patches/pest-plugin-browser-5.0.0-reset-assertions-static-property.patch",
                 "sha256": "19bad60c52344ddfa334413daf0656919632f56df48f7d5896407c97f846f4e5",
+                "depth": 1,
+                "extra": {
+                    "provenance": "root"
+                }
+            },
+            {
+                "package": "pestphp/pest-plugin-browser",
+                "description": "Fix PlaywrightNpmServer::start() launching via SystemProcess::fromShellCommandline() (a plain command string), which proc_open() routes through /bin/sh -c on this environment -- Symfony ends up tracking the shell's PID, not the real playwright run-server process underneath it, so stop()'s SIGTERM only reaches the shell and the real server survives, reparented to the nearest subreaper, on every run regardless of whether the suite passed. Ported the same fix already applied and confirmed working for the plugin's own pre-5.0 PlaywrightNpmServer (a differently-located/structured class the 4.3.1->5.0.0 rewrite silently reintroduced this exact bug for): build the process from an argv array instead, which bypasses the shell entirely",
+                "url": "patches/pest-plugin-browser-5.0.0-stop-server-without-shell.patch",
+                "sha256": "d650b22670d94a573d115e957a3e7676fb5f8768e6b5596d2044e4af5adbbe7f",
                 "depth": 1,
                 "extra": {
                     "provenance": "root"

@@ -1,0 +1,35 @@
+--- a/src/Playwright/Servers/PlaywrightNpmServer.php
++++ b/src/Playwright/Servers/PlaywrightNpmServer.php
+@@ -60,11 +60,30 @@
+             return;
+         }
+ 
+-        $this->systemProcess = SystemProcess::fromShellCommandline(sprintf(
++        // Built as an argv array, not fromShellCommandline(): a shell
++        // command *string* only gets Symfony's own `exec`-prefix
++        // treatment when Process::isSigchildEnabled() is true (an old
++        // PHP --enable-sigchild build flag) -- without it, proc_open()
++        // routes the string through `/bin/sh -c "<command>"`, and on a
++        // /bin/sh that forks rather than exec's a single simple command,
++        // Symfony ends up tracking the *shell's* PID, not the real
++        // `playwright run-server` process underneath it. stop()'s
++        // SIGTERM then only reaches the (possibly already-exited) shell,
++        // orphaning the real server -- reparented to the nearest
++        // subreaper and left running indefinitely. An array command
++        // bypasses the shell entirely (proc_open() execve()s the binary
++        // directly), so there's no intermediate process for Symfony to
++        // mistrack. $this->command is always this class's own fixed
++        // "<playwright binary> run-server --host %s --port %d --mode
++        // launchServer" template (see ServerManager::playwright(), its
++        // only real caller) -- none of its tokens ever contain spaces,
++        // so splitting the already-sprintf'd string on spaces is exact,
++        // not an approximation.
++        $this->systemProcess = new SystemProcess(explode(' ', sprintf(
+             $this->command,
+             $this->host,
+             $this->port,
+-        ), $this->baseDirectory, [
++        )), $this->baseDirectory, [
+             'APP_URL' => sprintf('http://%s:%d', $this->host, $this->port),
+         ]);
+ 

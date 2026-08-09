@@ -71,7 +71,7 @@ final class HistoryRepository extends EntityRepository implements LastVisitLooku
     ];
 
     /**
-     * Item 16F: real DQL replacement for the raw DBAL read
+     * Real DQL replacement for the raw DBAL read
      * {@see \Piwigo\Auth\AuthRepository::findLastVisitFromHistory()} used
      * to do directly -- `Auth` (`L2aCoreDomain`) can't depend on
      * `History` (`L2bExtendedDomain`), so `AuthRepository` now
@@ -106,7 +106,7 @@ final class HistoryRepository extends EntityRepository implements LastVisitLooku
     }
 
     /**
-     * Item 14 DQL audit, re-corrected: `history_summary` is now mapped
+     * `history_summary` is mapped
      * ({@see HistorySummaryEntity}). Converted to real DQL -- single-table,
      * static WHERE.
      */
@@ -137,9 +137,8 @@ final class HistoryRepository extends EntityRepository implements LastVisitLooku
     }
 
     /**
-     * Item 14 DQL audit: converted to real DQL -- single-table MIN()
-     * aggregate, no WHERE; `h.id` is a plain integer column, no custom
-     * Doctrine Type involved.
+     * Single-table MIN() aggregate, no WHERE; `h.id` is a plain integer
+     * column, no custom Doctrine Type involved.
      */
     public function findMinHistoryId(): ?int
     {
@@ -236,7 +235,7 @@ final class HistoryRepository extends EntityRepository implements LastVisitLooku
     }
 
     /**
-     * Item 14 DQL audit, re-corrected: `history_summary` is now mapped
+     * `history_summary` is mapped
      * ({@see HistorySummaryEntity}). Converted to real DQL -- the "dynamic
      * nullable-hierarchy WHERE" the original note flagged isn't actually
      * caller-supplied text: it's a fixed nested-conditional *shape*
@@ -288,7 +287,7 @@ final class HistoryRepository extends EntityRepository implements LastVisitLooku
     }
 
     /**
-     * Item 14 DQL audit, re-corrected: `history_summary` is now mapped
+     * `history_summary` is mapped
      * ({@see HistorySummaryEntity}). Converted to real DQL -- still a
      * per-row loop (each row has its own distinct WHERE, so this can't
      * collapse into a single bulk statement), but each iteration is now a
@@ -332,7 +331,7 @@ final class HistoryRepository extends EntityRepository implements LastVisitLooku
     }
 
     /**
-     * Item 14 DQL audit, re-corrected: `history_summary` is now mapped
+     * `history_summary` is mapped
      * ({@see HistorySummaryEntity}) -- DQL still has no INSERT statement
      * at all, but a real ORM `persist()`-per-row loop with a single
      * `flush()` after it is the same N-individual-writes shape this raw
@@ -362,8 +361,7 @@ final class HistoryRepository extends EntityRepository implements LastVisitLooku
     }
 
     /**
-     * Item 14 DQL audit: converted to real DQL -- single-table COUNT()
-     * aggregate, no WHERE.
+     * Single-table COUNT() aggregate, no WHERE.
      */
     public function countAll(): int
     {
@@ -376,7 +374,7 @@ final class HistoryRepository extends EntityRepository implements LastVisitLooku
     }
 
     /**
-     * Item 14 DQL audit, re-corrected: `history_summary` is now mapped
+     * `history_summary` is mapped
      * ({@see HistorySummaryEntity}). Converted to real DQL -- single-table,
      * static WHERE, SUM() is a standard DQL function.
      *
@@ -399,7 +397,7 @@ final class HistoryRepository extends EntityRepository implements LastVisitLooku
     }
 
     /**
-     * Item 14 DQL audit, re-corrected: `history_summary` is now mapped
+     * `history_summary` is mapped
      * ({@see HistorySummaryEntity}). Converted to real DQL -- single-table;
      * `$type`'s match() only ever selects one of 4 fixed WHERE/ORDER BY
      * shapes, not a caller-supplied dynamic fragment.
@@ -456,7 +454,7 @@ final class HistoryRepository extends EntityRepository implements LastVisitLooku
     }
 
     /**
-     * Item 14 DQL audit, re-corrected: `history_summary` is now mapped
+     * `history_summary` is mapped
      * ({@see HistorySummaryEntity}). Converted to real DQL -- single-table,
      * static WHERE.
      *
@@ -492,7 +490,7 @@ final class HistoryRepository extends EntityRepository implements LastVisitLooku
     }
 
     /**
-     * Item 14 DQL audit, re-corrected: `history_summary` is now mapped
+     * `history_summary` is mapped
      * ({@see HistorySummaryEntity}). Converted to real DQL -- single-table,
      * static WHERE (3 fixed (year, month) pairs, both bound parameters).
      *
@@ -534,7 +532,7 @@ final class HistoryRepository extends EntityRepository implements LastVisitLooku
     }
 
     /**
-     * Item 14 DQL audit, re-corrected: `history_summary` is now mapped
+     * `history_summary` is mapped
      * ({@see HistorySummaryEntity}). Converted to real DQL -- single-table,
      * static WHERE, AVG() is a standard DQL function. `ORDER BY` dropped
      * from the DQL form: a bare aggregate SELECT (no GROUP BY) always
@@ -567,13 +565,12 @@ final class HistoryRepository extends EntityRepository implements LastVisitLooku
     }
 
     /**
-     * Item 14 DQL audit: converted to real DQL -- single-table ORDER BY +
-     * LIMIT 1; getSingleColumnResult() + `$ids[0] ?? null` used instead of
-     * getOneOrNullResult() (Item 14 DQL audit gotcha #3: the latter throws
-     * NonUniqueResultException on more than one row, which setMaxResults(1)
-     * here rules out, but the array-index form matches the original's own
-     * "no rows -> null" fetchOne() semantics with no exception path at
-     * all).
+     * Single-table ORDER BY + LIMIT 1; getSingleColumnResult() +
+     * `$ids[0] ?? null` used instead of getOneOrNullResult()
+     * (getOneOrNullResult() throws NonUniqueResultException on more than
+     * one row, which setMaxResults(1) here rules out, but the array-index
+     * form matches "no rows -> null" fetchOne() semantics with no
+     * exception path at all).
      */
     public function findLatestHistoryId(): ?int
     {
@@ -590,8 +587,7 @@ final class HistoryRepository extends EntityRepository implements LastVisitLooku
     }
 
     /**
-     * Item 14 DQL audit: converted to real DQL -- same shape as
-     * findLatestHistoryId() above, ASC instead of DESC.
+     * Same shape as findLatestHistoryId() above, ASC instead of DESC.
      */
     public function findOldestHistoryId(): ?int
     {
@@ -620,11 +616,11 @@ final class HistoryRepository extends EntityRepository implements LastVisitLooku
     }
 
     /**
-     * Item 14 DQL audit: converted to real DQL -- single-table (`images`,
-     * mapped by {@see ImageEntity}, a different repository's own entity
-     * but freely queryable via the shared EntityManager), static WHERE,
-     * no join/aggregate DQL can't express; `id`/`file` are plain
-     * integer/string columns, no custom Doctrine Type involved.
+     * Single-table (`images`, mapped by {@see ImageEntity}, a different
+     * repository's own entity but freely queryable via the shared
+     * EntityManager), static WHERE, no join/aggregate DQL can't express;
+     * `id`/`file` are plain integer/string columns, no custom Doctrine
+     * Type involved.
      *
      * @return list<int>
      */
@@ -646,12 +642,11 @@ final class HistoryRepository extends EntityRepository implements LastVisitLooku
     }
 
     /**
-     * Item 14 DQL audit: converted to real DQL -- single-table (`history`),
-     * every filter a WHERE/LIKE/IN DQL can express; the dynamic
-     * $imageTypes OR-clause is built as a plain bound-placeholder string
-     * (not a loop-built Orx composite) to sidestep the phpstan-doctrine
-     * static-analysis false positive on loop-built composites (Item 14
-     * DQL audit gotcha #2) -- same "raw string + real bound params"
+     * Single-table (`history`), every filter a WHERE/LIKE/IN DQL can
+     * express; the dynamic $imageTypes OR-clause is built as a plain
+     * bound-placeholder string (not a loop-built Orx composite) to
+     * sidestep the phpstan-doctrine static-analysis false positive on
+     * loop-built composites -- same "raw string + real bound params"
      * convention already used everywhere else in this codebase.
      * `userId`/`categoryId`/`imageId`/`ip`/`date`/`time` all route through
      * custom Doctrine Types, so the row mapper below unwraps each via
@@ -763,13 +758,11 @@ final class HistoryRepository extends EntityRepository implements LastVisitLooku
 
     public function updateLastVisitNow(int $userId): void
     {
-        // Item 15 audit, re-verified: this plan's own text speculated the
-        // deptrac boundary rules this out -- wrong once actually checked.
         // `History` is `L2bExtendedDomain`; `Users` is `L2aCoreDomain` --
         // a downward dependency, the same accepted precedent already used
         // by `Permission\PermissionRepository`/`UserRepository::
         // deleteUser()`'s own direct `Users\*Entity` DQL touches, not the
-        // `deleteSiteRow`-class real violation. Converted to real DQL.
+        // `deleteSiteRow`-class real violation.
         //
         // Env::now() rather than DQL's CURRENT_TIMESTAMP() -- matches
         // SessionRepository/CommentRepository's own established reasoning
@@ -836,8 +829,8 @@ final class HistoryRepository extends EntityRepository implements LastVisitLooku
             ]));
         }
 
-        // SQL-modernization audit: verified, {$historyTable} is a
-        // structural Tables::history() constant, no real value spliced.
+        // {$historyTable} is a structural Tables::history() constant, no
+        // real value spliced.
         $rows = $conn->executeQuery(<<<SQL
             DESC {$historyTable}
             SQL)->fetchAllAssociative();
@@ -880,9 +873,9 @@ final class HistoryRepository extends EntityRepository implements LastVisitLooku
             return;
         }
 
-        // SQL-modernization audit: verified, not a target -- an ENUM
-        // column definition has no bind-able parameter position in any
-        // SQL dialect (DDL, same carve-out as Admin\Maintenance\
+        // Not a bind target -- an ENUM column definition has no
+        // bind-able parameter position in any SQL dialect (DDL, same
+        // carve-out as Admin\Maintenance\
         // DbMaintenanceRepository::repairOptimizeAllTables()), and
         // $options is already regex-gated by the one real caller (see
         // this method's own docblock) rather than raw user input.

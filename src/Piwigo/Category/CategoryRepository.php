@@ -72,10 +72,9 @@ use Piwigo\Permission\SqlCondition;
  * docblock): `Category` is `L2aCoreDomain`, `Permalink` is
  * `L2bExtendedDomain`, and a direct dependency the other way is a real
  * deptrac violation. This repository shares `user_access` ({@see UserAccessEntity})/
- * `group_access` ({@see \Piwigo\Group\GroupAccessEntity}, created during
- * the Group batch)/`image_category` ({@see \Piwigo\Image\ImageCategoryEntity},
- * placed in the Image domain, its heaviest real consumer -- Item 14
- * Sub-phase B1) with Group/Image/Permission -- only the single-row/
+ * `group_access` ({@see \Piwigo\Group\GroupAccessEntity})/`image_category`
+ * ({@see \Piwigo\Image\ImageCategoryEntity}, placed in the Image domain,
+ * its heaviest real consumer) with Group/Image/Permission -- only the single-row/
  * simple-id-list methods against those tables go through DQL; the large
  * majority of this repository's 65 methods are dynamic-fragment
  * (caller-built permission/ORDER BY SQL), dynamically table/column-named
@@ -120,7 +119,7 @@ final class CategoryRepository
      * Accepts either query-builder flavor -- {@see SqlCondition}'s own
      * `sql`/`parameters`/`types` shape applies identically via
      * `andWhere()`/`setParameter()` on both DBAL's and DQL's query
-     * builders, confirmed empirically (Item 15 audit): a DQL consumer
+     * builders, confirmed empirically: a DQL consumer
      * just passes a DQL property path (e.g. `c.id`) into the same
      * {@see PermissionCriteria} `*Condition()` methods a DBAL consumer
      * already uses with a raw column name.
@@ -153,10 +152,10 @@ final class CategoryRepository
      * @param  list<int>  $ids
      * @return array<int, CategoryIdNamePermalink> keyed by id
      *
-     * Item 14 DQL audit: converted to real DQL -- single-table, static WHERE,
-     * no join DQL can't express. `c.id`/`c.permalink` are now custom-Typed
-     * (`category_id`/`permalink`), so `getArrayResult()` (Gotcha #1)
-     * returns real VO instances for them -- unwrapped below.
+     * Real DQL -- single-table, static WHERE, no join DQL can't express.
+     * `c.id`/`c.permalink` are custom-Typed (`category_id`/`permalink`),
+     * so `getArrayResult()` (Gotcha #1) returns real VO instances for
+     * them -- unwrapped below.
      */
     public function findNamesByIds(array $ids): array
     {
@@ -193,9 +192,8 @@ final class CategoryRepository
      *
      * @return array<int, CategoryIdNamePermalink> keyed by id
      *
-     * Item 14 DQL audit: converted to real DQL -- single-table, unconditional
-     * select. `c.id`/`c.permalink` are custom-Typed -- see this class's own
-     * Gotcha #1 note above.
+     * Real DQL -- single-table, unconditional select. `c.id`/`c.permalink`
+     * are custom-Typed -- see this class's own Gotcha #1 note above.
      */
     public function findAllIdNamePermalink(): array
     {
@@ -228,10 +226,10 @@ final class CategoryRepository
      *
      * @return ?CategoryIdNamePermalink
      *
-     * Item 14 DQL audit: converted to real DQL -- single-table, id is the PK
-     * so at most one row can match (no NonUniqueResultException risk, no
-     * setMaxResults() needed). `c.id`/`c.permalink` are custom-Typed -- see
-     * this class's own Gotcha #1 note above.
+     * Real DQL -- single-table, id is the PK so at most one row can match
+     * (no NonUniqueResultException risk, no setMaxResults() needed).
+     * `c.id`/`c.permalink` are custom-Typed -- see this class's own
+     * Gotcha #1 note above.
      */
     public function findIdNamePermalinkById(int $id): ?CategoryIdNamePermalink
     {
@@ -266,13 +264,12 @@ final class CategoryRepository
      * @param  list<int>  $ids
      * @return list<int>
      *
-     * Item 14 DQL audit, re-corrected: `REGEXP`'s MySQL/MariaDB-specific
-     * *operator name* is now genuinely portable via a custom DQL function
-     * ({@see \Piwigo\Db\DqlFunction\RegexpFunction}, Item 14 Sub-phase B5
-     * Tier 1) that reads the real operator from `AbstractPlatform::
-     * getRegexpExpression()`. Converted to real DQL -- see that class's
-     * own docblock for the real remaining Postgres-portability caveat
-     * (the pattern *syntax* below, not just the operator, would need a
+     * `REGEXP`'s MySQL/MariaDB-specific *operator name* is portable via a
+     * custom DQL function ({@see \Piwigo\Db\DqlFunction\RegexpFunction})
+     * that reads the real operator from `AbstractPlatform::
+     * getRegexpExpression()`. Real DQL -- see that class's own docblock
+     * for the real remaining Postgres-portability caveat (the pattern
+     * *syntax* below, not just the operator, would need a
      * platform-specific rewrite for genuine Postgres support).
      */
     public function findSubcategoryIds(array $ids): array
@@ -302,30 +299,19 @@ final class CategoryRepository
     }
 
     /**
-     * SQL-modernization audit, Item 14 Sub-phase C1: converted to a typed
-     * {@see PermissionCriteria} -- the one real caller applies
+     * Uses a typed {@see PermissionCriteria} -- the one real caller applies
      * forbiddenCategoryIds/visibleCategoryIds against `c.id` and
-     * visibleImageIds against `ic.image_id`. It also passed `visible_images
-     * => 'image_id'` to the old `getSqlConditionFandFAsCondition()`, whose
-     * own `visible_images` case falls through into `forbidden_images` with
-     * no `break` -- with fieldName `'image_id'` (not `'id'`/`'i.id'`),
-     * that's the `image_access_list` branch, so imageAccessIds applies
-     * here too, against `ic.image_id`.
+     * visibleImageIds against `ic.image_id` (via `image_access_list`, since
+     * `visible_images` falls through to it in the old
+     * `getSqlConditionFandFAsCondition()` mapping, so imageAccessIds
+     * applies here too, against `ic.image_id`).
      *
-     * Item 14 DQL audit, re-corrected: `image_category` is now mapped
-     * ({@see \Piwigo\Image\ImageCategoryEntity}), and Sub-phase B5 Tier 3
-     * gives `RAND()` a portable custom DQL function
-     * ({@see \Piwigo\Db\DqlFunction\RandFunction}), but this method stays
-     * on DBAL -- $criteria's own fragments are built for a plain DBAL
-     * QueryBuilder, not DQL.
-     *
-     * Item 15 audit, re-verified: the claim above ("$criteria's own
-     * fragments are built for a plain DBAL QueryBuilder, not DQL") is
-     * wrong once actually tried -- {@see PermissionCriteria}'s
-     * `*Condition()` methods work identically against a DQL query
-     * builder, see {@see applyCondition()}'s own docblock. Converted to
-     * real DQL, `RAND()` unchanged (same portable custom function already
-     * used by {@see findRandomImageIdInCategory()}).
+     * Real DQL -- `image_category` is mapped
+     * ({@see \Piwigo\Image\ImageCategoryEntity}), {@see PermissionCriteria}'s
+     * `*Condition()` methods work identically against a DQL query builder
+     * (see {@see applyCondition()}), and `RAND()` uses the same portable
+     * custom DQL function ({@see \Piwigo\Db\DqlFunction\RandFunction}) as
+     * {@see findRandomImageIdInCategory()}.
      */
     public function findRandomImageId(int $catId, string $uppercats, bool $recursive, PermissionCriteria $criteria): ?int
     {
@@ -437,28 +423,21 @@ final class CategoryRepository
      * @param  list<int>  $catIds
      * @return list<int>
      *
-     * SQL-modernization audit, Item 14 Sub-phase C1: converted to a typed
-     * {@see PermissionCriteria} -- the one real caller applies
+     * Uses a typed {@see PermissionCriteria} -- the one real caller applies
      * forbiddenCategoryIds/visibleCategoryIds against `ic.category_id` and
-     * visibleImageIds against `i.id`. It also passed `visible_images =>
-     * 'id'` to the old `getSqlConditionFandFAsCondition()`, whose own
-     * `visible_images` case falls through into `forbidden_images` with no
-     * `break` -- with fieldName `'id'`, that's the images-table's own
-     * `level <= x` check, so maxLevel applies here too, against `i.level`.
+     * visibleImageIds against `i.id` (via `image_access_list`, since
+     * `visible_images` falls through to the images-table's own
+     * `level <= x` check in the old `getSqlConditionFandFAsCondition()`
+     * mapping, so maxLevel applies here too, against `i.level`).
      *
-     * Item 14 DQL audit, re-corrected: `image_category` is now mapped
-     * ({@see \Piwigo\Image\ImageCategoryEntity}), but stayed on DBAL for its
-     * other, still-real blocker: a raw `CurrentConfig::orderBy()` ORDER BY
-     * fragment.
-     *
-     * Item 16J: that blocker is now conditional, not absolute --
-     * {@see \Piwigo\Image\PhotoSortField::parseOrderByFragment()} parses
-     * the stored fragment against the bounded `$sort_fields` vocabulary
-     * (see that method's own docblock for why this doesn't repeat the
-     * reverted `CurrentConfig`-typing attempt), and this method runs real
-     * DQL whenever that parse succeeds, falling back to the original raw
-     * DBAL query -- unchanged below -- whenever `orderByCustom()` is active
-     * or the text doesn't parse.
+     * Runs real DQL whenever {@see resolveDqlOrderBy()} can parse the
+     * stored order-by fragment against the bounded `$sort_fields`
+     * vocabulary ({@see \Piwigo\Image\PhotoSortField::parseOrderByFragment()}),
+     * falling back to the raw DBAL query below whenever `orderByCustom()`
+     * is active or the text doesn't parse -- `image_category` is mapped
+     * ({@see \Piwigo\Image\ImageCategoryEntity}), but the raw
+     * `CurrentConfig::orderBy()` ORDER BY fragment can't always be
+     * expressed in DQL.
      */
     public function findImageIdsForCategories(
         array $catIds,
@@ -503,9 +482,9 @@ final class CategoryRepository
                 ->setParameter('catCount', count($catIds));
         }
 
-        // CurrentConfig::orderBy() is always applied -- Item 3's own dead-
-        // parameter cleanup found no real caller ever supplies a genuinely
-        // different order, so there's nothing left to distinguish "no
+        // CurrentConfig::orderBy() is always applied -- no real caller
+        // ever supplies a genuinely different order, so there's nothing
+        // left to distinguish "no
         // override" from "current config order" for. Its own raw "ORDER BY
         // ..." SQL-fragment shape means QueryBuilder::orderBy() prepends its
         // own "ORDER BY " keyword, so the prefix must be stripped here or
@@ -615,20 +594,12 @@ final class CategoryRepository
      * @param  list<int>  $excludedCatIds
      * @return array<int, CategoryUppercatsCounter> keyed by id
      *
-     * SQL-modernization audit, Item 14 Sub-phase C1: converted to a typed
-     * {@see PermissionCriteria} -- the one real caller applies
-     * forbiddenCategoryIds/visibleCategoryIds against the base table's own
-     * unqualified `category_id` (no alias on `image_category` here).
-     *
-     * Item 14 DQL audit, re-corrected: `image_category` is now mapped
-     * ({@see \Piwigo\Image\ImageCategoryEntity}), but stays on DBAL --
-     * $criteria's own fragments are built for a plain DBAL QueryBuilder,
-     * not DQL.
-     *
-     * Item 15 audit, re-verified: the claim above is wrong once actually
-     * tried -- {@see PermissionCriteria}'s `*Condition()` methods work
-     * identically against a DQL query builder, see
-     * {@see applyCondition()}'s own docblock. Converted to real DQL.
+     * Uses a typed {@see PermissionCriteria} -- the one real caller applies
+     * forbiddenCategoryIds/visibleCategoryIds against `ic.categoryId`.
+     * Real DQL -- `image_category` is mapped
+     * ({@see \Piwigo\Image\ImageCategoryEntity}), and
+     * {@see PermissionCriteria}'s `*Condition()` methods work identically
+     * against a DQL query builder (see {@see applyCondition()}).
      */
     public function findCommonCategories(array $itemIds, ?int $max, array $excludedCatIds, PermissionCriteria $criteria): array
     {
@@ -688,9 +659,8 @@ final class CategoryRepository
      * @param  list<int>  $ids
      * @return list<CategoryListingRow>
      *
-     * Item 14 DQL audit: converted to real DQL -- single-table, static WHERE.
-     * `c.id`/`c.permalink` are custom-Typed -- see this class's own Gotcha
-     * #1 note above.
+     * Real DQL -- single-table, static WHERE. `c.id`/`c.permalink` are
+     * custom-Typed -- see this class's own Gotcha #1 note above.
      */
     public function findCategoriesByIds(array $ids): array
     {
@@ -758,9 +728,8 @@ final class CategoryRepository
     /**
      * @return list<int>
      *
-     * Item 14 DQL audit: converted to real DQL -- single-table, static
-     * WHERE; id is plain-typed, so getSingleColumnResult() returns ordinary
-     * ints.
+     * Real DQL -- single-table, static WHERE; id is plain-typed, so
+     * getSingleColumnResult() returns ordinary ints.
      */
     public function findCategoryIdsBySite(int $siteId): array
     {
@@ -776,15 +745,14 @@ final class CategoryRepository
      * @param  list<int>  $ids
      * @return list<int>
      *
-     * SQL-modernization audit, Item 14 Sub-phase B4: converted to real
-     * DQL -- `images` is owned by the Image domain (`Piwigo\Image`,
+     * Real DQL -- `images` is owned by the Image domain (`Piwigo\Image`,
      * L2aCoreDomain, same layer as `Piwigo\Category`, so querying
      * `ImageEntity` directly here is a legal same-layer dependency per
      * `deptrac.yaml`'s own ruleset), with no association declared on
      * `CategoryEntity` to it -- queried directly via
-     * `$this->em->createQueryBuilder()->from(ImageEntity::class,
-     * ...)`, same "no new association required" shape Item 14's own
-     * `GroupAccessEntity`/`UserAccessEntity` joins already established.
+     * `$this->em->createQueryBuilder()->from(ImageEntity::class, ...)`,
+     * same "no new association required" shape as this class's own
+     * `GroupAccessEntity`/`UserAccessEntity` joins elsewhere.
      */
     public function findStorageLinkedImageIds(array $ids): array
     {
@@ -807,19 +775,17 @@ final class CategoryRepository
 
     /**
      * Category ids whose name and/or comment matches $pattern (already a
-     * complete SQL LIKE pattern, e.g. '%word%') -- Further SQL-
-     * modernization audit, Item 7: retargeted here from SearchRepository's
-     * own generic findIdsByClause(), SearchService::searchAllwords()'s own
-     * "all words" search feature (category-title/description match,
-     * distinct from quick-search's separate token-based category lookup).
+     * complete SQL LIKE pattern, e.g. '%word%') -- backs
+     * SearchService::searchAllwords()'s own "all words" search feature
+     * (category-title/description match, distinct from quick-search's
+     * separate token-based category lookup).
      *
      * @return list<int>
      *
-     * Item 14 DQL audit: converted to real DQL -- single-table. The
-     * dynamic name/comment OR is built as a plain string (both branches
-     * share the same `:pattern` bind), not a loop-built `Expr\Orx`
-     * composite -- sidesteps gotcha #2's phpstan-doctrine false positive
-     * on dynamically-built composites.
+     * Real DQL -- single-table. The dynamic name/comment OR is built as a
+     * plain string (both branches share the same `:pattern` bind), not a
+     * loop-built `Expr\Orx` composite -- sidesteps gotcha #2's
+     * phpstan-doctrine false positive on dynamically-built composites.
      */
     public function findIdsByNameOrCommentLike(string $pattern, bool $matchName, bool $matchComment): array
     {
@@ -850,9 +816,9 @@ final class CategoryRepository
      * @param  list<int>  $ids
      * @return list<int>
      *
-     * Item 14 DQL audit, re-corrected: `image_category` is now mapped
-     * ({@see ImageCategoryEntity}). Converted to real DQL -- single-table.
-     * `ic.imageId` uses the `image_id` custom Doctrine Type, but
+     * Real DQL -- single-table; `image_category` is mapped
+     * ({@see ImageCategoryEntity}). `ic.imageId` uses the `image_id`
+     * custom Doctrine Type, but
      * `getSingleColumnResult()` uses `HYDRATE_SCALAR_COLUMN`, which never
      * applies a field's custom Type regardless (Gotcha #4) -- so this
      * still returns ordinary ints/numeric strings.
@@ -884,15 +850,14 @@ final class CategoryRepository
      * @param  list<int>  $excludeIds
      * @return list<int>
      *
-     * Item 14 DQL audit, re-corrected: `image_category` is now mapped
-     * ({@see ImageCategoryEntity}). Converted to real DQL -- single-table,
-     * both filtered columns bound as `ArrayParameterType::INTEGER` IN-lists
-     * (raw ints, not wrapped through CategoryId -- the IN-clause array
-     * bind doesn't route through a field's custom Doctrine Type reliably,
-     * same established convention as {@see deleteGroupAccessForCategories()}
-     * elsewhere in this class). `$excludeIds` is still spliced in
-     * unconditionally, even when empty, matching the original's own
-     * behavior exactly (no new empty-array guard added).
+     * Real DQL -- single-table; `image_category` is mapped
+     * ({@see ImageCategoryEntity}). Both filtered columns bind as
+     * `ArrayParameterType::INTEGER` IN-lists (raw ints, not wrapped
+     * through CategoryId -- the IN-clause array bind doesn't route
+     * through a field's custom Doctrine Type reliably, same established
+     * convention as {@see deleteGroupAccessForCategories()} elsewhere in
+     * this class). `$excludeIds` is still spliced in unconditionally,
+     * even when empty.
      */
     public function findNonOrphanImageIds(array $imageIds, array $excludeIds): array
     {
@@ -927,10 +892,10 @@ final class CategoryRepository
      * @param  list<int>  $excludeIds
      * @return list<int>
      *
-     * Item 14 DQL audit, re-corrected: `image_category` is now mapped
-     * ({@see ImageCategoryEntity}). Converted to real DQL -- single-table,
-     * no DISTINCT (matches the original -- this method deliberately
-     * returns every matching row, see the class comment above).
+     * Real DQL -- single-table; `image_category` is mapped
+     * ({@see ImageCategoryEntity}). No DISTINCT -- this method
+     * deliberately returns every matching row, see the class comment
+     * above.
      */
     public function findImageIdsOutsideCategories(array $excludeIds): array
     {
@@ -949,13 +914,12 @@ final class CategoryRepository
     /**
      * @param  list<int>  $ids
      *
-     * Item 14 DQL audit, re-corrected: `image_category` is now mapped
-     * ({@see ImageCategoryEntity}). Converted to real DQL -- single-table
-     * bulk DELETE, same "delete-by-ids clears the identity map afterward"
-     * contract as {@see deleteUserAccessForCategories()}/
+     * Real DQL -- single-table bulk DELETE; `image_category` is mapped
+     * ({@see ImageCategoryEntity}). Same "delete-by-ids clears the
+     * identity map afterward" contract as
+     * {@see deleteUserAccessForCategories()}/
      * {@see deleteGroupAccessForCategories()} above. `$ids` is still
-     * spliced in unconditionally, even when empty, matching the original's
-     * own behavior exactly (no new empty-array guard added).
+     * spliced in unconditionally, even when empty.
      */
     public function deleteImageCategoryLinksForCategories(array $ids): void
     {
@@ -1100,9 +1064,9 @@ final class CategoryRepository
      * @param array<string, ArrayParameterType|ParameterType> $types
      * @return list<int>
      *
-     * Item 14 DQL audit: stays on DBAL -- $whereCatsSql is a caller-supplied
-     * raw SQL fragment, and this joins `images` (Image domain, no
-     * association from CategoryEntity).
+     * Stays on DBAL -- $whereCatsSql is a caller-supplied raw SQL
+     * fragment, and this joins `images` (Image domain, no association
+     * from CategoryEntity).
      */
     public function findWrongRepresentativeCategoryIds(string $whereCatsSql, array $params = [], array $types = []): array
     {
@@ -1149,10 +1113,9 @@ final class CategoryRepository
      * @param array<string, ArrayParameterType|ParameterType> $types
      * @return list<int>
      *
-     * Item 14 DQL audit, re-corrected: `image_category` is now mapped
-     * ({@see \Piwigo\Image\ImageCategoryEntity}), but stays on DBAL for its
-     * other, still-real blocker: `$whereCatsSql` is a caller-supplied raw
-     * SQL fragment.
+     * Stays on DBAL -- `image_category` is mapped
+     * ({@see \Piwigo\Image\ImageCategoryEntity}), but `$whereCatsSql` is a
+     * caller-supplied raw SQL fragment.
      */
     public function findCategoriesNeedingRandomRepresentative(string $whereCatsSql, array $params = [], array $types = []): array
     {
@@ -1172,12 +1135,10 @@ final class CategoryRepository
     /**
      * @return list<string>
      *
-     * Item 15 audit: `$table`/`$column` converted from arbitrary runtime
-     * strings to {@see CategoryOrphanTarget}'s bounded enum.
-     *
-     * Item 16I: 3 of the 4 targets now go through real DQL -- see that
-     * enum's own docblock for why `OldPermalinks` alone keeps the
-     * original raw DBAL path (a real deptrac boundary, not a VO-typing
+     * `$table`/`$column` are {@see CategoryOrphanTarget}'s bounded enum,
+     * not arbitrary runtime strings. 3 of the 4 targets go through real
+     * DQL -- see that enum's own docblock for why `OldPermalinks` alone
+     * keeps the raw DBAL path (a real deptrac boundary, not a VO-typing
      * question).
      */
     public function findOrphanedColumnValues(CategoryOrphanTarget $target): array
@@ -1220,11 +1181,9 @@ final class CategoryRepository
     /**
      * @param  list<int|string>  $values
      *
-     * Item 15 audit: `$table`/`$column` converted from arbitrary runtime
-     * strings to {@see CategoryOrphanTarget}'s bounded enum.
-     *
-     * Item 16I: same DQL/DBAL split as {@see findOrphanedColumnValues()}
-     * above, same reasons.
+     * `$table`/`$column` are {@see CategoryOrphanTarget}'s bounded enum,
+     * not arbitrary runtime strings. Same DQL/DBAL split as
+     * {@see findOrphanedColumnValues()} above, same reasons.
      */
     public function deleteRowsWhereColumnIn(CategoryOrphanTarget $target, array $values): void
     {
@@ -1273,8 +1232,8 @@ final class CategoryRepository
      *
      * @return list<CategoryRankUpdateRow>
      *
-     * Item 14 DQL audit: converted to real DQL -- single-table, unconditional
-     * select/order, all columns plain-typed.
+     * Real DQL -- single-table, unconditional select/order, all columns
+     * plain-typed.
      */
     public function findCategoriesForRankUpdate(): array
     {
@@ -1407,12 +1366,11 @@ final class CategoryRepository
      * @param  list<int>  $ids
      * @return array<int, CategoryIdStatus> keyed by id
      *
-     * Item 14 DQL audit: converted to real DQL -- single-table, static
-     * WHERE. `c.id` is now custom-Typed (`category_id`) -- `$row['id']`
-     * used directly as an array key here (a fatal TypeError once it
-     * became a real CategoryId object, not just a silently-wrong scalar
-     * like this class's other Gotcha #1 sites) is the reason this method
-     * was fixed first.
+     * Real DQL -- single-table, static WHERE. `c.id` is custom-Typed
+     * (`category_id`) -- `$row['id']` used directly as an array key here
+     * would be a fatal TypeError against a real CategoryId object, unlike
+     * this class's other Gotcha #1 sites which only silently return a
+     * wrong scalar.
      */
     public function findStatusByIds(array $ids): array
     {
@@ -1490,11 +1448,9 @@ final class CategoryRepository
      *   no reference access exists)
      * @param  list<int>  $catIds
      *
-     * Item 15 audit: `$table`/`$field` converted from arbitrary runtime
-     * strings to {@see CategoryAccessTarget}'s bounded enum.
-     *
-     * Item 16I: converted to real DQL -- see that enum's own docblock for
-     * why the earlier custom-Type mismatch reasoning didn't hold up.
+     * `$table`/`$field` are {@see CategoryAccessTarget}'s bounded enum,
+     * not arbitrary runtime strings. Real DQL -- see that enum's own
+     * docblock.
      */
     public function deleteInconsistentAccess(CategoryAccessTarget $target, array $keepIds, array $catIds): void
     {
@@ -1518,9 +1474,8 @@ final class CategoryRepository
      * @param  array<int>  $ids  real callers don't guarantee a list
      * @return list<string>
      *
-     * Item 14 DQL audit: converted to real DQL -- single-table, static
-     * WHERE; uppercats is a plain string column, so getSingleColumnResult()
-     * returns ordinary strings.
+     * Real DQL -- single-table, static WHERE; uppercats is a plain string
+     * column, so getSingleColumnResult() returns ordinary strings.
      */
     public function findUppercatsColumns(array $ids): array
     {
@@ -1544,11 +1499,11 @@ final class CategoryRepository
      * @param  list<int>  $ids
      * @return array<int, string> keyed by id
      *
-     * Item 14 DQL audit: converted to real DQL -- single-table, static
-     * WHERE; `c.id` is custom-Typed (`category_id`) -- see this class's
-     * own Gotcha #1 note above. `fetchAllKeyValue()` has no direct DQL
-     * equivalent, so the id=>uppercats map is built from
-     * `getArrayResult()`'s own rows instead.
+     * Real DQL -- single-table, static WHERE; `c.id` is custom-Typed
+     * (`category_id`) -- see this class's own Gotcha #1 note above.
+     * `fetchAllKeyValue()` has no direct DQL equivalent, so the
+     * id=>uppercats map is built from `getArrayResult()`'s own rows
+     * instead.
      */
     public function findUppercatsById(array $ids): array
     {
@@ -1593,13 +1548,10 @@ final class CategoryRepository
      * @param  list<int>  $categoryIds
      * @return array<int, mixed> keyed by category_id
      *
-     * Item 15 audit: `$field`/`$minmax` converted from arbitrary runtime
-     * strings to {@see CategoryRefDateField}/{@see CategoryRefDateAggregate}'s
-     * bounded enums.
-     *
-     * Item 16I: converted to real DQL -- see {@see CategoryRefDateField}'s
-     * own docblock for why the earlier "not worth the extra DQL-rewrite
-     * risk" call was reconsidered.
+     * `$field`/`$minmax` are {@see CategoryRefDateField}/
+     * {@see CategoryRefDateAggregate}'s bounded enums, not arbitrary
+     * runtime strings. Real DQL -- see {@see CategoryRefDateField}'s own
+     * docblock.
      */
     public function findRefDatesByCategoryIds(array $categoryIds, CategoryRefDateField $field, CategoryRefDateAggregate $minmax): array
     {
@@ -1665,16 +1617,15 @@ final class CategoryRepository
     }
 
     /**
-     * SQL-modernization audit, Item 14 Sub-phase B5 Tier 3: converted to
-     * real DQL -- `image_category` is mapped
-     * ({@see \Piwigo\Image\ImageCategoryEntity}), and its remaining
-     * blocker, MySQL's `RAND()`, now has a portable custom DQL function
+     * Real DQL -- `image_category` is mapped
+     * ({@see \Piwigo\Image\ImageCategoryEntity}), and MySQL's `RAND()` has
+     * a portable custom DQL function
      * ({@see \Piwigo\Db\DqlFunction\RandFunction}, per-platform dispatch,
      * MySQL/MariaDB verified, PostgreSQL/SQLite unverified against a real
      * install -- see that class's own docblock). `imageId` uses the
      * `image_id` custom Doctrine Type, but `getSingleColumnResult()` +
      * `setMaxResults(1)` stays safe regardless -- `HYDRATE_SCALAR_COLUMN`
-     * never applies a field's custom Type (this audit's own gotcha #4).
+     * never applies a field's custom Type (Gotcha #4).
      */
     public function findRandomImageIdInCategory(int $categoryId): ?int
     {
@@ -1701,11 +1652,10 @@ final class CategoryRepository
      *   coerces them to int automatically when used as real array keys, but
      *   fetchAllKeyValue()'s own generic type doesn't track that statically)
      *
-     * Item 14 DQL audit: converted to real DQL -- single-table, static
-     * WHERE; `c.id` is custom-Typed (`category_id`) -- see this class's
-     * own Gotcha #1 note above. Builds the id=>dir map from
-     * `getArrayResult()`'s own rows (no direct `fetchAllKeyValue()`
-     * equivalent).
+     * Real DQL -- single-table, static WHERE; `c.id` is custom-Typed
+     * (`category_id`) -- see this class's own Gotcha #1 note above.
+     * Builds the id=>dir map from `getArrayResult()`'s own rows (no
+     * direct `fetchAllKeyValue()` equivalent).
      */
     public function findCategoryDirsById(): array
     {
@@ -1734,9 +1684,8 @@ final class CategoryRepository
      * @param  array<int>  $ids  real callers don't guarantee a list
      * @return list<CategoryFulldirRow>
      *
-     * Item 14 DQL audit: converted to real DQL -- single-table, static
-     * WHERE. `c.id` is custom-Typed (`category_id`) -- see this class's
-     * own Gotcha #1 note above.
+     * Real DQL -- single-table, static WHERE. `c.id` is custom-Typed
+     * (`category_id`) -- see this class's own Gotcha #1 note above.
      */
     public function findCategoriesForFulldirs(array $ids): array
     {
@@ -1771,9 +1720,8 @@ final class CategoryRepository
     /**
      * @return list<int>
      *
-     * SQL-modernization audit, Item 14 Sub-phase B4: converted to real
-     * DQL -- same "no association declared, queried directly" shape as
-     * {@see findStorageLinkedImageIds()} above.
+     * Real DQL -- same "no association declared, queried directly" shape
+     * as {@see findStorageLinkedImageIds()} above.
      */
     public function findDistinctStorageCategoryIds(): array
     {
@@ -1790,20 +1738,17 @@ final class CategoryRepository
     }
 
     /**
-     * SQL-modernization audit, Item 14 Sub-phase B4: converted to real
-     * DQL -- writes `images` (Image domain table, no association from
+     * Writes `images` (Image domain table, no association from
      * CategoryEntity, queried directly same as
-     * {@see findStorageLinkedImageIds()} above). MySQL's own
-     * `SqlDialect::concat()` was already a real, portable
-     * `AbstractPlatform::getConcatExpression()` primitive (Item 16's own
-     * finding), and DQL's built-in `CONCAT()` accepting 3+ arguments
-     * (confirmed against `vendor/doctrine/orm/.../ConcatFunction.php`,
-     * same as {@see \Piwigo\Category\CategoryRepository::
-     * findAllForPermalinksDisplay()}'s own use) lets this collapse the
-     * original's nested `CONCAT(CONCAT(:fulldir, '/'), file)` into one
-     * flat call. DQL's bulk `UPDATE ... SET` accepts a function call as
-     * the new value, same as {@see touchOldPermalinkHit()}'s own
-     * self-referential-arithmetic SET precedent established this
+     * {@see findStorageLinkedImageIds()} above). DQL's built-in
+     * `CONCAT()` accepting 3+ arguments (confirmed against
+     * `vendor/doctrine/orm/.../ConcatFunction.php`, same as
+     * {@see \Piwigo\Category\CategoryRepository::
+     * findAllForPermalinksDisplay()}'s own use) collapses the nested
+     * `CONCAT(CONCAT(:fulldir, '/'), file)` shape into one flat call.
+     * DQL's bulk `UPDATE ... SET` accepts a function call as the new
+     * value, same as {@see touchOldPermalinkHit()}'s own
+     * self-referential-arithmetic SET precedent establishes this
      * primitive works for non-trivial SET expressions.
      */
     public function updateImagePathsForCategory(CategoryId $categoryId, string $fulldir): void
@@ -1829,8 +1774,7 @@ final class CategoryRepository
      * still doesn't call $em->clear() itself, matching every real caller's
      * own explicit clear() afterward).
      *
-     * Item 14 DQL audit: converted to real DQL -- single-table, static
-     * WHERE, fixed SET column.
+     * Real DQL -- single-table, static WHERE, fixed SET column.
      */
     public function setRepresentativeImage(int $categoryId, int $imageId): void
     {
@@ -1849,8 +1793,7 @@ final class CategoryRepository
      * @param  array<int>  $ids  real callers don't guarantee a list
      * @return list<CategoryMoveRow>
      *
-     * Item 14 DQL audit: converted to real DQL -- single-table, static
-     * WHERE, all 4 columns plain-typed.
+     * Real DQL -- single-table, static WHERE, all 4 columns plain-typed.
      */
     public function findCategoriesForMove(array $ids): array
     {
@@ -1879,10 +1822,9 @@ final class CategoryRepository
     }
 
     /**
-     * Item 14 DQL audit: converted to real DQL -- id is the PK, so this is
-     * just $this->find() plus a property read (same idiom as
-     * {@see findById()}/{@see updateImageOrder()} elsewhere in this class),
-     * rather than a partial-column select.
+     * id is the PK, so this is just $this->find() plus a property read
+     * (same idiom as {@see findById()}/{@see updateImageOrder()} elsewhere
+     * in this class), rather than a partial-column select.
      */
     public function findCategoryUppercatsById(int $id): ?string
     {
@@ -1919,8 +1861,8 @@ final class CategoryRepository
     }
 
     /**
-     * Item 14 DQL audit: converted to real DQL -- id is the PK, same
-     * $this->find()-based idiom as {@see findCategoryUppercatsById()} above.
+     * id is the PK, same $this->find()-based idiom as
+     * {@see findCategoryUppercatsById()} above.
      */
     public function findCategoryStatus(int $id): ?string
     {
@@ -1931,10 +1873,10 @@ final class CategoryRepository
     }
 
     /**
-     * Item 14 DQL audit: converted to real DQL -- single-table, MAX() is a
-     * standard DQL aggregate function. An aggregate with no GROUP BY always
-     * yields exactly one row (NULL when nothing matches), so
-     * getSingleScalarResult() can't throw NoResultException here.
+     * Single-table, MAX() is a standard DQL aggregate function. An
+     * aggregate with no GROUP BY always yields exactly one row (NULL when
+     * nothing matches), so getSingleScalarResult() can't throw
+     * NoResultException here.
      */
     public function findMaxRankForParent(int|string|null $parentId): ?int
     {
@@ -1961,10 +1903,8 @@ final class CategoryRepository
     /**
      * @return ParentCategoryForCreate|null
      *
-     * Item 14 DQL audit: converted to real DQL -- single-table, id is the
-     * PK. `visible` is a real bool column on CategoryEntity now (DQL
-     * hydrates it as bool, not the raw driver value the original DBAL
-     * fetchAssociative() row shape assumed).
+     * Single-table, id is the PK. `visible` is a real bool column on
+     * CategoryEntity -- DQL hydrates it as bool.
      */
     public function findParentCategoryForCreate(int|string $parentId): ?ParentCategoryForCreate
     {
@@ -1994,22 +1934,15 @@ final class CategoryRepository
     }
 
     /**
-     * Further SQL-modernization audit, Item 9: fetchCallerBuiltQuery() (a
-     * fully generic "execute an already-built SELECT" escape hatch) deleted
-     * outright -- every one of its 9 real call sites, read individually
-     * across 6 files, is one of the typed methods below.
-     *
      * Admin\CatOptionsPageRenderer's own "id,name,uppercats,global_rank
      * filtered by one boolean-ish column" shape, 3 of its 4 sections
      * (commentable/visible/status) -- the 4th (representative presence)
      * needs its own method below since its two branches aren't symmetric
      * (only the "no representative" branch joins image_category).
      *
-     * Item 14 DQL audit: converted to real DQL, and inlined into each of
-     * the 3 methods below individually (each column condition is a fixed,
-     * within-class literal, not a caller-supplied fragment) -- the shared
-     * `findIdNameUppercatsRankByCondition()` raw-SQL-fragment helper this
-     * replaces is gone; nothing else called it.
+     * Real DQL, inlined into each of the 3 methods below individually --
+     * each column condition is a fixed, within-class literal, not a
+     * caller-supplied fragment.
      *
      * @return list<CategoryIdNameUppercatsRank>
      */
@@ -2115,9 +2048,9 @@ final class CategoryRepository
      * @param list<string> $groupAuthorizedCatIds
      * @return list<CategoryIdNameUppercatsRank>
      *
-     * Item 14 DQL audit: converted to real DQL -- `user_access` is mapped
-     * ({@see UserAccessEntity}, no declared association to CategoryEntity,
-     * so joined via an explicit `Join::WITH` condition, same shape as
+     * `user_access` is mapped ({@see UserAccessEntity}, no declared
+     * association to CategoryEntity, so joined via an explicit
+     * `Join::WITH` condition, same shape as
      * {@see \Piwigo\Group\GroupRepository::getAccessibleCategoryIdsForUser()}'s
      * own precedent).
      *
@@ -2203,8 +2136,7 @@ final class CategoryRepository
      * @param list<string> $excludeCatIds
      * @return list<CategoryIdNameUppercatsRank>
      *
-     * Item 14 DQL audit: converted to real DQL -- single-table, static
-     * WHERE plus an optional NOT IN.
+     * Single-table, static WHERE plus an optional NOT IN.
      */
     public function findPrivateCategoriesExcluding(array $excludeCatIds): array
     {
@@ -2229,23 +2161,16 @@ final class CategoryRepository
      *
      * @return list<CategoryIdNameUppercatsRank>
      *
-     * SQL-modernization audit, Item 14 Sub-phase B3 re-investigation: this
-     * method's own sole real caller ({@see \Piwigo\Controller\
+     * This method's own sole real caller ({@see \Piwigo\Controller\
      * CommentsController}'s "search by album" listing, via
      * {@see \Piwigo\Category\CategoryService::displaySelectByCondition()})
      * only ever applies forbiddenCategoryIds/visibleCategoryIds against
      * the unqualified `id` (this table's own, no alias/join here).
      *
-     * SQL-modernization audit, Item 14 Sub-phase C1: converted to a typed
-     * {@see PermissionCriteria}. Stays on DBAL -- $criteria's own
-     * fragments are built for a plain DBAL QueryBuilder, not DQL.
-     *
-     * Item 15 audit, re-verified: the claim above is wrong once actually
-     * tried -- see {@see applyCondition()}'s own docblock. Converted to
-     * real DQL, reusing {@see narrowIdNameUppercatsRankRows()} for the
-     * same narrowing its own sibling method
-     * ({@see findPrivateCategoriesExcluding()}) already applies to the
-     * identical 4-column shape.
+     * Uses a typed {@see PermissionCriteria} -- real DQL, reusing
+     * {@see narrowIdNameUppercatsRankRows()} for the same narrowing its
+     * own sibling method ({@see findPrivateCategoriesExcluding()}) already
+     * applies to the identical 4-column shape.
      */
     public function findIdNameUppercatsRank(PermissionCriteria $criteria): array
     {
@@ -2268,13 +2193,12 @@ final class CategoryRepository
      * every category, `name` replaced with a display label indicating
      * whether it already has a permalink set.
      *
-     * SQL-modernization audit, Item 14 Sub-phase B5 Tier 2: converted to
-     * real DQL -- MySQL's `IF(permalink IS NULL, "", " &radic;")` builds a
-     * different value per branch (not just a NULL fallback COALESCE()
-     * could express -- see {@see findNextId()}'s own docblock for that
-     * distinction), but DQL's standard `CASE WHEN ... THEN ... ELSE ...
-     * END` is a clean, portable drop-in for it, and `CONCAT()` accepting
-     * more than 2 arguments (confirmed against
+     * MySQL's `IF(permalink IS NULL, "", " &radic;")` builds a different
+     * value per branch (not just a NULL fallback COALESCE() could express
+     * -- see {@see findNextId()}'s own docblock for that distinction), but
+     * DQL's standard `CASE WHEN ... THEN ... ELSE ... END` is a clean,
+     * portable drop-in for it, and `CONCAT()` accepting more than 2
+     * arguments (confirmed against
      * `vendor/doctrine/orm/.../ConcatFunction.php`) covers the rest.
      *
      * @return list<CategoryPermalinkDisplayRow>
@@ -2317,8 +2241,7 @@ final class CategoryRepository
      *
      * @return list<CategoryIdNameUppercatsRank>
      *
-     * Item 14 DQL audit: converted to real DQL -- single-table, static
-     * WHERE.
+     * Single-table, static WHERE.
      */
     public function findIdNameUppercatsRankBySite(int $siteId): array
     {
@@ -2337,9 +2260,8 @@ final class CategoryRepository
      *
      * @param array<int, array{id: mixed, rank: int}> $datas
      *
-     * Item 14 DQL audit: not a DQL-vs-DBAL question -- bulk multi-row write
-     * via BatchWriter, not something persist()/flush() (one row per flush)
-     * expresses.
+     * Bulk multi-row write via BatchWriter, not something persist()/flush()
+     * (one row per flush) expresses.
      */
     public function massUpdateRanks(array $datas): void
     {
@@ -2359,8 +2281,7 @@ final class CategoryRepository
     /**
      * @param array<int, array{id: int, rank: int, global_rank: ?string}> $datas
      *
-     * Item 14 DQL audit: not a DQL-vs-DBAL question -- bulk write, same as
-     * {@see massUpdateRanks()} above.
+     * Bulk write, same as {@see massUpdateRanks()} above.
      */
     public function massUpdateRanksAndGlobalRank(array $datas): void
     {
@@ -2380,8 +2301,7 @@ final class CategoryRepository
     /**
      * @param array<int, array{id: int, representative_picture_id: ?int}> $datas
      *
-     * Item 14 DQL audit: not a DQL-vs-DBAL question -- bulk write, same as
-     * {@see massUpdateRanks()} above.
+     * Bulk write, same as {@see massUpdateRanks()} above.
      */
     public function massUpdateRepresentativePictures(array $datas): void
     {
@@ -2401,8 +2321,7 @@ final class CategoryRepository
     /**
      * @param array<int, array{id: int, uppercats: string}> $datas
      *
-     * Item 14 DQL audit: not a DQL-vs-DBAL question -- bulk write, same as
-     * {@see massUpdateRanks()} above.
+     * Bulk write, same as {@see massUpdateRanks()} above.
      */
     public function massUpdateUppercats(array $datas): void
     {
@@ -2428,8 +2347,8 @@ final class CategoryRepository
      *
      * @param array<string, mixed> $insert
      *
-     * Item 14 DQL audit: stays on DBAL -- dynamic caller-supplied
-     * column=>value map, no fixed property path.
+     * Stays on DBAL -- dynamic caller-supplied column=>value map, no fixed
+     * property path.
      */
     public function insertCategory(array $insert): int|string
     {
@@ -2451,8 +2370,7 @@ final class CategoryRepository
      * @param string[] $dbfields
      * @param array<int, array<string, mixed>> $inserts
      *
-     * Item 14 DQL audit: not a DQL-vs-DBAL question -- bulk write with a
-     * dynamic column set.
+     * Bulk write with a dynamic column set.
      */
     public function massInsertCategories(array $dbfields, array $inserts): void
     {
@@ -2469,8 +2387,8 @@ final class CategoryRepository
     /**
      * @param array<string, mixed> $data
      *
-     * Item 14 DQL audit: stays on DBAL -- dynamic caller-supplied
-     * column=>value map, same reason as {@see insertCategory()} above.
+     * Stays on DBAL -- dynamic caller-supplied column=>value map, same
+     * reason as {@see insertCategory()} above.
      */
     public function updateCategoryAfterInsert(int|string $id, array $data): void
     {
@@ -2489,8 +2407,8 @@ final class CategoryRepository
      *
      * @param array<string, mixed> $data
      *
-     * Item 14 DQL audit: stays on DBAL -- dynamic caller-supplied
-     * column=>value map, same reason as {@see insertCategory()} above.
+     * Stays on DBAL -- dynamic caller-supplied column=>value map, same
+     * reason as {@see insertCategory()} above.
      */
     public function updateFields(CategoryId $id, array $data): void
     {
@@ -2520,8 +2438,8 @@ final class CategoryRepository
      *
      * @param array<int, array{group_id: int, cat_id: int}> $inserts
      *
-     * Item 14 DQL audit: not a DQL-vs-DBAL question -- bulk write with an
-     * INSERT IGNORE option ORM persist()/flush() has no equivalent for.
+     * Bulk write with an INSERT IGNORE option ORM persist()/flush() has no
+     * equivalent for.
      */
     public function massInsertGroupAccess(array $inserts, bool $ignore = false): void
     {
@@ -2538,41 +2456,19 @@ final class CategoryRepository
      * (`CategoryCatsRenderer`'s own fallback when a category has no direct
      * representative but does have sub-albums with images).
      *
-     * SQL-modernization audit, Item 14 Sub-phase C1: converted to a typed
-     * {@see PermissionCriteria} -- the one real caller only ever applies
-     * visibleCategoryIds, against the unqualified `id` (no alias here).
+     * Uses a typed {@see PermissionCriteria} -- the one real caller only
+     * ever applies visibleCategoryIds, against the unqualified `id` (no
+     * alias here). Deliberately has no `user_cache_categories` JOIN: that precomputed
+     * table has no writer left, so a JOIN against it would silently
+     * exclude every category for every user -- the caller's own
+     * PermissionCriteria condition already duplicates the same "is this
+     * category visible" check, so there's nothing the JOIN would add.
      *
-     * Gap-closure Stage 4h (docs/plan/gap-closure-p0-p23.md): dropped the
-     * `user_cache_categories` `INNER JOIN` -- a real, live regression this
-     * fix closes, not just a modernization: gap-closure Stage 4g deleted
-     * the only remaining writer of that table, so the JOIN's own
-     * visibility filter had silently gone permanently empty for every user
-     * (confirmed live: only 2 stale rows survived in the whole table).
-     * The caller's own condition (built via
-     * `PermissionService::getSqlConditionFandFAsCondition(['visible_categories' =>
-     * 'id'])`) was *already* a live, correctly-scoped duplicate of
-     * the exact same "is this category visible" check the JOIN provided
-     * via a now-dead precomputed table -- removing the JOIN is not a
-     * behavior change, the real filtering was already happening twice.
-     * `$userId` is dropped too -- its only use was the JOIN's own
-     * `user_id = :userId` condition.
-     *
-     * Item 14 DQL audit: stays on DBAL -- $criteria's own fragment is a
-     * raw SQL string spliced via heredoc (this method's own real
-     * blocker: no `QueryBuilder` at all here, plain `executeQuery()`
-     * string interpolation). MySQL's `RAND()` now has a portable custom
-     * DQL function ({@see \Piwigo\Db\DqlFunction\RandFunction}, Sub-phase
-     * B5 Tier 3), but that alone doesn't unblock this method; this call
-     * site's own `SqlDialect::DB_RANDOM_FUNCTION` stays as-is
-     * for now -- a broader `SqlDialect` portability rewrite is Item 16's
-     * own scope, not this one (see this plan's Context section).
-     *
-     * Item 15 audit, re-verified: converted to a DQL `QueryBuilder` --
-     * {@see PermissionCriteria}'s fragment needed no changes (see
-     * {@see applyCondition()}'s own docblock), and `RAND()` uses the same
-     * portable custom DQL function {@see findRandomImageIdInCategory()}
-     * already established, dropping the `SqlDialect::DB_RANDOM_FUNCTION`
-     * indirection for this one call site.
+     * Real DQL -- {@see PermissionCriteria}'s fragment works directly
+     * against a DQL query builder (see {@see applyCondition()}), and
+     * `RAND()` uses the same portable custom DQL function
+     * ({@see \Piwigo\Db\DqlFunction\RandFunction}) as
+     * {@see findRandomImageIdInCategory()}.
      */
     public function findRandomRepresentativeIdAmongSubcategories(string $uppercats, PermissionCriteria $criteria): ?string
     {
@@ -2657,8 +2553,7 @@ final class CategoryRepository
     }
 
     /**
-     * Item 14 DQL audit: converted to real DQL -- single-table,
-     * unconditional COUNT.
+     * Single-table, unconditional COUNT.
      */
     public function countAllCategories(): int
     {
@@ -2678,8 +2573,8 @@ final class CategoryRepository
      *
      * @return list<int>
      *
-     * Item 14 DQL audit: converted to real DQL -- single-table; $dirIsNull
-     * toggles between two fixed DQL conditions (not a dynamic column name).
+     * Single-table; $dirIsNull toggles between two fixed DQL conditions
+     * (not a dynamic column name).
      */
     public function findIdsByDirNull(bool $dirIsNull): array
     {
@@ -2699,8 +2594,7 @@ final class CategoryRepository
      * one (physical) -- Ws\PwgCore::getInfos()'s own "nb_virtual"/
      * "nb_physical" summary figures.
      *
-     * Item 14 DQL audit: converted to real DQL -- same reasoning as
-     * {@see findIdsByDirNull()} above.
+     * Same reasoning as {@see findIdsByDirNull()} above.
      */
     public function countByDirNull(bool $dirIsNull): int
     {
@@ -2722,8 +2616,7 @@ final class CategoryRepository
      * `WHERE visible = 'false'` predated (see Comment's own commentable/
      * validated retype for the same bug class).
      *
-     * Item 14 DQL audit: converted to real DQL -- single-table, static
-     * WHERE against the real bool column.
+     * Single-table, static WHERE against the real bool column.
      */
     public function countByVisible(bool $visible): int
     {
@@ -2744,8 +2637,7 @@ final class CategoryRepository
      *
      * @return list<int>
      *
-     * Item 14 DQL audit: converted to real DQL -- single-table, static
-     * WHERE.
+     * Single-table, static WHERE.
      */
     public function findCategoryIdsRepresentedByImage(int $imageId): array
     {
@@ -2767,9 +2659,9 @@ final class CategoryRepository
      *
      * @param list<int> $categoryIds
      *
-     * Item 14 DQL audit: converted to real DQL -- single-table, static SET/
-     * WHERE. Same "caller clears the EntityManager afterward" contract as
-     * {@see setRepresentativeImage()} above (both real callers already do).
+     * Single-table, static SET/WHERE. Same "caller clears the
+     * EntityManager afterward" contract as {@see setRepresentativeImage()}
+     * above (both real callers already do).
      */
     public function setRepresentativeImageForCategories(array $categoryIds, int $imageId): void
     {
@@ -2795,11 +2687,11 @@ final class CategoryRepository
      *
      * @return list<int>
      *
-     * Item 14 DQL audit: converted to real DQL -- `group_access` is mapped
-     * ({@see GroupAccessEntity}), joined via explicit `Join::WITH` (same
-     * precedent as {@see findPrivateCategoriesGrantedToGroup()} above).
-     * Only `c.id` is selected (plain int, not `ga.catId`), so this avoids
-     * the custom-Doctrine-Type array-hydration question entirely.
+     * `group_access` is mapped ({@see GroupAccessEntity}), joined via
+     * explicit `Join::WITH` (same precedent as
+     * {@see findPrivateCategoriesGrantedToGroup()} above). Only `c.id` is
+     * selected (plain int, not `ga.catId`), so this avoids the
+     * custom-Doctrine-Type array-hydration question entirely.
      */
     public function findPrivateCategoryIdsGrantedToGroup(int $groupId): array
     {
@@ -2828,11 +2720,10 @@ final class CategoryRepository
      *
      * @return list<CategoryGroupAuthorizationRow>
      *
-     * Item 14 DQL audit: converted to real DQL -- `user_group`/
-     * `group_access` are both mapped ({@see UserGroupEntity}/
+     * `user_group`/`group_access` are both mapped ({@see UserGroupEntity}/
      * {@see GroupAccessEntity}), chained via two explicit `Join::WITH`
-     * conditions. `c.id AS cat_id` is now custom-Typed (`category_id`) --
-     * see this class's own Gotcha #1 note above.
+     * conditions. `c.id AS cat_id` is custom-Typed (`category_id`) -- see
+     * this class's own Gotcha #1 note above.
      */
     public function findCategoriesAuthorizedViaGroupsForUser(int $userId): array
     {
@@ -2873,10 +2764,9 @@ final class CategoryRepository
      * @param list<int> $excludeCategoryIds
      * @return list<int>
      *
-     * Item 14 DQL audit: converted to real DQL -- `user_access` is mapped
-     * ({@see UserAccessEntity}), joined via explicit `Join::WITH`. Only
-     * `c.id` is selected (plain int), same reasoning as
-     * {@see findPrivateCategoryIdsGrantedToGroup()} above.
+     * `user_access` is mapped ({@see UserAccessEntity}), joined via
+     * explicit `Join::WITH`. Only `c.id` is selected (plain int), same
+     * reasoning as {@see findPrivateCategoryIdsGrantedToGroup()} above.
      *
      * Same UserId::tryFrom() boundary-safety reasoning as
      * {@see findPrivateCategoriesGrantedToUser()} above -- this method's
@@ -2916,8 +2806,7 @@ final class CategoryRepository
      *
      * @return list<string>
      *
-     * Item 14 DQL audit: converted to real DQL -- single-table, static
-     * WHERE; permalink is plain-typed.
+     * Single-table, static WHERE; permalink is plain-typed.
      */
     public function findActivePermalinks(): array
     {
@@ -2937,8 +2826,8 @@ final class CategoryRepository
      *
      * @return list<CategoryChildRow>
      *
-     * Item 14 DQL audit: converted to real DQL -- single-table; $parentId
-     * toggles between two fixed DQL conditions (not a dynamic column name).
+     * Single-table; $parentId toggles between two fixed DQL conditions
+     * (not a dynamic column name).
      */
     public function findChildrenOfParent(?int $parentId): array
     {
@@ -2981,11 +2870,10 @@ final class CategoryRepository
      *
      * @return array<int, int> keyed by category_id
      *
-     * Item 14 DQL audit, re-corrected: `image_category` is now mapped
-     * ({@see ImageCategoryEntity}). Converted to real DQL -- single-table
-     * GROUP BY COUNT. `ic.categoryId` hydrates as a CategoryId VO under
-     * getArrayResult() (Gotcha #1 shape), read via instanceof, same
-     * precedent as {@see \Piwigo\Tag\TagRepository::
+     * Single-table GROUP BY COUNT; `image_category` is mapped
+     * ({@see ImageCategoryEntity}). `ic.categoryId` hydrates as a
+     * CategoryId VO under getArrayResult() (Gotcha #1 shape), read via
+     * instanceof, same precedent as {@see \Piwigo\Tag\TagRepository::
      * countImagesPerTagUnrestricted()}'s own `it.tagId`/TagId shape.
      */
     public function findPhotoCountsByCategory(): array
@@ -3021,8 +2909,7 @@ final class CategoryRepository
      *
      * @return array<int|string, mixed> keyed by id
      *
-     * Item 14 DQL audit: converted to real DQL -- single-table,
-     * unconditional select, both columns plain-typed.
+     * Single-table, unconditional select, both columns plain-typed.
      */
     public function findAllCategoryUppercats(): array
     {
@@ -3051,8 +2938,8 @@ final class CategoryRepository
      *
      * @return list<int>
      *
-     * Item 14 DQL audit: converted to real DQL -- single-table; same
-     * $parentId toggle as {@see findChildrenOfParent()} above.
+     * Single-table; same $parentId toggle as {@see findChildrenOfParent()}
+     * above.
      */
     public function findIdsByParent(?int $parentId): array
     {
@@ -3080,8 +2967,7 @@ final class CategoryRepository
      * @param list<string> $categoryIds
      * @return list<CategoryIdNameUppercat>
      *
-     * Item 14 DQL audit: converted to real DQL -- single-table, static
-     * WHERE, all 3 columns plain-typed.
+     * Single-table, static WHERE, all 3 columns plain-typed.
      */
     public function findIdsNamesUppercatsForIds(array $categoryIds): array
     {
@@ -3114,10 +3000,9 @@ final class CategoryRepository
      *
      * @return list<CategoryAlbumTreeRow>
      *
-     * Item 14 DQL audit: converted to real DQL -- single-table,
-     * unconditional select. `id`/`status`/`lastmodified` are all
-     * custom-Typed (`CategoryId`/`CategoryStatus`/`SqlDateTime`), so the
-     * row mapper below unwraps each via `instanceof` (Gotcha #1).
+     * Single-table, unconditional select. `id`/`status`/`lastmodified`
+     * are all custom-Typed (`CategoryId`/`CategoryStatus`/`SqlDateTime`),
+     * so the row mapper below unwraps each via `instanceof` (Gotcha #1).
      */
     public function findAllForAlbumTree(): array
     {
@@ -3152,8 +3037,7 @@ final class CategoryRepository
      * Whether $categoryId has at least one direct image link --
      * Admin\CatModifyPageRenderer's own "has_images" flag.
      *
-     * Item 14 DQL audit, re-corrected: `image_category` is now mapped
-     * ({@see ImageCategoryEntity}). Converted to real DQL -- a COUNT
+     * `image_category` is mapped ({@see ImageCategoryEntity}). A COUNT
      * aggregate always returns exactly one row, so there's no LIMIT to
      * preserve. `categoryId` is a custom-typed field, so the single-value
      * bind wraps it in the {@see CategoryId} VO -- `convertToDatabaseValue()`
@@ -3181,13 +3065,11 @@ final class CategoryRepository
      *
      * @return PhotoCountDateRange
      *
-     * SQL-modernization audit, Item 14 Sub-phase B5 Tier 2: converted to
-     * real DQL -- `image_category` is mapped
-     * ({@see \Piwigo\Image\ImageCategoryEntity}), and its remaining two
-     * blockers are resolved by fetching raw rows and computing in PHP
-     * instead: MySQL's `DATE()` has no portable DQL equivalent, and the
-     * caller's `count`/`min`/`max` shape doesn't need DQL's named field
-     * selects at all once the aggregation itself moves to PHP.
+     * `image_category` is mapped ({@see \Piwigo\Image\ImageCategoryEntity}).
+     * Fetches raw rows and computes count/min/max in PHP -- MySQL's
+     * `DATE()` has no portable DQL equivalent, and the caller's
+     * `count`/`min`/`max` shape doesn't need DQL's named field selects at
+     * all once the aggregation itself moves to PHP.
      * `dateAvailable` is a `Y-m-d H:i:s` string, so
      * `substr($dateAvailable, 0, 10)` reproduces `DATE(date_available)`'s
      * output exactly.
@@ -3242,11 +3124,10 @@ final class CategoryRepository
      * @param list<int> $categoryIds
      * @return list<int>
      *
-     * Item 14 DQL audit, re-corrected: `image_category` is now mapped
-     * ({@see ImageCategoryEntity}). Converted to real DQL -- single-table,
-     * same shape as {@see findDistinctLinkedImageIds()} above (`$categoryIds`
-     * is still spliced in unconditionally, even when empty, matching the
-     * original's own behavior exactly -- no new empty-array guard added).
+     * Single-table; `image_category` is mapped
+     * ({@see ImageCategoryEntity}). Same shape as
+     * {@see findDistinctLinkedImageIds()} above (`$categoryIds` is still
+     * spliced in unconditionally, even when empty).
      */
     public function findDistinctImageIdsInCategories(array $categoryIds): array
     {
@@ -3269,8 +3150,7 @@ final class CategoryRepository
      * @param list<int|string> $ids
      * @return array<int|string, mixed> keyed by id
      *
-     * Item 14 DQL audit: converted to real DQL -- single-table, static
-     * WHERE, both columns plain-typed.
+     * Single-table, static WHERE, both columns plain-typed.
      */
     public function findDirsByIds(array $ids): array
     {
@@ -3305,11 +3185,10 @@ final class CategoryRepository
      * the caller sorts by global_rank itself afterward when not sorting
      * by id/permalink).
      *
-     * SQL-modernization audit, Item 14 Sub-phase B3: converted to real
-     * DQL -- the caller-supplied raw "ORDER BY ..." fragment turned out to
-     * be one of exactly 3 finite shapes at its one real caller, so
-     * $orderByColumn now carries just the column name (or null), and this
-     * method decides the DQL `orderBy()` call itself.
+     * The caller-supplied raw "ORDER BY ..." fragment is one of exactly 3
+     * finite shapes at its one real caller, so $orderByColumn carries just
+     * the column name (or null), and this method decides the DQL
+     * `orderBy()` call itself.
      *
      * @return list<ActivePermalinkRow>
      */
@@ -3351,9 +3230,8 @@ final class CategoryRepository
      * Controller\SearchController's own "does this album exist and is it
      * accessible" check.
      *
-     * Item 14 DQL audit: converted to real DQL -- single-table, static
-     * WHERE; $forbiddenIds is a plain int list computed in PHP before the
-     * query runs, not a raw fragment.
+     * Single-table, static WHERE; $forbiddenIds is a plain int list
+     * computed in PHP before the query runs, not a raw fragment.
      */
     public function existsAndNotForbidden(int $catId, string $forbiddenCategoriesCsv): bool
     {
@@ -3378,8 +3256,7 @@ final class CategoryRepository
      * Whether a category with this id exists -- Ws\PwgCategories'
      * setRepresentative()'s own existence check.
      *
-     * Item 14 DQL audit: converted to real DQL -- single-table, static
-     * WHERE, COUNT aggregate.
+     * Single-table, static WHERE, COUNT aggregate.
      */
     public function existsById(int $id): bool
     {
@@ -3400,8 +3277,7 @@ final class CategoryRepository
      * @param  list<int>  $ids
      * @return list<int>
      *
-     * Item 14 DQL audit: converted to real DQL -- single-table, static
-     * WHERE.
+     * Single-table, static WHERE.
      */
     public function findExistingIds(array $ids): array
     {
@@ -3440,13 +3316,12 @@ final class CategoryRepository
      * not a no-op; moved here so the guarantee lives with the method
      * that actually needs it.
      *
-     * Further SQL-modernization audit, Item 15G: converted to real DQL --
-     * single-table, no join, so the only real blocker was the caller's
-     * own hardcoded `RLIKE`/`REGEXP` operator splice, itself already
-     * solved by {@see \Piwigo\Db\DqlFunction\RegexpFunction} (registered,
-     * already used elsewhere in this file); {@see \Piwigo\Ws\PwgCategories}
-     * updated to build `c.`-prefixed DQL property paths and the portable
-     * `REGEXP(...) = true` DQL function instead of a raw SQL fragment.
+     * Real DQL -- single-table, no join. The caller's own `RLIKE`/`REGEXP`
+     * operator splice is solved by
+     * {@see \Piwigo\Db\DqlFunction\RegexpFunction} (registered, already
+     * used elsewhere in this file); {@see \Piwigo\Ws\PwgCategories} builds
+     * `c.`-prefixed DQL property paths and the portable `REGEXP(...) =
+     * true` DQL function instead of a raw SQL fragment.
      */
     public function findIdsAndImageOrderWithConditions(array $conditions): array
     {
@@ -3499,18 +3374,17 @@ final class CategoryRepository
         }
 
         if ($catId !== null) {
-            // Item 16 (AbstractPlatform adoption): the real per-platform
-            // operator (MySQL/MariaDB: RLIKE) rather than a hardcoded
-            // 'REGEXP' dialect constant. No longer static since this
-            // needs a real Connection to ask for it.
+            // The real per-platform operator (MySQL/MariaDB: RLIKE), not a
+            // hardcoded 'REGEXP' dialect constant -- needs a real
+            // Connection to ask for it.
             //
-            // pgsql support pass: real bug found live -- AbstractPlatform::
-            // getRegexpExpression() resolves to `SIMILAR TO` on Postgres, a
-            // genuinely different pattern-matching dialect than POSIX
-            // REGEXP (implicit whole-string anchoring, so the
-            // substring-search pattern below never matches -- confirmed
-            // live, same root cause as {@see \Piwigo\Db\DqlFunction\RegexpFunction}'s
-            // own fix). Postgres's own POSIX-regex operator is `~`.
+            // AbstractPlatform::getRegexpExpression() resolves to
+            // `SIMILAR TO` on Postgres, a genuinely different
+            // pattern-matching dialect than POSIX REGEXP (implicit
+            // whole-string anchoring, so the substring-search pattern
+            // below never matches -- same root cause as
+            // {@see \Piwigo\Db\DqlFunction\RegexpFunction}'s own fix).
+            // Postgres's own POSIX-regex operator is `~`.
             $platform = $this->em
                 ->getConnection()
                 ->getDatabasePlatform();
@@ -3682,8 +3556,7 @@ final class CategoryRepository
      * @param  list<int>  $parentIds
      * @return array<string, int> keyed by id_uppercat
      *
-     * Item 14 DQL audit: converted to real DQL -- single-table, standard
-     * COUNT + GROUP BY aggregate.
+     * Single-table, standard COUNT + GROUP BY aggregate.
      */
     public function findSubcategoryCountsByParent(array $parentIds): array
     {
@@ -3723,8 +3596,7 @@ final class CategoryRepository
      * @param  list<int>  $ids
      * @return list<CategoryRankInfoRow>
      *
-     * Item 14 DQL audit: converted to real DQL -- single-table, static
-     * WHERE, all 3 columns plain-typed.
+     * Single-table, static WHERE, all 3 columns plain-typed.
      */
     public function findRankInfoByIds(array $ids): array
     {
@@ -3764,8 +3636,7 @@ final class CategoryRepository
      *
      * @return list<int>
      *
-     * Item 14 DQL audit: converted to real DQL -- single-table; $parentId
-     * toggles between two fixed DQL conditions.
+     * Single-table; $parentId toggles between two fixed DQL conditions.
      */
     public function findIdsByParentOrderedById(?int $parentId): array
     {
@@ -3795,8 +3666,8 @@ final class CategoryRepository
      *
      * @return list<int>
      *
-     * Item 14 DQL audit: converted to real DQL -- single-table; same
-     * $parentId toggle as {@see findIdsByParentOrderedById()} above.
+     * Single-table; same $parentId toggle as
+     * {@see findIdsByParentOrderedById()} above.
      */
     public function findSiblingIdsExcludingOrderedByRank(?int $parentId, int $excludeId): array
     {
@@ -3830,8 +3701,7 @@ final class CategoryRepository
      * @param  list<int>  $ids
      * @return list<CategoryMoveDetailRow>
      *
-     * Item 14 DQL audit: converted to real DQL -- single-table, static
-     * WHERE, all 4 columns plain-typed.
+     * Single-table, static WHERE, all 4 columns plain-typed.
      */
     public function findMoveDetailsByIds(array $ids): array
     {
@@ -3868,11 +3738,10 @@ final class CategoryRepository
      * manual-id assignment for directory-synced categories (mirrors the
      * retired MysqliDb::nextval()).
      *
-     * Item 14 DQL audit: converted to real DQL -- single-table; `IF()` is
-     * MySQL-specific, but this particular "NULL becomes a default" shape is
-     * exactly what DQL's standard `COALESCE()` expresses (unlike
-     * {@see findAllForPermalinksDisplay()}'s own `IF()` use, which builds a
-     * different value per branch, not just a NULL fallback).
+     * `IF()` is MySQL-specific, but this particular "NULL becomes a
+     * default" shape is exactly what DQL's standard `COALESCE()` expresses
+     * (unlike {@see findAllForPermalinksDisplay()}'s own `IF()` use, which
+     * builds a different value per branch, not just a NULL fallback).
      */
     public function findNextId(): int
     {
@@ -3893,14 +3762,11 @@ final class CategoryRepository
      * `$recursive` true means every descendant of $catId (uppercats
      * REGEXP match), false means $catId itself only.
      *
-     * SQL-modernization audit, Item 14 Sub-phase B3: converted to real
-     * DQL -- the caller-supplied raw SQL AND-continuation fragment turned
-     * out to be one of exactly 3 finite shapes at its one real caller, so
-     * $catId/$recursive now carry the intent directly and this method
-     * builds the DQL condition itself, reusing the same portable REGEXP
-     * DQL function ({@see \Piwigo\Db\DqlFunction\RegexpFunction}, Sub-phase
-     * B5 Tier 1) {@see findSubcategoryIds()} already established for the
-     * exact same `uppercats REGEXP '(^|,)ID(,|$)'` pattern.
+     * $catId/$recursive carry the intent directly, and this method builds
+     * the DQL condition itself, reusing the same portable REGEXP DQL
+     * function ({@see \Piwigo\Db\DqlFunction\RegexpFunction})
+     * {@see findSubcategoryIds()} already established for the exact same
+     * `uppercats REGEXP '(^|,)ID(,|$)'` pattern.
      *
      * @return list<CategorySyncCandidateRow>
      */
@@ -3952,8 +3818,7 @@ final class CategoryRepository
      *
      * @return list<int>
      *
-     * Item 14 DQL audit: converted to real DQL -- single-table,
-     * unconditional select.
+     * Single-table, unconditional select.
      */
     public function findAllIds(): array
     {
@@ -3973,8 +3838,8 @@ final class CategoryRepository
      *
      * @return list<CategoryNextRankByParentRow>
      *
-     * Item 14 DQL audit: converted to real DQL -- single-table; MAX()+1 is
-     * a standard DQL aggregate/arithmetic expression.
+     * Single-table; MAX()+1 is a standard DQL aggregate/arithmetic
+     * expression.
      */
     public function findNextRanksByParent(): array
     {

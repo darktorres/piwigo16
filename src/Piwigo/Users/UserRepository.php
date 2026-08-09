@@ -104,14 +104,12 @@ final class UserRepository implements WebmasterMailProviderInterface
      * NotificationRepository::applyCondition()`/`Tag\TagRepository::
      * applyCondition()`.
      *
-     * SQL-modernization audit, Item 14 Sub-phase B3 re-investigation: this
-     * helper's own 3 callers (findAuthorizedFavoriteImageIds() /
+     * This helper's own 3 callers (findAuthorizedFavoriteImageIds() /
      * findVisibleFavoriteImageIds() / findVisibleFavoriteImages()) are all
      * fed a `PermissionService::getSqlConditionFandFAsCondition()` result
      * by their real caller ({@see \Piwigo\Ws\PwgUsers}/
-     * {@see \Piwigo\Section\SectionPopulator}) -- confirmed by reading
-     * those real call sites, same genuinely dynamic, cross-cutting
-     * permission-condition blocker documented in
+     * {@see \Piwigo\Section\SectionPopulator}), same genuinely dynamic,
+     * cross-cutting permission-condition blocker documented in
      * {@see \Piwigo\Image\ImageRepository::applyCondition()}'s own
      * docblock, not a small finite set of shapes a typed DTO could
      * replace. 2 of the 3 also take a caller-composed `$orderBySql`
@@ -120,15 +118,13 @@ final class UserRepository implements WebmasterMailProviderInterface
      * {@see \Piwigo\Image\ImageRepository::findIdsWithConditions()}'s own
      * docblock).
      *
-     * Item 15G: `$orderBySql` still blocks findVisibleFavoriteImageIds()/
+     * `$orderBySql` blocks findVisibleFavoriteImageIds()/
      * findVisibleFavoriteImages() from converting, so those 2 stay on DBAL.
-     * findAuthorizedFavoriteImageIds() has no such blocker -- its own
-     * "image_category has no entity" exclusion reason is now stale
-     * ({@see \Piwigo\Image\ImageCategoryEntity} exists), so it converts to
-     * DQL below. Widened to accept either builder type for that one
-     * remaining DQL caller, same empirical finding as every other
-     * `applyCondition()` in this migration: `SqlCondition`'s `andWhere()`/
-     * `setParameter()` calls work identically on both.
+     * findAuthorizedFavoriteImageIds() has no such blocker -- `image_category`
+     * is mapped ({@see \Piwigo\Image\ImageCategoryEntity}), so it converts
+     * to DQL below. Widened to accept either builder type for that one
+     * remaining DQL caller: `SqlCondition`'s `andWhere()`/`setParameter()`
+     * calls work identically on both.
      */
     private static function applyCondition(QueryBuilder|\Doctrine\ORM\QueryBuilder $qb, SqlCondition $condition): void
     {
@@ -176,14 +172,12 @@ final class UserRepository implements WebmasterMailProviderInterface
     }
 
     /**
-     * SQL-modernization audit, Item 14 Sub-phase C4: converted to real
-     * DQL -- `users` is now mapped ({@see UserEntity}); the multi-auth
-     * column indirection this used to take as `$idColumn`/`$usernameColumn`
-     * parameters is gone (see this class's own docblock). Uses
+     * `users` is mapped ({@see UserEntity}); see this class's own
+     * docblock for why its columns are fixed, not caller-supplied. Uses
      * `getOneOrNullResult(Query::HYDRATE_ARRAY)`, not
      * `getSingleColumnResult()` -- `u.id`'s custom `user_id` Doctrine Type
      * only gets applied by array/object hydration, not scalar-column
-     * hydration (this audit's own gotcha #4).
+     * hydration (Gotcha #4).
      */
     public function findIdByUsername(Username $username): ?UserId
     {
@@ -203,12 +197,10 @@ final class UserRepository implements WebmasterMailProviderInterface
     }
 
     /**
-     * SQL-modernization audit, Item 14 Sub-phase C4: converted to real
-     * DQL -- `users` is now mapped ({@see UserEntity}); the multi-auth
-     * column indirection this used to take as `$idColumn`/`$emailColumn`
-     * parameters is gone (see this class's own docblock). Same
+     * `users` is mapped ({@see UserEntity}); see this class's own
+     * docblock for why its columns are fixed, not caller-supplied. Same
      * `getOneOrNullResult(Query::HYDRATE_ARRAY)` reasoning as
-     * {@see findIdByUsername()} above (this audit's own gotcha #4).
+     * {@see findIdByUsername()} above (Gotcha #4).
      */
     public function findIdByEmail(Email $email): ?UserId
     {
@@ -233,10 +225,8 @@ final class UserRepository implements WebmasterMailProviderInterface
      * notifyExistingAccountOfDuplicateRegistration()}'s real (and only)
      * consumer, the SEC-31 duplicate-registration notice.
      *
-     * SQL-modernization audit, Item 14 Sub-phase C4: converted to real
-     * DQL -- `users` is now mapped ({@see UserEntity}); the multi-auth
-     * column indirection this used to take as `$idColumn`/`$usernameColumn`/
-     * `$emailColumn` parameters is gone (see this class's own docblock).
+     * `users` is mapped ({@see UserEntity}); see this class's own
+     * docblock for why its columns are fixed, not caller-supplied.
      */
     public function findByUsernameCaseInsensitive(string $username): ?UsernameLookup
     {
@@ -265,10 +255,8 @@ final class UserRepository implements WebmasterMailProviderInterface
     }
 
     /**
-     * SQL-modernization audit, Item 14 Sub-phase C4: converted to real
-     * DQL -- `users` is now mapped ({@see UserEntity}); the multi-auth
-     * column indirection this used to take as a `$usernameColumn`
-     * parameter is gone (see this class's own docblock).
+     * `users` is mapped ({@see UserEntity}); see this class's own
+     * docblock for why its columns are fixed, not caller-supplied.
      */
     public function usernameExistsCaseInsensitive(Username $username): bool
     {
@@ -285,10 +273,8 @@ final class UserRepository implements WebmasterMailProviderInterface
     }
 
     /**
-     * SQL-modernization audit, Item 14 Sub-phase C4: converted to real
-     * DQL -- `users` is now mapped ({@see UserEntity}); the multi-auth
-     * column indirection this used to take as `$emailColumn`/`$idColumn`
-     * parameters is gone (see this class's own docblock).
+     * `users` is mapped ({@see UserEntity}); see this class's own
+     * docblock for why its columns are fixed, not caller-supplied.
      */
     public function emailExists(Email $email, ?UserId $excludeUserId): bool
     {
@@ -311,10 +297,8 @@ final class UserRepository implements WebmasterMailProviderInterface
     }
 
     /**
-     * SQL-modernization audit, Item 14 Sub-phase C4: converted to real
-     * DQL -- `users` is now mapped ({@see UserEntity}); the multi-auth
-     * column indirection this used to take as `$idColumn`/`$usernameColumn`
-     * parameters is gone (see this class's own docblock).
+     * `users` is mapped ({@see UserEntity}); see this class's own
+     * docblock for why its columns are fixed, not caller-supplied.
      */
     public function findUsernameById(UserId $userId): ?Username
     {
@@ -334,10 +318,8 @@ final class UserRepository implements WebmasterMailProviderInterface
     }
 
     /**
-     * SQL-modernization audit, Item 14 Sub-phase C4: converted to real
-     * DQL -- `users` is now mapped ({@see UserEntity}); the multi-auth
-     * column indirection this used to take as a `$usernameColumn`
-     * parameter is gone (see this class's own docblock).
+     * `users` is mapped ({@see UserEntity}); see this class's own
+     * docblock for why its columns are fixed, not caller-supplied.
      *
      * @return list<string>
      */
@@ -360,10 +342,8 @@ final class UserRepository implements WebmasterMailProviderInterface
      * Every username keyed by id -- Admin\CatPermPageRenderer's own "list
      * every user for the groups/users permission form" lookup.
      *
-     * SQL-modernization audit, Item 14 Sub-phase C4: converted to real
-     * DQL -- `users` is now mapped ({@see UserEntity}); the multi-auth
-     * column indirection this used to take as `$idColumn`/`$usernameColumn`
-     * parameters is gone (see this class's own docblock).
+     * `users` is mapped ({@see UserEntity}); see this class's own
+     * docblock for why its columns are fixed, not caller-supplied.
      *
      * @return array<int|string, mixed> keyed by id
      */
@@ -399,11 +379,8 @@ final class UserRepository implements WebmasterMailProviderInterface
      * registration flow. See {@see insertUserWithId()} below for the one
      * real caller that needs an explicit, caller-chosen id instead.
      *
-     * SQL-modernization audit, Item 14 Sub-phase C4: converted to real
-     * DQL -- `users` is now mapped ({@see UserEntity}); this used to take
-     * a `$columns` generic pwgfield => column-name-and-value map (the
-     * multi-auth indirection this class's own docblock explains), now
-     * typed params directly.
+     * `users` is mapped ({@see UserEntity}); see this class's own
+     * docblock for why its columns are fixed, not caller-supplied.
      */
     public function insertUser(Username $username, ?string $password, ?Email $mailAddress): UserId
     {
@@ -424,7 +401,7 @@ final class UserRepository implements WebmasterMailProviderInterface
      * C13yInternal's own "recreate a missing guest/default/webmaster user
      * row with its exact known id" repair step.
      *
-     * Item 14 DQL audit: stays on DBAL, deliberately -- Doctrine's
+     * Stays on DBAL, deliberately -- Doctrine's
      * `IDENTITY` id-generator strategy (MySQL `AUTO_INCREMENT`) always
      * overwrites a pre-set id with the driver's own `lastInsertId()` after
      * `persist()`/`flush()`, so the ORM can't express "insert with this
@@ -627,12 +604,10 @@ final class UserRepository implements WebmasterMailProviderInterface
     /**
      * Every user id from the base users table.
      *
-     * SQL-modernization audit, Item 14 Sub-phase C4: converted to real
-     * DQL -- `users` is now mapped ({@see UserEntity}); the multi-auth
-     * column indirection this used to take as a `$userIdColumn` parameter
-     * is gone (see this class's own docblock). Uses `getArrayResult()`,
-     * not `getSingleColumnResult()` -- `u.id`'s custom `user_id` Doctrine
-     * Type only gets applied by the former (this audit's own gotcha #4).
+     * `users` is mapped ({@see UserEntity}); see this class's own
+     * docblock for why its columns are fixed, not caller-supplied. Uses
+     * `getArrayResult()`, not `getSingleColumnResult()` -- `u.id`'s custom
+     * `user_id` Doctrine Type only gets applied by the former (Gotcha #4).
      *
      * @return list<UserId>
      */
@@ -656,8 +631,8 @@ final class UserRepository implements WebmasterMailProviderInterface
     }
 
     /**
-     * Item 15 audit: `user_mail_notification`/`user_feed` are the only 2
-     * of {@see \Piwigo\Users\UserService::syncUsers()}'s own 5-table list
+     * `user_mail_notification`/`user_feed` are the only 2 of
+     * {@see \Piwigo\Users\UserService::syncUsers()}'s own 5-table list
      * this method still serves -- both a real `deleteSiteRow`-class
      * deptrac boundary (`Users` is `L2aCoreDomain`, those 2 tables'
      * domains are `L2bExtendedDomain`), so `$table` stays a raw runtime
@@ -678,7 +653,7 @@ final class UserRepository implements WebmasterMailProviderInterface
     }
 
     /**
-     * Item 15 audit: same permanent DBAL/deptrac reasoning as
+     * Same permanent DBAL/deptrac reasoning as
      * {@see findDistinctUserIdsInTable()} above -- only
      * `user_mail_notification`/`user_feed` still reach this method.
      *
@@ -706,7 +681,7 @@ final class UserRepository implements WebmasterMailProviderInterface
     }
 
     /**
-     * Item 15 audit: real DQL replacement for
+     * Real DQL replacement for
      * {@see findDistinctUserIdsInTable()}, for the 3 of
      * {@see \Piwigo\Users\UserService::syncUsers()}'s own tables this
      * repository can actually reach via DQL -- see
@@ -742,7 +717,7 @@ final class UserRepository implements WebmasterMailProviderInterface
     }
 
     /**
-     * Item 15 audit: real DQL replacement for
+     * Real DQL replacement for
      * {@see deleteUsersFromTable()}, same 3-of-5-tables scope as
      * {@see findDistinctUserIdsInMappedTable()} above. `UserAccessEntity::
      * $userId` is a plain int column (unlike `UserInfoEntity`/
@@ -789,11 +764,10 @@ final class UserRepository implements WebmasterMailProviderInterface
      * `id` is `$userId->value` directly, not re-selected -- the caller
      * already has it, and every real downstream consumer of this array
      * (templates, WS responses) expects a raw scalar there, not a UserId
-     * VO (this audit's own gotcha #4 territory, sidestepped entirely by
-     * not selecting the custom-Typed column at all).
+     * VO (Gotcha #4 territory, sidestepped entirely by not selecting the
+     * custom-Typed column at all).
      *
-     * SQL-modernization audit, Item 14 Sub-phase C4: converted to real
-     * DQL -- `users` is now mapped ({@see UserEntity}).
+     * `users` is mapped ({@see UserEntity}).
      */
     public function fetchBasicUserRow(UserId $userId): BasicUserRow|false
     {
@@ -827,8 +801,7 @@ final class UserRepository implements WebmasterMailProviderInterface
      * comment) exists for $userId -- the externalAuthentification
      * integrity check gating whether a missing row needs creating.
      *
-     * Item 14 DQL audit, re-corrected: `themes` is now mapped ({@see
-     * ThemeEntity}). Converted to real DQL -- LEFT JOIN via an explicit
+     * `themes` is mapped ({@see ThemeEntity}) -- LEFT JOIN via an explicit
      * `Join::WITH` condition (no formal association between UserInfoEntity
      * and ThemeEntity), same shape as
      * {@see \Piwigo\Category\CategoryRepository::findPrivateCategoriesGrantedToUser()}'s
@@ -856,8 +829,8 @@ final class UserRepository implements WebmasterMailProviderInterface
      * Full `user_infos` row plus the joined theme's display name --
      * UserService::getUserData()'s own merge-with-basic-row step.
      *
-     * Item 16H: converted to real DQL against the full {@see UserInfoEntity}
-     * -- a mapping shim right here translates its camelCase-hydrated
+     * Real DQL against the full {@see UserInfoEntity} -- a mapping shim
+     * right here translates its camelCase-hydrated
      * properties back into the exact snake_case-keyed array shape
      * `UserService::getUserData()`'s own `array_merge()` and every
      * downstream `$userdata['...']` read already expect, so the DQL
@@ -924,11 +897,11 @@ final class UserRepository implements WebmasterMailProviderInterface
      * Every favorite image id for $userId, unfiltered -- the other half of
      * UserService::checkUserFavorites()'s comparison.
      *
-     * Item 14 DQL audit, re-corrected: `favorites` is now mapped ({@see
-     * FavoriteEntity}). Converted to real DQL -- single-table select of
-     * `f.imageId` via `getSingleColumnResult()` (Gotcha #4, `HYDRATE_
-     * SCALAR_COLUMN`) never applies FavoriteEntity::$imageId's own
-     * `image_id` custom Type, so this stays a plain int read regardless.
+     * `favorites` is mapped ({@see FavoriteEntity}). Single-table select
+     * of `f.imageId` via `getSingleColumnResult()` (Gotcha #4,
+     * `HYDRATE_SCALAR_COLUMN`) never applies FavoriteEntity::$imageId's
+     * own `image_id` custom Type, so this stays a plain int read
+     * regardless.
      *
      * @return list<int>
      */
@@ -947,11 +920,10 @@ final class UserRepository implements WebmasterMailProviderInterface
     }
 
     /**
-     * Item 14 DQL audit, re-corrected: `favorites` is now mapped ({@see
-     * FavoriteEntity}). Converted to real DQL bulk DELETE -- still bypasses
-     * the identity map the same way the previous raw-DBAL DELETE did (a
-     * DQL bulk DELETE also skips the ORM's own cascade/lifecycle handling),
-     * so this is not a behavior change either way.
+     * `favorites` is mapped ({@see FavoriteEntity}). This DQL bulk DELETE
+     * still bypasses the identity map the same way a raw-DBAL DELETE does
+     * (a DQL bulk DELETE also skips the ORM's own cascade/lifecycle
+     * handling).
      *
      * @param list<int> $imageIds
      */
@@ -983,10 +955,8 @@ final class UserRepository implements WebmasterMailProviderInterface
      * duplicate-key error; PictureController's own call keeps the
      * pre-existing plain-INSERT default unchanged.
      *
-     * Item 14 DQL audit: not a DQL-vs-DBAL question -- single-row write via
-     * BatchWriter (its own `ignore`-flag INSERT IGNORE support has no ORM
-     * persist() equivalent); `favorites` also has no entity anywhere in
-     * this migration regardless.
+     * Single-row write via BatchWriter -- its own `ignore`-flag INSERT
+     * IGNORE support has no ORM persist() equivalent.
      */
     public function addFavorite(UserId $userId, int $imageId, bool $ignoreDuplicate = false): void
     {
@@ -1007,9 +977,8 @@ final class UserRepository implements WebmasterMailProviderInterface
      * Whether $imageId is already among $userId's favorites --
      * Controller\PictureController's own favorite-icon toggle state.
      *
-     * Item 14 DQL audit, re-corrected: `favorites` is now mapped ({@see
-     * FavoriteEntity}). Converted to real DQL -- `COUNT()` with no GROUP BY
-     * always returns exactly one row, same
+     * `favorites` is mapped ({@see FavoriteEntity}). `COUNT()` with no
+     * GROUP BY always returns exactly one row, same
      * {@see findMinRegistrationDateAfter()}-established reasoning for why
      * `getSingleScalarResult()` is safe here (never
      * NonUniqueResultException territory).
@@ -1035,9 +1004,8 @@ final class UserRepository implements WebmasterMailProviderInterface
      * SectionPopulator's own "remove_all_from_favorites" action, unlike
      * deleteFavoritesForImages() above which is scoped to a given image set.
      *
-     * Item 14 DQL audit, re-corrected: `favorites` is now mapped ({@see
-     * FavoriteEntity}). Converted to real DQL bulk DELETE -- same
-     * not-a-behavior-change reasoning as
+     * `favorites` is mapped ({@see FavoriteEntity}). Real DQL bulk
+     * DELETE, same not-a-behavior-change reasoning as
      * {@see deleteFavoritesForImages()} above.
      */
     public function deleteAllFavorites(UserId $userId): void
@@ -1059,27 +1027,22 @@ final class UserRepository implements WebmasterMailProviderInterface
      * merges this directly alongside that repository's sibling section
      * queries into the same $page['items'] slot.
      *
-     * SQL-modernization audit, Item 14 Sub-phase C1: converted to a typed
-     * {@see PermissionCriteria} -- the one real caller only ever applies
-     * visibleImageIds against the unqualified `id` (only `images` has a
-     * bare `id` column in this join, no alias needed). It also passed
-     * `visible_images => 'id'` to the old `getSqlConditionFandFAsCondition()`,
-     * whose own `visible_images` case falls through into `forbidden_images`
-     * with no `break` -- with fieldName `'id'`, that's the images-table's
-     * own `level <= x` check, so maxLevel applies here too, against the
-     * unqualified `level`. $orderBySql stays a raw fragment
-     * (CurrentConfig::orderBy(), trusted internal config, same "caller
-     * composes trusted fragments" contract used throughout this codebase).
+     * Uses a typed {@see PermissionCriteria} -- the one real caller only
+     * ever applies visibleImageIds against the unqualified `id` (only
+     * `images` has a bare `id` column in this join, no alias needed), via
+     * `image_access_list` (since `visible_images` falls through to the
+     * images-table's own `level <= x` check in the old
+     * `getSqlConditionFandFAsCondition()` mapping, so maxLevel applies
+     * here too, against the unqualified `level`). $orderBySql stays a raw
+     * fragment (CurrentConfig::orderBy(), trusted internal config, same
+     * "caller composes trusted fragments" contract used throughout this
+     * codebase).
      *
-     * Item 14 DQL audit: stayed on DBAL -- `favorites` has no entity
-     * anywhere in this migration, and $orderBySql concatenates a
-     * caller-composed raw ORDER BY fragment directly.
-     *
-     * Item 16J: `favorites` is now mapped ({@see FavoriteEntity}), and
-     * this method runs real DQL whenever $orderBySql parses against the
-     * bounded `$sort_fields` vocabulary, falling back to the original raw
-     * DBAL query -- unchanged below -- otherwise. Never offers an
-     * `image_category` alias for `Rank`: unlike {@see \Piwigo\Category\
+     * `favorites` is mapped ({@see FavoriteEntity}), and this method runs
+     * real DQL whenever $orderBySql parses against the bounded
+     * `$sort_fields` vocabulary, falling back to the raw DBAL query below
+     * otherwise. Never offers an `image_category` alias for `Rank`:
+     * unlike {@see \Piwigo\Category\
      * CategoryRepository::findImageIdsForCategories()}, a favorites
      * listing has no single-category context to make "the" rank
      * well-defined.
@@ -1191,20 +1154,17 @@ final class UserRepository implements WebmasterMailProviderInterface
      * {@see findVisibleFavoriteImageIds()} above (that one is
      * `image_id`-only, this one is `i.*`).
      *
-     * SQL-modernization audit, Item 14 Sub-phase C1: converted to a typed
-     * {@see PermissionCriteria} -- the one real caller only ever applies
-     * visibleImageIds against `i.id`. It also passed `visible_images =>
-     * 'id'` to the old `getSqlConditionFandFAsCondition()`, whose own
-     * `visible_images` case falls through into `forbidden_images` with no
-     * `break` -- with fieldName `'id'`, that's the images-table's own
-     * `level <= x` check, so maxLevel applies here too, against `i.level`.
+     * Uses a typed {@see PermissionCriteria} -- the one real caller only
+     * ever applies visibleImageIds against `i.id`, via `image_access_list`
+     * (since `visible_images` falls through to the images-table's own
+     * `level <= x` check in the old `getSqlConditionFandFAsCondition()`
+     * mapping, so maxLevel applies here too, against `i.level`).
      * $orderBySql stays a raw fragment, same reasoning as
      * findVisibleFavoriteImageIds() above.
      *
-     * Item 14 DQL audit: stays on DBAL -- `favorites` has no entity
-     * anywhere in this migration, $orderBySql concatenates a
-     * caller-composed raw fragment, and it selects `i.*` (a whole-row
-     * shape, not a fixed DQL property list).
+     * Stays on DBAL: $orderBySql concatenates a caller-composed raw
+     * fragment, and it selects `i.*` (a whole-row shape, not a fixed DQL
+     * property list).
      *
      * @return list<array<string, mixed>>
      */
@@ -1253,11 +1213,9 @@ final class UserRepository implements WebmasterMailProviderInterface
      * Bulk `user_infos.status` update -- UserService::checkAndSaveUserInfos()'s
      * own status-change branch, applied to every id in $userIds at once.
      *
-     * Item 14 DQL audit: converted to real DQL -- single-table bulk UPDATE,
-     * static column/property. Still bypasses the identity map the same way
-     * the previous raw-DBAL UPDATE did (a DQL bulk UPDATE also skips
-     * persist()/flush()'s change tracking), so this is not a behavior
-     * change either way.
+     * Single-table bulk UPDATE, static column/property. Still bypasses the
+     * identity map the same way a raw-DBAL UPDATE does (a DQL bulk UPDATE
+     * also skips persist()/flush()'s change tracking).
      *
      * @param list<UserId> $userIds
      */
@@ -1286,13 +1244,9 @@ final class UserRepository implements WebmasterMailProviderInterface
      * the caller composes it from whichever fields actually changed, a
      * genuinely dynamic key set, not a fixed row shape.
      *
-     * Item 15 audit: `$updates`'s keys are now validated against
-     * {@see UserInfoField}'s bounded enum before reaching the `set()`
-     * calls below.
-     *
-     * Item 16I: converted to real DQL -- see that enum's own docblock
-     * for why the earlier boolean-column-coercion reasoning was
-     * reconsidered.
+     * `$updates`'s keys are validated against {@see UserInfoField}'s
+     * bounded enum before reaching the `set()` calls below -- real DQL,
+     * see that enum's own docblock.
      *
      * @param list<UserId> $userIds
      * @param array<string, mixed> $updates
@@ -1339,11 +1293,9 @@ final class UserRepository implements WebmasterMailProviderInterface
      * Confirmed at both real callers: never more than these 3 fields, each
      * independently optional.
      *
-     * SQL-modernization audit, Item 14 Sub-phase C4: converted to real
-     * DQL (`find()` + mutate + `flush()`) -- `users` is now mapped
-     * ({@see UserEntity}); this used to take `$updates`/`$idColumn` as
-     * dynamic column-name-and-value pairs (see this class's own
-     * docblock).
+     * Real DQL (`find()` + mutate + `flush()`) -- `users` is mapped
+     * ({@see UserEntity}); see this class's own docblock for why its
+     * columns are fixed, not caller-supplied.
      */
     public function updateAccountFields(UserId $userId, ?Username $username, ?string $password, ?Email $mailAddress): void
     {
@@ -1377,12 +1329,11 @@ final class UserRepository implements WebmasterMailProviderInterface
      * Admin\PhotosAddDirectPageRenderer's own "how old is this install"
      * check for the mobile-app promotion banner.
      *
-     * Item 14 DQL audit: converted to real DQL -- single-table, static
-     * column/property. `registrationDate` is `SqlDateTime`-typed (Phase 5),
-     * but `getSingleColumnResult()` (`HYDRATE_SCALAR_COLUMN`, this
-     * codebase's own Gotcha #4) never applies a column's custom Type, so
-     * this stays a plain string regardless. setMaxResults(1) reproduces
-     * the original's LIMIT 1.
+     * Real DQL, single-table, static column/property. `registrationDate`
+     * is `SqlDateTime`-typed, but `getSingleColumnResult()`
+     * (`HYDRATE_SCALAR_COLUMN`, this codebase's own Gotcha #4) never
+     * applies a column's custom Type, so this stays a plain string
+     * regardless. setMaxResults(1) reproduces the original's LIMIT 1.
      */
     public function findEarliestRegistrationDate(): ?string
     {
@@ -1403,9 +1354,8 @@ final class UserRepository implements WebmasterMailProviderInterface
      * Every distinct `theme` value's user count -- Admin\
      * PiwigoInfosSender's own telemetry theme-usage breakdown.
      *
-     * Item 14 DQL audit: converted to real DQL -- single-table, static
-     * column/property, plain string `theme` (no custom-type hydration
-     * concern).
+     * Single-table, static column/property, plain string `theme` (no
+     * custom-type hydration concern).
      *
      * @return array<string, int> keyed by theme
      */
@@ -1430,8 +1380,7 @@ final class UserRepository implements WebmasterMailProviderInterface
      * Every distinct `language` value's user count -- Admin\
      * PiwigoInfosSender's own telemetry language-usage breakdown.
      *
-     * Item 14 DQL audit: converted to real DQL -- single-table, static
-     * column/property.
+     * Single-table, static column/property.
      *
      * UserInfoEntity::$language is LangCode-typed -- `ui.language`
      * array-hydrates as a LangCode instance, not a raw string; using it
@@ -1464,13 +1413,12 @@ final class UserRepository implements WebmasterMailProviderInterface
      * Distinct "YYYY-MM" registration months among every user --
      * Admin\UserListPageRenderer's own registration-date filter dropdown.
      *
-     * SQL-modernization audit, Item 14 Sub-phase B5 Tier 2: converted to
-     * real DQL -- MySQL's `month()`/`year()` have no portable DQL
-     * equivalent, and DISTINCT over both computed columns has the same
+     * MySQL's `month()`/`year()` have no portable DQL equivalent, and
+     * DISTINCT over both computed columns has the same
      * "can't express the grouping in DQL" shape as a GROUP BY alias.
      * Fetches `registrationDate` per row instead and computes the distinct
      * set in PHP -- an admin-only dropdown filter, not a hot path.
-     * `registrationDate` is `SqlDateTime`-typed (Phase 5); `getArrayResult()`
+     * `registrationDate` is `SqlDateTime`-typed; `getArrayResult()`
      * (Gotcha #1) applies that Type during hydration, so the row mapper
      * below unwraps via `instanceof` before slicing it in its canonical
      * `Y-m-d H:i:s` form (`UserInfoEntity`'s own `length: 19`), which
@@ -1543,9 +1491,8 @@ final class UserRepository implements WebmasterMailProviderInterface
      * Per-level user counts, excluding $excludeUserId (the guest user) --
      * Admin\UserListPageRenderer's own level-filter counters.
      *
-     * Item 14 DQL audit: converted to real DQL -- single-table, static
-     * column/property, plain smallint `level` (no custom-type hydration
-     * concern).
+     * Single-table, static column/property, plain smallint `level` (no
+     * custom-type hydration concern).
      *
      * @return array<int, int> keyed by level
      */
@@ -1792,8 +1739,8 @@ final class UserRepository implements WebmasterMailProviderInterface
      * Admin\AlbumNotificationPageRenderer's own "every non-guest user"
      * pool, further intersected with album-access ids for private albums.
      *
-     * Item 14 DQL audit: converted to real DQL -- single-table, static
-     * column/property. getSingleColumnResult() uses Doctrine's
+     * Single-table, static column/property. getSingleColumnResult() uses
+     * Doctrine's
      * HYDRATE_SCALAR_COLUMN mode (ScalarColumnHydrator), which does a raw
      * Statement::fetchFirstColumn() with NO per-field Type conversion at
      * all -- unlike getArrayResult()/getResult(), it does NOT hydrate
@@ -1829,15 +1776,12 @@ final class UserRepository implements WebmasterMailProviderInterface
      * AlbumNotificationPageRenderer's own "notify these specific users"
      * mail-merge data.
      *
-     * SQL-modernization audit, Item 14 Sub-phase C4: converted to real
-     * DQL -- `users` is now mapped ({@see UserEntity}); the multi-auth
-     * column indirection this used to take as `$idColumn`/
-     * `$usernameColumn`/`$emailColumn` parameters is gone (see this
-     * class's own docblock). Rows carry `user_id` as a raw int, not a
-     * UserId VO -- unwrapped explicitly after hydration (this audit's own
-     * gotcha #4 territory: array hydration WOULD apply `ui.userId`'s
-     * custom Type, but every real consumer of this row shape expects a
-     * plain scalar there).
+     * `users` is mapped ({@see UserEntity}); see this class's own
+     * docblock for why its columns are fixed, not caller-supplied. Rows
+     * carry `user_id` as a raw int, not a UserId VO -- unwrapped
+     * explicitly after hydration (Gotcha #4 territory: array hydration
+     * WOULD apply `ui.userId`'s custom Type, but every real consumer of
+     * this row shape expects a plain scalar there).
      *
      * @param  list<int|string>  $userIds
      * @return list<NotificationRecipient>
@@ -1886,12 +1830,10 @@ final class UserRepository implements WebmasterMailProviderInterface
      * Username + id rows for $userIds -- Admin\BatchManagerUnitPageRenderer's
      * own "who uploaded each of these photos" lookup.
      *
-     * SQL-modernization audit, Item 14 Sub-phase C4: converted to real
-     * DQL -- `users` is now mapped ({@see UserEntity}); the multi-auth
-     * column indirection this used to take as a `$userFields` parameter
-     * is gone (see this class's own docblock). Rows carry `id` as a raw
-     * int, not a UserId VO -- same gotcha #4 reasoning as
-     * {@see findNotificationRecipientsByIds()} above.
+     * `users` is mapped ({@see UserEntity}); see this class's own
+     * docblock for why its columns are fixed, not caller-supplied. Rows
+     * carry `id` as a raw int, not a UserId VO -- same Gotcha #4
+     * reasoning as {@see findNotificationRecipientsByIds()} above.
      *
      * @param list<string> $userIds
      * @return list<UsernameById>
@@ -1934,8 +1876,8 @@ final class UserRepository implements WebmasterMailProviderInterface
      * getInstallationDate()'s own "when was the first real (non-guest,
      * non-default) user, id 2, registered" candidate.
      *
-     * Item 14 DQL audit: converted to real DQL -- a `user_infos` lookup by
-     * its own primary key is exactly `$this->find()`'s contract; `$userId`
+     * A `user_infos` lookup by its own primary key is exactly
+     * `$this->find()`'s contract; `$userId`
      * stays a plain int in this method's own signature (its one real
      * caller passes the literal id 2), so an invalid/non-positive value is
      * turned into "no such row" via UserId::tryFrom() rather than letting
@@ -1958,8 +1900,8 @@ final class UserRepository implements WebmasterMailProviderInterface
      * when user id 2's own registration_date predates Piwigo's own
      * "origin of times".
      *
-     * Item 14 DQL audit: converted to real DQL -- single-table, static
-     * column/property. MIN() is a standard DQL function, and an unGROUPed
+     * Single-table, static column/property. MIN() is a standard DQL
+     * function, and an unGROUPed
      * aggregate always returns exactly one row (never NonUniqueResultException
      * territory), so getSingleScalarResult() is safe here.
      */
@@ -1979,8 +1921,7 @@ final class UserRepository implements WebmasterMailProviderInterface
      * Total row count of `users` -- Admin\UserActivityPageRenderer's own
      * "nb_users" summary figure.
      *
-     * SQL-modernization audit, Item 14 Sub-phase C4: converted to real
-     * DQL -- `users` is now mapped ({@see UserEntity}).
+     * `users` is mapped ({@see UserEntity}).
      */
     public function countAllUsers(): int
     {
@@ -2001,10 +1942,8 @@ final class UserRepository implements WebmasterMailProviderInterface
      * `user_infos` row (the LEFT JOIN's own "no such row" case) still
      * appears here, with a null status.
      *
-     * SQL-modernization audit, Item 14 Sub-phase C4: converted to real
-     * DQL -- `users` is now mapped ({@see UserEntity}); the multi-auth
-     * column indirection this used to take as a `$idColumn` parameter is
-     * gone (see this class's own docblock).
+     * `users` is mapped ({@see UserEntity}); see this class's own
+     * docblock for why its columns are fixed, not caller-supplied.
      *
      * @param  list<int|string>  $ids
      * @return array<int|string, ?string>
@@ -2049,14 +1988,14 @@ final class UserRepository implements WebmasterMailProviderInterface
      * Controller\PasswordController::checkPasswordResetKey()'s own reset-
      * key scan.
      *
-     * Item 14 DQL audit: converted to real DQL -- single-table, static
-     * columns/properties. DQL's CURRENT_TIMESTAMP() compiles to MySQL's
-     * NOW() (Doctrine\DBAL\Platforms\MySQLPlatform::getCurrentTimestampSQL()),
-     * same comparison as the original raw `activation_key_expire > NOW()`
-     * against this still-plain-string column. `ui.userId` maps through the
-     * `user_id` custom Doctrine Type, so getArrayResult() hydrates it as a
-     * UserId value object, not a raw scalar -- per the Item 14 gotcha, this
-     * builds ActivationKeyRow directly with an instanceof check instead of
+     * Single-table, static columns/properties. DQL's CURRENT_TIMESTAMP()
+     * compiles to MySQL's NOW()
+     * (Doctrine\DBAL\Platforms\MySQLPlatform::getCurrentTimestampSQL()),
+     * same comparison as `activation_key_expire > NOW()` against this
+     * still-plain-string column. `ui.userId` maps through the `user_id`
+     * custom Doctrine Type, so getArrayResult() hydrates it as a UserId
+     * value object, not a raw scalar -- so this builds ActivationKeyRow
+     * directly with an instanceof check instead of
      * reusing ActivationKeyRow::fromRow() (which does a raw-DBAL-shaped
      * UserId::tryFrom($row['user_id']) check that would silently treat a
      * UserId object as invalid and throw).

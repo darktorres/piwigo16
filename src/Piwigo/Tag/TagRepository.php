@@ -102,8 +102,8 @@ final class TagRepository extends EntityRepository
      * Accepts either query-builder flavor -- {@see SqlCondition}'s own
      * `sql`/`parameters`/`types` shape (a raw fragment string + named
      * bound parameters) applies identically via `andWhere()`/
-     * `setParameter()` on both, confirmed empirically (Item 15 audit):
-     * neither {@see PermissionCriteria} nor `SqlCondition` needed any new
+     * `setParameter()` on both, confirmed empirically: neither
+     * {@see PermissionCriteria} nor `SqlCondition` needed any new
      * DQL-specific contract -- a DQL consumer just passes a DQL property
      * path (e.g. `ic.categoryId`) instead of a raw SQL column
      * (`ic.category_id`) into the same `*Condition()` methods.
@@ -198,27 +198,18 @@ final class TagRepository extends EntityRepository
     }
 
     /**
-     * Item 16G: converted to real DQL. The original's trailing
-     * `ORDER BY NULL` (a MySQL query-optimizer hint meaning "don't sort")
-     * when $maxTags <= 0 has no `QueryBuilder` equivalent and none is
-     * needed -- omitting `ORDER BY` entirely is the same "unspecified
-     * order" behavior.
+     * The original's trailing `ORDER BY NULL` (a MySQL query-optimizer
+     * hint meaning "don't sort") when $maxTags <= 0 has no `QueryBuilder`
+     * equivalent and none is needed -- omitting `ORDER BY` entirely is the
+     * same "unspecified order" behavior.
      *
-     * Item 14 DQL audit's own "DQL's entity-vs-scalar select split
-     * doesn't cleanly express this" claim was stale, not re-verified --
-     * empirically confirmed this session that DQL's `SelectExpression`
-     * grammar genuinely allows a bare `IdentificationVariable` (a full
-     * entity, `t`) mixed with a scalar aggregate (`COUNT(...) AS counter`)
-     * in one SELECT list, hydrating each row as `[0 => TagEntity,
-     * 'counter' => int]` under default `getResult()` hydration -- live
-     * DQL-probed against the real fixture, not assumed.
+     * DQL's `SelectExpression` grammar allows a bare `IdentificationVariable`
+     * (a full entity, `t`) mixed with a scalar aggregate (`COUNT(...) AS
+     * counter`) in one SELECT list, hydrating each row as `[0 =>
+     * TagEntity, 'counter' => int]` under default `getResult()` hydration.
      *
-     * Stays a raw array shape, deliberately -- re-verified fresh for the
-     * Phase 6 DTO-promotion sweep (not just deferring to the stale
-     * precedent {@see \Piwigo\Group\Projection\Group}'s own docblock once
-     * cited, which turned out to be wrong once actually checked; see
-     * {@see \Piwigo\Group\Projection\GroupListing} for that correction).
-     * `TagService::getCommonTags()` (the one real caller) mutates
+     * Stays a raw array shape, deliberately. `TagService::getCommonTags()`
+     * (the one real caller) mutates
      * `$row['name']` in place after a `RenderTagName` event dispatch, then
      * `array_merge()`s the result with `TagService::getAvailableTags()`'s
      * own separately-cached, differently-sourced rows of this exact same
@@ -226,10 +217,9 @@ final class TagRepository extends EntityRepository
      * into the list" fallback) -- two independently-built, mutated,
      * merged row streams feeding one combined list across 6 real call
      * sites (WS responses and Smarty template assignments both). A safe
-     * conversion needs `getAvailableTags()`'s own row-building/caching
-     * converted in the same pass, which is a Tag-domain-wide, not
-     * single-method, change -- out of scope for this repository-layer
-     * promotion pass.
+     * conversion to a typed DTO needs `getAvailableTags()`'s own
+     * row-building/caching converted too -- a Tag-domain-wide, not
+     * single-method, change.
      *
      * @param list<int> $items
      * @param list<int> $excludedTagIds
@@ -365,13 +355,12 @@ final class TagRepository extends EntityRepository
      * (grace period so a tag freshly created/detached isn't immediately
      * swept up).
      *
-     * Item 14 DQL audit, corrected: the original note claimed
-     * `SUBDATE(NOW(), INTERVAL 1 DAY)` had no native DQL function -- wrong,
+     * `SUBDATE(NOW(), INTERVAL 1 DAY)`'s DQL equivalent is `DATE_SUB()`,
      * see {@see \Piwigo\Comment\CommentRepository::countRecentComments()}'s
-     * own corrected note for the real `DATE_SUB()` equivalent. The anti-join
-     * (`LEFT JOIN image_tag ... WHERE tag_id IS NULL`) has no formal ORM
-     * association between `ImageTagEntity`/`TagEntity`, but DQL supports
-     * arbitrary joins without one via `Join::WITH`.
+     * own note. The anti-join (`LEFT JOIN image_tag ... WHERE tag_id IS
+     * NULL`) has no formal ORM association between `ImageTagEntity`/
+     * `TagEntity`, but DQL supports arbitrary joins without one via
+     * `Join::WITH`.
      *
      * The cutoff uses DQL's own `CURRENT_TIMESTAMP()` (compiles to the DB
      * server's real `NOW()`) rather than a PHP-computed `Env::now()`
@@ -379,15 +368,13 @@ final class TagRepository extends EntityRepository
      * ({@see \Piwigo\Tests\Browser\TagsPageRendererTest}) backdates a tag
      * via raw SQL against the real MySQL clock
      * (`DATE_SUB(NOW(), INTERVAL 2 DAY)`), not a fixture date pinned to
-     * `PIWIGO_TEST_NOW`. Using `Env::now()` here would compare the real-
-     * clock-backdated row against a frozen-clock cutoff, drifting apart as
-     * real time passes without `PIWIGO_TEST_NOW` being updated -- confirmed
-     * as a real, reproducible bug during this conversion (2 Browser test
-     * failures) before switching to this server-side form. Contrast with
-     * {@see \Piwigo\Comment\CommentRepository::countRecentComments()},
-     * which deliberately uses `Env::now()` because it compares against
-     * static, hardcoded fixture dates that need a pinned anchor for
-     * determinism -- the opposite situation.
+     * `PIWIGO_TEST_NOW`. Using `Env::now()` here would compare the
+     * real-clock-backdated row against a frozen-clock cutoff, drifting
+     * apart as real time passes without `PIWIGO_TEST_NOW` being updated.
+     * Contrast with {@see \Piwigo\Comment\CommentRepository::
+     * countRecentComments()}, which deliberately uses `Env::now()` because
+     * it compares against static, hardcoded fixture dates that need a
+     * pinned anchor for determinism -- the opposite situation.
      *
      * @return list<TagBrief>
      */
@@ -556,17 +543,16 @@ final class TagRepository extends EntityRepository
 
     /**
      * Tag ids whose name matches $pattern (already a complete SQL LIKE
-     * pattern, e.g. '%word%') -- Further SQL-modernization audit, Item 7:
-     * retargeted here from SearchRepository's own generic findIdsByClause(),
-     * SearchService::searchAllwords()'s own "all words" search feature
-     * (distinct from quick-search's separate token-based tag lookup).
+     * pattern, e.g. '%word%') -- backs SearchService::searchAllwords()'s
+     * own "all words" search feature (distinct from quick-search's
+     * separate token-based tag lookup).
      *
-     * Item 14 DQL audit: converted to real DQL -- single-table, static
-     * WHERE, no join DQL can't express. t.id hydrates as a real TagId VO
-     * under DQL array hydration (its own 'tag_id' custom Doctrine Type
-     * applies there too, same as CommentRepository::findSummariesForImage()'s
-     * own documented finding for CommentId) -- extracted back to a plain
-     * int below since that's this method's own return contract.
+     * Single-table, static WHERE, no join DQL can't express. t.id
+     * hydrates as a real TagId VO under DQL array hydration (its own
+     * 'tag_id' custom Doctrine Type applies there too, same as
+     * CommentRepository::findSummariesForImage()'s own documented finding
+     * for CommentId) -- extracted back to a plain int below since that's
+     * this method's own return contract.
      *
      * @return list<int>
      */
@@ -605,27 +591,18 @@ final class TagRepository extends EntityRepository
      * description (plugin sub name)" step, backing a plugin's
      * `get_tag_name_like_where` EventDispatcher hook.
      *
-     * SQL-modernization audit: replaces the former findIdByWhereFragment(),
-     * which took an already-built raw SQL WHERE-continuation fragment
-     * straight from the plugin hook -- a real, unescaped SQL injection
-     * when the ExtendedDescription plugin is active, confirmed against
-     * its actual piwigo16-plugins source (`ed_name_like_where()`): it
-     * splices the tag name into `name LIKE '...'` with zero escaping.
-     * The hook's own contract changes here from "return raw SQL
-     * fragments" to "return LIKE pattern VALUES" -- every pattern is now
-     * a bound parameter, so no plugin handler can inject SQL structure
-     * anymore regardless of what string it returns. Not a compat break
-     * in practice: no 17.x plugin implements this hook yet (it's a
-     * greenfield rewrite hook), so there's nothing real to migrate.
+     * `get_tag_name_like_where`'s own contract is "return LIKE pattern
+     * VALUES", not raw SQL fragments -- every pattern is a bound
+     * parameter, so no plugin handler can inject SQL structure regardless
+     * of what string it returns.
      *
-     * Item 14 DQL audit: converted to real DQL -- single-table, dynamic
-     * OR-joined LIKE conditions (ORM's own Expr::orX()/like(), same shape
-     * as findByIdsUrlNamesOrNames()'s existing DQL orX() usage above), no
-     * join DQL can't express. Fetches the full entity (not a t.id partial
-     * select) and reads ->id off it -- avoids the array-hydration/custom-
-     * Type question entirely by staying on ordinary object hydration.
-     * setMaxResults(1) matches the original's own "just the first matching
-     * row" fetchOne() semantics -- getOneOrNullResult() alone throws
+     * Single-table, dynamic OR-joined LIKE conditions (ORM's own
+     * Expr::orX()/like(), same shape as findByIdsUrlNamesOrNames()'s
+     * existing DQL orX() usage above), no join DQL can't express. Fetches
+     * the full entity (not a t.id partial select) and reads ->id off it --
+     * avoids the array-hydration/custom-Type question entirely by staying
+     * on ordinary object hydration. setMaxResults(1) matches "just the
+     * first matching row" semantics -- getOneOrNullResult() alone throws
      * NonUniqueResultException for more than one match.
      *
      * @param list<string> $patterns
@@ -722,22 +699,18 @@ final class TagRepository extends EntityRepository
     }
 
     /**
-     * Further SQL-modernization audit, Item 10: fetchTagListRows() (a fully
-     * generic "execute an already-built SELECT id, name query" escape
-     * hatch) deleted -- its 3 real callers (Admin\PictureModifyPageRenderer/
-     * Admin\BatchManagerUnitPageRenderer, both this exact
-     * image_tag-JOIN-tags-by-image_id shape) replaced with this typed
-     * method.
+     * Backs Admin\PictureModifyPageRenderer/Admin\BatchManagerUnitPageRenderer's
+     * shared image_tag-JOIN-tags-by-image_id shape.
      *
-     * Item 15 audit: converted to real DQL -- no formal ORM association
-     * exists between `ImageTagEntity`/`TagEntity`, but DQL doesn't need one
-     * for an explicit `JOIN Entity WITH condition` (`Join::WITH`, already
-     * used elsewhere in this codebase for the identical "no association"
-     * shape). `t.id` hydrates as a `TagId` VO under DQL array hydration
-     * (same gotcha `findIdsByNameLike()` above already documents), unwrapped
-     * back to a raw int before `toIdNameRow()` -- that helper's own
-     * `is_numeric()` check would otherwise silently default a `TagId`
-     * object to 0 rather than using its real value.
+     * No formal ORM association exists between `ImageTagEntity`/
+     * `TagEntity`, but DQL doesn't need one for an explicit `JOIN Entity
+     * WITH condition` (`Join::WITH`, already used elsewhere in this
+     * codebase for the identical "no association" shape). `t.id`
+     * hydrates as a `TagId` VO under DQL array hydration (same gotcha
+     * `findIdsByNameLike()` above already documents), unwrapped back to a
+     * raw int before `toIdNameRow()` -- that helper's own `is_numeric()`
+     * check would otherwise silently default a `TagId` object to 0 rather
+     * than using its real value.
      *
      * @return list<TagIdName>
      */
@@ -768,18 +741,15 @@ final class TagRepository extends EntityRepository
     }
 
     /**
-     * Further SQL-modernization audit, Item 10: fetchTagListRows()'s 3rd
-     * real caller -- Admin\BatchManager\FilterPanelRenderer's own
+     * Backs Admin\BatchManager\FilterPanelRenderer's own
      * `tags WHERE id IN (...)` shape.
      *
-     * Item 14 DQL audit: converted to real DQL -- single-table, static
-     * WHERE, no join DQL can't express. Deliberately NOT reusing
-     * toIdNameRow() here: t.id hydrates as a TagId VO under DQL (see
-     * findIdsByNameLike()'s own docblock), and toIdNameRow()'s
+     * Single-table, static WHERE, no join DQL can't express. Deliberately
+     * NOT reusing toIdNameRow() here: t.id hydrates as a TagId VO under
+     * DQL (see findIdsByNameLike()'s own docblock), and toIdNameRow()'s
      * is_numeric() check would silently default that to 0 (a TagId object
-     * is never is_numeric()) instead of throwing -- the exact silent-bug
-     * shape this class's own SQL-modernization audit has been eliminating
-     * throughout, so this reads t.id explicitly instead.
+     * is never is_numeric()) instead of throwing, so this reads t.id
+     * explicitly instead.
      *
      * @param  list<int>  $ids
      * @return list<TagIdName>
@@ -834,11 +804,9 @@ final class TagRepository extends EntityRepository
      * an image already tagged with the destination tag doesn't collide with
      * one it's picking up from a merged-away tag.
      *
-     * Item 14 DQL audit: stays on DBAL -- bulk multi-row INSERT via
-     * BatchWriter, deliberately not per-entity persist() (an ORM insert
-     * writes one row per flush(), not a single bulk statement); not a real
-     * DQL-vs-DBAL question, same as every other BatchWriter call site in
-     * this codebase.
+     * Bulk multi-row INSERT via BatchWriter, deliberately not per-entity
+     * persist() (an ORM insert writes one row per flush(), not a single
+     * bulk statement).
      *
      * @param  list<array{image_id: int|string, tag_id: int|string}>  $inserts
      */
@@ -863,12 +831,11 @@ final class TagRepository extends EntityRepository
      * above (that one restricts to visible/permitted images via an
      * image_category JOIN, for the public-facing WS listing).
      *
-     * Item 14 DQL audit: converted to real DQL -- single-table
-     * (`image_tag`, mapped via ImageTagEntity), no WHERE/join DQL can't
-     * express. it.tagId hydrates as a TagId VO (ImageTagEntity's own
-     * TagIdType-mapped field, see that class's own docblock) -- read via
-     * instanceof, not is_numeric() (which a TagId object always fails,
-     * the same silent-bug shape findTagsByIds()'s own docblock documents).
+     * Single-table (`image_tag`, mapped via ImageTagEntity), no WHERE/join
+     * DQL can't express. it.tagId hydrates as a TagId VO (ImageTagEntity's
+     * own TagIdType-mapped field, see that class's own docblock) -- read
+     * via instanceof, not is_numeric() (which a TagId object always
+     * fails, the same shape findTagsByIds()'s own docblock documents).
      *
      * @return array<int, int> [tag_id => counter]
      */
@@ -956,8 +923,7 @@ final class TagRepository extends EntityRepository
     }
 
     /**
-     * Item 14 DQL audit: converted to real DQL -- single-table, static
-     * WHERE, no join DQL can't express.
+     * Single-table, static WHERE, no join DQL can't express.
      */
     public function existsById(int $id): bool
     {
@@ -972,8 +938,7 @@ final class TagRepository extends EntityRepository
     }
 
     /**
-     * Item 14 DQL audit: converted to real DQL -- single-table, static
-     * WHERE, no join DQL can't express.
+     * Single-table, static WHERE, no join DQL can't express.
      *
      * @param  list<int>  $ids
      */
@@ -994,8 +959,7 @@ final class TagRepository extends EntityRepository
     }
 
     /**
-     * Item 14 DQL audit: converted to real DQL -- single-table, static
-     * WHERE, no join DQL can't express.
+     * Single-table, static WHERE, no join DQL can't express.
      */
     public function existsByName(string $name): bool
     {
@@ -1013,10 +977,9 @@ final class TagRepository extends EntityRepository
      * Every tag name except $excludeId's own -- Ws\PwgTags::rename()'s
      * own "is the new name already taken by a different tag" check.
      *
-     * Item 14 DQL audit: converted to real DQL -- single-table, static
-     * WHERE, no join DQL can't express. t.name is a plain string column,
-     * no custom Doctrine Type involved (unlike t.id elsewhere in this
-     * class).
+     * Single-table, static WHERE, no join DQL can't express. t.name is a
+     * plain string column, no custom Doctrine Type involved (unlike t.id
+     * elsewhere in this class).
      *
      * @return list<string>
      */
@@ -1046,8 +1009,7 @@ final class TagRepository extends EntityRepository
      * Total row count of `tags` -- Admin\InstallationStats's own
      * "nb_tags" summary figure.
      *
-     * Item 14 DQL audit: converted to real DQL -- single-table, no WHERE/
-     * join DQL can't express.
+     * Single-table, no WHERE/join DQL can't express.
      */
     public function countAll(): int
     {
@@ -1063,8 +1025,8 @@ final class TagRepository extends EntityRepository
      * Total row count of `image_tag` -- Admin\InstallationStats's own
      * "nb_image_tag" summary figure.
      *
-     * Item 14 DQL audit: converted to real DQL -- single-table (mapped via
-     * ImageTagEntity), no WHERE/join DQL can't express.
+     * Single-table (mapped via ImageTagEntity), no WHERE/join DQL can't
+     * express.
      */
     public function countAllImageTagLinks(): int
     {

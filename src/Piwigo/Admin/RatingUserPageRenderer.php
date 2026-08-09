@@ -35,7 +35,7 @@ final class RatingUserPageRenderer
         $tabsheet->select('rating_user', $eventDispatcher);
         $tabsheet->assign($currentTemplate);
 
-        $ratingFilter = RatingUserFilterRequest::fromGlobals($currentConfig->topNumber());
+        $ratingFilter = RatingUserFilterRequest::fromGlobals($currentConfig->topNumber);
         $filter_min_rates = $ratingFilter->minRates;
         $consensus_top_number = $ratingFilter->consensusTopNumber;
 
@@ -50,7 +50,7 @@ final class RatingUserPageRenderer
             ];
         }
 
-        $rate_items = $currentConfig->rateItems();
+        $rate_items = $currentConfig->rateItems;
 
         $by_user_rating_model = [
             'rates' => [],
@@ -194,7 +194,7 @@ final class RatingUserPageRenderer
             formAction: $urlService->getRootUrl() . 'admin.php',
             minRates: $filter_min_rates,
             consensusTopNumber: $consensus_top_number,
-            availableRates: $currentConfig->rateItems(),
+            availableRates: $currentConfig->rateItems,
             ratings: $by_user_ratings,
             imageUrls: $image_urls,
             tnWidth: $imageStdParams->get_by_type(ImageStdParams::SQUARE)->sizing->ideal_size[0],

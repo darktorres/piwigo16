@@ -520,9 +520,9 @@ test('get_footer_scripts runs check_load_dep when the head has not been written 
     file_put_contents($root . '/themes/default/js/b.js', 'var b=1;');
     Kernel::boot(Paths::fromRoot($root));
     CurrentUserTestFactory::get()->attachGlobals();
-    CurrentConfigTestFactory::get()->setDataLocation('_data/');
-    CurrentConfigTestFactory::get()->setDataDirChecked('1');
-    CurrentConfigTestFactory::get()->setTemplateCombineFiles(false);
+    CurrentConfigTestFactory::get()->dataLocation = '_data/';
+    CurrentConfigTestFactory::get()->dataDirChecked = '1';
+    CurrentConfigTestFactory::get()->templateCombineFiles = false;
 
     $loader = new ScriptLoader();
     $loader->add('precedent', 2, [], 'themes/default/js/a.js');
@@ -545,9 +545,9 @@ test('get_footer_scripts skips check_load_dep when the head was already written 
     file_put_contents($root . '/themes/default/js/b.js', 'var b=1;');
     Kernel::boot(Paths::fromRoot($root));
     CurrentUserTestFactory::get()->attachGlobals();
-    CurrentConfigTestFactory::get()->setDataLocation('_data/');
-    CurrentConfigTestFactory::get()->setDataDirChecked('1');
-    CurrentConfigTestFactory::get()->setTemplateCombineFiles(false);
+    CurrentConfigTestFactory::get()->dataLocation = '_data/';
+    CurrentConfigTestFactory::get()->dataDirChecked = '1';
+    CurrentConfigTestFactory::get()->templateCombineFiles = false;
 
     $loader = new ScriptLoader();
     $loader->add('precedent', 2, [], 'themes/default/js/a.js');
@@ -572,8 +572,8 @@ test('get_footer_scripts marks did_footer, which then makes add_inline warn', fu
     mkdir($root, 0o777, true);
     Kernel::boot(Paths::fromRoot($root));
     CurrentUserTestFactory::get()->attachGlobals();
-    CurrentConfigTestFactory::get()->setDataLocation('_data/');
-    CurrentConfigTestFactory::get()->setDataDirChecked('1');
+    CurrentConfigTestFactory::get()->dataLocation = '_data/';
+    CurrentConfigTestFactory::get()->dataDirChecked = '1';
 
     $loader = new ScriptLoader();
 
@@ -607,9 +607,9 @@ test('get_footer_scripts separates sync (load_mode=1) and async (load_mode=2) sc
     file_put_contents($root . '/themes/default/js/async.js', 'var a=1;');
     Kernel::boot(Paths::fromRoot($root));
     CurrentUserTestFactory::get()->attachGlobals();
-    CurrentConfigTestFactory::get()->setDataLocation('_data/');
-    CurrentConfigTestFactory::get()->setDataDirChecked('1');
-    CurrentConfigTestFactory::get()->setTemplateCombineFiles(false);
+    CurrentConfigTestFactory::get()->dataLocation = '_data/';
+    CurrentConfigTestFactory::get()->dataDirChecked = '1';
+    CurrentConfigTestFactory::get()->templateCombineFiles = false;
 
     $loader = new ScriptLoader();
     $loader->add('sync-script', 1, [], 'themes/default/js/sync.js');
@@ -637,9 +637,9 @@ test('get_footer_scripts excludes scripts already claimed by get_head_scripts', 
     file_put_contents($root . '/themes/default/js/footer.js', 'var f=1;');
     Kernel::boot(Paths::fromRoot($root));
     CurrentUserTestFactory::get()->attachGlobals();
-    CurrentConfigTestFactory::get()->setDataLocation('_data/');
-    CurrentConfigTestFactory::get()->setDataDirChecked('1');
-    CurrentConfigTestFactory::get()->setTemplateCombineFiles(false);
+    CurrentConfigTestFactory::get()->dataLocation = '_data/';
+    CurrentConfigTestFactory::get()->dataDirChecked = '1';
+    CurrentConfigTestFactory::get()->templateCombineFiles = false;
 
     $loader = new ScriptLoader();
     $loader->add('head-script', 0, [], 'themes/default/js/head.js');
@@ -665,7 +665,7 @@ test('get_head_scripts runs check_load_dep before sorting, downgrading an async 
     // pre-boot memoized fallback instance until Kernel::boot() builds the
     // container's own (different) shared instance, and get_head_scripts()
     // below reads CurrentConfig via that container instance.
-    CurrentConfigTestFactory::get()->setTemplateCombineFiles(false);
+    CurrentConfigTestFactory::get()->templateCombineFiles = false;
     CurrentUserTestFactory::get()->attachGlobals();
 
     $loader = new ScriptLoader();
@@ -688,9 +688,9 @@ test('get_head_scripts computes and uses each script\'s topological order to sor
     file_put_contents($root . '/themes/default/js/dep.js', 'var dep=1;');
     Kernel::boot(Paths::fromRoot($root));
     CurrentUserTestFactory::get()->attachGlobals();
-    CurrentConfigTestFactory::get()->setDataLocation('_data/');
-    CurrentConfigTestFactory::get()->setDataDirChecked('1');
-    CurrentConfigTestFactory::get()->setTemplateCombineFiles(false);
+    CurrentConfigTestFactory::get()->dataLocation = '_data/';
+    CurrentConfigTestFactory::get()->dataDirChecked = '1';
+    CurrentConfigTestFactory::get()->templateCombineFiles = false;
 
     $loader = new ScriptLoader();
     // Registered in dependency-inverted order -- 'dependent' (order 1)
@@ -728,9 +728,9 @@ test('cmp_by_mode_and_order sorts a remote script before a same-mode, same-order
     file_put_contents($root . '/themes/default/js/local.js', 'var a=1;');
     Kernel::boot(Paths::fromRoot($root));
     CurrentUserTestFactory::get()->attachGlobals();
-    CurrentConfigTestFactory::get()->setDataLocation('_data/');
-    CurrentConfigTestFactory::get()->setDataDirChecked('1');
-    CurrentConfigTestFactory::get()->setTemplateCombineFiles(false);
+    CurrentConfigTestFactory::get()->dataLocation = '_data/';
+    CurrentConfigTestFactory::get()->dataDirChecked = '1';
+    CurrentConfigTestFactory::get()->templateCombineFiles = false;
 
     try {
         $remoteFirst = new ScriptLoader();
@@ -758,9 +758,9 @@ test('get_head_scripts collects every mode=0 script up to (not including) the fi
     file_put_contents($root . '/themes/default/js/footer.js', 'var f=1;');
     Kernel::boot(Paths::fromRoot($root));
     CurrentUserTestFactory::get()->attachGlobals();
-    CurrentConfigTestFactory::get()->setDataLocation('_data/');
-    CurrentConfigTestFactory::get()->setDataDirChecked('1');
-    CurrentConfigTestFactory::get()->setTemplateCombineFiles(false);
+    CurrentConfigTestFactory::get()->dataLocation = '_data/';
+    CurrentConfigTestFactory::get()->dataDirChecked = '1';
+    CurrentConfigTestFactory::get()->templateCombineFiles = false;
 
     $loader = new ScriptLoader();
     $loader->add('head-script', 0, [], 'themes/default/js/head.js');
@@ -836,9 +836,9 @@ test('get_footer_scripts sorts within the same load_mode by topological order to
     file_put_contents($root . '/themes/default/js/dep.js', 'var dep=1;');
     Kernel::boot(Paths::fromRoot($root));
     CurrentUserTestFactory::get()->attachGlobals();
-    CurrentConfigTestFactory::get()->setDataLocation('_data/');
-    CurrentConfigTestFactory::get()->setDataDirChecked('1');
-    CurrentConfigTestFactory::get()->setTemplateCombineFiles(false);
+    CurrentConfigTestFactory::get()->dataLocation = '_data/';
+    CurrentConfigTestFactory::get()->dataDirChecked = '1';
+    CurrentConfigTestFactory::get()->templateCombineFiles = false;
 
     $loader = new ScriptLoader();
     $loader->add('dependent', 1, ['base'], 'themes/default/js/dep.js');
@@ -863,9 +863,9 @@ test('get_footer_scripts excludes mode=0 scripts even when get_head_scripts was 
     file_put_contents($root . '/themes/default/js/footer.js', 'var f=1;');
     Kernel::boot(Paths::fromRoot($root));
     CurrentUserTestFactory::get()->attachGlobals();
-    CurrentConfigTestFactory::get()->setDataLocation('_data/');
-    CurrentConfigTestFactory::get()->setDataDirChecked('1');
-    CurrentConfigTestFactory::get()->setTemplateCombineFiles(false);
+    CurrentConfigTestFactory::get()->dataLocation = '_data/';
+    CurrentConfigTestFactory::get()->dataDirChecked = '1';
+    CurrentConfigTestFactory::get()->templateCombineFiles = false;
 
     $loader = new ScriptLoader();
     $loader->add('head-script', 0, [], 'themes/default/js/head.js');
@@ -905,7 +905,7 @@ test('check_load_dep converges over multiple passes for a 3-level async dependen
             // builds its own fresh container (and therefore its own fresh
             // CurrentConfig instance) before invoking it; setting this
             // outside would land on a different, discarded instance.
-            CurrentConfigTestFactory::get()->setTemplateCombineFiles(false);
+            CurrentConfigTestFactory::get()->templateCombineFiles = false;
             $method = new ReflectionMethod(ScriptLoader::class, 'check_load_dep');
             $method->invoke(null, scriptLoaderRegistered($loader));
         });
@@ -1192,7 +1192,7 @@ test('check_load_dep needs a second pass to cascade an unconditional downgrade t
     // remote) paths keep the async-specific downgrade branch inert, so
     // this isolates the do-while's own repeat -- a single pass leaves
     // bottom at its stale load_mode=2 instead of the converged 0.
-    CurrentConfigTestFactory::get()->setTemplateCombineFiles(true);
+    CurrentConfigTestFactory::get()->templateCombineFiles = true;
 
     $loader = new ScriptLoader();
     $loader->add('mid', 2, ['bottom'], 'themes/default/js/mid.js');
@@ -1227,7 +1227,7 @@ test('check_load_dep needs a further pass unlocked by the async branch\'s own ch
     // graphs can, because it needs both an unconditional AND an async
     // downgrade coexisting in the same pass, with the async one ending up
     // last.
-    CurrentConfigTestFactory::get()->setTemplateCombineFiles(false);
+    CurrentConfigTestFactory::get()->templateCombineFiles = false;
 
     $loader = new ScriptLoader();
     $loader->add('n4', 2, ['n1'], 'themes/default/js/n4.js');

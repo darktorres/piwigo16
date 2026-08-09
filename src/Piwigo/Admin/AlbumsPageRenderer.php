@@ -248,17 +248,17 @@ final class AlbumsPageRenderer
             nbCats: $nb_cats,
             openCat: $open_cat_value,
             fAction: $urlService->getRootUrl() . 'admin.php?page=albums',
-            delayBeforeAutoOpen: $currentConfig->albumMoveDelayBeforeAutoOpening(),
+            delayBeforeAutoOpen: $currentConfig->albumMoveDelayBeforeAutoOpening,
             // Known limitation: site-wide only -- Users\PreferencesService
             // could support a real per-user override of the default
             // new-album position, but none exists today.
-            posPref: $currentConfig->newcatDefaultPosition(),
+            posPref: $currentConfig->newcatDefaultPosition,
             albumData: self::assocToOrderedTree($associatedTree, $nb_photos_in, $nb_sub_photos, $is_forbidden),
             pwgToken: new CsrfService($currentConfig)
                 ->getToken(),
             nbAlbums: count($allAlbum),
             adminPageTitle: $lang->t('Albums'),
-            lightAlbumManager: ($albums_counter > $currentConfig->lightAlbumManagerThreshold()) ? 1 : 0,
+            lightAlbumManager: ($albums_counter > $currentConfig->lightAlbumManagerThreshold) ? 1 : 0,
         ));
 
         // +-------------------------------------------------------------------+

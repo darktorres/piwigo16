@@ -162,7 +162,7 @@ test('load on an unreadable file is a silent no-op', function (): void {
 });
 
 test('translate warns about a missing key when debug_l10n is enabled', function (): void {
-    CurrentConfigTestFactory::get()->setDebugL10n(true);
+    CurrentConfigTestFactory::get()->debugL10n = true;
 
     $triggered = null;
     set_error_handler(function (int $errno, string $errstr) use (&$triggered): bool {
@@ -178,7 +178,7 @@ test('translate warns about a missing key when debug_l10n is enabled', function 
 });
 
 test('translate does not warn about a missing key when debug_l10n is disabled', function (): void {
-    CurrentConfigTestFactory::get()->setDebugL10n(false);
+    CurrentConfigTestFactory::get()->debugL10n = false;
 
     $triggered = false;
     set_error_handler(function () use (&$triggered): bool {
@@ -194,7 +194,7 @@ test('translate does not warn about a missing key when debug_l10n is disabled', 
 });
 
 test('translate does not warn about a resolved key even when debug_l10n is enabled', function (): void {
-    CurrentConfigTestFactory::get()->setDebugL10n(true);
+    CurrentConfigTestFactory::get()->debugL10n = true;
     $this->translator->loadArray(['known_key' => 'known value']);
 
     $triggered = false;
@@ -294,7 +294,7 @@ test('load skips a context-tagged entry whose msgid is empty', function (): void
 });
 
 test('translate does not warn about a missing key when the key itself is empty', function (): void {
-    CurrentConfigTestFactory::get()->setDebugL10n(true);
+    CurrentConfigTestFactory::get()->debugL10n = true;
 
     $triggered = false;
     set_error_handler(function () use (&$triggered): bool {

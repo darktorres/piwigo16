@@ -44,17 +44,17 @@ test('getDevice returns an existing session value as-is', function (): void {
 });
 
 test('mobileTheme is false when the mobile_theme config is empty or "0", without touching the session', function (): void {
-    CurrentConfigTestFactory::get()->setMobilTheme('');
+    CurrentConfigTestFactory::get()->mobilTheme = '';
     expect(DeviceHelper::mobileTheme(deviceHelperTestSessionService(), CurrentConfigTestFactory::get()))->toBeFalse();
     expect($_SESSION)->toBe([]);
 
-    CurrentConfigTestFactory::get()->setMobilTheme('0');
+    CurrentConfigTestFactory::get()->mobilTheme = '0';
     expect(DeviceHelper::mobileTheme(deviceHelperTestSessionService(), CurrentConfigTestFactory::get()))->toBeFalse();
     expect($_SESSION)->toBe([]);
 });
 
 test('mobileTheme falls back to getDevice() === "mobile" when no GET override or session value exists', function (): void {
-    CurrentConfigTestFactory::get()->setMobilTheme('mobile');
+    CurrentConfigTestFactory::get()->mobilTheme = 'mobile';
 
     // getDevice() itself defaults to "desktop" with an empty session.
     expect(DeviceHelper::mobileTheme(deviceHelperTestSessionService(), CurrentConfigTestFactory::get()))->toBeFalse();
@@ -62,7 +62,7 @@ test('mobileTheme falls back to getDevice() === "mobile" when no GET override or
 });
 
 test('mobileTheme returns an existing session value directly, without calling getDevice()', function (): void {
-    CurrentConfigTestFactory::get()->setMobilTheme('mobile');
+    CurrentConfigTestFactory::get()->mobilTheme = 'mobile';
     $_SESSION['pwg_mobile_theme'] = true;
 
     expect(DeviceHelper::mobileTheme(deviceHelperTestSessionService(), CurrentConfigTestFactory::get()))->toBeTrue();
@@ -71,7 +71,7 @@ test('mobileTheme returns an existing session value directly, without calling ge
 });
 
 test('mobileTheme honors a ?mobile= GET override, persisting it to the session', function (): void {
-    CurrentConfigTestFactory::get()->setMobilTheme('mobile');
+    CurrentConfigTestFactory::get()->mobilTheme = 'mobile';
 
     $_GET['mobile'] = '1';
     expect(DeviceHelper::mobileTheme(deviceHelperTestSessionService(), CurrentConfigTestFactory::get()))->toBeTrue();

@@ -105,15 +105,15 @@ namespace Piwigo\Tests\Integration {
             ConfigLoader::applyDefaults();
             ConfigLoader::applyEnvOverrides();
 
-            $currentConfig->setObligatoryUserMailAddress(false);
-            $currentConfig->setInsensitiveCaseLogon(false);
-            $currentConfig->setBrowserLanguage(false);
-            $currentConfig->setEmailAdminOnNewUser('none');
-            $currentConfig->setGalleryTitle('Test Gallery');
-            $currentConfig->setWebmasterId(999999);
-            $currentConfig->setGuestId(2);
-            $currentConfig->setDefaultUserId(2);
-            $currentConfig->setAvailablePermissionLevels([0, 1, 2, 4, 8]);
+            $currentConfig->obligatoryUserMailAddress = false;
+            $currentConfig->insensitiveCaseLogon = false;
+            $currentConfig->browserLanguage = false;
+            $currentConfig->emailAdminOnNewUser = 'none';
+            $currentConfig->galleryTitle = 'Test Gallery';
+            $currentConfig->webmasterId = 999999;
+            $currentConfig->guestId = 2;
+            $currentConfig->defaultUserId = 2;
+            $currentConfig->availablePermissionLevels = [0, 1, 2, 4, 8];
 
             $this->conn = DbConnection::build();
             $mailer = Kernel::container()->get(MailService::class);
@@ -788,9 +788,9 @@ namespace Piwigo\Tests\Integration {
             // setUp() re-applies the fake default before every other
             // test, so no restore is needed.
             $currentConfig = CurrentConfigTestFactory::get();
-            $currentConfig->setEmailAdminOnNewUser('all');
-            $currentConfig->setWebmasterId(1);
-            $currentConfig->setSmtpHost('127.0.0.1:1');
+            $currentConfig->emailAdminOnNewUser = 'all';
+            $currentConfig->webmasterId = 1;
+            $currentConfig->smtpHost = '127.0.0.1:1';
             $login = 'reg-notify-' . bin2hex(random_bytes(4));
 
             // notifyAdminsOfNewRegistration()'s own mail send
@@ -831,9 +831,9 @@ namespace Piwigo\Tests\Integration {
             // -- exercises notifyAdminsOfNewRegistration()'s own
             // preg_match('/^group:(\d+)$/', ...) capture into $groupId.
             $currentConfig = CurrentConfigTestFactory::get();
-            $currentConfig->setEmailAdminOnNewUser('group:5');
-            $currentConfig->setWebmasterId(1);
-            $currentConfig->setSmtpHost('127.0.0.1:1');
+            $currentConfig->emailAdminOnNewUser = 'group:5';
+            $currentConfig->webmasterId = 1;
+            $currentConfig->smtpHost = '127.0.0.1:1';
             $login = 'reg-notify-group-' . bin2hex(random_bytes(4));
 
             set_error_handler(static fn (): bool => true);
@@ -919,7 +919,7 @@ namespace Piwigo\Tests\Integration {
             // does. Reuses 'guest' specifically because it has no email on
             // file (same determinism reasoning as the existing
             // test_register_user_sets_duplicate_username_without_revealing_it_in_errors).
-            CurrentConfigTestFactory::get()->setInsensitiveCaseLogon(true);
+            CurrentConfigTestFactory::get()->insensitiveCaseLogon = true;
 
             $result = $this->service->registerUser('GUEST', 'password123', null, UrlServiceTestFactory::build());
 
@@ -943,7 +943,7 @@ namespace Piwigo\Tests\Integration {
                 "INSERT INTO " . Tables::users() . " (username, password, mail_address) VALUES ('temp-webmaster-target', NULL, NULL)"
             );
             $tempId = (int) $this->conn->lastInsertId();
-            CurrentConfigTestFactory::get()->setWebmasterId($tempId);
+            CurrentConfigTestFactory::get()->webmasterId = $tempId;
 
             try {
                 $this->service->createUserInfos([UserId::from($tempId)]);
@@ -965,7 +965,7 @@ namespace Piwigo\Tests\Integration {
             );
             $tempId = (int) $this->conn->lastInsertId();
             $currentConfig = CurrentConfigTestFactory::get();
-            $currentConfig->setWebmasterId($tempId);
+            $currentConfig->webmasterId = $tempId;
             // setAvailablePermissionLevels([]) itself treats an empty array
             // as "reset to the built-in default" ([0,1,2,4,8]) -- confirmed
             // live, not a real empty state -- so a genuinely empty list can
@@ -981,7 +981,7 @@ namespace Piwigo\Tests\Integration {
                 );
                 self::assertSame(['status' => 'webmaster', 'level' => 0], $row);
             } finally {
-                $currentConfig->setAvailablePermissionLevels([0, 1, 2, 4, 8]);
+                $currentConfig->availablePermissionLevels = [0, 1, 2, 4, 8];
                 $this->conn->executeStatement('DELETE FROM ' . Tables::users() . ' WHERE id = ?', [$tempId]);
             }
         }

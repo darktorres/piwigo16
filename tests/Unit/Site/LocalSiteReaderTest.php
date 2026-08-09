@@ -172,7 +172,7 @@ test('get_elements does not look up a representative extension for a picture-ext
 });
 
 test('get_elements attaches per-format sizes under pwg_format when enable_formats is on', function (): void {
-    requireCurrentConfig($this->currentConfig)->setIsFormatsEnabled(true);
+    requireCurrentConfig($this->currentConfig)->isFormatsEnabled = true;
 
     mkdir($this->root . '/pwg_format');
     file_put_contents($this->root . '/scan.jpg', 'jpg-bytes');
@@ -191,7 +191,7 @@ test('get_elements attaches per-format sizes under pwg_format when enable_format
 });
 
 test('get_elements attaches an empty formats array when enable_formats is on but no pwg_format directory exists', function (): void {
-    requireCurrentConfig($this->currentConfig)->setIsFormatsEnabled(true);
+    requireCurrentConfig($this->currentConfig)->isFormatsEnabled = true;
     file_put_contents($this->root . '/scan.jpg', 'jpg-bytes');
 
     $reader = new LocalSiteReader($this->root, $this->currentConfig);

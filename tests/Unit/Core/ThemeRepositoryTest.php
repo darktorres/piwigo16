@@ -31,7 +31,6 @@ function themeRepositoryTestRepo(): ThemeRepository
 {
     $conn = DbConnection::build();
     $repo = EntityManagerFactory::build($conn)->getRepository(ThemeEntity::class);
-    expect($repo)->toBeInstanceOf(ThemeRepository::class);
 
     return $repo;
 }

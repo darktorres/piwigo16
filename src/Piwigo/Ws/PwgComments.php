@@ -55,7 +55,7 @@ final class PwgComments
      *   with no 'default' key -- may be entirely absent; WsParamType::ID
      *   guarantees a plain int when present. page: non-null int default,
      *   WsParamType::INT|WsParamType::POSITIVE -- always present. per_page: same type
-     *   flag, default is $this->currentConfig->commentsPageNbComments() (a real int,
+     *   flag, default is $this->currentConfig->commentsPageNbComments (a real int,
      *   confirmed 10 in config_default.inc.php) -- always present, always
      *   int.
      * A composite, multi-query response (raw summary/nb_authors aggregate
@@ -66,7 +66,7 @@ final class PwgComments
      */
     public function getList(array $params, PwgServer &$service): PwgError|array
     {
-        if (! $this->currentConfig->activateComments()) {
+        if (! $this->currentConfig->activateComments) {
             return new PwgError(403, 'Comments are disabled');
         }
 
@@ -166,7 +166,7 @@ final class PwgComments
             $medium = $medium_derivative->get_url();
 
             $row_author = is_string($row['author']) ? $row['author'] : null;
-            if (! is_numeric($row['author_id']) or (int) $row['author_id'] === 0 or (int) $row['author_id'] === $this->currentConfig->guestId()) {
+            if (! is_numeric($row['author_id']) or (int) $row['author_id'] === 0 or (int) $row['author_id'] === $this->currentConfig->guestId) {
                 $author_name = $row_author;
             } else {
                 $row_username = $row['username'] ?? null;
@@ -194,7 +194,7 @@ final class PwgComments
                 'file' => $row['file'],
                 'image_date_available' => DateHelper::formatDate($comment_date_available, ['day_name', 'day', 'month', 'year', 'time']),
                 'author' => $authorEvent->commentAuthor,
-                'author_status' => is_numeric($row['author_id']) && $this->currentConfig->webmasterId() === (int) $row['author_id'] ? 'main_user' : $row['status'],
+                'author_status' => is_numeric($row['author_id']) && $this->currentConfig->webmasterId === (int) $row['author_id'] ? 'main_user' : $row['status'],
                 'date' => DateHelper::formatDate($comment_date, ['day_name', 'day', 'month', 'year', 'time']),
                 'content' => $contentEvent->commentContent,
                 'raw_content' => $row['content'],

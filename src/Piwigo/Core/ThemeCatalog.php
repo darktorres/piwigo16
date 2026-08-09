@@ -38,7 +38,7 @@ final class ThemeCatalog
             $id = $row->id;
             $name = $row->name;
 
-            $mobile_theme = $currentConfig->mobilTheme();
+            $mobile_theme = $currentConfig->mobilTheme;
             if ($id === $mobile_theme) {
                 if (! $showMobile) {
                     continue;
@@ -77,7 +77,7 @@ final class ThemeCatalog
         // correctly pre-fix only because public/themes is itself a symlink
         // back to the real themes/, not because the CWD-relative read was
         // actually safe).
-        $themes_dir = $paths->root . $currentConfig->themesDir();
+        $themes_dir = $paths->root . $currentConfig->themesDir;
 
         return file_exists($themes_dir . '/' . $themeId . '/themeconf.inc.php');
     }

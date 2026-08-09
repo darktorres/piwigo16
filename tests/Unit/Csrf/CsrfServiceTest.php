@@ -35,7 +35,7 @@ function csrfTestSessionId(): string
 }
 
 beforeEach(function (): void {
-    CurrentConfigTestFactory::get()->setSecretKey('test-secret-key');
+    CurrentConfigTestFactory::get()->secretKey = 'test-secret-key';
     unset($_REQUEST['pwg_token']);
 });
 
@@ -69,7 +69,7 @@ test('getToken is stable for the same session id and secret key', function (): v
 // SEC-27/SEC-28 fix.
 test('getToken uses sha256, not md5', function (): void {
     session_id(csrfTestSessionId());
-    CurrentConfigTestFactory::get()->setSecretKey('test-secret-key');
+    CurrentConfigTestFactory::get()->secretKey = 'test-secret-key';
 
     $expected = hash_hmac('sha256', csrfTestSessionId(), 'test-secret-key');
 
@@ -81,7 +81,7 @@ test('getToken changes when the secret key changes', function (): void {
     $service = new CsrfService(CurrentConfigTestFactory::get());
     $first = $service->getToken();
 
-    CurrentConfigTestFactory::get()->setSecretKey('a-different-secret');
+    CurrentConfigTestFactory::get()->secretKey = 'a-different-secret';
 
     expect($service->getToken())->not->toBe($first);
 });

@@ -334,7 +334,7 @@ final class InstallServiceTest extends IntegrationTestCase
             $themesDir . $themeId . '/themeconf.inc.php',
             "<?php\n/*\nTheme Name: Default Template Test Fixture\nVersion: 3.1.4\nDescription: synthetic fixture for InstallServiceTest\nAuthor: p17-test\n*/\n"
         );
-        $this->currentConfig()->setThemesDir($themesDir);
+        $this->currentConfig()->themesDir = $themesDir;
 
         try {
             $this->conn->executeStatement('DELETE FROM ' . Tables::themes());
@@ -360,7 +360,7 @@ final class InstallServiceTest extends IntegrationTestCase
         // An explicitly empty scan directory proves the "nothing found on
         // disk" branch directly, regardless of what this repo's own real
         // themes/ directory currently contains.
-        $this->currentConfig()->setThemesDir($emptyThemesDir);
+        $this->currentConfig()->themesDir = $emptyThemesDir;
 
         try {
             $this->conn->executeStatement('DELETE FROM ' . Tables::themes());

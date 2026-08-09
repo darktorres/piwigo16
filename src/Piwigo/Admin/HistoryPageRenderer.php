@@ -105,7 +105,7 @@ final class HistoryPageRenderer
             end: $form['end'],
             displayThumbnails: $display_thumbnails,
             displayThumbnailSelected: $form['display_thumbnail'],
-            guestId: $currentConfig->guestId(),
+            guestId: $currentConfig->guestId,
             adminPageTitle: $lang->t('History'),
         ));
 

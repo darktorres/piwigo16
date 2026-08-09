@@ -155,7 +155,7 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
         // int=2 "per-template debug window" mode Smarty's own $debugging
         // property supports (vendor/smarty/smarty/src/Smarty.php) isn't a
         // reachable value here, so no is_int() passthrough is needed.
-        $this->smarty->debugging = $this->currentConfig->debugTemplate();
+        $this->smarty->debugging = $this->currentConfig->debugTemplate;
         if (! $this->smarty->debugging) {
             $this->smarty->error_reporting = error_reporting() & ~E_NOTICE;
         }
@@ -164,13 +164,13 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
         // vendor/smarty/smarty/src/Smarty.php), whose own @var docblocks
         // (int / boolean respectively) don't carry the same bool|int
         // flexibility as $debugging above.
-        $compile_check = $this->currentConfig->templateCompileCheck();
+        $compile_check = $this->currentConfig->templateCompileCheck;
         $this->smarty->compile_check = (int) $compile_check;
-        $this->smarty->force_compile = $this->currentConfig->templateForceCompile();
+        $this->smarty->force_compile = $this->currentConfig->templateForceCompile;
 
-        $conf_data_location = $this->currentConfig->dataLocation();
+        $conf_data_location = $this->currentConfig->dataLocation;
 
-        if ($this->currentConfig->dataDirChecked() === null) {
+        if ($this->currentConfig->dataDirChecked === null) {
             $dir = $this->paths->root . $conf_data_location;
             FilesystemHelper::mkgetdir($dir, $this->currentConfig, FilesystemHelper::MKGETDIR_DEFAULT & ~FilesystemHelper::MKGETDIR_DIE_ON_ERROR);
             if (! is_writable($dir)) {
@@ -283,7 +283,7 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
         $this->smarty->registerPlugin('modifier', 'sizeOf', 'sizeOf');
         $this->smarty->registerPlugin('modifier', 'array_key_exists', 'array_key_exists');
 
-        if ($this->currentConfig->compiledTemplateCacheLanguage()) {
+        if ($this->currentConfig->compiledTemplateCacheLanguage) {
             $this->smarty->registerFilter('post', self::postfilter_language(...));
         }
 
@@ -310,7 +310,7 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
         $this->smarty->assign('lang_info', $lang_info);
 
         if (! $this->adminContext->isActive()) {
-            $this->set_extents($this->currentConfig->extentsForTemplates(), $this->paths->root . 'template-extension/', true, $theme);
+            $this->set_extents($this->currentConfig->extentsForTemplates, $this->paths->root . 'template-extension/', true, $theme);
         }
     }
 
@@ -462,7 +462,7 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
         if (
             $theme !== 'default'
             and in_array(PageFilterHelper::scriptBasename($this->currentConfig), ['identification', 'register', 'password', 'profile'], true)
-            and ((bool) ($themeconf['use_standard_pages'] ?? false) or $this->currentConfig->useStandardPages())
+            and ((bool) ($themeconf['use_standard_pages'] ?? false) or $this->currentConfig->useStandardPages)
         ) {
             $theme = 'standard_pages';
             $themeconf = $this->load_themeconf($root . '/' . $theme);
@@ -761,7 +761,7 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
         $this->load_external_filters($handle);
 
         $lang_info = $this->lang->langInfo();
-        if ($this->currentConfig->compiledTemplateCacheLanguage() and isset($lang_info['code']) and is_string($lang_info['code'])) {
+        if ($this->currentConfig->compiledTemplateCacheLanguage and isset($lang_info['code']) and is_string($lang_info['code'])) {
             $this->smarty->compile_id .= '_' . $lang_info['code'];
         }
 
@@ -947,7 +947,7 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
                 // -- it's always a real string here since $params[0] is a
                 // template-compiled string literal expression, but narrow
                 // explicitly since the callee's return type is opaque.
-                if ($this->currentConfig->compiledTemplateCacheLanguage()
+                if ($this->currentConfig->compiledTemplateCacheLanguage
                   && is_string($key)
                   && $this->lang->has($key)
                 ) {
@@ -970,7 +970,7 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
                 return '\Piwigo\Template\Template::lang()->t(' . $params[0] . ')';
 
             default:
-                if ($this->currentConfig->compiledTemplateCacheLanguage()) {
+                if ($this->currentConfig->compiledTemplateCacheLanguage) {
                     $ret = 'sprintf(';
                     $ret .= $this->modcompiler_translate([$params[0]]);
                     $ret .= ',' . implode(',', array_slice($params, 1));
@@ -992,7 +992,7 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
      */
     public function modcompiler_translate_dec(array $params): string
     {
-        if ($this->currentConfig->compiledTemplateCacheLanguage()) {
+        if ($this->currentConfig->compiledTemplateCacheLanguage) {
             $ret = 'sprintf(';
             if ((bool) $this->lang->langInfo()['zero_plural']) {
                 $ret .= '($tmp=(' . $params[0] . '))>1||$tmp==0';

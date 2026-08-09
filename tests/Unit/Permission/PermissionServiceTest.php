@@ -431,7 +431,7 @@ test('getPrivacyLevelOptions labels level 0 as Everybody and stacks the rest', f
 });
 
 test('getPrivacyLevelOptions follows CurrentConfig::availablePermissionLevels when overridden', function (): void {
-    CurrentConfigTestFactory::get()->setAvailablePermissionLevels([0, 5]);
+    CurrentConfigTestFactory::get()->availablePermissionLevels = [0, 5];
 
     $options = PermissionService::getPrivacyLevelOptions(CurrentConfigTestFactory::get(), LangTestFactory::get());
 
@@ -450,7 +450,7 @@ test('getPrivacyLevelOptions does not prepend a stray separator before the very 
     // exactly 1 character can. `Lang::loadArray()` targets a translator
     // *output* key, so it maps the already-`sprintf()`-formatted 'Level 2'
     // string, not the 'Level %d' format string itself.
-    CurrentConfigTestFactory::get()->setAvailablePermissionLevels([0, 1, 2]);
+    CurrentConfigTestFactory::get()->availablePermissionLevels = [0, 1, 2];
     LangTestFactory::get()->loadArray(['Level 2' => 'X']);
 
     $options = PermissionService::getPrivacyLevelOptions(CurrentConfigTestFactory::get(), LangTestFactory::get());

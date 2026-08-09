@@ -216,7 +216,7 @@ final class Translator
         // Testing $val === $key only after both real resolution paths
         // above (gettext() then the $mirror fallback) are exhausted keeps
         // this diagnostic accurate for every Lang::t() caller.
-        if ($this->currentConfig->debugL10n() && $val === $key && $key !== '') {
+        if ($this->currentConfig->debugL10n && $val === $key && $key !== '') {
             trigger_error('[l10n] language key "' . $key . '" not defined', E_USER_WARNING);
         }
 

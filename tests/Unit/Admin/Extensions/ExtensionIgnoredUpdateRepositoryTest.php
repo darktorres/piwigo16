@@ -24,7 +24,6 @@ function extensionIgnoredTestRepo(): ExtensionIgnoredUpdateRepository
 {
     $conn = DbConnection::build();
     $repo = EntityManagerFactory::build($conn)->getRepository(ExtensionIgnoredUpdateEntity::class);
-    expect($repo)->toBeInstanceOf(ExtensionIgnoredUpdateRepository::class);
 
     return $repo;
 }

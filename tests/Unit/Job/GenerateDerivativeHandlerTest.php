@@ -46,8 +46,8 @@ beforeEach(function (): void {
     mkdir($root, 0o777, true);
     Kernel::boot(Paths::fromRoot($root));
     $currentConfig = generate_derivative_handler_test_current_config();
-    $currentConfig->setDataLocation('data/');
-    mkdir(CurrentPathsTestFactory::get()->root . $currentConfig->derivativeDir(), 0o777, true);
+    $currentConfig->dataLocation = 'data/';
+    mkdir(CurrentPathsTestFactory::get()->root . $currentConfig->derivativeDir, 0o777, true);
 });
 
 afterEach(function (): void {
@@ -57,7 +57,7 @@ afterEach(function (): void {
 });
 
 test('__invoke delegates to DerivativeCacheService::deleteElementDerivatives with just the path and type when representativeExt is null', function (): void {
-    $derivDir = CurrentPathsTestFactory::get()->root . generate_derivative_handler_test_current_config()->derivativeDir() . '2026/07';
+    $derivDir = CurrentPathsTestFactory::get()->root . generate_derivative_handler_test_current_config()->derivativeDir . '2026/07';
     mkdir($derivDir, 0o777, true);
     file_put_contents($derivDir . '/photo-th.jpg', 'x');
     file_put_contents($derivDir . '/other-th.jpg', 'x');
@@ -74,7 +74,7 @@ test('__invoke delegates to DerivativeCacheService::deleteElementDerivatives wit
 });
 
 test('__invoke forwards representativeExt as representative_ext, rewriting the path to its pwg_representative form', function (): void {
-    $derivDir = CurrentPathsTestFactory::get()->root . generate_derivative_handler_test_current_config()->derivativeDir() . '2026/07/pwg_representative';
+    $derivDir = CurrentPathsTestFactory::get()->root . generate_derivative_handler_test_current_config()->derivativeDir . '2026/07/pwg_representative';
     mkdir($derivDir, 0o777, true);
     file_put_contents($derivDir . '/photo-th.jpg', 'x');
 

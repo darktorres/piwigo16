@@ -157,7 +157,7 @@ final class CatModifyPageRenderer
         );
 
         $cat_commentable = null;
-        if ($currentConfig->activateComments()) {
+        if ($currentConfig->activateComments) {
             $cat_commentable = SqlDialect::booleanToString((bool) $category['commentable']);
         }
 
@@ -249,7 +249,7 @@ final class CatModifyPageRenderer
             $cat_dir_name = basename((string) $category_full_dir);
             $cat_min_dir = $this->getMinLocalDir($category_full_dir);
 
-            if ($currentConfig->enableSynchronization()) {
+            if ($currentConfig->enableSynchronization) {
                 $category_site_id = $category['site_id'];
                 $category_site_id = (is_int($category_site_id) || is_string($category_site_id)) ? $category_site_id : '';
                 $u_sync = $base_url . 'site_update&amp;site=' . $category_site_id . '&amp;cat_id=' . $category_id;
@@ -285,7 +285,7 @@ final class CatModifyPageRenderer
             // has_images-or-!empty(...) condition could be true here.
             if (
                 ($category['has_images']
-                 and $currentConfig->allowRandomRepresentative())
+                 and $currentConfig->allowRandomRepresentative)
                 or ! $category['has_images']) {
                 $tpl_representant['ALLOW_DELETE'] = true;
             }

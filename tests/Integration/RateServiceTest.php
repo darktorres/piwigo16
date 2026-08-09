@@ -56,10 +56,10 @@ namespace Piwigo\Tests\Integration {
             ConfigLoader::applyDefaults();
             ConfigLoader::applyEnvOverrides();
 
-            $currentConfig->setRateEnabled(true);
-            $currentConfig->setRateAnonymous(true);
-            $currentConfig->setRateItems([0, 1, 2, 3, 4, 5]);
-            $currentConfig->setGuestAccess(true);
+            $currentConfig->rateEnabled = true;
+            $currentConfig->rateAnonymous = true;
+            $currentConfig->rateItems = [0, 1, 2, 3, 4, 5];
+            $currentConfig->guestAccess = true;
             CurrentUserTestFactory::get()->set(User::fromUserArray(['id' => 3, 'status' => 'normal']));
             $_SERVER['REMOTE_ADDR'] = '10.20.30.40';
             unset($_COOKIE['pwg_anonymous_rater']);
@@ -83,7 +83,7 @@ namespace Piwigo\Tests\Integration {
             if (! $currentConfig instanceof CurrentConfig) {
                 throw new LogicException('Container returned an unexpected type for ' . CurrentConfig::class);
             }
-            $currentConfig->setRateEnabled(false);
+            $currentConfig->rateEnabled = false;
 
             self::assertFalse($this->service->rate(5, 3));
         }
@@ -104,7 +104,7 @@ namespace Piwigo\Tests\Integration {
             if (! $currentConfig instanceof CurrentConfig) {
                 throw new LogicException('Container returned an unexpected type for ' . CurrentConfig::class);
             }
-            $currentConfig->setRateAnonymous(false);
+            $currentConfig->rateAnonymous = false;
             CurrentUserTestFactory::get()->set(User::fromUserArray(['id' => 2, 'status' => 'guest']));
 
             self::assertFalse($this->service->rate(5, 3));

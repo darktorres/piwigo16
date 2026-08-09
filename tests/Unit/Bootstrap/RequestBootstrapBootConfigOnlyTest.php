@@ -108,7 +108,7 @@ test('bootConfigOnly seeds CurrentConfig from its own property defaults', functi
     // a real config-table row (this test's own DB connection, shared with
     // whatever fixture state other suites left behind) can legitimately
     // override it.
-    expect(CurrentConfigTestFactory::get()->galleryTitle())->not->toBe('');
+    expect(CurrentConfigTestFactory::get()->galleryTitle)->not->toBe('');
 });
 
 test('bootConfigOnly merges DB-persisted config overrides into CurrentConfig', function (): void {
@@ -117,7 +117,7 @@ test('bootConfigOnly merges DB-persisted config overrides into CurrentConfig', f
     // ran, not just that the property exists.
     RequestBootstrap::bootConfigOnly(Paths::fromRoot(sys_get_temp_dir()));
 
-    expect(CurrentConfigTestFactory::get()->galleryTitle())->toBe('Fixture Gallery');
+    expect(CurrentConfigTestFactory::get()->galleryTitle)->toBe('Fixture Gallery');
 });
 
 test('bootConfigOnly attaches a guest CurrentUser', function (): void {

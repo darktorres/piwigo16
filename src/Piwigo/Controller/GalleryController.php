@@ -196,7 +196,7 @@ final class GalleryController implements ControllerInterface
         // Standard Pages
         // Some themes will want to use standard pages so this will let
         // them know
-        $use_standard_pages = $this->currentConfig->useStandardPages();
+        $use_standard_pages = $this->currentConfig->useStandardPages;
 
         // -------------------------------------------------- page title
         $title = $section_context->title;
@@ -221,7 +221,7 @@ final class GalleryController implements ControllerInterface
         }
 
         $u_mode_flat = null;
-        if ($this->currentConfig->indexFlatIcon() and ! $section_context->flat and $section_context->section === Section::Categories) {
+        if ($this->currentConfig->indexFlatIcon and ! $section_context->flat and $section_context->section === Section::Categories) {
             $u_mode_flat = $urlService->duplicateIndexUrl([
                 'flat' => '',
             ], ['start', 'chronology_field']);
@@ -236,10 +236,10 @@ final class GalleryController implements ControllerInterface
                 'chronology_style' => 'monthly',
                 'chronology_view' => 'list',
             ];
-            if ($this->currentConfig->indexCreatedDateIcon()) {
+            if ($this->currentConfig->indexCreatedDateIcon) {
                 $u_mode_created = $urlService->duplicateIndexUrl($chronology_params, ['start', 'flat']);
             }
-            if ($this->currentConfig->indexPostedDateIcon()) {
+            if ($this->currentConfig->indexPostedDateIcon) {
                 $chronology_params['chronology_field'] = 'posted';
                 $u_mode_posted = $urlService->duplicateIndexUrl($chronology_params, ['start', 'flat']);
             }
@@ -250,8 +250,8 @@ final class GalleryController implements ControllerInterface
                 $chronology_field = 'created';
             }
             $chronology_date_icon = match ($chronology_field) {
-                'created' => $this->currentConfig->indexCreatedDateIcon(),
-                'posted' => $this->currentConfig->indexPostedDateIcon(),
+                'created' => $this->currentConfig->indexCreatedDateIcon,
+                'posted' => $this->currentConfig->indexPostedDateIcon,
             };
             if ($chronology_date_icon) {
                 $url = $urlService->duplicateIndexUrl(
@@ -275,8 +275,8 @@ final class GalleryController implements ControllerInterface
         $search_in_set_url = null;
 
         if ($section_context->section === Section::Categories and $section_context->category !== null and $section_context->combinedCategories === null) {
-            $search_in_set_button = $this->currentConfig->indexSearchInSetButton();
-            $search_in_set_action = $this->currentConfig->indexSearchInSetAction();
+            $search_in_set_button = $this->currentConfig->indexSearchInSetButton;
+            $search_in_set_action = $this->currentConfig->indexSearchInSetAction;
             $search_in_set_url = $urlService->getRootUrl() . 'search.php?cat_id=' . (is_numeric($section_context->category['id'] ?? null) ? (int) $section_context->category['id'] : 0);
         }
 
@@ -296,7 +296,7 @@ final class GalleryController implements ControllerInterface
 
             $tags = $tagService->getCommonTags(
                 $page_items,
-                $this->currentConfig->menubarTagCloudItemsNumber(),
+                $this->currentConfig->menubarTagCloudItemsNumber,
                 $this->htmlService,
                 $excluded_tag_ids
             );
@@ -392,19 +392,19 @@ final class GalleryController implements ControllerInterface
 
             $body_data_tag_ids = array_values(array_filter($bodyData['tag_ids'], is_scalar(...)));
 
-            $search_in_set_button_tags = $this->currentConfig->indexSearchInSetButton();
-            $search_in_set_action_tags = $this->currentConfig->indexSearchInSetAction();
+            $search_in_set_button_tags = $this->currentConfig->indexSearchInSetButton;
+            $search_in_set_action_tags = $this->currentConfig->indexSearchInSetAction;
             $search_in_set_url_tags = $urlService->getRootUrl() . 'search.php?tag_id=' . implode(',', $body_data_tag_ids);
             $combinable_tags = $related_tags;
         }
 
         $u_edit = null;
-        if ($section_context->category !== null and $this->accessControl->isAdmin() and $this->currentConfig->indexEditIcon()) {
+        if ($section_context->category !== null and $this->accessControl->isAdmin() and $this->currentConfig->indexEditIcon) {
             $u_edit = $urlService->getRootUrl() . 'admin.php?page=album-' . (is_numeric($section_context->category['id'] ?? null) ? (int) $section_context->category['id'] : 0);
         }
 
         $u_caddie = null;
-        if ($this->accessControl->isAdmin() and $page_items !== [] and $this->currentConfig->indexCaddieIcon()) {
+        if ($this->accessControl->isAdmin() and $page_items !== [] and $this->currentConfig->indexCaddieIcon) {
             $u_caddie = $urlService->addUrlParams($urlService->duplicateIndexUrl(), [
                 'caddie' => 1,
             ]);
@@ -458,7 +458,7 @@ final class GalleryController implements ControllerInterface
 
         // image order
         $image_orders = null;
-        if ($this->currentConfig->indexSortOrderInput()
+        if ($this->currentConfig->indexSortOrderInput
             and count($page_items) > 0
             and $section_context->section !== Section::MostVisited
             and $section_context->section !== Section::BestRated) {
@@ -466,7 +466,7 @@ final class GalleryController implements ControllerInterface
             $order_idx = $this->sessionService->getImageOrder() ?? 0;
 
             // get first order field and direction
-            $order_by = $this->currentConfig->orderBy();
+            $order_by = $this->currentConfig->orderBy;
             $first_order = substr($order_by, 9);
             if (($pos = strpos($first_order, ',')) !== false) {
                 $first_order = substr($first_order, 0, $pos);
@@ -507,7 +507,7 @@ final class GalleryController implements ControllerInterface
         $page_comment = $section_context->comment;
         $page_comment_present = $page_comment !== '' && $page_comment !== '0';
         $content_description = null;
-        if (($page_start === 0 or $this->currentConfig->albumDescriptionOnAllPages()) and $section_context->chronologyField === null and $page_comment_present) {
+        if (($page_start === 0 or $this->currentConfig->albumDescriptionOnAllPages) and $section_context->chronologyField === null and $page_comment_present) {
             $content_description = $section_context->comment;
         }
 
@@ -530,7 +530,7 @@ final class GalleryController implements ControllerInterface
         if ($page_items !== []) {
             $slideshow_url = $this->categoryDefaultRenderer->render($page_items, $page_start, $page_nb_image_page, $section_context->section);
 
-            if ($this->currentConfig->indexSizesIcon()) {
+            if ($this->currentConfig->indexSizesIcon) {
                 $url = $urlService->addUrlParams(
                     $urlService->duplicateIndexUrl(),
                     [
@@ -562,7 +562,7 @@ final class GalleryController implements ControllerInterface
         if ($slideshow_url_present) {
             if ($galleryDisplay->hasSlideshow) {
                 $redirectService->redirect($slideshow_url);
-            } elseif ($this->currentConfig->indexSlideShowIcon()) {
+            } elseif ($this->currentConfig->indexSlideShowIcon) {
                 $u_slideshow = $slideshow_url;
             }
         }
@@ -575,7 +575,7 @@ final class GalleryController implements ControllerInterface
         $related_tags_list = null;
         if ($page_items !== [] and $body_data_section !== 'tags') {
             $selection = array_slice($page_items, $page_start, $page_nb_image_page);
-            $tags = $tagService->addLevelToTags($tagService->getCommonTags($selection, $this->currentConfig->contentTagCloudItemsNumber(), $this->htmlService));
+            $tags = $tagService->addLevelToTags($tagService->getCommonTags($selection, $this->currentConfig->contentTagCloudItemsNumber, $this->htmlService));
             $related_tags = [];
             foreach ($tags as $tag) {
                 $related_tags[] =

@@ -147,7 +147,7 @@ final class CategoryCatsRendererTest extends IntegrationTestCase
         // Template's own data_dir_checked write, which would otherwise
         // reach for a full RequestBootstrap dependency this test never
         // boots.
-        $currentConfig->setDataDirChecked('1');
+        $currentConfig->dataDirChecked = '1';
 
         $this->conn = DbConnection::build();
 
@@ -361,7 +361,7 @@ final class CategoryCatsRendererTest extends IntegrationTestCase
         if (! $currentConfig instanceof CurrentConfig) {
             throw new LogicException('Container returned an unexpected type for ' . CurrentConfig::class);
         }
-        $currentConfig->setAllowRandomRepresentative(true);
+        $currentConfig->allowRandomRepresentative = true;
         $this->conn->executeStatement('UPDATE ' . Tables::categories() . ' SET representative_picture_id = NULL WHERE id = 2');
 
         try {
@@ -421,7 +421,7 @@ final class CategoryCatsRendererTest extends IntegrationTestCase
         if (! $currentConfig instanceof CurrentConfig) {
             throw new LogicException('Container returned an unexpected type for ' . CurrentConfig::class);
         }
-        $currentConfig->setDisplayFromto(true);
+        $currentConfig->displayFromto = true;
         // Only image 1's date_creation is set -- the other 2 direct images
         // of category 1 stay NULL, so MIN/MAX both resolve to this single
         // real value rather than just echoing back a NULL.

@@ -339,19 +339,19 @@ final class MailService implements MailerInterface
 
     public function getMailSenderName(): string
     {
-        $senderName = $this->currentConfig->mailSenderName();
+        $senderName = $this->currentConfig->mailSenderName;
         if ($senderName !== '') {
             return $senderName;
         }
 
-        $galleryTitle = $this->currentConfig->galleryTitle();
+        $galleryTitle = $this->currentConfig->galleryTitle;
 
         return $galleryTitle;
     }
 
     public function getMailSenderEmail(): string
     {
-        $senderEmail = $this->currentConfig->mailSenderEmail();
+        $senderEmail = $this->currentConfig->mailSenderEmail;
         if ($senderEmail !== '') {
             return $senderEmail;
         }
@@ -364,17 +364,17 @@ final class MailService implements MailerInterface
      */
     public function getMailConfiguration(): array
     {
-        $smtpHost = $this->currentConfig->smtpHost();
+        $smtpHost = $this->currentConfig->smtpHost;
 
         return [
-            'send_bcc_mail_webmaster' => $this->currentConfig->sendBccMailWebmaster(),
-            'mail_allow_html' => $this->currentConfig->mailAllowHtml(),
-            'mail_theme' => $this->currentConfig->mailTheme(),
+            'send_bcc_mail_webmaster' => $this->currentConfig->sendBccMailWebmaster,
+            'mail_allow_html' => $this->currentConfig->mailAllowHtml,
+            'mail_theme' => $this->currentConfig->mailTheme,
             'use_smtp' => $smtpHost !== '',
             'smtp_host' => $smtpHost,
-            'smtp_user' => $this->currentConfig->smtpUser(),
-            'smtp_password' => $this->currentConfig->smtpPassword(),
-            'smtp_secure' => is_string($this->currentConfig->smtpSecure()) ? $this->currentConfig->smtpSecure() : null,
+            'smtp_user' => $this->currentConfig->smtpUser,
+            'smtp_password' => $this->currentConfig->smtpPassword,
+            'smtp_secure' => is_string($this->currentConfig->smtpSecure) ? $this->currentConfig->smtpSecure : null,
             'email_webmaster' => $this->getMailSenderEmail(),
             'name_webmaster' => $this->getMailSenderName(),
         ];
@@ -650,7 +650,7 @@ final class MailService implements MailerInterface
             ];
         }
 
-        $galleryTitle = $this->currentConfig->galleryTitle();
+        $galleryTitle = $this->currentConfig->galleryTitle;
 
         return $this->mailAdmins(
             [
@@ -893,7 +893,7 @@ final class MailService implements MailerInterface
             }
         }
         if (! isset($args['mail_title'])) {
-            $args['mail_title'] = $this->currentConfig->galleryTitle();
+            $args['mail_title'] = $this->currentConfig->galleryTitle;
         }
         if (! isset($args['mail_subtitle'])) {
             $args['mail_subtitle'] = $args['subject'];
@@ -951,8 +951,8 @@ final class MailService implements MailerInterface
                 $template->assignContext(new MailHeaderPageContext(
                     galleryUrl: $this->urlService
                         ->addUrlParams($galleryHomeUrl, $addUrlParams),
-                    galleryTitle: $this->currentConfig->galleryTitle(),
-                    version: $this->currentConfig->showVersion() ? AppInfo::VERSION : '',
+                    galleryTitle: $this->currentConfig->galleryTitle,
+                    version: $this->currentConfig->showVersion ? AppInfo::VERSION : '',
                     phpwgUrl: AppInfo::URL,
                     contentEncoding: CharsetHelper::getPwgCharset(),
                     contactMail: is_string($confMail['email_webmaster']) ? $confMail['email_webmaster'] : '',
@@ -1084,7 +1084,7 @@ final class MailService implements MailerInterface
             if (! $ret && (! (bool) ini_get('display_errors') || $this->accessLevelChecker()->isAdmin())) {
                 trigger_error('Mailer Error: ' . $errorMessage, \E_USER_WARNING);
             }
-            if ($this->currentConfig->debugMail()) {
+            if ($this->currentConfig->debugMail) {
                 $this->sendMailTest($ret, $email, $args, $errorMessage);
             }
         }
@@ -1147,7 +1147,7 @@ final class MailService implements MailerInterface
      */
     public function sendMailTest(bool $success, Email $mail, array $args, ?string $errorMessage = null): void
     {
-        $dataLocation = $this->currentConfig->dataLocation();
+        $dataLocation = $this->currentConfig->dataLocation;
 
         $dir = $this->paths->root . $dataLocation . 'tmp';
         if (FilesystemHelper::mkgetdir($dir, $this->currentConfig, FilesystemHelper::MKGETDIR_DEFAULT & ~FilesystemHelper::MKGETDIR_DIE_ON_ERROR)) {
@@ -1248,7 +1248,7 @@ final class MailService implements MailerInterface
         $this->urlService
             ->unsetMakeFullUrl();
 
-        $galleryTitle = $this->currentConfig->galleryTitle();
+        $galleryTitle = $this->currentConfig->galleryTitle;
 
         return new MailContent(
             '[' . $galleryTitle . '] ' . $this->lang->t('Your verification code'),
@@ -1285,7 +1285,7 @@ final class MailService implements MailerInterface
         $this->urlService
             ->unsetMakeFullUrl();
 
-        $galleryTitle = $this->currentConfig->galleryTitle();
+        $galleryTitle = $this->currentConfig->galleryTitle;
 
         return new MailContent(
             '[' . $galleryTitle . '] ' . $this->lang->t('Your password has been reset'),

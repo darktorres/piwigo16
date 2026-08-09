@@ -120,7 +120,7 @@ final class RequestBootstrapFinalizeTest extends IntegrationTestCase
         if (! $currentConfig instanceof CurrentConfig) {
             throw new LogicException('Container returned an unexpected type for ' . CurrentConfig::class);
         }
-        $currentConfig->setMobilTheme('mobile-theme-name');
+        $currentConfig->mobilTheme = 'mobile-theme-name';
         $_SESSION['pwg_mobile_theme'] = true;
 
         try {
@@ -149,7 +149,7 @@ final class RequestBootstrapFinalizeTest extends IntegrationTestCase
         if (! $currentConfig instanceof CurrentConfig) {
             throw new LogicException('Container returned an unexpected type for ' . CurrentConfig::class);
         }
-        self::assertNull($currentConfig->noPhotoYet());
+        self::assertNull($currentConfig->noPhotoYet);
 
         // regular_user is neither guest nor admin, so
         // NoPhotoYetRenderer::render()'s own outer guard is false and it
@@ -159,7 +159,7 @@ final class RequestBootstrapFinalizeTest extends IntegrationTestCase
         // internal branches are NoPhotoYetRendererTest.php's job.
         RequestBootstrap::finalize();
 
-        self::assertNull($currentConfig->noPhotoYet());
+        self::assertNull($currentConfig->noPhotoYet);
     }
 
     public function test_finalize_adds_a_header_warning_when_guest_must_be_guest_is_flagged(): void
@@ -193,7 +193,7 @@ final class RequestBootstrapFinalizeTest extends IntegrationTestCase
         if (! $currentConfig instanceof CurrentConfig) {
             throw new LogicException('Container returned an unexpected type for ' . CurrentConfig::class);
         }
-        $currentConfig->setGalleryLocked(true);
+        $currentConfig->galleryLocked = true;
 
         try {
             RequestBootstrap::finalize();
@@ -215,7 +215,7 @@ final class RequestBootstrapFinalizeTest extends IntegrationTestCase
         if (! $currentConfig instanceof CurrentConfig) {
             throw new LogicException('Container returned an unexpected type for ' . CurrentConfig::class);
         }
-        $currentConfig->setOriginalUrlProtection('all');
+        $currentConfig->originalUrlProtection = 'all';
 
         RequestBootstrap::finalize();
 

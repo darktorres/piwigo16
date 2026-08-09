@@ -105,7 +105,7 @@ final class PhotosAddDirectPageRenderer
         $user_id = $this->currentUser->get()
             ->id->value;
 
-        $photosAddDirectRequest = PhotosAddDirectRequest::fromGlobals($this->currentConfig->isFormatsEnabled(), $this->inputValidator);
+        $photosAddDirectRequest = PhotosAddDirectRequest::fromGlobals($this->currentConfig->isFormatsEnabled, $this->inputValidator);
 
         // +-------------------------------------------------------------------+
         // |                        batch management request                   |
@@ -209,12 +209,12 @@ final class PhotosAddDirectPageRenderer
 
         $this->eventDispatcher->dispatchNotify(new LocEndPhotoAddDirect());
 
-        $conf_format_ext = $this->currentConfig->formatExtensions();
+        $conf_format_ext = $this->currentConfig->formatExtensions;
 
         $template->assignContext(new PhotosAddDirectPageContext(
             promoteMobileApps: $promote_mobile_apps,
             phpwgUrl: AppInfo::URL,
-            enableFormats: $this->currentConfig->isFormatsEnabled(),
+            enableFormats: $this->currentConfig->isFormatsEnabled,
             displayFormats: $display_formats,
             haveFormatsOriginal: $have_formats_original,
             formatsOriginalInfo: $formats_original_info,
@@ -247,8 +247,8 @@ final class PhotosAddDirectPageRenderer
         // +-------------------------------------------------------------------+
 
         $f_add_action = self::baseUrl($this->urlService);
-        $chunk_size = $this->currentConfig->uploadFormChunkSize();
-        $max_file_size = $this->currentConfig->uploadFormMaxFileSize();
+        $chunk_size = $this->currentConfig->uploadFormChunkSize;
+        $max_file_size = $this->currentConfig->uploadFormMaxFileSize;
         $admin_page_title = $this->lang->t('Upload Photos');
 
         $max_upload_width_ctx = null;
@@ -283,16 +283,16 @@ final class PhotosAddDirectPageRenderer
         $original_resize_maxheight = null;
 
         // warn the user if the picture will be resized after upload
-        if ($this->currentConfig->originalResize()) {
-            $original_resize_maxwidth = $this->currentConfig->originalResizeMaxwidth();
-            $original_resize_maxheight = $this->currentConfig->originalResizeMaxheight();
+        if ($this->currentConfig->originalResize) {
+            $original_resize_maxwidth = $this->currentConfig->originalResizeMaxwidth;
+            $original_resize_maxheight = $this->currentConfig->originalResizeMaxheight;
         }
 
         $form_action = self::baseUrl($this->urlService);
         $pwg_token = new CsrfService($this->currentConfig)
             ->getToken();
 
-        $upload_extensions = ($this->currentConfig->uploadFormAllTypes()) ? $this->currentConfig->fileExtensions() : $this->currentConfig->pictureExtensions();
+        $upload_extensions = ($this->currentConfig->uploadFormAllTypes) ? $this->currentConfig->fileExtensions : $this->currentConfig->pictureExtensions;
         $unique_exts = array_unique(array_map(strtolower(...), $upload_extensions));
 
         $upload_file_types = implode(', ', $unique_exts);
@@ -370,7 +370,7 @@ final class PhotosAddDirectPageRenderer
         if (! isset($_SESSION['upload_hide_warnings'])) {
             $setup_warnings = [];
 
-            if ($this->currentConfig->useExif() && ! function_exists('exif_read_data')) {
+            if ($this->currentConfig->useExif && ! function_exists('exif_read_data')) {
                 $setup_warnings[] = $this->lang->t('Exif extension not available, admin should disable exif use');
             }
 
@@ -382,7 +382,7 @@ final class PhotosAddDirectPageRenderer
                 );
             }
 
-            $upload_form_chunk_size = $this->currentConfig->uploadFormChunkSize();
+            $upload_form_chunk_size = $this->currentConfig->uploadFormChunkSize;
             if ($uploadService->getIniSize('upload_max_filesize') < $upload_form_chunk_size * 1024) {
                 $upload_max_filesize = $uploadService->getIniSize('upload_max_filesize');
                 // upload_max_filesize is a core php.ini directive, always present

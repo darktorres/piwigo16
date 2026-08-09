@@ -244,11 +244,11 @@ final class NotificationByMailSubController implements AdminSubControllerInterfa
             case 'param':
 
                 $template->assignContext(new NotificationByMailParamPageContext(
-                    sendHtmlMail: $this->currentConfig->nbmSendHtmlMail(),
-                    sendMailAs: $this->currentConfig->nbmSendMailAs(),
-                    sendDetailedContent: $this->currentConfig->nbmSendDetailedContent(),
-                    complementaryMailContent: $this->currentConfig->nbmComplementaryMailContent(),
-                    sendRecentPostDates: $this->currentConfig->nbmSendRecentPostDates(),
+                    sendHtmlMail: $this->currentConfig->nbmSendHtmlMail,
+                    sendMailAs: $this->currentConfig->nbmSendMailAs,
+                    sendDetailedContent: $this->currentConfig->nbmSendDetailedContent,
+                    complementaryMailContent: $this->currentConfig->nbmComplementaryMailContent,
+                    sendRecentPostDates: $this->currentConfig->nbmSendRecentPostDates,
                 ));
                 break;
 
@@ -295,7 +295,7 @@ final class NotificationByMailSubController implements AdminSubControllerInterfa
                 $tpl_var['CUSTOMIZE_MAIL_CONTENT'] =
                   (isset($post['send_customize_mail_content']) and is_string($post['send_customize_mail_content']))
                     ? stripslashes($post['send_customize_mail_content'])
-                    : $this->currentConfig->nbmComplementaryMailContent();
+                    : $this->currentConfig->nbmComplementaryMailContent;
 
                 $post_send_selection = (isset($post['send_selection']) and is_array($post['send_selection']))
                     ? $post['send_selection']
@@ -323,7 +323,7 @@ final class NotificationByMailSubController implements AdminSubControllerInterfa
                 }
                 // auth_key_duration is a plain int config value (see
                 // include/config_default.inc.php).
-                $auth_key_duration = $this->currentConfig->authKeyDuration();
+                $auth_key_duration = $this->currentConfig->authKeyDuration;
                 $auth_key_duration_num = $auth_key_duration;
                 $auth_key_duration_value = null;
                 if ($auth_key_duration_num > 0) {
@@ -457,7 +457,7 @@ final class NotificationByMailSubController implements AdminSubControllerInterfa
             // Update field enabled with specific function
             $check_key_treated = $nbmSender->doSubscribeUnsubscribeNotificationByMail(
                 true,
-                $currentConfig->nbmDefaultValueUserEnabled(),
+                $currentConfig->nbmDefaultValueUserEnabled,
                 $check_key_list
             );
 
@@ -479,7 +479,7 @@ final class NotificationByMailSubController implements AdminSubControllerInterfa
      */
     private function renderGlobalCustomizeMailContent(NbmRenderGlobalCustomizeMailContent $event): NbmRenderGlobalCustomizeMailContent
     {
-        if ($this->currentConfig->nbmSendHtmlMail() and ! str_starts_with($event->customizeMailContent, '<')) {
+        if ($this->currentConfig->nbmSendHtmlMail and ! str_starts_with($event->customizeMailContent, '<')) {
             // On HTML mail, detects if the content are HTML format.
             // If it's plain text format, convert content to readable HTML
             $event->customizeMailContent = nl2br(htmlspecialchars($event->customizeMailContent));

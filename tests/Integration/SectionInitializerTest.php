@@ -78,7 +78,7 @@ final class SectionInitializerTest extends IntegrationTestCase
         ConfigLoader::applyDefaults();
         ConfigLoader::applyEnvOverrides();
 
-        $currentConfig->setQuestionMarkInUrls(false);
+        $currentConfig->questionMarkInUrls = false;
 
         unset($_SERVER['SCRIPT_NAME'], $_SERVER['SCRIPT_FILENAME'], $_SERVER['PHP_SELF']);
 
@@ -124,7 +124,7 @@ final class SectionInitializerTest extends IntegrationTestCase
         CurrentConfigServiceTestFactory::get()->set(new ConfigService($this->buildConfigRepository(), new EventDispatcher(), CurrentConfigTestFactory::get()));
         LangTestFactory::get()->setLangInfo(['code' => 'en_UK', 'direction' => 'ltr']);
         CurrentTemplate::current()->set(TemplateTestFactory::build(CurrentPathsTestFactory::get()->root . 'themes', 'default'));
-        CurrentConfigTestFactory::get()->setSendPiwigoInfos(false);
+        CurrentConfigTestFactory::get()->sendPiwigoInfos = false;
     }
 
     public function test_parse_computes_root_path_from_path_info_depth(): void

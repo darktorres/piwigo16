@@ -41,7 +41,7 @@ final class EphemeralKeyService
         // rounding-race comments elsewhere in this file).
         $time = round(microtime(true), 1);
         $remote_addr = IpAddress::fromRemoteAddr()->value ?? '';
-        $secret_key = $this->currentConfig->secretKey();
+        $secret_key = $this->currentConfig->secretKey;
 
         // Both (string) casts below are redundant: `.` concatenation
         // already stringifies a float identically to an explicit cast
@@ -104,7 +104,7 @@ final class EphemeralKeyService
         }
 
         $remote_addr = IpAddress::fromRemoteAddr()->value ?? '';
-        $secret_key = $this->currentConfig->secretKey();
+        $secret_key = $this->currentConfig->secretKey;
 
         $expected = hash_hmac(
             'sha256',

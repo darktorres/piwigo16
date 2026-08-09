@@ -91,7 +91,7 @@ final readonly class MetadataService
                     foreach (array_keys($map, $iptcKey, true) as $pwgKey) {
                         $result[$pwgKey] = $value;
 
-                        if (! $this->currentConfig->allowHtmlInMetadata()) {
+                        if (! $this->currentConfig->allowHtmlInMetadata) {
                             // photo origin is unsecured (user upload) --
                             // strip HTML to avoid XSS.
                             $result[$pwgKey] = strip_tags($result[$pwgKey]);
@@ -232,7 +232,7 @@ final readonly class MetadataService
             }
         }
 
-        if (! $this->currentConfig->allowHtmlInMetadata()) {
+        if (! $this->currentConfig->allowHtmlInMetadata) {
             foreach ($result as $key => $value) {
                 // photo origin is unsecured (user upload) -- strip HTML to
                 // avoid XSS.
@@ -282,7 +282,7 @@ final readonly class MetadataService
     public function getSyncIptcData(string $file): array
     {
 
-        $map = $this->stringMap($this->currentConfig->useIptcMapping());
+        $map = $this->stringMap($this->currentConfig->useIptcMapping);
 
         $iptc = $this->getIptcData($file, $map);
 
@@ -321,7 +321,7 @@ final readonly class MetadataService
     public function getSyncExifData(string $file): array
     {
 
-        $map = $this->stringMap($this->currentConfig->useExifMapping());
+        $map = $this->stringMap($this->currentConfig->useExifMapping);
 
         $exif = $this->getExifData($file, $map);
         $result = [];
@@ -366,18 +366,18 @@ final readonly class MetadataService
 
         $updateFields = ['filesize', 'width', 'height'];
 
-        if ($this->currentConfig->useExif()) {
+        if ($this->currentConfig->useExif) {
             $updateFields = array_merge(
                 $updateFields,
-                array_map(strval(...), array_keys($this->stringMap($this->currentConfig->useExifMapping()))),
+                array_map(strval(...), array_keys($this->stringMap($this->currentConfig->useExifMapping))),
                 ['latitude', 'longitude']
             );
         }
 
-        if ($this->currentConfig->useIptc()) {
+        if ($this->currentConfig->useIptc) {
             $updateFields = array_merge(
                 $updateFields,
-                array_map(strval(...), array_keys($this->stringMap($this->currentConfig->useIptcMapping())))
+                array_map(strval(...), array_keys($this->stringMap($this->currentConfig->useIptcMapping)))
             );
         }
 
@@ -466,11 +466,11 @@ final readonly class MetadataService
             $file = $originalFile;
         }
 
-        if ($this->currentConfig->useExif()) {
+        if ($this->currentConfig->useExif) {
             $infos = array_merge($infos, $this->getSyncExifData($file));
         }
 
-        if ($this->currentConfig->useIptc()) {
+        if ($this->currentConfig->useIptc) {
             $infos = array_merge($infos, $this->getSyncIptcData($file));
         }
 
@@ -641,7 +641,7 @@ final readonly class MetadataService
     public function metadataNormalizeKeywordsString(string $keywordsString): string
     {
 
-        $separatorRegex = $this->currentConfig->metadataKeywordSeparatorRegex();
+        $separatorRegex = $this->currentConfig->metadataKeywordSeparatorRegex;
 
         $keywordsString = $separatorRegex === '' ? $keywordsString : preg_replace($separatorRegex, ',', $keywordsString);
         assert($keywordsString !== null);

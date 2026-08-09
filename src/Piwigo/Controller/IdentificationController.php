@@ -103,7 +103,7 @@ final class IdentificationController implements ControllerInterface
         $redirect_to = '';
         if ($identificationSubmit->getRedirect !== null) {
             $redirect_to = urldecode($identificationSubmit->getRedirect);
-            if ($this->currentConfig->guestAccess() and ! $identificationSubmit->hideRedirectErrorPresent) {
+            if ($this->currentConfig->guestAccess and ! $identificationSubmit->hideRedirectErrorPresent) {
                 $errors['login_page_error'] = $this->lang->t('You are not authorized to access the requested page');
             }
         }
@@ -124,7 +124,7 @@ final class IdentificationController implements ControllerInterface
                 $password = $identificationSubmit->password;
 
                 $conn = DbConnection::build();
-                if ($this->currentConfig->insensitiveCaseLogon()) {
+                if ($this->currentConfig->insensitiveCaseLogon) {
                     $username = $this->userService
                         ->searchCaseUsername($username);
                 }
@@ -176,19 +176,19 @@ final class IdentificationController implements ControllerInterface
         ]);
 
         $register = null;
-        if (! $this->currentConfig->galleryLocked() && $this->currentConfig->allowUserRegistration()) {
+        if (! $this->currentConfig->galleryLocked && $this->currentConfig->allowUserRegistration) {
             $register = $urlService->getRootUrl() . 'register.php';
         }
 
         $lost_password = null;
-        if (! $this->currentConfig->galleryLocked()) {
+        if (! $this->currentConfig->galleryLocked) {
             $lost_password = $urlService->getRootUrl() . 'password.php';
         }
 
         $themeconf = $template->get_template_vars('themeconf');
         $themeconf = is_array($themeconf) ? $themeconf : [];
         $hide_menu_on = $themeconf['hide_menu_on'] ?? null;
-        if (! $this->currentConfig->galleryLocked() && (! is_array($hide_menu_on) or ! in_array('theIdentificationPage', $hide_menu_on, true))) {
+        if (! $this->currentConfig->galleryLocked && (! is_array($hide_menu_on) or ! in_array('theIdentificationPage', $hide_menu_on, true))) {
             new MenubarRenderer()
                 ->render($this->lang, new AccessLevelChecker($this->currentUser, $this->currentConfig), $urlService, $this->filterState, $this->sectionContextRegistry, $this->sessionService, $this->deploymentPolicy, $this->currentUser, $this->currentTemplate, $this->currentConfig, $this->eventDispatcher, $this->translator, $this->currentLogger);
         }
@@ -226,7 +226,7 @@ final class IdentificationController implements ControllerInterface
         $template->assignContext(new IdentificationPageContext(
             redirect: $redirect_to,
             loginAction: $urlService->getRootUrl() . 'identification.php',
-            authorizeRemembering: $this->currentConfig->authorizeRemembering(),
+            authorizeRemembering: $this->currentConfig->authorizeRemembering,
             register: $register,
             lostPassword: $lost_password,
             languageOptions: $language_options,

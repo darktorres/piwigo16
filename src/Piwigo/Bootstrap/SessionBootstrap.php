@@ -33,7 +33,7 @@ final class SessionBootstrap
     public static function register(): void
     {
 
-        if (RequestBootstrap::currentConfig()->sessionSaveHandler() === 'db'
+        if (RequestBootstrap::currentConfig()->sessionSaveHandler === 'db'
           and self::installationFlag()->isActive()) {
             $sessionService = Kernel::container()->get(SessionService::class);
             if (! $sessionService instanceof SessionService) {
@@ -46,18 +46,18 @@ final class SessionBootstrap
             session_set_save_handler(new PwgSession($sessionService, $currentLogger));
 
             if (function_exists('ini_set')) {
-                $session_use_cookies = RequestBootstrap::currentConfig()->sessionUseCookies();
+                $session_use_cookies = RequestBootstrap::currentConfig()->sessionUseCookies;
                 ini_set('session.use_cookies', $session_use_cookies);
 
-                $session_use_only_cookies = RequestBootstrap::currentConfig()->sessionUseOnlyCookies();
+                $session_use_only_cookies = RequestBootstrap::currentConfig()->sessionUseOnlyCookies;
                 ini_set('session.use_only_cookies', $session_use_only_cookies);
 
-                $session_use_trans_sid = RequestBootstrap::currentConfig()->sessionUseTransSid();
+                $session_use_trans_sid = RequestBootstrap::currentConfig()->sessionUseTransSid;
                 ini_set('session.use_trans_sid', intval($session_use_trans_sid));
                 ini_set('session.cookie_httponly', 1);
             }
 
-            $session_name = RequestBootstrap::currentConfig()->sessionName();
+            $session_name = RequestBootstrap::currentConfig()->sessionName;
             session_name($session_name);
             session_set_cookie_params(0, new CookieService()->cookiePath());
             register_shutdown_function(session_write_close(...));

@@ -21,7 +21,7 @@ use Piwigo\Template\CurrentTemplate;
  * own real Browser-suite page loads instead.
  */
 afterEach(function (): void {
-    CurrentConfigTestFactory::get()->setBlkMenubar(null);
+    CurrentConfigTestFactory::get()->blkMenubar = null;
 });
 
 test('RegisteredBlock exposes its id/name/owner', function (): void {
@@ -84,7 +84,7 @@ test('prepare_display assigns positions in registration order (idx*50) with no c
 
 test('prepare_display honors an explicit position from blk_menubar config', function (): void {
     $currentConfig = CurrentConfigTestFactory::get();
-    $currentConfig->setBlkMenubar(['cat' => 5]);
+    $currentConfig->blkMenubar = ['cat' => 5];
 
     $manager = new BlockManager('menubar', EventDispatcherTestFactory::get(), CurrentTemplate::current(), $currentConfig);
     $manager->register_block(new RegisteredBlock('cat', 'Categories', 'core'));
@@ -99,7 +99,7 @@ test('prepare_display honors an explicit position from blk_menubar config', func
 
 test('prepare_display hides a block whose configured position is 0 or negative', function (): void {
     $currentConfig = CurrentConfigTestFactory::get();
-    $currentConfig->setBlkMenubar(['cat' => 0, 'tags' => -10]);
+    $currentConfig->blkMenubar = ['cat' => 0, 'tags' => -10];
 
     $manager = new BlockManager('menubar', EventDispatcherTestFactory::get(), CurrentTemplate::current(), $currentConfig);
     $manager->register_block(new RegisteredBlock('cat', 'Categories', 'core'));
@@ -113,7 +113,7 @@ test('prepare_display hides a block whose configured position is 0 or negative',
 
 test('prepare_display sorts display blocks by resolved position, independent of registration order', function (): void {
     $currentConfig = CurrentConfigTestFactory::get();
-    $currentConfig->setBlkMenubar(['second' => 10, 'first' => 20]);
+    $currentConfig->blkMenubar = ['second' => 10, 'first' => 20];
 
     $manager = new BlockManager('menubar', EventDispatcherTestFactory::get(), CurrentTemplate::current(), $currentConfig);
     $manager->register_block(new RegisteredBlock('first', 'First', 'core'));
@@ -139,7 +139,7 @@ test('prepare_display falls back to idx*50 positioning when a block\'s config va
     // "$idx * 50" fallback (distinct from the one on the line above that
     // only fires when the key is entirely absent from $mb_conf).
     $currentConfig = CurrentConfigTestFactory::get();
-    $currentConfig->setBlkMenubar(['first' => 'not-a-number']);
+    $currentConfig->blkMenubar = ['first' => 'not-a-number'];
 
     $manager = new BlockManager('menubar', EventDispatcherTestFactory::get(), CurrentTemplate::current(), $currentConfig);
     $manager->register_block(new RegisteredBlock('first', 'First', 'core'));
@@ -162,7 +162,7 @@ test('prepare_display casts a numeric-string config position to a real int', fun
     // (untyped param) would happily store the string "5" instead of the
     // int 5, which the strict toBe(5) below would catch.
     $currentConfig = CurrentConfigTestFactory::get();
-    $currentConfig->setBlkMenubar(['cat' => '5']);
+    $currentConfig->blkMenubar = ['cat' => '5'];
 
     $manager = new BlockManager('menubar', EventDispatcherTestFactory::get(), CurrentTemplate::current(), $currentConfig);
     $manager->register_block(new RegisteredBlock('cat', 'Categories', 'core'));
@@ -181,7 +181,7 @@ test('prepare_display treats a resolved position of exactly 1 as visible', funct
     // reject 0 identically) -- 1 is the smallest position that must remain
     // visible under "> 0" while a "> 1" mutant would wrongly hide it.
     $currentConfig = CurrentConfigTestFactory::get();
-    $currentConfig->setBlkMenubar(['cat' => 1]);
+    $currentConfig->blkMenubar = ['cat' => 1];
 
     $manager = new BlockManager('menubar', EventDispatcherTestFactory::get(), CurrentTemplate::current(), $currentConfig);
     $manager->register_block(new RegisteredBlock('cat', 'Categories', 'core'));
@@ -197,7 +197,7 @@ test('prepare_display treats a resolved position of exactly 1 as visible', funct
 
 test('prepare_display sorts display blocks before firing blockmanager_prepare_display, so handlers observe already-sorted order', function (): void {
     $currentConfig = CurrentConfigTestFactory::get();
-    $currentConfig->setBlkMenubar(['second' => 10, 'first' => 20]);
+    $currentConfig->blkMenubar = ['second' => 10, 'first' => 20];
 
     $manager = new BlockManager('menubar', EventDispatcherTestFactory::get(), CurrentTemplate::current(), $currentConfig);
     $manager->register_block(new RegisteredBlock('first', 'First', 'core'));

@@ -218,9 +218,9 @@ final class UrlService implements UrlServiceInterface
 
                     $url_port = null;
 
-                    if ($this->currentConfig->urlPort() === 'none') {
+                    if ($this->currentConfig->urlPort === 'none') {
                         // do nothing
-                    } elseif ($this->currentConfig->urlPort() === 'auto') {
+                    } elseif ($this->currentConfig->urlPort === 'auto') {
                         // Default to 80 (matching 16.x-rewrite's own
                         // UrlService) when SERVER_PORT is genuinely absent --
                         // real bug: defaulting to null instead left
@@ -233,7 +233,7 @@ final class UrlService implements UrlServiceInterface
                         }
                     } else {
                         // we have a custom port
-                        $url_port = ':' . $this->currentConfig->urlPort();
+                        $url_port = ':' . $this->currentConfig->urlPort;
                     }
 
                     if ($url_port !== null and strrchr($url, ':') !== $url_port) {
@@ -255,7 +255,7 @@ final class UrlService implements UrlServiceInterface
      */
     private function configuredHost(): ?string
     {
-        $gallery_url = $this->currentConfig->galleryUrl();
+        $gallery_url = $this->currentConfig->galleryUrl;
         if (! is_string($gallery_url) || $gallery_url === '') {
             return null;
         }
@@ -331,10 +331,10 @@ final class UrlService implements UrlServiceInterface
     public function makeIndexUrl(array $params = []): string
     {
         $url = $this->getRootUrl() . 'index';
-        if ($this->currentConfig->phpExtensionInUrls()) {
+        if ($this->currentConfig->phpExtensionInUrls) {
             $url .= '.php';
         }
-        if ($this->currentConfig->questionMarkInUrls()) {
+        if ($this->currentConfig->questionMarkInUrls) {
             $url .= '?';
         }
 
@@ -429,15 +429,15 @@ final class UrlService implements UrlServiceInterface
     public function makePictureUrl(array $params): string
     {
         $url = $this->getRootUrl() . 'picture';
-        if ($this->currentConfig->phpExtensionInUrls()) {
+        if ($this->currentConfig->phpExtensionInUrls) {
             $url .= '.php';
         }
-        if ($this->currentConfig->questionMarkInUrls()) {
+        if ($this->currentConfig->questionMarkInUrls) {
             $url .= '?';
         }
         $url .= '/';
         $image_id = $params['image_id'] ?? null;
-        $picture_url_style = $this->currentConfig->pictureUrlStyle();
+        $picture_url_style = $this->currentConfig->pictureUrlStyle;
         switch ($picture_url_style) {
             case 'id-file':
                 $url .= is_scalar($image_id) ? (string) $image_id : '';
@@ -561,7 +561,7 @@ final class UrlService implements UrlServiceInterface
                     if (! isset($category_info['permalink']) || $category_info['permalink'] === '') {
                         $category_id = $category_info['id'] ?? null;
                         $section_string .= is_scalar($category_id) ? (string) $category_id : '';
-                        if ($this->currentConfig->categoryUrlStyle() === 'id-name') {
+                        if ($this->currentConfig->categoryUrlStyle === 'id-name') {
                             $category_name = $category_info['name'] ?? null;
                             $section_string .= '-' . StringHelper::str2url(is_string($category_name) ? $category_name : '');
                         }
@@ -581,7 +581,7 @@ final class UrlService implements UrlServiceInterface
                             if (! isset($category['permalink']) || $category['permalink'] === '') {
                                 $combined_id = $category['id'] ?? null;
                                 $section_string .= is_scalar($combined_id) ? (string) $combined_id : '';
-                                if ($this->currentConfig->categoryUrlStyle() === 'id-name') {
+                                if ($this->currentConfig->categoryUrlStyle === 'id-name') {
                                     $combined_name = $category['name'] ?? null;
                                     $section_string .= '-' . StringHelper::str2url(is_string($combined_name) ? $combined_name : '');
                                 }
@@ -600,7 +600,7 @@ final class UrlService implements UrlServiceInterface
                 $section_string .= '/tags';
 
                 $tags_param = $params['tags'] ?? [];
-                $tag_url_style = $this->currentConfig->tagUrlStyle();
+                $tag_url_style = $this->currentConfig->tagUrlStyle;
                 foreach ((is_array($tags_param) ? $tags_param : []) as $tag) {
                     if (! is_array($tag)) {
                         $tag = [];
@@ -810,7 +810,7 @@ final class UrlService implements UrlServiceInterface
                     break;
                 }
 
-                if ($this->currentConfig->tagUrlStyle() !== 'tag' and (bool) preg_match('/^(\d+)(?:-(.*)|)$/', $tokens[$i], $matches)) {
+                if ($this->currentConfig->tagUrlStyle !== 'tag' and (bool) preg_match('/^(\d+)(?:-(.*)|)$/', $tokens[$i], $matches)) {
                     $requested_tag_ids[] = $matches[1];
                 } else {
                     $requested_tag_url_names[] = $tokens[$i];
@@ -1022,7 +1022,7 @@ final class UrlService implements UrlServiceInterface
     #[Override]
     public function getGalleryHomeUrl(): string
     {
-        $gallery_url = $this->currentConfig->galleryUrl();
+        $gallery_url = $this->currentConfig->galleryUrl;
         if (is_string($gallery_url) && $gallery_url !== '') {
             if ($this->urlIsRemote($gallery_url) or $gallery_url[0] === '/') {
                 return $gallery_url;

@@ -58,7 +58,7 @@ use Piwigo\Template\Template;
 
 beforeEach(function (): void {
     Kernel::boot(Paths::fromRoot(sys_get_temp_dir()));
-    CurrentConfigTestFactory::get()->setDataDirChecked('1');
+    CurrentConfigTestFactory::get()->dataDirChecked = '1';
 });
 
 afterEach(function (): void {
@@ -176,7 +176,7 @@ test('get_php_str_val checks the first character for a matching double-quote, no
 });
 
 test('modcompiler_translate returns a cached lang lookup when compiled_template_cache_language is on', function (): void {
-    CurrentConfigTestFactory::get()->setCompiledTemplateCacheLanguage(true);
+    CurrentConfigTestFactory::get()->compiledTemplateCacheLanguage = true;
     LangTestFactory::get()->loadArray(['Comment' => 'Commentaire']);
 
     $result = TemplateTestFactory::build()->modcompiler_translate(["'Comment'"]);
@@ -185,7 +185,7 @@ test('modcompiler_translate returns a cached lang lookup when compiled_template_
 });
 
 test('modcompiler_translate falls back to a runtime Template::lang()->t() call when caching is off', function (): void {
-    CurrentConfigTestFactory::get()->setCompiledTemplateCacheLanguage(false);
+    CurrentConfigTestFactory::get()->compiledTemplateCacheLanguage = false;
     LangTestFactory::get()->loadArray(['Comment' => 'Commentaire']);
 
     $result = TemplateTestFactory::build()->modcompiler_translate(["'Comment'"]);
@@ -194,7 +194,7 @@ test('modcompiler_translate falls back to a runtime Template::lang()->t() call w
 });
 
 test('modcompiler_translate falls back to a runtime Template::lang()->t() call when the key is not in the cached lang table', function (): void {
-    CurrentConfigTestFactory::get()->setCompiledTemplateCacheLanguage(true);
+    CurrentConfigTestFactory::get()->compiledTemplateCacheLanguage = true;
     LangTestFactory::get()->loadArray([]);
 
     $result = TemplateTestFactory::build()->modcompiler_translate(["'Unknown'"]);
@@ -203,7 +203,7 @@ test('modcompiler_translate falls back to a runtime Template::lang()->t() call w
 });
 
 test('modcompiler_translate wraps a runtime Template::lang()->t() call in sprintf when extra params are given', function (): void {
-    CurrentConfigTestFactory::get()->setCompiledTemplateCacheLanguage(false);
+    CurrentConfigTestFactory::get()->compiledTemplateCacheLanguage = false;
     LangTestFactory::get()->loadArray([]);
 
     $result = TemplateTestFactory::build()->modcompiler_translate(["'%d comments'", '$count']);
@@ -212,7 +212,7 @@ test('modcompiler_translate wraps a runtime Template::lang()->t() call in sprint
 });
 
 test('modcompiler_translate_dec falls back to a runtime Template::lang()->plural() call when caching is off', function (): void {
-    CurrentConfigTestFactory::get()->setCompiledTemplateCacheLanguage(false);
+    CurrentConfigTestFactory::get()->compiledTemplateCacheLanguage = false;
 
     $result = TemplateTestFactory::build()->modcompiler_translate_dec(['$count', "'%d comment'", "'%d comments'"]);
 
@@ -220,7 +220,7 @@ test('modcompiler_translate_dec falls back to a runtime Template::lang()->plural
 });
 
 test('modcompiler_translate wraps a cached lang lookup in sprintf when extra params are given and caching is on', function (): void {
-    CurrentConfigTestFactory::get()->setCompiledTemplateCacheLanguage(true);
+    CurrentConfigTestFactory::get()->compiledTemplateCacheLanguage = true;
     LangTestFactory::get()->loadArray(['%d comments' => '%d commentaires']);
 
     $result = TemplateTestFactory::build()->modcompiler_translate(["'%d comments'", '$count']);
@@ -229,7 +229,7 @@ test('modcompiler_translate wraps a cached lang lookup in sprintf when extra par
 });
 
 test('modcompiler_translate_dec builds a plain >1 ternary from cached lang lookups when caching is on and zero is not plural', function (): void {
-    CurrentConfigTestFactory::get()->setCompiledTemplateCacheLanguage(true);
+    CurrentConfigTestFactory::get()->compiledTemplateCacheLanguage = true;
     LangTestFactory::get()->setLangInfo(['zero_plural' => false]);
     LangTestFactory::get()->loadArray(['%d comment' => '%d commentaire', '%d comments' => '%d commentaires']);
 
@@ -239,7 +239,7 @@ test('modcompiler_translate_dec builds a plain >1 ternary from cached lang looku
 });
 
 test('modcompiler_translate_dec also treats zero as plural when zero_plural is set', function (): void {
-    CurrentConfigTestFactory::get()->setCompiledTemplateCacheLanguage(true);
+    CurrentConfigTestFactory::get()->compiledTemplateCacheLanguage = true;
     LangTestFactory::get()->setLangInfo(['zero_plural' => true]);
     LangTestFactory::get()->loadArray(['%d comment' => '%d commentaire', '%d comments' => '%d commentaires']);
 
@@ -376,13 +376,13 @@ test('urlService resolver throws when the container returns an unexpected type',
             UrlServiceInterface::class => new stdClass(),
         ],
         static function (): void {
-            CurrentConfigTestFactory::get()->setDataDirChecked('1');
+            CurrentConfigTestFactory::get()->dataDirChecked = '1';
             TemplateTestFactory::build();
         }
     ))->toThrow(LogicException::class, 'Container returned an unexpected type for ' . UrlServiceInterface::class);
 
     Kernel::boot(Paths::fromRoot(sys_get_temp_dir()));
-    CurrentConfigTestFactory::get()->setDataDirChecked('1');
+    CurrentConfigTestFactory::get()->dataDirChecked = '1';
 });
 
 test('lang resolver throws when the container returns an unexpected type', function (): void {
@@ -392,7 +392,7 @@ test('lang resolver throws when the container returns an unexpected type', funct
     ))->toThrow(LogicException::class, 'Container returned an unexpected type for ' . Lang::class);
 
     Kernel::boot(Paths::fromRoot(sys_get_temp_dir()));
-    CurrentConfigTestFactory::get()->setDataDirChecked('1');
+    CurrentConfigTestFactory::get()->dataDirChecked = '1';
 });
 
 test('htmlRenderer resolver throws when the container returns an unexpected type', function (): void {
@@ -404,7 +404,7 @@ test('htmlRenderer resolver throws when the container returns an unexpected type
     ))->toThrow(LogicException::class, 'Container returned an unexpected type for ' . HtmlRenderingInterface::class);
 
     Kernel::boot(Paths::fromRoot(sys_get_temp_dir()));
-    CurrentConfigTestFactory::get()->setDataDirChecked('1');
+    CurrentConfigTestFactory::get()->dataDirChecked = '1';
 });
 
 test('currentTemplate resolver throws when the container returns an unexpected type', function (): void {
@@ -428,7 +428,7 @@ test('currentTemplate resolver throws when the container returns an unexpected t
     ))->toThrow(LogicException::class, 'Container returned an unexpected type for ' . CurrentTemplate::class);
 
     Kernel::boot(Paths::fromRoot(sys_get_temp_dir()));
-    CurrentConfigTestFactory::get()->setDataDirChecked('1');
+    CurrentConfigTestFactory::get()->dataDirChecked = '1';
 });
 
 // --- set_theme: load_parent_css / load_parent_local_head propagation --------

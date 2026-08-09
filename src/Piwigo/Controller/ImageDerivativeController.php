@@ -375,7 +375,7 @@ final class ImageDerivativeController implements ControllerInterface
             ]);
         }
 
-        if ($this->currentConfig->derivativesStripMetadataThreshold() > $d_size[0] * $d_size[1]) {// strip metadata for small images
+        if ($this->currentConfig->derivativesStripMetadataThreshold > $d_size[0] * $d_size[1]) {// strip metadata for small images
             $image->strip();
         }
 
@@ -521,7 +521,7 @@ final class ImageDerivativeController implements ControllerInterface
         // (no scheme), which resolves the app's real mount path from
         // cookiePath() (SCRIPT_NAME/REDIRECT_URL-based) -- no URL-depth
         // computation of any kind is needed, in either URL style below.
-        if ($this->currentConfig->questionMarkInUrls() === false and
+        if ($this->currentConfig->questionMarkInUrls === false and
              isset($_SERVER['PATH_INFO']) and ! in_array($_SERVER['PATH_INFO'], [false, 0, '0', '', []], true)) {
             $req = $_SERVER['PATH_INFO'];
             // PHPStan types superglobal reads as mixed; PATH_INFO is only ever
@@ -545,12 +545,12 @@ final class ImageDerivativeController implements ControllerInterface
         if ($req_tokens === false) {
             $this->ierror('Invalid request', 400);
         }
-        $sync_chars_regex = $this->currentConfig->syncCharsRegex();
+        $sync_chars_regex = $this->currentConfig->syncCharsRegex;
         foreach ($req_tokens as $token) {
             ($sync_chars_regex !== '' && (bool) preg_match($sync_chars_regex, $token)) or $this->ierror('Invalid chars in request', 400);
         }
 
-        $this->derivativePath = $this->paths->root . $this->currentConfig->derivativeDir() . $req;
+        $this->derivativePath = $this->paths->root . $this->currentConfig->derivativeDir . $req;
         $this->derivativeUrlSuffix = $req;
 
         $pos = strrpos($req, '.');
@@ -804,10 +804,10 @@ final class ImageDerivativeController implements ControllerInterface
         $filename = $lastSlash === false ? $urlSuffix : substr($urlSuffix, $lastSlash + 1);
         $suffix = $dir . str_replace('-' . DerivativeUrlCodec::derivativeToUrl($fromType), '-' . DerivativeUrlCodec::derivativeToUrl($toType), $filename);
         $rel_url = 'i';
-        if ($currentConfig->phpExtensionInUrls()) {
+        if ($currentConfig->phpExtensionInUrls) {
             $rel_url .= '.php';
         }
-        if ($currentConfig->questionMarkInUrls()) {
+        if ($currentConfig->questionMarkInUrls) {
             $rel_url .= '?';
         }
 

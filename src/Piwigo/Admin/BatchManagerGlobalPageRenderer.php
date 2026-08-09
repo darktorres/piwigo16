@@ -526,8 +526,8 @@ final class BatchManagerGlobalPageRenderer
             } else {
                 $nb_images = is_numeric($batchManagerGlobalRequest->displayRaw) ? intval($batchManagerGlobalRequest->displayRaw) : 0;
             }
-        } elseif (in_array($this->currentConfig->batchManagerImagesPerPageGlobal(), [20, 50, 100], true)) {
-            $nb_images = $this->currentConfig->batchManagerImagesPerPageGlobal();
+        } elseif (in_array($this->currentConfig->batchManagerImagesPerPageGlobal, [20, 50, 100], true)) {
+            $nb_images = $this->currentConfig->batchManagerImagesPerPageGlobal;
         } else {
             $nb_images = 20;
         }
@@ -559,13 +559,13 @@ final class BatchManagerGlobalPageRenderer
             } else {
                 // order_by is a raw "ORDER BY ..." SQL fragment string --
                 // see CurrentConfig::orderBy()'s own docblock.
-                $order_by = $this->currentConfig->orderBy();
+                $order_by = $this->currentConfig->orderBy;
             }
 
             if ($is_category) {
                 $category_info = $this->categoryService->getCategoryInfo($filter_category_id);
 
-                $order_by = $this->currentConfig->orderByInsideCategory();
+                $order_by = $this->currentConfig->orderByInsideCategory;
                 $category_image_order = $category_info !== null ? $category_info->imageOrder : null;
                 if (is_string($category_image_order) && $category_image_order !== '') {
                     $order_by = ' ORDER BY ' . $category_image_order;

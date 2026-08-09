@@ -93,7 +93,7 @@ final class PhotoSubController implements AdminSubControllerInterface
         } elseif ($tab === 'coi') {
             $this->pictureCoiPageRenderer
                 ->render();
-        } elseif ($this->currentConfig->isFormatsEnabled()) {
+        } elseif ($this->currentConfig->isFormatsEnabled) {
             new PictureFormatsPageRenderer()
                 ->render($this->lang, $this->accessControl, $this->urlService, $this->imageStdParams, $this->currentTemplate, $this->htmlRenderer, $this->inputValidator, $this->currentConfig);
         }

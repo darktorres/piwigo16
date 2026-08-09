@@ -241,7 +241,7 @@ final class PwgImages
             }
         }
 
-        $upload_dir_conf = $this->paths->root . $this->currentConfig->uploadDir();
+        $upload_dir_conf = $this->paths->root . $this->currentConfig->uploadDir;
         $upload_dir = $upload_dir_conf . '/buffer';
         $pattern = '/' . $original_sum . '-' . $type . '/';
         $chunks = [];
@@ -300,7 +300,7 @@ final class PwgImages
     private function removeChunks($original_sum, string $type): void
     {
 
-        $upload_dir_conf = $this->paths->root . $this->currentConfig->uploadDir();
+        $upload_dir_conf = $this->paths->root . $this->currentConfig->uploadDir;
         $upload_dir = $upload_dir_conf . '/buffer';
         $pattern = '/' . $original_sum . '-' . $type . '/';
         $chunks = [];
@@ -333,7 +333,7 @@ final class PwgImages
     public function addComment(array $params, PwgServer $service): PwgError|array
     {
 
-        if (! $this->currentConfig->activateComments()) {
+        if (! $this->currentConfig->activateComments) {
             return new PwgError(403, 'Comments are disabled');
         }
 
@@ -517,10 +517,10 @@ final class PwgImages
         }
 
         $comment_post_data = null;
-        if ($this->currentConfig->activateComments() and
+        if ($this->currentConfig->activateComments and
             $is_commentable and
             (! $this->accessControl->isAGuest()
-              or $this->currentConfig->commentsForall()
+              or $this->currentConfig->commentsForall
             )
         ) {
             $username = $this->currentUser->get()
@@ -604,7 +604,7 @@ final class PwgImages
             ->rate($params['image_id'], (int) $params['rate']);
 
         if ($res === false) {
-            $rate_items = $this->currentConfig->rateItems();
+            $rate_items = $this->currentConfig->rateItems;
             return new PwgError(403, 'Forbidden or rate not in ' . implode(',', $rate_items));
         }
         return $res;
@@ -631,9 +631,9 @@ final class PwgImages
             // Communicates the effective order_by to SearchService::
             // getQuickSearchResults()/getRegularSearchResults() etc, which
             // read it back from $this->currentConfig-> for the rest of this request --
-            // an in-memory-only override ($this->currentConfig->setOrderBy()), not a
+            // an in-memory-only override ($this->currentConfig->orderBy = ), not a
             // DB write.
-            $this->currentConfig->setOrderBy('ORDER BY ' . $order_by);
+            $this->currentConfig->orderBy = 'ORDER BY ' . $order_by;
             $super_order_by = true; // quick_search_result might be faster
         }
 
@@ -981,7 +981,7 @@ final class PwgImages
             ];
         }
 
-        if ($this->currentConfig->rateEnabled() and isset($params['ratings'])) {
+        if ($this->currentConfig->rateEnabled and isset($params['ratings'])) {
             $search['fields']['ratings'] = $params['ratings'];
         }
 
@@ -1030,7 +1030,7 @@ final class PwgImages
     public function setPrivacyLevel(array $params, PwgServer $service): PwgError|int
     {
 
-        $available_permission_levels = $this->currentConfig->availablePermissionLevels();
+        $available_permission_levels = $this->currentConfig->availablePermissionLevels;
 
         if (! in_array($params['level'], $available_permission_levels, true)) {
             return new PwgError(WsError::INVALID_PARAM, 'Invalid level');
@@ -1152,7 +1152,7 @@ final class PwgImages
             ), 'WS');
         }
 
-        $upload_dir_conf = $this->paths->root . $this->currentConfig->uploadDir();
+        $upload_dir_conf = $this->paths->root . $this->currentConfig->uploadDir;
         $upload_dir = $upload_dir_conf . '/buffer';
 
         // create the upload directory tree if not exists
@@ -1222,7 +1222,7 @@ final class PwgImages
             $original_type = 'high';
         }
 
-        $upload_dir_conf = $this->paths->root . $this->currentConfig->uploadDir();
+        $upload_dir_conf = $this->paths->root . $this->currentConfig->uploadDir;
         $file_path = $upload_dir_conf . '/buffer/' . $image->md5sum . '-original';
 
         $this->mergeChunks($file_path, $image->md5sum, $original_type);
@@ -1311,7 +1311,7 @@ final class PwgImages
         $uniqueness_lock_name = null;
 
         if ($params['check_uniqueness']) {
-            $uniqueness_column = match ($this->currentConfig->uniquenessMode()) {
+            $uniqueness_column = match ($this->currentConfig->uniquenessMode) {
                 'md5sum' => 'md5sum',
                 'filename' => 'file',
                 default => null, // no known uniqueness_mode: skip the uniqueness check
@@ -1365,7 +1365,7 @@ final class PwgImages
             $original_type = 'file';
         }
 
-        $upload_dir_conf = $this->paths->root . $this->currentConfig->uploadDir();
+        $upload_dir_conf = $this->paths->root . $this->currentConfig->uploadDir;
         $file_path = $upload_dir_conf . '/buffer/' . $params['original_sum'] . '-original';
 
         $this->mergeChunks($file_path, $params['original_sum'], $original_type);
@@ -1594,11 +1594,11 @@ final class PwgImages
 
         if (isset($params['format_of'])) {
             // are formats enabled?
-            if (! $this->currentConfig->isFormatsEnabled()) {
+            if (! $this->currentConfig->isFormatsEnabled) {
                 return new PwgError(401, 'formats are disabled');
             }
 
-            $format_ext_list = $this->currentConfig->formatExtensions();
+            $format_ext_list = $this->currentConfig->formatExtensions;
 
             // We must check if the extension is in the authorized list.
             if ((bool) preg_match('/\.(' . implode('|', $format_ext_list) . ')$/', (string) $params['name'], $matches)) {
@@ -1610,7 +1610,7 @@ final class PwgImages
             }
         }
 
-        $upload_dir_conf = $this->paths->root . $this->currentConfig->uploadDir();
+        $upload_dir_conf = $this->paths->root . $this->currentConfig->uploadDir;
         $upload_dir = $upload_dir_conf . '/buffer';
 
         // create the upload directory tree if not exists
@@ -1792,7 +1792,7 @@ final class PwgImages
             }
         }
 
-        $upload_dir_conf = $this->paths->root . $this->currentConfig->uploadDir();
+        $upload_dir_conf = $this->paths->root . $this->currentConfig->uploadDir;
         $output_filepath_prefix = $upload_dir_conf . '/buffer/' . $params['original_sum'] . '-u' . $this->currentUser->get()->id->value;
         $chunkfile_path_pattern = $output_filepath_prefix . '-%03uof%03u.chunk';
 
@@ -1816,7 +1816,7 @@ final class PwgImages
         // the original absolute $chunkfile_path unchanged, since the
         // 'uploads' disk is rooted at the same real filesystem location.
         $paths = $this->paths;
-        $chunk_root = $paths->root . $this->currentConfig->uploadDir();
+        $chunk_root = $paths->root . $this->currentConfig->uploadDir;
         $chunk_abs_path = str_replace(['\\', '/./'], ['/', '/'], $chunkfile_path);
         $chunk_rel_path = StorageRegistry::stripRoot($chunk_root, $chunk_abs_path);
         $chunk_stream = fopen($uploaded_chunk_tmp_name, 'rb');
@@ -2051,7 +2051,7 @@ final class PwgImages
         $split_pattern = '/[\s,;\|]/';
         $result = [];
 
-        if ($this->currentConfig->uniquenessMode() === 'md5sum') {
+        if ($this->currentConfig->uniquenessMode === 'md5sum') {
             // search among photos the list of photos already added, based on md5sum list
             $md5sums = preg_split(
                 $split_pattern,
@@ -2068,7 +2068,7 @@ final class PwgImages
             foreach ($md5sums as $md5sum) {
                 $result[$md5sum] = $id_of_md5[$md5sum] ?? null;
             }
-        } elseif ($this->currentConfig->uniquenessMode() === 'filename') {
+        } elseif ($this->currentConfig->uniquenessMode === 'filename') {
             // search among photos the list of photos already added, based on
             // filename list
             $filenames = preg_split(
@@ -2128,7 +2128,7 @@ final class PwgImages
         // (kept as a local variable, not written back to $conf -- $conf is
         // reloaded from scratch on every request, so mutating it here
         // wouldn't persist anyway)
-        $format_ext_list = $this->currentConfig->formatExtensions();
+        $format_ext_list = $this->currentConfig->formatExtensions;
         usort($format_ext_list, static fn (string $a, string $b): int => strlen($b) - strlen($a));
 
         $format_db = [];
@@ -2385,7 +2385,7 @@ final class PwgImages
 
         foreach ($info_columns as $key) {
             if (isset($params[$key])) {
-                if (! $this->currentConfig->allowHtmlDescriptions() or ! isset($params['pwg_token'])) {
+                if (! $this->currentConfig->allowHtmlDescriptions or ! isset($params['pwg_token'])) {
                     $params[$key] = strip_tags((string) $params[$key], '<b><strong><em><i>');
                 }
 

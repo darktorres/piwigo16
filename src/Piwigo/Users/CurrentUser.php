@@ -49,7 +49,7 @@ final class CurrentUser
     public function attachGlobals(): void
     {
         $this->user ??= new User(
-            id: UserId::from($this->currentConfig->guestId()),
+            id: UserId::from($this->currentConfig->guestId),
             username: null,
             email: null,
             language: LangCode::from(AppInfo::DEFAULT_LANGUAGE),

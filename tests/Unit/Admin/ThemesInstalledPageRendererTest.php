@@ -339,7 +339,7 @@ beforeEach(function () use (&$themesInstalledFixtureRoot): void {
     $themesInstalledFixtureRoot = sys_get_temp_dir() . '/piwigo-themes-installed-page-renderer-test-' . bin2hex(random_bytes(4)) . '/';
     mkdir($themesInstalledFixtureRoot . 'themes', 0o777, true);
     Kernel::boot(Paths::fromRoot($themesInstalledFixtureRoot));
-    CurrentConfigTestFactory::get()->setThemesDir(rtrim($themesInstalledFixtureRoot, '/') . '/themes');
+    CurrentConfigTestFactory::get()->themesDir = rtrim($themesInstalledFixtureRoot, '/') . '/themes';
 });
 
 afterEach(function () use (&$themesInstalledFixtureRoot): void {

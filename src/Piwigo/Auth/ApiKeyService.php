@@ -227,7 +227,7 @@ final readonly class ApiKeyService
         $message .= '<p style="margin: 20px 0">' . $this->lang->t('To continue using the API, please renew your key before it expires.') . '</p>';
         $message .= '<p style="margin: 20px 0">' . $this->lang->t('You can manage your API keys in your <a href="%s">account settings.</a>', $this->urlService->getAbsoluteRootUrl() . 'profile.php') . '</p>';
 
-        $gallery_title = $this->currentConfig->galleryTitle();
+        $gallery_title = $this->currentConfig->galleryTitle;
 
         return $this->mailer->mail(
             $email->value,

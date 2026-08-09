@@ -1606,6 +1606,9 @@ final class CurrentConfig
      * @var list<string>
      */
     public array $apiKeyDuration = ['30', '90', '180', '365', 'custom'] {
+        /**
+         * @param array<mixed> $value
+         */
         set(array $value) {
             $this->apiKeyDuration = self::sanitizeApiKeyDuration($value);
         }
@@ -1626,6 +1629,9 @@ final class CurrentConfig
      * @var list<string>
      */
     public array $apiKeyForbiddenMethods = ['pwg.users.generatePasswordLink', 'pwg.users.getAuthKey', 'pwg.users.setMainUser', 'pwg.users.setInfo', 'pwg.plugins.performAction', 'pwg.themes.performAction', 'pwg.extensions.ignoreUpdate', 'pwg.extensions.update'] {
+        /**
+         * @param array<mixed> $value
+         */
         set(array $value) {
             $this->apiKeyForbiddenMethods = self::sanitizeApiKeyForbiddenMethods($value);
         }
@@ -1646,6 +1652,9 @@ final class CurrentConfig
      * @var list<int>
      */
     public array $availablePermissionLevels = [0, 1, 2, 4, 8] {
+        /**
+         * @param array<mixed> $value
+         */
         set(array $value) {
             $this->availablePermissionLevels = self::sanitizeAvailablePermissionLevels($value);
         }
@@ -1795,6 +1804,9 @@ final class CurrentConfig
      * @var array<string, array{access: string, default: bool}>
      */
     public array $defaultFiltersViews = self::DEFAULT_FILTERS_VIEWS {
+        /**
+         * @param array<mixed>|null $value
+         */
         set(?array $value) {
             $this->defaultFiltersViews = self::sanitizeDefaultFiltersViews($value);
         }
@@ -1844,6 +1856,9 @@ final class CurrentConfig
      * @var list<string>
      */
     public array $fileExtensions = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'tiff', 'tif', 'mpg', 'zip', 'avi', 'mp3', 'ogg', 'pdf', 'svg', 'heic'] {
+        /**
+         * @param array<mixed> $value
+         */
         set(array $value) {
             $this->fileExtensions = self::sanitizeFileExtensions($value);
         }
@@ -1937,6 +1952,9 @@ final class CurrentConfig
      * @var list<string>
      */
     public array $formatExtensions = ['cr2', 'tif', 'tiff', 'nef', 'dng', 'ai', 'psd'] {
+        /**
+         * @param array<mixed> $value
+         */
         set(array $value) {
             $this->formatExtensions = self::sanitizeFormatExtensions($value);
         }
@@ -1957,6 +1975,9 @@ final class CurrentConfig
      * @var list<string>
      */
     public array $headerNotes = [] {
+        /**
+         * @param array<mixed> $value
+         */
         set(array $value) {
             $this->headerNotes = self::sanitizeHeaderNotes($value);
         }
@@ -1978,6 +1999,9 @@ final class CurrentConfig
      * @var list<string>|null
      */
     public ?array $historySectionsCache = null {
+        /**
+         * @param array<mixed>|null $value
+         */
         set(?array $value) {
             $this->historySectionsCache = $value === null ? null : array_values(array_filter($value, is_string(...)));
         }
@@ -2043,6 +2067,9 @@ final class CurrentConfig
      * @var list<string>
      */
     public array $pictureExtensions = ['jpg', 'jpeg', 'png', 'gif', 'webp'] {
+        /**
+         * @param array<mixed> $value
+         */
         set(array $value) {
             $this->pictureExtensions = self::sanitizePictureExtensions($value);
         }
@@ -2064,6 +2091,9 @@ final class CurrentConfig
      * @var array<string, bool>
      */
     public array $pictureInformations = [] {
+        /**
+         * @param array<mixed> $value
+         */
         set(array $value) {
             $this->pictureInformations = self::sanitizePictureInformations($value);
         }
@@ -2090,6 +2120,9 @@ final class CurrentConfig
      * @var array<string,string>
      */
     public array $randomIndexRedirect = [] {
+        /**
+         * @param array<mixed> $value
+         */
         set(array $value) {
             $this->randomIndexRedirect = self::sanitizeRandomIndexRedirect($value);
         }
@@ -2116,6 +2149,9 @@ final class CurrentConfig
      * @var list<int>
      */
     public array $rateItems = [0, 1, 2, 3, 4, 5] {
+        /**
+         * @param array<mixed> $value
+         */
         set(array $value) {
             $this->rateItems = self::sanitizeRateItems($value);
         }
@@ -2151,6 +2187,9 @@ final class CurrentConfig
      * @var list<string>
      */
     public array $showExifFields = ['Make', 'Model', 'DateTimeOriginal', 'COMPUTED;ApertureFNumber'] {
+        /**
+         * @param array<mixed> $value
+         */
         set(array $value) {
             $this->showExifFields = self::sanitizeShowExifFields($value);
         }
@@ -2181,6 +2220,9 @@ final class CurrentConfig
      * @var array<string,string>
      */
     public array $showIptcMapping = self::DEFAULT_SHOW_IPTC_MAPPING {
+        /**
+         * @param array<mixed> $value
+         */
         set(array $value) {
             $this->showIptcMapping = self::sanitizeShowIptcMapping($value);
         }
@@ -2216,6 +2258,9 @@ final class CurrentConfig
      * @var list<string>
      */
     public array $syncExcludeFolders = [] {
+        /**
+         * @param array<mixed> $value
+         */
         set(array $value) {
             $this->syncExcludeFolders = self::sanitizeSyncExcludeFolders($value);
         }
@@ -2238,6 +2283,9 @@ final class CurrentConfig
      * @var array{version?: mixed, notified_on?: mixed}|null
      */
     public ?array $updateNotifyLastNotification = null {
+        /**
+         * @param array<mixed>|null $value
+         */
         set(?array $value) {
             if ($value === null) {
                 $this->updateNotifyLastNotification = null;
@@ -2267,6 +2315,9 @@ final class CurrentConfig
      * @var array<string,string>
      */
     public array $useExifMapping = self::DEFAULT_USE_EXIF_MAPPING {
+        /**
+         * @param array<mixed> $value
+         */
         set(array $value) {
             $this->useExifMapping = self::sanitizeUseExifMapping($value);
         }
@@ -2302,6 +2353,9 @@ final class CurrentConfig
      * @var array<string,string>
      */
     public array $useIptcMapping = self::DEFAULT_USE_IPTC_MAPPING {
+        /**
+         * @param array<mixed> $value
+         */
         set(array $value) {
             $this->useIptcMapping = self::sanitizeUseIptcMapping($value);
         }
@@ -2424,8 +2478,21 @@ final class CurrentConfig
             if ($property->isStatic()) {
                 continue;
             }
-            if (in_array($property->getName(), ['chmodValueStorage', 'recentPostDatesStorage'], true)) {
+            $name = $property->getName();
+            if (in_array($name, ['chmodValueStorage', 'recentPostDatesStorage'], true)) {
                 $property->setValue($this, null);
+                continue;
+            }
+            // chmodValue/recentPostDates themselves: already reset via
+            // their own backing field above -- their `set` hook only
+            // accepts a real int/NotificationConfig, not the null
+            // getDefaultValue() would otherwise try to pass it (see
+            // verified fact #6 in the conversion plan: a fully get+set
+            // hooked property reports no usable default). themesPath/
+            // combinedDir/derivativeDir have no backing state of their
+            // own at all -- get-only, computed from themesDir/
+            // dataLocation, which reset normally on their own turn.
+            if (in_array($name, ['chmodValue', 'recentPostDates', 'themesPath', 'combinedDir', 'derivativeDir'], true)) {
                 continue;
             }
             $property->setValue($this, $property->getDefaultValue());

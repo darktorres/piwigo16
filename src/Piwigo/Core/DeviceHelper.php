@@ -48,7 +48,7 @@ final class DeviceHelper
         // CurrentConfig::mobilTheme() is SCHEMA-typed 'string' only (never null/int/
         // float/bool/array) -- '' and '0' are the only two of empty()'s
         // falsy cases a string value can actually satisfy.
-        $mobile_theme_conf = $currentConfig->mobilTheme();
+        $mobile_theme_conf = $currentConfig->mobilTheme;
         if ($mobile_theme_conf === '' || $mobile_theme_conf === '0') {
             return false;
         }

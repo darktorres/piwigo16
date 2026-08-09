@@ -191,7 +191,7 @@ final class IntroSubController implements AdminSubControllerInterface
         $newsletter_email = null;
         $newsletter_subscribe_base_url = null;
         $newsletter_old_newsletters_url = null;
-        if ($this->currentConfig->showNewsletterSubscription() and ($this->preferencesService->getShowNewsletterSubscription() ?? true)) {
+        if ($this->currentConfig->showNewsletterSubscription and ($this->preferencesService->getShowNewsletterSubscription() ?? true)) {
             $register_date = (new UserRepository(EntityManagerFactory::build($conn), $this->eventDispatcher, $this->currentConfig))
                 ->findEarliestRegistrationDate();
             $nb_cats = $this->categoryService->countAllCategories();
@@ -222,9 +222,9 @@ final class IntroSubController implements AdminSubControllerInterface
             $du_decimals = 0;
         }
 
-        $nb_comments = $this->currentConfig->activateComments() ? $this->commentService->countAll() : 0;
+        $nb_comments = $this->currentConfig->activateComments ? $this->commentService->countAll() : 0;
 
-        if ($this->currentConfig->showPiwigoLatestNews()) {
+        if ($this->currentConfig->showPiwigoLatestNews) {
             $latest_news = self::getLatestNews($this->lang, $this->currentConfig, $this->paths);
 
             // getLatestNews() is declared to return mixed (it can come straight
@@ -263,7 +263,7 @@ final class IntroSubController implements AdminSubControllerInterface
         // |                           get activity data                           |
         // +-----------------------------------------------------------------------+
 
-        $nb_weeks = $this->currentConfig->dashboardActivityNbWeeks();
+        $nb_weeks = $this->currentConfig->dashboardActivityNbWeeks;
 
         // Count mondays
         $mondays = 0;
@@ -446,7 +446,7 @@ final class IntroSubController implements AdminSubControllerInterface
         /** @var array<string, array<string, array<string, mixed>>> $data_storage */
         $data_storage = [];
 
-        $picture_ext = $this->currentConfig->pictureExtensions();
+        $picture_ext = $this->currentConfig->pictureExtensions;
 
         // Select files in Image_Table
         $imageService = $this->imageService;
@@ -502,8 +502,8 @@ final class IntroSubController implements AdminSubControllerInterface
         }
 
         // Add cache size if requested and known.
-        if ($this->currentConfig->addCacheToStorageChart()) {
-            $cache_sizes = $this->currentConfig->cacheSizes();
+        if ($this->currentConfig->addCacheToStorageChart) {
+            $cache_sizes = $this->currentConfig->cacheSizes;
 
             if (is_array($cache_sizes)) {
                 $cache_size_zero = $cache_sizes[0] ?? null;
@@ -538,7 +538,7 @@ final class IntroSubController implements AdminSubControllerInterface
             nbPlugins: count($this->loadedPlugins->get()),
             storageUsed: str_replace(' ', '&nbsp;', $this->lang->t('%sGB', number_format($du_gb, $du_decimals))),
             uQuickSync: $this->urlService->getRootUrl() . 'admin.php?page=site_update&amp;site=1&amp;quick_sync=1&amp;pwg_token=' . new CsrfService($this->currentConfig)->getToken(),
-            checkForUpdates: $this->currentConfig->dashboardCheckForUpdates(),
+            checkForUpdates: $this->currentConfig->dashboardCheckForUpdates,
             nbComments: $nb_comments,
             activityWeekNumber: $week_number,
             activityLastWeeks: $activity_last_weeks,
@@ -584,7 +584,7 @@ final class IntroSubController implements AdminSubControllerInterface
     {
         $news = null;
 
-        $data_location = $currentConfig->dataLocation();
+        $data_location = $currentConfig->dataLocation;
         $lang_code = $lang->langInfo()['code'] ?? null;
         $lang_code = is_string($lang_code) ? $lang_code : '';
         $cache_path = $paths->root . $data_location . 'cache/piwigo_latest_news-' . $lang_code . '.cache.php';

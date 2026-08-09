@@ -168,7 +168,7 @@ final class LanguagesInstalledPageRenderer
             languages: $tpl_languages,
             isWebmaster: $this->accessControl->isWebmaster(),
             adminPageTitle: $this->lang->t('Languages'),
-            enableExtensionsInstall: $this->currentConfig->enableExtensionsInstall(),
+            enableExtensionsInstall: $this->currentConfig->enableExtensionsInstall,
         ));
 
         $template->assign_var_from_handle('ADMIN_CONTENT', 'languages');

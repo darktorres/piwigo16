@@ -79,7 +79,7 @@ final class SessionService
      */
     public function getRemoteAddrSessionHash(): string
     {
-        return self::remoteAddrHash($this->currentConfig->sessionUseIpAddress());
+        return self::remoteAddrHash($this->currentConfig->sessionUseIpAddress);
     }
 
     /**
@@ -166,7 +166,7 @@ final class SessionService
      */
     public function sessionGc(): int
     {
-        return $this->repo->gc($this->currentConfig->sessionLength());
+        return $this->repo->gc($this->currentConfig->sessionLength);
     }
 
     /**

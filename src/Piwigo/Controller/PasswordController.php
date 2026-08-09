@@ -351,7 +351,7 @@ final class PasswordController implements ControllerInterface
         if ($user_id_raw !== null) {
             $user_id = $user_id_raw;
         } else {
-            $user_id = UserId::from($this->currentConfig->guestId());
+            $user_id = UserId::from($this->currentConfig->guestId);
         }
 
         $userdata = $this->userService->getUserData($user_id);
@@ -408,7 +408,7 @@ final class PasswordController implements ControllerInterface
             'attempts' => 0,
             'user_id' => $is_user_found ? $user_id->value : null,
             'created_at' => time(),
-            'ttl' => min($this->currentConfig->passwordResetCodeDuration(), 900), // max 15 min
+            'ttl' => min($this->currentConfig->passwordResetCodeDuration, 900), // max 15 min
         ];
 
         return true;

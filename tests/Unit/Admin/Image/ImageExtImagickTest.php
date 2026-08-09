@@ -233,7 +233,7 @@ test('construct concatenates the imagickdir prefix directly onto the identify bi
     // a nonexistent path regardless of which real binary this environment
     // already resolves 'identify' to via PATH. Same convention as
     // PwgImageTest's own is_ext_imagick() "nonexistent dir" tests.
-    imageExtImagickTestCurrentConfig()->setExtImagickDir('/totally/nonexistent/dir/');
+    imageExtImagickTestCurrentConfig()->extImagickDir = '/totally/nonexistent/dir/';
 
     $path = imageExtImagickTestMarker() . '/prefix-src.jpg';
     imageExtImagickTestMakeJpeg($path, 12, 9, 5, 5, 5);
@@ -469,7 +469,7 @@ test('rotate by 270 degrees swaps width/height and queues rotate+orient commands
 
 test('set_compression_quality caps the requested quality via animatedWebpCompressionQuality for an animated webp source', function (): void {
     imageExtImagickTestSkipIfUnavailable();
-    imageExtImagickTestCurrentConfig()->setAnimatedWebpCompressionQuality(40);
+    imageExtImagickTestCurrentConfig()->animatedWebpCompressionQuality = 40;
 
     $path = imageExtImagickTestMarker() . '/animated-quality.webp';
     imageExtImagickTestMakeAnimatedWebp($path, 16, 10);

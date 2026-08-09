@@ -82,8 +82,8 @@ final class CalendarRendererTest extends IntegrationTestCase
         CurrentConfigTestFactory::get()->reset();
         ConfigLoader::applyDefaults();
         ConfigLoader::applyEnvOverrides();
-        CurrentConfigTestFactory::get()->setDataLocation('data/');
-        CurrentConfigTestFactory::get()->setDataDirChecked('1');
+        CurrentConfigTestFactory::get()->dataLocation = 'data/';
+        CurrentConfigTestFactory::get()->dataDirChecked = '1';
         LangTestFactory::get()->reset();
         TranslatorTestFactory::get()->reset();
 

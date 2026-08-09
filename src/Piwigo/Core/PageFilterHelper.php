@@ -25,7 +25,7 @@ final class PageFilterHelper
                 // guarantees this key is always set; lightweight test
                 // harnesses that build a minimal $conf by hand don't share
                 // that guarantee.
-                if ($currentConfig->phpExtensionInUrls() && StringHelper::getExtension($filename) !== 'php') {
+                if ($currentConfig->phpExtensionInUrls && StringHelper::getExtension($filename) !== 'php') {
                     continue;
                 }
                 $basename = basename($filename, '.php');
@@ -45,7 +45,7 @@ final class PageFilterHelper
 
         $page_name = self::scriptBasename($currentConfig);
 
-        $filter_pages = $currentConfig->filterPages();
+        $filter_pages = $currentConfig->filterPages;
 
         $page_filters = $filter_pages[$page_name] ?? null;
         if (isset($page_filters[$valueName])) {

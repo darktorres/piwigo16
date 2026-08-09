@@ -20,7 +20,6 @@ function pluginRepositoryTestRepo(): PluginRepository
 {
     $conn = DbConnection::build();
     $repo = EntityManagerFactory::build($conn)->getRepository(PluginEntity::class);
-    expect($repo)->toBeInstanceOf(PluginRepository::class);
 
     return $repo;
 }

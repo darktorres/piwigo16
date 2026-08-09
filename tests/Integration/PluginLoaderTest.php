@@ -170,7 +170,7 @@ final class PluginLoaderTest extends IntegrationTestCase
 
     public function test_load_plugins_stays_empty_and_skips_the_db_query_when_plugins_are_disabled(): void
     {
-        CurrentConfigTestFactory::get()->setEnablePlugins(false);
+        CurrentConfigTestFactory::get()->enablePlugins = false;
 
         PluginLoader::loadPlugins($this->loadedPlugins, new EventDispatcher(), $this->activityService, CurrentConfigTestFactory::get(), $this->wsContext(), $this->accessControl(), PageStateTestFactory::get(), CurrentPathsTestFactory::get());
 
@@ -181,7 +181,7 @@ final class PluginLoaderTest extends IntegrationTestCase
     {
         $root = $this->pluginLoaderTestMarker() . '/no-file/';
         mkdir($root . 'plugins', 0o777, true);
-        CurrentConfigTestFactory::get()->setEnablePlugins(true);
+        CurrentConfigTestFactory::get()->enablePlugins = true;
 
         DbConnection::build()->executeStatement(
             "INSERT INTO " . Tables::plugins() . " (id, state, version) VALUES ('ghost-plugin', 'active', '1.0')"
@@ -204,7 +204,7 @@ final class PluginLoaderTest extends IntegrationTestCase
             $pluginDir . '/main.inc.php',
             "<?php file_put_contents(" . var_export($marker, true) . ", 'loaded');"
         );
-        CurrentConfigTestFactory::get()->setEnablePlugins(true);
+        CurrentConfigTestFactory::get()->enablePlugins = true;
 
         DbConnection::build()->executeStatement(
             "INSERT INTO " . Tables::plugins() . " (id, state, version) VALUES ('loadable-plugin', 'active', '1.0')"
@@ -225,7 +225,7 @@ final class PluginLoaderTest extends IntegrationTestCase
         $pluginDir = $root . 'plugins/inactive-plugin';
         mkdir($pluginDir, 0o777, true);
         file_put_contents($pluginDir . '/main.inc.php', '<?php');
-        CurrentConfigTestFactory::get()->setEnablePlugins(true);
+        CurrentConfigTestFactory::get()->enablePlugins = true;
 
         DbConnection::build()->executeStatement(
             "INSERT INTO " . Tables::plugins() . " (id, state, version) VALUES ('inactive-plugin', 'inactive', '1.0')"
@@ -255,7 +255,7 @@ final class PluginLoaderTest extends IntegrationTestCase
         $errors[] = "updated from {$old_version} to {$new_version}";
     }
 PHP);
-        CurrentConfigTestFactory::get()->setEnablePlugins(true);
+        CurrentConfigTestFactory::get()->enablePlugins = true;
 
         DbConnection::build()->executeStatement(
             "INSERT INTO " . Tables::plugins() . " (id, state, version) VALUES (?, 'active', '1.0')",
@@ -312,7 +312,7 @@ PHP);
         $this->writeVersionedPluginMainFile($root, $id, '2.0');
         $this->writePluginMaintainClass($root, $id, extendsBase: false);
         $classname = str_replace('-', '_', $id . '_maintain');
-        CurrentConfigTestFactory::get()->setEnablePlugins(true);
+        CurrentConfigTestFactory::get()->enablePlugins = true;
 
         DbConnection::build()->executeStatement(
             "INSERT INTO " . Tables::plugins() . " (id, state, version) VALUES (?, 'active', '1.0')",
@@ -340,7 +340,7 @@ PHP);
         $id = 'pl-autoauto-' . bin2hex(random_bytes(4));
         $root = $this->pluginLoaderTestMarker() . '/autoupdate-auto-to-auto/';
         $this->writeVersionedPluginMainFile($root, $id, 'auto');
-        CurrentConfigTestFactory::get()->setEnablePlugins(true);
+        CurrentConfigTestFactory::get()->enablePlugins = true;
 
         DbConnection::build()->executeStatement(
             "INSERT INTO " . Tables::plugins() . " (id, state, version) VALUES (?, 'active', 'auto')",

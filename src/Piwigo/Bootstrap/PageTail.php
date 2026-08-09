@@ -248,11 +248,11 @@ final class PageTail
     private static function checkForUpdates(): void
     {
         // ----------------------------------------------- update notification
-        $update_notify_check_period = RequestBootstrap::currentConfig()->updateNotifyCheckPeriod();
+        $update_notify_check_period = RequestBootstrap::currentConfig()->updateNotifyCheckPeriod;
         if ($update_notify_check_period > 0) {
             $check_for_updates = false;
 
-            $update_notify_last_check = RequestBootstrap::currentConfig()->updateNotifyLastCheck();
+            $update_notify_last_check = RequestBootstrap::currentConfig()->updateNotifyLastCheck;
             $update_notify_last_check = is_string($update_notify_last_check) ? $update_notify_last_check : null;
 
             if ($update_notify_last_check !== null) {

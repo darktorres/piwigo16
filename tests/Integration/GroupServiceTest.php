@@ -237,7 +237,7 @@ final class GroupServiceTest extends IntegrationTestCase
             $result = $this->service->delete([GroupId::from(999999)]);
 
             self::assertSame([], $result);
-            self::assertSame('all', CurrentConfigTestFactory::get()->emailAdminOnNewUser());
+            self::assertSame('all', CurrentConfigTestFactory::get()->emailAdminOnNewUser);
         } finally {
             $this->configService->confUpdateParam('email_admin_on_new_user', 'none', true);
         }
@@ -251,7 +251,7 @@ final class GroupServiceTest extends IntegrationTestCase
             $result = $this->service->delete([GroupId::from(999999)]);
 
             self::assertSame([], $result);
-            self::assertSame('group:555555', CurrentConfigTestFactory::get()->emailAdminOnNewUser());
+            self::assertSame('group:555555', CurrentConfigTestFactory::get()->emailAdminOnNewUser);
         } finally {
             $this->configService->confUpdateParam('email_admin_on_new_user', 'none', true);
         }

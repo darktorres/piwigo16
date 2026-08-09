@@ -15,19 +15,19 @@ afterEach(function (): void {
 });
 
 test('applyDefaults is a genuine no-op -- every property already carries its own default', function (): void {
-    CurrentConfigTestFactory::get()->setGalleryTitle('Already set');
+    CurrentConfigTestFactory::get()->galleryTitle = 'Already set';
 
     ConfigLoader::applyDefaults();
 
-    expect(CurrentConfigTestFactory::get()->galleryTitle())->toBe('Already set');
+    expect(CurrentConfigTestFactory::get()->galleryTitle)->toBe('Already set');
 });
 
 test('applyEnvOverrides is a genuine no-op', function (): void {
-    CurrentConfigTestFactory::get()->setGalleryTitle('Already set');
+    CurrentConfigTestFactory::get()->galleryTitle = 'Already set';
 
     ConfigLoader::applyEnvOverrides();
 
-    expect(CurrentConfigTestFactory::get()->galleryTitle())->toBe('Already set');
+    expect(CurrentConfigTestFactory::get()->galleryTitle)->toBe('Already set');
 });
 
 test('validateRequired throws when a required key is missing', function (): void {
@@ -39,7 +39,7 @@ test('validateRequired throws when a required key is missing', function (): void
 });
 
 test('validateRequired passes when every required key is set', function (): void {
-    CurrentConfigTestFactory::get()->setSecretKey('a-real-secret');
+    CurrentConfigTestFactory::get()->secretKey = 'a-real-secret';
 
     expect(static fn () => ConfigLoader::validateRequired(CurrentConfigTestFactory::get()))->not->toThrow(Throwable::class);
 });

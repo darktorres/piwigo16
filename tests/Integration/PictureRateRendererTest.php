@@ -68,7 +68,7 @@ final class PictureRateRendererTest extends IntegrationTestCase
         $currentConfig->reset();
         ConfigLoader::applyDefaults();
         ConfigLoader::applyEnvOverrides();
-        $currentConfig->setRateEnabled(true);
+        $currentConfig->rateEnabled = true;
 
         $this->conn = DbConnection::build();
         $this->repo = EntityManagerFactory::build($this->conn)->getRepository(RateEntity::class);
@@ -152,8 +152,8 @@ final class PictureRateRendererTest extends IntegrationTestCase
         if (! $currentConfig instanceof CurrentConfig) {
             throw new LogicException('Container returned an unexpected type for ' . CurrentConfig::class);
         }
-        $currentConfig->setRateAnonymous(true);
-        $currentConfig->setGuestId(2);
+        $currentConfig->rateAnonymous = true;
+        $currentConfig->guestId = 2;
         $_SERVER['REMOTE_ADDR'] = '203.0.113.42';
 
         // guestId (2) voted 5, keyed by the trimmed (3-octet) IP prefix --
@@ -187,7 +187,7 @@ final class PictureRateRendererTest extends IntegrationTestCase
         if (! $currentConfig instanceof CurrentConfig) {
             throw new LogicException('Container returned an unexpected type for ' . CurrentConfig::class);
         }
-        $currentConfig->setRateAnonymous(true);
+        $currentConfig->rateAnonymous = true;
         // rating_score=0.0 is still a real, non-null score (the `!== null`
         // guard doesn't treat 0.0 as absent) -- findRateSummaryForElement()
         // still runs its real COUNT/AVG query, just against zero matching

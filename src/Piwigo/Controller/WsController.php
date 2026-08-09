@@ -54,7 +54,7 @@ final class WsController implements ControllerInterface
     {
         $this->accessControl->checkStatus(AccessLevel::Free);
 
-        if (! $this->currentConfig->allowWebServices()) {
+        if (! $this->currentConfig->allowWebServices) {
             $this->htmlService
                 ->pageForbidden($this->redirectService, 'Web services are disabled');
         }

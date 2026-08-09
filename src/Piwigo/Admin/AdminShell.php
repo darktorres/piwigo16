@@ -129,7 +129,7 @@ final class AdminShell
         // | Filesystem checks                                                 |
         // +-------------------------------------------------------------------+
 
-        if ($this->currentConfig->fsQuickCheckPeriod() > 0) {
+        if ($this->currentConfig->fsQuickCheckPeriod > 0) {
             $perform_fsqc = false;
 
             // Real invariant: fs_quick_check_last_check is only written (as an ISO
@@ -137,10 +137,10 @@ final class AdminShell
             // least once — on a fresh install it's genuinely still null, so this
             // is a real "has it ever run" guard, not just type-narrowing
             // boilerplate.
-            $fs_quick_check_last_check = $this->currentConfig->fsQuickCheckLastCheck();
+            $fs_quick_check_last_check = $this->currentConfig->fsQuickCheckLastCheck;
 
             if ($fs_quick_check_last_check !== null) {
-                $fs_quick_check_period = $this->currentConfig->fsQuickCheckPeriod();
+                $fs_quick_check_period = $this->currentConfig->fsQuickCheckPeriod;
                 if (strtotime($fs_quick_check_last_check) < strtotime($fs_quick_check_period . ' seconds ago')) {
                     $perform_fsqc = true;
                 }
@@ -166,7 +166,7 @@ final class AdminShell
         // theme changer
         if ($adminShellRequest->changeThemePresent) {
             $admin_themes = ['roma', 'clear'];
-            $admin_theme_param = $this->preferencesService->getAdminThemePref() ?? $this->currentConfig->adminTheme();
+            $admin_theme_param = $this->preferencesService->getAdminThemePref() ?? $this->currentConfig->adminTheme;
             $admin_theme_array = [$admin_theme_param];
             $result = array_diff(
                 $admin_themes,
@@ -286,13 +286,13 @@ final class AdminShell
         ]);
 
         $u_updates = null;
-        if ($this->currentConfig->enableCoreUpdate()) {
+        if ($this->currentConfig->enableCoreUpdate) {
             $u_updates = $link_start . 'updates';
         }
 
         $u_comments = null;
         $nb_pending_comments = null;
-        if ($this->currentConfig->activateComments()) {
+        if ($this->currentConfig->activateComments) {
             $u_comments = $link_start . 'comments';
 
             // pending comments
@@ -394,7 +394,7 @@ final class AdminShell
             // exact-equal case on its own terms: an account created at the
             // same moment as the major-update stamp has no earlier state to
             // be notified about.
-            if ($this->currentUser->get()->rawAttributes['registration_date'] >= $this->currentConfig->lastMajorUpdate()) {
+            if ($this->currentUser->get()->rawAttributes['registration_date'] >= $this->currentConfig->lastMajorUpdate) {
                 $this->preferencesService
                     ->updateParam('show_whats_new_' . $whats_new_major_version, false);
             } else {
@@ -431,7 +431,7 @@ final class AdminShell
         // a DB NOW() string (see the `\Piwigo\Config\CurrentConfig::lastMajorUpdate() === null`
         // block there) before this shell runs.
         $display_bell = false;
-        $last_major_update = $this->currentConfig->lastMajorUpdate();
+        $last_major_update = $this->currentConfig->lastMajorUpdate;
         if (is_string($last_major_update) and strtotime($last_major_update) > strtotime('1 month ago')) {
             $display_bell = true;
         }
@@ -439,7 +439,7 @@ final class AdminShell
         $template->assignContext(new AdminShellFramePageContext(
             username: $this->currentUser->get()
                 ->username?->value,
-            enableSynchronization: $this->currentConfig->enableSynchronization(),
+            enableSynchronization: $this->currentConfig->enableSynchronization,
             uSiteManager: $link_start . 'site_manager',
             uHistoryStat: $link_start . 'stats&amp;year=' . date('Y') . '&amp;month=' . date('n'),
             uFaq: $link_start . 'help',
@@ -469,8 +469,8 @@ final class AdminShell
             uChangeTheme: $change_theme_url,
             adminPageTitle: 'Piwigo Administration Page',
             adminPageObjectId: '',
-            uShowTemplateTab: $this->currentConfig->showTemplateInSideMenu(),
-            showRating: $this->currentConfig->rateEnabled(),
+            uShowTemplateTab: $this->currentConfig->showTemplateInSideMenu,
+            showRating: $this->currentConfig->rateEnabled,
             uUpdates: $u_updates,
             uComments: $u_comments,
             nbPendingComments: $nb_pending_comments,

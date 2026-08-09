@@ -114,9 +114,9 @@ test('c13y_exif adds no anomaly when exif_read_data() is available', function ()
 // in this environment.
 
 afterEach(function (): void {
-    CurrentConfigTestFactory::get()->setGuestId(2);
-    CurrentConfigTestFactory::get()->setDefaultUserId(2);
-    CurrentConfigTestFactory::get()->setWebmasterId(1);
+    CurrentConfigTestFactory::get()->guestId = 2;
+    CurrentConfigTestFactory::get()->defaultUserId = 2;
+    CurrentConfigTestFactory::get()->webmasterId = 1;
 });
 
 test('c13y_user flags a configured webmaster_id that has no matching user row, and c13y_correction_user creates it', function (): void {
@@ -124,9 +124,9 @@ test('c13y_user flags a configured webmaster_id that has no matching user row, a
     // 'guest' user genuinely exists at id 2), so only the webmaster_id slot
     // is deliberately pointed at a nonexistent id -- isolates the
     // "non_existent" anomaly branch without touching any real fixture row.
-    CurrentConfigTestFactory::get()->setGuestId(2);
-    CurrentConfigTestFactory::get()->setDefaultUserId(2);
-    CurrentConfigTestFactory::get()->setWebmasterId(999999);
+    CurrentConfigTestFactory::get()->guestId = 2;
+    CurrentConfigTestFactory::get()->defaultUserId = 2;
+    CurrentConfigTestFactory::get()->webmasterId = 999999;
 
     $c13y = c13yInternalTestCheckIntegrity();
     new C13yInternal(LangTestFactory::get(), c13yInternalTestSessionService(), EventDispatcherTestFactory::get(), PageStateTestFactory::get(), c13yInternalTestUserService(), CurrentConfigTestFactory::get())->c13y_user(new ListCheckIntegrity($c13y));
@@ -155,9 +155,9 @@ test('c13y_user flags a configured webmaster_id that has no matching user row, a
 });
 
 test('c13y_user flags a real user whose status does not match the expected one, and c13y_correction_user fixes it', function (): void {
-    CurrentConfigTestFactory::get()->setGuestId(2);
-    CurrentConfigTestFactory::get()->setDefaultUserId(2);
-    CurrentConfigTestFactory::get()->setWebmasterId(1);
+    CurrentConfigTestFactory::get()->guestId = 2;
+    CurrentConfigTestFactory::get()->defaultUserId = 2;
+    CurrentConfigTestFactory::get()->webmasterId = 1;
 
     $conn = DbConnection::build();
     $originalStatus = $conn->fetchOne('SELECT status FROM ' . Tables::userInfos() . ' WHERE user_id = 1');
@@ -209,9 +209,9 @@ test('c13y_user flags a configured default_user_id distinct from guest_id that h
     // building the default_user_id slot of $c13y_users never actually ran.
     // This is the one test that diverges them, isolating that branch the
     // same way the existing webmaster test isolates its own slot.
-    CurrentConfigTestFactory::get()->setGuestId(2);
-    CurrentConfigTestFactory::get()->setDefaultUserId(999995);
-    CurrentConfigTestFactory::get()->setWebmasterId(1);
+    CurrentConfigTestFactory::get()->guestId = 2;
+    CurrentConfigTestFactory::get()->defaultUserId = 999995;
+    CurrentConfigTestFactory::get()->webmasterId = 1;
 
     $c13y = c13yInternalTestCheckIntegrity();
     new C13yInternal(LangTestFactory::get(), c13yInternalTestSessionService(), EventDispatcherTestFactory::get(), PageStateTestFactory::get(), c13yInternalTestUserService(), CurrentConfigTestFactory::get())->c13y_user(new ListCheckIntegrity($c13y));
@@ -230,9 +230,9 @@ test('c13y_correction_user creates the guest_id slot for a "creation" action, re
     // retry with a generated suffix instead of succeeding on its first
     // pass, covering both the `$id === $guest_id` branch and the
     // rename-on-collision line inside the loop.
-    CurrentConfigTestFactory::get()->setGuestId(999997);
-    CurrentConfigTestFactory::get()->setDefaultUserId(2);
-    CurrentConfigTestFactory::get()->setWebmasterId(1);
+    CurrentConfigTestFactory::get()->guestId = 999997;
+    CurrentConfigTestFactory::get()->defaultUserId = 2;
+    CurrentConfigTestFactory::get()->webmasterId = 1;
 
     $conn = DbConnection::build();
     try {
@@ -252,9 +252,9 @@ test('c13y_correction_user creates the guest_id slot for a "creation" action, re
 });
 
 test('c13y_correction_user creates the default_user_id slot for a "creation" action', function (): void {
-    CurrentConfigTestFactory::get()->setGuestId(2);
-    CurrentConfigTestFactory::get()->setDefaultUserId(999996);
-    CurrentConfigTestFactory::get()->setWebmasterId(1);
+    CurrentConfigTestFactory::get()->guestId = 2;
+    CurrentConfigTestFactory::get()->defaultUserId = 999996;
+    CurrentConfigTestFactory::get()->webmasterId = 1;
 
     $conn = DbConnection::build();
     try {
@@ -275,9 +275,9 @@ test('c13y_correction_user sets a real user\'s status to "guest" when its id mat
     // the stand-in guest_id slot to drive the `$id === $guest_id` branch of
     // the 'status' action -- the same "hijack CurrentConfig, act on a real
     // row" technique the existing webmaster-status test above uses for id 1.
-    CurrentConfigTestFactory::get()->setGuestId(3);
-    CurrentConfigTestFactory::get()->setDefaultUserId(2);
-    CurrentConfigTestFactory::get()->setWebmasterId(1);
+    CurrentConfigTestFactory::get()->guestId = 3;
+    CurrentConfigTestFactory::get()->defaultUserId = 2;
+    CurrentConfigTestFactory::get()->webmasterId = 1;
 
     $conn = DbConnection::build();
     $originalStatus = $conn->fetchOne('SELECT status FROM ' . Tables::userInfos() . ' WHERE user_id = 3');
@@ -299,9 +299,9 @@ test('c13y_correction_user sets a real user\'s status to "guest" when its id mat
 });
 
 test('c13y_correction_user sets a real user\'s status to "guest" when its id matches the configured default_user_id', function (): void {
-    CurrentConfigTestFactory::get()->setGuestId(2);
-    CurrentConfigTestFactory::get()->setDefaultUserId(4);
-    CurrentConfigTestFactory::get()->setWebmasterId(1);
+    CurrentConfigTestFactory::get()->guestId = 2;
+    CurrentConfigTestFactory::get()->defaultUserId = 4;
+    CurrentConfigTestFactory::get()->webmasterId = 1;
 
     $conn = DbConnection::build();
     $originalStatus = $conn->fetchOne('SELECT status FROM ' . Tables::userInfos() . ' WHERE user_id = 4');

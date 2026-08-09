@@ -40,8 +40,8 @@ final class PictureMetadataRenderer
 
         $metadata = null;
 
-        if (($currentConfig->showExif()) and function_exists('exif_read_data')) {
-            $showExifFields = $currentConfig->showExifFields();
+        if (($currentConfig->showExif) and function_exists('exif_read_data')) {
+            $showExifFields = $currentConfig->showExifFields;
 
             $exifMapping = [];
             foreach ($showExifFields as $field) {
@@ -80,8 +80,8 @@ final class PictureMetadataRenderer
             }
         }
 
-        if ($currentConfig->showIptc()) {
-            $showIptcMapping = $currentConfig->showIptcMapping();
+        if ($currentConfig->showIptc) {
+            $showIptcMapping = $currentConfig->showIptcMapping;
 
             $iptc = $metadataService->getIptcData($picture['current']['src_image']->get_path(), $showIptcMapping, ', ');
 

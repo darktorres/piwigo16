@@ -152,7 +152,7 @@ final readonly class CategoryCatsRenderer
 
         $totalCategories = count($filtered);
 
-        $nbCategoriesPage = $this->currentConfig->nbCategoriesPage();
+        $nbCategoriesPage = $this->currentConfig->nbCategoriesPage;
 
         $pageRows = array_slice($filtered, $startcat, $nbCategoriesPage);
 
@@ -207,7 +207,7 @@ final readonly class CategoryCatsRenderer
                 $imageId = $cachedRepresentative;
             } elseif ($representativePictureIdSet) { // if a representative picture is set, it has priority
                 $imageId = $representativePictureId;
-            } elseif ($this->currentConfig->allowRandomRepresentative()) { // searching a random representant among elements in sub-categories
+            } elseif ($this->currentConfig->allowRandomRepresentative) { // searching a random representant among elements in sub-categories
                 $imageId = $categoryService->getRandomImageInCategory(new RandomImageCategoryQuery(
                     id: CategoryId::from($catId),
                     uppercats: $merged['uppercats'],
@@ -231,7 +231,7 @@ final readonly class CategoryCatsRenderer
             }
 
             if (isset($imageId)) {
-                if ($this->currentConfig->representativeCacheOnSubcats() and $cachedRepresentative !== $imageId) {
+                if ($this->currentConfig->representativeCacheOnSubcats and $cachedRepresentative !== $imageId) {
                     $userRepresentativeUpdatesFor[$catId] = $imageId;
                 }
 
@@ -251,7 +251,7 @@ final readonly class CategoryCatsRenderer
             unset($imageId);
         }
 
-        if ($this->currentConfig->displayFromto()) {
+        if ($this->currentConfig->displayFromto) {
             if (count($categoryIds) > 0) {
                 $datesOfCategory = $this->categoryRepo->findDateRangeByCategory($categoryIds, $this->permissionService->getPermissionCriteria());
             }
@@ -306,7 +306,7 @@ final readonly class CategoryCatsRenderer
                                 $newImageIds[] = $newImageId;
                             }
 
-                            if ($this->currentConfig->representativeCacheOnLevel()) {
+                            if ($this->currentConfig->representativeCacheOnLevel) {
                                 $userRepresentativeUpdatesFor[$category['id']] = $newImageId;
                             }
 
@@ -401,7 +401,7 @@ final readonly class CategoryCatsRenderer
                     'DESCRIPTION' => $literalDescriptionEvent->description,
                     'NAME' => $name,
                 ]);
-                if ($this->currentConfig->indexNewIcon()) {
+                if ($this->currentConfig->indexNewIcon) {
                     $categoryMaxDateLast = $category['max_date_last'];
                     $categoryMaxDateLast = is_string($categoryMaxDateLast) ? $categoryMaxDateLast : '';
                     $categoryIsChildDateLast = $category['is_child_date_last'];
@@ -410,7 +410,7 @@ final readonly class CategoryCatsRenderer
                     $tplVar['icon_ts'] = RecentIconResolver::getIcon($categoryMaxDateLast, $recentPeriodForIcon, $this->processCache, $this->lang, $categoryIsChildDateLast);
                 }
 
-                if ($this->currentConfig->displayFromto()) {
+                if ($this->currentConfig->displayFromto) {
                     $categoryIdKey = $category['id'];
                     $categoryIdKey = (is_string($categoryIdKey) or is_int($categoryIdKey)) ? $categoryIdKey : 0;
                     if (isset($datesOfCategory[$categoryIdKey])) {
@@ -434,7 +434,7 @@ final readonly class CategoryCatsRenderer
             $tplThumbnailsVarSelection = $this->eventDispatcher->dispatchChange(new LocEndIndexCategoryThumbnails($tplThumbnailsVarSelection))
                 ->tplThumbnailsVar;
             $template->assignContext(new CategoryCatsPageContext(
-                maxRequests: $this->currentConfig->maxRequests(),
+                maxRequests: $this->currentConfig->maxRequests,
                 categoryThumbnails: $tplThumbnailsVarSelection,
                 derivativeParams: $derivativeParams,
             ));

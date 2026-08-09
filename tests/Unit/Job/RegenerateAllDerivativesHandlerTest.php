@@ -34,8 +34,8 @@ beforeEach(function (): void {
     $root = sys_get_temp_dir() . '/piwigo-regen-handler-test-' . bin2hex(random_bytes(8));
     mkdir($root, 0o777, true);
     Kernel::boot(Paths::fromRoot($root));
-    CurrentConfigTestFactory::get()->setDataLocation('data/');
-    mkdir(CurrentPathsTestFactory::get()->root . CurrentConfigTestFactory::get()->derivativeDir(), 0o777, true);
+    CurrentConfigTestFactory::get()->dataLocation = 'data/';
+    mkdir(CurrentPathsTestFactory::get()->root . CurrentConfigTestFactory::get()->derivativeDir, 0o777, true);
 });
 
 afterEach(function (): void {
@@ -45,7 +45,7 @@ afterEach(function (): void {
 });
 
 test('__invoke delegates to DerivativeCacheService::clearDerivativeCache with the job types', function (): void {
-    $derivDir = CurrentPathsTestFactory::get()->root . CurrentConfigTestFactory::get()->derivativeDir() . '2026';
+    $derivDir = CurrentPathsTestFactory::get()->root . CurrentConfigTestFactory::get()->derivativeDir . '2026';
     mkdir($derivDir, 0o777, true);
     file_put_contents($derivDir . '/photo-th.jpg', 'x');
     file_put_contents($derivDir . '/photo-sq.jpg', 'x');

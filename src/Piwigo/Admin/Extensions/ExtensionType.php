@@ -44,9 +44,9 @@ enum ExtensionType: string
     public function pemCategoryId(CurrentConfig $currentConfig): int
     {
         return match ($this) {
-            self::Plugin => $currentConfig->pemPluginsCategory(),
-            self::Theme => $currentConfig->pemThemesCategory(),
-            self::Language => $currentConfig->pemLanguagesCategory(),
+            self::Plugin => $currentConfig->pemPluginsCategory,
+            self::Theme => $currentConfig->pemThemesCategory,
+            self::Language => $currentConfig->pemLanguagesCategory,
         };
     }
 
@@ -70,7 +70,7 @@ enum ExtensionType: string
     {
         return match ($this) {
             self::Plugin => PluginLoader::pluginsPath($paths),
-            self::Theme => $currentConfig->themesPath(),
+            self::Theme => $currentConfig->themesPath,
             self::Language => $paths->root . 'language/',
         };
     }

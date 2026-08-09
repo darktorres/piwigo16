@@ -81,7 +81,7 @@ final class MenubarRenderer
         $menu = new BlockManager('menubar', $eventDispatcher, $currentTemplate, $currentConfig);
 
         // if guest_access is disabled, we only display the menus if the user is identified
-        if ($currentConfig->guestAccess() or ! $accessLevelChecker->isAGuest()) {
+        if ($currentConfig->guestAccess or ! $accessLevelChecker->isAGuest()) {
             $menu->load_registered_blocks();
         }
         $menu->prepare_display();
@@ -94,9 +94,9 @@ final class MenubarRenderer
         }
 
         // --------------------------------------------------------------- external links
-        if ((bool) ($block = $menu->get_block('mbLinks')) and ! self::emptyValue($currentConfig->links())) {
+        if ((bool) ($block = $menu->get_block('mbLinks')) and ! self::emptyValue($currentConfig->links)) {
             $block->data = [];
-            foreach ($currentConfig->links() as $url => $url_data) {
+            foreach ($currentConfig->links as $url => $url_data) {
                 if (! is_array($url_data)) {
                     $url_data = [
                         'label' => $url_data,
@@ -133,7 +133,7 @@ final class MenubarRenderer
         // ------------------------------------------------------------------------ filter
         $u_stop_filter = null;
         $u_start_filter = null;
-        if ($currentConfig->menubarFilterIcon() and ! self::emptyValue($currentConfig->filterPages()) and (bool) PageFilterHelper::getFilterPageValue($currentConfig, 'used')) {
+        if ($currentConfig->menubarFilterIcon and ! self::emptyValue($currentConfig->filterPages) and (bool) PageFilterHelper::getFilterPageValue($currentConfig, 'used')) {
             if ($filterState->isEnabled()) {
                 $u_stop_filter = $urlService->addUrlParams($urlService->makeIndexUrl([]), [
                     'filter' => 'stop',
@@ -171,7 +171,7 @@ final class MenubarRenderer
         if (
             $section_context !== null
             and is_array($page_items)
-            and count($page_items) < $currentConfig->relatedAlbumsMaximumItemsToCompute()
+            and count($page_items) < $currentConfig->relatedAlbumsMaximumItemsToCompute
             and $block !== null
             and $page_items !== []
         ) {
@@ -208,7 +208,7 @@ final class MenubarRenderer
             $block->data = [];
             $tags = $tagService->getAvailableTags();
             usort($tags, $tagService->tagsCounterCompare(...));
-            $tag_cloud_items_number = $currentConfig->menubarTagCloudItemsNumber();
+            $tag_cloud_items_number = $currentConfig->menubarTagCloudItemsNumber;
             $tags = array_slice($tags, 0, $tag_cloud_items_number);
             foreach ($tags as $tag) {
                 $block->data[] = array_merge(
@@ -249,7 +249,7 @@ final class MenubarRenderer
                   'NAME' => $lang->t('Most visited'),
               ];
 
-            if ($currentConfig->rateEnabled()) {
+            if ($currentConfig->rateEnabled) {
                 $block->data['best_rated'] =
                  [
                      'URL' => $urlService->makeIndexUrl([
@@ -290,7 +290,7 @@ final class MenubarRenderer
               [
                   'URL' => $urlService->makeIndexUrl(
                       [
-                          'chronology_field' => ($currentConfig->calendarDatefield() === 'date_available'
+                          'chronology_field' => ($currentConfig->calendarDatefield === 'date_available'
                                                   ? 'posted' : 'created'),
                           'chronology_style' => 'monthly',
                           'chronology_view' => 'calendar',
@@ -328,7 +328,7 @@ final class MenubarRenderer
                   'REL' => 'rel="search"',
               ];
 
-            if ($currentConfig->activateComments()) {
+            if ($currentConfig->activateComments) {
                 // comments link
                 $block->data['comments'] =
                   [
@@ -371,8 +371,8 @@ final class MenubarRenderer
         if ($accessLevelChecker->isAGuest()) {
             $u_login = $urlService->getRootUrl() . 'identification.php';
             $u_lost_password = $urlService->getRootUrl() . 'password.php';
-            $authorize_remembering = $currentConfig->authorizeRemembering();
-            if ($currentConfig->allowUserRegistration()) {
+            $authorize_remembering = $currentConfig->authorizeRemembering;
+            if ($currentConfig->allowUserRegistration) {
                 $u_register = $urlService->getRootUrl() . 'register.php';
             }
         } else {

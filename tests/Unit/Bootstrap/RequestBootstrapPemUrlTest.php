@@ -26,7 +26,7 @@ test('pemUrl returns the alternative PEM URL when one is configured', function (
     if (! $currentConfig instanceof CurrentConfig) {
         throw new LogicException('Container returned an unexpected type for ' . CurrentConfig::class);
     }
-    $currentConfig->setAlternativePemUrl('https://pem.example.test/mirror');
+    $currentConfig->alternativePemUrl = 'https://pem.example.test/mirror';
 
     expect(RequestBootstrap::pemUrl())->toBe('https://pem.example.test/mirror');
 });
@@ -37,7 +37,7 @@ test('pemUrl falls back to AppInfo::URL . "/ext" when no alternative is configur
     if (! $currentConfig instanceof CurrentConfig) {
         throw new LogicException('Container returned an unexpected type for ' . CurrentConfig::class);
     }
-    $currentConfig->setAlternativePemUrl('');
+    $currentConfig->alternativePemUrl = '';
 
     expect(RequestBootstrap::pemUrl())->toBe(AppInfo::URL . '/ext');
 });

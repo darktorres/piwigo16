@@ -97,7 +97,7 @@ final class ProfileFormHandler
         // for reuse below.
         $user_id = is_numeric($userdata['id']) ? (int) $userdata['id'] : 0;
 
-        $special_user = in_array($userdata['id'], [$this->currentConfig->guestId(), $this->currentConfig->defaultUserId()], true);
+        $special_user = in_array($userdata['id'], [$this->currentConfig->guestId, $this->currentConfig->defaultUserId], true);
         if ($special_user) {
             unset(
                 $post['username'],
@@ -116,7 +116,7 @@ final class ProfileFormHandler
             unset($post['username']);
         }
 
-        if ($this->currentConfig->allowUserCustomization() or $this->adminContext->isActive()) {
+        if ($this->currentConfig->allowUserCustomization or $this->adminContext->isActive()) {
             $int_pattern = '/^\d+$/';
             // $_POST values are always strings or arrays -- never a real
             // PHP int/float/bool -- so only the null/string/array-emptiness
@@ -232,7 +232,7 @@ final class ProfileFormHandler
                                 $this->lang->buildArgs('Your username has been successfully changed to : %s', $username),
                             ];
 
-                            $gallery_title = $this->currentConfig->galleryTitle();
+                            $gallery_title = $this->currentConfig->galleryTitle;
                             $this->mailService
                                 ->mail(
                                     $mail_address,
@@ -258,14 +258,14 @@ final class ProfileFormHandler
                 $activity_details_tables[] = 'users';
             }
 
-            if ($this->currentConfig->allowUserCustomization() or $this->adminContext->isActive()) {
+            if ($this->currentConfig->allowUserCustomization or $this->adminContext->isActive()) {
                 // update user "additional" informations (specific to Piwigo)
                 $fields = [
                     'nb_image_page', 'language',
                     'expand', 'show_nb_hits', 'recent_period', 'theme',
                 ];
 
-                if ($this->currentConfig->activateComments()) {
+                if ($this->currentConfig->activateComments) {
                     $fields[] = 'show_nb_comments';
                 }
 
@@ -343,7 +343,7 @@ final class ProfileFormHandler
             $language_options[$language_code] = $language_name;
         }
 
-        $special_user = in_array($userdata['id'], [$this->currentConfig->guestId(), $this->currentConfig->defaultUserId()], true);
+        $special_user = in_array($userdata['id'], [$this->currentConfig->guestId, $this->currentConfig->defaultUserId], true);
 
         // api key expiration choice
         $conn = DbConnection::build();
@@ -353,7 +353,7 @@ final class ProfileFormHandler
 
         $display_duration = [];
         $has_custom = false;
-        $api_key_duration = $this->currentConfig->apiKeyDuration();
+        $api_key_duration = $this->currentConfig->apiKeyDuration;
         $duration_days = [];
         foreach ($api_key_duration as $day) {
             if ($day === 'custom') {
@@ -386,8 +386,8 @@ final class ProfileFormHandler
             templatePrefixe: $template_prefixe ?? '',
             username: stripslashes(is_string($userdata['username']) ? $userdata['username'] : ''),
             email: @$userdata['email'],
-            allowUserCustomization: $this->currentConfig->allowUserCustomization(),
-            activateComments: $this->currentConfig->activateComments(),
+            allowUserCustomization: $this->currentConfig->allowUserCustomization,
+            activateComments: $this->currentConfig->activateComments,
             nbImagePage: $userdata['nb_image_page'],
             recentPeriod: $userdata['recent_period'],
             expand: (bool) $userdata['expand'] ? 'true' : 'false',

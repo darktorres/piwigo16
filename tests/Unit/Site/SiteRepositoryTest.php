@@ -57,7 +57,6 @@ use Piwigo\Tests\Support\CurrentPathsTestFactory;
 function siteTestRepo(): SiteRepository
 {
     $repo = EntityManagerFactory::build(DbConnection::build())->getRepository(SiteEntity::class);
-    expect($repo)->toBeInstanceOf(SiteRepository::class);
 
     return $repo;
 }

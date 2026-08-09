@@ -85,7 +85,7 @@ final readonly class CoreUpdateService
         $url = AppInfo::URL . '/download/all_versions.php';
         $url .= '?rand=' . md5(uniqid((string) mt_rand(), true));
         $url .= $env === 'Official' ? '&docker' : '&show_requirements';
-        $secretKeyRaw = $this->currentConfig->secretKey();
+        $secretKeyRaw = $this->currentConfig->secretKey;
         $secretKey = $secretKeyRaw;
         $url .= '&origin_hash=' . sha1($secretKey . $this->urlService->getAbsoluteRootUrl());
 
@@ -181,7 +181,7 @@ final readonly class CoreUpdateService
         }
 
         $notify = false;
-        $lastNotificationSetting = $this->currentConfig->updateNotifyLastNotification();
+        $lastNotificationSetting = $this->currentConfig->updateNotifyLastNotification;
         if ($lastNotificationSetting === null) {
             $notify = true;
         } else {
@@ -189,7 +189,7 @@ final readonly class CoreUpdateService
             $lastNotification = $lastNotificationData['notified_on'] ?? null;
             $lastNotificationVersion = $lastNotificationData['version'] ?? null;
 
-            $reminderPeriodRaw = $this->currentConfig->updateNotifyReminderPeriod();
+            $reminderPeriodRaw = $this->currentConfig->updateNotifyReminderPeriod;
             $reminderPeriod = $reminderPeriodRaw;
 
             if ($newVersionsString !== $lastNotificationVersion) {
@@ -250,7 +250,7 @@ final readonly class CoreUpdateService
     {
         $template = $this->currentTemplate->get();
 
-        $dataLocationRaw = $this->currentConfig->dataLocation();
+        $dataLocationRaw = $this->currentConfig->dataLocation;
         $dataLocation = $dataLocationRaw;
 
         if ($checkCurrentVersion and ! version_compare($upgradeTo, AppInfo::VERSION, '>')) {

@@ -140,11 +140,11 @@ final class UserBootstrap
             $paths,
         );
 
-        $guest_id_int = RequestBootstrap::currentConfig()->guestId();
+        $guest_id_int = RequestBootstrap::currentConfig()->guestId;
 
         // by default we start with guest
         $user = [];
-        $user['id'] = RequestBootstrap::currentConfig()->guestId();
+        $user['id'] = RequestBootstrap::currentConfig()->guestId;
 
         $session_cookie_name = session_name();
         $session_cookie_name = is_string($session_cookie_name) ? $session_cookie_name : '';
@@ -287,7 +287,7 @@ final class UserBootstrap
         // own docblock for why isInitialized() can't substitute.
         $currentUser->markRealUserResolved();
 
-        if (RequestBootstrap::currentConfig()->browserLanguage() and ($this->accessLevelChecker->isAGuest() or $this->accessLevelChecker->isGeneric()) and (bool) ($language = $userService->getBrowserLanguage())) {
+        if (RequestBootstrap::currentConfig()->browserLanguage and ($this->accessLevelChecker->isAGuest() or $this->accessLevelChecker->isGeneric()) and (bool) ($language = $userService->getBrowserLanguage())) {
             $user['language'] = $language;
             $currentUser->updateLanguage(LangCode::from($language));
         }

@@ -501,7 +501,7 @@ final class CategoryRepository
         $qb->orderBy(str_ireplace(
             'RAND()',
             SqlDialect::randomFunction() . '()',
-            str_replace('ORDER BY ', '', $this->currentConfig->orderBy())
+            str_replace('ORDER BY ', '', $this->currentConfig->orderBy)
         ));
 
         $ids = $qb->executeQuery()
@@ -527,11 +527,11 @@ final class CategoryRepository
      */
     private function resolveDqlOrderBy(string $imageAlias, ?string $imageCategoryAlias): ?array
     {
-        if ($this->currentConfig->orderByCustom() !== null) {
+        if ($this->currentConfig->orderByCustom !== null) {
             return null;
         }
 
-        return PhotoSortField::resolveDqlOrderBy($this->currentConfig->orderBy(), $imageAlias, $imageCategoryAlias);
+        return PhotoSortField::resolveDqlOrderBy($this->currentConfig->orderBy, $imageAlias, $imageCategoryAlias);
     }
 
     /**

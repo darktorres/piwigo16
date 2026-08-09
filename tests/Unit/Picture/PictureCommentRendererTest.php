@@ -65,8 +65,8 @@ function makePictureCommentTestTemplate(): Template
     $root = sys_get_temp_dir() . '/piwigo-picture-comment-test-' . bin2hex(random_bytes(8));
     mkdir($root, 0o777, true);
     Kernel::boot(Paths::fromRoot($root));
-    CurrentConfigTestFactory::get()->setDataLocation('data/');
-    CurrentConfigTestFactory::get()->setDataDirChecked('1');
+    CurrentConfigTestFactory::get()->dataLocation = 'data/';
+    CurrentConfigTestFactory::get()->dataDirChecked = '1';
 
     return TemplateTestFactory::build();
 }
@@ -183,7 +183,7 @@ test('render only counts the first commentable related category then stops (`bre
         status: UserStatus::Guest,
         enabledHigh: false,
     ));
-    CurrentConfigTestFactory::get()->setCommentsForall(false);
+    CurrentConfigTestFactory::get()->commentsForall = false;
     $_POST['content'] = 'nice photo!';
     $renderer = new PictureCommentRenderer();
 
@@ -248,7 +248,7 @@ test('render rejects a posted comment as "Session expired" for a guest when comm
         status: UserStatus::Guest,
         enabledHigh: false,
     ));
-    CurrentConfigTestFactory::get()->setCommentsForall(false);
+    CurrentConfigTestFactory::get()->commentsForall = false;
     $_POST['content'] = 'nice photo!';
     $renderer = new PictureCommentRenderer();
 
@@ -280,7 +280,7 @@ test('render lets a guest post a comment when comments_forall is on', function (
         status: UserStatus::Guest,
         enabledHigh: false,
     ));
-    CurrentConfigTestFactory::get()->setCommentsForall(true);
+    CurrentConfigTestFactory::get()->commentsForall = true;
     // No $_POST['content'] set -- verifies the guest-reject guard itself
     // is what's gated on comments_forall, not that render() is unusable
     // for a guest altogether (the real insertComment() path needs a DB
@@ -320,7 +320,7 @@ test('render does not reject a logged-in (non-guest) user\'s posted comment even
     // Live-verified: mutating line 97's `and` to `or` makes this exact
     // scenario throw ResponseReadyException("Session expired") instead of
     // completing, confirming this test distinguishes the two operators.
-    CurrentConfigTestFactory::get()->setCommentsForall(false);
+    CurrentConfigTestFactory::get()->commentsForall = false;
     $_POST['content'] = 'nice photo!';
     file_put_contents(CurrentPathsTestFactory::get()->root . '/comment_list.tpl', 'STATIC-COMMENT-LIST-CONTENT');
     CurrentTemplate::current()->get()->set_template_dir(CurrentPathsTestFactory::get()->root);

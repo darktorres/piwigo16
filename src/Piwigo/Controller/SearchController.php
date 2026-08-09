@@ -73,7 +73,7 @@ final class SearchController implements ControllerInterface
         ];
 
         // list of filters in user preferences
-        $filters_views = $this->currentConfig->filtersViews() ?? $this->currentConfig->defaultFiltersViews();
+        $filters_views = $this->currentConfig->filtersViews ?? $this->currentConfig->defaultFiltersViews;
 
         // change the name of the keys so that they can be used with this
         // part of the program

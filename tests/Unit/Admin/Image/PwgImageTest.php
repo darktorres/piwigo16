@@ -1176,17 +1176,17 @@ test('is_ext_imagick returns false when the configured binary directory has no r
     // and PwgImage's internal resolve both reach the same real,
     // container-shared instance.
     Kernel::boot(Paths::fromRoot(sys_get_temp_dir()));
-    $original = CurrentConfigTestFactory::get()->extImagickDir();
+    $original = CurrentConfigTestFactory::get()->extImagickDir;
     // Concatenated adjacent to the (memoized, real) command name via
     // escapeshellarg() -- see get_ext_imagick_command()'s own [SEC-16]
     // comment -- so this genuinely points `exec()` at a nonexistent path
     // regardless of which real binary this environment already resolved.
-    CurrentConfigTestFactory::get()->setExtImagickDir('/totally/nonexistent/dir/');
+    CurrentConfigTestFactory::get()->extImagickDir = '/totally/nonexistent/dir/';
 
     try {
         expect(PwgImage::is_ext_imagick())->toBeFalse();
     } finally {
-        CurrentConfigTestFactory::get()->setExtImagickDir($original);
+        CurrentConfigTestFactory::get()->extImagickDir = $original;
         Kernel::reset();
     }
 });
@@ -1211,8 +1211,8 @@ test('get_graphics_library reports a real ImageMagick PHP-extension version when
     // same real, container-shared instance" reasoning as the
     // is_ext_imagick() test above.
     Kernel::boot(Paths::fromRoot(sys_get_temp_dir()));
-    $original = CurrentConfigTestFactory::get()->extImagickDir();
-    CurrentConfigTestFactory::get()->setExtImagickDir('/totally/nonexistent/dir/');
+    $original = CurrentConfigTestFactory::get()->extImagickDir;
+    CurrentConfigTestFactory::get()->extImagickDir = '/totally/nonexistent/dir/';
 
     try {
         // is_ext_imagick() forced false above; the 'imagick' PHP extension
@@ -1223,7 +1223,7 @@ test('get_graphics_library reports a real ImageMagick PHP-extension version when
         expect($library)->toBeString();
         expect($library)->toStartWith('imagick/');
     } finally {
-        CurrentConfigTestFactory::get()->setExtImagickDir($original);
+        CurrentConfigTestFactory::get()->extImagickDir = $original;
         Kernel::reset();
     }
 });
@@ -1298,7 +1298,7 @@ test('get_graphics_library resolves through the gd case and appends a real GD ve
     // currentConfig() resolve reaches this exact mutated instance --
     // same reasoning as the is_ext_imagick() test above's own doc.
     $script = '\Piwigo\Core\Kernel::boot(\Piwigo\Core\Paths::fromRoot(sys_get_temp_dir()));'
-        . '\Piwigo\Core\Kernel::container()->get(\Piwigo\Config\CurrentConfig::class)->setExtImagickDir("/totally/nonexistent/dir/");'
+        . '\Piwigo\Core\Kernel::container()->get(\Piwigo\Config\CurrentConfig::class)->extImagickDir = "/totally/nonexistent/dir/";'
         . 'echo json_encode(['
         . '"imagick_extension_loaded" => extension_loaded("imagick"), '
         . '"result" => \Piwigo\Admin\Image\PwgImage::get_graphics_library(),'

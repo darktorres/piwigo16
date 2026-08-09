@@ -202,7 +202,7 @@ final class CatPermPageRenderer
             nbUsersGrantedIndirect: $nb_users_granted_indirect,
             pwgToken: new CsrfService($this->currentConfig)
                 ->getToken(),
-            inherit: $this->currentConfig->inheritanceByDefault(),
+            inherit: $this->currentConfig->inheritanceByDefault,
             cacheKeys: AdminUiHelper::getAdminClientCacheKeys($this->urlService, ['groups', 'users']),
             userGrantedIndirectGroups: $user_granted_indirect_groups,
         ));

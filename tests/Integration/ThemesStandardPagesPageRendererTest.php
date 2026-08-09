@@ -489,7 +489,7 @@ final class ThemesStandardPagesPageRendererTest extends IntegrationTestCase
         if (! $currentConfig instanceof CurrentConfig) {
             throw new LogicException('Container returned an unexpected type for ' . CurrentConfig::class);
         }
-        $currentConfig->setThemesDir(rtrim($themesFixtureRoot, '/') . '/themes');
+        $currentConfig->themesDir = rtrim($themesFixtureRoot, '/') . '/themes';
 
         $this->renderer->render();
 

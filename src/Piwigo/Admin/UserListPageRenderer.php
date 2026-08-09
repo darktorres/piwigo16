@@ -73,9 +73,9 @@ final class UserListPageRenderer
         // conf's guest_id/default_user_id/webmaster_id are always scalar (raw DB
         // fetch value or int config default -- same normalization already used by
         // functions.inc.php's get_webmaster_mail_address() and build_user()).
-        $guest_id = $currentConfig->guestId();
-        $default_user_id = $currentConfig->defaultUserId();
-        $webmaster_id = $currentConfig->webmasterId();
+        $guest_id = $currentConfig->guestId;
+        $default_user_id = $currentConfig->defaultUserId;
+        $webmaster_id = $currentConfig->webmasterId;
 
         $protected_users = [
             $currentUser->get()
@@ -134,7 +134,7 @@ final class UserListPageRenderer
         }
 
         // user level options
-        $available_permission_levels = $currentConfig->availablePermissionLevels();
+        $available_permission_levels = $currentConfig->availablePermissionLevels;
 
         $level_options = [];
         foreach ($available_permission_levels as $level) {
@@ -174,8 +174,8 @@ final class UserListPageRenderer
             groupsForFilter: $groups_for_filter,
             registerDates: implode(',', $register_dates),
             adminPageTitle: $lang->t('Users'),
-            activateComments: $currentConfig->activateComments(),
-            doublePassword: $currentConfig->doublePasswordTypeInAdmin(),
+            activateComments: $currentConfig->activateComments,
+            doublePassword: $currentConfig->doublePasswordTypeInAdmin,
             uHistory: $urlService->getRootUrl() . 'admin.php?page=history&filter_user_id=',
             pwgToken: new CsrfService($currentConfig)
                 ->getToken(),

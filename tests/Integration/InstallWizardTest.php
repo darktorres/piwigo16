@@ -1286,8 +1286,8 @@ final class InstallWizardTest extends IntegrationTestCase
         if (! $currentConfig instanceof CurrentConfig) {
             throw new LogicException('Container returned an unexpected type for ' . CurrentConfig::class);
         }
-        $currentConfig->setSmtpHost('127.0.0.1:1');
-        $currentConfig->setDebugMail(true);
+        $currentConfig->smtpHost = '127.0.0.1:1';
+        $currentConfig->debugMail = true;
 
         $mailTmpDir = $this->tempRoot . '_data/tmp';
         $before = glob($mailTmpDir . '/mail.*');

@@ -89,7 +89,7 @@ final class MenubarRendererTest extends IntegrationTestCase
         // otherwise reach for a full RequestBootstrap dependency this
         // test never boots -- same as CategoryDefaultRendererTest/
         // PictureCommentRendererTest's identical comment.
-        $currentConfig->setDataDirChecked('1');
+        $currentConfig->dataDirChecked = '1';
 
         // Real menu-block registration (normally wired by
         // RequestBootstrap::finalize(), never booted here) -- without it
@@ -179,8 +179,8 @@ final class MenubarRendererTest extends IntegrationTestCase
 
     public function test_render_assigns_a_stop_filter_link_when_the_recent_filter_is_active(): void
     {
-        CurrentConfigTestFactory::get()->setMenubarFilterIcon(true);
-        CurrentConfigTestFactory::get()->setFilterPages(['default' => ['used' => true]]);
+        CurrentConfigTestFactory::get()->menubarFilterIcon = true;
+        CurrentConfigTestFactory::get()->filterPages = ['default' => ['used' => true]];
         $this->filterState->set(true, '', '', []);
 
         $this->renderer->render(LangTestFactory::get(), new AccessLevelChecker(CurrentUserTestFactory::get(), CurrentConfigTestFactory::get()), $this->urlService, $this->filterState, $this->sectionContextRegistry, $this->sessionService, new DeploymentPolicy(), CurrentUserTestFactory::get(), CurrentTemplate::current(), CurrentConfigTestFactory::get(), EventDispatcherTestFactory::get(), TranslatorTestFactory::get(), new CurrentLogger());
@@ -192,8 +192,8 @@ final class MenubarRendererTest extends IntegrationTestCase
 
     public function test_render_assigns_a_start_filter_link_with_the_users_recent_period_when_the_filter_is_inactive(): void
     {
-        CurrentConfigTestFactory::get()->setMenubarFilterIcon(true);
-        CurrentConfigTestFactory::get()->setFilterPages(['default' => ['used' => true]]);
+        CurrentConfigTestFactory::get()->menubarFilterIcon = true;
+        CurrentConfigTestFactory::get()->filterPages = ['default' => ['used' => true]];
         $this->filterState->set(false, '', '', []);
         CurrentUserTestFactory::get()->set(CurrentUserTestFactory::get()->get()->withRawAttribute('recent_period', 7));
 

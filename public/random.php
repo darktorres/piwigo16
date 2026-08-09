@@ -52,7 +52,7 @@ RequestBootstrap::accessControl()->checkStatus(AccessLevel::Guest);
 // nb_image_page has exactly this one reader repo-wide, under User's own
 // documented promotion bar for a named property -- read via
 // rawAttributes, same as every other low-frequency legacy $user key.
-$top_number = RequestBootstrap::currentConfig()->topNumber();
+$top_number = RequestBootstrap::currentConfig()->topNumber;
 $rawNbImagePage = RequestBootstrap::currentUser()->get()->rawAttributes['nb_image_page'] ?? null;
 $nb_image_page = is_numeric($rawNbImagePage) ? (int) $rawNbImagePage : 15;
 

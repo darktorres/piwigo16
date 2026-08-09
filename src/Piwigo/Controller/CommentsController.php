@@ -100,7 +100,7 @@ final class CommentsController implements ControllerInterface
 
         $conn = DbConnection::build();
 
-        if (! $this->currentConfig->activateComments()) {
+        if (! $this->currentConfig->activateComments) {
             $this->htmlService
                 ->pageNotFound($this->redirectService, null);
         }
@@ -128,7 +128,7 @@ final class CommentsController implements ControllerInterface
         // include/config_default.inc.php); $conf itself is only known as
         // array<string, mixed>, so narrow with a fallback matching the
         // shipped default rather than trust the shape blindly.
-        $comments_page_nb_comments = $this->currentConfig->commentsPageNbComments();
+        $comments_page_nb_comments = $this->currentConfig->commentsPageNbComments;
 
         // if the default value is not in the expected values, we add it in
         // the $items_number array (only compare against the numeric options

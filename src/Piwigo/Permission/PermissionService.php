@@ -62,7 +62,7 @@ final readonly class PermissionService
     public static function getPrivacyLevelOptions(CurrentConfig $currentConfig, Lang $lang): array
     {
 
-        $available_permission_levels = $currentConfig->availablePermissionLevels();
+        $available_permission_levels = $currentConfig->availablePermissionLevels;
 
         $options = [];
         $label = '';

@@ -119,7 +119,7 @@ final readonly class NoPhotoYetRenderer
                 ]);
 
                 if ($this->accessLevelChecker->isAdmin()) {
-                    $url = $this->currentConfig->noPhotoYetUrl();
+                    $url = $this->currentConfig->noPhotoYetUrl;
                     if (! str_starts_with($url, 'http')) {
                         $url = $this->urlService->getRootUrl() . $url;
                     }

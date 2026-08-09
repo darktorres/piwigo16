@@ -142,7 +142,7 @@ final readonly class CommentService
             return $event;
         }
 
-        $myAction = $this->currentConfig->commentSpamReject() ? 'reject' : 'moderate';
+        $myAction = $this->currentConfig->commentSpamReject ? 'reject' : 'moderate';
         if ($action === $myAction) {
             return $event;
         }
@@ -161,7 +161,7 @@ final readonly class CommentService
             $linkCount++;
         }
 
-        $maxLinks = $this->currentConfig->commentSpamMaxLinks();
+        $maxLinks = $this->currentConfig->commentSpamMaxLinks;
 
         if ($linkCount > $maxLinks) {
             $this->pushCrReason('links');
@@ -191,11 +191,11 @@ final readonly class CommentService
         ] + $comm;
 
         $infos = [];
-        $commentAction = (! $this->currentConfig->commentsValidation() || $this->accessLevelChecker->isAdmin()) ? 'validate' : 'moderate';
+        $commentAction = (! $this->currentConfig->commentsValidation || $this->accessLevelChecker->isAdmin()) ? 'validate' : 'moderate';
 
         if (! $this->accessLevelChecker->isClassicUser()) {
             if (self::emptyValue($comm['author'])) {
-                if ($this->currentConfig->commentsAuthorMandatory()) {
+                if ($this->currentConfig->commentsAuthorMandatory) {
                     $infos[] = $this->lang->t('Username is mandatory');
                     $commentAction = 'reject';
                 }
@@ -203,7 +203,7 @@ final readonly class CommentService
                 $comm['author'] = 'guest';
             }
 
-            $guestId = $this->currentConfig->guestId();
+            $guestId = $this->currentConfig->guestId;
             $comm['author_id'] = $guestId;
 
             // if a guest tries to use the name of an already existing user,
@@ -236,7 +236,7 @@ final readonly class CommentService
 
         // website
         if (! self::emptyValue($comm['website_url'] ?? null)) {
-            if (! $this->currentConfig->commentsEnableWebsite()) { // honeypot: if the field is disabled, it should be empty !
+            if (! $this->currentConfig->commentsEnableWebsite) { // honeypot: if the field is disabled, it should be empty !
                 $commentAction = 'reject';
                 $this->pushCrReason('website_url');
             } else {
@@ -260,7 +260,7 @@ final readonly class CommentService
                 ->email;
             if ($currentUserEmail !== null) {
                 $comm['email'] = $currentUserEmail->value;
-            } elseif ($this->currentConfig->commentsEmailMandatory()) {
+            } elseif ($this->currentConfig->commentsEmailMandatory) {
                 $infos[] = $this->lang->t('Email address is missing. Please specify an email address.');
                 $commentAction = 'reject';
             }
@@ -289,7 +289,7 @@ final readonly class CommentService
         // branches above.
         $authorId = $comm['author_id'];
 
-        $antiFloodTime = $this->currentConfig->antiFloodTime();
+        $antiFloodTime = $this->currentConfig->antiFloodTime;
 
         if ($commentAction !== 'reject' && $antiFloodTime > 0 && ! $this->accessLevelChecker->isAdmin()) { // anti-flood system
             $anonymousIdPrefix = $this->accessLevelChecker->isClassicUser() ? null : $trimmedIp;
@@ -325,8 +325,8 @@ final readonly class CommentService
 
             $this->invalidateNbCommentsCache();
 
-            $emailAdminOnComment = $this->currentConfig->emailAdminOnComment() && $commentAction === 'validate';
-            $emailAdminOnValidation = $this->currentConfig->emailAdminOnCommentValidation() && $commentAction === 'moderate';
+            $emailAdminOnComment = $this->currentConfig->emailAdminOnComment && $commentAction === 'validate';
+            $emailAdminOnValidation = $this->currentConfig->emailAdminOnCommentValidation && $commentAction === 'moderate';
             if ($emailAdminOnComment || $emailAdminOnValidation) {
                 $commentUrl = $this->urlService->getAbsoluteRootUrl() . 'comments.php?comment_id=' . $id->value;
 
@@ -427,7 +427,7 @@ final readonly class CommentService
 
         if (! $this->ephemeralKeys->verify($postKey, $imageIdRaw)) {
             $commentAction = 'reject';
-        } elseif (! $this->currentConfig->commentsValidation() || $this->accessLevelChecker->isAdmin()) { // should the updated comment be validated
+        } elseif (! $this->currentConfig->commentsValidation || $this->accessLevelChecker->isAdmin()) { // should the updated comment be validated
             $commentAction = 'validate';
         } else {
             $commentAction = 'moderate';
@@ -482,7 +482,7 @@ final readonly class CommentService
             );
 
             // mail admin and ask to validate the comment
-            if ($updated && $this->currentConfig->emailAdminOnCommentValidation() && $commentAction === 'moderate') {
+            if ($updated && $this->currentConfig->emailAdminOnCommentValidation && $commentAction === 'moderate') {
                 // $updated === true only when $commentId !== null (short-circuit above) --
                 // PHPStan already narrows this without an assert().
                 $commentUrl = $this->urlService->getAbsoluteRootUrl() . 'comments.php?comment_id=' . $commentId->value;
@@ -526,8 +526,8 @@ final readonly class CommentService
     public function emailAdmin(string $action, array $comment): void
     {
         if (! in_array($action, ['edit', 'delete'], true)
-            || ($action === 'edit' && ! $this->currentConfig->emailAdminOnCommentEdition())
-            || ($action === 'delete' && ! $this->currentConfig->emailAdminOnCommentDeletion())) {
+            || ($action === 'edit' && ! $this->currentConfig->emailAdminOnCommentEdition)
+            || ($action === 'delete' && ! $this->currentConfig->emailAdminOnCommentDeletion)) {
             return;
         }
 

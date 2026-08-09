@@ -24,7 +24,6 @@ function userFailedLoginTestRepo(): UserFailedLoginRepository
 {
     $conn = DbConnection::build();
     $repo = EntityManagerFactory::build($conn)->getRepository(UserFailedLoginEntity::class);
-    expect($repo)->toBeInstanceOf(UserFailedLoginRepository::class);
 
     return $repo;
 }

@@ -81,7 +81,7 @@ final class ActionController implements ControllerInterface
 
         $conn = DbConnection::build();
 
-        $actionRequest = ActionRequest::fromGlobals($this->currentConfig->isFormatsEnabled(), $this->inputValidator);
+        $actionRequest = ActionRequest::fromGlobals($this->currentConfig->isFormatsEnabled, $this->inputValidator);
 
         $format = null;
         if ($actionRequest->formatRequested) {

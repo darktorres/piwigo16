@@ -15,7 +15,7 @@ use Piwigo\Core\Paths;
  * matching composer package -- no call-site changes required.
  *
  * Disk roots use runtime Config values so they honour site-level overrides
- * (e.g. $currentConfig->uploadDir(), $currentConfig->dataLocation()). This
+ * (e.g. $currentConfig->uploadDir, $currentConfig->dataLocation). This
  * file returns a closure so StorageRegistry::fromConfig() can pass
  * $paths/$currentConfig through as real params -- see that method's own
  * docblock. 'local' is the effective (potentially PIWIGO_LOCAL_DIR-overridden)
@@ -28,12 +28,12 @@ return static function (Paths $paths, CurrentConfig $currentConfig): array {
     return [
         // User photo uploads: upload/YYYY/MM/DD/
         'uploads' => static fn (): Filesystem => new Filesystem(
-            new LocalFilesystemAdapter(rtrim($paths->root . $currentConfig->uploadDir(), '/')),
+            new LocalFilesystemAdapter(rtrim($paths->root . $currentConfig->uploadDir, '/')),
         ),
 
         // Derivative/thumbnail tree: _data/i/
         'derivatives' => static fn (): Filesystem => new Filesystem(
-            new LocalFilesystemAdapter($paths->root . $currentConfig->dataLocation() . 'i'),
+            new LocalFilesystemAdapter($paths->root . $currentConfig->dataLocation . 'i'),
         ),
 
         // Watermark PNG files: local/watermarks/
@@ -43,7 +43,7 @@ return static function (Paths $paths, CurrentConfig $currentConfig): array {
 
         // Theme files
         'themes' => static fn (): Filesystem => new Filesystem(
-            new LocalFilesystemAdapter($paths->root . $currentConfig->themesDir()),
+            new LocalFilesystemAdapter($paths->root . $currentConfig->themesDir),
         ),
 
         // Plugin files
@@ -53,7 +53,7 @@ return static function (Paths $paths, CurrentConfig $currentConfig): array {
 
         // Data exports
         'exports' => static fn (): Filesystem => new Filesystem(
-            new LocalFilesystemAdapter($paths->root . $currentConfig->dataLocation() . 'exports'),
+            new LocalFilesystemAdapter($paths->root . $currentConfig->dataLocation . 'exports'),
         ),
 
         // Site-local overrides: local/watermarks/, local/logo/, local/config/, …

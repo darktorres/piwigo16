@@ -316,11 +316,11 @@ final class InstallWizard
         // own site) -- no DB access needed, just Config/DbCredentials reads
         // already valid this early (the DB password was just seeded above).
         InstallBootstrap::currentLogger()->set(new Logger([
-            'directory' => $this->paths->root . $this->currentConfig->dataLocation() . $this->currentConfig->logDir(),
-            'severity' => $this->currentConfig->logLevel(),
+            'directory' => $this->paths->root . $this->currentConfig->dataLocation . $this->currentConfig->logDir,
+            'severity' => $this->currentConfig->logLevel,
             'filename' => 'log_' . date('Y-m-d') . '_' . sha1(date('Y-m-d') . $this->dbCredentials->password) . '.txt',
             'globPattern' => 'log_*.txt',
-            'archiveDays' => $this->currentConfig->logArchiveDays(),
+            'archiveDays' => $this->currentConfig->logArchiveDays,
         ]));
 
         // dblayer -- was unconditionally hardcoded to 'mysqli' regardless of
@@ -785,12 +785,12 @@ define(\'DB_COLLATE\', \'\');
             // session_save_handler === 'db' guard)
             session_set_save_handler(new PwgSession(new SessionService(EntityManagerFactory::build($conn)->getRepository(SessionEntity::class), $this->currentConfig), InstallBootstrap::currentLogger()));
             if (function_exists('ini_set')) {
-                ini_set('session.use_cookies', $this->currentConfig->sessionUseCookies());
-                ini_set('session.use_only_cookies', $this->currentConfig->sessionUseOnlyCookies());
-                ini_set('session.use_trans_sid', (int) $this->currentConfig->sessionUseTransSid());
+                ini_set('session.use_cookies', $this->currentConfig->sessionUseCookies);
+                ini_set('session.use_only_cookies', $this->currentConfig->sessionUseOnlyCookies);
+                ini_set('session.use_trans_sid', (int) $this->currentConfig->sessionUseTransSid);
                 ini_set('session.cookie_httponly', 1);
             }
-            session_name($this->currentConfig->sessionName());
+            session_name($this->currentConfig->sessionName);
             session_set_cookie_params(0, new CookieService()->cookiePath());
             register_shutdown_function(session_write_close(...));
 

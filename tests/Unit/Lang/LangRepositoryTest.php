@@ -20,7 +20,6 @@ function langRepositoryTestRepo(): LangRepository
 {
     $conn = DbConnection::build();
     $repo = EntityManagerFactory::build($conn)->getRepository(LanguageEntity::class);
-    expect($repo)->toBeInstanceOf(LangRepository::class);
 
     return $repo;
 }

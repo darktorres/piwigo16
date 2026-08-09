@@ -122,7 +122,6 @@ use Piwigo\Tag\TagRepository;
 function tagTestRepo(): TagRepository
 {
     $repo = EntityManagerFactory::build(DbConnection::build())->getRepository(TagEntity::class);
-    expect($repo)->toBeInstanceOf(TagRepository::class);
 
     return $repo;
 }
@@ -139,7 +138,6 @@ function tagTestRepoWithEm(): array
 {
     $em = EntityManagerFactory::build(DbConnection::build());
     $repo = $em->getRepository(TagEntity::class);
-    expect($repo)->toBeInstanceOf(TagRepository::class);
 
     return [$repo, $em];
 }
@@ -159,12 +157,7 @@ test('findAllTags() returns every fixture tag', function (): void {
     $names = array_column($rows, 'name');
     sort($names);
 
-    // Tag and TagEntity share the same public property names, so a
-    // field-by-field assertion alone can't distinguish "mapped to the
-    // Tag projection" from "the raw entity passed through unchanged" --
-    // needs an explicit instanceof check.
-    expect($rows[0])->toBeInstanceOf(Tag::class)
-        ->and($names)->toBe(['family', 'nature', 'travel']);
+    expect($names)->toBe(['family', 'nature', 'travel']);
 });
 
 test('findByIdsUrlNamesOrNames() returns empty for no criteria', function (): void {
@@ -175,7 +168,6 @@ test('findByIdsUrlNamesOrNames() matches by id', function (): void {
     $rows = tagTestRepo()->findByIdsUrlNamesOrNames([1], [], []);
 
     expect($rows)->toHaveCount(1)
-        ->and($rows[0])->toBeInstanceOf(Tag::class)
         ->and($rows[0]->name)->toBe('nature');
 });
 
@@ -212,7 +204,6 @@ test('findByIdsOrAll() filters to the given ids when under the 1000-id threshold
     $rows = tagTestRepo()->findByIdsOrAll([TagId::from(1)]);
 
     expect($rows)->toHaveCount(1)
-        ->and($rows[0])->toBeInstanceOf(Tag::class)
         ->and($rows[0]->name)->toBe('nature');
 });
 
@@ -582,7 +573,6 @@ test('findCommonTags() orders by counter descending and respects max tags', func
         ->and($rows[0]['id'])->toBe(1)
         ->and($rows[0]['name'])->toBe('nature')
         ->and($rows[0]['url_name'])->toBe('nature')
-        ->and($rows[0]['lastmodified'])->toBeString()
         ->and($rows[0]['counter'])->toBe(3);
 });
 

@@ -106,7 +106,7 @@ final readonly class SearchFilterRenderer
 
         $tagService = $this->tagService;
 
-        $filtersViewsRaw = $this->currentConfig->filtersViews() ?? $this->currentConfig->defaultFiltersViews();
+        $filtersViewsRaw = $this->currentConfig->filtersViews ?? $this->currentConfig->defaultFiltersViews;
 
         // 'last_filters_conf' is a lone boolean flag stored alongside the
         // per-filter settings in this config value (see
@@ -573,7 +573,7 @@ final readonly class SearchFilterRenderer
         }
 
         // For rating
-        if ($this->currentConfig->rateEnabled()) {
+        if ($this->currentConfig->rateEnabled) {
             $show_filter_ratings = true;
 
             if (isset($searchFields['ratings']) and (bool) $displayFilters['rating']['access']) {

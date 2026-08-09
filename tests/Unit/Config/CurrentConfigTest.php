@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Piwigo\Config\NotificationConfig;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
 
 /**
@@ -27,14 +28,14 @@ afterEach(function (): void {
 // $x === null ? (string) $x : '', $value)) -- byte-identical across all 8.
 
 dataset('scalarListToStringProperties', [
-    'apiKeyDuration' => [CurrentConfigTestFactory::get()->setApiKeyDuration(...), CurrentConfigTestFactory::get()->apiKeyDuration(...)],
-    'apiKeyForbiddenMethods' => [CurrentConfigTestFactory::get()->setApiKeyForbiddenMethods(...), CurrentConfigTestFactory::get()->apiKeyForbiddenMethods(...)],
-    'fileExtensions' => [CurrentConfigTestFactory::get()->setFileExtensions(...), CurrentConfigTestFactory::get()->fileExtensions(...)],
-    'formatExtensions' => [CurrentConfigTestFactory::get()->setFormatExtensions(...), CurrentConfigTestFactory::get()->formatExtensions(...)],
-    'headerNotes' => [CurrentConfigTestFactory::get()->setHeaderNotes(...), CurrentConfigTestFactory::get()->headerNotes(...)],
-    'pictureExtensions' => [CurrentConfigTestFactory::get()->setPictureExtensions(...), CurrentConfigTestFactory::get()->pictureExtensions(...)],
-    'showExifFields' => [CurrentConfigTestFactory::get()->setShowExifFields(...), CurrentConfigTestFactory::get()->showExifFields(...)],
-    'syncExcludeFolders' => [CurrentConfigTestFactory::get()->setSyncExcludeFolders(...), CurrentConfigTestFactory::get()->syncExcludeFolders(...)],
+    'apiKeyDuration' => [static function (array $v): void { CurrentConfigTestFactory::get()->apiKeyDuration = $v; }, static fn (): mixed => CurrentConfigTestFactory::get()->apiKeyDuration],
+    'apiKeyForbiddenMethods' => [static function (array $v): void { CurrentConfigTestFactory::get()->apiKeyForbiddenMethods = $v; }, static fn (): mixed => CurrentConfigTestFactory::get()->apiKeyForbiddenMethods],
+    'fileExtensions' => [static function (array $v): void { CurrentConfigTestFactory::get()->fileExtensions = $v; }, static fn (): mixed => CurrentConfigTestFactory::get()->fileExtensions],
+    'formatExtensions' => [static function (array $v): void { CurrentConfigTestFactory::get()->formatExtensions = $v; }, static fn (): mixed => CurrentConfigTestFactory::get()->formatExtensions],
+    'headerNotes' => [static function (array $v): void { CurrentConfigTestFactory::get()->headerNotes = $v; }, static fn (): mixed => CurrentConfigTestFactory::get()->headerNotes],
+    'pictureExtensions' => [static function (array $v): void { CurrentConfigTestFactory::get()->pictureExtensions = $v; }, static fn (): mixed => CurrentConfigTestFactory::get()->pictureExtensions],
+    'showExifFields' => [static function (array $v): void { CurrentConfigTestFactory::get()->showExifFields = $v; }, static fn (): mixed => CurrentConfigTestFactory::get()->showExifFields],
+    'syncExcludeFolders' => [static function (array $v): void { CurrentConfigTestFactory::get()->syncExcludeFolders = $v; }, static fn (): mixed => CurrentConfigTestFactory::get()->syncExcludeFolders],
 ]);
 
 test('scalar-list string properties cast scalars, pass null through as \'\', reject non-scalars, and reindex', function (Closure $setter, Closure $getter): void {
@@ -57,8 +58,8 @@ test('scalar-list string properties cast scalars, pass null through as \'\', rej
 // ---- Pattern B: scalar-list -> int, non-scalar 0 -------------------------
 
 dataset('scalarListToIntProperties', [
-    'availablePermissionLevels' => [CurrentConfigTestFactory::get()->setAvailablePermissionLevels(...), CurrentConfigTestFactory::get()->availablePermissionLevels(...)],
-    'rateItems' => [CurrentConfigTestFactory::get()->setRateItems(...), CurrentConfigTestFactory::get()->rateItems(...)],
+    'availablePermissionLevels' => [static function (array $v): void { CurrentConfigTestFactory::get()->availablePermissionLevels = $v; }, static fn (): mixed => CurrentConfigTestFactory::get()->availablePermissionLevels],
+    'rateItems' => [static function (array $v): void { CurrentConfigTestFactory::get()->rateItems = $v; }, static fn (): mixed => CurrentConfigTestFactory::get()->rateItems],
 ]);
 
 test('scalar-list int properties cast scalars (truncating floats), reject non-scalars to 0, and reindex', function (Closure $setter, Closure $getter): void {
@@ -75,21 +76,21 @@ test('scalar-list int properties cast scalars (truncating floats), reject non-sc
 })->with('scalarListToIntProperties');
 
 test('availablePermissionLevels falls back to its own factory default for an empty array', function (): void {
-    CurrentConfigTestFactory::get()->setAvailablePermissionLevels([1, 2, 3]);
-    expect(CurrentConfigTestFactory::get()->availablePermissionLevels())->toBe([1, 2, 3]);
+    CurrentConfigTestFactory::get()->availablePermissionLevels = [1, 2, 3];
+    expect(CurrentConfigTestFactory::get()->availablePermissionLevels)->toBe([1, 2, 3]);
 
-    CurrentConfigTestFactory::get()->setAvailablePermissionLevels([]);
+    CurrentConfigTestFactory::get()->availablePermissionLevels = [];
 
-    expect(CurrentConfigTestFactory::get()->availablePermissionLevels())->toBe([0, 1, 2, 4, 8]);
+    expect(CurrentConfigTestFactory::get()->availablePermissionLevels)->toBe([0, 1, 2, 4, 8]);
 });
 
 test('availablePermissionLevels accepts the exact boundary of a single-item array', function (): void {
     // The empty/non-empty test above (0 vs 3 items) can't tell
     // `count($value) > 0` apart from a mutated `> 1` -- both correctly
     // take the same branch for 0 and 3. Only exactly 1 item does.
-    CurrentConfigTestFactory::get()->setAvailablePermissionLevels([7]);
+    CurrentConfigTestFactory::get()->availablePermissionLevels = [7];
 
-    expect(CurrentConfigTestFactory::get()->availablePermissionLevels())->toBe([7]);
+    expect(CurrentConfigTestFactory::get()->availablePermissionLevels)->toBe([7]);
 });
 
 // ---- Pattern C: key => string-value map, non-scalar value '' ------------
@@ -106,9 +107,9 @@ test('availablePermissionLevels accepts the exact boundary of a single-item arra
 // it at all, for every reachable key value.
 
 dataset('keyToStringValueMapProperties', [
-    'showIptcMapping' => [CurrentConfigTestFactory::get()->setShowIptcMapping(...), CurrentConfigTestFactory::get()->showIptcMapping(...)],
-    'useExifMapping' => [CurrentConfigTestFactory::get()->setUseExifMapping(...), CurrentConfigTestFactory::get()->useExifMapping(...)],
-    'useIptcMapping' => [CurrentConfigTestFactory::get()->setUseIptcMapping(...), CurrentConfigTestFactory::get()->useIptcMapping(...)],
+    'showIptcMapping' => [static function (array $v): void { CurrentConfigTestFactory::get()->showIptcMapping = $v; }, static fn (): mixed => CurrentConfigTestFactory::get()->showIptcMapping],
+    'useExifMapping' => [static function (array $v): void { CurrentConfigTestFactory::get()->useExifMapping = $v; }, static fn (): mixed => CurrentConfigTestFactory::get()->useExifMapping],
+    'useIptcMapping' => [static function (array $v): void { CurrentConfigTestFactory::get()->useIptcMapping = $v; }, static fn (): mixed => CurrentConfigTestFactory::get()->useIptcMapping],
 ]);
 
 test('key-to-string-value map properties cast both key and scalar value to string, and \'\' for non-scalar values', function (Closure $setter, Closure $getter): void {
@@ -128,8 +129,8 @@ test('key-to-string-value map properties cast both key and scalar value to strin
 // ---- Pattern D: empty-string-fallback scalar string ----------------------
 
 dataset('emptyStringFallbackProperties', [
-    'metadataKeywordSeparatorRegex' => [CurrentConfigTestFactory::get()->setMetadataKeywordSeparatorRegex(...), CurrentConfigTestFactory::get()->metadataKeywordSeparatorRegex(...), '/[.,;]/'],
-    'syncCharsRegex' => [CurrentConfigTestFactory::get()->setSyncCharsRegex(...), CurrentConfigTestFactory::get()->syncCharsRegex(...), '/^[a-zA-Z0-9-_.]+$/'],
+    'metadataKeywordSeparatorRegex' => [static function (string $v): void { CurrentConfigTestFactory::get()->metadataKeywordSeparatorRegex = $v; }, static fn (): mixed => CurrentConfigTestFactory::get()->metadataKeywordSeparatorRegex, '/[.,;]/'],
+    'syncCharsRegex' => [static function (string $v): void { CurrentConfigTestFactory::get()->syncCharsRegex = $v; }, static fn (): mixed => CurrentConfigTestFactory::get()->syncCharsRegex, '/^[a-zA-Z0-9-_.]+$/'],
 ]);
 
 test('empty-string-fallback properties keep a real value but fall back to their own default for an empty string', function (Closure $setter, Closure $getter, string $default): void {
@@ -144,33 +145,33 @@ test('empty-string-fallback properties keep a real value but fall back to their 
 // ---- Pattern E: getters that must return the real stored value ----------
 
 test('headerNotes getter returns the real stored value, not a hardcoded empty array', function (): void {
-    CurrentConfigTestFactory::get()->setHeaderNotes(['a real note']);
+    CurrentConfigTestFactory::get()->headerNotes = ['a real note'];
 
-    expect(CurrentConfigTestFactory::get()->headerNotes())->toBe(['a real note']);
+    expect(CurrentConfigTestFactory::get()->headerNotes)->toBe(['a real note']);
 });
 
 test('links getter returns the real stored value, not a hardcoded empty array', function (): void {
-    CurrentConfigTestFactory::get()->setLinks(['home' => 'https://example.test']);
+    CurrentConfigTestFactory::get()->links = ['home' => 'https://example.test'];
 
-    expect(CurrentConfigTestFactory::get()->links())->toBe(['home' => 'https://example.test']);
+    expect(CurrentConfigTestFactory::get()->links)->toBe(['home' => 'https://example.test']);
 });
 
 test('emptyLoungeRunning getter returns the real stored value, not a hardcoded null', function (): void {
-    CurrentConfigTestFactory::get()->setEmptyLoungeRunning('12345-1700000000');
+    CurrentConfigTestFactory::get()->emptyLoungeRunning = '12345-1700000000';
 
-    expect(CurrentConfigTestFactory::get()->emptyLoungeRunning())->toBe('12345-1700000000');
+    expect(CurrentConfigTestFactory::get()->emptyLoungeRunning)->toBe('12345-1700000000');
 });
 
 test('pictureInformations getter returns the real stored value, not a hardcoded empty array', function (): void {
-    CurrentConfigTestFactory::get()->setPictureInformations(['iso' => true]);
+    CurrentConfigTestFactory::get()->pictureInformations = ['iso' => true];
 
-    expect(CurrentConfigTestFactory::get()->pictureInformations())->toBe(['iso' => true]);
+    expect(CurrentConfigTestFactory::get()->pictureInformations)->toBe(['iso' => true]);
 });
 
 test('countOrphans getter returns the real stored value, not a hardcoded null', function (): void {
-    CurrentConfigTestFactory::get()->setCountOrphans(42);
+    CurrentConfigTestFactory::get()->countOrphans = 42;
 
-    expect(CurrentConfigTestFactory::get()->countOrphans())->toBe(42);
+    expect(CurrentConfigTestFactory::get()->countOrphans)->toBe(42);
 });
 
 // ---- Individual/unique-shape properties ----------------------------------
@@ -184,17 +185,17 @@ test('chmodValue falls back to 0777 when unset, under this suite\'s own always-a
     // the value that branch would produce, and passes against 0777, the
     // real early-return value). Its own several numeric-literal mutants
     // are correspondingly unobservable here -- not chased further.
-    expect(CurrentConfigTestFactory::get()->chmodValue())->toBe(0777);
+    expect(CurrentConfigTestFactory::get()->chmodValue)->toBe(0777);
 });
 
 test('chmodValue returns the explicit override when set, regardless of the SAPI default', function (): void {
-    CurrentConfigTestFactory::get()->setChmodValue(0700);
+    CurrentConfigTestFactory::get()->chmodValue = 0700;
 
-    expect(CurrentConfigTestFactory::get()->chmodValue())->toBe(0700);
+    expect(CurrentConfigTestFactory::get()->chmodValue)->toBe(0700);
 });
 
 test('setDefaultFiltersViews keeps a well-shaped override entry and falls back per-key otherwise', function (): void {
-    CurrentConfigTestFactory::get()->setDefaultFiltersViews([
+    CurrentConfigTestFactory::get()->defaultFiltersViews = [
         // Well-shaped: both is_string(access) and is_bool(default) hold.
         'words' => ['access' => 'admins', 'default' => false],
         // Malformed access (not a string) -- falls back to the real default.
@@ -202,9 +203,9 @@ test('setDefaultFiltersViews keeps a well-shaped override entry and falls back p
         // Malformed default (not a bool) -- falls back to the real default.
         'post_date' => ['access' => 'everybody', 'default' => 'yes'],
         // Missing entirely -- falls back to the real default.
-    ]);
+    ];
 
-    $result = CurrentConfigTestFactory::get()->defaultFiltersViews();
+    $result = CurrentConfigTestFactory::get()->defaultFiltersViews;
 
     expect($result['words'])->toBe(['access' => 'admins', 'default' => false])
         ->and($result['tags'])->toBe(['access' => 'everybody', 'default' => false])
@@ -213,55 +214,55 @@ test('setDefaultFiltersViews keeps a well-shaped override entry and falls back p
 });
 
 test('setDefaultFiltersViews resets to the full factory default when given null', function (): void {
-    CurrentConfigTestFactory::get()->setDefaultFiltersViews(['words' => ['access' => 'admins', 'default' => false]]);
+    CurrentConfigTestFactory::get()->defaultFiltersViews = ['words' => ['access' => 'admins', 'default' => false]];
 
-    CurrentConfigTestFactory::get()->setDefaultFiltersViews(null);
+    CurrentConfigTestFactory::get()->defaultFiltersViews = null;
 
-    expect(CurrentConfigTestFactory::get()->defaultFiltersViews()['words'])->toBe(['access' => 'everybody', 'default' => true]);
+    expect(CurrentConfigTestFactory::get()->defaultFiltersViews['words'])->toBe(['access' => 'everybody', 'default' => true]);
 });
 
 test('setHistorySectionsCache keeps only string entries and reindexes', function (): void {
-    CurrentConfigTestFactory::get()->setHistorySectionsCache([5 => 'add', 10 => 42, 20 => 'delete']);
+    CurrentConfigTestFactory::get()->historySectionsCache = [5 => 'add', 10 => 42, 20 => 'delete'];
 
-    expect(CurrentConfigTestFactory::get()->historySectionsCache())->toBe(['add', 'delete']);
+    expect(CurrentConfigTestFactory::get()->historySectionsCache)->toBe(['add', 'delete']);
 });
 
 test('setHistorySectionsCache accepts a literal null', function (): void {
-    CurrentConfigTestFactory::get()->setHistorySectionsCache(['add']);
+    CurrentConfigTestFactory::get()->historySectionsCache = ['add'];
 
-    CurrentConfigTestFactory::get()->setHistorySectionsCache(null);
+    CurrentConfigTestFactory::get()->historySectionsCache = null;
 
-    expect(CurrentConfigTestFactory::get()->historySectionsCache())->toBeNull();
+    expect(CurrentConfigTestFactory::get()->historySectionsCache)->toBeNull();
 });
 
 test('setPictureInformations keeps only string-keyed bool entries', function (): void {
-    CurrentConfigTestFactory::get()->setPictureInformations([
+    CurrentConfigTestFactory::get()->pictureInformations = [
         'iso' => true,
         'aperture' => false,
         42 => true, // non-string key -- excluded
         'shutter' => 'not-a-bool', // non-bool value -- excluded
-    ]);
+    ];
 
-    expect(CurrentConfigTestFactory::get()->pictureInformations())->toBe(['iso' => true, 'aperture' => false]);
+    expect(CurrentConfigTestFactory::get()->pictureInformations)->toBe(['iso' => true, 'aperture' => false]);
 });
 
 test('setRandomIndexRedirect casts both key and scalar value to string, excluding non-scalar values entirely', function (): void {
-    CurrentConfigTestFactory::get()->setRandomIndexRedirect([
+    CurrentConfigTestFactory::get()->randomIndexRedirect = [
         5 => 'val1',
         'strkey' => 42,
         10 => ['nested'], // non-scalar value -- excluded, not defaulted
-    ]);
+    ];
 
-    expect(CurrentConfigTestFactory::get()->randomIndexRedirect())->toBe(['5' => 'val1', 'strkey' => '42']);
+    expect(CurrentConfigTestFactory::get()->randomIndexRedirect)->toBe(['5' => 'val1', 'strkey' => '42']);
 });
 
 test('setRecentPostDates keeps a well-shaped override entry and falls back per-field otherwise', function (): void {
-    CurrentConfigTestFactory::get()->setRecentPostDates([
+    CurrentConfigTestFactory::get()->recentPostDates = NotificationConfig::fromArray([
         'RSS' => ['max_dates' => 10, 'max_elements' => 11, 'max_cats' => 12],
         'NBM' => ['max_dates' => 'not-an-int', 'max_elements' => 20, 'max_cats' => 'also-not-an-int'],
     ]);
 
-    $result = CurrentConfigTestFactory::get()->recentPostDates();
+    $result = CurrentConfigTestFactory::get()->recentPostDates;
 
     expect($result->rss->maxDates)->toBe(10)
         ->and($result->rss->maxElements)->toBe(11)
@@ -279,7 +280,7 @@ test('recentPostDates getter lazily builds its own real default when never expli
     // the getter's own `??= new NotificationConfig(...)` lazy-default
     // construction (with its own literal max_dates/max_elements/max_cats
     // values) never actually runs in any of them.
-    $result = CurrentConfigTestFactory::get()->recentPostDates();
+    $result = CurrentConfigTestFactory::get()->recentPostDates;
 
     expect($result->rss->maxDates)->toBe(5)
         ->and($result->rss->maxElements)->toBe(6)

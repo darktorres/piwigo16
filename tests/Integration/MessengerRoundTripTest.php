@@ -61,8 +61,8 @@ final class MessengerRoundTripTest extends IntegrationTestCase
         // enough of a safeguard: scope every filesystem side effect to a
         // marker-suffixed subdirectory, verified before any destructive
         // operation.
-        $currentConfig->setDataLocation($this->marker() . '/');
-        mkdir(CurrentPathsTestFactory::get()->root . $currentConfig->derivativeDir(), 0o777, true);
+        $currentConfig->dataLocation = $this->marker() . '/';
+        mkdir(CurrentPathsTestFactory::get()->root . $currentConfig->derivativeDir, 0o777, true);
 
         $this->conn = DbConnection::build();
         $this->conn->executeStatement('DROP TABLE IF EXISTS messenger_messages');
@@ -114,7 +114,7 @@ final class MessengerRoundTripTest extends IntegrationTestCase
         if (! $currentConfig instanceof CurrentConfig) {
             throw new LogicException('Container returned an unexpected type for ' . CurrentConfig::class);
         }
-        $derivDir = CurrentPathsTestFactory::get()->root . $currentConfig->derivativeDir() . '2026/07';
+        $derivDir = CurrentPathsTestFactory::get()->root . $currentConfig->derivativeDir . '2026/07';
         mkdir($derivDir, 0o777, true);
         file_put_contents($derivDir . '/photo-th.jpg', 'x');
         file_put_contents($derivDir . '/photo-sq.jpg', 'x');

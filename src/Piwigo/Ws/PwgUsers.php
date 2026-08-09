@@ -104,7 +104,7 @@ final class PwgUsers
      */
     public function getList(array $params, PwgServer &$service): PwgError|array
     {
-        $available_permission_levels = $this->currentConfig->availablePermissionLevels();
+        $available_permission_levels = $this->currentConfig->availablePermissionLevels;
 
         if (! (bool) preg_match(ValidationPattern::ORDER, $params['order'])) {
             return new PwgError(WsError::INVALID_PARAM, 'Invalid input parameter order');
@@ -433,7 +433,7 @@ final class PwgUsers
             return new PwgError(WsError::INVALID_PARAM, 'Name field must not be empty');
         }
 
-        if ($this->currentConfig->doublePasswordTypeInAdmin()) {
+        if ($this->currentConfig->doublePasswordTypeInAdmin) {
             if (($params['password'] ?? '') !== ($params['password_confirm'] ?? '')) {
                 return new PwgError(WsError::INVALID_PARAM, $this->lang->t('The passwords do not match'));
             }
@@ -526,9 +526,9 @@ final class PwgUsers
 
         $protected_users = [
             $currentUser->id->value,
-            $this->currentConfig->guestId(),
-            $this->currentConfig->defaultUserId(),
-            $this->currentConfig->webmasterId(),
+            $this->currentConfig->guestId,
+            $this->currentConfig->defaultUserId,
+            $this->currentConfig->webmasterId,
         ];
 
         // an admin can't delete other admin/webmaster
@@ -647,12 +647,12 @@ final class PwgUsers
         $currentUser = $this->currentUser->get();
 
         // ACTIVATE_COMMENTS
-        if (! $this->currentConfig->activateComments()) {
+        if (! $this->currentConfig->activateComments) {
             unset($params['show_nb_comments']);
         }
 
         // ALLOW_USER_CUSTOMIZATION
-        if (! $this->currentConfig->allowUserCustomization()) {
+        if (! $this->currentConfig->allowUserCustomization) {
             unset(
                 $params['nb_image_page'],
                 $params['theme'],
@@ -665,7 +665,7 @@ final class PwgUsers
         }
 
         // SPECIAL_USER
-        $special_user = in_array($currentUser->id->value, [$this->currentConfig->guestId(), $this->currentConfig->defaultUserId()], true);
+        $special_user = in_array($currentUser->id->value, [$this->currentConfig->guestId, $this->currentConfig->defaultUserId], true);
         if ($special_user) {
             unset(
                 $params['password'],
@@ -820,7 +820,7 @@ final class PwgUsers
         $this->userService->checkUserFavorites();
 
         $order_by = $this->wsHelper->stdImageSqlOrder($params, 'i.');
-        $order_by = $order_by === '' ? $this->currentConfig->orderBy() : 'ORDER BY ' . $order_by;
+        $order_by = $order_by === '' ? $this->currentConfig->orderBy : 'ORDER BY ' . $order_by;
 
         $permission_condition = $this->permissionService->getPermissionCriteria();
 
@@ -911,10 +911,10 @@ final class PwgUsers
 
         $user_lost_email = is_string($user_lost['email']) ? $user_lost['email'] : null;
 
-        // $this->currentConfig->galleryTitle() is a raw config string; pwg_generate_set/
+        // $this->currentConfig->galleryTitle is a raw config string; pwg_generate_set/
         // reset_password_mail() both require a real string for their 3rd
         // parameter.
-        $gallery_title = $this->currentConfig->galleryTitle();
+        $gallery_title = $this->currentConfig->galleryTitle;
 
         if ($params['send_by_mail'] and ! in_array($user_lost_email, [null, ''], true)) {
             $user_lost_username = is_string($user_lost['username']) ? $user_lost['username'] : '';

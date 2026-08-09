@@ -75,7 +75,7 @@ final class FilterServiceInitializeFromRequestTest extends IntegrationTestCase
         // 'used'=true (real default) + 'add_notes'=true, forced directly
         // rather than depending on PageFilterHelper::scriptBasename()'s own
         // $_SERVER-based page-name resolution in a CLI test process.
-        $currentConfig->setFilterPages(['default' => ['used' => true, 'cancel' => false, 'add_notes' => true]]);
+        $currentConfig->filterPages = ['default' => ['used' => true, 'cancel' => false, 'add_notes' => true]];
 
         $this->conn = DbConnection::build();
 
@@ -248,7 +248,7 @@ final class FilterServiceInitializeFromRequestTest extends IntegrationTestCase
         if (! $currentConfig instanceof CurrentConfig) {
             throw new LogicException('Container returned an unexpected type for ' . CurrentConfig::class);
         }
-        $currentConfig->setFilterPages(['default' => ['used' => true, 'cancel' => true, 'add_notes' => true]]);
+        $currentConfig->filterPages = ['default' => ['used' => true, 'cancel' => true, 'add_notes' => true]];
         $this->filterState->reset();
 
         new FilterService($this->filterState, $this->sessionService, $this->translator, LangTestFactory::get(), CurrentConfigTestFactory::get(), new EventDispatcher(), $this->conn)->initializeFromRequest(PageStateTestFactory::get(), CurrentUserTestFactory::get());

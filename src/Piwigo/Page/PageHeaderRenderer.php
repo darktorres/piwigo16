@@ -76,14 +76,14 @@ final class PageHeaderRenderer
 
         $eventDispatcher->dispatchNotify(new LocBeginPageHeader());
 
-        $show_mobile_app_banner = $currentConfig->showMobileAppBannerInGallery();
+        $show_mobile_app_banner = $currentConfig->showMobileAppBannerInGallery;
         if (self::isAdminContextActive()) {
-            $show_mobile_app_banner = $currentConfig->showMobileAppBannerInAdmin();
+            $show_mobile_app_banner = $currentConfig->showMobileAppBannerInAdmin;
         }
 
         /** @var string $conf_gallery_title */
-        $conf_gallery_title = $currentConfig->galleryTitle();
-        $page_banner = $pageState->pageBanner ?? $currentConfig->pageBanner();
+        $conf_gallery_title = $currentConfig->galleryTitle;
+        $page_banner = $pageState->pageBanner ?? $currentConfig->pageBanner;
 
         $bodyDataJson = json_encode($pageState->bodyData);
         $bodyDataJson = is_string($bodyDataJson) ? $bodyDataJson : '{}';
@@ -92,7 +92,7 @@ final class PageHeaderRenderer
         $header_notes = $pageState->headerNotes;
         $headerNotesValue = self::emptyValue($header_notes) ? null : $header_notes;
 
-        if (! $currentConfig->metaRef()) {
+        if (! $currentConfig->metaRef) {
             $pageState->setMetaRobotsFlag('noindex');
             $pageState->setMetaRobotsFlag('nofollow');
         }
@@ -129,7 +129,7 @@ final class PageHeaderRenderer
             contentEncoding: CharsetHelper::getPwgCharset(),
             pageTitle: strip_tags($title),
             homeUrl: self::urlService()->getGalleryHomeUrl(),
-            levelSeparator: $currentConfig->levelSeparator(),
+            levelSeparator: $currentConfig->levelSeparator,
             showMobileAppBanner: $show_mobile_app_banner,
             bodyClasses: $pageState->bodyClasses,
             bodyData: $bodyDataJson,

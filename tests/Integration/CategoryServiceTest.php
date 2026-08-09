@@ -251,7 +251,7 @@ final class CategoryServiceTest extends IntegrationTestCase
         );
 
         CurrentUserTestFactory::get()->set(User::fromUserArray(['id' => 1]));
-        $currentConfig->setRateEnabled(true);
+        $currentConfig->rateEnabled = true;
         // getCategoryRepresentantProperties()'s own DerivativeImage::thumb_url()/
         // url() calls need a real, populated ImageStdParams type map --
         // DerivativeImage::urlService() resolves UrlServiceInterface live
@@ -1424,7 +1424,7 @@ final class CategoryServiceTest extends IntegrationTestCase
         if (! $currentConfig instanceof CurrentConfig) {
             throw new LogicException('Container returned an unexpected type for ' . CurrentConfig::class);
         }
-        $currentConfig->setNewcatDefaultPosition('last');
+        $currentConfig->newcatDefaultPosition = 'last';
 
         try {
             $result = $this->service->createVirtualCategory('ct_last_position_' . uniqid(), new CategoryServiceFakeActivityLogger(), CurrentUserTestFactory::get());
@@ -1445,7 +1445,7 @@ final class CategoryServiceTest extends IntegrationTestCase
 
             $this->conn->executeStatement('DELETE FROM ' . Tables::categories() . ' WHERE id = ' . $newId);
         } finally {
-            $currentConfig->setNewcatDefaultPosition('first');
+            $currentConfig->newcatDefaultPosition = 'first';
         }
     }
 

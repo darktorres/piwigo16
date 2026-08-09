@@ -89,7 +89,7 @@ final class PictureCommentRenderer
         }
 
         if ($showComments and $pictureCommentSubmitRequest->contentPresent) {
-            if ($accessLevelChecker->isAGuest() and ! $currentConfig->commentsForall()) {
+            if ($accessLevelChecker->isAGuest() and ! $currentConfig->commentsForall) {
                 throw new ResponseReadyException(ResponseFactory::text('Session expired'));
             }
 
@@ -160,7 +160,7 @@ final class PictureCommentRenderer
         $nbComments = $commentRepository->countForImage(ImageId::from($imageId), $onlyValidated);
 
         // navigation bar creation
-        $nbCommentPage = $currentConfig->nbCommentPage();
+        $nbCommentPage = $currentConfig->nbCommentPage;
 
         $navigationBar = new PaginationService($currentConfig)
             ->createNavigationBar($urlService->duplicatePictureUrl([], ['start']), $nbComments, $start, $nbCommentPage, true);
@@ -173,7 +173,7 @@ final class PictureCommentRenderer
             if ($getCommentsOrder !== null && $getCommentsOrder !== '' && $getCommentsOrder !== '0' && in_array(strtoupper($getCommentsOrder), [SortOrder::Asc->value, SortOrder::Desc->value], true)) {
                 $sessionService->setSessionVar('comments_order', $getCommentsOrder);
             }
-            $commentsOrder = $sessionService->getCommentsOrder() ?? $currentConfig->commentsOrder();
+            $commentsOrder = $sessionService->getCommentsOrder() ?? $currentConfig->commentsOrder;
 
             $template->assignContext(new PictureCommentsOrderPageContext(
                 orderUrl: $urlService->addUrlParams($urlService->duplicatePictureUrl(), [
@@ -284,7 +284,7 @@ final class PictureCommentRenderer
         if ($editCommentId !== null) {
             $showAddCommentForm = false;
         }
-        if ($accessLevelChecker->isAGuest() and ! $currentConfig->commentsForall()) {
+        if ($accessLevelChecker->isAGuest() and ! $currentConfig->commentsForall) {
             $showAddCommentForm = false;
         }
 
@@ -301,13 +301,13 @@ final class PictureCommentRenderer
                 'KEY' => $key,
                 'CONTENT' => '',
                 'SHOW_AUTHOR' => ! $accessLevelChecker->isClassicUser(),
-                'AUTHOR_MANDATORY' => $currentConfig->commentsAuthorMandatory(),
+                'AUTHOR_MANDATORY' => $currentConfig->commentsAuthorMandatory,
                 'AUTHOR' => '',
                 'WEBSITE_URL' => '',
                 'SHOW_EMAIL' => ! $accessLevelChecker->isClassicUser() or $userEmailEmpty,
-                'EMAIL_MANDATORY' => $currentConfig->commentsEmailMandatory(),
+                'EMAIL_MANDATORY' => $currentConfig->commentsEmailMandatory,
                 'EMAIL' => '',
-                'SHOW_WEBSITE' => $currentConfig->commentsEnableWebsite(),
+                'SHOW_WEBSITE' => $currentConfig->commentsEnableWebsite,
             ];
 
             if ($commentAction === 'reject') {

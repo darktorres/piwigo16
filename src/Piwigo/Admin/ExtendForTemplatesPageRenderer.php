@@ -46,7 +46,7 @@ final class ExtendForTemplatesPageRenderer
         // extentsForTemplates() defaults to [] when never configured, so
         // this loop is naturally a no-op then -- no separate presence
         // check needed.
-        foreach ($currentConfig->extentsForTemplates() as $tpl_extension_file => $tpl_extension_conditions) {
+        foreach ($currentConfig->extentsForTemplates as $tpl_extension_file => $tpl_extension_conditions) {
             if (is_string($tpl_extension_file) && is_array($tpl_extension_conditions)
                 && isset($tpl_extension_conditions[0], $tpl_extension_conditions[1], $tpl_extension_conditions[2])
                 && is_string($tpl_extension_conditions[0]) && is_string($tpl_extension_conditions[1])
@@ -155,7 +155,7 @@ final class ExtendForTemplatesPageRenderer
                 }
                 $i++;
             }
-            $currentConfig->setExtentsForTemplates($replacements);
+            $currentConfig->extentsForTemplates = $replacements;
             $tpl_extension = $replacements;
             /* ecrire la nouvelle conf */
             $configService->confUpdateParam('extents_for_templates', $replacements);

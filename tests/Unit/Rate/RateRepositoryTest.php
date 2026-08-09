@@ -56,7 +56,6 @@ use Piwigo\Rate\RateRepository;
 function rateTestRepo(): RateRepository
 {
     $repo = EntityManagerFactory::build(DbConnection::build())->getRepository(RateEntity::class);
-    expect($repo)->toBeInstanceOf(RateRepository::class);
 
     return $repo;
 }
@@ -73,7 +72,6 @@ function rateTestRepoWithEm(): array
 {
     $em = EntityManagerFactory::build(DbConnection::build());
     $repo = $em->getRepository(RateEntity::class);
-    expect($repo)->toBeInstanceOf(RateRepository::class);
 
     return [$repo, $em];
 }

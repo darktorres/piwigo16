@@ -130,7 +130,7 @@ final class BatchManagerUnitPageRenderer
                 $data['author'] = $batchManagerUnitRequest->post['author-' . $row_id_str] ?? null;
                 $data['level'] = $batchManagerUnitRequest->post['level-' . $row_id_str] ?? null;
 
-                if ($this->currentConfig->allowHtmlDescriptions()) {
+                if ($this->currentConfig->allowHtmlDescriptions) {
                     $data['comment'] = $batchManagerUnitRequest->post['description-' . $row_id_str] ?? null;
                 } else {
                     $description_post = $batchManagerUnitRequest->post['description-' . $row_id_str] ?? null;
@@ -229,8 +229,8 @@ final class BatchManagerUnitPageRenderer
             // \Piwigo\Config\ConfigDb::confUpdateParam('batch_manager_images_per_page_unit' , intval($_GET['display']));
             // $nb_images = \Piwigo\Config\CurrentConfig::batchManagerImagesPerPageUnit();
             $nb_images = $batchManagerUnitRequest->display;
-        } elseif (in_array($this->currentConfig->batchManagerImagesPerPageUnit(), [5, 10, 50], true)) {
-            $nb_images = $this->currentConfig->batchManagerImagesPerPageUnit();
+        } elseif (in_array($this->currentConfig->batchManagerImagesPerPageUnit, [5, 10, 50], true)) {
+            $nb_images = $this->currentConfig->batchManagerImagesPerPageUnit;
         } else {
             $nb_images = 5;
         }
@@ -271,13 +271,13 @@ final class BatchManagerUnitPageRenderer
             } else {
                 // order_by is a raw "ORDER BY ..." SQL fragment string --
                 // see CurrentConfig::orderBy()'s own docblock.
-                $order_by = $this->currentConfig->orderBy();
+                $order_by = $this->currentConfig->orderBy;
             }
 
             if ($is_category) {
                 $category_info = $this->categoryService->getCategoryInfo($filter_category_id);
 
-                $order_by = $this->currentConfig->orderByInsideCategory();
+                $order_by = $this->currentConfig->orderByInsideCategory;
                 $category_image_order = $category_info !== null ? $category_info->imageOrder : null;
                 if (is_string($category_image_order) && $category_image_order !== '') {
                     $order_by = ' ORDER BY ' . $category_image_order;

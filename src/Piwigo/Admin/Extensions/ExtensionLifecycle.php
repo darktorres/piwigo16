@@ -107,7 +107,7 @@ final readonly class ExtensionLifecycle
         array $options = [],
     ): array {
 
-        if (! $this->currentConfig->enableExtensionsInstall() and $action === 'delete') {
+        if (! $this->currentConfig->enableExtensionsInstall and $action === 'delete') {
             $this->htmlRenderer
                 ->fatalError('Piwigo extensions install/update/delete system is disabled');
         }
@@ -306,7 +306,7 @@ final readonly class ExtensionLifecycle
                 }
 
                 $isMobile = (bool) ($fsEntry['mobile'] ?? false);
-                $currentMobileTheme = $this->currentConfig->mobilTheme();
+                $currentMobileTheme = $this->currentConfig->mobilTheme;
                 $hasOtherMobileTheme = $currentMobileTheme !== '' && $currentMobileTheme !== '0';
                 if ($isMobile && $hasOtherMobileTheme && $currentMobileTheme !== $id) {
                     $errors[] = $this->lang->t('You can activate only one mobile theme.');
@@ -371,7 +371,7 @@ final readonly class ExtensionLifecycle
                 $maintain = $this->buildThemeMaintain($id);
                 $maintain->delete();
 
-                FilesystemHelper::deltree($this->currentConfig->themesPath() . $id, $this->currentConfig->themesPath() . 'trash');
+                FilesystemHelper::deltree($this->currentConfig->themesPath . $id, $this->currentConfig->themesPath . 'trash');
                 break;
 
             case 'set_default':
@@ -437,8 +437,8 @@ final readonly class ExtensionLifecycle
                 break;
 
             case 'set_default':
-                $defaultUserId = $this->currentConfig->defaultUserId();
-                $guestId = $this->currentConfig->guestId();
+                $defaultUserId = $this->currentConfig->defaultUserId;
+                $guestId = $this->currentConfig->guestId;
                 $this->repo->setLanguageForUserIds($id, $defaultUserId, $guestId);
                 break;
         }
@@ -500,8 +500,8 @@ final readonly class ExtensionLifecycle
         $defaultTheme = $this->userService->getDefaultTheme();
         $userIds = $this->repo->findUserIdsByTheme($defaultTheme);
 
-        $defaultUserId = $this->currentConfig->defaultUserId();
-        $guestId = $this->currentConfig->guestId();
+        $defaultUserId = $this->currentConfig->defaultUserId;
+        $guestId = $this->currentConfig->guestId;
 
         $userIds[] = (string) $defaultUserId;
         $userIds[] = (string) $guestId;
@@ -544,7 +544,7 @@ final readonly class ExtensionLifecycle
 
     private function buildThemeMaintain(string $themeId): ThemeMaintain
     {
-        $fileToInclude = $this->currentConfig->themesPath() . '/' . $themeId . '/admin/maintain.inc.php';
+        $fileToInclude = $this->currentConfig->themesPath . '/' . $themeId . '/admin/maintain.inc.php';
         $classname = $themeId . '_maintain';
 
         if (file_exists($fileToInclude)) {

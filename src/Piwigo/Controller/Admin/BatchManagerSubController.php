@@ -123,8 +123,8 @@ final class BatchManagerSubController implements AdminSubControllerInterface
         $user_id = $this->currentUser->get()
             ->id;
 
-        $available_permission_levels = $this->currentConfig->availablePermissionLevels();
-        $conf_order_by = $this->currentConfig->orderBy();
+        $available_permission_levels = $this->currentConfig->availablePermissionLevels;
+        $conf_order_by = $this->currentConfig->orderBy;
 
         // used both for the action-specific redirects below and for the
         // "category no longer exists" redirect further down

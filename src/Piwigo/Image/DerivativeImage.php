@@ -307,9 +307,9 @@ final class DerivativeImage
         }
         $loc = substr_replace($loc, '-' . implode('_', $tokens), $dot, 0);
 
-        $rel_path = $currentConfig->derivativeDir() . $loc;
+        $rel_path = $currentConfig->derivativeDir . $loc;
 
-        $url_style = $currentConfig->derivativeUrlStyle();
+        $url_style = $currentConfig->derivativeUrlStyle;
         if (! (bool) $url_style) {
             $abs_path = self::paths()->root . $rel_path;
             $mtime = file_exists($abs_path) ? filemtime($abs_path) : false;
@@ -323,10 +323,10 @@ final class DerivativeImage
 
         if ($url_style === 2) {
             $rel_url = 'i';
-            if ($currentConfig->phpExtensionInUrls()) {
+            if ($currentConfig->phpExtensionInUrls) {
                 $rel_url .= '.php';
             }
-            if ($currentConfig->questionMarkInUrls()) {
+            if ($currentConfig->questionMarkInUrls) {
                 $rel_url .= '?';
             }
             $rel_url .= '/' . $loc;

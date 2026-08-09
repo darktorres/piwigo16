@@ -54,8 +54,8 @@ function callDerivativeUrlPath(string $urlSuffix, string $fromType, string $toTy
 
 test('derivativeUrlPath substitutes the type token and keeps the rest of the suffix unchanged', function (): void {
     $currentConfig = new CurrentConfig();
-    $currentConfig->setPhpExtensionInUrls(true);
-    $currentConfig->setQuestionMarkInUrls(true);
+    $currentConfig->phpExtensionInUrls = true;
+    $currentConfig->questionMarkInUrls = true;
 
     $result = callDerivativeUrlPath(
         'upload/2026/08/01/20260801000000-2e7ed83c-th.jpg',
@@ -69,8 +69,8 @@ test('derivativeUrlPath substitutes the type token and keeps the rest of the suf
 
 test('derivativeUrlPath omits .php when php_extension_in_urls is disabled', function (): void {
     $currentConfig = new CurrentConfig();
-    $currentConfig->setPhpExtensionInUrls(false);
-    $currentConfig->setQuestionMarkInUrls(true);
+    $currentConfig->phpExtensionInUrls = false;
+    $currentConfig->questionMarkInUrls = true;
 
     $result = callDerivativeUrlPath('foo-sq.jpg', ImageStdParams::SQUARE, ImageStdParams::THUMB, $currentConfig);
 
@@ -79,8 +79,8 @@ test('derivativeUrlPath omits .php when php_extension_in_urls is disabled', func
 
 test('derivativeUrlPath omits the leading ? when question_mark_in_urls is disabled', function (): void {
     $currentConfig = new CurrentConfig();
-    $currentConfig->setPhpExtensionInUrls(true);
-    $currentConfig->setQuestionMarkInUrls(false);
+    $currentConfig->phpExtensionInUrls = true;
+    $currentConfig->questionMarkInUrls = false;
 
     $result = callDerivativeUrlPath('foo-sq.jpg', ImageStdParams::SQUARE, ImageStdParams::THUMB, $currentConfig);
 
@@ -89,8 +89,8 @@ test('derivativeUrlPath omits the leading ? when question_mark_in_urls is disabl
 
 test('derivativeUrlPath prefixes the app-mount-relative i.php URL, unaware of the app root itself', function (): void {
     $currentConfig = new CurrentConfig();
-    $currentConfig->setPhpExtensionInUrls(true);
-    $currentConfig->setQuestionMarkInUrls(true);
+    $currentConfig->phpExtensionInUrls = true;
+    $currentConfig->questionMarkInUrls = true;
 
     // derivativeUrlPath() itself is deliberately root-agnostic -- the real
     // caller (trySwitchSource()) prefixes its return value with

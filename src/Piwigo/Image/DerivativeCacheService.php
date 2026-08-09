@@ -62,7 +62,7 @@ final class DerivativeCacheService
         }
         $pattern .= '\.[a-zA-Z0-9]{3,4}$#';
 
-        $root = $this->paths->root . $this->currentConfig->derivativeDir();
+        $root = $this->paths->root . $this->currentConfig->derivativeDir;
         $contents = @opendir($root);
         if ($contents !== false) {
             while (($node = readdir($contents)) !== false) {
@@ -101,7 +101,7 @@ final class DerivativeCacheService
         }
         $path = substr_replace($path, $pattern, $dot, 0);
 
-        $glob = glob($this->paths->root . $this->currentConfig->derivativeDir() . $path);
+        $glob = glob($this->paths->root . $this->currentConfig->derivativeDir . $path);
         if ($glob !== false) {
             foreach ($glob as $file) {
                 @unlink($file);

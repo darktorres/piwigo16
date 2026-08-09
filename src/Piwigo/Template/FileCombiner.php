@@ -49,13 +49,13 @@ final class FileCombiner
     public static function clear_combined_files(CurrentConfig $currentConfig, Paths $paths): void
     {
         $root = $paths->root;
-        $dir = opendir($root . $currentConfig->combinedDir());
+        $dir = opendir($root . $currentConfig->combinedDir);
         if ($dir === false) {
             return;
         }
         while ((bool) ($file = readdir($dir))) {
             if (StringHelper::getExtension($file) === 'js' || StringHelper::getExtension($file) === 'css') {
-                unlink($root . $currentConfig->combinedDir() . $file);
+                unlink($root . $currentConfig->combinedDir . $file);
             }
         }
         closedir($dir);
@@ -100,14 +100,14 @@ final class FileCombiner
                 $result[] = $combinable;
                 continue;
             }
-            if (! $this->currentConfig->templateCombineFiles()) {
+            if (! $this->currentConfig->templateCombineFiles) {
                 $this->flush_pending($result, $pending, $key, $force);
                 $key = $ini_key;
             }
 
             $key[] = $combinable->path;
             $key[] = (string) $combinable->version;
-            if ($this->currentConfig->templateCompileCheck()) {
+            if ($this->currentConfig->templateCompileCheck) {
                 $key[] = (string) filemtime($this->paths->root . $combinable->path);
             }
             $pending[] = $combinable;
@@ -127,7 +127,7 @@ final class FileCombiner
 
     private function computeForce(): bool
     {
-        if ($this->accessLevelChecker->isAdmin() && ($this->is_css || ! $this->currentConfig->templateCompileCheck())) {
+        if ($this->accessLevelChecker->isAdmin() && ($this->is_css || ! $this->currentConfig->templateCompileCheck)) {
             return (isset($_SERVER['HTTP_CACHE_CONTROL']) && is_string($_SERVER['HTTP_CACHE_CONTROL']) && str_contains($_SERVER['HTTP_CACHE_CONTROL'], 'max-age=0'))
               || (isset($_SERVER['HTTP_PRAGMA']) && is_string($_SERVER['HTTP_PRAGMA']) && (bool) strpos($_SERVER['HTTP_PRAGMA'], 'no-cache'));
         }
@@ -146,7 +146,7 @@ final class FileCombiner
     {
         if (count($pending) > 1) {
             $key = join('>', $key);
-            $file = $this->currentConfig->combinedDir() . base_convert(hash('crc32b', $key), 16, 36) . '.' . $this->type;
+            $file = $this->currentConfig->combinedDir . base_convert(hash('crc32b', $key), 16, 36) . '.' . $this->type;
             if ($force || ! file_exists($this->paths->root . $file)) {
                 $output = '';
                 $header = '';
@@ -194,10 +194,10 @@ final class FileCombiner
             $file = null;
             if (! $return_content) {
                 $key = [$combinable->path, $combinable->version];
-                if ($this->currentConfig->templateCompileCheck()) {
+                if ($this->currentConfig->templateCompileCheck) {
                     $key[] = filemtime($this->paths->root);
                 }
-                $file = $this->currentConfig->combinedDir() . 't' . base_convert(hash('crc32b', implode(',', $key)), 16, 36) . '.' . $this->type;
+                $file = $this->currentConfig->combinedDir . 't' . base_convert(hash('crc32b', implode(',', $key)), 16, 36) . '.' . $this->type;
                 if (! $force && file_exists($this->paths->root . $file)) {
                     $combinable->path = $file;
                     $combinable->version = false;

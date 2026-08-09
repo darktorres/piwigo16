@@ -21,7 +21,6 @@ function feedTestRepo(): FeedRepository
 {
     $conn = DbConnection::build();
     $repo = EntityManagerFactory::build($conn)->getRepository(FeedEntity::class);
-    expect($repo)->toBeInstanceOf(FeedRepository::class);
 
     return $repo;
 }

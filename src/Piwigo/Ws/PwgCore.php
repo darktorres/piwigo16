@@ -148,9 +148,9 @@ final class PwgCore
 
         $uid = '&b=' . time();
 
-        $this->currentConfig->setQuestionMarkInUrls(true);
-        $this->currentConfig->setPhpExtensionInUrls(true);
-        $this->currentConfig->setDerivativeUrlStyle(2); // script
+        $this->currentConfig->questionMarkInUrls = true;
+        $this->currentConfig->phpExtensionInUrls = true;
+        $this->currentConfig->derivativeUrlStyle = 2; // script
 
         $qlimit = (int) min(5000, ceil(max($image_count / 500, $max_urls / count($types))));
         $criteria = new MissingDerivativesCriteria(
@@ -270,7 +270,7 @@ final class PwgCore
      */
     public function getCacheSize(array $params, PwgServer &$service): array
     {
-        $data_location = $this->currentConfig->dataLocation();
+        $data_location = $this->currentConfig->dataLocation;
         // $data_location ('_data/') is a path relative to the install root,
         // not to the PHP process's CWD -- request-time CWD is public/ (the
         // webroot), not the install root. Compose it against
@@ -498,7 +498,7 @@ final class PwgCore
         }
 
         if ($this->accessControl->isAdmin()) {
-            $upload_ext_list = ($this->currentConfig->uploadFormAllTypes()) ? $this->currentConfig->fileExtensions() : $this->currentConfig->pictureExtensions();
+            $upload_ext_list = ($this->currentConfig->uploadFormAllTypes) ? $this->currentConfig->fileExtensions : $this->currentConfig->pictureExtensions;
 
             $res['upload_file_types'] = implode(
                 ',',
@@ -510,7 +510,7 @@ final class PwgCore
                 )
             );
 
-            $chunk_size = $this->currentConfig->uploadFormChunkSize();
+            $chunk_size = $this->currentConfig->uploadFormChunkSize;
             $res['upload_form_chunk_size'] = $chunk_size;
         }
 
@@ -583,7 +583,7 @@ final class PwgCore
         // an ActivityListCriteria, translated into bound conditions inside
         // ActivityRepository itself (see that class's own findPaginated()
         // docblock).
-        $connections_mode = $this->currentConfig->activityDisplayConnections();
+        $connections_mode = $this->currentConfig->activityDisplayConnections;
         $admin_ids = [];
         if ($connections_mode === 'admins_only') {
             $admin_ids = (new UserRepository(EntityManagerFactory::build(DbConnection::build()), $this->eventDispatcher, $this->currentConfig))->findAdminIds();
@@ -1122,7 +1122,7 @@ final class PwgCore
 
         $page_start = $page['start'];
 
-        $nb_logs_page = $this->currentConfig->nbLogsPage();
+        $nb_logs_page = $this->currentConfig->nbLogsPage;
 
         $i = 0;
         $first_line = $page_start + 1;
@@ -1174,7 +1174,7 @@ final class PwgCore
                 $summary['total_filesize'] = $running_total_filesize + (is_scalar($filesize_value) ? intval($filesize_value) : 0);
             }
 
-            if (is_numeric($line_user_id) and (int) $line_user_id === $this->currentConfig->guestId()) {
+            if (is_numeric($line_user_id) and (int) $line_user_id === $this->currentConfig->guestId) {
                 $ip_key = $line_ip ?? '';
                 // 'guests_IP' is only ever set to array by this same loop
                 // (initialized to [] above, then always reassigned as array below).
@@ -1354,7 +1354,7 @@ final class PwgCore
             // we delete the "guest" from the $username_of hash so that it is
             // avoided in next steps
             // guestId() is SCHEMA-typed 'int' only.
-            $guest_id_key = (string) $this->currentConfig->guestId();
+            $guest_id_key = (string) $this->currentConfig->guestId;
             $username_of = array_diff_key($username_of, [
                 $guest_id_key => true,
             ]);

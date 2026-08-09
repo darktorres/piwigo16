@@ -154,7 +154,7 @@ final class ThemesInstalledPageRenderer
             tplThemes: $tpl_themes,
             isWebmaster: $this->accessControl->isWebmaster(),
             adminPageTitle: $this->lang->t('Themes'),
-            enableExtensionsInstall: $this->currentConfig->enableExtensionsInstall(),
+            enableExtensionsInstall: $this->currentConfig->enableExtensionsInstall,
         ));
 
         $template->set_filenames([

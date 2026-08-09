@@ -147,10 +147,10 @@ use Piwigo\Tests\Support\KernelContainerOverride;
 // ---------------------------------------------------------------------
 
 beforeEach(function (): void {
-    CurrentConfigTestFactory::get()->setSlideshowPeriod(4);
-    CurrentConfigTestFactory::get()->setSlideshowPeriodMin(1);
-    CurrentConfigTestFactory::get()->setSlideshowPeriodMax(10);
-    CurrentConfigTestFactory::get()->setSlideshowRepeat(true);
+    CurrentConfigTestFactory::get()->slideshowPeriod = 4;
+    CurrentConfigTestFactory::get()->slideshowPeriodMin = 1;
+    CurrentConfigTestFactory::get()->slideshowPeriodMax = 10;
+    CurrentConfigTestFactory::get()->slideshowRepeat = true;
 });
 
 afterEach(function (): void {
@@ -269,11 +269,11 @@ test('logger() throws when the container returns an unexpected type for CurrentL
 test('currentConfigService() throws when the container returns an unexpected type for CurrentConfigService', function (): void {
     // Kills line 167's InstanceOfToTrue -- countOrphans() is the
     // simplest public entry point that reaches currentConfigService()
-    // (only when $currentConfig->countOrphans() is null, which is
+    // (only when $currentConfig->countOrphans is null, which is
     // CurrentConfigTestFactory's own default state after afterEach's
     // reset()).
     [$conn, $repo] = imageServiceTestConnAndRepo();
-    expect(CurrentConfigTestFactory::get()->countOrphans())->toBeNull();
+    expect(CurrentConfigTestFactory::get()->countOrphans)->toBeNull();
     $service = imageServiceTestNewService($repo, $conn);
 
     KernelContainerOverride::withWrongTypeFor(CurrentConfigService::class, function () use ($service): void {
@@ -453,7 +453,7 @@ test('correctSlideshowParams defaults an absent period to 0, not -1, before clam
     // is NOT < 0 and not > the max either, so 'period' is left absent;
     // the mutant's `?? -1` default IS < 0, so it clamps 'period' up to
     // 0, a real, observable key the real code never adds here.
-    CurrentConfigTestFactory::get()->setSlideshowPeriodMin(0);
+    CurrentConfigTestFactory::get()->slideshowPeriodMin = 0;
     [$conn, $repo] = imageServiceTestConnAndRepo();
     $corrected = imageServiceTestNewService($repo, $conn)->correctSlideshowParams([]);
 
@@ -739,7 +739,7 @@ test('deleteElementFiles deletes the original, its representative, and its forma
     [$conn, $repo] = imageServiceTestConnAndRepo();
     $root = sys_get_temp_dir() . '/piwigo-imageservice-test-' . bin2hex(random_bytes(8));
     Kernel::boot(Paths::fromRoot($root));
-    CurrentConfigTestFactory::get()->setNeverDeleteOriginals(false);
+    CurrentConfigTestFactory::get()->neverDeleteOriginals = false;
 
     mkdir($root . '/upload/2026/07/pwg_representative', 0o777, true);
     mkdir($root . '/upload/2026/07/pwg_format', 0o777, true);
@@ -809,7 +809,7 @@ test('deleteElementFiles accumulates every registered format for an id, not just
     [$conn, $repo] = imageServiceTestConnAndRepo();
     $root = sys_get_temp_dir() . '/piwigo-imageservice-test-' . bin2hex(random_bytes(8));
     Kernel::boot(Paths::fromRoot($root));
-    CurrentConfigTestFactory::get()->setNeverDeleteOriginals(false);
+    CurrentConfigTestFactory::get()->neverDeleteOriginals = false;
 
     mkdir($root . '/upload/2026/07/pwg_format', 0o777, true);
     $imageId = imageServiceTestInsertImage($conn, 'upload/2026/07/multiformat.jpg');
@@ -852,7 +852,7 @@ test('deleteElementFiles skips a remote row with `continue`, not `break` -- a lo
     [$conn, $repo] = imageServiceTestConnAndRepo();
     $root = sys_get_temp_dir() . '/piwigo-imageservice-test-' . bin2hex(random_bytes(8));
     Kernel::boot(Paths::fromRoot($root));
-    CurrentConfigTestFactory::get()->setNeverDeleteOriginals(false);
+    CurrentConfigTestFactory::get()->neverDeleteOriginals = false;
 
     mkdir($root . '/upload/2026/07', 0o777, true);
     file_put_contents($root . '/upload/2026/07/afterremote.jpg', 'x');
@@ -888,7 +888,7 @@ test('deleteElementFiles treats an explicitly-empty-string representative_ext th
     [$conn, $repo] = imageServiceTestConnAndRepo();
     $root = sys_get_temp_dir() . '/piwigo-imageservice-test-' . bin2hex(random_bytes(8));
     Kernel::boot(Paths::fromRoot($root));
-    CurrentConfigTestFactory::get()->setNeverDeleteOriginals(false);
+    CurrentConfigTestFactory::get()->neverDeleteOriginals = false;
 
     mkdir($root . '/upload/2026/07/pwg_representative', 0o777, true);
     $imageId = imageServiceTestInsertImage($conn, 'upload/2026/07/emptyrepext.jpg', '');
@@ -924,7 +924,7 @@ test('deleteElementFiles stops removing a row\'s remaining files (`break`, not `
     [$conn, $repo] = imageServiceTestConnAndRepo();
     $root = sys_get_temp_dir() . '/piwigo-imageservice-test-' . bin2hex(random_bytes(8));
     Kernel::boot(Paths::fromRoot($root));
-    CurrentConfigTestFactory::get()->setNeverDeleteOriginals(false);
+    CurrentConfigTestFactory::get()->neverDeleteOriginals = false;
 
     mkdir($root . '/upload/2026/07/lockedwithrep/pwg_representative', 0o777, true);
     $imageId = imageServiceTestInsertImage($conn, 'upload/2026/07/lockedwithrep/original.jpg', 'jpg');
@@ -980,14 +980,14 @@ test('deleteElementFiles adds representative_ext to the derivative-cache lookup 
     [$conn, $repo] = imageServiceTestConnAndRepo();
     $root = sys_get_temp_dir() . '/piwigo-imageservice-test-' . bin2hex(random_bytes(8));
     Kernel::boot(Paths::fromRoot($root));
-    CurrentConfigTestFactory::get()->setDataLocation('data/');
+    CurrentConfigTestFactory::get()->dataLocation = 'data/';
     // Skips the real original/representative file unlink block
     // entirely, keeping this test focused purely on the derivative
     // cache side effect line 245/248 actually control.
-    CurrentConfigTestFactory::get()->setNeverDeleteOriginals(true);
+    CurrentConfigTestFactory::get()->neverDeleteOriginals = true;
 
     $imageId = imageServiceTestInsertImage($conn, 'upload/2026/07/repextderiv.jpg', 'jpg');
-    $derivRoot = $root . '/' . CurrentConfigTestFactory::get()->derivativeDir();
+    $derivRoot = $root . '/' . CurrentConfigTestFactory::get()->derivativeDir;
     mkdir($derivRoot . 'upload/2026/07/pwg_representative', 0o777, true);
     $representativePatternDecoy = $derivRoot . 'upload/2026/07/pwg_representative/repextderiv-th.jpg';
     $originalPatternDecoy = $derivRoot . 'upload/2026/07/repextderiv-th.jpg';
@@ -1015,7 +1015,7 @@ test('deleteElementFiles stops at the first file it cannot remove and does not r
     [$conn, $repo] = imageServiceTestConnAndRepo();
     $root = sys_get_temp_dir() . '/piwigo-imageservice-test-' . bin2hex(random_bytes(8));
     Kernel::boot(Paths::fromRoot($root));
-    CurrentConfigTestFactory::get()->setNeverDeleteOriginals(false);
+    CurrentConfigTestFactory::get()->neverDeleteOriginals = false;
 
     mkdir($root . '/upload/2026/07/locked', 0o777, true);
     $blockedId = imageServiceTestInsertImage($conn, 'upload/2026/07/locked/blocked.jpg');
@@ -1061,7 +1061,7 @@ test('deleteElements() returns 0 without touching the database when physical del
     [$conn, $repo] = imageServiceTestConnAndRepo();
     $root = sys_get_temp_dir() . '/piwigo-imageservice-test-' . bin2hex(random_bytes(8));
     Kernel::boot(Paths::fromRoot($root));
-    CurrentConfigTestFactory::get()->setNeverDeleteOriginals(false);
+    CurrentConfigTestFactory::get()->neverDeleteOriginals = false;
 
     mkdir($root . '/upload/2026/07/locked', 0o777, true);
     $blockedId = imageServiceTestInsertImage($conn, 'upload/2026/07/locked/blocked.jpg');
@@ -1108,7 +1108,7 @@ test('deleteElements() with physical deletion removing zero files never fires de
     [$conn, $repo] = imageServiceTestConnAndRepo();
     $root = sys_get_temp_dir() . '/piwigo-imageservice-test-' . bin2hex(random_bytes(8));
     Kernel::boot(Paths::fromRoot($root));
-    CurrentConfigTestFactory::get()->setNeverDeleteOriginals(false);
+    CurrentConfigTestFactory::get()->neverDeleteOriginals = false;
 
     mkdir($root . '/upload/2026/07/locked3', 0o777, true);
     $blockedId = imageServiceTestInsertImage($conn, 'upload/2026/07/locked3/blocked.jpg');
@@ -1659,7 +1659,7 @@ test('emptyLounge() clears a stale lock, logs the API-suffixed begin/win/end mes
         // hyphen) -- explode('-', ...) must split into exactly [execId,
         // startTime] for the (int) cast below to read the real timestamp,
         // not an unrelated string.
-        CurrentConfigTestFactory::get()->setEmptyLoungeRunning('staleexecid-' . (time() - 100));
+        CurrentConfigTestFactory::get()->emptyLoungeRunning = 'staleexecid-' . (time() - 100);
         $configRepo = EntityManagerFactory::build($conn)->getRepository(ConfigEntry::class);
         CurrentConfigServiceTestFactory::get()->set(new ConfigService($configRepo, new EventDispatcher(), CurrentConfigTestFactory::get()));
         // invalidateUserCache: false below -- this must survive untouched,
@@ -1833,7 +1833,7 @@ test('emptyLounge() actually clears a stale lock\'s real database row, letting t
             "INSERT INTO " . Tables::config() . " (param, value) VALUES ('empty_lounge_running', ?)",
             [json_encode($staleValue)]
         );
-        CurrentConfigTestFactory::get()->setEmptyLoungeRunning($staleValue);
+        CurrentConfigTestFactory::get()->emptyLoungeRunning = $staleValue;
         $configRepo = EntityManagerFactory::build($conn)->getRepository(ConfigEntry::class);
         CurrentConfigServiceTestFactory::get()->set(new ConfigService($configRepo, new EventDispatcher(), CurrentConfigTestFactory::get()));
 
@@ -1886,7 +1886,7 @@ test('emptyLounge() does not touch a lock that is not actually stale, and logs t
             "INSERT INTO " . Tables::config() . " (param, value) VALUES ('empty_lounge_running', ?)",
             [json_encode($freshLockValue)]
         );
-        CurrentConfigTestFactory::get()->setEmptyLoungeRunning($freshLockValue);
+        CurrentConfigTestFactory::get()->emptyLoungeRunning = $freshLockValue;
         $configRepo = EntityManagerFactory::build($conn)->getRepository(ConfigEntry::class);
         CurrentConfigServiceTestFactory::get()->set(new ConfigService($configRepo, new EventDispatcher(), CurrentConfigTestFactory::get()));
 
@@ -1995,7 +1995,7 @@ test('emptyLounge() treats a lock that is exactly 60 seconds old as still fresh,
             "INSERT INTO " . Tables::config() . " (param, value) VALUES ('empty_lounge_running', ?)",
             [json_encode($lockValue)]
         );
-        CurrentConfigTestFactory::get()->setEmptyLoungeRunning($lockValue);
+        CurrentConfigTestFactory::get()->emptyLoungeRunning = $lockValue;
         $configRepo = EntityManagerFactory::build($conn)->getRepository(ConfigEntry::class);
         CurrentConfigServiceTestFactory::get()->set(new ConfigService($configRepo, new EventDispatcher(), CurrentConfigTestFactory::get()));
 
@@ -2052,7 +2052,7 @@ test('emptyLounge() treats a lock that is exactly 61 seconds old as genuinely st
             "INSERT INTO " . Tables::config() . " (param, value) VALUES ('empty_lounge_running', ?)",
             [json_encode($staleValue)]
         );
-        CurrentConfigTestFactory::get()->setEmptyLoungeRunning($staleValue);
+        CurrentConfigTestFactory::get()->emptyLoungeRunning = $staleValue;
         $configRepo = EntityManagerFactory::build($conn)->getRepository(ConfigEntry::class);
         CurrentConfigServiceTestFactory::get()->set(new ConfigService($configRepo, new EventDispatcher(), CurrentConfigTestFactory::get()));
 
@@ -2087,7 +2087,7 @@ test('emptyLounge() returns null when a different, still-fresh execution already
         // Not stale (CurrentConfig::emptyLoungeRunning() defaults to null),
         // so the staleness check is skipped entirely and tryAcquireLoungeLock()
         // -- a real INSERT IGNORE -- finds the row above already taken.
-        CurrentConfigTestFactory::get()->setEmptyLoungeRunning(null);
+        CurrentConfigTestFactory::get()->emptyLoungeRunning = null;
 
         try {
             $service = imageServiceTestNewService($repo, $conn);

@@ -713,7 +713,7 @@ test('build() treats a cached file as fresh when its mtime exactly equals last_m
     file_put_contents($root . '/_data/i/gallery/photo-cu_80x60_a.jpg', 'cached-bytes');
     Kernel::boot(Paths::fromRoot($root));
     $currentConfig = CurrentConfigTestFactory::get();
-    $currentConfig->setDerivativeUrlStyle(0);
+    $currentConfig->derivativeUrlStyle = 0;
 
     try {
         $params = new DerivativeParams(SizingParams::classic(80, 60));
@@ -734,7 +734,7 @@ test('build() treats a cached file as fresh when its mtime exactly equals last_m
         expect($derivative->is_cached())->toBeTrue();
         expect($derivative->get_url())->toBe('_data/i/gallery/photo-cu_80x60_a.jpg');
     } finally {
-        $currentConfig->setDerivativeUrlStyle(2);
+        $currentConfig->derivativeUrlStyle = 2;
         derivativeCacheServiceRrmdirDerivativeImageTest($root);
     }
 });
@@ -880,7 +880,7 @@ test('build() routes through i.php and marks itself not cached when derivative_u
     mkdir($root, 0o777, true);
     Kernel::boot(Paths::fromRoot($root));
     $currentConfig = CurrentConfigTestFactory::get();
-    $currentConfig->setDerivativeUrlStyle(0);
+    $currentConfig->derivativeUrlStyle = 0;
 
     try {
         $src = new SrcImage([
@@ -894,7 +894,7 @@ test('build() routes through i.php and marks itself not cached when derivative_u
         expect($derivative->is_cached())->toBeFalse();
         expect($derivative->get_url())->toBe('i.php?/gallery/photo-cu_80x60_a.jpg');
     } finally {
-        $currentConfig->setDerivativeUrlStyle(2);
+        $currentConfig->derivativeUrlStyle = 2;
         derivativeCacheServiceRrmdirDerivativeImageTest($root);
     }
 });
@@ -904,7 +904,7 @@ test('build() links directly to a static file when derivative_url_style is auto 
     mkdir($root, 0o777, true);
     Kernel::boot(Paths::fromRoot($root));
     $currentConfig = CurrentConfigTestFactory::get();
-    $currentConfig->setDerivativeUrlStyle(0);
+    $currentConfig->derivativeUrlStyle = 0;
 
     try {
         mkdir($root . '/_data/i/gallery', 0o777, true);
@@ -921,7 +921,7 @@ test('build() links directly to a static file when derivative_url_style is auto 
         expect($derivative->is_cached())->toBeTrue();
         expect($derivative->get_url())->toBe('_data/i/gallery/photo-cu_80x60_a.jpg');
     } finally {
-        $currentConfig->setDerivativeUrlStyle(2);
+        $currentConfig->derivativeUrlStyle = 2;
         derivativeCacheServiceRrmdirDerivativeImageTest($root);
     }
 });

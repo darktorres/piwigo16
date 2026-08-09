@@ -44,8 +44,8 @@ beforeEach(function (): void {
     $root = sys_get_temp_dir() . '/piwigo-picture-rate-test-' . bin2hex(random_bytes(8));
     mkdir($root, 0o777, true);
     Kernel::boot(Paths::fromRoot($root));
-    CurrentConfigTestFactory::get()->setDataLocation('data/');
-    CurrentConfigTestFactory::get()->setDataDirChecked('1');
+    CurrentConfigTestFactory::get()->dataLocation = 'data/';
+    CurrentConfigTestFactory::get()->dataDirChecked = '1';
     CurrentTemplate::current()->set(TemplateTestFactory::build());
 });
 
@@ -57,7 +57,7 @@ afterEach(function (): void {
 });
 
 test('render does nothing when rating is disabled', function (): void {
-    CurrentConfigTestFactory::get()->setRateEnabled(false);
+    CurrentConfigTestFactory::get()->rateEnabled = false;
     $accessControl = Kernel::container()->get(AccessControl::class);
     if (! $accessControl instanceof AccessControl) {
         throw new LogicException('Container returned an unexpected type for ' . AccessControl::class);

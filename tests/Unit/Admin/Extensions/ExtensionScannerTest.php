@@ -168,7 +168,7 @@ function extensionScannerFixtureRoot(): string
     // takes.
     Kernel::reset();
     Kernel::boot(Paths::fromRoot($root));
-    CurrentConfigTestFactory::get()->setThemesDir(rtrim($root, '/') . '/themes');
+    CurrentConfigTestFactory::get()->themesDir = rtrim($root, '/') . '/themes';
 
     return $root;
 }

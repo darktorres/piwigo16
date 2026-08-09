@@ -47,7 +47,7 @@ final class ImageExtImagick implements ImageInterface
         private readonly CurrentLogger $currentLogger,
         private readonly CurrentConfig $currentConfig,
     ) {
-        $imagick_dir = $this->currentConfig->extImagickDir();
+        $imagick_dir = $this->currentConfig->extImagickDir;
         $this->imagickdir = $imagick_dir;
 
         if (strtolower(StringHelper::getExtension($this->source_filepath)) === 'webp') {
@@ -153,7 +153,7 @@ final class ImageExtImagick implements ImageInterface
             // in cas of animated WebP, we need to maximize quality to 70 to avoid
             // heavy thumbnails (or square or whatever is displayed on the thumbnails
             // page)
-            $max_quality = $this->currentConfig->animatedWebpCompressionQuality();
+            $max_quality = $this->currentConfig->animatedWebpCompressionQuality;
             $quality = min($quality, $max_quality);
         }
 

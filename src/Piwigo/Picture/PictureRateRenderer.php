@@ -53,7 +53,7 @@ final class PictureRateRenderer
     {
         $template = $this->currentTemplate->get();
 
-        if (! $this->currentConfig->rateEnabled()) {
+        if (! $this->currentConfig->rateEnabled) {
             return;
         }
 
@@ -75,7 +75,7 @@ final class PictureRateRenderer
         $template->assignContext(new PictureRateSummaryPageContext($rate_summary));
 
         $user_rate = null;
-        if ($this->currentConfig->rateAnonymous() or $this->accessControl->isAuthorizeStatus(AccessLevel::Classic)) {
+        if ($this->currentConfig->rateAnonymous or $this->accessControl->isAuthorizeStatus(AccessLevel::Classic)) {
             if ($rate_summary['count'] > 0) {
                 $rate_image_id = ImageId::from($imageId);
                 $rate_user_id = $this->currentUser->get()
@@ -102,7 +102,7 @@ final class PictureRateRenderer
                     ]
                 ),
                 userRate: $user_rate,
-                marks: $this->currentConfig->rateItems(),
+                marks: $this->currentConfig->rateItems,
             ));
         }
     }

@@ -251,7 +251,7 @@ final class PluginsInstalledPageRenderer
             isWebmaster: $accessControl->isWebmaster(),
             adminPageTitle: $lang->t('Plugins'),
             viewSelector: $preferencesService->getPluginManagerView() ?? 'classic',
-            enableExtensionsInstall: $currentConfig->enableExtensionsInstall(),
+            enableExtensionsInstall: $currentConfig->enableExtensionsInstall,
             pluginStates: $plugin_states,
         ));
 

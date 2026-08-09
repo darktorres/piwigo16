@@ -151,7 +151,7 @@ final class FilesystemHelper
                 $dir = str_replace('/', DIRECTORY_SEPARATOR, $dir);
             }
             $umask = umask(0);
-            $chmod_value = $currentConfig->chmodValue();
+            $chmod_value = $currentConfig->chmodValue;
             // Checking the nearest existing ancestor's write access before
             // calling mkdir() avoids a PHP-level warning on the deterministic
             // permission-denied case; a concurrent creation of the same
@@ -214,7 +214,7 @@ final class FilesystemHelper
         $dirs = [];
         $path = rtrim($path, '/');
 
-        $sync_exclude_folders = $currentConfig->syncExcludeFolders();
+        $sync_exclude_folders = $currentConfig->syncExcludeFolders;
 
         $exclude_folders = array_merge(
             $sync_exclude_folders,

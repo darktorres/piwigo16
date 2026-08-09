@@ -73,7 +73,7 @@ final class PiwigoInfosSender implements TelemetrySenderInterface
 
         $startTime = TimingHelper::getMoment();
 
-        if (! $this->currentConfig->sendPiwigoInfos()) {
+        if (! $this->currentConfig->sendPiwigoInfos) {
             return;
         }
 
@@ -83,14 +83,14 @@ final class PiwigoInfosSender implements TelemetrySenderInterface
         $this->configService->loadConfFromDb('send_piwigo_infos_last_notice', false);
 
         $doSend = false;
-        $lastNotice = $this->currentConfig->sendPiwigoInfosLastNotice();
+        $lastNotice = $this->currentConfig->sendPiwigoInfosLastNotice;
         // conf_get_param()/load_conf_from_db() both feed $conf through a
         // loosely-typed mixed pipeline, but this particular param is always a
         // MySQL datetime string once set; only strtotime()'s argument needs the
         // narrowing since the isset() check above doesn't provide a type.
         $lastNoticeStr = is_string($lastNotice) ? $lastNotice : null;
         if ($lastNoticeStr !== null) {
-            $period = $this->currentConfig->sendPiwigoInfosPeriod();
+            $period = $this->currentConfig->sendPiwigoInfosPeriod;
             if (strtotime($lastNoticeStr) < strtotime($period . ' second ago')) {
                 $doSend = true;
             }
@@ -119,14 +119,14 @@ final class PiwigoInfosSender implements TelemetrySenderInterface
         $dbInfo = new DbInfo($conn);
         $dbCurrentDate = $dbInfo->currentDateTime();
 
-        if ($this->currentConfig->sendPiwigoInfosOriginHash() === null) {
+        if ($this->currentConfig->sendPiwigoInfosOriginHash === null) {
             $this->configService->confUpdateParam('send_piwigo_infos_origin_hash', sha1(random_bytes(1000)), true);
         }
 
         $containerInfo = ContainerDetector::detect();
 
         $piwigoInfos = [
-            'origin_hash' => $this->currentConfig->sendPiwigoInfosOriginHash(),
+            'origin_hash' => $this->currentConfig->sendPiwigoInfosOriginHash,
             'technical' => [
                 'php_version' => PHP_VERSION,
                 'piwigo_version' => AppInfo::VERSION,
@@ -264,7 +264,7 @@ final class PiwigoInfosSender implements TelemetrySenderInterface
 
                 if (in_array($eid, [null, '0'], true)) {
                     // let's search in the data fetched from PEM
-                    $pemPluginsCategory = $this->currentConfig->pemPluginsCategory();
+                    $pemPluginsCategory = $this->currentConfig->pemPluginsCategory;
                     $eid = $officialExts[$pemPluginsCategory][$pluginId] ?? null;
                 }
 
@@ -318,7 +318,7 @@ final class PiwigoInfosSender implements TelemetrySenderInterface
 
             if (in_array($eid, [null, '0'], true)) {
                 // let's search in the data fetched from PEM
-                $pemThemesCategory = $this->currentConfig->pemThemesCategory();
+                $pemThemesCategory = $this->currentConfig->pemThemesCategory;
                 $eid = $officialExts[$pemThemesCategory][$themeId] ?? null;
             }
 
@@ -486,18 +486,18 @@ final class PiwigoInfosSender implements TelemetrySenderInterface
         $piwigoInfos['apps'] = $apps;
 
         $features = [
-            'activate_comments' => $this->currentConfig->activateComments(),
-            'rate' => $this->currentConfig->rateEnabled(),
-            'log' => $this->currentConfig->logConf(),
-            'history_guest' => $this->currentConfig->historyGuest(),
-            'history_admin' => $this->currentConfig->historyAdmin(),
+            'activate_comments' => $this->currentConfig->activateComments,
+            'rate' => $this->currentConfig->rateEnabled,
+            'log' => $this->currentConfig->logConf,
+            'history_guest' => $this->currentConfig->historyGuest,
+            'history_admin' => $this->currentConfig->historyAdmin,
         ];
 
         foreach ($features as $feature => $enabled) {
             $piwigoInfos['features'][$feature] = $enabled ? 'yes' : 'no';
         }
 
-        $updateUrlBase = $this->currentConfig->sendPiwigoInfosUpdateUrl();
+        $updateUrlBase = $this->currentConfig->sendPiwigoInfosUpdateUrl;
         $url = $updateUrlBase . '/ws.php';
 
         $getData = [
@@ -528,7 +528,7 @@ final class PiwigoInfosSender implements TelemetrySenderInterface
         $logger = $this->currentLogger->get();
 
         // let's fake a last_notice so that we only try 1 day later
-        $existingLastNotice = $this->currentConfig->sendPiwigoInfosLastNotice();
+        $existingLastNotice = $this->currentConfig->sendPiwigoInfosLastNotice;
         $lastNotice = is_string($existingLastNotice) ? strtotime($existingLastNotice) : time();
         $lastNotice = ($lastNotice === false ? time() : $lastNotice) + $waitTime;
 

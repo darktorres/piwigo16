@@ -22,7 +22,6 @@ function pluginMigrationTestRepo(): PluginMigrationRepository
 {
     $conn = DbConnection::build();
     $repo = EntityManagerFactory::build($conn)->getRepository(PluginMigrationEntity::class);
-    expect($repo)->toBeInstanceOf(PluginMigrationRepository::class);
 
     return $repo;
 }

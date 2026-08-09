@@ -120,7 +120,7 @@ test('scriptBasename uses PHP_SELF when it is the only candidate present', funct
  */
 test('scriptBasename skips a candidate whose extension is not .php when phpExtensionInUrls is enforced, falling through to the next one', function (): void {
     $saved = pageFilterHelperTestSaveServerKeys();
-    CurrentConfigTestFactory::get()->setPhpExtensionInUrls(true);
+    CurrentConfigTestFactory::get()->phpExtensionInUrls = true;
     $_SERVER['SCRIPT_NAME'] = '/gallery/index.html';
     $_SERVER['SCRIPT_FILENAME'] = '/var/www/piwigo/picture.php';
     unset($_SERVER['PHP_SELF']);
@@ -137,10 +137,10 @@ test('getFilterPageValue returns null when neither the page nor the default entr
     $_SERVER['SCRIPT_NAME'] = '/gallery/picture.php';
     unset($_SERVER['SCRIPT_FILENAME'], $_SERVER['PHP_SELF']);
 
-    CurrentConfigTestFactory::get()->setFilterPages([
+    CurrentConfigTestFactory::get()->filterPages = [
         'picture' => ['show_thumbnail_caption' => true],
         'default' => ['hide_menu' => false],
-    ]);
+    ];
 
     try {
         expect(PageFilterHelper::getFilterPageValue(CurrentConfigTestFactory::get(), 'unrelated_setting'))->toBeNull();
@@ -160,10 +160,10 @@ test('getFilterPageValue returns the page-specific value when configured, fallin
     $_SERVER['SCRIPT_NAME'] = '/gallery/picture.php';
     unset($_SERVER['SCRIPT_FILENAME'], $_SERVER['PHP_SELF']);
 
-    CurrentConfigTestFactory::get()->setFilterPages([
+    CurrentConfigTestFactory::get()->filterPages = [
         'picture' => ['show_thumbnail_caption' => true],
         'default' => ['hide_menu' => false],
-    ]);
+    ];
 
     try {
         expect(PageFilterHelper::getFilterPageValue(CurrentConfigTestFactory::get(), 'show_thumbnail_caption'))->toBeTrue()
@@ -181,7 +181,7 @@ test('scriptBasename falls through to the next candidate when basename() reduces
     // instead; the mutant wrongly accepts and returns the empty string
     // immediately.
     $saved = pageFilterHelperTestSaveServerKeys();
-    CurrentConfigTestFactory::get()->setPhpExtensionInUrls(false);
+    CurrentConfigTestFactory::get()->phpExtensionInUrls = false;
     $_SERVER['SCRIPT_NAME'] = '/';
     $_SERVER['SCRIPT_FILENAME'] = '/var/www/piwigo/picture.php';
     unset($_SERVER['PHP_SELF']);

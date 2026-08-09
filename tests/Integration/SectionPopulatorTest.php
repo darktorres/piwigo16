@@ -135,8 +135,8 @@ final class SectionPopulatorTest extends IntegrationTestCase
         ConfigLoader::applyEnvOverrides();
         CurrentConfigServiceTestFactory::get()->set(new ConfigService($this->buildConfigRepository(), new EventDispatcher(), CurrentConfigTestFactory::get()));
         LangTestFactory::get()->setLangInfo(['code' => 'en_UK', 'direction' => 'ltr']);
-        CurrentConfigTestFactory::get()->setSendPiwigoInfos(false);
-        CurrentConfigTestFactory::get()->setQuestionMarkInUrls(false);
+        CurrentConfigTestFactory::get()->sendPiwigoInfos = false;
+        CurrentConfigTestFactory::get()->questionMarkInUrls = false;
 
         $this->conn = DbConnection::build();
         $em = EntityManagerFactory::build($this->conn);
@@ -264,7 +264,7 @@ final class SectionPopulatorTest extends IntegrationTestCase
 
     public function test_populate_redirects_when_index_has_a_matching_random_redirect_candidate(): void
     {
-        CurrentConfigTestFactory::get()->setRandomIndexRedirect(['random.php' => '']);
+        CurrentConfigTestFactory::get()->randomIndexRedirect = ['random.php' => ''];
         $_SERVER['SCRIPT_NAME'] = '/piwigo17/index.php';
         $_SERVER['PATH_INFO'] = '/';
 
@@ -511,7 +511,7 @@ final class SectionPopulatorTest extends IntegrationTestCase
 
     public function test_populate_redirects_permanently_on_a_permalink_mismatch(): void
     {
-        CurrentConfigTestFactory::get()->setCategoryUrlStyle('id-name');
+        CurrentConfigTestFactory::get()->categoryUrlStyle = 'id-name';
         $_SERVER['SCRIPT_NAME'] = '/piwigo17/index.php';
         // Category 1 has no real permalink row -- categoryUrlStyle
         // 'id-name' + a URL name that doesn't match str2url('Sample Album')

@@ -50,8 +50,8 @@ final class LocalSiteReader
     ) {
         // flip_file_ext/flip_picture_ext are pure per-instance derived
         // state (never DB-persisted), computed once per instance here.
-        $this->flip_file_ext = array_flip($this->currentConfig->fileExtensions());
-        $this->flip_picture_ext = array_flip($this->currentConfig->pictureExtensions());
+        $this->flip_file_ext = array_flip($this->currentConfig->fileExtensions);
+        $this->flip_picture_ext = array_flip($this->currentConfig->pictureExtensions);
     }
 
     /**
@@ -190,7 +190,7 @@ final class LocalSiteReader
                             'representative_ext' => $representative_ext,
                         ];
 
-                        if ($this->currentConfig->isFormatsEnabled()) {
+                        if ($this->currentConfig->isFormatsEnabled) {
                             $fs[$path . '/' . $node]['formats'] = $this->get_formats($path, $filename_wo_ext);
                         }
                     }
@@ -267,7 +267,7 @@ final class LocalSiteReader
     public function get_representative_ext(string $path, string $filename_wo_ext): ?string
     {
         $base_test = $path . '/pwg_representative/' . $filename_wo_ext . '.';
-        foreach ($this->currentConfig->pictureExtensions() as $ext) {
+        foreach ($this->currentConfig->pictureExtensions as $ext) {
             $test = $base_test . $ext;
             if (is_file($test)) {
                 return $ext;
@@ -285,7 +285,7 @@ final class LocalSiteReader
 
         $base_test = $path . '/pwg_format/' . $filename_wo_ext . '.';
 
-        foreach ($this->currentConfig->formatExtensions() as $ext) {
+        foreach ($this->currentConfig->formatExtensions as $ext) {
             $test = $base_test . $ext;
 
             if (is_file($test)) {

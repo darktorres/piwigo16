@@ -131,7 +131,7 @@ final class StatsPageRenderer
         // self::ALL_YEARS sentinel) -- getMonthOfLastYears()'s own
         // self::ALL_YEARS default is unreachable from this call site, not
         // dead code to resurrect here.
-        $stat_compare_year_displayed = $currentConfig->statCompareYearDisplayed();
+        $stat_compare_year_displayed = $currentConfig->statCompareYearDisplayed;
 
         $template->assignContext(new StatsPageContext(
             helpUrl: $urlService->getRootUrl() . 'admin/popuphelp.php?page=history',

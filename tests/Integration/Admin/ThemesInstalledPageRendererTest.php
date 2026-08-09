@@ -128,7 +128,7 @@ final class ThemesInstalledPageRendererTest extends IntegrationTestCase
 
         $this->fixtureRoot = sys_get_temp_dir() . '/piwigo-themes-installed-integration-' . bin2hex(random_bytes(6)) . '/';
         mkdir($this->fixtureRoot . 'themes', 0o777, true);
-        $currentConfig->setThemesDir(rtrim($this->fixtureRoot, '/') . '/themes');
+        $currentConfig->themesDir = rtrim($this->fixtureRoot, '/') . '/themes';
 
         $_GET = [];
     }

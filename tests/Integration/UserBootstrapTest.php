@@ -212,7 +212,7 @@ final class UserBootstrapTest extends IntegrationTestCase
         // key never resolves to a real user.
         $this->bootstrap()->initialize();
 
-        self::assertSame(CurrentConfigTestFactory::get()->guestId(), CurrentUserTestFactory::get()->get()->id->value);
+        self::assertSame(CurrentConfigTestFactory::get()->guestId, CurrentUserTestFactory::get()->get()->id->value);
     }
 
     public function test_initialize_logs_in_via_ws_uploadAsync_and_marks_the_session_connected_with(): void

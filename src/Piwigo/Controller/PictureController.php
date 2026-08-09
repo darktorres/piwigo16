@@ -715,7 +715,7 @@ final class PictureController implements ControllerInterface
         } else {
             $slideshow = false;
         }
-        if ($slideshow and $this->currentConfig->lightSlideshow()) {
+        if ($slideshow and $this->currentConfig->lightSlideshow) {
             $template->set_filenames([
                 'slideshow' => 'slideshow.tpl',
             ]);
@@ -742,7 +742,7 @@ final class PictureController implements ControllerInterface
         // else than images?
         $metadata_showable = $this->eventDispatcher->dispatchChange(new GetElementMetadataAvailable(
             (
-                ($this->currentConfig->showExif() or $this->currentConfig->showIptc())
+                ($this->currentConfig->showExif or $this->currentConfig->showIptc)
                 and ! $picture['current']['src_image']->is_mimetype()
             ),
             $picture['current']
@@ -818,8 +818,8 @@ final class PictureController implements ControllerInterface
         $download_url_present = is_string($download_url) && $download_url !== '' && $download_url !== '0';
         /** @var list<array<string, mixed>> $formats */
         $formats = [];
-        if ($this->currentConfig->pictureDownloadIcon() and $download_url_present and $this->currentUser->get()->enabledHigh) {
-            if ($this->currentConfig->isFormatsEnabled()) {
+        if ($this->currentConfig->pictureDownloadIcon and $download_url_present and $this->currentUser->get()->enabledHigh) {
+            if ($this->currentConfig->isFormatsEnabled) {
                 $picture_id = $picture['current']['id'];
                 $formats = array_map(
                     static fn (ImageFormat $format): array => $format->toArray(),
@@ -870,10 +870,10 @@ final class PictureController implements ControllerInterface
         // a separate Template::append('current', ..., merge: true) call,
         // now that PicturePageContext owns 'current' entirely via
         // navCurrent.
-        if ($this->currentConfig->pictureDownloadIcon() and $download_url_present and $this->currentUser->get()->enabledHigh) {
+        if ($this->currentConfig->pictureDownloadIcon and $download_url_present and $this->currentUser->get()->enabledHigh) {
             $nav['current']['U_DOWNLOAD'] = $download_url;
 
-            if ($this->currentConfig->isFormatsEnabled()) {
+            if ($this->currentConfig->isFormatsEnabled) {
                 $nav['current']['formats'] = $formats;
             }
         }
@@ -917,7 +917,7 @@ final class PictureController implements ControllerInterface
                 // preg-captured \d+ string).
                 $current_period = $slideshow_params['period'];
                 $current_period = is_numeric($current_period) ? (int) $current_period : 0;
-                $slideshow_period_step = $this->currentConfig->slideshowPeriodStep();
+                $slideshow_period_step = $this->currentConfig->slideshowPeriodStep;
                 $new_period = $current_period + ((($op === 'dec') ? -1 : 1) * $slideshow_period_step);
                 $new_slideshow_params =
                   $this->imageService
@@ -943,7 +943,7 @@ final class PictureController implements ControllerInterface
                 }
             }
             $slideshow_nav = $tpl_slideshow;
-        } elseif ($this->currentConfig->pictureSlideShowIcon()) {
+        } elseif ($this->currentConfig->pictureSlideShowIcon) {
             $u_slideshow_start = $urlService->addUrlParams(
                 $picture['current']['url'],
                 [
@@ -955,12 +955,12 @@ final class PictureController implements ControllerInterface
         $section_title = $section_context->sectionTitle;
         $photo = $title_nb;
         $is_home = $section_context->section === Section::Categories && $page_category === null;
-        $level_separator = $this->currentConfig->levelSeparator();
-        $display_nav_buttons = $this->currentConfig->pictureNavigationIcons();
-        $display_nav_thumb = $this->currentConfig->pictureNavigationThumb();
+        $level_separator = $this->currentConfig->levelSeparator;
+        $display_nav_buttons = $this->currentConfig->pictureNavigationIcons;
+        $display_nav_thumb = $this->currentConfig->pictureNavigationThumb;
 
         $u_metadata = null;
-        if ($this->currentConfig->pictureMetadataIcon()) {
+        if ($this->currentConfig->pictureMetadataIcon) {
             $u_metadata = $url_metadata;
         }
 
@@ -972,7 +972,7 @@ final class PictureController implements ControllerInterface
         $u_caddie = null;
 
         if ($this->accessControl->isAdmin()) {
-            if ($page_category !== null and $this->currentConfig->pictureRepresentativeIcon()) {
+            if ($page_category !== null and $this->currentConfig->pictureRepresentativeIcon) {
                 $u_set_as_representative = $urlService->addUrlParams(
                     $url_self,
                     [
@@ -981,11 +981,11 @@ final class PictureController implements ControllerInterface
                 );
             }
 
-            if ($this->currentConfig->pictureEditIcon()) {
+            if ($this->currentConfig->pictureEditIcon) {
                 $u_photo_admin = $urlService->getRootUrl() . 'admin.php?page=photo-' . $image_id;
             }
 
-            if ($this->currentConfig->pictureCaddieIcon()) {
+            if ($this->currentConfig->pictureCaddieIcon) {
                 $u_caddie = $urlService->addUrlParams($url_self, [
                     'action' => 'add_to_caddie',
                 ]);
@@ -995,7 +995,7 @@ final class PictureController implements ControllerInterface
 
         // favorite manipulation
         $favorite = null;
-        if (! $this->accessControl->isAGuest() and $this->currentConfig->pictureFavoriteIcon()) {
+        if (! $this->accessControl->isAGuest() and $this->currentConfig->pictureFavoriteIcon) {
             // verify if the picture is already in the favorite of the
             // user
             $is_favorite = $this->userService->isFavorite($user->id, $image_id);
@@ -1099,7 +1099,7 @@ final class PictureController implements ControllerInterface
         // file
         $info_file = $picture['current']['file'];
 
-        $display_info = $this->currentConfig->pictureInformations();
+        $display_info = $this->currentConfig->pictureInformations;
 
         // related tags
         $tags = $this->tagService
@@ -1209,7 +1209,7 @@ final class PictureController implements ControllerInterface
             and $picture['next']['src_image']->is_original()
             and $template->get_template_vars('U_PREFETCH') === null
             and ! str_contains($http_user_agent, 'Chrome/')) {
-            $prefetch_deriv_type = $this->sessionService->getPictureDeriv() ?? $this->currentConfig->derivativeDefaultSize();
+            $prefetch_deriv_type = $this->sessionService->getPictureDeriv() ?? $this->currentConfig->derivativeDefaultSize;
             $u_prefetch = $picture['next']['derivatives'][$prefetch_deriv_type]->get_url();
         }
 
@@ -1264,7 +1264,7 @@ final class PictureController implements ControllerInterface
 
         $this->pictureRateRenderer
             ->render($image_id, $urlService, $picture, $url_self);
-        if ($this->currentConfig->activateComments()) {
+        if ($this->currentConfig->activateComments) {
             new PictureCommentRenderer()
                 ->render($this->lang, new AccessLevelChecker($this->currentUser, $this->currentConfig), $edit_comment, $image_id, $section_context->start, $urlService, $related_categories, $url_self, $this->sessionService, $this->eventDispatcher, $this->pageState, $this->currentUser, $this->currentTemplate, $this->currentConfig, $this->mailer, $this->htmlService);
         }
@@ -1276,7 +1276,7 @@ final class PictureController implements ControllerInterface
         // include menubar
         $themeconf = $template->get_template_vars('themeconf');
         $themeconf = is_array($themeconf) ? $themeconf : [];
-        if ($this->currentConfig->pictureMenu() and (! isset($themeconf['hide_menu_on']) or ! is_array($themeconf['hide_menu_on']) or ! in_array('thePicturePage', $themeconf['hide_menu_on'], true))) {
+        if ($this->currentConfig->pictureMenu and (! isset($themeconf['hide_menu_on']) or ! is_array($themeconf['hide_menu_on']) or ! in_array('thePicturePage', $themeconf['hide_menu_on'], true))) {
             new MenubarRenderer()
                 ->render($this->lang, new AccessLevelChecker($this->currentUser, $this->currentConfig), $urlService, $this->filterState, $this->sectionContextRegistry, $this->sessionService, $this->deploymentPolicy, $this->currentUser, $this->currentTemplate, $this->currentConfig, $this->eventDispatcher, $this->translator, $this->currentLogger);
         }
@@ -1291,7 +1291,7 @@ final class PictureController implements ControllerInterface
         $this->eventDispatcher->dispatchNotify(new LocEndPicture());
         $this->htmlService
             ->flushPageMessages();
-        if ($slideshow and $this->currentConfig->lightSlideshow()) {
+        if ($slideshow and $this->currentConfig->lightSlideshow) {
             $template->parse('slideshow', false);
         } else {
             $template->parse_picture_buttons();
@@ -1349,7 +1349,7 @@ final class PictureController implements ControllerInterface
                     ->cookiePath(),
             ]);
         }
-        $deriv_type = $this->sessionService->getPictureDeriv() ?? $this->currentConfig->derivativeDefaultSize();
+        $deriv_type = $this->sessionService->getPictureDeriv() ?? $this->currentConfig->derivativeDefaultSize;
         $selected_derivative = $element_info['derivatives'][$deriv_type];
 
         $unique_derivatives = [];
@@ -1371,7 +1371,7 @@ final class PictureController implements ControllerInterface
 
             // in case we do not display the sizes icon, we only add the
             // selected size to unique_derivatives
-            if ($this->currentConfig->pictureSizesIcon() or $type === $deriv_type) {
+            if ($this->currentConfig->pictureSizesIcon or $type === $deriv_type) {
                 $unique_derivatives[$type] = $derivative;
             }
         }
@@ -1391,7 +1391,7 @@ final class PictureController implements ControllerInterface
 
         $pdf_viewer_filesize_threshold = null;
         if (in_array(strtolower(StringHelper::getExtension($element_info['file'])), ['pdf'], true)) {
-            $pdf_viewer_filesize_threshold = $this->currentConfig->pdfViewerFilesizeThreshold() * 1024;
+            $pdf_viewer_filesize_threshold = $this->currentConfig->pdfViewerFilesizeThreshold * 1024;
         }
 
         $template->assignContext(new PictureContentPageContext(

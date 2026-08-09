@@ -63,7 +63,7 @@ final class PwgImage implements ImageInterface
 
         $extension = strtolower(StringHelper::getExtension($this->source_filepath));
 
-        $picture_ext = $this->currentConfig->pictureExtensions();
+        $picture_ext = $this->currentConfig->pictureExtensions;
         if (! in_array($extension, $picture_ext, true)) {
             throw new ImageProcessingException('[Image] unsupported file extension');
         }
@@ -481,7 +481,7 @@ final class PwgImage implements ImageInterface
         if (! is_string($command)) {
             $retval = null;
             $cmd_out = null;
-            $imagick_dir = self::currentConfig()->extImagickDir();
+            $imagick_dir = self::currentConfig()->extImagickDir;
             // check if magick is in path
             // [SEC-16] escapeshellarg() quotes the dir prefix; the adjacent
             // quoted+unquoted shell tokens still concatenate into one word
@@ -500,7 +500,7 @@ final class PwgImage implements ImageInterface
             return false;
         }
 
-        $imagick_dir = self::currentConfig()->extImagickDir();
+        $imagick_dir = self::currentConfig()->extImagickDir;
         // [SEC-16] see the escapeshellarg() note above. "< /dev/null" --
         // same stdin-hang guard as ImageExtImagick's own identify/convert
         // calls.
@@ -524,7 +524,7 @@ final class PwgImage implements ImageInterface
     {
 
         if ($library === null) {
-            $conf_library = self::currentConfig()->graphicsLibrary();
+            $conf_library = self::currentConfig()->graphicsLibrary;
             $library = $conf_library;
         }
 
@@ -568,7 +568,7 @@ final class PwgImage implements ImageInterface
 
         switch ($library) {
             case 'ext_imagick':
-                $ext_imagick_dir = self::currentConfig()->extImagickDir();
+                $ext_imagick_dir = self::currentConfig()->extImagickDir;
                 $returnarray = [];
                 exec($ext_imagick_dir . self::get_ext_imagick_command() . ' -version', $returnarray);
                 if ((bool) preg_match('/Version: ImageMagick (\d+\.\d+\.\d+-?\d*)/', $returnarray[0] ?? '', $match)) {

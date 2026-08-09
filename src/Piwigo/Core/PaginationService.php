@@ -51,7 +51,7 @@ final class PaginationService
         $start = (int) $start;
 
         $navbar = [];
-        $pages_around = $this->currentConfig->paginatePagesAround();
+        $pages_around = $this->currentConfig->paginatePagesAround;
         $start_str = $cleanUrl ? '/' . $paramName . '-' : (! str_contains($url, '?') ? '?' : '&amp;') . $paramName . '=';
 
         if ($start < 0) {

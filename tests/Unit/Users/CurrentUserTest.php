@@ -50,7 +50,7 @@ test('attachGlobals seeds a guest user', function (): void {
         ->and($user->enabledHigh)->toBeFalse()
         ->and($user->language)->toEqual(LangCode::from(AppInfo::DEFAULT_LANGUAGE))
         ->and($user->theme)->toBe(AppInfo::DEFAULT_TEMPLATE)
-        ->and($user->id->value)->toBe(new CurrentConfig()->guestId());
+        ->and($user->id->value)->toBe(new CurrentConfig()->guestId);
 });
 
 test('attachGlobals is idempotent -- does not clobber a real set() user', function (): void {

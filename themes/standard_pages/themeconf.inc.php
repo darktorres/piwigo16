@@ -22,7 +22,7 @@ $themeconf = [
 // property read here would report as undefined even though it works at
 // runtime.
 $theme_template_vars = [
-    'STD_PGS_SELECTED_SKIN' => Template::currentConfig()->standardPagesSelectedSkin(),
-    'STD_PGS_SELECTED_LOGO' => Template::currentConfig()->standardPagesSelectedLogo(),
-    'GALLERY_TITLE' => Template::currentConfig()->galleryTitle(),
+    'STD_PGS_SELECTED_SKIN' => Template::currentConfig()->standardPagesSelectedSkin,
+    'STD_PGS_SELECTED_LOGO' => Template::currentConfig()->standardPagesSelectedLogo,
+    'GALLERY_TITLE' => Template::currentConfig()->galleryTitle,
 ];

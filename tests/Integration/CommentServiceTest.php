@@ -203,20 +203,20 @@ namespace Piwigo\Tests\Integration {
             ConfigLoader::applyDefaults();
             ConfigLoader::applyEnvOverrides();
 
-            CurrentConfigTestFactory::get()->setSecretKey('test-secret-key');
-            CurrentConfigTestFactory::get()->setCommentsValidation(true);
-            CurrentConfigTestFactory::get()->setCommentsAuthorMandatory(false);
-            CurrentConfigTestFactory::get()->setCommentsEmailMandatory(false);
-            CurrentConfigTestFactory::get()->setCommentsEnableWebsite(true);
-            CurrentConfigTestFactory::get()->setCommentSpamReject(true);
-            CurrentConfigTestFactory::get()->setCommentSpamMaxLinks(3);
-            CurrentConfigTestFactory::get()->setAntiFloodTime(0);
-            CurrentConfigTestFactory::get()->setGuestId(2);
-            CurrentConfigTestFactory::get()->setGuestAccess(true);
-            CurrentConfigTestFactory::get()->setEmailAdminOnComment(false);
-            CurrentConfigTestFactory::get()->setEmailAdminOnCommentValidation(false);
-            CurrentConfigTestFactory::get()->setEmailAdminOnCommentEdition(false);
-            CurrentConfigTestFactory::get()->setEmailAdminOnCommentDeletion(false);
+            CurrentConfigTestFactory::get()->secretKey = 'test-secret-key';
+            CurrentConfigTestFactory::get()->commentsValidation = true;
+            CurrentConfigTestFactory::get()->commentsAuthorMandatory = false;
+            CurrentConfigTestFactory::get()->commentsEmailMandatory = false;
+            CurrentConfigTestFactory::get()->commentsEnableWebsite = true;
+            CurrentConfigTestFactory::get()->commentSpamReject = true;
+            CurrentConfigTestFactory::get()->commentSpamMaxLinks = 3;
+            CurrentConfigTestFactory::get()->antiFloodTime = 0;
+            CurrentConfigTestFactory::get()->guestId = 2;
+            CurrentConfigTestFactory::get()->guestAccess = true;
+            CurrentConfigTestFactory::get()->emailAdminOnComment = false;
+            CurrentConfigTestFactory::get()->emailAdminOnCommentValidation = false;
+            CurrentConfigTestFactory::get()->emailAdminOnCommentEdition = false;
+            CurrentConfigTestFactory::get()->emailAdminOnCommentDeletion = false;
             CurrentUserTestFactory::get()->set(User::fromUserArray(['id' => 1, 'status' => 'normal', 'username' => 'fixture_admin', 'email' => 'fixture_admin@example.test']));
             PageStateTestFactory::get()->reset();
 
@@ -296,7 +296,7 @@ namespace Piwigo\Tests\Integration {
          */
         public function test_check_for_spam_returns_action_unchanged_when_it_already_matches_my_action(): void
         {
-            CurrentConfigTestFactory::get()->setCommentSpamReject(false);
+            CurrentConfigTestFactory::get()->commentSpamReject = false;
 
             self::assertSame('moderate', $this->checkForSpam('moderate', ['content' => 'no links here', 'author' => 'plain_name', 'image_id' => 1]));
         }
@@ -311,7 +311,7 @@ namespace Piwigo\Tests\Integration {
         public function test_check_for_spam_counts_a_link_embedded_in_the_author_name(): void
         {
             CurrentUserTestFactory::get()->set(CurrentUserTestFactory::get()->get()->withStatus(UserStatus::Guest));
-            CurrentConfigTestFactory::get()->setCommentSpamMaxLinks(0);
+            CurrentConfigTestFactory::get()->commentSpamMaxLinks = 0;
 
             $action = $this->checkForSpam('moderate', ['content' => 'no links in here at all', 'author' => 'http://spammer.example', 'image_id' => 1]);
 
@@ -323,7 +323,7 @@ namespace Piwigo\Tests\Integration {
 
         public function test_insert_comment_validates_immediately_when_validation_disabled(): void
         {
-            CurrentConfigTestFactory::get()->setCommentsValidation(false);
+            CurrentConfigTestFactory::get()->commentsValidation = false;
 
             $comm = $this->baseComm();
             $key = $this->validKey();
@@ -494,7 +494,7 @@ namespace Piwigo\Tests\Integration {
 
         public function test_insert_comment_website_url_honeypot_rejected_when_disabled(): void
         {
-            CurrentConfigTestFactory::get()->setCommentsEnableWebsite(false);
+            CurrentConfigTestFactory::get()->commentsEnableWebsite = false;
 
             $comm = $this->baseComm();
             $comm['website_url'] = 'http://spam.example';
@@ -518,7 +518,7 @@ namespace Piwigo\Tests\Integration {
 
         public function test_insert_comment_falls_back_to_the_current_users_email(): void
         {
-            CurrentConfigTestFactory::get()->setCommentsValidation(false);
+            CurrentConfigTestFactory::get()->commentsValidation = false;
 
             $comm = $this->baseComm();
             $comm['email'] = '';
@@ -532,8 +532,8 @@ namespace Piwigo\Tests\Integration {
 
         public function test_insert_comment_anti_flood_rejects_a_second_immediate_post(): void
         {
-            CurrentConfigTestFactory::get()->setCommentsValidation(false);
-            CurrentConfigTestFactory::get()->setAntiFloodTime(3600);
+            CurrentConfigTestFactory::get()->commentsValidation = false;
+            CurrentConfigTestFactory::get()->antiFloodTime = 3600;
             CurrentUserTestFactory::get()->set(User::fromUserArray(['id' => 3, 'status' => 'normal', 'username' => 'regular_user']));
 
             $first = $this->baseComm();
@@ -560,8 +560,8 @@ namespace Piwigo\Tests\Integration {
          */
         public function test_insert_comment_anti_flood_triggers_with_a_one_second_window(): void
         {
-            CurrentConfigTestFactory::get()->setCommentsValidation(false);
-            CurrentConfigTestFactory::get()->setAntiFloodTime(1);
+            CurrentConfigTestFactory::get()->commentsValidation = false;
+            CurrentConfigTestFactory::get()->antiFloodTime = 1;
             CurrentUserTestFactory::get()->set(User::fromUserArray(['id' => 3, 'status' => 'normal', 'username' => 'regular_user']));
 
             $first = $this->baseComm();
@@ -586,8 +586,8 @@ namespace Piwigo\Tests\Integration {
          */
         public function test_insert_comment_skips_the_anti_flood_check_when_already_rejected_for_another_reason(): void
         {
-            CurrentConfigTestFactory::get()->setCommentsValidation(false);
-            CurrentConfigTestFactory::get()->setAntiFloodTime(3600);
+            CurrentConfigTestFactory::get()->commentsValidation = false;
+            CurrentConfigTestFactory::get()->antiFloodTime = 3600;
             // Deliberately id 2, not the more obviously-named 3 ("regular_
             // user") the sibling anti-flood tests above use: countRecentComments()
             // (CommentRepository) only filters by author_id (and, for
@@ -638,8 +638,8 @@ namespace Piwigo\Tests\Integration {
          */
         public function test_insert_comment_anti_flood_matches_a_guest_by_trimmed_ip_prefix(): void
         {
-            CurrentConfigTestFactory::get()->setCommentsValidation(false);
-            CurrentConfigTestFactory::get()->setAntiFloodTime(3600);
+            CurrentConfigTestFactory::get()->commentsValidation = false;
+            CurrentConfigTestFactory::get()->antiFloodTime = 3600;
             CurrentUserTestFactory::get()->set(User::fromUserArray(['id' => 6, 'status' => 'guest', 'username' => 'flood_guest']));
 
             $originalRemoteAddr = $_SERVER['REMOTE_ADDR'] ?? null;
@@ -674,7 +674,7 @@ namespace Piwigo\Tests\Integration {
         public function test_insert_comment_rejects_a_missing_author_when_mandatory(): void
         {
             CurrentUserTestFactory::get()->set(User::fromUserArray(['id' => 6, 'status' => 'guest', 'username' => '']));
-            CurrentConfigTestFactory::get()->setCommentsAuthorMandatory(true);
+            CurrentConfigTestFactory::get()->commentsAuthorMandatory = true;
 
             $comm = $this->baseComm();
             $infos = [];
@@ -694,7 +694,7 @@ namespace Piwigo\Tests\Integration {
          */
         public function test_insert_comment_defaults_a_missing_guest_author_to_guest(): void
         {
-            CurrentConfigTestFactory::get()->setCommentsValidation(false);
+            CurrentConfigTestFactory::get()->commentsValidation = false;
             CurrentUserTestFactory::get()->set(User::fromUserArray(['id' => 6, 'status' => 'guest', 'username' => '']));
 
             $comm = $this->baseComm();
@@ -716,7 +716,7 @@ namespace Piwigo\Tests\Integration {
          */
         public function test_insert_comment_website_url_is_stripped_and_scheme_prefixed(): void
         {
-            CurrentConfigTestFactory::get()->setCommentsValidation(false);
+            CurrentConfigTestFactory::get()->commentsValidation = false;
 
             $comm = $this->baseComm();
             $comm['website_url'] = 'example.test/<b>promo</b>';
@@ -758,7 +758,7 @@ namespace Piwigo\Tests\Integration {
          */
         public function test_insert_comment_treats_a_missing_website_url_key_as_empty(): void
         {
-            CurrentConfigTestFactory::get()->setCommentsValidation(false);
+            CurrentConfigTestFactory::get()->commentsValidation = false;
 
             $comm = $this->baseComm();
             unset($comm['website_url']);
@@ -778,7 +778,7 @@ namespace Piwigo\Tests\Integration {
         public function test_insert_comment_rejects_a_missing_email_when_mandatory(): void
         {
             CurrentUserTestFactory::get()->set(User::fromUserArray(['id' => 6, 'status' => 'guest', 'username' => 'emailless_guest', 'email' => '']));
-            CurrentConfigTestFactory::get()->setCommentsEmailMandatory(true);
+            CurrentConfigTestFactory::get()->commentsEmailMandatory = true;
 
             $comm = $this->baseComm();
             $infos = [];
@@ -797,8 +797,8 @@ namespace Piwigo\Tests\Integration {
          */
         public function test_insert_comment_notifies_admins_by_mail_on_immediate_validation(): void
         {
-            CurrentConfigTestFactory::get()->setCommentsValidation(false);
-            CurrentConfigTestFactory::get()->setEmailAdminOnComment(true);
+            CurrentConfigTestFactory::get()->commentsValidation = false;
+            CurrentConfigTestFactory::get()->emailAdminOnComment = true;
 
             $mailer = new CommentServiceFakeMailerRecordsNotifications();
             $service = $this->serviceWithMailer($mailer);
@@ -827,7 +827,7 @@ namespace Piwigo\Tests\Integration {
          */
         public function test_insert_comment_notifies_admins_by_mail_on_moderation(): void
         {
-            CurrentConfigTestFactory::get()->setEmailAdminOnCommentValidation(true);
+            CurrentConfigTestFactory::get()->emailAdminOnCommentValidation = true;
 
             $mailer = new CommentServiceFakeMailerRecordsNotifications();
             $service = $this->serviceWithMailer($mailer);
@@ -894,7 +894,7 @@ namespace Piwigo\Tests\Integration {
          */
         public function test_update_comment_notifies_admins_by_mail_on_moderation(): void
         {
-            CurrentConfigTestFactory::get()->setEmailAdminOnCommentValidation(true);
+            CurrentConfigTestFactory::get()->emailAdminOnCommentValidation = true;
             CurrentUserTestFactory::get()->set(User::fromUserArray(['id' => 3, 'status' => 'normal', 'username' => 'mail_dispatch_owner']));
             $comment = ['comment_id' => 2, 'image_id' => 2, 'content' => 'edited for mail dispatch', 'website_url' => ''];
 
@@ -1015,7 +1015,7 @@ namespace Piwigo\Tests\Integration {
 
         public function test_email_admin_notifies_on_delete_with_the_comment_id(): void
         {
-            CurrentConfigTestFactory::get()->setEmailAdminOnCommentDeletion(true);
+            CurrentConfigTestFactory::get()->emailAdminOnCommentDeletion = true;
 
             $mailer = new CommentServiceFakeMailerRecordsNotifications();
             $service = $this->serviceWithMailer($mailer);
@@ -1033,7 +1033,7 @@ namespace Piwigo\Tests\Integration {
 
         public function test_email_admin_notifies_on_edit_with_the_new_content(): void
         {
-            CurrentConfigTestFactory::get()->setEmailAdminOnCommentEdition(true);
+            CurrentConfigTestFactory::get()->emailAdminOnCommentEdition = true;
 
             $mailer = new CommentServiceFakeMailerRecordsNotifications();
             $service = $this->serviceWithMailer($mailer);
@@ -1052,8 +1052,8 @@ namespace Piwigo\Tests\Integration {
 
         public function test_email_admin_does_nothing_for_an_unrecognized_action(): void
         {
-            CurrentConfigTestFactory::get()->setEmailAdminOnCommentDeletion(true);
-            CurrentConfigTestFactory::get()->setEmailAdminOnCommentEdition(true);
+            CurrentConfigTestFactory::get()->emailAdminOnCommentDeletion = true;
+            CurrentConfigTestFactory::get()->emailAdminOnCommentEdition = true;
 
             $mailer = new CommentServiceFakeMailerRecordsNotifications();
             $service = $this->serviceWithMailer($mailer);
@@ -1236,7 +1236,7 @@ namespace Piwigo\Tests\Integration {
         {
             $issuedAt = round(microtime(true), 1) - 1.0;
             $remoteAddr = is_string($_SERVER['REMOTE_ADDR'] ?? null) ? $_SERVER['REMOTE_ADDR'] : '';
-            $secretKey = CurrentConfigTestFactory::get()->secretKey();
+            $secretKey = CurrentConfigTestFactory::get()->secretKey;
             $signature = hash_hmac('sha256', (string) $issuedAt . substr($remoteAddr, 0, 5) . '0' . $imageId, $secretKey);
 
             return (string) $issuedAt . ':0:' . $signature;

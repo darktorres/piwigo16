@@ -23,7 +23,6 @@ function integrityIgnoredAnomalyTestRepo(): IntegrityIgnoredAnomalyRepository
 {
     $conn = DbConnection::build();
     $repo = EntityManagerFactory::build($conn)->getRepository(IntegrityIgnoredAnomalyEntity::class);
-    expect($repo)->toBeInstanceOf(IntegrityIgnoredAnomalyRepository::class);
 
     return $repo;
 }

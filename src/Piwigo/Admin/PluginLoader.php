@@ -55,7 +55,7 @@ final class PluginLoader
     public static function loadPlugins(LoadedPlugins $loadedPlugins, EventDispatcher $eventDispatcher, ActivityService $activityService, CurrentConfig $currentConfig, WsContext $wsContext, AccessControl $accessControl, PageState $pageState, Paths $paths): void
     {
         $loadedPlugins->set([]);
-        if ($currentConfig->enablePlugins()) {
+        if ($currentConfig->enablePlugins) {
             $plugins = EntityManagerFactory::build(DbConnection::build())->getRepository(PluginEntity::class)->getDbPlugins('active');
             foreach ($plugins as $plugin) {// include main from a function to avoid using same function context
                 // Unboxed back to array here -- loadPlugin()/autoupdatePlugin()

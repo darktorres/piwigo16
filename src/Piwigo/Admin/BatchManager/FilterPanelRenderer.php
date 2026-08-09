@@ -94,7 +94,7 @@ final class FilterPanelRenderer
             ],
         ];
 
-        if ($currentConfig->enableSynchronization()) {
+        if ($currentConfig->enableSynchronization) {
             $prefilters[] = [
                 'ID' => 'no_virtual_album',
                 'NAME' => $lang->t('With no virtual album'),
@@ -124,7 +124,7 @@ final class FilterPanelRenderer
         $nb_no_md5sum = $no_md5sum_number ?? '';
 
         // privacy level
-        $available_permission_levels = $currentConfig->availablePermissionLevels();
+        $available_permission_levels = $currentConfig->availablePermissionLevels;
 
         $level_options = [];
         foreach ($available_permission_levels as $level) {
@@ -176,7 +176,7 @@ final class FilterPanelRenderer
         }
 
         $template->assignContext(new FilterPanelPageContext(
-            confChecksumComputeBlocksize: $currentConfig->checksumComputeBlocksize(),
+            confChecksumComputeBlocksize: $currentConfig->checksumComputeBlocksize,
             prefilters: $prefilters,
             filter: $bulk_manager_filter,
             selection: $collection,

@@ -54,7 +54,7 @@ final class MenubarPageRenderer
         // call site) -- a real CurrentConfig property instead of the
         // former dynamic 'blk_' . $id bag key. Already decoded -- no
         // manual unserialize() needed.
-        $mb_conf = $currentConfig->blkMenubar() ?? [];
+        $mb_conf = $currentConfig->blkMenubar ?? [];
 
         // $mb_conf comes from DB-stored config, so its element types are
         // not statically known; normalize every position to a real int.

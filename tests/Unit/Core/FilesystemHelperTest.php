@@ -161,7 +161,7 @@ test('mkgetdir applies the requested mode exactly, via a real umask(0) during cr
     // non-zero process umask strips bits from the requested mode during
     // mkdir() -- a chmod value with every bit set is the only way to
     // observe ANY stripped bit, regardless of which specific one.
-    CurrentConfigTestFactory::get()->setChmodValue(0o777);
+    CurrentConfigTestFactory::get()->chmodValue = 0o777;
     $dir = $this->root . '/full-perms';
 
     FilesystemHelper::mkgetdir($dir, CurrentConfigTestFactory::get());
@@ -341,7 +341,7 @@ test('lang() throws a RuntimeException carrying the container-type message when 
 });
 
 test('mkgetdir returns false when a freshly-created directory ends up non-writable and MKGETDIR_DIE_ON_ERROR is not set', function (): void {
-    CurrentConfigTestFactory::get()->setChmodValue(0o500);
+    CurrentConfigTestFactory::get()->chmodValue = 0o500;
     $dir = $this->root . '/read-only-new';
 
     $result = FilesystemHelper::mkgetdir($dir, CurrentConfigTestFactory::get(), FilesystemHelper::MKGETDIR_RECURSIVE);

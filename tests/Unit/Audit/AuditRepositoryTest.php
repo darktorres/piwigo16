@@ -32,7 +32,6 @@ function auditTestRepo(): AuditRepository
 {
     $conn = DbConnection::build();
     $repo = EntityManagerFactory::build($conn)->getRepository(AuditLogEntity::class);
-    expect($repo)->toBeInstanceOf(AuditRepository::class);
 
     return $repo;
 }

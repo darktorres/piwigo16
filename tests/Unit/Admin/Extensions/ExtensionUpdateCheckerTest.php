@@ -244,7 +244,7 @@ beforeEach(function () use (&$fixtureRoot): void {
     mkdir($fixtureRoot . 'plugins', 0o777, true);
     mkdir($fixtureRoot . 'themes', 0o777, true);
     mkdir($fixtureRoot . 'language', 0o777, true);
-    CurrentConfigTestFactory::get()->setThemesDir(rtrim($fixtureRoot, '/') . '/themes');
+    CurrentConfigTestFactory::get()->themesDir = rtrim($fixtureRoot, '/') . '/themes';
 
     unset($_SESSION['extensions_need_update']);
 });

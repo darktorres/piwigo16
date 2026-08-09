@@ -70,8 +70,8 @@ final class HistoryServiceTest extends IntegrationTestCase
         ConfigLoader::applyDefaults();
         ConfigLoader::applyEnvOverrides();
 
-        $currentConfig->setHistoryAutopurgeKeepLines(0);
-        $currentConfig->setHistoryAutopurgeBlocksize(50);
+        $currentConfig->historyAutopurgeKeepLines = 0;
+        $currentConfig->historyAutopurgeBlocksize = 50;
         // logVisit()'s own isLoggingAllowed() defaults log_conf to false --
         // real production traffic gets it from a genuine DB-loaded config
         // row (never exercised here, this class never calls
@@ -79,7 +79,7 @@ final class HistoryServiceTest extends IntegrationTestCase
         // explicitly. A 'normal' (non-admin, non-guest) CurrentUser leaves
         // it as this exact value (isLoggingAllowed()'s admin/guest
         // overrides don't apply).
-        $currentConfig->setLogConf(true);
+        $currentConfig->logConf = true;
         CurrentUserTestFactory::get()->set(User::fromUserArray(['id' => 1, 'status' => 'normal', 'username' => 'fixture_admin']));
         PageStateTestFactory::get()->reset();
         $GLOBALS['logger'] = new Logger(['severity' => Logger::OFF]);
@@ -218,7 +218,7 @@ final class HistoryServiceTest extends IntegrationTestCase
 
     public function test_autopurge_is_a_no_op_when_under_the_keep_lines_threshold(): void
     {
-        CurrentConfigTestFactory::get()->setHistoryAutopurgeKeepLines(10);
+        CurrentConfigTestFactory::get()->historyAutopurgeKeepLines = 10;
         $this->insertHistoryLine(1, '2026-07-12', '03:00:00');
 
         $this->service->autopurge();
@@ -228,7 +228,7 @@ final class HistoryServiceTest extends IntegrationTestCase
 
     public function test_autopurge_is_a_no_op_when_nothing_is_summarized_yet(): void
     {
-        CurrentConfigTestFactory::get()->setHistoryAutopurgeKeepLines(1);
+        CurrentConfigTestFactory::get()->historyAutopurgeKeepLines = 1;
         $this->insertHistoryLine(1, '2026-07-12', '03:00:00');
         $this->insertHistoryLine(1, '2026-07-12', '04:00:00');
 
@@ -240,8 +240,8 @@ final class HistoryServiceTest extends IntegrationTestCase
     public function test_autopurge_deletes_old_summarized_lines(): void
     {
         $currentConfig = CurrentConfigTestFactory::get();
-        $currentConfig->setHistoryAutopurgeKeepLines(1);
-        $currentConfig->setHistoryAutopurgeBlocksize(1);
+        $currentConfig->historyAutopurgeKeepLines = 1;
+        $currentConfig->historyAutopurgeBlocksize = 1;
         $id1 = $this->insertHistoryLine(1, '2026-07-10', '03:00:00');
         $id2 = $this->insertHistoryLine(1, '2026-07-11', '03:00:00');
         $id3 = $this->insertHistoryLine(1, '2026-07-12', '03:00:00');
@@ -375,7 +375,7 @@ final class HistoryServiceTest extends IntegrationTestCase
             $currentConfig = CurrentConfigTestFactory::get();
             $configService = new ConfigService($this->buildConfigRepository(), new EventDispatcher(), $currentConfig);
             $configService->confDeleteParam('history_sections_cache');
-            $currentConfig->setHistorySectionsCache(null);
+            $currentConfig->historySectionsCache = null;
         }
     }
 
@@ -392,9 +392,9 @@ final class HistoryServiceTest extends IntegrationTestCase
     public function test_log_visit_triggers_autopurge_when_the_new_id_is_a_multiple_of_autopurge_every(): void
     {
         $currentConfig = CurrentConfigTestFactory::get();
-        $currentConfig->setHistoryAutopurgeEvery(1);
-        $currentConfig->setHistoryAutopurgeKeepLines(1);
-        $currentConfig->setHistoryAutopurgeBlocksize(1);
+        $currentConfig->historyAutopurgeEvery = 1;
+        $currentConfig->historyAutopurgeKeepLines = 1;
+        $currentConfig->historyAutopurgeBlocksize = 1;
         $oldId1 = $this->insertHistoryLine(1, '2026-01-01', '00:00:00');
         $oldId2 = $this->insertHistoryLine(1, '2026-01-01', '01:00:00');
         $this->service->summarize();

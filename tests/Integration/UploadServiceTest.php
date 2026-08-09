@@ -276,8 +276,8 @@ final class UploadServiceTest extends IntegrationTestCase
         // stops the fixture's pre-existing 5 images from tripping
         // addUploadedFileAddToCategories()'s own count check by accident in
         // every other test.
-        CurrentConfigTestFactory::get()->setLoungeActive(false);
-        CurrentConfigTestFactory::get()->setLoungeActivateThreshold(1_000_000);
+        CurrentConfigTestFactory::get()->loungeActive = false;
+        CurrentConfigTestFactory::get()->loungeActivateThreshold = 1_000_000;
 
         $htmlService = HtmlServiceTestFactory::build();
         // RootPathOverride must be the one real, container-shared instance
@@ -627,7 +627,7 @@ final class UploadServiceTest extends IntegrationTestCase
 
     public function test_addUploadedFile_resolves_a_non_standard_extension_via_the_finfo_fallback_when_all_types_allowed(): void
     {
-        CurrentConfigTestFactory::get()->setUploadFormAllTypes(true);
+        CurrentConfigTestFactory::get()->uploadFormAllTypes = true;
 
         // Since 'zip' has no representative_ext (no upload_file_* handler
         // matches it) and isn't a picture extension either,
@@ -676,10 +676,10 @@ final class UploadServiceTest extends IntegrationTestCase
             self::markTestSkipped('No non-GD image library (ext_imagick/imagick) available in this environment -- addUploadedFile() never reaches its own originalResize()/needResize()/pwg_resize() block when PwgImage::get_library() is gd.');
         }
 
-        CurrentConfigTestFactory::get()->setOriginalResize(true);
-        CurrentConfigTestFactory::get()->setOriginalResizeMaxwidth(50);
-        CurrentConfigTestFactory::get()->setOriginalResizeMaxheight(50);
-        CurrentConfigTestFactory::get()->setOriginalResizeQuality(90);
+        CurrentConfigTestFactory::get()->originalResize = true;
+        CurrentConfigTestFactory::get()->originalResizeMaxwidth = 50;
+        CurrentConfigTestFactory::get()->originalResizeMaxheight = 50;
+        CurrentConfigTestFactory::get()->originalResizeQuality = 90;
 
         $source = $this->marker . '/big.jpg';
         $this->makeImage($source, 'jpeg', 200, 150);
@@ -718,7 +718,7 @@ final class UploadServiceTest extends IntegrationTestCase
      */
     public function test_addUploadedFile_stores_the_representative_ext_when_an_upload_file_handler_matches(): void
     {
-        CurrentConfigTestFactory::get()->setUploadFormAllTypes(true);
+        CurrentConfigTestFactory::get()->uploadFormAllTypes = true;
 
         EventDispatcherTestFactory::get()->addTypedHandler(UploadFile::class, UploadService::uploadFilePdf(...));
 
@@ -745,7 +745,7 @@ final class UploadServiceTest extends IntegrationTestCase
 
     public function test_addUploadedFile_rejects_a_mismatched_svg_mime_type_and_deletes_the_source_file(): void
     {
-        CurrentConfigTestFactory::get()->setUploadFormAllTypes(true);
+        CurrentConfigTestFactory::get()->uploadFormAllTypes = true;
 
         // Genuine SVG content (finfo sniffs 'image/svg+xml'), but the
         // original filename claims '.png' -- the exact mismatch
@@ -774,7 +774,7 @@ final class UploadServiceTest extends IntegrationTestCase
 
     public function test_addUploadedFile_rejects_an_extension_absent_from_fileExtensions_even_when_all_types_are_allowed(): void
     {
-        CurrentConfigTestFactory::get()->setUploadFormAllTypes(true);
+        CurrentConfigTestFactory::get()->uploadFormAllTypes = true;
 
         // Real, non-image bytes with an extension that is NOT one of
         // CurrentConfig::fileExtensions()'s own default entries -- unlike
@@ -806,7 +806,7 @@ final class UploadServiceTest extends IntegrationTestCase
 
     public function test_addUploadedFile_rejects_a_forbidden_file_type_and_deletes_the_source_file(): void
     {
-        CurrentConfigTestFactory::get()->setUploadFormAllTypes(false);
+        CurrentConfigTestFactory::get()->uploadFormAllTypes = false;
 
         $source = $this->marker . '/notes.txt';
         file_put_contents($source, 'just some plain text, not an image at all');
@@ -837,8 +837,8 @@ final class UploadServiceTest extends IntegrationTestCase
         $this->conn->executeStatement("UPDATE " . Tables::config() . " SET value = 'false' WHERE param = 'lounge_active'");
 
         $countBefore = $this->countRows('SELECT COUNT(*) FROM ' . Tables::images());
-        CurrentConfigTestFactory::get()->setLoungeActivateThreshold($countBefore + 1);
-        self::assertFalse(CurrentConfigTestFactory::get()->loungeActive());
+        CurrentConfigTestFactory::get()->loungeActivateThreshold = $countBefore + 1;
+        self::assertFalse(CurrentConfigTestFactory::get()->loungeActive);
 
         $source = $this->marker . '/threshold.png';
         $this->makeImage($source, 'png', 10, 8);
@@ -849,7 +849,7 @@ final class UploadServiceTest extends IntegrationTestCase
         // addUploadedFileAddToCategories()'s own COUNT(*) check (running
         // right after the insert, so it already sees the new row) now
         // meets the threshold set above.
-        self::assertTrue(CurrentConfigTestFactory::get()->loungeActive());
+        self::assertTrue(CurrentConfigTestFactory::get()->loungeActive);
 
         $dbValue = $this->conn->fetchOne("SELECT value FROM " . Tables::config() . " WHERE param = 'lounge_active'");
         self::assertSame('true', $dbValue);
@@ -867,7 +867,7 @@ final class UploadServiceTest extends IntegrationTestCase
         // setUp()'s own high default threshold keeps the lounge inactive
         // here, so this exercises associateImagesToCategories(), not
         // fillLounge().
-        self::assertFalse(CurrentConfigTestFactory::get()->loungeActive());
+        self::assertFalse(CurrentConfigTestFactory::get()->loungeActive);
 
         $linked = $this->countRows('SELECT COUNT(*) FROM ' . Tables::imageCategory() . ' WHERE image_id = ' . $id . ' AND category_id = 1');
         self::assertSame(1, $linked);
@@ -912,8 +912,8 @@ final class UploadServiceTest extends IntegrationTestCase
 
     public function test_addFormat_throws_when_the_format_of_image_does_not_exist(): void
     {
-        CurrentConfigTestFactory::get()->setIsFormatsEnabled(true);
-        CurrentConfigTestFactory::get()->setFormatExtensions(['tif']);
+        CurrentConfigTestFactory::get()->isFormatsEnabled = true;
+        CurrentConfigTestFactory::get()->formatExtensions = ['tif'];
 
         try {
             $service = new UploadService(LangTestFactory::get(), $this->currentLogger, $this->storageRegistry, EventDispatcherTestFactory::get(), $this->configService, $this->entityManager, $this->activityService, $this->metadataService, $this->imageService, $this->currentConfig, $this->wsContext, $this->currentUser, CurrentPathsTestFactory::get(), DbCredentialsTestFactory::get());
@@ -930,8 +930,8 @@ final class UploadServiceTest extends IntegrationTestCase
             self::assertNotNull($threw, 'addFormat() should have thrown for a nonexistent format_of image id');
             self::assertStringContainsString('this photo does not exist in the database', $threw->getMessage());
         } finally {
-            CurrentConfigTestFactory::get()->setIsFormatsEnabled(false);
-            CurrentConfigTestFactory::get()->setFormatExtensions(['cr2', 'tif', 'tiff', 'nef', 'dng', 'ai', 'psd']);
+            CurrentConfigTestFactory::get()->isFormatsEnabled = false;
+            CurrentConfigTestFactory::get()->formatExtensions = ['cr2', 'tif', 'tiff', 'nef', 'dng', 'ai', 'psd'];
         }
     }
 
@@ -947,8 +947,8 @@ final class UploadServiceTest extends IntegrationTestCase
      */
     public function test_addFormat_inserts_then_updates_the_same_format_row_on_a_second_call(): void
     {
-        CurrentConfigTestFactory::get()->setIsFormatsEnabled(true);
-        CurrentConfigTestFactory::get()->setFormatExtensions(['tif']);
+        CurrentConfigTestFactory::get()->isFormatsEnabled = true;
+        CurrentConfigTestFactory::get()->formatExtensions = ['tif'];
 
         try {
             $service = new UploadService(LangTestFactory::get(), $this->currentLogger, $this->storageRegistry, EventDispatcherTestFactory::get(), $this->configService, $this->entityManager, $this->activityService, $this->metadataService, $this->imageService, $this->currentConfig, $this->wsContext, $this->currentUser, CurrentPathsTestFactory::get(), DbCredentialsTestFactory::get());
@@ -966,8 +966,8 @@ final class UploadServiceTest extends IntegrationTestCase
             $count = $this->countRows('SELECT COUNT(*) FROM ' . Tables::imageFormat() . " WHERE image_id = 1 AND ext = 'tif'");
             self::assertSame(1, $count, 'a second addFormat() call for the same image/ext should UPDATE, not duplicate, the row');
         } finally {
-            CurrentConfigTestFactory::get()->setIsFormatsEnabled(false);
-            CurrentConfigTestFactory::get()->setFormatExtensions(['cr2', 'tif', 'tiff', 'nef', 'dng', 'ai', 'psd']);
+            CurrentConfigTestFactory::get()->isFormatsEnabled = false;
+            CurrentConfigTestFactory::get()->formatExtensions = ['cr2', 'tif', 'tiff', 'nef', 'dng', 'ai', 'psd'];
         }
     }
 
@@ -1208,7 +1208,7 @@ final class UploadServiceTest extends IntegrationTestCase
      */
     public function test_addUploadedFile_never_runs_duplicate_detection_on_the_update_branch_even_with_detection_enabled(): void
     {
-        CurrentConfigTestFactory::get()->setUploadDetectDuplicate(true);
+        CurrentConfigTestFactory::get()->uploadDetectDuplicate = true;
         try {
             $service = $this->newService();
 
@@ -1241,7 +1241,7 @@ final class UploadServiceTest extends IntegrationTestCase
             $image1Row = $this->fetchImageRow(1);
             self::assertSame('2e7ee450c4a4cffe42945205029782b9', $image1Row['md5sum']);
         } finally {
-            CurrentConfigTestFactory::get()->setUploadDetectDuplicate(true);
+            CurrentConfigTestFactory::get()->uploadDetectDuplicate = true;
         }
     }
 
@@ -1315,7 +1315,7 @@ final class UploadServiceTest extends IntegrationTestCase
      */
     public function test_addUploadedFile_computes_the_duplicate_detection_lock_name_from_the_documented_prefix_and_md5sum_formula(): void
     {
-        CurrentConfigTestFactory::get()->setUploadDetectDuplicate(true);
+        CurrentConfigTestFactory::get()->uploadDetectDuplicate = true;
 
         $source = $this->marker . '/lock-name-probe.png';
         $this->makeImage($source, 'png', 10, 8);
@@ -1541,7 +1541,7 @@ final class UploadServiceTest extends IntegrationTestCase
     public function test_the_5_ext_imagick_handlers_use_the_configured_dir_prefix_rather_than_a_bare_path_lookup(): void
     {
         $bogusDir = sys_get_temp_dir() . '/definitely-not-a-real-imagick-dir-' . bin2hex(random_bytes(4)) . '/';
-        CurrentConfigTestFactory::get()->setExtImagickDir($bogusDir);
+        CurrentConfigTestFactory::get()->extImagickDir = $bogusDir;
         try {
             $dir = $this->marker;
 
@@ -1566,7 +1566,7 @@ final class UploadServiceTest extends IntegrationTestCase
             $tiff = $dir . '/dirbogus.tiff';
             $this->convertSample($tiffPng, $tiff);
             $this->uploadFileExt(UploadService::uploadFileTiff(...), null, $tiff);
-            self::assertFileDoesNotExist($dir . '/pwg_representative/dirbogus.' . $this->currentConfig->tiffRepresentativeExt());
+            self::assertFileDoesNotExist($dir . '/pwg_representative/dirbogus.' . $this->currentConfig->tiffRepresentativeExt);
 
             $psdPng = $dir . '/dirbogus-psd-src.png';
             $this->makeSamplePng($psdPng);
@@ -1575,7 +1575,7 @@ final class UploadServiceTest extends IntegrationTestCase
             $this->uploadFileExt(UploadService::uploadFilePsd(...), null, $psd);
             self::assertFileDoesNotExist($dir . '/pwg_representative/dirbogus.png');
         } finally {
-            CurrentConfigTestFactory::get()->setExtImagickDir('');
+            CurrentConfigTestFactory::get()->extImagickDir = '';
         }
     }
 
@@ -1593,7 +1593,7 @@ final class UploadServiceTest extends IntegrationTestCase
     public function test_the_5_ext_imagick_handlers_prepend_the_configured_dir_before_the_command_name_not_after(): void
     {
         $realDir = $this->realExtImagickDir();
-        CurrentConfigTestFactory::get()->setExtImagickDir($realDir);
+        CurrentConfigTestFactory::get()->extImagickDir = $realDir;
         try {
             $dir = $this->marker;
 
@@ -1618,7 +1618,7 @@ final class UploadServiceTest extends IntegrationTestCase
             $tiff = $dir . '/dirreal.tiff';
             $this->convertSample($tiffPng, $tiff);
             $this->uploadFileExt(UploadService::uploadFileTiff(...), null, $tiff);
-            self::assertFileExists($dir . '/pwg_representative/dirreal.' . $this->currentConfig->tiffRepresentativeExt());
+            self::assertFileExists($dir . '/pwg_representative/dirreal.' . $this->currentConfig->tiffRepresentativeExt);
 
             $psdPng = $dir . '/dirreal-psd-src.png';
             $this->makeSamplePng($psdPng);
@@ -1627,7 +1627,7 @@ final class UploadServiceTest extends IntegrationTestCase
             $this->uploadFileExt(UploadService::uploadFilePsd(...), null, $psd);
             self::assertFileExists($dir . '/pwg_representative/dirreal.png');
         } finally {
-            CurrentConfigTestFactory::get()->setExtImagickDir('');
+            CurrentConfigTestFactory::get()->extImagickDir = '';
         }
     }
 
@@ -1706,7 +1706,7 @@ final class UploadServiceTest extends IntegrationTestCase
      */
     public function test_uploadFileTiff_applies_the_hardcoded_quality_98_flag_only_when_representative_ext_is_jpg(): void
     {
-        CurrentConfigTestFactory::get()->setTiffRepresentativeExt('jpg');
+        CurrentConfigTestFactory::get()->tiffRepresentativeExt = 'jpg';
         try {
             $dir = $this->marker;
             $png = $dir . '/tiff-quality-src.png';
@@ -1737,7 +1737,7 @@ final class UploadServiceTest extends IntegrationTestCase
 
             self::assertGreaterThan($baselineSize, $producedSize, 'the hardcoded -quality 98 flag must produce a larger, higher-quality file than ImageMagick\'s own unconfigured default');
         } finally {
-            CurrentConfigTestFactory::get()->setTiffRepresentativeExt('png');
+            CurrentConfigTestFactory::get()->tiffRepresentativeExt = 'png';
         }
     }
 
@@ -1799,7 +1799,7 @@ final class UploadServiceTest extends IntegrationTestCase
         $root = $this->marker . '/ready-root/';
         mkdir($root . 'upload', 0o777, true);
         chmod($root . 'upload', 0o555);
-        CurrentConfigTestFactory::get()->setUploadDir('upload/');
+        CurrentConfigTestFactory::get()->uploadDir = 'upload/';
 
         try {
             $service = new UploadService(LangTestFactory::get(), $this->currentLogger, $this->storageRegistry, EventDispatcherTestFactory::get(), $this->configService, $this->entityManager, $this->activityService, $this->metadataService, $this->imageService, $this->currentConfig, $this->wsContext, $this->currentUser, Paths::fromRoot($root), DbCredentialsTestFactory::get());

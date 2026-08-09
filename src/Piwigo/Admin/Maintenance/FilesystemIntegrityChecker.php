@@ -65,7 +65,7 @@ final class FilesystemIntegrityChecker
      */
     public function fsQuickCheck(): void
     {
-        $fs_quick_check_period = $this->currentConfig->fsQuickCheckPeriod();
+        $fs_quick_check_period = $this->currentConfig->fsQuickCheckPeriod;
         if ($fs_quick_check_period === 0) {
             return;
         }

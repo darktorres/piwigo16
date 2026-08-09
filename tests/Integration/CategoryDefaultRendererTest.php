@@ -83,7 +83,7 @@ final class CategoryDefaultRendererTest extends IntegrationTestCase
         // Template's own data_dir_checked write, which would otherwise
         // reach for a full RequestBootstrap dependency this test never
         // boots.
-        $currentConfig->setDataDirChecked('1');
+        $currentConfig->dataDirChecked = '1';
         // thumbnails.tpl reads $derivative_params (assigned from
         // ImageStdParams::get_by_type() by CategoryDefaultRenderer::render()
         // itself) -- ImageStdParams::$all_type_map starts empty until

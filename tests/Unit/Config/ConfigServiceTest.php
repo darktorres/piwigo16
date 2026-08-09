@@ -63,7 +63,7 @@ afterEach(function (): void {
 });
 
 test('confGetParam reads a property-backed key via its own typed getter', function (): void {
-    CurrentConfigTestFactory::get()->setBlkMenubar(['menu' => 50]);
+    CurrentConfigTestFactory::get()->blkMenubar = ['menu' => 50];
 
     $service = unconnectedConfigService();
 
@@ -106,44 +106,44 @@ function jsonEncodeForHydrateTest(mixed $value): string
 }
 
 test('hydrate falls back to false for a non-bool decoded value on a bool-typed property', function (): void {
-    CurrentConfigTestFactory::get()->setGalleryLocked(true);
+    CurrentConfigTestFactory::get()->galleryLocked = true;
 
     invokeConfigServiceHydrate('gallery_locked', jsonEncodeForHydrateTest('not-a-bool'));
 
-    expect(CurrentConfigTestFactory::get()->galleryLocked())->toBeFalse();
+    expect(CurrentConfigTestFactory::get()->galleryLocked)->toBe(false);
 });
 
 test('hydrate falls back to exactly 0 for a non-int decoded value on an int-typed property', function (): void {
-    CurrentConfigTestFactory::get()->setSessionLength(999);
+    CurrentConfigTestFactory::get()->sessionLength = 999;
 
     invokeConfigServiceHydrate('session_length', jsonEncodeForHydrateTest('not-an-int'));
 
-    expect(CurrentConfigTestFactory::get()->sessionLength())->toBe(0);
+    expect(CurrentConfigTestFactory::get()->sessionLength)->toBe(0);
 });
 
 test('hydrate falls back to exactly 0.0 for a non-numeric decoded value on a float-typed property', function (): void {
-    CurrentConfigTestFactory::get()->setNbmMaxTreatmentTimeoutPercent(99.9);
+    CurrentConfigTestFactory::get()->nbmMaxTreatmentTimeoutPercent = 99.9;
 
     invokeConfigServiceHydrate('nbm_max_treatment_timeout_percent', jsonEncodeForHydrateTest('not-a-float'));
 
-    expect(CurrentConfigTestFactory::get()->nbmMaxTreatmentTimeoutPercent())->toBe(0.0);
+    expect(CurrentConfigTestFactory::get()->nbmMaxTreatmentTimeoutPercent)->toBe(0.0);
 });
 
 test('hydrate falls back to an empty string for a non-string decoded value on a string-typed property', function (): void {
     // Same real bug this class's own docblock references (data_dir_checked):
     // jsonEncodeForHydrateTest(123) decodes to a real int, which the 'string' match arm
     // must not silently accept.
-    CurrentConfigTestFactory::get()->setGalleryTitle('Something Real');
+    CurrentConfigTestFactory::get()->galleryTitle = 'Something Real';
 
     invokeConfigServiceHydrate('gallery_title', jsonEncodeForHydrateTest(123));
 
-    expect(CurrentConfigTestFactory::get()->galleryTitle())->toBe('');
+    expect(CurrentConfigTestFactory::get()->galleryTitle)->toBe('');
 });
 
 test('hydrate invokes the setter with null for a nullable property when raw is null', function (): void {
-    CurrentConfigTestFactory::get()->setCountOrphans(5);
+    CurrentConfigTestFactory::get()->countOrphans = 5;
 
     invokeConfigServiceHydrate('count_orphans', null);
 
-    expect(CurrentConfigTestFactory::get()->countOrphans())->toBeNull();
+    expect(CurrentConfigTestFactory::get()->countOrphans)->toBe(null);
 });

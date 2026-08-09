@@ -34,7 +34,7 @@ final class LoungeMaintenance
     public static function needsEmptying(CurrentConfig $currentConfig): bool
     {
 
-        if (! $currentConfig->loungeActive()) {
+        if (! $currentConfig->loungeActive) {
             return false;
         }
 
@@ -58,7 +58,7 @@ final class LoungeMaintenance
         // an expected real path.
         $age = $dbnow - ($date_available !== false ? $date_available : 0);
 
-        $lounge_max_duration = $currentConfig->loungeMaxDuration();
+        $lounge_max_duration = $currentConfig->loungeMaxDuration;
 
         return $age > $lounge_max_duration;
     }

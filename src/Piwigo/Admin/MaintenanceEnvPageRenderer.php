@@ -118,7 +118,7 @@ final class MaintenanceEnvPageRenderer
             $container_name = '(unofficial) ' . $container_name;
         }
 
-        $cache_sizes = $this->currentConfig->cacheSizes();
+        $cache_sizes = $this->currentConfig->cacheSizes;
 
         $time_elapsed_since_last_calc = null;
         if ($cache_sizes !== null && is_array($cache_sizes[3] ?? null) && (is_string($cache_sizes[3]['value'] ?? null) || is_int($cache_sizes[3]['value'] ?? null))) {
@@ -131,7 +131,7 @@ final class MaintenanceEnvPageRenderer
 
         $maint_unlock_gallery = null;
         $maint_lock_gallery = null;
-        if ($this->currentConfig->galleryLocked()) {
+        if ($this->currentConfig->galleryLocked) {
             $maint_unlock_gallery = sprintf($url_format, 'unlock_gallery');
         } else {
             $maint_lock_gallery = sprintf($url_format, 'lock_gallery');

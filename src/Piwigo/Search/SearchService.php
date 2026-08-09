@@ -264,7 +264,7 @@ final readonly class SearchService
         /** @var array<string, list<int>> $imageIdsForFilter */
         $imageIdsForFilter = [];
 
-        $rawFiltersViews = $this->currentConfig->filtersViews() ?? $this->currentConfig->defaultFiltersViews();
+        $rawFiltersViews = $this->currentConfig->filtersViews ?? $this->currentConfig->defaultFiltersViews;
 
         $displayFilters = [];
         foreach ($rawFiltersViews as $filtName => $filtConf) {
@@ -473,7 +473,7 @@ final readonly class SearchService
         // ratings
         $ratingsField = $searchFields['ratings'] ?? null;
         $ratings = is_array($ratingsField) ? array_values(array_filter($ratingsField, is_string(...))) : [];
-        if ($this->currentConfig->rateEnabled() && $ratings !== [] && (bool) ($displayFilters['rating']['access'] ?? false)) {
+        if ($this->currentConfig->rateEnabled && $ratings !== [] && (bool) ($displayFilters['rating']['access'] ?? false)) {
             $hasFiltersFilled = true;
             $clauses = [];
             $ratingParams = [];
@@ -567,7 +567,7 @@ final readonly class SearchService
         if (count($items) > 1) {
             // CurrentConfig::orderBy() (the typed SCHEMA accessor) models a
             // structured {field,dir}[] shape that no real code writes --
-            $orderBy = $this->currentConfig->orderBy();
+            $orderBy = $this->currentConfig->orderBy;
             $items = $this->repo->findIdsByClause('id', Tables::images() . ' i', 'id IN (' . implode(',', array_fill(0, count($items), '?')) . ') ' . $orderBy, $items);
         }
 
@@ -1335,7 +1335,7 @@ final readonly class SearchService
             $token = $expr->stokens[$i];
 
             if ($catIds !== []) {
-                if ($this->currentConfig->quickSearchIncludeSubAlbums()) {
+                if ($this->currentConfig->quickSearchIncludeSubAlbums) {
                     $subcatIds = $this->categoryService->getSubcatIds($catIds);
                     $catIds = $subcatIds !== []
                         ? $this->repo->findIdsByClause(
@@ -1454,7 +1454,7 @@ final readonly class SearchService
         $pool = CachePools::searchResults();
         $cacheKey = md5(serialize([
             strtolower($q),
-            $this->currentConfig->orderBy(),
+            $this->currentConfig->orderBy,
             $user->id->value,
             isset($options['permissions']) ? (bool) $options['permissions'] : true,
             $options['images_where'] ?? '',
@@ -1520,7 +1520,7 @@ final readonly class SearchService
 
         $createdDateAliases = ['taken', 'shot'];
         $postedDateAliases = ['added'];
-        if ($this->currentConfig->calendarDatefield() === 'date_creation') {
+        if ($this->currentConfig->calendarDatefield === 'date_creation') {
             $createdDateAliases[] = 'date';
         } else {
             $postedDateAliases[] = 'date';
@@ -1673,7 +1673,7 @@ final readonly class SearchService
         // its own docblock), so `GROUP BY id` (functionally dependent via
         // the primary key) replaces DISTINCT here, same fix as
         // CalendarRepository::findImageIds().
-        $orderBy = $this->currentConfig->orderBy();
+        $orderBy = $this->currentConfig->orderBy;
         $whereSql = (string) $this->repo->expressionBuilder()
             ->and(...$whereClauses);
         $ids = $this->repo->findIdsByClause('id', $from, $whereSql . "\nGROUP BY id\n" . $orderBy, $params);

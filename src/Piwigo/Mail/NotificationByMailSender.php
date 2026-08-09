@@ -105,13 +105,13 @@ final class NotificationByMailSender
         private readonly MailService $mailer,
         private readonly CurrentConfig $currentConfig,
     ) {
-        $nbmMaxTreatmentTimeoutPercent = $this->currentConfig->nbmMaxTreatmentTimeoutPercent();
+        $nbmMaxTreatmentTimeoutPercent = $this->currentConfig->nbmMaxTreatmentTimeoutPercent;
 
         $this->startTime = TimingHelper::getMoment();
         $this->sendmailTimeout = (float) intval(ini_get('max_execution_time')) * $nbmMaxTreatmentTimeoutPercent;
 
         if ($this->sendmailTimeout <= 0) {
-            $this->sendmailTimeout = $this->currentConfig->nbmTreatmentTimeoutDefault();
+            $this->sendmailTimeout = $this->currentConfig->nbmTreatmentTimeoutDefault;
         }
     }
 
@@ -164,11 +164,11 @@ final class NotificationByMailSender
 
         if ($isToSendMail) {
             $this->emailFormat = $this->mailer
-                ->getStrEmailFormat(SqlDialect::getBoolean($this->currentConfig->nbmSendHtmlMail()));
+                ->getStrEmailFormat(SqlDialect::getBoolean($this->currentConfig->nbmSendHtmlMail));
 
             // \Piwigo\Config\CurrentConfig::nbmSendMailAs() is admin-submitted free text (see
             // NotificationByMailSubController), always a string when set.
-            $nbmSendMailAs = $this->currentConfig->nbmSendMailAs();
+            $nbmSendMailAs = $this->currentConfig->nbmSendMailAs;
             $sendAsName = $nbmSendMailAs !== ''
                 ? $nbmSendMailAs
                 : $this->mailer
@@ -321,7 +321,7 @@ final class NotificationByMailSender
 
         // \Piwigo\Config\CurrentConfig::galleryTitle() is always a string (config_default.inc.php),
         // but that isn't visible through $conf's own array<string, mixed> type.
-        $galleryTitle = $this->currentConfig->galleryTitle();
+        $galleryTitle = $this->currentConfig->galleryTitle;
 
         $checkKeyTreated = [];
         $updatedDataCount = 0;
@@ -475,7 +475,7 @@ final class NotificationByMailSender
             $dataUsers = $this->getUserNotifications('send', $checkKeyList);
 
             // List all if it's define on options or on timeout
-            $isListAllWithoutTest = ($this->isSendmailTimeout or $this->currentConfig->nbmListAllEnabledUsersToSend());
+            $isListAllWithoutTest = ($this->isSendmailTimeout or $this->currentConfig->nbmListAllEnabledUsersToSend);
 
             // Check if exist news to list user or send mails
             if ((! $isListAllWithoutTest) or ($isActionSend)) {
@@ -483,7 +483,7 @@ final class NotificationByMailSender
                     $datas = [];
 
                     if ($customizeMailContent === '') {
-                        $customizeMailContent = $this->currentConfig->nbmComplementaryMailContent();
+                        $customizeMailContent = $this->currentConfig->nbmComplementaryMailContent;
                     }
 
                     $customizeMailContent =
@@ -530,8 +530,8 @@ final class NotificationByMailSender
                             // These nbm_* flags are plain booleans in
                             // include/config_default.inc.php; (bool) is always a
                             // safe, non-failing cast for a mixed config value.
-                            $nbmSendDetailedContent = $this->currentConfig->nbmSendDetailedContent();
-                            $nbmSendHtmlMail = $this->currentConfig->nbmSendHtmlMail();
+                            $nbmSendDetailedContent = $this->currentConfig->nbmSendDetailedContent;
+                            $nbmSendHtmlMail = $this->currentConfig->nbmSendHtmlMail;
 
                             // Only ever read below inside `if
                             // ($nbmSendDetailedContent)` (where it's also
@@ -548,7 +548,7 @@ final class NotificationByMailSender
                             if ($existData) {
                                 // gallery_title is always a configured string
                                 // (see include/config_default.inc.php).
-                                $galleryTitle = $this->currentConfig->galleryTitle();
+                                $galleryTitle = $this->currentConfig->galleryTitle;
                                 $subject = '[' . $galleryTitle . '] ' . $this->lang->t('New photos added');
 
                                 $mailEmailFormat = $this->emailFormat ?? $this->mailer
@@ -581,13 +581,13 @@ final class NotificationByMailSender
                                 $custom_mail_content = ! in_array($nbmUserCustomizeMailContent, ['0', ''], true) ? $nbmUserCustomizeMailContent : null;
 
                                 $recent_posts = [];
-                                $nbmSendRecentPostDates = $this->currentConfig->nbmSendRecentPostDates();
+                                $nbmSendRecentPostDates = $this->currentConfig->nbmSendRecentPostDates;
                                 if ($nbmSendHtmlMail and $nbmSendRecentPostDates) {
                                     // CurrentConfig::recentPostDates() returns a
                                     // typed NotificationConfig object, not a raw
                                     // array -- same shape as FeedController's RSS
                                     // equivalent.
-                                    $nbmConfig = $this->currentConfig->recentPostDates()
+                                    $nbmConfig = $this->currentConfig->recentPostDates
                                         ->nbm;
                                     $nbmRecentPostDatesArgs = [
                                         'max_dates' => $nbmConfig->maxDates,

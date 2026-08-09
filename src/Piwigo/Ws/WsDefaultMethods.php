@@ -51,13 +51,13 @@ final class WsDefaultMethods
 
         // guard against a misconfigured/empty value since max() requires a
         // non-empty array.
-        $available_permission_levels = $this->currentConfig->availablePermissionLevels();
+        $available_permission_levels = $this->currentConfig->availablePermissionLevels;
         $available_permission_levels = $available_permission_levels !== []
             ? $available_permission_levels
             : [0, 1, 2, 4, 8];
 
-        // $this->currentConfig->nbCommentPage() is a numeric config value (see admin/configuration.php).
-        $nb_comment_page = $this->currentConfig->nbCommentPage();
+        // $this->currentConfig->nbCommentPage is a numeric config value (see admin/configuration.php).
+        $nb_comment_page = $this->currentConfig->nbCommentPage;
 
         $f_params = [
             'f_min_rate' => [
@@ -211,7 +211,7 @@ final class WsDefaultMethods
                 ],
                 'per_page' => [
                     'default' => 100,
-                    'maxValue' => $this->currentConfig->wsMaxImagesPerPage(),
+                    'maxValue' => $this->currentConfig->wsMaxImagesPerPage,
                     'type' => WsParamType::INT | WsParamType::POSITIVE,
                 ],
                 'page' => [
@@ -359,7 +359,7 @@ final class WsDefaultMethods
                 'query' => [],
                 'per_page' => [
                     'default' => 100,
-                    'maxValue' => $this->currentConfig->wsMaxImagesPerPage(),
+                    'maxValue' => $this->currentConfig->wsMaxImagesPerPage,
                     'type' => WsParamType::INT | WsParamType::POSITIVE,
                 ],
                 'page' => [
@@ -563,7 +563,7 @@ final class WsDefaultMethods
                 ],
                 'per_page' => [
                     'default' => 100,
-                    'maxValue' => $this->currentConfig->wsMaxImagesPerPage(),
+                    'maxValue' => $this->currentConfig->wsMaxImagesPerPage,
                     'type' => WsParamType::INT | WsParamType::POSITIVE,
                 ],
                 'page' => [
@@ -838,7 +838,7 @@ final class WsDefaultMethods
             $this->pwgImages->setMd5sum(...),
             [
                 'block_size' => [
-                    'default' => $this->currentConfig->checksumComputeBlocksize(),
+                    'default' => $this->currentConfig->checksumComputeBlocksize,
                     'type' => WsParamType::INT | WsParamType::POSITIVE,
                 ],
                 'pwg_token' => [],
@@ -1464,7 +1464,7 @@ final class WsDefaultMethods
                 ],
                 'per_page' => [
                     'default' => 100,
-                    'maxValue' => $this->currentConfig->wsMaxUsersPerPage(),
+                    'maxValue' => $this->currentConfig->wsMaxUsersPerPage,
                     'type' => WsParamType::INT | WsParamType::POSITIVE,
                 ],
                 'page' => [
@@ -1644,7 +1644,7 @@ final class WsDefaultMethods
                 ],
                 'per_page' => [
                     'default' => 100,
-                    'maxValue' => $this->currentConfig->wsMaxUsersPerPage(),
+                    'maxValue' => $this->currentConfig->wsMaxUsersPerPage,
                     'type' => WsParamType::INT | WsParamType::POSITIVE,
                 ],
                 'page' => [
@@ -2001,7 +2001,7 @@ final class WsDefaultMethods
             [
                 'per_page' => [
                     'default' => 100,
-                    'maxValue' => $this->currentConfig->wsMaxImagesPerPage(),
+                    'maxValue' => $this->currentConfig->wsMaxImagesPerPage,
                     'type' => WsParamType::INT | WsParamType::POSITIVE,
                 ],
                 'page' => [
@@ -2318,7 +2318,7 @@ final class WsDefaultMethods
                     'type' => WsParamType::INT | WsParamType::POSITIVE,
                 ],
                 'per_page' => [
-                    'default' => $this->currentConfig->commentsPageNbComments(),
+                    'default' => $this->currentConfig->commentsPageNbComments,
                     'type' => WsParamType::INT | WsParamType::POSITIVE,
                 ],
             ],

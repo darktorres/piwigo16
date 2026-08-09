@@ -146,7 +146,7 @@ final class FilesystemIntegrityCheckerTest extends IntegrationTestCase
         if (! $currentConfig instanceof CurrentConfig) {
             throw new LogicException('Container returned an unexpected type for ' . CurrentConfig::class);
         }
-        $currentConfig->setFsQuickCheckPeriod(0);
+        $currentConfig->fsQuickCheckPeriod = 0;
 
         $this->checker->fsQuickCheck();
 

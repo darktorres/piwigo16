@@ -100,7 +100,7 @@ final readonly class AuthService
         $data = $time . $userId . $username;
         // secret_key is a random string generated at install time (see
         // install/index.php), always a string in a working install
-        $secret_key = $this->currentConfig->secretKey();
+        $secret_key = $this->currentConfig->secretKey;
         $key = base64_encode(hash_hmac('sha256', $data, $secret_key . $found->password, true));
 
         return [
@@ -145,8 +145,8 @@ final readonly class AuthService
         // include/config_default.inc.php, but once persisted to the config
         // DB table both come back as raw strings (see load_conf_from_db())
         // -- accept either.
-        $remember_me_name = $this->currentConfig->rememberMeName();
-        $remember_me_length = $this->currentConfig->rememberMeLength();
+        $remember_me_name = $this->currentConfig->rememberMeName;
+        $remember_me_length = $this->currentConfig->rememberMeLength;
 
         // New default login and register pages, if users changes languages
         // and succesfully logs in we want to update the userpref language
@@ -170,7 +170,7 @@ final readonly class AuthService
             ]);
         }
 
-        if ($rememberMe && $this->currentConfig->authorizeRemembering()) {
+        if ($rememberMe && $this->currentConfig->authorizeRemembering) {
             $now = time();
             $calculated = $this->calculateAutoLoginKey($userId, $now);
             if ($calculated['key'] !== false) {
@@ -228,8 +228,8 @@ final readonly class AuthService
 
         // see logUser() for why these accept both the config-default
         // scalar type and the DB-persisted string form
-        $remember_me_name = $this->currentConfig->rememberMeName();
-        $remember_me_length = $this->currentConfig->rememberMeLength();
+        $remember_me_name = $this->currentConfig->rememberMeName;
+        $remember_me_length = $this->currentConfig->rememberMeLength;
 
         if (isset($_COOKIE[$remember_me_name])) {
             $remember_me_cookie = $_COOKIE[$remember_me_name];
@@ -312,7 +312,7 @@ final readonly class AuthService
         }
         // see logUser() for why this accepts both the config-default
         // scalar type and the DB-persisted string form
-        $remember_me_name = $this->currentConfig->rememberMeName();
+        $remember_me_name = $this->currentConfig->rememberMeName;
         setcookie($remember_me_name, '', [
             'expires' => 0,
             'path' => $this->cookieService->cookiePath(),
@@ -344,8 +344,8 @@ final readonly class AuthService
         $ip = IpAddress::fromRemoteAddr()->value ?? '';
         $now = Env::now();
         $nowFormatted = $now->format('Y-m-d H:i:s');
-        $windowStart = (clone $now)->modify('-' . $this->currentConfig->loginLockoutWindowMinutes() . ' minutes')->format('Y-m-d H:i:s');
-        $maxAttempts = $this->currentConfig->loginLockoutMaxAttempts();
+        $windowStart = (clone $now)->modify('-' . $this->currentConfig->loginLockoutWindowMinutes . ' minutes')->format('Y-m-d H:i:s');
+        $maxAttempts = $this->currentConfig->loginLockoutMaxAttempts;
 
         // LOCKOUT (IP-scoped): checked before the username is even resolved
         // below, so a fast reject here can never leak whether $username
@@ -640,7 +640,7 @@ final readonly class AuthService
         // auth_key_duration defaults to 3*24*60*60 (int) in
         // include/config_default.inc.php, but once persisted to the config DB
         // table it comes back as a raw string (see load_conf_from_db())
-        $auth_key_duration = $this->currentConfig->authKeyDuration();
+        $auth_key_duration = $this->currentConfig->authKeyDuration;
 
         if ($auth_key_duration === 0) {
             return false;
@@ -706,8 +706,8 @@ final readonly class AuthService
         $activation_key = $this->sessionService->generateKey(20);
 
         $duration = $firstLogin
-        ? $this->currentConfig->passwordActivationDuration()
-        : $this->currentConfig->passwordResetDuration();
+        ? $this->currentConfig->passwordActivationDuration
+        : $this->currentConfig->passwordResetDuration;
         $expire = (clone Env::now())->modify('+' . $duration . ' seconds');
 
         $this->repo->setActivationKey(UserId::from($userId), $this->passwordService->hash($activation_key), $expire);
@@ -767,7 +767,7 @@ final readonly class AuthService
         // password_reset_code_duration defaults to 5*60 (int) in
         // include/config_default.inc.php, but once persisted to the config DB
         // table it comes back as a raw string (see load_conf_from_db())
-        $password_reset_code_duration = $this->currentConfig->passwordResetCodeDuration();
+        $password_reset_code_duration = $this->currentConfig->passwordResetCodeDuration;
         $code = PwgTOTP::generateCode($secret, min($password_reset_code_duration, 900)); // max 15 minutes
 
         return [
@@ -780,7 +780,7 @@ final readonly class AuthService
     {
 
         // see generateUserCode() for why this needs numeric narrowing
-        $password_reset_code_duration = $this->currentConfig->passwordResetCodeDuration();
+        $password_reset_code_duration = $this->currentConfig->passwordResetCodeDuration;
         return PwgTOTP::verifyCode($code, $secret, min($password_reset_code_duration, 900), 1);
     }
 }

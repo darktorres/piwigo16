@@ -53,7 +53,7 @@ final class ActivityServiceTest extends IntegrationTestCase
         ConfigLoader::applyDefaults();
         ConfigLoader::applyEnvOverrides();
 
-        $currentConfig->setPhpExtensionInUrls(false);
+        $currentConfig->phpExtensionInUrls = false;
         CurrentUserTestFactory::get()->set(User::fromUserArray(['id' => 1]));
         CurrentUserTestFactory::get()->markRealUserResolved();
         unset($_REQUEST['method'], $_REQUEST['action'], $_GET['page'], $_POST['destination_tag'], $_SESSION['connected_with']);

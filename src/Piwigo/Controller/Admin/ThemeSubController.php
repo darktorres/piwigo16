@@ -57,7 +57,7 @@ final class ThemeSubController implements AdminSubControllerInterface
                 ->fatalError('Invalid theme');
         }
 
-        $filename = $this->currentConfig->themesPath() . $theme . '/admin/admin.inc.php';
+        $filename = $this->currentConfig->themesPath . $theme . '/admin/admin.inc.php';
         if (is_file($filename)) {
             include_once $filename;
         } else {

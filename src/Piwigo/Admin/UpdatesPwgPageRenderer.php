@@ -54,7 +54,7 @@ final class UpdatesPwgPageRenderer
     {
         $template = $this->currentTemplate->get();
 
-        if (! $this->currentConfig->enableCoreUpdate()) {
+        if (! $this->currentConfig->enableCoreUpdate) {
             $this->htmlRenderer
                 ->fatalError('Piwigo core update system is disabled');
         }

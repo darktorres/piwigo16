@@ -130,7 +130,7 @@ final class MaintenanceActionsPageRenderer
         // dance that used to live here was permanently dead -- $cache_sizes was
         // always null, meaning $time_elapsed_since_last_calc below never
         // actually populated.
-        $cache_sizes = $this->currentConfig->cacheSizes();
+        $cache_sizes = $this->currentConfig->cacheSizes;
         $time_elapsed_since_last_calc = null;
         if ($cache_sizes !== null) {
             $last_calc_row = $cache_sizes[3] ?? null;
@@ -147,7 +147,7 @@ final class MaintenanceActionsPageRenderer
         switch (PwgImage::get_library()) {
             case 'ext_imagick':
                 $library = 'External ImageMagick';
-                $ext_imagick_dir = $this->currentConfig->extImagickDir();
+                $ext_imagick_dir = $this->currentConfig->extImagickDir;
                 $returnarray = [];
                 exec($ext_imagick_dir . PwgImage::get_ext_imagick_command() . ' -version', $returnarray);
                 $returnarray_line0 = $returnarray[0] ?? '';
@@ -176,7 +176,7 @@ final class MaintenanceActionsPageRenderer
 
         $maint_unlock_gallery = null;
         $maint_lock_gallery = null;
-        if ($this->currentConfig->galleryLocked()) {
+        if ($this->currentConfig->galleryLocked) {
             $maint_unlock_gallery = sprintf($url_format, 'unlock_gallery');
         } else {
             $maint_lock_gallery = sprintf($url_format, 'lock_gallery');

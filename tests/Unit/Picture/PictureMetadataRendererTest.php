@@ -58,8 +58,8 @@ beforeEach(function (): void {
     $root = sys_get_temp_dir() . '/piwigo-picture-metadata-test-' . bin2hex(random_bytes(8));
     mkdir($root, 0o777, true);
     Kernel::boot(Paths::fromRoot($root));
-    picture_metadata_test_current_config()->setDataLocation('data/');
-    picture_metadata_test_current_config()->setDataDirChecked('1');
+    picture_metadata_test_current_config()->dataLocation = 'data/';
+    picture_metadata_test_current_config()->dataDirChecked = '1';
     CurrentTemplate::current()->set(TemplateTestFactory::build());
 });
 
@@ -71,8 +71,8 @@ afterEach(function (): void {
 });
 
 test('render appends nothing when both show_exif and show_iptc are disabled', function (): void {
-    picture_metadata_test_current_config()->setShowExif(false);
-    picture_metadata_test_current_config()->setShowIptc(false);
+    picture_metadata_test_current_config()->showExif = false;
+    picture_metadata_test_current_config()->showIptc = false;
     $renderer = new PictureMetadataRenderer();
 
     $renderer->render(LangTestFactory::get(), [], new CurrentLogger(), new EventDispatcher(), CurrentTemplate::current(), CurrentConfigTestFactory::get(), CurrentUserTestFactory::get(), SessionServiceTestFactory::get(), new FilterState(), CurrentPathsTestFactory::get());

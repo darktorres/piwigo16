@@ -86,8 +86,8 @@ final class PageTailTest extends IntegrationTestCase
         if (! $currentConfig instanceof CurrentConfig) {
             throw new LogicException('Container returned an unexpected type for ' . CurrentConfig::class);
         }
-        $currentConfig->setSendPiwigoInfos(false);
-        $currentConfig->setShowVersion(true);
+        $currentConfig->sendPiwigoInfos = false;
+        $currentConfig->showVersion = true;
     }
 
     #[Override]
@@ -111,11 +111,11 @@ final class PageTailTest extends IntegrationTestCase
         if (! $currentConfig instanceof CurrentConfig) {
             throw new LogicException('Container returned an unexpected type for ' . CurrentConfig::class);
         }
-        $currentConfig->setUpdateNotifyCheckPeriod(1);
+        $currentConfig->updateNotifyCheckPeriod = 1;
         // Far enough in the past that, with a 1-second check period,
         // strtotime($lastCheck) < strtotime('1 seconds ago') is true --
         // reaches the `$check_for_updates = true;` line under test.
-        $currentConfig->setUpdateNotifyLastCheck('2020-01-01 00:00:00');
+        $currentConfig->updateNotifyLastCheck = '2020-01-01 00:00:00';
 
         // Win the real lock first, on a genuinely separate connection --
         // GET_LOCK() re-acquiring an already-held name on the SAME

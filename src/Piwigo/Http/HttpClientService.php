@@ -228,11 +228,11 @@ final readonly class HttpClientService implements ClientInterface
             'timeout' => 10,
         ];
 
-        if ($currentConfig->useProxy() && $currentConfig->proxyServer() !== '') {
-            $proxyServer = $currentConfig->proxyServer();
+        if ($currentConfig->useProxy && $currentConfig->proxyServer !== '') {
+            $proxyServer = $currentConfig->proxyServer;
             $proxyUrl = $proxyServer;
-            if ($currentConfig->proxyAuth() !== '') {
-                $proxyAuth = $currentConfig->proxyAuth();
+            if ($currentConfig->proxyAuth !== '') {
+                $proxyAuth = $currentConfig->proxyAuth;
                 $proxyUrl = preg_replace('#^(https?://)#', '$1' . $proxyAuth . '@', $proxyUrl);
             }
             $extraOptions['proxy'] = $proxyUrl;

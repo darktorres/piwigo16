@@ -106,7 +106,7 @@ final class PageHeaderRendererTest extends IntegrationTestCase
         if (! $currentConfig instanceof CurrentConfig) {
             throw new LogicException('Container returned an unexpected type for ' . CurrentConfig::class);
         }
-        $currentConfig->setMetaRef(false);
+        $currentConfig->metaRef = false;
 
         $this->renderer->render('Meta Robots Test', new EventDispatcher(), PageStateTestFactory::get(), CurrentTemplate::current(), CurrentConfigTestFactory::get());
 
@@ -122,7 +122,7 @@ final class PageHeaderRendererTest extends IntegrationTestCase
         if (! $currentConfig instanceof CurrentConfig) {
             throw new LogicException('Container returned an unexpected type for ' . CurrentConfig::class);
         }
-        $currentConfig->setMetaRef(true);
+        $currentConfig->metaRef = true;
 
         $this->renderer->render('Meta Ref Enabled Test', new EventDispatcher(), PageStateTestFactory::get(), CurrentTemplate::current(), CurrentConfigTestFactory::get());
 

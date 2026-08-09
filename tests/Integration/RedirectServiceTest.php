@@ -77,7 +77,7 @@ final class RedirectServiceTest extends IntegrationTestCase
         // ScriptLoader::urlService() -- unset by default, real
         // RequestBootstrap-only wiring this test never boots.
 
-        $this->currentConfig()->setSendPiwigoInfos(false);
+        $this->currentConfig()->sendPiwigoInfos = false;
 
         // Deliberately NOT initialised here: CurrentTemplate::current()->reset()/
         // Lang::reset() are the actual precondition the early-crash branch
@@ -197,7 +197,7 @@ final class RedirectServiceTest extends IntegrationTestCase
         // body) if $refresh_time were ignored -- forcing the http method
         // here proves it's genuinely $refresh_time, not
         // defaultRedirectMethod(), driving the else branch.
-        $this->currentConfig()->setDefaultRedirectMethod('http');
+        $this->currentConfig()->defaultRedirectMethod = 'http';
 
         $execId = UniqueExecLock::begins(new Logger(['severity' => Logger::OFF]), 'check_for_updates');
         self::assertTrue($execId);

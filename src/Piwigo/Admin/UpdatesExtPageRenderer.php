@@ -45,7 +45,7 @@ final class UpdatesExtPageRenderer
     {
         $template = $currentTemplate->get();
 
-        if (! $currentConfig->enableExtensionsInstall()) {
+        if (! $currentConfig->enableExtensionsInstall) {
             $htmlRenderer
                 ->fatalError('Piwigo extensions install/update system is disabled');
         }

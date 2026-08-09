@@ -73,7 +73,7 @@ final class SiteManagerSubController implements AdminSubControllerInterface
     {
         $template = $this->currentTemplate->get();
 
-        if (! $this->currentConfig->enableSynchronization()) {
+        if (! $this->currentConfig->enableSynchronization) {
             $this->htmlRenderer
                 ->fatalError('synchronization is disabled');
         }

@@ -315,7 +315,7 @@ final readonly class GroupService
             return false;
         }
 
-        $emailAdminOnNewUser = $this->currentConfig->emailAdminOnNewUser();
+        $emailAdminOnNewUser = $this->currentConfig->emailAdminOnNewUser;
         if ((bool) preg_match('/^group:(\d+)$/', $emailAdminOnNewUser, $matches)) {
             foreach ($groupIds as $groupId) {
                 if ($groupId->value === (int) $matches[1]) {

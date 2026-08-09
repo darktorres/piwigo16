@@ -258,7 +258,7 @@ final class ExtensionScanner
         if (file_exists($screenshotPath)) {
             $theme['screenshot'] = $screenshotPath;
         } else {
-            $adminTheme = new PreferencesService(new UserRepository(EntityManagerFactory::build(DbConnection::build()), $eventDispatcher, $currentConfig), $currentUser)->getAdminThemePref() ?? $currentConfig->adminTheme();
+            $adminTheme = new PreferencesService(new UserRepository(EntityManagerFactory::build(DbConnection::build()), $eventDispatcher, $currentConfig), $currentUser)->getAdminThemePref() ?? $currentConfig->adminTheme;
             $theme['screenshot'] = $urlService->getRootUrl() . 'themes/admin/'
                 . $adminTheme
                 . '/images/missing_screenshot.png';

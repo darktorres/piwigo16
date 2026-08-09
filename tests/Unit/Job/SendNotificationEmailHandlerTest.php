@@ -95,19 +95,19 @@ test('__invoke actually reaches MailService::mail() with the job\'s exact to/arg
     // already-set CurrentConfigService" test).
     Kernel::boot(Paths::fromRoot(dirname(__DIR__, 3) . '/'));
 
-    CurrentConfigTestFactory::get()->setMailSenderEmail('sender@example.test');
-    CurrentConfigTestFactory::get()->setMailSenderName('Test Sender');
+    CurrentConfigTestFactory::get()->mailSenderEmail = 'sender@example.test';
+    CurrentConfigTestFactory::get()->mailSenderName = 'Test Sender';
     // Skips the real theme's text/html mail templates -- header.tpl
     // there reads lang_info['code'] directly, which needs a real
     // Lang::load() to populate; the plain-text template mail() always
     // also renders doesn't touch lang_info at all, and is sufficient to
     // prove the real render+send pipeline genuinely ran.
-    CurrentConfigTestFactory::get()->setMailAllowHtml(false);
+    CurrentConfigTestFactory::get()->mailAllowHtml = false;
     // Skips Template::__construct()'s own one-time data_dir_checked
     // write (which otherwise needs a real, activated
     // CurrentConfigService -- more bootstrap than this Unit test
     // should need just to prove delegation).
-    CurrentConfigTestFactory::get()->setDataDirChecked('1');
+    CurrentConfigTestFactory::get()->dataDirChecked = '1';
 
     $capturedTo = null;
     $capturedArgs = null;

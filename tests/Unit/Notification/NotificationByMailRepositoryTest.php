@@ -28,7 +28,6 @@ function nbmTestRepo(): NotificationByMailRepository
 {
     $conn = DbConnection::build();
     $repo = EntityManagerFactory::build($conn)->getRepository(UserMailNotificationEntity::class);
-    expect($repo)->toBeInstanceOf(NotificationByMailRepository::class);
 
     return $repo;
 }

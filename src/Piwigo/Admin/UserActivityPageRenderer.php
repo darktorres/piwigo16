@@ -167,7 +167,7 @@ final class UserActivityPageRenderer
             adminPageTitle: $lang->t('Users'),
             pwgToken: new CsrfService($currentConfig)
                 ->getToken(),
-            inherit: $currentConfig->inheritanceByDefault(),
+            inherit: $currentConfig->inheritanceByDefault,
             cacheKeys: AdminUiHelper::getAdminClientCacheKeys($urlService, ['users']),
             ulist: $filterable_users,
             nbUsers: $nb_users,

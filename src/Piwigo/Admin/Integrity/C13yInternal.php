@@ -113,8 +113,8 @@ final class C13yInternal
     {
         $c13y = $event->value;
         $checks = [
-            'show_exif' => $this->currentConfig->showExif(),
-            'use_exif' => $this->currentConfig->useExif(),
+            'show_exif' => $this->currentConfig->showExif,
+            'use_exif' => $this->currentConfig->useExif,
         ];
         foreach ($checks as $value => $enabled) {
             if ($enabled and (! function_exists('exif_read_data'))) {
@@ -139,11 +139,11 @@ final class C13yInternal
 
         // guest_id/default_user_id/webmaster_id are always scalar (raw DB
         // primary keys or config defaults, see include/config_default.inc.php).
-        $guest_id = $this->currentConfig->guestId();
+        $guest_id = $this->currentConfig->guestId;
 
-        $default_user_id = $this->currentConfig->defaultUserId();
+        $default_user_id = $this->currentConfig->defaultUserId;
 
-        $webmaster_id = $this->currentConfig->webmasterId();
+        $webmaster_id = $this->currentConfig->webmasterId;
 
         $c13y_users = [];
         $c13y_users[$guest_id] = [
@@ -201,11 +201,11 @@ final class C13yInternal
     {
         // guest_id/default_user_id/webmaster_id are always scalar (raw DB
         // primary keys or config defaults, see include/config_default.inc.php).
-        $guest_id = $this->currentConfig->guestId();
+        $guest_id = $this->currentConfig->guestId;
 
-        $default_user_id = $this->currentConfig->defaultUserId();
+        $default_user_id = $this->currentConfig->defaultUserId;
 
-        $webmaster_id = $this->currentConfig->webmasterId();
+        $webmaster_id = $this->currentConfig->webmasterId;
 
         $result = false;
 

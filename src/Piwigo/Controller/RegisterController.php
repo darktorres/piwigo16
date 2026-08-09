@@ -100,7 +100,7 @@ final class RegisterController implements ControllerInterface
 
         $this->accessControl->checkStatus(AccessLevel::Free);
 
-        if (! $this->currentConfig->allowUserRegistration()) {
+        if (! $this->currentConfig->allowUserRegistration) {
             $this->htmlService
                 ->pageForbidden($this->redirectService, 'User registration closed');
         }
@@ -285,7 +285,7 @@ final class RegisterController implements ControllerInterface
             formAction: 'register.php',
             formLogin: $login,
             formEmail: $email,
-            obligatoryUserMailAddress: $this->currentConfig->obligatoryUserMailAddress(),
+            obligatoryUserMailAddress: $this->currentConfig->obligatoryUserMailAddress,
             languageOptions: $language_options,
             currentLanguage: $this->currentUser->get()
                 ->language,

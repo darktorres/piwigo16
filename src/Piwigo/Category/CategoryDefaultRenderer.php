@@ -126,7 +126,7 @@ final readonly class CategoryDefaultRenderer
                   ]
               );
 
-            if ($this->currentConfig->activateComments() and (bool) $this->currentUser->get()->rawAttributes['show_nb_comments']) {
+            if ($this->currentConfig->activateComments and (bool) $this->currentUser->get()->rawAttributes['show_nb_comments']) {
                 $nbCommentsOf = $this->commentCounter->countValidatedByImageIds($selection);
             }
         }
@@ -173,7 +173,7 @@ final readonly class CategoryDefaultRenderer
                 'file_ext' => strtolower(StringHelper::getExtension($rowFile)),
             ]);
 
-            if ($this->currentConfig->indexNewIcon()) {
+            if ($this->currentConfig->indexNewIcon) {
                 // '' falls through get_icon()'s own empty($date) guard
                 // exactly like a non-string/null column value would, so
                 // behavior is unchanged.
@@ -221,8 +221,8 @@ final readonly class CategoryDefaultRenderer
         $template->assignContext(new CategoryDefaultThumbnailsPageContext(
             derivativeParams: $this->eventDispatcher->dispatchChange(new GetIndexDerivativeParams($this->imageStdParams->get_by_type($indexDeriv)))
                 ->params,
-            maxRequests: $this->currentConfig->maxRequests(),
-            showThumbnailCaption: $this->currentConfig->showThumbnailCaption(),
+            maxRequests: $this->currentConfig->maxRequests,
+            showThumbnailCaption: $this->currentConfig->showThumbnailCaption,
             thumbnails: $tplThumbnailsVar,
         ));
 

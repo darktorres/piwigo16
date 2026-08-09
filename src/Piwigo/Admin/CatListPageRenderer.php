@@ -169,7 +169,7 @@ final class CatListPageRenderer
             // same fallback default as include/config_default.inc.php's
             // \Piwigo\Config\CurrentConfig::levelSeparator() (' / '); see the identical pattern in
             // include/section_init.inc.php.
-            $level_separator = $this->currentConfig->levelSeparator();
+            $level_separator = $this->currentConfig->levelSeparator;
             $navigation .= $level_separator;
 
             $navigation .= $this->htmlRenderer
@@ -284,7 +284,7 @@ final class CatListPageRenderer
                 $tpl_cat['U_DELETE'] = $self_url . '&amp;delete=' . $cat_id;
                 $tpl_cat['U_DELETE'] .= '&amp;pwg_token=' . new CsrfService($this->currentConfig)->getToken();
             } else {
-                if ($this->currentConfig->enableSynchronization()) {
+                if ($this->currentConfig->enableSynchronization) {
                     $tpl_cat['U_SYNC'] = $base_url . 'site_update&amp;site=1&amp;cat_id=' . $cat_id;
                 }
             }

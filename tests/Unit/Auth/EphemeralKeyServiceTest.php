@@ -6,7 +6,7 @@ use Piwigo\Auth\EphemeralKeyService;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
 
 beforeEach(function (): void {
-    CurrentConfigTestFactory::get()->setSecretKey('test-secret-key');
+    CurrentConfigTestFactory::get()->secretKey = 'test-secret-key';
     $_SERVER['REMOTE_ADDR'] = '127.0.0.1';
 });
 
@@ -175,7 +175,7 @@ test('generate produces a different signature when the secret key changes', func
     $service = new EphemeralKeyService(CurrentConfigTestFactory::get());
     $key = $service->generate(0);
 
-    CurrentConfigTestFactory::get()->setSecretKey('a-different-secret');
+    CurrentConfigTestFactory::get()->secretKey = 'a-different-secret';
 
     expect($service->verify($key))->toBeFalse();
 });

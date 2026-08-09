@@ -44,7 +44,7 @@ final class CsrfService
             throw new Exception('CsrfService::getToken(): no active session');
         }
 
-        $secret_key = $this->currentConfig->secretKey();
+        $secret_key = $this->currentConfig->secretKey;
 
         return hash_hmac('sha256', $session_id, $secret_key);
     }

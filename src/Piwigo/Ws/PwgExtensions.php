@@ -134,7 +134,7 @@ final class PwgExtensions
             return new PwgError(403, $this->lang->t('Webmaster status is required.'));
         }
 
-        if (! $this->currentConfig->enableExtensionsInstall() and $params['action'] === 'delete') {
+        if (! $this->currentConfig->enableExtensionsInstall and $params['action'] === 'delete') {
             return new PwgError(401, 'Piwigo extensions install/update/delete system is disabled');
         }
 
@@ -196,7 +196,7 @@ final class PwgExtensions
             return new PwgError(403, 'Invalid security token');
         }
 
-        if (! $this->currentConfig->enableExtensionsInstall() and $params['action'] === 'delete') {
+        if (! $this->currentConfig->enableExtensionsInstall and $params['action'] === 'delete') {
             return new PwgError(401, 'Piwigo extensions install/update/delete system is disabled');
         }
 
@@ -249,7 +249,7 @@ final class PwgExtensions
      */
     public function update(array $params, PwgServer &$service): PwgError|string
     {
-        if (! $this->currentConfig->enableExtensionsInstall()) {
+        if (! $this->currentConfig->enableExtensionsInstall) {
             return new PwgError(401, 'Piwigo extensions install/update system is disabled');
         }
 

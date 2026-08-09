@@ -52,11 +52,11 @@ final readonly class RateService
     public function rate(int $imageId, int|string|null $rate): array|false
     {
 
-        $rateItems = $this->currentConfig->rateItems();
+        $rateItems = $this->currentConfig->rateItems;
 
         if (
             $rate === null
-            || ! $this->currentConfig->rateEnabled()
+            || ! $this->currentConfig->rateEnabled
             || ! (bool) preg_match('/^[0-9]+$/', (string) $rate)
         ) {
             return false;
@@ -73,7 +73,7 @@ final readonly class RateService
 
         $userAnonymous = ! $this->accessControl->isAuthorizeStatus(AccessLevel::Classic);
 
-        if ($userAnonymous && ! $this->currentConfig->rateAnonymous()) {
+        if ($userAnonymous && ! $this->currentConfig->rateAnonymous) {
             return false;
         }
 

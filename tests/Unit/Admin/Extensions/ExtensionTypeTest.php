@@ -28,9 +28,9 @@ test('table returns each type\'s own table', function (): void {
 });
 
 test('pemCategoryId returns each type\'s own pem category id', function (): void {
-    expect(ExtensionType::Plugin->pemCategoryId(CurrentConfigTestFactory::get()))->toBe(CurrentConfigTestFactory::get()->pemPluginsCategory())
-        ->and(ExtensionType::Theme->pemCategoryId(CurrentConfigTestFactory::get()))->toBe(CurrentConfigTestFactory::get()->pemThemesCategory())
-        ->and(ExtensionType::Language->pemCategoryId(CurrentConfigTestFactory::get()))->toBe(CurrentConfigTestFactory::get()->pemLanguagesCategory());
+    expect(ExtensionType::Plugin->pemCategoryId(CurrentConfigTestFactory::get()))->toBe(CurrentConfigTestFactory::get()->pemPluginsCategory)
+        ->and(ExtensionType::Theme->pemCategoryId(CurrentConfigTestFactory::get()))->toBe(CurrentConfigTestFactory::get()->pemThemesCategory)
+        ->and(ExtensionType::Language->pemCategoryId(CurrentConfigTestFactory::get()))->toBe(CurrentConfigTestFactory::get()->pemLanguagesCategory);
 });
 
 test('fromPluralWsParam maps each type\'s plural pwg.extensions.ignoreUpdate wire value back to its enum case', function (): void {
@@ -49,7 +49,7 @@ test('scanDirectory returns each type\'s own filesystem root', function (): void
     // Piwigo\Admin\PluginLoader::pluginsPath() is the canonical value for
     // the Plugin type's scan directory.
     expect(ExtensionType::Plugin->scanDirectory(CurrentPathsTestFactory::get(), CurrentConfigTestFactory::get()))->toBe(PluginLoader::pluginsPath(CurrentPathsTestFactory::get()))
-        ->and(ExtensionType::Theme->scanDirectory(CurrentPathsTestFactory::get(), CurrentConfigTestFactory::get()))->toBe(CurrentConfigTestFactory::get()->themesPath())
+        ->and(ExtensionType::Theme->scanDirectory(CurrentPathsTestFactory::get(), CurrentConfigTestFactory::get()))->toBe(CurrentConfigTestFactory::get()->themesPath)
         ->and(ExtensionType::Language->scanDirectory(CurrentPathsTestFactory::get(), CurrentConfigTestFactory::get()))->toBe(CurrentPathsTestFactory::get()->root . 'language/');
 });
 

@@ -83,10 +83,10 @@ final class PictureCoiPageRenderer
             new DerivativeCacheService($this->currentConfig, $this->paths)
                 ->deleteElementDerivatives($derivative_infos, ImageStdParams::CUSTOM);
             $uid = '&b=' . time();
-            $this->currentConfig->setQuestionMarkInUrls(true);
-            $this->currentConfig->setPhpExtensionInUrls(true);
-            if ($this->currentConfig->derivativeUrlStyle() === 1) {
-                $this->currentConfig->setDerivativeUrlStyle(0); // auto
+            $this->currentConfig->questionMarkInUrls = true;
+            $this->currentConfig->phpExtensionInUrls = true;
+            if ($this->currentConfig->derivativeUrlStyle === 1) {
+                $this->currentConfig->derivativeUrlStyle = 0; // auto
             }
         } else {
             $uid = '';

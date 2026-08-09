@@ -306,7 +306,7 @@ final class UploadService
         $dup_detect_lock_conn = null;
         $dup_detect_lock_name = null;
 
-        if (! isset($image_id) and $this->currentConfig->uploadDetectDuplicate()) {
+        if (! isset($image_id) and $this->currentConfig->uploadDetectDuplicate) {
             $dup_detect_lock_conn = DbConnection::build();
             // GET_LOCK() names are capped at 64 characters -- hashed (with the DB
             // prefix folded into the hashed input for the same collision-avoidance
@@ -406,7 +406,7 @@ final class UploadService
                 // every stored images.path -- rtrim() here matches the same
                 // defensive normalization this class's own addUploadedFile()
                 // already applies a few lines up ($upload_root).
-                $conf_upload_dir = rtrim($this->currentConfig->uploadDir(), '/');
+                $conf_upload_dir = rtrim($this->currentConfig->uploadDir, '/');
                 $upload_dir = sprintf(
                     $this->paths->root . $conf_upload_dir . '/%s/%s/%s',
                     $year,
@@ -439,7 +439,7 @@ final class UploadService
                     $file_path .= 'jpg';
                 } elseif ($type === IMAGETYPE_WEBP) {
                     $file_path .= 'webp';
-                } elseif ($this->currentConfig->uploadFormAllTypes()) {
+                } elseif ($this->currentConfig->uploadFormAllTypes) {
                     $original_extension = strtolower(StringHelper::getExtension($original_filename));
 
                     $finfo = finfo_open(FILEINFO_MIME_TYPE);
@@ -463,7 +463,7 @@ final class UploadService
                     // genuinely-matching SVG before it ever reaches storage.
                     $this->sanitizeSvgIfNeeded($source_filepath, is_string($finfo_type) ? $finfo_type : null);
 
-                    $conf_file_ext = $this->currentConfig->fileExtensions();
+                    $conf_file_ext = $this->currentConfig->fileExtensions;
                     if (in_array($original_extension, $conf_file_ext, true)) {
                         $file_path .= $original_extension;
                     } else {
@@ -495,7 +495,7 @@ final class UploadService
             // garbage-collection guarantee); the "already local" (rename()) branch
             // still needs an explicit unlink() since nothing else will remove that
             // source.
-            $upload_root = rtrim($this->paths->root . $this->currentConfig->uploadDir(), '/');
+            $upload_root = rtrim($this->paths->root . $this->currentConfig->uploadDir, '/');
             $upload_rel_path = StorageRegistry::stripRoot($upload_root, $file_path);
             $upload_stream = fopen($source_filepath, 'rb');
             if ($upload_stream !== false) {
@@ -516,24 +516,24 @@ final class UploadService
             $logger->info(__METHOD__ . ' : force cache generation, representative_ext = ' . ($representative_ext ?? ''));
 
             if (PwgImage::get_library() !== 'gd') {
-                if ($this->currentConfig->originalResize()) {
-                    $original_resize_maxwidth = $this->currentConfig->originalResizeMaxwidth();
+                if ($this->currentConfig->originalResize) {
+                    $original_resize_maxwidth = $this->currentConfig->originalResizeMaxwidth;
 
-                    $original_resize_maxheight = $this->currentConfig->originalResizeMaxheight();
+                    $original_resize_maxheight = $this->currentConfig->originalResizeMaxheight;
 
                     $need_resize = $this->needResize($file_path, $original_resize_maxwidth, $original_resize_maxheight);
 
                     if ($need_resize) {
                         $img = new PwgImage($file_path, $this->currentLogger, $this->eventDispatcher, $this->currentConfig);
 
-                        $original_resize_quality = $this->currentConfig->originalResizeQuality();
+                        $original_resize_quality = $this->currentConfig->originalResizeQuality;
 
                         $img->pwg_resize(
                             $file_path,
                             $original_resize_maxwidth,
                             $original_resize_maxheight,
                             $original_resize_quality,
-                            $this->currentConfig->uploadFormAutomaticRotation(),
+                            $this->currentConfig->uploadFormAutomaticRotation,
                             false
                         );
 
@@ -617,8 +617,8 @@ final class UploadService
         $this->addUploadedFileAddToCategories($image_id, $categories);
 
         // update metadata from the uploaded file (exif/iptc)
-        if ($this->currentConfig->useExif() and ! function_exists('exif_read_data')) {
-            $this->currentConfig->setUseExif(false);
+        if ($this->currentConfig->useExif and ! function_exists('exif_read_data')) {
+            $this->currentConfig->useExif = false;
         }
         $this->metadataService
             ->syncMetadata([$image_id]);
@@ -664,10 +664,10 @@ final class UploadService
     private function addUploadedFileAddToCategories(int $image_id, ?array $categories): void
     {
 
-        if (! $this->currentConfig->loungeActive()) {
+        if (! $this->currentConfig->loungeActive) {
             // check if we need to use the lounge from now
             $nb_photos = $this->imageService->getTotalImageCount();
-            if ($nb_photos >= $this->currentConfig->loungeActivateThreshold()) {
+            if ($nb_photos >= $this->currentConfig->loungeActivateThreshold) {
                 $this->configService->confUpdateParam('lounge_active', true, true);
             }
         }
@@ -676,7 +676,7 @@ final class UploadService
             $imageConn = DbConnection::build();
             $imageService = $this->imageService;
 
-            if ($this->currentConfig->loungeActive()) {
+            if ($this->currentConfig->loungeActive) {
                 // fillLounge() requires int keys for $categories; a WS param
                 // forced into an array by makeArrayParam() could theoretically
                 // carry non-sequential/string keys, so reindex to guarantee it.
@@ -686,7 +686,7 @@ final class UploadService
             }
         }
 
-        if (! $this->currentConfig->loungeActive()) {
+        if (! $this->currentConfig->loungeActive) {
             PermissionCacheInvalidator::invalidate();
         }
     }
@@ -777,11 +777,11 @@ final class UploadService
      */
     public function addFormat(string $source_filepath, string $format_ext, int|string $format_of): string
     {
-        if (! $this->currentConfig->isFormatsEnabled()) {
+        if (! $this->currentConfig->isFormatsEnabled) {
             throw new ImageProcessingException('[' . __METHOD__ . '] formats are disabled');
         }
 
-        $authorized_format_exts = $this->currentConfig->formatExtensions();
+        $authorized_format_exts = $this->currentConfig->formatExtensions;
 
         if (! in_array($format_ext, $authorized_format_exts, true)) {
             throw new ImageProcessingException('[' . __METHOD__ . '] unexpected format extension "' . $format_ext . '" (authorized extensions: ' . implode(', ', $authorized_format_exts) . ')');
@@ -807,7 +807,7 @@ final class UploadService
         // silently creating a stray "public/upload/..." directory tree
         // instead of the real one.
         $paths = $this->paths;
-        $format_root = $paths->root . $this->currentConfig->uploadDir();
+        $format_root = $paths->root . $this->currentConfig->uploadDir;
         $format_abs_path = $paths->root . ltrim(str_replace(['\\', '/./'], ['/', '/'], $format_path), '/');
         $format_rel_path = StorageRegistry::stripRoot($format_root, $format_abs_path);
 
@@ -885,14 +885,14 @@ final class UploadService
             return $event;
         }
 
-        $ext = self::currentConfig()->pdfRepresentativeExt();
-        $jpg_quality = self::currentConfig()->pdfJpgQuality();
+        $ext = self::currentConfig()->pdfRepresentativeExt;
+        $jpg_quality = self::currentConfig()->pdfJpgQuality;
 
         // move the uploaded file to pwg_representative sub-directory
         $representative_file_path = ImagePathHelper::originalToRepresentative($file_path, $ext);
         self::prepareDirectoryStatic(dirname($representative_file_path));
 
-        $ext_imagick_dir = self::currentConfig()->extImagickDir();
+        $ext_imagick_dir = self::currentConfig()->extImagickDir;
         // [SEC-16] escapeshellarg() on the dir prefix and both real paths
         // below -- same pattern established in PwgImage.php/
         // ImageExtImagick.php; the original never escaped an embedded
@@ -959,7 +959,7 @@ final class UploadService
 
         [$w, $h] = self::getOptimalDimensionsForRepresentative();
 
-        $ext_imagick_dir = self::currentConfig()->extImagickDir();
+        $ext_imagick_dir = self::currentConfig()->extImagickDir;
         // [SEC-16] see uploadFilePdf()'s escapeshellarg() note above.
         $exec = escapeshellarg($ext_imagick_dir) . PwgImage::get_ext_imagick_command();
         $exec .= ' ' . escapeshellarg((string) realpath($file_path));
@@ -1015,13 +1015,13 @@ final class UploadService
         $representative_file_path = dirname($file_path) . '/pwg_representative/';
         $representative_file_path .= StringHelper::getFilenameWoExtension(basename($file_path)) . '.';
 
-        $conf_tiff_representative_ext = self::currentConfig()->tiffRepresentativeExt();
+        $conf_tiff_representative_ext = self::currentConfig()->tiffRepresentativeExt;
         $representative_ext = $conf_tiff_representative_ext;
         $representative_file_path .= $representative_ext;
 
         self::prepareDirectoryStatic(dirname($representative_file_path));
 
-        $ext_imagick_dir = self::currentConfig()->extImagickDir();
+        $ext_imagick_dir = self::currentConfig()->extImagickDir;
         // [SEC-16] see uploadFilePdf()'s escapeshellarg() note above.
         $exec = escapeshellarg($ext_imagick_dir) . PwgImage::get_ext_imagick_command();
         // (string) is redundant under `.` concatenation -- see uploadFilePdf()'s
@@ -1122,7 +1122,7 @@ final class UploadService
         $logger->info(__METHOD__ . ', Poster at ' . (string) $second . 's');
 
         // Generate poster, see https://trac.ffmpeg.org/wiki/Seeking
-        $ffmpeg_dir = self::currentConfig()->ffmpegDir();
+        $ffmpeg_dir = self::currentConfig()->ffmpegDir;
         // [SEC-16] see uploadFilePdf()'s escapeshellarg() note above (same
         // dir-prefix pattern applied to the ffmpeg/avconv binaries here).
         $ffmpeg = escapeshellarg($ffmpeg_dir) . 'ffmpeg';
@@ -1198,7 +1198,7 @@ final class UploadService
 
         self::prepareDirectoryStatic(dirname($representative_file_path));
 
-        $ext_imagick_dir = self::currentConfig()->extImagickDir();
+        $ext_imagick_dir = self::currentConfig()->extImagickDir;
         // [SEC-16] see uploadFilePdf()'s escapeshellarg() note above.
         $exec = escapeshellarg($ext_imagick_dir) . PwgImage::get_ext_imagick_command();
 
@@ -1281,7 +1281,7 @@ final class UploadService
 
         // convert -density 300 image.eps -resize 2048x2048 image.png
 
-        $ext_imagick_dir = self::currentConfig()->extImagickDir();
+        $ext_imagick_dir = self::currentConfig()->extImagickDir;
         // [SEC-16] see uploadFilePdf()'s escapeshellarg() note above.
         $exec = escapeshellarg($ext_imagick_dir) . PwgImage::get_ext_imagick_command();
         // (string) is redundant under `.` concatenation -- see uploadFilePdf()'s
@@ -1447,7 +1447,7 @@ final class UploadService
     {
         $logger = $this->currentLogger->get();
 
-        $picture_ext = $this->currentConfig->pictureExtensions();
+        $picture_ext = $this->currentConfig->pictureExtensions;
         if (! in_array(strtolower(StringHelper::getExtension($image_filepath)), $picture_ext, true)) {
             return false;
         }
@@ -1526,10 +1526,10 @@ final class UploadService
      */
     public function isValidImageExtension(string $extension): array
     {
-        if ($this->currentConfig->uploadFormAllTypes()) {
-            $extensions = $this->currentConfig->fileExtensions();
+        if ($this->currentConfig->uploadFormAllTypes) {
+            $extensions = $this->currentConfig->fileExtensions;
         } else {
-            $extensions = $this->currentConfig->pictureExtensions();
+            $extensions = $this->currentConfig->pictureExtensions;
         }
 
         return array_unique(array_map(strtolower(...), $extensions));
@@ -1614,7 +1614,7 @@ final class UploadService
         // executing script's directory, not necessarily the install root),
         // while $relative_dir stays the short, root-relative form for
         // display (replaces the former PHPWG_ROOT_PATH-stripped './' read).
-        $relative_dir = $this->currentConfig->uploadDir();
+        $relative_dir = $this->currentConfig->uploadDir;
         $upload_dir = $this->paths->root . $relative_dir;
 
         if (! is_dir($upload_dir)) {

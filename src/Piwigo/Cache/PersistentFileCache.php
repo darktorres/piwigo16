@@ -27,7 +27,7 @@ final class PersistentFileCache extends PersistentCache
         private readonly CurrentConfig $currentConfig,
         private readonly Paths $paths,
     ) {
-        $data_location = $this->currentConfig->dataLocation();
+        $data_location = $this->currentConfig->dataLocation;
         $this->dir = $this->paths->root . $data_location . 'cache/';
     }
 

@@ -291,8 +291,8 @@ final class SearchServiceTest extends IntegrationTestCase
         $this->repo = new SearchRepository(EntityManagerFactory::build($this->conn));
 
         CurrentUserTestFactory::get()->set(User::fromUserArray(self::realisticUserGlobal()));
-        $currentConfig->setDefaultFiltersViews(null);
-        $currentConfig->setFiltersViews([
+        $currentConfig->defaultFiltersViews = null;
+        $currentConfig->filtersViews = [
             'expert' => ['access' => 'everybody'],
             'words' => ['access' => 'everybody'],
             'author' => ['access' => 'everybody'],
@@ -307,11 +307,11 @@ final class SearchServiceTest extends IntegrationTestCase
             'height' => ['access' => 'everybody'],
             'width' => ['access' => 'everybody'],
             'tags' => ['access' => 'everybody'],
-        ]);
-        $currentConfig->setOrderBy('ORDER BY id ASC');
-        $currentConfig->setCalendarDatefield('date_creation');
-        $currentConfig->setQuickSearchIncludeSubAlbums(false);
-        $currentConfig->setRateEnabled(true);
+        ];
+        $currentConfig->orderBy = 'ORDER BY id ASC';
+        $currentConfig->calendarDatefield = 'date_creation';
+        $currentConfig->quickSearchIncludeSubAlbums = false;
+        $currentConfig->rateEnabled = true;
 
         $accessLevelChecker = new AccessLevelChecker(CurrentUserTestFactory::get(), CurrentConfigTestFactory::get());
         $this->service = new SearchService(
@@ -1331,7 +1331,7 @@ final class SearchServiceTest extends IntegrationTestCase
 
     public function test_get_quick_search_results_no_cache_expands_to_subalbums_when_enabled(): void
     {
-        CurrentConfigTestFactory::get()->setQuickSearchIncludeSubAlbums(true);
+        CurrentConfigTestFactory::get()->quickSearchIncludeSubAlbums = true;
 
         // "Sample" matches category 1 ("Sample Album") only, by name --
         // with sub-album inclusion enabled this expands to include
@@ -1356,7 +1356,7 @@ final class SearchServiceTest extends IntegrationTestCase
         // genuinely return [], exercising qsearchGetCategories()'s own
         // "$subcatIds === []" ternary branch -- as opposed to the sibling
         // test above, whose category 1 always DOES have a real child.
-        CurrentConfigTestFactory::get()->setQuickSearchIncludeSubAlbums(true);
+        CurrentConfigTestFactory::get()->quickSearchIncludeSubAlbums = true;
         $originalUppercats = $this->conn->fetchOne('SELECT uppercats FROM ' . Tables::categories() . ' WHERE id = 2');
         self::assertIsString($originalUppercats);
         $this->conn->executeStatement("UPDATE " . Tables::categories() . " SET uppercats = '999' WHERE id = 2");
@@ -1479,7 +1479,7 @@ final class SearchServiceTest extends IntegrationTestCase
         // appending 'date' to $postedDateAliases instead of
         // $createdDateAliases -- proves the scope list still builds and the
         // search still functions correctly either way.
-        CurrentConfigTestFactory::get()->setCalendarDatefield('date_available');
+        CurrentConfigTestFactory::get()->calendarDatefield = 'date_available';
 
         $results = $this->service->getQuickSearchResultsNoCache('family', []);
 

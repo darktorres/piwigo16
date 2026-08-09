@@ -94,7 +94,7 @@ final class FeedController implements ControllerInterface
         } else {
             $image_only = true;
             if (! $this->accessControl->isAGuest()) {// auto session was created - so switch to guest
-                $guest_id = $this->currentConfig->guestId();
+                $guest_id = $this->currentConfig->guestId;
                 $guest_user = $this->userService->buildUser(UserId::from($guest_id));
                 $this->currentUser->set(User::fromUserArray($guest_user));
             }
@@ -113,8 +113,8 @@ final class FeedController implements ControllerInterface
 
         $rss_encoding = CharsetHelper::getPwgCharset();
 
-        $conf_gallery_title = $this->currentConfig->galleryTitle();
-        $conf_rss_feed_author = $this->currentConfig->rssReedAuthor();
+        $conf_gallery_title = $this->currentConfig->galleryTitle;
+        $conf_rss_feed_author = $this->currentConfig->rssReedAuthor;
         $user_username = $this->currentUser->get()
             ->username->value ?? '';
 
@@ -175,7 +175,7 @@ final class FeedController implements ControllerInterface
         // checked is_array() against it -- always false, so RSS recent-post-
         // date limits always fell back to getRecentPostDatesArray()'s own
         // hardcoded 3/3/3 defaults, ignoring any configured values.
-        $rss_config = $this->currentConfig->recentPostDates()
+        $rss_config = $this->currentConfig->recentPostDates
             ->rss;
         $rss_recent_post_dates_args = [
             'max_dates' => $rss_config->maxDates,
@@ -227,7 +227,7 @@ final class FeedController implements ControllerInterface
             $rss_items
         );
 
-        $data_location = $this->currentConfig->dataLocation();
+        $data_location = $this->currentConfig->dataLocation;
 
         $fileName = $this->paths->root . $data_location . 'tmp';
         FilesystemHelper::mkgetdir($fileName, $this->currentConfig); // just in case

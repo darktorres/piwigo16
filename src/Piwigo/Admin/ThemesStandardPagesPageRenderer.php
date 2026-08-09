@@ -192,17 +192,17 @@ final class ThemesStandardPagesPageRenderer
         // path stored in config. null (not the raw config value) is what
         // gates the template's own "existing logo preview" vs. "upload a
         // logo" UI toggle, so an unset/empty config value must stay null here.
-        $configured_logo_path = $this->currentConfig->standardPagesSelectedLogoPath();
+        $configured_logo_path = $this->currentConfig->standardPagesSelectedLogoPath;
         $std_pgs_selected_logo_path = is_string($configured_logo_path) && $configured_logo_path !== ''
             ? $this->urlService->getRootUrl() . 'logo.php'
             : null;
 
         // Send all info to template
         $template->assignContext(new ThemesStandardPagesPageContext(
-            useStandardPages: $this->currentConfig->useStandardPages(),
-            stdPgsSelectedLogo: $this->currentConfig->standardPagesSelectedLogo(),
+            useStandardPages: $this->currentConfig->useStandardPages,
+            stdPgsSelectedLogo: $this->currentConfig->standardPagesSelectedLogo,
             stdPgsLogoOptions: $std_pgs_logo_options,
-            stdPgsSelectedSkin: $this->currentConfig->standardPagesSelectedSkin(),
+            stdPgsSelectedSkin: $this->currentConfig->standardPagesSelectedSkin,
             stdPgsSkinOptions: $std_pgs_skin_options,
             isStandardPagesUsed: $is_standard_pages_used,
             standardPagesUsedBy: $standard_pages_used_by,

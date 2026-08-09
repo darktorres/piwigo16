@@ -47,8 +47,8 @@ beforeEach(function (): void {
     if (! $currentConfig instanceof CurrentConfig) {
         throw new LogicException('Container returned an unexpected type for ' . CurrentConfig::class);
     }
-    $currentConfig->setDataLocation('data/');
-    $currentConfig->setDataDirChecked('1');
+    $currentConfig->dataLocation = 'data/';
+    $currentConfig->dataDirChecked = '1';
 });
 
 afterEach(function (): void {

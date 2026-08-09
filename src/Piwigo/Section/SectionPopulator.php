@@ -95,7 +95,7 @@ final readonly class SectionPopulator
         // this method's section-specific branches below and read back by
         // several others -- a single local variable threaded through the
         // whole method, seeded from CurrentConfig::orderBy().
-        $order_by = $this->currentConfig->orderBy();
+        $order_by = $this->currentConfig->orderBy;
 
         $page['items'] = [];
         $page['start'] = $page['startcat'] = 0;
@@ -134,7 +134,7 @@ final readonly class SectionPopulator
                     // eval()'ing the condition string directly -- a config
                     // value with DB write access could otherwise gain
                     // arbitrary PHP execution.
-                    $redirect_candidates = $this->currentConfig->randomIndexRedirect();
+                    $redirect_candidates = $this->currentConfig->randomIndexRedirect;
                     $next_token_value = $tokens[$next_token] ?? '';
                     $next_token_is_empty = $next_token_value === '' || $next_token_value === '0';
                     if ($redirect_candidates !== [] and $next_token_is_empty) {
@@ -185,7 +185,7 @@ final readonly class SectionPopulator
         // and not as a category set because we can't use the #image_category.rank :
         // displayed images are not directly linked to the displayed category
         if ($section === Section::Categories and ! isset($page['flat'])) {
-            $order_by = $this->currentConfig->orderByInsideCategory();
+            $order_by = $this->currentConfig->orderByInsideCategory;
         }
 
         $image_order_id = $this->sessionService->getImageOrder() ?? 0;
@@ -586,7 +586,7 @@ final readonly class SectionPopulator
             elseif ($section === Section::MostVisited) {
                 $page['super_order_by'] = true;
 
-                $top_number = $this->currentConfig->topNumber();
+                $top_number = $this->currentConfig->topNumber;
 
                 $page = array_merge(
                     $page,
@@ -605,7 +605,7 @@ final readonly class SectionPopulator
             elseif ($section === Section::BestRated) {
                 $page['super_order_by'] = true;
 
-                $top_number = $this->currentConfig->topNumber();
+                $top_number = $this->currentConfig->topNumber;
 
                 $page = array_merge(
                     $page,
@@ -691,7 +691,7 @@ final readonly class SectionPopulator
         $page['section_title'] = '<a href="' . $gallery_home_url . '">' . $this->lang->t('Home') . '</a>';
         $title_value = $page['title'];
         if ($title_value !== '' && $title_value !== '0') {
-            $level_separator = $this->currentConfig->levelSeparator();
+            $level_separator = $this->currentConfig->levelSeparator;
             $page['section_title'] .= $level_separator . $title_value;
         } else {
             $page['title'] = $page['section_title'];
@@ -709,7 +709,7 @@ final readonly class SectionPopulator
             $hit_by_cat_url_name = is_string($hit_by_cat_url_name) ? $hit_by_cat_url_name : null;
             $hit_by_cat_permalink = $hit_by['cat_permalink'] ?? null;
             $hit_by_cat_permalink = is_string($hit_by_cat_permalink) ? $hit_by_cat_permalink : null;
-            $category_url_style = $this->currentConfig->categoryUrlStyle();
+            $category_url_style = $this->currentConfig->categoryUrlStyle;
             $category_permalink = is_string($page_category['permalink']) ? $page_category['permalink'] : null;
             $category_name = $page_category['name'];
             $expected_cat_url_name = StringHelper::str2url($category_name);

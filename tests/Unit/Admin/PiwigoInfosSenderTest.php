@@ -68,7 +68,7 @@ use Piwigo\Lang\Translator;
 // seeded first.
 
 afterEach(function (): void {
-    CurrentConfigTestFactory::get()->setSendPiwigoInfos(true);
+    CurrentConfigTestFactory::get()->sendPiwigoInfos = true;
 });
 
 // PiwigoInfosSender/UserService/ImageService/CategoryService/TagService
@@ -109,10 +109,10 @@ test('send returns immediately without touching the DB or network when telemetry
     // No Kernel::boot() in this plain Unit test (see file docblock), so a
     // fresh, throwaway instance stands in for the container-shared one --
     // reused below as the same PiwigoInfosSender constructor argument so
-    // send()'s own guard (reads $this->currentConfig->sendPiwigoInfos(),
+    // send()'s own guard (reads $this->currentConfig->sendPiwigoInfos,
     // not the static current() bridge) actually observes this false value.
     $currentConfig = new CurrentConfig();
-    $currentConfig->setSendPiwigoInfos(false);
+    $currentConfig->sendPiwigoInfos = false;
 
     // No exception, no fatal, no side effect to assert beyond "returned" --
     // proven by simply completing without the DB-reload/network code below

@@ -445,7 +445,7 @@ final class CalendarMonthly extends CalendarBase
             // first_day_dow = week day corresponding to the first day of this month
             $wday_labels = $this->lang->days();
 
-            if ($this->currentConfig->weekStartsOn() === 'monday') {
+            if ($this->currentConfig->weekStartsOn === 'monday') {
                 if ($first_day_dow === 0) {
                     $first_day_dow = 6;
                 } else {

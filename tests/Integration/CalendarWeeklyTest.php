@@ -89,8 +89,8 @@ final class CalendarWeeklyTest extends IntegrationTestCase
         // Pre-marking it "1" skips that write entirely, same technique as
         // tests/Unit/Picture/PictureCommentRendererTest.php's own
         // makePictureCommentTestTemplate().
-        CurrentConfigTestFactory::get()->setDataLocation('data/');
-        CurrentConfigTestFactory::get()->setDataDirChecked('1');
+        CurrentConfigTestFactory::get()->dataLocation = 'data/';
+        CurrentConfigTestFactory::get()->dataDirChecked = '1';
         LangTestFactory::get()->reset();
         TranslatorTestFactory::get()->reset();
 
@@ -179,12 +179,12 @@ final class CalendarWeeklyTest extends IntegrationTestCase
      */
     public function test_initialize_builds_different_week_and_day_sql_for_monday_vs_sunday_start(): void
     {
-        CurrentConfigTestFactory::get()->setWeekStartsOn('sunday');
+        CurrentConfigTestFactory::get()->weekStartsOn = 'sunday';
         $sunday = $this->makeCalendar();
         self::assertSame('WEEK(date_available)+1', $sunday->calendar_levels[CalendarBase::CWEEK]['sql']);
         self::assertSame('DAYOFWEEK(date_available)-1', $sunday->calendar_levels[CalendarBase::CDAY]['sql']);
 
-        CurrentConfigTestFactory::get()->setWeekStartsOn('monday');
+        CurrentConfigTestFactory::get()->weekStartsOn = 'monday';
         $monday = $this->makeCalendar();
         self::assertSame('WEEK(date_available, 5)+1', $monday->calendar_levels[CalendarBase::CWEEK]['sql']);
         self::assertSame('WEEKDAY(date_available)', $monday->calendar_levels[CalendarBase::CDAY]['sql']);
@@ -322,7 +322,7 @@ final class CalendarWeeklyTest extends IntegrationTestCase
     public function test_initialize_rotates_sunday_to_the_end_of_the_day_labels_when_monday_starts_the_week(): void
     {
         LangTestFactory::get()->loadArray(['day' => ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']]);
-        CurrentConfigTestFactory::get()->setWeekStartsOn('monday');
+        CurrentConfigTestFactory::get()->weekStartsOn = 'monday';
 
         $calendar = $this->makeCalendar();
 

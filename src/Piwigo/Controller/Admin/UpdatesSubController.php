@@ -70,7 +70,7 @@ final class UpdatesSubController implements AdminSubControllerInterface
     #[Override]
     public function handle(ServerRequestInterface $request): void
     {
-        if (! $this->currentConfig->enableExtensionsInstall() and ! $this->currentConfig->enableCoreUpdate()) {
+        if (! $this->currentConfig->enableExtensionsInstall and ! $this->currentConfig->enableCoreUpdate) {
             $this->htmlRenderer
                 ->fatalError('update system is disabled');
         }

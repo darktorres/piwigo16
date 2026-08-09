@@ -176,12 +176,12 @@ final class PictureMetadataRendererTest extends IntegrationTestCase
     public function test_render_appends_exif_metadata_with_direct_and_nested_field_tokens(): void
     {
         $currentConfig = CurrentConfigTestFactory::get();
-        $currentConfig->setShowExif(true);
-        $currentConfig->setShowIptc(false);
+        $currentConfig->showExif = true;
+        $currentConfig->showIptc = false;
         // 'COMPUTED;Height' is a real nested key exif_read_data() always
         // populates, even with zero embedded tags -- exercises the ';'
         // token branch alongside the 2 direct fields.
-        $currentConfig->setShowExifFields(['Artist', 'ImageDescription', 'COMPUTED;Height']);
+        $currentConfig->showExifFields = ['Artist', 'ImageDescription', 'COMPUTED;Height'];
         // Only 'Artist' gets a translation -- exercises both the
         // Lang::has() true and false sub-branches in the same test.
         // Lang::loadArray() (not restore()): Lang::t() reads through the
@@ -217,8 +217,8 @@ final class PictureMetadataRendererTest extends IntegrationTestCase
     public function test_render_translates_a_composite_exif_field_when_a_translation_exists_for_its_second_token(): void
     {
         $currentConfig = CurrentConfigTestFactory::get();
-        $currentConfig->setShowExif(true);
-        $currentConfig->setShowIptc(false);
+        $currentConfig->showExif = true;
+        $currentConfig->showIptc = false;
         // 'COMPUTED;Height' is a real nested key exif_read_data() always
         // populates, even with zero embedded EXIF tags (see the sibling
         // test above). That test deliberately leaves 'exif_field_Height'
@@ -228,7 +228,7 @@ final class PictureMetadataRendererTest extends IntegrationTestCase
         // field's own second token instead, reaching that same arm's
         // Lang::has()-true sub-branch (distinct from the direct-field
         // Lang::has()/Lang::t() pair a few lines above it in the source).
-        $currentConfig->setShowExifFields(['COMPUTED;Height']);
+        $currentConfig->showExifFields = ['COMPUTED;Height'];
         LangTestFactory::get()->loadArray(['exif_field_Height' => 'Hauteur']);
 
         $relativePath = '_data/picture-metadata-renderer-test-scratch/exif-composite-translated.jpg';
@@ -250,9 +250,9 @@ final class PictureMetadataRendererTest extends IntegrationTestCase
     public function test_render_appends_nothing_for_exif_when_no_configured_field_matches(): void
     {
         $currentConfig = CurrentConfigTestFactory::get();
-        $currentConfig->setShowExif(true);
-        $currentConfig->setShowIptc(false);
-        $currentConfig->setShowExifFields(['ThisFieldDoesNotExistAnywhere']);
+        $currentConfig->showExif = true;
+        $currentConfig->showIptc = false;
+        $currentConfig->showExifFields = ['ThisFieldDoesNotExistAnywhere'];
 
         $relativePath = '_data/picture-metadata-renderer-test-scratch/exif-empty.jpg';
         file_put_contents(dirname(__DIR__, 2) . '/' . $relativePath, $this->makeJpegWithSegments($this->buildApp1ExifSegment(['Artist' => 'Jane'])));
@@ -265,9 +265,9 @@ final class PictureMetadataRendererTest extends IntegrationTestCase
     public function test_render_appends_iptc_metadata_translating_known_fields(): void
     {
         $currentConfig = CurrentConfigTestFactory::get();
-        $currentConfig->setShowExif(false);
-        $currentConfig->setShowIptc(true);
-        $currentConfig->setShowIptcMapping(['title' => '2#005', 'author' => '2#080']);
+        $currentConfig->showExif = false;
+        $currentConfig->showIptc = true;
+        $currentConfig->showIptcMapping = ['title' => '2#005', 'author' => '2#080'];
         // getIptcData()'s own result is keyed by the *pwg* side of the
         // mapping ('title'/'author'), not the raw IPTC code -- confirmed
         // live, the renderer's own Lang::has($field)/Lang::t($field) calls
@@ -302,10 +302,10 @@ final class PictureMetadataRendererTest extends IntegrationTestCase
     public function test_render_appends_both_exif_and_iptc_metadata_as_2_separate_entries(): void
     {
         $currentConfig = CurrentConfigTestFactory::get();
-        $currentConfig->setShowExif(true);
-        $currentConfig->setShowIptc(true);
-        $currentConfig->setShowExifFields(['Artist']);
-        $currentConfig->setShowIptcMapping(['title' => '2#005']);
+        $currentConfig->showExif = true;
+        $currentConfig->showIptc = true;
+        $currentConfig->showExifFields = ['Artist'];
+        $currentConfig->showIptcMapping = ['title' => '2#005'];
 
         $relativePath = '_data/picture-metadata-renderer-test-scratch/both-fields.jpg';
         // Both marker segments spliced onto the same real file -- proves

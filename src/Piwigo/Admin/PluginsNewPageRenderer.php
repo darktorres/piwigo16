@@ -74,7 +74,7 @@ final class PluginsNewPageRenderer
     {
         $template = $this->currentTemplate->get();
 
-        if (! $this->currentConfig->enableExtensionsInstall()) {
+        if (! $this->currentConfig->enableExtensionsInstall) {
             $this->htmlRenderer
                 ->fatalError('Piwigo extensions install/update system is disabled');
         }

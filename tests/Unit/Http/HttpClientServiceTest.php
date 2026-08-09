@@ -841,9 +841,9 @@ test('guardedFetch() actually routes through the configured proxy and embeds Bas
     $originalHost = $_SERVER['HTTP_HOST'] ?? null;
     $_SERVER['HTTP_HOST'] = 'my-self-host.test';
 
-    CurrentConfigTestFactory::get()->setUseProxy(true);
-    CurrentConfigTestFactory::get()->setProxyServer('http://127.0.0.1:' . $port);
-    CurrentConfigTestFactory::get()->setProxyAuth('theuser:thepass');
+    CurrentConfigTestFactory::get()->useProxy = true;
+    CurrentConfigTestFactory::get()->proxyServer = 'http://127.0.0.1:' . $port;
+    CurrentConfigTestFactory::get()->proxyAuth = 'theuser:thepass';
 
     try {
         $result = HttpClientService::fetch('http://my-self-host.test/i.php?x=1', CurrentConfigTestFactory::get());
@@ -887,8 +887,8 @@ test('guardedFetch() does not route through the proxy at all when useProxy is fa
     $originalHost = $_SERVER['HTTP_HOST'] ?? null;
     $_SERVER['HTTP_HOST'] = '127.0.0.1:' . $targetPort;
 
-    CurrentConfigTestFactory::get()->setUseProxy(false);
-    CurrentConfigTestFactory::get()->setProxyServer('http://127.0.0.1:' . $proxyPort);
+    CurrentConfigTestFactory::get()->useProxy = false;
+    CurrentConfigTestFactory::get()->proxyServer = 'http://127.0.0.1:' . $proxyPort;
 
     try {
         $result = HttpClientService::fetch('http://127.0.0.1:' . $targetPort . '/direct.php', CurrentConfigTestFactory::get());
@@ -928,9 +928,9 @@ test('guardedFetch() does not embed Basic-auth credentials into the proxy URL wh
     $originalHost = $_SERVER['HTTP_HOST'] ?? null;
     $_SERVER['HTTP_HOST'] = '127.0.0.1:' . $targetPort;
 
-    CurrentConfigTestFactory::get()->setUseProxy(true);
-    CurrentConfigTestFactory::get()->setProxyServer('http://127.0.0.1:' . $proxyPort);
-    CurrentConfigTestFactory::get()->setProxyAuth('');
+    CurrentConfigTestFactory::get()->useProxy = true;
+    CurrentConfigTestFactory::get()->proxyServer = 'http://127.0.0.1:' . $proxyPort;
+    CurrentConfigTestFactory::get()->proxyAuth = '';
 
     try {
         $result = HttpClientService::fetch('http://127.0.0.1:' . $targetPort . '/direct.php', CurrentConfigTestFactory::get());

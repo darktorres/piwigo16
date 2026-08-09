@@ -194,7 +194,7 @@ final readonly class UserService implements DefaultLanguageProviderInterface
         $isEmpty = $mailAddress === null || $mailAddress === '';
         if (
             $isEmpty
-            && ! ($this->currentConfig->obligatoryUserMailAddress() && in_array(PageFilterHelper::scriptBasename($this->currentConfig), ['register', 'profile'], true))
+            && ! ($this->currentConfig->obligatoryUserMailAddress && in_array(PageFilterHelper::scriptBasename($this->currentConfig), ['register', 'profile'], true))
         ) {
             return '';
         }
@@ -364,7 +364,7 @@ final readonly class UserService implements DefaultLanguageProviderInterface
             $errors[] = $mailError;
         }
 
-        if ($this->currentConfig->insensitiveCaseLogon() && ! $duplicateUsername) {
+        if ($this->currentConfig->insensitiveCaseLogon && ! $duplicateUsername) {
             if ($this->validateLoginCase($login) !== '') {
                 $duplicateUsername = true;
             }
@@ -423,13 +423,13 @@ final readonly class UserService implements DefaultLanguageProviderInterface
         }
 
         $override = [];
-        if ($this->currentConfig->browserLanguage() && ($language = $this->getBrowserLanguage()) !== false) {
+        if ($this->currentConfig->browserLanguage && ($language = $this->getBrowserLanguage()) !== false) {
             $override['language'] = $language;
         }
 
         $this->createUserInfos([$userId], $override);
 
-        $emailAdminOnNewUserSetting = $this->currentConfig->emailAdminOnNewUser();
+        $emailAdminOnNewUserSetting = $this->currentConfig->emailAdminOnNewUser;
         if ($notifyAdmin && $emailAdminOnNewUserSetting !== 'none') {
             $this->notifyAdminsOfNewRegistration($userId, $login, $mailAddress, $urlService);
         }
@@ -467,7 +467,7 @@ final readonly class UserService implements DefaultLanguageProviderInterface
             $defaultUser = array_merge($defaultUser, $overrideValues);
         }
 
-        $availablePermissionLevels = $this->currentConfig->availablePermissionLevels();
+        $availablePermissionLevels = $this->currentConfig->availablePermissionLevels;
         // CurrentConfig::webmasterId()/guestId()/defaultUserId() are declared
         // non-nullable `int` with their own safe hardcoded fallback
         // defaults (2/1/guest_id respectively, matching config_default.
@@ -478,9 +478,9 @@ final readonly class UserService implements DefaultLanguageProviderInterface
         // user silently fell through to 'normal' status, including the
         // webmaster and guest accounts install.php itself just created.
         // Found live via a real fixture-regen run, not assumed.
-        $webmasterId = (string) $this->currentConfig->webmasterId();
-        $guestId = (string) $this->currentConfig->guestId();
-        $defaultUserId = (string) $this->currentConfig->defaultUserId();
+        $webmasterId = (string) $this->currentConfig->webmasterId;
+        $guestId = (string) $this->currentConfig->guestId;
+        $defaultUserId = (string) $this->currentConfig->defaultUserId;
 
         foreach ($userIds as $userId) {
             $level = $defaultUser['level'] ?? 0;
@@ -533,7 +533,7 @@ final readonly class UserService implements DefaultLanguageProviderInterface
         if ($this->processCache->has('default_user')) {
             $defaultUserCached = $this->processCache->get('default_user');
         } else {
-            $defaultUserId = UserId::from($this->currentConfig->defaultUserId());
+            $defaultUserId = UserId::from($this->currentConfig->defaultUserId);
 
             $row = $this->repo->findDefaultUserInfoRow($defaultUserId);
             if ($row !== null) {
@@ -573,7 +573,7 @@ final readonly class UserService implements DefaultLanguageProviderInterface
             return;
         }
 
-        $gallery_title = $this->currentConfig->galleryTitle();
+        $gallery_title = $this->currentConfig->galleryTitle;
 
         $this->mailer->mail(
             $existing->email,
@@ -603,7 +603,7 @@ final readonly class UserService implements DefaultLanguageProviderInterface
         ];
 
         $groupId = null;
-        $emailAdminOnNewUser = $this->currentConfig->emailAdminOnNewUser();
+        $emailAdminOnNewUser = $this->currentConfig->emailAdminOnNewUser;
         if (preg_match('/^group:(\d+)$/', $emailAdminOnNewUser, $matches) === 1) {
             $groupId = $matches[1];
         }
@@ -622,7 +622,7 @@ final readonly class UserService implements DefaultLanguageProviderInterface
         $length = mt_rand(10, 15);
         $keyargsContent = [
             $this->lang->buildArgs('Hello %s,', stripslashes($login)),
-            $this->lang->buildArgs('Thank you for registering at %s!', $this->currentConfig->galleryTitle()),
+            $this->lang->buildArgs('Thank you for registering at %s!', $this->currentConfig->galleryTitle),
             $this->lang->buildArgs('', ''),
             $this->lang->buildArgs('Here are your connection settings', ''),
             $this->lang->buildArgs('', ''),
@@ -634,7 +634,7 @@ final readonly class UserService implements DefaultLanguageProviderInterface
             $this->lang->buildArgs('If you think you\'ve received this email in error, please contact us at %s', $this->repo->getWebmasterMailAddress()),
         ];
 
-        $gallery_title = $this->currentConfig->galleryTitle();
+        $gallery_title = $this->currentConfig->galleryTitle;
 
         $this->mailer->mail(
             $mailAddress,
@@ -673,7 +673,7 @@ final readonly class UserService implements DefaultLanguageProviderInterface
         $user = array_merge($user, $this->getUserData($userId));
 
         $userStatusValue = $user['status'] ?? null;
-        if (is_numeric($user['id']) and (int) $user['id'] === $this->currentConfig->guestId()
+        if (is_numeric($user['id']) and (int) $user['id'] === $this->currentConfig->guestId
             and (! is_string($userStatusValue) or $userStatusValue !== 'guest')) {
             $user['status'] = 'guest';
             $internal_status = $user['internal_status'] ?? [];
@@ -1293,7 +1293,7 @@ final readonly class UserService implements DefaultLanguageProviderInterface
 
             if (! self::emptyValue($params['password'] ?? null)) {
                 if (! $this->accessLevelChecker()->isWebmaster()) {
-                    $password_protected_users = [$this->currentConfig->guestId()];
+                    $password_protected_users = [$this->currentConfig->guestId];
 
                     $admin_ids = array_map(
                         static fn (UserId $id): string => (string) $id->value,
@@ -1349,8 +1349,8 @@ final readonly class UserService implements DefaultLanguageProviderInterface
                 [
                     $this->currentUser->get()
                         ->id->value,
-                    $this->currentConfig->guestId(),
-                    $this->currentConfig->webmasterId(),
+                    $this->currentConfig->guestId,
+                    $this->currentConfig->webmasterId,
                 ],
                 is_scalar(...)
             );
@@ -1374,7 +1374,7 @@ final readonly class UserService implements DefaultLanguageProviderInterface
             $level_param = $params['level'] ?? null;
             // \Piwigo\Config\CurrentConfig::availablePermissionLevels() defaults to [0, 1, 2, 4, 8]
             // (see include/config_default.inc.php), always an array
-            $available_permission_levels = $this->currentConfig->availablePermissionLevels();
+            $available_permission_levels = $this->currentConfig->availablePermissionLevels;
             if (! in_array(is_numeric($level_param) ? (int) $level_param : null, $available_permission_levels, true)) {
                 return [
                     'error' => [

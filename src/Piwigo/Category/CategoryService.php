@@ -341,8 +341,8 @@ final readonly class CategoryService
             [$this->lang->t('Date created, old &rarr; new'), 'date_creation ASC', true],
             [$this->lang->t('Date posted, new &rarr; old'), 'date_available DESC', true],
             [$this->lang->t('Date posted, old &rarr; new'), 'date_available ASC', true],
-            [$this->lang->t('Rating score, high &rarr; low'), 'rating_score DESC', $this->currentConfig->rateEnabled()],
-            [$this->lang->t('Rating score, low &rarr; high'), 'rating_score ASC', $this->currentConfig->rateEnabled()],
+            [$this->lang->t('Rating score, high &rarr; low'), 'rating_score DESC', $this->currentConfig->rateEnabled],
+            [$this->lang->t('Rating score, low &rarr; high'), 'rating_score ASC', $this->currentConfig->rateEnabled],
             [$this->lang->t('Visits, high &rarr; low'), 'hit DESC', true],
             [$this->lang->t('Visits, low &rarr; high'), 'hit ASC', true],
             [$this->lang->t('Permissions'), 'level DESC', $this->accessLevelChecker->isAdmin()],
@@ -621,7 +621,7 @@ final readonly class CategoryService
     public function getRelatedCategoriesMenu(array $items, array $excludedCatIds = []): array
     {
 
-        $relatedAlbumsDisplayLimit = $this->currentConfig->relatedAlbumsDisplayLimit();
+        $relatedAlbumsDisplayLimit = $this->currentConfig->relatedAlbumsDisplayLimit;
         $relatedAlbumsDisplayLimitInt = $relatedAlbumsDisplayLimit;
 
         $commonCats = $this->getCommonCategories($items, $relatedAlbumsDisplayLimitInt, $excludedCatIds);
@@ -807,7 +807,7 @@ final readonly class CategoryService
                     'IS_UPPERCAT' => $selectedCategory !== null && $selectedIdUppercatStr !== null && $selectedIdUppercatStr === $rowIdStr,
                 ]
             );
-            if ($this->currentConfig->indexNewIcon()) {
+            if ($this->currentConfig->indexNewIcon) {
                 $maxDateLast = $row['max_date_last'];
                 $recentPeriodForIcon = is_numeric($user->rawAttributes['recent_period'] ?? null) ? (int) $user->rawAttributes['recent_period'] : 0;
                 $row['icon_ts'] = RecentIconResolver::getIcon(is_string($maxDateLast) ? $maxDateLast : '', $recentPeriodForIcon, $this->processCache(), $this->lang, $childDateLast);
@@ -1213,7 +1213,7 @@ final readonly class CategoryService
             $this->repo->clearRepresentativePictureIds($wrongRepresentant);
         }
 
-        if (! $this->currentConfig->allowRandomRepresentative()) {
+        if (! $this->currentConfig->allowRandomRepresentative) {
             // If the random representant is not allowed, we need to find
             // categories with elements and with no representant. Those categories
             // must be added to the list of categories to set to a random
@@ -1897,7 +1897,7 @@ final readonly class CategoryService
         }
 
         $rank = 0;
-        if ($this->currentConfig->newcatDefaultPosition() === 'last') {
+        if ($this->currentConfig->newcatDefaultPosition === 'last') {
             // what is the current higher rank for this parent?
             $maxRank = $this->repo->findMaxRankForParent($parentId);
             if ($maxRank !== null) {
@@ -1920,7 +1920,7 @@ final readonly class CategoryService
         if (isset($options['commentable']) && is_bool($options['commentable'])) {
             $insert['commentable'] = $options['commentable'];
         } else {
-            $insert['commentable'] = $this->currentConfig->newcatDefaultCommentable();
+            $insert['commentable'] = $this->currentConfig->newcatDefaultCommentable;
         }
 
         // is the album temporarily locked? (only visible by administrators,
@@ -1929,20 +1929,20 @@ final readonly class CategoryService
         if (isset($options['visible']) && is_bool($options['visible'])) {
             $insert['visible'] = $options['visible'];
         } else {
-            $insert['visible'] = $this->currentConfig->newcatDefaultVisible();
+            $insert['visible'] = $this->currentConfig->newcatDefaultVisible;
         }
 
         // is the album private? (may be overwritten if parent album is private)
         if (isset($options['status']) && $options['status'] === CategoryStatus::Private->value) {
             $insert['status'] = CategoryStatus::Private->value;
         } else {
-            $insert['status'] = $this->currentConfig->newcatDefaultStatus();
+            $insert['status'] = $this->currentConfig->newcatDefaultStatus;
         }
 
         // any description for this album?
         if (isset($options['comment'])) {
             $comment = is_scalar($options['comment']) ? (string) $options['comment'] : '';
-            $insert['comment'] = ($this->currentConfig->allowHtmlDescriptions()) ? $options['comment'] : strip_tags($comment);
+            $insert['comment'] = ($this->currentConfig->allowHtmlDescriptions) ? $options['comment'] : strip_tags($comment);
         }
 
         $parentIdIsEmpty = $parentId === null || $parentId === 0 || $parentId === '0' || $parentId === '';
@@ -1993,7 +1993,7 @@ final readonly class CategoryService
         $this->updateGlobalRank();
 
         $insertIdUppercat = $insert['id_uppercat'] ?? null;
-        if ($insert['status'] === CategoryStatus::Private->value && $insertIdUppercat !== null && $insertIdUppercat !== 0 && ((isset($options['inherit']) && (bool) $options['inherit']) || $this->currentConfig->inheritanceByDefault())) {
+        if ($insert['status'] === CategoryStatus::Private->value && $insertIdUppercat !== null && $insertIdUppercat !== 0 && ((isset($options['inherit']) && (bool) $options['inherit']) || $this->currentConfig->inheritanceByDefault)) {
             $grantedGrps = $this->repo->findAccessGroupIds(CategoryId::from($insertIdUppercat));
             $inserts = [];
             foreach ($grantedGrps as $grantedGrp) {

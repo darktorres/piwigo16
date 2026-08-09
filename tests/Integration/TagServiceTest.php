@@ -73,7 +73,7 @@ namespace Piwigo\Tests\Integration {
             ConfigLoader::applyDefaults();
             ConfigLoader::applyEnvOverrides();
 
-            $currentConfig->setTagsLevels(5);
+            $currentConfig->tagsLevels = 5;
 
             $currentLogger = Kernel::container()->get(CurrentLogger::class);
             if (! $currentLogger instanceof CurrentLogger) {

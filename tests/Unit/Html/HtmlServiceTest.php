@@ -1127,8 +1127,8 @@ test('getCombinedCategoriesContentTitle uses the current template\'s real icon_d
     // its constructor-injected $this->currentConfigService->get() (never
     // set() in this Unit test) and throws.
     KernelContainerOverride::with([Paths::class => Paths::fromRoot($root)], function () use ($root): void {
-        CurrentConfigTestFactory::get()->setDataLocation('data/');
-        CurrentConfigTestFactory::get()->setDataDirChecked('1');
+        CurrentConfigTestFactory::get()->dataLocation = 'data/';
+        CurrentConfigTestFactory::get()->dataDirChecked = '1';
 
         $template = TemplateTestFactory::build();
         $template->smarty->assign('themeconf', ['icon_dir' => '/my-theme/icons']);
@@ -1338,7 +1338,7 @@ test('getSrcImageUrlProtectionHandler uses "e" for an original image and "r" for
 });
 
 test('getElementUrlProtectionHandler passes a non-image extension through unchanged when protection is scoped to images', function (): void {
-    CurrentConfigTestFactory::get()->setOriginalUrlProtection('images');
+    CurrentConfigTestFactory::get()->originalUrlProtection = 'images';
     $service = HtmlServiceTestFactory::build();
 
     $result = htmlServiceTestElementUrlProtection($service, 'original-url-unchanged', ['id' => 3, 'path' => 'upload/video.mp4']);
@@ -1347,7 +1347,7 @@ test('getElementUrlProtectionHandler passes a non-image extension through unchan
 });
 
 test('getElementUrlProtectionHandler builds an action url for an image extension when protection is scoped to images', function (): void {
-    CurrentConfigTestFactory::get()->setOriginalUrlProtection('images');
+    CurrentConfigTestFactory::get()->originalUrlProtection = 'images';
     $service = HtmlServiceTestFactory::build();
 
     $result = htmlServiceTestElementUrlProtection($service, 'ignored', ['id' => 3, 'path' => 'upload/photo.jpg']);
@@ -1774,7 +1774,7 @@ test('setStatusHeader actually calls header(), not a no-op, for a real request',
  * PageMessagesContextTest.php for that).
  */
 test('flushPageMessages assigns only the non-empty PageState fields', function (): void {
-    CurrentConfigTestFactory::get()->setDataDirChecked('1');
+    CurrentConfigTestFactory::get()->dataDirChecked = '1';
     CurrentTemplate::current()->set(TemplateTestFactory::build());
     PageStateTestFactory::get()->reset();
     PageStateTestFactory::get()->addError('Something went wrong');
@@ -1790,7 +1790,7 @@ test('flushPageMessages assigns only the non-empty PageState fields', function (
 });
 
 test('flushPageMessages does nothing when a page refresh is already assigned', function (): void {
-    CurrentConfigTestFactory::get()->setDataDirChecked('1');
+    CurrentConfigTestFactory::get()->dataDirChecked = '1';
     CurrentTemplate::current()->set(TemplateTestFactory::build());
     PageStateTestFactory::get()->reset();
     PageStateTestFactory::get()->addError('Should not appear');
@@ -1802,7 +1802,7 @@ test('flushPageMessages does nothing when a page refresh is already assigned', f
 });
 
 test('flushPageMessages merges in and clears the session flash channel', function (): void {
-    CurrentConfigTestFactory::get()->setDataDirChecked('1');
+    CurrentConfigTestFactory::get()->dataDirChecked = '1';
     CurrentTemplate::current()->set(TemplateTestFactory::build());
     PageStateTestFactory::get()->reset();
     PageStateTestFactory::get()->addError('Live error');
@@ -1819,7 +1819,7 @@ test('flushPageMessages merges in and clears the session flash channel', functio
 });
 
 test('flushPageMessages filters out non string session flash values defensively', function (): void {
-    CurrentConfigTestFactory::get()->setDataDirChecked('1');
+    CurrentConfigTestFactory::get()->dataDirChecked = '1';
     CurrentTemplate::current()->set(TemplateTestFactory::build());
     PageStateTestFactory::get()->reset();
     $_SESSION['page_infos'] = ['Real info', 42, null];
@@ -1834,7 +1834,7 @@ test('flushPageMessages filters out non string session flash values defensively'
 });
 
 test('flushKeyedErrors assigns the keyed error bag under errors', function (): void {
-    CurrentConfigTestFactory::get()->setDataDirChecked('1');
+    CurrentConfigTestFactory::get()->dataDirChecked = '1';
     CurrentTemplate::current()->set(TemplateTestFactory::build());
 
     HtmlServiceTestFactory::build()->flushKeyedErrors(['login_page_error' => 'Invalid username or password!']);
@@ -1843,7 +1843,7 @@ test('flushKeyedErrors assigns the keyed error bag under errors', function (): v
 });
 
 test('flushKeyedErrors does nothing for an empty error bag', function (): void {
-    CurrentConfigTestFactory::get()->setDataDirChecked('1');
+    CurrentConfigTestFactory::get()->dataDirChecked = '1';
     CurrentTemplate::current()->set(TemplateTestFactory::build());
 
     HtmlServiceTestFactory::build()->flushKeyedErrors([]);
@@ -1860,7 +1860,7 @@ test('flushKeyedErrors does nothing for an empty error bag', function (): void {
  * fields leave the 1st call's own values untouched.
  */
 test('flushPageMessages then flushKeyedErrors overwrites errors but leaves infos untouched', function (): void {
-    CurrentConfigTestFactory::get()->setDataDirChecked('1');
+    CurrentConfigTestFactory::get()->dataDirChecked = '1';
     CurrentTemplate::current()->set(TemplateTestFactory::build());
     PageStateTestFactory::get()->reset();
     PageStateTestFactory::get()->addError('Generic page error');

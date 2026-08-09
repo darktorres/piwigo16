@@ -50,8 +50,8 @@ function nbm_sender_with_timeout_inputs(string $maxExecutionTime, float $percent
     if (! $currentConfig instanceof CurrentConfig) {
         throw new LogicException('Container returned an unexpected type for ' . CurrentConfig::class);
     }
-    $currentConfig->setNbmMaxTreatmentTimeoutPercent($percent);
-    $currentConfig->setNbmTreatmentTimeoutDefault($timeoutDefault);
+    $currentConfig->nbmMaxTreatmentTimeoutPercent = $percent;
+    $currentConfig->nbmTreatmentTimeoutDefault = $timeoutDefault;
 
     return PresentationAccessor::notificationByMailSender();
 }

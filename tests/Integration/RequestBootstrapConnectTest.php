@@ -226,8 +226,8 @@ final class RequestBootstrapConnectTest extends IntegrationTestCase
             );
             self::assertIsString($storedVersion);
             self::assertSame(AppInfo::VERSION, json_decode($storedVersion, true));
-            self::assertNotNull(CurrentConfigTestFactory::get()->lastMajorUpdate());
-            self::assertSame('ORDER BY id DESC', CurrentConfigTestFactory::get()->orderByInsideCategory());
+            self::assertNotNull(CurrentConfigTestFactory::get()->lastMajorUpdate);
+            self::assertSame('ORDER BY id DESC', CurrentConfigTestFactory::get()->orderByInsideCategory);
             // The real, definitive proof LoungeMaintenance::needsEmptying()
             // -> ImageService::emptyLounge() actually ran: the lounge row
             // deleteLoungeUpTo() removes is gone.

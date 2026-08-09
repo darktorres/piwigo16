@@ -27,7 +27,7 @@ function intronewsCachePath(): string
     $langCode = LangTestFactory::get()->langInfo()['code'] ?? null;
     $langCode = is_string($langCode) ? $langCode : '';
 
-    return CurrentPathsTestFactory::get()->root . CurrentConfigTestFactory::get()->dataLocation()
+    return CurrentPathsTestFactory::get()->root . CurrentConfigTestFactory::get()->dataLocation
         . 'cache/piwigo_latest_news-' . $langCode . '.cache.php';
 }
 

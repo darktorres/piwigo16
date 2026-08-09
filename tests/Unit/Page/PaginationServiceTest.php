@@ -282,7 +282,7 @@ test('createNavigationBar\'s "pages" array starts from floor(), not ceil() or ro
     // RemoveDoubleCast, are closed the same way: real
     // previous/next are exact -20/+20 offsets from the snapped 40.
     $currentConfig = new CurrentConfig();
-    $currentConfig->setPaginatePagesAround(0);
+    $currentConfig->paginatePagesAround = 0;
     $service = new PaginationService($currentConfig);
 
     $navbar = $service->createNavigationBar('index.php', 1000, 30, 20);
@@ -310,7 +310,7 @@ test('createNavigationBar\'s "pages" array uses ceil(), not round(), for its upp
     // the .5-boundary test above can't reach (round and ceil agree at
     // exactly .5).
     $currentConfig = new CurrentConfig();
-    $currentConfig->setPaginatePagesAround(0);
+    $currentConfig->paginatePagesAround = 0;
     $service = new PaginationService($currentConfig);
 
     $navbar = $service->createNavigationBar('index.php', 1000, 26, 20);

@@ -161,7 +161,7 @@ beforeEach(function (): void {
     // CurrentPathsTestFactory::get().
     Kernel::boot(Paths::fromRoot(sys_get_temp_dir()));
     batch_upload_handler_test_current_logger()->set(new Logger(['severity' => Logger::OFF]));
-    batch_upload_handler_test_current_config()->setLoungeActive(true);
+    batch_upload_handler_test_current_config()->loungeActive = true;
 });
 
 afterEach(function (): void {

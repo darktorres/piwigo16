@@ -62,9 +62,9 @@ final class ConfigServiceTest extends IntegrationTestCase
         // activate_comments, and a JSON-quoted string for both secret_key
         // and gallery_title.
         $currentConfig = CurrentConfigTestFactory::get();
-        self::assertTrue($currentConfig->activateComments());
-        self::assertNotSame('', $currentConfig->secretKey());
-        self::assertSame('Fixture Gallery', $currentConfig->galleryTitle());
+        self::assertTrue($currentConfig->activateComments);
+        self::assertNotSame('', $currentConfig->secretKey);
+        self::assertSame('Fixture Gallery', $currentConfig->galleryTitle);
     }
 
     public function test_loadConfFromDb_with_a_param_loads_only_that_row(): void
@@ -77,8 +77,8 @@ final class ConfigServiceTest extends IntegrationTestCase
         $this->service->loadConfFromDb('secret_key');
 
         $currentConfig = CurrentConfigTestFactory::get();
-        self::assertNotSame('', $currentConfig->secretKey());
-        self::assertSame('Piwigo', $currentConfig->galleryTitle());
+        self::assertNotSame('', $currentConfig->secretKey);
+        self::assertSame('Piwigo', $currentConfig->galleryTitle);
     }
 
     public function test_loadConfFromDb_throws_when_param_not_found_and_dieIfNotFound_is_true(): void
@@ -118,7 +118,7 @@ final class ConfigServiceTest extends IntegrationTestCase
 
         // Prime the cache with the fixture's own value.
         $this->service->loadConfFromDb();
-        self::assertSame('Fixture Gallery', CurrentConfigTestFactory::get()->galleryTitle());
+        self::assertSame('Fixture Gallery', CurrentConfigTestFactory::get()->galleryTitle);
 
         // Write directly through the repository, bypassing ConfigService's
         // own cache-clearing (and its encode() -- json_encode() the value
@@ -139,7 +139,7 @@ final class ConfigServiceTest extends IntegrationTestCase
         $currentConfig->reset();
         ConfigLoader::applyDefaults();
         $this->service->loadConfFromDb();
-        self::assertSame('Fixture Gallery', $currentConfig->galleryTitle());
+        self::assertSame('Fixture Gallery', $currentConfig->galleryTitle);
 
         // A real ConfigService write clears the cache; the next bulk load
         // picks up the fresh value.
@@ -151,7 +151,7 @@ final class ConfigServiceTest extends IntegrationTestCase
         $currentConfig->reset();
         ConfigLoader::applyDefaults();
         $this->service->loadConfFromDb();
-        self::assertSame('Fresh After Invalidation', $currentConfig->galleryTitle());
+        self::assertSame('Fresh After Invalidation', $currentConfig->galleryTitle);
 
         // Restore the fixture's own value -- confUpdateParam() also clears
         // the cache again, so later tests in this file don't inherit
@@ -184,11 +184,11 @@ final class ConfigServiceTest extends IntegrationTestCase
         $this->service->confUpdateParam('session_length', 9999);
         $this->service->loadConfFromDb('session_length');
         $currentConfig = CurrentConfigTestFactory::get();
-        self::assertSame(9999, $currentConfig->sessionLength());
+        self::assertSame(9999, $currentConfig->sessionLength);
 
         $this->service->confDeleteParam('session_length');
 
-        self::assertSame(3600, $currentConfig->sessionLength());
+        self::assertSame(3600, $currentConfig->sessionLength);
     }
 
     /**
@@ -207,7 +207,7 @@ final class ConfigServiceTest extends IntegrationTestCase
 
         $this->service->confUpdateParam('session_length', 9999);
         $this->service->loadConfFromDb();
-        self::assertSame(9999, $currentConfig->sessionLength());
+        self::assertSame(9999, $currentConfig->sessionLength);
 
         $this->service->confDeleteParam('session_length');
 
@@ -220,7 +220,7 @@ final class ConfigServiceTest extends IntegrationTestCase
         ConfigLoader::applyDefaults();
         $this->service->loadConfFromDb();
 
-        self::assertSame(3600, $currentConfig->sessionLength());
+        self::assertSame(3600, $currentConfig->sessionLength);
     }
 
     public function test_confUpdateParam_encodes_arrays_via_json(): void
@@ -282,11 +282,11 @@ final class ConfigServiceTest extends IntegrationTestCase
             $currentConfig = CurrentConfigTestFactory::get();
             $this->service->confUpdateParam('gallery_locked', true);
             $this->service->loadConfFromDb('gallery_locked');
-            self::assertTrue($currentConfig->galleryLocked());
+            self::assertTrue($currentConfig->galleryLocked);
 
             $this->service->confUpdateParam('gallery_locked', false);
             $this->service->loadConfFromDb('gallery_locked');
-            self::assertFalse($currentConfig->galleryLocked());
+            self::assertFalse($currentConfig->galleryLocked);
         } finally {
             $this->service->confUpdateParam('gallery_locked', false);
         }
@@ -301,7 +301,7 @@ final class ConfigServiceTest extends IntegrationTestCase
         try {
             $this->service->confUpdateParam('data_dir_checked', '1');
             $this->service->loadConfFromDb('data_dir_checked');
-            self::assertSame('1', CurrentConfigTestFactory::get()->dataDirChecked());
+            self::assertSame('1', CurrentConfigTestFactory::get()->dataDirChecked);
         } finally {
             $this->service->confDeleteParam('data_dir_checked');
         }

@@ -148,7 +148,7 @@ final class UserRepository implements WebmasterMailProviderInterface
     #[Override]
     public function getWebmasterMailAddress(): string
     {
-        $webmaster_id = $this->currentConfig->webmasterId();
+        $webmaster_id = $this->currentConfig->webmasterId;
 
         $values = $this->em
             ->createQueryBuilder()
@@ -1125,7 +1125,7 @@ final class UserRepository implements WebmasterMailProviderInterface
      */
     private function resolveFavoritesDqlOrderBy(string $orderBySql): ?array
     {
-        if ($this->currentConfig->orderByCustom() !== null) {
+        if ($this->currentConfig->orderByCustom !== null) {
             return null;
         }
 

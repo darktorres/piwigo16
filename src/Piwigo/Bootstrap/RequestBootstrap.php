@@ -308,9 +308,9 @@ final class RequestBootstrap
         // ErrorCollector::installIfConfigured()'s own docblock).
         self::errorCollector()->installIfConfigured();
 
-        if (self::currentConfig()->sessionGcProbability() > 0) {
+        if (self::currentConfig()->sessionGcProbability > 0) {
             @ini_set('session.gc_divisor', 100);
-            $gc_probability = self::currentConfig()->sessionGcProbability();
+            $gc_probability = self::currentConfig()->sessionGcProbability;
             @ini_set('session.gc_probability', min($gc_probability, 100));
         }
 
@@ -349,18 +349,18 @@ final class RequestBootstrap
         self::currentConfigService()->set($configService);
         $configService->loadConfFromDb();
 
-        $log_data_location = self::currentConfig()->dataLocation();
-        $log_dir = self::currentConfig()->logDir();
+        $log_data_location = self::currentConfig()->dataLocation;
+        $log_dir = self::currentConfig()->logDir;
 
         self::currentLogger()->set(new Logger([
             'directory' => self::paths()->root . $log_data_location . $log_dir,
-            'severity' => self::currentConfig()->logLevel(),
+            'severity' => self::currentConfig()->logLevel,
             // we use an hashed filename to prevent direct file access, and we salt with
             // the db_password instead of secret_key because the log must be usable in i.php
             // (secret_key is in the database)
             'filename' => 'log_' . date('Y-m-d') . '_' . sha1(date('Y-m-d') . $db_password) . '.txt',
             'globPattern' => 'log_*.txt',
-            'archiveDays' => self::currentConfig()->logArchiveDays(),
+            'archiveDays' => self::currentConfig()->logArchiveDays,
         ]));
 
         self::imageStdParams();
@@ -368,19 +368,19 @@ final class RequestBootstrap
         session_start();
         PluginLoader::loadPlugins(self::loadedPlugins(), self::eventDispatcher(), self::activityService($conn), self::currentConfig(), self::wsContext(), self::accessControl(), self::pageState(), self::paths());
 
-        if (self::currentConfig()->piwigoInstalledVersion() === null) {
+        if (self::currentConfig()->piwigoInstalledVersion === null) {
             $configService->confUpdateParam('piwigo_installed_version', AppInfo::VERSION);
-        } elseif (self::currentConfig()->piwigoInstalledVersion() !== AppInfo::VERSION) {
+        } elseif (self::currentConfig()->piwigoInstalledVersion !== AppInfo::VERSION) {
             // Piwigo has been updated "from filesystem" and not "from the administration UI". We mark it as an autoupdate in the system activities log
             self::activityService($conn)->record('system', ActivitySystem::Core, 'autoupdate', [
-                'from_version' => self::currentConfig()->piwigoInstalledVersion(),
+                'from_version' => self::currentConfig()->piwigoInstalledVersion,
                 'to_version' => AppInfo::VERSION,
             ]);
             $configService->confUpdateParam('piwigo_installed_version', AppInfo::VERSION);
         }
 
         // Check if last major update conf is set if not set it
-        if (self::currentConfig()->lastMajorUpdate() === null) {
+        if (self::currentConfig()->lastMajorUpdate === null) {
             $dbnow = Env::now()->format('Y-m-d H:i:s');
             $configService->confUpdateParam('last_major_update', $dbnow, updateGlobal: true);
         }
@@ -391,13 +391,13 @@ final class RequestBootstrap
         // themselves (not the structured {field,dir}[] shape the old SCHEMA
         // entry implied) -- CurrentConfig::orderByCustom()/
         // orderByInsideCategoryCustom() are real typed (nullable) accessors now.
-        $orderByCustom = self::currentConfig()->orderByCustom();
+        $orderByCustom = self::currentConfig()->orderByCustom;
         if ($orderByCustom !== null) {
-            self::currentConfig()->setOrderBy($orderByCustom);
+            self::currentConfig()->orderBy = $orderByCustom;
         }
-        $orderByInsideCategoryCustom = self::currentConfig()->orderByInsideCategoryCustom();
+        $orderByInsideCategoryCustom = self::currentConfig()->orderByInsideCategoryCustom;
         if ($orderByInsideCategoryCustom !== null) {
-            self::currentConfig()->setOrderByInsideCategory($orderByInsideCategoryCustom);
+            self::currentConfig()->orderByInsideCategory = $orderByInsideCategoryCustom;
         }
 
         if (LoungeMaintenance::needsEmptying(self::currentConfig())) {
@@ -456,8 +456,8 @@ final class RequestBootstrap
     public static function pemUrl(): string
     {
 
-        if (self::currentConfig()->alternativePemUrl() !== '') {
-            return self::currentConfig()->alternativePemUrl();
+        if (self::currentConfig()->alternativePemUrl !== '') {
+            return self::currentConfig()->alternativePemUrl;
         }
 
         return AppInfo::URL . '/ext';
@@ -556,12 +556,12 @@ final class RequestBootstrap
         // template instance
         if (self::adminContext()->isActive()) {// Admin template
             $admin_theme = new PreferencesService(new UserRepository(EntityManagerFactory::build($conn), self::eventDispatcher(), self::currentConfig()), self::currentUser())
-                ->getAdminThemePref() ?? self::currentConfig()->adminTheme();
+                ->getAdminThemePref() ?? self::currentConfig()->adminTheme;
             $template = new Template(self::currentConfig(), self::lang(), self::adminContext(), self::eventDispatcher(), self::pageState(), self::errorCollector(), self::processCache(), self::currentConfigService(), self::paths(), self::accessLevelChecker(), self::sessionService(), self::paths()->root . 'themes/admin', $admin_theme);
         } else { // Classic template
             $theme = self::currentUser()->get()->theme;
             if (PageFilterHelper::scriptBasename(self::currentConfig()) !== 'ws' and DeviceHelper::mobileTheme(self::sessionService(), self::currentConfig())) {
-                $theme = self::currentConfig()->mobilTheme();
+                $theme = self::currentConfig()->mobilTheme;
             }
             $template = new Template(self::currentConfig(), self::lang(), self::adminContext(), self::eventDispatcher(), self::pageState(), self::errorCollector(), self::processCache(), self::currentConfigService(), self::paths(), self::accessLevelChecker(), self::sessionService(), self::paths()->root . 'themes', $theme);
         }
@@ -581,7 +581,7 @@ final class RequestBootstrap
         }
         $currentThemeConfProvider->set($template);
 
-        if (self::currentConfig()->noPhotoYet() === null) {
+        if (self::currentConfig()->noPhotoYet === null) {
             // render() exits itself when it decides to take over the
             // page. CurrentConfigService::get() reuses the instance
             // connect() already resolved earlier in the same request.
@@ -594,7 +594,7 @@ final class RequestBootstrap
             $pageState->addHeaderMessage(self::lang()->t('Bad status for user "guest", using default status. Please notify the webmaster.'));
         }
 
-        if (self::currentConfig()->galleryLocked()) {
+        if (self::currentConfig()->galleryLocked) {
             $pageState->addHeaderMessage(self::lang()->t('The gallery is locked for maintenance. Please, come back later.'));
 
             if (PageFilterHelper::scriptBasename(self::currentConfig()) !== 'identification' and ! self::accessLevelChecker()->isAdmin()) {
@@ -614,18 +614,18 @@ final class RequestBootstrap
             $pageState->headerMessages = [];
         }
 
-        if (self::currentConfig()->filterPages() !== [] and (bool) PageFilterHelper::getFilterPageValue(self::currentConfig(), 'used')) {
+        if (self::currentConfig()->filterPages !== [] and (bool) PageFilterHelper::getFilterPageValue(self::currentConfig(), 'used')) {
             new FilterService(self::filterState(), self::sessionService(), self::translator(), self::lang(), self::currentConfig(), self::eventDispatcher(), $conn)
                 ->initializeFromRequest(self::pageState(), self::currentUser());
         } else {
             self::filterState()->set(false);
         }
 
-        $pageState->headerNotes = array_merge($pageState->headerNotes, self::currentConfig()->headerNotes());
+        $pageState->headerNotes = array_merge($pageState->headerNotes, self::currentConfig()->headerNotes);
 
         // default event handlers
         self::eventDispatcher()->addTypedHandler(RenderCategoryLiteralDescription::class, self::htmlService()->renderCategoryLiteralDescription(...));
-        if (! self::currentConfig()->allowHtmlDescriptions()) {
+        if (! self::currentConfig()->allowHtmlDescriptions) {
             // pwgNl2br() is a generic string transform reused by
             // RenderElementDescription's own default handler too -- a thin
             // adapter closure per event, leaving pwgNl2br() itself untouched,
@@ -709,7 +709,7 @@ final class RequestBootstrap
         self::eventDispatcher()->addTypedHandler(UploadFile::class, UploadService::uploadFileVideo(...));
         self::eventDispatcher()->addTypedHandler(UploadFile::class, UploadService::uploadFilePsd(...));
         self::eventDispatcher()->addTypedHandler(UploadFile::class, UploadService::uploadFileEps(...));
-        if (self::currentConfig()->originalUrlProtection() !== '') {
+        if (self::currentConfig()->originalUrlProtection !== '') {
             self::eventDispatcher()->addTypedHandler(GetElementUrl::class, self::htmlService()->getElementUrlProtectionHandler(...));
             self::eventDispatcher()->addTypedHandler(GetSrcImageUrl::class, self::htmlService()->getSrcImageUrlProtectionHandler(...));
         }

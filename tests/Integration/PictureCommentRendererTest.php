@@ -98,7 +98,7 @@ final class PictureCommentRendererTest extends IntegrationTestCase
         // (a full RequestBootstrap dependency this test never boots) just
         // to persist a "don't recheck this" cache flag -- skip it the same
         // way a real request's 2nd-and-later call already does.
-        CurrentConfigTestFactory::get()->setDataDirChecked('1');
+        CurrentConfigTestFactory::get()->dataDirChecked = '1';
         // render()'s final assign_var_from_handle() really compiles
         // comment_list.tpl -- root/theme='default' is what points
         // Smarty's template_dir at the real themes/default/template/
@@ -148,7 +148,7 @@ final class PictureCommentRendererTest extends IntegrationTestCase
         $commentIdA = $this->insertComment($imageId, $ownerId, 'First comment.');
         $commentIdB = $this->insertComment($imageId, $ownerId, 'Second comment.');
         $this->seedUser($ownerId, UserStatus::Normal);
-        CurrentConfigTestFactory::get()->setUserCanEditComment(true);
+        CurrentConfigTestFactory::get()->userCanEditComment = true;
 
         $this->renderer()->render(LangTestFactory::get(), new AccessLevelChecker(CurrentUserTestFactory::get(), CurrentConfigTestFactory::get()), $commentIdB, $imageId, 0, $this->urlService(), $this->commentableCategory(), '/picture.php', $this->sessionService(), new EventDispatcher(), PageStateTestFactory::get(), CurrentUserTestFactory::get(), CurrentTemplate::current(), CurrentConfigTestFactory::get(), $this->mailService(), PresentationAccessor::htmlService());
 
@@ -167,8 +167,8 @@ final class PictureCommentRendererTest extends IntegrationTestCase
         $ownerId = 3;
         $otherUserId = 4;
         $commentId = $this->insertComment($imageId, $ownerId, 'Owned by user 3.');
-        CurrentConfigTestFactory::get()->setUserCanEditComment(true);
-        CurrentConfigTestFactory::get()->setUserCanDeleteComment(true);
+        CurrentConfigTestFactory::get()->userCanEditComment = true;
+        CurrentConfigTestFactory::get()->userCanDeleteComment = true;
 
         $this->seedUser($ownerId, UserStatus::Normal);
         $ownerRow = $this->findRenderedRow(
@@ -190,7 +190,7 @@ final class PictureCommentRendererTest extends IntegrationTestCase
 
     public function test_render_rejects_a_guest_submission_with_session_expired_when_comments_for_all_is_disabled(): void
     {
-        CurrentConfigTestFactory::get()->setCommentsForall(false);
+        CurrentConfigTestFactory::get()->commentsForall = false;
         $imageId = 3;
         $_POST['content'] = 'A guest comment attempt.';
 
@@ -223,14 +223,14 @@ final class PictureCommentRendererTest extends IntegrationTestCase
 
     public function test_render_moderates_a_valid_guest_submission_when_comments_validation_is_enabled(): void
     {
-        CurrentConfigTestFactory::get()->setCommentsForall(true);
-        CurrentConfigTestFactory::get()->setCommentsValidation(true);
-        CurrentConfigTestFactory::get()->setCommentsAuthorMandatory(false);
-        CurrentConfigTestFactory::get()->setCommentsEmailMandatory(false);
-        CurrentConfigTestFactory::get()->setAntiFloodTime(0);
+        CurrentConfigTestFactory::get()->commentsForall = true;
+        CurrentConfigTestFactory::get()->commentsValidation = true;
+        CurrentConfigTestFactory::get()->commentsAuthorMandatory = false;
+        CurrentConfigTestFactory::get()->commentsEmailMandatory = false;
+        CurrentConfigTestFactory::get()->antiFloodTime = 0;
         // Real production default (true) would otherwise attempt a real
         // MailerInterface::mail() send for this exact outcome.
-        CurrentConfigTestFactory::get()->setEmailAdminOnCommentValidation(false);
+        CurrentConfigTestFactory::get()->emailAdminOnCommentValidation = false;
         $imageId = 3;
         $_POST['content'] = 'A moderated comment.';
         $_POST['key'] = new EphemeralKeyService(CurrentConfigTestFactory::get())->generate(0, (string) $imageId);
@@ -255,11 +255,11 @@ final class PictureCommentRendererTest extends IntegrationTestCase
 
     public function test_render_validates_a_guest_submission_immediately_when_comments_validation_is_disabled(): void
     {
-        CurrentConfigTestFactory::get()->setCommentsForall(true);
-        CurrentConfigTestFactory::get()->setCommentsValidation(false);
-        CurrentConfigTestFactory::get()->setCommentsAuthorMandatory(false);
-        CurrentConfigTestFactory::get()->setCommentsEmailMandatory(false);
-        CurrentConfigTestFactory::get()->setAntiFloodTime(0);
+        CurrentConfigTestFactory::get()->commentsForall = true;
+        CurrentConfigTestFactory::get()->commentsValidation = false;
+        CurrentConfigTestFactory::get()->commentsAuthorMandatory = false;
+        CurrentConfigTestFactory::get()->commentsEmailMandatory = false;
+        CurrentConfigTestFactory::get()->antiFloodTime = 0;
         $imageId = 3;
         $_POST['content'] = 'A validated comment.';
         $_POST['key'] = new EphemeralKeyService(CurrentConfigTestFactory::get())->generate(0, (string) $imageId);
@@ -276,10 +276,10 @@ final class PictureCommentRendererTest extends IntegrationTestCase
 
     public function test_render_rejects_an_invalid_key_and_repopulates_the_add_comment_form(): void
     {
-        CurrentConfigTestFactory::get()->setCommentsForall(true);
-        CurrentConfigTestFactory::get()->setCommentsAuthorMandatory(false);
-        CurrentConfigTestFactory::get()->setCommentsEmailMandatory(false);
-        CurrentConfigTestFactory::get()->setAntiFloodTime(0);
+        CurrentConfigTestFactory::get()->commentsForall = true;
+        CurrentConfigTestFactory::get()->commentsAuthorMandatory = false;
+        CurrentConfigTestFactory::get()->commentsEmailMandatory = false;
+        CurrentConfigTestFactory::get()->antiFloodTime = 0;
         $imageId = 3;
         $_POST['author'] = 'Some Author';
         $_POST['content'] = 'Rejected <b>content</b>.';
@@ -380,8 +380,8 @@ final class PictureCommentRendererTest extends IntegrationTestCase
         $imageId = 3;
         $ownerId = 3;
         $commentId = $this->insertComment($imageId, $ownerId, 'Owned by user 3.');
-        CurrentConfigTestFactory::get()->setUserCanEditComment(false);
-        CurrentConfigTestFactory::get()->setUserCanDeleteComment(false);
+        CurrentConfigTestFactory::get()->userCanEditComment = false;
+        CurrentConfigTestFactory::get()->userCanDeleteComment = false;
 
         $this->seedUser(1, UserStatus::Admin);
         $adminRow = $this->findRenderedRow(
@@ -459,7 +459,7 @@ final class PictureCommentRendererTest extends IntegrationTestCase
     {
         // imageId 4: exclusive to this test within this file.
         $imageId = 4;
-        CurrentConfigTestFactory::get()->setNbCommentPage(2);
+        CurrentConfigTestFactory::get()->nbCommentPage = 2;
         $sectionRegistry = Kernel::container()->get(SectionContextRegistry::class);
         if (! $sectionRegistry instanceof SectionContextRegistry) {
             throw new LogicException('Container returned an unexpected type for ' . SectionContextRegistry::class);
@@ -494,17 +494,17 @@ final class PictureCommentRendererTest extends IntegrationTestCase
                 'DELETE FROM ' . Tables::comments() . ' WHERE id IN (?, ?, ?)',
                 array_map(static fn (CommentId $id): int => $id->value, $commentIds)
             );
-            CurrentConfigTestFactory::get()->setNbCommentPage(10);
+            CurrentConfigTestFactory::get()->nbCommentPage = 10;
             $sectionRegistry->reset();
         }
     }
 
     public function test_render_shows_the_add_comment_form_with_its_full_default_field_set(): void
     {
-        CurrentConfigTestFactory::get()->setCommentsForall(false);
-        CurrentConfigTestFactory::get()->setCommentsAuthorMandatory(true);
-        CurrentConfigTestFactory::get()->setCommentsEmailMandatory(true);
-        CurrentConfigTestFactory::get()->setCommentsEnableWebsite(true);
+        CurrentConfigTestFactory::get()->commentsForall = false;
+        CurrentConfigTestFactory::get()->commentsAuthorMandatory = true;
+        CurrentConfigTestFactory::get()->commentsEmailMandatory = true;
+        CurrentConfigTestFactory::get()->commentsEnableWebsite = true;
         $imageId = 3;
         // A classic (Normal) user with a blank registered email -- not a
         // guest, so line 285's hide-guard never fires regardless of
@@ -549,7 +549,7 @@ final class PictureCommentRendererTest extends IntegrationTestCase
         $ownerId = 3;
         $commentId = $this->insertComment($imageId, $ownerId, 'Being edited right now.');
         $this->seedUser($ownerId, UserStatus::Normal);
-        CurrentConfigTestFactory::get()->setUserCanEditComment(true);
+        CurrentConfigTestFactory::get()->userCanEditComment = true;
 
         try {
             $this->renderer()->render(LangTestFactory::get(), new AccessLevelChecker(CurrentUserTestFactory::get(), CurrentConfigTestFactory::get()), $commentId, $imageId, 0, $this->urlService(), $this->commentableCategory(), '/picture.php', $this->sessionService(), new EventDispatcher(), PageStateTestFactory::get(), CurrentUserTestFactory::get(), CurrentTemplate::current(), CurrentConfigTestFactory::get(), $this->mailService(), PresentationAccessor::htmlService());
@@ -562,7 +562,7 @@ final class PictureCommentRendererTest extends IntegrationTestCase
 
     public function test_render_hides_the_add_comment_form_for_a_guest_when_comments_for_all_is_disabled(): void
     {
-        CurrentConfigTestFactory::get()->setCommentsForall(false);
+        CurrentConfigTestFactory::get()->commentsForall = false;
         $imageId = 3;
         // No seedUser() call -- the default CurrentUser is a guest.
 
@@ -603,7 +603,7 @@ final class PictureCommentRendererTest extends IntegrationTestCase
 
     public function test_render_repopulates_website_url_and_email_after_a_rejected_submission_with_no_author(): void
     {
-        CurrentConfigTestFactory::get()->setCommentsForall(true);
+        CurrentConfigTestFactory::get()->commentsForall = true;
         $imageId = 3;
         $_POST['content'] = 'Reject me for repopulation check.';
         $_POST['website_url'] = 'mutation-check.example.test';
@@ -628,7 +628,7 @@ final class PictureCommentRendererTest extends IntegrationTestCase
 
     public function test_render_sets_a_403_status_header_when_a_submission_is_rejected(): void
     {
-        CurrentConfigTestFactory::get()->setCommentsForall(true);
+        CurrentConfigTestFactory::get()->commentsForall = true;
         $imageId = 3;
         $_POST['content'] = 'Rejected for status header check.';
         $_POST['key'] = 'totally-invalid-key';
@@ -658,11 +658,11 @@ final class PictureCommentRendererTest extends IntegrationTestCase
 
     public function test_render_notifies_plugins_with_the_persisted_comm_array_and_the_resulting_action(): void
     {
-        CurrentConfigTestFactory::get()->setCommentsForall(true);
-        CurrentConfigTestFactory::get()->setCommentsValidation(false);
-        CurrentConfigTestFactory::get()->setCommentsAuthorMandatory(false);
-        CurrentConfigTestFactory::get()->setCommentsEmailMandatory(false);
-        CurrentConfigTestFactory::get()->setAntiFloodTime(0);
+        CurrentConfigTestFactory::get()->commentsForall = true;
+        CurrentConfigTestFactory::get()->commentsValidation = false;
+        CurrentConfigTestFactory::get()->commentsAuthorMandatory = false;
+        CurrentConfigTestFactory::get()->commentsEmailMandatory = false;
+        CurrentConfigTestFactory::get()->antiFloodTime = 0;
         $imageId = 3;
         $_POST['content'] = 'Notify plugins comment.';
         $_POST['key'] = new EphemeralKeyService(CurrentConfigTestFactory::get())->generate(0, (string) $imageId);
@@ -691,11 +691,11 @@ final class PictureCommentRendererTest extends IntegrationTestCase
 
     public function test_render_persists_trimmed_non_sentinel_author_and_content_from_a_valid_guest_submission(): void
     {
-        CurrentConfigTestFactory::get()->setCommentsForall(true);
-        CurrentConfigTestFactory::get()->setCommentsValidation(false);
-        CurrentConfigTestFactory::get()->setCommentsAuthorMandatory(false);
-        CurrentConfigTestFactory::get()->setCommentsEmailMandatory(false);
-        CurrentConfigTestFactory::get()->setAntiFloodTime(0);
+        CurrentConfigTestFactory::get()->commentsForall = true;
+        CurrentConfigTestFactory::get()->commentsValidation = false;
+        CurrentConfigTestFactory::get()->commentsAuthorMandatory = false;
+        CurrentConfigTestFactory::get()->commentsEmailMandatory = false;
+        CurrentConfigTestFactory::get()->antiFloodTime = 0;
         $imageId = 3;
         $_POST['author'] = '  MutationTestAuthor  ';
         $_POST['content'] = '  Trimmed mutation content check.  ';
@@ -714,11 +714,11 @@ final class PictureCommentRendererTest extends IntegrationTestCase
 
     public function test_render_treats_a_literal_zero_author_as_absent_and_falls_back_to_guest(): void
     {
-        CurrentConfigTestFactory::get()->setCommentsForall(true);
-        CurrentConfigTestFactory::get()->setCommentsValidation(false);
-        CurrentConfigTestFactory::get()->setCommentsAuthorMandatory(false);
-        CurrentConfigTestFactory::get()->setCommentsEmailMandatory(false);
-        CurrentConfigTestFactory::get()->setAntiFloodTime(0);
+        CurrentConfigTestFactory::get()->commentsForall = true;
+        CurrentConfigTestFactory::get()->commentsValidation = false;
+        CurrentConfigTestFactory::get()->commentsAuthorMandatory = false;
+        CurrentConfigTestFactory::get()->commentsEmailMandatory = false;
+        CurrentConfigTestFactory::get()->antiFloodTime = 0;
         $imageId = 3;
         $_POST['author'] = '0';
         $_POST['content'] = 'Zero author fallback check.';
@@ -737,11 +737,11 @@ final class PictureCommentRendererTest extends IntegrationTestCase
 
     public function test_render_rejects_a_submission_whose_content_is_a_literal_zero(): void
     {
-        CurrentConfigTestFactory::get()->setCommentsForall(true);
-        CurrentConfigTestFactory::get()->setCommentsValidation(false);
-        CurrentConfigTestFactory::get()->setCommentsAuthorMandatory(false);
-        CurrentConfigTestFactory::get()->setCommentsEmailMandatory(false);
-        CurrentConfigTestFactory::get()->setAntiFloodTime(0);
+        CurrentConfigTestFactory::get()->commentsForall = true;
+        CurrentConfigTestFactory::get()->commentsValidation = false;
+        CurrentConfigTestFactory::get()->commentsAuthorMandatory = false;
+        CurrentConfigTestFactory::get()->commentsEmailMandatory = false;
+        CurrentConfigTestFactory::get()->antiFloodTime = 0;
         $imageId = 3;
         $_POST['content'] = '0';
         $_POST['key'] = new EphemeralKeyService(CurrentConfigTestFactory::get())->generate(0, (string) $imageId);
@@ -760,12 +760,12 @@ final class PictureCommentRendererTest extends IntegrationTestCase
 
     public function test_render_persists_a_trimmed_scheme_prefixed_website_url_from_a_valid_guest_submission(): void
     {
-        CurrentConfigTestFactory::get()->setCommentsForall(true);
-        CurrentConfigTestFactory::get()->setCommentsValidation(false);
-        CurrentConfigTestFactory::get()->setCommentsAuthorMandatory(false);
-        CurrentConfigTestFactory::get()->setCommentsEmailMandatory(false);
-        CurrentConfigTestFactory::get()->setCommentsEnableWebsite(true);
-        CurrentConfigTestFactory::get()->setAntiFloodTime(0);
+        CurrentConfigTestFactory::get()->commentsForall = true;
+        CurrentConfigTestFactory::get()->commentsValidation = false;
+        CurrentConfigTestFactory::get()->commentsAuthorMandatory = false;
+        CurrentConfigTestFactory::get()->commentsEmailMandatory = false;
+        CurrentConfigTestFactory::get()->commentsEnableWebsite = true;
+        CurrentConfigTestFactory::get()->antiFloodTime = 0;
         $imageId = 3;
         $_POST['content'] = 'Website url trim check.';
         $_POST['website_url'] = '  mutation-check.example.test  ';
@@ -784,15 +784,15 @@ final class PictureCommentRendererTest extends IntegrationTestCase
 
     public function test_render_treats_a_literal_zero_website_url_as_absent_without_rejecting(): void
     {
-        CurrentConfigTestFactory::get()->setCommentsForall(true);
-        CurrentConfigTestFactory::get()->setCommentsValidation(false);
-        CurrentConfigTestFactory::get()->setCommentsAuthorMandatory(false);
-        CurrentConfigTestFactory::get()->setCommentsEmailMandatory(false);
+        CurrentConfigTestFactory::get()->commentsForall = true;
+        CurrentConfigTestFactory::get()->commentsValidation = false;
+        CurrentConfigTestFactory::get()->commentsAuthorMandatory = false;
+        CurrentConfigTestFactory::get()->commentsEmailMandatory = false;
         // Disabled deliberately: if '0' were wrongly treated as a real,
         // non-empty website_url, the honeypot check below would reject
         // regardless of URL format.
-        CurrentConfigTestFactory::get()->setCommentsEnableWebsite(false);
-        CurrentConfigTestFactory::get()->setAntiFloodTime(0);
+        CurrentConfigTestFactory::get()->commentsEnableWebsite = false;
+        CurrentConfigTestFactory::get()->antiFloodTime = 0;
         $imageId = 3;
         $_POST['content'] = 'Zero website url no reject check.';
         $_POST['website_url'] = '0';
@@ -810,11 +810,11 @@ final class PictureCommentRendererTest extends IntegrationTestCase
 
     public function test_render_persists_a_trimmed_email_from_a_valid_guest_submission(): void
     {
-        CurrentConfigTestFactory::get()->setCommentsForall(true);
-        CurrentConfigTestFactory::get()->setCommentsValidation(false);
-        CurrentConfigTestFactory::get()->setCommentsAuthorMandatory(false);
-        CurrentConfigTestFactory::get()->setCommentsEmailMandatory(false);
-        CurrentConfigTestFactory::get()->setAntiFloodTime(0);
+        CurrentConfigTestFactory::get()->commentsForall = true;
+        CurrentConfigTestFactory::get()->commentsValidation = false;
+        CurrentConfigTestFactory::get()->commentsAuthorMandatory = false;
+        CurrentConfigTestFactory::get()->commentsEmailMandatory = false;
+        CurrentConfigTestFactory::get()->antiFloodTime = 0;
         $imageId = 3;
         $_POST['content'] = 'Email trim check.';
         $_POST['email'] = '  mutation-check@example.test  ';
@@ -833,11 +833,11 @@ final class PictureCommentRendererTest extends IntegrationTestCase
 
     public function test_render_treats_a_literal_zero_email_as_absent_without_rejecting(): void
     {
-        CurrentConfigTestFactory::get()->setCommentsForall(true);
-        CurrentConfigTestFactory::get()->setCommentsValidation(false);
-        CurrentConfigTestFactory::get()->setCommentsAuthorMandatory(false);
-        CurrentConfigTestFactory::get()->setCommentsEmailMandatory(false);
-        CurrentConfigTestFactory::get()->setAntiFloodTime(0);
+        CurrentConfigTestFactory::get()->commentsForall = true;
+        CurrentConfigTestFactory::get()->commentsValidation = false;
+        CurrentConfigTestFactory::get()->commentsAuthorMandatory = false;
+        CurrentConfigTestFactory::get()->commentsEmailMandatory = false;
+        CurrentConfigTestFactory::get()->antiFloodTime = 0;
         $imageId = 3;
         $_POST['content'] = 'Zero email no reject check.';
         $_POST['email'] = '0';

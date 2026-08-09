@@ -196,7 +196,7 @@ final readonly class TagService
 
         // tag levels threshold calculation: a tag with an average rate
         // must have the middle level.
-        $tagsLevels = $this->currentConfig->tagsLevels();
+        $tagsLevels = $this->currentConfig->tagsLevels;
 
         $thresholdOfLevel = [];
         for ($i = 1; $i < $tagsLevels; $i++) {
@@ -354,7 +354,7 @@ final readonly class TagService
             return [];
         }
 
-        $orderBySql = in_array($orderBy, [null, ''], true) ? $this->currentConfig->orderBy() : $orderBy;
+        $orderBySql = in_array($orderBy, [null, ''], true) ? $this->currentConfig->orderBy : $orderBy;
 
         return $this->repo->findImageIdsForTags(
             array_map(static fn (TagId $id): int => $id->value, $tagIds),

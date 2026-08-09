@@ -123,7 +123,7 @@ final class AlbumNotificationPageRenderer
             $renderedCategoryName = $nameEvent->categoryName;
 
             $args = [
-                'subject' => $this->lang->t('[%s] Visit album %s', $this->currentConfig->galleryTitle(), $renderedCategoryName),
+                'subject' => $this->lang->t('[%s] Visit album %s', $this->currentConfig->galleryTitle, $renderedCategoryName),
             ];
 
             $mail_content = $albumNotificationSubmit->mailContent;
@@ -247,7 +247,7 @@ final class AlbumNotificationPageRenderer
 
         // auth_key_duration is a plain int config value (see
         // include/config_default.inc.php).
-        $auth_key_duration = $this->currentConfig->authKeyDuration();
+        $auth_key_duration = $this->currentConfig->authKeyDuration;
         $auth_key_duration_num = $auth_key_duration;
         $auth_key_duration_value = null;
         if ($auth_key_duration_num > 0) {

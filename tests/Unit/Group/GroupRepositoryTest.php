@@ -65,7 +65,6 @@ use Piwigo\Group\UserGroupEntity;
 function groupTestRepo(): GroupRepository
 {
     $repo = EntityManagerFactory::build(DbConnection::build())->getRepository(GroupEntity::class);
-    expect($repo)->toBeInstanceOf(GroupRepository::class);
 
     return $repo;
 }
@@ -82,7 +81,6 @@ function groupTestRepoWithEm(): array
 {
     $em = EntityManagerFactory::build(DbConnection::build());
     $repo = $em->getRepository(GroupEntity::class);
-    expect($repo)->toBeInstanceOf(GroupRepository::class);
 
     return [$repo, $em];
 }

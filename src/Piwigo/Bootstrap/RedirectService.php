@@ -177,7 +177,7 @@ final class RedirectService implements RedirectServiceInterface
 
         if (! $this->lang->isLangInfoInitialized() || ! isset($template)) {
             $paths = self::paths();
-            $guest_id = self::currentConfig()->guestId();
+            $guest_id = self::currentConfig()->guestId;
             $user = $this->userService->buildUser(UserId::from($guest_id));
             self::currentUser()->set(User::fromUserArray($user));
             $this->lang->load('common.lang');
@@ -229,7 +229,7 @@ final class RedirectService implements RedirectServiceInterface
     public function redirect(string $url, string $msg = '', int $refresh_time = 0): never
     {
         // with RefeshTime <> 0, only html must be used
-        if (self::currentConfig()->defaultRedirectMethod() === 'http'
+        if (self::currentConfig()->defaultRedirectMethod === 'http'
             and $refresh_time === 0
             and ! headers_sent()
         ) {

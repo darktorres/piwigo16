@@ -149,7 +149,7 @@ test('sessionOpen and sessionClose always return true', function (): void {
 
 test('getRemoteAddrSessionHash returns empty string when session_use_ip_address is off', function (): void {
     $currentConfig = new CurrentConfig();
-    $currentConfig->setSessionUseIpAddress(false);
+    $currentConfig->sessionUseIpAddress = false;
     $service = makeSessionService($currentConfig);
 
     expect($service->getRemoteAddrSessionHash())->toBe('');
@@ -161,7 +161,7 @@ test('getRemoteAddrSessionHash hashes only the first two octets of an ipv4 REMOT
     // long-standing behavior (also present unchanged in the reference
     // implementation), not something this migration should silently widen.
     $currentConfig = new CurrentConfig();
-    $currentConfig->setSessionUseIpAddress(true);
+    $currentConfig->sessionUseIpAddress = true;
     $service = makeSessionService($currentConfig);
     $_SERVER['REMOTE_ADDR'] = '127.0.0.1';
 
@@ -170,7 +170,7 @@ test('getRemoteAddrSessionHash hashes only the first two octets of an ipv4 REMOT
 
 test('getRemoteAddrSessionHash returns empty string for an ipv6 REMOTE_ADDR', function (): void {
     $currentConfig = new CurrentConfig();
-    $currentConfig->setSessionUseIpAddress(true);
+    $currentConfig->sessionUseIpAddress = true;
     $service = makeSessionService($currentConfig);
     $_SERVER['REMOTE_ADDR'] = '::1';
 
@@ -187,7 +187,7 @@ test('getRemoteAddrSessionHash returns empty string instead of throwing when REM
     // than throwing a ValueError from vsprintf('%02X%02X', ...).
     unset($_SERVER['REMOTE_ADDR']);
     $currentConfig = new CurrentConfig();
-    $currentConfig->setSessionUseIpAddress(true);
+    $currentConfig->sessionUseIpAddress = true;
     $service = makeSessionService($currentConfig);
 
     expect($service->getRemoteAddrSessionHash())->toBe('');

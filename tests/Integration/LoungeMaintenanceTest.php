@@ -46,8 +46,8 @@ final class LoungeMaintenanceTest extends IntegrationTestCase
         $this->originalDateAvailable = $dateAvailable;
 
         $this->conn->executeStatement('DELETE FROM ' . Tables::lounge());
-        $this->currentConfig()->setLoungeActive(false);
-        $this->currentConfig()->setLoungeMaxDuration(300);
+        $this->currentConfig()->loungeActive = false;
+        $this->currentConfig()->loungeMaxDuration = 300;
         unset($_REQUEST['method']);
     }
 
@@ -59,8 +59,8 @@ final class LoungeMaintenanceTest extends IntegrationTestCase
             'UPDATE ' . Tables::images() . ' SET date_available = ? WHERE id = 1',
             [$this->originalDateAvailable]
         );
-        $this->currentConfig()->setLoungeActive(false);
-        $this->currentConfig()->setLoungeMaxDuration(300);
+        $this->currentConfig()->loungeActive = false;
+        $this->currentConfig()->loungeMaxDuration = 300;
         unset($_REQUEST['method']);
         parent::tearDown();
     }
@@ -86,7 +86,7 @@ final class LoungeMaintenanceTest extends IntegrationTestCase
 
     public function test_needsEmptying_is_false_when_the_lounge_is_empty(): void
     {
-        $this->currentConfig()->setLoungeActive(true);
+        $this->currentConfig()->loungeActive = true;
 
         self::assertFalse(LoungeMaintenance::needsEmptying(CurrentConfigTestFactory::get()));
     }
@@ -99,7 +99,7 @@ final class LoungeMaintenanceTest extends IntegrationTestCase
         // sources agreed only as long as real wall-clock time stayed close
         // to a frozen PIWIGO_TEST_NOW, and drifted apart the moment it
         // didn't.
-        $this->currentConfig()->setLoungeActive(true);
+        $this->currentConfig()->loungeActive = true;
         $anHourAgo = Env::now()->modify('-1 hour')->format('Y-m-d H:i:s');
         $this->conn->executeStatement(
             'UPDATE ' . Tables::images() . ' SET date_available = ? WHERE id = 1',
@@ -112,7 +112,7 @@ final class LoungeMaintenanceTest extends IntegrationTestCase
 
     public function test_needsEmptying_is_false_when_the_oldest_lounge_photo_is_still_within_the_max_duration(): void
     {
-        $this->currentConfig()->setLoungeActive(true);
+        $this->currentConfig()->loungeActive = true;
         $this->conn->executeStatement(
             'UPDATE ' . Tables::images() . ' SET date_available = ? WHERE id = 1',
             [Env::now()->format('Y-m-d H:i:s')]
@@ -124,7 +124,7 @@ final class LoungeMaintenanceTest extends IntegrationTestCase
 
     public function test_needsEmptying_skips_the_check_during_an_active_upload_request(): void
     {
-        $this->currentConfig()->setLoungeActive(true);
+        $this->currentConfig()->loungeActive = true;
         $anHourAgo = Env::now()->modify('-1 hour')->format('Y-m-d H:i:s');
         $this->conn->executeStatement(
             'UPDATE ' . Tables::images() . ' SET date_available = ? WHERE id = 1',

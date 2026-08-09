@@ -41,7 +41,6 @@ function telemetryTestService(): TelemetryService
     $conn = DbConnection::build();
     $em = EntityManagerFactory::build($conn);
     $configRepo = $em->getRepository(ConfigEntry::class);
-    expect($configRepo)->toBeInstanceOf(ConfigRepository::class);
 
     return new TelemetryService($em, $configRepo);
 }

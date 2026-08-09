@@ -100,13 +100,13 @@ final readonly class PageTailRenderer
         // ------------------------------------------------------------- generation time
         $debug_vars = [];
 
-        if ($this->currentConfig->showQueries()) {
+        if ($this->currentConfig->showQueries) {
             $debug_vars = array_merge($debug_vars, [
                 'QUERIES_LIST' => $this->pageState->debugOutput,
             ]);
         }
 
-        if ($this->currentConfig->showGt()) {
+        if ($this->currentConfig->showGt) {
             $count_queries = $this->pageState->countQueries;
             $queries_time = $this->pageState->queriesTime;
 
@@ -124,7 +124,7 @@ final readonly class PageTailRenderer
 
         // ------------------------------------------------------------- mobile version
         $toggleMobileThemeUrl = null;
-        if (! self::emptyValue($this->currentConfig->mobilTheme()) && (DeviceHelper::getDevice($this->sessionService) !== 'desktop' || DeviceHelper::mobileTheme($this->sessionService, $this->currentConfig))) {
+        if (! self::emptyValue($this->currentConfig->mobilTheme) && (DeviceHelper::getDevice($this->sessionService) !== 'desktop' || DeviceHelper::mobileTheme($this->sessionService, $this->currentConfig))) {
             $request_uri = $_SERVER['REQUEST_URI'] ?? '';
             $toggleMobileThemeUrl = $this->urlService->addUrlParams(
                 htmlspecialchars(is_string($request_uri) ? $request_uri : ''),
@@ -135,7 +135,7 @@ final readonly class PageTailRenderer
         }
 
         $template->assignContext(new PageTailPageContext(
-            version: $this->currentConfig->showVersion() ? AppInfo::VERSION : '',
+            version: $this->currentConfig->showVersion ? AppInfo::VERSION : '',
             phpwgUrl: AppInfo::URL,
             // web-vitals RUM beacon -- fixed,
             // non-hashed filename (vite.config.ts), so no manifest.json

@@ -43,12 +43,12 @@ final readonly class HistoryService
     public function isLoggingAllowed(?int $imageId = null, ?string $imageType = null): bool
     {
 
-        $doLog = $this->currentConfig->logConf();
+        $doLog = $this->currentConfig->logConf;
         if ($this->accessControl->isAdmin()) {
-            $doLog = $this->currentConfig->historyAdmin();
+            $doLog = $this->currentConfig->historyAdmin;
         }
         if ($this->accessControl->isAGuest()) {
-            $doLog = $this->currentConfig->historyGuest();
+            $doLog = $this->currentConfig->historyGuest;
         }
 
         return $this->eventDispatcher->dispatchChange(new PwgLogAllowed($doLog, ImageId::tryFrom($imageId), $imageType))
@@ -90,7 +90,7 @@ final readonly class HistoryService
         $user = $this->currentUser->get();
         $lastVisit = $user->rawAttributes['last_visit'] ?? null;
         $lastVisitStr = is_string($lastVisit) ? $lastVisit : (is_numeric($lastVisit) ? (string) $lastVisit : '');
-        $sessionLength = $this->currentConfig->sessionLength();
+        $sessionLength = $this->currentConfig->sessionLength;
 
         $updateLastVisit = false;
         if (in_array($lastVisit, [null, false, 0, '0', '', []], true) or strtotime($lastVisitStr) < time() - $sessionLength) {
@@ -154,20 +154,20 @@ final readonly class HistoryService
         // If plugin developers add their own sections, Piwigo will automatically add it in the history.section enum column
         if ($pageSection !== null) {
             // set cache if not available
-            if ($this->currentConfig->historySectionsCache() === null) {
+            if ($this->currentConfig->historySectionsCache === null) {
                 $this->configService->confUpdateParam('history_sections_cache', $this->repo->getSectionEnumOptions(), true);
             }
 
             // CurrentConfig::historySectionsCache() already unserializes internally
             // and returns list<string>|null -- no further decoding needed.
-            $cachedSections = $this->currentConfig->historySectionsCache();
+            $cachedSections = $this->currentConfig->historySectionsCache;
             if (! is_array($cachedSections)) {
                 $cachedSections = $this->repo->getSectionEnumOptions();
             }
 
             $historySectionsCache = $cachedSections;
 
-            $this->currentConfig->setHistorySectionsCache($historySectionsCache);
+            $this->currentConfig->historySectionsCache = $historySectionsCache;
 
             // Real bug found live -- a case-insensitive
             // match used to store $pageSection verbatim, relying on MySQL's
@@ -232,7 +232,7 @@ final readonly class HistoryService
             $this->summarize(50000);
         }
 
-        $historyAutopurgeEvery = $this->currentConfig->historyAutopurgeEvery();
+        $historyAutopurgeEvery = $this->currentConfig->historyAutopurgeEvery;
         if ($historyAutopurgeEvery > 0 and $historyId % $historyAutopurgeEvery === 0) {
             $this->autopurge();
         }
@@ -437,7 +437,7 @@ final readonly class HistoryService
     {
         $logger = $this->currentLogger->get();
 
-        $keepLines = $this->currentConfig->historyAutopurgeKeepLines();
+        $keepLines = $this->currentConfig->historyAutopurgeKeepLines;
         if ($keepLines === 0) {
             return;
         }
@@ -458,7 +458,7 @@ final readonly class HistoryService
         }
 
         $oldestId = $this->repo->findOldestHistoryId() ?? 0;
-        $blocksize = $this->currentConfig->historyAutopurgeBlocksize();
+        $blocksize = $this->currentConfig->historyAutopurgeBlocksize;
 
         $searchMin = [
             $lastSummary->historyIdTo,

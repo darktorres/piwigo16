@@ -109,8 +109,8 @@ final class PageTailRendererTest extends IntegrationTestCase
 
     public function test_render_to_string_includes_the_query_debug_list_when_show_queries_is_enabled(): void
     {
-        CurrentConfigTestFactory::get()->setShowQueries(true);
-        CurrentConfigTestFactory::get()->setShowGt(false);
+        CurrentConfigTestFactory::get()->showQueries = true;
+        CurrentConfigTestFactory::get()->showGt = false;
         PageStateTestFactory::get()->debugOutput = '<li>SELECT 1 -- pagetailrenderer test query</li>';
 
         $output = $this->renderer->renderToString(microtime(true));
@@ -121,8 +121,8 @@ final class PageTailRendererTest extends IntegrationTestCase
 
     public function test_render_to_string_omits_the_debug_list_when_show_queries_is_disabled(): void
     {
-        CurrentConfigTestFactory::get()->setShowQueries(false);
-        CurrentConfigTestFactory::get()->setShowGt(false);
+        CurrentConfigTestFactory::get()->showQueries = false;
+        CurrentConfigTestFactory::get()->showGt = false;
         PageStateTestFactory::get()->debugOutput = '<li>should-not-appear</li>';
 
         $output = $this->renderer->renderToString(microtime(true));
@@ -133,8 +133,8 @@ final class PageTailRendererTest extends IntegrationTestCase
 
     public function test_render_to_string_includes_generation_time_and_query_count_when_show_gt_is_enabled(): void
     {
-        CurrentConfigTestFactory::get()->setShowQueries(false);
-        CurrentConfigTestFactory::get()->setShowGt(true);
+        CurrentConfigTestFactory::get()->showQueries = false;
+        CurrentConfigTestFactory::get()->showGt = true;
         PageStateTestFactory::get()->countQueries = 7;
         PageStateTestFactory::get()->queriesTime = 1.234567;
 
@@ -150,7 +150,7 @@ final class PageTailRendererTest extends IntegrationTestCase
 
     public function test_render_to_string_adds_the_mobile_theme_toggle_link_when_mobile_theme_is_active(): void
     {
-        CurrentConfigTestFactory::get()->setMobilTheme('mobile');
+        CurrentConfigTestFactory::get()->mobilTheme = 'mobile';
         $_SESSION['pwg_mobile_theme'] = true;
         $_SERVER['REQUEST_URI'] = '/test/mobile-toggle-path';
 
@@ -168,7 +168,7 @@ final class PageTailRendererTest extends IntegrationTestCase
 
     public function test_render_to_string_omits_the_mobile_theme_toggle_link_when_mobile_theme_is_disabled(): void
     {
-        CurrentConfigTestFactory::get()->setMobilTheme('');
+        CurrentConfigTestFactory::get()->mobilTheme = '';
 
         $output = $this->renderer->renderToString(microtime(true));
 

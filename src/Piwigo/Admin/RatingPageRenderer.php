@@ -47,7 +47,7 @@ final class RatingPageRenderer
 
         // \Piwigo\Config\CurrentConfig::guestId() is set as a PHP int literal in
         // include/config_default.inc.php.
-        $conf_guest_id = $currentConfig->guestId();
+        $conf_guest_id = $currentConfig->guestId;
         $guest_id = $conf_guest_id;
 
         $conn = DbConnection::build();

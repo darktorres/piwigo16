@@ -383,8 +383,8 @@ beforeEach(function (): void {
     ConfigLoader::applyEnvOverrides();
 
     CurrentUserTestFactory::get()->set(User::fromUserArray(searchServiceTestRealisticUserGlobal()));
-    $currentConfig->setDefaultFiltersViews(null);
-    $currentConfig->setFiltersViews([
+    $currentConfig->defaultFiltersViews = null;
+    $currentConfig->filtersViews = [
         'expert' => ['access' => 'everybody'],
         'words' => ['access' => 'everybody'],
         'author' => ['access' => 'everybody'],
@@ -399,11 +399,11 @@ beforeEach(function (): void {
         'height' => ['access' => 'everybody'],
         'width' => ['access' => 'everybody'],
         'tags' => ['access' => 'everybody'],
-    ]);
-    $currentConfig->setOrderBy('ORDER BY id ASC');
-    $currentConfig->setCalendarDatefield('date_creation');
-    $currentConfig->setQuickSearchIncludeSubAlbums(false);
-    $currentConfig->setRateEnabled(true);
+    ];
+    $currentConfig->orderBy = 'ORDER BY id ASC';
+    $currentConfig->calendarDatefield = 'date_creation';
+    $currentConfig->quickSearchIncludeSubAlbums = false;
+    $currentConfig->rateEnabled = true;
 });
 
 afterEach(function (): void {
@@ -752,10 +752,10 @@ test('getRegularSearchResults() skips a criterion entirely when its own display 
     // criterion's own gate independently, not just "some gate somewhere
     // works".
     $currentConfig = CurrentConfigTestFactory::get();
-    $filtersViews = $currentConfig->filtersViews();
+    $filtersViews = $currentConfig->filtersViews;
     expect($filtersViews)->not->toBeNull();
     $filtersViews[$filterKey] = ['access' => 'admins-only'];
-    $currentConfig->setFiltersViews($filtersViews);
+    $currentConfig->filtersViews = $filtersViews;
 
     $results = searchServiceTestService()->getRegularSearchResults(['fields' => $fields]);
 
@@ -783,7 +783,7 @@ test('getRegularSearchResults() falls back to defaultFiltersViews() when filters
     // (CurrentConfig's own DEFAULT_FILTERS_VIEWS constant, 'everybody'
     // access for 'tags' among others) is only reachable when
     // filtersViews() is null.
-    CurrentConfigTestFactory::get()->setFiltersViews(null);
+    CurrentConfigTestFactory::get()->filtersViews = null;
 
     $results = searchServiceTestService()->getRegularSearchResults(['fields' => ['tags' => ['words' => [1], 'mode' => 'AND']]]);
 
@@ -1740,7 +1740,7 @@ test('getQuickSearchResultsNoCache() narrows two adjacent short terms to a share
 });
 
 test('getQuickSearchResultsNoCache() expands to subalbums when enabled', function (): void {
-    CurrentConfigTestFactory::get()->setQuickSearchIncludeSubAlbums(true);
+    CurrentConfigTestFactory::get()->quickSearchIncludeSubAlbums = true;
 
     // "Sample" matches category 1 ("Sample Album") only, by name -- with
     // sub-album inclusion enabled this expands to include category 2
@@ -1764,7 +1764,7 @@ test('getQuickSearchResultsNoCache() finds no subalbums for a leaf category matc
     // return [], exercising qsearchGetCategories()'s own "$subcatIds ===
     // []" ternary branch -- as opposed to the sibling test above, whose
     // category 1 always DOES have a real child.
-    CurrentConfigTestFactory::get()->setQuickSearchIncludeSubAlbums(true);
+    CurrentConfigTestFactory::get()->quickSearchIncludeSubAlbums = true;
     $conn = searchServiceTestConn();
     $originalUppercats = $conn->fetchOne('SELECT uppercats FROM ' . Tables::categories() . ' WHERE id = 2');
     expect($originalUppercats)->toBeString();
@@ -1878,7 +1878,7 @@ test('getQuickSearchResultsNoCache() works with a non-default calendar datefield
     // appending 'date' to $postedDateAliases instead of
     // $createdDateAliases -- proves the scope list still builds and the
     // search still functions correctly either way.
-    CurrentConfigTestFactory::get()->setCalendarDatefield('date_available');
+    CurrentConfigTestFactory::get()->calendarDatefield = 'date_available';
 
     $results = searchServiceTestService()->getQuickSearchResultsNoCache('family', []);
 

@@ -67,7 +67,7 @@ final class ThemesNewPageRenderer
     {
         $template = $this->currentTemplate->get();
 
-        if (! $this->currentConfig->enableExtensionsInstall()) {
+        if (! $this->currentConfig->enableExtensionsInstall) {
             $this->htmlRenderer
                 ->fatalError('Piwigo extensions install/update system is disabled');
         }
@@ -194,7 +194,7 @@ final class ThemesNewPageRenderer
             $this->pageState->addError($this->lang->t('Can\'t connect to server.'));
         }
 
-        $admin_theme_pref = $this->preferencesService->getAdminThemePref() ?? $this->currentConfig->adminTheme();
+        $admin_theme_pref = $this->preferencesService->getAdminThemePref() ?? $this->currentConfig->adminTheme;
         $template->assignContext(new ThemesNewPageContext(
             defaultScreenshot: $this->urlService->getRootUrl() . 'themes/admin/' . $admin_theme_pref . '/images/missing_screenshot.png',
             adminPageTitle: $this->lang->t('Themes'),

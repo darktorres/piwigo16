@@ -54,7 +54,7 @@ final class CustomLogoController implements ControllerInterface
     {
         $this->accessControl->checkStatus(AccessLevel::Guest);
 
-        $path = $this->currentConfig->standardPagesSelectedLogoPath();
+        $path = $this->currentConfig->standardPagesSelectedLogoPath;
         if (! is_string($path) || $path === '') {
             return ResponseFactory::text('Not found', 404);
         }

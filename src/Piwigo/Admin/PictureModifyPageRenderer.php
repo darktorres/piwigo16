@@ -181,7 +181,7 @@ final class PictureModifyPageRenderer
                 'comment' => $pictureModifyRequest->commentField ?? '',
             ];
             foreach ($to_sanitize_fields as $field => $field_value) {
-                $data[$field] = ($this->currentConfig->allowHtmlDescriptions()) ? $field_value : strip_tags($field_value);
+                $data[$field] = ($this->currentConfig->allowHtmlDescriptions) ? $field_value : strip_tags($field_value);
             }
 
             $data['date_creation'] = $pictureModifyRequest->dateCreation;
@@ -347,7 +347,7 @@ final class PictureModifyPageRenderer
             'is_svg' => (strtoupper(end($extTab)) === 'SVG'),
         ];
 
-        if ($this->currentConfig->rateEnabled() && ! in_array($row['rating_score'], [null, false, 0, 0.0, '0', '', []], true)) {
+        if ($this->currentConfig->rateEnabled && ! in_array($row['rating_score'], [null, false, 0, 0.0, '0', '', []], true)) {
             $row['nb_rates'] = $this->rateService->countRatesForElement(ImageId::from($image_id));
 
             $intro_vars['stats'] .= ', ' . sprintf($this->lang->t('Rated %d times, score : %.2f'), $row['nb_rates'], is_numeric($row['rating_score']) ? (float) $row['rating_score'] : 0.0);
@@ -367,7 +367,7 @@ final class PictureModifyPageRenderer
         }
 
         $row_path = is_string($row['path']) ? $row['path'] : null;
-        $picture_ext = $this->currentConfig->pictureExtensions();
+        $picture_ext = $this->currentConfig->pictureExtensions;
         $u_coi = null;
         if (in_array(StringHelper::getExtension($row_path), $picture_ext, true)) {
             $u_coi = $this->urlService->getRootUrl() . 'admin.php?page=picture_coi&amp;image_id=' . $image_id;

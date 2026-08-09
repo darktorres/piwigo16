@@ -19,7 +19,6 @@ function sessionTestRepo(): SessionRepository
 {
     $conn = DbConnection::build();
     $repo = EntityManagerFactory::build($conn)->getRepository(SessionEntity::class);
-    expect($repo)->toBeInstanceOf(SessionRepository::class);
 
     return $repo;
 }

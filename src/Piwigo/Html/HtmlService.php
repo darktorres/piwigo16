@@ -208,7 +208,7 @@ final class HtmlService implements HtmlRenderingInterface
     #[Override]
     public function getCatDisplayName(array $catInformations, ?string $url = ''): string
     {
-        $level_separator = $this->currentConfig->levelSeparator();
+        $level_separator = $this->currentConfig->levelSeparator;
 
         $output = '';
         $is_first = true;
@@ -256,7 +256,7 @@ final class HtmlService implements HtmlRenderingInterface
         ?string $linkClass = null,
         ?string $authKey = null,
     ): string {
-        $level_separator = $this->currentConfig->levelSeparator();
+        $level_separator = $this->currentConfig->levelSeparator;
 
         $add_url_params = [];
         if (isset($authKey)) {
@@ -833,7 +833,7 @@ final class HtmlService implements HtmlRenderingInterface
             $details[] = $this->lang()->t('%d visits', $info['hit']);
         }
 
-        if ($this->currentConfig->rateEnabled() and isset($info['rating_score']) && is_numeric($info['rating_score']) && (float) $info['rating_score'] !== 0.0) {
+        if ($this->currentConfig->rateEnabled and isset($info['rating_score']) && is_numeric($info['rating_score']) && (float) $info['rating_score'] !== 0.0) {
             $details[] = $this->lang()->t('rating score %s', $info['rating_score']);
         }
 
@@ -877,10 +877,10 @@ final class HtmlService implements HtmlRenderingInterface
     public function getElementUrlProtectionHandler(GetElementUrl $event): GetElementUrl
     {
         $infos = $event->elementInfo;
-        if ($this->currentConfig->originalUrlProtection() === 'images') { // protect only images and not other file types (for example large movies that we don't want to send through our file proxy)
+        if ($this->currentConfig->originalUrlProtection === 'images') { // protect only images and not other file types (for example large movies that we don't want to send through our file proxy)
             $path = $infos['path'] ?? null;
             $ext = StringHelper::getExtension(is_string($path) ? $path : null);
-            $picture_ext = $this->currentConfig->pictureExtensions();
+            $picture_ext = $this->currentConfig->pictureExtensions;
             if (! in_array($ext, $picture_ext, true)) {
                 return $event;
             }

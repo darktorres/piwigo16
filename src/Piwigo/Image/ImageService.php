@@ -206,8 +206,8 @@ final readonly class ImageService
     public function getDefaultSlideshowParams(): SlideshowParams
     {
         return new SlideshowParams(
-            period: $this->currentConfig->slideshowPeriod(),
-            repeat: $this->currentConfig->slideshowRepeat(),
+            period: $this->currentConfig->slideshowPeriod,
+            repeat: $this->currentConfig->slideshowRepeat,
             play: true,
         );
     }
@@ -225,8 +225,8 @@ final readonly class ImageService
     {
 
         $period = $params['period'] ?? 0;
-        $min = $this->currentConfig->slideshowPeriodMin();
-        $max = $this->currentConfig->slideshowPeriodMax();
+        $min = $this->currentConfig->slideshowPeriodMin;
+        $max = $this->currentConfig->slideshowPeriodMax;
 
         if ($period < $min) {
             $params['period'] = $min;
@@ -365,7 +365,7 @@ final readonly class ImageService
             }
 
             $ok = true;
-            if (! $this->currentConfig->neverDeleteOriginals()) {
+            if (! $this->currentConfig->neverDeleteOriginals) {
                 foreach ($files as $path) {
                     if (is_file($path) and ! unlink($path)) {
                         $ok = false;
@@ -466,7 +466,7 @@ final readonly class ImageService
     {
         $logger = $this->logger();
 
-        $emptyLoungeRunning = $this->currentConfig->emptyLoungeRunning();
+        $emptyLoungeRunning = $this->currentConfig->emptyLoungeRunning;
         if ($emptyLoungeRunning !== null) {
             [$runningExecId, $runningExecStartTime] = explode('-', $emptyLoungeRunning);
             if (time() - (int) $runningExecStartTime > 60) {
@@ -686,7 +686,7 @@ final readonly class ImageService
 
     public function countOrphans(): int
     {
-        if ($this->currentConfig->countOrphans() === null) {
+        if ($this->currentConfig->countOrphans === null) {
             // we don't care about the list of image_ids, we only care about the number
             // of orphans, so let's use a faster method than calling count(getOrphans())
             $counter = $this->repo->countAllImages() - $this->repo->countImagesInCategories();
@@ -695,7 +695,7 @@ final readonly class ImageService
                 ->confUpdateParam('count_orphans', $counter, updateGlobal: true);
         }
 
-        return $this->currentConfig->countOrphans() ?? 0;
+        return $this->currentConfig->countOrphans ?? 0;
     }
 
     /**

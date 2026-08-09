@@ -127,7 +127,7 @@ final class SiteUpdateSubController implements AdminSubControllerInterface
         // | Check Access and exit when user status is not ok                      |
         // +-----------------------------------------------------------------------+
 
-        if (! $this->currentConfig->enableSynchronization()) {
+        if (! $this->currentConfig->enableSynchronization) {
             $this->htmlRenderer
                 ->fatalError('synchronization is disabled');
         }
@@ -353,16 +353,16 @@ final class SiteUpdateSubController implements AdminSubControllerInterface
             // new categories are the directories not present yet in the database
             foreach (array_diff($fs_fulldirs, array_keys($db_fulldirs)) as $fulldir) {
                 $dir = basename($fulldir);
-                $sync_chars_regex = $this->currentConfig->syncCharsRegex();
+                $sync_chars_regex = $this->currentConfig->syncCharsRegex;
                 if ($sync_chars_regex !== '' && (bool) preg_match($sync_chars_regex, $dir)) {
                     $insert = [
                         'id' => $next_id++,
                         'dir' => $dir,
                         'name' => str_replace('_', ' ', $dir),
                         'site_id' => $site_id,
-                        'commentable' => $this->currentConfig->newcatDefaultCommentable(),
-                        'status' => $this->currentConfig->newcatDefaultStatus(),
-                        'visible' => $this->currentConfig->newcatDefaultVisible(),
+                        'commentable' => $this->currentConfig->newcatDefaultCommentable,
+                        'status' => $this->currentConfig->newcatDefaultStatus,
+                        'visible' => $this->currentConfig->newcatDefaultVisible,
                     ];
 
                     if (isset($db_fulldirs[dirname($fulldir)])) {
@@ -447,7 +447,7 @@ final class SiteUpdateSubController implements AdminSubControllerInterface
                     ]);
 
                     $category_up = array_values(array_unique($category_up));
-                    if ($this->currentConfig->inheritanceByDefault() and $category_up !== []) {
+                    if ($this->currentConfig->inheritanceByDefault and $category_up !== []) {
                         $granted_grps = new PermissionRepository(EntityManagerFactory::build($conn))
                             ->findGrantedGroupIdsByCategory($category_up);
                         $granted_users = new PermissionRepository(EntityManagerFactory::build($conn))
@@ -514,7 +514,7 @@ final class SiteUpdateSubController implements AdminSubControllerInterface
                 if (substr_compare($fulldir, '../', 0, 3) === 0) {
                     $fulldir = substr($fulldir, 3);
                 }
-                $to_delete_derivative_dirs[] = $this->paths->root . $this->currentConfig->derivativeDir() . $fulldir;
+                $to_delete_derivative_dirs[] = $this->paths->root . $this->currentConfig->derivativeDir . $fulldir;
             }
 
             if (count($to_delete) > 0) {
@@ -578,7 +578,7 @@ final class SiteUpdateSubController implements AdminSubControllerInterface
                     continue;
                 }
                 $filename = basename($path);
-                $sync_chars_regex = $this->currentConfig->syncCharsRegex();
+                $sync_chars_regex = $this->currentConfig->syncCharsRegex;
                 if ($sync_chars_regex === '' || ! (bool) preg_match($sync_chars_regex, $filename)) {
                     $errors[] = [
                         'path' => $path,
@@ -616,7 +616,7 @@ final class SiteUpdateSubController implements AdminSubControllerInterface
                     'info' => $this->lang->t('added'),
                 ];
 
-                if ($this->currentConfig->isFormatsEnabled()) {
+                if ($this->currentConfig->isFormatsEnabled) {
                     $element_formats = $fs[$path]['formats'] ?? null;
                     if ($element_formats !== null) {
                         foreach ($element_formats as $ext => $filesize) {
@@ -638,7 +638,7 @@ final class SiteUpdateSubController implements AdminSubControllerInterface
             }
 
             // search new/removed formats on photos already registered in database
-            if ($this->currentConfig->isFormatsEnabled()) {
+            if ($this->currentConfig->isFormatsEnabled) {
                 $db_elements_flip = array_flip($db_elements);
 
                 $existing_ids = [];

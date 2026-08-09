@@ -6,7 +6,7 @@ namespace Piwigo\Job;
 
 /**
  * Piwigo's derivative generation is lazy (i.php regenerates a missing/
- * stale derivative on the next request that needs it, SEC-33/35, P19) --
+ * stale derivative on the next request that needs it, SEC-33/35) --
  * "generate this element's derivative" is therefore really "invalidate
  * its cached file(s), so the next view regenerates them". Mirrors
  * Piwigo\Image\DerivativeCacheService::deleteElementDerivatives()'s own

@@ -11,7 +11,7 @@ use Piwigo\Core\Paths;
 /**
  * Derivative-cache invalidation. Piwigo's real derivative-generation design
  * is lazy: i.php regenerates a missing/stale derivative file on the next
- * request that needs it (SEC-33/35, P19). "Regenerating" a derivative is
+ * request that needs it (SEC-33/35). "Regenerating" a derivative is
  * therefore really "delete the cached file(s)", which is exactly what the
  * original admin/include/functions.php free functions
  * (delete_element_derivatives()/clear_derivative_cache()) already did --

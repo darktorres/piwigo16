@@ -27,7 +27,7 @@ use Symfony\Component\Messenger\Transport\TransportInterface;
  * Builds real Symfony Messenger infrastructure from config/messenger.php --
  * no DI container involvement (matches Piwigo\Storage\StorageRegistry's
  * own "load from a plain config array" shape). Not wired into any
- * existing page this phase (P21+ concern once a real console worker
+ * existing page yet (a concern once a real console worker
  * exists) -- verified via a direct dispatch -> transport -> handler
  * round-trip integration test instead.
  */
@@ -129,7 +129,7 @@ final class MessengerFactory
     }
 
     /**
-     * Real consumption path: a worker (P21+, `messenger:consume`) pulls
+     * Real consumption path: a worker (`messenger:consume`) pulls
      * Envelopes off the transport and dispatches them through this bus to
      * actually invoke handlers.
      */

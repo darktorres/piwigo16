@@ -14,7 +14,7 @@ use Piwigo\Common\ValueObject\ImageId;
  * Mirrors that method's own parameter shape; BatchUploadHandler is a
  * thin delegate to it.
  *
- * P17-23 Phase 8: $imageId is a real {@see ImageId}, not a raw int -- the
+ * $imageId is a real {@see ImageId}, not a raw int -- the
  * one real consumer ({@see \Piwigo\Job\Handler\BatchUploadHandler}) unwraps
  * `->value` at its own call into `UploadService::addUploadedFile()`, whose
  * own `?int $image_id` parameter stays untouched here (it has several

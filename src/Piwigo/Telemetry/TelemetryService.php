@@ -31,8 +31,8 @@ use Piwigo\Users\UserEntity;
  * since resolveInstallId()'s get-or-create must read/write the real DB
  * row every time, not the request-scoped CurrentConfig:: snapshot.
  *
- * Item 15 audit: galleryStats()/extensionStats()'s 7 counts converted to
- * DQL via {@see TelemetryCountedEntity}'s enumerated dispatch --
+ * galleryStats()/extensionStats()'s 7 counts run as DQL via
+ * {@see TelemetryCountedEntity}'s enumerated dispatch --
  * `databaseInfo()`'s `SELECT VERSION()` stays DBAL (no DQL equivalent for
  * a driver-version probe). Holds `EntityManagerInterface` directly rather
  * than a raw `Connection` -- `detectDriverLabel()`/`databaseInfo()` reach

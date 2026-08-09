@@ -69,7 +69,7 @@ final readonly class DefaultUserInfo
     /**
      * {@see \Piwigo\Users\UserService::createUserInfos()} array_merge()s
      * this with caller-supplied overrides -- unbox to array at that
-     * boundary. `getDefaultTheme()`/`getDefaultLanguage()` (P17-23 Phase 9)
+     * boundary. `getDefaultTheme()`/`getDefaultLanguage()`
      * read `$theme`/`$language` directly as typed properties instead.
      *
      * @return array{nb_image_page: int, language: string, expand: bool, show_nb_comments: bool, show_nb_hits: bool, recent_period: int, theme: string, enabled_high: bool, level: int, activation_key: ?string, activation_key_expire: ?string, lastmodified: string, preferences: array<string, mixed>|null}

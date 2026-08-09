@@ -67,9 +67,9 @@ final readonly class PreferencesService
     }
 
     /**
-     * P17-23 Phase 9: stays for the one genuinely dynamic real caller
+     * Stays for the one genuinely dynamic real caller
      * (`Admin\AdminShell`'s `'show_whats_new_' . $majorVersion`, a
-     * runtime-built key) -- every other real call site now has its own
+     * runtime-built key) -- every other real call site has its own
      * named, correctly-narrowed accessor below instead of re-checking
      * `is_string()`/`is_array()`/casting to bool on this method's own
      * `mixed` return.

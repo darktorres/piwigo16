@@ -115,12 +115,11 @@ final class PwgUsers
             $params['order'] = str_ireplace('username', 'LOWER(username)', $params['order']);
         }
 
-        // SQL-modernization audit: every field below used to splice a
-        // value directly into a $where_clauses[]-appended raw SQL fragment
-        // (some already safe -- $conn->quote(), int casts, enum-filtering --
-        // some not, but all converted regardless per this initiative's
-        // "regardless of exploitability" stance). Each is null when its
-        // filter wasn't requested -- UserRepository::findListForWs() (via
+        // Every field below is bound, not spliced into a raw SQL
+        // fragment (some were already safe -- $conn->quote(), int casts,
+        // enum-filtering -- some weren't, but all are bound regardless
+        // of exploitability). Each is null when its filter wasn't
+        // requested -- UserRepository::findListForWs() (via
         // UserListCriteria) decides for itself which condition to add.
         $userId = null;
         if (isset($params['user_id']) && $params['user_id'] !== []) {

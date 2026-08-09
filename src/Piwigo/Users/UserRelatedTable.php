@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Users;
 
 /**
- * Item 15 Sub-item D/E: {@see UserRepository::findDistinctUserIdsInMappedTable()}/
+ * {@see UserRepository::findDistinctUserIdsInMappedTable()}/
  * {@see UserRepository::deleteUsersFromMappedTable()}'s target, enumerated
  * -- {@see UserService::syncUsers()}'s own fixed 5-table list has exactly
  * 3 tables this repository may reach via DQL ({@see UserInfoEntity}/
@@ -16,8 +16,7 @@ namespace Piwigo\Users;
  * cannot cross via DQL regardless of whether those tables get their own
  * entities elsewhere -- {@see UserRepository::findDistinctUserIdsInTable()}/
  * {@see UserRepository::deleteUsersFromTable()} stay on raw-table-name
- * DBAL permanently for those 2, confirmed against deptrac.yaml's actual
- * ruleset before this plan's own execution began.
+ * DBAL permanently for those 2.
  */
 enum UserRelatedTable
 {

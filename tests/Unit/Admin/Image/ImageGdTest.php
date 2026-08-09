@@ -11,10 +11,9 @@ use Piwigo\Admin\Image\PwgImage;
 use Piwigo\Core\CurrentLogger;
 
 /**
- * P23 Stage 1e: __construct()'s 2 real failure branches (unsupported
- * extension, undecodable content) used to die() -- first test coverage
- * for this class, confirming both now throw ImageProcessingException
- * instead.
+ * __construct()'s 2 real failure branches (unsupported extension,
+ * undecodable content) used to die() -- first test coverage for this
+ * class, confirming both now throw ImageProcessingException instead.
  *
  * crop()/resize() have a real, directly reachable
  * imagecreatetruecolor() failure path -- unlike

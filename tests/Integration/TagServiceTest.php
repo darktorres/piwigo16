@@ -172,7 +172,7 @@ namespace Piwigo\Tests\Integration {
         }
 
         /**
-         * CachePools::tagCloud() (P23 Stage 1d) replaces the older
+         * CachePools::tagCloud() replaces the older
          * CurrentPersistentCache mechanism for getAvailableTags()'s
          * no-tag-id-filter branch -- proven the same way
          * ForbiddenCategoriesCacheTest/CategoryTreeCacheTest prove their

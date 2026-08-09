@@ -155,9 +155,9 @@ final class UserRepositoryTest extends IntegrationTestCase
 
     public function test_insert_user_infos_accepts_real_bool_for_the_tinyint_columns(): void
     {
-        // User domain Stage 1a: expand/show_nb_comments/show_nb_hits/
+        // expand/show_nb_comments/show_nb_hits/
         // enabled_high/last_visit_from_history are real tinyint(1)
-        // columns now, and UserService::createUserInfos() hands
+        // columns, and UserService::createUserInfos() hands
         // insertUserInfos() a row straight from
         // Projection\UserInfo::toArray() -- real PHP bool, not the old
         // enum('true','false') string. setParameter() with no explicit

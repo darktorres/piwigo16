@@ -9,7 +9,7 @@ use Piwigo\Tests\Support\CurrentConfigTestFactory;
  * dedicated test file at all -- most of them get incidental coverage from
  * elsewhere (ConfigService/RequestBootstrap tests reading/writing various
  * properties), which is why a mutation-testing sweep only flagged the
- * "Custom-shaped properties (non-trivial coercion)" section (P17-23's own
+ * "Custom-shaped properties (non-trivial coercion)" section (a real
  * heading in the source) as genuinely untested: every property there has
  * real branching/coercion logic in its setter (and, for a few, its
  * getter) that a plain round-trip assignment never exercises.

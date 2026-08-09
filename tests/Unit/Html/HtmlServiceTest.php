@@ -1768,11 +1768,10 @@ test('setStatusHeader actually calls header(), not a no-op, for a real request',
 });
 
 /**
- * flushPageMessages()/flushKeyedErrors() had zero real test coverage
- * before this campaign's own conversion of their raw
- * Template::assign() calls to assignContext(new PageMessagesContext(...))
- * -- these exercise the real, live behavior end to end, not just the
- * DTO's own toArray() (see PageMessagesContextTest.php for that).
+ * flushPageMessages()/flushKeyedErrors() exercise the real, live
+ * Template::assign()-via-assignContext(new PageMessagesContext(...))
+ * behavior end to end, not just the DTO's own toArray() (see
+ * PageMessagesContextTest.php for that).
  */
 test('flushPageMessages assigns only the non-empty PageState fields', function (): void {
     CurrentConfigTestFactory::get()->setDataDirChecked('1');

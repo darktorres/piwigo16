@@ -15,8 +15,7 @@ use Piwigo\Tests\Support\CurrentUserTestFactory;
 use Piwigo\Users\User;
 
 /**
- * No prior coverage existed for this [SEC-33] class at all -- a real gap
- * this closes, found the same way Stage 4b's own UserServiceTest gap was:
+ * No prior coverage existed for this [SEC-33] class at all -- found via
  * a failing Browser test (DerivativePermissionTest), not by this class's
  * own (nonexistent) tests. Same fixture shape as ForbiddenCategoriesCacheTest:
  * category 1 ("Sample Album") has images 1-3; category 2 ("Nested Sub

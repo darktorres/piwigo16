@@ -367,7 +367,7 @@ final class RegenerateFixtureTest extends IntegrationTestCase
         ));
 
         // 14. A few config tweaks. piwigo_config.value is JSON-encoded
-        // (gap-closure Stage 1a-bis item 5: ConfigService::encode()) --
+        // (ConfigService::encode()) --
         // each entry below is json_encode()d to match. The former
         // `derivatives`/`disabled_derivatives` serialize()-blob exception
         // (ConfigService::OBJECT_SERIALIZED_PARAMS) is gone entirely: both

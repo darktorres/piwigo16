@@ -71,7 +71,7 @@ final class C13yInternal
         $rawDbVersion = new DbInfo($conn)
             ->version();
 
-        // pgsql support pass: real bug found live -- Postgres's own
+        // Real bug found live -- Postgres's own
         // SELECT version() output is a full descriptive string
         // ("PostgreSQL 18.4 (Ubuntu ...) on x86_64-pc-linux-gnu,
         // compiled by gcc ..."), not a bare parseable version number the

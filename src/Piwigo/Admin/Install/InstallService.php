@@ -144,7 +144,7 @@ final class InstallService
             $version = new DbInfo($conn)
                 ->version();
 
-            // pgsql support pass: real bug found live -- this ran
+            // Real bug found live -- this ran
             // unconditionally against every driver, so a genuine
             // PostgreSQL 18.4 server failed here with "your MySQL version
             // is too old, you have "PostgreSQL 18.4 (...)..." (version_compare()

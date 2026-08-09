@@ -358,7 +358,7 @@ final class CommentRepository extends EntityRepository implements CommentCounter
     {
         $conditions = self::buildApiConditions($criteria, $includeAuthorId);
 
-        // pgsql support pass: real bug found live -- a bare 0/1 integer
+        // Real bug found live -- a bare 0/1 integer
         // literal spliced into raw SQL text is rejected outright against
         // a genuine PostgreSQL boolean column ("operator does not exist:
         // boolean = integer"). The identical value bound as a real

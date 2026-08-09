@@ -490,7 +490,7 @@ final class CategoryRepository
         // own "ORDER BY " keyword, so the prefix must be stripped here or
         // the query becomes "ORDER BY ORDER BY ..." (a real syntax error,
         // caught live via CategoryServiceTest).
-        // pgsql support pass: real bug found live -- CurrentConfig::orderBy()
+        // Real bug found live -- CurrentConfig::orderBy()
         // is raw, sysadmin-settable SQL text (order_by/order_by_custom),
         // commonly containing the well-known "RAND()" random-order value
         // (Image\PhotoSortField::Random's own token). Unlike the DQL path
@@ -2150,7 +2150,7 @@ final class CategoryRepository
                 ->setParameter('excludeCatIds', $excludeCatIds, ArrayParameterType::STRING);
         }
 
-        // pgsql support pass: see findPrivateCategoriesGrantedToGroup()'s
+        // See findPrivateCategoriesGrantedToGroup()'s
         // own docblock for why this needs an explicit order.
         return self::narrowIdNameUppercatsRankRows($qb->orderBy('c.id', 'ASC')->getQuery()->getArrayResult());
     }
@@ -2183,7 +2183,7 @@ final class CategoryRepository
             $criteria->visibleCategoriesCondition('c.id'),
         ));
 
-        // pgsql support pass: see findPrivateCategoriesGrantedToGroup()'s
+        // See findPrivateCategoriesGrantedToGroup()'s
         // own docblock for why this needs an explicit order.
         return self::narrowIdNameUppercatsRankRows($qb->orderBy('c.id', 'ASC')->getQuery()->getArrayResult());
     }
@@ -2704,7 +2704,7 @@ final class CategoryRepository
                 ->andWhere('ga.groupId = :groupId')
                 ->setParameter('status', 'private')
                 ->setParameter('groupId', GroupId::from($groupId))
-                // pgsql support pass: see findPrivateCategoriesGrantedToGroup()'s
+                // See findPrivateCategoriesGrantedToGroup()'s
                 // own docblock for why this needs an explicit order.
                 ->orderBy('c.id', 'ASC')
                 ->getQuery()
@@ -3438,7 +3438,7 @@ final class CategoryRepository
         }
 
         if ($criteria->publicOnly) {
-            // pgsql support pass: real bugs found live -- double-quoted
+            // Real bugs found live -- double-quoted
             // "public" is a STRING LITERAL under MySQL's own lenient
             // default (non-ANSI_QUOTES) SQL mode, but Postgres always
             // treats double-quotes as an IDENTIFIER reference (never a

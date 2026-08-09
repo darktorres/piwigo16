@@ -305,8 +305,8 @@ final class Version20260804122300 extends AbstractMigration
         // once here since this is the first migration to need it.
         //
         // Every `lastmodified` column below is declared `timestamp(0)`, not
-        // bare `timestamp` -- real bug found live (typed-primitives Phase
-        // 5): PostgreSQL's bare `timestamp` defaults to microsecond
+        // bare `timestamp` -- real bug found live:
+        // PostgreSQL's bare `timestamp` defaults to microsecond
         // precision, but MySQL's `TIMESTAMP` (this schema's other real
         // target, see the *-mysql.sql reference) has zero fractional
         // digits by default. `Common\ValueObject\SqlDateTime::from()`'s

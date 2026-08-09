@@ -258,7 +258,7 @@ final readonly class FilterResolver
             $where[] = 'height <= :max_height';
             $params['max_height'] = $dimension->maxHeight;
         }
-        // pgsql support pass: real bug found live -- width/height are
+        // Real bug found live -- width/height are
         // both plain integer columns. MySQL's `/` always computes in
         // DECIMAL/floating context regardless of operand types, but
         // PostgreSQL's `/` on two integer operands truncates to an
@@ -304,7 +304,7 @@ final readonly class FilterResolver
             // to counter the effect of converting kB to mB and rounding, go
             // slightly lower for the minimum value.
             //
-            // pgsql support pass: real bug found live -- `filesize` is a
+            // Real bug found live -- `filesize` is a
             // genuine integer column (mediumint), and this fractional
             // threshold used to bind as an untyped parameter. MySQL
             // tolerates comparing an integer column against a fractional

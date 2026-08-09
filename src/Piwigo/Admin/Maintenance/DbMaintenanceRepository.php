@@ -151,7 +151,7 @@ final readonly class DbMaintenanceRepository
      * exception already means every step succeeded; no return value
      * needed.
      *
-     * pgsql support pass: Postgres has no `REPAIR TABLE`/`ALTER TABLE ...
+     * Postgres has no `REPAIR TABLE`/`ALTER TABLE ...
      * ORDER BY`/`OPTIMIZE TABLE` -- and neither of the first two has a
      * safe, meaningful Postgres equivalent worth porting (REPAIR TABLE is
      * a MyISAM-era corruption-recovery statement; this schema is

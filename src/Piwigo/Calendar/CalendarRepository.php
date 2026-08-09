@@ -110,7 +110,7 @@ final class CalendarRepository
             }
         }
 
-        // pgsql support pass: real bug found live -- $orderBySql traces
+        // Real bug found live -- $orderBySql traces
         // back to CurrentConfig::orderBy(), admin-settable raw SQL text
         // that can legitimately be `ORDER BY RAND()`. Same real gap
         // already fixed for CategoryRepository's own raw-DBAL fallback
@@ -197,7 +197,7 @@ final class CalendarRepository
      */
     public function countGroupedByLevel(string $levelDql, CalendarQueryScope $scope, SqlCondition $dateWhere): array
     {
-        // pgsql support pass: real bug found live -- no ORDER BY, so row
+        // Real bug found live -- no ORDER BY, so row
         // order was never guaranteed; MySQL and PostgreSQL disagreed on
         // it (nav bar items appearing out of chronological order).
         // $levelDql is always one of YEAR()/WEEK()/WEEKDAY()'s own

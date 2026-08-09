@@ -73,8 +73,8 @@ final class SiteRepository extends EntityRepository implements SiteGalleriesUrlL
     /**
      * Returns a site's galleries_url, or null if the id doesn't exist.
      *
-     * pgsql support pass: real bug found live -- sites.id is a Postgres
-     * `smallint` column (Phase B's translation of MySQL's own `tinyint
+     * Real bug found live -- sites.id is a Postgres
+     * `smallint` column (a translation of MySQL's own `tinyint
      * unsigned`, per the migration's documented widening rule). MySQL
      * happily evaluates `id = 999999` as a plain false comparison against
      * a tinyint column with no protocol-level range check, but

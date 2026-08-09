@@ -68,58 +68,27 @@ parameters:
             - ecs.php
     ignoreErrors:
         -
-            # staabm/phpstan-dba's DoctrineKeyValueStyleRule validates
-            # insert()/update()/delete()'s table-name argument only when
-            # it's a compile-time string literal, so it can look up real
-            # column names/types against the live schema. This codebase
-            # never passes a literal table name to those calls -- every
-            # real call site goes through Piwigo\Db\Tables::xxx() (39
-            # methods, one per table), which builds `$prefix . 'tablename'`
-            # at runtime from PIWIGO_DB_PREFIX (see that class's own
-            # docblock) precisely so the table prefix stays configurable.
-            # That's a deliberate, permanent architectural pattern, not an
-            # oversight -- every insert/update/delete call in the whole
-            # codebase would trip this rule, so a per-site @phpstan-ignore
-            # would just mean the same comment repeated at 60+ call sites
-            # with zero added value. The rest of phpstan-dba (real SQL
-            # syntax/schema validation via executeQuery/fetchAssociative/
-            # etc.) stays fully active; this disables only the one sub-rule
-            # whose premise doesn't fit this codebase.
+            # Piwigo\Db\Tables::xxx() resolves every table name at runtime
+            # from PIWIGO_DB_PREFIX, never a literal string -- this rule
+            # requires a literal, so it trips on every insert/update/delete
+            # call in the codebase. staabm/phpstan-dba's other rules (real
+            # SQL syntax/schema validation) stay fully active.
             identifier: dba.keyValue
         -
-            # Every query in this file targets an in-memory pdo_sqlite
-            # scratch table (t/t2/t3, see the file's own docblock) created
-            # fresh inline by each test -- never the live DB
-            # tests/phpstan-dba-bootstrap.php connects to, so
-            # staabm/phpstan-dba always reports "table does not exist".
+            # Queries here target an in-memory sqlite scratch table created
+            # fresh per test, never the live DB the bootstrap connects to.
             identifier: dba.syntaxError
             path: tests/Unit/Db/BatchWriterTest.php
         -
-            # Every query in this file targets self::TABLE
-            # ('batchwriter_test_scratch', see the file's own docblock) or
-            # a quoted variant of it -- a throwaway table this file's own
-            # setUp()/tearDown() drops and recreates around each test, so
-            # it never matches the live reflector's persistent schema.
+            # Queries here target a throwaway table this file's own
+            # setUp()/tearDown() drops and recreates, never the live
+            # reflector's persistent schema.
             identifier: dba.syntaxError
             path: tests/Integration/BatchWriterTest.php
         -
-            # shipmonk/dead-code-detector has no usage provider for this
-            # codebase's own event-dispatch/plugin-hook system
-            # (Piwigo\PluginConfig\EventDispatcher) the way it does for
-            # Symfony/Laravel/Nette's -- these typed event DTOs are public
-            # payload data for a plugin extension-point system (see
-            # project memory: all plugins get rewritten against this new
-            # typed-event surface), not internal state. Every one of these
-            # classes already carries its own docblock, written during the
-            # dedicated typed-event conversion, stating plainly whether it
-            # has a real handler today -- "never read in-tree" is the
-            # correct, documented, intentional state for a
-            # notify/filter-style hook with no listener yet, not dead
-            # code. Spot-checked several: UserLogin (dispatched nowhere
-            # yet), DeleteCategories (dispatched by CategoryService, zero
-            # listeners), UploadImageResize (dead-but-harmless legacy
-            # registration, already documented) -- all consistent with
-            # this being the whole directory's own architecture, not
-            # per-class bugs.
+            # No usage provider for this codebase's own event-dispatch/
+            # plugin-hook system -- these are public payload DTOs for an
+            # extension-point system, correctly unread in-tree when no
+            # listener is registered yet.
             identifier: shipmonk.deadProperty.neverRead
             path: '*/Event/*'

@@ -532,8 +532,8 @@ namespace Piwigo\Tests\Integration {
          * exact name and url name both miss -- no new tag gets created in
          * that case.
          *
-         * SQL-modernization audit / [SEC-19]: the handler now returns LIKE
-         * pattern VALUES (bound as parameters), not raw SQL fragments --
+         * [SEC-19]: the handler returns LIKE pattern VALUES (bound as
+         * parameters), not raw SQL fragments --
          * see TagRepository::findIdByNameLikeAnyPattern()'s own docblock
          * for why (a real injection in the ExtendedDescription plugin's
          * actual handler, which built raw SQL from an unescaped tag name).

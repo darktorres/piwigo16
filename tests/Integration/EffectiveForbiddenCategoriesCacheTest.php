@@ -211,11 +211,11 @@ final class EffectiveForbiddenCategoriesCacheTest extends IntegrationTestCase
 
             // Admins never get the feature-1053 widening -- a fresh pool
             // entry (different user id) proves this is the status gate,
-            // not a stale cache hit from the assertion above. Gap-closure
-            // Stage 4e: getComputedCategories() -- and therefore
-            // lastPhotoDate -- is called unconditionally now, matching the
-            // legacy code's own real behavior, so admins still get a real
-            // value even though the widening loop itself never runs for them.
+            // not a stale cache hit from the assertion above.
+            // getComputedCategories() -- and therefore lastPhotoDate --
+            // is called unconditionally, matching the legacy code's own
+            // real behavior, so admins still get a real value even
+            // though the widening loop itself never runs for them.
             $adminResult = $this->cache->getForUser(999, 'admin', '0');
             self::assertSame('0', $adminResult->forbiddenCategories);
             self::assertSame('2026-08-01 00:00:00', $adminResult->lastPhotoDate);

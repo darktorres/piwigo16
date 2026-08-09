@@ -161,7 +161,7 @@ final class TelemetryServiceTest extends IntegrationTestCase
      * method directly since none of its 3 sibling branches are reachable
      * through buildPayload() in this environment either.
      *
-     * Item 15 audit: detectDriverLabel() now reaches the connection via
+     * detectDriverLabel() reaches the connection via
      * `$this->em->getConnection()` -- the stub Connection is wrapped in a
      * stub EntityManagerInterface whose only expectation is returning it.
      */

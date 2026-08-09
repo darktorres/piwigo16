@@ -16,8 +16,8 @@ use Piwigo\Core\CurrentLogger;
  * for this class, confirming both now throw ImageProcessingException
  * instead.
  *
- * Gap-closure follow-up: crop()/resize() DO have a real, directly
- * reachable imagecreatetruecolor() failure path after all -- unlike
+ * crop()/resize() have a real, directly reachable
+ * imagecreatetruecolor() failure path -- unlike
  * compose() (see below), crop($width, $height, ...)/resize($width,
  * $height) pass their own method *arguments* straight into
  * imagecreatetruecolor(), completely independent of the already-decoded

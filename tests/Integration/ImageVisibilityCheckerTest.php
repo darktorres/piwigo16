@@ -88,8 +88,7 @@ final class ImageVisibilityCheckerTest extends IntegrationTestCase
     }
 
     /**
-     * Gap-closure Stage 4g's own real regression, reproduced directly: a
-     * permission revocation (CurrentUser::forbiddenCategories changing
+     * A permission revocation (CurrentUser::forbiddenCategories changing
      * mid-request-lifecycle here, simulating the next real request after
      * an admin action) must be reflected immediately, not served from a
      * frozen prior value.

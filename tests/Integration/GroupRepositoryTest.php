@@ -405,11 +405,10 @@ final class GroupRepositoryTest extends IntegrationTestCase
 
     public function test_find_ids_by_name_like_matches_a_wildcard_pattern(): void
     {
-        // Item 14 DQL audit regression test: g.id is the custom `group_id`
-        // Doctrine Type, but getSingleColumnResult() uses HYDRATE_SCALAR_COLUMN
-        // (a raw fetchFirstColumn(), no per-field Type conversion at all) --
-        // an earlier version of this method wrongly assumed VO hydration
-        // here (an instanceof GroupId check that never matched a raw int),
+        // g.id is the custom `group_id` Doctrine Type, but
+        // getSingleColumnResult() uses HYDRATE_SCALAR_COLUMN (a raw
+        // fetchFirstColumn(), no per-field Type conversion at all) -- an
+        // instanceof GroupId check here would never match a raw int,
         // silently always returning [] regardless of $namePattern.
         self::assertSame([1], $this->repo->findIdsByNameLike('%dit%'));
     }

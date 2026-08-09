@@ -842,7 +842,7 @@ final class CalendarMonthlyTest extends IntegrationTestCase
 
     public function test_build_month_calendar_populates_a_real_thumbnail_for_a_day_with_images(): void
     {
-        // Item 16H: findRandomImageForDay()'s own by-id row feeds
+        // findRandomImageForDay()'s own by-id row feeds
         // new SrcImage($row) directly (CalendarMonthly.php:428) -- a
         // wrong key name there wouldn't crash (SrcImage's own
         // constructor defensively narrows every field to 0/''/null),

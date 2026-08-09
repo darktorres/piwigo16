@@ -492,7 +492,7 @@ final class RegenerateFixtureTest extends IntegrationTestCase
         }
 
         if ($this->dbDriver !== 'pgsql') {
-            // Item 22: mysqldump's own output never includes this -- MySQL
+            // mysqldump's own output never includes this -- MySQL
             // bakes a FULLTEXT index's effective stopword-filtering behavior
             // in at CREATE TABLE time (confirmed live: a later per-connection
             // setting has zero effect on an already-existing index), so the
@@ -502,8 +502,7 @@ final class RegenerateFixtureTest extends IntegrationTestCase
             // rationale as install/piwigo_structure-mysql.sql's own identical
             // line, kept in sync with it. Postgres has no equivalent concept
             // to prepend -- its own FULLTEXT parity uses generated tsvector
-            // columns (Phase B/F of the pgsql-support pass), with no
-            // session-level setting of any kind involved.
+            // columns, with no session-level setting of any kind involved.
             $dump = "SET SESSION innodb_ft_enable_stopword = 0;\n" . $dump;
         }
 

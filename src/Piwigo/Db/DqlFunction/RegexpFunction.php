@@ -15,24 +15,18 @@ use Override;
 /**
  * Custom DQL function: "REGEXP" "(" StringPrimary "," StringPrimary ")",
  * compiling to an infix `left <op> right` regex-match predicate.
+ * Genuinely portable, unlike a hardcoded `REGEXP` splice -- resolves to
+ * `RLIKE` on MySQL/MariaDB
+ * ({@see \Doctrine\DBAL\Platforms\AbstractMySQLPlatform}) and Postgres's
+ * own POSIX-regex operator (`~`, case-sensitive match) elsewhere.
  *
- * Further SQL-modernization audit, Item 14 Sub-phase B5 Tier 1: genuinely
- * portable, unlike a hardcoded `REGEXP` splice -- resolves to `RLIKE` on
- * MySQL/MariaDB ({@see \Doctrine\DBAL\Platforms\AbstractMySQLPlatform}).
- *
- * pgsql support pass: the previous version delegated to
- * `AbstractPlatform::getRegexpExpression()`, which resolves to `SIMILAR
- * TO` on PostgreSQL -- a genuinely different pattern-matching dialect
- * than POSIX `REGEXP`, not just a syntax rename (`SIMILAR TO` implicitly
- * anchors the *whole* string, so a substring-search POSIX pattern like
- * `(^|,)123(,|$)` never matches -- confirmed live: `'1,2' SIMILAR TO
- * '(^|,)2(,|$)'` is `false`). The class's own prior docblock flagged this
- * exact gap as unverified pending a real Postgres environment ("no
- * install/schema/pgsql.sql exists yet"); now that one does, the fix is
- * a real platform branch onto Postgres's own POSIX-regex operator (`~`,
- * case-sensitive match -- confirmed live the same `'1,2' ~ '(^|,)2(,|$)'`
- * pattern is `true`), not the framework's own generic
- * `getRegexpExpression()`.
+ * Doesn't use `AbstractPlatform::getRegexpExpression()` on Postgres,
+ * which resolves to `SIMILAR TO` -- a genuinely different
+ * pattern-matching dialect than POSIX `REGEXP`, not just a syntax rename
+ * (`SIMILAR TO` implicitly anchors the *whole* string, so a
+ * substring-search POSIX pattern like `(^|,)123(,|$)` never matches --
+ * confirmed live: `'1,2' SIMILAR TO '(^|,)2(,|$)'` is `false`, while
+ * `'1,2' ~ '(^|,)2(,|$)'` is `true`).
  */
 final class RegexpFunction extends FunctionNode
 {

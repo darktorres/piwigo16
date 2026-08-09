@@ -20,27 +20,24 @@ use Override;
  * always comma-separated (MySQL's own GROUP_CONCAT default separator,
  * made explicit here rather than relied upon).
  *
- * Further SQL-modernization audit, Item 14 Sub-phase B5 Tier 3: no
- * `AbstractPlatform` primitive exists for this (confirmed against Item
- * 16's own research, cited in this plan's Context section) -- MySQL/
- * MariaDB's `GROUP_CONCAT(expr SEPARATOR ',')`, PostgreSQL's
- * `STRING_AGG(expr, ',')` (needs an explicit `::text`/`CAST` since
- * `string_agg()` requires a text argument, unlike MySQL's GROUP_CONCAT
- * which accepts any type), and SQLite's own `GROUP_CONCAT(expr, ',')`
- * (positional separator, no `SEPARATOR` keyword) are different enough
- * that a single portable SQL string doesn't exist -- this hand-rolls the
- * same per-`instanceof`-branch dispatch shape
+ * No `AbstractPlatform` primitive exists for this -- MySQL/MariaDB's
+ * `GROUP_CONCAT(expr SEPARATOR ',')`, PostgreSQL's `STRING_AGG(expr,
+ * ',')` (needs an explicit `::text`/`CAST` since `string_agg()` requires
+ * a text argument, unlike MySQL's GROUP_CONCAT which accepts any type),
+ * and SQLite's own `GROUP_CONCAT(expr, ',')` (positional separator, no
+ * `SEPARATOR` keyword) are different enough that a single portable SQL
+ * string doesn't exist -- this hand-rolls the same
+ * per-`instanceof`-branch dispatch shape
  * `AbstractPlatform::getRegexpExpression()` itself uses internally, since
  * DBAL doesn't ship the primitive for us.
  *
- * MySQL/MariaDB branch verified against real data via this project's own
- * Integration tests. PostgreSQL/SQLite branches are unverified against a
- * real installation -- no `install/schema/pgsql.sql` (or SQLite
- * equivalent) exists yet in this repo (see this plan's own Context
- * section) -- built from each platform's own documented GROUP_CONCAT/
- * STRING_AGG syntax, not empirically confirmed. Any other platform
- * (SQL Server, Oracle, DB2) throws `NotSupported` rather than guessing at
- * an unverified syntax for a platform the user never named as a target.
+ * MySQL/MariaDB and PostgreSQL branches are both verified against real
+ * data via this project's own Integration tests. SQLite is unverified
+ * against a real installation (no SQLite install/schema exists in this
+ * repo) -- built from its own documented GROUP_CONCAT syntax, not
+ * empirically confirmed. Any other platform (SQL Server, Oracle, DB2)
+ * throws `NotSupported` rather than guessing at an unverified syntax for
+ * a platform the user never named as a target.
  */
 final class GroupConcatFunction extends FunctionNode
 {

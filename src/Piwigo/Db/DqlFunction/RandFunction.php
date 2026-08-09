@@ -19,16 +19,14 @@ use Override;
  * `ORDER BY RAND()`-style "pick one random row" queries, matching
  * {@see \Piwigo\Db\SqlDialect}'s own `DB_RANDOM_FUNCTION` constant.
  *
- * Further SQL-modernization audit, Item 14 Sub-phase B5 Tier 3: no
- * `AbstractPlatform` primitive exists for a portable "random value"
- * expression (confirmed against Item 16's own research). MySQL/MariaDB's
- * `RAND()` and PostgreSQL/SQLite's `RANDOM()` are both real, so this
- * hand-rolls the same per-`instanceof`-branch dispatch shape
- * {@see GroupConcatFunction}'s own docblock explains. MySQL/MariaDB
- * branch verified against real data via this project's own Integration
- * tests; PostgreSQL/SQLite unverified against a real installation (no
- * `install/schema/pgsql.sql` or SQLite equivalent exists yet -- see this
- * plan's own Context section). Any other platform (SQL Server's
+ * No `AbstractPlatform` primitive exists for a portable "random value"
+ * expression. MySQL/MariaDB's `RAND()` and PostgreSQL/SQLite's
+ * `RANDOM()` are both real, so this hand-rolls the same
+ * per-`instanceof`-branch dispatch shape {@see GroupConcatFunction}'s
+ * own docblock explains. MySQL/MariaDB and PostgreSQL branches are both
+ * verified against real data via this project's own Integration tests;
+ * SQLite is unverified against a real installation (no SQLite
+ * install/schema exists in this repo). Any other platform (SQL Server's
  * `NEWID()`, Oracle, DB2) throws `NotSupported` rather than guessing at
  * an unverified syntax for a platform the user never named as a target.
  */

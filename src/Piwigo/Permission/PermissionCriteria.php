@@ -8,7 +8,7 @@ use Doctrine\DBAL\ArrayParameterType;
 use Doctrine\DBAL\ParameterType;
 
 /**
- * SQL-modernization audit, Item 14 Sub-phase C1: typed replacement for
+ * Typed replacement for
  * {@see PermissionService::getSqlConditionFandFAsCondition()}'s own
  * `array<string,string> $conditionFields` (condition-type-name =>
  * column-name) + raw `SqlCondition` return -- confirmed by reading that
@@ -57,8 +57,8 @@ final readonly class PermissionCriteria
      * Raw-SQL fragment builders, one per dimension, for the DBAL-based
      * consumers of this criteria (plain `Doctrine\DBAL\Query\QueryBuilder`,
      * not DQL) -- same shape as
-     * {@see \Piwigo\Image\ImageFilterCriteria::toSqlCondition()} (Sub-phase
-     * C3). Each takes the real column/alias.path the consumer's own query
+     * {@see \Piwigo\Image\ImageFilterCriteria::toSqlCondition()}.
+     * Each takes the real column/alias.path the consumer's own query
      * has in scope for that dimension (e.g. `'ic.category_id'`, plain
      * `'id'`) and returns an empty (`isEmpty()`) SqlCondition when the
      * dimension doesn't apply -- SqlCondition::combine() already drops

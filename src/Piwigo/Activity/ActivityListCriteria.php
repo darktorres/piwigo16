@@ -8,22 +8,19 @@ use Piwigo\Common\ValueObject\SqlDateTime;
 use Piwigo\Common\ValueObject\UserId;
 
 /**
- * Further SQL-modernization audit, Item 14 Sub-phase B3: replaces the ad
- * hoc `list<SqlCondition>` that `Ws\PwgCore::getActivityList()` used to
- * build and combine itself before handing the finished raw fragment to
+ * Replaces the ad hoc `list<SqlCondition>` that
+ * `Ws\PwgCore::getActivityList()` used to build and combine itself
+ * before handing the finished raw fragment to
  * {@see ActivityRepository::findPaginated()}. One immutable object built
  * once by the caller from its own already-validated `$param`, passed
- * straight through -- `findPaginated()` itself now decides how each field
- * translates into a DQL condition, replacing the caller-built
- * `SqlCondition::combine('AND', ...)` chain with real, readable
- * per-repository code (same shape {@see \Piwigo\Comment\CommentApiCriteria}
- * already established).
+ * straight through -- `findPaginated()` itself decides how each field
+ * translates into a DQL condition, same shape
+ * {@see \Piwigo\Comment\CommentApiCriteria} also uses.
  *
- * P17-23 Phase 8: $performedBy/$minDate/$maxDate/$adminIds are real VOs.
- * `ActivityEntity::$performedBy` is already `?UserId`-typed, so
- * `ActivityRepository::findPaginated()` no longer needs its own
- * `UserId::from($criteria->performedBy)` unwrap-then-rewrap -- it just
- * compares the VO directly. $adminIds stays `list<UserId>` all the way
+ * $performedBy/$minDate/$maxDate/$adminIds are real VOs.
+ * `ActivityEntity::$performedBy` is `?UserId`-typed, so
+ * `ActivityRepository::findPaginated()` compares the VO directly rather
+ * than unwrap-then-rewrap. $adminIds stays `list<UserId>` all the way
  * from its real producer (`UserRepository::findAdminIds()`, itself
  * already `list<UserId>`) through to the repository, which unwraps
  * `->value` only at its own `objectId` comparison (that column is a

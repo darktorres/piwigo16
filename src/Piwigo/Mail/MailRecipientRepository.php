@@ -22,12 +22,11 @@ use Piwigo\Users\UserInfoEntity;
  * `mailAdmins()`/`mailGroup()` queries against `users`/`user_infos`/
  * `user_group`.
  *
- * SQL-modernization audit, Item 14 Sub-phase C4: dropped every
- * `$idColumn`/`$usernameColumn`/`$emailColumn` multi-auth column-name
- * param -- `users` is now mapped ({@see \Piwigo\Users\UserEntity}), always
+ * No `$idColumn`/`$usernameColumn`/`$emailColumn` multi-auth column-name
+ * params -- `users` is mapped ({@see \Piwigo\Users\UserEntity}), always
  * `id`/`username`/`mail_address`.
  *
- * Item 15 audit: converted to real DQL. None of `UserEntity`/
+ * None of `UserEntity`/
  * `UserInfoEntity`/`UserGroupEntity` declares a formal ORM association to
  * either of the others, so every join here uses `Join::WITH` (same
  * established pattern as `TagRepository`/`CategoryRepository`/etc.). `Mail`

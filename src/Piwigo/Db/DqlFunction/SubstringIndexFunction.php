@@ -18,20 +18,17 @@ use Override;
  * Custom DQL function: "SUBSTRING_INDEX" "(" StringPrimary "," StringPrimary ","
  * SimpleArithmeticExpression ")", matching MySQL's own
  * `SUBSTRING_INDEX(str, delim, count)`. This codebase's only real caller
- * (SearchFilterRenderer's own filetypes filter block, Item 15H) always
- * calls it as `(path, '.', -1)` -- everything after the final delimiter,
- * i.e. a file extension.
+ * (SearchFilterRenderer's own filetypes filter block) always calls it as
+ * `(path, '.', -1)` -- everything after the final delimiter, i.e. a file
+ * extension.
  *
- * Further SQL-modernization audit, Item 15H: MySQL/MariaDB branch
- * verified against real data via this project's own Integration tests.
- * PostgreSQL's `split_part(str, delim, n)` only supports a NEGATIVE $n
- * (counting from the end, this function's own only real call shape) since
- * PostgreSQL 14 -- unverifiable against a real installation (no
- * install/schema/pgsql.sql exists yet, same gap this directory's other
- * functions already document), so a non-negative $count throws
- * NotSupported on PostgreSQL rather than guessing at a version-dependent
- * behavior. SQLite has no equivalent primitive at all -- always
- * NotSupported.
+ * MySQL/MariaDB branch verified against real data via this project's own
+ * Integration tests. PostgreSQL's `split_part(str, delim, n)` only
+ * supports a NEGATIVE $n (counting from the end, this function's own
+ * only real call shape) since PostgreSQL 14, so a non-negative $count
+ * throws NotSupported on PostgreSQL rather than guessing at a
+ * version-dependent behavior. SQLite has no equivalent primitive at
+ * all -- always NotSupported.
  */
 final class SubstringIndexFunction extends FunctionNode
 {

@@ -456,6 +456,20 @@ test('getSearchArray() returns false for a missing search', function (): void {
     expect(searchServiceTestService()->getSearchArray('psk-20260712-nosuchuid0'))->toBeFalse();
 });
 
+test('getSearchArray() returns false, not true, for a real row whose rules column is genuinely NULL', function (): void {
+    // insertSavedSearch()'s own $rules param is never nullable, so a
+    // real NULL `rules` column only happens via a raw, non-service
+    // write (a legacy/corrupted row) -- inserted directly here to reach
+    // it. Search::$rules stays null (not decoded to []) when the raw
+    // column is NULL, so `$search->rules ?? false`'s own fallback value
+    // is what this test targets, not just "is rules present".
+    searchServiceTestConn()->executeStatement(
+        "INSERT INTO " . Tables::search() . " (search_uuid, created_on, created_by, rules) VALUES ('psk-20260712-nullrulz1', '2026-07-12 00:00:00', 1, NULL)"
+    );
+
+    expect(searchServiceTestService()->getSearchArray('psk-20260712-nullrulz1'))->toBeFalse();
+});
+
 test('getAvailableSearchUuid() matches the expected shape', function (): void {
     $uuid = searchServiceTestService()->getAvailableSearchUuid();
 
@@ -482,6 +496,25 @@ test('splitAllwords() splits on whitespace', function (): void {
 
 test('splitAllwords() returns null for blank input', function (): void {
     expect(SearchService::splitAllwords('   '))->toBeNull();
+});
+
+test('splitAllwords() drops or space-replaces every one of its 26 special characters correctly', function (): void {
+    // One word between every consecutive pair of the real
+    // $dropCharMatch/$dropCharReplace entries, in their own real
+    // array order -- removing (RemoveArrayItem) or reordering either
+    // array shifts every later char's own replacement out of
+    // alignment with str_replace()'s positional pairing, which this
+    // single pass-through is sensitive to end to end. Backtick/
+    // apostrophe/backslash are real *removals* (empty-string
+    // replacement, no word split), not space-replacements -- confirmed
+    // live via a hand-run of the real $dropCharMatch/$dropCharReplace
+    // pair: 'g`h\'i' collapses to one word 'ghi', not 3.
+    $input = 'a;b&c(d)e<f>g`h\'i"j|k,l@m?n%o. p[q]r{s}t:u\\v/w=x\'y!z*aa';
+
+    expect(SearchService::splitAllwords($input))->toBe([
+        'a', 'b', 'c', 'd', 'e', 'f', 'ghi', 'j', 'k', 'l', 'm', 'n', 'o',
+        'p', 'q', 'r', 's', 't', 'uv', 'w', 'xy', 'z', 'aa',
+    ]);
 });
 
 test('splitAllwords() throws when preg_split() hits the backtrack limit', function (): void {
@@ -592,6 +625,60 @@ test('getRegularSearchResults() returns empty for no filters', function (): void
         ->and($results['search_details']['has_filters_filled'])->toBeFalse();
 });
 
+test('getRegularSearchResults() skips a criterion entirely when its own display filter access is denied', function (string $filterKey, array $fields): void {
+    // Every one of getRegularSearchResults()'s ~14 near-identical
+    // criterion blocks gates on its own
+    // `(bool) ($displayFilters[$filterKey]['access'] ?? false)` --
+    // beforeEach() grants every filter 'everybody' access, so none of
+    // this file's own "filters by X" tests can ever observe THIS
+    // specific criterion's own access gate being denied (as opposed to
+    // some other criterion's). Forcing exactly one filter to
+    // 'admins-only' (denied, since beforeEach()'s user status is
+    // 'normal') while every other filter stays granted proves each
+    // criterion's own gate independently, not just "some gate somewhere
+    // works".
+    $currentConfig = CurrentConfigTestFactory::get();
+    $filtersViews = $currentConfig->filtersViews();
+    expect($filtersViews)->not->toBeNull();
+    $filtersViews[$filterKey] = ['access' => 'admins-only'];
+    $currentConfig->setFiltersViews($filtersViews);
+
+    $results = searchServiceTestService()->getRegularSearchResults(['fields' => $fields]);
+
+    expect($results['search_details']['has_filters_filled'])->toBeFalse();
+})->with([
+    'expert' => ['expert', ['expert' => ['string' => 'x']]],
+    'allwords' => ['words', ['allwords' => ['words' => ['x'], 'fields' => ['name']]]],
+    'author' => ['author', ['author' => ['words' => ['x']]]],
+    'filetypes' => ['file_type', ['filetypes' => ['jpg']]],
+    'added_by' => ['added_by', ['added_by' => [1]]],
+    'cat' => ['album', ['cat' => ['words' => [1], 'sub_inc' => false]]],
+    'date_posted' => ['post_date', ['date_posted' => ['preset' => '24h']]],
+    'date_created' => ['creation_date', ['date_created' => ['preset' => '7d']]],
+    'ratios' => ['ratio', ['ratios' => ['Landscape']]],
+    'ratings' => ['rating', ['ratings' => ['5']]],
+    'filesize' => ['file_size', ['filesize_min' => 1, 'filesize_max' => 2]],
+    'height' => ['height', ['height_min' => 100, 'height_max' => 300]],
+    'width' => ['width', ['width_min' => 100, 'width_max' => 300]],
+    'tags' => ['tags', ['tags' => ['words' => [1], 'mode' => 'AND']]],
+]);
+
+test('getRegularSearchResults() falls back to defaultFiltersViews() when filtersViews() is null', function (): void {
+    // beforeEach() always sets a real, non-null filtersViews() --
+    // CurrentConfig::defaultFiltersViews()'s own right-hand fallback
+    // (CurrentConfig's own DEFAULT_FILTERS_VIEWS constant, 'everybody'
+    // access for 'tags' among others) is only reachable when
+    // filtersViews() is null.
+    CurrentConfigTestFactory::get()->setFiltersViews(null);
+
+    $results = searchServiceTestService()->getRegularSearchResults(['fields' => ['tags' => ['words' => [1], 'mode' => 'AND']]]);
+
+    $items = $results['items'];
+    sort($items);
+    expect($items)->toBe([1, 2, 3])
+        ->and($results['search_details']['has_filters_filled'])->toBeTrue();
+});
+
 test('getRegularSearchResults() filters by expert string', function (): void {
     // The 'expert' criterion delegates to getQuickSearchResults() itself
     // -- "family" resolves via the tag-name quick-search path to image 1.
@@ -616,8 +703,11 @@ test('getRegularSearchResults() filters by author field with no match', function
 });
 
 test('getRegularSearchResults() filters by filetypes', function (): void {
-    // every fixture image's path ends in .jpg.
-    $search = ['fields' => ['filetypes' => ['jpg']]];
+    // every fixture image's path ends in .jpg. 2 filetypes (not 1) --
+    // each builds its own indexed `:filetype{$i}` clause/param pair, so
+    // this is what actually exercises the loop's own per-index param
+    // naming, not just its single-element degenerate case.
+    $search = ['fields' => ['filetypes' => ['png', 'jpg']]];
 
     $results = searchServiceTestService()->getRegularSearchResults($search);
 
@@ -687,9 +777,22 @@ test('getRegularSearchResults() filters by date_created preset', function (): vo
 });
 
 test('getRegularSearchResults() date_created custom range', function (): void {
+    // Each of the 3 real fixture images below sits in a DIFFERENT one
+    // of the 3 'y'/'m'/'d'-prefixed custom entries' own date range, and
+    // NONE of them share a year -- proving each prefix shape's own
+    // begin/end boundary construction independently and correctly
+    // (not just "the loop runs"), including the 'm'/'d' branches' own
+    // `! isset($customDates['y' . $year])` exclusion guard actually
+    // NOT excluding them here (no 'y2023'/'y2022' entry is present).
+    // Image 2 sits well inside June 2023 (not on a month boundary), so
+    // a boundary-day-count mutation in the 'm' branch's own
+    // cal_days_in_month() concat would still likely be caught by a
+    // grosser malformed-date failure, without this test being
+    // sensitive to the exact day-30-vs-31 edge itself.
     $conn = searchServiceTestConn();
     $conn->executeStatement("UPDATE " . Tables::images() . " SET date_creation = '2024-03-15 12:00:00' WHERE id = 1");
-    $conn->executeStatement("UPDATE " . Tables::images() . " SET date_creation = '2025-01-01 00:00:00' WHERE id = 2");
+    $conn->executeStatement("UPDATE " . Tables::images() . " SET date_creation = '2023-06-10 00:00:00' WHERE id = 2");
+    $conn->executeStatement("UPDATE " . Tables::images() . " SET date_creation = '2022-05-15 12:00:00' WHERE id = 3");
 
     try {
         // Mixes a 'y'/'m'/'d'-prefixed string entry of each shape plus a
@@ -704,7 +807,7 @@ test('getRegularSearchResults() date_created custom range', function (): void {
 
         $items = $results['items'];
         sort($items);
-        expect($items)->toBe([1]);
+        expect($items)->toBe([1, 2, 3]);
     } finally {
         $conn->executeStatement('UPDATE ' . Tables::images() . ' SET date_creation = NULL WHERE id IN (1,2,3,4,5)');
     }
@@ -791,7 +894,29 @@ test('getQuickSearchResultsNoCache() finds a tag-named match', function (): void
 test('getQuickSearchResultsNoCache() returns empty for no match', function (): void {
     $results = searchServiceTestService()->getQuickSearchResultsNoCache('nosuchtermatall', []);
 
-    expect($results['items'])->toBe([]);
+    expect($results['items'])->toBe([])
+        ->and($results['qs']['unmatched_terms'])->not->toBe([]);
+});
+
+test('getQuickSearchResultsNoCache() a term matching a real tag with zero currently-tagged images still qualifies, unlike a genuinely unrecognized term', function (): void {
+    // qsearchEval()'s own $crtQualifies is `count($crtIds) > 0 ||
+    // count($qsr->tag_ids[idx]) > 0` -- the 2nd half only differs from
+    // the 1st when a term resolves to a REAL tag (tag_ids populated)
+    // that currently has zero images linked to it (crtIds stays empty).
+    // The sibling test above (a genuinely unrecognized word) can never
+    // observe this, since it never populates tag_ids either.
+    $conn = searchServiceTestConn();
+    $conn->executeStatement("INSERT INTO " . Tables::tags() . " (name, url_name, lastmodified) VALUES ('zqualifiesonly', 'zqualifiesonly', NOW())");
+    $tagId = (int) $conn->lastInsertId();
+
+    try {
+        $results = searchServiceTestService()->getQuickSearchResultsNoCache('zqualifiesonly', []);
+
+        expect($results['items'])->toBe([])
+            ->and($results['qs']['unmatched_terms'])->toBe([]);
+    } finally {
+        $conn->executeStatement('DELETE FROM ' . Tables::tags() . ' WHERE id = ?', [$tagId]);
+    }
 });
 
 test('getQuickSearchResultsNoCache() finds a category-named match', function (): void {
@@ -888,6 +1013,27 @@ test('qsearchGetTextTokenSearchSql() falls back to REGEXP when every split part 
         $values
     )->fetchOne();
     expect(is_numeric($count) ? (int) $count : null)->toBe(0);
+});
+
+test('qsearchGetTextTokenSearchSql() stays on FULLTEXT when the longest split part is exactly 4 chars', function (): void {
+    // The `$max < 4` boundary itself, not just "short vs long" --
+    // "abc-defg" splits into ["abc"(3), "defg"(4)]; max=4 must NOT
+    // trip the too-short fallback (only max < 4 does), unlike the
+    // sibling "every split part is short" test above, whose own max=2
+    // never gets near this exact boundary.
+    $token = new QSingleToken('abc-defg', 0, null);
+
+    [$clauses, $values] = searchServiceTestService()->qsearchGetTextTokenSearchSql($token, ['name', 'comment']);
+
+    if (DbCredentials::fromEnv()->driver === 'pgsql') {
+        expect($clauses)->toBe(["tsv_search @@ to_tsquery('simple', ?)"]);
+    } else {
+        // $ft is the whole original variant, hyphen included -- the
+        // split-into-parts step above is only ever used for the
+        // eligibility check itself, never to transform the bound value.
+        expect($clauses)->toBe(['MATCH(name, comment) AGAINST(? IN BOOLEAN MODE)'])
+            ->and($values)->toBe(['abc-defg']);
+    }
 });
 
 test('qsearchGetTextTokenSearchSql() wraps a quoted term in double quotes for FULLTEXT', function (): void {
@@ -1193,6 +1339,42 @@ test('getQuickSearchResultsNoCache() a lone NOT-prefixed category match produces
     expect($results['items'])->toBe([]);
 });
 
+test('qsearchGetTags() narrows 2 adjacent short, non-wildcarded, non-quoted terms to their shared tag ids', function (): void {
+    // Distinguishes this intersection from the top-level AND every
+    // OTHER multi-term test in this file already exercises: needs a
+    // single token to match MULTIPLE tag ids on its own (word-boundary
+    // REGEXP against a multi-word tag name does this -- 'zna' matches
+    // both a tag literally named 'zna' AND one named 'zna znb', since
+    // both contain 'zna' as a whole word), so that requiring the
+    // adjacent 'znb' token's own match set to agree narrows it down to
+    // just the shared 'zna znb' tag. 'zna'/'znb' alone are each tagged
+    // to image 5 (noise); 'zna znb' alone is tagged to image 4.
+    $conn = searchServiceTestConn();
+    $conn->executeStatement("INSERT INTO " . Tables::tags() . " (name, url_name, lastmodified) VALUES ('zna', 'zna', NOW())");
+    $tagA = (int) $conn->lastInsertId();
+    $conn->executeStatement("INSERT INTO " . Tables::tags() . " (name, url_name, lastmodified) VALUES ('znb', 'znb', NOW())");
+    $tagB = (int) $conn->lastInsertId();
+    $conn->executeStatement("INSERT INTO " . Tables::tags() . " (name, url_name, lastmodified) VALUES ('zna znb', 'zna-znb', NOW())");
+    $tagAB = (int) $conn->lastInsertId();
+    $conn->executeStatement(
+        'INSERT INTO ' . Tables::imageTag() . ' (image_id, tag_id) VALUES (5, ?), (5, ?), (4, ?)',
+        [$tagA, $tagB, $tagAB]
+    );
+
+    try {
+        $expr = new QExpression('zna znb', []);
+        $qsr = new QResults();
+
+        searchServiceTestService()->qsearchGetTags($expr, $qsr);
+
+        expect($qsr->tag_iids[0])->toBe([4])
+            ->and($qsr->tag_iids[1])->toBe([4]);
+    } finally {
+        $conn->executeStatement('DELETE FROM ' . Tables::imageTag() . ' WHERE tag_id IN (?, ?, ?)', [$tagA, $tagB, $tagAB]);
+        $conn->executeStatement('DELETE FROM ' . Tables::tags() . ' WHERE id IN (?, ?, ?)', [$tagA, $tagB, $tagAB]);
+    }
+});
+
 test('getQuickSearchResultsNoCache() narrows two adjacent short terms to a shared tag match', function (): void {
     // "dog" (<=3 chars) is too short for a real fixture tag -- insert a
     // temporary one so 2 adjacent short terms genuinely share a match,
@@ -1214,6 +1396,40 @@ test('getQuickSearchResultsNoCache() narrows two adjacent short terms to a share
     } finally {
         $conn->executeStatement('DELETE FROM ' . Tables::imageTag() . ' WHERE tag_id = ?', [$tagId]);
         $conn->executeStatement('DELETE FROM ' . Tables::tags() . ' WHERE id = ?', [$tagId]);
+    }
+});
+
+test('qsearchGetCategories() narrows 2 adjacent short, non-wildcarded, non-quoted terms to their shared category ids', function (): void {
+    // Same rationale/technique as qsearchGetTags()'s own analogous
+    // test above: a single token matching MULTIPLE category ids on its
+    // own (word-boundary REGEXP against a multi-word category name)
+    // is required to make the adjacent-token intersection observably
+    // narrow anything, since the top-level AND across sibling tokens
+    // would otherwise coincidentally reach the same final image set
+    // regardless of whether this sub-intersection ran.
+    $conn = searchServiceTestConn();
+    $conn->executeStatement("INSERT INTO " . Tables::categories() . " (name) VALUES ('zca')");
+    $catA = (int) $conn->lastInsertId();
+    $conn->executeStatement("INSERT INTO " . Tables::categories() . " (name) VALUES ('zcb')");
+    $catB = (int) $conn->lastInsertId();
+    $conn->executeStatement("INSERT INTO " . Tables::categories() . " (name) VALUES ('zca zcb')");
+    $catAB = (int) $conn->lastInsertId();
+    $conn->executeStatement(
+        'INSERT INTO ' . Tables::imageCategory() . ' (image_id, category_id) VALUES (5, ?), (5, ?), (4, ?)',
+        [$catA, $catB, $catAB]
+    );
+
+    try {
+        $expr = new QExpression('zca zcb', []);
+        $qsr = new QResults();
+
+        searchServiceTestService()->qsearchGetCategories($expr, $qsr);
+
+        expect($qsr->cat_iids[0])->toBe([4])
+            ->and($qsr->cat_iids[1])->toBe([4]);
+    } finally {
+        $conn->executeStatement('DELETE FROM ' . Tables::imageCategory() . ' WHERE category_id IN (?, ?, ?)', [$catA, $catB, $catAB]);
+        $conn->executeStatement('DELETE FROM ' . Tables::categories() . ' WHERE id IN (?, ?, ?)', [$catA, $catB, $catAB]);
     }
 });
 
@@ -1409,6 +1625,33 @@ test('getValidatedSearchInfo() calls fatalError() when a uuid search is looked u
     }
 });
 
+test('getValidatedSearchInfo() looking up by uuid never triggers the id-vs-uuid mismatch gate, even when the row has a real uuid', function (): void {
+    // The mismatch gate's own 3-term `and` chain
+    // (`scriptBasename() !== 'ws' and $clausePattern === 'id = ?' and
+    // $search->searchUuid !== null`) needs its own 2nd term false here
+    // -- a uuid-pattern candidate can never make $clausePattern equal
+    // 'id = ?' -- to prove it's a real AND, not an accidentally widened
+    // OR that would fire on any single true term.
+    searchServiceTestRepo()->insertSavedSearch(['q' => 'nature'], '2026-07-12 00:00:00', 1, 'psk-20260712-anduuidts1', null);
+    $service = searchServiceTestServiceWithRenderer(new SearchServiceTestFatalSignalHtmlRenderer());
+
+    $search = $service->getValidatedSearchInfo('psk-20260712-anduuidts1', null);
+
+    expect($search)->not->toBeNull();
+});
+
+test('getValidatedSearchInfo() looking up a bare id never triggers the mismatch gate when the row has no uuid at all', function (): void {
+    // Same 3-term `and` chain, this time with its own 3rd term false
+    // ($search->searchUuid === null) -- together with the sibling test
+    // above (2nd term false), these pin down both `and` operators.
+    $id = searchServiceTestRepo()->insertSavedSearch(['q' => 'nature'], '2026-07-12 00:00:00', 1, null, null);
+    $service = searchServiceTestServiceWithRenderer(new SearchServiceTestFatalSignalHtmlRenderer());
+
+    $search = $service->getValidatedSearchInfo((string) $id, null);
+
+    expect($search)->not->toBeNull();
+});
+
 test('getValidatedSearchArray() calls badRequest() when the search is not found', function (): void {
     $service = searchServiceTestServiceWithRenderer(new SearchServiceTestFatalSignalHtmlRenderer());
 
@@ -1444,6 +1687,27 @@ test('getSearchResults() resolves a saved quick search query', function (): void
     $results = searchServiceTestService()->getSearchResults((string) $id, true, '');
 
     expect($results['items'])->toBe([1]);
+});
+
+test('getQuickSearchResultsNoCache() writes the default-user lookup through the real container-shared ProcessCache, not a throwaway instance', function (): void {
+    // SearchService's own private processCache() helper resolves
+    // Kernel::container()->get(ProcessCache::class) when booted --
+    // proven here by checking the SAME container-shared instance
+    // (searchServiceTestProcessCache(), same resolution path every
+    // other TestFactory in this project relies on) actually observes
+    // the 'default_user' key UserService::getDefaultUserInfo() writes
+    // internally. A silently-fresh `new ProcessCache()` per call would
+    // never be externally observable this way.
+    searchServiceTestProcessCache()->forget('default_user');
+    expect(searchServiceTestProcessCache()->has('default_user'))->toBeFalse();
+
+    try {
+        searchServiceTestService()->getQuickSearchResultsNoCache('nature', []);
+
+        expect(searchServiceTestProcessCache()->has('default_user'))->toBeTrue();
+    } finally {
+        searchServiceTestProcessCache()->forget('default_user');
+    }
 });
 
 test('getQuickSearchResultsNoCache() throws when the default user language resolves to an Inflector class that does not implement the interface', function (): void {

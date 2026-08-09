@@ -47,7 +47,7 @@ use Piwigo\Core\Projection\ContainerInfo;
  * without touching this PHPUnit process's own ini state at all. See
  * the dedicated test below.
  *
- * Mutation-testing sweep (batch 18, 2026-08-01): 18 mutations across
+ * A mutation-testing sweep found 18 mutations across
  * lines 33/34/37 (the open_basedir_empty computation and its Linux/
  * kthreadd guard conditions) initially showed UNTESTED. Root cause,
  * confirmed per-mutation via a live sed-applied mutation + rerun of the

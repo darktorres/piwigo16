@@ -86,13 +86,12 @@ use Piwigo\Users\User;
  *     shared with every other Browser test file in the same suite run,
  *     and (confirmed live) already holds far more rows than the
  *     committed 5-image fixture ships. A byte-exact restore across that
- *     many FK-linked tables is not something this pass can safely author
- *     AND verify (verifying it would mean actually running it against
- *     that same shared table), so it's deliberately left undone here
- *     rather than risked -- see this repo's project-wide "extensive
- *     passes, not narrow ones" / adversarial-validation discipline,
- *     which cuts the other way once verification itself is the
- *     unsafe step.
+ *     many FK-linked tables is not something that can safely be authored
+ *     AND verified here (verifying it would mean actually running it
+ *     against that same shared table), so it's deliberately left
+ *     undone rather than risked -- verifying it live against the same
+ *     shared table used by every other Browser test in the run would
+ *     itself be the unsafe step.
  */
 final class NoPhotoYetRendererTest extends IntegrationTestCase
 {

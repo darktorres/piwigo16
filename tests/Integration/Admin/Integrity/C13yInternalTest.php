@@ -103,7 +103,7 @@ test('c13y_exif adds no anomaly when exif_read_data() is available', function ()
 // own composer.json ("php": "^8.5") makes structurally impossible to
 // satisfy from inside a real Composer-installed run -- there is no config
 // knob or fixture that flips this without editing the constant itself
-// (not a bug, so out of this pass's scope). SqlDialect::
+// (not a bug, so out of scope here). SqlDialect::
 // REQUIRED_MYSQL_VERSION ('8.4.10') is equally unreachable here: this
 // environment's real MySQL server is pinned to that exact floor, so it
 // can never report a version below it. c13y_exif()'s branch is the exact same

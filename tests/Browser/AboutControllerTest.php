@@ -46,8 +46,7 @@ it('sets the About page title and body id', function (): void {
  * (`is_array($url_data)` false -> rebuilt as `['label' => ...]`, which
  * also defaults `new_window` to true), the array shape with an explicit
  * `new_window => false`, and eval_visible's true/false gating (the eval()
- * call is a real, preserved-as-is legacy plugin contract, not touched by
- * this pass).
+ * call is a real, preserved-as-is legacy plugin contract).
  */
 /**
  * Closes the "THEME_ABOUT" assignment (~line 73): gated on

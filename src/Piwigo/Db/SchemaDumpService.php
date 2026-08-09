@@ -18,7 +18,7 @@ use Symfony\Component\Process\Process;
  * Migrator directly -- see MigrationDependencyFactory's own docblock),
  * never hand-edited. No longer load-bearing for a fresh install the way
  * the recovered prior attempt's own version was written to be (that
- * version predates this pass's InstallWizard wiring, and its own docblock
+ * version predates the current InstallWizard wiring, and its own docblock
  * says as much) -- this class is now purely a generated, human-reviewable
  * schema snapshot plus a CI drift guard (`schema:dump` + `git diff
  * --exit-code`, the same role Rails' `db/schema.rb` plays alongside its

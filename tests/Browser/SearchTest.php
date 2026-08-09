@@ -54,7 +54,7 @@ it('gallery search page renders without errors', function (): void {
     // so the box always falls back to its "Quick search" JS placeholder
     // here -- confirmed live, and the reference 16.x-rewrite branch's own
     // SearchController has the exact same gap, so this is pre-existing
-    // behavior, not a regression to fix in this pass.
+    // behavior, not a regression.
     $page->assertPresent('input#qsearchInput');
     $page->assertSee('Search results');
 });

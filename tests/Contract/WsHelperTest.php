@@ -102,7 +102,7 @@ final class WsHelperTest extends ContractTestCase
      * genuinely different between piwigo-17.0.sql and
      * piwigo-17.0-pgsql.sql (separate independent install+upload+rate
      * runs, same real gap already fixed for the fixture-photo hash
-     * suffixes elsewhere in this pass) -- they also shift *during* a
+     * suffixes elsewhere) -- they also shift *during* a
      * single suite run. RateService::updateRatingScore() recomputes a
      * bayesian-shrinkage score for every rated image whenever any rate
      * is added or removed anywhere (confirmed live by reading its own

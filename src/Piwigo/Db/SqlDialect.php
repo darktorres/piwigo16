@@ -47,8 +47,8 @@ final class SqlDialect
      * both failed against a real Postgres server with "function rand()
      * does not exist" -- Postgres's own random-ordering function is
      * `RANDOM()`, a different name entirely, not just a dialect quirk of
-     * the same function. Was a bare `const string` (no way to branch)
-     * before this pass; converted to a method, matching this class's own
+     * the same function. Was a bare `const string` (no way to branch);
+     * converted to a method, matching this class's own
      * established `DbCredentials::fromEnv()->driver`-branch pattern
      * ({@see getRecentPeriodExpression()}/{@see getHour()}/{@see dateToTs()}).
      */

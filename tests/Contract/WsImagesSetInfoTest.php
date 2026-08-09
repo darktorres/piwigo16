@@ -378,8 +378,7 @@ final class WsImagesSetInfoTest extends ContractTestCase
      * genuinely misleading combination of a 500 HTTP status alongside a
      * "stat":"ok" JSON body -- the validation failure is silently
      * swallowed rather than ever reaching the caller as an error. Out of
-     * scope to fix here (a test-writing pass, not a bug-fixing one); this
-     * only documents the current, real behavior.
+     * scope to fix here; this only documents the current, real behavior.
      */
     public function test_setInfo_categories_with_an_unknown_category_silently_swallows_the_error(): void
     {

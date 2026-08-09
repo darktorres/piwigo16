@@ -285,7 +285,7 @@ final class CheckIntegrity
      * 'c13y_correction_user', which is actually a C13yInternal instance
      * method, not a bare global function; is_callable() on that bare
      * string is therefore false and this correction path silently never
-     * fires today. Pre-existing, out of this pass's scope to fix.
+     * fires. Pre-existing; left unfixed here.
      *
      * @param ?array<string, mixed> $correction_fct_args
      */

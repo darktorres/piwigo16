@@ -26,7 +26,7 @@ use Piwigo\Session\SessionService;
  * closes both gaps at once with a real DB connection.
  *
  * Real, live-confirmed finding along the way (not "fixed" here -- out of
- * scope for a test-writing pass): CurrentConfig::sessionUseIpAddress()
+ * scope): CurrentConfig::sessionUseIpAddress()
  * defaults to true, and SessionService::remoteAddrHash(true) crashes with
  * an uncaught ValueError ("arguments array must contain 2 items, 1
  * given") whenever $_SERVER['REMOTE_ADDR'] is empty -- explode('.', '')

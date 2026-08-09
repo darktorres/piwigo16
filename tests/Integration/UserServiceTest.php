@@ -424,8 +424,8 @@ namespace Piwigo\Tests\Integration {
 
             // Real production typo: the array key is 'code ' (trailing
             // space), not 'code' -- confirmed live via a standalone
-            // sanity script, not assumed. Documented here, not "fixed":
-            // out of scope for a test-writing pass.
+            // sanity script, not assumed. Documented here, not "fixed" --
+            // out of scope here.
             self::assertSame(
                 [
                     'error' => [

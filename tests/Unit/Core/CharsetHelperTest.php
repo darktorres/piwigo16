@@ -21,7 +21,7 @@ use Piwigo\Core\CharsetHelper;
  * are hard composer.json requirements, and ext-iconv is checked first, so
  * the mbstring fallback can never actually run here.
  *
- * Mutation-testing sweep (batch 18, 2026-08-01): 12 mutations initially
+ * A mutation-testing sweep found 12 mutations initially
  * showed UNTESTED, all inside convertCharset(). Each verified individually
  * via a live sed-applied mutation rerun (not assumed from reasoning
  * alone):

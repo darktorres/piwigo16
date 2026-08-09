@@ -157,7 +157,7 @@ test('encode() trigger_error()s an E_USER_WARNING for a resource value and write
 });
 
 /**
- * Mutation-sweep closure batch (encodeResponse()'s PwgError branch,
+ * Mutation-sweep closure notes (encodeResponse()'s PwgError branch,
  * encode_struct()'s twin scan loops, and encode()'s array/object
  * dispatch). Each test below is built to fail under one specific
  * mutant, traced by hand against the source before being written --

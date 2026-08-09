@@ -959,8 +959,8 @@ test('a negated wildcard-end token keeps both its NOT and WILDCARD_END bits in s
 
 /*
  * QMultiToken mutation-sweep coverage (resumes after QSearchScope,
- * QSingleToken, QExpression, QNumericRangeScope, QDateRangeScope, which
- * were already closed out in earlier passes over this same file).
+ * QSingleToken, QExpression, QNumericRangeScope, QDateRangeScope,
+ * covered above).
  */
 
 test('QMultiToken::__toString concatenates the opening paren onto pending sibling text, not overwrites it', function (): void {
@@ -1338,8 +1338,8 @@ test('a freshly regrouped sub-expression recurses check_operator_priority into a
  * (verified live, same methodology as the QSingleToken/QDateRangeScope/
  * QNumericRangeScope blocks above: each exact mutation applied to
  * src/Piwigo/Search/QMultiToken.php in turn against the full suite incl.
- * every test in this file -- 102 tests at the time of this pass -- suite
- * still passed every time, mutation reverted immediately after). Grouped
+ * every test in this file -- suite still passed every time, mutation
+ * reverted immediately after). Grouped
  * by why:
  * - The `(bool)` casts at lines 34, 37, 40, 60, 90, 119, 125, 132, 144
  *   (both), 145, 152, 205, 214, 226 and the ternary condition's cast at

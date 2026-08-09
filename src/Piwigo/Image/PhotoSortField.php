@@ -8,30 +8,24 @@ use Piwigo\Db\DbCredentials;
 use Piwigo\Db\SqlDialect;
 
 /**
- * SQL-modernization audit, Item 14 Sub-phase C2: typed replacement for
- * {@see \Piwigo\Ws\WsHelper::stdImageSqlOrder()}'s own regex+switch-based
- * per-token sort-field parser -- the WS `order` param's 8 real sortable
- * tokens (confirmed by reading that method's own full body), each
- * optionally suffixed `asc`/`desc`(`ending`), comma-chained.
+ * Typed replacement for {@see \Piwigo\Ws\WsHelper::stdImageSqlOrder()}'s
+ * own regex+switch-based per-token sort-field parser -- the WS `order`
+ * param's 8 real sortable tokens (confirmed by reading that method's own
+ * full body), each optionally suffixed `asc`/`desc`(`ending`),
+ * comma-chained.
  *
  * Deliberately scoped to `stdImageSqlOrder()`'s own replacement, not
  * `CurrentConfig::orderBy()`/`orderByInsideCategory()`'s own stored value
  * or any of their real readers ({@see \Piwigo\Category\CategoryRepository::
- * findImageIdsForCategories()} and similar) -- re-investigated directly
- * against the current tree before designing this class (the plan's own
- * "re-run this grep before starting each sub-item" instruction) and found
- * a load-bearing precedent this sub-item must not repeat:
- * `CurrentConfig.php`'s own "nothing is frozen" gap-closure note documents
- * a prior attempt at exactly this (a typed `{field,dir}[]` shape for
- * `order_by`/`order_by_inside_category` themselves) that was reverted
- * because it "modeled NOTHING any real code ever wrote" -- every real
- * writer (`Controller\Admin\ConfigurationSubController`'s save handler)
- * always produces a raw `"ORDER BY field dir, field dir"` SQL fragment
- * string, and every real reader (15 call sites, re-confirmed via a fresh
- * grep) already treats it as trusted, caller-composed opaque text spliced
- * straight into an ORDER BY clause -- the same accepted "caller composes
- * trusted ORDER BY text" architecture this whole SQL-modernization
- * initiative already uses elsewhere (e.g.
+ * findImageIdsForCategories()} and similar). A prior attempt to give
+ * `CurrentConfig::orderBy()`'s stored value a structured `{field,dir}[]`
+ * type was reverted because it modeled nothing any real code ever wrote:
+ * every real writer (`Controller\Admin\ConfigurationSubController`'s save
+ * handler) always produces a raw `"ORDER BY field dir, field dir"` SQL
+ * fragment string, and every real reader (15 call sites) already treats
+ * it as trusted, caller-composed opaque text spliced straight into an
+ * ORDER BY clause -- the same "caller composes trusted ORDER BY text"
+ * architecture used elsewhere (e.g.
  * {@see \Piwigo\Comment\CommentRepository::findAllWithConditions()}'s own
  * `$sortByColumn`/`$sortOrder`), not an injection risk needing binding.
  * Forcing those call sites to parse individual tokens they've never needed
@@ -41,38 +35,31 @@ use Piwigo\Db\SqlDialect;
  * more than one field), so it's the one place a typed parser pays for
  * itself.
  *
- * Item 16J re-audit: the "must not repeat" note above is narrower than it
- * first reads -- it rejects giving `CurrentConfig::orderBy()`'s own stored
- * value a structured type (the reverted attempt) and rejects making its
- * *callers* parse tokens they never needed to. Neither describes what
- * follows: `parseOrderByFragment()`/`dqlOrderProperty()` are an opt-in
- * translation used only inside a repository method's own DQL conversion,
- * with `CurrentConfig::orderBy()`'s stored string and every caller's
- * signature left untouched -- confirmed against
+ * `parseOrderByFragment()`/`dqlOrderProperty()` are an opt-in translation
+ * used only inside a repository method's own DQL conversion, with
+ * `CurrentConfig::orderBy()`'s stored string and every caller's signature
+ * left untouched -- confirmed against
  * {@see \Piwigo\Image\ImageRepository::findIdsWithConditions()}'s own
- * docblock, which explicitly deferred "a real multi-dialect
- * `CurrentConfig::orderBy()` rewrite" to "Item 16's territory" rather than
- * closing the door on it. Also corrects a stale claim repeated in a few
- * Item 14/15G docblocks (e.g. {@see \Piwigo\Calendar\CalendarRepository::
- * findImageIds()}) that `orderByCustom()` is "admin-typed... via the admin
- * UI" -- re-verified directly against `Bootstrap\RequestBootstrap.php` and
- * `Controller\Admin\ConfigurationSubController.php`: `order_by_custom`/
- * `order_by_inside_category_custom` have no HTML form field anywhere:
- * `orderByCustom() !== null` only ever *suppresses* the validated
- * `order_by` save handler and renders a read-only "specified in your local
- * configuration file" warning. It's the sysadmin-filesystem-level
- * `$conf['order_by_custom']` override, not admin-UI-reachable text -- the
- * "genuinely open-ended, falls back to raw DBAL" case is real, but it was
- * never a live injection surface either way (still trusted, caller-typed
- * text, same as always).
+ * docblock.
  *
- * `Rank` added for this same re-audit: `` `rank` ASC `` is the 8th, ASC-only
- * entry in `ConfigurationSubController.php`'s own `$sort_fields` vocabulary
- * (confirmed via a fresh read of its real save-handler code), mapped to
- * {@see \Piwigo\Image\ImageCategoryEntity::$rank} -- a join-row property,
- * not a column on `ImageEntity` itself, so {@see dqlOrderProperty()} needs
- * an `image_category` alias to express it and returns null without one
- * (the caller's own signal to fall back to raw DBAL for that query).
+ * `orderByCustom()` is not admin-UI-reachable: `order_by_custom`/
+ * `order_by_inside_category_custom` have no HTML form field anywhere
+ * (`Bootstrap\RequestBootstrap.php`, `Controller\Admin\
+ * ConfigurationSubController.php`); `orderByCustom() !== null` only ever
+ * *suppresses* the validated `order_by` save handler and renders a
+ * read-only "specified in your local configuration file" warning. It's
+ * the sysadmin-filesystem-level `$conf['order_by_custom']` override, not
+ * admin-UI-reachable text -- genuinely open-ended, falls back to raw
+ * DBAL, but never a live injection surface either way (still trusted,
+ * caller-typed text, same as always).
+ *
+ * `Rank`: `` `rank` ASC `` is the 8th, ASC-only entry in
+ * `ConfigurationSubController.php`'s own `$sort_fields` vocabulary,
+ * mapped to {@see \Piwigo\Image\ImageCategoryEntity::$rank} -- a join-row
+ * property, not a column on `ImageEntity` itself, so
+ * {@see dqlOrderProperty()} needs an `image_category` alias to express it
+ * and returns null without one (the caller's own signal to fall back to
+ * raw DBAL for that query).
  */
 enum PhotoSortField
 {
@@ -236,8 +223,8 @@ enum PhotoSortField
     }
 
     /**
-     * Shared Item 16J entry point: parses $orderBySql and maps every entry
-     * to a DQL property path in one step, for a query aliasing `ImageEntity`
+     * Parses $orderBySql and maps every entry to a DQL property path in
+     * one step, for a query aliasing `ImageEntity`
      * as $imageAlias and (optionally) `ImageCategoryEntity` as
      * $imageCategoryAlias. Null means "fall back to raw DBAL for this
      * call" (unparseable text, or an entry -- almost always `Rank` --

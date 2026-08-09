@@ -712,21 +712,20 @@ final readonly class UserService implements DefaultLanguageProviderInterface
 
         // retrieve additional user data ?
         if ($this->deploymentPolicy->externalAuthentification) {
-            // Gap-closure Stage 4g: dropped the LEFT JOIN onto user_cache --
-            // it never affected this COUNT(1) (a LEFT JOIN can only ever
-            // add exactly 0 or 1 matching row per ui row, and GROUP BY
-            // ui.user_id collapses that back to 1 either way), and nothing
-            // here selects any of its columns.
+            // No LEFT JOIN onto user_cache here -- it would only ever add
+            // exactly 0 or 1 matching row per ui row, and GROUP BY
+            // ui.user_id collapses that back to 1 either way, so it
+            // wouldn't affect this COUNT(1); nothing here selects any of
+            // its columns either.
             $counter = $this->repo->countUserInfosRows($userId);
             if ($counter !== 1) {
                 $this->createUserInfos([$userId]);
             }
         }
 
-        // retrieve user info. Gap-closure Stage 4g: dropped the LEFT JOIN
-        // onto user_cache (`uc.*`) -- getUserData() no longer reads any of
-        // its columns, and nothing writes that table any more either
-        // (deleted alongside this same stage's lock/wait/503 mechanism).
+        // retrieve user info -- no LEFT JOIN onto user_cache (`uc.*`)
+        // here; getUserData() doesn't read any of its columns, and
+        // nothing writes that table any more either.
         $user_infos_row = $this->repo->fetchUserInfosWithThemeName($userId);
         if ($user_infos_row === false) {
             throw new Exception('UserService::getUserData(): user_infos fetch failed for user_id ' . $userId->value);
@@ -757,15 +756,14 @@ final readonly class UserService implements DefaultLanguageProviderInterface
         // mixed for the remainder of this function. Merged back in just
         // before the final return instead.
         //
-        // Real bug found live (2026-08-04, via a failing AdminShellTest
-        // purge-logic assertion): this used to only accept a raw JSON
-        // *string*, matching fetchUserInfosWithThemeName()'s old raw-DBAL
-        // return shape. Item 16H converted that method to real DQL
-        // UserInfoEntity hydration, whose `preferences` column maps as
-        // Doctrine's native `json` type -- already a decoded PHP array by
-        // the time it reaches here, never a string anymore. is_string()
-        // was therefore always false post-conversion, silently discarding
-        // every real user's preferences on every single login (test and
+        // Real bug found live (via a failing AdminShellTest purge-logic
+        // assertion): this used to only accept a raw JSON *string*,
+        // matching fetchUserInfosWithThemeName()'s old raw-DBAL return
+        // shape. fetchUserInfosWithThemeName() hydrates `preferences` via
+        // UserInfoEntity's `json`-typed column -- already a decoded PHP
+        // array by the time it reaches here, never a string. is_string()
+        // was therefore always false, silently discarding every real
+        // user's preferences on every single login (test and
         // production alike) -- confirmed live via CurrentUser::get()
         // ->preferences coming back `[]` immediately after a real login,
         // despite the DB row genuinely holding real preference data.
@@ -800,10 +798,10 @@ final readonly class UserService implements DefaultLanguageProviderInterface
         $userdata['image_access_type'] = $effective->imageAccessType;
         $userdata['image_access_list'] = $effective->imageAccessList;
         $userdata['nb_total_images'] = $effective->nbTotalImages;
-        // Gap-closure Stage 4e: Filter\FilterService's own separate,
-        // differently-scoped (recent-period-filtered) last_photo_date
-        // computation is untouched -- see EffectiveForbiddenCategoriesCache's
-        // own docblock for why these aren't the same value.
+        // Filter\FilterService's own separate, differently-scoped
+        // (recent-period-filtered) last_photo_date computation is
+        // untouched -- see EffectiveForbiddenCategoriesCache's own
+        // docblock for why these aren't the same value.
         $userdata['last_photo_date'] = $effective->lastPhotoDate;
 
         $userdata['preferences'] = $preferences;
@@ -1085,12 +1083,11 @@ final readonly class UserService implements DefaultLanguageProviderInterface
      * Returns the SQL WHERE condition for recent photos/albums for the
      * current user.
      *
-     * Further SQL-modernization audit, Item 11: now returns a SqlCondition
-     * instead of a bare string -- $last_photo_date is bound via its own
-     * parameter rather than spliced into SqlDialect::
-     * getRecentPeriodExpression()'s returned expression (see that method's
-     * own docblock for the placeholder-passthrough contract this relies
-     * on).
+     * Returns a SqlCondition, not a bare string -- $last_photo_date is
+     * bound via its own parameter rather than spliced into SqlDialect::
+     * getRecentPeriodExpression()'s returned expression (see that
+     * method's own docblock for the placeholder-passthrough contract
+     * this relies on).
      */
     public function getRecentPhotosCondition(string $dbField): SqlCondition
     {
@@ -1100,14 +1097,11 @@ final readonly class UserService implements DefaultLanguageProviderInterface
         }
 
         // A raw user_infos DB value -- numeric string or int in practice,
-        // but rawAttributes is untyped mixed storage. SQL-modernization
-        // audit: the previous fallback kept a non-numeric string as-is
-        // (`is_string($recent_period) ? $recent_period : 0`), which would
-        // have spliced raw, unquoted string content straight into
-        // SqlDialect::getRecentPeriodExpression()'s SQL fragment below --
-        // that method's own $period param is now `int`-only, and a
-        // corrupted/non-numeric value correctly falls back to 0 like any
-        // other malformed input, rather than being passed through.
+        // but rawAttributes is untyped mixed storage. A non-numeric
+        // string falls back to 0 rather than being spliced, unquoted,
+        // straight into SqlDialect::getRecentPeriodExpression()'s SQL
+        // fragment below -- that method's own $period param is
+        // `int`-only.
         $recent_period = $user->rawAttributes['recent_period'] ?? null;
         $recent_period = is_numeric($recent_period) ? (int) $recent_period : 0;
 

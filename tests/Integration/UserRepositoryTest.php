@@ -355,12 +355,10 @@ final class UserRepositoryTest extends IntegrationTestCase
 
     public function test_update_infos_for_users_persists_a_non_boolean_and_a_boolean_field_together(): void
     {
-        // Item 16I: converted to real DQL against UserInfoEntity --
-        // had zero real behavioral coverage before (both existing
-        // sibling tests only ever probed the no-op early-return
-        // branches), despite nb_image_page/expand exercising genuinely
-        // different code paths (plain scalar bind vs. explicit bool
-        // cast, see UserInfoField::dqlPropertyAndIsBoolean()).
+        // Covers a persist against UserInfoEntity exercising two
+        // genuinely different code paths together: nb_image_page (plain
+        // scalar bind) and expand (explicit bool cast) -- see
+        // UserInfoField::dqlPropertyAndIsBoolean().
         $username = 'p18-test-' . bin2hex(random_bytes(4));
         $id = $this->repo->insertUser(Username::from($username), 'irrelevant-hash', null);
         $this->repo->insertUserInfos([$id], ['status' => 'normal']);
@@ -709,7 +707,6 @@ final class UserRepositoryTest extends IntegrationTestCase
 
     public function test_count_user_infos_rows_is_one_for_a_real_user(): void
     {
-        // Item 14 Sub-phase B2 re-audit: had zero existing coverage.
         self::assertSame(1, $this->repo->countUserInfosRows(UserId::from(1)));
     }
 
@@ -720,7 +717,6 @@ final class UserRepositoryTest extends IntegrationTestCase
 
     public function test_find_favorite_image_ids_returns_the_real_ids(): void
     {
-        // Item 14 Sub-phase B2 re-audit: had zero existing coverage.
         // Fixture: user 1 has favorites [1, 3, 5].
         $ids = $this->repo->findFavoriteImageIds(UserId::from(1));
         sort($ids);
@@ -734,7 +730,6 @@ final class UserRepositoryTest extends IntegrationTestCase
 
     public function test_delete_all_favorites_removes_every_row_for_the_user(): void
     {
-        // Item 14 Sub-phase B2 re-audit: had zero existing coverage.
         $this->conn->beginTransaction();
 
         try {
@@ -748,8 +743,7 @@ final class UserRepositoryTest extends IntegrationTestCase
 
     public function test_find_visible_favorite_image_ids_returns_the_real_ids(): void
     {
-        // Item 16J: had zero existing coverage. Fixture: user 1 has
-        // favorites [1, 3, 5].
+        // Fixture: user 1 has favorites [1, 3, 5].
         $ids = $this->repo->findVisibleFavoriteImageIds(
             UserId::from(1),
             self::noPermissionRestriction(),
@@ -800,13 +794,12 @@ final class UserRepositoryTest extends IntegrationTestCase
     }
 
     /**
-     * Item 15 audit: had zero existing coverage -- covers every one of
-     * deleteUser()'s 9 target tables (user_access/user_auth_keys/
-     * user_group/user_infos/users all converted to DQL; favorites newly
-     * converted this item; user_mail_notification/user_feed/caddie stay
-     * on raw DBAL, a real deptrac boundary, see UserRelatedTable's own
-     * docblock) on a real throwaway user, never touching the shared
-     * fixture users other tests in this class depend on.
+     * Covers every one of deleteUser()'s 9 target tables
+     * (user_access/user_auth_keys/user_group/user_infos/users/favorites
+     * all DQL; user_mail_notification/user_feed/caddie stay on raw DBAL,
+     * a real deptrac boundary, see UserRelatedTable's own docblock) on a
+     * real throwaway user, never touching the shared fixture users other
+     * tests in this class depend on.
      */
     public function test_delete_user_removes_every_row_across_every_related_table(): void
     {

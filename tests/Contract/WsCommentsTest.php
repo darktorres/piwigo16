@@ -279,8 +279,7 @@ final class WsCommentsTest extends ContractTestCase
     }
 
     /**
-     * SQL-modernization audit, Item 13's own Verification note: confirms
-     * end to end, through the real WS layer (not just
+     * Confirms end to end, through the real WS layer (not just
      * CommentRepositoryTest.php's own repository-level coverage), that
      * `filters.nb_authors` -- CommentApiCriteria's one deliberately
      * asymmetric field, per CommentRepository::findAuthorCounts()'s own

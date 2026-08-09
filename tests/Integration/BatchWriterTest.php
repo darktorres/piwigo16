@@ -213,31 +213,28 @@ final class BatchWriterTest extends IntegrationTestCase
     }
 
     /**
-     * Item 16's own plan text specifically calls for "a column/table name
-     * containing a literal backtick character, asserted as correctly
-     * escaped, not silently broken" -- the one real behavioral difference
-     * between the old hand-rolled protectColumnName() (`` '`' . $name .
-     * '`' ``, no escaping of an embedded backtick) and
-     * AbstractMySQLPlatform::quoteSingleIdentifier() (`` '`' .
-     * str_replace('`', '``', $name) . '`' ``) this item's own docblock
-     * names -- confirmed missing from every existing BatchWriter test
-     * file. Not a live vulnerability (every real caller passes a fixed,
-     * code-controlled name), but the framework method's own real
+     * Asserts a column/table name containing a literal backtick
+     * character is correctly escaped, not silently broken -- the one
+     * real behavioral difference between the old hand-rolled
+     * protectColumnName() (`` '`' . $name . '`' ``, no escaping of an
+     * embedded backtick) and AbstractMySQLPlatform::
+     * quoteSingleIdentifier() (`` '`' . str_replace('`', '``', $name) .
+     * '`' ``). Not a live vulnerability (every real caller passes a
+     * fixed, code-controlled name), but the framework method's own real
      * correctness gain over the code it replaced, worth proving directly
      * rather than trusting it because the happy-path tests above pass.
      *
      * Only exercises `updateRow()` (via singleUpdate()'s SET and WHERE
-     * sides), not singleInsert()/massInsert() -- confirmed live that
-     * those 2 derive their bound-*parameter* name directly from the raw
-     * column key (`':' . $key`), a real, separate, narrower limitation
-     * (any column name that isn't itself a valid bound-parameter token --
-     * not just a backtick -- breaks there) that predates this item and is
-     * out of Item 16's own scope (identifier *quoting* in the SQL text,
-     * not placeholder-name generation). updateRow()'s own SET/WHERE
-     * placeholders are counter-based (`'set' . $i++` / `'where' . $j++`),
-     * never derived from the column name, so they're unaffected either
-     * way -- the real, common case every actual BatchWriter caller today
-     * exercises.
+     * sides), not singleInsert()/massInsert() -- those 2 derive their
+     * bound-*parameter* name directly from the raw column key (`':' .
+     * $key`), a real, separate, narrower limitation (any column name
+     * that isn't itself a valid bound-parameter token -- not just a
+     * backtick -- breaks there), which is about placeholder-name
+     * generation, not identifier *quoting* in the SQL text.
+     * updateRow()'s own SET/WHERE placeholders are counter-based
+     * (`'set' . $i++` / `'where' . $j++`), never derived from the column
+     * name, so they're unaffected either way -- the real, common case
+     * every actual BatchWriter caller today exercises.
      *
      * Uses its own disposable scratch table/column (both named with an
      * embedded quote-identifier-delimiter character) rather than
@@ -246,24 +243,19 @@ final class BatchWriterTest extends IntegrationTestCase
      * BatchWriter::singleInsert(), to keep this test isolated from the
      * unrelated limitation above.
      *
-     * pgsql support pass: real bug found live -- this test used to
-     * hand-roll MySQL's own backtick-doubling convention directly
-     * (`` '`' . str_replace('`', '``', $name) . '`' ``) and MySQL-only
-     * `ENGINE=InnoDB`, neither valid on Postgres (double-quote delimited
-     * identifiers, no ENGINE concept at all -- "syntax error at or near
-     * 'KEY'"/'InnoDB' territory). Routes through the same real
+     * The fixture DDL routes through the same real
      * `Connection::getDatabasePlatform()->quoteSingleIdentifier()` call
-     * BatchWriter::protectColumnName() itself uses instead of
+     * BatchWriter::protectColumnName() itself uses, rather than
      * hand-rolling the quoting convention a second time here -- this is
      * exactly the framework method under test, so using it to build the
      * fixture too is the honest, self-consistent way to prove it (not a
      * weaker test: the assertions below still independently verify
      * BatchWriter's real behavior against these names, this only changes
      * how the *fixture* is quoted, matching whichever character each
-     * real platform actually uses for identifier delimiting -- a literal
-     * backtick has no special meaning to quote at all on Postgres, so
-     * asserting specifically against `` ` `` here would test nothing
-     * real on that platform).
+     * real platform actually uses for identifier delimiting -- MySQL's
+     * backtick or Postgres's double-quote; MySQL's own `ENGINE=InnoDB`
+     * has no Postgres equivalent either, so the DDL itself is built
+     * per-platform too).
      */
     public function testSingleUpdateCorrectlyEscapesATableAndColumnNameContainingALiteralBacktickOnBothTheSetAndWhereSides(): void
     {

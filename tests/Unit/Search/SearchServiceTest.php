@@ -620,10 +620,8 @@ test('splitAllwords() throws when preg_split() hits the backtrack limit', functi
     ini_set('pcre.backtrack_limit', '0');
 
     try {
-        SearchService::splitAllwords('nature travel');
-        expect(false)->toBeTrue('expected an exception');
-    } catch (Exception $e) {
-        expect($e->getMessage())->toContain('splitAllwords(): preg_split() failed');
+        expect(static fn () => SearchService::splitAllwords('nature travel'))
+            ->toThrow(Exception::class, 'splitAllwords(): preg_split() failed');
     } finally {
         ini_set('pcre.backtrack_limit', $originalLimit === false ? '1000000' : $originalLimit);
     }
@@ -1084,6 +1082,26 @@ test('getQuickSearchResultsNoCache() a term matching a real tag with zero curren
     }
 });
 
+test('getQuickSearchResultsNoCache() a term matching a real category with zero currently-categorized images still qualifies, unlike a genuinely unrecognized term', function (): void {
+    // Same reasoning as the tag-based sibling test above, for
+    // qsearchEval()'s own $crtQualifies category-side term
+    // (`count($qsr->cat_ids[idx]) > 0`) -- a real, empty category is
+    // the only way to populate cat_ids while crtIds itself stays
+    // empty.
+    $conn = searchServiceTestConn();
+    $conn->executeStatement("INSERT INTO " . Tables::categories() . " (name) VALUES ('zqualifiesonlycat')");
+    $catId = (int) $conn->lastInsertId();
+
+    try {
+        $results = searchServiceTestService()->getQuickSearchResultsNoCache('zqualifiesonlycat', []);
+
+        expect($results['items'])->toBe([])
+            ->and($results['qs']['unmatched_terms'])->toBe([]);
+    } finally {
+        $conn->executeStatement('DELETE FROM ' . Tables::categories() . ' WHERE id = ?', [$catId]);
+    }
+});
+
 test('getQuickSearchResultsNoCache() finds a category-named match', function (): void {
     // "Nested" only matches category 2's name ("Nested Sub Album",
     // fixture) -- exercises qsearchGetCategories(), which filters
@@ -1262,10 +1280,8 @@ test('qsearchGetTextTokenSearchSql() throws when preg_split() hits the backtrack
     ini_set('pcre.backtrack_limit', '0');
 
     try {
-        searchServiceTestService()->qsearchGetTextTokenSearchSql(new QSingleToken('hello-world', 0, null), ['name']);
-        expect(false)->toBeTrue('expected an exception');
-    } catch (Exception $e) {
-        expect($e->getMessage())->toContain('qsearchGetTextTokenSearchSql(): preg_split() failed');
+        expect(fn () => searchServiceTestService()->qsearchGetTextTokenSearchSql(new QSingleToken('hello-world', 0, null), ['name']))
+            ->toThrow(Exception::class, 'qsearchGetTextTokenSearchSql(): preg_split() failed');
     } finally {
         ini_set('pcre.backtrack_limit', $originalLimit === false ? '1000000' : $originalLimit);
     }
@@ -1380,6 +1396,27 @@ test('getQuickSearchResultsNoCache() filters by file scope', function (): void {
     $results = searchServiceTestService()->getQuickSearchResultsNoCache('file:photo-1', []);
 
     expect($results['items'])->toBe([1]);
+});
+
+test('getQuickSearchResultsNoCache() escapes a literal percent sign in the file scope, not treating it as a SQL LIKE wildcard', function (): void {
+    // No fixture filename contains a literal '%' -- if str_replace()'s
+    // own '%' => '\%' escaping pair were dropped, the raw '%' would
+    // instead be interpreted as SQL's own "match anything" wildcard,
+    // and 'fixture%1' would incorrectly match 'fixture-photo-1.jpg'
+    // (starts with 'fixture', has a '1' later).
+    $results = searchServiceTestService()->getQuickSearchResultsNoCache('file:fixture%1', []);
+
+    expect($results['items'])->toBe([]);
+});
+
+test('getQuickSearchResultsNoCache() escapes a literal underscore in the file scope, not treating it as a SQL LIKE single-char wildcard', function (): void {
+    // Real fixture filenames use a hyphen ('fixture-photo-N.jpg'), not
+    // an underscore -- if str_replace()'s own '_' => '\_' escaping pair
+    // were dropped, the raw '_' would match any single character
+    // (including that real hyphen) instead of a literal underscore.
+    $results = searchServiceTestService()->getQuickSearchResultsNoCache('file:photo_1', []);
+
+    expect($results['items'])->toBe([]);
 });
 
 test('getQuickSearchResultsNoCache() unhandled scope falls through the default hook branch', function (): void {
@@ -1757,10 +1794,8 @@ test('getQuickSearchResultsNoCache() throws when a QsearchGetScopes handler retu
     EventDispatcherTestFactory::get()->addEventHandler(QsearchGetScopes::class, $handler);
 
     try {
-        searchServiceTestService()->getQuickSearchResultsNoCache('family', []);
-        expect(false)->toBeTrue('expected an exception');
-    } catch (Error $e) {
-        expect($e->getMessage())->toContain('must return an instance of');
+        expect(fn () => searchServiceTestService()->getQuickSearchResultsNoCache('family', []))
+            ->toThrow(Error::class, 'must return an instance of');
     } finally {
         EventDispatcherTestFactory::get()->removeEventHandler(QsearchGetScopes::class, $handler);
     }
@@ -1844,12 +1879,8 @@ test('getQuickSearchResultsNoCache() applies a custom images_where clause', func
 test('getValidatedSearchInfo() calls fatalError() for an invalid identifier', function (): void {
     $service = searchServiceTestServiceWithRenderer(new SearchServiceTestFatalSignalHtmlRenderer());
 
-    try {
-        $service->getValidatedSearchInfo('not-a-valid-identifier', null);
-        expect(false)->toBeTrue('expected an exception');
-    } catch (RuntimeException $e) {
-        expect($e->getMessage())->toBe('fatalError: Invalid search identifier');
-    }
+    expect(fn () => $service->getValidatedSearchInfo('not-a-valid-identifier', null))
+        ->toThrow(RuntimeException::class, 'fatalError: Invalid search identifier');
 });
 
 test('getValidatedSearchInfo() calls fatalError() when a uuid search is looked up by bare id', function (): void {
@@ -1857,12 +1888,8 @@ test('getValidatedSearchInfo() calls fatalError() when a uuid search is looked u
 
     $service = searchServiceTestServiceWithRenderer(new SearchServiceTestFatalSignalHtmlRenderer());
 
-    try {
-        $service->getValidatedSearchInfo((string) $id, null);
-        expect(false)->toBeTrue('expected an exception');
-    } catch (RuntimeException $e) {
-        expect($e->getMessage())->toBe('fatalError: this search is not reachable with its id, need the search_uuid instead');
-    }
+    expect(fn () => $service->getValidatedSearchInfo((string) $id, null))
+        ->toThrow(RuntimeException::class, 'fatalError: this search is not reachable with its id, need the search_uuid instead');
 });
 
 test('getValidatedSearchInfo() looking up by uuid never triggers the id-vs-uuid mismatch gate, even when the row has a real uuid', function (): void {
@@ -1895,30 +1922,21 @@ test('getValidatedSearchInfo() looking up a bare id never triggers the mismatch 
 test('getValidatedSearchArray() calls badRequest() when the search is not found', function (): void {
     $service = searchServiceTestServiceWithRenderer(new SearchServiceTestFatalSignalHtmlRenderer());
 
-    try {
-        // getSearchIdPattern()'s own search_uuid regex requires exactly
-        // 10 alphanumeric chars after the date ('doesnotexist' is 12) --
-        // confirmed live, a too-long suffix doesn't match *any*
-        // recognised pattern at all, so getValidatedSearchInfo()'s
-        // earlier "Invalid search identifier" fatalError() fires first
-        // instead of ever reaching the not-found badRequest() this test
-        // means to exercise.
-        $service->getValidatedSearchArray('psk-20260712-doesnotexi', null);
-        expect(false)->toBeTrue('expected an exception');
-    } catch (RuntimeException $e) {
-        expect($e->getMessage())->toBe('badRequest: this search identifier does not exist');
-    }
+    // getSearchIdPattern()'s own search_uuid regex requires exactly 10
+    // alphanumeric chars after the date ('doesnotexist' is 12) --
+    // confirmed live, a too-long suffix doesn't match *any* recognised
+    // pattern at all, so getValidatedSearchInfo()'s earlier "Invalid
+    // search identifier" fatalError() fires first instead of ever
+    // reaching the not-found badRequest() this test means to exercise.
+    expect(fn () => $service->getValidatedSearchArray('psk-20260712-doesnotexi', null))
+        ->toThrow(RuntimeException::class, 'badRequest: this search identifier does not exist');
 });
 
 test('getSearchResults() calls badRequest() when the search identifier does not exist', function (): void {
     $service = searchServiceTestServiceWithRenderer(new SearchServiceTestFatalSignalHtmlRenderer());
 
-    try {
-        $service->getSearchResults('psk-20260712-doesnotexist', null);
-        expect(false)->toBeTrue('expected an exception');
-    } catch (RuntimeException $e) {
-        expect($e->getMessage())->toBe('badRequest: this search identifier does not exist');
-    }
+    expect(fn () => $service->getSearchResults('psk-20260712-doesnotexist', null))
+        ->toThrow(RuntimeException::class, 'badRequest: this search identifier does not exist');
 });
 
 test('getSearchResults() resolves a saved quick search query', function (): void {
@@ -1967,10 +1985,8 @@ test('getQuickSearchResultsNoCache() throws when the default user language resol
     searchServiceTestProcessCache()->forget('default_user');
 
     try {
-        searchServiceTestService()->getQuickSearchResultsNoCache('nature', []);
-        expect(false)->toBeTrue('expected an exception');
-    } catch (LogicException $e) {
-        expect($e->getMessage())->toBe('qsearch: \Piwigo\Search\Inflector\Inflector_zz does not implement InflectorInterface');
+        expect(fn () => searchServiceTestService()->getQuickSearchResultsNoCache('nature', []))
+            ->toThrow(LogicException::class, 'qsearch: \Piwigo\Search\Inflector\Inflector_zz does not implement InflectorInterface');
     } finally {
         $conn->executeStatement('UPDATE ' . Tables::userInfos() . ' SET language = ? WHERE user_id = 2', [$originalLanguage]);
         searchServiceTestProcessCache()->forget('default_user');

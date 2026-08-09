@@ -19,7 +19,7 @@ use Piwigo\Db\DbCredentials;
 /**
  * Real command-level proof for `bin/piwigo backup:create`/`backup:restore`,
  * replacing the rewire tools/restore-drill.sh's own header comment
- * anticipated ("Rewire onto the real bin/piwigo backup:restore once P12
+ * anticipated ("Rewire onto the real bin/piwigo backup:restore once it
  * lands"). Deliberately NOT wired into that script/its CI job instead --
  * see docs/REFERENCE.md's Restore section for why: that job
  * is intentionally PHP-dependency-free (~10s, no composer install step),

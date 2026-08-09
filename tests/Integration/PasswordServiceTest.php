@@ -19,9 +19,9 @@ use Piwigo\Db\Tables;
 
 /**
  * PasswordService::hash()/verify()/verifyLegacyPhpass() use native
- * password_hash()/password_verify() (bcrypt) as of P5. verify() also
+ * password_hash()/password_verify() (bcrypt). verify() also
  * accepts a legacy phpass ($P$/$H$-prefixed) hash -- this codebase's own
- * pre-P5 format, still present in installs/fixtures created before this
+ * older format, still present in installs/fixtures created before this
  * migration -- rehashing it to bcrypt on successful verify. The old MD5/
  * $conf['pass_convert'] fallback (bridging from *upstream* Piwigo's
  * pre-2.5 format) is gone: this fork has no in-place upgrade from

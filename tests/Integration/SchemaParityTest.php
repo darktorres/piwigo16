@@ -47,9 +47,9 @@ use Piwigo\Db\EntityManagerFactory;
  * "in sync" as "the live database contains ONLY what's mapped," so it
  * flags every still-unmapped table and FK constraint as a phantom drop.
  * That's not a real mismatch, just the wrong tool for this project's
- * deliberately incremental entity-mapping strategy (P14's own "first
+ * deliberately incremental entity-mapping strategy ("first
  * repositories needed for Config/DB bootstrap" scoping, carried through
- * P15). validateMapping() (metadata-internal correctness) plus a
+ * since). validateMapping() (metadata-internal correctness) plus a
  * targeted column-level check against just the config table is the
  * real, meaningful parity check at this stage.
  */

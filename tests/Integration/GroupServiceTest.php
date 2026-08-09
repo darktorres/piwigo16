@@ -39,8 +39,7 @@ use Piwigo\Group\GroupService;
  * common.inc.php), which this lightweight DBAL-only Integration harness
  * deliberately doesn't load. The full create/update/duplicate/merge/
  * delete/addMembers/removeMembers success paths are live-verified via
- * ws.php against the running Apache instance instead -- see the P18
- * wrap-up memory for the exact commands used.
+ * ws.php against the running Apache instance instead.
  *
  * The specific gaps below (duplicate()'s and merge()'s own per-member
  * activity-logging loop, addAccess()) are the one real exception: they

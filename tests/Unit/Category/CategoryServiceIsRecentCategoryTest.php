@@ -9,8 +9,8 @@ use DateTimeImmutable;
 use Piwigo\Category\CategoryService;
 
 /**
- * CategoryService::isRecentCategory() -- the PHP-side replacement (P23
- * batch 4b) for get_recent_photos_sql()'s SQL fragment:
+ * CategoryService::isRecentCategory() -- the PHP-side replacement
+ * for get_recent_photos_sql()'s SQL fragment:
  * `$dbField >= LEAST(today - $recentPeriod days, $lastPhotoDate - 1 day)`.
  * Pure function, no DB/globals needed.
  *

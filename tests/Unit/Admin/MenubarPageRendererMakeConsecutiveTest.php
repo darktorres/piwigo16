@@ -9,8 +9,8 @@ use Piwigo\Admin\MenubarPageRenderer;
 
 /**
  * MenubarPageRenderer::makeConsecutive()/absFnCmp() -- extracted from
- * include/admin/menubar.php's own top-level free functions during the P23
- * batch 6a port. Pure functions, no DB/globals needed.
+ * include/admin/menubar.php's own top-level free functions.
+ * Pure functions, no DB/globals needed.
  */
 final class MenubarPageRendererMakeConsecutiveTest extends TestCase
 {

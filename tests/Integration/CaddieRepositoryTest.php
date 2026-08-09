@@ -19,7 +19,7 @@ use Piwigo\Db\Tables;
 /**
  * caddie is empty in the fixture and only 4 real (FK-valid) user ids exist,
  * so tests can't rely on disjoint user ids for isolation the way most other
- * P18 Repository tests do -- each test cleans up its own rows via
+ * Repository tests do -- each test cleans up its own rows via
  * try/finally instead (same reasoning as CommentRepositoryTest/
  * RateRepositoryTest's own order-dependence fixes).
  */

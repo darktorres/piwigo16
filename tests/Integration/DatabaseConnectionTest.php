@@ -7,7 +7,7 @@ namespace Piwigo\Tests\Integration;
 use Override;
 
 /**
- * Restores the P2 verification step that was planned ("IntegrationTestCase-based
+ * Restores a verification step that was planned ("IntegrationTestCase-based
  * smoke passes against piwigo_test") but never actually landed as a concrete test —
  * tests/Integration/ only ever held the shared base class, so `pest --testsuite
  * Integration` silently exited non-zero with "No tests found". This is the minimal

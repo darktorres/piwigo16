@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 use Piwigo\Core\ShutdownHandler;
 
-// install() wires a real SIGTERM handler -- a P10-style global-state hazard
-// (same lesson as that phase's Sentry default_integrations handler
+// install() wires a real SIGTERM handler -- a global-state hazard
+// (same lesson as Sentry's own default_integrations handler
 // leakage), so afterEach restores SIGTERM to SIG_DFL to keep this from
 // bleeding into unrelated tests in the same worker process.
 //

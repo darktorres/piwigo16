@@ -6,9 +6,9 @@ use Symfony\Component\Routing\RouteCollection;
 
 // Validates config/routes.php generically: every route's `_controller`
 // default names a loadable class or interface. Passes trivially today --
-// config/routes.php is empty -- stays permanently useful as later phases
-// (starting P22) add real routes. Mirrors
-// tests/Unit/Core/ContainerDefinitionsTest.php's P8 precedent.
+// config/routes.php is empty -- stays permanently useful as later work
+// adds real routes. Mirrors
+// tests/Unit/Core/ContainerDefinitionsTest.php's own precedent.
 
 function loadRouteCollection(): RouteCollection
 {

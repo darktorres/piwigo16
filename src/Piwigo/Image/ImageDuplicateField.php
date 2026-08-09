@@ -5,12 +5,11 @@ declare(strict_types=1);
 namespace Piwigo\Image;
 
 /**
- * Item 15 Sub-item D: {@see ImageRepository::findIdsGroupedByDuplicateFields()}'s
- * `$fields` list, enumerated -- {@see \Piwigo\Admin\BatchManager\FilterResolver::
+ * {@see ImageRepository::findIdsGroupedByDuplicateFields()}'s `$fields`
+ * list, enumerated -- {@see \Piwigo\Admin\BatchManager\FilterResolver::
  * duplicateFieldsFromFilter()}'s own fixed internal allowlist (file/md5sum/
- * date_creation/width+height), confirmed via a fresh grep before converting.
- * A caller passes any subset of these cases (the "dimensions" toggle adds
- * both Width and Height together).
+ * date_creation/width+height). A caller passes any subset of these
+ * cases (the "dimensions" toggle adds both Width and Height together).
  */
 enum ImageDuplicateField
 {

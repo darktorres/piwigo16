@@ -134,13 +134,11 @@ final class FilterService implements FilterUpdaterInterface
             if (
                 // New filter
                 ! $this->sessionService->getFilterEnabled() or
-                // Gap-closure Stage 4a (docs/plan/gap-closure-p0-p23.md):
-                // replaces the deleted `user_cache.cache_update_time`-keyed
-                // immediate-invalidation check with the same 30s staleness
-                // budget every other CachePools-backed permission check
-                // uses -- long enough to avoid recomputing on every
-                // request, short enough that a permission change becomes
-                // visible well within one user session.
+                // Same 30s staleness budget every other CachePools-backed
+                // permission check uses -- long enough to avoid
+                // recomputing on every request, short enough that a
+                // permission change becomes visible well within one user
+                // session.
                 time() - $filter_key_time >= 30 or
                 // Date, period, user are changed
                 $filter_key['user'] !== $user->id->value or

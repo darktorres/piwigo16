@@ -63,7 +63,7 @@ final readonly class DbInfo
      */
     public function getTableFingerprint(string $table): string
     {
-        // SQL-modernization audit: {$table} verified structural -- its one
+        // {$table} is structural, not caller-controlled -- its one
         // real caller (Admin\AdminUiHelper::getAdminClientCacheKeys())
         // only ever passes a value drawn from a fixed Db\Tables::xxx()
         // array via array_intersect() against that same array's own keys,

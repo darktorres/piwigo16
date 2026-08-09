@@ -262,8 +262,13 @@ test('deleteImageTagByTagIds() is a no-op for no ids', function (): void {
         tagTestRepo()->deleteImageTagByTagIds([]);
 
         // tag 3 (family) is also linked to image 1 in the fixture --
-        // both links survive this no-op call.
-        expect(tagTestRepo()->findImageIdsForTagIds([TagId::from(3)]))->toBe([1, 4]);
+        // both links survive this no-op call. findImageIdsForTagIds()
+        // carries no ORDER BY (order is not part of its contract -- both
+        // real callers in TagService just treat the result as a set), so
+        // sort before comparing, same idiom as the sibling test above.
+        $imageIds = tagTestRepo()->findImageIdsForTagIds([TagId::from(3)]);
+        sort($imageIds);
+        expect($imageIds)->toBe([1, 4]);
     } finally {
         $conn->delete(Tables::imageTag(), ['image_id' => 4, 'tag_id' => 3]);
     }

@@ -483,11 +483,18 @@ test('findImageThumbInfoByIds() returns the requested images', function (): void
     }
 
     // Every field, not just name/file -- id (ImageId-typed) and every
-    // plain-string column alike.
+    // plain-string column alike. The upload path's own hash suffix is
+    // baked into each fixture file at regen time and genuinely differs
+    // between piwigo-17.0.sql and piwigo-17.0-pgsql.sql (both generated
+    // via separate, independent install+upload runs), same driver split
+    // documented in NotificationRepositoryTest.php/WsTopLevelTest.php.
+    $expectedPath = getenv('PIWIGO_DB_DRIVER') === 'pgsql'
+        ? 'upload/2026/08/01/20260801000000-2e7e7413.jpg'
+        : 'upload/2026/08/01/20260801000000-2e7ed018.jpg';
     expect($byId[1]->id)->toBe(1)
         ->and($byId[1]->name)->toBe('Photo 1')
         ->and($byId[1]->file)->toBe('fixture-photo-1.jpg')
-        ->and($byId[1]->path)->toBe('upload/2026/08/01/20260801000000-2e7ed018.jpg')
+        ->and($byId[1]->path)->toBe($expectedPath)
         ->and($byId[1]->representativeExt)->toBeNull()
         ->and($byId[1]->level)->toBe(0)
         ->and($byId[4]->id)->toBe(4)

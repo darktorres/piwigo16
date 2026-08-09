@@ -9,7 +9,7 @@ use Piwigo\Validation\InputValidator;
 
 /**
  * Validated `$_GET` shape for RatingPageRenderer::render() (page slug
- * "rating") -- P26/SEC-40 Request DTO. `catRaw`/`usersRaw` stay `mixed`
+ * "rating"). `catRaw`/`usersRaw` stay `mixed`
  * -- both are handed straight to a template array unchanged
  * (`'category' => [$_GET['cat']]` / `'user_options_selected' =>
  * [$_GET['users']]`), independently of `catId`'s own numeric-narrowed

@@ -10,7 +10,7 @@ use Piwigo\Validation\InputValidator;
 
 /**
  * Validated `$_GET['image_id']` for PictureFormatsPageRenderer::render()
- * (page slug "picture_formats") -- P26/SEC-40 Request DTO. Not mandatory:
+ * (page slug "picture_formats"). Not mandatory:
  * an absent/invalid value now resolves to `null` (`ImageId::tryFrom()`),
  * which the caller must check explicitly before calling findById() --
  * `ImageId::from(0)` throws, so the old "let a fake id 0 fail the lookup"

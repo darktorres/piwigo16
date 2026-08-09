@@ -9,7 +9,7 @@ use Piwigo\Validation\InputValidator;
 
 /**
  * Validated `$_GET` shape for UserActivityPageRenderer::render() (page
- * slug "user_activity") -- P26/SEC-40 Request DTO. `photo`/`album`/`group`
+ * slug "user_activity"). `photo`/`album`/`group`
  * are pattern-validated (`ValidationPattern::ID`, digits-only) up front,
  * same as the original; the additional-filters loop's own `is_string()` +
  * fatalError() check on whichever key is actually present is preserved at

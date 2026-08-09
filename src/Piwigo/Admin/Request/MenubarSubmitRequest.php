@@ -6,7 +6,7 @@ namespace Piwigo\Admin\Request;
 
 /**
  * Validated `$_POST` shape for MenubarPageRenderer::render()'s save form
- * (page slug "menubar") -- P26/SEC-40 Request DTO. Per-block fields are
+ * (page slug "menubar"). Per-block fields are
  * named dynamically (`hide_{id}`/`pos_{id}`) by the menubar block id, but
  * those ids come from the server's own registered-block/DB-config set
  * (`$reg_blocks`/`$mb_conf`), never from this request -- so there's no

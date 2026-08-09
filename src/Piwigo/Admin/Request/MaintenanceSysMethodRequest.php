@@ -6,7 +6,7 @@ namespace Piwigo\Admin\Request;
 
 /**
  * Validated `$_GET['method']` for MaintenanceSysPageRenderer::render() (the
- * "sys" tab of page slug "maintenance") -- P26/SEC-40 Request DTO. The
+ * "sys" tab of page slug "maintenance"). The
  * only real value this page acts on is the exact literal
  * `pwg.activity_sys.getList` (an equality check, not a pattern) -- anything
  * else falls through to the normal HTML render, so there's nothing for

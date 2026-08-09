@@ -7,7 +7,7 @@ namespace Piwigo\Admin\Request;
 /**
  * Validated `$_POST`/`$_FILES` shape for
  * ThemesStandardPagesPageRenderer::render()'s save form (page slug
- * "themes_standard_pages") -- P26/SEC-40 Request DTO. `selectedLogo`/
+ * "themes_standard_pages"). `selectedLogo`/
  * `selectedSkin` are checked against the renderer's own fixed option
  * lists (passed in by the caller, same as ExtensionTabRequest's pattern
  * parameter) -- an unrecognized value is simply not applied, matching

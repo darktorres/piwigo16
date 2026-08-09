@@ -6,7 +6,7 @@ namespace Piwigo\Admin\Request;
 
 /**
  * Validated `$_GET` shape for PluginsNewPageRenderer::render() (the "new"
- * tab of the "plugins" page slug) -- P26/SEC-40 Request DTO.
+ * tab of the "plugins" page slug).
  *
  * `revision`/`extension` collapse the original's combined
  * `isset(...) and isset(...) and is_string(...) and is_string(...)` gate

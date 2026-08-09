@@ -10,7 +10,7 @@ use Piwigo\Validation\InputValidator;
 /**
  * Validated `$_GET`/`$_POST` shape for PhotosAddDirectPageRenderer's
  * `render()`/`prepareUploadForm()` (the "direct" tab of the "photos_add"
- * page slug) -- P26/SEC-40 Request DTO.
+ * page slug).
  *
  * `fromGlobals()`/`fromArrays()` take `$isFormatsEnabled` as an explicit
  * parameter (from `CurrentConfig::isFormatsEnabled()`) rather than reading

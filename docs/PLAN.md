@@ -335,6 +335,18 @@ invokes `CurrentConfig::set{Property}()` via `ReflectionMethod`). The
 underlying fix (DB writes reaching the live config object, not just the
 legacy global) holds under the new names.
 
+**`#[Required]`/`#[Sensitive]` on `CurrentConfig` properties are markers
+only, not enforced.** Both are empty attribute classes with zero real
+reflection-based consumers anywhere in the codebase — nothing currently
+validates a `#[Required]` property is non-empty at boot, and nothing
+redacts a `#[Sensitive]` property from logs/dumps/admin views. `secretKey`
+carries both; `smtpPassword` carries `#[Sensitive]` alone. Fix: give
+`Sensitive` a real consumer (log/dump
+redaction, and audit which other properties should carry it — mail/API
+credentials are the obvious candidates) and `Required` a real one (a
+boot-time or `SchemaIntegrityTest`-style check that every `#[Required]`
+property is non-empty after `ConfigLoader` runs).
+
 **P14 — DB layer + Doctrine ORM.** Two real corrections, both since
 resolved:
 - The "repositories as real Doctrine ORM `EntityRepository` subclasses

@@ -218,7 +218,10 @@ and the doc it wrote (`docs/CONFIG.md`) were both removed: the generator
 was never wired into CI or any hook, so the table it produced drifted out
 of sync with the real properties. `CurrentConfig.php`'s own per-property
 docblocks (`#[Required]`/`#[Sensitive]` attributes included) are the real
-source of truth — read the class directly.
+source of truth — read the class directly. Both attributes are markers
+only today — `Required`/`Sensitive` are empty classes with no real
+reflection-based consumer anywhere, so neither one currently drives any
+enforcement or redaction; they document intent, nothing more.
 
 ## Deployment
 

@@ -2979,6 +2979,7 @@ final class CurrentConfig
      * Random string used to sign CSRF tokens and internal hashes.
      */
     #[Required]
+    #[Sensitive]
     private string $secretKey = '';
 
     public function secretKey(): string

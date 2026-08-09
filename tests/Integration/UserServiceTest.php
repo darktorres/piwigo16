@@ -966,11 +966,15 @@ namespace Piwigo\Tests\Integration {
             $tempId = (int) $this->conn->lastInsertId();
             $currentConfig = CurrentConfigTestFactory::get();
             $currentConfig->webmasterId = $tempId;
-            // setAvailablePermissionLevels([]) itself treats an empty array
-            // as "reset to the built-in default" ([0,1,2,4,8]) -- confirmed
-            // live, not a real empty state -- so a genuinely empty list can
-            // only be reached by seeding the backing property directly.
-            new ReflectionProperty(CurrentConfig::class, 'availablePermissionLevels')->setValue($currentConfig, []);
+            // availablePermissionLevels's own set hook treats an empty
+            // array as "reset to the built-in default" ([0,1,2,4,8]) --
+            // confirmed live, not a real empty state -- and
+            // ReflectionProperty::setValue() invokes that hook rather than
+            // bypassing it (confirmed live: it's the property's own write
+            // path, not a separate setter method). setRawValue() writes the
+            // backing storage directly, skipping the hook entirely -- the
+            // only way left to reach a genuinely empty list.
+            new ReflectionProperty(CurrentConfig::class, 'availablePermissionLevels')->setRawValue($currentConfig, []);
 
             try {
                 $this->service->createUserInfos([UserId::from($tempId)]);

@@ -195,6 +195,38 @@ at this codebase's shape, not a bug in the code. Psalm gating paused here
 dropped as a dependency entirely; see `docs/REFERENCE.md`'s "Psalm gating
 is moot, not just paused" decision.
 
+**`mdetect.php`'s removal left device detection entirely unimplemented,
+not just library-free.** `Core\DeviceHelper::getDevice()` has a single
+writer and it unconditionally sets `'desktop'` on every new session — no
+User-Agent parsing exists anywhere in this codebase, so `'mobile'`/
+`'tablet'` are never produced automatically; the only path to the mobile
+theme is an explicit `?mobile=1` query param a visitor has to already
+know to use. The reference implementation (`../piwigo16-rewrite`) kept
+`mobiledetect/mobiledetectlib` and built a real `Http\DeviceDetectionService`
+on top of it (`MobileDetect::isTablet()`/`isMobile()`, cached in the
+session same as this fork's design). Fix: reintroduce
+`mobiledetect/mobiledetectlib` (or an equivalent native-platform check)
+and give `DeviceHelper::getDevice()` a real classification path instead
+of the static default.
+
+**Rector's rule set is still a P0 placeholder, despite P5 being "Done."**
+`rector.php`'s own header comment says "Rule selection below is
+deliberately provisional; P5 designs the real strategy from scratch," but
+`withPhpSets()`/`withPreparedSets()` are commented out and exactly one
+trivial rule (`RemoveUselessAliasInUseStatementRector`) is live — Rector
+was applied once during P5 (`chore(p5): apply Rector instanceOf set`)
+but the config was never left enforcing anything ongoing. The reference
+implementation runs a real, continuously-enforced set: `withPhpSets(php85:
+true)`, `withComposerBased(doctrine: true, phpunit: true, symfony: true)`,
+`SetList::TYPE_DECLARATION`, plus explicit strict-types/dead-tag-removal
+rules. Separately, this fork's `phpstan.neon` has no
+`phpstan/phpstan-deprecation-rules` include — the reference's does, giving
+it automatic, project-wide detection of any call to a `@deprecated`-tagged
+method (vendor or first-party), something this fork's singleton/DI
+campaign instead had to track by hand via a shrinking arch-test
+allow-list. Fix: design the real Rector rule set P5's own comment
+promised, and add `phpstan/phpstan-deprecation-rules` to `phpstan.neon`.
+
 **P6 — PSR-4 namespace migration.** Extracted every first-party `class`/
 `interface` declaration living inside `include/`/`admin/include/`
 procedural files into `src/Piwigo/`, `Piwigo\` namespace prefix — 66
@@ -256,6 +288,17 @@ of `CacheFactory`; `rate_limiter` specifically stays unbuilt (genuinely
 P26 scope, no consumer exists yet). Messenger itself is real and wired
 (`config/messenger.php`, 5 `Piwigo\Job\*` classes + handlers) — see
 `docs/REFERENCE.md`.
+
+**A failed job today is invisible and unmanageable.** No code anywhere in
+this codebase queries the `messenger_messages` transport table — if a
+`SendNotificationEmailJob`/`GenerateDerivativeJob`/`BatchUploadJob`/
+`ReindexImagesJob`/`RegenerateAllDerivativesJob` fails, there's no way to
+see it, retry it, or purge it. The reference implementation has
+`Job\MessengerRepository`/`Job\FailedJob` backing "an admin batch-manager
+queue dashboard to inspect failed jobs and retry/purge them" (that
+class's own docblock). Fix: build the equivalent repository + a small
+admin-facing view, the same pattern this fork already uses elsewhere for
+DB-backed admin tooling.
 
 **P12 — CLI tool + backup/restore + graceful shutdown.** `bin/piwigo`,
 `BackupService`, `ShutdownHandler`/SIGTERM cleanup, PHPBench. A
@@ -947,12 +990,28 @@ accessor over raw offset access" discipline SEC-40 already established:
    — whether new session keys become more named `SessionService`
    accessors (the pattern actually shipped for that half) or populate
    the still-empty `Session` VO (a different, parallel pattern) isn't
-   resolved.
+   resolved. One slice of this has a ready-made design already:
+   `page_infos`/`page_errors`/`message_tags` (the cross-request
+   flash-message pair `HtmlService` still reads/writes as raw
+   `$_SESSION` keys) map directly onto the reference implementation's
+   real `Session\FlashBag` class — write during request N via `add()`,
+   consume-once on N+1 via `consume()`, peek without consuming via
+   `peek()`. Worth porting directly rather than redesigning.
 3. **WS method `$params` arrays** — 97 methods across 11 `Ws/Pwg*.php`
    files take a raw `array $params` indexed by string key, with zero
    typed accessors; each already has a full param-type schema at its
    `addMethod()` registration site in `WsDefaultMethods.php`, a
-   ready-made scaffold for one `{Method}Params` DTO per method.
+   ready-made scaffold for one `{Method}Params` DTO per method. The
+   reference implementation has already built this, for real, for 95 of
+   its WS methods: a `{Method}Params implements WsParams` DTO (`fromArray()`
+   factory) paired with a `{Method}Handler implements WsAction`
+   (`__invoke(array $params, PwgServer $server): mixed`, constructor-
+   injected typed dependencies), registered via a typed `MethodDefinition`/
+   `ParamDefinition` pair instead of the legacy callback-array shape —
+   `Ws/WsAction.php`'s own docblock: "replaces the legacy `*Endpoints`
+   god-classes... being replaced one method at a time." This is directly
+   adoptable prior art for this item, not just a target shape to
+   reinvent from scratch.
 4. **Raw DBAL row arrays** consumed by string-keyed offset — real, but
    its own prior sizing document (a now-deleted `docs/plan/` file) can no
    longer be checked against source; needs a fresh count before scoping.

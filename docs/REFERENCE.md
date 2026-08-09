@@ -142,6 +142,8 @@ natively, no code change.
 (`SendNotificationEmailJob`, `GenerateDerivativeJob`, `BatchUploadJob`,
 `ReindexImagesJob`, `RegenerateAllDerivativesJob`) with matching
 `Piwigo\Job\Handler\*` handlers, transport table `messenger_messages`.
+No code queries that table back — a failed job has no admin-facing
+visibility, retry, or purge path today.
 
 ### CLI (`bin/piwigo`)
 
@@ -174,6 +176,12 @@ the current, live (post-migration) schema.
 - **opcache.preload** — `config/preload.php` exists and lists hot classes,
   but isn't enabled in any shipped `php.ini`; this is left as a
   deployment-time optimization, not something CI/local dev needs.
+- **Mobile/tablet device detection** — `Core\DeviceHelper::getDevice()`
+  has a single writer, and it unconditionally sets `'desktop'` on every
+  new session; no User-Agent parsing exists anywhere in this codebase.
+  `'mobile'`/`'tablet'` are never produced automatically — the only path
+  to the mobile theme is an explicit `?mobile=1` query param a visitor
+  has to already know to use.
 - **The image-derivative fast path (`bootMinimal`)** — the plan committed to
   a stripped request path for image derivatives specifically (the highest-
   volume request type on a photo gallery): skip the full DI container/
@@ -555,7 +563,13 @@ each with an inline comment saying so "until P5" — see `docs/PLAN.md` for
 P5's completion status; the CI file itself hasn't been revisited to make
 either job blocking since. Psalm gating was never reconsidered either,
 but that's moot now — see "Psalm gating is moot, not just paused" under
-Key design decisions.
+Key design decisions. Rector's own rule set is narrower than
+"non-blocking" implies: `rector.php` has `withPhpSets()`/
+`withPreparedSets()` commented out, leaving exactly one trivial rule
+live (`RemoveUselessAliasInUseStatementRector`) — the `rector` job runs
+and reports, but checks almost nothing. `phpstan.neon` also has no
+`phpstan/phpstan-deprecation-rules` include, so PHPStan doesn't flag
+calls to `@deprecated`-tagged methods anywhere in the codebase.
 
 Every DB-backed job gets a real ephemeral `mysql:9.7` service container,
 fixture imported fresh via `mysql < tests/Fixtures/piwigo-17.0.sql`.

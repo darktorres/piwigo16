@@ -28,7 +28,7 @@ it('admin photo editor page loads without errors', function (): void {
     $page->assertNoJavaScriptErrors();
 });
 
-// P21 Config batch: picture_formats/picture_coi both need a real image_id.
+// Config batch: picture_formats/picture_coi both need a real image_id.
 it('admin picture_formats and picture_coi pages load without errors', function (): void {
     $page = H::loginAsAdmin($this);
     $album = H::wsCall($page, 'pwg.categories.add', ['name' => 'Smoke Test Album ' . uniqid()]);
@@ -56,7 +56,7 @@ $routes = [
     'admin stats'          => '/admin.php?page=stats',
     'admin rating'         => '/admin.php?page=rating',
     'admin permalinks'     => '/admin.php?page=permalinks',
-    // P21 Upload batch: photos_add is the first page migrated to
+    // Upload batch: photos_add is the first page migrated to
     // AdminSubControllerInterface (PhotosAddSubController) -- all 3 tabs
     // covered since the sub-controller's own tab-allowlist affects all of
     // them, plus the invalid-tab fallback.
@@ -69,7 +69,7 @@ $routes = [
     // scheme) -- not exercised by the "(applications)" route above,
     // which uses the real tab name directly.
     'admin photos_add (ploader alias)' => '/admin.php?page=photos_add&section=ploader',
-    // P21 Albums batch: cat_list is the one page in this batch with no
+    // Albums batch: cat_list is the one page in this batch with no
     // prior Browser coverage anywhere (albums/album/cat_options already
     // covered by AdminSmokeTest/AlbumTreeTest/ConsoleCleanTest/
     // VisualRegressionTest); tab=notification exercises AlbumSubController's
@@ -77,7 +77,7 @@ $routes = [
     // VisualRegressionTest routes above.
     'admin cat_list'                  => '/admin.php?page=cat_list',
     'admin album (notification tab)'  => '/admin.php?page=album&cat_id=1&tab=notification',
-    // P21 Config batch: configuration is already covered by ConsoleCleanTest/
+    // Config batch: configuration is already covered by ConsoleCleanTest/
     // VisualRegressionTest; the other 7 pages in this batch have no prior
     // Browser coverage anywhere.
     'admin extend_for_templates'      => '/admin.php?page=extend_for_templates',

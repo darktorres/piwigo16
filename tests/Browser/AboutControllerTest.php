@@ -5,7 +5,7 @@ declare(strict_types=1);
 use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
 
 /**
- * Piwigo\Controller\AboutController (about.php) -- P22's own proof-of-concept
+ * Piwigo\Controller\AboutController (about.php) -- a proof-of-concept
  * controller. Guest-accessible, no POST handling, no redirects: the only
  * real branches are the theme-specific "THEME_ABOUT" assignment (gated on
  * Lang::load() returning something other than false) and the credits body

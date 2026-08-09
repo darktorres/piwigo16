@@ -156,6 +156,13 @@ test('config() reads config/messenger.php relative to CurrentPathsTestFactory::g
 
         $transport->send(new Envelope(new stdClass()));
 
+        // $connection is a fresh in-memory sqlite connection created a few
+        // lines above (not the live DB staabm/phpstan-dba's bootstrap
+        // connects to), and mutation_sweep_messages is auto-created on it
+        // by transport()'s own send() call just above -- neither the
+        // engine nor the table exists in the persistent schema the live
+        // reflector inspects.
+        // @phpstan-ignore dba.syntaxError
         $rows = $connection->fetchAllAssociative('SELECT queue_name FROM mutation_sweep_messages');
         expect($rows)->toBe([['queue_name' => 'mutation_sweep_queue']]);
     } finally {

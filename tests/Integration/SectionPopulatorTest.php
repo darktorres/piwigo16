@@ -448,7 +448,7 @@ final class SectionPopulatorTest extends IntegrationTestCase
         }
 
         $remaining = $this->conn->fetchOne('SELECT COUNT(*) FROM piwigo_favorites WHERE user_id = 3');
-        self::assertSame(0, is_numeric($remaining) ? (int) $remaining : -1);
+        self::assertSame(0, $remaining);
     }
 
     public function test_populate_builds_the_recent_pics_section(): void

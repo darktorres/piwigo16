@@ -3,6 +3,8 @@ includes:
 
 parameters:
     level: 10
+    bootstrapFiles:
+        - tests/phpstan-dba-bootstrap.php
     doctrine:
         objectManagerLoader: tests/phpstan-object-manager.php
     stubFiles:
@@ -64,3 +66,39 @@ parameters:
             # class-string<FixerInterface>. Tooling config, not application
             # code.
             - ecs.php
+    ignoreErrors:
+        -
+            # staabm/phpstan-dba's DoctrineKeyValueStyleRule validates
+            # insert()/update()/delete()'s table-name argument only when
+            # it's a compile-time string literal, so it can look up real
+            # column names/types against the live schema. This codebase
+            # never passes a literal table name to those calls -- every
+            # real call site goes through Piwigo\Db\Tables::xxx() (39
+            # methods, one per table), which builds `$prefix . 'tablename'`
+            # at runtime from PIWIGO_DB_PREFIX (see that class's own
+            # docblock) precisely so the table prefix stays configurable.
+            # That's a deliberate, permanent architectural pattern, not an
+            # oversight -- every insert/update/delete call in the whole
+            # codebase would trip this rule, so a per-site @phpstan-ignore
+            # would just mean the same comment repeated at 60+ call sites
+            # with zero added value. The rest of phpstan-dba (real SQL
+            # syntax/schema validation via executeQuery/fetchAssociative/
+            # etc.) stays fully active; this disables only the one sub-rule
+            # whose premise doesn't fit this codebase.
+            identifier: dba.keyValue
+        -
+            # Every query in this file targets an in-memory pdo_sqlite
+            # scratch table (t/t2/t3, see the file's own docblock) created
+            # fresh inline by each test -- never the live DB
+            # tests/phpstan-dba-bootstrap.php connects to, so
+            # staabm/phpstan-dba always reports "table does not exist".
+            identifier: dba.syntaxError
+            path: tests/Unit/Db/BatchWriterTest.php
+        -
+            # Every query in this file targets self::TABLE
+            # ('batchwriter_test_scratch', see the file's own docblock) or
+            # a quoted variant of it -- a throwaway table this file's own
+            # setUp()/tearDown() drops and recreates around each test, so
+            # it never matches the live reflector's persistent schema.
+            identifier: dba.syntaxError
+            path: tests/Integration/BatchWriterTest.php

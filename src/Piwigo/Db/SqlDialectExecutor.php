@@ -70,6 +70,16 @@ final class SqlDialectExecutor
             ? 'NOW() + make_interval(days => 1)'
             : 'ADDDATE(NOW(), INTERVAL 1 DAY)';
 
+        // staabm/phpstan-dba resolves both of $expr's possible literal
+        // values and validates each against the one live DB its bootstrap
+        // connects to (tests/phpstan-dba-bootstrap.php, driven by
+        // .env.test -- currently pgsql). The MySQL-flavored ADDDATE()
+        // branch above necessarily fails against a Postgres connection
+        // (and vice versa) -- both branches are real and correct for their
+        // own engine, already verified by this method's own platform
+        // check; this is a single-connection blind spot in the tool, not
+        // a bug in either branch.
+        // @phpstan-ignore dba.syntaxError
         $value = $this->conn->fetchOne('SELECT ' . $expr);
 
         return is_string($value) ? $value : '';

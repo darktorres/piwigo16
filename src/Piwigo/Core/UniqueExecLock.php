@@ -123,6 +123,13 @@ final class UniqueExecLock
 
     private static function isRunningPostgres(Connection $conn, string $tokenName): bool
     {
+        // staabm/phpstan-dba's named-placeholder regex (`:[a-zA-Z0-9_]+`)
+        // matches the second colon of Postgres's own `expr::bigint` cast
+        // syntax below and misreads it as a named placeholder `:bigint`
+        // with no bound value -- confirmed by reading the extension's own
+        // QueryReflection::NAMED_PATTERN. Only one real placeholder (`?`)
+        // exists in this query; all 3 array values bind to it correctly.
+        // @phpstan-ignore dba.syntaxError
         $held = $conn->fetchOne(
             'SELECT 1 FROM pg_locks WHERE locktype = ? AND objsubid = ? AND ((classid::bigint << 32) | objid::bigint) = ?',
             ['advisory', 1, AdvisorySessionLock::key(self::lockName($tokenName))]

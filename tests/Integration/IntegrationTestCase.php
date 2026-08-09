@@ -20,6 +20,7 @@ use Piwigo\Core\InstallationFlag;
 use Piwigo\Core\Env;
 use mysqli;
 use mysqli_result;
+use mysqli_sql_exception;
 use Doctrine\DBAL\Connection;
 use Doctrine\ORM\EntityManager;
 use Doctrine\ORM\Events;
@@ -597,16 +598,26 @@ abstract class IntegrationTestCase extends TestCase
                     }
                 }
             } else {
-                $db = $this->newMysqli($this->dbName);
-                if ($db->connect_errno === 0) {
-                    $result = $db->query(sprintf('SELECT COUNT(*) FROM `%simages`', $this->dbPrefix));
-                    if ($result !== false) {
-                        $db->close();
+                try {
+                    $db = $this->newMysqli($this->dbName);
+                    $db->query(sprintf('SELECT COUNT(*) FROM `%simages`', $this->dbPrefix));
+                    $db->close();
 
-                        return;
-                    }
+                    return;
+                } catch (mysqli_sql_exception) {
+                    // PHP 8.1+'s default mysqli error mode throws
+                    // mysqli_sql_exception on both a failed connection and a
+                    // failed query, rather than leaving connect_errno
+                    // nonzero or returning false -- under this PHP
+                    // version's real default, reaching the return above at
+                    // all already proves the query succeeded, and this
+                    // catch (not a `!== false` check) is what makes the
+                    // retry loop's own documented "poll until readable"
+                    // intent actually work for a transient failure during
+                    // InnoDB's cold-buffer-pool warm-up. Falls through to
+                    // the usleep()+retry below, same as
+                    // the pgsql branch's own @-suppressed false return.
                 }
-                $db->close();
             }
 
             usleep(100_000);

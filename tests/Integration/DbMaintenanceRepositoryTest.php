@@ -374,6 +374,13 @@ final class DbMaintenanceRepositoryTest extends IntegrationTestCase
             // the same regex-based extraction below applies unchanged once
             // fed this instead.
             if ($this->dbDriver === 'pgsql') {
+                // staabm/phpstan-dba's named-placeholder regex matches the
+                // second colon of Postgres's own `?::regclass` cast below
+                // and misreads it as a second, unbound named placeholder
+                // -- see UniqueExecLock::isRunningPostgres()'s own
+                // identical finding for the same root cause. Only the
+                // single `?` is a real placeholder; $tableName binds to it.
+                // @phpstan-ignore dba.syntaxError
                 $createTableSql = $this->conn->fetchOne(
                     "SELECT pg_get_constraintdef(oid) FROM pg_constraint WHERE contype = 'p' AND conrelid = ?::regclass",
                     [$tableName]

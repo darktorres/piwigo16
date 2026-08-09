@@ -61,6 +61,9 @@
     "ext-imap": "Optional email-address parsing helper for notification features."
   },
   "require-dev": {
+    "ext-pdo": "*",
+    "ext-pdo_mysql": "*",
+    "ext-pdo_pgsql": "*",
     "cweagans/composer-patches": "^2.0",
     "cyclonedx/cyclonedx-php-composer": "^6.2",
     "deptrac/deptrac": "^4.6",
@@ -83,6 +86,7 @@
     "phpstan/phpstan-symfony": "^2.0",
     "rector/rector": "^2.0",
     "roave/security-advisories": "dev-latest",
+    "staabm/phpstan-dba": "dev-main",
     "symfony/yaml": "^8.1",
     "symplify/easy-coding-standard": "^13.1"
   },

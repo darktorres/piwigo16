@@ -196,7 +196,7 @@ final class UserBootstrapTest extends IntegrationTestCase
             'SELECT COUNT(*) FROM piwigo_users WHERE username = ?',
             ['regular_user']
         );
-        self::assertSame(1, is_numeric($count) ? (int) $count : 0);
+        self::assertSame(1, $count);
     }
 
     public function test_initialize_calls_authKeyLogin_when_the_auth_query_parameter_is_present(): void

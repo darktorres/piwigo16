@@ -815,11 +815,9 @@ final class PictureController implements ControllerInterface
         }
         $download_url = $picture['current']['download_url'] ?? null;
         $download_url_present = is_string($download_url) && $download_url !== '' && $download_url !== '0';
+        /** @var list<array<string, mixed>> $formats */
+        $formats = [];
         if ($this->currentConfig->pictureDownloadIcon() and $download_url_present and $this->currentUser->get()->enabledHigh) {
-            $template->append('current', [
-                'U_DOWNLOAD' => $download_url,
-            ], true);
-
             if ($this->currentConfig->isFormatsEnabled()) {
                 $picture_id = $picture['current']['id'];
                 $formats = array_map(
@@ -861,9 +859,6 @@ final class PictureController implements ControllerInterface
                     $format['filesize'] = sprintf('%.1fMB', $format_filesize / 1024.0);
                 }
                 unset($format);
-                $template->append('current', [
-                    'formats' => $formats,
-                ], true);
             }
         }
 
@@ -1191,6 +1186,20 @@ final class PictureController implements ControllerInterface
                 ->countPdfPages($this->paths->root . $picture['current']['path']);
         }
 
+        // Real bug found live: picture_content.tpl's own {if ...
+        // $current.filesize < $PDF_VIEWER_FILESIZE_THRESHOLD} guard (its
+        // only real consumer) reads this template variable from inside
+        // the dispatchChange() call immediately below -- before this
+        // method's own later assignContext(new PicturePageContext(...))
+        // ever assigns it. Undefined there, `<` against it silently
+        // evaluates false, and the <embed> PDF viewer tag never renders
+        // for any PDF, confirmed live via a real PDF upload test.
+        // $pdf_viewer_filesize_threshold is already fully computed above;
+        // assign it early too so it's actually available where it's
+        // used -- the later assignContext() call re-assigns the same
+        // key to the same value, which is harmless.
+        $template->assign('PDF_VIEWER_FILESIZE_THRESHOLD', $pdf_viewer_filesize_threshold);
+
         // maybe someone wants a special display (call it before
         // page_header so that they can add stylesheets)
         $contentEvent = $this->eventDispatcher->dispatchChange(new RenderElementContent('', $picture['current']));
@@ -1251,6 +1260,32 @@ final class PictureController implements ControllerInterface
             uPrefetch: $u_prefetch,
             uCanonical: $u_canonical,
         ));
+
+        // Real bug found live: assignContext() above assigns 'current'
+        // via Smarty's own assign() (a full replace, not a merge) to
+        // $nav['current'] -- built purely from the plain $picture['current']
+        // PHP array, which never carries U_DOWNLOAD/formats (those only
+        // ever got appended onto the *Smarty* 'current' variable, back
+        // when $download_url_present/isFormatsEnabled() were evaluated
+        // above). Appending them there, before this replace, meant
+        // picture.tpl (which reads $current.formats/U_DOWNLOAD directly,
+        // and parses only later, at parse('picture', ...) below) never
+        // saw them -- confirmed live via a real enable_formats upload
+        // test. Re-running the same append()s here, after the replace,
+        // is the fix; $download_url/$download_url_present/$formats are
+        // still the same PHP variables computed above (function-scoped,
+        // not lost).
+        if ($this->currentConfig->pictureDownloadIcon() and $download_url_present and $this->currentUser->get()->enabledHigh) {
+            $template->append('current', [
+                'U_DOWNLOAD' => $download_url,
+            ], true);
+
+            if ($this->currentConfig->isFormatsEnabled()) {
+                $template->append('current', [
+                    'formats' => $formats,
+                ], true);
+            }
+        }
 
         // +-------------------------------------------------------------+
         // |                          sub pages                           |

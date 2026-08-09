@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Piwigo\Template\Request;
 
 /**
- * Validated `$_GET` shape for Template::set_extents() -- P26/SEC-40
- * Request DTO. The original matches a candidate extension's own `$param`
+ * Validated `$_GET` shape for Template::set_extents().
+ * The original matches a candidate extension's own `$param`
  * substring against every GET param NAME concatenated together (never
  * the values) -- a legacy PATH_INFO-style query-string convention (e.g.
  * `?admin/foo=1`), not user-controlled data flowing anywhere sensitive.

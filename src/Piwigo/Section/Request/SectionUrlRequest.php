@@ -5,8 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Section\Request;
 
 /**
- * Validated `$_GET` shape for SectionInitializer::parse() -- P26/SEC-40
- * Request DTO.
+ * Validated `$_GET` shape for SectionInitializer::parse().
  *
  * `firstGetKey` is the legacy query-string-as-path convention this
  * gallery URL scheme relies on (`?category/12-name/start-24` --  the

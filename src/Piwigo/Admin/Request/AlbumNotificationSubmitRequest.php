@@ -9,8 +9,8 @@ use Piwigo\Validation\InputValidator;
 
 /**
  * Validated `$_POST` shape for AlbumNotificationPageRenderer::render()'s
- * "notification" tab email form (page slug "album") -- P26/SEC-40 Request
- * DTO. `users`' own `InputValidator::validate()` call only runs when
+ * "notification" tab email form (page slug "album").
+ * `users`' own `InputValidator::validate()` call only runs when
  * `who === 'users'` and `users` is a non-empty array, matching the
  * original exactly; same for `group`'s validation, gated on
  * `who === 'group'` and `group` not being one of the original's

@@ -6,8 +6,7 @@ namespace Piwigo\Admin\Request;
 
 /**
  * Validated `$_GET`/`$_POST` shape for ElementSetRanksPageRenderer::render()
- * (the "sort_order" tab of the "album" page slug) -- P26/SEC-40 Request
- * DTO.
+ * (the "sort_order" tab of the "album" page slug).
  *
  * `isCatIdValid`/`catId` split the original's `isset(...) or ! is_numeric(...)`
  * guard from its own unconditional `(int) $_GET['cat_id']` cast that

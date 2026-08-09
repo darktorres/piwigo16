@@ -9,8 +9,7 @@ use Piwigo\Validation\InputValidator;
 
 /**
  * Validated `$_GET`/`$_POST` shape for BatchManagerGlobalPageRenderer::render()
- * (the "global" mode tab of the "batch_manager" page slug) -- P26/SEC-40
- * Request DTO.
+ * (the "global" mode tab of the "batch_manager" page slug).
  *
  * `post` retains the raw `$_POST` array -- same "expose the raw bag"
  * shape as the sibling `BatchManagerUnitRequest::$post`: each action

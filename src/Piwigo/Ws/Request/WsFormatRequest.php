@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Piwigo\Ws\Request;
 
 /**
- * Validated `$_GET['format']` for `WsInitializer::init()` -- P26/SEC-40
- * Request DTO. Defaults to `'rest'` when absent, matching the request
+ * Validated `$_GET['format']` for `WsInitializer::init()`.
+ * Defaults to `'rest'` when absent, matching the request
  * format (this app only ever registers a REST request handler). No
  * pattern validation needed: `WsInitializer::init()`'s own switch
  * already leaves the encoder null for any unrecognized format before

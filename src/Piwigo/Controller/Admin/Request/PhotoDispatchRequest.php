@@ -9,8 +9,8 @@ use Piwigo\Validation\InputValidator;
 
 /**
  * Validated `$_GET['image_id']`/`$_GET['tab']` for
- * PhotoSubController::handle() (page slug "photo") -- P26/SEC-40 Request
- * DTO. `tab` is checked against a fixed allowlist (not an InputValidator
+ * PhotoSubController::handle() (page slug "photo").
+ * `tab` is checked against a fixed allowlist (not an InputValidator
  * pattern), matching this controller's own established
  * defense-in-depth precedent (its own docblock: admin.php's shared tab
  * pattern already blocks real path traversal before dispatch reaches

@@ -50,6 +50,7 @@ use Piwigo\Tests\Support\HtmlServiceTestFactory;
 use Piwigo\Tests\Support\LangTestFactory;
 use Piwigo\Tests\Support\PageStateTestFactory;
 use Piwigo\Tests\Support\TranslatorTestFactory;
+use Piwigo\Tests\Support\UrlServiceTestFactory;
 use Piwigo\Users\User;
 use Piwigo\Users\UserService;
 
@@ -490,8 +491,80 @@ test('getAvailableSearchUuid() skips a colliding uuid', function (): void {
         ->and(searchServiceTestRepo()->countSavedSearchByUuid($next))->toBe(0);
 });
 
+test('saveSearch() persists the rules under a fresh uuid and returns a matching uuid+url pair', function (): void {
+    // saveSearch() has no dedicated test anywhere -- not even in the
+    // Integration original (a real spec gap, same shape as
+    // TagRepositoryTest.php's own findByIdsOrAll() finding this
+    // session). 2 real production callers (Ws\PwgImages::
+    // filteredSearchCreate(), Controller\SearchController) depend on
+    // its own [uuid, url] contract.
+    $rules = ['q' => 'nature'];
+
+    [$uuid, $url] = searchServiceTestService()->saveSearch($rules, UrlServiceTestFactory::build());
+
+    expect($uuid)->toMatch('/^psk-\d{8}-[a-z0-9]{10}$/i')
+        ->and($url)->toContain($uuid);
+
+    $info = searchServiceTestService()->getSearchInfo($uuid);
+    if ($info === null) {
+        throw new LogicException('expected a persisted Search row, got null');
+    }
+
+    expect($info->rules)->toBe($rules)
+        ->and($info->createdBy)->toBe(1)
+        ->and($info->forkedFrom)->toBeNull();
+});
+
+test('saveSearch() threads a real forkedFrom id into the persisted row', function (): void {
+    $originalId = searchServiceTestRepo()->insertSavedSearch(['q' => 'nature'], '2026-07-12 00:00:00', 1, 'psk-20260712-forkorigin', null);
+
+    [$uuid] = searchServiceTestService()->saveSearch(['q' => 'nature refined'], UrlServiceTestFactory::build(), $originalId);
+
+    $info = searchServiceTestService()->getSearchInfo($uuid);
+    if ($info === null) {
+        throw new LogicException('expected a persisted Search row, got null');
+    }
+
+    expect($info->forkedFrom)->toBe($originalId);
+});
+
+test('saveSearch() updates the current user\'s gallery_search_filters preference for a real registered user', function (): void {
+    // The `! isAGuest() && ! isGeneric()` gate -- beforeEach()'s default
+    // user (status 'normal') is neither, so this must actually reach
+    // PreferencesService::updateParam(), persisting the search's own
+    // top-level field names into user_infos.preferences (one combined
+    // JSON column, not a per-param row).
+    $conn = searchServiceTestConn();
+    $originalPreferences = $conn->fetchOne('SELECT preferences FROM ' . Tables::userInfos() . ' WHERE user_id = 1');
+
+    try {
+        searchServiceTestService()->saveSearch(['q' => 'x', 'fields' => ['tags' => ['words' => [1]], 'author' => ['words' => ['a']]]], UrlServiceTestFactory::build());
+
+        $stored = $conn->fetchOne('SELECT preferences FROM ' . Tables::userInfos() . ' WHERE user_id = 1');
+        if (! is_string($stored)) {
+            throw new LogicException('expected a real JSON preferences string, got ' . get_debug_type($stored));
+        }
+
+        $decoded = json_decode($stored, true);
+        if (! is_array($decoded)) {
+            throw new LogicException('expected preferences to decode to an array, got ' . get_debug_type($decoded));
+        }
+
+        expect($decoded['gallery_search_filters'] ?? null)->toBe(['tags', 'author']);
+    } finally {
+        $conn->executeStatement('UPDATE ' . Tables::userInfos() . ' SET preferences = ? WHERE user_id = 1', [$originalPreferences]);
+    }
+});
+
 test('splitAllwords() splits on whitespace', function (): void {
     expect(SearchService::splitAllwords('nature travel'))->toBe(['nature', 'travel']);
+});
+
+test('splitAllwords() deduplicates a genuinely repeated word', function (): void {
+    // Every other test's own input has zero real duplicates, so
+    // array_unique()'s own effect (as opposed to just "the words got
+    // split") was never actually observed.
+    expect(SearchService::splitAllwords('nature travel nature'))->toBe(['nature', 'travel']);
 });
 
 test('splitAllwords() returns null for blank input', function (): void {
@@ -939,6 +1012,26 @@ test('getQuickSearchResultsNoCache() excludes a forbidden category match', funct
     $results = searchServiceTestService()->getQuickSearchResultsNoCache('Nested', []);
 
     expect($results['items'])->toBe([]);
+});
+
+test('getQuickSearchResultsNoCache() binds a multi-value forbidden-categories condition correctly', function (): void {
+    // Every OTHER test in this file has exactly 1 forbidden-category id
+    // (the harmless default '0'), so positionalCondition()'s own
+    // array-to-placeholder expansion (`implode(',',
+    // array_fill(0, count($value), '?'))`) never has more than 1
+    // element to expand -- forbidding 2 real ids at once is what
+    // actually exercises building a real ?,? multi-placeholder clause
+    // with 2 correctly-ordered bound values, not just the single-value
+    // degenerate case. 'nature' only matches category-1 images, so
+    // forbidding categories 2 and 3 (neither of which any fixture image
+    // sits in) must still return the full match untouched.
+    CurrentUserTestFactory::get()->set(User::fromUserArray(array_merge(searchServiceTestRealisticUserGlobal(), ['forbidden_categories' => '2,3'])));
+
+    $results = searchServiceTestService()->getQuickSearchResultsNoCache('nature', []);
+
+    $items = $results['items'];
+    sort($items);
+    expect($items)->toBe([1, 2, 3]);
 });
 
 test('getQuickSearchResults() caches across calls', function (): void {

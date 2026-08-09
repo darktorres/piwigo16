@@ -13,7 +13,9 @@ use Piwigo\Core\TemplatePageContext;
  * `$metaRef`, and `$pageRefresh` are genuinely optional -- the original
  * code only ever assigns those 3 template keys under their own runtime
  * condition, omitted here (not present as a null value) to match that
- * exact original behavior.
+ * exact original behavior. `$headElements` is always included (even
+ * empty) since `header.tpl` reads it with `{if not empty($head_elements)}`,
+ * not `isset()`.
  */
 final readonly class PageHeaderPageContext implements TemplatePageContext
 {
@@ -21,6 +23,7 @@ final readonly class PageHeaderPageContext implements TemplatePageContext
      * @param list<string> $bodyClasses
      * @param list<string>|null $headerNotes
      * @param array{TIME: string, U_REFRESH: string}|null $pageRefresh
+     * @param list<string> $headElements
      */
     public function __construct(
         public string $galleryTitle,
@@ -36,6 +39,7 @@ final readonly class PageHeaderPageContext implements TemplatePageContext
         public ?array $headerNotes,
         public ?int $metaRef,
         public ?array $pageRefresh,
+        public array $headElements,
     ) {}
 
     /**
@@ -55,6 +59,7 @@ final readonly class PageHeaderPageContext implements TemplatePageContext
             'SHOW_MOBILE_APP_BANNER' => $this->showMobileAppBanner,
             'BODY_CLASSES' => $this->bodyClasses,
             'BODY_DATA' => $this->bodyData,
+            'head_elements' => $this->headElements,
         ];
 
         if ($this->headerNotes !== null) {

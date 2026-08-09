@@ -165,10 +165,7 @@ final class PictureCommentRenderer
         $navigationBar = new PaginationService($currentConfig)
             ->createNavigationBar($urlService->duplicatePictureUrl([], ['start']), $nbComments, $start, $nbCommentPage, true);
 
-        $template->assignContext(new PictureCommentListPageContext(
-            commentCount: $nbComments,
-            navbar: $navigationBar,
-        ));
+        $comments = [];
 
         if ($nbComments > 0) {
             // comments order (get, session, conf)
@@ -273,9 +270,15 @@ final class PictureCommentRenderer
                         );
                     }
                 }
-                $template->append('comments', $tplComment);
+                $comments[] = $tplComment;
             }
         }
+
+        $template->assignContext(new PictureCommentListPageContext(
+            commentCount: $nbComments,
+            navbar: $navigationBar,
+            comments: $comments,
+        ));
 
         $showAddCommentForm = true;
         if ($editCommentId !== null) {

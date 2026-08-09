@@ -19,6 +19,7 @@ test('toArray flattens every fixed property, and omits the 3 optional keys when 
         headerNotes: null,
         metaRef: null,
         pageRefresh: null,
+        headElements: [],
     );
 
     expect($context->toArray())->toBe([
@@ -32,6 +33,7 @@ test('toArray flattens every fixed property, and omits the 3 optional keys when 
         'SHOW_MOBILE_APP_BANNER' => true,
         'BODY_CLASSES' => ['theme-dark'],
         'BODY_DATA' => '{}',
+        'head_elements' => [],
     ]);
 });
 
@@ -50,11 +52,13 @@ test('toArray includes header_notes/meta_ref/page_refresh when set', function ()
         headerNotes: ['Maintenance scheduled'],
         metaRef: 1,
         pageRefresh: ['TIME' => '5', 'U_REFRESH' => 'https://example.test/next'],
+        headElements: ['<meta name="robots" content="noindex,nofollow">'],
     );
 
     $result = $context->toArray();
 
     expect($result['header_notes'])->toBe(['Maintenance scheduled'])
         ->and($result['meta_ref'])->toBe(1)
-        ->and($result['page_refresh'])->toBe(['TIME' => '5', 'U_REFRESH' => 'https://example.test/next']);
+        ->and($result['page_refresh'])->toBe(['TIME' => '5', 'U_REFRESH' => 'https://example.test/next'])
+        ->and($result['head_elements'])->toBe(['<meta name="robots" content="noindex,nofollow">']);
 });

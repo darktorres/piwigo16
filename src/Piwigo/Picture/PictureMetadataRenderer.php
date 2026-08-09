@@ -14,6 +14,7 @@ use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Image\SrcImage;
 use Piwigo\Metadata\MetadataRepository;
 use Piwigo\Metadata\MetadataService;
+use Piwigo\Picture\Projection\PictureMetadataPageContext;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Session\SessionService;
 use Piwigo\Template\CurrentTemplate;
@@ -36,6 +37,8 @@ final class PictureMetadataRenderer
         $template = $currentTemplate->get();
 
         $metadataService = new MetadataService($lang, new MetadataRepository(EntityManagerFactory::build(DbConnection::build())), $currentLogger, $eventDispatcher, $currentConfig, $currentUser, $sessionService, $filterState, $paths);
+
+        $metadata = null;
 
         if (($currentConfig->showExif()) and function_exists('exif_read_data')) {
             $showExifFields = $currentConfig->showExifFields();
@@ -73,7 +76,7 @@ final class PictureMetadataRenderer
                         }
                     }
                 }
-                $template->append('metadata', $tplMeta);
+                $metadata = [$tplMeta];
             }
         }
 
@@ -95,8 +98,11 @@ final class PictureMetadataRenderer
                     }
                     $tplMeta['lines'][$key] = $value;
                 }
-                $template->append('metadata', $tplMeta);
+                $metadata ??= [];
+                $metadata[] = $tplMeta;
             }
         }
+
+        $template->assignContext(new PictureMetadataPageContext($metadata));
     }
 }

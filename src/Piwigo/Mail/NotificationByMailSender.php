@@ -580,6 +580,7 @@ final class NotificationByMailSender
                                   )->customizeMailContent;
                                 $custom_mail_content = ! in_array($nbmUserCustomizeMailContent, ['0', ''], true) ? $nbmUserCustomizeMailContent : null;
 
+                                $recent_posts = [];
                                 $nbmSendRecentPostDates = $this->currentConfig->nbmSendRecentPostDates();
                                 if ($nbmSendHtmlMail and $nbmSendRecentPostDates) {
                                     // CurrentConfig::recentPostDates() returns a
@@ -596,13 +597,10 @@ final class NotificationByMailSender
 
                                     $recentPostDates = $this->notificationService->getRecentPostDatesArray($nbmRecentPostDatesArgs);
                                     foreach ($recentPostDates as $dateDetail) {
-                                        $mailTemplate->append(
-                                            'recent_posts',
-                                            [
-                                                'TITLE' => $this->notificationService->getTitleRecentPostDate($dateDetail),
-                                                'HTML_DATA' => $this->notificationService->getHtmlDescriptionRecentPostDate($dateDetail, $auth),
-                                            ]
-                                        );
+                                        $recent_posts[] = [
+                                            'TITLE' => $this->notificationService->getTitleRecentPostDate($dateDetail),
+                                            'HTML_DATA' => $this->notificationService->getHtmlDescriptionRecentPostDate($dateDetail, $auth),
+                                        ];
                                     }
                                 }
 
@@ -615,6 +613,7 @@ final class NotificationByMailSender
                                     galleryTitle: $galleryTitle,
                                     galleryUrl: $this->urlService->addUrlParams($galleryHomeUrl, $addUrlParams),
                                     sendAsName: $this->sendAsName,
+                                    recentPosts: $recent_posts,
                                 ));
 
                                 $mailArgs = [

@@ -16,6 +16,9 @@ use Piwigo\Core\TemplatePageContext;
  * independently optional -- the original code only ever assigns those
  * template keys under their own runtime condition, omitted here (not
  * present as a null value) to match that exact original behavior.
+ * `$recentPosts` is always included (even empty) since
+ * `notification_by_mail.tpl` reads it with `{if not empty($recent_posts)}`,
+ * not `isset()`.
  */
 final readonly class NbmNewsMailContext implements TemplatePageContext
 {
@@ -23,6 +26,7 @@ final readonly class NbmNewsMailContext implements TemplatePageContext
      * @param array{DATE_BETWEEN_1: string, DATE_BETWEEN_2: string}|null $contentNewElementsBetween
      * @param array{DATE_SINGLE: string}|null $contentNewElementsSingle
      * @param array<int, string>|null $globalNewLines
+     * @param list<array{TITLE: string, HTML_DATA: string}> $recentPosts
      */
     public function __construct(
         public ?array $contentNewElementsBetween,
@@ -32,6 +36,7 @@ final readonly class NbmNewsMailContext implements TemplatePageContext
         public string $galleryTitle,
         public string $galleryUrl,
         public ?string $sendAsName,
+        public array $recentPosts,
     ) {}
 
     /**
@@ -40,7 +45,9 @@ final readonly class NbmNewsMailContext implements TemplatePageContext
     #[Override]
     public function toArray(): array
     {
-        $result = [];
+        $result = [
+            'recent_posts' => $this->recentPosts,
+        ];
 
         if ($this->contentNewElementsBetween !== null) {
             $result['content_new_elements_between'] = $this->contentNewElementsBetween;

@@ -97,13 +97,11 @@ final class PageHeaderRenderer
             $pageState->setMetaRobotsFlag('nofollow');
         }
 
+        $head_elements = [];
         if (! self::emptyValue($pageState->metaRobots)) {
-            $template->append(
-                'head_elements',
-                '<meta name="robots" content="'
+            $head_elements[] = '<meta name="robots" content="'
                   . implode(',', array_keys($pageState->metaRobots))
-                  . '">'
-            );
+                  . '">';
         }
         $metaRef = isset($pageState->metaRobots['noindex']) ? null : 1;
 
@@ -138,6 +136,7 @@ final class PageHeaderRenderer
             headerNotes: $headerNotesValue,
             metaRef: $metaRef,
             pageRefresh: $pageRefresh,
+            headElements: $head_elements,
         ));
 
         $eventDispatcher->dispatchNotify(new LocEndPageHeader());

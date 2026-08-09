@@ -21,8 +21,8 @@ use Psr\Http\Server\RequestHandlerInterface;
  * Terminal middleware -- resolves the matched route's handler from the
  * container and invokes it, instead of calling $handler->handle() onward.
  *
- * Resolves Piwigo\Http\ControllerInterface (->__invoke()), P22's own
- * deliverable -- real Controllers now exist for config/routes.php's
+ * Resolves Piwigo\Http\ControllerInterface (->__invoke()) -- real
+ * Controllers exist for config/routes.php's
  * `_controller` defaults to reference.
  */
 final readonly class ControllerInvokerMiddleware implements MiddlewareInterface

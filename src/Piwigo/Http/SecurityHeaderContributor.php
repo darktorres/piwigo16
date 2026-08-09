@@ -7,10 +7,10 @@ namespace Piwigo\Http;
 use Psr\Http\Message\ResponseInterface;
 
 /**
- * Lets later phases add header providers without rewriting
- * SecurityHeadersMiddleware: P27 adds nonce-CSP/COOP/COEP/Trusted-Types/
- * Fetch-Metadata/CSP-reporting, P32 adds per-request nonce + SRI, T3-WEB
- * adds 103 Early-Hints Link headers.
+ * Lets future work add header providers without rewriting
+ * SecurityHeadersMiddleware: planned additions include
+ * nonce-CSP/COOP/COEP/Trusted-Types/Fetch-Metadata/CSP-reporting,
+ * per-request nonce + SRI, and 103 Early-Hints Link headers.
  */
 interface SecurityHeaderContributor
 {

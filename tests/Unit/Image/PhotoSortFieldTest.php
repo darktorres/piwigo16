@@ -8,9 +8,9 @@ use Piwigo\Image\PhotoSortField;
 
 /**
  * Piwigo\Image\PhotoSortField -- the typed replacement for
- * Ws\WsHelper::stdImageSqlOrder()'s own per-token field allowlist (Item 14
- * Sub-phase C2). Every one of the 8 real WS `order` tokens, its 2 aliases,
- * and one invalid token.
+ * Ws\WsHelper::stdImageSqlOrder()'s own per-token field allowlist. Every
+ * one of the 8 real WS `order` tokens, its 2 aliases, and one invalid
+ * token.
  */
 test('fromToken recognizes every real sortable field', function (string $token, PhotoSortField $expected): void {
     expect(PhotoSortField::fromToken($token))->toBe($expected);
@@ -57,7 +57,7 @@ test('column returns the real column or function name for every field', function
 });
 
 /**
- * Item 16J: fromSortFieldToken() matches
+ * fromSortFieldToken() matches
  * Controller\Admin\ConfigurationSubController.php's own real `$sort_fields`
  * vocabulary -- 7 plain fields plus `rank`, deliberately not the same
  * alias set as fromToken() above (no date_created/date_posted/rand/random,

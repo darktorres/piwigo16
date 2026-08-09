@@ -108,50 +108,43 @@ final class SqlDialect
     }
 
     /**
-     * SQL-modernization audit (recursive-cuddling-squid.md): $period was
-     * `int|string` -- tightened to `int` since every real caller (checked
-     * directly: `Core\RecentIconResolver`, `Filter\FilterService`,
+     * $period is `int` -- every real caller (`Core\RecentIconResolver`,
+     * `Filter\FilterService`,
      * `Category\CategoryRepository::findComputedCategoriesRollup()`,
      * `Controller\CommentsController`, `Users\UserService`,
      * `Image\ImageRepository`) either already passes a real `int` or, in
-     * `UserService`'s case, had its own loose `is_numeric(...) ? (int) ...
-     * : (is_string(...) ? $recent_period : 0)` cast that silently let a
-     * non-numeric string through untouched -- fixed at that call site (P24
-     * gap-closure-adjacent bug found via this audit, not merely a type
-     * annotation tightening).
+     * `UserService`'s case, is fixed at that call site to fall back to
+     * `0` rather than silently pass a non-numeric string through
+     * untouched.
      *
-     * Further SQL-modernization audit, Item 11: $date's own manual
-     * `'\'' . $date . '\''` quote-wrap used to apply to *any* non-default
-     * $date, including a caller-supplied raw literal date value -- a real,
-     * separate raw-string-splice defect. Fixed by changing the contract: a
-     * non-default $date is now always a bound-parameter placeholder (e.g.
-     * `:lastDate`) the caller has already declared and will bind via their
-     * own query's existing params/types, never a literal value handed to
-     * this method directly -- so it's spliced into the returned expression
-     * unquoted, same as the `CURRENT_DATE` keyword always was. The 2 real
-     * non-default-$date callers (`Image\ImageRepository::
-     * findIdsAddedSameDayAsLatest()`, `Users\UserService::
-     * getRecentPhotosCondition()`) converted to this placeholder contract
-     * in this same pass. Quoting is still needed -- and still applied --
-     * for the one remaining literal-date case: the internal test-mode
-     * override below, a controlled `Y-m-d`-formatted string, not caller
-     * input.
+     * $date's contract: the default (`CURRENT_DATE`) is routed through
+     * Env::now() in test mode (see this method's own body); any
+     * non-default $date is always a bound-parameter placeholder (e.g.
+     * `:lastDate`) the caller has already declared and will bind via
+     * their own query's existing params/types, never a literal value
+     * handed to this method directly -- so it's spliced into the
+     * returned expression unquoted, same as the `CURRENT_DATE` keyword
+     * always is. The 2 real non-default-$date callers are
+     * `Image\ImageRepository::findIdsAddedSameDayAsLatest()` and
+     * `Users\UserService::getRecentPhotosCondition()`. Quoting is still
+     * applied for the one remaining literal-date case: the internal
+     * test-mode override below, a controlled `Y-m-d`-formatted string,
+     * not caller input.
      *
-     * pgsql support pass: Postgres has no `SUBDATE()` -- `$date -
-     * make_interval(days => $period)` is the real equivalent. Needs an
-     * explicit `::timestamp` cast on `$date` first, verified live: bare
-     * subtraction of an `interval` from an untyped string literal/bound
-     * parameter (`'2026-08-01' - make_interval(...)`) fails outright
-     * (`ERROR: invalid input syntax for type interval`) -- Postgres can't
-     * infer `date`/`timestamp` from context here the way MySQL's own
-     * looser typing does, unlike the `CURRENT_DATE` keyword case (already
-     * a real `date`, so the cast is a no-op there). `::timestamp`, not
-     * `::date`, specifically: verified live that a `::date` cast would
-     * silently truncate a caller-supplied value's time-of-day component
-     * (`getRecentPhotosCondition()`'s own `last_photo_date` bind is a
-     * full datetime, not a bare date) -- `::timestamp` preserves it,
-     * matching `SUBDATE()`'s own type-preserving behavior on the MySQL
-     * side exactly.
+     * Postgres has no `SUBDATE()` -- `$date - make_interval(days =>
+     * $period)` is the real equivalent, with an explicit `::timestamp`
+     * cast on `$date` first (verified live: bare subtraction of an
+     * `interval` from an untyped string literal/bound parameter fails
+     * outright with `ERROR: invalid input syntax for type interval` --
+     * Postgres can't infer `date`/`timestamp` from context here the way
+     * MySQL's own looser typing does, unlike the `CURRENT_DATE` keyword
+     * case, which is already a real `date`, so the cast is a no-op
+     * there). `::timestamp`, not `::date`, specifically: a `::date` cast
+     * would silently truncate a caller-supplied value's time-of-day
+     * component (`getRecentPhotosCondition()`'s own `last_photo_date`
+     * bind is a full datetime, not a bare date) -- `::timestamp`
+     * preserves it, matching `SUBDATE()`'s own type-preserving behavior
+     * on the MySQL side exactly.
      */
     public static function getRecentPeriodExpression(int $period, string $date = 'CURRENT_DATE'): string
     {

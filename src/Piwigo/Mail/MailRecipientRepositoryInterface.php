@@ -11,9 +11,8 @@ use Piwigo\Mail\Projection\MailRecipient;
  * against, so tests can substitute a fake implementation without extending
  * the final MailRecipientRepository directly.
  *
- * SQL-modernization audit, Item 14 Sub-phase C4: dropped every
- * `$idColumn`/`$usernameColumn`/`$emailColumn` multi-auth column-name
- * param -- `users` is now mapped ({@see \Piwigo\Users\UserEntity}), always
+ * No `$idColumn`/`$usernameColumn`/`$emailColumn` multi-auth column-name
+ * params -- `users` is mapped ({@see \Piwigo\Users\UserEntity}), always
  * `id`/`username`/`mail_address`.
  */
 interface MailRecipientRepositoryInterface

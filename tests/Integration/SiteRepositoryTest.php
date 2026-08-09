@@ -95,10 +95,9 @@ final class SiteRepositoryTest extends IntegrationTestCase
 
     public function test_delete_removes_the_row(): void
     {
-        // Item 16E: real DQL replacement for CategoryRepository::
+        // Real DQL replacement for the now-deleted CategoryRepository::
         // deleteSiteRow() (a real deptrac boundary -- Category is
-        // L2aCoreDomain, Site is L2bExtendedDomain -- deleted the same
-        // commit this method was added), had zero existing coverage.
+        // L2aCoreDomain, Site is L2bExtendedDomain).
         $url = 'p17-test-' . bin2hex(random_bytes(4));
         $this->repo->insert($url);
         $id = (int) $this->queryScalar(sprintf("SELECT id FROM %ssites WHERE galleries_url = '%s'", $this->dbPrefix, $url));
@@ -119,10 +118,9 @@ final class SiteRepositoryTest extends IntegrationTestCase
 
     public function test_find_all_galleries_urls_returns_the_id_to_url_map(): void
     {
-        // Item 16F: real DQL replacement for CategoryRepository::
+        // Real DQL replacement for the now-deleted CategoryRepository::
         // findSiteGalleriesUrls() (a real deptrac boundary -- Category is
-        // L2aCoreDomain, Site is L2bExtendedDomain -- deleted the same
-        // commit this method was added).
+        // L2aCoreDomain, Site is L2bExtendedDomain).
         self::assertSame(
             [1 => CurrentPathsTestFactory::get()->root . 'galleries/'],
             $this->repo->findAllGalleriesUrls()
@@ -133,8 +131,8 @@ final class SiteRepositoryTest extends IntegrationTestCase
     {
         // Both fixture categories have site_id NULL -- the join predicate
         // is never satisfied against a NULL, so the query returns no row
-        // and this exercises the false/null branch. Item 16F: real DQL
-        // replacement for CategoryRepository::findGalleriesUrlForCategory().
+        // and this exercises the false/null branch. Real DQL replacement
+        // for the now-deleted CategoryRepository::findGalleriesUrlForCategory().
         self::assertNull($this->repo->findGalleriesUrlForCategory(1));
     }
 

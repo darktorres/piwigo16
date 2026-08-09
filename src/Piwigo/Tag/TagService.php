@@ -558,9 +558,8 @@ final readonly class TagService
 
             if ($existingId === null) {
                 // search by extended description (plugin sub name) --
-                // SQL-modernization audit: the hook now returns LIKE
-                // pattern VALUES (bound as parameters), not raw SQL
-                // fragments -- see TagRepository::
+                // the hook returns LIKE pattern VALUES (bound as
+                // parameters), not raw SQL fragments -- see TagRepository::
                 // findIdByNameLikeAnyPattern()'s own docblock for why.
                 $likeWhereEvent = $this->eventDispatcher->dispatchChange(new GetTagNameLikeWhere([], $tagName));
                 $namePatterns = array_values(array_filter($likeWhereEvent->value, is_string(...)));
@@ -709,11 +708,8 @@ final readonly class TagService
     }
 
     /**
-     * Further SQL-modernization audit, Item 10: getTagList() (a caller-built-
-     * query wrapper around the now-deleted TagRepository::fetchTagListRows())
-     * replaced with this shared row-processing tail plus one typed public
-     * method per real query shape below (ids are surrounded by ~~, for
-     * getTagIds()).
+     * Shared row-processing tail for one typed public method per real
+     * query shape below (ids are surrounded by ~~, for getTagIds()).
      *
      * @param  list<TagIdName>  $rows
      * @param  bool  $onlyUserLanguage  if true, only local name is returned for

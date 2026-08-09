@@ -34,8 +34,8 @@ use Symfony\Component\Console\Output\BufferedOutput;
  * Runs against whichever engine .env.test currently points at (via the
  * shared DbConnection::build()) -- deliberately independent of
  * IntegrationTestCase's still mysqli-hardcoded newMysqli()/resetDatabase()
- * helpers, so this test doesn't need Phase G's driver-awareness fixes to
- * already work on both platforms.
+ * helpers, so this test doesn't need IntegrationTestCase's still-pending
+ * driver-awareness fixes to already work on both platforms.
  *
  * Uses its own migrations_paths namespace/directory
  * (tests/Fixtures/Migrations/UpgradePathProbe/, 2 throwaway migrations)

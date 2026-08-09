@@ -18,9 +18,9 @@ use Piwigo\Tests\Integration\IntegrationTestCase;
  * Regenerates tests/Fixtures/piwigo-17.0.sql (or, on Postgres,
  * piwigo-17.0-pgsql.sql) by driving a fresh install -- via the real
  * Doctrine Migrations baseline InstallWizard::performInstall() now runs
- * (Phase B of the pgsql-support pass; this docblock's own prior "no
- * Doctrine Migrations step" claim predates that and is no longer
- * accurate) -- seeding content, then dumping it.
+ * (this docblock's own prior "no Doctrine Migrations step" claim
+ * predates that and is no longer accurate) -- seeding content, then
+ * dumping it.
  *
  * Usage:
  *   vendor/bin/pest --group=fixture-regen
@@ -427,7 +427,7 @@ final class RegenerateFixtureTest extends IntegrationTestCase
         // Piwigo\Db\SchemaDumpService's own docblock already gives for its
         // schema-only dump) -- this table didn't exist in this fixture
         // before InstallWizard started driving schema creation through the
-        // real Migrator (Phase B), so this exclusion is a real, newly-
+        // real Migrator, so this exclusion is a real, newly-
         // needed fix, not carried over from before.
         $fixturePath = $this->dbDriver === 'pgsql'
             ? dirname(__DIR__) . '/Fixtures/piwigo-17.0-pgsql.sql'

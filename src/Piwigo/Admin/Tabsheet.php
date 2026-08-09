@@ -161,23 +161,15 @@ final class Tabsheet
         $template = $currentTemplate->get();
 
         $template->set_filename('tabsheet', 'tabsheet.tpl');
-        $template->assignContext(new TabsheetPageContext(
-            sheets: array_map(static fn (TabSheetEntry $entry): array => $entry->toArray(), $this->sheets),
-            selected: $this->selected,
-        ));
 
         $selected_tab = $this->get_selected();
 
-        if (isset($selected_tab)) {
-            // Not a Phase 13 TemplatePageContext candidate: $this->titlename
-            // is a real, per-instance mutable property (set_titlename()) --
-            // a genuinely dynamic key, not a fixed page var.
-            $template->assign(
-                [
-                    $this->titlename => '[' . $selected_tab->caption . ']',
-                ]
-            );
-        }
+        $template->assignContext(new TabsheetPageContext(
+            sheets: array_map(static fn (TabSheetEntry $entry): array => $entry->toArray(), $this->sheets),
+            selected: $this->selected,
+            titlenameKey: isset($selected_tab) ? $this->titlename : null,
+            titlenameValue: isset($selected_tab) ? '[' . $selected_tab->caption . ']' : null,
+        ));
 
         $template->assign_var_from_handle($this->name, 'tabsheet');
         $template->clear_assign('tabsheet');

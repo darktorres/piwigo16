@@ -31,10 +31,10 @@ test('escapeToken() escapes a value without surrounding quotes', function (): vo
     $escaped = sectionTestRepo()->escapeToken("o'brien");
 
     // escapeToken() routes through Connection::quote() -- the real
-    // per-driver quoting mechanism. This environment's real connection is
-    // Postgres, which doubles an embedded quote (SQL-standard escaping)
-    // rather than MySQL's backslash-escape.
-    expect($escaped)->toBe("o''brien")
+    // per-driver quoting mechanism. Postgres doubles an embedded quote
+    // (SQL-standard escaping); mysqli backslash-escapes it instead.
+    $expected = getenv('PIWIGO_DB_DRIVER') === 'pgsql' ? "o''brien" : "o\\'brien";
+    expect($escaped)->toBe($expected)
         ->and($escaped)->not->toStartWith("'")
         ->and($escaped)->not->toEndWith("'");
 });

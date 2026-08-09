@@ -146,18 +146,19 @@ test('buildPayload() assembles a real, structurally-complete payload', function 
     try {
         $payload = telemetryTestService()->buildPayload();
 
-        // This environment's real connection is Postgres (confirmed live:
-        // DbConnection::build()->getDatabasePlatform() is
-        // Doctrine\DBAL\Platforms\PostgreSQLPlatform) -- asserting the exact
-        // label, not just "not unknown", is what actually exercises
-        // detectDriverLabel() end-to-end against a real connection. The
+        // This test runs against whichever real connection PIWIGO_DB_DRIVER
+        // selects (confirmed live under both: pgsql resolves
+        // PostgreSQLPlatform, mysqli resolves MySQL84Platform -- not
+        // MariaDBPlatform) -- asserting the exact label, not just "not
+        // unknown", is what actually exercises detectDriverLabel()
+        // end-to-end against a real connection. The
         // MariaDB-vs-MySQL-vs-Postgres instanceof branches themselves are
         // covered driver-independently by the dedicated detectDriverLabel()
         // test above, via DqlPlatformQueryTestFactory fakes.
         expect($payload->installId)->toMatch('/^[0-9a-f]{32}$/')
             ->and($payload->environment->phpVersion)->toBe(PHP_VERSION)
             ->and($payload->environment->osFamily)->toBe(PHP_OS_FAMILY)
-            ->and($payload->database->driver)->toBe('pgsql')
+            ->and($payload->database->driver)->toBe(getenv('PIWIGO_DB_DRIVER') === 'pgsql' ? 'pgsql' : 'mysql')
             ->and($payload->database->serverVersion)->not->toBe('');
     } finally {
         $conn->createQueryBuilder()

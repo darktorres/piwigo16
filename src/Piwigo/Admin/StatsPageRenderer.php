@@ -33,6 +33,17 @@ use Piwigo\Users\CurrentUser;
 final class StatsPageRenderer
 {
     /**
+     * getMonthOfLastYears()'s own sentinel default -- "no year limit, use
+     * every real month-level history row" -- distinct from a real int
+     * $last value (a bounded number of years back). Self-contained to
+     * this class: CurrentConfig::statCompareYearDisplayed() is
+     * schema-typed 'int' only, so the one real production call site can
+     * never reach this branch (see that call site's own comment); only
+     * reflection-driven tests exercise it directly.
+     */
+    private const string ALL_YEARS = 'all';
+
+    /**
      * $pageSlug is an explicit param: the one real caller (StatsSubController)
      * already knows its own fixed page slug statically (it's the only class
      * registered for the 'stats' slug in config/admin_pages.php). Selects
@@ -117,8 +128,9 @@ final class StatsPageRenderer
         ksort($lang_month);
 
         // CurrentConfig::statCompareYearDisplayed() is SCHEMA-typed 'int' only (no
-        // 'all' sentinel) -- getMonthOfLastYears()'s own 'all' default is
-        // unreachable from this call site, not dead code to resurrect here.
+        // self::ALL_YEARS sentinel) -- getMonthOfLastYears()'s own
+        // self::ALL_YEARS default is unreachable from this call site, not
+        // dead code to resurrect here.
         $stat_compare_year_displayed = $currentConfig->statCompareYearDisplayed();
 
         $template->assignContext(new StatsPageContext(
@@ -150,12 +162,12 @@ final class StatsPageRenderer
     }
 
     /**
-     * @param int|'all' $last
+     * @param int|self::ALL_YEARS $last
      * @return float[]|int[]
      */
-    private static function getMonthOfLastYears(HistoryService $historyService, $last = 'all'): array
+    private static function getMonthOfLastYears(HistoryService $historyService, $last = self::ALL_YEARS): array
     {
-        if ($last !== 'all') {
+        if ($last !== self::ALL_YEARS) {
             $date = new DateTime();
             $limit = ($last - 1) * 12 + (int) $date->format('n') - 1;
             $result = $historyService->getMonthlyRows($limit);

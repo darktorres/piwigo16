@@ -22,10 +22,10 @@ use Piwigo\Permission\SqlCondition;
  * matching image ids" query, and for CalendarBase/CalendarMonthly/
  * CalendarWeekly's own remaining query-execution sites.
  *
- * Further SQL-modernization audit, Item 15G: every method here is real
- * DQL except {@see findImageIds()}, which only conditionally is --
- * see its own docblock (Item 16J). Dropped `extends AbstractRepository`
- * (this repository queries `Image\ImageEntity`/`ImageCategoryEntity`, not
+ * Every method here is real DQL except {@see findImageIds()}, which only
+ * conditionally is -- see its own docblock. Doesn't extend
+ * `AbstractRepository` (this repository queries `Image\ImageEntity`/
+ * `ImageCategoryEntity`, not
  * an entity of its own -- same shape as {@see \Piwigo\Notification\
  * NotificationRepository}) in favor of a directly-injected
  * `EntityManagerInterface`.
@@ -58,8 +58,8 @@ final class CalendarRepository
      * query has to be valid under it from the start, unlike the pre-DBAL
      * version.
      *
-     * Item 16J: the raw-DBAL blocker above is now conditional -- corrected
-     * too, `orderByCustom()` was never actually admin-UI-reachable (see
+     * The raw-DBAL blocker above is conditional: `orderByCustom()` is
+     * never actually admin-UI-reachable (see
      * {@see \Piwigo\Image\PhotoSortField}'s own docblock). $orderBySql
      * traces to `CurrentConfig::orderBy()`, but {@see \Piwigo\Calendar\
      * CalendarRenderer::render()}'s own call site dynamically prepends
@@ -168,22 +168,18 @@ final class CalendarRepository
     }
 
     /**
-     * Further SQL-modernization audit, Item 6: findRows()/findRow() (a
-     * fully generic "execute an already-built query" pair) replaced with
-     * one typed method per real query shape, built internally from
-     * typed SqlCondition/expression-string pieces instead of a
-     * pre-assembled query the calendar classes used to concatenate
-     * themselves. Column extraction/reduction (e.g. period => nb_images)
-     * deliberately stays in the calendar classes, unchanged -- some of
-     * it has subtle, real casting differences between call sites (e.g.
-     * build_month_calendar()'s day-count loop never casts `count` to
-     * int, unlike its build_global_calendar()/build_year_calendar()
-     * siblings), not worth risking a behavior change over for this item.
+     * One typed method per real query shape, built internally from typed
+     * SqlCondition/expression-string pieces. Column extraction/reduction
+     * (e.g. period => nb_images) deliberately stays in the calendar
+     * classes, unchanged -- some of it has subtle, real casting
+     * differences between call sites (e.g. build_month_calendar()'s
+     * day-count loop never casts `count` to int, unlike its
+     * build_global_calendar()/build_year_calendar() siblings), not worth
+     * risking a behavior change over.
      *
      * CalendarBase::build_nav_bar()'s own query: one row per distinct
      * $levelDql value within the current inner/date-range filter.
      *
-     * Further SQL-modernization audit, Item 15G: converted to real DQL.
      * DQL's own `GroupByItem` grammar only accepts a path expression or a
      * `ResultVariable` (a SELECT-list alias), never an arbitrary function
      * call -- confirmed against `vendor/doctrine/orm`'s own
@@ -240,7 +236,6 @@ final class CalendarRepository
      * `count` columns have), and $dateFieldDql is needed here regardless
      * to build the query's own "IS NOT NULL" clause.
      *
-     * Further SQL-modernization audit, Item 15G: converted to real DQL --
      * $levelDqlExpressions (one DQL expression per chronology_date level,
      * e.g. `['YEAR(i.dateAvailable)', 'WEEK(i.dateAvailable)+1']`) used to
      * be pre-joined by the caller into one `CONCAT(...)` DQL expression
@@ -301,7 +296,6 @@ final class CalendarRepository
      * CalendarMonthly::build_global_calendar()'s own query: image count
      * per year+month within the current inner/date-range filter.
      *
-     * Further SQL-modernization audit, Item 15G: converted to real DQL.
      * The original raw-SQL query's own `GROUP BY period, {$yearExpr},
      * {$monthExpr}` (restating the literal YEAR()/MONTH() expressions
      * for MySQL's ONLY_FULL_GROUP_BY, since it can't infer they're
@@ -352,7 +346,6 @@ final class CalendarRepository
      * CalendarMonthly::build_year_calendar()'s own query: image count per
      * month+day within the current inner/date-range filter.
      *
-     * Further SQL-modernization audit, Item 15G: converted to real DQL --
      * `period` alone is both the group key and sort key here (unlike
      * countByYearMonth() above), so no extra GROUP-BY-satisfying aliases
      * are needed.
@@ -387,8 +380,7 @@ final class CalendarRepository
      * image count per day-of-month within the current inner/date-range
      * filter (already scoped to a single year+month by $scope/$dateWhere).
      *
-     * Further SQL-modernization audit, Item 15G: converted to real DQL,
-     * same "period alone is group+sort key" shape as countByMonthDay()
+     * Same "period alone is group+sort key" shape as countByMonthDay()
      * above.
      *
      * @return list<array<string, mixed>>
@@ -422,13 +414,12 @@ final class CalendarRepository
      * on the given day, dated rows only ($dateFieldDql IS NOT NULL is
      * implicit in $dateWhere/$scope already scoping to a single day).
      *
-     * Further SQL-modernization audit, Item 15G: the *selection* (which
-     * image id, and its `dow` value, respecting $scope/$dateWhere, in
-     * random order) runs as its own DQL query -- every table/condition it
-     * touches is mapped.
+     * The *selection* (which image id, and its `dow` value, respecting
+     * $scope/$dateWhere, in random order) runs as its own DQL query --
+     * every table/condition it touches is mapped.
      *
-     * Item 16H: the final by-id row also converted, via explicit `AS`
-     * aliases matching `SrcImage`'s own raw snake_case constructor
+     * The final by-id row is fetched via explicit `AS` aliases matching
+     * `SrcImage`'s own raw snake_case constructor
      * contract exactly (`representative_ext`, confirmed by reading it) --
      * a mapping shim at this call site, not a `SrcImage` redesign. All 7
      * selected columns (id/file/representative_ext/path/width/height/

@@ -80,16 +80,15 @@ final class GroupRepository extends EntityRepository
             ->getQuery()
             ->getSingleColumnResult();
 
-        // Item 14 DQL audit correction: getSingleColumnResult() uses
-        // Doctrine's HYDRATE_SCALAR_COLUMN mode (ScalarColumnHydrator),
-        // which does a raw Statement::fetchFirstColumn() with NO per-field
-        // Type conversion at all -- unlike getArrayResult() (HYDRATE_ARRAY),
-        // it does NOT hydrate g.id into a GroupId VO despite the custom
-        // `group_id` Doctrine Type, so this reads the raw int/numeric-string
-        // directly rather than an instanceof GroupId check (which always
-        // silently produced [] here, a real bug caught by the consolidated
-        // Item 14 verification pass, not by gotcha #1 -- that gotcha is
-        // specific to getArrayResult()/getResult()-shaped hydration).
+        // getSingleColumnResult() uses Doctrine's HYDRATE_SCALAR_COLUMN
+        // mode (ScalarColumnHydrator), which does a raw
+        // Statement::fetchFirstColumn() with NO per-field Type conversion
+        // at all -- unlike getArrayResult() (HYDRATE_ARRAY), it does NOT
+        // hydrate g.id into a GroupId VO despite the custom `group_id`
+        // Doctrine Type, so this reads the raw int/numeric-string
+        // directly rather than an instanceof GroupId check (which would
+        // silently produce [] here -- that gotcha is specific to
+        // getArrayResult()/getResult()-shaped hydration, not this method).
         $result = [];
         foreach ($ids as $id) {
             if (! is_numeric($id)) {
@@ -136,20 +135,14 @@ final class GroupRepository extends EntityRepository
      * above being about DQL specifically -- this was already true before
      * this VO integration, unchanged behavior, just a typed input now.
      *
-     * Item 14 DQL audit: stays on DBAL -- $order is a genuinely dynamic
-     * runtime ORDER BY fragment; DQL's orderBy() takes a fixed field path,
-     * not a caller-supplied string.
-     *
-     * Item 15 audit, re-verified: this plan's own text speculated $order
-     * "is regex-validated... re-derive that pattern's real bounded token
-     * set and build a GroupSortField-shaped enum" -- wrong once actually
-     * checked. {@see \Piwigo\Core\ValidationPattern::ORDER}'s real regex
-     * (`/^(rand(om)?|[a-z_]+(\s+(asc|desc))?)(\s*,\s*...)*$/i`) matches
-     * any `[a-z_]+` token, not a small fixed vocabulary -- genuinely
-     * open-ended, same "caller composes trusted ORDER BY text"
-     * architecture as {@see \Piwigo\Image\PhotoSortField}'s own
-     * documented exception. No enum conversion here; the existing Item 14
-     * exclusion stands.
+     * Stays on DBAL -- $order is a genuinely dynamic runtime ORDER BY
+     * fragment; DQL's orderBy() takes a fixed field path, not a
+     * caller-supplied string. {@see \Piwigo\Core\ValidationPattern::ORDER}'s
+     * real regex (`/^(rand(om)?|[a-z_]+(\s+(asc|desc))?)(\s*,\s*...)*$/i`)
+     * matches any `[a-z_]+` token, not a small fixed vocabulary --
+     * genuinely open-ended, same "caller composes trusted ORDER BY text"
+     * architecture as {@see \Piwigo\Image\PhotoSortField}'s own documented
+     * exception, so no enum can replace it here.
      *
      * @param list<GroupId> $groupIds when non-empty, restricts to these ids
      * @return list<GroupListing>
@@ -317,10 +310,7 @@ final class GroupRepository extends EntityRepository
     /**
      * Usernames of a group's members.
      *
-     * SQL-modernization audit, Item 14 Sub-phase C4: converted to real
-     * DQL -- `users` is now mapped ({@see \Piwigo\Users\UserEntity}); the
-     * multi-auth column indirection this used to take as
-     * `$usernameColumn`/`$idColumn` parameters is gone.
+     * `users` is mapped ({@see \Piwigo\Users\UserEntity}).
      *
      * @return list<string>
      */
@@ -357,12 +347,9 @@ final class GroupRepository extends EntityRepository
      * {@see ConstraintViolationException} -- both ids unwrap to raw ints,
      * matching every other plain-DBAL query in this file.
      *
-     * Item 14 DQL audit: not a DQL-vs-DBAL question -- ORM persist()/flush()
-     * writes one row per call, not a bulk insert-if-absent statement.
-     *
-     * Item 16C: not `persist()`/`flush()` either -- empirically verified
-     * that a caught {@see ConstraintViolationException} from a failed
-     * `flush()` leaves the EntityManager permanently closed
+     * Not `persist()`/`flush()`: a caught
+     * {@see ConstraintViolationException} from a failed `flush()` leaves
+     * the EntityManager permanently closed
      * (`Doctrine\ORM\UnitOfWork::commit()`'s own `finally` branch calls
      * `$em->close()` on any failure, and `clear()` cannot undo that),
      * which would break every other repository sharing this request's
@@ -626,7 +613,7 @@ final class GroupRepository extends EntityRepository
         // a partial-field DQL select hydrates them into real UserId/GroupId
         // VOs, not raw ints, so this extracts ->value explicitly with an
         // instanceof check rather than an is_numeric()-style raw-DBAL row
-        // check (Item 14 DQL audit gotcha #1). Callers (CatPermPageRenderer,
+        // check (Gotcha #1). Callers (CatPermPageRenderer,
         // AlbumNotificationPageRenderer) expect raw scalars under the
         // 'user_id'/'group_id' keys, unchanged from the DBAL shape.
         $result = [];
@@ -669,8 +656,8 @@ final class GroupRepository extends EntityRepository
             ->getQuery()
             ->getResult();
 
-        // Same VO-hydration caveat as findMembersByGroupIds() above (Item 14
-        // DQL audit gotcha #1) -- ug.userId/ug.groupId hydrate into real
+        // Same VO-hydration caveat as findMembersByGroupIds() above
+        // (Gotcha #1) -- ug.userId/ug.groupId hydrate into real
         // UserId/GroupId VOs under a partial-field DQL select, so this
         // extracts ->value explicitly with an instanceof check. Callers
         // (Ws\PwgUsers::getList()) expect raw scalars under the
@@ -729,7 +716,7 @@ final class GroupRepository extends EntityRepository
         // g.id is the custom `group_id` Doctrine Type -- a partial-field DQL
         // select hydrates it into a real GroupId VO, not a raw int, so this
         // uses an instanceof check rather than the previous is_numeric()
-        // raw-DBAL row check (Item 14 DQL audit gotcha #1). g.name is a
+        // raw-DBAL row check (Gotcha #1). g.name is a
         // plain `string` column -- phpstan-doctrine's own DQL metadata
         // already narrows $row['name'] to string, so no is_string() guard
         // is needed for it (unlike the id field above).

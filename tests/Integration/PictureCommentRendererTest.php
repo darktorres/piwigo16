@@ -109,7 +109,11 @@ final class PictureCommentRendererTest extends IntegrationTestCase
         // one machine-wide /var/lib/php/sessions directory (see
         // Tests\Unit\Csrf\CsrfServiceTest's own docblock) -- CsrfService::getToken()
         // just needs a session id, not a running session, so any unique value works.
-        session_id(uniqid('picture-comment-test-', true));
+        // str_replace() strips uniqid()'s own '.' separator (more_entropy):
+        // session_start() rejects a session id containing anything outside
+        // A-Z/a-z/0-9/'-'/',' -- see CsrfServiceTest's own docblock for the
+        // real warning this caused when inherited by an unrelated test.
+        session_id(str_replace('.', '-', uniqid('picture-comment-test-', true)));
         unset($_POST['content']);
     }
 

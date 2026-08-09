@@ -17,12 +17,19 @@ use Piwigo\Csrf\CsrfService;
 // process its own value, so no two concurrent runs anywhere on the
 // machine can ever collide; memoized so every call within this one
 // process's run still agrees (test below computes its own expected hash
-// from the same id).
+// from the same id). str_replace() strips uniqid()'s own '.' separator
+// (present whenever more_entropy is true) -- confirmed live, PHP's
+// session_start() itself rejects a session id containing anything
+// outside A-Z/a-z/0-9/'-'/',' ("Session ID is too long or contains
+// illegal characters"), a real warning surfaced by
+// Tests\Unit\Http\Middleware\SessionMiddlewareTest inheriting this
+// file's leftover session_id() value in the same sequential/parallel
+// worker process.
 function csrfTestSessionId(): string
 {
     /** @var string|null $id */
     static $id = null;
-    $id ??= uniqid('csrf-test-', true);
+    $id ??= str_replace('.', '-', uniqid('csrf-test-', true));
 
     return $id;
 }

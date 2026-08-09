@@ -146,8 +146,7 @@
                 <file name="src/Piwigo/Admin/BatchManagerGlobalPageRenderer.php"/>
                 <!-- Same guard-then-bare-access disagreement, this time on
                      the $comm in/out parameter (and $_SERVER['REMOTE_ADDR']/
-                     ['HTTP_USER_AGENT'], the plan's own explicitly-flagged
-                     superglobal-guard bucket) throughout insertComment()'s
+                     ['HTTP_USER_AGENT']) throughout insertComment()'s
                      validation chain: every one of these offsets is read via
                      an `is_string(...['x'] ?? null) ? ...['x'] : default`
                      or `emptyValue(...['x'] ?? null)` guard a few tokens

@@ -391,7 +391,7 @@ namespace Piwigo\Tests\Integration {
             $currentConfig = CurrentConfigTestFactory::get();
             $currentConfig->enableExtensionsInstall = true;
             $currentConfig->phpExtensionInUrls = false;
-            $currentConfig->mobilTheme = $first;
+            $currentConfig->mobileTheme = $first;
 
             $second = $this->themeId();
             $errors = $this->lifecycle->performAction(ExtensionType::Theme, 'activate', $second, [
@@ -997,7 +997,7 @@ PHP);
             $currentConfig = CurrentConfigTestFactory::get();
             $currentConfig->enableExtensionsInstall = true;
             $currentConfig->phpExtensionInUrls = false;
-            $currentConfig->mobilTheme = $mobile;
+            $currentConfig->mobileTheme = $mobile;
             $this->lifecycle->performAction(ExtensionType::Theme, 'activate', $other, ['version' => '1.0', 'name' => 'Other']);
 
             $errors = $this->lifecycle->performAction(ExtensionType::Theme, 'deactivate', $mobile, ['version' => '1.0', 'name' => 'Mobile', 'mobile' => true]);

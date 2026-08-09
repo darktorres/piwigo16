@@ -45,10 +45,10 @@ final class DeviceHelper
     public static function mobileTheme(SessionService $sessionService, CurrentConfig $currentConfig): bool
     {
 
-        // CurrentConfig::mobilTheme() is SCHEMA-typed 'string' only (never null/int/
+        // CurrentConfig::mobileTheme() is SCHEMA-typed 'string' only (never null/int/
         // float/bool/array) -- '' and '0' are the only two of empty()'s
         // falsy cases a string value can actually satisfy.
-        $mobile_theme_conf = $currentConfig->mobilTheme;
+        $mobile_theme_conf = $currentConfig->mobileTheme;
         if ($mobile_theme_conf === '' || $mobile_theme_conf === '0') {
             return false;
         }

@@ -562,7 +562,7 @@ final class GalleryController implements ControllerInterface
         if ($slideshow_url_present) {
             if ($galleryDisplay->hasSlideshow) {
                 $redirectService->redirect($slideshow_url);
-            } elseif ($this->currentConfig->indexSlideShowIcon) {
+            } elseif ($this->currentConfig->indexSlideshowIcon) {
                 $u_slideshow = $slideshow_url;
             }
         }

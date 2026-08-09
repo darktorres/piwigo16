@@ -943,7 +943,7 @@ final class PictureController implements ControllerInterface
                 }
             }
             $slideshow_nav = $tpl_slideshow;
-        } elseif ($this->currentConfig->pictureSlideShowIcon) {
+        } elseif ($this->currentConfig->pictureSlideshowIcon) {
             $u_slideshow_start = $urlService->addUrlParams(
                 $picture['current']['url'],
                 [

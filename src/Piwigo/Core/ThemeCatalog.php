@@ -38,7 +38,7 @@ final class ThemeCatalog
             $id = $row->id;
             $name = $row->name;
 
-            $mobile_theme = $currentConfig->mobilTheme;
+            $mobile_theme = $currentConfig->mobileTheme;
             if ($id === $mobile_theme) {
                 if (! $showMobile) {
                     continue;

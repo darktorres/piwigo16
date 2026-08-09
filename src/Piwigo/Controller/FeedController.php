@@ -114,7 +114,7 @@ final class FeedController implements ControllerInterface
         $rss_encoding = CharsetHelper::getPwgCharset();
 
         $conf_gallery_title = $this->currentConfig->galleryTitle;
-        $conf_rss_feed_author = $this->currentConfig->rssReedAuthor;
+        $conf_rss_feed_author = $this->currentConfig->rssFeedAuthor;
         $user_username = $this->currentUser->get()
             ->username->value ?? '';
 

@@ -124,7 +124,7 @@ final readonly class PageTailRenderer
 
         // ------------------------------------------------------------- mobile version
         $toggleMobileThemeUrl = null;
-        if (! self::emptyValue($this->currentConfig->mobilTheme) && (DeviceHelper::getDevice($this->sessionService) !== 'desktop' || DeviceHelper::mobileTheme($this->sessionService, $this->currentConfig))) {
+        if (! self::emptyValue($this->currentConfig->mobileTheme) && (DeviceHelper::getDevice($this->sessionService) !== 'desktop' || DeviceHelper::mobileTheme($this->sessionService, $this->currentConfig))) {
             $request_uri = $_SERVER['REQUEST_URI'] ?? '';
             $toggleMobileThemeUrl = $this->urlService->addUrlParams(
                 htmlspecialchars(is_string($request_uri) ? $request_uri : ''),

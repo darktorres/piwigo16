@@ -606,7 +606,7 @@ final class CurrentConfig
     /**
      * Show the slideshow icon on album index pages.
      */
-    public private(set) bool $indexSlideShowIcon = true;
+    public private(set) bool $indexSlideshowIcon = true;
 
     // === index_sort_order_input ===
     /**
@@ -777,7 +777,7 @@ final class CurrentConfig
     /**
      * Theme name applied automatically when a mobile browser is detected.
      */
-    public string $mobilTheme = '';
+    public string $mobileTheme = '';
 
     // === nb_categories_page ===
     /**
@@ -1066,7 +1066,7 @@ final class CurrentConfig
     /**
      * Show the slideshow icon on the photo detail page.
      */
-    public private(set) bool $pictureSlideShowIcon = true;
+    public private(set) bool $pictureSlideshowIcon = true;
 
     // === picture_url_style ===
     /**
@@ -1157,7 +1157,7 @@ final class CurrentConfig
     /**
      * Author name shown in the gallery RSS feed.
      */
-    public private(set) string $rssReedAuthor = 'Piwigo notifier';
+    public private(set) string $rssFeedAuthor = 'Piwigo notifier';
 
     // === secret_key ===
     /**

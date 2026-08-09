@@ -306,7 +306,7 @@ final readonly class ExtensionLifecycle
                 }
 
                 $isMobile = (bool) ($fsEntry['mobile'] ?? false);
-                $currentMobileTheme = $this->currentConfig->mobilTheme;
+                $currentMobileTheme = $this->currentConfig->mobileTheme;
                 $hasOtherMobileTheme = $currentMobileTheme !== '' && $currentMobileTheme !== '0';
                 if ($isMobile && $hasOtherMobileTheme && $currentMobileTheme !== $id) {
                     $errors[] = $this->lang->t('You can activate only one mobile theme.');

@@ -105,7 +105,7 @@ final class ThemeCatalogTest extends IntegrationTestCase
         if (! $currentConfig instanceof CurrentConfig) {
             throw new LogicException('Container returned an unexpected type for ' . CurrentConfig::class);
         }
-        $currentConfig->mobilTheme = 'mobile-candidate';
+        $currentConfig->mobileTheme = 'mobile-candidate';
 
         try {
             $themes = ThemeCatalog::getPwgThemes(EventDispatcherTestFactory::get(), CurrentPathsTestFactory::get(), CurrentConfigTestFactory::get(), LangTestFactory::get(), showMobile: false);
@@ -125,7 +125,7 @@ final class ThemeCatalogTest extends IntegrationTestCase
         if (! $currentConfig instanceof CurrentConfig) {
             throw new LogicException('Container returned an unexpected type for ' . CurrentConfig::class);
         }
-        $currentConfig->mobilTheme = 'default';
+        $currentConfig->mobileTheme = 'default';
 
         try {
             $themes = ThemeCatalog::getPwgThemes(EventDispatcherTestFactory::get(), CurrentPathsTestFactory::get(), CurrentConfigTestFactory::get(), LangTestFactory::get(), showMobile: true);

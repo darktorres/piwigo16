@@ -39,7 +39,7 @@ use Piwigo\Users\UserStatus;
  * Covers 6 branches the real Browser suite's fixture state never
  * naturally exercises together:
  *  - the stale-auth-key error message.
- *  - the mobile-theme CurrentConfig::mobilTheme() override.
+ *  - the mobile-theme CurrentConfig::mobileTheme() override.
  *  - the "first time noPhotoYet() is null" NoPhotoYetRenderer::render()
  *    call site (the fixture's 5 images mean NoPhotoYetRenderer's own
  *    guard-false path runs -- never its exit()-terminated nb_photos===0
@@ -120,7 +120,7 @@ final class RequestBootstrapFinalizeTest extends IntegrationTestCase
         if (! $currentConfig instanceof CurrentConfig) {
             throw new LogicException('Container returned an unexpected type for ' . CurrentConfig::class);
         }
-        $currentConfig->mobilTheme = 'mobile-theme-name';
+        $currentConfig->mobileTheme = 'mobile-theme-name';
         $_SESSION['pwg_mobile_theme'] = true;
 
         try {

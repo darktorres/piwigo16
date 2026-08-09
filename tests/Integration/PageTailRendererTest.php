@@ -150,7 +150,7 @@ final class PageTailRendererTest extends IntegrationTestCase
 
     public function test_render_to_string_adds_the_mobile_theme_toggle_link_when_mobile_theme_is_active(): void
     {
-        CurrentConfigTestFactory::get()->mobilTheme = 'mobile';
+        CurrentConfigTestFactory::get()->mobileTheme = 'mobile';
         $_SESSION['pwg_mobile_theme'] = true;
         $_SERVER['REQUEST_URI'] = '/test/mobile-toggle-path';
 
@@ -168,7 +168,7 @@ final class PageTailRendererTest extends IntegrationTestCase
 
     public function test_render_to_string_omits_the_mobile_theme_toggle_link_when_mobile_theme_is_disabled(): void
     {
-        CurrentConfigTestFactory::get()->mobilTheme = '';
+        CurrentConfigTestFactory::get()->mobileTheme = '';
 
         $output = $this->renderer->renderToString(microtime(true));
 

@@ -95,7 +95,7 @@ final class LoungeMaintenanceTest extends IntegrationTestCase
     {
         // Anchored on Env::now() rather than the DB server's own real
         // NOW(), matching the real bug fixed in needsEmptying()/
-        // findOldestLoungeAgeInfo() itself (2026-08-01): the two clock
+        // findOldestLoungeAgeInfo() itself: the two clock
         // sources agreed only as long as real wall-clock time stayed close
         // to a frozen PIWIGO_TEST_NOW, and drifted apart the moment it
         // didn't.

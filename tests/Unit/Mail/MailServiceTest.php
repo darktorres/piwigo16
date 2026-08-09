@@ -1317,8 +1317,8 @@ test('mail keys its per-request template cache by lang_info[code] too, not reusi
 });
 
 test('mail keys its per-request template cache by theme too, not reusing one theme\'s CSS for another', function (): void {
-    // Confirmed-real bug found while writing this test (2026-08-01, fixed
-    // same commit): the cache key never included $args['theme'] even
+    // Confirmed-real bug found while writing this test: the cache key
+    // never included $args['theme'] even
     // though the cached entry's own CSS file selection depends on it --
     // present identically in the legacy procedural functions_mail.inc.php
     // and 16.x-rewrite's own MailService, a genuine cross-codebase bug,

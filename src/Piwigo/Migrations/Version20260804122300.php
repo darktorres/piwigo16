@@ -319,8 +319,8 @@ final class Version20260804122300 extends AbstractMigration
         // now()`), matching MySQL's real behavior exactly.
         //
         // This same rule applies to every OTHER `sql_datetime`-Doctrine-Type
-        // column in this schema, not just `lastmodified` -- confirmed live a
-        // second time (2026-08-08): `user_infos.activation_key_expire`,
+        // column in this schema, not just `lastmodified` -- confirmed live:
+        // `user_infos.activation_key_expire`,
         // populated via a raw `NOW() + INTERVAL '1 hour'` test fixture
         // insert (same class of write as this trigger's own `now()`), threw
         // the identical `SqlDateTime::from()` rejection once read back

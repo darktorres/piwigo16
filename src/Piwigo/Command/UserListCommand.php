@@ -16,14 +16,12 @@ use Symfony\Component\Process\Process;
 /**
  * New CLI-only capability (no web equivalent). Reads via a raw `mysql`/
  * `psql` client shell-out (env-var credentials, Piwigo\Db\DbCredentials)
- * rather than a Users domain service. docs/PLAN.md's P12 audit note
- * (2026-07-13) records that this docblock used to point at a
- * "scope-decision section" that never existed. Doctrine DBAL (P14) and a
- * real Users domain service (Piwigo\Users\UserRepository/UserService) have
- * both since landed and are usable from CLI commands (see sibling commands
+ * rather than a Users domain service. Doctrine DBAL and a
+ * real Users domain service (Piwigo\Users\UserRepository/UserService) are
+ * usable from CLI commands (see sibling commands
  * in this directory); this command has not yet been migrated to use them.
  *
- * pgsql support pass: real bug found live -- this always shelled out to
+ * Real bug found live -- this always shelled out to
  * `mysql` regardless of `PIWIGO_DB_DRIVER`, so `bin/piwigo user:list`
  * against a real Postgres install didn't just produce wrong output, it
  * hung for the full 60s Process timeout (the `mysql` binary has no idea

@@ -917,9 +917,8 @@ final class MailService implements MailerInterface
         $contents = [];
         foreach ($contentTypeList as $contentType) {
             // Key composed of indexes which allow caching mail data. Must
-            // include theme -- confirmed-real bug found via mutation-gap
-            // test-writing (2026-08-01): the cache entry built below (css
-            // file selection at "mail-css-{theme}.tpl") depends on
+            // include theme -- a real bug otherwise: the cache entry
+            // built below (css file selection at "mail-css-{theme}.tpl") depends on
             // $args['theme'], but the key itself didn't, so two mail()
             // calls in the same request sharing contentType/langCode/
             // auth_key but using DIFFERENT themes would silently reuse the

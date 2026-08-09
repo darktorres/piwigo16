@@ -6,7 +6,7 @@ namespace Piwigo\Activity\Request;
 
 /**
  * Validated `$_GET`/`$_POST`/`$_REQUEST` shape for
- * ActivityService::record() -- P26/SEC-40 Request DTO.
+ * ActivityService::record().
  *
  * `record()` is called from dozens of L4Integration/legacy sites (per
  * the class's own docblock), so changing its signature to thread these

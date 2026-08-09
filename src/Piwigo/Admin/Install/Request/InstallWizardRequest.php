@@ -8,8 +8,7 @@ use Piwigo\Validation\InputValidator;
 
 /**
  * Validated `$_GET`/`$_POST` shape for InstallWizard::boot()/render()
- * (replaces install.php's top-level `$_POST`/`$_GET` narrowing) --
- * P26/SEC-40 Request DTO.
+ * (replaces install.php's top-level `$_POST`/`$_GET` narrowing).
  *
  * `languageParam` stays a raw (only `strip_tags()`-normalized) nullable
  * string -- the original's fallback-to-browser-language logic depends on

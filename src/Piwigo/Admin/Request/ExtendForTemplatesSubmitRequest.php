@@ -6,7 +6,7 @@ namespace Piwigo\Admin\Request;
 
 /**
  * Validated `$_POST` shape for ExtendForTemplatesPageRenderer::render()'s
- * save form (page slug "extend_for_templates") -- P26/SEC-40 Request DTO.
+ * save form (page slug "extend_for_templates").
  * The 4 fields are parallel arrays (`reptpl[]`/`original[]`/`url[]`/
  * `bound[]`), indexed by row position -- preserved as-is (not restructured
  * into a list of row objects) since the consuming loop's own

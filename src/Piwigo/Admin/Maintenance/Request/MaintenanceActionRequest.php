@@ -7,7 +7,7 @@ namespace Piwigo\Admin\Maintenance\Request;
 /**
  * Validated `$_GET['action']` for `MaintenanceActionsPageRenderer::render()`/
  * `MaintenanceEnvPageRenderer::render()` (the "actions"/"env" tabs of page
- * slug "maintenance") -- P26/SEC-40 Request DTO, shared by both since they
+ * slug "maintenance") -- shared by both since they
  * had the exact same inline `$_GET['action']` read duplicated verbatim.
  * `MaintenanceActionDispatcher::dispatch()`'s own switch already treats any
  * unrecognized action as a safe no-op (`default:` case), so there's no

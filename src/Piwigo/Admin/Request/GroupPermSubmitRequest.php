@@ -9,7 +9,7 @@ use Piwigo\Validation\InputValidator;
 
 /**
  * Validated `$_GET`/`$_POST` shape for GroupPermPageRenderer::render()
- * (page slug "group_perm") -- P26/SEC-40 Request DTO. `cat_true`/
+ * (page slug "group_perm"). `cat_true`/
  * `cat_false`'s own `InputValidator::validate()` calls only run when
  * `$_POST` is non-empty, matching the original exactly. `groupIdPresent`/
  * `groupId` stay split -- the original's own presence check and its

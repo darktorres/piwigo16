@@ -24,6 +24,18 @@ use Piwigo\Permalink\Projection\OldPermalink;
  * in afterEach() after any test that touches it (touchOldPermalinkHit()'s
  * own test).
  *
+ * Every test that writes to `categories.permalink` (as opposed to the
+ * separate `old_permalinks` table, which nothing else in the Unit suite
+ * touches) uses category id 2, never 1 -- composer test's own parallel
+ * runner puts this file and PermalinkServiceTest.php in different
+ * worker processes against the SAME real, shared DB, and
+ * PermalinkServiceTest.php's own beforeEach()/afterEach() claims
+ * category 1 exclusively for its own setCatPermalink() calls. Confirmed
+ * live: this file's own findPermalinkMatches() test produced a real,
+ * intermittent failure when its own category-1 UPDATE raced against
+ * that file's concurrently-running clearCategoryPermalink(1) calls.
+ *
+
  * Confirmed-equivalent mutations, not individually tested:
  * findCategoryIdByPermalink()/findOldCategoryId()'s own `is_numeric($ids[0])
  * ? (int) $ids[0] : null` casts are unreachable -- getSingleColumnResult()
@@ -86,13 +98,13 @@ test('setCategoryPermalink() then findCategoryIdByPermalink() round-trips', func
     $repo = permalinkRepoTest();
     $slug = permalinkRepoTestSlug();
 
-    $repo->setCategoryPermalink(1, $slug);
+    $repo->setCategoryPermalink(2, $slug);
 
     try {
-        expect($repo->findCategoryIdByPermalink($slug))->toBe(1)
-            ->and($repo->findPermalinkByCategoryId(1))->toBe($slug);
+        expect($repo->findCategoryIdByPermalink($slug))->toBe(2)
+            ->and($repo->findPermalinkByCategoryId(2))->toBe($slug);
     } finally {
-        $repo->clearCategoryPermalink(1);
+        $repo->clearCategoryPermalink(2);
     }
 });
 
@@ -102,9 +114,9 @@ test('findCategoryIdByPermalink() returns null when unused', function (): void {
 
 test('findPermalinkByCategoryId() returns null when unset', function (): void {
     $repo = permalinkRepoTest();
-    $repo->clearCategoryPermalink(1);
+    $repo->clearCategoryPermalink(2);
 
-    expect($repo->findPermalinkByCategoryId(1))->toBeNull();
+    expect($repo->findPermalinkByCategoryId(2))->toBeNull();
 });
 
 test('findPermalinkByCategoryId() returns null for a category that does not exist at all', function (): void {
@@ -118,11 +130,11 @@ test('findPermalinkByCategoryId() returns null for a category that does not exis
 test('clearCategoryPermalink() removes it', function (): void {
     $repo = permalinkRepoTest();
     $slug = permalinkRepoTestSlug();
-    $repo->setCategoryPermalink(1, $slug);
+    $repo->setCategoryPermalink(2, $slug);
 
-    $repo->clearCategoryPermalink(1);
+    $repo->clearCategoryPermalink(2);
 
-    expect($repo->findPermalinkByCategoryId(1))->toBeNull()
+    expect($repo->findPermalinkByCategoryId(2))->toBeNull()
         ->and($repo->findCategoryIdByPermalink($slug))->toBeNull();
 });
 
@@ -355,8 +367,15 @@ test('findAllOrderedBy() with a null sort field leaves the natural order untouch
 });
 
 test('findPermalinkMatches() finds old and current permalinks', function (): void {
+    // Deliberately 2 DIFFERENT categories, not the same one for both
+    // matches -- category 1 is PermalinkServiceTest.php's own exclusive
+    // id (see this file's own top-of-file docblock); using category 2
+    // here for the "current permalink" half still proves the real thing
+    // this test is about (a mixed old+current result set, each row
+    // correctly tagged via is_old), without needing the 2 permalinks to
+    // share a category.
     $conn = DbConnection::build();
-    $conn->executeStatement("UPDATE " . Tables::categories() . " SET permalink = 'p17-unit-sample-album' WHERE id = 1");
+    $conn->executeStatement("UPDATE " . Tables::categories() . " SET permalink = 'p17-unit-sample-album' WHERE id = 2");
 
     try {
         $matches = permalinkRepoTest()->findPermalinkMatches(['old-sample-album', 'p17-unit-sample-album']);
@@ -365,10 +384,10 @@ test('findPermalinkMatches() finds old and current permalinks', function (): voi
         // driver config (unlike varchar columns like 'permalink').
         expect($matches['old-sample-album']['id'])->toBe(1)
             ->and($matches['old-sample-album']['is_old'])->toBe(1)
-            ->and($matches['p17-unit-sample-album']['id'])->toBe(1)
+            ->and($matches['p17-unit-sample-album']['id'])->toBe(2)
             ->and($matches['p17-unit-sample-album']['is_old'])->toBe(0);
     } finally {
-        $conn->executeStatement('UPDATE ' . Tables::categories() . ' SET permalink = NULL WHERE id = 1');
+        $conn->executeStatement('UPDATE ' . Tables::categories() . ' SET permalink = NULL WHERE id = 2');
     }
 });
 

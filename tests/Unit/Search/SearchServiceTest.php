@@ -399,6 +399,14 @@ beforeEach(function (): void {
 });
 
 afterEach(function (): void {
+    // insertSavedSearch() calls below use literal 'psk-2026...' uuids
+    // (matching the Integration original's own hardcoded style) plus
+    // getAvailableSearchUuid()'s own real 'psk-'-prefixed generated
+    // ones -- this whole DB is shared/persistent across the Unit suite
+    // (and across every pest --mutate re-execution), unlike a real
+    // Integration run's own per-class resetDatabase(), so leftover rows
+    // accumulate without this cleanup.
+    searchServiceTestConn()->executeStatement("DELETE FROM " . Tables::search() . " WHERE search_uuid LIKE 'psk-%'");
     CachePools::searchResults()->clear();
     CurrentUserTestFactory::get()->reset();
     CurrentConfigTestFactory::get()->reset();

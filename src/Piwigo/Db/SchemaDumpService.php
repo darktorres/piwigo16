@@ -42,7 +42,7 @@ use Symfony\Component\Process\Process;
  * MariaDB as one portability tier throughout, never a 3-way split.
  *
  * Shells out to mysqldump/pg_dump via the same Symfony\Process pattern
- * BackupService (P12) already uses -- schema-only, no data
+ * BackupService already uses -- schema-only, no data
  * (`--no-data` / `--schema-only`).
  */
 final readonly class SchemaDumpService

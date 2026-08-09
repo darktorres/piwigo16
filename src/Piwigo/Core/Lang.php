@@ -16,7 +16,7 @@ use Piwigo\Lang\Translator;
  * `$translator->mirroredStrings()`. Nothing outside this class and
  * `Translator` reads `$GLOBALS['lang']`.
  *
- * `t()` delegates to `Piwigo\Lang\Translator` (gettext-backed, P16) rather
+ * `t()` delegates to `Piwigo\Lang\Translator` (gettext-backed) rather
  * than reading `self::$data` directly -- `Translator::translate()` itself
  * falls back to its own mirrored string map for keys with no gettext
  * entry, so both PHP-array-loaded and PO-loaded strings resolve correctly

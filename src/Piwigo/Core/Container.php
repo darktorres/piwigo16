@@ -17,7 +17,7 @@ use Psr\Container\ContainerInterface;
  * why the layer names have no hyphens -- a real deptrac 4.6.2 parsing bug,
  * found while verifying this placement.)
  *
- * P16 adds an optional `Paths` parameter -- when the caller has already
+ * Adds an optional `Paths` parameter -- when the caller has already
  * minted one at the entry point (`index.php`/`bin/piwigo`), it's
  * registered as a container instance so any service can receive it via
  * constructor injection. Still loads `config/container.php` from a fixed

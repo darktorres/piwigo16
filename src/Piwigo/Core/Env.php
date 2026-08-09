@@ -10,7 +10,7 @@ use Symfony\Component\Dotenv\Dotenv;
 
 /**
  * Environment/test-mode resolution, ported verbatim from the 7 free
- * functions that used to live in include/env.inc.php (P23 sub-batch 8f-5).
+ * functions that used to live in include/env.inc.php.
  * That file survives as a pure "require vendor/autoload.php" seam (some
  * thin entry points -- random.php, i.php, ready.php -- rely on it as
  * their only autoloader hookup); everything it used to *do* lives here.

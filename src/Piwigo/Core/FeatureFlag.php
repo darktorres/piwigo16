@@ -10,10 +10,10 @@ use RuntimeException;
  * Read-only feature-flag checks, backed by config/feature-flags.php.
  *
  * SEC-58's own threat ("unauthorized feature-flag change") needs authz,
- * which needs CurrentUser (P16) -- a service with no write/toggle path has
+ * which needs CurrentUser -- a service with no write/toggle path has
  * no "unauthorized change" surface to protect yet. The admin-facing
- * mutation capability (P21 admin UI + P16 CurrentUser + audit_log,
- * P13-16/SEC-57) is a later phase's job.
+ * mutation capability (admin UI + CurrentUser + audit_log,
+ * SEC-57) is a future addition.
  */
 final class FeatureFlag
 {

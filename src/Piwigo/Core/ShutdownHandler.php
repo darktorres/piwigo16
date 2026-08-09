@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Core;
 
 /**
- * Static callback registry for CLI graceful shutdown (P12). `install()`
+ * Static callback registry for CLI graceful shutdown. `install()`
  * wires SIGTERM to run every registered cleanup callback before exiting --
  * Docker sends SIGTERM on `docker stop`/container restart, and a
  * `bin/piwigo backup:*` command mid-archive-extraction needs a chance to

@@ -36,7 +36,7 @@ use Psr\Http\Message\ServerRequestInterface;
 
 /**
  * Replaces feed.php -- generates the RSS2 gallery feed. Unlike every other
- * P22 controller, this page never touches Template/page_header.php/
+ * controller, this page never touches Template/page_header.php/
  * page_tail.php at all (it's a plain XML response, not an HTML page), so
  * there's no LegacyRenderCapture involved -- the whole body is built as a
  * plain string and returned via ResponseFactory::raw() with the feed's own
@@ -44,7 +44,7 @@ use Psr\Http\Message\ServerRequestInterface;
  *
  * page_not_found() happens before any output is built, so it's fine to
  * leave outside of any capture -- same exit()-based-termination limitation
- * as every other controller this phase.
+ * as every other controller.
  */
 final class FeedController implements ControllerInterface
 {

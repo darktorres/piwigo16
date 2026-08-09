@@ -8,7 +8,7 @@ use LogicException;
 use Psr\Container\ContainerInterface;
 
 /**
- * P7 boot skeleton, growing via P8's Container. P16 adds Paths threading.
+ * Boot skeleton, wired via Container. Also threads Paths.
  * `CurrentUser::attachGlobals()` (guest-user init) is deliberately NOT
  * called from here -- `Piwigo\Users\` is L2aCoreDomain, and deptrac's
  * ruleset only lets L1Infrastructure (this class's own layer) depend on
@@ -21,7 +21,7 @@ use Psr\Container\ContainerInterface;
  * `RequestBootstrap::configure()`/`finalize()` resolve it instead, right
  * alongside `CurrentUser::attachGlobals()`.
  *
- * Deliberately does NOT run the P9 middleware pipeline -- that's
+ * Deliberately does NOT run the middleware pipeline -- that's
  * Piwigo\Bootstrap\RequestPipeline's job. Kernel must stay
  * infrastructure-only (L1Infrastructure in deptrac.yaml, which only allows
  * depending on L0Data); orchestrating Http/Routing/Container together is

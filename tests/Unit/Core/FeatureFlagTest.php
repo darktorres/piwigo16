@@ -4,9 +4,8 @@ declare(strict_types=1);
 
 use Piwigo\Core\FeatureFlag;
 
-// config/feature-flags.php is empty right now (no real flag exists yet --
-// see the plan's read-only, no-write-path scoping). Every check is
-// correctly false until a later phase adds a real entry.
+// config/feature-flags.php is empty right now -- no real flag exists
+// yet. Every check is correctly false until a real entry is added.
 
 test('a flag not present in config/feature-flags.php is disabled', function (): void {
     expect(FeatureFlag::isEnabled('nonexistent_flag'))->toBeFalse();

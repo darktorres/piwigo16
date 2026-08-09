@@ -16,14 +16,13 @@ use Psr\Http\Message\ServerRequestInterface;
 use Psr\Log\LoggerInterface;
 
 /**
- * web-vitals RUM beacon sink (docs/PLAN.md P1, item 11b) --
+ * web-vitals RUM beacon sink --
  * build/vitals.ts POSTs one JSON body per Core Web Vitals metric via
  * navigator.sendBeacon(), this logs it as structured JSON on the Monolog
  * "app" channel ($logger resolves there per config/container.php, same
- * binding ExceptionHandlerMiddleware already uses). Log-only for this pass
- * (see the plan's own Step 3.4 scope note) -- a p75-aggregating admin
- * dashboard is tracked as a separate follow-up once the log data's real
- * shape is known.
+ * binding ExceptionHandlerMiddleware already uses). Log-only -- a
+ * p75-aggregating admin dashboard is a separate follow-up once the log
+ * data's real shape is known.
  *
  * A malformed or missing body is silently ignored (still 204) rather than
  * ever surfacing an error -- sendBeacon() is fire-and-forget from a real

@@ -6,8 +6,7 @@ use Piwigo\Image\DerivativeUrlCodec;
 
 /**
  * Piwigo\Image\DerivativeUrlCodec -- pure, stateless derivative-filename-
- * token encoding helpers. Had zero dedicated coverage (see
- * /home/torres/.claude/plans/piped-enchanting-spark.md, Wave 1) despite
+ * token encoding helpers. Had zero dedicated coverage despite
  * being simple, deterministic, side-effect-free logic.
  */
 test('derivativeToUrl truncates a derivative type to its first 2 characters', function (): void {

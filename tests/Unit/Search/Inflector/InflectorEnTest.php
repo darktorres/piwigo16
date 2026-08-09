@@ -8,8 +8,7 @@ use Piwigo\Search\Inflector\Inflector_en;
  * Piwigo\Search\Inflector\Inflector_en::get_variants() -- the quick-search
  * word-stemming engine (generates plural/singular/verb-form variants of a
  * search term so e.g. searching "cat" also matches "cats"). Had zero
- * dedicated coverage (see /home/torres/.claude/plans/piped-enchanting-
- * spark.md, Wave 1) despite being pure, deterministic, side-effect-free
+ * dedicated coverage despite being pure, deterministic, side-effect-free
  * logic. Every expected value below was independently confirmed by
  * invoking the real class before writing the assertion (this engine's
  * multi-stage regex fallthrough is not something to hand-trace and trust

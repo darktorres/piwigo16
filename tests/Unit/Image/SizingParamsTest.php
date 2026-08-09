@@ -7,8 +7,7 @@ use Piwigo\Image\SizingParams;
 /**
  * Piwigo\Image\SizingParams -- had partial coverage (compute()'s ratio_h
  * >= ratio_w / crop_v branch, and add_url_tokens() entirely, were
- * untested; see /home/torres/.claude/plans/piped-enchanting-spark.md,
- * Wave 1). Every value below was independently confirmed by invoking the
+ * untested). Every value below was independently confirmed by invoking the
  * real class before writing the assertion.
  *
  * Real finding, not fixed here (self-consistent, no observable bug --

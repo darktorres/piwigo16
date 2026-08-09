@@ -87,8 +87,7 @@ function qexprSetScopeData(QSingleToken $token, mixed $value): void
  * QNumericRangeScope/QDateRangeScope -- the quick-search query-string
  * parser/tokenizer (AND/OR/NOT, quoted phrases, wildcards, `scope:value`
  * prefixes, parenthesized sub-expressions, numeric/date range scopes). Had
- * zero dedicated coverage (see /home/torres/.claude/plans/piped-enchanting-
- * spark.md, Wave 1) despite being pure, side-effect-free, deterministic
+ * zero dedicated coverage despite being pure, side-effect-free, deterministic
  * logic with no DB/network/filesystem dependency -- the real scope set
  * mirrors SearchService::getValidatedSearchArray()'s own construction.
  *

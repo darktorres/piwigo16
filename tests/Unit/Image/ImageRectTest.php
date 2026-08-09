@@ -6,8 +6,7 @@ use Piwigo\Image\ImageRect;
 
 /**
  * Piwigo\Image\ImageRect -- the center-of-interest crop math used by
- * derivative generation. Had zero dedicated coverage (see
- * /home/torres/.claude/plans/piped-enchanting-spark.md, Wave 1). Every
+ * derivative generation. Had zero dedicated coverage. Every
  * expected value below was independently confirmed by invoking the real
  * class before writing the assertion -- the COI-adjusted crop branches
  * are not something to hand-trace and trust blindly.

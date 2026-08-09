@@ -7,10 +7,9 @@ use Piwigo\Image\ImageFormatEntity;
 use Piwigo\Image\Projection\ImageFormat;
 
 /**
- * Piwigo\Image\Projection\ImageFormat -- had zero dedicated coverage (see
- * /home/torres/.claude/plans/piped-enchanting-spark.md, Wave 1). Same
- * fromRow()/fromEntity()/toArray() shape already established for
- * UserInfo/Plugin/ApiKey's own projection tests this session --
+ * Piwigo\Image\Projection\ImageFormat -- had zero dedicated coverage.
+ * Same fromRow()/fromEntity()/toArray() shape already established for
+ * UserInfo/Plugin/ApiKey's own projection tests --
  * fromRow() itself has no real production caller (see this class's own
  * docblock: current readers go through fromEntity() instead), but stays
  * dead-but-callable, same documented shape as PluginConfig\Projection\

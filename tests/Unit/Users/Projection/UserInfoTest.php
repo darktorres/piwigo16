@@ -7,8 +7,7 @@ use Piwigo\Core\AppInfo;
 use Piwigo\Users\Projection\UserInfo;
 
 /**
- * Piwigo\Users\Projection\UserInfo -- had zero dedicated coverage (see
- * /home/torres/.claude/plans/piped-enchanting-spark.md, Wave 1).
+ * Piwigo\Users\Projection\UserInfo -- had zero dedicated coverage.
  * fromEntity() (the only real production caller today) is already
  * exercised indirectly via UserRepositoryTest; this file covers fromRow()
  * (kept for a future raw-row caller, per this class's own docblock) and

@@ -9,8 +9,7 @@ use Piwigo\Image\ImagePathHelper;
 
 /**
  * Piwigo\Image\ImagePathHelper -- pure path-string helpers. Had zero
- * dedicated coverage (see /home/torres/.claude/plans/piped-enchanting-
- * spark.md, Wave 1) despite being reachable from several real callers.
+ * dedicated coverage despite being reachable from several real callers.
  */
 beforeEach(function (): void {
     Kernel::boot(Paths::fromRoot('/var/www/piwigo'));

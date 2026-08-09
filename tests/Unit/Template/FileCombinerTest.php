@@ -946,9 +946,7 @@ test('process_css throws when a combined_css_postfilter listener returns somethi
  * respectively (confirmed live: each fails under its own sed-applied
  * mutation). pest --mutate's own report listed them as UNTESTED anyway;
  * same class of tool limitation as this project's other documented
- * pest-plugin-mutate blind spots (see MEMORY.md's
- * feedback_pest_mutate_blank_line_blind_spot /
- * feedback_pest_mutate_invisible_to_subprocess_tests).
+ * pest-plugin-mutate blind spots.
  */
 test('process_css_rec resolves a nested @import file recursively into the combined output', function (): void {
     $root = sys_get_temp_dir() . '/piwigo-file-combiner-import-ok-' . bin2hex(random_bytes(8));

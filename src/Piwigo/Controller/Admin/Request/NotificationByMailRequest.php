@@ -9,7 +9,7 @@ use Piwigo\Validation\InputValidator;
 /**
  * Validated `$_GET`/`$_POST` shape for
  * NotificationByMailSubController::handle() (page slug
- * "notification_by_mail") -- P26/SEC-40 Request DTO.
+ * "notification_by_mail").
  *
  * `post` retains the raw `$_POST` array rather than enumerating fixed
  * properties: `handle()`'s "param" tab reads `$_POST[$nbm_user['param']]`

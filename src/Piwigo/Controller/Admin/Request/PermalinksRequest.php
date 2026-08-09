@@ -9,7 +9,7 @@ use Piwigo\Validation\InputValidator;
 
 /**
  * Validated `$_GET`/`$_POST` shape for PermalinksSubController::handle()
- * (page slug "permalinks") -- P26/SEC-40 Request DTO. `catId`'s own
+ * (page slug "permalinks"). `catId`'s own
  * `InputValidator::validate()` call runs unconditionally, matching the
  * original exactly (it validated the format whenever `cat_id` was
  * present, regardless of the other fields). `psfPresent`/`psf` and

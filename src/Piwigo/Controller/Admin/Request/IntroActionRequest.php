@@ -6,7 +6,7 @@ namespace Piwigo\Controller\Admin\Request;
 
 /**
  * Validated `$_GET['action']` for IntroSubController::handle() (page slug
- * "intro") -- P26/SEC-40 Request DTO. The only real value this page acts
+ * "intro"). The only real value this page acts
  * on is the exact literal `hide_newsletter_subscription` (an equality
  * check, not a pattern) -- see this controller's own docblock for why that
  * one write path needs no CSRF token (a per-admin-user UI preference

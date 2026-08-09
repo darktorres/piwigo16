@@ -10,7 +10,7 @@ use Piwigo\Validation\InputValidator;
 
 /**
  * Validated `$_GET`/`$_POST` shape for CommentsController::__invoke()
- * (comments.php) -- P26/SEC-40 Request DTO.
+ * (comments.php).
  *
  * `authorFilter`/`keywordFilter` split from `authorDisplay`/`keywordDisplay`:
  * the original re-read `author`/`keyword` a second time for the form's

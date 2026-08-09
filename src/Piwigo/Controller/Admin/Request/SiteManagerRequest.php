@@ -6,7 +6,7 @@ namespace Piwigo\Controller\Admin\Request;
 
 /**
  * Validated `$_POST`/`$_GET` shape for SiteManagerSubController::handle()
- * (page slug "site_manager") -- P26/SEC-40 Request DTO. `action`'s own
+ * (page slug "site_manager"). `action`'s own
  * `switch` has a single real case (`delete`) with no `default:` branch,
  * so any unrecognized value is already a safe no-op -- no pattern
  * validation needed.

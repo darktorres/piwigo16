@@ -6,7 +6,7 @@ namespace Piwigo\Category\Request;
 
 /**
  * Validated `$_GET['slideshow']` shape for CategoryDefaultRenderer's
- * own slideshow-url building -- P26/SEC-40 Request DTO. The value only
+ * own slideshow-url building. The value only
  * ever gets echoed back verbatim into a URL parameter (never compared
  * or branched on), so a malformed non-string value collapses to the
  * same `''` the original's own `?? ''` fallback already used for

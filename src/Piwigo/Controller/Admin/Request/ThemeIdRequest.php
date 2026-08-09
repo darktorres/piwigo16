@@ -8,7 +8,7 @@ use Piwigo\Validation\InputValidator;
 
 /**
  * Validated `$_GET['theme']` for ThemeSubController::handle() (page slug
- * "theme") -- P26/SEC-40 Request DTO. Charset pattern matches
+ * "theme"). Charset pattern matches
  * `ExtensionScanner`'s own directory-scan filter (`/^[a-zA-Z0-9-_]+$/`,
  * see its `scan()` method) -- every real theme id `ThemeSubController`
  * later checks this value against via `in_array($theme,

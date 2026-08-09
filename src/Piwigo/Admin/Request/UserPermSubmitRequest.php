@@ -9,7 +9,7 @@ use Piwigo\Validation\InputValidator;
 
 /**
  * Validated `$_GET`/`$_POST` shape for UserPermPageRenderer::render()
- * (page slug "user_perm") -- P26/SEC-40 Request DTO. `cat_true`/
+ * (page slug "user_perm"). `cat_true`/
  * `cat_false`'s own `InputValidator::validate()` calls only run when
  * `$_POST` is non-empty, matching the original exactly. `userId` stays
  * `mixed` (raw `$_GET['user_id']`) -- its own `is_numeric(...) ?:

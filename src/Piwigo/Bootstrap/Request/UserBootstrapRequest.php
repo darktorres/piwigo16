@@ -6,7 +6,7 @@ namespace Piwigo\Bootstrap\Request;
 
 /**
  * Validated `$_GET`/`$_POST`/`$_REQUEST` shape for
- * UserBootstrap::initialize() -- P26/SEC-40 Request DTO.
+ * UserBootstrap::initialize().
  *
  * This runs at the very top of the request lifecycle (before any
  * controller/WS-method dispatch), but unlike `Http\RequestFactory::

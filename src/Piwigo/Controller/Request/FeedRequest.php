@@ -8,7 +8,7 @@ use Piwigo\Validation\InputValidator;
 
 /**
  * Validated request shape for FeedController::__invoke() (replaces
- * feed.php) -- P26/SEC-40 Request DTO. `feed` (a 50-char alphanumeric
+ * feed.php). `feed` (a 50-char alphanumeric
  * per-user feed token) is pattern-validated, not mandatory: an absent
  * value means the generic (non-personalized) feed. `image_only` is
  * presence-only.

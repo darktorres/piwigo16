@@ -264,22 +264,23 @@ final readonly class SearchService
         /** @var array<string, list<int>> $imageIdsForFilter */
         $imageIdsForFilter = [];
 
-        $rawFiltersViews = $this->currentConfig->filtersViews ?? $this->currentConfig->defaultFiltersViews;
+        $rawFiltersViews = $this->currentConfig->filtersViews->filters ?? $this->currentConfig->defaultFiltersViews;
 
+        // $displayFilters stays a local raw array, not the VO map itself --
+        // the loop below overwrites each entry's 'access' with a computed
+        // bool (can *this* user actually use the filter), a different type
+        // than FilterViewDefinition::$access (the access-level name), so it
+        // can't be written back into the readonly VO.
         $displayFilters = [];
         foreach ($rawFiltersViews as $filtName => $filtConf) {
-            if (is_string($filtName) && is_array($filtConf)) {
-                $displayFilters[$filtName] = $filtConf;
-            }
+            $displayFilters[$filtName] = $filtConf->toArray();
         }
 
         foreach ($displayFilters as $filtName => $filtConf) {
-            if (isset($filtConf['access'])) {
-                $filtConf['access'] = $filtConf['access'] === 'everybody'
-                    || ($filtConf['access'] === 'admins-only' && $this->accessLevelChecker->isAdmin())
-                    || ($filtConf['access'] === 'registered-users' && $this->accessLevelChecker->isClassicUser());
-                $displayFilters[$filtName] = $filtConf;
-            }
+            $filtConf['access'] = $filtConf['access'] === 'everybody'
+                || ($filtConf['access'] === 'admins-only' && $this->accessLevelChecker->isAdmin())
+                || ($filtConf['access'] === 'registered-users' && $this->accessLevelChecker->isClassicUser());
+            $displayFilters[$filtName] = $filtConf;
         }
 
         $rawSearchFields = $search['fields'] ?? null;
@@ -288,7 +289,7 @@ final readonly class SearchService
         // expert
         $expertField = $searchFields['expert'] ?? null;
         $expertString = (is_array($expertField) && is_string($expertField['string'] ?? null)) ? $expertField['string'] : null;
-        if (isset($searchFields['expert']) && $expertString !== null && $expertString !== '' && (bool) ($displayFilters['expert']['access'] ?? false)) {
+        if (isset($searchFields['expert']) && $expertString !== null && $expertString !== '' && ($displayFilters['expert']['access'] ?? false)) {
             $hasFiltersFilled = true;
             $expertItems = $this->getQuickSearchResults($expertString, [])['items'];
             $imageIdsForFilter['expert'] = is_array($expertItems) ? array_values(array_map(intval(...), array_filter($expertItems, is_numeric(...)))) : [];
@@ -302,7 +303,7 @@ final readonly class SearchService
         $allwordsSearchFields = is_array($allwordsField) && is_array($allwordsField['fields'] ?? null)
             ? array_values(array_filter($allwordsField['fields'], is_string(...)))
             : [];
-        if (isset($searchFields['allwords']) && is_array($allwordsField) && $allwordsWords !== [] && $allwordsSearchFields !== [] && (bool) ($displayFilters['words']['access'] ?? false)) {
+        if (isset($searchFields['allwords']) && is_array($allwordsField) && $allwordsWords !== [] && $allwordsSearchFields !== [] && ($displayFilters['words']['access'] ?? false)) {
             $hasFiltersFilled = true;
             [$imageIdsForFilter['allwords'], $matchingCatIds, $matchingTagIds] = $this->searchAllwords($allwordsField, $allwordsWords, $allwordsSearchFields, $forbidden);
         }
@@ -312,7 +313,7 @@ final readonly class SearchService
         $authorWords = is_array($authorField) && is_array($authorField['words'] ?? null)
             ? array_values(array_filter($authorField['words'], is_string(...)))
             : [];
-        if (isset($searchFields['author']) && $authorWords !== [] && (bool) ($displayFilters['author']['access'] ?? false)) {
+        if (isset($searchFields['author']) && $authorWords !== [] && ($displayFilters['author']['access'] ?? false)) {
             $hasFiltersFilled = true;
             $imageIdsForFilter['author'] = $this->queryImageIdsFor(
                 new SqlCondition('i.author IN (:authorWords)', [
@@ -327,7 +328,7 @@ final readonly class SearchService
         // filetypes
         $filetypesField = $searchFields['filetypes'] ?? null;
         $filetypes = is_array($filetypesField) ? array_values(array_filter($filetypesField, is_string(...))) : [];
-        if ($filetypes !== [] && (bool) ($displayFilters['file_type']['access'] ?? false)) {
+        if ($filetypes !== [] && ($displayFilters['file_type']['access'] ?? false)) {
             $hasFiltersFilled = true;
             $clauses = [];
             $params = [];
@@ -342,7 +343,7 @@ final readonly class SearchService
         // added_by
         $addedByField = $searchFields['added_by'] ?? null;
         $addedByIds = is_array($addedByField) ? array_values(array_map(intval(...), array_filter($addedByField, is_numeric(...)))) : [];
-        if ($addedByIds !== [] && (bool) ($displayFilters['added_by']['access'] ?? false)) {
+        if ($addedByIds !== [] && ($displayFilters['added_by']['access'] ?? false)) {
             $hasFiltersFilled = true;
             $imageIdsForFilter['added_by'] = $this->queryImageIdsFor(
                 new SqlCondition('i.addedBy IN (:addedByIds)', [
@@ -364,7 +365,7 @@ final readonly class SearchService
                 }
             }
         }
-        if (isset($searchFields['cat']) && $catWords !== [] && (bool) ($displayFilters['album']['access'] ?? false)) {
+        if (isset($searchFields['cat']) && $catWords !== [] && ($displayFilters['album']['access'] ?? false)) {
             $hasFiltersFilled = true;
             $catIds = (is_array($catField) && (bool) ($catField['sub_inc'] ?? false))
                 ? $this->categoryService->getSubcatIds($catWords)
@@ -385,7 +386,7 @@ final readonly class SearchService
         // date_posted
         $datePostedField = $searchFields['date_posted'] ?? null;
         $datePostedPreset = is_array($datePostedField) && is_string($datePostedField['preset'] ?? null) ? $datePostedField['preset'] : null;
-        if ($datePostedPreset !== null && $datePostedPreset !== '' && (bool) ($displayFilters['post_date']['access'] ?? false)) {
+        if ($datePostedPreset !== null && $datePostedPreset !== '' && ($displayFilters['post_date']['access'] ?? false)) {
             $hasFiltersFilled = true;
             $condition = $this->dateFilterClause('i.dateAvailable', $datePostedPreset, $datePostedField, [
                 '24h' => [24, 'HOUR'],
@@ -400,7 +401,7 @@ final readonly class SearchService
         // date_created
         $dateCreatedField = $searchFields['date_created'] ?? null;
         $dateCreatedPreset = is_array($dateCreatedField) && is_string($dateCreatedField['preset'] ?? null) ? $dateCreatedField['preset'] : null;
-        if ($dateCreatedPreset !== null && $dateCreatedPreset !== '' && (bool) ($displayFilters['creation_date']['access'] ?? false)) {
+        if ($dateCreatedPreset !== null && $dateCreatedPreset !== '' && ($displayFilters['creation_date']['access'] ?? false)) {
             $hasFiltersFilled = true;
             $condition = $this->dateFilterClause('i.dateCreation', $dateCreatedPreset, $dateCreatedField, [
                 '7d' => [7, 'DAY'],
@@ -415,7 +416,7 @@ final readonly class SearchService
         // ratios
         $ratiosField = $searchFields['ratios'] ?? null;
         $ratios = is_array($ratiosField) ? array_values(array_filter($ratiosField, is_string(...))) : [];
-        if ($ratios !== [] && (bool) ($displayFilters['ratio']['access'] ?? false)) {
+        if ($ratios !== [] && ($displayFilters['ratio']['access'] ?? false)) {
             $hasFiltersFilled = true;
             // `i.width`/`i.height` are both plain integer columns. MySQL's
             // `/` operator always computes in DECIMAL/floating context
@@ -473,7 +474,7 @@ final readonly class SearchService
         // ratings
         $ratingsField = $searchFields['ratings'] ?? null;
         $ratings = is_array($ratingsField) ? array_values(array_filter($ratingsField, is_string(...))) : [];
-        if ($this->currentConfig->rateEnabled && $ratings !== [] && (bool) ($displayFilters['rating']['access'] ?? false)) {
+        if ($this->currentConfig->rateEnabled && $ratings !== [] && ($displayFilters['rating']['access'] ?? false)) {
             $hasFiltersFilled = true;
             $clauses = [];
             $ratingParams = [];
@@ -493,7 +494,7 @@ final readonly class SearchService
         // filesize
         $filesizeMinRaw = $searchFields['filesize_min'] ?? null;
         $filesizeMaxRaw = $searchFields['filesize_max'] ?? null;
-        if ($filesizeMinRaw !== null && $filesizeMinRaw !== 0 && $filesizeMaxRaw !== null && $filesizeMaxRaw !== 0 && is_numeric($filesizeMinRaw) && is_numeric($filesizeMaxRaw) && (bool) ($displayFilters['file_size']['access'] ?? false)) {
+        if ($filesizeMinRaw !== null && $filesizeMinRaw !== 0 && $filesizeMaxRaw !== null && $filesizeMaxRaw !== 0 && is_numeric($filesizeMinRaw) && is_numeric($filesizeMaxRaw) && ($displayFilters['file_size']['access'] ?? false)) {
             $hasFiltersFilled = true;
             $imageIdsForFilter['filesize'] = $this->queryImageIdsFor(
                 new SqlCondition('i.filesize BETWEEN :filesizeMin AND :filesizeMax', [
@@ -507,7 +508,7 @@ final readonly class SearchService
         // height
         $heightMinRaw = $searchFields['height_min'] ?? null;
         $heightMaxRaw = $searchFields['height_max'] ?? null;
-        if ($heightMinRaw !== null && $heightMinRaw !== 0 && $heightMaxRaw !== null && $heightMaxRaw !== 0 && is_scalar($heightMinRaw) && is_scalar($heightMaxRaw) && (bool) ($displayFilters['height']['access'] ?? false)) {
+        if ($heightMinRaw !== null && $heightMinRaw !== 0 && $heightMaxRaw !== null && $heightMaxRaw !== 0 && is_scalar($heightMinRaw) && is_scalar($heightMaxRaw) && ($displayFilters['height']['access'] ?? false)) {
             $hasFiltersFilled = true;
             $imageIdsForFilter['height'] = $this->queryImageIdsFor(
                 new SqlCondition('i.height BETWEEN :heightMin AND :heightMax', [
@@ -521,7 +522,7 @@ final readonly class SearchService
         // width
         $widthMinRaw = $searchFields['width_min'] ?? null;
         $widthMaxRaw = $searchFields['width_max'] ?? null;
-        if ($widthMinRaw !== null && $widthMinRaw !== 0 && $widthMaxRaw !== null && $widthMaxRaw !== 0 && is_scalar($widthMinRaw) && is_scalar($widthMaxRaw) && (bool) ($displayFilters['width']['access'] ?? false)) {
+        if ($widthMinRaw !== null && $widthMinRaw !== 0 && $widthMaxRaw !== null && $widthMaxRaw !== 0 && is_scalar($widthMinRaw) && is_scalar($widthMaxRaw) && ($displayFilters['width']['access'] ?? false)) {
             $hasFiltersFilled = true;
             $imageIdsForFilter['width'] = $this->queryImageIdsFor(
                 new SqlCondition('i.width BETWEEN :widthMin AND :widthMax', [
@@ -543,7 +544,7 @@ final readonly class SearchService
             }
         }
         $tagsMode = is_array($tagsField) && is_string($tagsField['mode'] ?? null) ? $tagsField['mode'] : 'AND';
-        if (isset($searchFields['tags']) && $tagsWords !== [] && (bool) ($displayFilters['tags']['access'] ?? false)) {
+        if (isset($searchFields['tags']) && $tagsWords !== [] && ($displayFilters['tags']['access'] ?? false)) {
             $hasFiltersFilled = true;
             $tagService = $this->tagService();
             $imageIdsForFilter['tags'] = array_values(array_map(intval(...), array_filter($tagService->getImageIdsForTags(array_map(TagId::from(...), $tagsWords), $tagsMode), is_numeric(...))));

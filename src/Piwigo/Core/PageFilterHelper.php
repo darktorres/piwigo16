@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Core;
 
 use Piwigo\Config\CurrentConfig;
+use Piwigo\Config\PageFilterFlags;
 
 /**
  * Current-script and page-filter helper functions.
@@ -48,14 +49,21 @@ final class PageFilterHelper
         $filter_pages = $currentConfig->filterPages;
 
         $page_filters = $filter_pages[$page_name] ?? null;
-        if (isset($page_filters[$valueName])) {
-            return $page_filters[$valueName];
+        $value = $page_filters !== null ? self::readFlag($page_filters, $valueName) : null;
+        if ($value !== null) {
+            return $value;
         }
         $default_filters = $filter_pages['default'] ?? null;
-        if (isset($default_filters[$valueName])) {
-            return $default_filters[$valueName];
-        } else {
-            return null;
-        }
+        return $default_filters !== null ? self::readFlag($default_filters, $valueName) : null;
+    }
+
+    private static function readFlag(PageFilterFlags $flags, string $valueName): ?bool
+    {
+        return match ($valueName) {
+            'used' => $flags->used,
+            'cancel' => $flags->cancel,
+            'add_notes' => $flags->addNotes,
+            default => null,
+        };
     }
 }

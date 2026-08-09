@@ -19,6 +19,7 @@ use Piwigo\Auth\PasswordService;
 use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Config\ConfigService;
 use Piwigo\Config\CurrentConfig;
+use Piwigo\Config\FilterViewDefinition;
 use Piwigo\Controller\Admin\Projection\ConfigurationCommentsPageContext;
 use Piwigo\Controller\Admin\Projection\ConfigurationDefaultPageContext;
 use Piwigo\Controller\Admin\Projection\ConfigurationDisplayTabPageContext;
@@ -249,11 +250,15 @@ final class ConfigurationSubController implements AdminSubControllerInterface
         ];
 
         if ($this->currentConfig->filtersViews === null) {
-            $this->configService->confUpdateParam('filters_views', $this->currentConfig->defaultFiltersViews, true);
+            $this->configService->confUpdateParam(
+                'filters_views',
+                array_map(static fn (FilterViewDefinition $d): array => $d->toArray(), $this->currentConfig->defaultFiltersViews),
+                true,
+            );
         }
 
-        $filters_views_default = $this->currentConfig->filtersViews ?? $this->currentConfig->defaultFiltersViews;
-        $filters_names_checkboxes = array_values(array_diff(array_keys($filters_views_default), ['last_filters_conf']));
+        $filters_views_default = $this->currentConfig->filtersViews->filters ?? $this->currentConfig->defaultFiltersViews;
+        $filters_names_checkboxes = array_keys($filters_views_default);
 
         // image order management
         $sort_fields = [
@@ -778,7 +783,8 @@ final class ConfigurationSubController implements AdminSubControllerInterface
 
                 $template->assignContext(new ConfigurationSearchTabPageContext(
                     search: [
-                        'filters_views' => $this->currentConfig->filtersViews ?? [],
+                        'filters_views' => $this->currentConfig->filtersViews->filters ?? $this->currentConfig->defaultFiltersViews,
+                        'last_filters_conf' => $this->currentConfig->filtersViews->lastFiltersConf ?? false,
                         'filters_names' => $filters_names_checkboxes,
                     ],
                     showFilterRatings: $this->currentConfig->rateEnabled,

@@ -73,7 +73,7 @@ final class SearchController implements ControllerInterface
         ];
 
         // list of filters in user preferences
-        $filters_views = $this->currentConfig->filtersViews ?? $this->currentConfig->defaultFiltersViews;
+        $filters_views = $this->currentConfig->filtersViews->filters ?? $this->currentConfig->defaultFiltersViews;
 
         // change the name of the keys so that they can be used with this
         // part of the program
@@ -98,19 +98,17 @@ final class SearchController implements ControllerInterface
         // get all default filters
         $default_fields = [];
         foreach ($filters_conf as $filt_name => $filt_conf) {
-            if (! is_array($filt_conf)) {
-                continue;
-            }
-
-            if (isset($filt_conf['default'])) {
-                if ((bool) $filt_conf['default']) {
-                    $default_fields[] = $filt_name;
-                }
+            if ($filt_conf->default) {
+                $default_fields[] = $filt_name;
             }
         }
 
-        $last_filters_conf = $filters_conf['last_filters_conf'] ?? null;
-        if ($this->accessControl->isAGuest() or $this->accessControl->isGeneric() or ! (bool) $last_filters_conf) {
+        // filtersViews's own lastFiltersConf field (not a commingled key
+        // inside $filters_conf) -- defaultFiltersViews (the fallback when
+        // filtersViews is null) never had one either, matching the old
+        // raw-array shape's own null-when-absent behavior.
+        $last_filters_conf = $this->currentConfig->filtersViews->lastFiltersConf ?? false;
+        if ($this->accessControl->isAGuest() or $this->accessControl->isGeneric() or ! $last_filters_conf) {
             $fields = $default_fields;
         } else {
             $fields = $this->preferencesService->getGallerySearchFilters() ?? $default_fields;

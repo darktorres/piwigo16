@@ -12,6 +12,7 @@ use Piwigo\Category\CategoryRepository;
 use Piwigo\Category\Projection\Category;
 use Piwigo\Common\Enum\Section;
 use Piwigo\Config\CurrentConfig;
+use Piwigo\Config\FilterViewDefinition;
 use Piwigo\Core\CurrentLogger;
 use Piwigo\Core\DateHelper;
 use Piwigo\Core\HtmlRenderingInterface;
@@ -106,15 +107,15 @@ final readonly class SearchFilterRenderer
 
         $tagService = $this->tagService;
 
-        $filtersViewsRaw = $this->currentConfig->filtersViews ?? $this->currentConfig->defaultFiltersViews;
+        $filtersViewsRaw = $this->currentConfig->filtersViews->filters ?? $this->currentConfig->defaultFiltersViews;
 
-        // 'last_filters_conf' is a lone boolean flag stored alongside the
-        // per-filter settings in this config value (see
-        // admin/configuration.php); every other entry is a settings array.
-        // This method only ever reads the per-filter arrays by name, so
-        // drop the flag here to give $filtersViews a uniform, narrow shape.
-        /** @var array<string, array<string, mixed>> $filtersViews */
-        $filtersViews = array_filter($filtersViewsRaw, is_array(...));
+        // filtersViews->filters (unlike the old raw filters_views config
+        // value) never commingles the sibling 'last_filters_conf' flag with
+        // the per-filter entries -- FilterViewsSelection keeps it as its
+        // own field -- so every entry here is already a real per-filter
+        // definition; no filtering needed, just the VO -> array unwrap this
+        // method's own boolean-access rewrite below needs.
+        $filtersViews = array_map(static fn (FilterViewDefinition $d): array => $d->toArray(), $filtersViewsRaw);
 
         // we add the search_details emptiness check in this condition
         // because it only applies to regular search, not the legacy
@@ -129,13 +130,14 @@ final readonly class SearchFilterRenderer
 
         $displayFilters = $filtersViews;
 
+        // Every entry has an 'access' key -- toArray() above always
+        // produces both fields, unlike the old raw config-array shape this
+        // isset() guard used to defend against.
         foreach ($filtersViews as $filtName => $filtConf) {
-            if (isset($filtConf['access'])) {
-                if ($filtConf['access'] === 'everybody' or ($filtConf['access'] === 'admins-only' and $this->accessControl->isAdmin()) or ($filtConf['access'] === 'registered-users' and $this->accessControl->isClassicUser())) {
-                    $displayFilters[$filtName]['access'] = true;
-                } else {
-                    $displayFilters[$filtName]['access'] = false;
-                }
+            if ($filtConf['access'] === 'everybody' or ($filtConf['access'] === 'admins-only' and $this->accessControl->isAdmin()) or ($filtConf['access'] === 'registered-users' and $this->accessControl->isClassicUser())) {
+                $displayFilters[$filtName]['access'] = true;
+            } else {
+                $displayFilters[$filtName]['access'] = false;
             }
         }
 

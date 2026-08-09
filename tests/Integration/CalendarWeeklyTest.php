@@ -238,7 +238,7 @@ final class CalendarWeeklyTest extends IntegrationTestCase
 
         self::assertFalse($calendar->generate_category_content($template));
 
-        $navVars = $template->get_template_vars('chronology_navigation_bars');
+        $navVars = $calendar->getChronologyNavigationBars();
         self::assertSame(2024, $this->dig($navVars, [0, 'items', 0, 'LABEL']));
         self::assertSame(3, $this->dig($navVars, [0, 'items', 0, 'NB_IMAGES']));
         self::assertSame(2025, $this->dig($navVars, [0, 'items', 1, 'LABEL']));
@@ -261,7 +261,7 @@ final class CalendarWeeklyTest extends IntegrationTestCase
 
         self::assertFalse($calendar->generate_category_content($template));
 
-        $navVars = $template->get_template_vars('chronology_navigation_bars');
+        $navVars = $calendar->getChronologyNavigationBars();
         self::assertSame(11, $this->dig($navVars, [0, 'items', 0, 'LABEL']));
         self::assertSame(1, $this->dig($navVars, [0, 'items', 0, 'NB_IMAGES']));
         self::assertSame(12, $this->dig($navVars, [0, 'items', 1, 'LABEL']));
@@ -278,7 +278,7 @@ final class CalendarWeeklyTest extends IntegrationTestCase
 
         self::assertFalse($calendar->generate_category_content($template));
 
-        $navVars = $template->get_template_vars('chronology_navigation_bars');
+        $navVars = $calendar->getChronologyNavigationBars();
         // WEEKDAY(2025-01-20) = 0 (Monday, image 4), WEEKDAY(2025-01-25) = 5 (Saturday, image 5).
         self::assertSame(0, $this->dig($navVars, [0, 'items', 0, 'LABEL']));
         self::assertSame(1, $this->dig($navVars, [0, 'items', 0, 'NB_IMAGES']));
@@ -302,7 +302,7 @@ final class CalendarWeeklyTest extends IntegrationTestCase
 
         $calendar->generate_category_content($template);
 
-        $nav = $this->digArray($template->get_template_vars('chronology_navigation_bars'), [0]);
+        $nav = $this->digArray($calendar->getChronologyNavigationBars(), [0]);
         self::assertArrayNotHasKey('previous', $nav);
         // Fixed: correctly advances to '2025', not '2024' (the period
         // already being viewed).

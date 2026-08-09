@@ -270,6 +270,7 @@ final readonly class CalendarRenderer
             $template->assignContext(new CalendarChronologyPageContext(
                 fileChronologyView: 'month_calendar.tpl',
                 chronologyTitle: $calendar_title,
+                chronologyNavigationBars: $calendar->getChronologyNavigationBars(),
             ));
         } // end category calling
 

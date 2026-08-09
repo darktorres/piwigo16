@@ -12,6 +12,8 @@ use Piwigo\Controller\Projection\PicturePageContext;
  * @param array<string, mixed>|null $navCurrent
  * @param array<string, string>|null $slideshowNav
  * @param array{IS_FAVORITE: bool, U_FAVORITE: string}|null $favorite
+ * @param list<array<string, mixed>>|null $relatedTags
+ * @param list<string>|null $relatedCategories
  */
 function makePicturePageContextForTest(
     ?array $navFirst = null,
@@ -32,9 +34,10 @@ function makePicturePageContextForTest(
     ?string $infoCreationDate = null,
     ?string $infoDimensions = null,
     ?string $infoFilesize = null,
-    ?int $pdfViewerFilesizeThreshold = null,
     int|false|null $pdfNbPages = null,
     ?string $uPrefetch = null,
+    ?array $relatedTags = null,
+    ?array $relatedCategories = null,
 ): PicturePageContext {
     return new PicturePageContext(
         navFirst: $navFirst,
@@ -66,18 +69,19 @@ function makePicturePageContextForTest(
         infoVisits: '42',
         infoFile: 'photo.jpg',
         displayInfo: ['file' => true],
-        pdfViewerFilesizeThreshold: $pdfViewerFilesizeThreshold,
         pdfNbPages: $pdfNbPages,
         elementContent: '',
         uPrefetch: $uPrefetch,
         uCanonical: '/picture.php?/5',
+        relatedTags: $relatedTags,
+        relatedCategories: $relatedCategories,
     );
 }
 
 test('toArray flattens every fixed property, and omits every optional key when null', function (): void {
     $result = makePicturePageContextForTest()->toArray();
 
-    expect($result)->not->toHaveKeys(['first', 'previous', 'next', 'last', 'current', 'U_SLIDESHOW_STOP', 'slideshow', 'U_SLIDESHOW_START', 'U_METADATA', 'U_SET_AS_REPRESENTATIVE', 'U_PHOTO_ADMIN', 'U_CADDIE', 'favorite', 'COMMENT_IMG', 'INFO_AUTHOR', 'INFO_CREATION_DATE', 'INFO_DIMENSIONS', 'INFO_FILESIZE', 'PDF_VIEWER_FILESIZE_THRESHOLD', 'PDF_NB_PAGES', 'U_PREFETCH'])
+    expect($result)->not->toHaveKeys(['first', 'previous', 'next', 'last', 'current', 'U_SLIDESHOW_STOP', 'slideshow', 'U_SLIDESHOW_START', 'U_METADATA', 'U_SET_AS_REPRESENTATIVE', 'U_PHOTO_ADMIN', 'U_CADDIE', 'favorite', 'COMMENT_IMG', 'INFO_AUTHOR', 'INFO_CREATION_DATE', 'INFO_DIMENSIONS', 'INFO_FILESIZE', 'PDF_NB_PAGES', 'U_PREFETCH', 'related_tags', 'related_categories'])
         ->and($result['SECTION_TITLE'])->toBe('Holidays')
         ->and($result['INFO_VISITS'])->toBe('42')
         ->and($result['display_info'])->toBe(['file' => true]);
@@ -108,14 +112,20 @@ test('toArray includes U_SLIDESHOW_START alone', function (): void {
         ->and($result)->not->toHaveKey('slideshow');
 });
 
-test('toArray includes PDF_VIEWER_FILESIZE_THRESHOLD and PDF_NB_PAGES together, including a false page count', function (): void {
+test('toArray includes PDF_NB_PAGES alone, including a false page count', function (): void {
+    $result = makePicturePageContextForTest(pdfNbPages: false)->toArray();
+
+    expect($result['PDF_NB_PAGES'])->toBeFalse();
+});
+
+test('toArray includes related_tags and related_categories when set', function (): void {
     $result = makePicturePageContextForTest(
-        pdfViewerFilesizeThreshold: 2048,
-        pdfNbPages: false,
+        relatedTags: [['id' => 3, 'name' => 'sunset', 'URL' => '/index.php?/tags/3']],
+        relatedCategories: ['<a href="/index.php?/category/1">Holidays</a>'],
     )->toArray();
 
-    expect($result['PDF_VIEWER_FILESIZE_THRESHOLD'])->toBe(2048)
-        ->and($result['PDF_NB_PAGES'])->toBeFalse();
+    expect($result['related_tags'])->toBe([['id' => 3, 'name' => 'sunset', 'URL' => '/index.php?/tags/3']])
+        ->and($result['related_categories'])->toBe(['<a href="/index.php?/category/1">Holidays</a>']);
 });
 
 test('toArray includes every other optional key when set', function (): void {

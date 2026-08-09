@@ -80,15 +80,15 @@ final class CalendarWeekly extends CalendarBase
     {
         $nb_date_parts = count($this->chronology_date);
         if ($nb_date_parts === 0) {
-            $this->build_nav_bar(self::CYEAR, null, $template); // years
+            $this->build_nav_bar(self::CYEAR, null); // years
         }
         if ($nb_date_parts === 1) {
-            $this->build_nav_bar(self::CWEEK, [], $template); // week nav bar 1-53
+            $this->build_nav_bar(self::CWEEK, []); // week nav bar 1-53
         }
         if ($nb_date_parts === 2) {
-            $this->build_nav_bar(self::CDAY, null, $template); // days nav bar Mon-Sun
+            $this->build_nav_bar(self::CDAY, null); // days nav bar Mon-Sun
         }
-        $this->build_next_prev($template);
+        $this->build_next_prev();
         return false;
     }
 

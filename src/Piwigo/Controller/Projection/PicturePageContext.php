@@ -25,7 +25,16 @@ use Piwigo\Core\TemplatePageContext;
  * `$infoDimensions`/`$infoFilesize` are the original's conditionally-set
  * `$infos` keys; `$infoPostedDate`/`$infoVisits`/`$infoFile` are its
  * unconditional ones -- fully enumerable, so modeled as named fields
- * rather than a loose passthrough bag.
+ * rather than a loose passthrough bag. `$pdfNbPages` alone gates
+ * `PDF_NB_PAGES`'s inclusion (`ImageService::countPdfPages()` never
+ * returns null, only `int|false`, once the pdf branch runs) -- the
+ * sibling `PDF_VIEWER_FILESIZE_THRESHOLD` key moved to {@see
+ * PictureContentPageContext}, the template variable set actually live
+ * when `picture_content.tpl` (its one real consumer) parses. `$relatedTags`/
+ * `$relatedCategories` were formerly `Template::append()`-built lists --
+ * `null` when the original loop never ran at all (matching its own
+ * `isset($related_tags)`/`isset($related_categories)` template guards),
+ * a real, non-empty list otherwise.
  */
 final readonly class PicturePageContext implements TemplatePageContext
 {
@@ -38,6 +47,8 @@ final readonly class PicturePageContext implements TemplatePageContext
      * @param array<string, string>|null $slideshowNav
      * @param array<string, bool> $displayInfo
      * @param array{IS_FAVORITE: bool, U_FAVORITE: string}|null $favorite
+     * @param list<array<string, mixed>>|null $relatedTags
+     * @param list<string>|null $relatedCategories
      */
     public function __construct(
         public ?array $navFirst,
@@ -69,11 +80,12 @@ final readonly class PicturePageContext implements TemplatePageContext
         public string $infoVisits,
         public string $infoFile,
         public array $displayInfo,
-        public ?int $pdfViewerFilesizeThreshold,
         public int|false|null $pdfNbPages,
         public string $elementContent,
         public ?string $uPrefetch,
         public string $uCanonical,
+        public ?array $relatedTags,
+        public ?array $relatedCategories,
     ) {}
 
     /**
@@ -167,13 +179,20 @@ final readonly class PicturePageContext implements TemplatePageContext
             $result['INFO_FILESIZE'] = $this->infoFilesize;
         }
 
-        if ($this->pdfViewerFilesizeThreshold !== null) {
-            $result['PDF_VIEWER_FILESIZE_THRESHOLD'] = $this->pdfViewerFilesizeThreshold;
+        if ($this->pdfNbPages !== null) {
             $result['PDF_NB_PAGES'] = $this->pdfNbPages;
         }
 
         if ($this->uPrefetch !== null) {
             $result['U_PREFETCH'] = $this->uPrefetch;
+        }
+
+        if ($this->relatedTags !== null) {
+            $result['related_tags'] = $this->relatedTags;
+        }
+
+        if ($this->relatedCategories !== null) {
+            $result['related_categories'] = $this->relatedCategories;
         }
 
         return $result;

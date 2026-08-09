@@ -363,7 +363,7 @@ final class CalendarMonthlyTest extends IntegrationTestCase
 
         // build_nav_bar(CYEAR) also ran (case B always calls it) -- 2024
         // has 3 images total, 2025 has 2, plus the "All" link.
-        $navVars = $template->get_template_vars('chronology_navigation_bars');
+        $navVars = $calendar->getChronologyNavigationBars();
         self::assertSame(2024, $this->dig($navVars, [0, 'items', 0, 'LABEL']));
         self::assertSame(3, $this->dig($navVars, [0, 'items', 0, 'NB_IMAGES']));
         self::assertSame(2025, $this->dig($navVars, [0, 'items', 1, 'LABEL']));
@@ -465,7 +465,7 @@ final class CalendarMonthlyTest extends IntegrationTestCase
         $templateStrings = TemplateTestFactory::build();
         $withStrings->generate_category_content($templateStrings);
 
-        $navStrings = $this->digArray($templateStrings->get_template_vars('chronology_navigation_bars'), [0]);
+        $navStrings = $this->digArray($withStrings->getChronologyNavigationBars(), [0]);
         self::assertArrayNotHasKey('previous', $navStrings);
         self::assertSame('7 2024', $this->dig($navStrings, ['next', 'LABEL']));
 
@@ -475,7 +475,7 @@ final class CalendarMonthlyTest extends IntegrationTestCase
         $templateInts = TemplateTestFactory::build();
         $withInts->generate_category_content($templateInts);
 
-        $navInts = $this->digArray($templateInts->get_template_vars('chronology_navigation_bars'), [0]);
+        $navInts = $this->digArray($withInts->getChronologyNavigationBars(), [0]);
         self::assertArrayNotHasKey('previous', $navInts);
         // Fixed: "next" now correctly points at the real next period
         // (2024-7), identically to the string-typed case above, instead of
@@ -495,7 +495,7 @@ final class CalendarMonthlyTest extends IntegrationTestCase
         $yearLevel->chronology_date = [];
         $yearTemplate = TemplateTestFactory::build();
         self::assertFalse($yearLevel->generate_category_content($yearTemplate));
-        $yearNav = $yearTemplate->get_template_vars('chronology_navigation_bars');
+        $yearNav = $yearLevel->getChronologyNavigationBars();
         self::assertSame(2024, $this->dig($yearNav, [0, 'items', 0, 'LABEL']));
         self::assertSame(3, $this->dig($yearNav, [0, 'items', 0, 'NB_IMAGES']));
 
@@ -505,7 +505,7 @@ final class CalendarMonthlyTest extends IntegrationTestCase
         $monthLevel->chronology_date = [2024];
         $monthTemplate = TemplateTestFactory::build();
         self::assertFalse($monthLevel->generate_category_content($monthTemplate));
-        $monthNav = $monthTemplate->get_template_vars('chronology_navigation_bars');
+        $monthNav = $monthLevel->getChronologyNavigationBars();
         self::assertSame(3, $this->dig($monthNav, [0, 'items', 0, 'LABEL']));
         self::assertSame(2, $this->dig($monthNav, [0, 'items', 0, 'NB_IMAGES']));
         self::assertSame(7, $this->dig($monthNav, [0, 'items', 1, 'LABEL']));
@@ -524,7 +524,7 @@ final class CalendarMonthlyTest extends IntegrationTestCase
         $dayLevel->chronology_date = [2024, 3];
         $dayTemplate = TemplateTestFactory::build();
         self::assertFalse($dayLevel->generate_category_content($dayTemplate));
-        $dayItems = $this->digArray($dayTemplate->get_template_vars('chronology_navigation_bars'), [0, 'items']);
+        $dayItems = $this->digArray($dayLevel->getChronologyNavigationBars(), [0, 'items']);
         self::assertCount(31, $dayItems);
         self::assertSame(['LABEL' => 1], $dayItems[0]);
         self::assertSame(10, $this->dig($dayItems, [9, 'LABEL']));
@@ -621,7 +621,7 @@ final class CalendarMonthlyTest extends IntegrationTestCase
         // now that it's fixed, it correctly finds that 2025-1 is the only
         // period id 4/5 (the only images in scope) ever fall into, so
         // there is genuinely no next or previous period at all.
-        $navVars = $this->digArray($template->get_template_vars('chronology_navigation_bars'), [0]);
+        $navVars = $this->digArray($calendar->getChronologyNavigationBars(), [0]);
         self::assertSame([], $navVars);
     }
 
@@ -675,7 +675,7 @@ final class CalendarMonthlyTest extends IntegrationTestCase
 
         $calendar->generate_category_content($template);
 
-        $dayNav = $this->digArray($template->get_template_vars('chronology_navigation_bars'), [0, 'items']);
+        $dayNav = $this->digArray($calendar->getChronologyNavigationBars(), [0, 'items']);
         self::assertCount(31, $dayNav);
     }
 
@@ -702,7 +702,7 @@ final class CalendarMonthlyTest extends IntegrationTestCase
 
         $calendar->generate_category_content($template);
 
-        $nav = $this->digArray($template->get_template_vars('chronology_navigation_bars'), [0]);
+        $nav = $this->digArray($calendar->getChronologyNavigationBars(), [0]);
         self::assertArrayNotHasKey('previous', $nav);
         self::assertSame('2025', $this->dig($nav, ['next', 'LABEL']));
         self::assertSame(
@@ -735,7 +735,7 @@ final class CalendarMonthlyTest extends IntegrationTestCase
 
         $calendar->generate_category_content($template);
 
-        $nav = $this->digArray($template->get_template_vars('chronology_navigation_bars'), [0]);
+        $nav = $this->digArray($calendar->getChronologyNavigationBars(), [0]);
         self::assertArrayNotHasKey('previous', $nav);
         self::assertSame('3 2024', $this->dig($nav, ['next', 'LABEL']));
         self::assertSame(

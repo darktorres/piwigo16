@@ -862,6 +862,21 @@ final class PictureController implements ControllerInterface
             }
         }
 
+        // U_DOWNLOAD/formats are picture.tpl's own $current.U_DOWNLOAD/
+        // $current.formats -- merged straight into $nav['current'] (built
+        // above, always set whenever $download_url_present can be true,
+        // since that itself reads $picture['current']) rather than through
+        // a separate Template::append('current', ..., merge: true) call,
+        // now that PicturePageContext owns 'current' entirely via
+        // navCurrent.
+        if ($this->currentConfig->pictureDownloadIcon() and $download_url_present and $this->currentUser->get()->enabledHigh) {
+            $nav['current']['U_DOWNLOAD'] = $download_url;
+
+            if ($this->currentConfig->isFormatsEnabled()) {
+                $nav['current']['formats'] = $formats;
+            }
+        }
+
         $u_slideshow_stop = null;
         $u_slideshow_start = null;
 
@@ -1086,28 +1101,24 @@ final class PictureController implements ControllerInterface
         // related tags
         $tags = $this->tagService
             ->getCommonTags([$image_id], -1, $this->htmlService);
-        if ($tags !== []) {
-            foreach ($tags as $tag) {
-                $template->append(
-                    'related_tags',
-                    array_merge(
-                        $tag,
+        $related_tags = [];
+        foreach ($tags as $tag) {
+            $related_tags[] = array_merge(
+                $tag,
+                [
+                    'URL' => $urlService->makeIndexUrl(
                         [
-                            'URL' => $urlService->makeIndexUrl(
-                                [
-                                    'tags' => [$tag],
-                                ]
-                            ),
-                            'U_TAG_IMAGE' => $urlService->duplicatePictureUrl(
-                                [
-                                    'section' => 'tags',
-                                    'tags' => [$tag],
-                                ]
-                            ),
+                            'tags' => [$tag],
                         ]
-                    )
-                );
-            }
+                    ),
+                    'U_TAG_IMAGE' => $urlService->duplicatePictureUrl(
+                        [
+                            'section' => 'tags',
+                            'tags' => [$tag],
+                        ]
+                    ),
+                ]
+            );
         }
 
         // related categories
@@ -1130,6 +1141,7 @@ final class PictureController implements ControllerInterface
         $related_cat0_id = $related_categories[0]['id'] ?? null;
         $related_cat0_id = is_numeric($related_cat0_id) ? (int) $related_cat0_id : null;
         $page_category_id_for_compare = $page_category !== null && is_numeric($page_category['id'] ?? null) ? (int) $page_category['id'] : null;
+        $related_categories_display = [];
         if (count($related_categories) === 1 and
             $page_category !== null and
             $related_cat0_id !== null and $related_cat0_id === $page_category_id_for_compare) { // no need to go to db, we have all the info
@@ -1139,11 +1151,8 @@ final class PictureController implements ControllerInterface
             $upper_names = $page_category['upper_names'] ?? [];
             $upper_names = is_array($upper_names) ? $upper_names : [];
             /** @var array<int, array<string, mixed>> $upper_names */
-            $template->append(
-                'related_categories',
-                $this->htmlService
-                    ->getCatDisplayName($upper_names)
-            );
+            $related_categories_display[] = $this->htmlService
+                ->getCatDisplayName($upper_names);
         } else { // use only 1 sql query to get names for all related categories
             $ids = [];
             foreach ($related_categories as $category) {// add all uppercats to $ids
@@ -1158,15 +1167,13 @@ final class PictureController implements ControllerInterface
                 foreach (explode(',', is_scalar($categoryUppercats) ? (string) $categoryUppercats : '') as $id) {
                     $cats[] = $cat_map[$id];
                 }
-                $template->append('related_categories', $this->htmlService->getCatDisplayName($cats));
+                $related_categories_display[] = $this->htmlService->getCatDisplayName($cats);
             }
         }
 
-        $pdf_viewer_filesize_threshold = null;
         $pdf_nb_pages = null;
 
         if (in_array(strtolower(StringHelper::getExtension($picture['current']['file'])), ['pdf'], true)) {
-            $pdf_viewer_filesize_threshold = $this->currentConfig->pdfViewerFilesizeThreshold() * 1024;
             // Real bug, found while adding coverage for this branch:
             // $picture['current']['path'] is the raw images.path
             // column, root-relative (e.g. 'upload/2026/07/x.pdf'),
@@ -1185,20 +1192,6 @@ final class PictureController implements ControllerInterface
             $pdf_nb_pages = $this->imageService
                 ->countPdfPages($this->paths->root . $picture['current']['path']);
         }
-
-        // Real bug found live: picture_content.tpl's own {if ...
-        // $current.filesize < $PDF_VIEWER_FILESIZE_THRESHOLD} guard (its
-        // only real consumer) reads this template variable from inside
-        // the dispatchChange() call immediately below -- before this
-        // method's own later assignContext(new PicturePageContext(...))
-        // ever assigns it. Undefined there, `<` against it silently
-        // evaluates false, and the <embed> PDF viewer tag never renders
-        // for any PDF, confirmed live via a real PDF upload test.
-        // $pdf_viewer_filesize_threshold is already fully computed above;
-        // assign it early too so it's actually available where it's
-        // used -- the later assignContext() call re-assigns the same
-        // key to the same value, which is harmless.
-        $template->assign('PDF_VIEWER_FILESIZE_THRESHOLD', $pdf_viewer_filesize_threshold);
 
         // maybe someone wants a special display (call it before
         // page_header so that they can add stylesheets)
@@ -1254,38 +1247,13 @@ final class PictureController implements ControllerInterface
             infoVisits: $info_visits,
             infoFile: $info_file,
             displayInfo: $display_info,
-            pdfViewerFilesizeThreshold: $pdf_viewer_filesize_threshold,
             pdfNbPages: $pdf_nb_pages,
             elementContent: $element_content,
             uPrefetch: $u_prefetch,
             uCanonical: $u_canonical,
+            relatedTags: $related_tags !== [] ? $related_tags : null,
+            relatedCategories: $related_categories_display !== [] ? $related_categories_display : null,
         ));
-
-        // Real bug found live: assignContext() above assigns 'current'
-        // via Smarty's own assign() (a full replace, not a merge) to
-        // $nav['current'] -- built purely from the plain $picture['current']
-        // PHP array, which never carries U_DOWNLOAD/formats (those only
-        // ever got appended onto the *Smarty* 'current' variable, back
-        // when $download_url_present/isFormatsEnabled() were evaluated
-        // above). Appending them there, before this replace, meant
-        // picture.tpl (which reads $current.formats/U_DOWNLOAD directly,
-        // and parses only later, at parse('picture', ...) below) never
-        // saw them -- confirmed live via a real enable_formats upload
-        // test. Re-running the same append()s here, after the replace,
-        // is the fix; $download_url/$download_url_present/$formats are
-        // still the same PHP variables computed above (function-scoped,
-        // not lost).
-        if ($this->currentConfig->pictureDownloadIcon() and $download_url_present and $this->currentUser->get()->enabledHigh) {
-            $template->append('current', [
-                'U_DOWNLOAD' => $download_url,
-            ], true);
-
-            if ($this->currentConfig->isFormatsEnabled()) {
-                $template->append('current', [
-                    'formats' => $formats,
-                ], true);
-            }
-        }
 
         // +-------------------------------------------------------------+
         // |                          sub pages                           |
@@ -1412,39 +1380,28 @@ final class PictureController implements ControllerInterface
             $u_original = $element_info['element_url'];
         }
 
-        // Real bug found live: this listener fires from the
-        // dispatchChange() call in __invoke() *before* that method's own
-        // later assignContext(new PicturePageContext(...)) ever assigns
-        // the full $picture['current'] data (TITLE_ESC, id, file, ...)
-        // onto the 'current' template variable. picture_content.tpl is
-        // parsed right here, synchronously, so at parse time 'current'
-        // only had whatever an earlier, unrelated append() happened to
-        // add -- picture_content.tpl's own {$current.TITLE_ESC} read
-        // then hit "Undefined array key" (confirmed live via a real
-        // picture.php request under this test env, which turns any PHP
-        // warning into a 500). $element_info *is* $picture['current']
-        // (see this method's own docblock), so merging it in here gives
-        // this fragment's own render the same data the outer page will
-        // eventually get -- __invoke()'s later assignContext() call is a
-        // full replace, not a merge, so this doesn't affect what the
-        // outer picture.tpl itself ends up seeing.
-        $template->append('current', [
-            ...$element_info,
-            'selected_derivative' => $selected_derivative,
-            'unique_derivatives' => $unique_derivatives,
-        ], true);
-
         $template->set_filenames(
             [
                 'default_content' => 'picture_content.tpl',
             ]
         );
 
+        $pdf_viewer_filesize_threshold = null;
+        if (in_array(strtolower(StringHelper::getExtension($element_info['file'])), ['pdf'], true)) {
+            $pdf_viewer_filesize_threshold = $this->currentConfig->pdfViewerFilesizeThreshold() * 1024;
+        }
+
         $template->assignContext(new PictureContentPageContext(
             uOriginal: $u_original,
             altImg: $element_info['file'],
             cookiePath: new CookieService()
                 ->cookiePath(),
+            pdfViewerFilesizeThreshold: $pdf_viewer_filesize_threshold,
+            current: [
+                ...$element_info,
+                'selected_derivative' => $selected_derivative,
+                'unique_derivatives' => $unique_derivatives,
+            ],
         ));
         $event->content = $template->parse('default_content', true);
 

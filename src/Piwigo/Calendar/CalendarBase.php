@@ -118,6 +118,21 @@ abstract class CalendarBase
      */
     public $chronology_view = '';
 
+    /**
+     * `month_calendar.tpl`'s own `chronology_navigation_bars` data --
+     * formerly shared between build_nav_bar()/build_next_prev() via the
+     * live Smarty template variable itself (an append-then-read-modify-write
+     * round trip through Template::append()/get_template_vars()/assign()).
+     * A private instance property instead: both methods are declared on
+     * this same class, so no subclass access is needed; CalendarRenderer
+     * (an unrelated class) reads the final result via
+     * {@see self::getChronologyNavigationBars()} once every
+     * build_nav_bar()/build_next_prev() call for this render has run.
+     *
+     * @var list<array<string, mixed>>
+     */
+    private array $chronologyNavigationBars = [];
+
     public function __construct(
         protected readonly Lang $lang,
         protected readonly CalendarRepository $calendarRepository,
@@ -125,6 +140,18 @@ abstract class CalendarBase
         protected readonly CurrentConfig $currentConfig,
         protected readonly ImageStdParams $imageStdParams,
     ) {}
+
+    /**
+     * The `chronology_navigation_bars` rows accumulated by every
+     * build_nav_bar()/build_next_prev() call made so far during this
+     * render -- read once generate_category_content() returns.
+     *
+     * @return list<array<string, mixed>>
+     */
+    public function getChronologyNavigationBars(): array
+    {
+        return $this->chronologyNavigationBars;
+    }
 
     /**
      * Generate navigation bars for category page.
@@ -319,7 +346,7 @@ abstract class CalendarBase
      *   display value -- CalendarMonthly's own day-number labels are ints,
      *   not strings.
      */
-    protected function build_nav_bar($level, ?array $labels, TemplateInterface $template): void
+    protected function build_nav_bar($level, ?array $labels): void
     {
         $levelDql = $this->calendar_levels[$level]['dql'];
         $scope = $this->scope;
@@ -365,19 +392,16 @@ abstract class CalendarBase
             $labels ?? $this->calendar_levels[$level]['labels']
         );
 
-        $template->append(
-            'chronology_navigation_bars',
-            [
-                'items' => $nav_bar,
-            ]
-        );
+        $this->chronologyNavigationBars[] = [
+            'items' => $nav_bar,
+        ];
     }
 
     /**
      * Assigns the next/previous link to the template with regards to
      * the currently choosen date.
      */
-    protected function build_next_prev(TemplateInterface $template): void
+    protected function build_next_prev(): void
     {
         $prev = $next = null;
         if ($this->chronology_date === []) {
@@ -457,26 +481,14 @@ abstract class CalendarBase
         }
 
         if ($tpl_var !== []) {
-            // Template::get_template_vars() is declared to return mixed;
-            // every write to 'chronology_navigation_bars' (build_nav_bar()
-            // above, and the append() below) stores a list of arrays, so
-            // narrow with is_array() rather than trusting the signature.
-            //
-            // Not a Phase 13 TemplatePageContext candidate: this assign()
-            // is a read-modify-write patch on a var already incrementally
-            // built by build_nav_bar()'s own append() calls (real
-            // cross-method shared mutable state, not one page's own fixed
-            // var set) -- there is no fixed "this page's context" to
-            // model here.
-            $existing = $template->get_template_vars('chronology_navigation_bars');
-            if (is_array($existing) && $existing !== []) {
-                $last_index = count($existing) - 1;
-                $last_item = $existing[$last_index] ?? null;
-                $last_item = is_array($last_item) ? $last_item : [];
-                $existing[$last_index] = array_merge($last_item, $tpl_var);
-                $template->assign('chronology_navigation_bars', $existing);
+            // Patches the *last* row build_nav_bar() accumulated so far
+            // this render (real cross-method shared state -- see this
+            // property's own docblock), rather than adding a new row.
+            if ($this->chronologyNavigationBars !== []) {
+                $last_index = count($this->chronologyNavigationBars) - 1;
+                $this->chronologyNavigationBars[$last_index] = array_merge($this->chronologyNavigationBars[$last_index], $tpl_var);
             } else {
-                $template->append('chronology_navigation_bars', $tpl_var);
+                $this->chronologyNavigationBars[] = $tpl_var;
             }
         }
     }

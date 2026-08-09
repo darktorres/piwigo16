@@ -78,7 +78,7 @@ final class CalendarMonthly extends CalendarBase
             if ($nb_date_parts === 1) {// case B: year given - display all days in given year
                 if ($this->build_year_calendar($tpl_var)) {
                     $template->assignContext(new CalendarMonthlyCalendarPageContext($tpl_var));
-                    $this->build_nav_bar(self::CYEAR, null, $template); // years
+                    $this->build_nav_bar(self::CYEAR, null); // years
                     return true;
                 }
             }
@@ -90,7 +90,7 @@ final class CalendarMonthly extends CalendarBase
                 if ($this->build_month_calendar($tpl_var)) {
                     $template->assignContext(new CalendarMonthlyCalendarPageContext($tpl_var));
                 }
-                $this->build_next_prev($template);
+                $this->build_next_prev();
                 return true;
             }
         }
@@ -98,10 +98,10 @@ final class CalendarMonthly extends CalendarBase
         $nb_date_parts = count($this->chronology_date);
         if ($view_type === self::CAL_VIEW_LIST or $nb_date_parts === 3) {
             if ($nb_date_parts === 0) {
-                $this->build_nav_bar(self::CYEAR, null, $template); // years
+                $this->build_nav_bar(self::CYEAR, null); // years
             }
             if ($nb_date_parts === 1) {
-                $this->build_nav_bar(self::CMONTH, null, $template); // month
+                $this->build_nav_bar(self::CMONTH, null); // month
             }
             if ($nb_date_parts === 2) {
                 $chronology_date = $this->chronology_date;
@@ -112,9 +112,9 @@ final class CalendarMonthly extends CalendarBase
                 $day_labels = range(1, $this->get_all_days_in_month($year, $month));
                 array_unshift($day_labels, 0);
                 unset($day_labels[0]);
-                $this->build_nav_bar(self::CDAY, $day_labels, $template); // days
+                $this->build_nav_bar(self::CDAY, $day_labels); // days
             }
-            $this->build_next_prev($template);
+            $this->build_next_prev();
         }
         return false;
     }

@@ -13,12 +13,14 @@ use Piwigo\Activity\ActivityService;
 use Piwigo\Auth\AuthService;
 use Piwigo\Auth\PasswordService;
 use Piwigo\Common\ValueObject\Email;
+use Piwigo\Common\ValueObject\ThemeId;
 use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Common\ValueObject\Username;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Controller\Projection\ProfileFormPageContext;
 use Piwigo\Controller\Request\ProfileFormSubmitRequest;
 use Piwigo\Core\AdminContext;
+use Piwigo\Core\AppInfo;
 use Piwigo\Core\DateHelper;
 use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\Lang;
@@ -329,7 +331,7 @@ final class ProfileFormHandler
             'false' => $this->lang->t('No'),
         ];
 
-        $template_selection = $userdata['theme'];
+        $template_selection = ThemeId::tryFrom($userdata['theme'] ?? null) ?? ThemeId::from(AppInfo::DEFAULT_TEMPLATE);
         $template_options = ThemeCatalog::getPwgThemes($this->eventDispatcher, $this->paths, $this->currentConfig, $this->lang);
 
         $profileFormSubmitRequest = ProfileFormSubmitRequest::fromGlobals();
@@ -385,11 +387,11 @@ final class ProfileFormHandler
         $template->assignContext(new ProfileFormPageContext(
             templatePrefixe: $template_prefixe ?? '',
             username: stripslashes(is_string($userdata['username']) ? $userdata['username'] : ''),
-            email: @$userdata['email'],
+            email: Email::tryFrom($userdata['email'] ?? null),
             allowUserCustomization: $this->currentConfig->allowUserCustomization,
             activateComments: $this->currentConfig->activateComments,
-            nbImagePage: $userdata['nb_image_page'],
-            recentPeriod: $userdata['recent_period'],
+            nbImagePage: is_numeric($userdata['nb_image_page'] ?? null) ? (int) $userdata['nb_image_page'] : 0,
+            recentPeriod: is_numeric($userdata['recent_period'] ?? null) ? (int) $userdata['recent_period'] : 0,
             expand: (bool) $userdata['expand'] ? 'true' : 'false',
             nbComments: (bool) $userdata['show_nb_comments'] ? 'true' : 'false',
             nbHits: (bool) $userdata['show_nb_hits'] ? 'true' : 'false',

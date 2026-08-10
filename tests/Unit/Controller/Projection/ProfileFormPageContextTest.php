@@ -2,13 +2,15 @@
 
 declare(strict_types=1);
 
+use Piwigo\Common\ValueObject\Email;
+use Piwigo\Common\ValueObject\ThemeId;
 use Piwigo\Controller\Projection\ProfileFormPageContext;
 
 test('toArray uses an empty prefix by default, and omits language_selection when null', function (): void {
     $context = new ProfileFormPageContext(
         templatePrefixe: '',
         username: 'jane',
-        email: 'jane@example.test',
+        email: Email::from('jane@example.test'),
         allowUserCustomization: true,
         activateComments: true,
         nbImagePage: 20,
@@ -19,7 +21,7 @@ test('toArray uses an empty prefix by default, and omits language_selection when
         redirect: '/index.php',
         fAction: '/profile.php',
         radioOptions: ['true' => 'Yes', 'false' => 'No'],
-        templateSelection: 'default',
+        templateSelection: ThemeId::from('default'),
         templateOptions: ['default' => 'Default'],
         languageSelection: null,
         languageOptions: ['en_GB' => 'English'],
@@ -58,7 +60,7 @@ test('toArray prefixes every dynamic key with the GUEST_ prefix, and includes la
         redirect: '',
         fAction: '/admin.php?page=configuration',
         radioOptions: ['true' => 'Yes', 'false' => 'No'],
-        templateSelection: 'default',
+        templateSelection: ThemeId::from('default'),
         templateOptions: ['default' => 'Default'],
         languageSelection: 'en_GB',
         languageOptions: ['en_GB' => 'English'],

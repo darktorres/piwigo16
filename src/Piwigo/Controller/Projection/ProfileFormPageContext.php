@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Piwigo\Controller\Projection;
 
 use Override;
+use Piwigo\Common\ValueObject\Email;
+use Piwigo\Common\ValueObject\ThemeId;
 use Piwigo\Core\TemplatePageContext;
 
 /**
@@ -31,19 +33,19 @@ final readonly class ProfileFormPageContext implements TemplatePageContext
      */
     public function __construct(
         public string $templatePrefixe,
-        public mixed $username,
-        public mixed $email,
+        public string $username,
+        public ?Email $email,
         public bool $allowUserCustomization,
         public bool $activateComments,
-        public mixed $nbImagePage,
-        public mixed $recentPeriod,
+        public int $nbImagePage,
+        public int $recentPeriod,
         public string $expand,
         public string $nbComments,
         public string $nbHits,
         public string $redirect,
         public string $fAction,
         public array $radioOptions,
-        public mixed $templateSelection,
+        public ThemeId $templateSelection,
         public array $templateOptions,
         public ?string $languageSelection,
         public array $languageOptions,
@@ -65,7 +67,7 @@ final readonly class ProfileFormPageContext implements TemplatePageContext
     {
         $result = [
             $this->templatePrefixe . 'USERNAME' => $this->username,
-            $this->templatePrefixe . 'EMAIL' => $this->email,
+            $this->templatePrefixe . 'EMAIL' => $this->email?->value,
             $this->templatePrefixe . 'ALLOW_USER_CUSTOMIZATION' => $this->allowUserCustomization,
             $this->templatePrefixe . 'ACTIVATE_COMMENTS' => $this->activateComments,
             $this->templatePrefixe . 'NB_IMAGE_PAGE' => $this->nbImagePage,
@@ -76,7 +78,7 @@ final readonly class ProfileFormPageContext implements TemplatePageContext
             $this->templatePrefixe . 'REDIRECT' => $this->redirect,
             $this->templatePrefixe . 'F_ACTION' => $this->fAction,
             'radio_options' => $this->radioOptions,
-            'template_selection' => $this->templateSelection,
+            'template_selection' => $this->templateSelection->value,
             'template_options' => $this->templateOptions,
             'language_options' => $this->languageOptions,
             'SPECIAL_USER' => $this->specialUser,

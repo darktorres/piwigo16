@@ -113,7 +113,7 @@ final class WsImagesMutationTest extends ContractTestCase
 
     public function test_setRank_with_multiple_image_ids_reorders_the_category(): void
     {
-        // piwigo_image_category is (image_id, category_id, rank) with no
+        // image_category is (image_id, category_id, rank) with no
         // separate id column -- fixture category 1 contains images 1, 2 and 3
         // (rows (1,1,1),(2,1,2),(3,1,3)). Passing all 3 -- count(image_id) > 1
         // takes the "reorder" branch instead of the single-image "set one
@@ -173,8 +173,7 @@ final class WsImagesMutationTest extends ContractTestCase
             'SELECT COUNT(*) FROM ' . 'image_category' . ' WHERE image_id = ? AND category_id = ?',
             [$imageId, self::FIXTURE_CAT_ID]
         );
-        self::assertIsNumeric($remaining);
-        self::assertSame(0, (int) $remaining);
+        self::assertSame(0, $remaining);
     }
 
     public function test_setCategory_move_reassigns_the_association(): void
@@ -195,15 +194,13 @@ final class WsImagesMutationTest extends ContractTestCase
             'SELECT COUNT(*) FROM ' . 'image_category' . ' WHERE image_id = ? AND category_id = ?',
             [$imageId, self::FIXTURE_CAT_ID]
         );
-        self::assertIsNumeric($stillInOld);
-        self::assertSame(0, (int) $stillInOld);
+        self::assertSame(0, $stillInOld);
 
         $nowInNew = $this->conn->fetchOne(
             'SELECT COUNT(*) FROM ' . 'image_category' . ' WHERE image_id = ? AND category_id = ?',
             [$imageId, $otherCatId]
         );
-        self::assertIsNumeric($nowInNew);
-        self::assertSame(1, (int) $nowInNew);
+        self::assertSame(1, $nowInNew);
     }
 
     // delete()'s own preg_split() failure guard (image_id, the same
@@ -228,8 +225,7 @@ final class WsImagesMutationTest extends ContractTestCase
         self::assertSame(1, $response['result']);
 
         $remaining = $this->conn->fetchOne('SELECT COUNT(*) FROM ' . 'images' . ' WHERE id = ?', [$imageId]);
-        self::assertIsNumeric($remaining);
-        self::assertSame(0, (int) $remaining);
+        self::assertSame(0, $remaining);
     }
 
     public function test_delete_invalid_token_returns_error(): void

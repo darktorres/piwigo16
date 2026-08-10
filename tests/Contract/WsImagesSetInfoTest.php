@@ -345,7 +345,7 @@ final class WsImagesSetInfoTest extends ContractTestCase
 
             $response = $this->callWs('pwg.images.setInfo', [
                 'image_id' => 1,
-                'categories' => (string) (int) $newCatId,
+                'categories' => (string) $newCatId,
                 'multiple_value_mode' => 'replace',
                 'pwg_token' => $this->pwgToken(),
             ]);
@@ -355,7 +355,7 @@ final class WsImagesSetInfoTest extends ContractTestCase
             $afterCats = $this->conn->fetchFirstColumn(
                 'SELECT category_id FROM ' . 'image_category' . ' WHERE image_id = 1'
             );
-            self::assertSame([(int) $newCatId], array_map(self::toIntOrFail(...), $afterCats));
+            self::assertSame([$newCatId], array_map(self::toIntOrFail(...), $afterCats));
         } finally {
             $this->conn->executeStatement('DELETE FROM ' . 'image_category' . ' WHERE image_id = 1');
             foreach ($originalCats as $catId) {

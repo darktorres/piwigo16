@@ -15,6 +15,7 @@ use Piwigo\Core\CurrentLogger;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Paths;
 use Piwigo\Event\Lifecycle\LoadImageLibrary;
+use Piwigo\Tests\Support\KernelContainerOverride;
 
 /**
  * __construct()'s unsupported-extension guard throws
@@ -171,6 +172,86 @@ final class PwgImageSpyImage implements ImageInterface
 }
 
 /**
+ * Same call-recording contract as PwgImageSpyImage, but write() controls
+ * the destination file directly -- $writeBytes=null never creates it at
+ * all (get_resize_result()'s own filesize() call observes a genuinely
+ * missing file), otherwise it writes exactly that many bytes (exact
+ * control over the "X KB" computation).
+ */
+final class PwgImageSpyImageFileControl implements ImageInterface
+{
+    /** @var list<string> */
+    public array $calls = [];
+
+    public function __construct(
+        private readonly int|float $width,
+        private readonly int|float $height,
+        private readonly ?int $writeBytes,
+    ) {}
+
+    public function get_width(): int|float
+    {
+        return $this->width;
+    }
+
+    public function get_height(): int|float
+    {
+        return $this->height;
+    }
+
+    public function set_compression_quality(int $quality): bool
+    {
+        $this->calls[] = 'set_compression_quality';
+        return true;
+    }
+
+    public function crop(int|float $width, int|float $height, int|float $x, int|float $y): bool
+    {
+        $this->calls[] = 'crop';
+        return true;
+    }
+
+    public function strip(): bool
+    {
+        $this->calls[] = 'strip';
+        return true;
+    }
+
+    public function rotate(int|float $rotation): bool
+    {
+        $this->calls[] = 'rotate';
+        return true;
+    }
+
+    public function resize(int|float $width, int|float $height): bool
+    {
+        $this->calls[] = 'resize';
+        return true;
+    }
+
+    public function sharpen(int|float $amount): bool
+    {
+        $this->calls[] = 'sharpen';
+        return true;
+    }
+
+    public function compose(PwgImage $overlay, int|float $x, int|float $y, int|float $opacity): bool
+    {
+        $this->calls[] = 'compose';
+        return true;
+    }
+
+    public function write(string $destination_filepath): bool
+    {
+        $this->calls[] = 'write';
+        if ($this->writeBytes !== null) {
+            file_put_contents($destination_filepath, str_repeat('x', $this->writeBytes));
+        }
+        return true;
+    }
+}
+
+/**
  * Builds a PwgImage whose underlying ImageInterface is a PwgImageSpyImage
  * reporting the given (fake) width/height -- via the same 'load_image_library'
  * event short-circuit as the "plugin-provided image instance" test below, so
@@ -183,6 +264,33 @@ final class PwgImageSpyImage implements ImageInterface
 function pwgImageTestMakeSpy(string $sourceFilepath, int|float $width, int|float $height): array
 {
     $spy = new PwgImageSpyImage($width, $height);
+    $handler = function (LoadImageLibrary $event) use ($spy): void {
+        $target = $event->value;
+        if (! $target instanceof PwgImage) {
+            throw new RuntimeException('load_image_library: expected a PwgImage instance');
+        }
+        $target->image = $spy;
+    };
+    EventDispatcherTestFactory::get()->addTypedHandler(LoadImageLibrary::class, $handler);
+    try {
+        $img = pwgImageTestMake($sourceFilepath);
+    } finally {
+        EventDispatcherTestFactory::get()->removeEventHandler(LoadImageLibrary::class, $handler);
+    }
+
+    return [$img, $spy];
+}
+
+/**
+ * Same shape as pwgImageTestMakeSpy(), but for PwgImageSpyImageFileControl
+ * -- exact control over the destination file get_resize_result() later
+ * inspects via filesize().
+ *
+ * @return array{0: PwgImage, 1: PwgImageSpyImageFileControl}
+ */
+function pwgImageTestMakeFileControlSpy(string $sourceFilepath, int|float $width, int|float $height, ?int $writeBytes): array
+{
+    $spy = new PwgImageSpyImageFileControl($width, $height, $writeBytes);
     $handler = function (LoadImageLibrary $event) use ($spy): void {
         $target = $event->value;
         if (! $target instanceof PwgImage) {
@@ -1217,4 +1325,600 @@ test('get_graphics_library resolves through the gd case and appends a real GD ve
     expect($decoded['result'])->toBeString();
     expect($decoded['result'])->toStartWith('gd/');
     expect($decoded['result'])->not->toBe('gd/');
+});
+
+// ---------------------------------------------------------------------
+// Mutation-testing gap closure (G1, when-i-run-the-mutable-cookie.md):
+// every test below closes a real, previously-untested branch/output
+// found by a fresh scoped `pest --mutate` rerun (94 untested, 2026-08-10
+// -- the plan's own Aug 8 count of 93 was already stale given how much
+// this file's own coverage had grown in the interim).
+//
+// Confirmed-equivalent/unreachable mutations from that same rerun, deliberately
+// not chased with a new test (category 3/4/5 per the plan's own triage):
+// - __construct()'s `(bool) ($this->library = self::get_library(...))` cast
+//   (line 71) and get_graphics_library_label()'s own `(string)
+//   self::get_graphics_library())` cast (line 599): both live on the
+//   already-documented "no image library available" branch at the top of
+//   this file -- GD is compiled-in and always available in any PHP process
+//   that can run this file, so get_library()/get_graphics_library() never
+//   actually return `false` here. Category 4.
+// - get_resize_dimensions()'s whole crop/ratio-math block (RemoveDoubleCast
+//   on $img_ratio/$dest_ratio/$ratio_width/$ratio_height and every
+//   round()-wrapped destHeight/destWidth/destination_width/
+//   destination_height expression): every one of these divisions/casts
+//   either (a) only ever feeds a numeric comparison (`>`/`<`), where PHP's
+//   loose numeric comparison is int/float-type-agnostic, or (b) is wrapped
+//   in round(), which always returns float regardless of its argument's
+//   own type. `declare(strict_types=1)` guarantees every width/height/max_*
+//   param genuinely is int|float by the time it reaches these casts (no
+//   numeric-string coercion in play), so removing a (float) cast here can
+//   only ever change PHP's internal int-vs-float bookkeeping mid-expression,
+//   never the final observable value. Category 5.
+// - get_resize_dimensions()'s `$dest_ratio > $img_ratio` / `$dest_ratio <
+//   $img_ratio` boundary (`>`/`<` vs `>=`/`<=`): already proven inert by
+//   the "applies neither crop offset when dest_ratio exactly equals
+//   img_ratio" test's own docblock above (a mathematical identity makes
+//   the "wrongly taken" branch reassign height/width to their own current
+//   value at the exact tie) -- that reasoning covers both the `>` and `<`
+//   comparisons symmetrically, not just one. Category 5.
+// - get_resize_dimensions()'s `(bool) $x or (bool) $y` (line 278) and
+//   webp_info()'s `! (bool) $fp` (line 295): both already-boolean-context
+//   positions (`or`/`!` both coerce their operand to bool regardless of an
+//   explicit cast) -- the same established "already-coercing position"
+//   pattern as this codebase's other confirmed-inert cast removals.
+//   Category 5.
+// - webp_info()'s `fread($fp, 25)` byte count (line 298): nothing in this
+//   method ever reads index 25 or later (every check is `strlen() < 25` or
+//   a fixed index <= 24), so requesting one extra byte is unobservable
+//   regardless of source length. Category 5.
+// - webp_info()'s `fclose($fp);` (line 299): a resource-cleanup call with
+//   no return value read and no cross-test observable effect within a
+//   single process -- same shape as AdminUiHelper.php's own
+//   already-confirmed "resource-cleanup call" skip from an earlier phase
+//   of this same campaign. Category 3.
+// - get_rotation_angle()'s `$size === false` check (line 331) and its
+//   early `return null;` (line 339): the sibling `[$width, $height, $type]
+//   = $size;` destructuring on a genuinely-false $size emits a PHP warning
+//   and yields $type=null, which the very next `$type !== IMAGETYPE_JPEG`
+//   check also maps to `return null;` -- the SAME final return value
+//   either way. The one existing test exercising this path
+//   (getimagesize() failing) wraps the whole call in a warning-swallowing
+//   set_error_handler(), so even the intermediate warning is invisible.
+//   Both mutations are provably unkillable by any test using this
+//   swallow-and-observe-final-return shape. Category 5.
+// - get_rotation_angle()'s `$matches[1]` (line 359, the EXIF-orientation
+//   regex capture): `/^\s*(\d)/`'s $matches[0] (full match) and $matches[1]
+//   (captured digit) are identical strings unless the source has leading
+//   whitespace before the digit -- verified empirically that
+//   exif_read_data() returns a real, unpadded PHP int for a SHORT-typed
+//   Orientation tag (e.g. int(6), never " 6"), so this file's own
+//   hand-crafted EXIF fixtures can never produce a leading-whitespace
+//   value to distinguish the two. Category 5.
+// - get_rotation_angle_from_code()'s `(int) $rotation_code % 4` cast (line
+//   393): PHP's `%` operator already coerces a numeric-string operand to
+//   int on its own -- confirmed by the existing '4'-string test already
+//   passing regardless of this cast. Category 5.
+// - is_imagick()'s `extension_loaded('imagick') and class_exists('Imagick')`
+//   (line 448, `and` vs `or`): both operands are real facts about the SAME
+//   running PHP process for the SAME extension name -- they can't
+//   disagree (confirmed: this environment's own imagick tests elsewhere in
+//   this file rely on both being true together), so `and`/`or` always
+//   agree here. Category 5.
+// - get_sharpen_matrix()'s `(float) $amount` cast (line 410, the
+//   RemoveDoubleCast survivor after the round()-precision test above):
+//   $amount is `int|float`-typed under strict_types, and `*` between an
+//   int and a float already produces a float with the identical numeric
+//   value in PHP -- same already-coercing-arithmetic reasoning as the
+//   get_resize_dimensions() cluster above. Category 5.
+// - get_resize_result()'s `$destination_filesize !== false ? ... : 0`
+//   fallback's own `false`/`0` literals (line 434, the FalseToTrue/
+//   IncrementInteger survivors after the "0 KB fallback" test above):
+//   both mutations were checked directly against that same test and
+//   converge to the identical "0 KB" output -- `false` coerces to int 0 in
+//   arithmetic (line 440's `floor($destination_filesize / 1024)`), and
+//   floor(0/1024) and floor(1/1024) are both 0. The "X KB" display can
+//   never distinguish any fallback value under 1024 from any other.
+//   Category 5.
+// - get_resize_result()'s `(string) floor(...)` cast (line 440,
+//   RemoveStringCast): the `.` concatenation operator immediately after
+//   it already stringifies its left operand -- same already-coercing
+//   pattern as the destroy()/is_ext_imagick() casts above. Category 5.
+// - get_resize_result()'s `(bool) $time` cast (line 441, RemoveBooleanCast):
+//   another already-coercing ternary-condition position, same as
+//   get_resize_dimensions()'s crop check. Category 5.
+// - get_resize_result()'s `* 1000.0` scale factor (line 441,
+//   DecrementFloat/IncrementFloat -> 999.0/1001.0, a 0.1% precision
+//   change): ResizeResult::$time is a purely human-facing "X.XX ms"
+//   performance indicator (confirmed via a full grep of every real
+//   caller -- nothing downstream parses or branches on it), and
+//   distinguishing a 0.1% scale error from ordinary wall-clock
+//   measurement jitter is not realistically achievable without
+//   controlling TimingHelper::getMoment() itself (a real microtime(true)
+//   call, not injectable). Category 3.
+// - get_graphics_library()'s own `(bool) preg_match(...)` cast in the
+//   'imagick' PHP-extension case (line 581): another already-coercing
+//   if-condition position, same pattern as several others above --
+//   already exercised (not just theoretically) by the existing "reports a
+//   real ImageMagick PHP-extension version" test. Category 5.
+//
+// A NEW, project-wide finding, NOT a gap in this file's own tests: the
+// exec()-command-string-construction mutations for
+// get_ext_imagick_command() (lines 489-490), is_ext_imagick()'s own exec()
+// call (lines 508-510), get_graphics_library()'s own ext_imagick exec()
+// call (lines 573-574), and get_graphics_library_label()'s 'gd' array
+// entry (line 604) all still show as UNTESTED after adding real,
+// purpose-built subprocess tests above that DO exercise them -- verified
+// directly (not assumed) by hand-mutating each line, running ONLY the new
+// subprocess test against the mutant, and confirming it genuinely fails,
+// then reverting. `pest --mutate --covered-only`'s own mutant/test
+// selection is driven by a plain in-process coverage run, which has no
+// visibility into code executed inside a `proc_open()`-spawned child
+// process (the same subprocess technique this file's own pre-existing
+// exif_read_data()/exec()-disabled tests already use) -- so it never even
+// attempts to run a subprocess-based test against a mutant on a
+// subprocess-only-covered line, regardless of whether that test would
+// really catch it. This is a genuine, permanent blind spot in this
+// project's mutation-testing tooling, not a real coverage gap: these
+// lines will keep showing UNTESTED in every future `pest --mutate` run of
+// this file too. Same root cause and consequence as
+// tests/Unit/Core/ErrorCollectorTest.php's own documented subprocess-crash
+// blind spot (there for genuine PHP fatals; here for a real, non-crashing
+// custom-environment subprocess instead) -- not code-quality gaps, don't
+// re-chase either.
+// ---------------------------------------------------------------------
+
+test('get_sharpen_matrix rounds to exactly 2 decimal places, not 1 or 3', function (): void {
+    // Real gap, found via mutation testing: round(..., 2)'s own literal
+    // `2` -- the sibling "computes exact, real weight values" test above
+    // uses amount=50, whose pre-round value (29.0) happens to already be
+    // a whole number, so round() to 1/2/3 decimals all coincide there.
+    // amount=33.333 is chosen so round(...,1)=35.3, round(...,2)=35.33,
+    // round(...,3)=35.333 all genuinely differ (verified directly against
+    // the real function, not hand-derived).
+    $matrix = PwgImage::get_sharpen_matrix(33.333);
+
+    expect($matrix[1][1])->toBe(1.2927186242224662);
+    expect($matrix[0][0])->toBe(-0.036589828027808274);
+});
+
+test('get_resize_result falls back to "0 KB" when the destination file is genuinely unreadable', function (): void {
+    // Real gap, found via mutation testing: the `$destination_filesize
+    // !== false ? $destination_filesize : 0` fallback (get_resize_result(),
+    // itself private, only reachable through pwg_resize()) was never
+    // exercised by any existing test -- every prior pwg_resize test writes
+    // a real destination file first. This spy's own write() never creates
+    // the file at all, so filesize() genuinely fails.
+    $dest = pwgImageTestMarker() . '/missing-dest.jpg';
+    [$img, $spy] = pwgImageTestMakeFileControlSpy(pwgImageTestMarker() . '/missing-source.jpg', 200, 100, null);
+
+    // filesize() on a missing path emits a real PHP warning -- same
+    // swallow-for-one-call pattern as this file's other fopen()/
+    // getimagesize() warning tests.
+    set_error_handler(static fn (): bool => true);
+    try {
+        $result = $img->pwg_resize($dest, 100, 50, 77, automatic_rotation: false);
+    } finally {
+        restore_error_handler();
+    }
+
+    expect($spy->calls)->toContain('write');
+    expect($result->size)->toBe('0 KB');
+});
+
+test('get_resize_result computes the exact "X KB" size, floor not round/ceil', function (): void {
+    // Real gap, found via mutation testing: FloorToRound/FloorToCeil on
+    // floor($destination_filesize / 1024) -- 1536 bytes -> 1.5 exactly,
+    // where floor()=1 genuinely differs from round()=2 and ceil()=2
+    // (verified directly against the real function).
+    $dest = pwgImageTestMarker() . '/sized-dest.jpg';
+    [$img] = pwgImageTestMakeFileControlSpy(pwgImageTestMarker() . '/sized-source.jpg', 200, 100, 1536);
+
+    $result = $img->pwg_resize($dest, 100, 50, 77, automatic_rotation: false);
+
+    expect($result->size)->toBe('1 KB');
+});
+
+test('get_resize_result divides the destination size by exactly 1024, not 1023 or 1025', function (): void {
+    // Real gap, found via mutation testing: DecrementInteger/IncrementInteger
+    // on the literal 1024 -- 524799 bytes is chosen so floor(524799/1024)=512
+    // genuinely differs from floor(524799/1023)=513 and floor(524799/1025)=511
+    // (verified directly against the real function; small byte counts near
+    // this magnitude mostly coincide across all three divisors).
+    $dest = pwgImageTestMarker() . '/precise-dest.jpg';
+    [$img] = pwgImageTestMakeFileControlSpy(pwgImageTestMarker() . '/precise-source.jpg', 200, 100, 524799);
+
+    $result = $img->pwg_resize($dest, 100, 50, 77, automatic_rotation: false);
+
+    expect($result->size)->toBe('512 KB');
+});
+
+test('get_resize_result reports a real, accurately-scaled elapsed-time measurement', function (): void {
+    // Real gap, found via mutation testing: no existing pwg_resize test
+    // checks $result->time against a real, independently-verifiable
+    // duration -- only that it's a non-empty ' ms'-suffixed string,
+    // string-typed. A deliberately slow write() (usleep) forces a real,
+    // known-minimum elapsed duration, so MultiplicationToDivision
+    // (reporting ~1000x too small) and MinusToPlus (reporting a value on
+    // the order of the current unix timestamp, billions of ms) both fail
+    // a tight bound a merely-imprecise measurement never would. Also
+    // proves the exact ' ms' suffix (ConcatRemoveLeft) and the 2-decimal
+    // format (DecrementInteger/IncrementInteger on number_format()'s own
+    // literal 2) via the regex itself.
+    $slowImage = new class(200, 100) implements ImageInterface {
+        public function __construct(private readonly int|float $width, private readonly int|float $height)
+        {
+        }
+
+        public function get_width(): int|float
+        {
+            return $this->width;
+        }
+
+        public function get_height(): int|float
+        {
+            return $this->height;
+        }
+
+        public function set_compression_quality(int $quality): bool
+        {
+            return true;
+        }
+
+        public function crop(int|float $width, int|float $height, int|float $x, int|float $y): bool
+        {
+            return true;
+        }
+
+        public function strip(): bool
+        {
+            return true;
+        }
+
+        public function rotate(int|float $rotation): bool
+        {
+            return true;
+        }
+
+        public function resize(int|float $width, int|float $height): bool
+        {
+            return true;
+        }
+
+        public function sharpen(int|float $amount): bool
+        {
+            return true;
+        }
+
+        public function compose(PwgImage $overlay, int|float $x, int|float $y, int|float $opacity): bool
+        {
+            return true;
+        }
+
+        public function write(string $destination_filepath): bool
+        {
+            usleep(40000);
+            touch($destination_filepath);
+            return true;
+        }
+    };
+    $handler = function (LoadImageLibrary $event) use ($slowImage): void {
+        $target = $event->value;
+        if (! $target instanceof PwgImage) {
+            throw new RuntimeException('load_image_library: expected a PwgImage instance');
+        }
+        $target->image = $slowImage;
+    };
+    EventDispatcherTestFactory::get()->addTypedHandler(LoadImageLibrary::class, $handler);
+
+    try {
+        $img = pwgImageTestMake(pwgImageTestMarker() . '/slow-source.jpg');
+        $dest = pwgImageTestMarker() . '/slow-dest.jpg';
+
+        $result = $img->pwg_resize($dest, 100, 50, 77, automatic_rotation: false);
+
+        expect($result->time)->toMatch('/^\d+\.\d{2} ms$/');
+        $reportedMs = (float) $result->time;
+        expect($reportedMs)->toBeGreaterThanOrEqual(35.0)
+            ->and($reportedMs)->toBeLessThan(5000.0);
+    } finally {
+        EventDispatcherTestFactory::get()->removeEventHandler(LoadImageLibrary::class, $handler);
+    }
+});
+
+test('currentConfig throws LogicException when the container returns an unexpected type', function (): void {
+    // Kills the private currentConfig() resolver's own InstanceOfToTrue
+    // mutation (`if (!true)`, never taking the throw branch) -- same
+    // established KernelContainerOverride::withWrongTypeFor() pattern as
+    // CurrentTemplateTest.php's own identical guard-shape test.
+    // get_library() is the entry point since currentConfig() is private
+    // -- it calls self::currentConfig()->graphicsLibrary() unconditionally
+    // as its very first real statement.
+    Kernel::boot(Paths::fromRoot(sys_get_temp_dir()));
+
+    try {
+        KernelContainerOverride::withWrongTypeFor(
+            CurrentConfig::class,
+            static fn () => PwgImage::get_library(),
+        );
+    } finally {
+        Kernel::reset();
+    }
+})->throws(LogicException::class, 'Container returned an unexpected type for ' . CurrentConfig::class);
+
+test('get_library lowercases the requested library name before matching', function (): void {
+    // Real gap, found via mutation testing: switch(strtolower($library))
+    // -- every existing get_library() test already passes an
+    // already-lowercase library name, so UnwrapStrtolower (comparing the
+    // raw, unlowercased value instead) was never observed to matter.
+    expect(PwgImage::get_library('GD', 'jpg'))->toBe('gd');
+});
+
+test('get_library never selects imagick for a gif extension, even when imagick is available', function (): void {
+    // Real gap, found via mutation testing: `$extension !== 'gif' and
+    // self::is_imagick()` becoming `or` would wrongly still pick imagick
+    // for a gif file whenever this real environment's own imagick probe
+    // is true -- every existing get_library() test uses a 'jpg' extension,
+    // so this exclusion was never actually exercised. Requesting 'imagick'
+    // directly (not 'auto') isolates this to the imagick-specific guard:
+    // falling through it lands on the 'gd' case, which this environment's
+    // own is_gd() always confirms available.
+    expect(PwgImage::get_library('imagick', 'gif'))->toBe('gd');
+});
+
+test('get_graphics_library_label formats the imagick-extension library and version when ext_imagick is unavailable', function (): void {
+    // Real gap, found via mutation testing: RemoveArrayItem on the
+    // 'imagick' => 'ImageMagick' entry in $label_for_lib -- every existing
+    // get_graphics_library_label() test only exercises this real
+    // environment's own default 'auto' pick (ext_imagick, a real magick
+    // CLI is installed here). Same "force ext_imagick CLI unavailable"
+    // technique as get_graphics_library()'s own sibling test.
+    Kernel::boot(Paths::fromRoot(sys_get_temp_dir()));
+    $original = CurrentConfigTestFactory::get()->extImagickDir();
+    CurrentConfigTestFactory::get()->setExtImagickDir('/totally/nonexistent/dir/');
+
+    try {
+        $label = PwgImage::get_graphics_library_label();
+
+        // get_graphics_library()'s own 'imagick' case captures the WHOLE
+        // "ImageMagick X.X.X" phrase from Imagick::getVersion() (not just
+        // the version number) into $match[0] -- a real, pre-existing
+        // quirk of this codebase, not something this test is asserting
+        // as newly-introduced behavior.
+        expect($label)->toStartWith('ImageMagick ')
+            ->and($label)->toMatch('/^ImageMagick ImageMagick \d+\.\d+\.\d+/');
+    } finally {
+        CurrentConfigTestFactory::get()->setExtImagickDir($original);
+        Kernel::reset();
+    }
+});
+
+test('get_graphics_library_label formats the gd library and version when no imagick backend is available', function (): void {
+    // Real gap, found via mutation testing: RemoveArrayItem on the
+    // 'gd' => 'GD' entry -- mirrors get_graphics_library()'s own "gd case"
+    // subprocess test, calling get_graphics_library_label() instead to
+    // prove the label array's own 'gd' entry is real, not just non-empty.
+    $script = '\Piwigo\Core\Kernel::boot(\Piwigo\Core\Paths::fromRoot(sys_get_temp_dir()));'
+        . '\Piwigo\Core\Kernel::container()->get(\Piwigo\Config\CurrentConfig::class)->setExtImagickDir("/totally/nonexistent/dir/");'
+        . 'echo \Piwigo\Admin\Image\PwgImage::get_graphics_library_label();';
+    $proc = pwgImageRunSubprocess(['-n', '-d', 'extension=gd'], $script);
+
+    expect($proc['exit'])->toBe(0, 'subprocess failed: ' . $proc['stderr']);
+    expect($proc['stdout'])->toStartWith('GD ');
+});
+
+test('get_ext_imagick_command/is_ext_imagick/get_graphics_library correctly locate and parse a real custom-path magick binary', function (): void {
+    // Real gap, found via mutation testing: the concatenation pieces
+    // building each real exec() command string (get_ext_imagick_command()'s
+    // 'command -v '.escapeshellarg($dir).'magick', is_ext_imagick()'s
+    // escapeshellarg($dir).command.' -version < /dev/null', and
+    // get_graphics_library()'s own sibling call) were never proven correct
+    // by any existing test -- every prior test either points extImagickDir
+    // at a nonexistent path (proving only the "not found" branch) or
+    // relies on this environment's own real, default-empty-dir magick
+    // install (which happens to still resolve correctly regardless of
+    // concatenation order, since escapeshellarg('') is a no-op either side
+    // of 'magick'). A real, custom, non-empty binary directory containing
+    // a fake 'magick' script is the only way to prove the command string
+    // is assembled from the right pieces in the right order.
+    // get_ext_imagick_command()'s own `static $command` memoization means
+    // this must run in a fresh subprocess, not this shared test process.
+    $dir = sys_get_temp_dir() . '/pwgimage-fake-magick-' . bin2hex(random_bytes(8));
+    mkdir($dir, 0o777, true);
+    $fakeMagick = $dir . '/magick';
+    $scriptContent = <<<'SH'
+        #!/bin/sh
+        if [ "$1" = "-version" ]; then
+            echo 'Version: ImageMagick 7.1.0-49 Q16-HDRI x86_64 00000'
+        fi
+        exit 0
+        SH;
+    file_put_contents($fakeMagick, $scriptContent);
+    chmod($fakeMagick, 0o755);
+
+    try {
+        $script = '\Piwigo\Core\Kernel::boot(\Piwigo\Core\Paths::fromRoot(sys_get_temp_dir()));'
+            . '\Piwigo\Core\Kernel::container()->get(\Piwigo\Config\CurrentConfig::class)->setExtImagickDir(' . var_export($dir . '/', true) . ');'
+            . 'echo json_encode(['
+            . '"command" => \Piwigo\Admin\Image\PwgImage::get_ext_imagick_command(),'
+            . '"is_ext" => \Piwigo\Admin\Image\PwgImage::is_ext_imagick(),'
+            . '"version" => \Piwigo\Admin\Image\PwgImage::$ext_imagick_version,'
+            . '"library" => \Piwigo\Admin\Image\PwgImage::get_graphics_library(),'
+            . ']);';
+        $proc = pwgImageRunSubprocess([], $script);
+
+        expect($proc['exit'])->toBe(0, 'subprocess failed: ' . $proc['stderr']);
+        $decoded = json_decode($proc['stdout'], true);
+        expect($decoded)->toBe([
+            'command' => 'magick',
+            'is_ext' => true,
+            'version' => '7.1.0-49',
+            'library' => 'ext_imagick/7.1.0-49',
+        ]);
+    } finally {
+        unlink($fakeMagick);
+        rmdir($dir);
+    }
+});
+
+test('destroy falls back to true when the underlying image has no destroy method at all', function (): void {
+    // Real gap, found via mutation testing: IfNegated on
+    // method_exists($image, 'destroy') -- the only existing destroy()
+    // test uses a GD-backed image (which DOES implement destroy()), never
+    // an image without one (e.g. a plugin-provided backend, per this
+    // method's own docblock).
+    $fake = new class implements ImageInterface {
+        public function get_width(): int
+        {
+            return 1;
+        }
+
+        public function get_height(): int
+        {
+            return 1;
+        }
+
+        public function set_compression_quality(int $quality): bool
+        {
+            return true;
+        }
+
+        public function crop(int|float $width, int|float $height, int|float $x, int|float $y): bool
+        {
+            return true;
+        }
+
+        public function strip(): bool
+        {
+            return true;
+        }
+
+        public function rotate(int|float $rotation): bool
+        {
+            return true;
+        }
+
+        public function resize(int|float $width, int|float $height): bool
+        {
+            return true;
+        }
+
+        public function sharpen(int|float $amount): bool
+        {
+            return true;
+        }
+
+        public function compose(PwgImage $overlay, int|float $x, int|float $y, int|float $opacity): bool
+        {
+            return true;
+        }
+
+        public function write(string $destination_filepath): bool
+        {
+            return true;
+        }
+    };
+    $handler = function (LoadImageLibrary $event) use ($fake): void {
+        $target = $event->value;
+        if (! $target instanceof PwgImage) {
+            throw new RuntimeException('load_image_library: expected a PwgImage instance');
+        }
+        $target->image = $fake;
+    };
+    EventDispatcherTestFactory::get()->addTypedHandler(LoadImageLibrary::class, $handler);
+
+    try {
+        $img = pwgImageTestMake(pwgImageTestMarker() . '/no-destroy.whatever-unsupported-ext');
+
+        expect($img->destroy())->toBeTrue();
+    } finally {
+        EventDispatcherTestFactory::get()->removeEventHandler(LoadImageLibrary::class, $handler);
+    }
+});
+
+test('destroy coerces and genuinely forwards the underlying image\'s own destroy() return value', function (): void {
+    // Real gap, found via mutation testing: RemoveBooleanCast and
+    // RemoveEarlyReturn on `return (bool) $image->destroy();` -- the only
+    // existing destroy() test uses ImageGd::destroy(), which always
+    // returns bool(true) unconditionally, so neither the cast nor the
+    // early return can be distinguished from PwgImage::destroy()'s own
+    // unconditional `return true;` fallback by that test alone. A fake
+    // destroy() returning a non-bool falsy value (int 0, not declared by
+    // ImageInterface at all, called dynamically) proves both: without the
+    // cast, returning a raw int from a `: bool`-declared method under
+    // strict_types is a real TypeError; without the early return, this
+    // method falls through to its own unconditional `return true;`
+    // regardless of what the real destroy() returned.
+    $fake = new class implements ImageInterface {
+        public function get_width(): int
+        {
+            return 1;
+        }
+
+        public function get_height(): int
+        {
+            return 1;
+        }
+
+        public function set_compression_quality(int $quality): bool
+        {
+            return true;
+        }
+
+        public function crop(int|float $width, int|float $height, int|float $x, int|float $y): bool
+        {
+            return true;
+        }
+
+        public function strip(): bool
+        {
+            return true;
+        }
+
+        public function rotate(int|float $rotation): bool
+        {
+            return true;
+        }
+
+        public function resize(int|float $width, int|float $height): bool
+        {
+            return true;
+        }
+
+        public function sharpen(int|float $amount): bool
+        {
+            return true;
+        }
+
+        public function compose(PwgImage $overlay, int|float $x, int|float $y, int|float $opacity): bool
+        {
+            return true;
+        }
+
+        public function write(string $destination_filepath): bool
+        {
+            return true;
+        }
+
+        public function destroy(): int
+        {
+            return 0;
+        }
+    };
+    $handler = function (LoadImageLibrary $event) use ($fake): void {
+        $target = $event->value;
+        if (! $target instanceof PwgImage) {
+            throw new RuntimeException('load_image_library: expected a PwgImage instance');
+        }
+        $target->image = $fake;
+    };
+    EventDispatcherTestFactory::get()->addTypedHandler(LoadImageLibrary::class, $handler);
+
+    try {
+        $img = pwgImageTestMake(pwgImageTestMarker() . '/coerce-destroy.whatever-unsupported-ext');
+
+        expect($img->destroy())->toBeFalse();
+    } finally {
+        EventDispatcherTestFactory::get()->removeEventHandler(LoadImageLibrary::class, $handler);
+    }
 });

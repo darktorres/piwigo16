@@ -105,8 +105,8 @@ test('fromArrays passes tagsRaw through unvalidated', function (): void {
     expect($request->tagsRaw)->toBe(['tag1', 'tag2']);
 });
 
-test('fromArrays passes postLevel through raw', function (): void {
+test('fromArrays casts a valid postLevel to int', function (): void {
     $request = PictureModifyRequest::fromArrays([], ['level' => '8'], new InputValidator());
 
-    expect($request->postLevel)->toBe('8');
+    expect($request->postLevel)->toBe(8);
 });

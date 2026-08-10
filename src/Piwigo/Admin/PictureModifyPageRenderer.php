@@ -198,7 +198,7 @@ final class PictureModifyPageRenderer
 
             $tag_ids = [];
             $raw_tags_post = $pictureModifyRequest->tagsRaw;
-            if (! in_array($raw_tags_post, [null, false, 0, '0', '', []], true)) {
+            if (! in_array($raw_tags_post, [null, '0', '', []], true)) {
                 if (is_array($raw_tags_post)) {
                     $raw_tags_post_strings = [];
                     foreach ($raw_tags_post as $raw_tag) {

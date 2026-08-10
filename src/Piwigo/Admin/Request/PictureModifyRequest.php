@@ -31,6 +31,13 @@ use Piwigo\Validation\InputValidator;
  * can never be one of those empty sentinels, so "present" and "not
  * empty" are the same condition here.
  *
+ * `postLevel` is cast to `int` after its own digit-pattern validation
+ * (`InputValidator` hard-rejects a non-scalar POST value before this
+ * point, so the cast is always safe). `tagsRaw` stays a loose
+ * `array<array-key, mixed>|string|null` union, unvalidated -- it mirrors
+ * `TagService::getTagIds(string|array $rawTags, ...)`'s own parameter
+ * shape exactly, since that's the sole real consumer.
+ *
  * `associate`/`represent` replicate the original's own
  * `if (! isset($_POST['associate'])) { $_POST['associate'] = []; }`
  * pre-mutation (done only so the immediately-following
@@ -42,6 +49,7 @@ use Piwigo\Validation\InputValidator;
 final readonly class PictureModifyRequest
 {
     /**
+     * @param array<array-key, mixed>|string|null $tagsRaw
      * @param list<int> $associate
      * @param list<int> $represent
      */
@@ -50,12 +58,12 @@ final readonly class PictureModifyRequest
         public bool $deletePresent,
         public bool $syncMetadataPresent,
         public bool $isSubmitted,
-        public mixed $postLevel,
+        public ?int $postLevel,
         public ?string $nameField,
         public ?string $authorField,
         public ?string $commentField,
         public ?string $dateCreation,
-        public mixed $tagsRaw,
+        public array|string|null $tagsRaw,
         public array $associate,
         public array $represent,
     ) {}
@@ -95,6 +103,12 @@ final readonly class PictureModifyRequest
         $date_creation_raw = $post['date_creation'] ?? null;
         $date_creation = is_string($date_creation_raw) ? $date_creation_raw : null;
 
+        $level_raw = $post['level'] ?? null;
+        $post_level = is_numeric($level_raw) ? (int) $level_raw : null;
+
+        $tags_raw = $post['tags'] ?? null;
+        $tags_raw = is_array($tags_raw) || is_string($tags_raw) ? $tags_raw : null;
+
         $post_associate = $post['associate'] ?? [];
         $inputValidator
             ->validate('associate', [
@@ -128,12 +142,12 @@ final readonly class PictureModifyRequest
             isset($get['delete']),
             isset($get['sync_metadata']),
             isset($post['submit']),
-            $post['level'] ?? null,
+            $post_level,
             $name_field,
             $author_field,
             $comment_field,
             $date_creation,
-            $post['tags'] ?? null,
+            $tags_raw,
             $associate,
             $represent,
         );

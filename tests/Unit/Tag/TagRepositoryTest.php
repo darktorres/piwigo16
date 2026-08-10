@@ -726,38 +726,40 @@ test('findOtherNames() excludes the given id', function (): void {
 });
 
 test('countAll() reflects a freshly inserted tag', function (): void {
-    // >= , not an exact $before + 1 -- same reasoning as
-    // countAllImageTagLinks()'s own sibling test below: a genuinely
-    // global, unfiltered COUNT(*) against a table this whole DB shares
-    // across every Unit test in one process isn't safe to assert an
-    // exact delta on.
+    // Compares against a raw ground-truth COUNT(*) taken right next to
+    // the repo's own read, not a "before" snapshot from an earlier round
+    // trip -- countAll() is a genuinely global, unfiltered COUNT(*), and
+    // this whole DB is shared across every Unit test in one process, so
+    // even a >= delta against a "before" value isn't safe: another
+    // concurrently-running test's own DELETE can land in the gap between
+    // "before" and "insert", pushing the real total below "before + 1"
+    // even though countAll() itself is working correctly (confirmed
+    // live). Comparing 2 near-simultaneous reads of the *same* final
+    // state, instead of "before" vs "after", proves countAll() isn't
+    // stale/cached without depending on nothing else touching tags in
+    // the same instant.
     $repo = tagTestRepo();
-    $before = $repo->countAll();
+    $conn = DbConnection::build();
     $id = $repo->insert(tagTestName(), tagTestName());
 
     try {
-        expect($repo->countAll())->toBeGreaterThanOrEqual($before + 1);
+        $raw = $conn->createQueryBuilder()->select('COUNT(*)')->from('tags')->executeQuery()->fetchOne();
+        expect($repo->countAll())->toBe(is_numeric($raw) ? (int) $raw : -1);
     } finally {
         $repo->deleteByIds([$id]);
     }
 });
 
 test('countAllImageTagLinks() reflects a freshly inserted link', function (): void {
-    // >= , not an exact $before + 1 -- countAllImageTagLinks() is a
-    // genuinely global, unfiltered COUNT(*), and this whole DB is shared
-    // across every Unit test in one process (same reasoning as this
-    // file's own countImagesPerTagUnrestricted() test above); the real
-    // thing under test is that the method recomputes and isn't
-    // stale/cached, which >= already proves just as well as an exact
-    // delta would, without depending on nothing else concurrently
-    // touching image_tag in the same instant.
+    // Same ground-truth-comparison technique as countAll()'s own sibling
+    // test above, for the identical reason -- see its comment.
     $repo = tagTestRepo();
     $conn = DbConnection::build();
-    $before = $repo->countAllImageTagLinks();
     $conn->insert('image_tag', ['image_id' => 5, 'tag_id' => 2]);
 
     try {
-        expect($repo->countAllImageTagLinks())->toBeGreaterThanOrEqual($before + 1);
+        $raw = $conn->createQueryBuilder()->select('COUNT(*)')->from('image_tag')->executeQuery()->fetchOne();
+        expect($repo->countAllImageTagLinks())->toBe(is_numeric($raw) ? (int) $raw : -1);
     } finally {
         $conn->delete('image_tag', ['image_id' => 5, 'tag_id' => 2]);
     }

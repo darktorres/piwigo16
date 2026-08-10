@@ -3,20 +3,28 @@
 declare(strict_types=1);
 
 use Piwigo\Admin\Request\AlbumsRequest;
+use Piwigo\Common\ValueObject\CategoryId;
 use Piwigo\Validation\InputValidator;
 
-test('fromArrays defaults parentId to -1 when absent', function (): void {
+test('fromArrays defaults parentId to null when absent', function (): void {
     $request = AlbumsRequest::fromArrays([], [], new InputValidator());
 
-    expect($request->parentId)->toBe(-1)
+    expect($request->parentId)->toBeNull()
         ->and($request->simpleAutoOrder)->toBeFalse()
         ->and($request->recursiveAutoOrder)->toBeFalse();
 });
 
-test('fromArrays passes parentId through when present', function (): void {
+test('fromArrays parses parentId to a CategoryId when present', function (): void {
     $request = AlbumsRequest::fromArrays(['parent_id' => '42'], [], new InputValidator());
 
-    expect($request->parentId)->toBe('42');
+    expect($request->parentId)->toBeInstanceOf(CategoryId::class)
+        ->and($request->parentId?->value)->toBe(42);
+});
+
+test('fromArrays collapses a non-positive parent_id to null', function (): void {
+    $request = AlbumsRequest::fromArrays(['parent_id' => '0'], [], new InputValidator());
+
+    expect($request->parentId)->toBeNull();
 });
 
 test('fromArrays rejects a non-digit parent_id', function (): void {

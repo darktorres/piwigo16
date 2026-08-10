@@ -11,6 +11,7 @@ use Piwigo\Category\CategoryRefDateAggregate;
 use Piwigo\Category\CategoryRefDateField;
 use Piwigo\Category\CategoryService;
 use Piwigo\Common\Enum\SortOrder;
+use Piwigo\Common\ValueObject\CategoryId;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\DateHelper;
 use Piwigo\Core\HtmlRenderingInterface;
@@ -146,7 +147,11 @@ final class AlbumsPageRenderer
             $open_cat = $albumsRequest->rawId;
         }
 
-        $open_cat_value = is_int($open_cat) || is_string($open_cat) ? (string) $open_cat : '';
+        $open_cat_value = match (true) {
+            $open_cat instanceof CategoryId => (string) $open_cat->value,
+            is_int($open_cat) || is_string($open_cat) => (string) $open_cat,
+            default => '',
+        };
 
         // +-------------------------------------------------------------------+
         // |                       template initialization                     |

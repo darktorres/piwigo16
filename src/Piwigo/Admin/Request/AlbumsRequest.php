@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin\Request;
 
+use Piwigo\Common\ValueObject\CategoryId;
 use Piwigo\Core\ValidationPattern;
 use Piwigo\Validation\InputValidator;
 
@@ -19,11 +20,16 @@ use Piwigo\Validation\InputValidator;
  * (id is never read otherwise). `rawId` mirrors the original's own
  * second, unvalidated `$_POST['id']` re-read used only for the
  * `$open_cat` display reassignment after a successful auto-order.
+ * `parentId` is `CategoryId::tryFrom()`-parsed after its own
+ * `ValidationPattern::ID` check; absent (or a non-positive value
+ * `CategoryId` itself rejects, e.g. `0`) becomes `null` instead of the
+ * original's `-1` sentinel -- real category ids start at 1, so both
+ * collapse to the same "nothing selected" no-op at the consumer.
  */
 final readonly class AlbumsRequest
 {
     private function __construct(
-        public mixed $parentId,
+        public ?CategoryId $parentId,
         public bool $simpleAutoOrder,
         public bool $recursiveAutoOrder,
         public mixed $order,
@@ -58,7 +64,7 @@ final readonly class AlbumsRequest
         }
 
         return new self(
-            $get['parent_id'] ?? -1,
+            CategoryId::tryFrom($get['parent_id'] ?? null),
             $simpleAutoOrder,
             $recursiveAutoOrder,
             $post['order'] ?? null,

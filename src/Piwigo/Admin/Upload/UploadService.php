@@ -308,11 +308,11 @@ final class UploadService
 
         if (! isset($image_id) and $this->currentConfig->uploadDetectDuplicate) {
             $dup_detect_lock_conn = DbConnection::build();
-            // GET_LOCK() names are capped at 64 characters -- hashed (with the DB
-            // prefix folded into the hashed input for the same collision-avoidance
-            // reasoning as add()'s own lock, see PwgImages::add()) rather than
-            // concatenated literally.
-            $dup_detect_lock_name = 'piwigo_iud_' . sha1($this->dbCredentials->prefix . ':' . $md5sum);
+            // GET_LOCK() names are capped at 64 characters -- hashed (with the
+            // database name folded into the hashed input for the same
+            // collision-avoidance reasoning as add()'s own lock, see
+            // PwgImages::add()) rather than concatenated literally.
+            $dup_detect_lock_name = 'piwigo_iud_' . sha1($this->dbCredentials->database . ':' . $md5sum);
             $dup_detect_lock_acquired = AdvisorySessionLock::acquire(
                 $dup_detect_lock_conn,
                 $dup_detect_lock_name,

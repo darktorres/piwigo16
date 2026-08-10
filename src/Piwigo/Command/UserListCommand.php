@@ -37,11 +37,8 @@ final class UserListCommand extends Command
     {
         $credentials = DbCredentials::fromEnv();
 
-        $query = sprintf(
-            'SELECT u.id, u.username, u.mail_address, i.status, i.registration_date '
-            . 'FROM %1$susers u LEFT JOIN %1$suser_infos i ON i.user_id = u.id ORDER BY u.id',
-            $credentials->prefix
-        );
+        $query = 'SELECT u.id, u.username, u.mail_address, i.status, i.registration_date '
+            . 'FROM users u LEFT JOIN user_infos i ON i.user_id = u.id ORDER BY u.id';
 
         if ($credentials->driver === 'pgsql') {
             $process = new Process(

@@ -8,7 +8,6 @@ use Override;
 use Piwigo\Core\Kernel;
 use LogicException;
 use Piwigo\Db\EntityManagerFactory;
-use Piwigo\Tests\Support\DbCredentialsTestFactory;
 use Doctrine\DBAL\Schema\Name\OptionallyQualifiedName;
 use Doctrine\DBAL\Schema\Name\UnqualifiedName;
 use Doctrine\DBAL\Connection;
@@ -55,7 +54,7 @@ final class DbMaintenanceRepositoryTest extends IntegrationTestCase
         ConfigLoader::applyEnvOverrides();
 
         $this->conn = DbConnection::build();
-        $this->repo = new DbMaintenanceRepository(EntityManagerFactory::build($this->conn), DbCredentialsTestFactory::get());
+        $this->repo = new DbMaintenanceRepository(EntityManagerFactory::build($this->conn));
     }
 
     public function test_purge_history_detail_deletes_every_row(): void
@@ -330,16 +329,12 @@ final class DbMaintenanceRepositoryTest extends IntegrationTestCase
      */
     public function test_repair_optimize_all_tables_introspection_matches_raw_show_tables_and_create_table(): void
     {
-        $prefix = DbCredentialsTestFactory::get()->prefix;
         $schemaManager = $this->conn->createSchemaManager();
 
-        $introspectedTableNames = array_values(array_filter(
-            array_map(
-                static fn (OptionallyQualifiedName $name): string => $name->getUnqualifiedName()->getValue(),
-                $schemaManager->introspectTableNames(),
-            ),
-            static fn (string $name): bool => str_starts_with($name, $prefix),
-        ));
+        $introspectedTableNames = array_map(
+            static fn (OptionallyQualifiedName $name): string => $name->getUnqualifiedName()->getValue(),
+            $schemaManager->introspectTableNames(),
+        );
         sort($introspectedTableNames);
 
         // SHOW TABLES is MySQL-only syntax ("syntax error at or near
@@ -348,14 +343,13 @@ final class DbMaintenanceRepositoryTest extends IntegrationTestCase
         /** @var list<string> $rawTableNames */
         $rawTableNames = $this->dbDriver === 'pgsql'
             ? $this->conn->fetchFirstColumn(
-                'SELECT tablename FROM pg_tables WHERE schemaname = current_schema() AND tablename LIKE ?',
-                [$prefix . '%']
+                'SELECT tablename FROM pg_tables WHERE schemaname = current_schema()'
             )
-            : $this->conn->fetchFirstColumn('SHOW TABLES LIKE ' . $this->conn->quote($prefix . '%'));
+            : $this->conn->fetchFirstColumn('SHOW TABLES');
         sort($rawTableNames);
 
         self::assertSame($rawTableNames, $introspectedTableNames, 'introspectTableNames() must find the exact same table set raw SHOW TABLES does');
-        self::assertNotEmpty($introspectedTableNames, 'the fixture must have real prefixed tables for this comparison to prove anything');
+        self::assertNotEmpty($introspectedTableNames, 'the fixture must have real tables for this comparison to prove anything');
 
         $sawACompositePrimaryKey = false;
 

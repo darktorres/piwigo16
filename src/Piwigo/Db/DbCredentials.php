@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Db;
 
 /**
- * The 7 PIWIGO_DB_* connection parameters, read from the process
+ * The 6 PIWIGO_DB_* connection parameters, read from the process
  * environment only -- the one source of DB credentials for the whole app.
  * These are infrastructure-bootstrapping values needed before a DB
  * connection (and therefore Piwigo\Config\CurrentConfig's own DB-backed
@@ -29,9 +29,9 @@ namespace Piwigo\Db;
  * direct container access (`InstallBootstrap::boot()` has already run by
  * that point). Env vars are always meaningfully available regardless of DI
  * wiring, so most of this codebase's own Unit tests construct a
- * `Connection`/read a `Tables::*()` name without ever calling
- * `Kernel::boot()` at all. `Tables`/`DbConnection` each hold their own
- * private `dbCredentials()` container-resolve helper.
+ * `Connection` without ever calling `Kernel::boot()` at all.
+ * `DbConnection` holds its own private `dbCredentials()`
+ * container-resolve helper.
  *
  * toMysqlArgs() mirrors tools/restore-drill.sh's own mysql_args
  * construction exactly, so backup/restore commands shell out to the
@@ -45,7 +45,6 @@ final class DbCredentials
         public string $user,
         public string $password,
         public string $database,
-        public string $prefix,
         public ?int $port = null,
         public string $driver = 'mysqli',
     ) {}
@@ -60,7 +59,6 @@ final class DbCredentials
             user: self::env('PIWIGO_DB_USER', ''),
             password: self::env('PIWIGO_DB_PASSWORD', ''),
             database: self::env('PIWIGO_DB_BASE', ''),
-            prefix: self::env('PIWIGO_DB_PREFIX', 'piwigo_'),
             port: $portEnv !== false && $portEnv !== '' && is_numeric($portEnv) ? (int) $portEnv : null,
             driver: $driverEnv !== false && $driverEnv !== '' ? $driverEnv : 'mysqli',
         );
@@ -79,7 +77,6 @@ final class DbCredentials
         $this->user = $fresh->user;
         $this->password = $fresh->password;
         $this->database = $fresh->database;
-        $this->prefix = $fresh->prefix;
         $this->port = $fresh->port;
         $this->driver = $fresh->driver;
     }

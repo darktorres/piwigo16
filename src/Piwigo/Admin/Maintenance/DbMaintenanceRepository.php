@@ -12,7 +12,6 @@ use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Query\Expr\Join;
 use Piwigo\Common\ValueObject\TagId;
 use Piwigo\Common\ValueObject\UserId;
-use Piwigo\Db\DbCredentials;
 use Piwigo\Feed\FeedEntity;
 use Piwigo\History\HistoryEntity;
 use Piwigo\History\HistorySummaryEntity;
@@ -45,7 +44,6 @@ final readonly class DbMaintenanceRepository
 {
     public function __construct(
         private EntityManagerInterface $em,
-        private DbCredentials $dbCredentials,
     ) {}
 
     public function purgeHistoryDetail(): void
@@ -134,8 +132,8 @@ final readonly class DbMaintenanceRepository
     }
 
     /**
-     * Repairs, re-orders (by primary key), and optimizes every table with
-     * this install's own DB prefix -- ported from
+     * Repairs, re-orders (by primary key), and optimizes every table in
+     * this database -- ported from
      * \Piwigo\Db\MysqliDb::doMaintenanceAllTables(), the "database" action's
      * only real caller (confirmed via a direct grep; not reused elsewhere).
      * Table/column names come from `SHOW TABLES`/`DESC`, never user input,
@@ -182,16 +180,12 @@ final readonly class DbMaintenanceRepository
         // statements can never be placeholders) -- those stay raw SQL,
         // spliced only from already-introspected identifier-shaped values.
         $conn = $this->em->getConnection();
-        $prefix = $this->dbCredentials->prefix;
         $schemaManager = $conn->createSchemaManager();
 
-        // Identifier::toString() quotes (e.g. `"piwigo_activity"`) --
-        // getValue() is the real unquoted name, matching what SHOW
-        // TABLES/DESC's own output gave the original raw-splice version.
-        $allTableNames = array_values(array_filter(
-            $schemaManager->introspectTableNames(),
-            static fn (OptionallyQualifiedName $name): bool => str_starts_with($name->getUnqualifiedName()->getValue(), $prefix)
-        ));
+        // Identifier::toString() quotes (e.g. `"activity"`) -- getValue()
+        // is the real unquoted name, matching what SHOW TABLES/DESC's own
+        // output gave the original raw-splice version.
+        $allTableNames = $schemaManager->introspectTableNames();
         $allTables = array_map(
             static fn (OptionallyQualifiedName $name): string => $name->getUnqualifiedName()
                 ->getValue(),

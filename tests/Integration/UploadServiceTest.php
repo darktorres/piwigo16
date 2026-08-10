@@ -1252,7 +1252,7 @@ final class UploadServiceTest extends IntegrationTestCase
      */
     private function dupDetectLockName(string $md5sum): string
     {
-        return 'piwigo_iud_' . sha1($this->dbPrefix . ':' . $md5sum);
+        return 'piwigo_iud_' . sha1($this->dbName . ':' . $md5sum);
     }
 
     /**
@@ -1301,11 +1301,11 @@ final class UploadServiceTest extends IntegrationTestCase
 
     /**
      * Real gap: the duplicate-detection lock name is built from
-     * `$this->dbCredentials->prefix . ':' . $md5sum`, hashed and prefixed
-     * with 'piwigo_iud_' -- a wrong formula (dropped prefix, dropped
-     * separator, swapped operand order, or a hardcoded literal with no
-     * per-md5sum hashing at all) would let two genuinely concurrent
-     * duplicate uploads of the SAME file race past each other
+     * `$this->dbCredentials->database . ':' . $md5sum`, hashed and
+     * prefixed with 'piwigo_iud_' -- a wrong formula (dropped database
+     * name, dropped separator, swapped operand order, or a hardcoded
+     * literal with no per-md5sum hashing at all) would let two genuinely
+     * concurrent duplicate uploads of the SAME file race past each other
      * uncontended, defeating the whole point of the lock. A real,
      * separate connection holding the EXACT documented lock name for a
      * short window is the only way to prove addUploadedFile() computes
@@ -1313,7 +1313,7 @@ final class UploadServiceTest extends IntegrationTestCase
      * promptly once released) a name it independently computed
      * identically.
      */
-    public function test_addUploadedFile_computes_the_duplicate_detection_lock_name_from_the_documented_prefix_and_md5sum_formula(): void
+    public function test_addUploadedFile_computes_the_duplicate_detection_lock_name_from_the_documented_database_name_and_md5sum_formula(): void
     {
         CurrentConfigTestFactory::get()->uploadDetectDuplicate = true;
 

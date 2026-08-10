@@ -33,9 +33,9 @@ use Piwigo\Db\DbCredentials;
  *
  * `GET_LOCK()` names are capped at 64 characters by MySQL and are global
  * to the whole MySQL server, not scoped to one database/schema. {@see
- * lockName()} hashes `$tokenName` together with the DB table prefix
- * rather than concatenating, keeping names short and collision-safe
- * across databases sharing one server.
+ * lockName()} hashes `$tokenName` together with the database name rather
+ * than concatenating, keeping names short and collision-safe across
+ * databases sharing one server.
  *
  * Both the MySQL and Postgres primitives are reentrant per session: an
  * already-held name can be acquired again by the same session, and a
@@ -156,8 +156,8 @@ final class UniqueExecLock
 
     private static function lockName(string $tokenName): string
     {
-        $prefix = self::dbCredentials()->prefix;
+        $database = self::dbCredentials()->database;
 
-        return 'piwigo_exec_' . sha1($prefix . ':unique_exec:' . $tokenName);
+        return 'piwigo_exec_' . sha1($database . ':unique_exec:' . $tokenName);
     }
 }

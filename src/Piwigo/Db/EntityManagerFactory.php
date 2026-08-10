@@ -8,10 +8,8 @@ use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\Types\Type;
 use Doctrine\ORM\EntityManager;
 use Doctrine\ORM\EntityManagerInterface;
-use Doctrine\ORM\Events;
 use Doctrine\ORM\ORMSetup;
 use Piwigo\Cache\CachePools;
-use Piwigo\Core\Kernel;
 use Piwigo\Db\DqlFunction\DateFormatMonthDayFunction;
 use Piwigo\Db\DqlFunction\DateFormatYearMonthFunction;
 use Piwigo\Db\DqlFunction\DateSubFunction;
@@ -60,27 +58,6 @@ use Psr\Cache\CacheItemPoolInterface;
 final class EntityManagerFactory
 {
     /**
-     * Direct container resolve, not the DbCredentials::current() shim --
-     * this class is a purely static factory (see this class's own
-     * docblock), matching FilesystemHelper's own established "no wrapper
-     * instance" precedent. Mirrors DbCredentials::current()'s own graceful
-     * degradation (a fresh fromEnv() read, not a throw) when Kernel isn't
-     * booted -- most callers of build() are plain Unit tests that never
-     * boot a Kernel at all.
-     */
-    private static function dbCredentials(): DbCredentials
-    {
-        if (Kernel::isBooted()) {
-            $dbCredentials = Kernel::container()->get(DbCredentials::class);
-            if ($dbCredentials instanceof DbCredentials) {
-                return $dbCredentials;
-            }
-        }
-
-        return DbCredentials::fromEnv();
-    }
-
-    /**
      * $cache overrides the default CachePools::doctrineMetadata() pool --
      * DqlPlatformQueryTestFactory's own real reason to need this: that
      * default pool backs Doctrine's *query* cache too (ORMSetup::
@@ -126,29 +103,10 @@ final class EntityManagerFactory
             }
         }
 
-        // The dbCredentials()->prefix half of this cache key is
-        // load-bearing, not defensive: TablePrefixListener below (registered
-        // on Events::loadClassMetadata) only fires on a real metadata
-        // *miss* -- it's what turns an entity's bare table name ('config')
-        // into the real, connection-specific one ('piwigo_config'). Caching
-        // metadata keyed on entity mtimes alone (this cache's first version)
-        // meant the *first* prefix ever seen got baked into the cached
-        // metadata and silently reused for every later build() call
-        // regardless of which connection's prefix was actually current --
-        // confirmed live as a real regression, not theoretical:
-        // InstallWizardTest legitimately calls build() against many
-        // different temp databases (DbCredentials::current() is a mutable,
-        // container-shared instance specifically so InstallWizard's own
-        // mid-request seed() call takes effect for later reads -- see its
-        // own docblock) within one process, and 6 of its 23 tests failed
-        // with "Table '<temp db>.piwigo_config' doesn't exist" once
-        // metadata caching landed without this. Hashed (md5), not
-        // concatenated raw, because a real install's prefix is
-        // user-submitted input, not a trusted config constant.
         $config = ORMSetup::createAttributeMetadataConfig(
             paths: [dirname(__DIR__)],
             isDevMode: true,
-            cache: $cache ?? CachePools::doctrineMetadata(self::entityMtimeHash() . '.' . md5(self::dbCredentials()->prefix)),
+            cache: $cache ?? CachePools::doctrineMetadata(self::entityMtimeHash()),
         );
         $config->enableNativeLazyObjects(true);
         $config->addCustomStringFunction('REGEXP', RegexpFunction::class);
@@ -169,11 +127,7 @@ final class EntityManagerFactory
         $config->addCustomNumericFunction('YEAR', YearFunction::class);
         $config->addCustomNumericFunction('MONTH', MonthFunction::class);
 
-        $em = new EntityManager($conn ?? DbConnection::build(), $config);
-        $em->getEventManager()
-            ->addEventListener(Events::loadClassMetadata, new TablePrefixListener(self::dbCredentials()));
-
-        return $em;
+        return new EntityManager($conn ?? DbConnection::build(), $config);
     }
 
     /**

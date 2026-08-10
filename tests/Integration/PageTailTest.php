@@ -124,7 +124,7 @@ final class PageTailTest extends IntegrationTestCase
         // contention at all. checkForUpdates()'s own begins() call (its
         // own cached, request-scoped connection) then loses the race.
         $otherConn = DbConnection::build();
-        $lockName = 'piwigo_exec_' . sha1(DbCredentialsTestFactory::get()->prefix . ':unique_exec:check_for_updates');
+        $lockName = 'piwigo_exec_' . sha1(DbCredentialsTestFactory::get()->database . ':unique_exec:check_for_updates');
         self::assertTrue(AdvisorySessionLock::acquire($otherConn, $lockName, 1));
         self::assertTrue(UniqueExecLock::isRunning('check_for_updates'));
 

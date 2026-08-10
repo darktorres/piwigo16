@@ -14,11 +14,10 @@ use Piwigo\Core\Container;
 use Piwigo\Core\Kernel;
 
 /**
- * The ORM stack (EntityManager, attribute-mapped entities,
- * TablePrefixListener) is genuinely new and unproven in this codebase --
- * the reference implementation never built it. This is the
- * "does it actually work, resolved through the real container, not a
- * hand-built EntityManager" proof.
+ * The ORM stack (EntityManager, attribute-mapped entities) is genuinely
+ * new and unproven in this codebase -- the reference implementation
+ * never built it. This is the "does it actually work, resolved through
+ * the real container, not a hand-built EntityManager" proof.
  */
 final class EntityManagerSmokeTest extends IntegrationTestCase
 {
@@ -62,7 +61,7 @@ final class EntityManagerSmokeTest extends IntegrationTestCase
         self::assertInstanceOf(EntityManagerInterface::class, $em);
 
         $metadata = $em->getClassMetadata(ConfigEntry::class);
-        self::assertSame('piwigo_config', $metadata->getTableName());
+        self::assertSame('config', $metadata->getTableName());
         self::assertSame(['param'], $metadata->getIdentifierFieldNames());
     }
 

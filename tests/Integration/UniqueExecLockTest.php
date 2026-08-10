@@ -135,8 +135,8 @@ final class UniqueExecLockTest extends IntegrationTestCase
      */
     private function lockNameFor(string $tokenName): string
     {
-        $prefix = DbCredentialsTestFactory::get()->prefix;
+        $database = DbCredentialsTestFactory::get()->database;
 
-        return 'piwigo_exec_' . sha1($prefix . ':unique_exec:' . $tokenName);
+        return 'piwigo_exec_' . sha1($database . ':unique_exec:' . $tokenName);
     }
 }

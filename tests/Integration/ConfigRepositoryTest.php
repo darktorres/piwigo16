@@ -7,17 +7,14 @@ namespace Piwigo\Tests\Integration;
 use Override;
 use Piwigo\Core\Kernel;
 use LogicException;
-use Piwigo\Tests\Support\DbCredentialsTestFactory;
 use Doctrine\ORM\EntityManager;
 use Doctrine\ORM\EntityManagerInterface;
-use Doctrine\ORM\Events;
 use Doctrine\ORM\ORMSetup;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\ConfigEntry;
 use Piwigo\Config\ConfigLoader;
 use Piwigo\Config\ConfigRepository;
 use Piwigo\Db\DbConnection;
-use Piwigo\Db\TablePrefixListener;
 
 /**
  * ConfigRepository has no Unit-level test file at all -- every public
@@ -62,7 +59,6 @@ final class ConfigRepositoryTest extends IntegrationTestCase
         $ormConfig = ORMSetup::createAttributeMetadataConfig([dirname(__DIR__, 2) . '/src/Piwigo'], isDevMode: true);
         $ormConfig->enableNativeLazyObjects(true);
         $this->em = new EntityManager($conn, $ormConfig);
-        $this->em->getEventManager()->addEventListener(Events::loadClassMetadata, new TablePrefixListener(DbCredentialsTestFactory::get()));
 
         $repo = $this->em->getRepository(ConfigEntry::class);
         $this->repo = $repo;
@@ -283,7 +279,6 @@ final class ConfigRepositoryTest extends IntegrationTestCase
         $ormConfig = ORMSetup::createAttributeMetadataConfig([dirname(__DIR__, 2) . '/src/Piwigo'], isDevMode: true);
         $ormConfig->enableNativeLazyObjects(true);
         $em = new EntityManager($conn, $ormConfig);
-        $em->getEventManager()->addEventListener(Events::loadClassMetadata, new TablePrefixListener(DbCredentialsTestFactory::get()));
 
         $repo = $em->getRepository(ConfigEntry::class);
 

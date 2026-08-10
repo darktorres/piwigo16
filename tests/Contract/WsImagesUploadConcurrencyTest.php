@@ -68,7 +68,7 @@ final class WsImagesUploadConcurrencyTest extends ContractTestCase
      */
     private function uploadUniquenessLockName(string $md5sum): string
     {
-        return 'piwigo_iu_' . sha1($this->dbPrefix . ':md5sum:' . $md5sum);
+        return 'piwigo_iu_' . sha1($this->dbName . ':md5sum:' . $md5sum);
     }
 
     /**

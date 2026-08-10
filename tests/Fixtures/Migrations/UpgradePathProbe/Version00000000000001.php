@@ -7,7 +7,6 @@ namespace Piwigo\Migrations\UpgradePathProbe;
 use Override;
 use Doctrine\DBAL\Schema\Schema;
 use Doctrine\Migrations\AbstractMigration;
-use Piwigo\Db\DbCredentials;
 
 /**
  * Test-only fixture for tests/Integration/MigrationUpgradePathTest.php --
@@ -47,6 +46,6 @@ final class Version00000000000001 extends AbstractMigration
 
     public static function probeTable(): string
     {
-        return DbCredentials::fromEnv()->prefix . 'migration_upgrade_probe';
+        return 'migration_upgrade_probe';
     }
 }

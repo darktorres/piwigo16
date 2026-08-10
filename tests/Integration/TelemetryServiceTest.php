@@ -9,21 +9,18 @@ use Piwigo\Core\Kernel;
 use LogicException;
 use Piwigo\Db\EntityManagerFactory;
 use ReflectionMethod;
-use Piwigo\Tests\Support\DbCredentialsTestFactory;
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\Platforms\MariaDBPlatform;
 use Doctrine\DBAL\Platforms\PostgreSQLPlatform;
 use Doctrine\DBAL\Platforms\SQLitePlatform;
 use Doctrine\ORM\EntityManager;
 use Doctrine\ORM\EntityManagerInterface;
-use Doctrine\ORM\Events;
 use Doctrine\ORM\ORMSetup;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\ConfigEntry;
 use Piwigo\Config\ConfigLoader;
 use Piwigo\Config\ConfigRepository;
 use Piwigo\Db\DbConnection;
-use Piwigo\Db\TablePrefixListener;
 use Piwigo\Db\Tables;
 use Piwigo\Telemetry\TelemetryService;
 
@@ -216,7 +213,6 @@ final class TelemetryServiceTest extends IntegrationTestCase
         $ormConfig = ORMSetup::createAttributeMetadataConfig([dirname(__DIR__, 2) . '/src/Piwigo'], isDevMode: true);
         $ormConfig->enableNativeLazyObjects(true);
         $em = new EntityManager($conn, $ormConfig);
-        $em->getEventManager()->addEventListener(Events::loadClassMetadata, new TablePrefixListener(DbCredentialsTestFactory::get()));
 
         $repo = $em->getRepository(ConfigEntry::class);
 

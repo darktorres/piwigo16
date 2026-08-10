@@ -17,7 +17,7 @@ use Symfony\Component\Console\Output\OutputInterface;
  * (already reachable from the admin web UI's MaintenanceActionDispatcher,
  * had no CLI wrapper until now).
  */
-#[AsCommand(name: 'maintenance:repair-db', description: 'Repair, re-order, and optimize every table with this install\'s DB prefix')]
+#[AsCommand(name: 'maintenance:repair-db', description: 'Repair, re-order, and optimize every table in this database')]
 final class MaintenanceRepairDbCommand extends Command
 {
     public function __construct(

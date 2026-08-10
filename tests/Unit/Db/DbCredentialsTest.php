@@ -12,7 +12,7 @@ use Piwigo\Tests\Support\DbCredentialsTestFactory;
 // test's real DB connection (tests/bootstrap.php loads them once via
 // pwg_load_env_file() at process start, nothing else re-populates them).
 // Save + restore the real values instead of just clearing them.
-$envVars = ['PIWIGO_DB_HOST', 'PIWIGO_DB_USER', 'PIWIGO_DB_PASSWORD', 'PIWIGO_DB_BASE', 'PIWIGO_DB_PREFIX', 'PIWIGO_DB_PORT', 'PIWIGO_DB_DRIVER'];
+$envVars = ['PIWIGO_DB_HOST', 'PIWIGO_DB_USER', 'PIWIGO_DB_PASSWORD', 'PIWIGO_DB_BASE', 'PIWIGO_DB_PORT', 'PIWIGO_DB_DRIVER'];
 $originalEnvVars = [];
 
 beforeEach(function () use ($envVars, &$originalEnvVars): void {
@@ -37,7 +37,6 @@ test('fromEnv() falls back to defaults when no env vars are set', function (): v
         ->and($credentials->user)->toBe('')
         ->and($credentials->password)->toBe('')
         ->and($credentials->database)->toBe('')
-        ->and($credentials->prefix)->toBe('piwigo_')
         ->and($credentials->port)->toBeNull()
         ->and($credentials->driver)->toBe('mysqli');
 });
@@ -58,7 +57,6 @@ test('fromEnv() reads every PIWIGO_DB_* var when set', function (): void {
     putenv('PIWIGO_DB_USER=piwigo_app');
     putenv('PIWIGO_DB_PASSWORD=s3cret');
     putenv('PIWIGO_DB_BASE=piwigo_prod');
-    putenv('PIWIGO_DB_PREFIX=pwg_');
     putenv('PIWIGO_DB_PORT=33061');
     putenv('PIWIGO_DB_DRIVER=pgsql');
 
@@ -68,7 +66,6 @@ test('fromEnv() reads every PIWIGO_DB_* var when set', function (): void {
         ->and($credentials->user)->toBe('piwigo_app')
         ->and($credentials->password)->toBe('s3cret')
         ->and($credentials->database)->toBe('piwigo_prod')
-        ->and($credentials->prefix)->toBe('pwg_')
         ->and($credentials->port)->toBe(33061)
         ->and($credentials->driver)->toBe('pgsql');
 });
@@ -163,7 +160,6 @@ test('reload() re-derives every property from the current environment, mutating 
     putenv('PIWIGO_DB_USER=reloaded_user');
     putenv('PIWIGO_DB_PASSWORD=reloaded_pass');
     putenv('PIWIGO_DB_BASE=reloaded_db');
-    putenv('PIWIGO_DB_PREFIX=reloaded_');
     putenv('PIWIGO_DB_PORT=5432');
     putenv('PIWIGO_DB_DRIVER=pgsql');
 
@@ -178,7 +174,6 @@ test('reload() re-derives every property from the current environment, mutating 
         ->and($credentials->user)->toBe('reloaded_user')
         ->and($credentials->password)->toBe('reloaded_pass')
         ->and($credentials->database)->toBe('reloaded_db')
-        ->and($credentials->prefix)->toBe('reloaded_')
         ->and($credentials->port)->toBe(5432)
         ->and($credentials->driver)->toBe('pgsql');
 });
@@ -202,17 +197,17 @@ test('seed() on the container-shared instance is visible to every other consumer
 });
 
 test('toMysqlArgs() includes -p only when a password is set', function (): void {
-    $withoutPassword = new DbCredentials(host: 'localhost', user: 'root', password: '', database: 'piwigo', prefix: 'piwigo_');
+    $withoutPassword = new DbCredentials(host: 'localhost', user: 'root', password: '', database: 'piwigo');
     expect($withoutPassword->toMysqlArgs())->toBe(['-hlocalhost', '-uroot']);
 
-    $withPassword = new DbCredentials(host: 'localhost', user: 'root', password: 'secret', database: 'piwigo', prefix: 'piwigo_');
+    $withPassword = new DbCredentials(host: 'localhost', user: 'root', password: 'secret', database: 'piwigo');
     expect($withPassword->toMysqlArgs())->toBe(['-hlocalhost', '-uroot', '-psecret']);
 });
 
 test('toMysqlArgs() includes -P only when a port is set', function (): void {
-    $withoutPort = new DbCredentials(host: 'localhost', user: 'root', password: '', database: 'piwigo', prefix: 'piwigo_');
+    $withoutPort = new DbCredentials(host: 'localhost', user: 'root', password: '', database: 'piwigo');
     expect($withoutPort->toMysqlArgs())->toBe(['-hlocalhost', '-uroot']);
 
-    $withPort = new DbCredentials(host: 'localhost', user: 'root', password: '', database: 'piwigo', prefix: 'piwigo_', port: 33061);
+    $withPort = new DbCredentials(host: 'localhost', user: 'root', password: '', database: 'piwigo', port: 33061);
     expect($withPort->toMysqlArgs())->toBe(['-hlocalhost', '-uroot', '-P33061']);
 });

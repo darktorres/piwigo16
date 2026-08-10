@@ -8,7 +8,6 @@ use Override;
 use Piwigo\Core\Kernel;
 use LogicException;
 use Piwigo\Db\EntityManagerFactory;
-use Piwigo\Tests\Support\DbCredentialsTestFactory;
 use Piwigo\Admin\Maintenance\DbMaintenanceRepository;
 use Piwigo\Command\MaintenanceRepairDbCommand;
 use Piwigo\Config\CurrentConfig;
@@ -46,7 +45,7 @@ final class MaintenanceRepairDbCommandTest extends IntegrationTestCase
     {
         $conn = DbConnection::build();
 
-        $command = new MaintenanceRepairDbCommand(new DbMaintenanceRepository(EntityManagerFactory::build($conn), DbCredentialsTestFactory::get()));
+        $command = new MaintenanceRepairDbCommand(new DbMaintenanceRepository(EntityManagerFactory::build($conn)));
         $tester  = new CommandTester($command);
 
         $exitCode = $tester->execute([]);

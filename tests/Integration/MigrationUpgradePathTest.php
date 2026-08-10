@@ -14,7 +14,6 @@ use Doctrine\Migrations\Configuration\Migration\ConfigurationArray;
 use Doctrine\Migrations\DependencyFactory;
 use Doctrine\Migrations\Tools\Console\Command\MigrateCommand;
 use Piwigo\Db\DbConnection;
-use Piwigo\Db\DbCredentials;
 use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Migrations\UpgradePathProbe\Version00000000000001;
 use Symfony\Component\Console\Input\ArrayInput;
@@ -25,8 +24,8 @@ use Symfony\Component\Console\Output\BufferedOutput;
  * proves *this app's* wiring instead: Piwigo\Db\MigrationDependencyFactory's
  * construction recipe (the same one InstallWizard::performInstall() and
  * config/container.php's DependencyFactory::class entry both use), the
- * prefixed ledger-table naming, and MigrateCommand's non-interactive
- * ArrayInput invocation, all correctly apply an incremental migration
+ * ledger-table naming, and MigrateCommand's non-interactive ArrayInput
+ * invocation, all correctly apply an incremental migration
  * against an already-migrated database -- the real upgrade-path shape
  * (bin/piwigo migrations:migrate against an existing install), not just a
  * fresh-install run.
@@ -45,7 +44,7 @@ use Symfony\Component\Console\Output\BufferedOutput;
  */
 final class MigrationUpgradePathTest extends IntegrationTestCase
 {
-    private const string LEDGER_TABLE_SUFFIX = 'migration_versions_upgrade_probe';
+    private const string LEDGER_TABLE_NAME = 'migration_versions_upgrade_probe';
 
     private Connection $conn;
 
@@ -65,7 +64,7 @@ final class MigrationUpgradePathTest extends IntegrationTestCase
     }
 
     /**
-     * Deliberately duplicates $this->probeTable()'s own
+     * Deliberately duplicates Version00000000000001::probeTable()'s own
      * one-line computation rather than calling it -- this runs from
      * setUp(), before Doctrine's own migration finder has required that
      * fixture file (only buildDependencyFactory()/runMigrate() below
@@ -76,14 +75,13 @@ final class MigrationUpgradePathTest extends IntegrationTestCase
      */
     private function probeTable(): string
     {
-        return DbCredentials::fromEnv()->prefix . 'migration_upgrade_probe';
+        return 'migration_upgrade_probe';
     }
 
     private function dropProbeTables(): void
     {
-        $prefix = DbCredentials::fromEnv()->prefix;
         $this->conn->executeStatement('DROP TABLE IF EXISTS ' . $this->probeTable());
-        $this->conn->executeStatement('DROP TABLE IF EXISTS ' . $prefix . self::LEDGER_TABLE_SUFFIX);
+        $this->conn->executeStatement('DROP TABLE IF EXISTS ' . self::LEDGER_TABLE_NAME);
     }
 
     private function buildDependencyFactory(): DependencyFactory
@@ -94,7 +92,7 @@ final class MigrationUpgradePathTest extends IntegrationTestCase
                 'Piwigo\\Migrations\\UpgradePathProbe' => dirname(__DIR__) . '/Fixtures/Migrations/UpgradePathProbe',
             ],
             'table_storage' => [
-                'table_name' => DbCredentials::fromEnv()->prefix . self::LEDGER_TABLE_SUFFIX,
+                'table_name' => self::LEDGER_TABLE_NAME,
             ],
         ]);
 

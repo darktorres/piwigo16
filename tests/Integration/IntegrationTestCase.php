@@ -23,7 +23,6 @@ use mysqli_result;
 use mysqli_sql_exception;
 use Doctrine\DBAL\Connection;
 use Doctrine\ORM\EntityManager;
-use Doctrine\ORM\Events;
 use Doctrine\ORM\ORMSetup;
 use PHPUnit\Framework\TestCase;
 use Piwigo\Config\ConfigEntry;
@@ -31,9 +30,7 @@ use Piwigo\Config\ConfigRepository;
 use Piwigo\Core\FilesystemHelper;
 use Piwigo\Core\Paths;
 use Piwigo\Db\DbConnection;
-use Piwigo\Tests\Support\DbCredentialsTestFactory;
 use Piwigo\Db\Tables;
-use Piwigo\Db\TablePrefixListener;
 
 /**
  * Shared infrastructure for integration tests.
@@ -270,7 +267,6 @@ abstract class IntegrationTestCase extends TestCase
         $ormConfig = ORMSetup::createAttributeMetadataConfig([dirname(__DIR__, 2) . '/src/Piwigo'], isDevMode: true);
         $ormConfig->enableNativeLazyObjects(true);
         $em = new EntityManager($conn, $ormConfig);
-        $em->getEventManager()->addEventListener(Events::loadClassMetadata, new TablePrefixListener(DbCredentialsTestFactory::get()));
         $this->configEntityManager = $em;
 
         $repo = $em->getRepository(ConfigEntry::class);

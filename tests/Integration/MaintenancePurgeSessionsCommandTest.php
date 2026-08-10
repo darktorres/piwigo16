@@ -8,7 +8,6 @@ use Override;
 use Piwigo\Core\Kernel;
 use LogicException;
 use Piwigo\Db\EntityManagerFactory;
-use Piwigo\Tests\Support\DbCredentialsTestFactory;
 use Piwigo\Admin\Maintenance\DbMaintenanceRepository;
 use Piwigo\Command\MaintenancePurgeSessionsCommand;
 use Piwigo\Config\CurrentConfig;
@@ -55,7 +54,7 @@ final class MaintenancePurgeSessionsCommandTest extends IntegrationTestCase
             ->executeStatement();
 
         try {
-            $command = new MaintenancePurgeSessionsCommand(new DbMaintenanceRepository(EntityManagerFactory::build($conn), DbCredentialsTestFactory::get()));
+            $command = new MaintenancePurgeSessionsCommand(new DbMaintenanceRepository(EntityManagerFactory::build($conn)));
             $tester = new CommandTester($command);
 
             $exitCode = $tester->execute([]);

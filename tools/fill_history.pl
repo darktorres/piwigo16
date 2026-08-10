@@ -11,7 +11,7 @@ use List::Util qw/shuffle min/;
 my %opt;
 GetOptions(
     \%opt,
-    qw/dbname=s dbuser=s dbpass=s prefix=s
+    qw/dbname=s dbuser=s dbpass=s
        total=i start_date=s end_date=s
        help/
    );
@@ -26,14 +26,11 @@ Usage: pwg_fill_comments.pl --dbname=<database_name>
                             --dbuser=<username>
                             --dbpass=<password>
                             --tagfile=<tags filename>
-                            [--prefix=<tables prefix>]
                             [--help]
 
 --dbname, --dbuser and --dbpass are connexion parameters.
 
 --tagfile
-
---prefix : determines the prefix for your table names.
 
 --help : show this help
 
@@ -50,7 +47,6 @@ foreach my $option (qw/dbname dbuser dbpass start_date end_date/) {
   }
 }
 
-$opt{prefix} = 'piwigo_' if (not defined $opt{prefix});
 my $dbh = DBI->connect(
     'DBI:mysql:'.$opt{dbname},
     $opt{dbuser},
@@ -64,7 +60,7 @@ my $sth;
 # retrieve all available users
 $query = '
 SELECT id
-  FROM '.$opt{prefix}.'users
+  FROM users
 ';
 my @user_ids = keys %{ $dbh->selectall_hashref($query, 'id') };
 
@@ -96,7 +92,7 @@ my $end_unixtime = timelocal(0,0,0,$day,$month-1,$year);
 # "tags from image" and "images from tag"
 $query = '
 SELECT image_id, tag_id
-  FROM '.$opt{prefix}.'image_tag
+  FROM image_tag
 ';
 my %image_tags = ();
 my %tag_images = ();
@@ -135,7 +131,7 @@ while (my $row = $sth->fetchrow_hashref()) {
 # categories from image_id
 $query = '
 SELECT image_id, category_id
-  FROM '.$opt{prefix}.'image_category
+  FROM image_category
 ';
 my %image_categories = ();
 my %category_images =();
@@ -280,7 +276,7 @@ if (scalar @inserts) {
     $question_marks_string.= ')';
 
     my $query = '
-INSERT INTO '.$opt{prefix}.'history
+INSERT INTO history
   ('.join(', ', @columns).')
   VALUES
 ';

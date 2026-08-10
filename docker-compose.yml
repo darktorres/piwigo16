@@ -14,7 +14,6 @@ services:
       PIWIGO_DB_USER: piwigo
       PIWIGO_DB_PASSWORD: piwigo
       PIWIGO_DB_BASE: piwigo
-      PIWIGO_DB_PREFIX: piwigo_
     # _data/ is a persistent volume, not tmpfs: alongside the truly-ephemeral
     # Smarty/combined-JS-CSS cache, it also holds i.php's derivative-image
     # cache (_data/i/) and logs (_data/logs/) — losing those on every

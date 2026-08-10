@@ -39,7 +39,7 @@
 # stale-state class.
 #
 # Reads DB credentials from .env.test, same variables IntegrationTestCase.php
-# uses (PIWIGO_DB_HOST/USER/PASSWORD/BASE/PREFIX) — no PIWIGO_DB_PORT support,
+# uses (PIWIGO_DB_HOST/USER/PASSWORD/BASE) — no PIWIGO_DB_PORT support,
 # matching that class, which doesn't read one either.
 #
 # pgsql support pass: branches on PIWIGO_DB_DRIVER the same way
@@ -104,19 +104,19 @@ if [ "${PIWIGO_DB_DRIVER:-mysqli}" = "pgsql" ]; then
 
   psql "${psql_args[@]}" -f tests/Fixtures/piwigo-17.0-pgsql.sql
 
-  until psql "${psql_args[@]}" -c "SELECT COUNT(*) FROM ${PIWIGO_DB_PREFIX}images;" > /dev/null 2>&1; do
+  until psql "${psql_args[@]}" -c "SELECT COUNT(*) FROM images;" > /dev/null 2>&1; do
     sleep 0.5
   done
 
   # tests/Fixtures/piwigo-17.0-pgsql.sql ships an entirely empty `themes`
   # table -- same real gap as the mysql fixture below, same fix, ON
   # CONFLICT being the real Postgres equivalent of ON DUPLICATE KEY UPDATE
-  # (piwigo_themes.id is the PRIMARY KEY on both platforms).
-  psql "${psql_args[@]}" -c "INSERT INTO ${PIWIGO_DB_PREFIX}themes (id, version, name) VALUES ('default', '1.0.0', 'Default') ON CONFLICT (id) DO UPDATE SET name = 'Default';"
+  # (themes.id is the PRIMARY KEY on both platforms).
+  psql "${psql_args[@]}" -c "INSERT INTO themes (id, version, name) VALUES ('default', '1.0.0', 'Default') ON CONFLICT (id) DO UPDATE SET name = 'Default';"
 
-  psql "${psql_args[@]}" -c "UPDATE ${PIWIGO_DB_PREFIX}sites SET galleries_url = '${real_root}galleries/' WHERE id = 1;"
+  psql "${psql_args[@]}" -c "UPDATE sites SET galleries_url = '${real_root}galleries/' WHERE id = 1;"
 
-  # piwigo_categories has a real BEFORE UPDATE trigger (trg_categories_lastmodified,
+  # categories has a real BEFORE UPDATE trigger (trg_categories_lastmodified,
   # Phase B's port of MySQL's `ON UPDATE CURRENT_TIMESTAMP`) that
   # unconditionally sets NEW.lastmodified = now() on every UPDATE,
   # silently clobbering this literal value -- confirmed live. session_replication_role
@@ -124,7 +124,7 @@ if [ "${PIWIGO_DB_DRIVER:-mysqli}" = "pgsql" ]; then
   # codebase) suppresses user-defined triggers for the duration of this one
   # statement, the same way MySQL's own ON UPDATE CURRENT_TIMESTAMP has no
   # such guard to bypass in the first place.
-  psql "${psql_args[@]}" -c "BEGIN; SET session_replication_role = replica; UPDATE ${PIWIGO_DB_PREFIX}categories SET lastmodified = '2026-08-02 00:00:00'; SET session_replication_role = DEFAULT; COMMIT;"
+  psql "${psql_args[@]}" -c "BEGIN; SET session_replication_role = replica; UPDATE categories SET lastmodified = '2026-08-02 00:00:00'; SET session_replication_role = DEFAULT; COMMIT;"
 else
   mysql_args=(-h"${PIWIGO_DB_HOST}" -u"${PIWIGO_DB_USER}")
   if [ -n "${PIWIGO_DB_PASSWORD:-}" ]; then
@@ -133,7 +133,7 @@ else
 
   mysql "${mysql_args[@]}" "${PIWIGO_DB_BASE}" < tests/Fixtures/piwigo-17.0.sql
 
-  until mysql "${mysql_args[@]}" "${PIWIGO_DB_BASE}" -e "SELECT COUNT(*) FROM ${PIWIGO_DB_PREFIX}images;" > /dev/null 2>&1; do
+  until mysql "${mysql_args[@]}" "${PIWIGO_DB_BASE}" -e "SELECT COUNT(*) FROM images;" > /dev/null 2>&1; do
     sleep 0.5
   done
 
@@ -147,11 +147,11 @@ else
   # independently, from two separate Browser test files. Seeded here (once,
   # for the whole suite) rather than per-test, now that a second file hit the
   # same wall.
-  mysql "${mysql_args[@]}" "${PIWIGO_DB_BASE}" -e "INSERT INTO ${PIWIGO_DB_PREFIX}themes (id, version, name) VALUES ('default', '1.0.0', 'Default') ON DUPLICATE KEY UPDATE name = 'Default';"
+  mysql "${mysql_args[@]}" "${PIWIGO_DB_BASE}" -e "INSERT INTO themes (id, version, name) VALUES ('default', '1.0.0', 'Default') ON DUPLICATE KEY UPDATE name = 'Default';"
 
-  mysql "${mysql_args[@]}" "${PIWIGO_DB_BASE}" -e "UPDATE ${PIWIGO_DB_PREFIX}sites SET galleries_url = '${real_root}galleries/' WHERE id = 1;"
+  mysql "${mysql_args[@]}" "${PIWIGO_DB_BASE}" -e "UPDATE sites SET galleries_url = '${real_root}galleries/' WHERE id = 1;"
 
-  mysql "${mysql_args[@]}" "${PIWIGO_DB_BASE}" -e "UPDATE ${PIWIGO_DB_PREFIX}categories SET lastmodified = '2026-08-02 00:00:00';"
+  mysql "${mysql_args[@]}" "${PIWIGO_DB_BASE}" -e "UPDATE categories SET lastmodified = '2026-08-02 00:00:00';"
 fi
 
 sudo rm -rf _data/cache/piwigo.*/

@@ -364,7 +364,7 @@ attachment`) rather than render inline, same three-target split.
 ### Environment variables
 
 See `.env.example` for the full reference (`PIWIGO_DB_HOST`/`USER`/
-`PASSWORD`/`BASE`/`PREFIX`). In containers these are set directly
+`PASSWORD`/`BASE`). In containers these are set directly
 (compose `environment:`, Helm chart env) rather than via a file —
 `Piwigo\Core\Env::loadEnvFile()` reads `getenv()` either way, so no `.env`
 file needs to exist inside the image.
@@ -690,7 +690,7 @@ without a scratch-DB dry run first.
   rotate at the MySQL user level first, then update the Secret/env var and
   roll the deployment — rotating the Secret before the DB user locks the
   app out.
-- **`secret_key`** (`piwigo_config`, session/CSRF token signing): rotating
+- **`secret_key`** (`config`, session/CSRF token signing): rotating
   it invalidates all existing sessions and CSRF tokens — plan for a forced
   re-login.
 - **Container registry / signing credentials** (cosign/sigstore keyless

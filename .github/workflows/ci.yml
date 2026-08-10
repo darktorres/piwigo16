@@ -458,7 +458,6 @@ jobs:
           PIWIGO_DB_USER=${{ matrix.user }}
           PIWIGO_DB_PASSWORD=root
           PIWIGO_DB_BASE=piwigo_test
-          PIWIGO_DB_PREFIX=piwigo_
           PIWIGO_DB_DRIVER=${{ matrix.driver }}
           PIWIGO_BASE_URL=http://localhost:8080
           ENVEOF
@@ -517,7 +516,7 @@ jobs:
       - name: Provision piwigo_test from the committed fixture
         run: |
           mysql -h127.0.0.1 -uroot -proot piwigo_test < tests/Fixtures/piwigo-17.0.sql
-          until mysql -h127.0.0.1 -uroot -proot piwigo_test -e 'SELECT COUNT(*) FROM piwigo_images;' > /dev/null 2>&1; do sleep 0.5; done
+          until mysql -h127.0.0.1 -uroot -proot piwigo_test -e 'SELECT COUNT(*) FROM images;' > /dev/null 2>&1; do sleep 0.5; done
       - name: Write .env.test
         run: |
           cat > .env.test <<'ENVEOF'
@@ -526,7 +525,6 @@ jobs:
           PIWIGO_DB_USER=root
           PIWIGO_DB_PASSWORD=root
           PIWIGO_DB_BASE=piwigo_test
-          PIWIGO_DB_PREFIX=piwigo_
           PIWIGO_BASE_URL=http://localhost:8080
           ENVEOF
       - run: mkdir -p local && touch local/.installed.test
@@ -558,7 +556,7 @@ jobs:
       - name: Provision piwigo_test from the committed fixture
         run: |
           mysql -h127.0.0.1 -uroot -proot piwigo_test < tests/Fixtures/piwigo-17.0.sql
-          until mysql -h127.0.0.1 -uroot -proot piwigo_test -e 'SELECT COUNT(*) FROM piwigo_images;' > /dev/null 2>&1; do sleep 0.5; done
+          until mysql -h127.0.0.1 -uroot -proot piwigo_test -e 'SELECT COUNT(*) FROM images;' > /dev/null 2>&1; do sleep 0.5; done
       - name: Write .env.test
         run: |
           cat > .env.test <<'ENVEOF'
@@ -567,7 +565,6 @@ jobs:
           PIWIGO_DB_USER=root
           PIWIGO_DB_PASSWORD=root
           PIWIGO_DB_BASE=piwigo_test
-          PIWIGO_DB_PREFIX=piwigo_
           PIWIGO_BASE_URL=http://localhost:8080
           ENVEOF
       - run: mkdir -p local && touch local/.installed.test
@@ -621,7 +618,7 @@ jobs:
       - name: Provision piwigo_test from the committed fixture
         run: |
           mysql -h127.0.0.1 -uroot -proot piwigo_test < tests/Fixtures/piwigo-17.0.sql
-          until mysql -h127.0.0.1 -uroot -proot piwigo_test -e 'SELECT COUNT(*) FROM piwigo_images;' > /dev/null 2>&1; do sleep 0.5; done
+          until mysql -h127.0.0.1 -uroot -proot piwigo_test -e 'SELECT COUNT(*) FROM images;' > /dev/null 2>&1; do sleep 0.5; done
       - name: Write .env.test
         run: |
           cat > .env.test <<'ENVEOF'
@@ -630,7 +627,6 @@ jobs:
           PIWIGO_DB_USER=root
           PIWIGO_DB_PASSWORD=root
           PIWIGO_DB_BASE=piwigo_test
-          PIWIGO_DB_PREFIX=piwigo_
           PIWIGO_BASE_URL=http://localhost:8080
           ENVEOF
       - run: mkdir -p local && touch local/.installed.test
@@ -689,7 +685,6 @@ jobs:
           PIWIGO_DB_USER=root
           PIWIGO_DB_PASSWORD=root
           PIWIGO_DB_BASE=piwigo_test
-          PIWIGO_DB_PREFIX=piwigo_
           PIWIGO_BASE_URL=http://localhost:8080
           ENVEOF
       # Deliberately skips the 2 steps every other Browser-suite job above has --
@@ -764,7 +759,7 @@ jobs:
       - name: Provision piwigo_test from the committed fixture
         run: |
           mysql -h127.0.0.1 -uroot -proot piwigo_test < tests/Fixtures/piwigo-17.0.sql
-          until mysql -h127.0.0.1 -uroot -proot piwigo_test -e 'SELECT COUNT(*) FROM piwigo_images;' > /dev/null 2>&1; do sleep 0.5; done
+          until mysql -h127.0.0.1 -uroot -proot piwigo_test -e 'SELECT COUNT(*) FROM images;' > /dev/null 2>&1; do sleep 0.5; done
       - name: Write .env.test
         run: |
           cat > .env.test <<'ENVEOF'
@@ -773,7 +768,6 @@ jobs:
           PIWIGO_DB_USER=root
           PIWIGO_DB_PASSWORD=root
           PIWIGO_DB_BASE=piwigo_test
-          PIWIGO_DB_PREFIX=piwigo_
           PIWIGO_BASE_URL=http://localhost:8080
           ENVEOF
       - run: mkdir -p local && touch local/.installed.test
@@ -816,7 +810,6 @@ jobs:
           PIWIGO_DB_USER=root
           PIWIGO_DB_PASSWORD=root
           PIWIGO_DB_BASE=piwigo_test
-          PIWIGO_DB_PREFIX=piwigo_
           ENVEOF
       # Restores tests/Fixtures/piwigo-17.0.sql into a scratch DB (never
       # piwigo_test itself) and asserts row counts + a join query — proves
@@ -857,7 +850,7 @@ jobs:
       - name: Provision piwigo_test from the committed fixture
         run: |
           mysql -h127.0.0.1 -uroot -proot piwigo_test < tests/Fixtures/piwigo-17.0.sql
-          until mysql -h127.0.0.1 -uroot -proot piwigo_test -e 'SELECT COUNT(*) FROM piwigo_images;' > /dev/null 2>&1; do sleep 0.5; done
+          until mysql -h127.0.0.1 -uroot -proot piwigo_test -e 'SELECT COUNT(*) FROM images;' > /dev/null 2>&1; do sleep 0.5; done
       - name: Write .env (non-test — lighthouserc.json hits the plain URL)
         run: |
           cat > .env <<'ENVEOF'
@@ -866,7 +859,6 @@ jobs:
           PIWIGO_DB_USER=root
           PIWIGO_DB_PASSWORD=root
           PIWIGO_DB_BASE=piwigo_test
-          PIWIGO_DB_PREFIX=piwigo_
           ENVEOF
       - run: mkdir -p local && touch local/.installed
       - name: Start PHP built-in server

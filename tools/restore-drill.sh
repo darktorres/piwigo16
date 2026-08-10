@@ -35,8 +35,8 @@ trap cleanup EXIT
 mysql "${mysql_args[@]}" -e "DROP DATABASE IF EXISTS \`${SCRATCH_DB}\`; CREATE DATABASE \`${SCRATCH_DB}\`;"
 mysql "${mysql_args[@]}" "${SCRATCH_DB}" < tests/Fixtures/piwigo-17.0.sql
 
-image_count=$(mysql "${mysql_args[@]}" "${SCRATCH_DB}" -N -e "SELECT COUNT(*) FROM ${PIWIGO_DB_PREFIX}images;")
-user_count=$(mysql "${mysql_args[@]}" "${SCRATCH_DB}" -N -e "SELECT COUNT(*) FROM ${PIWIGO_DB_PREFIX}users;")
+image_count=$(mysql "${mysql_args[@]}" "${SCRATCH_DB}" -N -e "SELECT COUNT(*) FROM images;")
+user_count=$(mysql "${mysql_args[@]}" "${SCRATCH_DB}" -N -e "SELECT COUNT(*) FROM users;")
 
 if [ "${image_count}" -lt 1 ] || [ "${user_count}" -lt 1 ]; then
   echo "restore-drill: FAILED — restored DB has ${image_count} images, ${user_count} users (expected >= 1 each)" >&2
@@ -46,7 +46,7 @@ fi
 # Smoke query: a join across tables proves the schema itself (not just raw
 # row presence) survived the restore intact.
 mysql "${mysql_args[@]}" "${SCRATCH_DB}" -N -e \
-  "SELECT i.id FROM ${PIWIGO_DB_PREFIX}images i JOIN ${PIWIGO_DB_PREFIX}image_category ic ON ic.image_id = i.id LIMIT 1;" \
+  "SELECT i.id FROM images i JOIN image_category ic ON ic.image_id = i.id LIMIT 1;" \
   > /dev/null
 
 echo "restore-drill: OK — restored ${image_count} images, ${user_count} users into scratch DB, schema smoke query passed"

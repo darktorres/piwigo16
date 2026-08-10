@@ -29,7 +29,6 @@ db:
   host: piwigo-mysql
   user: piwigo
   base: piwigo
-  prefix: piwigo_
   existingSecret: ""
   existingSecretPasswordKey: db-password
 

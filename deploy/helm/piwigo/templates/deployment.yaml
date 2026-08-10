@@ -42,8 +42,6 @@ spec:
               value: {{ .Values.db.user | quote }}
             - name: PIWIGO_DB_BASE
               value: {{ .Values.db.base | quote }}
-            - name: PIWIGO_DB_PREFIX
-              value: {{ .Values.db.prefix | quote }}
             {{- if .Values.db.existingSecret }}
             - name: PIWIGO_DB_PASSWORD
               valueFrom:

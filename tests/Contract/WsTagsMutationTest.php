@@ -421,7 +421,7 @@ final class WsTagsMutationTest extends ContractTestCase
      * RequestBootstrap's own priority 50) always returns a real
      * RenderTagUrl, so reaching this for real needs a second,
      * higher-priority handler chained after it -- a real plugin file +
-     * `piwigo_plugins` activation row (PluginLoader::loadPlugins()
+     * `plugins` activation row (PluginLoader::loadPlugins()
      * include_once()s it on every real request), the same established
      * technique as tests/Contract/WsHistoryTest.php's own 'get_history'
      * override test: EventDispatcher's singleton lives in the real

@@ -89,7 +89,7 @@ final class WsTagsTest extends ContractTestCase
     public function test_getImages_accepts_an_order_param(): void
     {
         // fixture tag 1 ("nature") is attached to images 1, 2 and 3, per
-        // piwigo_image_tag -- confirmed live via a direct DB read.
+        // image_tag -- confirmed live via a direct DB read.
         $response = $this->wsAdmin('pwg.tags.getImages', ['tag_id' => [1], 'order' => 'id asc']);
 
         self::assertSame('ok', $response['stat']);

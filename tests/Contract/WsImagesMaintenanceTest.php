@@ -15,7 +15,7 @@ use Piwigo\Db\DbConnection;
  * all admin_only + post_only, all reachable through the real WS route.
  *
  * checkFiles() had a real bug (found while writing these tests, fixed in
- * the same commit): it called md5_file() on the bare `piwigo_images.path`
+ * the same commit): it called md5_file() on the bare `images.path`
  * column value, never prefixing the live, container-bound Paths->root the way
  * ImagePathHelper::getElementPath() (used correctly by formatsDelete() a
  * few methods down in the same file) does -- so md5_file() always failed
@@ -198,8 +198,7 @@ final class WsImagesMaintenanceTest extends ContractTestCase
         $orphanId = $this->insertOrphanImage();
 
         $before = $this->conn->fetchOne('SELECT COUNT(*) FROM ' . 'images' . ' WHERE id = ?', [$orphanId]);
-        self::assertIsNumeric($before);
-        self::assertSame(1, (int) $before);
+        self::assertSame(1, $before);
 
         $response = $this->callWs('pwg.images.deleteOrphans', [
             'block_size' => 1000,
@@ -213,8 +212,7 @@ final class WsImagesMaintenanceTest extends ContractTestCase
         self::assertSame(0, $result['nb_orphans']);
 
         $after = $this->conn->fetchOne('SELECT COUNT(*) FROM ' . 'images' . ' WHERE id = ?', [$orphanId]);
-        self::assertIsNumeric($after);
-        self::assertSame(0, (int) $after);
+        self::assertSame(0, $after);
     }
 
     // ------------------------------------------------------------ checkFiles
@@ -412,8 +410,7 @@ final class WsImagesMaintenanceTest extends ContractTestCase
             'SELECT COUNT(*) FROM ' . 'image_format' . ' WHERE format_id = ?',
             [$formatId]
         );
-        self::assertIsNumeric($remaining);
-        self::assertSame(0, (int) $remaining);
+        self::assertSame(0, $remaining);
     }
 
     public function test_formatsDelete_skips_physical_deletion_for_a_remote_path(): void
@@ -443,7 +440,7 @@ final class WsImagesMaintenanceTest extends ContractTestCase
             'SELECT COUNT(*) FROM ' . 'image_format' . ' WHERE format_id = ?',
             [$formatId]
         );
-        self::assertSame(0, is_numeric($remaining) ? (int) $remaining : -1);
+        self::assertSame(0, $remaining);
     }
 
     public function test_formatsDelete_reports_failure_when_a_format_file_cannot_be_unlinked(): void
@@ -501,7 +498,7 @@ final class WsImagesMaintenanceTest extends ContractTestCase
                 'SELECT COUNT(*) FROM ' . 'image_format' . ' WHERE format_id = ?',
                 [$formatId]
             );
-            self::assertSame(0, is_numeric($remaining) ? (int) $remaining : -1);
+            self::assertSame(0, $remaining);
         } finally {
             chmod($formatDir, 0o755);
             @unlink($formatFile);

@@ -105,7 +105,7 @@ final class WsUsersTest extends ContractTestCase
     {
         // 'Reviewers' is a real fixture group (id 2) whose only member is
         // regular_user (id 3, own email is NULL) -- per the fixture's
-        // piwigo_user_group rows. Neither regular_user's username nor its
+        // user_group rows. Neither regular_user's username nor its
         // (null) email contains "Reviewers", so a match here only comes
         // through getList()'s own self::groupService()->getIdsByNameLike()
         // + "OR ug.group_id IN (...)" branch, not the plain username/email
@@ -256,7 +256,7 @@ final class WsUsersTest extends ContractTestCase
     public function test_getList_filters_by_group_id(): void
     {
         // Group 3 ('Guests') has only power_user (id 4) as a member, per
-        // the fixture's piwigo_user_group rows -- exercises getList()'s
+        // the fixture's user_group rows -- exercises getList()'s
         // own 'ug.group_id IN(...)' where-clause branch (distinct from the
         // filter-by-group-name test above, which reaches the *same* SQL
         // alias through a different param).

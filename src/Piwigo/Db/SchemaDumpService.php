@@ -85,16 +85,12 @@ final readonly class SchemaDumpService
     /**
      * Doctrine's own migration-execution ledger -- real and necessary for
      * `migrations:migrate`, but out of place in a schema snapshot that
-     * doesn't go through the migration runner at all. Prefixed, matching
-     * MigrationDependencyFactory's own `table_storage.table_name` value
-     * (every other table in this schema carries PIWIGO_DB_PREFIX too) --
-     * unlike the recovered prior attempt's own hardcoded, unprefixed
-     * `doctrine_migration_versions` constant, which predates that prefix
-     * fix.
+     * doesn't go through the migration runner at all. Matches
+     * MigrationDependencyFactory's own `table_storage.table_name` value.
      */
-    private function ledgerTable(DbCredentials $credentials): string
+    private function ledgerTable(): string
     {
-        return $credentials->prefix . 'migration_versions';
+        return 'migration_versions';
     }
 
     private function runMysqldump(DbCredentials $credentials): string
@@ -116,7 +112,7 @@ final readonly class SchemaDumpService
             // talking to -- errors out against a real MariaDB server,
             // which doesn't have that table.
             '--column-statistics=0',
-            '--ignore-table=' . $credentials->database . '.' . $this->ledgerTable($credentials),
+            '--ignore-table=' . $credentials->database . '.' . $this->ledgerTable(),
             $credentials->database,
         ]);
         $process->setTimeout(120);
@@ -137,7 +133,7 @@ final readonly class SchemaDumpService
         $args = [
             'pg_dump', '-h', $credentials->host, '-U', $credentials->user,
             '--schema-only', '--no-owner', '--no-privileges',
-            '--exclude-table=' . $this->ledgerTable($credentials),
+            '--exclude-table=' . $this->ledgerTable(),
         ];
         if ($credentials->port !== null) {
             $args[] = '-p';

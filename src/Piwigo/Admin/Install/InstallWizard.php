@@ -613,7 +613,7 @@ define(\'DB_COLLATE\', \'\');
         // becomes the real upgrade path for an existing install (bin/
         // piwigo migrations:migrate), not just a fresh-install mechanism.
         $migrationsEm = EntityManagerFactory::build($conn);
-        $dependencyFactory = MigrationDependencyFactory::build($migrationsEm, $this->dbCredentials);
+        $dependencyFactory = MigrationDependencyFactory::build($migrationsEm);
         $migrateInput = new ArrayInput([
             'version' => 'latest',
             '--allow-no-migration' => true,

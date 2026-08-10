@@ -297,8 +297,8 @@ return [
     Connection::class => factory(static fn (): Connection => DbConnection::build()),
 
     // Delegates to EntityManagerFactory -- the same construction recipe
-    // (metadata paths, enableNativeLazyObjects, TablePrefixListener) is
-    // also needed by callers that can't participate in constructor
+    // (metadata paths, enableNativeLazyObjects) is also needed by
+    // callers that can't participate in constructor
     // injection at all (a static L1Infrastructure method, a self-managed
     // singleton's fallback branch) -- see that factory's own docblock.
     EntityManagerInterface::class => factory(static fn (Connection $conn): EntityManagerInterface => EntityManagerFactory::build($conn)),
@@ -361,15 +361,11 @@ return [
     // already-seeded connection, following the same pattern already
     // established there for every other DB-touching service it needs.
     //
-    // The actual construction (table_storage.table_name prefixing --
-    // every other table in this schema carries PIWIGO_DB_PREFIX so
-    // multiple installs can share one database; an unprefixed
-    // doctrine_migration_versions ledger table would silently defeat that
-    // guarantee) lives in MigrationDependencyFactory itself, not here, so
-    // both this container entry and InstallWizard's own direct call share
-    // one implementation.
+    // The actual construction (table_storage.table_name) lives in
+    // MigrationDependencyFactory itself, not here, so both this container
+    // entry and InstallWizard's own direct call share one implementation.
     DependencyFactory::class => factory(
-        static fn (EntityManagerInterface $em, DbCredentials $dbCredentials): DependencyFactory => MigrationDependencyFactory::build($em, $dbCredentials),
+        static fn (EntityManagerInterface $em): DependencyFactory => MigrationDependencyFactory::build($em),
     ),
 
     // MigrateCommand's constructor param is an OPTIONAL/nullable

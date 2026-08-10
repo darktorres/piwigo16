@@ -38,7 +38,7 @@ use RuntimeException;
  */
 final class MigrationDependencyFactory
 {
-    public static function build(EntityManagerInterface $em, DbCredentials $dbCredentials): DependencyFactory
+    public static function build(EntityManagerInterface $em): DependencyFactory
     {
         $raw = require dirname(__DIR__, 3) . '/config/migrations.php';
         if (! is_array($raw)) {
@@ -53,13 +53,8 @@ final class MigrationDependencyFactory
             }
             $migrationsConfig[$key] = $value;
         }
-        // Every other table in this schema carries the configurable
-        // PIWIGO_DB_PREFIX so multiple installs can share one database --
-        // an unprefixed ledger table would silently defeat that guarantee
-        // (two prefixed installs in the same DB would collide on, and
-        // corrupt, each other's migration history).
         $migrationsConfig['table_storage'] = [
-            'table_name' => $dbCredentials->prefix . 'migration_versions',
+            'table_name' => 'migration_versions',
         ];
 
         return DependencyFactory::fromEntityManager(

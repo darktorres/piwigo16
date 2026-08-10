@@ -229,7 +229,7 @@ final class WsExtensionsTest extends ContractTestCase
      * ExtensionLifecycle::performThemeAction()'s 'deactivate' case refuses
      * to deactivate the last remaining theme ("you need at least one
      * theme") -- but only once it has a real dbRow to act on; the fixture's
-     * piwigo_themes table starts out completely empty (confirmed live --
+     * themes table starts out completely empty (confirmed live --
      * without a seeded row, 'default' hits the null-dbRow safe-noop branch
      * instead, same as the "never installed" test below), so this test
      * seeds the single row itself and removes it afterward.
@@ -508,6 +508,6 @@ final class WsExtensionsTest extends ContractTestCase
         self::assertSame('ok', $response['stat']);
 
         $remaining = $this->conn->fetchOne('SELECT COUNT(*) FROM ' . 'extension_ignored_updates');
-        self::assertSame(0, is_numeric($remaining) ? (int) $remaining : -1);
+        self::assertSame(0, $remaining);
     }
 }

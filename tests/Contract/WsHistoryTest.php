@@ -170,7 +170,7 @@ final class WsHistoryTest extends ContractTestCase
         // fixture_admin (wsAdmin() always logs in as fixture_admin first).
         $this->wsAdmin('pwg.images.setPrivacyLevel', ['image_id' => [1], 'level' => 0]);
 
-        $response = $this->wsAdmin('pwg.activity.getList', ['object' => 'photo', 'action' => 'edit', 'uid' => (int) $adminId]);
+        $response = $this->wsAdmin('pwg.activity.getList', ['object' => 'photo', 'action' => 'edit', 'uid' => $adminId]);
 
         self::assertSame('ok', $response['stat']);
         $result = $response['result'];
@@ -180,7 +180,7 @@ final class WsHistoryTest extends ContractTestCase
         self::assertNotEmpty($lines);
         foreach ($lines as $line) {
             self::assertIsArray($line);
-            self::assertSame((string) (int) $adminId, $line['user_id']);
+            self::assertSame((string) $adminId, $line['user_id']);
         }
     }
 
@@ -262,8 +262,8 @@ final class WsHistoryTest extends ContractTestCase
                 }
             }
 
-            self::assertContains((string) (int) $adminId, $objectIds, 'admins_only must keep an admin login');
-            self::assertNotContains((string) (int) $regularUserId, $objectIds, 'admins_only must exclude a non-admin login');
+            self::assertContains((string) $adminId, $objectIds, 'admins_only must keep an admin login');
+            self::assertNotContains((string) $regularUserId, $objectIds, 'admins_only must exclude a non-admin login');
         } finally {
             $this->conn->executeStatement("DELETE FROM " . 'config' . " WHERE param = 'activity_display_connections'");
             CachePools::config()->clear();
@@ -280,8 +280,7 @@ final class WsHistoryTest extends ContractTestCase
     public function test_activityGetList_login_event_enriches_username_and_details_users(): void
     {
         $adminId = $this->conn->fetchOne("SELECT id FROM " . 'users' . " WHERE username = 'fixture_admin'");
-        self::assertIsNumeric($adminId);
-        $adminIdString = (string) (int) $adminId;
+        $adminIdString = (string) $adminId;
 
         // wsAdmin() performs a real pwg.session.login, which AuthService::
         // login() records as a 'user'/'login' row with object_id = the user
@@ -328,7 +327,7 @@ final class WsHistoryTest extends ContractTestCase
      * with unique session_idx values (so none concatenate into an
      * existing line) reliably exceeds 100 regardless of whatever
      * unrelated 'photo'/'edit' noise earlier Contract test files may have
-     * already left in piwigo_activity (this file's own tearDown() doesn't
+     * already left in activity (this file's own tearDown() doesn't
      * scope its DELETE to these rows either, so leftover noise never
      * accumulates across this file's own tests).
      */
@@ -363,7 +362,7 @@ final class WsHistoryTest extends ContractTestCase
      * getActivityList()'s per-line `object==='user'` enrichment loop:
      * `foreach ($output_line['object_id'] as $user_id) { if (!
      * is_string($user_id)) { continue; } ... }` -- `object_id` is an
-     * `int unsigned NOT NULL` column (see piwigo_activity's own CREATE
+     * `int unsigned NOT NULL` column (see activity's own CREATE
      * TABLE), and every element of `$output_line['object_id']` is built
      * from it via `is_scalar($row['object_id']) ? (string) ... : null`
      * (always scalar for a NOT NULL int column) -- `is_string($user_id)`
@@ -376,8 +375,7 @@ final class WsHistoryTest extends ContractTestCase
     public function test_activityGetList_resets_a_non_array_users_detail_before_appending(): void
     {
         $adminId = $this->conn->fetchOne("SELECT id FROM " . 'users' . " WHERE username = 'fixture_admin'");
-        self::assertIsNumeric($adminId);
-        $adminIdInt = (int) $adminId;
+        $adminIdInt = $adminId;
 
         // A real 'user' activity row whose `details` JSON already has a
         // 'users' key set to a non-array value -- no real
@@ -468,13 +466,11 @@ final class WsHistoryTest extends ContractTestCase
         self::assertIsArray($row);
         self::assertSame('high', $row['image_type']);
         self::assertSame('categories', $row['section']);
-        self::assertIsNumeric($row['category_id']);
-        self::assertSame(1, (int) $row['category_id']);
+        self::assertSame(1, $row['category_id']);
         self::assertNull($row['tag_ids']);
 
         $afterHit = $this->conn->fetchOne('SELECT hit FROM ' . 'images' . ' WHERE id = 1');
-        self::assertIsNumeric($afterHit);
-        self::assertSame((int) $beforeHit + 1, (int) $afterHit);
+        self::assertSame($beforeHit + 1, $afterHit);
     }
 
     public function test_historyLog_with_tags_section_stores_tag_ids(): void
@@ -707,9 +703,8 @@ final class WsHistoryTest extends ContractTestCase
         $this->wsAdmin('pwg.history.log', ['image_id' => 1]);
 
         $adminId = $this->conn->fetchOne("SELECT id FROM " . 'users' . " WHERE username = 'fixture_admin'");
-        self::assertIsNumeric($adminId);
 
-        $response = $this->wsAdmin('pwg.history.search', ['user_id' => (int) $adminId]);
+        $response = $this->wsAdmin('pwg.history.search', ['user_id' => $adminId]);
 
         $result = $response['result'];
         self::assertIsArray($result);
@@ -719,7 +714,7 @@ final class WsHistoryTest extends ContractTestCase
         $line = $lines[0];
         self::assertIsArray($line);
         self::assertSame('fixture_admin', $line['USERNAME']);
-        self::assertSame((string) (int) $adminId, $line['USERID']);
+        self::assertSame((string) $adminId, $line['USERID']);
 
         $nonMatching = $this->wsAdmin('pwg.history.search', ['user_id' => 999999]);
         $nonMatchingResult = $nonMatching['result'];
@@ -794,7 +789,7 @@ final class WsHistoryTest extends ContractTestCase
      * (confirmed via its WsDefaultMethods registration and
      * HistoryService::logVisit()'s own signature: image_id/image_type/
      * section/category/tagIds only), so the *only* way a real
-     * piwigo_history row ever gets a non-null search_id is a lower-level
+     * history row ever gets a non-null search_id is a lower-level
      * write this Contract suite doesn't otherwise reach -- writing it
      * directly via SQL, then reading it back through the real WS route, is
      * the same "set up a precondition unreachable via the WS API itself"
@@ -832,7 +827,7 @@ final class WsHistoryTest extends ContractTestCase
         $this->callWs('pwg.history.log', ['image_id' => 1]);
         $this->conn->executeStatement(
             'UPDATE ' . 'history' . ' SET search_id = ? WHERE image_id = 1',
-            [(int) $searchDbId]
+            [$searchDbId]
         );
 
         $response = $this->callWs('pwg.history.search', ['image_id' => 1, 'pwg_token' => $token]);
@@ -845,7 +840,7 @@ final class WsHistoryTest extends ContractTestCase
         self::assertNotEmpty($lines);
         $line = $lines[0];
         self::assertIsArray($line);
-        self::assertSame((string) (int) $searchDbId, $line['SEARCH_ID']);
+        self::assertSame((string) $searchDbId, $line['SEARCH_ID']);
         $details = $line['SEARCH_DETAILS'];
         self::assertIsArray($details);
         self::assertSame(['mountain', 'lake'], $details['allwords']);
@@ -865,7 +860,7 @@ final class WsHistoryTest extends ContractTestCase
      * filteredSearchCreate() registers 'tags'/'categories'/'added_by' with
      * 'type' => WsParamType::ID, so PwgServer::checkType() coerces every
      * element to a real PHP int (filter_var(..., FILTER_VALIDATE_INT)), and
-     * json round-tripping through piwigo_search.rules preserves that int
+     * json round-tripping through search.rules preserves that int
      * type. is_string() on an int is always false, so the filter empties
      * the list every time regardless of what was actually searched --
      * confirmed live (a real WS call, not a unit test poking internals)
@@ -898,7 +893,7 @@ final class WsHistoryTest extends ContractTestCase
         $this->callWs('pwg.history.log', ['image_id' => 1]);
         $this->conn->executeStatement(
             'UPDATE ' . 'history' . ' SET search_id = ? WHERE image_id = 1',
-            [(int) $searchDbId]
+            [$searchDbId]
         );
 
         $response = $this->callWs('pwg.history.search', ['image_id' => 1, 'pwg_token' => $token]);
@@ -920,7 +915,7 @@ final class WsHistoryTest extends ContractTestCase
 
     /**
      * historySearch()'s saved-search reconstruction loop has two guards
-     * around each `piwigo_search.rules` row it reads back via
+     * around each `search.rules` row it reads back via
      * SearchRepository::findRulesByIds(): `if ($rules_full === null) {
      * continue; }` (the `rules` column itself is NULL) and `$rules_search
      * = isset($rules_full['fields']) && is_array($rules_full['fields']) ?
@@ -931,7 +926,7 @@ final class WsHistoryTest extends ContractTestCase
      * `{"fields": {...}}` shape -- so both rows are written directly, the
      * same "reproduce the only real way this state could exist" rationale
      * as this file's own dangling-image-id test. `rules` is `json DEFAULT
-     * NULL` (nullable), confirmed against piwigo_search's own CREATE TABLE.
+     * NULL` (nullable), confirmed against search's own CREATE TABLE.
      */
     public function test_historySearch_gracefully_skips_a_saved_search_with_malformed_or_null_rules(): void
     {
@@ -1006,7 +1001,7 @@ final class WsHistoryTest extends ContractTestCase
      * priority handler chained after it -- exactly the "a plugin can still
      * override history search behavior by registering its own GetHistory
      * handler at a higher priority" scenario historyGet()'s own docblock
-     * describes. A real plugin file + `piwigo_plugins` activation row
+     * describes. A real plugin file + `plugins` activation row
      * (PluginLoader::loadPlugins() include_once()s it on every real
      * request, including ws.php) is the same established technique as
      * tests/Browser/PictureControllerTest.php's own 'user_comment_check'
@@ -1127,8 +1122,7 @@ final class WsHistoryTest extends ContractTestCase
         self::assertIsArray($result);
         $summary = $result['summary'];
         self::assertIsArray($summary);
-        self::assertIsNumeric($summary['FILESIZE']);
-        self::assertSame((int) ceil((int) $filesize / 1024), (int) $summary['FILESIZE']);
+        self::assertSame((int) ceil($filesize / 1024), $summary['FILESIZE']);
     }
 
     /**
@@ -1240,7 +1234,7 @@ final class WsHistoryTest extends ContractTestCase
      * historySearch()'s per-line `if (isset($username_of[$user_id_key]))
      * {...} else { $user_string .= $user_id_key; }` -- the else arm (raw
      * id instead of a resolved username) is only reachable for a user_id
-     * getUsernamesByIds() can't resolve. piwigo_history.user_id is
+     * getUsernamesByIds() can't resolve. history.user_id is
      * `mediumint unsigned NOT NULL` with `fk_history_user_id ... ON
      * DELETE CASCADE` (deleting a user deletes their own history rows
      * too), so no genuine WS-API-driven history row can ever carry an

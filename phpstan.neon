@@ -85,3 +85,96 @@ parameters:
             # listener is registered yet.
             identifier: shipmonk.deadProperty.neverRead
             path: '*/Event/*'
+        -
+            # tearDown()/finally restores a runtime-captured snapshot row via
+            # $conn->insert($table, $row), $row built from a prior
+            # fetchAssociative() call -- inherently a dynamically-shaped
+            # array, not a literal one. dba.keyValue requires a constant
+            # array by design; this pattern can't satisfy it by any code
+            # change.
+            identifier: dba.keyValue
+            path: tests/Integration/Admin/UserActivityPageRendererTest.php
+        -
+            # Same runtime-captured-snapshot-restore shape as
+            # UserActivityPageRendererTest.php above.
+            identifier: dba.keyValue
+            path: tests/Integration/DerivativeSizeRepositoryTest.php
+        -
+            # Same runtime-captured-snapshot-restore shape as
+            # UserActivityPageRendererTest.php above.
+            identifier: dba.keyValue
+            path: tests/Integration/ImageStdParamsTest.php
+        -
+            # config.value is jsonb; phpstan-dba substitutes a generic
+            # date-shaped sample ('1970-01-01') for an unresolvable bound
+            # parameter when building its EXPLAIN-able query, which isn't
+            # valid JSON. Tool limitation, not a real bug -- the app always
+            # writes a real json_encode()'d string here.
+            identifier: dba.syntaxError
+            path: src/Piwigo/Admin/Install/InstallWizard.php
+        -
+            # Same config.value jsonb-placeholder limitation as
+            # InstallWizard.php above, plus (same query) MySQL's
+            # `ON DUPLICATE KEY UPDATE` inside driver-conditional code,
+            # validated against the one Postgres connection phpstan-dba
+            # has -- upsertConfig()'s own docblock documents the
+            # MySQL/Postgres split; only the branch matching the
+            # configured driver ever actually executes.
+            identifier: dba.syntaxError
+            path: tests/Contract/ContractTestCase.php
+        -
+            # Same config.value jsonb-placeholder limitation as
+            # InstallWizard.php above.
+            identifier: dba.syntaxError
+            path: tests/Contract/WsUploadTest.php
+        -
+            # Same config.value jsonb-placeholder limitation as
+            # InstallWizard.php above.
+            identifier: dba.syntaxError
+            path: tests/Contract/WsUsersMutationTest.php
+        -
+            # Same config.value jsonb-placeholder limitation as
+            # InstallWizard.php above, plus (same query) the same
+            # MySQL-dialect-vs-Postgres-connection limitation as
+            # ContractTestCase.php above (seedFlag()'s own comment
+            # documents the ON DUPLICATE KEY UPDATE / ON CONFLICT split).
+            identifier: dba.syntaxError
+            path: tests/Integration/NoPhotoYetRendererTest.php
+        -
+            # MySQL's backtick-quoted identifiers inside driver-conditional
+            # code (the mysqli branch of a pgsql/mysqli split), validated
+            # against the one Postgres connection phpstan-dba has -- only
+            # the branch matching the configured driver ever actually
+            # executes.
+            identifier: dba.syntaxError
+            path: tests/Integration/IntegrationTestCase.php
+        -
+            # MySQL-only `REPLACE INTO` inside driver-conditional code,
+            # validated against the one Postgres connection phpstan-dba
+            # has (own comment documents the ON CONFLICT portable
+            # equivalent) -- same shape as IntegrationTestCase.php above.
+            identifier: dba.syntaxError
+            path: tests/Integration/SessionRepositoryTest.php
+        -
+            # Postgres's `::text` cast (needed because the target column is
+            # json/jsonb, which rejects a bare LIKE, or to disambiguate a
+            # bound parameter's type inside a function call) is misread by
+            # phpstan-dba's own placeholder-scanning regex as a bound
+            # parameter named "text".
+            identifier: dba.syntaxError
+            path: tests/Contract/WsCategoriesMutationTest.php
+        -
+            # Same `::text`-cast-misread-as-placeholder limitation as
+            # WsCategoriesMutationTest.php above.
+            identifier: dba.syntaxError
+            path: tests/Integration/GroupServiceTest.php
+        -
+            # Same `::text`-cast-misread-as-placeholder limitation as
+            # WsCategoriesMutationTest.php above.
+            identifier: dba.syntaxError
+            path: tests/Integration/PluginLoaderTest.php
+        -
+            # Same `::text`-cast-misread-as-placeholder limitation as
+            # WsCategoriesMutationTest.php above.
+            identifier: dba.syntaxError
+            path: tests/Integration/RequestBootstrapConnectTest.php

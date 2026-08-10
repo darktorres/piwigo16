@@ -86,8 +86,8 @@ final class UserListCommandTest extends IntegrationTestCase
         // on.
         $conn = DbConnection::build();
         $this->disableForeignKeyChecks($conn);
-        $conn->executeStatement('DELETE FROM ' . $this->dbPrefix . 'user_infos');
-        $conn->executeStatement('DELETE FROM ' . $this->dbPrefix . 'users');
+        $conn->executeStatement('DELETE FROM user_infos');
+        $conn->executeStatement('DELETE FROM users');
         $this->enableForeignKeyChecks($conn);
 
         try {

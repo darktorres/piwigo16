@@ -48,7 +48,7 @@ final class FeedRepositoryTest extends IntegrationTestCase
     protected function tearDown(): void
     {
         DbConnection::build()->executeStatement(
-            sprintf("DELETE FROM %suser_feed WHERE id LIKE 'p17-test-%%'", $this->dbPrefix)
+            "DELETE FROM user_feed WHERE id LIKE 'p17-test-%'"
         );
 
         parent::tearDown();

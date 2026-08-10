@@ -84,7 +84,7 @@ final class BackupRestoreCommandTest extends IntegrationTestCase
 
         $imageCount = (int) $this->queryScalarFromDatabase(
             $this->scratchDb,
-            sprintf('SELECT COUNT(*) FROM %simages', $this->dbPrefix)
+            'SELECT COUNT(*) FROM images'
         );
         self::assertGreaterThanOrEqual(1, $imageCount);
     }

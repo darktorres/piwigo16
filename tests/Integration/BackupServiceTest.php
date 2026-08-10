@@ -118,11 +118,11 @@ final class BackupServiceTest extends IntegrationTestCase
 
         $imageCount = (int) $this->queryScalarFromDatabase(
             $this->scratchDb,
-            sprintf('SELECT COUNT(*) FROM %simages', $this->dbPrefix)
+            'SELECT COUNT(*) FROM images'
         );
         $userCount = (int) $this->queryScalarFromDatabase(
             $this->scratchDb,
-            sprintf('SELECT COUNT(*) FROM %susers', $this->dbPrefix)
+            'SELECT COUNT(*) FROM users'
         );
 
         self::assertGreaterThanOrEqual(1, $imageCount, 'Restored DB should have at least one image');
@@ -134,10 +134,10 @@ final class BackupServiceTest extends IntegrationTestCase
         // without error matters here (queryScalarFromDatabase() itself
         // asserts a successful query internally); the returned value isn't
         // otherwise checked.
-        $this->queryScalarFromDatabase($this->scratchDb, sprintf(
-            'SELECT i.id FROM %1$simages i JOIN %1$simage_category ic ON ic.image_id = i.id LIMIT 1',
-            $this->dbPrefix
-        ));
+        $this->queryScalarFromDatabase(
+            $this->scratchDb,
+            'SELECT i.id FROM images i JOIN image_category ic ON ic.image_id = i.id LIMIT 1'
+        );
     }
 
     public function test_restore_rejects_a_corrupt_archive(): void
@@ -285,7 +285,7 @@ final class BackupServiceTest extends IntegrationTestCase
 
             self::assertNotSame('', $dump);
             self::assertStringContainsString('CREATE TABLE', $dump);
-            self::assertStringContainsString($this->dbPrefix . 'images', $dump);
+            self::assertStringContainsString('images', $dump);
 
             if ($this->dbDriver !== 'pgsql') {
                 self::assertStringNotContainsString('-- MySQL dump', $dump);

@@ -89,7 +89,7 @@ final class RequestBootstrapConnectTest extends IntegrationTestCase
         // below doesn't currently touch either key, but capturing them here
         // too closes the same class of gap before a future edit could
         // reintroduce it.
-        foreach (['PIWIGO_DB_HOST', 'PIWIGO_DB_USER', 'PIWIGO_DB_PASSWORD', 'PIWIGO_DB_BASE', 'PIWIGO_DB_PREFIX', 'PIWIGO_DB_DRIVER', 'PIWIGO_DB_PORT'] as $key) {
+        foreach (['PIWIGO_DB_HOST', 'PIWIGO_DB_USER', 'PIWIGO_DB_PASSWORD', 'PIWIGO_DB_BASE', 'PIWIGO_DB_DRIVER', 'PIWIGO_DB_PORT'] as $key) {
             $value = getenv($key);
             $this->originalDbEnv[$key] = $value === false ? '' : $value;
         }
@@ -156,7 +156,6 @@ final class RequestBootstrapConnectTest extends IntegrationTestCase
             'PIWIGO_DB_USER' => $this->dbUser,
             'PIWIGO_DB_PASSWORD' => $this->dbPass . '-definitely-wrong',
             'PIWIGO_DB_BASE' => $this->dbName,
-            'PIWIGO_DB_PREFIX' => $this->dbPrefix,
         ]);
 
         try {

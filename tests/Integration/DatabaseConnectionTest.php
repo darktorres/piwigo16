@@ -50,7 +50,7 @@ final class DatabaseConnectionTest extends IntegrationTestCase
 
     public function test_it_reads_the_loaded_fixture(): void
     {
-        $count = $this->queryScalar(sprintf('SELECT COUNT(*) FROM %simages', $this->dbPrefix));
+        $count = $this->queryScalar('SELECT COUNT(*) FROM images');
         self::assertGreaterThan(0, (int) $count, 'Expected the committed fixture to seed at least one image row');
     }
 

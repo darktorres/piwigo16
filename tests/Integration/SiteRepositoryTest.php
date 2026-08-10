@@ -51,7 +51,7 @@ final class SiteRepositoryTest extends IntegrationTestCase
         // thing under test) -- every other test here still inserts and
         // never deletes, so this catch-all stays for them.
         DbConnection::build()->executeStatement(
-            sprintf("DELETE FROM %ssites WHERE galleries_url LIKE 'p17-test-%%'", $this->dbPrefix)
+            "DELETE FROM sites WHERE galleries_url LIKE 'p17-test-%'"
         );
 
         parent::tearDown();
@@ -76,7 +76,7 @@ final class SiteRepositoryTest extends IntegrationTestCase
         $url = 'p17-test-' . bin2hex(random_bytes(4));
         $this->repo->insert($url);
 
-        $id = $this->queryScalar(sprintf("SELECT id FROM %ssites WHERE galleries_url = '%s'", $this->dbPrefix, $url));
+        $id = $this->queryScalar(sprintf("SELECT id FROM sites WHERE galleries_url = '%s'", $url));
 
         self::assertSame($url, $this->repo->findGalleriesUrlById((int) $id));
     }
@@ -100,7 +100,7 @@ final class SiteRepositoryTest extends IntegrationTestCase
         // L2aCoreDomain, Site is L2bExtendedDomain).
         $url = 'p17-test-' . bin2hex(random_bytes(4));
         $this->repo->insert($url);
-        $id = (int) $this->queryScalar(sprintf("SELECT id FROM %ssites WHERE galleries_url = '%s'", $this->dbPrefix, $url));
+        $id = (int) $this->queryScalar(sprintf("SELECT id FROM sites WHERE galleries_url = '%s'", $url));
 
         $this->repo->delete($id);
 
@@ -141,7 +141,7 @@ final class SiteRepositoryTest extends IntegrationTestCase
         // Fixture has exactly one sites row (id 1); temporarily point
         // category 1 at it.
         $conn = DbConnection::build();
-        $conn->executeStatement(sprintf('UPDATE %1$scategories SET site_id = 1 WHERE id = 1', $this->dbPrefix));
+        $conn->executeStatement('UPDATE categories SET site_id = 1 WHERE id = 1');
 
         try {
             self::assertSame(
@@ -149,7 +149,7 @@ final class SiteRepositoryTest extends IntegrationTestCase
                 $this->repo->findGalleriesUrlForCategory(1)
             );
         } finally {
-            $conn->executeStatement(sprintf('UPDATE %1$scategories SET site_id = NULL WHERE id = 1', $this->dbPrefix));
+            $conn->executeStatement('UPDATE categories SET site_id = NULL WHERE id = 1');
         }
     }
 
@@ -187,24 +187,21 @@ final class SiteRepositoryTest extends IntegrationTestCase
         // genuinely non-zero, not just structurally present.
         $url = 'p17-test-' . bin2hex(random_bytes(4));
         $this->repo->insert($url);
-        $siteId = (int) $this->queryScalar(sprintf("SELECT id FROM %ssites WHERE galleries_url = '%s'", $this->dbPrefix, $url));
+        $siteId = (int) $this->queryScalar(sprintf("SELECT id FROM sites WHERE galleries_url = '%s'", $url));
 
         $conn = DbConnection::build();
         $conn->executeStatement(sprintf(
-            "INSERT INTO %1\$scategories (name, site_id, uppercats) VALUES ('p17-test-site-cat-with-image', %2\$d, '999901')",
-            $this->dbPrefix,
+            "INSERT INTO categories (name, site_id, uppercats) VALUES ('p17-test-site-cat-with-image', %d, '999901')",
             $siteId
         ));
         $catWithImageId = (int) $conn->lastInsertId();
         $conn->executeStatement(sprintf(
-            "INSERT INTO %1\$scategories (name, site_id, uppercats) VALUES ('p17-test-site-cat-without-image', %2\$d, '999902')",
-            $this->dbPrefix,
+            "INSERT INTO categories (name, site_id, uppercats) VALUES ('p17-test-site-cat-without-image', %d, '999902')",
             $siteId
         ));
         $catWithoutImageId = (int) $conn->lastInsertId();
         $conn->executeStatement(sprintf(
-            "INSERT INTO %1\$simages (file, path, storage_category_id) VALUES ('p17-test-site.jpg', 'p17-test-site.jpg', %2\$d)",
-            $this->dbPrefix,
+            "INSERT INTO images (file, path, storage_category_id) VALUES ('p17-test-site.jpg', 'p17-test-site.jpg', %d)",
             $catWithImageId
         ));
         $imageId = (int) $conn->lastInsertId();
@@ -215,8 +212,8 @@ final class SiteRepositoryTest extends IntegrationTestCase
             self::assertArrayHasKey($siteId, $counts);
             self::assertSame(['nb_categories' => 2, 'nb_images' => 1], $counts[$siteId]);
         } finally {
-            $conn->executeStatement(sprintf('DELETE FROM %1$simages WHERE id = %2$d', $this->dbPrefix, $imageId));
-            $conn->executeStatement(sprintf('DELETE FROM %1$scategories WHERE id IN (%2$d, %3$d)', $this->dbPrefix, $catWithImageId, $catWithoutImageId));
+            $conn->executeStatement(sprintf('DELETE FROM images WHERE id = %d', $imageId));
+            $conn->executeStatement(sprintf('DELETE FROM categories WHERE id IN (%d, %d)', $catWithImageId, $catWithoutImageId));
         }
     }
 }

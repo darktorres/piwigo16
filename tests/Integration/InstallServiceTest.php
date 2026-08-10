@@ -63,7 +63,7 @@ final class InstallServiceTest extends IntegrationTestCase
         // most of the time (defaults to mysqli), which then leaked
         // unrestored into every later Integration test class in the same
         // process -- confirmed live via a full suite run.
-        foreach (['PIWIGO_DB_HOST', 'PIWIGO_DB_USER', 'PIWIGO_DB_PASSWORD', 'PIWIGO_DB_BASE', 'PIWIGO_DB_PREFIX', 'PIWIGO_DB_DRIVER', 'PIWIGO_DB_PORT'] as $key) {
+        foreach (['PIWIGO_DB_HOST', 'PIWIGO_DB_USER', 'PIWIGO_DB_PASSWORD', 'PIWIGO_DB_BASE', 'PIWIGO_DB_DRIVER', 'PIWIGO_DB_PORT'] as $key) {
             $value = getenv($key);
             $this->originalDbEnv[$key] = $value === false ? '' : $value;
         }
@@ -79,7 +79,6 @@ final class InstallServiceTest extends IntegrationTestCase
             'PIWIGO_DB_USER' => $this->dbUser,
             'PIWIGO_DB_PASSWORD' => $this->dbPass,
             'PIWIGO_DB_BASE' => $this->dbName,
-            'PIWIGO_DB_PREFIX' => $this->dbPrefix,
         ]);
         $this->conn = DbConnection::build();
     }
@@ -199,7 +198,6 @@ final class InstallServiceTest extends IntegrationTestCase
             'PIWIGO_DB_USER' => $this->dbUser,
             'PIWIGO_DB_PASSWORD' => $this->dbPass . '-definitely-wrong',
             'PIWIGO_DB_BASE' => $this->dbName,
-            'PIWIGO_DB_PREFIX' => $this->dbPrefix,
         ]);
         $infos = [];
         $errors = [];
@@ -239,7 +237,6 @@ final class InstallServiceTest extends IntegrationTestCase
             'PIWIGO_DB_USER' => $this->dbUser,
             'PIWIGO_DB_PASSWORD' => $this->dbPass,
             'PIWIGO_DB_BASE' => 'piwigo_test_db_that_does_not_exist_xyz',
-            'PIWIGO_DB_PREFIX' => $this->dbPrefix,
         ]);
         $infos = [];
         $errors = [];

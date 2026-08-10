@@ -14,7 +14,7 @@ use Piwigo\Db\DbConnection;
 // every call since Kernel is never booted in this file, so a bare
 // putenv() per scenario is enough to seed it, no reset() needed.
 
-$envVars = ['PIWIGO_DB_HOST', 'PIWIGO_DB_USER', 'PIWIGO_DB_PASSWORD', 'PIWIGO_DB_BASE', 'PIWIGO_DB_PREFIX', 'PIWIGO_DB_PORT', 'PIWIGO_DB_DRIVER'];
+$envVars = ['PIWIGO_DB_HOST', 'PIWIGO_DB_USER', 'PIWIGO_DB_PASSWORD', 'PIWIGO_DB_BASE', 'PIWIGO_DB_PORT', 'PIWIGO_DB_DRIVER'];
 $originalEnvVars = [];
 
 beforeEach(function () use ($envVars, &$originalEnvVars): void {

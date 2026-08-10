@@ -41,7 +41,6 @@ use Piwigo\Db\DbConnection;
  *   PIWIGO_DB_USER      MySQL user
  *   PIWIGO_DB_PASSWORD  MySQL password
  *   PIWIGO_DB_BASE      Test database name — never the production DB
- *   PIWIGO_DB_PREFIX    Table prefix (default: piwigo_)
  *   PIWIGO_BASE_URL     Base URL of the running Apache instance
  *
  * Every HTTP call sends `X-Piwigo-Env: test` so the runtime reads
@@ -57,8 +56,6 @@ abstract class IntegrationTestCase extends TestCase
     protected string $dbPass = '';
 
     protected string $dbName = '';
-
-    protected string $dbPrefix = 'piwigo_';
 
     protected string $dbDriver = 'mysqli';
 
@@ -279,7 +276,6 @@ abstract class IntegrationTestCase extends TestCase
         $dbUser   = getenv('PIWIGO_DB_USER');
         $dbPass   = getenv('PIWIGO_DB_PASSWORD');
         $dbName   = getenv('PIWIGO_DB_BASE');
-        $dbPrefix = getenv('PIWIGO_DB_PREFIX');
         $dbDriver = getenv('PIWIGO_DB_DRIVER');
         $baseUrl  = getenv('PIWIGO_BASE_URL');
 
@@ -287,7 +283,6 @@ abstract class IntegrationTestCase extends TestCase
         $this->dbUser   = $dbUser !== false ? $dbUser : '';
         $this->dbPass   = $dbPass !== false ? $dbPass : '';
         $this->dbName   = $dbName !== false ? $dbName : '';
-        $this->dbPrefix = $dbPrefix !== false ? $dbPrefix : 'piwigo_';
         $this->dbDriver = $dbDriver === 'pgsql' ? 'pgsql' : 'mysqli';
         $this->baseUrl  = rtrim($baseUrl !== false ? $baseUrl : '', '/');
     }
@@ -586,7 +581,7 @@ abstract class IntegrationTestCase extends TestCase
                 // genuinely re-probing.
                 $conn = @pg_connect($this->pgsqlConnectionString($this->dbName), PGSQL_CONNECT_FORCE_NEW);
                 if ($conn !== false) {
-                    $result = @pg_query($conn, sprintf('SELECT COUNT(*) FROM "%simages"', $this->dbPrefix));
+                    $result = @pg_query($conn, 'SELECT COUNT(*) FROM "images"');
                     pg_close($conn);
                     if ($result !== false) {
                         return;
@@ -595,7 +590,7 @@ abstract class IntegrationTestCase extends TestCase
             } else {
                 try {
                     $db = $this->newMysqli($this->dbName);
-                    $db->query(sprintf('SELECT COUNT(*) FROM `%simages`', $this->dbPrefix));
+                    $db->query('SELECT COUNT(*) FROM `images`');
                     $db->close();
 
                     return;

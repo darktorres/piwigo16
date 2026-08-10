@@ -599,7 +599,7 @@ namespace Piwigo\Tests\Integration {
             // (test_update_comment_moderates_when_validation_required),
             // and narrowing the DELETE to this test's own image_id didn't
             // help since the fixture row's image_id differs but still
-            // counts. Id 2 is a real, FK-valid piwigo_users row (needed --
+            // counts. Id 2 is a real, FK-valid users row (needed --
             // insertComment()'s own INSERT fails fk_comments_author_id
             // otherwise) that starts with zero comments in the fixture and
             // is never reused as a comment author anywhere else in this
@@ -1203,7 +1203,7 @@ namespace Piwigo\Tests\Integration {
                 'author_id' => null,
                 'anonymous_id' => '127.0.0.4',
                 'content' => 'Anonymous comment with no owner.',
-                'validated' => 1,
+                'validated' => true,
             ]);
 
             return (int) $this->conn->lastInsertId();

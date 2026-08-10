@@ -124,13 +124,20 @@ final class ImageStdParamsTest extends IntegrationTestCase
         self::assertSame($allTypeMap['xxlarge'], $allTypeMap['4xlarge']);
 
         $settingsRowCount = $this->conn->fetchOne('SELECT COUNT(*) FROM ' . 'derivative_settings');
-        self::assertSame(1, is_numeric($settingsRowCount) ? (int) $settingsRowCount : -1);
+        self::assertSame(1, $settingsRowCount);
         $sizeRowCount = $this->conn->fetchOne('SELECT COUNT(*) FROM ' . 'derivative_size');
-        self::assertSame(11, is_numeric($sizeRowCount) ? (int) $sizeRowCount : -1);
+        self::assertSame(11, $sizeRowCount);
     }
 
     public function test_load_from_db_reads_a_real_settings_row_and_filters_malformed_custom_json_entries(): void
     {
+        $customJson = json_encode([
+            'my_custom_key' => 1_700_000_000,
+            '0' => 5,
+            'not_numeric' => 'nope',
+        ]);
+        assert($customJson !== false);
+
         $this->conn->executeStatement('DELETE FROM ' . 'derivative_settings');
         $this->conn->insert('derivative_settings', [
             'id' => 1,
@@ -143,11 +150,7 @@ final class ImageStdParamsTest extends IntegrationTestCase
             // numeric-string-looking key that PHP coerces to an int array
             // key ("0" -> is_string() fails after json_decode()) and a
             // non-numeric value (is_numeric() fails).
-            'custom_json' => json_encode([
-                'my_custom_key' => 1_700_000_000,
-                '0' => 5,
-                'not_numeric' => 'nope',
-            ]),
+            'custom_json' => $customJson,
         ]);
 
         $this->conn->executeStatement('DELETE FROM ' . 'derivative_size');
@@ -157,10 +160,10 @@ final class ImageStdParamsTest extends IntegrationTestCase
             'enabled' => 1,
             'max_width' => 100,
             'max_height' => 100,
-            'max_crop' => '0.0000',
+            'max_crop' => 0.0,
             'min_width' => null,
             'min_height' => null,
-            'sharpen' => '0.0000',
+            'sharpen' => 0.0,
             'last_mod_time' => $thumb->last_mod_time,
         ]);
         // Non-empty so load_from_db()'s own "disabled map is empty ->
@@ -172,10 +175,10 @@ final class ImageStdParamsTest extends IntegrationTestCase
             'enabled' => 0,
             'max_width' => 2232,
             'max_height' => 1674,
-            'max_crop' => '0.0000',
+            'max_crop' => 0.0,
             'min_width' => null,
             'min_height' => null,
-            'sharpen' => '0.0000',
+            'sharpen' => 0.0,
             'last_mod_time' => 0,
         ]);
 
@@ -281,7 +284,7 @@ final class ImageStdParamsTest extends IntegrationTestCase
         // otherwise mask a real deletion bug by refilling the table right
         // back up before this test could observe the empty state.
         $sizeRowCountAfterClear = $this->conn->fetchOne('SELECT COUNT(*) FROM ' . 'derivative_size' . ' WHERE enabled = 0');
-        self::assertSame(0, is_numeric($sizeRowCountAfterClear) ? (int) $sizeRowCountAfterClear : -1, 'set_and_save_disabled([]) must delete every disabled row, not leave stale ones behind.');
+        self::assertSame(0, $sizeRowCountAfterClear, 'set_and_save_disabled([]) must delete every disabled row, not leave stale ones behind.');
 
         // A fresh instance -- reload() must derive everything from the DB
         // rows just saved above, not from any in-memory state left behind
@@ -327,8 +330,7 @@ final class ImageStdParamsTest extends IntegrationTestCase
             'SELECT enabled FROM ' . 'derivative_size' . " WHERE name = '3xlarge'"
         );
         self::assertCount(1, $rows, '3xlarge must have exactly one row after moving from disabled to enabled, not two.');
-        $enabledValue = $rows[0]['enabled'];
-        self::assertSame(1, is_numeric($enabledValue) ? (int) $enabledValue : -1);
+        self::assertSame(1, $rows[0]['enabled']);
     }
 
     public function test_watermark_from_json_rejects_a_non_array_min_size_and_a_pair_with_one_non_numeric_element(): void
@@ -337,6 +339,9 @@ final class ImageStdParamsTest extends IntegrationTestCase
         // watermarkFromJson()'s own guard must reject anything that isn't a
         // genuine 2-element numeric array and leave that default intact,
         // rather than coercing a malformed value into a bogus min_size.
+        $twoCharWatermarkJson = json_encode(['min_size' => '12']);
+        assert($twoCharWatermarkJson !== false);
+
         $this->conn->executeStatement('DELETE FROM ' . 'derivative_settings');
         $this->conn->insert('derivative_settings', [
             'id' => 1,
@@ -345,7 +350,7 @@ final class ImageStdParamsTest extends IntegrationTestCase
             // string-offset access) isset($minSize[0], $minSize[1]) and
             // both is_numeric() checks would still pass on '1'/'2' --
             // exercises the is_array() conjunct specifically.
-            'watermark_json' => json_encode(['min_size' => '12']),
+            'watermark_json' => $twoCharWatermarkJson,
             'custom_json' => '{}',
         ]);
 
@@ -356,11 +361,14 @@ final class ImageStdParamsTest extends IntegrationTestCase
         // A genuine 2-element array where the first element is numeric but
         // the second isn't -- exercises the trailing is_numeric($minSize[1])
         // conjunct specifically (is_array()/isset() both pass here).
+        $mixedMinSizeWatermarkJson = json_encode(['min_size' => [300, 'abc']]);
+        assert($mixedMinSizeWatermarkJson !== false);
+
         $this->conn->executeStatement('DELETE FROM ' . 'derivative_settings');
         $this->conn->insert('derivative_settings', [
             'id' => 1,
             'default_quality' => 95,
-            'watermark_json' => json_encode(['min_size' => [300, 'abc']]),
+            'watermark_json' => $mixedMinSizeWatermarkJson,
             'custom_json' => '{}',
         ]);
 
@@ -377,16 +385,19 @@ final class ImageStdParamsTest extends IntegrationTestCase
         // or externally-written row (Doctrine's `json` column type only
         // guarantees valid JSON, not that every value already has the
         // right PHP type) can contain numeric strings here.
+        $numericStringWatermarkJson = json_encode([
+            'min_size' => ['300', '250'],
+            'xpos' => '77',
+            'xrepeat' => '4',
+            'yrepeat' => '6',
+        ]);
+        assert($numericStringWatermarkJson !== false);
+
         $this->conn->executeStatement('DELETE FROM ' . 'derivative_settings');
         $this->conn->insert('derivative_settings', [
             'id' => 1,
             'default_quality' => 95,
-            'watermark_json' => json_encode([
-                'min_size' => ['300', '250'],
-                'xpos' => '77',
-                'xrepeat' => '4',
-                'yrepeat' => '6',
-            ]),
+            'watermark_json' => $numericStringWatermarkJson,
             'custom_json' => '{}',
         ]);
 
@@ -411,10 +422,10 @@ final class ImageStdParamsTest extends IntegrationTestCase
             'enabled' => 1,
             'max_width' => 200,
             'max_height' => 150,
-            'max_crop' => '0.5000',
+            'max_crop' => 0.5,
             'min_width' => 80,
             'min_height' => null,
-            'sharpen' => '0.0000',
+            'sharpen' => 0.0,
             'last_mod_time' => 0,
         ]);
         $this->conn->insert('derivative_size', [
@@ -422,10 +433,10 @@ final class ImageStdParamsTest extends IntegrationTestCase
             'enabled' => 0,
             'max_width' => 2232,
             'max_height' => 1674,
-            'max_crop' => '0.0000',
+            'max_crop' => 0.0,
             'min_width' => null,
             'min_height' => null,
-            'sharpen' => '0.0000',
+            'sharpen' => 0.0,
             'last_mod_time' => 0,
         ]);
 
@@ -453,10 +464,10 @@ final class ImageStdParamsTest extends IntegrationTestCase
             'enabled' => 1,
             'max_width' => 792,
             'max_height' => 594,
-            'max_crop' => '0.0000',
+            'max_crop' => 0.0,
             'min_width' => null,
             'min_height' => null,
-            'sharpen' => '0.0000',
+            'sharpen' => 0.0,
             'last_mod_time' => 0,
         ]);
         $this->conn->insert('derivative_size', [
@@ -464,10 +475,10 @@ final class ImageStdParamsTest extends IntegrationTestCase
             'enabled' => 1,
             'max_width' => 432,
             'max_height' => 324,
-            'max_crop' => '0.0000',
+            'max_crop' => 0.0,
             'min_width' => null,
             'min_height' => null,
-            'sharpen' => '0.0000',
+            'sharpen' => 0.0,
             'last_mod_time' => 0,
         ]);
         $this->conn->insert('derivative_size', [
@@ -475,10 +486,10 @@ final class ImageStdParamsTest extends IntegrationTestCase
             'enabled' => 1,
             'max_width' => 10,
             'max_height' => 10,
-            'max_crop' => '0.0000',
+            'max_crop' => 0.0,
             'min_width' => null,
             'min_height' => null,
-            'sharpen' => '0.0000',
+            'sharpen' => 0.0,
             'last_mod_time' => 0,
         ]);
         $this->conn->insert('derivative_size', [
@@ -486,10 +497,10 @@ final class ImageStdParamsTest extends IntegrationTestCase
             'enabled' => 0,
             'max_width' => 2232,
             'max_height' => 1674,
-            'max_crop' => '0.0000',
+            'max_crop' => 0.0,
             'min_width' => null,
             'min_height' => null,
-            'sharpen' => '0.0000',
+            'sharpen' => 0.0,
             'last_mod_time' => 0,
         ]);
 
@@ -601,10 +612,10 @@ final class ImageStdParamsTest extends IntegrationTestCase
             'enabled' => 1,
             'max_width' => 999,
             'max_height' => 999,
-            'max_crop' => '0.0000',
+            'max_crop' => 0.0,
             'min_width' => null,
             'min_height' => null,
-            'sharpen' => '0.0000',
+            'sharpen' => 0.0,
             'last_mod_time' => 0,
         ]);
         $this->conn->insert('derivative_size', [
@@ -612,10 +623,10 @@ final class ImageStdParamsTest extends IntegrationTestCase
             'enabled' => 0,
             'max_width' => 2232,
             'max_height' => 1674,
-            'max_crop' => '0.0000',
+            'max_crop' => 0.0,
             'min_width' => null,
             'min_height' => null,
-            'sharpen' => '0.0000',
+            'sharpen' => 0.0,
             'last_mod_time' => 0,
         ]);
 

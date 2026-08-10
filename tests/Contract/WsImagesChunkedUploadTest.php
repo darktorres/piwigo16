@@ -152,8 +152,7 @@ final class WsImagesChunkedUploadTest extends ContractTestCase
             'SELECT category_id FROM ' . 'image_category' . ' WHERE image_id = ?',
             [$imageId]
         );
-        self::assertIsNumeric($categoryId);
-        self::assertSame(1, (int) $categoryId);
+        self::assertSame(1, $categoryId);
     }
 
     /**

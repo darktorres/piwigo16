@@ -61,7 +61,7 @@ final class WsImagesFilteredSearchTest extends ContractTestCase
             'SELECT rules FROM ' . 'search' . ' WHERE search_uuid = ?',
             [$searchUuid]
         );
-        self::assertIsString($raw, 'no piwigo_search row for uuid ' . $searchUuid);
+        self::assertIsString($raw, 'no search row for uuid ' . $searchUuid);
         $decoded = json_decode($raw, true, flags: JSON_THROW_ON_ERROR);
         self::assertIsArray($decoded);
 
@@ -88,7 +88,7 @@ final class WsImagesFilteredSearchTest extends ContractTestCase
         }
         self::assertIsNumeric($value);
 
-        return (int) $value;
+        return $value;
     }
 
     /**
@@ -180,8 +180,7 @@ final class WsImagesFilteredSearchTest extends ContractTestCase
             'SELECT id FROM ' . 'search' . ' WHERE search_uuid = ?',
             [$parentUuid]
         );
-        self::assertIsNumeric($parentId);
-        self::assertSame((int) $parentId, $this->fetchForkedFrom($childUuid));
+        self::assertSame($parentId, $this->fetchForkedFrom($childUuid));
     }
 
     public function test_allwords_defaults_mode_and_fields_when_omitted(): void

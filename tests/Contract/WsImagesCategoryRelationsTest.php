@@ -100,12 +100,9 @@ final class WsImagesCategoryRelationsTest extends ContractTestCase
     /** @return list<int> */
     private function categoryIdsOf(int $imageId): array
     {
-        return array_map(
-            static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0,
-            $this->conn->fetchFirstColumn(
-                'SELECT category_id FROM ' . 'image_category' . ' WHERE image_id = ?',
-                [$imageId]
-            )
+        return $this->conn->fetchFirstColumn(
+            'SELECT category_id FROM ' . 'image_category' . ' WHERE image_id = ?',
+            [$imageId]
         );
     }
 

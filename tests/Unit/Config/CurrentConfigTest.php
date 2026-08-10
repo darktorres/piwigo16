@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 
+use Piwigo\Config\FilterViewDefinition;
+use Piwigo\Config\MenuLink;
 use Piwigo\Config\NotificationConfig;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
 
@@ -153,7 +155,7 @@ test('headerNotes getter returns the real stored value, not a hardcoded empty ar
 test('links getter returns the real stored value, not a hardcoded empty array', function (): void {
     CurrentConfigTestFactory::get()->links = ['home' => 'https://example.test'];
 
-    expect(CurrentConfigTestFactory::get()->links)->toBe(['home' => 'https://example.test']);
+    expect(CurrentConfigTestFactory::get()->links)->toEqual(['home' => MenuLink::fromArray('https://example.test')]);
 });
 
 test('emptyLoungeRunning getter returns the real stored value, not a hardcoded null', function (): void {
@@ -207,10 +209,10 @@ test('setDefaultFiltersViews keeps a well-shaped override entry and falls back p
 
     $result = CurrentConfigTestFactory::get()->defaultFiltersViews;
 
-    expect($result['words'])->toBe(['access' => 'admins', 'default' => false])
-        ->and($result['tags'])->toBe(['access' => 'everybody', 'default' => false])
-        ->and($result['post_date'])->toBe(['access' => 'everybody', 'default' => false])
-        ->and($result['album'])->toBe(['access' => 'everybody', 'default' => true]);
+    expect($result['words'])->toEqual(new FilterViewDefinition(access: 'admins', default: false))
+        ->and($result['tags'])->toEqual(new FilterViewDefinition(access: 'everybody', default: false))
+        ->and($result['post_date'])->toEqual(new FilterViewDefinition(access: 'everybody', default: false))
+        ->and($result['album'])->toEqual(new FilterViewDefinition(access: 'everybody', default: true));
 });
 
 test('setDefaultFiltersViews resets to the full factory default when given null', function (): void {
@@ -218,7 +220,7 @@ test('setDefaultFiltersViews resets to the full factory default when given null'
 
     CurrentConfigTestFactory::get()->defaultFiltersViews = null;
 
-    expect(CurrentConfigTestFactory::get()->defaultFiltersViews['words'])->toBe(['access' => 'everybody', 'default' => true]);
+    expect(CurrentConfigTestFactory::get()->defaultFiltersViews['words'])->toEqual(new FilterViewDefinition(access: 'everybody', default: true));
 });
 
 test('setHistorySectionsCache keeps only string entries and reindexes', function (): void {

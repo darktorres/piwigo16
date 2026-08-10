@@ -370,17 +370,20 @@ test('get_size() re-reads real dimensions from disk when width/height columns ar
 });
 
 /**
- * Confirmed-equivalent: line 173's TernaryNegated (the `is_string(...)
- * ? null : $infos['file']` inversion for $file) and line 175's
- * UnwrapStrtolower (`strtolower(StringHelper::getExtension($file))`).
- * $file's ONLY use anywhere in this class is feeding
- * `$infos['file_ext'] = ...` -- and $infos['file_ext'] is itself never
- * read again, by this class or any real caller ($infos is a local
- * constructor parameter, never stored or returned). Both mutations are
- * therefore dead code, not just untested. Live sed-verified both
- * independently against the full suite too.
+ * Confirmed-equivalent (re-verified 2026-08-10 against current line
+ * numbers -- the file has shifted since this was first written, content
+ * unchanged): line 186's TernaryNegated (the `is_string(...) ? ... :
+ * null` inversion for $file) and its own CoalesceRemoveLeft
+ * (`$infos['file'] ?? null` -> `null`), plus line 188's UnwrapStrtolower
+ * (`strtolower(StringHelper::getExtension($file))`). $file's ONLY use
+ * anywhere in this class is feeding `$infos['file_ext'] = ...` -- and
+ * $infos['file_ext'] is itself never read again, by this class or any
+ * real caller ($infos is a local constructor parameter, never stored or
+ * returned; re-confirmed via a fresh grep for `file_ext` across the
+ * current file -- only the one write site exists). All 3 mutations are
+ * therefore dead code, not just untested.
  *
- * Also confirmed-equivalent: line 213's, line 222's, and line 294's
+ * Also confirmed-equivalent: line 222's, line 231's, and line 299's
  * RemoveBooleanCast (`(bool) $this->size`, `(bool) ($this->rotation %
  * 2)`, `(bool) ($this->flags & self::DIM_NOT_GIVEN)`). An `if()`
  * condition already coerces its operand to bool on its own -- `if

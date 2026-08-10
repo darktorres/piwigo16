@@ -9,8 +9,8 @@ namespace Piwigo\Config;
  * persisted as a {name, value} pair list (PwgNamedArray's own wire
  * shape), looked up here by name rather than position. The real
  * producer also emits `msizes`/`tsizes` rows, but no consumer in this
- * codebase reads either back out (confirmed via a full-repo PHPStan
- * dead-code sweep) -- only the 2 fields real callers use are kept here.
+ * codebase reads either one back out, so only the 2 fields real callers
+ * use are kept here.
  */
 final readonly class CacheSizesSnapshot
 {

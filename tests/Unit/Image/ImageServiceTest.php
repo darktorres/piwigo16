@@ -1087,7 +1087,7 @@ test('deleteElements() returns 0 without touching the database when physical del
 
         expect($result)->toBe(0);
         $stillThere = $conn->fetchOne('SELECT COUNT(*) FROM ' . 'images' . ' WHERE id = ' . $blockedId);
-        expect(is_numeric($stillThere) ? (int) $stillThere : -1)->toBe(1);
+        expect($stillThere)->toBe(1);
     } finally {
         chmod($root . '/upload/2026/07/locked', 0o755);
         $conn->executeStatement('DELETE FROM ' . 'images' . ' WHERE id = ?', [$blockedId]);
@@ -1187,7 +1187,7 @@ test('deleteElements() fires begin_delete_elements and delete_elements with the 
         expect($capturedBeginIds)->toBe([$imageId]);
         expect($capturedDeleteIds)->toBe([$imageId]);
         $imagesRemaining = $conn->fetchOne('SELECT COUNT(*) FROM ' . 'images' . ' WHERE id = ' . $imageId);
-        expect(is_numeric($imagesRemaining) ? (int) $imagesRemaining : -1)->toBe(0);
+        expect($imagesRemaining)->toBe(0);
         expect($activityService->getOccuredOnForObject($imageId, 'photo', 'delete'))->not->toBeNull();
     } finally {
         EventDispatcherTestFactory::get()->removeEventHandler(BeginDeleteElements::class, $beginHandler);
@@ -1219,7 +1219,7 @@ test('deleteElements() with an empty id list never fires begin_delete_elements a
 // check (findRepresentedCategoryIds($ids) -> categoryService()->
 // updateCategory($categoryIds), directly after deleteImages($ids)) is
 // confirmed dead code against the real schema, not merely untested:
-// `piwigo_categories.representative_picture_id` carries a real
+// `categories.representative_picture_id` carries a real
 // `fk_categories_representative_picture_id ... ON DELETE SET NULL`
 // constraint (tests/Fixtures/piwigo-17.0.sql), verified live against the
 // test database directly -- deleting a referenced `images` row already
@@ -1309,7 +1309,7 @@ test('moveImagesToCategories() returns false for an empty image list, and treats
         // stays empty.
         expect($service->moveImagesToCategories([$imageId], 'not-an-array'))->toBeNull();
         $remaining = $conn->fetchOne('SELECT COUNT(*) FROM ' . 'image_category' . ' WHERE image_id = ' . $imageId);
-        expect(is_numeric($remaining) ? (int) $remaining : -1)->toBe(0);
+        expect($remaining)->toBe(0);
     } finally {
         $conn->executeStatement('DELETE FROM ' . 'image_category' . ' WHERE image_id = ?', [$imageId]);
         $conn->executeStatement('DELETE FROM ' . 'images' . ' WHERE id = ?', [$imageId]);
@@ -1738,7 +1738,7 @@ test('emptyLounge() clears a stale lock, logs the API-suffixed begin/win/end mes
             expect($messages[3])->toBe("emptyLounge, exec={$execId}, ends");
 
             $remainingLounge = $conn->fetchOne('SELECT COUNT(*) FROM ' . 'lounge' . ' WHERE image_id IN (' . $imageA . ',' . $imageB . ')');
-            expect(is_numeric($remainingLounge) ? (int) $remainingLounge : -1)->toBe(0);
+            expect($remainingLounge)->toBe(0);
             $categoryLinks = $conn->fetchAllAssociative('SELECT image_id, category_id FROM ' . 'image_category' . ' WHERE image_id IN (' . $imageA . ',' . $imageB . ') ORDER BY image_id');
             expect($categoryLinks)->toBe([
                 ['image_id' => $imageA, 'category_id' => 1],
@@ -2153,7 +2153,7 @@ test('updateFormatFilesize() delegates straight through to the repository', func
         $service->updateFormatFilesize($formatId, 12345);
 
         $filesize = $conn->fetchOne('SELECT filesize FROM ' . 'image_format' . ' WHERE format_id = ' . $formatId);
-        expect(is_numeric($filesize) ? (int) $filesize : null)->toBe(12345);
+        expect(is_numeric($filesize) ? $filesize : null)->toBe(12345);
     } finally {
         $conn->executeStatement('DELETE FROM ' . 'image_format' . ' WHERE format_id = ?', [$formatId]);
         $conn->executeStatement('DELETE FROM ' . 'images' . ' WHERE id = ?', [$imageId]);

@@ -9,7 +9,7 @@ use RuntimeException;
 
 /**
  * The deterministic solid-color + "Photo N" label content every fixture
- * photo (piwigo_images ids 1-5, in RegenerateFixtureTest's own upload
+ * photo (images ids 1-5, in RegenerateFixtureTest's own upload
  * order) gets. Shared so tools/regenerate-fixture-photos.php (fast,
  * DB-row-targeted, run before every Browser/VR suite via
  * tools/reimport-fixture.sh) and RegenerateFixtureTest itself (slow, full

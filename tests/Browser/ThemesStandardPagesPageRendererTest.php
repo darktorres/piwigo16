@@ -207,7 +207,7 @@ it('rejects a non-image logo upload with the generic invalid-image save_error, a
         // underscores (confirmed live) -- "My Custom Logo!.png" becomes
         // "my_custom_logo.png", not a hyphenated slug. ConfigService::encode()
         // itself produces a PHP json_encode() string with the '/' escaped
-        // ("\/"), but piwigo_config.value is a real MySQL JSON column
+        // ("\/"), but config.value is a real MySQL JSON column
         // (install/piwigo_structure-mysql.sql), which parses the inserted
         // text and re-serializes it in MySQL's own canonical form on
         // storage -- '/' needs no escaping per the JSON spec, so MySQL

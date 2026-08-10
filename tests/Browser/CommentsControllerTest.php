@@ -16,11 +16,11 @@ use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
  * filter, items_number pagination override, delete/validate moderation),
  * not just that the page loads.
  *
- * Comments are inserted directly into piwigo_comments (matching
+ * Comments are inserted directly into comments (matching
  * RegenerateFixtureTest's own direct-insert shape -- pwg.images.addComment
  * requires commentable=true on the parent album, which a freshly created
  * album doesn't have) against a real, freshly uploaded photo so the
- * INNER JOIN against piwigo_image_category (comments.php's own listing
+ * INNER JOIN against image_category (comments.php's own listing
  * query) has a real row to match. Every comment uses a uniqid()-suffixed
  * author name so `author=` filtering isolates these rows from whatever
  * else the shared dev DB currently contains.

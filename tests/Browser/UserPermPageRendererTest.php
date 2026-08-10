@@ -9,8 +9,8 @@ use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
  * Controller/Admin/UserPermSubController.php) -- 0% coverage before this
  * file.
  *
- * Fixture shape (tests/Fixtures/piwigo-17.0.sql): piwigo_user_group puts
- * user 4 "power_user" in group 3 "Guests" only, and piwigo_group_access
+ * Fixture shape (tests/Fixtures/piwigo-17.0.sql): user_group puts
+ * user 4 "power_user" in group 3 "Guests" only, and group_access
  * grants group 3 access to category 1 "Sample Album" only (not category 2)
  * -- so user 4's "authorized thanks to group" list always shows "Sample
  * Album" regardless of any per-category private/public mutation, while the
@@ -20,7 +20,7 @@ use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
  * Not exercised: the `$category['uppercats'] === null || ! is_string(...)`
  * defensive `continue` inside the group-authorized-categories loop.
  * findCategoriesAuthorizedViaGroupsForUser()'s own query always selects
- * `c.uppercats` from a real `piwigo_categories` row, a genuine `NOT NULL
+ * `c.uppercats` from a real `categories` row, a genuine `NOT NULL
  * DEFAULT ''` column (tests/Fixtures/piwigo-17.0.sql's own CREATE TABLE),
  * so a real row's value is always a string -- the "power_user" test below
  * already drives this exact loop with real data (category 1) without ever
@@ -125,7 +125,7 @@ it('trueifies then falsifies direct user_access for a private album', function (
     $db = H::connect();
 
     try {
-        // piwigo_user_access has no rows at all in this fixture (see this
+        // user_access has no rows at all in this fixture (see this
         // file's own docblock) -- trueify grants user 4 direct access to
         // category 2 via PermissionService::grantUserAccess().
         $trueifyResult = H::adminPost($page, '/admin.php?page=user_perm&user_id=4', [

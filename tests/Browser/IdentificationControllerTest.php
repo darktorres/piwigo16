@@ -305,7 +305,7 @@ it('treats an unregistered lang cookie value as a hacking attempt and returns a 
 });
 
 it("applies a valid, different lang cookie: switches CurrentUser's language, loads its translations, and swaps in the French help link", function (): void {
-    // The fixture only ships `en_UK` in `piwigo_languages` -- `fr_FR` is a
+    // The fixture only ships `en_UK` in `languages` -- `fr_FR` is a
     // real, on-disk core language pack (language/fr_FR/common.po exists),
     // just not registered in this fixture's DB -- registering it
     // temporarily is the minimal state needed to exercise

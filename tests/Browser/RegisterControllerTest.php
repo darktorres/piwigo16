@@ -524,7 +524,7 @@ it('treats an unregistered lang cookie value as a hacking attempt and returns a 
 });
 
 it("applies a valid, different lang cookie: switches CurrentUser's language, loads its translations, and swaps in the French help link", function (): void {
-    // The fixture only ships `en_UK` in `piwigo_languages` (this file's
+    // The fixture only ships `en_UK` in `languages` (this file's
     // own docblock) -- LangService::getLanguages()'s own
     // array_key_exists() check against a `lang` cookie never accepts
     // anything else without a real DB row first. `fr_FR` is a real,

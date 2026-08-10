@@ -553,7 +553,7 @@ it('saves the default tab (guest profile) and persists real user_infos values', 
     // omitting it here reproduces a genuine `Column 'expand' cannot be
     // null` DB crash (confirmed live), same class of gap as this admin
     // form's own established "send the whole section" convention. This
-    // data lives on guest's own piwigo_user_infos row, not the config
+    // data lives on guest's own user_infos row, not the config
     // table -- same direct-mysqli snapshot/restore shape as
     // NotificationByMailSubControllerTest's own DB helpers, since
     // H::snapshotConfig()/restoreConfig() only ever touch `config`.

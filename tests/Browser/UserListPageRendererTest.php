@@ -145,7 +145,7 @@ it('shows the local-webmaster_id deprecation warning when config.inc.php really 
 // deleted directly in the DB rather than through the app). Config has no
 // real 'default_user_id' row in the fixture (CurrentConfig's own class
 // default is 2), so this inserts one pointing at an id nothing in
-// piwigo_user_infos will ever have.
+// user_infos will ever have.
 it('shows a fatal error when the configured default_user_id matches no real user_infos row', function (): void {
     $snapshot = H::snapshotConfig(['default_user_id']);
     H::setConfigValue('default_user_id', '999999');

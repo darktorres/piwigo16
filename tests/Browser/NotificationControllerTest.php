@@ -6,7 +6,7 @@ use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
 
 /**
  * Piwigo\Controller\NotificationController (notification.php) -- mints a
- * new per-user feed subscription (a piwigo_user_feed row) and shows its
+ * new per-user feed subscription (a user_feed row) and shows its
  * URL. Asserts the real DB row this creates, not just that the page
  * renders a link.
  */

@@ -60,7 +60,7 @@ function extraFiltersSettledContent(Webpage|PendingAwaitablePage|AwaitableWebpag
 }
 
 /**
- * Inserts a `piwigo_search` row directly via raw SQL, bypassing
+ * Inserts a `search` row directly via raw SQL, bypassing
  * SearchService::saveSearch()/the WS API entirely -- needed to construct
  * `rules` shapes neither ever produces: a JSON object with no top-level
  * "fields" key at all, or a per-field value that isn't the array shape
@@ -499,7 +499,7 @@ it('serves the date-filter row/counter data from cache on a second load of a dat
  * pwg.images.filteredSearch.create()-persisted row, which always carries a
  * `fields` key -- SearchController's own default-filter mechanism, driven
  * through here, always pre-declares `'fields' => []` too): a directly
- * persisted `piwigo_search` row whose `rules` JSON has no top-level
+ * persisted `search` row whose `rules` JSON has no top-level
  * "fields" key at all (render()'s own `$mySearch['fields'] = []`
  * fallback), and one whose `fields.tags`/`fields.author` values aren't the
  * array shape any real writer ever produces (render()'s own per-field

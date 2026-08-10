@@ -25,7 +25,7 @@ use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
  *
  * CONFIRMED REAL FIXTURE GAP (reproduced directly with raw curl,
  * independent of this file, before writing this workaround): tests/
- * Fixtures/piwigo-17.0.sql ships an entirely EMPTY `piwigo_themes` table
+ * Fixtures/piwigo-17.0.sql ships an entirely EMPTY `themes` table
  * (no INSERT rows at all between its own DISABLE/ENABLE KEYS markers) --
  * ThemeCatalog::getPwgThemes() reads that table directly, so profile.tpl's
  * theme <select> renders with ZERO <option>s in this environment, and

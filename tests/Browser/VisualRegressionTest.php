@@ -20,7 +20,7 @@ use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
  * What keeps these baselines deterministic:
  *   - $conf['show_gt'] (page-generation-time footer) defaults to false, so
  *     it never renders and needs no special handling here.
- *   - piwigo_images.hit ("Visited N times", shown on picture.php and the
+ *   - images.hit ("Visited N times", shown on picture.php and the
  *     admin photo editor) increments on every view — including the view
  *     this very test performs — so it drifts on every run. H::freezeImageHits()
  *     pins it to a fixed value right before each screenshot that would
@@ -47,7 +47,7 @@ use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
  *     otherwise shows whatever real guest page-views the rest of this run
  *     already logged — admin.php?page=history has no start/end GET
  *     override, so there's no way to pin that content via a URL param.
- *     H::truncateHistory() wipes piwigo_history right before this one
+ *     H::truncateHistory() wipes history right before this one
  *     screenshot instead, the same freeze-a-narrow-DB-slice approach as
  *     freezeImageHits().
  *   - admin-tags races the same way, for a different reason:

@@ -317,7 +317,7 @@ it('applies a plain (non-duplicates) prefilter via a URL filter token', function
     $page->assertNoJavaScriptErrors();
 });
 
-it('applies add_tags then del_tags to a whole_set selection, round-tripping the association in piwigo_image_tag', function (): void {
+it('applies add_tags then del_tags to a whole_set selection, round-tripping the association in image_tag', function (): void {
     $page = H::loginAsAdmin($this);
     $album = H::wsCall($page, 'pwg.categories.add', ['name' => 'Batch AddTags Album ' . uniqid()]);
     $albumResult = $album['result'] ?? null;
@@ -795,7 +795,7 @@ it('rejects a whole_set value containing a non-digit element as a hacking attemp
  * fallback (filesizes === [] at ~773-774). Both read
  * ImageRepository::findDistinctDimensions()/findDistinctFilesizes(),
  * confirmed by direct source read to be UNCONDITIONAL queries over the
- * whole piwigo_images table -- no category/album/search scoping of any
+ * whole images table -- no category/album/search scoping of any
  * kind, unlike SearchFilterRenderer's own sibling "arbitrary bucket"
  * fallback (closed in SearchFilterRendererDataFiltersTest.php), which
  * IS reachable because its equivalent query is scoped to a single
@@ -1149,7 +1149,7 @@ it('renders unmatched search terms as "No results for" alongside real matched it
 
 it('aggregates portrait/square/panorama ratio buckets from real distinct image dimensions', function (): void {
     // computeDimensionOptions() reads ImageRepository::
-    // findDistinctDimensions() unscoped (the whole piwigo_images table,
+    // findDistinctDimensions() unscoped (the whole images table,
     // no category/search filter) -- so uploading these 3 photos anywhere
     // and forcing their width/height via raw SQL is enough for the
     // global ratio-bucket aggregation to pick them up on the very next

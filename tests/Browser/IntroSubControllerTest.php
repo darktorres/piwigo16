@@ -176,7 +176,7 @@ it('smooths the activity chart into size groups when daily counts vary by more t
     // accumulates into dozens of extra same-day rows, inflating "1
     // Activity" into "N Activities" and breaking this test's own
     // escalating 1/3/20 scenario. daysAgo=1 lands one day earlier than
-    // the fixture/login noise ever touches (no piwigo_activity rows
+    // the fixture/login noise ever touches (no activity rows
     // exist before "today" at all), while staying on its own distinct
     // day-of-week from the other two seeded days.
     introInsertActivityRows([

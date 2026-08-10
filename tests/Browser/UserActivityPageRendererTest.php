@@ -13,8 +13,8 @@ use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
  * fixture_admin (each real login writes a new 'user'/'login' activity row),
  * so this file deliberately avoids asserting on activity *counts* --
  * instead it targets the "additional filter" branch (?photo=/?album=/?group=),
- * whose resolved name comes straight from static fixture rows (piwigo_images/
- * piwigo_categories/piwigo_groups) and is unaffected by how many logins have
+ * whose resolved name comes straight from static fixture rows (images/
+ * categories/groups) and is unaffected by how many logins have
  * accumulated.
  *
  * The `! is_string($filter_value)` "[Hacking attempt]" guard inside the

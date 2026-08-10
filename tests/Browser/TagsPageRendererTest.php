@@ -46,7 +46,7 @@ function tagsPageBackdateTag(int $tagId): void
 {
     $db = H::connect();
     // DATE_SUB() is MySQL-only -- Postgres's own date arithmetic is
-    // `NOW() - INTERVAL '2 days'`. piwigo_tags also has a real BEFORE
+    // `NOW() - INTERVAL '2 days'`. tags also has a real BEFORE
     // UPDATE trigger (trg_tags_lastmodified, a port of MySQL's
     // `ON UPDATE CURRENT_TIMESTAMP`) that unconditionally sets
     // NEW.lastmodified = now() on every UPDATE, which would otherwise

@@ -254,7 +254,7 @@ it('batch manager unit mode renders the real per-photo edit grid for a category 
     // rendering), never exercised by the empty-filter test above.
     // Category 1 ("Sample Album") holds fixture images 1-3 (Photo
     // 1/2/3, files fixture-photo-1..3.jpg) per this fixture's own
-    // piwigo_image_category rows -- verified against this exact URL's
+    // image_category rows -- verified against this exact URL's
     // real rendered output before writing this assertion, not guessed.
     $page = H::loginAsAdmin($this);
     $page = H::navigateOk($page, '/admin.php?page=batch_manager&mode=unit&filter=cat-1');

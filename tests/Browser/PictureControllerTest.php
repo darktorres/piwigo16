@@ -10,7 +10,7 @@ use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
  * detail page. Covers the hit-counter increment (and its "don't
  * double-count a same-picture reload" branch), the favorites toggle (a
  * real add_to_favorites/remove_from_favorites action round trip verified
- * against piwigo_favorites), the invalid-image_id 404 branch, and the
+ * against favorites), the invalid-image_id 404 branch, and the
  * admin comment-moderation actions this controller's own switch handles
  * (delete_comment/validate_comment) -- distinct from CommentsController's
  * own moderation actions (comments.php), covered separately.
@@ -165,7 +165,7 @@ it('increments the hit counter on first view, then not on an immediate same-pict
     $albumId = (int) $albumResult['id'];
     // Piwigo\Admin\Upload\UploadService::addUploadedFile() de-duplicates by
     // md5sum whenever CurrentConfig::uploadDetectDuplicate() is enabled
-    // (confirmed live: this fixture's own piwigo_config ships
+    // (confirmed live: this fixture's own config ships
     // upload_detect_duplicate=true), so a fixed image label -- H::
     // makeTestImage() draws it straight onto the pixel data -- produces
     // byte-IDENTICAL file content across repeated runs against this
@@ -208,7 +208,7 @@ it('increments the hit counter on first view, then not on an immediate same-pict
     expect(pictureHitCount($imageId))->toBe(1);
 });
 
-it('adds and removes a photo from favorites via the picture.php action links, verified in piwigo_favorites', function (): void {
+it('adds and removes a photo from favorites via the picture.php action links, verified in favorites', function (): void {
     $page = H::loginAsAdmin($this);
     $album = H::wsCall($page, 'pwg.categories.add', ['name' => 'Picture Test Album ' . uniqid()]);
     $albumResult = $album['result'] ?? null;
@@ -838,7 +838,7 @@ function pictureRemoveImageFromAllCategories(int $imageId): void
     H::dbClose($db);
 }
 
-/** Directly inserts a piwigo_image_format row -- for the format-list building test below (download-URL fallback/Lang-key label lookup/filesize MB-formatting), not reachable through any WS method that lets a test control the stored filesize precisely. */
+/** Directly inserts an image_format row -- for the format-list building test below (download-URL fallback/Lang-key label lookup/filesize MB-formatting), not reachable through any WS method that lets a test control the stored filesize precisely. */
 function pictureInsertImageFormat(int $imageId, string $ext, int $filesizeKb): void
 {
     $db = pictureDbConnect();
@@ -1339,7 +1339,7 @@ it('appends the current photo into best_rated\'s own item list instead of redire
 
     // No rate config/data manipulation needed: SectionPopulator's own
     // best_rated query (`ORDER BY rating_score DESC`) only ever returns
-    // images with at least one real piwigo_rate row -- a brand-new,
+    // images with at least one real rate row -- a brand-new,
     // never-rated photo is guaranteed to not already be part of that
     // list. Viewing it via /best_rated therefore deterministically
     // exercises PictureController's own best_rated-specific fallback
@@ -1661,7 +1661,7 @@ it('builds a download-format list with the URL fallback, strtoupper() label fall
         $imageId = H::uploadPhotoViaApi($image, $albumId, 'Format List Photo');
         @unlink($image);
 
-        // A real piwigo_image_format row with no lang catalog entry for
+        // A real image_format row with no lang catalog entry for
         // 'format WEBP' (confirmed live: no core language file, en_UK or
         // otherwise, in this repo or the 16.x reference tree defines any
         // 'format <EXT>' msgid -- Lang::has()'s own true branch is
@@ -1788,7 +1788,7 @@ it('assigns PDF_VIEWER_FILESIZE_THRESHOLD/PDF_NB_PAGES and renders the inline PD
 it('renders the legend/author/creation-date info block for a photo with a real comment, author, and creation date', function (): void {
     // None of this file's other tests ever set the image's OWN comment
     // (caption)/author/date_creation columns via pwg.images.setInfo --
-    // distinct from the piwigo_comments table entries this file's
+    // distinct from the comments table entries this file's
     // edit_comment/delete_comment/validate_comment tests exercise
     // elsewhere. Every prior test's freshly-uploaded photo leaves those 3
     // columns NULL, so PictureController::__invoke()'s own
@@ -1821,7 +1821,7 @@ it('renders the legend/author/creation-date info block for a photo with a real c
     expect($updateResult['stat'] ?? null)->toBe('ok');
 
     // picture_informations defaults author=true/created_on=true (confirmed
-    // live against the fixture's own piwigo_config row) -- not overridden
+    // live against the fixture's own config row) -- not overridden
     // here, same as this file's own "format list" test relies on for its
     // own tags=true default.
     $page = H::navigateOk($page, '/picture.php?/' . $imageId . '/category/' . $albumId);

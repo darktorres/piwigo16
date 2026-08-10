@@ -210,7 +210,7 @@ it('assigns U_SYNC (not U_DELETE) for a non-virtual (real dir) category when syn
     // a non-virtual (site-synced) category needs a real `dir` + `site_id`,
     // which only a direct raw-SQL row can provide here (same technique as
     // CatModifyPageRendererTest's own physical-directory test); site_id=1
-    // is the fixture's own real piwigo_sites row.
+    // is the fixture's own real sites row.
     $dirName = 'cat_list_physical_dir_' . uniqid();
     H::dbQuery($db, sprintf("INSERT INTO categories (name, dir, site_id, status, uppercats) VALUES ('Cat List Physical Album', '%s', 1, 'public', '0')", H::dbEscape($db, $dirName)));
     $categoryId = H::dbInsertId($db);

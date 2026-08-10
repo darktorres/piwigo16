@@ -8,7 +8,7 @@ use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
  * Piwigo\Controller\NbmController (public nbm.php) -- the public
  * "notification by mail" subscribe/unsubscribe confirmation link target
  * (distinct from admin/notification_by_mail.php). Exercises real DB state
- * changes on piwigo_user_mail_notification via the exact 16-char check_key
+ * changes on user_mail_notification via the exact 16-char check_key
  * regex nbm.php validates against, not just "the page renders".
  *
  * Uses the fixture's 'regular_user' row (check_key 'ghijkl9876543210',

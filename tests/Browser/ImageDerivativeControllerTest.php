@@ -120,7 +120,7 @@ function idcUploadSizedPhoto(object $test, string $albumName, int $width, int $h
 }
 
 /**
- * Writes piwigo_images.rotation directly -- ImageDerivativeController's
+ * Writes images.rotation directly -- ImageDerivativeController's
  * __invoke() reads this column (via ImageRepository::findByPath()) to set
  * $this->rotationAngle *without* any live EXIF re-read whenever it's
  * already non-null (PwgImage::get_rotation_angle_from_code(): 0=0deg,
@@ -367,7 +367,7 @@ it('ierrors 404 "Source not found" when the underlying file does not exist at al
 it('ierrors 404 "Db file path not found" for a real file never registered as an image', function (): void {
     // A physically-real file (so is_file() succeeds and this isn't just
     // re-testing the "source not found" case above) under upload/, but
-    // with no matching piwigo_images.path row -- ImageRepository::
+    // with no matching images.path row -- ImageRepository::
     // findByPath() returns null and this is the *other* 404 branch,
     // distinct from a missing file. Placed inside a directory an earlier
     // real API upload just created, so the web server user (Apache runs

@@ -1028,7 +1028,7 @@ final class BrowserTestHelpers
     }
 
     /**
-     * Deletes every row from piwigo_history before a visual-regression
+     * Deletes every row from history before a visual-regression
      * screenshot of admin.php?page=history. Its "Search" tab always filters
      * to today's date server-side (admin/history.php has no start/end GET
      * override), so it shows whatever real guest page-views the rest of
@@ -1061,7 +1061,7 @@ final class BrowserTestHelpers
     }
 
     /**
-     * Pins piwigo_images.hit to a fixed value before a visual-regression
+     * Pins images.hit to a fixed value before a visual-regression
      * screenshot. Viewing a photo (picture.php, the admin photo editor)
      * increments this counter as a side effect of the very navigation the
      * screenshot needs, so without this every VR run would drift the

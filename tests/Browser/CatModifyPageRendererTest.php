@@ -179,10 +179,10 @@ it('shows the real physical directory info for a non-virtual (disk-synced) album
 
     // Every album created via pwg.categories.add is virtual (dir=NULL), as
     // are both fixture categories (1 and 2) -- confirmed by direct read of
-    // tests/Fixtures/piwigo-17.0.sql's own INSERT INTO piwigo_categories
+    // tests/Fixtures/piwigo-17.0.sql's own INSERT INTO categories
     // row. A non-virtual (site-synced) album needs a real `dir` + `site_id`,
     // which only a direct raw-SQL row can provide here; site_id=1 is the
-    // fixture's own real `piwigo_sites` row, its `galleries_url` corrected
+    // fixture's own real `sites` row, its `galleries_url` corrected
     // to this checkout's own Paths::$root at fixture-load time (not the
     // literal committed in the fixture -- see
     // tools/reimport-fixture.sh's own docblock for why it can't be).

@@ -37,7 +37,7 @@ function galSetNbImagePage(int $userId, int $value): void
 }
 
 /**
- * Inserts a real `piwigo_search` row shaped like
+ * Inserts a real `search` row shaped like
  * SearchRepository::insertSearch()'s own `rules` column (a bare `{"q":
  * ...}` object, the shape SearchService::getSearchResults() checks
  * `isset($search['q'])` against to route into getQuickSearchResults()
@@ -176,7 +176,7 @@ it('builds a navigation bar when the section holds more items than the page size
     // count($page_items) > $page_nb_image_page; the fixture's own
     // 3-photo category 1 never exceeds the real 15-per-page default, so
     // this temporarily narrows the admin user's own nb_image_page
-    // preference (piwigo_user_infos, same "restorable DB toggle" pattern
+    // preference (user_infos, same "restorable DB toggle" pattern
     // as galSetCategoryComment()/galClearCaddie() above) instead of
     // faking a bigger fixture.
     $page = H::loginAsAdmin($this);

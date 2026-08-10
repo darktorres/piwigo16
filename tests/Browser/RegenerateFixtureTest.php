@@ -353,7 +353,7 @@ final class RegenerateFixtureTest extends IntegrationTestCase
             $now
         ));
 
-        // 14. A few config tweaks. piwigo_config.value is JSON-encoded
+        // 14. A few config tweaks. config.value is JSON-encoded
         // (ConfigService::encode()) --
         // each entry below is json_encode()d to match. The former
         // `derivatives`/`disabled_derivatives` serialize()-blob exception
@@ -365,7 +365,7 @@ final class RegenerateFixtureTest extends IntegrationTestCase
         // true (config_default.inc.php) and have no row from a fresh
         // install, so this must be an upsert, not an UPDATE — matching
         // conf_update_param()'s own real INSERT ... ON DUPLICATE KEY UPDATE
-        // pattern (piwigo_config.param is the PRIMARY KEY). Both gate live
+        // pattern (config.param is the PRIMARY KEY). Both gate live
         // HTTP calls to piwigo.org from the admin dashboard (a real
         // news-feed fetch and a core/extension update check) that have
         // nothing to do with test-mode's frozen clock and must never fire
@@ -380,7 +380,7 @@ final class RegenerateFixtureTest extends IntegrationTestCase
             'dashboard_check_for_updates'  => false,
         ];
         // ON DUPLICATE KEY UPDATE has no Postgres equivalent -- ON CONFLICT
-        // (param) DO UPDATE SET is the real one (piwigo_config.param is the
+        // (param) DO UPDATE SET is the real one (config.param is the
         // PRIMARY KEY on both platforms, so the conflict target is valid
         // either way).
         $upsertSql = $this->dbDriver === 'pgsql'
@@ -428,7 +428,7 @@ final class RegenerateFixtureTest extends IntegrationTestCase
             // real tests do exactly that, reloading in their own finally
             // block after intentionally corrupting/truncating data) --
             // pg_dump has no such default, so without these flags a second
-            // load hits "function piwigo_set_lastmodified already exists"
+            // load hits "function set_lastmodified already exists"
             // (confirmed live). --if-exists keeps the emitted DROPs from
             // erroring on a genuinely fresh/empty database either.
             $cmd[] = '--clean';

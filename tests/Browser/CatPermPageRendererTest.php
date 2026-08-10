@@ -8,12 +8,12 @@ use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
  * CatPermPageRenderer (admin.php?page=album&cat_id=X&tab=permissions, the
  * "permissions" tab of the "album" page) -- 0% coverage before this file.
  *
- * Fixture shape (tests/Fixtures/piwigo-17.0.sql): piwigo_group_access grants
+ * Fixture shape (tests/Fixtures/piwigo-17.0.sql): group_access grants
  * all 3 groups (1 "Editors", 2 "Reviewers", 3 "Guests") access to category 1
  * "Sample Album", but only group 1 access to category 2 "Nested Sub Album" --
  * so asserting the exact granted-group-id set for each category (not just
  * "some groups are granted") catches a renderer that queried the wrong
- * category's group_access rows. piwigo_user_access has no rows at all in
+ * category's group_access rows. user_access has no rows at all in
  * this fixture, so users_selected is always empty regardless of category.
  *
  * render()'s own bare `$users = []`/`$user_granted_indirect_ids = []`
@@ -28,7 +28,7 @@ use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
  *
  * Not exercised: the `(! is_int($row_group_id) && ! is_string($row_group_id))
  * || (...)` defensive `continue` inside the indirect-membership loop.
- * piwigo_user_group's own group_id/user_id columns are both real `NOT
+ * user_group's own group_id/user_id columns are both real `NOT
  * NULL` numeric columns (tests/Fixtures/piwigo-17.0.sql's own CREATE
  * TABLE), so a genuine row from getMembersByGroupIds() is always int or a
  * numeric string -- this branch is provably unreachable through real

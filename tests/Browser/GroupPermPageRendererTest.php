@@ -9,7 +9,7 @@ use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
  * via Controller/Admin/GroupPermSubController.php) -- 0% coverage before
  * this file.
  *
- * Fixture shape (tests/Fixtures/piwigo-17.0.sql): piwigo_group_access grants
+ * Fixture shape (tests/Fixtures/piwigo-17.0.sql): group_access grants
  * group 1 "Editors" access to BOTH category 1 "Sample Album" and category 2
  * "Nested Sub Album", but group 3 "Guests" access to category 1 only -- so
  * once category 2 is marked private, group 1's own permission page must

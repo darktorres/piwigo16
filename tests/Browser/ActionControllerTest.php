@@ -445,7 +445,7 @@ it('denies HD download of an oversized original to a guest with no HD access', f
 
     // Bigger than the XXLARGE (1656x1242) box in both dimensions -- forces
     // DerivativeImage::same_as_source() to be false for a non-HD user,
-    // exercising the 401 "Access denied e" branch. `piwigo_user_infos.
+    // exercising the 401 "Access denied e" branch. `user_infos.
     // enabled_high` defaults to 1 in the schema (and the fixture's guest
     // row, user_id 2, is no exception -- confirmed live) -- a guest only
     // has enabledHigh=false when a webmaster has explicitly disabled it

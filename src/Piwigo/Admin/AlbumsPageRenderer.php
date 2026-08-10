@@ -147,10 +147,15 @@ final class AlbumsPageRenderer
             $open_cat = $albumsRequest->rawId;
         }
 
+        // '-1' is the "nothing selected" sentinel albums.tpl's own inline
+        // `var openCat = {$open_cat};` embeds as a raw JS numeric literal,
+        // and albums.js's own `openCat == -1` check expects -- not '', which
+        // renders as `var openCat = ;` (a syntax error) and wouldn't match
+        // that check even quoted (JS `"" == -1` is false).
         $open_cat_value = match (true) {
             $open_cat instanceof CategoryId => (string) $open_cat->value,
             is_int($open_cat) || is_string($open_cat) => (string) $open_cat,
-            default => '',
+            default => '-1',
         };
 
         // +-------------------------------------------------------------------+

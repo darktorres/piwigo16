@@ -21,7 +21,6 @@ use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Paths;
 use Piwigo\Core\ProcessCache;
-use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\DbCredentials;
 use Piwigo\Db\EntityManagerFactory;
@@ -52,138 +51,10 @@ use Piwigo\Tests\Support\LangTestFactory;
 use Piwigo\Tests\Support\PageStateTestFactory;
 use Piwigo\Tests\Support\TranslatorTestFactory;
 use Piwigo\Tests\Support\UrlServiceTestFactory;
+use Piwigo\Tests\Unit\Search\SearchServiceTestFatalSignalHtmlRenderer;
+use Piwigo\Tests\Unit\Search\SearchServiceTestNotAnInflector;
 use Piwigo\Users\User;
 use Piwigo\Users\UserService;
-
-/**
- * Test-only HtmlRenderingInterface: turns the `never`-typed
- * badRequest()/fatalError() calls into a catchable exception instead of a
- * real header()+exit() redirect, so the "invalid identifier"/"not found"
- * gates on SearchService's own $htmlRenderer can be observed from a test.
- * Every other method throws too -- none of the scenarios exercised through
- * this fake ever reach tag/category matching (which is the only other
- * HtmlRenderingInterface method SearchService itself calls,
- * tagAlphaCompare()). Named with a SearchServiceTest-specific prefix (not
- * bare FatalSignalHtmlRenderer, matching tests/Integration/SearchServiceTest.php's
- * own name) since this file has no namespace, unlike the Integration
- * original -- every other test class this campaign has ever defined
- * inline lives in the shared global namespace across all of tests/Unit.
- */
-final class SearchServiceTestFatalSignalHtmlRenderer implements HtmlRenderingInterface
-{
-    /**
-     * @param array<int, array<string, mixed>> $catInformations
-     */
-    public function getCatDisplayName(array $catInformations, ?string $url = ''): string
-    {
-        throw new LogicException('not implemented in this fake');
-    }
-
-    public function getCatDisplayNameCache(
-        string $uppercats,
-        ?string $url = '',
-        bool $singleLink = false,
-        ?string $linkClass = null,
-        ?string $authKey = null,
-    ): string {
-        throw new LogicException('not implemented in this fake');
-    }
-
-    /**
-     * @param array<string, mixed> $a
-     * @param array<string, mixed> $b
-     */
-    public function nameCompare(array $a, array $b): int
-    {
-        throw new LogicException('not implemented in this fake');
-    }
-
-    /**
-     * @param array<string, mixed> $a
-     * @param array<string, mixed> $b
-     */
-    public function tagAlphaCompare(array $a, array $b): int
-    {
-        throw new LogicException('not implemented in this fake');
-    }
-
-    public function accessDenied(RedirectServiceInterface $redirectService): never
-    {
-        throw new RuntimeException('accessDenied called');
-    }
-
-    public function badRequest(RedirectServiceInterface $redirectService, string $msg, ?string $alternateUrl = null): never
-    {
-        throw new RuntimeException('badRequest: ' . $msg);
-    }
-
-    public function pageNotFound(RedirectServiceInterface $redirectService, ?string $msg, ?string $alternateUrl = null): never
-    {
-        throw new RuntimeException('pageNotFound: ' . ($msg ?? ''));
-    }
-
-    public function fatalError(string $msg, ?string $title = null, bool $showTrace = true): never
-    {
-        throw new RuntimeException('fatalError: ' . $msg);
-    }
-
-    /**
-     * @param list<array<string, mixed>> $tags
-     */
-    public function getTagsContentTitle(array $tags): string
-    {
-        throw new LogicException('not implemented in this fake');
-    }
-
-    /**
-     * @param array<string, mixed>|null $category
-     * @param list<array<string, mixed>> $combinedCategories
-     */
-    public function getCombinedCategoriesContentTitle(?array $category, array $combinedCategories): string
-    {
-        throw new LogicException('not implemented in this fake');
-    }
-
-    public function setStatusHeader(int $code, string $text = ''): void
-    {
-        throw new LogicException('not implemented in this fake');
-    }
-
-    /**
-     * @param array<string, mixed> $info
-     */
-    public function renderElementName(array $info): string
-    {
-        throw new LogicException('not implemented in this fake');
-    }
-
-    /**
-     * @param array<string, mixed> $info
-     */
-    public function renderElementDescription(array $info, string $param = ''): string
-    {
-        throw new LogicException('not implemented in this fake');
-    }
-
-    /**
-     * @param array<string, mixed> $info
-     */
-    public function getThumbnailTitle(array $info, string $title, string $comment = ''): string
-    {
-        throw new LogicException('not implemented in this fake');
-    }
-}
-
-/**
- * A real class that deliberately does NOT implement InflectorInterface --
- * class_alias()'d onto a fake 'Piwigo\Search\Inflector\Inflector_zz' FQCN
- * by the Inflector-guard test below, standing in for exactly the real-world
- * scenario that guard defends against (a 3rd-party language pack shipping
- * a broken Inflector_xx.php for its own 2-letter code).
- */
-final class SearchServiceTestNotAnInflector
-{
-}
 
 /**
  * Piwigo\Search\SearchService -- has its own dedicated

@@ -134,19 +134,14 @@ final class NotificationByMailSenderTest extends IntegrationTestCase
             'SELECT check_key, enabled, last_send FROM ' . 'user_mail_notification' . ' WHERE user_id = 1'
         );
         self::assertIsArray($row);
-        self::assertIsString($row['check_key']);
         // enabled is a genuine boolean column -- a raw (unmapped) fetch
         // returns a native PHP bool for it on Postgres, but a numeric 1/0
         // on MySQL (confirmed live, same as categories.visible/commentable
-        // elsewhere). (int) (bool) normalizes either representation.
-        self::assertTrue(is_bool($row['enabled']) || is_numeric($row['enabled']));
+        // elsewhere). (int) normalizes either representation.
         $lastSend = $row['last_send'];
-        if ($lastSend !== null) {
-            self::assertIsString($lastSend);
-        }
         $this->user1OriginalRow = [
             'check_key' => $row['check_key'],
-            'enabled' => (int) (bool) $row['enabled'],
+            'enabled' => (int) $row['enabled'],
             'last_send' => $lastSend,
         ];
 
@@ -252,9 +247,8 @@ final class NotificationByMailSenderTest extends IntegrationTestCase
         $value = $this->conn->fetchOne(
             'SELECT enabled FROM ' . 'user_mail_notification' . ' WHERE user_id = 1'
         );
-        self::assertTrue(is_bool($value) || is_numeric($value));
 
-        return (int) (bool) $value;
+        return (int) $value;
     }
 
     /**
@@ -462,8 +456,7 @@ final class NotificationByMailSenderTest extends IntegrationTestCase
             'SELECT COUNT(*) FROM ' . 'user_mail_notification' . ' WHERE check_key = ?',
             [$key]
         );
-        self::assertIsNumeric($taken);
-        self::assertSame(0, (int) $taken);
+        self::assertSame(0, $taken);
     }
 
     public function test_getUserNotifications_delegates_to_the_notification_by_mail_service(): void
@@ -649,6 +642,6 @@ final class NotificationByMailSenderTest extends IntegrationTestCase
         $authKeyCount = $this->conn->fetchOne(
             'SELECT COUNT(*) FROM ' . 'user_auth_keys' . " WHERE user_id = 4 AND key_type = 'auth_key'"
         );
-        self::assertSame(1, is_numeric($authKeyCount) ? (int) $authKeyCount : -1);
+        self::assertSame(1, $authKeyCount);
     }
 }

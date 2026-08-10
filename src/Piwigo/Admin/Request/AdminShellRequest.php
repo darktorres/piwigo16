@@ -28,6 +28,12 @@ use Piwigo\Validation\InputValidator;
  * the original, both run earlier in the method than the first alias
  * block) -- `page`/`section`'s own `InputValidator::validate()` calls
  * run at that same early point too, and are folded in here.
+ *
+ * `pluginsNewOrder` narrows to `?string`: its sole write path,
+ * `AdminShell::runDispatch()`'s `setSessionVar('plugins_new_order',
+ * ...)`, round-trips through the identical `$_SESSION[
+ * 'pwg_plugins_new_order']` key `SessionService::getPluginsNewOrder()`
+ * already reads back as `?string`.
  */
 final readonly class AdminShellRequest
 {
@@ -37,7 +43,7 @@ final readonly class AdminShellRequest
      */
     private function __construct(
         public bool $pluginsNewOrderPresent,
-        public mixed $pluginsNewOrder,
+        public ?string $pluginsNewOrder,
         public bool $changeThemePresent,
         public array $changeThemeUrlParams,
         public array $testGet,
@@ -70,9 +76,11 @@ final readonly class AdminShellRequest
         $test_get = $get;
         unset($test_get['page'], $test_get['section'], $test_get['tag']);
 
+        $plugins_new_order_raw = $get['plugins_new_order'] ?? null;
+
         return new self(
             isset($get['plugins_new_order']),
-            $get['plugins_new_order'] ?? null,
+            is_string($plugins_new_order_raw) ? $plugins_new_order_raw : null,
             isset($get['change_theme']),
             $change_theme_url_params,
             $test_get,

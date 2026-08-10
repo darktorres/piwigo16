@@ -26,11 +26,18 @@ test('fromArrays rejects a malformed section', function (): void {
         ->toThrow(RuntimeException::class);
 });
 
-test('fromArrays reports pluginsNewOrderPresent and passes the raw value through', function (): void {
+test('fromArrays reports pluginsNewOrderPresent and passes a string value through', function (): void {
     $request = AdminShellRequest::fromArrays(['plugins_new_order' => 'foo,bar'], [], new InputValidator());
 
     expect($request->pluginsNewOrderPresent)->toBeTrue()
         ->and($request->pluginsNewOrder)->toBe('foo,bar');
+});
+
+test('fromArrays reports pluginsNewOrderPresent but narrows a non-string value to null', function (): void {
+    $request = AdminShellRequest::fromArrays(['plugins_new_order' => ['foo']], [], new InputValidator());
+
+    expect($request->pluginsNewOrderPresent)->toBeTrue()
+        ->and($request->pluginsNewOrder)->toBeNull();
 });
 
 test('fromArrays builds changeThemeUrlParams in page/tab/section order', function (): void {

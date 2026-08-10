@@ -15,7 +15,6 @@ use Piwigo\Users\CurrentUser;
 use Piwigo\Users\User;
 use Piwigo\Users\UserStatus;
 use Psr\Log\AbstractLogger;
-use Stringable;
 
 /**
  * Piwigo\Controller\VitalsController -- only 2 constructor deps, no

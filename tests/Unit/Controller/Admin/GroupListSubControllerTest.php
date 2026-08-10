@@ -2,7 +2,6 @@
 
 declare(strict_types=1);
 
-use LogicException;
 use Nyholm\Psr7\ServerRequest;
 use Piwigo\Admin\CoreTabs;
 use Piwigo\Common\ValueObject\LangCode;

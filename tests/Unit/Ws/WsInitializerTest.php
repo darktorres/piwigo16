@@ -2,7 +2,6 @@
 
 declare(strict_types=1);
 
-use LogicException;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Paths;
 use Piwigo\Ws\Protocol\PwgJsonEncoder;

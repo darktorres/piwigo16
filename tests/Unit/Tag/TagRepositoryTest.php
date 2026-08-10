@@ -726,12 +726,17 @@ test('findOtherNames() excludes the given id', function (): void {
 });
 
 test('countAll() reflects a freshly inserted tag', function (): void {
+    // >= , not an exact $before + 1 -- same reasoning as
+    // countAllImageTagLinks()'s own sibling test below: a genuinely
+    // global, unfiltered COUNT(*) against a table this whole DB shares
+    // across every Unit test in one process isn't safe to assert an
+    // exact delta on.
     $repo = tagTestRepo();
     $before = $repo->countAll();
     $id = $repo->insert(tagTestName(), tagTestName());
 
     try {
-        expect($repo->countAll())->toBe($before + 1);
+        expect($repo->countAll())->toBeGreaterThanOrEqual($before + 1);
     } finally {
         $repo->deleteByIds([$id]);
     }

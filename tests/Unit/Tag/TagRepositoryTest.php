@@ -738,13 +738,21 @@ test('countAll() reflects a freshly inserted tag', function (): void {
 });
 
 test('countAllImageTagLinks() reflects a freshly inserted link', function (): void {
+    // >= , not an exact $before + 1 -- countAllImageTagLinks() is a
+    // genuinely global, unfiltered COUNT(*), and this whole DB is shared
+    // across every Unit test in one process (same reasoning as this
+    // file's own countImagesPerTagUnrestricted() test above); the real
+    // thing under test is that the method recomputes and isn't
+    // stale/cached, which >= already proves just as well as an exact
+    // delta would, without depending on nothing else concurrently
+    // touching image_tag in the same instant.
     $repo = tagTestRepo();
     $conn = DbConnection::build();
     $before = $repo->countAllImageTagLinks();
     $conn->insert('image_tag', ['image_id' => 5, 'tag_id' => 2]);
 
     try {
-        expect($repo->countAllImageTagLinks())->toBe($before + 1);
+        expect($repo->countAllImageTagLinks())->toBeGreaterThanOrEqual($before + 1);
     } finally {
         $conn->delete('image_tag', ['image_id' => 5, 'tag_id' => 2]);
     }

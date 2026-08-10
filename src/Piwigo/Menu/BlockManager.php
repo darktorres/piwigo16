@@ -98,8 +98,11 @@ final class BlockManager
 
         $idx = 1;
         foreach ($this->registered_blocks as $id => $block) {
-            $raw_pos = $mb_conf[$id] ?? $idx * 50;
-            $pos = is_numeric($raw_pos) ? (int) $raw_pos : $idx * 50;
+            // $mb_conf[$id], when present, is already a real int -- its own
+            // sanitizing hook drops non-numeric entries entirely rather
+            // than coercing them, so no is_numeric()/(int) cast is needed
+            // here either.
+            $pos = $mb_conf[$id] ?? $idx * 50;
             if ($pos > 0) {
                 $this->display_blocks[$id] = new DisplayBlock($block);
                 $this->display_blocks[$id]->set_position($pos);

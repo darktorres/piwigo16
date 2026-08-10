@@ -54,15 +54,10 @@ final class MenubarPageRenderer
         // call site) -- a real CurrentConfig property instead of the
         // former dynamic 'blk_' . $id bag key. Already decoded -- no
         // manual unserialize() needed.
+        // Every position is already a real int -- blkMenubar's own
+        // sanitizing hook drops non-numeric entries rather than coercing
+        // them, so no further normalization is needed here.
         $mb_conf = $currentConfig->blkMenubar ?? [];
-
-        // $mb_conf comes from DB-stored config, so its element types are
-        // not statically known; normalize every position to a real int.
-        $mb_conf_normalized = [];
-        foreach ($mb_conf as $id => $pos) {
-            $mb_conf_normalized[$id] = is_numeric($pos) ? (int) $pos : 0;
-        }
-        $mb_conf = $mb_conf_normalized;
 
         foreach ($mb_conf as $id => $pos) {
             if (! isset($reg_blocks[$id])) {

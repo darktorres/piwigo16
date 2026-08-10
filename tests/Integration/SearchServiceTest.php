@@ -20,6 +20,7 @@ namespace Piwigo\Tests\Integration {
     use Piwigo\Tests\Support\HtmlServiceTestFactory;
     use Piwigo\Core\CurrentLogger;
     use Piwigo\Config\DeploymentPolicy;
+    use Piwigo\Config\FilterViewsSelection;
     use Piwigo\Cache\CachePools;
     use Piwigo\Users\UserService;
     use Exception;
@@ -292,22 +293,22 @@ final class SearchServiceTest extends IntegrationTestCase
 
         CurrentUserTestFactory::get()->set(User::fromUserArray(self::realisticUserGlobal()));
         $currentConfig->defaultFiltersViews = null;
-        $currentConfig->filtersViews = [
-            'expert' => ['access' => 'everybody'],
-            'words' => ['access' => 'everybody'],
-            'author' => ['access' => 'everybody'],
-            'file_type' => ['access' => 'everybody'],
-            'added_by' => ['access' => 'everybody'],
-            'album' => ['access' => 'everybody'],
-            'post_date' => ['access' => 'everybody'],
-            'creation_date' => ['access' => 'everybody'],
-            'ratio' => ['access' => 'everybody'],
-            'rating' => ['access' => 'everybody'],
-            'file_size' => ['access' => 'everybody'],
-            'height' => ['access' => 'everybody'],
-            'width' => ['access' => 'everybody'],
-            'tags' => ['access' => 'everybody'],
-        ];
+        $currentConfig->filtersViews = FilterViewsSelection::fromArray([
+            'expert' => ['access' => 'everybody', 'default' => false],
+            'words' => ['access' => 'everybody', 'default' => false],
+            'author' => ['access' => 'everybody', 'default' => false],
+            'file_type' => ['access' => 'everybody', 'default' => false],
+            'added_by' => ['access' => 'everybody', 'default' => false],
+            'album' => ['access' => 'everybody', 'default' => false],
+            'post_date' => ['access' => 'everybody', 'default' => false],
+            'creation_date' => ['access' => 'everybody', 'default' => false],
+            'ratio' => ['access' => 'everybody', 'default' => false],
+            'rating' => ['access' => 'everybody', 'default' => false],
+            'file_size' => ['access' => 'everybody', 'default' => false],
+            'height' => ['access' => 'everybody', 'default' => false],
+            'width' => ['access' => 'everybody', 'default' => false],
+            'tags' => ['access' => 'everybody', 'default' => false],
+        ]);
         $currentConfig->orderBy = 'ORDER BY id ASC';
         $currentConfig->calendarDatefield = 'date_creation';
         $currentConfig->quickSearchIncludeSubAlbums = false;

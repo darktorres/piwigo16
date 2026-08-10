@@ -33,9 +33,9 @@ use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
  */
 
 /** @return array<int, array{id: string, date_available: ?string}> */
-function feedAllImageDates(mysqli|Connection $db, string $prefix): array
+function feedAllImageDates(mysqli|Connection $db): array
 {
-    $fetchedRows = H::dbFetchAll($db, sprintf('SELECT id, date_available FROM %simages', $prefix));
+    $fetchedRows = H::dbFetchAll($db, 'SELECT id, date_available FROM images');
 
     $rows = [];
     foreach ($fetchedRows as $row) {
@@ -49,13 +49,6 @@ function feedAllImageDates(mysqli|Connection $db, string $prefix): array
 function feedDbConnect(): mysqli|Connection
 {
     return H::connect();
-}
-
-function feedDbPrefix(): string
-{
-    $prefix = getenv('PIWIGO_DB_PREFIX');
-
-    return $prefix !== false ? $prefix : 'piwigo_';
 }
 
 /** @return array{status: int, headers: string, body: string} */
@@ -95,12 +88,7 @@ function feedExtractFeedId(string $html): string
 function feedUserFeedRow(string $feedId): ?array
 {
     $db = feedDbConnect();
-    $prefix = feedDbPrefix();
-    $row = H::dbFetchAssoc($db, sprintf(
-        "SELECT last_check FROM %suser_feed WHERE id = '%s'",
-        $prefix,
-        H::dbEscape($db, $feedId)
-    ));
+    $row = H::dbFetchAssoc($db, sprintf("SELECT last_check FROM user_feed WHERE id = '%s'", H::dbEscape($db, $feedId)));
     H::dbClose($db);
 
     if (! is_array($row)) {
@@ -197,10 +185,9 @@ it('serves a well-formed RSS2 XML feed with the real Content-Type header and exa
     // feed's recent-post-dates grouping collapses to exactly 1 date,
     // saving the original values to restore afterward.
     $db = feedDbConnect();
-    $prefix = feedDbPrefix();
-    $originalDates = feedAllImageDates($db, $prefix);
+    $originalDates = feedAllImageDates($db);
     expect($originalDates)->not->toBe([]);
-    H::dbQuery($db, sprintf("UPDATE %simages SET date_available = '%s'", $prefix, FEED_FIXED_DATE));
+    H::dbQuery($db, sprintf("UPDATE images SET date_available = '%s'", FEED_FIXED_DATE));
     H::dbClose($db);
     CachePools::notifications()->clear();
 
@@ -256,14 +243,9 @@ it('serves a well-formed RSS2 XML feed with the real Content-Type header and exa
         foreach ($originalDates as $row) {
             $value = $row['date_available'];
             if ($value === null) {
-                H::dbQuery($db, sprintf('UPDATE %simages SET date_available = NULL WHERE id = %d', $prefix, (int) $row['id']));
+                H::dbQuery($db, sprintf('UPDATE images SET date_available = NULL WHERE id = %d', (int) $row['id']));
             } else {
-                H::dbQuery($db, sprintf(
-                    "UPDATE %simages SET date_available = '%s' WHERE id = %d",
-                    $prefix,
-                    H::dbEscape($db, $value),
-                    (int) $row['id']
-                ));
+                H::dbQuery($db, sprintf("UPDATE images SET date_available = '%s' WHERE id = %d", H::dbEscape($db, $value), (int) $row['id']));
             }
         }
         H::dbClose($db);

@@ -176,15 +176,8 @@ function identCurlWithRawCookie(string $rawCookieHeader): array
     return ['status' => $status, 'body' => is_string($body) ? $body : ''];
 }
 
-function identDbPrefix(): string
-{
-    $prefix = getenv('PIWIGO_DB_PREFIX');
-
-    return $prefix !== false ? $prefix : 'piwigo_';
-}
-
 /**
- * Temporarily registers a language row in `piwigo_languages` -- see
+ * Temporarily registers a language row in `languages` -- see
  * RegisterControllerTest.php's identical registerAddLanguage() for the
  * full rationale (this fixture only ships `en_UK` in the DB, though
  * `fr_FR` is a real on-disk core language pack). Caller must pair this
@@ -193,13 +186,11 @@ function identDbPrefix(): string
 function identAddLanguage(string $code, string $name): void
 {
     $db = H::connect();
-    $prefix = identDbPrefix();
     $upsertSql = $db instanceof mysqli
-        ? "INSERT INTO %slanguages (id, version, name) VALUES ('%s', '16.3.0', '%s') ON DUPLICATE KEY UPDATE version = VALUES(version)"
-        : "INSERT INTO %slanguages (id, version, name) VALUES ('%s', '16.3.0', '%s') ON CONFLICT (id) DO UPDATE SET version = EXCLUDED.version";
+        ? "INSERT INTO languages (id, version, name) VALUES ('%s', '16.3.0', '%s') ON DUPLICATE KEY UPDATE version = VALUES(version)"
+        : "INSERT INTO languages (id, version, name) VALUES ('%s', '16.3.0', '%s') ON CONFLICT (id) DO UPDATE SET version = EXCLUDED.version";
     H::dbQuery($db, sprintf(
         $upsertSql,
-        $prefix,
         H::dbEscape($db, $code),
         H::dbEscape($db, $name)
     ));
@@ -210,8 +201,7 @@ function identAddLanguage(string $code, string $name): void
 function identRemoveLanguage(string $code): void
 {
     $db = H::connect();
-    $prefix = identDbPrefix();
-    H::dbQuery($db, sprintf("DELETE FROM %slanguages WHERE id = '%s'", $prefix, H::dbEscape($db, $code)));
+    H::dbQuery($db, sprintf("DELETE FROM languages WHERE id = '%s'", H::dbEscape($db, $code)));
     H::dbClose($db);
 }
 

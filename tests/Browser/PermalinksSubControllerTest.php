@@ -21,13 +21,6 @@ use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
  * shared, global state across the whole Browser suite run (same rationale
  * as BrowserTestHelpers::snapshotConfig()'s own docblock).
  */
-function permalinksDbPrefix(): string
-{
-    $prefix = getenv('PIWIGO_DB_PREFIX');
-
-    return $prefix !== false ? $prefix : 'piwigo_';
-}
-
 function permalinksDb(): mysqli|Connection
 {
     return H::connect();
@@ -42,9 +35,9 @@ function permalinksDb(): mysqli|Connection
  * the value narrowing stays even though the query-level null narrowing is
  * now handled inside dbFetchAssoc() itself.
  */
-function permalinksCategoryPermalink(mysqli|Connection $db, string $prefix, int $catId): ?string
+function permalinksCategoryPermalink(mysqli|Connection $db, int $catId): ?string
 {
-    $row = H::dbFetchAssoc($db, sprintf('SELECT permalink FROM %scategories WHERE id = %d', $prefix, $catId));
+    $row = H::dbFetchAssoc($db, sprintf('SELECT permalink FROM categories WHERE id = %d', $catId));
 
     return is_array($row) && is_string($row['permalink'] ?? null) ? $row['permalink'] : null;
 }
@@ -54,13 +47,9 @@ function permalinksCategoryPermalink(mysqli|Connection $db, string $prefix, int 
  * (that table's own PRIMARY KEY), or null if no such row exists -- same
  * narrowing rationale as permalinksCategoryPermalink() above.
  */
-function permalinksOldPermalinkCatId(mysqli|Connection $db, string $prefix, string $permalink): ?int
+function permalinksOldPermalinkCatId(mysqli|Connection $db, string $permalink): ?int
 {
-    $row = H::dbFetchAssoc($db, sprintf(
-        "SELECT cat_id FROM %sold_permalinks WHERE permalink = '%s'",
-        $prefix,
-        H::dbEscape($db, $permalink)
-    ));
+    $row = H::dbFetchAssoc($db, sprintf("SELECT cat_id FROM old_permalinks WHERE permalink = '%s'", H::dbEscape($db, $permalink)));
 
     return is_array($row) && is_numeric($row['cat_id'] ?? null) ? (int) $row['cat_id'] : null;
 }
@@ -78,8 +67,7 @@ it('rejects a set_permalink submission without a valid CSRF token', function ():
     expect($result['body'])->toContain('missing token');
 
     $db = permalinksDb();
-    $prefix = permalinksDbPrefix();
-    $permalinkValue = permalinksCategoryPermalink($db, $prefix, 2);
+    $permalinkValue = permalinksCategoryPermalink($db, 2);
     H::dbClose($db);
     expect($permalinkValue)->toBeNull();
 });
@@ -99,7 +87,6 @@ it('sets a category permalink, lists it among active permalinks, clears it into 
     $catId = 2;
     $permalink = 'permalinks-subctrl-' . uniqid();
     $db = permalinksDb();
-    $prefix = permalinksDbPrefix();
 
     try {
         // set_permalink + a non-empty permalink value -> the
@@ -117,7 +104,7 @@ it('sets a category permalink, lists it among active permalinks, clears it into 
         // uppercats-narrowing + getCatDisplayNameCache() lines).
         expect($setResult['body'])->toContain($permalink);
 
-        expect(permalinksCategoryPermalink($db, $prefix, $catId))->toBe($permalink);
+        expect(permalinksCategoryPermalink($db, $catId))->toBe($permalink);
 
         // set_permalink + an empty permalink value + save=1 -> the
         // PermalinkService::deleteCatPermalink() branch. Since a real
@@ -133,9 +120,9 @@ it('sets a category permalink, lists it among active permalinks, clears it into 
         ]);
         expect($clearResult['status'])->toBe(200);
 
-        expect(permalinksCategoryPermalink($db, $prefix, $catId))->toBeNull();
+        expect(permalinksCategoryPermalink($db, $catId))->toBeNull();
 
-        expect(permalinksOldPermalinkCatId($db, $prefix, $permalink))->toBe($catId);
+        expect(permalinksOldPermalinkCatId($db, $permalink))->toBe($catId);
 
         // delete_permanent (GET, CSRF-gated) -> PermalinkService::
         // deleteOldPermalinkByValue(), permanently removing the history row.
@@ -145,14 +132,10 @@ it('sets a category permalink, lists it among active permalinks, clears it into 
         );
         expect($deleteResult['status'])->toBe(200);
 
-        expect(permalinksOldPermalinkCatId($db, $prefix, $permalink))->toBeNull();
+        expect(permalinksOldPermalinkCatId($db, $permalink))->toBeNull();
     } finally {
-        H::dbQuery($db, sprintf('UPDATE %scategories SET permalink = NULL WHERE id = %d', $prefix, $catId));
-        H::dbQuery($db, sprintf(
-            "DELETE FROM %sold_permalinks WHERE permalink = '%s'",
-            $prefix,
-            H::dbEscape($db, $permalink)
-        ));
+        H::dbQuery($db, sprintf('UPDATE categories SET permalink = NULL WHERE id = %d', $catId));
+        H::dbQuery($db, sprintf("DELETE FROM old_permalinks WHERE permalink = '%s'", H::dbEscape($db, $permalink)));
         H::dbClose($db);
     }
 });

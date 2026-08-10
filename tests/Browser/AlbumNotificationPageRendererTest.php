@@ -83,17 +83,10 @@ it('resolves the representative-photo image query and injects an auth_key URL pa
     $userId = wsAddedUserId($addUserResult);
 
     $db = H::connect();
-    $prefix = getenv('PIWIGO_DB_PREFIX');
-    $prefix = $prefix !== false ? $prefix : 'piwigo_';
     // Directly assigns the uploaded photo as this album's representative --
     // deterministic regardless of whatever "auto-pick a representative"
     // default behavior addSimple() may or may not apply.
-    H::dbQuery($db, sprintf(
-        'UPDATE %scategories SET representative_picture_id = %d WHERE id = %d',
-        $prefix,
-        $imageId,
-        $albumId
-    ));
+    H::dbQuery($db, sprintf('UPDATE categories SET representative_picture_id = %d WHERE id = %d', $imageId, $albumId));
 
     try {
         $result = H::adminPost($page, '/admin.php?page=album-' . $albumId . '-notification', [
@@ -108,8 +101,8 @@ it('resolves the representative-photo image query and injects an auth_key URL pa
         expect($result['body'])->toContain('1 mail has been sent.');
         expect($result['body'])->toContain($username);
     } finally {
-        H::dbQuery($db, sprintf('DELETE FROM %suser_infos WHERE user_id = %d', $prefix, $userId));
-        H::dbQuery($db, sprintf('DELETE FROM %susers WHERE id = %d', $prefix, $userId));
+        H::dbQuery($db, sprintf('DELETE FROM user_infos WHERE user_id = %d', $userId));
+        H::dbQuery($db, sprintf('DELETE FROM users WHERE id = %d', $userId));
         H::dbClose($db);
     }
 });
@@ -144,19 +137,17 @@ it('populates the private-album permission_url and direct/indirect notified-user
     $indirectUserId = wsAddedUserId($addUserResult);
 
     $db = H::connect();
-    $prefix = getenv('PIWIGO_DB_PREFIX');
-    $prefix = $prefix !== false ? $prefix : 'piwigo_';
 
     // status='private' both routes the form-construction group_ids query
     // through the group_access-scoped branch (assigning permission_url)
     // and enters the direct+indirect user-access resolution block below it.
-    H::dbQuery($db, sprintf("UPDATE %scategories SET status = 'private' WHERE id = %d", $prefix, $albumId));
+    H::dbQuery($db, sprintf("UPDATE categories SET status = 'private' WHERE id = %d", $albumId));
     // Grants this specific album to the group (group_access), and the new
     // user to that group (user_group) -- exercises the indirect-access
     // resolution query with a real, non-empty result rather than an always-
     // empty one.
-    H::dbQuery($db, sprintf('INSERT INTO %sgroup_access (group_id, cat_id) VALUES (%d, %d)', $prefix, $groupId, $albumId));
-    H::dbQuery($db, sprintf('INSERT INTO %suser_group (group_id, user_id) VALUES (%d, %d)', $prefix, $groupId, $indirectUserId));
+    H::dbQuery($db, sprintf('INSERT INTO group_access (group_id, cat_id) VALUES (%d, %d)', $groupId, $albumId));
+    H::dbQuery($db, sprintf('INSERT INTO user_group (group_id, user_id) VALUES (%d, %d)', $groupId, $indirectUserId));
 
     try {
         $page = H::navigateOk($page, '/admin.php?page=album-' . $albumId . '-notification');
@@ -186,10 +177,10 @@ it('populates the private-album permission_url and direct/indirect notified-user
         $result = H::rawGet($page, '/admin.php?page=album-' . $albumId . '-notification');
         expect($result['body'])->toContain($usernameIndirect);
     } finally {
-        H::dbQuery($db, sprintf('DELETE FROM %suser_group WHERE group_id = %d', $prefix, $groupId));
-        H::dbQuery($db, sprintf('DELETE FROM %sgroup_access WHERE group_id = %d', $prefix, $groupId));
-        H::dbQuery($db, sprintf('DELETE FROM %suser_infos WHERE user_id = %d', $prefix, $indirectUserId));
-        H::dbQuery($db, sprintf('DELETE FROM %susers WHERE id = %d', $prefix, $indirectUserId));
+        H::dbQuery($db, sprintf('DELETE FROM user_group WHERE group_id = %d', $groupId));
+        H::dbQuery($db, sprintf('DELETE FROM group_access WHERE group_id = %d', $groupId));
+        H::dbQuery($db, sprintf('DELETE FROM user_infos WHERE user_id = %d', $indirectUserId));
+        H::dbQuery($db, sprintf('DELETE FROM users WHERE id = %d', $indirectUserId));
         H::dbClose($db);
     }
 });

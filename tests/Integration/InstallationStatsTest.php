@@ -7,12 +7,6 @@ use Piwigo\Core\Kernel;
 use Piwigo\Core\Paths;
 use Piwigo\Db\DbConnection;
 
-function installationStatsDbPrefix(): string
-{
-    $prefix = getenv('PIWIGO_DB_PREFIX');
-
-    return $prefix !== false ? $prefix : 'piwigo_';
-}
 
 // InstallationStats is a container-shared, constructor-injected instance,
 // like RateService/HistoryService/ImageService/CategoryService/TagService/
@@ -87,18 +81,13 @@ test('getGeneralStatistics sums image filesize plus format filesize into disk_us
     $before = installation_stats_test_make()->getGeneralStatistics();
 
     $conn = DbConnection::build();
-    $prefix = installationStatsDbPrefix();
     $conn->executeStatement(sprintf(
         "INSERT INTO %s (name, path, filesize, representative_ext, added_by, date_available)
          VALUES ('Installation Stats Test Photo', '/tmp/installation-stats-test.jpg', 12345, NULL, 1, NOW())",
         'images'
     ));
     $imageId = (int) $conn->lastInsertId();
-    $conn->executeStatement(sprintf(
-        "INSERT INTO %simage_format (image_id, ext, filesize) VALUES (%d, 'tif', 6789)",
-        $prefix,
-        $imageId
-    ));
+    $conn->executeStatement(sprintf("INSERT INTO image_format (image_id, ext, filesize) VALUES (%d, 'tif', 6789)", $imageId));
 
     try {
         $after = installation_stats_test_make()->getGeneralStatistics();
@@ -108,7 +97,7 @@ test('getGeneralStatistics sums image filesize plus format filesize into disk_us
         expect($after->formatsDiskUsage)->toBe($before->formatsDiskUsage + 6789);
         expect($after->diskUsage)->toBe($before->diskUsage + 12345 + 6789);
     } finally {
-        $conn->executeStatement(sprintf('DELETE FROM %simage_format WHERE image_id = %d', $prefix, $imageId));
+        $conn->executeStatement(sprintf('DELETE FROM image_format WHERE image_id = %d', $imageId));
         $conn->executeStatement('DELETE FROM ' . 'images' . ' WHERE id = ' . $imageId);
     }
 });
@@ -133,7 +122,6 @@ test('getInstallationDate returns user 2\'s own registration_date when it is a r
 
 test('getInstallationDate falls back to the MIN registration_date across all users when user 2\'s own date predates piwigo\'s origin', function (): void {
     $conn = DbConnection::build();
-    $prefix = installationStatsDbPrefix();
     $originalRows = $conn->fetchAllAssociative('SELECT user_id, registration_date FROM ' . 'user_infos');
 
     try {
@@ -141,10 +129,7 @@ test('getInstallationDate falls back to the MIN registration_date across all use
         // 2001-09-01 origin, then insert one fresh, valid user whose
         // registration_date should become the real MIN() fallback.
         $conn->executeStatement("UPDATE " . 'user_infos' . " SET registration_date = '1999-01-01 00:00:00'");
-        $conn->executeStatement(sprintf(
-            "INSERT INTO %susers (username, password, mail_address) VALUES ('installation-stats-fallback-user', NULL, NULL)",
-            $prefix
-        ));
+        $conn->executeStatement(sprintf("INSERT INTO users (username, password, mail_address) VALUES ('installation-stats-fallback-user', NULL, NULL)"));
         $newUserId = (int) $conn->lastInsertId();
         $conn->executeStatement(sprintf(
             "INSERT INTO %s (user_id, status, registration_date) VALUES (%d, 'normal', '2023-03-10 08:00:00')",
@@ -155,7 +140,7 @@ test('getInstallationDate falls back to the MIN registration_date across all use
         expect(installation_stats_test_make()->getInstallationDate())->toBe('2023-03-10 08:00:00');
 
         $conn->executeStatement(sprintf('DELETE FROM %s WHERE user_id = %d', 'user_infos', $newUserId));
-        $conn->executeStatement(sprintf('DELETE FROM %susers WHERE id = %d', $prefix, $newUserId));
+        $conn->executeStatement(sprintf('DELETE FROM users WHERE id = %d', $newUserId));
     } finally {
         foreach ($originalRows as $row) {
             $rowUserId = $row['user_id'];

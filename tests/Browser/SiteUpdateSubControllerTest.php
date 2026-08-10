@@ -8,65 +8,6 @@ use Pest\Browser\Api\PendingAwaitablePage;
 use Pest\Browser\Api\Webpage;
 use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
 
-/**
- * Piwigo\Controller\Admin\SiteUpdateSubController (admin.php?page=
- * site_update) -- the filesystem/DB synchronization pass: new/deleted
- * category detection, new/deleted/updated element detection, metadata
- * sync. Site 1's `galleries_url` (piwigo_sites fixture row) is the real
- * repo-root `galleries/` directory, otherwise empty in this fixture (no
- * category in the fixture has `dir`/`site_id` set, so a full, unscoped
- * sync of site 1 never touches any pre-existing category/photo) -- tests
- * below create a uniquely-named subdirectory + one GD-generated JPEG
- * under it, drive a real sync, then either let a second "the directory is
- * gone" sync delete what was created (exercising the deletion-detection
- * path for free) or fall back to that same real resync in a `finally`
- * block as cleanup.
- *
- * Deliberately light on: `enable_formats` beyond the one dedicated test
- * below, and `meta_empty_overrides` -- each is a real but narrow
- * combinatorial branch of an already very large handler; render +
- * guard-clause + the core create/simulate/delete/metadata/quick_sync
- * flows cover the large majority of this file's real gap without the
- * disproportionate setup those would need (matching AdminConfigurationTest's
- * own documented scoping precedent).
- *
- * Two lines of the "directories / categories" block are deliberately left
- * uncovered below, not silently skipped:
- *
- * - `CategoryService::getNextRanksByParent()`'s row-shape narrowing
- *   `continue` (reached when a row's `id_uppercat` is neither `int` nor
- *   `string`) is provably unreachable under this project's own DB driver
- *   configuration: `id_uppercat` is a nullable `smallint unsigned`
- *   column, and `DbConnection::build()` sets
- *   `MYSQLI_OPT_INT_AND_FLOAT_NATIVE`, so a raw `fetchAllAssociative()`
- *   row always yields either `int` (non-null) or `null` for it -- and the
- *   controller's own preceding `isset($row['id_uppercat']) or === ''`
- *   normalization already rewrites every `null`/`''` case to the string
- *   `'NULL'` before this check runs. There is no third native-MySQL
- *   column type this branch could ever observe.
- * - The `substr_compare($fulldir, '../', 0, 3)` prefix-strip (a
- *   category's on-disk fulldir starting with a literal `../`) is a
- *   holdover from legacy Piwigo's relative-`galleries_url` convention.
- *   Both of this rewrite's real write paths for a site row
- *   (`InstallWizard`'s own site-1 seed, and `SiteManagerSubController`'s
- *   "add a new site" form -- see that controller's own inline comment)
- *   always anchor `galleries_url` to `the live, container-bound Paths->root`, an
- *   absolute path, so no fulldir built from
- *   `CategoryService::getFulldirs()` can ever start with `../` for data
- *   this application itself wrote. It remains reachable only via a
- *   pre-rewrite-migrated site row a legacy install left with a relative
- *   URL -- this suite deliberately does not fabricate that here, since
- *   doing so would mean creating a real directory outside this repo's own
- *   `galleries/`/`_data/` sandbox (one level above the project root, in
- *   the host's actual home directory) purely to satisfy
- *   `LocalSiteReader::open()`'s `is_dir()` check.
- */
-function suDbPrefix(): string
-{
-    $prefix = getenv('PIWIGO_DB_PREFIX');
-
-    return $prefix !== false ? $prefix : 'piwigo_';
-}
 
 function suConnect(): mysqli|Connection
 {
@@ -76,12 +17,7 @@ function suConnect(): mysqli|Connection
 function suCategoryIdByDir(int $siteId, string $dir): ?int
 {
     $db = suConnect();
-    $row = H::dbFetchAssoc($db, sprintf(
-        "SELECT id FROM %scategories WHERE site_id = %d AND dir = '%s'",
-        suDbPrefix(),
-        $siteId,
-        H::dbEscape($db, $dir)
-    ));
+    $row = H::dbFetchAssoc($db, sprintf("SELECT id FROM categories WHERE site_id = %d AND dir = '%s'", $siteId, H::dbEscape($db, $dir)));
     H::dbClose($db);
 
     return is_array($row) && isset($row['id']) ? (int) $row['id'] : null;
@@ -90,11 +26,7 @@ function suCategoryIdByDir(int $siteId, string $dir): ?int
 function suImageIdByFile(string $file): ?int
 {
     $db = suConnect();
-    $row = H::dbFetchAssoc($db, sprintf(
-        "SELECT id FROM %simages WHERE file = '%s'",
-        suDbPrefix(),
-        H::dbEscape($db, $file)
-    ));
+    $row = H::dbFetchAssoc($db, sprintf("SELECT id FROM images WHERE file = '%s'", H::dbEscape($db, $file)));
     H::dbClose($db);
 
     return is_array($row) && isset($row['id']) ? (int) $row['id'] : null;
@@ -103,11 +35,7 @@ function suImageIdByFile(string $file): ?int
 function suImageDateMetadataUpdate(int $imageId): ?string
 {
     $db = suConnect();
-    $row = H::dbFetchAssoc($db, sprintf(
-        'SELECT date_metadata_update FROM %simages WHERE id = %d',
-        suDbPrefix(),
-        $imageId
-    ));
+    $row = H::dbFetchAssoc($db, sprintf('SELECT date_metadata_update FROM images WHERE id = %d', $imageId));
     H::dbClose($db);
 
     $value = is_array($row) ? ($row['date_metadata_update'] ?? null) : null;
@@ -118,7 +46,7 @@ function suImageDateMetadataUpdate(int $imageId): ?string
 function suImageLevel(int $imageId): ?int
 {
     $db = suConnect();
-    $row = H::dbFetchAssoc($db, sprintf('SELECT level FROM %simages WHERE id = %d', suDbPrefix(), $imageId));
+    $row = H::dbFetchAssoc($db, sprintf('SELECT level FROM images WHERE id = %d', $imageId));
     H::dbClose($db);
 
     $value = is_array($row) ? ($row['level'] ?? null) : null;
@@ -129,12 +57,7 @@ function suImageLevel(int $imageId): ?int
 function suImageFormatFilesize(int $imageId, string $ext): ?int
 {
     $db = suConnect();
-    $row = H::dbFetchAssoc($db, sprintf(
-        "SELECT filesize FROM %simage_format WHERE image_id = %d AND ext = '%s'",
-        suDbPrefix(),
-        $imageId,
-        H::dbEscape($db, $ext)
-    ));
+    $row = H::dbFetchAssoc($db, sprintf("SELECT filesize FROM image_format WHERE image_id = %d AND ext = '%s'", $imageId, H::dbEscape($db, $ext)));
     H::dbClose($db);
 
     $value = is_array($row) ? ($row['filesize'] ?? null) : null;
@@ -145,36 +68,21 @@ function suImageFormatFilesize(int $imageId, string $ext): ?int
 function suGrantGroupAccess(int $groupId, int $catId): void
 {
     $db = suConnect();
-    H::dbQuery($db, sprintf(
-        'INSERT INTO %sgroup_access (group_id, cat_id) VALUES (%d, %d)',
-        suDbPrefix(),
-        $groupId,
-        $catId
-    ));
+    H::dbQuery($db, sprintf('INSERT INTO group_access (group_id, cat_id) VALUES (%d, %d)', $groupId, $catId));
     H::dbClose($db);
 }
 
 function suGrantUserAccess(int $userId, int $catId): void
 {
     $db = suConnect();
-    H::dbQuery($db, sprintf(
-        'INSERT INTO %suser_access (user_id, cat_id) VALUES (%d, %d)',
-        suDbPrefix(),
-        $userId,
-        $catId
-    ));
+    H::dbQuery($db, sprintf('INSERT INTO user_access (user_id, cat_id) VALUES (%d, %d)', $userId, $catId));
     H::dbClose($db);
 }
 
 function suHasGroupAccess(int $groupId, int $catId): bool
 {
     $db = suConnect();
-    $row = H::dbFetchAssoc($db, sprintf(
-        'SELECT 1 FROM %sgroup_access WHERE group_id = %d AND cat_id = %d',
-        suDbPrefix(),
-        $groupId,
-        $catId
-    ));
+    $row = H::dbFetchAssoc($db, sprintf('SELECT 1 FROM group_access WHERE group_id = %d AND cat_id = %d', $groupId, $catId));
     H::dbClose($db);
 
     return $row !== null;
@@ -183,12 +91,7 @@ function suHasGroupAccess(int $groupId, int $catId): bool
 function suHasUserAccess(int $userId, int $catId): bool
 {
     $db = suConnect();
-    $row = H::dbFetchAssoc($db, sprintf(
-        'SELECT 1 FROM %suser_access WHERE user_id = %d AND cat_id = %d',
-        suDbPrefix(),
-        $userId,
-        $catId
-    ));
+    $row = H::dbFetchAssoc($db, sprintf('SELECT 1 FROM user_access WHERE user_id = %d AND cat_id = %d', $userId, $catId));
     H::dbClose($db);
 
     return $row !== null;
@@ -201,19 +104,14 @@ function suSetCategoryVisible(int $catId, bool $visible): void
     // bare 0/1 literal is valid MySQL tinyint(1) input but Postgres
     // rejects it outright.
     $sqlValue = $db instanceof mysqli ? ($visible ? '1' : '0') : ($visible ? 'true' : 'false');
-    H::dbQuery($db, sprintf(
-        'UPDATE %scategories SET visible = %s WHERE id = %d',
-        suDbPrefix(),
-        $sqlValue,
-        $catId
-    ));
+    H::dbQuery($db, sprintf('UPDATE categories SET visible = %s WHERE id = %d', $sqlValue, $catId));
     H::dbClose($db);
 }
 
 function suCategoryVisible(int $catId): ?bool
 {
     $db = suConnect();
-    $row = H::dbFetchAssoc($db, sprintf('SELECT visible FROM %scategories WHERE id = %d', suDbPrefix(), $catId));
+    $row = H::dbFetchAssoc($db, sprintf('SELECT visible FROM categories WHERE id = %d', $catId));
     H::dbClose($db);
 
     return is_array($row) && isset($row['visible']) ? H::dbToBool($row['visible']) : null;
@@ -222,7 +120,7 @@ function suCategoryVisible(int $catId): ?bool
 function suSetCategoryGlobalRankNull(int $catId): void
 {
     $db = suConnect();
-    H::dbQuery($db, sprintf('UPDATE %scategories SET global_rank = NULL WHERE id = %d', suDbPrefix(), $catId));
+    H::dbQuery($db, sprintf('UPDATE categories SET global_rank = NULL WHERE id = %d', $catId));
     H::dbClose($db);
 }
 
@@ -232,12 +130,7 @@ function suSetCategoryGlobalRankNull(int $catId): void
 function suImageTagNames(int $imageId): array
 {
     $db = suConnect();
-    $fetchedRows = H::dbFetchAll($db, sprintf(
-        'SELECT t.name FROM %stags t INNER JOIN %simage_tag it ON it.tag_id = t.id WHERE it.image_id = %d ORDER BY t.name',
-        suDbPrefix(),
-        suDbPrefix(),
-        $imageId
-    ));
+    $fetchedRows = H::dbFetchAll($db, sprintf('SELECT t.name FROM tags t INNER JOIN image_tag it ON it.tag_id = t.id WHERE it.image_id = %d ORDER BY t.name', $imageId));
     $names = [];
     foreach ($fetchedRows as $row) {
         if (is_string($row['name'] ?? null)) {
@@ -260,18 +153,14 @@ function suDeleteTagsByName(array $names): void
 
     $db = suConnect();
     $quoted = array_map(static fn (string $name): string => "'" . H::dbEscape($db, $name) . "'", $names);
-    H::dbQuery($db, sprintf('DELETE FROM %stags WHERE name IN (%s)', suDbPrefix(), implode(',', $quoted)));
+    H::dbQuery($db, sprintf('DELETE FROM tags WHERE name IN (%s)', implode(',', $quoted)));
     H::dbClose($db);
 }
 
 function suInsertRemoteSite(string $url): int
 {
     $db = suConnect();
-    H::dbQuery($db, sprintf(
-        "INSERT INTO %ssites (galleries_url) VALUES ('%s')",
-        suDbPrefix(),
-        H::dbEscape($db, $url)
-    ));
+    H::dbQuery($db, sprintf("INSERT INTO sites (galleries_url) VALUES ('%s')", H::dbEscape($db, $url)));
     $id = H::dbInsertId($db);
     H::dbClose($db);
 
@@ -281,7 +170,7 @@ function suInsertRemoteSite(string $url): int
 function suDeleteSite(int $id): void
 {
     $db = suConnect();
-    H::dbQuery($db, sprintf('DELETE FROM %ssites WHERE id = %d', suDbPrefix(), $id));
+    H::dbQuery($db, sprintf('DELETE FROM sites WHERE id = %d', $id));
     H::dbClose($db);
 }
 
@@ -794,11 +683,7 @@ it('propagates directly-granted group/user permissions onto newly-synced private
         assert($childBId !== null);
 
         $db = suConnect();
-        $grandchildRow = H::dbFetchAssoc($db, sprintf(
-            "SELECT id FROM %scategories WHERE site_id = 1 AND id_uppercat = %d",
-            suDbPrefix(),
-            $childBId
-        ));
+        $grandchildRow = H::dbFetchAssoc($db, sprintf("SELECT id FROM categories WHERE site_id = 1 AND id_uppercat = %d", $childBId));
         H::dbClose($db);
         expect($grandchildRow)->not->toBeNull();
         assert(is_array($grandchildRow));

@@ -197,21 +197,15 @@ function actionSetEnabledHigh(int $userId, bool $enabled): void
 {
     $db = actionDbConnect();
     $sqlValue = $db instanceof mysqli ? ($enabled ? '1' : '0') : ($enabled ? 'true' : 'false');
-    H::dbQuery($db, sprintf('UPDATE %suser_infos SET enabled_high = %s WHERE user_id = %d', actionDbPrefix(), $sqlValue, $userId));
+    H::dbQuery($db, sprintf('UPDATE user_infos SET enabled_high = %s WHERE user_id = %d', $sqlValue, $userId));
     H::dbClose($db);
 }
 
-function actionDbPrefix(): string
-{
-    $prefix = getenv('PIWIGO_DB_PREFIX');
-
-    return $prefix !== false ? $prefix : 'piwigo_';
-}
 
 function actionImagePath(int $imageId): string
 {
     $db = actionDbConnect();
-    $row = H::dbFetchAssoc($db, sprintf('SELECT path FROM %simages WHERE id = %d', actionDbPrefix(), $imageId));
+    $row = H::dbFetchAssoc($db, sprintf('SELECT path FROM images WHERE id = %d', $imageId));
     H::dbClose($db);
     if (! is_array($row) || ! is_string($row['path'] ?? null)) {
         throw new RuntimeException("actionImagePath(): no path found for image {$imageId}");
@@ -249,11 +243,7 @@ it('serves a remote-storage photo through the guessMimeType() fallback when mime
     @unlink($image);
 
     $db = actionDbConnect();
-    H::dbQuery($db, sprintf(
-        "UPDATE %simages SET path = 'http://127.0.0.1:1/ct-remote-photo.jpg' WHERE id = %d",
-        actionDbPrefix(),
-        $imageId
-    ));
+    H::dbQuery($db, sprintf("UPDATE images SET path = 'http://127.0.0.1:1/ct-remote-photo.jpg' WHERE id = %d", $imageId));
     H::dbClose($db);
 
     try {
@@ -314,11 +304,7 @@ it('serves a photo through a real registered format id, logging a "high" visit',
     file_put_contents($formatFile, str_repeat('R', 4096));
 
     $db = actionDbConnect();
-    H::dbQuery($db, sprintf(
-        "INSERT INTO %simage_format (image_id, ext, filesize) VALUES (%d, 'ct_raw', 4)",
-        actionDbPrefix(),
-        $imageId
-    ));
+    H::dbQuery($db, sprintf("INSERT INTO image_format (image_id, ext, filesize) VALUES (%d, 'ct_raw', 4)", $imageId));
     $formatId = H::dbInsertId($db);
     H::dbClose($db);
 
@@ -330,7 +316,7 @@ it('serves a photo through a real registered format id, logging a "high" visit',
     } finally {
         @unlink($formatFile);
         $cleanupDb = actionDbConnect();
-        H::dbQuery($cleanupDb, sprintf('DELETE FROM %simage_format WHERE format_id = %d', actionDbPrefix(), $formatId));
+        H::dbQuery($cleanupDb, sprintf('DELETE FROM image_format WHERE format_id = %d', $formatId));
         H::dbClose($cleanupDb);
         H::wsCall($page, 'pwg.categories.delete', [
             'category_id' => $albumId,
@@ -367,7 +353,7 @@ it('serves a photo\'s representative file via part=r when one is registered', fu
     file_put_contents($repFile, str_repeat('P', 2048));
 
     $db = actionDbConnect();
-    H::dbQuery($db, sprintf("UPDATE %simages SET representative_ext = 'jpg' WHERE id = %d", actionDbPrefix(), $imageId));
+    H::dbQuery($db, sprintf("UPDATE images SET representative_ext = 'jpg' WHERE id = %d", $imageId));
     H::dbClose($db);
 
     try {

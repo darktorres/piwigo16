@@ -4,19 +4,6 @@ declare(strict_types=1);
 
 use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
 
-/**
- * Piwigo\Admin\PhotosAddDirectPageRenderer (admin.php?page=photos_add) --
- * AdminExtendedSmokeTest's own routes already cover the direct/
- * applications/ftp/invalid-tab GET renders; this file targets the
- * remaining real branches: the CSRF-gated `batch` caddie action, the
- * `album`/`formats` GET params, and the `hide_warnings` session flag.
- */
-function photosAddDirectDbPrefix(): string
-{
-    $prefix = getenv('PIWIGO_DB_PREFIX');
-
-    return $prefix !== false ? $prefix : 'piwigo_';
-}
 
 it('adds a batch of photo ids to the caddie and redirects to the batch manager', function (): void {
     $page = H::loginAsAdmin($this);
@@ -38,11 +25,7 @@ it('adds a batch of photo ids to the caddie and redirects to the batch manager',
     expect($result['status'])->toBe(0);
 
     $db = H::connect();
-    $caddieRow = H::dbFetchAssoc($db, sprintf(
-        'SELECT COUNT(*) AS c FROM %scaddie WHERE user_id = 1 AND element_id = %d',
-        photosAddDirectDbPrefix(),
-        $imageId
-    ));
+    $caddieRow = H::dbFetchAssoc($db, sprintf('SELECT COUNT(*) AS c FROM caddie WHERE user_id = 1 AND element_id = %d', $imageId));
     H::dbClose($db);
     expect(is_array($caddieRow) ? (int) $caddieRow['c'] : -1)->toBe(1);
 });
@@ -113,8 +96,7 @@ it('lists a real photo\'s existing formats when formats= targets a valid origina
         @unlink($image);
 
         $db = H::connect();
-        $prefix = photosAddDirectDbPrefix();
-        H::dbQuery($db, sprintf("INSERT INTO %simage_format (image_id, ext, filesize) VALUES (%d, 'tif', 2048)", $prefix, $imageId));
+        H::dbQuery($db, sprintf("INSERT INTO image_format (image_id, ext, filesize) VALUES (%d, 'tif', 2048)", $imageId));
         H::dbClose($db);
 
         $page = H::navigateOk($page, '/admin.php?page=photos_add&formats=' . $imageId);

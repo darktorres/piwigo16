@@ -34,12 +34,6 @@ function tagsPageAddTag(Webpage|PendingAwaitablePage|AwaitableWebpage $page, str
     return (int) $tagId;
 }
 
-function tagsPageDbPrefix(): string
-{
-    $prefix = getenv('PIWIGO_DB_PREFIX');
-
-    return $prefix !== false ? $prefix : 'piwigo_';
-}
 
 // TagRepository::findOrphanTags() only considers a tag orphaned once its
 // lastmodified is >1 day old (a grace period against deleting a tag the
@@ -64,11 +58,11 @@ function tagsPageBackdateTag(int $tagId): void
         ? 'DATE_SUB(NOW(), INTERVAL 2 DAY)'
         : "NOW() - INTERVAL '2 days'";
     if ($db instanceof mysqli) {
-        H::dbQuery($db, sprintf('UPDATE %stags SET lastmodified = %s WHERE id = %d', tagsPageDbPrefix(), $dateExpr, $tagId));
+        H::dbQuery($db, sprintf('UPDATE tags SET lastmodified = %s WHERE id = %d', $dateExpr, $tagId));
     } else {
         H::dbQuery($db, 'BEGIN');
         H::dbQuery($db, 'SET session_replication_role = replica');
-        H::dbQuery($db, sprintf('UPDATE %stags SET lastmodified = %s WHERE id = %d', tagsPageDbPrefix(), $dateExpr, $tagId));
+        H::dbQuery($db, sprintf('UPDATE tags SET lastmodified = %s WHERE id = %d', $dateExpr, $tagId));
         H::dbQuery($db, 'SET session_replication_role = DEFAULT');
         H::dbQuery($db, 'COMMIT');
     }
@@ -78,7 +72,7 @@ function tagsPageBackdateTag(int $tagId): void
 function tagsPageDeleteTag(int $tagId): void
 {
     $db = H::connect();
-    H::dbQuery($db, sprintf('DELETE FROM %stags WHERE id = %d', tagsPageDbPrefix(), $tagId));
+    H::dbQuery($db, sprintf('DELETE FROM tags WHERE id = %d', $tagId));
     H::dbClose($db);
 }
 
@@ -221,12 +215,7 @@ it('joins real get_tag_alt_names hook results into a comma-separated alt_names v
     );
 
     $db = H::connect();
-    $prefix = tagsPageDbPrefix();
-    H::dbQuery($db, sprintf(
-        "INSERT INTO %splugins (id, state, version) VALUES ('%s', 'active', '1.0.0')",
-        $prefix,
-        H::dbEscape($db, $pluginId)
-    ));
+    H::dbQuery($db, sprintf("INSERT INTO plugins (id, state, version) VALUES ('%s', 'active', '1.0.0')", H::dbEscape($db, $pluginId)));
 
     $page = H::loginAsAdmin($this);
     $tagId = tagsPageAddTag($page, $tagName);
@@ -242,7 +231,7 @@ it('joins real get_tag_alt_names hook results into a comma-separated alt_names v
         expect($result['body'])->toContain('Alt Name One, Alt Name Two');
     } finally {
         tagsPageDeleteTag($tagId);
-        H::dbQuery($db, sprintf("DELETE FROM %splugins WHERE id = '%s'", $prefix, H::dbEscape($db, $pluginId)));
+        H::dbQuery($db, sprintf("DELETE FROM plugins WHERE id = '%s'", H::dbEscape($db, $pluginId)));
         H::dbClose($db);
         tagsPageRemoveFixturePlugin($pluginId);
     }

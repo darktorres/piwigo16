@@ -19,8 +19,6 @@ use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
 function extraFiltersSetImageAttrs(int $imageId, ?float $ratingScore = null, ?string $dateCreation = null): void
 {
     $db = H::connect();
-    $prefix = getenv('PIWIGO_DB_PREFIX');
-    $prefix = $prefix !== false ? $prefix : 'piwigo_';
     $sets = [];
     if ($ratingScore !== null) {
         $sets[] = 'rating_score = ' . $ratingScore;
@@ -29,7 +27,7 @@ function extraFiltersSetImageAttrs(int $imageId, ?float $ratingScore = null, ?st
         $sets[] = "date_creation = '" . H::dbEscape($db, $dateCreation) . "'";
     }
     if ($sets !== []) {
-        H::dbQuery($db, sprintf('UPDATE %simages SET %s WHERE id = %d', $prefix, implode(', ', $sets), $imageId));
+        H::dbQuery($db, sprintf('UPDATE images SET %s WHERE id = %d', implode(', ', $sets), $imageId));
     }
     H::dbClose($db);
 }
@@ -82,8 +80,6 @@ function extraFiltersSettledContent(Webpage|PendingAwaitablePage|AwaitableWebpag
 function extraFiltersInsertRawSearchRow(array $rules): string
 {
     $db = H::connect();
-    $prefix = getenv('PIWIGO_DB_PREFIX');
-    $prefix = $prefix !== false ? $prefix : 'piwigo_';
 
     $uuid = 'psk-' . date('Ymd') . '-' . substr(md5(uniqid('', true)), 0, 10);
     $rulesJson = json_encode($rules);
@@ -91,12 +87,7 @@ function extraFiltersInsertRawSearchRow(array $rules): string
         throw new RuntimeException('json_encode failed for raw search rules: ' . var_export($rules, true));
     }
 
-    H::dbQuery($db, sprintf(
-        "INSERT INTO %ssearch (rules, created_on, created_by, search_uuid, forked_from) VALUES ('%s', NOW(), NULL, '%s', NULL)",
-        $prefix,
-        H::dbEscape($db, $rulesJson),
-        H::dbEscape($db, $uuid)
-    ));
+    H::dbQuery($db, sprintf("INSERT INTO search (rules, created_on, created_by, search_uuid, forked_from) VALUES ('%s', NOW(), NULL, '%s', NULL)", H::dbEscape($db, $rulesJson), H::dbEscape($db, $uuid)));
     H::dbClose($db);
 
     return $uuid;

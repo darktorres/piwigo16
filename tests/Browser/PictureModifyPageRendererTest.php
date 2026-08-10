@@ -8,56 +8,6 @@ use Pest\Browser\Api\PendingAwaitablePage;
 use Pest\Browser\Api\Webpage;
 use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
 
-/**
- * Piwigo\Admin\PictureModifyPageRenderer (admin.php?page=photo, the
- * per-photo "Properties" tab) -- AdminExtendedSmokeTest.php's own
- * data-driven smoke sweep already visits this tab with a plain GET, so
- * this file focuses on the actual metadata-update submission this
- * renderer's own request-handling branch (~150 uncovered lines) never
- * gets exercised by that bare visit: title/author/comment/level/
- * date_creation, tag assignment, and moving the photo into another album.
- *
- * Coverage-gap closure batch also added: the delete/U_JUMPTO branches
- * that key off a session `edit_context` (UserService::getEditContext()),
- * a real filesystem-synced photo (the only way `storage_category_id`/
- * multi-format rows are ever non-null -- every OTHER test in this file
- * uploads via pwg.images.addSimple, which always leaves both null), a
- * directly-stored 90/270-degree rotation code (swap-width/height
- * branch), the new-album-representative branch (`$new_thumbnail_for`,
- * distinguished from the already-representative-at-upload-time case the
- * pre-existing "sets a plain (non-array) tag name..." test below only
- * looks like it covers), and a real fixture-plugin `main.inc.php` proving
- * that a PictureModifyBeforeUpdate handler returning something other than
- * a PictureModifyBeforeUpdate instance now fails the request loud
- * (dispatchChange()'s own instanceof enforcement) instead of silently
- * falling back to the pre-hook submission.
- *
- * Deliberately NOT covered, both non-behavioral:
- *  - `if (! isset($page['image']))`'s own FALSE branch: `$page` is a
- *    fresh local scratch array (`$page = [];`, this method's own
- *    top-of-body reset -- see that assignment's own docblock) reset on
- *    every single call, so `isset($page['image'])` is structurally
- *    guaranteed false every time this line runs; there is no real
- *    request shape (this renderer's only entry point) that could ever
- *    reach it already set. A pure static-analysis narrowing artifact
- *    left over from the legacy script's own `global $page` shape (where
- *    an earlier include COULD have already populated it), not a
- *    reachable branch in this ported, per-call-scoped form.
- *  - `$added_by = 'N/A';`: dead even in the original legacy source
- *    (admin/picture_modify.php, confirmed by direct read) -- assigned
- *    once and never read again there either (only `$row['added_by']`,
- *    a completely separate variable, is used by the `$intro_vars` build
- *    below it). Ported faithfully rather than silently dropped, but has
- *    zero observable effect on any output, so no behavioral test can
- *    target it.
- */
-
-function pictureModifyDbPrefix(): string
-{
-    $prefix = getenv('PIWIGO_DB_PREFIX');
-
-    return $prefix !== false ? $prefix : 'piwigo_';
-}
 
 function pictureModifyDbConnect(): mysqli|Connection
 {
@@ -68,11 +18,7 @@ function pictureModifyDbConnect(): mysqli|Connection
 function pictureModifyImageRow(int $imageId): ?array
 {
     $db = pictureModifyDbConnect();
-    $row = H::dbFetchAssoc($db, sprintf(
-        'SELECT name, author, comment, level, date_creation FROM %simages WHERE id = %d',
-        pictureModifyDbPrefix(),
-        $imageId
-    ));
+    $row = H::dbFetchAssoc($db, sprintf('SELECT name, author, comment, level, date_creation FROM images WHERE id = %d', $imageId));
     H::dbClose($db);
 
     if (! is_array($row)) {
@@ -96,12 +42,7 @@ function pictureModifyImageRow(int $imageId): ?array
 function pictureModifyImageHasTag(int $imageId, int $tagId): bool
 {
     $db = pictureModifyDbConnect();
-    $row = H::dbFetchAssoc($db, sprintf(
-        'SELECT COUNT(*) AS c FROM %simage_tag WHERE image_id = %d AND tag_id = %d',
-        pictureModifyDbPrefix(),
-        $imageId,
-        $tagId
-    ));
+    $row = H::dbFetchAssoc($db, sprintf('SELECT COUNT(*) AS c FROM image_tag WHERE image_id = %d AND tag_id = %d', $imageId, $tagId));
     H::dbClose($db);
 
     return is_array($row) && (int) $row['c'] > 0;
@@ -110,11 +51,7 @@ function pictureModifyImageHasTag(int $imageId, int $tagId): bool
 function pictureModifyCategoryRepresentativeId(int $categoryId): ?int
 {
     $db = pictureModifyDbConnect();
-    $row = H::dbFetchAssoc($db, sprintf(
-        'SELECT representative_picture_id FROM %scategories WHERE id = %d',
-        pictureModifyDbPrefix(),
-        $categoryId
-    ));
+    $row = H::dbFetchAssoc($db, sprintf('SELECT representative_picture_id FROM categories WHERE id = %d', $categoryId));
     H::dbClose($db);
 
     if (! is_array($row) || $row['representative_picture_id'] === null) {
@@ -127,12 +64,7 @@ function pictureModifyCategoryRepresentativeId(int $categoryId): ?int
 function pictureModifySetRotationCode(int $imageId, int $rotationCode): void
 {
     $db = pictureModifyDbConnect();
-    H::dbQuery($db, sprintf(
-        'UPDATE %simages SET rotation = %d WHERE id = %d',
-        pictureModifyDbPrefix(),
-        $rotationCode,
-        $imageId
-    ));
+    H::dbQuery($db, sprintf('UPDATE images SET rotation = %d WHERE id = %d', $rotationCode, $imageId));
     H::dbClose($db);
 }
 
@@ -205,11 +137,7 @@ function pictureModifySync(Webpage|PendingAwaitablePage|AwaitableWebpage $page, 
 function pictureModifyImageIdByFile(string $file): ?int
 {
     $db = pictureModifyDbConnect();
-    $row = H::dbFetchAssoc($db, sprintf(
-        "SELECT id FROM %simages WHERE file = '%s'",
-        pictureModifyDbPrefix(),
-        H::dbEscape($db, $file)
-    ));
+    $row = H::dbFetchAssoc($db, sprintf("SELECT id FROM images WHERE file = '%s'", H::dbEscape($db, $file)));
     H::dbClose($db);
 
     return is_array($row) && isset($row['id']) ? (int) $row['id'] : null;
@@ -218,12 +146,7 @@ function pictureModifyImageIdByFile(string $file): ?int
 function pictureModifyCategoryIdByDir(int $siteId, string $dir): ?int
 {
     $db = pictureModifyDbConnect();
-    $row = H::dbFetchAssoc($db, sprintf(
-        "SELECT id FROM %scategories WHERE site_id = %d AND dir = '%s'",
-        pictureModifyDbPrefix(),
-        $siteId,
-        H::dbEscape($db, $dir)
-    ));
+    $row = H::dbFetchAssoc($db, sprintf("SELECT id FROM categories WHERE site_id = %d AND dir = '%s'", $siteId, H::dbEscape($db, $dir)));
     H::dbClose($db);
 
     return is_array($row) && isset($row['id']) ? (int) $row['id'] : null;
@@ -383,8 +306,7 @@ it('sets a plain (non-array) tag name and assigns the photo as its new album rep
     expect(pictureModifyImageHasTag($imageId, 2))->toBeTrue();
 
     $db = pictureModifyDbConnect();
-    $prefix = pictureModifyDbPrefix();
-    $assoc = H::dbFetchAssoc($db, sprintf('SELECT representative_picture_id FROM %scategories WHERE id = %d', $prefix, $albumId));
+    $assoc = H::dbFetchAssoc($db, sprintf('SELECT representative_picture_id FROM categories WHERE id = %d', $albumId));
     H::dbClose($db);
     expect(is_array($assoc) ? (int) $assoc['representative_picture_id'] : -1)->toBe($imageId);
 });
@@ -569,11 +491,7 @@ it('fatal-errors instead of silently falling back when a picture_modify_before_u
         PHP);
 
     $pluginDb = pictureModifyDbConnect();
-    H::dbQuery($pluginDb, sprintf(
-        "INSERT INTO %splugins (id, state, version) VALUES ('%s', 'active', '1.0.0')",
-        pictureModifyDbPrefix(),
-        $pluginId
-    ));
+    H::dbQuery($pluginDb, sprintf("INSERT INTO plugins (id, state, version) VALUES ('%s', 'active', '1.0.0')", $pluginId));
     H::dbClose($pluginDb);
 
     try {
@@ -611,7 +529,7 @@ it('fatal-errors instead of silently falling back when a picture_modify_before_u
         expect($row['comment'] ?? null)->not->toBe('Bogus hook comment ' . $marker);
     } finally {
         $cleanupDb = pictureModifyDbConnect();
-        H::dbQuery($cleanupDb, sprintf("DELETE FROM %splugins WHERE id = '%s'", pictureModifyDbPrefix(), $pluginId));
+        H::dbQuery($cleanupDb, sprintf("DELETE FROM plugins WHERE id = '%s'", $pluginId));
         H::dbClose($cleanupDb);
         @unlink($mainFile);
         @rmdir($pluginDir);

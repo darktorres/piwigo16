@@ -187,13 +187,11 @@ it('saves a manual rank_of_image POST as the real image_category rank order', fu
     expect($result['body'])->toContain('Album updated successfully');
 
     $db = H::connect();
-    $prefix = getenv('PIWIGO_DB_PREFIX');
-    $prefix = $prefix !== false ? $prefix : 'piwigo_';
 
     // `rank` is a reserved word on both platforms (MySQL 8.0.2+'s window
     // functions, Postgres always) -- backtick/double-quote per platform.
     $rankIdentifier = $db instanceof mysqli ? '`rank`' : '"rank"';
-    $fetchedRows = H::dbFetchAll($db, sprintf('SELECT image_id, %1$s FROM %2$simage_category WHERE category_id = %3$d ORDER BY %1$s', $rankIdentifier, $prefix, $albumId));
+    $fetchedRows = H::dbFetchAll($db, sprintf('SELECT image_id, %1$s FROM image_category WHERE category_id = %2$d ORDER BY %1$s', $rankIdentifier, $albumId));
     $rows = [];
     foreach ($fetchedRows as $row) {
         $rows[] = ['image_id' => (int) $row['image_id'], 'rank' => (int) $row['rank']];
@@ -232,9 +230,7 @@ it('builds a comma-joined user_define image_order string, filtering out an inval
     expect($result['body'])->toContain('Album updated successfully');
 
     $db = H::connect();
-    $prefix = getenv('PIWIGO_DB_PREFIX');
-    $prefix = $prefix !== false ? $prefix : 'piwigo_';
-    $row = H::fetchAssocOrFail($db, sprintf('SELECT image_order FROM %scategories WHERE id = %d', $prefix, $albumId));
+    $row = H::fetchAssocOrFail($db, sprintf('SELECT image_order FROM categories WHERE id = %d', $albumId));
     H::dbClose($db);
 
     expect($row['image_order'])->toBe('file ASC,name DESC');
@@ -267,9 +263,7 @@ it('persists the literal `rank` ASC order string for the manual "rank" choice, w
     expect($result['body'])->toContain('Images manual order saved');
 
     $db = H::connect();
-    $prefix = getenv('PIWIGO_DB_PREFIX');
-    $prefix = $prefix !== false ? $prefix : 'piwigo_';
-    $row = H::fetchAssocOrFail($db, sprintf('SELECT image_order FROM %scategories WHERE id = %d', $prefix, $albumId));
+    $row = H::fetchAssocOrFail($db, sprintf('SELECT image_order FROM categories WHERE id = %d', $albumId));
     H::dbClose($db);
 
     expect($row['image_order'])->toBe('`rank` ASC');
@@ -300,9 +294,7 @@ it('falls back to the filename-derived name when a photo has no explicit name', 
     @unlink($image);
 
     $db = H::connect();
-    $prefix = getenv('PIWIGO_DB_PREFIX');
-    $prefix = $prefix !== false ? $prefix : 'piwigo_';
-    $row = H::dbFetchAssoc($db, sprintf('SELECT file, name FROM %simages WHERE id = %d', $prefix, $imageId));
+    $row = H::dbFetchAssoc($db, sprintf('SELECT file, name FROM images WHERE id = %d', $imageId));
     H::dbClose($db);
     if (! is_array($row)) {
         throw new RuntimeException("expected a real images row for id {$imageId}");

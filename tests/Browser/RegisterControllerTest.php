@@ -113,13 +113,7 @@ function registerExtractKey(string $html): string
 function registerUserCount(string $username): int
 {
     $db = H::connect();
-    $prefix = getenv('PIWIGO_DB_PREFIX');
-    $prefix = $prefix !== false ? $prefix : 'piwigo_';
-    $row = H::dbFetchAssoc($db, sprintf(
-        "SELECT COUNT(*) AS c FROM %susers WHERE username = '%s'",
-        $prefix,
-        H::dbEscape($db, $username)
-    ));
+    $row = H::dbFetchAssoc($db, sprintf("SELECT COUNT(*) AS c FROM users WHERE username = '%s'", H::dbEscape($db, $username)));
     H::dbClose($db);
 
     return is_array($row) ? (int) $row['c'] : -1;
@@ -167,15 +161,8 @@ function registerCurlWithRawCookie(string $path, string $rawCookieHeader): array
     return ['status' => $status, 'body' => is_string($body) ? $body : ''];
 }
 
-function registerDbPrefix(): string
-{
-    $prefix = getenv('PIWIGO_DB_PREFIX');
-
-    return $prefix !== false ? $prefix : 'piwigo_';
-}
-
 /**
- * Temporarily registers a language row in `piwigo_languages` -- this
+ * Temporarily registers a language row in `languages` -- this
  * fixture only ever ships `en_UK` (confirmed via the fixture SQL dump),
  * but LangService::getLanguages() requires a real DB row (on top of a
  * real on-disk `language/<code>/` directory, which `fr_FR` genuinely has)
@@ -185,13 +172,11 @@ function registerDbPrefix(): string
 function registerAddLanguage(string $code, string $name): void
 {
     $db = H::connect();
-    $prefix = registerDbPrefix();
     $upsertSql = $db instanceof mysqli
-        ? "INSERT INTO %slanguages (id, version, name) VALUES ('%s', '16.3.0', '%s') ON DUPLICATE KEY UPDATE version = VALUES(version)"
-        : "INSERT INTO %slanguages (id, version, name) VALUES ('%s', '16.3.0', '%s') ON CONFLICT (id) DO UPDATE SET version = EXCLUDED.version";
+        ? "INSERT INTO languages (id, version, name) VALUES ('%s', '16.3.0', '%s') ON DUPLICATE KEY UPDATE version = VALUES(version)"
+        : "INSERT INTO languages (id, version, name) VALUES ('%s', '16.3.0', '%s') ON CONFLICT (id) DO UPDATE SET version = EXCLUDED.version";
     H::dbQuery($db, sprintf(
         $upsertSql,
-        $prefix,
         H::dbEscape($db, $code),
         H::dbEscape($db, $name)
     ));
@@ -202,8 +187,7 @@ function registerAddLanguage(string $code, string $name): void
 function registerRemoveLanguage(string $code): void
 {
     $db = H::connect();
-    $prefix = registerDbPrefix();
-    H::dbQuery($db, sprintf("DELETE FROM %slanguages WHERE id = '%s'", $prefix, H::dbEscape($db, $code)));
+    H::dbQuery($db, sprintf("DELETE FROM languages WHERE id = '%s'", H::dbEscape($db, $code)));
     H::dbClose($db);
 }
 

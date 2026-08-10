@@ -4,16 +4,6 @@ declare(strict_types=1);
 
 use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
 
-/**
- * Piwigo\Admin\MaintenanceActionsPageRenderer (admin.php?page=maintenance,
- * the default "actions" tab).
- */
-function maintenanceActionsDbPrefix(): string
-{
-    $prefix = getenv('PIWIGO_DB_PREFIX');
-
-    return $prefix !== false ? $prefix : 'piwigo_';
-}
 
 it('renders the global gallery actions fieldset with no webmaster warning for the webmaster fixture user', function (): void {
     $page = H::loginAsAdmin($this);
@@ -43,8 +33,7 @@ it('shows the webmaster-required warning for a plain "admin"-status user', funct
     $userId = wsAddedUserId($addResult);
 
     $db = H::connect();
-    $prefix = maintenanceActionsDbPrefix();
-    H::dbQuery($db, sprintf("UPDATE %suser_infos SET status = 'admin' WHERE user_id = %d", $prefix, $userId));
+    H::dbQuery($db, sprintf("UPDATE user_infos SET status = 'admin' WHERE user_id = %d", $userId));
     H::dbClose($db);
 
     try {
@@ -57,8 +46,8 @@ it('shows the webmaster-required warning for a plain "admin"-status user', funct
         $adminPage->assertSee('status is required to edit parameters');
     } finally {
         $db = H::connect();
-        H::dbQuery($db, sprintf('DELETE FROM %suser_infos WHERE user_id = %d', $prefix, $userId));
-        H::dbQuery($db, sprintf('DELETE FROM %susers WHERE id = %d', $prefix, $userId));
+        H::dbQuery($db, sprintf('DELETE FROM user_infos WHERE user_id = %d', $userId));
+        H::dbQuery($db, sprintf('DELETE FROM users WHERE id = %d', $userId));
         H::dbClose($db);
     }
 });
@@ -157,15 +146,14 @@ it('shows the empty-lounge link and counter when the upload lounge has real item
     @unlink($image);
 
     $db = H::connect();
-    $prefix = maintenanceActionsDbPrefix();
-    H::dbQuery($db, sprintf('INSERT INTO %slounge (image_id, category_id) VALUES (%d, %d)', $prefix, $imageId, $albumId));
+    H::dbQuery($db, sprintf('INSERT INTO lounge (image_id, category_id) VALUES (%d, %d)', $imageId, $albumId));
 
     try {
         // countLoungeItems() counts every row in the whole table, shared
         // with every other concurrently-running Browser test in this
         // suite -- read the real total back rather than assuming this
         // insert is the only row, so this stays correct either way.
-        $countAssoc = H::dbFetchAssoc($db, sprintf('SELECT COUNT(*) AS c FROM %slounge', $prefix));
+        $countAssoc = H::dbFetchAssoc($db, sprintf('SELECT COUNT(*) AS c FROM lounge'));
         $expectedCount = is_array($countAssoc) ? (int) $countAssoc['c'] : -1;
         expect($expectedCount)->toBeGreaterThan(0);
 
@@ -174,7 +162,7 @@ it('shows the empty-lounge link and counter when the upload lounge has real item
         $page->assertPresent('a[href*="action=empty_lounge"]');
         $page->assertSeeIn('a[href*="action=empty_lounge"] .multiple-pictures-sizes', (string) $expectedCount);
     } finally {
-        H::dbQuery($db, sprintf('DELETE FROM %slounge WHERE image_id = %d AND category_id = %d', $prefix, $imageId, $albumId));
+        H::dbQuery($db, sprintf('DELETE FROM lounge WHERE image_id = %d AND category_id = %d', $imageId, $albumId));
         H::dbClose($db);
     }
 });

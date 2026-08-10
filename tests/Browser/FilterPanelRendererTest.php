@@ -17,8 +17,6 @@ use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
  * checksum yet).
  */
 it('shows the missing-checksum counter when at least one photo has no md5sum', function (): void {
-    $prefix = getenv('PIWIGO_DB_PREFIX');
-    $prefix = $prefix !== false ? $prefix : 'piwigo_';
     $db = H::connect();
 
     // Every fixture image ships a real, non-null md5sum (confirmed via a
@@ -30,12 +28,12 @@ it('shows the missing-checksum counter when at least one photo has no md5sum', f
     // *other* image missing a checksum first, in case an unrelated
     // fixture-regen run left any -- this asserts the exact expected total
     // rather than assuming 1.
-    $before = H::fetchAssocOrFail($db, "SELECT COUNT(*) AS n FROM {$prefix}images WHERE md5sum IS NULL AND id != 1");
+    $before = H::fetchAssocOrFail($db, 'SELECT COUNT(*) AS n FROM images WHERE md5sum IS NULL AND id != 1');
     $expectedCount = (int) $before['n'] + 1;
 
-    $original = H::fetchAssocOrFail($db, "SELECT md5sum FROM {$prefix}images WHERE id = 1");
+    $original = H::fetchAssocOrFail($db, 'SELECT md5sum FROM images WHERE id = 1');
     expect($original['md5sum'] ?? null)->not->toBeNull('fixture precondition: image 1 must start with a real md5sum');
-    H::dbQuery($db, "UPDATE {$prefix}images SET md5sum = NULL WHERE id = 1");
+    H::dbQuery($db, 'UPDATE images SET md5sum = NULL WHERE id = 1');
 
     try {
         $page = H::asAdmin($this);
@@ -46,11 +44,7 @@ it('shows the missing-checksum counter when at least one photo has no md5sum', f
         expect($html)->toContain('id="md5sum_to_add" data-origin="' . $expectedCount . '"');
     } finally {
         $md5sum = $original['md5sum'];
-        H::dbQuery($db, sprintf(
-            'UPDATE %simages SET md5sum = %s WHERE id = 1',
-            $prefix,
-            $md5sum === null ? 'NULL' : "'" . H::dbEscape($db, (string) $md5sum) . "'"
-        ));
+        H::dbQuery($db, sprintf('UPDATE images SET md5sum = %s WHERE id = 1', $md5sum === null ? 'NULL' : "'" . H::dbEscape($db, (string) $md5sum) . "'"));
         H::dbClose($db);
     }
 });

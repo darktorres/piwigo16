@@ -84,9 +84,7 @@ it('rejects an install request from a non-webmaster session', function (): void 
     $userId = wsAddedUserId($addResult);
 
     $db = H::connect();
-    $prefix = getenv('PIWIGO_DB_PREFIX');
-    $prefix = $prefix !== false ? $prefix : 'piwigo_';
-    H::dbQuery($db, sprintf("UPDATE %suser_infos SET status = 'admin' WHERE user_id = %d", $prefix, $userId));
+    H::dbQuery($db, sprintf("UPDATE user_infos SET status = 'admin' WHERE user_id = %d", $userId));
 
     try {
         $adminPage = H::visitPwg($this, '/identification.php');
@@ -96,8 +94,8 @@ it('rejects an install request from a non-webmaster session', function (): void 
         $adminPage = H::navigateOk($adminPage, '/admin.php?page=languages&tab=new&revision=1');
         $adminPage->assertSee('Webmaster status is required');
     } finally {
-        H::dbQuery($db, sprintf('DELETE FROM %suser_infos WHERE user_id = %d', $prefix, $userId));
-        H::dbQuery($db, sprintf('DELETE FROM %susers WHERE id = %d', $prefix, $userId));
+        H::dbQuery($db, sprintf('DELETE FROM user_infos WHERE user_id = %d', $userId));
+        H::dbQuery($db, sprintf('DELETE FROM users WHERE id = %d', $userId));
         H::dbClose($db);
         H::restoreConfig($snapshot);
     }

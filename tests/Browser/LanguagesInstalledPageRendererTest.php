@@ -4,30 +4,11 @@ declare(strict_types=1);
 
 use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
 
-/**
- * Piwigo\Admin\LanguagesInstalledPageRenderer (admin.php?page=languages,
- * the default "installed" tab) -- already GET-tested by the extension-tabs
- * smoke route. fr_FR is a real, on-disk-but-not-default language in this
- * environment (see language/ directory), so activate/deactivate is a
- * genuinely safe, reversible real-lifecycle test here -- unlike
- * ThemesInstalledPageRendererTest's own deliberate avoidance of a live
- * theme toggle (this env only has one theme on disk at all).
- */
-function languagesInstalledDbPrefix(): string
-{
-    $prefix = getenv('PIWIGO_DB_PREFIX');
-
-    return $prefix !== false ? $prefix : 'piwigo_';
-}
 
 function languagesInstalledIsActive(string $languageId): bool
 {
     $db = H::connect();
-    $row = H::dbFetchAssoc($db, sprintf(
-        "SELECT COUNT(*) AS c FROM %slanguages WHERE id = '%s'",
-        languagesInstalledDbPrefix(),
-        H::dbEscape($db, $languageId)
-    ));
+    $row = H::dbFetchAssoc($db, sprintf("SELECT COUNT(*) AS c FROM languages WHERE id = '%s'", H::dbEscape($db, $languageId)));
     H::dbClose($db);
 
     return is_array($row) && (int) $row['c'] > 0;
@@ -81,14 +62,13 @@ it('cannot deactivate en_UK: it is the only active language and the default', fu
 
 it('reassigns users off a missing-from-disk language and deletes its stale db row on page load', function (): void {
     $page = H::loginAsAdmin($this);
-    $prefix = languagesInstalledDbPrefix();
     $db = H::connect();
 
     // A language row with no matching fs entry -- render()'s own
     // `array_diff(db_languages, fs_languages)` cleanup loop reassigns any
     // user still set to it (to the gallery's default language) and deletes
     // the now-orphaned db row, every page load.
-    H::dbQuery($db, sprintf("INSERT INTO %slanguages (id, version, name) VALUES ('xx_XX', '1.0', 'Missing Language')", $prefix));
+    H::dbQuery($db, sprintf("INSERT INTO languages (id, version, name) VALUES ('xx_XX', '1.0', 'Missing Language')"));
 
     $username = 'languages_installed_missing_lang_' . uniqid();
     $password = 'a-strong-test-password-1';
@@ -99,20 +79,20 @@ it('reassigns users off a missing-from-disk language and deletes its stale db ro
         'pwg_token' => H::pwgToken($page),
     ]);
     $userId = wsAddedUserId($addResult);
-    H::dbQuery($db, sprintf("UPDATE %suser_infos SET language = 'xx_XX' WHERE user_id = %d", $prefix, $userId));
+    H::dbQuery($db, sprintf("UPDATE user_infos SET language = 'xx_XX' WHERE user_id = %d", $userId));
 
     try {
         H::navigateOk($page, '/admin.php?page=languages');
 
-        $langAssoc = H::dbFetchAssoc($db, sprintf("SELECT COUNT(*) AS c FROM %slanguages WHERE id = 'xx_XX'", $prefix));
+        $langAssoc = H::dbFetchAssoc($db, sprintf("SELECT COUNT(*) AS c FROM languages WHERE id = 'xx_XX'"));
         expect(is_array($langAssoc) ? (int) $langAssoc['c'] : -1)->toBe(0);
 
-        $userAssoc = H::dbFetchAssoc($db, sprintf('SELECT language FROM %suser_infos WHERE user_id = %d', $prefix, $userId));
+        $userAssoc = H::dbFetchAssoc($db, sprintf('SELECT language FROM user_infos WHERE user_id = %d', $userId));
         expect(is_array($userAssoc) ? $userAssoc['language'] : 'MISSING')->toBe('en_UK');
     } finally {
-        H::dbQuery($db, sprintf("DELETE FROM %slanguages WHERE id = 'xx_XX'", $prefix));
-        H::dbQuery($db, sprintf('DELETE FROM %suser_infos WHERE user_id = %d', $prefix, $userId));
-        H::dbQuery($db, sprintf('DELETE FROM %susers WHERE id = %d', $prefix, $userId));
+        H::dbQuery($db, sprintf("DELETE FROM languages WHERE id = 'xx_XX'"));
+        H::dbQuery($db, sprintf('DELETE FROM user_infos WHERE user_id = %d', $userId));
+        H::dbQuery($db, sprintf('DELETE FROM users WHERE id = %d', $userId));
         H::dbClose($db);
     }
 });
@@ -130,8 +110,7 @@ it('shows the webmaster-required warning for a plain "admin"-status user', funct
     $userId = wsAddedUserId($addResult);
 
     $db = H::connect();
-    $prefix = languagesInstalledDbPrefix();
-    H::dbQuery($db, sprintf("UPDATE %suser_infos SET status = 'admin' WHERE user_id = %d", $prefix, $userId));
+    H::dbQuery($db, sprintf("UPDATE user_infos SET status = 'admin' WHERE user_id = %d", $userId));
 
     try {
         $adminPage = H::visitPwg($this, '/identification.php');
@@ -141,8 +120,8 @@ it('shows the webmaster-required warning for a plain "admin"-status user', funct
         $adminPage = H::navigateOk($adminPage, '/admin.php?page=languages');
         $adminPage->assertSee('status is required to edit parameters');
     } finally {
-        H::dbQuery($db, sprintf('DELETE FROM %suser_infos WHERE user_id = %d', $prefix, $userId));
-        H::dbQuery($db, sprintf('DELETE FROM %susers WHERE id = %d', $prefix, $userId));
+        H::dbQuery($db, sprintf('DELETE FROM user_infos WHERE user_id = %d', $userId));
+        H::dbQuery($db, sprintf('DELETE FROM users WHERE id = %d', $userId));
         H::dbClose($db);
     }
 });

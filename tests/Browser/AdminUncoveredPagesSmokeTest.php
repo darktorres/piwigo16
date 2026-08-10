@@ -319,126 +319,6 @@ it('admin popuphelp rejects a page parameter with invalid characters', function 
     expect($page->content())->toContain('Hacking attempt!');
 });
 
-/**
- * Closes the `$help_content === false` fallback (~line 95): a
- * well-formed (charset-valid) `page` value with no matching
- * `help/<page>.html` under any real/parent/force_fallback('en_UK')/
- * default language -- distinct from the "rejects invalid characters" test
- * above, which never even reaches Lang::load() at all.
- */
-it('admin popuphelp falls back to empty content for a well-formed but nonexistent help topic', function (): void {
-    $page = H::loginAsAdmin($this);
-    // H::rawGet() (not navigateOk()+content()): Playwright's own content()
-    // always DOM-normalizes a navigation into a full <html><head>
-    // </head><body>...</body></html> document even for a truly empty
-    // response body (confirmed by the "content_only output" test above's
-    // own docblock, for the same underlying reason) -- rawGet() reads the
-    // real, raw HTTP response body instead, needed for an exact-empty
-    // assertion.
-    $result = H::rawGet($page, '/admin/popuphelp.php?page=zzz_nonexistent_help_topic&output=content_only');
-
-    expect($result['status'])->toBe(200);
-    expect($result['body'])->toBe('');
-});
-
-/**
- * Closes the `get_popup_help_content` hook's own non-string-return
- * fallback (~line 100) -- EventDispatcher::triggerChange()'s pass-through
- * default (no handler registered) always returns $help_content unchanged,
- * already a string, so this needs a REAL plugin registering the hook,
- * same throwaway-fixture-plugin technique as the PluginSubController
- * tests above.
- */
-it('admin popuphelp fatal-errors when a real get_popup_help_content hook returns something other than a GetPopupHelpContent instance', function (): void {
-    $pluginId = 'ct-popuphelp-hook-' . uniqid();
-    $dir = pluginSubPluginsPath() . $pluginId;
-    if (! is_dir($dir)) {
-        mkdir($dir, 0o777, true);
-    }
-    file_put_contents($dir . '/main.inc.php', <<<'PHP'
-    <?php
-
-    declare(strict_types=1);
-
-    /*
-    Plugin Name: Admin Popuphelp Test -- get_popup_help_content Hook
-    Version: 1.0.0
-    Description: Test-only fixture plugin (tests/Browser/AdminUncoveredPagesSmokeTest.php).
-    */
-
-    \Piwigo\Tests\Support\EventDispatcherTestFactory::get()->addEventHandler(
-        \Piwigo\Event\Admin\GetPopupHelpContent::class,
-        static fn (): mixed => null
-    );
-    PHP);
-    $db = pluginSubDb();
-    $prefix = pluginSubDbPrefix();
-    H::dbQuery($db, sprintf(
-        "INSERT INTO %splugins (id, state, version) VALUES ('%s', 'active', '1.0.0')",
-        $prefix,
-        H::dbEscape($db, $pluginId)
-    ));
-    H::dbClose($db);
-
-    try {
-        $page = H::loginAsAdmin($this);
-        // dispatchChange()'s own fail-loud contract now throws \Error
-        // instead of gracefully falling back to '' -- display_errors is
-        // off site-wide, so the HTTP status is the only reliable signal
-        // (see this suite's own established convention for this).
-        $result = H::rawGet($page, '/admin/popuphelp.php?page=cat_options&output=content_only');
-
-        expect($result['status'])->toBe(500);
-    } finally {
-        $db = pluginSubDb();
-        H::dbQuery($db, sprintf("DELETE FROM %splugins WHERE id = '%s'", $prefix, H::dbEscape($db, $pluginId)));
-        H::dbClose($db);
-        pluginSubRemoveFixturePlugin($pluginId);
-    }
-});
-
-it('rating by user page renders its own tab and ratings table', function (): void {
-    $page = H::loginAsAdmin($this);
-    $page = H::navigateOk($page, '/admin.php?page=rating_user');
-
-    $page->assertSee('Users');
-    $page->assertPresent('#rateTable');
-    $page->assertSee('Average rate');
-});
-
-it('plugin page rejects a well-formed but inactive plugin id', function (): void {
-    $page = H::loginAsAdmin($this);
-    $page = H::navigateOk($page, '/admin.php?page=plugin&section=nonexistent_fixture_plugin/foo');
-
-    expect($page->content())->toContain('Invalid URL - plugin nonexistent_fixture_plugin not active');
-});
-
-it('plugin page rejects a section with fewer than 2 slash-separated segments', function (): void {
-    $page = H::loginAsAdmin($this);
-    $page = H::navigateOk($page, '/admin.php?page=plugin&section=onlyonesegment');
-
-    expect($page->content())->toContain('[Hacking attempt] the input parameter "section" is not valid');
-});
-
-/**
- * Both tests below need a plugin PluginLoader::loadPlugins() actually
- * loads (a real `plugins` DB row with state='active' AND a matching
- * plugins/<id>/main.inc.php on disk -- LoadedPlugins::get() only gets
- * populated for a plugin satisfying both), reaching PluginSubController's
- * own remaining 2 branches (line ~42 onward: an active plugin whose
- * requested section file does/doesn't exist) that neither test above can
- * reach (both use a plugin id LoadedPlugins never even contains). Same
- * throwaway-fixture-under-the-live-plugins-root technique
- * PluginsInstalledPageRendererTest.php's own docblock already establishes
- * (single it()-scoped, sequential Browser suite, cleaned up in a finally
- * block).
- */
-function pluginSubDbPrefix(): string
-{
-    $prefix = getenv('PIWIGO_DB_PREFIX');
-
-    return $prefix !== false ? $prefix : 'piwigo_';
-}
 
 function pluginSubDb(): mysqli|Connection
 {
@@ -489,12 +369,7 @@ it('plugin page includes a real settings file from an active on-disk plugin', fu
     $pluginId = 'ct-pluginsub-active-' . strtr(uniqid(), '0123456789', 'abcdefghij');
     pluginSubWriteFixturePlugin($pluginId);
     $db = pluginSubDb();
-    $prefix = pluginSubDbPrefix();
-    H::dbQuery($db, sprintf(
-        "INSERT INTO %splugins (id, state, version) VALUES ('%s', 'active', '1.0')",
-        $prefix,
-        H::dbEscape($db, $pluginId)
-    ));
+    H::dbQuery($db, sprintf("INSERT INTO plugins (id, state, version) VALUES ('%s', 'active', '1.0')", H::dbEscape($db, $pluginId)));
     H::dbClose($db);
 
     try {
@@ -515,7 +390,7 @@ it('plugin page includes a real settings file from an active on-disk plugin', fu
         expect($result['body'])->toContain('CT_PLUGINSUB_INCLUDED');
     } finally {
         $db = pluginSubDb();
-        H::dbQuery($db, sprintf("DELETE FROM %splugins WHERE id = '%s'", $prefix, H::dbEscape($db, $pluginId)));
+        H::dbQuery($db, sprintf("DELETE FROM plugins WHERE id = '%s'", H::dbEscape($db, $pluginId)));
         H::dbClose($db);
         pluginSubRemoveFixturePlugin($pluginId);
     }
@@ -527,12 +402,7 @@ it('plugin page fatal-errors on a missing section file for a real active plugin'
     $pluginId = 'ct-pluginsub-missing-' . strtr(uniqid(), '0123456789', 'abcdefghij');
     pluginSubWriteFixturePlugin($pluginId);
     $db = pluginSubDb();
-    $prefix = pluginSubDbPrefix();
-    H::dbQuery($db, sprintf(
-        "INSERT INTO %splugins (id, state, version) VALUES ('%s', 'active', '1.0')",
-        $prefix,
-        H::dbEscape($db, $pluginId)
-    ));
+    H::dbQuery($db, sprintf("INSERT INTO plugins (id, state, version) VALUES ('%s', 'active', '1.0')", H::dbEscape($db, $pluginId)));
     H::dbClose($db);
 
     try {
@@ -544,7 +414,7 @@ it('plugin page fatal-errors on a missing section file for a real active plugin'
             ->and($page->content())->toContain($pluginId . '/ct_missing.php');
     } finally {
         $db = pluginSubDb();
-        H::dbQuery($db, sprintf("DELETE FROM %splugins WHERE id = '%s'", $prefix, H::dbEscape($db, $pluginId)));
+        H::dbQuery($db, sprintf("DELETE FROM plugins WHERE id = '%s'", H::dbEscape($db, $pluginId)));
         H::dbClose($db);
         pluginSubRemoveFixturePlugin($pluginId);
     }

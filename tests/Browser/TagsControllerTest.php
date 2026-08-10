@@ -113,8 +113,6 @@ it('fatal-errors instead of silently swallowing a real render_tag_name hook that
 
     $page = H::loginAsAdmin($this);
     $db = H::connect();
-    $prefix = getenv('PIWIGO_DB_PREFIX');
-    $prefix = $prefix !== false ? $prefix : 'piwigo_';
 
     try {
         $album = H::wsCall($page, 'pwg.categories.add', ['name' => 'Tags Controller Hook Album ' . uniqid()]);
@@ -137,11 +135,7 @@ it('fatal-errors instead of silently swallowing a real render_tag_name hook that
 
         CachePools::tagCloud()->clear();
 
-        H::dbQuery($db, sprintf(
-            "INSERT INTO %splugins (id, state, version) VALUES ('%s', 'active', '1.0.0')",
-            $prefix,
-            H::dbEscape($db, $pluginId)
-        ));
+        H::dbQuery($db, sprintf("INSERT INTO plugins (id, state, version) VALUES ('%s', 'active', '1.0.0')", H::dbEscape($db, $pluginId)));
 
         try {
             // dispatchChange() now enforces its own instanceof contract --
@@ -154,7 +148,7 @@ it('fatal-errors instead of silently swallowing a real render_tag_name hook that
             $response = H::rawGet($page, '/tags.php?display_mode=letters');
             expect($response['status'])->toBe(500);
         } finally {
-            H::dbQuery($db, sprintf("DELETE FROM %splugins WHERE id = '%s'", $prefix, H::dbEscape($db, $pluginId)));
+            H::dbQuery($db, sprintf("DELETE FROM plugins WHERE id = '%s'", H::dbEscape($db, $pluginId)));
         }
     } finally {
         H::dbClose($db);

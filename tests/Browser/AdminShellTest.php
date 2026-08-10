@@ -120,16 +120,8 @@ it('shows the pending-comments counter when at least one unvalidated comment exi
     // gets created through picture.php's own form action, so a direct
     // insert is the established way to seed one for a test (same shape as
     // PictureControllerTest's own pictureInsertComment() helper).
-    $prefix = getenv('PIWIGO_DB_PREFIX');
-    $prefix = $prefix !== false ? $prefix : 'piwigo_';
     $db = H::connect();
-    H::dbQuery($db, sprintf(
-        "INSERT INTO %scomments (image_id, date, author, anonymous_id, content, validated) VALUES (%d, NOW(), '%s', '127.0.0.9', '%s', FALSE)",
-        $prefix,
-        $imageId,
-        H::dbEscape($db, 'AdminShell Test Author'),
-        H::dbEscape($db, 'Pending comment for AdminShell coverage')
-    ));
+    H::dbQuery($db, sprintf("INSERT INTO comments (image_id, date, author, anonymous_id, content, validated) VALUES (%d, NOW(), '%s', '127.0.0.9', '%s', FALSE)", $imageId, H::dbEscape($db, 'AdminShell Test Author'), H::dbEscape($db, 'Pending comment for AdminShell coverage')));
     $commentId = H::dbInsertId($db);
     H::dbClose($db);
 
@@ -204,11 +196,9 @@ it('synchronizes users against the base table when externalAuthentification is e
 });
 
 it('purges stale whats_new_* preferences and shows the whats-new popin for a user registered before the last major update', function (): void {
-    $prefix = getenv('PIWIGO_DB_PREFIX');
-    $prefix = $prefix !== false ? $prefix : 'piwigo_';
     $db = H::connect();
 
-    $original = H::fetchAssocOrFail($db, "SELECT registration_date, preferences FROM {$prefix}user_infos WHERE user_id = 1");
+    $original = H::fetchAssocOrFail($db, 'SELECT registration_date, preferences FROM user_infos WHERE user_id = 1');
 
     // fixture_admin (user_id 1, confirmed via tests/Fixtures/piwigo-17.0.sql)
     // registers *after* the fixture's own last_major_update and already
@@ -217,11 +207,7 @@ it('purges stale whats_new_* preferences and shows the whats-new popin for a use
     // would come back false, and even if it didn't, registration_date >
     // lastMajorUpdate takes the OTHER branch), so both are overridden here
     // and restored in the finally block below.
-    H::dbQuery($db, sprintf(
-        "UPDATE %suser_infos SET registration_date = '2020-01-01 00:00:00', preferences = '%s' WHERE user_id = 1",
-        $prefix,
-        H::dbEscape($db, H::jsonEncode(['whats_new_15' => true]))
-    ));
+    H::dbQuery($db, sprintf("UPDATE user_infos SET registration_date = '2020-01-01 00:00:00', preferences = '%s' WHERE user_id = 1", H::dbEscape($db, H::jsonEncode(['whats_new_15' => true]))));
 
     try {
         $page = H::loginAsAdmin($this);
@@ -236,7 +222,7 @@ it('purges stale whats_new_* preferences and shows the whats-new popin for a use
         // IntroSubControllerTest already uses).
         expect(H::rawWebpage($page)->content())->toContain('id="whats_new_popin"');
 
-        $after = H::fetchAssocOrFail($db, "SELECT preferences FROM {$prefix}user_infos WHERE user_id = 1");
+        $after = H::fetchAssocOrFail($db, 'SELECT preferences FROM user_infos WHERE user_id = 1');
         $prefsAfter = json_decode((string) $after['preferences'], true);
         expect($prefsAfter)->not->toHaveKey('whats_new_15');
     } finally {
@@ -246,12 +232,7 @@ it('purges stale whats_new_* preferences and shows the whats-new popin for a use
         $restorePreferences = $original['preferences'] === null
             ? 'NULL'
             : "'" . H::dbEscape($db, (string) $original['preferences']) . "'";
-        H::dbQuery($db, sprintf(
-            "UPDATE %suser_infos SET registration_date = %s, preferences = %s WHERE user_id = 1",
-            $prefix,
-            $restoreRegistration,
-            $restorePreferences
-        ));
+        H::dbQuery($db, sprintf("UPDATE user_infos SET registration_date = %s, preferences = %s WHERE user_id = 1", $restoreRegistration, $restorePreferences));
         H::dbClose($db);
     }
 });

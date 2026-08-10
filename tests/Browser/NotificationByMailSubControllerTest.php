@@ -8,58 +8,6 @@ use Pest\Browser\Api\PendingAwaitablePage;
 use Pest\Browser\Api\Webpage;
 use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
 
-/**
- * Piwigo\Controller\Admin\NotificationByMailSubController (admin.php?page=
- * notification_by_mail) -- the 3-tab (param/subscribe/send) notification
- * management page, plus the always-runs-on-a-plain-GET
- * insertNewDataUserMailNotification() self-heal. Fixture gives 2
- * pre-seeded `user_mail_notification` rows: user 1 (fixture_admin,
- * check_key 'abcdef1234567890', enabled) and user 3 (regular_user,
- * check_key 'ghijkl9876543210', disabled) -- real, restorable state to
- * drive the subscribe/unsubscribe/send actions without needing new users.
- *
- * handle()'s own `if ($nbm_user->param === '') { continue; }` guard
- * (~line 160, inside the 'param' tab's config-save loop) is unreachable
- * via any real request: `$nbm_user` comes straight from
- * ConfigService::getParamsAndValuesLike(), whose own
- * ConfigRepository::findParamsAndValuesLike() already defensively coerces
- * a non-string `param` column value to `''` (`is_string($row['param']) ?
- * ... : ''`, applied when building the ConfigParamValue DTO) -- but
- * `config.param` is that table's own VARCHAR PRIMARY
- * KEY, so a real row's `param` is both never NULL and never actually the
- * empty string (Doctrine/PDO also always returns VARCHAR columns as PHP
- * strings to begin with). That inner fallback -- and therefore this
- * `continue` -- is a pure static-analysis narrowing guard with no real,
- * DB-backed row that can ever trigger it.
- *
- * The timeout/"must repost" branch (NotificationByMailSender::
- * isSendmailTimeout()) IS covered below, via nbmForceInstantSendmailTimeout().
- * Neither nbm_max_treatment_timeout_percent nor nbm_treatment_timeout_default
- * has an existing `config` row in this fixture, so the 'param' tab's own
- * admin-UI round trip -- which only updates *existing* nbm_% rows, see the
- * `select ... where param like 'nbm\_%'` loop in
- * NotificationByMailSubController::handle() -- can never reach them.
- * H::setConfigValue() writes the config table directly instead (properly
- * JSON-typed, matching every other Browser test file's config-override
- * convention), forcing NotificationByMailSender's own $sendmailTimeout to
- * 0 -- so checkSendmailTimeout()'s `(moment - start) > threshold` is
- * satisfied by any nonzero elapsed time, which the real DB round trips
- * each of these flows already performs before its first per-user check
- * (getUserNotifications(), beginUsersEnv()'s webmaster-address lookup)
- * reliably guarantees. This always lands on the "zero users treated
- * before the timeout" branch, matching NotificationByMailSenderTest's own
- * identically-reasoned senderWithImmediateTimeout() helper (same
- * real-elapsed-time constraint) -- the timing race needed to land
- * mid-batch (some users treated, then a timeout mid-loop) isn't reachable
- * deterministically over real HTTP either, the same conclusion that
- * Integration test file's own docblock already reaches.
- */
-function nbmDbPrefix(): string
-{
-    $prefix = getenv('PIWIGO_DB_PREFIX');
-
-    return $prefix !== false ? $prefix : 'piwigo_';
-}
 
 function nbmDbConnect(): mysqli|Connection
 {
@@ -70,11 +18,7 @@ function nbmDbConnect(): mysqli|Connection
 function nbmUserMailNotificationRow(int $userId): ?array
 {
     $db = nbmDbConnect();
-    $row = H::dbFetchAssoc($db, sprintf(
-        'SELECT check_key, enabled, last_send FROM %suser_mail_notification WHERE user_id = %d',
-        nbmDbPrefix(),
-        $userId
-    ));
+    $row = H::dbFetchAssoc($db, sprintf('SELECT check_key, enabled, last_send FROM user_mail_notification WHERE user_id = %d', $userId));
     H::dbClose($db);
 
     if (! is_array($row) || ! is_string($row['check_key'] ?? null)) {
@@ -95,21 +39,14 @@ function nbmUserMailNotificationRow(int $userId): ?array
 function nbmSetUserMailNotificationRow(int $userId, ?array $row): void
 {
     $db = nbmDbConnect();
-    H::dbQuery($db, sprintf('DELETE FROM %suser_mail_notification WHERE user_id = %d', nbmDbPrefix(), $userId));
+    H::dbQuery($db, sprintf('DELETE FROM user_mail_notification WHERE user_id = %d', $userId));
     if ($row !== null) {
         $lastSend = $row['last_send'] === null ? 'NULL' : "'" . H::dbEscape($db, $row['last_send']) . "'";
         // Same boolean-column-vs-integer-literal bug as elsewhere in this
         // file's own reads -- a bare 0/1 literal is valid MySQL
         // tinyint(1) input but Postgres rejects it outright.
         $sqlEnabled = $db instanceof mysqli ? (string) $row['enabled'] : ($row['enabled'] !== 0 ? 'true' : 'false');
-        H::dbQuery($db, sprintf(
-            "INSERT INTO %suser_mail_notification (user_id, check_key, enabled, last_send) VALUES (%d, '%s', %s, %s)",
-            nbmDbPrefix(),
-            $userId,
-            H::dbEscape($db, $row['check_key']),
-            $sqlEnabled,
-            $lastSend
-        ));
+        H::dbQuery($db, sprintf("INSERT INTO user_mail_notification (user_id, check_key, enabled, last_send) VALUES (%d, '%s', %s, %s)", $userId, H::dbEscape($db, $row['check_key']), $sqlEnabled, $lastSend));
     }
     H::dbClose($db);
 }
@@ -132,7 +69,7 @@ function nbmPost(Webpage|PendingAwaitablePage|AwaitableWebpage $page, string $mo
 function nbmUserMailAddress(int $userId): ?string
 {
     $db = nbmDbConnect();
-    $row = H::dbFetchAssoc($db, sprintf('SELECT mail_address FROM %susers WHERE id = %d', nbmDbPrefix(), $userId));
+    $row = H::dbFetchAssoc($db, sprintf('SELECT mail_address FROM users WHERE id = %d', $userId));
     H::dbClose($db);
 
     return is_array($row) && is_string($row['mail_address'] ?? null) ? $row['mail_address'] : null;
@@ -142,14 +79,9 @@ function nbmSetUserMailAddress(int $userId, ?string $mailAddress): void
 {
     $db = nbmDbConnect();
     if ($mailAddress === null) {
-        H::dbQuery($db, sprintf('UPDATE %susers SET mail_address = NULL WHERE id = %d', nbmDbPrefix(), $userId));
+        H::dbQuery($db, sprintf('UPDATE users SET mail_address = NULL WHERE id = %d', $userId));
     } else {
-        H::dbQuery($db, sprintf(
-            "UPDATE %susers SET mail_address = '%s' WHERE id = %d",
-            nbmDbPrefix(),
-            H::dbEscape($db, $mailAddress),
-            $userId
-        ));
+        H::dbQuery($db, sprintf("UPDATE users SET mail_address = '%s' WHERE id = %d", H::dbEscape($db, $mailAddress), $userId));
     }
     H::dbClose($db);
 }

@@ -24,13 +24,6 @@ use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
  * make `getLatestNews()` perform a real outbound HTTP request to
  * piwigo.org, which has no place in a deterministic test.
  */
-function introDbPrefix(): string
-{
-    $prefix = getenv('PIWIGO_DB_PREFIX');
-
-    return $prefix !== false ? $prefix : 'piwigo_';
-}
-
 function introDbConnect(): mysqli|Connection
 {
     return H::connect();
@@ -41,12 +34,7 @@ function introInsertOrphanImage(): int
 {
     $db = introDbConnect();
     $file = 'ct_orphan_' . uniqid() . '.jpg';
-    H::dbQuery($db, sprintf(
-        "INSERT INTO %simages (file, path, hit, level) VALUES ('%s', '%s', 0, 0)",
-        introDbPrefix(),
-        H::dbEscape($db, $file),
-        H::dbEscape($db, $file)
-    ));
+    H::dbQuery($db, sprintf("INSERT INTO images (file, path, hit, level) VALUES ('%s', '%s', 0, 0)", H::dbEscape($db, $file), H::dbEscape($db, $file)));
     $id = H::dbInsertId($db);
     H::dbClose($db);
 
@@ -56,7 +44,7 @@ function introInsertOrphanImage(): int
 function introDeleteImage(int $imageId): void
 {
     $db = introDbConnect();
-    H::dbQuery($db, sprintf('DELETE FROM %simages WHERE id = %d', introDbPrefix(), $imageId));
+    H::dbQuery($db, sprintf('DELETE FROM images WHERE id = %d', $imageId));
     H::dbClose($db);
 }
 
@@ -67,12 +55,7 @@ function introSetCategoryVisible(int $categoryId, bool $visible): void
     // bare 0/1 literal is valid MySQL tinyint(1) input but Postgres
     // rejects it outright.
     $sqlValue = $db instanceof mysqli ? ($visible ? '1' : '0') : ($visible ? 'true' : 'false');
-    H::dbQuery($db, sprintf(
-        'UPDATE %scategories SET visible = %s WHERE id = %d',
-        introDbPrefix(),
-        $sqlValue,
-        $categoryId
-    ));
+    H::dbQuery($db, sprintf('UPDATE categories SET visible = %s WHERE id = %d', $sqlValue, $categoryId));
     H::dbClose($db);
 }
 
@@ -164,13 +147,7 @@ function introInsertActivityRows(array $rows): void
     $now = Env::now();
     foreach ($rows as $row) {
         $occuredOn = (clone $now)->modify('-' . $row['daysAgo'] . ' day')->format('Y-m-d H:i:s');
-        H::dbQuery($db, sprintf(
-            "INSERT INTO %sactivity (object, object_id, action, session_idx, occured_on) VALUES ('%s', 1, '%s', 'ct_intro_session', '%s')",
-            introDbPrefix(),
-            H::dbEscape($db, $row['object']),
-            H::dbEscape($db, $row['action']),
-            H::dbEscape($db, $occuredOn)
-        ));
+        H::dbQuery($db, sprintf("INSERT INTO activity (object, object_id, action, session_idx, occured_on) VALUES ('%s', 1, '%s', 'ct_intro_session', '%s')", H::dbEscape($db, $row['object']), H::dbEscape($db, $row['action']), H::dbEscape($db, $occuredOn)));
     }
     H::dbClose($db);
 }
@@ -178,7 +155,7 @@ function introInsertActivityRows(array $rows): void
 function introDeleteActivityRows(): void
 {
     $db = introDbConnect();
-    H::dbQuery($db, sprintf("DELETE FROM %sactivity WHERE session_idx = 'ct_intro_session'", introDbPrefix()));
+    H::dbQuery($db, sprintf("DELETE FROM activity WHERE session_idx = 'ct_intro_session'"));
     H::dbClose($db);
 }
 
@@ -254,12 +231,7 @@ it('smooths the activity chart into size groups when daily counts vary by more t
 function introInsertFakeImage(string $path): int
 {
     $db = introDbConnect();
-    H::dbQuery($db, sprintf(
-        "INSERT INTO %simages (file, path, hit, level) VALUES ('%s', '%s', 0, 0)",
-        introDbPrefix(),
-        H::dbEscape($db, basename($path)),
-        H::dbEscape($db, $path)
-    ));
+    H::dbQuery($db, sprintf("INSERT INTO images (file, path, hit, level) VALUES ('%s', '%s', 0, 0)", H::dbEscape($db, basename($path)), H::dbEscape($db, $path)));
     $id = H::dbInsertId($db);
     H::dbClose($db);
 
@@ -269,13 +241,7 @@ function introInsertFakeImage(string $path): int
 function introInsertImageFormat(int $imageId, string $ext, int $filesize): void
 {
     $db = introDbConnect();
-    H::dbQuery($db, sprintf(
-        "INSERT INTO %simage_format (image_id, ext, filesize) VALUES (%d, '%s', %d)",
-        introDbPrefix(),
-        $imageId,
-        H::dbEscape($db, $ext),
-        $filesize
-    ));
+    H::dbQuery($db, sprintf("INSERT INTO image_format (image_id, ext, filesize) VALUES (%d, '%s', %d)", $imageId, H::dbEscape($db, $ext), $filesize));
     H::dbClose($db);
 }
 
@@ -386,10 +352,8 @@ it('shows the latest Piwigo news message from a pre-seeded, still-fresh on-disk 
 function introBulkInsertImages(int $count, string $marker): void
 {
     $db = introDbConnect();
-    $prefix = introDbPrefix();
     $escapedMarker = H::dbEscape($db, $marker);
-    H::dbQuery($db, sprintf(
-        "INSERT INTO %simages (file, path, hit, level)
+    H::dbQuery($db, sprintf("INSERT INTO images (file, path, hit, level)
          SELECT CONCAT('%s', n, '.jpg'), CONCAT('%s', n, '.jpg'), 0, 0
          FROM (
            SELECT (a.N + b.N*10 + c.N*100 + d.N*1000 + e.N*10000) AS n
@@ -399,23 +363,14 @@ function introBulkInsertImages(int $count, string $marker): void
            , (SELECT 0 N UNION SELECT 1 UNION SELECT 2 UNION SELECT 3 UNION SELECT 4 UNION SELECT 5 UNION SELECT 6 UNION SELECT 7 UNION SELECT 8 UNION SELECT 9) d
            , (SELECT 0 N UNION SELECT 1 UNION SELECT 2 UNION SELECT 3 UNION SELECT 4 UNION SELECT 5 UNION SELECT 6 UNION SELECT 7 UNION SELECT 8 UNION SELECT 9) e
          ) nums
-         WHERE n < %d",
-        $prefix,
-        $escapedMarker,
-        $escapedMarker,
-        $count
-    ));
+         WHERE n < %d", $escapedMarker, $escapedMarker, $count));
     H::dbClose($db);
 }
 
 function introDeleteMarkedImages(string $marker): void
 {
     $db = introDbConnect();
-    H::dbQuery($db, sprintf(
-        "DELETE FROM %simages WHERE file LIKE '%s%%'",
-        introDbPrefix(),
-        H::dbEscape($db, $marker)
-    ));
+    H::dbQuery($db, sprintf("DELETE FROM images WHERE file LIKE '%s%%'", H::dbEscape($db, $marker)));
     H::dbClose($db);
 }
 
@@ -435,7 +390,7 @@ it('forces a real orphan recount via ImageService::countOrphans() once the galle
     $marker = 'ct_intro_bignb_' . uniqid() . '_';
 
     $db = introDbConnect();
-    $countRow = H::fetchAssocOrFail($db, 'SELECT COUNT(*) AS c FROM ' . introDbPrefix() . 'images');
+    $countRow = H::fetchAssocOrFail($db, 'SELECT COUNT(*) AS c FROM images');
     H::dbClose($db);
     $needed = max(1, 100000 - (int) $countRow['c']);
 
@@ -459,25 +414,13 @@ it('drops the storage-used decimal display once total disk usage exceeds 100GB',
     // branch checks for needs several max-sized rows, not one huge one.
     $page = H::loginAsAdmin($this);
     $db = introDbConnect();
-    $prefix = introDbPrefix();
     $marker = 'ct_intro_bigsize_' . uniqid();
 
     for ($i = 0; $i < 7; $i++) {
-        H::dbQuery($db, sprintf(
-            "INSERT INTO %simages (file, path, hit, level, filesize) VALUES ('%s_%d.jpg', '%s_%d.jpg', 0, 0, 16777215)",
-            $prefix,
-            $marker,
-            $i,
-            $marker,
-            $i
-        ));
+        H::dbQuery($db, sprintf("INSERT INTO images (file, path, hit, level, filesize) VALUES ('%s_%d.jpg', '%s_%d.jpg', 0, 0, 16777215)", $marker, $i, $marker, $i));
     }
 
-    $totalRow = H::fetchAssocOrFail($db, sprintf(
-        'SELECT (SELECT COALESCE(SUM(filesize),0) FROM %simages) + (SELECT COALESCE(SUM(filesize),0) FROM %simage_format) AS total_kb',
-        $prefix,
-        $prefix
-    ));
+    $totalRow = H::fetchAssocOrFail($db, 'SELECT (SELECT COALESCE(SUM(filesize),0) FROM images) + (SELECT COALESCE(SUM(filesize),0) FROM image_format) AS total_kb');
     H::dbClose($db);
 
     $totalKb = (float) $totalRow['total_kb'];
@@ -504,20 +447,13 @@ it('drops the storage-used decimal display once total disk usage exceeds 100GB',
 function introSetUserColumn(int $userId, string $column, ?string $value): void
 {
     $db = introDbConnect();
-    $prefix = introDbPrefix();
     if ($value === null) {
-        H::dbQuery($db, sprintf('UPDATE %suser_infos SET %s = NULL WHERE user_id = %d', $prefix, $column, $userId));
+        H::dbQuery($db, sprintf('UPDATE user_infos SET %s = NULL WHERE user_id = %d', $column, $userId));
         H::dbClose($db);
 
         return;
     }
-    H::dbQuery($db, sprintf(
-        "UPDATE %suser_infos SET %s = '%s' WHERE user_id = %d",
-        $prefix,
-        $column,
-        H::dbEscape($db, $value),
-        $userId
-    ));
+    H::dbQuery($db, sprintf("UPDATE user_infos SET %s = '%s' WHERE user_id = %d", $column, H::dbEscape($db, $value), $userId));
     H::dbClose($db);
 }
 
@@ -533,20 +469,19 @@ it('shows the newsletter subscription promo panel for an account old enough with
     // banner" test, with no cleanup of its own) need forcing here.
     $page = H::loginAsAdmin($this);
     $db = introDbConnect();
-    $prefix = introDbPrefix();
 
-    $originalRegistration = H::fetchAssocOrFail($db, "SELECT registration_date FROM {$prefix}user_infos WHERE user_id = 1")['registration_date'];
-    $originalPreferences = H::fetchAssocOrFail($db, "SELECT preferences FROM {$prefix}user_infos WHERE user_id = 1")['preferences'];
+    $originalRegistration = H::fetchAssocOrFail($db, 'SELECT registration_date FROM user_infos WHERE user_id = 1')['registration_date'];
+    $originalPreferences = H::fetchAssocOrFail($db, 'SELECT preferences FROM user_infos WHERE user_id = 1')['preferences'];
     $configSnapshot = H::snapshotConfig(['show_newsletter_subscription']);
 
-    H::dbQuery($db, "UPDATE {$prefix}user_infos SET registration_date = '2020-01-01 00:00:00' WHERE user_id = 1");
+    H::dbQuery($db, "UPDATE user_infos SET registration_date = '2020-01-01 00:00:00' WHERE user_id = 1");
     // JSON_SET()/JSON_OBJECT() are MySQL-only -- Postgres's own
     // jsonb_set() takes a `{key}` path array (not a `$.key` string) and
     // an already-jsonb new value, verified live.
     $preferencesExpr = $db instanceof mysqli
         ? "JSON_SET(COALESCE(preferences, JSON_OBJECT()), '\$.show_newsletter_subscription', TRUE)"
         : "jsonb_set(COALESCE(preferences, '{}'::jsonb), '{show_newsletter_subscription}', 'true'::jsonb)";
-    H::dbQuery($db, "UPDATE {$prefix}user_infos SET preferences = {$preferencesExpr} WHERE user_id = 1");
+    H::dbQuery($db, "UPDATE user_infos SET preferences = {$preferencesExpr} WHERE user_id = 1");
     H::dbClose($db);
 
     try {
@@ -640,9 +575,8 @@ it('skips malformed cached activity-week/day entries from a stale-but-still-"fre
         $sessionSuffix = $m[1];
 
         $db = introDbConnect();
-        $prefix = introDbPrefix();
         $sessionId = null;
-        foreach (H::dbFetchAll($db, "SELECT id FROM {$prefix}sessions") as $row) {
+        foreach (H::dbFetchAll($db, 'SELECT id FROM sessions') as $row) {
             $candidate = (string) $row['id'];
             if (str_ends_with($candidate, $sessionSuffix)) {
                 $sessionId = $candidate;
@@ -683,12 +617,7 @@ it('skips malformed cached activity-week/day entries from a stale-but-still-"fre
         ]);
         $fragment = 'cache_activity_last_weeks|' . $malformedValue;
 
-        H::dbQuery($db, sprintf(
-            "UPDATE %ssessions SET data = CONCAT(data, '%s') WHERE id = '%s'",
-            $prefix,
-            H::dbEscape($db, $fragment),
-            H::dbEscape($db, $sessionId)
-        ));
+        H::dbQuery($db, sprintf("UPDATE sessions SET data = CONCAT(data, '%s') WHERE id = '%s'", H::dbEscape($db, $fragment), H::dbEscape($db, $sessionId)));
         H::dbClose($db);
 
         $html = $curl(H::baseUrl() . '/admin.php');

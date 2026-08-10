@@ -31,17 +31,9 @@ function commentsDbConnect(): mysqli|Connection
     return H::connect();
 }
 
-function commentsDbPrefix(): string
-{
-    $prefix = getenv('PIWIGO_DB_PREFIX');
-
-    return $prefix !== false ? $prefix : 'piwigo_';
-}
-
 function commentsInsert(int $imageId, string $author, string $content, bool $validated, ?int $authorId = null, ?string $email = null): int
 {
     $db = commentsDbConnect();
-    $prefix = commentsDbPrefix();
     // comments.validated is a genuine `boolean` column on Postgres (not
     // the smallint-with-integer-range convention this codebase uses
     // elsewhere) -- a bare 0/1 literal is valid MySQL tinyint(1) input
@@ -51,17 +43,7 @@ function commentsInsert(int $imageId, string $author, string $content, bool $val
     // identical column.
     $sqlTrue = $db instanceof mysqli ? '1' : 'true';
     $sqlFalse = $db instanceof mysqli ? '0' : 'false';
-    H::dbQuery($db, sprintf(
-        "INSERT INTO %scomments (image_id, date, author, anonymous_id, author_id, content, validated, validation_date, email) VALUES (%d, NOW(), '%s', '127.0.0.8', %s, '%s', %s, %s, %s)",
-        $prefix,
-        $imageId,
-        H::dbEscape($db, $author),
-        $authorId === null ? 'NULL' : (string) $authorId,
-        H::dbEscape($db, $content),
-        $validated ? $sqlTrue : $sqlFalse,
-        $validated ? 'NOW()' : 'NULL',
-        $email === null ? 'NULL' : "'" . H::dbEscape($db, $email) . "'"
-    ));
+    H::dbQuery($db, sprintf("INSERT INTO comments (image_id, date, author, anonymous_id, author_id, content, validated, validation_date, email) VALUES (%d, NOW(), '%s', '127.0.0.8', %s, '%s', %s, %s, %s)", $imageId, H::dbEscape($db, $author), $authorId === null ? 'NULL' : (string) $authorId, H::dbEscape($db, $content), $validated ? $sqlTrue : $sqlFalse, $validated ? 'NOW()' : 'NULL', $email === null ? 'NULL' : "'" . H::dbEscape($db, $email) . "'"));
     $id = H::dbInsertId($db);
     H::dbClose($db);
 
@@ -72,7 +54,7 @@ function commentsInsert(int $imageId, string $author, string $content, bool $val
 function commentsRowCount(int $commentId): int
 {
     $db = commentsDbConnect();
-    $row = H::dbFetchAssoc($db, sprintf('SELECT COUNT(*) AS c FROM %scomments WHERE id = %d', commentsDbPrefix(), $commentId));
+    $row = H::dbFetchAssoc($db, sprintf('SELECT COUNT(*) AS c FROM comments WHERE id = %d', $commentId));
     H::dbClose($db);
 
     return is_array($row) ? (int) $row['c'] : 0;
@@ -81,7 +63,7 @@ function commentsRowCount(int $commentId): int
 function commentsValidatedFlag(int $commentId): ?int
 {
     $db = commentsDbConnect();
-    $row = H::dbFetchAssoc($db, sprintf('SELECT validated FROM %scomments WHERE id = %d', commentsDbPrefix(), $commentId));
+    $row = H::dbFetchAssoc($db, sprintf('SELECT validated FROM comments WHERE id = %d', $commentId));
     H::dbClose($db);
 
     // validated is a genuine boolean column -- pg_fetch_assoc() returns
@@ -512,8 +494,7 @@ it('falls back to the filename-derived name when a photo has no explicit name', 
     @unlink($image);
 
     $db = commentsDbConnect();
-    $prefix = commentsDbPrefix();
-    $row = H::dbFetchAssoc($db, sprintf('SELECT file, name FROM %simages WHERE id = %d', $prefix, $imageId));
+    $row = H::dbFetchAssoc($db, sprintf('SELECT file, name FROM images WHERE id = %d', $imageId));
     H::dbClose($db);
     if (! is_array($row)) {
         throw new RuntimeException("expected a real images row for id {$imageId}");
@@ -599,12 +580,7 @@ it('trigger_errors on an unrecognized comment_action from a real user_comment_ch
     PHP);
 
     $db = commentsDbConnect();
-    $prefix = commentsDbPrefix();
-    H::dbQuery($db, sprintf(
-        "INSERT INTO %splugins (id, state, version) VALUES ('%s', 'active', '1.0.0')",
-        $prefix,
-        H::dbEscape($db, $pluginId)
-    ));
+    H::dbQuery($db, sprintf("INSERT INTO plugins (id, state, version) VALUES ('%s', 'active', '1.0.0')", H::dbEscape($db, $pluginId)));
 
     try {
         $page = H::loginAsAdmin($this);
@@ -680,7 +656,7 @@ it('trigger_errors on an unrecognized comment_action from a real user_comment_ch
         expect($testErrorsLog)->toContain('Invalid comment action ct_unknown_action');
     } finally {
         $db = commentsDbConnect();
-        H::dbQuery($db, sprintf("DELETE FROM %splugins WHERE id = '%s'", $prefix, H::dbEscape($db, $pluginId)));
+        H::dbQuery($db, sprintf("DELETE FROM plugins WHERE id = '%s'", H::dbEscape($db, $pluginId)));
         H::dbClose($db);
         @unlink($dir . '/main.inc.php');
         if (is_dir($dir)) {

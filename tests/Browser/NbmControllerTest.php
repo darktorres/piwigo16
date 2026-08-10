@@ -27,13 +27,7 @@ use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
 function nbmEnabledForKey(string $checkKey): ?int
 {
     $db = H::connect();
-    $prefix = getenv('PIWIGO_DB_PREFIX');
-    $prefix = $prefix !== false ? $prefix : 'piwigo_';
-    $row = H::dbFetchAssoc($db, sprintf(
-        "SELECT enabled FROM %suser_mail_notification WHERE check_key = '%s'",
-        $prefix,
-        H::dbEscape($db, $checkKey)
-    ));
+    $row = H::dbFetchAssoc($db, sprintf("SELECT enabled FROM user_mail_notification WHERE check_key = '%s'", H::dbEscape($db, $checkKey)));
     H::dbClose($db);
 
     // enabled is a genuine boolean column on Postgres -- pg_fetch_assoc()

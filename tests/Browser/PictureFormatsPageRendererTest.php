@@ -4,25 +4,6 @@ declare(strict_types=1);
 
 use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
 
-/**
- * Piwigo\Admin\PictureFormatsPageRenderer (admin.php?page=picture_formats)
- * -- lists a photo's alternate-format files (RAW/PSD/TIFF alongside the
- * main JPEG).
- *
- * Not exercised: the `Lang::has('format ' . $ext)` translated-label
- * override -- confirmed via a direct grep across every locale's .po
- * catalog under `language/` in this repo (not just en_UK), and against
- * the reference implementation (16.x-rewrite) too, that no
- * `"format XXX"` msgid is defined anywhere. Always evaluates false; the
- * plain `strtoupper($ext)` label is the only reachable outcome with any
- * real translation data this project ships.
- */
-function pictureFormatsDbPrefix(): string
-{
-    $prefix = getenv('PIWIGO_DB_PREFIX');
-
-    return $prefix !== false ? $prefix : 'piwigo_';
-}
 
 it('renders an empty formats list for a photo with no alternate formats', function (): void {
     $page = H::loginAsAdmin($this);
@@ -55,17 +36,12 @@ it('lists a real alternate-format file with its label, filesize in KB, and downl
     @unlink($image);
 
     $db = H::connect();
-    $prefix = pictureFormatsDbPrefix();
     // filesize is stored in KB; 2048 -> 2.0 KB rendered. NOT the
     // Lang::has('format TIF') branch -- no catalog anywhere in this repo
     // (including the reference 16.x branch) defines a "format XXX" msgid,
     // see this file's own top docblock; the label here is always the plain
     // strtoupper($ext) fallback ("TIF").
-    H::dbQuery($db, sprintf(
-        "INSERT INTO %simage_format (image_id, ext, filesize) VALUES (%d, 'tif', 2048)",
-        $prefix,
-        $imageId
-    ));
+    H::dbQuery($db, sprintf("INSERT INTO image_format (image_id, ext, filesize) VALUES (%d, 'tif', 2048)", $imageId));
     $formatId = H::dbInsertId($db);
     H::dbClose($db);
 
@@ -77,7 +53,7 @@ it('lists a real alternate-format file with its label, filesize in KB, and downl
         $page->assertNoJavaScriptErrors();
     } finally {
         $db = H::connect();
-        H::dbQuery($db, sprintf('DELETE FROM %simage_format WHERE format_id = %d', $prefix, $formatId));
+        H::dbQuery($db, sprintf('DELETE FROM image_format WHERE format_id = %d', $formatId));
         H::dbClose($db);
     }
 });

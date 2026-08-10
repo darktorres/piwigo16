@@ -644,9 +644,7 @@ final class BrowserTestHelpers
     public static function clearLoginLockout(): void
     {
         $db = self::connect();
-        $prefix = getenv('PIWIGO_DB_PREFIX');
-        $prefix = $prefix !== false ? $prefix : 'piwigo_';
-        self::dbQuery($db, sprintf('DELETE FROM %suser_failed_logins', $prefix));
+        self::dbQuery($db, 'DELETE FROM user_failed_logins');
         self::dbClose($db);
     }
 
@@ -1043,9 +1041,7 @@ final class BrowserTestHelpers
     public static function truncateHistory(): void
     {
         $db = self::connect();
-        $prefix = getenv('PIWIGO_DB_PREFIX');
-        $prefix = $prefix !== false ? $prefix : 'piwigo_';
-        self::dbQuery($db, sprintf('DELETE FROM %shistory', $prefix));
+        self::dbQuery($db, 'DELETE FROM history');
         self::dbClose($db);
     }
 
@@ -1076,9 +1072,7 @@ final class BrowserTestHelpers
     public static function freezeImageHits(int $imageId, int $value): void
     {
         $db = self::connect();
-        $prefix = getenv('PIWIGO_DB_PREFIX');
-        $prefix = $prefix !== false ? $prefix : 'piwigo_';
-        self::dbQuery($db, sprintf('UPDATE %simages SET hit = %d WHERE id = %d', $prefix, $value, $imageId));
+        self::dbQuery($db, sprintf('UPDATE images SET hit = %d WHERE id = %d', $value, $imageId));
         self::dbClose($db);
     }
 
@@ -1091,13 +1085,7 @@ final class BrowserTestHelpers
     public static function configValue(string $param): ?string
     {
         $db = self::connect();
-        $prefix = getenv('PIWIGO_DB_PREFIX');
-        $prefix = $prefix !== false ? $prefix : 'piwigo_';
-        $row = self::dbFetchAssoc($db, sprintf(
-            "SELECT value FROM %sconfig WHERE param = '%s'",
-            $prefix,
-            self::dbEscape($db, $param)
-        ));
+        $row = self::dbFetchAssoc($db, sprintf("SELECT value FROM config WHERE param = '%s'", self::dbEscape($db, $param)));
         self::dbClose($db);
 
         return is_array($row) && is_string($row['value'] ?? null) ? $row['value'] : null;
@@ -1133,25 +1121,18 @@ final class BrowserTestHelpers
     public static function setConfigValue(string $param, ?string $rawJsonValue): void
     {
         $db = self::connect();
-        $prefix = getenv('PIWIGO_DB_PREFIX');
-        $prefix = $prefix !== false ? $prefix : 'piwigo_';
         if ($rawJsonValue === null) {
-            self::dbQuery($db, sprintf(
-                "UPDATE %sconfig SET value = NULL WHERE param = '%s'",
-                $prefix,
-                self::dbEscape($db, $param)
-            ));
+            self::dbQuery($db, sprintf("UPDATE config SET value = NULL WHERE param = '%s'", self::dbEscape($db, $param)));
         } else {
             // ON DUPLICATE KEY UPDATE has no Postgres equivalent -- ON
             // CONFLICT (param) DO UPDATE SET is the real one, same as
             // ContractTestCase::upsertConfig()'s own established branch
-            // (piwigo_config.param is the PRIMARY KEY on both platforms).
+            // (config.param is the PRIMARY KEY on both platforms).
             $upsertSql = $db instanceof mysqli
-                ? "INSERT INTO %sconfig (param, value) VALUES ('%s', '%s') ON DUPLICATE KEY UPDATE value = VALUES(value)"
-                : "INSERT INTO %sconfig (param, value) VALUES ('%s', '%s') ON CONFLICT (param) DO UPDATE SET value = EXCLUDED.value";
+                ? "INSERT INTO config (param, value) VALUES ('%s', '%s') ON DUPLICATE KEY UPDATE value = VALUES(value)"
+                : "INSERT INTO config (param, value) VALUES ('%s', '%s') ON CONFLICT (param) DO UPDATE SET value = EXCLUDED.value";
             self::dbQuery($db, sprintf(
                 $upsertSql,
-                $prefix,
                 self::dbEscape($db, $param),
                 self::dbEscape($db, $rawJsonValue)
             ));
@@ -1200,11 +1181,9 @@ final class BrowserTestHelpers
     public static function snapshotDerivativeConfig(): array
     {
         $db = self::connect();
-        $prefix = getenv('PIWIGO_DB_PREFIX');
-        $prefix = $prefix !== false ? $prefix : 'piwigo_';
 
-        $settings = self::dbFetchAssoc($db, sprintf('SELECT * FROM %sderivative_settings', $prefix));
-        $sizes = self::dbFetchAll($db, sprintf('SELECT * FROM %sderivative_size', $prefix));
+        $settings = self::dbFetchAssoc($db, 'SELECT * FROM derivative_settings');
+        $sizes = self::dbFetchAll($db, 'SELECT * FROM derivative_size');
 
         self::dbClose($db);
 
@@ -1222,17 +1201,15 @@ final class BrowserTestHelpers
     public static function restoreDerivativeConfig(array $snapshot): void
     {
         $db = self::connect();
-        $prefix = getenv('PIWIGO_DB_PREFIX');
-        $prefix = $prefix !== false ? $prefix : 'piwigo_';
 
-        self::dbQuery($db, sprintf('DELETE FROM %sderivative_settings', $prefix));
+        self::dbQuery($db, 'DELETE FROM derivative_settings');
         if ($snapshot['settings'] !== null) {
-            self::insertRow($db, $prefix . 'derivative_settings', $snapshot['settings']);
+            self::insertRow($db, 'derivative_settings', $snapshot['settings']);
         }
 
-        self::dbQuery($db, sprintf('DELETE FROM %sderivative_size', $prefix));
+        self::dbQuery($db, 'DELETE FROM derivative_size');
         foreach ($snapshot['sizes'] as $row) {
-            self::insertRow($db, $prefix . 'derivative_size', $row);
+            self::insertRow($db, 'derivative_size', $row);
         }
 
         self::dbClose($db);
@@ -1251,11 +1228,9 @@ final class BrowserTestHelpers
     public static function setDerivativeSettingsRow(array $row): void
     {
         $db = self::connect();
-        $prefix = getenv('PIWIGO_DB_PREFIX');
-        $prefix = $prefix !== false ? $prefix : 'piwigo_';
 
-        self::dbQuery($db, sprintf('DELETE FROM %sderivative_settings', $prefix));
-        self::insertRow($db, $prefix . 'derivative_settings', ['id' => 1] + $row);
+        self::dbQuery($db, 'DELETE FROM derivative_settings');
+        self::insertRow($db, 'derivative_settings', ['id' => 1] + $row);
         self::dbClose($db);
     }
 
@@ -1273,18 +1248,12 @@ final class BrowserTestHelpers
     public static function syncEnabledDerivativeSizes(array $rows): void
     {
         $db = self::connect();
-        $prefix = getenv('PIWIGO_DB_PREFIX');
-        $prefix = $prefix !== false ? $prefix : 'piwigo_';
 
-        $names = array_map(static function (array $row) use ($db, $prefix): string {
+        $names = array_map(static function (array $row) use ($db): string {
             $rowName = $row['name'] ?? null;
             $name = is_string($rowName) ? $rowName : '';
-            self::dbQuery($db, sprintf(
-                'DELETE FROM %sderivative_size WHERE name = \'%s\'',
-                $prefix,
-                self::dbEscape($db, $name)
-            ));
-            self::insertRow($db, $prefix . 'derivative_size', $row);
+            self::dbQuery($db, sprintf('DELETE FROM derivative_size WHERE name = \'%s\'', self::dbEscape($db, $name)));
+            self::insertRow($db, 'derivative_size', $row);
 
             return $name;
         }, $rows);
@@ -1293,11 +1262,7 @@ final class BrowserTestHelpers
             ? "'\\0'" // never matches a real name -- keeps the DELETE valid SQL when $rows is empty
             : implode(', ', array_map(static fn (string $n): string => "'" . self::dbEscape($db, $n) . "'", $names));
 
-        self::dbQuery($db, sprintf(
-            'DELETE FROM %sderivative_size WHERE enabled = 1 AND name NOT IN (%s)',
-            $prefix,
-            $inClause
-        ));
+        self::dbQuery($db, sprintf('DELETE FROM derivative_size WHERE enabled = 1 AND name NOT IN (%s)', $inClause));
 
         self::dbClose($db);
     }
@@ -1357,10 +1322,8 @@ final class BrowserTestHelpers
     public static function setCategoryPrivate(int $categoryId, bool $private): void
     {
         $db = self::connect();
-        $prefix = getenv('PIWIGO_DB_PREFIX');
-        $prefix = $prefix !== false ? $prefix : 'piwigo_';
         $status = $private ? 'private' : 'public';
-        self::dbQuery($db, sprintf("UPDATE %scategories SET status = '%s' WHERE id = %d", $prefix, $status, $categoryId));
+        self::dbQuery($db, sprintf("UPDATE categories SET status = '%s' WHERE id = %d", $status, $categoryId));
         self::dbClose($db);
 
         CachePools::permissions()->clear();
@@ -1379,9 +1342,7 @@ final class BrowserTestHelpers
     public static function imagePath(int $imageId): string
     {
         $db = self::connect();
-        $prefix = getenv('PIWIGO_DB_PREFIX');
-        $prefix = $prefix !== false ? $prefix : 'piwigo_';
-        $row = self::dbFetchAssoc($db, sprintf('SELECT path FROM %simages WHERE id = %d', $prefix, $imageId));
+        $row = self::dbFetchAssoc($db, sprintf('SELECT path FROM images WHERE id = %d', $imageId));
         self::dbClose($db);
         $path = is_array($row) ? ($row['path'] ?? null) : null;
         if (! is_string($path)) {
@@ -1404,13 +1365,7 @@ final class BrowserTestHelpers
     public static function setGuestTheme(string $theme): void
     {
         $db = self::connect();
-        $prefix = getenv('PIWIGO_DB_PREFIX');
-        $prefix = $prefix !== false ? $prefix : 'piwigo_';
-        self::dbQuery($db, sprintf(
-            "UPDATE %suser_infos SET theme = '%s' WHERE user_id = 2",
-            $prefix,
-            self::dbEscape($db, $theme)
-        ));
+        self::dbQuery($db, sprintf("UPDATE user_infos SET theme = '%s' WHERE user_id = 2", self::dbEscape($db, $theme)));
         self::dbClose($db);
     }
 
@@ -1467,12 +1422,7 @@ final class BrowserTestHelpers
         }
 
         $db = self::connect();
-        $prefix = getenv('PIWIGO_DB_PREFIX');
-        $prefix = $prefix !== false ? $prefix : 'piwigo_';
-        self::dbQuery($db, sprintf(
-            "DELETE FROM %sconfig WHERE param IN ('standard_pages_selected_logo', 'standard_pages_selected_logo_path')",
-            $prefix
-        ));
+        self::dbQuery($db, "DELETE FROM config WHERE param IN ('standard_pages_selected_logo', 'standard_pages_selected_logo_path')");
         self::dbClose($db);
 
         CachePools::config()->clear();

@@ -132,9 +132,7 @@ function idcUploadSizedPhoto(object $test, string $albumName, int $width, int $h
 function idcSetImageRotationCode(int $imageId, int $rotationCode): void
 {
     $db = H::connect();
-    $prefix = getenv('PIWIGO_DB_PREFIX');
-    $prefix = $prefix !== false ? $prefix : 'piwigo_';
-    H::dbQuery($db, sprintf('UPDATE %simages SET rotation = %d WHERE id = %d', $prefix, $rotationCode, $imageId));
+    H::dbQuery($db, sprintf('UPDATE images SET rotation = %d WHERE id = %d', $rotationCode, $imageId));
     H::dbClose($db);
 }
 
@@ -172,13 +170,6 @@ function idcPixel(GdImage $image, int $x, int $y): array
 function idcDb(): mysqli|Connection
 {
     return H::connect();
-}
-
-function idcPrefix(): string
-{
-    $prefix = getenv('PIWIGO_DB_PREFIX');
-
-    return $prefix !== false ? $prefix : 'piwigo_';
 }
 
 /**
@@ -1084,7 +1075,7 @@ it('resolves the rotation angle live from EXIF when the DB rotation column is st
     // that state deterministically.
     $imageId = idcCreateTestPhoto($this, 'Derivative Rotation Null Album');
     $db = idcDb();
-    H::dbQuery($db, sprintf('UPDATE %simages SET rotation = NULL WHERE id = %d', idcPrefix(), $imageId));
+    H::dbQuery($db, sprintf('UPDATE images SET rotation = NULL WHERE id = %d', $imageId));
     H::dbClose($db);
 
     $result = idcGet('i.php?/' . idcDerivativePath(H::imagePath($imageId), 'th'));
@@ -1093,7 +1084,7 @@ it('resolves the rotation angle live from EXIF when the DB rotation column is st
     // __invoke() persists the freshly-resolved code straight back via
     // ImageRepository::updateRotation() -- confirms the live-EXIF branch
     // really ran, not just that the request happened to succeed anyway.
-    $row = idcFetchOne(sprintf('SELECT rotation FROM %simages WHERE id = %d', idcPrefix(), $imageId));
+    $row = idcFetchOne(sprintf('SELECT rotation FROM images WHERE id = %d', $imageId));
     expect($row['rotation'] ?? null)->not->toBeNull();
 });
 
@@ -1132,7 +1123,7 @@ it('sends a long-lived Expires header when both the source file and the derivati
         touch($srcDiskPath, $old);
 
         $db = idcDb();
-        H::dbQuery($db, sprintf("UPDATE %sderivative_size SET last_mod_time = %d WHERE name = 'square'", idcPrefix(), $old));
+        H::dbQuery($db, sprintf("UPDATE derivative_size SET last_mod_time = %d WHERE name = 'square'", $old));
         H::dbClose($db);
 
         $result = idcGet('i.php?/' . idcDerivativePath($imagePath, 'sq'));
@@ -1191,8 +1182,7 @@ it('generates a custom size once its own key is registered, averaging sharpen ac
             ? "JSON_OBJECT('%s', %d)"
             : "jsonb_build_object('%s', %d)";
         H::dbQuery($db, sprintf(
-            'UPDATE %sderivative_settings SET custom_json = ' . $jsonObjectExpr,
-            idcPrefix(),
+            'UPDATE derivative_settings SET custom_json = ' . $jsonObjectExpr,
             H::dbEscape($db, $key),
             time()
         ));
@@ -1248,12 +1238,7 @@ it('ierrors 500 "dir create error" when the derivative cache directory cannot be
     copy($originalDiskPath, $newDiskDir . '/dummy.jpg');
 
     $db = idcDb();
-    H::dbQuery($db, sprintf(
-        "UPDATE %simages SET path = '%s' WHERE id = %d",
-        idcPrefix(),
-        H::dbEscape($db, $newRelPath),
-        $imageId
-    ));
+    H::dbQuery($db, sprintf("UPDATE images SET path = '%s' WHERE id = %d", H::dbEscape($db, $newRelPath), $imageId));
     H::dbClose($db);
 
     // Pre-create (and lock down) the derivative cache directory that would
@@ -1296,7 +1281,7 @@ it('applies a configured non-zero sharpen amount when generating a standard-type
         expect(idcGet('i.php?/' . idcDerivativePath(H::imagePath($primeId), 'sq'))['status'])->toBe(200);
 
         $db = idcDb();
-        H::dbQuery($db, sprintf("UPDATE %sderivative_size SET sharpen = '0.5000' WHERE name = 'square'", idcPrefix()));
+        H::dbQuery($db, sprintf("UPDATE derivative_size SET sharpen = '0.5000' WHERE name = 'square'"));
         H::dbClose($db);
 
         $imageId = idcCreateTestPhoto($this, 'Derivative Sharpen Album');
@@ -1313,7 +1298,7 @@ it('clamps the JPEG compression quality to 75 when generating a 4xlarge derivati
     $snapshot = H::snapshotDerivativeConfig();
     try {
         $db = idcDb();
-        H::dbQuery($db, sprintf("UPDATE %sderivative_size SET enabled = 1 WHERE name = '4xlarge'", idcPrefix()));
+        H::dbQuery($db, sprintf("UPDATE derivative_size SET enabled = 1 WHERE name = '4xlarge'"));
         H::dbClose($db);
 
         // A real crop/scale change isn't needed to leave the "0 changes"
@@ -1387,7 +1372,7 @@ it('never attempts sibling-derivative reuse when the source height is unknown', 
     // height null while width is set.
     $imageId = idcCreateTestPhoto($this, 'Derivative HeightNull Album');
     $db = idcDb();
-    H::dbQuery($db, sprintf('UPDATE %simages SET height = NULL WHERE id = %d', idcPrefix(), $imageId));
+    H::dbQuery($db, sprintf('UPDATE images SET height = NULL WHERE id = %d', $imageId));
     H::dbClose($db);
 
     $result = idcGet('i.php?/' . idcDerivativePath(H::imagePath($imageId), 'sq'));

@@ -104,13 +104,11 @@ it('formats a multi-date info-title ("added between") when its photos span more 
     @unlink($imagePathB);
 
     $db = H::connect();
-    $prefix = getenv('PIWIGO_DB_PREFIX');
-    $prefix = $prefix !== false ? $prefix : 'piwigo_';
     // Two widely-separated, distinct years (rather than the same year or
     // adjacent ones) so a MIN/MAX transposition bug would be obvious from
     // the ordering check below, not hidden by two nearly-identical values.
-    H::dbQuery($db, sprintf('UPDATE %simages SET date_available = \'2019-03-10\' WHERE id = %d', $prefix, $imageIdA));
-    H::dbQuery($db, sprintf('UPDATE %simages SET date_available = \'2024-11-20\' WHERE id = %d', $prefix, $imageIdB));
+    H::dbQuery($db, sprintf('UPDATE images SET date_available = \'2019-03-10\' WHERE id = %d', $imageIdA));
+    H::dbQuery($db, sprintf('UPDATE images SET date_available = \'2024-11-20\' WHERE id = %d', $imageIdB));
 
     try {
         $result = H::rawGet($page, '/admin.php?page=album&cat_id=' . $albumId . '&tab=properties');
@@ -178,8 +176,6 @@ it('shows the real physical directory info for a non-virtual (disk-synced) album
     $page = H::loginAsAdmin($this);
 
     $db = H::connect();
-    $prefix = getenv('PIWIGO_DB_PREFIX');
-    $prefix = $prefix !== false ? $prefix : 'piwigo_';
 
     // Every album created via pwg.categories.add is virtual (dir=NULL), as
     // are both fixture categories (1 and 2) -- confirmed by direct read of
@@ -192,16 +188,12 @@ it('shows the real physical directory info for a non-virtual (disk-synced) album
     // tools/reimport-fixture.sh's own docblock for why it can't be).
     $realRoot = dirname(__DIR__, 2) . '/';
     $dirName = 'physical_test_dir_' . uniqid();
-    H::dbQuery($db, sprintf(
-        "INSERT INTO %scategories (name, dir, site_id, status, uppercats) VALUES ('Physical Test Album', '%s', 1, 'public', '0')",
-        $prefix,
-        H::dbEscape($db, $dirName)
-    ));
+    H::dbQuery($db, sprintf("INSERT INTO categories (name, dir, site_id, status, uppercats) VALUES ('Physical Test Album', '%s', 1, 'public', '0')", H::dbEscape($db, $dirName)));
     $albumId = H::dbInsertId($db);
     // uppercats must resolve to (at least) this category's own id for
     // getLocalDir()'s `id IN (uppercats)` lookup to find it -- a root
     // category (no parent) has uppercats equal to its own id.
-    H::dbQuery($db, sprintf('UPDATE %scategories SET uppercats = %d WHERE id = %d', $prefix, $albumId, $albumId));
+    H::dbQuery($db, sprintf('UPDATE categories SET uppercats = %d WHERE id = %d', $albumId, $albumId));
 
     try {
         $page = H::navigateOk($page, '/admin.php?page=album&cat_id=' . $albumId . '&tab=properties');
@@ -218,7 +210,7 @@ it('shows the real physical directory info for a non-virtual (disk-synced) album
             $realRoot . 'galleries/' . $dirName
         );
     } finally {
-        H::dbQuery($db, sprintf('DELETE FROM %scategories WHERE id = %d', $prefix, $albumId));
+        H::dbQuery($db, sprintf('DELETE FROM categories WHERE id = %d', $albumId));
         H::dbClose($db);
     }
 });

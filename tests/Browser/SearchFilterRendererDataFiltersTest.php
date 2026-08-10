@@ -6,34 +6,6 @@ use PgSql\Connection;
 use Piwigo\Cache\CachePools;
 use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
 
-/**
- * Piwigo\Search\SearchFilterRenderer::render() -- closes the remaining
- * coverage gap left by SearchFilterRendererTest.php (tag_id/cat_id/q, the
- * fields SearchController's own GET params populate) and
- * SearchFilterRendererExtraFiltersTest.php (every filter panel active, but
- * with only the placeholder empty values search.php's own "default
- * filter" mechanism ever produces, and images that are all identically
- * 200x150/unrated/same-filesize).
- *
- * `pwg.images.filteredSearch.create` (Ws\PwgImages::filteredSearchCreate(),
- * the same WS method WsImagesFilteredSearchTest.php exercises) is the only
- * way to persist a search with REAL non-empty per-filter values (real
- * author/added_by/ratios/ratings/filesize/height/width/date criteria) --
- * SearchController itself never reads those from $_GET at all. The
- * returned `search_url` is navigated to directly (not via
- * H::navigateOk(), which only accepts a path relative to H::baseUrl()).
- *
- * Real per-image width/height/rating_score/filesize/date_creation values
- * come from raw mysqli UPDATEs after upload (same established pattern as
- * CatListPageRendererTest.php's own raw DB helper) -- there's no WS setter
- * for any of those columns.
- */
-function searchFilterDataDbPrefix(): string
-{
-    $prefix = getenv('PIWIGO_DB_PREFIX');
-
-    return $prefix !== false ? $prefix : 'piwigo_';
-}
 
 function searchFilterDataDb(): mysqli|Connection
 {
@@ -43,19 +15,9 @@ function searchFilterDataDb(): mysqli|Connection
 function searchFilterDataSetImageStats(int $imageId, int $width, int $height, ?float $ratingScore, int $filesize, ?string $dateCreation): void
 {
     $db = searchFilterDataDb();
-    $prefix = searchFilterDataDbPrefix();
     $ratingSql = $ratingScore === null ? 'NULL' : (string) $ratingScore;
     $dateSql = $dateCreation === null ? 'NULL' : "'" . H::dbEscape($db, $dateCreation) . "'";
-    H::dbQuery($db, sprintf(
-        'UPDATE %simages SET width = %d, height = %d, rating_score = %s, filesize = %d, date_creation = %s WHERE id = %d',
-        $prefix,
-        $width,
-        $height,
-        $ratingSql,
-        $filesize,
-        $dateSql,
-        $imageId
-    ));
+    H::dbQuery($db, sprintf('UPDATE images SET width = %d, height = %d, rating_score = %s, filesize = %d, date_creation = %s WHERE id = %d', $width, $height, $ratingSql, $filesize, $dateSql, $imageId));
     H::dbClose($db);
 }
 
@@ -66,12 +28,7 @@ function searchFilterDataSetImageStats(int $imageId, int $width, int $height, ?f
 function searchFilterDataAdminUserId(): int
 {
     $db = searchFilterDataDb();
-    $prefix = searchFilterDataDbPrefix();
-    $row = H::dbFetchAssoc($db, sprintf(
-        "SELECT id FROM %susers WHERE username = '%s'",
-        $prefix,
-        H::dbEscape($db, H::ADMIN_USER)
-    ));
+    $row = H::dbFetchAssoc($db, sprintf("SELECT id FROM users WHERE username = '%s'", H::dbEscape($db, H::ADMIN_USER)));
     H::dbClose($db);
     if (! is_array($row) || ! is_numeric($row['id'] ?? null)) {
         throw new RuntimeException('could not resolve the admin user id for username ' . H::ADMIN_USER);
@@ -88,8 +45,7 @@ function searchFilterDataAdminUserId(): int
 function searchFilterDataSetAddedByNull(int $imageId): void
 {
     $db = searchFilterDataDb();
-    $prefix = searchFilterDataDbPrefix();
-    H::dbQuery($db, sprintf('UPDATE %simages SET added_by = NULL WHERE id = %d', $prefix, $imageId));
+    H::dbQuery($db, sprintf('UPDATE images SET added_by = NULL WHERE id = %d', $imageId));
     H::dbClose($db);
 }
 
@@ -101,8 +57,7 @@ function searchFilterDataSetAddedByNull(int $imageId): void
 function searchFilterDataSetImageDimsNull(int $imageId): void
 {
     $db = searchFilterDataDb();
-    $prefix = searchFilterDataDbPrefix();
-    H::dbQuery($db, sprintf('UPDATE %simages SET width = NULL, height = NULL WHERE id = %d', $prefix, $imageId));
+    H::dbQuery($db, sprintf('UPDATE images SET width = NULL, height = NULL WHERE id = %d', $imageId));
     H::dbClose($db);
 }
 
@@ -112,8 +67,7 @@ function searchFilterDataSetImageDimsNull(int $imageId): void
 function searchFilterDataSetImageFilesizeNull(int $imageId): void
 {
     $db = searchFilterDataDb();
-    $prefix = searchFilterDataDbPrefix();
-    H::dbQuery($db, sprintf('UPDATE %simages SET filesize = NULL WHERE id = %d', $prefix, $imageId));
+    H::dbQuery($db, sprintf('UPDATE images SET filesize = NULL WHERE id = %d', $imageId));
     H::dbClose($db);
 }
 

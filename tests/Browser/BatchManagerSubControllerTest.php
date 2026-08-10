@@ -25,13 +25,6 @@ use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
  * covering BatchManagerSubController's own branch-selection/session-
  * mutation logic, not re-verifying FilterResolver's query results.
  */
-function bmDbPrefix(): string
-{
-    $prefix = getenv('PIWIGO_DB_PREFIX');
-
-    return $prefix !== false ? $prefix : 'piwigo_';
-}
-
 function bmDbConnect(): mysqli|Connection
 {
     return H::connect();
@@ -40,7 +33,7 @@ function bmDbConnect(): mysqli|Connection
 function bmCaddieCount(int $userId): int
 {
     $db = bmDbConnect();
-    $row = H::dbFetchAssoc($db, sprintf('SELECT COUNT(*) AS c FROM %scaddie WHERE user_id = %d', bmDbPrefix(), $userId));
+    $row = H::dbFetchAssoc($db, sprintf('SELECT COUNT(*) AS c FROM caddie WHERE user_id = %d', $userId));
     H::dbClose($db);
 
     return is_array($row) ? (int) $row['c'] : -1;
@@ -55,11 +48,10 @@ function bmInsertCaddie(int $userId, int $imageId): void
     // conflict target needed since (user_id, element_id) is the table's
     // only PK/unique constraint.
     $insertSql = $db instanceof mysqli
-        ? 'INSERT INTO %scaddie (user_id, element_id) VALUES (%d, %d) ON DUPLICATE KEY UPDATE user_id = user_id'
-        : 'INSERT INTO %scaddie (user_id, element_id) VALUES (%d, %d) ON CONFLICT DO NOTHING';
+        ? 'INSERT INTO caddie (user_id, element_id) VALUES (%d, %d) ON DUPLICATE KEY UPDATE user_id = user_id'
+        : 'INSERT INTO caddie (user_id, element_id) VALUES (%d, %d) ON CONFLICT DO NOTHING';
     H::dbQuery($db, sprintf(
         $insertSql,
-        bmDbPrefix(),
         $userId,
         $imageId
     ));
@@ -69,12 +61,7 @@ function bmInsertCaddie(int $userId, int $imageId): void
 function bmImageHasTag(int $imageId, int $tagId): bool
 {
     $db = bmDbConnect();
-    $row = H::dbFetchAssoc($db, sprintf(
-        'SELECT COUNT(*) AS c FROM %simage_tag WHERE image_id = %d AND tag_id = %d',
-        bmDbPrefix(),
-        $imageId,
-        $tagId
-    ));
+    $row = H::dbFetchAssoc($db, sprintf('SELECT COUNT(*) AS c FROM image_tag WHERE image_id = %d AND tag_id = %d', $imageId, $tagId));
     H::dbClose($db);
 
     return is_array($row) && (int) $row['c'] > 0;
@@ -393,12 +380,7 @@ it('associates a whole_set selection with another album via the associate action
     @unlink($image);
 
     $db = bmDbConnect();
-    $beforeRow = H::dbFetchAssoc($db, sprintf(
-        'SELECT COUNT(*) AS c FROM %simage_category WHERE image_id = %d AND category_id = %d',
-        bmDbPrefix(),
-        $imageId,
-        $targetAlbumId
-    ));
+    $beforeRow = H::dbFetchAssoc($db, sprintf('SELECT COUNT(*) AS c FROM image_category WHERE image_id = %d AND category_id = %d', $imageId, $targetAlbumId));
     expect(is_array($beforeRow) ? (int) $beforeRow['c'] : -1)->toBe(0);
 
     $result = bmPost($page, [
@@ -410,12 +392,7 @@ it('associates a whole_set selection with another album via the associate action
     ]);
     expect($result['status'])->toBe(200);
 
-    $afterRow = H::dbFetchAssoc($db, sprintf(
-        'SELECT COUNT(*) AS c FROM %simage_category WHERE image_id = %d AND category_id = %d',
-        bmDbPrefix(),
-        $imageId,
-        $targetAlbumId
-    ));
+    $afterRow = H::dbFetchAssoc($db, sprintf('SELECT COUNT(*) AS c FROM image_category WHERE image_id = %d AND category_id = %d', $imageId, $targetAlbumId));
     H::dbClose($db);
     expect(is_array($afterRow) ? (int) $afterRow['c'] : -1)->toBe(1);
 });
@@ -424,11 +401,7 @@ it('associates a whole_set selection with another album via the associate action
 function bmImageCategoryLinks(int $imageId, int $storageAlbumId, int $targetAlbumId): array
 {
     $db = bmDbConnect();
-    $rows = H::dbFetchAll($db, sprintf(
-        'SELECT category_id FROM %simage_category WHERE image_id = %d',
-        bmDbPrefix(),
-        $imageId
-    ));
+    $rows = H::dbFetchAll($db, sprintf('SELECT category_id FROM image_category WHERE image_id = %d', $imageId));
     $ids = array_map(static fn (array $row): int => (int) $row['category_id'], $rows);
     H::dbClose($db);
 
@@ -521,11 +494,7 @@ it('dissociates a whole_set selection from a non-storage album', function (): vo
 function bmImageRow(int $imageId): array
 {
     $db = bmDbConnect();
-    $row = H::dbFetchAssoc($db, sprintf(
-        'SELECT name, author, level, date_creation FROM %simages WHERE id = %d',
-        bmDbPrefix(),
-        $imageId
-    ));
+    $row = H::dbFetchAssoc($db, sprintf('SELECT name, author, level, date_creation FROM images WHERE id = %d', $imageId));
     H::dbClose($db);
     if (! is_array($row)) {
         throw new RuntimeException("expected a real image row for id {$imageId}");
@@ -628,11 +597,7 @@ it('adds and removes a whole_set selection from the caddie', function (): void {
     expect($addResult['status'])->toBe(200);
 
     $db = bmDbConnect();
-    $checkRow = H::dbFetchAssoc($db, sprintf(
-        'SELECT COUNT(*) AS c FROM %scaddie WHERE user_id = 1 AND element_id = %d',
-        bmDbPrefix(),
-        $imageId
-    ));
+    $checkRow = H::dbFetchAssoc($db, sprintf('SELECT COUNT(*) AS c FROM caddie WHERE user_id = 1 AND element_id = %d', $imageId));
     H::dbClose($db);
     expect(is_array($checkRow) ? (int) $checkRow['c'] : -1)->toBe(1);
 
@@ -673,7 +638,7 @@ it('rejects a delete action without confirm_deletion, then deletes and records a
     expect($unconfirmedResult['body'])->toContain('You must confirm deletion');
 
     $db = bmDbConnect();
-    $stillThereRow = H::dbFetchAssoc($db, sprintf('SELECT COUNT(*) AS c FROM %simages WHERE id = %d', bmDbPrefix(), $imageId));
+    $stillThereRow = H::dbFetchAssoc($db, sprintf('SELECT COUNT(*) AS c FROM images WHERE id = %d', $imageId));
     H::dbClose($db);
     expect(is_array($stillThereRow) ? (int) $stillThereRow['c'] : -1)->toBe(1);
 
@@ -848,13 +813,7 @@ it('rejects a whole_set value containing a non-digit element as a hacking attemp
 function bmSetImageDimensions(int $imageId, int $width, int $height): void
 {
     $db = bmDbConnect();
-    H::dbQuery($db, sprintf(
-        'UPDATE %simages SET width = %d, height = %d WHERE id = %d',
-        bmDbPrefix(),
-        $width,
-        $height,
-        $imageId
-    ));
+    H::dbQuery($db, sprintf('UPDATE images SET width = %d, height = %d WHERE id = %d', $width, $height, $imageId));
     H::dbClose($db);
 }
 
@@ -943,11 +902,7 @@ function bmCookieJarSessionId(string $cookieJar): string
 function bmSessionData(string $pwgIdCookieValue): string
 {
     $db = bmDbConnect();
-    $row = H::dbFetchAssoc($db, sprintf(
-        "SELECT data FROM %ssessions WHERE id LIKE '%%%s'",
-        bmDbPrefix(),
-        H::dbEscape($db, $pwgIdCookieValue)
-    ));
+    $row = H::dbFetchAssoc($db, sprintf("SELECT data FROM sessions WHERE id LIKE '%%%s'", H::dbEscape($db, $pwgIdCookieValue)));
     H::dbClose($db);
 
     return is_array($row) && is_string($row['data'] ?? null) ? $row['data'] : '';
@@ -970,19 +925,13 @@ function bmSessionData(string $pwgIdCookieValue): string
 function bmCorruptSessionBulkManagerFilter(string $pwgIdCookieValue): void
 {
     $db = bmDbConnect();
-    $prefix = bmDbPrefix();
     $fragment = 'bulk_manager_filter|' . serialize('not-an-array');
     $likePattern = '%' . $pwgIdCookieValue;
     // mysqli's own native prepare()/bind_param() has no portable
     // Postgres equivalent worth porting here -- $fragment/$likePattern
     // are escaped and inlined instead, the same shape every other raw
     // query in this file already uses.
-    H::dbQuery($db, sprintf(
-        "UPDATE %ssessions SET data = CONCAT(data, '%s') WHERE id LIKE '%s'",
-        $prefix,
-        H::dbEscape($db, $fragment),
-        H::dbEscape($db, $likePattern)
-    ));
+    H::dbQuery($db, sprintf("UPDATE sessions SET data = CONCAT(data, '%s') WHERE id LIKE '%s'", H::dbEscape($db, $fragment), H::dbEscape($db, $likePattern)));
     H::dbClose($db);
 }
 
@@ -1080,11 +1029,7 @@ it('fatal-errors instead of silently swallowing a perform_batch_manager_prefilte
         PHP);
 
     $pluginDb = bmDbConnect();
-    H::dbQuery($pluginDb, sprintf(
-        "INSERT INTO %splugins (id, state, version) VALUES ('%s', 'active', '1.0.0')",
-        bmDbPrefix(),
-        $pluginId
-    ));
+    H::dbQuery($pluginDb, sprintf("INSERT INTO plugins (id, state, version) VALUES ('%s', 'active', '1.0.0')", $pluginId));
     H::dbClose($pluginDb);
 
     try {
@@ -1105,7 +1050,7 @@ it('fatal-errors instead of silently swallowing a perform_batch_manager_prefilte
         expect($result['status'])->toBe(500);
     } finally {
         $cleanupDb = bmDbConnect();
-        H::dbQuery($cleanupDb, sprintf("DELETE FROM %splugins WHERE id = '%s'", bmDbPrefix(), $pluginId));
+        H::dbQuery($cleanupDb, sprintf("DELETE FROM plugins WHERE id = '%s'", $pluginId));
         H::dbClose($cleanupDb);
         @unlink($mainFile);
         @rmdir($pluginDir);
@@ -1149,11 +1094,7 @@ it('fatal-errors instead of silently swallowing a batch_manager_perform_filters 
         PHP);
 
     $pluginDb = bmDbConnect();
-    H::dbQuery($pluginDb, sprintf(
-        "INSERT INTO %splugins (id, state, version) VALUES ('%s', 'active', '1.0.0')",
-        bmDbPrefix(),
-        $pluginId
-    ));
+    H::dbQuery($pluginDb, sprintf("INSERT INTO plugins (id, state, version) VALUES ('%s', 'active', '1.0.0')", $pluginId));
     H::dbClose($pluginDb);
 
     try {
@@ -1174,7 +1115,7 @@ it('fatal-errors instead of silently swallowing a batch_manager_perform_filters 
         expect($result['status'])->toBe(500);
     } finally {
         $cleanupDb = bmDbConnect();
-        H::dbQuery($cleanupDb, sprintf("DELETE FROM %splugins WHERE id = '%s'", bmDbPrefix(), $pluginId));
+        H::dbQuery($cleanupDb, sprintf("DELETE FROM plugins WHERE id = '%s'", $pluginId));
         H::dbClose($cleanupDb);
         @unlink($mainFile);
         @rmdir($pluginDir);

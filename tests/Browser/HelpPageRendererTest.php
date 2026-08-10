@@ -56,22 +56,20 @@ it('shows the English online-documentation message for an en_UK admin user', fun
 it('shows the French online-documentation message for a fr_ admin user', function (): void {
     $page = H::loginAsAdmin($this);
     $db = H::connect();
-    $prefix = getenv('PIWIGO_DB_PREFIX');
-    $prefix = $prefix !== false ? $prefix : 'piwigo_';
 
     // CurrentUser is loaded fresh from the DB on each request, so switching
     // fixture_admin's own language column for the duration of this one
     // request (then restoring it) is enough -- no separate user/session
     // needed, unlike the webmaster-required-warning tests elsewhere in this
     // batch.
-    H::dbQuery($db, sprintf("UPDATE %suser_infos SET language = 'fr_FR' WHERE user_id = 1", $prefix));
+    H::dbQuery($db, sprintf("UPDATE user_infos SET language = 'fr_FR' WHERE user_id = 1"));
 
     try {
         $page = H::navigateOk($page, '/admin.php?page=help');
 
         $page->assertSee('Besoin d\'aide pour utiliser Piwigo');
     } finally {
-        H::dbQuery($db, sprintf("UPDATE %suser_infos SET language = 'en_UK' WHERE user_id = 1", $prefix));
+        H::dbQuery($db, sprintf("UPDATE user_infos SET language = 'en_UK' WHERE user_id = 1"));
         H::dbClose($db);
     }
 });

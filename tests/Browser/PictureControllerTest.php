@@ -48,17 +48,11 @@ function pictureDbConnect(): mysqli|Connection
     return H::connect();
 }
 
-function pictureDbPrefix(): string
-{
-    $prefix = getenv('PIWIGO_DB_PREFIX');
-
-    return $prefix !== false ? $prefix : 'piwigo_';
-}
 
 function pictureHitCount(int $imageId): int
 {
     $db = pictureDbConnect();
-    $row = H::dbFetchAssoc($db, sprintf('SELECT hit FROM %simages WHERE id = %d', pictureDbPrefix(), $imageId));
+    $row = H::dbFetchAssoc($db, sprintf('SELECT hit FROM images WHERE id = %d', $imageId));
     H::dbClose($db);
 
     return is_array($row) && isset($row['hit']) ? (int) $row['hit'] : -1;
@@ -67,12 +61,7 @@ function pictureHitCount(int $imageId): int
 function pictureFavoriteExists(int $imageId, int $userId): bool
 {
     $db = pictureDbConnect();
-    $row = H::dbFetchAssoc($db, sprintf(
-        'SELECT COUNT(*) AS c FROM %sfavorites WHERE image_id = %d AND user_id = %d',
-        pictureDbPrefix(),
-        $imageId,
-        $userId
-    ));
+    $row = H::dbFetchAssoc($db, sprintf('SELECT COUNT(*) AS c FROM favorites WHERE image_id = %d AND user_id = %d', $imageId, $userId));
     H::dbClose($db);
 
     return is_array($row) && (int) $row['c'] > 0;
@@ -89,19 +78,9 @@ function pictureFavoriteExists(int $imageId, int $userId): bool
 function pictureInsertComment(int $imageId, string $author, string $content, bool $validated, ?int $authorId = null): int
 {
     $db = pictureDbConnect();
-    $prefix = pictureDbPrefix();
     $sqlTrue = $db instanceof mysqli ? '1' : 'true';
     $sqlFalse = $db instanceof mysqli ? '0' : 'false';
-    H::dbQuery($db, sprintf(
-        "INSERT INTO %scomments (image_id, date, author, anonymous_id, author_id, content, validated, validation_date) VALUES (%d, NOW(), '%s', '127.0.0.9', %s, '%s', %s, %s)",
-        $prefix,
-        $imageId,
-        H::dbEscape($db, $author),
-        $authorId === null ? 'NULL' : (string) $authorId,
-        H::dbEscape($db, $content),
-        $validated ? $sqlTrue : $sqlFalse,
-        $validated ? 'NOW()' : 'NULL'
-    ));
+    H::dbQuery($db, sprintf("INSERT INTO comments (image_id, date, author, anonymous_id, author_id, content, validated, validation_date) VALUES (%d, NOW(), '%s', '127.0.0.9', %s, '%s', %s, %s)", $imageId, H::dbEscape($db, $author), $authorId === null ? 'NULL' : (string) $authorId, H::dbEscape($db, $content), $validated ? $sqlTrue : $sqlFalse, $validated ? 'NOW()' : 'NULL'));
     $id = H::dbInsertId($db);
     H::dbClose($db);
 
@@ -112,7 +91,7 @@ function pictureInsertComment(int $imageId, string $author, string $content, boo
 function pictureCommentRow(int $commentId): ?array
 {
     $db = pictureDbConnect();
-    $row = H::dbFetchAssoc($db, sprintf('SELECT validated FROM %scomments WHERE id = %d', pictureDbPrefix(), $commentId));
+    $row = H::dbFetchAssoc($db, sprintf('SELECT validated FROM comments WHERE id = %d', $commentId));
     H::dbClose($db);
 
     // pg_fetch_assoc() represents a boolean column as 't'/'f' -- a naive
@@ -123,7 +102,7 @@ function pictureCommentRow(int $commentId): ?array
 function pictureCategoryRepresentativeId(int $categoryId): ?int
 {
     $db = pictureDbConnect();
-    $row = H::dbFetchAssoc($db, sprintf('SELECT representative_picture_id FROM %scategories WHERE id = %d', pictureDbPrefix(), $categoryId));
+    $row = H::dbFetchAssoc($db, sprintf('SELECT representative_picture_id FROM categories WHERE id = %d', $categoryId));
     H::dbClose($db);
 
     return is_array($row) && $row['representative_picture_id'] !== null ? (int) $row['representative_picture_id'] : null;
@@ -132,12 +111,7 @@ function pictureCategoryRepresentativeId(int $categoryId): ?int
 function pictureCaddieExists(int $imageId, int $userId): bool
 {
     $db = pictureDbConnect();
-    $row = H::dbFetchAssoc($db, sprintf(
-        'SELECT COUNT(*) AS c FROM %scaddie WHERE element_id = %d AND user_id = %d',
-        pictureDbPrefix(),
-        $imageId,
-        $userId
-    ));
+    $row = H::dbFetchAssoc($db, sprintf('SELECT COUNT(*) AS c FROM caddie WHERE element_id = %d AND user_id = %d', $imageId, $userId));
     H::dbClose($db);
 
     return is_array($row) && (int) $row['c'] > 0;
@@ -151,12 +125,7 @@ function pictureRateValue(int $imageId, int $userId): ?int
     // sentinel for "not anonymous" -- so this only filters by
     // element_id/user_id (deleteExistingRate() already guarantees at most
     // one row per user_id+element_id for a non-anonymous rater).
-    $row = H::dbFetchAssoc($db, sprintf(
-        'SELECT rate FROM %srate WHERE element_id = %d AND user_id = %d',
-        pictureDbPrefix(),
-        $imageId,
-        $userId
-    ));
+    $row = H::dbFetchAssoc($db, sprintf('SELECT rate FROM rate WHERE element_id = %d AND user_id = %d', $imageId, $userId));
     H::dbClose($db);
 
     return is_array($row) ? (int) $row['rate'] : null;
@@ -500,7 +469,7 @@ it("edits a comment's own content via the edit_comment action, validating it as 
     expect($postResult['body'])->not->toContain('Fatal error');
 
     $db = pictureDbConnect();
-    $row = H::fetchAssocOrFail($db, sprintf('SELECT content, validated FROM %scomments WHERE id = %d', pictureDbPrefix(), $commentId));
+    $row = H::fetchAssocOrFail($db, sprintf('SELECT content, validated FROM comments WHERE id = %d', $commentId));
     H::dbClose($db);
     expect($row['content'])->toBe($newContent);
     // Admin editing any comment always takes the 'validate' branch
@@ -736,7 +705,7 @@ it('rejects an edit_comment submission whose key is used before its 2-second min
     expect($postResult['body'])->toContain('Your comment has NOT been registered because it did not pass the validation rules');
 
     $db = pictureDbConnect();
-    $row = H::fetchAssocOrFail($db, sprintf('SELECT content FROM %scomments WHERE id = %d', pictureDbPrefix(), $commentId));
+    $row = H::fetchAssocOrFail($db, sprintf('SELECT content FROM comments WHERE id = %d', $commentId));
     H::dbClose($db);
     expect($row['content'])->toBe('Original content.');
 });
@@ -849,12 +818,7 @@ function pictureCurlLoginSession(string $username, string $password): array
 function pictureSetImageDateAvailable(int $imageId, string $mysqlDateTime): void
 {
     $db = pictureDbConnect();
-    H::dbQuery($db, sprintf(
-        "UPDATE %simages SET date_available = '%s' WHERE id = %d",
-        pictureDbPrefix(),
-        H::dbEscape($db, $mysqlDateTime),
-        $imageId
-    ));
+    H::dbQuery($db, sprintf("UPDATE images SET date_available = '%s' WHERE id = %d", H::dbEscape($db, $mysqlDateTime), $imageId));
     H::dbClose($db);
 }
 
@@ -862,12 +826,7 @@ function pictureSetImageDateAvailable(int $imageId, string $mysqlDateTime): void
 function pictureAddImageToCategory(int $imageId, int $categoryId): void
 {
     $db = pictureDbConnect();
-    H::dbQuery($db, sprintf(
-        'INSERT INTO %simage_category (image_id, category_id) VALUES (%d, %d)',
-        pictureDbPrefix(),
-        $imageId,
-        $categoryId
-    ));
+    H::dbQuery($db, sprintf('INSERT INTO image_category (image_id, category_id) VALUES (%d, %d)', $imageId, $categoryId));
     H::dbClose($db);
 }
 
@@ -875,7 +834,7 @@ function pictureAddImageToCategory(int $imageId, int $categoryId): void
 function pictureRemoveImageFromAllCategories(int $imageId): void
 {
     $db = pictureDbConnect();
-    H::dbQuery($db, sprintf('DELETE FROM %simage_category WHERE image_id = %d', pictureDbPrefix(), $imageId));
+    H::dbQuery($db, sprintf('DELETE FROM image_category WHERE image_id = %d', $imageId));
     H::dbClose($db);
 }
 
@@ -883,13 +842,7 @@ function pictureRemoveImageFromAllCategories(int $imageId): void
 function pictureInsertImageFormat(int $imageId, string $ext, int $filesizeKb): void
 {
     $db = pictureDbConnect();
-    H::dbQuery($db, sprintf(
-        "INSERT INTO %simage_format (image_id, ext, filesize) VALUES (%d, '%s', %d)",
-        pictureDbPrefix(),
-        $imageId,
-        H::dbEscape($db, $ext),
-        $filesizeKb
-    ));
+    H::dbQuery($db, sprintf("INSERT INTO image_format (image_id, ext, filesize) VALUES (%d, '%s', %d)", $imageId, H::dbEscape($db, $ext), $filesizeKb));
     H::dbClose($db);
 }
 
@@ -939,11 +892,7 @@ function pictureCookieJarSessionId(string $cookieJar): string
 function pictureSessionDerivType(string $pwgIdCookieValue): ?string
 {
     $db = pictureDbConnect();
-    $row = H::dbFetchAssoc($db, sprintf(
-        "SELECT data FROM %ssessions WHERE id LIKE '%%%s'",
-        pictureDbPrefix(),
-        H::dbEscape($db, $pwgIdCookieValue)
-    ));
+    $row = H::dbFetchAssoc($db, sprintf("SELECT data FROM sessions WHERE id LIKE '%%%s'", H::dbEscape($db, $pwgIdCookieValue)));
     H::dbClose($db);
 
     $data = is_array($row) && is_string($row['data'] ?? null) ? $row['data'] : '';
@@ -1540,7 +1489,7 @@ it('flashes an admin-authorization message via the session when a non-admin\'s c
         $finalBody = $curl($plainPictureUrl)['body'];
 
         $db = pictureDbConnect();
-        $row = H::fetchAssocOrFail($db, sprintf('SELECT content, validated FROM %scomments WHERE id = %d', pictureDbPrefix(), $commentId));
+        $row = H::fetchAssocOrFail($db, sprintf('SELECT content, validated FROM comments WHERE id = %d', $commentId));
         H::dbClose($db);
         @unlink($userSession['cookieJar']);
 
@@ -1601,11 +1550,7 @@ it('logs a PHP warning and still renders when a plugin-registered user_comment_c
         PHP);
 
     $pluginDb = pictureDbConnect();
-    H::dbQuery($pluginDb, sprintf(
-        "INSERT INTO %splugins (id, state, version) VALUES ('%s', 'active', '1.0.0')",
-        pictureDbPrefix(),
-        $pluginId
-    ));
+    H::dbQuery($pluginDb, sprintf("INSERT INTO plugins (id, state, version) VALUES ('%s', 'active', '1.0.0')", $pluginId));
     H::dbClose($pluginDb);
     // The DB `config` cache pool has no bearing on plugin *loading* itself
     // (PluginLoader::loadPlugins() always re-queries active plugins fresh,
@@ -1682,13 +1627,13 @@ it('logs a PHP warning and still renders when a plugin-registered user_comment_c
         // instead of the redirect this file's other successful-edit tests
         // get is the real, distinguishing signal above).
         $db = pictureDbConnect();
-        $row = H::fetchAssocOrFail($db, sprintf('SELECT content, validated FROM %scomments WHERE id = %d', pictureDbPrefix(), $commentId));
+        $row = H::fetchAssocOrFail($db, sprintf('SELECT content, validated FROM comments WHERE id = %d', $commentId));
         H::dbClose($db);
         expect($row['content'])->toBe('Bogus action content update ' . $marker);
         expect(H::dbToBool($row['validated']) ? 1 : 0)->toBe(0);
     } finally {
         $cleanupDb = pictureDbConnect();
-        H::dbQuery($cleanupDb, sprintf("DELETE FROM %splugins WHERE id = '%s'", pictureDbPrefix(), $pluginId));
+        H::dbQuery($cleanupDb, sprintf("DELETE FROM plugins WHERE id = '%s'", $pluginId));
         H::dbClose($cleanupDb);
         @unlink($mainFile);
         @rmdir($pluginDir);
@@ -1819,14 +1764,7 @@ it('assigns PDF_VIEWER_FILESIZE_THRESHOLD/PDF_NB_PAGES and renders the inline PD
 
     $pdfFilename = basename($relativePdfPath);
     $db = pictureDbConnect();
-    H::dbQuery($db, sprintf(
-        "UPDATE %simages SET file = '%s', path = '%s', filesize = %d WHERE id = %d",
-        pictureDbPrefix(),
-        H::dbEscape($db, $pdfFilename),
-        H::dbEscape($db, $relativePdfPath),
-        $pdfFilesizeKb,
-        $imageId
-    ));
+    H::dbQuery($db, sprintf("UPDATE images SET file = '%s', path = '%s', filesize = %d WHERE id = %d", H::dbEscape($db, $pdfFilename), H::dbEscape($db, $relativePdfPath), $pdfFilesizeKb, $imageId));
     H::dbClose($db);
 
     try {
@@ -2002,11 +1940,7 @@ it('falls back to the medium derivative size, without warnings, when the picture
     // (not replacing any existing key), since neither the login flow nor
     // the plain index.php visit above ever writes a real
     // 'pwg_picture_deriv' session var of their own.
-    H::dbQuery($db, sprintf(
-        "UPDATE %ssessions SET data = CONCAT(data, 'pwg_picture_deriv|i:999;') WHERE id LIKE '%%%s'",
-        pictureDbPrefix(),
-        H::dbEscape($db, $sessionId)
-    ));
+    H::dbQuery($db, sprintf("UPDATE sessions SET data = CONCAT(data, 'pwg_picture_deriv|i:999;') WHERE id LIKE '%%%s'", H::dbEscape($db, $sessionId)));
     H::dbClose($db);
 
     $result = $curl($baseUrl . '/picture.php?/' . $idA . '/category/' . $albumId);
@@ -2082,11 +2016,7 @@ it('short-circuits the default element-content renderer when an earlier render_e
         PHP);
 
     $pluginDb = pictureDbConnect();
-    H::dbQuery($pluginDb, sprintf(
-        "INSERT INTO %splugins (id, state, version) VALUES ('%s', 'active', '1.0.0')",
-        pictureDbPrefix(),
-        $pluginId
-    ));
+    H::dbQuery($pluginDb, sprintf("INSERT INTO plugins (id, state, version) VALUES ('%s', 'active', '1.0.0')", $pluginId));
     H::dbClose($pluginDb);
     // No cache-clear needed: PluginLoader::loadPlugins() always re-queries
     // active plugins fresh on every request, same as this file's own
@@ -2107,7 +2037,7 @@ it('short-circuits the default element-content renderer when an earlier render_e
         $page->assertNoJavaScriptErrors();
     } finally {
         $cleanupDb = pictureDbConnect();
-        H::dbQuery($cleanupDb, sprintf("DELETE FROM %splugins WHERE id = '%s'", pictureDbPrefix(), $pluginId));
+        H::dbQuery($cleanupDb, sprintf("DELETE FROM plugins WHERE id = '%s'", $pluginId));
         H::dbClose($cleanupDb);
         @unlink($mainFile);
         @rmdir($pluginDir);

@@ -41,9 +41,6 @@ it('renders the stats page as a webmaster', function (): void {
 });
 
 it('renders more than one year of history summary data and a real day-level month bucket, covering the multi-year compare branch and the daily-stats accumulation loop', function (): void {
-    $prefix = getenv('PIWIGO_DB_PREFIX');
-    $prefix = $prefix !== false ? $prefix : 'piwigo_';
-
     $today = new DateTime();
     $lastMonth = (clone $today)->sub(new DateInterval('P1M'));
     $lastMonthYear = (int) $lastMonth->format('Y');
@@ -59,31 +56,15 @@ it('renders more than one year of history summary data and a real day-level mont
     // as an extra duplicate (skewing nb_pages sums) rather than fail a
     // duplicate-key INSERT. Deleting first makes this idempotent for real,
     // not just in appearance.
-    $deleteSeeds = function () use ($db, $prefix, $lastMonthYear, $lastMonthMonth): void {
-        H::dbQuery($db, sprintf('DELETE FROM %shistory_summary WHERE year IN (2019, 2020)', $prefix));
-        H::dbQuery($db, sprintf(
-            'DELETE FROM %shistory_summary WHERE year = %d AND month = %d AND day = 10 AND hour IS NULL',
-            $prefix,
-            $lastMonthYear,
-            $lastMonthMonth
-        ));
+    $deleteSeeds = function () use ($db, $lastMonthYear, $lastMonthMonth): void {
+        H::dbQuery($db, 'DELETE FROM history_summary WHERE year IN (2019, 2020)');
+        H::dbQuery($db, sprintf('DELETE FROM history_summary WHERE year = %d AND month = %d AND day = 10 AND hour IS NULL', $lastMonthYear, $lastMonthMonth));
     };
     $deleteSeeds();
 
-    H::dbQuery($db, sprintf(
-        'INSERT INTO %shistory_summary (year, month, day, hour, nb_pages, history_id_from, history_id_to) VALUES (2019, NULL, NULL, NULL, 42, 1, 999000001)',
-        $prefix
-    ));
-    H::dbQuery($db, sprintf(
-        'INSERT INTO %shistory_summary (year, month, day, hour, nb_pages, history_id_from, history_id_to) VALUES (2020, NULL, NULL, NULL, 7, 1, 999000002)',
-        $prefix
-    ));
-    H::dbQuery($db, sprintf(
-        'INSERT INTO %shistory_summary (year, month, day, hour, nb_pages, history_id_from, history_id_to) VALUES (%d, %d, 10, NULL, 99, 1, 999000003)',
-        $prefix,
-        $lastMonthYear,
-        $lastMonthMonth
-    ));
+    H::dbQuery($db, 'INSERT INTO history_summary (year, month, day, hour, nb_pages, history_id_from, history_id_to) VALUES (2019, NULL, NULL, NULL, 42, 1, 999000001)');
+    H::dbQuery($db, 'INSERT INTO history_summary (year, month, day, hour, nb_pages, history_id_from, history_id_to) VALUES (2020, NULL, NULL, NULL, 7, 1, 999000002)');
+    H::dbQuery($db, sprintf('INSERT INTO history_summary (year, month, day, hour, nb_pages, history_id_from, history_id_to) VALUES (%d, %d, 10, NULL, 99, 1, 999000003)', $lastMonthYear, $lastMonthMonth));
 
     $cookieJar = tempnam(sys_get_temp_dir(), 'pwg_stats_page_');
     if ($cookieJar === false) {

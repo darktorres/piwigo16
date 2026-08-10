@@ -4,45 +4,18 @@ declare(strict_types=1);
 
 use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
 
-/**
- * Piwigo\Admin\RatingPageRenderer (admin.php?page=rating) -- already
- * GET-tested by AdminExtendedSmokeTest against an empty rate table; this
- * file adds real piwigo_rate rows so the actual report loop (~60 lines),
- * cat_id/user/guest filters, and order_by clamping all execute.
- *
- * Not exercised: the "? {user_id}" unknown-rater fallback (only reached
- * when a rate row's user_id has no matching users row) -- piwigo_rate's
- * own fk_rate_user_id FOREIGN KEY (ON DELETE CASCADE) guarantees every
- * real rate row's user_id always resolves to a real user (deleting the
- * user cascades to delete their rates too), so this can't actually happen
- * against this schema.
- */
-function ratingPageDbPrefix(): string
-{
-    $prefix = getenv('PIWIGO_DB_PREFIX');
-
-    return $prefix !== false ? $prefix : 'piwigo_';
-}
 
 function ratingPageInsertRate(int $imageId, int $userId, string $anonymousId, int $rate): void
 {
     $db = H::connect();
-    $prefix = ratingPageDbPrefix();
-    H::dbQuery($db, sprintf(
-        "INSERT INTO %srate (user_id, element_id, anonymous_id, rate, date) VALUES (%d, %d, '%s', %d, CURRENT_DATE)",
-        $prefix,
-        $userId,
-        $imageId,
-        H::dbEscape($db, $anonymousId),
-        $rate
-    ));
+    H::dbQuery($db, sprintf("INSERT INTO rate (user_id, element_id, anonymous_id, rate, date) VALUES (%d, %d, '%s', %d, CURRENT_DATE)", $userId, $imageId, H::dbEscape($db, $anonymousId), $rate));
     H::dbClose($db);
 }
 
 function ratingPageDeleteRates(int $imageId): void
 {
     $db = H::connect();
-    H::dbQuery($db, sprintf('DELETE FROM %srate WHERE element_id = %d', ratingPageDbPrefix(), $imageId));
+    H::dbQuery($db, sprintf('DELETE FROM rate WHERE element_id = %d', $imageId));
     H::dbClose($db);
 }
 

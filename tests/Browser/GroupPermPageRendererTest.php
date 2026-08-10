@@ -102,9 +102,7 @@ it('falsifies (revokes) a private album\'s access for a group that currently has
         expect($result['status'])->toBe(200);
 
         $db = H::connect();
-        $prefix = getenv('PIWIGO_DB_PREFIX');
-        $prefix = $prefix !== false ? $prefix : 'piwigo_';
-        $assoc = H::dbFetchAssoc($db, sprintf('SELECT COUNT(*) AS c FROM %sgroup_access WHERE group_id = 1 AND cat_id = 2', $prefix));
+        $assoc = H::dbFetchAssoc($db, 'SELECT COUNT(*) AS c FROM group_access WHERE group_id = 1 AND cat_id = 2');
         expect(is_array($assoc) ? (int) $assoc['c'] : -1)->toBe(0);
         H::dbClose($db);
     } finally {
@@ -137,13 +135,11 @@ it('trueifies (grants) a private album\'s access for a group that currently lack
         expect($result['status'])->toBe(200);
 
         $db = H::connect();
-        $prefix = getenv('PIWIGO_DB_PREFIX');
-        $prefix = $prefix !== false ? $prefix : 'piwigo_';
-        $assoc = H::dbFetchAssoc($db, sprintf('SELECT COUNT(*) AS c FROM %sgroup_access WHERE group_id = 3 AND cat_id = 2', $prefix));
+        $assoc = H::dbFetchAssoc($db, 'SELECT COUNT(*) AS c FROM group_access WHERE group_id = 3 AND cat_id = 2');
         expect(is_array($assoc) ? (int) $assoc['c'] : -1)->toBe(1);
 
         // Restore fixture state (group 3 had no access to category 2).
-        H::dbQuery($db, 'DELETE FROM ' . $prefix . 'group_access WHERE group_id = 3 AND cat_id = 2');
+        H::dbQuery($db, 'DELETE FROM group_access WHERE group_id = 3 AND cat_id = 2');
         H::dbClose($db);
     } finally {
         H::setCategoryPrivate(2, private: false);

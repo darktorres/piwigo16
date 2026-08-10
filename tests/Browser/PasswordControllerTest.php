@@ -94,13 +94,6 @@ function passwordDbConnect(): mysqli|Connection
     return H::connect();
 }
 
-function passwordDbPrefix(): string
-{
-    $prefix = getenv('PIWIGO_DB_PREFIX');
-
-    return $prefix !== false ? $prefix : 'piwigo_';
-}
-
 /**
  * Directly inserts a real user + user_infos row with a real, valid
  * activation_key -- this is the same bcrypt hashing PasswordService::
@@ -124,29 +117,17 @@ function passwordDbPrefix(): string
 function passwordInsertResetUser(string $status = 'normal'): array
 {
     $db = passwordDbConnect();
-    $prefix = passwordDbPrefix();
     $username = 'pwreset_' . uniqid();
     $plainKey = substr(bin2hex(random_bytes(16)), 0, 20);
     $hashedKey = password_hash($plainKey, PASSWORD_BCRYPT, ['cost' => 4]);
 
-    H::dbQuery($db, sprintf(
-        "INSERT INTO %susers (username, password, mail_address) VALUES ('%s', '%s', NULL)",
-        $prefix,
-        H::dbEscape($db, $username),
-        H::dbEscape($db, password_hash('original-password', PASSWORD_BCRYPT, ['cost' => 4]))
-    ));
+    H::dbQuery($db, sprintf("INSERT INTO users (username, password, mail_address) VALUES ('%s', '%s', NULL)", H::dbEscape($db, $username), H::dbEscape($db, password_hash('original-password', PASSWORD_BCRYPT, ['cost' => 4]))));
     $userId = H::dbInsertId($db);
 
     // DATE_ADD() is MySQL-only -- Postgres's own date arithmetic is
     // `NOW() + INTERVAL '1 hour'`.
     $expiryExpr = $db instanceof mysqli ? 'DATE_ADD(NOW(), INTERVAL 1 HOUR)' : "NOW() + INTERVAL '1 hour'";
-    H::dbQuery($db, sprintf(
-        "INSERT INTO %suser_infos (user_id, status, activation_key, activation_key_expire) VALUES (%d, '%s', '%s', {$expiryExpr})",
-        $prefix,
-        $userId,
-        H::dbEscape($db, $status),
-        H::dbEscape($db, $hashedKey)
-    ));
+    H::dbQuery($db, sprintf("INSERT INTO user_infos (user_id, status, activation_key, activation_key_expire) VALUES (%d, '%s', '%s', {$expiryExpr})", $userId, H::dbEscape($db, $status), H::dbEscape($db, $hashedKey)));
     H::dbClose($db);
 
     return ['userId' => $userId, 'plainKey' => $plainKey];
@@ -168,23 +149,13 @@ function passwordInsertResetUser(string $status = 'normal'): array
 function passwordInsertEmptyActivationKeyUser(): int
 {
     $db = passwordDbConnect();
-    $prefix = passwordDbPrefix();
     $username = 'pwnoise_' . uniqid();
 
-    H::dbQuery($db, sprintf(
-        "INSERT INTO %susers (username, password, mail_address) VALUES ('%s', '%s', NULL)",
-        $prefix,
-        H::dbEscape($db, $username),
-        H::dbEscape($db, password_hash('original-password', PASSWORD_BCRYPT, ['cost' => 4]))
-    ));
+    H::dbQuery($db, sprintf("INSERT INTO users (username, password, mail_address) VALUES ('%s', '%s', NULL)", H::dbEscape($db, $username), H::dbEscape($db, password_hash('original-password', PASSWORD_BCRYPT, ['cost' => 4]))));
     $userId = H::dbInsertId($db);
 
     $expiryExpr = $db instanceof mysqli ? 'DATE_ADD(NOW(), INTERVAL 1 HOUR)' : "NOW() + INTERVAL '1 hour'";
-    H::dbQuery($db, sprintf(
-        "INSERT INTO %suser_infos (user_id, status, activation_key, activation_key_expire) VALUES (%d, 'normal', '', {$expiryExpr})",
-        $prefix,
-        $userId
-    ));
+    H::dbQuery($db, sprintf("INSERT INTO user_infos (user_id, status, activation_key, activation_key_expire) VALUES (%d, 'normal', '', {$expiryExpr})", $userId));
     H::dbClose($db);
 
     return $userId;
@@ -205,22 +176,12 @@ function passwordInsertEmptyActivationKeyUser(): int
 function passwordInsertNormalUserNoEmail(): array
 {
     $db = passwordDbConnect();
-    $prefix = passwordDbPrefix();
     $username = 'pwnoemail_' . uniqid();
 
-    H::dbQuery($db, sprintf(
-        "INSERT INTO %susers (username, password, mail_address) VALUES ('%s', '%s', NULL)",
-        $prefix,
-        H::dbEscape($db, $username),
-        H::dbEscape($db, password_hash('original-password', PASSWORD_BCRYPT, ['cost' => 4]))
-    ));
+    H::dbQuery($db, sprintf("INSERT INTO users (username, password, mail_address) VALUES ('%s', '%s', NULL)", H::dbEscape($db, $username), H::dbEscape($db, password_hash('original-password', PASSWORD_BCRYPT, ['cost' => 4]))));
     $userId = H::dbInsertId($db);
 
-    H::dbQuery($db, sprintf(
-        "INSERT INTO %suser_infos (user_id, status, language) VALUES (%d, 'normal', 'en_UK')",
-        $prefix,
-        $userId
-    ));
+    H::dbQuery($db, sprintf("INSERT INTO user_infos (user_id, status, language) VALUES (%d, 'normal', 'en_UK')", $userId));
     H::dbClose($db);
 
     return ['userId' => $userId, 'username' => $username];
@@ -326,11 +287,7 @@ function passwordCookieJarSessionId(string $cookieJar): string
 function passwordSessionData(string $pwgIdCookieValue): string
 {
     $db = passwordDbConnect();
-    $row = H::dbFetchAssoc($db, sprintf(
-        "SELECT data FROM %ssessions WHERE id LIKE '%%%s'",
-        passwordDbPrefix(),
-        H::dbEscape($db, $pwgIdCookieValue)
-    ));
+    $row = H::dbFetchAssoc($db, sprintf("SELECT data FROM sessions WHERE id LIKE '%%%s'", H::dbEscape($db, $pwgIdCookieValue)));
     H::dbClose($db);
 
     return is_array($row) && is_string($row['data'] ?? null) ? $row['data'] : '';
@@ -377,8 +334,7 @@ function passwordComputeValidCode(string $secret): string
 function passwordUserRow(int $userId): ?array
 {
     $db = passwordDbConnect();
-    $prefix = passwordDbPrefix();
-    $row = H::dbFetchAssoc($db, sprintf('SELECT password FROM %susers WHERE id = %d', $prefix, $userId));
+    $row = H::dbFetchAssoc($db, sprintf('SELECT password FROM users WHERE id = %d', $userId));
     H::dbClose($db);
 
     return is_array($row) ? ['password' => (string) $row['password']] : null;
@@ -388,8 +344,7 @@ function passwordUserRow(int $userId): ?array
 function passwordUserInfosRow(int $userId): ?array
 {
     $db = passwordDbConnect();
-    $prefix = passwordDbPrefix();
-    $row = H::dbFetchAssoc($db, sprintf('SELECT activation_key FROM %suser_infos WHERE user_id = %d', $prefix, $userId));
+    $row = H::dbFetchAssoc($db, sprintf('SELECT activation_key FROM user_infos WHERE user_id = %d', $userId));
     H::dbClose($db);
 
     if (! is_array($row)) {
@@ -404,9 +359,8 @@ function passwordUserInfosRow(int $userId): ?array
 function passwordDeleteUser(int $userId): void
 {
     $db = passwordDbConnect();
-    $prefix = passwordDbPrefix();
-    H::dbQuery($db, sprintf('DELETE FROM %suser_infos WHERE user_id = %d', $prefix, $userId));
-    H::dbQuery($db, sprintf('DELETE FROM %susers WHERE id = %d', $prefix, $userId));
+    H::dbQuery($db, sprintf('DELETE FROM user_infos WHERE user_id = %d', $userId));
+    H::dbQuery($db, sprintf('DELETE FROM users WHERE id = %d', $userId));
     H::dbClose($db);
 }
 
@@ -497,23 +451,12 @@ function passwordCurlGet(string $path, array $extraHeaders = []): array
 function passwordInsertNormalUserWithEmail(string $email): array
 {
     $db = passwordDbConnect();
-    $prefix = passwordDbPrefix();
     $username = 'pwlost_' . uniqid();
 
-    H::dbQuery($db, sprintf(
-        "INSERT INTO %susers (username, password, mail_address) VALUES ('%s', '%s', '%s')",
-        $prefix,
-        H::dbEscape($db, $username),
-        H::dbEscape($db, password_hash('original-password', PASSWORD_BCRYPT, ['cost' => 4])),
-        H::dbEscape($db, $email)
-    ));
+    H::dbQuery($db, sprintf("INSERT INTO users (username, password, mail_address) VALUES ('%s', '%s', '%s')", H::dbEscape($db, $username), H::dbEscape($db, password_hash('original-password', PASSWORD_BCRYPT, ['cost' => 4])), H::dbEscape($db, $email)));
     $userId = H::dbInsertId($db);
 
-    H::dbQuery($db, sprintf(
-        "INSERT INTO %suser_infos (user_id, status, language) VALUES (%d, 'normal', 'en_UK')",
-        $prefix,
-        $userId
-    ));
+    H::dbQuery($db, sprintf("INSERT INTO user_infos (user_id, status, language) VALUES (%d, 'normal', 'en_UK')", $userId));
     H::dbClose($db);
 
     return ['userId' => $userId];
@@ -523,8 +466,7 @@ function passwordInsertNormalUserWithEmail(string $email): array
 function passwordUserPreferences(int $userId): ?array
 {
     $db = passwordDbConnect();
-    $prefix = passwordDbPrefix();
-    $row = H::dbFetchAssoc($db, sprintf('SELECT preferences FROM %suser_infos WHERE user_id = %d', $prefix, $userId));
+    $row = H::dbFetchAssoc($db, sprintf('SELECT preferences FROM user_infos WHERE user_id = %d', $userId));
     H::dbClose($db);
 
     if (! is_array($row)) {
@@ -752,11 +694,10 @@ it('fatal-errors on a hacking-attempt invalid lang cookie', function (): void {
 
 it('switches to a valid, different lang cookie and shows the French translation', function (): void {
     $db = passwordDbConnect();
-    $prefix = passwordDbPrefix();
     $upsertSql = $db instanceof mysqli
-        ? "INSERT INTO %slanguages (id, version, name) VALUES ('fr_FR', '1.0.0', 'French') ON DUPLICATE KEY UPDATE name = VALUES(name)"
-        : "INSERT INTO %slanguages (id, version, name) VALUES ('fr_FR', '1.0.0', 'French') ON CONFLICT (id) DO UPDATE SET name = EXCLUDED.name";
-    H::dbQuery($db, sprintf($upsertSql, $prefix));
+        ? "INSERT INTO languages (id, version, name) VALUES ('fr_FR', '1.0.0', 'French') ON DUPLICATE KEY UPDATE name = VALUES(name)"
+        : "INSERT INTO languages (id, version, name) VALUES ('fr_FR', '1.0.0', 'French') ON CONFLICT (id) DO UPDATE SET name = EXCLUDED.name";
+    H::dbQuery($db, $upsertSql);
     H::dbClose($db);
 
     try {
@@ -774,7 +715,7 @@ it('switches to a valid, different lang cookie and shows the French translation'
         expect($result['body'])->toContain('Mot de passe oublié ?');
     } finally {
         $db2 = passwordDbConnect();
-        H::dbQuery($db2, sprintf("DELETE FROM %slanguages WHERE id = 'fr_FR'", passwordDbPrefix()));
+        H::dbQuery($db2, sprintf("DELETE FROM languages WHERE id = 'fr_FR'"));
         H::dbClose($db2);
     }
 });

@@ -5,17 +5,6 @@ declare(strict_types=1);
 use PgSql\Connection;
 use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
 
-/**
- * Piwigo\Admin\RatingUserPageRenderer (admin.php?page=rating_user) -- the
- * "rating by user" report, aggregating piwigo_rate rows per rater. No
- * dedicated test file existed before this one.
- */
-function ratingUserDbPrefix(): string
-{
-    $prefix = getenv('PIWIGO_DB_PREFIX');
-
-    return $prefix !== false ? $prefix : 'piwigo_';
-}
 
 function ratingUserDbConnect(): mysqli|Connection
 {
@@ -25,14 +14,7 @@ function ratingUserDbConnect(): mysqli|Connection
 function ratingUserInsertRate(int $imageId, int $userId, string $anonymousId, int $rate): void
 {
     $db = ratingUserDbConnect();
-    H::dbQuery($db, sprintf(
-        "INSERT INTO %srate (user_id, element_id, anonymous_id, rate, date) VALUES (%d, %d, '%s', %d, CURRENT_DATE)",
-        ratingUserDbPrefix(),
-        $userId,
-        $imageId,
-        H::dbEscape($db, $anonymousId),
-        $rate
-    ));
+    H::dbQuery($db, sprintf("INSERT INTO rate (user_id, element_id, anonymous_id, rate, date) VALUES (%d, %d, '%s', %d, CURRENT_DATE)", $userId, $imageId, H::dbEscape($db, $anonymousId), $rate));
     H::dbClose($db);
 }
 
@@ -61,7 +43,7 @@ it('formats an anonymous (guest) rater\'s user_key with their anonymous_id', fun
         $page->assertNoJavaScriptErrors();
     } finally {
         $db = ratingUserDbConnect();
-        H::dbQuery($db, sprintf('DELETE FROM %srate WHERE element_id = %d', ratingUserDbPrefix(), $imageId));
+        H::dbQuery($db, sprintf('DELETE FROM rate WHERE element_id = %d', $imageId));
         H::dbClose($db);
     }
 });
@@ -85,8 +67,7 @@ it('labels a rate from a user with no matching user_infos row as "???{user_id}"'
     // simulates that directly at the DB level, since there's no real app
     // flow that produces it.
     $db = ratingUserDbConnect();
-    $prefix = ratingUserDbPrefix();
-    H::dbQuery($db, sprintf("INSERT INTO %susers (username) VALUES ('ghost_rater_%s')", $prefix, uniqid()));
+    H::dbQuery($db, sprintf("INSERT INTO users (username) VALUES ('ghost_rater_%s')", uniqid()));
     $ghostUserId = H::dbInsertId($db);
 
     ratingUserInsertRate($imageId, $ghostUserId, '', 3);
@@ -97,8 +78,8 @@ it('labels a rate from a user with no matching user_infos row as "???{user_id}"'
         $page->assertSee('???' . $ghostUserId);
         $page->assertNoJavaScriptErrors();
     } finally {
-        H::dbQuery($db, sprintf('DELETE FROM %srate WHERE element_id = %d', $prefix, $imageId));
-        H::dbQuery($db, sprintf('DELETE FROM %susers WHERE id = %d', $prefix, $ghostUserId));
+        H::dbQuery($db, sprintf('DELETE FROM rate WHERE element_id = %d', $imageId));
+        H::dbQuery($db, sprintf('DELETE FROM users WHERE id = %d', $ghostUserId));
         H::dbClose($db);
     }
 });

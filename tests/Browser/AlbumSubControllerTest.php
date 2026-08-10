@@ -5,27 +5,6 @@ declare(strict_types=1);
 use PgSql\Connection;
 use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
 
-/**
- * Piwigo\Controller\Admin\AlbumSubController (admin.php?page=album) --
- * already smoke-tested (a valid cat_id, tab=notification) by
- * AdminExtendedSmokeTest.php. This file closes its 2 remaining branches
- * that route never reaches:
- * - the `$categoryRow === null` "unknown album" fatalError (a cat_id with
- *   no matching row at all);
- * - a real `RenderCategoryName` plugin handler that returns something
- *   other than a RenderCategoryName instance -- needs a REAL plugin
- *   registering that hook, since EventDispatcher's own pass-through
- *   default (no handler registered) never reaches dispatchChange()'s
- *   instanceof enforcement at all. Same throwaway-fixture-plugin-under-
- *   the-live-plugins-root technique PluginsInstalledPageRendererTest.php's
- *   own "get_admin_plugin_menu_links" hook test already establishes.
- */
-function albumSubDbPrefix(): string
-{
-    $prefix = getenv('PIWIGO_DB_PREFIX');
-
-    return $prefix !== false ? $prefix : 'piwigo_';
-}
 
 function albumSubDb(): mysqli|Connection
 {
@@ -88,7 +67,6 @@ it('fatal-errors instead of silently swallowing a real render_category_name hook
     PHP;
 
     $db = albumSubDb();
-    $prefix = albumSubDbPrefix();
 
     $page = H::loginAsAdmin($this);
     $categoryName = 'CT Album Sub Hook Fallback ' . uniqid();
@@ -101,11 +79,7 @@ it('fatal-errors instead of silently swallowing a real render_category_name hook
 
     try {
         albumSubWriteFixturePlugin($pluginId, $pluginSource);
-        H::dbQuery($db, sprintf(
-            "INSERT INTO %splugins (id, state, version) VALUES ('%s', 'active', '1.0.0')",
-            $prefix,
-            H::dbEscape($db, $pluginId)
-        ));
+        H::dbQuery($db, sprintf("INSERT INTO plugins (id, state, version) VALUES ('%s', 'active', '1.0.0')", H::dbEscape($db, $pluginId)));
 
         try {
             // dispatchChange() now enforces its own instanceof contract --
@@ -118,7 +92,7 @@ it('fatal-errors instead of silently swallowing a real render_category_name hook
             $response = H::rawGet($page, '/admin.php?page=album&cat_id=' . $albumId);
             expect($response['status'])->toBe(500);
         } finally {
-            H::dbQuery($db, sprintf("DELETE FROM %splugins WHERE id = '%s'", $prefix, H::dbEscape($db, $pluginId)));
+            H::dbQuery($db, sprintf("DELETE FROM plugins WHERE id = '%s'", H::dbEscape($db, $pluginId)));
             albumSubRemoveFixturePlugin($pluginId);
         }
     } finally {

@@ -561,10 +561,8 @@ it('saves the default tab (guest profile) and persists real user_infos values', 
     H::navigateOk($page, ctConfigSection('default'));
     $token = H::pwgToken($page);
 
-    $prefix = getenv('PIWIGO_DB_PREFIX');
-    $prefix = $prefix !== false ? $prefix : 'piwigo_';
     $db = H::connect();
-    $guestRow = H::fetchAssocOrFail($db, 'SELECT nb_image_page, recent_period FROM ' . $prefix . 'user_infos WHERE user_id = 2');
+    $guestRow = H::fetchAssocOrFail($db, 'SELECT nb_image_page, recent_period FROM user_infos WHERE user_id = 2');
 
     try {
         $result = H::adminPost($page, ctConfigSection('default'), [
@@ -581,12 +579,12 @@ it('saves the default tab (guest profile) and persists real user_infos values', 
         expect($result['body'])->not->toContain('Fatal error');
         expect($result['body'])->toContain('Information data registered in database');
 
-        $updated = H::fetchAssocOrFail($db, 'SELECT nb_image_page, recent_period FROM ' . $prefix . 'user_infos WHERE user_id = 2');
+        $updated = H::fetchAssocOrFail($db, 'SELECT nb_image_page, recent_period FROM user_infos WHERE user_id = 2');
         expect((int) $updated['nb_image_page'])->toBe(25);
         expect((int) $updated['recent_period'])->toBe(10);
     } finally {
-        H::dbQuery($db, 
-            'UPDATE ' . $prefix . 'user_infos SET nb_image_page = ' . (int) $guestRow['nb_image_page']
+        H::dbQuery($db,
+            'UPDATE user_infos SET nb_image_page = ' . (int) $guestRow['nb_image_page']
             . ', recent_period = ' . (int) $guestRow['recent_period'] . ' WHERE user_id = 2'
         );
         H::dbClose($db);
@@ -969,10 +967,8 @@ it('shows the webmaster-required warning for a plain "admin"-status user', funct
     ]);
     $userId = wsAddedUserId($addResult);
 
-    $prefix = getenv('PIWIGO_DB_PREFIX');
-    $prefix = $prefix !== false ? $prefix : 'piwigo_';
     $db = H::connect();
-    H::dbQuery($db, sprintf("UPDATE %suser_infos SET status = 'admin' WHERE user_id = %d", $prefix, $userId));
+    H::dbQuery($db, sprintf("UPDATE user_infos SET status = 'admin' WHERE user_id = %d", $userId));
 
     try {
         $adminPage = H::visitPwg($this, '/identification.php');
@@ -983,8 +979,8 @@ it('shows the webmaster-required warning for a plain "admin"-status user', funct
         $adminPage = H::navigateOk($adminPage, ctConfigSection('main'));
         $adminPage->assertSee('status is required to edit parameters');
     } finally {
-        H::dbQuery($db, sprintf('DELETE FROM %suser_infos WHERE user_id = %d', $prefix, $userId));
-        H::dbQuery($db, sprintf('DELETE FROM %susers WHERE id = %d', $prefix, $userId));
+        H::dbQuery($db, sprintf('DELETE FROM user_infos WHERE user_id = %d', $userId));
+        H::dbQuery($db, sprintf('DELETE FROM users WHERE id = %d', $userId));
         H::dbClose($db);
     }
 });
@@ -1968,10 +1964,8 @@ it('sizes/watermark tabs: a plain "admin"-status user\'s submission is silently 
     ]);
     $userId = wsAddedUserId($addResult);
 
-    $prefix = getenv('PIWIGO_DB_PREFIX');
-    $prefix = $prefix !== false ? $prefix : 'piwigo_';
     $db = H::connect();
-    H::dbQuery($db, sprintf("UPDATE %suser_infos SET status = 'admin' WHERE user_id = %d", $prefix, $userId));
+    H::dbQuery($db, sprintf("UPDATE user_infos SET status = 'admin' WHERE user_id = %d", $userId));
 
     $derivativeSnapshot = H::snapshotDerivativeConfig();
 
@@ -2013,8 +2007,8 @@ it('sizes/watermark tabs: a plain "admin"-status user\'s submission is silently 
         expect($watermarkResult['body'])->not->toContain('Fatal error');
     } finally {
         H::restoreDerivativeConfig($derivativeSnapshot);
-        H::dbQuery($db, sprintf('DELETE FROM %suser_infos WHERE user_id = %d', $prefix, $userId));
-        H::dbQuery($db, sprintf('DELETE FROM %susers WHERE id = %d', $prefix, $userId));
+        H::dbQuery($db, sprintf('DELETE FROM user_infos WHERE user_id = %d', $userId));
+        H::dbQuery($db, sprintf('DELETE FROM users WHERE id = %d', $userId));
         H::dbClose($db);
     }
 });

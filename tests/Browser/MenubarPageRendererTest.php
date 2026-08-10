@@ -24,9 +24,7 @@ it('shows the webmaster-required warning for a plain "admin"-status user', funct
     $userId = wsAddedUserId($addResult);
 
     $db = H::connect();
-    $prefix = getenv('PIWIGO_DB_PREFIX');
-    $prefix = $prefix !== false ? $prefix : 'piwigo_';
-    H::dbQuery($db, sprintf("UPDATE %suser_infos SET status = 'admin' WHERE user_id = %d", $prefix, $userId));
+    H::dbQuery($db, sprintf("UPDATE user_infos SET status = 'admin' WHERE user_id = %d", $userId));
 
     try {
         $adminPage = H::visitPwg($this, '/identification.php');
@@ -36,8 +34,8 @@ it('shows the webmaster-required warning for a plain "admin"-status user', funct
         $adminPage = H::navigateOk($adminPage, '/admin.php?page=menubar');
         $adminPage->assertSee('status is required to edit parameters');
     } finally {
-        H::dbQuery($db, sprintf('DELETE FROM %suser_infos WHERE user_id = %d', $prefix, $userId));
-        H::dbQuery($db, sprintf('DELETE FROM %susers WHERE id = %d', $prefix, $userId));
+        H::dbQuery($db, sprintf('DELETE FROM user_infos WHERE user_id = %d', $userId));
+        H::dbQuery($db, sprintf('DELETE FROM users WHERE id = %d', $userId));
         H::dbClose($db);
     }
 });

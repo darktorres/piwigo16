@@ -55,12 +55,10 @@ const PROFILE_TEST_PASS = 'regular_user_pass';
 function profileEnsureDefaultThemeRegistered(): void
 {
     $db = H::connect();
-    $prefix = getenv('PIWIGO_DB_PREFIX');
-    $prefix = $prefix !== false ? $prefix : 'piwigo_';
     $upsertSql = $db instanceof mysqli
-        ? "INSERT INTO %sthemes (id, version, name) VALUES ('default', '1.0.0', 'Default') ON DUPLICATE KEY UPDATE name = 'Default'"
-        : "INSERT INTO %sthemes (id, version, name) VALUES ('default', '1.0.0', 'Default') ON CONFLICT (id) DO UPDATE SET name = 'Default'";
-    H::dbQuery($db, sprintf($upsertSql, $prefix));
+        ? "INSERT INTO themes (id, version, name) VALUES ('default', '1.0.0', 'Default') ON DUPLICATE KEY UPDATE name = 'Default'"
+        : "INSERT INTO themes (id, version, name) VALUES ('default', '1.0.0', 'Default') ON CONFLICT (id) DO UPDATE SET name = 'Default'";
+    H::dbQuery($db, $upsertSql);
     H::dbClose($db);
 }
 
@@ -92,14 +90,7 @@ function profileLogin(object $test): Webpage|PendingAwaitablePage|AwaitableWebpa
 function profileUserSettings(): array
 {
     $db = H::connect();
-    $prefix = getenv('PIWIGO_DB_PREFIX');
-    $prefix = $prefix !== false ? $prefix : 'piwigo_';
-    $row = H::dbFetchAssoc($db, sprintf(
-        "SELECT ui.nb_image_page, ui.recent_period FROM %suser_infos ui INNER JOIN %susers u ON u.id = ui.user_id WHERE u.username = '%s'",
-        $prefix,
-        $prefix,
-        H::dbEscape($db, PROFILE_TEST_USER)
-    ));
+    $row = H::dbFetchAssoc($db, sprintf("SELECT ui.nb_image_page, ui.recent_period FROM user_infos ui INNER JOIN users u ON u.id = ui.user_id WHERE u.username = '%s'", H::dbEscape($db, PROFILE_TEST_USER)));
     if (! is_array($row)) {
         throw new RuntimeException('regular_user user_infos row not found');
     }
@@ -118,14 +109,7 @@ function profileUserSettings(): array
 function profileUserToggleSettings(): array
 {
     $db = H::connect();
-    $prefix = getenv('PIWIGO_DB_PREFIX');
-    $prefix = $prefix !== false ? $prefix : 'piwigo_';
-    $row = H::dbFetchAssoc($db, sprintf(
-        "SELECT ui.expand, ui.show_nb_hits, ui.show_nb_comments FROM %suser_infos ui INNER JOIN %susers u ON u.id = ui.user_id WHERE u.username = '%s'",
-        $prefix,
-        $prefix,
-        H::dbEscape($db, PROFILE_TEST_USER)
-    ));
+    $row = H::dbFetchAssoc($db, sprintf("SELECT ui.expand, ui.show_nb_hits, ui.show_nb_comments FROM user_infos ui INNER JOIN users u ON u.id = ui.user_id WHERE u.username = '%s'", H::dbEscape($db, PROFILE_TEST_USER)));
     H::dbClose($db);
     if (! is_array($row)) {
         throw new RuntimeException('regular_user user_infos row not found');
@@ -211,13 +195,7 @@ it('rejects an empty nb_image_page and leaves the stored settings untouched', fu
 function profileUserAuthRow(): ?array
 {
     $db = H::connect();
-    $prefix = getenv('PIWIGO_DB_PREFIX');
-    $prefix = $prefix !== false ? $prefix : 'piwigo_';
-    $row = H::dbFetchAssoc($db, sprintf(
-        "SELECT mail_address, password FROM %susers WHERE username = '%s'",
-        $prefix,
-        H::dbEscape($db, PROFILE_TEST_USER)
-    ));
+    $row = H::dbFetchAssoc($db, sprintf("SELECT mail_address, password FROM users WHERE username = '%s'", H::dbEscape($db, PROFILE_TEST_USER)));
     H::dbClose($db);
 
     if (! is_array($row)) {
@@ -382,15 +360,7 @@ it('omits the 3 boolFields from the POST and leaves expand/show_nb_hits/show_nb_
 function profileRestoreAuthRow(string $email, string $passwordHash): void
 {
     $db = H::connect();
-    $prefix = getenv('PIWIGO_DB_PREFIX');
-    $prefix = $prefix !== false ? $prefix : 'piwigo_';
-    H::dbQuery($db, sprintf(
-        "UPDATE %susers SET mail_address = %s, password = '%s' WHERE username = '%s'",
-        $prefix,
-        $email === '' ? 'NULL' : "'" . H::dbEscape($db, $email) . "'",
-        H::dbEscape($db, $passwordHash),
-        H::dbEscape($db, PROFILE_TEST_USER)
-    ));
+    H::dbQuery($db, sprintf("UPDATE users SET mail_address = %s, password = '%s' WHERE username = '%s'", $email === '' ? 'NULL' : "'" . H::dbEscape($db, $email) . "'", H::dbEscape($db, $passwordHash), H::dbEscape($db, PROFILE_TEST_USER)));
     H::dbClose($db);
 }
 
@@ -546,14 +516,7 @@ it('fatal-errors on an unrecognized lang cookie value (hacking attempt)', functi
 function profileUserLanguage(): string
 {
     $db = H::connect();
-    $prefix = getenv('PIWIGO_DB_PREFIX');
-    $prefix = $prefix !== false ? $prefix : 'piwigo_';
-    $row = H::dbFetchAssoc($db, sprintf(
-        "SELECT ui.language FROM %suser_infos ui INNER JOIN %susers u ON u.id = ui.user_id WHERE u.username = '%s'",
-        $prefix,
-        $prefix,
-        H::dbEscape($db, PROFILE_TEST_USER)
-    ));
+    $row = H::dbFetchAssoc($db, sprintf("SELECT ui.language FROM user_infos ui INNER JOIN users u ON u.id = ui.user_id WHERE u.username = '%s'", H::dbEscape($db, PROFILE_TEST_USER)));
     H::dbClose($db);
     if (! is_array($row)) {
         throw new RuntimeException('regular_user user_infos row not found');
@@ -565,26 +528,22 @@ function profileUserLanguage(): string
 function profileSetUserLanguage(string $language): void
 {
     $db = H::connect();
-    $prefix = getenv('PIWIGO_DB_PREFIX');
-    $prefix = $prefix !== false ? $prefix : 'piwigo_';
     $escapedLanguage = H::dbEscape($db, $language);
     $escapedUsername = H::dbEscape($db, PROFILE_TEST_USER);
     // MySQL's own multi-table UPDATE...INNER JOIN...SET syntax has no
     // Postgres equivalent -- UPDATE...SET...FROM...WHERE is the real
     // portable form, confirmed live against this exact join shape.
     $sql = $db instanceof mysqli
-        ? "UPDATE {$prefix}user_infos ui INNER JOIN {$prefix}users u ON u.id = ui.user_id SET ui.language = '{$escapedLanguage}' WHERE u.username = '{$escapedUsername}'"
-        : "UPDATE {$prefix}user_infos ui SET language = '{$escapedLanguage}' FROM {$prefix}users u WHERE u.id = ui.user_id AND u.username = '{$escapedUsername}'";
+        ? "UPDATE user_infos ui INNER JOIN users u ON u.id = ui.user_id SET ui.language = '{$escapedLanguage}' WHERE u.username = '{$escapedUsername}'"
+        : "UPDATE user_infos ui SET language = '{$escapedLanguage}' FROM users u WHERE u.id = ui.user_id AND u.username = '{$escapedUsername}'";
     H::dbQuery($db, $sql);
     H::dbClose($db);
 }
 
 it('switches the interface language via a valid, different lang cookie and persists it to user_infos', function (): void {
     $db = H::connect();
-    $prefix = getenv('PIWIGO_DB_PREFIX');
-    $prefix = $prefix !== false ? $prefix : 'piwigo_';
     // Same fixture gap/workaround shape as this file's own
-    // profileEnsureDefaultThemeRegistered(): the fixture's piwigo_languages
+    // profileEnsureDefaultThemeRegistered(): the fixture's languages
     // table only ever seeds 'en_UK' (confirmed by reading
     // tests/Fixtures/piwigo-17.0.sql directly), but LangService::getLanguages()
     // requires a real DB row (AND a real `language/<code>/` directory,
@@ -594,9 +553,9 @@ it('switches the interface language via a valid, different lang cookie and persi
     // would always fail and this couldn't reach the real switch path at
     // all.
     $upsertSql = $db instanceof mysqli
-        ? "INSERT INTO %slanguages (id, version, name) VALUES ('fr_FR', '1.0.0', 'French') ON DUPLICATE KEY UPDATE name = VALUES(name)"
-        : "INSERT INTO %slanguages (id, version, name) VALUES ('fr_FR', '1.0.0', 'French') ON CONFLICT (id) DO UPDATE SET name = EXCLUDED.name";
-    H::dbQuery($db, sprintf($upsertSql, $prefix));
+        ? "INSERT INTO languages (id, version, name) VALUES ('fr_FR', '1.0.0', 'French') ON DUPLICATE KEY UPDATE name = VALUES(name)"
+        : "INSERT INTO languages (id, version, name) VALUES ('fr_FR', '1.0.0', 'French') ON CONFLICT (id) DO UPDATE SET name = EXCLUDED.name";
+    H::dbQuery($db, $upsertSql);
     H::dbClose($db);
 
     $originalLanguage = profileUserLanguage();
@@ -630,7 +589,7 @@ it('switches the interface language via a valid, different lang cookie and persi
     } finally {
         profileSetUserLanguage($originalLanguage);
         $db2 = H::connect();
-        H::dbQuery($db2, sprintf("DELETE FROM %slanguages WHERE id = 'fr_FR'", $prefix));
+        H::dbQuery($db2, sprintf("DELETE FROM languages WHERE id = 'fr_FR'"));
         H::dbClose($db2);
     }
 });
@@ -639,9 +598,7 @@ it('switches the interface language via a valid, different lang cookie and persi
 function profileGuestDefaults(): array
 {
     $db = H::connect();
-    $prefix = getenv('PIWIGO_DB_PREFIX');
-    $prefix = $prefix !== false ? $prefix : 'piwigo_';
-    $row = H::dbFetchAssoc($db, 'SELECT nb_image_page, recent_period FROM ' . $prefix . 'user_infos WHERE user_id = 2');
+    $row = H::dbFetchAssoc($db, 'SELECT nb_image_page, recent_period FROM user_infos WHERE user_id = 2');
     H::dbClose($db);
     if (! is_array($row)) {
         throw new RuntimeException('guest (user_id=2) user_infos row not found');
@@ -653,15 +610,13 @@ function profileGuestDefaults(): array
 function profileSetImageSettings(int $nbImagePage, int $recentPeriod): void
 {
     $db = H::connect();
-    $prefix = getenv('PIWIGO_DB_PREFIX');
-    $prefix = $prefix !== false ? $prefix : 'piwigo_';
     $escapedUsername = H::dbEscape($db, PROFILE_TEST_USER);
     // Same MySQL-only UPDATE...INNER JOIN...SET syntax as
     // profileSetUserLanguage() above -- UPDATE...SET...FROM...WHERE is
     // the real Postgres equivalent.
     $sql = $db instanceof mysqli
-        ? "UPDATE {$prefix}user_infos ui INNER JOIN {$prefix}users u ON u.id = ui.user_id SET ui.nb_image_page = {$nbImagePage}, ui.recent_period = {$recentPeriod} WHERE u.username = '{$escapedUsername}'"
-        : "UPDATE {$prefix}user_infos ui SET nb_image_page = {$nbImagePage}, recent_period = {$recentPeriod} FROM {$prefix}users u WHERE u.id = ui.user_id AND u.username = '{$escapedUsername}'";
+        ? "UPDATE user_infos ui INNER JOIN users u ON u.id = ui.user_id SET ui.nb_image_page = {$nbImagePage}, ui.recent_period = {$recentPeriod} WHERE u.username = '{$escapedUsername}'"
+        : "UPDATE user_infos ui SET nb_image_page = {$nbImagePage}, recent_period = {$recentPeriod} FROM users u WHERE u.id = ui.user_id AND u.username = '{$escapedUsername}'";
     H::dbQuery($db, $sql);
     H::dbClose($db);
 }

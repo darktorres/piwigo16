@@ -5,51 +5,6 @@ declare(strict_types=1);
 use PgSql\Connection;
 use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
 
-/**
- * Piwigo\Controller\GalleryController (index.php) -- the main gallery
- * browsing page. Already exercised incidentally by many other Browser
- * tests (GallerySmokeTest visits the plain homepage, VisualRegressionTest
- * visits `/index.php?/category/1`/`/category/2`), but almost none of the
- * query-driven branches (chronology navigation, image order, display
- * type, caddie fill, out-of-range start, the "related tags"/"combinable
- * tags" widgets, category flat-icon/description) had a dedicated test.
- * Site 1's fixture gives category 1 ("Sample Album", 3 photos, 1
- * subcategory) and category 2 ("Nested Sub Album", 2 photos, no
- * subcategory), tag 1 ("nature", tagging all 3 of category 1's photos) --
- * enough real, permission-free data to drive every branch below without
- * any fixture mutation beyond a couple of restorable config/DB toggles.
- *
- * The `section === 'search'` qsearch-details block (lines 394-434) IS
- * covered below, via `galInsertQuickSearch()` -- a direct `piwigo_search`
- * row insert with a bare top-level 'q' rule, the exact same shape
- * SearchServiceTest.php already uses to drive SearchService::
- * getQuickSearchResults() itself. No first-party controller
- * (QSearchController -> SearchController) ever produces that shape --
- * SearchController always nests the query under `fields.allwords.words`,
- * confirmed by SearchTest.php's own comment on that exact gap -- so this
- * is the only way to reach the block through a real request; search_uuid
- * stays NULL so SearchService::getValidatedSearchInfo() accepts the
- * plain numeric id (its "not reachable with its id" guard only fires
- * once a row already has a search_uuid).
- *
- * NOT chased here: GalleryController.php:88-91's `! $section_context
- * instanceof SectionContext` RuntimeException guard. Its own docblock
- * (GalleryController.php:83-87) is explicit that this is real, not dead
- * code, but SectionPopulator::populate() -- this controller's only
- * caller of SectionContextRegistry::set() -- always calls it as the
- * very last thing it does, in the same request, with no legitimate HTTP
- * input able to land between that call and this read. There's no real
- * front door to null it out from a Browser test; forcing it would mean
- * reaching into SectionContextRegistry's static state from outside a
- * real request, which is closer to testing the guard's own wiring than
- * to testing GalleryController's behavior.
- */
-function galDbPrefix(): string
-{
-    $prefix = getenv('PIWIGO_DB_PREFIX');
-
-    return $prefix !== false ? $prefix : 'piwigo_';
-}
 
 function galDbConnect(): mysqli|Connection
 {
@@ -60,14 +15,9 @@ function galSetCategoryComment(int $categoryId, ?string $comment): void
 {
     $db = galDbConnect();
     if ($comment === null) {
-        H::dbQuery($db, sprintf('UPDATE %scategories SET comment = NULL WHERE id = %d', galDbPrefix(), $categoryId));
+        H::dbQuery($db, sprintf('UPDATE categories SET comment = NULL WHERE id = %d', $categoryId));
     } else {
-        H::dbQuery($db, sprintf(
-            "UPDATE %scategories SET comment = '%s' WHERE id = %d",
-            galDbPrefix(),
-            H::dbEscape($db, $comment),
-            $categoryId
-        ));
+        H::dbQuery($db, sprintf("UPDATE categories SET comment = '%s' WHERE id = %d", H::dbEscape($db, $comment), $categoryId));
     }
     H::dbClose($db);
 }
@@ -75,14 +25,14 @@ function galSetCategoryComment(int $categoryId, ?string $comment): void
 function galClearCaddie(int $userId): void
 {
     $db = galDbConnect();
-    H::dbQuery($db, sprintf('DELETE FROM %scaddie WHERE user_id = %d', galDbPrefix(), $userId));
+    H::dbQuery($db, sprintf('DELETE FROM caddie WHERE user_id = %d', $userId));
     H::dbClose($db);
 }
 
 function galSetNbImagePage(int $userId, int $value): void
 {
     $db = galDbConnect();
-    H::dbQuery($db, sprintf('UPDATE %suser_infos SET nb_image_page = %d WHERE user_id = %d', galDbPrefix(), $value, $userId));
+    H::dbQuery($db, sprintf('UPDATE user_infos SET nb_image_page = %d WHERE user_id = %d', $value, $userId));
     H::dbClose($db);
 }
 
@@ -101,11 +51,7 @@ function galInsertQuickSearch(string $q): int
 {
     $db = galDbConnect();
     $rulesJson = json_encode(['q' => $q], JSON_THROW_ON_ERROR);
-    H::dbQuery($db, sprintf(
-        "INSERT INTO %ssearch (search_uuid, created_on, created_by, forked_from, rules) VALUES (NULL, NOW(), 1, NULL, '%s')",
-        galDbPrefix(),
-        H::dbEscape($db, $rulesJson)
-    ));
+    H::dbQuery($db, sprintf("INSERT INTO search (search_uuid, created_on, created_by, forked_from, rules) VALUES (NULL, NOW(), 1, NULL, '%s')", H::dbEscape($db, $rulesJson)));
     $searchId = H::dbInsertId($db);
     H::dbClose($db);
 
@@ -115,7 +61,7 @@ function galInsertQuickSearch(string $q): int
 function galDeleteSearch(int $searchId): void
 {
     $db = galDbConnect();
-    H::dbQuery($db, sprintf('DELETE FROM %ssearch WHERE id = %d', galDbPrefix(), $searchId));
+    H::dbQuery($db, sprintf('DELETE FROM search WHERE id = %d', $searchId));
     H::dbClose($db);
 }
 

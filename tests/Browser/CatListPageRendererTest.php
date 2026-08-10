@@ -4,34 +4,11 @@ declare(strict_types=1);
 
 use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
 
-/**
- * Piwigo\Admin\CatListPageRenderer (admin.php?page=cat_list) -- the
- * virtual-album creation/deletion page, distinct from AlbumsPageRenderer's
- * own tree-view/auto-order page (same tabsheet group, different tab).
- *
- * Not exercised: the `! is_string($uppercats)` defensive `continue` in the
- * sub-album-count loop (categories.uppercats is a real `NOT NULL DEFAULT
- * ''` column, so a genuine row's value is always a string).
- *
- * render()'s own 3 bare `$categories = []`/`$categories_with_images = []`
- * literal-array-assignment lines (~L69/177/183) execute on every single
- * request this file makes (they sit unconditionally ahead of the first
- * real branch) -- if a coverage tool still reports them as uncovered, that's
- * the documented OPcache constant-array-folding artifact (pure-literal
- * arrays report 0%-covered regardless of real execution), not a genuine
- * gap; no test change can move that.
- */
-function catListPageDbPrefix(): string
-{
-    $prefix = getenv('PIWIGO_DB_PREFIX');
-
-    return $prefix !== false ? $prefix : 'piwigo_';
-}
 
 function catListPageCategoryExists(int $categoryId): bool
 {
     $db = H::connect();
-    $row = H::dbFetchAssoc($db, sprintf('SELECT COUNT(*) AS c FROM %scategories WHERE id = %d', catListPageDbPrefix(), $categoryId));
+    $row = H::dbFetchAssoc($db, sprintf('SELECT COUNT(*) AS c FROM categories WHERE id = %d', $categoryId));
     H::dbClose($db);
 
     return is_array($row) && (int) $row['c'] > 0;
@@ -228,7 +205,6 @@ it('deletes a virtual child album and redirects back to its own parent_id listin
 it('assigns U_SYNC (not U_DELETE) for a non-virtual (real dir) category when synchronization is enabled', function (): void {
     $page = H::loginAsAdmin($this);
     $db = H::connect();
-    $prefix = catListPageDbPrefix();
 
     // Every album created via pwg.categories.add is virtual (dir=NULL) --
     // a non-virtual (site-synced) category needs a real `dir` + `site_id`,
@@ -236,13 +212,9 @@ it('assigns U_SYNC (not U_DELETE) for a non-virtual (real dir) category when syn
     // CatModifyPageRendererTest's own physical-directory test); site_id=1
     // is the fixture's own real piwigo_sites row.
     $dirName = 'cat_list_physical_dir_' . uniqid();
-    H::dbQuery($db, sprintf(
-        "INSERT INTO %scategories (name, dir, site_id, status, uppercats) VALUES ('Cat List Physical Album', '%s', 1, 'public', '0')",
-        $prefix,
-        H::dbEscape($db, $dirName)
-    ));
+    H::dbQuery($db, sprintf("INSERT INTO categories (name, dir, site_id, status, uppercats) VALUES ('Cat List Physical Album', '%s', 1, 'public', '0')", H::dbEscape($db, $dirName)));
     $categoryId = H::dbInsertId($db);
-    H::dbQuery($db, sprintf('UPDATE %scategories SET uppercats = %d WHERE id = %d', $prefix, $categoryId, $categoryId));
+    H::dbQuery($db, sprintf('UPDATE categories SET uppercats = %d WHERE id = %d', $categoryId, $categoryId));
 
     try {
         $page = H::navigateOk($page, '/admin.php?page=cat_list');
@@ -251,7 +223,7 @@ it('assigns U_SYNC (not U_DELETE) for a non-virtual (real dir) category when syn
         $page->assertNoJavaScriptErrors();
         H::assertNoServerErrors($page, 'cat_list with a non-virtual category');
     } finally {
-        H::dbQuery($db, sprintf('DELETE FROM %scategories WHERE id = %d', $prefix, $categoryId));
+        H::dbQuery($db, sprintf('DELETE FROM categories WHERE id = %d', $categoryId));
         H::dbClose($db);
     }
 });

@@ -4,23 +4,6 @@ declare(strict_types=1);
 
 use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
 
-/**
- * Piwigo\Controller\Admin\SiteManagerSubController (admin.php?page=
- * site_manager) -- multi-site (multi local-gallery-root) management. Real
- * site creation needs a real, on-disk directory under the live app root
- * (file_exists() is checked relative to the Apache worker's own CWD, not
- * redirectable via CurrentPaths like most other tests in this suite) --
- * galleries/ is this environment's own real, already-used site-storage
- * root (see the fixture's own site 1 row), so a uniquely-named throwaway
- * subdirectory there is the safe, cleanable equivalent of every other
- * "create then delete via the app's own action" test in this suite.
- */
-function siteManagerDbPrefix(): string
-{
-    $prefix = getenv('PIWIGO_DB_PREFIX');
-
-    return $prefix !== false ? $prefix : 'piwigo_';
-}
 
 it('shows a fatal error when synchronization is disabled', function (): void {
     $snapshot = H::snapshotConfig(['enable_synchronization']);
@@ -105,12 +88,7 @@ it('creates a new site for a real, existing directory, then deletes it via the C
         expect($createResult['body'])->toContain('created');
 
         $db = H::connect();
-        $prefix = siteManagerDbPrefix();
-        $row = H::dbFetchAssoc($db, sprintf(
-            "SELECT id FROM %ssites WHERE galleries_url LIKE '%%%s%%'",
-            $prefix,
-            H::dbEscape($db, $dirName)
-        ));
+        $row = H::dbFetchAssoc($db, sprintf("SELECT id FROM sites WHERE galleries_url LIKE '%%%s%%'", H::dbEscape($db, $dirName)));
         expect($row)->not->toBeNull();
         $siteId = is_array($row) ? (int) $row['id'] : 0;
         expect($siteId)->toBeGreaterThan(0);
@@ -125,7 +103,7 @@ it('creates a new site for a real, existing directory, then deletes it via the C
         expect($deleteResult['status'])->toBe(200);
         expect($deleteResult['body'])->toContain('deleted');
 
-        $afterRow = H::dbFetchAssoc($db, sprintf('SELECT id FROM %ssites WHERE id = %d', $prefix, $siteId));
+        $afterRow = H::dbFetchAssoc($db, sprintf('SELECT id FROM sites WHERE id = %d', $siteId));
         H::dbClose($db);
         expect($afterRow)->toBeNull();
     } finally {

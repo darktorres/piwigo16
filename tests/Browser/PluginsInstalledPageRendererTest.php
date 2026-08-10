@@ -5,50 +5,6 @@ declare(strict_types=1);
 use PgSql\Connection;
 use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
 
-/**
- * Piwigo\Admin\PluginsInstalledPageRenderer (admin.php?page=plugins, the
- * default "installed" tab) -- already GET-tested by AdminExtendedSmokeTest;
- * this file exercises the show_details session toggle (persists across
- * requests) and the "missing" plugin state (a real DB row with no
- * matching filesystem plugin).
- *
- * getIncompatibleExtensions()'s own PEM network round-trip has no
- * injectable seam (same documented limitation as PemCatalog/CoreUpdateService/
- * PiwigoInfosSender), but the incompatible_plugins= AJAX branch itself IS
- * reachable: with no real PEM connection, getVersionsToCheck() always
- * returns [], so getIncompatibleExtensions() always returns false on a
- * fresh session (no real network flakiness risk) and the cached-array reuse
- * path (a second call within its 5-minute TTL) on a following one --
- * exercised below. The one residual sub-branch NOT exercised is a real
- * non-'~~expire~~' entry inside that cached array (needs an actually
- * PEM-incompatible plugin on disk to produce) -- this test env's real
- * plugins/ directory is empty and ExtensionType::scanDirectory() hardcodes
- * that real path with no injection point (same limitation documented in
- * ExtensionScannerTest's own docblock), so seeding one would mean writing
- * to the live, Apache-shared plugins/ root -- out of scope for the same
- * blast-radius reason ThemesInstalledPageRendererTest's docblock gives for
- * not writing a second theme under themes/.
- *
- * The deprecated get_admin_plugin_menu_links plugin-menu hook, the 'merged'
- * plugin state, the piwigo-videojs/piwigo-openstreetmap settings-URL
- * rewrite, and the session-based incompatibility-dismissal branch all DO
- * get exercised below despite the empty-plugins-directory limitation
- * described above -- each of those needs a real fs plugin, not a real PEM
- * connection, so the tests write a throwaway, self-cleaning plugin
- * directory straight under the live plugins/ root for the duration of a
- * single it() (same create-assert-cleanup shape as the missing-plugin DB
- * row test above), then remove it in a finally block. Still NOT exercised:
- * a real non-'~~expire~~' entry inside getIncompatibleExtensions()'s own
- * cached array (render()'s $incompatible_plugins[] = $plugin line) --
- * that one genuinely needs live PEM connectivity to produce, not just a
- * real fs plugin, so it stays out of scope here too.
- */
-function pluginsInstalledDbPrefix(): string
-{
-    $prefix = getenv('PIWIGO_DB_PREFIX');
-
-    return $prefix !== false ? $prefix : 'piwigo_';
-}
 
 it('toggles show_details on via the URL param and persists it across a later plain visit', function (): void {
     $page = H::loginAsAdmin($this);
@@ -105,12 +61,7 @@ it('flags an installed-but-missing-from-disk plugin as STATE=missing with the un
     $pluginId = 'missing-plugin-' . uniqid();
 
     $db = H::connect();
-    $prefix = pluginsInstalledDbPrefix();
-    H::dbQuery($db, sprintf(
-        "INSERT INTO %splugins (id, state, version) VALUES ('%s', 'active', '1.0')",
-        $prefix,
-        H::dbEscape($db, $pluginId)
-    ));
+    H::dbQuery($db, sprintf("INSERT INTO plugins (id, state, version) VALUES ('%s', 'active', '1.0')", H::dbEscape($db, $pluginId)));
 
     try {
         $page = H::navigateOk($page, '/admin.php?page=plugins');
@@ -118,7 +69,7 @@ it('flags an installed-but-missing-from-disk plugin as STATE=missing with the un
         $page->assertSee($pluginId);
         $page->assertSee('THIS PLUGIN IS MISSING BUT IT IS INSTALLED');
     } finally {
-        H::dbQuery($db, sprintf("DELETE FROM %splugins WHERE id = '%s'", $prefix, H::dbEscape($db, $pluginId)));
+        H::dbQuery($db, sprintf("DELETE FROM plugins WHERE id = '%s'", H::dbEscape($db, $pluginId)));
         H::dbClose($db);
     }
 });
@@ -186,12 +137,7 @@ it('flags a plugin whose PEM extension id is in the locally-merged list as STATE
     PHP);
 
     $db = pluginsInstalledDb();
-    $prefix = pluginsInstalledDbPrefix();
-    H::dbQuery($db, sprintf(
-        "INSERT INTO %splugins (id, state, version) VALUES ('%s', 'active', '3.0.0')",
-        $prefix,
-        H::dbEscape($db, $pluginId)
-    ));
+    H::dbQuery($db, sprintf("INSERT INTO plugins (id, state, version) VALUES ('%s', 'active', '3.0.0')", H::dbEscape($db, $pluginId)));
 
     try {
         $page = H::loginAsAdmin($this);
@@ -203,14 +149,10 @@ it('flags a plugin whose PEM extension id is in the locally-merged list as STATE
         $page->assertSee('THIS PLUGIN IS NOW PART OF PIWIGO CORE');
         $page->assertNoJavaScriptErrors();
 
-        $row = H::fetchAssocOrFail($db, sprintf(
-            "SELECT state FROM %splugins WHERE id = '%s'",
-            $prefix,
-            H::dbEscape($db, $pluginId)
-        ));
+        $row = H::fetchAssocOrFail($db, sprintf("SELECT state FROM plugins WHERE id = '%s'", H::dbEscape($db, $pluginId)));
         expect($row['state'])->toBe('inactive');
     } finally {
-        H::dbQuery($db, sprintf("DELETE FROM %splugins WHERE id = '%s'", $prefix, H::dbEscape($db, $pluginId)));
+        H::dbQuery($db, sprintf("DELETE FROM plugins WHERE id = '%s'", H::dbEscape($db, $pluginId)));
         H::dbClose($db);
         pluginsInstalledRemoveFixturePlugin($pluginId);
     }
@@ -264,15 +206,10 @@ it('resolves a settings URL from a real get_admin_plugin_menu_links hook via bot
     PHP);
 
     $db = pluginsInstalledDb();
-    $prefix = pluginsInstalledDbPrefix();
     // Only the hook-registering plugin needs a DB row -- PluginLoader::
     // loadPlugins() only include_once's an active plugin's main.inc.php,
     // and only that file needs to actually run for the hook to register.
-    H::dbQuery($db, sprintf(
-        "INSERT INTO %splugins (id, state, version) VALUES ('%s', 'active', '1.0.0')",
-        $prefix,
-        H::dbEscape($db, $hooksId)
-    ));
+    H::dbQuery($db, sprintf("INSERT INTO plugins (id, state, version) VALUES ('%s', 'active', '1.0.0')", H::dbEscape($db, $hooksId)));
 
     try {
         $page = H::loginAsAdmin($this);
@@ -289,7 +226,7 @@ it('resolves a settings URL from a real get_admin_plugin_menu_links hook via bot
         $page->assertPresent('a[href="index.php?section=pwgtest-plugins-installed-target&foo=bar"]');
         $page->assertNoJavaScriptErrors();
     } finally {
-        H::dbQuery($db, sprintf("DELETE FROM %splugins WHERE id = '%s'", $prefix, H::dbEscape($db, $hooksId)));
+        H::dbQuery($db, sprintf("DELETE FROM plugins WHERE id = '%s'", H::dbEscape($db, $hooksId)));
         H::dbClose($db);
         pluginsInstalledRemoveFixturePlugin($hooksId);
         pluginsInstalledRemoveFixturePlugin($targetId);
@@ -333,12 +270,7 @@ it('skips malformed get_admin_plugin_menu_links entries instead of erroring, and
     PHP);
 
     $db = pluginsInstalledDb();
-    $prefix = pluginsInstalledDbPrefix();
-    H::dbQuery($db, sprintf(
-        "INSERT INTO %splugins (id, state, version) VALUES ('%s', 'active', '1.0.0')",
-        $prefix,
-        H::dbEscape($db, $hooksId)
-    ));
+    H::dbQuery($db, sprintf("INSERT INTO plugins (id, state, version) VALUES ('%s', 'active', '1.0.0')", H::dbEscape($db, $hooksId)));
 
     try {
         $page = H::loginAsAdmin($this);
@@ -348,7 +280,7 @@ it('skips malformed get_admin_plugin_menu_links entries instead of erroring, and
         $page->assertNoJavaScriptErrors();
         H::assertNoServerErrors($page, 'plugins_installed malformed menu-link entries');
     } finally {
-        H::dbQuery($db, sprintf("DELETE FROM %splugins WHERE id = '%s'", $prefix, H::dbEscape($db, $hooksId)));
+        H::dbQuery($db, sprintf("DELETE FROM plugins WHERE id = '%s'", H::dbEscape($db, $hooksId)));
         H::dbClose($db);
         pluginsInstalledRemoveFixturePlugin($hooksId);
     }
@@ -425,12 +357,7 @@ it('clears a stale $_SESSION[incompatible_plugins] entry once the on-disk plugin
     PHP);
 
     $db = pluginsInstalledDb();
-    $prefix = pluginsInstalledDbPrefix();
-    H::dbQuery($db, sprintf(
-        "INSERT INTO %splugins (id, state, version) VALUES ('%s', 'active', '1.0.0')",
-        $prefix,
-        H::dbEscape($db, $pluginId)
-    ));
+    H::dbQuery($db, sprintf("INSERT INTO plugins (id, state, version) VALUES ('%s', 'active', '1.0.0')", H::dbEscape($db, $pluginId)));
 
     try {
         $page = H::loginAsAdmin($this);
@@ -449,7 +376,7 @@ it('clears a stale $_SESSION[incompatible_plugins] entry once the on-disk plugin
         expect($probe['status'])->toBe(200);
         expect($probe['body'])->toBe('SESSION_UNSET');
     } finally {
-        H::dbQuery($db, sprintf("DELETE FROM %splugins WHERE id = '%s'", $prefix, H::dbEscape($db, $pluginId)));
+        H::dbQuery($db, sprintf("DELETE FROM plugins WHERE id = '%s'", H::dbEscape($db, $pluginId)));
         H::dbClose($db);
         pluginsInstalledRemoveFixturePlugin($pluginId);
     }
@@ -482,12 +409,7 @@ it('leaves a $_SESSION[incompatible_plugins] entry untouched when its recorded v
     PHP);
 
     $db = pluginsInstalledDb();
-    $prefix = pluginsInstalledDbPrefix();
-    H::dbQuery($db, sprintf(
-        "INSERT INTO %splugins (id, state, version) VALUES ('%s', 'active', '1.0.0')",
-        $prefix,
-        H::dbEscape($db, $pluginId)
-    ));
+    H::dbQuery($db, sprintf("INSERT INTO plugins (id, state, version) VALUES ('%s', 'active', '1.0.0')", H::dbEscape($db, $pluginId)));
 
     try {
         $page = H::loginAsAdmin($this);
@@ -502,7 +424,7 @@ it('leaves a $_SESSION[incompatible_plugins] entry untouched when its recorded v
         expect($probe['status'])->toBe(200);
         expect($probe['body'])->toBe('SESSION_SET');
     } finally {
-        H::dbQuery($db, sprintf("DELETE FROM %splugins WHERE id = '%s'", $prefix, H::dbEscape($db, $pluginId)));
+        H::dbQuery($db, sprintf("DELETE FROM plugins WHERE id = '%s'", H::dbEscape($db, $pluginId)));
         H::dbClose($db);
         pluginsInstalledRemoveFixturePlugin($pluginId);
     }

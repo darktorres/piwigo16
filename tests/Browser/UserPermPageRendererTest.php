@@ -123,8 +123,6 @@ it('trueifies then falsifies direct user_access for a private album', function (
     H::setCategoryPrivate(2, private: true);
     $page = H::loginAsAdmin($this);
     $db = H::connect();
-    $prefix = getenv('PIWIGO_DB_PREFIX');
-    $prefix = $prefix !== false ? $prefix : 'piwigo_';
 
     try {
         // piwigo_user_access has no rows at all in this fixture (see this
@@ -137,7 +135,7 @@ it('trueifies then falsifies direct user_access for a private album', function (
         ]);
         expect($trueifyResult['status'])->toBe(200);
 
-        $assoc = H::dbFetchAssoc($db, sprintf('SELECT COUNT(*) AS c FROM %suser_access WHERE user_id = 4 AND cat_id = 2', $prefix));
+        $assoc = H::dbFetchAssoc($db, sprintf('SELECT COUNT(*) AS c FROM user_access WHERE user_id = 4 AND cat_id = 2'));
         expect(is_array($assoc) ? (int) $assoc['c'] : -1)->toBe(1);
 
         // falsify then removes it again via removeUserAccess().
@@ -148,10 +146,10 @@ it('trueifies then falsifies direct user_access for a private album', function (
         ]);
         expect($falsifyResult['status'])->toBe(200);
 
-        $assoc2 = H::dbFetchAssoc($db, sprintf('SELECT COUNT(*) AS c FROM %suser_access WHERE user_id = 4 AND cat_id = 2', $prefix));
+        $assoc2 = H::dbFetchAssoc($db, sprintf('SELECT COUNT(*) AS c FROM user_access WHERE user_id = 4 AND cat_id = 2'));
         expect(is_array($assoc2) ? (int) $assoc2['c'] : -1)->toBe(0);
     } finally {
-        H::dbQuery($db, sprintf('DELETE FROM %suser_access WHERE user_id = 4 AND cat_id = 2', $prefix));
+        H::dbQuery($db, sprintf('DELETE FROM user_access WHERE user_id = 4 AND cat_id = 2'));
         H::dbClose($db);
     }
 });

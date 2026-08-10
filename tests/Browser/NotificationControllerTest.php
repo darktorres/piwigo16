@@ -15,13 +15,7 @@ use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
 function userFeedRow(string $feedId): ?array
 {
     $db = H::connect();
-    $prefix = getenv('PIWIGO_DB_PREFIX');
-    $prefix = $prefix !== false ? $prefix : 'piwigo_';
-    $row = H::dbFetchAssoc($db, sprintf(
-        "SELECT id, user_id, last_check FROM %suser_feed WHERE id = '%s'",
-        $prefix,
-        H::dbEscape($db, $feedId)
-    ));
+    $row = H::dbFetchAssoc($db, sprintf("SELECT id, user_id, last_check FROM user_feed WHERE id = '%s'", H::dbEscape($db, $feedId)));
     H::dbClose($db);
 
     if (! is_array($row)) {

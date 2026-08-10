@@ -96,13 +96,11 @@ it('submits a status/group permission change and persists it', function (): void
     expect($result['body'])->toContain('Album updated successfully');
 
     $db = H::connect();
-    $prefix = getenv('PIWIGO_DB_PREFIX');
-    $prefix = $prefix !== false ? $prefix : 'piwigo_';
 
-    $statusAssoc = H::dbFetchAssoc($db, sprintf('SELECT status FROM %scategories WHERE id = %d', $prefix, $albumId));
+    $statusAssoc = H::dbFetchAssoc($db, sprintf('SELECT status FROM categories WHERE id = %d', $albumId));
     expect(is_array($statusAssoc) ? $statusAssoc['status'] : 'MISSING')->toBe('private');
 
-    $groupAssoc = H::dbFetchAssoc($db, sprintf('SELECT group_id FROM %sgroup_access WHERE cat_id = %d', $prefix, $albumId));
+    $groupAssoc = H::dbFetchAssoc($db, sprintf('SELECT group_id FROM group_access WHERE cat_id = %d', $albumId));
     expect(is_array($groupAssoc) ? (int) $groupAssoc['group_id'] : -1)->toBe(3);
     H::dbClose($db);
 });

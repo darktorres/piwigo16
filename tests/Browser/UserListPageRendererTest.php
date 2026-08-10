@@ -33,9 +33,7 @@ it('protects other admin/webmaster users from deletion for a plain "admin"-statu
     $userId = wsAddedUserId($addResult);
 
     $db = H::connect();
-    $prefix = getenv('PIWIGO_DB_PREFIX');
-    $prefix = $prefix !== false ? $prefix : 'piwigo_';
-    H::dbQuery($db, sprintf("UPDATE %suser_infos SET status = 'admin' WHERE user_id = %d", $prefix, $userId));
+    H::dbQuery($db, sprintf("UPDATE user_infos SET status = 'admin' WHERE user_id = %d", $userId));
 
     try {
         $adminPage = H::visitPwg($this, '/identification.php');
@@ -70,8 +68,8 @@ it('protects other admin/webmaster users from deletion for a plain "admin"-statu
         $adminPage->assertSee('fixture_admin');
         $adminPage->assertNoJavaScriptErrors();
     } finally {
-        H::dbQuery($db, sprintf('DELETE FROM %suser_infos WHERE user_id = %d', $prefix, $userId));
-        H::dbQuery($db, sprintf('DELETE FROM %susers WHERE id = %d', $prefix, $userId));
+        H::dbQuery($db, sprintf('DELETE FROM user_infos WHERE user_id = %d', $userId));
+        H::dbQuery($db, sprintf('DELETE FROM users WHERE id = %d', $userId));
         H::dbClose($db);
     }
 });
@@ -163,13 +161,6 @@ it('shows a fatal error when the configured default_user_id matches no real user
     }
 });
 
-function userListPageRendererDbPrefix(): string
-{
-    $prefix = getenv('PIWIGO_DB_PREFIX');
-
-    return $prefix !== false ? $prefix : 'piwigo_';
-}
-
 function userListPageRendererDbConnect(): mysqli|Connection
 {
     return H::connect();
@@ -177,9 +168,8 @@ function userListPageRendererDbConnect(): mysqli|Connection
 
 it('defaults to line-view pagination of 5 for an admin with no saved view preference', function (): void {
     $db = userListPageRendererDbConnect();
-    $prefix = userListPageRendererDbPrefix();
-    $original = H::fetchAssocOrFail($db, "SELECT preferences FROM {$prefix}user_infos WHERE user_id = 1");
-    H::dbQuery($db, "UPDATE {$prefix}user_infos SET preferences = NULL WHERE user_id = 1");
+    $original = H::fetchAssocOrFail($db, 'SELECT preferences FROM user_infos WHERE user_id = 1');
+    H::dbQuery($db, 'UPDATE user_infos SET preferences = NULL WHERE user_id = 1');
 
     try {
         $page = H::loginAsAdmin($this);
@@ -193,11 +183,7 @@ it('defaults to line-view pagination of 5 for an admin with no saved view prefer
     } finally {
         $original_preferences = $original['preferences'];
         if (is_string($original_preferences)) {
-            H::dbQuery($db, sprintf(
-                "UPDATE %suser_infos SET preferences = '%s' WHERE user_id = 1",
-                $prefix,
-                H::dbEscape($db, $original_preferences)
-            ));
+            H::dbQuery($db, sprintf("UPDATE user_infos SET preferences = '%s' WHERE user_id = 1", H::dbEscape($db, $original_preferences)));
         }
         H::dbClose($db);
     }
@@ -205,9 +191,8 @@ it('defaults to line-view pagination of 5 for an admin with no saved view prefer
 
 it('switches to grid-view pagination default of 10 when the saved view preference is not "line"', function (): void {
     $db = userListPageRendererDbConnect();
-    $prefix = userListPageRendererDbPrefix();
-    $original = H::fetchAssocOrFail($db, "SELECT preferences FROM {$prefix}user_infos WHERE user_id = 1");
-    H::dbQuery($db, "UPDATE {$prefix}user_infos SET preferences = '{\"user-manager-view\":\"tile\"}' WHERE user_id = 1");
+    $original = H::fetchAssocOrFail($db, 'SELECT preferences FROM user_infos WHERE user_id = 1');
+    H::dbQuery($db, "UPDATE user_infos SET preferences = '{\"user-manager-view\":\"tile\"}' WHERE user_id = 1");
 
     try {
         $page = H::loginAsAdmin($this);
@@ -218,13 +203,9 @@ it('switches to grid-view pagination default of 10 when the saved view preferenc
     } finally {
         $original_preferences = $original['preferences'];
         if (is_string($original_preferences)) {
-            H::dbQuery($db, sprintf(
-                "UPDATE %suser_infos SET preferences = '%s' WHERE user_id = 1",
-                $prefix,
-                H::dbEscape($db, $original_preferences)
-            ));
+            H::dbQuery($db, sprintf("UPDATE user_infos SET preferences = '%s' WHERE user_id = 1", H::dbEscape($db, $original_preferences)));
         } else {
-            H::dbQuery($db, "UPDATE {$prefix}user_infos SET preferences = NULL WHERE user_id = 1");
+            H::dbQuery($db, 'UPDATE user_infos SET preferences = NULL WHERE user_id = 1');
         }
         H::dbClose($db);
     }

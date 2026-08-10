@@ -4,56 +4,12 @@ declare(strict_types=1);
 
 use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
 
-/**
- * Piwigo\Admin\BatchManagerUnitPageRenderer (admin.php?page=batch_manager&
- * mode=unit) -- the per-photo inline edit grid. BatchManagerSubController
- * Test's own "renders the unit tab" test visits this with the default
- * (empty caddie) filter, so the real per-image thumbnail-grid loop (~400
- * lines) never runs there -- this file filters to a real category with a
- * real photo instead, and exercises the unit-mode form submission
- * (name/author/level/description/date/tags, per image).
- *
- * Not exercised, genuinely unreachable via real inputs (coverage-gap
- * closure pass confirmed each via the real merged HTML coverage report,
- * not just static reading):
- *
- *  - 3 "row id"/"category_id" is-not-a-real-scalar defensive guards (the
- *    `continue;` bodies around $row['id'] and $item['category_id']/
- *    ['uppercats']) -- 'images'.id and 'image_category'.
- *    category_id/'categories'.uppercats are all NOT NULL columns
- *    (auto_increment PK for id), so a real query can never produce the
- *    shape these guard against.
- *  - The `if ($row_cat_id !== null and in_array(...))` true-branch (the
- *    5-line makePictureUrl() call building U_JUMPTO from $row['cat_id'])
- *    -- findBatchManagerUnitRows()'s own `SELECT * FROM images [JOIN
- *    image_category ON id = image_id]` can never populate a 'cat_id' key:
- *    neither piwigo_images nor piwigo_image_category has a column by that
- *    name (only `id`/`image_id` and `category_id`). $row_cat_id is
- *    therefore always null for real data, so `in_array($row_cat_id, ...)`
- *    on the right side of that `and` never even evaluates (PHP
- *    short-circuits), and every real request falls straight into the
- *    always-live `else` foreach beneath it instead -- this predates the
- *    17.x rewrite entirely (the original admin/batch_manager_unit.php had
- *    the exact same `isset($row['cat_id'])` shape against the exact same
- *    query), so per this class's own "mechanical port doesn't fold in
- *    unrelated fixes" precedent it stays as-is, not "fixed" here.
- */
-function batchManagerUnitDbPrefix(): string
-{
-    $prefix = getenv('PIWIGO_DB_PREFIX');
-
-    return $prefix !== false ? $prefix : 'piwigo_';
-}
 
 /** @return array{name: ?string, author: ?string, level: int, comment: ?string, date_creation: ?string} */
 function batchManagerUnitImageRow(int $imageId): array
 {
     $db = H::connect();
-    $row = H::dbFetchAssoc($db, sprintf(
-        'SELECT name, author, level, comment, date_creation FROM %simages WHERE id = %d',
-        batchManagerUnitDbPrefix(),
-        $imageId
-    ));
+    $row = H::dbFetchAssoc($db, sprintf('SELECT name, author, level, comment, date_creation FROM images WHERE id = %d', $imageId));
     H::dbClose($db);
     if (! is_array($row)) {
         throw new RuntimeException("expected a real image row for id {$imageId}");
@@ -169,11 +125,7 @@ it('accepts a single non-array tag string for the per-image tags field', functio
     expect($result['status'])->toBe(200);
 
     $db = H::connect();
-    $tagAssoc = H::dbFetchAssoc($db, sprintf(
-        'SELECT COUNT(*) AS c FROM %simage_tag WHERE image_id = %d AND tag_id = 2',
-        batchManagerUnitDbPrefix(),
-        $imageId
-    ));
+    $tagAssoc = H::dbFetchAssoc($db, sprintf('SELECT COUNT(*) AS c FROM image_tag WHERE image_id = %d AND tag_id = 2', $imageId));
     H::dbClose($db);
     expect(is_array($tagAssoc) ? (int) $tagAssoc['c'] : -1)->toBe(1);
 });
@@ -214,15 +166,14 @@ it('highlights STORAGE_CATEGORY and honors a category-specific image_order for a
     @unlink($image);
 
     $db = H::connect();
-    $prefix = batchManagerUnitDbPrefix();
     // pwg.images.addSimple() never populates storage_category_id (confirmed
     // live -- it stays NULL for every virtual-album upload), so the
     // STORAGE_CATEGORY-highlight branch (only reachable when a photo's own
     // storage_category_id matches the active category filter) and the
     // per-category image_order override both need direct SQL, simulating
     // what a real physically-synced album would already have set.
-    H::dbQuery($db, sprintf('UPDATE %simages SET storage_category_id = %d WHERE id = %d', $prefix, $albumId, $imageId));
-    H::dbQuery($db, sprintf("UPDATE %scategories SET image_order = 'name ASC' WHERE id = %d", $prefix, $albumId));
+    H::dbQuery($db, sprintf('UPDATE images SET storage_category_id = %d WHERE id = %d', $albumId, $imageId));
+    H::dbQuery($db, sprintf("UPDATE categories SET image_order = 'name ASC' WHERE id = %d", $albumId));
 
     try {
         $filterResult = H::adminPost($page, '/admin.php?page=batch_manager', [
@@ -237,7 +188,7 @@ it('highlights STORAGE_CATEGORY and honors a category-specific image_order for a
         $page->assertNoJavaScriptErrors();
         H::assertNoServerErrors($page, 'batch_manager unit-mode storage-category/image-order branch');
     } finally {
-        H::dbQuery($db, sprintf('UPDATE %scategories SET image_order = NULL WHERE id = %d', $prefix, $albumId));
+        H::dbQuery($db, sprintf('UPDATE categories SET image_order = NULL WHERE id = %d', $albumId));
         H::dbClose($db);
     }
 });

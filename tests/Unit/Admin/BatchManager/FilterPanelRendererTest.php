@@ -1,0 +1,158 @@
+<?php
+
+declare(strict_types=1);
+
+use Piwigo\Activity\ActivityService;
+use Piwigo\Activity\ActivityEntity;
+use Piwigo\Admin\BatchManager\FilterPanelRenderer;
+use Piwigo\Auth\AccessLevelChecker;
+use Piwigo\Category\CategoryRepository;
+use Piwigo\Config\CurrentConfig;
+use Piwigo\Core\CurrentLogger;
+use Piwigo\Core\FilterState;
+use Piwigo\Core\Kernel;
+use Piwigo\Core\PageState;
+use Piwigo\Core\Paths;
+use Piwigo\Db\DbConnection;
+use Piwigo\Db\EntityManagerFactory;
+use Piwigo\Group\GroupEntity;
+use Piwigo\Html\HtmlService;
+use Piwigo\Lang\Translator;
+use Piwigo\PluginConfig\EventDispatcher;
+use Piwigo\Permission\PermissionRepository;
+use Piwigo\Permission\PermissionService;
+use Piwigo\Session\SessionEntity;
+use Piwigo\Session\SessionService;
+use Piwigo\Tag\TagEntity;
+use Piwigo\Tag\TagService;
+use Piwigo\Tests\Support\CurrentConfigTestFactory;
+use Piwigo\Tests\Support\CurrentUserTestFactory;
+use Piwigo\Tests\Support\HtmlServiceTestFactory;
+use Piwigo\Tests\Support\LangTestFactory;
+use Piwigo\Tests\Support\PageStateTestFactory;
+use Piwigo\Tests\Support\TemplateTestFactory;
+use Piwigo\Tests\Support\UrlServiceTestFactory;
+use Piwigo\Users\CurrentUser;
+
+/**
+ * Piwigo\Admin\BatchManager\FilterPanelRenderer -- has no constructor
+ * (B5's own T1 pattern). No dedicated Integration/Browser spec of its
+ * own -- shared by BatchManagerGlobalPageRenderer/BatchManagerUnitPageRenderer.
+ *
+ * Only the no-active-filter, no-selected-elements happy path is covered:
+ * an empty/unset $_SESSION['bulk_manager_filter'] skips the real
+ * TagService::getTagListByIds()/HtmlService::getCatDisplayNameFromId()
+ * calls, and an empty $catElementsId skips the real
+ * ImageRepository::findVirtuallyAssociatedCategoryRows() DB call --
+ * TagService is still a required param regardless (never actually
+ * queried on this path, matching this campaign's established
+ * "type-satisfying instance" reasoning).
+ *
+ * Unlike every other renderer test in this campaign, this class takes a
+ * real Template directly (not CurrentTemplate) and never calls
+ * assign_var_from_handle()/set_filename() -- no .tpl fixture file
+ * needed at all.
+ */
+function filterPanelTestRoot(): string
+{
+    $root = sys_get_temp_dir() . '/piwigo-filter-panel-test-' . bin2hex(random_bytes(8)) . '/';
+    mkdir($root, 0o777, true);
+    Kernel::boot(Paths::fromRoot($root));
+    CurrentConfigTestFactory::get()->setDataLocation('data/');
+    CurrentConfigTestFactory::get()->setDataDirChecked('1');
+
+    return $root;
+}
+
+function filterPanelTestRrmdir(string $dir): void
+{
+    if (! is_dir($dir)) {
+        return;
+    }
+    $nodes = scandir($dir);
+    foreach ($nodes !== false ? $nodes : [] as $node) {
+        if ($node === '.' || $node === '..') {
+            continue;
+        }
+        $path = $dir . '/' . $node;
+        is_dir($path) ? filterPanelTestRrmdir($path) : unlink($path);
+    }
+    rmdir($dir);
+}
+
+function filterPanelTestActivityService(): ActivityService
+{
+    return new ActivityService(EntityManagerFactory::build(DbConnection::build())->getRepository(ActivityEntity::class));
+}
+
+function filterPanelTestTagService(): TagService
+{
+    $conn = DbConnection::build();
+    $currentUser = CurrentUserTestFactory::get();
+
+    return new TagService(
+        LangTestFactory::get(),
+        EntityManagerFactory::build($conn)->getRepository(TagEntity::class),
+        new PermissionService(
+            new PermissionRepository(EntityManagerFactory::build($conn)),
+            EntityManagerFactory::build($conn)->getRepository(GroupEntity::class),
+            new CategoryRepository(EntityManagerFactory::build($conn), new CurrentConfig()),
+            $currentUser,
+            new FilterState(),
+            new AccessLevelChecker($currentUser, new CurrentConfig()),
+        ),
+        filterPanelTestActivityService(),
+        new EventDispatcher(),
+        $currentUser,
+        new CurrentConfig(),
+        new CurrentLogger(),
+        new SessionService(EntityManagerFactory::build($conn)->getRepository(SessionEntity::class), new CurrentConfig()),
+    );
+}
+
+test('render() shows every built-in prefilter and no active filter/selection when nothing is set', function (): void {
+    $root = filterPanelTestRoot();
+    unset($_SESSION['bulk_manager_filter']);
+
+    try {
+        $template = TemplateTestFactory::build();
+        $pageState = new PageState();
+
+        new FilterPanelRenderer()->render(
+            LangTestFactory::get(),
+            $template,
+            '/admin.php?page=batch_manager',
+            [],
+            [],
+            0,
+            UrlServiceTestFactory::build(),
+            new EventDispatcher(),
+            $pageState,
+            filterPanelTestTagService(),
+            HtmlServiceTestFactory::build(),
+            CurrentConfigTestFactory::get(),
+        );
+
+        $prefilters = $template->get_template_vars('prefilters');
+        if (! is_array($prefilters)) {
+            throw new LogicException('expected an array of prefilters');
+        }
+        $ids = array_map(static fn (mixed $row): mixed => is_array($row) ? ($row['ID'] ?? null) : null, $prefilters);
+
+        // Alphabetically sorted by each entry's own localized NAME (an
+        // untranslated Lang here just echoes the English key back) -- a
+        // fresh CurrentConfig defaults enableSynchronization() to true,
+        // adding 'no_sync_md5sum'/'no_virtual_album' to the built-in 7.
+        expect($ids)->toBe(['all_photos', 'caddie', 'duplicates', 'last_import', 'no_album', 'no_sync_md5sum', 'no_tag', 'no_virtual_album', 'favorites'])
+            ->and($template->get_template_vars('filter'))->toBe([])
+            ->and($template->get_template_vars('selection'))->toBe([])
+            ->and($template->get_template_vars('associated_categories'))->toBe([])
+            ->and($template->get_template_vars('filter_tags'))->toBe([])
+            ->and($template->get_template_vars('ADMIN_PAGE_TITLE'))->toBe('Batch Manager');
+    } finally {
+        CurrentConfigTestFactory::get()->reset();
+        CurrentUserTestFactory::get()->reset();
+        Kernel::reset();
+        filterPanelTestRrmdir($root);
+    }
+});

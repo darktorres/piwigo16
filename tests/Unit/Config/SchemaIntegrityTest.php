@@ -15,12 +15,13 @@ use Piwigo\PluginConfig\EventDispatcher;
 // pass-through.
 //
 // CurrentConfig's config-key properties are instance members (not static).
-// This file's own reflection filters those out, plus the 2 private backing
-// fields (chmodValueStorage/recentPostDatesStorage) behind chmodValue/
-// recentPostDates -- implementation detail of those 2 hooked properties,
-// not config keys of their own.
+// This file's own reflection filters those out, plus the 4 private backing
+// fields (chmodValueStorage/recentPostDatesStorage/
+// defaultFiltersViewsStorage/filterPagesStorage) behind chmodValue/
+// recentPostDates/defaultFiltersViews/filterPages -- implementation detail
+// of those 4 hooked properties, not config keys of their own.
 
-const SCHEMA_INTEGRITY_BACKING_FIELDS = ['chmodValueStorage', 'recentPostDatesStorage'];
+const SCHEMA_INTEGRITY_BACKING_FIELDS = ['chmodValueStorage', 'recentPostDatesStorage', 'defaultFiltersViewsStorage', 'filterPagesStorage'];
 
 const SCHEMA_INTEGRITY_STATIC_METHOD_ALLOW_LIST = [
     // Bulk/legacy-bridge helper -- a small hand-picked snapshot, not backed
@@ -70,13 +71,13 @@ const SCHEMA_INTEGRITY_PRIVATE_SET_LIST = [
 // properties all the same (a `get` hook computing a derived value, no
 // `set` at all).
 const SCHEMA_INTEGRITY_HOOKED_LIST = [
-    'apiKeyDuration', 'apiKeyForbiddenMethods', 'availablePermissionLevels', 'chmodValue',
-    'combinedDir', 'defaultFiltersViews', 'derivativeDir', 'fileExtensions',
-    'formatExtensions', 'headerNotes', 'historySectionsCache', 'metadataKeywordSeparatorRegex',
+    'apiKeyDuration', 'apiKeyForbiddenMethods', 'availablePermissionLevels', 'blkMenubar',
+    'chmodValue', 'combinedDir', 'defaultFiltersViews', 'derivativeDir',
+    'extentsForTemplates', 'fileExtensions', 'filterPages', 'formatExtensions',
+    'headerNotes', 'historySectionsCache', 'links', 'metadataKeywordSeparatorRegex',
     'pictureExtensions', 'pictureInformations', 'randomIndexRedirect', 'rateItems',
     'recentPostDates', 'showExifFields', 'showIptcMapping', 'syncCharsRegex',
-    'syncExcludeFolders', 'themesPath', 'updateNotifyLastNotification', 'useExifMapping',
-    'useIptcMapping',
+    'syncExcludeFolders', 'themesPath', 'useExifMapping', 'useIptcMapping',
 ];
 
 /**
@@ -167,11 +168,11 @@ test('hooks exist only on the documented properties, and each one writes its own
             continue;
         }
         $body = schemaIntegrityHookBody($hooks['set']);
-        // chmodValue/recentPostDates write their own private backing field
-        // (chmodValueStorage/recentPostDatesStorage), not $this->{name}
+        // chmodValue/recentPostDates/defaultFiltersViews/filterPages write
+        // their own private backing field (…Storage), not $this->{name}
         // directly -- see CurrentConfig's own docblocks for why (a fully
         // hooked property can't hold its own storage under its own name).
-        $expectedTarget = in_array($name, ['chmodValue', 'recentPostDates'], true) ? "{$name}Storage" : $name;
+        $expectedTarget = in_array($name, ['chmodValue', 'recentPostDates', 'defaultFiltersViews', 'filterPages'], true) ? "{$name}Storage" : $name;
         expect(str_contains($body, "\$this->{$expectedTarget}"))
             ->toBeTrue("CurrentConfig::\${$name}'s set hook doesn't write to its own state.");
     }

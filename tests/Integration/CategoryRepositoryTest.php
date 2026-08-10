@@ -22,7 +22,6 @@ namespace Piwigo\Tests\Integration {
     use Piwigo\Tests\Support\CurrentConfigTestFactory;
     use Piwigo\Config\ConfigLoader;
     use Piwigo\Db\DbConnection;
-    use Piwigo\Db\Tables;
     use Piwigo\Permission\PermissionCriteria;
 
 /**
@@ -74,11 +73,11 @@ final class CategoryRepositoryTest extends IntegrationTestCase
     #[Override]
     protected function tearDown(): void
     {
-        $this->conn->executeStatement('UPDATE ' . Tables::categories() . " SET status = 'public'");
-        $this->conn->executeStatement('UPDATE ' . Tables::oldPermalinks() . " SET hit = 42, last_hit = '2026-07-07 05:02:38'");
+        $this->conn->executeStatement('UPDATE ' . 'categories' . " SET status = 'public'");
+        $this->conn->executeStatement('UPDATE ' . 'old_permalinks' . " SET hit = 42, last_hit = '2026-07-07 05:02:38'");
         $rank = $this->conn->getDatabasePlatform()->quoteSingleIdentifier('rank');
         $this->conn->executeStatement(
-            'UPDATE ' . Tables::imageCategory() . " SET {$rank} = CASE image_id WHEN 1 THEN 1 WHEN 2 THEN 2 WHEN 3 THEN 3 END WHERE category_id = 1"
+            'UPDATE ' . 'image_category' . " SET {$rank} = CASE image_id WHEN 1 THEN 1 WHEN 2 THEN 2 WHEN 3 THEN 3 END WHERE category_id = 1"
         );
         parent::tearDown();
     }
@@ -255,7 +254,7 @@ final class CategoryRepositoryTest extends IntegrationTestCase
         // fallback to id-order would fail this assertion.
         $rank = $this->conn->getDatabasePlatform()->quoteSingleIdentifier('rank');
         $this->conn->executeStatement(
-            'UPDATE ' . Tables::imageCategory() . " SET {$rank} = CASE image_id WHEN 1 THEN 3 WHEN 2 THEN 2 WHEN 3 THEN 1 END WHERE category_id = 1"
+            'UPDATE ' . 'image_category' . " SET {$rank} = CASE image_id WHEN 1 THEN 3 WHEN 2 THEN 2 WHEN 3 THEN 1 END WHERE category_id = 1"
         );
         // No quoting needed here -- PhotoSortField::parseOrderByFragment()'s
         // own regex already treats a surrounding backtick as optional, and
@@ -370,37 +369,37 @@ final class CategoryRepositoryTest extends IntegrationTestCase
         // linkage, distinct from image_category membership) -- give image 1
         // one temporarily.
         try {
-            $this->conn->executeStatement('UPDATE ' . Tables::images() . ' SET storage_category_id = 1 WHERE id = 1');
+            $this->conn->executeStatement('UPDATE ' . 'images' . ' SET storage_category_id = 1 WHERE id = 1');
 
             self::assertSame([1], $this->repo->findStorageLinkedImageIds([1]));
             self::assertSame([], $this->repo->findStorageLinkedImageIds([2]));
         } finally {
-            $this->conn->executeStatement('UPDATE ' . Tables::images() . ' SET storage_category_id = NULL WHERE id = 1');
+            $this->conn->executeStatement('UPDATE ' . 'images' . ' SET storage_category_id = NULL WHERE id = 1');
         }
     }
 
     public function test_find_distinct_storage_category_ids_returns_the_real_distinct_set(): void
     {
         try {
-            $this->conn->executeStatement('UPDATE ' . Tables::images() . ' SET storage_category_id = 1 WHERE id IN (1, 2)');
+            $this->conn->executeStatement('UPDATE ' . 'images' . ' SET storage_category_id = 1 WHERE id IN (1, 2)');
 
             self::assertSame([1], $this->repo->findDistinctStorageCategoryIds());
         } finally {
-            $this->conn->executeStatement('UPDATE ' . Tables::images() . ' SET storage_category_id = NULL WHERE id IN (1, 2)');
+            $this->conn->executeStatement('UPDATE ' . 'images' . ' SET storage_category_id = NULL WHERE id IN (1, 2)');
         }
     }
 
     public function test_update_image_paths_for_category_rewrites_the_path_from_the_new_fulldir(): void
     {
         try {
-            $this->conn->executeStatement('UPDATE ' . Tables::images() . ' SET storage_category_id = 1 WHERE id = 1');
+            $this->conn->executeStatement('UPDATE ' . 'images' . ' SET storage_category_id = 1 WHERE id = 1');
 
             $this->repo->updateImagePathsForCategory(CategoryId::from(1), 'galleries/renamed-album');
 
-            $path = $this->conn->fetchOne('SELECT path FROM ' . Tables::images() . ' WHERE id = 1');
+            $path = $this->conn->fetchOne('SELECT path FROM ' . 'images' . ' WHERE id = 1');
             self::assertSame('galleries/renamed-album/fixture-photo-1.jpg', $path);
         } finally {
-            $this->conn->executeStatement("UPDATE " . Tables::images() . " SET storage_category_id = NULL, path = 'upload/2026/08/01/20260801000000-2e7ed018.jpg' WHERE id = 1");
+            $this->conn->executeStatement("UPDATE " . 'images' . " SET storage_category_id = NULL, path = 'upload/2026/08/01/20260801000000-2e7ed018.jpg' WHERE id = 1");
         }
     }
 
@@ -429,41 +428,41 @@ final class CategoryRepositoryTest extends IntegrationTestCase
 
     public function test_delete_user_access_for_categories_is_a_no_op_for_no_ids(): void
     {
-        $before = $this->countRows(Tables::userAccess());
+        $before = $this->countRows('user_access');
 
         $this->repo->deleteUserAccessForCategories([]);
 
-        $after = $this->countRows(Tables::userAccess());
+        $after = $this->countRows('user_access');
         self::assertSame($before, $after);
     }
 
     public function test_delete_group_access_for_categories_is_a_no_op_for_no_ids(): void
     {
-        $before = $this->countRows(Tables::groupAccess());
+        $before = $this->countRows('group_access');
 
         $this->repo->deleteGroupAccessForCategories([]);
 
-        $after = $this->countRows(Tables::groupAccess());
+        $after = $this->countRows('group_access');
         self::assertSame($before, $after);
     }
 
     public function test_delete_user_access_for_users_and_categories_is_a_no_op_for_no_user_ids(): void
     {
-        $before = $this->countRows(Tables::userAccess());
+        $before = $this->countRows('user_access');
 
         $this->repo->deleteUserAccessForUsersAndCategories([], [1]);
 
-        $after = $this->countRows(Tables::userAccess());
+        $after = $this->countRows('user_access');
         self::assertSame($before, $after);
     }
 
     public function test_delete_group_access_for_groups_and_categories_is_a_no_op_for_no_group_ids(): void
     {
-        $before = $this->countRows(Tables::groupAccess());
+        $before = $this->countRows('group_access');
 
         $this->repo->deleteGroupAccessForGroupsAndCategories([], [1]);
 
-        $after = $this->countRows(Tables::groupAccess());
+        $after = $this->countRows('group_access');
         self::assertSame($before, $after);
     }
 
@@ -492,7 +491,7 @@ final class CategoryRepositoryTest extends IntegrationTestCase
         // either representation to the same value, unlike the old
         // is_numeric()-gated cast, which silently produced null for a
         // real Postgres bool.
-        $visible = $this->conn->createQueryBuilder()->select('visible')->from(Tables::categories())->where('id = 1')->executeQuery()->fetchOne();
+        $visible = $this->conn->createQueryBuilder()->select('visible')->from('categories')->where('id = 1')->executeQuery()->fetchOne();
         self::assertSame(1, (int) (bool) $visible);
     }
 
@@ -500,7 +499,7 @@ final class CategoryRepositoryTest extends IntegrationTestCase
     {
         $this->repo->updateCategoryCommentable([], false);
 
-        $commentable = $this->conn->createQueryBuilder()->select('commentable')->from(Tables::categories())->where('id = 1')->executeQuery()->fetchOne();
+        $commentable = $this->conn->createQueryBuilder()->select('commentable')->from('categories')->where('id = 1')->executeQuery()->fetchOne();
         self::assertSame(1, (int) (bool) $commentable);
     }
 
@@ -556,7 +555,7 @@ final class CategoryRepositoryTest extends IntegrationTestCase
 
         $cat = $this->repo->findById(2);
         self::assertNotNull($cat);
-        $idUppercat = $this->conn->createQueryBuilder()->select('id_uppercat')->from(Tables::categories())->where('id = 2')->executeQuery()->fetchOne();
+        $idUppercat = $this->conn->createQueryBuilder()->select('id_uppercat')->from('categories')->where('id = 2')->executeQuery()->fetchOne();
         self::assertSame(1, is_numeric($idUppercat) ? (int) $idUppercat : null);
     }
 
@@ -604,7 +603,7 @@ final class CategoryRepositoryTest extends IntegrationTestCase
         // of category 1 stay NULL) -- MIN/MAX both resolve to that single
         // real value, proving the aggregate reads real data rather than
         // just echoing back a NULL.
-        $this->conn->executeStatement("UPDATE " . Tables::images() . " SET date_creation = '2019-06-15 10:00:00' WHERE id = 2");
+        $this->conn->executeStatement("UPDATE " . 'images' . " SET date_creation = '2019-06-15 10:00:00' WHERE id = 2");
 
         try {
             $range = $this->repo->findDateRangeByCategory([1], self::noPermissionRestriction());
@@ -614,7 +613,7 @@ final class CategoryRepositoryTest extends IntegrationTestCase
             self::assertSame('2019-06-15 10:00:00', $entry->from);
             self::assertSame('2019-06-15 10:00:00', $entry->to);
         } finally {
-            $this->conn->executeStatement('UPDATE ' . Tables::images() . ' SET date_creation = NULL WHERE id = 2');
+            $this->conn->executeStatement('UPDATE ' . 'images' . ' SET date_creation = NULL WHERE id = 2');
         }
     }
 
@@ -636,11 +635,11 @@ final class CategoryRepositoryTest extends IntegrationTestCase
 
     public function test_mass_insert_categories_is_a_no_op_for_no_inserts(): void
     {
-        $before = $this->countRows(Tables::categories());
+        $before = $this->countRows('categories');
 
         $this->repo->massInsertCategories(['name'], []);
 
-        $after = $this->countRows(Tables::categories());
+        $after = $this->countRows('categories');
         self::assertSame($before, $after);
     }
 
@@ -659,7 +658,7 @@ final class CategoryRepositoryTest extends IntegrationTestCase
 
         $repId = $this->conn->createQueryBuilder()
             ->select('representative_picture_id')
-            ->from(Tables::categories())
+            ->from('categories')
             ->where('id = 1')
             ->executeQuery()
             ->fetchOne();
@@ -672,14 +671,14 @@ final class CategoryRepositoryTest extends IntegrationTestCase
         try {
             $this->repo->setRepresentativeImageForCategories([1, 2], 3);
 
-            $repId1 = $this->conn->createQueryBuilder()->select('representative_picture_id')->from(Tables::categories())->where('id = 1')->executeQuery()->fetchOne();
-            $repId2 = $this->conn->createQueryBuilder()->select('representative_picture_id')->from(Tables::categories())->where('id = 2')->executeQuery()->fetchOne();
+            $repId1 = $this->conn->createQueryBuilder()->select('representative_picture_id')->from('categories')->where('id = 1')->executeQuery()->fetchOne();
+            $repId2 = $this->conn->createQueryBuilder()->select('representative_picture_id')->from('categories')->where('id = 2')->executeQuery()->fetchOne();
 
             self::assertSame(3, is_numeric($repId1) ? (int) $repId1 : null);
             self::assertSame(3, is_numeric($repId2) ? (int) $repId2 : null);
         } finally {
-            $this->conn->executeStatement('UPDATE ' . Tables::categories() . ' SET representative_picture_id = 1 WHERE id = 1');
-            $this->conn->executeStatement('UPDATE ' . Tables::categories() . ' SET representative_picture_id = 4 WHERE id = 2');
+            $this->conn->executeStatement('UPDATE ' . 'categories' . ' SET representative_picture_id = 1 WHERE id = 1');
+            $this->conn->executeStatement('UPDATE ' . 'categories' . ' SET representative_picture_id = 4 WHERE id = 2');
         }
     }
 
@@ -738,7 +737,7 @@ final class CategoryRepositoryTest extends IntegrationTestCase
 
     public function test_find_by_status_filters_on_the_status_column(): void
     {
-        $this->conn->executeStatement('UPDATE ' . Tables::categories() . " SET status = 'private' WHERE id = 2");
+        $this->conn->executeStatement('UPDATE ' . 'categories' . " SET status = 'private' WHERE id = 2");
 
         $publicRows = $this->repo->findByStatus('public');
         $privateRows = $this->repo->findByStatus('private');
@@ -754,11 +753,11 @@ final class CategoryRepositoryTest extends IntegrationTestCase
         self::assertSame([1, 2], array_column($rows, 'id'));
 
         try {
-            $this->conn->executeStatement('UPDATE ' . Tables::categories() . ' SET representative_picture_id = NULL WHERE id IN (1, 2)');
+            $this->conn->executeStatement('UPDATE ' . 'categories' . ' SET representative_picture_id = NULL WHERE id IN (1, 2)');
             self::assertSame([], $this->repo->findByRepresentativePresence(true));
         } finally {
-            $this->conn->executeStatement('UPDATE ' . Tables::categories() . ' SET representative_picture_id = 1 WHERE id = 1');
-            $this->conn->executeStatement('UPDATE ' . Tables::categories() . ' SET representative_picture_id = 4 WHERE id = 2');
+            $this->conn->executeStatement('UPDATE ' . 'categories' . ' SET representative_picture_id = 1 WHERE id = 1');
+            $this->conn->executeStatement('UPDATE ' . 'categories' . ' SET representative_picture_id = 4 WHERE id = 2');
         }
     }
 
@@ -769,13 +768,13 @@ final class CategoryRepositoryTest extends IntegrationTestCase
             // rows 1,2,3) -- the DISTINCT is what's actually under test here: a
             // missing distinct() would return category 1 three times (once per
             // matching image_category row).
-            $this->conn->executeStatement('UPDATE ' . Tables::categories() . ' SET representative_picture_id = NULL WHERE id = 1');
+            $this->conn->executeStatement('UPDATE ' . 'categories' . ' SET representative_picture_id = NULL WHERE id = 1');
 
             $rows = $this->repo->findByRepresentativePresence(false);
 
             self::assertSame([1], array_column($rows, 'id'));
         } finally {
-            $this->conn->executeStatement('UPDATE ' . Tables::categories() . ' SET representative_picture_id = 1 WHERE id = 1');
+            $this->conn->executeStatement('UPDATE ' . 'categories' . ' SET representative_picture_id = 1 WHERE id = 1');
         }
     }
 
@@ -783,10 +782,10 @@ final class CategoryRepositoryTest extends IntegrationTestCase
     {
         try {
             $this->conn->executeStatement(
-                'INSERT INTO ' . Tables::userAccess() . ' (user_id, cat_id) VALUES (?, ?)',
+                'INSERT INTO ' . 'user_access' . ' (user_id, cat_id) VALUES (?, ?)',
                 [3, 1]
             );
-            $this->conn->executeStatement('UPDATE ' . Tables::categories() . " SET status = 'private' WHERE id = 1");
+            $this->conn->executeStatement('UPDATE ' . 'categories' . " SET status = 'private' WHERE id = 1");
 
             $rows = $this->repo->findPrivateCategoriesGrantedToUser(3);
             self::assertSame([1], array_column($rows, 'id'));
@@ -795,7 +794,7 @@ final class CategoryRepositoryTest extends IntegrationTestCase
             // group membership -- must be excluded from this result.
             self::assertSame([], $this->repo->findPrivateCategoriesGrantedToUser(3, ['1']));
         } finally {
-            $this->conn->executeStatement('DELETE FROM ' . Tables::userAccess() . ' WHERE user_id = 3 AND cat_id = 1');
+            $this->conn->executeStatement('DELETE FROM ' . 'user_access' . ' WHERE user_id = 3 AND cat_id = 1');
         }
     }
 
@@ -803,7 +802,7 @@ final class CategoryRepositoryTest extends IntegrationTestCase
     {
         // Fixture group_access: (group_id=1, cat_id=1), (group_id=2, cat_id=1),
         // (group_id=3, cat_id=1), (group_id=1, cat_id=2).
-        $this->conn->executeStatement('UPDATE ' . Tables::categories() . " SET status = 'private'");
+        $this->conn->executeStatement('UPDATE ' . 'categories' . " SET status = 'private'");
 
         self::assertSame([1, 2], array_column($this->repo->findPrivateCategoriesGrantedToGroup(1), 'id'));
         self::assertSame([1], array_column($this->repo->findPrivateCategoriesGrantedToGroup(2), 'id'));
@@ -818,7 +817,7 @@ final class CategoryRepositoryTest extends IntegrationTestCase
         // resolves correctly against a real DB (DQL JOIN...WITH conditions
         // compile to a plain SQL column comparison regardless of PHP-side
         // Type differences).
-        $this->conn->executeStatement('UPDATE ' . Tables::categories() . " SET status = 'private'");
+        $this->conn->executeStatement('UPDATE ' . 'categories' . " SET status = 'private'");
 
         self::assertSame([1, 2], $this->repo->findPrivateCategoryIdsGrantedToGroup(1));
         self::assertSame([1], $this->repo->findPrivateCategoryIdsGrantedToGroup(2));
@@ -844,7 +843,7 @@ final class CategoryRepositoryTest extends IntegrationTestCase
 
     public function test_find_private_categories_excluding_filters_out_the_given_ids(): void
     {
-        $this->conn->executeStatement('UPDATE ' . Tables::categories() . " SET status = 'private'");
+        $this->conn->executeStatement('UPDATE ' . 'categories' . " SET status = 'private'");
 
         self::assertSame([1, 2], array_column($this->repo->findPrivateCategoriesExcluding([]), 'id'));
         self::assertSame([2], array_column($this->repo->findPrivateCategoriesExcluding(['1']), 'id'));
@@ -878,7 +877,7 @@ final class CategoryRepositoryTest extends IntegrationTestCase
     public function test_find_all_for_permalinks_display_appends_a_checkmark_when_permalink_is_set(): void
     {
         try {
-            $this->conn->executeStatement('UPDATE ' . Tables::categories() . " SET permalink = 'sample-album' WHERE id = 1");
+            $this->conn->executeStatement('UPDATE ' . 'categories' . " SET permalink = 'sample-album' WHERE id = 1");
 
             $rows = $this->repo->findAllForPermalinksDisplay();
 
@@ -887,7 +886,7 @@ final class CategoryRepositoryTest extends IntegrationTestCase
             self::assertSame('sample-album', $byId[1]->permalink);
             self::assertSame('2 - Nested Sub Album', $byId[2]->name);
         } finally {
-            $this->conn->executeStatement('UPDATE ' . Tables::categories() . ' SET permalink = NULL WHERE id = 1');
+            $this->conn->executeStatement('UPDATE ' . 'categories' . ' SET permalink = NULL WHERE id = 1');
         }
     }
 
@@ -897,7 +896,7 @@ final class CategoryRepositoryTest extends IntegrationTestCase
         self::assertSame([], $this->repo->findIdNameUppercatsRankBySite(1));
 
         try {
-            $this->conn->executeStatement('UPDATE ' . Tables::categories() . ' SET site_id = 1 WHERE id = 1');
+            $this->conn->executeStatement('UPDATE ' . 'categories' . ' SET site_id = 1 WHERE id = 1');
 
             $rows = $this->repo->findIdNameUppercatsRankBySite(1);
             // PHPStan treats this same method+args call as returning the
@@ -907,7 +906,7 @@ final class CategoryRepositoryTest extends IntegrationTestCase
             // @phpstan-ignore return.type, staticMethod.impossibleType
             self::assertSame([1], array_map(static fn (CategoryIdNameUppercatsRank $row): int => $row->id, $rows));
         } finally {
-            $this->conn->executeStatement('UPDATE ' . Tables::categories() . ' SET site_id = NULL WHERE id = 1');
+            $this->conn->executeStatement('UPDATE ' . 'categories' . ' SET site_id = NULL WHERE id = 1');
         }
     }
 
@@ -953,7 +952,7 @@ final class CategoryRepositoryTest extends IntegrationTestCase
 
     public function test_find_list_for_ws_public_only_excludes_non_public_categories(): void
     {
-        $this->conn->executeStatement('UPDATE ' . Tables::categories() . " SET status = 'private' WHERE id = 2");
+        $this->conn->executeStatement('UPDATE ' . 'categories' . " SET status = 'private' WHERE id = 2");
 
         $criteria = new CategoryListCriteria(catId: null, recursive: true, forbiddenCategoryIds: [], publicOnly: true);
 
@@ -1016,7 +1015,7 @@ final class CategoryRepositoryTest extends IntegrationTestCase
         // findNextId() computes COALESCE(MAX(id)+1, 1) -- verified here
         // against the real, non-empty fixture table (the empty-table branch
         // isn't practically testable against this shared fixture DB).
-        $maxId = $this->conn->fetchOne('SELECT MAX(id) FROM ' . Tables::categories());
+        $maxId = $this->conn->fetchOne('SELECT MAX(id) FROM ' . 'categories');
 
         self::assertSame((is_numeric($maxId) ? (int) $maxId : 0) + 1, $this->repo->findNextId());
     }
@@ -1082,7 +1081,7 @@ final class CategoryRepositoryTest extends IntegrationTestCase
 
             $remaining = $this->conn->createQueryBuilder()
                 ->select('DISTINCT category_id')
-                ->from(Tables::imageCategory())
+                ->from('image_category')
                 ->executeQuery()
                 ->fetchFirstColumn();
 

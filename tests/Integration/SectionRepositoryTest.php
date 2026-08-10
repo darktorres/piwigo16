@@ -8,7 +8,6 @@ use Override;
 use Piwigo\Db\EntityManagerFactory;
 use Doctrine\DBAL\Connection;
 use Piwigo\Db\DbConnection;
-use Piwigo\Db\Tables;
 use Piwigo\Permission\SqlCondition;
 use Piwigo\Section\SectionRepository;
 
@@ -92,15 +91,15 @@ final class SectionRepositoryTest extends IntegrationTestCase
 
     public function test_find_top_by_hits_image_ids_returns_ids_ordered_by_hit_desc(): void
     {
-        $this->conn->executeStatement('UPDATE ' . Tables::images() . ' SET hit = 5 WHERE id = 2');
-        $this->conn->executeStatement('UPDATE ' . Tables::images() . ' SET hit = 10 WHERE id = 4');
+        $this->conn->executeStatement('UPDATE ' . 'images' . ' SET hit = 5 WHERE id = 2');
+        $this->conn->executeStatement('UPDATE ' . 'images' . ' SET hit = 10 WHERE id = 4');
 
         try {
             $ids = $this->repo->findTopByHitsImageIds(new SqlCondition(''), 5);
 
             self::assertSame(['4', '2'], $ids);
         } finally {
-            $this->conn->executeStatement('UPDATE ' . Tables::images() . ' SET hit = 0 WHERE id IN (2, 4)');
+            $this->conn->executeStatement('UPDATE ' . 'images' . ' SET hit = 0 WHERE id IN (2, 4)');
         }
     }
 

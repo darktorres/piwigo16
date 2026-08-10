@@ -7,7 +7,6 @@ namespace Piwigo\Tests\Contract;
 use Override;
 use Doctrine\DBAL\Connection;
 use Piwigo\Db\DbConnection;
-use Piwigo\Db\Tables;
 
 final class WsCategoriesMutationTest extends ContractTestCase
 {
@@ -43,12 +42,12 @@ final class WsCategoriesMutationTest extends ContractTestCase
         }
 
         foreach ($this->imageIdsToDelete as $imageId) {
-            $this->conn->executeStatement('DELETE FROM ' . Tables::imageCategory() . ' WHERE image_id = ?', [$imageId]);
-            $this->conn->executeStatement('DELETE FROM ' . Tables::images() . ' WHERE id = ?', [$imageId]);
+            $this->conn->executeStatement('DELETE FROM ' . 'image_category' . ' WHERE image_id = ?', [$imageId]);
+            $this->conn->executeStatement('DELETE FROM ' . 'images' . ' WHERE id = ?', [$imageId]);
         }
         foreach (array_reverse($this->categoryIdsToDelete) as $categoryId) {
-            $this->conn->executeStatement('DELETE FROM ' . Tables::imageCategory() . ' WHERE category_id = ?', [$categoryId]);
-            $this->conn->executeStatement('DELETE FROM ' . Tables::categories() . ' WHERE id = ?', [$categoryId]);
+            $this->conn->executeStatement('DELETE FROM ' . 'image_category' . ' WHERE category_id = ?', [$categoryId]);
+            $this->conn->executeStatement('DELETE FROM ' . 'categories' . ' WHERE id = ?', [$categoryId]);
         }
 
         parent::tearDown();
@@ -86,7 +85,7 @@ final class WsCategoriesMutationTest extends ContractTestCase
         ));
 
         $this->conn->executeStatement(
-            'INSERT INTO ' . Tables::images() . ' (file, path, md5sum, date_available) VALUES (?, ?, ?, ?)',
+            'INSERT INTO ' . 'images' . ' (file, path, md5sum, date_available) VALUES (?, ?, ?, ?)',
             [$filename, 'upload/2026/08/01/' . $filename, md5($filename), '2026-08-01 00:00:00']
         );
         $id = (int) $this->conn->lastInsertId();
@@ -112,7 +111,7 @@ final class WsCategoriesMutationTest extends ContractTestCase
             ->quoteSingleIdentifier('rank');
         foreach ($orderedIds as $index => $categoryId) {
             $this->conn->executeStatement(
-                "UPDATE " . Tables::categories() . " SET {$rank} = ? WHERE id = ?",
+                "UPDATE " . 'categories' . " SET {$rank} = ? WHERE id = ?",
                 [$index + 1, $categoryId]
             );
         }
@@ -126,7 +125,7 @@ final class WsCategoriesMutationTest extends ContractTestCase
         $rankIdentifier = $this->conn->getDatabasePlatform()
             ->quoteSingleIdentifier('rank');
         $ids = $this->conn->fetchFirstColumn(
-            "SELECT id FROM " . Tables::categories() . " WHERE id_uppercat = ? ORDER BY {$rankIdentifier} ASC",
+            "SELECT id FROM " . 'categories' . " WHERE id_uppercat = ? ORDER BY {$rankIdentifier} ASC",
             [$parentId]
         );
 
@@ -280,7 +279,7 @@ final class WsCategoriesMutationTest extends ContractTestCase
         ]);
         $this->categoryId = $this->extractResultId($add);
 
-        $stored = $this->conn->fetchOne('SELECT comment FROM ' . Tables::categories() . ' WHERE id = ?', [$this->categoryId]);
+        $stored = $this->conn->fetchOne('SELECT comment FROM ' . 'categories' . ' WHERE id = ?', [$this->categoryId]);
         self::assertIsString($stored);
         self::assertStringContainsString('a real comment', $stored);
     }
@@ -402,7 +401,7 @@ final class WsCategoriesMutationTest extends ContractTestCase
     public function test_setInfo_changes_status_to_private(): void
     {
         $categoryId = $this->createCategory('ct_album_' . uniqid());
-        $before = $this->conn->fetchOne('SELECT status FROM ' . Tables::categories() . ' WHERE id = ?', [$categoryId]);
+        $before = $this->conn->fetchOne('SELECT status FROM ' . 'categories' . ' WHERE id = ?', [$categoryId]);
         self::assertSame('public', $before);
 
         $response = $this->callWs('pwg.categories.setInfo', [
@@ -411,7 +410,7 @@ final class WsCategoriesMutationTest extends ContractTestCase
         ]);
 
         self::assertSame('ok', $response['stat']);
-        $after = $this->conn->fetchOne('SELECT status FROM ' . Tables::categories() . ' WHERE id = ?', [$categoryId]);
+        $after = $this->conn->fetchOne('SELECT status FROM ' . 'categories' . ' WHERE id = ?', [$categoryId]);
         self::assertSame('private', $after);
     }
 
@@ -436,7 +435,7 @@ final class WsCategoriesMutationTest extends ContractTestCase
      */
     private function fetchCategoryBoolColumn(string $column, int $categoryId): int
     {
-        $value = $this->conn->fetchOne('SELECT ' . $column . ' FROM ' . Tables::categories() . ' WHERE id = ?', [$categoryId]);
+        $value = $this->conn->fetchOne('SELECT ' . $column . ' FROM ' . 'categories' . ' WHERE id = ?', [$categoryId]);
         self::assertTrue(is_bool($value) || is_numeric($value), $column . ' must be a boolean or numeric value');
 
         return (int) (bool) $value;
@@ -473,7 +472,7 @@ final class WsCategoriesMutationTest extends ContractTestCase
         ]);
 
         self::assertSame('ok', $response['stat']);
-        $stored = $this->conn->fetchOne('SELECT comment FROM ' . Tables::categories() . ' WHERE id = ?', [$categoryId]);
+        $stored = $this->conn->fetchOne('SELECT comment FROM ' . 'categories' . ' WHERE id = ?', [$categoryId]);
         self::assertIsString($stored);
         self::assertStringContainsString('a fresh comment', $stored);
     }
@@ -639,7 +638,7 @@ final class WsCategoriesMutationTest extends ContractTestCase
         self::assertArrayHasKey('src', $result);
         self::assertArrayHasKey('url', $result);
 
-        $representativeId = $this->conn->fetchOne('SELECT representative_picture_id FROM ' . Tables::categories() . ' WHERE id = ?', [$categoryId]);
+        $representativeId = $this->conn->fetchOne('SELECT representative_picture_id FROM ' . 'categories' . ' WHERE id = ?', [$categoryId]);
         self::assertIsNumeric($representativeId);
         self::assertSame($imageId, (int) $representativeId, 'the only associated image must become the new representative');
     }
@@ -789,7 +788,7 @@ final class WsCategoriesMutationTest extends ContractTestCase
         // virtual one (dir=NULL), so simulating a physical category needs a
         // direct raw-SQL write; this only exercises move()'s own guard, it
         // doesn't pretend to be a real filesystem sync.
-        $this->conn->executeStatement('UPDATE ' . Tables::categories() . ' SET dir = ? WHERE id = ?', ['some_physical_dir', $categoryId]);
+        $this->conn->executeStatement('UPDATE ' . 'categories' . ' SET dir = ? WHERE id = ?', ['some_physical_dir', $categoryId]);
         $token = $this->getPwgToken();
 
         $response = $this->callWs('pwg.categories.move', [
@@ -909,7 +908,7 @@ final class WsCategoriesMutationTest extends ContractTestCase
             // and accepts the bare parameter unchanged.
             $textCast = $this->dbDriver === 'pgsql' ? '::text' : '';
             $this->conn->executeStatement(
-                'INSERT INTO ' . Tables::images() . " (file, path, md5sum, date_available)
+                'INSERT INTO ' . 'images' . " (file, path, md5sum, date_available)
                  SELECT CONCAT(?{$textCast}, n), CONCAT(?{$textCast}, n), MD5(CONCAT(?{$textCast}, n)), ?
                  FROM (
                      WITH RECURSIVE seq AS (
@@ -923,14 +922,14 @@ final class WsCategoriesMutationTest extends ContractTestCase
             );
 
             $imageIds = $this->conn->fetchFirstColumn(
-                'SELECT id FROM ' . Tables::images() . ' WHERE file LIKE ? ORDER BY id',
+                'SELECT id FROM ' . 'images' . ' WHERE file LIKE ? ORDER BY id',
                 [$prefix . '%']
             );
             self::assertCount(1000, $imageIds, 'bulk insert must have produced exactly 1000 real image rows');
 
             $this->conn->executeStatement(
-                'INSERT INTO ' . Tables::imageCategory() . ' (image_id, category_id)
-                 SELECT id, ? FROM ' . Tables::images() . ' WHERE file LIKE ?',
+                'INSERT INTO ' . 'image_category' . ' (image_id, category_id)
+                 SELECT id, ? FROM ' . 'images' . ' WHERE file LIKE ?',
                 [$categoryId, $prefix . '%']
             );
 
@@ -942,7 +941,7 @@ final class WsCategoriesMutationTest extends ContractTestCase
             foreach ($sharedImageIds as $imageId) {
                 self::assertIsNumeric($imageId);
                 $this->conn->executeStatement(
-                    'INSERT INTO ' . Tables::imageCategory() . ' (image_id, category_id) VALUES (?, ?)',
+                    'INSERT INTO ' . 'image_category' . ' (image_id, category_id) VALUES (?, ?)',
                     [(int) $imageId, 1]
                 );
             }
@@ -964,7 +963,7 @@ final class WsCategoriesMutationTest extends ContractTestCase
             // this single statement also removes both image_category rows
             // per shared image (the $categoryId link and the fixture
             // category 1 link) as well as the 996 orphan-only links.
-            $this->conn->executeStatement('DELETE FROM ' . Tables::images() . ' WHERE file LIKE ?', [$prefix . '%']);
+            $this->conn->executeStatement('DELETE FROM ' . 'images' . ' WHERE file LIKE ?', [$prefix . '%']);
         }
     }
 

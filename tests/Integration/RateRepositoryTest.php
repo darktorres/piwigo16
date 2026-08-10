@@ -20,7 +20,6 @@ use Doctrine\DBAL\Connection;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\ConfigLoader;
 use Piwigo\Db\DbConnection;
-use Piwigo\Db\Tables;
 use Piwigo\Rate\RateRepository;
 
 /**
@@ -145,7 +144,7 @@ final class RateRepositoryTest extends IntegrationTestCase
         try {
             $value = $this->conn->createQueryBuilder()
                 ->select('rate')
-                ->from(Tables::rate())
+                ->from('rate')
                 ->where('element_id = 5')
                 ->andWhere('user_id = 2')
                 ->executeQuery()
@@ -192,7 +191,7 @@ final class RateRepositoryTest extends IntegrationTestCase
             self::assertSame(4.75, $this->fetchRatingScore(1));
         } finally {
             $this->conn->createQueryBuilder()
-                ->update(Tables::images())
+                ->update('images')
                 ->set('rating_score', ':score')
                 ->where('id = 1')
                 ->setParameter('score', $original)
@@ -216,14 +215,14 @@ final class RateRepositoryTest extends IntegrationTestCase
         // score being recomputed yet.
         $deletedRow = $this->conn->createQueryBuilder()
             ->select('*')
-            ->from(Tables::rate())
+            ->from('rate')
             ->where('element_id = 4')
             ->executeQuery()
             ->fetchAssociative();
         self::assertIsArray($deletedRow);
 
         $this->conn->createQueryBuilder()
-            ->delete(Tables::rate())
+            ->delete('rate')
             ->where('element_id = 4')
             ->executeStatement();
 
@@ -231,7 +230,7 @@ final class RateRepositoryTest extends IntegrationTestCase
             self::assertSame([4], $this->repo->findImageIdsWithStaleRatingScore());
         } finally {
             $this->conn->createQueryBuilder()
-                ->insert(Tables::rate())
+                ->insert('rate')
                 ->values([
                     'user_id' => ':userId',
                     'element_id' => ':elementId',
@@ -262,13 +261,13 @@ final class RateRepositoryTest extends IntegrationTestCase
             self::assertSame(5.0, $this->fetchRatingScore(3));
         } finally {
             $this->conn->createQueryBuilder()
-                ->update(Tables::images())
+                ->update('images')
                 ->set('rating_score', ':score')
                 ->where('id = 1')
                 ->setParameter('score', $original1)
                 ->executeStatement();
             $this->conn->createQueryBuilder()
-                ->update(Tables::images())
+                ->update('images')
                 ->set('rating_score', ':score')
                 ->where('id = 2')
                 ->setParameter('score', $original2)
@@ -483,7 +482,7 @@ final class RateRepositoryTest extends IntegrationTestCase
     {
         $value = $this->conn->createQueryBuilder()
             ->select('COUNT(*)')
-            ->from(Tables::rate())
+            ->from('rate')
             ->where('element_id = :elementId')
             ->andWhere('user_id = :userId')
             ->setParameter('elementId', $elementId)
@@ -503,7 +502,7 @@ final class RateRepositoryTest extends IntegrationTestCase
     {
         $value = $this->conn->createQueryBuilder()
             ->select('rating_score')
-            ->from(Tables::images())
+            ->from('images')
             ->where('id = :id')
             ->setParameter('id', $imageId)
             ->executeQuery()

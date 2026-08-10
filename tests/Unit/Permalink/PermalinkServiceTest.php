@@ -7,7 +7,6 @@ use Piwigo\Core\Paths;
 use Piwigo\Core\ProcessCache;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
-use Piwigo\Db\Tables;
 use Piwigo\Permalink\PermalinkRepository;
 use Piwigo\Permalink\PermalinkService;
 use Piwigo\Tests\Support\LangTestFactory;
@@ -255,7 +254,7 @@ test('deleteCatPermalink() with save marks an already-recorded history row delet
     $repo->setCategoryPermalink(1, $slug);
     $repo->insertOldPermalinkDeleted(1, $slug);
     $conn->createQueryBuilder()
-        ->update(Tables::oldPermalinks())
+        ->update('old_permalinks')
         ->set('date_deleted', ':date')
         ->where('permalink = :permalink')
         ->setParameter('date', '2020-01-01 00:00:00')
@@ -269,7 +268,7 @@ test('deleteCatPermalink() with save marks an already-recorded history row delet
 
         $dateDeleted = $conn->createQueryBuilder()
             ->select('date_deleted')
-            ->from(Tables::oldPermalinks())
+            ->from('old_permalinks')
             ->where('permalink = :permalink')
             ->setParameter('permalink', $slug)
             ->fetchOne();

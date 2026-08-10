@@ -8,7 +8,6 @@ use Override;
 use Piwigo\Cache\CachePools;
 use Doctrine\DBAL\Connection;
 use Piwigo\Db\DbConnection;
-use Piwigo\Db\Tables;
 
 /**
  * Covers several small Ws classes only reachable through non-default
@@ -127,7 +126,7 @@ final class WsAlternateFormatsTest extends ContractTestCase
             self::assertIsArray($byName['level']);
             self::assertSame(8, $byName['level']['maxValue']);
         } finally {
-            $this->conn->executeStatement("DELETE FROM " . Tables::config() . " WHERE param = 'available_permission_levels'");
+            $this->conn->executeStatement("DELETE FROM " . 'config' . " WHERE param = 'available_permission_levels'");
             CachePools::config()->clear();
         }
     }

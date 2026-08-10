@@ -12,7 +12,6 @@ use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\ConfigLoader;
 use Piwigo\Db\DbConnection;
-use Piwigo\Db\Tables;
 use Piwigo\Permalink\OldPermalinkSortField;
 use Piwigo\Permalink\PermalinkRepository;
 
@@ -54,7 +53,7 @@ final class PermalinkRepositoryTest extends IntegrationTestCase
         // Resets the fixture's own seeded baseline (piwigo-17.0.sql:
         // hit=42, last_hit='2026-08-01 00:00:00') after any test that
         // mutates it.
-        $this->conn->executeStatement("UPDATE " . Tables::oldPermalinks() . " SET hit = 42, last_hit = '2026-08-01 00:00:00' WHERE permalink = 'old-sample-album'");
+        $this->conn->executeStatement("UPDATE " . 'old_permalinks' . " SET hit = 42, last_hit = '2026-08-01 00:00:00' WHERE permalink = 'old-sample-album'");
         parent::tearDown();
     }
 
@@ -189,7 +188,7 @@ final class PermalinkRepositoryTest extends IntegrationTestCase
 
     public function test_find_permalink_matches_finds_old_and_current_permalinks(): void
     {
-        $this->conn->executeStatement('UPDATE ' . Tables::categories() . " SET permalink = 'sample-album' WHERE id = 1");
+        $this->conn->executeStatement('UPDATE ' . 'categories' . " SET permalink = 'sample-album' WHERE id = 1");
 
         $matches = $this->repo->findPermalinkMatches(['old-sample-album', 'sample-album']);
 
@@ -200,7 +199,7 @@ final class PermalinkRepositoryTest extends IntegrationTestCase
         self::assertSame(1, $matches['sample-album']['id']);
         self::assertSame(0, $matches['sample-album']['is_old']);
 
-        $this->conn->executeStatement('UPDATE ' . Tables::categories() . ' SET permalink = NULL WHERE id = 1');
+        $this->conn->executeStatement('UPDATE ' . 'categories' . ' SET permalink = NULL WHERE id = 1');
     }
 
     public function test_find_permalink_matches_returns_empty_for_no_permalinks(): void
@@ -214,7 +213,7 @@ final class PermalinkRepositoryTest extends IntegrationTestCase
 
         $hit = $this->conn->createQueryBuilder()
             ->select('hit')
-            ->from(Tables::oldPermalinks())
+            ->from('old_permalinks')
             ->where('permalink = :permalink')
             ->setParameter('permalink', 'old-sample-album')
             ->executeQuery()
@@ -227,7 +226,7 @@ final class PermalinkRepositoryTest extends IntegrationTestCase
     {
         $this->repo->deleteOldPermalinksForCategories([]);
 
-        $count = $this->conn->createQueryBuilder()->select('COUNT(*) AS c')->from(Tables::oldPermalinks())->executeQuery()->fetchOne();
+        $count = $this->conn->createQueryBuilder()->select('COUNT(*) AS c')->from('old_permalinks')->executeQuery()->fetchOne();
         self::assertSame(1, is_numeric($count) ? (int) $count : 0);
     }
 }

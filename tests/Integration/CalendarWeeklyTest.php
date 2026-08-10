@@ -21,7 +21,6 @@ use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Tests\Support\CurrentPathsTestFactory;
 use Piwigo\Tests\Support\LangTestFactory;
 use Piwigo\Db\DbConnection;
-use Piwigo\Db\Tables;
 use Piwigo\Tests\Support\TranslatorTestFactory;
 use Piwigo\Permission\SqlCondition;
 
@@ -96,11 +95,11 @@ final class CalendarWeeklyTest extends IntegrationTestCase
 
         $this->conn = DbConnection::build();
 
-        $this->conn->executeStatement("UPDATE " . Tables::images() . " SET date_available = '2024-03-10 00:00:00' WHERE id = 1");
-        $this->conn->executeStatement("UPDATE " . Tables::images() . " SET date_available = '2024-03-15 00:00:00' WHERE id = 2");
-        $this->conn->executeStatement("UPDATE " . Tables::images() . " SET date_available = '2024-07-04 00:00:00' WHERE id = 3");
-        $this->conn->executeStatement("UPDATE " . Tables::images() . " SET date_available = '2025-01-20 00:00:00' WHERE id = 4");
-        $this->conn->executeStatement("UPDATE " . Tables::images() . " SET date_available = '2025-01-25 00:00:00' WHERE id = 5");
+        $this->conn->executeStatement("UPDATE " . 'images' . " SET date_available = '2024-03-10 00:00:00' WHERE id = 1");
+        $this->conn->executeStatement("UPDATE " . 'images' . " SET date_available = '2024-03-15 00:00:00' WHERE id = 2");
+        $this->conn->executeStatement("UPDATE " . 'images' . " SET date_available = '2024-07-04 00:00:00' WHERE id = 3");
+        $this->conn->executeStatement("UPDATE " . 'images' . " SET date_available = '2025-01-20 00:00:00' WHERE id = 4");
+        $this->conn->executeStatement("UPDATE " . 'images' . " SET date_available = '2025-01-25 00:00:00' WHERE id = 5");
 
         $this->urlService = new CalendarWeeklyTestFakeUrlService();
     }
@@ -129,7 +128,7 @@ final class CalendarWeeklyTest extends IntegrationTestCase
         $calendar = new CalendarWeekly(LangTestFactory::get(), new CalendarRepository(EntityManagerFactory::build($this->conn)), $this->urlService, CurrentConfigTestFactory::get(), ImageStdParamsTestFactory::get());
         $calendar->chronology_field = 'posted';
         $calendar->initialize(new CalendarQueryScope(
-            new SqlCondition(' FROM ' . Tables::images() . ' WHERE id IN (1,2,3,4,5)'),
+            new SqlCondition(' FROM ' . 'images' . ' WHERE id IN (1,2,3,4,5)'),
             false,
             new SqlCondition('i.id IN (1,2,3,4,5)'),
         ));

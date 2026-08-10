@@ -7,7 +7,6 @@ use Piwigo\Auth\UserFailedLoginEntity;
 use Piwigo\Auth\UserFailedLoginRepository;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
-use Piwigo\Db\Tables;
 
 /**
  * Piwigo\Auth\UserFailedLoginRepository -- has no dedicated Integration
@@ -31,7 +30,7 @@ function userFailedLoginTestRepo(): UserFailedLoginRepository
 function userFailedLoginTestPurgeIp(Connection $conn, string $ip): void
 {
     $conn->createQueryBuilder()
-        ->delete(Tables::userFailedLogins())
+        ->delete('user_failed_logins')
         ->where('ip = :ip')
         ->setParameter('ip', $ip)
         ->executeStatement();
@@ -46,7 +45,7 @@ test('recordFailure() persists a real user_id and ip', function (): void {
 
         $row = $conn->createQueryBuilder()
             ->select('user_id', 'ip', 'attempted_at')
-            ->from(Tables::userFailedLogins())
+            ->from('user_failed_logins')
             ->where('ip = :ip')
             ->setParameter('ip', $ip)
             ->fetchAssociative();
@@ -70,7 +69,7 @@ test('recordFailure() accepts a null user_id for an unknown-username attempt', f
 
         $userId = $conn->createQueryBuilder()
             ->select('user_id')
-            ->from(Tables::userFailedLogins())
+            ->from('user_failed_logins')
             ->where('ip = :ip')
             ->setParameter('ip', $ip)
             ->fetchOne();
@@ -93,7 +92,7 @@ test('recordFailure() gracefully stores an empty-string ip (REMOTE_ADDR unavaila
 
         $ip = $conn->createQueryBuilder()
             ->select('ip')
-            ->from(Tables::userFailedLogins())
+            ->from('user_failed_logins')
             ->where('attempted_at = :at')
             ->setParameter('at', $marker)
             ->fetchOne();
@@ -101,7 +100,7 @@ test('recordFailure() gracefully stores an empty-string ip (REMOTE_ADDR unavaila
         expect($ip)->toBe('');
     } finally {
         $conn->createQueryBuilder()
-            ->delete(Tables::userFailedLogins())
+            ->delete('user_failed_logins')
             ->where('attempted_at = :at')
             ->setParameter('at', $marker)
             ->executeStatement();

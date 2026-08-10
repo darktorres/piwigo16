@@ -27,7 +27,6 @@ use Piwigo\Core\ThemeEntity;
 use Piwigo\Core\WebmasterMailProviderInterface;
 use Piwigo\Db\BatchWriter;
 use Piwigo\Db\SqlDialect;
-use Piwigo\Db\Tables;
 use Piwigo\Event\Mail\GetWebmasterMailAddress;
 use Piwigo\Group\UserGroupEntity;
 use Piwigo\Image\ImageCategoryEntity;
@@ -414,7 +413,7 @@ final class UserRepository implements WebmasterMailProviderInterface
         $this->em
             ->getConnection()
             ->createQueryBuilder()
-            ->insert(Tables::users())
+            ->insert('users')
             ->values([
                 'id' => ':id',
                 'username' => ':username',
@@ -963,7 +962,7 @@ final class UserRepository implements WebmasterMailProviderInterface
     {
         new BatchWriter($this->em->getConnection())
             ->singleInsert(
-                Tables::favorites(),
+                'favorites',
                 [
                     'image_id' => $imageId,
                     'user_id' => $userId->value,
@@ -1079,8 +1078,8 @@ final class UserRepository implements WebmasterMailProviderInterface
             ));
         }
 
-        $favoritesTable = Tables::favorites();
-        $imagesTable = Tables::images();
+        $favoritesTable = 'favorites';
+        $imagesTable = 'images';
 
         $condition = SqlCondition::combine(
             'AND',
@@ -1171,8 +1170,8 @@ final class UserRepository implements WebmasterMailProviderInterface
      */
     public function findVisibleFavoriteImages(UserId $userId, PermissionCriteria $criteria, string $orderBySql): array
     {
-        $favoritesTable = Tables::favorites();
-        $imagesTable = Tables::images();
+        $favoritesTable = 'favorites';
+        $imagesTable = 'images';
 
         $condition = SqlCondition::combine(
             'AND',
@@ -1678,9 +1677,9 @@ final class UserRepository implements WebmasterMailProviderInterface
         $conn = $this->em
             ->getConnection();
 
-        $usersTable = Tables::users();
-        $userInfosTable = Tables::userInfos();
-        $userGroupTable = Tables::userGroup();
+        $usersTable = 'users';
+        $userInfosTable = 'user_infos';
+        $userGroupTable = 'user_group';
 
         $columnPairs = [];
         foreach ($displayColumns as $field => $alias) {

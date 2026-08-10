@@ -35,7 +35,6 @@ use Piwigo\Tests\Support\DbCredentialsTestFactory;
 use Piwigo\Core\Paths;
 use Piwigo\Core\ThemeConfProviderInterface;
 use Piwigo\Db\DbConnection;
-use Piwigo\Db\Tables;
 use Piwigo\Event\Picture\UploadFile;
 use Piwigo\Tests\Support\ImageStdParamsTestFactory;
 use Piwigo\PluginConfig\EventDispatcher;
@@ -328,19 +327,19 @@ final class UploadServiceTest extends IntegrationTestCase
             // ON DELETE CASCADE on both piwigo_image_category.image_id and
             // piwigo_lounge.image_id (see the schema) takes care of any
             // association rows a test created for these ids too.
-            $this->conn->executeStatement('DELETE FROM ' . Tables::images() . " WHERE id IN ({$ids})");
+            $this->conn->executeStatement('DELETE FROM ' . 'images' . " WHERE id IN ({$ids})");
         }
         // Cleans up the one fixture-image association a test adds (image 1
         // -> category 2, not present in the stock fixture) without
         // disturbing image 1 itself, which every other test in this class
         // still relies on for duplicate-detection.
-        $this->conn->executeStatement('DELETE FROM ' . Tables::imageCategory() . ' WHERE image_id = 1 AND category_id = 2');
+        $this->conn->executeStatement('DELETE FROM ' . 'image_category' . ' WHERE image_id = 1 AND category_id = 2');
         // Same belt-and-suspenders reasoning as the image_category cleanup
         // above -- addFormat()'s own tests write real piwigo_image_format
         // rows against the shared fixture image 1, not a throwaway id this
         // class deletes wholesale.
-        $this->conn->executeStatement('DELETE FROM ' . Tables::imageFormat() . ' WHERE image_id = 1');
-        $this->conn->executeStatement("DELETE FROM " . Tables::config() . " WHERE param IN ('lounge_active', 'count_orphans')");
+        $this->conn->executeStatement('DELETE FROM ' . 'image_format' . ' WHERE image_id = 1');
+        $this->conn->executeStatement("DELETE FROM " . 'config' . " WHERE param IN ('lounge_active', 'count_orphans')");
 
         self::rrmdir($this->marker);
 
@@ -398,7 +397,7 @@ final class UploadServiceTest extends IntegrationTestCase
      */
     private function fetchImageRow(int $imageId): array
     {
-        $row = $this->conn->fetchAssociative('SELECT * FROM ' . Tables::images() . ' WHERE id = ' . $imageId);
+        $row = $this->conn->fetchAssociative('SELECT * FROM ' . 'images' . ' WHERE id = ' . $imageId);
         self::assertIsArray($row, "image #{$imageId} not found");
 
         return $row;
@@ -469,7 +468,7 @@ final class UploadServiceTest extends IntegrationTestCase
         $source = $this->marker . '/dup-source.jpg';
         file_put_contents($source, 'duplicate-upload-bytes');
 
-        $countBefore = $this->countRows('SELECT COUNT(*) FROM ' . Tables::images());
+        $countBefore = $this->countRows('SELECT COUNT(*) FROM ' . 'images');
 
         $result = new UploadService(LangTestFactory::get(), $this->currentLogger, $this->storageRegistry, EventDispatcherTestFactory::get(), $this->configService, $this->entityManager, $this->activityService, $this->metadataService, $this->imageService, $this->currentConfig, $this->wsContext, $this->currentUser, CurrentPathsTestFactory::get(), DbCredentialsTestFactory::get())->addUploadedFile(
             $source,
@@ -488,13 +487,13 @@ final class UploadServiceTest extends IntegrationTestCase
 
         // No second row was inserted -- the short-circuit returned the
         // existing image_id instead.
-        $countAfter = $this->countRows('SELECT COUNT(*) FROM ' . Tables::images());
+        $countAfter = $this->countRows('SELECT COUNT(*) FROM ' . 'images');
         self::assertSame($countBefore, $countAfter);
 
         // Image 1 is only linked to category 1 in the stock fixture --
         // addUploadedFileAddToCategories() still associates it to the
         // $categories given here, even on the short-circuit path.
-        $linked = $this->countRows('SELECT COUNT(*) FROM ' . Tables::imageCategory() . ' WHERE image_id = 1 AND category_id = 2');
+        $linked = $this->countRows('SELECT COUNT(*) FROM ' . 'image_category' . ' WHERE image_id = 1 AND category_id = 2');
         self::assertSame(1, $linked);
     }
 
@@ -515,7 +514,7 @@ final class UploadServiceTest extends IntegrationTestCase
         $id = $firstId;
         $this->imageIdsToDelete[] = $id;
 
-        $countBefore = $this->countRows('SELECT COUNT(*) FROM ' . Tables::images());
+        $countBefore = $this->countRows('SELECT COUNT(*) FROM ' . 'images');
 
         $secondSource = $this->marker . '/second.png';
         $this->makeImage($secondSource, 'png', 20, 15);
@@ -526,7 +525,7 @@ final class UploadServiceTest extends IntegrationTestCase
 
         // Same id back -- an UPDATE, not a fresh INSERT.
         self::assertSame($id, $result);
-        $countAfter = $this->countRows('SELECT COUNT(*) FROM ' . Tables::images());
+        $countAfter = $this->countRows('SELECT COUNT(*) FROM ' . 'images');
         self::assertSame($countBefore, $countAfter);
 
         $row = $this->fetchImageRow($id);
@@ -552,7 +551,7 @@ final class UploadServiceTest extends IntegrationTestCase
         $source = $this->marker . '/orphan-update.png';
         $this->makeImage($source, 'png', 10, 8);
 
-        $countBefore = $this->countRows('SELECT COUNT(*) FROM ' . Tables::images());
+        $countBefore = $this->countRows('SELECT COUNT(*) FROM ' . 'images');
 
         $threw = null;
         try {
@@ -568,7 +567,7 @@ final class UploadServiceTest extends IntegrationTestCase
         // write, unlike the SVG-mismatch/forbidden-type rejection tests
         // below, which unlink() the source first.
         self::assertFileExists($source);
-        $countAfter = $this->countRows('SELECT COUNT(*) FROM ' . Tables::images());
+        $countAfter = $this->countRows('SELECT COUNT(*) FROM ' . 'images');
         self::assertSame($countBefore, $countAfter);
     }
 
@@ -755,7 +754,7 @@ final class UploadServiceTest extends IntegrationTestCase
         $source = $this->marker . '/fake.png';
         file_put_contents($source, '<svg xmlns="http://www.w3.org/2000/svg"><circle r="5"/></svg>');
 
-        $countBefore = $this->countRows('SELECT COUNT(*) FROM ' . Tables::images());
+        $countBefore = $this->countRows('SELECT COUNT(*) FROM ' . 'images');
 
         $threw = null;
         try {
@@ -768,7 +767,7 @@ final class UploadServiceTest extends IntegrationTestCase
         self::assertStringContainsString('does not match file MIME type', $threw->getMessage());
 
         self::assertFileDoesNotExist($source);
-        $countAfter = $this->countRows('SELECT COUNT(*) FROM ' . Tables::images());
+        $countAfter = $this->countRows('SELECT COUNT(*) FROM ' . 'images');
         self::assertSame($countBefore, $countAfter);
     }
 
@@ -787,7 +786,7 @@ final class UploadServiceTest extends IntegrationTestCase
         $source = $this->marker . '/payload.exe';
         file_put_contents($source, "MZ\x90\x00" . str_repeat('x', 32));
 
-        $countBefore = $this->countRows('SELECT COUNT(*) FROM ' . Tables::images());
+        $countBefore = $this->countRows('SELECT COUNT(*) FROM ' . 'images');
 
         $threw = null;
         try {
@@ -800,7 +799,7 @@ final class UploadServiceTest extends IntegrationTestCase
         self::assertSame('unexpected file type', $threw->getMessage());
 
         self::assertFileDoesNotExist($source);
-        $countAfter = $this->countRows('SELECT COUNT(*) FROM ' . Tables::images());
+        $countAfter = $this->countRows('SELECT COUNT(*) FROM ' . 'images');
         self::assertSame($countBefore, $countAfter);
     }
 
@@ -811,7 +810,7 @@ final class UploadServiceTest extends IntegrationTestCase
         $source = $this->marker . '/notes.txt';
         file_put_contents($source, 'just some plain text, not an image at all');
 
-        $countBefore = $this->countRows('SELECT COUNT(*) FROM ' . Tables::images());
+        $countBefore = $this->countRows('SELECT COUNT(*) FROM ' . 'images');
 
         $threw = null;
         try {
@@ -824,7 +823,7 @@ final class UploadServiceTest extends IntegrationTestCase
         self::assertSame('forbidden file type', $threw->getMessage());
 
         self::assertFileDoesNotExist($source);
-        $countAfter = $this->countRows('SELECT COUNT(*) FROM ' . Tables::images());
+        $countAfter = $this->countRows('SELECT COUNT(*) FROM ' . 'images');
         self::assertSame($countBefore, $countAfter);
     }
 
@@ -834,9 +833,9 @@ final class UploadServiceTest extends IntegrationTestCase
         // 'true' (see this class's own docblock) -- force it to 'false' here
         // so the assertion below actually proves confUpdateParam() wrote a
         // real change, not just a coincidental match with pre-existing data.
-        $this->conn->executeStatement("UPDATE " . Tables::config() . " SET value = 'false' WHERE param = 'lounge_active'");
+        $this->conn->executeStatement("UPDATE " . 'config' . " SET value = 'false' WHERE param = 'lounge_active'");
 
-        $countBefore = $this->countRows('SELECT COUNT(*) FROM ' . Tables::images());
+        $countBefore = $this->countRows('SELECT COUNT(*) FROM ' . 'images');
         CurrentConfigTestFactory::get()->loungeActivateThreshold = $countBefore + 1;
         self::assertFalse(CurrentConfigTestFactory::get()->loungeActive);
 
@@ -851,7 +850,7 @@ final class UploadServiceTest extends IntegrationTestCase
         // meets the threshold set above.
         self::assertTrue(CurrentConfigTestFactory::get()->loungeActive);
 
-        $dbValue = $this->conn->fetchOne("SELECT value FROM " . Tables::config() . " WHERE param = 'lounge_active'");
+        $dbValue = $this->conn->fetchOne("SELECT value FROM " . 'config' . " WHERE param = 'lounge_active'");
         self::assertSame('true', $dbValue);
     }
 
@@ -869,10 +868,10 @@ final class UploadServiceTest extends IntegrationTestCase
         // fillLounge().
         self::assertFalse(CurrentConfigTestFactory::get()->loungeActive);
 
-        $linked = $this->countRows('SELECT COUNT(*) FROM ' . Tables::imageCategory() . ' WHERE image_id = ' . $id . ' AND category_id = 1');
+        $linked = $this->countRows('SELECT COUNT(*) FROM ' . 'image_category' . ' WHERE image_id = ' . $id . ' AND category_id = 1');
         self::assertSame(1, $linked);
 
-        $inLounge = $this->countRows('SELECT COUNT(*) FROM ' . Tables::lounge() . ' WHERE image_id = ' . $id);
+        $inLounge = $this->countRows('SELECT COUNT(*) FROM ' . 'lounge' . ' WHERE image_id = ' . $id);
         self::assertSame(0, $inLounge);
     }
 
@@ -963,7 +962,7 @@ final class UploadServiceTest extends IntegrationTestCase
             $result2 = $service->addFormat($sourceV2, 'tif', 1);
             self::assertSame('update', $result2);
 
-            $count = $this->countRows('SELECT COUNT(*) FROM ' . Tables::imageFormat() . " WHERE image_id = 1 AND ext = 'tif'");
+            $count = $this->countRows('SELECT COUNT(*) FROM ' . 'image_format' . " WHERE image_id = 1 AND ext = 'tif'");
             self::assertSame(1, $count, 'a second addFormat() call for the same image/ext should UPDATE, not duplicate, the row');
         } finally {
             CurrentConfigTestFactory::get()->isFormatsEnabled = false;
@@ -1126,10 +1125,10 @@ final class UploadServiceTest extends IntegrationTestCase
             self::assertTrue($result);
             self::assertSame([], $errors);
 
-            $stored = $this->conn->fetchOne("SELECT value FROM " . Tables::config() . " WHERE param = 'original_resize_maxheight'");
+            $stored = $this->conn->fetchOne("SELECT value FROM " . 'config' . " WHERE param = 'original_resize_maxheight'");
             self::assertSame('1500', $stored, 'the field after the skipped non-scalar one must still be processed and persisted, not abandoned by a wrongly-broken loop');
         } finally {
-            $this->conn->executeStatement("UPDATE " . Tables::config() . " SET value = '2016' WHERE param = 'original_resize_maxheight'");
+            $this->conn->executeStatement("UPDATE " . 'config' . " SET value = '2016' WHERE param = 'original_resize_maxheight'");
             $this->entityManager->clear();
         }
     }
@@ -1145,7 +1144,7 @@ final class UploadServiceTest extends IntegrationTestCase
      */
     public function test_saveUploadFormConfig_clears_the_injected_entity_managers_identity_map_after_a_successful_write(): void
     {
-        $this->conn->executeStatement("UPDATE " . Tables::config() . " SET value = '2016' WHERE param = 'original_resize_maxheight'");
+        $this->conn->executeStatement("UPDATE " . 'config' . " SET value = '2016' WHERE param = 'original_resize_maxheight'");
         $this->entityManager->clear();
 
         // Populates $this->entityManager's own identity map with the
@@ -1170,7 +1169,7 @@ final class UploadServiceTest extends IntegrationTestCase
             self::assertInstanceOf(ConfigEntry::class, $after);
             self::assertSame('1500', $after->value, 'entityManager->clear() must genuinely evict the stale cached entity so this find() re-queries instead of returning the pre-write identity-map copy');
         } finally {
-            $this->conn->executeStatement("UPDATE " . Tables::config() . " SET value = '2016' WHERE param = 'original_resize_maxheight'");
+            $this->conn->executeStatement("UPDATE " . 'config' . " SET value = '2016' WHERE param = 'original_resize_maxheight'");
             $this->entityManager->clear();
         }
     }
@@ -1359,12 +1358,12 @@ final class UploadServiceTest extends IntegrationTestCase
         $source = $this->marker . '/no-duplicate.png';
         $this->makeImage($source, 'png', 11, 7);
 
-        $countBefore = $this->countRows('SELECT COUNT(*) FROM ' . Tables::images());
+        $countBefore = $this->countRows('SELECT COUNT(*) FROM ' . 'images');
 
         $imageId = $this->newService()->addUploadedFile($source, $this->urlService, 'no-duplicate.png');
         $this->imageIdsToDelete[] = $imageId;
 
-        $countAfter = $this->countRows('SELECT COUNT(*) FROM ' . Tables::images());
+        $countAfter = $this->countRows('SELECT COUNT(*) FROM ' . 'images');
         self::assertSame($countBefore + 1, $countAfter, 'a genuinely new photo (zero real duplicate matches) must be INSERTed, not short-circuited');
         self::assertFileDoesNotExist($source);
     }

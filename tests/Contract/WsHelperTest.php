@@ -9,7 +9,6 @@ use Piwigo\Core\Kernel;
 use Piwigo\Core\Paths;
 use Doctrine\DBAL\Connection;
 use Piwigo\Db\DbConnection;
-use Piwigo\Db\Tables;
 use Piwigo\Ws\WsHelper;
 
 /**
@@ -119,7 +118,7 @@ final class WsHelperTest extends ContractTestCase
      */
     private function fetchFixtureImageIdsWithRating(callable $matches): array
     {
-        $rows = $this->conn->fetchAllAssociative('SELECT id, rating_score FROM ' . Tables::images() . ' WHERE id IN (1, 2, 3, 4, 5)');
+        $rows = $this->conn->fetchAllAssociative('SELECT id, rating_score FROM ' . 'images' . ' WHERE id IN (1, 2, 3, 4, 5)');
         $matching = [];
         foreach ($rows as $row) {
             $id = $row['id'] ?? null;
@@ -158,13 +157,13 @@ final class WsHelperTest extends ContractTestCase
         // All 5 fixture images start with hit=0 -- seed a real nonzero
         // value on image 1 so the filter has something to actually
         // discriminate on.
-        $this->conn->executeStatement('UPDATE ' . Tables::images() . ' SET hit = 4 WHERE id = 1');
+        $this->conn->executeStatement('UPDATE ' . 'images' . ' SET hit = 4 WHERE id = 1');
 
         try {
             $ids = $this->searchIds('Photo', ['f_min_hit' => 1]);
             self::assertSame([1], $ids);
         } finally {
-            $this->conn->executeStatement('UPDATE ' . Tables::images() . ' SET hit = 0 WHERE id = 1');
+            $this->conn->executeStatement('UPDATE ' . 'images' . ' SET hit = 0 WHERE id = 1');
         }
     }
 
@@ -192,13 +191,13 @@ final class WsHelperTest extends ContractTestCase
         // All 5 fixture images start with hit=0 -- seed a real nonzero
         // value on image 1 so the filter has something to actually
         // discriminate on.
-        $this->conn->executeStatement('UPDATE ' . Tables::images() . ' SET hit = 4 WHERE id = 1');
+        $this->conn->executeStatement('UPDATE ' . 'images' . ' SET hit = 4 WHERE id = 1');
 
         try {
             $ids = $this->searchIds('Photo', ['f_max_hit' => 3]);
             self::assertSame([2, 3, 4, 5], $ids);
         } finally {
-            $this->conn->executeStatement('UPDATE ' . Tables::images() . ' SET hit = 0 WHERE id = 1');
+            $this->conn->executeStatement('UPDATE ' . 'images' . ' SET hit = 0 WHERE id = 1');
         }
     }
 
@@ -226,7 +225,7 @@ final class WsHelperTest extends ContractTestCase
         // Every fixture image starts with date_creation=NULL -- `date_creation
         // >= '...'` is always false (NULL) against it, so a real value is
         // seeded first, same rationale as the f_min_hit test above.
-        $this->conn->executeStatement("UPDATE " . Tables::images() . " SET date_creation = '2026-01-15 00:00:00' WHERE id = 1");
+        $this->conn->executeStatement("UPDATE " . 'images' . " SET date_creation = '2026-01-15 00:00:00' WHERE id = 1");
 
         try {
             $included = $this->searchIds('Photo 1', ['f_min_date_created' => '2026-01-10']);
@@ -235,13 +234,13 @@ final class WsHelperTest extends ContractTestCase
             $excluded = $this->searchIds('Photo 1', ['f_min_date_created' => '2026-01-20']);
             self::assertSame([], $excluded);
         } finally {
-            $this->conn->executeStatement('UPDATE ' . Tables::images() . ' SET date_creation = NULL WHERE id = 1');
+            $this->conn->executeStatement('UPDATE ' . 'images' . ' SET date_creation = NULL WHERE id = 1');
         }
     }
 
     public function test_stdImageSqlFilterCriteria_f_max_date_created_keeps_only_images_strictly_before(): void
     {
-        $this->conn->executeStatement("UPDATE " . Tables::images() . " SET date_creation = '2026-01-15 00:00:00' WHERE id = 1");
+        $this->conn->executeStatement("UPDATE " . 'images' . " SET date_creation = '2026-01-15 00:00:00' WHERE id = 1");
 
         try {
             $included = $this->searchIds('Photo 1', ['f_max_date_created' => '2026-01-20']);
@@ -250,7 +249,7 @@ final class WsHelperTest extends ContractTestCase
             $excluded = $this->searchIds('Photo 1', ['f_max_date_created' => '2026-01-10']);
             self::assertSame([], $excluded);
         } finally {
-            $this->conn->executeStatement('UPDATE ' . Tables::images() . ' SET date_creation = NULL WHERE id = 1');
+            $this->conn->executeStatement('UPDATE ' . 'images' . ' SET date_creation = NULL WHERE id = 1');
         }
     }
 
@@ -318,12 +317,12 @@ final class WsHelperTest extends ContractTestCase
         // (urlService->getElementUrl()) instead of the is_original()
         // element_url/get_url() branch.
         $this->conn->executeStatement(
-            'INSERT INTO ' . Tables::images() . ' (file, path, md5sum, representative_ext, width, height) VALUES (?, ?, ?, ?, ?, ?)',
+            'INSERT INTO ' . 'images' . ' (file, path, md5sum, representative_ext, width, height) VALUES (?, ?, ?, ?, ?, ?)',
             ['video-helper-test.mp4', 'upload/video-helper-test.mp4', md5('video-helper-test'), 'mp4', 200, 150]
         );
         $imageId = (int) $this->conn->lastInsertId();
         $this->conn->executeStatement(
-            'INSERT INTO ' . Tables::imageCategory() . ' (image_id, category_id) VALUES (?, 1)',
+            'INSERT INTO ' . 'image_category' . ' (image_id, category_id) VALUES (?, 1)',
             [$imageId]
         );
 
@@ -338,8 +337,8 @@ final class WsHelperTest extends ContractTestCase
             self::assertIsString($result['download_url']);
             self::assertStringContainsString('part=e&download', $result['download_url']);
         } finally {
-            $this->conn->executeStatement('DELETE FROM ' . Tables::imageCategory() . ' WHERE image_id = ?', [$imageId]);
-            $this->conn->executeStatement('DELETE FROM ' . Tables::images() . ' WHERE id = ?', [$imageId]);
+            $this->conn->executeStatement('DELETE FROM ' . 'image_category' . ' WHERE image_id = ?', [$imageId]);
+            $this->conn->executeStatement('DELETE FROM ' . 'images' . ' WHERE id = ?', [$imageId]);
         }
     }
 

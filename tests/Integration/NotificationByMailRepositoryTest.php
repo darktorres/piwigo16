@@ -13,7 +13,6 @@ use Doctrine\DBAL\Connection;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\ConfigLoader;
 use Piwigo\Db\DbConnection;
-use Piwigo\Db\Tables;
 use Piwigo\Notification\NotificationByMailRepository;
 use Piwigo\Notification\UserMailNotificationEntity;
 
@@ -157,7 +156,7 @@ final class NotificationByMailRepositoryTest extends IntegrationTestCase
     {
         $value = $this->conn->createQueryBuilder()
             ->select('COUNT(*)')
-            ->from(Tables::userMailNotification())
+            ->from('user_mail_notification')
             ->executeQuery()
             ->fetchOne();
 

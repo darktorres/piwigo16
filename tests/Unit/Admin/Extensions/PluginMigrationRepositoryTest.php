@@ -8,7 +8,6 @@ use Piwigo\Admin\Extensions\PluginMigrationRepository;
 use Piwigo\Common\ValueObject\PluginId;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
-use Piwigo\Db\Tables;
 
 /**
  * Piwigo\Admin\Extensions\PluginMigrationRepository -- has no dedicated
@@ -29,7 +28,7 @@ function pluginMigrationTestRepo(): PluginMigrationRepository
 function pluginMigrationTestDelete(Connection $conn, PluginId $pluginId, string $version): void
 {
     $conn->createQueryBuilder()
-        ->delete(Tables::pluginMigrations())
+        ->delete('plugin_migrations')
         ->where('plugin_id = :pluginId AND version = :version')
         ->setParameter('pluginId', $pluginId->value)
         ->setParameter('version', $version)
@@ -45,7 +44,7 @@ test('record() inserts a new row when no (plugin_id, version) pair exists yet', 
 
         $row = $conn->createQueryBuilder()
             ->select('plugin_id', 'version', 'executed_at')
-            ->from(Tables::pluginMigrations())
+            ->from('plugin_migrations')
             ->where('plugin_id = :pluginId AND version = :version')
             ->setParameter('pluginId', $pluginId->value)
             ->setParameter('version', '1.0.0')
@@ -72,7 +71,7 @@ test('record() updates executed_at in place when the same (plugin_id, version) p
 
         $rows = $conn->createQueryBuilder()
             ->select('plugin_id', 'version', 'executed_at')
-            ->from(Tables::pluginMigrations())
+            ->from('plugin_migrations')
             ->where('plugin_id = :pluginId AND version = :version')
             ->setParameter('pluginId', $pluginId->value)
             ->setParameter('version', '2.0.0')
@@ -101,7 +100,7 @@ test('record() keeps separate rows for the same plugin at different versions (co
 
         $rows = $conn->createQueryBuilder()
             ->select('version')
-            ->from(Tables::pluginMigrations())
+            ->from('plugin_migrations')
             ->where('plugin_id = :pluginId')
             ->orderBy('version', 'ASC')
             ->setParameter('pluginId', $pluginId->value)

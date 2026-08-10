@@ -7,7 +7,6 @@ namespace Piwigo\Tests\Contract;
 use Override;
 use Doctrine\DBAL\Connection;
 use Piwigo\Db\DbConnection;
-use Piwigo\Db\Tables;
 
 /**
  * Ws\PwgImages::setRank() -- WsImagesMutationTest covers the multi-image
@@ -58,12 +57,12 @@ final class WsImagesSetRankTest extends ContractTestCase
     protected function tearDown(): void
     {
         foreach ($this->imageIdsToDelete as $imageId) {
-            $this->conn->executeStatement('DELETE FROM ' . Tables::imageCategory() . ' WHERE image_id = ?', [$imageId]);
-            $this->conn->executeStatement('DELETE FROM ' . Tables::images() . ' WHERE id = ?', [$imageId]);
+            $this->conn->executeStatement('DELETE FROM ' . 'image_category' . ' WHERE image_id = ?', [$imageId]);
+            $this->conn->executeStatement('DELETE FROM ' . 'images' . ' WHERE id = ?', [$imageId]);
         }
         foreach (array_reverse($this->categoryIdsToDelete) as $categoryId) {
-            $this->conn->executeStatement('DELETE FROM ' . Tables::imageCategory() . ' WHERE category_id = ?', [$categoryId]);
-            $this->conn->executeStatement('DELETE FROM ' . Tables::categories() . ' WHERE id = ?', [$categoryId]);
+            $this->conn->executeStatement('DELETE FROM ' . 'image_category' . ' WHERE category_id = ?', [$categoryId]);
+            $this->conn->executeStatement('DELETE FROM ' . 'categories' . ' WHERE id = ?', [$categoryId]);
         }
         parent::tearDown();
     }
@@ -95,7 +94,7 @@ final class WsImagesSetRankTest extends ContractTestCase
     {
         $filename = 'setrank-test-' . uniqid() . '.jpg';
         $this->conn->executeStatement(
-            'INSERT INTO ' . Tables::images() . ' (file, path, md5sum) VALUES (?, ?, ?)',
+            'INSERT INTO ' . 'images' . ' (file, path, md5sum) VALUES (?, ?, ?)',
             [$filename, 'upload/2026/08/01/' . $filename, md5($filename)]
         );
         $id = (int) $this->conn->lastInsertId();
@@ -104,7 +103,7 @@ final class WsImagesSetRankTest extends ContractTestCase
         $rankIdentifier = $this->conn->getDatabasePlatform()
             ->quoteSingleIdentifier('rank');
         $this->conn->executeStatement(
-            "INSERT INTO " . Tables::imageCategory() . " (image_id, category_id, {$rankIdentifier}) VALUES (?, ?, ?)",
+            "INSERT INTO " . 'image_category' . " (image_id, category_id, {$rankIdentifier}) VALUES (?, ?, ?)",
             [$id, $categoryId, $rank]
         );
 
@@ -171,7 +170,7 @@ final class WsImagesSetRankTest extends ContractTestCase
         $rankIdentifier = $this->conn->getDatabasePlatform()
             ->quoteSingleIdentifier('rank');
         $stored = $this->conn->fetchOne(
-            "SELECT {$rankIdentifier} FROM " . Tables::imageCategory() . ' WHERE image_id = ? AND category_id = ?',
+            "SELECT {$rankIdentifier} FROM " . 'image_category' . ' WHERE image_id = ? AND category_id = ?',
             [$imageId, $freshCatId]
         );
         self::assertSame(1, is_numeric($stored) ? (int) $stored : 0);

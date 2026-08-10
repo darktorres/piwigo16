@@ -13,7 +13,6 @@ use Doctrine\DBAL\Connection;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\ConfigLoader;
 use Piwigo\Db\DbConnection;
-use Piwigo\Db\Tables;
 use Piwigo\Common\ValueObject\CategoryId;
 use Piwigo\Permission\SqlCondition;
 use Piwigo\Search\Projection\CategoryIdUppercats;
@@ -80,7 +79,7 @@ final class SearchRepositoryTest extends IntegrationTestCase
 
     public function test_find_ids_by_clause_returns_a_list_of_ints(): void
     {
-        $ids = $this->repo->findIdsByClause('id', Tables::images() . ' i', 'id > ?', [0]);
+        $ids = $this->repo->findIdsByClause('id', 'images' . ' i', 'id > ?', [0]);
         sort($ids);
 
         self::assertSame([1, 2, 3, 4, 5], $ids);
@@ -88,12 +87,12 @@ final class SearchRepositoryTest extends IntegrationTestCase
 
     public function test_find_ids_by_clause_returns_empty_for_no_match(): void
     {
-        self::assertSame([], $this->repo->findIdsByClause('id', Tables::images() . ' i', 'id > ?', [99999]));
+        self::assertSame([], $this->repo->findIdsByClause('id', 'images' . ' i', 'id > ?', [99999]));
     }
 
     public function test_find_rows_by_clause_returns_full_rows(): void
     {
-        $rows = $this->repo->findRowsByClause(Tables::tags(), 'name = ?', ['nature']);
+        $rows = $this->repo->findRowsByClause('tags', 'name = ?', ['nature']);
 
         self::assertCount(1, $rows);
         self::assertSame(1, $rows[0]['id']);
@@ -102,7 +101,7 @@ final class SearchRepositoryTest extends IntegrationTestCase
 
     public function test_find_rows_by_clause_returns_empty_for_no_match(): void
     {
-        self::assertSame([], $this->repo->findRowsByClause(Tables::tags(), 'name = ?', ['no-such-tag']));
+        self::assertSame([], $this->repo->findRowsByClause('tags', 'name = ?', ['no-such-tag']));
     }
 
     public function test_quote_escapes_a_value_for_safe_inline_embedding(): void
@@ -180,7 +179,7 @@ final class SearchRepositoryTest extends IntegrationTestCase
         // `rules` column's real NULLable-JSON shape (schema: `rules json
         // DEFAULT NULL`) is a raw insert bypassing that method.
         $this->conn->executeStatement(
-            'INSERT INTO ' . Tables::search() . ' (rules, created_on, created_by, search_uuid, forked_from) VALUES (NULL, ?, ?, ?, NULL)',
+            'INSERT INTO ' . 'search' . ' (rules, created_on, created_by, search_uuid, forked_from) VALUES (NULL, ?, ?, ?, NULL)',
             ['2026-07-12 00:00:00', 1, 'psk-20260712-nullrules1']
         );
         $id = (int) $this->conn->lastInsertId();
@@ -203,8 +202,8 @@ final class SearchRepositoryTest extends IntegrationTestCase
      */
     public function test_count_images_grouped_by_returns_counts_ordered_desc(): void
     {
-        $this->conn->executeStatement('UPDATE ' . Tables::images() . " SET author = 'Ansel Adams' WHERE id IN (1, 2)");
-        $this->conn->executeStatement('UPDATE ' . Tables::images() . " SET author = 'Dorothea Lange' WHERE id = 3");
+        $this->conn->executeStatement('UPDATE ' . 'images' . " SET author = 'Ansel Adams' WHERE id IN (1, 2)");
+        $this->conn->executeStatement('UPDATE ' . 'images' . " SET author = 'Dorothea Lange' WHERE id = 3");
 
         try {
             $rows = $this->repo->countImagesGroupedBy('i.author', 'author', new SqlCondition('i.author IS NOT NULL'), true);
@@ -214,7 +213,7 @@ final class SearchRepositoryTest extends IntegrationTestCase
                 ['author' => 'Dorothea Lange', 'counter' => 1],
             ], $rows);
         } finally {
-            $this->conn->executeStatement('UPDATE ' . Tables::images() . ' SET author = NULL WHERE id IN (1, 2, 3)');
+            $this->conn->executeStatement('UPDATE ' . 'images' . ' SET author = NULL WHERE id IN (1, 2, 3)');
         }
     }
 

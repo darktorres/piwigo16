@@ -6,7 +6,6 @@ use Doctrine\DBAL\Connection;
 use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
-use Piwigo\Db\Tables;
 use Piwigo\History\HistoryEntity;
 use Piwigo\History\HistoryRepository;
 use Piwigo\History\Projection\HistorySummaryCount;
@@ -105,7 +104,7 @@ function historyTestInsertLine(int $userId, string $date, string $time): int
 {
     $conn = DbConnection::build();
     $conn->createQueryBuilder()
-        ->insert(Tables::history())
+        ->insert('history')
         ->values(['date' => ':date', 'time' => ':time', 'user_id' => ':userId', 'IP' => "'127.0.0.1'"])
         ->setParameter('date', $date)
         ->setParameter('time', $time)
@@ -117,7 +116,7 @@ function historyTestInsertLine(int $userId, string $date, string $time): int
 
 function historyTestMinId(Connection $conn): int
 {
-    $value = $conn->createQueryBuilder()->select('MIN(id)')->from(Tables::history())->executeQuery()->fetchOne();
+    $value = $conn->createQueryBuilder()->select('MIN(id)')->from('history')->executeQuery()->fetchOne();
 
     return is_numeric($value) ? (int) $value : 0;
 }
@@ -125,7 +124,7 @@ function historyTestMinId(Connection $conn): int
 function historyTestInsertSummary(int $year, ?int $month, ?int $day, ?int $hour, int $nbPages, int $idFrom, int $idTo): void
 {
     DbConnection::build()->createQueryBuilder()
-        ->insert(Tables::historySummary())
+        ->insert('history_summary')
         ->values([
             'year' => ':year', 'month' => ':month', 'day' => ':day', 'hour' => ':hour',
             'nb_pages' => ':nbPages', 'history_id_from' => ':idFrom', 'history_id_to' => ':idTo',
@@ -147,7 +146,7 @@ function historyTestFetchSummary(Connection $conn, int $year, ?int $month, ?int 
 {
     $qb = $conn->createQueryBuilder()
         ->select('*')
-        ->from(Tables::historySummary())
+        ->from('history_summary')
         ->where('year = :year')
         ->setParameter('year', $year);
     $qb->andWhere($month === null ? 'month IS NULL' : 'month = ' . $month);
@@ -164,12 +163,12 @@ function historyTestFetchSummary(Connection $conn, int $year, ?int $month, ?int 
 
 function historyTestClearHistory(): void
 {
-    DbConnection::build()->executeStatement('DELETE FROM ' . Tables::history());
+    DbConnection::build()->executeStatement('DELETE FROM ' . 'history');
 }
 
 function historyTestClearSummary(): void
 {
-    DbConnection::build()->executeStatement('DELETE FROM ' . Tables::historySummary());
+    DbConnection::build()->executeStatement('DELETE FROM ' . 'history_summary');
 }
 
 test('findLastSummaryWithHistoryIdTo() returns null when empty', function (): void {
@@ -532,9 +531,9 @@ test('search() filters by image type, against the full real $types vocabulary', 
     // no image_type at all, via the 'none' member) survive.
     $conn = DbConnection::build();
     $pictureId = historyTestInsertLine(1, '2026-07-12', '03:00:00');
-    $conn->executeStatement('UPDATE ' . Tables::history() . " SET image_type = 'picture' WHERE id = ?", [$pictureId]);
+    $conn->executeStatement('UPDATE ' . 'history' . " SET image_type = 'picture' WHERE id = ?", [$pictureId]);
     $highId = historyTestInsertLine(1, '2026-07-12', '03:00:01');
-    $conn->executeStatement('UPDATE ' . Tables::history() . " SET image_type = 'high' WHERE id = ?", [$highId]);
+    $conn->executeStatement('UPDATE ' . 'history' . " SET image_type = 'high' WHERE id = ?", [$highId]);
     $noneId = historyTestInsertLine(1, '2026-07-12', '03:00:02');
 
     try {
@@ -556,9 +555,9 @@ test('search() binds a distinct query parameter per non-none image type, not a s
     // need 2 distinct bound values at once to prove the suffix matters.
     $conn = DbConnection::build();
     $pictureId = historyTestInsertLine(1, '2026-07-12', '03:00:00');
-    $conn->executeStatement('UPDATE ' . Tables::history() . " SET image_type = 'picture' WHERE id = ?", [$pictureId]);
+    $conn->executeStatement('UPDATE ' . 'history' . " SET image_type = 'picture' WHERE id = ?", [$pictureId]);
     $highId = historyTestInsertLine(1, '2026-07-12', '03:00:01');
-    $conn->executeStatement('UPDATE ' . Tables::history() . " SET image_type = 'high' WHERE id = ?", [$highId]);
+    $conn->executeStatement('UPDATE ' . 'history' . " SET image_type = 'high' WHERE id = ?", [$highId]);
     historyTestInsertLine(1, '2026-07-12', '03:00:02'); // no image_type -- excluded, 'none' isn't in $imageTypes here
 
     try {
@@ -589,13 +588,13 @@ test('search() maps every optional column when a row actually has them populated
     // is only ever transiently occupied -- confirmed live (a genuine
     // ForeignKeyConstraintViolationException when the literal id this
     // test used to hardcode wasn't currently occupied).
-    $conn->executeStatement('INSERT INTO ' . Tables::search() . ' (search_uuid) VALUES (NULL)');
+    $conn->executeStatement('INSERT INTO ' . 'search' . ' (search_uuid) VALUES (NULL)');
     $searchId = (int) $conn->lastInsertId();
 
     try {
         $id = historyTestInsertLine(1, '2026-07-12', '03:00:00');
         $conn->executeStatement(
-            'UPDATE ' . Tables::history() . " SET section = 'categories', category_id = 1, search_id = ?, tag_ids = '1,2,3', image_id = 1, image_type = 'picture' WHERE id = ?",
+            'UPDATE ' . 'history' . " SET section = 'categories', category_id = 1, search_id = ?, tag_ids = '1,2,3', image_id = 1, image_type = 'picture' WHERE id = ?",
             [$searchId, $id]
         );
 
@@ -613,7 +612,7 @@ test('search() maps every optional column when a row actually has them populated
             ->and($row->imageType)->toBe('picture');
     } finally {
         historyTestClearHistory();
-        $conn->executeStatement('DELETE FROM ' . Tables::search() . ' WHERE id = ?', [$searchId]);
+        $conn->executeStatement('DELETE FROM ' . 'search' . ' WHERE id = ?', [$searchId]);
     }
 });
 
@@ -705,7 +704,7 @@ test('updateLastVisitNow() sets last_visit on the real user_infos row', function
     $conn = DbConnection::build();
     $before = $conn->createQueryBuilder()
         ->select('last_visit')
-        ->from(Tables::userInfos())
+        ->from('user_infos')
         ->where('user_id = 4')
         ->executeQuery()
         ->fetchOne();
@@ -716,14 +715,14 @@ test('updateLastVisitNow() sets last_visit on the real user_infos row', function
     try {
         $after = $conn->createQueryBuilder()
             ->select('last_visit')
-            ->from(Tables::userInfos())
+            ->from('user_infos')
             ->where('user_id = 4')
             ->executeQuery()
             ->fetchOne();
         expect($after)->toBeString()
             ->and($after)->not->toBe('');
     } finally {
-        $conn->executeStatement('UPDATE ' . Tables::userInfos() . ' SET last_visit = NULL WHERE user_id = 4');
+        $conn->executeStatement('UPDATE ' . 'user_infos' . ' SET last_visit = NULL WHERE user_id = 4');
     }
 });
 
@@ -746,6 +745,6 @@ test('updateLastVisitNow() clears the identity map, so a later find() sees the r
         }
         expect($refetched->lastVisit)->not->toBeNull();
     } finally {
-        DbConnection::build()->executeStatement('UPDATE ' . Tables::userInfos() . ' SET last_visit = NULL WHERE user_id = 4');
+        DbConnection::build()->executeStatement('UPDATE ' . 'user_infos' . ' SET last_visit = NULL WHERE user_id = 4');
     }
 });

@@ -24,7 +24,6 @@ namespace Piwigo\Tests\Integration {
     use Piwigo\Tests\Support\CurrentConfigTestFactory;
     use Piwigo\Config\ConfigLoader;
     use Piwigo\Db\DbConnection;
-    use Piwigo\Db\Tables;
     use Piwigo\Lang\Translator;
     use Piwigo\Notification\NotificationRepository;
     use Piwigo\Notification\NotificationService;
@@ -78,12 +77,12 @@ final class NotificationServiceTest extends IntegrationTestCase
             // in the SQL text (unlike a bound parameter, which the driver
             // coerces implicitly) is rejected outright by Postgres.
             $validatedLiteral = $this->dbDriver === 'pgsql' ? 'true' : '1';
-            $this->conn->executeStatement('UPDATE ' . Tables::comments() . " SET validation_date = '2026-07-07 05:02:38' WHERE validated = {$validatedLiteral}");
-            $this->conn->executeStatement('UPDATE ' . Tables::images() . " SET date_available = '2026-07-07 05:02:36' WHERE id IN (1, 2)");
-            $this->conn->executeStatement('UPDATE ' . Tables::images() . " SET date_available = '2026-07-07 05:02:37' WHERE id IN (3, 4)");
-            $this->conn->executeStatement('UPDATE ' . Tables::images() . " SET date_available = '2026-07-07 05:02:38' WHERE id = 5");
-            $this->conn->executeStatement('UPDATE ' . Tables::userInfos() . " SET registration_date = '2026-07-07 05:02:35' WHERE user_id IN (1, 2)");
-            $this->conn->executeStatement('UPDATE ' . Tables::userInfos() . " SET registration_date = '2026-07-07 05:02:38' WHERE user_id IN (3, 4)");
+            $this->conn->executeStatement('UPDATE ' . 'comments' . " SET validation_date = '2026-07-07 05:02:38' WHERE validated = {$validatedLiteral}");
+            $this->conn->executeStatement('UPDATE ' . 'images' . " SET date_available = '2026-07-07 05:02:36' WHERE id IN (1, 2)");
+            $this->conn->executeStatement('UPDATE ' . 'images' . " SET date_available = '2026-07-07 05:02:37' WHERE id IN (3, 4)");
+            $this->conn->executeStatement('UPDATE ' . 'images' . " SET date_available = '2026-07-07 05:02:38' WHERE id = 5");
+            $this->conn->executeStatement('UPDATE ' . 'user_infos' . " SET registration_date = '2026-07-07 05:02:35' WHERE user_id IN (1, 2)");
+            $this->conn->executeStatement('UPDATE ' . 'user_infos' . " SET registration_date = '2026-07-07 05:02:38' WHERE user_id IN (3, 4)");
         }
 
         CurrentUserTestFactory::get()->set(User::fromUserArray([
@@ -274,7 +273,7 @@ final class NotificationServiceTest extends IntegrationTestCase
         // coerces implicitly) is rejected outright by Postgres.
         $validatedLiteral = $this->dbDriver === 'pgsql' ? 'false' : '0';
         $this->conn->executeStatement(
-            "INSERT INTO " . Tables::comments() . " (image_id, date, author, anonymous_id, content, validated) VALUES (1, '2026-08-01 00:00:00', ?, ?, ?, {$validatedLiteral})",
+            "INSERT INTO " . 'comments' . " (image_id, date, author, anonymous_id, content, validated) VALUES (1, '2026-08-01 00:00:00', ?, ?, ?, {$validatedLiteral})",
             ['test author', '127.0.0.9', 'pending test comment']
         );
 
@@ -284,7 +283,7 @@ final class NotificationServiceTest extends IntegrationTestCase
         CurrentUserTestFactory::get()->set(CurrentUserTestFactory::get()->get()->withStatus(UserStatus::Admin));
         self::assertTrue($this->service->newsExists('2026-07-31 00:00:00', '2026-08-02 00:00:00'));
 
-        $this->conn->executeStatement("DELETE FROM " . Tables::comments() . " WHERE author = 'test author'");
+        $this->conn->executeStatement("DELETE FROM " . 'comments' . " WHERE author = 'test author'");
     }
 
     /**
@@ -301,7 +300,7 @@ final class NotificationServiceTest extends IntegrationTestCase
         self::assertNotSame([], $result);
 
         $this->conn->executeStatement(
-            "UPDATE " . Tables::images() . " SET date_available = '2099-01-01 00:00:00' WHERE id = 5"
+            "UPDATE " . 'images' . " SET date_available = '2099-01-01 00:00:00' WHERE id = 5"
         );
 
         try {
@@ -309,7 +308,7 @@ final class NotificationServiceTest extends IntegrationTestCase
             self::assertSame($result, $cached, 'a cache hit must not re-query the DB');
         } finally {
             $this->conn->executeStatement(
-                "UPDATE " . Tables::images() . " SET date_available = '2026-07-07 05:02:38' WHERE id = 5"
+                "UPDATE " . 'images' . " SET date_available = '2026-07-07 05:02:38' WHERE id = 5"
             );
         }
     }

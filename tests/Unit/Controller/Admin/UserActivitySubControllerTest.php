@@ -28,7 +28,6 @@ use Piwigo\Core\Paths;
 use Piwigo\Core\ProcessCache;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
-use Piwigo\Db\Tables;
 use Piwigo\Event\Admin\TabsheetBeforeSelect;
 use Piwigo\Group\GroupEntity;
 use Piwigo\Group\GroupService;
@@ -227,10 +226,10 @@ test('handle() delegates to UserActivityPageRenderer::render() with real activit
     // Same "own the table for this test's duration" technique
     // UserActivityPageRendererTest.php already established.
     $conn = DbConnection::build();
-    $originalActivityRows = $conn->fetchAllAssociative('SELECT * FROM ' . Tables::activity());
-    $conn->executeStatement('DELETE FROM ' . Tables::activity());
+    $originalActivityRows = $conn->fetchAllAssociative('SELECT * FROM ' . 'activity');
+    $conn->executeStatement('DELETE FROM ' . 'activity');
     $conn->executeStatement(
-        "INSERT INTO " . Tables::activity() . " VALUES "
+        "INSERT INTO " . 'activity' . " VALUES "
         . "(1,'system',3,'activate',NULL,'none','::1','2026-08-01 03:00:00','{\"script\": \"install\", \"theme_id\": \"default\"}',NULL),"
         . "(2,'system',1,'install',NULL,'none','::1','2026-08-01 03:00:00','{\"script\": \"install\", \"version\": \"16.3.0\"}',NULL),"
         . "(3,'user',1,'login',1,'8681675b2a4136fb177e08193dcc5043','::1','2026-08-01 03:00:00','{\"script\": \"install\"}','PiwigoFixtureRegen/1.0'),"
@@ -291,10 +290,10 @@ test('handle() delegates to UserActivityPageRenderer::render() with real activit
             ])
             ->and($template->get_template_vars('ADMIN_CONTENT'))->toBe('users=4');
     } finally {
-        $conn->executeStatement('DELETE FROM ' . Tables::activity());
+        $conn->executeStatement('DELETE FROM ' . 'activity');
         foreach ($originalActivityRows as $row) {
             $conn->createQueryBuilder()
-                ->insert(Tables::activity())
+                ->insert('activity')
                 ->values(array_combine(array_keys($row), array_map(static fn (string $col): string => ':' . $col, array_keys($row))))
                 ->setParameters($row)
                 ->executeStatement();

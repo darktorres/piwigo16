@@ -14,7 +14,6 @@ use Doctrine\DBAL\Connection;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\ConfigLoader;
 use Piwigo\Db\DbConnection;
-use Piwigo\Db\Tables;
 use Piwigo\PluginConfig\PluginRepository;
 
 final class PluginRepositoryTest extends IntegrationTestCase
@@ -60,7 +59,7 @@ final class PluginRepositoryTest extends IntegrationTestCase
         // test_get_db_plugins_filters_by_a_malformed_id_finds_nothing()
         // below instead.
         $this->conn->executeStatement(
-            "INSERT INTO " . Tables::plugins() . " (id, state, version) VALUES
+            "INSERT INTO " . 'plugins' . " (id, state, version) VALUES
              ('c13y', 'active', '2.1'),
              ('nut2', 'inactive', '1.0'),
              ('o-brien', 'active', '3.0')"
@@ -70,7 +69,7 @@ final class PluginRepositoryTest extends IntegrationTestCase
     #[Override]
     protected function tearDown(): void
     {
-        $this->conn->executeStatement('DELETE FROM ' . Tables::plugins());
+        $this->conn->executeStatement('DELETE FROM ' . 'plugins');
         parent::tearDown();
     }
 
@@ -128,7 +127,7 @@ final class PluginRepositoryTest extends IntegrationTestCase
 
         $version = $this->conn->createQueryBuilder()
             ->select('version')
-            ->from(Tables::plugins())
+            ->from('plugins')
             ->where("id = 'c13y'")
             ->executeQuery()
             ->fetchOne();
@@ -142,7 +141,7 @@ final class PluginRepositoryTest extends IntegrationTestCase
 
         $version = $this->conn->createQueryBuilder()
             ->select('version')
-            ->from(Tables::plugins())
+            ->from('plugins')
             ->where("id = 'nut2'")
             ->executeQuery()
             ->fetchOne();
@@ -157,7 +156,7 @@ final class PluginRepositoryTest extends IntegrationTestCase
 
         $count = $this->conn->createQueryBuilder()
             ->select('COUNT(*)')
-            ->from(Tables::plugins())
+            ->from('plugins')
             ->where("id = 'this-plugin-id-does-not-exist'")
             ->executeQuery()
             ->fetchOne();

@@ -335,7 +335,7 @@ final class Version20260804122300 extends AbstractMigration
         // patching call sites as each one gets hit. `search_filter_view.
         // created_at` is deliberately NOT included here: that table has no
         // Doctrine entity / `sql_datetime` mapping at all (confirmed zero
-        // real callers of `Tables::searchFilterView()` beyond its own
+        // real callers of the `search_filter_view` table beyond its own
         // definition), so it never routes through `SqlDateTime::from()` and
         // isn't exposed to this bug.
         $this->addSql('CREATE FUNCTION piwigo_set_lastmodified() RETURNS trigger AS $$ BEGIN NEW.lastmodified = now(); RETURN NEW; END; $$ LANGUAGE plpgsql');

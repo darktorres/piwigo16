@@ -21,7 +21,6 @@ use Piwigo\Config\ConfigLoader;
 use Piwigo\Core\ActivitySystem;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
-use Piwigo\Db\Tables;
 use Piwigo\Tests\Support\CurrentUserTestFactory;
 use Piwigo\Users\User;
 
@@ -66,7 +65,7 @@ final class ActivityServiceTest extends IntegrationTestCase
     #[Override]
     protected function tearDown(): void
     {
-        $this->conn->executeStatement("DELETE FROM " . Tables::activity() . " WHERE object LIKE 'test-%'");
+        $this->conn->executeStatement("DELETE FROM " . 'activity' . " WHERE object LIKE 'test-%'");
         parent::tearDown();
     }
 
@@ -108,7 +107,7 @@ final class ActivityServiceTest extends IntegrationTestCase
         try {
             self::assertSame(1, $this->countRows('system', 2, 'restore'));
         } finally {
-            $this->conn->executeStatement("DELETE FROM " . Tables::activity() . " WHERE object = 'system' AND action = 'restore'");
+            $this->conn->executeStatement("DELETE FROM " . 'activity' . " WHERE object = 'system' AND action = 'restore'");
         }
     }
 
@@ -185,14 +184,14 @@ final class ActivityServiceTest extends IntegrationTestCase
 
             $userAgent = $this->conn->createQueryBuilder()
                 ->select('user_agent')
-                ->from(Tables::activity())
+                ->from('activity')
                 ->where('object_id = 777')
                 ->executeQuery()
                 ->fetchOne();
 
             self::assertSame('TestAgent/1.0', $userAgent);
         } finally {
-            $this->conn->executeStatement('DELETE FROM ' . Tables::activity() . ' WHERE object_id = 777');
+            $this->conn->executeStatement('DELETE FROM ' . 'activity' . ' WHERE object_id = 777');
         }
     }
 
@@ -204,7 +203,7 @@ final class ActivityServiceTest extends IntegrationTestCase
 
         $userAgent = $this->conn->createQueryBuilder()
             ->select('user_agent')
-            ->from(Tables::activity())
+            ->from('activity')
             ->where("object = 'test-non-login'")
             ->executeQuery()
             ->fetchOne();
@@ -224,14 +223,14 @@ final class ActivityServiceTest extends IntegrationTestCase
 
             $userAgent = $this->conn->createQueryBuilder()
                 ->select('user_agent')
-                ->from(Tables::activity())
+                ->from('activity')
                 ->where('object_id = 778')
                 ->executeQuery()
                 ->fetchOne();
 
             self::assertNull($userAgent);
         } finally {
-            $this->conn->executeStatement('DELETE FROM ' . Tables::activity() . ' WHERE object_id = 778');
+            $this->conn->executeStatement('DELETE FROM ' . 'activity' . ' WHERE object_id = 778');
         }
     }
 
@@ -281,7 +280,7 @@ final class ActivityServiceTest extends IntegrationTestCase
             self::assertIsArray($details);
             self::assertTrue($details['sync']);
         } finally {
-            $this->conn->executeStatement('DELETE FROM ' . Tables::activity() . ' WHERE object_id = 888885');
+            $this->conn->executeStatement('DELETE FROM ' . 'activity' . ' WHERE object_id = 888885');
         }
     }
 
@@ -299,7 +298,7 @@ final class ActivityServiceTest extends IntegrationTestCase
             self::assertIsArray($details);
             self::assertTrue($details['sync']);
         } finally {
-            $this->conn->executeStatement('DELETE FROM ' . Tables::activity() . ' WHERE object_id = 888884');
+            $this->conn->executeStatement('DELETE FROM ' . 'activity' . ' WHERE object_id = 888884');
         }
     }
 
@@ -317,7 +316,7 @@ final class ActivityServiceTest extends IntegrationTestCase
             self::assertIsArray($details);
             self::assertArrayNotHasKey('sync', $details);
         } finally {
-            $this->conn->executeStatement('DELETE FROM ' . Tables::activity() . ' WHERE object_id = 888883');
+            $this->conn->executeStatement('DELETE FROM ' . 'activity' . ' WHERE object_id = 888883');
         }
     }
 
@@ -337,7 +336,7 @@ final class ActivityServiceTest extends IntegrationTestCase
             self::assertSame('merge', $details['action']);
             self::assertSame('5', $details['destination_tag']);
         } finally {
-            $this->conn->executeStatement("DELETE FROM " . Tables::activity() . " WHERE object = 'tag' AND action = 'delete'");
+            $this->conn->executeStatement("DELETE FROM " . 'activity' . " WHERE object = 'tag' AND action = 'delete'");
         }
     }
 
@@ -355,7 +354,7 @@ final class ActivityServiceTest extends IntegrationTestCase
             self::assertIsArray($details);
             self::assertArrayNotHasKey('action', $details);
         } finally {
-            $this->conn->executeStatement('DELETE FROM ' . Tables::activity() . ' WHERE object_id = 780');
+            $this->conn->executeStatement('DELETE FROM ' . 'activity' . ' WHERE object_id = 780');
         }
     }
 
@@ -379,7 +378,7 @@ final class ActivityServiceTest extends IntegrationTestCase
 
         $sessionIdx = $this->conn->createQueryBuilder()
             ->select('session_idx')
-            ->from(Tables::activity())
+            ->from('activity')
             ->where("object = 'test-session-idx'")
             ->executeQuery()
             ->fetchOne();
@@ -395,7 +394,7 @@ final class ActivityServiceTest extends IntegrationTestCase
 
         $sessionIdx = $this->conn->createQueryBuilder()
             ->select('session_idx')
-            ->from(Tables::activity())
+            ->from('activity')
             ->where("object = 'test-no-session-idx'")
             ->executeQuery()
             ->fetchOne();
@@ -413,7 +412,7 @@ final class ActivityServiceTest extends IntegrationTestCase
 
         $performedBy = $this->conn->createQueryBuilder()
             ->select('performed_by')
-            ->from(Tables::activity())
+            ->from('activity')
             ->where("object = 'test-logout'")
             ->executeQuery()
             ->fetchOne();
@@ -430,7 +429,7 @@ final class ActivityServiceTest extends IntegrationTestCase
 
         $performedBy = $this->conn->createQueryBuilder()
             ->select('performed_by')
-            ->from(Tables::activity())
+            ->from('activity')
             ->where("object = 'test-performer'")
             ->executeQuery()
             ->fetchOne();
@@ -452,7 +451,7 @@ final class ActivityServiceTest extends IntegrationTestCase
             self::assertIsArray($details);
             self::assertSame('auto_login', $details['auth_function']);
         } finally {
-            $this->conn->executeStatement('DELETE FROM ' . Tables::activity() . ' WHERE object_id = 555');
+            $this->conn->executeStatement('DELETE FROM ' . 'activity' . ' WHERE object_id = 555');
         }
     }
 
@@ -465,7 +464,7 @@ final class ActivityServiceTest extends IntegrationTestCase
             self::assertIsArray($details);
             self::assertSame('auth_key_login', $details['auth_function']);
         } finally {
-            $this->conn->executeStatement('DELETE FROM ' . Tables::activity() . ' WHERE object_id = 556');
+            $this->conn->executeStatement('DELETE FROM ' . 'activity' . ' WHERE object_id = 556');
         }
     }
 
@@ -481,7 +480,7 @@ final class ActivityServiceTest extends IntegrationTestCase
             self::assertIsArray($details);
             self::assertArrayNotHasKey('auth_function', $details);
         } finally {
-            $this->conn->executeStatement('DELETE FROM ' . Tables::activity() . ' WHERE object_id = 779');
+            $this->conn->executeStatement('DELETE FROM ' . 'activity' . ' WHERE object_id = 779');
         }
     }
 
@@ -501,7 +500,7 @@ final class ActivityServiceTest extends IntegrationTestCase
             self::assertIsArray($details);
             self::assertSame('browser', $details['added_with']);
         } finally {
-            $this->conn->executeStatement('DELETE FROM ' . Tables::activity() . ' WHERE object_id = 888887');
+            $this->conn->executeStatement('DELETE FROM ' . 'activity' . ' WHERE object_id = 888887');
         }
     }
 
@@ -519,7 +518,7 @@ final class ActivityServiceTest extends IntegrationTestCase
             self::assertIsArray($details);
             self::assertArrayNotHasKey('added_with', $details);
         } finally {
-            $this->conn->executeStatement('DELETE FROM ' . Tables::activity() . ' WHERE object_id = 888886');
+            $this->conn->executeStatement('DELETE FROM ' . 'activity' . ' WHERE object_id = 888886');
         }
     }
 
@@ -623,7 +622,7 @@ final class ActivityServiceTest extends IntegrationTestCase
             self::assertSame($expectedDetails, $actualDetails);
         } finally {
             $this->conn->executeStatement(
-                "DELETE FROM " . Tables::activity() . " WHERE object = 'system' AND action = 'update' AND object_id = " . ActivitySystem::Core
+                "DELETE FROM " . 'activity' . " WHERE object = 'system' AND action = 'update' AND object_id = " . ActivitySystem::Core
             );
         }
     }
@@ -661,7 +660,7 @@ final class ActivityServiceTest extends IntegrationTestCase
 
         $performedBy = $this->conn->createQueryBuilder()
             ->select('performed_by')
-            ->from(Tables::activity())
+            ->from('activity')
             ->where("object = 'test-no-user'")
             ->executeQuery()
             ->fetchOne();
@@ -673,7 +672,7 @@ final class ActivityServiceTest extends IntegrationTestCase
     {
         $qb = $this->conn->createQueryBuilder()
             ->select('COUNT(*)')
-            ->from(Tables::activity())
+            ->from('activity')
             ->where('object = :object')
             ->andWhere('action = :action')
             ->setParameter('object', $object)
@@ -696,7 +695,7 @@ final class ActivityServiceTest extends IntegrationTestCase
     {
         $value = $this->conn->createQueryBuilder()
             ->select('details')
-            ->from(Tables::activity())
+            ->from('activity')
             ->where('object = :object')
             ->andWhere('object_id = :objectId')
             ->andWhere('action = :action')

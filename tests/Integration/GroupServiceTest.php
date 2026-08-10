@@ -27,7 +27,6 @@ use Piwigo\Config\ConfigService;
 use Piwigo\Tests\Support\CurrentConfigServiceTestFactory;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
-use Piwigo\Db\Tables;
 use Piwigo\Group\GroupRepository;
 use Piwigo\Group\GroupService;
 
@@ -382,7 +381,7 @@ final class GroupServiceTest extends IntegrationTestCase
         $detailsColumn = $this->dbDriver === 'pgsql' ? 'details::text' : 'details';
         $value = $this->conn->createQueryBuilder()
             ->select('details')
-            ->from(Tables::activity())
+            ->from('activity')
             ->where('object = \'user\'')
             ->andWhere('object_id = :userId')
             ->andWhere('action = \'edit\'')
@@ -406,7 +405,7 @@ final class GroupServiceTest extends IntegrationTestCase
     {
         $detailsColumn = $this->dbDriver === 'pgsql' ? 'details::text' : 'details';
         $this->conn->executeStatement(
-            'DELETE FROM ' . Tables::activity() . " WHERE object = 'user' AND action = 'edit' AND {$detailsColumn} LIKE :assoc",
+            'DELETE FROM ' . 'activity' . " WHERE object = 'user' AND action = 'edit' AND {$detailsColumn} LIKE :assoc",
             ['assoc' => '%"associated": ' . $associatedGroupId . '%']
         );
     }

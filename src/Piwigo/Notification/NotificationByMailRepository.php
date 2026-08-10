@@ -11,7 +11,6 @@ use Piwigo\Common\ValueObject\Email;
 use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Common\ValueObject\Username;
 use Piwigo\Db\BatchWriter;
-use Piwigo\Db\Tables;
 use Piwigo\Notification\Projection\UserMailNotification;
 use Piwigo\Users\UserEntity;
 use Piwigo\Users\UserInfoEntity;
@@ -247,6 +246,6 @@ final class NotificationByMailRepository extends EntityRepository
         }
 
         new BatchWriter($this->getEntityManager()->getConnection())
-            ->massInsert(Tables::userMailNotification(), ['user_id', 'check_key', 'enabled'], $inserts);
+            ->massInsert('user_mail_notification', ['user_id', 'check_key', 'enabled'], $inserts);
     }
 }

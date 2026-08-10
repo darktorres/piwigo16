@@ -22,7 +22,6 @@ use Piwigo\Common\ValueObject\ImageId;
 use Piwigo\Common\ValueObject\SqlDateTime;
 use Piwigo\Core\CommentCounterInterface;
 use Piwigo\Core\Env;
-use Piwigo\Db\Tables;
 use Piwigo\Image\ImageCategoryEntity;
 use Piwigo\Permission\SqlCondition;
 use Piwigo\Users\UserEntity;
@@ -768,9 +767,9 @@ final class CommentRepository extends EntityRepository implements CommentCounter
                 'com.validated',
                 'COUNT(*) OVER() AS total_count',
             )
-            ->from(Tables::imageCategory(), 'ic')
-            ->innerJoin('ic', Tables::comments(), 'com', 'ic.image_id = com.image_id')
-            ->leftJoin('com', Tables::users(), 'u', 'u.id = com.author_id')
+            ->from('image_category', 'ic')
+            ->innerJoin('ic', 'comments', 'com', 'ic.image_id = com.image_id')
+            ->leftJoin('com', 'users', 'u', 'u.id = com.author_id')
             ->groupBy('comment_id')
             ->orderBy($sortByColumn, $sortOrder)
             ->addOrderBy('comment_id', $sortOrder);
@@ -867,10 +866,10 @@ final class CommentRepository extends EntityRepository implements CommentCounter
                 'validated',
                 'c.anonymous_id',
             )
-            ->from(Tables::comments(), 'c')
-            ->innerJoin('c', Tables::images(), 'i', 'i.id = c.image_id')
-            ->leftJoin('c', Tables::users(), 'u', 'u.id = c.author_id')
-            ->leftJoin('c', Tables::userInfos(), 'ui', 'ui.user_id = c.author_id')
+            ->from('comments', 'c')
+            ->innerJoin('c', 'images', 'i', 'i.id = c.image_id')
+            ->leftJoin('c', 'users', 'u', 'u.id = c.author_id')
+            ->leftJoin('c', 'user_infos', 'ui', 'ui.user_id = c.author_id')
             ->orderBy('c.date', 'DESC')
             ->addOrderBy('c.id', 'DESC')
             ->setFirstResult($offset)

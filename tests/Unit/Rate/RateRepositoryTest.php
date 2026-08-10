@@ -7,7 +7,6 @@ use Piwigo\Common\ValueObject\ImageId;
 use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
-use Piwigo\Db\Tables;
 use Piwigo\Image\ImageEntity;
 use Piwigo\Rate\Projection\RaterInfo;
 use Piwigo\Rate\Projection\RateSummary;
@@ -80,7 +79,7 @@ function rateTestFetchCount(Connection $conn, int $elementId, int $userId): int
 {
     $value = $conn->createQueryBuilder()
         ->select('COUNT(*)')
-        ->from(Tables::rate())
+        ->from('rate')
         ->where('element_id = :elementId')
         ->andWhere('user_id = :userId')
         ->setParameter('elementId', $elementId)
@@ -100,7 +99,7 @@ function rateTestFetchRatingScore(Connection $conn, int $imageId): ?float
 {
     $value = $conn->createQueryBuilder()
         ->select('rating_score')
-        ->from(Tables::images())
+        ->from('images')
         ->where('id = :id')
         ->setParameter('id', $imageId)
         ->executeQuery()
@@ -191,7 +190,7 @@ test('insertRate() persists the given rate', function (): void {
     try {
         $value = $conn->createQueryBuilder()
             ->select('rate')
-            ->from(Tables::rate())
+            ->from('rate')
             ->where('element_id = 5')
             ->andWhere('user_id = 2')
             ->executeQuery()
@@ -231,7 +230,7 @@ test('updateRatingScores() persists the given score', function (): void {
         expect(rateTestFetchRatingScore($conn, 1))->toBe(4.75);
     } finally {
         $conn->createQueryBuilder()
-            ->update(Tables::images())
+            ->update('images')
             ->set('rating_score', ':score')
             ->where('id = 1')
             ->setParameter('score', $original)
@@ -260,7 +259,7 @@ test('updateRatingScores() clears the identity map, so a later find() sees the r
         expect($refetched->ratingScore)->toBe(4.75);
     } finally {
         DbConnection::build()->createQueryBuilder()
-            ->update(Tables::images())
+            ->update('images')
             ->set('rating_score', ':score')
             ->where('id = 1')
             ->setParameter('score', $original)
@@ -284,7 +283,7 @@ test('findImageIdsWithStaleRatingScore() finds an image with a leftover score bu
     $conn = DbConnection::build();
     $deletedRow = $conn->createQueryBuilder()
         ->select('*')
-        ->from(Tables::rate())
+        ->from('rate')
         ->where('element_id = 4')
         ->executeQuery()
         ->fetchAssociative();
@@ -293,13 +292,13 @@ test('findImageIdsWithStaleRatingScore() finds an image with a leftover score bu
         throw new RuntimeException('unreachable');
     }
 
-    $conn->createQueryBuilder()->delete(Tables::rate())->where('element_id = 4')->executeStatement();
+    $conn->createQueryBuilder()->delete('rate')->where('element_id = 4')->executeStatement();
 
     try {
         expect(rateTestRepo()->findImageIdsWithStaleRatingScore())->toBe([4]);
     } finally {
         $conn->createQueryBuilder()
-            ->insert(Tables::rate())
+            ->insert('rate')
             ->values([
                 'user_id' => ':userId',
                 'element_id' => ':elementId',
@@ -329,8 +328,8 @@ test('clearRatingScores() nulls only the given ids', function (): void {
             // untouched
             ->and(rateTestFetchRatingScore($conn, 3))->toBe(5.0);
     } finally {
-        $conn->createQueryBuilder()->update(Tables::images())->set('rating_score', ':score')->where('id = 1')->setParameter('score', $original1)->executeStatement();
-        $conn->createQueryBuilder()->update(Tables::images())->set('rating_score', ':score')->where('id = 2')->setParameter('score', $original2)->executeStatement();
+        $conn->createQueryBuilder()->update('images')->set('rating_score', ':score')->where('id = 1')->setParameter('score', $original1)->executeStatement();
+        $conn->createQueryBuilder()->update('images')->set('rating_score', ':score')->where('id = 2')->setParameter('score', $original2)->executeStatement();
     }
 });
 
@@ -357,7 +356,7 @@ test('clearRatingScores() clears the identity map, so a later find() sees the re
         expect($refetched->ratingScore)->toBeNull();
     } finally {
         DbConnection::build()->createQueryBuilder()
-            ->update(Tables::images())
+            ->update('images')
             ->set('rating_score', ':score')
             ->where('id = 1')
             ->setParameter('score', $original)

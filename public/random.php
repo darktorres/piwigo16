@@ -21,7 +21,6 @@ use Piwigo\Core\Paths;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Db\SqlDialect;
-use Piwigo\Db\Tables;
 use Piwigo\Group\GroupEntity;
 use Piwigo\Http\ResponseEmitter;
 use Piwigo\Http\ResponseReadyException;
@@ -69,8 +68,8 @@ $condition = SqlCondition::combine(
 
 $query = '
 SELECT id
-  FROM ' . Tables::images() . '
-    INNER JOIN ' . Tables::imageCategory() . ' AS ic ON id = ic.image_id
+  FROM images
+    INNER JOIN image_category AS ic ON id = ic.image_id
 ' . ($condition->isEmpty() ? '' : 'WHERE ' . $condition->sql) . '
   ORDER BY ' . SqlDialect::randomFunction() . '()
   LIMIT :limit

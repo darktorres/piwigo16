@@ -12,7 +12,6 @@ use Doctrine\DBAL\Connection;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\ConfigLoader;
 use Piwigo\Db\DbConnection;
-use Piwigo\Db\Tables;
 use Piwigo\Permission\PermissionRepository;
 
 /**
@@ -69,9 +68,9 @@ final class PermissionRepositoryTest extends IntegrationTestCase
         // SQL text (unlike a bound parameter, which the driver coerces
         // implicitly) is rejected outright by Postgres.
         $visibleLiteral = $this->dbDriver === 'pgsql' ? 'true' : '1';
-        $this->conn->executeStatement('UPDATE ' . Tables::categories() . " SET status = 'public', visible = {$visibleLiteral}");
-        $this->conn->executeStatement('DELETE FROM ' . Tables::userAccess());
-        $this->conn->executeStatement('DELETE FROM ' . Tables::groupAccess());
+        $this->conn->executeStatement('UPDATE ' . 'categories' . " SET status = 'public', visible = {$visibleLiteral}");
+        $this->conn->executeStatement('DELETE FROM ' . 'user_access');
+        $this->conn->executeStatement('DELETE FROM ' . 'group_access');
         parent::tearDown();
     }
 
@@ -82,7 +81,7 @@ final class PermissionRepositoryTest extends IntegrationTestCase
 
     public function test_find_private_category_ids_reflects_a_private_category(): void
     {
-        $this->conn->executeStatement('UPDATE ' . Tables::categories() . " SET status = 'private' WHERE id = 1");
+        $this->conn->executeStatement('UPDATE ' . 'categories' . " SET status = 'private' WHERE id = 1");
 
         self::assertSame([1], $this->repo->findPrivateCategoryIds());
     }
@@ -95,7 +94,7 @@ final class PermissionRepositoryTest extends IntegrationTestCase
     public function test_find_locked_category_ids_reflects_an_invisible_category(): void
     {
         $visibleLiteral = $this->dbDriver === 'pgsql' ? 'false' : '0';
-        $this->conn->executeStatement('UPDATE ' . Tables::categories() . " SET visible = {$visibleLiteral} WHERE id = 2");
+        $this->conn->executeStatement('UPDATE ' . 'categories' . " SET visible = {$visibleLiteral} WHERE id = 2");
 
         self::assertSame([2], $this->repo->findLockedCategoryIds());
     }
@@ -108,7 +107,7 @@ final class PermissionRepositoryTest extends IntegrationTestCase
     public function test_find_directly_authorized_category_ids_reflects_a_user_access_row(): void
     {
         $this->conn->executeStatement(
-            'INSERT INTO ' . Tables::userAccess() . ' (user_id, cat_id) VALUES (2, 1)'
+            'INSERT INTO ' . 'user_access' . ' (user_id, cat_id) VALUES (2, 1)'
         );
 
         self::assertSame([1], $this->repo->findDirectlyAuthorizedCategoryIds(2));
@@ -117,7 +116,7 @@ final class PermissionRepositoryTest extends IntegrationTestCase
     public function test_delete_user_access_removes_only_the_given_categories(): void
     {
         $this->conn->executeStatement(
-            'INSERT INTO ' . Tables::userAccess() . ' (user_id, cat_id) VALUES (2, 1), (2, 2)'
+            'INSERT INTO ' . 'user_access' . ' (user_id, cat_id) VALUES (2, 1), (2, 2)'
         );
 
         $this->repo->deleteUserAccess(2, [1]);
@@ -128,7 +127,7 @@ final class PermissionRepositoryTest extends IntegrationTestCase
     public function test_delete_user_access_with_an_empty_id_list_does_nothing(): void
     {
         $this->conn->executeStatement(
-            'INSERT INTO ' . Tables::userAccess() . ' (user_id, cat_id) VALUES (2, 1)'
+            'INSERT INTO ' . 'user_access' . ' (user_id, cat_id) VALUES (2, 1)'
         );
 
         $this->repo->deleteUserAccess(2, []);
@@ -139,7 +138,7 @@ final class PermissionRepositoryTest extends IntegrationTestCase
     public function test_find_granted_group_ids_by_category_groups_rows_by_cat_id(): void
     {
         $this->conn->executeStatement(
-            'INSERT INTO ' . Tables::groupAccess() . ' (group_id, cat_id) VALUES (1, 1), (2, 1), (3, 2)'
+            'INSERT INTO ' . 'group_access' . ' (group_id, cat_id) VALUES (1, 1), (2, 1), (3, 2)'
         );
 
         self::assertSame(
@@ -156,7 +155,7 @@ final class PermissionRepositoryTest extends IntegrationTestCase
     public function test_find_granted_user_ids_by_category_groups_rows_by_cat_id(): void
     {
         $this->conn->executeStatement(
-            'INSERT INTO ' . Tables::userAccess() . ' (user_id, cat_id) VALUES (2, 1), (3, 1), (2, 2)'
+            'INSERT INTO ' . 'user_access' . ' (user_id, cat_id) VALUES (2, 1), (3, 1), (2, 2)'
         );
 
         self::assertSame(

@@ -18,7 +18,6 @@ use Piwigo\Core\Paths;
 use Piwigo\Core\ProcessCache;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
-use Piwigo\Db\Tables;
 use Piwigo\Image\ImageEntity;
 use Piwigo\Lang\Translator;
 use Piwigo\Mail\MailService;
@@ -175,11 +174,11 @@ test('render() does nothing when photos already exist, only refreshing the no_ph
         $template = TemplateTestFactory::build();
         CurrentTemplate::current()->set($template);
         $conn = DbConnection::build();
-        $before = $conn->fetchOne("SELECT value FROM " . Tables::config() . " WHERE param = 'no_photo_yet'");
+        $before = $conn->fetchOne("SELECT value FROM " . 'config' . " WHERE param = 'no_photo_yet'");
 
         noPhotoYetTestRenderer(new AdminContext(active: false))->render();
 
-        $after = $conn->fetchOne("SELECT value FROM " . Tables::config() . " WHERE param = 'no_photo_yet'");
+        $after = $conn->fetchOne("SELECT value FROM " . 'config' . " WHERE param = 'no_photo_yet'");
         expect($after)->toBe($before)
             ->and($after)->toBe('"false"');
     } finally {

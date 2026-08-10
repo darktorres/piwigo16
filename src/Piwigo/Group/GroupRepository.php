@@ -15,7 +15,6 @@ use Piwigo\Common\ValueObject\CategoryId;
 use Piwigo\Common\ValueObject\GroupId;
 use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Core\Env;
-use Piwigo\Db\Tables;
 use Piwigo\Group\Projection\Group;
 use Piwigo\Group\Projection\GroupListing;
 use Piwigo\Users\UserEntity;
@@ -158,8 +157,8 @@ final class GroupRepository extends EntityRepository
             ->getConnection()
             ->createQueryBuilder()
             ->select('g.*', 'COUNT(ug.user_id) AS nb_users')
-            ->from(Tables::groups(), 'g')
-            ->leftJoin('g', Tables::userGroup(), 'ug', 'ug.group_id = g.id')
+            ->from('groups', 'g')
+            ->leftJoin('g', 'user_group', 'ug', 'ug.group_id = g.id')
             ->groupBy('g.id')
             ->orderBy($order)
             ->setMaxResults($perPage)
@@ -364,7 +363,7 @@ final class GroupRepository extends EntityRepository
     {
         $conn = $this->getEntityManager()
             ->getConnection();
-        $userGroupTable = Tables::userGroup();
+        $userGroupTable = 'user_group';
         foreach ($userIds as $userId) {
             try {
                 $conn->insert(

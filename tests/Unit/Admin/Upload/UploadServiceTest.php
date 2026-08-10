@@ -28,7 +28,6 @@ use Piwigo\Tests\Support\CurrentPathsTestFactory;
 use Piwigo\Tests\Support\DbCredentialsTestFactory;
 use Piwigo\Core\Paths;
 use Piwigo\Db\DbConnection;
-use Piwigo\Db\Tables;
 use Piwigo\Event\Picture\UploadFile;
 use Piwigo\Storage\StorageRegistry;
 use Piwigo\Tests\Support\KernelContainerOverride;
@@ -762,10 +761,10 @@ test('saveUploadFormConfig keeps processing later fields after skipping an unkno
 
         $conn = DbConnection::build();
         try {
-            $stored = $conn->fetchOne('SELECT value FROM ' . Tables::config() . " WHERE param = 'original_resize_maxheight'");
+            $stored = $conn->fetchOne('SELECT value FROM ' . 'config' . " WHERE param = 'original_resize_maxheight'");
             expect($stored)->toBe('1500');
         } finally {
-            $conn->executeStatement("UPDATE " . Tables::config() . " SET value = '2016' WHERE param = 'original_resize_maxheight'");
+            $conn->executeStatement("UPDATE " . 'config' . " SET value = '2016' WHERE param = 'original_resize_maxheight'");
             InfrastructureAccessor::entityManager()->clear();
         }
     } finally {
@@ -834,7 +833,7 @@ test('saveUploadFormConfig accepts a value exactly at the min or max boundary', 
             ->and($errorsMax)->toBe([]);
 
         $conn = DbConnection::build();
-        $conn->executeStatement("UPDATE " . Tables::config() . " SET value = '2016' WHERE param = 'original_resize_maxheight'");
+        $conn->executeStatement("UPDATE " . 'config' . " SET value = '2016' WHERE param = 'original_resize_maxheight'");
         InfrastructureAccessor::entityManager()->clear();
     } finally {
         Kernel::reset();
@@ -858,7 +857,7 @@ test('saveUploadFormConfig accepts a real int value without a TypeError, not jus
             ->and($errors)->toBe([]);
 
         $conn = DbConnection::build();
-        $conn->executeStatement("UPDATE " . Tables::config() . " SET value = '2016' WHERE param = 'original_resize_maxheight'");
+        $conn->executeStatement("UPDATE " . 'config' . " SET value = '2016' WHERE param = 'original_resize_maxheight'");
         InfrastructureAccessor::entityManager()->clear();
     } finally {
         Kernel::reset();
@@ -928,10 +927,10 @@ test('saveUploadFormConfig sets the boolean field true whenever it is present, e
 
         $conn = DbConnection::build();
         try {
-            $stored = $conn->fetchOne('SELECT value FROM ' . Tables::config() . " WHERE param = 'original_resize'");
+            $stored = $conn->fetchOne('SELECT value FROM ' . 'config' . " WHERE param = 'original_resize'");
             expect($stored)->toBe('true');
         } finally {
-            $conn->executeStatement("UPDATE " . Tables::config() . " SET value = 'false' WHERE param = 'original_resize'");
+            $conn->executeStatement("UPDATE " . 'config' . " SET value = 'false' WHERE param = 'original_resize'");
             InfrastructureAccessor::entityManager()->clear();
         }
     } finally {
@@ -958,10 +957,10 @@ test('saveUploadFormConfig persists a valid in-range numeric field', function ()
 
         $conn = DbConnection::build();
         try {
-            $stored = $conn->fetchOne('SELECT value FROM ' . Tables::config() . " WHERE param = 'original_resize_maxheight'");
+            $stored = $conn->fetchOne('SELECT value FROM ' . 'config' . " WHERE param = 'original_resize_maxheight'");
             expect($stored)->toBe('1500');
         } finally {
-            $conn->executeStatement("UPDATE " . Tables::config() . " SET value = '2016' WHERE param = 'original_resize_maxheight'");
+            $conn->executeStatement("UPDATE " . 'config' . " SET value = '2016' WHERE param = 'original_resize_maxheight'");
             InfrastructureAccessor::entityManager()->clear();
         }
     } finally {

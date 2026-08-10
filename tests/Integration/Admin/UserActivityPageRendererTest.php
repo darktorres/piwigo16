@@ -26,7 +26,6 @@ use Piwigo\Tests\Support\CurrentPathsTestFactory;
 use Piwigo\Core\Kernel;
 use Piwigo\Tests\Support\LangTestFactory;
 use Piwigo\Db\DbConnection;
-use Piwigo\Db\Tables;
 use Piwigo\Event\Admin\TabsheetBeforeSelect;
 use Piwigo\Html\HtmlService;
 use Piwigo\PluginConfig\EventDispatcher;
@@ -124,7 +123,7 @@ final class UserActivityPageRendererTest extends IntegrationTestCase
     {
         if ($this->deletedActivityRows !== []) {
             foreach ($this->deletedActivityRows as $row) {
-                $this->conn->insert(Tables::activity(), $row);
+                $this->conn->insert('activity', $row);
             }
             $this->deletedActivityRows = [];
         }
@@ -142,11 +141,11 @@ final class UserActivityPageRendererTest extends IntegrationTestCase
     public function test_no_activity_at_all_leaves_ulist_empty_instead_of_erroring(): void
     {
         /** @var list<array<string, mixed>> $rows */
-        $rows = $this->conn->fetchAllAssociative('SELECT * FROM ' . Tables::activity() . " WHERE object != 'system'");
+        $rows = $this->conn->fetchAllAssociative('SELECT * FROM ' . 'activity' . " WHERE object != 'system'");
         $this->deletedActivityRows = $rows;
         self::assertNotSame([], $rows, 'Fixture is expected to seed real non-system activity rows to delete/restore.');
 
-        $this->conn->executeStatement('DELETE FROM ' . Tables::activity() . " WHERE object != 'system'");
+        $this->conn->executeStatement('DELETE FROM ' . 'activity' . " WHERE object != 'system'");
 
         $activityService = Kernel::container()->get(ActivityService::class);
         if (! $activityService instanceof ActivityService) {

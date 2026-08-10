@@ -24,7 +24,6 @@ use Piwigo\Config\ConfigLoader;
 use Piwigo\Core\MailerInterface;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
-use Piwigo\Db\Tables;
 use Piwigo\Session\SessionEntity;
 use Piwigo\Session\SessionService;
 
@@ -105,7 +104,7 @@ final class ApiKeyServiceLifecycleTest extends IntegrationTestCase
         ConfigLoader::applyEnvOverrides();
 
         $this->conn = DbConnection::build();
-        $userId = $this->conn->fetchOne("SELECT id FROM " . Tables::users() . " WHERE username = 'fixture_admin'");
+        $userId = $this->conn->fetchOne("SELECT id FROM " . 'users' . " WHERE username = 'fixture_admin'");
         self::assertIsNumeric($userId);
         $this->userId = (int) $userId;
 
@@ -120,13 +119,13 @@ final class ApiKeyServiceLifecycleTest extends IntegrationTestCase
             CurrentConfigTestFactory::get(),
         );
 
-        $this->conn->executeStatement('DELETE FROM ' . Tables::userAuthKeys() . " WHERE user_id = ? AND key_type = 'api_key'", [$this->userId]);
+        $this->conn->executeStatement('DELETE FROM ' . 'user_auth_keys' . " WHERE user_id = ? AND key_type = 'api_key'", [$this->userId]);
     }
 
     #[Override]
     protected function tearDown(): void
     {
-        $this->conn->executeStatement('DELETE FROM ' . Tables::userAuthKeys() . " WHERE user_id = ? AND key_type = 'api_key'", [$this->userId]);
+        $this->conn->executeStatement('DELETE FROM ' . 'user_auth_keys' . " WHERE user_id = ? AND key_type = 'api_key'", [$this->userId]);
         parent::tearDown();
     }
 
@@ -176,7 +175,7 @@ final class ApiKeyServiceLifecycleTest extends IntegrationTestCase
         // hours ahead keeps DateHelper::dateDiff()'s ->days at 0 so the
         // hours branch fires, not the days one.
         $this->conn->executeStatement(
-            'UPDATE ' . Tables::userAuthKeys() . " SET expired_on = '2026-08-01 03:00:00' WHERE auth_key = ?",
+            'UPDATE ' . 'user_auth_keys' . " SET expired_on = '2026-08-01 03:00:00' WHERE auth_key = ?",
             [$created->authKey]
         );
         $this->em->clear();
@@ -195,7 +194,7 @@ final class ApiKeyServiceLifecycleTest extends IntegrationTestCase
         // 45 minutes ahead of the frozen 2026-08-01 00:00:00 "now" -- both
         // ->days and ->h stay 0, so the minutes branch fires.
         $this->conn->executeStatement(
-            'UPDATE ' . Tables::userAuthKeys() . " SET expired_on = '2026-08-01 00:45:00' WHERE auth_key = ?",
+            'UPDATE ' . 'user_auth_keys' . " SET expired_on = '2026-08-01 00:45:00' WHERE auth_key = ?",
             [$created->authKey]
         );
         $this->em->clear();

@@ -8,7 +8,6 @@ use Override;
 use RuntimeException;
 use Doctrine\DBAL\Connection;
 use Piwigo\Db\DbConnection;
-use Piwigo\Db\Tables;
 
 /**
  * Ws\PwgTags::delete()'s own `else { return ['id' => []]; }` branch (when
@@ -467,7 +466,7 @@ final class WsTagsMutationTest extends ContractTestCase
             PHP);
 
         $this->conn->executeStatement(
-            "INSERT INTO " . Tables::plugins() . " (id, state, version) VALUES (?, 'active', '1.0.0')",
+            "INSERT INTO " . 'plugins' . " (id, state, version) VALUES (?, 'active', '1.0.0')",
             [$pluginId]
         );
 
@@ -491,7 +490,7 @@ final class WsTagsMutationTest extends ContractTestCase
 
             self::assertSame(500, $status);
         } finally {
-            $this->conn->executeStatement('DELETE FROM ' . Tables::plugins() . ' WHERE id = ?', [$pluginId]);
+            $this->conn->executeStatement('DELETE FROM ' . 'plugins' . ' WHERE id = ?', [$pluginId]);
             @unlink($mainFile);
             @rmdir($pluginDir);
         }
@@ -538,7 +537,7 @@ final class WsTagsMutationTest extends ContractTestCase
             PHP);
 
         $this->conn->executeStatement(
-            "INSERT INTO " . Tables::plugins() . " (id, state, version) VALUES (?, 'active', '1.0.0')",
+            "INSERT INTO " . 'plugins' . " (id, state, version) VALUES (?, 'active', '1.0.0')",
             [$pluginId]
         );
 
@@ -558,7 +557,7 @@ final class WsTagsMutationTest extends ContractTestCase
 
             self::assertSame(500, $status);
         } finally {
-            $this->conn->executeStatement('DELETE FROM ' . Tables::plugins() . ' WHERE id = ?', [$pluginId]);
+            $this->conn->executeStatement('DELETE FROM ' . 'plugins' . ' WHERE id = ?', [$pluginId]);
             @unlink($mainFile);
             @rmdir($pluginDir);
         }

@@ -9,7 +9,6 @@ use LogicException;
 use Doctrine\DBAL\Connection;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
-use Piwigo\Db\Tables;
 use Piwigo\Image\DerivativeSizeEntity;
 use Piwigo\Image\DerivativeSizeRepository;
 
@@ -56,7 +55,7 @@ final class DerivativeSizeRepositoryTest extends IntegrationTestCase
         }
 
         $this->conn = DbConnection::build();
-        $this->originalRows = $this->conn->fetchAllAssociative('SELECT * FROM ' . Tables::derivativeSize());
+        $this->originalRows = $this->conn->fetchAllAssociative('SELECT * FROM ' . 'derivative_size');
 
         $repo = EntityManagerFactory::build($this->conn)->getRepository(DerivativeSizeEntity::class);
         $this->repo = $repo;
@@ -65,9 +64,9 @@ final class DerivativeSizeRepositoryTest extends IntegrationTestCase
     #[Override]
     protected function tearDown(): void
     {
-        $this->conn->executeStatement('DELETE FROM ' . Tables::derivativeSize());
+        $this->conn->executeStatement('DELETE FROM ' . 'derivative_size');
         foreach ($this->originalRows as $row) {
-            $this->conn->insert(Tables::derivativeSize(), $row);
+            $this->conn->insert('derivative_size', $row);
         }
 
         parent::tearDown();
@@ -106,7 +105,7 @@ final class DerivativeSizeRepositoryTest extends IntegrationTestCase
 
     public function test_sync_enabled_removes_a_previously_enabled_row_that_is_absent_from_the_new_set(): void
     {
-        $this->conn->executeStatement('DELETE FROM ' . Tables::derivativeSize());
+        $this->conn->executeStatement('DELETE FROM ' . 'derivative_size');
 
         $this->repo->syncEnabled([
             $this->newSize('p17-test-keep', enabled: 1),
@@ -130,7 +129,7 @@ final class DerivativeSizeRepositoryTest extends IntegrationTestCase
 
     public function test_sync_disabled_removes_a_previously_disabled_row_that_is_absent_from_the_new_set_without_touching_the_enabled_partition(): void
     {
-        $this->conn->executeStatement('DELETE FROM ' . Tables::derivativeSize());
+        $this->conn->executeStatement('DELETE FROM ' . 'derivative_size');
 
         $this->repo->syncEnabled([$this->newSize('p17-test-enabled-untouched', enabled: 1)]);
         $this->repo->syncDisabled([

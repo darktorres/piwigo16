@@ -21,7 +21,6 @@ namespace Piwigo\Tests\Integration {
     use Piwigo\Tests\Support\CurrentConfigTestFactory;
     use Piwigo\Config\ConfigLoader;
     use Piwigo\Db\DbConnection;
-    use Piwigo\Db\Tables;
     use Piwigo\Event\Picture\UpdateRatingScore;
     use Piwigo\Tests\Support\EventDispatcherTestFactory;
     use Piwigo\Rate\RateService;
@@ -121,12 +120,12 @@ namespace Piwigo\Tests\Integration {
                 self::assertSame('4', $this->fetchRate(5, 3));
             } finally {
                 $this->conn->createQueryBuilder()
-                    ->delete(Tables::rate())
+                    ->delete('rate')
                     ->where('element_id = 5')
                     ->andWhere('user_id = 3')
                     ->executeStatement();
                 $this->conn->createQueryBuilder()
-                    ->update(Tables::images())
+                    ->update('images')
                     ->set('rating_score', 'NULL')
                     ->where('id = 5')
                     ->executeStatement();
@@ -144,12 +143,12 @@ namespace Piwigo\Tests\Integration {
                 self::assertSame('5', $this->fetchRate(5, 3));
             } finally {
                 $this->conn->createQueryBuilder()
-                    ->delete(Tables::rate())
+                    ->delete('rate')
                     ->where('element_id = 5')
                     ->andWhere('user_id = 3')
                     ->executeStatement();
                 $this->conn->createQueryBuilder()
-                    ->update(Tables::images())
+                    ->update('images')
                     ->set('rating_score', 'NULL')
                     ->where('id = 5')
                     ->executeStatement();
@@ -168,7 +167,7 @@ namespace Piwigo\Tests\Integration {
 
                 $anonymousId = $this->conn->createQueryBuilder()
                     ->select('anonymous_id')
-                    ->from(Tables::rate())
+                    ->from('rate')
                     ->where('element_id = 5')
                     ->andWhere('user_id = 2')
                     ->executeQuery()
@@ -182,12 +181,12 @@ namespace Piwigo\Tests\Integration {
                 self::assertSame('10.20.30', $anonymousId);
             } finally {
                 $this->conn->createQueryBuilder()
-                    ->delete(Tables::rate())
+                    ->delete('rate')
                     ->where('element_id = 5')
                     ->andWhere('user_id = 2')
                     ->executeStatement();
                 $this->conn->createQueryBuilder()
-                    ->update(Tables::images())
+                    ->update('images')
                     ->set('rating_score', 'NULL')
                     ->where('id = 5')
                     ->executeStatement();
@@ -233,8 +232,8 @@ namespace Piwigo\Tests\Integration {
             CurrentUserTestFactory::get()->set(User::fromUserArray(['id' => 2, 'status' => 'guest']));
             $_COOKIE['pwg_anonymous_rater'] = '99.99.99';
 
-            $this->conn->insert(Tables::rate(), ['element_id' => 4, 'user_id' => 2, 'anonymous_id' => '99.99.99', 'rate' => 2, 'date' => '2026-08-01']);
-            $this->conn->insert(Tables::rate(), ['element_id' => 4, 'user_id' => 2, 'anonymous_id' => '10.20.30', 'rate' => 1, 'date' => '2026-08-01']);
+            $this->conn->insert('rate', ['element_id' => 4, 'user_id' => 2, 'anonymous_id' => '99.99.99', 'rate' => 2, 'date' => '2026-08-01']);
+            $this->conn->insert('rate', ['element_id' => 4, 'user_id' => 2, 'anonymous_id' => '10.20.30', 'rate' => 1, 'date' => '2026-08-01']);
 
             try {
                 $result = $this->service->rate(5, 3);
@@ -243,9 +242,9 @@ namespace Piwigo\Tests\Integration {
                 self::assertSame(['10.20.30'], $this->fetchAnonymousIdsForElement(4, 2));
                 self::assertSame('10.20.30', $_COOKIE['pwg_anonymous_rater']);
             } finally {
-                $this->conn->createQueryBuilder()->delete(Tables::rate())->where('element_id = 4')->andWhere('user_id = 2')->executeStatement();
-                $this->conn->createQueryBuilder()->delete(Tables::rate())->where('element_id = 5')->andWhere('user_id = 2')->executeStatement();
-                $this->conn->createQueryBuilder()->update(Tables::images())->set('rating_score', 'NULL')->where('id = 5')->executeStatement();
+                $this->conn->createQueryBuilder()->delete('rate')->where('element_id = 4')->andWhere('user_id = 2')->executeStatement();
+                $this->conn->createQueryBuilder()->delete('rate')->where('element_id = 5')->andWhere('user_id = 2')->executeStatement();
+                $this->conn->createQueryBuilder()->update('images')->set('rating_score', 'NULL')->where('id = 5')->executeStatement();
             }
         }
 
@@ -256,7 +255,7 @@ namespace Piwigo\Tests\Integration {
         {
             $values = $this->conn->createQueryBuilder()
                 ->select('anonymous_id')
-                ->from(Tables::rate())
+                ->from('rate')
                 ->where('element_id = :elementId')
                 ->andWhere('user_id = :userId')
                 ->setParameter('elementId', $elementId)
@@ -280,7 +279,7 @@ namespace Piwigo\Tests\Integration {
         {
             $value = $this->conn->createQueryBuilder()
                 ->select('rate')
-                ->from(Tables::rate())
+                ->from('rate')
                 ->where('element_id = :elementId')
                 ->andWhere('user_id = :userId')
                 ->setParameter('elementId', $elementId)

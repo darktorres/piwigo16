@@ -274,9 +274,9 @@ final class RequestBootstrap
 
         Env::loadEnvFile($paths->root);
 
-        // Piwigo\Db\Tables::*()/other Piwigo\Config\Config::* accessors used
-        // further down in this bootstrap's own body (not just by code that
-        // runs after full boot) read Config's static state -- these two
+        // Piwigo\Config\Config::* accessors used further down in this
+        // bootstrap's own body (not just by code that runs after full
+        // boot) read Config's static state -- these two
         // calls must seed it before any of that later code runs. Both are
         // idempotent (verified: re-running never overwrites an already-set
         // key), so bootConfigOnly()'s own copy of these same two calls

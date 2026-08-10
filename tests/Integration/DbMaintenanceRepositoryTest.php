@@ -15,7 +15,6 @@ use Piwigo\Admin\Maintenance\DbMaintenanceRepository;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\ConfigLoader;
 use Piwigo\Db\DbConnection;
-use Piwigo\Db\Tables;
 
 /**
  * Fixture: piwigo_history/piwigo_history_summary/piwigo_search/
@@ -60,39 +59,39 @@ final class DbMaintenanceRepositoryTest extends IntegrationTestCase
     public function test_purge_history_detail_deletes_every_row(): void
     {
         $this->conn->createQueryBuilder()
-            ->insert(Tables::history())
+            ->insert('history')
             ->values(['user_id' => ':userId'])
             ->setParameter('userId', 1)
             ->executeStatement();
 
         $this->repo->purgeHistoryDetail();
 
-        self::assertSame(0, $this->countRows(Tables::history()));
+        self::assertSame(0, $this->countRows('history'));
     }
 
     public function test_purge_history_summary_deletes_every_row(): void
     {
         $this->conn->createQueryBuilder()
-            ->insert(Tables::historySummary())
+            ->insert('history_summary')
             ->values(['year' => ':year'])
             ->setParameter('year', 2026)
             ->executeStatement();
 
         $this->repo->purgeHistorySummary();
 
-        self::assertSame(0, $this->countRows(Tables::historySummary()));
+        self::assertSame(0, $this->countRows('history_summary'));
     }
 
     public function test_purge_unused_feeds_only_removes_never_checked_feeds(): void
     {
         $this->conn->createQueryBuilder()
-            ->insert(Tables::userFeed())
+            ->insert('user_feed')
             ->values(['id' => ':id', 'user_id' => ':userId', 'last_check' => 'NULL'])
             ->setParameter('id', 'never-checked')
             ->setParameter('userId', 1)
             ->executeStatement();
         $this->conn->createQueryBuilder()
-            ->insert(Tables::userFeed())
+            ->insert('user_feed')
             ->values(['id' => ':id', 'user_id' => ':userId', 'last_check' => ':lastCheck'])
             ->setParameter('id', 'checked-once')
             ->setParameter('userId', 1)
@@ -104,26 +103,26 @@ final class DbMaintenanceRepositoryTest extends IntegrationTestCase
 
             $remaining = $this->conn->createQueryBuilder()
                 ->select('id')
-                ->from(Tables::userFeed())
+                ->from('user_feed')
                 ->executeQuery()
                 ->fetchFirstColumn();
             self::assertSame(['checked-once'], $remaining);
         } finally {
-            $this->conn->executeStatement('DELETE FROM ' . Tables::userFeed());
+            $this->conn->executeStatement('DELETE FROM ' . 'user_feed');
         }
     }
 
     public function test_purge_search_history_deletes_every_row(): void
     {
         $this->conn->createQueryBuilder()
-            ->insert(Tables::search())
+            ->insert('search')
             ->values(['created_by' => ':createdBy'])
             ->setParameter('createdBy', 1)
             ->executeStatement();
 
         $this->repo->purgeSearchHistory();
 
-        self::assertSame(0, $this->countRows(Tables::search()));
+        self::assertSame(0, $this->countRows('search'));
     }
 
     public function test_count_lounge_items_matches_real_rows(): void
@@ -131,7 +130,7 @@ final class DbMaintenanceRepositoryTest extends IntegrationTestCase
         self::assertSame(0, $this->repo->countLoungeItems());
 
         $this->conn->createQueryBuilder()
-            ->insert(Tables::lounge())
+            ->insert('lounge')
             ->values(['image_id' => ':imageId', 'category_id' => ':categoryId'])
             ->setParameter('imageId', 1)
             ->setParameter('categoryId', 1)
@@ -140,14 +139,14 @@ final class DbMaintenanceRepositoryTest extends IntegrationTestCase
         try {
             self::assertSame(1, $this->repo->countLoungeItems());
         } finally {
-            $this->conn->executeStatement('DELETE FROM ' . Tables::lounge());
+            $this->conn->executeStatement('DELETE FROM ' . 'lounge');
         }
     }
 
     public function test_delete_orphan_tags_removes_a_tag_with_no_linked_image_older_than_a_day(): void
     {
         $this->conn->createQueryBuilder()
-            ->insert(Tables::tags())
+            ->insert('tags')
             ->values([
                 'name' => ':name',
                 'url_name' => ':urlName',
@@ -164,7 +163,7 @@ final class DbMaintenanceRepositoryTest extends IntegrationTestCase
             self::assertSame(1, $deleted);
             $remaining = $this->conn->createQueryBuilder()
                 ->select('id')
-                ->from(Tables::tags())
+                ->from('tags')
                 ->where('name = :name')
                 ->setParameter('name', 'orphan-tag')
                 ->executeQuery()
@@ -172,7 +171,7 @@ final class DbMaintenanceRepositoryTest extends IntegrationTestCase
             self::assertFalse($remaining, 'the orphan tag must have been deleted');
         } finally {
             $this->conn->createQueryBuilder()
-                ->delete(Tables::tags())
+                ->delete('tags')
                 ->where('name = :name')
                 ->setParameter('name', 'orphan-tag')
                 ->executeStatement();
@@ -182,7 +181,7 @@ final class DbMaintenanceRepositoryTest extends IntegrationTestCase
     public function test_delete_orphan_tags_keeps_a_tag_linked_to_an_image(): void
     {
         $this->conn->createQueryBuilder()
-            ->insert(Tables::tags())
+            ->insert('tags')
             ->values([
                 'name' => ':name',
                 'url_name' => ':urlName',
@@ -195,7 +194,7 @@ final class DbMaintenanceRepositoryTest extends IntegrationTestCase
         $tagId = $this->conn->lastInsertId();
 
         $this->conn->createQueryBuilder()
-            ->insert(Tables::imageTag())
+            ->insert('image_tag')
             ->values(['image_id' => ':imageId', 'tag_id' => ':tagId'])
             ->setParameter('imageId', 1)
             ->setParameter('tagId', $tagId)
@@ -206,7 +205,7 @@ final class DbMaintenanceRepositoryTest extends IntegrationTestCase
 
             $remaining = $this->conn->createQueryBuilder()
                 ->select('id')
-                ->from(Tables::tags())
+                ->from('tags')
                 ->where('name = :name')
                 ->setParameter('name', 'linked-tag')
                 ->executeQuery()
@@ -214,12 +213,12 @@ final class DbMaintenanceRepositoryTest extends IntegrationTestCase
             self::assertNotFalse($remaining, 'a tag linked to an image must not be deleted');
         } finally {
             $this->conn->createQueryBuilder()
-                ->delete(Tables::imageTag())
+                ->delete('image_tag')
                 ->where('tag_id = :tagId')
                 ->setParameter('tagId', $tagId)
                 ->executeStatement();
             $this->conn->createQueryBuilder()
-                ->delete(Tables::tags())
+                ->delete('tags')
                 ->where('name = :name')
                 ->setParameter('name', 'linked-tag')
                 ->executeStatement();
@@ -238,15 +237,15 @@ final class DbMaintenanceRepositoryTest extends IntegrationTestCase
         // a deleted user) rather than a specific total row count, which
         // varies with how many anonymous sessions a given regen run
         // happens to create.
-        $before = $this->countRows(Tables::sessions());
+        $before = $this->countRows('sessions');
 
         $this->repo->purgeSessionsForDeletedUsers();
 
-        self::assertSame($before, $this->countRows(Tables::sessions()), 'no session here references a deleted user, so nothing should be purged');
+        self::assertSame($before, $this->countRows('sessions'), 'no session here references a deleted user, so nothing should be purged');
 
         $realUserSession = $this->conn->createQueryBuilder()
             ->select('id')
-            ->from(Tables::sessions())
+            ->from('sessions')
             ->where('data LIKE :pattern')
             ->setParameter('pattern', '%pwg\_uid|i:1;%')
             ->executeQuery()
@@ -257,7 +256,7 @@ final class DbMaintenanceRepositoryTest extends IntegrationTestCase
     public function test_purge_sessions_for_deleted_users_removes_a_session_for_a_nonexistent_user(): void
     {
         $this->conn->createQueryBuilder()
-            ->insert(Tables::sessions())
+            ->insert('sessions')
             ->values(['id' => ':id', 'data' => ':data', 'expiration' => ':expiration'])
             ->setParameter('id', 'orphan-session')
             ->setParameter('data', 'pwg_uid|i:999999;')
@@ -269,7 +268,7 @@ final class DbMaintenanceRepositoryTest extends IntegrationTestCase
 
             $remaining = $this->conn->createQueryBuilder()
                 ->select('id')
-                ->from(Tables::sessions())
+                ->from('sessions')
                 ->where('id = :id')
                 ->setParameter('id', 'orphan-session')
                 ->executeQuery()
@@ -277,7 +276,7 @@ final class DbMaintenanceRepositoryTest extends IntegrationTestCase
             self::assertFalse($remaining, 'the orphan session must have been purged');
         } finally {
             $this->conn->createQueryBuilder()
-                ->delete(Tables::sessions())
+                ->delete('sessions')
                 ->where('id = :id')
                 ->setParameter('id', 'orphan-session')
                 ->executeStatement();

@@ -9,7 +9,6 @@ use Piwigo\Cache\CachePools;
 use CURLFile;
 use Doctrine\DBAL\Connection;
 use Piwigo\Db\DbConnection;
-use Piwigo\Db\Tables;
 
 /**
  * Ws\PwgImages::upload() (`pwg.images.upload`) -- covers only the START of
@@ -61,7 +60,7 @@ final class WsImagesUploadStartTest extends ContractTestCase
     #[Override]
     protected function tearDown(): void
     {
-        $this->conn->executeStatement("DELETE FROM " . Tables::config() . " WHERE param = 'enable_formats'");
+        $this->conn->executeStatement("DELETE FROM " . 'config' . " WHERE param = 'enable_formats'");
         CachePools::config()->clear();
         parent::tearDown();
     }
@@ -309,12 +308,12 @@ final class WsImagesUploadStartTest extends ContractTestCase
     {
         $filename = 'update-mode-probe-' . uniqid() . '.jpg';
         $this->conn->executeStatement(
-            'INSERT INTO ' . Tables::images() . ' (file, path, md5sum, width, height, filesize) VALUES (?, ?, ?, ?, ?, ?)',
+            'INSERT INTO ' . 'images' . ' (file, path, md5sum, width, height, filesize) VALUES (?, ?, ?, ?, ?, ?)',
             [$filename, 'upload/2026/08/01/' . $filename, md5($filename), 1, 1, 0]
         );
         $existingId = (int) $this->conn->lastInsertId();
         $this->conn->executeStatement(
-            'INSERT INTO ' . Tables::imageCategory() . ' (image_id, category_id) VALUES (?, ?)',
+            'INSERT INTO ' . 'image_category' . ' (image_id, category_id) VALUES (?, ?)',
             [$existingId, 1]
         );
 

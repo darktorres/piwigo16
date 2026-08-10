@@ -9,7 +9,6 @@ use Doctrine\ORM\AbstractQuery;
 use Doctrine\ORM\EntityRepository;
 use Piwigo\Config\Projection\ConfigParamValue;
 use Piwigo\Db\BatchWriter;
-use Piwigo\Db\Tables;
 
 /**
  * `find()`/`findAll()` are inherited from EntityRepository for free --
@@ -74,7 +73,7 @@ final class ConfigRepository extends EntityRepository
 
         new BatchWriter($this->getEntityManager()->getConnection())
             ->massUpdate(
-                Tables::config(),
+                'config',
                 [
                     'primary' => ['param'],
                     'update' => ['value'],
@@ -174,7 +173,7 @@ final class ConfigRepository extends EntityRepository
         try {
             $this->getEntityManager()
                 ->getConnection()
-                ->insert(Tables::config(), [
+                ->insert('config', [
                     'param' => $param,
                     'value' => $encodedValue,
                 ]);

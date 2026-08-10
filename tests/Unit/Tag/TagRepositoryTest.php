@@ -8,7 +8,6 @@ use Piwigo\Common\ValueObject\ImageId;
 use Piwigo\Common\ValueObject\TagId;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
-use Piwigo\Db\Tables;
 use Piwigo\Image\ImageFilterCriteria;
 use Piwigo\Permission\PermissionCriteria;
 use Piwigo\Tag\ImageTagEntity;
@@ -256,7 +255,7 @@ test('findImageIdsForTagIds() matches the fixture', function (): void {
 
 test('deleteImageTagByTagIds() is a no-op for no ids', function (): void {
     $conn = DbConnection::build();
-    $conn->insert(Tables::imageTag(), ['image_id' => 4, 'tag_id' => 3]);
+    $conn->insert('image_tag', ['image_id' => 4, 'tag_id' => 3]);
 
     try {
         tagTestRepo()->deleteImageTagByTagIds([]);
@@ -270,14 +269,14 @@ test('deleteImageTagByTagIds() is a no-op for no ids', function (): void {
         sort($imageIds);
         expect($imageIds)->toBe([1, 4]);
     } finally {
-        $conn->delete(Tables::imageTag(), ['image_id' => 4, 'tag_id' => 3]);
+        $conn->delete('image_tag', ['image_id' => 4, 'tag_id' => 3]);
     }
 });
 
 test('deleteImageTagByTagIds() removes every link to that tag', function (): void {
     $conn = DbConnection::build();
-    $conn->insert(Tables::imageTag(), ['image_id' => 4, 'tag_id' => 3]);
-    $conn->insert(Tables::imageTag(), ['image_id' => 5, 'tag_id' => 3]);
+    $conn->insert('image_tag', ['image_id' => 4, 'tag_id' => 3]);
+    $conn->insert('image_tag', ['image_id' => 5, 'tag_id' => 3]);
 
     try {
         tagTestRepo()->deleteImageTagByTagIds([TagId::from(3)]);
@@ -288,13 +287,13 @@ test('deleteImageTagByTagIds() removes every link to that tag', function (): voi
         expect(tagTestRepo()->findImageIdsForTagIds([TagId::from(3)]))->toBe([]);
     } finally {
         // restore the fixture's own image1<->tag3 link for later tests
-        $conn->insert(Tables::imageTag(), ['image_id' => 1, 'tag_id' => 3]);
+        $conn->insert('image_tag', ['image_id' => 1, 'tag_id' => 3]);
     }
 });
 
 test('deleteImageTagByImageIds() is a no-op for no ids', function (): void {
     $conn = DbConnection::build();
-    $conn->insert(Tables::imageTag(), ['image_id' => 5, 'tag_id' => 2]);
+    $conn->insert('image_tag', ['image_id' => 5, 'tag_id' => 2]);
 
     try {
         tagTestRepo()->deleteImageTagByImageIds([]);
@@ -303,14 +302,14 @@ test('deleteImageTagByImageIds() is a no-op for no ids', function (): void {
         // survive this no-op call.
         expect(tagTestRepo()->findImageIdsForTagIds([TagId::from(2)]))->toBe([1, 5]);
     } finally {
-        $conn->delete(Tables::imageTag(), ['image_id' => 5, 'tag_id' => 2]);
+        $conn->delete('image_tag', ['image_id' => 5, 'tag_id' => 2]);
     }
 });
 
 test('deleteImageTagByImageIds() removes every link from that image', function (): void {
     $conn = DbConnection::build();
-    $conn->insert(Tables::imageTag(), ['image_id' => 5, 'tag_id' => 2]);
-    $conn->insert(Tables::imageTag(), ['image_id' => 5, 'tag_id' => 3]);
+    $conn->insert('image_tag', ['image_id' => 5, 'tag_id' => 2]);
+    $conn->insert('image_tag', ['image_id' => 5, 'tag_id' => 3]);
 
     tagTestRepo()->deleteImageTagByImageIds([5]);
 
@@ -319,27 +318,27 @@ test('deleteImageTagByImageIds() removes every link from that image', function (
 
 test('deleteImageTagByImageAndTagIds() is a no-op for empty image ids', function (): void {
     $conn = DbConnection::build();
-    $conn->insert(Tables::imageTag(), ['image_id' => 4, 'tag_id' => 3]);
+    $conn->insert('image_tag', ['image_id' => 4, 'tag_id' => 3]);
 
     try {
         tagTestRepo()->deleteImageTagByImageAndTagIds([], [TagId::from(3)]);
 
         expect(tagTestRepo()->findImageIdsForTagIds([TagId::from(3)]))->toBe([1, 4]);
     } finally {
-        $conn->delete(Tables::imageTag(), ['image_id' => 4, 'tag_id' => 3]);
+        $conn->delete('image_tag', ['image_id' => 4, 'tag_id' => 3]);
     }
 });
 
 test('deleteImageTagByImageAndTagIds() is a no-op for empty tag ids', function (): void {
     $conn = DbConnection::build();
-    $conn->insert(Tables::imageTag(), ['image_id' => 4, 'tag_id' => 3]);
+    $conn->insert('image_tag', ['image_id' => 4, 'tag_id' => 3]);
 
     try {
         tagTestRepo()->deleteImageTagByImageAndTagIds([4], []);
 
         expect(tagTestRepo()->findImageIdsForTagIds([TagId::from(3)]))->toBe([1, 4]);
     } finally {
-        $conn->delete(Tables::imageTag(), ['image_id' => 4, 'tag_id' => 3]);
+        $conn->delete('image_tag', ['image_id' => 4, 'tag_id' => 3]);
     }
 });
 
@@ -348,8 +347,8 @@ test('deleteImageTagByImageAndTagIds() removes only the intersection', function 
     // (the requested image/tag intersection) should be removed -- the
     // (image 4, tag 2) link must survive untouched.
     $conn = DbConnection::build();
-    $conn->insert(Tables::imageTag(), ['image_id' => 4, 'tag_id' => 2]);
-    $conn->insert(Tables::imageTag(), ['image_id' => 4, 'tag_id' => 3]);
+    $conn->insert('image_tag', ['image_id' => 4, 'tag_id' => 2]);
+    $conn->insert('image_tag', ['image_id' => 4, 'tag_id' => 3]);
 
     try {
         tagTestRepo()->deleteImageTagByImageAndTagIds([4], [TagId::from(3)]);
@@ -362,7 +361,7 @@ test('deleteImageTagByImageAndTagIds() removes only the intersection', function 
         expect($remaining)->toHaveCount(1)
             ->and($remaining[0]->tagId->value)->toBe(2);
     } finally {
-        $conn->delete(Tables::imageTag(), ['image_id' => 4, 'tag_id' => 2]);
+        $conn->delete('image_tag', ['image_id' => 4, 'tag_id' => 2]);
     }
 });
 
@@ -482,7 +481,7 @@ test('countImagesPerTagUnrestricted() counts every image_tag link regardless of 
 
         expect($counters[$tagId->value] ?? null)->toBe(2);
     } finally {
-        DbConnection::build()->executeStatement('DELETE FROM ' . Tables::imageTag() . ' WHERE tag_id = ?', [$tagId->value]);
+        DbConnection::build()->executeStatement('DELETE FROM ' . 'image_tag' . ' WHERE tag_id = ?', [$tagId->value]);
         $repo->deleteByIds([$tagId]);
     }
 });
@@ -513,7 +512,7 @@ test('massInsertImageTags() clears the identity map, so a later find() sees the 
 
         expect($em->find(ImageTagEntity::class, $key))->not->toBeNull();
     } finally {
-        DbConnection::build()->executeStatement('DELETE FROM ' . Tables::imageTag() . ' WHERE tag_id = ?', [$tagId->value]);
+        DbConnection::build()->executeStatement('DELETE FROM ' . 'image_tag' . ' WHERE tag_id = ?', [$tagId->value]);
         $repo->deleteByIds([$tagId]);
     }
 });
@@ -742,11 +741,11 @@ test('countAllImageTagLinks() reflects a freshly inserted link', function (): vo
     $repo = tagTestRepo();
     $conn = DbConnection::build();
     $before = $repo->countAllImageTagLinks();
-    $conn->insert(Tables::imageTag(), ['image_id' => 5, 'tag_id' => 2]);
+    $conn->insert('image_tag', ['image_id' => 5, 'tag_id' => 2]);
 
     try {
         expect($repo->countAllImageTagLinks())->toBe($before + 1);
     } finally {
-        $conn->delete(Tables::imageTag(), ['image_id' => 5, 'tag_id' => 2]);
+        $conn->delete('image_tag', ['image_id' => 5, 'tag_id' => 2]);
     }
 });

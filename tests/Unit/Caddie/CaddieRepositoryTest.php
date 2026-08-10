@@ -9,7 +9,6 @@ use Piwigo\Common\ValueObject\ImageId;
 use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
-use Piwigo\Db\Tables;
 
 /**
  * Piwigo\Caddie\CaddieRepository -- has its own dedicated
@@ -80,7 +79,7 @@ function caddieTestRepoWithEm(): array
 function caddieTestClear(Connection $conn, int $userId): void
 {
     $conn->createQueryBuilder()
-        ->delete(Tables::caddie())
+        ->delete('caddie')
         ->where('user_id = :userId')
         ->setParameter('userId', $userId)
         ->executeStatement();
@@ -93,7 +92,7 @@ function caddieTestFetchElementIds(Connection $conn, int $userId): array
 {
     $ids = $conn->createQueryBuilder()
         ->select('element_id')
-        ->from(Tables::caddie())
+        ->from('caddie')
         ->where('user_id = :userId')
         ->setParameter('userId', $userId)
         ->orderBy('element_id', 'ASC')

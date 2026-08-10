@@ -15,7 +15,6 @@ use Piwigo\Calendar\CalendarRepository;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\ConfigLoader;
 use Piwigo\Db\DbConnection;
-use Piwigo\Db\Tables;
 use Piwigo\Permission\SqlCondition;
 
 final class CalendarRepositoryTest extends IntegrationTestCase
@@ -53,7 +52,7 @@ final class CalendarRepositoryTest extends IntegrationTestCase
     public function test_find_image_ids_returns_matching_ids_in_order(): void
     {
         $ids = $this->repo->findImageIds(
-            new SqlCondition(' FROM ' . Tables::images() . ' WHERE id IN (3, 1, 2)'),
+            new SqlCondition(' FROM ' . 'images' . ' WHERE id IN (3, 1, 2)'),
             new SqlCondition(''),
             'ORDER BY id ASC'
         );
@@ -64,7 +63,7 @@ final class CalendarRepositoryTest extends IntegrationTestCase
     public function test_find_image_ids_returns_empty_for_no_match(): void
     {
         $ids = $this->repo->findImageIds(
-            new SqlCondition(' FROM ' . Tables::images() . ' WHERE id = 999999'),
+            new SqlCondition(' FROM ' . 'images' . ' WHERE id = 999999'),
             new SqlCondition(''),
             ''
         );
@@ -81,7 +80,7 @@ final class CalendarRepositoryTest extends IntegrationTestCase
         // for ORDER BY columns not in the SELECT list). A regression here
         // breaks every live calendar page.
         $ids = $this->repo->findImageIds(
-            new SqlCondition(' FROM ' . Tables::images() . ' WHERE id IN (1, 2, 3)'),
+            new SqlCondition(' FROM ' . 'images' . ' WHERE id IN (1, 2, 3)'),
             new SqlCondition(''),
             'ORDER BY date_available DESC, file ASC, id ASC'
         );
@@ -96,7 +95,7 @@ final class CalendarRepositoryTest extends IntegrationTestCase
         // (one row per category an image belongs to) -- GROUP BY id must
         // still collapse that back down to one id per image.
         $ids = $this->repo->findImageIds(
-            new SqlCondition(' FROM ' . Tables::images() . ' INNER JOIN ' . Tables::imageCategory() . ' ON id = image_id WHERE category_id IN (1, 2)'),
+            new SqlCondition(' FROM ' . 'images' . ' INNER JOIN ' . 'image_category' . ' ON id = image_id WHERE category_id IN (1, 2)'),
             new SqlCondition(''),
             'ORDER BY id ASC'
         );
@@ -116,11 +115,11 @@ final class CalendarRepositoryTest extends IntegrationTestCase
         // pushed a day later here, scoped to this test only, so images 1
         // and 2 are the only ones matching the filter below.
         $this->conn->executeStatement(
-            "UPDATE " . Tables::images() . " SET date_available = '2026-08-02 00:00:00' WHERE id = 3"
+            "UPDATE " . 'images' . " SET date_available = '2026-08-02 00:00:00' WHERE id = 3"
         );
 
         $ids = $this->repo->findImageIds(
-            new SqlCondition(' FROM ' . Tables::images() . ' WHERE id IN (1, 2, 3)'),
+            new SqlCondition(' FROM ' . 'images' . ' WHERE id IN (1, 2, 3)'),
             new SqlCondition("AND (date_available = '2026-08-01 00:00:00')"),
             'ORDER BY id ASC'
         );
@@ -135,7 +134,7 @@ final class CalendarRepositoryTest extends IntegrationTestCase
     public function test_find_image_ids_runs_dql_when_dql_scope_and_order_by_are_given(): void
     {
         $ids = $this->repo->findImageIds(
-            new SqlCondition(' FROM ' . Tables::images() . ' WHERE id IN (1, 2, 3)'),
+            new SqlCondition(' FROM ' . 'images' . ' WHERE id IN (1, 2, 3)'),
             new SqlCondition(''),
             'ORDER BY id DESC',
             new CalendarQueryScope(
@@ -159,7 +158,7 @@ final class CalendarRepositoryTest extends IntegrationTestCase
     public function test_find_image_ids_runs_dql_for_a_date_field_prepended_order(): void
     {
         $ids = $this->repo->findImageIds(
-            new SqlCondition(' FROM ' . Tables::images() . ' WHERE id IN (1, 2, 3)'),
+            new SqlCondition(' FROM ' . 'images' . ' WHERE id IN (1, 2, 3)'),
             new SqlCondition(''),
             'ORDER BY id DESC, file ASC',
             new CalendarQueryScope(
@@ -179,7 +178,7 @@ final class CalendarRepositoryTest extends IntegrationTestCase
         // must still return the right members via the raw-DBAL fallback,
         // not throw, even though a $dqlScope is given.
         $ids = $this->repo->findImageIds(
-            new SqlCondition(' FROM ' . Tables::images() . ' WHERE id IN (1, 2, 3)'),
+            new SqlCondition(' FROM ' . 'images' . ' WHERE id IN (1, 2, 3)'),
             new SqlCondition(''),
             'ORDER BY RAND()',
             new CalendarQueryScope(

@@ -10,7 +10,6 @@ use Piwigo\Config\ConfigEntry;
 use Piwigo\Config\ConfigRepository;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
-use Piwigo\Db\Tables;
 use Piwigo\Telemetry\TelemetryService;
 use Piwigo\Tests\Support\DqlPlatformQueryTestFactory;
 
@@ -55,7 +54,7 @@ test('resolveInstallId() generates and persists a random id on first use', funct
 
         $stored = $conn->createQueryBuilder()
             ->select('value')
-            ->from(Tables::config())
+            ->from('config')
             ->where('param = :param')
             ->setParameter('param', 'telemetry_install_id')
             ->fetchOne();
@@ -63,7 +62,7 @@ test('resolveInstallId() generates and persists a random id on first use', funct
         expect(is_string($stored) ? json_decode($stored, true) : null)->toBe($id);
     } finally {
         $conn->createQueryBuilder()
-            ->delete(Tables::config())
+            ->delete('config')
             ->where('param = :param')
             ->setParameter('param', 'telemetry_install_id')
             ->executeStatement();
@@ -81,7 +80,7 @@ test('resolveInstallId() returns the same id on a later call instead of regenera
         expect($second)->toBe($first);
     } finally {
         $conn->createQueryBuilder()
-            ->delete(Tables::config())
+            ->delete('config')
             ->where('param = :param')
             ->setParameter('param', 'telemetry_install_id')
             ->executeStatement();
@@ -93,7 +92,7 @@ test('resolveInstallId() regenerates when the stored value decodes to something 
 
     try {
         $conn->createQueryBuilder()
-            ->insert(Tables::config())
+            ->insert('config')
             ->values(['param' => ':param', 'value' => ':value'])
             ->setParameter('param', 'telemetry_install_id')
             // Valid JSON, but a number, not a string -- is_string() must
@@ -106,7 +105,7 @@ test('resolveInstallId() regenerates when the stored value decodes to something 
         expect($id)->toMatch('/^[0-9a-f]{32}$/');
     } finally {
         $conn->createQueryBuilder()
-            ->delete(Tables::config())
+            ->delete('config')
             ->where('param = :param')
             ->setParameter('param', 'telemetry_install_id')
             ->executeStatement();
@@ -162,7 +161,7 @@ test('buildPayload() assembles a real, structurally-complete payload', function 
             ->and($payload->database->serverVersion)->not->toBe('');
     } finally {
         $conn->createQueryBuilder()
-            ->delete(Tables::config())
+            ->delete('config')
             ->where('param = :param')
             ->setParameter('param', 'telemetry_install_id')
             ->executeStatement();
@@ -175,9 +174,9 @@ test('buildPayload() gallery/extension stats match real raw COUNT(*) queries', f
     try {
         $payload = telemetryTestService()->buildPayload();
 
-        $realImageCount = $conn->createQueryBuilder()->select('COUNT(*)')->from(Tables::images())->fetchOne();
-        $realUserCount = $conn->createQueryBuilder()->select('COUNT(*)')->from(Tables::users())->fetchOne();
-        $realPluginCount = $conn->createQueryBuilder()->select('COUNT(*)')->from(Tables::plugins())->fetchOne();
+        $realImageCount = $conn->createQueryBuilder()->select('COUNT(*)')->from('images')->fetchOne();
+        $realUserCount = $conn->createQueryBuilder()->select('COUNT(*)')->from('users')->fetchOne();
+        $realPluginCount = $conn->createQueryBuilder()->select('COUNT(*)')->from('plugins')->fetchOne();
         expect($realImageCount)->toBeInt();
         expect($realUserCount)->toBeInt();
         expect($realPluginCount)->toBeInt();
@@ -187,7 +186,7 @@ test('buildPayload() gallery/extension stats match real raw COUNT(*) queries', f
             ->and($payload->extensions->pluginCount)->toBe($realPluginCount);
     } finally {
         $conn->createQueryBuilder()
-            ->delete(Tables::config())
+            ->delete('config')
             ->where('param = :param')
             ->setParameter('param', 'telemetry_install_id')
             ->executeStatement();

@@ -14,7 +14,6 @@ use Doctrine\DBAL\Connection;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\ConfigLoader;
 use Piwigo\Db\DbConnection;
-use Piwigo\Db\Tables;
 use Piwigo\History\HistoryRepository;
 
 /**
@@ -386,7 +385,7 @@ final class HistoryRepositoryTest extends IntegrationTestCase
     private function insertHistoryLine(int $userId, string $date, string $time): int
     {
         $this->conn->createQueryBuilder()
-            ->insert(Tables::history())
+            ->insert('history')
             ->values([
                 'date' => ':date',
                 'time' => ':time',
@@ -405,7 +404,7 @@ final class HistoryRepositoryTest extends IntegrationTestCase
     {
         $value = $this->conn->createQueryBuilder()
             ->select('MIN(id)')
-            ->from(Tables::history())
+            ->from('history')
             ->executeQuery()
             ->fetchOne();
 
@@ -415,7 +414,7 @@ final class HistoryRepositoryTest extends IntegrationTestCase
     private function insertSummary(int $year, ?int $month, ?int $day, ?int $hour, int $nbPages, int $idFrom, int $idTo): void
     {
         $this->conn->createQueryBuilder()
-            ->insert(Tables::historySummary())
+            ->insert('history_summary')
             ->values([
                 'year' => ':year',
                 'month' => ':month',
@@ -442,7 +441,7 @@ final class HistoryRepositoryTest extends IntegrationTestCase
     {
         $qb = $this->conn->createQueryBuilder()
             ->select('*')
-            ->from(Tables::historySummary())
+            ->from('history_summary')
             ->where('year = :year')
             ->setParameter('year', $year);
         $qb->andWhere($month === null ? 'month IS NULL' : 'month = ' . $month);
@@ -457,19 +456,19 @@ final class HistoryRepositoryTest extends IntegrationTestCase
 
     private function clearHistory(): void
     {
-        $this->conn->executeStatement('DELETE FROM ' . Tables::history());
+        $this->conn->executeStatement('DELETE FROM ' . 'history');
     }
 
     private function clearSummary(): void
     {
-        $this->conn->executeStatement('DELETE FROM ' . Tables::historySummary());
+        $this->conn->executeStatement('DELETE FROM ' . 'history_summary');
     }
 
     public function test_update_last_visit_now_sets_last_visit_on_the_real_user_infos_row(): void
     {
         $before = $this->conn->createQueryBuilder()
             ->select('last_visit')
-            ->from(Tables::userInfos())
+            ->from('user_infos')
             ->where('user_id = 4')
             ->executeQuery()
             ->fetchOne();
@@ -479,13 +478,13 @@ final class HistoryRepositoryTest extends IntegrationTestCase
 
         $after = $this->conn->createQueryBuilder()
             ->select('last_visit')
-            ->from(Tables::userInfos())
+            ->from('user_infos')
             ->where('user_id = 4')
             ->executeQuery()
             ->fetchOne();
         self::assertIsString($after);
         self::assertNotSame('', $after);
 
-        $this->conn->executeStatement('UPDATE ' . Tables::userInfos() . ' SET last_visit = NULL WHERE user_id = 4');
+        $this->conn->executeStatement('UPDATE ' . 'user_infos' . ' SET last_visit = NULL WHERE user_id = 4');
     }
 }

@@ -10,7 +10,6 @@ use LogicException;
 use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Tests\Support\LangTestFactory;
 use Piwigo\PluginConfig\EventDispatcher;
-use Piwigo\Db\Tables;
 use Doctrine\DBAL\Connection;
 use Piwigo\Config\ConfigLoader;
 use Piwigo\Config\CurrentConfig;
@@ -171,11 +170,11 @@ final class FilterServiceInitializeFromRequestTest extends IntegrationTestCase
         // proves the 2nd call read the session's own serialized snapshot
         // instead of re-querying the DB.
         $this->conn->executeStatement(
-            "INSERT INTO " . Tables::images() . " (file, path, date_available) VALUES ('cache-probe.jpg', 'upload/cache-probe.jpg', '2026-08-01 00:00:00')"
+            "INSERT INTO " . 'images' . " (file, path, date_available) VALUES ('cache-probe.jpg', 'upload/cache-probe.jpg', '2026-08-01 00:00:00')"
         );
         $newImageId = (int) $this->conn->lastInsertId();
         $this->conn->executeStatement(
-            'INSERT INTO ' . Tables::imageCategory() . ' (image_id, category_id) VALUES (?, 2)',
+            'INSERT INTO ' . 'image_category' . ' (image_id, category_id) VALUES (?, 2)',
             [$newImageId]
         );
 
@@ -187,7 +186,7 @@ final class FilterServiceInitializeFromRequestTest extends IntegrationTestCase
             self::assertTrue($this->filterState->isEnabled());
             self::assertSame(2, $this->filterState->categories()[2]['nb_images']);
         } finally {
-            $this->conn->executeStatement('DELETE FROM ' . Tables::images() . ' WHERE id = ?', [$newImageId]);
+            $this->conn->executeStatement('DELETE FROM ' . 'images' . ' WHERE id = ?', [$newImageId]);
         }
     }
 

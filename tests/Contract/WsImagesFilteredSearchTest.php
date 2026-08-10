@@ -7,7 +7,6 @@ namespace Piwigo\Tests\Contract;
 use Override;
 use Doctrine\DBAL\Connection;
 use Piwigo\Db\DbConnection;
-use Piwigo\Db\Tables;
 
 /**
  * Ws\PwgImages::filteredSearchCreate() (`pwg.images.filteredSearch.create`) --
@@ -59,7 +58,7 @@ final class WsImagesFilteredSearchTest extends ContractTestCase
     private function fetchRules(string $searchUuid): array
     {
         $raw = $this->conn->fetchOne(
-            'SELECT rules FROM ' . Tables::search() . ' WHERE search_uuid = ?',
+            'SELECT rules FROM ' . 'search' . ' WHERE search_uuid = ?',
             [$searchUuid]
         );
         self::assertIsString($raw, 'no piwigo_search row for uuid ' . $searchUuid);
@@ -81,7 +80,7 @@ final class WsImagesFilteredSearchTest extends ContractTestCase
     private function fetchForkedFrom(string $searchUuid): ?int
     {
         $value = $this->conn->fetchOne(
-            'SELECT forked_from FROM ' . Tables::search() . ' WHERE search_uuid = ?',
+            'SELECT forked_from FROM ' . 'search' . ' WHERE search_uuid = ?',
             [$searchUuid]
         );
         if ($value === null) {
@@ -178,7 +177,7 @@ final class WsImagesFilteredSearchTest extends ContractTestCase
         self::assertNotSame($parentUuid, $childUuid);
 
         $parentId = $this->conn->fetchOne(
-            'SELECT id FROM ' . Tables::search() . ' WHERE search_uuid = ?',
+            'SELECT id FROM ' . 'search' . ' WHERE search_uuid = ?',
             [$parentUuid]
         );
         self::assertIsNumeric($parentId);

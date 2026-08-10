@@ -16,7 +16,6 @@ use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Db\DbConnection;
-use Piwigo\Db\Tables;
 use Piwigo\Url\UrlService;
 
 /**
@@ -197,7 +196,7 @@ final class UrlServiceParseSectionUrlTest extends IntegrationTestCase
     #[Override]
     protected function tearDown(): void
     {
-        $this->conn->executeStatement('UPDATE ' . Tables::categories() . ' SET permalink = NULL WHERE id IN (1, 2)');
+        $this->conn->executeStatement('UPDATE ' . 'categories' . ' SET permalink = NULL WHERE id IN (1, 2)');
         parent::tearDown();
     }
 
@@ -269,7 +268,7 @@ final class UrlServiceParseSectionUrlTest extends IntegrationTestCase
 
     public function test_parse_section_url_resolves_a_category_by_its_permalink(): void
     {
-        $this->conn->executeStatement("UPDATE " . Tables::categories() . " SET permalink = 'sub-album' WHERE id = 2");
+        $this->conn->executeStatement("UPDATE " . 'categories' . " SET permalink = 'sub-album' WHERE id = 2");
 
         $i = 0;
         $page = $this->service()->parseSectionUrl(['category', 'sub-album'], $i, $this->redirect());
@@ -289,7 +288,7 @@ final class UrlServiceParseSectionUrlTest extends IntegrationTestCase
         // progressive-join accumulation (`$maybe_permalinks[] =
         // $maybe_permalinks[count-1] . '/' . $tokens[$current_token]`)
         // that a 2nd token needs.
-        $this->conn->executeStatement("UPDATE " . Tables::categories() . " SET permalink = 'parent-word/child-word' WHERE id = 2");
+        $this->conn->executeStatement("UPDATE " . 'categories' . " SET permalink = 'parent-word/child-word' WHERE id = 2");
 
         $i = 0;
         $page = $this->service()->parseSectionUrl(['category', 'parent-word', 'child-word'], $i, $this->redirect());
@@ -304,7 +303,7 @@ final class UrlServiceParseSectionUrlTest extends IntegrationTestCase
 
     public function test_parse_section_url_resolves_a_second_combined_category_via_permalink(): void
     {
-        $this->conn->executeStatement("UPDATE " . Tables::categories() . " SET permalink = 'sub-album' WHERE id = 2");
+        $this->conn->executeStatement("UPDATE " . 'categories' . " SET permalink = 'sub-album' WHERE id = 2");
 
         $i = 0;
         // Primary category resolved by plain numeric id (category 1); the

@@ -26,7 +26,6 @@ namespace Piwigo\Tests\Integration {
     use Error;
     use Imagick;
     use ReflectionMethod;
-    use Piwigo\Db\Tables;
     use Doctrine\DBAL\Connection;
     use Piwigo\Config\CurrentConfig;
     use Piwigo\Tests\Support\CurrentConfigTestFactory;
@@ -992,7 +991,7 @@ final class MetadataServiceTest extends IntegrationTestCase
         file_put_contents($this->scratchDir . '/sync-tags.jpg', $bytes);
 
         $this->conn->executeStatement(
-            'INSERT INTO ' . Tables::images() . ' (path) VALUES (?)',
+            'INSERT INTO ' . 'images' . ' (path) VALUES (?)',
             [$relativePath]
         );
         $imageId = (int) $this->conn->lastInsertId();
@@ -1001,8 +1000,8 @@ final class MetadataServiceTest extends IntegrationTestCase
             $this->service->syncMetadata([$imageId]);
 
             $tagNames = $this->conn->fetchFirstColumn(
-                'SELECT t.name FROM ' . Tables::tags() . ' t
-                 INNER JOIN ' . Tables::imageTag() . ' it ON it.tag_id = t.id
+                'SELECT t.name FROM ' . 'tags' . ' t
+                 INNER JOIN ' . 'image_tag' . ' it ON it.tag_id = t.id
                  WHERE it.image_id = ?
                  ORDER BY t.name',
                 [$imageId]
@@ -1010,21 +1009,21 @@ final class MetadataServiceTest extends IntegrationTestCase
             self::assertSame(['sync-nature', 'sync-travel'], $tagNames);
 
             $updatedDate = $this->conn->fetchOne(
-                'SELECT date_metadata_update FROM ' . Tables::images() . ' WHERE id = ?',
+                'SELECT date_metadata_update FROM ' . 'images' . ' WHERE id = ?',
                 [$imageId]
             );
             self::assertNotNull($updatedDate);
         } finally {
-            $this->conn->executeStatement('DELETE FROM ' . Tables::imageTag() . ' WHERE image_id = ?', [$imageId]);
-            $this->conn->executeStatement('DELETE FROM ' . Tables::images() . ' WHERE id = ?', [$imageId]);
-            $this->conn->executeStatement("DELETE FROM " . Tables::tags() . " WHERE name IN ('sync-nature', 'sync-travel')");
+            $this->conn->executeStatement('DELETE FROM ' . 'image_tag' . ' WHERE image_id = ?', [$imageId]);
+            $this->conn->executeStatement('DELETE FROM ' . 'images' . ' WHERE id = ?', [$imageId]);
+            $this->conn->executeStatement("DELETE FROM " . 'tags' . " WHERE name IN ('sync-nature', 'sync-travel')");
         }
     }
 
     public function test_sync_metadata_skips_a_row_whose_file_is_unreadable(): void
     {
         $this->conn->executeStatement(
-            "INSERT INTO " . Tables::images() . " (path) VALUES ('no/such/file-for-sync.jpg')"
+            "INSERT INTO " . 'images' . " (path) VALUES ('no/such/file-for-sync.jpg')"
         );
         $imageId = (int) $this->conn->lastInsertId();
 
@@ -1035,12 +1034,12 @@ final class MetadataServiceTest extends IntegrationTestCase
             $this->service->syncMetadata([$imageId]);
 
             $updatedDate = $this->conn->fetchOne(
-                'SELECT date_metadata_update FROM ' . Tables::images() . ' WHERE id = ?',
+                'SELECT date_metadata_update FROM ' . 'images' . ' WHERE id = ?',
                 [$imageId]
             );
             self::assertNull($updatedDate);
         } finally {
-            $this->conn->executeStatement('DELETE FROM ' . Tables::images() . ' WHERE id = ?', [$imageId]);
+            $this->conn->executeStatement('DELETE FROM ' . 'images' . ' WHERE id = ?', [$imageId]);
         }
     }
 

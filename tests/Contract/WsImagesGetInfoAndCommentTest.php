@@ -8,7 +8,6 @@ use Override;
 use Piwigo\Cache\CachePools;
 use Doctrine\DBAL\Connection;
 use Piwigo\Db\DbConnection;
-use Piwigo\Db\Tables;
 
 /**
  * Ws\PwgImages::getInfo()/addComment() -- branches WsImagesTest/
@@ -47,15 +46,15 @@ final class WsImagesGetInfoAndCommentTest extends ContractTestCase
     protected function tearDown(): void
     {
         foreach ($this->imageIdsToDelete as $imageId) {
-            $this->conn->executeStatement('DELETE FROM ' . Tables::comments() . ' WHERE image_id = ?', [$imageId]);
-            $this->conn->executeStatement('DELETE FROM ' . Tables::images() . ' WHERE id = ?', [$imageId]);
+            $this->conn->executeStatement('DELETE FROM ' . 'comments' . ' WHERE image_id = ?', [$imageId]);
+            $this->conn->executeStatement('DELETE FROM ' . 'images' . ' WHERE id = ?', [$imageId]);
         }
         if ($this->userIdsToDelete !== []) {
             $this->loginAsAdmin();
             $token = $this->getPwgToken();
             $this->callWs('pwg.users.delete', ['user_id' => $this->userIdsToDelete, 'pwg_token' => $token]);
         }
-        $this->conn->executeStatement("UPDATE " . Tables::config() . " SET value = 'true' WHERE param = 'activate_comments'");
+        $this->conn->executeStatement("UPDATE " . 'config' . " SET value = 'true' WHERE param = 'activate_comments'");
         CachePools::config()->clear();
         parent::tearDown();
     }
@@ -64,7 +63,7 @@ final class WsImagesGetInfoAndCommentTest extends ContractTestCase
     {
         $filename = 'getinfo-orphan-' . uniqid() . '.jpg';
         $this->conn->executeStatement(
-            'INSERT INTO ' . Tables::images() . ' (file, path, md5sum) VALUES (?, ?, ?)',
+            'INSERT INTO ' . 'images' . ' (file, path, md5sum) VALUES (?, ?, ?)',
             [$filename, 'upload/2026/08/01/' . $filename, md5($filename)]
         );
         $id = (int) $this->conn->lastInsertId();
@@ -154,7 +153,7 @@ final class WsImagesGetInfoAndCommentTest extends ContractTestCase
 
     public function test_addComment_when_comments_are_disabled_returns_error(): void
     {
-        $this->conn->executeStatement("UPDATE " . Tables::config() . " SET value = 'false' WHERE param = 'activate_comments'");
+        $this->conn->executeStatement("UPDATE " . 'config' . " SET value = 'false' WHERE param = 'activate_comments'");
         CachePools::config()->clear();
 
         $response = $this->ws('pwg.images.addComment', [
@@ -243,11 +242,11 @@ final class WsImagesGetInfoAndCommentTest extends ContractTestCase
         self::assertFalse($comment['validation']);
 
         $validated = $this->conn->fetchOne(
-            'SELECT validated FROM ' . Tables::comments() . ' WHERE content = ?',
+            'SELECT validated FROM ' . 'comments' . ' WHERE content = ?',
             [$content]
         );
         self::assertSame(0, is_bool($validated) || is_numeric($validated) ? (int) (bool) $validated : -1);
 
-        $this->conn->executeStatement('DELETE FROM ' . Tables::comments() . ' WHERE content = ?', [$content]);
+        $this->conn->executeStatement('DELETE FROM ' . 'comments' . ' WHERE content = ?', [$content]);
     }
 }

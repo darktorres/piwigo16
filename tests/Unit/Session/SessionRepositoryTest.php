@@ -5,7 +5,6 @@ declare(strict_types=1);
 use Doctrine\DBAL\Connection;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
-use Piwigo\Db\Tables;
 use Piwigo\Session\SessionEntity;
 use Piwigo\Session\SessionRepository;
 
@@ -31,7 +30,7 @@ function sessionTestId(string $suffix = ''): string
 function sessionTestDelete(Connection $conn, string $id): void
 {
     $conn->createQueryBuilder()
-        ->delete(Tables::sessions())
+        ->delete('sessions')
         ->where('id = :id')
         ->setParameter('id', $id)
         ->executeStatement();
@@ -100,7 +99,7 @@ test('gc() deletes only sessions older than the cutoff and returns the count', f
         // the stale in-memory row instead of seeing it as deleted.
         $repo->write($oldId, 'stale');
         $conn->executeStatement(
-            'UPDATE ' . Tables::sessions() . ' SET expiration = ? WHERE id = ?',
+            'UPDATE ' . 'sessions' . ' SET expiration = ? WHERE id = ?',
             [(new DateTimeImmutable('-1 year'))->format('Y-m-d H:i:s'), $oldId],
         );
         $repo->write($freshId, 'fresh');

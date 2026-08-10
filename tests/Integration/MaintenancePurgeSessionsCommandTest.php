@@ -13,7 +13,6 @@ use Piwigo\Command\MaintenancePurgeSessionsCommand;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\ConfigLoader;
 use Piwigo\Db\DbConnection;
-use Piwigo\Db\Tables;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Tester\CommandTester;
 
@@ -46,7 +45,7 @@ final class MaintenancePurgeSessionsCommandTest extends IntegrationTestCase
     {
         $conn = DbConnection::build();
         $conn->createQueryBuilder()
-            ->insert(Tables::sessions())
+            ->insert('sessions')
             ->values(['id' => ':id', 'data' => ':data', 'expiration' => ':expiration'])
             ->setParameter('id', 'cli-orphan-session')
             ->setParameter('data', 'pwg_uid|i:999999;')
@@ -62,7 +61,7 @@ final class MaintenancePurgeSessionsCommandTest extends IntegrationTestCase
             self::assertSame(Command::SUCCESS, $exitCode);
             $remaining = $conn->createQueryBuilder()
                 ->select('id')
-                ->from(Tables::sessions())
+                ->from('sessions')
                 ->where('id = :id')
                 ->setParameter('id', 'cli-orphan-session')
                 ->executeQuery()
@@ -70,7 +69,7 @@ final class MaintenancePurgeSessionsCommandTest extends IntegrationTestCase
             self::assertFalse($remaining, 'the orphan session must have been purged');
         } finally {
             $conn->createQueryBuilder()
-                ->delete(Tables::sessions())
+                ->delete('sessions')
                 ->where('id = :id')
                 ->setParameter('id', 'cli-orphan-session')
                 ->executeStatement();

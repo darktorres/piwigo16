@@ -38,7 +38,6 @@ namespace Piwigo\Tests\Integration {
     use Piwigo\Core\WsError;
     use Piwigo\Db\DbConnection;
     use Piwigo\Db\EntityManagerFactory;
-    use Piwigo\Db\Tables;
     use Piwigo\Mail\MailService;
     use Piwigo\Permission\SqlCondition;
     use Piwigo\Session\SessionEntity;
@@ -234,7 +233,7 @@ namespace Piwigo\Tests\Integration {
         {
             $countBefore = $this->conn->createQueryBuilder()
                 ->select('COUNT(*)')
-                ->from(Tables::users())
+                ->from('users')
                 ->executeQuery()
                 ->fetchOne();
 
@@ -242,7 +241,7 @@ namespace Piwigo\Tests\Integration {
 
             $countAfter = $this->conn->createQueryBuilder()
                 ->select('COUNT(*)')
-                ->from(Tables::users())
+                ->from('users')
                 ->executeQuery()
                 ->fetchOne();
 
@@ -276,7 +275,7 @@ namespace Piwigo\Tests\Integration {
             // Confirm no such row exists.
             $swappedRowCount = $this->conn->createQueryBuilder()
                 ->select('COUNT(*)')
-                ->from(Tables::userGroup())
+                ->from('user_group')
                 ->where('group_id = :userId')
                 ->setParameter('userId', $userId)
                 ->executeQuery()
@@ -403,7 +402,7 @@ namespace Piwigo\Tests\Integration {
 
         public function test_check_and_save_user_infos_allows_a_password_change_by_a_webmaster(): void
         {
-            $originalHash = $this->conn->fetchOne('SELECT password FROM ' . Tables::users() . ' WHERE id = 4');
+            $originalHash = $this->conn->fetchOne('SELECT password FROM ' . 'users' . ' WHERE id = 4');
             self::assertIsString($originalHash);
             CurrentUserTestFactory::get()->set(CurrentUserTestFactory::get()->get()->withStatus(UserStatus::Webmaster));
 
@@ -415,7 +414,7 @@ namespace Piwigo\Tests\Integration {
                 self::assertArrayHasKey('password', $result['account']);
             } finally {
                 CurrentUserTestFactory::get()->reset();
-                $this->conn->executeStatement('UPDATE ' . Tables::users() . ' SET password = ? WHERE id = 4', [$originalHash]);
+                $this->conn->executeStatement('UPDATE ' . 'users' . ' SET password = ? WHERE id = 4', [$originalHash]);
             }
         }
 
@@ -483,7 +482,7 @@ namespace Piwigo\Tests\Integration {
 
         public function test_check_and_save_user_infos_updates_username_and_email_for_a_single_user(): void
         {
-            $before = $this->conn->fetchAssociative('SELECT username, mail_address FROM ' . Tables::users() . ' WHERE id = 4');
+            $before = $this->conn->fetchAssociative('SELECT username, mail_address FROM ' . 'users' . ' WHERE id = 4');
             self::assertIsArray($before);
             $newLogin = 'temp-login-' . bin2hex(random_bytes(4));
 
@@ -498,11 +497,11 @@ namespace Piwigo\Tests\Integration {
                     ['user_id' => [4], 'infos' => [], 'account' => ['username' => $newLogin, 'mail_address' => 'temp13@example.test']],
                     $result
                 );
-                $after = $this->conn->fetchAssociative('SELECT username, mail_address FROM ' . Tables::users() . ' WHERE id = 4');
+                $after = $this->conn->fetchAssociative('SELECT username, mail_address FROM ' . 'users' . ' WHERE id = 4');
                 self::assertSame(['username' => $newLogin, 'mail_address' => 'temp13@example.test'], $after);
             } finally {
                 $this->conn->executeStatement(
-                    'UPDATE ' . Tables::users() . ' SET username = ?, mail_address = ? WHERE id = 4',
+                    'UPDATE ' . 'users' . ' SET username = ?, mail_address = ? WHERE id = 4',
                     [$before['username'], $before['mail_address']]
                 );
             }
@@ -513,7 +512,7 @@ namespace Piwigo\Tests\Integration {
             // getPwgThemes()'s own checkThemeInstalled() call requires a
             // real themes/<id> directory on disk, not just a DB row --
             // 'default' is the one real theme directory this repo ships.
-            $this->conn->executeStatement("INSERT INTO " . Tables::themes() . " (id, version, name) VALUES ('default', '1.0', 'Default')");
+            $this->conn->executeStatement("INSERT INTO " . 'themes' . " (id, version, name) VALUES ('default', '1.0', 'Default')");
 
             try {
                 $result = $this->service->checkAndSaveUserInfos([
@@ -544,7 +543,7 @@ namespace Piwigo\Tests\Integration {
 
                 $after = $this->conn->fetchAssociative(
                     'SELECT level, language, theme, nb_image_page, recent_period, expand, show_nb_comments, show_nb_hits, enabled_high'
-                    . ' FROM ' . Tables::userInfos() . ' WHERE user_id = 4'
+                    . ' FROM ' . 'user_infos' . ' WHERE user_id = 4'
                 );
                 self::assertIsArray($after);
                 // expand/show_nb_comments/show_nb_hits/enabled_high are
@@ -560,12 +559,12 @@ namespace Piwigo\Tests\Integration {
                 }
                 self::assertSame($expectedInfos, $after);
             } finally {
-                $this->conn->executeStatement("DELETE FROM " . Tables::themes() . " WHERE id = 'default'");
+                $this->conn->executeStatement("DELETE FROM " . 'themes' . " WHERE id = 'default'");
                 $boolLiterals = $this->dbDriver === 'pgsql'
                     ? ['expand' => 'false', 'show_nb_comments' => 'false', 'show_nb_hits' => 'false', 'enabled_high' => 'true']
                     : ['expand' => '0', 'show_nb_comments' => '0', 'show_nb_hits' => '0', 'enabled_high' => '1'];
                 $this->conn->executeStatement(
-                    "UPDATE " . Tables::userInfos() . " SET level = 0, language = 'en_UK', theme = 'default',"
+                    "UPDATE " . 'user_infos' . " SET level = 0, language = 'en_UK', theme = 'default',"
                     . " nb_image_page = 15, recent_period = 7, expand = {$boolLiterals['expand']},"
                     . " show_nb_comments = {$boolLiterals['show_nb_comments']}, show_nb_hits = {$boolLiterals['show_nb_hits']},"
                     . " enabled_high = {$boolLiterals['enabled_high']}"
@@ -590,11 +589,11 @@ namespace Piwigo\Tests\Integration {
                 self::assertSame(['user_id' => [3, 4], 'infos' => ['level' => 2], 'account' => []], $result);
 
                 $levels = $this->conn->fetchAllAssociative(
-                    'SELECT user_id, level FROM ' . Tables::userInfos() . ' WHERE user_id IN (3, 4) ORDER BY user_id'
+                    'SELECT user_id, level FROM ' . 'user_infos' . ' WHERE user_id IN (3, 4) ORDER BY user_id'
                 );
                 self::assertSame([['user_id' => 3, 'level' => 2], ['user_id' => 4, 'level' => 2]], $levels);
             } finally {
-                $this->conn->executeStatement('UPDATE ' . Tables::userInfos() . ' SET level = 0 WHERE user_id IN (3, 4)');
+                $this->conn->executeStatement('UPDATE ' . 'user_infos' . ' SET level = 0 WHERE user_id IN (3, 4)');
             }
         }
 
@@ -604,10 +603,10 @@ namespace Piwigo\Tests\Integration {
                 $result = $this->service->checkAndSaveUserInfos(['user_id' => [4], 'status' => 'guest'], PageStateTestFactory::get());
 
                 self::assertArrayNotHasKey('error', $result);
-                $status = $this->conn->fetchOne('SELECT status FROM ' . Tables::userInfos() . ' WHERE user_id = 4');
+                $status = $this->conn->fetchOne('SELECT status FROM ' . 'user_infos' . ' WHERE user_id = 4');
                 self::assertSame('guest', $status);
             } finally {
-                $this->conn->executeStatement("UPDATE " . Tables::userInfos() . " SET status = 'normal' WHERE user_id = 4");
+                $this->conn->executeStatement("UPDATE " . 'user_infos' . " SET status = 'normal' WHERE user_id = 4");
             }
         }
 
@@ -629,7 +628,7 @@ namespace Piwigo\Tests\Integration {
             }
 
             self::assertArrayNotHasKey('error', $result);
-            $status = $this->conn->fetchOne('SELECT status FROM ' . Tables::userInfos() . ' WHERE user_id = 1');
+            $status = $this->conn->fetchOne('SELECT status FROM ' . 'user_infos' . ' WHERE user_id = 1');
             self::assertSame('webmaster', $status);
         }
 
@@ -641,12 +640,12 @@ namespace Piwigo\Tests\Integration {
 
                 self::assertArrayNotHasKey('error', $result);
                 $groups = $this->conn->fetchFirstColumn(
-                    'SELECT group_id FROM ' . Tables::userGroup() . ' WHERE user_id = 4 ORDER BY group_id'
+                    'SELECT group_id FROM ' . 'user_group' . ' WHERE user_id = 4 ORDER BY group_id'
                 );
                 self::assertSame([1, 2], $groups);
             } finally {
-                $this->conn->executeStatement('DELETE FROM ' . Tables::userGroup() . ' WHERE user_id = 4');
-                $this->conn->executeStatement('INSERT INTO ' . Tables::userGroup() . ' (user_id, group_id) VALUES (4, 3)');
+                $this->conn->executeStatement('DELETE FROM ' . 'user_group' . ' WHERE user_id = 4');
+                $this->conn->executeStatement('INSERT INTO ' . 'user_group' . ' (user_id, group_id) VALUES (4, 3)');
             }
         }
 
@@ -656,11 +655,11 @@ namespace Piwigo\Tests\Integration {
                 $result = $this->service->checkAndSaveUserInfos(['user_id' => [4], 'group_id' => [999999]], PageStateTestFactory::get());
 
                 self::assertArrayNotHasKey('error', $result);
-                $groups = $this->conn->fetchFirstColumn('SELECT group_id FROM ' . Tables::userGroup() . ' WHERE user_id = 4');
+                $groups = $this->conn->fetchFirstColumn('SELECT group_id FROM ' . 'user_group' . ' WHERE user_id = 4');
                 self::assertSame([], $groups);
             } finally {
-                $this->conn->executeStatement('DELETE FROM ' . Tables::userGroup() . ' WHERE user_id = 4');
-                $this->conn->executeStatement('INSERT INTO ' . Tables::userGroup() . ' (user_id, group_id) VALUES (4, 3)');
+                $this->conn->executeStatement('DELETE FROM ' . 'user_group' . ' WHERE user_id = 4');
+                $this->conn->executeStatement('INSERT INTO ' . 'user_group' . ' (user_id, group_id) VALUES (4, 3)');
             }
         }
 
@@ -735,24 +734,24 @@ namespace Piwigo\Tests\Integration {
         public function test_sync_users_creates_missing_user_infos_for_a_base_user(): void
         {
             $this->conn->executeStatement(
-                "INSERT INTO " . Tables::users() . " (username, password, mail_address) VALUES ('sync-orphan-user', NULL, NULL)"
+                "INSERT INTO " . 'users' . " (username, password, mail_address) VALUES ('sync-orphan-user', NULL, NULL)"
             );
             $newUserId = (int) $this->conn->lastInsertId();
 
             try {
                 self::assertSame(0, $this->fetchOneInt(
-                    'SELECT COUNT(*) FROM ' . Tables::userInfos() . ' WHERE user_id = ?',
+                    'SELECT COUNT(*) FROM ' . 'user_infos' . ' WHERE user_id = ?',
                     [$newUserId]
                 ));
 
                 $this->service->syncUsers();
 
                 self::assertSame(1, $this->fetchOneInt(
-                    'SELECT COUNT(*) FROM ' . Tables::userInfos() . ' WHERE user_id = ?',
+                    'SELECT COUNT(*) FROM ' . 'user_infos' . ' WHERE user_id = ?',
                     [$newUserId]
                 ));
             } finally {
-                $this->conn->executeStatement('DELETE FROM ' . Tables::users() . ' WHERE id = ?', [$newUserId]);
+                $this->conn->executeStatement('DELETE FROM ' . 'users' . ' WHERE id = ?', [$newUserId]);
             }
         }
 
@@ -767,17 +766,17 @@ namespace Piwigo\Tests\Integration {
             // existed in practice: a bulk import/migration that ran with
             // checks off.
             $this->disableForeignKeyChecks($this->conn);
-            $this->conn->executeStatement('INSERT INTO ' . Tables::userGroup() . ' (user_id, group_id) VALUES (777777, 1)');
-            $this->conn->executeStatement('INSERT INTO ' . Tables::userInfos() . ' (user_id) VALUES (777777)');
+            $this->conn->executeStatement('INSERT INTO ' . 'user_group' . ' (user_id, group_id) VALUES (777777, 1)');
+            $this->conn->executeStatement('INSERT INTO ' . 'user_infos' . ' (user_id) VALUES (777777)');
             $this->enableForeignKeyChecks($this->conn);
 
-            self::assertSame(1, $this->fetchOneInt('SELECT COUNT(*) FROM ' . Tables::userGroup() . ' WHERE user_id = 777777'));
-            self::assertSame(1, $this->fetchOneInt('SELECT COUNT(*) FROM ' . Tables::userInfos() . ' WHERE user_id = 777777'));
+            self::assertSame(1, $this->fetchOneInt('SELECT COUNT(*) FROM ' . 'user_group' . ' WHERE user_id = 777777'));
+            self::assertSame(1, $this->fetchOneInt('SELECT COUNT(*) FROM ' . 'user_infos' . ' WHERE user_id = 777777'));
 
             $this->service->syncUsers();
 
-            self::assertSame(0, $this->fetchOneInt('SELECT COUNT(*) FROM ' . Tables::userGroup() . ' WHERE user_id = 777777'));
-            self::assertSame(0, $this->fetchOneInt('SELECT COUNT(*) FROM ' . Tables::userInfos() . ' WHERE user_id = 777777'));
+            self::assertSame(0, $this->fetchOneInt('SELECT COUNT(*) FROM ' . 'user_group' . ' WHERE user_id = 777777'));
+            self::assertSame(0, $this->fetchOneInt('SELECT COUNT(*) FROM ' . 'user_infos' . ' WHERE user_id = 777777'));
         }
 
         public function test_register_user_notifies_admins_of_a_new_registration(): void
@@ -819,7 +818,7 @@ namespace Piwigo\Tests\Integration {
                 self::assertSame([], $result->errors);
             } finally {
                 if ($result->userId !== null) {
-                    $this->conn->executeStatement('DELETE FROM ' . Tables::users() . ' WHERE id = ?', [$result->userId]);
+                    $this->conn->executeStatement('DELETE FROM ' . 'users' . ' WHERE id = ?', [$result->userId]);
                 }
             }
         }
@@ -849,7 +848,7 @@ namespace Piwigo\Tests\Integration {
                 self::assertSame([], $result->errors);
             } finally {
                 if ($result->userId !== null) {
-                    $this->conn->executeStatement('DELETE FROM ' . Tables::users() . ' WHERE id = ?', [$result->userId]);
+                    $this->conn->executeStatement('DELETE FROM ' . 'users' . ' WHERE id = ?', [$result->userId]);
                 }
             }
         }
@@ -931,17 +930,17 @@ namespace Piwigo\Tests\Integration {
 
         public function test_create_user_infos_does_nothing_for_an_empty_user_id_list(): void
         {
-            $countBefore = $this->fetchOneInt('SELECT COUNT(*) FROM ' . Tables::userInfos());
+            $countBefore = $this->fetchOneInt('SELECT COUNT(*) FROM ' . 'user_infos');
 
             $this->service->createUserInfos([]);
 
-            self::assertSame($countBefore, $this->fetchOneInt('SELECT COUNT(*) FROM ' . Tables::userInfos()));
+            self::assertSame($countBefore, $this->fetchOneInt('SELECT COUNT(*) FROM ' . 'user_infos'));
         }
 
         public function test_create_user_infos_assigns_webmaster_status_and_the_max_permission_level(): void
         {
             $this->conn->executeStatement(
-                "INSERT INTO " . Tables::users() . " (username, password, mail_address) VALUES ('temp-webmaster-target', NULL, NULL)"
+                "INSERT INTO " . 'users' . " (username, password, mail_address) VALUES ('temp-webmaster-target', NULL, NULL)"
             );
             $tempId = (int) $this->conn->lastInsertId();
             CurrentConfigTestFactory::get()->webmasterId = $tempId;
@@ -950,19 +949,19 @@ namespace Piwigo\Tests\Integration {
                 $this->service->createUserInfos([UserId::from($tempId)]);
 
                 $row = $this->conn->fetchAssociative(
-                    'SELECT status, level FROM ' . Tables::userInfos() . ' WHERE user_id = ?',
+                    'SELECT status, level FROM ' . 'user_infos' . ' WHERE user_id = ?',
                     [$tempId]
                 );
                 self::assertSame(['status' => 'webmaster', 'level' => 8], $row);
             } finally {
-                $this->conn->executeStatement('DELETE FROM ' . Tables::users() . ' WHERE id = ?', [$tempId]);
+                $this->conn->executeStatement('DELETE FROM ' . 'users' . ' WHERE id = ?', [$tempId]);
             }
         }
 
         public function test_create_user_infos_assigns_webmaster_status_and_level_zero_when_no_permission_levels_are_configured(): void
         {
             $this->conn->executeStatement(
-                "INSERT INTO " . Tables::users() . " (username, password, mail_address) VALUES ('temp-webmaster-target-2', NULL, NULL)"
+                "INSERT INTO " . 'users' . " (username, password, mail_address) VALUES ('temp-webmaster-target-2', NULL, NULL)"
             );
             $tempId = (int) $this->conn->lastInsertId();
             $currentConfig = CurrentConfigTestFactory::get();
@@ -981,19 +980,19 @@ namespace Piwigo\Tests\Integration {
                 $this->service->createUserInfos([UserId::from($tempId)]);
 
                 $row = $this->conn->fetchAssociative(
-                    'SELECT status, level FROM ' . Tables::userInfos() . ' WHERE user_id = ?',
+                    'SELECT status, level FROM ' . 'user_infos' . ' WHERE user_id = ?',
                     [$tempId]
                 );
                 self::assertSame(['status' => 'webmaster', 'level' => 0], $row);
             } finally {
                 $currentConfig->availablePermissionLevels = [0, 1, 2, 4, 8];
-                $this->conn->executeStatement('DELETE FROM ' . Tables::users() . ' WHERE id = ?', [$tempId]);
+                $this->conn->executeStatement('DELETE FROM ' . 'users' . ' WHERE id = ?', [$tempId]);
             }
         }
 
         public function test_build_user_forces_guest_status_for_the_configured_guest_id(): void
         {
-            $this->conn->executeStatement("UPDATE " . Tables::userInfos() . " SET status = 'normal' WHERE user_id = 2");
+            $this->conn->executeStatement("UPDATE " . 'user_infos' . " SET status = 'normal' WHERE user_id = 2");
 
             try {
                 $user = $this->service->buildUser(UserId::from(2));
@@ -1001,7 +1000,7 @@ namespace Piwigo\Tests\Integration {
                 self::assertSame('guest', $user['status']);
                 self::assertSame(['guest_must_be_guest' => true], $user['internal_status']);
             } finally {
-                $this->conn->executeStatement("UPDATE " . Tables::userInfos() . " SET status = 'guest' WHERE user_id = 2");
+                $this->conn->executeStatement("UPDATE " . 'user_infos' . " SET status = 'guest' WHERE user_id = 2");
             }
         }
 
@@ -1023,12 +1022,12 @@ namespace Piwigo\Tests\Integration {
             $username = 'p24-longtail-theme-' . bin2hex(random_bytes(4));
             $theme = 'p24-longtail-theme-' . bin2hex(random_bytes(4));
             $this->conn->executeStatement(
-                "INSERT INTO " . Tables::users() . " (username, password, mail_address) VALUES (?, NULL, NULL)",
+                "INSERT INTO " . 'users' . " (username, password, mail_address) VALUES (?, NULL, NULL)",
                 [$username]
             );
             $tempId = (int) $this->conn->lastInsertId();
             $this->conn->executeStatement(
-                'INSERT INTO ' . Tables::userInfos() . ' (user_id, theme) VALUES (?, ?)',
+                'INSERT INTO ' . 'user_infos' . ' (user_id, theme) VALUES (?, ?)',
                 [$tempId, $theme]
             );
 
@@ -1038,7 +1037,7 @@ namespace Piwigo\Tests\Integration {
                 self::assertArrayHasKey($theme, $counts);
                 self::assertSame(1, $counts[$theme]);
             } finally {
-                $this->conn->executeStatement('DELETE FROM ' . Tables::users() . ' WHERE id = ?', [$tempId]);
+                $this->conn->executeStatement('DELETE FROM ' . 'users' . ' WHERE id = ?', [$tempId]);
             }
         }
 
@@ -1050,12 +1049,12 @@ namespace Piwigo\Tests\Integration {
             $username = 'p24-longtail-lang-' . bin2hex(random_bytes(4));
             $language = chr(random_int(97, 122)) . chr(random_int(97, 122)) . '_' . chr(random_int(65, 90)) . chr(random_int(65, 90));
             $this->conn->executeStatement(
-                "INSERT INTO " . Tables::users() . " (username, password, mail_address) VALUES (?, NULL, NULL)",
+                "INSERT INTO " . 'users' . " (username, password, mail_address) VALUES (?, NULL, NULL)",
                 [$username]
             );
             $tempId = (int) $this->conn->lastInsertId();
             $this->conn->executeStatement(
-                'INSERT INTO ' . Tables::userInfos() . ' (user_id, language) VALUES (?, ?)',
+                'INSERT INTO ' . 'user_infos' . ' (user_id, language) VALUES (?, ?)',
                 [$tempId, $language]
             );
 
@@ -1065,14 +1064,14 @@ namespace Piwigo\Tests\Integration {
                 self::assertArrayHasKey($language, $counts);
                 self::assertSame(1, $counts[$language]);
             } finally {
-                $this->conn->executeStatement('DELETE FROM ' . Tables::users() . ' WHERE id = ?', [$tempId]);
+                $this->conn->executeStatement('DELETE FROM ' . 'users' . ' WHERE id = ?', [$tempId]);
             }
         }
 
         public function test_get_user_data_creates_missing_user_infos_when_external_authentification_is_active(): void
         {
             $this->conn->executeStatement(
-                "INSERT INTO " . Tables::users() . " (username, password, mail_address) VALUES ('sync-target-getdata', NULL, NULL)"
+                "INSERT INTO " . 'users' . " (username, password, mail_address) VALUES ('sync-target-getdata', NULL, NULL)"
             );
             $tempId = (int) $this->conn->lastInsertId();
             // A one-off instance with a non-default DeploymentPolicy --
@@ -1089,7 +1088,7 @@ namespace Piwigo\Tests\Integration {
 
             try {
                 self::assertSame(0, $this->fetchOneInt(
-                    'SELECT COUNT(*) FROM ' . Tables::userInfos() . ' WHERE user_id = ?',
+                    'SELECT COUNT(*) FROM ' . 'user_infos' . ' WHERE user_id = ?',
                     [$tempId]
                 ));
 
@@ -1097,7 +1096,7 @@ namespace Piwigo\Tests\Integration {
 
                 self::assertArrayHasKey('status', $data);
                 self::assertSame(1, $this->fetchOneInt(
-                    'SELECT COUNT(*) FROM ' . Tables::userInfos() . ' WHERE user_id = ?',
+                    'SELECT COUNT(*) FROM ' . 'user_infos' . ' WHERE user_id = ?',
                     [$tempId]
                 ));
                 // fetchUserInfosWithThemeName() hydrates these 5 columns
@@ -1107,7 +1106,7 @@ namespace Piwigo\Tests\Integration {
                     self::assertIsBool($data[$key], "{$key} should be a real bool");
                 }
             } finally {
-                $this->conn->executeStatement('DELETE FROM ' . Tables::users() . ' WHERE id = ?', [$tempId]);
+                $this->conn->executeStatement('DELETE FROM ' . 'users' . ' WHERE id = ?', [$tempId]);
             }
         }
 
@@ -1122,7 +1121,7 @@ namespace Piwigo\Tests\Integration {
         public function test_get_user_data_throws_when_the_user_infos_row_is_missing(): void
         {
             $this->conn->executeStatement(
-                "INSERT INTO " . Tables::users() . " (username, password, mail_address) VALUES ('no-user-infos-target', NULL, NULL)"
+                "INSERT INTO " . 'users' . " (username, password, mail_address) VALUES ('no-user-infos-target', NULL, NULL)"
             );
             $tempId = (int) $this->conn->lastInsertId();
 
@@ -1132,7 +1131,7 @@ namespace Piwigo\Tests\Integration {
 
                 $this->service->getUserData(UserId::from($tempId));
             } finally {
-                $this->conn->executeStatement('DELETE FROM ' . Tables::users() . ' WHERE id = ?', [$tempId]);
+                $this->conn->executeStatement('DELETE FROM ' . 'users' . ' WHERE id = ?', [$tempId]);
             }
         }
 
@@ -1143,14 +1142,14 @@ namespace Piwigo\Tests\Integration {
             // has no reserved-word restriction at this layer, so a literal
             // 'true'/'false' username is a real, if odd, way to reach it.
             $this->conn->executeStatement(
-                "INSERT INTO " . Tables::users() . " (username, password, mail_address) VALUES ('true', NULL, NULL)"
+                "INSERT INTO " . 'users' . " (username, password, mail_address) VALUES ('true', NULL, NULL)"
             );
             $trueId = (int) $this->conn->lastInsertId();
             $this->conn->executeStatement(
-                "INSERT INTO " . Tables::users() . " (username, password, mail_address) VALUES ('false', NULL, NULL)"
+                "INSERT INTO " . 'users' . " (username, password, mail_address) VALUES ('false', NULL, NULL)"
             );
             $falseId = (int) $this->conn->lastInsertId();
-            $this->conn->executeStatement('INSERT INTO ' . Tables::userInfos() . ' (user_id) VALUES (?), (?)', [$trueId, $falseId]);
+            $this->conn->executeStatement('INSERT INTO ' . 'user_infos' . ' (user_id) VALUES (?), (?)', [$trueId, $falseId]);
 
             try {
                 $trueData = $this->service->getUserData(UserId::from($trueId));
@@ -1159,7 +1158,7 @@ namespace Piwigo\Tests\Integration {
                 self::assertTrue($trueData['username']);
                 self::assertFalse($falseData['username']);
             } finally {
-                $this->conn->executeStatement('DELETE FROM ' . Tables::users() . ' WHERE id IN (?, ?)', [$trueId, $falseId]);
+                $this->conn->executeStatement('DELETE FROM ' . 'users' . ' WHERE id IN (?, ?)', [$trueId, $falseId]);
             }
         }
 
@@ -1171,11 +1170,11 @@ namespace Piwigo\Tests\Integration {
             // string -- getUserData()'s own is_string() gate must not
             // discard a genuinely non-empty value arriving in that shape.
             $this->conn->executeStatement(
-                "INSERT INTO " . Tables::users() . " (username, password, mail_address) VALUES ('prefs-user', NULL, NULL)"
+                "INSERT INTO " . 'users' . " (username, password, mail_address) VALUES ('prefs-user', NULL, NULL)"
             );
             $userId = (int) $this->conn->lastInsertId();
             $this->conn->executeStatement(
-                'INSERT INTO ' . Tables::userInfos() . " (user_id, preferences) VALUES (?, '{\"show_whats_new_16\": false, \"admin_theme\": \"clear\"}')",
+                'INSERT INTO ' . 'user_infos' . " (user_id, preferences) VALUES (?, '{\"show_whats_new_16\": false, \"admin_theme\": \"clear\"}')",
                 [$userId]
             );
 
@@ -1191,7 +1190,7 @@ namespace Piwigo\Tests\Integration {
                 ksort($preferences);
                 self::assertSame(['admin_theme' => 'clear', 'show_whats_new_16' => false], $preferences);
             } finally {
-                $this->conn->executeStatement('DELETE FROM ' . Tables::users() . ' WHERE id = ?', [$userId]);
+                $this->conn->executeStatement('DELETE FROM ' . 'users' . ' WHERE id = ?', [$userId]);
             }
         }
 
@@ -1200,11 +1199,11 @@ namespace Piwigo\Tests\Integration {
             // Default guest CurrentUser's forbiddenCategories is '' --
             // the early-return guard, confirmed by asserting the
             // fixture's own favorites rows are untouched.
-            $before = $this->conn->fetchFirstColumn('SELECT image_id FROM ' . Tables::favorites() . ' WHERE user_id = 1 ORDER BY image_id');
+            $before = $this->conn->fetchFirstColumn('SELECT image_id FROM ' . 'favorites' . ' WHERE user_id = 1 ORDER BY image_id');
 
             $this->service->checkUserFavorites();
 
-            $after = $this->conn->fetchFirstColumn('SELECT image_id FROM ' . Tables::favorites() . ' WHERE user_id = 1 ORDER BY image_id');
+            $after = $this->conn->fetchFirstColumn('SELECT image_id FROM ' . 'favorites' . ' WHERE user_id = 1 ORDER BY image_id');
             self::assertSame($before, $after);
         }
 
@@ -1223,11 +1222,11 @@ namespace Piwigo\Tests\Integration {
                 CurrentUserTestFactory::get()->reset();
             }
 
-            $after = $this->conn->fetchFirstColumn('SELECT image_id FROM ' . Tables::favorites() . ' WHERE user_id = 1 ORDER BY image_id');
+            $after = $this->conn->fetchFirstColumn('SELECT image_id FROM ' . 'favorites' . ' WHERE user_id = 1 ORDER BY image_id');
             self::assertSame([1, 3], $after);
 
-            $this->conn->executeStatement('DELETE FROM ' . Tables::favorites() . ' WHERE user_id = 1');
-            $this->conn->executeStatement('INSERT INTO ' . Tables::favorites() . ' (user_id, image_id) VALUES (1,1),(1,3),(1,5)');
+            $this->conn->executeStatement('DELETE FROM ' . 'favorites' . ' WHERE user_id = 1');
+            $this->conn->executeStatement('INSERT INTO ' . 'favorites' . ' (user_id, image_id) VALUES (1,1),(1,3),(1,5)');
         }
 
         public function test_get_default_theme_falls_back_to_the_literal_default_when_nothing_installed_matches(): void
@@ -1238,12 +1237,12 @@ namespace Piwigo\Tests\Integration {
             // default user's own theme also fails checkThemeInstalled(),
             // there's no installed theme left to fall back to at all --
             // the method's own final, hardcoded 'default' literal.
-            $this->conn->executeStatement("UPDATE " . Tables::userInfos() . " SET theme = 'nonexistent-theme-xyz' WHERE user_id = 2");
+            $this->conn->executeStatement("UPDATE " . 'user_infos' . " SET theme = 'nonexistent-theme-xyz' WHERE user_id = 2");
 
             try {
                 self::assertSame('default', $this->service->getDefaultTheme());
             } finally {
-                $this->conn->executeStatement("UPDATE " . Tables::userInfos() . " SET theme = 'default' WHERE user_id = 2");
+                $this->conn->executeStatement("UPDATE " . 'user_infos' . " SET theme = 'default' WHERE user_id = 2");
             }
         }
 

@@ -22,7 +22,6 @@ use LogicException;
 use Piwigo\Auth\AccessLevelChecker;
 use Piwigo\Tests\Support\TranslatorTestFactory;
 use Piwigo\Core\CurrentLogger;
-use Piwigo\Db\Tables;
 use Doctrine\DBAL\Connection;
 use Doctrine\ORM\EntityManagerInterface;
 use Piwigo\Bootstrap\RedirectService;
@@ -128,7 +127,7 @@ final class SearchFulltextPortabilityTest extends IntegrationTestCase
     protected function tearDown(): void
     {
         foreach ($this->insertedCategoryIds as $id) {
-            $this->conn->executeStatement('DELETE FROM ' . Tables::categories() . ' WHERE id = ?', [$id]);
+            $this->conn->executeStatement('DELETE FROM ' . 'categories' . ' WHERE id = ?', [$id]);
         }
 
         parent::tearDown();
@@ -171,7 +170,7 @@ final class SearchFulltextPortabilityTest extends IntegrationTestCase
         self::assertNotSame([], $clauses);
 
         $rows = $this->conn->fetchAllAssociative(
-            'SELECT id FROM ' . Tables::categories() . ' WHERE id IN (' . implode(',', $this->insertedCategoryIds) . ') AND (' . implode(' OR ', $clauses) . ')',
+            'SELECT id FROM ' . 'categories' . ' WHERE id IN (' . implode(',', $this->insertedCategoryIds) . ') AND (' . implode(' OR ', $clauses) . ')',
             $values
         );
 

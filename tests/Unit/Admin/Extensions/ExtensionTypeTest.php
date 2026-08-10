@@ -9,7 +9,6 @@ use Piwigo\Core\ActivitySystem;
 use Piwigo\Tests\Support\CurrentPathsTestFactory;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Paths;
-use Piwigo\Db\Tables;
 
 beforeEach(function (): void {
     CurrentConfigTestFactory::get()->reset();
@@ -22,9 +21,9 @@ afterEach(function (): void {
 });
 
 test('table returns each type\'s own table', function (): void {
-    expect(ExtensionType::Plugin->table())->toBe(Tables::plugins())
-        ->and(ExtensionType::Theme->table())->toBe(Tables::themes())
-        ->and(ExtensionType::Language->table())->toBe(Tables::languages());
+    expect(ExtensionType::Plugin->table())->toBe('plugins')
+        ->and(ExtensionType::Theme->table())->toBe('themes')
+        ->and(ExtensionType::Language->table())->toBe('languages');
 });
 
 test('pemCategoryId returns each type\'s own pem category id', function (): void {

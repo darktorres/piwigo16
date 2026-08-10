@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\DbInfo;
-use Piwigo\Db\Tables;
 
 /**
  * Piwigo\Db\DbInfo -- real DB server diagnostics (version/current
@@ -41,7 +40,7 @@ test('currentDateTime returns the real DB server\'s current datetime', function 
 test('getTableFingerprint returns a real "<epoch>_<count>" fingerprint for a real table', function (): void {
     $dbInfo = new DbInfo(DbConnection::build());
 
-    $result = $dbInfo->getTableFingerprint(Tables::categories());
+    $result = $dbInfo->getTableFingerprint('categories');
 
     expect($result)->toMatch('/^\d+_\d+$/');
 });
@@ -49,5 +48,5 @@ test('getTableFingerprint returns a real "<epoch>_<count>" fingerprint for a rea
 test('resyncIdentitySequence runs cleanly against the real users table on either platform', function (): void {
     $dbInfo = new DbInfo(DbConnection::build());
 
-    $dbInfo->resyncIdentitySequence(Tables::users());
+    $dbInfo->resyncIdentitySequence('users');
 })->throwsNoExceptions();

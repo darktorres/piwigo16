@@ -31,7 +31,6 @@ use Piwigo\Core\ActivityLoggerInterface;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Db\DbConnection;
-use Piwigo\Db\Tables;
 use Piwigo\Permission\PermissionRepository;
 use Piwigo\Permission\PermissionService;
 
@@ -189,10 +188,10 @@ final class CategoryAdminServiceTest extends IntegrationTestCase
         // literals in the SQL text (unlike a bound parameter, which the
         // driver coerces implicitly) are rejected outright by Postgres.
         $boolLiteral = $this->dbDriver === 'pgsql' ? 'true' : '1';
-        $this->conn->executeStatement('UPDATE ' . Tables::categories() . " SET commentable = {$boolLiteral}, visible = {$boolLiteral}, status = 'public', representative_picture_id = NULL, image_order = NULL");
-        $this->conn->executeStatement('DELETE FROM ' . Tables::userAccess());
-        $this->conn->executeStatement('DELETE FROM ' . Tables::groupAccess());
-        $this->conn->executeStatement('INSERT INTO ' . Tables::groupAccess() . ' (group_id, cat_id) VALUES (1, 1), (1, 2), (2, 1), (3, 1)');
+        $this->conn->executeStatement('UPDATE ' . 'categories' . " SET commentable = {$boolLiteral}, visible = {$boolLiteral}, status = 'public', representative_picture_id = NULL, image_order = NULL");
+        $this->conn->executeStatement('DELETE FROM ' . 'user_access');
+        $this->conn->executeStatement('DELETE FROM ' . 'group_access');
+        $this->conn->executeStatement('INSERT INTO ' . 'group_access' . ' (group_id, cat_id) VALUES (1, 1), (1, 2), (2, 1), (3, 1)');
         Kernel::reset();
         parent::tearDown();
     }
@@ -202,7 +201,7 @@ final class CategoryAdminServiceTest extends IntegrationTestCase
      */
     private function fetchCategory(int $catId): ?array
     {
-        $row = $this->conn->executeQuery('SELECT * FROM ' . Tables::categories() . ' WHERE id = ' . $catId)
+        $row = $this->conn->executeQuery('SELECT * FROM ' . 'categories' . ' WHERE id = ' . $catId)
             ->fetchAssociative();
 
         return $row === false ? null : $row;
@@ -217,7 +216,7 @@ final class CategoryAdminServiceTest extends IntegrationTestCase
             static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0,
             $this->conn->createQueryBuilder()
                 ->select('group_id')
-                ->from(Tables::groupAccess())
+                ->from('group_access')
                 ->where('cat_id = :catId')
                 ->setParameter('catId', $catId)
                 ->executeQuery()
@@ -234,7 +233,7 @@ final class CategoryAdminServiceTest extends IntegrationTestCase
             static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0,
             $this->conn->createQueryBuilder()
                 ->select('user_id')
-                ->from(Tables::userAccess())
+                ->from('user_access')
                 ->where('cat_id = :catId')
                 ->setParameter('catId', $catId)
                 ->executeQuery()
@@ -294,7 +293,7 @@ final class CategoryAdminServiceTest extends IntegrationTestCase
 
     public function test_set_category_option_representative_false_clears_the_row(): void
     {
-        $this->conn->executeStatement('UPDATE ' . Tables::categories() . ' SET representative_picture_id = 1 WHERE id = 1');
+        $this->conn->executeStatement('UPDATE ' . 'categories' . ' SET representative_picture_id = 1 WHERE id = 1');
 
         $this->service->setCategoryOption([1], 'representative', false, new CategoryAdminServiceFakeActivityLogger());
 
@@ -400,7 +399,7 @@ final class CategoryAdminServiceTest extends IntegrationTestCase
         self::assertNotNull($created);
         self::assertSame('Integration Test Album', $created['name']);
 
-        $this->conn->executeStatement('DELETE FROM ' . Tables::categories() . ' WHERE id = ' . $result->categoryId);
+        $this->conn->executeStatement('DELETE FROM ' . 'categories' . ' WHERE id = ' . $result->categoryId);
     }
 
     public function test_set_category_permissions_denies_a_group_no_longer_in_the_grant_list(): void
@@ -467,7 +466,7 @@ final class CategoryAdminServiceTest extends IntegrationTestCase
 
     public function test_set_category_permissions_denies_a_user_no_longer_in_the_grant_list(): void
     {
-        $this->conn->executeStatement('INSERT INTO ' . Tables::userAccess() . ' (user_id, cat_id) VALUES (2, 1), (3, 1)');
+        $this->conn->executeStatement('INSERT INTO ' . 'user_access' . ' (user_id, cat_id) VALUES (2, 1), (3, 1)');
 
         // Real public -> private transition (not private -> private):
         // addPermissionOnCategory()'s own grant only ever inserts rows
@@ -488,7 +487,7 @@ final class CategoryAdminServiceTest extends IntegrationTestCase
 
     public function test_set_category_permissions_switches_status_without_touching_permission_tables_when_new_status_is_not_private(): void
     {
-        $this->conn->executeStatement("UPDATE " . Tables::categories() . " SET status = 'private' WHERE id = 2");
+        $this->conn->executeStatement("UPDATE " . 'categories' . " SET status = 'private' WHERE id = 2");
         $groupsBefore = $this->groupAccessFor(2);
         self::assertNotSame([], $groupsBefore, 'fixture precondition: cat 2 must already have a real group grant');
 

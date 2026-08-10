@@ -8,7 +8,6 @@ use Piwigo\Calendar\CalendarQueryScope;
 use Piwigo\Calendar\CalendarRepository;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
-use Piwigo\Db\Tables;
 use Piwigo\Permission\SqlCondition;
 
 /**
@@ -54,7 +53,7 @@ function calendarTestRepo(): CalendarRepository
 
 test('findImageIds() returns matching ids in order', function (): void {
     $ids = calendarTestRepo()->findImageIds(
-        new SqlCondition(' FROM ' . Tables::images() . ' WHERE id IN (3, 1, 2)'),
+        new SqlCondition(' FROM ' . 'images' . ' WHERE id IN (3, 1, 2)'),
         new SqlCondition(''),
         'ORDER BY id ASC'
     );
@@ -64,7 +63,7 @@ test('findImageIds() returns matching ids in order', function (): void {
 
 test('findImageIds() returns empty for no match', function (): void {
     $ids = calendarTestRepo()->findImageIds(
-        new SqlCondition(' FROM ' . Tables::images() . ' WHERE id = 999999'),
+        new SqlCondition(' FROM ' . 'images' . ' WHERE id = 999999'),
         new SqlCondition(''),
         ''
     );
@@ -79,7 +78,7 @@ test('findImageIds() orders by a column outside the select list', function (): v
     // DISTINCT id, which has no functional-dependency exception for
     // ORDER BY columns not in the SELECT list).
     $ids = calendarTestRepo()->findImageIds(
-        new SqlCondition(' FROM ' . Tables::images() . ' WHERE id IN (1, 2, 3)'),
+        new SqlCondition(' FROM ' . 'images' . ' WHERE id IN (1, 2, 3)'),
         new SqlCondition(''),
         'ORDER BY date_available DESC, file ASC, id ASC'
     );
@@ -93,7 +92,7 @@ test('findImageIds() deduplicates rows from a join', function (): void {
     // row per category an image belongs to) -- GROUP BY id must still
     // collapse that back down to one id per image.
     $ids = calendarTestRepo()->findImageIds(
-        new SqlCondition(' FROM ' . Tables::images() . ' INNER JOIN ' . Tables::imageCategory() . ' ON id = image_id WHERE category_id IN (1, 2)'),
+        new SqlCondition(' FROM ' . 'images' . ' INNER JOIN ' . 'image_category' . ' ON id = image_id WHERE category_id IN (1, 2)'),
         new SqlCondition(''),
         'ORDER BY id ASC'
     );
@@ -110,18 +109,18 @@ test('findImageIds() collapses a real multi-category duplicate down to one row',
     // rows for it, so a missing GROUP BY is directly observable as a
     // repeated id.
     $conn = DbConnection::build();
-    $conn->executeStatement('INSERT INTO ' . Tables::imageCategory() . ' (image_id, category_id) VALUES (1, 2)');
+    $conn->executeStatement('INSERT INTO ' . 'image_category' . ' (image_id, category_id) VALUES (1, 2)');
 
     try {
         $ids = calendarTestRepo()->findImageIds(
-            new SqlCondition(' FROM ' . Tables::images() . ' INNER JOIN ' . Tables::imageCategory() . ' ON id = image_id WHERE category_id IN (1, 2)'),
+            new SqlCondition(' FROM ' . 'images' . ' INNER JOIN ' . 'image_category' . ' ON id = image_id WHERE category_id IN (1, 2)'),
             new SqlCondition(''),
             'ORDER BY id ASC'
         );
 
         expect($ids)->toBe([1, 2, 3, 4, 5]);
     } finally {
-        $conn->executeStatement('DELETE FROM ' . Tables::imageCategory() . ' WHERE image_id = 1 AND category_id = 2');
+        $conn->executeStatement('DELETE FROM ' . 'image_category' . ' WHERE image_id = 1 AND category_id = 2');
     }
 });
 
@@ -133,7 +132,7 @@ test('findImageIds() honours a real DESC order, not just the GROUP BY key\'s own
     // actually proves $orderBySql reaches the query rather than being
     // silently dropped.
     $ids = calendarTestRepo()->findImageIds(
-        new SqlCondition(' FROM ' . Tables::images() . ' WHERE id IN (1, 2, 3)'),
+        new SqlCondition(' FROM ' . 'images' . ' WHERE id IN (1, 2, 3)'),
         new SqlCondition(''),
         'ORDER BY id DESC'
     );
@@ -147,7 +146,7 @@ test('findImageIds() binds real parameters and types from both $fromWhere and $d
     // side's own ->parameters/->types is dropped when the two are
     // merged into one executeQuery() call.
     $ids = calendarTestRepo()->findImageIds(
-        new SqlCondition(' FROM ' . Tables::images() . ' WHERE id = :onlyId', ['onlyId' => 2], ['onlyId' => ParameterType::INTEGER]),
+        new SqlCondition(' FROM ' . 'images' . ' WHERE id = :onlyId', ['onlyId' => 2], ['onlyId' => ParameterType::INTEGER]),
         new SqlCondition('AND (rating_score = :rating)', ['rating' => '3.00'], ['rating' => ParameterType::STRING]),
         'ORDER BY id ASC'
     );
@@ -160,18 +159,18 @@ test('findImageIds() applies the date_where continuation', function (): void {
     // *continuation* fragment ("AND (...)"), which must land right
     // after $fromWhereSql's own WHERE and before GROUP BY.
     $conn = DbConnection::build();
-    $conn->executeStatement("UPDATE " . Tables::images() . " SET date_available = '2026-08-02 00:00:00' WHERE id = 3");
+    $conn->executeStatement("UPDATE " . 'images' . " SET date_available = '2026-08-02 00:00:00' WHERE id = 3");
 
     try {
         $ids = calendarTestRepo()->findImageIds(
-            new SqlCondition(' FROM ' . Tables::images() . ' WHERE id IN (1, 2, 3)'),
+            new SqlCondition(' FROM ' . 'images' . ' WHERE id IN (1, 2, 3)'),
             new SqlCondition("AND (date_available = '2026-08-01 00:00:00')"),
             'ORDER BY id ASC'
         );
 
         expect($ids)->toBe([1, 2]);
     } finally {
-        $conn->executeStatement("UPDATE " . Tables::images() . " SET date_available = '2026-08-01 00:00:00' WHERE id = 3");
+        $conn->executeStatement("UPDATE " . 'images' . " SET date_available = '2026-08-01 00:00:00' WHERE id = 3");
     }
 });
 
@@ -184,7 +183,7 @@ test('findImageIds() runs DQL, applies a real $dqlDateWhere filter, and never fa
     // dropped, the wider/wrong raw-path result would leak through
     // instead of the correct DQL-filtered one.
     $ids = calendarTestRepo()->findImageIds(
-        new SqlCondition(' FROM ' . Tables::images() . ' WHERE id IN (1, 2, 3, 4, 5)'),
+        new SqlCondition(' FROM ' . 'images' . ' WHERE id IN (1, 2, 3, 4, 5)'),
         new SqlCondition(''),
         'ORDER BY id DESC',
         new CalendarQueryScope(
@@ -203,7 +202,7 @@ test('findImageIds() falls back to raw DBAL when $dqlScope is given but $dqlDate
     // ignored here -- with $dqlDateWhere null, the method must never
     // attempt DQL at all, only the raw-DBAL args below (all 5 images).
     $ids = calendarTestRepo()->findImageIds(
-        new SqlCondition(' FROM ' . Tables::images() . ' WHERE id IN (1, 2, 3, 4, 5)'),
+        new SqlCondition(' FROM ' . 'images' . ' WHERE id IN (1, 2, 3, 4, 5)'),
         new SqlCondition(''),
         'ORDER BY id ASC',
         new CalendarQueryScope(
@@ -219,7 +218,7 @@ test('findImageIds() falls back to raw DBAL when $dqlScope is given but $dqlDate
 
 test('findImageIds() falls back to raw DBAL when $dqlDateWhere is given but $dqlScope is not', function (): void {
     $ids = calendarTestRepo()->findImageIds(
-        new SqlCondition(' FROM ' . Tables::images() . ' WHERE id IN (1, 2, 3, 4, 5)'),
+        new SqlCondition(' FROM ' . 'images' . ' WHERE id IN (1, 2, 3, 4, 5)'),
         new SqlCondition(''),
         'ORDER BY id ASC',
         null,
@@ -235,7 +234,7 @@ test('findImageIds() DQL path only joins image_category when the scope asks for 
     // result, proving the join really is conditional on the scope's own
     // flag, not always-on or always-off.
     $conn = DbConnection::build();
-    $conn->executeStatement("INSERT INTO " . Tables::images() . " (file, path) VALUES ('p17-unit-test-calendar-orphan.jpg', 'p17-unit-test-calendar-orphan.jpg')");
+    $conn->executeStatement("INSERT INTO " . 'images' . " (file, path) VALUES ('p17-unit-test-calendar-orphan.jpg', 'p17-unit-test-calendar-orphan.jpg')");
     $orphanId = (int) $conn->lastInsertId();
 
     try {
@@ -253,7 +252,7 @@ test('findImageIds() DQL path only joins image_category when the scope asks for 
 
         expect($ids)->toBe([1]);
     } finally {
-        $conn->executeStatement('DELETE FROM ' . Tables::images() . ' WHERE id = ?', [$orphanId]);
+        $conn->executeStatement('DELETE FROM ' . 'images' . ' WHERE id = ?', [$orphanId]);
     }
 });
 
@@ -262,7 +261,7 @@ test('findImageIds() falls back to raw DBAL when a DQL scope is given but order 
     // must still return the right members via the raw-DBAL fallback,
     // not throw, even though a $dqlScope is given.
     $ids = calendarTestRepo()->findImageIds(
-        new SqlCondition(' FROM ' . Tables::images() . ' WHERE id IN (1, 2, 3)'),
+        new SqlCondition(' FROM ' . 'images' . ' WHERE id IN (1, 2, 3)'),
         new SqlCondition(''),
         'ORDER BY RAND()',
         new CalendarQueryScope(

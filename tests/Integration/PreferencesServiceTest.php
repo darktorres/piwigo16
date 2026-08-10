@@ -13,7 +13,6 @@ use Doctrine\DBAL\Connection;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\ConfigLoader;
 use Piwigo\Db\DbConnection;
-use Piwigo\Db\Tables;
 use Piwigo\Tests\Support\CurrentUserTestFactory;
 use Piwigo\Users\PreferencesService;
 use Piwigo\Users\User;
@@ -56,7 +55,7 @@ final class PreferencesServiceTest extends IntegrationTestCase
     #[Override]
     protected function tearDown(): void
     {
-        $this->conn->executeStatement('UPDATE ' . Tables::userInfos() . ' SET preferences = NULL WHERE user_id = 1');
+        $this->conn->executeStatement('UPDATE ' . 'user_infos' . ' SET preferences = NULL WHERE user_id = 1');
         parent::tearDown();
     }
 
@@ -75,7 +74,7 @@ final class PreferencesServiceTest extends IntegrationTestCase
 
         $value = $this->conn->createQueryBuilder()
             ->select('preferences')
-            ->from(Tables::userInfos())
+            ->from('user_infos')
             ->where('user_id = 1')
             ->executeQuery()
             ->fetchOne();

@@ -9,7 +9,6 @@ use Piwigo\Cache\CachePools;
 use RuntimeException;
 use Doctrine\DBAL\Connection;
 use Piwigo\Db\DbConnection;
-use Piwigo\Db\Tables;
 
 final class WsHistoryTest extends ContractTestCase
 {
@@ -25,8 +24,8 @@ final class WsHistoryTest extends ContractTestCase
     #[Override]
     protected function tearDown(): void
     {
-        $this->conn->executeStatement('DELETE FROM ' . Tables::history());
-        $this->conn->executeStatement("DELETE FROM " . Tables::config() . " WHERE param IN ('history_admin', 'history_guest')");
+        $this->conn->executeStatement('DELETE FROM ' . 'history');
+        $this->conn->executeStatement("DELETE FROM " . 'config' . " WHERE param IN ('history_admin', 'history_guest')");
         CachePools::config()->clear();
         parent::tearDown();
     }
@@ -164,7 +163,7 @@ final class WsHistoryTest extends ContractTestCase
      */
     public function test_activityGetList_filters_by_performer_uid(): void
     {
-        $adminId = $this->conn->fetchOne("SELECT id FROM " . Tables::users() . " WHERE username = 'fixture_admin'");
+        $adminId = $this->conn->fetchOne("SELECT id FROM " . 'users' . " WHERE username = 'fixture_admin'");
         self::assertIsNumeric($adminId);
 
         // Generates a real, fresh 'photo'/'edit' row performed by
@@ -206,7 +205,7 @@ final class WsHistoryTest extends ContractTestCase
             self::assertIsArray($result);
             self::assertSame([], $result['result_lines']);
         } finally {
-            $this->conn->executeStatement("DELETE FROM " . Tables::config() . " WHERE param = 'activity_display_connections'");
+            $this->conn->executeStatement("DELETE FROM " . 'config' . " WHERE param = 'activity_display_connections'");
             CachePools::config()->clear();
         }
     }
@@ -224,9 +223,9 @@ final class WsHistoryTest extends ContractTestCase
         CachePools::config()->clear();
 
         try {
-            $adminId = $this->conn->fetchOne("SELECT id FROM " . Tables::users() . " WHERE username = 'fixture_admin'");
+            $adminId = $this->conn->fetchOne("SELECT id FROM " . 'users' . " WHERE username = 'fixture_admin'");
             self::assertIsNumeric($adminId);
-            $regularUserId = $this->conn->fetchOne("SELECT id FROM " . Tables::users() . " WHERE username = 'regular_user'");
+            $regularUserId = $this->conn->fetchOne("SELECT id FROM " . 'users' . " WHERE username = 'regular_user'");
             self::assertIsNumeric($regularUserId);
 
             // fixture_admin (webmaster status) logs in first -- its own
@@ -266,7 +265,7 @@ final class WsHistoryTest extends ContractTestCase
             self::assertContains((string) (int) $adminId, $objectIds, 'admins_only must keep an admin login');
             self::assertNotContains((string) (int) $regularUserId, $objectIds, 'admins_only must exclude a non-admin login');
         } finally {
-            $this->conn->executeStatement("DELETE FROM " . Tables::config() . " WHERE param = 'activity_display_connections'");
+            $this->conn->executeStatement("DELETE FROM " . 'config' . " WHERE param = 'activity_display_connections'");
             CachePools::config()->clear();
         }
     }
@@ -280,7 +279,7 @@ final class WsHistoryTest extends ContractTestCase
      */
     public function test_activityGetList_login_event_enriches_username_and_details_users(): void
     {
-        $adminId = $this->conn->fetchOne("SELECT id FROM " . Tables::users() . " WHERE username = 'fixture_admin'");
+        $adminId = $this->conn->fetchOne("SELECT id FROM " . 'users' . " WHERE username = 'fixture_admin'");
         self::assertIsNumeric($adminId);
         $adminIdString = (string) (int) $adminId;
 
@@ -345,7 +344,7 @@ final class WsHistoryTest extends ContractTestCase
             );
         }
         $this->conn->executeStatement(
-            'INSERT INTO ' . Tables::activity() . ' (object, object_id, action, session_idx, occured_on) VALUES '
+            'INSERT INTO ' . 'activity' . ' (object, object_id, action, session_idx, occured_on) VALUES '
             . implode(', ', $rows)
         );
 
@@ -376,7 +375,7 @@ final class WsHistoryTest extends ContractTestCase
      */
     public function test_activityGetList_resets_a_non_array_users_detail_before_appending(): void
     {
-        $adminId = $this->conn->fetchOne("SELECT id FROM " . Tables::users() . " WHERE username = 'fixture_admin'");
+        $adminId = $this->conn->fetchOne("SELECT id FROM " . 'users' . " WHERE username = 'fixture_admin'");
         self::assertIsNumeric($adminId);
         $adminIdInt = (int) $adminId;
 
@@ -391,7 +390,7 @@ final class WsHistoryTest extends ContractTestCase
         // only real way this state could exist" rationale as
         // WsHistoryTest's own dangling-image-id/dangling-user-id tests.
         $this->conn->executeStatement(
-            "INSERT INTO " . Tables::activity() . " (object, object_id, action, session_idx, occured_on, details) VALUES ('user', ?, 'edit', ?, NOW(), ?)",
+            "INSERT INTO " . 'activity' . " (object, object_id, action, session_idx, occured_on, details) VALUES ('user', ?, 'edit', ?, NOW(), ?)",
             [$adminIdInt, 'pwgcore-malformed-users-' . uniqid(), json_encode(['users' => 'not-an-array'])]
         );
 
@@ -446,7 +445,7 @@ final class WsHistoryTest extends ContractTestCase
     public function test_historyLog_records_a_visit_and_increments_the_hit_counter(): void
     {
         $this->enableHistoryForAdmin();
-        $beforeHit = $this->conn->fetchOne('SELECT hit FROM ' . Tables::images() . ' WHERE id = 1');
+        $beforeHit = $this->conn->fetchOne('SELECT hit FROM ' . 'images' . ' WHERE id = 1');
         self::assertIsNumeric($beforeHit);
 
         $response = $this->wsAdmin('pwg.history.log', [
@@ -464,7 +463,7 @@ final class WsHistoryTest extends ContractTestCase
         self::assertNull($response['result']);
 
         $row = $this->conn->fetchAssociative(
-            'SELECT * FROM ' . Tables::history() . ' WHERE image_id = 1 ORDER BY id DESC LIMIT 1'
+            'SELECT * FROM ' . 'history' . ' WHERE image_id = 1 ORDER BY id DESC LIMIT 1'
         );
         self::assertIsArray($row);
         self::assertSame('high', $row['image_type']);
@@ -473,7 +472,7 @@ final class WsHistoryTest extends ContractTestCase
         self::assertSame(1, (int) $row['category_id']);
         self::assertNull($row['tag_ids']);
 
-        $afterHit = $this->conn->fetchOne('SELECT hit FROM ' . Tables::images() . ' WHERE id = 1');
+        $afterHit = $this->conn->fetchOne('SELECT hit FROM ' . 'images' . ' WHERE id = 1');
         self::assertIsNumeric($afterHit);
         self::assertSame((int) $beforeHit + 1, (int) $afterHit);
     }
@@ -491,7 +490,7 @@ final class WsHistoryTest extends ContractTestCase
         self::assertSame('ok', $response['stat']);
 
         $row = $this->conn->fetchAssociative(
-            'SELECT * FROM ' . Tables::history() . ' WHERE image_id = 1 ORDER BY id DESC LIMIT 1'
+            'SELECT * FROM ' . 'history' . ' WHERE image_id = 1 ORDER BY id DESC LIMIT 1'
         );
         self::assertIsArray($row);
         self::assertSame('tags', $row['section']);
@@ -510,7 +509,7 @@ final class WsHistoryTest extends ContractTestCase
         self::assertSame('ok', $response['stat']);
 
         $section = $this->conn->fetchOne(
-            'SELECT section FROM ' . Tables::history() . ' WHERE image_id = 2 ORDER BY id DESC LIMIT 1'
+            'SELECT section FROM ' . 'history' . ' WHERE image_id = 2 ORDER BY id DESC LIMIT 1'
         );
         self::assertNull($section);
     }
@@ -630,7 +629,7 @@ final class WsHistoryTest extends ContractTestCase
     public function test_historySearch_filters_by_filename(): void
     {
         $this->enableHistoryForAdmin();
-        $file = $this->conn->fetchOne('SELECT file FROM ' . Tables::images() . ' WHERE id = 1');
+        $file = $this->conn->fetchOne('SELECT file FROM ' . 'images' . ' WHERE id = 1');
         self::assertIsString($file);
 
         $this->wsAdmin('pwg.history.log', ['image_id' => 1]);
@@ -665,7 +664,7 @@ final class WsHistoryTest extends ContractTestCase
         $this->enableHistoryForAdmin();
         $this->wsAdmin('pwg.history.log', ['image_id' => 1]);
 
-        $loggedIp = $this->conn->fetchOne('SELECT IP FROM ' . Tables::history() . ' WHERE image_id = 1 ORDER BY id DESC LIMIT 1');
+        $loggedIp = $this->conn->fetchOne('SELECT IP FROM ' . 'history' . ' WHERE image_id = 1 ORDER BY id DESC LIMIT 1');
         self::assertIsString($loggedIp);
         self::assertNotSame('', $loggedIp);
 
@@ -707,7 +706,7 @@ final class WsHistoryTest extends ContractTestCase
         $this->enableHistoryForAdmin();
         $this->wsAdmin('pwg.history.log', ['image_id' => 1]);
 
-        $adminId = $this->conn->fetchOne("SELECT id FROM " . Tables::users() . " WHERE username = 'fixture_admin'");
+        $adminId = $this->conn->fetchOne("SELECT id FROM " . 'users' . " WHERE username = 'fixture_admin'");
         self::assertIsNumeric($adminId);
 
         $response = $this->wsAdmin('pwg.history.search', ['user_id' => (int) $adminId]);
@@ -733,7 +732,7 @@ final class WsHistoryTest extends ContractTestCase
         $this->enableHistoryForAdmin();
         $this->wsAdmin('pwg.history.log', ['image_id' => 1, 'cat_id' => 1, 'section' => 'categories']);
 
-        $expectedName = $this->conn->fetchOne('SELECT name FROM ' . Tables::categories() . ' WHERE id = 1');
+        $expectedName = $this->conn->fetchOne('SELECT name FROM ' . 'categories' . ' WHERE id = 1');
         self::assertIsString($expectedName);
 
         $response = $this->wsAdmin('pwg.history.search', ['image_id' => 1]);
@@ -755,7 +754,7 @@ final class WsHistoryTest extends ContractTestCase
     public function test_historySearch_enriches_the_tag_name(): void
     {
         $this->enableHistoryForAdmin();
-        $tagName = $this->conn->fetchOne('SELECT name FROM ' . Tables::tags() . ' WHERE id = 1');
+        $tagName = $this->conn->fetchOne('SELECT name FROM ' . 'tags' . ' WHERE id = 1');
         self::assertIsString($tagName);
 
         $this->wsAdmin('pwg.history.log', ['image_id' => 1, 'section' => 'tags', 'tags_string' => '1']);
@@ -825,14 +824,14 @@ final class WsHistoryTest extends ContractTestCase
         $searchUuid = $searchResult['search_id'];
         self::assertIsString($searchUuid);
         $searchDbId = $this->conn->fetchOne(
-            'SELECT id FROM ' . Tables::search() . ' WHERE search_uuid = ?',
+            'SELECT id FROM ' . 'search' . ' WHERE search_uuid = ?',
             [$searchUuid]
         );
         self::assertIsNumeric($searchDbId);
 
         $this->callWs('pwg.history.log', ['image_id' => 1]);
         $this->conn->executeStatement(
-            'UPDATE ' . Tables::history() . ' SET search_id = ? WHERE image_id = 1',
+            'UPDATE ' . 'history' . ' SET search_id = ? WHERE image_id = 1',
             [(int) $searchDbId]
         );
 
@@ -891,14 +890,14 @@ final class WsHistoryTest extends ContractTestCase
         $searchUuid = $searchResult['search_id'];
         self::assertIsString($searchUuid);
         $searchDbId = $this->conn->fetchOne(
-            'SELECT id FROM ' . Tables::search() . ' WHERE search_uuid = ?',
+            'SELECT id FROM ' . 'search' . ' WHERE search_uuid = ?',
             [$searchUuid]
         );
         self::assertIsNumeric($searchDbId);
 
         $this->callWs('pwg.history.log', ['image_id' => 1]);
         $this->conn->executeStatement(
-            'UPDATE ' . Tables::history() . ' SET search_id = ? WHERE image_id = 1',
+            'UPDATE ' . 'history' . ' SET search_id = ? WHERE image_id = 1',
             [(int) $searchDbId]
         );
 
@@ -939,13 +938,13 @@ final class WsHistoryTest extends ContractTestCase
         $this->enableHistoryForAdmin();
 
         $this->conn->executeStatement(
-            'INSERT INTO ' . Tables::search() . ' (search_uuid, rules) VALUES (?, NULL)',
+            'INSERT INTO ' . 'search' . ' (search_uuid, rules) VALUES (?, NULL)',
             ['pwgcoretst' . substr(uniqid(), 0, 13)]
         );
         $nullRulesSearchId = (int) $this->conn->lastInsertId();
 
         $this->conn->executeStatement(
-            'INSERT INTO ' . Tables::search() . ' (search_uuid, rules) VALUES (?, ?)',
+            'INSERT INTO ' . 'search' . ' (search_uuid, rules) VALUES (?, ?)',
             ['pwgcoretst' . substr(uniqid(), 0, 13), json_encode(['created_by' => 5])]
         );
         $noFieldsSearchId = (int) $this->conn->lastInsertId();
@@ -953,11 +952,11 @@ final class WsHistoryTest extends ContractTestCase
         $this->wsAdmin('pwg.history.log', ['image_id' => 1]);
         $this->wsAdmin('pwg.history.log', ['image_id' => 2]);
         $this->conn->executeStatement(
-            'UPDATE ' . Tables::history() . ' SET search_id = ? WHERE image_id = 1',
+            'UPDATE ' . 'history' . ' SET search_id = ? WHERE image_id = 1',
             [$nullRulesSearchId]
         );
         $this->conn->executeStatement(
-            'UPDATE ' . Tables::history() . ' SET search_id = ? WHERE image_id = 2',
+            'UPDATE ' . 'history' . ' SET search_id = ? WHERE image_id = 2',
             [$noFieldsSearchId]
         );
 
@@ -1029,7 +1028,7 @@ final class WsHistoryTest extends ContractTestCase
     public function test_historySearch_fatals_when_a_plugin_get_history_handler_returns_something_other_than_a_get_history_instance(): void
     {
         $this->conn->executeStatement(
-            'INSERT INTO ' . Tables::images() . ' (file, path) VALUES (?, ?)',
+            'INSERT INTO ' . 'images' . ' (file, path) VALUES (?, ?)',
             ['pwgcore-gethistory-' . uniqid() . '.jpg', 'upload/pwgcore-gethistory-throwaway.jpg']
         );
         $imageId = (int) $this->conn->lastInsertId();
@@ -1080,7 +1079,7 @@ final class WsHistoryTest extends ContractTestCase
                 PHP);
 
             $this->conn->executeStatement(
-                "INSERT INTO " . Tables::plugins() . " (id, state, version) VALUES (?, 'active', '1.0.0')",
+                "INSERT INTO " . 'plugins' . " (id, state, version) VALUES (?, 'active', '1.0.0')",
                 [$pluginId]
             );
 
@@ -1104,17 +1103,17 @@ final class WsHistoryTest extends ContractTestCase
 
             self::assertSame(500, $status, 'a plugin GetHistory handler returning a non-GetHistory instance must fatal (fail loud), not silently degrade');
         } finally {
-            $this->conn->executeStatement('DELETE FROM ' . Tables::plugins() . " WHERE id = ?", [$pluginId]);
+            $this->conn->executeStatement('DELETE FROM ' . 'plugins' . " WHERE id = ?", [$pluginId]);
             @unlink($mainFile);
             @rmdir($pluginDir);
-            $this->conn->executeStatement('DELETE FROM ' . Tables::images() . ' WHERE id = ?', [$imageId]);
+            $this->conn->executeStatement('DELETE FROM ' . 'images' . ' WHERE id = ?', [$imageId]);
         }
     }
 
     public function test_historySearch_computes_the_total_filesize_of_high_type_images(): void
     {
         $this->enableHistoryForAdmin();
-        $filesize = $this->conn->fetchOne('SELECT filesize FROM ' . Tables::images() . ' WHERE id = 1');
+        $filesize = $this->conn->fetchOne('SELECT filesize FROM ' . 'images' . ' WHERE id = 1');
         self::assertIsNumeric($filesize);
 
         // historyLog() with is_download=true records image_type='high'
@@ -1166,8 +1165,8 @@ final class WsHistoryTest extends ContractTestCase
         // a derived table; Postgres has no such restriction but accepts
         // this form identically.
         $this->conn->executeStatement(
-            'UPDATE ' . Tables::history() . ' SET image_id = 999999, category_id = NULL, section = NULL '
-            . 'WHERE id = (SELECT id FROM (SELECT id FROM ' . Tables::history() . ' WHERE image_id = 1 ORDER BY id DESC LIMIT 1) AS t)'
+            'UPDATE ' . 'history' . ' SET image_id = 999999, category_id = NULL, section = NULL '
+            . 'WHERE id = (SELECT id FROM (SELECT id FROM ' . 'history' . ' WHERE image_id = 1 ORDER BY id DESC LIMIT 1) AS t)'
         );
         $this->enableForeignKeyChecks($this->conn);
 
@@ -1232,7 +1231,7 @@ final class WsHistoryTest extends ContractTestCase
             self::assertIsArray($line);
             self::assertContains($line['IMAGEID'], ['1', '2']);
         } finally {
-            $this->conn->executeStatement("DELETE FROM " . Tables::config() . " WHERE param = 'nb_logs_page'");
+            $this->conn->executeStatement("DELETE FROM " . 'config' . " WHERE param = 'nb_logs_page'");
             CachePools::config()->clear();
         }
     }
@@ -1260,8 +1259,8 @@ final class WsHistoryTest extends ContractTestCase
         // and why the extra derived-table wrapper is needed on MySQL
         // specifically.
         $this->conn->executeStatement(
-            'UPDATE ' . Tables::history() . ' SET user_id = 999999 '
-            . 'WHERE id = (SELECT id FROM (SELECT id FROM ' . Tables::history() . ' WHERE image_id = 1 ORDER BY id DESC LIMIT 1) AS t)'
+            'UPDATE ' . 'history' . ' SET user_id = 999999 '
+            . 'WHERE id = (SELECT id FROM (SELECT id FROM ' . 'history' . ' WHERE image_id = 1 ORDER BY id DESC LIMIT 1) AS t)'
         );
         $this->enableForeignKeyChecks($this->conn);
 
@@ -1289,7 +1288,7 @@ final class WsHistoryTest extends ContractTestCase
             // always present -- no assertion needed in a `finally` cleanup.
             $this->disableForeignKeyChecks($this->conn);
             $this->conn->executeStatement(
-                "UPDATE " . Tables::history() . " SET user_id = (SELECT id FROM " . Tables::users() . " WHERE username = 'fixture_admin') WHERE user_id = 999999"
+                "UPDATE " . 'history' . " SET user_id = (SELECT id FROM " . 'users' . " WHERE username = 'fixture_admin') WHERE user_id = 999999"
             );
             $this->enableForeignKeyChecks($this->conn);
         }
@@ -1329,7 +1328,7 @@ final class WsHistoryTest extends ContractTestCase
         self::assertSame(200, $status);
 
         $row = $this->conn->fetchAssociative(
-            'SELECT id FROM ' . Tables::history() . " WHERE image_id IS NULL AND section = 'categories' ORDER BY id DESC LIMIT 1"
+            'SELECT id FROM ' . 'history' . " WHERE image_id IS NULL AND section = 'categories' ORDER BY id DESC LIMIT 1"
         );
         self::assertIsArray($row, 'expected the /index.php visit above to log a real image_id-less history row');
 

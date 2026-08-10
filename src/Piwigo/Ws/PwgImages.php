@@ -393,7 +393,7 @@ final class PwgImages
             return new PwgError(404, 'image_id not found');
         }
 
-        // id is the Tables::images() primary key, guaranteed numeric; captured
+        // id is the 'images' primary key, guaranteed numeric; captured
         // before array_merge() below widens every value of $image_row to mixed.
         assert(is_numeric($image_row['id']));
         $image_id = (int) $image_row['id'];
@@ -401,7 +401,7 @@ final class PwgImages
         // array_merge() with WsHelper::stdGetUrls()'s mixed-valued return widens
         // PHPStan's tracked shape for every other key of the original
         // fetchAssociative() row -- restate the columns this function reads
-        // below (id: Tables::images() NOT NULL primary key, native int under
+        // below (id: 'images' NOT NULL primary key, native int under
         // DBAL; file: NOT NULL; name/comment/rating_score: nullable) plus an
         // open tail for the rest of the row and the page_url/element_url/
         // download_url/derivatives keys WsHelper::stdGetUrls() injects.
@@ -2039,7 +2039,7 @@ final class PwgImages
      * @param array{md5sum_list: string|null, filename_list: string|null, ...} $params
      *    both: no WS_TYPE flag, null default -- string|null.
      * @return array<string, int|string|null> keyed by md5sum/filename;
-     *   id is Tables::images()'s NOT NULL primary key (int|string per
+     *   id is 'images''s NOT NULL primary key (int|string per
      *   driver), or null when no matching photo was found
      */
     public function exist(array $params, PwgServer $service): array

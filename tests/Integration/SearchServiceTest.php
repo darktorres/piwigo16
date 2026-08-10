@@ -35,7 +35,6 @@ namespace Piwigo\Tests\Integration {
     use Piwigo\Core\HtmlRenderingInterface;
     use Piwigo\Core\RedirectServiceInterface;
     use Piwigo\Db\DbConnection;
-    use Piwigo\Db\Tables;
     use Piwigo\Event\Search\QsearchGetScopes;
     use Piwigo\Mail\MailService;
     use Piwigo\Permission\PermissionRepository;
@@ -557,7 +556,7 @@ final class SearchServiceTest extends IntegrationTestCase
         self::assertNotSame([], $clauses);
 
         $count = $this->conn->executeQuery(
-            'SELECT COUNT(*) FROM ' . Tables::images() . ' WHERE (' . implode(' OR ', $clauses) . ')',
+            'SELECT COUNT(*) FROM ' . 'images' . ' WHERE (' . implode(' OR ', $clauses) . ')',
             $values
         )->fetchOne();
 
@@ -703,10 +702,10 @@ final class SearchServiceTest extends IntegrationTestCase
         // NOW()-relative rather than a hardcoded literal, so this stays
         // correct regardless of the real wall-clock date the suite runs on.
         $this->conn->executeStatement(
-            'UPDATE ' . Tables::images() . ' SET date_available = ' . $this->nowMinusInterval(1, 'HOUR') . ' WHERE id IN (1, 2)'
+            'UPDATE ' . 'images' . ' SET date_available = ' . $this->nowMinusInterval(1, 'HOUR') . ' WHERE id IN (1, 2)'
         );
         $this->conn->executeStatement(
-            'UPDATE ' . Tables::images() . ' SET date_available = ' . $this->nowMinusInterval(30, 'HOUR') . ' WHERE id IN (3, 4, 5)'
+            'UPDATE ' . 'images' . ' SET date_available = ' . $this->nowMinusInterval(30, 'HOUR') . ' WHERE id IN (3, 4, 5)'
         );
 
         try {
@@ -719,7 +718,7 @@ final class SearchServiceTest extends IntegrationTestCase
             self::assertTrue($results['search_details']['has_filters_filled']);
         } finally {
             $this->conn->executeStatement(
-                "UPDATE " . Tables::images() . " SET date_available = '2026-08-01 00:00:00' WHERE id IN (1,2,3,4,5)"
+                "UPDATE " . 'images' . " SET date_available = '2026-08-01 00:00:00' WHERE id IN (1,2,3,4,5)"
             );
         }
     }
@@ -727,10 +726,10 @@ final class SearchServiceTest extends IntegrationTestCase
     public function test_get_regular_search_results_filters_by_date_created_preset(): void
     {
         $this->conn->executeStatement(
-            'UPDATE ' . Tables::images() . ' SET date_creation = ' . $this->nowMinusInterval(1, 'DAY') . ' WHERE id IN (1, 2, 3)'
+            'UPDATE ' . 'images' . ' SET date_creation = ' . $this->nowMinusInterval(1, 'DAY') . ' WHERE id IN (1, 2, 3)'
         );
         $this->conn->executeStatement(
-            'UPDATE ' . Tables::images() . ' SET date_creation = ' . $this->nowMinusInterval(60, 'DAY') . ' WHERE id IN (4, 5)'
+            'UPDATE ' . 'images' . ' SET date_creation = ' . $this->nowMinusInterval(60, 'DAY') . ' WHERE id IN (4, 5)'
         );
 
         try {
@@ -741,14 +740,14 @@ final class SearchServiceTest extends IntegrationTestCase
             sort($items);
             self::assertSame([1, 2, 3], $items);
         } finally {
-            $this->conn->executeStatement('UPDATE ' . Tables::images() . ' SET date_creation = NULL WHERE id IN (1,2,3,4,5)');
+            $this->conn->executeStatement('UPDATE ' . 'images' . ' SET date_creation = NULL WHERE id IN (1,2,3,4,5)');
         }
     }
 
     public function test_get_regular_search_results_date_created_custom_range(): void
     {
-        $this->conn->executeStatement("UPDATE " . Tables::images() . " SET date_creation = '2024-03-15 12:00:00' WHERE id = 1");
-        $this->conn->executeStatement("UPDATE " . Tables::images() . " SET date_creation = '2025-01-01 00:00:00' WHERE id = 2");
+        $this->conn->executeStatement("UPDATE " . 'images' . " SET date_creation = '2024-03-15 12:00:00' WHERE id = 1");
+        $this->conn->executeStatement("UPDATE " . 'images' . " SET date_creation = '2025-01-01 00:00:00' WHERE id = 2");
 
         try {
             // Mixes a 'y'/'m'/'d'-prefixed string entry of each shape plus a
@@ -765,7 +764,7 @@ final class SearchServiceTest extends IntegrationTestCase
             sort($items);
             self::assertSame([1], $items);
         } finally {
-            $this->conn->executeStatement('UPDATE ' . Tables::images() . ' SET date_creation = NULL WHERE id IN (1,2,3,4,5)');
+            $this->conn->executeStatement('UPDATE ' . 'images' . ' SET date_creation = NULL WHERE id IN (1,2,3,4,5)');
         }
     }
 
@@ -898,7 +897,7 @@ final class SearchServiceTest extends IntegrationTestCase
         self::assertSame([1], $first['items']);
 
         $this->conn->executeStatement(
-            'INSERT INTO ' . Tables::imageTag() . ' (image_id, tag_id) VALUES (2, 3)'
+            'INSERT INTO ' . 'image_tag' . ' (image_id, tag_id) VALUES (2, 3)'
         );
 
         try {
@@ -907,7 +906,7 @@ final class SearchServiceTest extends IntegrationTestCase
             self::assertArrayNotHasKey('debug', $second);
         } finally {
             $this->conn->executeStatement(
-                'DELETE FROM ' . Tables::imageTag() . ' WHERE image_id = 2 AND tag_id = 3'
+                'DELETE FROM ' . 'image_tag' . ' WHERE image_id = 2 AND tag_id = 3'
             );
         }
     }
@@ -922,7 +921,7 @@ final class SearchServiceTest extends IntegrationTestCase
 
         self::assertNotSame([], $clauses);
         $count = $this->conn->executeQuery(
-            'SELECT COUNT(*) FROM ' . Tables::images() . ' WHERE (' . implode(' OR ', $clauses) . ')',
+            'SELECT COUNT(*) FROM ' . 'images' . ' WHERE (' . implode(' OR ', $clauses) . ')',
             $values
         )->fetchOne();
         // every fixture image is named "Photo N" -- "hoto" (no left
@@ -939,7 +938,7 @@ final class SearchServiceTest extends IntegrationTestCase
 
         self::assertNotSame([], $clauses);
         $count = $this->conn->executeQuery(
-            'SELECT COUNT(*) FROM ' . Tables::images() . ' WHERE (' . implode(' OR ', $clauses) . ')',
+            'SELECT COUNT(*) FROM ' . 'images' . ' WHERE (' . implode(' OR ', $clauses) . ')',
             $values
         )->fetchOne();
         self::assertSame(5, is_numeric($count) ? (int) $count : null);
@@ -956,7 +955,7 @@ final class SearchServiceTest extends IntegrationTestCase
 
         self::assertNotSame([], $clauses);
         $count = $this->conn->executeQuery(
-            'SELECT COUNT(*) FROM ' . Tables::images() . ' WHERE (' . implode(' OR ', $clauses) . ')',
+            'SELECT COUNT(*) FROM ' . 'images' . ' WHERE (' . implode(' OR ', $clauses) . ')',
             $values
         )->fetchOne();
         self::assertSame(0, is_numeric($count) ? (int) $count : null);
@@ -1300,11 +1299,11 @@ final class SearchServiceTest extends IntegrationTestCase
         // temporary one so 2 adjacent short terms genuinely share a match,
         // exercising qsearchGetTags()'s own short-token intersection.
         $this->conn->executeStatement(
-            "INSERT INTO " . Tables::tags() . " (name, url_name, lastmodified) VALUES ('dog', 'dog', NOW())"
+            "INSERT INTO " . 'tags' . " (name, url_name, lastmodified) VALUES ('dog', 'dog', NOW())"
         );
         $tagId = (int) $this->conn->lastInsertId();
         $this->conn->executeStatement(
-            'INSERT INTO ' . Tables::imageTag() . ' (image_id, tag_id) VALUES (2, ?)',
+            'INSERT INTO ' . 'image_tag' . ' (image_id, tag_id) VALUES (2, ?)',
             [$tagId]
         );
 
@@ -1313,8 +1312,8 @@ final class SearchServiceTest extends IntegrationTestCase
 
             self::assertSame([2], $results['items']);
         } finally {
-            $this->conn->executeStatement('DELETE FROM ' . Tables::imageTag() . ' WHERE tag_id = ?', [$tagId]);
-            $this->conn->executeStatement('DELETE FROM ' . Tables::tags() . ' WHERE id = ?', [$tagId]);
+            $this->conn->executeStatement('DELETE FROM ' . 'image_tag' . ' WHERE tag_id = ?', [$tagId]);
+            $this->conn->executeStatement('DELETE FROM ' . 'tags' . ' WHERE id = ?', [$tagId]);
         }
     }
 
@@ -1358,9 +1357,9 @@ final class SearchServiceTest extends IntegrationTestCase
         // "$subcatIds === []" ternary branch -- as opposed to the sibling
         // test above, whose category 1 always DOES have a real child.
         CurrentConfigTestFactory::get()->quickSearchIncludeSubAlbums = true;
-        $originalUppercats = $this->conn->fetchOne('SELECT uppercats FROM ' . Tables::categories() . ' WHERE id = 2');
+        $originalUppercats = $this->conn->fetchOne('SELECT uppercats FROM ' . 'categories' . ' WHERE id = 2');
         self::assertIsString($originalUppercats);
-        $this->conn->executeStatement("UPDATE " . Tables::categories() . " SET uppercats = '999' WHERE id = 2");
+        $this->conn->executeStatement("UPDATE " . 'categories' . " SET uppercats = '999' WHERE id = 2");
 
         try {
             // "Nested" matches category 2 ("Nested Sub Album") by name only.
@@ -1368,7 +1367,7 @@ final class SearchServiceTest extends IntegrationTestCase
 
             self::assertSame([], $results['items']);
         } finally {
-            $this->conn->executeStatement('UPDATE ' . Tables::categories() . ' SET uppercats = ? WHERE id = 2', [$originalUppercats]);
+            $this->conn->executeStatement('UPDATE ' . 'categories' . ' SET uppercats = ? WHERE id = 2', [$originalUppercats]);
         }
     }
 
@@ -1562,12 +1561,12 @@ final class SearchServiceTest extends IntegrationTestCase
             class_alias(SearchServiceTestNotAnInflector::class, 'Piwigo\\Search\\Inflector\\Inflector_zz');
         }
 
-        $originalLanguage = $this->conn->fetchOne('SELECT language FROM ' . Tables::userInfos() . ' WHERE user_id = 2');
+        $originalLanguage = $this->conn->fetchOne('SELECT language FROM ' . 'user_infos' . ' WHERE user_id = 2');
         self::assertIsString($originalLanguage);
         // user_id=2 is CurrentConfig::defaultUserId()'s own default (the
         // guest account) -- getDefaultLanguage() reads *this* row, entirely
         // independent of CurrentUser (id=1 in this file's own setUp()).
-        $this->conn->executeStatement("UPDATE " . Tables::userInfos() . " SET language = 'zz_ZZ' WHERE user_id = 2");
+        $this->conn->executeStatement("UPDATE " . 'user_infos' . " SET language = 'zz_ZZ' WHERE user_id = 2");
         $this->processCache()->forget('default_user');
 
         try {
@@ -1576,7 +1575,7 @@ final class SearchServiceTest extends IntegrationTestCase
 
             $this->service->getQuickSearchResultsNoCache('nature', []);
         } finally {
-            $this->conn->executeStatement('UPDATE ' . Tables::userInfos() . ' SET language = ? WHERE user_id = 2', [$originalLanguage]);
+            $this->conn->executeStatement('UPDATE ' . 'user_infos' . ' SET language = ? WHERE user_id = 2', [$originalLanguage]);
             $this->processCache()->forget('default_user');
         }
     }

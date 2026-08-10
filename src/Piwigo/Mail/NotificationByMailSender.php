@@ -15,7 +15,6 @@ use Piwigo\Db\BatchWriter;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Db\SqlDialect;
-use Piwigo\Db\Tables;
 use Piwigo\Event\Mail\NbmRenderGlobalCustomizeMailContent;
 use Piwigo\Lang\Translator;
 use Piwigo\Mail\Projection\NbmMailContentPageContext;
@@ -421,7 +420,7 @@ final class NotificationByMailSender
             $this->displayCounterInfo();
 
             $this->batchWriter->massUpdate(
-                Tables::userMailNotification(),
+                'user_mail_notification',
                 [
                     'primary' => ['check_key'],
                     'update' => ['enabled'],
@@ -663,7 +662,7 @@ final class NotificationByMailSender
 
                     if ($isActionSend) {
                         $this->batchWriter->massUpdate(
-                            Tables::userMailNotification(),
+                            'user_mail_notification',
                             [
                                 'primary' => ['user_id'],
                                 'update' => ['last_send'],

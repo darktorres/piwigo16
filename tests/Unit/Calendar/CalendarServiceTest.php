@@ -19,7 +19,6 @@ use Piwigo\Core\Kernel;
 use Piwigo\Tests\Support\LangTestFactory;
 use Piwigo\Core\Paths;
 use Piwigo\Db\DbConnection;
-use Piwigo\Db\Tables;
 use Piwigo\Permission\PermissionRepository;
 use Piwigo\Permission\PermissionService;
 use Piwigo\Tests\Support\CurrentUserTestFactory;
@@ -123,7 +122,7 @@ test('buildInnerSql builds a WHERE id IN clause for a non-category section', fun
     $scope = $service->buildInnerSql('tags', false, null, '', [1, 2, 3]);
     assert($scope !== null);
 
-    expect($scope->rawSqlFromWhere->sql)->toBe(' FROM ' . Tables::images() . "\nWHERE id IN (:innerItems)")
+    expect($scope->rawSqlFromWhere->sql)->toBe(' FROM ' . 'images' . "\nWHERE id IN (:innerItems)")
         ->and($scope->rawSqlFromWhere->parameters)->toBe(['innerItems' => ['1', '2', '3']])
         ->and($scope->rawSqlFromWhere->types)->toBe(['innerItems' => ArrayParameterType::STRING])
         ->and($scope->joinImageCategory)->toBeFalse()
@@ -176,8 +175,8 @@ test('buildInnerSql browses everything visible when there is no category context
     assert(is_string($key));
 
     expect($scope->rawSqlFromWhere->sql)->toBe(
-        ' FROM ' . Tables::images()
-        . "\nINNER JOIN " . Tables::imageCategory() . ' ON id = image_id'
+        ' FROM ' . 'images'
+        . "\nINNER JOIN " . 'image_category' . ' ON id = image_id'
         . "\n    WHERE level <= :{$key}"
     )->and($scope->rawSqlFromWhere->parameters)->toBe([$key => 0]);
 
@@ -217,8 +216,8 @@ test('buildInnerSql falls back to a forced 1 = 1 condition when no permission cl
     assert($scope !== null);
 
     expect($scope->rawSqlFromWhere->sql)->toBe(
-        ' FROM ' . Tables::images()
-        . "\nINNER JOIN " . Tables::imageCategory() . ' ON id = image_id'
+        ' FROM ' . 'images'
+        . "\nINNER JOIN " . 'image_category' . ' ON id = image_id'
         . "\n    WHERE 1 = 1"
     )->and($scope->rawSqlFromWhere->parameters)->toBe([]);
 
@@ -250,8 +249,8 @@ test('buildInnerSql composes forbidden/visible categories and images into the WH
     [$forbidKey, $visCatKey, $visImgKey, $levelKey] = array_keys($scope->rawSqlFromWhere->parameters);
 
     expect($scope->rawSqlFromWhere->sql)->toBe(
-        ' FROM ' . Tables::images()
-        . "\nINNER JOIN " . Tables::imageCategory() . ' ON id = image_id'
+        ' FROM ' . 'images'
+        . "\nINNER JOIN " . 'image_category' . ' ON id = image_id'
         . "\n    WHERE category_id NOT IN (:{$forbidKey}) AND category_id IN (:{$visCatKey}) AND id IN (:{$visImgKey}) AND level <= :{$levelKey}"
     )->and($scope->rawSqlFromWhere->parameters)->toBe([
         $forbidKey => [5, 6],

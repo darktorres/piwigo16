@@ -15,14 +15,13 @@ use Piwigo\Tests\Support\CurrentPathsTestFactory;
 use Piwigo\Tests\Support\LangTestFactory;
 use Piwigo\Core\ThemeCatalog;
 use Piwigo\Db\DbConnection;
-use Piwigo\Db\Tables;
 use Piwigo\Event\Lifecycle\GetPwgThemes;
 use Piwigo\Tests\Support\TranslatorTestFactory;
 use Piwigo\Tests\Support\EventDispatcherTestFactory;
 
 /**
  * Piwigo\Core\ThemeCatalog::getPwgThemes()/checkThemeInstalled() need a
- * real DB connection (Tables::themes() row set) and a real on-disk theme
+ * real DB connection ('themes' row set) and a real on-disk theme
  * directory (checkThemeInstalled() does a genuine file_exists()) --
  * Integration, not Unit, matching this repo's own established split. The
  * fixture's own piwigo_themes table is empty (confirmed live, same fact
@@ -81,13 +80,13 @@ final class ThemeCatalogTest extends IntegrationTestCase
         // is_string($name) is a real runtime guard against exactly this,
         // not defensive padding.
         $this->conn->executeStatement(
-            'INSERT INTO ' . Tables::themes() . " (id, version, name) VALUES ('broken-theme', '1.0', NULL)"
+            'INSERT INTO ' . 'themes' . " (id, version, name) VALUES ('broken-theme', '1.0', NULL)"
         );
 
         try {
             $themes = ThemeCatalog::getPwgThemes(EventDispatcherTestFactory::get(), CurrentPathsTestFactory::get(), CurrentConfigTestFactory::get(), LangTestFactory::get());
         } finally {
-            $this->conn->executeStatement('DELETE FROM ' . Tables::themes() . " WHERE id = 'broken-theme'");
+            $this->conn->executeStatement('DELETE FROM ' . 'themes' . " WHERE id = 'broken-theme'");
         }
 
         // The fixture's piwigo_themes table is otherwise empty, so a
@@ -99,7 +98,7 @@ final class ThemeCatalogTest extends IntegrationTestCase
     public function test_get_pwg_themes_skips_the_configured_mobile_theme_when_show_mobile_is_false(): void
     {
         $this->conn->executeStatement(
-            'INSERT INTO ' . Tables::themes() . " (id, version, name) VALUES ('mobile-candidate', '1.0', 'Mobile Candidate')"
+            'INSERT INTO ' . 'themes' . " (id, version, name) VALUES ('mobile-candidate', '1.0', 'Mobile Candidate')"
         );
         $currentConfig = Kernel::container()->get(CurrentConfig::class);
         if (! $currentConfig instanceof CurrentConfig) {
@@ -110,7 +109,7 @@ final class ThemeCatalogTest extends IntegrationTestCase
         try {
             $themes = ThemeCatalog::getPwgThemes(EventDispatcherTestFactory::get(), CurrentPathsTestFactory::get(), CurrentConfigTestFactory::get(), LangTestFactory::get(), showMobile: false);
         } finally {
-            $this->conn->executeStatement("DELETE FROM " . Tables::themes() . " WHERE id = 'mobile-candidate'");
+            $this->conn->executeStatement("DELETE FROM " . 'themes' . " WHERE id = 'mobile-candidate'");
         }
 
         expect($themes)->toBe([]);
@@ -119,7 +118,7 @@ final class ThemeCatalogTest extends IntegrationTestCase
     public function test_get_pwg_themes_appends_the_mobile_suffix_and_includes_the_theme_when_show_mobile_is_true(): void
     {
         $this->conn->executeStatement(
-            "INSERT INTO " . Tables::themes() . " (id, version, name) VALUES ('default', '1.0', 'Default')"
+            "INSERT INTO " . 'themes' . " (id, version, name) VALUES ('default', '1.0', 'Default')"
         );
         $currentConfig = Kernel::container()->get(CurrentConfig::class);
         if (! $currentConfig instanceof CurrentConfig) {
@@ -130,7 +129,7 @@ final class ThemeCatalogTest extends IntegrationTestCase
         try {
             $themes = ThemeCatalog::getPwgThemes(EventDispatcherTestFactory::get(), CurrentPathsTestFactory::get(), CurrentConfigTestFactory::get(), LangTestFactory::get(), showMobile: true);
         } finally {
-            $this->conn->executeStatement("DELETE FROM " . Tables::themes() . " WHERE id = 'default'");
+            $this->conn->executeStatement("DELETE FROM " . 'themes' . " WHERE id = 'default'");
         }
 
         // 'default' is checkThemeInstalled()'s one real installed theme,

@@ -15,7 +15,6 @@ use Piwigo\Config\ConfigLoader;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
-use Piwigo\Db\Tables;
 
 /**
  * Direct coverage of ExtensionIgnoredUpdateRepository's own query/mutation
@@ -77,7 +76,7 @@ final class ExtensionIgnoredUpdateRepositoryTest extends IntegrationTestCase
             self::assertSame(['test-plugin-a', 'test-plugin-b'], $ids, 'the Theme row must not leak into the Plugin result');
         } finally {
             $this->conn->executeStatement(
-                'DELETE FROM ' . Tables::extensionIgnoredUpdates()
+                'DELETE FROM ' . 'extension_ignored_updates'
                 . " WHERE extension_id IN ('test-plugin-a', 'test-plugin-b', 'test-theme-a')"
             );
         }
@@ -107,7 +106,7 @@ final class ExtensionIgnoredUpdateRepositoryTest extends IntegrationTestCase
         // from Doctrine's identity map) -- a raw query bypassing the
         // EntityManager entirely.
         $count = $this->conn->fetchOne(
-            'SELECT COUNT(*) FROM ' . Tables::extensionIgnoredUpdates() . " WHERE extension_id = 'test-plugin-unignore'"
+            'SELECT COUNT(*) FROM ' . 'extension_ignored_updates' . " WHERE extension_id = 'test-plugin-unignore'"
         );
         self::assertSame(0, is_numeric($count) ? (int) $count : null);
     }
@@ -118,11 +117,11 @@ final class ExtensionIgnoredUpdateRepositoryTest extends IntegrationTestCase
         // ignore()'d by this or any other test in this file, so find()
         // genuinely returns null and unignore() must return before ever
         // calling getEntityManager()/remove()/flush().
-        $countBefore = $this->conn->fetchOne('SELECT COUNT(*) FROM ' . Tables::extensionIgnoredUpdates());
+        $countBefore = $this->conn->fetchOne('SELECT COUNT(*) FROM ' . 'extension_ignored_updates');
 
         $this->repo->unignore(ExtensionType::Plugin, 'no-such-extension');
 
-        $countAfter = $this->conn->fetchOne('SELECT COUNT(*) FROM ' . Tables::extensionIgnoredUpdates());
+        $countAfter = $this->conn->fetchOne('SELECT COUNT(*) FROM ' . 'extension_ignored_updates');
         self::assertSame($countBefore, $countAfter);
     }
 }

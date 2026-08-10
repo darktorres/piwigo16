@@ -68,13 +68,6 @@ parameters:
             - ecs.php
     ignoreErrors:
         -
-            # Piwigo\Db\Tables::xxx() resolves every table name at runtime
-            # from PIWIGO_DB_PREFIX, never a literal string -- this rule
-            # requires a literal, so it trips on every insert/update/delete
-            # call in the codebase. staabm/phpstan-dba's other rules (real
-            # SQL syntax/schema validation) stay fully active.
-            identifier: dba.keyValue
-        -
             # Queries here target an in-memory sqlite scratch table created
             # fresh per test, never the live DB the bootstrap connects to.
             identifier: dba.syntaxError

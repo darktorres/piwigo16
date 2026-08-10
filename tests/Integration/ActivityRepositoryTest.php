@@ -23,7 +23,6 @@ use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\ConfigLoader;
 use Piwigo\Core\ActivitySystem;
 use Piwigo\Db\DbConnection;
-use Piwigo\Db\Tables;
 
 /**
  * Fixture: 19 activity rows (activity_id 1-19). Row 1 is object='system',
@@ -102,7 +101,7 @@ final class ActivityRepositoryTest extends IntegrationTestCase
 
             $rows = $this->conn->createQueryBuilder()
                 ->select('object_id', 'ip_address', 'user_agent')
-                ->from(Tables::activity())
+                ->from('activity')
                 ->where("object = 'disposable'")
                 ->orderBy('object_id', 'ASC')
                 ->executeQuery()
@@ -114,17 +113,17 @@ final class ActivityRepositoryTest extends IntegrationTestCase
             self::assertSame(999, $rows[1]['object_id']);
             self::assertSame('10.0.0.1', $rows[1]['ip_address']);
         } finally {
-            $this->conn->executeStatement("DELETE FROM " . Tables::activity() . " WHERE object = 'disposable'");
+            $this->conn->executeStatement("DELETE FROM " . 'activity' . " WHERE object = 'disposable'");
         }
     }
 
     public function test_insert_many_with_an_empty_array_is_a_no_op(): void
     {
-        $countBefore = $this->conn->fetchOne('SELECT COUNT(*) FROM ' . Tables::activity());
+        $countBefore = $this->conn->fetchOne('SELECT COUNT(*) FROM ' . 'activity');
 
         $this->repo->insertMany([]);
 
-        $countAfter = $this->conn->fetchOne('SELECT COUNT(*) FROM ' . Tables::activity());
+        $countAfter = $this->conn->fetchOne('SELECT COUNT(*) FROM ' . 'activity');
 
         self::assertSame($countBefore, $countAfter);
     }
@@ -146,14 +145,14 @@ final class ActivityRepositoryTest extends IntegrationTestCase
 
             $objectId = $this->conn->createQueryBuilder()
                 ->select('object_id')
-                ->from(Tables::activity())
+                ->from('activity')
                 ->where("object = 'disposable'")
                 ->executeQuery()
                 ->fetchOne();
 
             self::assertSame(777, $objectId);
         } finally {
-            $this->conn->executeStatement("DELETE FROM " . Tables::activity() . " WHERE object = 'disposable'");
+            $this->conn->executeStatement("DELETE FROM " . 'activity' . " WHERE object = 'disposable'");
         }
     }
 
@@ -174,14 +173,14 @@ final class ActivityRepositoryTest extends IntegrationTestCase
 
             $objectId = $this->conn->createQueryBuilder()
                 ->select('object_id')
-                ->from(Tables::activity())
+                ->from('activity')
                 ->where("object = 'disposable'")
                 ->executeQuery()
                 ->fetchOne();
 
             self::assertSame(0, $objectId);
         } finally {
-            $this->conn->executeStatement("DELETE FROM " . Tables::activity() . " WHERE object = 'disposable'");
+            $this->conn->executeStatement("DELETE FROM " . 'activity' . " WHERE object = 'disposable'");
         }
     }
 
@@ -202,14 +201,14 @@ final class ActivityRepositoryTest extends IntegrationTestCase
 
             $performedBy = $this->conn->createQueryBuilder()
                 ->select('performed_by')
-                ->from(Tables::activity())
+                ->from('activity')
                 ->where("object = 'disposable'")
                 ->executeQuery()
                 ->fetchOne();
 
             self::assertSame(1, $performedBy);
         } finally {
-            $this->conn->executeStatement("DELETE FROM " . Tables::activity() . " WHERE object = 'disposable'");
+            $this->conn->executeStatement("DELETE FROM " . 'activity' . " WHERE object = 'disposable'");
         }
     }
 
@@ -243,7 +242,7 @@ final class ActivityRepositoryTest extends IntegrationTestCase
             // besides 'install' (activateCoreThemes()'s own 'activate'
             // entry, see InstallService's docblock), which a broader
             // `action != 'install'` filter would incorrectly delete too.
-            $this->conn->executeStatement("DELETE FROM " . Tables::activity() . " WHERE object = 'system' AND action = 'test'");
+            $this->conn->executeStatement("DELETE FROM " . 'activity' . " WHERE object = 'system' AND action = 'test'");
         }
     }
 
@@ -274,7 +273,7 @@ final class ActivityRepositoryTest extends IntegrationTestCase
             self::assertCount(1, $counts, 'the NULL-performed_by row must not add its own bucket');
             self::assertSame(17, $counts[1]);
         } finally {
-            $this->conn->executeStatement("DELETE FROM " . Tables::activity() . " WHERE object = 'disposable'");
+            $this->conn->executeStatement("DELETE FROM " . 'activity' . " WHERE object = 'disposable'");
         }
     }
 
@@ -284,7 +283,7 @@ final class ActivityRepositoryTest extends IntegrationTestCase
         // 1 (the earliest-inserted row) genuinely earlier, scoped to this
         // test only, so min/max are actually distinguishable.
         $this->conn->executeStatement(
-            "UPDATE " . Tables::activity() . " SET occured_on = '2026-07-07 00:00:00' WHERE activity_id = 1"
+            "UPDATE " . 'activity' . " SET occured_on = '2026-07-07 00:00:00' WHERE activity_id = 1"
         );
 
         self::assertLessThan($this->repo->findMaxOccuredOn(), $this->repo->findMinOccuredOn());
@@ -323,7 +322,7 @@ final class ActivityRepositoryTest extends IntegrationTestCase
             self::assertNull($this->repo->findOccuredOnForObject(4242, 'other-object', 'find-test'), 'a non-matching object must not match');
             self::assertNull($this->repo->findOccuredOnForObject(4242, 'disposable', 'other-action'), 'a non-matching action must not match');
         } finally {
-            $this->conn->executeStatement("DELETE FROM " . Tables::activity() . " WHERE object = 'disposable' AND action = 'find-test'");
+            $this->conn->executeStatement("DELETE FROM " . 'activity' . " WHERE object = 'disposable' AND action = 'find-test'");
         }
     }
 
@@ -416,7 +415,7 @@ final class ActivityRepositoryTest extends IntegrationTestCase
             // Scoped to this test's own inserted row (action = 'maintenance')
             // -- see test_count_by_user_excludes_system_object's own comment
             // for why a broader `action != 'install'` filter is wrong now.
-            $this->conn->executeStatement("DELETE FROM " . Tables::activity() . " WHERE object = 'system' AND action = 'maintenance'");
+            $this->conn->executeStatement("DELETE FROM " . 'activity' . " WHERE object = 'system' AND action = 'maintenance'");
         }
     }
 
@@ -456,7 +455,7 @@ final class ActivityRepositoryTest extends IntegrationTestCase
             // Scoped to this test's own inserted row (action = 'update') --
             // see test_count_by_user_excludes_system_object's own comment
             // for why a broader `action != 'install'` filter is wrong now.
-            $this->conn->executeStatement("DELETE FROM " . Tables::activity() . " WHERE object = 'system' AND action = 'update'");
+            $this->conn->executeStatement("DELETE FROM " . 'activity' . " WHERE object = 'system' AND action = 'update'");
         }
     }
 
@@ -517,7 +516,7 @@ final class ActivityRepositoryTest extends IntegrationTestCase
             self::assertSame('2026-07-11 00:00:00', $rows[1]->occuredOn);
         } finally {
             $this->conn->executeStatement(
-                "DELETE FROM " . Tables::activity() . " WHERE object = 'system' AND action IN ('update', 'autoupdate') AND object_id = " . ActivitySystem::Core
+                "DELETE FROM " . 'activity' . " WHERE object = 'system' AND action IN ('update', 'autoupdate') AND object_id = " . ActivitySystem::Core
             );
         }
     }
@@ -565,7 +564,7 @@ final class ActivityRepositoryTest extends IntegrationTestCase
             self::assertSame(2, $matching[0]->counter);
         } finally {
             $this->conn->executeStatement(
-                "DELETE FROM " . Tables::activity() . " WHERE object = 'system' AND action = 'install' AND object_id = " . ActivitySystem::Plugin
+                "DELETE FROM " . 'activity' . " WHERE object = 'system' AND action = 'install' AND object_id = " . ActivitySystem::Plugin
             );
         }
     }
@@ -624,7 +623,7 @@ final class ActivityRepositoryTest extends IntegrationTestCase
             self::assertSame('2026-07-10 00:00:00', $matching[0]->firstEncounter);
             self::assertSame('2026-07-11 00:00:00', $matching[0]->lastEncounter);
         } finally {
-            $this->conn->executeStatement("DELETE FROM " . Tables::activity() . " WHERE object = 'disposable'");
+            $this->conn->executeStatement("DELETE FROM " . 'activity' . " WHERE object = 'disposable'");
         }
     }
 

@@ -12,7 +12,6 @@ use Doctrine\DBAL\Connection;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\ConfigLoader;
 use Piwigo\Db\DbConnection;
-use Piwigo\Db\Tables;
 use Piwigo\Mail\MailRecipientRepository;
 use Piwigo\Mail\Projection\MailRecipient;
 
@@ -67,8 +66,8 @@ final class MailRecipientRepositoryTest extends IntegrationTestCase
     #[Override]
     protected function tearDown(): void
     {
-        $this->conn->executeStatement("UPDATE " . Tables::users() . " SET mail_address = NULL WHERE id IN (3, 4)");
-        $this->conn->executeStatement("UPDATE " . Tables::userInfos() . " SET status = 'normal', language = 'en_UK' WHERE user_id IN (3, 4)");
+        $this->conn->executeStatement("UPDATE " . 'users' . " SET mail_address = NULL WHERE id IN (3, 4)");
+        $this->conn->executeStatement("UPDATE " . 'user_infos' . " SET status = 'normal', language = 'en_UK' WHERE user_id IN (3, 4)");
         parent::tearDown();
     }
 
@@ -85,8 +84,8 @@ final class MailRecipientRepositoryTest extends IntegrationTestCase
 
     public function test_find_admins_and_webmasters_includes_a_real_admin_status_user_with_a_real_email(): void
     {
-        $this->conn->executeStatement("UPDATE " . Tables::users() . " SET mail_address = 'power.user@example.test' WHERE id = 4");
-        $this->conn->executeStatement("UPDATE " . Tables::userInfos() . " SET status = 'admin' WHERE user_id = 4");
+        $this->conn->executeStatement("UPDATE " . 'users' . " SET mail_address = 'power.user@example.test' WHERE id = 4");
+        $this->conn->executeStatement("UPDATE " . 'user_infos' . " SET status = 'admin' WHERE user_id = 4");
 
         $recipients = $this->repo->findAdminsAndWebmasters(['webmaster', 'admin'], null, null);
 
@@ -121,8 +120,8 @@ final class MailRecipientRepositoryTest extends IntegrationTestCase
 
     public function test_find_distinct_languages_in_group_returns_only_eligible_members_languages(): void
     {
-        $this->conn->executeStatement("UPDATE " . Tables::users() . " SET mail_address = 'regular.user@example.test' WHERE id = 3");
-        $this->conn->executeStatement("UPDATE " . Tables::userInfos() . " SET language = 'fr_FR' WHERE user_id = 3");
+        $this->conn->executeStatement("UPDATE " . 'users' . " SET mail_address = 'regular.user@example.test' WHERE id = 3");
+        $this->conn->executeStatement("UPDATE " . 'user_infos' . " SET language = 'fr_FR' WHERE user_id = 3");
 
         // group 1 has users 1 (en_UK, real email) and 3 (fr_FR, now a real email).
         $languages = $this->repo->findDistinctLanguagesInGroup(1, null);
@@ -133,8 +132,8 @@ final class MailRecipientRepositoryTest extends IntegrationTestCase
 
     public function test_find_distinct_languages_in_group_honors_the_language_filter(): void
     {
-        $this->conn->executeStatement("UPDATE " . Tables::users() . " SET mail_address = 'regular.user@example.test' WHERE id = 3");
-        $this->conn->executeStatement("UPDATE " . Tables::userInfos() . " SET language = 'fr_FR' WHERE user_id = 3");
+        $this->conn->executeStatement("UPDATE " . 'users' . " SET mail_address = 'regular.user@example.test' WHERE id = 3");
+        $this->conn->executeStatement("UPDATE " . 'user_infos' . " SET language = 'fr_FR' WHERE user_id = 3");
 
         $languages = $this->repo->findDistinctLanguagesInGroup(1, 'fr_FR');
 
@@ -165,8 +164,8 @@ final class MailRecipientRepositoryTest extends IntegrationTestCase
 
     public function test_find_by_group_and_language_scopes_correctly_across_two_languages_in_the_same_group(): void
     {
-        $this->conn->executeStatement("UPDATE " . Tables::users() . " SET mail_address = 'regular.user@example.test' WHERE id = 3");
-        $this->conn->executeStatement("UPDATE " . Tables::userInfos() . " SET language = 'fr_FR' WHERE user_id = 3");
+        $this->conn->executeStatement("UPDATE " . 'users' . " SET mail_address = 'regular.user@example.test' WHERE id = 3");
+        $this->conn->executeStatement("UPDATE " . 'user_infos' . " SET language = 'fr_FR' WHERE user_id = 3");
 
         $frenchRecipients = $this->repo->findByGroupAndLanguage(1, 'fr_FR');
         $englishRecipients = $this->repo->findByGroupAndLanguage(1, 'en_UK');

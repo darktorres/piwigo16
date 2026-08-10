@@ -21,7 +21,6 @@ use Piwigo\Tests\Support\PageStateTestFactory;
 use Piwigo\Core\Paths;
 use Piwigo\Core\WsContext;
 use Piwigo\Db\DbConnection;
-use Piwigo\Db\Tables;
 use Piwigo\Tests\Support\KernelContainerOverride;
 
 /**
@@ -98,9 +97,9 @@ final class PluginLoaderTest extends IntegrationTestCase
     #[Override]
     protected function tearDown(): void
     {
-        DbConnection::build()->executeStatement('DELETE FROM ' . Tables::plugins());
+        DbConnection::build()->executeStatement('DELETE FROM ' . 'plugins');
         DbConnection::build()->executeStatement(
-            'DELETE FROM ' . Tables::activity() . ' WHERE object = ? AND object_id = ? AND action = ?',
+            'DELETE FROM ' . 'activity' . ' WHERE object = ? AND object_id = ? AND action = ?',
             ['system', ActivitySystem::Plugin, 'autoupdate']
         );
         parent::tearDown();
@@ -184,7 +183,7 @@ final class PluginLoaderTest extends IntegrationTestCase
         CurrentConfigTestFactory::get()->enablePlugins = true;
 
         DbConnection::build()->executeStatement(
-            "INSERT INTO " . Tables::plugins() . " (id, state, version) VALUES ('ghost-plugin', 'active', '1.0')"
+            "INSERT INTO " . 'plugins' . " (id, state, version) VALUES ('ghost-plugin', 'active', '1.0')"
         );
 
         KernelContainerOverride::with([Paths::class => Paths::fromRoot($root)], function (): void {
@@ -207,7 +206,7 @@ final class PluginLoaderTest extends IntegrationTestCase
         CurrentConfigTestFactory::get()->enablePlugins = true;
 
         DbConnection::build()->executeStatement(
-            "INSERT INTO " . Tables::plugins() . " (id, state, version) VALUES ('loadable-plugin', 'active', '1.0')"
+            "INSERT INTO " . 'plugins' . " (id, state, version) VALUES ('loadable-plugin', 'active', '1.0')"
         );
 
         KernelContainerOverride::with([Paths::class => Paths::fromRoot($root)], function () use ($marker): void {
@@ -228,7 +227,7 @@ final class PluginLoaderTest extends IntegrationTestCase
         CurrentConfigTestFactory::get()->enablePlugins = true;
 
         DbConnection::build()->executeStatement(
-            "INSERT INTO " . Tables::plugins() . " (id, state, version) VALUES ('inactive-plugin', 'inactive', '1.0')"
+            "INSERT INTO " . 'plugins' . " (id, state, version) VALUES ('inactive-plugin', 'inactive', '1.0')"
         );
 
         KernelContainerOverride::with([Paths::class => Paths::fromRoot($root)], function (): void {
@@ -258,7 +257,7 @@ PHP);
         CurrentConfigTestFactory::get()->enablePlugins = true;
 
         DbConnection::build()->executeStatement(
-            "INSERT INTO " . Tables::plugins() . " (id, state, version) VALUES (?, 'active', '1.0')",
+            "INSERT INTO " . 'plugins' . " (id, state, version) VALUES (?, 'active', '1.0')",
             [$id]
         );
 
@@ -269,13 +268,13 @@ PHP);
             expect($this->loadedPlugins->get()[$id]['version'])->toBe('2.0');
 
             $storedVersion = DbConnection::build()->fetchOne(
-                'SELECT version FROM ' . Tables::plugins() . ' WHERE id = ?',
+                'SELECT version FROM ' . 'plugins' . ' WHERE id = ?',
                 [$id]
             );
             expect($storedVersion)->toBe('2.0');
 
             $row = DbConnection::build()->fetchAssociative(
-                'SELECT object_id, details FROM ' . Tables::activity()
+                'SELECT object_id, details FROM ' . 'activity'
                 . " WHERE object = 'system' AND action = 'autoupdate' ORDER BY activity_id DESC LIMIT 1"
             );
             self::assertIsArray($row);
@@ -315,7 +314,7 @@ PHP);
         CurrentConfigTestFactory::get()->enablePlugins = true;
 
         DbConnection::build()->executeStatement(
-            "INSERT INTO " . Tables::plugins() . " (id, state, version) VALUES (?, 'active', '1.0')",
+            "INSERT INTO " . 'plugins' . " (id, state, version) VALUES (?, 'active', '1.0')",
             [$id]
         );
 
@@ -343,7 +342,7 @@ PHP);
         CurrentConfigTestFactory::get()->enablePlugins = true;
 
         DbConnection::build()->executeStatement(
-            "INSERT INTO " . Tables::plugins() . " (id, state, version) VALUES (?, 'active', 'auto')",
+            "INSERT INTO " . 'plugins' . " (id, state, version) VALUES (?, 'active', 'auto')",
             [$id]
         );
 
@@ -351,7 +350,7 @@ PHP);
             PluginLoader::loadPlugins($this->loadedPlugins, new EventDispatcher(), $this->activityService, CurrentConfigTestFactory::get(), $this->wsContext(), $this->accessControl(), PageStateTestFactory::get(), CurrentPathsTestFactory::get());
 
             $storedVersion = DbConnection::build()->fetchOne(
-                'SELECT version FROM ' . Tables::plugins() . ' WHERE id = ?',
+                'SELECT version FROM ' . 'plugins' . ' WHERE id = ?',
                 [$id]
             );
             expect($storedVersion)->toBe('auto');
@@ -363,7 +362,7 @@ PHP);
             // RequestBootstrapConnectTest/GroupServiceTest).
             $detailsColumn = $this->dbDriver === 'pgsql' ? 'details::text' : 'details';
             $activityCount = DbConnection::build()->fetchOne(
-                'SELECT COUNT(*) FROM ' . Tables::activity()
+                'SELECT COUNT(*) FROM ' . 'activity'
                 . " WHERE object = 'system' AND action = 'autoupdate' AND {$detailsColumn} LIKE ?",
                 ['%' . $id . '%']
             );

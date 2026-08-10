@@ -5,7 +5,6 @@ declare(strict_types=1);
 use Doctrine\DBAL\Connection;
 use Piwigo\Caddie\CaddieService;
 use Piwigo\Db\DbConnection;
-use Piwigo\Db\Tables;
 use Piwigo\Tests\Support\CurrentUserTestFactory;
 use Piwigo\Users\User;
 
@@ -31,7 +30,7 @@ use Piwigo\Users\User;
 function caddieServiceTestClear(Connection $conn, int $userId): void
 {
     $conn->createQueryBuilder()
-        ->delete(Tables::caddie())
+        ->delete('caddie')
         ->where('user_id = :userId')
         ->setParameter('userId', $userId)
         ->executeStatement();
@@ -44,7 +43,7 @@ function caddieServiceTestFetchElementIds(Connection $conn, int $userId): array
 {
     $ids = $conn->createQueryBuilder()
         ->select('element_id')
-        ->from(Tables::caddie())
+        ->from('caddie')
         ->where('user_id = :userId')
         ->setParameter('userId', $userId)
         ->orderBy('element_id', 'ASC')

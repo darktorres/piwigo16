@@ -12,7 +12,6 @@ use Piwigo\Config\CurrentConfig;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Core\Env;
 use Piwigo\Db\DbConnection;
-use Piwigo\Db\Tables;
 use Piwigo\Image\LoungeMaintenance;
 
 /**
@@ -41,11 +40,11 @@ final class LoungeMaintenanceTest extends IntegrationTestCase
         }
 
         $this->conn = DbConnection::build();
-        $dateAvailable = $this->conn->fetchOne('SELECT date_available FROM ' . Tables::images() . ' WHERE id = 1');
+        $dateAvailable = $this->conn->fetchOne('SELECT date_available FROM ' . 'images' . ' WHERE id = 1');
         self::assertIsString($dateAvailable);
         $this->originalDateAvailable = $dateAvailable;
 
-        $this->conn->executeStatement('DELETE FROM ' . Tables::lounge());
+        $this->conn->executeStatement('DELETE FROM ' . 'lounge');
         $this->currentConfig()->loungeActive = false;
         $this->currentConfig()->loungeMaxDuration = 300;
         unset($_REQUEST['method']);
@@ -54,9 +53,9 @@ final class LoungeMaintenanceTest extends IntegrationTestCase
     #[Override]
     protected function tearDown(): void
     {
-        $this->conn->executeStatement('DELETE FROM ' . Tables::lounge());
+        $this->conn->executeStatement('DELETE FROM ' . 'lounge');
         $this->conn->executeStatement(
-            'UPDATE ' . Tables::images() . ' SET date_available = ? WHERE id = 1',
+            'UPDATE ' . 'images' . ' SET date_available = ? WHERE id = 1',
             [$this->originalDateAvailable]
         );
         $this->currentConfig()->loungeActive = false;
@@ -102,10 +101,10 @@ final class LoungeMaintenanceTest extends IntegrationTestCase
         $this->currentConfig()->loungeActive = true;
         $anHourAgo = Env::now()->modify('-1 hour')->format('Y-m-d H:i:s');
         $this->conn->executeStatement(
-            'UPDATE ' . Tables::images() . ' SET date_available = ? WHERE id = 1',
+            'UPDATE ' . 'images' . ' SET date_available = ? WHERE id = 1',
             [$anHourAgo]
         );
-        $this->conn->executeStatement('INSERT INTO ' . Tables::lounge() . ' (image_id, category_id) VALUES (1, 1)');
+        $this->conn->executeStatement('INSERT INTO ' . 'lounge' . ' (image_id, category_id) VALUES (1, 1)');
 
         self::assertTrue(LoungeMaintenance::needsEmptying(CurrentConfigTestFactory::get()));
     }
@@ -114,10 +113,10 @@ final class LoungeMaintenanceTest extends IntegrationTestCase
     {
         $this->currentConfig()->loungeActive = true;
         $this->conn->executeStatement(
-            'UPDATE ' . Tables::images() . ' SET date_available = ? WHERE id = 1',
+            'UPDATE ' . 'images' . ' SET date_available = ? WHERE id = 1',
             [Env::now()->format('Y-m-d H:i:s')]
         );
-        $this->conn->executeStatement('INSERT INTO ' . Tables::lounge() . ' (image_id, category_id) VALUES (1, 1)');
+        $this->conn->executeStatement('INSERT INTO ' . 'lounge' . ' (image_id, category_id) VALUES (1, 1)');
 
         self::assertFalse(LoungeMaintenance::needsEmptying(CurrentConfigTestFactory::get()));
     }
@@ -127,10 +126,10 @@ final class LoungeMaintenanceTest extends IntegrationTestCase
         $this->currentConfig()->loungeActive = true;
         $anHourAgo = Env::now()->modify('-1 hour')->format('Y-m-d H:i:s');
         $this->conn->executeStatement(
-            'UPDATE ' . Tables::images() . ' SET date_available = ? WHERE id = 1',
+            'UPDATE ' . 'images' . ' SET date_available = ? WHERE id = 1',
             [$anHourAgo]
         );
-        $this->conn->executeStatement('INSERT INTO ' . Tables::lounge() . ' (image_id, category_id) VALUES (1, 1)');
+        $this->conn->executeStatement('INSERT INTO ' . 'lounge' . ' (image_id, category_id) VALUES (1, 1)');
 
         $_REQUEST['method'] = 'pwg.images.upload';
         self::assertFalse(LoungeMaintenance::needsEmptying(CurrentConfigTestFactory::get()));

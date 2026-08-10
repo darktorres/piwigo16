@@ -13,7 +13,6 @@ use Piwigo\Command\MaintenancePurgeHistoryCommand;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\ConfigLoader;
 use Piwigo\Db\DbConnection;
-use Piwigo\Db\Tables;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Tester\CommandTester;
 
@@ -46,7 +45,7 @@ final class MaintenancePurgeHistoryCommandTest extends IntegrationTestCase
     {
         $conn = DbConnection::build();
         $conn->createQueryBuilder()
-            ->insert(Tables::history())
+            ->insert('history')
             ->values(['user_id' => ':userId'])
             ->setParameter('userId', 1)
             ->executeStatement();
@@ -59,7 +58,7 @@ final class MaintenancePurgeHistoryCommandTest extends IntegrationTestCase
         self::assertSame(Command::SUCCESS, $exitCode);
         $remaining = $conn->createQueryBuilder()
             ->select('COUNT(*)')
-            ->from(Tables::history())
+            ->from('history')
             ->executeQuery()
             ->fetchOne();
         self::assertSame(0, is_numeric($remaining) ? (int) $remaining : -1);

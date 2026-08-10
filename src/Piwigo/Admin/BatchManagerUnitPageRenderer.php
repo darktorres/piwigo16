@@ -114,7 +114,7 @@ final class BatchManagerUnitPageRenderer
             $tagService = $this->tagService;
 
             foreach ($this->imageService->getIdsAndDatesForBatchUnitSave($collection) as $row) {
-                // Tables::images().id is a NOT NULL auto_increment primary key; this
+                // 'images'.id is a NOT NULL auto_increment primary key; this
                 // guard only defends against the generic mixed element type a
                 // fetched row carries for every column.
                 if ($row['id'] === null || ! is_scalar($row['id'])) {
@@ -303,7 +303,7 @@ final class BatchManagerUnitPageRenderer
             $imageService = new ImageService($this->lang, EntityManagerFactory::build($conn)->getRepository(ImageEntity::class), $this->activityService, $this->sessionService, $this->eventDispatcher, $this->currentConfig, $this->translator, $this->paths);
 
             foreach ($images as $row) {
-                // Tables::images().id is a NOT NULL auto_increment primary key; this
+                // 'images'.id is a NOT NULL auto_increment primary key; this
                 // guard only defends against the generic mixed element type a
                 // fetched row carries for every column.
                 if ($row['id'] === null || (! is_int($row['id']) && ! is_string($row['id']))) {
@@ -347,7 +347,7 @@ final class BatchManagerUnitPageRenderer
                 assert($media['image'] !== null);
 
                 foreach ($imageService->getCategoryLinksForImage(ImageId::from((int) $row_id)) as $item) {
-                    // Tables::imageCategory()/Tables::categories().category_id/uppercats are
+                    // 'image_category'/'categories'.category_id/uppercats are
                     // NOT NULL; this guard only defends against the generic mixed
                     // element type a fetched row carries for every column.
                     if ($item['category_id'] === null || $item['uppercats'] === null

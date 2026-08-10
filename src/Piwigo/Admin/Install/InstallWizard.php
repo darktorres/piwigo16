@@ -62,7 +62,6 @@ use Piwigo\Db\DbCredentials;
 use Piwigo\Db\DbInfo;
 use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Db\MigrationDependencyFactory;
-use Piwigo\Db\Tables;
 use Piwigo\Group\GroupEntity;
 use Piwigo\Http\HttpClientService;
 use Piwigo\Http\ResponseFactory;
@@ -705,9 +704,9 @@ define(\'DB_COLLATE\', \'\');
             'galleries_url' => $this->paths->root . 'galleries/',
         ];
         new BatchWriter($conn)
-            ->massInsert(Tables::sites(), array_keys($insert), [$insert]);
+            ->massInsert('sites', array_keys($insert), [$insert]);
         new DbInfo($conn)
-            ->resyncIdentitySequence(Tables::sites());
+            ->resyncIdentitySequence('sites');
 
         // webmaster admin user
         $inserts = [
@@ -724,9 +723,9 @@ define(\'DB_COLLATE\', \'\');
             ],
         ];
         new BatchWriter($conn)
-            ->massInsert(Tables::users(), array_keys($inserts[0]), $inserts);
+            ->massInsert('users', array_keys($inserts[0]), $inserts);
         new DbInfo($conn)
-            ->resyncIdentitySequence(Tables::users());
+            ->resyncIdentitySequence('users');
 
         $this->userService($conn)
             ->createUserInfos([UserId::from(1), UserId::from(2)], [

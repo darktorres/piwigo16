@@ -13,7 +13,6 @@ use Piwigo\Ws\PwgCore;
 use Doctrine\DBAL\Connection;
 use Piwigo\Core\Paths;
 use Piwigo\Db\DbConnection;
-use Piwigo\Db\Tables;
 
 final class WsTopLevelTest extends ContractTestCase
 {
@@ -287,7 +286,7 @@ final class WsTopLevelTest extends ContractTestCase
             $conn->beginTransaction();
 
             try {
-                $conn->executeStatement('DELETE FROM ' . Tables::images());
+                $conn->executeStatement('DELETE FROM ' . 'images');
 
                 $service = Kernel::container()->get(PwgServer::class);
                 self::assertInstanceOf(PwgServer::class, $service);
@@ -337,7 +336,7 @@ final class WsTopLevelTest extends ContractTestCase
     public function test_getMissingDerivatives_skips_a_non_picture_file_rendered_as_a_mimetype_icon(): void
     {
         $this->conn->executeStatement(
-            'INSERT INTO ' . Tables::images() . ' (file, path) VALUES (?, ?)',
+            'INSERT INTO ' . 'images' . ' (file, path) VALUES (?, ?)',
             ['pwgcore-mimetype-' . uniqid() . '.pdf', 'upload/pwgcore-mimetype-throwaway.pdf']
         );
         $imageId = (int) $this->conn->lastInsertId();
@@ -350,7 +349,7 @@ final class WsTopLevelTest extends ContractTestCase
             self::assertIsArray($result);
             self::assertSame([], $result['urls']);
         } finally {
-            $this->conn->executeStatement('DELETE FROM ' . Tables::images() . ' WHERE id = ?', [$imageId]);
+            $this->conn->executeStatement('DELETE FROM ' . 'images' . ' WHERE id = ?', [$imageId]);
         }
     }
 
@@ -402,7 +401,7 @@ final class WsTopLevelTest extends ContractTestCase
     public function test_getMissingDerivatives_stops_mid_batch_once_max_urls_is_reached(): void
     {
         $this->conn->executeStatement(
-            'INSERT INTO ' . Tables::images() . ' (file, path, width, height) VALUES (?, ?, ?, ?)',
+            'INSERT INTO ' . 'images' . ' (file, path, width, height) VALUES (?, ?, ?, ?)',
             ['pwgcore-huge-' . uniqid() . '.jpg', 'upload/pwgcore-huge-throwaway.jpg', 6000, 4500]
         );
         $imageId = (int) $this->conn->lastInsertId();
@@ -419,7 +418,7 @@ final class WsTopLevelTest extends ContractTestCase
             self::assertIsArray($urls);
             self::assertGreaterThanOrEqual(2, count($urls));
         } finally {
-            $this->conn->executeStatement('DELETE FROM ' . Tables::images() . ' WHERE id = ?', [$imageId]);
+            $this->conn->executeStatement('DELETE FROM ' . 'images' . ' WHERE id = ?', [$imageId]);
         }
     }
 
@@ -447,21 +446,21 @@ final class WsTopLevelTest extends ContractTestCase
         $statusResult = $status['result'];
         self::assertIsArray($statusResult);
         $userId = $this->conn->fetchOne(
-            'SELECT id FROM ' . Tables::users() . ' WHERE username = ?',
+            'SELECT id FROM ' . 'users' . ' WHERE username = ?',
             ['fixture_admin']
         );
         self::assertIsNumeric($userId);
 
         $filename = 'ratesdelete-throwaway-' . uniqid() . '.jpg';
         $this->conn->executeStatement(
-            'INSERT INTO ' . Tables::images() . ' (file, path, md5sum) VALUES (?, ?, ?)',
+            'INSERT INTO ' . 'images' . ' (file, path, md5sum) VALUES (?, ?, ?)',
             [$filename, 'upload/' . $filename, md5($filename)]
         );
         $imageId = (int) $this->conn->lastInsertId();
 
         try {
             $this->conn->executeStatement(
-                'INSERT INTO ' . Tables::imageCategory() . ' (image_id, category_id) VALUES (?, ?)',
+                'INSERT INTO ' . 'image_category' . ' (image_id, category_id) VALUES (?, ?)',
                 [$imageId, 1]
             );
 
@@ -469,7 +468,7 @@ final class WsTopLevelTest extends ContractTestCase
             self::assertSame('ok', $rateResponse['stat']);
 
             $before = $this->conn->fetchOne(
-                'SELECT COUNT(*) FROM ' . Tables::rate() . ' WHERE user_id = ? AND element_id = ?',
+                'SELECT COUNT(*) FROM ' . 'rate' . ' WHERE user_id = ? AND element_id = ?',
                 [$userId, $imageId]
             );
             self::assertIsNumeric($before);
@@ -481,20 +480,20 @@ final class WsTopLevelTest extends ContractTestCase
             self::assertSame(1, $response['result']);
 
             $after = $this->conn->fetchOne(
-                'SELECT COUNT(*) FROM ' . Tables::rate() . ' WHERE user_id = ? AND element_id = ?',
+                'SELECT COUNT(*) FROM ' . 'rate' . ' WHERE user_id = ? AND element_id = ?',
                 [$userId, $imageId]
             );
             self::assertIsNumeric($after);
             self::assertSame(0, (int) $after);
         } finally {
-            $this->conn->executeStatement('DELETE FROM ' . Tables::images() . ' WHERE id = ?', [$imageId]);
+            $this->conn->executeStatement('DELETE FROM ' . 'images' . ' WHERE id = ?', [$imageId]);
         }
     }
 
     public function test_ratesDelete_with_no_matching_rate_returns_zero(): void
     {
         $userId = $this->conn->fetchOne(
-            'SELECT id FROM ' . Tables::users() . ' WHERE username = ?',
+            'SELECT id FROM ' . 'users' . ' WHERE username = ?',
             ['fixture_admin']
         );
         self::assertIsNumeric($userId);
@@ -521,24 +520,24 @@ final class WsTopLevelTest extends ContractTestCase
     public function test_ratesDelete_with_anonymous_id_only_removes_the_matching_rate(): void
     {
         $guestId = $this->conn->fetchOne(
-            'SELECT id FROM ' . Tables::users() . ' WHERE username = ?',
+            'SELECT id FROM ' . 'users' . ' WHERE username = ?',
             ['guest']
         );
         self::assertIsNumeric($guestId);
 
         $this->conn->executeStatement(
-            'INSERT INTO ' . Tables::images() . ' (file, path) VALUES (?, ?)',
+            'INSERT INTO ' . 'images' . ' (file, path) VALUES (?, ?)',
             ['pwgcore-throwaway-' . uniqid() . '.jpg', 'upload/pwgcore-throwaway.jpg']
         );
         $imageId = (int) $this->conn->lastInsertId();
 
         try {
             $this->conn->executeStatement(
-                'INSERT INTO ' . Tables::rate() . ' (user_id, element_id, anonymous_id, rate, date) VALUES (?, ?, ?, 4, CURRENT_DATE)',
+                'INSERT INTO ' . 'rate' . ' (user_id, element_id, anonymous_id, rate, date) VALUES (?, ?, ?, 4, CURRENT_DATE)',
                 [(int) $guestId, $imageId, 'anon-a']
             );
             $this->conn->executeStatement(
-                'INSERT INTO ' . Tables::rate() . ' (user_id, element_id, anonymous_id, rate, date) VALUES (?, ?, ?, 2, CURRENT_DATE)',
+                'INSERT INTO ' . 'rate' . ' (user_id, element_id, anonymous_id, rate, date) VALUES (?, ?, ?, 2, CURRENT_DATE)',
                 [(int) $guestId, $imageId, 'anon-b']
             );
 
@@ -552,7 +551,7 @@ final class WsTopLevelTest extends ContractTestCase
             self::assertSame(1, $response['result']);
 
             $remaining = $this->conn->fetchAllAssociative(
-                'SELECT anonymous_id FROM ' . Tables::rate() . ' WHERE user_id = ? AND element_id = ?',
+                'SELECT anonymous_id FROM ' . 'rate' . ' WHERE user_id = ? AND element_id = ?',
                 [(int) $guestId, $imageId]
             );
             self::assertSame(['anon-b'], array_column($remaining, 'anonymous_id'));
@@ -562,7 +561,7 @@ final class WsTopLevelTest extends ContractTestCase
             // one final recompute against the fully-restored piwigo_rate
             // table before the throwaway image itself is removed.
             $this->wsAdmin('pwg.rates.delete', ['user_id' => (int) $guestId, 'image_id' => $imageId]);
-            $this->conn->executeStatement('DELETE FROM ' . Tables::images() . ' WHERE id = ?', [$imageId]);
+            $this->conn->executeStatement('DELETE FROM ' . 'images' . ' WHERE id = ?', [$imageId]);
         }
     }
 }

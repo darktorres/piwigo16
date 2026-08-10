@@ -9,7 +9,6 @@ use Piwigo\Cache\CachePools;
 use CURLFile;
 use Doctrine\DBAL\Connection;
 use Piwigo\Db\DbConnection;
-use Piwigo\Db\Tables;
 
 /**
  * Remaining Ws\PwgImages upload-pipeline gaps not covered by
@@ -67,7 +66,7 @@ final class WsImagesUploadGapsTest extends ContractTestCase
                 'pwg_token' => $token,
             ]);
         }
-        $this->conn->executeStatement("DELETE FROM " . Tables::config() . " WHERE param = 'uniqueness_mode'");
+        $this->conn->executeStatement("DELETE FROM " . 'config' . " WHERE param = 'uniqueness_mode'");
         CachePools::config()->clear();
         parent::tearDown();
     }
@@ -193,7 +192,7 @@ final class WsImagesUploadGapsTest extends ContractTestCase
         $tagIds = array_map(
             static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0,
             $this->conn->fetchFirstColumn(
-                'SELECT tag_id FROM ' . Tables::imageTag() . ' WHERE image_id = ? ORDER BY tag_id',
+                'SELECT tag_id FROM ' . 'image_tag' . ' WHERE image_id = ? ORDER BY tag_id',
                 [(int) $imageId]
             )
         );
@@ -252,12 +251,12 @@ final class WsImagesUploadGapsTest extends ContractTestCase
     {
         $base = 'dup-basename-' . uniqid();
         $this->conn->executeStatement(
-            'INSERT INTO ' . Tables::images() . ' (file, path, md5sum) VALUES (?, ?, ?)',
+            'INSERT INTO ' . 'images' . ' (file, path, md5sum) VALUES (?, ?, ?)',
             [$base . '.jpg', 'upload/' . $base . '.jpg', md5($base . 'a')]
         );
         $firstId = (int) $this->conn->lastInsertId();
         $this->conn->executeStatement(
-            'INSERT INTO ' . Tables::images() . ' (file, path, md5sum) VALUES (?, ?, ?)',
+            'INSERT INTO ' . 'images' . ' (file, path, md5sum) VALUES (?, ?, ?)',
             [$base . '.tif', 'upload/' . $base . '.tif', md5($base . 'b')]
         );
         $secondId = (int) $this->conn->lastInsertId();
@@ -270,7 +269,7 @@ final class WsImagesUploadGapsTest extends ContractTestCase
             self::assertSame('ok', $response['stat']);
             self::assertSame(['a' => ['status' => 'multiple']], $response['result']);
         } finally {
-            $this->conn->executeStatement('DELETE FROM ' . Tables::images() . ' WHERE id IN (?, ?)', [$firstId, $secondId]);
+            $this->conn->executeStatement('DELETE FROM ' . 'images' . ' WHERE id IN (?, ?)', [$firstId, $secondId]);
         }
     }
 
@@ -617,12 +616,12 @@ final class WsImagesUploadGapsTest extends ContractTestCase
         $sum = md5($bytes);
 
         $adminUserId = $this->conn->fetchOne(
-            "SELECT id FROM " . Tables::users() . " WHERE username = 'fixture_admin'"
+            "SELECT id FROM " . 'users' . " WHERE username = 'fixture_admin'"
         );
         self::assertIsNumeric($adminUserId);
 
         $originalLevel = $this->conn->fetchOne(
-            'SELECT level FROM ' . Tables::userInfos() . ' WHERE user_id = ?',
+            'SELECT level FROM ' . 'user_infos' . ' WHERE user_id = ?',
             [(int) $adminUserId]
         );
         self::assertIsNumeric($originalLevel);
@@ -638,7 +637,7 @@ final class WsImagesUploadGapsTest extends ContractTestCase
             // on every request (UserBootstrap::buildUser()), so this is
             // visible to the WS call below without re-logging in.
             $this->conn->executeStatement(
-                'UPDATE ' . Tables::userInfos() . ' SET level = 0 WHERE user_id = ?',
+                'UPDATE ' . 'user_infos' . ' SET level = 0 WHERE user_id = ?',
                 [(int) $adminUserId]
             );
 
@@ -663,20 +662,20 @@ final class WsImagesUploadGapsTest extends ContractTestCase
             $tagIds = array_map(
                 static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0,
                 $this->conn->fetchFirstColumn(
-                    'SELECT tag_id FROM ' . Tables::imageTag() . ' WHERE image_id = ? ORDER BY tag_id',
+                    'SELECT tag_id FROM ' . 'image_tag' . ' WHERE image_id = ? ORDER BY tag_id',
                     [(int) $imageId]
                 )
             );
             self::assertSame([1, 2], $tagIds);
 
             $storedLevel = $this->conn->fetchOne(
-                'SELECT level FROM ' . Tables::images() . ' WHERE id = ?',
+                'SELECT level FROM ' . 'images' . ' WHERE id = ?',
                 [(int) $imageId]
             );
             self::assertSame(4, is_numeric($storedLevel) ? (int) $storedLevel : -1);
         } finally {
             $this->conn->executeStatement(
-                'UPDATE ' . Tables::userInfos() . ' SET level = ? WHERE user_id = ?',
+                'UPDATE ' . 'user_infos' . ' SET level = ? WHERE user_id = ?',
                 [(int) $originalLevel, (int) $adminUserId]
             );
         }

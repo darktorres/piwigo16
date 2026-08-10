@@ -6,7 +6,6 @@ namespace Piwigo\Calendar;
 
 use Doctrine\DBAL\ArrayParameterType;
 use Piwigo\Category\CategoryService;
-use Piwigo\Db\Tables;
 use Piwigo\Permission\PermissionService;
 use Piwigo\Permission\SqlCondition;
 
@@ -50,11 +49,11 @@ final readonly class CalendarService
      */
     public function buildInnerSql(string $section, bool $hasCategoryContext, int|string|null $categoryId, string $forbiddenCategories, array $items): ?CalendarQueryScope
     {
-        $imagesTable = Tables::images();
+        $imagesTable = 'images';
         $sql = " FROM {$imagesTable}";
 
         if ($section === 'categories') {
-            $imageCategoryTable = Tables::imageCategory();
+            $imageCategoryTable = 'image_category';
             $sql .= "\nINNER JOIN {$imageCategoryTable} ON id = image_id";
 
             if ($hasCategoryContext) {

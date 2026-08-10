@@ -7,7 +7,6 @@ namespace Piwigo\Tests\Contract;
 use Override;
 use Doctrine\DBAL\Connection;
 use Piwigo\Db\DbConnection;
-use Piwigo\Db\Tables;
 
 final class WsImagesMutationTest extends ContractTestCase
 {
@@ -34,7 +33,7 @@ final class WsImagesMutationTest extends ContractTestCase
     protected function tearDown(): void
     {
         foreach ($this->throwawayImageIds as $id) {
-            $this->conn->executeStatement('DELETE FROM ' . Tables::images() . ' WHERE id = ?', [$id]);
+            $this->conn->executeStatement('DELETE FROM ' . 'images' . ' WHERE id = ?', [$id]);
         }
         parent::tearDown();
     }
@@ -56,7 +55,7 @@ final class WsImagesMutationTest extends ContractTestCase
         ));
 
         $this->conn->executeStatement(
-            'INSERT INTO ' . Tables::images() . ' (file, path, md5sum) VALUES (?, ?, ?)',
+            'INSERT INTO ' . 'images' . ' (file, path, md5sum) VALUES (?, ?, ?)',
             [$filename, 'upload/2026/08/01/' . $filename, md5($filename)]
         );
         $id = (int) $this->conn->lastInsertId();
@@ -64,7 +63,7 @@ final class WsImagesMutationTest extends ContractTestCase
 
         foreach ($categoryIds as $catId) {
             $this->conn->executeStatement(
-                'INSERT INTO ' . Tables::imageCategory() . ' (image_id, category_id) VALUES (?, ?)',
+                'INSERT INTO ' . 'image_category' . ' (image_id, category_id) VALUES (?, ?)',
                 [$id, $catId]
             );
         }
@@ -171,7 +170,7 @@ final class WsImagesMutationTest extends ContractTestCase
 
         self::assertSame('ok', $response['stat']);
         $remaining = $this->conn->fetchOne(
-            'SELECT COUNT(*) FROM ' . Tables::imageCategory() . ' WHERE image_id = ? AND category_id = ?',
+            'SELECT COUNT(*) FROM ' . 'image_category' . ' WHERE image_id = ? AND category_id = ?',
             [$imageId, self::FIXTURE_CAT_ID]
         );
         self::assertIsNumeric($remaining);
@@ -193,14 +192,14 @@ final class WsImagesMutationTest extends ContractTestCase
         self::assertSame('ok', $response['stat']);
 
         $stillInOld = $this->conn->fetchOne(
-            'SELECT COUNT(*) FROM ' . Tables::imageCategory() . ' WHERE image_id = ? AND category_id = ?',
+            'SELECT COUNT(*) FROM ' . 'image_category' . ' WHERE image_id = ? AND category_id = ?',
             [$imageId, self::FIXTURE_CAT_ID]
         );
         self::assertIsNumeric($stillInOld);
         self::assertSame(0, (int) $stillInOld);
 
         $nowInNew = $this->conn->fetchOne(
-            'SELECT COUNT(*) FROM ' . Tables::imageCategory() . ' WHERE image_id = ? AND category_id = ?',
+            'SELECT COUNT(*) FROM ' . 'image_category' . ' WHERE image_id = ? AND category_id = ?',
             [$imageId, $otherCatId]
         );
         self::assertIsNumeric($nowInNew);
@@ -228,7 +227,7 @@ final class WsImagesMutationTest extends ContractTestCase
         self::assertSame('ok', $response['stat']);
         self::assertSame(1, $response['result']);
 
-        $remaining = $this->conn->fetchOne('SELECT COUNT(*) FROM ' . Tables::images() . ' WHERE id = ?', [$imageId]);
+        $remaining = $this->conn->fetchOne('SELECT COUNT(*) FROM ' . 'images' . ' WHERE id = ?', [$imageId]);
         self::assertIsNumeric($remaining);
         self::assertSame(0, (int) $remaining);
     }

@@ -6,7 +6,6 @@ use Doctrine\DBAL\Connection;
 use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
-use Piwigo\Db\Tables;
 use Piwigo\Notification\NotificationByMailRepository;
 use Piwigo\Notification\UserMailNotificationEntity;
 
@@ -36,7 +35,7 @@ function nbmTestCountRows(Connection $conn): int
 {
     $value = $conn->createQueryBuilder()
         ->select('COUNT(*)')
-        ->from(Tables::userMailNotification())
+        ->from('user_mail_notification')
         ->executeQuery()
         ->fetchOne();
 
@@ -127,7 +126,7 @@ test('nullifyBlankEmails() sets a whitespace-only email to NULL', function (): v
 
     try {
         $conn->createQueryBuilder()
-            ->update(Tables::users())
+            ->update('users')
             ->set('mail_address', ':email')
             ->where('id = 4')
             ->setParameter('email', '   ')
@@ -137,14 +136,14 @@ test('nullifyBlankEmails() sets a whitespace-only email to NULL', function (): v
 
         $email = $conn->createQueryBuilder()
             ->select('mail_address')
-            ->from(Tables::users())
+            ->from('users')
             ->where('id = 4')
             ->fetchOne();
 
         expect($email)->toBeNull();
     } finally {
         $conn->createQueryBuilder()
-            ->update(Tables::users())
+            ->update('users')
             ->set('mail_address', 'NULL')
             ->where('id = 4')
             ->executeStatement();
@@ -158,7 +157,7 @@ test('nullifyBlankEmails() leaves a real email untouched', function (): void {
 
     $email = $conn->createQueryBuilder()
         ->select('mail_address')
-        ->from(Tables::users())
+        ->from('users')
         ->where('id = 1')
         ->fetchOne();
 
@@ -172,7 +171,7 @@ test('findUsersWithoutNotificationRow() returns only users with a real email and
         // user 4 (power_user) has no notification row and no real email
         // in the fixture -- give it a real email so it becomes eligible.
         $conn->createQueryBuilder()
-            ->update(Tables::users())
+            ->update('users')
             ->set('mail_address', ':email')
             ->where('id = 4')
             ->setParameter('email', 'power.user@example.test')
@@ -196,7 +195,7 @@ test('findUsersWithoutNotificationRow() returns only users with a real email and
             ->and($byId[4]['mail_address'])->toBe('power.user@example.test');
     } finally {
         $conn->createQueryBuilder()
-            ->update(Tables::users())
+            ->update('users')
             ->set('mail_address', 'NULL')
             ->where('id = 4')
             ->executeStatement();

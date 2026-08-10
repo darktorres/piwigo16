@@ -5,7 +5,6 @@ declare(strict_types=1);
 use Doctrine\DBAL\Connection;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
-use Piwigo\Db\Tables;
 use Piwigo\Feed\FeedEntity;
 use Piwigo\Feed\FeedRepository;
 
@@ -33,7 +32,7 @@ function feedTestId(): string
 function feedTestDelete(Connection $conn, string $id): void
 {
     $conn->createQueryBuilder()
-        ->delete(Tables::userFeed())
+        ->delete('user_feed')
         ->where('id = :id')
         ->setParameter('id', $id)
         ->executeStatement();

@@ -47,7 +47,6 @@ use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Core\WsError;
 use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Db\SqlDialect;
-use Piwigo\Db\Tables;
 use Piwigo\Event\User\DeleteUser;
 use Piwigo\Event\User\RegisterUser;
 use Piwigo\Event\User\RegisterUserCheck;
@@ -1537,7 +1536,7 @@ final readonly class UserService implements DefaultLanguageProviderInterface
     /**
      * Synchronize base users list and related users list.
      *
-     * Compares and synchronizes the base users table (`Tables::users()`)
+     * Compares and synchronizes the base users table (`'users'`)
      * with its child tables (`user_infos`/`user_access`/`user_group`,
      * plus `user_mail_notification`/`user_feed`): each base user must be
      * present in child tables, users in child tables not present in the
@@ -1563,8 +1562,8 @@ final readonly class UserService implements DefaultLanguageProviderInterface
         // table. user_mail_notification/user_feed stay on the raw-table-name
         // method permanently -- see UserRelatedTable's own docblock.
         $rawTables = [
-            Tables::userMailNotification(),
-            Tables::userFeed(),
+            'user_mail_notification',
+            'user_feed',
         ];
         foreach ($rawTables as $table) {
             $toDelete = array_values(array_diff(

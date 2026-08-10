@@ -22,7 +22,6 @@ use Piwigo\Category\CategoryRepository;
     use Piwigo\Config\CurrentConfig;
     use Piwigo\Config\ConfigLoader;
     use Piwigo\Db\DbConnection;
-    use Piwigo\Db\Tables;
     use Piwigo\Permission\PermissionRepository;
     use Piwigo\Permission\PermissionService;
 
@@ -73,8 +72,8 @@ use Piwigo\Category\CategoryRepository;
             // the SQL text (unlike a bound parameter, which the driver
             // coerces implicitly) is rejected outright by Postgres.
             $visibleLiteral = $this->dbDriver === 'pgsql' ? 'true' : '1';
-            $this->conn->executeStatement('UPDATE ' . Tables::categories() . " SET status = 'public', visible = {$visibleLiteral}");
-            $this->conn->executeStatement('DELETE FROM ' . Tables::userAccess());
+            $this->conn->executeStatement('UPDATE ' . 'categories' . " SET status = 'public', visible = {$visibleLiteral}");
+            $this->conn->executeStatement('DELETE FROM ' . 'user_access');
             parent::tearDown();
         }
 
@@ -85,7 +84,7 @@ use Piwigo\Category\CategoryRepository;
 
         public function test_a_private_category_is_forbidden_to_a_user_with_no_access(): void
         {
-            $this->conn->executeStatement('UPDATE ' . Tables::categories() . " SET status = 'private' WHERE id = 1");
+            $this->conn->executeStatement('UPDATE ' . 'categories' . " SET status = 'private' WHERE id = 1");
 
             // User 2 (guest, fixture) has no user_access row and isn't in
             // any group with group_access to cat 1.
@@ -94,15 +93,15 @@ use Piwigo\Category\CategoryRepository;
 
         public function test_a_private_category_is_not_forbidden_with_direct_user_access(): void
         {
-            $this->conn->executeStatement('UPDATE ' . Tables::categories() . " SET status = 'private' WHERE id = 1");
-            $this->conn->executeStatement('INSERT INTO ' . Tables::userAccess() . ' (user_id, cat_id) VALUES (2, 1)');
+            $this->conn->executeStatement('UPDATE ' . 'categories' . " SET status = 'private' WHERE id = 1");
+            $this->conn->executeStatement('INSERT INTO ' . 'user_access' . ' (user_id, cat_id) VALUES (2, 1)');
 
             self::assertSame('0', $this->service->getForbiddenCategories(2, 'normal'));
         }
 
         public function test_a_private_category_is_not_forbidden_via_group_access(): void
         {
-            $this->conn->executeStatement('UPDATE ' . Tables::categories() . " SET status = 'private' WHERE id = 1");
+            $this->conn->executeStatement('UPDATE ' . 'categories' . " SET status = 'private' WHERE id = 1");
 
             // Fixture: user 1 is a member of group 1 ("Editors"), which has
             // group_access to cat 1 -- this is exactly the group-based JOIN
@@ -112,22 +111,22 @@ use Piwigo\Category\CategoryRepository;
 
         public function test_a_locked_category_is_forbidden_to_a_non_admin(): void
         {
-            $this->conn->executeStatement('UPDATE ' . Tables::categories() . ' SET visible = ' . ($this->dbDriver === 'pgsql' ? 'false' : '0') . ' WHERE id = 2');
+            $this->conn->executeStatement('UPDATE ' . 'categories' . ' SET visible = ' . ($this->dbDriver === 'pgsql' ? 'false' : '0') . ' WHERE id = 2');
 
             self::assertSame('2', $this->service->getForbiddenCategories(2, 'normal'));
         }
 
         public function test_a_locked_category_is_not_forbidden_to_an_admin(): void
         {
-            $this->conn->executeStatement('UPDATE ' . Tables::categories() . ' SET visible = ' . ($this->dbDriver === 'pgsql' ? 'false' : '0') . ' WHERE id = 2');
+            $this->conn->executeStatement('UPDATE ' . 'categories' . ' SET visible = ' . ($this->dbDriver === 'pgsql' ? 'false' : '0') . ' WHERE id = 2');
 
             self::assertSame('0', $this->service->getForbiddenCategories(2, 'admin'));
         }
 
         public function test_private_and_locked_categories_combine(): void
         {
-            $this->conn->executeStatement('UPDATE ' . Tables::categories() . " SET status = 'private' WHERE id = 1");
-            $this->conn->executeStatement('UPDATE ' . Tables::categories() . ' SET visible = ' . ($this->dbDriver === 'pgsql' ? 'false' : '0') . ' WHERE id = 2');
+            $this->conn->executeStatement('UPDATE ' . 'categories' . " SET status = 'private' WHERE id = 1");
+            $this->conn->executeStatement('UPDATE ' . 'categories' . ' SET visible = ' . ($this->dbDriver === 'pgsql' ? 'false' : '0') . ' WHERE id = 2');
 
             $forbidden = explode(',', $this->service->getForbiddenCategories(2, 'normal'));
             sort($forbidden);
@@ -142,7 +141,7 @@ use Piwigo\Category\CategoryRepository;
         {
             $rows = $this->conn->createQueryBuilder()
                 ->select('cat_id')
-                ->from(Tables::userAccess())
+                ->from('user_access')
                 ->where('user_id = :userId')
                 ->setParameter('userId', $userId)
                 ->executeQuery()
@@ -153,7 +152,7 @@ use Piwigo\Category\CategoryRepository;
 
         public function test_remove_user_access_delegates_to_the_repository(): void
         {
-            $this->conn->executeStatement('INSERT INTO ' . Tables::userAccess() . ' (user_id, cat_id) VALUES (2, 1), (2, 2)');
+            $this->conn->executeStatement('INSERT INTO ' . 'user_access' . ' (user_id, cat_id) VALUES (2, 1), (2, 2)');
 
             $this->service->removeUserAccess(2, [1]);
 
@@ -167,7 +166,7 @@ use Piwigo\Category\CategoryRepository;
             // own `$userIds = [$userIds];` scalar-to-array normalization
             // (the sibling normalization for $categoryIds is already
             // covered by other callers that pass a bare int there).
-            $this->conn->executeStatement("UPDATE " . Tables::categories() . " SET status = 'private' WHERE id = 1");
+            $this->conn->executeStatement("UPDATE " . 'categories' . " SET status = 'private' WHERE id = 1");
 
             $this->service->grantUserAccess(4, [1]);
 
@@ -176,7 +175,7 @@ use Piwigo\Category\CategoryRepository;
 
         public function test_add_permission_on_category_with_no_categories_is_a_noop(): void
         {
-            $this->conn->executeStatement("UPDATE " . Tables::categories() . " SET status = 'private' WHERE id = 1");
+            $this->conn->executeStatement("UPDATE " . 'categories' . " SET status = 'private' WHERE id = 1");
 
             $this->service->addPermissionOnCategory([], [2]);
 
@@ -190,7 +189,7 @@ use Piwigo\Category\CategoryRepository;
             // eligible for an explicit user_access row -- proving
             // applyOnSub's own findSubcategoryIds() merge actually widens
             // the grant beyond category 1 alone.
-            $this->conn->executeStatement("UPDATE " . Tables::categories() . " SET status = 'private' WHERE id IN (1, 2)");
+            $this->conn->executeStatement("UPDATE " . 'categories' . " SET status = 'private' WHERE id IN (1, 2)");
 
             $this->service->addPermissionOnCategory([1], [3], applyOnSub: true);
 

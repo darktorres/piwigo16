@@ -738,7 +738,7 @@ test('src/Piwigo/ contains no global $filter/$pwg_loaded_plugins/$template/$page
 });
 
 test('src/Piwigo/ contains no global $conf/$prefixeTable/$last_time/$t2 declarations', function (): void {
-    // Table-prefix reads go through Tables::/DbCredentials::current()->prefix.
+    // Table names are plain literal strings now -- no prefix, no indirection.
     // Config keys only ever set by a site's own local/config/config.inc.php
     // (never mirrored into CurrentConfig) read through
     // LegacyFileConf::read(). $t2 (RequestBootstrap::configure()) is an

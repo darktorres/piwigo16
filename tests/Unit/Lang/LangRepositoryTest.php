@@ -5,7 +5,6 @@ declare(strict_types=1);
 use Doctrine\DBAL\Connection;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
-use Piwigo\Db\Tables;
 use Piwigo\Lang\LangRepository;
 use Piwigo\Lang\LanguageEntity;
 use Piwigo\Lang\Projection\LanguageListing;
@@ -27,7 +26,7 @@ function langRepositoryTestRepo(): LangRepository
 function langRepositoryTestInsert(Connection $conn, string $id, string $version, ?string $name): void
 {
     $conn->createQueryBuilder()
-        ->insert(Tables::languages())
+        ->insert('languages')
         ->values([
             'id' => ':id',
             'version' => ':version',
@@ -42,7 +41,7 @@ function langRepositoryTestInsert(Connection $conn, string $id, string $version,
 function langRepositoryTestDelete(Connection $conn, string $id): void
 {
     $conn->createQueryBuilder()
-        ->delete(Tables::languages())
+        ->delete('languages')
         ->where('id = :id')
         ->setParameter('id', $id)
         ->executeStatement();

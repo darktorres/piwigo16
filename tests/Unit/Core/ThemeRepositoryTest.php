@@ -8,7 +8,6 @@ use Piwigo\Core\ThemeEntity;
 use Piwigo\Core\ThemeRepository;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
-use Piwigo\Db\Tables;
 
 /**
  * Piwigo\Core\ThemeRepository -- has no dedicated Integration test file
@@ -38,7 +37,7 @@ function themeRepositoryTestRepo(): ThemeRepository
 function themeRepositoryTestInsert(Connection $conn, string $id, string $version, ?string $name): void
 {
     $conn->createQueryBuilder()
-        ->insert(Tables::themes())
+        ->insert('themes')
         ->values([
             'id' => ':id',
             'version' => ':version',
@@ -53,7 +52,7 @@ function themeRepositoryTestInsert(Connection $conn, string $id, string $version
 function themeRepositoryTestDelete(Connection $conn, string $id): void
 {
     $conn->createQueryBuilder()
-        ->delete(Tables::themes())
+        ->delete('themes')
         ->where('id = :id')
         ->setParameter('id', $id)
         ->executeStatement();

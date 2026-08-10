@@ -14,7 +14,6 @@ use Piwigo\Core\Lang;
 use Piwigo\Core\Paths;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
-use Piwigo\Db\Tables;
 use Piwigo\Lang\Translator;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Tests\Support\CurrentConfigServiceTestFactory;
@@ -302,7 +301,7 @@ test('activateCoreThemes() does not activate the non-selectable default placehol
         InstallService::activateCoreThemes(LangTestFactory::get(), CurrentUserTestFactory::get(), CurrentConfigServiceTestFactory::get(), CurrentConfigTestFactory::get(), CurrentPathsTestFactory::get(), EventDispatcherTestFactory::get());
 
         $conn = DbConnection::build();
-        expect($conn->fetchAssociative('SELECT id FROM ' . Tables::themes() . ' WHERE id = ' . $conn->quote($themeId)))->toBeFalse();
+        expect($conn->fetchAssociative('SELECT id FROM ' . 'themes' . ' WHERE id = ' . $conn->quote($themeId)))->toBeFalse();
     } finally {
         FilesystemHelper::deltree($themesDir);
         installServiceTestResetKernel();
@@ -318,7 +317,7 @@ test('activateCoreThemes() activates nothing when no default template theme dire
         InstallService::activateCoreThemes(LangTestFactory::get(), CurrentUserTestFactory::get(), CurrentConfigServiceTestFactory::get(), CurrentConfigTestFactory::get(), CurrentPathsTestFactory::get(), EventDispatcherTestFactory::get());
 
         $conn = DbConnection::build();
-        expect($conn->fetchAssociative('SELECT id FROM ' . Tables::themes() . ' WHERE id = ' . $conn->quote(AppInfo::DEFAULT_TEMPLATE)))->toBeFalse();
+        expect($conn->fetchAssociative('SELECT id FROM ' . 'themes' . ' WHERE id = ' . $conn->quote(AppInfo::DEFAULT_TEMPLATE)))->toBeFalse();
     } finally {
         FilesystemHelper::deltree($emptyThemesDir);
         installServiceTestResetKernel();
@@ -342,7 +341,7 @@ test('activateCorePlugins() scans but auto-activates nothing, even when a real f
         InstallService::activateCorePlugins(LangTestFactory::get(), Paths::fromRoot($root), CurrentUserTestFactory::get(), EventDispatcherTestFactory::get(), CurrentConfigTestFactory::get());
 
         $conn = DbConnection::build();
-        expect($conn->fetchAssociative('SELECT id FROM ' . Tables::plugins() . ' WHERE id = ' . $conn->quote($pluginId)))->toBeFalse();
+        expect($conn->fetchAssociative('SELECT id FROM ' . 'plugins' . ' WHERE id = ' . $conn->quote($pluginId)))->toBeFalse();
     } finally {
         FilesystemHelper::deltree($root);
         installServiceTestResetKernel();
@@ -361,7 +360,7 @@ test('activateCorePlugins() is a no-op for an empty plugins directory', function
         // via a different, simpler route (nothing found at all, rather
         // than something found and then deliberately not activated).
         $conn = DbConnection::build();
-        expect($conn->fetchAssociative('SELECT id FROM ' . Tables::plugins() . ' WHERE id = ' . $conn->quote('p17_unit_install_test_plugin')))->toBeFalse();
+        expect($conn->fetchAssociative('SELECT id FROM ' . 'plugins' . ' WHERE id = ' . $conn->quote('p17_unit_install_test_plugin')))->toBeFalse();
     } finally {
         FilesystemHelper::deltree($root);
         installServiceTestResetKernel();

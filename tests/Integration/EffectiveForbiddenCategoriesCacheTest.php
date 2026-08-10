@@ -22,7 +22,6 @@ use Piwigo\Config\ConfigLoader;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Db\DbConnection;
-use Piwigo\Db\Tables;
 use Piwigo\Permission\EffectiveForbiddenCategoriesCache;
 use Piwigo\Permission\PermissionRepository;
 use Piwigo\Permission\PermissionService;
@@ -112,7 +111,7 @@ final class EffectiveForbiddenCategoriesCacheTest extends IntegrationTestCase
     protected function tearDown(): void
     {
         $visibleLiteral = $this->dbDriver === 'pgsql' ? 'true' : '1';
-        $this->conn->executeStatement('UPDATE ' . Tables::categories() . " SET status = 'public', visible = {$visibleLiteral}");
+        $this->conn->executeStatement('UPDATE ' . 'categories' . " SET status = 'public', visible = {$visibleLiteral}");
         parent::tearDown();
     }
 
@@ -129,7 +128,7 @@ final class EffectiveForbiddenCategoriesCacheTest extends IntegrationTestCase
 
     public function test_get_for_user_reflects_a_structurally_forbidden_category(): void
     {
-        $this->conn->executeStatement('UPDATE ' . Tables::categories() . " SET status = 'private' WHERE id = 1");
+        $this->conn->executeStatement('UPDATE ' . 'categories' . " SET status = 'private' WHERE id = 1");
 
         $result = $this->cache->getForUser(2, 'normal', '0');
 
@@ -148,14 +147,14 @@ final class EffectiveForbiddenCategoriesCacheTest extends IntegrationTestCase
     public function test_get_for_user_last_photo_date_reflects_only_visible_categories(): void
     {
         $this->conn->executeStatement(
-            "UPDATE " . Tables::images() . " SET date_available = '2020-01-01 00:00:00' WHERE id IN (1, 2, 3)"
+            "UPDATE " . 'images' . " SET date_available = '2020-01-01 00:00:00' WHERE id IN (1, 2, 3)"
         );
 
         try {
             $before = $this->cache->getForUser(2, 'normal', '0');
             self::assertSame('2026-08-01 00:00:00', $before->lastPhotoDate, 'category 2 (unmutated) should still be the most recent');
 
-            $this->conn->executeStatement('UPDATE ' . Tables::categories() . " SET status = 'private' WHERE id = 2");
+            $this->conn->executeStatement('UPDATE ' . 'categories' . " SET status = 'private' WHERE id = 2");
 
             // A fresh pool (not $this->cache's), same user -- the point
             // here is a genuinely fresh computation reflecting the new
@@ -175,7 +174,7 @@ final class EffectiveForbiddenCategoriesCacheTest extends IntegrationTestCase
             self::assertSame('2020-01-01 00:00:00', $after->lastPhotoDate, "once category 2 is forbidden, only category 1's backdated images remain visible");
         } finally {
             $this->conn->executeStatement(
-                "UPDATE " . Tables::images() . " SET date_available = '2026-08-01 00:00:00' WHERE id IN (1, 2, 3)"
+                "UPDATE " . 'images' . " SET date_available = '2026-08-01 00:00:00' WHERE id IN (1, 2, 3)"
             );
         }
     }
@@ -220,7 +219,7 @@ final class EffectiveForbiddenCategoriesCacheTest extends IntegrationTestCase
             self::assertSame('0', $adminResult->forbiddenCategories);
             self::assertSame('2026-08-01 00:00:00', $adminResult->lastPhotoDate);
         } finally {
-            $this->conn->executeStatement('DELETE FROM ' . Tables::categories() . ' WHERE id = ' . $emptyId);
+            $this->conn->executeStatement('DELETE FROM ' . 'categories' . ' WHERE id = ' . $emptyId);
         }
     }
 
@@ -229,7 +228,7 @@ final class EffectiveForbiddenCategoriesCacheTest extends IntegrationTestCase
         $first = $this->cache->getForUser(2, 'normal', '0');
         self::assertSame('0', $first->forbiddenCategories);
 
-        $this->conn->executeStatement('UPDATE ' . Tables::categories() . " SET status = 'private' WHERE id = 1");
+        $this->conn->executeStatement('UPDATE ' . 'categories' . " SET status = 'private' WHERE id = 1");
 
         $second = $this->cache->getForUser(2, 'normal', '0');
         self::assertEquals($first, $second, 'a cache hit must not re-query the DB');
@@ -237,7 +236,7 @@ final class EffectiveForbiddenCategoriesCacheTest extends IntegrationTestCase
 
     public function test_get_for_user_uses_a_separate_cache_entry_per_user(): void
     {
-        $this->conn->executeStatement('UPDATE ' . Tables::categories() . " SET status = 'private' WHERE id = 1");
+        $this->conn->executeStatement('UPDATE ' . 'categories' . " SET status = 'private' WHERE id = 1");
 
         $forUser2 = $this->cache->getForUser(2, 'normal', '0');
         self::assertSame('1', $forUser2->forbiddenCategories);

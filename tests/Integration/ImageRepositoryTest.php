@@ -16,7 +16,6 @@ use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\ConfigLoader;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\SqlDialect;
-use Piwigo\Db\Tables;
 use Piwigo\Image\CategoryImagesCriteria;
 use Piwigo\Image\ImageFilterCriteria;
 use Piwigo\Image\ImageRepository;
@@ -67,8 +66,8 @@ final class ImageRepositoryTest extends IntegrationTestCase
     #[Override]
     protected function tearDown(): void
     {
-        $this->conn->executeStatement('UPDATE ' . Tables::images() . " SET hit = 0, coi = NULL WHERE id IN (1, 2)");
-        $this->conn->executeStatement('DELETE FROM ' . Tables::imageFormat());
+        $this->conn->executeStatement('UPDATE ' . 'images' . " SET hit = 0, coi = NULL WHERE id IN (1, 2)");
+        $this->conn->executeStatement('DELETE FROM ' . 'image_format');
         parent::tearDown();
     }
 
@@ -76,7 +75,7 @@ final class ImageRepositoryTest extends IntegrationTestCase
     {
         $before = $this->conn->createQueryBuilder()
             ->select('hit')
-            ->from(Tables::images())
+            ->from('images')
             ->where('id = 1')
             ->executeQuery()
             ->fetchOne();
@@ -86,7 +85,7 @@ final class ImageRepositoryTest extends IntegrationTestCase
 
         $after = $this->conn->createQueryBuilder()
             ->select('hit')
-            ->from(Tables::images())
+            ->from('images')
             ->where('id = 1')
             ->executeQuery()
             ->fetchOne();
@@ -99,7 +98,7 @@ final class ImageRepositoryTest extends IntegrationTestCase
     {
         $before = $this->conn->createQueryBuilder()
             ->select('hit')
-            ->from(Tables::images())
+            ->from('images')
             ->where('id = 2')
             ->executeQuery()
             ->fetchOne();
@@ -109,7 +108,7 @@ final class ImageRepositoryTest extends IntegrationTestCase
 
         $after = $this->conn->createQueryBuilder()
             ->select('hit')
-            ->from(Tables::images())
+            ->from('images')
             ->where('id = 2')
             ->executeQuery()
             ->fetchOne();
@@ -124,7 +123,7 @@ final class ImageRepositoryTest extends IntegrationTestCase
 
         $coi = $this->conn->createQueryBuilder()
             ->select('coi')
-            ->from(Tables::images())
+            ->from('images')
             ->where('id = 1')
             ->executeQuery()
             ->fetchOne();
@@ -140,7 +139,7 @@ final class ImageRepositoryTest extends IntegrationTestCase
 
         $coi = $this->conn->createQueryBuilder()
             ->select('coi')
-            ->from(Tables::images())
+            ->from('images')
             ->where('id = 1')
             ->executeQuery()
             ->fetchOne();
@@ -168,7 +167,7 @@ final class ImageRepositoryTest extends IntegrationTestCase
     {
         $path = $this->conn->createQueryBuilder()
             ->select('path')
-            ->from(Tables::images())
+            ->from('images')
             ->where('id = 1')
             ->executeQuery()
             ->fetchOne();
@@ -266,7 +265,7 @@ final class ImageRepositoryTest extends IntegrationTestCase
     private function insertFormat(int $imageId, string $ext, int $filesize): int
     {
         $this->conn->createQueryBuilder()
-            ->insert(Tables::imageFormat())
+            ->insert('image_format')
             ->values([
                 'image_id' => ':imageId',
                 'ext' => ':ext',
@@ -287,7 +286,7 @@ final class ImageRepositoryTest extends IntegrationTestCase
 
             self::assertSame('exec123-1700000000', $this->repo->findLoungeLockValue());
         } finally {
-            $this->conn->executeStatement("DELETE FROM " . Tables::config() . " WHERE param = 'empty_lounge_running'");
+            $this->conn->executeStatement("DELETE FROM " . 'config' . " WHERE param = 'empty_lounge_running'");
         }
     }
 
@@ -299,7 +298,7 @@ final class ImageRepositoryTest extends IntegrationTestCase
 
             self::assertSame('exec123-1700000000', $this->repo->findLoungeLockValue());
         } finally {
-            $this->conn->executeStatement("DELETE FROM " . Tables::config() . " WHERE param = 'empty_lounge_running'");
+            $this->conn->executeStatement("DELETE FROM " . 'config' . " WHERE param = 'empty_lounge_running'");
         }
     }
 
@@ -314,7 +313,7 @@ final class ImageRepositoryTest extends IntegrationTestCase
 
         $coi = $this->conn->createQueryBuilder()
             ->select('coi')
-            ->from(Tables::images())
+            ->from('images')
             ->where('id = 1')
             ->executeQuery()
             ->fetchOne();
@@ -329,11 +328,11 @@ final class ImageRepositoryTest extends IntegrationTestCase
 
     public function test_delete_images_is_a_noop_for_empty_ids(): void
     {
-        $before = $this->conn->fetchOne('SELECT COUNT(*) FROM ' . Tables::images());
+        $before = $this->conn->fetchOne('SELECT COUNT(*) FROM ' . 'images');
 
         $this->repo->deleteImages([]);
 
-        $after = $this->conn->fetchOne('SELECT COUNT(*) FROM ' . Tables::images());
+        $after = $this->conn->fetchOne('SELECT COUNT(*) FROM ' . 'images');
         self::assertSame($before, $after);
     }
 
@@ -343,7 +342,7 @@ final class ImageRepositoryTest extends IntegrationTestCase
         // image 3's own link so it's a real orphan for this test, then
         // restore the exact original row.
         $this->conn->executeStatement(
-            'DELETE FROM ' . Tables::imageCategory() . ' WHERE image_id = 3 AND category_id = 1'
+            'DELETE FROM ' . 'image_category' . ' WHERE image_id = 3 AND category_id = 1'
         );
 
         try {
@@ -355,7 +354,7 @@ final class ImageRepositoryTest extends IntegrationTestCase
         } finally {
             $rank = $this->conn->getDatabasePlatform()->quoteSingleIdentifier('rank');
             $this->conn->executeStatement(
-                'INSERT INTO ' . Tables::imageCategory() . " (image_id, category_id, {$rank}) VALUES (3, 1, 3)"
+                'INSERT INTO ' . 'image_category' . " (image_id, category_id, {$rank}) VALUES (3, 1, 3)"
             );
         }
     }
@@ -364,7 +363,7 @@ final class ImageRepositoryTest extends IntegrationTestCase
     {
         $before = $this->conn->createQueryBuilder()
             ->select('lastmodified')
-            ->from(Tables::images())
+            ->from('images')
             ->where('id = 1')
             ->executeQuery()
             ->fetchOne();
@@ -373,7 +372,7 @@ final class ImageRepositoryTest extends IntegrationTestCase
 
         $after = $this->conn->createQueryBuilder()
             ->select('lastmodified')
-            ->from(Tables::images())
+            ->from('images')
             ->where('id = 1')
             ->executeQuery()
             ->fetchOne();
@@ -388,14 +387,14 @@ final class ImageRepositoryTest extends IntegrationTestCase
 
             $rotation = $this->conn->createQueryBuilder()
                 ->select('rotation')
-                ->from(Tables::images())
+                ->from('images')
                 ->where('id = 1')
                 ->executeQuery()
                 ->fetchOne();
 
             self::assertSame(3, is_numeric($rotation) ? (int) $rotation : null);
         } finally {
-            $this->conn->executeStatement('UPDATE ' . Tables::images() . ' SET rotation = 0 WHERE id = 1');
+            $this->conn->executeStatement('UPDATE ' . 'images' . ' SET rotation = 0 WHERE id = 1');
         }
     }
 
@@ -405,7 +404,7 @@ final class ImageRepositoryTest extends IntegrationTestCase
 
         $rotation = $this->conn->createQueryBuilder()
             ->select('rotation')
-            ->from(Tables::images())
+            ->from('images')
             ->where('id = 1')
             ->executeQuery()
             ->fetchOne();
@@ -415,21 +414,21 @@ final class ImageRepositoryTest extends IntegrationTestCase
 
     public function test_mass_insert_lounge_is_a_noop_for_empty_inserts(): void
     {
-        $before = $this->conn->fetchOne('SELECT COUNT(*) FROM ' . Tables::lounge());
+        $before = $this->conn->fetchOne('SELECT COUNT(*) FROM ' . 'lounge');
 
         $this->repo->massInsertLounge([]);
 
-        $after = $this->conn->fetchOne('SELECT COUNT(*) FROM ' . Tables::lounge());
+        $after = $this->conn->fetchOne('SELECT COUNT(*) FROM ' . 'lounge');
         self::assertSame($before, $after);
     }
 
     public function test_mass_insert_image_category_is_a_noop_for_empty_inserts(): void
     {
-        $before = $this->conn->fetchOne('SELECT COUNT(*) FROM ' . Tables::imageCategory());
+        $before = $this->conn->fetchOne('SELECT COUNT(*) FROM ' . 'image_category');
 
         $this->repo->massInsertImageCategory([]);
 
-        $after = $this->conn->fetchOne('SELECT COUNT(*) FROM ' . Tables::imageCategory());
+        $after = $this->conn->fetchOne('SELECT COUNT(*) FROM ' . 'image_category');
         self::assertSame($before, $after);
     }
 
@@ -440,7 +439,7 @@ final class ImageRepositoryTest extends IntegrationTestCase
 
             $row = $this->conn->createQueryBuilder()
                 ->select('width', 'height')
-                ->from(Tables::images())
+                ->from('images')
                 ->where('id = 1')
                 ->executeQuery()
                 ->fetchAssociative();
@@ -449,7 +448,7 @@ final class ImageRepositoryTest extends IntegrationTestCase
             self::assertSame(999, is_numeric($row['width']) ? (int) $row['width'] : null);
             self::assertSame(888, is_numeric($row['height']) ? (int) $row['height'] : null);
         } finally {
-            $this->conn->executeStatement('UPDATE ' . Tables::images() . ' SET width = 200, height = 150 WHERE id = 1');
+            $this->conn->executeStatement('UPDATE ' . 'images' . ' SET width = 200, height = 150 WHERE id = 1');
         }
     }
 
@@ -459,7 +458,7 @@ final class ImageRepositoryTest extends IntegrationTestCase
 
         $row = $this->conn->createQueryBuilder()
             ->select('width', 'height')
-            ->from(Tables::images())
+            ->from('images')
             ->where('id = 1')
             ->executeQuery()
             ->fetchAssociative();
@@ -473,7 +472,7 @@ final class ImageRepositoryTest extends IntegrationTestCase
     {
         $nameBefore = $this->conn->createQueryBuilder()
             ->select('name')
-            ->from(Tables::images())
+            ->from('images')
             ->where('id = 1')
             ->executeQuery()
             ->fetchOne();
@@ -482,7 +481,7 @@ final class ImageRepositoryTest extends IntegrationTestCase
 
         $nameAfter = $this->conn->createQueryBuilder()
             ->select('name')
-            ->from(Tables::images())
+            ->from('images')
             ->where('id = 1')
             ->executeQuery()
             ->fetchOne();
@@ -497,14 +496,14 @@ final class ImageRepositoryTest extends IntegrationTestCase
 
             $dateCreation = $this->conn->createQueryBuilder()
                 ->select('date_creation')
-                ->from(Tables::images())
+                ->from('images')
                 ->where('id = 1')
                 ->executeQuery()
                 ->fetchOne();
 
             self::assertSame('2020-05-01 00:00:00', $dateCreation);
         } finally {
-            $this->conn->executeStatement('UPDATE ' . Tables::images() . ' SET date_creation = NULL WHERE id = 1');
+            $this->conn->executeStatement('UPDATE ' . 'images' . ' SET date_creation = NULL WHERE id = 1');
         }
     }
 
@@ -516,7 +515,7 @@ final class ImageRepositoryTest extends IntegrationTestCase
 
         $filesize = $this->conn->createQueryBuilder()
             ->select('filesize')
-            ->from(Tables::imageFormat())
+            ->from('image_format')
             ->where('format_id = ' . $formatId)
             ->executeQuery()
             ->fetchOne();
@@ -532,7 +531,7 @@ final class ImageRepositoryTest extends IntegrationTestCase
 
         $filesize = $this->conn->createQueryBuilder()
             ->select('filesize')
-            ->from(Tables::imageFormat())
+            ->from('image_format')
             ->where('format_id = ' . $formatId)
             ->executeQuery()
             ->fetchOne();
@@ -542,11 +541,11 @@ final class ImageRepositoryTest extends IntegrationTestCase
 
     public function test_mass_insert_formats_is_a_noop_for_empty_inserts(): void
     {
-        $before = $this->conn->fetchOne('SELECT COUNT(*) FROM ' . Tables::imageFormat());
+        $before = $this->conn->fetchOne('SELECT COUNT(*) FROM ' . 'image_format');
 
         $this->repo->massInsertFormats([]);
 
-        $after = $this->conn->fetchOne('SELECT COUNT(*) FROM ' . Tables::imageFormat());
+        $after = $this->conn->fetchOne('SELECT COUNT(*) FROM ' . 'image_format');
         self::assertSame($before, $after);
     }
 
@@ -561,7 +560,7 @@ final class ImageRepositoryTest extends IntegrationTestCase
 
         $this->repo->deleteFormatsByIds([]);
 
-        $count = $this->conn->fetchOne('SELECT COUNT(*) FROM ' . Tables::imageFormat() . ' WHERE format_id = ' . $formatId);
+        $count = $this->conn->fetchOne('SELECT COUNT(*) FROM ' . 'image_format' . ' WHERE format_id = ' . $formatId);
         self::assertSame(1, is_numeric($count) ? (int) $count : null);
     }
 
@@ -574,7 +573,7 @@ final class ImageRepositoryTest extends IntegrationTestCase
     {
         $before = $this->conn->createQueryBuilder()
             ->select('name')
-            ->from(Tables::images())
+            ->from('images')
             ->where('id = 1')
             ->executeQuery()
             ->fetchOne();
@@ -583,7 +582,7 @@ final class ImageRepositoryTest extends IntegrationTestCase
 
         $after = $this->conn->createQueryBuilder()
             ->select('name')
-            ->from(Tables::images())
+            ->from('images')
             ->where('id = 1')
             ->executeQuery()
             ->fetchOne();
@@ -595,7 +594,7 @@ final class ImageRepositoryTest extends IntegrationTestCase
     {
         $before = $this->conn->createQueryBuilder()
             ->select('name')
-            ->from(Tables::images())
+            ->from('images')
             ->where('id = 1')
             ->executeQuery()
             ->fetchOne();
@@ -607,7 +606,7 @@ final class ImageRepositoryTest extends IntegrationTestCase
 
         $after = $this->conn->createQueryBuilder()
             ->select('name')
-            ->from(Tables::images())
+            ->from('images')
             ->where('id = 1')
             ->executeQuery()
             ->fetchOne();
@@ -619,7 +618,7 @@ final class ImageRepositoryTest extends IntegrationTestCase
     {
         $before = $this->conn->createQueryBuilder()
             ->select('name')
-            ->from(Tables::images())
+            ->from('images')
             ->where('id = 1')
             ->executeQuery()
             ->fetchOne();
@@ -628,7 +627,7 @@ final class ImageRepositoryTest extends IntegrationTestCase
 
         $after = $this->conn->createQueryBuilder()
             ->select('name')
-            ->from(Tables::images())
+            ->from('images')
             ->where('id = 1')
             ->executeQuery()
             ->fetchOne();
@@ -638,11 +637,11 @@ final class ImageRepositoryTest extends IntegrationTestCase
 
     public function test_mass_insert_images_is_a_noop_for_empty_inserts(): void
     {
-        $before = $this->conn->fetchOne('SELECT COUNT(*) FROM ' . Tables::images());
+        $before = $this->conn->fetchOne('SELECT COUNT(*) FROM ' . 'images');
 
         $this->repo->massInsertImages([]);
 
-        $after = $this->conn->fetchOne('SELECT COUNT(*) FROM ' . Tables::images());
+        $after = $this->conn->fetchOne('SELECT COUNT(*) FROM ' . 'images');
         self::assertSame($before, $after);
     }
 
@@ -655,20 +654,20 @@ final class ImageRepositoryTest extends IntegrationTestCase
         // this single row is guaranteed to be the "oldest" (ORDER BY
         // image_id ASC LIMIT 1) one found.
         $this->conn->executeStatement(
-            "INSERT INTO " . Tables::images() . " (file, path, date_available) VALUES ('lounge-null-date.jpg', 'upload/lounge-null-date.jpg', NULL)"
+            "INSERT INTO " . 'images' . " (file, path, date_available) VALUES ('lounge-null-date.jpg', 'upload/lounge-null-date.jpg', NULL)"
         );
         $imageId = (int) $this->conn->lastInsertId();
 
         $this->conn->executeStatement(
-            'INSERT INTO ' . Tables::lounge() . ' (image_id, category_id) VALUES (?, ?)',
+            'INSERT INTO ' . 'lounge' . ' (image_id, category_id) VALUES (?, ?)',
             [$imageId, 1]
         );
 
         try {
             self::assertNull($this->repo->findOldestLoungeAgeInfo());
         } finally {
-            $this->conn->executeStatement('DELETE FROM ' . Tables::lounge() . ' WHERE image_id = ?', [$imageId]);
-            $this->conn->executeStatement('DELETE FROM ' . Tables::images() . ' WHERE id = ?', [$imageId]);
+            $this->conn->executeStatement('DELETE FROM ' . 'lounge' . ' WHERE image_id = ?', [$imageId]);
+            $this->conn->executeStatement('DELETE FROM ' . 'images' . ' WHERE id = ?', [$imageId]);
         }
     }
 
@@ -676,11 +675,11 @@ final class ImageRepositoryTest extends IntegrationTestCase
     {
         // Fixture: image 1 is linked to category 1 (image_category rows
         // (1,1),(2,1),(3,1),(4,2),(5,2)).
-        $before = $this->conn->fetchOne('SELECT COUNT(*) FROM ' . Tables::imageCategory() . ' WHERE image_id = 1');
+        $before = $this->conn->fetchOne('SELECT COUNT(*) FROM ' . 'image_category' . ' WHERE image_id = 1');
 
         $this->repo->deleteImageCategoryLinksForCategoryIds(ImageId::from(1), []);
 
-        $after = $this->conn->fetchOne('SELECT COUNT(*) FROM ' . Tables::imageCategory() . ' WHERE image_id = 1');
+        $after = $this->conn->fetchOne('SELECT COUNT(*) FROM ' . 'image_category' . ' WHERE image_id = 1');
         self::assertSame($before, $after);
     }
 
@@ -693,7 +692,7 @@ final class ImageRepositoryTest extends IntegrationTestCase
         $this->conn->beginTransaction();
 
         try {
-            $this->conn->executeStatement('DELETE FROM ' . Tables::images());
+            $this->conn->executeStatement('DELETE FROM ' . 'images');
 
             self::assertNull($this->repo->findEarliestDateAvailable());
         } finally {
@@ -711,7 +710,7 @@ final class ImageRepositoryTest extends IntegrationTestCase
 
         try {
             $this->conn->executeStatement(
-                "INSERT INTO " . Tables::images() . " (file, path, date_available) VALUES ('older-photo.jpg', 'upload/older-photo.jpg', '2020-01-01 00:00:00')"
+                "INSERT INTO " . 'images' . " (file, path, date_available) VALUES ('older-photo.jpg', 'upload/older-photo.jpg', '2020-01-01 00:00:00')"
             );
             $olderId = (int) $this->conn->lastInsertId();
 
@@ -734,7 +733,7 @@ final class ImageRepositoryTest extends IntegrationTestCase
         $this->conn->beginTransaction();
 
         try {
-            $this->conn->executeStatement('DELETE FROM ' . Tables::imageCategory());
+            $this->conn->executeStatement('DELETE FROM ' . 'image_category');
 
             self::assertNull($this->repo->findMostRecentImageCategoryInfo());
         } finally {
@@ -758,11 +757,11 @@ final class ImageRepositoryTest extends IntegrationTestCase
 
     public function test_delete_image_category_rows_for_image_ids_is_a_noop_for_empty_ids(): void
     {
-        $before = $this->conn->fetchOne('SELECT COUNT(*) FROM ' . Tables::imageCategory());
+        $before = $this->conn->fetchOne('SELECT COUNT(*) FROM ' . 'image_category');
 
         $this->repo->deleteImageCategoryRowsForImageIds([]);
 
-        $after = $this->conn->fetchOne('SELECT COUNT(*) FROM ' . Tables::imageCategory());
+        $after = $this->conn->fetchOne('SELECT COUNT(*) FROM ' . 'image_category');
         self::assertSame($before, $after);
     }
 
@@ -817,7 +816,7 @@ final class ImageRepositoryTest extends IntegrationTestCase
         // and both array_map() mapping passes, actually run against real
         // grouped data.
         try {
-            $this->conn->executeStatement('UPDATE ' . Tables::images() . ' SET storage_category_id = 1 WHERE id = 1');
+            $this->conn->executeStatement('UPDATE ' . 'images' . ' SET storage_category_id = 1 WHERE id = 1');
 
             $breakdown = $this->repo->findAddMethodBreakdown();
 
@@ -834,7 +833,7 @@ final class ImageRepositoryTest extends IntegrationTestCase
             self::assertSame('2026-08-01 00:00:00', $byMethod['sync']->lastAddedOn);
             self::assertSame('2026-08-01 00:00:00', $byMethod['api']->lastAddedOn);
         } finally {
-            $this->conn->executeStatement('UPDATE ' . Tables::images() . ' SET storage_category_id = NULL WHERE id = 1');
+            $this->conn->executeStatement('UPDATE ' . 'images' . ' SET storage_category_id = NULL WHERE id = 1');
         }
     }
 
@@ -855,13 +854,13 @@ final class ImageRepositoryTest extends IntegrationTestCase
 
         try {
             $this->conn->executeStatement(
-                "INSERT INTO " . Tables::images() . " (file, date_available) VALUES ('p18-earliest.jpg', '2010-01-01 00:00:00')"
+                "INSERT INTO " . 'images' . " (file, date_available) VALUES ('p18-earliest.jpg', '2010-01-01 00:00:00')"
             );
             $this->conn->executeStatement(
-                "INSERT INTO " . Tables::images() . " (file, date_available) VALUES ('p18-max.jpg', '2030-01-01 00:00:00')"
+                "INSERT INTO " . 'images' . " (file, date_available) VALUES ('p18-max.jpg', '2030-01-01 00:00:00')"
             );
             $this->conn->executeStatement(
-                "INSERT INTO " . Tables::images() . " (file, date_available) VALUES ('p18-middle.jpg', '2020-01-01 00:00:00')"
+                "INSERT INTO " . 'images' . " (file, date_available) VALUES ('p18-middle.jpg', '2020-01-01 00:00:00')"
             );
 
             $breakdown = $this->repo->findAddMethodBreakdown();
@@ -942,7 +941,7 @@ final class ImageRepositoryTest extends IntegrationTestCase
         $this->conn->beginTransaction();
 
         try {
-            $this->conn->executeStatement('UPDATE ' . Tables::images() . ' SET md5sum = NULL WHERE id = 2');
+            $this->conn->executeStatement('UPDATE ' . 'images' . ' SET md5sum = NULL WHERE id = 2');
 
             self::assertSame([2], $this->repo->findImageIdsWithoutMd5sum());
         } finally {
@@ -1067,12 +1066,12 @@ final class ImageRepositoryTest extends IntegrationTestCase
 
     public function test_has_accessible_image_with_author_is_true_once_one_image_has_an_author(): void
     {
-        $this->conn->executeStatement('UPDATE ' . Tables::images() . " SET author = 'fixture-author' WHERE id = 1");
+        $this->conn->executeStatement('UPDATE ' . 'images' . " SET author = 'fixture-author' WHERE id = 1");
 
         try {
             self::assertTrue($this->repo->hasAccessibleImageWithAuthor(self::noPermissionRestriction()));
         } finally {
-            $this->conn->executeStatement('UPDATE ' . Tables::images() . ' SET author = NULL WHERE id = 1');
+            $this->conn->executeStatement('UPDATE ' . 'images' . ' SET author = NULL WHERE id = 1');
         }
     }
 
@@ -1167,14 +1166,14 @@ final class ImageRepositoryTest extends IntegrationTestCase
         // image (1-5) already has an image_category link -- a disposable
         // image row (with none) is the only way to reach the "pending"
         // (not yet linked into image_category) branch this method counts.
-        $this->conn->insert(Tables::images(), ['file' => 'p18-test-lounge-pending.jpg']);
+        $this->conn->insert('images', ['file' => 'p18-test-lounge-pending.jpg']);
         $imageId = (int) $this->conn->lastInsertId();
-        $this->conn->insert(Tables::lounge(), ['image_id' => $imageId, 'category_id' => 1]);
+        $this->conn->insert('lounge', ['image_id' => $imageId, 'category_id' => 1]);
 
         try {
             self::assertSame(1, $this->repo->countLoungeImagesPendingForCategory(CategoryId::from(1)));
         } finally {
-            $this->conn->executeStatement('DELETE FROM ' . Tables::images() . ' WHERE id = ?', [$imageId]);
+            $this->conn->executeStatement('DELETE FROM ' . 'images' . ' WHERE id = ?', [$imageId]);
         }
     }
 
@@ -1206,7 +1205,7 @@ final class ImageRepositoryTest extends IntegrationTestCase
 
             $ranks = $this->conn->createQueryBuilder()
                 ->select('image_id', $rankIdentifier)
-                ->from(Tables::imageCategory())
+                ->from('image_category')
                 ->where('category_id = 1')
                 ->executeQuery()
                 ->fetchAllKeyValue();
@@ -1218,7 +1217,7 @@ final class ImageRepositoryTest extends IntegrationTestCase
             // and rank are numerically identical by construction (1/1,
             // 2/2, 3/3) -- restoring rank = image_id is exact, not an
             // approximation.
-            $this->conn->executeStatement("UPDATE " . Tables::imageCategory() . " SET {$rankIdentifier} = image_id WHERE category_id = 1");
+            $this->conn->executeStatement("UPDATE " . 'image_category' . " SET {$rankIdentifier} = image_id WHERE category_id = 1");
         }
     }
 
@@ -1230,14 +1229,14 @@ final class ImageRepositoryTest extends IntegrationTestCase
 
             $rank = $this->conn->createQueryBuilder()
                 ->select($rankIdentifier)
-                ->from(Tables::imageCategory())
+                ->from('image_category')
                 ->where('image_id = 1')
                 ->andWhere('category_id = 1')
                 ->executeQuery()
                 ->fetchOne();
             self::assertSame(99, $rank);
         } finally {
-            $this->conn->executeStatement("UPDATE " . Tables::imageCategory() . " SET {$rankIdentifier} = 1 WHERE image_id = 1 AND category_id = 1");
+            $this->conn->executeStatement("UPDATE " . 'image_category' . " SET {$rankIdentifier} = 1 WHERE image_id = 1 AND category_id = 1");
         }
     }
 
@@ -1259,10 +1258,10 @@ final class ImageRepositoryTest extends IntegrationTestCase
             self::assertSame(2, $affected);
             self::assertSame(
                 5,
-                $this->conn->createQueryBuilder()->select('level')->from(Tables::images())->where('id = 1')->executeQuery()->fetchOne()
+                $this->conn->createQueryBuilder()->select('level')->from('images')->where('id = 1')->executeQuery()->fetchOne()
             );
         } finally {
-            $this->conn->executeStatement('UPDATE ' . Tables::images() . ' SET level = 0 WHERE id IN (1, 2)');
+            $this->conn->executeStatement('UPDATE ' . 'images' . ' SET level = 0 WHERE id IN (1, 2)');
         }
     }
 
@@ -1281,7 +1280,7 @@ final class ImageRepositoryTest extends IntegrationTestCase
         // against the real, non-empty fixture table -- the empty-table
         // branch isn't practically testable against this shared fixture
         // DB.
-        $maxId = $this->conn->fetchOne('SELECT MAX(id) FROM ' . Tables::images());
+        $maxId = $this->conn->fetchOne('SELECT MAX(id) FROM ' . 'images');
 
         self::assertSame((is_numeric($maxId) ? (int) $maxId : 0) + 1, $this->repo->findNextId());
     }
@@ -1402,7 +1401,7 @@ final class ImageRepositoryTest extends IntegrationTestCase
         $this->conn->beginTransaction();
 
         try {
-            $this->conn->insert(Tables::lounge(), ['image_id' => 1, 'category_id' => 2]);
+            $this->conn->insert('lounge', ['image_id' => 1, 'category_id' => 2]);
 
             self::assertEquals(
                 [new ImageCategoryLink(1, 2)],
@@ -1418,8 +1417,8 @@ final class ImageRepositoryTest extends IntegrationTestCase
         $this->conn->beginTransaction();
 
         try {
-            $this->conn->insert(Tables::lounge(), ['image_id' => 1, 'category_id' => 2]);
-            $this->conn->insert(Tables::lounge(), ['image_id' => 3, 'category_id' => 2]);
+            $this->conn->insert('lounge', ['image_id' => 1, 'category_id' => 2]);
+            $this->conn->insert('lounge', ['image_id' => 3, 'category_id' => 2]);
 
             $this->repo->deleteLoungeUpTo(1);
 
@@ -1434,7 +1433,7 @@ final class ImageRepositoryTest extends IntegrationTestCase
         $this->conn->beginTransaction();
 
         try {
-            $this->conn->insert(Tables::lounge(), ['image_id' => 4, 'category_id' => 1]);
+            $this->conn->insert('lounge', ['image_id' => 4, 'category_id' => 1]);
 
             self::assertSame([4], $this->repo->findLoungedImageIds());
         } finally {
@@ -1545,7 +1544,7 @@ final class ImageRepositoryTest extends IntegrationTestCase
 
         try {
             $this->disableForeignKeyChecks($this->conn);
-            $this->conn->insert(Tables::imageCategory(), ['image_id' => 999999, 'category_id' => 1]);
+            $this->conn->insert('image_category', ['image_id' => 999999, 'category_id' => 1]);
             $this->enableForeignKeyChecks($this->conn);
 
             self::assertSame([999999], $this->repo->findOrphanImageCategoryLinkIds());

@@ -14,7 +14,6 @@ use Piwigo\Admin\Extensions\ExtensionType;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\ConfigLoader;
 use Piwigo\Db\DbConnection;
-use Piwigo\Db\Tables;
 
 /**
  * Direct coverage of ExtensionRepository's own CRUD/query methods --
@@ -265,7 +264,7 @@ final class ExtensionRepositoryTest extends IntegrationTestCase
     {
         $value = $this->conn->createQueryBuilder()
             ->select($column)
-            ->from(Tables::userInfos())
+            ->from('user_infos')
             ->where('user_id = :id')
             ->setParameter('id', $userId)
             ->executeQuery()

@@ -37,7 +37,6 @@ namespace Piwigo\Tests\Integration {
     use Piwigo\Config\ConfigService;
     use Piwigo\Core\Kernel;
     use Piwigo\Db\DbConnection;
-    use Piwigo\Db\Tables;
     use Piwigo\Html\HtmlService;
     use Piwigo\Users\CurrentUser;
     use Piwigo\Tests\Support\CurrentUserTestFactory;
@@ -130,12 +129,12 @@ namespace Piwigo\Tests\Integration {
         #[Override]
         protected function tearDown(): void
         {
-            $this->conn->executeStatement('DELETE FROM ' . Tables::plugins());
-            $this->conn->executeStatement('DELETE FROM ' . Tables::themes());
-            $this->conn->executeStatement('DELETE FROM ' . Tables::languages() . " WHERE id != 'en_UK'");
-            $this->conn->executeStatement('UPDATE ' . Tables::userInfos() . " SET theme = 'default' WHERE user_id IN (1, 2)");
-            $this->conn->executeStatement('DELETE FROM ' . Tables::activity());
-            $this->conn->executeStatement('DELETE FROM ' . Tables::pluginMigrations());
+            $this->conn->executeStatement('DELETE FROM ' . 'plugins');
+            $this->conn->executeStatement('DELETE FROM ' . 'themes');
+            $this->conn->executeStatement('DELETE FROM ' . 'languages' . " WHERE id != 'en_UK'");
+            $this->conn->executeStatement('UPDATE ' . 'user_infos' . " SET theme = 'default' WHERE user_id IN (1, 2)");
+            $this->conn->executeStatement('DELETE FROM ' . 'activity');
+            $this->conn->executeStatement('DELETE FROM ' . 'plugin_migrations');
             Kernel::reset();
             parent::tearDown();
         }
@@ -517,7 +516,7 @@ namespace Piwigo\Tests\Integration {
         {
             $value = $this->conn->createQueryBuilder()
                 ->select('COUNT(*)')
-                ->from(Tables::activity())
+                ->from('activity')
                 ->executeQuery()
                 ->fetchOne();
 
@@ -535,7 +534,7 @@ namespace Piwigo\Tests\Integration {
         private function findMigrationVersions(string $pluginId): array
         {
             $rows = $this->conn->fetchAllAssociative(
-                'SELECT version FROM ' . Tables::pluginMigrations() . ' WHERE plugin_id = ?',
+                'SELECT version FROM ' . 'plugin_migrations' . ' WHERE plugin_id = ?',
                 [$pluginId]
             );
 
@@ -958,19 +957,19 @@ PHP);
             // 'set_default' case (a 1-line delegation to the private
             // setDefaultTheme(), otherwise only ever exercised directly).
             $new = $this->themeId();
-            $before = $this->conn->fetchAllAssociative("SELECT user_id, theme FROM " . Tables::userInfos() . " WHERE theme = 'default'");
+            $before = $this->conn->fetchAllAssociative("SELECT user_id, theme FROM " . 'user_infos' . " WHERE theme = 'default'");
 
             try {
                 $errors = $this->lifecycle->performAction(ExtensionType::Theme, 'set_default', $new, null);
 
                 self::assertSame([], $errors);
                 foreach ($before as $row) {
-                    $current = $this->conn->fetchOne('SELECT theme FROM ' . Tables::userInfos() . ' WHERE user_id = ?', [$row['user_id']]);
+                    $current = $this->conn->fetchOne('SELECT theme FROM ' . 'user_infos' . ' WHERE user_id = ?', [$row['user_id']]);
                     self::assertSame($new, $current);
                 }
             } finally {
                 foreach ($before as $row) {
-                    $this->conn->executeStatement('UPDATE ' . Tables::userInfos() . ' SET theme = ? WHERE user_id = ?', [$row['theme'], $row['user_id']]);
+                    $this->conn->executeStatement('UPDATE ' . 'user_infos' . ' SET theme = ? WHERE user_id = ?', [$row['theme'], $row['user_id']]);
                 }
             }
         }
@@ -1003,11 +1002,11 @@ PHP);
             $errors = $this->lifecycle->performAction(ExtensionType::Theme, 'deactivate', $mobile, ['version' => '1.0', 'name' => 'Mobile', 'mobile' => true]);
 
             self::assertSame([], $errors);
-            $raw = $this->conn->fetchOne("SELECT value FROM " . Tables::config() . " WHERE param = 'mobile_theme'");
+            $raw = $this->conn->fetchOne("SELECT value FROM " . 'config' . " WHERE param = 'mobile_theme'");
             self::assertIsString($raw);
             self::assertSame('', json_decode($raw));
 
-            $this->conn->executeStatement("DELETE FROM " . Tables::config() . " WHERE param = 'mobile_theme'");
+            $this->conn->executeStatement("DELETE FROM " . 'config' . " WHERE param = 'mobile_theme'");
         }
 
         public function test_theme_deactivate_of_the_real_default_theme_reassigns_a_replacement_default(): void
@@ -1050,18 +1049,18 @@ PHP);
             $this->lifecycle->performAction(ExtensionType::Theme, 'activate', $other, ['version' => '1.0', 'name' => 'Other']);
 
             $defaultUserId = $currentConfig->defaultUserId;
-            $before = $this->conn->fetchOne('SELECT theme FROM ' . Tables::userInfos() . ' WHERE user_id = ?', [$defaultUserId]);
-            $this->conn->executeStatement('UPDATE ' . Tables::userInfos() . ' SET theme = ? WHERE user_id = ?', [$default, $defaultUserId]);
+            $before = $this->conn->fetchOne('SELECT theme FROM ' . 'user_infos' . ' WHERE user_id = ?', [$defaultUserId]);
+            $this->conn->executeStatement('UPDATE ' . 'user_infos' . ' SET theme = ? WHERE user_id = ?', [$default, $defaultUserId]);
 
             try {
                 $errors = $this->lifecycle->performAction(ExtensionType::Theme, 'deactivate', $default, ['version' => '1.0', 'name' => 'Real Default']);
 
                 self::assertSame([], $errors);
                 self::assertNull($this->repo->find(ExtensionType::Theme, $default));
-                $reassigned = $this->conn->fetchOne('SELECT theme FROM ' . Tables::userInfos() . ' WHERE user_id = ?', [$defaultUserId]);
+                $reassigned = $this->conn->fetchOne('SELECT theme FROM ' . 'user_infos' . ' WHERE user_id = ?', [$defaultUserId]);
                 self::assertSame($other, $reassigned, 'deactivating the real default theme must pick the remaining installed theme as the new default');
             } finally {
-                $this->conn->executeStatement('UPDATE ' . Tables::userInfos() . ' SET theme = ? WHERE user_id = ?', [$before, $defaultUserId]);
+                $this->conn->executeStatement('UPDATE ' . 'user_infos' . ' SET theme = ? WHERE user_id = ?', [$before, $defaultUserId]);
                 $this->removeThemeDir($default);
             }
         }
@@ -1108,14 +1107,14 @@ PHP);
             // always looks up whoever currently has theme = 'default' --
             // snapshot them all so this test can restore the exact prior
             // state no matter how many rows that is.
-            $before = $this->conn->fetchAllAssociative("SELECT user_id, theme FROM " . Tables::userInfos() . " WHERE theme = 'default'");
+            $before = $this->conn->fetchAllAssociative("SELECT user_id, theme FROM " . 'user_infos' . " WHERE theme = 'default'");
 
             try {
                 $method = new ReflectionMethod($this->lifecycle, 'setDefaultTheme');
                 $method->invoke($this->lifecycle, $new);
 
                 foreach ($before as $row) {
-                    $current = $this->conn->fetchOne('SELECT theme FROM ' . Tables::userInfos() . ' WHERE user_id = ?', [$row['user_id']]);
+                    $current = $this->conn->fetchOne('SELECT theme FROM ' . 'user_infos' . ' WHERE user_id = ?', [$row['user_id']]);
                     self::assertSame($new, $current);
                 }
                 // defaultUserId()/guestId() (both user_id 2 in this
@@ -1124,11 +1123,11 @@ PHP);
                 // 'default' (already asserted above for user 2), so this
                 // only adds real signal when user 2 *wasn't* already in
                 // $before; assert it regardless for a stable, exact check.
-                $guestTheme = $this->conn->fetchOne('SELECT theme FROM ' . Tables::userInfos() . ' WHERE user_id = 2');
+                $guestTheme = $this->conn->fetchOne('SELECT theme FROM ' . 'user_infos' . ' WHERE user_id = 2');
                 self::assertSame($new, $guestTheme);
             } finally {
                 foreach ($before as $row) {
-                    $this->conn->executeStatement('UPDATE ' . Tables::userInfos() . ' SET theme = ? WHERE user_id = ?', [$row['theme'], $row['user_id']]);
+                    $this->conn->executeStatement('UPDATE ' . 'user_infos' . ' SET theme = ? WHERE user_id = ?', [$row['theme'], $row['user_id']]);
                 }
             }
         }
@@ -1152,11 +1151,11 @@ PHP);
             $errors = $this->lifecycle->performAction(ExtensionType::Language, 'set_default', 'xx_ZZ', null);
 
             self::assertSame([], $errors);
-            $row = $this->conn->fetchAssociative('SELECT language FROM ' . Tables::userInfos() . ' WHERE user_id = 2');
+            $row = $this->conn->fetchAssociative('SELECT language FROM ' . 'user_infos' . ' WHERE user_id = 2');
             self::assertIsArray($row);
             self::assertSame('xx_ZZ', $row['language']);
 
-            $this->conn->executeStatement("UPDATE " . Tables::userInfos() . " SET language = 'en_UK' WHERE user_id = 2");
+            $this->conn->executeStatement("UPDATE " . 'user_infos' . " SET language = 'en_UK' WHERE user_id = 2");
         }
     }
 }

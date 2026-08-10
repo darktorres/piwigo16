@@ -8,7 +8,6 @@ use Override;
 use Piwigo\Cache\CachePools;
 use Doctrine\DBAL\Connection;
 use Piwigo\Db\DbConnection;
-use Piwigo\Db\Tables;
 
 /**
  * Ws\PwgComments::getList()'s summary/date-range "unable to compute" guards
@@ -57,7 +56,7 @@ final class WsCommentsTest extends ContractTestCase
     {
         if ($this->commentIdsToDelete !== []) {
             $this->conn->executeStatement(
-                'DELETE FROM ' . Tables::comments() . ' WHERE id IN (' . implode(',', array_fill(0, count($this->commentIdsToDelete), '?')) . ')',
+                'DELETE FROM ' . 'comments' . ' WHERE id IN (' . implode(',', array_fill(0, count($this->commentIdsToDelete), '?')) . ')',
                 $this->commentIdsToDelete
             );
             $this->commentIdsToDelete = [];
@@ -231,7 +230,7 @@ final class WsCommentsTest extends ContractTestCase
     public function test_userComments_getList_returns_error_when_comments_are_disabled(): void
     {
         $this->conn->executeStatement(
-            "UPDATE " . Tables::config() . " SET value = 'false' WHERE param = 'activate_comments'"
+            "UPDATE " . 'config' . " SET value = 'false' WHERE param = 'activate_comments'"
         );
         CachePools::config()->clear();
 
@@ -245,7 +244,7 @@ final class WsCommentsTest extends ContractTestCase
             self::assertSame('Comments are disabled', $response['message']);
         } finally {
             $this->conn->executeStatement(
-                "UPDATE " . Tables::config() . " SET value = 'true' WHERE param = 'activate_comments'"
+                "UPDATE " . 'config' . " SET value = 'true' WHERE param = 'activate_comments'"
             );
             CachePools::config()->clear();
         }
@@ -393,7 +392,7 @@ final class WsCommentsTest extends ContractTestCase
     public function test_userComments_getList_shows_the_raw_author_name_for_an_anonymous_comment(): void
     {
         $this->conn->executeStatement(
-            "UPDATE " . Tables::config() . " SET value = 'true' WHERE param = 'comments_forall'"
+            "UPDATE " . 'config' . " SET value = 'true' WHERE param = 'comments_forall'"
         );
         CachePools::config()->clear();
 
@@ -445,7 +444,7 @@ final class WsCommentsTest extends ContractTestCase
             }
         } finally {
             $this->conn->executeStatement(
-                "UPDATE " . Tables::config() . " SET value = 'false' WHERE param = 'comments_forall'"
+                "UPDATE " . 'config' . " SET value = 'false' WHERE param = 'comments_forall'"
             );
             CachePools::config()->clear();
         }

@@ -6,7 +6,6 @@ namespace Piwigo\Category;
 
 use Piwigo\Category\Projection\DqlPropertyTarget;
 use Piwigo\Category\Projection\TableColumnTarget;
-use Piwigo\Db\Tables;
 use Piwigo\Group\GroupAccessEntity;
 use Piwigo\Image\ImageCategoryEntity;
 
@@ -39,10 +38,10 @@ enum CategoryOrphanTarget
     public function tableAndColumn(): TableColumnTarget
     {
         return match ($this) {
-            self::ImageCategory => new TableColumnTarget(Tables::imageCategory(), 'category_id'),
-            self::UserAccess => new TableColumnTarget(Tables::userAccess(), 'cat_id'),
-            self::GroupAccess => new TableColumnTarget(Tables::groupAccess(), 'cat_id'),
-            self::OldPermalinks => new TableColumnTarget(Tables::oldPermalinks(), 'cat_id'),
+            self::ImageCategory => new TableColumnTarget('image_category', 'category_id'),
+            self::UserAccess => new TableColumnTarget('user_access', 'cat_id'),
+            self::GroupAccess => new TableColumnTarget('group_access', 'cat_id'),
+            self::OldPermalinks => new TableColumnTarget('old_permalinks', 'cat_id'),
         };
     }
 

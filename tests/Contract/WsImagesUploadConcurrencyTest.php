@@ -8,7 +8,6 @@ use Override;
 use Piwigo\Db\AdvisorySessionLock;
 use Doctrine\DBAL\Connection;
 use Piwigo\Db\DbConnection;
-use Piwigo\Db\Tables;
 
 /**
  * A single PHP test process can't simulate two genuinely simultaneous
@@ -46,7 +45,7 @@ final class WsImagesUploadConcurrencyTest extends ContractTestCase
     protected function tearDown(): void
     {
         foreach ($this->createdImageIds as $id) {
-            $this->conn->executeStatement('DELETE FROM ' . Tables::images() . ' WHERE id = ?', [$id]);
+            $this->conn->executeStatement('DELETE FROM ' . 'images' . ' WHERE id = ?', [$id]);
         }
         parent::tearDown();
     }
@@ -125,7 +124,7 @@ final class WsImagesUploadConcurrencyTest extends ContractTestCase
             $sql = sprintf(
                 "SET lock_timeout = '5s'; SELECT pg_advisory_lock(%d); SELECT pg_sleep(0.3); INSERT INTO %s (file, path, md5sum) VALUES ('%s', 'upload/%s', '%s'); SELECT pg_advisory_unlock(%d);",
                 $key,
-                Tables::images(),
+                'images',
                 $file,
                 $file,
                 $md5sum,
@@ -139,7 +138,7 @@ final class WsImagesUploadConcurrencyTest extends ContractTestCase
             $sql = sprintf(
                 "SELECT GET_LOCK('%s', 5); SELECT SLEEP(0.3); INSERT INTO %s (file, path, md5sum) VALUES ('%s', 'upload/%s', '%s'); SELECT RELEASE_LOCK('%s');",
                 $lockName,
-                Tables::images(),
+                'images',
                 $file,
                 $file,
                 $md5sum,
@@ -205,7 +204,7 @@ final class WsImagesUploadConcurrencyTest extends ContractTestCase
             $stderr = $this->lockHolderPipes !== null ? stream_get_contents($this->lockHolderPipes[2]) : '';
             $exit = proc_close($proc);
             self::assertSame(0, $exit, "background lock-holder process failed. stdout=[{$stdout}] stderr=[{$stderr}]");
-            $this->conn->executeStatement('DELETE FROM ' . Tables::images() . ' WHERE md5sum = ?', [$md5sum]);
+            $this->conn->executeStatement('DELETE FROM ' . 'images' . ' WHERE md5sum = ?', [$md5sum]);
         }
     }
 

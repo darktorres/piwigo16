@@ -8,7 +8,6 @@ use Override;
 use Piwigo\Cache\CachePools;
 use Doctrine\DBAL\Connection;
 use Piwigo\Db\DbConnection;
-use Piwigo\Db\Tables;
 
 final class WsUsersMutationTest extends ContractTestCase
 {
@@ -52,8 +51,8 @@ final class WsUsersMutationTest extends ContractTestCase
         }
 
         foreach ($this->imageIdsToDelete as $imageId) {
-            $this->conn->executeStatement('DELETE FROM ' . Tables::favorites() . ' WHERE image_id = ?', [$imageId]);
-            $this->conn->executeStatement('DELETE FROM ' . Tables::images() . ' WHERE id = ?', [$imageId]);
+            $this->conn->executeStatement('DELETE FROM ' . 'favorites' . ' WHERE image_id = ?', [$imageId]);
+            $this->conn->executeStatement('DELETE FROM ' . 'images' . ' WHERE id = ?', [$imageId]);
         }
 
         parent::tearDown();
@@ -84,7 +83,7 @@ final class WsUsersMutationTest extends ContractTestCase
      * goes through the actual HTTP server under test, a separate process
      * with its own container) -- reads the real, DB-backed guest_id
      * config value directly, matching this file's own established
-     * "query Tables::config() over SQL" idiom, and falling back to
+     * "query 'config' over SQL" idiom, and falling back to
      * CurrentConfig::guestId()'s own compiled-in default (2) for the
      * common case where the fixture never overrides it, the same
      * fallback ConfigService::loadConfFromDb() itself would apply for a
@@ -92,7 +91,7 @@ final class WsUsersMutationTest extends ContractTestCase
      */
     private function guestId(): int
     {
-        $raw = $this->conn->fetchOne("SELECT value FROM " . Tables::config() . " WHERE param = 'guest_id'");
+        $raw = $this->conn->fetchOne("SELECT value FROM " . 'config' . " WHERE param = 'guest_id'");
         if (! is_string($raw)) {
             return 2;
         }
@@ -115,7 +114,7 @@ final class WsUsersMutationTest extends ContractTestCase
         ));
 
         $this->conn->executeStatement(
-            'INSERT INTO ' . Tables::images() . ' (file, path, md5sum, date_available) VALUES (?, ?, ?, ?)',
+            'INSERT INTO ' . 'images' . ' (file, path, md5sum, date_available) VALUES (?, ?, ?, ?)',
             [$filename, 'upload/2026/08/01/' . $filename, md5($filename), '2026-08-01 00:00:00']
         );
         $id = (int) $this->conn->lastInsertId();
@@ -295,7 +294,7 @@ final class WsUsersMutationTest extends ContractTestCase
             self::assertSame(1003, $response['err']);
             self::assertSame('The passwords do not match', $response['message']);
         } finally {
-            $this->conn->executeStatement("DELETE FROM " . Tables::config() . " WHERE param = 'double_password_type_in_admin'");
+            $this->conn->executeStatement("DELETE FROM " . 'config' . " WHERE param = 'double_password_type_in_admin'");
             CachePools::config()->clear();
         }
     }
@@ -315,7 +314,7 @@ final class WsUsersMutationTest extends ContractTestCase
         $id = self::firstUserId($response);
         $this->extraUserIdsToDelete[] = $id;
 
-        $password = $this->conn->fetchOne('SELECT password FROM ' . Tables::users() . ' WHERE id = ?', [$id]);
+        $password = $this->conn->fetchOne('SELECT password FROM ' . 'users' . ' WHERE id = ?', [$id]);
         self::assertIsString($password);
         self::assertNotSame('', $password, 'auto_password must generate a real, non-empty hash');
     }
@@ -399,7 +398,7 @@ final class WsUsersMutationTest extends ContractTestCase
     public function test_delete_protects_the_current_user_from_self_deletion(): void
     {
         $token = $this->getPwgToken();
-        $selfId = $this->conn->fetchOne('SELECT id FROM ' . Tables::users() . ' WHERE username = ?', ['fixture_admin']);
+        $selfId = $this->conn->fetchOne('SELECT id FROM ' . 'users' . ' WHERE username = ?', ['fixture_admin']);
         self::assertIsNumeric($selfId);
         $selfId = (int) $selfId;
 
@@ -411,7 +410,7 @@ final class WsUsersMutationTest extends ContractTestCase
         self::assertSame('ok', $response['stat']);
         self::assertSame('0 users deleted', $response['result']);
 
-        $stillExists = $this->conn->fetchOne('SELECT COUNT(*) FROM ' . Tables::users() . ' WHERE id = ?', [$selfId]);
+        $stillExists = $this->conn->fetchOne('SELECT COUNT(*) FROM ' . 'users' . ' WHERE id = ?', [$selfId]);
         self::assertIsNumeric($stillExists);
         self::assertSame(1, (int) $stillExists);
     }
@@ -441,7 +440,7 @@ final class WsUsersMutationTest extends ContractTestCase
     public function test_delete_as_a_non_webmaster_admin_also_protects_other_admins(): void
     {
         $adminToken = $this->getPwgToken();
-        $selfId = $this->conn->fetchOne('SELECT id FROM ' . Tables::users() . ' WHERE username = ?', ['fixture_admin']);
+        $selfId = $this->conn->fetchOne('SELECT id FROM ' . 'users' . ' WHERE username = ?', ['fixture_admin']);
         self::assertIsNumeric($selfId);
 
         $username = 'ct_nonwm_admin_' . uniqid();
@@ -464,7 +463,7 @@ final class WsUsersMutationTest extends ContractTestCase
 
         self::assertSame('ok', $response['stat']);
         self::assertSame('0 users deleted', $response['result']);
-        $stillExists = $this->conn->fetchOne('SELECT COUNT(*) FROM ' . Tables::users() . ' WHERE id = ?', [(int) $selfId]);
+        $stillExists = $this->conn->fetchOne('SELECT COUNT(*) FROM ' . 'users' . ' WHERE id = ?', [(int) $selfId]);
         self::assertIsNumeric($stillExists);
         self::assertSame(1, (int) $stillExists);
 
@@ -584,7 +583,7 @@ final class WsUsersMutationTest extends ContractTestCase
         // switch the session onto the throwaway user before changing their
         // own password
         $login = $this->callWs('pwg.session.login', [
-            'username' => $this->conn->fetchOne('SELECT username FROM ' . Tables::users() . ' WHERE id = ?', [$userId]),
+            'username' => $this->conn->fetchOne('SELECT username FROM ' . 'users' . ' WHERE id = ?', [$userId]),
             'password' => 'OldPass123!',
         ]);
         self::assertSame('ok', $login['stat']);
@@ -603,7 +602,7 @@ final class WsUsersMutationTest extends ContractTestCase
         // log back in as admin so tearDown()'s own delete calls are authorized
         $this->loginAsAdmin();
         $reLogin = $this->callWs('pwg.session.login', [
-            'username' => $this->conn->fetchOne('SELECT username FROM ' . Tables::users() . ' WHERE id = ?', [$userId]),
+            'username' => $this->conn->fetchOne('SELECT username FROM ' . 'users' . ' WHERE id = ?', [$userId]),
             'password' => 'NewPass456!',
         ]);
         self::assertSame('ok', $reLogin['stat'], 'the new password must actually authenticate');
@@ -622,7 +621,7 @@ final class WsUsersMutationTest extends ContractTestCase
 
         try {
             $token = $this->getPwgToken();
-            $before = $this->conn->fetchOne('SELECT theme FROM ' . Tables::userInfos() . ' WHERE user_id = 1');
+            $before = $this->conn->fetchOne('SELECT theme FROM ' . 'user_infos' . ' WHERE user_id = 1');
 
             $response = $this->callWs('pwg.users.setMyInfo', [
                 'theme' => 'a_theme_that_should_be_ignored',
@@ -630,10 +629,10 @@ final class WsUsersMutationTest extends ContractTestCase
             ]);
 
             self::assertSame('ok', $response['stat']);
-            $after = $this->conn->fetchOne('SELECT theme FROM ' . Tables::userInfos() . ' WHERE user_id = 1');
+            $after = $this->conn->fetchOne('SELECT theme FROM ' . 'user_infos' . ' WHERE user_id = 1');
             self::assertSame($before, $after);
         } finally {
-            $this->conn->executeStatement("DELETE FROM " . Tables::config() . " WHERE param = 'allow_user_customization'");
+            $this->conn->executeStatement("DELETE FROM " . 'config' . " WHERE param = 'allow_user_customization'");
             CachePools::config()->clear();
         }
     }
@@ -649,13 +648,13 @@ final class WsUsersMutationTest extends ContractTestCase
     public function test_setMyInfo_ignores_show_nb_comments_when_comments_are_disabled(): void
     {
         $this->conn->executeStatement(
-            "UPDATE " . Tables::config() . " SET value = 'false' WHERE param = 'activate_comments'"
+            "UPDATE " . 'config' . " SET value = 'false' WHERE param = 'activate_comments'"
         );
         CachePools::config()->clear();
 
         try {
             $token = $this->getPwgToken();
-            $before = $this->conn->fetchOne('SELECT show_nb_comments FROM ' . Tables::userInfos() . ' WHERE user_id = 1');
+            $before = $this->conn->fetchOne('SELECT show_nb_comments FROM ' . 'user_infos' . ' WHERE user_id = 1');
 
             $response = $this->callWs('pwg.users.setMyInfo', [
                 'show_nb_comments' => true,
@@ -663,10 +662,10 @@ final class WsUsersMutationTest extends ContractTestCase
             ]);
 
             self::assertSame('ok', $response['stat']);
-            $after = $this->conn->fetchOne('SELECT show_nb_comments FROM ' . Tables::userInfos() . ' WHERE user_id = 1');
+            $after = $this->conn->fetchOne('SELECT show_nb_comments FROM ' . 'user_infos' . ' WHERE user_id = 1');
             self::assertSame($before, $after, 'show_nb_comments must be silently dropped, not applied, while comments are disabled gallery-wide');
         } finally {
-            $this->conn->executeStatement("UPDATE " . Tables::config() . " SET value = 'true' WHERE param = 'activate_comments'");
+            $this->conn->executeStatement("UPDATE " . 'config' . " SET value = 'true' WHERE param = 'activate_comments'");
             CachePools::config()->clear();
         }
     }
@@ -686,14 +685,14 @@ final class WsUsersMutationTest extends ContractTestCase
         $password = 'Test1234!';
         $userId = $this->createUser($username, $password);
 
-        $originalDefaultUserId = $this->conn->fetchOne("SELECT value FROM " . Tables::config() . " WHERE param = 'default_user_id'");
+        $originalDefaultUserId = $this->conn->fetchOne("SELECT value FROM " . 'config' . " WHERE param = 'default_user_id'");
 
         $this->upsertConfig('default_user_id', (string) $userId);
         CachePools::config()->clear();
 
         try {
             $before = $this->conn->fetchAssociative(
-                'SELECT theme, language FROM ' . Tables::userInfos() . ' WHERE user_id = ?',
+                'SELECT theme, language FROM ' . 'user_infos' . ' WHERE user_id = ?',
                 [$userId]
             );
             self::assertIsArray($before);
@@ -715,7 +714,7 @@ final class WsUsersMutationTest extends ContractTestCase
             self::assertSame('Your changes have been applied.', $response['result']);
 
             $after = $this->conn->fetchAssociative(
-                'SELECT theme, language FROM ' . Tables::userInfos() . ' WHERE user_id = ?',
+                'SELECT theme, language FROM ' . 'user_infos' . ' WHERE user_id = ?',
                 [$userId]
             );
             self::assertSame($before, $after, 'theme/language must be unchanged -- SPECIAL_USER must have dropped them');
@@ -726,10 +725,10 @@ final class WsUsersMutationTest extends ContractTestCase
         } finally {
             $this->loginAsAdmin();
             if ($originalDefaultUserId === false) {
-                $this->conn->executeStatement("DELETE FROM " . Tables::config() . " WHERE param = 'default_user_id'");
+                $this->conn->executeStatement("DELETE FROM " . 'config' . " WHERE param = 'default_user_id'");
             } else {
                 $this->conn->executeStatement(
-                    "UPDATE " . Tables::config() . " SET value = ? WHERE param = 'default_user_id'",
+                    "UPDATE " . 'config' . " SET value = ? WHERE param = 'default_user_id'",
                     [$originalDefaultUserId]
                 );
             }
@@ -811,7 +810,7 @@ final class WsUsersMutationTest extends ContractTestCase
     public function test_favoritesAdd_and_remove_roundtrip(): void
     {
         $imageId = $this->insertThrowawayImage();
-        $selfId = $this->conn->fetchOne('SELECT id FROM ' . Tables::users() . ' WHERE username = ?', ['fixture_admin']);
+        $selfId = $this->conn->fetchOne('SELECT id FROM ' . 'users' . ' WHERE username = ?', ['fixture_admin']);
         self::assertIsNumeric($selfId);
         $selfId = (int) $selfId;
 
@@ -819,7 +818,7 @@ final class WsUsersMutationTest extends ContractTestCase
         self::assertSame('ok', $add['stat']);
 
         $count = $this->conn->fetchOne(
-            'SELECT COUNT(*) FROM ' . Tables::favorites() . ' WHERE user_id = ? AND image_id = ?',
+            'SELECT COUNT(*) FROM ' . 'favorites' . ' WHERE user_id = ? AND image_id = ?',
             [$selfId, $imageId]
         );
         self::assertIsNumeric($count);
@@ -829,7 +828,7 @@ final class WsUsersMutationTest extends ContractTestCase
         self::assertSame('ok', $remove['stat']);
 
         $countAfter = $this->conn->fetchOne(
-            'SELECT COUNT(*) FROM ' . Tables::favorites() . ' WHERE user_id = ? AND image_id = ?',
+            'SELECT COUNT(*) FROM ' . 'favorites' . ' WHERE user_id = ? AND image_id = ?',
             [$selfId, $imageId]
         );
         self::assertIsNumeric($countAfter);
@@ -928,7 +927,7 @@ final class WsUsersMutationTest extends ContractTestCase
     public function test_generatePasswordLink_admin_cannot_target_a_webmaster(): void
     {
         $adminToken = $this->getPwgToken();
-        $selfId = $this->conn->fetchOne('SELECT id FROM ' . Tables::users() . ' WHERE username = ?', ['fixture_admin']);
+        $selfId = $this->conn->fetchOne('SELECT id FROM ' . 'users' . ' WHERE username = ?', ['fixture_admin']);
         self::assertIsNumeric($selfId);
 
         $username = 'ct_nonwm_admin_' . uniqid();
@@ -993,7 +992,7 @@ final class WsUsersMutationTest extends ContractTestCase
         $email = $username . '@example.test';
         $userId = $this->createUser($username, $password, $email);
 
-        $originalSmtpHost = $this->conn->fetchOne("SELECT value FROM " . Tables::config() . " WHERE param = 'smtp_host'");
+        $originalSmtpHost = $this->conn->fetchOne("SELECT value FROM " . 'config' . " WHERE param = 'smtp_host'");
         $this->upsertConfig('smtp_host', '"127.0.0.1:1"');
         CachePools::config()->clear();
 
@@ -1027,10 +1026,10 @@ final class WsUsersMutationTest extends ContractTestCase
         } finally {
             $this->loginAsAdmin();
             if ($originalSmtpHost === false) {
-                $this->conn->executeStatement("DELETE FROM " . Tables::config() . " WHERE param = 'smtp_host'");
+                $this->conn->executeStatement("DELETE FROM " . 'config' . " WHERE param = 'smtp_host'");
             } else {
                 $this->conn->executeStatement(
-                    "UPDATE " . Tables::config() . " SET value = ? WHERE param = 'smtp_host'",
+                    "UPDATE " . 'config' . " SET value = ? WHERE param = 'smtp_host'",
                     [$originalSmtpHost]
                 );
             }
@@ -1118,7 +1117,7 @@ final class WsUsersMutationTest extends ContractTestCase
 
     public function test_setMainUser_promotes_a_webmaster(): void
     {
-        $originalWebmasterId = $this->conn->fetchOne("SELECT value FROM " . Tables::config() . " WHERE param = 'webmaster_id'");
+        $originalWebmasterId = $this->conn->fetchOne("SELECT value FROM " . 'config' . " WHERE param = 'webmaster_id'");
         self::assertIsString($originalWebmasterId);
 
         $token = $this->getPwgToken();
@@ -1139,11 +1138,11 @@ final class WsUsersMutationTest extends ContractTestCase
             self::assertSame('ok', $response['stat']);
             self::assertSame('The main user has been changed.', $response['result']);
 
-            $stored = $this->conn->fetchOne("SELECT value FROM " . Tables::config() . " WHERE param = 'webmaster_id'");
+            $stored = $this->conn->fetchOne("SELECT value FROM " . 'config' . " WHERE param = 'webmaster_id'");
             self::assertSame((string) $userId, $stored);
         } finally {
             $this->conn->executeStatement(
-                "UPDATE " . Tables::config() . " SET value = ? WHERE param = 'webmaster_id'",
+                "UPDATE " . 'config' . " SET value = ? WHERE param = 'webmaster_id'",
                 [$originalWebmasterId]
             );
             CachePools::config()->clear();

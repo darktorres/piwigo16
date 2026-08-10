@@ -35,7 +35,6 @@ namespace Piwigo\Tests\Integration {
     use Piwigo\Tests\Support\PageStateTestFactory;
     use Piwigo\Core\RedirectServiceInterface;
     use Piwigo\Db\DbConnection;
-    use Piwigo\Db\Tables;
     use Piwigo\Event\Album\GetCategoryPreferredImageOrders;
     use Piwigo\Event\Site\DeleteSite;
     use Piwigo\Tests\Support\ImageStdParamsTestFactory;
@@ -266,11 +265,11 @@ final class CategoryServiceTest extends IntegrationTestCase
     #[Override]
     protected function tearDown(): void
     {
-        $this->conn->executeStatement('UPDATE ' . Tables::categories() . " SET status = 'public'");
+        $this->conn->executeStatement('UPDATE ' . 'categories' . " SET status = 'public'");
         // Safety-net restore for tests that touch old_permalinks' hit
         // counter (findCategoryIdFromPermalinks()'s is_old branch) --
         // matches CategoryRepositoryTest's own tearDown restore value.
-        $this->conn->executeStatement('UPDATE ' . Tables::oldPermalinks() . " SET hit = 42, last_hit = '2026-07-07 05:02:38'");
+        $this->conn->executeStatement('UPDATE ' . 'old_permalinks' . " SET hit = 42, last_hit = '2026-07-07 05:02:38'");
         parent::tearDown();
     }
 
@@ -363,7 +362,7 @@ final class CategoryServiceTest extends IntegrationTestCase
 
     public function test_find_category_id_from_permalinks_matches_the_last_permalink_first(): void
     {
-        $this->conn->executeStatement('UPDATE ' . Tables::categories() . " SET permalink = 'sample-album' WHERE id = 1");
+        $this->conn->executeStatement('UPDATE ' . 'categories' . " SET permalink = 'sample-album' WHERE id = 1");
 
         $idx = null;
         $catId = $this->service->findCategoryIdFromPermalinks(['no-match', 'sample-album'], $idx, new PermalinkRepository(EntityManagerFactory::build($this->conn)));
@@ -371,7 +370,7 @@ final class CategoryServiceTest extends IntegrationTestCase
         self::assertSame(1, $catId);
         self::assertSame(1, $idx);
 
-        $this->conn->executeStatement('UPDATE ' . Tables::categories() . ' SET permalink = NULL WHERE id = 1');
+        $this->conn->executeStatement('UPDATE ' . 'categories' . ' SET permalink = NULL WHERE id = 1');
     }
 
     public function test_find_category_id_from_permalinks_returns_null_when_nothing_matches(): void
@@ -600,7 +599,7 @@ final class CategoryServiceTest extends IntegrationTestCase
 
         $hit = $this->conn->createQueryBuilder()
             ->select('hit')
-            ->from(Tables::oldPermalinks())
+            ->from('old_permalinks')
             ->where("permalink = 'old-sample-album'")
             ->executeQuery()
             ->fetchOne();
@@ -634,15 +633,15 @@ final class CategoryServiceTest extends IntegrationTestCase
         $rank = $this->conn->getDatabasePlatform()->quoteSingleIdentifier('rank');
         $trueLiteral = $this->dbDriver === 'pgsql' ? 'true' : '1';
         $this->conn->executeStatement(
-            "INSERT INTO " . Tables::categories() . " (name, id_uppercat, {$rank}, status, visible, uppercats, commentable, global_rank) VALUES ('Grandchild Album', 2, 1, 'public', {$trueLiteral}, '1,2,0', {$trueLiteral}, '1.1.1')"
+            "INSERT INTO " . 'categories' . " (name, id_uppercat, {$rank}, status, visible, uppercats, commentable, global_rank) VALUES ('Grandchild Album', 2, 1, 'public', {$trueLiteral}, '1,2,0', {$trueLiteral}, '1.1.1')"
         );
         $grandchildId = (int) $this->conn->lastInsertId();
-        $this->conn->executeStatement("UPDATE " . Tables::categories() . " SET uppercats = '1,2,{$grandchildId}' WHERE id = {$grandchildId}");
+        $this->conn->executeStatement("UPDATE " . 'categories' . " SET uppercats = '1,2,{$grandchildId}' WHERE id = {$grandchildId}");
         // Reuse image 1 (already directly in category 1) as a second,
         // additional link into the new grandchild -- proves the walk
         // propagates a real image count up two ancestor levels, not just
         // one.
-        $this->conn->executeStatement("INSERT INTO " . Tables::imageCategory() . " (image_id, category_id) VALUES (1, {$grandchildId})");
+        $this->conn->executeStatement("INSERT INTO " . 'image_category' . " (image_id, category_id) VALUES (1, {$grandchildId})");
 
         try {
             $userdata = ['id' => 1, 'level' => 0, 'forbidden_categories' => ''];
@@ -655,7 +654,7 @@ final class CategoryServiceTest extends IntegrationTestCase
             self::assertSame(6, $cats[1]['count_images']); // own 3 + cat2's 2 + grandchild's 1
             self::assertSame(2, $cats[1]['count_categories']); // cat2 + grandchild
         } finally {
-            $this->conn->executeStatement("DELETE FROM " . Tables::categories() . " WHERE id = {$grandchildId}");
+            $this->conn->executeStatement("DELETE FROM " . 'categories' . " WHERE id = {$grandchildId}");
         }
     }
 
@@ -665,7 +664,7 @@ final class CategoryServiceTest extends IntegrationTestCase
         // (999) that findCategoriesByIds() can't resolve (no such
         // category) -- the real ancestor (1) must still get its
         // count_categories incremented despite the phantom one.
-        $this->conn->executeStatement("UPDATE " . Tables::categories() . " SET uppercats = '1,999,2' WHERE id = 2");
+        $this->conn->executeStatement("UPDATE " . 'categories' . " SET uppercats = '1,999,2' WHERE id = 2");
 
         try {
             $cats = $this->service->getRelatedCategoriesMenu([4], []);
@@ -680,7 +679,7 @@ final class CategoryServiceTest extends IntegrationTestCase
 
             self::assertSame(1, $byId['1']['count_categories']);
         } finally {
-            $this->conn->executeStatement("UPDATE " . Tables::categories() . " SET uppercats = '1,2' WHERE id = 2");
+            $this->conn->executeStatement("UPDATE " . 'categories' . " SET uppercats = '1,2' WHERE id = 2");
         }
     }
 
@@ -788,14 +787,14 @@ final class CategoryServiceTest extends IntegrationTestCase
         // temp category too makes it a real "non-orphan": deleting the
         // temp category must NOT delete it, unlike a genuinely orphaned
         // image.
-        $this->conn->executeStatement("INSERT INTO " . Tables::imageCategory() . " (image_id, category_id) VALUES (1, {$tempId})");
+        $this->conn->executeStatement("INSERT INTO " . 'image_category' . " (image_id, category_id) VALUES (1, {$tempId})");
 
         $this->service->deleteCategories([$tempId], $activityLogger, $urlService, new SessionService(EntityManagerFactory::build($this->conn)->getRepository(SessionEntity::class),CurrentConfigTestFactory::get()), EventDispatcherTestFactory::get(), new PermalinkRepository(EntityManagerFactory::build($this->conn)), 'delete_orphans');
 
         self::assertNull($this->repo->findById($tempId));
         $stillLinked = $this->conn->createQueryBuilder()
             ->select('COUNT(*) AS c')
-            ->from(Tables::imageCategory())
+            ->from('image_category')
             ->where('image_id = 1 AND category_id = 1')
             ->executeQuery()
             ->fetchOne();
@@ -820,7 +819,7 @@ final class CategoryServiceTest extends IntegrationTestCase
         // own identical pattern).
         $rawSiteId = $this->conn->createQueryBuilder()
             ->select('id')
-            ->from(Tables::sites())
+            ->from('sites')
             ->where('galleries_url = :url')
             ->setParameter('url', $siteUrl)
             ->executeQuery()
@@ -830,7 +829,7 @@ final class CategoryServiceTest extends IntegrationTestCase
 
         $categoryId = $this->service->createVirtualCategory('Site Delete Temp', new CategoryServiceFakeActivityLogger(), CurrentUserTestFactory::get())->id;
         self::assertTrue(is_numeric($categoryId));
-        $this->conn->executeStatement('UPDATE ' . Tables::categories() . ' SET site_id = ? WHERE id = ?', [$siteId, $categoryId]);
+        $this->conn->executeStatement('UPDATE ' . 'categories' . ' SET site_id = ? WHERE id = ?', [$siteId, $categoryId]);
 
         $handler = static function (DeleteSite $e) use ($siteRepo): void {
             $siteRepo->delete($e->siteId);
@@ -860,9 +859,9 @@ final class CategoryServiceTest extends IntegrationTestCase
         // ever existed in practice, same pattern
         // FilesystemIntegrityCheckerTest's own orphan tests use.
         $this->disableForeignKeyChecks($this->conn);
-        $this->conn->executeStatement('INSERT INTO ' . Tables::imageCategory() . ' (image_id, category_id) VALUES (1, 60000)');
-        $this->conn->executeStatement('INSERT INTO ' . Tables::userAccess() . ' (user_id, cat_id) VALUES (1, 60000)');
-        $this->conn->executeStatement('INSERT INTO ' . Tables::groupAccess() . ' (group_id, cat_id) VALUES (1, 60000)');
+        $this->conn->executeStatement('INSERT INTO ' . 'image_category' . ' (image_id, category_id) VALUES (1, 60000)');
+        $this->conn->executeStatement('INSERT INTO ' . 'user_access' . ' (user_id, cat_id) VALUES (1, 60000)');
+        $this->conn->executeStatement('INSERT INTO ' . 'group_access' . ' (group_id, cat_id) VALUES (1, 60000)');
         $this->enableForeignKeyChecks($this->conn);
 
         try {
@@ -870,7 +869,7 @@ final class CategoryServiceTest extends IntegrationTestCase
 
             $orphanedImageCategoryCount = $this->conn->createQueryBuilder()
                 ->select('COUNT(*) AS c')
-                ->from(Tables::imageCategory())
+                ->from('image_category')
                 ->where('image_id = 1 AND category_id = 60000')
                 ->executeQuery()
                 ->fetchOne();
@@ -878,7 +877,7 @@ final class CategoryServiceTest extends IntegrationTestCase
 
             $orphanedUserAccessCount = $this->conn->createQueryBuilder()
                 ->select('COUNT(*) AS c')
-                ->from(Tables::userAccess())
+                ->from('user_access')
                 ->where('user_id = 1 AND cat_id = 60000')
                 ->executeQuery()
                 ->fetchOne();
@@ -886,7 +885,7 @@ final class CategoryServiceTest extends IntegrationTestCase
 
             $orphanedGroupAccessCount = $this->conn->createQueryBuilder()
                 ->select('COUNT(*) AS c')
-                ->from(Tables::groupAccess())
+                ->from('group_access')
                 ->where('group_id = 1 AND cat_id = 60000')
                 ->executeQuery()
                 ->fetchOne();
@@ -896,15 +895,15 @@ final class CategoryServiceTest extends IntegrationTestCase
             // fixture category 1) survives untouched.
             $realImageCategoryCount = $this->conn->createQueryBuilder()
                 ->select('COUNT(*) AS c')
-                ->from(Tables::imageCategory())
+                ->from('image_category')
                 ->where('image_id = 1 AND category_id = 1')
                 ->executeQuery()
                 ->fetchOne();
             self::assertSame(1, is_numeric($realImageCategoryCount) ? (int) $realImageCategoryCount : null);
         } finally {
-            $this->conn->executeStatement('DELETE FROM ' . Tables::imageCategory() . ' WHERE image_id = 1 AND category_id = 60000');
-            $this->conn->executeStatement('DELETE FROM ' . Tables::userAccess() . ' WHERE user_id = 1 AND cat_id = 60000');
-            $this->conn->executeStatement('DELETE FROM ' . Tables::groupAccess() . ' WHERE group_id = 1 AND cat_id = 60000');
+            $this->conn->executeStatement('DELETE FROM ' . 'image_category' . ' WHERE image_id = 1 AND category_id = 60000');
+            $this->conn->executeStatement('DELETE FROM ' . 'user_access' . ' WHERE user_id = 1 AND cat_id = 60000');
+            $this->conn->executeStatement('DELETE FROM ' . 'group_access' . ' WHERE group_id = 1 AND cat_id = 60000');
         }
     }
 
@@ -914,14 +913,14 @@ final class CategoryServiceTest extends IntegrationTestCase
         // elsewhere in this file only as a query parameter, never a raw
         // INSERT value) would overflow it here.
         $this->conn->executeStatement(
-            "INSERT INTO " . Tables::oldPermalinks() . " (cat_id, permalink, hit) VALUES (60000, 'orphaned-permalink-test', 0)"
+            "INSERT INTO " . 'old_permalinks' . " (cat_id, permalink, hit) VALUES (60000, 'orphaned-permalink-test', 0)"
         );
 
         $this->service->checkCategoriesIntegrity();
 
         $orphanCount = $this->conn->createQueryBuilder()
             ->select('COUNT(*) AS c')
-            ->from(Tables::oldPermalinks())
+            ->from('old_permalinks')
             ->where("permalink = 'orphaned-permalink-test'")
             ->executeQuery()
             ->fetchOne();
@@ -929,7 +928,7 @@ final class CategoryServiceTest extends IntegrationTestCase
 
         $realCount = $this->conn->createQueryBuilder()
             ->select('COUNT(*) AS c')
-            ->from(Tables::oldPermalinks())
+            ->from('old_permalinks')
             ->where("permalink = 'old-sample-album'")
             ->executeQuery()
             ->fetchOne();
@@ -942,14 +941,14 @@ final class CategoryServiceTest extends IntegrationTestCase
         // ancestor id that no longer exists (deleted without a full
         // uppercats resync) -- catMapCallback()'s own defensive ''
         // fallback for an unmatched captured id.
-        $this->conn->executeStatement("UPDATE " . Tables::categories() . " SET uppercats = '1,999,2' WHERE id = 2");
+        $this->conn->executeStatement("UPDATE " . 'categories' . " SET uppercats = '1,999,2' WHERE id = 2");
 
         try {
             $this->service->updateGlobalRank();
 
             $globalRank = $this->conn->createQueryBuilder()
                 ->select('global_rank')
-                ->from(Tables::categories())
+                ->from('categories')
                 ->where('id = 2')
                 ->executeQuery()
                 ->fetchOne();
@@ -960,7 +959,7 @@ final class CategoryServiceTest extends IntegrationTestCase
             // than a crash.
             self::assertSame('1..1', $globalRank);
         } finally {
-            $this->conn->executeStatement("UPDATE " . Tables::categories() . " SET uppercats = '1,2', global_rank = '1.1' WHERE id = 2");
+            $this->conn->executeStatement("UPDATE " . 'categories' . " SET uppercats = '1,2', global_rank = '1.1' WHERE id = 2");
         }
     }
 
@@ -1000,7 +999,7 @@ final class CategoryServiceTest extends IntegrationTestCase
 
     public function test_set_cat_status_public_makes_parent_categories_public_too(): void
     {
-        $this->conn->executeStatement("UPDATE " . Tables::categories() . " SET status = 'private'");
+        $this->conn->executeStatement("UPDATE " . 'categories' . " SET status = 'private'");
 
         $this->service->setCatStatus([2], 'public');
 
@@ -1010,8 +1009,8 @@ final class CategoryServiceTest extends IntegrationTestCase
 
     public function test_set_cat_status_private_uses_the_private_parent_as_the_permission_reference(): void
     {
-        $this->conn->executeStatement("UPDATE " . Tables::categories() . " SET status = 'private' WHERE id = 1");
-        $this->conn->executeStatement('INSERT INTO ' . Tables::userAccess() . ' (user_id, cat_id) VALUES (3, 2)');
+        $this->conn->executeStatement("UPDATE " . 'categories' . " SET status = 'private' WHERE id = 1");
+        $this->conn->executeStatement('INSERT INTO ' . 'user_access' . ' (user_id, cat_id) VALUES (3, 2)');
 
         try {
             $this->service->setCatStatus([2], 'private');
@@ -1025,13 +1024,13 @@ final class CategoryServiceTest extends IntegrationTestCase
             // kept its own row as "consistent with itself").
             $remaining = $this->conn->createQueryBuilder()
                 ->select('COUNT(*) AS c')
-                ->from(Tables::userAccess())
+                ->from('user_access')
                 ->where('cat_id = 2')
                 ->executeQuery()
                 ->fetchOne();
             self::assertSame(0, is_numeric($remaining) ? (int) $remaining : null);
         } finally {
-            $this->conn->executeStatement('DELETE FROM ' . Tables::userAccess() . ' WHERE cat_id IN (1, 2)');
+            $this->conn->executeStatement('DELETE FROM ' . 'user_access' . ' WHERE cat_id IN (1, 2)');
         }
     }
 
@@ -1046,25 +1045,25 @@ final class CategoryServiceTest extends IntegrationTestCase
         // fixture's own groups 1-3 already have real access to category 1
         // (the "reference"), which would make it the *consistent* case
         // this test isn't trying to cover.
-        $this->conn->executeStatement("INSERT INTO " . Tables::groups() . " (name) VALUES ('zzz-16i-probe-group')");
+        $this->conn->executeStatement("INSERT INTO " . 'groups' . " (name) VALUES ('zzz-16i-probe-group')");
         $groupId = (int) $this->conn->lastInsertId();
-        $this->conn->executeStatement("UPDATE " . Tables::categories() . " SET status = 'private' WHERE id = 1");
-        $this->conn->executeStatement('INSERT INTO ' . Tables::groupAccess() . ' (group_id, cat_id) VALUES (?, 2)', [$groupId]);
+        $this->conn->executeStatement("UPDATE " . 'categories' . " SET status = 'private' WHERE id = 1");
+        $this->conn->executeStatement('INSERT INTO ' . 'group_access' . ' (group_id, cat_id) VALUES (?, 2)', [$groupId]);
 
         try {
             $this->service->setCatStatus([2], 'private');
 
             $remaining = $this->conn->createQueryBuilder()
                 ->select('COUNT(*) AS c')
-                ->from(Tables::groupAccess())
+                ->from('group_access')
                 ->where('cat_id = 2 AND group_id = :groupId')
                 ->setParameter('groupId', $groupId)
                 ->executeQuery()
                 ->fetchOne();
             self::assertSame(0, is_numeric($remaining) ? (int) $remaining : null);
         } finally {
-            $this->conn->executeStatement('DELETE FROM ' . Tables::groupAccess() . ' WHERE group_id = ?', [$groupId]);
-            $this->conn->executeStatement('DELETE FROM ' . Tables::groups() . ' WHERE id = ?', [$groupId]);
+            $this->conn->executeStatement('DELETE FROM ' . 'group_access' . ' WHERE group_id = ?', [$groupId]);
+            $this->conn->executeStatement('DELETE FROM ' . 'groups' . ' WHERE id = ?', [$groupId]);
         }
     }
 
@@ -1087,15 +1086,15 @@ final class CategoryServiceTest extends IntegrationTestCase
 
     public function test_update_path_rewrites_image_paths_for_storage_linked_categories(): void
     {
-        $this->conn->executeStatement("UPDATE " . Tables::categories() . " SET dir = 'sample-album', site_id = 1 WHERE id = 1");
-        $this->conn->executeStatement('UPDATE ' . Tables::images() . ' SET storage_category_id = 1 WHERE id = 1');
+        $this->conn->executeStatement("UPDATE " . 'categories' . " SET dir = 'sample-album', site_id = 1 WHERE id = 1");
+        $this->conn->executeStatement('UPDATE ' . 'images' . ' SET storage_category_id = 1 WHERE id = 1');
 
         try {
             $this->service->updatePath(EntityManagerFactory::build($this->conn)->getRepository(SiteEntity::class));
 
             $path = $this->conn->createQueryBuilder()
                 ->select('path')
-                ->from(Tables::images())
+                ->from('images')
                 ->where('id = 1')
                 ->executeQuery()
                 ->fetchOne();
@@ -1107,8 +1106,8 @@ final class CategoryServiceTest extends IntegrationTestCase
             // IntegrationTestCase::loadFixture()'s own docblock.
             self::assertSame(CurrentPathsTestFactory::get()->root . 'galleries/sample-album/fixture-photo-1.jpg', $path);
         } finally {
-            $this->conn->executeStatement("UPDATE " . Tables::categories() . " SET dir = NULL, site_id = NULL WHERE id = 1");
-            $this->conn->executeStatement("UPDATE " . Tables::images() . " SET storage_category_id = NULL, path = 'upload/2026/08/01/20260801000000-2e7e64c7.jpg' WHERE id = 1");
+            $this->conn->executeStatement("UPDATE " . 'categories' . " SET dir = NULL, site_id = NULL WHERE id = 1");
+            $this->conn->executeStatement("UPDATE " . 'images' . " SET storage_category_id = NULL, path = 'upload/2026/08/01/20260801000000-2e7e64c7.jpg' WHERE id = 1");
         }
     }
 
@@ -1123,7 +1122,7 @@ final class CategoryServiceTest extends IntegrationTestCase
         // the move must not have actually happened.
         $idUppercat = $this->conn->createQueryBuilder()
             ->select('id_uppercat')
-            ->from(Tables::categories())
+            ->from('categories')
             ->where('id = 1')
             ->executeQuery()
             ->fetchOne();
@@ -1144,7 +1143,7 @@ final class CategoryServiceTest extends IntegrationTestCase
         // coerces implicitly) are rejected outright by Postgres.
         $falseLiteral = $this->dbDriver === 'pgsql' ? 'false' : '0';
         $trueLiteral = $this->dbDriver === 'pgsql' ? 'true' : '1';
-        $this->conn->executeStatement("UPDATE " . Tables::categories() . " SET visible = {$falseLiteral} WHERE id = 1");
+        $this->conn->executeStatement("UPDATE " . 'categories' . " SET visible = {$falseLiteral} WHERE id = 1");
 
         try {
             $result = $this->service->createVirtualCategory('Invisible Child Test', new CategoryServiceFakeActivityLogger(), CurrentUserTestFactory::get(), 1);
@@ -1154,23 +1153,23 @@ final class CategoryServiceTest extends IntegrationTestCase
 
             $visible = $this->conn->createQueryBuilder()
                 ->select('visible')
-                ->from(Tables::categories())
+                ->from('categories')
                 ->where('id = ' . $newId)
                 ->executeQuery()
                 ->fetchOne();
             // A native PHP bool on Postgres, numeric 1/0 on MySQL.
             self::assertSame(0, (int) (bool) $visible);
 
-            $this->conn->executeStatement('DELETE FROM ' . Tables::categories() . ' WHERE id = ' . $newId);
+            $this->conn->executeStatement('DELETE FROM ' . 'categories' . ' WHERE id = ' . $newId);
         } finally {
-            $this->conn->executeStatement("UPDATE " . Tables::categories() . " SET visible = {$trueLiteral} WHERE id = 1");
+            $this->conn->executeStatement("UPDATE " . 'categories' . " SET visible = {$trueLiteral} WHERE id = 1");
         }
     }
 
     public function test_create_virtual_category_with_inherit_propagates_the_parents_groups_and_users(): void
     {
-        $this->conn->executeStatement("UPDATE " . Tables::categories() . " SET status = 'private' WHERE id = 1");
-        $this->conn->executeStatement('INSERT INTO ' . Tables::userAccess() . ' (user_id, cat_id) VALUES (3, 1)');
+        $this->conn->executeStatement("UPDATE " . 'categories' . " SET status = 'private' WHERE id = 1");
+        $this->conn->executeStatement('INSERT INTO ' . 'user_access' . ' (user_id, cat_id) VALUES (3, 1)');
 
         try {
             $result = $this->service->createVirtualCategory('Inherited Child Test', new CategoryServiceFakeActivityLogger(), CurrentUserTestFactory::get(), 1, ['inherit' => true]);
@@ -1188,9 +1187,9 @@ final class CategoryServiceTest extends IntegrationTestCase
             // been copied.
             self::assertSame([3], $this->repo->findAccessUserIds(CategoryId::from($newId)));
 
-            $this->conn->executeStatement('DELETE FROM ' . Tables::categories() . ' WHERE id = ' . $newId);
+            $this->conn->executeStatement('DELETE FROM ' . 'categories' . ' WHERE id = ' . $newId);
         } finally {
-            $this->conn->executeStatement('DELETE FROM ' . Tables::userAccess() . ' WHERE cat_id = 1');
+            $this->conn->executeStatement('DELETE FROM ' . 'user_access' . ' WHERE cat_id = 1');
         }
     }
 
@@ -1217,7 +1216,7 @@ final class CategoryServiceTest extends IntegrationTestCase
         // reproduced here rather than a plain UPDATE, which the live FK
         // would reject outright.
         $this->disableForeignKeyChecks($this->conn);
-        $this->conn->executeStatement('UPDATE ' . Tables::categories() . ' SET representative_picture_id = 999999 WHERE id = 1');
+        $this->conn->executeStatement('UPDATE ' . 'categories' . ' SET representative_picture_id = 999999 WHERE id = 1');
         $this->enableForeignKeyChecks($this->conn);
 
         try {
@@ -1227,7 +1226,7 @@ final class CategoryServiceTest extends IntegrationTestCase
 
             $repId = $this->conn->createQueryBuilder()
                 ->select('representative_picture_id')
-                ->from(Tables::categories())
+                ->from('categories')
                 ->where('id = 1')
                 ->executeQuery()
                 ->fetchOne();
@@ -1243,7 +1242,7 @@ final class CategoryServiceTest extends IntegrationTestCase
             // bogus id didn't survive the sweep.
             self::assertContains(is_numeric($repId) ? (int) $repId : null, [1, 2, 3]);
         } finally {
-            $this->conn->executeStatement('UPDATE ' . Tables::categories() . ' SET representative_picture_id = 1 WHERE id = 1');
+            $this->conn->executeStatement('UPDATE ' . 'categories' . ' SET representative_picture_id = 1 WHERE id = 1');
         }
     }
 
@@ -1256,7 +1255,7 @@ final class CategoryServiceTest extends IntegrationTestCase
         // defaults to false) both of them, not just whichever one a
         // narrower scalar/array branch would have hit.
         $this->disableForeignKeyChecks($this->conn);
-        $this->conn->executeStatement('UPDATE ' . Tables::categories() . ' SET representative_picture_id = 999999 WHERE id IN (1, 2)');
+        $this->conn->executeStatement('UPDATE ' . 'categories' . ' SET representative_picture_id = 999999 WHERE id IN (1, 2)');
         $this->enableForeignKeyChecks($this->conn);
 
         try {
@@ -1265,14 +1264,14 @@ final class CategoryServiceTest extends IntegrationTestCase
             self::assertNull($result);
 
             $repIds = $this->conn->fetchFirstColumn(
-                'SELECT representative_picture_id FROM ' . Tables::categories() . ' WHERE id IN (1, 2) ORDER BY id'
+                'SELECT representative_picture_id FROM ' . 'categories' . ' WHERE id IN (1, 2) ORDER BY id'
             );
             foreach ($repIds as $repId) {
                 self::assertNotSame(999999, is_numeric($repId) ? (int) $repId : null);
             }
         } finally {
-            $this->conn->executeStatement('UPDATE ' . Tables::categories() . ' SET representative_picture_id = 1 WHERE id = 1');
-            $this->conn->executeStatement('UPDATE ' . Tables::categories() . ' SET representative_picture_id = 4 WHERE id = 2');
+            $this->conn->executeStatement('UPDATE ' . 'categories' . ' SET representative_picture_id = 1 WHERE id = 1');
+            $this->conn->executeStatement('UPDATE ' . 'categories' . ' SET representative_picture_id = 4 WHERE id = 2');
         }
     }
 
@@ -1294,7 +1293,7 @@ final class CategoryServiceTest extends IntegrationTestCase
         // value bound against an integer column would fail outright
         // rather than scoping cleanly to category 2.
         $this->disableForeignKeyChecks($this->conn);
-        $this->conn->executeStatement('UPDATE ' . Tables::categories() . ' SET representative_picture_id = 999999 WHERE id = 2');
+        $this->conn->executeStatement('UPDATE ' . 'categories' . ' SET representative_picture_id = 999999 WHERE id = 2');
         $this->enableForeignKeyChecks($this->conn);
 
         try {
@@ -1304,13 +1303,13 @@ final class CategoryServiceTest extends IntegrationTestCase
 
             $repId = $this->conn->createQueryBuilder()
                 ->select('representative_picture_id')
-                ->from(Tables::categories())
+                ->from('categories')
                 ->where('id = 2')
                 ->executeQuery()
                 ->fetchOne();
             self::assertNotSame(999999, is_numeric($repId) ? (int) $repId : null);
         } finally {
-            $this->conn->executeStatement('UPDATE ' . Tables::categories() . ' SET representative_picture_id = 4 WHERE id = 2');
+            $this->conn->executeStatement('UPDATE ' . 'categories' . ' SET representative_picture_id = 4 WHERE id = 2');
         }
     }
 
@@ -1321,7 +1320,7 @@ final class CategoryServiceTest extends IntegrationTestCase
         // coerces implicitly) are rejected outright by Postgres.
         $falseLiteral = $this->dbDriver === 'pgsql' ? 'false' : '0';
         $trueLiteral = $this->dbDriver === 'pgsql' ? 'true' : '1';
-        $this->conn->executeStatement("UPDATE " . Tables::categories() . " SET visible = {$falseLiteral} WHERE id = 2");
+        $this->conn->executeStatement("UPDATE " . 'categories' . " SET visible = {$falseLiteral} WHERE id = 2");
 
         try {
             // unlockChild=true merges getSubcatIds([1]) (== [1, 2]) into
@@ -1332,14 +1331,14 @@ final class CategoryServiceTest extends IntegrationTestCase
 
             $visible = $this->conn->createQueryBuilder()
                 ->select('visible')
-                ->from(Tables::categories())
+                ->from('categories')
                 ->where('id = 2')
                 ->executeQuery()
                 ->fetchOne();
             // A native PHP bool on Postgres, numeric 1/0 on MySQL.
             self::assertSame(1, (int) (bool) $visible);
         } finally {
-            $this->conn->executeStatement("UPDATE " . Tables::categories() . " SET visible = {$trueLiteral} WHERE id = 2");
+            $this->conn->executeStatement("UPDATE " . 'categories' . " SET visible = {$trueLiteral} WHERE id = 2");
         }
     }
 
@@ -1373,7 +1372,7 @@ final class CategoryServiceTest extends IntegrationTestCase
 
             $idUppercat = $this->conn->createQueryBuilder()
                 ->select('id_uppercat')
-                ->from(Tables::categories())
+                ->from('categories')
                 ->where('id = 2')
                 ->executeQuery()
                 ->fetchOne();
@@ -1381,7 +1380,7 @@ final class CategoryServiceTest extends IntegrationTestCase
             self::assertSame('public', $this->repo->findCategoryStatus(2));
         } finally {
             $this->conn->executeStatement(
-                "UPDATE " . Tables::categories() . " SET id_uppercat = 1, uppercats = '1,2', global_rank = '1.1' WHERE id = 2"
+                "UPDATE " . 'categories' . " SET id_uppercat = 1, uppercats = '1,2', global_rank = '1.1' WHERE id = 2"
             );
         }
     }
@@ -1412,9 +1411,9 @@ final class CategoryServiceTest extends IntegrationTestCase
             self::assertSame('private', $this->repo->findCategoryStatus(2));
         } finally {
             $this->conn->executeStatement(
-                "UPDATE " . Tables::categories() . " SET id_uppercat = 1, uppercats = '1,2', global_rank = '1.1', status = 'public' WHERE id = 2"
+                "UPDATE " . 'categories' . " SET id_uppercat = 1, uppercats = '1,2', global_rank = '1.1', status = 'public' WHERE id = 2"
             );
-            $this->conn->executeStatement('DELETE FROM ' . Tables::categories() . ' WHERE id = ' . $privateParentId);
+            $this->conn->executeStatement('DELETE FROM ' . 'categories' . ' WHERE id = ' . $privateParentId);
         }
     }
 
@@ -1434,7 +1433,7 @@ final class CategoryServiceTest extends IntegrationTestCase
 
             $rank = $this->conn->createQueryBuilder()
                 ->select($this->conn->getDatabasePlatform()->quoteSingleIdentifier('rank'))
-                ->from(Tables::categories())
+                ->from('categories')
                 ->where('id = ' . $newId)
                 ->executeQuery()
                 ->fetchOne();
@@ -1443,7 +1442,7 @@ final class CategoryServiceTest extends IntegrationTestCase
             // after it rather than at the default rank 0.
             self::assertSame(2, is_numeric($rank) ? (int) $rank : null);
 
-            $this->conn->executeStatement('DELETE FROM ' . Tables::categories() . ' WHERE id = ' . $newId);
+            $this->conn->executeStatement('DELETE FROM ' . 'categories' . ' WHERE id = ' . $newId);
         } finally {
             $currentConfig->newcatDefaultPosition = 'first';
         }
@@ -1455,12 +1454,12 @@ final class CategoryServiceTest extends IntegrationTestCase
             $this->service->setRepresentativeImageForCategories([1, 2], 3);
 
             $repIds = $this->conn->fetchFirstColumn(
-                'SELECT representative_picture_id FROM ' . Tables::categories() . ' WHERE id IN (1, 2) ORDER BY id'
+                'SELECT representative_picture_id FROM ' . 'categories' . ' WHERE id IN (1, 2) ORDER BY id'
             );
             self::assertSame([3, 3], array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $repIds));
         } finally {
-            $this->conn->executeStatement('UPDATE ' . Tables::categories() . ' SET representative_picture_id = 1 WHERE id = 1');
-            $this->conn->executeStatement('UPDATE ' . Tables::categories() . ' SET representative_picture_id = 4 WHERE id = 2');
+            $this->conn->executeStatement('UPDATE ' . 'categories' . ' SET representative_picture_id = 1 WHERE id = 1');
+            $this->conn->executeStatement('UPDATE ' . 'categories' . ' SET representative_picture_id = 4 WHERE id = 2');
         }
     }
 

@@ -10,7 +10,6 @@ use Piwigo\Core\StringHelper;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\DbInfo;
-use Piwigo\Db\Tables;
 
 /**
  * Small, disparate admin-UI utility functions with no single natural
@@ -159,11 +158,11 @@ final class AdminUiHelper
     public static function getAdminClientCacheKeys(UrlServiceInterface $urlService, string|array $requested = []): array
     {
         $tables = [
-            'categories' => Tables::categories(),
-            'groups' => Tables::groups(),
-            'images' => Tables::images(),
-            'tags' => Tables::tags(),
-            'users' => Tables::userInfos(),
+            'categories' => 'categories',
+            'groups' => 'groups',
+            'images' => 'images',
+            'tags' => 'tags',
+            'users' => 'user_infos',
         ];
 
         if (! is_array($requested)) {

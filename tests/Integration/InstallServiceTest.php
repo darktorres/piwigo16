@@ -22,7 +22,6 @@ use Piwigo\Core\Kernel;
 use Piwigo\Tests\Support\LangTestFactory;
 use Piwigo\Db\DbConnection;
 use Piwigo\Tests\Support\DbCredentialsTestFactory;
-use Piwigo\Db\Tables;
 use Piwigo\Tests\Support\CurrentUserTestFactory;
 
 /**
@@ -337,14 +336,14 @@ final class InstallServiceTest extends IntegrationTestCase
         $this->currentConfig()->themesDir = $themesDir;
 
         try {
-            $this->conn->executeStatement('DELETE FROM ' . Tables::themes());
+            $this->conn->executeStatement('DELETE FROM ' . 'themes');
 
             InstallService::activateCoreThemes(LangTestFactory::get(), CurrentUserTestFactory::get(), CurrentConfigServiceTestFactory::get(), CurrentConfigTestFactory::get(), CurrentPathsTestFactory::get(), EventDispatcherTestFactory::get());
 
-            self::assertFalse($this->conn->fetchAssociative('SELECT id FROM ' . Tables::themes() . ' WHERE id = ' . $this->conn->quote($themeId)));
-            self::assertSame(0, $this->fetchOneInt($this->conn->fetchOne('SELECT COUNT(*) FROM ' . Tables::themes())));
+            self::assertFalse($this->conn->fetchAssociative('SELECT id FROM ' . 'themes' . ' WHERE id = ' . $this->conn->quote($themeId)));
+            self::assertSame(0, $this->fetchOneInt($this->conn->fetchOne('SELECT COUNT(*) FROM ' . 'themes')));
         } finally {
-            $this->conn->executeStatement('DELETE FROM ' . Tables::themes());
+            $this->conn->executeStatement('DELETE FROM ' . 'themes');
             unlink($themesDir . $themeId . '/themeconf.inc.php');
             rmdir($themesDir . $themeId);
             rmdir($themesDir);
@@ -363,13 +362,13 @@ final class InstallServiceTest extends IntegrationTestCase
         $this->currentConfig()->themesDir = $emptyThemesDir;
 
         try {
-            $this->conn->executeStatement('DELETE FROM ' . Tables::themes());
+            $this->conn->executeStatement('DELETE FROM ' . 'themes');
 
             InstallService::activateCoreThemes(LangTestFactory::get(), CurrentUserTestFactory::get(), CurrentConfigServiceTestFactory::get(), CurrentConfigTestFactory::get(), CurrentPathsTestFactory::get(), EventDispatcherTestFactory::get());
 
-            self::assertSame(0, $this->fetchOneInt($this->conn->fetchOne('SELECT COUNT(*) FROM ' . Tables::themes())));
+            self::assertSame(0, $this->fetchOneInt($this->conn->fetchOne('SELECT COUNT(*) FROM ' . 'themes')));
         } finally {
-            $this->conn->executeStatement('DELETE FROM ' . Tables::themes());
+            $this->conn->executeStatement('DELETE FROM ' . 'themes');
             rmdir($emptyThemesDir);
         }
     }
@@ -380,7 +379,7 @@ final class InstallServiceTest extends IntegrationTestCase
     {
         $this->bootKernelAndConfigService();
 
-        $before = $this->fetchOneInt($this->conn->fetchOne('SELECT COUNT(*) FROM ' . Tables::plugins()));
+        $before = $this->fetchOneInt($this->conn->fetchOne('SELECT COUNT(*) FROM ' . 'plugins'));
 
         // Real production plugins/ directory (only an index.php placeholder
         // in this repo -- confirmed by direct read) -- InstallService's own
@@ -390,7 +389,7 @@ final class InstallServiceTest extends IntegrationTestCase
         // to exercise the same real "no-op by design" behavior.
         InstallService::activateCorePlugins(LangTestFactory::get(), CurrentPathsTestFactory::get(), CurrentUserTestFactory::get(), EventDispatcherTestFactory::get(), CurrentConfigTestFactory::get());
 
-        $after = $this->fetchOneInt($this->conn->fetchOne('SELECT COUNT(*) FROM ' . Tables::plugins()));
+        $after = $this->fetchOneInt($this->conn->fetchOne('SELECT COUNT(*) FROM ' . 'plugins'));
         self::assertSame($before, $after);
         self::assertSame(0, $after);
     }

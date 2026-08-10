@@ -9,7 +9,6 @@ use CURLFile;
 use Piwigo\Cache\CachePools;
 use Doctrine\DBAL\Connection;
 use Piwigo\Db\DbConnection;
-use Piwigo\Db\Tables;
 
 final class WsUploadTest extends ContractTestCase
 {
@@ -414,8 +413,8 @@ final class WsUploadTest extends ContractTestCase
         $this->uploadedImageId = (int) $imageId;
 
         $tagNames = $this->conn->fetchFirstColumn(
-            'SELECT t.name FROM ' . Tables::tags() . ' t
-             INNER JOIN ' . Tables::imageTag() . ' it ON it.tag_id = t.id
+            'SELECT t.name FROM ' . 'tags' . ' t
+             INNER JOIN ' . 'image_tag' . ' it ON it.tag_id = t.id
              WHERE it.image_id = ?',
             [(int) $imageId]
         );
@@ -445,7 +444,7 @@ final class WsUploadTest extends ContractTestCase
         self::assertStringContainsString('category', $result['url']);
 
         $row = $this->conn->fetchAssociative(
-            'SELECT name, author, comment FROM ' . Tables::images() . ' WHERE id = ?',
+            'SELECT name, author, comment FROM ' . 'images' . ' WHERE id = ?',
             [(int) $imageId]
         );
         self::assertIsArray($row);
@@ -454,8 +453,8 @@ final class WsUploadTest extends ContractTestCase
         self::assertSame('addSimple Comment', $row['comment']);
 
         $tagNames = $this->conn->fetchFirstColumn(
-            'SELECT t.name FROM ' . Tables::tags() . ' t
-             INNER JOIN ' . Tables::imageTag() . ' it ON it.tag_id = t.id
+            'SELECT t.name FROM ' . 'tags' . ' t
+             INNER JOIN ' . 'image_tag' . ' it ON it.tag_id = t.id
              WHERE it.image_id = ?',
             [(int) $imageId]
         );
@@ -622,8 +621,8 @@ final class WsUploadTest extends ContractTestCase
         // undoing the override above. Pinning the threshold absurdly high
         // for the test's duration keeps that legitimate feature from firing
         // without disabling or working around it.
-        $originalLoungeActive = $this->conn->fetchOne("SELECT value FROM " . Tables::config() . " WHERE param = 'lounge_active'");
-        $originalLoungeThreshold = $this->conn->fetchOne("SELECT value FROM " . Tables::config() . " WHERE param = 'lounge_activate_threshold'");
+        $originalLoungeActive = $this->conn->fetchOne("SELECT value FROM " . 'config' . " WHERE param = 'lounge_active'");
+        $originalLoungeThreshold = $this->conn->fetchOne("SELECT value FROM " . 'config' . " WHERE param = 'lounge_activate_threshold'");
         $this->upsertConfig('lounge_active', 'false');
         $this->upsertConfig('lounge_activate_threshold', '999999999');
         CachePools::config()->clear();
@@ -659,19 +658,19 @@ final class WsUploadTest extends ContractTestCase
         } finally {
             if (is_string($originalLoungeActive)) {
                 $this->conn->executeStatement(
-                    "UPDATE " . Tables::config() . " SET value = ? WHERE param = 'lounge_active'",
+                    "UPDATE " . 'config' . " SET value = ? WHERE param = 'lounge_active'",
                     [$originalLoungeActive]
                 );
             } else {
-                $this->conn->executeStatement("DELETE FROM " . Tables::config() . " WHERE param = 'lounge_active'");
+                $this->conn->executeStatement("DELETE FROM " . 'config' . " WHERE param = 'lounge_active'");
             }
             if (is_string($originalLoungeThreshold)) {
                 $this->conn->executeStatement(
-                    "UPDATE " . Tables::config() . " SET value = ? WHERE param = 'lounge_activate_threshold'",
+                    "UPDATE " . 'config' . " SET value = ? WHERE param = 'lounge_activate_threshold'",
                     [$originalLoungeThreshold]
                 );
             } else {
-                $this->conn->executeStatement("DELETE FROM " . Tables::config() . " WHERE param = 'lounge_activate_threshold'");
+                $this->conn->executeStatement("DELETE FROM " . 'config' . " WHERE param = 'lounge_activate_threshold'");
             }
             CachePools::config()->clear();
         }
@@ -717,7 +716,7 @@ final class WsUploadTest extends ContractTestCase
             self::assertSame('fail', $response['stat']);
             self::assertSame(401, $response['err']);
         } finally {
-            $this->conn->executeStatement("DELETE FROM " . Tables::config() . " WHERE param = 'enable_formats'");
+            $this->conn->executeStatement("DELETE FROM " . 'config' . " WHERE param = 'enable_formats'");
             CachePools::config()->clear();
         }
     }
@@ -742,7 +741,7 @@ final class WsUploadTest extends ContractTestCase
             self::assertSame('add', $result['add_status']);
 
             $formatId = $this->conn->fetchOne(
-                'SELECT format_id FROM ' . Tables::imageFormat() . ' WHERE image_id = 1 AND ext = ?',
+                'SELECT format_id FROM ' . 'image_format' . ' WHERE image_id = 1 AND ext = ?',
                 ['tif']
             );
             self::assertIsNumeric($formatId);
@@ -757,7 +756,7 @@ final class WsUploadTest extends ContractTestCase
                     'pwg_token' => $this->getPwgToken(),
                 ]);
             }
-            $this->conn->executeStatement("DELETE FROM " . Tables::config() . " WHERE param = 'enable_formats'");
+            $this->conn->executeStatement("DELETE FROM " . 'config' . " WHERE param = 'enable_formats'");
             CachePools::config()->clear();
         }
     }

@@ -21,7 +21,6 @@ use Piwigo\Config\ConfigService;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Tests\Support\LangTestFactory;
 use Piwigo\Db\DbConnection;
-use Piwigo\Db\Tables;
 use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Tests\Support\ImageStdParamsTestFactory;
@@ -101,11 +100,11 @@ final class CalendarMonthlyTest extends IntegrationTestCase
         // Idempotent: safe to re-run before every test method even though
         // the DB itself is only reset/reloaded once per class (see
         // $fixtureReady above).
-        $this->conn->executeStatement("UPDATE " . Tables::images() . " SET date_available = '2024-03-10 00:00:00' WHERE id = 1");
-        $this->conn->executeStatement("UPDATE " . Tables::images() . " SET date_available = '2024-03-15 00:00:00' WHERE id = 2");
-        $this->conn->executeStatement("UPDATE " . Tables::images() . " SET date_available = '2024-07-04 00:00:00' WHERE id = 3");
-        $this->conn->executeStatement("UPDATE " . Tables::images() . " SET date_available = '2025-01-20 00:00:00' WHERE id = 4");
-        $this->conn->executeStatement("UPDATE " . Tables::images() . " SET date_available = '2025-01-25 00:00:00' WHERE id = 5");
+        $this->conn->executeStatement("UPDATE " . 'images' . " SET date_available = '2024-03-10 00:00:00' WHERE id = 1");
+        $this->conn->executeStatement("UPDATE " . 'images' . " SET date_available = '2024-03-15 00:00:00' WHERE id = 2");
+        $this->conn->executeStatement("UPDATE " . 'images' . " SET date_available = '2024-07-04 00:00:00' WHERE id = 3");
+        $this->conn->executeStatement("UPDATE " . 'images' . " SET date_available = '2025-01-20 00:00:00' WHERE id = 4");
+        $this->conn->executeStatement("UPDATE " . 'images' . " SET date_available = '2025-01-25 00:00:00' WHERE id = 5");
 
         $this->urlService = new CalendarMonthlyTestFakeUrlService();
 
@@ -143,7 +142,7 @@ final class CalendarMonthlyTest extends IntegrationTestCase
     private function makeScope(?string $idFilterSql = null): CalendarQueryScope
     {
         return new CalendarQueryScope(
-            new SqlCondition(' FROM ' . Tables::images() . ($idFilterSql === null ? '' : ' WHERE ' . $idFilterSql)),
+            new SqlCondition(' FROM ' . 'images' . ($idFilterSql === null ? '' : ' WHERE ' . $idFilterSql)),
             false,
             new SqlCondition($idFilterSql === null ? '' : 'i.' . $idFilterSql),
         );
@@ -411,7 +410,7 @@ final class CalendarMonthlyTest extends IntegrationTestCase
         // internal path-building logic as a guess.
         $row1 = $this->conn->createQueryBuilder()
             ->select('id', 'file', 'representative_ext', 'path', 'width', 'height', 'rotation')
-            ->from(Tables::images())
+            ->from('images')
             ->where('id = 1')
             ->executeQuery()
             ->fetchAssociative();
@@ -794,7 +793,7 @@ final class CalendarMonthlyTest extends IntegrationTestCase
      */
     public function test_build_month_calendar_shifts_a_sunday_first_day_to_the_last_column(): void
     {
-        $this->conn->executeStatement("UPDATE " . Tables::images() . " SET date_available = '2024-09-15 00:00:00' WHERE id = 1");
+        $this->conn->executeStatement("UPDATE " . 'images' . " SET date_available = '2024-09-15 00:00:00' WHERE id = 1");
 
         try {
             $calendar = new CalendarMonthly(LangTestFactory::get(), new CalendarRepository(EntityManagerFactory::build($this->conn)), $this->urlService, CurrentConfigTestFactory::get(), ImageStdParamsTestFactory::get());
@@ -811,7 +810,7 @@ final class CalendarMonthlyTest extends IntegrationTestCase
             self::assertArrayNotHasKey('DAY', $this->digArray($firstWeek, [0]));
             self::assertSame(1, $this->dig($firstWeek, [6, 'DAY']));
         } finally {
-            $this->conn->executeStatement("UPDATE " . Tables::images() . " SET date_available = '2024-03-10 00:00:00' WHERE id = 1");
+            $this->conn->executeStatement("UPDATE " . 'images' . " SET date_available = '2024-03-10 00:00:00' WHERE id = 1");
         }
     }
 

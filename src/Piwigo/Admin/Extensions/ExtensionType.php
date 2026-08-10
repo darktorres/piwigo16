@@ -8,7 +8,6 @@ use Piwigo\Admin\PluginLoader;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\ActivitySystem;
 use Piwigo\Core\Paths;
-use Piwigo\Db\Tables;
 
 /**
  * The 3 kinds of installable extension, replacing the plugins/themes/
@@ -29,9 +28,9 @@ enum ExtensionType: string
     public function table(): string
     {
         return match ($this) {
-            self::Plugin => Tables::plugins(),
-            self::Theme => Tables::themes(),
-            self::Language => Tables::languages(),
+            self::Plugin => 'plugins',
+            self::Theme => 'themes',
+            self::Language => 'languages',
         };
     }
 

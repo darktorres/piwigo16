@@ -19,7 +19,6 @@ use Doctrine\DBAL\Connection;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\ConfigLoader;
 use Piwigo\Db\DbConnection;
-use Piwigo\Db\Tables;
 use Piwigo\Users\UserListCriteria;
 use Piwigo\Users\UserRepository;
 
@@ -131,7 +130,7 @@ final class UserRepositoryTest extends IntegrationTestCase
 
         self::assertEquals($id, $this->repo->findIdByUsername(Username::from($username)));
 
-        $this->conn->executeStatement('DELETE FROM ' . Tables::users() . ' WHERE id = ' . $id->value);
+        $this->conn->executeStatement('DELETE FROM ' . 'users' . ' WHERE id = ' . $id->value);
     }
 
     public function test_insert_user_infos_then_find_default_user_info_row_round_trips(): void
@@ -150,7 +149,7 @@ final class UserRepositoryTest extends IntegrationTestCase
         self::assertNotNull($row);
         self::assertSame('normal', $row->status);
 
-        $this->conn->executeStatement('DELETE FROM ' . Tables::users() . ' WHERE id = ' . $id->value);
+        $this->conn->executeStatement('DELETE FROM ' . 'users' . ' WHERE id = ' . $id->value);
     }
 
     public function test_insert_user_infos_accepts_real_bool_for_the_tinyint_columns(): void
@@ -191,14 +190,14 @@ final class UserRepositoryTest extends IntegrationTestCase
         self::assertTrue($row->enabledHigh);
         self::assertFalse($row->lastVisitFromHistory);
 
-        $this->conn->executeStatement('DELETE FROM ' . Tables::users() . ' WHERE id = ' . $id->value);
+        $this->conn->executeStatement('DELETE FROM ' . 'users' . ' WHERE id = ' . $id->value);
     }
 
     public function test_insert_user_infos_with_no_ids_is_a_noop(): void
     {
         $countBefore = $this->conn->createQueryBuilder()
             ->select('COUNT(*)')
-            ->from(Tables::userInfos())
+            ->from('user_infos')
             ->executeQuery()
             ->fetchOne();
 
@@ -206,7 +205,7 @@ final class UserRepositoryTest extends IntegrationTestCase
 
         $countAfter = $this->conn->createQueryBuilder()
             ->select('COUNT(*)')
-            ->from(Tables::userInfos())
+            ->from('user_infos')
             ->executeQuery()
             ->fetchOne();
 
@@ -219,7 +218,7 @@ final class UserRepositoryTest extends IntegrationTestCase
 
         $value = $this->conn->createQueryBuilder()
             ->select('preferences')
-            ->from(Tables::userInfos())
+            ->from('user_infos')
             ->where('user_id = 1')
             ->executeQuery()
             ->fetchOne();
@@ -227,7 +226,7 @@ final class UserRepositoryTest extends IntegrationTestCase
         self::assertIsString($value);
         self::assertSame(['theme' => 'dark'], json_decode($value, true));
 
-        $this->conn->executeStatement('UPDATE ' . Tables::userInfos() . " SET preferences = NULL WHERE user_id = 1");
+        $this->conn->executeStatement('UPDATE ' . 'user_infos' . " SET preferences = NULL WHERE user_id = 1");
     }
 
     public function test_save_preferences_is_a_noop_for_a_nonexistent_user(): void
@@ -238,7 +237,7 @@ final class UserRepositoryTest extends IntegrationTestCase
 
         $count = $this->conn->createQueryBuilder()
             ->select('COUNT(*)')
-            ->from(Tables::userInfos())
+            ->from('user_infos')
             ->where('user_id = 999999')
             ->executeQuery()
             ->fetchOne();
@@ -250,15 +249,15 @@ final class UserRepositoryTest extends IntegrationTestCase
     {
         $countBefore = $this->conn->createQueryBuilder()
             ->select('COUNT(*)')
-            ->from(Tables::userInfos())
+            ->from('user_infos')
             ->executeQuery()
             ->fetchOne();
 
-        $this->repo->deleteUsersFromTable(Tables::userInfos(), []);
+        $this->repo->deleteUsersFromTable('user_infos', []);
 
         $countAfter = $this->conn->createQueryBuilder()
             ->select('COUNT(*)')
-            ->from(Tables::userInfos())
+            ->from('user_infos')
             ->executeQuery()
             ->fetchOne();
 
@@ -274,27 +273,27 @@ final class UserRepositoryTest extends IntegrationTestCase
         // image_id has a real FK constraint onto images.id) -- image 2
         // exists in the fixture and isn't one of user 1's own favorited
         // images above.
-        $this->conn->executeStatement('INSERT INTO ' . Tables::favorites() . ' (user_id, image_id) VALUES (1, 2)');
+        $this->conn->executeStatement('INSERT INTO ' . 'favorites' . ' (user_id, image_id) VALUES (1, 2)');
 
         $this->repo->deleteFavoritesForImages(UserId::from(1), []);
 
         $count = $this->conn->createQueryBuilder()
             ->select('COUNT(*)')
-            ->from(Tables::favorites())
+            ->from('favorites')
             ->where('user_id = 1 AND image_id = 2')
             ->executeQuery()
             ->fetchOne();
 
         self::assertSame(1, $count);
 
-        $this->conn->executeStatement('DELETE FROM ' . Tables::favorites() . ' WHERE user_id = 1 AND image_id = 2');
+        $this->conn->executeStatement('DELETE FROM ' . 'favorites' . ' WHERE user_id = 1 AND image_id = 2');
     }
 
     public function test_update_status_for_users_with_no_ids_is_a_noop(): void
     {
         $before = $this->conn->createQueryBuilder()
             ->select('status')
-            ->from(Tables::userInfos())
+            ->from('user_infos')
             ->where('user_id = 1')
             ->executeQuery()
             ->fetchOne();
@@ -303,7 +302,7 @@ final class UserRepositoryTest extends IntegrationTestCase
 
         $after = $this->conn->createQueryBuilder()
             ->select('status')
-            ->from(Tables::userInfos())
+            ->from('user_infos')
             ->where('user_id = 1')
             ->executeQuery()
             ->fetchOne();
@@ -315,7 +314,7 @@ final class UserRepositoryTest extends IntegrationTestCase
     {
         $before = $this->conn->createQueryBuilder()
             ->select('nb_image_page')
-            ->from(Tables::userInfos())
+            ->from('user_infos')
             ->where('user_id = 1')
             ->executeQuery()
             ->fetchOne();
@@ -324,7 +323,7 @@ final class UserRepositoryTest extends IntegrationTestCase
 
         $after = $this->conn->createQueryBuilder()
             ->select('nb_image_page')
-            ->from(Tables::userInfos())
+            ->from('user_infos')
             ->where('user_id = 1')
             ->executeQuery()
             ->fetchOne();
@@ -336,7 +335,7 @@ final class UserRepositoryTest extends IntegrationTestCase
     {
         $before = $this->conn->createQueryBuilder()
             ->select('nb_image_page')
-            ->from(Tables::userInfos())
+            ->from('user_infos')
             ->where('user_id = 1')
             ->executeQuery()
             ->fetchOne();
@@ -345,7 +344,7 @@ final class UserRepositoryTest extends IntegrationTestCase
 
         $after = $this->conn->createQueryBuilder()
             ->select('nb_image_page')
-            ->from(Tables::userInfos())
+            ->from('user_infos')
             ->where('user_id = 1')
             ->executeQuery()
             ->fetchOne();
@@ -371,7 +370,7 @@ final class UserRepositoryTest extends IntegrationTestCase
 
             $row = $this->conn->createQueryBuilder()
                 ->select('nb_image_page', 'expand')
-                ->from(Tables::userInfos())
+                ->from('user_infos')
                 ->where('user_id = :userId')
                 ->setParameter('userId', $id->value)
                 ->executeQuery()
@@ -380,8 +379,8 @@ final class UserRepositoryTest extends IntegrationTestCase
             self::assertSame(27, is_numeric($row['nb_image_page']) ? (int) $row['nb_image_page'] : null);
             self::assertSame(1, is_bool($row['expand']) || is_numeric($row['expand']) ? (int) (bool) $row['expand'] : null);
         } finally {
-            $this->conn->executeStatement('DELETE FROM ' . Tables::userInfos() . ' WHERE user_id = ' . $id->value);
-            $this->conn->executeStatement('DELETE FROM ' . Tables::users() . ' WHERE id = ' . $id->value);
+            $this->conn->executeStatement('DELETE FROM ' . 'user_infos' . ' WHERE user_id = ' . $id->value);
+            $this->conn->executeStatement('DELETE FROM ' . 'users' . ' WHERE id = ' . $id->value);
         }
     }
 
@@ -409,8 +408,8 @@ final class UserRepositoryTest extends IntegrationTestCase
         self::assertArrayHasKey($theme, $counts);
         self::assertSame(1, $counts[$theme]);
 
-        $this->conn->executeStatement('DELETE FROM ' . Tables::userInfos() . ' WHERE user_id = ' . $id->value);
-        $this->conn->executeStatement('DELETE FROM ' . Tables::users() . ' WHERE id = ' . $id->value);
+        $this->conn->executeStatement('DELETE FROM ' . 'user_infos' . ' WHERE user_id = ' . $id->value);
+        $this->conn->executeStatement('DELETE FROM ' . 'users' . ' WHERE id = ' . $id->value);
     }
 
     public function test_find_language_usage_counts_includes_a_freshly_inserted_user(): void
@@ -433,8 +432,8 @@ final class UserRepositoryTest extends IntegrationTestCase
             self::assertArrayHasKey($language, $counts);
             self::assertSame(1, $counts[$language]);
         } finally {
-            $this->conn->executeStatement('DELETE FROM ' . Tables::userInfos() . ' WHERE user_id = ' . $id->value);
-            $this->conn->executeStatement('DELETE FROM ' . Tables::users() . ' WHERE id = ' . $id->value);
+            $this->conn->executeStatement('DELETE FROM ' . 'user_infos' . ' WHERE user_id = ' . $id->value);
+            $this->conn->executeStatement('DELETE FROM ' . 'users' . ' WHERE id = ' . $id->value);
         }
     }
 
@@ -484,15 +483,15 @@ final class UserRepositoryTest extends IntegrationTestCase
         // back deduplicated and chronologically ordered regardless of the
         // rows' own id order.
         try {
-            $this->conn->executeStatement('UPDATE ' . Tables::userInfos() . " SET registration_date = '2024-01-15 10:00:00' WHERE user_id = 1");
-            $this->conn->executeStatement('UPDATE ' . Tables::userInfos() . " SET registration_date = '2027-03-20 10:00:00' WHERE user_id = 2");
+            $this->conn->executeStatement('UPDATE ' . 'user_infos' . " SET registration_date = '2024-01-15 10:00:00' WHERE user_id = 1");
+            $this->conn->executeStatement('UPDATE ' . 'user_infos' . " SET registration_date = '2027-03-20 10:00:00' WHERE user_id = 2");
 
             self::assertSame(
                 ['2024-01', '2026-08', '2027-03'],
                 $this->repo->findDistinctRegistrationYearMonths()
             );
         } finally {
-            $this->conn->executeStatement('UPDATE ' . Tables::userInfos() . " SET registration_date = '2026-08-01 00:00:00' WHERE user_id IN (1, 2)");
+            $this->conn->executeStatement('UPDATE ' . 'user_infos' . " SET registration_date = '2026-08-01 00:00:00' WHERE user_id IN (1, 2)");
         }
     }
 
@@ -553,13 +552,13 @@ final class UserRepositoryTest extends IntegrationTestCase
 
         $count = $this->conn->createQueryBuilder()
             ->select('COUNT(*)')
-            ->from(Tables::favorites())
+            ->from('favorites')
             ->where('user_id = 3 AND image_id = 2')
             ->executeQuery()
             ->fetchOne();
         self::assertSame(1, $count);
 
-        $this->conn->executeStatement('DELETE FROM ' . Tables::favorites() . ' WHERE user_id = 3 AND image_id = 2');
+        $this->conn->executeStatement('DELETE FROM ' . 'favorites' . ' WHERE user_id = 3 AND image_id = 2');
     }
 
     public function test_find_registration_date_by_id_returns_null_for_a_nonexistent_user(): void
@@ -804,50 +803,50 @@ final class UserRepositoryTest extends IntegrationTestCase
     public function test_delete_user_removes_every_row_across_every_related_table(): void
     {
         $this->conn->executeStatement(
-            'INSERT INTO ' . Tables::users() . " (username, password, mail_address) VALUES ('delete_user_test', NULL, NULL)"
+            'INSERT INTO ' . 'users' . " (username, password, mail_address) VALUES ('delete_user_test', NULL, NULL)"
         );
         $newUserId = (int) $this->conn->lastInsertId();
         $userId = UserId::from($newUserId);
 
         $this->conn->executeStatement(
-            'INSERT INTO ' . Tables::userInfos() . ' (user_id, status, language, theme) VALUES (?, ?, ?, ?)',
+            'INSERT INTO ' . 'user_infos' . ' (user_id, status, language, theme) VALUES (?, ?, ?, ?)',
             [$newUserId, 'normal', 'en_UK', 'default']
         );
         $this->conn->executeStatement(
-            'INSERT INTO ' . Tables::userAccess() . ' (user_id, cat_id) VALUES (?, 1)',
+            'INSERT INTO ' . 'user_access' . ' (user_id, cat_id) VALUES (?, 1)',
             [$newUserId]
         );
         $this->conn->executeStatement(
-            'INSERT INTO ' . Tables::userGroup() . ' (user_id, group_id) VALUES (?, 1)',
+            'INSERT INTO ' . 'user_group' . ' (user_id, group_id) VALUES (?, 1)',
             [$newUserId]
         );
         $this->conn->executeStatement(
-            'INSERT INTO ' . Tables::favorites() . ' (user_id, image_id) VALUES (?, 1)',
+            'INSERT INTO ' . 'favorites' . ' (user_id, image_id) VALUES (?, 1)',
             [$newUserId]
         );
         $this->conn->executeStatement(
-            'INSERT INTO ' . Tables::userMailNotification() . ' (user_id, check_key, enabled) VALUES (?, ?, ?)',
+            'INSERT INTO ' . 'user_mail_notification' . ' (user_id, check_key, enabled) VALUES (?, ?, ?)',
             [$newUserId, 'delusrtestkey01', 0]
         );
         $this->conn->executeStatement(
-            'INSERT INTO ' . Tables::userFeed() . " (id, user_id) VALUES ('delusrtestfeed01', ?)",
+            'INSERT INTO ' . 'user_feed' . " (id, user_id) VALUES ('delusrtestfeed01', ?)",
             [$newUserId]
         );
         $this->conn->executeStatement(
-            'INSERT INTO ' . Tables::caddie() . ' (user_id, element_id) VALUES (?, 1)',
+            'INSERT INTO ' . 'caddie' . ' (user_id, element_id) VALUES (?, 1)',
             [$newUserId]
         );
 
         $this->repo->deleteUser($userId);
 
-        self::assertSame(0, $this->countRows(Tables::users(), 'id', $newUserId));
-        self::assertSame(0, $this->countRows(Tables::userInfos(), 'user_id', $newUserId));
-        self::assertSame(0, $this->countRows(Tables::userAccess(), 'user_id', $newUserId));
-        self::assertSame(0, $this->countRows(Tables::userGroup(), 'user_id', $newUserId));
-        self::assertSame(0, $this->countRows(Tables::favorites(), 'user_id', $newUserId));
-        self::assertSame(0, $this->countRows(Tables::userMailNotification(), 'user_id', $newUserId));
-        self::assertSame(0, $this->countRows(Tables::userFeed(), 'user_id', $newUserId));
-        self::assertSame(0, $this->countRows(Tables::caddie(), 'user_id', $newUserId));
+        self::assertSame(0, $this->countRows('users', 'id', $newUserId));
+        self::assertSame(0, $this->countRows('user_infos', 'user_id', $newUserId));
+        self::assertSame(0, $this->countRows('user_access', 'user_id', $newUserId));
+        self::assertSame(0, $this->countRows('user_group', 'user_id', $newUserId));
+        self::assertSame(0, $this->countRows('favorites', 'user_id', $newUserId));
+        self::assertSame(0, $this->countRows('user_mail_notification', 'user_id', $newUserId));
+        self::assertSame(0, $this->countRows('user_feed', 'user_id', $newUserId));
+        self::assertSame(0, $this->countRows('caddie', 'user_id', $newUserId));
     }
 
     private function countRows(string $table, string $column, int $userId): int

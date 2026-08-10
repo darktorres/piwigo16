@@ -24,7 +24,6 @@ use Piwigo\Core\Kernel;
 use Piwigo\Tests\Support\PageStateTestFactory;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
-use Piwigo\Db\Tables;
 use Piwigo\Lang\Translator;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Tests\Support\EventDispatcherTestFactory;
@@ -105,7 +104,7 @@ final class CheckIntegrityTest extends IntegrationTestCase
         Kernel::boot();
         CurrentConfigServiceTestFactory::get()->set(new ConfigService($this->buildConfigRepository(), new EventDispatcher(), CurrentConfigTestFactory::get()));
 
-        DbConnection::build()->executeStatement('DELETE FROM ' . Tables::integrityIgnoredAnomalies());
+        DbConnection::build()->executeStatement('DELETE FROM ' . 'integrity_ignored_anomalies');
 
         self::$queuedAnomalies = [];
         EventDispatcherTestFactory::get()->addTypedHandler(ListCheckIntegrity::class, [self::class, 'pushQueuedAnomalies']);
@@ -120,7 +119,7 @@ final class CheckIntegrityTest extends IntegrationTestCase
     {
         EventDispatcherTestFactory::get()->removeEventHandler(ListCheckIntegrity::class, [self::class, 'pushQueuedAnomalies']);
         unset($_POST['c13y_submit_correction'], $_POST['c13y_submit_ignore'], $_POST['c13y_selection']);
-        DbConnection::build()->executeStatement('DELETE FROM ' . Tables::integrityIgnoredAnomalies());
+        DbConnection::build()->executeStatement('DELETE FROM ' . 'integrity_ignored_anomalies');
         CurrentTemplate::current()->reset();
         Kernel::reset();
         parent::tearDown();
@@ -228,7 +227,7 @@ final class CheckIntegrityTest extends IntegrationTestCase
         self::assertSame([$id], $c13y->build_ignore_list);
 
         $rows = DbConnection::build()->fetchAllAssociative(
-            'SELECT anomaly_id, piwigo_version FROM ' . Tables::integrityIgnoredAnomalies()
+            'SELECT anomaly_id, piwigo_version FROM ' . 'integrity_ignored_anomalies'
         );
         self::assertCount(1, $rows);
         self::assertSame($id, $rows[0]['anomaly_id']);

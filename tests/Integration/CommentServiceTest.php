@@ -29,7 +29,6 @@ namespace Piwigo\Tests\Integration {
     use Piwigo\Core\MailerInterface;
     use Piwigo\Core\RedirectServiceInterface;
     use Piwigo\Db\DbConnection;
-    use Piwigo\Db\Tables;
     use Piwigo\Event\User\UserCommentCheck;
     use Piwigo\Mail\MailService;
     use Piwigo\Tests\Support\CurrentUserTestFactory;
@@ -1095,7 +1094,7 @@ namespace Piwigo\Tests\Integration {
 
                 self::assertSame($baseline + 1, $afterInsert, 'only the validated comment should count');
             } finally {
-                $this->conn->executeStatement('DELETE FROM ' . Tables::comments() . ' WHERE id IN (?, ?)', [$validatedId->value, $unvalidatedId->value]);
+                $this->conn->executeStatement('DELETE FROM ' . 'comments' . ' WHERE id IN (?, ?)', [$validatedId->value, $unvalidatedId->value]);
             }
         }
 
@@ -1197,7 +1196,7 @@ namespace Piwigo\Tests\Integration {
          */
         private function insertAnonymousComment(int $imageId = 1): int
         {
-            $this->conn->insert(Tables::comments(), [
+            $this->conn->insert('comments', [
                 'image_id' => $imageId,
                 'date' => '2026-08-01 00:00:00',
                 'author' => 'anonymous',
@@ -1246,7 +1245,7 @@ namespace Piwigo\Tests\Integration {
         {
             $value = $this->conn->createQueryBuilder()
                 ->select($column)
-                ->from(Tables::comments())
+                ->from('comments')
                 ->where('id = :id')
                 ->setParameter('id', $commentId)
                 ->executeQuery()
@@ -1264,7 +1263,7 @@ namespace Piwigo\Tests\Integration {
         {
             $value = $this->conn->createQueryBuilder()
                 ->select('validated')
-                ->from(Tables::comments())
+                ->from('comments')
                 ->where('id = :id')
                 ->setParameter('id', $commentId)
                 ->executeQuery()

@@ -8,7 +8,6 @@ use Override;
 use ReflectionProperty;
 use Doctrine\DBAL\Connection;
 use Piwigo\Db\DbConnection;
-use Piwigo\Db\Tables;
 use Piwigo\Image\DerivativeParams;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Image\SizingParams;
@@ -76,8 +75,8 @@ final class ImageStdParamsTest extends IntegrationTestCase
 
         $this->conn = DbConnection::build();
 
-        $this->originalSettingsRows = $this->conn->fetchAllAssociative('SELECT * FROM ' . Tables::derivativeSettings());
-        $this->originalSizeRows = $this->conn->fetchAllAssociative('SELECT * FROM ' . Tables::derivativeSize());
+        $this->originalSettingsRows = $this->conn->fetchAllAssociative('SELECT * FROM ' . 'derivative_settings');
+        $this->originalSizeRows = $this->conn->fetchAllAssociative('SELECT * FROM ' . 'derivative_size');
 
         $this->imageStdParams = new ImageStdParams();
     }
@@ -85,14 +84,14 @@ final class ImageStdParamsTest extends IntegrationTestCase
     #[Override]
     protected function tearDown(): void
     {
-        $this->conn->executeStatement('DELETE FROM ' . Tables::derivativeSettings());
+        $this->conn->executeStatement('DELETE FROM ' . 'derivative_settings');
         foreach ($this->originalSettingsRows as $row) {
-            $this->conn->insert(Tables::derivativeSettings(), $row);
+            $this->conn->insert('derivative_settings', $row);
         }
 
-        $this->conn->executeStatement('DELETE FROM ' . Tables::derivativeSize());
+        $this->conn->executeStatement('DELETE FROM ' . 'derivative_size');
         foreach ($this->originalSizeRows as $row) {
-            $this->conn->insert(Tables::derivativeSize(), $row);
+            $this->conn->insert('derivative_size', $row);
         }
 
         parent::tearDown();
@@ -100,8 +99,8 @@ final class ImageStdParamsTest extends IntegrationTestCase
 
     public function test_load_from_db_falls_back_to_enabled_defaults_and_a_fresh_watermark_when_no_rows_exist(): void
     {
-        $this->conn->executeStatement('DELETE FROM ' . Tables::derivativeSettings());
-        $this->conn->executeStatement('DELETE FROM ' . Tables::derivativeSize());
+        $this->conn->executeStatement('DELETE FROM ' . 'derivative_settings');
+        $this->conn->executeStatement('DELETE FROM ' . 'derivative_size');
 
         $this->imageStdParams->load_from_db();
 
@@ -124,16 +123,16 @@ final class ImageStdParamsTest extends IntegrationTestCase
         self::assertSame($allTypeMap['xxlarge'], $allTypeMap['3xlarge']);
         self::assertSame($allTypeMap['xxlarge'], $allTypeMap['4xlarge']);
 
-        $settingsRowCount = $this->conn->fetchOne('SELECT COUNT(*) FROM ' . Tables::derivativeSettings());
+        $settingsRowCount = $this->conn->fetchOne('SELECT COUNT(*) FROM ' . 'derivative_settings');
         self::assertSame(1, is_numeric($settingsRowCount) ? (int) $settingsRowCount : -1);
-        $sizeRowCount = $this->conn->fetchOne('SELECT COUNT(*) FROM ' . Tables::derivativeSize());
+        $sizeRowCount = $this->conn->fetchOne('SELECT COUNT(*) FROM ' . 'derivative_size');
         self::assertSame(11, is_numeric($sizeRowCount) ? (int) $sizeRowCount : -1);
     }
 
     public function test_load_from_db_reads_a_real_settings_row_and_filters_malformed_custom_json_entries(): void
     {
-        $this->conn->executeStatement('DELETE FROM ' . Tables::derivativeSettings());
-        $this->conn->insert(Tables::derivativeSettings(), [
+        $this->conn->executeStatement('DELETE FROM ' . 'derivative_settings');
+        $this->conn->insert('derivative_settings', [
             'id' => 1,
             'default_quality' => 90,
             // Deliberately no 'file' key inside watermark_json -- exercises
@@ -151,9 +150,9 @@ final class ImageStdParamsTest extends IntegrationTestCase
             ]),
         ]);
 
-        $this->conn->executeStatement('DELETE FROM ' . Tables::derivativeSize());
+        $this->conn->executeStatement('DELETE FROM ' . 'derivative_size');
         $thumb = new DerivativeParams(SizingParams::classic(100, 100));
-        $this->conn->insert(Tables::derivativeSize(), [
+        $this->conn->insert('derivative_size', [
             'name' => 'thumb',
             'enabled' => 1,
             'max_width' => 100,
@@ -168,7 +167,7 @@ final class ImageStdParamsTest extends IntegrationTestCase
         // rebuild defaults" branch (covered by the previous test) isn't
         // exercised again here -- this test stays focused on settings/size
         // row parsing above.
-        $this->conn->insert(Tables::derivativeSize(), [
+        $this->conn->insert('derivative_size', [
             'name' => '3xlarge',
             'enabled' => 0,
             'max_width' => 2232,
@@ -247,7 +246,7 @@ final class ImageStdParamsTest extends IntegrationTestCase
         }
 
         $savedCustomJson = $this->conn->fetchOne(
-            'SELECT custom_json FROM ' . Tables::derivativeSettings() . ' WHERE id = 1'
+            'SELECT custom_json FROM ' . 'derivative_settings' . ' WHERE id = 1'
         );
         self::assertIsString($savedCustomJson);
         $decoded = json_decode($savedCustomJson, true);
@@ -281,7 +280,7 @@ final class ImageStdParamsTest extends IntegrationTestCase
         // faithfully from the original blob-based behavior) would
         // otherwise mask a real deletion bug by refilling the table right
         // back up before this test could observe the empty state.
-        $sizeRowCountAfterClear = $this->conn->fetchOne('SELECT COUNT(*) FROM ' . Tables::derivativeSize() . ' WHERE enabled = 0');
+        $sizeRowCountAfterClear = $this->conn->fetchOne('SELECT COUNT(*) FROM ' . 'derivative_size' . ' WHERE enabled = 0');
         self::assertSame(0, is_numeric($sizeRowCountAfterClear) ? (int) $sizeRowCountAfterClear : -1, 'set_and_save_disabled([]) must delete every disabled row, not leave stale ones behind.');
 
         // A fresh instance -- reload() must derive everything from the DB
@@ -325,7 +324,7 @@ final class ImageStdParamsTest extends IntegrationTestCase
         $this->imageStdParams->set_and_save_disabled([]);
 
         $rows = $this->conn->fetchAllAssociative(
-            'SELECT enabled FROM ' . Tables::derivativeSize() . " WHERE name = '3xlarge'"
+            'SELECT enabled FROM ' . 'derivative_size' . " WHERE name = '3xlarge'"
         );
         self::assertCount(1, $rows, '3xlarge must have exactly one row after moving from disabled to enabled, not two.');
         $enabledValue = $rows[0]['enabled'];
@@ -338,8 +337,8 @@ final class ImageStdParamsTest extends IntegrationTestCase
         // watermarkFromJson()'s own guard must reject anything that isn't a
         // genuine 2-element numeric array and leave that default intact,
         // rather than coercing a malformed value into a bogus min_size.
-        $this->conn->executeStatement('DELETE FROM ' . Tables::derivativeSettings());
-        $this->conn->insert(Tables::derivativeSettings(), [
+        $this->conn->executeStatement('DELETE FROM ' . 'derivative_settings');
+        $this->conn->insert('derivative_settings', [
             'id' => 1,
             'default_quality' => 95,
             // A 2-character string: is_array() is false, but (via PHP's
@@ -357,8 +356,8 @@ final class ImageStdParamsTest extends IntegrationTestCase
         // A genuine 2-element array where the first element is numeric but
         // the second isn't -- exercises the trailing is_numeric($minSize[1])
         // conjunct specifically (is_array()/isset() both pass here).
-        $this->conn->executeStatement('DELETE FROM ' . Tables::derivativeSettings());
-        $this->conn->insert(Tables::derivativeSettings(), [
+        $this->conn->executeStatement('DELETE FROM ' . 'derivative_settings');
+        $this->conn->insert('derivative_settings', [
             'id' => 1,
             'default_quality' => 95,
             'watermark_json' => json_encode(['min_size' => [300, 'abc']]),
@@ -378,8 +377,8 @@ final class ImageStdParamsTest extends IntegrationTestCase
         // or externally-written row (Doctrine's `json` column type only
         // guarantees valid JSON, not that every value already has the
         // right PHP type) can contain numeric strings here.
-        $this->conn->executeStatement('DELETE FROM ' . Tables::derivativeSettings());
-        $this->conn->insert(Tables::derivativeSettings(), [
+        $this->conn->executeStatement('DELETE FROM ' . 'derivative_settings');
+        $this->conn->insert('derivative_settings', [
             'id' => 1,
             'default_quality' => 95,
             'watermark_json' => json_encode([
@@ -406,8 +405,8 @@ final class ImageStdParamsTest extends IntegrationTestCase
         // sizesFromEntities() must require BOTH minWidth and minHeight
         // non-null, not treat "either one set" as enough to build a
         // malformed 1-real/1-null pair.
-        $this->conn->executeStatement('DELETE FROM ' . Tables::derivativeSize());
-        $this->conn->insert(Tables::derivativeSize(), [
+        $this->conn->executeStatement('DELETE FROM ' . 'derivative_size');
+        $this->conn->insert('derivative_size', [
             'name' => 'thumb',
             'enabled' => 1,
             'max_width' => 200,
@@ -418,7 +417,7 @@ final class ImageStdParamsTest extends IntegrationTestCase
             'sharpen' => '0.0000',
             'last_mod_time' => 0,
         ]);
-        $this->conn->insert(Tables::derivativeSize(), [
+        $this->conn->insert('derivative_size', [
             'name' => '3xlarge',
             'enabled' => 0,
             'max_width' => 2232,
@@ -448,8 +447,8 @@ final class ImageStdParamsTest extends IntegrationTestCase
         // schema has no CHECK constraint to prevent -- must still surface
         // via the canonical loop's own fallback rather than being silently
         // dropped.
-        $this->conn->executeStatement('DELETE FROM ' . Tables::derivativeSize());
-        $this->conn->insert(Tables::derivativeSize(), [
+        $this->conn->executeStatement('DELETE FROM ' . 'derivative_size');
+        $this->conn->insert('derivative_size', [
             'name' => 'medium',
             'enabled' => 1,
             'max_width' => 792,
@@ -460,7 +459,7 @@ final class ImageStdParamsTest extends IntegrationTestCase
             'sharpen' => '0.0000',
             'last_mod_time' => 0,
         ]);
-        $this->conn->insert(Tables::derivativeSize(), [
+        $this->conn->insert('derivative_size', [
             'name' => 'xsmall',
             'enabled' => 1,
             'max_width' => 432,
@@ -471,7 +470,7 @@ final class ImageStdParamsTest extends IntegrationTestCase
             'sharpen' => '0.0000',
             'last_mod_time' => 0,
         ]);
-        $this->conn->insert(Tables::derivativeSize(), [
+        $this->conn->insert('derivative_size', [
             'name' => 'bogus_type',
             'enabled' => 1,
             'max_width' => 10,
@@ -482,7 +481,7 @@ final class ImageStdParamsTest extends IntegrationTestCase
             'sharpen' => '0.0000',
             'last_mod_time' => 0,
         ]);
-        $this->conn->insert(Tables::derivativeSize(), [
+        $this->conn->insert('derivative_size', [
             'name' => '3xlarge',
             'enabled' => 0,
             'max_width' => 2232,
@@ -596,8 +595,8 @@ final class ImageStdParamsTest extends IntegrationTestCase
         // DerivativeSizeEntity's own docblock) -- planting one directly is
         // the only way to observe whether that extra, out-of-bounds
         // iteration would wrongly treat it as a valid fallback source.
-        $this->conn->executeStatement('DELETE FROM ' . Tables::derivativeSize());
-        $this->conn->insert(Tables::derivativeSize(), [
+        $this->conn->executeStatement('DELETE FROM ' . 'derivative_size');
+        $this->conn->insert('derivative_size', [
             'name' => '',
             'enabled' => 1,
             'max_width' => 999,
@@ -608,7 +607,7 @@ final class ImageStdParamsTest extends IntegrationTestCase
             'sharpen' => '0.0000',
             'last_mod_time' => 0,
         ]);
-        $this->conn->insert(Tables::derivativeSize(), [
+        $this->conn->insert('derivative_size', [
             'name' => '3xlarge',
             'enabled' => 0,
             'max_width' => 2232,

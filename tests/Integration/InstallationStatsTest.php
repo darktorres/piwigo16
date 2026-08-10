@@ -6,7 +6,6 @@ use Piwigo\Admin\InstallationStats;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Paths;
 use Piwigo\Db\DbConnection;
-use Piwigo\Db\Tables;
 
 function installationStatsDbPrefix(): string
 {
@@ -64,12 +63,12 @@ test('getGeneralStatistics reflects a real, freshly-inserted category and tag as
     $conn = DbConnection::build();
     $conn->executeStatement(sprintf(
         "INSERT INTO %s (name) VALUES ('Installation Stats Test Album')",
-        Tables::categories()
+        'categories'
     ));
     $categoryId = (int) $conn->lastInsertId();
     $conn->executeStatement(sprintf(
         "INSERT INTO %s (name, url_name) VALUES ('installation-stats-test-tag', 'installation-stats-test-tag')",
-        Tables::tags()
+        'tags'
     ));
     $tagId = (int) $conn->lastInsertId();
 
@@ -79,8 +78,8 @@ test('getGeneralStatistics reflects a real, freshly-inserted category and tag as
         expect($after->nbCategories)->toBe($before->nbCategories + 1);
         expect($after->nbTags)->toBe($before->nbTags + 1);
     } finally {
-        $conn->executeStatement('DELETE FROM ' . Tables::tags() . ' WHERE id = ' . $tagId);
-        $conn->executeStatement('DELETE FROM ' . Tables::categories() . ' WHERE id = ' . $categoryId);
+        $conn->executeStatement('DELETE FROM ' . 'tags' . ' WHERE id = ' . $tagId);
+        $conn->executeStatement('DELETE FROM ' . 'categories' . ' WHERE id = ' . $categoryId);
     }
 });
 
@@ -92,7 +91,7 @@ test('getGeneralStatistics sums image filesize plus format filesize into disk_us
     $conn->executeStatement(sprintf(
         "INSERT INTO %s (name, path, filesize, representative_ext, added_by, date_available)
          VALUES ('Installation Stats Test Photo', '/tmp/installation-stats-test.jpg', 12345, NULL, 1, NOW())",
-        Tables::images()
+        'images'
     ));
     $imageId = (int) $conn->lastInsertId();
     $conn->executeStatement(sprintf(
@@ -110,23 +109,23 @@ test('getGeneralStatistics sums image filesize plus format filesize into disk_us
         expect($after->diskUsage)->toBe($before->diskUsage + 12345 + 6789);
     } finally {
         $conn->executeStatement(sprintf('DELETE FROM %simage_format WHERE image_id = %d', $prefix, $imageId));
-        $conn->executeStatement('DELETE FROM ' . Tables::images() . ' WHERE id = ' . $imageId);
+        $conn->executeStatement('DELETE FROM ' . 'images' . ' WHERE id = ' . $imageId);
     }
 });
 
 test('getInstallationDate returns user 2\'s own registration_date when it is a real, post-2001 date', function (): void {
     $conn = DbConnection::build();
-    $original = $conn->fetchOne('SELECT registration_date FROM ' . Tables::userInfos() . ' WHERE user_id = 2');
+    $original = $conn->fetchOne('SELECT registration_date FROM ' . 'user_infos' . ' WHERE user_id = 2');
     expect($original)->not->toBeFalse();
 
     try {
-        $conn->executeStatement("UPDATE " . Tables::userInfos() . " SET registration_date = '2020-05-15 10:00:00' WHERE user_id = 2");
+        $conn->executeStatement("UPDATE " . 'user_infos' . " SET registration_date = '2020-05-15 10:00:00' WHERE user_id = 2");
 
         expect(installation_stats_test_make()->getInstallationDate())->toBe('2020-05-15 10:00:00');
     } finally {
         $conn->executeStatement(sprintf(
             "UPDATE %s SET registration_date = %s WHERE user_id = 2",
-            Tables::userInfos(),
+            'user_infos',
             $conn->quote(is_string($original) ? $original : '2020-01-01 00:00:00')
         ));
     }
@@ -135,13 +134,13 @@ test('getInstallationDate returns user 2\'s own registration_date when it is a r
 test('getInstallationDate falls back to the MIN registration_date across all users when user 2\'s own date predates piwigo\'s origin', function (): void {
     $conn = DbConnection::build();
     $prefix = installationStatsDbPrefix();
-    $originalRows = $conn->fetchAllAssociative('SELECT user_id, registration_date FROM ' . Tables::userInfos());
+    $originalRows = $conn->fetchAllAssociative('SELECT user_id, registration_date FROM ' . 'user_infos');
 
     try {
         // Push every real user's registration_date before piwigo's own
         // 2001-09-01 origin, then insert one fresh, valid user whose
         // registration_date should become the real MIN() fallback.
-        $conn->executeStatement("UPDATE " . Tables::userInfos() . " SET registration_date = '1999-01-01 00:00:00'");
+        $conn->executeStatement("UPDATE " . 'user_infos' . " SET registration_date = '1999-01-01 00:00:00'");
         $conn->executeStatement(sprintf(
             "INSERT INTO %susers (username, password, mail_address) VALUES ('installation-stats-fallback-user', NULL, NULL)",
             $prefix
@@ -149,13 +148,13 @@ test('getInstallationDate falls back to the MIN registration_date across all use
         $newUserId = (int) $conn->lastInsertId();
         $conn->executeStatement(sprintf(
             "INSERT INTO %s (user_id, status, registration_date) VALUES (%d, 'normal', '2023-03-10 08:00:00')",
-            Tables::userInfos(),
+            'user_infos',
             $newUserId
         ));
 
         expect(installation_stats_test_make()->getInstallationDate())->toBe('2023-03-10 08:00:00');
 
-        $conn->executeStatement(sprintf('DELETE FROM %s WHERE user_id = %d', Tables::userInfos(), $newUserId));
+        $conn->executeStatement(sprintf('DELETE FROM %s WHERE user_id = %d', 'user_infos', $newUserId));
         $conn->executeStatement(sprintf('DELETE FROM %susers WHERE id = %d', $prefix, $newUserId));
     } finally {
         foreach ($originalRows as $row) {
@@ -165,7 +164,7 @@ test('getInstallationDate falls back to the MIN registration_date across all use
             }
             $conn->executeStatement(sprintf(
                 'UPDATE %s SET registration_date = %s WHERE user_id = %d',
-                Tables::userInfos(),
+                'user_infos',
                 $conn->quote(is_string($row['registration_date']) ? $row['registration_date'] : '2020-01-01 00:00:00'),
                 (int) $rowUserId
             ));
@@ -175,12 +174,12 @@ test('getInstallationDate falls back to the MIN registration_date across all use
 
 test('getInstallationDate falls back to the earliest image\'s date_available when no user has a valid registration_date', function (): void {
     $conn = DbConnection::build();
-    $originalRows = $conn->fetchAllAssociative('SELECT user_id, registration_date FROM ' . Tables::userInfos());
+    $originalRows = $conn->fetchAllAssociative('SELECT user_id, registration_date FROM ' . 'user_infos');
 
     try {
-        $conn->executeStatement("UPDATE " . Tables::userInfos() . " SET registration_date = '1999-01-01 00:00:00'");
+        $conn->executeStatement("UPDATE " . 'user_infos' . " SET registration_date = '1999-01-01 00:00:00'");
 
-        $earliestDateAvailable = $conn->fetchOne('SELECT date_available FROM ' . Tables::images() . ' ORDER BY id ASC LIMIT 1');
+        $earliestDateAvailable = $conn->fetchOne('SELECT date_available FROM ' . 'images' . ' ORDER BY id ASC LIMIT 1');
 
         if ($earliestDateAvailable === false) {
             // No fixture photos at all -- both DB-backed candidates are
@@ -197,7 +196,7 @@ test('getInstallationDate falls back to the earliest image\'s date_available whe
             }
             $conn->executeStatement(sprintf(
                 'UPDATE %s SET registration_date = %s WHERE user_id = %d',
-                Tables::userInfos(),
+                'user_infos',
                 $conn->quote(is_string($row['registration_date']) ? $row['registration_date'] : '2020-01-01 00:00:00'),
                 (int) $rowUserId
             ));

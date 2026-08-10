@@ -8,7 +8,6 @@ use Override;
 use Piwigo\Cache\CachePools;
 use Doctrine\DBAL\Connection;
 use Piwigo\Db\DbConnection;
-use Piwigo\Db\Tables;
 
 final class WsCategoriesTest extends ContractTestCase
 {
@@ -31,18 +30,18 @@ final class WsCategoriesTest extends ContractTestCase
     protected function tearDown(): void
     {
         foreach ($this->imageIdsToDelete as $imageId) {
-            $this->conn->executeStatement('DELETE FROM ' . Tables::imageCategory() . ' WHERE image_id = ?', [$imageId]);
-            $this->conn->executeStatement('DELETE FROM ' . Tables::images() . ' WHERE id = ?', [$imageId]);
+            $this->conn->executeStatement('DELETE FROM ' . 'image_category' . ' WHERE image_id = ?', [$imageId]);
+            $this->conn->executeStatement('DELETE FROM ' . 'images' . ' WHERE id = ?', [$imageId]);
         }
         foreach (array_reverse($this->categoryIdsToDelete) as $categoryId) {
-            $this->conn->executeStatement('DELETE FROM ' . Tables::imageCategory() . ' WHERE category_id = ?', [$categoryId]);
-            $this->conn->executeStatement('DELETE FROM ' . Tables::categories() . ' WHERE id = ?', [$categoryId]);
+            $this->conn->executeStatement('DELETE FROM ' . 'image_category' . ' WHERE category_id = ?', [$categoryId]);
+            $this->conn->executeStatement('DELETE FROM ' . 'categories' . ' WHERE id = ?', [$categoryId]);
         }
         // A test may have overridden category 1's image_order via raw SQL --
         // restore it so later tests (in this file or any other Contract
         // test file sharing the same per-process fixture) see the fixture's
         // original NULL.
-        $this->conn->executeStatement('UPDATE ' . Tables::categories() . ' SET image_order = NULL WHERE id = 1');
+        $this->conn->executeStatement('UPDATE ' . 'categories' . ' SET image_order = NULL WHERE id = 1');
 
         parent::tearDown();
     }
@@ -89,7 +88,7 @@ final class WsCategoriesTest extends ContractTestCase
         // CategoriesCache's "feature 1053" zero-image exclusion) even
         // though the image is really associated.
         $this->conn->executeStatement(
-            'INSERT INTO ' . Tables::images() . ' (file, path, md5sum, level, date_available) VALUES (?, ?, ?, ?, ?)',
+            'INSERT INTO ' . 'images' . ' (file, path, md5sum, level, date_available) VALUES (?, ?, ?, ?, ?)',
             [$filename, 'upload/2026/08/01/' . $filename, md5($filename), $level, '2026-08-01 00:00:00']
         );
         $id = (int) $this->conn->lastInsertId();
@@ -275,7 +274,7 @@ final class WsCategoriesTest extends ContractTestCase
     public function test_getImages_single_cat_id_uses_its_own_image_order(): void
     {
         $this->conn->executeStatement(
-            'UPDATE ' . Tables::categories() . ' SET image_order = ? WHERE id = 1',
+            'UPDATE ' . 'categories' . ' SET image_order = ? WHERE id = 1',
             ['file DESC']
         );
 
@@ -548,7 +547,7 @@ final class WsCategoriesTest extends ContractTestCase
             self::assertIsArray($entry);
             self::assertSame(1, $entry['representative_picture_id'], 'only image in the category, so the random pick is deterministic');
         } finally {
-            $this->conn->executeStatement("DELETE FROM " . Tables::config() . " WHERE param = 'allow_random_representative'");
+            $this->conn->executeStatement("DELETE FROM " . 'config' . " WHERE param = 'allow_random_representative'");
             CachePools::config()->clear();
         }
     }
@@ -566,7 +565,7 @@ final class WsCategoriesTest extends ContractTestCase
         $lowLevelImageId = $this->insertThrowawayImage(level: 0);
 
         $this->conn->executeStatement(
-            'UPDATE ' . Tables::categories() . ' SET representative_picture_id = ? WHERE id = ?',
+            'UPDATE ' . 'categories' . ' SET representative_picture_id = ? WHERE id = ?',
             [$highLevelImageId, $categoryId]
         );
         $token = $this->getPwgToken();
@@ -623,7 +622,7 @@ final class WsCategoriesTest extends ContractTestCase
      */
     private function imageFilePath(int $imageId): string
     {
-        $path = $this->conn->fetchOne('SELECT path FROM ' . Tables::images() . ' WHERE id = ?', [$imageId]);
+        $path = $this->conn->fetchOne('SELECT path FROM ' . 'images' . ' WHERE id = ?', [$imageId]);
         self::assertIsString($path);
 
         return pathinfo($path, PATHINFO_FILENAME);

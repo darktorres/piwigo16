@@ -39,7 +39,6 @@ namespace Piwigo\Tests\Integration {
     use Piwigo\Tests\Support\CurrentConfigTestFactory;
     use Piwigo\Config\ConfigLoader;
     use Piwigo\Db\DbConnection;
-    use Piwigo\Db\Tables;
     use Piwigo\Event\User\TryLogUser;
     use Piwigo\Http\ResponseReadyException;
     use Piwigo\Tests\Support\EventDispatcherTestFactory;
@@ -318,7 +317,7 @@ namespace Piwigo\Tests\Integration {
             // duration of this test so this exact `if` has a genuinely
             // different, valid language to accept.
             $this->conn->executeStatement(
-                "INSERT INTO " . Tables::languages() . " (id, version, name) VALUES ('fr_FR', '16.3.0', 'Francais')"
+                "INSERT INTO " . 'languages' . " (id, version, name) VALUES ('fr_FR', '16.3.0', 'Francais')"
             );
 
             CurrentUserTestFactory::get()->set(new User(
@@ -352,7 +351,7 @@ namespace Piwigo\Tests\Integration {
                     restore_error_handler();
                 }
 
-                $language = $this->conn->fetchOne('SELECT language FROM ' . Tables::userInfos() . ' WHERE user_id = 1');
+                $language = $this->conn->fetchOne('SELECT language FROM ' . 'user_infos' . ' WHERE user_id = 1');
                 self::assertSame('fr_FR', $language, 'logUser() should persist the lang cookie value to user_infos.language.');
 
                 // setcookie('lang', '', ['expires' => time() - 3600]) itself
@@ -365,8 +364,8 @@ namespace Piwigo\Tests\Integration {
                 // this exact branch (including the setcookie() call) ran.
             } finally {
                 unset($_COOKIE['lang']);
-                $this->conn->executeStatement("DELETE FROM " . Tables::languages() . " WHERE id = 'fr_FR'");
-                $this->conn->executeStatement("UPDATE " . Tables::userInfos() . " SET language = 'en_UK' WHERE user_id = 1");
+                $this->conn->executeStatement("DELETE FROM " . 'languages' . " WHERE id = 'fr_FR'");
+                $this->conn->executeStatement("UPDATE " . 'user_infos' . " SET language = 'en_UK' WHERE user_id = 1");
                 unset($_SESSION['pwg_uid']);
             }
         }
@@ -481,14 +480,14 @@ namespace Piwigo\Tests\Integration {
                 self::assertFalse($result);
             } finally {
                 EventDispatcherTestFactory::get()->removeEventHandler(FinalizeLogin::class, $handler);
-                $this->conn->executeStatement('DELETE FROM ' . Tables::userFailedLogins() . ' WHERE user_id = 1');
+                $this->conn->executeStatement('DELETE FROM ' . 'user_failed_logins' . ' WHERE user_id = 1');
             }
         }
 
         public function test_pwg_login_records_a_failed_login_row_for_a_wrong_password(): void
         {
             $countFailedLoginsForFixtureAdmin = function (): int {
-                $count = $this->conn->fetchOne('SELECT COUNT(*) FROM ' . Tables::userFailedLogins() . ' WHERE user_id = 1');
+                $count = $this->conn->fetchOne('SELECT COUNT(*) FROM ' . 'user_failed_logins' . ' WHERE user_id = 1');
                 return is_numeric($count) ? (int) $count : 0;
             };
 
@@ -500,7 +499,7 @@ namespace Piwigo\Tests\Integration {
                 self::assertFalse($result);
                 self::assertSame($before + 1, $countFailedLoginsForFixtureAdmin());
             } finally {
-                $this->conn->executeStatement('DELETE FROM ' . Tables::userFailedLogins() . ' WHERE user_id = 1');
+                $this->conn->executeStatement('DELETE FROM ' . 'user_failed_logins' . ' WHERE user_id = 1');
             }
         }
 
@@ -531,7 +530,7 @@ namespace Piwigo\Tests\Integration {
                 );
             } finally {
                 unset($_SESSION['fake_user_cache']);
-                $this->conn->executeStatement('DELETE FROM ' . Tables::userFailedLogins() . ' WHERE user_id = 1');
+                $this->conn->executeStatement('DELETE FROM ' . 'user_failed_logins' . ' WHERE user_id = 1');
             }
         }
 
@@ -573,11 +572,11 @@ namespace Piwigo\Tests\Integration {
             // reason about the shape of $_SERVER through.
             $originalRemoteAddr = is_string($_SERVER['REMOTE_ADDR'] ?? null) ? $_SERVER['REMOTE_ADDR'] : '';
             $_SERVER['REMOTE_ADDR'] = '';
-            $this->conn->executeStatement('DELETE FROM ' . Tables::userFailedLogins() . ' WHERE user_id = 1');
+            $this->conn->executeStatement('DELETE FROM ' . 'user_failed_logins' . ' WHERE user_id = 1');
             CurrentConfigTestFactory::get()->loginLockoutMaxAttempts = 1;
 
             $countFailedLoginsForFixtureAdmin = function (): int {
-                $count = $this->conn->fetchOne('SELECT COUNT(*) FROM ' . Tables::userFailedLogins() . ' WHERE user_id = 1');
+                $count = $this->conn->fetchOne('SELECT COUNT(*) FROM ' . 'user_failed_logins' . ' WHERE user_id = 1');
                 return is_numeric($count) ? (int) $count : 0;
             };
 
@@ -602,7 +601,7 @@ namespace Piwigo\Tests\Integration {
                 );
             } finally {
                 unset($_SESSION['fake_user_cache']);
-                $this->conn->executeStatement('DELETE FROM ' . Tables::userFailedLogins() . ' WHERE user_id = 1');
+                $this->conn->executeStatement('DELETE FROM ' . 'user_failed_logins' . ' WHERE user_id = 1');
                 $_SERVER['REMOTE_ADDR'] = $originalRemoteAddr;
             }
         }
@@ -638,7 +637,7 @@ namespace Piwigo\Tests\Integration {
                 } else {
                     $_SERVER['REMOTE_ADDR'] = $originalRemoteAddr;
                 }
-                $this->conn->executeStatement("DELETE FROM " . Tables::userFailedLogins() . " WHERE ip = '203.0.113.55'");
+                $this->conn->executeStatement("DELETE FROM " . 'user_failed_logins' . " WHERE ip = '203.0.113.55'");
             }
         }
 
@@ -660,14 +659,14 @@ namespace Piwigo\Tests\Integration {
             self::assertIsArray($created);
 
             $this->conn->executeStatement(
-                'UPDATE ' . Tables::userAuthKeys() . " SET expired_on = '2000-01-01 00:00:00' WHERE auth_key = ?",
+                'UPDATE ' . 'user_auth_keys' . " SET expired_on = '2000-01-01 00:00:00' WHERE auth_key = ?",
                 [$created['auth_key']]
             );
 
             try {
                 self::assertFalse($this->service->authKeyLogin($created['auth_key']));
             } finally {
-                $this->conn->executeStatement('DELETE FROM ' . Tables::userAuthKeys() . ' WHERE auth_key = ?', [$created['auth_key']]);
+                $this->conn->executeStatement('DELETE FROM ' . 'user_auth_keys' . ' WHERE auth_key = ?', [$created['auth_key']]);
             }
         }
 
@@ -681,13 +680,13 @@ namespace Piwigo\Tests\Integration {
             $created = $this->service->createUserAuthKey(4, 'normal');
             self::assertIsArray($created);
 
-            $this->conn->executeStatement("UPDATE " . Tables::userInfos() . " SET status = 'admin' WHERE user_id = 4");
+            $this->conn->executeStatement("UPDATE " . 'user_infos' . " SET status = 'admin' WHERE user_id = 4");
 
             try {
                 self::assertFalse($this->service->authKeyLogin($created['auth_key']));
             } finally {
-                $this->conn->executeStatement("UPDATE " . Tables::userInfos() . " SET status = 'normal' WHERE user_id = 4");
-                $this->conn->executeStatement('DELETE FROM ' . Tables::userAuthKeys() . ' WHERE auth_key = ?', [$created['auth_key']]);
+                $this->conn->executeStatement("UPDATE " . 'user_infos' . " SET status = 'normal' WHERE user_id = 4");
+                $this->conn->executeStatement('DELETE FROM ' . 'user_auth_keys' . ' WHERE auth_key = ?', [$created['auth_key']]);
             }
         }
 
@@ -714,7 +713,7 @@ namespace Piwigo\Tests\Integration {
             try {
                 self::assertFalse($this->service->authKeyLogin($created->authKey . ':' . $tamperedSecret));
             } finally {
-                $this->conn->executeStatement('DELETE FROM ' . Tables::userAuthKeys() . ' WHERE auth_key = ?', [$created->authKey]);
+                $this->conn->executeStatement('DELETE FROM ' . 'user_auth_keys' . ' WHERE auth_key = ?', [$created->authKey]);
             }
         }
 
@@ -738,7 +737,7 @@ namespace Piwigo\Tests\Integration {
             try {
                 self::assertFalse($this->service->authKeyLogin($created->authKey . ':' . $created->apikeySecret));
             } finally {
-                $this->conn->executeStatement('DELETE FROM ' . Tables::userAuthKeys() . ' WHERE auth_key = ?', [$created->authKey]);
+                $this->conn->executeStatement('DELETE FROM ' . 'user_auth_keys' . ' WHERE auth_key = ?', [$created->authKey]);
             }
         }
 
@@ -757,7 +756,7 @@ namespace Piwigo\Tests\Integration {
                 self::assertStringContainsString('password.php?key=', $result['password_link']);
             } finally {
                 $this->conn->executeStatement(
-                    'UPDATE ' . Tables::userInfos() . ' SET activation_key = NULL, activation_key_expire = NULL WHERE user_id = 4'
+                    'UPDATE ' . 'user_infos' . ' SET activation_key = NULL, activation_key_expire = NULL WHERE user_id = 4'
                 );
             }
         }
@@ -787,9 +786,9 @@ namespace Piwigo\Tests\Integration {
                 self::assertStringContainsString('password.php?key=', $result['password_link']);
             } finally {
                 $this->conn->executeStatement(
-                    'UPDATE ' . Tables::userInfos() . ' SET activation_key = NULL, activation_key_expire = NULL WHERE user_id = 4'
+                    'UPDATE ' . 'user_infos' . ' SET activation_key = NULL, activation_key_expire = NULL WHERE user_id = 4'
                 );
-                $this->conn->executeStatement('DELETE FROM ' . Tables::userFailedLogins() . ' WHERE user_id = 4');
+                $this->conn->executeStatement('DELETE FROM ' . 'user_failed_logins' . ' WHERE user_id = 4');
             }
         }
     }

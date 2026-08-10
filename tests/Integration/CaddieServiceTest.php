@@ -12,7 +12,6 @@ use Piwigo\Caddie\CaddieService;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\ConfigLoader;
 use Piwigo\Db\DbConnection;
-use Piwigo\Db\Tables;
 use Piwigo\Tests\Support\CurrentUserTestFactory;
 use Piwigo\Users\User;
 
@@ -96,7 +95,7 @@ final class CaddieServiceTest extends IntegrationTestCase
     private function clearCaddie(int $userId): void
     {
         $this->conn->createQueryBuilder()
-            ->delete(Tables::caddie())
+            ->delete('caddie')
             ->where('user_id = :userId')
             ->setParameter('userId', $userId)
             ->executeStatement();
@@ -109,7 +108,7 @@ final class CaddieServiceTest extends IntegrationTestCase
     {
         $ids = $this->conn->createQueryBuilder()
             ->select('element_id')
-            ->from(Tables::caddie())
+            ->from('caddie')
             ->where('user_id = :userId')
             ->setParameter('userId', $userId)
             ->orderBy('element_id', 'ASC')

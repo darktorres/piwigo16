@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
-use Piwigo\Db\Tables;
 use Piwigo\Permission\SqlCondition;
 use Piwigo\Section\SectionRepository;
 
@@ -61,13 +60,13 @@ test('findTopRatedImageIds() respects the limit', function (): void {
 
 test('findTopByHitsImageIds() returns ids ordered by hit desc', function (): void {
     $conn = DbConnection::build();
-    $conn->executeStatement('UPDATE ' . Tables::images() . ' SET hit = 5 WHERE id = 2');
-    $conn->executeStatement('UPDATE ' . Tables::images() . ' SET hit = 10 WHERE id = 4');
+    $conn->executeStatement('UPDATE ' . 'images' . ' SET hit = 5 WHERE id = 2');
+    $conn->executeStatement('UPDATE ' . 'images' . ' SET hit = 10 WHERE id = 4');
 
     try {
         expect(sectionTestRepo()->findTopByHitsImageIds(new SqlCondition(''), 5))->toBe(['4', '2']);
     } finally {
-        $conn->executeStatement('UPDATE ' . Tables::images() . ' SET hit = 0 WHERE id IN (2, 4)');
+        $conn->executeStatement('UPDATE ' . 'images' . ' SET hit = 0 WHERE id IN (2, 4)');
     }
 });
 

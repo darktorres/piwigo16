@@ -13,7 +13,6 @@ use Doctrine\DBAL\Connection;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\ConfigLoader;
 use Piwigo\Db\DbConnection;
-use Piwigo\Db\Tables;
 use Piwigo\Notification\NotificationRepository;
 use Piwigo\Notification\Projection\RecentCategoryForDate;
 use Piwigo\Permission\SqlCondition;
@@ -73,12 +72,12 @@ final class NotificationRepositoryTest extends IntegrationTestCase
             // in the SQL text (unlike a bound parameter, which the driver
             // coerces implicitly) is rejected outright by Postgres.
             $validatedLiteral = $this->dbDriver === 'pgsql' ? 'true' : '1';
-            $this->conn->executeStatement('UPDATE ' . Tables::comments() . " SET validation_date = '2026-07-07 05:02:38' WHERE validated = {$validatedLiteral}");
-            $this->conn->executeStatement('UPDATE ' . Tables::images() . " SET date_available = '2026-07-07 05:02:36' WHERE id IN (1, 2)");
-            $this->conn->executeStatement('UPDATE ' . Tables::images() . " SET date_available = '2026-07-07 05:02:37' WHERE id IN (3, 4)");
-            $this->conn->executeStatement('UPDATE ' . Tables::images() . " SET date_available = '2026-07-07 05:02:38' WHERE id = 5");
-            $this->conn->executeStatement('UPDATE ' . Tables::userInfos() . " SET registration_date = '2026-07-07 05:02:35' WHERE user_id IN (1, 2)");
-            $this->conn->executeStatement('UPDATE ' . Tables::userInfos() . " SET registration_date = '2026-07-07 05:02:38' WHERE user_id IN (3, 4)");
+            $this->conn->executeStatement('UPDATE ' . 'comments' . " SET validation_date = '2026-07-07 05:02:38' WHERE validated = {$validatedLiteral}");
+            $this->conn->executeStatement('UPDATE ' . 'images' . " SET date_available = '2026-07-07 05:02:36' WHERE id IN (1, 2)");
+            $this->conn->executeStatement('UPDATE ' . 'images' . " SET date_available = '2026-07-07 05:02:37' WHERE id IN (3, 4)");
+            $this->conn->executeStatement('UPDATE ' . 'images' . " SET date_available = '2026-07-07 05:02:38' WHERE id = 5");
+            $this->conn->executeStatement('UPDATE ' . 'user_infos' . " SET registration_date = '2026-07-07 05:02:35' WHERE user_id IN (1, 2)");
+            $this->conn->executeStatement('UPDATE ' . 'user_infos' . " SET registration_date = '2026-07-07 05:02:38' WHERE user_id IN (3, 4)");
         }
     }
 
@@ -110,7 +109,7 @@ final class NotificationRepositoryTest extends IntegrationTestCase
         // own -- this insert adds a second, proving the filter counts
         // every matching row, not just one.
         $this->conn->executeStatement(
-            'INSERT INTO ' . Tables::comments() . ' (image_id, date, author, anonymous_id, content, validated) VALUES (1, NOW(), ?, ?, ?, ?)',
+            'INSERT INTO ' . 'comments' . ' (image_id, date, author, anonymous_id, content, validated) VALUES (1, NOW(), ?, ?, ?, ?)',
             ['test author', '127.0.0.9', 'pending test comment', 0]
         );
 
@@ -118,7 +117,7 @@ final class NotificationRepositoryTest extends IntegrationTestCase
 
         self::assertSame(2, $count);
 
-        $this->conn->executeStatement("DELETE FROM " . Tables::comments() . " WHERE author = 'test author'");
+        $this->conn->executeStatement("DELETE FROM " . 'comments' . " WHERE author = 'test author'");
     }
 
     public function test_count_by_type_counts_new_elements_in_range(): void

@@ -6,7 +6,6 @@ namespace Piwigo\Tests\Contract;
 
 use Override;
 use Piwigo\Db\DbConnection;
-use Piwigo\Db\Tables;
 use JsonSchema\Validator;
 use Piwigo\Tests\Integration\IntegrationTestCase;
 
@@ -320,7 +319,7 @@ abstract class ContractTestCase extends IntegrationTestCase
             ? 'ON CONFLICT (param) DO UPDATE SET value = EXCLUDED.value'
             : 'ON DUPLICATE KEY UPDATE value = VALUES(value)';
         $conn->executeStatement(
-            'INSERT INTO ' . Tables::config() . " (param, value) VALUES (?, ?) {$onConflict}",
+            'INSERT INTO ' . 'config' . " (param, value) VALUES (?, ?) {$onConflict}",
             [$param, $value]
         );
     }

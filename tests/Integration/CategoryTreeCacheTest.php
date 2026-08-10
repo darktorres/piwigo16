@@ -23,7 +23,6 @@ use Piwigo\Config\CurrentConfig;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Config\ConfigLoader;
 use Piwigo\Db\DbConnection;
-use Piwigo\Db\Tables;
 use Piwigo\Permission\PermissionRepository;
 use Piwigo\Permission\PermissionService;
 use Symfony\Component\Cache\Adapter\ArrayAdapter;
@@ -99,7 +98,7 @@ final class CategoryTreeCacheTest extends IntegrationTestCase
     #[Override]
     protected function tearDown(): void
     {
-        $this->conn->executeStatement('UPDATE ' . Tables::categories() . " SET status = 'public'");
+        $this->conn->executeStatement('UPDATE ' . 'categories' . " SET status = 'public'");
         parent::tearDown();
     }
 
@@ -150,14 +149,14 @@ final class CategoryTreeCacheTest extends IntegrationTestCase
         self::assertSame('Sample Album', $first[1]['name']);
 
         $this->conn->executeStatement(
-            'UPDATE ' . Tables::categories() . " SET name = 'Renamed' WHERE id = 1"
+            'UPDATE ' . 'categories' . " SET name = 'Renamed' WHERE id = 1"
         );
 
         $second = $this->cache->getForUser(self::userdata());
         self::assertSame('Sample Album', $second[1]['name'], 'a cache hit must not re-query the DB');
 
         $this->conn->executeStatement(
-            'UPDATE ' . Tables::categories() . " SET name = 'Sample Album' WHERE id = 1"
+            'UPDATE ' . 'categories' . " SET name = 'Sample Album' WHERE id = 1"
         );
     }
 

@@ -12,7 +12,6 @@ use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Core\Env;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
-use Piwigo\Db\Tables;
 use Piwigo\Tag\TagEntity;
 use Piwigo\Tag\TagRepository;
 
@@ -91,7 +90,7 @@ final class FulltextNgramSearchTest extends IntegrationTestCase
         $catId = $this->insertCategory('美丽的风景照片');
 
         $hits = $this->fetchCount(
-            'SELECT COUNT(*) FROM ' . Tables::categories() . " WHERE id = ? AND MATCH(name, comment) AGAINST('风景' IN BOOLEAN MODE)",
+            'SELECT COUNT(*) FROM ' . 'categories' . " WHERE id = ? AND MATCH(name, comment) AGAINST('风景' IN BOOLEAN MODE)",
             [$catId]
         );
 
@@ -107,7 +106,7 @@ final class FulltextNgramSearchTest extends IntegrationTestCase
         $catId = $this->insertCategory('My Cats and Vacation Photos');
 
         $hits = $this->fetchCount(
-            'SELECT COUNT(*) FROM ' . Tables::categories() . " WHERE id = ? AND MATCH(name, comment) AGAINST('cat' IN BOOLEAN MODE)",
+            'SELECT COUNT(*) FROM ' . 'categories' . " WHERE id = ? AND MATCH(name, comment) AGAINST('cat' IN BOOLEAN MODE)",
             [$catId]
         );
 
@@ -123,7 +122,7 @@ final class FulltextNgramSearchTest extends IntegrationTestCase
         $tagId = $this->tagRepo->insert($tag, $tag);
 
         $hits = $this->fetchCount(
-            'SELECT COUNT(*) FROM ' . Tables::tags() . " WHERE id = ? AND MATCH(name) AGAINST('at' IN BOOLEAN MODE)",
+            'SELECT COUNT(*) FROM ' . 'tags' . " WHERE id = ? AND MATCH(name) AGAINST('at' IN BOOLEAN MODE)",
             [$tagId->value]
         );
 
@@ -137,7 +136,7 @@ final class FulltextNgramSearchTest extends IntegrationTestCase
         $catId = $this->insertCategory('Mountain Landscape');
 
         $hits = $this->fetchCount(
-            'SELECT COUNT(*) FROM ' . Tables::categories() . " WHERE id = ? AND MATCH(name, comment) AGAINST('mountain' IN BOOLEAN MODE)",
+            'SELECT COUNT(*) FROM ' . 'categories' . " WHERE id = ? AND MATCH(name, comment) AGAINST('mountain' IN BOOLEAN MODE)",
             [$catId]
         );
 

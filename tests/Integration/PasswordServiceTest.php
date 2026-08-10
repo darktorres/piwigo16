@@ -15,7 +15,6 @@ use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\ConfigLoader;
 use Piwigo\Config\DeploymentPolicy;
 use Piwigo\Db\DbConnection;
-use Piwigo\Db\Tables;
 
 /**
  * PasswordService::hash()/verify()/verifyLegacyPhpass() use native
@@ -135,7 +134,7 @@ final class PasswordServiceTest extends IntegrationTestCase
 
         $newHash = $this->conn->createQueryBuilder()
             ->select('password')
-            ->from(Tables::users())
+            ->from('users')
             ->where('id = :id')
             ->setParameter('id', 3)
             ->executeQuery()
@@ -147,7 +146,7 @@ final class PasswordServiceTest extends IntegrationTestCase
 
         // Restore the fixture row for later tests in this run.
         $this->conn->executeStatement(
-            'UPDATE ' . Tables::users() . " SET password = '\$2y\$04\$xGZfKCZNROjaLMYm0nOuKugaMf/IEPCzJsuk9lpjDwZrK.RZLusGy' WHERE id = 3"
+            'UPDATE ' . 'users' . " SET password = '\$2y\$04\$xGZfKCZNROjaLMYm0nOuKugaMf/IEPCzJsuk9lpjDwZrK.RZLusGy' WHERE id = 3"
         );
     }
 

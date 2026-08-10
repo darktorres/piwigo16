@@ -6,7 +6,6 @@ use Doctrine\DBAL\ArrayParameterType;
 use Piwigo\Common\ValueObject\CategoryId;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
-use Piwigo\Db\Tables;
 use Piwigo\Permission\SqlCondition;
 use Piwigo\Search\Projection\CategoryIdUppercats;
 use Piwigo\Search\SearchRepository;
@@ -79,7 +78,7 @@ function searchTestUuid(): string
 }
 
 afterEach(function (): void {
-    DbConnection::build()->executeStatement("DELETE FROM " . Tables::search() . " WHERE search_uuid LIKE 'psk-rt%'");
+    DbConnection::build()->executeStatement("DELETE FROM " . 'search' . " WHERE search_uuid LIKE 'psk-rt%'");
 });
 
 test('findSavedSearchByUuid() returns null for no match', function (): void {
@@ -113,7 +112,7 @@ test('findSavedSearchByUuid() filters out a numeric-string rules key on decode',
     $conn = DbConnection::build();
     $uuid = searchTestUuid();
     $conn->executeStatement(
-        'INSERT INTO ' . Tables::search() . ' (rules, created_on, created_by, search_uuid, forked_from) VALUES (?, ?, ?, ?, NULL)',
+        'INSERT INTO ' . 'search' . ' (rules, created_on, created_by, search_uuid, forked_from) VALUES (?, ?, ?, ?, NULL)',
         ['{"5":"numeric-key-value","q":"nature"}', '2026-07-12 00:00:00', 1, $uuid]
     );
 
@@ -141,18 +140,18 @@ test('findSavedSearchByUuid() maps a null created_on to null, not the entity ins
 });
 
 test('findIdsByClause() returns a list of ints', function (): void {
-    $ids = searchTestRepo()->findIdsByClause('id', Tables::images() . ' i', 'id > ?', [0]);
+    $ids = searchTestRepo()->findIdsByClause('id', 'images' . ' i', 'id > ?', [0]);
     sort($ids);
 
     expect($ids)->toBe([1, 2, 3, 4, 5]);
 });
 
 test('findIdsByClause() returns empty for no match', function (): void {
-    expect(searchTestRepo()->findIdsByClause('id', Tables::images() . ' i', 'id > ?', [99999]))->toBe([]);
+    expect(searchTestRepo()->findIdsByClause('id', 'images' . ' i', 'id > ?', [99999]))->toBe([]);
 });
 
 test('findRowsByClause() returns full rows', function (): void {
-    $rows = searchTestRepo()->findRowsByClause(Tables::tags(), 'name = ?', ['nature']);
+    $rows = searchTestRepo()->findRowsByClause('tags', 'name = ?', ['nature']);
 
     expect($rows)->toHaveCount(1)
         ->and($rows[0]['id'])->toBe(1)
@@ -160,7 +159,7 @@ test('findRowsByClause() returns full rows', function (): void {
 });
 
 test('findRowsByClause() returns empty for no match', function (): void {
-    expect(searchTestRepo()->findRowsByClause(Tables::tags(), 'name = ?', ['no-such-tag']))->toBe([]);
+    expect(searchTestRepo()->findRowsByClause('tags', 'name = ?', ['no-such-tag']))->toBe([]);
 });
 
 test('quote() escapes a value for safe inline embedding', function (): void {
@@ -245,7 +244,7 @@ test('findSavedSearchRulesByIds() decodes a null rules column to null', function
     // method.
     $conn = DbConnection::build();
     $conn->executeStatement(
-        'INSERT INTO ' . Tables::search() . ' (rules, created_on, created_by, search_uuid, forked_from) VALUES (NULL, ?, ?, ?, NULL)',
+        'INSERT INTO ' . 'search' . ' (rules, created_on, created_by, search_uuid, forked_from) VALUES (NULL, ?, ?, ?, NULL)',
         ['2026-07-12 00:00:00', 1, searchTestUuid()]
     );
     $id = (int) $conn->lastInsertId();
@@ -267,8 +266,8 @@ test('countImagesGroupedBy() returns counts ordered desc', function (): void {
     // tell a real ORDER BY counter DESC apart from GROUP BY's own
     // incidental (frequently alphabetical) scan order.
     $conn = DbConnection::build();
-    $conn->executeStatement("UPDATE " . Tables::images() . " SET author = 'Zzz Author' WHERE id IN (1, 2)");
-    $conn->executeStatement("UPDATE " . Tables::images() . " SET author = 'Aaa Author' WHERE id = 3");
+    $conn->executeStatement("UPDATE " . 'images' . " SET author = 'Zzz Author' WHERE id IN (1, 2)");
+    $conn->executeStatement("UPDATE " . 'images' . " SET author = 'Aaa Author' WHERE id = 3");
 
     try {
         $rows = searchTestRepo()->countImagesGroupedBy('i.author', 'author', new SqlCondition('i.author IS NOT NULL'), true);
@@ -278,7 +277,7 @@ test('countImagesGroupedBy() returns counts ordered desc', function (): void {
             ['author' => 'Aaa Author', 'counter' => 1],
         ]);
     } finally {
-        $conn->executeStatement('UPDATE ' . Tables::images() . ' SET author = NULL WHERE id IN (1, 2, 3)');
+        $conn->executeStatement('UPDATE ' . 'images' . ' SET author = NULL WHERE id IN (1, 2, 3)');
     }
 });
 

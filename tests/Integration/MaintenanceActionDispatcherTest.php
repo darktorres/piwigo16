@@ -64,7 +64,6 @@ use Piwigo\Tests\Support\CurrentPathsTestFactory;
 use Piwigo\Core\Kernel;
 use Piwigo\Tests\Support\LangTestFactory;
 use Piwigo\Db\DbConnection;
-use Piwigo\Db\Tables;
 use Piwigo\Lang\Translator;
 use Piwigo\Tests\Support\TranslatorTestFactory;
 use Piwigo\Session\SessionEntity;
@@ -301,14 +300,14 @@ final class MaintenanceActionDispatcherTest extends IntegrationTestCase
     public function test_search_purges_history_and_assigns_the_real_info_message(): void
     {
         $this->conn->createQueryBuilder()
-            ->insert(Tables::search())
+            ->insert('search')
             ->values(['created_by' => ':createdBy'])
             ->setParameter('createdBy', 1)
             ->executeStatement();
 
         $this->dispatcher->dispatch('search');
 
-        self::assertSame(0, $this->countRows(Tables::search()));
+        self::assertSame(0, $this->countRows('search'));
         // Regression guard: this message must be "Purge search history",
         // not a copy-paste of the 'c13y' case's "Reinitialize check
         // integrity".
@@ -321,12 +320,12 @@ final class MaintenanceActionDispatcherTest extends IntegrationTestCase
     public function test_history_detail_and_summary_both_purge_via_one_dispatch_each(): void
     {
         $this->conn->createQueryBuilder()
-            ->insert(Tables::history())
+            ->insert('history')
             ->values(['user_id' => ':userId'])
             ->setParameter('userId', 1)
             ->executeStatement();
         $this->conn->createQueryBuilder()
-            ->insert(Tables::historySummary())
+            ->insert('history_summary')
             ->values(['year' => ':year'])
             ->setParameter('year', 2026)
             ->executeStatement();
@@ -334,22 +333,22 @@ final class MaintenanceActionDispatcherTest extends IntegrationTestCase
         $this->dispatcher->dispatch('history_detail');
         $this->dispatcher->dispatch('history_summary');
 
-        self::assertSame(0, $this->countRows(Tables::history()));
-        self::assertSame(0, $this->countRows(Tables::historySummary()));
+        self::assertSame(0, $this->countRows('history'));
+        self::assertSame(0, $this->countRows('history_summary'));
     }
 
     public function test_a_real_action_is_logged_to_pwg_activity(): void
     {
         // The dispatcher always calls pwg_activity() for every action,
         // regardless of which tab reaches it.
-        $before = $this->countRows(Tables::activity());
+        $before = $this->countRows('activity');
 
         $this->dispatcher->dispatch('search');
 
-        self::assertSame($before + 1, $this->countRows(Tables::activity()));
+        self::assertSame($before + 1, $this->countRows('activity'));
         $lastAction = $this->conn->createQueryBuilder()
             ->select('action', 'object_id')
-            ->from(Tables::activity())
+            ->from('activity')
             ->orderBy('activity_id', 'DESC')
             ->setMaxResults(1)
             ->executeQuery()
@@ -360,11 +359,11 @@ final class MaintenanceActionDispatcherTest extends IntegrationTestCase
 
     public function test_an_unregistered_action_is_not_logged_to_pwg_activity(): void
     {
-        $before = $this->countRows(Tables::activity());
+        $before = $this->countRows('activity');
 
         $this->dispatcher->dispatch('this_action_does_not_exist');
 
-        self::assertSame($before, $this->countRows(Tables::activity()));
+        self::assertSame($before, $this->countRows('activity'));
     }
 
     private function countRows(string $table): int
@@ -408,10 +407,10 @@ final class MaintenanceActionDispatcherTest extends IntegrationTestCase
             // docblock.
         }
 
-        $raw = $this->conn->fetchOne("SELECT value FROM " . Tables::config() . " WHERE param = 'gallery_locked'");
+        $raw = $this->conn->fetchOne("SELECT value FROM " . 'config' . " WHERE param = 'gallery_locked'");
         self::assertTrue(json_decode(is_scalar($raw) ? (string) $raw : ''));
 
-        $this->conn->executeStatement("DELETE FROM " . Tables::config() . " WHERE param = 'gallery_locked'");
+        $this->conn->executeStatement("DELETE FROM " . 'config' . " WHERE param = 'gallery_locked'");
     }
 
     public function test_unlock_gallery_persists_gallery_unlocked_and_redirects(): void
@@ -422,14 +421,14 @@ final class MaintenanceActionDispatcherTest extends IntegrationTestCase
         } catch (ResponseReadyException) {
         }
 
-        $raw = $this->conn->fetchOne("SELECT value FROM " . Tables::config() . " WHERE param = 'gallery_locked'");
+        $raw = $this->conn->fetchOne("SELECT value FROM " . 'config' . " WHERE param = 'gallery_locked'");
         self::assertFalse(json_decode(is_scalar($raw) ? (string) $raw : ''));
         // $_SESSION['page_infos'] here has no reader anywhere in src/Piwigo
         // (confirmed via full-repo grep) -- exercised for coverage credit
         // without asserting on a visible effect that doesn't exist.
         self::assertSame(['Gallery unlocked'], $_SESSION['page_infos'] ?? null);
 
-        $this->conn->executeStatement("DELETE FROM " . Tables::config() . " WHERE param = 'gallery_locked'");
+        $this->conn->executeStatement("DELETE FROM " . 'config' . " WHERE param = 'gallery_locked'");
         unset($_SESSION['page_infos']);
     }
 
@@ -462,17 +461,17 @@ final class MaintenanceActionDispatcherTest extends IntegrationTestCase
         // a freshly-inserted tag (lastmodified defaulting to NOW()) is
         // never picked up regardless of having no image_tag rows.
         $this->conn->createQueryBuilder()
-            ->insert(Tables::tags())
+            ->insert('tags')
             ->values(['name' => ':name', 'url_name' => ':url', 'lastmodified' => ':lastmodified'])
             ->setParameter('name', 'orphan-tag-' . uniqid())
             ->setParameter('url', 'orphan-tag-' . uniqid())
             ->setParameter('lastmodified', '2020-01-01 00:00:00')
             ->executeStatement();
-        $before = $this->countRows(Tables::tags());
+        $before = $this->countRows('tags');
 
         $this->dispatcher->dispatch('delete_orphan_tags');
 
-        self::assertLessThan($before, $this->countRows(Tables::tags()));
+        self::assertLessThan($before, $this->countRows('tags'));
         self::assertContains(
             'Delete orphan tags : action successfully performed.',
             PageStateTestFactory::get()->infos

@@ -14,7 +14,6 @@ use Piwigo\Common\ValueObject\SqlDateTime;
 use Piwigo\Common\ValueObject\TagId;
 use Piwigo\Core\Env;
 use Piwigo\Db\BatchWriter;
-use Piwigo\Db\Tables;
 use Piwigo\Image\ImageCategoryEntity;
 use Piwigo\Image\ImageFilterCriteria;
 use Piwigo\Permission\PermissionCriteria;
@@ -298,13 +297,13 @@ final class TagRepository extends EntityRepository
             ->getConnection()
             ->createQueryBuilder()
             ->select('id')
-            ->from(Tables::images(), 'i');
+            ->from('images', 'i');
 
         if ($usePermissions) {
-            $qb->innerJoin('i', Tables::imageCategory(), 'ic', 'id=ic.image_id');
+            $qb->innerJoin('i', 'image_category', 'ic', 'id=ic.image_id');
         }
 
-        $qb->innerJoin('i', Tables::imageTag(), 'it', 'id=it.image_id')
+        $qb->innerJoin('i', 'image_tag', 'it', 'id=it.image_id')
             ->where($qb->expr()->in('tag_id', ':tagIds'))
             ->setParameter('tagIds', $tagIds, ArrayParameterType::INTEGER)
             ->groupBy('id');
@@ -663,7 +662,7 @@ final class TagRepository extends EntityRepository
         $this->getEntityManager()
             ->getConnection()
             ->createQueryBuilder()
-            ->insert(Tables::tags())
+            ->insert('tags')
             ->values([
                 'name' => ':name',
                 'url_name' => ':urlName',
@@ -818,7 +817,7 @@ final class TagRepository extends EntityRepository
 
         $em = $this->getEntityManager();
         new BatchWriter($em->getConnection())
-            ->massInsert(Tables::imageTag(), array_keys($inserts[0]), $inserts, [
+            ->massInsert('image_tag', array_keys($inserts[0]), $inserts, [
                 'ignore' => $ignore,
             ]);
         $em->clear();

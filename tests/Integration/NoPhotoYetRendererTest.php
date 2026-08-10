@@ -35,7 +35,6 @@ use Piwigo\Tests\Support\CurrentConfigServiceTestFactory;
 use Piwigo\Core\AdminContext;
 use Piwigo\Core\Paths;
 use Piwigo\Db\DbConnection;
-use Piwigo\Db\Tables;
 use Piwigo\Page\NoPhotoYetRenderer;
 use Piwigo\Session\SessionEntity;
 use Piwigo\Session\SessionService;
@@ -142,7 +141,7 @@ final class NoPhotoYetRendererTest extends IntegrationTestCase
         // same as this class's own tests) -- delete rather than reset to
         // a value, restoring the true baseline.
         $this->conn->executeStatement(
-            "DELETE FROM " . Tables::config() . " WHERE param = 'no_photo_yet'"
+            "DELETE FROM " . 'config' . " WHERE param = 'no_photo_yet'"
         );
         parent::tearDown();
     }
@@ -173,7 +172,7 @@ final class NoPhotoYetRendererTest extends IntegrationTestCase
             ? 'ON CONFLICT (param) DO UPDATE SET value = EXCLUDED.value'
             : 'ON DUPLICATE KEY UPDATE value = VALUES(value)';
         $this->conn->executeStatement(
-            'INSERT INTO ' . Tables::config() . " (param, value) VALUES ('no_photo_yet', ?) {$onConflict}",
+            'INSERT INTO ' . 'config' . " (param, value) VALUES ('no_photo_yet', ?) {$onConflict}",
             [$value]
         );
     }
@@ -182,7 +181,7 @@ final class NoPhotoYetRendererTest extends IntegrationTestCase
     {
         $value = $this->conn->createQueryBuilder()
             ->select('value')
-            ->from(Tables::config())
+            ->from('config')
             ->where("param = 'no_photo_yet'")
             ->executeQuery()
             ->fetchOne();
@@ -239,7 +238,7 @@ final class NoPhotoYetRendererTest extends IntegrationTestCase
         $this->conn->beginTransaction();
 
         try {
-            $this->conn->executeStatement('DELETE FROM ' . Tables::images());
+            $this->conn->executeStatement('DELETE FROM ' . 'images');
 
             try {
                 $this->renderer->render();
@@ -262,7 +261,7 @@ final class NoPhotoYetRendererTest extends IntegrationTestCase
         $this->conn->beginTransaction();
 
         try {
-            $this->conn->executeStatement('DELETE FROM ' . Tables::images());
+            $this->conn->executeStatement('DELETE FROM ' . 'images');
 
             try {
                 $this->renderer->render();
@@ -282,7 +281,7 @@ final class NoPhotoYetRendererTest extends IntegrationTestCase
         // under a consistent snapshot that predates it, confirmed live --
         // a read through the same still-open transaction cannot see it.
         self::assertSame('"false"', $this->readFlag());
-        $this->conn->executeStatement("DELETE FROM " . Tables::config() . " WHERE param = 'no_photo_yet'");
+        $this->conn->executeStatement("DELETE FROM " . 'config' . " WHERE param = 'no_photo_yet'");
     }
 }
 }

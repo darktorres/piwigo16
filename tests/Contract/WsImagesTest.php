@@ -8,7 +8,6 @@ use Override;
 use Piwigo\Cache\CachePools;
 use Doctrine\DBAL\Connection;
 use Piwigo\Db\DbConnection;
-use Piwigo\Db\Tables;
 
 final class WsImagesTest extends ContractTestCase
 {
@@ -147,7 +146,7 @@ final class WsImagesTest extends ContractTestCase
             self::assertNull($result['nonexistent-file.jpg']);
         } finally {
             $this->conn->executeStatement(
-                "DELETE FROM " . Tables::config() . " WHERE param = 'uniqueness_mode'"
+                "DELETE FROM " . 'config' . " WHERE param = 'uniqueness_mode'"
             );
             CachePools::config()->clear();
         }
@@ -206,7 +205,7 @@ final class WsImagesTest extends ContractTestCase
             self::assertStringContainsString('chmod 777', $result['message']);
         } finally {
             chmod($absDir, 0o755);
-            $this->conn->executeStatement("DELETE FROM " . Tables::config() . " WHERE param = 'upload_dir'");
+            $this->conn->executeStatement("DELETE FROM " . 'config' . " WHERE param = 'upload_dir'");
             CachePools::config()->clear();
             rmdir($absDir);
         }

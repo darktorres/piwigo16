@@ -65,7 +65,7 @@ final readonly class DbInfo
     {
         // {$table} is structural, not caller-controlled -- its one
         // real caller (Admin\AdminUiHelper::getAdminClientCacheKeys())
-        // only ever passes a value drawn from a fixed Db\Tables::xxx()
+        // only ever passes a value drawn from a fixed literal table-name
         // array via array_intersect() against that same array's own keys,
         // never an arbitrary/request-derived table name. Left unquoted
         // (no backticks/double-quotes) -- every real table name here is

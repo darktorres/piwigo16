@@ -15,7 +15,6 @@ use Piwigo\Common\ValueObject\GroupId;
 use Piwigo\Common\ValueObject\ImageId;
 use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Db\BatchWriter;
-use Piwigo\Db\Tables;
 use Piwigo\Group\GroupAccessEntity;
 use Piwigo\Group\UserGroupEntity;
 use Piwigo\Image\ImageCategoryEntity;
@@ -186,7 +185,7 @@ final readonly class PermissionRepository
         }
 
         new BatchWriter($this->em->getConnection())
-            ->massInsert(Tables::userAccess(), ['user_id', 'cat_id'], $inserts, [
+            ->massInsert('user_access', ['user_id', 'cat_id'], $inserts, [
                 'ignore' => $ignore,
             ]);
         $this->em->clear();

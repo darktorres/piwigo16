@@ -7,7 +7,6 @@ namespace Piwigo\Tests\Contract;
 use Override;
 use Doctrine\DBAL\Connection;
 use Piwigo\Db\DbConnection;
-use Piwigo\Db\Tables;
 
 /**
  * Ws\PwgImages::addImageCategoryRelations() -- a private helper only
@@ -43,12 +42,12 @@ final class WsImagesCategoryRelationsTest extends ContractTestCase
     protected function tearDown(): void
     {
         foreach ($this->imageIdsToDelete as $imageId) {
-            $this->conn->executeStatement('DELETE FROM ' . Tables::imageCategory() . ' WHERE image_id = ?', [$imageId]);
-            $this->conn->executeStatement('DELETE FROM ' . Tables::images() . ' WHERE id = ?', [$imageId]);
+            $this->conn->executeStatement('DELETE FROM ' . 'image_category' . ' WHERE image_id = ?', [$imageId]);
+            $this->conn->executeStatement('DELETE FROM ' . 'images' . ' WHERE id = ?', [$imageId]);
         }
         foreach (array_reverse($this->categoryIdsToDelete) as $categoryId) {
-            $this->conn->executeStatement('DELETE FROM ' . Tables::imageCategory() . ' WHERE category_id = ?', [$categoryId]);
-            $this->conn->executeStatement('DELETE FROM ' . Tables::categories() . ' WHERE id = ?', [$categoryId]);
+            $this->conn->executeStatement('DELETE FROM ' . 'image_category' . ' WHERE category_id = ?', [$categoryId]);
+            $this->conn->executeStatement('DELETE FROM ' . 'categories' . ' WHERE id = ?', [$categoryId]);
         }
         parent::tearDown();
     }
@@ -65,7 +64,7 @@ final class WsImagesCategoryRelationsTest extends ContractTestCase
     {
         $filename = 'cat-relations-test-' . uniqid() . '.jpg';
         $this->conn->executeStatement(
-            'INSERT INTO ' . Tables::images() . ' (file, path, md5sum) VALUES (?, ?, ?)',
+            'INSERT INTO ' . 'images' . ' (file, path, md5sum) VALUES (?, ?, ?)',
             [$filename, 'upload/2026/08/01/' . $filename, md5($filename)]
         );
         $id = (int) $this->conn->lastInsertId();
@@ -73,7 +72,7 @@ final class WsImagesCategoryRelationsTest extends ContractTestCase
 
         foreach ($categoryIds as $catId) {
             $this->conn->executeStatement(
-                'INSERT INTO ' . Tables::imageCategory() . ' (image_id, category_id) VALUES (?, ?)',
+                'INSERT INTO ' . 'image_category' . ' (image_id, category_id) VALUES (?, ?)',
                 [$id, $catId]
             );
         }
@@ -104,7 +103,7 @@ final class WsImagesCategoryRelationsTest extends ContractTestCase
         return array_map(
             static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0,
             $this->conn->fetchFirstColumn(
-                'SELECT category_id FROM ' . Tables::imageCategory() . ' WHERE image_id = ?',
+                'SELECT category_id FROM ' . 'image_category' . ' WHERE image_id = ?',
                 [$imageId]
             )
         );
@@ -221,7 +220,7 @@ final class WsImagesCategoryRelationsTest extends ContractTestCase
         $rankIdentifier = $this->conn->getDatabasePlatform()
             ->quoteSingleIdentifier('rank');
         $rank = $this->conn->fetchOne(
-            "SELECT {$rankIdentifier} FROM " . Tables::imageCategory() . ' WHERE image_id = ? AND category_id = ?',
+            "SELECT {$rankIdentifier} FROM " . 'image_category' . ' WHERE image_id = ? AND category_id = ?',
             [$imageId, $freshCatId]
         );
         self::assertSame(1, is_numeric($rank) ? (int) $rank : 0);

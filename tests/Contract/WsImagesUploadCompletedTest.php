@@ -7,7 +7,6 @@ namespace Piwigo\Tests\Contract;
 use Override;
 use Doctrine\DBAL\Connection;
 use Piwigo\Db\DbConnection;
-use Piwigo\Db\Tables;
 
 /**
  * Ws\PwgImages::uploadCompleted() (pwg.images.uploadCompleted) -- had zero
@@ -71,10 +70,10 @@ final class WsImagesUploadCompletedTest extends ContractTestCase
     public function test_uploadCompleted_returns_the_target_category_photo_count(): void
     {
         $expectedCount = $this->conn->fetchOne(
-            'SELECT COUNT(*) FROM ' . Tables::imageCategory() . ' WHERE category_id = 1'
+            'SELECT COUNT(*) FROM ' . 'image_category' . ' WHERE category_id = 1'
         );
         self::assertIsNumeric($expectedCount);
-        $expectedName = $this->conn->fetchOne('SELECT name FROM ' . Tables::categories() . ' WHERE id = 1');
+        $expectedName = $this->conn->fetchOne('SELECT name FROM ' . 'categories' . ' WHERE id = 1');
         self::assertIsString($expectedName);
 
         $response = $this->callWs('pwg.images.uploadCompleted', [

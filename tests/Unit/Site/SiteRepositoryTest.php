@@ -6,7 +6,6 @@ use Piwigo\Core\Kernel;
 use Piwigo\Core\Paths;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
-use Piwigo\Db\Tables;
 use Piwigo\Site\SiteEntity;
 use Piwigo\Site\SiteRepository;
 use Piwigo\Tests\Support\CurrentPathsTestFactory;
@@ -71,7 +70,7 @@ beforeEach(function (): void {
 });
 
 afterEach(function (): void {
-    DbConnection::build()->executeStatement("DELETE FROM " . Tables::sites() . " WHERE galleries_url LIKE 'p17-unit-test-%'");
+    DbConnection::build()->executeStatement("DELETE FROM " . 'sites' . " WHERE galleries_url LIKE 'p17-unit-test-%'");
     Kernel::reset();
 });
 
@@ -93,7 +92,7 @@ test('findGalleriesUrlById() returns the inserted url', function (): void {
     $url = siteTestUrl();
     $repo->insert($url);
     $id = DbConnection::build()->fetchOne(
-        'SELECT id FROM ' . Tables::sites() . ' WHERE galleries_url = ?',
+        'SELECT id FROM ' . 'sites' . ' WHERE galleries_url = ?',
         [$url]
     );
 
@@ -111,7 +110,7 @@ test('delete() removes the row', function (): void {
     $url = siteTestUrl();
     $repo->insert($url);
     $id = DbConnection::build()->fetchOne(
-        'SELECT id FROM ' . Tables::sites() . ' WHERE galleries_url = ?',
+        'SELECT id FROM ' . 'sites' . ' WHERE galleries_url = ?',
         [$url]
     );
     $intId = is_numeric($id) ? (int) $id : 0;
@@ -137,12 +136,12 @@ test('findGalleriesUrlForCategory() returns null when the category has no linked
 
 test('findGalleriesUrlForCategory() returns the joined sites row', function (): void {
     $conn = DbConnection::build();
-    $conn->executeStatement('UPDATE ' . Tables::categories() . ' SET site_id = 1 WHERE id = 1');
+    $conn->executeStatement('UPDATE ' . 'categories' . ' SET site_id = 1 WHERE id = 1');
 
     try {
         expect(siteTestRepo()->findGalleriesUrlForCategory(1))->toBe(CurrentPathsTestFactory::get()->root . 'galleries/');
     } finally {
-        $conn->executeStatement('UPDATE ' . Tables::categories() . ' SET site_id = NULL WHERE id = 1');
+        $conn->executeStatement('UPDATE ' . 'categories' . ' SET site_id = NULL WHERE id = 1');
     }
 });
 
@@ -173,21 +172,21 @@ test('findCategoryAndImageCountsBySite() groups by site and ignores categories w
     $url = siteTestUrl();
     $repo->insert($url);
     $conn = DbConnection::build();
-    $siteId = $conn->fetchOne('SELECT id FROM ' . Tables::sites() . ' WHERE galleries_url = ?', [$url]);
+    $siteId = $conn->fetchOne('SELECT id FROM ' . 'sites' . ' WHERE galleries_url = ?', [$url]);
     $siteId = is_numeric($siteId) ? (int) $siteId : 0;
 
     $conn->executeStatement(
-        'INSERT INTO ' . Tables::categories() . " (name, site_id, uppercats) VALUES ('p17-unit-test-site-cat-with-image', ?, '999901')",
+        'INSERT INTO ' . 'categories' . " (name, site_id, uppercats) VALUES ('p17-unit-test-site-cat-with-image', ?, '999901')",
         [$siteId]
     );
     $catWithImageId = (int) $conn->lastInsertId();
     $conn->executeStatement(
-        'INSERT INTO ' . Tables::categories() . " (name, site_id, uppercats) VALUES ('p17-unit-test-site-cat-without-image', ?, '999902')",
+        'INSERT INTO ' . 'categories' . " (name, site_id, uppercats) VALUES ('p17-unit-test-site-cat-without-image', ?, '999902')",
         [$siteId]
     );
     $catWithoutImageId = (int) $conn->lastInsertId();
     $conn->executeStatement(
-        'INSERT INTO ' . Tables::images() . " (file, path, storage_category_id) VALUES ('p17-unit-test-site.jpg', 'p17-unit-test-site.jpg', ?)",
+        'INSERT INTO ' . 'images' . " (file, path, storage_category_id) VALUES ('p17-unit-test-site.jpg', 'p17-unit-test-site.jpg', ?)",
         [$catWithImageId]
     );
     $imageId = (int) $conn->lastInsertId();
@@ -198,7 +197,7 @@ test('findCategoryAndImageCountsBySite() groups by site and ignores categories w
         expect($counts)->toHaveKey($siteId)
             ->and($counts[$siteId])->toBe(['nb_categories' => 2, 'nb_images' => 1]);
     } finally {
-        $conn->executeStatement('DELETE FROM ' . Tables::images() . ' WHERE id = ?', [$imageId]);
-        $conn->executeStatement('DELETE FROM ' . Tables::categories() . ' WHERE id IN (?, ?)', [$catWithImageId, $catWithoutImageId]);
+        $conn->executeStatement('DELETE FROM ' . 'images' . ' WHERE id = ?', [$imageId]);
+        $conn->executeStatement('DELETE FROM ' . 'categories' . ' WHERE id IN (?, ?)', [$catWithImageId, $catWithoutImageId]);
     }
 });

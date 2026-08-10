@@ -24,7 +24,6 @@ use Piwigo\Tests\Support\CurrentPathsTestFactory;
 use Piwigo\Tests\Support\LangTestFactory;
 use Piwigo\Tests\Support\PageStateTestFactory;
 use Piwigo\Db\DbConnection;
-use Piwigo\Db\Tables;
 use Piwigo\Html\HtmlService;
 use Piwigo\Tests\Support\TranslatorTestFactory;
 use Piwigo\Tests\Support\CurrentUserTestFactory;
@@ -89,11 +88,11 @@ final class CalendarRendererTest extends IntegrationTestCase
 
         $this->conn = DbConnection::build();
 
-        $this->conn->executeStatement("UPDATE " . Tables::images() . " SET date_available = '2024-03-10 00:00:00' WHERE id = 1");
-        $this->conn->executeStatement("UPDATE " . Tables::images() . " SET date_available = '2024-03-15 00:00:00' WHERE id = 2");
-        $this->conn->executeStatement("UPDATE " . Tables::images() . " SET date_available = '2024-07-04 00:00:00' WHERE id = 3");
-        $this->conn->executeStatement("UPDATE " . Tables::images() . " SET date_available = '2025-01-20 00:00:00' WHERE id = 4");
-        $this->conn->executeStatement("UPDATE " . Tables::images() . " SET date_available = '2025-01-25 00:00:00' WHERE id = 5");
+        $this->conn->executeStatement("UPDATE " . 'images' . " SET date_available = '2024-03-10 00:00:00' WHERE id = 1");
+        $this->conn->executeStatement("UPDATE " . 'images' . " SET date_available = '2024-03-15 00:00:00' WHERE id = 2");
+        $this->conn->executeStatement("UPDATE " . 'images' . " SET date_available = '2024-07-04 00:00:00' WHERE id = 3");
+        $this->conn->executeStatement("UPDATE " . 'images' . " SET date_available = '2025-01-20 00:00:00' WHERE id = 4");
+        $this->conn->executeStatement("UPDATE " . 'images' . " SET date_available = '2025-01-25 00:00:00' WHERE id = 5");
 
         $this->urlService = new CalendarRendererTestFakeUrlService();
         $this->htmlService = HtmlServiceTestFactory::build();

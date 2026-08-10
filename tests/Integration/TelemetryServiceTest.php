@@ -21,7 +21,6 @@ use Piwigo\Config\ConfigEntry;
 use Piwigo\Config\ConfigLoader;
 use Piwigo\Config\ConfigRepository;
 use Piwigo\Db\DbConnection;
-use Piwigo\Db\Tables;
 use Piwigo\Telemetry\TelemetryService;
 
 final class TelemetryServiceTest extends IntegrationTestCase
@@ -108,10 +107,10 @@ final class TelemetryServiceTest extends IntegrationTestCase
 
     public function test_build_payload_reports_real_fixture_counts(): void
     {
-        $imageCount = $this->scalarCount(Tables::images());
-        $categoryCount = $this->scalarCount(Tables::categories());
-        $userCount = $this->scalarCount(Tables::users());
-        $commentCount = $this->scalarCount(Tables::comments());
+        $imageCount = $this->scalarCount('images');
+        $categoryCount = $this->scalarCount('categories');
+        $userCount = $this->scalarCount('users');
+        $commentCount = $this->scalarCount('comments');
 
         $payload = $this->service->buildPayload();
 

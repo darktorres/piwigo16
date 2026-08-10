@@ -31,7 +31,6 @@ use Piwigo\Config\ConfigLoader;
 use Piwigo\Tests\Support\LangTestFactory;
 use Piwigo\Tests\Support\PageStateTestFactory;
 use Piwigo\Db\DbConnection;
-use Piwigo\Db\Tables;
 use Piwigo\Event\Template\SetStatusHeader;
 use Piwigo\Event\User\UserCommentInsertion;
 use Piwigo\Http\ResponseReadyException;
@@ -250,7 +249,7 @@ final class PictureCommentRendererTest extends IntegrationTestCase
             );
         } finally {
             unset($_POST['content'], $_POST['key']);
-            $this->conn->executeStatement("DELETE FROM " . Tables::comments() . " WHERE content = 'A moderated comment.'");
+            $this->conn->executeStatement("DELETE FROM " . 'comments' . " WHERE content = 'A moderated comment.'");
         }
     }
 
@@ -271,7 +270,7 @@ final class PictureCommentRendererTest extends IntegrationTestCase
             self::assertSame(['Your comment has been registered'], PageStateTestFactory::get()->infos);
         } finally {
             unset($_POST['content'], $_POST['key']);
-            $this->conn->executeStatement("DELETE FROM " . Tables::comments() . " WHERE content = 'A validated comment.'");
+            $this->conn->executeStatement("DELETE FROM " . 'comments' . " WHERE content = 'A validated comment.'");
         }
     }
 
@@ -372,7 +371,7 @@ final class PictureCommentRendererTest extends IntegrationTestCase
             self::assertSame('fixture_admin@example.test', $rowWithUserEmail['EMAIL']);
             self::assertSame('anon@example.test', $rowWithOwnEmail['EMAIL']);
         } finally {
-            $this->conn->executeStatement('DELETE FROM ' . Tables::comments() . ' WHERE id IN (?, ?)', [$commentIdWithUserEmail->value, $commentIdWithOwnEmail->value]);
+            $this->conn->executeStatement('DELETE FROM ' . 'comments' . ' WHERE id IN (?, ?)', [$commentIdWithUserEmail->value, $commentIdWithOwnEmail->value]);
         }
     }
 
@@ -416,7 +415,7 @@ final class PictureCommentRendererTest extends IntegrationTestCase
             self::assertSame(2, $adminCount);
             self::assertSame(1, $normalCount);
         } finally {
-            $this->conn->executeStatement("DELETE FROM " . Tables::comments() . " WHERE content IN ('Validated onlyValidated check.', 'Unvalidated onlyValidated check.')");
+            $this->conn->executeStatement("DELETE FROM " . 'comments' . " WHERE content IN ('Validated onlyValidated check.', 'Unvalidated onlyValidated check.')");
         }
     }
 
@@ -452,7 +451,7 @@ final class PictureCommentRendererTest extends IntegrationTestCase
             self::assertSame(1, CurrentTemplate::current()->get()->get_template_vars('COMMENT_COUNT'));
             self::assertIsString(CurrentTemplate::current()->get()->get_template_vars('COMMENTS_ORDER_URL'));
         } finally {
-            $this->conn->executeStatement('DELETE FROM ' . Tables::comments() . ' WHERE id = ?', [$commentId->value]);
+            $this->conn->executeStatement('DELETE FROM ' . 'comments' . ' WHERE id = ?', [$commentId->value]);
         }
     }
 
@@ -492,7 +491,7 @@ final class PictureCommentRendererTest extends IntegrationTestCase
             self::assertStringNotContainsString('start-42', $navbar['URL_NEXT']);
         } finally {
             $this->conn->executeStatement(
-                'DELETE FROM ' . Tables::comments() . ' WHERE id IN (?, ?, ?)',
+                'DELETE FROM ' . 'comments' . ' WHERE id IN (?, ?, ?)',
                 array_map(static fn (CommentId $id): int => $id->value, $commentIds)
             );
             CurrentConfigTestFactory::get()->nbCommentPage = 10;
@@ -557,7 +556,7 @@ final class PictureCommentRendererTest extends IntegrationTestCase
 
             self::assertNull(CurrentTemplate::current()->get()->get_template_vars('comment_add'));
         } finally {
-            $this->conn->executeStatement('DELETE FROM ' . Tables::comments() . ' WHERE id = ?', [$commentId->value]);
+            $this->conn->executeStatement('DELETE FROM ' . 'comments' . ' WHERE id = ?', [$commentId->value]);
         }
     }
 
@@ -686,7 +685,7 @@ final class PictureCommentRendererTest extends IntegrationTestCase
             self::assertSame('Notify plugins comment.', $captured['content']);
         } finally {
             unset($_POST['content'], $_POST['key']);
-            $this->conn->executeStatement("DELETE FROM " . Tables::comments() . " WHERE content = 'Notify plugins comment.'");
+            $this->conn->executeStatement("DELETE FROM " . 'comments' . " WHERE content = 'Notify plugins comment.'");
         }
     }
 
@@ -709,7 +708,7 @@ final class PictureCommentRendererTest extends IntegrationTestCase
             self::assertSame('MutationTestAuthor', $row['author']);
         } finally {
             unset($_POST['author'], $_POST['content'], $_POST['key']);
-            $this->conn->executeStatement("DELETE FROM " . Tables::comments() . " WHERE content = 'Trimmed mutation content check.'");
+            $this->conn->executeStatement("DELETE FROM " . 'comments' . " WHERE content = 'Trimmed mutation content check.'");
         }
     }
 
@@ -732,7 +731,7 @@ final class PictureCommentRendererTest extends IntegrationTestCase
             self::assertSame('guest', $row['author']);
         } finally {
             unset($_POST['author'], $_POST['content'], $_POST['key']);
-            $this->conn->executeStatement("DELETE FROM " . Tables::comments() . " WHERE content = 'Zero author fallback check.'");
+            $this->conn->executeStatement("DELETE FROM " . 'comments' . " WHERE content = 'Zero author fallback check.'");
         }
     }
 
@@ -779,7 +778,7 @@ final class PictureCommentRendererTest extends IntegrationTestCase
             self::assertSame('http://mutation-check.example.test', $row['website_url']);
         } finally {
             unset($_POST['content'], $_POST['website_url'], $_POST['key']);
-            $this->conn->executeStatement("DELETE FROM " . Tables::comments() . " WHERE content = 'Website url trim check.'");
+            $this->conn->executeStatement("DELETE FROM " . 'comments' . " WHERE content = 'Website url trim check.'");
         }
     }
 
@@ -805,7 +804,7 @@ final class PictureCommentRendererTest extends IntegrationTestCase
             self::assertSame(['Your comment has been registered'], PageStateTestFactory::get()->infos);
         } finally {
             unset($_POST['content'], $_POST['website_url'], $_POST['key']);
-            $this->conn->executeStatement("DELETE FROM " . Tables::comments() . " WHERE content = 'Zero website url no reject check.'");
+            $this->conn->executeStatement("DELETE FROM " . 'comments' . " WHERE content = 'Zero website url no reject check.'");
         }
     }
 
@@ -828,7 +827,7 @@ final class PictureCommentRendererTest extends IntegrationTestCase
             self::assertSame('mutation-check@example.test', $row['email']);
         } finally {
             unset($_POST['content'], $_POST['email'], $_POST['key']);
-            $this->conn->executeStatement("DELETE FROM " . Tables::comments() . " WHERE content = 'Email trim check.'");
+            $this->conn->executeStatement("DELETE FROM " . 'comments' . " WHERE content = 'Email trim check.'");
         }
     }
 
@@ -850,7 +849,7 @@ final class PictureCommentRendererTest extends IntegrationTestCase
             self::assertSame(['Your comment has been registered'], PageStateTestFactory::get()->infos);
         } finally {
             unset($_POST['content'], $_POST['email'], $_POST['key']);
-            $this->conn->executeStatement("DELETE FROM " . Tables::comments() . " WHERE content = 'Zero email no reject check.'");
+            $this->conn->executeStatement("DELETE FROM " . 'comments' . " WHERE content = 'Zero email no reject check.'");
         }
     }
 
@@ -956,7 +955,7 @@ final class PictureCommentRendererTest extends IntegrationTestCase
     {
         $row = $this->conn->createQueryBuilder()
             ->select('*')
-            ->from(Tables::comments())
+            ->from('comments')
             ->where('content = :content')
             ->setParameter('content', $content)
             ->executeQuery()

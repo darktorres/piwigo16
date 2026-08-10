@@ -23,7 +23,6 @@ use Piwigo\Core\Paths;
 use Piwigo\Tests\Support\PageStateTestFactory;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
-use Piwigo\Db\Tables;
 use Piwigo\Mail\NotificationByMailSender;
 use Piwigo\Notification\Projection\UserMailNotification;
 
@@ -132,7 +131,7 @@ final class NotificationByMailSenderTest extends IntegrationTestCase
 
         $this->conn = $conn;
         $row = $this->conn->fetchAssociative(
-            'SELECT check_key, enabled, last_send FROM ' . Tables::userMailNotification() . ' WHERE user_id = 1'
+            'SELECT check_key, enabled, last_send FROM ' . 'user_mail_notification' . ' WHERE user_id = 1'
         );
         self::assertIsArray($row);
         self::assertIsString($row['check_key']);
@@ -162,9 +161,9 @@ final class NotificationByMailSenderTest extends IntegrationTestCase
         // Idempotent even for tests that never touch user 4 -- belt-and-
         // suspenders cleanup so a failed assertion mid-test (which skips a
         // test-local finally-block restore) can't leak into later tests.
-        $this->conn->executeStatement('DELETE FROM ' . Tables::userMailNotification() . ' WHERE user_id = 4');
-        $this->conn->executeStatement('DELETE FROM ' . Tables::userAuthKeys() . ' WHERE user_id = 4');
-        $this->conn->executeStatement('UPDATE ' . Tables::users() . ' SET mail_address = NULL WHERE id = 4');
+        $this->conn->executeStatement('DELETE FROM ' . 'user_mail_notification' . ' WHERE user_id = 4');
+        $this->conn->executeStatement('DELETE FROM ' . 'user_auth_keys' . ' WHERE user_id = 4');
+        $this->conn->executeStatement('UPDATE ' . 'users' . ' SET mail_address = NULL WHERE id = 4');
         CurrentConfigTestFactory::get()->smtpHost = '';
         CurrentConfigTestFactory::get()->nbmListAllEnabledUsersToSend = false;
         CurrentConfigTestFactory::get()->nbmSendDetailedContent = true;
@@ -235,7 +234,7 @@ final class NotificationByMailSenderTest extends IntegrationTestCase
     private function setUser1LastSend(?string $lastSend): void
     {
         $this->conn->executeStatement(
-            'UPDATE ' . Tables::userMailNotification() . ' SET last_send = ? WHERE user_id = 1',
+            'UPDATE ' . 'user_mail_notification' . ' SET last_send = ? WHERE user_id = 1',
             [$lastSend]
         );
     }
@@ -243,7 +242,7 @@ final class NotificationByMailSenderTest extends IntegrationTestCase
     private function restoreUser1Row(): void
     {
         $this->conn->executeStatement(
-            'UPDATE ' . Tables::userMailNotification() . ' SET enabled = ?, last_send = ? WHERE user_id = 1',
+            'UPDATE ' . 'user_mail_notification' . ' SET enabled = ?, last_send = ? WHERE user_id = 1',
             [$this->user1OriginalRow['enabled'], $this->user1OriginalRow['last_send']]
         );
     }
@@ -251,7 +250,7 @@ final class NotificationByMailSenderTest extends IntegrationTestCase
     private function user1Enabled(): int
     {
         $value = $this->conn->fetchOne(
-            'SELECT enabled FROM ' . Tables::userMailNotification() . ' WHERE user_id = 1'
+            'SELECT enabled FROM ' . 'user_mail_notification' . ' WHERE user_id = 1'
         );
         self::assertTrue(is_bool($value) || is_numeric($value));
 
@@ -460,7 +459,7 @@ final class NotificationByMailSenderTest extends IntegrationTestCase
 
         self::assertNotSame($this->user1OriginalRow['check_key'], $key);
         $taken = $this->conn->fetchOne(
-            'SELECT COUNT(*) FROM ' . Tables::userMailNotification() . ' WHERE check_key = ?',
+            'SELECT COUNT(*) FROM ' . 'user_mail_notification' . ' WHERE check_key = ?',
             [$key]
         );
         self::assertIsNumeric($taken);
@@ -620,7 +619,7 @@ final class NotificationByMailSenderTest extends IntegrationTestCase
         // nbm_complementary_mail_content so the per-user
         // customize-content branch (never empty here, no plugin handler
         // registered) fires too.
-        $this->conn->executeStatement("UPDATE " . Tables::users() . " SET mail_address = 'temp4@example.test' WHERE id = 4");
+        $this->conn->executeStatement("UPDATE " . 'users' . " SET mail_address = 'temp4@example.test' WHERE id = 4");
         // check_key is varchar(16) -- must stay within that limit.
         $checkKey = 'user4-tmp-key';
         // enabled is a genuine boolean column -- a bare `1` literal in the
@@ -630,7 +629,7 @@ final class NotificationByMailSenderTest extends IntegrationTestCase
         // confirmed live).
         $enabledLiteral = $this->dbDriver === 'pgsql' ? 'true' : '1';
         $this->conn->executeStatement(
-            'INSERT INTO ' . Tables::userMailNotification() . " (user_id, check_key, enabled, last_send) VALUES (?, ?, {$enabledLiteral}, NULL)",
+            'INSERT INTO ' . 'user_mail_notification' . " (user_id, check_key, enabled, last_send) VALUES (?, ?, {$enabledLiteral}, NULL)",
             [4, $checkKey]
         );
         CurrentConfigTestFactory::get()->smtpHost = '127.0.0.1:1';
@@ -648,7 +647,7 @@ final class NotificationByMailSenderTest extends IntegrationTestCase
         );
 
         $authKeyCount = $this->conn->fetchOne(
-            'SELECT COUNT(*) FROM ' . Tables::userAuthKeys() . " WHERE user_id = 4 AND key_type = 'auth_key'"
+            'SELECT COUNT(*) FROM ' . 'user_auth_keys' . " WHERE user_id = 4 AND key_type = 'auth_key'"
         );
         self::assertSame(1, is_numeric($authKeyCount) ? (int) $authKeyCount : -1);
     }

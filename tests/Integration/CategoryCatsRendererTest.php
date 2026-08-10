@@ -36,7 +36,6 @@ use Piwigo\Core\Kernel;
 use Piwigo\Tests\Support\PageStateTestFactory;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
-use Piwigo\Db\Tables;
 use Piwigo\Event\Template\RenderCategoryName;
 use Piwigo\Group\GroupEntity;
 use Piwigo\Image\ImageEntity;
@@ -230,7 +229,7 @@ final class CategoryCatsRendererTest extends IntegrationTestCase
     #[Override]
     protected function tearDown(): void
     {
-        $this->conn->executeStatement('UPDATE ' . Tables::categories() . " SET status = 'public'");
+        $this->conn->executeStatement('UPDATE ' . 'categories' . " SET status = 'public'");
         CachePools::categoryTree()->clear();
         parent::tearDown();
     }
@@ -288,7 +287,7 @@ final class CategoryCatsRendererTest extends IntegrationTestCase
             $html = $this->renderedCategoriesHtml();
             self::assertStringNotContainsString('Empty Recent Test', $html);
         } finally {
-            $this->conn->executeStatement('DELETE FROM ' . Tables::categories() . ' WHERE id = ' . $newId);
+            $this->conn->executeStatement('DELETE FROM ' . 'categories' . ' WHERE id = ' . $newId);
         }
     }
 
@@ -306,11 +305,11 @@ final class CategoryCatsRendererTest extends IntegrationTestCase
         $newId = (int) $newIdRaw;
 
         $this->conn->executeStatement(
-            "INSERT INTO " . Tables::images() . " (file, path, date_available) VALUES ('toctou-probe.jpg', 'upload/toctou-probe.jpg', '2026-08-01 00:00:00')"
+            "INSERT INTO " . 'images' . " (file, path, date_available) VALUES ('toctou-probe.jpg', 'upload/toctou-probe.jpg', '2026-08-01 00:00:00')"
         );
         $newImageId = (int) $this->conn->lastInsertId();
         $this->conn->executeStatement(
-            'INSERT INTO ' . Tables::imageCategory() . ' (image_id, category_id) VALUES (?, ?)',
+            'INSERT INTO ' . 'image_category' . ' (image_id, category_id) VALUES (?, ?)',
             [$newImageId, $newId]
         );
         // Real bug, found live: without this, render()'s own representative-
@@ -325,7 +324,7 @@ final class CategoryCatsRendererTest extends IntegrationTestCase
         // doesn't either -- set it explicitly, matching what a real upload
         // actually does.
         $this->conn->executeStatement(
-            'UPDATE ' . Tables::categories() . ' SET representative_picture_id = ? WHERE id = ?',
+            'UPDATE ' . 'categories' . ' SET representative_picture_id = ? WHERE id = ?',
             [$newImageId, $newId]
         );
 
@@ -341,7 +340,7 @@ final class CategoryCatsRendererTest extends IntegrationTestCase
             // (a cache hit) still lists this category, but
             // findFullCategoriesByIds() (always a live read) no longer
             // finds it.
-            $this->conn->executeStatement('DELETE FROM ' . Tables::categories() . ' WHERE id = ' . $newId);
+            $this->conn->executeStatement('DELETE FROM ' . 'categories' . ' WHERE id = ' . $newId);
 
             // Must not throw/warn, and the real, still-existing category
             // must still render normally around the now-vanished one.
@@ -350,7 +349,7 @@ final class CategoryCatsRendererTest extends IntegrationTestCase
             self::assertStringNotContainsString('Toctou Probe Album', $html);
             self::assertStringContainsString('Sample Album', $html);
         } finally {
-            $this->conn->executeStatement('DELETE FROM ' . Tables::categories() . ' WHERE id = ' . $newId);
+            $this->conn->executeStatement('DELETE FROM ' . 'categories' . ' WHERE id = ' . $newId);
         }
     }
 
@@ -362,7 +361,7 @@ final class CategoryCatsRendererTest extends IntegrationTestCase
             throw new LogicException('Container returned an unexpected type for ' . CurrentConfig::class);
         }
         $currentConfig->allowRandomRepresentative = true;
-        $this->conn->executeStatement('UPDATE ' . Tables::categories() . ' SET representative_picture_id = NULL WHERE id = 2');
+        $this->conn->executeStatement('UPDATE ' . 'categories' . ' SET representative_picture_id = NULL WHERE id = 2');
 
         try {
             $this->renderer->render(Section::Categories, ['id' => 1], 0);
@@ -371,7 +370,7 @@ final class CategoryCatsRendererTest extends IntegrationTestCase
             self::assertTrue($item->isHit());
             self::assertContains($item->get(), ['4', '5']);
         } finally {
-            $this->conn->executeStatement('UPDATE ' . Tables::categories() . ' SET representative_picture_id = 4 WHERE id = 2');
+            $this->conn->executeStatement('UPDATE ' . 'categories' . ' SET representative_picture_id = 4 WHERE id = 2');
         }
     }
 
@@ -381,7 +380,7 @@ final class CategoryCatsRendererTest extends IntegrationTestCase
         // allow_random_representative stays disabled (the real fixture
         // default) -- category 1 has sub-categories with images, so it
         // must fall back to a sub-category's own representative instead.
-        $this->conn->executeStatement('UPDATE ' . Tables::categories() . ' SET representative_picture_id = NULL WHERE id = 1');
+        $this->conn->executeStatement('UPDATE ' . 'categories' . ' SET representative_picture_id = NULL WHERE id = 1');
 
         try {
             $this->renderer->render(Section::Categories, null, 0);
@@ -392,7 +391,7 @@ final class CategoryCatsRendererTest extends IntegrationTestCase
             self::assertTrue($item->isHit());
             self::assertSame('4', $item->get());
         } finally {
-            $this->conn->executeStatement('UPDATE ' . Tables::categories() . ' SET representative_picture_id = 1 WHERE id = 1');
+            $this->conn->executeStatement('UPDATE ' . 'categories' . ' SET representative_picture_id = 1 WHERE id = 1');
         }
     }
 
@@ -402,7 +401,7 @@ final class CategoryCatsRendererTest extends IntegrationTestCase
         // category 2 has no sub-categories of its own, so with no direct
         // representative and allow_random_representative disabled, no
         // branch can resolve an image_id at all.
-        $this->conn->executeStatement('UPDATE ' . Tables::categories() . ' SET representative_picture_id = NULL WHERE id = 2');
+        $this->conn->executeStatement('UPDATE ' . 'categories' . ' SET representative_picture_id = NULL WHERE id = 2');
 
         try {
             $this->renderer->render(Section::Categories, ['id' => 1], 0);
@@ -410,7 +409,7 @@ final class CategoryCatsRendererTest extends IntegrationTestCase
             $html = $this->renderedCategoriesHtml();
             self::assertStringNotContainsString('Nested Sub Album', $html);
         } finally {
-            $this->conn->executeStatement('UPDATE ' . Tables::categories() . ' SET representative_picture_id = 4 WHERE id = 2');
+            $this->conn->executeStatement('UPDATE ' . 'categories' . ' SET representative_picture_id = 4 WHERE id = 2');
         }
     }
 
@@ -425,7 +424,7 @@ final class CategoryCatsRendererTest extends IntegrationTestCase
         // Only image 1's date_creation is set -- the other 2 direct images
         // of category 1 stay NULL, so MIN/MAX both resolve to this single
         // real value rather than just echoing back a NULL.
-        $this->conn->executeStatement("UPDATE " . Tables::images() . " SET date_creation = '2021-03-10 08:00:00' WHERE id = 1");
+        $this->conn->executeStatement("UPDATE " . 'images' . " SET date_creation = '2021-03-10 08:00:00' WHERE id = 1");
 
         try {
             $this->renderer->render(Section::Categories, null, 0);
@@ -434,7 +433,7 @@ final class CategoryCatsRendererTest extends IntegrationTestCase
             $html = $this->renderedCategoriesHtml();
             self::assertStringContainsString($expected, $html);
         } finally {
-            $this->conn->executeStatement('UPDATE ' . Tables::images() . ' SET date_creation = NULL WHERE id = 1');
+            $this->conn->executeStatement('UPDATE ' . 'images' . ' SET date_creation = NULL WHERE id = 1');
         }
     }
 
@@ -447,7 +446,7 @@ final class CategoryCatsRendererTest extends IntegrationTestCase
         // column (checked directly, not via SQL, against the *fetched*
         // representative row) is what actually triggers the substitution.
         $this->seedUser(['image_access_list' => '4']);
-        $this->conn->executeStatement('UPDATE ' . Tables::images() . ' SET level = 5 WHERE id = 4');
+        $this->conn->executeStatement('UPDATE ' . 'images' . ' SET level = 5 WHERE id = 4');
 
         try {
             $this->renderer->render(Section::Categories, ['id' => 1], 0);
@@ -459,7 +458,7 @@ final class CategoryCatsRendererTest extends IntegrationTestCase
             self::assertTrue($item->isHit());
             self::assertSame('5', $item->get());
         } finally {
-            $this->conn->executeStatement('UPDATE ' . Tables::images() . ' SET level = 0 WHERE id = 4');
+            $this->conn->executeStatement('UPDATE ' . 'images' . ' SET level = 0 WHERE id = 4');
         }
     }
 
@@ -468,7 +467,7 @@ final class CategoryCatsRendererTest extends IntegrationTestCase
         // Both of category 2's own images (4 and 5) excluded this time --
         // no substitute exists anywhere in the category.
         $this->seedUser(['image_access_list' => '4,5']);
-        $this->conn->executeStatement('UPDATE ' . Tables::images() . ' SET level = 5 WHERE id = 4');
+        $this->conn->executeStatement('UPDATE ' . 'images' . ' SET level = 5 WHERE id = 4');
 
         try {
             $this->renderer->render(Section::Categories, ['id' => 1], 0);
@@ -477,7 +476,7 @@ final class CategoryCatsRendererTest extends IntegrationTestCase
             self::assertTrue($item->isHit());
             self::assertNull($item->get());
         } finally {
-            $this->conn->executeStatement('UPDATE ' . Tables::images() . ' SET level = 0 WHERE id = 4');
+            $this->conn->executeStatement('UPDATE ' . 'images' . ' SET level = 0 WHERE id = 4');
         }
     }
 

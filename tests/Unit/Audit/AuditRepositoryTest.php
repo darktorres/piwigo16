@@ -10,7 +10,6 @@ use Piwigo\Common\ValueObject\IpAddress;
 use Piwigo\Common\ValueObject\SqlDateTime;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
-use Piwigo\Db\Tables;
 
 /**
  * Piwigo\Audit\AuditRepository -- has its own dedicated
@@ -39,7 +38,7 @@ function auditTestRepo(): AuditRepository
 function auditTestPurge(Connection $conn, string $entityType): void
 {
     $conn->createQueryBuilder()
-        ->delete(Tables::auditLog())
+        ->delete('audit_log')
         ->where('entity_type = :entityType')
         ->setParameter('entityType', $entityType)
         ->executeStatement();
@@ -67,7 +66,7 @@ test('insert() persists every column and returns the real auto-generated id', fu
 
         $stored = $conn->createQueryBuilder()
             ->select('actor_id', 'action', 'entity_id', 'before_json', 'after_json', 'ip_address', 'created_at', 'prev_hash', 'row_hash')
-            ->from(Tables::auditLog())
+            ->from('audit_log')
             ->where('id = :id')
             ->setParameter('id', $id)
             ->fetchAssociative();
@@ -133,7 +132,7 @@ test('findLatestRowHash() really does bypass the identity map (HINT_REFRESH), no
         // HINT_REFRESH, findLatestRowHash() would still return
         // str_repeat('a', 64) here.
         $conn->createQueryBuilder()
-            ->update(Tables::auditLog())
+            ->update('audit_log')
             ->set('row_hash', ':hash')
             ->where('id = :id')
             ->setParameter('hash', str_repeat('c', 64))
@@ -189,7 +188,7 @@ test('findAllInOrder() really does bypass the identity map (HINT_REFRESH), not j
         // a raw UPDATE bypassing the ORM leaves this same EntityManager's
         // already-tracked entity stale without the hint.
         $conn->createQueryBuilder()
-            ->update(Tables::auditLog())
+            ->update('audit_log')
             ->set('row_hash', ':hash')
             ->where('id = :id')
             ->setParameter('hash', str_repeat('d', 64))

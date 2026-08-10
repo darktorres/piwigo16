@@ -14,7 +14,6 @@ use Piwigo\Caddie\CaddieRepository;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\ConfigLoader;
 use Piwigo\Db\DbConnection;
-use Piwigo\Db\Tables;
 
 /**
  * caddie is empty in the fixture and only 4 real (FK-valid) user ids exist,
@@ -185,7 +184,7 @@ final class CaddieRepositoryTest extends IntegrationTestCase
     private function clearCaddie(int $userId): void
     {
         $this->conn->createQueryBuilder()
-            ->delete(Tables::caddie())
+            ->delete('caddie')
             ->where('user_id = :userId')
             ->setParameter('userId', $userId)
             ->executeStatement();
@@ -198,7 +197,7 @@ final class CaddieRepositoryTest extends IntegrationTestCase
     {
         $ids = $this->conn->createQueryBuilder()
             ->select('element_id')
-            ->from(Tables::caddie())
+            ->from('caddie')
             ->where('user_id = :userId')
             ->setParameter('userId', $userId)
             ->orderBy('element_id', 'ASC')

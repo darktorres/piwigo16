@@ -8,7 +8,6 @@ use Override;
 use Doctrine\DBAL\Connection;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
-use Piwigo\Db\Tables;
 use Piwigo\Lang\LangRepository;
 use Piwigo\Lang\LanguageEntity;
 use Piwigo\Lang\Projection\LanguageListing;
@@ -52,7 +51,7 @@ final class LangRepositoryTest extends IntegrationTestCase
     public function test_find_all_rows_excludes_a_row_with_a_null_name(): void
     {
         $this->conn->executeStatement(
-            "INSERT INTO " . Tables::languages() . " (id, version, name) VALUES ('zz_NM', '1.0.0', NULL)"
+            "INSERT INTO " . 'languages' . " (id, version, name) VALUES ('zz_NM', '1.0.0', NULL)"
         );
 
         try {
@@ -60,14 +59,14 @@ final class LangRepositoryTest extends IntegrationTestCase
 
             self::assertEquals([new LanguageListing('en_UK', 'English (Great Britain)')], $rows);
         } finally {
-            $this->conn->executeStatement("DELETE FROM " . Tables::languages() . " WHERE id = 'zz_NM'");
+            $this->conn->executeStatement("DELETE FROM " . 'languages' . " WHERE id = 'zz_NM'");
         }
     }
 
     public function test_find_all_rows_orders_by_name(): void
     {
         $this->conn->executeStatement(
-            "INSERT INTO " . Tables::languages() . " (id, version, name) VALUES ('zz_AA', '1.0.0', 'AAA First')"
+            "INSERT INTO " . 'languages' . " (id, version, name) VALUES ('zz_AA', '1.0.0', 'AAA First')"
         );
 
         try {
@@ -78,7 +77,7 @@ final class LangRepositoryTest extends IntegrationTestCase
                 $rows
             );
         } finally {
-            $this->conn->executeStatement("DELETE FROM " . Tables::languages() . " WHERE id = 'zz_AA'");
+            $this->conn->executeStatement("DELETE FROM " . 'languages' . " WHERE id = 'zz_AA'");
         }
     }
 }

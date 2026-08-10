@@ -8,7 +8,6 @@ use Override;
 use CURLFile;
 use Doctrine\DBAL\Connection;
 use Piwigo\Db\DbConnection;
-use Piwigo\Db\Tables;
 
 /**
  * Ws\PwgImages's older, 2-step chunked-upload API: addChunk, add --
@@ -54,7 +53,7 @@ final class WsImagesChunkedUploadTest extends ContractTestCase
     protected function tearDown(): void
     {
         foreach ($this->createdImageIds as $id) {
-            $this->conn->executeStatement('DELETE FROM ' . Tables::images() . ' WHERE id = ?', [$id]);
+            $this->conn->executeStatement('DELETE FROM ' . 'images' . ' WHERE id = ?', [$id]);
         }
         parent::tearDown();
     }
@@ -146,11 +145,11 @@ final class WsImagesChunkedUploadTest extends ContractTestCase
         $this->createdImageIds[] = $imageId;
         self::assertIsString($result['url']);
 
-        $name = $this->conn->fetchOne('SELECT name FROM ' . Tables::images() . ' WHERE id = ?', [$imageId]);
+        $name = $this->conn->fetchOne('SELECT name FROM ' . 'images' . ' WHERE id = ?', [$imageId]);
         self::assertSame('Chunked upload test photo', $name);
 
         $categoryId = $this->conn->fetchOne(
-            'SELECT category_id FROM ' . Tables::imageCategory() . ' WHERE image_id = ?',
+            'SELECT category_id FROM ' . 'image_category' . ' WHERE image_id = ?',
             [$imageId]
         );
         self::assertIsNumeric($categoryId);
@@ -257,7 +256,7 @@ final class WsImagesChunkedUploadTest extends ContractTestCase
         $imageId = (int) $imageId;
         $this->createdImageIds[] = $imageId;
 
-        $name = $this->conn->fetchOne('SELECT name FROM ' . Tables::images() . ' WHERE id = ?', [$imageId]);
+        $name = $this->conn->fetchOne('SELECT name FROM ' . 'images' . ' WHERE id = ?', [$imageId]);
         self::assertSame('Async upload test photo', $name);
     }
 
@@ -286,7 +285,7 @@ final class WsImagesChunkedUploadTest extends ContractTestCase
         // filesize (bytes) comfortably bigger than the 70-byte TINY_PNG_B64
         // fixture used to build a "smaller replacement" merged file below.
         $this->conn->executeStatement(
-            'INSERT INTO ' . Tables::images() . ' (file, path, md5sum, width, height, filesize) VALUES (?, ?, ?, ?, ?, ?)',
+            'INSERT INTO ' . 'images' . ' (file, path, md5sum, width, height, filesize) VALUES (?, ?, ?, ?, ?, ?)',
             [$filename, 'upload/2026/08/01/' . $filename, $md5sum, 200, 150, 1000]
         );
         $id = (int) $this->conn->lastInsertId();
@@ -538,7 +537,7 @@ final class WsImagesChunkedUploadTest extends ContractTestCase
         // even a modest real replacement clears it (do_update only needs
         // *one* of width/height/filesize to grow).
         $this->conn->executeStatement(
-            'UPDATE ' . Tables::images() . ' SET filesize = 0 WHERE id = ?',
+            'UPDATE ' . 'images' . ' SET filesize = 0 WHERE id = ?',
             [$imageId]
         );
 

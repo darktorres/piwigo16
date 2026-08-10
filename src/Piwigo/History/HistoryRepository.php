@@ -17,7 +17,6 @@ use Piwigo\Common\ValueObject\SqlDate;
 use Piwigo\Common\ValueObject\SqlTime;
 use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Core\Env;
-use Piwigo\Db\Tables;
 use Piwigo\History\Projection\GroupedCountSince;
 use Piwigo\History\Projection\HistorySearchRow;
 use Piwigo\History\Projection\HistorySummaryCount;
@@ -816,7 +815,7 @@ final class HistoryRepository extends EntityRepository implements LastVisitLooku
     {
         $conn = $this->getEntityManager()
             ->getConnection();
-        $historyTable = Tables::history();
+        $historyTable = 'history';
 
         if ($conn->getDatabasePlatform() instanceof PostgreSQLPlatform) {
             $sections = $conn->executeQuery(<<<SQL
@@ -829,7 +828,7 @@ final class HistoryRepository extends EntityRepository implements LastVisitLooku
             ]));
         }
 
-        // {$historyTable} is a structural Tables::history() constant, no
+        // {$historyTable} is a structural 'history' constant, no
         // real value spliced.
         $rows = $conn->executeQuery(<<<SQL
             DESC {$historyTable}
@@ -881,7 +880,7 @@ final class HistoryRepository extends EntityRepository implements LastVisitLooku
         // this method's own docblock) rather than raw user input.
         $enumList = implode(',', array_map(static fn (string $option): string => "'" . $option . "'", array_unique($options)));
 
-        $historyTable = Tables::history();
+        $historyTable = 'history';
         $conn->executeStatement(
             <<<SQL
             ALTER TABLE {$historyTable} CHANGE section section enum({$enumList}) DEFAULT NULL

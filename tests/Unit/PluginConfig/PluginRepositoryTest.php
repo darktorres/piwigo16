@@ -6,7 +6,6 @@ use Doctrine\DBAL\Connection;
 use Piwigo\Common\ValueObject\PluginId;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
-use Piwigo\Db\Tables;
 use Piwigo\PluginConfig\PluginEntity;
 use Piwigo\PluginConfig\PluginRepository;
 
@@ -27,7 +26,7 @@ function pluginRepositoryTestRepo(): PluginRepository
 function pluginRepositoryTestInsert(Connection $conn, string $id, string $state, string $version): void
 {
     $conn->createQueryBuilder()
-        ->insert(Tables::plugins())
+        ->insert('plugins')
         ->values([
             'id' => ':id',
             'state' => ':state',
@@ -42,7 +41,7 @@ function pluginRepositoryTestInsert(Connection $conn, string $id, string $state,
 function pluginRepositoryTestDelete(Connection $conn, string $id): void
 {
     $conn->createQueryBuilder()
-        ->delete(Tables::plugins())
+        ->delete('plugins')
         ->where('id = :id')
         ->setParameter('id', $id)
         ->executeStatement();
@@ -122,7 +121,7 @@ test('updateVersion() updates only the given plugin\'s version', function (): vo
 
         $version = $conn->createQueryBuilder()
             ->select('version')
-            ->from(Tables::plugins())
+            ->from('plugins')
             ->where('id = :id')
             ->setParameter('id', $id)
             ->fetchOne();

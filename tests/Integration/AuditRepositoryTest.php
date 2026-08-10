@@ -16,7 +16,6 @@ use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\ConfigLoader;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
-use Piwigo\Db\Tables;
 
 /**
  * The fixture actually seeds 3 real audit_log rows (group-creation events
@@ -55,13 +54,13 @@ final class AuditRepositoryTest extends IntegrationTestCase
 
         $this->conn = DbConnection::build();
         $this->repo = EntityManagerFactory::build($this->conn)->getRepository(AuditLogEntity::class);
-        $this->conn->executeStatement('DELETE FROM ' . Tables::auditLog());
+        $this->conn->executeStatement('DELETE FROM ' . 'audit_log');
     }
 
     #[Override]
     protected function tearDown(): void
     {
-        $this->conn->executeStatement('DELETE FROM ' . Tables::auditLog());
+        $this->conn->executeStatement('DELETE FROM ' . 'audit_log');
         parent::tearDown();
     }
 
@@ -89,7 +88,7 @@ final class AuditRepositoryTest extends IntegrationTestCase
 
         $row = $this->conn->createQueryBuilder()
             ->select('*')
-            ->from(Tables::auditLog())
+            ->from('audit_log')
             ->where('id = :id')
             ->setParameter('id', $id)
             ->executeQuery()
@@ -129,7 +128,7 @@ final class AuditRepositoryTest extends IntegrationTestCase
 
         $actorId = $this->conn->createQueryBuilder()
             ->select('actor_id')
-            ->from(Tables::auditLog())
+            ->from('audit_log')
             ->where('id = :id')
             ->setParameter('id', $id)
             ->executeQuery()

@@ -10,7 +10,7 @@ use Piwigo\Group\GroupAccessEntity;
 /**
  * {@see CategoryRepository::deleteInconsistentAccess()}'s `$table`/
  * `$field` pair, enumerated -- {@see CategoryService}'s own fixed
- * `[Tables::userAccess() => 'user_id', Tables::groupAccess() => 'group_id']`
+ * `['user_access' => 'user_id', 'group_access' => 'group_id']`
  * map.
  *
  * {@see entityClassAndFieldProperty()} maps each case to real DQL --

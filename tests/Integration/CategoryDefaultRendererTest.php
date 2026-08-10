@@ -11,7 +11,6 @@ use Piwigo\Url\RootPathOverride;
 use Piwigo\Tests\Support\UrlServiceTestFactory;
 use Piwigo\Core\ProcessCache;
 use Piwigo\Tests\Support\LangTestFactory;
-use Piwigo\Db\Tables;
 use Piwigo\Tests\Support\TemplateTestFactory;
 use Error;
 use Doctrine\DBAL\Connection;
@@ -131,14 +130,14 @@ final class CategoryDefaultRendererTest extends IntegrationTestCase
     {
         // Restore the fixture's real hit=0 for id=3 in case a test mutated
         // it via setImageHit() below.
-        $this->conn->executeStatement('UPDATE ' . Tables::images() . ' SET hit = 0 WHERE id = 3');
+        $this->conn->executeStatement('UPDATE ' . 'images' . ' SET hit = 0 WHERE id = 3');
         parent::tearDown();
     }
 
     private function setImageHit(int $imageId, int $hit): void
     {
         $this->conn->executeStatement(
-            'UPDATE ' . Tables::images() . ' SET hit = :hit WHERE id = :id',
+            'UPDATE ' . 'images' . ' SET hit = :hit WHERE id = :id',
             ['hit' => $hit, 'id' => $imageId]
         );
     }

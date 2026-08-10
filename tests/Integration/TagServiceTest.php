@@ -33,7 +33,6 @@ namespace Piwigo\Tests\Integration {
     use Piwigo\Tests\Support\CurrentConfigTestFactory;
     use Piwigo\Config\ConfigLoader;
     use Piwigo\Db\DbConnection;
-    use Piwigo\Db\Tables;
     use Piwigo\Event\Tag\GetTagAltNames;
     use Piwigo\Event\Tag\GetTagNameLikeWhere;
     use Piwigo\Event\Tag\RenderTagUrl;
@@ -200,8 +199,8 @@ namespace Piwigo\Tests\Integration {
             // image/tag association rows staying the same.
             $imageId = $this->conn->createQueryBuilder()
                 ->select('ic.image_id')
-                ->from(Tables::imageCategory(), 'ic')
-                ->where('ic.image_id NOT IN (SELECT image_id FROM ' . Tables::imageTag() . ' WHERE tag_id = 1)')
+                ->from('image_category', 'ic')
+                ->where('ic.image_id NOT IN (SELECT image_id FROM ' . 'image_tag' . ' WHERE tag_id = 1)')
                 ->setMaxResults(1)
                 ->executeQuery()
                 ->fetchOne();
@@ -210,7 +209,7 @@ namespace Piwigo\Tests\Integration {
             $before = array_column($this->service->getAvailableTags(), 'id');
 
             $this->conn->executeStatement(
-                'INSERT INTO ' . Tables::imageTag() . ' (image_id, tag_id) VALUES (?, 1)',
+                'INSERT INTO ' . 'image_tag' . ' (image_id, tag_id) VALUES (?, 1)',
                 [$imageId]
             );
 
@@ -222,7 +221,7 @@ namespace Piwigo\Tests\Integration {
                 self::assertContains(1, $bypassed, 'an explicit tag_id filter always bypasses this cache');
             } finally {
                 $this->conn->executeStatement(
-                    'DELETE FROM ' . Tables::imageTag() . ' WHERE image_id = ? AND tag_id = 1',
+                    'DELETE FROM ' . 'image_tag' . ' WHERE image_id = ? AND tag_id = 1',
                     [$imageId]
                 );
             }
@@ -246,14 +245,14 @@ namespace Piwigo\Tests\Integration {
                     $name,
                     $this->conn->createQueryBuilder()
                         ->select('name')
-                        ->from(Tables::tags())
+                        ->from('tags')
                         ->where('id = :id')
                         ->setParameter('id', $id->value)
                         ->executeQuery()
                         ->fetchOne()
                 );
             } finally {
-                $this->conn->executeStatement('DELETE FROM ' . Tables::tags() . ' WHERE name = ?', [$name]);
+                $this->conn->executeStatement('DELETE FROM ' . 'tags' . ' WHERE name = ?', [$name]);
             }
         }
 
@@ -272,7 +271,7 @@ namespace Piwigo\Tests\Integration {
                 $this->service->setTagsOf([4 => [TagId::from(3)]]);
                 self::assertEqualsCanonicalizing([TagId::from(3)], $this->service->getImageTagIds([4])[4]);
             } finally {
-                $this->conn->executeStatement('DELETE FROM ' . Tables::imageTag() . ' WHERE image_id = 4');
+                $this->conn->executeStatement('DELETE FROM ' . 'image_tag' . ' WHERE image_id = 4');
             }
         }
 
@@ -297,7 +296,7 @@ namespace Piwigo\Tests\Integration {
 
                 self::assertSame([], $this->service->compareImageTagLists($before, $after));
             } finally {
-                $this->conn->executeStatement('DELETE FROM ' . Tables::imageTag() . ' WHERE image_id = 4');
+                $this->conn->executeStatement('DELETE FROM ' . 'image_tag' . ' WHERE image_id = 4');
             }
         }
 
@@ -314,7 +313,7 @@ namespace Piwigo\Tests\Integration {
         public function test_get_orphan_tags_finds_a_tag_with_no_images_past_the_grace_period(): void
         {
             $name = 'orphan-tag-' . uniqid();
-            $this->conn->insert(Tables::tags(), [
+            $this->conn->insert('tags', [
                 'name' => $name,
                 'url_name' => $name,
                 // past the 1-day grace period findOrphanTags() applies.
@@ -328,14 +327,14 @@ namespace Piwigo\Tests\Integration {
 
                 self::assertContains($id, $orphanIds);
             } finally {
-                $this->conn->executeStatement('DELETE FROM ' . Tables::tags() . ' WHERE id = ?', [$id]);
+                $this->conn->executeStatement('DELETE FROM ' . 'tags' . ' WHERE id = ?', [$id]);
             }
         }
 
         public function test_delete_orphan_tags_removes_a_genuinely_orphaned_tag(): void
         {
             $name = 'orphan-tag-' . uniqid();
-            $this->conn->insert(Tables::tags(), [
+            $this->conn->insert('tags', [
                 'name' => $name,
                 'url_name' => $name,
                 'lastmodified' => '2020-01-01 00:00:00',
@@ -346,7 +345,7 @@ namespace Piwigo\Tests\Integration {
 
             $remaining = $this->conn->createQueryBuilder()
                 ->select('id')
-                ->from(Tables::tags())
+                ->from('tags')
                 ->where('id = :id')
                 ->setParameter('id', $id)
                 ->executeQuery()
@@ -389,8 +388,8 @@ namespace Piwigo\Tests\Integration {
                 enabledHigh: false,
             ));
 
-            $tagsTable = Tables::tags();
-            $imageTagTable = Tables::imageTag();
+            $tagsTable = 'tags';
+            $imageTagTable = 'image_tag';
             $suffix = bin2hex(random_bytes(4));
 
             $tagValues = [];
@@ -490,20 +489,20 @@ namespace Piwigo\Tests\Integration {
             $name = 'cache-hit-tag-' . uniqid();
 
             $firstId = $this->service->tagIdFromTagName($name);
-            $this->conn->executeStatement('DELETE FROM ' . Tables::tags() . ' WHERE id = ?', [$firstId->value]);
+            $this->conn->executeStatement('DELETE FROM ' . 'tags' . ' WHERE id = ?', [$firstId->value]);
 
             try {
                 $secondId = $this->service->tagIdFromTagName($name);
 
                 self::assertEquals($firstId, $secondId);
-                $tagCount = $this->conn->createQueryBuilder()->select('COUNT(*)')->from(Tables::tags())->where('name = :name')->setParameter('name', $name)->executeQuery()->fetchOne();
+                $tagCount = $this->conn->createQueryBuilder()->select('COUNT(*)')->from('tags')->where('name = :name')->setParameter('name', $name)->executeQuery()->fetchOne();
                 self::assertSame(
                     0,
                     is_numeric($tagCount) ? (int) $tagCount : -1,
                     'the cache hit must never re-insert the deleted row'
                 );
             } finally {
-                $this->conn->executeStatement('DELETE FROM ' . Tables::tags() . ' WHERE name = ?', [$name]);
+                $this->conn->executeStatement('DELETE FROM ' . 'tags' . ' WHERE name = ?', [$name]);
             }
         }
 
@@ -523,7 +522,7 @@ namespace Piwigo\Tests\Integration {
                 $this->service->tagIdFromTagName($name);
             } finally {
                 EventDispatcherTestFactory::get()->reset();
-                $this->conn->executeStatement('DELETE FROM ' . Tables::tags() . ' WHERE name = ?', [$name]);
+                $this->conn->executeStatement('DELETE FROM ' . 'tags' . ' WHERE name = ?', [$name]);
             }
         }
 
@@ -578,7 +577,7 @@ namespace Piwigo\Tests\Integration {
                     $tagName,
                     $this->conn->createQueryBuilder()
                         ->select('name')
-                        ->from(Tables::tags())
+                        ->from('tags')
                         ->where('id = :id')
                         ->setParameter('id', $id->value)
                         ->executeQuery()
@@ -586,7 +585,7 @@ namespace Piwigo\Tests\Integration {
                 );
             } finally {
                 EventDispatcherTestFactory::get()->reset();
-                $this->conn->executeStatement('DELETE FROM ' . Tables::tags() . ' WHERE name = ?', [$tagName]);
+                $this->conn->executeStatement('DELETE FROM ' . 'tags' . ' WHERE name = ?', [$tagName]);
             }
         }
 
@@ -687,10 +686,10 @@ namespace Piwigo\Tests\Integration {
                 self::assertCount(1, $ids);
                 self::assertSame(
                     $name,
-                    $this->conn->createQueryBuilder()->select('name')->from(Tables::tags())->where('id = :id')->setParameter('id', $ids[0]->value)->executeQuery()->fetchOne()
+                    $this->conn->createQueryBuilder()->select('name')->from('tags')->where('id = :id')->setParameter('id', $ids[0]->value)->executeQuery()->fetchOne()
                 );
             } finally {
-                $this->conn->executeStatement('DELETE FROM ' . Tables::tags() . ' WHERE name = ?', [$name]);
+                $this->conn->executeStatement('DELETE FROM ' . 'tags' . ' WHERE name = ?', [$name]);
             }
         }
 

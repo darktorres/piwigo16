@@ -30,7 +30,6 @@ use Piwigo\Config\ConfigRepository;
 use Piwigo\Core\FilesystemHelper;
 use Piwigo\Core\Paths;
 use Piwigo\Db\DbConnection;
-use Piwigo\Db\Tables;
 
 /**
  * Shared infrastructure for integration tests.
@@ -459,7 +458,7 @@ abstract class IntegrationTestCase extends TestCase
         // the identical "this checkout's real root" value -- self-contained,
         // no initialization-order dependency.
         DbConnection::build()->executeStatement(
-            'UPDATE ' . Tables::sites() . ' SET galleries_url = ? WHERE id = 1',
+            'UPDATE ' . 'sites' . ' SET galleries_url = ? WHERE id = 1',
             [dirname(__DIR__, 2) . '/galleries/']
         );
 

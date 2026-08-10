@@ -29,7 +29,6 @@ use Piwigo\Core\FilesystemHelper;
 use Piwigo\Tests\Support\LangTestFactory;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Paths;
-use Piwigo\Db\Tables;
 use Piwigo\Storage\StorageRegistry;
 use Piwigo\Template\CurrentTemplate;
 
@@ -463,7 +462,7 @@ final class ThemesStandardPagesPageRendererTest extends IntegrationTestCase
     private function rawConfigValue(string $param): ?string
     {
         $value = DbConnection::build()->fetchOne(
-            'SELECT value FROM ' . Tables::config() . " WHERE param = '{$param}'"
+            'SELECT value FROM ' . 'config' . " WHERE param = '{$param}'"
         );
         if ($value === false) {
             return null;

@@ -19,8 +19,8 @@ use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
  *
  *  - 3 "row id"/"category_id" is-not-a-real-scalar defensive guards (the
  *    `continue;` bodies around $row['id'] and $item['category_id']/
- *    ['uppercats']) -- Tables::images().id and Tables::imageCategory().
- *    category_id/Tables::categories().uppercats are all NOT NULL columns
+ *    ['uppercats']) -- 'images'.id and 'image_category'.
+ *    category_id/'categories'.uppercats are all NOT NULL columns
  *    (auto_increment PK for id), so a real query can never produce the
  *    shape these guard against.
  *  - The `if ($row_cat_id !== null and in_array(...))` true-branch (the

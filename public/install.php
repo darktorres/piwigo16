@@ -43,13 +43,10 @@ if (isset($_POST['install'])) {
     $prefixeTable = InstallWizard::DEFAULT_PREFIX_TABLE;
 }
 
-// Piwigo\Db\Tables::*() (used throughout the wizard) reads
-// DbCredentials::current()->prefix -- there's no database.inc.php/.env to
-// read a real db_prefix from until this wizard writes one, so the
-// user-chosen $prefixeTable must be seeded into the process environment
-// directly here, or every Tables::*() call downstream would fall back to
-// whatever's already there (a coincidental PIWIGO_DB_PREFIX env var, or
-// the 'piwigo_' default) instead of the real chosen prefix.
+// TODO(Phase 4): this whole $prefixeTable/PIWIGO_DB_PREFIX seed is dead --
+// DbCredentials no longer has a $prefix property to read it into (removed
+// with the table-prefix-removal work) and every table name downstream is
+// now a bare literal string, not prefix-derived.
 $dbCredentials = InstallBootstrap::dbCredentials();
 $dbCredentials->seed([
     'PIWIGO_DB_PREFIX' => $prefixeTable,

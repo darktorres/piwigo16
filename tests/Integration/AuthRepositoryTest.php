@@ -17,7 +17,6 @@ use Piwigo\Auth\AuthRepository;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\ConfigLoader;
 use Piwigo\Db\DbConnection;
-use Piwigo\Db\Tables;
 
 final class AuthRepositoryTest extends IntegrationTestCase
 {
@@ -71,7 +70,7 @@ final class AuthRepositoryTest extends IntegrationTestCase
 
         $value = $this->conn->createQueryBuilder()
             ->select('language')
-            ->from(Tables::userInfos())
+            ->from('user_infos')
             ->where('user_id = :id')
             ->setParameter('id', 1)
             ->executeQuery()
@@ -80,7 +79,7 @@ final class AuthRepositoryTest extends IntegrationTestCase
         self::assertSame('fr_FR', $value);
 
         $this->conn->executeStatement(
-            'UPDATE ' . Tables::userInfos() . " SET language = 'en_UK' WHERE user_id = 1"
+            'UPDATE ' . 'user_infos' . " SET language = 'en_UK' WHERE user_id = 1"
         );
     }
 
@@ -109,7 +108,7 @@ final class AuthRepositoryTest extends IntegrationTestCase
 
         $row = $this->conn->createQueryBuilder()
             ->select('activation_key', 'activation_key_expire')
-            ->from(Tables::userInfos())
+            ->from('user_infos')
             ->where('user_id = :id')
             ->setParameter('id', 4)
             ->executeQuery()
@@ -136,7 +135,7 @@ final class AuthRepositoryTest extends IntegrationTestCase
         try {
             $row = $this->conn->createQueryBuilder()
                 ->select('activation_key', 'activation_key_expire')
-                ->from(Tables::userInfos())
+                ->from('user_infos')
                 ->where('user_id = :id')
                 ->setParameter('id', 4)
                 ->executeQuery()
@@ -160,18 +159,18 @@ final class AuthRepositoryTest extends IntegrationTestCase
     public function test_find_last_visit_from_history_returns_the_most_recent_date_and_time(): void
     {
         $this->conn->executeStatement(
-            'INSERT INTO ' . Tables::history() . ' (date, time, user_id, IP) VALUES (?, ?, ?, ?)',
+            'INSERT INTO ' . 'history' . ' (date, time, user_id, IP) VALUES (?, ?, ?, ?)',
             ['2026-07-20', '08:00:00', 4, '10.0.0.5']
         );
         $this->conn->executeStatement(
-            'INSERT INTO ' . Tables::history() . ' (date, time, user_id, IP) VALUES (?, ?, ?, ?)',
+            'INSERT INTO ' . 'history' . ' (date, time, user_id, IP) VALUES (?, ?, ?, ?)',
             ['2026-07-25', '14:30:00', 4, '10.0.0.5']
         );
 
         try {
             self::assertSame('2026-07-25 14:30:00', $this->repo->findLastVisitFromHistory(4, $this->historyLookup()));
         } finally {
-            $this->conn->executeStatement('DELETE FROM ' . Tables::history() . ' WHERE user_id = 4');
+            $this->conn->executeStatement('DELETE FROM ' . 'history' . ' WHERE user_id = 4');
         }
     }
 
@@ -187,7 +186,7 @@ final class AuthRepositoryTest extends IntegrationTestCase
         try {
             $row = $this->conn->createQueryBuilder()
                 ->select('last_visit', 'last_visit_from_history')
-                ->from(Tables::userInfos())
+                ->from('user_infos')
                 ->where('user_id = :id')
                 ->setParameter('id', 4)
                 ->executeQuery()
@@ -201,7 +200,7 @@ final class AuthRepositoryTest extends IntegrationTestCase
         } finally {
             $lastVisitLiteral = $this->dbDriver === 'pgsql' ? 'false' : '0';
             $this->conn->executeStatement(
-                'UPDATE ' . Tables::userInfos() . " SET last_visit = NULL, last_visit_from_history = {$lastVisitLiteral} WHERE user_id = 4"
+                'UPDATE ' . 'user_infos' . " SET last_visit = NULL, last_visit_from_history = {$lastVisitLiteral} WHERE user_id = 4"
             );
         }
     }
@@ -217,7 +216,7 @@ final class AuthRepositoryTest extends IntegrationTestCase
 
         $row = $this->conn->createQueryBuilder()
             ->select('last_visit')
-            ->from(Tables::userInfos())
+            ->from('user_infos')
             ->where('user_id = :id')
             ->setParameter('id', 4)
             ->executeQuery()
@@ -228,7 +227,7 @@ final class AuthRepositoryTest extends IntegrationTestCase
 
         $lastVisitLiteral = $this->dbDriver === 'pgsql' ? 'false' : '0';
         $this->conn->executeStatement(
-            'UPDATE ' . Tables::userInfos() . " SET last_visit_from_history = {$lastVisitLiteral} WHERE user_id = 4"
+            'UPDATE ' . 'user_infos' . " SET last_visit_from_history = {$lastVisitLiteral} WHERE user_id = 4"
         );
     }
 }

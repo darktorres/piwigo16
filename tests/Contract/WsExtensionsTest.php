@@ -9,7 +9,6 @@ use Piwigo\Cache\CachePools;
 use Piwigo\Core\Env;
 use Doctrine\DBAL\Connection;
 use Piwigo\Db\DbConnection;
-use Piwigo\Db\Tables;
 
 /**
  * Covers PwgExtensions' 6 admin_only WS methods. Deliberately never
@@ -43,7 +42,7 @@ final class WsExtensionsTest extends ContractTestCase
     protected function tearDown(): void
     {
         $this->setConfigBool('enable_extensions_install', true);
-        $this->conn->executeStatement('DELETE FROM ' . Tables::extensionIgnoredUpdates());
+        $this->conn->executeStatement('DELETE FROM ' . 'extension_ignored_updates');
 
         if ($this->extraUserIdsToDelete !== []) {
             $this->loginAsAdmin();
@@ -240,7 +239,7 @@ final class WsExtensionsTest extends ContractTestCase
         $token = $this->getPwgToken();
 
         $this->conn->executeStatement(
-            'INSERT INTO ' . Tables::themes() . ' (id, version, name) VALUES (?, ?, ?)',
+            'INSERT INTO ' . 'themes' . ' (id, version, name) VALUES (?, ?, ?)',
             ['default', '1.0.0', 'default']
         );
 
@@ -258,7 +257,7 @@ final class WsExtensionsTest extends ContractTestCase
             self::assertSame(500, $response['err']);
             self::assertSame('Impossible to deactivate this theme, you need at least one theme.', $response['message']);
         } finally {
-            $this->conn->executeStatement('DELETE FROM ' . Tables::themes() . ' WHERE id = ?', ['default']);
+            $this->conn->executeStatement('DELETE FROM ' . 'themes' . ' WHERE id = ?', ['default']);
         }
     }
 
@@ -423,7 +422,7 @@ final class WsExtensionsTest extends ContractTestCase
         // not the plural wire-format 'plugins' the WS param itself uses --
         // see ExtensionIgnoredUpdateEntity's own docblock.
         $rows = $this->conn->fetchAllAssociative(
-            'SELECT extension_id FROM ' . Tables::extensionIgnoredUpdates() . " WHERE extension_type = 'plugin'"
+            'SELECT extension_id FROM ' . 'extension_ignored_updates' . " WHERE extension_type = 'plugin'"
         );
         self::assertCount(1, $rows);
         self::assertSame($pluginId, $rows[0]['extension_id']);
@@ -452,7 +451,7 @@ final class WsExtensionsTest extends ContractTestCase
         self::assertSame('ok', $second['stat']);
 
         $rows = $this->conn->fetchAllAssociative(
-            'SELECT extension_id FROM ' . Tables::extensionIgnoredUpdates() . " WHERE extension_type = 'plugin' AND extension_id = ?",
+            'SELECT extension_id FROM ' . 'extension_ignored_updates' . " WHERE extension_type = 'plugin' AND extension_id = ?",
             [$pluginId]
         );
         self::assertCount(1, $rows, 'ignoring the same extension twice must not create a duplicate row');
@@ -463,12 +462,12 @@ final class WsExtensionsTest extends ContractTestCase
         $token = $this->getPwgToken();
         $pluginId = 'ct_fake_plugin_' . uniqid();
         $now = Env::now()->format('Y-m-d H:i:s');
-        $this->conn->insert(Tables::extensionIgnoredUpdates(), [
+        $this->conn->insert('extension_ignored_updates', [
             'extension_type' => 'plugin',
             'extension_id' => $pluginId,
             'ignored_at' => $now,
         ]);
-        $this->conn->insert(Tables::extensionIgnoredUpdates(), [
+        $this->conn->insert('extension_ignored_updates', [
             'extension_type' => 'theme',
             'extension_id' => 'some_theme',
             'ignored_at' => $now,
@@ -483,12 +482,12 @@ final class WsExtensionsTest extends ContractTestCase
         self::assertSame('ok', $response['stat']);
 
         $pluginRows = $this->conn->fetchAllAssociative(
-            'SELECT extension_id FROM ' . Tables::extensionIgnoredUpdates() . " WHERE extension_type = 'plugin'"
+            'SELECT extension_id FROM ' . 'extension_ignored_updates' . " WHERE extension_type = 'plugin'"
         );
         self::assertSame([], $pluginRows);
 
         $themeRows = $this->conn->fetchAllAssociative(
-            'SELECT extension_id FROM ' . Tables::extensionIgnoredUpdates() . " WHERE extension_type = 'theme'"
+            'SELECT extension_id FROM ' . 'extension_ignored_updates' . " WHERE extension_type = 'theme'"
         );
         self::assertSame(['some_theme'], array_column($themeRows, 'extension_id'), 'reset with a specific type must not touch other types');
     }
@@ -497,9 +496,9 @@ final class WsExtensionsTest extends ContractTestCase
     {
         $token = $this->getPwgToken();
         $now = Env::now()->format('Y-m-d H:i:s');
-        $this->conn->insert(Tables::extensionIgnoredUpdates(), ['extension_type' => 'plugin', 'extension_id' => 'a', 'ignored_at' => $now]);
-        $this->conn->insert(Tables::extensionIgnoredUpdates(), ['extension_type' => 'theme', 'extension_id' => 'b', 'ignored_at' => $now]);
-        $this->conn->insert(Tables::extensionIgnoredUpdates(), ['extension_type' => 'language', 'extension_id' => 'c', 'ignored_at' => $now]);
+        $this->conn->insert('extension_ignored_updates', ['extension_type' => 'plugin', 'extension_id' => 'a', 'ignored_at' => $now]);
+        $this->conn->insert('extension_ignored_updates', ['extension_type' => 'theme', 'extension_id' => 'b', 'ignored_at' => $now]);
+        $this->conn->insert('extension_ignored_updates', ['extension_type' => 'language', 'extension_id' => 'c', 'ignored_at' => $now]);
 
         $response = $this->callWs('pwg.extensions.ignoreUpdate', [
             'reset' => true,
@@ -508,7 +507,7 @@ final class WsExtensionsTest extends ContractTestCase
 
         self::assertSame('ok', $response['stat']);
 
-        $remaining = $this->conn->fetchOne('SELECT COUNT(*) FROM ' . Tables::extensionIgnoredUpdates());
+        $remaining = $this->conn->fetchOne('SELECT COUNT(*) FROM ' . 'extension_ignored_updates');
         self::assertSame(0, is_numeric($remaining) ? (int) $remaining : -1);
     }
 }

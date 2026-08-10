@@ -8,7 +8,6 @@ use Piwigo\Admin\Extensions\ExtensionIgnoredUpdateRepository;
 use Piwigo\Admin\Extensions\ExtensionType;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
-use Piwigo\Db\Tables;
 
 /**
  * Piwigo\Admin\Extensions\ExtensionIgnoredUpdateRepository -- has a
@@ -36,7 +35,7 @@ function extensionIgnoredTestId(string $suffix = ''): string
 function extensionIgnoredTestPurge(Connection $conn, ExtensionType $type, string $id): void
 {
     $conn->createQueryBuilder()
-        ->delete(Tables::extensionIgnoredUpdates())
+        ->delete('extension_ignored_updates')
         ->where('extension_type = :type AND extension_id = :id')
         ->setParameter('type', $type->value)
         ->setParameter('id', $id)

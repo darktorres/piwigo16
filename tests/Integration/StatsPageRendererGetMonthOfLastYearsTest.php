@@ -7,7 +7,6 @@ use Piwigo\Admin\StatsPageRenderer;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Paths;
 use Piwigo\Db\DbConnection;
-use Piwigo\Db\Tables;
 
 /**
  * StatsPageRenderer::getMonthOfLastYears()'s own `$last === 'all'` branches
@@ -74,11 +73,11 @@ beforeEach(function (): void {
     // branching can only be pinned deterministically by starting from a
     // genuinely empty slate, same reasoning as HistoryServiceTest's own
     // tearDown() and HistoryRepositoryTest's own clearSummary().
-    DbConnection::build()->executeStatement('DELETE FROM ' . Tables::historySummary());
+    DbConnection::build()->executeStatement('DELETE FROM ' . 'history_summary');
 });
 
 afterEach(function (): void {
-    DbConnection::build()->executeStatement('DELETE FROM ' . Tables::historySummary());
+    DbConnection::build()->executeStatement('DELETE FROM ' . 'history_summary');
     Kernel::reset();
 });
 
@@ -100,7 +99,7 @@ test('getMonthOfLastYears(\'all\') takes the <= 1 row fallback branch, zero-fill
 
 test('getMonthOfLastYears(\'all\') takes the count > 1 branch, spanning exactly the real month-level rows\' own oldest-to-newest range', function (): void {
     $conn = DbConnection::build();
-    $table = Tables::historySummary();
+    $table = 'history_summary';
     $conn->executeStatement(
         "INSERT INTO {$table} (year, month, day, hour, nb_pages, history_id_from, history_id_to) VALUES (2019, 3, NULL, NULL, 11, 1, 10)"
     );

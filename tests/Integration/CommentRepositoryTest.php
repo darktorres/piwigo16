@@ -20,7 +20,6 @@ use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\ConfigLoader;
 use Piwigo\Db\DbConnection;
-use Piwigo\Db\Tables;
 use Piwigo\Permission\SqlCondition;
 
 final class CommentRepositoryTest extends IntegrationTestCase
@@ -174,7 +173,7 @@ final class CommentRepositoryTest extends IntegrationTestCase
         // into the past here, scoped to this test only, so only the fresh
         // insert below counts as "recent".
         $this->conn->executeStatement(
-            "UPDATE " . Tables::comments() . " SET date = '2026-01-01 00:00:00' WHERE author_id = 4"
+            "UPDATE " . 'comments' . " SET date = '2026-01-01 00:00:00' WHERE author_id = 4"
         );
 
         $this->repo->insert([
@@ -590,7 +589,7 @@ final class CommentRepositoryTest extends IntegrationTestCase
     {
         $value = $this->conn->createQueryBuilder()
             ->select('content')
-            ->from(Tables::comments())
+            ->from('comments')
             ->where('id = :id')
             ->setParameter('id', $commentId->value)
             ->executeQuery()
@@ -603,7 +602,7 @@ final class CommentRepositoryTest extends IntegrationTestCase
     {
         $value = $this->conn->createQueryBuilder()
             ->select('validated')
-            ->from(Tables::comments())
+            ->from('comments')
             ->where('id = :id')
             ->setParameter('id', $commentId->value)
             ->executeQuery()

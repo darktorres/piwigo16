@@ -45,7 +45,6 @@ use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Db\BatchWriter;
 use Piwigo\Db\SqlDialect;
-use Piwigo\Db\Tables;
 use Piwigo\Group\GroupAccessEntity;
 use Piwigo\Group\UserGroupEntity;
 use Piwigo\Image\ImageCategoryEntity;
@@ -395,9 +394,9 @@ final class CategoryRepository
                 'MAX(date_available) AS date_last',
                 'COUNT(date_available) AS nb_images'
             )
-            ->from(Tables::categories(), 'c')
-            ->leftJoin('c', Tables::imageCategory(), 'ic', 'ic.category_id = c.id')
-            ->leftJoin('ic', Tables::images(), 'i', $imagesJoinCondition)
+            ->from('categories', 'c')
+            ->leftJoin('c', 'image_category', 'ic', 'ic.category_id = c.id')
+            ->leftJoin('ic', 'images', 'i', $imagesJoinCondition)
             ->groupBy('c.id')
             ->setParameter('level', $level);
 
@@ -464,8 +463,8 @@ final class CategoryRepository
             ->getConnection()
             ->createQueryBuilder()
             ->select('id')
-            ->from(Tables::images(), 'i')
-            ->innerJoin('i', Tables::imageCategory(), 'ic', 'id = ic.image_id')
+            ->from('images', 'i')
+            ->innerJoin('i', 'image_category', 'ic', 'id = ic.image_id')
             ->where('category_id IN (:catIds)')
             ->setParameter('catIds', $catIds, ArrayParameterType::INTEGER)
             ->groupBy('id');
@@ -1070,8 +1069,8 @@ final class CategoryRepository
      */
     public function findWrongRepresentativeCategoryIds(string $whereCatsSql, array $params = [], array $types = []): array
     {
-        $categoriesTable = Tables::categories();
-        $imagesTable = Tables::images();
+        $categoriesTable = 'categories';
+        $imagesTable = 'images';
 
         return array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $this->em->getConnection()->executeQuery(<<<SQL
             SELECT DISTINCT c.id
@@ -1119,8 +1118,8 @@ final class CategoryRepository
      */
     public function findCategoriesNeedingRandomRepresentative(string $whereCatsSql, array $params = [], array $types = []): array
     {
-        $categoriesTable = Tables::categories();
-        $imageCategoryTable = Tables::imageCategory();
+        $categoriesTable = 'categories';
+        $imageCategoryTable = 'image_category';
 
         return array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $this->em->getConnection()->executeQuery(<<<SQL
             SELECT DISTINCT id
@@ -1149,7 +1148,7 @@ final class CategoryRepository
             $tableAndColumn = $target->tableAndColumn();
             $table = $tableAndColumn->table;
             $column = $tableAndColumn->column;
-            $categoriesTable = Tables::categories();
+            $categoriesTable = 'categories';
 
             return array_values(array_unique(array_map(static fn (mixed $v): string => is_scalar($v) ? (string) $v : '', $this->em->getConnection()->executeQuery(<<<SQL
                 SELECT
@@ -2268,7 +2267,7 @@ final class CategoryRepository
         $em = $this->em;
         new BatchWriter($em->getConnection())
             ->massUpdate(
-                Tables::categories(),
+                'categories',
                 [
                     'primary' => ['id'],
                     'update' => ['rank'],
@@ -2288,7 +2287,7 @@ final class CategoryRepository
         $em = $this->em;
         new BatchWriter($em->getConnection())
             ->massUpdate(
-                Tables::categories(),
+                'categories',
                 [
                     'primary' => ['id'],
                     'update' => ['rank', 'global_rank'],
@@ -2308,7 +2307,7 @@ final class CategoryRepository
         $em = $this->em;
         new BatchWriter($em->getConnection())
             ->massUpdate(
-                Tables::categories(),
+                'categories',
                 [
                     'primary' => ['id'],
                     'update' => ['representative_picture_id'],
@@ -2328,7 +2327,7 @@ final class CategoryRepository
         $em = $this->em;
         new BatchWriter($em->getConnection())
             ->massUpdate(
-                Tables::categories(),
+                'categories',
                 [
                     'primary' => ['id'],
                     'update' => ['uppercats'],
@@ -2354,7 +2353,7 @@ final class CategoryRepository
     {
         $em = $this->em;
         new BatchWriter($em->getConnection())
-            ->singleInsert(Tables::categories(), $insert);
+            ->singleInsert('categories', $insert);
         $em->clear();
 
         return $em->getConnection()
@@ -2380,7 +2379,7 @@ final class CategoryRepository
 
         $em = $this->em;
         new BatchWriter($em->getConnection())
-            ->massInsert(Tables::categories(), $dbfields, $inserts);
+            ->massInsert('categories', $dbfields, $inserts);
         $em->clear();
     }
 
@@ -2394,7 +2393,7 @@ final class CategoryRepository
     {
         $em = $this->em;
         new BatchWriter($em->getConnection())
-            ->singleUpdate(Tables::categories(), $data, [
+            ->singleUpdate('categories', $data, [
                 'id' => $id,
             ]);
         $em->clear();
@@ -2418,7 +2417,7 @@ final class CategoryRepository
 
         $em = $this->em;
         new BatchWriter($em->getConnection())
-            ->singleUpdate(Tables::categories(), $data, [
+            ->singleUpdate('categories', $data, [
                 'id' => $id->value,
             ]);
         $em->clear();
@@ -2445,7 +2444,7 @@ final class CategoryRepository
     {
         $em = $this->em;
         new BatchWriter($em->getConnection())
-            ->massInsert(Tables::groupAccess(), ['group_id', 'cat_id'], $inserts, [
+            ->massInsert('group_access', ['group_id', 'cat_id'], $inserts, [
                 'ignore' => $ignore,
             ]);
         $em->clear();
@@ -3455,7 +3454,7 @@ final class CategoryRepository
         $params = $combined->parameters;
         $types = $combined->types;
 
-        $categoriesTable = Tables::categories();
+        $categoriesTable = 'categories';
         $totalColumn = $limit !== null ? 'COUNT(*) OVER() AS total_count,' : '';
 
         $sql = <<<SQL
@@ -3524,7 +3523,7 @@ final class CategoryRepository
         $params = $combined->parameters;
         $types = $combined->types;
 
-        $categoriesTable = Tables::categories();
+        $categoriesTable = 'categories';
 
         $sql = <<<SQL
             SELECT COUNT(*) OVER() AS total_count, id, name, comment, uppercats, global_rank, dir, status, image_order

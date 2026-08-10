@@ -22,7 +22,6 @@ use Piwigo\Config\ConfigLoader;
 use Piwigo\Config\ConfigService;
 use Piwigo\Tests\Support\CurrentConfigServiceTestFactory;
 use Piwigo\Db\DbConnection;
-use Piwigo\Db\Tables;
 use Piwigo\Picture\PictureRateRenderer;
 use Piwigo\Rate\RateEntity;
 use Piwigo\Rate\RateRepository;
@@ -83,7 +82,7 @@ final class PictureRateRendererTest extends IntegrationTestCase
         // when this test runs before any other test's tearDown() has
         // cleared them. Clearing here first makes every test deterministic
         // regardless of run order.
-        $this->conn->executeStatement('DELETE FROM ' . Tables::rate() . ' WHERE element_id = 1');
+        $this->conn->executeStatement('DELETE FROM ' . 'rate' . ' WHERE element_id = 1');
 
         $accessControl = Kernel::container()->get(AccessControl::class);
         if (! $accessControl instanceof AccessControl) {
@@ -97,7 +96,7 @@ final class PictureRateRendererTest extends IntegrationTestCase
     {
         CurrentTemplate::current()->reset();
         CurrentUserTestFactory::get()->reset();
-        $this->conn->executeStatement('DELETE FROM ' . Tables::rate() . ' WHERE element_id = 1');
+        $this->conn->executeStatement('DELETE FROM ' . 'rate' . ' WHERE element_id = 1');
         parent::tearDown();
     }
 
@@ -122,7 +121,7 @@ final class PictureRateRendererTest extends IntegrationTestCase
     public function test_render_computes_the_rate_summary_and_the_current_classic_users_own_rate(): void
     {
         // 3 real votes (5, 3, 4) on image 1 -- count=3, average=4.0.
-        $this->conn->executeStatement("INSERT INTO " . Tables::rate() . " (user_id, element_id, anonymous_id, rate) VALUES (1, 1, '', 5), (3, 1, '', 3), (4, 1, '', 4)");
+        $this->conn->executeStatement("INSERT INTO " . 'rate' . " (user_id, element_id, anonymous_id, rate) VALUES (1, 1, '', 5), (3, 1, '', 3), (4, 1, '', 4)");
 
         CurrentUserTestFactory::get()->set(new User(
             id: UserId::from(3),
@@ -159,7 +158,7 @@ final class PictureRateRendererTest extends IntegrationTestCase
 
         // guestId (2) voted 5, keyed by the trimmed (3-octet) IP prefix --
         // the exact anonymous_id shape render() itself computes.
-        $this->conn->executeStatement("INSERT INTO " . Tables::rate() . " (user_id, element_id, anonymous_id, rate) VALUES (2, 1, '203.0.113', 5)");
+        $this->conn->executeStatement("INSERT INTO " . 'rate' . " (user_id, element_id, anonymous_id, rate) VALUES (2, 1, '203.0.113', 5)");
 
         CurrentUserTestFactory::get()->set(new User(
             id: UserId::from(2),

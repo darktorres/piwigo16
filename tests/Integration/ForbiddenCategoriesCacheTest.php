@@ -17,7 +17,6 @@ use Piwigo\Category\CategoryRepository;
 use Piwigo\Config\ConfigLoader;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Db\DbConnection;
-use Piwigo\Db\Tables;
 use Piwigo\Permission\ForbiddenCategoriesCache;
 use Piwigo\Permission\PermissionRepository;
 use Piwigo\Permission\PermissionService;
@@ -82,13 +81,13 @@ final class ForbiddenCategoriesCacheTest extends IntegrationTestCase
     protected function tearDown(): void
     {
         $visibleLiteral = $this->dbDriver === 'pgsql' ? 'true' : '1';
-        $this->conn->executeStatement('UPDATE ' . Tables::categories() . " SET status = 'public', visible = {$visibleLiteral}");
+        $this->conn->executeStatement('UPDATE ' . 'categories' . " SET status = 'public', visible = {$visibleLiteral}");
         parent::tearDown();
     }
 
     public function test_get_for_user_returns_the_underlying_forbidden_categories(): void
     {
-        $this->conn->executeStatement('UPDATE ' . Tables::categories() . " SET status = 'private' WHERE id = 1");
+        $this->conn->executeStatement('UPDATE ' . 'categories' . " SET status = 'private' WHERE id = 1");
 
         self::assertSame('1', $this->cache->getForUser(2, 'normal'));
     }
@@ -97,14 +96,14 @@ final class ForbiddenCategoriesCacheTest extends IntegrationTestCase
     {
         self::assertSame('0', $this->cache->getForUser(2, 'normal'));
 
-        $this->conn->executeStatement('UPDATE ' . Tables::categories() . " SET status = 'private' WHERE id = 1");
+        $this->conn->executeStatement('UPDATE ' . 'categories' . " SET status = 'private' WHERE id = 1");
 
         self::assertSame('0', $this->cache->getForUser(2, 'normal'), 'a cache hit must not re-query the DB');
     }
 
     public function test_get_for_user_uses_a_separate_cache_entry_per_user(): void
     {
-        $this->conn->executeStatement('UPDATE ' . Tables::categories() . " SET status = 'private' WHERE id = 1");
+        $this->conn->executeStatement('UPDATE ' . 'categories' . " SET status = 'private' WHERE id = 1");
 
         self::assertSame('1', $this->cache->getForUser(2, 'normal'));
         // Fixture: user 1 is a member of group 1 ("Editors"), which has

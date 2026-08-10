@@ -25,7 +25,6 @@ use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\DbCredentials;
 use Piwigo\Db\EntityManagerFactory;
-use Piwigo\Db\Tables;
 use Piwigo\Event\Search\QsearchGetScopes;
 use Piwigo\Group\GroupEntity;
 use Piwigo\Mail\MailService;
@@ -427,7 +426,7 @@ afterEach(function (): void {
     // own tests ever produce is genuinely date-shaped (either a literal
     // 'psk-2026...' or the real generator's own output), so this narrower
     // pattern loses no real coverage.
-    searchServiceTestConn()->executeStatement("DELETE FROM " . Tables::search() . " WHERE search_uuid REGEXP '^psk-[0-9]{8}-'");
+    searchServiceTestConn()->executeStatement("DELETE FROM " . 'search' . " WHERE search_uuid REGEXP '^psk-[0-9]{8}-'");
     CachePools::searchResults()->clear();
     CurrentUserTestFactory::get()->reset();
     CurrentConfigTestFactory::get()->reset();
@@ -485,7 +484,7 @@ test('getSearchArray() returns false, not true, for a real row whose rules colum
     // column is NULL, so `$search->rules ?? false`'s own fallback value
     // is what this test targets, not just "is rules present".
     searchServiceTestConn()->executeStatement(
-        "INSERT INTO " . Tables::search() . " (search_uuid, created_on, created_by, rules) VALUES ('psk-20260712-nullrulz1', '2026-07-12 00:00:00', 1, NULL)"
+        "INSERT INTO " . 'search' . " (search_uuid, created_on, created_by, rules) VALUES ('psk-20260712-nullrulz1', '2026-07-12 00:00:00', 1, NULL)"
     );
 
     expect(searchServiceTestService()->getSearchArray('psk-20260712-nullrulz1'))->toBeFalse();
@@ -528,7 +527,7 @@ test('saveSearch() persists the rules under a fresh uuid and returns a matching 
     // of this test and the forkedFrom test below silently corrupted
     // user_id=1's real preferences column for the rest of the suite.
     $conn = searchServiceTestConn();
-    $originalPreferences = $conn->fetchOne('SELECT preferences FROM ' . Tables::userInfos() . ' WHERE user_id = 1');
+    $originalPreferences = $conn->fetchOne('SELECT preferences FROM ' . 'user_infos' . ' WHERE user_id = 1');
 
     try {
         $rules = ['q' => 'nature'];
@@ -547,7 +546,7 @@ test('saveSearch() persists the rules under a fresh uuid and returns a matching 
             ->and($info->createdBy)->toBe(1)
             ->and($info->forkedFrom)->toBeNull();
     } finally {
-        $conn->executeStatement('UPDATE ' . Tables::userInfos() . ' SET preferences = ? WHERE user_id = 1', [$originalPreferences]);
+        $conn->executeStatement('UPDATE ' . 'user_infos' . ' SET preferences = ? WHERE user_id = 1', [$originalPreferences]);
     }
 });
 
@@ -555,7 +554,7 @@ test('saveSearch() threads a real forkedFrom id into the persisted row', functio
     // Same saveSearch()-always-writes-preferences reasoning as the
     // sibling test above.
     $conn = searchServiceTestConn();
-    $originalPreferences = $conn->fetchOne('SELECT preferences FROM ' . Tables::userInfos() . ' WHERE user_id = 1');
+    $originalPreferences = $conn->fetchOne('SELECT preferences FROM ' . 'user_infos' . ' WHERE user_id = 1');
 
     try {
         $originalId = searchServiceTestRepo()->insertSavedSearch(['q' => 'nature'], '2026-07-12 00:00:00', 1, 'psk-20260712-forkorigin', null);
@@ -569,7 +568,7 @@ test('saveSearch() threads a real forkedFrom id into the persisted row', functio
 
         expect($info->forkedFrom)->toBe($originalId);
     } finally {
-        $conn->executeStatement('UPDATE ' . Tables::userInfos() . ' SET preferences = ? WHERE user_id = 1', [$originalPreferences]);
+        $conn->executeStatement('UPDATE ' . 'user_infos' . ' SET preferences = ? WHERE user_id = 1', [$originalPreferences]);
     }
 });
 
@@ -580,12 +579,12 @@ test('saveSearch() updates the current user\'s gallery_search_filters preference
     // top-level field names into user_infos.preferences (one combined
     // JSON column, not a per-param row).
     $conn = searchServiceTestConn();
-    $originalPreferences = $conn->fetchOne('SELECT preferences FROM ' . Tables::userInfos() . ' WHERE user_id = 1');
+    $originalPreferences = $conn->fetchOne('SELECT preferences FROM ' . 'user_infos' . ' WHERE user_id = 1');
 
     try {
         searchServiceTestService()->saveSearch(['q' => 'x', 'fields' => ['tags' => ['words' => [1]], 'author' => ['words' => ['a']]]], UrlServiceTestFactory::build());
 
-        $stored = $conn->fetchOne('SELECT preferences FROM ' . Tables::userInfos() . ' WHERE user_id = 1');
+        $stored = $conn->fetchOne('SELECT preferences FROM ' . 'user_infos' . ' WHERE user_id = 1');
         if (! is_string($stored)) {
             throw new LogicException('expected a real JSON preferences string, got ' . get_debug_type($stored));
         }
@@ -597,7 +596,7 @@ test('saveSearch() updates the current user\'s gallery_search_filters preference
 
         expect($decoded['gallery_search_filters'] ?? null)->toBe(['tags', 'author']);
     } finally {
-        $conn->executeStatement('UPDATE ' . Tables::userInfos() . ' SET preferences = ? WHERE user_id = 1', [$originalPreferences]);
+        $conn->executeStatement('UPDATE ' . 'user_infos' . ' SET preferences = ? WHERE user_id = 1', [$originalPreferences]);
     }
 });
 
@@ -659,7 +658,7 @@ test('qsearchGetTextTokenSearchSql() is injection-safe', function (): void {
     expect($clauses)->not->toBe([]);
 
     $count = searchServiceTestConn()->executeQuery(
-        'SELECT COUNT(*) FROM ' . Tables::images() . ' WHERE (' . implode(' OR ', $clauses) . ')',
+        'SELECT COUNT(*) FROM ' . 'images' . ' WHERE (' . implode(' OR ', $clauses) . ')',
         $values
     )->fetchOne();
 
@@ -853,10 +852,10 @@ test('getRegularSearchResults() filters by date_posted preset', function (): voi
     // correct regardless of the real wall-clock date the suite runs on.
     $conn = searchServiceTestConn();
     $conn->executeStatement(
-        'UPDATE ' . Tables::images() . ' SET date_available = ' . searchServiceTestNowMinusInterval(1, 'HOUR') . ' WHERE id IN (1, 2)'
+        'UPDATE ' . 'images' . ' SET date_available = ' . searchServiceTestNowMinusInterval(1, 'HOUR') . ' WHERE id IN (1, 2)'
     );
     $conn->executeStatement(
-        'UPDATE ' . Tables::images() . ' SET date_available = ' . searchServiceTestNowMinusInterval(30, 'HOUR') . ' WHERE id IN (3, 4, 5)'
+        'UPDATE ' . 'images' . ' SET date_available = ' . searchServiceTestNowMinusInterval(30, 'HOUR') . ' WHERE id IN (3, 4, 5)'
     );
 
     try {
@@ -869,7 +868,7 @@ test('getRegularSearchResults() filters by date_posted preset', function (): voi
             ->and($results['search_details']['has_filters_filled'])->toBeTrue();
     } finally {
         $conn->executeStatement(
-            "UPDATE " . Tables::images() . " SET date_available = '2026-08-01 00:00:00' WHERE id IN (1,2,3,4,5)"
+            "UPDATE " . 'images' . " SET date_available = '2026-08-01 00:00:00' WHERE id IN (1,2,3,4,5)"
         );
     }
 });
@@ -877,10 +876,10 @@ test('getRegularSearchResults() filters by date_posted preset', function (): voi
 test('getRegularSearchResults() filters by date_created preset', function (): void {
     $conn = searchServiceTestConn();
     $conn->executeStatement(
-        'UPDATE ' . Tables::images() . ' SET date_creation = ' . searchServiceTestNowMinusInterval(1, 'DAY') . ' WHERE id IN (1, 2, 3)'
+        'UPDATE ' . 'images' . ' SET date_creation = ' . searchServiceTestNowMinusInterval(1, 'DAY') . ' WHERE id IN (1, 2, 3)'
     );
     $conn->executeStatement(
-        'UPDATE ' . Tables::images() . ' SET date_creation = ' . searchServiceTestNowMinusInterval(60, 'DAY') . ' WHERE id IN (4, 5)'
+        'UPDATE ' . 'images' . ' SET date_creation = ' . searchServiceTestNowMinusInterval(60, 'DAY') . ' WHERE id IN (4, 5)'
     );
 
     try {
@@ -891,7 +890,7 @@ test('getRegularSearchResults() filters by date_created preset', function (): vo
         sort($items);
         expect($items)->toBe([1, 2, 3]);
     } finally {
-        $conn->executeStatement('UPDATE ' . Tables::images() . ' SET date_creation = NULL WHERE id IN (1,2,3,4,5)');
+        $conn->executeStatement('UPDATE ' . 'images' . ' SET date_creation = NULL WHERE id IN (1,2,3,4,5)');
     }
 });
 
@@ -919,9 +918,9 @@ test('getRegularSearchResults() date_created custom range', function (): void {
     // populate the UN-prefixed key instead, so only a real, correct
     // prefix concat avoids colliding with them.
     $conn = searchServiceTestConn();
-    $conn->executeStatement("UPDATE " . Tables::images() . " SET date_creation = '2024-03-15 12:00:00' WHERE id = 1");
-    $conn->executeStatement("UPDATE " . Tables::images() . " SET date_creation = '2023-06-10 00:00:00' WHERE id = 2");
-    $conn->executeStatement("UPDATE " . Tables::images() . " SET date_creation = '2022-05-15 12:00:00' WHERE id = 3");
+    $conn->executeStatement("UPDATE " . 'images' . " SET date_creation = '2024-03-15 12:00:00' WHERE id = 1");
+    $conn->executeStatement("UPDATE " . 'images' . " SET date_creation = '2023-06-10 00:00:00' WHERE id = 2");
+    $conn->executeStatement("UPDATE " . 'images' . " SET date_creation = '2022-05-15 12:00:00' WHERE id = 3");
 
     try {
         // Mixes a 'y'/'m'/'d'-prefixed string entry of each shape plus a
@@ -938,7 +937,7 @@ test('getRegularSearchResults() date_created custom range', function (): void {
         sort($items);
         expect($items)->toBe([1, 2, 3]);
     } finally {
-        $conn->executeStatement('UPDATE ' . Tables::images() . ' SET date_creation = NULL WHERE id IN (1,2,3,4,5)');
+        $conn->executeStatement('UPDATE ' . 'images' . ' SET date_creation = NULL WHERE id IN (1,2,3,4,5)');
     }
 });
 
@@ -1061,9 +1060,9 @@ test('getQuickSearchResultsNoCache() widens a match via the default-language Inf
     // variants)` step actually widens the match, not just that the
     // Inflector class loads without throwing.
     $conn = searchServiceTestConn();
-    $conn->executeStatement("INSERT INTO " . Tables::tags() . " (name, url_name, lastmodified) VALUES ('natures', 'natures', NOW())");
+    $conn->executeStatement("INSERT INTO " . 'tags' . " (name, url_name, lastmodified) VALUES ('natures', 'natures', NOW())");
     $tagId = (int) $conn->lastInsertId();
-    $conn->executeStatement('INSERT INTO ' . Tables::imageTag() . ' (image_id, tag_id) VALUES (4, ?)', [$tagId]);
+    $conn->executeStatement('INSERT INTO ' . 'image_tag' . ' (image_id, tag_id) VALUES (4, ?)', [$tagId]);
 
     try {
         $results = searchServiceTestService()->getQuickSearchResultsNoCache('nature', []);
@@ -1072,8 +1071,8 @@ test('getQuickSearchResultsNoCache() widens a match via the default-language Inf
         sort($items);
         expect($items)->toBe([1, 2, 3, 4]);
     } finally {
-        $conn->executeStatement('DELETE FROM ' . Tables::imageTag() . ' WHERE tag_id = ?', [$tagId]);
-        $conn->executeStatement('DELETE FROM ' . Tables::tags() . ' WHERE id = ?', [$tagId]);
+        $conn->executeStatement('DELETE FROM ' . 'image_tag' . ' WHERE tag_id = ?', [$tagId]);
+        $conn->executeStatement('DELETE FROM ' . 'tags' . ' WHERE id = ?', [$tagId]);
     }
 });
 
@@ -1092,7 +1091,7 @@ test('getQuickSearchResultsNoCache() a term matching a real tag with zero curren
     // The sibling test above (a genuinely unrecognized word) can never
     // observe this, since it never populates tag_ids either.
     $conn = searchServiceTestConn();
-    $conn->executeStatement("INSERT INTO " . Tables::tags() . " (name, url_name, lastmodified) VALUES ('zqualifiesonly', 'zqualifiesonly', NOW())");
+    $conn->executeStatement("INSERT INTO " . 'tags' . " (name, url_name, lastmodified) VALUES ('zqualifiesonly', 'zqualifiesonly', NOW())");
     $tagId = (int) $conn->lastInsertId();
 
     try {
@@ -1101,7 +1100,7 @@ test('getQuickSearchResultsNoCache() a term matching a real tag with zero curren
         expect($results['items'])->toBe([])
             ->and($results['qs']['unmatched_terms'])->toBe([]);
     } finally {
-        $conn->executeStatement('DELETE FROM ' . Tables::tags() . ' WHERE id = ?', [$tagId]);
+        $conn->executeStatement('DELETE FROM ' . 'tags' . ' WHERE id = ?', [$tagId]);
     }
 });
 
@@ -1112,7 +1111,7 @@ test('getQuickSearchResultsNoCache() a term matching a real category with zero c
     // the only way to populate cat_ids while crtIds itself stays
     // empty.
     $conn = searchServiceTestConn();
-    $conn->executeStatement("INSERT INTO " . Tables::categories() . " (name) VALUES ('zqualifiesonlycat')");
+    $conn->executeStatement("INSERT INTO " . 'categories' . " (name) VALUES ('zqualifiesonlycat')");
     $catId = (int) $conn->lastInsertId();
 
     try {
@@ -1121,7 +1120,7 @@ test('getQuickSearchResultsNoCache() a term matching a real category with zero c
         expect($results['items'])->toBe([])
             ->and($results['qs']['unmatched_terms'])->toBe([]);
     } finally {
-        $conn->executeStatement('DELETE FROM ' . Tables::categories() . ' WHERE id = ?', [$catId]);
+        $conn->executeStatement('DELETE FROM ' . 'categories' . ' WHERE id = ?', [$catId]);
     }
 });
 
@@ -1180,7 +1179,7 @@ test('getQuickSearchResults() caches across calls', function (): void {
 
     $conn = searchServiceTestConn();
     $conn->executeStatement(
-        'INSERT INTO ' . Tables::imageTag() . ' (image_id, tag_id) VALUES (2, 3)'
+        'INSERT INTO ' . 'image_tag' . ' (image_id, tag_id) VALUES (2, 3)'
     );
 
     try {
@@ -1189,7 +1188,7 @@ test('getQuickSearchResults() caches across calls', function (): void {
             ->and($second)->not->toHaveKey('debug');
     } finally {
         $conn->executeStatement(
-            'DELETE FROM ' . Tables::imageTag() . ' WHERE image_id = 2 AND tag_id = 3'
+            'DELETE FROM ' . 'image_tag' . ' WHERE image_id = 2 AND tag_id = 3'
         );
     }
 });
@@ -1203,7 +1202,7 @@ test('qsearchGetTextTokenSearchSql() falls back to REGEXP for a leading wildcard
 
     expect($clauses)->not->toBe([]);
     $count = searchServiceTestConn()->executeQuery(
-        'SELECT COUNT(*) FROM ' . Tables::images() . ' WHERE (' . implode(' OR ', $clauses) . ')',
+        'SELECT COUNT(*) FROM ' . 'images' . ' WHERE (' . implode(' OR ', $clauses) . ')',
         $values
     )->fetchOne();
     // every fixture image is named "Photo N" -- "hoto" (no left boundary
@@ -1219,7 +1218,7 @@ test('qsearchGetTextTokenSearchSql() falls back to REGEXP for a quoted trailing 
 
     expect($clauses)->not->toBe([]);
     $count = searchServiceTestConn()->executeQuery(
-        'SELECT COUNT(*) FROM ' . Tables::images() . ' WHERE (' . implode(' OR ', $clauses) . ')',
+        'SELECT COUNT(*) FROM ' . 'images' . ' WHERE (' . implode(' OR ', $clauses) . ')',
         $values
     )->fetchOne();
     expect(is_numeric($count) ? (int) $count : null)->toBe(5);
@@ -1235,7 +1234,7 @@ test('qsearchGetTextTokenSearchSql() falls back to REGEXP when every split part 
 
     expect($clauses)->not->toBe([]);
     $count = searchServiceTestConn()->executeQuery(
-        'SELECT COUNT(*) FROM ' . Tables::images() . ' WHERE (' . implode(' OR ', $clauses) . ')',
+        'SELECT COUNT(*) FROM ' . 'images' . ' WHERE (' . implode(' OR ', $clauses) . ')',
         $values
     )->fetchOne();
     expect(is_numeric($count) ? (int) $count : null)->toBe(0);
@@ -1595,14 +1594,14 @@ test('qsearchGetTags() narrows 2 adjacent short, non-wildcarded, non-quoted term
     // just the shared 'zna znb' tag. 'zna'/'znb' alone are each tagged
     // to image 5 (noise); 'zna znb' alone is tagged to image 4.
     $conn = searchServiceTestConn();
-    $conn->executeStatement("INSERT INTO " . Tables::tags() . " (name, url_name, lastmodified) VALUES ('zna', 'zna', NOW())");
+    $conn->executeStatement("INSERT INTO " . 'tags' . " (name, url_name, lastmodified) VALUES ('zna', 'zna', NOW())");
     $tagA = (int) $conn->lastInsertId();
-    $conn->executeStatement("INSERT INTO " . Tables::tags() . " (name, url_name, lastmodified) VALUES ('znb', 'znb', NOW())");
+    $conn->executeStatement("INSERT INTO " . 'tags' . " (name, url_name, lastmodified) VALUES ('znb', 'znb', NOW())");
     $tagB = (int) $conn->lastInsertId();
-    $conn->executeStatement("INSERT INTO " . Tables::tags() . " (name, url_name, lastmodified) VALUES ('zna znb', 'zna-znb', NOW())");
+    $conn->executeStatement("INSERT INTO " . 'tags' . " (name, url_name, lastmodified) VALUES ('zna znb', 'zna-znb', NOW())");
     $tagAB = (int) $conn->lastInsertId();
     $conn->executeStatement(
-        'INSERT INTO ' . Tables::imageTag() . ' (image_id, tag_id) VALUES (5, ?), (5, ?), (4, ?)',
+        'INSERT INTO ' . 'image_tag' . ' (image_id, tag_id) VALUES (5, ?), (5, ?), (4, ?)',
         [$tagA, $tagB, $tagAB]
     );
 
@@ -1615,8 +1614,8 @@ test('qsearchGetTags() narrows 2 adjacent short, non-wildcarded, non-quoted term
         expect($qsr->tag_iids[0])->toBe([4])
             ->and($qsr->tag_iids[1])->toBe([4]);
     } finally {
-        $conn->executeStatement('DELETE FROM ' . Tables::imageTag() . ' WHERE tag_id IN (?, ?, ?)', [$tagA, $tagB, $tagAB]);
-        $conn->executeStatement('DELETE FROM ' . Tables::tags() . ' WHERE id IN (?, ?, ?)', [$tagA, $tagB, $tagAB]);
+        $conn->executeStatement('DELETE FROM ' . 'image_tag' . ' WHERE tag_id IN (?, ?, ?)', [$tagA, $tagB, $tagAB]);
+        $conn->executeStatement('DELETE FROM ' . 'tags' . ' WHERE id IN (?, ?, ?)', [$tagA, $tagB, $tagAB]);
     }
 });
 
@@ -1632,9 +1631,9 @@ test('getQuickSearchResultsNoCache() excludes a matched tag from the display lis
     // be found (a real, valid tag match) yet excluded from the display
     // list -- unlike 'family', long enough to qualify on its own.
     $conn = searchServiceTestConn();
-    $conn->executeStatement("INSERT INTO " . Tables::tags() . " (name, url_name, lastmodified) VALUES ('ab', 'ab', NOW())");
+    $conn->executeStatement("INSERT INTO " . 'tags' . " (name, url_name, lastmodified) VALUES ('ab', 'ab', NOW())");
     $tagId = (int) $conn->lastInsertId();
-    $conn->executeStatement('INSERT INTO ' . Tables::imageTag() . ' (image_id, tag_id) VALUES (4, ?)', [$tagId]);
+    $conn->executeStatement('INSERT INTO ' . 'image_tag' . ' (image_id, tag_id) VALUES (4, ?)', [$tagId]);
 
     try {
         $results = searchServiceTestService()->getQuickSearchResultsNoCache('ab family', []);
@@ -1646,8 +1645,8 @@ test('getQuickSearchResultsNoCache() excludes a matched tag from the display lis
 
         expect(array_column($matchingTags, 'name'))->toBe(['family']);
     } finally {
-        $conn->executeStatement('DELETE FROM ' . Tables::imageTag() . ' WHERE tag_id = ?', [$tagId]);
-        $conn->executeStatement('DELETE FROM ' . Tables::tags() . ' WHERE id = ?', [$tagId]);
+        $conn->executeStatement('DELETE FROM ' . 'image_tag' . ' WHERE tag_id = ?', [$tagId]);
+        $conn->executeStatement('DELETE FROM ' . 'tags' . ' WHERE id = ?', [$tagId]);
     }
 });
 
@@ -1657,11 +1656,11 @@ test('getQuickSearchResultsNoCache() narrows two adjacent short terms to a share
     // exercising qsearchGetTags()'s own short-token intersection.
     $conn = searchServiceTestConn();
     $conn->executeStatement(
-        "INSERT INTO " . Tables::tags() . " (name, url_name, lastmodified) VALUES ('dog', 'dog', NOW())"
+        "INSERT INTO " . 'tags' . " (name, url_name, lastmodified) VALUES ('dog', 'dog', NOW())"
     );
     $tagId = (int) $conn->lastInsertId();
     $conn->executeStatement(
-        'INSERT INTO ' . Tables::imageTag() . ' (image_id, tag_id) VALUES (2, ?)',
+        'INSERT INTO ' . 'image_tag' . ' (image_id, tag_id) VALUES (2, ?)',
         [$tagId]
     );
 
@@ -1670,8 +1669,8 @@ test('getQuickSearchResultsNoCache() narrows two adjacent short terms to a share
 
         expect($results['items'])->toBe([2]);
     } finally {
-        $conn->executeStatement('DELETE FROM ' . Tables::imageTag() . ' WHERE tag_id = ?', [$tagId]);
-        $conn->executeStatement('DELETE FROM ' . Tables::tags() . ' WHERE id = ?', [$tagId]);
+        $conn->executeStatement('DELETE FROM ' . 'image_tag' . ' WHERE tag_id = ?', [$tagId]);
+        $conn->executeStatement('DELETE FROM ' . 'tags' . ' WHERE id = ?', [$tagId]);
     }
 });
 
@@ -1684,14 +1683,14 @@ test('qsearchGetCategories() narrows 2 adjacent short, non-wildcarded, non-quote
     // would otherwise coincidentally reach the same final image set
     // regardless of whether this sub-intersection ran.
     $conn = searchServiceTestConn();
-    $conn->executeStatement("INSERT INTO " . Tables::categories() . " (name) VALUES ('zca')");
+    $conn->executeStatement("INSERT INTO " . 'categories' . " (name) VALUES ('zca')");
     $catA = (int) $conn->lastInsertId();
-    $conn->executeStatement("INSERT INTO " . Tables::categories() . " (name) VALUES ('zcb')");
+    $conn->executeStatement("INSERT INTO " . 'categories' . " (name) VALUES ('zcb')");
     $catB = (int) $conn->lastInsertId();
-    $conn->executeStatement("INSERT INTO " . Tables::categories() . " (name) VALUES ('zca zcb')");
+    $conn->executeStatement("INSERT INTO " . 'categories' . " (name) VALUES ('zca zcb')");
     $catAB = (int) $conn->lastInsertId();
     $conn->executeStatement(
-        'INSERT INTO ' . Tables::imageCategory() . ' (image_id, category_id) VALUES (5, ?), (5, ?), (4, ?)',
+        'INSERT INTO ' . 'image_category' . ' (image_id, category_id) VALUES (5, ?), (5, ?), (4, ?)',
         [$catA, $catB, $catAB]
     );
 
@@ -1704,8 +1703,8 @@ test('qsearchGetCategories() narrows 2 adjacent short, non-wildcarded, non-quote
         expect($qsr->cat_iids[0])->toBe([4])
             ->and($qsr->cat_iids[1])->toBe([4]);
     } finally {
-        $conn->executeStatement('DELETE FROM ' . Tables::imageCategory() . ' WHERE category_id IN (?, ?, ?)', [$catA, $catB, $catAB]);
-        $conn->executeStatement('DELETE FROM ' . Tables::categories() . ' WHERE id IN (?, ?, ?)', [$catA, $catB, $catAB]);
+        $conn->executeStatement('DELETE FROM ' . 'image_category' . ' WHERE category_id IN (?, ?, ?)', [$catA, $catB, $catAB]);
+        $conn->executeStatement('DELETE FROM ' . 'categories' . ' WHERE id IN (?, ?, ?)', [$catA, $catB, $catAB]);
     }
 });
 
@@ -1716,7 +1715,7 @@ test('getQuickSearchResultsNoCache() excludes a matched category from the displa
     // the identical 4-term OR gate. A 2-char exact category name ('ab')
     // in a 2-token search satisfies none of the 4 conditions.
     $conn = searchServiceTestConn();
-    $conn->executeStatement("INSERT INTO " . Tables::categories() . " (name) VALUES ('ab')");
+    $conn->executeStatement("INSERT INTO " . 'categories' . " (name) VALUES ('ab')");
     $catId = (int) $conn->lastInsertId();
 
     try {
@@ -1729,7 +1728,7 @@ test('getQuickSearchResultsNoCache() excludes a matched category from the displa
 
         expect(array_column($matchingCats, 'name'))->toBe(['Sample Album']);
     } finally {
-        $conn->executeStatement('DELETE FROM ' . Tables::categories() . ' WHERE id = ?', [$catId]);
+        $conn->executeStatement('DELETE FROM ' . 'categories' . ' WHERE id = ?', [$catId]);
     }
 });
 
@@ -1771,9 +1770,9 @@ test('getQuickSearchResultsNoCache() finds no subalbums for a leaf category matc
     // category 1 always DOES have a real child.
     CurrentConfigTestFactory::get()->quickSearchIncludeSubAlbums = true;
     $conn = searchServiceTestConn();
-    $originalUppercats = $conn->fetchOne('SELECT uppercats FROM ' . Tables::categories() . ' WHERE id = 2');
+    $originalUppercats = $conn->fetchOne('SELECT uppercats FROM ' . 'categories' . ' WHERE id = 2');
     expect($originalUppercats)->toBeString();
-    $conn->executeStatement("UPDATE " . Tables::categories() . " SET uppercats = '999' WHERE id = 2");
+    $conn->executeStatement("UPDATE " . 'categories' . " SET uppercats = '999' WHERE id = 2");
 
     try {
         // "Nested" matches category 2 ("Nested Sub Album") by name only.
@@ -1781,7 +1780,7 @@ test('getQuickSearchResultsNoCache() finds no subalbums for a leaf category matc
 
         expect($results['items'])->toBe([]);
     } finally {
-        $conn->executeStatement('UPDATE ' . Tables::categories() . ' SET uppercats = ? WHERE id = 2', [$originalUppercats]);
+        $conn->executeStatement('UPDATE ' . 'categories' . ' SET uppercats = ? WHERE id = 2', [$originalUppercats]);
     }
 });
 
@@ -1999,19 +1998,19 @@ test('getQuickSearchResultsNoCache() throws when the default user language resol
     }
 
     $conn = searchServiceTestConn();
-    $originalLanguage = $conn->fetchOne('SELECT language FROM ' . Tables::userInfos() . ' WHERE user_id = 2');
+    $originalLanguage = $conn->fetchOne('SELECT language FROM ' . 'user_infos' . ' WHERE user_id = 2');
     expect($originalLanguage)->toBeString();
     // user_id=2 is CurrentConfig::defaultUserId()'s own default (the
     // guest account) -- getDefaultLanguage() reads *this* row, entirely
     // independent of CurrentUser (id=1 in this file's own beforeEach()).
-    $conn->executeStatement("UPDATE " . Tables::userInfos() . " SET language = 'zz_ZZ' WHERE user_id = 2");
+    $conn->executeStatement("UPDATE " . 'user_infos' . " SET language = 'zz_ZZ' WHERE user_id = 2");
     searchServiceTestProcessCache()->forget('default_user');
 
     try {
         expect(fn () => searchServiceTestService()->getQuickSearchResultsNoCache('nature', []))
             ->toThrow(LogicException::class, 'qsearch: \Piwigo\Search\Inflector\Inflector_zz does not implement InflectorInterface');
     } finally {
-        $conn->executeStatement('UPDATE ' . Tables::userInfos() . ' SET language = ? WHERE user_id = 2', [$originalLanguage]);
+        $conn->executeStatement('UPDATE ' . 'user_infos' . ' SET language = ? WHERE user_id = 2', [$originalLanguage]);
         searchServiceTestProcessCache()->forget('default_user');
     }
 });

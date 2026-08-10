@@ -26,7 +26,6 @@ use Piwigo\Tests\Support\HtmlServiceTestFactory;
 use Piwigo\Core\Paths;
 use Piwigo\Core\InstallationFlag;
 use Doctrine\DBAL\Connection;
-use Piwigo\Db\Tables;
 use Piwigo\Activity\ActivityRepository;
 use Piwigo\Core\Logger;
 use Piwigo\Core\CurrentLogger;
@@ -184,8 +183,8 @@ test('currentUser() throws when the container returns an unexpected type for Cur
             $service->associateImagesToCategories([$imageId], [1]);
         });
     } finally {
-        $conn->executeStatement('DELETE FROM ' . Tables::imageCategory() . ' WHERE image_id = ?', [$imageId]);
-        $conn->executeStatement('DELETE FROM ' . Tables::images() . ' WHERE id = ?', [$imageId]);
+        $conn->executeStatement('DELETE FROM ' . 'image_category' . ' WHERE image_id = ?', [$imageId]);
+        $conn->executeStatement('DELETE FROM ' . 'images' . ' WHERE id = ?', [$imageId]);
     }
 })->throws(LogicException::class, 'Container returned an unexpected type for ' . CurrentUser::class);
 
@@ -232,8 +231,8 @@ test('filterState() throws when the container returns an unexpected type for Fil
             $service->associateImagesToCategories([$imageId], [1]);
         });
     } finally {
-        $conn->executeStatement('DELETE FROM ' . Tables::imageCategory() . ' WHERE image_id = ?', [$imageId]);
-        $conn->executeStatement('DELETE FROM ' . Tables::images() . ' WHERE id = ?', [$imageId]);
+        $conn->executeStatement('DELETE FROM ' . 'image_category' . ' WHERE image_id = ?', [$imageId]);
+        $conn->executeStatement('DELETE FROM ' . 'images' . ' WHERE id = ?', [$imageId]);
     }
 })->throws(LogicException::class, 'Container returned an unexpected type for ' . FilterState::class);
 
@@ -331,8 +330,8 @@ test('countOrphans computes the real difference (not sum) between all images and
             ->and($result)->toBeLessThanOrEqual($totalImagesNearby)
             ->and(CurrentConfigTestFactory::get()->countOrphans())->toBe($result);
     } finally {
-        $conn->executeStatement("DELETE FROM " . Tables::config() . " WHERE param = 'count_orphans'");
-        $conn->executeStatement('DELETE FROM ' . Tables::images() . ' WHERE id = ?', [$orphanId]);
+        $conn->executeStatement("DELETE FROM " . 'config' . " WHERE param = 'count_orphans'");
+        $conn->executeStatement('DELETE FROM ' . 'images' . ' WHERE id = ?', [$orphanId]);
         CurrentConfigServiceTestFactory::get()->reset();
         Kernel::reset();
     }
@@ -360,7 +359,7 @@ test('getRowWithCondition returns the real image row when one genuinely matches,
             expect(is_numeric($rowId) ? (int) $rowId : null)->toBe($imageId);
         }
     } finally {
-        $conn->executeStatement('DELETE FROM ' . Tables::images() . ' WHERE id = ?', [$imageId]);
+        $conn->executeStatement('DELETE FROM ' . 'images' . ' WHERE id = ?', [$imageId]);
     }
 });
 
@@ -728,7 +727,7 @@ function imageServiceTestNewService(ImageRepository $repo, Connection $conn, ?Pa
 function imageServiceTestInsertImage(Connection $conn, string $path, ?string $representativeExt = null): int
 {
     $conn->createQueryBuilder()
-        ->insert(Tables::images())
+        ->insert('images')
         ->values([
             'file' => ':file',
             'path' => ':path',
@@ -765,7 +764,7 @@ test('deleteElementFiles deletes the original, its representative, and its forma
     file_put_contents($root . '/upload/2026/07/withformat.jpg', 'x');
     file_put_contents($root . '/upload/2026/07/pwg_format/withformat.webp', 'x');
     $conn->createQueryBuilder()
-        ->insert(Tables::imageFormat())
+        ->insert('image_format')
         ->values(['image_id' => ':imageId', 'ext' => ':ext'])
         ->setParameter('imageId', $formatId)
         ->setParameter('ext', 'webp')
@@ -797,8 +796,8 @@ test('deleteElementFiles deletes the original, its representative, and its forma
         expect(file_exists($root . '/upload/2026/07/withformat.jpg'))->toBeFalse();
         expect(file_exists($root . '/upload/2026/07/pwg_format/withformat.webp'))->toBeFalse();
     } finally {
-        $conn->executeStatement('DELETE FROM ' . Tables::images() . ' WHERE id IN (?, ?, ?, ?)', [$plainId, $repId, $formatId, $remoteId]);
-        $conn->executeStatement('DELETE FROM ' . Tables::imageFormat() . ' WHERE image_id = ?', [$formatId]);
+        $conn->executeStatement('DELETE FROM ' . 'images' . ' WHERE id IN (?, ?, ?, ?)', [$plainId, $repId, $formatId, $remoteId]);
+        $conn->executeStatement('DELETE FROM ' . 'image_format' . ' WHERE image_id = ?', [$formatId]);
         imageServiceTestRrmdir($root);
         Kernel::reset();
         CurrentConfigTestFactory::get()->reset();
@@ -823,10 +822,10 @@ test('deleteElementFiles accumulates every registered format for an id, not just
     file_put_contents($root . '/upload/2026/07/multiformat.jpg', 'x');
     file_put_contents($root . '/upload/2026/07/pwg_format/multiformat.webp', 'x');
     file_put_contents($root . '/upload/2026/07/pwg_format/multiformat.avif', 'x');
-    $conn->createQueryBuilder()->insert(Tables::imageFormat())
+    $conn->createQueryBuilder()->insert('image_format')
         ->values(['image_id' => ':i', 'ext' => ':e'])->setParameter('i', $imageId)->setParameter('e', 'webp')
         ->executeStatement();
-    $conn->createQueryBuilder()->insert(Tables::imageFormat())
+    $conn->createQueryBuilder()->insert('image_format')
         ->values(['image_id' => ':i', 'ext' => ':e'])->setParameter('i', $imageId)->setParameter('e', 'avif')
         ->executeStatement();
 
@@ -840,8 +839,8 @@ test('deleteElementFiles accumulates every registered format for an id, not just
         expect(file_exists($root . '/upload/2026/07/pwg_format/multiformat.webp'))->toBeFalse();
         expect(file_exists($root . '/upload/2026/07/pwg_format/multiformat.avif'))->toBeFalse();
     } finally {
-        $conn->executeStatement('DELETE FROM ' . Tables::images() . ' WHERE id = ?', [$imageId]);
-        $conn->executeStatement('DELETE FROM ' . Tables::imageFormat() . ' WHERE image_id = ?', [$imageId]);
+        $conn->executeStatement('DELETE FROM ' . 'images' . ' WHERE id = ?', [$imageId]);
+        $conn->executeStatement('DELETE FROM ' . 'image_format' . ' WHERE image_id = ?', [$imageId]);
         imageServiceTestRrmdir($root);
         Kernel::reset();
         CurrentConfigTestFactory::get()->reset();
@@ -864,9 +863,9 @@ test('deleteElementFiles skips a remote row with `continue`, not `break` -- a lo
     mkdir($root . '/upload/2026/07', 0o777, true);
     file_put_contents($root . '/upload/2026/07/afterremote.jpg', 'x');
 
-    $conn->executeStatement('DELETE FROM ' . Tables::images() . ' WHERE id IN (760001, 760002)');
-    $conn->executeStatement('INSERT INTO ' . Tables::images() . ' (id, file, path) VALUES (760001, ?, ?)', ['remote.jpg', 'https://remote.example.test/remote.jpg']);
-    $conn->executeStatement('INSERT INTO ' . Tables::images() . ' (id, file, path) VALUES (760002, ?, ?)', ['afterremote.jpg', 'upload/2026/07/afterremote.jpg']);
+    $conn->executeStatement('DELETE FROM ' . 'images' . ' WHERE id IN (760001, 760002)');
+    $conn->executeStatement('INSERT INTO ' . 'images' . ' (id, file, path) VALUES (760001, ?, ?)', ['remote.jpg', 'https://remote.example.test/remote.jpg']);
+    $conn->executeStatement('INSERT INTO ' . 'images' . ' (id, file, path) VALUES (760002, ?, ?)', ['afterremote.jpg', 'upload/2026/07/afterremote.jpg']);
 
     try {
         $service = imageServiceTestNewService($repo, $conn, Paths::fromRoot($root));
@@ -877,7 +876,7 @@ test('deleteElementFiles skips a remote row with `continue`, not `break` -- a lo
         expect($result)->toBe([760002]);
         expect(file_exists($root . '/upload/2026/07/afterremote.jpg'))->toBeFalse();
     } finally {
-        $conn->executeStatement('DELETE FROM ' . Tables::images() . ' WHERE id IN (760001, 760002)');
+        $conn->executeStatement('DELETE FROM ' . 'images' . ' WHERE id IN (760001, 760002)');
         imageServiceTestRrmdir($root);
         Kernel::reset();
         CurrentConfigTestFactory::get()->reset();
@@ -916,7 +915,7 @@ test('deleteElementFiles treats an explicitly-empty-string representative_ext th
         expect(file_exists($root . '/upload/2026/07/emptyrepext.jpg'))->toBeFalse();
         expect(file_exists($decoyPath))->toBeTrue();
     } finally {
-        $conn->executeStatement('DELETE FROM ' . Tables::images() . ' WHERE id = ?', [$imageId]);
+        $conn->executeStatement('DELETE FROM ' . 'images' . ' WHERE id = ?', [$imageId]);
         imageServiceTestRrmdir($root);
         Kernel::reset();
         CurrentConfigTestFactory::get()->reset();
@@ -967,7 +966,7 @@ test('deleteElementFiles stops removing a row\'s remaining files (`break`, not `
     } finally {
         restore_error_handler();
         chmod($root . '/upload/2026/07/lockedwithrep', 0o755);
-        $conn->executeStatement('DELETE FROM ' . Tables::images() . ' WHERE id = ?', [$imageId]);
+        $conn->executeStatement('DELETE FROM ' . 'images' . ' WHERE id = ?', [$imageId]);
         imageServiceTestRrmdir($root);
         Kernel::reset();
         CurrentConfigTestFactory::get()->reset();
@@ -1011,7 +1010,7 @@ test('deleteElementFiles adds representative_ext to the derivative-cache lookup 
         expect(file_exists($representativePatternDecoy))->toBeFalse();
         expect(file_exists($originalPatternDecoy))->toBeTrue();
     } finally {
-        $conn->executeStatement('DELETE FROM ' . Tables::images() . ' WHERE id = ?', [$imageId]);
+        $conn->executeStatement('DELETE FROM ' . 'images' . ' WHERE id = ?', [$imageId]);
         imageServiceTestRrmdir($root);
         Kernel::reset();
         CurrentConfigTestFactory::get()->reset();
@@ -1057,7 +1056,7 @@ test('deleteElementFiles stops at the first file it cannot remove and does not r
         expect(file_exists($root . '/upload/2026/07/after.jpg'))->toBeTrue();
     } finally {
         chmod($root . '/upload/2026/07/locked', 0o755);
-        $conn->executeStatement('DELETE FROM ' . Tables::images() . ' WHERE id IN (?, ?)', [$blockedId, $afterId]);
+        $conn->executeStatement('DELETE FROM ' . 'images' . ' WHERE id IN (?, ?)', [$blockedId, $afterId]);
         imageServiceTestRrmdir($root);
         Kernel::reset();
         CurrentConfigTestFactory::get()->reset();
@@ -1087,11 +1086,11 @@ test('deleteElements() returns 0 without touching the database when physical del
         }
 
         expect($result)->toBe(0);
-        $stillThere = $conn->fetchOne('SELECT COUNT(*) FROM ' . Tables::images() . ' WHERE id = ' . $blockedId);
+        $stillThere = $conn->fetchOne('SELECT COUNT(*) FROM ' . 'images' . ' WHERE id = ' . $blockedId);
         expect(is_numeric($stillThere) ? (int) $stillThere : -1)->toBe(1);
     } finally {
         chmod($root . '/upload/2026/07/locked', 0o755);
-        $conn->executeStatement('DELETE FROM ' . Tables::images() . ' WHERE id = ?', [$blockedId]);
+        $conn->executeStatement('DELETE FROM ' . 'images' . ' WHERE id = ?', [$blockedId]);
         imageServiceTestRrmdir($root);
         Kernel::reset();
         CurrentConfigTestFactory::get()->reset();
@@ -1148,7 +1147,7 @@ test('deleteElements() with physical deletion removing zero files never fires de
     } finally {
         EventDispatcherTestFactory::get()->removeEventHandler(DeleteElements::class, $deleteHandler);
         chmod($root . '/upload/2026/07/locked3', 0o755);
-        $conn->executeStatement('DELETE FROM ' . Tables::images() . ' WHERE id = ?', [$blockedId]);
+        $conn->executeStatement('DELETE FROM ' . 'images' . ' WHERE id = ?', [$blockedId]);
         imageServiceTestRrmdir($root);
         Kernel::reset();
         CurrentConfigTestFactory::get()->reset();
@@ -1187,7 +1186,7 @@ test('deleteElements() fires begin_delete_elements and delete_elements with the 
         expect($count)->toBe(1);
         expect($capturedBeginIds)->toBe([$imageId]);
         expect($capturedDeleteIds)->toBe([$imageId]);
-        $imagesRemaining = $conn->fetchOne('SELECT COUNT(*) FROM ' . Tables::images() . ' WHERE id = ' . $imageId);
+        $imagesRemaining = $conn->fetchOne('SELECT COUNT(*) FROM ' . 'images' . ' WHERE id = ' . $imageId);
         expect(is_numeric($imagesRemaining) ? (int) $imagesRemaining : -1)->toBe(0);
         expect($activityService->getOccuredOnForObject($imageId, 'photo', 'delete'))->not->toBeNull();
     } finally {
@@ -1267,7 +1266,7 @@ test('associateImagesToCategories() treats a numeric-string image id as already 
     $imageId = imageServiceTestInsertImage($conn, 'upload/2026/07/existingassoc.jpg');
     $rankColumn = $conn->getDatabasePlatform()->quoteSingleIdentifier('rank');
     $conn->createQueryBuilder()
-        ->insert(Tables::imageCategory())
+        ->insert('image_category')
         ->values(['image_id' => ':imageId', 'category_id' => ':categoryId', $rankColumn => ':rank'])
         ->setParameter('imageId', $imageId)
         ->setParameter('categoryId', 1)
@@ -1279,12 +1278,12 @@ test('associateImagesToCategories() treats a numeric-string image id as already 
 
         expect($service->associateImagesToCategories([(string) $imageId], [1]))->toBeNull();
 
-        $rows = $conn->fetchAllAssociative('SELECT ' . $rankColumn . ' FROM ' . Tables::imageCategory() . ' WHERE image_id = ' . $imageId . ' AND category_id = 1');
+        $rows = $conn->fetchAllAssociative('SELECT ' . $rankColumn . ' FROM ' . 'image_category' . ' WHERE image_id = ' . $imageId . ' AND category_id = 1');
         expect($rows)->toHaveCount(1);
         expect($rows[0]['rank'])->toBe(1);
     } finally {
-        $conn->executeStatement('DELETE FROM ' . Tables::imageCategory() . ' WHERE image_id = ?', [$imageId]);
-        $conn->executeStatement('DELETE FROM ' . Tables::images() . ' WHERE id = ?', [$imageId]);
+        $conn->executeStatement('DELETE FROM ' . 'image_category' . ' WHERE image_id = ?', [$imageId]);
+        $conn->executeStatement('DELETE FROM ' . 'images' . ' WHERE id = ?', [$imageId]);
     }
 });
 
@@ -1292,7 +1291,7 @@ test('moveImagesToCategories() returns false for an empty image list, and treats
     [$conn, $repo] = imageServiceTestConnAndRepo();
     $imageId = imageServiceTestInsertImage($conn, 'upload/2026/07/mover.jpg');
     $conn->createQueryBuilder()
-        ->insert(Tables::imageCategory())
+        ->insert('image_category')
         ->values(['image_id' => ':imageId', 'category_id' => ':categoryId', $conn->getDatabasePlatform()->quoteSingleIdentifier('rank') => ':rank'])
         ->setParameter('imageId', $imageId)
         ->setParameter('categoryId', 1)
@@ -1309,11 +1308,11 @@ test('moveImagesToCategories() returns false for an empty image list, and treats
         // associateImagesToCategories() is never called since categories
         // stays empty.
         expect($service->moveImagesToCategories([$imageId], 'not-an-array'))->toBeNull();
-        $remaining = $conn->fetchOne('SELECT COUNT(*) FROM ' . Tables::imageCategory() . ' WHERE image_id = ' . $imageId);
+        $remaining = $conn->fetchOne('SELECT COUNT(*) FROM ' . 'image_category' . ' WHERE image_id = ' . $imageId);
         expect(is_numeric($remaining) ? (int) $remaining : -1)->toBe(0);
     } finally {
-        $conn->executeStatement('DELETE FROM ' . Tables::imageCategory() . ' WHERE image_id = ?', [$imageId]);
-        $conn->executeStatement('DELETE FROM ' . Tables::images() . ' WHERE id = ?', [$imageId]);
+        $conn->executeStatement('DELETE FROM ' . 'image_category' . ' WHERE image_id = ?', [$imageId]);
+        $conn->executeStatement('DELETE FROM ' . 'images' . ' WHERE id = ?', [$imageId]);
     }
 });
 
@@ -1337,7 +1336,7 @@ test('associateImagesToCategories() initializes a brand new category\'s starting
     // categoryService()->updateCategory() resolves -- proving line 445
     // genuinely ran.
     [$conn, $repo] = imageServiceTestConnAndRepo();
-    $conn->executeStatement("INSERT INTO " . Tables::categories() . " (name) VALUES ('mutation-sweep-fresh-category')");
+    $conn->executeStatement("INSERT INTO " . 'categories' . " (name) VALUES ('mutation-sweep-fresh-category')");
     $categoryId = (int) $conn->lastInsertId();
     $imageId = imageServiceTestInsertImage($conn, 'upload/2026/07/freshcategoryrank.jpg');
 
@@ -1354,15 +1353,15 @@ test('associateImagesToCategories() initializes a brand new category\'s starting
         expect($service->associateImagesToCategories([$imageId], [$categoryId]))->toBeNull();
 
         expect($capturedWarnings)->toBe([]);
-        $rank = $conn->fetchOne('SELECT ' . $conn->getDatabasePlatform()->quoteSingleIdentifier('rank') . ' FROM ' . Tables::imageCategory() . ' WHERE image_id = ' . $imageId . ' AND category_id = ' . $categoryId);
+        $rank = $conn->fetchOne('SELECT ' . $conn->getDatabasePlatform()->quoteSingleIdentifier('rank') . ' FROM ' . 'image_category' . ' WHERE image_id = ' . $imageId . ' AND category_id = ' . $categoryId);
         expect($rank)->toBe(1);
-        $representative = $conn->fetchOne('SELECT representative_picture_id FROM ' . Tables::categories() . ' WHERE id = ' . $categoryId);
+        $representative = $conn->fetchOne('SELECT representative_picture_id FROM ' . 'categories' . ' WHERE id = ' . $categoryId);
         expect($representative)->toBe($imageId);
     } finally {
         restore_error_handler();
-        $conn->executeStatement('DELETE FROM ' . Tables::imageCategory() . ' WHERE image_id = ?', [$imageId]);
-        $conn->executeStatement('DELETE FROM ' . Tables::images() . ' WHERE id = ?', [$imageId]);
-        $conn->executeStatement('DELETE FROM ' . Tables::categories() . ' WHERE id = ?', [$categoryId]);
+        $conn->executeStatement('DELETE FROM ' . 'image_category' . ' WHERE image_id = ?', [$imageId]);
+        $conn->executeStatement('DELETE FROM ' . 'images' . ' WHERE id = ?', [$imageId]);
+        $conn->executeStatement('DELETE FROM ' . 'categories' . ' WHERE id = ?', [$categoryId]);
     }
 });
 
@@ -1379,11 +1378,11 @@ test('moveImagesToCategories() actually associates images to a real, non-empty c
 
         expect($service->moveImagesToCategories([$imageId], [2]))->toBeNull();
 
-        $rows = $conn->fetchAllAssociative('SELECT category_id FROM ' . Tables::imageCategory() . ' WHERE image_id = ' . $imageId);
+        $rows = $conn->fetchAllAssociative('SELECT category_id FROM ' . 'image_category' . ' WHERE image_id = ' . $imageId);
         expect($rows)->toBe([['category_id' => 2]]);
     } finally {
-        $conn->executeStatement('DELETE FROM ' . Tables::imageCategory() . ' WHERE image_id = ?', [$imageId]);
-        $conn->executeStatement('DELETE FROM ' . Tables::images() . ' WHERE id = ?', [$imageId]);
+        $conn->executeStatement('DELETE FROM ' . 'image_category' . ' WHERE image_id = ?', [$imageId]);
+        $conn->executeStatement('DELETE FROM ' . 'images' . ' WHERE id = ?', [$imageId]);
     }
 });
 
@@ -1408,10 +1407,10 @@ test('addMd5sum() computes and persists a real md5sum for a readable file, prefi
         $count = $service->addMd5sum([$imageId]);
 
         expect($count)->toBe(1);
-        $md5sum = $conn->fetchOne('SELECT md5sum FROM ' . Tables::images() . ' WHERE id = ' . $imageId);
+        $md5sum = $conn->fetchOne('SELECT md5sum FROM ' . 'images' . ' WHERE id = ' . $imageId);
         expect($md5sum)->toBe(md5_file($root . '/upload/2026/07/hashme.jpg'));
     } finally {
-        $conn->executeStatement('DELETE FROM ' . Tables::images() . ' WHERE id = ?', [$imageId]);
+        $conn->executeStatement('DELETE FROM ' . 'images' . ' WHERE id = ?', [$imageId]);
         imageServiceTestRrmdir($root);
         Kernel::reset();
     }
@@ -1428,19 +1427,19 @@ test('addMd5sum() does not stop at the first unhashable id -- a later id in the 
     mkdir($root . '/upload/2026/07', 0o777, true);
     file_put_contents($root . '/upload/2026/07/readable.jpg', 'hashable content');
 
-    $conn->executeStatement('DELETE FROM ' . Tables::images() . ' WHERE id IN (750001, 750002)');
-    $conn->executeStatement('INSERT INTO ' . Tables::images() . ' (id, file, path) VALUES (750001, ?, ?)', ['unreadable.jpg', 'upload/2026/07/does-not-exist-on-disk.jpg']);
-    $conn->executeStatement('INSERT INTO ' . Tables::images() . ' (id, file, path) VALUES (750002, ?, ?)', ['readable.jpg', 'upload/2026/07/readable.jpg']);
+    $conn->executeStatement('DELETE FROM ' . 'images' . ' WHERE id IN (750001, 750002)');
+    $conn->executeStatement('INSERT INTO ' . 'images' . ' (id, file, path) VALUES (750001, ?, ?)', ['unreadable.jpg', 'upload/2026/07/does-not-exist-on-disk.jpg']);
+    $conn->executeStatement('INSERT INTO ' . 'images' . ' (id, file, path) VALUES (750002, ?, ?)', ['readable.jpg', 'upload/2026/07/readable.jpg']);
 
     try {
         $service = imageServiceTestNewService($repo, $conn, Paths::fromRoot($root));
 
         $service->addMd5sum([750001, 750002]);
 
-        $md5sum = $conn->fetchOne('SELECT md5sum FROM ' . Tables::images() . ' WHERE id = 750002');
+        $md5sum = $conn->fetchOne('SELECT md5sum FROM ' . 'images' . ' WHERE id = 750002');
         expect($md5sum)->toBe(md5_file($root . '/upload/2026/07/readable.jpg'));
     } finally {
-        $conn->executeStatement('DELETE FROM ' . Tables::images() . ' WHERE id IN (750001, 750002)');
+        $conn->executeStatement('DELETE FROM ' . 'images' . ' WHERE id IN (750001, 750002)');
         imageServiceTestRrmdir($root);
         Kernel::reset();
     }
@@ -1471,10 +1470,10 @@ test('addMd5sum() skips ids whose file cannot be hashed and still counts them am
         $updatedCount = $service->addMd5sum([$missingId]);
 
         expect($updatedCount)->toBe(1);
-        $md5sum = $conn->fetchOne('SELECT md5sum FROM ' . Tables::images() . ' WHERE id = ' . $missingId);
+        $md5sum = $conn->fetchOne('SELECT md5sum FROM ' . 'images' . ' WHERE id = ' . $missingId);
         expect($md5sum)->toBeNull();
     } finally {
-        $conn->executeStatement('DELETE FROM ' . Tables::images() . ' WHERE id = ?', [$missingId]);
+        $conn->executeStatement('DELETE FROM ' . 'images' . ' WHERE id = ?', [$missingId]);
         imageServiceTestRrmdir($root);
         Kernel::reset();
     }
@@ -1538,7 +1537,7 @@ test('getImageInfos() returns the real row for an existing image id, not null', 
         Assert::assertIsArray($info);
         expect($info['id'])->toBe($imageId);
     } finally {
-        $conn->executeStatement('DELETE FROM ' . Tables::images() . ' WHERE id = ?', [$imageId]);
+        $conn->executeStatement('DELETE FROM ' . 'images' . ' WHERE id = ?', [$imageId]);
     }
 });
 
@@ -1659,7 +1658,7 @@ test('emptyLounge() clears a stale lock, logs the API-suffixed begin/win/end mes
         // Both params, not just 'empty_lounge_running' -- the raw INSERT
         // below needs 'count_orphans' gone too, or a leftover row from a
         // previous run throws a unique-key violation here.
-        $conn->executeStatement("DELETE FROM " . Tables::config() . " WHERE param IN ('empty_lounge_running', 'count_orphans')");
+        $conn->executeStatement("DELETE FROM " . 'config' . " WHERE param IN ('empty_lounge_running', 'count_orphans')");
         // Single hyphen, matching the real "$execId-$startTime" shape
         // tryAcquireLoungeLock() itself always constructs (SessionService::
         // generateKey()'s base64 alphabet, minus '+'/'/', never contains a
@@ -1677,7 +1676,7 @@ test('emptyLounge() clears a stale lock, logs the API-suffixed begin/win/end mes
         // findRawValue() (below) only ever returns string|false, matching
         // insertIgnoreRawValue()'s own string-only contract.
         $conn->executeStatement(
-            "INSERT INTO " . Tables::config() . " (param, value) VALUES ('count_orphans', ?)",
+            "INSERT INTO " . 'config' . " (param, value) VALUES ('count_orphans', ?)",
             [json_encode('3')]
         );
 
@@ -1687,10 +1686,10 @@ test('emptyLounge() clears a stale lock, logs the API-suffixed begin/win/end mes
         // to work with, not just $maxImageId's own untouched 0 default.
         $imageA = imageServiceTestInsertImage($conn, 'upload/2026/07/lounge-a.jpg');
         $imageB = imageServiceTestInsertImage($conn, 'upload/2026/07/lounge-b.jpg');
-        $conn->createQueryBuilder()->insert(Tables::lounge())
+        $conn->createQueryBuilder()->insert('lounge')
             ->values(['image_id' => ':i', 'category_id' => ':c'])->setParameter('i', $imageA)->setParameter('c', 1)
             ->executeStatement();
-        $conn->createQueryBuilder()->insert(Tables::lounge())
+        $conn->createQueryBuilder()->insert('lounge')
             ->values(['image_id' => ':i', 'category_id' => ':c'])->setParameter('i', $imageB)->setParameter('c', 2)
             ->executeStatement();
 
@@ -1738,9 +1737,9 @@ test('emptyLounge() clears a stale lock, logs the API-suffixed begin/win/end mes
             expect($messages[2])->toBe("emptyLounge, exec={$execId} wins the race and gets the token!");
             expect($messages[3])->toBe("emptyLounge, exec={$execId}, ends");
 
-            $remainingLounge = $conn->fetchOne('SELECT COUNT(*) FROM ' . Tables::lounge() . ' WHERE image_id IN (' . $imageA . ',' . $imageB . ')');
+            $remainingLounge = $conn->fetchOne('SELECT COUNT(*) FROM ' . 'lounge' . ' WHERE image_id IN (' . $imageA . ',' . $imageB . ')');
             expect(is_numeric($remainingLounge) ? (int) $remainingLounge : -1)->toBe(0);
-            $categoryLinks = $conn->fetchAllAssociative('SELECT image_id, category_id FROM ' . Tables::imageCategory() . ' WHERE image_id IN (' . $imageA . ',' . $imageB . ') ORDER BY image_id');
+            $categoryLinks = $conn->fetchAllAssociative('SELECT image_id, category_id FROM ' . 'image_category' . ' WHERE image_id IN (' . $imageA . ',' . $imageB . ') ORDER BY image_id');
             expect($categoryLinks)->toBe([
                 ['image_id' => $imageA, 'category_id' => 1],
                 ['image_id' => $imageB, 'category_id' => 2],
@@ -1763,10 +1762,10 @@ test('emptyLounge() clears a stale lock, logs the API-suffixed begin/win/end mes
         } finally {
             EventDispatcherTestFactory::get()->removeEventHandler(EmptyLounge::class, $handler);
             $_REQUEST = $originalRequest;
-            $conn->executeStatement('DELETE FROM ' . Tables::imageCategory() . ' WHERE image_id IN (?, ?)', [$imageA, $imageB]);
-            $conn->executeStatement('DELETE FROM ' . Tables::lounge() . ' WHERE image_id IN (?, ?)', [$imageA, $imageB]);
-            $conn->executeStatement('DELETE FROM ' . Tables::images() . ' WHERE id IN (?, ?)', [$imageA, $imageB]);
-            $conn->executeStatement("DELETE FROM " . Tables::config() . " WHERE param IN ('empty_lounge_running', 'count_orphans')");
+            $conn->executeStatement('DELETE FROM ' . 'image_category' . ' WHERE image_id IN (?, ?)', [$imageA, $imageB]);
+            $conn->executeStatement('DELETE FROM ' . 'lounge' . ' WHERE image_id IN (?, ?)', [$imageA, $imageB]);
+            $conn->executeStatement('DELETE FROM ' . 'images' . ' WHERE id IN (?, ?)', [$imageA, $imageB]);
+            $conn->executeStatement("DELETE FROM " . 'config' . " WHERE param IN ('empty_lounge_running', 'count_orphans')");
             CurrentConfigServiceTestFactory::get()->reset();
             Kernel::reset();
             CurrentConfigTestFactory::get()->reset();
@@ -1792,11 +1791,11 @@ test('emptyLounge() invalidates the permission cache (and its orphan-count cache
 
     try {
         imageServiceTestSeedCurrentLogger(new Logger(['severity' => Logger::OFF]));
-        $conn->executeStatement("DELETE FROM " . Tables::config() . " WHERE param IN ('empty_lounge_running', 'count_orphans')");
+        $conn->executeStatement("DELETE FROM " . 'config' . " WHERE param IN ('empty_lounge_running', 'count_orphans')");
         $configRepo = EntityManagerFactory::build($conn)->getRepository(ConfigEntry::class);
         CurrentConfigServiceTestFactory::get()->set(new ConfigService($configRepo, new EventDispatcher(), CurrentConfigTestFactory::get()));
         $conn->executeStatement(
-            "INSERT INTO " . Tables::config() . " (param, value) VALUES ('count_orphans', ?)",
+            "INSERT INTO " . 'config' . " (param, value) VALUES ('count_orphans', ?)",
             [json_encode(3)]
         );
 
@@ -1807,7 +1806,7 @@ test('emptyLounge() invalidates the permission cache (and its orphan-count cache
 
             expect(CurrentConfigServiceTestFactory::get()->get()->findRawValue('count_orphans'))->toBeFalse();
         } finally {
-            $conn->executeStatement("DELETE FROM " . Tables::config() . " WHERE param IN ('empty_lounge_running', 'count_orphans')");
+            $conn->executeStatement("DELETE FROM " . 'config' . " WHERE param IN ('empty_lounge_running', 'count_orphans')");
             CurrentConfigServiceTestFactory::get()->reset();
             Kernel::reset();
             CurrentConfigTestFactory::get()->reset();
@@ -1834,10 +1833,10 @@ test('emptyLounge() actually clears a stale lock\'s real database row, letting t
 
     try {
         imageServiceTestSeedCurrentLogger(new Logger(['severity' => Logger::OFF]));
-        $conn->executeStatement("DELETE FROM " . Tables::config() . " WHERE param = 'empty_lounge_running'");
+        $conn->executeStatement("DELETE FROM " . 'config' . " WHERE param = 'empty_lounge_running'");
         $staleValue = 'reallystale-' . (time() - 100);
         $conn->executeStatement(
-            "INSERT INTO " . Tables::config() . " (param, value) VALUES ('empty_lounge_running', ?)",
+            "INSERT INTO " . 'config' . " (param, value) VALUES ('empty_lounge_running', ?)",
             [json_encode($staleValue)]
         );
         CurrentConfigTestFactory::get()->emptyLoungeRunning = $staleValue;
@@ -1851,7 +1850,7 @@ test('emptyLounge() actually clears a stale lock\'s real database row, letting t
 
             expect($result)->toBeArray();
         } finally {
-            $conn->executeStatement("DELETE FROM " . Tables::config() . " WHERE param = 'empty_lounge_running'");
+            $conn->executeStatement("DELETE FROM " . 'config' . " WHERE param = 'empty_lounge_running'");
             CurrentConfigServiceTestFactory::get()->reset();
             Kernel::reset();
             CurrentConfigTestFactory::get()->reset();
@@ -1884,13 +1883,13 @@ test('emptyLounge() does not touch a lock that is not actually stale, and logs t
         $logDir = sys_get_temp_dir() . '/piwigo-imageservice-test-' . bin2hex(random_bytes(8));
         mkdir($logDir, 0o777, true);
         imageServiceTestSeedCurrentLogger(new Logger(['severity' => Logger::DEBUG, 'directory' => $logDir, 'filename' => 'emptylounge2.log']));
-        $conn->executeStatement("DELETE FROM " . Tables::config() . " WHERE param = 'empty_lounge_running'");
+        $conn->executeStatement("DELETE FROM " . 'config' . " WHERE param = 'empty_lounge_running'");
         $freshLockValue = 'freshexecid-' . (time() - 30);
         // A real row, not just CurrentConfig's static cache below -- this is
         // what tryAcquireLoungeLock()'s own real INSERT IGNORE actually
         // contends against.
         $conn->executeStatement(
-            "INSERT INTO " . Tables::config() . " (param, value) VALUES ('empty_lounge_running', ?)",
+            "INSERT INTO " . 'config' . " (param, value) VALUES ('empty_lounge_running', ?)",
             [json_encode($freshLockValue)]
         );
         CurrentConfigTestFactory::get()->emptyLoungeRunning = $freshLockValue;
@@ -1925,7 +1924,7 @@ test('emptyLounge() does not touch a lock that is not actually stale, and logs t
             expect(CurrentConfigServiceTestFactory::get()->get()->findRawValue('empty_lounge_running'))->toBe($freshLockValue);
         } finally {
             $_REQUEST = $originalRequest;
-            $conn->executeStatement("DELETE FROM " . Tables::config() . " WHERE param = 'empty_lounge_running'");
+            $conn->executeStatement("DELETE FROM " . 'config' . " WHERE param = 'empty_lounge_running'");
             CurrentConfigServiceTestFactory::get()->reset();
             Kernel::reset();
             CurrentConfigTestFactory::get()->reset();
@@ -1995,11 +1994,11 @@ test('emptyLounge() treats a lock that is exactly 60 seconds old as still fresh,
         $logDir = sys_get_temp_dir() . '/piwigo-imageservice-test-' . bin2hex(random_bytes(8));
         mkdir($logDir, 0o777, true);
         imageServiceTestSeedCurrentLogger(new Logger(['severity' => Logger::DEBUG, 'directory' => $logDir, 'filename' => 'emptylounge3.log']));
-        $conn->executeStatement("DELETE FROM " . Tables::config() . " WHERE param = 'empty_lounge_running'");
+        $conn->executeStatement("DELETE FROM " . 'config' . " WHERE param = 'empty_lounge_running'");
         $t0 = time();
         $lockValue = 'boundaryexecid-' . ($t0 - 60);
         $conn->executeStatement(
-            "INSERT INTO " . Tables::config() . " (param, value) VALUES ('empty_lounge_running', ?)",
+            "INSERT INTO " . 'config' . " (param, value) VALUES ('empty_lounge_running', ?)",
             [json_encode($lockValue)]
         );
         CurrentConfigTestFactory::get()->emptyLoungeRunning = $lockValue;
@@ -2026,7 +2025,7 @@ test('emptyLounge() treats a lock that is exactly 60 seconds old as still fresh,
             // encoded (see ConfigRepository::findRawValue()'s own docblock).
             expect(CurrentConfigServiceTestFactory::get()->get()->findRawValue('empty_lounge_running'))->toBe($lockValue);
         } finally {
-            $conn->executeStatement("DELETE FROM " . Tables::config() . " WHERE param = 'empty_lounge_running'");
+            $conn->executeStatement("DELETE FROM " . 'config' . " WHERE param = 'empty_lounge_running'");
             CurrentConfigServiceTestFactory::get()->reset();
             Kernel::reset();
             CurrentConfigTestFactory::get()->reset();
@@ -2053,10 +2052,10 @@ test('emptyLounge() treats a lock that is exactly 61 seconds old as genuinely st
 
     try {
         imageServiceTestSeedCurrentLogger(new Logger(['severity' => Logger::OFF]));
-        $conn->executeStatement("DELETE FROM " . Tables::config() . " WHERE param = 'empty_lounge_running'");
+        $conn->executeStatement("DELETE FROM " . 'config' . " WHERE param = 'empty_lounge_running'");
         $staleValue = 'boundary61execid-' . (time() - 61);
         $conn->executeStatement(
-            "INSERT INTO " . Tables::config() . " (param, value) VALUES ('empty_lounge_running', ?)",
+            "INSERT INTO " . 'config' . " (param, value) VALUES ('empty_lounge_running', ?)",
             [json_encode($staleValue)]
         );
         CurrentConfigTestFactory::get()->emptyLoungeRunning = $staleValue;
@@ -2070,7 +2069,7 @@ test('emptyLounge() treats a lock that is exactly 61 seconds old as genuinely st
 
             expect($result)->toBeArray();
         } finally {
-            $conn->executeStatement("DELETE FROM " . Tables::config() . " WHERE param = 'empty_lounge_running'");
+            $conn->executeStatement("DELETE FROM " . 'config' . " WHERE param = 'empty_lounge_running'");
             CurrentConfigServiceTestFactory::get()->reset();
             Kernel::reset();
             CurrentConfigTestFactory::get()->reset();
@@ -2086,9 +2085,9 @@ test('emptyLounge() returns null when a different, still-fresh execution already
 
     try {
         imageServiceTestSeedCurrentLogger(new Logger(['severity' => Logger::OFF]));
-        $conn->executeStatement("DELETE FROM " . Tables::config() . " WHERE param = 'empty_lounge_running'");
+        $conn->executeStatement("DELETE FROM " . 'config' . " WHERE param = 'empty_lounge_running'");
         $conn->executeStatement(
-            "INSERT INTO " . Tables::config() . " (param, value) VALUES ('empty_lounge_running', ?)",
+            "INSERT INTO " . 'config' . " (param, value) VALUES ('empty_lounge_running', ?)",
             [json_encode('foreignexec-' . time())]
         );
         // Not stale (CurrentConfig::emptyLoungeRunning() defaults to null),
@@ -2101,7 +2100,7 @@ test('emptyLounge() returns null when a different, still-fresh execution already
 
             expect($service->emptyLounge())->toBeNull();
         } finally {
-            $conn->executeStatement("DELETE FROM " . Tables::config() . " WHERE param = 'empty_lounge_running'");
+            $conn->executeStatement("DELETE FROM " . 'config' . " WHERE param = 'empty_lounge_running'");
             CurrentConfigTestFactory::get()->reset();
             Kernel::reset();
         }
@@ -2153,11 +2152,11 @@ test('updateFormatFilesize() delegates straight through to the repository', func
 
         $service->updateFormatFilesize($formatId, 12345);
 
-        $filesize = $conn->fetchOne('SELECT filesize FROM ' . Tables::imageFormat() . ' WHERE format_id = ' . $formatId);
+        $filesize = $conn->fetchOne('SELECT filesize FROM ' . 'image_format' . ' WHERE format_id = ' . $formatId);
         expect(is_numeric($filesize) ? (int) $filesize : null)->toBe(12345);
     } finally {
-        $conn->executeStatement('DELETE FROM ' . Tables::imageFormat() . ' WHERE format_id = ?', [$formatId]);
-        $conn->executeStatement('DELETE FROM ' . Tables::images() . ' WHERE id = ?', [$imageId]);
+        $conn->executeStatement('DELETE FROM ' . 'image_format' . ' WHERE format_id = ?', [$formatId]);
+        $conn->executeStatement('DELETE FROM ' . 'images' . ' WHERE id = ?', [$imageId]);
     }
 });
 
@@ -2165,7 +2164,7 @@ test('getIdsByFilenameInCategory() delegates straight through to the repository'
     [$conn, $repo] = imageServiceTestConnAndRepo();
     $imageId = imageServiceTestInsertImage($conn, 'upload/2026/07/filenameincat.jpg');
     $conn->createQueryBuilder()
-        ->insert(Tables::imageCategory())
+        ->insert('image_category')
         ->values(['image_id' => ':imageId', 'category_id' => ':categoryId', $conn->getDatabasePlatform()->quoteSingleIdentifier('rank') => ':rank'])
         ->setParameter('imageId', $imageId)
         ->setParameter('categoryId', 1)
@@ -2178,17 +2177,17 @@ test('getIdsByFilenameInCategory() delegates straight through to the repository'
         expect($service->getIdsByFilenameInCategory('filenameincat.jpg', CategoryId::from(1)))->toBe([$imageId]);
         expect($service->getIdsByFilenameInCategory('no-such-file.jpg', CategoryId::from(1)))->toBe([]);
     } finally {
-        $conn->executeStatement('DELETE FROM ' . Tables::imageCategory() . ' WHERE image_id = ?', [$imageId]);
-        $conn->executeStatement('DELETE FROM ' . Tables::images() . ' WHERE id = ?', [$imageId]);
+        $conn->executeStatement('DELETE FROM ' . 'image_category' . ' WHERE image_id = ?', [$imageId]);
+        $conn->executeStatement('DELETE FROM ' . 'images' . ' WHERE id = ?', [$imageId]);
     }
 });
 
 test('getIdsVisibleInCategoriesRecentlyAvailable() delegates straight through to the repository', function (): void {
     [$conn, $repo] = imageServiceTestConnAndRepo();
     $imageId = imageServiceTestInsertImage($conn, 'upload/2026/07/recentlyavailable.jpg');
-    $conn->executeStatement('UPDATE ' . Tables::images() . ' SET date_available = NOW() WHERE id = ?', [$imageId]);
+    $conn->executeStatement('UPDATE ' . 'images' . ' SET date_available = NOW() WHERE id = ?', [$imageId]);
     $conn->createQueryBuilder()
-        ->insert(Tables::imageCategory())
+        ->insert('image_category')
         ->values(['image_id' => ':imageId', 'category_id' => ':categoryId', $conn->getDatabasePlatform()->quoteSingleIdentifier('rank') => ':rank'])
         ->setParameter('imageId', $imageId)
         ->setParameter('categoryId', 1)
@@ -2202,8 +2201,8 @@ test('getIdsVisibleInCategoriesRecentlyAvailable() delegates straight through to
 
         expect($result)->toContain($imageId);
     } finally {
-        $conn->executeStatement('DELETE FROM ' . Tables::imageCategory() . ' WHERE image_id = ?', [$imageId]);
-        $conn->executeStatement('DELETE FROM ' . Tables::images() . ' WHERE id = ?', [$imageId]);
+        $conn->executeStatement('DELETE FROM ' . 'image_category' . ' WHERE image_id = ?', [$imageId]);
+        $conn->executeStatement('DELETE FROM ' . 'images' . ' WHERE id = ?', [$imageId]);
     }
 });
 

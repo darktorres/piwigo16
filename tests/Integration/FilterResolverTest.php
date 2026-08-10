@@ -38,7 +38,6 @@ use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Config\ConfigLoader;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
-use Piwigo\Db\Tables;
 use Piwigo\Image\ImageDuplicateField;
 use Piwigo\Image\ImageService;
 use Piwigo\Mail\MailService;
@@ -162,7 +161,7 @@ final class FilterResolverTest extends IntegrationTestCase
     public function test_resolve_prefilter_caddie_returns_the_users_caddie_image_ids(): void
     {
         $this->conn->createQueryBuilder()
-            ->insert(Tables::caddie())
+            ->insert('caddie')
             ->values(['user_id' => ':user_id', 'element_id' => ':element_id'])
             ->setParameter('user_id', 1)
             ->setParameter('element_id', 2)
@@ -174,7 +173,7 @@ final class FilterResolverTest extends IntegrationTestCase
             self::assertSame([2], $ids);
         } finally {
             $this->conn->createQueryBuilder()
-                ->delete(Tables::caddie())
+                ->delete('caddie')
                 ->where('user_id = :user_id')
                 ->setParameter('user_id', 1)
                 ->executeStatement();
@@ -326,7 +325,7 @@ final class FilterResolverTest extends IntegrationTestCase
         $this->conn->beginTransaction();
 
         try {
-            $this->conn->executeStatement('DELETE FROM ' . Tables::images());
+            $this->conn->executeStatement('DELETE FROM ' . 'images');
 
             $ids = $this->resolver->resolvePrefilter('last_import', new DuplicateFieldFlags(), true, UserId::from(1), '');
 
@@ -344,17 +343,17 @@ final class FilterResolverTest extends IntegrationTestCase
         // becomes the new max, one sits exactly on the inclusive lower
         // boundary (max minus 1 day), and one sits 1 second outside it.
         $this->conn->executeStatement(
-            "INSERT INTO " . Tables::images() . " (file, path, date_available) VALUES ('last-import-max.jpg', 'upload/last-import-max.jpg', '2026-08-10 12:00:00')"
+            "INSERT INTO " . 'images' . " (file, path, date_available) VALUES ('last-import-max.jpg', 'upload/last-import-max.jpg', '2026-08-10 12:00:00')"
         );
         $maxId = (int) $this->conn->lastInsertId();
 
         $this->conn->executeStatement(
-            "INSERT INTO " . Tables::images() . " (file, path, date_available) VALUES ('last-import-boundary.jpg', 'upload/last-import-boundary.jpg', '2026-08-09 12:00:00')"
+            "INSERT INTO " . 'images' . " (file, path, date_available) VALUES ('last-import-boundary.jpg', 'upload/last-import-boundary.jpg', '2026-08-09 12:00:00')"
         );
         $boundaryId = (int) $this->conn->lastInsertId();
 
         $this->conn->executeStatement(
-            "INSERT INTO " . Tables::images() . " (file, path, date_available) VALUES ('last-import-excluded.jpg', 'upload/last-import-excluded.jpg', '2026-08-09 11:59:59')"
+            "INSERT INTO " . 'images' . " (file, path, date_available) VALUES ('last-import-excluded.jpg', 'upload/last-import-excluded.jpg', '2026-08-09 11:59:59')"
         );
         $excludedId = (int) $this->conn->lastInsertId();
 
@@ -374,7 +373,7 @@ final class FilterResolverTest extends IntegrationTestCase
             );
         } finally {
             $this->conn->executeStatement(
-                'DELETE FROM ' . Tables::images() . ' WHERE id IN (?, ?, ?)',
+                'DELETE FROM ' . 'images' . ' WHERE id IN (?, ?, ?)',
                 [$maxId, $boundaryId, $excludedId]
             );
         }
@@ -383,27 +382,27 @@ final class FilterResolverTest extends IntegrationTestCase
     public function test_resolve_prefilter_no_virtual_album_excludes_images_linked_only_to_a_virtual_category(): void
     {
         $this->conn->executeStatement(
-            "INSERT INTO " . Tables::categories() . " (name, dir) VALUES ('Real Album', 'real_album')"
+            "INSERT INTO " . 'categories' . " (name, dir) VALUES ('Real Album', 'real_album')"
         );
         $realCategoryId = (int) $this->conn->lastInsertId();
 
         $this->conn->executeStatement(
-            "INSERT INTO " . Tables::images() . " (file, path) VALUES ('no-virtual-real.jpg', 'upload/no-virtual-real.jpg')"
+            "INSERT INTO " . 'images' . " (file, path) VALUES ('no-virtual-real.jpg', 'upload/no-virtual-real.jpg')"
         );
         $realImageId = (int) $this->conn->lastInsertId();
         $this->conn->executeStatement(
-            'INSERT INTO ' . Tables::imageCategory() . ' (image_id, category_id) VALUES (?, ?)',
+            'INSERT INTO ' . 'image_category' . ' (image_id, category_id) VALUES (?, ?)',
             [$realImageId, $realCategoryId]
         );
 
         $this->conn->executeStatement(
-            "INSERT INTO " . Tables::images() . " (file, path) VALUES ('no-virtual-virtual-only.jpg', 'upload/no-virtual-virtual-only.jpg')"
+            "INSERT INTO " . 'images' . " (file, path) VALUES ('no-virtual-virtual-only.jpg', 'upload/no-virtual-virtual-only.jpg')"
         );
         $virtualOnlyImageId = (int) $this->conn->lastInsertId();
         // Category 1 is one of the fixture's own virtual categories (dir IS
         // NULL, confirmed via direct read of tests/Fixtures/piwigo-17.0.sql).
         $this->conn->executeStatement(
-            'INSERT INTO ' . Tables::imageCategory() . ' (image_id, category_id) VALUES (?, 1)',
+            'INSERT INTO ' . 'image_category' . ' (image_id, category_id) VALUES (?, 1)',
             [$virtualOnlyImageId]
         );
 
@@ -416,11 +415,11 @@ final class FilterResolverTest extends IntegrationTestCase
             self::assertSame([$realImageId], $ids);
         } finally {
             $this->conn->executeStatement(
-                'DELETE FROM ' . Tables::images() . ' WHERE id IN (?, ?)',
+                'DELETE FROM ' . 'images' . ' WHERE id IN (?, ?)',
                 [$realImageId, $virtualOnlyImageId]
             );
             $this->conn->executeStatement(
-                'DELETE FROM ' . Tables::categories() . ' WHERE id = ?',
+                'DELETE FROM ' . 'categories' . ' WHERE id = ?',
                 [$realCategoryId]
             );
         }
@@ -432,7 +431,7 @@ final class FilterResolverTest extends IntegrationTestCase
             static fn (mixed $id): int => is_numeric($id) ? (int) $id : 0,
             $this->conn->createQueryBuilder()
                 ->select('id')
-                ->from(Tables::categories())
+                ->from('categories')
                 ->where('dir IS NULL')
                 ->executeQuery()
                 ->fetchFirstColumn()
@@ -444,7 +443,7 @@ final class FilterResolverTest extends IntegrationTestCase
         );
 
         $this->conn->executeStatement(
-            'UPDATE ' . Tables::categories() . " SET dir = 'temp-real-dir' WHERE dir IS NULL"
+            'UPDATE ' . 'categories' . " SET dir = 'temp-real-dir' WHERE dir IS NULL"
         );
 
         try {
@@ -459,7 +458,7 @@ final class FilterResolverTest extends IntegrationTestCase
             );
         } finally {
             $this->conn->executeStatement(
-                'UPDATE ' . Tables::categories() . ' SET dir = NULL WHERE id IN (' . implode(',', $virtualCategoryIds) . ')'
+                'UPDATE ' . 'categories' . ' SET dir = NULL WHERE id IN (' . implode(',', $virtualCategoryIds) . ')'
             );
         }
     }

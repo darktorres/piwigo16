@@ -7,7 +7,6 @@ namespace Piwigo\Tests\Contract;
 use Override;
 use Doctrine\DBAL\Connection;
 use Piwigo\Db\DbConnection;
-use Piwigo\Db\Tables;
 
 /**
  * Ws\PwgImages maintenance/format methods:
@@ -43,7 +42,7 @@ final class WsImagesMaintenanceTest extends ContractTestCase
     protected function tearDown(): void
     {
         foreach ($this->insertedImageIds as $id) {
-            $this->conn->executeStatement('DELETE FROM ' . Tables::images() . ' WHERE id = ?', [$id]);
+            $this->conn->executeStatement('DELETE FROM ' . 'images' . ' WHERE id = ?', [$id]);
         }
         parent::tearDown();
     }
@@ -70,11 +69,11 @@ final class WsImagesMaintenanceTest extends ContractTestCase
         // Fixture image 1 always has a real md5sum already -- null it out for
         // this test only, then restore it, so setMd5sum() has real work to do
         // without permanently mutating fixture state for later tests.
-        $original = $this->conn->fetchOne('SELECT md5sum FROM ' . Tables::images() . ' WHERE id = 1');
+        $original = $this->conn->fetchOne('SELECT md5sum FROM ' . 'images' . ' WHERE id = 1');
         self::assertIsString($original);
 
         try {
-            $this->conn->executeStatement("UPDATE " . Tables::images() . ' SET md5sum = NULL WHERE id = 1');
+            $this->conn->executeStatement("UPDATE " . 'images' . ' SET md5sum = NULL WHERE id = 1');
 
             $response = $this->callWs('pwg.images.setMd5sum', [
                 'block_size' => 50,
@@ -87,11 +86,11 @@ final class WsImagesMaintenanceTest extends ContractTestCase
             self::assertSame(1, $result['nb_added']);
             self::assertSame(0, $result['nb_no_md5sum']);
 
-            $recomputed = $this->conn->fetchOne('SELECT md5sum FROM ' . Tables::images() . ' WHERE id = 1');
+            $recomputed = $this->conn->fetchOne('SELECT md5sum FROM ' . 'images' . ' WHERE id = 1');
             self::assertSame($original, $recomputed);
         } finally {
             $this->conn->executeStatement(
-                'UPDATE ' . Tables::images() . ' SET md5sum = ? WHERE id = 1',
+                'UPDATE ' . 'images' . ' SET md5sum = ? WHERE id = 1',
                 [$original]
             );
         }
@@ -177,7 +176,7 @@ final class WsImagesMaintenanceTest extends ContractTestCase
         ));
 
         $this->conn->executeStatement(
-            'INSERT INTO ' . Tables::images() . ' (file, path, md5sum) VALUES (?, ?, ?)',
+            'INSERT INTO ' . 'images' . ' (file, path, md5sum) VALUES (?, ?, ?)',
             [$filename, 'upload/2026/08/01/' . $filename, md5($filename)]
         );
         $id = (int) $this->conn->lastInsertId();
@@ -198,7 +197,7 @@ final class WsImagesMaintenanceTest extends ContractTestCase
     {
         $orphanId = $this->insertOrphanImage();
 
-        $before = $this->conn->fetchOne('SELECT COUNT(*) FROM ' . Tables::images() . ' WHERE id = ?', [$orphanId]);
+        $before = $this->conn->fetchOne('SELECT COUNT(*) FROM ' . 'images' . ' WHERE id = ?', [$orphanId]);
         self::assertIsNumeric($before);
         self::assertSame(1, (int) $before);
 
@@ -213,7 +212,7 @@ final class WsImagesMaintenanceTest extends ContractTestCase
         self::assertGreaterThanOrEqual(1, $result['nb_deleted']);
         self::assertSame(0, $result['nb_orphans']);
 
-        $after = $this->conn->fetchOne('SELECT COUNT(*) FROM ' . Tables::images() . ' WHERE id = ?', [$orphanId]);
+        $after = $this->conn->fetchOne('SELECT COUNT(*) FROM ' . 'images' . ' WHERE id = ?', [$orphanId]);
         self::assertIsNumeric($after);
         self::assertSame(0, (int) $after);
     }
@@ -328,7 +327,7 @@ final class WsImagesMaintenanceTest extends ContractTestCase
     public function test_formatsSearchImage_finds_a_matching_photo_without_existing_format(): void
     {
         $formatExtensions = $this->conn->fetchOne(
-            "SELECT value FROM " . Tables::config() . " WHERE param = 'format_ext'"
+            "SELECT value FROM " . 'config' . " WHERE param = 'format_ext'"
         );
         // format_ext isn't seeded by the fixture -- CurrentConfig's own
         // non-null static default (includes 'tif') is what's actually in
@@ -359,7 +358,7 @@ final class WsImagesMaintenanceTest extends ContractTestCase
             );
         } finally {
             $this->conn->executeStatement(
-                'DELETE FROM ' . Tables::imageFormat() . ' WHERE format_id = ?',
+                'DELETE FROM ' . 'image_format' . ' WHERE format_id = ?',
                 [$formatId]
             );
         }
@@ -370,7 +369,7 @@ final class WsImagesMaintenanceTest extends ContractTestCase
     private function insertImageFormat(int $imageId, string $ext): int
     {
         $this->conn->executeStatement(
-            'INSERT INTO ' . Tables::imageFormat() . ' (image_id, ext, filesize) VALUES (?, ?, ?)',
+            'INSERT INTO ' . 'image_format' . ' (image_id, ext, filesize) VALUES (?, ?, ?)',
             [$imageId, $ext, 100]
         );
 
@@ -410,7 +409,7 @@ final class WsImagesMaintenanceTest extends ContractTestCase
         self::assertTrue($response['result']);
 
         $remaining = $this->conn->fetchOne(
-            'SELECT COUNT(*) FROM ' . Tables::imageFormat() . ' WHERE format_id = ?',
+            'SELECT COUNT(*) FROM ' . 'image_format' . ' WHERE format_id = ?',
             [$formatId]
         );
         self::assertIsNumeric($remaining);
@@ -421,7 +420,7 @@ final class WsImagesMaintenanceTest extends ContractTestCase
     {
         $filename = 'remote-format-' . uniqid() . '.jpg';
         $this->conn->executeStatement(
-            'INSERT INTO ' . Tables::images() . ' (file, path, md5sum) VALUES (?, ?, ?)',
+            'INSERT INTO ' . 'images' . ' (file, path, md5sum) VALUES (?, ?, ?)',
             [$filename, 'https://example.test/remote/' . $filename, md5($filename)]
         );
         $imageId = (int) $this->conn->lastInsertId();
@@ -441,7 +440,7 @@ final class WsImagesMaintenanceTest extends ContractTestCase
         self::assertTrue($response['result']);
 
         $remaining = $this->conn->fetchOne(
-            'SELECT COUNT(*) FROM ' . Tables::imageFormat() . ' WHERE format_id = ?',
+            'SELECT COUNT(*) FROM ' . 'image_format' . ' WHERE format_id = ?',
             [$formatId]
         );
         self::assertSame(0, is_numeric($remaining) ? (int) $remaining : -1);
@@ -467,7 +466,7 @@ final class WsImagesMaintenanceTest extends ContractTestCase
         file_put_contents($formatFile, 'stand-in format file content');
 
         $this->conn->executeStatement(
-            'INSERT INTO ' . Tables::images() . ' (file, path, md5sum) VALUES (?, ?, ?)',
+            'INSERT INTO ' . 'images' . ' (file, path, md5sum) VALUES (?, ?, ?)',
             [$filename, $imagePath, md5($slug)]
         );
         $imageId = (int) $this->conn->lastInsertId();
@@ -499,7 +498,7 @@ final class WsImagesMaintenanceTest extends ContractTestCase
             // unconditional deleteFormatsByIds() call, same as every other
             // test in this section.
             $remaining = $this->conn->fetchOne(
-                'SELECT COUNT(*) FROM ' . Tables::imageFormat() . ' WHERE format_id = ?',
+                'SELECT COUNT(*) FROM ' . 'image_format' . ' WHERE format_id = ?',
                 [$formatId]
             );
             self::assertSame(0, is_numeric($remaining) ? (int) $remaining : -1);

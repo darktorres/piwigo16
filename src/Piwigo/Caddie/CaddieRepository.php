@@ -10,7 +10,6 @@ use Doctrine\DBAL\ParameterType;
 use Doctrine\ORM\EntityRepository;
 use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Db\BatchWriter;
-use Piwigo\Db\Tables;
 
 /**
  * Persistence layer for the caddie domain: `caddie` (a per-user
@@ -63,7 +62,7 @@ final class CaddieRepository extends EntityRepository
         foreach ($elementIds as $elementId) {
             try {
                 $conn->insert(
-                    Tables::caddie(),
+                    'caddie',
                     [
                         'element_id' => $elementId,
                         'user_id' => $userId,
@@ -149,7 +148,7 @@ final class CaddieRepository extends EntityRepository
         }
 
         new BatchWriter($em->getConnection())
-            ->massInsert(Tables::caddie(), array_keys($inserts[0]), $inserts);
+            ->massInsert('caddie', array_keys($inserts[0]), $inserts);
     }
 
     /**

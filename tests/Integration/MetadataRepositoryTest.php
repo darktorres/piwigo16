@@ -12,7 +12,6 @@ use Doctrine\DBAL\Connection;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\ConfigLoader;
 use Piwigo\Db\DbConnection;
-use Piwigo\Db\Tables;
 use Piwigo\Metadata\MetadataRepository;
 
 /**
@@ -57,8 +56,8 @@ final class MetadataRepositoryTest extends IntegrationTestCase
     #[Override]
     protected function tearDown(): void
     {
-        $this->conn->executeStatement('UPDATE ' . Tables::categories() . ' SET site_id = NULL, dir = NULL');
-        $this->conn->executeStatement("UPDATE " . Tables::images() . " SET storage_category_id = NULL, date_metadata_update = '2026-07-07'");
+        $this->conn->executeStatement('UPDATE ' . 'categories' . ' SET site_id = NULL, dir = NULL');
+        $this->conn->executeStatement("UPDATE " . 'images' . " SET storage_category_id = NULL, date_metadata_update = '2026-07-07'");
         parent::tearDown();
     }
 
@@ -88,8 +87,8 @@ final class MetadataRepositoryTest extends IntegrationTestCase
 
     public function test_find_category_ids_matches_a_specific_category(): void
     {
-        $this->conn->executeStatement("UPDATE " . Tables::categories() . " SET site_id = 1, dir = 'sample_album' WHERE id = 1");
-        $this->conn->executeStatement("UPDATE " . Tables::categories() . " SET site_id = 1, dir = 'nested' WHERE id = 2");
+        $this->conn->executeStatement("UPDATE " . 'categories' . " SET site_id = 1, dir = 'sample_album' WHERE id = 1");
+        $this->conn->executeStatement("UPDATE " . 'categories' . " SET site_id = 1, dir = 'nested' WHERE id = 2");
 
         $ids = $this->repo->findCategoryIds(1, 1, false);
 
@@ -98,8 +97,8 @@ final class MetadataRepositoryTest extends IntegrationTestCase
 
     public function test_find_category_ids_recursive_includes_subcategories(): void
     {
-        $this->conn->executeStatement("UPDATE " . Tables::categories() . " SET site_id = 1, dir = 'sample_album', uppercats = '1' WHERE id = 1");
-        $this->conn->executeStatement("UPDATE " . Tables::categories() . " SET site_id = 1, dir = 'nested', uppercats = '1,2' WHERE id = 2");
+        $this->conn->executeStatement("UPDATE " . 'categories' . " SET site_id = 1, dir = 'sample_album', uppercats = '1' WHERE id = 1");
+        $this->conn->executeStatement("UPDATE " . 'categories' . " SET site_id = 1, dir = 'nested', uppercats = '1,2' WHERE id = 2");
 
         $ids = $this->repo->findCategoryIds(1, 1, true);
         sort($ids);
@@ -115,8 +114,8 @@ final class MetadataRepositoryTest extends IntegrationTestCase
 
     public function test_find_images_by_storage_category_ids_keys_by_id(): void
     {
-        $this->conn->executeStatement('UPDATE ' . Tables::images() . ' SET storage_category_id = 1 WHERE id IN (1, 2, 3)');
-        $this->conn->executeStatement('UPDATE ' . Tables::images() . ' SET storage_category_id = 2 WHERE id IN (4, 5)');
+        $this->conn->executeStatement('UPDATE ' . 'images' . ' SET storage_category_id = 1 WHERE id IN (1, 2, 3)');
+        $this->conn->executeStatement('UPDATE ' . 'images' . ' SET storage_category_id = 2 WHERE id IN (4, 5)');
 
         $result = $this->repo->findImagesByStorageCategoryIds([1], false);
 
@@ -129,8 +128,8 @@ final class MetadataRepositoryTest extends IntegrationTestCase
         // The fixture's own default already sets date_metadata_update to a
         // real date for every image -- null out 2/3 to simulate "not yet
         // synced", leaving image 1 as "already synced".
-        $this->conn->executeStatement('UPDATE ' . Tables::images() . ' SET storage_category_id = 1 WHERE id IN (1, 2, 3)');
-        $this->conn->executeStatement('UPDATE ' . Tables::images() . ' SET date_metadata_update = NULL WHERE id IN (2, 3)');
+        $this->conn->executeStatement('UPDATE ' . 'images' . ' SET storage_category_id = 1 WHERE id IN (1, 2, 3)');
+        $this->conn->executeStatement('UPDATE ' . 'images' . ' SET date_metadata_update = NULL WHERE id IN (2, 3)');
 
         $result = $this->repo->findImagesByStorageCategoryIds([1], true);
 

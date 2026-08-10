@@ -5,7 +5,6 @@ declare(strict_types=1);
 use Piwigo\Common\ValueObject\Permalink;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
-use Piwigo\Db\Tables;
 use Piwigo\Permalink\OldPermalinkEntity;
 use Piwigo\Permalink\OldPermalinkSortField;
 use Piwigo\Permalink\PermalinkRepository;
@@ -90,7 +89,7 @@ function permalinkRepoTestSlug(string $prefix = 'p17-unit-test-'): string
 
 afterEach(function (): void {
     DbConnection::build()->executeStatement(
-        "UPDATE " . Tables::oldPermalinks() . " SET hit = 42, last_hit = '2026-08-01 00:00:00' WHERE permalink = 'old-sample-album'"
+        "UPDATE " . 'old_permalinks' . " SET hit = 42, last_hit = '2026-08-01 00:00:00' WHERE permalink = 'old-sample-album'"
     );
 });
 
@@ -160,7 +159,7 @@ test('insertOldPermalinkDeleted() starts the hit counter at exactly zero', funct
     try {
         $hit = $conn->createQueryBuilder()
             ->select('hit')
-            ->from(Tables::oldPermalinks())
+            ->from('old_permalinks')
             ->where('permalink = :permalink')
             ->setParameter('permalink', $slug)
             ->executeQuery()
@@ -168,7 +167,7 @@ test('insertOldPermalinkDeleted() starts the hit counter at exactly zero', funct
 
         expect($hit)->toBe(0);
     } finally {
-        $conn->executeStatement('DELETE FROM ' . Tables::oldPermalinks() . ' WHERE permalink = ?', [$slug]);
+        $conn->executeStatement('DELETE FROM ' . 'old_permalinks' . ' WHERE permalink = ?', [$slug]);
     }
 });
 
@@ -208,7 +207,7 @@ test('markOldPermalinkDeleted() clears the identity map, so a later find() sees 
         // write the exact same frozen value), so this backdates the row
         // directly instead of relying on wall-clock drift.
         DbConnection::build()->executeStatement(
-            "UPDATE " . Tables::oldPermalinks() . " SET date_deleted = '2020-01-01 00:00:00' WHERE permalink = ?",
+            "UPDATE " . 'old_permalinks' . " SET date_deleted = '2020-01-01 00:00:00' WHERE permalink = ?",
             [$slug]
         );
         $em->clear();
@@ -333,8 +332,8 @@ test('findAllOrderedBy() sorts by a column whose order genuinely differs from th
     $highSlug = permalinkRepoTestSlug('zzz-p17-unit-hit-order-test-');
     $repo->insertOldPermalinkDeleted(1, $lowSlug);
     $repo->insertOldPermalinkDeleted(1, $highSlug);
-    $conn->executeStatement('UPDATE ' . Tables::oldPermalinks() . ' SET hit = 100 WHERE permalink = ?', [$lowSlug]);
-    $conn->executeStatement('UPDATE ' . Tables::oldPermalinks() . ' SET hit = 1 WHERE permalink = ?', [$highSlug]);
+    $conn->executeStatement('UPDATE ' . 'old_permalinks' . ' SET hit = 100 WHERE permalink = ?', [$lowSlug]);
+    $conn->executeStatement('UPDATE ' . 'old_permalinks' . ' SET hit = 1 WHERE permalink = ?', [$highSlug]);
 
     try {
         $rows = $repo->findAllOrderedBy(OldPermalinkSortField::Hit);
@@ -394,7 +393,7 @@ test('findPermalinkMatches() finds old and current permalinks', function (): voi
     // correctly tagged via is_old), without needing the 2 permalinks to
     // share a category.
     $conn = DbConnection::build();
-    $conn->executeStatement("UPDATE " . Tables::categories() . " SET permalink = 'p17-unit-sample-album' WHERE id = 2");
+    $conn->executeStatement("UPDATE " . 'categories' . " SET permalink = 'p17-unit-sample-album' WHERE id = 2");
 
     try {
         $matches = permalinkRepoTest()->findPermalinkMatches(['old-sample-album', 'p17-unit-sample-album']);
@@ -406,7 +405,7 @@ test('findPermalinkMatches() finds old and current permalinks', function (): voi
             ->and($matches['p17-unit-sample-album']['id'])->toBe(2)
             ->and($matches['p17-unit-sample-album']['is_old'])->toBe(0);
     } finally {
-        $conn->executeStatement('UPDATE ' . Tables::categories() . ' SET permalink = NULL WHERE id = 2');
+        $conn->executeStatement('UPDATE ' . 'categories' . ' SET permalink = NULL WHERE id = 2');
     }
 });
 
@@ -419,7 +418,7 @@ test('touchOldPermalinkHit() increments the counter', function (): void {
 
     $hit = DbConnection::build()->createQueryBuilder()
         ->select('hit')
-        ->from(Tables::oldPermalinks())
+        ->from('old_permalinks')
         ->where('permalink = :permalink')
         ->setParameter('permalink', 'old-sample-album')
         ->executeQuery()

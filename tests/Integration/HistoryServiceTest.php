@@ -19,7 +19,6 @@ use Piwigo\Core\Logger;
 use Piwigo\Tests\Support\PageStateTestFactory;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
-use Piwigo\Db\Tables;
 use Piwigo\History\HistoryEntity;
 use Piwigo\History\HistoryRepository;
 use Piwigo\History\HistoryService;
@@ -97,8 +96,8 @@ final class HistoryServiceTest extends IntegrationTestCase
     #[Override]
     protected function tearDown(): void
     {
-        $this->conn->executeStatement('DELETE FROM ' . Tables::history());
-        $this->conn->executeStatement('DELETE FROM ' . Tables::historySummary());
+        $this->conn->executeStatement('DELETE FROM ' . 'history');
+        $this->conn->executeStatement('DELETE FROM ' . 'history_summary');
         parent::tearDown();
     }
 
@@ -147,9 +146,9 @@ final class HistoryServiceTest extends IntegrationTestCase
     {
         // image_type is enum('picture','high','other') -- not a real file
         // extension.
-        $this->conn->insert(Tables::history(), ['date' => '2026-07-12', 'time' => '03:00:00', 'user_id' => 1, 'IP' => '127.0.0.1', 'image_type' => 'picture']);
-        $this->conn->insert(Tables::history(), ['date' => '2026-07-12', 'time' => '04:00:00', 'user_id' => 1, 'IP' => '127.0.0.1', 'image_type' => 'high']);
-        $this->conn->insert(Tables::history(), ['date' => '2026-07-12', 'time' => '05:00:00', 'user_id' => 1, 'IP' => '127.0.0.1', 'image_type' => null]);
+        $this->conn->insert('history', ['date' => '2026-07-12', 'time' => '03:00:00', 'user_id' => 1, 'IP' => '127.0.0.1', 'image_type' => 'picture']);
+        $this->conn->insert('history', ['date' => '2026-07-12', 'time' => '04:00:00', 'user_id' => 1, 'IP' => '127.0.0.1', 'image_type' => 'high']);
+        $this->conn->insert('history', ['date' => '2026-07-12', 'time' => '05:00:00', 'user_id' => 1, 'IP' => '127.0.0.1', 'image_type' => null]);
 
         $result = $this->service->getHistory([], ['fields' => ['types' => ['picture']]], ['none', 'picture', 'high']);
 
@@ -369,7 +368,7 @@ final class HistoryServiceTest extends IntegrationTestCase
             // into the new, narrower enum definition. Delete that row
             // first.
             $this->conn->executeStatement(
-                'DELETE FROM ' . Tables::history() . " WHERE section = 'my_custom_section'"
+                'DELETE FROM ' . 'history' . " WHERE section = 'my_custom_section'"
             );
             $repo->alterSectionEnum($originalOptions);
             $currentConfig = CurrentConfigTestFactory::get();
@@ -435,10 +434,10 @@ final class HistoryServiceTest extends IntegrationTestCase
         if ($this->dbDriver === 'pgsql') {
             $this->conn->executeStatement(
                 "SELECT setval(pg_get_serial_sequence(?, 'id'), 1000, false)",
-                [Tables::history()]
+                ['history']
             );
         } else {
-            $this->conn->executeStatement('ALTER TABLE ' . Tables::history() . ' AUTO_INCREMENT = 1000');
+            $this->conn->executeStatement('ALTER TABLE ' . 'history' . ' AUTO_INCREMENT = 1000');
         }
 
         self::assertTrue($this->service->logVisit());
@@ -457,7 +456,7 @@ final class HistoryServiceTest extends IntegrationTestCase
     {
         return $this->conn->createQueryBuilder()
             ->select($column)
-            ->from(Tables::history())
+            ->from('history')
             ->orderBy('id', 'DESC')
             ->setMaxResults(1)
             ->executeQuery()
@@ -468,7 +467,7 @@ final class HistoryServiceTest extends IntegrationTestCase
     {
         $qb = $this->conn->createQueryBuilder()
             ->select('history_id_from')
-            ->from(Tables::historySummary())
+            ->from('history_summary')
             ->where('year = :year')
             ->setParameter('year', $year);
         $qb->andWhere($month === null ? 'month IS NULL' : 'month = ' . $month);
@@ -483,7 +482,7 @@ final class HistoryServiceTest extends IntegrationTestCase
     private function insertHistoryLine(int $userId, string $date, string $time): int
     {
         $this->conn->createQueryBuilder()
-            ->insert(Tables::history())
+            ->insert('history')
             ->values([
                 'date' => ':date',
                 'time' => ':time',
@@ -502,7 +501,7 @@ final class HistoryServiceTest extends IntegrationTestCase
     {
         $value = $this->conn->createQueryBuilder()
             ->select('COUNT(*)')
-            ->from(Tables::history())
+            ->from('history')
             ->executeQuery()
             ->fetchOne();
 
@@ -516,7 +515,7 @@ final class HistoryServiceTest extends IntegrationTestCase
     {
         $ids = $this->conn->createQueryBuilder()
             ->select('id')
-            ->from(Tables::history())
+            ->from('history')
             ->orderBy('id', 'ASC')
             ->executeQuery()
             ->fetchFirstColumn();
@@ -531,7 +530,7 @@ final class HistoryServiceTest extends IntegrationTestCase
     {
         $qb = $this->conn->createQueryBuilder()
             ->select('nb_pages')
-            ->from(Tables::historySummary())
+            ->from('history_summary')
             ->where('year = :year')
             ->setParameter('year', $year);
         $qb->andWhere($month === null ? 'month IS NULL' : 'month = ' . $month);

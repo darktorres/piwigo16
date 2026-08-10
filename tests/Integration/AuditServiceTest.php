@@ -14,7 +14,6 @@ use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\ConfigLoader;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
-use Piwigo\Db\Tables;
 
 final class AuditServiceTest extends IntegrationTestCase
 {
@@ -52,13 +51,13 @@ final class AuditServiceTest extends IntegrationTestCase
         // The fixture seeds 3 real audit_log rows (group-creation events) --
         // cleared so every test starts from a genuinely empty table, same
         // reasoning as AuditRepositoryTest's own setUp().
-        $this->conn->executeStatement('DELETE FROM ' . Tables::auditLog());
+        $this->conn->executeStatement('DELETE FROM ' . 'audit_log');
     }
 
     #[Override]
     protected function tearDown(): void
     {
-        $this->conn->executeStatement('DELETE FROM ' . Tables::auditLog());
+        $this->conn->executeStatement('DELETE FROM ' . 'audit_log');
         parent::tearDown();
     }
 
@@ -68,7 +67,7 @@ final class AuditServiceTest extends IntegrationTestCase
 
         $row = $this->conn->createQueryBuilder()
             ->select('*')
-            ->from(Tables::auditLog())
+            ->from('audit_log')
             ->where('id = :id')
             ->setParameter('id', $id)
             ->executeQuery()
@@ -99,7 +98,7 @@ final class AuditServiceTest extends IntegrationTestCase
 
         $rows = $this->conn->createQueryBuilder()
             ->select('id', 'prev_hash', 'row_hash')
-            ->from(Tables::auditLog())
+            ->from('audit_log')
             ->orderBy('id', 'ASC')
             ->executeQuery()
             ->fetchAllAssociative();
@@ -133,7 +132,7 @@ final class AuditServiceTest extends IntegrationTestCase
         // second row's prev_hash no longer matches a hash that reflects
         // reality either way.
         $this->conn->createQueryBuilder()
-            ->update(Tables::auditLog())
+            ->update('audit_log')
             ->set('action', "'tampered'")
             ->where('action = :action')
             ->setParameter('action', 'create')
@@ -148,7 +147,7 @@ final class AuditServiceTest extends IntegrationTestCase
         $this->service->record(1, 'delete', 'group', 2);
 
         $this->conn->createQueryBuilder()
-            ->update(Tables::auditLog())
+            ->update('audit_log')
             ->set('row_hash', ':fake')
             ->where('action = :action')
             ->setParameter('fake', str_repeat('f', 64))
@@ -171,7 +170,7 @@ final class AuditServiceTest extends IntegrationTestCase
         $this->service->record(1, 'delete', 'group', 2);
 
         $this->conn->createQueryBuilder()
-            ->update(Tables::auditLog())
+            ->update('audit_log')
             ->set('prev_hash', ':fake')
             ->where('action = :action')
             ->setParameter('fake', str_repeat('a', 64))

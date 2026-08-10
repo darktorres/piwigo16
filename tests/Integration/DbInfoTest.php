@@ -7,7 +7,6 @@ namespace Piwigo\Tests\Integration;
 use Override;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\DbInfo;
-use Piwigo\Db\Tables;
 
 final class DbInfoTest extends IntegrationTestCase
 {
@@ -53,10 +52,10 @@ final class DbInfoTest extends IntegrationTestCase
     public function test_get_table_fingerprint_matches_the_real_epoch_and_row_count(): void
     {
         $conn = DbConnection::build();
-        $expectedCount = $conn->fetchOne('SELECT COUNT(*) FROM ' . Tables::categories());
+        $expectedCount = $conn->fetchOne('SELECT COUNT(*) FROM ' . 'categories');
         self::assertIsNumeric($expectedCount);
 
-        $fingerprint = $this->dbInfo->getTableFingerprint(Tables::categories());
+        $fingerprint = $this->dbInfo->getTableFingerprint('categories');
 
         self::assertMatchesRegularExpression('/^\d+_\d+$/', $fingerprint);
         [, $count] = explode('_', $fingerprint);

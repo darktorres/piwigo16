@@ -15,7 +15,6 @@ use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\ConfigLoader;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
-use Piwigo\Db\Tables;
 use Piwigo\Permission\PermissionCriteria;
 use Piwigo\Tag\Projection\ImageTagLink;
 use Piwigo\Tag\TagEntity;
@@ -144,7 +143,7 @@ final class TagRepositoryTest extends IntegrationTestCase
 
     public function test_delete_image_tag_by_tag_ids_is_a_no_op_for_no_ids(): void
     {
-        $this->conn->insert(Tables::imageTag(), ['image_id' => 4, 'tag_id' => 3]);
+        $this->conn->insert('image_tag', ['image_id' => 4, 'tag_id' => 3]);
 
         try {
             $this->repo->deleteImageTagByTagIds([]);
@@ -153,14 +152,14 @@ final class TagRepositoryTest extends IntegrationTestCase
             // both links survive this no-op call.
             self::assertSame([1, 4], $this->repo->findImageIdsForTagIds([TagId::from(3)]));
         } finally {
-            $this->conn->delete(Tables::imageTag(), ['image_id' => 4, 'tag_id' => 3]);
+            $this->conn->delete('image_tag', ['image_id' => 4, 'tag_id' => 3]);
         }
     }
 
     public function test_delete_image_tag_by_tag_ids_removes_every_link_to_that_tag(): void
     {
-        $this->conn->insert(Tables::imageTag(), ['image_id' => 4, 'tag_id' => 3]);
-        $this->conn->insert(Tables::imageTag(), ['image_id' => 5, 'tag_id' => 3]);
+        $this->conn->insert('image_tag', ['image_id' => 4, 'tag_id' => 3]);
+        $this->conn->insert('image_tag', ['image_id' => 5, 'tag_id' => 3]);
 
         try {
             $this->repo->deleteImageTagByTagIds([TagId::from(3)]);
@@ -171,13 +170,13 @@ final class TagRepositoryTest extends IntegrationTestCase
             self::assertSame([], $this->repo->findImageIdsForTagIds([TagId::from(3)]));
         } finally {
             // restore the fixture's own image1<->tag3 link for later tests/classes
-            $this->conn->insert(Tables::imageTag(), ['image_id' => 1, 'tag_id' => 3]);
+            $this->conn->insert('image_tag', ['image_id' => 1, 'tag_id' => 3]);
         }
     }
 
     public function test_delete_image_tag_by_image_ids_is_a_no_op_for_no_ids(): void
     {
-        $this->conn->insert(Tables::imageTag(), ['image_id' => 5, 'tag_id' => 2]);
+        $this->conn->insert('image_tag', ['image_id' => 5, 'tag_id' => 2]);
 
         try {
             $this->repo->deleteImageTagByImageIds([]);
@@ -186,14 +185,14 @@ final class TagRepositoryTest extends IntegrationTestCase
             // survive this no-op call.
             self::assertSame([1, 5], $this->repo->findImageIdsForTagIds([TagId::from(2)]));
         } finally {
-            $this->conn->delete(Tables::imageTag(), ['image_id' => 5, 'tag_id' => 2]);
+            $this->conn->delete('image_tag', ['image_id' => 5, 'tag_id' => 2]);
         }
     }
 
     public function test_delete_image_tag_by_image_ids_removes_every_link_from_that_image(): void
     {
-        $this->conn->insert(Tables::imageTag(), ['image_id' => 5, 'tag_id' => 2]);
-        $this->conn->insert(Tables::imageTag(), ['image_id' => 5, 'tag_id' => 3]);
+        $this->conn->insert('image_tag', ['image_id' => 5, 'tag_id' => 2]);
+        $this->conn->insert('image_tag', ['image_id' => 5, 'tag_id' => 3]);
 
         $this->repo->deleteImageTagByImageIds([5]);
 
@@ -202,7 +201,7 @@ final class TagRepositoryTest extends IntegrationTestCase
 
     public function test_delete_image_tag_by_image_and_tag_ids_is_a_no_op_for_empty_image_ids(): void
     {
-        $this->conn->insert(Tables::imageTag(), ['image_id' => 4, 'tag_id' => 3]);
+        $this->conn->insert('image_tag', ['image_id' => 4, 'tag_id' => 3]);
 
         try {
             $this->repo->deleteImageTagByImageAndTagIds([], [TagId::from(3)]);
@@ -211,13 +210,13 @@ final class TagRepositoryTest extends IntegrationTestCase
             // both links survive this no-op call.
             self::assertSame([1, 4], $this->repo->findImageIdsForTagIds([TagId::from(3)]));
         } finally {
-            $this->conn->delete(Tables::imageTag(), ['image_id' => 4, 'tag_id' => 3]);
+            $this->conn->delete('image_tag', ['image_id' => 4, 'tag_id' => 3]);
         }
     }
 
     public function test_delete_image_tag_by_image_and_tag_ids_is_a_no_op_for_empty_tag_ids(): void
     {
-        $this->conn->insert(Tables::imageTag(), ['image_id' => 4, 'tag_id' => 3]);
+        $this->conn->insert('image_tag', ['image_id' => 4, 'tag_id' => 3]);
 
         try {
             $this->repo->deleteImageTagByImageAndTagIds([4], []);
@@ -226,7 +225,7 @@ final class TagRepositoryTest extends IntegrationTestCase
             // both links survive this no-op call.
             self::assertSame([1, 4], $this->repo->findImageIdsForTagIds([TagId::from(3)]));
         } finally {
-            $this->conn->delete(Tables::imageTag(), ['image_id' => 4, 'tag_id' => 3]);
+            $this->conn->delete('image_tag', ['image_id' => 4, 'tag_id' => 3]);
         }
     }
 
@@ -235,8 +234,8 @@ final class TagRepositoryTest extends IntegrationTestCase
         // image 4 linked to both tag 2 and tag 3, but only (image 4, tag 3)
         // (the requested image/tag intersection) should be removed -- the
         // (image 4, tag 2) link must survive untouched.
-        $this->conn->insert(Tables::imageTag(), ['image_id' => 4, 'tag_id' => 2]);
-        $this->conn->insert(Tables::imageTag(), ['image_id' => 4, 'tag_id' => 3]);
+        $this->conn->insert('image_tag', ['image_id' => 4, 'tag_id' => 2]);
+        $this->conn->insert('image_tag', ['image_id' => 4, 'tag_id' => 3]);
 
         try {
             $this->repo->deleteImageTagByImageAndTagIds([4], [TagId::from(3)]);
@@ -249,7 +248,7 @@ final class TagRepositoryTest extends IntegrationTestCase
             self::assertCount(1, $remaining);
             self::assertSame(2, $remaining[0]->tagId->value);
         } finally {
-            $this->conn->delete(Tables::imageTag(), ['image_id' => 4, 'tag_id' => 2]);
+            $this->conn->delete('image_tag', ['image_id' => 4, 'tag_id' => 2]);
         }
     }
 
@@ -356,7 +355,7 @@ final class TagRepositoryTest extends IntegrationTestCase
 
             self::assertSame(2, $counters[$tagId->value] ?? null);
         } finally {
-            $this->conn->executeStatement('DELETE FROM ' . Tables::imageTag() . ' WHERE tag_id = ?', [$tagId->value]);
+            $this->conn->executeStatement('DELETE FROM ' . 'image_tag' . ' WHERE tag_id = ?', [$tagId->value]);
             $this->repo->deleteByIds([$tagId]);
         }
     }
@@ -582,12 +581,12 @@ final class TagRepositoryTest extends IntegrationTestCase
     {
         $before = $this->repo->countAllImageTagLinks();
 
-        $this->conn->insert(Tables::imageTag(), ['image_id' => 5, 'tag_id' => 2]);
+        $this->conn->insert('image_tag', ['image_id' => 5, 'tag_id' => 2]);
 
         try {
             self::assertSame($before + 1, $this->repo->countAllImageTagLinks());
         } finally {
-            $this->conn->delete(Tables::imageTag(), ['image_id' => 5, 'tag_id' => 2]);
+            $this->conn->delete('image_tag', ['image_id' => 5, 'tag_id' => 2]);
         }
     }
 

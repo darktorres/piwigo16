@@ -13,7 +13,6 @@ use Error;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Image\ImageEntity;
-use Piwigo\Db\Tables;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Tests\Support\CurrentPathsTestFactory;
 use Piwigo\Core\CurrentThemeConfProvider;
@@ -620,7 +619,7 @@ test('get_size() persists the real, correctly-ordered width/height back onto the
     $repo = EntityManagerFactory::build($conn)->getRepository(ImageEntity::class);
 
     $conn->createQueryBuilder()
-        ->insert(Tables::images())
+        ->insert('images')
         ->values(['file' => ':file', 'path' => ':path'])
         ->setParameter('file', 'update-dimensions.jpg')
         ->setParameter('path', 'upload/2026/07/update-dimensions.jpg')
@@ -651,10 +650,10 @@ test('get_size() persists the real, correctly-ordered width/height back onto the
             expect($src->get_size())->toBe([77, 55]);
         });
 
-        $row = $conn->fetchAssociative('SELECT width, height FROM ' . Tables::images() . " WHERE id = {$imageId}");
+        $row = $conn->fetchAssociative('SELECT width, height FROM ' . 'images' . " WHERE id = {$imageId}");
         expect($row)->toBe(['width' => 77, 'height' => 55]);
     } finally {
-        $conn->executeStatement('DELETE FROM ' . Tables::images() . ' WHERE id = ?', [$imageId]);
+        $conn->executeStatement('DELETE FROM ' . 'images' . ' WHERE id = ?', [$imageId]);
         srcImageTestRrmdir($root);
     }
 });

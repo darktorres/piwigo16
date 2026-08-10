@@ -13,7 +13,6 @@ use Piwigo\Command\MaintenanceOrphanTagsCommand;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\ConfigLoader;
 use Piwigo\Db\DbConnection;
-use Piwigo\Db\Tables;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Tester\CommandTester;
 
@@ -46,7 +45,7 @@ final class MaintenanceOrphanTagsCommandTest extends IntegrationTestCase
     {
         $conn = DbConnection::build();
         $conn->createQueryBuilder()
-            ->insert(Tables::tags())
+            ->insert('tags')
             ->values([
                 'name' => ':name',
                 'url_name' => ':urlName',
@@ -67,7 +66,7 @@ final class MaintenanceOrphanTagsCommandTest extends IntegrationTestCase
             self::assertStringContainsString('Deleted 1 orphan tag(s).', $tester->getDisplay());
         } finally {
             $conn->createQueryBuilder()
-                ->delete(Tables::tags())
+                ->delete('tags')
                 ->where('name = :name')
                 ->setParameter('name', 'cli-orphan-tag')
                 ->executeStatement();

@@ -8,7 +8,6 @@ use Piwigo\Auth\Projection\ApiKey;
 use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
-use Piwigo\Db\Tables;
 
 /**
  * Piwigo\Auth\ApiKeyRepository -- has no dedicated Integration test file
@@ -49,7 +48,7 @@ function apiKeyTestRow(array $overrides = []): array
 function apiKeyTestDelete(Connection $conn, string $authKey): void
 {
     $conn->createQueryBuilder()
-        ->delete(Tables::userAuthKeys())
+        ->delete('user_auth_keys')
         ->where('auth_key = :authKey')
         ->setParameter('authKey', $authKey)
         ->executeStatement();
@@ -64,7 +63,7 @@ test('insert() persists every column as given', function (): void {
 
         $stored = $conn->createQueryBuilder()
             ->select('auth_key', 'apikey_secret', 'apikey_name', 'user_id', 'created_on', 'duration', 'expired_on', 'key_type')
-            ->from(Tables::userAuthKeys())
+            ->from('user_auth_keys')
             ->where('auth_key = :authKey')
             ->setParameter('authKey', $row['auth_key'])
             ->fetchAssociative();
@@ -123,7 +122,7 @@ test('revoke() sets revoked_on and leaves every other column untouched', functio
 
         $stored = $conn->createQueryBuilder()
             ->select('revoked_on', 'apikey_name', 'duration')
-            ->from(Tables::userAuthKeys())
+            ->from('user_auth_keys')
             ->where('auth_key = :authKey')
             ->setParameter('authKey', $row['auth_key'])
             ->fetchAssociative();
@@ -179,7 +178,7 @@ test('updateName() renames only the row matching both the auth key and the user'
 
         $name = $conn->createQueryBuilder()
             ->select('apikey_name')
-            ->from(Tables::userAuthKeys())
+            ->from('user_auth_keys')
             ->where('auth_key = :authKey')
             ->setParameter('authKey', $row['auth_key'])
             ->fetchOne();
@@ -225,7 +224,7 @@ test('updateName() accepts null to clear the name', function (): void {
 
         $name = $conn->createQueryBuilder()
             ->select('apikey_name')
-            ->from(Tables::userAuthKeys())
+            ->from('user_auth_keys')
             ->where('auth_key = :authKey')
             ->setParameter('authKey', $row['auth_key'])
             ->fetchOne();
@@ -271,7 +270,7 @@ test('updateLastNotifiedOn() records when the near-expiration email was sent', f
 
         $lastNotifiedOn = $conn->createQueryBuilder()
             ->select('last_notified_on')
-            ->from(Tables::userAuthKeys())
+            ->from('user_auth_keys')
             ->where('auth_key = :authKey')
             ->setParameter('authKey', $row['auth_key'])
             ->fetchOne();

@@ -7,7 +7,6 @@ use Piwigo\Admin\Integrity\IntegrityIgnoredAnomalyEntity;
 use Piwigo\Admin\Integrity\IntegrityIgnoredAnomalyRepository;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
-use Piwigo\Db\Tables;
 
 /**
  * Piwigo\Admin\Integrity\IntegrityIgnoredAnomalyRepository -- has no
@@ -30,7 +29,7 @@ function integrityIgnoredAnomalyTestRepo(): IntegrityIgnoredAnomalyRepository
 function integrityIgnoredAnomalyTestPurgeVersion(Connection $conn, string $piwigoVersion): void
 {
     $conn->createQueryBuilder()
-        ->delete(Tables::integrityIgnoredAnomalies())
+        ->delete('integrity_ignored_anomalies')
         ->where('piwigo_version = :v')
         ->setParameter('v', $piwigoVersion)
         ->executeStatement();
@@ -86,7 +85,7 @@ test('syncForVersion leaves an already-ignored id\'s own ignored_at untouched on
 
         $ignoredAt = $conn->createQueryBuilder()
             ->select('ignored_at')
-            ->from(Tables::integrityIgnoredAnomalies())
+            ->from('integrity_ignored_anomalies')
             ->where('piwigo_version = :v AND anomaly_id = :a')
             ->setParameter('v', $version)
             ->setParameter('a', 'still_ignored')

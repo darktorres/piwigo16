@@ -8,7 +8,6 @@ use Doctrine\DBAL\ArrayParameterType;
 use Doctrine\ORM\EntityManagerInterface;
 use Piwigo\Category\CategoryEntity;
 use Piwigo\Db\BatchWriter;
-use Piwigo\Db\Tables;
 use Piwigo\Image\ImageEntity;
 use Piwigo\Metadata\Projection\MetadataImage;
 
@@ -131,7 +130,7 @@ final readonly class MetadataRepository
     {
         new BatchWriter($this->em->getConnection())
             ->massUpdate(
-                Tables::images(),
+                'images',
                 [
                     'primary' => ['id'],
                     'update' => $updateFields,

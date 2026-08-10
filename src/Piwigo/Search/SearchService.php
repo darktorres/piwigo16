@@ -31,7 +31,6 @@ use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\DbCredentials;
 use Piwigo\Db\EntityManagerFactory;
-use Piwigo\Db\Tables;
 use Piwigo\Event\Search\QsearchGetScopes;
 use Piwigo\Event\Search\QsearchPre;
 use Piwigo\Event\Tag\RenderTagName;
@@ -569,7 +568,7 @@ final readonly class SearchService
             // CurrentConfig::orderBy() (the typed SCHEMA accessor) models a
             // structured {field,dir}[] shape that no real code writes --
             $orderBy = $this->currentConfig->orderBy;
-            $items = $this->repo->findIdsByClause('id', Tables::images() . ' i', 'id IN (' . implode(',', array_fill(0, count($items), '?')) . ') ' . $orderBy, $items);
+            $items = $this->repo->findIdsByClause('id', 'images i', 'id IN (' . implode(',', array_fill(0, count($items), '?')) . ') ' . $orderBy, $items);
         }
 
         return [
@@ -1188,7 +1187,7 @@ final readonly class SearchService
             }
 
             if ($clauses !== []) {
-                $qsr->images_iids[$i] = $this->repo->findIdsByClause('id', Tables::images() . ' i', '(' . implode("\n OR ", $clauses) . ')', $params);
+                $qsr->images_iids[$i] = $this->repo->findIdsByClause('id', 'images i', '(' . implode("\n OR ", $clauses) . ')', $params);
             }
         }
     }
@@ -1209,7 +1208,7 @@ final readonly class SearchService
             }
 
             [$clauses, $params] = $this->qsearchGetTextTokenSearchSql($token, ['name']);
-            $rows = $this->repo->findRowsByClause(Tables::tags(), '(' . implode("\n OR ", $clauses) . ')', $params);
+            $rows = $this->repo->findRowsByClause('tags', '(' . implode("\n OR ", $clauses) . ')', $params);
             foreach ($rows as $tag) {
                 if (! is_numeric($tag['id'])) {
                     continue;
@@ -1240,7 +1239,7 @@ final readonly class SearchService
             if ($tagIds !== []) {
                 $qsr->tag_iids[$i] = $this->repo->findIdsByClause(
                     'image_id',
-                    Tables::imageTag(),
+                    'image_tag',
                     'tag_id IN (' . implode(',', array_fill(0, count($tagIds), '?')) . ') GROUP BY image_id',
                     $tagIds
                 );
@@ -1251,11 +1250,11 @@ final readonly class SearchService
                 }
             } elseif (isset($token->scope) && $token->scope->id === 'tag' && strlen($token->term) === 0) {
                 if ((bool) ($token->modifier & QSingleToken::QST_WILDCARD)) {
-                    $qsr->tag_iids[$i] = $this->repo->findIdsByClause('DISTINCT image_id', Tables::imageTag(), '1=1');
+                    $qsr->tag_iids[$i] = $this->repo->findIdsByClause('DISTINCT image_id', 'image_tag', '1=1');
                 } else {
                     $qsr->tag_iids[$i] = $this->repo->findIdsByClause(
                         'id',
-                        Tables::images() . ' LEFT JOIN ' . Tables::imageTag() . ' ON id=image_id',
+                        'images LEFT JOIN image_tag ON id=image_id',
                         'image_id IS NULL'
                     );
                 }
@@ -1304,7 +1303,7 @@ final readonly class SearchService
 
             [$clauses, $params] = $this->qsearchGetTextTokenSearchSql($token, ['name', 'comment']);
             $rows = $this->repo->findRowsByClause(
-                Tables::categories(),
+                'categories',
                 '(' . implode("\n OR ", $clauses) . ') AND id NOT IN (' . $forbiddenPlaceholders . ')',
                 [...$params, ...$forbiddenIds]
             );
@@ -1341,7 +1340,7 @@ final readonly class SearchService
                     $catIds = $subcatIds !== []
                         ? $this->repo->findIdsByClause(
                             'id',
-                            Tables::categories(),
+                            'categories',
                             'id IN (' . implode(',', array_fill(0, count($subcatIds), '?')) . ') AND id NOT IN (' . $forbiddenPlaceholders . ')',
                             [...$subcatIds, ...$forbiddenIds]
                         )
@@ -1350,7 +1349,7 @@ final readonly class SearchService
 
                 $qsr->cat_iids[$i] = $catIds !== [] ? $this->repo->findIdsByClause(
                     'image_id',
-                    Tables::imageCategory(),
+                    'image_category',
                     'category_id IN (' . implode(',', array_fill(0, count($catIds), '?')) . ') GROUP BY image_id',
                     $catIds
                 ) : [];
@@ -1361,11 +1360,11 @@ final readonly class SearchService
                 }
             } elseif (isset($token->scope) && $token->scope->id === 'category' && strlen($token->term) === 0) {
                 if ((bool) ($token->modifier & QSingleToken::QST_WILDCARD)) {
-                    $qsr->cat_iids[$i] = $this->repo->findIdsByClause('DISTINCT image_id', Tables::imageCategory(), '1=1');
+                    $qsr->cat_iids[$i] = $this->repo->findIdsByClause('DISTINCT image_id', 'image_category', '1=1');
                 } else {
                     $qsr->cat_iids[$i] = $this->repo->findIdsByClause(
                         'id',
-                        Tables::images() . ' LEFT JOIN ' . Tables::imageCategory() . ' ON id=image_id',
+                        'images LEFT JOIN image_category ON id=image_id',
                         'image_id IS NULL'
                     );
                 }
@@ -1663,9 +1662,9 @@ final readonly class SearchService
             }
         }
 
-        $from = Tables::images() . ' i';
+        $from = 'images i';
         if ($permissions) {
-            $from .= ' INNER JOIN ' . Tables::imageCategory() . ' AS ic ON id = ic.image_id';
+            $from .= ' INNER JOIN image_category AS ic ON id = ic.image_id';
         }
 
         // `SELECT DISTINCT(id) ... ORDER BY <col not in select>` is invalid

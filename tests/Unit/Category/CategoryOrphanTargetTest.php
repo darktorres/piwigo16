@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 use Piwigo\Category\CategoryOrphanTarget;
 use Piwigo\Category\UserAccessEntity;
-use Piwigo\Db\Tables;
 use Piwigo\Group\GroupAccessEntity;
 use Piwigo\Image\ImageCategoryEntity;
 
@@ -12,22 +11,15 @@ use Piwigo\Image\ImageCategoryEntity;
  * Piwigo\Category\CategoryOrphanTarget -- CategoryRepository::
  * findOrphanedColumnValues()/deleteRowsWhereColumnIn()'s $table/$column
  * pairs, enumerated. No dedicated Integration/Browser spec of its own.
- *
- * tableAndColumn()'s expected table names are computed via the same
- * real Tables::*() static methods the enum itself calls, rather than
- * hardcoded literals -- proves the right table method was picked (a
- * typo swapping e.g. imageCategory() for userAccess() would still fail
- * this comparison), without duplicating "what's the real table prefix"
- * knowledge.
  */
 test('tableAndColumn maps every case to its real table/column pair', function (): void {
-    expect(CategoryOrphanTarget::ImageCategory->tableAndColumn()->table)->toBe(Tables::imageCategory())
+    expect(CategoryOrphanTarget::ImageCategory->tableAndColumn()->table)->toBe('image_category')
         ->and(CategoryOrphanTarget::ImageCategory->tableAndColumn()->column)->toBe('category_id')
-        ->and(CategoryOrphanTarget::UserAccess->tableAndColumn()->table)->toBe(Tables::userAccess())
+        ->and(CategoryOrphanTarget::UserAccess->tableAndColumn()->table)->toBe('user_access')
         ->and(CategoryOrphanTarget::UserAccess->tableAndColumn()->column)->toBe('cat_id')
-        ->and(CategoryOrphanTarget::GroupAccess->tableAndColumn()->table)->toBe(Tables::groupAccess())
+        ->and(CategoryOrphanTarget::GroupAccess->tableAndColumn()->table)->toBe('group_access')
         ->and(CategoryOrphanTarget::GroupAccess->tableAndColumn()->column)->toBe('cat_id')
-        ->and(CategoryOrphanTarget::OldPermalinks->tableAndColumn()->table)->toBe(Tables::oldPermalinks())
+        ->and(CategoryOrphanTarget::OldPermalinks->tableAndColumn()->table)->toBe('old_permalinks')
         ->and(CategoryOrphanTarget::OldPermalinks->tableAndColumn()->column)->toBe('cat_id');
 });
 

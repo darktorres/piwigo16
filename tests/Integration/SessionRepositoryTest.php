@@ -14,7 +14,6 @@ use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\ConfigLoader;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
-use Piwigo\Db\Tables;
 use Piwigo\Session\SessionEntity;
 use Piwigo\Session\SessionRepository;
 
@@ -104,7 +103,7 @@ final class SessionRepositoryTest extends IntegrationTestCase
             ? 'ON CONFLICT (id) DO UPDATE SET data = EXCLUDED.data, expiration = EXCLUDED.expiration'
             : 'ON DUPLICATE KEY UPDATE data = VALUES(data), expiration = VALUES(expiration)';
         $conn->executeStatement(
-            'INSERT INTO ' . Tables::sessions() . " (id, data, expiration) VALUES (?, ?, ?) {$onConflict}",
+            'INSERT INTO ' . 'sessions' . " (id, data, expiration) VALUES (?, ?, ?) {$onConflict}",
             [$oldId, 'stale', new DateTimeImmutable('-1 year')],
             [ParameterType::STRING, ParameterType::STRING, Types::DATETIME_IMMUTABLE],
         );

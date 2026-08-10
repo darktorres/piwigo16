@@ -22,7 +22,6 @@ use Piwigo\Config\ConfigEntry;
 use Piwigo\Core\Env;
 use Piwigo\Db\BatchWriter;
 use Piwigo\Db\SqlDialect;
-use Piwigo\Db\Tables;
 use Piwigo\Image\Projection\AddMethodBreakdown;
 use Piwigo\Image\Projection\ExtensionBreakdown;
 use Piwigo\Image\Projection\FormatCountSum;
@@ -539,7 +538,7 @@ final class ImageRepository extends EntityRepository
         }
 
         new BatchWriter($this->getEntityManager()->getConnection())
-            ->massUpdate(Tables::images(), $dbfields, $datas, $flags);
+            ->massUpdate('images', $dbfields, $datas, $flags);
     }
 
     /**
@@ -564,7 +563,7 @@ final class ImageRepository extends EntityRepository
         }
 
         new BatchWriter($this->getEntityManager()->getConnection())
-            ->singleUpdate(Tables::images(), $updates, [
+            ->singleUpdate('images', $updates, [
                 'id' => $imageId->value,
             ]);
     }
@@ -585,7 +584,7 @@ final class ImageRepository extends EntityRepository
         $em = $this->getEntityManager();
 
         new BatchWriter($em->getConnection())
-            ->singleInsert(Tables::images(), $insert);
+            ->singleInsert('images', $insert);
 
         return (int) $em->getConnection()
             ->lastInsertId();
@@ -608,7 +607,7 @@ final class ImageRepository extends EntityRepository
         }
 
         new BatchWriter($this->getEntityManager()->getConnection())
-            ->massInsert(Tables::images(), array_keys($inserts[0]), $inserts);
+            ->massInsert('images', array_keys($inserts[0]), $inserts);
     }
 
     /**
@@ -782,7 +781,7 @@ final class ImageRepository extends EntityRepository
         $em = $this->getEntityManager();
         try {
             $em->getConnection()
-                ->insert(Tables::config(), [
+                ->insert('config', [
                     'param' => 'empty_lounge_running',
                     'value' => $encodedLockValue,
                 ]);
@@ -1618,7 +1617,7 @@ final class ImageRepository extends EntityRepository
         }
 
         new BatchWriter($this->getEntityManager()->getConnection())
-            ->massInsert(Tables::lounge(), array_keys($inserts[0]), $inserts, [
+            ->massInsert('lounge', array_keys($inserts[0]), $inserts, [
                 'ignore' => true,
             ]);
     }
@@ -1639,7 +1638,7 @@ final class ImageRepository extends EntityRepository
         }
 
         new BatchWriter($this->getEntityManager()->getConnection())
-            ->massInsert(Tables::imageCategory(), array_keys($inserts[0]), $inserts);
+            ->massInsert('image_category', array_keys($inserts[0]), $inserts);
         $this->getEntityManager()
             ->clear();
     }
@@ -1651,7 +1650,7 @@ final class ImageRepository extends EntityRepository
     {
         new BatchWriter($this->getEntityManager()->getConnection())
             ->massUpdate(
-                Tables::images(),
+                'images',
                 [
                     'primary' => ['id'],
                     'update' => ['md5sum'],
@@ -1685,7 +1684,7 @@ final class ImageRepository extends EntityRepository
     {
         new BatchWriter($this->getEntityManager()->getConnection())
             ->massUpdate(
-                Tables::imageCategory(),
+                'image_category',
                 [
                     'primary' => ['image_id', 'category_id'],
                     'update' => ['rank'],
@@ -1989,7 +1988,7 @@ final class ImageRepository extends EntityRepository
      */
     public function findBatchManagerThumbnails(array $imageIds, ?int $categoryId, string $orderBySql, int $limit, int $offset): array
     {
-        $imagesTable = Tables::images();
+        $imagesTable = 'images';
 
         $query = <<<SQL
             SELECT id,path,representative_ext,file,filesize,level,name,width,height,rotation
@@ -2007,7 +2006,7 @@ final class ImageRepository extends EntityRepository
         ];
 
         if ($categoryId !== null) {
-            $imageCategoryTable = Tables::imageCategory();
+            $imageCategoryTable = 'image_category';
             $query .= <<<SQL
 
                 JOIN {$imageCategoryTable} ON id = image_id
@@ -2080,7 +2079,7 @@ final class ImageRepository extends EntityRepository
      */
     public function findBatchManagerUnitRows(array $imageIds, ?int $categoryId, string $orderBySql, int $limit, int $offset): array
     {
-        $imagesTable = Tables::images();
+        $imagesTable = 'images';
 
         $query = <<<SQL
             SELECT *
@@ -2098,7 +2097,7 @@ final class ImageRepository extends EntityRepository
         ];
 
         if ($categoryId !== null) {
-            $imageCategoryTable = Tables::imageCategory();
+            $imageCategoryTable = 'image_category';
             $query .= <<<SQL
 
                 JOIN {$imageCategoryTable} ON id = image_id
@@ -2492,7 +2491,7 @@ final class ImageRepository extends EntityRepository
             ->getConnection()
             ->createQueryBuilder()
             ->select('*')
-            ->from(Tables::images())
+            ->from('images')
             ->where('id = :imageId')
             ->setMaxResults(1)
             ->setParameter('imageId', $imageId->value, ParameterType::INTEGER);
@@ -2878,8 +2877,8 @@ final class ImageRepository extends EntityRepository
             $criteria->visibleImagesCondition,
         );
 
-        $imagesTable = Tables::images();
-        $imageCategoryTable = Tables::imageCategory();
+        $imagesTable = 'images';
+        $imageCategoryTable = 'image_category';
 
         $sql = <<<SQL
             SELECT i.*, COUNT(*) OVER() AS total_count
@@ -3165,8 +3164,8 @@ final class ImageRepository extends EntityRepository
      */
     public function findIdsWithNoTag(): array
     {
-        $imagesTable = Tables::images();
-        $imageTagTable = Tables::imageTag();
+        $imagesTable = 'images';
+        $imageTagTable = 'image_tag';
 
         // Row order is otherwise unguaranteed; MySQL and PostgreSQL return
         // this exact join's row order differently with no ORDER BY.
@@ -3260,7 +3259,7 @@ final class ImageRepository extends EntityRepository
      */
     public function findIdsWithConditions(array $whereClauses, array $params, string $orderBySql): array
     {
-        $imagesTable = Tables::images();
+        $imagesTable = 'images';
         $whereSql = $whereClauses === [] ? '' : 'WHERE ' . implode(' AND ', $whereClauses);
 
         // An empty $orderBySql defaults to `ORDER BY id` for a
@@ -3308,8 +3307,8 @@ final class ImageRepository extends EntityRepository
      */
     public function findIdsVisibleInCategoriesRecentlyAvailable(string $categoryIdsCsv, string $recentPeriodExpr): array
     {
-        $imageCategoryTable = Tables::imageCategory();
-        $imagesTable = Tables::images();
+        $imageCategoryTable = 'image_category';
+        $imagesTable = 'images';
         $categoryIds = array_map(intval(...), explode(',', $categoryIdsCsv));
 
         return array_map(

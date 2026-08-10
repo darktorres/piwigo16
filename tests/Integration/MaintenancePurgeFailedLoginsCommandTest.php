@@ -14,7 +14,6 @@ use Piwigo\Config\ConfigLoader;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
-use Piwigo\Db\Tables;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Tester\CommandTester;
 
@@ -64,17 +63,17 @@ final class MaintenancePurgeFailedLoginsCommandTest extends IntegrationTestCase
 
             self::assertSame(Command::SUCCESS, $exitCode);
 
-            $remainingFailedLogins = $conn->fetchOne('SELECT COUNT(*) FROM ' . Tables::userFailedLogins() . ' WHERE user_id = 1');
+            $remainingFailedLogins = $conn->fetchOne('SELECT COUNT(*) FROM ' . 'user_failed_logins' . ' WHERE user_id = 1');
             self::assertSame(1, is_numeric($remainingFailedLogins) ? (int) $remainingFailedLogins : -1);
 
-            $remainingOld = $conn->fetchOne("SELECT COUNT(*) FROM " . Tables::integrityIgnoredAnomalies() . " WHERE anomaly_id = 'old-anomaly'");
+            $remainingOld = $conn->fetchOne("SELECT COUNT(*) FROM " . 'integrity_ignored_anomalies' . " WHERE anomaly_id = 'old-anomaly'");
             self::assertSame(0, is_numeric($remainingOld) ? (int) $remainingOld : -1);
 
-            $remainingRecent = $conn->fetchOne("SELECT COUNT(*) FROM " . Tables::integrityIgnoredAnomalies() . " WHERE anomaly_id = 'recent-anomaly'");
+            $remainingRecent = $conn->fetchOne("SELECT COUNT(*) FROM " . 'integrity_ignored_anomalies' . " WHERE anomaly_id = 'recent-anomaly'");
             self::assertSame(1, is_numeric($remainingRecent) ? (int) $remainingRecent : -1);
         } finally {
-            $conn->executeStatement('DELETE FROM ' . Tables::userFailedLogins() . ' WHERE user_id = 1');
-            $conn->executeStatement("DELETE FROM " . Tables::integrityIgnoredAnomalies() . " WHERE anomaly_id IN ('old-anomaly', 'recent-anomaly')");
+            $conn->executeStatement('DELETE FROM ' . 'user_failed_logins' . ' WHERE user_id = 1');
+            $conn->executeStatement("DELETE FROM " . 'integrity_ignored_anomalies' . " WHERE anomaly_id IN ('old-anomaly', 'recent-anomaly')");
         }
     }
 }

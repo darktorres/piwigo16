@@ -9,7 +9,7 @@ use Piwigo\Common\ValueObject\Permalink;
 use Piwigo\Permalink\OldPermalinkEntity;
 
 /**
- * Typed row shape for `piwigo_old_permalinks`, built from
+ * Typed row shape for `old_permalinks`, built from
  * {@see \Piwigo\Permalink\OldPermalinkEntity}.
  *
  * `dateDeleted` stays `?string` here (this Projection's own convention) --

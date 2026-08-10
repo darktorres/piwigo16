@@ -11,8 +11,8 @@ use Piwigo\Common\ValueObject\UserId;
 /**
  * Typed row shape for
  * {@see \Piwigo\Activity\ActivityRepository::findUserObjectLogWithUsernames()}.
- * Not a plain `piwigo_activity` row --
- * an `INNER JOIN` onto `piwigo_users` (`username`, always present: the join
+ * Not a plain `activity` row --
+ * an `INNER JOIN` onto `users` (`username`, always present: the join
  * itself guarantees a matching user) restricted to `object = 'user'` rows,
  * feeding only {@see \Piwigo\Admin\UserActivityPageRenderer}'s CSV export.
  *

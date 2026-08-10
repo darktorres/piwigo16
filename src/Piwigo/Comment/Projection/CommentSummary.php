@@ -31,7 +31,7 @@ final readonly class CommentSummary
     ) {}
 
     /**
-     * @param array<string, mixed> $row a `SELECT id, date, author, content` row from `piwigo_comments`
+     * @param array<string, mixed> $row a `SELECT id, date, author, content` row from `comments`
      */
     public static function fromRow(array $row): self
     {

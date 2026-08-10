@@ -1298,7 +1298,7 @@ final class PwgImages
         // $params['original_sum']/original_filename are bound as query
         // parameters via existsWithColumnValue(), not spliced into SQL.
         //
-        // Neither piwigo_images.md5sum nor .file is indexed, and the
+        // Neither images.md5sum nor .file is indexed, and the
         // check-then-insert sequence below has a time-of-check-to-time-of-use
         // race (two concurrent uploads of the same value could both pass
         // this check before either INSERT completes). A MySQL advisory
@@ -1323,7 +1323,7 @@ final class PwgImages
                 $uniqueness_lock_conn = DbConnection::build();
                 // GET_LOCK() names are capped at 64 characters -- $uniqueness_value
                 // is a caller-supplied filename in the 'file' uniqueness mode (up to
-                // piwigo_images.file's own 255-char width), so it's hashed rather
+                // images.file's own 255-char width), so it's hashed rather
                 // than concatenated literally. $this->dbCredentials->database is
                 // folded into the hashed input so it still contributes to
                 // collision-avoidance against unrelated applications on a shared

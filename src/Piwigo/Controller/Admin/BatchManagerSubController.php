@@ -67,8 +67,8 @@ use Psr\Http\Message\ServerRequestInterface;
  * check_status(AccessLevel::Administrator) before dispatch, so this class
  * has no check_status() call of its own.
  *
- * `action=empty_caddie` performs an unconditional `DELETE FROM
- * piwigo_caddie WHERE user_id = ...`, so it requires CSRF verification
+ * `action=empty_caddie` performs an unconditional `DELETE FROM caddie
+ * WHERE user_id = ...`, so it requires CSRF verification
  * (`check_pwg_token()`) and carries a `pwg_token` on its link
  * (`CsrfService::check()` reads `$_REQUEST`, so a GET-carried token works
  * the same as a POST one). The other 2 GET actions (`delete_orphans`,

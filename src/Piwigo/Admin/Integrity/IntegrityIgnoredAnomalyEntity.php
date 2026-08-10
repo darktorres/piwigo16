@@ -8,8 +8,8 @@ use Doctrine\ORM\Mapping as ORM;
 
 /**
  * Maps the `integrity_ignored_anomalies` table. Replaces CheckIntegrity's
- * former `c13y_ignore` piwigo_config blob (`{version, list: [md5 ids]}`, the
- * whole list discarded if the stored version didn't match AppInfo::VERSION)
+ * former `c13y_ignore` config blob (`{version, list: [md5 ids]}`, the whole
+ * list discarded if the stored version didn't match AppInfo::VERSION)
  * with one row per (anomaly, version) -- same version-scoping semantics
  * (CheckIntegrity::check() only ever queries rows for the current version),
  * but each ignore now carries its own real timestamp instead of being lost

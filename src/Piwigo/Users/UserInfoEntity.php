@@ -15,7 +15,7 @@ use Piwigo\Common\ValueObject\UserId;
  * `users` row's own id -- never auto-generated here).
  *
  * `status` is `UserStatus` (native Doctrine `enumType` column), not a
- * plain string. `piwigo_user_infos.status` is a DB-level
+ * plain string. `user_infos.status` is a DB-level
  * `enum('webmaster','admin','normal','generic','guest')` matching
  * `UserStatus`'s 5 cases exactly, so Doctrine's throw-on-mismatch
  * hydration can never actually throw for a row read back from this

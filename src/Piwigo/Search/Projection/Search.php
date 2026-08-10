@@ -8,13 +8,13 @@ use Piwigo\Common\ValueObject\SqlDateTime;
 use Piwigo\Core\ArrayHelper;
 
 /**
- * Typed row shape for `piwigo_search`. `fromRow()` centralises the
+ * Typed row shape for `search`. `fromRow()` centralises the
  * `is_string($row['x']) ? ... :
  * default` narrowing {@see \Piwigo\Search\SearchService}'s own callers
  * used to do inline, same shape as {@see \Piwigo\Category\Projection\Category}.
  *
  * Scoped to {@see \Piwigo\Search\SearchRepository::findOneByClause()} only
- * -- that method is always fixed to `piwigo_search` (unlike this same
+ * -- that method is always fixed to `search` (unlike this same
  * repository's deliberately generic findRowsByClause()/findIdsByClause(),
  * whose `$fromSql` varies per caller and can't be represented by a single
  * table's projection).
@@ -50,7 +50,7 @@ final readonly class Search
     ) {}
 
     /**
-     * @param array<string, mixed> $row a `SELECT *` (or equivalent) row from `piwigo_search`
+     * @param array<string, mixed> $row a `SELECT *` (or equivalent) row from `search`
      */
     public static function fromRow(array $row): self
     {

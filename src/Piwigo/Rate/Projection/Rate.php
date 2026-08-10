@@ -9,7 +9,7 @@ use Piwigo\Common\ValueObject\ImageId;
 use Piwigo\Common\ValueObject\UserId;
 
 /**
- * Typed row shape for `piwigo_rate`. `fromRow()` centralises the
+ * Typed row shape for `rate`. `fromRow()` centralises the
  * `is_string($row['x']) ? ... :
  * default` narrowing {@see \Piwigo\Rate\RateRepository}'s own private
  * `toRateRow()` array-shape helper used to provide, same shape as
@@ -22,10 +22,10 @@ use Piwigo\Common\ValueObject\UserId;
  * {@see \Piwigo\Image\Projection\Image}.
  *
  * `userId`/`elementId` are `UserId`/`ImageId`, not `?UserId`/`?ImageId` --
- * `piwigo_rate.user_id`/`element_id` are both `NOT NULL`, part of the
+ * `rate.user_id`/`element_id` are both `NOT NULL`, part of the
  * table's own composite PRIMARY KEY, and each carries a real FOREIGN KEY
- * (`fk_rate_user_id` onto `piwigo_users.id`, `fk_rate_element_id` onto
- * `piwigo_images.id`, both `ON DELETE CASCADE`) -- a real fetched row can't
+ * (`fk_rate_user_id` onto `users.id`, `fk_rate_element_id` onto
+ * `images.id`, both `ON DELETE CASCADE`) -- a real fetched row can't
  * carry a missing/invalid value for either, same reasoning as
  * {@see \Piwigo\Comment\Projection\Comment}'s `id`/`imageId`.
  */
@@ -40,7 +40,7 @@ final readonly class Rate
     ) {}
 
     /**
-     * @param array<string, mixed> $row a `SELECT *` (or equivalent) row from `piwigo_rate`
+     * @param array<string, mixed> $row a `SELECT *` (or equivalent) row from `rate`
      */
     public static function fromRow(array $row): self
     {

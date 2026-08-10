@@ -20,7 +20,7 @@ final readonly class TagBrief
     ) {}
 
     /**
-     * @param array<string, mixed> $row a `SELECT id, name` row from `piwigo_tags`
+     * @param array<string, mixed> $row a `SELECT id, name` row from `tags`
      */
     public static function fromRow(array $row): self
     {

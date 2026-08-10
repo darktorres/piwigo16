@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Site\Projection;
 
 /**
- * Typed row shape for `piwigo_sites`. `fromRow()` centralises the
+ * Typed row shape for `sites`. `fromRow()` centralises the
  * `is_string($row['x']) ? ... :
  * default` narrowing {@see \Piwigo\Site\SiteRepository}'s own caller used
  * to do inline, same shape as {@see \Piwigo\Category\Projection\Category}.
@@ -18,7 +18,7 @@ final readonly class Site
     ) {}
 
     /**
-     * @param array<string, mixed> $row a `SELECT *` (or equivalent) row from `piwigo_sites`
+     * @param array<string, mixed> $row a `SELECT *` (or equivalent) row from `sites`
      */
     public static function fromRow(array $row): self
     {

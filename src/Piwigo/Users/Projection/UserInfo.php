@@ -14,7 +14,7 @@ use Piwigo\Core\ArrayHelper;
 use Piwigo\Users\UserInfoEntity;
 
 /**
- * Typed row shape for `piwigo_user_infos`. `fromRow()` centralises the
+ * Typed row shape for `user_infos`. `fromRow()` centralises the
  * `is_string($row['x']) ? ... :
  * default` narrowing every {@see \Piwigo\Users\UserRepository} caller used
  * to duplicate for itself, same shape as
@@ -73,7 +73,7 @@ final readonly class UserInfo
     ) {}
 
     /**
-     * @param array<string, mixed> $row a `SELECT *` (or equivalent) row from `piwigo_user_infos`
+     * @param array<string, mixed> $row a `SELECT *` (or equivalent) row from `user_infos`
      */
     public static function fromRow(array $row): self
     {

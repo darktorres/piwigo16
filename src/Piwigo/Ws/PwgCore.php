@@ -526,8 +526,8 @@ final class PwgCore
      *    int|null. offset: WsParamType::INT|POSITIVE, default 0 (non-null) ->
      *    always int. date_min/date_max/object/action: no WS_TYPE flag, null
      *    default -> string|null.
-     * result_lines' rows are genuinely heterogeneous (piwigo_activity.details
-     * is an entity-agnostic per-action payload, same rationale as
+     * result_lines' rows are genuinely heterogeneous (activity.details is
+     * an entity-agnostic per-action payload, same rationale as
      * Admin\Maintenance\ActivityLogEntryFormatter's own $details); 'params'
      * echoes $param back for the WS client, same by-design shape.
      * @return PwgError|array{result_lines: array<int, array<string, mixed>>, page_offset: int, end_page: bool, params: array<string, mixed>}

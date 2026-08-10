@@ -19,8 +19,8 @@ use Override;
  * round-trip through this project's DBAL driver setup, same reasoning as
  * `SqlDate`/`SqlDateTime`.
  *
- * `piwigo_history.time` is currently the only real `TIME`-typed column in
- * this schema.
+ * `history.time` is currently the only real `TIME`-typed column in this
+ * schema.
  */
 final readonly class SqlTime implements StringVo
 {

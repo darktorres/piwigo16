@@ -8,7 +8,7 @@ use Doctrine\ORM\Mapping as ORM;
 
 /**
  * Maps the `extension_ignored_updates` table. Replaces the former
- * `updates_ignored` piwigo_config blob (one JSON object keyed by the *plural*
+ * `updates_ignored` config blob (one JSON object keyed by the *plural*
  * page-slug form, `{plugins: [...], themes: [...], languages: [...]}`).
  *
  * `extensionType` stores `ExtensionType::value` (singular: 'plugin'/

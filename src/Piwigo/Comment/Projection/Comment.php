@@ -11,7 +11,7 @@ use Piwigo\Common\ValueObject\ImageId;
 use Piwigo\Common\ValueObject\SqlDateTime;
 
 /**
- * Typed row shape for `piwigo_comments`. `fromRow()` centralises the
+ * Typed row shape for `comments`. `fromRow()` centralises the
  * `is_string($row['x']) ? ... :
  * default` narrowing {@see \Piwigo\Picture\PictureCommentRenderer}'s own
  * render() loop used to duplicate for itself, same shape as
@@ -23,7 +23,7 @@ use Piwigo\Common\ValueObject\SqlDateTime;
  * countAvailableWithConditions(), etc.), same "no pure `SELECT *` reader
  * exists, so the projection matches the one real query instead" shape as
  * {@see \Piwigo\Search\Projection\Search}. `userEmail` is genuinely part of
- * that query's own shape (a `LEFT JOIN` onto `piwigo_users`, aliased
+ * that query's own shape (a `LEFT JOIN` onto `users`, aliased
  * `user_email`) -- baked in as a real typed property rather than deferred to
  * a raw array, since `findForImage()` has exactly one real caller and this
  * is precisely the shape it needs.
@@ -41,7 +41,7 @@ use Piwigo\Common\ValueObject\SqlDateTime;
  * `CommentId::from()` throwing on that (structurally impossible) case is
  * safe. `imageId` is `ImageId`, not `?ImageId`, for the identical reason --
  * `com.image_id` is `NOT NULL` with a real `fk_comments_image_id` FOREIGN
- * KEY onto `piwigo_images.id` (`ON DELETE CASCADE`), so a real fetched row
+ * KEY onto `images.id` (`ON DELETE CASCADE`), so a real fetched row
  * can't carry a missing/invalid value either. `authorId` stays plain
  * `?int`, not `UserId` -- see CommentEntity's own docblock.
  */

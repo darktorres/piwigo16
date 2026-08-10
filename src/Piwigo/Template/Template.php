@@ -421,9 +421,9 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
      * Template, or (worse) merely by *any* caller satisfying this class's
      * own constructor signature -- InstallWizard's own real construction
      * site had to resolve this eagerly just to build a Template, before
-     * install.php has ever confirmed the schema exists (the exact
-     * `piwigo_derivative_settings` table doesn't exist yet on a fresh
-     * install). Kept lazy here, so nothing forces this cost except
+     * install.php has ever confirmed the schema exists (the
+     * `derivative_settings` table doesn't exist yet on a fresh install).
+     * Kept lazy here, so nothing forces this cost except
      * func_define_derivative() actually running.
      */
     private function imageStdParams(): ImageStdParams

@@ -97,13 +97,13 @@ final readonly class DbInfo
      * of whether it came from an explicit value or the default, so a
      * later default-value insert never collides -- Postgres's identity
      * sequence does NOT auto-advance for an explicit insert (confirmed
-     * live: `piwigo_users_id_seq` stayed at `last_value=1` after
-     * explicitly inserting ids 1 and 2), so the next default-generated
+     * live: `users_id_seq` stayed at `last_value=1` after explicitly
+     * inserting ids 1 and 2), so the next default-generated
      * `pwg.users.add()` call collided head-on with the already-seeded
      * guest row ("duplicate key value violates unique constraint
-     * piwigo_users_pkey"). `pg_get_serial_sequence()` resolves the real
+     * users_pkey"). `pg_get_serial_sequence()` resolves the real
      * sequence name regardless of Doctrine's own naming convention
-     * (verified live against `piwigo_users`), rather than guessing
+     * (verified live against `users`), rather than guessing
      * `{$table}_id_seq` by string convention. No-op on MySQL --
      * `AUTO_INCREMENT` never needs this.
      */

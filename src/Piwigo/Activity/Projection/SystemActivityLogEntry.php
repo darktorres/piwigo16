@@ -11,8 +11,8 @@ use Piwigo\Common\ValueObject\Username;
 /**
  * Typed row shape for
  * {@see \Piwigo\Activity\ActivityRepository::findSystemObjectLogWithUsernames()}.
- * Not a plain `piwigo_activity` row
- * -- a `LEFT JOIN` onto `piwigo_users` (`username`, nullable: NULL
+ * Not a plain `activity` row
+ * -- a `LEFT JOIN` onto `users` (`username`, nullable: NULL
  * `performed_by` renders as "System" instead of a real username) plus a
  * narrower column list than the table has (no `object`/`session_idx`/
  * `ip_address`/`user_agent`) -- matches this repository method's own real

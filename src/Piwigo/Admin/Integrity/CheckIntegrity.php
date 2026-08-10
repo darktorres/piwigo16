@@ -60,8 +60,8 @@ final class CheckIntegrity
 
     /**
      * @param IntegrityIgnoredAnomalyRepository $repo persists per-(anomaly,
-     *   version) ignore rows -- replaces the former `c13y_ignore`
-     *   piwigo_config blob entirely
+     *   version) ignore rows -- replaces the former `c13y_ignore` config
+     *   blob entirely
      */
     public function __construct(
         private readonly Lang $lang,

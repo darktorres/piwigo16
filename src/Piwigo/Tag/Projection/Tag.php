@@ -9,16 +9,16 @@ use Piwigo\Common\ValueObject\SqlDateTime;
 use Piwigo\Common\ValueObject\TagId;
 
 /**
- * Typed row shape for `piwigo_tags`. `fromRow()` centralises the
+ * Typed row shape for `tags`. `fromRow()` centralises the
  * `is_string($row['x']) ? ... :
  * default` narrowing every {@see \Piwigo\Tag\TagRepository} caller used to
  * duplicate for itself, same shape as {@see \Piwigo\Category\Projection\Category}.
  *
- * Scoped to the 3 pure single-table `piwigo_tags` row methods (findAllTags()/
+ * Scoped to the 3 pure single-table `tags` row methods (findAllTags()/
  * findByIdsUrlNamesOrNames()/findByIdsOrAll()) -- findCommonTags()'s own
  * `t.*, count(*) AS counter` JOIN-plus-aggregate query stays a raw array,
  * same deliberate deferral as UserService::getUserData()'s own 3-way raw
- * JOIN (a tag row glued to an aggregate isn't a `piwigo_tags` row this
+ * JOIN (a tag row glued to an aggregate isn't a `tags` row this
  * projection could represent on its own). `fromRow()` still tolerates an
  * extra `counter` key being present on the row it's handed (it simply
  * never reads it) -- this matters for `TagService::getAllTags()`/
@@ -48,7 +48,7 @@ final readonly class Tag
     ) {}
 
     /**
-     * @param array<string, mixed> $row a `SELECT *` (or equivalent) row from `piwigo_tags`
+     * @param array<string, mixed> $row a `SELECT *` (or equivalent) row from `tags`
      */
     public static function fromRow(array $row): self
     {

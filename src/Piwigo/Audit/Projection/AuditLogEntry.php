@@ -7,7 +7,7 @@ namespace Piwigo\Audit\Projection;
 use Piwigo\Common\ValueObject\IpAddress;
 
 /**
- * Typed row shape for `piwigo_audit_log`. `fromRow()` centralises the
+ * Typed row shape for `audit_log`. `fromRow()` centralises the
  * `is_numeric($row['x']) ? ... :
  * default` narrowing a raw DBAL row read of this table would need -- unlike
  * {@see \Piwigo\Audit\AuditRepository::findAllInOrder()}'s own inline
@@ -32,7 +32,7 @@ final readonly class AuditLogEntry
     ) {}
 
     /**
-     * @param array<string, mixed> $row a `SELECT id, actor_id, action, entity_type, entity_id, before_json, after_json, ip_address, created_at, prev_hash, row_hash` row from `piwigo_audit_log`
+     * @param array<string, mixed> $row a `SELECT id, actor_id, action, entity_type, entity_id, before_json, after_json, ip_address, created_at, prev_hash, row_hash` row from `audit_log`
      */
     public static function fromRow(array $row): self
     {

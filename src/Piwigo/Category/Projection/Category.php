@@ -12,7 +12,7 @@ use Piwigo\Common\ValueObject\Permalink;
 use Piwigo\Common\ValueObject\SqlDateTime;
 
 /**
- * Typed row shape for `piwigo_categories`. `fromRow()` centralises the
+ * Typed row shape for `categories`. `fromRow()` centralises the
  * `is_string($row['x']) ? ... :
  * default` narrowing every {@see \Piwigo\Category\CategoryRepository}
  * caller used to duplicate for itself; `toArray()` hands that
@@ -96,7 +96,7 @@ final readonly class Category
     }
 
     /**
-     * @param array<string, mixed> $row a `SELECT *` (or equivalent) row from `piwigo_categories`
+     * @param array<string, mixed> $row a `SELECT *` (or equivalent) row from `categories`
      */
     public static function fromRow(array $row): self
     {

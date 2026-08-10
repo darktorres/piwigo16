@@ -385,7 +385,7 @@ final class UploadService
                 // current date -- Env::now() rather than a raw "SELECT NOW();",
                 // since the latter runs on the MySQL server's real clock,
                 // invisible to Env::now()'s PIWIGO_TEST_NOW freeze. This value
-                // drives both piwigo_images.date_available and the upload
+                // drives both images.date_available and the upload
                 // directory/filename's date portion, so a real-clock read here
                 // made every fixture regeneration produce a fresh, unstable
                 // upload path and a non-reproducible photo sort order.
@@ -1500,8 +1500,8 @@ final class UploadService
         $image_size = getimagesize($path);
         // Not decodable as an image at all (e.g. a non-picture file
         // uploaded via CurrentConfig::uploadFormAllTypes()) -- width/height
-        // are genuinely unknown, not an error: piwigo_images.width/height
-        // are nullable columns precisely for this case (see the schema),
+        // are genuinely unknown, not an error: images.width/height are
+        // nullable columns precisely for this case (see the schema),
         // and addFormat()'s own call to this method (the only other real
         // caller) never reads width/height at all.
         if ($image_size === false) {

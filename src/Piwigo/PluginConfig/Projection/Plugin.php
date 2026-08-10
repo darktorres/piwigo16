@@ -7,7 +7,7 @@ namespace Piwigo\PluginConfig\Projection;
 use Piwigo\Common\ValueObject\PluginId;
 
 /**
- * Typed row shape for `piwigo_plugins`.
+ * Typed row shape for `plugins`.
  * {@see \Piwigo\PluginConfig\PluginRepository}'s
  * `getDbPlugins()` builds this straight from `PluginEntity`'s
  * already-typed properties.

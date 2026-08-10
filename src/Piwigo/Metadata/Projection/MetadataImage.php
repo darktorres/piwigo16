@@ -11,7 +11,7 @@ use Piwigo\Image\ImageEntity;
  * {@see \Piwigo\Metadata\MetadataRepository::findImagesByIds()} and
  * {@see \Piwigo\Metadata\MetadataRepository::findImagesByStorageCategoryIds()}
  * -- both select the exact same `id`/`path`/`representative_ext` triple
- * from `piwigo_images`.
+ * from `images`.
  *
  * `toArray()` is the real consumer shape here, not `fromEntity()`'s own
  * typed properties: both {@see \Piwigo\Metadata\MetadataService::syncMetadata()}

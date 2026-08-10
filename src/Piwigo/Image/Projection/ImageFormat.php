@@ -8,7 +8,7 @@ use Piwigo\Common\ValueObject\ImageId;
 use Piwigo\Image\ImageFormatEntity;
 
 /**
- * Typed row shape for `piwigo_image_format`. `fromRow()` centralises the
+ * Typed row shape for `image_format`. `fromRow()` centralises the
  * `is_scalar($row['x']) ? ... :
  * default` narrowing for any raw `SELECT *` reader of this table, same
  * shape as {@see \Piwigo\Category\Projection\Category} -- current real
@@ -41,7 +41,7 @@ final readonly class ImageFormat
     }
 
     /**
-     * @param array<string, mixed> $row a `SELECT *` (or equivalent) row from `piwigo_image_format`
+     * @param array<string, mixed> $row a `SELECT *` (or equivalent) row from `image_format`
      */
     public static function fromRow(array $row): self
     {

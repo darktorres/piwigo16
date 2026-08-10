@@ -12,7 +12,7 @@ use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Image\ImageEntity;
 
 /**
- * Typed row shape for `piwigo_images`. `fromRow()` centralises the
+ * Typed row shape for `images`. `fromRow()` centralises the
  * `is_string($row['x']) ? ... :
  * default` narrowing every {@see \Piwigo\Image\ImageRepository} caller used
  * to duplicate for itself; `toArray()` hands that already-narrowed data
@@ -90,7 +90,7 @@ final readonly class Image
     }
 
     /**
-     * @param array<string, mixed> $row a `SELECT *` (or equivalent) row from `piwigo_images`
+     * @param array<string, mixed> $row a `SELECT *` (or equivalent) row from `images`
      */
     public static function fromRow(array $row): self
     {

@@ -8,7 +8,7 @@ use InvalidArgumentException;
 use Piwigo\Common\ValueObject\UserId;
 
 /**
- * Typed row shape for `piwigo_user_infos`'s `(user_id, status,
+ * Typed row shape for `user_infos`'s `(user_id, status,
  * activation_key)` triple -- the reset-password activation-key scan
  * {@see \Piwigo\Controller\PasswordController::checkPasswordResetKey()}
  * runs over every row with a non-expired `activation_key`. `fromRow()`
@@ -25,7 +25,7 @@ final readonly class ActivationKeyRow
 
     /**
      * @param array<string, mixed> $row a `SELECT user_id, status,
-     *   activation_key` row from `piwigo_user_infos`
+     *   activation_key` row from `user_infos`
      */
     public static function fromRow(array $row): self
     {

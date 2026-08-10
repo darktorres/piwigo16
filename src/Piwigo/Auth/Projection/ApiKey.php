@@ -10,7 +10,7 @@ use Piwigo\Common\ValueObject\SqlDateTime;
 use Piwigo\Common\ValueObject\UserId;
 
 /**
- * Typed row shape for `piwigo_user_auth_keys`. `fromRow()` centralises
+ * Typed row shape for `user_auth_keys`. `fromRow()` centralises
  * the `is_string($row['x']) ? ... : default` narrowing
  * {@see \Piwigo\Auth\ApiKeyRepository}'s own
  * caller ({@see \Piwigo\Auth\ApiKeyService::get()}) used to do inline,
@@ -27,7 +27,7 @@ use Piwigo\Common\ValueObject\UserId;
  *
  * `userId` is `UserId`, not `?UserId` -- `user_auth_keys.user_id` is
  * `NOT NULL` with a real `fk_user_auth_keys_user_id` FOREIGN KEY onto
- * `piwigo_users.id` (`ON DELETE CASCADE`), so a real fetched row can't
+ * `users.id` (`ON DELETE CASCADE`), so a real fetched row can't
  * carry a missing/invalid value, same reasoning as
  * {@see \Piwigo\Rate\Projection\Rate}'s `userId`/`elementId`.
  */
@@ -67,7 +67,7 @@ final readonly class ApiKey
     }
 
     /**
-     * @param array<string, mixed> $row a `SELECT *` (or equivalent) row from `piwigo_user_auth_keys`
+     * @param array<string, mixed> $row a `SELECT *` (or equivalent) row from `user_auth_keys`
      */
     public static function fromRow(array $row): self
     {

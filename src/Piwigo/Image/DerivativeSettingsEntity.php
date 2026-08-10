@@ -12,7 +12,7 @@ use Doctrine\ORM\Mapping as ORM;
  * against install/piwigo_structure-mysql.sql: `id` is a bare smallint PK, no
  * AUTO_INCREMENT, no default), so DerivativeSettingsRepository is what
  * enforces the singleton shape, not the schema. Replaces ImageStdParams's
- * former `derivatives` piwigo_config blob (`ConfigService::
+ * former `derivatives` config blob (`ConfigService::
  * OBJECT_SERIALIZED_PARAMS`) -- `watermarkJson`/`customJson` hold the same
  * data `WatermarkParams`/`ImageStdParams::$custom` used to carry via
  * serialize(), now as real JSON instead of an opaque PHP-object blob.

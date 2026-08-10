@@ -8,13 +8,13 @@ use InvalidArgumentException;
 use Piwigo\Common\ValueObject\GroupId;
 
 /**
- * Typed row shape for `piwigo_groups`. `fromRow()` centralises the
+ * Typed row shape for `groups`. `fromRow()` centralises the
  * `is_string($row['x']) ? ... :
  * default` narrowing {@see \Piwigo\Group\GroupRepository::findAllBasic()}
  * used to do inline, same shape as {@see \Piwigo\Tag\Projection\Tag}.
  *
  * Scoped to `findAllBasic()`'s own 3-column projection (`id`/`name`/
- * `is_default`), not every `piwigo_groups` column -- {@see
+ * `is_default`), not every `groups` column -- {@see
  * \Piwigo\Group\GroupRepository::findWithMemberCounts()}'s own `g.*` +
  * `COUNT(...) AS nb_users` query stays a raw array, same deliberate
  * deferral as {@see \Piwigo\Tag\TagRepository::findCommonTags()}: it feeds

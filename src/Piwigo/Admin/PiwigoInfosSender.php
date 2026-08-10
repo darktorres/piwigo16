@@ -241,11 +241,11 @@ final class PiwigoInfosSender implements TelemetrySenderInterface
         $piwigoInfos['general_stats']['nb_private_plugins'] = 0;
         $piwigoInfos['plugins'] = [];
         foreach ($dbPluginsById as $plugin) {
-            // piwigo_plugins.state is `enum(...) NOT NULL` in the schema --
-            // a genuine row here always carries a string.
+            // plugins.state is `enum(...) NOT NULL` in the schema -- a
+            // genuine row here always carries a string.
             assert(is_string($plugin['state']));
             if ($plugin['state'] === 'active') {
-                // piwigo_plugins.id/version are `varchar(...) NOT NULL` in the
+                // plugins.id/version are `varchar(...) NOT NULL` in the
                 // schema — a genuine row here always carries strings.
                 $pluginId = $plugin['id'];
                 assert(is_string($pluginId));
@@ -294,12 +294,12 @@ final class PiwigoInfosSender implements TelemetrySenderInterface
         $piwigoInfos['general_stats']['nb_private_themes'] = 0;
         $piwigoInfos['themes'] = [];
         $privateThemes = [];
-        // piwigo_themes has no 'state' column (confirmed in both
+        // themes has no 'state' column (confirmed in both
         // install/piwigo_structure-mysql.sql and the test fixture) — unlike
         // plugins, a theme is only in this table while active, so every row
         // here is implicitly active.
         foreach ($dbThemesById as $theme) {
-            // piwigo_themes.id/version are `varchar(...) NOT NULL` in the
+            // themes.id/version are `varchar(...) NOT NULL` in the
             // schema — a genuine row here always carries strings.
             $themeId = $theme['id'];
             assert(is_string($themeId));

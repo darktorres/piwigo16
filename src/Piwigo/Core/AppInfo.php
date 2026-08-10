@@ -26,10 +26,10 @@ final class AppInfo
     // Real upstream Piwigo's own PHPWG_DEFAULT_TEMPLATE is 'modus', but
     // this project never actually ships a themes/modus/ directory (only
     // themes/default/, themes/admin/, themes/standard_pages/) -- 'modus'
-    // here left every fresh install's piwigo_themes table permanently
-    // empty (InstallService::activateCoreThemes()'s scan never matched
-    // it) and seeded CurrentUser::attachGlobals()'s guest placeholder with
-    // a theme id that resolves to a nonexistent directory. Confirmed this
+    // here left every fresh install's themes table permanently empty
+    // (InstallService::activateCoreThemes()'s scan never matched it) and
+    // seeded CurrentUser::attachGlobals()'s guest placeholder with a theme
+    // id that resolves to a nonexistent directory. Confirmed this
     // project's actual bundled theme really is 'default' (themes/default/
     // themeconf.inc.php's own 'name' key agrees).
     public const string DEFAULT_TEMPLATE = 'default';

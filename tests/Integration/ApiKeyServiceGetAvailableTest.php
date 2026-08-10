@@ -58,7 +58,7 @@ final class ApiKeyServiceGetAvailableTest extends IntegrationTestCase
         $this->conn = DbConnection::build();
         $userId = $this->conn->fetchOne("SELECT id FROM " . 'users' . " WHERE username = 'fixture_admin'");
         self::assertIsNumeric($userId);
-        $this->userId = (int) $userId;
+        $this->userId = $userId;
 
         $this->em = EntityManagerFactory::build($this->conn);
         $mailer = Kernel::container()->get(MailService::class);

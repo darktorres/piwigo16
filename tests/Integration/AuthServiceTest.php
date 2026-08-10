@@ -488,7 +488,9 @@ namespace Piwigo\Tests\Integration {
         {
             $countFailedLoginsForFixtureAdmin = function (): int {
                 $count = $this->conn->fetchOne('SELECT COUNT(*) FROM ' . 'user_failed_logins' . ' WHERE user_id = 1');
-                return is_numeric($count) ? (int) $count : 0;
+                self::assertIsNumeric($count);
+
+                return $count;
             };
 
             $before = $countFailedLoginsForFixtureAdmin();
@@ -577,7 +579,9 @@ namespace Piwigo\Tests\Integration {
 
             $countFailedLoginsForFixtureAdmin = function (): int {
                 $count = $this->conn->fetchOne('SELECT COUNT(*) FROM ' . 'user_failed_logins' . ' WHERE user_id = 1');
-                return is_numeric($count) ? (int) $count : 0;
+                self::assertIsNumeric($count);
+
+                return $count;
             };
 
             try {

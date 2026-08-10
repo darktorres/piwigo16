@@ -106,7 +106,7 @@ final class ApiKeyServiceLifecycleTest extends IntegrationTestCase
         $this->conn = DbConnection::build();
         $userId = $this->conn->fetchOne("SELECT id FROM " . 'users' . " WHERE username = 'fixture_admin'");
         self::assertIsNumeric($userId);
-        $this->userId = (int) $userId;
+        $this->userId = $userId;
 
         $this->em = EntityManagerFactory::build($this->conn);
         $this->service = new ApiKeyService(

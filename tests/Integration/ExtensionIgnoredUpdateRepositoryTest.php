@@ -108,7 +108,7 @@ final class ExtensionIgnoredUpdateRepositoryTest extends IntegrationTestCase
         $count = $this->conn->fetchOne(
             'SELECT COUNT(*) FROM ' . 'extension_ignored_updates' . " WHERE extension_id = 'test-plugin-unignore'"
         );
-        self::assertSame(0, is_numeric($count) ? (int) $count : null);
+        self::assertSame(0, $count);
     }
 
     public function test_unignore_is_a_no_op_when_the_row_was_never_ignored(): void

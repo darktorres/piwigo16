@@ -1267,7 +1267,7 @@ final class CategoryServiceTest extends IntegrationTestCase
                 'SELECT representative_picture_id FROM ' . 'categories' . ' WHERE id IN (1, 2) ORDER BY id'
             );
             foreach ($repIds as $repId) {
-                self::assertNotSame(999999, is_numeric($repId) ? (int) $repId : null);
+                self::assertNotSame(999999, $repId);
             }
         } finally {
             $this->conn->executeStatement('UPDATE ' . 'categories' . ' SET representative_picture_id = 1 WHERE id = 1');
@@ -1456,7 +1456,7 @@ final class CategoryServiceTest extends IntegrationTestCase
             $repIds = $this->conn->fetchFirstColumn(
                 'SELECT representative_picture_id FROM ' . 'categories' . ' WHERE id IN (1, 2) ORDER BY id'
             );
-            self::assertSame([3, 3], array_map(static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0, $repIds));
+            self::assertSame([3, 3], $repIds);
         } finally {
             $this->conn->executeStatement('UPDATE ' . 'categories' . ' SET representative_picture_id = 1 WHERE id = 1');
             $this->conn->executeStatement('UPDATE ' . 'categories' . ' SET representative_picture_id = 4 WHERE id = 2');

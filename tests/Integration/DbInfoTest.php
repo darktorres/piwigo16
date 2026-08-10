@@ -53,12 +53,11 @@ final class DbInfoTest extends IntegrationTestCase
     {
         $conn = DbConnection::build();
         $expectedCount = $conn->fetchOne('SELECT COUNT(*) FROM ' . 'categories');
-        self::assertIsNumeric($expectedCount);
 
         $fingerprint = $this->dbInfo->getTableFingerprint('categories');
 
         self::assertMatchesRegularExpression('/^\d+_\d+$/', $fingerprint);
         [, $count] = explode('_', $fingerprint);
-        self::assertSame((string) (int) $expectedCount, $count);
+        self::assertSame((string) $expectedCount, $count);
     }
 }

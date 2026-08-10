@@ -1017,7 +1017,7 @@ final class CategoryRepositoryTest extends IntegrationTestCase
         // isn't practically testable against this shared fixture DB).
         $maxId = $this->conn->fetchOne('SELECT MAX(id) FROM ' . 'categories');
 
-        self::assertSame((is_numeric($maxId) ? (int) $maxId : 0) + 1, $this->repo->findNextId());
+        self::assertSame((is_numeric($maxId) ? $maxId : 0) + 1, $this->repo->findNextId());
     }
 
     public function test_find_photo_counts_by_category_counts_direct_images(): void

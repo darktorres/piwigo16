@@ -134,7 +134,8 @@ final class FilterPanelRenderer
                 $level_options[$level] = $lang->t('Everybody');
             }
         }
-        $filter_level_options_selected = $bulk_manager_filter['level'] ?? 0;
+        $filter_level_options_selected_raw = $bulk_manager_filter['level'] ?? 0;
+        $filter_level_options_selected = is_int($filter_level_options_selected_raw) ? $filter_level_options_selected_raw : 0;
 
         // tags
         $filter_tags = [];

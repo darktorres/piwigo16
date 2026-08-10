@@ -35,7 +35,7 @@ final readonly class FilterPanelPageContext implements TemplatePageContext
         public string $adminPageTitle,
         public int|string $nbNoMd5sum,
         public array $filterLevelOptions,
-        public mixed $filterLevelOptionsSelected,
+        public int $filterLevelOptionsSelected,
         public array $filterTags,
         public string $filterCategorySelectedName,
         public ?int $filterCategorySelected,

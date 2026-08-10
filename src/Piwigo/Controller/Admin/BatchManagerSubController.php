@@ -353,7 +353,7 @@ final class BatchManagerSubController implements AdminSubControllerInterface
                 // succeeds, matching the original loose-comparison behavior.
                 $filter_level_raw = $post['filter_level'] ?? null;
                 if (is_numeric($filter_level_raw) && in_array((int) $filter_level_raw, $availablePermissionLevels, true)) {
-                    $bulk_manager_filter['level'] = $post['filter_level'];
+                    $bulk_manager_filter['level'] = (int) $filter_level_raw;
 
                     if (isset($post['filter_level_include_lower'])) {
                         $bulk_manager_filter['level_include_lower'] = true;

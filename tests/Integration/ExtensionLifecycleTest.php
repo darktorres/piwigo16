@@ -538,10 +538,7 @@ namespace Piwigo\Tests\Integration {
                 [$pluginId]
             );
 
-            return array_map(
-                static fn (mixed $version): string => is_string($version) ? $version : '',
-                array_column($rows, 'version')
-            );
+            return array_column($rows, 'version');
         }
 
         private function themeId(): string

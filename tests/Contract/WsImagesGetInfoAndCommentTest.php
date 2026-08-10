@@ -245,7 +245,11 @@ final class WsImagesGetInfoAndCommentTest extends ContractTestCase
             'SELECT validated FROM ' . 'comments' . ' WHERE content = ?',
             [$content]
         );
-        self::assertSame(0, is_bool($validated) || is_numeric($validated) ? (int) (bool) $validated : -1);
+        // (int) alone, not a is_bool()/is_numeric() guard first --
+        // 'validated' is a real boolean column on Postgres but mysqli
+        // returns the equivalent tinyint(1) as a native int, and (int)
+        // normalizes either representation the same safe way.
+        self::assertSame(0, (int) $validated);
 
         $this->conn->executeStatement('DELETE FROM ' . 'comments' . ' WHERE content = ?', [$content]);
     }

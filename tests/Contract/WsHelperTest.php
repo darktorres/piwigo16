@@ -42,7 +42,7 @@ use Piwigo\Ws\WsHelper;
  * categoriesFlatlistToTree()'s 2 malformed-row guards (`! is_int($cat_id)
  * && ! is_string($cat_id)` and the sibling check on `$id_uppercat`) are
  * genuinely unreachable through the real pwg.categories.getList route:
- * every row's `id`/`id_uppercat` comes straight off piwigo_categories'
+ * every row's `id`/`id_uppercat` comes straight off categories'
  * `id`/`id_uppercat` columns (a real int PK / nullable int FK), never a
  * non-scalar value. test_categoriesFlatlistToTree_skips_*() below call the
  * method directly (via a locally-booted Kernel/container, same pattern as
@@ -106,7 +106,7 @@ final class WsHelperTest extends ContractTestCase
      * bayesian-shrinkage score for every rated image whenever any rate
      * is added or removed anywhere (confirmed live by reading its own
      * source: every image's score depends on global averages over the
-     * whole piwigo_rate table, not just its own rows), so even a
+     * whole rate table, not just its own rows), so even a
      * different test's throwaway-image rate call shifts every fixture
      * image's rating_score for the rest of the run -- a hardcoded
      * expected value (for either platform) is fundamentally unreliable
@@ -121,10 +121,12 @@ final class WsHelperTest extends ContractTestCase
         $rows = $this->conn->fetchAllAssociative('SELECT id, rating_score FROM ' . 'images' . ' WHERE id IN (1, 2, 3, 4, 5)');
         $matching = [];
         foreach ($rows as $row) {
-            $id = $row['id'] ?? null;
-            $rating = $row['rating_score'] ?? null;
-            if (is_numeric($id) && is_numeric($rating) && $matches((float) $rating)) {
-                $matching[] = (int) $id;
+            // id is a real, never-null PK; rating_score genuinely can be
+            // null (unrated images), so its own is_numeric() guard stays.
+            $id = $row['id'];
+            $rating = $row['rating_score'];
+            if (is_numeric($rating) && $matches((float) $rating)) {
+                $matching[] = $id;
             }
         }
         sort($matching);
@@ -373,7 +375,7 @@ final class WsHelperTest extends ContractTestCase
 
     /**
      * See this file's own class docblock: unreachable through the real WS
-     * route (piwigo_categories.id is a real int PK), so this calls the
+     * route (categories.id is a real int PK), so this calls the
      * real public static method directly with a genuinely malformed row.
      */
     public function test_categoriesFlatlistToTree_skips_a_row_with_a_non_scalar_id(): void
@@ -397,7 +399,7 @@ final class WsHelperTest extends ContractTestCase
 
     /**
      * Same rationale as the sibling test above, for the `id_uppercat`
-     * guard instead: piwigo_categories.id_uppercat is a real nullable int
+     * guard instead: categories.id_uppercat is a real nullable int
      * FK, never a non-scalar value through the real WS route.
      */
     public function test_categoriesFlatlistToTree_skips_a_child_row_with_a_non_scalar_uppercat_id(): void

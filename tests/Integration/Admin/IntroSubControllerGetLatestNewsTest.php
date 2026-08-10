@@ -101,6 +101,22 @@ test('getLatestNews returns null when the fresh cache holds a serialized null (n
     expect($result)->toBeNull();
 });
 
+test('getLatestNews returns null when the fresh cache holds a malformed shape', function (): void {
+    $path = intronewsCachePath();
+    $cacheDir = dirname($path);
+    if (! is_dir($cacheDir)) {
+        mkdir($cacheDir, 0o777, true);
+    }
+    // Missing 'url' and a non-string 'posted' -- a corrupted or
+    // hand-edited cache file, not this method's own real shape.
+    file_put_contents($path, serialize(['id' => 1, 'subject' => 'x', 'posted_on' => 1, 'posted' => 42]));
+    touch($path, time());
+
+    $result = intronewsInvoke();
+
+    expect($result)->toBeNull();
+});
+
 test('getLatestNews attempts a live fetch and returns an empty array when the cache is stale and the upstream host is unreachable', function (): void {
     // No cache file at all (is_file() false) -- the simplest way to force
     // the "stale" branch without racing a real 24h mtime boundary.

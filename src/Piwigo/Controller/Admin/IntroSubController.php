@@ -227,9 +227,10 @@ final class IntroSubController implements AdminSubControllerInterface
         if ($this->currentConfig->showPiwigoLatestNews) {
             $latest_news = self::getLatestNews($this->lang, $this->currentConfig, $this->paths);
 
-            // getLatestNews() is declared to return mixed (it can come straight
-            // back out of unserialize() on the cache file), so every field needs a
-            // real runtime check before use below.
+            // getLatestNews()'s array shape's own leaf values stay mixed (raw
+            // external JSON), and it can also be bool|null (unserialize()
+            // failure/no cache yet), so every field still needs a real runtime
+            // check before use below.
             $news_posted_on = is_array($latest_news) ? ($latest_news['posted_on'] ?? null) : null;
 
             if (
@@ -575,8 +576,18 @@ final class IntroSubController implements AdminSubControllerInterface
      * Fetches (and 24h-caches) the latest Piwigo project news for the
      * dashboard's news panel. Kept as a private method here (not a
      * separate service) since this dashboard page is its only caller.
+     *
+     * `false` is a real, reachable case (a corrupted cache file --
+     * `unserialize()` is natively `mixed|false`), not just theoretical.
+     * The 4 non-`posted` keys stay `mixed`: they're raw `json_decode()`
+     * leaves from the external `porg.news.getLatest` API, genuinely
+     * unknowable beyond "whatever that endpoint returns" -- but the fixed
+     * 5-key shape itself is real, checkable information a bare `mixed`
+     * return threw away.
+     *
+     * @return array{id: mixed, subject: mixed, posted_on: mixed, posted: string, url: mixed}|list<never>|bool|null
      */
-    private static function getLatestNews(Lang $lang, CurrentConfig $currentConfig, Paths $paths): mixed
+    private static function getLatestNews(Lang $lang, CurrentConfig $currentConfig, Paths $paths): array|bool|null
     {
         $news = null;
 
@@ -618,10 +629,32 @@ final class IntroSubController implements AdminSubControllerInterface
         if ($news === null) {
             $cached_contents = file_get_contents($cache_path);
             if ($cached_contents !== false) {
-                $news = unserialize($cached_contents);
+                $unserialized = unserialize($cached_contents);
+                if (self::isLatestNewsShape($unserialized)) {
+                    $news = $unserialized;
+                } elseif (is_bool($unserialized)) {
+                    $news = $unserialized;
+                }
             }
         }
 
         return $news;
+    }
+
+    /**
+     * Validates a cache-file round-trip actually produced this method's own
+     * shape (not just any array) before trusting it as `$news` -- a stale or
+     * hand-edited cache file is a real, if unlikely, possibility.
+     *
+     * @phpstan-assert-if-true array{id: mixed, subject: mixed, posted_on: mixed, posted: string, url: mixed} $value
+     */
+    private static function isLatestNewsShape(mixed $value): bool
+    {
+        return is_array($value)
+            && array_key_exists('id', $value)
+            && array_key_exists('subject', $value)
+            && array_key_exists('posted_on', $value)
+            && is_string($value['posted'] ?? null)
+            && array_key_exists('url', $value);
     }
 }

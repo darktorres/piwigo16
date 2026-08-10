@@ -69,10 +69,6 @@ if ($driver === 'pgsql') {
     }
 
     $result = $db->query('SELECT id, path FROM images WHERE id BETWEEN 1 AND 5 ORDER BY id');
-    if (! $result instanceof mysqli_result) {
-        fwrite(STDERR, "regenerate-fixture-photos.php: failed to query images.\n");
-        exit(1);
-    }
 
     while (($row = $result->fetch_assoc()) !== null) {
         $rows[] = $row;

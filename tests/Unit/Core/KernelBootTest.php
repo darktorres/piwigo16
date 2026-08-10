@@ -50,6 +50,43 @@ test('reset makes container throw again', function (): void {
     Kernel::container();
 })->throws(LogicException::class);
 
+test('boot is idempotent when re-called with the same Paths root by value', function (): void {
+    Kernel::boot(Paths::fromRoot('/tmp/piwigo-kernel-boot-test'));
+    Kernel::boot(Paths::fromRoot('/tmp/piwigo-kernel-boot-test')); // same root, different instance -- must not throw
+
+    expect(Kernel::isBooted())->toBeTrue();
+});
+
+test('boot throws instead of silently keeping a stale Paths binding when re-called with a different root', function (): void {
+    Kernel::boot(Paths::fromRoot('/tmp/piwigo-kernel-boot-test-a'));
+
+    Kernel::boot(Paths::fromRoot('/tmp/piwigo-kernel-boot-test-b'));
+})->throws(LogicException::class, 'Kernel already booted with a different Paths root (/tmp/piwigo-kernel-boot-test-a/) -- call Kernel::reset() first to rebind it (e.g. between tests).');
+
+test('boot does not throw when a Paths-less boot is later followed by a real Paths root', function (): void {
+    // Mirrors Tests\Support\KernelContainerOverride::with(), which
+    // installs an already-booted, deliberately Paths-less container via
+    // reflection -- real bootstrap code running inside that override may
+    // still legitimately call boot() with a genuine root afterward.
+    Kernel::boot();
+    Kernel::boot(Paths::fromRoot('/tmp/piwigo-kernel-boot-test'));
+
+    expect(Kernel::isBooted())->toBeTrue();
+});
+
+test('a rejected reboot leaves the original Paths binding intact, not corrupted', function (): void {
+    Kernel::boot(Paths::fromRoot('/tmp/piwigo-kernel-boot-test-a'));
+
+    try {
+        Kernel::boot(Paths::fromRoot('/tmp/piwigo-kernel-boot-test-b'));
+    } catch (LogicException) {
+        // Expected -- see the test above for the throw itself.
+    }
+
+    $paths = CurrentPathsTestFactory::get();
+    expect($paths->root)->toBe('/tmp/piwigo-kernel-boot-test-a/');
+});
+
 test('reset also resets CurrentPaths, not just its own booted/container state', function (): void {
     // CurrentPaths is a pure shim reading Paths::class straight out of the
     // live container -- proves Kernel::reset() nulling the container is

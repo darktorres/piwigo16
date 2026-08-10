@@ -46,7 +46,13 @@ function mail_service_test_build(
     ?MailRecipientRepositoryInterface $mailRecipientRepo = null,
     ?AuthService $authService = null,
 ): MailService {
-    Kernel::boot(Paths::fromRoot(dirname(__DIR__, 3) . '/'));
+    // Explicitly conditional, not a bare Kernel::boot() call -- a caller
+    // that already booted its own (possibly custom-rooted, e.g. a fake
+    // CurrentPaths root) Kernel must keep that root; Kernel::boot() itself
+    // now throws on a mismatched root instead of silently keeping it.
+    if (! Kernel::isBooted()) {
+        Kernel::boot(Paths::fromRoot(dirname(__DIR__, 3) . '/'));
+    }
 
     $lang = Kernel::container()->get(Lang::class);
     $currentConfig = Kernel::container()->get(CurrentConfig::class);
@@ -118,7 +124,11 @@ function mail_service_with_fake_webmaster(): MailService
  */
 function mail_service_capture_send(MailService $service, string|array $to, array $args = [], array $tpl = []): array
 {
-    Kernel::boot(Paths::fromRoot(dirname(__DIR__, 3) . '/'));
+    // Same "don't clobber an already-established custom root" reasoning
+    // as mail_service_test_build() above.
+    if (! Kernel::isBooted()) {
+        Kernel::boot(Paths::fromRoot(dirname(__DIR__, 3) . '/'));
+    }
     CurrentConfigTestFactory::get()->dataDirChecked = '1';
 
     $capturedTo = null;

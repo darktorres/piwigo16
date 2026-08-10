@@ -224,6 +224,12 @@ beforeEach(function (): void {
     // afterEach() runs, so CurrentPathsTestFactory::get() would throw there.
     $this->root = $root;
     mkdir($root, 0o777, true);
+    // A prior test file left Kernel booted without resetting first would
+    // otherwise make the boot() call below silently no-op, leaving
+    // CurrentPathsTestFactory (and every CurrentPathsTestFactory::get()->root
+    // -based mutation throughout this file) pointed at whatever root that
+    // earlier boot bound instead of this fixture root.
+    Kernel::reset();
     // Template's own ProcessCache usage goes through a static shim
     // (Template isn't converted to constructor injection, see that
     // shim's own docblock), which needs a real container. CurrentPaths

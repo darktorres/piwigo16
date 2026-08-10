@@ -58,6 +58,11 @@ use Piwigo\Template\Template;
 // already established for this identical scenario.
 
 beforeEach(function (): void {
+    // A prior test file left Kernel booted without resetting first would
+    // otherwise make the boot() call below silently no-op, leaving
+    // CurrentPathsTestFactory pointed at whatever root that earlier boot
+    // bound instead of this fixture root.
+    Kernel::reset();
     Kernel::boot(Paths::fromRoot(sys_get_temp_dir()));
     CurrentConfigTestFactory::get()->dataDirChecked = '1';
 });

@@ -59,6 +59,11 @@ function persistentFileCacheTestNewCurrentConfig(): CurrentConfig
 beforeEach(function (): void {
     $root = sys_get_temp_dir() . '/piwigo-persistent-file-cache-test-' . bin2hex(random_bytes(8));
     mkdir($root, 0o777, true);
+    // A prior test file left Kernel booted without resetting first would
+    // otherwise make this boot() silently no-op, leaving CurrentPathsTestFactory
+    // (and afterEach's own recursive delete below) pointed at whatever
+    // root that earlier boot bound instead of this fixture root.
+    Kernel::reset();
     Kernel::boot(Paths::fromRoot($root));
     // Pre-create the cache dir set() itself writes into: without this, its
     // first @file_put_contents() attempt against the not-yet-existing dir
@@ -404,6 +409,9 @@ test('purge is a no-op when glob() itself fails (an overlong pattern returns fal
     // about foreach()-ing a non-iterable -- a handler that recognizes
     // and swallows only the expected glob() warning surfaces that.
     $originalRoot = CurrentPathsTestFactory::get()->root;
+    // A deliberate mid-test root switch (unlike beforeEach's own boot() --
+    // see its own comment), so it must reset() first to actually rebind.
+    Kernel::reset();
     Kernel::boot(Paths::fromRoot(sys_get_temp_dir() . '/' . str_repeat('a', 4100)));
     $cache = new PersistentFileCache(persistentFileCacheTestNewCurrentConfig(), CurrentPathsTestFactory::get());
 
@@ -419,6 +427,7 @@ test('purge is a no-op when glob() itself fails (an overlong pattern returns fal
         $cache->purge(false);
     } finally {
         restore_error_handler();
+        Kernel::reset();
         Kernel::boot(Paths::fromRoot($originalRoot));
     }
 

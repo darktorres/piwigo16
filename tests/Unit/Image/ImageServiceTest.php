@@ -147,6 +147,13 @@ use Piwigo\Tests\Support\KernelContainerOverride;
 // ---------------------------------------------------------------------
 
 beforeEach(function (): void {
+    // Individual tests below each manage their own Kernel::boot(Paths::fromRoot(...))/
+    // reset() pair inline rather than sharing one -- without this, a prior
+    // test file left Kernel booted (no reset) would make one of those
+    // in-test boot() calls silently no-op, leaving CurrentPathsTestFactory
+    // pointed at whatever root that earlier boot bound instead of this
+    // test's own fixture root.
+    Kernel::reset();
     CurrentConfigTestFactory::get()->slideshowPeriod = 4;
     CurrentConfigTestFactory::get()->slideshowPeriodMin = 1;
     CurrentConfigTestFactory::get()->slideshowPeriodMax = 10;

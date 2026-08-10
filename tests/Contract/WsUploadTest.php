@@ -752,7 +752,7 @@ final class WsUploadTest extends ContractTestCase
                 // file on disk too -- a raw SQL DELETE would leave it behind,
                 // owned by www-data and unremovable by this CLI test process.
                 $this->callWs('pwg.images.formats.delete', [
-                    'format_id' => (int) $formatId,
+                    'format_id' => $formatId,
                     'pwg_token' => $this->getPwgToken(),
                 ]);
             }

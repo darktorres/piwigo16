@@ -24,6 +24,53 @@ use Piwigo\Core\Paths;
 // via ExtensionType::scanDirectory() for its own trash-path string), so
 // this suite seeds it against this repo's real root, same convention as
 // every other Unit test touching CurrentPaths (e.g. ExtensionTypeTest).
+//
+// [Mutation] The above architectural gap -- confirmed the SAME conclusion
+// independently reached by ExtensionUpdateCheckerTest's own docblock --
+// means getVersionsToCheck()'s own URL/$getData construction (Lines
+// 64/66/67), its `(bool) $pemVersions = @unserialize(...)` cast (Line
+// 70), and its final `return $versionsToCheck;` (Line 116,
+// AlwaysReturnEmptyArray) all show up as untested mutations with no fix
+// possible here: HttpClientService::fetch() always fails in this
+// environment (AppInfo::DOMAIN is deliberately an RFC 2606
+// never-resolves domain, see ExtensionUpdateCheckerTest), so
+// $versionsToCheck can never actually become non-empty in ANY Unit test
+// in this codebase -- Line 116's "always return []" mutation is
+// therefore genuinely, provably inert here (not just hard to reach), and
+// Lines 64/66/67/70 are covered (the code runs) but structurally
+// unobservable (the function's own return value is identical regardless
+// of what URL/getData get built, since the outer HTTP call fails either
+// way). Verified by tracing, not assumed from the docblock alone.
+//
+// Line 383's `$extractPathRealpath === false` guard is a genuine
+// TOCTOU-only defensive check: file_exists($extractPath . '/obsolete.list')
+// (the guard just before it) already structurally implies $extractPath
+// itself exists as a real directory, so realpath($extractPath) can only
+// fail here via a race condition between that check and this one (the
+// directory vanishing mid-call) -- not something any deterministic test
+// can construct.
+//
+// Lines 376/377 (the `$oldFiles === false` / `return;` guard right
+// before deleteObsoleteFiles()'s own debug-log call) ARE already
+// covered by the new "cannot be read" test below -- hand-mutating either
+// one and running that ONE test filtered, standalone, produces a real
+// failure (breaking the guard leaves $oldFiles === false, and
+// `$oldFiles[] = 'obsolete.list';` on a bool throws "Cannot use a scalar
+// value as an array", an uncaught Error). Same blind spot as
+// ExtensionScanner.php's own crash-based guards this same G2 batch --
+// `pest --mutate` doesn't credit an uncaught crash as "tested" the way
+// it credits a normal assertion failure.
+//
+// Line 433's FalseToTrue mutation (`$lines !== false` ->
+// `$lines !== true`, getLocallyMergedExtensions()'s own file-read guard)
+// is genuinely inert, confirmed via hand-mutation against the new
+// "cannot be read" test below: unlike ExtensionScanner.php's own
+// analogous guards (which feed a string-typed, strict_types=1 param and
+// throw a real TypeError when broken), `foreach (false as $x)` just
+// emits a suppressible E_WARNING and performs zero iterations -- so
+// both the correct guard (skip the loop) and the mutated one (enter the
+// if, but the foreach still no-ops on a non-iterable) produce the exact
+// same empty result.
 
 function pem_catalog_test_marker(): string
 {
@@ -170,12 +217,117 @@ test('getLocallyMergedExtensions reads the paths->root-prefixed file, not a bare
     expect($catalog->getLocallyMergedExtensions())->toBe([999 => 'fixture_only_extension']);
 });
 
+test('getLocallyMergedExtensions returns an empty array, not a crash, when the list file cannot be read', function (): void {
+    // Real gap, found via mutation testing: a real, unreadable file (0000,
+    // torres owns it but no read bit for anyone) -- file() genuinely
+    // returns false here, not a mock, matching this project's own
+    // established permission-denied convention (torres is a non-root user
+    // in this environment, confirmed via `id`, so owning a file does not
+    // bypass its own permission bits).
+    $root = pem_catalog_test_marker();
+    mkdir($root . '/install', 0o777, true);
+    $listFile = $root . '/install/obsolete_extensions.list';
+    file_put_contents($listFile, "999:fixture_only_extension\n");
+    chmod($listFile, 0o000);
+
+    $catalog = new PemCatalog(new ZipExtractor(), new CurrentLogger(), new CurrentUser(new CurrentConfig()), Paths::fromRoot($root), new CurrentConfig());
+
+    set_error_handler(static fn (): bool => true, E_WARNING);
+    try {
+        $merged = $catalog->getLocallyMergedExtensions();
+    } finally {
+        restore_error_handler();
+        chmod($listFile, 0o644);
+    }
+
+    expect($merged)->toBe([]);
+});
+
 function pem_catalog_delete_obsolete_files(ExtensionType $type, string $extractPath): void
 {
     $catalog = new PemCatalog(new ZipExtractor(), new CurrentLogger(), new CurrentUser(new CurrentConfig()), Paths::fromRoot(dirname(__DIR__, 4)), new CurrentConfig());
     $method = new ReflectionMethod($catalog, 'deleteObsoleteFiles');
     $method->invoke($catalog, $type, $extractPath, new Logger(['severity' => Logger::OFF]));
 }
+
+/**
+ * Recursively removes a directory -- used for the standalone log
+ * directories the debug-logging tests below point a real, DEBUG-severity
+ * Logger at (separate from pem_catalog_test_marker(), same convention as
+ * ImageExtImagickTest's own imageExtImagickTestRrmdir()).
+ */
+function pem_catalog_rrmdir(string $dir): void
+{
+    if (! is_dir($dir)) {
+        return;
+    }
+    $nodes = scandir($dir);
+    foreach ($nodes !== false ? $nodes : [] as $node) {
+        if ($node === '.' || $node === '..') {
+            continue;
+        }
+        $path = $dir . '/' . $node;
+        is_dir($path) ? pem_catalog_rrmdir($path) : unlink($path);
+    }
+    rmdir($dir);
+}
+
+test('deleteObsoleteFiles logs the real function name and old-files list, not just any debug line', function (): void {
+    // Real gap, found via mutation testing: every other deleteObsoleteFiles
+    // test here passes a Logger::OFF instance (see
+    // pem_catalog_delete_obsolete_files()), so nothing ever observed the
+    // debug() calls' own message content -- a ConcatRemoveLeft/Right/
+    // SwitchSides mutation on either could silently corrupt or blank the
+    // logged message with zero test-visible effect.
+    $logDir = sys_get_temp_dir() . '/piwigo-pem-catalog-test-log-' . bin2hex(random_bytes(8));
+    mkdir($logDir, 0o777, true);
+
+    try {
+        $extractPath = pem_catalog_test_marker() . '/log_old_files';
+        mkdir($extractPath, 0o777, true);
+        file_put_contents($extractPath . '/old-file.php', 'stale code');
+        file_put_contents($extractPath . '/obsolete.list', "old-file.php\n");
+
+        $catalog = new PemCatalog(new ZipExtractor(), new CurrentLogger(), new CurrentUser(new CurrentConfig()), Paths::fromRoot(dirname(__DIR__, 4)), new CurrentConfig());
+        $method = new ReflectionMethod($catalog, 'deleteObsoleteFiles');
+        $method->invoke($catalog, ExtensionType::Plugin, $extractPath, new Logger(['severity' => Logger::DEBUG, 'directory' => $logDir, 'filename' => 'old-files.log']));
+
+        $logContent = file_get_contents($logDir . '/old-files.log');
+        if ($logContent === false) {
+            throw new RuntimeException('Failed to read the real log file written by deleteObsoleteFiles().');
+        }
+        expect($logContent)->toContain('deleteObsoleteFiles, $old_files = {old-file.php},{obsolete.list}');
+    } finally {
+        pem_catalog_rrmdir($logDir);
+    }
+});
+
+test('deleteObsoleteFiles logs the real function name and full path before deleting each entry', function (): void {
+    // Real gap, found via mutation testing: same underlying issue as the
+    // sibling "old-files list" test above, for the OTHER debug() call --
+    // the one right before each individual file/dir is actually removed.
+    $logDir = sys_get_temp_dir() . '/piwigo-pem-catalog-test-log-' . bin2hex(random_bytes(8));
+    mkdir($logDir, 0o777, true);
+
+    try {
+        $extractPath = pem_catalog_test_marker() . '/log_to_delete';
+        mkdir($extractPath, 0o777, true);
+        file_put_contents($extractPath . '/old-file.php', 'stale code');
+        file_put_contents($extractPath . '/obsolete.list', "old-file.php\n");
+
+        $catalog = new PemCatalog(new ZipExtractor(), new CurrentLogger(), new CurrentUser(new CurrentConfig()), Paths::fromRoot(dirname(__DIR__, 4)), new CurrentConfig());
+        $method = new ReflectionMethod($catalog, 'deleteObsoleteFiles');
+        $method->invoke($catalog, ExtensionType::Plugin, $extractPath, new Logger(['severity' => Logger::DEBUG, 'directory' => $logDir, 'filename' => 'to-delete.log']));
+
+        $logContent = file_get_contents($logDir . '/to-delete.log');
+        if ($logContent === false) {
+            throw new RuntimeException('Failed to read the real log file written by deleteObsoleteFiles().');
+        }
+        expect($logContent)->toContain('deleteObsoleteFiles, to delete = ' . $extractPath . '/old-file.php');
+    } finally {
+        pem_catalog_rrmdir($logDir);
+    }
+});
 
 test('deleteObsoleteFiles removes every file listed in obsolete.list, plus the list itself', function (): void {
     $extractPath = pem_catalog_test_marker() . '/plugin';
@@ -239,11 +391,28 @@ test('deleteObsoleteFiles skips a listed entry that does not actually exist on d
     expect(file_exists($extractPath . '/obsolete.list'))->toBeFalse();
 });
 
+// [Mutation] Line 387's $trashPath construction
+// (`$type->scanDirectory(...) . 'trash'`) is verified difficult to
+// exercise deterministically without root, not assumed untestable: the
+// test below's own scenario, despite its name, does NOT actually reach
+// this path -- FilesystemHelper::deltree() tries a plain rmdir() FIRST
+// and only falls back to $trash_path if that fails, and an empty
+// stale-dir under a normal writable parent always succeeds via rmdir()
+// directly. Forcing the fallback needs rmdir() to fail while dirname()'s
+// own is_writable() check still passes (required for the later rename()
+// attempt) -- tried making the extract directory itself read-only
+// (blocks BOTH rmdir() and rename(), confirmed via a direct probe: both
+// return false) and making an inner file undeletable so the directory
+// isn't empty (rmdir() correctly fails with ENOTEMPTY, but the
+// subsequent rename() ALSO failed in a direct probe -- Linux's rename()
+// needs write access on the moved directory's own inode, not just its
+// parent, to update its own '..' entry). No non-root technique found
+// that reliably triggers a real trash-path rename() in this sandbox.
 test('deleteObsoleteFiles moves a listed directory to trash rather than unlinking it', function (): void {
     // Real gap, found via mutation testing: every other test here lists
     // only plain files (is_file() -> @unlink()) -- nothing exercised the
-    // is_dir() -> FilesystemHelper::deltree() branch, or the real
-    // ExtensionType::scanDirectory() . 'trash' path it moves to.
+    // is_dir() -> FilesystemHelper::deltree() branch. See the docblock
+    // above for why this does NOT reach the trash-path fallback itself.
     $extractPath = pem_catalog_test_marker() . '/plugin6';
     mkdir($extractPath . '/stale-dir', 0o777, true);
     file_put_contents($extractPath . '/stale-dir/inner.php', 'stale');
@@ -262,4 +431,31 @@ test('deleteObsoleteFiles does nothing when there is no obsolete.list at all', f
     pem_catalog_delete_obsolete_files(ExtensionType::Plugin, $extractPath);
 
     expect(file_exists($extractPath . '/keep-me.php'))->toBeTrue();
+});
+
+test('deleteObsoleteFiles does nothing, not a crash, when obsolete.list exists but cannot be read', function (): void {
+    // Real gap, found via mutation testing: a real, unreadable file (0000)
+    // -- file() genuinely returns false here, same established
+    // permission-denied convention as this file's own sibling
+    // getLocallyMergedExtensions test above. file_exists() (the guard
+    // just before this one) stays true regardless of the chmod -- only
+    // the later read fails -- so this genuinely exercises the `$oldFiles
+    // === false` guard, not the guard above it.
+    $extractPath = pem_catalog_test_marker() . '/plugin7';
+    mkdir($extractPath, 0o777, true);
+    file_put_contents($extractPath . '/keep-me.php', 'still here');
+    $listFile = $extractPath . '/obsolete.list';
+    file_put_contents($listFile, "keep-me.php\n");
+    chmod($listFile, 0o000);
+
+    set_error_handler(static fn (): bool => true, E_WARNING);
+    try {
+        pem_catalog_delete_obsolete_files(ExtensionType::Plugin, $extractPath);
+    } finally {
+        restore_error_handler();
+        chmod($listFile, 0o644);
+    }
+
+    expect(file_exists($extractPath . '/keep-me.php'))->toBeTrue()
+        ->and(file_exists($listFile))->toBeTrue();
 });

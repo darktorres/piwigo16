@@ -5,17 +5,19 @@ declare(strict_types=1);
 namespace Piwigo\Config;
 
 /**
- * A page's own tag/date filter UI flags. Each field is nullable because
- * a page entry may omit any of the 3, falling back to the 'default'
- * entry's own value at the caller level -- see
- * Piwigo\Core\PageFilterHelper::getFilterPageValue().
+ * A page's own tag/date filter UI flags. Genuinely open-ended -- callers
+ * (see Piwigo\Core\PageFilterHelper::getFilterPageValue()) look up flags
+ * by an arbitrary name, not just the 3 well-known Piwigo-core ones
+ * (`used`/`cancel`/`add_notes`), so this wraps a flag map rather than
+ * fixed named fields.
  */
 final readonly class PageFilterFlags
 {
+    /**
+     * @param array<string, bool> $flags
+     */
     public function __construct(
-        public ?bool $used,
-        public ?bool $cancel,
-        public ?bool $addNotes,
+        public array $flags,
     ) {}
 
     /**
@@ -23,14 +25,13 @@ final readonly class PageFilterFlags
      */
     public static function fromArray(array $entry): self
     {
-        $used = $entry['used'] ?? null;
-        $cancel = $entry['cancel'] ?? null;
-        $addNotes = $entry['add_notes'] ?? null;
+        $result = [];
+        foreach ($entry as $key => $val) {
+            if (is_string($key) && is_bool($val)) {
+                $result[$key] = $val;
+            }
+        }
 
-        return new self(
-            used: is_bool($used) ? $used : null,
-            cancel: is_bool($cancel) ? $cancel : null,
-            addNotes: is_bool($addNotes) ? $addNotes : null,
-        );
+        return new self(flags: $result);
     }
 }

@@ -58,6 +58,61 @@ use RuntimeException;
  * KernelContainerOverride::with() instead.
  */
 
+// ---------------------------------------------------------------------
+// Mutation-testing gap closure (G1, when-i-run-the-mutable-cookie.md):
+// a fresh scoped rerun (2026-08-10) found 20 untested. Every one
+// confirmed genuinely inert this pass -- this file's existing coverage
+// (above) already exercises every REAL branch; the survivors are all
+// structurally unkillable, so no new test was needed:
+// - url()'s `$rel_path = ''; $rel_url = '';` (EmptyStringToNotEmpty x2)
+//   and build()'s own identical pre-initialization of the same two
+//   by-ref out-params: both are ALWAYS overwritten by build() before
+//   ever being read -- every one of build()'s own return paths
+//   (the identity-no-watermark early return, the recursive
+//   smaller-type substitution, and the main token/cache-style path)
+//   unconditionally assigns both. The initial value never survives to
+//   be observed.
+// - Every `(bool) $size`/`(bool) $url_style`/`(bool) $src->rotation`
+//   cast inside an `if`/`!` condition (RemoveBooleanCast, 6 sites:
+//   build()'s watermark check, its url_style check, and all 5 of
+//   get_size_css()/get_size_htm()/get_size_hr()/get_scaled_size()/
+//   get_scaled_size_htm()'s own "size computed" guards): the
+//   already-coercing if-condition/negation position, same established
+//   pattern as every other cast-removal finding across this campaign.
+// - build()'s `$url_style = 1;` (DecrementInteger to 0): $url_style is
+//   a pure local, never a by-ref/return value -- its only later read is
+//   `if ($url_style === 2)`, which neither 0 nor 1 satisfies, so both
+//   values reach the identical `else` branch.
+// - build()'s defined-type search loop's own `$i = 0` starting index
+//   (IncrementInteger to 1, line 275): traced through every real
+//   consequence -- this loop exists solely to find $params->type's own
+//   position so the INNER loop can search STRICTLY SMALLER types.
+//   Skipping index 0 can only affect whether the type AT index 0 gets
+//   matched; if it would have matched there, there's nothing smaller to
+//   search anyway (immediate break, same as a proper match with an
+//   empty inner search), and if it wouldn't have, skipping it changes
+//   nothing. Both outcomes converge on "fall through to the main
+//   unsubstituted-type path" -- confirmed against the real existing
+//   substitution test above, which happens to match at index 1, not 0
+//   (the general case this file needed a fresh trace for, not that
+//   specific instance).
+// - get_scaled_size()'s ratio-vs-1 and ratio-vs-ratio comparisons
+//   (GreaterToGreaterOrEqual x3) and their surrounding `(float)`/
+//   `floor()` casts (RemoveDoubleCast x4): the real (non-tied) scaling
+//   math is already thoroughly covered above (both the
+//   width-overflows and height-overflows branches, with genuinely
+//   different computed outputs). The only remaining case (`>` vs `>=`
+//   at an EXACT ratio of 1, or EXACT ratio_w===ratio_h) is a
+//   mathematical-identity self-reassignment -- verified algebraically
+//   that both branches compute the IDENTICAL final ($maxw, $maxh) at
+//   that exact tie, same "wrongly taken branch reassigns to its own
+//   current value" reasoning as PwgImage.php's own dest_ratio===
+//   img_ratio finding. `(float)`/floor()'s own casts are additionally
+//   inert on their own terms too: `/` between two ints already produces
+//   a type-correct result PHP's numeric comparisons don't care about,
+//   and floor() always returns float regardless of its argument's type.
+// ---------------------------------------------------------------------
+
 /**
  * Round-trips ImageStdParams' 3 static maps through derivativeImageTestRestoreStdParams()
  * unexamined -- callers never inspect the snapshot's contents directly, so

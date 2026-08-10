@@ -399,8 +399,6 @@ final class WsUsersMutationTest extends ContractTestCase
     {
         $token = $this->getPwgToken();
         $selfId = $this->conn->fetchOne('SELECT id FROM ' . 'users' . ' WHERE username = ?', ['fixture_admin']);
-        self::assertIsNumeric($selfId);
-        $selfId = (int) $selfId;
 
         $response = $this->callWs('pwg.users.delete', [
             'user_id' => [$selfId],
@@ -411,8 +409,7 @@ final class WsUsersMutationTest extends ContractTestCase
         self::assertSame('0 users deleted', $response['result']);
 
         $stillExists = $this->conn->fetchOne('SELECT COUNT(*) FROM ' . 'users' . ' WHERE id = ?', [$selfId]);
-        self::assertIsNumeric($stillExists);
-        self::assertSame(1, (int) $stillExists);
+        self::assertSame(1, $stillExists);
     }
 
     public function test_delete_protects_the_guest_id(): void
@@ -457,15 +454,14 @@ final class WsUsersMutationTest extends ContractTestCase
         $nonWebmasterToken = $this->getPwgToken();
 
         $response = $this->callWs('pwg.users.delete', [
-            'user_id' => [(int) $selfId],
+            'user_id' => [$selfId],
             'pwg_token' => $nonWebmasterToken,
         ]);
 
         self::assertSame('ok', $response['stat']);
         self::assertSame('0 users deleted', $response['result']);
-        $stillExists = $this->conn->fetchOne('SELECT COUNT(*) FROM ' . 'users' . ' WHERE id = ?', [(int) $selfId]);
-        self::assertIsNumeric($stillExists);
-        self::assertSame(1, (int) $stillExists);
+        $stillExists = $this->conn->fetchOne('SELECT COUNT(*) FROM ' . 'users' . ' WHERE id = ?', [$selfId]);
+        self::assertSame(1, $stillExists);
 
         $this->loginAsAdmin();
     }
@@ -642,7 +638,7 @@ final class WsUsersMutationTest extends ContractTestCase
      * checkAndSaveUserInfos() runs -- same "silently ignored, not applied"
      * shape as allow_user_customization above, but for a different config
      * flag/field pair. fixture_admin's show_nb_comments starts at 0 (see
-     * the fixture's own piwigo_user_infos row), so requesting `true` here
+     * the fixture's own user_infos row), so requesting `true` here
      * would be a real, detectable change if it weren't dropped.
      */
     public function test_setMyInfo_ignores_show_nb_comments_when_comments_are_disabled(): void
@@ -811,8 +807,6 @@ final class WsUsersMutationTest extends ContractTestCase
     {
         $imageId = $this->insertThrowawayImage();
         $selfId = $this->conn->fetchOne('SELECT id FROM ' . 'users' . ' WHERE username = ?', ['fixture_admin']);
-        self::assertIsNumeric($selfId);
-        $selfId = (int) $selfId;
 
         $add = $this->callWs('pwg.users.favorites.add', ['image_id' => $imageId]);
         self::assertSame('ok', $add['stat']);
@@ -821,8 +815,7 @@ final class WsUsersMutationTest extends ContractTestCase
             'SELECT COUNT(*) FROM ' . 'favorites' . ' WHERE user_id = ? AND image_id = ?',
             [$selfId, $imageId]
         );
-        self::assertIsNumeric($count);
-        self::assertSame(1, (int) $count);
+        self::assertSame(1, $count);
 
         $remove = $this->callWs('pwg.users.favorites.remove', ['image_id' => $imageId]);
         self::assertSame('ok', $remove['stat']);
@@ -831,8 +824,7 @@ final class WsUsersMutationTest extends ContractTestCase
             'SELECT COUNT(*) FROM ' . 'favorites' . ' WHERE user_id = ? AND image_id = ?',
             [$selfId, $imageId]
         );
-        self::assertIsNumeric($countAfter);
-        self::assertSame(0, (int) $countAfter);
+        self::assertSame(0, $countAfter);
     }
 
     public function test_favoritesRemove_guest_forbidden(): void
@@ -944,7 +936,7 @@ final class WsUsersMutationTest extends ContractTestCase
         $nonWebmasterToken = $this->getPwgToken();
 
         $response = $this->callWsAllowingServerError('pwg.users.generatePasswordLink', [
-            'user_id' => (int) $selfId,
+            'user_id' => $selfId,
             'pwg_token' => $nonWebmasterToken,
         ]);
 

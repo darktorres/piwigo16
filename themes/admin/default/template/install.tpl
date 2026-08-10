@@ -256,11 +256,6 @@ jQuery().ready(function(){ldelim}
       <td><input type="text" name="dbname" value="{$F_DB_NAME}" required></td>
       <td class="fielddesc">{'also given by your host provider'|@translate}</td>
     </tr>
-    <tr>
-      <td class="fieldname">{'Database table prefix'|@translate}</td>
-      <td><input type="text" name="prefix" value="{$F_DB_PREFIX}"></td>
-      <td class="fielddesc">{'database tables names will be prefixed with it (enables you to manage better your tables)'|@translate}</td>
-    </tr>
   </table>
 
 </fieldset>

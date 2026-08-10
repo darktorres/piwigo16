@@ -131,8 +131,8 @@ use Piwigo\Tests\Support\KernelContainerOverride;
  *  - render()'s step-2 `$login_user_id` narrowing (the
  *    `elseif (is_string($raw_login_user_id) && is_numeric(...))`/`else`
  *    arms): $raw_login_user_id always comes from
- *    UserService::buildUser(1)'s own 'id' key, ultimately
- *    `{prefix}users.id` (a `mediumint unsigned` column) read through this
+ *    UserService::buildUser(1)'s own 'id' key, ultimately `users.id`
+ *    (a `mediumint unsigned` column) read through this
  *    project's real mysqli DBAL driver config, which returns integer
  *    columns as native PHP int (confirmed live with a throwaway
  *    `fetchAssociative('SELECT 1 AS id')` against this same driver
@@ -211,7 +211,7 @@ final class InstallWizardTest extends IntegrationTestCase
         // driver (`PIWIGO_DB_DRIVER=pgsql` in `.env.test`, but
         // `getenv('PIWIGO_DB_DRIVER')` returning the leaked 'mysqli')
         // once this class's tests happened to run first in process order.
-        foreach (['PIWIGO_DB_HOST', 'PIWIGO_DB_USER', 'PIWIGO_DB_PASSWORD', 'PIWIGO_DB_BASE', 'PIWIGO_DB_PREFIX', 'PIWIGO_DB_DRIVER', 'PIWIGO_DB_PORT'] as $key) {
+        foreach (['PIWIGO_DB_HOST', 'PIWIGO_DB_USER', 'PIWIGO_DB_PASSWORD', 'PIWIGO_DB_BASE', 'PIWIGO_DB_DRIVER', 'PIWIGO_DB_PORT'] as $key) {
             $value = getenv($key);
             $this->originalDbEnv[$key] = $value === false ? '' : $value;
         }
@@ -308,12 +308,7 @@ final class InstallWizardTest extends IntegrationTestCase
 
     /**
      * Mirrors public/install.php's own real bootstrap sequence exactly (not
-     * just InstallWizard's constructor+boot()): that entry shell seeds
-     * PIWIGO_DB_PREFIX itself before constructing the wizard (InstallWizard::
-     * boot() only ever seeds host/user/password/dbname -- Tables::*()'s own
-     * DbCredentialsTestFactory::get()->prefix read would otherwise silently keep
-     * resolving to whatever prefix was already ambient in this process, not
-     * the one this test actually wants every table named with), and sets
+     * just InstallWizard's constructor+boot()): sets
      * Piwigo\Template\ScriptLoader's static URL service (a "pre-existing
      * gap" the entry shell's own docblock already documents: nothing inside
      * InstallWizard/InstallBootstrap does this, since install.php never runs
@@ -322,7 +317,7 @@ final class InstallWizardTest extends IntegrationTestCase
      * @param array<string, string> $post
      * @param array<string, string> $get
      */
-    private function submit(array $post, array $get = [], string $prefix = 'itest_', bool $preserveAcceptLanguage = false): InstallWizard
+    private function submit(array $post, array $get = [], bool $preserveAcceptLanguage = false): InstallWizard
     {
         $_GET = $get;
         $_POST = $post;
@@ -338,11 +333,8 @@ final class InstallWizardTest extends IntegrationTestCase
         unset($_SERVER['HTTPS']);
 
         $dbCredentials = DbCredentialsTestFactory::get();
-        $dbCredentials->seed([
-            'PIWIGO_DB_PREFIX' => $prefix,
-        ]);
 
-        $wizard = new InstallWizard(LangTestFactory::get(), $prefix, $this->paths, $dbCredentials, CurrentConfigServiceTestFactory::get(), CurrentConfigTestFactory::get(), new InputValidator(), new AdminContext(), new EventDispatcher(), new PageState(), new ErrorCollector(new DeploymentPolicy(), $this->paths), new ProcessCache(), new DeploymentPolicy(), new CurrentTemplate(), CurrentUserTestFactory::get());
+        $wizard = new InstallWizard(LangTestFactory::get(), $this->paths, $dbCredentials, CurrentConfigServiceTestFactory::get(), CurrentConfigTestFactory::get(), new InputValidator(), new AdminContext(), new EventDispatcher(), new PageState(), new ErrorCollector(new DeploymentPolicy(), $this->paths), new ProcessCache(), new DeploymentPolicy(), new CurrentTemplate(), CurrentUserTestFactory::get());
         $wizard->boot();
 
         return $wizard;
@@ -429,7 +421,7 @@ final class InstallWizardTest extends IntegrationTestCase
         // KernelContainerOverride::with()
         // rebinds Paths::class for just this test's own scope instead.
         KernelContainerOverride::with([Paths::class => $this->paths], function (): void {
-            $wizard = new InstallWizard(LangTestFactory::get(), 'itest_', $this->paths, DbCredentialsTestFactory::get(), CurrentConfigServiceTestFactory::get(), CurrentConfigTestFactory::get(), new InputValidator(), new AdminContext(), new EventDispatcher(), new PageState(), new ErrorCollector(new DeploymentPolicy(), $this->paths), new ProcessCache(), new DeploymentPolicy(), new CurrentTemplate(), CurrentUserTestFactory::get());
+            $wizard = new InstallWizard(LangTestFactory::get(), $this->paths, DbCredentialsTestFactory::get(), CurrentConfigServiceTestFactory::get(), CurrentConfigTestFactory::get(), new InputValidator(), new AdminContext(), new EventDispatcher(), new PageState(), new ErrorCollector(new DeploymentPolicy(), $this->paths), new ProcessCache(), new DeploymentPolicy(), new CurrentTemplate(), CurrentUserTestFactory::get());
 
             self::assertSame('_data/', $this->reflectPrivate($wizard, 'confDataLocation'));
         });
@@ -443,7 +435,7 @@ final class InstallWizardTest extends IntegrationTestCase
         $this->expectExceptionMessageIsOrContains("Invalid \$conf['data_location'] configuration: expected a string.");
 
         KernelContainerOverride::with([Paths::class => $this->paths], function (): void {
-            new InstallWizard(LangTestFactory::get(), 'itest_', $this->paths, DbCredentialsTestFactory::get(), CurrentConfigServiceTestFactory::get(), CurrentConfigTestFactory::get(), new InputValidator(), new AdminContext(), new EventDispatcher(), new PageState(), new ErrorCollector(new DeploymentPolicy(), $this->paths), new ProcessCache(), new DeploymentPolicy(), new CurrentTemplate(), CurrentUserTestFactory::get());
+            new InstallWizard(LangTestFactory::get(), $this->paths, DbCredentialsTestFactory::get(), CurrentConfigServiceTestFactory::get(), CurrentConfigTestFactory::get(), new InputValidator(), new AdminContext(), new EventDispatcher(), new PageState(), new ErrorCollector(new DeploymentPolicy(), $this->paths), new ProcessCache(), new DeploymentPolicy(), new CurrentTemplate(), CurrentUserTestFactory::get());
         });
     }
 
@@ -482,32 +474,6 @@ final class InstallWizardTest extends IntegrationTestCase
         // those errors come from the field checks, not a connection failure
         // masquerading as 3 separate messages.
         self::assertNotNull($this->reflectPrivate($wizard, 'conn'));
-    }
-
-    public function test_analyzeForm_rejects_a_table_prefix_starting_with_a_digit(): void
-    {
-        $this->bootInstallBootstrap();
-
-        $wizard = $this->submit([
-            'dbhost' => $this->dbHost,
-            'dbdriver' => $this->dbDriver,
-            'dbuser' => $this->dbUser,
-            'dbpasswd' => $this->dbPass,
-            'dbname' => $this->dbName,
-            'admin_name' => 'somebody',
-            'admin_pass1' => 'same-password',
-            'admin_pass2' => 'same-password',
-            'admin_mail' => 'somebody@example.test',
-        ], [], '1bad');
-
-        $wizard->analyzeForm();
-
-        // Every other field here is deliberately valid (real DB
-        // credentials, matching passwords, a well-formed mail address) --
-        // an exact single-element list proves the prefix check is the only
-        // thing that fired, not merely that it fired somewhere among
-        // other, unrelated errors a looser assertContains() would tolerate.
-        self::assertSame(['invalid table prefix'], $this->reflectPrivate($wizard, 'errors'));
     }
 
     // ------------------------------------------------------------- render() (step 1)
@@ -636,7 +602,7 @@ final class InstallWizardTest extends IntegrationTestCase
         $wizard->performInstall();
 
         // ---- webmaster + guest users -----------------------------------
-        $webmaster = $this->queryOne($freshDb, 'SELECT id, username, password, mail_address FROM itest_users WHERE id = 1');
+        $webmaster = $this->queryOne($freshDb, 'SELECT id, username, password, mail_address FROM users WHERE id = 1');
         self::assertIsArray($webmaster);
         self::assertSame('p17setup', $webmaster['username']);
         self::assertSame('webmaster@example.test', $webmaster['mail_address']);
@@ -646,44 +612,44 @@ final class InstallWizardTest extends IntegrationTestCase
             'the stored hash must verify against the exact submitted password'
         );
 
-        $guest = $this->queryOne($freshDb, 'SELECT id, username, password, mail_address FROM itest_users WHERE id = 2');
+        $guest = $this->queryOne($freshDb, 'SELECT id, username, password, mail_address FROM users WHERE id = 2');
         self::assertIsArray($guest);
         self::assertSame('guest', $guest['username']);
         self::assertNull($guest['password']);
         self::assertNull($guest['mail_address']);
 
         // ---- user_infos: webmaster/guest status + language -------------
-        $webmasterInfo = $this->queryOne($freshDb, 'SELECT status, language FROM itest_user_infos WHERE user_id = 1');
+        $webmasterInfo = $this->queryOne($freshDb, 'SELECT status, language FROM user_infos WHERE user_id = 1');
         self::assertIsArray($webmasterInfo);
         self::assertSame('webmaster', $webmasterInfo['status']);
         self::assertSame('en_UK', $webmasterInfo['language']);
 
-        $guestInfo = $this->queryOne($freshDb, 'SELECT status, language FROM itest_user_infos WHERE user_id = 2');
+        $guestInfo = $this->queryOne($freshDb, 'SELECT status, language FROM user_infos WHERE user_id = 2');
         self::assertIsArray($guestInfo);
         self::assertSame('guest', $guestInfo['status']);
 
         // ---- sites -------------------------------------------------------
-        $site = $this->queryOne($freshDb, 'SELECT id, galleries_url FROM itest_sites WHERE id = 1');
+        $site = $this->queryOne($freshDb, 'SELECT id, galleries_url FROM sites WHERE id = 1');
         self::assertIsArray($site);
         self::assertSame($this->tempRoot . 'galleries/', $site['galleries_url']);
 
         // ---- config: secret_key + gallery_title + page_banner -----------
-        $secretKey = $this->queryOne($freshDb, "SELECT value FROM itest_config WHERE param = 'secret_key'");
+        $secretKey = $this->queryOne($freshDb, "SELECT value FROM config WHERE param = 'secret_key'");
         self::assertIsArray($secretKey);
         self::assertIsString($secretKey['value']);
         $decodedSecret = json_decode($secretKey['value'], true);
         self::assertIsString($decodedSecret);
         self::assertSame(40, strlen($decodedSecret), 'secret_key must be a sha1 hex digest');
 
-        $galleryTitle = $this->queryOne($freshDb, "SELECT value FROM itest_config WHERE param = 'gallery_title'");
+        $galleryTitle = $this->queryOne($freshDb, "SELECT value FROM config WHERE param = 'gallery_title'");
         self::assertIsArray($galleryTitle);
         self::assertSame('"Just another Piwigo gallery"', $galleryTitle['value']);
 
         // ---- languages: only en_UK activated -----------------------------
-        $language = $this->queryOne($freshDb, "SELECT id, name FROM itest_languages WHERE id = 'en_UK'");
+        $language = $this->queryOne($freshDb, "SELECT id, name FROM languages WHERE id = 'en_UK'");
         self::assertIsArray($language);
         self::assertSame('English (Great Britain)', $language['name']);
-        self::assertSame(1, $this->queryOneCount($freshDb, 'SELECT COUNT(*) AS c FROM itest_languages'));
+        self::assertSame(1, $this->queryOneCount($freshDb, 'SELECT COUNT(*) AS c FROM languages'));
 
         // ---- themes/plugins: this repo's real themes/ (symlinked in above)
         // only bundles the 'default' placeholder theme so far (the real
@@ -695,8 +661,8 @@ final class InstallWizardTest extends IntegrationTestCase
         // so activateCoreThemes() activates zero themes; zero plugins are
         // auto-activated by design too (see InstallServiceTest's own
         // equivalent assertions) -------------------
-        self::assertSame(0, $this->queryOneCount($freshDb, 'SELECT COUNT(*) AS c FROM itest_themes'));
-        self::assertSame(0, $this->queryOneCount($freshDb, 'SELECT COUNT(*) AS c FROM itest_plugins'));
+        self::assertSame(0, $this->queryOneCount($freshDb, 'SELECT COUNT(*) AS c FROM themes'));
+        self::assertSame(0, $this->queryOneCount($freshDb, 'SELECT COUNT(*) AS c FROM plugins'));
 
         // ---- .env.test (this whole process runs with test mode active) --
         $envFile = $this->tempRoot . '.env.test';
@@ -706,7 +672,6 @@ final class InstallWizardTest extends IntegrationTestCase
         self::assertStringContainsString('PIWIGO_DB_HOST=' . $this->dbHost, $envContent);
         self::assertStringContainsString('PIWIGO_DB_USER=' . $this->dbUser, $envContent);
         self::assertStringContainsString('PIWIGO_DB_BASE=' . $freshDb, $envContent);
-        self::assertStringContainsString('PIWIGO_DB_PREFIX=itest_', $envContent);
         self::assertStringContainsString('PIWIGO_BASE_URL=http://example.test', $envContent);
 
         // ---- legacy database.inc.php is skipped while test mode is active
@@ -781,7 +746,7 @@ final class InstallWizardTest extends IntegrationTestCase
         self::assertStringContainsString("\$conf['db_base'] = '" . $freshDb . "';", $content);
         self::assertStringContainsString("\$conf['db_user'] = '" . $this->dbUser . "';", $content);
         self::assertStringContainsString("\$conf['db_host'] = '" . $this->dbHost . "';", $content);
-        self::assertStringContainsString("\$prefixeTable = 'itest_';", $content);
+        self::assertStringContainsString("\$prefixeTable = '';", $content);
         self::assertStringContainsString("define('PHPWG_INSTALLED', true);", $content);
 
         // Plain '.env' this time, not '.env.test' -- the same env-write
@@ -878,7 +843,7 @@ final class InstallWizardTest extends IntegrationTestCase
         // site creation) still ran to completion despite the legacy config
         // write failing.
         self::assertSame([], $this->reflectPrivate($wizard, 'errors'));
-        $webmaster = $this->queryOne($freshDb, 'SELECT username FROM itest_users WHERE id = 1');
+        $webmaster = $this->queryOne($freshDb, 'SELECT username FROM users WHERE id = 1');
         self::assertIsArray($webmaster);
         self::assertSame('p17cfgfallback', $webmaster['username']);
     }
@@ -1365,7 +1330,7 @@ final class InstallWizardTest extends IntegrationTestCase
 
         self::assertStringContainsString('Congratulations', $output);
 
-        $prefsRow = $this->queryOne($freshDb, 'SELECT preferences FROM itest_user_infos WHERE user_id = 1');
+        $prefsRow = $this->queryOne($freshDb, 'SELECT preferences FROM user_infos WHERE user_id = 1');
         self::assertIsArray($prefsRow);
         self::assertIsString($prefsRow['preferences']);
         $preferences = json_decode($prefsRow['preferences'], true);

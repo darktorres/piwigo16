@@ -118,7 +118,6 @@ function install_piwigo(array $option): void
         'dbuser' => $option['db_user'],
         'dbpasswd' => $option['db_password'],
         'dbname' => $option['db_name'],
-        'prefix' => 'piwigo_',
         'admin_name' => 'admin',
         'admin_pass1' => 'pwg123',
         'admin_pass2' => 'pwg123',

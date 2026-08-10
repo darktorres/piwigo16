@@ -47,12 +47,10 @@ use RuntimeException;
 final class InstallService
 {
     /**
-     * Loads a SQL file and executes all queries.
-     * Before executing a query, $replaced is... replaced by $replacing. This is
-     * useful when the SQL file contains generic words. Drop table queries are
+     * Loads a SQL file and executes all queries. Drop table queries are
      * not executed.
      */
-    public static function executeSqlfile(Connection $conn, string $filepath, string $replaced, string $replacing): void
+    public static function executeSqlfile(Connection $conn, string $filepath): void
     {
         $sql_lines = file($filepath);
         if ($sql_lines === false) {
@@ -69,7 +67,6 @@ final class InstallService
             // variable "query"
             if ((bool) preg_match('/;$/', $sql_line)) {
                 $query = trim($query);
-                $query = str_replace($replaced, $replacing, $query);
                 // we don't execute "DROP TABLE" queries
                 if (! (bool) preg_match('/^DROP TABLE/i', $query)) {
                     $conn->executeStatement($query);

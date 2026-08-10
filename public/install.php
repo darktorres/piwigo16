@@ -10,8 +10,7 @@ declare(strict_types=1);
 // +-----------------------------------------------------------------------+
 // Thin bootstrap shell (matching admin.php's shape). Orchestration lives
 // in Piwigo\Admin\Install\InstallWizard; this file keeps only what's
-// forbidden inside src/Piwigo by Arch rule SEC-60 (every define()) or
-// must run before InstallWizard is constructed (the db_prefix override).
+// forbidden inside src/Piwigo by Arch rule SEC-60 (every define()).
 use Piwigo\Admin\Install\InstallWizard;
 use Piwigo\Bootstrap\InstallBootstrap;
 use Piwigo\Bootstrap\RequestBootstrap;
@@ -34,23 +33,7 @@ InstallBootstrap::boot($paths);
 
 // ----------------------------------------------------- variable initialization
 
-if (isset($_POST['install'])) {
-    // Narrow to string (and guard the possibly-missing array key) rather than
-    // trusting raw POST data downstream in SQL/file-content concatenation.
-    $post_prefix = $_POST['prefix'] ?? null;
-    $prefixeTable = is_string($post_prefix) ? $post_prefix : InstallWizard::DEFAULT_PREFIX_TABLE;
-} else {
-    $prefixeTable = InstallWizard::DEFAULT_PREFIX_TABLE;
-}
-
-// TODO(Phase 4): this whole $prefixeTable/PIWIGO_DB_PREFIX seed is dead --
-// DbCredentials no longer has a $prefix property to read it into (removed
-// with the table-prefix-removal work) and every table name downstream is
-// now a bare literal string, not prefix-derived.
 $dbCredentials = InstallBootstrap::dbCredentials();
-$dbCredentials->seed([
-    'PIWIGO_DB_PREFIX' => $prefixeTable,
-]);
 
 // SessionBootstrap::register() carries the same internal PHPWG_INSTALLED
 // guard, so it stays a no-op at this point of a fresh install.
@@ -59,7 +42,6 @@ SessionBootstrap::register();
 // ---------------------------------------------------------------- orchestration
 $wizard = new InstallWizard(
     RequestBootstrap::lang(),
-    $prefixeTable,
     $paths,
     $dbCredentials,
     RequestBootstrap::currentConfigService(),

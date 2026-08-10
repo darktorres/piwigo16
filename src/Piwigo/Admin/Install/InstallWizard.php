@@ -103,12 +103,6 @@ use Symfony\Component\Console\Output\BufferedOutput;
  */
 final class InstallWizard
 {
-    /**
-     * Default table prefix. install.php also reads this constant, at the
-     * point it computes the site's actual chosen prefix.
-     */
-    public const string DEFAULT_PREFIX_TABLE = 'piwigo_';
-
     private readonly string $confDataLocation;
 
     private readonly string $configFile;
@@ -184,7 +178,6 @@ final class InstallWizard
      */
     public function __construct(
         private readonly Lang $lang,
-        private readonly string $prefixeTable,
         private readonly Paths $paths,
         private readonly DbCredentials $dbCredentials,
         private readonly CurrentConfigService $currentConfigService,
@@ -260,9 +253,8 @@ final class InstallWizard
         $this->dbname = $this->request->dbname;
         $this->dbport = $this->request->dbport;
 
-        // Same reasoning as the db_prefix seeding in the install.php entry
-        // shell: any code reached later in this same request that resolves
-        // a DB connection via Piwigo\Db\DbConnection::build() (which reads
+        // Any code reached later in this same request that resolves a DB
+        // connection via Piwigo\Db\DbConnection::build() (which reads
         // DbCredentials::current()) would otherwise silently see whatever
         // was already in the process environment instead of the real
         // submitted credentials. Found live: get_default_user_value() ->
@@ -435,7 +427,7 @@ final class InstallWizard
 
     /**
      * Former install.php "form analyze" validation block (DB connection
-     * attempt + prefix/webmaster/password/mail checks). Only called when
+     * attempt + webmaster/password/mail checks). Only called when
      * $_POST['install'] is set.
      */
     public function analyzeForm(): void
@@ -444,14 +436,6 @@ final class InstallWizard
 
         if (count($this->errors) > 0) {
             print_r($this->errors);
-        }
-
-        if (
-            strlen($this->prefixeTable) > 20
-            or (bool) preg_match('/^\d/', $this->prefixeTable)
-            or ! (bool) preg_match('/^[a-zA-Z0-9_$]*$/u', $this->prefixeTable)
-        ) {
-            $this->errors[] = 'invalid table prefix';
         }
 
         $webmaster = trim((string) preg_replace('/\s{2,}/', ' ', $this->adminName));
@@ -508,7 +492,6 @@ final class InstallWizard
             'PIWIGO_DB_USER' => $this->dbuser,
             'PIWIGO_DB_PASSWORD' => $this->dbpasswd,
             'PIWIGO_DB_BASE' => $this->dbname,
-            'PIWIGO_DB_PREFIX' => $this->prefixeTable,
             'PIWIGO_DB_DRIVER' => $this->dblayer,
         ];
         // Only written when the operator actually chose a non-default port
@@ -546,7 +529,7 @@ $conf[\'db_user\'] = \'' . $this->dbuser . '\';
 $conf[\'db_password\'] = \'' . $this->dbpasswd . '\';
 $conf[\'db_host\'] = \'' . $this->dbhost . '\';
 
-$prefixeTable = \'' . $this->prefixeTable . '\';
+$prefixeTable = \'\';
 
 define(\'PHPWG_INSTALLED\', true);
 define(\'PWG_CHARSET\', \'utf-8\');
@@ -632,8 +615,6 @@ define(\'DB_COLLATE\', \'\');
         InstallService::executeSqlfile(
             $conn,
             $this->paths->root . 'install/config.sql',
-            self::DEFAULT_PREFIX_TABLE,
-            $this->prefixeTable,
         );
 
         // config.value is JSON -- json_encode() the value (not the bare
@@ -643,7 +624,7 @@ define(\'DB_COLLATE\', \'\');
         $secretKeyJson = json_encode(sha1(random_bytes(1000)));
         assert($secretKeyJson !== false);
 
-        $configTable = $this->prefixeTable . 'config';
+        $configTable = 'config';
         $query = <<<SQL
             INSERT INTO {$configTable} (param,value,comment)
                VALUES ('secret_key', :secretKey,
@@ -893,7 +874,6 @@ define(\'DB_COLLATE\', \'\');
             fDbHost: $this->dbhost,
             fDbUser: $this->dbuser,
             fDbName: $this->dbname,
-            fDbPrefix: $this->prefixeTable,
             fDbDriver: $this->dblayer,
             fDbPort: $this->dbport,
             fAdmin: $this->adminName,

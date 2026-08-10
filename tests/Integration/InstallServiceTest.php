@@ -118,36 +118,36 @@ final class InstallServiceTest extends IntegrationTestCase
 
     // --------------------------------------------------------- executeSqlfile
 
-    public function test_executeSqlfile_creates_tables_applies_prefix_replacement_and_skips_drop_table(): void
+    public function test_executeSqlfile_creates_tables_and_skips_drop_table(): void
     {
         $sqlFile = sys_get_temp_dir() . '/piwigo-install-service-' . bin2hex(random_bytes(6)) . '.sql';
         file_put_contents(
             $sqlFile,
             "-- a comment line, must be ignored\n"
             . "\n"
-            . "CREATE TABLE PREFIX_gizmo (\n"
+            . "CREATE TABLE gizmo (\n"
             . "  id INT NOT NULL,\n"
             . "  label VARCHAR(64) NOT NULL\n"
             . ");\n"
-            . "INSERT INTO PREFIX_gizmo (id, label) VALUES (42, 'widget-forty-two');\n"
-            . "DROP TABLE PREFIX_gizmo;\n"
+            . "INSERT INTO gizmo (id, label) VALUES (42, 'widget-forty-two');\n"
+            . "DROP TABLE gizmo;\n"
         );
 
         try {
-            InstallService::executeSqlfile($this->conn, $sqlFile, 'PREFIX_', 'itest_');
+            InstallService::executeSqlfile($this->conn, $sqlFile);
 
             // The DROP TABLE line was skipped -- the table (and its row)
             // must still exist.
-            // itest_gizmo only exists via executeSqlfile() above, not in
+            // gizmo only exists via executeSqlfile() above, not in
             // the live reflector's persistent schema.
             // @phpstan-ignore dba.syntaxError
-            $row = $this->conn->fetchAssociative('SELECT id, label FROM itest_gizmo WHERE id = 42');
+            $row = $this->conn->fetchAssociative('SELECT id, label FROM gizmo WHERE id = 42');
             self::assertIsArray($row);
             $id = $row['id'];
             self::assertSame(42, is_numeric($id) ? (int) $id : null);
             self::assertSame('widget-forty-two', $row['label']);
         } finally {
-            $this->conn->executeStatement('DROP TABLE IF EXISTS itest_gizmo');
+            $this->conn->executeStatement('DROP TABLE IF EXISTS gizmo');
             unlink($sqlFile);
         }
     }
@@ -171,7 +171,7 @@ final class InstallServiceTest extends IntegrationTestCase
             $this->expectException(RuntimeException::class);
             $this->expectExceptionMessageIsOrContains('Unable to read SQL file: ' . $missing);
 
-            InstallService::executeSqlfile($this->conn, $missing, 'PREFIX_', 'itest_');
+            InstallService::executeSqlfile($this->conn, $missing);
         } finally {
             restore_error_handler();
         }

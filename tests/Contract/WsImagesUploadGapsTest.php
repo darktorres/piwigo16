@@ -189,12 +189,9 @@ final class WsImagesUploadGapsTest extends ContractTestCase
         // add() -- the thumb chunk buffered above must be gone.
         self::assertFileDoesNotExist($bufferDir . $sum . '-thumb-00000.block');
 
-        $tagIds = array_map(
-            static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0,
-            $this->conn->fetchFirstColumn(
-                'SELECT tag_id FROM ' . 'image_tag' . ' WHERE image_id = ? ORDER BY tag_id',
-                [(int) $imageId]
-            )
+        $tagIds = $this->conn->fetchFirstColumn(
+            'SELECT tag_id FROM ' . 'image_tag' . ' WHERE image_id = ? ORDER BY tag_id',
+            [(int) $imageId]
         );
         self::assertSame([1, 2], $tagIds);
     }
@@ -622,7 +619,7 @@ final class WsImagesUploadGapsTest extends ContractTestCase
 
         $originalLevel = $this->conn->fetchOne(
             'SELECT level FROM ' . 'user_infos' . ' WHERE user_id = ?',
-            [(int) $adminUserId]
+            [$adminUserId]
         );
         self::assertIsNumeric($originalLevel);
 
@@ -638,7 +635,7 @@ final class WsImagesUploadGapsTest extends ContractTestCase
             // visible to the WS call below without re-logging in.
             $this->conn->executeStatement(
                 'UPDATE ' . 'user_infos' . ' SET level = 0 WHERE user_id = ?',
-                [(int) $adminUserId]
+                [$adminUserId]
             );
 
             $response = $this->multipart('pwg.images.uploadAsync', [
@@ -659,12 +656,9 @@ final class WsImagesUploadGapsTest extends ContractTestCase
             self::assertIsNumeric($imageId);
             $this->imageIdsToDelete[] = (int) $imageId;
 
-            $tagIds = array_map(
-                static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0,
-                $this->conn->fetchFirstColumn(
-                    'SELECT tag_id FROM ' . 'image_tag' . ' WHERE image_id = ? ORDER BY tag_id',
-                    [(int) $imageId]
-                )
+            $tagIds = $this->conn->fetchFirstColumn(
+                'SELECT tag_id FROM ' . 'image_tag' . ' WHERE image_id = ? ORDER BY tag_id',
+                [(int) $imageId]
             );
             self::assertSame([1, 2], $tagIds);
 
@@ -672,11 +666,11 @@ final class WsImagesUploadGapsTest extends ContractTestCase
                 'SELECT level FROM ' . 'images' . ' WHERE id = ?',
                 [(int) $imageId]
             );
-            self::assertSame(4, is_numeric($storedLevel) ? (int) $storedLevel : -1);
+            self::assertSame(4, $storedLevel);
         } finally {
             $this->conn->executeStatement(
                 'UPDATE ' . 'user_infos' . ' SET level = ? WHERE user_id = ?',
-                [(int) $originalLevel, (int) $adminUserId]
+                [$originalLevel, $adminUserId]
             );
         }
     }

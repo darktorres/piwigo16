@@ -88,7 +88,7 @@ final class WsImagesUploadCompletedTest extends ContractTestCase
         $category = $result['category'];
         self::assertIsArray($category);
         self::assertSame(1, $category['id']);
-        self::assertSame((int) $expectedCount, $category['nb_photos']);
+        self::assertSame($expectedCount, $category['nb_photos']);
         self::assertIsString($category['label']);
         self::assertStringContainsString($expectedName, $category['label']);
     }

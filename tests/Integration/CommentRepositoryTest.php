@@ -164,7 +164,7 @@ final class CommentRepositoryTest extends IntegrationTestCase
 
     public function test_count_recent_comments_counts_within_the_flood_window(): void
     {
-        // author_id has an FK onto piwigo_users, so a real fixture user id
+        // author_id has an FK onto users, so a real fixture user id
         // is needed -- 4 (power_user), not reused by insertFixtureComment()
         // (which only ever uses 1 or 3), so no other test's disposable rows
         // inflate this count. Fixture comments 3 and 4 (also author_id 4)

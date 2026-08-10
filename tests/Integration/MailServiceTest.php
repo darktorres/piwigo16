@@ -75,7 +75,7 @@ use Symfony\Component\Mime\Email;
  * Fixture shape this file depends on: only user 1 (fixture_admin) has a
  * real mail_address (users 2-4 are NULL) and is the fixture's only
  * webmaster/admin (status 'webmaster', users 3/4 are 'normal') -- see
- * piwigo_user_group: user 1 is in group 1 only, user 3 is in groups 1 and
+ * user_group: user 1 is in group 1 only, user 3 is in groups 1 and
  * 2. This makes user 1 double as both "the only admin" and "the only
  * group-1 member with a real email", and user 3 (status 'normal', so
  * AuthService::createUserAuthKey() actually succeeds for it, unlike

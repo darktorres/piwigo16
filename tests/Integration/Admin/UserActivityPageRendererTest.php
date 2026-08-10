@@ -58,7 +58,7 @@ use Piwigo\Users\User;
  * straight to an admin User (CurrentUserTestFactory::get()->set(), not a real
  * AuthService login) -- no activity row is written by that, unlike a
  * genuine loginAsAdmin() POST. The real fixture's own 17 non-'system' rows
- * (piwigo_activity ids 3-19) are snapshotted and deleted for the
+ * (activity ids 3-19) are snapshotted and deleted for the
  * duration of the test, then restored verbatim in tearDown() --
  * same "mutate shared fixture rows, restore afterward" shape
  * tests/Integration/CategoryAdminServiceTest.php's own tearDown() already
@@ -140,7 +140,6 @@ final class UserActivityPageRendererTest extends IntegrationTestCase
 
     public function test_no_activity_at_all_leaves_ulist_empty_instead_of_erroring(): void
     {
-        /** @var list<array<string, mixed>> $rows */
         $rows = $this->conn->fetchAllAssociative('SELECT * FROM ' . 'activity' . " WHERE object != 'system'");
         $this->deletedActivityRows = $rows;
         self::assertNotSame([], $rows, 'Fixture is expected to seed real non-system activity rows to delete/restore.');

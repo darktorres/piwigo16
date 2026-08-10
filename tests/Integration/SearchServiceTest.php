@@ -865,7 +865,7 @@ final class SearchServiceTest extends IntegrationTestCase
         // fixture) -- exercises qsearchGetCategories(), which filters
         // categories via $user['forbidden_categories'] instead of an
         // INNER JOIN against user_cache_categories, end to end. Category 2
-        // holds images 4 and 5 (piwigo_image_category fixture).
+        // holds images 4 and 5 (image_category fixture).
         $results = $this->service->getQuickSearchResultsNoCache('Nested', []);
 
         self::assertSame([4, 5], $results['items']);

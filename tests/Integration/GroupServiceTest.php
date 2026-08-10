@@ -225,7 +225,7 @@ final class GroupServiceTest extends IntegrationTestCase
 
     public function test_delete_flips_email_admin_on_new_user_to_all_when_the_configured_group_is_among_the_requested_ids(): void
     {
-        // 999999 isn't a real group (piwigo_groups only has ids 1-3), so
+        // 999999 isn't a real group (groups only has ids 1-3), so
         // repo->delete() finds nothing and delete() returns [] the same
         // way test_delete_returns_empty_array_when_no_ids_exist() already
         // does -- this only isolates the email_admin_on_new_user

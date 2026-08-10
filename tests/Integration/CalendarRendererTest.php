@@ -369,7 +369,7 @@ final class CalendarRendererTest extends IntegrationTestCase
      * for section='categories', category=null, and an empty/'any'-only
      * chronologyDate) is keyed on 'nav_' . user id . md5(date_field .
      * order_by) -- forbidden_categories plays no part in that key. Fixture
-     * shape: piwigo_image_category puts images 1/2/3 in category 1 and
+     * shape: image_category puts images 1/2/3 in category 1 and
      * images 4/5 in category 2 -- forbidding category 2 between the two
      * calls below would make a genuine re-query return [3, 2, 1] instead of
      * [5, 4, 3, 2, 1], so the second call only matching the first proves

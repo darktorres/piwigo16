@@ -155,7 +155,7 @@ final class GroupRepositoryTest extends IntegrationTestCase
 
     public function test_update_on_a_nonexistent_group_id_is_a_silent_noop(): void
     {
-        // 999999 isn't in the fixture (piwigo_groups has ids 1-3 only) --
+        // 999999 isn't in the fixture (groups has ids 1-3 only) --
         // find() returns null, and update() must return without throwing
         // rather than crash on a null entity.
         $this->repo->update(GroupId::from(999999), ['name' => 'should-never-be-written']);

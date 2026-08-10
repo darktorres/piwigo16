@@ -22,10 +22,10 @@ use Piwigo\Search\SearchRepository;
  * Same fixture shape as CategoryRepositoryTest: images 1-5 (image_category
  * assigns 1,2,3 to category 1 and 4,5 to category 2), tags 1 "nature", 2
  * "travel", 3 "family" (image_tag: image 1 has all 3 tags, images 2/3 have
- * tag 1 only). `piwigo_search` starts empty.
+ * tag 1 only). `search` starts empty.
  *
  * findSavedSearchRulesByIds()'s own `! is_numeric($row['id'] ?? null)`
- * `continue` branch is NOT chased here: `id` is `piwigo_search`'s NOT
+ * `continue` branch is NOT chased here: `id` is `search`'s NOT
  * NULL AUTO_INCREMENT primary key, always a native int, so that branch is
  * unreachable through any real fetched row -- purely defensive, same
  * shape as the SKIP LIST's documented HttpClientService-only residuals.

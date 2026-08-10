@@ -405,7 +405,7 @@ final class SectionPopulatorTest extends IntegrationTestCase
             ],
             'matching_cats' => [],
         ], $ctx->qsearchDetails);
-        // 'nature' matches images 1, 2, 3 (piwigo_image_tag fixture rows).
+        // 'nature' matches images 1, 2, 3 (image_tag fixture rows).
         self::assertCount(3, $ctx->items);
     }
 

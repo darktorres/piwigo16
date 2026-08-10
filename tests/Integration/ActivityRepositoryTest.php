@@ -27,7 +27,7 @@ use Piwigo\Db\DbConnection;
 /**
  * Fixture: 19 activity rows (activity_id 1-19). Row 1 is object='system',
  * action='activate' (activateCoreThemes()'s own real attempt to activate
- * the 'default' placeholder theme -- always a no-op on piwigo_themes
+ * the 'default' placeholder theme -- always a no-op on themes
  * itself, see InstallService's own docblock, but still activity-logged
  * like any other extension action). Row 2 is object='system',
  * action='install', performed_by=NULL. Rows 3-19 (17 rows) are all

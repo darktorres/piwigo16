@@ -17,8 +17,8 @@ use Piwigo\Config\ConfigLoader;
 use Piwigo\Db\DbConnection;
 
 /**
- * Fixture: piwigo_history/piwigo_history_summary/piwigo_search/
- * piwigo_lounge/piwigo_user_feed are all empty; piwigo_sessions has several
+ * Fixture: history/history_summary/search/
+ * lounge/user_feed are all empty; sessions has several
  * rows (1 real session for user 1, plus a handful of anonymous/guest
  * sessions with empty `data`). Every test inserts its own disposable rows
  * and cleans up via try/finally, matching this suite's established
@@ -284,7 +284,7 @@ final class DbMaintenanceRepositoryTest extends IntegrationTestCase
     }
 
     // purgeSessionsForDeletedUsers()'s `if (! is_string($data)) { continue;
-    // }` guard (its own line 209) is left uncovered: `piwigo_sessions.data`
+    // }` guard (its own line 209) is left uncovered: `sessions.data`
     // is `mediumtext NOT NULL` (confirmed via install/piwigo_structure-mysql.sql
     // and this file's own fixture schema) -- DBAL always returns a TEXT
     // column as a PHP string, and the column can never hold NULL. There is
@@ -316,7 +316,7 @@ final class DbMaintenanceRepositoryTest extends IntegrationTestCase
      *
      * DESC's own row order for a composite PK is column-*definition*
      * order, not the PRIMARY KEY clause's own *declared* column order --
-     * confirmed live on `piwigo_rate` (columns defined
+     * confirmed live on `rate` (columns defined
      * user_id/element_id/anonymous_id, but `PRIMARY KEY (element_id,
      * user_id, anonymous_id)` declared in a different order).
      * `introspectTablePrimaryKeyConstraint()` reports the real declared

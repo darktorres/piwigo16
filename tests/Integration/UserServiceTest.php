@@ -469,7 +469,7 @@ namespace Piwigo\Tests\Integration {
 
         public function test_check_and_save_user_infos_rejects_an_invalid_theme(): void
         {
-            // The fixture's own piwigo_themes table is empty (confirmed
+            // The fixture's own themes table is empty (confirmed
             // live), so any value at all is "invalid" here -- no need for
             // an implausible-sounding fake theme name.
             $result = $this->service->checkAndSaveUserInfos(['user_id' => [4], 'theme' => 'anything'], PageStateTestFactory::get());
@@ -758,7 +758,7 @@ namespace Piwigo\Tests\Integration {
         public function test_sync_users_deletes_orphaned_child_rows_not_present_in_the_base_table(): void
         {
             // Every one of syncUsers()'s 5 child tables carries a real
-            // ON DELETE CASCADE FK back to piwigo_users in this schema, so
+            // ON DELETE CASCADE FK back to users in this schema, so
             // a genuine orphan can never arise through normal DB writes --
             // confirmed live (a plain INSERT with a nonexistent user_id
             // is rejected by the FK). Disabling FK checks just for this
@@ -1231,7 +1231,7 @@ namespace Piwigo\Tests\Integration {
 
         public function test_get_default_theme_falls_back_to_the_literal_default_when_nothing_installed_matches(): void
         {
-            // The fixture's own piwigo_themes table is empty (confirmed
+            // The fixture's own themes table is empty (confirmed
             // live -- same fact SizingParams/ThemeCatalog tests elsewhere
             // in this suite already establish), so once the configured
             // default user's own theme also fails checkThemeInstalled(),

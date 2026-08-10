@@ -430,7 +430,7 @@ abstract class IntegrationTestCase extends TestCase
         // replaced them.
         CachePools::config()->clear();
 
-        // `piwigo_sites` id=1's own `galleries_url` is committed in the
+        // `sites` id=1's own `galleries_url` is committed in the
         // fixture as an absolute filesystem path (Piwigo\Core\Paths::$root
         // . 'galleries/', matching exactly what Admin\Install\InstallWizard
         // seeds it with on a real install) -- inherently tied to wherever

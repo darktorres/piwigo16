@@ -285,7 +285,7 @@ final class CategoryAdminServiceTest extends IntegrationTestCase
 
         $category = $this->fetchCategory(1);
         self::assertNotNull($category);
-        // Category 1 links images 1/2/3 (piwigo_image_category fixture
+        // Category 1 links images 1/2/3 (image_category fixture
         // rows) -- any real representative pick must be one of those,
         // not null and not some unrelated id.
         self::assertContains($category['representative_picture_id'], ['1', '2', '3', 1, 2, 3]);

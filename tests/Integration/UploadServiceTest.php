@@ -115,7 +115,7 @@ final class UploadServiceTestThemeConfProvider implements ThemeConfProviderInter
  * duplicate-detection fixture value, reused here for the same reason);
  * category 1 "Sample Album" and category 2 "Nested Sub Album" both exist,
  * with image 1 linked only to category 1 (not 2) in the stock fixture.
- * piwigo_config's own `lounge_active` row is 'true' in the fixture, but
+ * config's own `lounge_active` row is 'true' in the fixture, but
  * this suite deliberately never calls ConfigService::loadConfFromDb() --
  * ImageStdParams::load_from_db() (needed for DerivativeImage::url(),
  * addUploadedFile()'s own "cache a derivative" tail) is independent of
@@ -324,8 +324,8 @@ final class UploadServiceTest extends IntegrationTestCase
     {
         if ($this->imageIdsToDelete !== []) {
             $ids = implode(',', array_map(static fn (int $id): string => (string) $id, $this->imageIdsToDelete));
-            // ON DELETE CASCADE on both piwigo_image_category.image_id and
-            // piwigo_lounge.image_id (see the schema) takes care of any
+            // ON DELETE CASCADE on both image_category.image_id and
+            // lounge.image_id (see the schema) takes care of any
             // association rows a test created for these ids too.
             $this->conn->executeStatement('DELETE FROM ' . 'images' . " WHERE id IN ({$ids})");
         }
@@ -335,7 +335,7 @@ final class UploadServiceTest extends IntegrationTestCase
         // still relies on for duplicate-detection.
         $this->conn->executeStatement('DELETE FROM ' . 'image_category' . ' WHERE image_id = 1 AND category_id = 2');
         // Same belt-and-suspenders reasoning as the image_category cleanup
-        // above -- addFormat()'s own tests write real piwigo_image_format
+        // above -- addFormat()'s own tests write real image_format
         // rows against the shared fixture image 1, not a throwaway id this
         // class deletes wholesale.
         $this->conn->executeStatement('DELETE FROM ' . 'image_format' . ' WHERE image_id = 1');
@@ -829,7 +829,7 @@ final class UploadServiceTest extends IntegrationTestCase
 
     public function test_add_uploaded_file_add_to_categories_flips_lounge_active_once_the_photo_count_reaches_the_threshold(): void
     {
-        // The fixture's own piwigo_config row already has 'lounge_active' =
+        // The fixture's own config row already has 'lounge_active' =
         // 'true' (see this class's own docblock) -- force it to 'false' here
         // so the assertion below actually proves confUpdateParam() wrote a
         // real change, not just a coincidental match with pre-existing data.
@@ -937,7 +937,7 @@ final class UploadServiceTest extends IntegrationTestCase
     /**
      * addFormat()'s own getFormatIdByImageAndExt()-then-branch: a first
      * call for a given (image, ext) pair inserts a new
-     * piwigo_image_format row ('add'); a second call for the exact same
+     * image_format row ('add'); a second call for the exact same
      * pair updates that same row's filesize in place instead of inserting
      * a duplicate ('update') -- neither status was exercised by any
      * existing test before this one (only the two disabled-formats/

@@ -24,7 +24,7 @@ use Piwigo\Tests\Support\EventDispatcherTestFactory;
  * real DB connection ('themes' row set) and a real on-disk theme
  * directory (checkThemeInstalled() does a genuine file_exists()) --
  * Integration, not Unit, matching this repo's own established split. The
- * fixture's own piwigo_themes table is empty (confirmed live, same fact
+ * fixture's own themes table is empty (confirmed live, same fact
  * UserServiceTest's own comments note), and 'default' is the one real
  * theme directory this repo ships (themes/default/themeconf.inc.php) --
  * every row this file inserts is cleaned up in its own test's finally
@@ -76,7 +76,7 @@ final class ThemeCatalogTest extends IntegrationTestCase
 
     public function test_get_pwg_themes_skips_a_row_whose_name_is_null(): void
     {
-        // piwigo_themes.name is a nullable column (schema-confirmed) --
+        // themes.name is a nullable column (schema-confirmed) --
         // is_string($name) is a real runtime guard against exactly this,
         // not defensive padding.
         $this->conn->executeStatement(
@@ -89,7 +89,7 @@ final class ThemeCatalogTest extends IntegrationTestCase
             $this->conn->executeStatement('DELETE FROM ' . 'themes' . " WHERE id = 'broken-theme'");
         }
 
-        // The fixture's piwigo_themes table is otherwise empty, so a
+        // The fixture's themes table is otherwise empty, so a
         // fully empty result confirms the row was skipped, not merely
         // filtered out for some unrelated reason.
         expect($themes)->toBe([]);

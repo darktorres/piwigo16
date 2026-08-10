@@ -283,8 +283,8 @@ final class FilesystemIntegrityCheckerTest extends IntegrationTestCase
 
     public function test_images_integrity_deletes_image_category_rows_whose_image_no_longer_exists(): void
     {
-        // piwigo_image_category.image_id carries a real ON DELETE CASCADE
-        // FK back to piwigo_images, so a genuine orphan can never arise
+        // image_category.image_id carries a real ON DELETE CASCADE
+        // FK back to images, so a genuine orphan can never arise
         // through normal DB writes (confirmed live: a plain INSERT with a
         // nonexistent image_id is rejected by the FK) -- disabling FK
         // checks just for this insert reproduces the only real way this

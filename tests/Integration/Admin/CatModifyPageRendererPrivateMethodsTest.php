@@ -58,7 +58,7 @@ function catModifyReflect(string $method, int|string $categoryId): string
 }
 
 test('getLocalDir throws when the category id matches no real row', function (): void {
-    // Never a real piwigo_categories id in the fixture (tests/Fixtures/
+    // Never a real categories id in the fixture (tests/Fixtures/
     // piwigo-17.0.sql only seeds ids 1 and 2) or anything any other
     // Integration test file creates.
     $missingId = 999999;

@@ -66,15 +66,57 @@ function imageImagickTestSkipIfUnavailable(): void
     }
 }
 
+/**
+ * Unlike imageImagickTestMakeJpeg() above, this writes a REAL,
+ * fully-opaque alpha channel into the PNG -- a bare `imagepng()` on a
+ * plain truecolor GD image (no imagesavealpha()/imagealphablending()/
+ * imagecolorallocatealpha()) produces a PNG Imagick reads back with no
+ * meaningful per-pixel alpha data to dim at all, confirmed empirically
+ * (`php -r` probe) to make compose()'s own evaluateImage(CHANNEL_ALPHA)
+ * dimming step a silent no-op regardless of the requested opacity.
+ */
+function imageImagickTestMakeAlphaPng(string $path, int $width, int $height, int $r, int $g, int $b): void
+{
+    assert($width > 0 && $height > 0);
+    assert($r >= 0 && $r <= 255);
+    assert($g >= 0 && $g <= 255);
+    assert($b >= 0 && $b <= 255);
+
+    $im = imagecreatetruecolor($width, $height);
+    if ($im === false) {
+        throw new RuntimeException('imagecreatetruecolor() failed building the test fixture image.');
+    }
+    imagesavealpha($im, true);
+    imagealphablending($im, false);
+    $color = imagecolorallocatealpha($im, $r, $g, $b, 0);
+    if ($color === false) {
+        throw new RuntimeException('imagecolorallocatealpha() failed building the test fixture image.');
+    }
+    imagefill($im, 0, 0, $color);
+    imagepng($im, $path);
+}
+
 function imageImagickTestMakeStripes(string $path, int $width, int $height): void
 {
-    // High-frequency vertical-stripe content, unlike the flat single-color
+    // High-frequency checkerboard content, unlike the flat single-color
     // fixtures above: resize()'s pre-halving pass and write()'s chroma
     // subsampling factors are both no-ops (byte-identical output either
     // way) on a flat color -- there's no spatial/color detail for either
     // to actually discard or blend differently. Real edges are needed to
     // make any difference observable, same reasoning as the sharpen
     // fixture below.
+    //
+    // Real gap, found via mutation testing: an earlier version of this
+    // fixture varied color along X only (pure vertical stripes, constant
+    // down each column) -- every row was then identical to every other
+    // row, so any mutation affecting ONLY the pre-halving pass's height
+    // argument (scaleImage()'s intdiv($this->get_height(), 2) divisor)
+    // was structurally invisible no matter what final assertion a caller
+    // made, confirmed empirically (hand-mutated 2->1 and 2->3, reran the
+    // real byte-for-byte comparison in imageImagickTestAssertPrehalving(),
+    // output stayed identical both times). Varying color along BOTH axes
+    // (a checkerboard, not stripes) gives every dimension-scaling mutation
+    // real pixel content to lose or distort.
     assert($width > 0 && $height > 0);
 
     $im = imagecreatetruecolor($width, $height);
@@ -86,9 +128,11 @@ function imageImagickTestMakeStripes(string $path, int $width, int $height): voi
     if ($red === false || $blue === false) {
         throw new RuntimeException('imagecolorallocate() failed building the striped test fixture image.');
     }
-    for ($x = 0; $x < $width; $x++) {
-        $color = intdiv($x, 4) % 2 === 0 ? $red : $blue;
-        imageline($im, $x, 0, $x, $height - 1, $color);
+    for ($y = 0; $y < $height; $y++) {
+        for ($x = 0; $x < $width; $x++) {
+            $color = (intdiv($x, 4) + intdiv($y, 4)) % 2 === 0 ? $red : $blue;
+            imagesetpixel($im, $x, $y, $color);
+        }
     }
     imagejpeg($im, $path);
 }
@@ -459,6 +503,17 @@ test('resize accepts real float width/height without a TypeError', function (): 
 // dimension/pre-halving/interlace/subsampling behavior around it is
 // already covered by the sibling tests above and below.
 
+// [Mutation] Two RemoveDoubleCast mutants -- resize()'s Line 103
+// `3.0 * (float) $width` and compose()'s Line 147
+// `(float) $opacity / 100.0` -- are both genuinely inert regardless of
+// fixture or assertion precision: $width/$opacity are declared
+// `int|float`, and PHP's arithmetic already coerces an int operand to
+// float the moment it's combined with a float literal (`3.0`/`100.0`),
+// with or without an explicit `(float)` cast. Verified empirically
+// (hand-removed each cast in turn, reran the full suite including the
+// byte-exact `md5_file()` comparisons below -- zero difference in either
+// case) rather than assumed from the type declaration alone.
+
 test('resize\'s pre-halving pass lands on the exact halved intermediate size, not just the right final dimensions', function (): void {
     imageImagickTestSkipIfUnavailable();
 
@@ -491,15 +546,29 @@ test('resize takes the pre-halving path once the source exceeds 3x the target wi
 test('resize does not take the pre-halving path when only the width is even', function (): void {
     imageImagickTestSkipIfUnavailable();
 
+    // Real gap, found via mutation testing: the target here was
+    // originally 40x24 (a ~15x downscale ratio from 600) -- at that
+    // ratio, ImageMagick's own internal Lanczos reduction already
+    // converges the "wrongly triggered" and "correctly skipped" outputs
+    // to byte-identical, the exact same convergence zone the
+    // "lands on the exact halved intermediate size" test's own comment
+    // documents and deliberately avoids with a moderate ~4x ratio. A
+    // real DecrementInteger on this height check's own `% 2` (to `% 1`,
+    // always true) survived here for that reason -- 150x90 (also a ~4x
+    // ratio, matching the already-proven-distinguishing zone) is chosen
+    // for the same reason.
     // 600 is even but 361 is odd -- both dimensions must be even.
-    imageImagickTestAssertPrehalving(600, 361, 40, 24, false);
+    imageImagickTestAssertPrehalving(600, 361, 150, 90, false);
 });
 
 test('resize does not take the pre-halving path when only the height is even', function (): void {
     imageImagickTestSkipIfUnavailable();
 
+    // Same ~4x-ratio fix as the sibling "only the width is even" test
+    // above, for the identical reason (the original 40x24 target fell
+    // into ImageMagick's own large-ratio Lanczos-convergence zone).
     // 360 is even but 601 is odd -- both dimensions must be even.
-    imageImagickTestAssertPrehalving(601, 360, 40, 24, false);
+    imageImagickTestAssertPrehalving(601, 360, 150, 90, false);
 });
 
 test('resize\'s pre-halving pass halves by exactly /2, verified with dimensions not evenly divisible by 3', function (): void {
@@ -553,10 +622,21 @@ test('compose dims the overlay when opacity is 99, one below the threshold', fun
 test('compose dims the overlay alpha by exactly opacity/100 before compositing', function (): void {
     imageImagickTestSkipIfUnavailable();
 
+    // Real gap, found via mutation testing: an earlier version of this test
+    // used a JPEG overlay (imageImagickTestMakeJpeg()) here -- JPEG has NO
+    // alpha channel at all, so BOTH the real pipeline and this test's own
+    // hand-reconstructed reference pipeline dim nothing, making the exact
+    // md5 match below true regardless of the divisor's actual value or even
+    // whether the dimming call runs at all (confirmed empirically:
+    // hand-mutated the source's `100.0` divisor to `99.0`/`101.0` and
+    // removed the `(float)` cast, reran, all three mutations left this
+    // test still passing). A PNG overlay with a REAL, explicitly-enabled
+    // alpha channel (imageImagickTestMakeAlphaPng()) makes the exact
+    // reference-pipeline comparison actually exercise the divisor's value.
     $basePath = imageImagickTestMarker() . '/base-dim.jpg';
-    $overlayPath = imageImagickTestMarker() . '/overlay-dim.jpg';
+    $overlayPath = imageImagickTestMarker() . '/overlay-dim.png';
     imageImagickTestMakeJpeg($basePath, 100, 100, 0, 0, 0);
-    imageImagickTestMakeJpeg($overlayPath, 100, 100, 255, 255, 255);
+    imageImagickTestMakeAlphaPng($overlayPath, 100, 100, 255, 255, 255);
 
     $base = new ImageImagick($basePath);
     $overlay = new PwgImage($overlayPath, new CurrentLogger(), new EventDispatcher(), new CurrentConfig(), 'imagick');
@@ -580,6 +660,39 @@ test('compose dims the overlay alpha by exactly opacity/100 before compositing',
     $rawBase->writeImage($expectedPath);
 
     expect(md5_file($actualPath))->toBe(md5_file($expectedPath));
+});
+
+test('compose\'s alpha-dimming step genuinely changes the composited pixel color, not just the encoded bytes', function (): void {
+    imageImagickTestSkipIfUnavailable();
+
+    // Real gap, found via mutation testing: same underlying issue the
+    // sibling "dims the overlay alpha by exactly opacity/100" test above
+    // was just fixed for (see its own comment) -- a JPEG overlay has NO
+    // alpha channel, so evaluateImage(..., CHANNEL_ALPHA) is a no-op on
+    // one regardless of the divisor or even whether the call runs at all
+    // (verified via `php -r` probe). This test complements that exact
+    // byte-comparison one with a plain-English pixel-value sanity check:
+    // an opaque white overlay dissolved onto a black base at opacity=37
+    // composites to a real partial blend (~rgb(94,94,94), matching
+    // 255*0.37) when the dimming genuinely runs, vs full-opacity white
+    // (255,255,255) when it's skipped entirely -- guards against the case
+    // where a future change breaks both the real pipeline and this file's
+    // own hand-reconstructed reference pipeline in the same way.
+    $basePath = imageImagickTestMarker() . '/base-alpha-dim.jpg';
+    $overlayPath = imageImagickTestMarker() . '/overlay-alpha-dim.png';
+    imageImagickTestMakeJpeg($basePath, 50, 50, 0, 0, 0);
+    imageImagickTestMakeAlphaPng($overlayPath, 50, 50, 255, 255, 255);
+
+    $base = new ImageImagick($basePath);
+    $overlay = new PwgImage($overlayPath, new CurrentLogger(), new EventDispatcher(), new CurrentConfig(), 'imagick');
+
+    $result = $base->compose($overlay, 0, 0, 37);
+
+    expect($result)->toBeTrue();
+    $pixel = $base->image->getImagePixelColor(25, 25)->getColor();
+    expect($pixel['r'])->toBeGreaterThan(50)->toBeLessThan(140)
+        ->and($pixel['g'])->toBe($pixel['r'])
+        ->and($pixel['b'])->toBe($pixel['r']);
 });
 
 test('compose accepts real float x/y without a TypeError', function (): void {

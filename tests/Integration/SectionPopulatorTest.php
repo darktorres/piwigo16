@@ -348,14 +348,14 @@ final class SectionPopulatorTest extends IntegrationTestCase
 
     public function test_populate_applies_the_categorys_own_custom_image_order(): void
     {
-        $this->conn->executeStatement("UPDATE piwigo_categories SET image_order = 'name ASC' WHERE id = 1");
+        $this->conn->executeStatement("UPDATE categories SET image_order = 'name ASC' WHERE id = 1");
         $_SERVER['SCRIPT_NAME'] = '/piwigo17/index.php';
         $_SERVER['PATH_INFO'] = '/category/1';
 
         try {
             $this->makePopulator()->populate();
         } finally {
-            $this->conn->executeStatement('UPDATE piwigo_categories SET image_order = NULL WHERE id = 1');
+            $this->conn->executeStatement('UPDATE categories SET image_order = NULL WHERE id = 1');
         }
 
         $ctx = $this->sectionContextRegistry->current();
@@ -366,7 +366,7 @@ final class SectionPopulatorTest extends IntegrationTestCase
     public function test_populate_denies_access_when_a_tag_has_zero_linked_images(): void
     {
         $this->conn->executeStatement(
-            "INSERT INTO piwigo_tags (id, name, url_name, lastmodified) VALUES (4, 'empty-tag', 'empty-tag', NOW())"
+            "INSERT INTO tags (id, name, url_name, lastmodified) VALUES (4, 'empty-tag', 'empty-tag', NOW())"
         );
         $_SERVER['SCRIPT_NAME'] = '/piwigo17/index.php';
         $_SERVER['PATH_INFO'] = '/tags/4';
@@ -379,7 +379,7 @@ final class SectionPopulatorTest extends IntegrationTestCase
             // throws its own 401 HTML page directly rather than redirecting.
             self::assertSame(401, $e->response()->getStatusCode());
         } finally {
-            $this->conn->executeStatement('DELETE FROM piwigo_tags WHERE id = 4');
+            $this->conn->executeStatement('DELETE FROM tags WHERE id = 4');
         }
     }
 
@@ -430,7 +430,7 @@ final class SectionPopulatorTest extends IntegrationTestCase
     public function test_populate_deletes_all_favorites_and_redirects(): void
     {
         $this->conn->executeStatement(
-            'INSERT INTO piwigo_favorites (user_id, image_id) VALUES (3, 2)'
+            'INSERT INTO favorites (user_id, image_id) VALUES (3, 2)'
         );
         $_SERVER['SCRIPT_NAME'] = '/piwigo17/index.php';
         $_SERVER['PATH_INFO'] = '/favorites';
@@ -448,7 +448,7 @@ final class SectionPopulatorTest extends IntegrationTestCase
             self::assertStringContainsString('index.php/favorites', $response->getHeaderLine('Location'));
         }
 
-        $remaining = $this->conn->fetchOne('SELECT COUNT(*) FROM piwigo_favorites WHERE user_id = 3');
+        $remaining = $this->conn->fetchOne('SELECT COUNT(*) FROM favorites WHERE user_id = 3');
         self::assertSame(0, $remaining);
     }
 

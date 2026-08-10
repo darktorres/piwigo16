@@ -171,13 +171,13 @@ final class UserBootstrapTest extends IntegrationTestCase
 
             self::assertEquals(Username::from($remoteUser), CurrentUserTestFactory::get()->get()->username);
             $row = $this->conn->fetchAssociative(
-                'SELECT id, username FROM piwigo_users WHERE username = ?',
+                'SELECT id, username FROM users WHERE username = ?',
                 [$remoteUser]
             );
             self::assertIsArray($row);
             self::assertSame($remoteUser, $row['username']);
         } finally {
-            $this->conn->executeStatement('DELETE FROM piwigo_users WHERE username = ?', [$remoteUser]);
+            $this->conn->executeStatement('DELETE FROM users WHERE username = ?', [$remoteUser]);
         }
     }
 
@@ -193,7 +193,7 @@ final class UserBootstrapTest extends IntegrationTestCase
         self::assertEquals(Username::from('regular_user'), CurrentUserTestFactory::get()->get()->username);
         // No 2nd row was created for an account that already exists.
         $count = $this->conn->fetchOne(
-            'SELECT COUNT(*) FROM piwigo_users WHERE username = ?',
+            'SELECT COUNT(*) FROM users WHERE username = ?',
             ['regular_user']
         );
         self::assertSame(1, $count);
@@ -221,7 +221,7 @@ final class UserBootstrapTest extends IntegrationTestCase
         $hash = (new PasswordService(new PasswordRepository(EntityManagerFactory::build($this->conn)), new DeploymentPolicy()))->hash($plainPassword);
         $username = 'upload_async_user_' . bin2hex(random_bytes(4));
         $this->conn->executeStatement(
-            'INSERT INTO piwigo_users (username, password, mail_address) VALUES (?, ?, NULL)',
+            'INSERT INTO users (username, password, mail_address) VALUES (?, ?, NULL)',
             [$username, $hash]
         );
         $newUserId = (int) $this->conn->lastInsertId();
@@ -255,7 +255,7 @@ final class UserBootstrapTest extends IntegrationTestCase
 
             self::assertSame('pwg.images.uploadAsync', $_SESSION['connected_with'] ?? null);
         } finally {
-            $this->conn->executeStatement('DELETE FROM piwigo_users WHERE id = ?', [$newUserId]);
+            $this->conn->executeStatement('DELETE FROM users WHERE id = ?', [$newUserId]);
         }
     }
 }

@@ -444,7 +444,7 @@ test('tryAcquireLoungeLock persists a real, JSON-round-trippable value, and clea
         $cached = $repo->find(ImageId::from(1));
         expect($cached)->not->toBeNull();
 
-        $conn->createQueryBuilder()->delete('piwigo_config')
+        $conn->createQueryBuilder()->delete('config')
             ->where('param = :p')->setParameter('p', 'empty_lounge_running')
             ->executeStatement();
 
@@ -459,7 +459,7 @@ test('tryAcquireLoungeLock persists a real, JSON-round-trippable value, and clea
             $refetched = $repo->find(ImageId::from(1));
             expect($refetched)->not->toBe($cached);
         } finally {
-            $conn->createQueryBuilder()->delete('piwigo_config')
+            $conn->createQueryBuilder()->delete('config')
                 ->where('param = :p')->setParameter('p', 'empty_lounge_running')
                 ->executeStatement();
         }

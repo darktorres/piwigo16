@@ -639,8 +639,7 @@ final class WsCategoriesMutationTest extends ContractTestCase
         self::assertArrayHasKey('url', $result);
 
         $representativeId = $this->conn->fetchOne('SELECT representative_picture_id FROM ' . 'categories' . ' WHERE id = ?', [$categoryId]);
-        self::assertIsNumeric($representativeId);
-        self::assertSame($imageId, (int) $representativeId, 'the only associated image must become the new representative');
+        self::assertSame($imageId, $representativeId, 'the only associated image must become the new representative');
     }
 
     // delete()'s and move()'s own `preg_split() === false` guards (both the
@@ -939,10 +938,9 @@ final class WsCategoriesMutationTest extends ContractTestCase
             // expected in nb_images_becoming_orphan.
             $sharedImageIds = array_slice($imageIds, 0, 4);
             foreach ($sharedImageIds as $imageId) {
-                self::assertIsNumeric($imageId);
                 $this->conn->executeStatement(
                     'INSERT INTO ' . 'image_category' . ' (image_id, category_id) VALUES (?, ?)',
-                    [(int) $imageId, 1]
+                    [$imageId, 1]
                 );
             }
 

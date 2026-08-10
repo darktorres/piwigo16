@@ -43,20 +43,16 @@ final class ExtendForTemplatesPageRenderer
         $accessControl->checkStatus(AccessLevel::Administrator);
 
         $tpl_extension = [];
-        // extentsForTemplates() defaults to [] when never configured, so
-        // this loop is naturally a no-op then -- no separate presence
-        // check needed.
+        // extentsForTemplates defaults to [] when never configured, so this
+        // loop is naturally a no-op then -- no separate presence check
+        // needed. Every entry is already a validated TemplateExtension, so
+        // no further shape-checking is needed here either.
         foreach ($currentConfig->extentsForTemplates as $tpl_extension_file => $tpl_extension_conditions) {
-            if (is_string($tpl_extension_file) && is_array($tpl_extension_conditions)
-                && isset($tpl_extension_conditions[0], $tpl_extension_conditions[1], $tpl_extension_conditions[2])
-                && is_string($tpl_extension_conditions[0]) && is_string($tpl_extension_conditions[1])
-                && is_string($tpl_extension_conditions[2])) {
-                $tpl_extension[$tpl_extension_file] = [
-                    $tpl_extension_conditions[0],
-                    $tpl_extension_conditions[1],
-                    $tpl_extension_conditions[2],
-                ];
-            }
+            $tpl_extension[$tpl_extension_file] = [
+                $tpl_extension_conditions->handle,
+                $tpl_extension_conditions->param,
+                $tpl_extension_conditions->theme,
+            ];
         }
         $new_extensions = AdminUiHelper::getExtents($paths);
 

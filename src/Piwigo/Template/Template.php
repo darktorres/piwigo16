@@ -17,6 +17,7 @@ use Override;
 use Piwigo\Auth\AccessLevelChecker;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\CurrentConfigService;
+use Piwigo\Config\TemplateExtension;
 use Piwigo\Core\AdminContext;
 use Piwigo\Core\AppInfo;
 use Piwigo\Core\DeviceHelper;
@@ -310,7 +311,17 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
         $this->smarty->assign('lang_info', $lang_info);
 
         if (! $this->adminContext->isActive()) {
-            $this->set_extents($this->currentConfig->extentsForTemplates, $this->paths->root . 'template-extension/', true, $theme);
+            // set_extents() itself stays untouched -- it's also called by
+            // set_extent() with an arbitrary, genuinely-untyped $param a
+            // third-party plugin supplies, so its own polymorphic
+            // is_array()/is_string() handling is load-bearing, not legacy
+            // cruft. Unwrap back to the raw [handle, param, theme] shape it
+            // already expects here, at this one config-fed call site.
+            $rawExtents = array_map(
+                static fn (TemplateExtension $e): array => [$e->handle, $e->param, $e->theme],
+                $this->currentConfig->extentsForTemplates,
+            );
+            $this->set_extents($rawExtents, $this->paths->root . 'template-extension/', true, $theme);
         }
     }
 

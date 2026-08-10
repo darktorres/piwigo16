@@ -1175,7 +1175,7 @@ final class ConfigurationSubController implements AdminSubControllerInterface
                 saveSuccess: null,
                 derivatives: $pderivatives,
                 ferrors: $errors + $derivative_errors,
-                resizeQuality: $post['resize_quality'],
+                resizeQuality: is_string($post['resize_quality']) ? $post['resize_quality'] : null,
                 sizes: $sizes,
             ));
             $this->sizesLoadedInTpl = true;

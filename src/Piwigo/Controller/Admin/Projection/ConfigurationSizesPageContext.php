@@ -20,6 +20,14 @@ use Piwigo\Core\TemplatePageContext;
  * 3 (matching the original's own independent per-field `isset($post[...])`
  * loop) even though in practice `$original_fields` always includes the 3
  * hidden-input fields `configuration_sizes.tpl` reads unguarded.
+ *
+ * `$resizeQuality` is the scalar counterpart of `$sizes`/`$derivatives`/
+ * `$ferrors` above -- also a raw, unvalidated POST-back echo for the
+ * validation-failure redisplay (the range check at `processSizes()`'s
+ * own out-of-range check runs directly against the raw value with no
+ * prior cast), but stays `?string` rather than a nested
+ * `array<string, mixed>|null` shape since it's a single field, not a
+ * record.
  */
 final readonly class ConfigurationSizesPageContext implements TemplatePageContext
 {
@@ -32,7 +40,7 @@ final readonly class ConfigurationSizesPageContext implements TemplatePageContex
         public ?string $saveSuccess,
         public ?array $derivatives,
         public ?array $ferrors,
-        public mixed $resizeQuality,
+        public ?string $resizeQuality,
         public ?array $sizes,
     ) {}
 

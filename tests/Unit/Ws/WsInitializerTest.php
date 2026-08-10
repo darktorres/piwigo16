@@ -1,0 +1,107 @@
+<?php
+
+declare(strict_types=1);
+
+use LogicException;
+use Piwigo\Core\Kernel;
+use Piwigo\Core\Paths;
+use Piwigo\Ws\Protocol\PwgJsonEncoder;
+use Piwigo\Ws\Protocol\PwgRestEncoder;
+use Piwigo\Ws\Protocol\PwgRestRequestHandler;
+use Piwigo\Ws\Protocol\PwgSerialPhpEncoder;
+use Piwigo\Ws\Protocol\PwgXmlRpcEncoder;
+use Piwigo\Ws\WsInitializer;
+
+/**
+ * Piwigo\Ws\WsInitializer -- builds the per-request PwgServer and
+ * registers the WS default event handlers. Resolved via
+ * `Kernel::container()->get()`: its own 8 constructor deps include
+ * `WsDefaultMethods`/`PwgCore` (each themselves wrapping ~10-25 further
+ * domain Services), so hand-constructing that whole graph would be
+ * strictly worse than trusting the real, already-tested container
+ * wiring -- same rationale as `UpdatesSubControllerTest.php`'s own
+ * `Kernel::container()->get()` use for a Controller/Admin SubController,
+ * applied here to a Ws-layer class instead. No dedicated Integration/
+ * Browser spec of its own -- `WsController` (every real WS HTTP request)
+ * calls `init()` transitively.
+ *
+ * `init()`'s own event-handler registrations (`WsAddMethods`/
+ * `WsInvokeAllowed`/`GetHistory`) are not asserted on directly here --
+ * they wire `WsDefaultMethods::register()`/`WsHelper::isInvokeAllowed()`/
+ * `PwgCore::historyGet()`, each already deferred/covered on their own
+ * terms elsewhere in the B4 bucket.
+ */
+function wsInitializerTestGet(): WsInitializer
+{
+    $wsInitializer = Kernel::container()->get(WsInitializer::class);
+    if (! $wsInitializer instanceof WsInitializer) {
+        throw new LogicException('Container returned an unexpected type for ' . WsInitializer::class);
+    }
+
+    return $wsInitializer;
+}
+
+beforeEach(function (): void {
+    Kernel::boot(Paths::fromRoot(sys_get_temp_dir()));
+});
+
+afterEach(function (): void {
+    unset($_GET['format']);
+    Kernel::reset();
+});
+
+test('init defaults to a REST request handler and REST response encoder when no format is requested', function (): void {
+    unset($_GET['format']);
+
+    $server = wsInitializerTestGet()->init();
+
+    expect($server->_requestFormat)->toBe('rest')
+        ->and($server->_requestHandler)->toBeInstanceOf(PwgRestRequestHandler::class)
+        ->and($server->_responseFormat)->toBe('rest')
+        ->and($server->_responseEncoder)->toBeInstanceOf(PwgRestEncoder::class);
+});
+
+test('init memoizes the built PwgServer across repeated calls on the same instance', function (): void {
+    $wsInitializer = wsInitializerTestGet();
+
+    $first = $wsInitializer->init();
+    $second = $wsInitializer->init();
+
+    expect($second)->toBe($first);
+});
+
+test('init selects the response encoder matching ?format=json', function (): void {
+    $_GET['format'] = 'json';
+
+    $server = wsInitializerTestGet()->init();
+
+    expect($server->_responseFormat)->toBe('json')
+        ->and($server->_responseEncoder)->toBeInstanceOf(PwgJsonEncoder::class);
+});
+
+test('init selects the response encoder matching ?format=php', function (): void {
+    $_GET['format'] = 'php';
+
+    $server = wsInitializerTestGet()->init();
+
+    expect($server->_responseFormat)->toBe('php')
+        ->and($server->_responseEncoder)->toBeInstanceOf(PwgSerialPhpEncoder::class);
+});
+
+test('init selects the response encoder matching ?format=xmlrpc', function (): void {
+    $_GET['format'] = 'xmlrpc';
+
+    $server = wsInitializerTestGet()->init();
+
+    expect($server->_responseFormat)->toBe('xmlrpc')
+        ->and($server->_responseEncoder)->toBeInstanceOf(PwgXmlRpcEncoder::class);
+});
+
+test('init leaves the response encoder null for an unrecognized format', function (): void {
+    $_GET['format'] = 'not-a-real-format';
+
+    $server = wsInitializerTestGet()->init();
+
+    expect($server->_responseFormat)->toBe('not-a-real-format')
+        ->and($server->_responseEncoder)->toBeNull();
+});

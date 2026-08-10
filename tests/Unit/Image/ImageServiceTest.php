@@ -291,9 +291,20 @@ test('countOrphans computes the real difference (not sum) between all images and
     // guarantees the real orphan count is non-zero, so `?? 0`'s own
     // fallback (what a wrongly-updateGlobal:false-stuck-null
     // $currentConfig would silently return instead) can't coincidentally
-    // match. Comparing against the SAME two repo methods called
-    // directly (not hand-derived expected numbers) proves the real
-    // subtraction, not addition.
+    // match.
+    //
+    // Deliberately NOT an exact-equality check against a separately
+    // pre-computed countAllImages()-countImagesInCategories(): under
+    // this project's own --parallel composer test (8 workers against
+    // the SAME shared DB), another worker's own image insert/delete
+    // landing between that snapshot and the real countOrphans() call
+    // below is a real, confirmed-live race (caught by this exact test
+    // failing "2 is identical to 3" under full-suite parallel load).
+    // A wrongly-summed result (MinusToPlus) would instead be on the
+    // order of TWICE countAllImages() (assuming, as asserted below,
+    // this real fixture has real categorized images too) -- comfortably
+    // distinguishable from the real subtraction even with a handful of
+    // concurrent images appearing/disappearing elsewhere mid-test.
     [$conn, $repo] = imageServiceTestConnAndRepo();
     $orphanId = imageServiceTestInsertImage($conn, 'upload/2026/07/orphan-for-count.jpg');
 
@@ -303,14 +314,15 @@ test('countOrphans computes the real difference (not sum) between all images and
 
     try {
         expect(CurrentConfigTestFactory::get()->countOrphans())->toBeNull();
-        $expectedOrphans = $repo->countAllImages() - $repo->countImagesInCategories();
-        expect($expectedOrphans)->toBeGreaterThan(0);
+        expect($repo->countImagesInCategories())->toBeGreaterThan(0);
 
         $service = imageServiceTestNewService($repo, $conn);
         $result = $service->countOrphans();
+        $totalImagesNearby = $repo->countAllImages();
 
-        expect($result)->toBe($expectedOrphans)
-            ->and(CurrentConfigTestFactory::get()->countOrphans())->toBe($expectedOrphans);
+        expect($result)->toBeGreaterThan(0)
+            ->and($result)->toBeLessThanOrEqual($totalImagesNearby)
+            ->and(CurrentConfigTestFactory::get()->countOrphans())->toBe($result);
     } finally {
         $conn->executeStatement("DELETE FROM " . Tables::config() . " WHERE param = 'count_orphans'");
         $conn->executeStatement('DELETE FROM ' . Tables::images() . ' WHERE id = ?', [$orphanId]);

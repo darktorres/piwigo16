@@ -61,7 +61,7 @@ test('boot throws instead of silently keeping a stale Paths binding when re-call
     Kernel::boot(Paths::fromRoot('/tmp/piwigo-kernel-boot-test-a'));
 
     Kernel::boot(Paths::fromRoot('/tmp/piwigo-kernel-boot-test-b'));
-})->throws(LogicException::class, 'Kernel already booted with a different Paths root (/tmp/piwigo-kernel-boot-test-a/) -- call Kernel::reset() first to rebind it (e.g. between tests).');
+})->throws(LogicException::class, 'Kernel already booted with a different Paths root (/tmp/piwigo-kernel-boot-test-a/) -- reset the Kernel (call reset() first) to rebind it (e.g. between tests).');
 
 test('boot does not throw when a Paths-less boot is later followed by a real Paths root', function (): void {
     // Mirrors Tests\Support\KernelContainerOverride::with(), which

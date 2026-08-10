@@ -62,7 +62,7 @@ final class Kernel
                 throw new LogicException(
                     'Kernel already booted with a different Paths root ('
                     . self::$boundPaths->root
-                    . ') -- call Kernel::reset() first to rebind it (e.g. between tests).'
+                    . ') -- reset the Kernel (call reset() first) to rebind it (e.g. between tests).'
                 );
             }
             return;

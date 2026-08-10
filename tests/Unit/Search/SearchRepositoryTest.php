@@ -14,7 +14,7 @@ use Piwigo\Search\SearchRepository;
  * Piwigo\Search\SearchRepository -- has its own dedicated
  * tests/Integration/SearchRepositoryTest.php; this ports its 21 tests
  * down to the Unit suite via the real-DB-no-HTTP ImageRepositoryTest.php
- * pattern. `piwigo_search` starts empty in the fixture.
+ * pattern. `search` starts empty in the fixture.
  *
  * findImageIdsMatching()/expressionBuilder() aren't covered by this
  * repository's own Integration spec -- both are exercised transitively

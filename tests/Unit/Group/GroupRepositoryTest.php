@@ -207,7 +207,7 @@ test('update() with no fields is a no-op', function (): void {
 });
 
 test('update() on a nonexistent group id is a silent no-op', function (): void {
-    // 999999 isn't in the fixture (piwigo_groups has ids 1-3 only) --
+    // 999999 isn't in the fixture (groups has ids 1-3 only) --
     // find() returns null, and update() must return without throwing
     // rather than crash on a null entity.
     groupTestRepo()->update(GroupId::from(999999), ['name' => 'should-never-be-written']);

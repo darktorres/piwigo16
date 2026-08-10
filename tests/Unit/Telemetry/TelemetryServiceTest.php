@@ -22,7 +22,7 @@ use Piwigo\Tests\Support\DqlPlatformQueryTestFactory;
  * 4 confirmed-equivalent mutations, not individually tested:
  * resolveInstallId()'s own `$entry->value !== ''` raw-empty-string check
  * is unreachable through any real write path -- confirmed live:
- * `piwigo_config.value` is a real MySQL JSON column, which rejects an
+ * `config.value` is a real MySQL JSON column, which rejects an
  * empty-string insert outright ("Invalid JSON text: The document is
  * empty"), and every real write goes through upsert()'s own
  * json_encode() anyway; `json_decode($entry->value, true)`'s

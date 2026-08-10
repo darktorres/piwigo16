@@ -579,10 +579,10 @@ test('search() maps every optional column when a row actually has them populated
     // maps a genuinely non-null value correctly, not just its null
     // fallback.
     $conn = DbConnection::build();
-    // A real, test-owned piwigo_search row -- history.search_id has a
-    // real `fk_search_search_created_by`-adjacent FK onto piwigo_search.id
+    // A real, test-owned search row -- history.search_id has a
+    // real `fk_search_search_created_by`-adjacent FK onto search.id
     // (ON DELETE SET NULL, but INSERT/UPDATE still enforces the row
-    // exists). A hardcoded literal id here isn't safe: piwigo_search is
+    // exists). A hardcoded literal id here isn't safe: search is
     // real, shared, high-churn state written by every SearchRepositoryTest.php/
     // SearchServiceTest.php test in this same suite, so any specific id
     // is only ever transiently occupied -- confirmed live (a genuine

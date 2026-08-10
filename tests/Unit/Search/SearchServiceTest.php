@@ -1000,7 +1000,7 @@ test('getQuickSearchResultsNoCache() finds a category-named match', function ():
     // fixture) -- exercises qsearchGetCategories(), which filters
     // categories via $user['forbidden_categories'] instead of an INNER
     // JOIN against user_cache_categories, end to end. Category 2 holds
-    // images 4 and 5 (piwigo_image_category fixture).
+    // images 4 and 5 (image_category fixture).
     $results = searchServiceTestService()->getQuickSearchResultsNoCache('Nested', []);
 
     expect($results['items'])->toBe([4, 5]);

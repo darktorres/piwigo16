@@ -520,7 +520,7 @@ test('pwgImageInfos reads real width/height/filesize from a generated image', fu
 test('pwgImageInfos returns null width/height when getimagesize() can\'t read the file, instead of throwing', function (): void {
     // Every real upload of a non-picture file allowed via
     // CurrentConfig::uploadFormAllTypes() reaches this exact path, and
-    // piwigo_images.width/height are nullable columns precisely for it.
+    // images.width/height are nullable columns precisely for it.
     $path = upload_service_test_marker() . '/not-an-image.png';
     file_put_contents($path, 'definitely not a real PNG');
 

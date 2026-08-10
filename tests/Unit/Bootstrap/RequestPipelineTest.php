@@ -23,6 +23,13 @@ use Piwigo\Core\Paths;
  * check (`$result->status !== RouteMatchStatus::Found`) returns a plain
  * 404 text response immediately -- no controller is ever resolved or
  * invoked.
+ *
+ * `SessionMiddleware` really does call `session_start()` here (see
+ * `SessionMiddlewareTest.php`'s own docblock -- it genuinely activates
+ * under Pest's CLI runner, not a silent no-op), so this closes the
+ * session in `finally` via `session_write_close()` -- confirmed live
+ * that leaving it active breaks `CsrfServiceTest.php`'s own
+ * `session_id()` calls whenever both files land in the same worker.
  */
 function requestPipelineTestRrmdir(string $dir): void
 {
@@ -51,6 +58,9 @@ test('handle returns a real 404 for a path matching no real route, without invok
         expect($response->getStatusCode())->toBe(404)
             ->and((string) $response->getBody())->toBe('Not Found');
     } finally {
+        if (session_status() === PHP_SESSION_ACTIVE) {
+            session_write_close();
+        }
         Kernel::reset();
         requestPipelineTestRrmdir($root);
     }

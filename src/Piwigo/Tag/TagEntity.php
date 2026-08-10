@@ -9,15 +9,13 @@ use Piwigo\Common\ValueObject\SqlDateTime;
 use Piwigo\Common\ValueObject\TagId;
 
 /**
- * Maps the `tags` table (`piwigo_tags` once Piwigo\Db\TablePrefixListener
- * applies db_prefix at metadata-load time). Real shape: id smallint PK
- * auto-increment, name varchar(255), url_name varchar(255), lastmodified
- * TIMESTAMP (DB-managed ON UPDATE CURRENT_TIMESTAMP -- set explicitly to
- * Env::now() on insert() only, matching pre-ORM behavior; never touched on
- * any update method since none exists). `lastmodified` is
- * `SqlDateTime`-typed -- matches Tag\Projection\Tag's own
- * plain-string convention at the DTO level ("no real consumer needs
- * anything but the raw DB DATETIME string form").
+ * Maps the `tags` table. Real shape: id smallint PK auto-increment, name
+ * varchar(255), url_name varchar(255), lastmodified TIMESTAMP (DB-managed ON
+ * UPDATE CURRENT_TIMESTAMP -- set explicitly to Env::now() on insert() only,
+ * matching pre-ORM behavior; never touched on any update method since none
+ * exists). `lastmodified` is `SqlDateTime`-typed -- matches
+ * Tag\Projection\Tag's own plain-string convention at the DTO level ("no real
+ * consumer needs anything but the raw DB DATETIME string form").
  *
  * `id`'s `tag_id` column type is a custom Doctrine Type
  * ({@see \Piwigo\Db\Type\TagIdType}, registered in

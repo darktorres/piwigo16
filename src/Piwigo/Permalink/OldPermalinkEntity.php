@@ -10,12 +10,11 @@ use Piwigo\Common\ValueObject\Permalink;
 use Piwigo\Common\ValueObject\SqlDateTime;
 
 /**
- * Maps the `old_permalinks` table (`piwigo_old_permalinks` once
- * Piwigo\Db\TablePrefixListener applies db_prefix at metadata-load time)
- * -- retired album permalinks, kept to block reuse and shown on the admin
- * permalinks page. `permalink` is the table's own real PRIMARY KEY (see
- * `install/piwigo_structure-mysql.sql`), not an auto-increment surrogate
- * id, same "application-assigned string id" shape as `Feed\FeedEntity`.
+ * Maps the `old_permalinks` table -- retired album permalinks, kept to block
+ * reuse and shown on the admin permalinks page. `permalink` is the table's own
+ * real PRIMARY KEY (see `install/piwigo_structure-mysql.sql`), not an
+ * auto-increment surrogate id, same "application-assigned string id" shape as
+ * `Feed\FeedEntity`.
  *
  * No dedicated `repositoryClass` -- unlike most entities, this one is
  * queried from `Permalink\PermalinkRepository` alongside the unrelated

@@ -10,14 +10,13 @@ use Piwigo\Common\ValueObject\Permalink;
 use Piwigo\Common\ValueObject\SqlDateTime;
 
 /**
- * Maps the `categories` table (`piwigo_categories` once
- * Piwigo\Db\TablePrefixListener applies db_prefix at metadata-load time).
- * `lastmodified` is `SqlDateTime`-typed -- `NOT NULL DEFAULT
- * CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP` means the DB server
- * always populates a real, well-formed timestamp. `new CategoryEntity(...)`
- * is never constructed in PHP anywhere in this codebase (every real
- * category row is inserted via raw DBAL). `Category\Projection\Category`
- * keeps its own plain-string `lastmodified` convention.
+ * Maps the `categories` table. `lastmodified` is `SqlDateTime`-typed -- `NOT
+ * NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP` means the DB
+ * server always populates a real, well-formed timestamp. `new
+ * CategoryEntity(...)` is never constructed in PHP anywhere in this codebase
+ * (every real category row is inserted via raw DBAL).
+ * `Category\Projection\Category` keeps its own plain-string `lastmodified`
+ * convention.
  *
  * `status` is `CategoryStatus` (native Doctrine `enumType` column), same
  * gotcha as `Piwigo\Users\UserInfoEntity::$status`: `enumType` hydration

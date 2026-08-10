@@ -11,10 +11,8 @@ use Piwigo\Common\ValueObject\ThemeId;
 use Piwigo\Common\ValueObject\UserId;
 
 /**
- * Maps the `user_infos` table (`piwigo_user_infos` once
- * Piwigo\Db\TablePrefixListener applies db_prefix at metadata-load time).
- * `user_id` is the PK, application-assigned (the `users` row's own id --
- * never auto-generated here).
+ * Maps the `user_infos` table. `user_id` is the PK, application-assigned (the
+ * `users` row's own id -- never auto-generated here).
  *
  * `status` is `UserStatus` (native Doctrine `enumType` column), not a
  * plain string. `piwigo_user_infos.status` is a DB-level

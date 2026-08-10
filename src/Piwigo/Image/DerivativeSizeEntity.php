@@ -7,11 +7,10 @@ namespace Piwigo\Image;
 use Doctrine\ORM\Mapping as ORM;
 
 /**
- * Maps the `derivative_size` table (`piwigo_derivative_size` once
- * Piwigo\Db\TablePrefixListener applies db_prefix at metadata-load time).
- * One row per named derivative size (`name` is one of ImageStdParams's own
- * size-type constants, e.g. ImageStdParams::THUMB). The `enabled` column
- * distinguishes enabled from disabled sizes within this single table.
+ * Maps the `derivative_size` table. One row per named derivative size (`name`
+ * is one of ImageStdParams's own size-type constants, e.g.
+ * ImageStdParams::THUMB). The `enabled` column distinguishes enabled from
+ * disabled sizes within this single table.
  * `maxWidth`/`maxHeight`/`maxCrop`/`minWidth`/`minHeight` mirror
  * SizingParams's own fields; `sharpen`/`lastModTime` mirror DerivativeParams's
  * own fields -- together they fully reconstruct a real DerivativeParams/

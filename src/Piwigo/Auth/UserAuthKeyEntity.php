@@ -9,22 +9,20 @@ use Piwigo\Common\ValueObject\SqlDateTime;
 use Piwigo\Common\ValueObject\UserId;
 
 /**
- * Maps the `user_auth_keys` table (`piwigo_user_auth_keys` once
- * Piwigo\Db\TablePrefixListener applies db_prefix at metadata-load time).
- * No `repositoryClass` -- this table has no single natural owner:
- * {@see AuthRepository} owns its `auth_key`-type rows (persistent login),
- * {@see ApiKeyRepository} owns its `api_key`-type rows (personal API
- * keys), same physical table, different lifecycle/owner (both classes'
- * own docblocks already documented this before either converted). Both
- * query this entity directly via DQL through their own EntityManager,
- * matching Group\UserGroupEntity/GroupAccessEntity's own no-owner
- * precedent. `created_on`/`expired_on` are genuine NOT NULL columns
- * (unlike every other datetime-shaped column here) and are `SqlDateTime`-
- * typed -- both real construction sites (AuthRepository::
- * insertAuthKey()/ApiKeyRepository::insert()) trace to an
- * Env::now()-derived value. Every other datetime column stays plain
- * ?string, not \DateTimeImmutable, matching Auth\Projection\ApiKey's own
- * already-documented decision.
+ * Maps the `user_auth_keys` table. No `repositoryClass` -- this table has no
+ * single natural owner: {@see AuthRepository} owns its `auth_key`-type rows
+ * (persistent login), {@see ApiKeyRepository} owns its `api_key`-type rows
+ * (personal API keys), same physical table, different lifecycle/owner (both
+ * classes' own docblocks already documented this before either converted).
+ * Both query this entity directly via DQL through their own EntityManager,
+ * matching Group\UserGroupEntity/GroupAccessEntity's own no-owner precedent.
+ * `created_on`/`expired_on` are genuine NOT NULL columns (unlike every other
+ * datetime-shaped column here) and are `SqlDateTime`- typed -- both real
+ * construction sites (AuthRepository::
+ * insertAuthKey()/ApiKeyRepository::insert()) trace to an Env::now()-derived
+ * value. Every other datetime column stays plain ?string, not
+ * \DateTimeImmutable, matching Auth\Projection\ApiKey's own already-documented
+ * decision.
  */
 #[ORM\Entity]
 #[ORM\Table(name: 'user_auth_keys')]

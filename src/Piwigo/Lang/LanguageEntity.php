@@ -8,10 +8,8 @@ use Doctrine\ORM\Mapping as ORM;
 use Piwigo\Common\ValueObject\LangCode;
 
 /**
- * Maps the `languages` table (`piwigo_languages` once
- * Piwigo\Db\TablePrefixListener applies db_prefix at metadata-load time).
- * Real shape: id varchar(64) PK, version varchar(64) NOT NULL default '0',
- * name varchar(64) nullable.
+ * Maps the `languages` table. Real shape: id varchar(64) PK, version
+ * varchar(64) NOT NULL default '0', name varchar(64) nullable.
  */
 #[ORM\Entity(repositoryClass: LangRepository::class)]
 #[ORM\Table(name: 'languages')]

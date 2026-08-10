@@ -7,11 +7,9 @@ namespace Piwigo\Admin\Extensions;
 use Doctrine\ORM\Mapping as ORM;
 
 /**
- * Maps the `extension_ignored_updates` table
- * (`piwigo_extension_ignored_updates` once Piwigo\Db\TablePrefixListener
- * applies db_prefix at metadata-load time). Replaces the former
- * `updates_ignored` piwigo_config blob (one JSON object keyed by the
- * *plural* page-slug form, `{plugins: [...], themes: [...], languages: [...]}`).
+ * Maps the `extension_ignored_updates` table. Replaces the former
+ * `updates_ignored` piwigo_config blob (one JSON object keyed by the *plural*
+ * page-slug form, `{plugins: [...], themes: [...], languages: [...]}`).
  *
  * `extensionType` stores `ExtensionType::value` (singular: 'plugin'/
  * 'theme'/'language'), not the plural form the old blob and the WS API's

@@ -8,12 +8,10 @@ use Doctrine\ORM\Mapping as ORM;
 use Piwigo\Common\ValueObject\SqlDateTime;
 
 /**
- * Maps the `search` table (`piwigo_search` once
- * Piwigo\Db\TablePrefixListener applies db_prefix at metadata-load time).
- * Named to avoid colliding with the existing {@see \Piwigo\Search\
- * Projection\Search} DTO, which stays the return shape every real caller
- * already consumes -- repository methods build it from this entity's
- * properties directly rather than round-tripping through
+ * Maps the `search` table. Named to avoid colliding with the existing {@see
+ * \Piwigo\Search\ Projection\Search} DTO, which stays the return shape every
+ * real caller already consumes -- repository methods build it from this
+ * entity's properties directly rather than round-tripping through
  * `Search::fromRow()`'s raw-row path.
  *
  * `createdBy`/`forkedFrom` stay plain `?int` -- FK into the un-VO'd

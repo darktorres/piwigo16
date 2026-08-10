@@ -9,10 +9,8 @@ use Doctrine\ORM\Mapping as ORM;
 use Piwigo\Common\ValueObject\UserId;
 
 /**
- * Maps the `user_feed` table (`piwigo_user_feed` once
- * Piwigo\Db\TablePrefixListener applies db_prefix at metadata-load time).
- * `id` is the feed identifier string (application-assigned, not
- * auto-generated).
+ * Maps the `user_feed` table. `id` is the feed identifier string
+ * (application-assigned, not auto-generated).
  */
 #[ORM\Entity(repositoryClass: FeedRepository::class)]
 #[ORM\Table(name: 'user_feed')]

@@ -9,22 +9,20 @@ use Piwigo\Common\ValueObject\IpAddress;
 use Piwigo\Common\ValueObject\SqlDateTime;
 
 /**
- * Maps the `audit_log` table (`piwigo_audit_log` once
- * Piwigo\Db\TablePrefixListener applies db_prefix at metadata-load time).
- * `before_json`/`after_json` map as plain `text`, not Doctrine's `json`
- * type -- AuditService::record()/verifyChain() already do their own
- * json_encode()/json_decode() (the hash chain needs the exact raw bytes
- * MySQL's JSON column gives back, see AuditService::canonicalJson()'s own
- * docblock); Doctrine's `json` type would decode on read and re-encode a
+ * Maps the `audit_log` table. `before_json`/`after_json` map as plain `text`,
+ * not Doctrine's `json` type -- AuditService::record()/verifyChain() already
+ * do their own json_encode()/json_decode() (the hash chain needs the exact raw
+ * bytes MySQL's JSON column gives back, see AuditService::canonicalJson()'s
+ * own docblock); Doctrine's `json` type would decode on read and re-encode a
  * PHP value on write, corrupting an already-encoded string handed to it.
- * `created_at` is `SqlDateTime`-typed -- the one real write
- * path traces to an `Env::now()`-derived value. This is orthogonal to the
- * hash chain: `AuditService::computeHash()` hashes the plain `Y-m-d H:i:s`
- * string directly (never re-reads it off this entity), and `SqlDateTime`'s
- * own `__toString()`/`->value` round-trip byte-identically to that same
- * string, so the chain's content is unaffected either way.
- * Insert-only (only `Audit\Projection\AuditLogEntry`, a separate readonly
- * DTO, is used for reads) -- no update method needed on the entity.
+ * `created_at` is `SqlDateTime`-typed -- the one real write path traces to an
+ * `Env::now()`-derived value. This is orthogonal to the hash chain:
+ * `AuditService::computeHash()` hashes the plain `Y-m-d H:i:s` string directly
+ * (never re-reads it off this entity), and `SqlDateTime`'s own
+ * `__toString()`/`->value` round-trip byte-identically to that same string, so
+ * the chain's content is unaffected either way. Insert-only (only
+ * `Audit\Projection\AuditLogEntry`, a separate readonly DTO, is used for
+ * reads) -- no update method needed on the entity.
  */
 #[ORM\Entity(repositoryClass: AuditRepository::class)]
 #[ORM\Table(name: 'audit_log')]

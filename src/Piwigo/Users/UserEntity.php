@@ -10,10 +10,9 @@ use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Common\ValueObject\Username;
 
 /**
- * Maps the `users` table (`piwigo_users` once
- * Piwigo\Db\TablePrefixListener applies db_prefix at metadata-load time)
- * -- core login accounts: id/username/password/mail_address, exactly the
- * real `CREATE TABLE users` in `install/piwigo_structure-mysql.sql`.
+ * Maps the `users` table -- core login accounts:
+ * id/username/password/mail_address, exactly the real `CREATE TABLE users` in
+ * `install/piwigo_structure-mysql.sql`.
  *
  * `Piwigo\Config\CurrentConfig::userFields()` exists for remapping these
  * column names at runtime for multi-auth integrations, but

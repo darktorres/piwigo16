@@ -12,12 +12,11 @@ use Piwigo\Common\ValueObject\SqlDateTime;
 use Piwigo\Common\ValueObject\UserId;
 
 /**
- * Maps the `images` table (`piwigo_images` once Piwigo\Db\TablePrefixListener
- * applies db_prefix at metadata-load time). `dateMetadataUpdate` stays
- * plain ?string, not a VO -- matches Image\Projection\Image's own
- * already-documented decision (every real consumer wants the raw DB
- * DATETIME string form, and unlike `dateAvailable`/`dateCreation` below,
- * no real code anywhere reads this column back through the entity).
+ * Maps the `images` table. `dateMetadataUpdate` stays plain ?string, not a VO
+ * -- matches Image\Projection\Image's own already-documented decision (every
+ * real consumer wants the raw DB DATETIME string form, and unlike
+ * `dateAvailable`/`dateCreation` below, no real code anywhere reads this
+ * column back through the entity).
  *
  * `dateAvailable`/`dateCreation` are `SqlDateTime`-typed via the strict
  * `sql_datetime` Doctrine Type, same as `lastmodified` below. They used

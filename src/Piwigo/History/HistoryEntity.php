@@ -13,15 +13,11 @@ use Piwigo\Common\ValueObject\SqlTime;
 use Piwigo\Common\ValueObject\UserId;
 
 /**
- * Maps the `history` table (`piwigo_history` once
- * Piwigo\Db\TablePrefixListener applies db_prefix at metadata-load time).
- * `date`/`time` are `SqlDate`/`SqlTime`-typed -- the one real
- * write path (`insert()`) traces to an `Env::now()`-derived value.
- * `history_summary`
- * (this repository's other owned table) is mapped as
- * {@see HistorySummaryEntity}; only `findSummaryRowsForHierarchy()`'s own
- * dynamic composite-nullable-key WHERE doesn't fit a clean single-row
- * shape.
+ * Maps the `history` table. `date`/`time` are `SqlDate`/`SqlTime`-typed -- the
+ * one real write path (`insert()`) traces to an `Env::now()`-derived value.
+ * `history_summary` (this repository's other owned table) is mapped as {@see
+ * HistorySummaryEntity}; only `findSummaryRowsForHierarchy()`'s own dynamic
+ * composite-nullable-key WHERE doesn't fit a clean single-row shape.
  *
  * `imageType` is `HistoryImageType` (a native Doctrine `enumType` column)
  * -- `section` deliberately stays a plain `?string` instead, see

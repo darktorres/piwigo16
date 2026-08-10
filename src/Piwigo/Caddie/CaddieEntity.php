@@ -9,10 +9,8 @@ use Piwigo\Common\ValueObject\ImageId;
 use Piwigo\Common\ValueObject\UserId;
 
 /**
- * Maps the `caddie` table (`piwigo_caddie` once
- * Piwigo\Db\TablePrefixListener applies db_prefix at metadata-load time)
- * -- composite PK (userId, elementId), no other columns.
- * {@see CaddieRepository} is this table's sole real owner.
+ * Maps the `caddie` table -- composite PK (userId, elementId), no other
+ * columns. {@see CaddieRepository} is this table's sole real owner.
  *
  * `elementId` uses the `image_id` custom Doctrine Type, same as
  * {@see \Piwigo\Image\ImageCategoryEntity}/{@see \Piwigo\Image\LoungeEntity}.

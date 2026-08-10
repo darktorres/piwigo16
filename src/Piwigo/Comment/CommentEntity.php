@@ -10,15 +10,14 @@ use Piwigo\Common\ValueObject\ImageId;
 use Piwigo\Common\ValueObject\SqlDateTime;
 
 /**
- * Maps the `comments` table (`piwigo_comments` once
- * Piwigo\Db\TablePrefixListener applies db_prefix at metadata-load time).
- * `date`/`validationDate` are `SqlDateTime`-typed -- both real
- * write paths (`CommentRepository::insert()`/`update()`/`validate()`)
- * trace to an `Env::now()`-derived value. `validated`
- * is a real boolean column. `author_id` stays plain ?int -- UserId
- * propagation across every other domain's foreign-key-shaped column
- * (this one, Audit\AuditLogEntity::$actorId, Activity\ActivityEntity::
- * $performedBy, ...) is deliberately out of scope here.
+ * Maps the `comments` table. `date`/`validationDate` are `SqlDateTime`-typed
+ * -- both real write paths
+ * (`CommentRepository::insert()`/`update()`/`validate()`) trace to an
+ * `Env::now()`-derived value. `validated` is a real boolean column.
+ * `author_id` stays plain ?int -- UserId propagation across every other
+ * domain's foreign-key-shaped column (this one,
+ * Audit\AuditLogEntity::$actorId, Activity\ActivityEntity:: $performedBy, ...)
+ * is deliberately out of scope here.
  *
  * `id`'s `comment_id` column type is a custom Doctrine Type
  * ({@see \Piwigo\Db\Type\CommentIdType}, registered in

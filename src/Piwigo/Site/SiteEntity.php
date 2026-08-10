@@ -7,8 +7,7 @@ namespace Piwigo\Site;
 use Doctrine\ORM\Mapping as ORM;
 
 /**
- * Maps the `sites` table (`piwigo_sites` once Piwigo\Db\TablePrefixListener
- * applies db_prefix at metadata-load time).
+ * Maps the `sites` table.
  */
 #[ORM\Entity(repositoryClass: SiteRepository::class)]
 #[ORM\Table(name: 'sites')]

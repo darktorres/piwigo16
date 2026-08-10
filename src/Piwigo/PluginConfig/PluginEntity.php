@@ -8,9 +8,8 @@ use Doctrine\ORM\Mapping as ORM;
 use Piwigo\Common\ValueObject\PluginId;
 
 /**
- * Maps the `plugins` table (`piwigo_plugins` once
- * Piwigo\Db\TablePrefixListener applies db_prefix at metadata-load time).
- * `id` is the plugin directory-name identifier (application-assigned).
+ * Maps the `plugins` table. `id` is the plugin directory-name identifier
+ * (application-assigned).
  *
  * `state` is `PluginState` (a native Doctrine `enumType` column) --
  * {@see PluginRepository::getDbPlugins()}'s own real caller unwraps

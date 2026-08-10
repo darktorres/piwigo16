@@ -9,13 +9,11 @@ use Doctrine\ORM\Mapping as ORM;
 use Piwigo\Common\ValueObject\GroupId;
 
 /**
- * Maps the `groups` table (`piwigo_groups` once
- * Piwigo\Db\TablePrefixListener applies db_prefix at metadata-load time).
- * Real shape: id smallint PK auto-increment, name varchar(255) unique,
- * is_default tinyint(1), lastmodified TIMESTAMP (DB-managed ON UPDATE
- * CURRENT_TIMESTAMP -- set explicitly to Env::now() on insert only,
- * matching GroupRepository::insert()'s pre-ORM behavior exactly; never
- * touched on update(), same as before).
+ * Maps the `groups` table. Real shape: id smallint PK auto-increment, name
+ * varchar(255) unique, is_default tinyint(1), lastmodified TIMESTAMP
+ * (DB-managed ON UPDATE CURRENT_TIMESTAMP -- set explicitly to Env::now() on
+ * insert only, matching GroupRepository::insert()'s pre-ORM behavior exactly;
+ * never touched on update(), same as before).
  *
  * `id`'s `group_id` column type is a custom Doctrine Type
  * ({@see \Piwigo\Db\Type\GroupIdType}, registered in

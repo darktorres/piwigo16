@@ -8,9 +8,8 @@ use Doctrine\ORM\Mapping as ORM;
 use Piwigo\Common\ValueObject\ImageId;
 
 /**
- * Maps the `image_format` table (`piwigo_image_format` once
- * Piwigo\Db\TablePrefixListener applies db_prefix at metadata-load time).
- * Owned by {@see ImageRepository}, same as {@see ImageEntity}.
+ * Maps the `image_format` table. Owned by {@see ImageRepository}, same as
+ * {@see ImageEntity}.
  */
 #[ORM\Entity(repositoryClass: ImageRepository::class)]
 #[ORM\Table(name: 'image_format')]

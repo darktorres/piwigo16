@@ -8,14 +8,13 @@ use DateTimeImmutable;
 use Doctrine\ORM\Mapping as ORM;
 
 /**
- * Maps the `sessions` table (`piwigo_sessions` once
- * Piwigo\Db\TablePrefixListener applies db_prefix at metadata-load time).
- * Real shape: id varchar(50) PK (the composite session id, already
- * IP-hash-prefixed by SessionService before it ever reaches this layer),
- * data mediumtext NOT NULL, expiration datetime nullable. `expiration`
- * maps as a real `datetime_immutable` -- the pre-ORM SessionRepository
- * already bound it as `Types::DATETIME_IMMUTABLE`, not a raw string, so
- * this preserves existing behavior rather than widening or narrowing it.
+ * Maps the `sessions` table. Real shape: id varchar(50) PK (the composite
+ * session id, already IP-hash-prefixed by SessionService before it ever
+ * reaches this layer), data mediumtext NOT NULL, expiration datetime nullable.
+ * `expiration` maps as a real `datetime_immutable` -- the pre-ORM
+ * SessionRepository already bound it as `Types::DATETIME_IMMUTABLE`, not a raw
+ * string, so this preserves existing behavior rather than widening or
+ * narrowing it.
  */
 #[ORM\Entity(repositoryClass: SessionRepository::class)]
 #[ORM\Table(name: 'sessions')]

@@ -258,17 +258,17 @@ test('deleteImages cascades away rows from every real referencing table, and cle
 
         foreach (['comments', 'image_category', 'image_format', 'image_tag', 'favorites'] as $table) {
             $count = $conn->fetchOne("SELECT COUNT(*) FROM {$table} WHERE image_id = {$imageId}");
-            expect(is_numeric($count) ? (int) $count : -1)->toBe(0);
+            expect($count)->toBe(0);
         }
         foreach (['rate', 'caddie'] as $table) {
             $count = $conn->fetchOne("SELECT COUNT(*) FROM {$table} WHERE element_id = {$imageId}");
-            expect(is_numeric($count) ? (int) $count : -1)->toBe(0);
+            expect($count)->toBe(0);
         }
 
         // The cascade is scoped to the deleted image's own id -- a
         // bystander image's own comment row survives untouched.
         $bystanderCount = $conn->fetchOne('SELECT COUNT(*) FROM ' . 'comments' . " WHERE image_id = {$bystanderId}");
-        expect(is_numeric($bystanderCount) ? (int) $bystanderCount : -1)->toBe(1);
+        expect($bystanderCount)->toBe(1);
 
         $refetched = $repo->find(ImageId::from(1));
         expect($refetched)->not->toBe($cached);
@@ -295,7 +295,7 @@ test('deleteImages removes the row for real, and clears the identity map', funct
     $repo->deleteImages([$imageId]);
 
     $stillThere = DbConnection::build()->fetchOne('SELECT COUNT(*) FROM ' . 'images' . " WHERE id = {$imageId}");
-    expect(is_numeric($stillThere) ? (int) $stillThere : -1)->toBe(0);
+    expect($stillThere)->toBe(0);
 
     $refetched = $repo->find(ImageId::from(1));
     expect($refetched)->not->toBe($cached);
@@ -662,7 +662,7 @@ test('deleteNonStorageCategoryLinks clears the identity map after a raw write ou
     } finally {
         $conn = DbConnection::build();
         $exists = $conn->fetchOne('SELECT COUNT(*) FROM ' . 'image_category' . ' WHERE image_id = 1 AND category_id = 1');
-        if (! is_numeric($exists) || (int) $exists === 0) {
+        if ($exists === 0) {
             $rankColumn = $conn->getDatabasePlatform()->quoteSingleIdentifier('rank');
             $conn->executeStatement('INSERT INTO ' . 'image_category' . " (image_id, category_id, {$rankColumn}) VALUES (1, 1, 1)");
         }

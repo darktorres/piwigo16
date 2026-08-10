@@ -230,7 +230,7 @@ final class RequestBootstrapConnectTest extends IntegrationTestCase
             // -> ImageService::emptyLounge() actually ran: the lounge row
             // deleteLoungeUpTo() removes is gone.
             $loungeCount = $this->conn->fetchOne('SELECT COUNT(*) FROM ' . 'lounge');
-            self::assertSame('0', is_scalar($loungeCount) ? (string) $loungeCount : null);
+            self::assertSame('0', (string) $loungeCount);
         } finally {
             $this->conn->executeStatement('DELETE FROM ' . 'lounge');
             $this->conn->executeStatement(

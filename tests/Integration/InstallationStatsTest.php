@@ -143,15 +143,11 @@ test('getInstallationDate falls back to the MIN registration_date across all use
         $conn->executeStatement(sprintf('DELETE FROM users WHERE id = %d', $newUserId));
     } finally {
         foreach ($originalRows as $row) {
-            $rowUserId = $row['user_id'];
-            if (! is_numeric($rowUserId)) {
-                throw new RuntimeException('Expected user_id to be numeric: ' . var_export($rowUserId, true));
-            }
             $conn->executeStatement(sprintf(
                 'UPDATE %s SET registration_date = %s WHERE user_id = %d',
                 'user_infos',
                 $conn->quote(is_string($row['registration_date']) ? $row['registration_date'] : '2020-01-01 00:00:00'),
-                (int) $rowUserId
+                $row['user_id']
             ));
         }
     }
@@ -175,15 +171,11 @@ test('getInstallationDate falls back to the earliest image\'s date_available whe
         }
     } finally {
         foreach ($originalRows as $row) {
-            $rowUserId = $row['user_id'];
-            if (! is_numeric($rowUserId)) {
-                throw new RuntimeException('Expected user_id to be numeric: ' . var_export($rowUserId, true));
-            }
             $conn->executeStatement(sprintf(
                 'UPDATE %s SET registration_date = %s WHERE user_id = %d',
                 'user_infos',
                 $conn->quote(is_string($row['registration_date']) ? $row['registration_date'] : '2020-01-01 00:00:00'),
-                (int) $rowUserId
+                $row['user_id']
             ));
         }
     }

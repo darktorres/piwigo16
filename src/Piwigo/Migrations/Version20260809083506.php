@@ -8,7 +8,6 @@ use Doctrine\DBAL\Platforms\PostgreSQLPlatform;
 use Doctrine\DBAL\Schema\Schema;
 use Doctrine\Migrations\AbstractMigration;
 use Override;
-use Piwigo\Db\DbCredentials;
 
 /**
  * One-time data backfill: nulls out the legacy MySQL zero-date sentinel
@@ -41,13 +40,11 @@ final class Version20260809083506 extends AbstractMigration
             return;
         }
 
-        $prefix = DbCredentials::fromEnv()->prefix;
-
         $this->addSql(
-            'UPDATE `' . $prefix . 'images` SET `date_creation` = NULL WHERE `date_creation` = \'0000-00-00 00:00:00\''
+            'UPDATE `images` SET `date_creation` = NULL WHERE `date_creation` = \'0000-00-00 00:00:00\''
         );
         $this->addSql(
-            'UPDATE `' . $prefix . 'images` SET `date_available` = NULL WHERE `date_available` = \'0000-00-00 00:00:00\''
+            'UPDATE `images` SET `date_available` = NULL WHERE `date_available` = \'0000-00-00 00:00:00\''
         );
     }
 

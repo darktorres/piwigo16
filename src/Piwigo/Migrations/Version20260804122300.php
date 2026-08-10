@@ -8,7 +8,6 @@ use Doctrine\DBAL\Platforms\PostgreSQLPlatform;
 use Doctrine\DBAL\Schema\Schema;
 use Doctrine\Migrations\AbstractMigration;
 use Override;
-use Piwigo\Db\DbCredentials;
 
 /**
  * Baseline bootstrap, content domain: categories, images, tags, comments,
@@ -55,7 +54,7 @@ use Piwigo\Db\DbCredentials;
  *   `Types::JSON` round-trips through json_encode()/json_decode() either
  *   way, so this is transparent to every real consumer).
  * - `TIMESTAMP ... DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP`
- *   -> `timestamp DEFAULT now()` plus a shared `piwigo_set_lastmodified()`
+ *   -> `timestamp DEFAULT now()` plus a shared `set_lastmodified()`
  *   trigger function (created once, in this migration) + one `BEFORE
  *   UPDATE` trigger per affected table -- the real gap the reverted prior
  *   attempt left unbuilt ("no application code targets a non-MySQL/
@@ -117,16 +116,16 @@ final class Version20260804122300 extends AbstractMigration
         // combat, station, water, later...).
         $this->addSql('SET SESSION innodb_ft_enable_stopword = 0');
 
-        $this->addSql($this->withMysqlPrefix(<<<'SQL'
-            CREATE TABLE `piwigo_caddie` (
+        $this->addSql(<<<'SQL'
+            CREATE TABLE `caddie` (
               `user_id` mediumint(8) unsigned NOT NULL default '0' COMMENT 'owning user id',
               `element_id` mediumint(8) unsigned NOT NULL default '0' COMMENT 'image id added to the caddie',
               PRIMARY KEY  (`user_id`,`element_id`)
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='per-user temporary photo selection (caddie/basket) used by batch operations'
-            SQL));
+            SQL);
 
-        $this->addSql($this->withMysqlPrefix(<<<'SQL'
-            CREATE TABLE `piwigo_categories` (
+        $this->addSql(<<<'SQL'
+            CREATE TABLE `categories` (
               `id` smallint(5) unsigned NOT NULL auto_increment COMMENT 'surrogate primary key',
               `name` varchar(255) NOT NULL default '' COMMENT 'album display name',
               `id_uppercat` smallint(5) unsigned default NULL COMMENT 'parent album id, null for a root album',
@@ -149,10 +148,10 @@ final class Version20260804122300 extends AbstractMigration
               KEY `lastmodified` (`lastmodified`),
               FULLTEXT KEY `categories_ft_name_comment` (`name`,`comment`) WITH PARSER ngram
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='photo albums, both physical filesystem-synced and virtual'
-            SQL));
+            SQL);
 
-        $this->addSql($this->withMysqlPrefix(<<<'SQL'
-            CREATE TABLE `piwigo_comments` (
+        $this->addSql(<<<'SQL'
+            CREATE TABLE `comments` (
               `id` int(11) unsigned NOT NULL auto_increment COMMENT 'surrogate primary key',
               `image_id` mediumint(8) unsigned NOT NULL default '0' COMMENT 'commented image id',
               `date` datetime default NULL COMMENT 'when the comment was submitted',
@@ -168,47 +167,47 @@ final class Version20260804122300 extends AbstractMigration
               KEY `comments_i2` (`validation_date`),
               KEY `comments_i1` (`image_id`)
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='visitor comments left on photos'
-            SQL));
+            SQL);
 
-        $this->addSql($this->withMysqlPrefix(<<<'SQL'
-            CREATE TABLE `piwigo_favorites` (
+        $this->addSql(<<<'SQL'
+            CREATE TABLE `favorites` (
               `user_id` mediumint(8) unsigned NOT NULL default '0' COMMENT 'owning user id',
               `image_id` mediumint(8) unsigned NOT NULL default '0' COMMENT 'image the user marked as a favorite',
               PRIMARY KEY  (`user_id`,`image_id`)
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='per-user favorited images'
-            SQL));
+            SQL);
 
-        $this->addSql($this->withMysqlPrefix(<<<'SQL'
-            CREATE TABLE `piwigo_image_category` (
+        $this->addSql(<<<'SQL'
+            CREATE TABLE `image_category` (
               `image_id` mediumint(8) unsigned NOT NULL default '0' COMMENT 'member image id',
               `category_id` smallint(5) unsigned NOT NULL default '0' COMMENT 'album the image belongs to',
               `rank` mediumint(8) unsigned default NULL COMMENT 'manual sort position of the image within this specific album',
               PRIMARY KEY  (`image_id`,`category_id`),
               KEY `image_category_i1` (`category_id`)
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='image-to-album membership, an image can belong to more than one album'
-            SQL));
+            SQL);
 
-        $this->addSql($this->withMysqlPrefix(<<<'SQL'
-            CREATE TABLE `piwigo_image_format` (
+        $this->addSql(<<<'SQL'
+            CREATE TABLE `image_format` (
               `format_id` int(11) unsigned NOT NULL auto_increment COMMENT 'surrogate primary key',
               `image_id` mediumint(8) unsigned NOT NULL DEFAULT '0' COMMENT 'image this alternate format file belongs to',
               `ext` varchar(255) NOT NULL COMMENT 'file extension of this alternate format, e.g. a RAW file stored alongside the main JPEG',
               `filesize` mediumint(9) unsigned DEFAULT NULL COMMENT 'file size of this alternate format in KB',
               PRIMARY KEY  (`format_id`)
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='alternate format files stored alongside an image (the multiple formats feature)'
-            SQL));
+            SQL);
 
-        $this->addSql($this->withMysqlPrefix(<<<'SQL'
-            CREATE TABLE `piwigo_image_tag` (
+        $this->addSql(<<<'SQL'
+            CREATE TABLE `image_tag` (
               `image_id` mediumint(8) unsigned NOT NULL default '0' COMMENT 'tagged image id',
               `tag_id` smallint(5) unsigned NOT NULL default '0' COMMENT 'tag applied to the image',
               PRIMARY KEY  (`image_id`,`tag_id`),
               KEY `image_tag_i1` (`tag_id`)
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='image-to-tag associations'
-            SQL));
+            SQL);
 
-        $this->addSql($this->withMysqlPrefix(<<<'SQL'
-            CREATE TABLE `piwigo_images` (
+        $this->addSql(<<<'SQL'
+            CREATE TABLE `images` (
               `id` mediumint(8) unsigned NOT NULL auto_increment COMMENT 'surrogate primary key',
               `file` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL default '' COMMENT 'base filename of the original file',
               `date_available` datetime default NULL COMMENT 'date the photo is considered added/visible in the gallery, can be mapped from EXIF/IPTC or admin-edited',
@@ -223,7 +222,7 @@ final class Version20260804122300 extends AbstractMigration
               `coi` char(4) default NULL COMMENT 'center of interest',
               `representative_ext` varchar(4) default NULL COMMENT 'file extension of a separate representative thumbnail, for formats that cannot be thumbnailed directly, e.g. PDF/video',
               `date_metadata_update` date default NULL COMMENT 'date the row was last synced from the file EXIF/IPTC metadata, null if never synced',
-              `rating_score` float(5,2) unsigned default NULL COMMENT 'bayesian average of piwigo_rate ratings, recomputed by RateService::updateRatingScore',
+              `rating_score` float(5,2) unsigned default NULL COMMENT 'bayesian average of rate ratings, recomputed by RateService::updateRatingScore',
               `path` varchar(255) NOT NULL default '' COMMENT 'full relative filesystem path to the original file',
               `storage_category_id` smallint(5) unsigned default NULL COMMENT 'album the file is physically stored under, distinct from possibly multiple image_category memberships',
               `level` tinyint unsigned NOT NULL default '0' COMMENT 'minimum permission level required to view the image, see PwgImages::setPrivacyLevel and available_permission_levels',
@@ -248,18 +247,18 @@ final class Version20260804122300 extends AbstractMigration
               FULLTEXT KEY `images_ft_name_comment` (`name`,`comment`) WITH PARSER ngram,
               FULLTEXT KEY `images_ft_author` (`author`) WITH PARSER ngram
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='photo/media metadata and file location, one row per uploaded image'
-            SQL));
+            SQL);
 
-        $this->addSql($this->withMysqlPrefix(<<<'SQL'
-            CREATE TABLE `piwigo_lounge` (
+        $this->addSql(<<<'SQL'
+            CREATE TABLE `lounge` (
               `image_id` mediumint(8) unsigned NOT NULL DEFAULT '0' COMMENT 'newly uploaded image pending album association',
               `category_id` smallint(5) unsigned NOT NULL DEFAULT '0' COMMENT 'album the image is intended for once the lounge is emptied',
               PRIMARY KEY (`image_id`,`category_id`)
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='pending image-to-album associations, applied in bulk by ImageService::emptyLounge'
-            SQL));
+            SQL);
 
-        $this->addSql($this->withMysqlPrefix(<<<'SQL'
-            CREATE TABLE `piwigo_old_permalinks` (
+        $this->addSql(<<<'SQL'
+            CREATE TABLE `old_permalinks` (
               `cat_id` smallint(5) unsigned NOT NULL default '0' COMMENT 'album the removed permalink used to point to',
               `permalink` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL default '' COMMENT 'the retired URL slug, kept so it is not immediately reusable by another album',
               `date_deleted` datetime default NULL COMMENT 'when the permalink was retired',
@@ -267,10 +266,10 @@ final class Version20260804122300 extends AbstractMigration
               `hit` int(10) unsigned NOT NULL default '0' COMMENT 'visit count against the dead permalink',
               PRIMARY KEY  (`permalink`)
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='retired album permalinks, kept to block reuse and shown on the admin permalinks page'
-            SQL));
+            SQL);
 
-        $this->addSql($this->withMysqlPrefix(<<<'SQL'
-            CREATE TABLE `piwigo_rate` (
+        $this->addSql(<<<'SQL'
+            CREATE TABLE `rate` (
               `user_id` mediumint(8) unsigned NOT NULL default '0' COMMENT 'rating user id, the guest user id for anonymous visitors',
               `element_id` mediumint(8) unsigned NOT NULL default '0' COMMENT 'rated image id',
               `anonymous_id` varchar(45) NOT NULL default '' COMMENT 'truncated IP address identifying an anonymous rater, from the anonymous_rater cookie',
@@ -278,10 +277,10 @@ final class Version20260804122300 extends AbstractMigration
               `date` date default NULL COMMENT 'date the rate was submitted',
               PRIMARY KEY  (`element_id`,`user_id`,`anonymous_id`)
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='per-user or per-anonymous-visitor image ratings, aggregated into images.rating_score'
-            SQL));
+            SQL);
 
-        $this->addSql($this->withMysqlPrefix(<<<'SQL'
-            CREATE TABLE `piwigo_tags` (
+        $this->addSql(<<<'SQL'
+            CREATE TABLE `tags` (
               `id` smallint(5) unsigned NOT NULL auto_increment COMMENT 'surrogate primary key',
               `name` varchar(255) NOT NULL default '' COMMENT 'tag display name',
               `url_name` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL default '' COMMENT 'URL-friendly slug derived from name',
@@ -291,13 +290,11 @@ final class Version20260804122300 extends AbstractMigration
               KEY `lastmodified` (`lastmodified`),
               FULLTEXT KEY `tags_ft_name` (`name`) WITH PARSER ngram
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='photo tags/keywords'
-            SQL));
+            SQL);
     }
 
     private function upPostgres(): void
     {
-        $prefix = DbCredentials::fromEnv()->prefix;
-
         // Shared BEFORE UPDATE trigger function backing every
         // `ON UPDATE CURRENT_TIMESTAMP`-equivalent `lastmodified` column
         // in the whole schema (this migration's own categories/images/tags,
@@ -338,15 +335,15 @@ final class Version20260804122300 extends AbstractMigration
         // real callers of the `search_filter_view` table beyond its own
         // definition), so it never routes through `SqlDateTime::from()` and
         // isn't exposed to this bug.
-        $this->addSql('CREATE FUNCTION piwigo_set_lastmodified() RETURNS trigger AS $$ BEGIN NEW.lastmodified = now(); RETURN NEW; END; $$ LANGUAGE plpgsql');
+        $this->addSql('CREATE FUNCTION set_lastmodified() RETURNS trigger AS $$ BEGIN NEW.lastmodified = now(); RETURN NEW; END; $$ LANGUAGE plpgsql');
 
-        $this->addSql('CREATE TABLE ' . $prefix . 'caddie (user_id integer NOT NULL, element_id integer NOT NULL, PRIMARY KEY (user_id, element_id))');
-        $this->addSql("COMMENT ON TABLE {$prefix}caddie IS 'per-user temporary photo selection (caddie/basket) used by batch operations'");
-        $this->addSql("COMMENT ON COLUMN {$prefix}caddie.user_id IS 'owning user id'");
-        $this->addSql("COMMENT ON COLUMN {$prefix}caddie.element_id IS 'image id added to the caddie'");
+        $this->addSql('CREATE TABLE caddie (user_id integer NOT NULL, element_id integer NOT NULL, PRIMARY KEY (user_id, element_id))');
+        $this->addSql("COMMENT ON TABLE caddie IS 'per-user temporary photo selection (caddie/basket) used by batch operations'");
+        $this->addSql("COMMENT ON COLUMN caddie.user_id IS 'owning user id'");
+        $this->addSql("COMMENT ON COLUMN caddie.element_id IS 'image id added to the caddie'");
 
         $this->addSql(
-            'CREATE TABLE ' . $prefix . 'categories (' .
+            'CREATE TABLE categories (' .
             'id integer GENERATED BY DEFAULT AS IDENTITY, ' .
             "name varchar(255) NOT NULL DEFAULT '', " .
             'id_uppercat integer DEFAULT NULL, ' .
@@ -366,31 +363,31 @@ final class Version20260804122300 extends AbstractMigration
             "tsv_search tsvector GENERATED ALWAYS AS (to_tsvector('simple', coalesce(name, '') || ' ' || coalesce(comment, ''))) STORED, " .
             'PRIMARY KEY (id))'
         );
-        $this->addSql('ALTER TABLE ' . $prefix . 'categories ADD CONSTRAINT categories_i3_unique UNIQUE (permalink)');
-        $this->addSql('CREATE INDEX categories_i2 ON ' . $prefix . 'categories (id_uppercat)');
-        $this->addSql('CREATE INDEX categories_lastmodified_idx ON ' . $prefix . 'categories (lastmodified)');
-        $this->addSql('CREATE INDEX categories_ft_name_comment ON ' . $prefix . 'categories USING GIN (tsv_search)');
-        $this->addSql('CREATE TRIGGER trg_categories_lastmodified BEFORE UPDATE ON ' . $prefix . 'categories FOR EACH ROW EXECUTE FUNCTION piwigo_set_lastmodified()');
-        $this->addSql("COMMENT ON TABLE {$prefix}categories IS 'photo albums, both physical filesystem-synced and virtual'");
-        $this->addSql("COMMENT ON COLUMN {$prefix}categories.id IS 'surrogate primary key'");
-        $this->addSql("COMMENT ON COLUMN {$prefix}categories.name IS 'album display name'");
-        $this->addSql("COMMENT ON COLUMN {$prefix}categories.id_uppercat IS 'parent album id, null for a root album'");
-        $this->addSql("COMMENT ON COLUMN {$prefix}categories.comment IS 'album description shown on its page'");
-        $this->addSql("COMMENT ON COLUMN {$prefix}categories.dir IS 'filesystem subdirectory name for a physical, synchronized album, null for a virtual album'");
-        $this->addSql("COMMENT ON COLUMN {$prefix}categories.rank IS 'sibling display order within the same parent, distinct from global_rank'");
-        $this->addSql("COMMENT ON COLUMN {$prefix}categories.status IS 'private albums require an explicit user_access or group_access grant to view'");
-        $this->addSql("COMMENT ON COLUMN {$prefix}categories.site_id IS 'owning site id, resolves to sites.galleries_url for a physical album'");
-        $this->addSql("COMMENT ON COLUMN {$prefix}categories.visible IS 'whether the album is shown in navigation, forced false at creation if its parent is not visible'");
-        $this->addSql("COMMENT ON COLUMN {$prefix}categories.representative_picture_id IS 'image id used as the album thumbnail'");
-        $this->addSql("COMMENT ON COLUMN {$prefix}categories.uppercats IS 'comma-separated ancestor album id path, from root to this album'");
-        $this->addSql("COMMENT ON COLUMN {$prefix}categories.commentable IS 'whether photo comments are allowed for images in this album'");
-        $this->addSql("COMMENT ON COLUMN {$prefix}categories.global_rank IS 'full-tree sort key derived from rank along the ancestor path, used to order albums across different parents'");
-        $this->addSql("COMMENT ON COLUMN {$prefix}categories.image_order IS 'preferred ORDER BY expression for images in this album, inheritable to descendant albums'");
-        $this->addSql("COMMENT ON COLUMN {$prefix}categories.permalink IS 'unique URL-friendly slug for this album'");
-        $this->addSql("COMMENT ON COLUMN {$prefix}categories.lastmodified IS 'row last-update timestamp'");
+        $this->addSql('ALTER TABLE categories ADD CONSTRAINT categories_i3_unique UNIQUE (permalink)');
+        $this->addSql('CREATE INDEX categories_i2 ON categories (id_uppercat)');
+        $this->addSql('CREATE INDEX categories_lastmodified_idx ON categories (lastmodified)');
+        $this->addSql('CREATE INDEX categories_ft_name_comment ON categories USING GIN (tsv_search)');
+        $this->addSql('CREATE TRIGGER trg_categories_lastmodified BEFORE UPDATE ON categories FOR EACH ROW EXECUTE FUNCTION set_lastmodified()');
+        $this->addSql("COMMENT ON TABLE categories IS 'photo albums, both physical filesystem-synced and virtual'");
+        $this->addSql("COMMENT ON COLUMN categories.id IS 'surrogate primary key'");
+        $this->addSql("COMMENT ON COLUMN categories.name IS 'album display name'");
+        $this->addSql("COMMENT ON COLUMN categories.id_uppercat IS 'parent album id, null for a root album'");
+        $this->addSql("COMMENT ON COLUMN categories.comment IS 'album description shown on its page'");
+        $this->addSql("COMMENT ON COLUMN categories.dir IS 'filesystem subdirectory name for a physical, synchronized album, null for a virtual album'");
+        $this->addSql("COMMENT ON COLUMN categories.rank IS 'sibling display order within the same parent, distinct from global_rank'");
+        $this->addSql("COMMENT ON COLUMN categories.status IS 'private albums require an explicit user_access or group_access grant to view'");
+        $this->addSql("COMMENT ON COLUMN categories.site_id IS 'owning site id, resolves to sites.galleries_url for a physical album'");
+        $this->addSql("COMMENT ON COLUMN categories.visible IS 'whether the album is shown in navigation, forced false at creation if its parent is not visible'");
+        $this->addSql("COMMENT ON COLUMN categories.representative_picture_id IS 'image id used as the album thumbnail'");
+        $this->addSql("COMMENT ON COLUMN categories.uppercats IS 'comma-separated ancestor album id path, from root to this album'");
+        $this->addSql("COMMENT ON COLUMN categories.commentable IS 'whether photo comments are allowed for images in this album'");
+        $this->addSql("COMMENT ON COLUMN categories.global_rank IS 'full-tree sort key derived from rank along the ancestor path, used to order albums across different parents'");
+        $this->addSql("COMMENT ON COLUMN categories.image_order IS 'preferred ORDER BY expression for images in this album, inheritable to descendant albums'");
+        $this->addSql("COMMENT ON COLUMN categories.permalink IS 'unique URL-friendly slug for this album'");
+        $this->addSql("COMMENT ON COLUMN categories.lastmodified IS 'row last-update timestamp'");
 
         $this->addSql(
-            'CREATE TABLE ' . $prefix . 'comments (' .
+            'CREATE TABLE comments (' .
             'id integer GENERATED BY DEFAULT AS IDENTITY, ' .
             'image_id integer NOT NULL, ' .
             'date timestamp(0) DEFAULT NULL, ' .
@@ -404,59 +401,59 @@ final class Version20260804122300 extends AbstractMigration
             'validation_date timestamp(0) DEFAULT NULL, ' .
             'PRIMARY KEY (id))'
         );
-        $this->addSql('CREATE INDEX comments_i2 ON ' . $prefix . 'comments (validation_date)');
-        $this->addSql('CREATE INDEX comments_i1 ON ' . $prefix . 'comments (image_id)');
-        $this->addSql("COMMENT ON TABLE {$prefix}comments IS 'visitor comments left on photos'");
-        $this->addSql("COMMENT ON COLUMN {$prefix}comments.id IS 'surrogate primary key'");
-        $this->addSql("COMMENT ON COLUMN {$prefix}comments.image_id IS 'commented image id'");
-        $this->addSql("COMMENT ON COLUMN {$prefix}comments.date IS 'when the comment was submitted'");
-        $this->addSql("COMMENT ON COLUMN {$prefix}comments.author IS 'display name shown with the comment, the account username for a logged-in user or the guest-entered name otherwise'");
-        $this->addSql("COMMENT ON COLUMN {$prefix}comments.email IS 'guest-provided email address'");
-        $this->addSql("COMMENT ON COLUMN {$prefix}comments.author_id IS 'commenting user id, null for a guest comment'");
-        $this->addSql("COMMENT ON COLUMN {$prefix}comments.anonymous_id IS 'full IP address of a guest commenter, used for anti-flood throttling'");
-        $this->addSql("COMMENT ON COLUMN {$prefix}comments.website_url IS 'guest-provided homepage link'");
-        $this->addSql("COMMENT ON COLUMN {$prefix}comments.content IS 'comment body'");
-        $this->addSql("COMMENT ON COLUMN {$prefix}comments.validated IS 'moderation approval flag, gates visibility when comments_validation is enabled'");
-        $this->addSql("COMMENT ON COLUMN {$prefix}comments.validation_date IS 'when the comment was approved'");
+        $this->addSql('CREATE INDEX comments_i2 ON comments (validation_date)');
+        $this->addSql('CREATE INDEX comments_i1 ON comments (image_id)');
+        $this->addSql("COMMENT ON TABLE comments IS 'visitor comments left on photos'");
+        $this->addSql("COMMENT ON COLUMN comments.id IS 'surrogate primary key'");
+        $this->addSql("COMMENT ON COLUMN comments.image_id IS 'commented image id'");
+        $this->addSql("COMMENT ON COLUMN comments.date IS 'when the comment was submitted'");
+        $this->addSql("COMMENT ON COLUMN comments.author IS 'display name shown with the comment, the account username for a logged-in user or the guest-entered name otherwise'");
+        $this->addSql("COMMENT ON COLUMN comments.email IS 'guest-provided email address'");
+        $this->addSql("COMMENT ON COLUMN comments.author_id IS 'commenting user id, null for a guest comment'");
+        $this->addSql("COMMENT ON COLUMN comments.anonymous_id IS 'full IP address of a guest commenter, used for anti-flood throttling'");
+        $this->addSql("COMMENT ON COLUMN comments.website_url IS 'guest-provided homepage link'");
+        $this->addSql("COMMENT ON COLUMN comments.content IS 'comment body'");
+        $this->addSql("COMMENT ON COLUMN comments.validated IS 'moderation approval flag, gates visibility when comments_validation is enabled'");
+        $this->addSql("COMMENT ON COLUMN comments.validation_date IS 'when the comment was approved'");
 
-        $this->addSql('CREATE TABLE ' . $prefix . 'favorites (user_id integer NOT NULL, image_id integer NOT NULL, PRIMARY KEY (user_id, image_id))');
-        $this->addSql("COMMENT ON TABLE {$prefix}favorites IS 'per-user favorited images'");
-        $this->addSql("COMMENT ON COLUMN {$prefix}favorites.user_id IS 'owning user id'");
-        $this->addSql("COMMENT ON COLUMN {$prefix}favorites.image_id IS 'image the user marked as a favorite'");
+        $this->addSql('CREATE TABLE favorites (user_id integer NOT NULL, image_id integer NOT NULL, PRIMARY KEY (user_id, image_id))');
+        $this->addSql("COMMENT ON TABLE favorites IS 'per-user favorited images'");
+        $this->addSql("COMMENT ON COLUMN favorites.user_id IS 'owning user id'");
+        $this->addSql("COMMENT ON COLUMN favorites.image_id IS 'image the user marked as a favorite'");
 
         $this->addSql(
-            'CREATE TABLE ' . $prefix . 'image_category (' .
+            'CREATE TABLE image_category (' .
             'image_id integer NOT NULL, category_id integer NOT NULL, "rank" integer DEFAULT NULL, ' .
             'PRIMARY KEY (image_id, category_id))'
         );
-        $this->addSql('CREATE INDEX image_category_i1 ON ' . $prefix . 'image_category (category_id)');
-        $this->addSql("COMMENT ON TABLE {$prefix}image_category IS 'image-to-album membership, an image can belong to more than one album'");
-        $this->addSql("COMMENT ON COLUMN {$prefix}image_category.image_id IS 'member image id'");
-        $this->addSql("COMMENT ON COLUMN {$prefix}image_category.category_id IS 'album the image belongs to'");
-        $this->addSql("COMMENT ON COLUMN {$prefix}image_category.rank IS 'manual sort position of the image within this specific album'");
+        $this->addSql('CREATE INDEX image_category_i1 ON image_category (category_id)');
+        $this->addSql("COMMENT ON TABLE image_category IS 'image-to-album membership, an image can belong to more than one album'");
+        $this->addSql("COMMENT ON COLUMN image_category.image_id IS 'member image id'");
+        $this->addSql("COMMENT ON COLUMN image_category.category_id IS 'album the image belongs to'");
+        $this->addSql("COMMENT ON COLUMN image_category.rank IS 'manual sort position of the image within this specific album'");
 
         $this->addSql(
-            'CREATE TABLE ' . $prefix . 'image_format (' .
+            'CREATE TABLE image_format (' .
             'format_id integer GENERATED BY DEFAULT AS IDENTITY, image_id integer NOT NULL, ' .
             'ext varchar(255) NOT NULL, filesize integer DEFAULT NULL, PRIMARY KEY (format_id))'
         );
-        $this->addSql("COMMENT ON TABLE {$prefix}image_format IS 'alternate format files stored alongside an image (the multiple formats feature)'");
-        $this->addSql("COMMENT ON COLUMN {$prefix}image_format.format_id IS 'surrogate primary key'");
-        $this->addSql("COMMENT ON COLUMN {$prefix}image_format.image_id IS 'image this alternate format file belongs to'");
-        $this->addSql("COMMENT ON COLUMN {$prefix}image_format.ext IS 'file extension of this alternate format, e.g. a RAW file stored alongside the main JPEG'");
-        $this->addSql("COMMENT ON COLUMN {$prefix}image_format.filesize IS 'file size of this alternate format in KB'");
+        $this->addSql("COMMENT ON TABLE image_format IS 'alternate format files stored alongside an image (the multiple formats feature)'");
+        $this->addSql("COMMENT ON COLUMN image_format.format_id IS 'surrogate primary key'");
+        $this->addSql("COMMENT ON COLUMN image_format.image_id IS 'image this alternate format file belongs to'");
+        $this->addSql("COMMENT ON COLUMN image_format.ext IS 'file extension of this alternate format, e.g. a RAW file stored alongside the main JPEG'");
+        $this->addSql("COMMENT ON COLUMN image_format.filesize IS 'file size of this alternate format in KB'");
 
         $this->addSql(
-            'CREATE TABLE ' . $prefix . 'image_tag (' .
+            'CREATE TABLE image_tag (' .
             'image_id integer NOT NULL, tag_id integer NOT NULL, PRIMARY KEY (image_id, tag_id))'
         );
-        $this->addSql('CREATE INDEX image_tag_i1 ON ' . $prefix . 'image_tag (tag_id)');
-        $this->addSql("COMMENT ON TABLE {$prefix}image_tag IS 'image-to-tag associations'");
-        $this->addSql("COMMENT ON COLUMN {$prefix}image_tag.image_id IS 'tagged image id'");
-        $this->addSql("COMMENT ON COLUMN {$prefix}image_tag.tag_id IS 'tag applied to the image'");
+        $this->addSql('CREATE INDEX image_tag_i1 ON image_tag (tag_id)');
+        $this->addSql("COMMENT ON TABLE image_tag IS 'image-to-tag associations'");
+        $this->addSql("COMMENT ON COLUMN image_tag.image_id IS 'tagged image id'");
+        $this->addSql("COMMENT ON COLUMN image_tag.tag_id IS 'tag applied to the image'");
 
         $this->addSql(
-            'CREATE TABLE ' . $prefix . 'images (' .
+            'CREATE TABLE images (' .
             'id integer GENERATED BY DEFAULT AS IDENTITY, ' .
             "file varchar(255) COLLATE \"C\" NOT NULL DEFAULT '', " .
             'date_available timestamp DEFAULT NULL, ' .
@@ -485,56 +482,56 @@ final class Version20260804122300 extends AbstractMigration
             "tsv_author tsvector GENERATED ALWAYS AS (to_tsvector('simple', coalesce(author, ''))) STORED, " .
             'PRIMARY KEY (id))'
         );
-        $this->addSql('CREATE INDEX images_i2 ON ' . $prefix . 'images (date_available)');
-        $this->addSql('CREATE INDEX images_i3 ON ' . $prefix . 'images (rating_score)');
-        $this->addSql('CREATE INDEX images_i4 ON ' . $prefix . 'images (hit)');
-        $this->addSql('CREATE INDEX images_i5 ON ' . $prefix . 'images (date_creation)');
-        $this->addSql('CREATE INDEX images_i1 ON ' . $prefix . 'images (storage_category_id)');
-        $this->addSql('CREATE INDEX images_i6 ON ' . $prefix . 'images (latitude)');
-        $this->addSql('CREATE INDEX images_i7 ON ' . $prefix . 'images (path)');
-        $this->addSql('CREATE INDEX images_i8 ON ' . $prefix . 'images (md5sum)');
-        $this->addSql('CREATE INDEX images_i9 ON ' . $prefix . 'images (file)');
-        $this->addSql('CREATE INDEX images_lastmodified_idx ON ' . $prefix . 'images (lastmodified)');
-        $this->addSql('CREATE INDEX idx_images_date_desc ON ' . $prefix . 'images (date_available DESC, id DESC)');
-        $this->addSql('CREATE INDEX images_ft_name_comment ON ' . $prefix . 'images USING GIN (tsv_search)');
-        $this->addSql('CREATE INDEX images_ft_author ON ' . $prefix . 'images USING GIN (tsv_author)');
-        $this->addSql('CREATE TRIGGER trg_images_lastmodified BEFORE UPDATE ON ' . $prefix . 'images FOR EACH ROW EXECUTE FUNCTION piwigo_set_lastmodified()');
-        $this->addSql("COMMENT ON TABLE {$prefix}images IS 'photo/media metadata and file location, one row per uploaded image'");
-        $this->addSql("COMMENT ON COLUMN {$prefix}images.id IS 'surrogate primary key'");
-        $this->addSql("COMMENT ON COLUMN {$prefix}images.file IS 'base filename of the original file'");
-        $this->addSql("COMMENT ON COLUMN {$prefix}images.date_available IS 'date the photo is considered added/visible in the gallery, can be mapped from EXIF/IPTC or admin-edited'");
-        $this->addSql("COMMENT ON COLUMN {$prefix}images.date_creation IS 'date the photo was taken, typically synced from EXIF/IPTC metadata'");
-        $this->addSql("COMMENT ON COLUMN {$prefix}images.name IS 'display title, distinct from the filename'");
-        $this->addSql("COMMENT ON COLUMN {$prefix}images.comment IS 'photo description shown on its page'");
-        $this->addSql("COMMENT ON COLUMN {$prefix}images.author IS 'photographer/author credit'");
-        $this->addSql("COMMENT ON COLUMN {$prefix}images.hit IS 'view counter'");
-        $this->addSql("COMMENT ON COLUMN {$prefix}images.filesize IS 'original file size in KB'");
-        $this->addSql("COMMENT ON COLUMN {$prefix}images.width IS 'original pixel width'");
-        $this->addSql("COMMENT ON COLUMN {$prefix}images.height IS 'original pixel height'");
-        $this->addSql("COMMENT ON COLUMN {$prefix}images.coi IS 'center of interest'");
-        $this->addSql("COMMENT ON COLUMN {$prefix}images.representative_ext IS 'file extension of a separate representative thumbnail, for formats that cannot be thumbnailed directly, e.g. PDF/video'");
-        $this->addSql("COMMENT ON COLUMN {$prefix}images.date_metadata_update IS 'date the row was last synced from the file EXIF/IPTC metadata, null if never synced'");
-        $this->addSql("COMMENT ON COLUMN {$prefix}images.rating_score IS 'bayesian average of piwigo_rate ratings, recomputed by RateService::updateRatingScore'");
-        $this->addSql("COMMENT ON COLUMN {$prefix}images.path IS 'full relative filesystem path to the original file'");
-        $this->addSql("COMMENT ON COLUMN {$prefix}images.storage_category_id IS 'album the file is physically stored under, distinct from possibly multiple image_category memberships'");
-        $this->addSql("COMMENT ON COLUMN {$prefix}images.level IS 'minimum permission level required to view the image, see PwgImages::setPrivacyLevel and available_permission_levels'");
-        $this->addSql("COMMENT ON COLUMN {$prefix}images.md5sum IS 'MD5 checksum of the original file, computed lazily for duplicate detection'");
-        $this->addSql("COMMENT ON COLUMN {$prefix}images.added_by IS 'uploading user id'");
-        $this->addSql("COMMENT ON COLUMN {$prefix}images.rotation IS 'pending quarter-turn rotation to apply when rendering, 0 to 3'");
-        $this->addSql("COMMENT ON COLUMN {$prefix}images.latitude IS 'GPS latitude, from EXIF'");
-        $this->addSql("COMMENT ON COLUMN {$prefix}images.longitude IS 'GPS longitude, from EXIF'");
-        $this->addSql("COMMENT ON COLUMN {$prefix}images.lastmodified IS 'row last-update timestamp'");
+        $this->addSql('CREATE INDEX images_i2 ON images (date_available)');
+        $this->addSql('CREATE INDEX images_i3 ON images (rating_score)');
+        $this->addSql('CREATE INDEX images_i4 ON images (hit)');
+        $this->addSql('CREATE INDEX images_i5 ON images (date_creation)');
+        $this->addSql('CREATE INDEX images_i1 ON images (storage_category_id)');
+        $this->addSql('CREATE INDEX images_i6 ON images (latitude)');
+        $this->addSql('CREATE INDEX images_i7 ON images (path)');
+        $this->addSql('CREATE INDEX images_i8 ON images (md5sum)');
+        $this->addSql('CREATE INDEX images_i9 ON images (file)');
+        $this->addSql('CREATE INDEX images_lastmodified_idx ON images (lastmodified)');
+        $this->addSql('CREATE INDEX idx_images_date_desc ON images (date_available DESC, id DESC)');
+        $this->addSql('CREATE INDEX images_ft_name_comment ON images USING GIN (tsv_search)');
+        $this->addSql('CREATE INDEX images_ft_author ON images USING GIN (tsv_author)');
+        $this->addSql('CREATE TRIGGER trg_images_lastmodified BEFORE UPDATE ON images FOR EACH ROW EXECUTE FUNCTION set_lastmodified()');
+        $this->addSql("COMMENT ON TABLE images IS 'photo/media metadata and file location, one row per uploaded image'");
+        $this->addSql("COMMENT ON COLUMN images.id IS 'surrogate primary key'");
+        $this->addSql("COMMENT ON COLUMN images.file IS 'base filename of the original file'");
+        $this->addSql("COMMENT ON COLUMN images.date_available IS 'date the photo is considered added/visible in the gallery, can be mapped from EXIF/IPTC or admin-edited'");
+        $this->addSql("COMMENT ON COLUMN images.date_creation IS 'date the photo was taken, typically synced from EXIF/IPTC metadata'");
+        $this->addSql("COMMENT ON COLUMN images.name IS 'display title, distinct from the filename'");
+        $this->addSql("COMMENT ON COLUMN images.comment IS 'photo description shown on its page'");
+        $this->addSql("COMMENT ON COLUMN images.author IS 'photographer/author credit'");
+        $this->addSql("COMMENT ON COLUMN images.hit IS 'view counter'");
+        $this->addSql("COMMENT ON COLUMN images.filesize IS 'original file size in KB'");
+        $this->addSql("COMMENT ON COLUMN images.width IS 'original pixel width'");
+        $this->addSql("COMMENT ON COLUMN images.height IS 'original pixel height'");
+        $this->addSql("COMMENT ON COLUMN images.coi IS 'center of interest'");
+        $this->addSql("COMMENT ON COLUMN images.representative_ext IS 'file extension of a separate representative thumbnail, for formats that cannot be thumbnailed directly, e.g. PDF/video'");
+        $this->addSql("COMMENT ON COLUMN images.date_metadata_update IS 'date the row was last synced from the file EXIF/IPTC metadata, null if never synced'");
+        $this->addSql("COMMENT ON COLUMN images.rating_score IS 'bayesian average of rate ratings, recomputed by RateService::updateRatingScore'");
+        $this->addSql("COMMENT ON COLUMN images.path IS 'full relative filesystem path to the original file'");
+        $this->addSql("COMMENT ON COLUMN images.storage_category_id IS 'album the file is physically stored under, distinct from possibly multiple image_category memberships'");
+        $this->addSql("COMMENT ON COLUMN images.level IS 'minimum permission level required to view the image, see PwgImages::setPrivacyLevel and available_permission_levels'");
+        $this->addSql("COMMENT ON COLUMN images.md5sum IS 'MD5 checksum of the original file, computed lazily for duplicate detection'");
+        $this->addSql("COMMENT ON COLUMN images.added_by IS 'uploading user id'");
+        $this->addSql("COMMENT ON COLUMN images.rotation IS 'pending quarter-turn rotation to apply when rendering, 0 to 3'");
+        $this->addSql("COMMENT ON COLUMN images.latitude IS 'GPS latitude, from EXIF'");
+        $this->addSql("COMMENT ON COLUMN images.longitude IS 'GPS longitude, from EXIF'");
+        $this->addSql("COMMENT ON COLUMN images.lastmodified IS 'row last-update timestamp'");
 
         $this->addSql(
-            'CREATE TABLE ' . $prefix . 'lounge (' .
+            'CREATE TABLE lounge (' .
             'image_id integer NOT NULL, category_id integer NOT NULL, PRIMARY KEY (image_id, category_id))'
         );
-        $this->addSql("COMMENT ON TABLE {$prefix}lounge IS 'pending image-to-album associations, applied in bulk by ImageService::emptyLounge'");
-        $this->addSql("COMMENT ON COLUMN {$prefix}lounge.image_id IS 'newly uploaded image pending album association'");
-        $this->addSql("COMMENT ON COLUMN {$prefix}lounge.category_id IS 'album the image is intended for once the lounge is emptied'");
+        $this->addSql("COMMENT ON TABLE lounge IS 'pending image-to-album associations, applied in bulk by ImageService::emptyLounge'");
+        $this->addSql("COMMENT ON COLUMN lounge.image_id IS 'newly uploaded image pending album association'");
+        $this->addSql("COMMENT ON COLUMN lounge.category_id IS 'album the image is intended for once the lounge is emptied'");
 
         $this->addSql(
-            'CREATE TABLE ' . $prefix . 'old_permalinks (' .
+            'CREATE TABLE old_permalinks (' .
             'cat_id integer NOT NULL, ' .
             "permalink varchar(64) COLLATE \"C\" NOT NULL DEFAULT '', " .
             'date_deleted timestamp(0) DEFAULT NULL, ' .
@@ -542,28 +539,28 @@ final class Version20260804122300 extends AbstractMigration
             'hit bigint NOT NULL DEFAULT 0, ' .
             'PRIMARY KEY (permalink))'
         );
-        $this->addSql("COMMENT ON TABLE {$prefix}old_permalinks IS 'retired album permalinks, kept to block reuse and shown on the admin permalinks page'");
-        $this->addSql("COMMENT ON COLUMN {$prefix}old_permalinks.cat_id IS 'album the removed permalink used to point to'");
-        $this->addSql("COMMENT ON COLUMN {$prefix}old_permalinks.permalink IS 'the retired URL slug, kept so it is not immediately reusable by another album'");
-        $this->addSql("COMMENT ON COLUMN {$prefix}old_permalinks.date_deleted IS 'when the permalink was retired'");
-        $this->addSql("COMMENT ON COLUMN {$prefix}old_permalinks.last_hit IS 'when the dead permalink was last visited'");
-        $this->addSql("COMMENT ON COLUMN {$prefix}old_permalinks.hit IS 'visit count against the dead permalink'");
+        $this->addSql("COMMENT ON TABLE old_permalinks IS 'retired album permalinks, kept to block reuse and shown on the admin permalinks page'");
+        $this->addSql("COMMENT ON COLUMN old_permalinks.cat_id IS 'album the removed permalink used to point to'");
+        $this->addSql("COMMENT ON COLUMN old_permalinks.permalink IS 'the retired URL slug, kept so it is not immediately reusable by another album'");
+        $this->addSql("COMMENT ON COLUMN old_permalinks.date_deleted IS 'when the permalink was retired'");
+        $this->addSql("COMMENT ON COLUMN old_permalinks.last_hit IS 'when the dead permalink was last visited'");
+        $this->addSql("COMMENT ON COLUMN old_permalinks.hit IS 'visit count against the dead permalink'");
 
         $this->addSql(
-            'CREATE TABLE ' . $prefix . 'rate (' .
+            'CREATE TABLE rate (' .
             'user_id integer NOT NULL, element_id integer NOT NULL, ' .
             "anonymous_id varchar(45) NOT NULL DEFAULT '', rate smallint NOT NULL DEFAULT 0, date date DEFAULT NULL, " .
             'PRIMARY KEY (element_id, user_id, anonymous_id))'
         );
-        $this->addSql("COMMENT ON TABLE {$prefix}rate IS 'per-user or per-anonymous-visitor image ratings, aggregated into images.rating_score'");
-        $this->addSql("COMMENT ON COLUMN {$prefix}rate.user_id IS 'rating user id, the guest user id for anonymous visitors'");
-        $this->addSql("COMMENT ON COLUMN {$prefix}rate.element_id IS 'rated image id'");
-        $this->addSql("COMMENT ON COLUMN {$prefix}rate.anonymous_id IS 'truncated IP address identifying an anonymous rater, from the anonymous_rater cookie'");
-        $this->addSql("COMMENT ON COLUMN {$prefix}rate.rate IS 'submitted rating value, restricted to the configured rate_items'");
-        $this->addSql("COMMENT ON COLUMN {$prefix}rate.date IS 'date the rate was submitted'");
+        $this->addSql("COMMENT ON TABLE rate IS 'per-user or per-anonymous-visitor image ratings, aggregated into images.rating_score'");
+        $this->addSql("COMMENT ON COLUMN rate.user_id IS 'rating user id, the guest user id for anonymous visitors'");
+        $this->addSql("COMMENT ON COLUMN rate.element_id IS 'rated image id'");
+        $this->addSql("COMMENT ON COLUMN rate.anonymous_id IS 'truncated IP address identifying an anonymous rater, from the anonymous_rater cookie'");
+        $this->addSql("COMMENT ON COLUMN rate.rate IS 'submitted rating value, restricted to the configured rate_items'");
+        $this->addSql("COMMENT ON COLUMN rate.date IS 'date the rate was submitted'");
 
         $this->addSql(
-            'CREATE TABLE ' . $prefix . 'tags (' .
+            'CREATE TABLE tags (' .
             'id integer GENERATED BY DEFAULT AS IDENTITY, ' .
             "name varchar(255) NOT NULL DEFAULT '', " .
             "url_name varchar(255) COLLATE \"C\" NOT NULL DEFAULT '', " .
@@ -571,31 +568,14 @@ final class Version20260804122300 extends AbstractMigration
             "tsv_search tsvector GENERATED ALWAYS AS (to_tsvector('simple', coalesce(name, ''))) STORED, " .
             'PRIMARY KEY (id))'
         );
-        $this->addSql('CREATE INDEX tags_i1 ON ' . $prefix . 'tags (url_name)');
-        $this->addSql('CREATE INDEX tags_lastmodified_idx ON ' . $prefix . 'tags (lastmodified)');
-        $this->addSql('CREATE INDEX tags_ft_name ON ' . $prefix . 'tags USING GIN (tsv_search)');
-        $this->addSql('CREATE TRIGGER trg_tags_lastmodified BEFORE UPDATE ON ' . $prefix . 'tags FOR EACH ROW EXECUTE FUNCTION piwigo_set_lastmodified()');
-        $this->addSql("COMMENT ON TABLE {$prefix}tags IS 'photo tags/keywords'");
-        $this->addSql("COMMENT ON COLUMN {$prefix}tags.id IS 'surrogate primary key'");
-        $this->addSql("COMMENT ON COLUMN {$prefix}tags.name IS 'tag display name'");
-        $this->addSql("COMMENT ON COLUMN {$prefix}tags.url_name IS 'URL-friendly slug derived from name'");
-        $this->addSql("COMMENT ON COLUMN {$prefix}tags.lastmodified IS 'row last-update timestamp, set on insert only'");
-    }
-
-    /**
-     * The verbatim-copied MySQL/MariaDB DDL blocks above always literally
-     * say `piwigo_`, matching `install/piwigo_structure-mysql.sql` itself
-     * (which has no prefix placeholder either) -- the *old* install path
-     * only supported a custom `PIWIGO_DB_PREFIX` by string-replacing
-     * `InstallService::executeSqlfile()`'s own `DEFAULT_PREFIX_TABLE`
-     * ('piwigo_') for the real submitted prefix as it streamed the file.
-     * Now that `InstallWizard` calls this migration directly instead of
-     * that file-based path, the same replacement has to happen here, or a
-     * non-default prefix submitted through the install form would be
-     * silently ignored on the MySQL/MariaDB branch.
-     */
-    private function withMysqlPrefix(string $sql): string
-    {
-        return str_replace('piwigo_', DbCredentials::fromEnv()->prefix, $sql);
+        $this->addSql('CREATE INDEX tags_i1 ON tags (url_name)');
+        $this->addSql('CREATE INDEX tags_lastmodified_idx ON tags (lastmodified)');
+        $this->addSql('CREATE INDEX tags_ft_name ON tags USING GIN (tsv_search)');
+        $this->addSql('CREATE TRIGGER trg_tags_lastmodified BEFORE UPDATE ON tags FOR EACH ROW EXECUTE FUNCTION set_lastmodified()');
+        $this->addSql("COMMENT ON TABLE tags IS 'photo tags/keywords'");
+        $this->addSql("COMMENT ON COLUMN tags.id IS 'surrogate primary key'");
+        $this->addSql("COMMENT ON COLUMN tags.name IS 'tag display name'");
+        $this->addSql("COMMENT ON COLUMN tags.url_name IS 'URL-friendly slug derived from name'");
+        $this->addSql("COMMENT ON COLUMN tags.lastmodified IS 'row last-update timestamp, set on insert only'");
     }
 }

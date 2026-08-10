@@ -8,7 +8,6 @@ use Doctrine\DBAL\Platforms\PostgreSQLPlatform;
 use Doctrine\DBAL\Schema\Schema;
 use Doctrine\Migrations\AbstractMigration;
 use Override;
-use Piwigo\Db\DbCredentials;
 
 /**
  * Baseline bootstrap, final step: every FK constraint, added once all 39
@@ -90,15 +89,14 @@ final class Version20260804122303 extends AbstractMigration
     #[Override]
     public function up(Schema $schema): void
     {
-        $prefix = DbCredentials::fromEnv()->prefix;
         $isPostgres = $this->platform instanceof PostgreSQLPlatform;
 
         foreach (self::foreignKeys() as [$table, $constraintName, $column, $refTable, $refColumn, $onDelete]) {
             if ($isPostgres) {
                 $this->addSql(
-                    'ALTER TABLE ' . $prefix . $table .
+                    'ALTER TABLE ' . $table .
                     ' ADD CONSTRAINT ' . $constraintName .
-                    ' FOREIGN KEY (' . $column . ') REFERENCES ' . $prefix . $refTable . ' (' . $refColumn . ')' .
+                    ' FOREIGN KEY (' . $column . ') REFERENCES ' . $refTable . ' (' . $refColumn . ')' .
                     ' ON DELETE ' . $onDelete
                 );
 
@@ -106,9 +104,9 @@ final class Version20260804122303 extends AbstractMigration
             }
 
             $this->addSql(
-                'ALTER TABLE `' . $prefix . $table . '`' .
+                'ALTER TABLE `' . $table . '`' .
                 ' ADD CONSTRAINT `' . $constraintName . '`' .
-                ' FOREIGN KEY (`' . $column . '`) REFERENCES `' . $prefix . $refTable . '` (`' . $refColumn . '`)' .
+                ' FOREIGN KEY (`' . $column . '`) REFERENCES `' . $refTable . '` (`' . $refColumn . '`)' .
                 ' ON DELETE ' . $onDelete
             );
         }

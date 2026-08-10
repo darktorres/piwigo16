@@ -312,7 +312,7 @@ final class PictureModifyPageRenderer
         $u_delete = $admin_url_start . '&amp;delete=1&amp;pwg_token=' . new CsrfService($this->currentConfig)->getToken();
         $u_history = $this->urlService->getRootUrl() . 'admin.php?page=history&amp;filter_image_id=' . $image_id;
         $u_activity = $this->urlService->getRootUrl() . 'admin.php?page=user_activity&photo=' . $image_id;
-        $path = $row['path'];
+        $path = is_string($row['path']) ? $row['path'] : '';
         $tn_src = DerivativeImage::url(ImageStdParams::MEDIUM, $src_image);
         $file_src = DerivativeImage::url(ImageStdParams::LARGE, $src_image);
         $title = $htmlRenderer->renderElementName($row);
@@ -320,7 +320,7 @@ final class PictureModifyPageRenderer
         $format_flag = ($row['width'] >= $row['height']) ? 1 : 0; // 0:horizontal, 1:vertical
         $filesize = (is_scalar($row['filesize']) ? (string) $row['filesize'] : '') . ' KB';
         $registration_date = DateHelper::formatDate(is_string($row['date_available']) || is_int($row['date_available']) ? $row['date_available'] : false);
-        $date_creation = $row['date_creation'];
+        $date_creation = is_string($row['date_creation']) || is_int($row['date_creation']) ? $row['date_creation'] : null;
         $f_action = $this->urlService->getRootUrl() . 'admin.php'
             . $this->urlService->getQueryStringDiff(['sync_metadata']);
 

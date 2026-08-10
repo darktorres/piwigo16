@@ -59,7 +59,7 @@ test('toArray includes save_success/U_COI/STORAGE_CATEGORY/U_JUMPTO when set', f
         uDelete: '/admin.php?page=photo-5-properties&delete=1&pwg_token=abc',
         uHistory: '/admin.php?page=history&filter_image_id=5',
         uActivity: '/admin.php?page=user_activity&photo=5',
-        path: null,
+        path: '',
         tnSrc: '/i/sunset-md.jpg',
         fileSrc: '/i/sunset-lg.jpg',
         name: 'Sunset',

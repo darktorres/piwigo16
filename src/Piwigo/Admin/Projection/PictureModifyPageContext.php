@@ -20,6 +20,19 @@ use Piwigo\Core\TemplatePageContext;
  * (confirmed by direct read) -- kept here anyway as a faithful 1:1 port
  * of the original assign() call, not removed as an out-of-scope
  * dead-code cleanup.
+ *
+ * `dateCreation` stays `string|int|null`, unvalidated -- `picture_modify.tpl`
+ * renders it straight into `<input type="hidden" name="date_creation"
+ * value="{$DATE_CREATION}">`, read back by a JS datepicker and
+ * round-tripped through `PictureModifyRequest`'s own
+ * `date_creation` validation pattern (`\d\d\d\d-\d\d-\d\d(...)?`, time
+ * component optional). Its raw driver-fetch source can be `int` or
+ * `string` depending on DBAL's native-casting mode (same ambiguity
+ * `CatModifyPageRenderer` documents for a different column), which is
+ * harmless here since the value is only ever string-interpolated, never
+ * computed on -- no existing VO matches "loose date-or-datetime string,
+ * no validation," and one built solely for this call site would be a
+ * premature abstraction.
  */
 final readonly class PictureModifyPageContext implements TemplatePageContext
 {
@@ -42,7 +55,7 @@ final readonly class PictureModifyPageContext implements TemplatePageContext
         public string $uDelete,
         public string $uHistory,
         public string $uActivity,
-        public mixed $path,
+        public string $path,
         public string $tnSrc,
         public string $fileSrc,
         public string $name,
@@ -52,7 +65,7 @@ final readonly class PictureModifyPageContext implements TemplatePageContext
         public string $filesize,
         public string $registrationDate,
         public string $author,
-        public mixed $dateCreation,
+        public string|int|null $dateCreation,
         public string $description,
         public string $fAction,
         public array $introVars,

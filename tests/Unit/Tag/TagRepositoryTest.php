@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\Exception\UniqueConstraintViolationException;
+use Doctrine\DBAL\TransactionIsolationLevel;
 use Piwigo\Common\ValueObject\ImageId;
 use Piwigo\Common\ValueObject\TagId;
 use Piwigo\Db\DbConnection;
@@ -121,6 +122,20 @@ use Piwigo\Tag\TagRepository;
 function tagTestRepo(): TagRepository
 {
     $repo = EntityManagerFactory::build(DbConnection::build())->getRepository(TagEntity::class);
+
+    return $repo;
+}
+
+/**
+ * Same as tagTestRepo(), but built on a caller-supplied connection
+ * instead of a fresh internal one -- the countAll()/countAllImageTagLinks()
+ * "reflects a freshly inserted..." tests below need the repo to share
+ * their own raw-SQL ground-truth read's exact connection/transaction, not
+ * a separate one of its own.
+ */
+function tagTestRepoFor(Connection $conn): TagRepository
+{
+    $repo = EntityManagerFactory::build($conn)->getRepository(TagEntity::class);
 
     return $repo;
 }
@@ -726,40 +741,50 @@ test('findOtherNames() excludes the given id', function (): void {
 });
 
 test('countAll() reflects a freshly inserted tag', function (): void {
-    // Compares against a raw ground-truth COUNT(*) taken right next to
-    // the repo's own read, not a "before" snapshot from an earlier round
-    // trip -- countAll() is a genuinely global, unfiltered COUNT(*), and
-    // this whole DB is shared across every Unit test in one process, so
-    // even a >= delta against a "before" value isn't safe: another
+    // countAll() is a genuinely global, unfiltered COUNT(*), and this
+    // whole DB is shared across every Unit test in one process -- even
+    // 2 back-to-back reads (a raw COUNT(*) immediately next to the
+    // repo's own) each over their own round trip aren't safe: a
     // concurrently-running test's own DELETE can land in the gap between
-    // "before" and "insert", pushing the real total below "before + 1"
-    // even though countAll() itself is working correctly (confirmed
-    // live). Comparing 2 near-simultaneous reads of the *same* final
-    // state, instead of "before" vs "after", proves countAll() isn't
-    // stale/cached without depending on nothing else touching tags in
-    // the same instant.
-    $repo = tagTestRepo();
+    // them, so the 2 reads observe genuinely different snapshots even
+    // though countAll() itself is working correctly (confirmed live:
+    // "6 is identical to 7" after switching to that technique). Building
+    // the repo on the SAME connection as the raw read and running both
+    // inside one REPEATABLE READ transaction pins both queries to the
+    // exact same snapshot, closing the gap for good rather than just
+    // narrowing it.
     $conn = DbConnection::build();
+    $repo = tagTestRepoFor($conn);
     $id = $repo->insert(tagTestName(), tagTestName());
 
     try {
+        $conn->setTransactionIsolation(TransactionIsolationLevel::REPEATABLE_READ);
+        $conn->beginTransaction();
         $raw = $conn->createQueryBuilder()->select('COUNT(*)')->from('tags')->executeQuery()->fetchOne();
-        expect($repo->countAll())->toBe(is_numeric($raw) ? (int) $raw : -1);
+        $actual = $repo->countAll();
+        $conn->commit();
+
+        expect($actual)->toBe(is_numeric($raw) ? (int) $raw : -1);
     } finally {
         $repo->deleteByIds([$id]);
     }
 });
 
 test('countAllImageTagLinks() reflects a freshly inserted link', function (): void {
-    // Same ground-truth-comparison technique as countAll()'s own sibling
-    // test above, for the identical reason -- see its comment.
-    $repo = tagTestRepo();
+    // Same same-connection, same-snapshot technique as countAll()'s own
+    // sibling test above, for the identical reason -- see its comment.
     $conn = DbConnection::build();
+    $repo = tagTestRepoFor($conn);
     $conn->insert('image_tag', ['image_id' => 5, 'tag_id' => 2]);
 
     try {
+        $conn->setTransactionIsolation(TransactionIsolationLevel::REPEATABLE_READ);
+        $conn->beginTransaction();
         $raw = $conn->createQueryBuilder()->select('COUNT(*)')->from('image_tag')->executeQuery()->fetchOne();
-        expect($repo->countAllImageTagLinks())->toBe(is_numeric($raw) ? (int) $raw : -1);
+        $actual = $repo->countAllImageTagLinks();
+        $conn->commit();
+
+        expect($actual)->toBe(is_numeric($raw) ? (int) $raw : -1);
     } finally {
         $conn->delete('image_tag', ['image_id' => 5, 'tag_id' => 2]);
     }

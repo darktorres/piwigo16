@@ -34,6 +34,7 @@
 !/plugins/index.php
 /themes/*
 !/themes/index.php
+!/themes/admin
 !/themes/default
 !/themes/standard_pages
 /upload

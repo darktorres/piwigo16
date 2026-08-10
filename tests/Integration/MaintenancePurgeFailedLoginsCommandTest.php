@@ -64,13 +64,13 @@ final class MaintenancePurgeFailedLoginsCommandTest extends IntegrationTestCase
             self::assertSame(Command::SUCCESS, $exitCode);
 
             $remainingFailedLogins = $conn->fetchOne('SELECT COUNT(*) FROM ' . 'user_failed_logins' . ' WHERE user_id = 1');
-            self::assertSame(1, is_numeric($remainingFailedLogins) ? (int) $remainingFailedLogins : -1);
+            self::assertSame(1, $remainingFailedLogins);
 
             $remainingOld = $conn->fetchOne("SELECT COUNT(*) FROM " . 'integrity_ignored_anomalies' . " WHERE anomaly_id = 'old-anomaly'");
-            self::assertSame(0, is_numeric($remainingOld) ? (int) $remainingOld : -1);
+            self::assertSame(0, $remainingOld);
 
             $remainingRecent = $conn->fetchOne("SELECT COUNT(*) FROM " . 'integrity_ignored_anomalies' . " WHERE anomaly_id = 'recent-anomaly'");
-            self::assertSame(1, is_numeric($remainingRecent) ? (int) $remainingRecent : -1);
+            self::assertSame(1, $remainingRecent);
         } finally {
             $conn->executeStatement('DELETE FROM ' . 'user_failed_logins' . ' WHERE user_id = 1');
             $conn->executeStatement("DELETE FROM " . 'integrity_ignored_anomalies' . " WHERE anomaly_id IN ('old-anomaly', 'recent-anomaly')");

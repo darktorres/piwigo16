@@ -561,7 +561,7 @@ final class ImageRepositoryTest extends IntegrationTestCase
         $this->repo->deleteFormatsByIds([]);
 
         $count = $this->conn->fetchOne('SELECT COUNT(*) FROM ' . 'image_format' . ' WHERE format_id = ' . $formatId);
-        self::assertSame(1, is_numeric($count) ? (int) $count : null);
+        self::assertSame(1, $count);
     }
 
     public function test_find_paths_and_level_for_ids_returns_empty_array_for_empty_input(): void
@@ -1282,7 +1282,7 @@ final class ImageRepositoryTest extends IntegrationTestCase
         // DB.
         $maxId = $this->conn->fetchOne('SELECT MAX(id) FROM ' . 'images');
 
-        self::assertSame((is_numeric($maxId) ? (int) $maxId : 0) + 1, $this->repo->findNextId());
+        self::assertSame((is_numeric($maxId) ? $maxId : 0) + 1, $this->repo->findNextId());
     }
 
     public function test_find_ids_not_in_categories_excludes_linked_images(): void

@@ -140,7 +140,11 @@ test('findSavedSearchByUuid() maps a null created_on to null, not the entity ins
 });
 
 test('findIdsByClause() returns a list of ints', function (): void {
-    $ids = searchTestRepo()->findIdsByClause('id', 'images' . ' i', 'id > ?', [0]);
+    // Bounded to the fixture's own 5 ids, not a bare 'id > 0' -- several
+    // OTHER Unit-suite files insert a disposable image (a real, higher
+    // auto-increment id) for the span of their own test, which an
+    // unbounded condition here could catch mid-test under --parallel.
+    $ids = searchTestRepo()->findIdsByClause('id', 'images' . ' i', 'id > ? AND id <= ?', [0, 5]);
     sort($ids);
 
     expect($ids)->toBe([1, 2, 3, 4, 5]);

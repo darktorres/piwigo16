@@ -40,11 +40,18 @@ final class Version20260809083506 extends AbstractMigration
             return;
         }
 
+        // CAST(... AS CHAR) on the column side, not a bare `col = '0000-...'`
+        // literal comparison -- MySQL's default strict sql_mode (NO_ZERO_DATE,
+        // active on this server) rejects the zero-date *string literal itself*
+        // while parsing it into a DATETIME for the comparison, before any row
+        // is ever examined, so the literal-comparison form fails outright even
+        // when the table is empty. Casting the column to CHAR compares as text
+        // instead, never triggering that DATETIME-literal validation.
         $this->addSql(
-            'UPDATE `images` SET `date_creation` = NULL WHERE `date_creation` = \'0000-00-00 00:00:00\''
+            'UPDATE `images` SET `date_creation` = NULL WHERE CAST(`date_creation` AS CHAR) = \'0000-00-00 00:00:00\''
         );
         $this->addSql(
-            'UPDATE `images` SET `date_available` = NULL WHERE `date_available` = \'0000-00-00 00:00:00\''
+            'UPDATE `images` SET `date_available` = NULL WHERE CAST(`date_available` AS CHAR) = \'0000-00-00 00:00:00\''
         );
     }
 

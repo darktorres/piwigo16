@@ -23,7 +23,7 @@ use Piwigo\Common\ValueObject\GroupId;
  * straight into a real GroupId VO instead of a raw int.
  */
 #[ORM\Entity(repositoryClass: GroupRepository::class)]
-#[ORM\Table(name: 'groups')]
+#[ORM\Table(name: '`groups`')]
 final class GroupEntity
 {
     #[ORM\Id]

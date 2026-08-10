@@ -153,11 +153,20 @@ final class GroupRepository extends EntityRepository
         int $perPage,
         int $page
     ): array {
-        $qb = $this->getEntityManager()
-            ->getConnection()
-            ->createQueryBuilder()
+        $conn = $this->getEntityManager()
+            ->getConnection();
+        // 'groups' became a reserved keyword on MySQL 8.0.2+ (its own
+        // window-frame GROUPS clause) -- QueryBuilder::from() takes a raw
+        // table-name string, with none of the automatic quoting a mapped
+        // entity's own #[ORM\Table(name: '`groups`')] attribute gets, so
+        // this needs the same explicit, per-platform quoteSingleIdentifier()
+        // this codebase already uses elsewhere (e.g. CategoryRepository's
+        // own `rank` column quoting).
+        $groupsTable = $conn->getDatabasePlatform()
+            ->quoteSingleIdentifier('groups');
+        $qb = $conn->createQueryBuilder()
             ->select('g.*', 'COUNT(ug.user_id) AS nb_users')
-            ->from('groups', 'g')
+            ->from($groupsTable, 'g')
             ->leftJoin('g', 'user_group', 'ug', 'ug.group_id = g.id')
             ->groupBy('g.id')
             ->orderBy($order)

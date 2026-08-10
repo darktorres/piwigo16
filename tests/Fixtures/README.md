@@ -31,12 +31,12 @@ composer test:fixture-regen
 ```
 
 This runs `tests/Browser/RegenerateFixtureTest.php` (tagged `fixture-regen`, excluded
-from `composer test:browser`): drops and recreates `piwigo_test`, drives a real
-`install.php` submission (which creates the final schema directly from
-`install/piwigo_structure-mysql.sql` -- there's no separate migration step), seeds the
-content listed above via the WS API, then dumps the result over this file. Rerun it
-whenever the fixture's shape needs to change (new tables/columns, more seed data needed
-by a new test) — not part of the normal day-to-day test loop, which just loads the file
+from `composer test:browser`): drops and recreates the test database, drives a real
+`install.php` submission (which creates the final schema via the real Doctrine
+Migrations baseline `InstallWizard::performInstall()` runs, not a static SQL file),
+seeds the content listed above via the WS API, then dumps the result over this file.
+Rerun it whenever the fixture's shape needs to change (new tables/columns, more seed data
+needed by a new test) — not part of the normal day-to-day test loop, which just loads the file
 as committed.
 
 Since it wipes `piwigo_test`, never point `PIWIGO_DB_BASE` in `.env.test` at a real

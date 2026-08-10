@@ -488,8 +488,8 @@ test('findImageThumbInfoByIds() returns the requested images', function (): void
     // via separate, independent install+upload runs), same driver split
     // documented in NotificationRepositoryTest.php/WsTopLevelTest.php.
     $expectedPath = getenv('PIWIGO_DB_DRIVER') === 'pgsql'
-        ? 'upload/2026/08/01/20260801000000-2e7e7413.jpg'
-        : 'upload/2026/08/01/20260801000000-2e7ed018.jpg';
+        ? 'upload/2026/08/01/20260801000000-2e7e2ce3.jpg'
+        : 'upload/2026/08/01/20260801000000-2e7e6c90.jpg';
     expect($byId[1]->id)->toBe(1)
         ->and($byId[1]->name)->toBe('Photo 1')
         ->and($byId[1]->file)->toBe('fixture-photo-1.jpg')

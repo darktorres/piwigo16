@@ -43,6 +43,13 @@ beforeEach(function (): void {
     $root = sys_get_temp_dir() . '/piwigo-tabsheet-test-' . bin2hex(random_bytes(8));
     mkdir($root, 0o777, true);
     file_put_contents($root . '/tabsheet.tpl', '');
+    // Captured on $this, not re-read via CurrentPathsTestFactory::get() in
+    // afterEach() below -- if Kernel::boot() throws here (a prior test left
+    // Kernel booted against a different root without resetting), afterEach()
+    // still runs, and re-resolving through the container would delete
+    // whatever root that earlier, unrelated test left bound instead of this
+    // test's own fixture root.
+    $this->root = $root;
     Kernel::boot(Paths::fromRoot($root));
     $currentConfig = Kernel::container()->get(CurrentConfig::class);
     if (! $currentConfig instanceof CurrentConfig) {
@@ -54,7 +61,7 @@ beforeEach(function (): void {
 });
 
 afterEach(function (): void {
-    tabsheetTestRrmdir(CurrentPathsTestFactory::get()->root);
+    tabsheetTestRrmdir($this->root);
     CurrentTemplate::current()->reset();
     Kernel::reset();
     CurrentConfigTestFactory::get()->reset();

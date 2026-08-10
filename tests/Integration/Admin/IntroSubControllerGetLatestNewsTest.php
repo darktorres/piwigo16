@@ -22,12 +22,12 @@ use Piwigo\Core\Paths;
  * method reads whenever that cache is still fresh (< 24h old) --
  * deterministically exercising the real cache-hit + unserialize() path.
  */
-function intronewsCachePath(): string
+function intronewsCachePath(?string $root = null): string
 {
     $langCode = LangTestFactory::get()->langInfo()['code'] ?? null;
     $langCode = is_string($langCode) ? $langCode : '';
 
-    return CurrentPathsTestFactory::get()->root . CurrentConfigTestFactory::get()->dataLocation
+    return ($root ?? CurrentPathsTestFactory::get()->root) . CurrentConfigTestFactory::get()->dataLocation
         . 'cache/piwigo_latest_news-' . $langCode . '.cache.php';
 }
 
@@ -39,19 +39,28 @@ function intronewsInvoke(): mixed
 }
 
 beforeEach(function (): void {
+    $root = dirname(__DIR__, 3);
+    // Captured on $this, not re-read via CurrentPathsTestFactory::get() in
+    // afterEach() below -- if Kernel::boot() throws here (a prior test left
+    // Kernel booted against a different root without resetting), afterEach()
+    // still runs, and re-resolving through the container would target
+    // whatever root that earlier, unrelated test left bound instead of this
+    // file's own real-root path.
+    $this->root = $root;
     // CurrentPaths is a shared, process-wide static -- explicitly (re-)set
     // it here rather than relying on some earlier-run Integration test
     // file (e.g. IntegrationTestCase::setUp()) to have already done so.
-    Kernel::boot(Paths::fromRoot(dirname(__DIR__, 3)));
+    Kernel::boot(Paths::fromRoot($root));
 });
 
 afterEach(function (): void {
+    $path = intronewsCachePath($this->root);
     // @ doesn't suppress this from PHPUnit's own warning collector -- most
     // tests here never create the cache file at all, so "already gone" is
     // the common case, not a bug.
     set_error_handler(static fn (): bool => true);
     try {
-        unlink(intronewsCachePath());
+        unlink($path);
     } finally {
         restore_error_handler();
     }

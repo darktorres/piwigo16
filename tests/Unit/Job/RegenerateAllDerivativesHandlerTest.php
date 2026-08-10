@@ -33,13 +33,20 @@ beforeEach(function (): void {
     CurrentConfigTestFactory::get()->reset();
     $root = sys_get_temp_dir() . '/piwigo-regen-handler-test-' . bin2hex(random_bytes(8));
     mkdir($root, 0o777, true);
+    // Captured on $this, not re-read via CurrentPathsTestFactory::get() in
+    // afterEach() below -- if Kernel::boot() throws here (a prior test left
+    // Kernel booted against a different root without resetting), afterEach()
+    // still runs, and re-resolving through the container would delete
+    // whatever root that earlier, unrelated test left bound instead of this
+    // test's own fixture root.
+    $this->root = $root;
     Kernel::boot(Paths::fromRoot($root));
     CurrentConfigTestFactory::get()->dataLocation = 'data/';
     mkdir(CurrentPathsTestFactory::get()->root . CurrentConfigTestFactory::get()->derivativeDir, 0o777, true);
 });
 
 afterEach(function (): void {
-    regen_handler_test_rrmdir(CurrentPathsTestFactory::get()->root);
+    regen_handler_test_rrmdir($this->root);
     CurrentConfigTestFactory::get()->reset();
     Kernel::reset();
 });

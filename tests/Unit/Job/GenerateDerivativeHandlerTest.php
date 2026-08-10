@@ -44,6 +44,13 @@ beforeEach(function (): void {
     CurrentConfigTestFactory::get()->reset();
     $root = sys_get_temp_dir() . '/piwigo-generate-derivative-handler-test-' . bin2hex(random_bytes(8));
     mkdir($root, 0o777, true);
+    // Captured on $this, not re-read via CurrentPathsTestFactory::get() in
+    // afterEach() below -- if Kernel::boot() throws here (a prior test left
+    // Kernel booted against a different root without resetting), afterEach()
+    // still runs, and re-resolving through the container would delete
+    // whatever root that earlier, unrelated test left bound instead of this
+    // test's own fixture root.
+    $this->root = $root;
     Kernel::boot(Paths::fromRoot($root));
     $currentConfig = generate_derivative_handler_test_current_config();
     $currentConfig->dataLocation = 'data/';
@@ -51,7 +58,7 @@ beforeEach(function (): void {
 });
 
 afterEach(function (): void {
-    generate_derivative_handler_test_rrmdir(CurrentPathsTestFactory::get()->root);
+    generate_derivative_handler_test_rrmdir($this->root);
     CurrentConfigTestFactory::get()->reset();
     Kernel::reset();
 });

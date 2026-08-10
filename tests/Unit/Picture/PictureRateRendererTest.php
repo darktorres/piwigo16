@@ -43,6 +43,13 @@ function picture_rate_test_rrmdir(string $dir): void
 beforeEach(function (): void {
     $root = sys_get_temp_dir() . '/piwigo-picture-rate-test-' . bin2hex(random_bytes(8));
     mkdir($root, 0o777, true);
+    // Captured on $this, not re-read via CurrentPathsTestFactory::get() in
+    // afterEach() below -- if Kernel::boot() throws here (a prior test left
+    // Kernel booted against a different root without resetting), afterEach()
+    // still runs, and re-resolving through the container would delete
+    // whatever root that earlier, unrelated test left bound instead of this
+    // test's own fixture root.
+    $this->root = $root;
     Kernel::boot(Paths::fromRoot($root));
     CurrentConfigTestFactory::get()->dataLocation = 'data/';
     CurrentConfigTestFactory::get()->dataDirChecked = '1';
@@ -50,7 +57,7 @@ beforeEach(function (): void {
 });
 
 afterEach(function (): void {
-    picture_rate_test_rrmdir(CurrentPathsTestFactory::get()->root);
+    picture_rate_test_rrmdir($this->root);
     CurrentTemplate::current()->reset();
     Kernel::reset();
     CurrentConfigTestFactory::get()->reset();

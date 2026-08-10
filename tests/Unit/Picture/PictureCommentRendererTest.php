@@ -61,10 +61,8 @@ function picture_comment_test_rrmdir(string $dir): void
  * skips the extra is_writable()/confUpdateParam() DB-touching branch for
  * the data dir itself, which would otherwise run unconditionally too.
  */
-function makePictureCommentTestTemplate(): Template
+function makePictureCommentTestTemplate(string $root): Template
 {
-    $root = sys_get_temp_dir() . '/piwigo-picture-comment-test-' . bin2hex(random_bytes(8));
-    mkdir($root, 0o777, true);
     Kernel::boot(Paths::fromRoot($root));
     CurrentConfigTestFactory::get()->dataLocation = 'data/';
     CurrentConfigTestFactory::get()->dataDirChecked = '1';
@@ -73,13 +71,23 @@ function makePictureCommentTestTemplate(): Template
 }
 
 beforeEach(function (): void {
+    $root = sys_get_temp_dir() . '/piwigo-picture-comment-test-' . bin2hex(random_bytes(8));
+    mkdir($root, 0o777, true);
+    // Captured on $this, not re-read via CurrentPathsTestFactory::get() in
+    // afterEach() below -- if Kernel::boot() throws inside
+    // makePictureCommentTestTemplate() (a prior test left Kernel booted
+    // against a different root without resetting), afterEach() still runs,
+    // and re-resolving through the container would delete whatever root
+    // that earlier, unrelated test left bound instead of this test's own
+    // fixture root.
+    $this->root = $root;
     // makePictureCommentTestTemplate() itself calls Kernel::boot() -- must
     // finish (and its return value captured) before CurrentTemplate::
     // current() resolves, or current() resolves the pre-boot memoized
     // fallback instead of the now-booted container's own instance, and
     // this set() call is invisible to every later current()->get() read
     // in this file (same pitfall as Translator/EventDispatcher/CurrentUser).
-    $template = makePictureCommentTestTemplate();
+    $template = makePictureCommentTestTemplate($root);
     CurrentTemplate::current()->set($template);
     CurrentUserTestFactory::get()->set(new User(
         id: UserId::from(1),
@@ -94,7 +102,7 @@ beforeEach(function (): void {
 });
 
 afterEach(function (): void {
-    picture_comment_test_rrmdir(CurrentPathsTestFactory::get()->root);
+    picture_comment_test_rrmdir($this->root);
     CurrentTemplate::current()->reset();
     Kernel::reset();
     CurrentUserTestFactory::get()->reset();

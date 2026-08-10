@@ -59,6 +59,12 @@ function persistentFileCacheTestNewCurrentConfig(): CurrentConfig
 beforeEach(function (): void {
     $root = sys_get_temp_dir() . '/piwigo-persistent-file-cache-test-' . bin2hex(random_bytes(8));
     mkdir($root, 0o777, true);
+    // Captured on $this, not re-read via CurrentPathsTestFactory::get() in
+    // afterEach() below -- belt-and-suspenders alongside the Kernel::reset()
+    // call right below: if boot() ever threw here for any reason, afterEach()
+    // still runs, and re-resolving through the container would delete
+    // whatever root some other test left bound instead of this fixture root.
+    $this->root = $root;
     // A prior test file left Kernel booted without resetting first would
     // otherwise make this boot() silently no-op, leaving CurrentPathsTestFactory
     // (and afterEach's own recursive delete below) pointed at whatever
@@ -76,7 +82,7 @@ beforeEach(function (): void {
 });
 
 afterEach(function (): void {
-    persistentFileCacheTestRrmdir(CurrentPathsTestFactory::get()->root);
+    persistentFileCacheTestRrmdir($this->root);
     Kernel::reset();
 });
 

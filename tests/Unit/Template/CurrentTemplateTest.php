@@ -42,6 +42,13 @@ function current_template_test_rrmdir(string $dir): void
 beforeEach(function (): void {
     $root = sys_get_temp_dir() . '/piwigo-current-template-test-' . bin2hex(random_bytes(8));
     mkdir($root, 0o777, true);
+    // Captured on $this, not re-read via CurrentPathsTestFactory::get() in
+    // afterEach() below -- if Kernel::boot() throws here (a prior test left
+    // Kernel booted against a different root without resetting), afterEach()
+    // still runs, and re-resolving through the container would delete
+    // whatever root that earlier, unrelated test left bound instead of this
+    // test's own fixture root.
+    $this->root = $root;
     Kernel::boot(Paths::fromRoot($root));
     $currentConfig = Kernel::container()->get(CurrentConfig::class);
     if (! $currentConfig instanceof CurrentConfig) {
@@ -52,7 +59,7 @@ beforeEach(function (): void {
 });
 
 afterEach(function (): void {
-    current_template_test_rrmdir(CurrentPathsTestFactory::get()->root);
+    current_template_test_rrmdir($this->root);
     CurrentConfigTestFactory::get()->reset();
     Kernel::reset();
 });

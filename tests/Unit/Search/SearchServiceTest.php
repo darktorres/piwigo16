@@ -13,6 +13,8 @@ use Piwigo\Category\CategoryService;
 use Piwigo\Config\ConfigLoader;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\DeploymentPolicy;
+use Piwigo\Config\FilterViewDefinition;
+use Piwigo\Config\FilterViewsSelection;
 use Piwigo\Core\CurrentLogger;
 use Piwigo\Core\FilterState;
 use Piwigo\Core\HtmlRenderingInterface;
@@ -384,22 +386,22 @@ beforeEach(function (): void {
 
     CurrentUserTestFactory::get()->set(User::fromUserArray(searchServiceTestRealisticUserGlobal()));
     $currentConfig->defaultFiltersViews = null;
-    $currentConfig->filtersViews = [
-        'expert' => ['access' => 'everybody'],
-        'words' => ['access' => 'everybody'],
-        'author' => ['access' => 'everybody'],
-        'file_type' => ['access' => 'everybody'],
-        'added_by' => ['access' => 'everybody'],
-        'album' => ['access' => 'everybody'],
-        'post_date' => ['access' => 'everybody'],
-        'creation_date' => ['access' => 'everybody'],
-        'ratio' => ['access' => 'everybody'],
-        'rating' => ['access' => 'everybody'],
-        'file_size' => ['access' => 'everybody'],
-        'height' => ['access' => 'everybody'],
-        'width' => ['access' => 'everybody'],
-        'tags' => ['access' => 'everybody'],
-    ];
+    $currentConfig->filtersViews = FilterViewsSelection::fromArray([
+        'expert' => ['access' => 'everybody', 'default' => false],
+        'words' => ['access' => 'everybody', 'default' => false],
+        'author' => ['access' => 'everybody', 'default' => false],
+        'file_type' => ['access' => 'everybody', 'default' => false],
+        'added_by' => ['access' => 'everybody', 'default' => false],
+        'album' => ['access' => 'everybody', 'default' => false],
+        'post_date' => ['access' => 'everybody', 'default' => false],
+        'creation_date' => ['access' => 'everybody', 'default' => false],
+        'ratio' => ['access' => 'everybody', 'default' => false],
+        'rating' => ['access' => 'everybody', 'default' => false],
+        'file_size' => ['access' => 'everybody', 'default' => false],
+        'height' => ['access' => 'everybody', 'default' => false],
+        'width' => ['access' => 'everybody', 'default' => false],
+        'tags' => ['access' => 'everybody', 'default' => false],
+    ]);
     $currentConfig->orderBy = 'ORDER BY id ASC';
     $currentConfig->calendarDatefield = 'date_creation';
     $currentConfig->quickSearchIncludeSubAlbums = false;
@@ -753,9 +755,12 @@ test('getRegularSearchResults() skips a criterion entirely when its own display 
     // works".
     $currentConfig = CurrentConfigTestFactory::get();
     $filtersViews = $currentConfig->filtersViews;
-    expect($filtersViews)->not->toBeNull();
-    $filtersViews[$filterKey] = ['access' => 'admins-only'];
-    $currentConfig->filtersViews = $filtersViews;
+    if ($filtersViews === null) {
+        throw new RuntimeException('beforeEach() always sets a real, non-null filtersViews.');
+    }
+    $filters = $filtersViews->filters;
+    $filters[$filterKey] = new FilterViewDefinition(access: 'admins-only', default: false);
+    $currentConfig->filtersViews = new FilterViewsSelection(filters: $filters, lastFiltersConf: $filtersViews->lastFiltersConf);
 
     $results = searchServiceTestService()->getRegularSearchResults(['fields' => $fields]);
 

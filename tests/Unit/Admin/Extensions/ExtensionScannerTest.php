@@ -31,6 +31,75 @@ use Piwigo\Users\User;
 // whatever's actually installed, not re-duplicated here. CurrentPaths is
 // seeded against this repo's own real root (not a disposable temp dir) so
 // the real language/ tree is genuinely reachable.
+// [Mutation] Remaining untested mutations after mutation testing, all
+// verified per-instance via hand-mutation (not assumed by category
+// alone), triaged into 3 groups:
+//
+// 1. RemoveBooleanCast on `if ((bool) preg_match(...))` (~20 sites across
+//    scanPlugin()/scanTheme()/scanLanguage()'s header-parsing blocks) --
+//    genuinely inert everywhere it appears in this file: an `if()`
+//    condition already coerces its operand to bool on its own, a
+//    universal PHP semantics fact independent of what preg_match() itself
+//    returns (int|false, both already truthy/falsy the same way with or
+//    without the cast). Same finding as this campaign's own
+//    ImageImagick.php/ImageExtImagick.php/SrcImage.php batches.
+//
+// 2. A `$data === false` / `return null;` guard (constructor-style, after
+//    file_get_contents()/file() -- scanPlugin() lines 125-126, scanTheme()
+//    lines 212-213, scanLanguage() lines 336-337) IS already covered by
+//    this file's own "cannot be read" tests for each type: hand-mutating
+//    FalseToTrue (`=== false` -> `=== true`) or RemoveEarlyReturn (drops
+//    `return null;`) both make that test fail for real (an uncaught
+//    TypeError -- strict_types=1 means preg_match()'s string-typed $data
+//    param can't silently coerce a bool `false`), confirmed by running
+//    each "cannot be read" test filtered, standalone, against the
+//    hand-mutated source. `pest --mutate` doesn't credit an uncaught
+//    fatal-error crash as "tested" the way it credits a normal assertion
+//    failure -- a real, if narrower, blind spot alongside the
+//    already-documented subprocess-coverage one.
+//
+// 3. Individually-verified inert mutations, each confirmed via
+//    hand-mutation + a full filtered rerun (not inferred from the others):
+//    - Line 64 BooleanOrToBooleanAnd (the '.'/'..' directory-entry
+//      guard): '.' and '..' both already fail the very next line's
+//      `^[a-zA-Z0-9-_]+$` id regex (a period isn't in that character
+//      class), so whether this check uses `||` or the always-false `&&`,
+//      both entries end up skipped via the regex guard instead -- same
+//      observable result either way.
+//    - Lines 133/221 UnwrapTrim (`trim($val[1])` on the Version header):
+//      the Version regex's own capture group is `[\w.-]+`, which
+//      structurally excludes whitespace -- unlike Plugin/Theme
+//      Name/Description/Author's `(.+)` capture, $val[1] here can never
+//      contain anything trim() would strip in the first place.
+//    - Line 326 UnwrapStrtolower (`strtolower($targetCharset ?? ...)`):
+//      CharsetHelper::convertCharset()'s own destCharset comparisons
+//      against literal lowercase strings ('utf-8'/'iso-8859-1') would
+//      indeed miss a same-charset fast path for a mixed-case caller value
+//      without this -- but the resulting fallback through
+//      iconv()/mb_convert_encoding() is itself case-insensitive for
+//      charset names, producing byte-identical output either way
+//      (confirmed via a direct probe comparing the "fast path identity"
+//      output against the "iconv utf-8 -> UTF-8" output for the same
+//      string).
+//    - Line 339 EmptyStringToNotEmpty (`implode('', $lines)` in
+//      scanLanguage()): unlike scanTheme()'s own analogous implode() --
+//      which DOES have a real, dedicated multi-line test -- this file's
+//      "X-Piwigo-Language-Name"/"X-Piwigo-Country" regexes aren't
+//      line-anchored, so a garbage separator inserted between file()
+//      lines lands adjacent to, not inside, whichever line actually
+//      carries a header, leaving the header's own regex match unaffected.
+//    - Line 378 EmptyStringToNotEmpty (`$uri === ''` in
+//      extractExtensionId()): mathematically redundant given the very
+//      next `||` clause -- an empty string can never contain the
+//      non-empty 'extension_view.php?eid=' marker substring, so
+//      `!str_contains($uri, ...)` is already true whenever $uri === ''
+//      would have been, making the first clause's own literal value
+//      unable to change the overall result for any input.
+//    - Line 81 RemoveFunctionCall (`closedir($dir)`): pure resource
+//      cleanup with no return value used and no observable effect on
+//      $found or any thrown exception -- a leaked directory handle isn't
+//      something any black-box test in this suite can detect.
+
 beforeEach(function (): void {
     CurrentConfigTestFactory::get()->reset();
     ConfigLoader::applyDefaults();
@@ -236,21 +305,49 @@ test('scan skips a directory entry with an invalid id but keeps scanning the res
     // Real gap, found via mutation testing: a directory containing only
     // '.'/'..' plus valid-id entries never actually reaches the
     // regex-mismatch branch at all (both are caught by the earlier '.'/
-    // '..' guard), so `continue` vs `break` there was never exercised.
-    // An entry with a dot in its name fails the [a-zA-Z0-9-_]+ id regex
-    // (invalid) placed alphabetically *before* a real, valid plugin id
-    // forces `continue` to matter: `break` would stop scanning right
-    // there and never reach the valid one afterward.
+    // '..' guard), so `continue` vs `break` there was never exercised. An
+    // entry with an invalid id needs to be encountered by readdir() BEFORE
+    // a real, valid plugin id for `continue` (keep scanning) vs `break`
+    // (stop entirely) to actually diverge.
+    //
+    // This file's original fixture ('a.invalid.name' before
+    // 'zzz_valid_plugin', assuming alphabetical iteration) did NOT
+    // actually catch this, and a follow-up fixed-name-pair attempt didn't
+    // reliably catch it either: readdir()'s real order on this filesystem
+    // is neither alphabetical nor stable creation order -- confirmed via
+    // direct, repeated probing that the SAME two literal names can come
+    // back in either relative order across different runs (a randomized
+    // per-mount directory-hash seed is the likely cause, same security
+    // rationale as ext4 htree's own hash-flood mitigation -- this
+    // sandbox's /tmp may well be tmpfs, not ext4, but shows the same
+    // instability). No fixed name pair can be trusted deterministic here.
+    //
+    // Statistical approach instead: many valid entries (20) plus several
+    // invalid ones (3) spread across the same directory. `continue`
+    // (correct) always finds all 20 regardless of order. `break`
+    // (mutated) stops at the FIRST invalid entry readdir() happens to
+    // reach, so `count($found)` comes back short unless, by chance, all 3
+    // invalid entries land after every single valid one in this run's
+    // real iteration order -- for 23 real entries in random relative
+    // order that's on the order of 1-in-10000, deterministic enough in
+    // practice without depending on any specific name's hash outcome.
     $root = extensionScannerFixtureRoot();
     try {
-        mkdir($root . 'plugins/a.invalid.name', 0o777, true);
-        mkdir($root . 'plugins/zzz_valid_plugin', 0o777, true);
-        file_put_contents($root . 'plugins/zzz_valid_plugin/main.inc.php', "<?php\n/*\nPlugin Name: Valid\n*/\n");
+        for ($i = 0; $i < 20; $i++) {
+            $id = 'valid_plugin_' . $i;
+            mkdir($root . 'plugins/' . $id, 0o777, true);
+            file_put_contents($root . 'plugins/' . $id . '/main.inc.php', "<?php\n/*\nPlugin Name: Valid {$i}\n*/\n");
+        }
+        foreach (['bad!one', 'bad!two', 'bad!three'] as $badId) {
+            mkdir($root . 'plugins/' . $badId, 0o777, true);
+        }
 
         $found = new ExtensionScanner()->scan(ExtensionType::Plugin, UrlServiceTestFactory::build(), LangTestFactory::get(), CurrentPathsTestFactory::get(), CurrentUserTestFactory::get(), EventDispatcherTestFactory::get(), CurrentConfigTestFactory::get());
 
-        expect($found)->not->toHaveKey('a.invalid.name')
-            ->and($found)->toHaveKey('zzz_valid_plugin');
+        expect($found)->toHaveCount(20, 'break instead of continue on the invalid-id check would stop the scan early and miss some valid entries');
+        for ($i = 0; $i < 20; $i++) {
+            expect($found)->toHaveKey('valid_plugin_' . $i);
+        }
     } finally {
         FilesystemHelper::deltree($root);
     }

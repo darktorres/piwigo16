@@ -96,7 +96,7 @@ test('findGalleriesUrlById() returns the inserted url', function (): void {
         [$url]
     );
 
-    expect($repo->findGalleriesUrlById(is_numeric($id) ? (int) $id : 0))->toBe($url);
+    expect($repo->findGalleriesUrlById(is_numeric($id) ? $id : 0))->toBe($url);
 });
 
 test('findGalleriesUrlById() returns null when unused', function (): void {
@@ -113,7 +113,7 @@ test('delete() removes the row', function (): void {
         'SELECT id FROM ' . 'sites' . ' WHERE galleries_url = ?',
         [$url]
     );
-    $intId = is_numeric($id) ? (int) $id : 0;
+    $intId = is_numeric($id) ? $id : 0;
 
     $repo->delete($intId);
 
@@ -173,7 +173,7 @@ test('findCategoryAndImageCountsBySite() groups by site and ignores categories w
     $repo->insert($url);
     $conn = DbConnection::build();
     $siteId = $conn->fetchOne('SELECT id FROM ' . 'sites' . ' WHERE galleries_url = ?', [$url]);
-    $siteId = is_numeric($siteId) ? (int) $siteId : 0;
+    $siteId = is_numeric($siteId) ? $siteId : 0;
 
     $conn->executeStatement(
         'INSERT INTO ' . 'categories' . " (name, site_id, uppercats) VALUES ('p17-unit-test-site-cat-with-image', ?, '999901')",

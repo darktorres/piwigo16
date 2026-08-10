@@ -4,30 +4,21 @@ declare(strict_types=1);
 
 namespace Piwigo\Page;
 
-use Piwigo\Activity\ActivityEntity;
-use Piwigo\Activity\ActivityService;
 use Piwigo\Auth\AccessLevelChecker;
 use Piwigo\Config\ConfigService;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\CurrentConfigService;
-use Piwigo\Config\DeploymentPolicy;
 use Piwigo\Core\AdminContext;
 use Piwigo\Core\CharsetHelper;
 use Piwigo\Core\ErrorCollector;
-use Piwigo\Core\HtmlRenderingInterface;
-use Piwigo\Core\InstallationFlag;
 use Piwigo\Core\Lang;
-use Piwigo\Core\MailerInterface;
 use Piwigo\Core\PageFilterHelper;
 use Piwigo\Core\PageState;
 use Piwigo\Core\Paths;
 use Piwigo\Core\ProcessCache;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
-use Piwigo\Db\DbConnection;
-use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Event\Location\LocEndNoPhotoYet;
-use Piwigo\Group\GroupEntity;
 use Piwigo\Image\ImageRepository;
 use Piwigo\Page\Projection\NoPhotoYetAdminPageContext;
 use Piwigo\Page\Projection\NoPhotoYetGuestPageContext;
@@ -37,8 +28,6 @@ use Piwigo\Session\SessionService;
 use Piwigo\Template\CurrentTemplate;
 use Piwigo\Template\Template;
 use Piwigo\Users\CurrentUser;
-use Piwigo\Users\UserRepository;
-use Piwigo\Users\UserService;
 
 /**
  * The "No Photo Yet" feature: if the gallery has no photos yet, replaces
@@ -67,17 +56,13 @@ final readonly class NoPhotoYetRenderer
         private readonly AdminContext $adminContext,
         private readonly SessionService $sessionService,
         private readonly EventDispatcher $eventDispatcher,
-        private readonly DeploymentPolicy $deploymentPolicy,
         private readonly CurrentUser $currentUser,
         private readonly CurrentTemplate $currentTemplate,
-        private readonly MailerInterface $mailer,
         private readonly CurrentConfig $currentConfig,
         private readonly PageState $pageState,
         private readonly ErrorCollector $errorCollector,
         private readonly ProcessCache $processCache,
         private readonly CurrentConfigService $currentConfigService,
-        private readonly HtmlRenderingInterface $htmlRenderer,
-        private readonly InstallationFlag $installationFlag,
     ) {}
 
     public function render(): void
@@ -96,9 +81,15 @@ final readonly class NoPhotoYetRenderer
             if ($nb_photos === 0) {
                 // make sure we don't use the mobile theme, which is not compatible with
                 // the "no photo yet" feature
+                //
+                // User::$theme is ThemeId-typed and can never be empty (its
+                // constructor guarantees a real value, falling back to
+                // AppInfo::DEFAULT_TEMPLATE), so the getDefaultTheme() fallback
+                // this line used to reach for an empty theme is now unreachable
+                // -- that fallback only ever checked for emptiness too, never
+                // filesystem installation, so this is a faithful simplification.
                 $user_theme = $this->currentUser->get()
-                    ->theme;
-                $user_theme = $user_theme !== '' ? $user_theme : new UserService($this->lang, new UserRepository(EntityManagerFactory::build(DbConnection::build()), $this->eventDispatcher, $this->currentConfig), EntityManagerFactory::build(DbConnection::build())->getRepository(GroupEntity::class), $this->mailer, new ActivityService(EntityManagerFactory::build(DbConnection::build())->getRepository(ActivityEntity::class)), $this->htmlRenderer, DbConnection::build(), $this->sessionService, $this->eventDispatcher, $this->deploymentPolicy, $this->currentUser, $this->currentConfig, $this->installationFlag, $this->processCache, $this->paths)->getDefaultTheme();
+                    ->theme->value;
                 $template = new Template($this->currentConfig, $this->lang, $this->adminContext, $this->eventDispatcher, $this->pageState, $this->errorCollector, $this->processCache, $this->currentConfigService, $this->paths, $this->accessLevelChecker, $this->sessionService, $this->paths->root . 'themes', $user_theme);
                 $this->currentTemplate->set($template);
 

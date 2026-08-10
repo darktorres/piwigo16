@@ -29,6 +29,7 @@ use Piwigo\Rate\RateRepository;
 use Piwigo\Template\CurrentTemplate;
 use Piwigo\Url\UrlService;
 use Piwigo\Tests\Support\CurrentUserTestFactory;
+use Piwigo\Common\ValueObject\ThemeId;
 use Piwigo\Users\User;
 use Piwigo\Users\UserStatus;
 
@@ -128,7 +129,7 @@ final class PictureRateRendererTest extends IntegrationTestCase
             username: Username::from('fixture_user_3'),
             email: null,
             language: LangCode::from('en_UK'),
-            theme: '',
+            theme: ThemeId::from('default'),
             status: UserStatus::Normal,
             enabledHigh: false,
         ));
@@ -165,7 +166,7 @@ final class PictureRateRendererTest extends IntegrationTestCase
             username: Username::from('guest'),
             email: null,
             language: LangCode::from('en_UK'),
-            theme: '',
+            theme: ThemeId::from('default'),
             status: UserStatus::Guest,
             enabledHigh: false,
         ));

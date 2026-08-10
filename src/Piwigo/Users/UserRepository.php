@@ -18,6 +18,7 @@ use Piwigo\Common\Dto\PaginatedResult;
 use Piwigo\Common\ValueObject\Email;
 use Piwigo\Common\ValueObject\LangCode;
 use Piwigo\Common\ValueObject\SqlDateTime;
+use Piwigo\Common\ValueObject\ThemeId;
 use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Common\ValueObject\Username;
 use Piwigo\Config\CurrentConfig;
@@ -473,7 +474,7 @@ final class UserRepository implements WebmasterMailProviderInterface
             showNbComments: (bool) ($row['show_nb_comments'] ?? false),
             showNbHits: (bool) ($row['show_nb_hits'] ?? false),
             recentPeriod: is_numeric($row['recent_period'] ?? null) ? (int) $row['recent_period'] : 7,
-            theme: is_string($row['theme'] ?? null) ? $row['theme'] : 'default',
+            theme: ThemeId::tryFrom($row['theme'] ?? null) ?? ThemeId::from('default'),
             registrationDate: SqlDateTime::tryFrom($row['registration_date'] ?? null),
             enabledHigh: (bool) ($row['enabled_high'] ?? true),
             level: is_numeric($row['level'] ?? null) ? (int) $row['level'] : 0,
@@ -1354,8 +1355,12 @@ final class UserRepository implements WebmasterMailProviderInterface
      * Every distinct `theme` value's user count -- Admin\
      * PiwigoInfosSender's own telemetry theme-usage breakdown.
      *
-     * Single-table, static column/property, plain string `theme` (no
-     * custom-type hydration concern).
+     * Single-table, static column/property.
+     *
+     * UserInfoEntity::$theme is ThemeId-typed -- `ui.theme` array-hydrates
+     * as a ThemeId instance, not a raw string; using it directly as an
+     * array key would throw ("Illegal offset type"), so this unwraps
+     * ->value explicitly.
      *
      * @return array<string, int> keyed by theme
      */
@@ -1370,7 +1375,10 @@ final class UserRepository implements WebmasterMailProviderInterface
 
         $byTheme = [];
         foreach ($rows as $row) {
-            $byTheme[$row['theme']] = $row['themeCounter'];
+            if (! $row['theme'] instanceof ThemeId) {
+                continue;
+            }
+            $byTheme[$row['theme']->value] = $row['themeCounter'];
         }
 
         return $byTheme;

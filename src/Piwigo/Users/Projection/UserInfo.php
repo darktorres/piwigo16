@@ -7,6 +7,7 @@ namespace Piwigo\Users\Projection;
 use InvalidArgumentException;
 use Piwigo\Common\ValueObject\LangCode;
 use Piwigo\Common\ValueObject\SqlDateTime;
+use Piwigo\Common\ValueObject\ThemeId;
 use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Core\AppInfo;
 use Piwigo\Core\ArrayHelper;
@@ -59,7 +60,7 @@ final readonly class UserInfo
         public bool $showNbComments,
         public bool $showNbHits,
         public int $recentPeriod,
-        public string $theme,
+        public ThemeId $theme,
         public ?string $registrationDate,
         public bool $enabledHigh,
         public int $level,
@@ -94,7 +95,9 @@ final readonly class UserInfo
             showNbComments: (bool) ($row['show_nb_comments'] ?? false),
             showNbHits: (bool) ($row['show_nb_hits'] ?? false),
             recentPeriod: is_numeric($row['recent_period'] ?? null) ? (int) $row['recent_period'] : 0,
-            theme: is_string($row['theme'] ?? null) ? $row['theme'] : '',
+            theme: ($row['theme'] ?? null) instanceof ThemeId
+                ? $row['theme']
+                : (ThemeId::tryFrom($row['theme'] ?? null) ?? ThemeId::from(AppInfo::DEFAULT_TEMPLATE)),
             registrationDate: ($row['registration_date'] ?? null) instanceof SqlDateTime
                 ? $row['registration_date']->value
                 : (is_string($row['registration_date'] ?? null) ? $row['registration_date'] : null),
@@ -159,7 +162,7 @@ final readonly class UserInfo
             'show_nb_comments' => $this->showNbComments,
             'show_nb_hits' => $this->showNbHits,
             'recent_period' => $this->recentPeriod,
-            'theme' => $this->theme,
+            'theme' => $this->theme->value,
             'registration_date' => $this->registrationDate,
             'enabled_high' => $this->enabledHigh,
             'level' => $this->level,

@@ -6,6 +6,7 @@ namespace Piwigo\Users;
 
 use LogicException;
 use Piwigo\Common\ValueObject\LangCode;
+use Piwigo\Common\ValueObject\ThemeId;
 use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\AppInfo;
@@ -53,7 +54,7 @@ final class CurrentUser
             username: null,
             email: null,
             language: LangCode::from(AppInfo::DEFAULT_LANGUAGE),
-            theme: AppInfo::DEFAULT_TEMPLATE,
+            theme: ThemeId::from(AppInfo::DEFAULT_TEMPLATE),
             status: UserStatus::Guest,
             enabledHigh: false,
         );

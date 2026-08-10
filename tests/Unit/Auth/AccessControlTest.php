@@ -14,6 +14,7 @@ use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Users\CurrentUser;
+use Piwigo\Common\ValueObject\ThemeId;
 use Piwigo\Users\User;
 use Piwigo\Users\UserStatus;
 use RuntimeException;
@@ -39,7 +40,7 @@ function seedAccessControlUser(UserStatus $status, int $id = 1): CurrentUser
         username: null,
         email: null,
         language: LangCode::from('en_UK'),
-        theme: '',
+        theme: ThemeId::from('default'),
         status: $status,
         enabledHigh: false,
     ));

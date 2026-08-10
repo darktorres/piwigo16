@@ -22,6 +22,7 @@ use Piwigo\Tests\Support\TranslatorTestFactory;
 use Piwigo\Permission\PermissionRepository;
 use Piwigo\Permission\PermissionService;
 use Piwigo\Tests\Support\CurrentUserTestFactory;
+use Piwigo\Common\ValueObject\ThemeId;
 use Piwigo\Users\User;
 use Piwigo\Users\UserStatus;
 
@@ -75,7 +76,7 @@ function seedPermissionUser(string $forbiddenCategories = '', int $level = 0, st
         username: Username::from('torres'),
         email: null,
         language: LangCode::from('en_UK'),
-        theme: '',
+        theme: ThemeId::from('default'),
         status: UserStatus::Normal,
         enabledHigh: false,
         forbiddenCategories: $forbiddenCategories,
@@ -107,7 +108,7 @@ function seedPermissionUserRaw(array $rawAttributes): void
         username: Username::from('torres'),
         email: null,
         language: LangCode::from('en_UK'),
-        theme: '',
+        theme: ThemeId::from('default'),
         status: UserStatus::Normal,
         enabledHigh: false,
         rawAttributes: $rawAttributes,

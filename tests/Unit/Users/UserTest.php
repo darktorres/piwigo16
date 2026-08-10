@@ -4,8 +4,10 @@ declare(strict_types=1);
 
 use Piwigo\Common\ValueObject\Email;
 use Piwigo\Common\ValueObject\LangCode;
+use Piwigo\Common\ValueObject\ThemeId;
 use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Common\ValueObject\Username;
+use Piwigo\Core\AppInfo;
 use Piwigo\Users\User;
 use Piwigo\Users\UserStatus;
 
@@ -27,7 +29,7 @@ test('fromUserArray coerces a real legacy $user row', function (): void {
         ->and($user->username)->toEqual(Username::from('alice'))
         ->and($user->email)->toEqual(Email::from('alice@example.com'))
         ->and($user->language)->toEqual(LangCode::from('en_UK'))
-        ->and($user->theme)->toBe('modus')
+        ->and($user->theme)->toEqual(ThemeId::from('modus'))
         ->and($user->status)->toBe(UserStatus::Admin)
         ->and($user->enabledHigh)->toBeTrue()
         ->and($user->forbiddenCategories)->toBe('3,8,12')
@@ -47,7 +49,7 @@ test('fromUserArray degrades safely on a missing/malformed non-id field', functi
         ->and($user->username)->toBeNull()
         ->and($user->email)->toBeNull()
         ->and($user->language)->toEqual(LangCode::from('en_UK'))
-        ->and($user->theme)->toBe('')
+        ->and($user->theme)->toEqual(ThemeId::from(AppInfo::DEFAULT_TEMPLATE))
         ->and($user->status)->toBe(UserStatus::Guest)
         ->and($user->enabledHigh)->toBeFalse()
         ->and($user->forbiddenCategories)->toBe('')
@@ -67,7 +69,7 @@ test('withLanguage returns a new immutable instance, original is untouched', fun
         username: Username::from('bob'),
         email: null,
         language: LangCode::from('en_UK'),
-        theme: 'modus',
+        theme: ThemeId::from('modus'),
         status: UserStatus::Normal,
         enabledHigh: false,
     );
@@ -85,7 +87,7 @@ test('withUsername returns a new immutable instance', function (): void {
         username: Username::from('bob'),
         email: null,
         language: LangCode::from('en_UK'),
-        theme: 'modus',
+        theme: ThemeId::from('modus'),
         status: UserStatus::Normal,
         enabledHigh: false,
     );
@@ -102,7 +104,7 @@ test('withLevel returns a new immutable instance and syncs rawAttributes', funct
         username: Username::from('bob'),
         email: null,
         language: LangCode::from('en_UK'),
-        theme: 'modus',
+        theme: ThemeId::from('modus'),
         status: UserStatus::Normal,
         enabledHigh: false,
         level: 4,
@@ -124,7 +126,7 @@ test('withEnabledHigh returns a new immutable instance and syncs rawAttributes',
         username: Username::from('bob'),
         email: null,
         language: LangCode::from('en_UK'),
-        theme: 'modus',
+        theme: ThemeId::from('modus'),
         status: UserStatus::Normal,
         enabledHigh: false,
         rawAttributes: ['enabled_high' => false],
@@ -144,7 +146,7 @@ test('withRawAttribute adds a key without disturbing the rest of the array', fun
         username: Username::from('bob'),
         email: null,
         language: LangCode::from('en_UK'),
-        theme: 'modus',
+        theme: ThemeId::from('modus'),
         status: UserStatus::Normal,
         enabledHigh: false,
         rawAttributes: ['existing' => 'value'],

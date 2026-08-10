@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Piwigo\Common\ValueObject\LangCode;
+use Piwigo\Common\ValueObject\ThemeId;
 use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Common\ValueObject\Username;
 use Piwigo\Config\CurrentConfig;
@@ -49,7 +50,7 @@ test('attachGlobals seeds a guest user', function (): void {
         ->and($user->email)->toBeNull()
         ->and($user->enabledHigh)->toBeFalse()
         ->and($user->language)->toEqual(LangCode::from(AppInfo::DEFAULT_LANGUAGE))
-        ->and($user->theme)->toBe(AppInfo::DEFAULT_TEMPLATE)
+        ->and($user->theme)->toEqual(ThemeId::from(AppInfo::DEFAULT_TEMPLATE))
         ->and($user->id->value)->toBe(new CurrentConfig()->guestId);
 });
 
@@ -59,7 +60,7 @@ test('attachGlobals is idempotent -- does not clobber a real set() user', functi
         username: Username::from('alice'),
         email: null,
         language: LangCode::from('fr_FR'),
-        theme: 'modus',
+        theme: ThemeId::from('modus'),
         status: UserStatus::Admin,
         enabledHigh: true,
     );

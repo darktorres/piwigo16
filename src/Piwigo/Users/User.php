@@ -7,6 +7,7 @@ namespace Piwigo\Users;
 use InvalidArgumentException;
 use Piwigo\Common\ValueObject\Email;
 use Piwigo\Common\ValueObject\LangCode;
+use Piwigo\Common\ValueObject\ThemeId;
 use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Common\ValueObject\Username;
 use Piwigo\Core\AppInfo;
@@ -43,7 +44,7 @@ final readonly class User
         public ?Username $username,
         public ?Email $email,
         public LangCode $language,
-        public string $theme,
+        public ThemeId $theme,
         public UserStatus $status,
         public bool $enabledHigh,
         public string $forbiddenCategories = '',
@@ -71,7 +72,7 @@ final readonly class User
             username: Username::tryFrom($row['username'] ?? null),
             email: Email::tryFrom($row['email'] ?? null),
             language: LangCode::tryFrom($row['language'] ?? null) ?? LangCode::from(AppInfo::DEFAULT_LANGUAGE),
-            theme: is_string($row['theme'] ?? null) ? $row['theme'] : '',
+            theme: ThemeId::tryFrom($row['theme'] ?? null) ?? ThemeId::from(AppInfo::DEFAULT_TEMPLATE),
             status: is_string($status) ? (UserStatus::tryFrom($status) ?? UserStatus::Guest) : UserStatus::Guest,
             enabledHigh: (bool) ($row['enabled_high'] ?? false),
             forbiddenCategories: is_string($row['forbidden_categories'] ?? null) ? $row['forbidden_categories'] : '',
@@ -97,7 +98,7 @@ final readonly class User
             'username' => $this->username?->value,
             'email' => $this->email?->value,
             'language' => $this->language->value,
-            'theme' => $this->theme,
+            'theme' => $this->theme->value,
             'status' => $this->status->value,
             'enabled_high' => $this->enabledHigh,
             'forbidden_categories' => $this->forbiddenCategories,

@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Piwigo\Common\ValueObject\LangCode;
+use Piwigo\Common\ValueObject\ThemeId;
 use Piwigo\Core\AppInfo;
 use Piwigo\Users\Projection\UserInfo;
 
@@ -43,7 +44,7 @@ test('fromRow narrows a real DB row into typed properties, decoding JSON prefere
     expect($info->showNbComments)->toBeFalse();
     expect($info->showNbHits)->toBeTrue();
     expect($info->recentPeriod)->toBe(7);
-    expect($info->theme)->toBe('default');
+    expect($info->theme)->toEqual(ThemeId::from('default'));
     expect($info->registrationDate)->toBe('2024-01-01 00:00:00');
     expect($info->enabledHigh)->toBeTrue();
     expect($info->level)->toBe(2);
@@ -66,7 +67,7 @@ test('fromRow falls back to safe defaults for every field except user_id', funct
     expect($info->showNbComments)->toBeFalse();
     expect($info->showNbHits)->toBeFalse();
     expect($info->recentPeriod)->toBe(0);
-    expect($info->theme)->toBe('');
+    expect($info->theme)->toEqual(ThemeId::from(AppInfo::DEFAULT_TEMPLATE));
     expect($info->registrationDate)->toBeNull();
     expect($info->enabledHigh)->toBeFalse();
     expect($info->level)->toBe(0);
@@ -92,6 +93,23 @@ test('fromRow passes a real LangCode instance for language straight through', fu
     ]);
 
     expect($info->language)->toEqual(LangCode::from('fr_FR'));
+});
+
+test('fromRow passes a real ThemeId instance for theme straight through', function (): void {
+    // Same mutation-killing shape as the LangCode test above, for theme's
+    // identical instanceof ThemeId branch.
+    $info = UserInfo::fromRow([
+        'user_id' => 1,
+        'theme' => ThemeId::from('modus'),
+    ]);
+
+    expect($info->theme)->toEqual(ThemeId::from('modus'));
+});
+
+test('fromRow falls back to the default theme for an invalid raw string', function (): void {
+    $info = UserInfo::fromRow(['user_id' => 1, 'theme' => 'not a valid theme id!']);
+
+    expect($info->theme)->toEqual(ThemeId::from(AppInfo::DEFAULT_TEMPLATE));
 });
 
 test('fromRow reads a truthy show_nb_comments value, not just the coalesce fallback', function (): void {

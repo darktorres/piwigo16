@@ -42,6 +42,7 @@ namespace Piwigo\Tests\Integration {
     use Piwigo\Tests\Support\EventDispatcherTestFactory;
     use Piwigo\Tag\TagService;
     use Piwigo\Tests\Support\CurrentUserTestFactory;
+    use Piwigo\Common\ValueObject\ThemeId;
     use Piwigo\Users\User;
     use Piwigo\Users\UserStatus;
 
@@ -188,7 +189,7 @@ namespace Piwigo\Tests\Integration {
                 username: Username::from('fixture_guest'),
                 email: null,
                 language: LangCode::from('en_UK'),
-                theme: '',
+                theme: ThemeId::from('default'),
                 status: UserStatus::Guest,
                 enabledHigh: false,
             ));
@@ -383,7 +384,7 @@ namespace Piwigo\Tests\Integration {
                 username: Username::from('fixture_guest'),
                 email: null,
                 language: LangCode::from('en_UK'),
-                theme: '',
+                theme: ThemeId::from('default'),
                 status: UserStatus::Guest,
                 enabledHigh: false,
             ));

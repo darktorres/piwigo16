@@ -26,6 +26,7 @@ use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Tests\Support\EventDispatcherTestFactory;
 use Piwigo\Template\CurrentTemplate;
 use Piwigo\Tests\Support\CurrentUserTestFactory;
+use Piwigo\Common\ValueObject\ThemeId;
 use Piwigo\Users\User;
 use Piwigo\Users\UserStatus;
 
@@ -77,7 +78,7 @@ final class RequestBootstrapFinalizeTest extends IntegrationTestCase
             username: Username::from('regular_user'),
             email: Email::from('regular@example.test'),
             language: LangCode::from('en_UK'),
-            theme: 'default',
+            theme: ThemeId::from('default'),
             status: UserStatus::Normal,
             enabledHigh: true,
         ));
@@ -169,7 +170,7 @@ final class RequestBootstrapFinalizeTest extends IntegrationTestCase
             username: Username::from('guest'),
             email: null,
             language: LangCode::from('en_UK'),
-            theme: 'default',
+            theme: ThemeId::from('default'),
             status: UserStatus::Guest,
             enabledHigh: false,
             internalStatus: ['guest_must_be_guest' => true],

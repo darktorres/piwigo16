@@ -23,6 +23,7 @@ use Piwigo\Db\Tables;
 use Piwigo\Permission\PermissionRepository;
 use Piwigo\Permission\PermissionService;
 use Piwigo\Tests\Support\CurrentUserTestFactory;
+use Piwigo\Common\ValueObject\ThemeId;
 use Piwigo\Users\User;
 use Piwigo\Users\UserStatus;
 
@@ -99,7 +100,7 @@ beforeEach(function (): void {
         username: null,
         email: null,
         language: LangCode::from('en_UK'),
-        theme: '',
+        theme: ThemeId::from('default'),
         status: UserStatus::Normal,
         enabledHigh: false,
     ));
@@ -205,7 +206,7 @@ test('buildInnerSql falls back to a forced 1 = 1 condition when no permission cl
         username: null,
         email: null,
         language: LangCode::from('en_UK'),
-        theme: '',
+        theme: ThemeId::from('default'),
         status: UserStatus::Normal,
         enabledHigh: false,
         rawAttributes: ['image_access_type' => 'NOT IN', 'image_access_list' => ''],
@@ -233,7 +234,7 @@ test('buildInnerSql composes forbidden/visible categories and images into the WH
         username: null,
         email: null,
         language: LangCode::from('en_UK'),
-        theme: '',
+        theme: ThemeId::from('default'),
         status: UserStatus::Normal,
         enabledHigh: false,
         forbiddenCategories: '5,6',

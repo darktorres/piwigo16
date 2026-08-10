@@ -19,6 +19,7 @@ namespace Piwigo\Tests\Integration {
     use Piwigo\Common\ValueObject\Email;
     use Piwigo\Tests\Support\UrlServiceTestFactory;
     use Piwigo\Users\Projection\DefaultUserInfo;
+    use Piwigo\Common\ValueObject\ThemeId;
     use Piwigo\Users\User;
     use Piwigo\Tests\Support\PageStateTestFactory;
     use ReflectionProperty;
@@ -704,7 +705,7 @@ namespace Piwigo\Tests\Integration {
                 username: Username::from('torres'),
                 email: null,
                 language: LangCode::from('en_UK'),
-                theme: '',
+                theme: ThemeId::from('default'),
                 status: UserStatus::Normal,
                 enabledHigh: false,
                 rawAttributes: [

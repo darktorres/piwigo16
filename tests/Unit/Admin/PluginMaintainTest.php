@@ -12,6 +12,7 @@ use Piwigo\Core\Paths;
 use Piwigo\Core\WsContext;
 use Piwigo\Tests\Support\KernelContainerOverride;
 use Piwigo\Tests\Support\CurrentUserTestFactory;
+use Piwigo\Common\ValueObject\ThemeId;
 use Piwigo\Users\User;
 use Piwigo\Users\UserStatus;
 
@@ -39,7 +40,7 @@ function pluginMaintainSetUserStatus(UserStatus $status): void
         username: Username::from('plugin-maintain-test-user'),
         email: null,
         language: LangCode::from('en_UK'),
-        theme: '',
+        theme: ThemeId::from('default'),
         status: $status,
         enabledHigh: false,
     ));

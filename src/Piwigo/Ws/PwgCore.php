@@ -471,7 +471,7 @@ final class PwgCore
         $res = [];
         $res['username'] = $this->accessControl->isAGuest() ? 'guest' : stripslashes($currentUser->username->value ?? '');
         $res['status'] = $currentUser->status->value;
-        $res['theme'] = $currentUser->theme;
+        $res['theme'] = $currentUser->theme->value;
         $res['language'] = $currentUser->language->value;
         $res['pwg_token'] = new CsrfService($this->currentConfig)->getToken();
         $res['charset'] = CharsetHelper::getPwgCharset();

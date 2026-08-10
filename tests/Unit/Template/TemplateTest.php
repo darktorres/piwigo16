@@ -12,6 +12,7 @@ use Piwigo\Template\CurrentTemplate;
 use Piwigo\Tests\Support\CurrentUserTestFactory;
 use Piwigo\Tests\Support\KernelContainerOverride;
 use Piwigo\Tests\Support\TemplateTestFactory;
+use Piwigo\Common\ValueObject\ThemeId;
 use Piwigo\Users\User;
 use Piwigo\Users\UserStatus;
 use Smarty\Smarty;
@@ -319,7 +320,7 @@ test('constructor registers an is_admin modifier that reads the current user\'s 
         username: Username::from('admin-user'),
         email: null,
         language: LangCode::from('en_GB'),
-        theme: 'dummy',
+        theme: ThemeId::from('dummy'),
         status: UserStatus::Admin,
         enabledHigh: false,
     ));
@@ -342,7 +343,7 @@ test('constructor registers an is_classic_user modifier that reads the current u
         username: Username::from('normal-user'),
         email: null,
         language: LangCode::from('en_GB'),
-        theme: 'dummy',
+        theme: ThemeId::from('dummy'),
         status: UserStatus::Normal,
         enabledHigh: false,
     ));

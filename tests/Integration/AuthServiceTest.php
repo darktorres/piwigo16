@@ -46,6 +46,7 @@ namespace Piwigo\Tests\Integration {
     use Piwigo\Session\SessionEntity;
     use Piwigo\Session\SessionService;
     use Piwigo\Tests\Support\CurrentUserTestFactory;
+    use Piwigo\Common\ValueObject\ThemeId;
     use Piwigo\Users\User;
     use Piwigo\Users\UserStatus;
 
@@ -245,7 +246,7 @@ namespace Piwigo\Tests\Integration {
                 username: Username::from('fixture_admin'),
                 email: null,
                 language: LangCode::from('en_UK'),
-                theme: '',
+                theme: ThemeId::from('default'),
                 status: UserStatus::Webmaster,
                 enabledHigh: false,
             ));
@@ -284,7 +285,7 @@ namespace Piwigo\Tests\Integration {
                 username: Username::from('fixture_admin'),
                 email: null,
                 language: LangCode::from('en_UK'),
-                theme: '',
+                theme: ThemeId::from('default'),
                 status: UserStatus::Webmaster,
                 enabledHigh: false,
             ));
@@ -325,7 +326,7 @@ namespace Piwigo\Tests\Integration {
                 username: Username::from('fixture_admin'),
                 email: null,
                 language: LangCode::from('en_UK'),
-                theme: '',
+                theme: ThemeId::from('default'),
                 status: UserStatus::Webmaster,
                 enabledHigh: false,
             ));

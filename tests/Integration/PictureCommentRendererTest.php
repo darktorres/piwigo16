@@ -45,6 +45,7 @@ use Piwigo\Tests\Support\SessionServiceTestFactory;
 use Piwigo\Template\CurrentTemplate;
 use Piwigo\Url\UrlService;
 use Piwigo\Tests\Support\CurrentUserTestFactory;
+use Piwigo\Common\ValueObject\ThemeId;
 use Piwigo\Users\User;
 use Piwigo\Users\UserStatus;
 
@@ -903,7 +904,7 @@ final class PictureCommentRendererTest extends IntegrationTestCase
             username: Username::from('fixture_user_' . $id),
             email: Email::tryFrom($email),
             language: LangCode::from('en_UK'),
-            theme: '',
+            theme: ThemeId::from('default'),
             status: $status,
             enabledHigh: false,
         ));

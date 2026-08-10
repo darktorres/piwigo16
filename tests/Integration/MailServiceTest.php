@@ -48,6 +48,7 @@ use Piwigo\Session\SessionService;
 use Piwigo\Tests\Support\TranslatorTestFactory;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Tests\Support\CurrentUserTestFactory;
+use Piwigo\Common\ValueObject\ThemeId;
 use Piwigo\Users\User;
 use Piwigo\Users\UserService;
 use Piwigo\Users\UserStatus;
@@ -445,7 +446,7 @@ final class MailServiceTest extends IntegrationTestCase
             username: Username::from('nonexistent-subdir/evil'),
             email: null,
             language: LangCode::from('en_UK'),
-            theme: '',
+            theme: ThemeId::from('default'),
             status: UserStatus::Normal,
             enabledHigh: false,
         ));

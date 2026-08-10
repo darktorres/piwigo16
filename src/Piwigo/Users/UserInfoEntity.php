@@ -7,6 +7,7 @@ namespace Piwigo\Users;
 use Doctrine\ORM\Mapping as ORM;
 use Piwigo\Common\ValueObject\LangCode;
 use Piwigo\Common\ValueObject\SqlDateTime;
+use Piwigo\Common\ValueObject\ThemeId;
 use Piwigo\Common\ValueObject\UserId;
 
 /**
@@ -65,6 +66,13 @@ use Piwigo\Common\ValueObject\UserId;
  * LangService::getLanguages() (real installed `language/ll_RR`
  * directories) before persisting, so the hydration boundary is safe to
  * type strictly.
+ *
+ * `theme` is `ThemeId`-typed, the same `theme_id` custom Doctrine Type
+ * already used for `ThemeEntity::$id` (this column's own FK target,
+ * {@see \Piwigo\Core\ThemeRepository}) -- every real write path
+ * (`ProfileFormHandler`, `UserService::checkAndSaveUserInfos()`)
+ * validates against `ThemeCatalog::getPwgThemes()` (real installed
+ * themes) before persisting, matching `language`'s own precedent above.
  */
 #[ORM\Entity]
 #[ORM\Table(name: 'user_infos')]
@@ -88,8 +96,8 @@ final class UserInfoEntity
         public bool $showNbHits,
         #[ORM\Column(name: 'recent_period', type: 'smallint')]
         public int $recentPeriod,
-        #[ORM\Column(type: 'string', length: 255)]
-        public string $theme,
+        #[ORM\Column(type: 'theme_id', length: 255)]
+        public ThemeId $theme,
         #[ORM\Column(name: 'registration_date', type: 'sql_datetime', length: 19, nullable: true)]
         public ?SqlDateTime $registrationDate,
         #[ORM\Column(name: 'enabled_high', type: 'boolean')]

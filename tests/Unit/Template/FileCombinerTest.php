@@ -19,6 +19,7 @@ use Piwigo\Template\CurrentTemplate;
 use Piwigo\Template\Event\CombinablePreparse;
 use Piwigo\Template\FileCombiner;
 use Piwigo\Tests\Support\CurrentUserTestFactory;
+use Piwigo\Common\ValueObject\ThemeId;
 use Piwigo\Users\User;
 use Piwigo\Users\UserStatus;
 
@@ -78,7 +79,7 @@ function setAdminUser(): void
         username: Username::from('admin'),
         email: null,
         language: LangCode::from('en_UK'),
-        theme: 'modus',
+        theme: ThemeId::from('modus'),
         status: UserStatus::Admin,
         enabledHigh: false,
     ));

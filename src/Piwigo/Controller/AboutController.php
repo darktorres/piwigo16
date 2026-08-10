@@ -91,7 +91,7 @@ final class AboutController implements ControllerInterface
         ]);
 
         $user_theme = $this->currentUser->get()
-            ->theme;
+            ->theme->value;
 
         $theme_about = $this->lang->load('about.html', $this->currentConfig->themesPath . $user_theme . '/', [
             'return' => true,

@@ -11,6 +11,7 @@ use Piwigo\Common\ValueObject\LangCode;
 use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Common\ValueObject\Username;
 use Piwigo\Tests\Support\CurrentUserTestFactory;
+use Piwigo\Common\ValueObject\ThemeId;
 use Piwigo\Users\User;
 use Piwigo\Users\UserStatus;
 use ReflectionMethod;
@@ -203,7 +204,7 @@ test('getOtpAuthUrl builds an otpauth:// url from the current user and a scheme-
         username: Username::from('totp_user'),
         email: null,
         language: LangCode::from('en_UK'),
-        theme: '',
+        theme: ThemeId::from('default'),
         status: UserStatus::Normal,
         enabledHigh: false,
     ));
@@ -225,7 +226,7 @@ test('getQrCode returns a base64 PNG data uri encoding the same otpauth url as g
         username: Username::from('totp_user'),
         email: null,
         language: LangCode::from('en_UK'),
-        theme: '',
+        theme: ThemeId::from('default'),
         status: UserStatus::Normal,
         enabledHigh: false,
     ));

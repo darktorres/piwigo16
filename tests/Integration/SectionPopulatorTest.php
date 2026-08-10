@@ -61,6 +61,7 @@ use Piwigo\Tag\TagService;
 use Piwigo\Template\CurrentTemplate;
 use Piwigo\Template\Template;
 use Piwigo\Tests\Support\CurrentUserTestFactory;
+use Piwigo\Common\ValueObject\ThemeId;
 use Piwigo\Users\User;
 use Piwigo\Users\UserService;
 use Piwigo\Users\UserStatus;
@@ -229,7 +230,7 @@ final class SectionPopulatorTest extends IntegrationTestCase
             username: Username::from('regular_user'),
             email: Email::from('regular@example.test'),
             language: LangCode::from('en_UK'),
-            theme: 'default',
+            theme: ThemeId::from('default'),
             status: UserStatus::Normal,
             enabledHigh: true,
         ));
@@ -242,7 +243,7 @@ final class SectionPopulatorTest extends IntegrationTestCase
             username: Username::from('fixture_admin'),
             email: Email::from('fixture_admin@example.test'),
             language: LangCode::from('en_UK'),
-            theme: 'default',
+            theme: ThemeId::from('default'),
             status: UserStatus::Admin,
             enabledHigh: true,
         ));

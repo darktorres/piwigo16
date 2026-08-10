@@ -8,6 +8,7 @@ use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Auth\AccessLevelChecker;
 use Piwigo\Section\RandomIndexRedirectResolver;
 use Piwigo\Tests\Support\CurrentUserTestFactory;
+use Piwigo\Common\ValueObject\ThemeId;
 use Piwigo\Users\User;
 use Piwigo\Users\UserStatus;
 
@@ -21,7 +22,7 @@ function seedCurrentUserStatus(UserStatus $status): void
         username: null,
         email: null,
         language: LangCode::from('en_UK'),
-        theme: '',
+        theme: ThemeId::from('default'),
         status: $status,
         enabledHigh: false,
     ));

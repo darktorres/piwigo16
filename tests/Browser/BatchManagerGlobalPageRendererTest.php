@@ -134,8 +134,7 @@ it('clears the title/date_creation via their own "remove" checkboxes instead of 
     expect($titleResult['status'])->toBe(200);
 
     $db = bmDbConnect();
-    $prefix = bmDbPrefix();
-    $nameRow = H::dbFetchAssoc($db, sprintf('SELECT name FROM %simages WHERE id = %d', $prefix, $imageId));
+    $nameRow = H::dbFetchAssoc($db, sprintf('SELECT name FROM images WHERE id = %d', $imageId));
     expect(is_array($nameRow) ? $nameRow['name'] : 'MISSING')->toBeNull();
 
     $dateResult = bmPost($page, [
@@ -148,7 +147,7 @@ it('clears the title/date_creation via their own "remove" checkboxes instead of 
     ]);
     expect($dateResult['status'])->toBe(200);
 
-    $dateAssoc = H::dbFetchAssoc($db, sprintf('SELECT date_creation FROM %simages WHERE id = %d', $prefix, $imageId));
+    $dateAssoc = H::dbFetchAssoc($db, sprintf('SELECT date_creation FROM images WHERE id = %d', $imageId));
     expect(is_array($dateAssoc) ? $dateAssoc['date_creation'] : 'MISSING')->toBeNull();
     H::dbClose($db);
 });
@@ -510,7 +509,7 @@ it('passes representative_ext through to the derivative-deletion payload when th
     // plain jpg upload carry a representative_ext), not an assertion on
     // the DB; the assertion below is on the real HTTP response.
     $db = bmDbConnect();
-    H::dbQuery($db, sprintf("UPDATE %simages SET representative_ext = 'jpg' WHERE id = %d", bmDbPrefix(), $imageId));
+    H::dbQuery($db, sprintf("UPDATE images SET representative_ext = 'jpg' WHERE id = %d", $imageId));
     H::dbClose($db);
 
     $result = bmPost($page, [
@@ -574,7 +573,7 @@ it('falls back to the hardcoded 20-per-page default when the configured page siz
  * CURLFile's own postname (uploadPhotoViaApi()'s 3rd \CURLFile argument)
  * is basename($imagePath), so both uploads report the identical filename
  * to pwg.images.addSimple, and UploadService::addUploadedFile() stores
- * that verbatim in piwigo_images.file (confirmed by reading the source:
+ * that verbatim in images.file (confirmed by reading the source:
  * `'file' => $original_filename ?? basename($file_path)`) -- producing a
  * real `file`-column duplicate pair without ever touching the DB by hand.
  */
@@ -621,7 +620,7 @@ it('orders thumbnails by the duplicate-detection fields when the active filter i
 
     // display=all so the whole (globally-scoped, not album-scoped --
     // FilterResolver's own duplicate-detection query groups by `file`
-    // across all of piwigo_images) duplicate set renders on one page,
+    // across all of images) duplicate set renders on one page,
     // regardless of how many unrelated duplicate groups already exist.
     $result = H::adminPost($page, '/admin.php?page=batch_manager&display=all', [
         'pwg_token' => H::pwgToken($page),

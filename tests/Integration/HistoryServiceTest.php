@@ -146,9 +146,9 @@ final class HistoryServiceTest extends IntegrationTestCase
     {
         // image_type is enum('picture','high','other') -- not a real file
         // extension.
-        $this->conn->insert('history', ['date' => '2026-07-12', 'time' => '03:00:00', 'user_id' => 1, 'IP' => '127.0.0.1', 'image_type' => 'picture']);
-        $this->conn->insert('history', ['date' => '2026-07-12', 'time' => '04:00:00', 'user_id' => 1, 'IP' => '127.0.0.1', 'image_type' => 'high']);
-        $this->conn->insert('history', ['date' => '2026-07-12', 'time' => '05:00:00', 'user_id' => 1, 'IP' => '127.0.0.1', 'image_type' => null]);
+        $this->conn->insert('history', ['date' => '2026-07-12', 'time' => '03:00:00', 'user_id' => 1, 'ip' => '127.0.0.1', 'image_type' => 'picture']);
+        $this->conn->insert('history', ['date' => '2026-07-12', 'time' => '04:00:00', 'user_id' => 1, 'ip' => '127.0.0.1', 'image_type' => 'high']);
+        $this->conn->insert('history', ['date' => '2026-07-12', 'time' => '05:00:00', 'user_id' => 1, 'ip' => '127.0.0.1', 'image_type' => null]);
 
         $result = $this->service->getHistory([], ['fields' => ['types' => ['picture']]], ['none', 'picture', 'high']);
 
@@ -318,7 +318,7 @@ final class HistoryServiceTest extends IntegrationTestCase
         try {
             $this->service->logVisit();
 
-            self::assertSame(str_repeat(' ', 39), $this->fetchLastHistoryColumn('IP'));
+            self::assertSame(str_repeat(' ', 39), $this->fetchLastHistoryColumn('ip'));
         } finally {
             unset($_SERVER['REMOTE_ADDR']);
         }
@@ -487,7 +487,7 @@ final class HistoryServiceTest extends IntegrationTestCase
                 'date' => ':date',
                 'time' => ':time',
                 'user_id' => ':userId',
-                'IP' => "'127.0.0.1'",
+                'ip' => "'127.0.0.1'",
             ])
             ->setParameter('date', $date)
             ->setParameter('time', $time)

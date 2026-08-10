@@ -426,7 +426,7 @@ final class WsTopLevelTest extends ContractTestCase
      * Real bug found live: this used to rate fixture image 1 directly.
      * RateService::updateRatingScore() (triggered by every real
      * pwg.images.rate/pwg.rates.delete call) recomputes *every* image's
-     * rating_score from a bayesian average over the whole piwigo_rate
+     * rating_score from a bayesian average over the whole rate
      * table, not just the touched row -- confirmed live that adding then
      * deleting a rate on image 1 leaves every other fixture image's
      * rating_score numerically different from its pre-test value (a
@@ -471,10 +471,9 @@ final class WsTopLevelTest extends ContractTestCase
                 'SELECT COUNT(*) FROM ' . 'rate' . ' WHERE user_id = ? AND element_id = ?',
                 [$userId, $imageId]
             );
-            self::assertIsNumeric($before);
-            self::assertSame(1, (int) $before);
+            self::assertSame(1, $before);
 
-            $response = $this->wsAdmin('pwg.rates.delete', ['user_id' => (int) $userId, 'image_id' => $imageId]);
+            $response = $this->wsAdmin('pwg.rates.delete', ['user_id' => $userId, 'image_id' => $imageId]);
 
             self::assertSame('ok', $response['stat']);
             self::assertSame(1, $response['result']);
@@ -483,8 +482,7 @@ final class WsTopLevelTest extends ContractTestCase
                 'SELECT COUNT(*) FROM ' . 'rate' . ' WHERE user_id = ? AND element_id = ?',
                 [$userId, $imageId]
             );
-            self::assertIsNumeric($after);
-            self::assertSame(0, (int) $after);
+            self::assertSame(0, $after);
         } finally {
             $this->conn->executeStatement('DELETE FROM ' . 'images' . ' WHERE id = ?', [$imageId]);
         }
@@ -496,9 +494,7 @@ final class WsTopLevelTest extends ContractTestCase
             'SELECT id FROM ' . 'users' . ' WHERE username = ?',
             ['fixture_admin']
         );
-        self::assertIsNumeric($userId);
-
-        $response = $this->wsAdmin('pwg.rates.delete', ['user_id' => (int) $userId, 'image_id' => 999999]);
+        $response = $this->wsAdmin('pwg.rates.delete', ['user_id' => $userId, 'image_id' => 999999]);
 
         self::assertSame('ok', $response['stat']);
         self::assertSame(0, $response['result']);
@@ -515,7 +511,7 @@ final class WsTopLevelTest extends ContractTestCase
      * WsImagesMutationTest's own insertThrowawayImage() helper --
      * RateService::updateRatingScore() (triggered by every real delete)
      * recomputes every image's rating_score from a global average over the
-     * whole piwigo_rate table, not just the touched row.
+     * whole rate table, not just the touched row.
      */
     public function test_ratesDelete_with_anonymous_id_only_removes_the_matching_rate(): void
     {
@@ -523,8 +519,6 @@ final class WsTopLevelTest extends ContractTestCase
             'SELECT id FROM ' . 'users' . ' WHERE username = ?',
             ['guest']
         );
-        self::assertIsNumeric($guestId);
-
         $this->conn->executeStatement(
             'INSERT INTO ' . 'images' . ' (file, path) VALUES (?, ?)',
             ['pwgcore-throwaway-' . uniqid() . '.jpg', 'upload/pwgcore-throwaway.jpg']
@@ -534,15 +528,15 @@ final class WsTopLevelTest extends ContractTestCase
         try {
             $this->conn->executeStatement(
                 'INSERT INTO ' . 'rate' . ' (user_id, element_id, anonymous_id, rate, date) VALUES (?, ?, ?, 4, CURRENT_DATE)',
-                [(int) $guestId, $imageId, 'anon-a']
+                [$guestId, $imageId, 'anon-a']
             );
             $this->conn->executeStatement(
                 'INSERT INTO ' . 'rate' . ' (user_id, element_id, anonymous_id, rate, date) VALUES (?, ?, ?, 2, CURRENT_DATE)',
-                [(int) $guestId, $imageId, 'anon-b']
+                [$guestId, $imageId, 'anon-b']
             );
 
             $response = $this->wsAdmin('pwg.rates.delete', [
-                'user_id' => (int) $guestId,
+                'user_id' => $guestId,
                 'image_id' => $imageId,
                 'anonymous_id' => 'anon-a',
             ]);
@@ -552,15 +546,15 @@ final class WsTopLevelTest extends ContractTestCase
 
             $remaining = $this->conn->fetchAllAssociative(
                 'SELECT anonymous_id FROM ' . 'rate' . ' WHERE user_id = ? AND element_id = ?',
-                [(int) $guestId, $imageId]
+                [$guestId, $imageId]
             );
             self::assertSame(['anon-b'], array_column($remaining, 'anonymous_id'));
         } finally {
             // Deletes the still-remaining 'anon-b' rate via the real WS
             // method (not raw SQL) so RateService::updateRatingScore() gets
-            // one final recompute against the fully-restored piwigo_rate
+            // one final recompute against the fully-restored rate
             // table before the throwaway image itself is removed.
-            $this->wsAdmin('pwg.rates.delete', ['user_id' => (int) $guestId, 'image_id' => $imageId]);
+            $this->wsAdmin('pwg.rates.delete', ['user_id' => $guestId, 'image_id' => $imageId]);
             $this->conn->executeStatement('DELETE FROM ' . 'images' . ' WHERE id = ?', [$imageId]);
         }
     }

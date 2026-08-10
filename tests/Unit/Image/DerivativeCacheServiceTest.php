@@ -35,6 +35,12 @@ beforeEach(function (): void {
     CurrentConfigTestFactory::get()->reset();
     $root = sys_get_temp_dir() . '/piwigo-derivative-cache-test-' . bin2hex(random_bytes(8));
     mkdir($root, 0o777, true);
+    // A prior test file left Kernel booted without resetting first would
+    // otherwise make the boot() call below silently no-op, leaving
+    // CurrentPathsTestFactory (and every recursive-delete call this file's
+    // own tests exercise) pointed at whatever root that earlier boot bound
+    // instead of this fixture root.
+    Kernel::reset();
     Kernel::boot(Paths::fromRoot($root));
     CurrentConfigTestFactory::get()->dataLocation = 'data/';
     mkdir(CurrentPathsTestFactory::get()->root . CurrentConfigTestFactory::get()->derivativeDir, 0o777, true);

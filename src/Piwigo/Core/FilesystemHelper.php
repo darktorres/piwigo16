@@ -273,6 +273,7 @@ final class FilesystemHelper
      */
     public static function deltree(string $path, ?string $trash_path = null): ?bool
     {
+        self::guardAgainstRealRoot($path, __METHOD__);
         if (is_dir($path)) {
             $fh = opendir($path);
             if ($fh !== false) {
@@ -317,6 +318,25 @@ final class FilesystemHelper
         }
 
         return null;
+    }
+
+    /**
+     * Last-resort guard against a recursive-delete implementation (this
+     * class's own deltree(), or an independent one like
+     * Image\DerivativeCacheService::clearDerivativeCacheRecursive()) ever
+     * being called with the real application root as its target -- a
+     * genuinely destructive class of bug (test-isolation contamination
+     * leaking the real root into what a caller believes is a disposable
+     * temp/cache directory) that's cheap to rule out unconditionally,
+     * whatever the actual root cause turns out to be. A real temp/cache
+     * directory never has both a composer.json and a .git directly inside
+     * it, so this false-positives on nothing legitimate.
+     */
+    public static function guardAgainstRealRoot(string $path, string $caller): void
+    {
+        if (is_file($path . '/composer.json') && is_dir($path . '/.git')) {
+            throw new RuntimeException($caller . '() refused to operate on what looks like the real application root: ' . $path);
+        }
     }
 
     /**

@@ -6,6 +6,7 @@ namespace Piwigo\Image;
 
 use Exception;
 use Piwigo\Config\CurrentConfig;
+use Piwigo\Core\FilesystemHelper;
 use Piwigo\Core\Paths;
 
 /**
@@ -117,6 +118,7 @@ final class DerivativeCacheService
      */
     public function clearDerivativeCacheRecursive(string $path, string $pattern): bool
     {
+        FilesystemHelper::guardAgainstRealRoot($path, __METHOD__);
         $rmdir = true;
         $rmIndex = false;
 

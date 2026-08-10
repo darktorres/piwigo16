@@ -24,6 +24,13 @@ use Piwigo\Rate\RateRepository;
  * pair) or restores the exact fixture value it touched before returning,
  * matching the Integration original's own discipline exactly -- this
  * suite's DB is shared across the whole run, not reloaded per class.
+ * updateRatingScores()/clearRatingScores() write rating_score directly
+ * rather than deriving it from a rate row -- their own tests use a
+ * disposable image (rateTestInsertImage()) instead, not a real fixture
+ * image's score: SectionRepositoryTest.php's own findTopRatedImageIds()
+ * tests read every image's rating_score unfiltered, and briefly mutating
+ * a real one (even restored after) raced that file under --parallel --
+ * confirmed live.
  *
  * fixture: user1 rated element1(=5) and element3(=5); user3 rated
  * element1(=4) and element4(=2); user4 rated element2(=3). images
@@ -106,6 +113,25 @@ function rateTestFetchRatingScore(Connection $conn, int $imageId): ?float
         ->fetchOne();
 
     return is_numeric($value) ? (float) $value : null;
+}
+
+/**
+ * A disposable image, not one of the fixture's own shared 1-5 --
+ * updateRatingScores()/clearRatingScores() write rating_score directly,
+ * and SectionRepositoryTest.php's own findTopRatedImageIds() tests read
+ * the fixture's rating_score values across ALL images unfiltered, so
+ * mutating a real fixture image's score (even briefly, restored in
+ * finally) raced that file under --parallel -- confirmed live.
+ */
+function rateTestInsertImage(Connection $conn): int
+{
+    $conn->createQueryBuilder()->insert('images')
+        ->values(['file' => ':file', 'path' => ':path'])
+        ->setParameter('file', 'rate-test.jpg')
+        ->setParameter('path', 'upload/rate-test.jpg')
+        ->executeStatement();
+
+    return (int) $conn->lastInsertId();
 }
 
 test('findElementIdsForUserAndAnonymousId() matches the fixture', function (): void {
@@ -220,35 +246,30 @@ test('findRateSummaries() matches the fixture', function (): void {
 
 test('updateRatingScores() persists the given score', function (): void {
     $conn = DbConnection::build();
-    $original = rateTestFetchRatingScore($conn, 1);
+    $imageId = rateTestInsertImage($conn);
 
     try {
         rateTestRepo()->updateRatingScores([
-            ['id' => 1, 'ratingScore' => 4.75],
+            ['id' => $imageId, 'ratingScore' => 4.75],
         ]);
 
-        expect(rateTestFetchRatingScore($conn, 1))->toBe(4.75);
+        expect(rateTestFetchRatingScore($conn, $imageId))->toBe(4.75);
     } finally {
-        $conn->createQueryBuilder()
-            ->update('images')
-            ->set('rating_score', ':score')
-            ->where('id = 1')
-            ->setParameter('score', $original)
-            ->executeStatement();
+        $conn->createQueryBuilder()->delete('images')->where('id = :id')->setParameter('id', $imageId)->executeStatement();
     }
 });
 
 test('updateRatingScores() clears the identity map, so a later find() sees the real update instead of a stale cached entity', function (): void {
     [$repo, $em] = rateTestRepoWithEm();
-    $imageIdVo = ImageId::from(1);
-    $original = rateTestFetchRatingScore(DbConnection::build(), 1);
+    $imageId = rateTestInsertImage(DbConnection::build());
+    $imageIdVo = ImageId::from($imageId);
 
     try {
         $tracked = $em->find(ImageEntity::class, $imageIdVo);
         expect($tracked)->not->toBeNull();
 
         $repo->updateRatingScores([
-            ['id' => 1, 'ratingScore' => 4.75],
+            ['id' => $imageId, 'ratingScore' => 4.75],
         ]);
 
         $refetched = $em->find(ImageEntity::class, $imageIdVo);
@@ -258,12 +279,7 @@ test('updateRatingScores() clears the identity map, so a later find() sees the r
         }
         expect($refetched->ratingScore)->toBe(4.75);
     } finally {
-        DbConnection::build()->createQueryBuilder()
-            ->update('images')
-            ->set('rating_score', ':score')
-            ->where('id = 1')
-            ->setParameter('score', $original)
-            ->executeStatement();
+        DbConnection::build()->createQueryBuilder()->delete('images')->where('id = :id')->setParameter('id', $imageId)->executeStatement();
     }
 });
 
@@ -317,26 +333,30 @@ test('findImageIdsWithStaleRatingScore() finds an image with a leftover score bu
 
 test('clearRatingScores() nulls only the given ids', function (): void {
     $conn = DbConnection::build();
-    $original1 = rateTestFetchRatingScore($conn, 1);
-    $original2 = rateTestFetchRatingScore($conn, 2);
+    $imageId1 = rateTestInsertImage($conn);
+    $imageId2 = rateTestInsertImage($conn);
+    $conn->createQueryBuilder()->update('images')->set('rating_score', ':score')->where('id = :id')->setParameter('score', 4.5)->setParameter('id', $imageId1)->executeStatement();
+    $conn->createQueryBuilder()->update('images')->set('rating_score', ':score')->where('id = :id')->setParameter('score', 3.0)->setParameter('id', $imageId2)->executeStatement();
 
     try {
-        rateTestRepo()->clearRatingScores([1, 2]);
+        rateTestRepo()->clearRatingScores([$imageId1, $imageId2]);
 
-        expect(rateTestFetchRatingScore($conn, 1))->toBeNull()
-            ->and(rateTestFetchRatingScore($conn, 2))->toBeNull()
+        expect(rateTestFetchRatingScore($conn, $imageId1))->toBeNull()
+            ->and(rateTestFetchRatingScore($conn, $imageId2))->toBeNull()
             // untouched
             ->and(rateTestFetchRatingScore($conn, 3))->toBe(5.0);
     } finally {
-        $conn->createQueryBuilder()->update('images')->set('rating_score', ':score')->where('id = 1')->setParameter('score', $original1)->executeStatement();
-        $conn->createQueryBuilder()->update('images')->set('rating_score', ':score')->where('id = 2')->setParameter('score', $original2)->executeStatement();
+        $conn->createQueryBuilder()->delete('images')->where('id = :id')->setParameter('id', $imageId1)->executeStatement();
+        $conn->createQueryBuilder()->delete('images')->where('id = :id')->setParameter('id', $imageId2)->executeStatement();
     }
 });
 
 test('clearRatingScores() clears the identity map, so a later find() sees the real deletion instead of a stale cached entity', function (): void {
     [$repo, $em] = rateTestRepoWithEm();
-    $imageIdVo = ImageId::from(1);
-    $original = rateTestFetchRatingScore(DbConnection::build(), 1);
+    $conn = DbConnection::build();
+    $imageId = rateTestInsertImage($conn);
+    $conn->createQueryBuilder()->update('images')->set('rating_score', ':score')->where('id = :id')->setParameter('score', 4.5)->setParameter('id', $imageId)->executeStatement();
+    $imageIdVo = ImageId::from($imageId);
 
     try {
         $tracked = $em->find(ImageEntity::class, $imageIdVo);
@@ -346,7 +366,7 @@ test('clearRatingScores() clears the identity map, so a later find() sees the re
         }
         expect($tracked->ratingScore)->not->toBeNull();
 
-        $repo->clearRatingScores([1]);
+        $repo->clearRatingScores([$imageId]);
 
         $refetched = $em->find(ImageEntity::class, $imageIdVo);
         expect($refetched)->not->toBeNull();
@@ -355,12 +375,7 @@ test('clearRatingScores() clears the identity map, so a later find() sees the re
         }
         expect($refetched->ratingScore)->toBeNull();
     } finally {
-        DbConnection::build()->createQueryBuilder()
-            ->update('images')
-            ->set('rating_score', ':score')
-            ->where('id = 1')
-            ->setParameter('score', $original)
-            ->executeStatement();
+        $conn->createQueryBuilder()->delete('images')->where('id = :id')->setParameter('id', $imageId)->executeStatement();
     }
 });
 

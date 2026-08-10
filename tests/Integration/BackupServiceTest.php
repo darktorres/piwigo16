@@ -377,7 +377,6 @@ final class BackupServiceTest extends IntegrationTestCase
         $archivePath = $this->makeTestArchive([
             'manifest.json' => json_encode([
                 'created_at' => '2026-01-01T00:00:00Z',
-                'db_prefix' => $this->dbPrefix,
                 'included' => ['db.sql'],
             ], JSON_THROW_ON_ERROR),
             'db.sql' => "SELECT 1;\n",
@@ -409,7 +408,6 @@ final class BackupServiceTest extends IntegrationTestCase
         $archivePath = $this->makeTestArchive([
             'manifest.json' => json_encode([
                 'created_at' => '2026-01-01T00:00:00Z',
-                'db_prefix' => $this->dbPrefix,
                 'included' => ['db.sql'],
             ], JSON_THROW_ON_ERROR),
             'db.sql' => "SELECT 1;\n",
@@ -520,7 +518,6 @@ final class BackupServiceTest extends IntegrationTestCase
         $archivePath = $this->makeTestArchive([
             'manifest.json' => json_encode([
                 'created_at' => '2026-01-01T00:00:00Z',
-                'db_prefix' => $this->dbPrefix,
                 'included' => ['db.sql'],
             ], JSON_THROW_ON_ERROR),
             'db.sql' => "SELECT 1;\n",
@@ -552,7 +549,6 @@ final class BackupServiceTest extends IntegrationTestCase
         $archivePath = $this->makeTestArchive([
             'manifest.json' => json_encode([
                 'created_at' => '2026-01-01T00:00:00Z',
-                'db_prefix' => $this->dbPrefix,
                 'included' => [],
             ], JSON_THROW_ON_ERROR),
         ]);

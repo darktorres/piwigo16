@@ -75,7 +75,6 @@ final readonly class BackupService
 
             $manifest = [
                 'created_at' => gmdate('c'),
-                'db_prefix' => $credentials->prefix,
                 'included' => $included,
             ];
             file_put_contents(
@@ -142,7 +141,6 @@ final readonly class BackupService
         if (
             ! is_array($decoded)
             || ! is_string($decoded['created_at'] ?? null)
-            || ! is_string($decoded['db_prefix'] ?? null)
             || ! is_array($decoded['included'] ?? null)
         ) {
             throw new RuntimeException("Invalid backup archive: malformed manifest.json in {$archivePath}");
@@ -151,7 +149,7 @@ final readonly class BackupService
         /** @var list<string> $included */
         $included = array_values(array_filter($decoded['included'], is_string(...)));
 
-        return new BackupManifest($decoded['created_at'], $decoded['db_prefix'], $included);
+        return new BackupManifest($decoded['created_at'], $included);
     }
 
     private function dumpDatabase(DbCredentials $credentials, string $outputPath): void

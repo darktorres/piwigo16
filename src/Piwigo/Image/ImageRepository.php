@@ -3169,14 +3169,11 @@ final class ImageRepository extends EntityRepository
 
         // Row order is otherwise unguaranteed; MySQL and PostgreSQL return
         // this exact join's row order differently with no ORDER BY.
-        return array_map(
-            static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0,
-            $this->getEntityManager()
-                ->getConnection()
-                ->fetchFirstColumn(<<<SQL
-                    SELECT id FROM {$imagesTable} LEFT JOIN {$imageTagTable} ON id = image_id WHERE tag_id IS NULL ORDER BY id
-                    SQL)
-        );
+        return $this->getEntityManager()
+            ->getConnection()
+            ->fetchFirstColumn(<<<SQL
+                SELECT id FROM {$imagesTable} LEFT JOIN {$imageTagTable} ON id = image_id WHERE tag_id IS NULL ORDER BY id
+                SQL);
     }
 
     /**

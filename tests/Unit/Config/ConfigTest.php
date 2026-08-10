@@ -3,7 +3,9 @@
 declare(strict_types=1);
 
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
+use Piwigo\Config\FilterViewDefinition;
 use Piwigo\Config\NotificationConfig;
+use Piwigo\Config\UpdateNotification;
 
 beforeEach(function (): void {
     CurrentConfigTestFactory::get()->reset();
@@ -142,11 +144,11 @@ test('setDefaultFiltersViews replaces only well-shaped entries, falling back per
 
     $result = CurrentConfigTestFactory::get()->defaultFiltersViews;
 
-    expect($result['words'])->toBe(['access' => 'admin_only', 'default' => false])
-        ->and($result['tags'])->toBe(['access' => 'everybody', 'default' => false]);
+    expect($result['words'])->toEqual(new FilterViewDefinition(access: 'admin_only', default: false))
+        ->and($result['tags'])->toEqual(new FilterViewDefinition(access: 'everybody', default: false));
 
     CurrentConfigTestFactory::get()->defaultFiltersViews = null;
-    expect(CurrentConfigTestFactory::get()->defaultFiltersViews['words'])->toBe(['access' => 'everybody', 'default' => true]);
+    expect(CurrentConfigTestFactory::get()->defaultFiltersViews['words'])->toEqual(new FilterViewDefinition(access: 'everybody', default: true));
 });
 
 test('setRandomIndexRedirect keeps only scalar values, stringified, keyed by stringified key', function (): void {
@@ -178,12 +180,9 @@ test('setRecentPostDates coerces valid fields and falls back per-field and per-c
         ->and($config->nbm->maxCats)->toBe(9);
 });
 
-test('setUpdateNotifyLastNotification keeps only the recognized keys and clears with null', function (): void {
+test('UpdateNotification::fromArray keeps only the recognized keys, and the property round-trips it', function (): void {
     expect(CurrentConfigTestFactory::get()->updateNotifyLastNotification)->toBeNull();
 
-    CurrentConfigTestFactory::get()->updateNotifyLastNotification = ['version' => '17.1.0', 'notified_on' => '2026-07-01', 'unexpected' => 'ignored'];
-    expect(CurrentConfigTestFactory::get()->updateNotifyLastNotification)->toBe(['version' => '17.1.0', 'notified_on' => '2026-07-01']);
-
-    CurrentConfigTestFactory::get()->updateNotifyLastNotification = null;
-    expect(CurrentConfigTestFactory::get()->updateNotifyLastNotification)->toBeNull();
+    CurrentConfigTestFactory::get()->updateNotifyLastNotification = UpdateNotification::fromArray(['version' => '17.1.0', 'notified_on' => '2026-07-01', 'unexpected' => 'ignored']);
+    expect(CurrentConfigTestFactory::get()->updateNotifyLastNotification)->toEqual(new UpdateNotification(version: '17.1.0', notifiedOn: '2026-07-01'));
 });

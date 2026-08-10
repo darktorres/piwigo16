@@ -31,15 +31,17 @@ use Piwigo\Users\UserStatus;
  * dedicated Integration/Browser spec of its own (reached transitively by
  * every Browser test that loads a themed page).
  *
- * `render()` itself has no early guard, but `guestAccess(false)` +
- * a guest `CurrentUser` makes `BlockManager::load_registered_blocks()`
- * a real no-op (see its own first condition), so `display_blocks` stays
- * empty for the rest of the method -- every block section is gated
- * behind `$menu->get_block($id) !== null`, so this deterministically
- * skips the real DB-backed `TagService::getAvailableTags()`/
- * `CategoryService::getCategoriesMenu()` calls entirely, leaving only
- * the pure identification-vars computation and a real (but block-free)
- * `BlockManager::apply()` template parse.
+ * `render()` itself has no early guard, but `BlockManager::
+ * load_registered_blocks()` only ever populates `registered_blocks` via
+ * a `BlockManagerRegisterBlocks` notify's own listeners calling
+ * `register_block()` back -- a bare, freshly-booted test container has
+ * no plugin/listener registered to do that, so `display_blocks` stays
+ * empty regardless of the guest-access config value. Every block
+ * section is gated behind `$menu->get_block($id) !== null`, so this
+ * deterministically skips the real DB-backed `TagService::
+ * getAvailableTags()`/`CategoryService::getCategoriesMenu()` calls
+ * entirely, leaving only the pure identification-vars computation and a
+ * real (but block-free) `BlockManager::apply()` template parse.
  */
 function menubarRendererTestSubject(): MenubarRenderer
 {
@@ -67,7 +69,7 @@ function menubarRendererTestRrmdir(string $dir): void
     rmdir($dir);
 }
 
-test('render skips every real DB-backed block when guest access is disabled for a guest visitor', function (): void {
+test('render skips every real DB-backed block when no listener has registered any block', function (): void {
     $root = sys_get_temp_dir() . '/piwigo-menubar-renderer-test-' . bin2hex(random_bytes(8)) . '/';
     mkdir($root, 0o777, true);
     Kernel::boot(Paths::fromRoot($root));
@@ -75,7 +77,6 @@ test('render skips every real DB-backed block when guest access is disabled for 
     try {
         CurrentConfigTestFactory::get()->setDataLocation('data/');
         CurrentConfigTestFactory::get()->setDataDirChecked('1');
-        CurrentConfigTestFactory::get()->setGuestAccess(false);
         CurrentConfigTestFactory::get()->setMenubarFilterIcon(false);
 
         CurrentUserTestFactory::get()->set(new User(

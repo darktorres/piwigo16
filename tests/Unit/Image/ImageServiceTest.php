@@ -44,6 +44,7 @@ use Piwigo\Event\Album\EmptyLounge;
 use Piwigo\Event\Picture\BeginDeleteElements;
 use Piwigo\Event\Picture\DeleteElements;
 use Piwigo\Image\ImageRepository;
+use Piwigo\Permission\PermissionCriteria;
 use Piwigo\Image\ImageService;
 use RuntimeException;
 use Piwigo\Users\CurrentUser;
@@ -51,6 +52,99 @@ use Piwigo\Core\FilterState;
 use Piwigo\Config\CurrentConfigService;
 use ReflectionMethod;
 use Piwigo\Tests\Support\KernelContainerOverride;
+
+// ---------------------------------------------------------------------
+// Mutation-testing gap closure (G1, when-i-run-the-mutable-cookie.md):
+// a fresh scoped rerun (2026-08-10) found 22 untested. 3 new real tests
+// closed above (countOrphans' MinusToPlus/TrueToFalse, getRowWithCondition's
+// AlwaysReturnNull) plus a 4th (encodeSlideshowParams' shared-key
+// non-scalar case) that, as a side effect, ALSO closed the sibling
+// array_filter() line's own UnwrapArrayFilter mutation (the $corrected
+// side) that the pre-existing "treats a non-scalar caller-supplied
+// value" test below could never reach. The mandatory scoped verify
+// rerun (per this plan's own step 3) surfaced 2 MORE mutations neither
+// original scan listed: countOrphans()'s own test newly covers a
+// previously-uncovered line (`--covered-only` can't mutate a line
+// nothing exercises), and emptyLounge()'s `$maxImageId = 0;` starting
+// value was in the original 22 but initially missed during triage --
+// both are documented inert below, not new gaps requiring more tests.
+//
+// 3 mutations were ALREADY documented by an earlier pass of this same
+// file (see each test's own docblock): the sibling "treats a non-scalar
+// caller-supplied value" test ($defaults-side UnwrapArrayFilter +
+// RemoveStringCast, confirmed-equivalent), the "deleteElements()'s
+// own... category representant check" comment (IfNegated/
+// NotIdenticalToIdentical, confirmed dead code via a real ON DELETE SET
+// NULL FK), and the "invalidates the permission cache" test
+// (RemoveMethodCall, a confirmed blank-line mutation-coverage blind
+// spot, same as feedback_pest_mutate_blank_line_blind_spot).
+//
+// The remaining ones, confirmed inert this pass (none needed a new test):
+// - decodeSlideshowParams()'s 2x `(bool) preg_match_all(...)` if-conditions:
+//   already-coercing position, same established pattern as every other
+//   bool-cast-in-an-if-condition mutation across this campaign.
+// - Both `count($matches[1])` array-index casts (DecrementInteger-to-0,
+//   IncrementInteger-to-2): preg_match_all()'s default PREG_PATTERN_ORDER
+//   guarantees every capture-group's own match array (index 0, 1, 2, ...)
+//   has the IDENTICAL length (one entry per overall match) -- the loop
+//   bound this count() feeds is the same regardless of which group's
+//   array it's taken from, and the loop body itself still indexes the
+//   correct groups ($matches[1][$i]/$matches[2][$i]) either way.
+// - deleteElementFiles()'s own `if ($ids === []) { return []; }` early
+//   guard: ImageRepository::findFormatsByImageIds()/
+//   findPathsForFileDeletion() both already have their OWN identical
+//   `if ($imageIds === []) { return []; }` guard -- removing the outer
+//   one still produces an empty result set the exact same way, one call
+//   frame deeper.
+// - emptyLounge()'s `(int) $runningExecStartTime` cast (from an
+//   explode()-derived string): PHP's `-` operator already numeric-string-
+//   coerces on its own, identically to an explicit cast.
+// - emptyLounge()'s `if ($rowImageId > $maxImageId)` (GreaterToGreaterOrEqual):
+//   the only way `>` and `>=` diverge is an exact tie, and a tie
+//   reassigns $maxImageId to its own current value -- unobservable either
+//   way, same "self-reassignment at a boundary" reasoning as
+//   PwgImage.php's own dest_ratio==img_ratio finding.
+// - emptyLounge()'s `$idx + 1` lookahead index (IncrementInteger to
+//   `$idx + 2`): verified directly (not assumed) that
+//   associateImagesToCategories() re-queries findMaxRanksByCategory()
+//   fresh on every call and assigns ranks sequentially regardless of
+//   batch size, and the EmptyLounge event's own row payload comes from
+//   the ORIGINAL, ungrouped lounge rows, not the internal per-category
+//   batching -- splitting one grouped call into two separate ones for
+//   the same category produces the identical final image_category rows,
+//   ranks, and event payload, just more DB round trips (not a publicly
+//   observable difference).
+// - emptyLounge()'s own lock-value write, `tryAcquireLoungeLock($execId .
+//   '-' . time())` (ConcatRemoveRight, dropping the timestamp): the
+//   value is either never persisted at all (this call loses the
+//   INSERT IGNORE race) or written-then-deleted by this same call's own
+//   successful-path cleanup a few lines later -- the missing timestamp is
+//   only observable by a DIFFERENT, LATER call reading a lock this one
+//   left behind mid-flight (a real crash between acquire and cleanup),
+//   which would need dedicated subprocess/SIGKILL infrastructure
+//   disproportionate to one line; not pursued.
+// - emptyLounge()'s `$maxImageId = 0;` starting value (DecrementInteger/
+//   IncrementInteger to -1/1): only observable if some real lounge row's
+//   own image id were <= 1 -- this environment's real `images` table
+//   auto-increment counter is already at 700,000+ (confirmed live), and
+//   AUTO_INCREMENT never reuses low values once advanced past them, so
+//   no realistically-inserted row can ever trigger this boundary.
+//
+// One MORE mutation surfaced only by adding the countOrphans() test
+// above (a line with no prior coverage at all has no prior mutant to
+// begin with -- `--covered-only` only mutates lines something already
+// exercises): `return $this->currentConfig->countOrphans() ?? 0;`'s own
+// literal `0` (DecrementInteger/IncrementInteger to -1/1). This fallback
+// is reachable only if `$currentConfig->countOrphans()` is STILL null
+// after the update block above it -- which the countOrphans() test
+// itself already proves doesn't happen under real code (confUpdateParam's
+// own `updateGlobal: true` genuinely re-syncs it, asserted directly).
+// Forcing the fallback to fire for real would mean deliberately breaking
+// a DIFFERENT, unrelated invariant (ConfigService::KEY_TO_PROPERTY
+// mapping 'count_orphans' correctly) purely to reach this one line --
+// disproportionate for a defensive "should never happen" default whose
+// own value (0 vs 1) has no meaningful real-world distinction either way.
+// ---------------------------------------------------------------------
 
 beforeEach(function (): void {
     CurrentConfigTestFactory::get()->setSlideshowPeriod(4);
@@ -186,6 +280,70 @@ test('currentConfigService() throws when the container returns an unexpected typ
         $service->countOrphans();
     });
 })->throws(LogicException::class, 'Container returned an unexpected type for ' . CurrentConfigService::class);
+
+test('countOrphans computes the real difference (not sum) between all images and categorized images, and updates the live in-memory config', function (): void {
+    // Real gap, found via mutation testing: MinusToPlus on
+    // countAllImages() - countImagesInCategories() and TrueToFalse on
+    // confUpdateParam(..., updateGlobal: true) -- the only existing
+    // countOrphans() test above interrupts execution before either line
+    // is ever reached (via KernelContainerOverride, testing a different
+    // guard). Inserting a real orphan image (no category link)
+    // guarantees the real orphan count is non-zero, so `?? 0`'s own
+    // fallback (what a wrongly-updateGlobal:false-stuck-null
+    // $currentConfig would silently return instead) can't coincidentally
+    // match. Comparing against the SAME two repo methods called
+    // directly (not hand-derived expected numbers) proves the real
+    // subtraction, not addition.
+    [$conn, $repo] = imageServiceTestConnAndRepo();
+    $orphanId = imageServiceTestInsertImage($conn, 'upload/2026/07/orphan-for-count.jpg');
+
+    Kernel::boot();
+    $configRepo = EntityManagerFactory::build($conn)->getRepository(ConfigEntry::class);
+    CurrentConfigServiceTestFactory::get()->set(new ConfigService($configRepo, new EventDispatcher(), CurrentConfigTestFactory::get()));
+
+    try {
+        expect(CurrentConfigTestFactory::get()->countOrphans())->toBeNull();
+        $expectedOrphans = $repo->countAllImages() - $repo->countImagesInCategories();
+        expect($expectedOrphans)->toBeGreaterThan(0);
+
+        $service = imageServiceTestNewService($repo, $conn);
+        $result = $service->countOrphans();
+
+        expect($result)->toBe($expectedOrphans)
+            ->and(CurrentConfigTestFactory::get()->countOrphans())->toBe($expectedOrphans);
+    } finally {
+        $conn->executeStatement("DELETE FROM " . Tables::config() . " WHERE param = 'count_orphans'");
+        $conn->executeStatement('DELETE FROM ' . Tables::images() . ' WHERE id = ?', [$orphanId]);
+        CurrentConfigServiceTestFactory::get()->reset();
+        Kernel::reset();
+    }
+});
+
+test('getRowWithCondition returns the real image row when one genuinely matches, not just null', function (): void {
+    // Real gap, found via mutation testing: AlwaysReturnNull -- this
+    // method's only real caller (Ws\PwgImages::getInfo(), already
+    // Unit-tested) only ever exercises the "image_id not found" 404
+    // branch (a deliberately nonexistent id), which returns null under
+    // both the real code and this mutation identically. A real,
+    // just-inserted image id proves the delegate genuinely forwards
+    // findRowWithCondition()'s own found-row result.
+    [$conn, $repo] = imageServiceTestConnAndRepo();
+    $imageId = imageServiceTestInsertImage($conn, 'upload/2026/07/row-with-condition.jpg');
+
+    try {
+        $service = imageServiceTestNewService($repo, $conn);
+
+        $row = $service->getRowWithCondition(ImageId::from($imageId), new PermissionCriteria(null, null, null, null, null, null));
+
+        expect($row)->toBeArray();
+        if (is_array($row)) {
+            $rowId = $row['id'] ?? null;
+            expect(is_numeric($rowId) ? (int) $rowId : null)->toBe($imageId);
+        }
+    } finally {
+        $conn->executeStatement('DELETE FROM ' . Tables::images() . ' WHERE id = ?', [$imageId]);
+    }
+});
 
 test('getDefaultSlideshowParams reads conf', function (): void {
     $params = new ImageService(imageServiceTestLang(), EntityManagerFactory::build(DbConnection::build())->getRepository(ImageEntity::class), new ActivityService(EntityManagerFactory::build(DbConnection::build())->getRepository(ActivityEntity::class)), SessionServiceTestFactory::get(), EventDispatcherTestFactory::get(), CurrentConfigTestFactory::get(), TranslatorTestFactory::get(), Paths::fromRoot(sys_get_temp_dir()))->getDefaultSlideshowParams();
@@ -396,6 +554,29 @@ test('encodeSlideshowParams treats a non-scalar caller-supplied value as unrepre
     $encoded = imageServiceTestNewService($repo, $conn)->encodeSlideshowParams(['period' => 4, 'repeat' => true, 'play' => true, 'extra' => ['nested']]);
 
     expect($encoded)->toBe('');
+});
+
+test('encodeSlideshowParams filters out a non-scalar value under a key shared with the real defaults, avoiding a real array-to-string warning', function (): void {
+    // Real gap, found via mutation testing: the sibling "treats a
+    // non-scalar caller-supplied value as unrepresentable" test above
+    // (via a NEW 'extra' key, absent from getDefaultSlideshowParams()'s
+    // own fixed 3-key shape) is genuinely confirmed-equivalent for THAT
+    // scenario only -- array_diff_assoc() short-circuits on key absence,
+    // no value comparison needed, so array_filter()'s own removal is
+    // unobservable there. A non-scalar value under a key ALREADY present
+    // in both arrays (here: 'repeat', untouched by
+    // correctSlideshowParams()'s own period-only clamping) is genuinely
+    // different: array_diff_assoc() DOES (string)-cast both sides to
+    // compare a shared key's value -- verified directly (php -r) that
+    // this raises a real "Array to string conversion" E_WARNING, which
+    // PHPUnit's own failOnWarning would turn into a failure. Proves
+    // array_filter(..., is_scalar(...)) genuinely runs before
+    // array_diff_assoc(), not just that a non-scalar value happens to
+    // also be caught by this method's own downstream loop guard.
+    [$conn, $repo] = imageServiceTestConnAndRepo();
+    $encoded = imageServiceTestNewService($repo, $conn)->encodeSlideshowParams(['period' => 4, 'repeat' => ['nested' => 'array'], 'play' => true]);
+
+    expect($encoded)->not->toContain('repeat');
 });
 
 // encodeSlideshowParams()'s own `if (! is_scalar($value)) { continue; }`

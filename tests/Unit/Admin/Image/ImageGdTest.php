@@ -195,6 +195,50 @@ test('destroy is a true no-op returning true', function (): void {
     expect($img->destroy())->toBeTrue();
 });
 
+// ---------------------------------------------------------------------
+// Mutation-testing gap closure (G1, when-i-run-the-mutable-cookie.md):
+// a fresh scoped rerun (2026-08-10) found 20 untested. 1 new real test
+// closed above (resize()'s own imagealphablending(false) call). The
+// rest confirmed inert/unreachable/already-documented this pass, none
+// needing a new test:
+// - crop()'s own IDENTICAL imagealphablending($dest, false)/
+//   imagesavealpha($dest, true)/imageantialias($dest, true) setup
+//   (TrueToFalse/RemoveFunctionCall/IfNegated): verified directly (not
+//   assumed) that this trio has NO observable effect on crop()'s own
+//   output, even with the exact same alpha-transparent source the new
+//   resize() test above uses -- crop() merges via imagecopymerge(),
+//   which has a real, well-known PHP/GD alpha-handling limitation (the
+//   same "php bug #23815" compose()'s own docblock already references
+//   for the identical reason) that makes it ignore all three regardless.
+// - resize()'s own `imagesavealpha($dest, true)` call: a SEPARATE,
+//   narrower finding from the alphablending call above -- verified
+//   directly that it's redundant specifically for imagecopyresampled()
+//   onto a fresh truecolor canvas (probed with alphablending(false)
+//   alone, no savealpha call at all: byte-identical alpha result).
+// - Both `if (function_exists('imageantialias'))` guards (crop() and
+//   resize(), IfNegated): imageantialias() only affects line-drawing
+//   functions (imageline()/imagepolygon()/etc.), never a pixel-copy
+//   function like imagecopymerge()/imagecopyresampled() -- neither
+//   method draws a single line, so this call is a genuine no-op in
+//   both places regardless of whether it's skipped.
+// - compose()'s own `if ($cut === false)` check (FalseToTrue): already
+//   documented in this file's own top docblock (see above) --
+//   $ow/$oh come from a real, already-successfully-decoded overlay
+//   image, making a second, identically-sized imagecreatetruecolor()
+//   call fail a structural contradiction, not just untested.
+// - compose()'s own FIRST imagecopy() call ("Copy the blank image into
+//   the destination image where the source goes", RemoveFunctionCall +
+//   DecrementInteger/IncrementInteger x2 on its dst_x/dst_y literals):
+//   confirmed PROVABLY DEAD CODE by reading the next statement -- the
+//   very next line unconditionally overwrites the ENTIRE $cut canvas
+//   with the overlay image at the same (0,0) origin and the SAME
+//   $ow/$oh dimensions $cut was just allocated at, so nothing this
+//   first call writes can ever survive to be read. Not removed as part
+//   of this mutation-gap-closure pass (out of scope -- a source-level
+//   dead-code cleanup deserves its own dedicated, independently-
+//   verified change), but worth flagging for one.
+// ---------------------------------------------------------------------
+
 test('crop produces a real image of exactly the requested size, taken from the correct region', function (): void {
     $path = imageGdTestMarker() . '/crop.png';
     // A 20x20 canvas split into 2 distinct 10x10 colored halves (left
@@ -392,6 +436,58 @@ test('resize samples from the correct source region, not shifted by one pixel', 
     expect([$redRgb['red'], $redRgb['green'], $redRgb['blue']])->toBe([255, 0, 0]);
     expect([$blueRgb['red'], $blueRgb['green'], $blueRgb['blue']])->toBe([0, 0, 255]);
     expect([$greenRgb['red'], $greenRgb['green'], $greenRgb['blue']])->toBe([0, 255, 0]);
+});
+
+test('resize preserves the real alpha channel via imagecopyresampled(), not silently flattening it to opaque', function (): void {
+    // Real gap, found via mutation testing: TrueToFalse/RemoveFunctionCall
+    // on resize()'s own imagealphablending($dest, false) call -- no
+    // existing resize test uses a source with real alpha transparency,
+    // only opaque colors. Without it, a semi-transparent source pixel
+    // comes back fully opaque AND color-shifted (blended against GD's
+    // default black canvas instead of copied raw) -- confirmed live via
+    // a hand-mutated probe before writing this assertion.
+    // imagecopyresampled() genuinely honors this flag, unlike crop()'s
+    // own imagecopymerge()-based pipeline (see that method's own test
+    // docblock below -- imagecopymerge() has a well-known, long-standing
+    // PHP/GD alpha-handling bug, the exact one compose()'s own docblock
+    // references as "php bug #23815", making the identical
+    // alphablending call genuinely inert THERE).
+    // The adjacent `imagesavealpha($dest, true)` call is a SEPARATE
+    // finding: verified directly that it is redundant for this pipeline
+    // specifically -- imagecopyresampled() onto a fresh truecolor canvas
+    // preserves the source's alpha channel structurally regardless of
+    // this flag (probed with alphablending(false) alone, no savealpha
+    // call at all: identical result). Its own TrueToFalse/
+    // RemoveFunctionCall mutations (and imageantialias()'s, which only
+    // affects line-drawing functions never called here) stay untested
+    // and inert for the same reason as crop()'s own trio above.
+    $path = imageGdTestMarker() . '/resize-alpha.png';
+    $gdImg = imagecreatetruecolor(10, 10);
+    if ($gdImg === false) {
+        throw new RuntimeException('imagecreatetruecolor failed');
+    }
+    imagesavealpha($gdImg, true);
+    imagealphablending($gdImg, false);
+    $transparentRed = imagecolorallocatealpha($gdImg, 255, 0, 0, 64);
+    if ($transparentRed === false) {
+        throw new RuntimeException('imagecolorallocatealpha failed');
+    }
+    imagefilledrectangle($gdImg, 0, 0, 9, 9, $transparentRed);
+    imagepng($gdImg, $path);
+
+    $img = new ImageGd($path);
+    $result = $img->resize(10, 10);
+
+    expect($result)->toBeTrue();
+    $color = imagecolorat($img->image, 5, 5);
+    if ($color === false) {
+        throw new RuntimeException('imagecolorat failed');
+    }
+    $rgb = imagecolorsforindex($img->image, $color);
+    expect($rgb['red'])->toBe(255)
+        ->and($rgb['green'])->toBe(0)
+        ->and($rgb['blue'])->toBe(0)
+        ->and($rgb['alpha'])->toBe(64);
 });
 
 test('rotate produces a real image with width/height swapped for a 90-degree turn', function (): void {

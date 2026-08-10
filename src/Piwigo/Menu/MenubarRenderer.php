@@ -96,28 +96,18 @@ final class MenubarRenderer
         // --------------------------------------------------------------- external links
         if ((bool) ($block = $menu->get_block('mbLinks')) and ! self::emptyValue($currentConfig->links)) {
             $block->data = [];
-            foreach ($currentConfig->links as $url => $url_data) {
-                if (! is_array($url_data)) {
-                    $url_data = [
-                        'label' => $url_data,
-                    ];
-                }
-
-                if (
-                    (! isset($url_data['eval_visible']))
-                    or
-                    (eval($url_data['eval_visible']))
-                ) {
+            foreach ($currentConfig->links as $url => $link) {
+                if ($link->evalVisible === null or eval($link->evalVisible)) {
                     $tpl_var = [
                         'URL' => $url,
-                        'LABEL' => $url_data['label'],
+                        'LABEL' => $link->label,
                     ];
 
-                    if (! isset($url_data['new_window']) or (bool) $url_data['new_window']) {
+                    if ($link->newWindow) {
                         $tpl_var['new_window'] =
                           [
-                              'NAME' => ($url_data['nw_name'] ?? ''),
-                              'FEATURES' => ($url_data['nw_features'] ?? ''),
+                              'NAME' => $link->nwName,
+                              'FEATURES' => $link->nwFeatures,
                           ];
                     }
                     $block->data[] = $tpl_var;

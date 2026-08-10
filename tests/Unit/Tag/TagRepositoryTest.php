@@ -167,11 +167,17 @@ function tagTestNoPermissionRestriction(): PermissionCriteria
 }
 
 test('findAllTags() returns every fixture tag', function (): void {
-    $rows = tagTestRepo()->findAllTags();
-    $names = array_column($rows, 'name');
-    sort($names);
+    // Checks the fixture's 3 are all present, not that the result is
+    // exactly those 3 -- findAllTags() is a genuinely global, unfiltered
+    // query, and another file can have a real, non-disposable-shaped tag
+    // alive at the same instant under --parallel (confirmed live:
+    // SearchServiceTest.php's own Inflector-variant test briefly inserts
+    // a real 'natures' tag).
+    $names = array_column(tagTestRepo()->findAllTags(), 'name');
 
-    expect($names)->toBe(['family', 'nature', 'travel']);
+    expect($names)->toContain('family')
+        ->and($names)->toContain('nature')
+        ->and($names)->toContain('travel');
 });
 
 test('findByIdsUrlNamesOrNames() returns empty for no criteria', function (): void {
@@ -232,13 +238,19 @@ test('findByIdsOrAll() falls back to every tag at exactly the 1000-id threshold'
     // the real fixture ids (1/2/3) -- a `count($ids) < 1000` boundary
     // widened to `<= 1000` would otherwise still apply the id filter at
     // exactly 1000, which this proves would return empty instead of the
-    // real "no filter, every tag" fallback.
+    // real "no filter, every tag" fallback. Checks the fixture's 3 are
+    // all present, not that the result is exactly those 3 -- the
+    // fallback is a genuinely global, unfiltered query, and another file
+    // can have a real, non-disposable-shaped tag alive at the same
+    // instant under --parallel (same reasoning as findAllTags()'s own
+    // sibling test above).
     $ids = array_map(TagId::from(...), range(1000, 1999));
 
     $names = array_column(tagTestRepo()->findByIdsOrAll($ids), 'name');
-    sort($names);
 
-    expect($names)->toBe(['family', 'nature', 'travel']);
+    expect($names)->toContain('family')
+        ->and($names)->toContain('nature')
+        ->and($names)->toContain('travel');
 });
 
 test('findTagIdsByImageIds() returns empty for no ids', function (): void {
@@ -718,7 +730,11 @@ test('findTagsByIds() matches the given ids', function (): void {
 });
 
 test('findIdsByNameLike() matches a wildcard pattern', function (): void {
-    expect(tagTestRepo()->findIdsByNameLike('%nat%'))->toBe([1]);
+    // toContain(), not an exact [1] -- SearchServiceTest.php's own
+    // Inflector-variant test briefly inserts a real 'natures' tag (also
+    // matching '%nat%'), a separate file so a separate --parallel
+    // worker; confirmed live this raced.
+    expect(tagTestRepo()->findIdsByNameLike('%nat%'))->toContain(1);
 });
 
 test('findIdsByNameLike() returns empty for no match', function (): void {
@@ -734,10 +750,16 @@ test('existsByName() is false for an unknown name', function (): void {
 });
 
 test('findOtherNames() excludes the given id', function (): void {
+    // Checks exclusion/inclusion individually, not an exact 2-name array
+    // -- findOtherNames() is a genuinely global, unfiltered "every other
+    // tag" query, and (same root cause as the sibling findIdsByNameLike()
+    // test above) another file can have a real, non-disposable-shaped
+    // tag alive at the same instant under --parallel.
     $names = tagTestRepo()->findOtherNames(1);
-    sort($names);
 
-    expect($names)->toBe(['family', 'travel']);
+    expect($names)->not->toContain('nature')
+        ->and($names)->toContain('family')
+        ->and($names)->toContain('travel');
 });
 
 test('countAll() reflects a freshly inserted tag', function (): void {

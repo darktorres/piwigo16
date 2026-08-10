@@ -29,7 +29,7 @@ use Piwigo\Tests\Integration\IntegrationTestCase;
  * --exclude-group=fixture-regen) — this wipes the test DB and overwrites a
  * committed fixture file. It is not a regression test.
  *
- * Credentials come from .env.test (PIWIGO_DB_HOST/USER/PASSWORD/BASE/PREFIX/
+ * Credentials come from .env.test (PIWIGO_DB_HOST/USER/PASSWORD/BASE/
  * DRIVER), loaded via IntegrationTestCase::setUpConnectionFromEnv() --
  * running this against Postgres needs .env.test's own PIWIGO_DB_DRIVER set
  * to pgsql beforehand (the real, live-server-facing side of this test;
@@ -155,7 +155,6 @@ final class RegenerateFixtureTest extends IntegrationTestCase
             'dbpasswd'      => $this->dbPass,
             'dbname'        => $this->dbName,
             'dbdriver'      => $this->dbDriver,
-            'prefix'        => $this->dbPrefix,
             'admin_name'    => self::ADMIN_USER,
             'admin_pass1'   => self::ADMIN_PASS,
             'admin_pass2'   => self::ADMIN_PASS,
@@ -222,8 +221,7 @@ final class RegenerateFixtureTest extends IntegrationTestCase
         }
         $db = $this->dbDriver === 'pgsql' ? $this->newPgsqlConnection($this->dbName) : $this->newMysqli($this->dbName);
         $this->dbQuery($db, sprintf(
-            'INSERT INTO %simage_tag (image_id, tag_id) VALUES (%d,%d),(%d,%d),(%d,%d),(%d,%d),(%d,%d)',
-            $this->dbPrefix,
+            'INSERT INTO image_tag (image_id, tag_id) VALUES (%d,%d),(%d,%d),(%d,%d),(%d,%d),(%d,%d)',
             $photoIds[0], $tagIds[0],
             $photoIds[0], $tagIds[1],
             $photoIds[0], $tagIds[2],
@@ -260,13 +258,12 @@ final class RegenerateFixtureTest extends IntegrationTestCase
         // a fresh, non-reproducible timestamp in the committed fixture.
         $now = Env::now()->format('Y-m-d H:i:s');
         $this->dbQuery($db, sprintf(
-            "INSERT INTO %scomments (image_id, date, author, anonymous_id, author_id, content, validated, validation_date) VALUES "
+            "INSERT INTO comments (image_id, date, author, anonymous_id, author_id, content, validated, validation_date) VALUES "
             . "(%d, '%s', 'fixture_admin', '127.0.0.1', 1, 'Fixture comment for integration tests.', {$sqlTrue}, '%s'), "
             . "(%d, '%s', 'regular_user', '127.0.0.2', %d, 'Another perspective on this photo.', {$sqlTrue}, '%s'), "
             . "(%d, '%s', 'power_user', '127.0.0.3', %d, 'Great composition and colors!', {$sqlTrue}, '%s'), "
             . "(%d, '%s', 'power_user', '127.0.0.3', %d, 'I keep coming back to this one.', {$sqlTrue}, '%s'), "
             . "(%d, '%s', 'fixture_admin', '127.0.0.1', 1, 'Pending comment for moderation.', {$sqlFalse}, NULL)",
-            $this->dbPrefix,
             $photoIds[0], $now, $now,
             $photoIds[1], $now, $userIds['regular_user'], $now,
             $photoIds[2], $now, $userIds['power_user'], $now,
@@ -288,16 +285,14 @@ final class RegenerateFixtureTest extends IntegrationTestCase
             $groupIds[] = self::idFromWsValue($firstAddedGroup['id'], 'pwg.groups.add');
         }
         $this->dbQuery($db, sprintf(
-            'INSERT INTO %suser_group (user_id, group_id) VALUES (1,%d),(%d,%d),(%d,%d),(%d,%d)',
-            $this->dbPrefix,
+            'INSERT INTO user_group (user_id, group_id) VALUES (1,%d),(%d,%d),(%d,%d),(%d,%d)',
             $groupIds[0],
             $userIds['regular_user'], $groupIds[0],
             $userIds['regular_user'], $groupIds[1],
             $userIds['power_user'], $groupIds[2]
         ));
         $this->dbQuery($db, sprintf(
-            'INSERT INTO %sgroup_access (group_id, cat_id) VALUES (%d,%d),(%d,%d),(%d,%d),(%d,%d)',
-            $this->dbPrefix,
+            'INSERT INTO group_access (group_id, cat_id) VALUES (%d,%d),(%d,%d),(%d,%d),(%d,%d)',
             $groupIds[0], $rootAlbumId,
             $groupIds[0], $subAlbumId,
             $groupIds[1], $rootAlbumId,
@@ -307,10 +302,9 @@ final class RegenerateFixtureTest extends IntegrationTestCase
         // 10. Five ratings across users/photos.
         $today = Env::now()->format('Y-m-d');
         $this->dbQuery($db, sprintf(
-            "INSERT INTO %srate (user_id, element_id, anonymous_id, rate, date) VALUES "
+            "INSERT INTO rate (user_id, element_id, anonymous_id, rate, date) VALUES "
             . "(1,%d,'',5,'%s'), (%d,%d,'',4,'%s'), (%d,%d,'',3,'%s'), "
             . "(1,%d,'',5,'%s'), (%d,%d,'',2,'%s')",
-            $this->dbPrefix,
             $photoIds[0], $today,
             $userIds['regular_user'], $photoIds[0], $today,
             $userIds['power_user'], $photoIds[1], $today,
@@ -318,30 +312,25 @@ final class RegenerateFixtureTest extends IntegrationTestCase
             $userIds['regular_user'], $photoIds[3], $today
         ));
         $this->dbQuery($db, sprintf(
-            'UPDATE %simages SET rating_score = 4.50 WHERE id = %d',
-            $this->dbPrefix,
+            'UPDATE images SET rating_score = 4.50 WHERE id = %d',
             $photoIds[0]
         ));
         $this->dbQuery($db, sprintf(
-            'UPDATE %simages SET rating_score = 3.00 WHERE id = %d',
-            $this->dbPrefix,
+            'UPDATE images SET rating_score = 3.00 WHERE id = %d',
             $photoIds[1]
         ));
         $this->dbQuery($db, sprintf(
-            'UPDATE %simages SET rating_score = 5.00 WHERE id = %d',
-            $this->dbPrefix,
+            'UPDATE images SET rating_score = 5.00 WHERE id = %d',
             $photoIds[2]
         ));
         $this->dbQuery($db, sprintf(
-            'UPDATE %simages SET rating_score = 2.00 WHERE id = %d',
-            $this->dbPrefix,
+            'UPDATE images SET rating_score = 2.00 WHERE id = %d',
             $photoIds[3]
         ));
 
         // 11. Three favorites for the admin user.
         $this->dbQuery($db, sprintf(
-            'INSERT INTO %sfavorites (user_id, image_id) VALUES (1,%d),(1,%d),(1,%d)',
-            $this->dbPrefix,
+            'INSERT INTO favorites (user_id, image_id) VALUES (1,%d),(1,%d),(1,%d)',
             $photoIds[0],
             $photoIds[2],
             $photoIds[4]
@@ -349,18 +338,16 @@ final class RegenerateFixtureTest extends IntegrationTestCase
 
         // 12. Two mail notification entries.
         $this->dbQuery($db, sprintf(
-            "INSERT INTO %suser_mail_notification (user_id, check_key, enabled, last_send) VALUES "
+            "INSERT INTO user_mail_notification (user_id, check_key, enabled, last_send) VALUES "
             . "(1, 'abcdef1234567890', {$sqlTrue}, '%s'), (%d, 'ghijkl9876543210', {$sqlFalse}, NULL)",
-            $this->dbPrefix,
             $now,
             $userIds['regular_user']
         ));
 
         // 13. One old permalink.
         $this->dbQuery($db, sprintf(
-            "INSERT INTO %sold_permalinks (cat_id, permalink, date_deleted, last_hit, hit) VALUES "
+            "INSERT INTO old_permalinks (cat_id, permalink, date_deleted, last_hit, hit) VALUES "
             . "(%d, 'old-sample-album', '%s', '%s', 42)",
-            $this->dbPrefix,
             $rootAlbumId,
             $now,
             $now
@@ -397,8 +384,8 @@ final class RegenerateFixtureTest extends IntegrationTestCase
         // PRIMARY KEY on both platforms, so the conflict target is valid
         // either way).
         $upsertSql = $this->dbDriver === 'pgsql'
-            ? "INSERT INTO %sconfig (param, value) VALUES ('%s', '%s') ON CONFLICT (param) DO UPDATE SET value = '%s'"
-            : "INSERT INTO %sconfig (param, value) VALUES ('%s', '%s') ON DUPLICATE KEY UPDATE value = '%s'";
+            ? "INSERT INTO config (param, value) VALUES ('%s', '%s') ON CONFLICT (param) DO UPDATE SET value = '%s'"
+            : "INSERT INTO config (param, value) VALUES ('%s', '%s') ON DUPLICATE KEY UPDATE value = '%s'";
         foreach ($configEntries as $param => $value) {
             $jsonValue = json_encode($value);
             if ($jsonValue === false) {
@@ -407,7 +394,6 @@ final class RegenerateFixtureTest extends IntegrationTestCase
 
             $this->dbQuery($db, sprintf(
                 $upsertSql,
-                $this->dbPrefix,
                 $this->dbEscape($db, $param),
                 $this->dbEscape($db, $jsonValue),
                 $this->dbEscape($db, $jsonValue)
@@ -447,7 +433,7 @@ final class RegenerateFixtureTest extends IntegrationTestCase
             // erroring on a genuinely fresh/empty database either.
             $cmd[] = '--clean';
             $cmd[] = '--if-exists';
-            $cmd[] = '--exclude-table=' . $this->dbPrefix . 'migration_versions';
+            $cmd[] = '--exclude-table=migration_versions';
             $cmd[] = $this->dbName;
             $env = $this->dbPass !== '' ? array_merge(getenv(), ['PGPASSWORD' => $this->dbPass]) : null;
         } else {
@@ -459,7 +445,7 @@ final class RegenerateFixtureTest extends IntegrationTestCase
             $cmd[] = str_starts_with($this->dbHost, '/') ? '--socket=' . $this->dbHost : '-h' . $this->dbHost;
             $cmd[] = '--no-tablespaces';
             $cmd[] = '--set-gtid-purged=OFF';
-            $cmd[] = '--ignore-table=' . $this->dbName . '.' . $this->dbPrefix . 'migration_versions';
+            $cmd[] = '--ignore-table=' . $this->dbName . '.migration_versions';
             $cmd[] = $this->dbName;
             $env = null;
         }

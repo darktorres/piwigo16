@@ -27,6 +27,7 @@ use Piwigo\Core\Paths;
 use Piwigo\Core\ProcessCache;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
+use Piwigo\Db\Tables;
 use Piwigo\Event\Admin\TabsheetBeforeSelect;
 use Piwigo\Group\GroupEntity;
 use Piwigo\Group\GroupService;
@@ -65,21 +66,20 @@ use Piwigo\Validation\InputValidator;
  * type-satisfying instance, which is a materially bigger unit of setup
  * for one more branch.
  *
- * The real fixture's own piwigo_activity data (19 rows, all sharing one
- * literal occured_on) is used as-is, not fabricated -- no other Unit
- * test file writes to that table (confirmed via grep), so exact
- * aggregate assertions are safe against concurrent-worker races, unlike
- * piwigo_rate/piwigo_search. It is NOT immune to slow one-way
- * accumulation from real production code paths that log activity as a
- * side effect (e.g. a real theme activation/photo deletion exercised by
- * some other, unrelated test) -- confirmed live: this table had 28 stray
- * rows (activity_id > 19) left over from this exact session's own many
- * hours of Extension/theme-activation testing, restored to the
- * canonical 19 via `DELETE FROM piwigo_activity WHERE activity_id > 19`
- * before this test could pass. If this file ever needs to run
- * unattended in a long-lived shared dev DB again, own the table for the
- * test's own duration (delete all, insert a known snapshot, restore in
- * finally) instead of trusting the ambient fixture state.
+ * This test owns piwigo_activity for its own duration: no other Unit
+ * test file writes there (confirmed via grep), but the table itself
+ * accumulates real side-effect rows from Browser/Integration runs
+ * elsewhere in this same shared dev DB (theme activation logs "system"/
+ * "activate", image deletion logs "photo"/"delete") -- confirmed live,
+ * TWICE in one session, silently drifting this test's exact-aggregate
+ * assertions each time. The test now snapshots whatever is really there
+ * first (debris included, not this test's call to judge what's
+ * canonical), replaces it with the exact known 19-row fixture dataset
+ * its own assertions are written against, and restores the original
+ * snapshot verbatim in finally regardless of outcome -- immune to
+ * concurrent-worker races (same "own it" technique as piwigo_rate/
+ * piwigo_search) AND to whatever unrelated process writes there while
+ * this test runs.
  */
 function userActivityTestRoot(): string
 {
@@ -244,6 +244,43 @@ function userActivityTestGroupService(ActivityService $activityService): GroupSe
 test('render() lists real activity aggregated by user and skips the additional-filter branch by default', function (): void {
     $root = userActivityTestRoot();
     unset($_GET['photo'], $_GET['album'], $_GET['group'], $_GET['type']);
+    // This test owns piwigo_activity for its own duration -- every
+    // aggregate it asserts on (nb_users aside) sums over the WHOLE table,
+    // and no Unit test file writes there today to coordinate a targeted
+    // row instead. Confirmed live, twice in one session: a real
+    // Browser/Integration run elsewhere in this same shared dev DB left
+    // stray system/activate + photo/delete rows behind (real side
+    // effects of theme activation/image deletion), silently drifting
+    // this test's exact-count assertions. Snapshot whatever is really
+    // there (debris included -- not this test's call to judge what's
+    // canonical), replace it with the exact known 19-row fixture dataset
+    // this test's own assertions are written against, then restore the
+    // original snapshot verbatim in finally regardless of outcome.
+    $conn = DbConnection::build();
+    $originalActivityRows = $conn->fetchAllAssociative('SELECT * FROM ' . Tables::activity());
+    $conn->executeStatement('DELETE FROM ' . Tables::activity());
+    $conn->executeStatement(
+        "INSERT INTO " . Tables::activity() . " VALUES "
+        . "(1,'system',3,'activate',NULL,'none','::1','2026-08-01 03:00:00','{\"script\": \"install\", \"theme_id\": \"default\"}',NULL),"
+        . "(2,'system',1,'install',NULL,'none','::1','2026-08-01 03:00:00','{\"script\": \"install\", \"version\": \"16.3.0\"}',NULL),"
+        . "(3,'user',1,'login',1,'8681675b2a4136fb177e08193dcc5043','::1','2026-08-01 03:00:00','{\"script\": \"install\"}','PiwigoFixtureRegen/1.0'),"
+        . "(4,'user',1,'login',1,'585b19819a0ff68b93e80b96c088e442','::1','2026-08-01 03:00:00','{\"method\": \"pwg.session.login\"}','PiwigoFixtureRegen/1.0'),"
+        . "(5,'album',1,'add',1,'585b19819a0ff68b93e80b96c088e442','::1','2026-08-01 03:00:00','{\"method\": \"pwg.categories.add\"}',NULL),"
+        . "(6,'album',2,'add',1,'585b19819a0ff68b93e80b96c088e442','::1','2026-08-01 03:00:00','{\"method\": \"pwg.categories.add\"}',NULL),"
+        . "(7,'photo',1,'add',1,'585b19819a0ff68b93e80b96c088e442','::1','2026-08-01 03:00:00','{\"method\": \"pwg.images.addSimple\", \"added_with\": \"app\"}',NULL),"
+        . "(8,'photo',2,'add',1,'585b19819a0ff68b93e80b96c088e442','::1','2026-08-01 03:00:00','{\"method\": \"pwg.images.addSimple\", \"added_with\": \"app\"}',NULL),"
+        . "(9,'photo',3,'add',1,'585b19819a0ff68b93e80b96c088e442','::1','2026-08-01 03:00:00','{\"method\": \"pwg.images.addSimple\", \"added_with\": \"app\"}',NULL),"
+        . "(10,'photo',4,'add',1,'585b19819a0ff68b93e80b96c088e442','::1','2026-08-01 03:00:00','{\"method\": \"pwg.images.addSimple\", \"added_with\": \"app\"}',NULL),"
+        . "(11,'photo',5,'add',1,'585b19819a0ff68b93e80b96c088e442','::1','2026-08-01 03:00:00','{\"method\": \"pwg.images.addSimple\", \"added_with\": \"app\"}',NULL),"
+        . "(12,'tag',1,'add',1,'585b19819a0ff68b93e80b96c088e442','::1','2026-08-01 03:00:00','{\"method\": \"pwg.tags.add\"}',NULL),"
+        . "(13,'tag',2,'add',1,'585b19819a0ff68b93e80b96c088e442','::1','2026-08-01 03:00:00','{\"method\": \"pwg.tags.add\"}',NULL),"
+        . "(14,'tag',3,'add',1,'585b19819a0ff68b93e80b96c088e442','::1','2026-08-01 03:00:00','{\"method\": \"pwg.tags.add\"}',NULL),"
+        . "(15,'user',3,'add',1,'585b19819a0ff68b93e80b96c088e442','::1','2026-08-01 03:00:00','{\"method\": \"pwg.users.add\"}',NULL),"
+        . "(16,'user',4,'add',1,'585b19819a0ff68b93e80b96c088e442','::1','2026-08-01 03:00:00','{\"method\": \"pwg.users.add\"}',NULL),"
+        . "(17,'group',1,'add',1,'585b19819a0ff68b93e80b96c088e442','::1','2026-08-01 03:00:00','{\"method\": \"pwg.groups.add\"}',NULL),"
+        . "(18,'group',2,'add',1,'585b19819a0ff68b93e80b96c088e442','::1','2026-08-01 03:00:00','{\"method\": \"pwg.groups.add\"}',NULL),"
+        . "(19,'group',3,'add',1,'585b19819a0ff68b93e80b96c088e442','::1','2026-08-01 03:00:00','{\"method\": \"pwg.groups.add\"}',NULL)"
+    );
 
     try {
         $template = TemplateTestFactory::build();
@@ -305,6 +342,14 @@ test('render() lists real activity aggregated by user and skips the additional-f
         ));
         expect($totalActionCount)->toBe(17);
     } finally {
+        $conn->executeStatement('DELETE FROM ' . Tables::activity());
+        foreach ($originalActivityRows as $row) {
+            $conn->createQueryBuilder()
+                ->insert(Tables::activity())
+                ->values(array_combine(array_keys($row), array_map(static fn (string $col): string => ':' . $col, array_keys($row))))
+                ->setParameters($row)
+                ->executeStatement();
+        }
         CurrentTemplate::current()->reset();
         CurrentConfigTestFactory::get()->reset();
         Kernel::reset();

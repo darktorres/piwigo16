@@ -242,6 +242,83 @@ test('construct concatenates the imagickdir prefix directly onto the identify bi
         ->toThrow(ImageProcessingException::class, '[External ImageMagick] Corrupt image');
 });
 
+// [Mutation] Line 84's ConcatRemoveRight mutant (dropping the trailing
+// ' < /dev/null') is real and severe -- confirmed via a direct, bounded
+// probe (`timeout 5 bash -c 'identify -format "%wx%h" ""'`) that removing
+// the redirect genuinely HANGS in this sandbox for exactly the scenario
+// the constructor's own docblock above describes (a vanished/empty
+// filename makes identify read from stdin instead of failing fast). This
+// makes it structurally untestable via a normal Pest assertion: the only
+// way to "catch" a reverted mutation here is to observe an infinite hang,
+// which isn't safe to provoke inside this test suite. The existing
+// "casts a since-vanished source path's realpath() failure..." test below
+// already exercises the exact scenario that depends on this redirect for
+// correctness (a quick, clean exception instead of a hang) -- this is a
+// real, load-bearing line with no assumption-only "should be fine"
+// reasoning behind it, just a `pest --mutate` blind spot on a mutation
+// whose only observable effect is a hang.
+
+test('construct concatenates the imagickdir prefix directly onto the identify binary name, not merely anywhere in the command', function (): void {
+    imageExtImagickTestSkipIfUnavailable();
+
+    // Real gap, found via mutation testing: the sibling "concatenates the
+    // imagickdir prefix" test above uses a NONEXISTENT dir, which can't
+    // discriminate a swapped concatenation order from the real one --
+    // with `identify` unprefixed (found via PATH regardless) and the
+    // nonexistent dir glued onto the file path argument instead, BOTH the
+    // correct and the reordered command end up throwing the exact same
+    // "Corrupt image" exception (verified via hand-mutation). Same
+    // "real symlink in a private, never-on-PATH-alone directory"
+    // technique as write()'s own imagickdir-prefix test below: this needs
+    // a real, working target to tell the two orderings apart.
+    $path = imageExtImagickTestMarker() . '/construct-dirprefix-src.jpg';
+    imageExtImagickTestMakeJpeg($path, 12, 9, 5, 5, 5);
+
+    $realBinaryPath = imageExtImagickTestRealBinaryPath('identify');
+    $privateBinPath = imageExtImagickTestMarker() . '/identify';
+    symlink($realBinaryPath, $privateBinPath);
+    imageExtImagickTestCurrentConfig()->setExtImagickDir(imageExtImagickTestMarker() . '/');
+
+    $image = imageExtImagickTestMake($path);
+
+    expect($image->get_width())->toBe(12)
+        ->and($image->get_height())->toBe(9);
+});
+
+// [Mutation] Line 88's EmptyStringToNotEmpty mutant (the
+// `$returnarray[0] === ''` guard) is a defensive check this environment's
+// real `identify` binary never appears to trigger: empirically confirmed
+// (probed a 0-byte file, a truncated GIF header, and raw null bytes) that
+// every real failure path leaves $returnarray completely EMPTY (identify
+// writes errors to stderr, which this command never captures via `2>&1`)
+// rather than populating element 0 with an empty string -- so the
+// `!isset($returnarray[0])` branch immediately to its left always fires
+// first in practice. Kept as defense-in-depth for a real edge case, not
+// removed, but no test in this suite can construct a genuine
+// `$returnarray[0] === ''` scenario via a real subprocess call.
+//
+// Line 88's RemoveBooleanCast mutant (`!(bool) preg_match(...)` -> `!
+// preg_match(...)`) is genuinely inert, verified via hand-mutation:
+// preg_match() returns `int|false`, and PHP's `!` operator already
+// coerces that to the correct boolean regardless of an explicit `(bool)`
+// cast -- 0 and false are both falsy, any nonzero match count is truthy,
+// with or without the cast.
+//
+// Line 92's DecrementInteger mutant (`(int) $match[1]` -> `(int)
+// $match[0]`) is genuinely inert for this specific regex, verified via
+// hand-mutation: the pattern is `/^(\d+)x(\d+)$/`, so $match[0] (the full
+// match, e.g. "12x9") and $match[1] (just the width group, e.g. "12")
+// always share the same LEADING digit run -- PHP's (int) cast on a
+// string reads only the leading numeric prefix, so `(int) "12x9"` and
+// `(int) "12"` both evaluate to 12 for any real width x height pair.
+//
+// Line 245's RemoveStringCast mutant (`(string) $params` -> `$params`)
+// is genuinely inert, verified via hand-mutation: $params is declared
+// `int|float|string|null`, the preceding `in_array(..., true)` guard
+// already excludes null, and PHP's `.=` concatenation operator coerces
+// any remaining int/float/string operand to string automatically, with
+// or without an explicit cast.
+
 test('construct casts a since-vanished source path\'s realpath() failure to an empty string instead of passing bool into escapeshellarg', function (): void {
     imageExtImagickTestSkipIfUnavailable();
 
@@ -639,6 +716,60 @@ test('write triggers E_USER_WARNING for each line of real CLI failure output', f
     expect(file_exists($dest))->toBeFalse();
 });
 
+// [Mutation] Line 258's ConcatSwitchSides mutant (moving
+// ' < /dev/null 2>&1' to appear BEFORE the destination-path argument
+// instead of after it) is genuinely inert at the shell level: POSIX shell
+// redirections are positionally independent from the surrounding words in
+// a simple command -- `cmd arg1 arg2 < /dev/null 2>&1` and
+// `cmd < /dev/null 2>&1 arg1 arg2` parse to the exact same argv and the
+// exact same redirects, confirmed via a direct probe
+// (`bash -c 'printf "%s|" arg1 arg2 < /dev/null 2>&1'` vs
+// `bash -c 'printf "%s|" < /dev/null 2>&1 arg1 arg2'` -- byte-identical
+// output both times) rather than assumed from the diff alone.
+
+test('write logs a real ERROR line via the logger when the CLI call fails, with an empty message (the CLI output is the payload, in context)', function (): void {
+    imageExtImagickTestSkipIfUnavailable();
+
+    // Real gap, found via mutation testing: the sibling "triggers
+    // E_USER_WARNING" test above only asserts on trigger_error() output,
+    // never on the $logger->error('', 'i.php', $returnarray) call right
+    // before it -- so neither removing that call (RemoveMethodCall) nor
+    // changing its message argument from '' to anything else
+    // (EmptyStringToNotEmpty) was ever observable. Logger::error()'s own
+    // formatMessage() appends the $returnarray context as an indented
+    // block right after the message -- with an empty message, the log
+    // line's own "[i.php]\t" category marker is followed IMMEDIATELY by a
+    // newline (verified by reading Logger::formatMessage() directly, not
+    // assumed): a non-empty message would put real text there instead.
+    $logDir = sys_get_temp_dir() . '/piwigo-imageextimagick-test-log-' . bin2hex(random_bytes(8));
+    mkdir($logDir, 0o777, true);
+    imageExtImagickTestCurrentLogger()->set(new Logger(['severity' => Logger::DEBUG, 'directory' => $logDir, 'filename' => 'error-line.log']));
+
+    try {
+        $path = imageExtImagickTestMarker() . '/error-line-src.jpg';
+        imageExtImagickTestMakeJpeg($path, 12, 8, 10, 20, 30);
+        $image = imageExtImagickTestMake($path);
+        file_put_contents($path, 'not a real jpeg anymore, just garbage bytes');
+        $dest = imageExtImagickTestMarker() . '/error-line-out.jpg';
+
+        set_error_handler(static fn (): bool => true);
+        try {
+            $image->write($dest);
+        } finally {
+            restore_error_handler();
+        }
+
+        $logContent = file_get_contents($logDir . '/error-line.log');
+        if ($logContent === false) {
+            throw new RuntimeException('Failed to read the real log file written by write().');
+        }
+        expect($logContent)->toContain("\t[ERROR]\t")
+            ->and($logContent)->toContain("[i.php]\t\n");
+    } finally {
+        imageExtImagickTestRrmdir($logDir);
+    }
+});
+
 test('write adds the -layers coalesce flag and preserves every frame of an animated webp source', function (): void {
     imageExtImagickTestSkipIfUnavailable();
 
@@ -668,9 +799,8 @@ test('write concatenates the imagickdir prefix directly onto the convert/magick 
     // A real symlink to the actual convert/magick binary, placed inside
     // this test's own private marker directory -- one that is genuinely
     // never on PATH -- proves the imagickdir prefix concatenation is
-    // itself what makes the binary resolve, not PATH doing it for us
-    // regardless of concatenation order/presence. Unlike the "nonexistent
-    // dir" trick used for construct()'s own identify command above, a
+    // itself what makes the binary resolve. Unlike the "nonexistent dir"
+    // trick used for construct()'s own identify command above, a
     // nonexistent dir here can't discriminate a swapped concatenation
     // order from the real one: with an empty/missing dir, *both* the
     // correct and the reordered command end up trying (and failing) to
@@ -683,7 +813,24 @@ test('write concatenates the imagickdir prefix directly onto the convert/magick 
 
     $image->imagickdir = imageExtImagickTestMarker() . '/';
 
-    $result = $image->write($dest);
+    // Real gap, found via mutation testing: without also starving PATH,
+    // dropping the imagickdir prefix entirely (ConcatRemoveLeft) is
+    // INDISTINGUISHABLE from the real code -- $commandName is *also*
+    // resolvable via PATH (confirmed: imageExtImagickTestRealBinaryPath()
+    // above found it via `command -v`), so a version that relies on PATH
+    // alone succeeds just as well as the prefixed one, producing the same
+    // output. Starving PATH first (confirmed via a direct probe: an
+    // unprefixed command genuinely fails with status 127, while the
+    // absolute-prefixed one still succeeds) makes the prefix load-bearing
+    // for real. Save+restore is mandatory here -- a bare clear would
+    // corrupt every other exec() call in this same process.
+    $originalPath = getenv('PATH');
+    putenv('PATH=' . imageExtImagickTestMarker() . '/definitely-not-on-any-path');
+    try {
+        $result = $image->write($dest);
+    } finally {
+        putenv($originalPath === false ? 'PATH' : 'PATH=' . $originalPath);
+    }
 
     expect($result)->toBeTrue()
         ->and(file_exists($dest))->toBeTrue();

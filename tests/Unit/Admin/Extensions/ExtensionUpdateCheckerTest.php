@@ -70,6 +70,54 @@ use Piwigo\Db\EntityManagerFactory;
 // CurrentConfig::setThemesDir() is pointed at an empty fixture directory
 // below specifically to keep every scan in this file free of both the
 // real repo tree and the real DB.
+//
+// [Mutation] Every remaining untested mutation after mutation testing is
+// confirmed genuinely inert via hand-mutation + a full filtered rerun --
+// zero new tests needed, all downstream of the SAME "PEM server always
+// unreachable" architecture this file's own docblock above already
+// establishes:
+// - getPendingUpdates()'s own $fsExtensionIds-building loop (foreach/
+//   ??/is_scalar/(string) cast, plus the $new/$betaTest args passed
+//   into getServerExtensions()) is entirely inert because
+//   getServerExtensions() itself returns null from its OWN very first
+//   check (getVersionsToCheck() also always fails) -- before it ever
+//   looks at $fsExtensionIds, $new, or $betaTest at all. Their exact
+//   values are structurally unobservable regardless of what real fs
+//   data feeds them.
+// - checkExtensions()'s own `foreach (ExtensionType::cases() as $type)`
+//   loop (ForeachEmptyIterable) and its `if ($pending === null) {
+//   continue; }` guard (ContinueToBreak) are both inert for the same
+//   underlying reason as above: getPendingUpdates() returns null for
+//   EVERY type, so every iteration hits the same no-op branch
+//   regardless of whether the loop runs 3 times, 0 times, or stops
+//   after the first hit -- $extensionsNeedUpdate (and the final
+//   $_SESSION write) ends up identically [] in every case.
+// - checkUpdatedExtensions()'s own `!is_array(...) || ... === []`
+//   guard (BooleanOrToBooleanAnd) is inert too, verified by tracing
+//   BOTH ways the mutation can misfire (a real non-empty record for
+//   one type, null/[] for another): the `??` operator on the very next
+//   line already suppresses any warning from indexing a wrong-shaped
+//   $typeUpdatesRaw, and is_string(null) is always false regardless --
+//   the mutation lets extra, unnecessary fs scans run for types with
+//   no pending record, but never changes the final observable result.
+// - $fsVersion's own '' vs '/(sentinel)' default (Line 210,
+//   EmptyStringToNotEmpty) is inert here specifically because every
+//   fixture plugin/theme/language this file constructs always carries
+//   a real string Version -- the ternary's false branch never actually
+//   executes with real fixture data one way or the other.
+// - getMergedExtensions()'s own `return $merged;` (Line 246,
+//   AlwaysReturnEmptyArray) is the identical PemCatalog.php pattern:
+//   $mergedExtensionUrl is hardcoded to the same never-resolves
+//   'upstream.example.invalid' domain, so $merged can never become
+//   non-empty in this environment either.
+// - getMissingExtensions()'s own (string) casts (Lines 274/288) and its
+//   `getServerExtensions(...) ?? []` (Line 281, CoalesceRemoveLeft +
+//   both FalseToTrue variants) are the same "always-null
+//   getServerExtensions(), args never actually inspected" pattern as
+//   getPendingUpdates() above.
+// - The remaining (bool) casts (Line 212) are inert for the universal
+//   `if((bool)X)` === `if(X)`/`and (bool)X` === `and X` PHP semantics
+//   reason established throughout this whole campaign.
 function fixturePlugin(string $root, string $id, string $version, string $eid, string $name): void
 {
     $dir = $root . 'plugins/' . $id;

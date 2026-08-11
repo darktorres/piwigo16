@@ -66,15 +66,7 @@ final readonly class CatPermPageRenderer
         $template = $this->currentTemplate->get();
         $conn = DbConnection::build();
 
-        // +-------------------------------------------------------------------+
-        // |                       variable initialization                     |
-        // +-------------------------------------------------------------------+
-
         $page['cat'] = $category['id'];
-
-        // +-------------------------------------------------------------------+
-        // |                           form submission                         |
-        // +-------------------------------------------------------------------+
 
         $save_success = null;
         $catPermSubmit = CatPermSubmitRequest::fromGlobals();
@@ -95,10 +87,6 @@ final readonly class CatPermPageRenderer
             $save_success = $this->lang->t('Album updated successfully');
         }
 
-        // +-------------------------------------------------------------------+
-        // |                       template initialization                     |
-        // +-------------------------------------------------------------------+
-
         $template->setFilename('cat_perm', 'cat_perm.tpl');
 
         $categories_nav = $this->htmlService
@@ -106,10 +94,6 @@ final readonly class CatPermPageRenderer
                 $page['cat'],
                 'admin.php?page=album-'
             );
-
-        // +-------------------------------------------------------------------+
-        // |                          form construction                        |
-        // +-------------------------------------------------------------------+
 
         // groups denied are the groups not granted. So we need to find all groups
         // minus groups granted to find groups denied.
@@ -186,9 +170,6 @@ final readonly class CatPermPageRenderer
             }
         }
 
-        // +-------------------------------------------------------------------+
-        // |                           sending html code                       |
-        // +-------------------------------------------------------------------+
         $template->assignContext(new CatPermPageContext(
             saveSuccess: $save_success,
             categoriesNav: $categories_nav,

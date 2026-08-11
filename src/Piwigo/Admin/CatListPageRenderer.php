@@ -89,10 +89,6 @@ final readonly class CatListPageRenderer
             'date_available ASC' => $this->lang->t('Date posted, old &rarr; new') . ' ' . $this->lang->t('(determined from photos)'),
         ];
 
-        // +-------------------------------------------------------------------+
-        // |                            initialization                          |
-        // +-------------------------------------------------------------------+
-
         $parent_id = $catListRequest->parentId;
 
         $categories = [];
@@ -101,10 +97,6 @@ final readonly class CatListPageRenderer
         $navigation = '<a href="' . $base_url . '">';
         $navigation .= $this->lang->t('Home');
         $navigation .= '</a>';
-
-        // +-------------------------------------------------------------------+
-        // | tabs                                                              |
-        // +-------------------------------------------------------------------+
 
         $this->coreTabs->setContext(new CoreTabsContext(myBaseUrl: $this->urlService->getRootUrl() . 'admin.php?page='));
 
@@ -116,9 +108,6 @@ final readonly class CatListPageRenderer
         $nb_cats = $categoryService->countAllCategories();
         $template->assignContext(new CatListNbCatsPageContext($nb_cats));
 
-        // +-------------------------------------------------------------------+
-        // |                    virtual categories management                  |
-        // +-------------------------------------------------------------------+
         // request to delete a virtual category
         if ($catListRequest->deleteId !== null) {
             $categoryService->deleteCategories(
@@ -161,10 +150,6 @@ final readonly class CatListPageRenderer
                 $this->pageState->addInfo($output_create_message . ' <a class="icon-pencil" href="' . $edit_url . '">' . $this->lang->t('Edit album') . '</a>');
             }
         }
-        // +-------------------------------------------------------------------+
-        // |                            Navigation path                        |
-        // +-------------------------------------------------------------------+
-
         if ($parent_id !== null) {
             // same fallback default as include/config_default.inc.php's
             // \Piwigo\Config\CurrentConfig::levelSeparator() (' / '); see the identical pattern in
@@ -178,9 +163,6 @@ final readonly class CatListPageRenderer
                     $base_url . '&amp;parent_id='
                 );
         }
-        // +-------------------------------------------------------------------+
-        // |                       template initialization                     |
-        // +-------------------------------------------------------------------+
         $template->setFilename('categories', 'cat_list.tpl');
 
         $form_action = $this->urlService->getRootUrl() . 'admin.php?page=cat_list';
@@ -198,10 +180,6 @@ final readonly class CatListPageRenderer
             sortOrders: $sort_orders,
             sortOrderChecked: array_shift($sort_orders_checked),
         ));
-
-        // +-------------------------------------------------------------------+
-        // |                          Categories display                       |
-        // +-------------------------------------------------------------------+
 
         $categories = [];
 
@@ -299,9 +277,6 @@ final readonly class CatListPageRenderer
 
         $this->eventDispatcher->dispatchNotify(new LocEndCatList());
 
-        // +-------------------------------------------------------------------+
-        // |                          sending html code                        |
-        // +-------------------------------------------------------------------+
         $template->assignVarFromHandle('ADMIN_CONTENT', 'categories');
     }
 }

@@ -17,22 +17,18 @@ class Combinable
 {
     public ?string $path = null;
 
-    /**
-     * @var bool
-     */
-    public $is_template;
+    public bool $is_template;
 
     /**
-     * @param string $id
      * @param string|null $path null leaves $path unset -- callers that pass
      *   null (e.g. ScriptLoader::add()'s UI-core-dependency recursion) rely
      *   on a well-known path being filled in afterwards
      * @param string|false $version false disables version-based cache busting
      */
     public function __construct(
-        public $id,
+        public string $id,
         $path,
-        public $version = '0'
+        public string|false $version = '0'
     ) {
         $this->setPath($path);
         $this->is_template = false;

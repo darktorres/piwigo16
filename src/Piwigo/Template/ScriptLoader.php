@@ -32,7 +32,7 @@ final class ScriptLoader
     /**
      * @var string[]
      */
-    public $inline_scripts;
+    public array $inline_scripts;
 
     private bool $did_head;
 

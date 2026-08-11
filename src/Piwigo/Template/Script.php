@@ -16,7 +16,7 @@ final class Script extends Combinable
     /**
      * @var array{order?: int}
      */
-    public $extra;
+    public array $extra;
 
     /**
      * @param int $load_mode 0,1,2
@@ -27,11 +27,11 @@ final class Script extends Combinable
      * @param string[] $precedents
      */
     public function __construct(
-        public $load_mode,
+        public int $load_mode,
         $id,
         $path,
         $version = '0',
-        public $precedents = []
+        public array $precedents = []
     ) {
         parent::__construct($id, $path, $version);
         $this->extra = [];

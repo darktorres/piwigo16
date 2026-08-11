@@ -71,35 +71,29 @@ use Smarty\TemplateBase;
  */
 final class Template implements ThemeConfProviderInterface, TemplateInterface
 {
-    /**
-     * @var Smarty
-     */
-    public $smarty;
+    public Smarty $smarty;
 
-    /**
-     * @var string
-     */
-    public $output = '';
+    public string $output = '';
 
     /**
      * @var string[] - Hash of filenames for each template handle.
      */
-    public $files = [];
+    public array $files = [];
 
     /**
      * @var string[] - Template extents filenames for each template handle.
      */
-    public $extents = [];
+    public array $extents = [];
 
     /**
      * @var array<string, array<int, array<int, array{0: string, 1: callable}>>> - Templates prefilter from external sources (plugins)
      */
-    public $external_filters = [];
+    public array $external_filters = [];
 
     /**
      * @var string[] - Content to add before </head> tag
      */
-    public $html_head_elements = [];
+    public array $html_head_elements = [];
 
     /**
      * @var string - Runtime CSS rules
@@ -108,27 +102,21 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
 
     public const string COMBINED_SCRIPTS_TAG = '<!-- COMBINED_SCRIPTS -->';
 
-    /**
-     * @var ScriptLoader
-     */
-    public $scriptLoader;
+    public ScriptLoader $scriptLoader;
 
     public const string COMBINED_CSS_TAG = '<!-- COMBINED_CSS -->';
 
-    /**
-     * @var CssLoader
-     */
-    public $cssLoader;
+    public CssLoader $cssLoader;
 
     /**
      * @var array<int, string[]> - Runtime buttons on picture page
      */
-    public $picture_buttons = [];
+    public array $picture_buttons = [];
 
     /**
      * @var array<int, string[]> - Runtime buttons on index page
      */
-    public $index_buttons = [];
+    public array $index_buttons = [];
 
     public function __construct(
         private readonly CurrentConfig $currentConfig,

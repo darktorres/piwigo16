@@ -24,7 +24,7 @@ final class Css extends Combinable
         $id,
         $path,
         $version = '0',
-        public $order = 0
+        public int $order = 0
     ) {
         parent::__construct($id, $path, $version);
     }

@@ -251,15 +251,13 @@ return [
         return $imageStdParams;
     }),
 
-    // Non-obvious construction -- confirmed bug fix (WsHistoryTest.php's
-    // assertHistorySearchIsAHackingAttempt() cases): PHP-DI's default
-    // autowiring only injects REQUIRED constructor parameters via
-    // reflection; a parameter with a default value (InputValidator's own
-    // `?HtmlRenderingInterface $htmlRenderer = null`, kept optional so
-    // InputValidatorTest.php's `new InputValidator()` sites keep their
-    // "never wired up" behavior) is left at its default even when the
-    // interface itself is bound above and the container is fully booted --
-    // confirmed empirically, not assumed. Without this entry, every
+    // Non-obvious construction -- PHP-DI's default autowiring only injects
+    // REQUIRED constructor parameters via reflection; a parameter with a
+    // default value (InputValidator's own `?HtmlRenderingInterface
+    // $htmlRenderer = null`, kept optional so InputValidatorTest.php's `new
+    // InputValidator()` sites keep their "never wired up" behavior) is left
+    // at its default even when the interface itself is bound above and the
+    // container is fully booted. Without this entry, every
     // container-resolved InputValidator (i.e. every real WS/admin caller
     // via createStatic()) silently loses its renderer, so fatalError()
     // falls through to a bare RuntimeException instead of the intended
@@ -378,10 +376,10 @@ return [
     ),
 
     // MigrateCommand's constructor param is an OPTIONAL/nullable
-    // DependencyFactory -- verified (same as every other optional
-    // class-typed constructor param in this codebase) that PHP-DI's
-    // default reflection autowiring does NOT inject it, so it needs this
-    // explicit factory entry.
+    // DependencyFactory -- like every other optional class-typed
+    // constructor param in this codebase, PHP-DI's default reflection
+    // autowiring does NOT inject it, so it needs this explicit factory
+    // entry.
     MigrateCommand::class => factory(
         static fn (DependencyFactory $df): MigrateCommand => new MigrateCommand($df),
     ),

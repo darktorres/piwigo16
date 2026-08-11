@@ -114,9 +114,6 @@ final readonly class LanguagesInstalledPageRenderer
             }
         }
 
-        // +-----------------------------------------------------------------------+
-        // |                     start template output                             |
-        // +-----------------------------------------------------------------------+
         $default_language = $this->userService->getDefaultLanguage();
 
         $tpl_languages = [];

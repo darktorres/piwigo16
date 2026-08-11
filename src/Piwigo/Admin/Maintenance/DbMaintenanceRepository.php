@@ -136,8 +136,7 @@ final readonly class DbMaintenanceRepository
      * Repairs, re-orders (by primary key), and optimizes every table in
      * this database -- ported from
      * \Piwigo\Db\MysqliDb::doMaintenanceAllTables(), the "database" action's
-     * only real caller (confirmed via a direct grep; not reused elsewhere).
-     * Table/column names come from `SHOW TABLES`/`DESC`, never user input,
+     * only real caller. Table/column names come from `SHOW TABLES`/`DESC`, never user input,
      * so splicing them into raw SQL here matches the original's own
      * approach (none of these 4 statement kinds are parameterizable SQL
      * identifiers anyway).
@@ -161,11 +160,10 @@ final readonly class DbMaintenanceRepository
      * real Postgres practice, not a like-for-like swap). `VACUUM
      * (ANALYZE)` (reclaim dead tuples + refresh planner stats) + `REINDEX
      * TABLE` (rebuild index bloat) are Postgres's own real maintenance-
-     * sweep primitives -- verified live that `VACUUM` cannot run inside
-     * an explicit transaction block, which this method's own
-     * all-bare-executeStatement()-calls shape (confirmed by reading the
-     * full method body: no beginTransaction()/transactional() wraps any
-     * of these statements) already satisfies.
+     * sweep primitives -- `VACUUM` cannot run inside an explicit
+     * transaction block, which this method's own all-bare-
+     * executeStatement()-calls shape (no beginTransaction()/
+     * transactional() wraps any of these statements) already satisfies.
      */
     public function repairOptimizeAllTables(): void
     {
@@ -185,11 +183,11 @@ final readonly class DbMaintenanceRepository
 
         // getValue() is the real unquoted name; quoteSingleIdentifier()
         // wraps it in the platform's own identifier-quote character
-        // (backtick on MySQL, double-quote on Postgres). Real bug found
-        // live: `groups` is a reserved word on MySQL (added 8.0.2+) --
-        // a bare, unquoted REPAIR/OPTIMIZE/ALTER ... TABLE groups is a
-        // real syntax error there, confirmed once the table stopped being
-        // always-prefixed and could collide with a keyword.
+        // (backtick on MySQL, double-quote on Postgres). `groups` is a
+        // reserved word on MySQL (added 8.0.2+) -- a bare, unquoted
+        // REPAIR/OPTIMIZE/ALTER ... TABLE groups is a real syntax error
+        // there once the table stopped being always-prefixed and could
+        // collide with a keyword.
         $platform = $conn->getDatabasePlatform();
         $allTableNames = $schemaManager->introspectTableNames();
         $allTables = array_map(

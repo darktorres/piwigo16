@@ -95,10 +95,6 @@ final readonly class MaintenanceActionsPageRenderer
         new MaintenanceActionDispatcher($this->redirectService, $this->urlService, $this->configService, $this->filesystemIntegrityChecker, $this->sessionService, $this->translator, $this->eventDispatcher, $this->pageState, $this->currentTemplate, $this->dbMaintenanceRepository, $this->activityService, $this->rateService, $this->categoryService, $this->tagService, $this->htmlRenderer, $this->lang, $this->currentConfig, $this->inputValidator, $this->paths, $this->persistentCache)
             ->dispatch($action);
 
-        // +-------------------------------------------------------------------+
-        // |                             template init                             |
-        // +-------------------------------------------------------------------+
-
         $template->setFilenames([
             'maintenance' => 'maintenance_actions.tpl',
         ]);
@@ -181,10 +177,6 @@ final readonly class MaintenanceActionsPageRenderer
             $lounge_counter = $nb_lounge;
         }
 
-        // +-------------------------------------------------------------------+
-        // | Define advanced features                                              |
-        // +-------------------------------------------------------------------+
-
         // $advanced_features is array of array composed of CAPTION & URL
         $advanced_features_event = $this->eventDispatcher->dispatchChange(new GetAdminAdvancedFeaturesLinks([]));
 
@@ -226,10 +218,6 @@ final readonly class MaintenanceActionsPageRenderer
             isWebmaster: ($this->accessControl->isWebmaster()) ? 1 : 0,
             advancedFeatures: $advanced_features_event->advancedFeatures,
         ));
-
-        // +-------------------------------------------------------------------+
-        // |                           sending html code                           |
-        // +-------------------------------------------------------------------+
 
         $template->assignVarFromHandle('ADMIN_CONTENT', 'maintenance');
     }

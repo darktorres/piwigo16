@@ -67,9 +67,8 @@ final class ActivityLogEntryFormatter
                             // $c_icon/$c_text's '' initial values are dead: every
                             // arm of the switch below (including its own
                             // default:) unconditionally reassigns both, so
-                            // these two never survive to be read -- confirmed
-                            // while investigating a mutation-testing gap, no
-                            // test can observe a mutation to either literal.
+                            // these two never survive to be read -- no test
+                            // can observe a mutation to either literal.
                             $c_icon = '';
                             $c_text = '';
                             switch ($details['config_section']) {

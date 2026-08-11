@@ -37,10 +37,6 @@ final class MaintenanceSysPageRenderer
     {
         $template = $currentTemplate->get();
 
-        // +-------------------------------------------------------------------+
-        // |                    Only Webmaster can see this tab                    |
-        // +-------------------------------------------------------------------+
-
         if ($accessControl->isWebmaster()) {
             // Get system activities data
             if (MaintenanceSysMethodRequest::fromGlobals()->isActivitySysGetList) {
@@ -67,18 +63,10 @@ final class MaintenanceSysPageRenderer
             $pageState->addWarning(str_replace('%s', $lang->t('user_status_webmaster'), $lang->t('%s status is required to edit parameters.')));
         }
 
-        // +-------------------------------------------------------------------+
-        // |                             template init                             |
-        // +-------------------------------------------------------------------+
-
         $template->assignContext(new MaintenanceSysPageContext(isWebmaster: $accessControl->isWebmaster()));
         $template->setFilenames([
             'maintenance' => 'maintenance_sys.tpl',
         ]);
-
-        // +-------------------------------------------------------------------+
-        // |                           sending html code                           |
-        // +-------------------------------------------------------------------+
 
         $template->assignVarFromHandle('ADMIN_CONTENT', 'maintenance');
     }

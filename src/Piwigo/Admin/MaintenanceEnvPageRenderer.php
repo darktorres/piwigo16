@@ -88,10 +88,6 @@ final readonly class MaintenanceEnvPageRenderer
         new MaintenanceActionDispatcher($this->redirectService, $this->urlService, $this->configService, $this->filesystemIntegrityChecker, $this->sessionService, $this->translator, $this->eventDispatcher, $this->pageState, $this->currentTemplate, $this->dbMaintenanceRepository, $this->activityService, $this->rateService, $this->categoryService, $this->tagService, $this->htmlRenderer, $this->lang, $this->currentConfig, $this->inputValidator, $this->paths, $this->persistentCache)
             ->dispatch($action);
 
-        // +-------------------------------------------------------------------+
-        // |                             template init                             |
-        // +-------------------------------------------------------------------+
-
         $template->setFilenames([
             'maintenance' => 'maintenance_env.tpl',
         ]);
@@ -145,10 +141,6 @@ final readonly class MaintenanceEnvPageRenderer
             $installed_since_value = DateHelper::timeSince($installed_on, 'day');
         }
 
-        // +-------------------------------------------------------------------+
-        // | Define advanced features                                              |
-        // +-------------------------------------------------------------------+
-
         // $advanced_features is array of array composed of CAPTION & URL
         $advanced_features_event = $this->eventDispatcher->dispatchChange(new GetAdminAdvancedFeaturesLinks([]));
 
@@ -188,10 +180,6 @@ final readonly class MaintenanceEnvPageRenderer
             installedSince: $installed_since_value,
             advancedFeatures: $advanced_features_event->advancedFeatures,
         ));
-
-        // +-------------------------------------------------------------------+
-        // |                           sending html code                           |
-        // +-------------------------------------------------------------------+
 
         $template->assignVarFromHandle('ADMIN_CONTENT', 'maintenance');
     }

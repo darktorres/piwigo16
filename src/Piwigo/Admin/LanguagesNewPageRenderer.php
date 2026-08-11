@@ -39,8 +39,8 @@ use Piwigo\Users\UserService;
  * slug, dispatched by LanguagesSubController) -- browse the PEM catalog and
  * install a new language.
  *
- * Already correctly protected before this port (confirmed by direct read):
- * its one real mutation (isset($_GET['revision']), install + auto-activate)
+ * Already correctly protected before this port -- its one real mutation
+ * (isset($_GET['revision']), install + auto-activate)
  * already gates on is_webmaster() and check_pwg_token() -- no CSRF fix
  * needed here, unlike LanguagesInstalledPageRenderer.
  */
@@ -94,18 +94,10 @@ final readonly class LanguagesNewPageRenderer
         $plugin_migration_repo = EntityManagerFactory::build(DbConnection::build())->getRepository(PluginMigrationEntity::class);
         $extension_lifecycle = new ExtensionLifecycle($this->lang, $extension_repository, $pem_catalog, $this->urlService, $this->configService, $plugin_migration_repo, $this->activityService, $this->userService, $this->htmlRenderer, $this->currentConfig, $this->wsContext, $this->accessControl, $this->paths, $this->currentUser, $this->eventDispatcher);
 
-        // +-----------------------------------------------------------------------+
-        // |                           setup check                                 |
-        // +-----------------------------------------------------------------------+
-
         $languages_dir = $this->paths->root . 'language';
         if (! is_writable($languages_dir)) {
             $this->pageState->addError($this->lang->t('Add write access to the "%s" directory', 'language'));
         }
-
-        // +-----------------------------------------------------------------------+
-        // |                       perform installation                            |
-        // +-----------------------------------------------------------------------+
 
         $languagesNewInstall = LanguagesNewInstallRequest::fromGlobals();
 
@@ -135,9 +127,6 @@ final readonly class LanguagesNewPageRenderer
             }
         }
 
-        // +-----------------------------------------------------------------------+
-        // |                        installation result                            |
-        // +-----------------------------------------------------------------------+
         if ($languagesNewInstall->installStatus !== null) {
             $installstatus = $languagesNewInstall->installStatus;
 
@@ -150,9 +139,6 @@ final readonly class LanguagesNewPageRenderer
             };
         }
 
-        // +-----------------------------------------------------------------------+
-        // |                     start template output                             |
-        // +-----------------------------------------------------------------------+
         $fs_language_ids = [];
         foreach ($extension_scanner->scan(ExtensionType::Language, $this->urlService, $this->lang, $this->paths, $this->currentUser, $this->eventDispatcher, $this->currentConfig) as $fs_language) {
             $extension = $fs_language['extension'] ?? null;

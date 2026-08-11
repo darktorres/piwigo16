@@ -44,10 +44,9 @@ final class ServerInfoService
             // ini_get() only returns false for an unknown directive name; every
             // entry in KEY_INI_SETTINGS above is a real, always-registered core
             // (or always-loaded-extension) directive on any PHP build this app
-            // supports, so this branch is unreachable in practice -- confirmed
-            // live (all 9 return a string, never false) while investigating a
-            // mutation-testing gap. Kept as defensive typing for the return
-            // signature, not because it can actually fire.
+            // supports, so this branch is unreachable in practice. Kept as
+            // defensive typing for the return signature, not because it can
+            // actually fire.
             $ini[$setting] = $value === false ? '' : $value;
         }
 

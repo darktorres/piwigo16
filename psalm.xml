@@ -24,13 +24,6 @@
             <directory name="language"/>
             <!-- Runtime-compiled Smarty templates + combined JS/CSS cache, not source. -->
             <directory name="_data"/>
-            <!-- Standalone CLI tool excluded from analysis for the same
-                 reason as phpstan.neon's own excludePaths entry: it curls a
-                 real running install and reads a database.inc.php the
-                 install just generated — a path that genuinely doesn't
-                 exist at analysis time. Not part of the analyzed
-                 application. -->
-            <file name="tools/test_piwigo.php"/>
             <!-- Standalone maintenance script; its own header comment
                  documents that knplabs/github-api must be `composer
                  require`d manually before running it — mirrors
@@ -192,7 +185,7 @@
                      Psalm's union narrowing across an isset() guard on a
                      disjoint array-shape union doesn't reach the same
                      conclusion. -->
-                <file name="src/Piwigo/Ws/PwgTags.php"/>
+                <file name="src/Piwigo/Ws/Tags.php"/>
                 <!-- str2DateTime()'s `count($ymdhms) < 3` early-return
                      guarantees offsets 0-2 exist by the setDate() call;
                      PHPStan's list<T> flow-length tracking proves it
@@ -203,7 +196,7 @@
                      ConfigurationSubController above:
                      `is_numeric($params['max_level'] ?? null)` guards the
                      bare `$params['max_level']` reads a few tokens later. -->
-                <file name="src/Piwigo/Ws/PwgUsers.php"/>
+                <file name="src/Piwigo/Ws/Users.php"/>
                 <!-- Same $_POST-shape-narrowing disagreement, this time on
                      username/password/redirect (each guarded by its own
                      `is_string($_POST['x'] ?? null)` a few tokens earlier). -->
@@ -228,7 +221,7 @@
                      ?? null))` the line before; PHPStan's assert-narrowing
                      carries through to the array-offset read that follows,
                      Psalm's doesn't. -->
-                <file name="src/Piwigo/Ws/PwgImages.php"/>
+                <file name="src/Piwigo/Ws/Images.php"/>
                 <!-- Same disagreement on login/mail_address, each guarded
                      by its own `is_string($_POST['x'] ?? null)` a few
                      tokens earlier. -->
@@ -476,7 +469,7 @@
                      doesn't match — same "$_SERVER/$_FILES stub is more
                      optimistic than reality" class as ActivityService's
                      $_SERVER guards above, extended to file uploads. -->
-                <file name="src/Piwigo/Ws/PwgImages.php"/>
+                <file name="src/Piwigo/Ws/Images.php"/>
                 <!-- $searchFields = &$mySearch['fields'] is a by-ref alias
                      (project's known "by-ref loses narrowing" limitation,
                      already documented for this same file's EmptyArrayAccess
@@ -582,7 +575,7 @@
                      $counterValue`) — the two tools disagree in opposite
                      directions. -->
                 <file name="src/Piwigo/Admin/PiwigoInfosSender.php"/>
-                <file name="src/Piwigo/Ws/PwgImages.php"/>
+                <file name="src/Piwigo/Ws/Images.php"/>
                 <!-- Same by-ref-loses-narrowing class as above ($searchFields
                      sites), plus $cacheApplicable
                      (! preg_match('/^image_id IN/', $filterClause)) — a real,
@@ -658,11 +651,11 @@
                 <!-- $category_id ($category['id']) is docblock-typed int
                      already; the is_numeric() re-check is defensive against
                      a real row shape drift, not dead code in practice. -->
-                <file name="src/Piwigo/Ws/PwgCategories.php"/>
+                <file name="src/Piwigo/Ws/Categories.php"/>
                 <!-- $type ($this narrowed to a single enum case in a match
                      arm) — real, structurally-necessary comparison, not
                      dead logic. -->
-                <file name="src/Piwigo/Ws/PwgExtensions.php"/>
+                <file name="src/Piwigo/Ws/Extensions.php"/>
             </errorLevel>
         </RedundantCondition>
         <!-- $added_size ($added_size is docblock-typed int; PHPStan agrees
@@ -672,8 +665,8 @@
              re-validation, not dead code. -->
         <RedundantConditionGivenDocblockType>
             <errorLevel type="suppress">
-                <file name="src/Piwigo/Ws/PwgCore.php"/>
-                <file name="src/Piwigo/Ws/PwgNamedStruct.php"/>
+                <file name="src/Piwigo/Ws/Core.php"/>
+                <file name="src/Piwigo/Ws/NamedStruct.php"/>
             </errorLevel>
         </RedundantConditionGivenDocblockType>
         <!-- Each entry below is a genuine PHPStan-vs-Psalm disagreement,
@@ -724,7 +717,7 @@
                      dead code). Psalm's stub is more pessimistic
                      (int|false). composer analyse:phpstan is clean here
                      with zero changes. -->
-                <file name="src/Piwigo/Ws/PwgCore.php"/>
+                <file name="src/Piwigo/Ws/Core.php"/>
             </errorLevel>
         </PossiblyFalseArgument>
         <PossiblyNullArgument>
@@ -750,7 +743,7 @@
                      Psalm loses the narrowing across the intervening
                      chunk-upload code. composer analyse:phpstan is clean
                      here with zero changes. -->
-                <file name="src/Piwigo/Ws/PwgImages.php"/>
+                <file name="src/Piwigo/Ws/Images.php"/>
                 <!-- $mailAddress is already proven non-null here by
                      $isEmpty (see $isEmpty's own definition two lines above:
                      $isEmpty = $mailAddress === null || $mailAddress === '',
@@ -781,7 +774,7 @@
         <InvalidArgument>
             <errorLevel type="suppress">
                 <file name="src/Piwigo/Template/Template.php"/>
-                <file name="src/Piwigo/Ws/PwgServer.php"/>
+                <file name="src/Piwigo/Ws/Server.php"/>
             </errorLevel>
         </InvalidArgument>
         <!-- FileCombiner.php: $file is only ever null-typed for Psalm's
@@ -944,7 +937,7 @@
                      offset always exists and is always int. Already carries
                      a matching @phpstan-ignore function.alreadyNarrowedType
                      immediately above it. -->
-                <file name="src/Piwigo/Ws/PwgCore.php"/>
+                <file name="src/Piwigo/Ws/Core.php"/>
             </errorLevel>
         </DocblockTypeContradiction>
         <UnsupportedReferenceUsage>
@@ -1042,7 +1035,7 @@
                      PHPStan does — pre-existing, documented in project
                      memory as deferred for its own dedicated triage pass,
                      not introduced or touched by this batch. -->
-                <file name="src/Piwigo/Ws/PwgCategories.php"/>
+                <file name="src/Piwigo/Ws/Categories.php"/>
                 <!-- MessengerFactory::transport(): same DoctrineTransportFactory
                      generic-resolution gap documented on the matching
                      InvalidReturnStatement suppression below — PHPStan
@@ -1054,7 +1047,7 @@
         </InvalidReturnType>
         <InvalidReturnStatement>
             <errorLevel type="suppress">
-                <file name="src/Piwigo/Ws/PwgCategories.php"/>
+                <file name="src/Piwigo/Ws/Categories.php"/>
                 <!-- MessengerFactory::transport(): DoctrineTransportFactory::
                      createTransport()'s own signature returns the wider
                      TransportInterface, but its `@implements

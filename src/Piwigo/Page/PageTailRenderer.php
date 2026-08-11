@@ -88,8 +88,6 @@ final readonly class PageTailRenderer
 
         $this->eventDispatcher->dispatchNotify(new LocBeginPageTail());
 
-        // --------------------------------------------------------------------- contact
-
         $contactMail = null;
         if (! $this->accessLevelChecker->isAGuest()) {
             $contactMail = new UserRepository(EntityManagerFactory::build(DbConnection::build()), $this->eventDispatcher, $this->currentConfig)->getWebmasterMailAddress();
@@ -97,7 +95,6 @@ final readonly class PageTailRenderer
 
         $this->telemetrySender->send();
 
-        // ------------------------------------------------------------- generation time
         $debug_vars = [];
 
         if ($this->currentConfig->showQueries) {
@@ -122,7 +119,6 @@ final readonly class PageTailRenderer
             );
         }
 
-        // ------------------------------------------------------------- mobile version
         $toggleMobileThemeUrl = null;
         if (! self::emptyValue($this->currentConfig->mobileTheme) && (DeviceHelper::getDevice($this->sessionService) !== 'desktop' || DeviceHelper::mobileTheme($this->sessionService, $this->currentConfig))) {
             $request_uri = $_SERVER['REQUEST_URI'] ?? '';

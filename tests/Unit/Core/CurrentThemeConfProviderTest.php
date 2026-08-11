@@ -61,6 +61,6 @@ test('current() throws when the container returns an unexpected type', function 
     // throw branch).
     KernelContainerOverride::withWrongTypeFor(
         CurrentThemeConfProvider::class,
-        static fn () => CurrentThemeConfProvider::current(),
+        static fn (): CurrentThemeConfProvider => CurrentThemeConfProvider::current(),
     );
 })->throws(LogicException::class, 'Container returned an unexpected type for ' . CurrentThemeConfProvider::class);

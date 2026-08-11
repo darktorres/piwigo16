@@ -63,7 +63,7 @@ final readonly class User
         $preferences = $row['preferences'] ?? null;
 
         $id = UserId::tryFrom($row['id'] ?? null);
-        if ($id === null) {
+        if (! $id instanceof UserId) {
             throw new InvalidArgumentException('User::fromUserArray(): missing or invalid id');
         }
 

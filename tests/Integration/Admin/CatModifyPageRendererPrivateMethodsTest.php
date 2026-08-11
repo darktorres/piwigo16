@@ -63,13 +63,13 @@ test('getLocalDir throws when the category id matches no real row', function ():
     // Integration test file creates.
     $missingId = 999999;
 
-    expect(fn () => catModifyReflect('getLocalDir', $missingId))
+    expect(fn (): string => catModifyReflect('getLocalDir', $missingId))
         ->toThrow(Exception::class, "getLocalDir(): category #{$missingId} not found");
 });
 
 test('getSiteUrl throws when the category id matches no real row', function (): void {
     $missingId = 999999;
 
-    expect(fn () => catModifyReflect('getSiteUrl', $missingId))
+    expect(fn (): string => catModifyReflect('getSiteUrl', $missingId))
         ->toThrow(Exception::class, "getSiteUrl(): category #{$missingId} not found");
 });

@@ -24,13 +24,13 @@ test('every getter throws before set() has ever been called', function (): void 
 
     $message = 'FilterState not initialised -- call Piwigo\Filter\FilterService::initializeFromRequest() (or RequestBootstrap::finalize()\'s own disabled-filter fallback) first.';
 
-    expect(fn () => $filterState->isEnabled())
+    expect(fn (): bool => $filterState->isEnabled())
         ->toThrow(LogicException::class, $message);
-    expect(fn () => $filterState->visibleCategories())
+    expect(fn (): string => $filterState->visibleCategories())
         ->toThrow(LogicException::class, $message);
-    expect(fn () => $filterState->visibleImages())
+    expect(fn (): string => $filterState->visibleImages())
         ->toThrow(LogicException::class, $message);
-    expect(fn () => $filterState->categories())
+    expect(fn (): array => $filterState->categories())
         ->toThrow(LogicException::class, $message);
 });
 

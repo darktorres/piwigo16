@@ -7,6 +7,7 @@ namespace Piwigo\Admin;
 use Piwigo\Admin\Projection\PictureCoiPageContext;
 use Piwigo\Admin\Request\PictureCoiRequest;
 use Piwigo\Auth\AccessControl;
+use Piwigo\Common\ValueObject\ImageId;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\HtmlRenderingInterface;
@@ -50,7 +51,7 @@ final readonly class PictureCoiPageRenderer
 
         $pictureCoiRequest = PictureCoiRequest::fromGlobals($this->inputValidator);
         $image_id = $pictureCoiRequest->imageId;
-        if ($image_id === null) {
+        if (! $image_id instanceof ImageId) {
             $htmlRenderer->pageNotFound($this->redirectService, 'Requested photo does not exist');
         }
 

@@ -123,7 +123,7 @@ test('tags throws when myBaseUrl was not set in the context', function (): void 
     $coreTabs = new CoreTabs(coreTabsLang(), coreTabsUrlService(), coreTabsCurrentConfig());
     $coreTabs->setContext(new CoreTabsContext());
 
-    expect(fn () => coreTabsTestAddCoreTabs($coreTabs, [], 'tags'))->toThrow(RuntimeException::class);
+    expect(fn (): array => coreTabsTestAddCoreTabs($coreTabs, [], 'tags'))->toThrow(RuntimeException::class);
 });
 
 test('a context-needing tab throws its own distinct exception when setContext() was never called at all', function (): void {
@@ -135,7 +135,7 @@ test('a context-needing tab throws its own distinct exception when setContext() 
     // that each test gets its own isolated instance.
     $coreTabs = new CoreTabs(coreTabsLang(), coreTabsUrlService(), coreTabsCurrentConfig());
 
-    expect(fn () => coreTabsTestAddCoreTabs($coreTabs, [], 'tags'))
+    expect(fn (): array => coreTabsTestAddCoreTabs($coreTabs, [], 'tags'))
         ->toThrow(RuntimeException::class, 'CoreTabs: no context set (writer file forgot CoreTabs::setContext()?)');
 });
 

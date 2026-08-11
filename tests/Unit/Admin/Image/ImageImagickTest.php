@@ -212,7 +212,7 @@ test('construct throws for content that is not a real image', function (): void 
     $path = imageImagickTestMarker() . '/photo.jpg';
     file_put_contents($path, 'this is plain text, not a real JPEG');
 
-    expect(fn () => new ImageImagick($path))
+    expect(fn (): ImageImagick => new ImageImagick($path))
         ->toThrow(ImagickException::class);
 });
 
@@ -459,7 +459,7 @@ test('compose throws when the overlay uses a different image backend', function 
     $base = new ImageImagick($basePath);
     $overlay = new ImageBackend($overlayPath, new CurrentLogger(), new EventDispatcher(), new CurrentConfig(), 'gd');
 
-    expect(fn () => $base->compose($overlay, 0, 0, 50))
+    expect(fn (): bool => $base->compose($overlay, 0, 0, 50))
         ->toThrow(LogicException::class, 'ImageBackend::compose(): overlay must use the same image backend');
 });
 

@@ -537,7 +537,7 @@ final class RequestBootstrap
         // requirement.
         $notify_username = $notify_api_key_expiration !== null ? Username::tryFrom(self::currentUser()->get()->username) : null;
         $notify_email = $notify_api_key_expiration !== null ? Email::tryFrom(self::currentUser()->get()->email) : null;
-        if ($notify_api_key_expiration !== null && $notify_username !== null && $notify_email !== null) {
+        if ($notify_api_key_expiration !== null && $notify_username instanceof Username && $notify_email instanceof Email) {
             $apiKeyRepo = new ApiKeyRepository(EntityManagerFactory::build($conn));
             $is_mail_send = new ApiKeyService(self::lang(), self::mailService(), $apiKeyRepo, self::passwordService($conn), self::urlService(), self::sessionService(), self::currentConfig())
                 ->notifyExpiration($notify_username, $notify_email, $notify_api_key_expiration['days_left']);

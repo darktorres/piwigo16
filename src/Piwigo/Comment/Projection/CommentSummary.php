@@ -36,7 +36,7 @@ final readonly class CommentSummary
     public static function fromRow(array $row): self
     {
         $id = CommentId::tryFrom($row['id'] ?? null);
-        if ($id === null) {
+        if (! $id instanceof CommentId) {
             throw new InvalidArgumentException(sprintf('Expected a positive comment id, got %s', get_debug_type($row['id'] ?? null)));
         }
 

@@ -220,7 +220,7 @@ test('construct throws for an unsupported file extension', function (): void {
     $path = pwgImageTestMarker() . '/photo.bmp';
     file_put_contents($path, 'not a real bmp, extension alone is enough to hit the guard');
 
-    expect(fn () => pwgImageTestMake($path))
+    expect(fn (): ImageBackend => pwgImageTestMake($path))
         ->toThrow(ImageProcessingException::class, '[Image] unsupported file extension');
 });
 
@@ -449,7 +449,7 @@ test('getRotationCodeFromAngle maps every known angle, treating null the same as
 });
 
 test('getRotationCodeFromAngle throws for an unexpected angle', function (): void {
-    expect(fn () => ImageBackend::getRotationCodeFromAngle(45))
+    expect(fn (): int => ImageBackend::getRotationCodeFromAngle(45))
         ->toThrow(Exception::class, 'getRotationCodeFromAngle(): unexpected rotation angle 45');
 });
 
@@ -465,7 +465,7 @@ test('getRotationAngleFromCode maps every known code, wrapping modulo 4', functi
 });
 
 test('getRotationAngleFromCode throws for an unexpected code', function (): void {
-    expect(fn () => ImageBackend::getRotationAngleFromCode(-1))
+    expect(fn (): int => ImageBackend::getRotationAngleFromCode(-1))
         ->toThrow(Exception::class);
 });
 
@@ -608,7 +608,7 @@ test('webpInfo throws for a file that is not a real WEBP container', function ()
     $path = pwgImageTestMarker() . '/not-webp.webp';
     file_put_contents($path, str_repeat('x', 30));
 
-    expect(fn () => ImageBackend::webpInfo($path))
+    expect(fn (): WebpInfo => ImageBackend::webpInfo($path))
         ->toThrow(Exception::class, 'webpInfo(): not a valid webp image');
 });
 
@@ -627,7 +627,7 @@ test('webpInfo throws for a buffer exactly one byte short of the 25-byte minimum
         ->toBe(24);
     file_put_contents($path, $buf);
 
-    expect(fn () => ImageBackend::webpInfo($path))
+    expect(fn (): WebpInfo => ImageBackend::webpInfo($path))
         ->toThrow(Exception::class, 'webpInfo(): not a valid webp image');
 });
 
@@ -973,7 +973,7 @@ test('webpInfo throws when the file cannot be opened for reading', function (): 
     // is ever reached.
     set_error_handler(static fn (): bool => true);
     try {
-        expect(fn () => ImageBackend::webpInfo($path))
+        expect(fn (): WebpInfo => ImageBackend::webpInfo($path))
             ->toThrow(Exception::class, "webpInfo(): fopen({$path}): Failed");
     } finally {
         restore_error_handler();
@@ -985,7 +985,7 @@ test('webpInfo throws for a well-formed VP8 header with an unrecognized sub-form
     // Valid up through byte 14 ('VP8'), but byte 15 is neither ' ', 'L' nor 'X'.
     file_put_contents($path, "RIFF\x00\x00\x00\x00" . 'WEBPVP8?' . str_repeat("\x00", 9));
 
-    expect(fn () => ImageBackend::webpInfo($path))
+    expect(fn (): WebpInfo => ImageBackend::webpInfo($path))
         ->toThrow(Exception::class, 'webpInfo(): could not detect webp type');
 });
 
@@ -1141,7 +1141,7 @@ test('webpInfo throws when fread() fails after a successful fopen()', function (
 
     set_error_handler(static fn (): bool => true);
     try {
-        expect(fn () => ImageBackend::webpInfo($dir))
+        expect(fn (): WebpInfo => ImageBackend::webpInfo($dir))
             ->toThrow(Exception::class, "webpInfo(): fread({$dir}): Failed");
     } finally {
         restore_error_handler();
@@ -1552,7 +1552,7 @@ test('currentConfig throws LogicException when the container returns an unexpect
     try {
         KernelContainerOverride::withWrongTypeFor(
             CurrentConfig::class,
-            static fn () => ImageBackend::getLibrary(),
+            static fn (): string|false => ImageBackend::getLibrary(),
         );
     } finally {
         Kernel::reset();

@@ -1619,7 +1619,7 @@ test('getImageInfos() delegates a fatal error to HtmlRenderingInterface for a no
     $service = imageServiceTestNewService($repo, $conn);
     $renderer = new ImageServiceTestFakeHtmlRenderer();
 
-    expect(fn () => $service->getImageInfos('not-a-number', $renderer))
+    expect(fn (): ?array => $service->getImageInfos('not-a-number', $renderer))
         ->toThrow(ImageServiceTestFatalSignal::class);
     expect($renderer->lastMessage)
         ->toBe('[getImageInfos] invalid image identifier not-a-number');
@@ -1634,7 +1634,7 @@ test('getImageInfos() html-escapes special characters in an invalid, non-numeric
     $service = imageServiceTestNewService($repo, $conn);
     $renderer = new ImageServiceTestFakeHtmlRenderer();
 
-    expect(fn () => $service->getImageInfos('<script>&"\'', $renderer))
+    expect(fn (): ?array => $service->getImageInfos('<script>&"\'', $renderer))
         ->toThrow(ImageServiceTestFatalSignal::class);
     expect($renderer->lastMessage)
         ->toBe('[getImageInfos] invalid image identifier ' . htmlentities('<script>&"\''));
@@ -1645,7 +1645,7 @@ test('getImageInfos() delegates a fatal error to HtmlRenderingInterface when die
     $service = imageServiceTestNewService($repo, $conn);
     $renderer = new ImageServiceTestFakeHtmlRenderer();
 
-    expect(fn () => $service->getImageInfos(999_999, $renderer, dieOnMissing: true))
+    expect(fn (): ?array => $service->getImageInfos(999_999, $renderer, dieOnMissing: true))
         ->toThrow(ImageServiceTestFatalSignal::class);
     expect($renderer->lastMessage)
         ->toBe('photo 999999 does not exist');

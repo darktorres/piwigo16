@@ -210,6 +210,6 @@ test('generate does not throw when REMOTE_ADDR is not a string', function (): vo
     $_SERVER['REMOTE_ADDR'] = ['not', 'a', 'string'];
     $service = new EphemeralKeyService(CurrentConfigTestFactory::get());
 
-    expect(fn () => $service->generate(0))
+    expect(fn (): string => $service->generate(0))
         ->not->toThrow(TypeError::class);
 });

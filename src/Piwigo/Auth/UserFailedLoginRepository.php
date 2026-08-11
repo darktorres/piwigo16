@@ -44,7 +44,7 @@ final class UserFailedLoginRepository extends EntityRepository
         // when $ip !== '', so this is unreachable in practice, not just
         // theoretically safe.
         $ipVo = IpAddress::tryFrom($ip);
-        if ($ipVo === null) {
+        if (! $ipVo instanceof IpAddress) {
             return 0;
         }
 

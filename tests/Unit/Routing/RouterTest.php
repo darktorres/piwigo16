@@ -6,6 +6,7 @@ use Nyholm\Psr7\ServerRequest;
 use Piwigo\Bootstrap\RouteDefinitions;
 use Piwigo\Routing\RouteMatchStatus;
 use Piwigo\Routing\Router;
+use Piwigo\Routing\RouteResult;
 use Symfony\Component\Routing\Route;
 use Symfony\Component\Routing\RouteCollection;
 
@@ -422,7 +423,7 @@ test('dispatch throws when a matched route has no _controller default', function
     $routes = new RouteCollection();
     $routes->add('broken_route', new Route('/broken'));
 
-    expect(static fn () => new Router($routes)->dispatch(new ServerRequest('GET', '/broken')))
+    expect(static fn (): RouteResult => new Router($routes)->dispatch(new ServerRequest('GET', '/broken')))
         ->toThrow(RuntimeException::class, "Route 'broken_route' has no _controller default.");
 });
 

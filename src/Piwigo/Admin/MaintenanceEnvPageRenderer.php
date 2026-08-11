@@ -13,6 +13,7 @@ use Piwigo\Admin\Maintenance\Request\MaintenanceActionRequest;
 use Piwigo\Admin\Projection\MaintenanceEnvPageContext;
 use Piwigo\Cache\PersistentCache;
 use Piwigo\Category\CategoryService;
+use Piwigo\Config\CacheSizesSnapshot;
 use Piwigo\Config\ConfigService;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\AppInfo;
@@ -120,7 +121,7 @@ final readonly class MaintenanceEnvPageRenderer
 
         $cache_sizes = $this->currentConfig->cacheSizes;
 
-        $time_elapsed_since_last_calc = $cache_sizes !== null
+        $time_elapsed_since_last_calc = $cache_sizes instanceof CacheSizesSnapshot
             ? DateHelper::timeSince($cache_sizes->lastDateCalc, 'year')
             : null;
 

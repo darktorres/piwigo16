@@ -16,6 +16,7 @@ use Piwigo\Category\CategoryRepository;
 use Piwigo\Category\CategoryService;
 use Piwigo\Common\ValueObject\ImageId;
 use Piwigo\Common\ValueObject\UserId;
+use Piwigo\Common\ValueObject\Username;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\DateHelper;
@@ -326,9 +327,9 @@ final readonly class PictureModifyPageRenderer
 
         $added_by = 'N/A';
         $row_added_by = UserId::tryFrom($row['added_by']);
-        $added_by_username = $row_added_by === null ? null : new UserRepository(EntityManagerFactory::build($conn), $this->eventDispatcher, $this->currentConfig)
-            ->findUsernameById($row_added_by);
-        if ($added_by_username !== null) {
+        $added_by_username = $row_added_by instanceof UserId ? new UserRepository(EntityManagerFactory::build($conn), $this->eventDispatcher, $this->currentConfig)
+            ->findUsernameById($row_added_by) : null;
+        if ($added_by_username instanceof Username) {
             $row['added_by'] = $added_by_username->value;
         }
 

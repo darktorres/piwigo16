@@ -1664,7 +1664,7 @@ final class ImageRepository extends EntityRepository
     public function updateDimensions(int $imageId, int $width, int $height): void
     {
         $imageIdVo = ImageId::tryFrom($imageId);
-        $entity = $imageIdVo === null ? null : $this->find($imageIdVo);
+        $entity = $imageIdVo instanceof ImageId ? $this->find($imageIdVo) : null;
         if ($entity === null) {
             return;
         }

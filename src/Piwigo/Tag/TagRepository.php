@@ -321,7 +321,7 @@ final class TagRepository extends EntityRepository
             ));
         }
 
-        if ($filterCriteria !== null && ! $filterCriteria->isEmpty()) {
+        if ($filterCriteria instanceof ImageFilterCriteria && ! $filterCriteria->isEmpty()) {
             // toSqlCondition()'s own fragment is already self-contained
             // (its own clauses are wrapped in one outer set of parens), so
             // andWhere()'s plain string concatenation scopes it correctly
@@ -640,7 +640,7 @@ final class TagRepository extends EntityRepository
         $em->persist($entity);
         $em->flush();
 
-        assert($entity->id !== null);
+        assert($entity->id instanceof TagId);
 
         return $entity->id;
     }
@@ -999,7 +999,7 @@ final class TagRepository extends EntityRepository
 
     private static function toProjection(TagEntity $entity): Tag
     {
-        assert($entity->id !== null);
+        assert($entity->id instanceof TagId);
 
         return new Tag($entity->id, $entity->name, $entity->urlName, $entity->lastmodified->value);
     }

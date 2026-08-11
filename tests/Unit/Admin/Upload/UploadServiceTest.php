@@ -5,6 +5,7 @@ declare(strict_types=1);
 use Doctrine\ORM\EntityManagerInterface;
 use Piwigo\Activity\ActivityService;
 use Piwigo\Admin\Image\ImageProcessingException;
+use Piwigo\Admin\Upload\Projection\ImageDimensionsInfo;
 use Piwigo\Admin\Upload\UploadService;
 use Piwigo\Bootstrap\InfrastructureAccessor;
 use Piwigo\Config\ConfigService;
@@ -593,7 +594,7 @@ test('pwgImageInfos throws when filesize() fails for a path that does not exist 
     // pattern as addUploadedFile's own md5_file()-read-failure test below.
     set_error_handler(static fn (): bool => true);
     try {
-        expect(fn () => $service->pwgImageInfos($missing))
+        expect(fn (): ImageDimensionsInfo => $service->pwgImageInfos($missing))
             ->toThrow(Exception::class, 'filesize() failed for ' . $missing);
     } finally {
         restore_error_handler();
@@ -1105,7 +1106,7 @@ test('addUploadedFile throws when md5_file() fails to read the source file', fun
     // pattern as ImageGdTest's own construct-throws-on-bad-jpeg case.
     set_error_handler(static fn (): bool => true);
     try {
-        expect(fn () => $service->addUploadedFile($missingPath, $urlService, original_md5sum: null))
+        expect(fn (): int => $service->addUploadedFile($missingPath, $urlService, original_md5sum: null))
             ->toThrow(Exception::class, "upload(): unable to compute md5sum of {$missingPath}");
     } finally {
         restore_error_handler();
@@ -1232,7 +1233,7 @@ test('addFormat throws when formats are disabled', function (): void {
     CurrentConfigTestFactory::get()->isFormatsEnabled = false;
     $service = upload_service_test_make();
 
-    expect(fn () => $service->addFormat('/tmp/whatever', 'tif', 1))
+    expect(fn (): string => $service->addFormat('/tmp/whatever', 'tif', 1))
         ->toThrow(ImageProcessingException::class, '[Piwigo\Admin\Upload\UploadService::addFormat] formats are disabled');
 });
 
@@ -1242,7 +1243,7 @@ test('addFormat throws for an unauthorized format extension', function (): void 
     $service = upload_service_test_make();
 
     try {
-        expect(fn () => $service->addFormat('/tmp/whatever', 'exe', 1))
+        expect(fn (): string => $service->addFormat('/tmp/whatever', 'exe', 1))
             ->toThrow(
                 ImageProcessingException::class,
                 '[Piwigo\Admin\Upload\UploadService::addFormat] unexpected format extension "exe" (authorized extensions: tif, psd)'
@@ -1311,7 +1312,7 @@ test('uploadFileVideo recognizes every one of its 17 ffmpeg-tested extensions', 
             'wmv', 'mov', 'mkv', 'mp4', 'mpg', 'flv', 'asf', 'xvid', 'divx', 'mpeg',
             'avi', 'rm', 'm4v', 'ogg', 'ogv', 'webm', 'webmv',
         ] as $ext) {
-            expect(fn () => upload_service_test_upload(UploadService::uploadFileVideo(...), null, $dir . '/video.' . $ext))
+            expect(fn (): ?string => upload_service_test_upload(UploadService::uploadFileVideo(...), null, $dir . '/video.' . $ext))
                 ->toThrow(ImageProcessingException::class);
         }
     } finally {
@@ -1324,7 +1325,7 @@ test('uploadFileVideo matches a video extension case-insensitively', function ()
     $dir = upload_service_video_readonly_dir();
     set_error_handler(static fn (): bool => true);
     try {
-        expect(fn () => upload_service_test_upload(UploadService::uploadFileVideo(...), null, $dir . '/video.WMV'))
+        expect(fn (): ?string => upload_service_test_upload(UploadService::uploadFileVideo(...), null, $dir . '/video.WMV'))
             ->toThrow(ImageProcessingException::class);
     } finally {
         restore_error_handler();

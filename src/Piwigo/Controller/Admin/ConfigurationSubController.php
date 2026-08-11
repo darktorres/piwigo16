@@ -20,6 +20,7 @@ use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Config\ConfigService;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\FilterViewDefinition;
+use Piwigo\Config\FilterViewsSelection;
 use Piwigo\Controller\Admin\Projection\ConfigurationCommentsPageContext;
 use Piwigo\Controller\Admin\Projection\ConfigurationDefaultPageContext;
 use Piwigo\Controller\Admin\Projection\ConfigurationDisplayTabPageContext;
@@ -249,7 +250,7 @@ final class ConfigurationSubController implements AdminSubControllerInterface
             'rating_score',
         ];
 
-        if ($this->currentConfig->filtersViews === null) {
+        if (! $this->currentConfig->filtersViews instanceof FilterViewsSelection) {
             $this->configService->confUpdateParam(
                 'filters_views',
                 array_map(static fn (FilterViewDefinition $d): array => $d->toArray(), $this->currentConfig->defaultFiltersViews),

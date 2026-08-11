@@ -15,6 +15,7 @@ use Piwigo\Admin\ElementSetRanksPageRenderer;
 use Piwigo\Admin\Tabsheet;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Category\CategoryService;
+use Piwigo\Category\Projection\Category;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Controller\Admin\Projection\AlbumSubControllerPageContext;
 use Piwigo\Core\HtmlRenderingInterface;
@@ -78,7 +79,7 @@ final readonly class AlbumSubController implements AdminSubControllerInterface
 
         $categoryRow = new CategoryRepository(EntityManagerFactory::build(DbConnection::build()), $this->currentConfig)
             ->findById($cat_id);
-        if ($categoryRow === null) {
+        if (! $categoryRow instanceof Category) {
             $this->htmlRenderer
                 ->fatalError('unknown album');
         }

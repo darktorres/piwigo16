@@ -369,7 +369,7 @@ test('findAllOrderedBy() applies the given order column', function (): void {
     try {
         $rows = $repo->findAllOrderedBy(OldPermalinkSortField::Permalink);
         expect($rows[0] ?? null)->toBeInstanceOf(OldPermalink::class);
-        $permalinks = array_map(static fn ($row) => $row->permalink->value, $rows);
+        $permalinks = array_map(static fn (OldPermalink $row): string => $row->permalink->value, $rows);
 
         $lowIndex = array_search($lowSlug, $permalinks, true);
         $highIndex = array_search($highSlug, $permalinks, true);
@@ -445,8 +445,8 @@ test('findAllOrderedBy() with a null sort field leaves the natural order untouch
 
         // A null sort field just skips the orderBy() call, not the
         // query -- both reads must still find the same 2 rows.
-        expect(array_map(static fn ($row) => $row->permalink->value, $unsorted))
-            ->toBe(array_map(static fn ($row) => $row->permalink->value, $sorted));
+        expect(array_map(static fn (OldPermalink $row): string => $row->permalink->value, $unsorted))
+            ->toBe(array_map(static fn (OldPermalink $row): string => $row->permalink->value, $sorted));
     } finally {
         $repo->deleteOldPermalink(1, $slugA);
         $repo->deleteOldPermalink(1, $slugB);

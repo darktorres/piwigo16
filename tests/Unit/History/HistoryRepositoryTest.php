@@ -9,7 +9,10 @@ use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
 use Piwigo\History\HistoryEntity;
 use Piwigo\History\HistoryRepository;
+use Piwigo\History\Projection\GroupedCountSince;
+use Piwigo\History\Projection\HistorySearchRow;
 use Piwigo\History\Projection\HistorySummaryCount;
+use Piwigo\History\Projection\HistorySummaryCursor;
 use Piwigo\Users\UserInfoEntity;
 
 /**
@@ -202,7 +205,7 @@ test('findLastSummaryWithHistoryIdTo() returns the highest', function (): void {
 
         expect($found)
             ->not->toBeNull();
-        if ($found === null) {
+        if (! $found instanceof HistorySummaryCursor) {
             throw new RuntimeException('unreachable');
         }
         expect($found->historyIdTo)
@@ -277,7 +280,7 @@ test('findGroupedCountsSince() sorts buckets by date then hour, not just row/ins
         $groups = historyTestRepo()
             ->findGroupedCountsSince(0, null);
 
-        $keys = array_map(static fn ($g) => $g->date . ' ' . $g->hour, $groups);
+        $keys = array_map(static fn (GroupedCountSince $g): string => $g->date . ' ' . $g->hour, $groups);
         expect($keys)
             ->toBe(['2026-07-12 2', '2026-07-12 5', '2026-07-13 1']);
     } finally {
@@ -614,7 +617,7 @@ test('search() filters by image type, against the full real $types vocabulary', 
         $rows = historyTestRepo()
             ->search(null, null, ['picture', 'none'], ['picture', 'high', 'other', 'none'], null, null, null, null);
 
-        $ids = array_map(static fn ($row) => $row->userId . '-' . ($row->imageType ?? 'x'), $rows);
+        $ids = array_map(static fn (HistorySearchRow $row): string => $row->userId . '-' . ($row->imageType ?? 'x'), $rows);
         sort($ids);
         expect($rows)
             ->toHaveCount(2)
@@ -641,7 +644,7 @@ test('search() binds a distinct query parameter per non-none image type, not a s
         $rows = historyTestRepo()
             ->search(null, null, ['picture', 'high'], ['picture', 'high', 'other', 'none'], null, null, null, null);
 
-        $types = array_map(static fn ($row) => $row->imageType, $rows);
+        $types = array_map(static fn (HistorySearchRow $row): ?string => $row->imageType, $rows);
         sort($types);
         expect($types)
             ->toBe(['high', 'picture']);

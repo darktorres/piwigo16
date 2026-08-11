@@ -31,7 +31,7 @@ final class DerivativeSettingsRepository extends EntityRepository
         $em = $this->getEntityManager();
         $entity = $this->load();
 
-        if ($entity === null) {
+        if (! $entity instanceof DerivativeSettingsEntity) {
             $entity = new DerivativeSettingsEntity(
                 DerivativeSettingsEntity::SINGLETON_ID,
                 $defaultQuality,

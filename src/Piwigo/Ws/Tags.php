@@ -30,6 +30,7 @@ use Piwigo\Event\Tag\RenderTagName;
 use Piwigo\Event\Tag\RenderTagUrl;
 use Piwigo\Image\ImageEntity;
 use Piwigo\PluginConfig\EventDispatcher;
+use Piwigo\Tag\Projection\Tag;
 use Piwigo\Tag\TagService;
 
 /**
@@ -354,7 +355,7 @@ final readonly class Tags
         $this->entityManager->clear();
 
         $renamed_tag = $this->tagService->getById(TagId::from($tag_id));
-        assert($renamed_tag !== null);
+        assert($renamed_tag instanceof Tag);
 
         $tag = [
             'id' => $renamed_tag->id->value,

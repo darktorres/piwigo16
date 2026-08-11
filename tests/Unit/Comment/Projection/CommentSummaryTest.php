@@ -79,7 +79,7 @@ test('fromRow throws with the real debug type of a non-null but invalid id', fun
     $row = fullCommentSummaryRow();
     $row['id'] = 'not-a-number';
 
-    expect(fn () => CommentSummary::fromRow($row))
+    expect(fn (): CommentSummary => CommentSummary::fromRow($row))
         ->toThrow(InvalidArgumentException::class, 'Expected a positive comment id, got string');
 });
 

@@ -13,6 +13,7 @@ use Piwigo\Auth\AccessLevelChecker;
 use Piwigo\Auth\CookieService;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Category\CategoryService;
+use Piwigo\Category\Projection\CategoryInfo;
 use Piwigo\Common\Enum\Section;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\DeploymentPolicy;
@@ -773,7 +774,7 @@ final class UrlService implements UrlServiceInterface
 
             if ($category !== null) {
                 $result = $categoryService->getCategoryInfo((int) $category);
-                if ($result === null) {
+                if (! $result instanceof CategoryInfo) {
                     $this->htmlRenderer->pageNotFound($redirectService, $this->lang->t('Requested album does not exist'));
                 }
                 $page['category'] = $result->toArray();
@@ -784,7 +785,7 @@ final class UrlService implements UrlServiceInterface
 
                 foreach ($combined_category_ids as $cat_id) {
                     $result = $categoryService->getCategoryInfo((int) $cat_id);
-                    if ($result === null) {
+                    if (! $result instanceof CategoryInfo) {
                         $this->htmlRenderer->pageNotFound($redirectService, $this->lang->t('Requested album does not exist'));
                     }
 

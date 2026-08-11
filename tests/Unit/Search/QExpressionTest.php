@@ -34,7 +34,7 @@ function qexprMulti(mixed $token): QMultiToken
 
 function qexprScope(?QSearchScope $scope): QSearchScope
 {
-    if ($scope === null) {
+    if (! $scope instanceof QSearchScope) {
         throw new RuntimeException('Expected a non-null QSearchScope');
     }
 
@@ -314,7 +314,7 @@ test('a plain QSearchScope throws on getSql (only range scopes support it)', fun
 
     // exact message text (not just the exception class) pins the
     // static::class . ' does not support getSql()' concatenation order.
-    expect(fn () => $scope->getSql('images.tag', $token))
+    expect(fn (): string => $scope->getSql('images.tag', $token))
         ->toThrow(LogicException::class, 'Piwigo\Search\QSearchScope does not support getSql()');
 });
 

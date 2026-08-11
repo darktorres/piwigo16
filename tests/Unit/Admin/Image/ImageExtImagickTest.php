@@ -225,7 +225,7 @@ test('construct throws when identify cannot determine the image dimensions', fun
     $path = imageExtImagickTestMarker() . '/photo.jpg';
     file_put_contents($path, 'this is plain text, not a real image at all');
 
-    expect(fn () => imageExtImagickTestMake($path))
+    expect(fn (): ImageExtImagick => imageExtImagickTestMake($path))
         ->toThrow(ImageProcessingException::class, '[External ImageMagick] Corrupt image');
 });
 
@@ -242,7 +242,7 @@ test('construct concatenates the imagickdir prefix directly onto the identify bi
     $path = imageExtImagickTestMarker() . '/prefix-src.jpg';
     imageExtImagickTestMakeJpeg($path, 12, 9, 5, 5, 5);
 
-    expect(fn () => imageExtImagickTestMake($path))
+    expect(fn (): ImageExtImagick => imageExtImagickTestMake($path))
         ->toThrow(ImageProcessingException::class, '[External ImageMagick] Corrupt image');
 });
 
@@ -335,7 +335,7 @@ test('construct casts a since-vanished source path\'s realpath() failure to an e
     // escapeshellarg(false) would throw a TypeError under this file's own
     // strict_types=1 instead of the real ImageProcessingException below.
 
-    expect(fn () => imageExtImagickTestMake($path))
+    expect(fn (): ImageExtImagick => imageExtImagickTestMake($path))
         ->toThrow(ImageProcessingException::class, '[External ImageMagick] Corrupt image');
 });
 
@@ -406,7 +406,7 @@ test('construct throws when an animated webp is too short for getimagesize to re
     expect(getimagesize($path))
         ->toBeFalse();
 
-    expect(fn () => imageExtImagickTestMake($path))
+    expect(fn (): ImageExtImagick => imageExtImagickTestMake($path))
         ->toThrow(Exception::class, "ImageExtImagick(): getimagesize({$path}): Failed");
 });
 
@@ -669,7 +669,7 @@ test('compose throws a LogicException when the overlay uses a different image ba
         }
     };
 
-    expect(fn () => $base->compose($overlay, 0, 0, 50))
+    expect(fn (): bool => $base->compose($overlay, 0, 0, 50))
         ->toThrow(LogicException::class, 'ImageBackend::compose(): overlay must use the same image backend');
 });
 
@@ -689,7 +689,7 @@ test('compose throws when the overlay source path cannot be resolved', function 
     // it -- realpath() must fail.
     unlink($overlayPath);
 
-    expect(fn () => $base->compose($overlay, 0, 0, 50))
+    expect(fn (): bool => $base->compose($overlay, 0, 0, 50))
         ->toThrow(Exception::class, "compose(): unable to resolve overlay path {$overlayPath}");
 });
 
@@ -703,7 +703,7 @@ test('write throws when the destination directory cannot be resolved', function 
     $missingDir = imageExtImagickTestMarker() . '/no-such-subdir';
     $dest = $missingDir . '/out.jpg';
 
-    expect(fn () => $image->write($dest))
+    expect(fn (): bool => $image->write($dest))
         ->toThrow(Exception::class, "write(): unable to resolve directory {$missingDir}");
 });
 
@@ -718,7 +718,7 @@ test('write throws when the destination path has no directory component at all',
     // entirely (confirmed live: only 'basename'/'filename' come back, both
     // empty strings) -- every non-empty path, even a bare filename with no
     // slash, still gets a 'dirname' of '.'.
-    expect(fn () => $image->write(''))
+    expect(fn (): bool => $image->write(''))
         ->toThrow(Exception::class, 'write(): unable to determine directory for ');
 });
 

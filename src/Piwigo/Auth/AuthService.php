@@ -7,7 +7,9 @@ namespace Piwigo\Auth;
 use DateTimeImmutable;
 use Exception;
 use Piwigo\Auth\Event\FinalizeLogin;
+use Piwigo\Auth\Projection\AuthKeyDetails;
 use Piwigo\Auth\Projection\AuthUser;
+use Piwigo\Auth\Projection\UsernamePassword;
 use Piwigo\Common\ValueObject\IpAddress;
 use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Common\ValueObject\Username;
@@ -87,9 +89,9 @@ final readonly class AuthService
         // tryFrom() rather than from() so a tampered/malformed value
         // degrades to "not found" below instead of throwing.
         $userIdVo = UserId::tryFrom($userId);
-        $found = $userIdVo === null ? null : $this->repo->findUsernameAndPassword($userIdVo);
+        $found = $userIdVo instanceof UserId ? $this->repo->findUsernameAndPassword($userIdVo) : null;
 
-        if ($found === null) {
+        if (! $found instanceof UsernamePassword) {
             return [
                 'key' => false,
                 'username' => '',
@@ -395,8 +397,8 @@ final readonly class AuthService
         $password_verify = $this->passwordService->verify($password ?? '', $hash, $verify_user_id);
 
         // If the user was not found, is a guest, or the password is incorrect
-        if ($user_found === null || $user_found->status === 'guest' || ! $password_verify) {
-            if ($user_found !== null && ! $password_verify) {
+        if (! $user_found instanceof AuthUser || $user_found->status === 'guest' || ! $password_verify) {
+            if ($user_found instanceof AuthUser && ! $password_verify) {
                 $this->activityLogger->record('user', $user_found->id, 'login_failure_wrong_password');
             }
             $this->failedLoginRepo->recordFailure($userId, $ip, $nowFormatted);
@@ -467,7 +469,7 @@ final readonly class AuthService
      */
     private function resolveUserId(?AuthUser $user): ?int
     {
-        return $user !== null && is_numeric($user->id) ? (int) $user->id : null;
+        return $user instanceof AuthUser && is_numeric($user->id) ? (int) $user->id : null;
     }
 
     /**
@@ -548,7 +550,7 @@ final readonly class AuthService
 
         $key = $this->repo->findAuthKeyDetails($authKey);
 
-        if ($key === null) {
+        if (! $key instanceof AuthKeyDetails) {
             return false;
         }
 

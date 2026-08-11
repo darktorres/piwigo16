@@ -542,21 +542,21 @@ final readonly class TagService
     {
         $tagName = trim($tagName);
         $cached = $this->tagIdFromTagNameCache->get($tagName);
-        if ($cached !== null) {
+        if ($cached instanceof TagId) {
             return $cached;
         }
 
         // search existing by exact name
         $existingId = $this->repo->findIdByName($tagName);
 
-        if ($existingId === null) {
+        if (! $existingId instanceof TagId) {
             $urlNameEvent = $this->eventDispatcher->dispatchChange(new RenderTagUrl($tagName));
             $urlName = $urlNameEvent->tagName;
 
             // search existing by url name
             $existingId = $this->repo->findIdByUrlName($urlName);
 
-            if ($existingId === null) {
+            if (! $existingId instanceof TagId) {
                 // search by extended description (plugin sub name) --
                 // the hook returns LIKE pattern VALUES (bound as
                 // parameters), not raw SQL fragments -- see TagRepository::
@@ -567,7 +567,7 @@ final readonly class TagService
                     $existingId = $this->repo->findIdByNameLikeAnyPattern($namePatterns);
                 }
 
-                if ($existingId === null) {
+                if (! $existingId instanceof TagId) {
                     // finally create the tag
                     $newId = $this->repo->insertWithoutTimestamp($tagName, $urlName);
                     $this->tagIdFromTagNameCache->set($tagName, $newId);
@@ -695,7 +695,7 @@ final readonly class TagService
         $tagName = strip_tags($tagName);
 
         // does the tag already exist?
-        if ($this->repo->findIdByName($tagName) === null) {
+        if (! $this->repo->findIdByName($tagName) instanceof TagId) {
             $insertUrlNameEvent = $this->eventDispatcher->dispatchChange(new RenderTagUrl($tagName));
             $urlName = $insertUrlNameEvent->tagName;
 

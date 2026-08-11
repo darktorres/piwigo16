@@ -296,7 +296,7 @@ final class RateRepository extends EntityRepository
                 ->setParameter('categoryIds', $categoryIds, ArrayParameterType::INTEGER);
         }
 
-        if ($filterUserId !== null) {
+        if ($filterUserId instanceof UserId) {
             $qb->andWhere($excludeFilterUser ? 'r.userId <> :filterUserId' : 'r.userId = :filterUserId')
                 ->setParameter('filterUserId', $filterUserId);
         }
@@ -371,7 +371,7 @@ final class RateRepository extends EntityRepository
                 ->setParameter('categoryIds', $categoryIds, ArrayParameterType::INTEGER);
         }
 
-        if ($filterUserId !== null) {
+        if ($filterUserId instanceof UserId) {
             $qb->andWhere($excludeFilterUser ? 'r.userId <> :filterUserId' : 'r.userId = :filterUserId')
                 ->setParameter('filterUserId', $filterUserId);
         }
@@ -463,7 +463,7 @@ final class RateRepository extends EntityRepository
                 ->setParameter('anonymousId', $anonymousId);
         }
 
-        if ($elementId !== null) {
+        if ($elementId instanceof ImageId) {
             $qb->andWhere('r.elementId = :elementId')
                 ->setParameter('elementId', $elementId);
         }

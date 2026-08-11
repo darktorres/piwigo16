@@ -201,7 +201,7 @@ test('url() throws a RuntimeException when RequestBootstrap has not set a Curren
     ]);
     Kernel::reset();
 
-    expect(fn () => DerivativeImage::url(new DerivativeParams(SizingParams::classic(50, 50)), $src))
+    expect(fn (): string => DerivativeImage::url(new DerivativeParams(SizingParams::classic(50, 50)), $src))
         ->toThrow(RuntimeException::class, 'DerivativeImage: no CurrentConfig set (RequestBootstrap not run yet?)');
 });
 
@@ -225,7 +225,7 @@ test('url() throws a RuntimeException when the container returns an unexpected t
     ]);
 
     KernelContainerOverride::withWrongTypeFor(CurrentConfig::class, function () use ($src): void {
-        expect(fn () => DerivativeImage::url(new DerivativeParams(SizingParams::classic(50, 50)), $src))
+        expect(fn (): string => DerivativeImage::url(new DerivativeParams(SizingParams::classic(50, 50)), $src))
             ->toThrow(RuntimeException::class, 'DerivativeImage: no CurrentConfig set (RequestBootstrap not run yet?)');
     });
 });
@@ -247,7 +247,7 @@ test('constructing a DerivativeImage throws a RuntimeException when the containe
     $currentConfig = CurrentConfigTestFactory::get();
 
     KernelContainerOverride::withWrongTypeFor(ImageStdParams::class, function () use ($src, $currentConfig): void {
-        expect(fn () => new DerivativeImage(ImageStdParams::THUMB, $src, $currentConfig))
+        expect(fn (): DerivativeImage => new DerivativeImage(ImageStdParams::THUMB, $src, $currentConfig))
             ->toThrow(RuntimeException::class, 'DerivativeImage: no ImageStdParams set (RequestBootstrap not run yet?)');
     });
 });
@@ -270,7 +270,7 @@ test('getUrl() throws a RuntimeException when RequestBootstrap has not set a URL
     $derivative = new DerivativeImage(new DerivativeParams(SizingParams::classic(50, 50)), $src, CurrentConfigTestFactory::get());
     Kernel::reset();
 
-    expect(fn () => $derivative->getUrl())
+    expect(fn (): string => $derivative->getUrl())
         ->toThrow(RuntimeException::class, 'DerivativeImage: no URL service set (RequestBootstrap not run yet?)');
 });
 
@@ -294,7 +294,7 @@ test('getUrl() throws a RuntimeException when the container returns an unexpecte
     $derivative = new DerivativeImage(new DerivativeParams(SizingParams::classic(80, 60)), $src, CurrentConfigTestFactory::get());
 
     KernelContainerOverride::withWrongTypeFor(UrlServiceInterface::class, function () use ($derivative): void {
-        expect(fn () => $derivative->getUrl())
+        expect(fn (): string => $derivative->getUrl())
             ->toThrow(RuntimeException::class, 'DerivativeImage: no URL service set (RequestBootstrap not run yet?)');
     });
 });
@@ -341,7 +341,7 @@ test('getPath() throws a RuntimeException when the container returns an unexpect
     $derivative = new DerivativeImage(new DerivativeParams(SizingParams::classic(80, 60)), $src, CurrentConfigTestFactory::get());
 
     KernelContainerOverride::withWrongTypeFor(Paths::class, function () use ($derivative): void {
-        expect(fn () => $derivative->getPath())
+        expect(fn (): string => $derivative->getPath())
             ->toThrow(RuntimeException::class, 'DerivativeImage: no Paths set (RequestBootstrap not run yet?)');
     });
 });
@@ -397,7 +397,7 @@ test('url() throws when a get_derivative_url handler returns something other tha
             'file' => 'photo.jpg',
         ]);
 
-        expect(fn () => DerivativeImage::url(new DerivativeParams(SizingParams::classic(80, 60)), $src))
+        expect(fn (): string => DerivativeImage::url(new DerivativeParams(SizingParams::classic(80, 60)), $src))
             ->toThrow(Error::class, 'must return an instance of');
     } finally {
         EventDispatcherTestFactory::get()->removeEventHandler(GetDerivativeUrl::class, $handler);
@@ -513,7 +513,7 @@ test('build() throws when the source path has no extension', function (): void {
     // mimetype-icon branch rather than IS_ORIGINAL, a different scenario.
     $src->rel_path = 'upload/2026/07/photoNoExtension';
 
-    expect(fn () => new DerivativeImage(new DerivativeParams(SizingParams::classic(50, 50)), $src, CurrentConfigTestFactory::get()))
+    expect(fn (): DerivativeImage => new DerivativeImage(new DerivativeParams(SizingParams::classic(50, 50)), $src, CurrentConfigTestFactory::get()))
         ->toThrow(Exception::class, "DerivativeImage::build(): path 'upload/2026/07/photoNoExtension' has no extension");
 });
 
@@ -989,7 +989,7 @@ test('getUrl() throws when a get_derivative_url handler returns something other 
 
         $derivative = new DerivativeImage(new DerivativeParams(SizingParams::classic(80, 60)), $src, CurrentConfigTestFactory::get());
 
-        expect(fn () => $derivative->getUrl())
+        expect(fn (): string => $derivative->getUrl())
             ->toThrow(Error::class, 'must return an instance of');
     } finally {
         EventDispatcherTestFactory::get()->removeEventHandler(GetDerivativeUrl::class, $handler);

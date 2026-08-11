@@ -250,7 +250,7 @@ final readonly class ExtensionRepository
     {
         $oldLanguageVo = LangCode::tryFrom($oldLanguage);
         $newLanguageVo = LangCode::tryFrom($newLanguage);
-        if ($oldLanguageVo === null || $newLanguageVo === null) {
+        if (! $oldLanguageVo instanceof LangCode || ! $newLanguageVo instanceof LangCode) {
             return;
         }
 
@@ -271,7 +271,7 @@ final readonly class ExtensionRepository
     public function setLanguageForUserIds(string $language, int $defaultUserId, int $guestId): void
     {
         $languageVo = LangCode::tryFrom($language);
-        if ($languageVo === null) {
+        if (! $languageVo instanceof LangCode) {
             return;
         }
 

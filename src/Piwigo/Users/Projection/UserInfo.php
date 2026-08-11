@@ -80,7 +80,7 @@ final readonly class UserInfo
         $preferencesRaw = $row['preferences'] ?? null;
 
         $userId = UserId::tryFrom($row['user_id'] ?? null);
-        if ($userId === null) {
+        if (! $userId instanceof UserId) {
             throw new InvalidArgumentException('UserInfo::fromRow(): missing or invalid user_id');
         }
 

@@ -113,7 +113,7 @@ test('themeConf() throws a RuntimeException when no ThemeConfProviderInterface h
     Kernel::boot(Paths::fromRoot(sys_get_temp_dir() . '/piwigo-srcimage-test-themeconf-not-set'));
     srcImageTestSetThemeConfProvider(null);
 
-    expect(fn () => new SrcImage([
+    expect(fn (): SrcImage => new SrcImage([
         'id' => 1,
         'path' => 'upload/2026/07/doc.pdf',
         'file' => 'doc.pdf',
@@ -135,7 +135,7 @@ test('urlService() throws a RuntimeException when no UrlServiceInterface has bee
     ]);
     Kernel::reset();
 
-    expect(fn () => $src->getUrl())
+    expect(fn (): string => $src->getUrl())
         ->toThrow(RuntimeException::class, 'SrcImage: no URL service set (RequestBootstrap not run yet?)');
 });
 
@@ -153,7 +153,7 @@ test('getSize() throws a RuntimeException carrying the untranslated message when
     ]);
     Kernel::reset();
 
-    expect(fn () => $src->getSize())
+    expect(fn (): ?array => $src->getSize())
         ->toThrow(RuntimeException::class, 'SrcImage dimensions required but not provided');
 });
 
@@ -169,7 +169,7 @@ test('getSize() delegates the fatal message to the installed HtmlRenderingInterf
             'file' => 'photo.jpg',
         ]);
 
-        expect(fn () => $src->getSize())
+        expect(fn (): ?array => $src->getSize())
             ->toThrow(SrcImageTestFatalSignal::class);
         expect($renderer->lastMessage)
             ->toBe('SrcImage dimensions required but not provided');
@@ -357,7 +357,7 @@ test('constructor falls back to the original path for a .svg with no icon, then 
     file_put_contents($root . '/upload/2026/07/vector.svg', 'not-a-real-image-payload');
 
     try {
-        expect(fn () => new SrcImage([
+        expect(fn (): SrcImage => new SrcImage([
             'id' => 1,
             'path' => 'upload/2026/07/vector.svg',
             'file' => 'vector.svg',
@@ -452,7 +452,7 @@ test('constructor throws when a get_mimetype_location handler returns something 
     EventDispatcherTestFactory::get()->addEventHandler(GetMimetypeLocation::class, $handler);
 
     try {
-        expect(fn () => new SrcImage([
+        expect(fn (): SrcImage => new SrcImage([
             'id' => 1,
             'path' => 'upload/2026/07/file.zzz',
             'file' => 'file.zzz',
@@ -475,7 +475,7 @@ test('constructor throws when neither the per-extension icon nor the shared unkn
     srcImageTestSetThemeConfProvider(new SrcImageTestFakeThemeConfProvider('themes/default/icon/mimetypes/'));
 
     try {
-        expect(fn () => new SrcImage([
+        expect(fn (): SrcImage => new SrcImage([
             'id' => 1,
             'path' => 'upload/2026/07/file.qqq',
             'file' => 'file.qqq',
@@ -649,7 +649,7 @@ test('getUrl() throws when a get_src_image_url handler returns something other t
                 'file' => 'photo.jpg',
             ]);
 
-            expect(static fn () => $src->getUrl())
+            expect(static fn (): string => $src->getUrl())
                 ->toThrow(Error::class, 'must return an instance of');
         } finally {
             EventDispatcherTestFactory::get()->removeEventHandler(GetSrcImageUrl::class, $handler);
@@ -731,7 +731,7 @@ test('urlService() throws when the container returns an unexpected type for UrlS
         'file' => 'photo.jpg',
     ]);
 
-    expect(fn () => KernelContainerOverride::withWrongTypeFor(UrlServiceInterface::class, function () use ($src): void {
+    expect(fn (): mixed => KernelContainerOverride::withWrongTypeFor(UrlServiceInterface::class, function () use ($src): void {
         $src->getUrl();
     }))->toThrow(RuntimeException::class, 'SrcImage: no URL service set (RequestBootstrap not run yet?)');
 });
@@ -742,7 +742,7 @@ test('currentConfig() throws when the container returns an unexpected type for C
     // own sibling test above. The constructor is the only entry point that
     // reaches currentConfig() (it needs pictureExtensions() to classify
     // the extension), so it has to run entirely inside the override.
-    expect(fn () => KernelContainerOverride::withWrongTypeFor(CurrentConfig::class, function (): void {
+    expect(fn (): mixed => KernelContainerOverride::withWrongTypeFor(CurrentConfig::class, function (): void {
         new SrcImage([
             'id' => 1,
             'path' => 'upload/2026/07/photo.jpg',
@@ -763,7 +763,7 @@ test('paths() throws when the container returns an unexpected type for Paths', f
         'file' => 'photo.jpg',
     ]);
 
-    expect(fn () => KernelContainerOverride::withWrongTypeFor(Paths::class, function () use ($src): void {
+    expect(fn (): mixed => KernelContainerOverride::withWrongTypeFor(Paths::class, function () use ($src): void {
         $src->getPath();
     }))->toThrow(RuntimeException::class, 'SrcImage: no Paths set (RequestBootstrap not run yet?)');
 });
@@ -780,7 +780,7 @@ test('eventDispatcher() throws when the container returns an unexpected type for
     // instance once Kernel is booted than the pre-boot memoized fallback
     // it returns beforehand (see the mimetype-icon test's own comment
     // further above).
-    expect(fn () => KernelContainerOverride::withWrongTypeFor(EventDispatcher::class, function (): void {
+    expect(fn (): mixed => KernelContainerOverride::withWrongTypeFor(EventDispatcher::class, function (): void {
         srcImageTestSetThemeConfProvider(new SrcImageTestFakeThemeConfProvider('themes/default/icon/mimetypes/'));
 
         new SrcImage([

@@ -21,6 +21,7 @@ use Piwigo\Mail\BoundedSendmailTransport;
 use Piwigo\Mail\MailRecipientRepositoryInterface;
 use Piwigo\Mail\MailService;
 use Piwigo\Mail\Projection\EmailRecipient;
+use Piwigo\Mail\Projection\MailContent;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Session\SessionService;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
@@ -31,6 +32,7 @@ use Piwigo\Tests\Support\TranslatorTestFactory;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\User;
 use Symfony\Component\Mailer\Mailer;
+use Symfony\Component\Mime\Address;
 use Symfony\Component\Mime\Email;
 
 /**
@@ -801,7 +803,7 @@ test('generateResetPasswordMail throws when a render_lost_password_mail_content 
     EventDispatcherTestFactory::get()->addEventHandler(RenderLostPasswordMailContent::class, $handler);
 
     try {
-        expect(fn () => $service->generateResetPasswordMail('jane', 'https://example.test/x', 'My Gallery', '2 hours'))
+        expect(fn (): MailContent => $service->generateResetPasswordMail('jane', 'https://example.test/x', 'My Gallery', '2 hours'))
             ->toThrow(Error::class, 'must return an instance of');
     } finally {
         EventDispatcherTestFactory::get()->removeEventHandler(RenderLostPasswordMailContent::class, $handler);
@@ -994,7 +996,7 @@ test('mail builds a To address for every recipient in a comma-separated list', f
         'content' => 'y',
     ]);
 
-    $toAddresses = array_map(static fn ($a): string => $a->getAddress(), $result['email']->getTo());
+    $toAddresses = array_map(static fn (Address $a): string => $a->getAddress(), $result['email']->getTo());
     expect($toAddresses)
         ->toBe(['bob@example.test', 'jane@example.test']);
 });
@@ -1137,7 +1139,7 @@ test('mail Bcc\'s only the explicit recipient when send_bcc_mail_webmaster is fa
         'Bcc' => 'bcc@example.test',
     ]);
 
-    $bccAddresses = array_map(static fn ($a): string => $a->getAddress(), $result['email']->getBcc());
+    $bccAddresses = array_map(static fn (Address $a): string => $a->getAddress(), $result['email']->getBcc());
     expect($bccAddresses)
         ->toBe(['bcc@example.test']);
 });
@@ -1154,7 +1156,7 @@ test('mail Bcc\'s the webmaster address when send_bcc_mail_webmaster is true, ev
         'content' => 'y',
     ]);
 
-    $bccAddresses = array_map(static fn ($a): string => $a->getAddress(), $result['email']->getBcc());
+    $bccAddresses = array_map(static fn (Address $a): string => $a->getAddress(), $result['email']->getBcc());
     expect($bccAddresses)
         ->toBe(['webmaster@example.test']);
 });

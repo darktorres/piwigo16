@@ -21,6 +21,7 @@ use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Template\CurrentTemplate;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\PreferencesService;
+use Piwigo\Users\Projection\DefaultUserInfo;
 use Piwigo\Users\UserService;
 use Piwigo\Users\UserStatus;
 use Piwigo\Validation\InputValidator;
@@ -65,7 +66,7 @@ final class UserListPageRenderer
         ]);
 
         $default_user = $userService->getDefaultUserInfo();
-        if ($default_user === null) {
+        if (! $default_user instanceof DefaultUserInfo) {
             $htmlRenderer
                 ->fatalError('Default user not found');
         }

@@ -6,6 +6,7 @@ namespace Piwigo\Controller;
 
 use Override;
 use Piwigo\Auth\AccessControl;
+use Piwigo\Common\ValueObject\ImageId;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Controller\Request\ActionRequest;
 use Piwigo\Core\AccessLevel;
@@ -99,7 +100,7 @@ final readonly class ActionController implements ControllerInterface
             $image_id = $format->imageId;
             $get_part = 'f'; // "f" for "format"
         } else {
-            if ($actionRequest->id === null or $actionRequest->part === null) {
+            if (! $actionRequest->id instanceof ImageId or $actionRequest->part === null) {
                 return $this->doError(400, 'Invalid request - id/part');
             }
 

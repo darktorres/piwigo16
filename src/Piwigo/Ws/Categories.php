@@ -22,6 +22,7 @@ use Piwigo\Category\CategoryListCriteria;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Category\CategoryService;
 use Piwigo\Category\CategoryTreeCache;
+use Piwigo\Category\Projection\Category;
 use Piwigo\Category\Projection\RandomImageCategoryQuery;
 use Piwigo\Common\ValueObject\CategoryId;
 use Piwigo\Common\ValueObject\ImageId;
@@ -463,13 +464,13 @@ final readonly class Categories
             $search_term,
             $this->currentConfig->linkedAlbumSearchLimit,
             $params['limit'],
-            $catIdVo !== null
+            $catIdVo instanceof CategoryId
         );
         $rows = $paginated_cats->rows;
 
         if (isset($params['limit'])) {
             $result_count = $paginated_cats->total ?? 0;
-            if ($catIdVo !== null) {
+            if ($catIdVo instanceof CategoryId) {
                 --$result_count;
             }
             $output['limit'] = [
@@ -559,7 +560,7 @@ final readonly class Categories
             } elseif ($this->currentConfig->allowRandomRepresentative) {
                 // searching a random representant among elements in sub-categories
                 $catIdVoForRandom = CategoryId::tryFrom($catId);
-                $image_id = $catIdVoForRandom !== null
+                $image_id = $catIdVoForRandom instanceof CategoryId
                     ? $categoryService->getRandomImageInCategory(new RandomImageCategoryQuery(
                         id: $catIdVoForRandom,
                         uppercats: $row['uppercats'],
@@ -638,7 +639,7 @@ final readonly class Categories
                             // searching a random representant among elements in sub-categories
                             $category_id = $category['id'];
                             $categoryIdVoForRandom = is_int($category_id) ? CategoryId::tryFrom($category_id) : null;
-                            $image_id = $categoryIdVoForRandom !== null
+                            $image_id = $categoryIdVoForRandom instanceof CategoryId
                                 ? $categoryService->getRandomImageInCategory(new RandomImageCategoryQuery(
                                     id: $categoryIdVoForRandom,
                                     uppercats: $category['uppercats'],
@@ -965,7 +966,7 @@ final readonly class Categories
 
         // does the category really exist?
         $category = $this->categoryRepository->findById($params['category_id']);
-        if ($category === null) {
+        if (! $category instanceof Category) {
             return new WsErrorResponse(404, 'category_id not found');
         }
 
@@ -1134,7 +1135,7 @@ final readonly class Categories
         $category = $this->categoryRepository->findById($params['category_id']);
         // the category's existence was already verified above, and nothing
         // in between could have deleted it
-        assert($category !== null);
+        assert($category instanceof Category);
 
         // setRandomRepresentant() is expected to have populated
         // representative_picture_id above, but it's not a NOT NULL column, so

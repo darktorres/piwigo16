@@ -559,7 +559,7 @@ test('findIdByNameLikeAnyPattern() matches an exact pattern', function (): void 
 
     expect($id)
         ->not->toBeNull();
-    if ($id === null) {
+    if (! $id instanceof TagId) {
         throw new RuntimeException('unreachable');
     }
     expect($id->value)
@@ -572,7 +572,7 @@ test('findIdByNameLikeAnyPattern() matches a wildcard pattern', function (): voi
 
     expect($id)
         ->not->toBeNull();
-    if ($id === null) {
+    if (! $id instanceof TagId) {
         throw new RuntimeException('unreachable');
     }
     expect($id->value)
@@ -585,7 +585,7 @@ test('findIdByNameLikeAnyPattern() tries every pattern until one matches', funct
 
     expect($id)
         ->not->toBeNull();
-    if ($id === null) {
+    if (! $id instanceof TagId) {
         throw new RuntimeException('unreachable');
     }
     expect($id->value)
@@ -619,7 +619,7 @@ test('updateNameAndUrlName() renames an existing tag', function (): void {
         $renamedId = $repo->findIdByName($newName);
         expect($renamedId)
             ->not->toBeNull();
-        if ($renamedId === null) {
+        if (! $renamedId instanceof TagId) {
             throw new RuntimeException('unreachable');
         }
         expect($renamedId->value)

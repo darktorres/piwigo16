@@ -567,7 +567,7 @@ test('args delegates the fatal error to the installed HtmlRenderingInterface', f
     $capture = new stdClass();
     $lang = langTestMake(htmlRenderer: langTestMakeFatalRenderer($capture));
 
-    expect(fn () => $lang->args('not-an-array'))
+    expect(fn (): string => $lang->args('not-an-array'))
         ->toThrow(RuntimeException::class, 'renderer-fatal:Lang::args: Invalid arguments');
 
     expect($capture->lastMessage)
@@ -1337,6 +1337,6 @@ test('current() resolves the real container-shared instance once Kernel::boot() 
 });
 
 test('current() throws when Kernel has not been booted -- no memoized pre-boot fallback, unlike e.g. CurrentUserTestFactory::get()', function (): void {
-    expect(fn () => LangTestFactory::get())
+    expect(fn (): Lang => LangTestFactory::get())
         ->toThrow(LogicException::class, 'Kernel not booted — call Kernel::boot() first.');
 });

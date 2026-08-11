@@ -87,12 +87,12 @@ test('fromRow falls back to defaults for a missing/malformed row, except user_id
 });
 
 test('fromRow throws when user_id is missing', function (): void {
-    expect(fn () => ApiKey::fromRow([]))
+    expect(fn (): ApiKey => ApiKey::fromRow([]))
         ->toThrow(InvalidArgumentException::class, 'Expected a positive user id, got null');
 });
 
 test('fromRow throws with the real debug type of a non-null but invalid user_id', function (): void {
-    expect(fn () => ApiKey::fromRow([
+    expect(fn (): ApiKey => ApiKey::fromRow([
         'user_id' => 'not-a-number',
     ]))
         ->toThrow(InvalidArgumentException::class, 'Expected a positive user id, got string');

@@ -49,7 +49,7 @@ final class Server
     /**
      * @var array<string, array{callback: string|array<int, string>|Closure, description: string, signature: array<string, array<string, mixed>>, options: array<string, mixed>}>
      */
-    private $methods = [];
+    private array $methods = [];
 
     public function __construct(
         private readonly EventDispatcher $eventDispatcher,

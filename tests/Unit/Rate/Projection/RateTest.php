@@ -65,12 +65,12 @@ test('fromRow defaults anonymous_id/rate/date when absent', function (): void {
 });
 
 test('fromRow throws when user_id is missing or invalid', function (): void {
-    expect(fn () => Rate::fromRow([
+    expect(fn (): Rate => Rate::fromRow([
         'element_id' => 1,
     ]))
         ->toThrow(InvalidArgumentException::class, 'Expected a positive user id, got null');
 
-    expect(fn () => Rate::fromRow([
+    expect(fn (): Rate => Rate::fromRow([
         'user_id' => 'not-a-number',
         'element_id' => 1,
     ]))
@@ -78,12 +78,12 @@ test('fromRow throws when user_id is missing or invalid', function (): void {
 });
 
 test('fromRow throws when element_id is missing or invalid', function (): void {
-    expect(fn () => Rate::fromRow([
+    expect(fn (): Rate => Rate::fromRow([
         'user_id' => 1,
     ]))
         ->toThrow(InvalidArgumentException::class, 'Expected a positive element id, got null');
 
-    expect(fn () => Rate::fromRow([
+    expect(fn (): Rate => Rate::fromRow([
         'user_id' => 1,
         'element_id' => 'not-a-number',
     ]))

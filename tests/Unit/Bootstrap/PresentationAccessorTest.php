@@ -56,34 +56,34 @@ test('every accessor returns its real, correctly-typed instance from a real cont
 test('htmlService throws when the container returns an unexpected type', function (): void {
     KernelContainerOverride::withWrongTypeFor(
         HtmlService::class,
-        static fn () => PresentationAccessor::htmlService()
+        static fn (): HtmlService => PresentationAccessor::htmlService()
     );
 })->throws(LogicException::class, 'Container returned an unexpected type for ' . HtmlService::class);
 
 test('mailService throws when the container returns an unexpected type', function (): void {
     KernelContainerOverride::withWrongTypeFor(
         MailService::class,
-        static fn () => PresentationAccessor::mailService()
+        static fn (): MailService => PresentationAccessor::mailService()
     );
 })->throws(LogicException::class, 'Container returned an unexpected type for ' . MailService::class);
 
 test('urlService throws when the container returns an unexpected type', function (): void {
     KernelContainerOverride::withWrongTypeFor(
         UrlService::class,
-        static fn () => PresentationAccessor::urlService()
+        static fn (): UrlService => PresentationAccessor::urlService()
     );
 })->throws(LogicException::class, 'Container returned an unexpected type for ' . UrlService::class);
 
 test('notificationByMailSender throws when the container returns an unexpected type', function (): void {
     KernelContainerOverride::withWrongTypeFor(
         NotificationByMailSender::class,
-        static fn () => PresentationAccessor::notificationByMailSender()
+        static fn (): NotificationByMailSender => PresentationAccessor::notificationByMailSender()
     );
 })->throws(LogicException::class, 'Container returned an unexpected type for ' . NotificationByMailSender::class);
 
 test('pictureRateRenderer throws when the container returns an unexpected type', function (): void {
     KernelContainerOverride::withWrongTypeFor(
         PictureRateRenderer::class,
-        static fn () => PresentationAccessor::pictureRateRenderer()
+        static fn (): PictureRateRenderer => PresentationAccessor::pictureRateRenderer()
     );
 })->throws(LogicException::class, 'Container returned an unexpected type for ' . PictureRateRenderer::class);

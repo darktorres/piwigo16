@@ -43,6 +43,7 @@ use Piwigo\Section\SectionContextRegistry;
 use Piwigo\Session\SessionService;
 use Piwigo\Template\CurrentTemplate;
 use Piwigo\Users\CurrentUser;
+use Piwigo\Users\Projection\DefaultUserInfo;
 use Piwigo\Users\UserService;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
@@ -156,7 +157,7 @@ final readonly class ProfileController implements ControllerInterface
         // leaks into the DEFAULT_USER_VALUES template assignment below,
         // matching this method's own original raw-query column list.
         $default_user = $this->userService->getDefaultUserInfo();
-        $default_user = $default_user !== null ? array_intersect_key($default_user->toArray(), array_flip($fields)) : [];
+        $default_user = $default_user instanceof DefaultUserInfo ? array_intersect_key($default_user->toArray(), array_flip($fields)) : [];
 
         // profile.tpl's inline JS (preferencesDefaultValues) interpolates
         // these bare/unquoted, relying on the *old* enum('true','false')

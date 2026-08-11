@@ -9,6 +9,7 @@ use Piwigo\Admin\Projection\ElementSetRanksHeaderPageContext;
 use Piwigo\Admin\Projection\ElementSetRanksSaveSuccessPageContext;
 use Piwigo\Admin\Request\ElementSetRanksRequest;
 use Piwigo\Category\CategoryRepository;
+use Piwigo\Category\Projection\Category;
 use Piwigo\Common\ValueObject\CategoryId;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\ErrorCollector;
@@ -148,7 +149,7 @@ final readonly class ElementSetRanksPageRenderer
 
         $category = new CategoryRepository(EntityManagerFactory::build($conn), $this->currentConfig)
             ->findById($category_id);
-        if ($category === null) {
+        if (! $category instanceof Category) {
             $htmlRenderer->pageNotFound($this->redirectService, 'Requested album does not exist');
         }
 

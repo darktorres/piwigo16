@@ -43,7 +43,7 @@ final readonly class VitalsController implements ControllerInterface
         $this->accessControl->checkStatus(AccessLevel::Guest);
 
         $metric = $this->parseMetric((string) $request->getBody());
-        if ($metric !== null) {
+        if ($metric instanceof WebVitalMetric) {
             $this->logger->info('web_vitals.metric', $metric->toArray());
         }
 

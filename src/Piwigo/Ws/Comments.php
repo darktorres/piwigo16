@@ -13,6 +13,8 @@ namespace Piwigo\Ws;
 
 use Piwigo\Comment\CommentApiCriteria;
 use Piwigo\Comment\CommentService;
+use Piwigo\Comment\Projection\CommentDateRange;
+use Piwigo\Comment\Projection\CommentSummaryCounts;
 use Piwigo\Common\ValueObject\CommentId;
 use Piwigo\Common\ValueObject\ImageId;
 use Piwigo\Common\ValueObject\SqlDateTime;
@@ -127,7 +129,7 @@ final readonly class Comments
         // convert 'true' to 0 too, inverting the validated/pending counts
         // (same bug class as Category's own commentable/visible columns).
         $summary = $this->commentService->getSummaryCounts($criteria);
-        if ($summary === null) {
+        if (! $summary instanceof CommentSummaryCounts) {
             return new WsErrorResponse(500, 'Unable to compute comments summary');
         }
         $total_comments = $summary->allComments;
@@ -204,7 +206,7 @@ final readonly class Comments
 
         // filters
         $dates = $this->commentService->getDateRange($criteria);
-        if ($dates === null) {
+        if (! $dates instanceof CommentDateRange) {
             return new WsErrorResponse(500, 'Unable to compute comments date range');
         }
 

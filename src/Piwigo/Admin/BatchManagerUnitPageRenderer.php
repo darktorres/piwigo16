@@ -12,6 +12,7 @@ use Piwigo\Admin\Request\BatchManagerUnitRequest;
 use Piwigo\Cache\CachePools;
 use Piwigo\Cache\PermissionCacheInvalidator;
 use Piwigo\Category\CategoryService;
+use Piwigo\Category\Projection\CategoryInfo;
 use Piwigo\Common\ValueObject\ImageId;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\DateHelper;
@@ -278,7 +279,7 @@ final readonly class BatchManagerUnitPageRenderer
                 $category_info = $this->categoryService->getCategoryInfo($filter_category_id);
 
                 $order_by = $this->currentConfig->orderByInsideCategory;
-                $category_image_order = $category_info !== null ? $category_info->imageOrder : null;
+                $category_image_order = $category_info instanceof CategoryInfo ? $category_info->imageOrder : null;
                 if (is_string($category_image_order) && $category_image_order !== '') {
                     $order_by = ' ORDER BY ' . $category_image_order;
                 }

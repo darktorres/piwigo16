@@ -109,13 +109,13 @@ final readonly class CalendarRenderer
 
             $scope = $calendarService->buildInnerSql('categories', $category !== null, $category_id, $forbidden_categories, []);
 
-            if ($scope === null) {
+            if (! $scope instanceof CalendarQueryScope) {
                 return new CalendarRenderResult($items, '', $chronologyDate, $chronologyStyle, $chronologyView); // nothing to do
             }
         } else {
             $scope = $calendarService->buildInnerSql('items', false, null, '', $items);
 
-            if ($scope === null) {
+            if (! $scope instanceof CalendarQueryScope) {
                 return new CalendarRenderResult($items, '', $chronologyDate, $chronologyStyle, $chronologyView); // nothing to do
             }
         }

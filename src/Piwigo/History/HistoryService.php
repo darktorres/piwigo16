@@ -13,6 +13,7 @@ use Piwigo\Core\CurrentLogger;
 use Piwigo\Core\PageState;
 use Piwigo\Event\Picture\LogAllowed;
 use Piwigo\Event\Picture\LogUpdateLastVisit;
+use Piwigo\History\Projection\HistorySummaryCursor;
 use Piwigo\History\Projection\HistorySummaryRow;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Users\CurrentUser;
@@ -168,7 +169,7 @@ final readonly class HistoryService
             $historySectionsCache = $cachedSections;
 
             $this->currentConfig->historySectionsCache = $historySectionsCache;
-            $canonicalMatch = array_find($historySectionsCache, fn ($knownSection) => strtolower($knownSection) === strtolower($pageSection));
+            $canonicalMatch = array_find($historySectionsCache, fn ($knownSection): bool => strtolower($knownSection) === strtolower($pageSection));
 
             if ($canonicalMatch !== null) {
                 $section = $canonicalMatch;
@@ -287,7 +288,7 @@ final readonly class HistoryService
     public function summarize(?int $maxLines = null): void
     {
         $lastSummary = $this->repo->findLastSummaryWithHistoryIdTo();
-        if ($lastSummary !== null) {
+        if ($lastSummary instanceof HistorySummaryCursor) {
             $historyMinId = $lastSummary->historyIdTo;
         } else {
             // if we have no "reference" starting point, "0" is not the
@@ -426,7 +427,7 @@ final readonly class HistoryService
         }
 
         $lastSummary = $this->repo->findLastSummaryWithHistoryIdTo();
-        if ($lastSummary === null) {
+        if (! $lastSummary instanceof HistorySummaryCursor) {
             return; // lines not summarized, no purge
         }
 

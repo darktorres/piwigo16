@@ -16,7 +16,7 @@ test('CurrentPathsTestFactory::get throws when Kernel has not booted at all', fu
     expect(Kernel::isBooted())->toBeFalse();
     expect(CurrentPathsTestFactory::isSet())->toBeFalse();
 
-    expect(fn () => CurrentPathsTestFactory::get())->toThrow(
+    expect(fn (): Paths => CurrentPathsTestFactory::get())->toThrow(
         LogicException::class,
         'CurrentPaths not initialised -- call Piwigo\Core\Kernel::boot() first.',
     );
@@ -28,7 +28,7 @@ test('CurrentPathsTestFactory::get throws when Kernel has booted without a real 
     try {
         expect(CurrentPathsTestFactory::isSet())->toBeFalse();
 
-        expect(fn () => CurrentPathsTestFactory::get())->toThrow(
+        expect(fn (): Paths => CurrentPathsTestFactory::get())->toThrow(
             LogicException::class,
             'CurrentPaths not initialised -- call Piwigo\Core\Kernel::boot() first.',
         );
@@ -56,5 +56,5 @@ test('CurrentPathsTestFactory::isSet/get go back to the unbooted behavior after 
     Kernel::reset();
 
     expect(CurrentPathsTestFactory::isSet())->toBeFalse();
-    expect(fn () => CurrentPathsTestFactory::get())->toThrow(LogicException::class);
+    expect(fn (): Paths => CurrentPathsTestFactory::get())->toThrow(LogicException::class);
 });

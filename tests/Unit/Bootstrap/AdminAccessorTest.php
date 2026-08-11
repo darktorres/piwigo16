@@ -105,167 +105,167 @@ test('every accessor returns its real, correctly-typed instance from a real cont
 test('categoryAdminService throws when the container returns an unexpected type', function (): void {
     KernelContainerOverride::withWrongTypeFor(
         CategoryAdminService::class,
-        static fn () => AdminAccessor::categoryAdminService()
+        static fn (): CategoryAdminService => AdminAccessor::categoryAdminService()
     );
 })->throws(LogicException::class, 'Container returned an unexpected type for ' . CategoryAdminService::class);
 
 test('dbMaintenanceRepository throws when the container returns an unexpected type', function (): void {
     KernelContainerOverride::withWrongTypeFor(
         DbMaintenanceRepository::class,
-        static fn () => AdminAccessor::dbMaintenanceRepository()
+        static fn (): DbMaintenanceRepository => AdminAccessor::dbMaintenanceRepository()
     );
 })->throws(LogicException::class, 'Container returned an unexpected type for ' . DbMaintenanceRepository::class);
 
 test('filterResolver throws when the container returns an unexpected type', function (): void {
     KernelContainerOverride::withWrongTypeFor(
         FilterResolver::class,
-        static fn () => AdminAccessor::filterResolver()
+        static fn (): FilterResolver => AdminAccessor::filterResolver()
     );
 })->throws(LogicException::class, 'Container returned an unexpected type for ' . FilterResolver::class);
 
 test('userPermPageRenderer throws when the container returns an unexpected type', function (): void {
     KernelContainerOverride::withWrongTypeFor(
         UserPermPageRenderer::class,
-        static fn () => AdminAccessor::userPermPageRenderer()
+        static fn (): UserPermPageRenderer => AdminAccessor::userPermPageRenderer()
     );
 })->throws(LogicException::class, 'Container returned an unexpected type for ' . UserPermPageRenderer::class);
 
 test('updatesPwgPageRenderer throws when the container returns an unexpected type', function (): void {
     KernelContainerOverride::withWrongTypeFor(
         UpdatesPwgPageRenderer::class,
-        static fn () => AdminAccessor::updatesPwgPageRenderer()
+        static fn (): UpdatesPwgPageRenderer => AdminAccessor::updatesPwgPageRenderer()
     );
 })->throws(LogicException::class, 'Container returned an unexpected type for ' . UpdatesPwgPageRenderer::class);
 
 test('themesNewPageRenderer throws when the container returns an unexpected type', function (): void {
     KernelContainerOverride::withWrongTypeFor(
         ThemesNewPageRenderer::class,
-        static fn () => AdminAccessor::themesNewPageRenderer()
+        static fn (): ThemesNewPageRenderer => AdminAccessor::themesNewPageRenderer()
     );
 })->throws(LogicException::class, 'Container returned an unexpected type for ' . ThemesNewPageRenderer::class);
 
 test('themesInstalledPageRenderer throws when the container returns an unexpected type', function (): void {
     KernelContainerOverride::withWrongTypeFor(
         ThemesInstalledPageRenderer::class,
-        static fn () => AdminAccessor::themesInstalledPageRenderer()
+        static fn (): ThemesInstalledPageRenderer => AdminAccessor::themesInstalledPageRenderer()
     );
 })->throws(LogicException::class, 'Container returned an unexpected type for ' . ThemesInstalledPageRenderer::class);
 
 test('tagsPageRenderer throws when the container returns an unexpected type', function (): void {
     KernelContainerOverride::withWrongTypeFor(
         TagsPageRenderer::class,
-        static fn () => AdminAccessor::tagsPageRenderer()
+        static fn (): TagsPageRenderer => AdminAccessor::tagsPageRenderer()
     );
 })->throws(LogicException::class, 'Container returned an unexpected type for ' . TagsPageRenderer::class);
 
 test('pluginsNewPageRenderer throws when the container returns an unexpected type', function (): void {
     KernelContainerOverride::withWrongTypeFor(
         PluginsNewPageRenderer::class,
-        static fn () => AdminAccessor::pluginsNewPageRenderer()
+        static fn (): PluginsNewPageRenderer => AdminAccessor::pluginsNewPageRenderer()
     );
 })->throws(LogicException::class, 'Container returned an unexpected type for ' . PluginsNewPageRenderer::class);
 
 test('pictureModifyPageRenderer throws when the container returns an unexpected type', function (): void {
     KernelContainerOverride::withWrongTypeFor(
         PictureModifyPageRenderer::class,
-        static fn () => AdminAccessor::pictureModifyPageRenderer()
+        static fn (): PictureModifyPageRenderer => AdminAccessor::pictureModifyPageRenderer()
     );
 })->throws(LogicException::class, 'Container returned an unexpected type for ' . PictureModifyPageRenderer::class);
 
 test('photosAddDirectPageRenderer throws when the container returns an unexpected type', function (): void {
     KernelContainerOverride::withWrongTypeFor(
         PhotosAddDirectPageRenderer::class,
-        static fn () => AdminAccessor::photosAddDirectPageRenderer()
+        static fn (): PhotosAddDirectPageRenderer => AdminAccessor::photosAddDirectPageRenderer()
     );
 })->throws(LogicException::class, 'Container returned an unexpected type for ' . PhotosAddDirectPageRenderer::class);
 
 test('maintenanceEnvPageRenderer throws when the container returns an unexpected type', function (): void {
     KernelContainerOverride::withWrongTypeFor(
         MaintenanceEnvPageRenderer::class,
-        static fn () => AdminAccessor::maintenanceEnvPageRenderer()
+        static fn (): MaintenanceEnvPageRenderer => AdminAccessor::maintenanceEnvPageRenderer()
     );
 })->throws(LogicException::class, 'Container returned an unexpected type for ' . MaintenanceEnvPageRenderer::class);
 
 test('maintenanceActionsPageRenderer throws when the container returns an unexpected type', function (): void {
     KernelContainerOverride::withWrongTypeFor(
         MaintenanceActionsPageRenderer::class,
-        static fn () => AdminAccessor::maintenanceActionsPageRenderer()
+        static fn (): MaintenanceActionsPageRenderer => AdminAccessor::maintenanceActionsPageRenderer()
     );
 })->throws(LogicException::class, 'Container returned an unexpected type for ' . MaintenanceActionsPageRenderer::class);
 
 test('languagesNewPageRenderer throws when the container returns an unexpected type', function (): void {
     KernelContainerOverride::withWrongTypeFor(
         LanguagesNewPageRenderer::class,
-        static fn () => AdminAccessor::languagesNewPageRenderer()
+        static fn (): LanguagesNewPageRenderer => AdminAccessor::languagesNewPageRenderer()
     );
 })->throws(LogicException::class, 'Container returned an unexpected type for ' . LanguagesNewPageRenderer::class);
 
 test('languagesInstalledPageRenderer throws when the container returns an unexpected type', function (): void {
     KernelContainerOverride::withWrongTypeFor(
         LanguagesInstalledPageRenderer::class,
-        static fn () => AdminAccessor::languagesInstalledPageRenderer()
+        static fn (): LanguagesInstalledPageRenderer => AdminAccessor::languagesInstalledPageRenderer()
     );
 })->throws(LogicException::class, 'Container returned an unexpected type for ' . LanguagesInstalledPageRenderer::class);
 
 test('groupListPageRenderer throws when the container returns an unexpected type', function (): void {
     KernelContainerOverride::withWrongTypeFor(
         GroupListPageRenderer::class,
-        static fn () => AdminAccessor::groupListPageRenderer()
+        static fn (): GroupListPageRenderer => AdminAccessor::groupListPageRenderer()
     );
 })->throws(LogicException::class, 'Container returned an unexpected type for ' . GroupListPageRenderer::class);
 
 test('elementSetRanksPageRenderer throws when the container returns an unexpected type', function (): void {
     KernelContainerOverride::withWrongTypeFor(
         ElementSetRanksPageRenderer::class,
-        static fn () => AdminAccessor::elementSetRanksPageRenderer()
+        static fn (): ElementSetRanksPageRenderer => AdminAccessor::elementSetRanksPageRenderer()
     );
 })->throws(LogicException::class, 'Container returned an unexpected type for ' . ElementSetRanksPageRenderer::class);
 
 test('catPermPageRenderer throws when the container returns an unexpected type', function (): void {
     KernelContainerOverride::withWrongTypeFor(
         CatPermPageRenderer::class,
-        static fn () => AdminAccessor::catPermPageRenderer()
+        static fn (): CatPermPageRenderer => AdminAccessor::catPermPageRenderer()
     );
 })->throws(LogicException::class, 'Container returned an unexpected type for ' . CatPermPageRenderer::class);
 
 test('catOptionsPageRenderer throws when the container returns an unexpected type', function (): void {
     KernelContainerOverride::withWrongTypeFor(
         CatOptionsPageRenderer::class,
-        static fn () => AdminAccessor::catOptionsPageRenderer()
+        static fn (): CatOptionsPageRenderer => AdminAccessor::catOptionsPageRenderer()
     );
 })->throws(LogicException::class, 'Container returned an unexpected type for ' . CatOptionsPageRenderer::class);
 
 test('catListPageRenderer throws when the container returns an unexpected type', function (): void {
     KernelContainerOverride::withWrongTypeFor(
         CatListPageRenderer::class,
-        static fn () => AdminAccessor::catListPageRenderer()
+        static fn (): CatListPageRenderer => AdminAccessor::catListPageRenderer()
     );
 })->throws(LogicException::class, 'Container returned an unexpected type for ' . CatListPageRenderer::class);
 
 test('batchManagerUnitPageRenderer throws when the container returns an unexpected type', function (): void {
     KernelContainerOverride::withWrongTypeFor(
         BatchManagerUnitPageRenderer::class,
-        static fn () => AdminAccessor::batchManagerUnitPageRenderer()
+        static fn (): BatchManagerUnitPageRenderer => AdminAccessor::batchManagerUnitPageRenderer()
     );
 })->throws(LogicException::class, 'Container returned an unexpected type for ' . BatchManagerUnitPageRenderer::class);
 
 test('albumNotificationPageRenderer throws when the container returns an unexpected type', function (): void {
     KernelContainerOverride::withWrongTypeFor(
         AlbumNotificationPageRenderer::class,
-        static fn () => AdminAccessor::albumNotificationPageRenderer()
+        static fn (): AlbumNotificationPageRenderer => AdminAccessor::albumNotificationPageRenderer()
     );
 })->throws(LogicException::class, 'Container returned an unexpected type for ' . AlbumNotificationPageRenderer::class);
 
 test('themesStandardPagesPageRenderer throws when the container returns an unexpected type', function (): void {
     KernelContainerOverride::withWrongTypeFor(
         ThemesStandardPagesPageRenderer::class,
-        static fn () => AdminAccessor::themesStandardPagesPageRenderer()
+        static fn (): ThemesStandardPagesPageRenderer => AdminAccessor::themesStandardPagesPageRenderer()
     );
 })->throws(LogicException::class, 'Container returned an unexpected type for ' . ThemesStandardPagesPageRenderer::class);
 
 test('pictureCoiPageRenderer throws when the container returns an unexpected type', function (): void {
     KernelContainerOverride::withWrongTypeFor(
         PictureCoiPageRenderer::class,
-        static fn () => AdminAccessor::pictureCoiPageRenderer()
+        static fn (): PictureCoiPageRenderer => AdminAccessor::pictureCoiPageRenderer()
     );
 })->throws(LogicException::class, 'Container returned an unexpected type for ' . PictureCoiPageRenderer::class);

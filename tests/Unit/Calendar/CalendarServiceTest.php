@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use Doctrine\DBAL\ArrayParameterType;
 use Piwigo\Auth\AccessLevelChecker;
+use Piwigo\Calendar\CalendarQueryScope;
 use Piwigo\Calendar\CalendarService;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Category\CategoryService;
@@ -120,7 +121,7 @@ test('buildInnerSql builds a WHERE id IN clause for a non-category section', fun
     $service = makeCalendarService();
 
     $scope = $service->buildInnerSql('tags', false, null, '', [1, 2, 3]);
-    assert($scope !== null);
+    assert($scope instanceof CalendarQueryScope);
 
     expect($scope->rawSqlFromWhere->sql)
         ->toBe(" FROM images\nWHERE id IN (:innerItems)")
@@ -153,7 +154,7 @@ test('buildInnerSql casts each DQL item to int, defaulting a non-numeric item to
     $service = makeCalendarService();
 
     $scope = $service->buildInnerSql('tags', false, null, '', ['5', 'abc']);
-    assert($scope !== null);
+    assert($scope instanceof CalendarQueryScope);
 
     expect($scope->dqlWhere->sql)
         ->toBe('i.id IN (:innerItems)')
@@ -180,7 +181,7 @@ test('buildInnerSql browses everything visible when there is no category context
     $service = makeCalendarService();
 
     $scope = $service->buildInnerSql('categories', false, null, '', []);
-    assert($scope !== null);
+    assert($scope instanceof CalendarQueryScope);
 
     // Even a fully-default CurrentUser still gets a "level <= 0" clause --
     // visible_images falls through into the forbidden_images level check
@@ -245,7 +246,7 @@ test('buildInnerSql falls back to a forced 1 = 1 condition when no permission cl
     $service = makeCalendarService();
 
     $scope = $service->buildInnerSql('categories', false, null, '', []);
-    assert($scope !== null);
+    assert($scope instanceof CalendarQueryScope);
 
     expect($scope->rawSqlFromWhere->sql)
         ->toBe(
@@ -277,7 +278,7 @@ test('buildInnerSql composes forbidden/visible categories and images into the WH
     $service = makeCalendarService();
 
     $scope = $service->buildInnerSql('categories', false, null, '', []);
-    assert($scope !== null);
+    assert($scope instanceof CalendarQueryScope);
 
     expect($scope->rawSqlFromWhere->parameters)
         ->toHaveCount(4);

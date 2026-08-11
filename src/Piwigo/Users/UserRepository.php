@@ -285,7 +285,7 @@ final readonly class UserRepository implements WebmasterMailProviderInterface
             ->where('UPPER(u.mailAddress) = UPPER(:email)')
             ->setParameter('email', $email->value);
 
-        if ($excludeUserId !== null) {
+        if ($excludeUserId instanceof UserId) {
             $qb->andWhere('u.id != :excludeUserId')
                 ->setParameter('excludeUserId', $excludeUserId);
         }
@@ -389,7 +389,7 @@ final readonly class UserRepository implements WebmasterMailProviderInterface
         $em->persist($entity);
         $em->flush();
 
-        if ($entity->id === null) {
+        if (! $entity->id instanceof UserId) {
             throw new RuntimeException('UserEntity::$id not populated after flush()');
         }
 
@@ -490,7 +490,7 @@ final readonly class UserRepository implements WebmasterMailProviderInterface
     {
         $entity = $this->find($defaultUserId);
 
-        return $entity === null ? null : UserInfo::fromEntity($entity);
+        return $entity instanceof UserInfoEntity ? UserInfo::fromEntity($entity) : null;
     }
 
     /**
@@ -499,7 +499,7 @@ final readonly class UserRepository implements WebmasterMailProviderInterface
     public function savePreferences(UserId $userId, array $preferences): void
     {
         $entity = $this->find($userId);
-        if ($entity === null) {
+        if (! $entity instanceof UserInfoEntity) {
             return;
         }
 
@@ -708,7 +708,7 @@ final readonly class UserRepository implements WebmasterMailProviderInterface
         $ids = [];
         foreach ($rows as $row) {
             $id = $row instanceof UserId ? $row : UserId::tryFrom($row);
-            if ($id !== null) {
+            if ($id instanceof UserId) {
                 $ids[] = $id;
             }
         }
@@ -1265,7 +1265,7 @@ final readonly class UserRepository implements WebmasterMailProviderInterface
 
         foreach ($updates as $field => $value) {
             $fieldEnum = UserInfoField::fromToken($field);
-            if ($fieldEnum === null) {
+            if (! $fieldEnum instanceof UserInfoField) {
                 throw new InvalidArgumentException("Unknown user_infos field: {$field}");
             }
             assert(is_scalar($value));
@@ -1299,7 +1299,7 @@ final readonly class UserRepository implements WebmasterMailProviderInterface
      */
     public function updateAccountFields(UserId $userId, ?Username $username, ?string $password, ?Email $mailAddress): void
     {
-        if ($username === null && $password === null && $mailAddress === null) {
+        if (! $username instanceof Username && $password === null && ! $mailAddress instanceof Email) {
             return;
         }
 
@@ -1309,7 +1309,7 @@ final readonly class UserRepository implements WebmasterMailProviderInterface
             return;
         }
 
-        if ($username !== null) {
+        if ($username instanceof Username) {
             $entity->username = $username;
         }
 
@@ -1317,7 +1317,7 @@ final readonly class UserRepository implements WebmasterMailProviderInterface
             $entity->password = $password;
         }
 
-        if ($mailAddress !== null) {
+        if ($mailAddress instanceof Email) {
             $entity->mailAddress = $mailAddress;
         }
 
@@ -1561,13 +1561,13 @@ final readonly class UserRepository implements WebmasterMailProviderInterface
             $conditions[] = new SqlCondition($filterClause . ')', $filterParams, $filterTypes);
         }
 
-        if ($criteria->minRegister !== null) {
+        if ($criteria->minRegister instanceof SqlDateTime) {
             $conditions[] = new SqlCondition('ui.registration_date >= :minRegister', [
                 'minRegister' => $criteria->minRegister->value,
             ]);
         }
 
-        if ($criteria->maxRegister !== null) {
+        if ($criteria->maxRegister instanceof SqlDateTime) {
             $conditions[] = new SqlCondition('ui.registration_date <= :maxRegister', [
                 'maxRegister' => $criteria->maxRegister->value,
             ]);
@@ -1894,7 +1894,7 @@ final readonly class UserRepository implements WebmasterMailProviderInterface
     public function findRegistrationDateById(int $userId): ?string
     {
         $id = UserId::tryFrom($userId);
-        if ($id === null) {
+        if (! $id instanceof UserId) {
             return null;
         }
 

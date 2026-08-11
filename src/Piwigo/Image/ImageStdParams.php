@@ -121,7 +121,7 @@ final class ImageStdParams
     /**
      * @return DerivativeParams[]
      */
-    public function getAllTypeMap()
+    public function getAllTypeMap(): array
     {
         return $this->all_type_map;
     }
@@ -170,7 +170,7 @@ final class ImageStdParams
     /**
      * @return DerivativeParams[]
      */
-    public function getDefinedTypeMap()
+    public function getDefinedTypeMap(): array
     {
         return $this->type_map;
     }
@@ -186,7 +186,7 @@ final class ImageStdParams
     /**
      * @return string[]
      */
-    public function getUndefinedTypeMap()
+    public function getUndefinedTypeMap(): array
     {
         return $this->undefined_type_map;
     }
@@ -230,10 +230,8 @@ final class ImageStdParams
      * gets a sensible fresh WatermarkParams(), not null, keeping this
      * method's own return type (and every real caller's expectations)
      * unchanged.
-     *
-     * @return WatermarkParams
      */
-    public function getWatermark()
+    public function getWatermark(): WatermarkParams
     {
         $this->watermark ??= new WatermarkParams();
 
@@ -247,7 +245,7 @@ final class ImageStdParams
     {
         $settings = self::settingsRepository()->load();
 
-        if ($settings !== null) {
+        if ($settings instanceof DerivativeSettingsEntity) {
             $this->quality = $settings->defaultQuality;
             $this->watermark = self::watermarkFromJson($settings->watermarkJson);
             $this->custom = self::customFromJson($settings->customJson);
@@ -433,10 +431,7 @@ final class ImageStdParams
         return number_format($value, 4, '.', '');
     }
 
-    /**
-     * @param WatermarkParams $watermark
-     */
-    public function setWatermark($watermark): void
+    public function setWatermark(?WatermarkParams $watermark): void
     {
         $this->watermark = $watermark;
     }
@@ -446,7 +441,7 @@ final class ImageStdParams
      *
      * @param DerivativeParams[] $map
      */
-    public function setAndSave($map): void
+    public function setAndSave(array $map): void
     {
         $this->type_map = $map;
         $this->save(false);

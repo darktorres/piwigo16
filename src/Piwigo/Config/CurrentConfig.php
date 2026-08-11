@@ -1912,7 +1912,7 @@ final class CurrentConfig
         foreach ($value as $key => $entry) {
             if (is_string($key) && is_array($entry)) {
                 $extension = TemplateExtension::tryFromArray($entry);
-                if ($extension !== null) {
+                if ($extension instanceof TemplateExtension) {
                     $result[$key] = $extension;
                 }
             }

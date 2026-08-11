@@ -202,7 +202,7 @@ final class ImageBackend implements ImageInterface
             $image->strip();
         }
 
-        if ($resize_dimensions->crop !== null) {
+        if ($resize_dimensions->crop instanceof ResizeCrop) {
             $image->crop($resize_dimensions->crop->width, $resize_dimensions->crop->height, $resize_dimensions->crop->x, $resize_dimensions->crop->y);
         }
 

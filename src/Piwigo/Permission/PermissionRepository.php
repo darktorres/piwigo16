@@ -125,7 +125,7 @@ final readonly class PermissionRepository
         }
 
         $userIdVo = UserId::tryFrom($userId);
-        if ($userIdVo === null) {
+        if (! $userIdVo instanceof UserId) {
             return;
         }
 

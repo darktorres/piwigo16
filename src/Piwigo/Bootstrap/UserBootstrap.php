@@ -173,7 +173,7 @@ final readonly class UserBootstrap
 
             if ($remote_user !== null) {
                 $remoteUsername = Username::tryFrom($remote_user);
-                if (! (bool) ($user['id'] = $remoteUsername === null ? null : $userService->getUserId($remoteUsername)?->value)) {
+                if (! (bool) ($user['id'] = $remoteUsername instanceof Username ? $userService->getUserId($remoteUsername)?->value : null)) {
                     $urlService = Kernel::container()->get(UrlServiceInterface::class);
                     if (! $urlService instanceof UrlServiceInterface) {
                         throw new LogicException('Container returned an unexpected type for ' . UrlServiceInterface::class);

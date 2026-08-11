@@ -28,6 +28,7 @@ use Piwigo\Menu\Projection\MenubarIdentificationPageContext;
 use Piwigo\Permission\PermissionRepository;
 use Piwigo\Permission\PermissionService;
 use Piwigo\PluginConfig\EventDispatcher;
+use Piwigo\Section\SectionContext;
 use Piwigo\Section\SectionContextRegistry;
 use Piwigo\Session\SessionService;
 use Piwigo\Tag\TagEntity;
@@ -87,7 +88,7 @@ final class MenubarRenderer
         $menu->prepareDisplay();
 
         $query_search = null;
-        if ($section_context !== null && $section_context->section === Section::Search && $section_context->qsearchDetails !== []) {
+        if ($section_context instanceof SectionContext && $section_context->section === Section::Search && $section_context->qsearchDetails !== []) {
             $qsearch_q = $section_context->qsearchDetails['q'] ?? '';
             $qsearch_q = is_string($qsearch_q) ? $qsearch_q : '';
             $query_search = htmlspecialchars($qsearch_q);
@@ -159,7 +160,7 @@ final class MenubarRenderer
         $page_items = $section_context?->items;
 
         if (
-            $section_context !== null
+            $section_context instanceof SectionContext
             and is_array($page_items)
             and count($page_items) < $currentConfig->relatedAlbumsMaximumItemsToCompute
             and $block !== null

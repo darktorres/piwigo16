@@ -55,7 +55,7 @@ test('fromEntity maps a real, already-persisted entity\'s own id', function (): 
 test('fromEntity throws for a transient (not-yet-persisted) entity, whose real id is still null', function (): void {
     // $id is the ImageId VO, which has no valid zero-value to fall back
     // to -- fromEntity() throws instead of defaulting.
-    expect(fn () => Image::fromEntity(transientImageEntity()))
+    expect(fn (): Image => Image::fromEntity(transientImageEntity()))
         ->toThrow(LogicException::class, 'ImageEntity::$id is only null before persist; fromEntity() expects an already-persisted entity');
 });
 
@@ -208,7 +208,7 @@ test('fromRow throws when id cannot be coerced to a positive integer, since its 
     $row = fullImageRow();
     $row['id'] = 'not-a-number';
 
-    expect(fn () => Image::fromRow($row))
+    expect(fn (): Image => Image::fromRow($row))
         ->toThrow(InvalidArgumentException::class, 'ImageId must be a positive integer, got 0');
 });
 

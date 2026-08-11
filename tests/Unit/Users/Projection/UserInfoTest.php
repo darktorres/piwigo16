@@ -213,12 +213,12 @@ test('fromRow falls back to the default language for an invalid raw string', fun
 });
 
 test('fromRow throws for a missing or invalid user_id', function (): void {
-    expect(fn () => UserInfo::fromRow([
+    expect(fn (): UserInfo => UserInfo::fromRow([
         'user_id' => 'not-a-number',
     ]))
         ->toThrow(InvalidArgumentException::class, 'UserInfo::fromRow(): missing or invalid user_id');
 
-    expect(fn () => UserInfo::fromRow([]))
+    expect(fn (): UserInfo => UserInfo::fromRow([]))
         ->toThrow(InvalidArgumentException::class, 'UserInfo::fromRow(): missing or invalid user_id');
 });
 

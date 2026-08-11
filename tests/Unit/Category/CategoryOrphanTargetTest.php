@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Piwigo\Category\CategoryOrphanTarget;
+use Piwigo\Category\Projection\DqlPropertyTarget;
 use Piwigo\Category\UserAccessEntity;
 use Piwigo\Group\GroupAccessEntity;
 use Piwigo\Image\ImageCategoryEntity;
@@ -27,7 +28,7 @@ test('entityClassAndProperty maps every DQL-backed case to its real entity/prope
     $imageCategory = CategoryOrphanTarget::ImageCategory->entityClassAndProperty();
     expect($imageCategory)
         ->not->toBeNull();
-    if ($imageCategory !== null) {
+    if ($imageCategory instanceof DqlPropertyTarget) {
         expect($imageCategory->entityClass)->toBe(ImageCategoryEntity::class)
             ->and($imageCategory->property)
             ->toBe('categoryId');
@@ -36,7 +37,7 @@ test('entityClassAndProperty maps every DQL-backed case to its real entity/prope
     $userAccess = CategoryOrphanTarget::UserAccess->entityClassAndProperty();
     expect($userAccess)
         ->not->toBeNull();
-    if ($userAccess !== null) {
+    if ($userAccess instanceof DqlPropertyTarget) {
         expect($userAccess->entityClass)->toBe(UserAccessEntity::class)
             ->and($userAccess->property)
             ->toBe('catId');
@@ -45,7 +46,7 @@ test('entityClassAndProperty maps every DQL-backed case to its real entity/prope
     $groupAccess = CategoryOrphanTarget::GroupAccess->entityClassAndProperty();
     expect($groupAccess)
         ->not->toBeNull();
-    if ($groupAccess !== null) {
+    if ($groupAccess instanceof DqlPropertyTarget) {
         expect($groupAccess->entityClass)->toBe(GroupAccessEntity::class)
             ->and($groupAccess->property)
             ->toBe('catId');

@@ -302,7 +302,7 @@ test('cookiePath throws when the container returns an unexpected type for Reques
 
     KernelContainerOverride::withWrongTypeFor(
         RequestMountDepth::class,
-        static fn () => new CookieService()
+        static fn (): string => new CookieService()
             ->cookiePath()
     );
 })->throws(LogicException::class, 'Container returned an unexpected type for ' . RequestMountDepth::class);

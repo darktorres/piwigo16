@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Admin\Upload;
 
 use ArrayIterator;
+use Doctrine\DBAL\Connection;
 use Doctrine\ORM\EntityManagerInterface;
 use DOMAttr;
 use DOMDocument;
@@ -451,7 +452,7 @@ final class UploadService
                     if (in_array($finfo_type, ['image/svg', 'image/svg+xml'], true) and $original_extension !== 'svg') {
                         unlink($source_filepath);
                         $error_msg = 'File extension "' . $original_extension . '" for file "' . $original_filename . '" does not match file MIME type "' . $finfo_type . '"';
-                        if ($this->wsContext->isActive() && $service !== null) {
+                        if ($this->wsContext->isActive() && $service instanceof Server) {
                             $service->sendResponse(new WsErrorResponse(415, $error_msg));
                             exit;
                         }
@@ -608,7 +609,7 @@ final class UploadService
             // $dup_detect_lock_conn (see above), so checking the connection
             // alone is sufficient -- PHPStan proves this itself, flagging a
             // separate null-check on the name as redundant.
-            if ($dup_detect_lock_conn !== null) {
+            if ($dup_detect_lock_conn instanceof Connection) {
                 AdvisorySessionLock::release($dup_detect_lock_conn, $dup_detect_lock_name);
             }
         }

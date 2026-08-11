@@ -33,6 +33,7 @@ use Piwigo\Group\GroupEntity;
 use Piwigo\Image\Projection\AddMethodBreakdown;
 use Piwigo\Image\Projection\ExtensionBreakdown;
 use Piwigo\Image\Projection\FormatCountSum;
+use Piwigo\Image\Projection\Image;
 use Piwigo\Image\Projection\ImageCategoryLink;
 use Piwigo\Image\Projection\ImageIdExt;
 use Piwigo\Image\Projection\ImageIdFile;
@@ -1014,8 +1015,8 @@ final readonly class ImageService
         // not as the format-invalid case above (ImageId::tryFrom() would
         // reject it for the same reason findById() will never find it).
         $imageIdVo = ImageId::tryFrom($imageId);
-        $image = $imageIdVo === null ? null : $this->repo->findById($imageIdVo);
-        if ($image === null) {
+        $image = $imageIdVo instanceof ImageId ? $this->repo->findById($imageIdVo) : null;
+        if (! $image instanceof Image) {
             if ($dieOnMissing) {
                 $htmlRenderer->fatalError('photo ' . $imageId . ' does not exist');
             }
@@ -1131,7 +1132,7 @@ final readonly class ImageService
     {
         $imageIdVo = ImageId::tryFrom($imageId);
 
-        return $imageIdVo === null ? null : $this->repo->findById($imageIdVo)?->toArray();
+        return $imageIdVo instanceof ImageId ? $this->repo->findById($imageIdVo)?->toArray() : null;
     }
 
     public function getTotalImageCount(): int

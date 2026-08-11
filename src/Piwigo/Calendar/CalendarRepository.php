@@ -84,7 +84,7 @@ final readonly class CalendarRepository
         ?CalendarQueryScope $dqlScope = null,
         ?SqlCondition $dqlDateWhere = null
     ): array {
-        if ($dqlScope !== null && $dqlDateWhere !== null) {
+        if ($dqlScope instanceof CalendarQueryScope && $dqlDateWhere instanceof SqlCondition) {
             // Never offered an `ic` alias for Rank: whether image_category
             // is even joined is conditional ($scope->joinImageCategory),
             // and a calendar view has no single category context the way

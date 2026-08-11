@@ -8,6 +8,7 @@ use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
 use Piwigo\PluginConfig\PluginEntity;
 use Piwigo\PluginConfig\PluginRepository;
+use Piwigo\PluginConfig\Projection\Plugin;
 
 /**
  * Piwigo\PluginConfig\PluginRepository -- has its own dedicated
@@ -56,7 +57,7 @@ test('getDbPlugins() with no filters returns every row', function (): void {
 
         $found = pluginRepositoryTestRepo()
             ->getDbPlugins();
-        $ours = array_values(array_filter($found, static fn ($p) => $p->id->value === $id));
+        $ours = array_values(array_filter($found, static fn (Plugin $p): bool => $p->id->value === $id));
 
         expect($ours)
             ->toHaveCount(1)
@@ -79,7 +80,7 @@ test('getDbPlugins() filters by state', function (): void {
 
         $found = pluginRepositoryTestRepo()
             ->getDbPlugins(state: 'active');
-        $ids = array_map(static fn ($p) => $p->id->value, $found);
+        $ids = array_map(static fn (Plugin $p): string => $p->id->value, $found);
 
         expect($ids)
             ->toContain($activeId)

@@ -65,6 +65,8 @@ use Piwigo\Users\Projection\ActivationKeyRow;
 use Piwigo\Users\Projection\DefaultUserInfo;
 use Piwigo\Users\Projection\NotificationRecipient;
 use Piwigo\Users\Projection\RegistrationOutcome;
+use Piwigo\Users\Projection\UserInfo;
+use Piwigo\Users\Projection\UsernameLookup;
 use Piwigo\Validation\InputValidator;
 use SensitiveParameter;
 
@@ -199,7 +201,7 @@ final readonly class UserService implements DefaultLanguageProviderInterface
         }
 
         $email = InputValidator::checkEmailFormat($mailAddress) ? Email::tryFrom($mailAddress) : null;
-        if ($email === null) {
+        if (! $email instanceof Email) {
             return $this->lang->t('mail address must be like xxx@yyy.eee (example : jack@altern.org)');
         }
 
@@ -220,7 +222,7 @@ final readonly class UserService implements DefaultLanguageProviderInterface
     {
 
         $username = Username::tryFrom($login);
-        if ($this->installationFlag->isActive() && $username !== null) {
+        if ($this->installationFlag->isActive() && $username instanceof Username) {
             if ($this->repo->usernameExistsCaseInsensitive($username)) {
                 return $this->lang->t('this login is already used');
             }
@@ -270,7 +272,7 @@ final readonly class UserService implements DefaultLanguageProviderInterface
     {
         $username = $this->repo->findUsernameById($userId);
 
-        return $username === null ? null : Username::from(stripslashes($username->value));
+        return $username instanceof Username ? Username::from(stripslashes($username->value)) : null;
     }
 
     /**
@@ -348,10 +350,10 @@ final readonly class UserService implements DefaultLanguageProviderInterface
         // passing all 3 above could still fail Username::from() once
         // UserEntity::$username is VO-typed. Report it the same way as the
         // other format violations rather than let it through silently.
-        if ($loginUsername === null && $login !== '' && $login === trim($login)) {
+        if (! $loginUsername instanceof Username && $login !== '' && $login === trim($login)) {
             $errors[] = $this->lang->t('invalid login format');
         }
-        if ($loginUsername !== null && $this->getUserId($loginUsername) !== null) {
+        if ($loginUsername instanceof Username && $this->getUserId($loginUsername) instanceof UserId) {
             $duplicateUsername = true;
         }
         if ($login !== strip_tags($login)) {
@@ -390,7 +392,7 @@ final readonly class UserService implements DefaultLanguageProviderInterface
         // $errors is empty here, so $loginUsername is guaranteed non-null --
         // either it was already valid, or the format checks above would
         // have added an error and returned before this point.
-        assert($loginUsername !== null);
+        assert($loginUsername instanceof Username);
         // tryFrom(), not from(): validateMailAddress() above already
         // allows a genuinely empty (not just null) $mailAddress when the
         // config doesn't make it obligatory -- Email::from('') would
@@ -535,7 +537,7 @@ final readonly class UserService implements DefaultLanguageProviderInterface
             $defaultUserId = UserId::from($this->currentConfig->defaultUserId);
 
             $row = $this->repo->findDefaultUserInfoRow($defaultUserId);
-            if ($row !== null) {
+            if ($row instanceof UserInfo) {
                 $rowArray = $row->toArray();
                 unset($rowArray['user_id'], $rowArray['status'], $rowArray['registration_date'], $rowArray['last_visit'], $rowArray['last_visit_from_history']);
                 $this->processCache->set('default_user', $rowArray);
@@ -568,7 +570,7 @@ final readonly class UserService implements DefaultLanguageProviderInterface
     private function notifyExistingAccountOfDuplicateRegistration(string $login, ?string $mailAddress): void
     {
         $existing = $this->repo->findByUsernameCaseInsensitive($login);
-        if ($existing === null || $existing->email === '' || ! InputValidator::checkEmailFormat($existing->email)) {
+        if (! $existing instanceof UsernameLookup || $existing->email === '' || ! InputValidator::checkEmailFormat($existing->email)) {
             return;
         }
 
@@ -1235,7 +1237,7 @@ final readonly class UserService implements DefaultLanguageProviderInterface
         }
 
         if (count($user_ids) === 1) {
-            if ($this->getUsername(UserId::from($user_ids[0])) === null) {
+            if (! $this->getUsername(UserId::from($user_ids[0])) instanceof Username) {
                 return [
                     'error' => [
                         'code' => WsError::INVALID_PARAM,
@@ -1248,7 +1250,7 @@ final readonly class UserService implements DefaultLanguageProviderInterface
                 $username_param = $params['username'];
                 assert(is_string($username_param));
                 $username_param_vo = Username::tryFrom($username_param);
-                if ($username_param_vo === null) {
+                if (! $username_param_vo instanceof Username) {
                     return [
                         'error' => [
                             'code' => WsError::INVALID_PARAM,
@@ -1257,7 +1259,7 @@ final readonly class UserService implements DefaultLanguageProviderInterface
                     ];
                 }
                 $user_id = $this->getUserId($username_param_vo);
-                if ($user_id !== null and $user_id->value !== $user_ids[0]) {
+                if ($user_id instanceof UserId and $user_id->value !== $user_ids[0]) {
                     return [
                         'error' => [
                             'code' => WsError::INVALID_PARAM,
@@ -1457,7 +1459,7 @@ final readonly class UserService implements DefaultLanguageProviderInterface
             $authService->deactivateUserAuthKeys($user_ids[0]);
         }
 
-        if ($email_update !== null) {
+        if ($email_update instanceof Email) {
             $authService->deactivatePasswordResetKey($user_ids[0]);
         }
 

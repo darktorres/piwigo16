@@ -13,6 +13,7 @@ use Piwigo\Cache\PermissionCacheInvalidator;
 use Piwigo\Caddie\CaddieEntity;
 use Piwigo\Caddie\CaddieService;
 use Piwigo\Category\CategoryService;
+use Piwigo\Category\Projection\CategoryInfo;
 use Piwigo\Common\ValueObject\TagId;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\CurrentLogger;
@@ -240,7 +241,7 @@ final readonly class BatchManagerGlobalPageRenderer
 
                     $tagService->removeTagsFromImages(
                         $collection,
-                        array_values(array_filter(array_map(TagId::tryFrom(...), $del_tags), static fn (?TagId $id): bool => $id !== null))
+                        array_values(array_filter(array_map(TagId::tryFrom(...), $del_tags), static fn (?TagId $id): bool => $id instanceof TagId))
                     );
 
                     $taglist_after = $tagService->getImageTagIds($collection);
@@ -566,7 +567,7 @@ final readonly class BatchManagerGlobalPageRenderer
                 $category_info = $this->categoryService->getCategoryInfo($filter_category_id);
 
                 $order_by = $this->currentConfig->orderByInsideCategory;
-                $category_image_order = $category_info !== null ? $category_info->imageOrder : null;
+                $category_image_order = $category_info instanceof CategoryInfo ? $category_info->imageOrder : null;
                 if (is_string($category_image_order) && $category_image_order !== '') {
                     $order_by = ' ORDER BY ' . $category_image_order;
                 }

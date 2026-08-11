@@ -11,6 +11,7 @@ use Piwigo\Comment\Projection\CommentSummary;
 use Piwigo\Comment\Projection\CommentSummaryCounts;
 use Piwigo\Common\Dto\PaginatedResult;
 use Piwigo\Common\ValueObject\CommentId;
+use Piwigo\Common\ValueObject\Email;
 use Piwigo\Common\ValueObject\ImageId;
 use Piwigo\Common\ValueObject\IpAddress;
 use Piwigo\Config\CurrentConfig;
@@ -258,7 +259,7 @@ final readonly class CommentService
         if (self::emptyValue($comm['email'] ?? null)) {
             $currentUserEmail = $this->currentUser->get()
                 ->email;
-            if ($currentUserEmail !== null) {
+            if ($currentUserEmail instanceof Email) {
                 $comm['email'] = $currentUserEmail->value;
             } elseif ($this->currentConfig->commentsEmailMandatory) {
                 $infos[] = $this->lang->t('Email address is missing. Please specify an email address.');
@@ -471,7 +472,7 @@ final readonly class CommentService
             // (ids start at 1) -- skip the query entirely rather than
             // calling update() with a sentinel, same outcome ($updated ===
             // false) the original's own `?? 0` default produced.
-            $updated = $commentId !== null && $this->repo->update(
+            $updated = $commentId instanceof CommentId && $this->repo->update(
                 $commentId,
                 [
                     'content' => $content,

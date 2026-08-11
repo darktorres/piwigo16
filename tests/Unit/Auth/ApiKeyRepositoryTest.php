@@ -150,7 +150,7 @@ test('revoke() clears the EntityManager identity map, so a later read reflects t
         // Hydrates and caches the entity in this EntityManager's own
         // identity map (revokedOn still null at this point).
         $before = $repo->findByUser(API_KEY_TEST_USER_ID);
-        $beforeMatch = array_values(array_filter($before, static fn ($k) => $k->authKey === $row['auth_key']));
+        $beforeMatch = array_values(array_filter($before, static fn (ApiKey $k): bool => $k->authKey === $row['auth_key']));
         expect($beforeMatch[0]->revokedOn)->toBeNull();
 
         // revoke() updates the DB via a bulk DQL UPDATE, which bypasses
@@ -160,7 +160,7 @@ test('revoke() clears the EntityManager identity map, so a later read reflects t
         $repo->revoke($row['auth_key'], API_KEY_TEST_USER_ID, new DateTimeImmutable('2026-08-05 10:00:00'));
 
         $after = $repo->findByUser(API_KEY_TEST_USER_ID);
-        $afterMatch = array_values(array_filter($after, static fn ($k) => $k->authKey === $row['auth_key']));
+        $afterMatch = array_values(array_filter($after, static fn (ApiKey $k): bool => $k->authKey === $row['auth_key']));
 
         expect($afterMatch[0]->revokedOn)->toBe('2026-08-05 10:00:00');
     } finally {
@@ -201,13 +201,13 @@ test('updateName() clears the EntityManager identity map, so a later read reflec
         $repo->insert($row);
 
         $before = $repo->findByUser(API_KEY_TEST_USER_ID);
-        $beforeMatch = array_values(array_filter($before, static fn ($k) => $k->authKey === $row['auth_key']));
+        $beforeMatch = array_values(array_filter($before, static fn (ApiKey $k): bool => $k->authKey === $row['auth_key']));
         expect($beforeMatch[0]->apikeyName)->toBe('unit test key');
 
         $repo->updateName($row['auth_key'], API_KEY_TEST_USER_ID, 'renamed key');
 
         $after = $repo->findByUser(API_KEY_TEST_USER_ID);
-        $afterMatch = array_values(array_filter($after, static fn ($k) => $k->authKey === $row['auth_key']));
+        $afterMatch = array_values(array_filter($after, static fn (ApiKey $k): bool => $k->authKey === $row['auth_key']));
 
         expect($afterMatch[0]->apikeyName)->toBe('renamed key');
     } finally {
@@ -248,13 +248,13 @@ test('updateLastNotifiedOn() clears the EntityManager identity map, so a later r
         $repo->insert($row);
 
         $before = $repo->findByUser(API_KEY_TEST_USER_ID);
-        $beforeMatch = array_values(array_filter($before, static fn ($k) => $k->authKey === $row['auth_key']));
+        $beforeMatch = array_values(array_filter($before, static fn (ApiKey $k): bool => $k->authKey === $row['auth_key']));
         expect($beforeMatch[0]->lastNotifiedOn)->toBeNull();
 
         $repo->updateLastNotifiedOn($row['auth_key'], API_KEY_TEST_USER_ID, '2026-08-06 08:00:00');
 
         $after = $repo->findByUser(API_KEY_TEST_USER_ID);
-        $afterMatch = array_values(array_filter($after, static fn ($k) => $k->authKey === $row['auth_key']));
+        $afterMatch = array_values(array_filter($after, static fn (ApiKey $k): bool => $k->authKey === $row['auth_key']));
 
         expect($afterMatch[0]->lastNotifiedOn)->toBe('2026-08-06 08:00:00');
     } finally {
@@ -301,7 +301,7 @@ test('findByUser() returns only api_key-typed rows for that user, not auth_key-t
         $repo->insert($loginRow);
 
         $found = $repo->findByUser(API_KEY_TEST_USER_ID);
-        $foundAuthKeys = array_map(static fn ($k) => $k->authKey, $found);
+        $foundAuthKeys = array_map(static fn (ApiKey $k): string => $k->authKey, $found);
 
         expect($foundAuthKeys)
             ->toContain($apiRow['auth_key'])

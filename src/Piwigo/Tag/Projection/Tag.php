@@ -53,7 +53,7 @@ final readonly class Tag
     public static function fromRow(array $row): self
     {
         $id = TagId::tryFrom($row['id'] ?? null);
-        if ($id === null) {
+        if (! $id instanceof TagId) {
             throw new InvalidArgumentException(sprintf('Expected a positive tag id, got %s', get_debug_type($row['id'] ?? null)));
         }
 

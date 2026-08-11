@@ -30,7 +30,7 @@ final readonly class ActivationKeyRow
     public static function fromRow(array $row): self
     {
         $userId = UserId::tryFrom($row['user_id'] ?? null);
-        if ($userId === null) {
+        if (! $userId instanceof UserId) {
             throw new InvalidArgumentException('ActivationKeyRow::fromRow(): missing or invalid user_id');
         }
 

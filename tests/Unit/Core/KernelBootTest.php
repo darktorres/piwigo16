@@ -5,6 +5,7 @@ declare(strict_types=1);
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Paths;
 use Piwigo\Tests\Support\CurrentPathsTestFactory;
+use Psr\Container\ContainerInterface;
 
 beforeEach(function (): void {
     Kernel::reset();
@@ -33,7 +34,7 @@ test('container returns a ContainerInterface after boot', function (): void {
     // container()'s own return type already guarantees the class; what's
     // actually under test is that its "not booted" LogicException guard
     // doesn't fire once boot() has run.
-    expect(static fn () => Kernel::container())->not->toThrow(LogicException::class);
+    expect(static fn (): ContainerInterface => Kernel::container())->not->toThrow(LogicException::class);
 });
 
 test('reset clears the booted flag', function (): void {
@@ -96,9 +97,9 @@ test('reset also resets CurrentPaths, not just its own booted/container state', 
     Kernel::boot(Paths::fromRoot('/tmp/piwigo-kernel-boot-test'));
     // Confirms the baseline works before reset -- proves the throw below
     // is really caused by reset(), not some pre-existing issue.
-    expect(static fn () => CurrentPathsTestFactory::get())->not->toThrow(LogicException::class);
+    expect(static fn (): Paths => CurrentPathsTestFactory::get())->not->toThrow(LogicException::class);
 
     Kernel::reset();
 
-    expect(fn () => CurrentPathsTestFactory::get())->toThrow(LogicException::class);
+    expect(fn (): Paths => CurrentPathsTestFactory::get())->toThrow(LogicException::class);
 });

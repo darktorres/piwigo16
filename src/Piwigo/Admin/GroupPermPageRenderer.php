@@ -79,7 +79,7 @@ final readonly class GroupPermPageRenderer
         // correctly rejects that too, same error message as the two
         // existing checks above.
         $groupId = is_numeric($groupPermSubmit->groupId) ? GroupId::tryFrom((int) $groupPermSubmit->groupId) : null;
-        if ($groupId === null) {
+        if (! $groupId instanceof GroupId) {
             $this->htmlRenderer
                 ->fatalError('group_id URL parameter is missing');
         }

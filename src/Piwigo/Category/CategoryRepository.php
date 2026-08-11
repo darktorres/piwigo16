@@ -34,6 +34,7 @@ use Piwigo\Category\Projection\CategoryRankUpdateRow;
 use Piwigo\Category\Projection\CategorySyncCandidateRow;
 use Piwigo\Category\Projection\CategoryUppercatsCounter;
 use Piwigo\Category\Projection\ComputedCategoryRollupRow;
+use Piwigo\Category\Projection\DqlPropertyTarget;
 use Piwigo\Category\Projection\ParentCategoryForCreate;
 use Piwigo\Category\Projection\PhotoCountDateRange;
 use Piwigo\Common\Dto\PaginatedResult;
@@ -138,13 +139,13 @@ final readonly class CategoryRepository
     public function findById(int $id): ?Category
     {
         $catId = CategoryId::tryFrom($id);
-        if ($catId === null) {
+        if (! $catId instanceof CategoryId) {
             return null;
         }
 
         $entity = $this->find($catId);
 
-        return $entity === null ? null : Category::fromEntity($entity);
+        return $entity instanceof CategoryEntity ? Category::fromEntity($entity) : null;
     }
 
     /**
@@ -1144,7 +1145,7 @@ final readonly class CategoryRepository
     {
         $entityClassAndProperty = $target->entityClassAndProperty();
 
-        if ($entityClassAndProperty === null) {
+        if (! $entityClassAndProperty instanceof DqlPropertyTarget) {
             $tableAndColumn = $target->tableAndColumn();
             $table = $tableAndColumn->table;
             $column = $tableAndColumn->column;
@@ -1188,7 +1189,7 @@ final readonly class CategoryRepository
     {
         $entityClassAndProperty = $target->entityClassAndProperty();
 
-        if ($entityClassAndProperty === null) {
+        if (! $entityClassAndProperty instanceof DqlPropertyTarget) {
             $tableAndColumn = $target->tableAndColumn();
             $table = $tableAndColumn->table;
             $column = $tableAndColumn->column;
@@ -1333,7 +1334,7 @@ final readonly class CategoryRepository
     public function updateImageOrder(CategoryId $catId, ?string $imageOrder): void
     {
         $entity = $this->find($catId);
-        if ($entity === null) {
+        if (! $entity instanceof CategoryEntity) {
             return;
         }
 
@@ -1829,7 +1830,7 @@ final readonly class CategoryRepository
     {
         $catId = CategoryId::tryFrom($id);
 
-        return $catId === null ? null : $this->find($catId)?->uppercats;
+        return $catId instanceof CategoryId ? $this->find($catId)?->uppercats : null;
     }
 
     /**
@@ -1867,8 +1868,8 @@ final readonly class CategoryRepository
     {
         $catId = CategoryId::tryFrom($id);
 
-        return $catId === null ? null : $this->find($catId)?->status
-            ->value;
+        return $catId instanceof CategoryId ? $this->find($catId)?->status
+            ->value : null;
     }
 
     /**
@@ -2064,7 +2065,7 @@ final readonly class CategoryRepository
     public function findPrivateCategoriesGrantedToUser(int $userId, array $groupAuthorizedCatIds = []): array
     {
         $userIdVo = UserId::tryFrom($userId);
-        if ($userIdVo === null) {
+        if (! $userIdVo instanceof UserId) {
             return [];
         }
 
@@ -2775,7 +2776,7 @@ final readonly class CategoryRepository
     public function findPrivateCategoryIdsGrantedToUser(int $userId, array $excludeCategoryIds): array
     {
         $userIdVo = UserId::tryFrom($userId);
-        if ($userIdVo === null) {
+        if (! $userIdVo instanceof UserId) {
             return [];
         }
 
@@ -3363,7 +3364,7 @@ final readonly class CategoryRepository
     private function categoryScopeCondition(?CategoryId $catId, bool $recursive): SqlCondition
     {
         if (! $recursive) {
-            if ($catId !== null) {
+            if ($catId instanceof CategoryId) {
                 return new SqlCondition('(id_uppercat = :catId OR id = :catId)', [
                     'catId' => $catId->value,
                 ]);
@@ -3372,7 +3373,7 @@ final readonly class CategoryRepository
             return new SqlCondition('id_uppercat IS NULL');
         }
 
-        if ($catId !== null) {
+        if ($catId instanceof CategoryId) {
             // The real per-platform operator (MySQL/MariaDB: RLIKE), not a
             // hardcoded 'REGEXP' dialect constant -- needs a real
             // Connection to ask for it.

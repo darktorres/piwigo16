@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Doctrine\DBAL\Connection;
 use Piwigo\Db\DbConnection;
 
 // DBAL connections are lazy -- no socket opens until a query runs, so this
@@ -37,7 +38,7 @@ test('build() returns a real Connection', function (): void {
     putenv('PIWIGO_DB_PASSWORD=secret');
     putenv('PIWIGO_DB_BASE=piwigo_prod');
 
-    expect(static fn () => DbConnection::build())->not->toThrow(Throwable::class);
+    expect(static fn (): Connection => DbConnection::build())->not->toThrow(Throwable::class);
 });
 
 test('params() reads host/user/password/dbname from DbCredentials', function (): void {

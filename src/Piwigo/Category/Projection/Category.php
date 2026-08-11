@@ -71,7 +71,7 @@ final readonly class Category
     public static function fromEntity(CategoryEntity $entity): self
     {
         $id = $entity->id;
-        if ($id === null) {
+        if (! $id instanceof CategoryId) {
             throw new InvalidArgumentException('Category::fromEntity(): entity has no id (not yet persisted)');
         }
 
@@ -102,7 +102,7 @@ final readonly class Category
     {
         $idValue = $row['id'] ?? null;
         $id = $idValue instanceof CategoryId ? $idValue : CategoryId::tryFrom($idValue);
-        if ($id === null) {
+        if (! $id instanceof CategoryId) {
             throw new InvalidArgumentException(sprintf('Expected a positive category id, got %s', get_debug_type($idValue)));
         }
 

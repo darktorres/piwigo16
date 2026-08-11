@@ -14,7 +14,7 @@ test('get() throws before anything has ever been initialised', function (): void
 
     expect($loadedPlugins->isInitialized())
         ->toBeFalse();
-    expect(fn () => $loadedPlugins->get())
+    expect(fn (): array => $loadedPlugins->get())
         ->toThrow(LogicException::class, 'LoadedPlugins not initialised -- call Piwigo\Admin\PluginLoader::loadPlugins() first.');
 });
 
@@ -124,6 +124,6 @@ test('reset() returns to the never-initialised state', function (): void {
 
     expect($loadedPlugins->isInitialized())
         ->toBeFalse();
-    expect(fn () => $loadedPlugins->get())
+    expect(fn (): array => $loadedPlugins->get())
         ->toThrow(LogicException::class);
 });

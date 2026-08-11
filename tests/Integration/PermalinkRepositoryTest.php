@@ -14,6 +14,7 @@ use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Permalink\OldPermalinkSortField;
 use Piwigo\Permalink\PermalinkRepository;
+use Piwigo\Permalink\Projection\OldPermalink;
 
 final class PermalinkRepositoryTest extends IntegrationTestCase
 {
@@ -172,7 +173,7 @@ final class PermalinkRepositoryTest extends IntegrationTestCase
 
         try {
             $rows = $this->repo->findAllOrderedBy(OldPermalinkSortField::Permalink);
-            $permalinks = array_map(static fn ($row) => $row->permalink->value, $rows);
+            $permalinks = array_map(static fn (OldPermalink $row): string => $row->permalink->value, $rows);
 
             $lowIndex = array_search($lowSlug, $permalinks, true);
             $highIndex = array_search($highSlug, $permalinks, true);

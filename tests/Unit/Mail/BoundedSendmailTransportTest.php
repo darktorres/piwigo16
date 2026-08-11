@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use Piwigo\Mail\BoundedSendmailTransport;
 use Symfony\Component\Mailer\Exception\TransportException;
+use Symfony\Component\Mailer\SentMessage;
 use Symfony\Component\Mime\Email;
 use Symfony\Component\Process\Exception\ProcessSignaledException;
 use Symfony\Component\Process\Exception\ProcessTimedOutException;
@@ -213,7 +214,7 @@ test('doSend throws a TransportException (not an unbounded hang) when sendmail e
     $transport = new BoundedSendmailTransport($script, 0.3);
 
     $start = hrtime(true);
-    expect(static fn () => $transport->send(testEmail()))
+    expect(static fn (): ?SentMessage => $transport->send(testEmail()))
         ->toThrow(TransportException::class, 'timed out');
     $elapsedSeconds = (hrtime(true) - $start) / 1_000_000_000;
 
@@ -278,7 +279,7 @@ test('doSend throws a TransportException (via the non-timeout ProcessExceptionIn
 
     $transport = new BoundedSendmailTransport($script, 5.0);
 
-    expect(static fn () => $transport->send(testEmail()))
+    expect(static fn (): ?SentMessage => $transport->send(testEmail()))
         ->toThrow(TransportException::class, 'Sendmail process could not be started');
 
     cleanupFakeSendmail([$script]);
@@ -318,7 +319,7 @@ test('doSend throws a TransportException when sendmail exits non-zero', function
 
     $transport = new BoundedSendmailTransport($script . ' -t -i', 5.0);
 
-    expect(static fn () => $transport->send(testEmail()))
+    expect(static fn (): ?SentMessage => $transport->send(testEmail()))
         ->toThrow(TransportException::class, 'exit code 1');
 
     cleanupFakeSendmail([$script, $argvFile, $stdinFile]);
@@ -355,7 +356,7 @@ test('doSend\'s "process failed" exception message concatenates the exact exit c
 test('doSend throws a TransportException for an empty sendmail_path instead of silently doing nothing', function (): void {
     $transport = new BoundedSendmailTransport('   ', 5.0);
 
-    expect(static fn () => $transport->send(testEmail()))
+    expect(static fn (): ?SentMessage => $transport->send(testEmail()))
         ->toThrow(TransportException::class, 'sendmail_path');
 });
 
@@ -371,7 +372,7 @@ test('doSend\'s "sendmail_path is empty or invalid" exception message concatenat
     // comparison (verified by hand for each below).
     $transport = new BoundedSendmailTransport(' ', 5.0);
 
-    expect(static fn () => $transport->send(testEmail()))
+    expect(static fn (): ?SentMessage => $transport->send(testEmail()))
         ->toThrow(TransportException::class, 'BoundedSendmailTransport: sendmail_path is empty or invalid: " "');
 });
 

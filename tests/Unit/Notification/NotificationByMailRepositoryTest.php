@@ -7,6 +7,7 @@ use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Notification\NotificationByMailRepository;
+use Piwigo\Notification\Projection\UserMailNotification;
 use Piwigo\Notification\UserMailNotificationEntity;
 
 /**
@@ -56,7 +57,7 @@ test('findUserNotifications() subscribe returns every subscriber', function (): 
     $rows = nbmTestRepo()
         ->findUserNotifications('subscribe', [], '');
 
-    $usernames = array_map(static fn ($r) => $r->username, $rows);
+    $usernames = array_map(static fn (UserMailNotification $r): string => $r->username, $rows);
     expect($usernames)
         ->toBe(['fixture_admin', 'regular_user']);
 });

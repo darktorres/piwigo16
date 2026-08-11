@@ -167,7 +167,7 @@ test('setMissingValues defaults first/last date from the data itself when neithe
 });
 
 test('setMissingValues throws for an unrecognized unit', function (): void {
-    expect(fn () => StatsPageRenderer::setMissingValues('century', [[
+    expect(fn (): array => StatsPageRenderer::setMissingValues('century', [[
         'year' => 2026,
         'month' => null,
         'day' => null,

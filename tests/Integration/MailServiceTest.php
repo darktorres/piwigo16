@@ -292,7 +292,7 @@ final class MailServiceTest extends IntegrationTestCase
     {
         CurrentConfigTestFactory::get()->smtpHost = '127.0.0.1:1';
 
-        $result = $this->suppressMailerWarning(fn () => $this->mailer->mailNotificationAdmins('Test subject', 'Test content'));
+        $result = $this->suppressMailerWarning(fn (): bool => $this->mailer->mailNotificationAdmins('Test subject', 'Test content'));
 
         self::assertFalse($result);
     }
@@ -306,7 +306,7 @@ final class MailServiceTest extends IntegrationTestCase
             LangTestFactory::get()->buildArgs('Email: %s', 'someuser@example.test'),
         ];
 
-        $result = $this->suppressMailerWarning(fn () => $this->mailer->mailNotificationAdmins($subject, $content));
+        $result = $this->suppressMailerWarning(fn (): bool => $this->mailer->mailNotificationAdmins($subject, $content));
 
         self::assertFalse($result);
     }
@@ -334,7 +334,7 @@ final class MailServiceTest extends IntegrationTestCase
     {
         CurrentConfigTestFactory::get()->smtpHost = '127.0.0.1:1';
 
-        $result = $this->suppressMailerWarning(fn () => $this->mailer->mailAdmins([
+        $result = $this->suppressMailerWarning(fn (): bool => $this->mailer->mailAdmins([
             'content' => 'hi',
         ], []));
 
@@ -345,7 +345,7 @@ final class MailServiceTest extends IntegrationTestCase
     {
         CurrentConfigTestFactory::get()->smtpHost = '127.0.0.1:1';
 
-        $result = $this->suppressMailerWarning(fn () => $this->mailer->mailAdmins([
+        $result = $this->suppressMailerWarning(fn (): bool => $this->mailer->mailAdmins([
             'content' => 'hi',
         ], [], true, true));
 
@@ -377,7 +377,7 @@ final class MailServiceTest extends IntegrationTestCase
         // out at the query level) -- exactly one real send attempt.
         CurrentConfigTestFactory::get()->smtpHost = '127.0.0.1:1';
 
-        $result = $this->suppressMailerWarning(fn () => $this->mailer->mailGroup(1, [
+        $result = $this->suppressMailerWarning(fn (): bool => $this->mailer->mailGroup(1, [
             'content' => 'hi',
         ]));
 
@@ -396,7 +396,7 @@ final class MailServiceTest extends IntegrationTestCase
         );
         CurrentConfigTestFactory::get()->smtpHost = '127.0.0.1:1';
 
-        $result = $this->suppressMailerWarning(fn () => $this->mailer->mailGroup(2, [
+        $result = $this->suppressMailerWarning(fn (): bool => $this->mailer->mailGroup(2, [
             'content' => 'hi',
         ], [
             'assign' => [
@@ -416,7 +416,7 @@ final class MailServiceTest extends IntegrationTestCase
     {
         CurrentConfigTestFactory::get()->smtpHost = '127.0.0.1:1';
 
-        $result = $this->suppressMailerWarning(fn () => $this->mailer->mail('', [
+        $result = $this->suppressMailerWarning(fn (): bool => $this->mailer->mail('', [
             'Cc' => 'cc@example.test',
             'content' => 'hi',
         ]));
@@ -433,7 +433,7 @@ final class MailServiceTest extends IntegrationTestCase
         $before = glob($dir . '/mail.*');
         self::assertIsArray($before);
 
-        $result = $this->suppressMailerWarning(fn () => $this->mailer->mail(
+        $result = $this->suppressMailerWarning(fn (): bool => $this->mailer->mail(
             [
                 'name' => 'Someone',
                 'email' => 'someone@example.test',
@@ -484,7 +484,7 @@ final class MailServiceTest extends IntegrationTestCase
         $before = glob($dir . '/mail.*');
         self::assertIsArray($before);
 
-        $result = $this->suppressMailerWarning(fn () => $this->mailer->mail(
+        $result = $this->suppressMailerWarning(fn (): bool => $this->mailer->mail(
             [
                 'name' => 'Someone',
                 'email' => 'someone@example.test',
@@ -602,7 +602,7 @@ final class MailServiceTest extends IntegrationTestCase
         // non-empty ternary branch, not just its default-null fallback.
         CurrentConfigTestFactory::get()->smtpHost = '127.0.0.1:1';
 
-        $result = $this->suppressMailerWarning(fn () => $this->mailer->mailGroup(1, [
+        $result = $this->suppressMailerWarning(fn (): bool => $this->mailer->mailGroup(1, [
             'content' => 'hi',
             'language_selected' => 'en_UK',
         ]));
@@ -716,7 +716,7 @@ final class MailServiceTest extends IntegrationTestCase
         );
         CurrentConfigTestFactory::get()->smtpHost = '127.0.0.1:1';
 
-        $result = $this->suppressMailerWarning(fn () => $this->mailer->mailGroup(
+        $result = $this->suppressMailerWarning(fn (): bool => $this->mailer->mailGroup(
             2,
             [
                 'content' => 'hi',
@@ -740,7 +740,7 @@ final class MailServiceTest extends IntegrationTestCase
         $currentConfig->smtpHost = '127.0.0.1:1';
         $currentConfig->sendBccMailWebmaster = true;
 
-        $result = $this->suppressMailerWarning(fn () => $this->mailer->mail(
+        $result = $this->suppressMailerWarning(fn (): bool => $this->mailer->mail(
             [
                 'name' => 'Someone',
                 'email' => 'someone@example.test',
@@ -763,7 +763,7 @@ final class MailServiceTest extends IntegrationTestCase
         // of dirname.
         CurrentConfigTestFactory::get()->smtpHost = '127.0.0.1:1';
 
-        $result = $this->suppressMailerWarning(fn () => $this->mailer->mail(
+        $result = $this->suppressMailerWarning(fn (): bool => $this->mailer->mail(
             [
                 'name' => 'Someone',
                 'email' => 'someone@example.test',
@@ -795,7 +795,7 @@ final class MailServiceTest extends IntegrationTestCase
         $currentConfig->smtpPassword = 'p@ss w/ord';
         $currentConfig->smtpSecure = 'tls';
 
-        $result = $this->suppressMailerWarning(fn () => $this->mailer->mail(
+        $result = $this->suppressMailerWarning(fn (): bool => $this->mailer->mail(
             [
                 'name' => 'Someone',
                 'email' => 'someone@example.test',
@@ -1025,7 +1025,7 @@ final class MailServiceTest extends IntegrationTestCase
         $before = $urlService->getRootUrl();
         CurrentConfigTestFactory::get()->smtpHost = '127.0.0.1:1';
 
-        $this->suppressMailerWarning(fn () => $this->mailer->mail(
+        $this->suppressMailerWarning(fn (): bool => $this->mailer->mail(
             [
                 'name' => 'Someone',
                 'email' => 'someone@example.test',
@@ -1058,7 +1058,7 @@ final class MailServiceTest extends IntegrationTestCase
         $currentConfig->smtpUser = 'mail user';
         $currentConfig->smtpPassword = 'p@ss w/ord';
 
-        $result = $this->suppressMailerWarning(fn () => $this->mailer->mail(
+        $result = $this->suppressMailerWarning(fn (): bool => $this->mailer->mail(
             [
                 'name' => 'Someone',
                 'email' => 'someone@example.test',

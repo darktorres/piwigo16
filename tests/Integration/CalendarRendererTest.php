@@ -10,6 +10,7 @@ namespace Piwigo\Tests\Integration {
     use Piwigo\Cache\CachePools;
     use Piwigo\Calendar\CalendarBase;
     use Piwigo\Calendar\CalendarRenderer;
+    use Piwigo\Calendar\CalendarRenderResult;
     use Piwigo\Common\Enum\Section;
     use Piwigo\Config\ConfigLoader;
     use Piwigo\Core\FilterState;
@@ -382,7 +383,7 @@ namespace Piwigo\Tests\Integration {
         {
             CachePools::calendarNav()->clear();
 
-            $render = fn () => $this->makeRenderer()
+            $render = fn (): CalendarRenderResult => $this->makeRenderer()
                 ->render(
                     section: Section::Categories,
                     category: null,

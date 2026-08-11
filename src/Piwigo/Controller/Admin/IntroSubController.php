@@ -18,6 +18,7 @@ use Piwigo\Admin\Maintenance\FilesystemIntegrityChecker;
 use Piwigo\Admin\Tabsheet;
 use Piwigo\Category\CategoryService;
 use Piwigo\Comment\CommentService;
+use Piwigo\Config\CacheSizesSnapshot;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Controller\Admin\Projection\IntroPageContext;
 use Piwigo\Controller\Admin\Request\IntroActionRequest;
@@ -506,7 +507,7 @@ final readonly class IntroSubController implements AdminSubControllerInterface
         if ($this->currentConfig->addCacheToStorageChart) {
             $cache_sizes = $this->currentConfig->cacheSizes;
 
-            if ($cache_sizes !== null && $cache_sizes->cacheSize !== null) {
+            if ($cache_sizes instanceof CacheSizesSnapshot && $cache_sizes->cacheSize !== null) {
                 @$data_storage['Cache']['total']['filesize'] = $cache_sizes->cacheSize / 1024.0;
             }
         }

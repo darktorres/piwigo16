@@ -125,7 +125,7 @@ test('fromRow throws with the real debug type of a non-null but invalid id', fun
     $row = fullCommentRow();
     $row['id'] = 'not-a-number';
 
-    expect(fn () => Comment::fromRow($row))
+    expect(fn (): Comment => Comment::fromRow($row))
         ->toThrow(InvalidArgumentException::class, 'Expected a positive comment id, got string');
 });
 
@@ -146,7 +146,7 @@ test('fromRow throws with the real debug type of a non-null but invalid image_id
     $row = fullCommentRow();
     $row['image_id'] = 'not-a-number';
 
-    expect(fn () => Comment::fromRow($row))
+    expect(fn (): Comment => Comment::fromRow($row))
         ->toThrow(InvalidArgumentException::class, 'Expected a positive image id, got string');
 });
 

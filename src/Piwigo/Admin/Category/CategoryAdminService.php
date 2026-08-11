@@ -7,6 +7,7 @@ namespace Piwigo\Admin\Category;
 use Piwigo\Category\CategoryRefDateAggregate;
 use Piwigo\Category\CategoryRefDateField;
 use Piwigo\Category\CategoryService;
+use Piwigo\Category\Projection\CategoryInfo;
 use Piwigo\Common\ValueObject\CategoryId;
 use Piwigo\Core\ActivityLoggerInterface;
 use Piwigo\Core\HtmlRenderingInterface;
@@ -249,7 +250,7 @@ final readonly class CategoryAdminService
         }
 
         $catInfo = $this->categoryService->getCategoryInfo($catId);
-        if ($catInfo === null) {
+        if (! $catInfo instanceof CategoryInfo) {
             $this->htmlRenderer
                 ->pageNotFound($redirectService, 'Requested album does not exist');
         }

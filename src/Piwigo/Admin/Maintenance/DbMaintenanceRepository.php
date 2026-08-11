@@ -8,6 +8,7 @@ use Doctrine\DBAL\ArrayParameterType;
 use Doctrine\DBAL\Platforms\PostgreSQLPlatform;
 use Doctrine\DBAL\Schema\Name\OptionallyQualifiedName;
 use Doctrine\DBAL\Schema\Name\UnqualifiedName;
+use Doctrine\DBAL\Schema\PrimaryKeyConstraint;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Query\Expr\Join;
 use Piwigo\Common\ValueObject\TagId;
@@ -215,7 +216,7 @@ final readonly class DbMaintenanceRepository
 
         foreach ($allTableNames as $tableName) {
             $primaryKey = $schemaManager->introspectTablePrimaryKeyConstraint($tableName);
-            if ($primaryKey === null) {
+            if (! $primaryKey instanceof PrimaryKeyConstraint) {
                 continue;
             }
 

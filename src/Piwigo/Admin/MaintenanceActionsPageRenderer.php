@@ -15,6 +15,7 @@ use Piwigo\Admin\Projection\MaintenanceActionsPageContext;
 use Piwigo\Auth\AccessControl;
 use Piwigo\Cache\PersistentCache;
 use Piwigo\Category\CategoryService;
+use Piwigo\Config\CacheSizesSnapshot;
 use Piwigo\Config\ConfigService;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\AppInfo;
@@ -126,7 +127,7 @@ final readonly class MaintenanceActionsPageRenderer
         // by ws_getCacheSize() (cache_size, msizes, tsizes, last_date_calc);
         // lastDateCalc is the date string used for time_since().
         $cache_sizes = $this->currentConfig->cacheSizes;
-        $time_elapsed_since_last_calc = $cache_sizes !== null
+        $time_elapsed_since_last_calc = $cache_sizes instanceof CacheSizesSnapshot
             ? DateHelper::timeSince($cache_sizes->lastDateCalc, 'year')
             : null;
 

@@ -46,7 +46,7 @@ test('fromRow narrows a full real row', function (): void {
  * adding dead defensive code for a row shape no real caller ever produces.
  */
 test('fromRow throws for a missing/malformed row, image_id has no valid zero-default', function (): void {
-    expect(fn () => ImageFormat::fromRow([]))
+    expect(fn (): ImageFormat => ImageFormat::fromRow([]))
         ->toThrow(InvalidArgumentException::class, 'ImageId must be a positive integer, got 0');
 });
 

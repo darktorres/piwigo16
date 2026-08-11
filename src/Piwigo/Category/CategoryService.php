@@ -11,6 +11,7 @@ use LogicException;
 use Piwigo\Auth\AccessLevelChecker;
 use Piwigo\Cache\CachePools;
 use Piwigo\Category\Projection\ActivePermalinkRow;
+use Piwigo\Category\Projection\Category;
 use Piwigo\Category\Projection\CategoryAdminListForWsRow;
 use Piwigo\Category\Projection\CategoryAlbumTreeRow;
 use Piwigo\Category\Projection\CategoryChildRow;
@@ -30,6 +31,7 @@ use Piwigo\Category\Projection\CategoryRankInfoRow;
 use Piwigo\Category\Projection\CategorySelectOptions;
 use Piwigo\Category\Projection\CategorySyncCandidateRow;
 use Piwigo\Category\Projection\CategoryUppercatsCounter;
+use Piwigo\Category\Projection\ParentCategoryForCreate;
 use Piwigo\Category\Projection\PhotoCountDateRange;
 use Piwigo\Category\Projection\RandomImageCategoryQuery;
 use Piwigo\Common\Dto\PaginatedResult;
@@ -274,7 +276,7 @@ final readonly class CategoryService
     public function getCategoryInfo(int $id): ?CategoryInfo
     {
         $cat = $this->repo->findById($id);
-        if ($cat === null) {
+        if (! $cat instanceof Category) {
             return null;
         }
 
@@ -1673,7 +1675,7 @@ final readonly class CategoryService
     public function getCategoryRepresentantProperties(int|string $imageId, UrlServiceInterface $urlService, ?string $size = null): array
     {
         $imageIdVo = ImageId::tryFrom($imageId);
-        $row = $imageIdVo === null ? null : EntityManagerFactory::build(DbConnection::build())->getRepository(ImageEntity::class)->findById($imageIdVo);
+        $row = $imageIdVo instanceof ImageId ? EntityManagerFactory::build(DbConnection::build())->getRepository(ImageEntity::class)->findById($imageIdVo) : null;
         if ($row === null) {
             throw new Exception("getCategoryRepresentantProperties(): image {$imageId} does not exist (stale representative_picture_id?)");
         }
@@ -1948,7 +1950,7 @@ final readonly class CategoryService
         $parentIdIsEmpty = $parentId === null || $parentId === 0 || $parentId === '0' || $parentId === '';
         if (! $parentIdIsEmpty && is_numeric($parentId)) {
             $parent = $this->repo->findParentCategoryForCreate($parentId);
-            if ($parent === null) {
+            if (! $parent instanceof ParentCategoryForCreate) {
                 return CategoryCreateOutcome::failure($this->lang->t('The parent album does not exist'));
             }
 

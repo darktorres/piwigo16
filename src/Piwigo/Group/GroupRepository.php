@@ -57,7 +57,7 @@ final class GroupRepository extends EntityRepository
             ->getResult();
 
         return array_map(static function (GroupEntity $g): GroupId {
-            assert($g->id !== null);
+            assert($g->id instanceof GroupId);
 
             return $g->id;
         }, $entities);
@@ -114,7 +114,7 @@ final class GroupRepository extends EntityRepository
 
         return array_map(
             static function (GroupEntity $g): Group {
-                assert($g->id !== null);
+                assert($g->id instanceof GroupId);
 
                 return new Group($g->id, $g->name, $g->isDefault);
             },
@@ -203,7 +203,7 @@ final class GroupRepository extends EntityRepository
             ->where('g.name = :name')
             ->setParameter('name', $name);
 
-        if ($excludeGroupId !== null) {
+        if ($excludeGroupId instanceof GroupId) {
             $qb->andWhere('g.id != :excludeGroupId')
                 ->setParameter('excludeGroupId', $excludeGroupId);
         }
@@ -238,7 +238,7 @@ final class GroupRepository extends EntityRepository
             ->getResult();
 
         return array_map(static function (GroupEntity $g): GroupId {
-            assert($g->id !== null);
+            assert($g->id instanceof GroupId);
 
             return $g->id;
         }, $entities);
@@ -267,7 +267,7 @@ final class GroupRepository extends EntityRepository
         $em->persist($entity);
         $em->flush();
 
-        assert($entity->id !== null);
+        assert($entity->id instanceof GroupId);
 
         return $entity->id;
     }

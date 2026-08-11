@@ -22,6 +22,7 @@ use Piwigo\Auth\Projection\ApiKeySummary;
 use Piwigo\Common\ValueObject\ImageId;
 use Piwigo\Common\ValueObject\SqlDateTime;
 use Piwigo\Common\ValueObject\UserId;
+use Piwigo\Common\ValueObject\Username;
 use Piwigo\Config\ConfigService;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\CurrentLogger;
@@ -126,7 +127,7 @@ final readonly class Users
             $userId = [];
             foreach ($params['user_id'] as $rawUserId) {
                 $userIdVo = UserId::tryFrom($rawUserId);
-                if ($userIdVo !== null) {
+                if ($userIdVo instanceof UserId) {
                     $userId[] = $userIdVo;
                 }
             }
@@ -879,7 +880,7 @@ final readonly class Users
         $lost_user_id = UserId::from($params['user_id']);
 
         // check if user exist
-        if ($this->userService->getUsername($lost_user_id) === null) {
+        if (! $this->userService->getUsername($lost_user_id) instanceof Username) {
             return new WsErrorResponse(WsError::INVALID_PARAM, 'This user does not exist.');
         }
 
@@ -965,7 +966,7 @@ final readonly class Users
         $new_main_user_id = UserId::from($params['user_id']);
 
         // checl if user exist
-        if ($this->userService->getUsername($new_main_user_id) === null) {
+        if (! $this->userService->getUsername($new_main_user_id) instanceof Username) {
             return new WsErrorResponse(WsError::INVALID_PARAM, 'This user does not exist.');
         }
 

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use Doctrine\DBAL\DriverManager;
 use Doctrine\DBAL\Types\Type;
+use Doctrine\ORM\EntityManagerInterface;
 use Piwigo\Db\EntityManagerFactory;
 
 /**
@@ -43,7 +44,7 @@ test('build() is safe to call more than once without throwing on double type reg
 
     EntityManagerFactory::build($conn);
 
-    expect(static fn () => EntityManagerFactory::build($conn))->not->toThrow(Throwable::class);
+    expect(static fn (): EntityManagerInterface => EntityManagerFactory::build($conn))->not->toThrow(Throwable::class);
 });
 
 test('build() configures a real entity source path, not an empty one', function (): void {

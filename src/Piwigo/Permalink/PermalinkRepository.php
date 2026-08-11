@@ -70,7 +70,7 @@ final readonly class PermalinkRepository implements OldPermalinkLookupInterface
     public function findOldCategoryId(string $permalink): ?int
     {
         $permalinkVo = Permalink::tryFrom($permalink);
-        if ($permalinkVo === null) {
+        if (! $permalinkVo instanceof Permalink) {
             return null;
         }
 
@@ -93,7 +93,7 @@ final readonly class PermalinkRepository implements OldPermalinkLookupInterface
     public function findPermalinkByCategoryId(int $catId): ?string
     {
         $catIdVo = CategoryId::tryFrom($catId);
-        if ($catIdVo === null) {
+        if (! $catIdVo instanceof CategoryId) {
             return null;
         }
 
@@ -103,7 +103,7 @@ final readonly class PermalinkRepository implements OldPermalinkLookupInterface
     public function clearCategoryPermalink(int $catId): void
     {
         $catIdVo = CategoryId::tryFrom($catId);
-        if ($catIdVo === null) {
+        if (! $catIdVo instanceof CategoryId) {
             return;
         }
 
@@ -127,7 +127,7 @@ final readonly class PermalinkRepository implements OldPermalinkLookupInterface
     public function setCategoryPermalink(int $catId, string $permalink): void
     {
         $catIdVo = CategoryId::tryFrom($catId);
-        if ($catIdVo === null) {
+        if (! $catIdVo instanceof CategoryId) {
             return;
         }
 
@@ -238,7 +238,7 @@ final readonly class PermalinkRepository implements OldPermalinkLookupInterface
     public function deleteOldPermalinkByValue(string $permalink): bool
     {
         $permalinkVo = Permalink::tryFrom($permalink);
-        if ($permalinkVo === null) {
+        if (! $permalinkVo instanceof Permalink) {
             return false;
         }
 
@@ -268,7 +268,7 @@ final readonly class PermalinkRepository implements OldPermalinkLookupInterface
             ->select('op')
             ->from(OldPermalinkEntity::class, 'op');
 
-        if ($sortField !== null) {
+        if ($sortField instanceof OldPermalinkSortField) {
             $qb->orderBy($sortField->dqlProperty());
         }
 

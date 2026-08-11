@@ -12,6 +12,7 @@ use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Db\SqlDialect;
 use Piwigo\Image\ImageEntity;
 use Piwigo\Image\ImageRepository;
+use Piwigo\Image\Projection\Image;
 use Piwigo\Image\Projection\ImageCategoryLink;
 use Piwigo\Image\Projection\PathRepresentativeExt;
 
@@ -673,12 +674,12 @@ test('findById reads a numeric-string id, not just a native int', function (): v
     $repo = imageRepositoryTestRepo();
 
     $imageId = ImageId::tryFrom('1');
-    if ($imageId === null) {
+    if (! $imageId instanceof ImageId) {
         throw new RuntimeException('expected ImageId::tryFrom() to accept a numeric string');
     }
     $found = $repo->findById($imageId);
 
-    if ($found === null) {
+    if (! $found instanceof Image) {
         throw new RuntimeException('expected a real Image instance');
     }
     expect($found->id->value)

@@ -51,7 +51,7 @@ test('load() throws when local/config/config.php does not return a DeploymentPol
     mkdir($root . '/local/config', 0o777, true);
     file_put_contents($root . '/local/config/config.php', "<?php\nreturn ['showPhpErrorsOnFrontend' => false];\n");
 
-    expect(static fn () => DeploymentPolicy::load(Paths::fromRoot($root)))
+    expect(static fn (): DeploymentPolicy => DeploymentPolicy::load(Paths::fromRoot($root)))
         ->toThrow(LogicException::class);
 
     deployment_policy_test_rrmdir($root);
@@ -67,7 +67,7 @@ test('load() throws with the exact message naming the real file path and get_deb
     $configFile = $root . '/local/config/config.php';
     file_put_contents($configFile, "<?php\nreturn ['showPhpErrorsOnFrontend' => false];\n");
 
-    expect(static fn () => DeploymentPolicy::load(Paths::fromRoot($root)))->toThrow(
+    expect(static fn (): DeploymentPolicy => DeploymentPolicy::load(Paths::fromRoot($root)))->toThrow(
         LogicException::class,
         $configFile . ' must `return new ' . DeploymentPolicy::class . '(...)`, got array.'
     );

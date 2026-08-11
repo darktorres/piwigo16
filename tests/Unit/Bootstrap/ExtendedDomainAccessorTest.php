@@ -34,13 +34,13 @@ test('activityService resolves a real ActivityService from the container', funct
     // instance's class (a mismatch would throw a TypeError first) -- what's
     // actually under test is that the call doesn't hit its internal
     // "Container returned an unexpected type" guard.
-    expect(static fn () => ExtendedDomainAccessor::activityService())->not->toThrow(Throwable::class);
+    expect(static fn (): ActivityService => ExtendedDomainAccessor::activityService())->not->toThrow(Throwable::class);
 });
 
 test('activityService throws when the container returns an unexpected type', function (): void {
     KernelContainerOverride::withWrongTypeFor(
         ActivityService::class,
-        static fn () => ExtendedDomainAccessor::activityService()
+        static fn (): ActivityService => ExtendedDomainAccessor::activityService()
     );
 })->throws(LogicException::class, 'Container returned an unexpected type for ' . ActivityService::class);
 
@@ -50,12 +50,12 @@ test('metadataService resolves a real MetadataService from the container', funct
     // Same rationale as activityService() above: the return type already
     // guarantees the class, so the real thing under test is that this
     // doesn't hit the internal "unexpected type" guard.
-    expect(static fn () => ExtendedDomainAccessor::metadataService())->not->toThrow(Throwable::class);
+    expect(static fn (): MetadataService => ExtendedDomainAccessor::metadataService())->not->toThrow(Throwable::class);
 });
 
 test('metadataService throws when the container returns an unexpected type', function (): void {
     KernelContainerOverride::withWrongTypeFor(
         MetadataService::class,
-        static fn () => ExtendedDomainAccessor::metadataService()
+        static fn (): MetadataService => ExtendedDomainAccessor::metadataService()
     );
 })->throws(LogicException::class, 'Container returned an unexpected type for ' . MetadataService::class);

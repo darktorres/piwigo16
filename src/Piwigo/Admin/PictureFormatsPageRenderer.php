@@ -7,6 +7,7 @@ namespace Piwigo\Admin;
 use Piwigo\Admin\Projection\PictureFormatsPageContext;
 use Piwigo\Admin\Request\PictureFormatsImageIdRequest;
 use Piwigo\Auth\AccessControl;
+use Piwigo\Common\ValueObject\ImageId;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\AccessLevel;
 use Piwigo\Core\HtmlRenderingInterface;
@@ -33,7 +34,7 @@ final class PictureFormatsPageRenderer
         $accessControl->checkStatus(AccessLevel::Administrator);
 
         $image_id = PictureFormatsImageIdRequest::fromGlobals($inputValidator)->imageId;
-        if ($image_id === null) {
+        if (! $image_id instanceof ImageId) {
             $htmlRenderer
                 ->fatalError('image_id does not exist');
         }

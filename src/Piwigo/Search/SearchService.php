@@ -198,7 +198,7 @@ final readonly class SearchService
 
         $search = $this->getSearchInfo($candidate);
 
-        if ($search !== null) {
+        if ($search instanceof Search) {
             if (PageFilterHelper::scriptBasename($this->currentConfig) !== 'ws' and $clausePattern === 'id = ?' and $search->searchUuid !== null) {
                 $this->htmlRenderer->fatalError('this search is not reachable with its id, need the search_uuid instead');
             }
@@ -217,7 +217,7 @@ final readonly class SearchService
     public function getSearchArray(int|string $searchId): array|false
     {
         $search = $this->getSearchInfo($searchId);
-        if ($search === null) {
+        if (! $search instanceof Search) {
             return false;
         }
 
@@ -238,7 +238,7 @@ final readonly class SearchService
     public function getValidatedSearchArray(int|string $searchId, ?Section $section, ?int &$resolvedSearchId = null): array|false
     {
         $search = $this->getValidatedSearchInfo($searchId, $section, $resolvedSearchId);
-        if ($search === null) {
+        if (! $search instanceof Search) {
             $this->htmlRenderer->badRequest($this->redirectService, 'this search identifier does not exist');
         }
 

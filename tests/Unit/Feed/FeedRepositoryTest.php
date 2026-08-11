@@ -7,6 +7,7 @@ use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Feed\FeedEntity;
 use Piwigo\Feed\FeedRepository;
+use Piwigo\Feed\Projection\FeedInfo;
 
 /**
  * Piwigo\Feed\FeedRepository -- has its own dedicated
@@ -65,7 +66,7 @@ test('findById() returns the owning user id with a null last-check for a freshly
         $repo->insert($id, 1);
 
         $info = $repo->findById($id);
-        if ($info === null) {
+        if (! $info instanceof FeedInfo) {
             throw new RuntimeException('Expected a matching feed row.');
         }
 
@@ -95,7 +96,7 @@ test('updateLastCheck() sets the timestamp on an existing feed', function (): vo
         $repo->updateLastCheck($id, $now);
 
         $info = $repo->findById($id);
-        if ($info === null) {
+        if (! $info instanceof FeedInfo) {
             throw new RuntimeException('Expected a matching feed row.');
         }
 

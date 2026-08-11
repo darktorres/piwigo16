@@ -337,18 +337,18 @@ final class PasswordController implements ControllerInterface
 
         // retrievies user by email is not try by username
         $emailOrNull = Email::tryFrom($username_or_email);
-        $user_id_raw = $emailOrNull === null ? null : $this->userService->getUserIdByEmail($emailOrNull);
+        $user_id_raw = $emailOrNull instanceof Email ? $this->userService->getUserIdByEmail($emailOrNull) : null;
 
-        if ($user_id_raw === null) {
+        if (! $user_id_raw instanceof UserId) {
             $usernameOrNull = Username::tryFrom($username_or_email);
-            $user_id_raw = $usernameOrNull === null ? null : $this->userService->getUserId($usernameOrNull);
+            $user_id_raw = $usernameOrNull instanceof Username ? $this->userService->getUserId($usernameOrNull) : null;
         }
 
         // when no user is found, we assign guest_id instead of stopping.
         // this lets the function behave identically for unknown users,
         // preventing username/email enumeration through timing or responses.
-        $is_user_found = $user_id_raw !== null;
-        if ($user_id_raw !== null) {
+        $is_user_found = $user_id_raw instanceof UserId;
+        if ($user_id_raw instanceof UserId) {
             $user_id = $user_id_raw;
         } else {
             $user_id = UserId::from($this->currentConfig->guestId);
@@ -532,7 +532,7 @@ final class PasswordController implements ControllerInterface
             'language' => $targetUser->language->value,
         ];
         $status = $targetUser->status->value;
-        $has_no_email = $targetUser->email === null;
+        $has_no_email = ! $targetUser->email instanceof Email;
         $this->username = $targetUser->username?->value;
         $this->currentUser->set($saveCurrentUser);
 

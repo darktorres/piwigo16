@@ -98,7 +98,7 @@ test('fromRow throws when user_id is missing', function (): void {
     $row = fullUserMailNotificationRow();
     $row['user_id'] = null;
 
-    expect(fn () => UserMailNotification::fromRow($row))
+    expect(fn (): UserMailNotification => UserMailNotification::fromRow($row))
         ->toThrow(InvalidArgumentException::class, 'Expected a positive user id, got null');
 });
 
@@ -106,7 +106,7 @@ test('fromRow throws with the real debug type of a non-null but invalid user_id'
     $row = fullUserMailNotificationRow();
     $row['user_id'] = 'not-a-number';
 
-    expect(fn () => UserMailNotification::fromRow($row))
+    expect(fn (): UserMailNotification => UserMailNotification::fromRow($row))
         ->toThrow(InvalidArgumentException::class, 'Expected a positive user id, got string');
 });
 

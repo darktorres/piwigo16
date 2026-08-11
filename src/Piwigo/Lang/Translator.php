@@ -10,6 +10,7 @@ use Gettext\Translations;
 use Gettext\Translator as GettextTranslator;
 use Piwigo\Cache\CachePools;
 use Piwigo\Config\CurrentConfig;
+use Psr\Cache\CacheItemInterface;
 
 /**
  * Piwigo translation service backed by gettext PO files.
@@ -129,7 +130,7 @@ final class Translator
         $pool = $mtime !== false ? CachePools::translations() : null;
         $item = $pool?->getItem(md5($poFile . '_' . $mtime));
 
-        if ($item !== null && $item->isHit()) {
+        if ($item instanceof CacheItemInterface && $item->isHit()) {
             /**
              * @var array{
              *     dictionary: array{domain: string, plural-forms: string, messages: array<string, array<string, list<string>>>},
@@ -158,7 +159,7 @@ final class Translator
             $this->mirror[$mirrorKey] = $mirrorValue;
         }
 
-        if ($item !== null) {
+        if ($item instanceof CacheItemInterface) {
             $item->set([
                 'dictionary' => $dictionary,
                 'mirror' => $mirrorContribution,

@@ -94,7 +94,7 @@ final readonly class MailRecipientRepository implements MailRecipientRepositoryI
 
         if ($languageFilter !== null && $languageFilter !== '') {
             $languageFilterVo = LangCode::tryFrom($languageFilter);
-            if ($languageFilterVo === null) {
+            if (! $languageFilterVo instanceof LangCode) {
                 // A malformed filter value can never match a real row --
                 // every real ui.language value is a valid LangCode.
                 return [];

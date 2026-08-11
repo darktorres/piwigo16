@@ -447,7 +447,7 @@ final readonly class MetadataService
             if ($mimeType !== false && str_starts_with($mimeType, 'image/')) {
                 if (in_array($mimeType, ['image/svg+xml', 'image/svg'], true)) {
                     $svgSize = $this->parseSvgDimensions($file);
-                    if ($svgSize !== null) {
+                    if ($svgSize instanceof SvgDimensions) {
                         $infos['width'] = $svgSize->width;
                         $infos['height'] = $svgSize->height;
                     }

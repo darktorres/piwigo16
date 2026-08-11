@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Ws;
 
+use Doctrine\DBAL\Connection;
 use Doctrine\ORM\EntityManagerInterface;
 use Exception;
 use LogicException;
@@ -49,10 +50,14 @@ use Piwigo\Image\ImageRepository;
 use Piwigo\Image\ImageService;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Image\ImageUniquenessColumn;
+use Piwigo\Image\Projection\Image;
+use Piwigo\Image\Projection\UploadInfo;
+use Piwigo\Image\Projection\UploadResultInfo;
 use Piwigo\Metadata\MetadataService;
 use Piwigo\Permission\PermissionService;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Rate\RateService;
+use Piwigo\Search\Projection\Search;
 use Piwigo\Search\SearchService;
 use Piwigo\Storage\StorageRegistry;
 use Piwigo\Tag\TagService;
@@ -758,7 +763,7 @@ final readonly class Images
             }
 
             $search_info = $searchService->getValidatedSearchInfo($params['search_id'], null);
-            if ($search_info === null) {
+            if (! $search_info instanceof Search) {
                 return new WsErrorResponse(WsError::INVALID_PARAM, 'This search does not exist.');
             }
         }
@@ -1199,7 +1204,7 @@ final readonly class Images
 
         // what is the path and other infos about the photo?
         $image = $this->imageService->getUploadInfoById(ImageId::from($params['image_id']));
-        if ($image === null) {
+        if (! $image instanceof UploadInfo) {
             return new WsErrorResponse(404, 'image_id not found');
         }
 
@@ -1388,7 +1393,7 @@ final readonly class Images
             // $uniqueness_lock_conn (see above), so checking the connection
             // alone is sufficient -- PHPStan proves this itself, flagging a
             // separate null-check on the name as redundant.
-            if ($uniqueness_lock_conn !== null) {
+            if ($uniqueness_lock_conn instanceof Connection) {
                 AdvisorySessionLock::release($uniqueness_lock_conn, $uniqueness_lock_name);
             }
         }
@@ -1685,8 +1690,8 @@ final readonly class Images
 
             if (isset($params['format_of'])) {
                 $formatOfId = ImageId::tryFrom($params['format_of']);
-                $imageRow = $formatOfId === null ? null : $this->imageRepository->findById($formatOfId);
-                if ($imageRow === null) {
+                $imageRow = $formatOfId instanceof ImageId ? $this->imageRepository->findById($formatOfId) : null;
+                if (! $imageRow instanceof Image) {
                     return new WsErrorResponse(404, __FUNCTION__ . ' : image_id not found');
                 }
                 $image = $imageRow->toArray();
@@ -1727,7 +1732,7 @@ final readonly class Images
                 );
 
             $image_infos = $this->imageService->getUploadResultInfoById(ImageId::from($image_id));
-            if ($image_infos === null) {
+            if (! $image_infos instanceof UploadResultInfo) {
                 throw new Exception('ws_images_upload(): image fetch failed right after inserting it');
             }
 
@@ -2362,9 +2367,9 @@ final readonly class Images
         }
 
         $imageId = ImageId::tryFrom($params['image_id']);
-        $imageRow = $imageId === null ? null : $this->imageRepository->findById($imageId);
+        $imageRow = $imageId instanceof ImageId ? $this->imageRepository->findById($imageId) : null;
 
-        if ($imageRow === null) {
+        if (! $imageRow instanceof Image) {
             return new WsErrorResponse(404, 'image_id not found');
         }
         // Unboxed here rather than kept as the typed object -- this method

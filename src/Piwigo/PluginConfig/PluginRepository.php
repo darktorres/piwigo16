@@ -37,7 +37,7 @@ final class PluginRepository extends EntityRepository
         }
         if ($id !== '') {
             $pluginId = PluginId::tryFrom($id);
-            if ($pluginId === null) {
+            if (! $pluginId instanceof PluginId) {
                 return [];
             }
 
@@ -72,7 +72,7 @@ final class PluginRepository extends EntityRepository
     public function updateVersion(string $id, string $version): void
     {
         $pluginId = PluginId::tryFrom($id);
-        if ($pluginId === null) {
+        if (! $pluginId instanceof PluginId) {
             return;
         }
 

@@ -278,7 +278,7 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
         }
 
         $this->smarty->setTemplateDir([]);
-        if ($theme !== null) {
+        if ($theme instanceof ThemeId) {
             $this->setTheme($root, $theme, $path);
             if (! $this->adminContext->isActive()) {
                 $this->setPrefilter('header', fn (string $source, SmartyTemplate $smarty): string => self::prefilterLocalCss($source, $smarty, $this->paths));
@@ -470,7 +470,7 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
         $this->setTemplateDir($root . '/' . $theme->value . '/' . $path);
 
         $parentTheme = isset($themeconf['parent']) ? ThemeId::tryFrom($themeconf['parent']) : null;
-        if ($parentTheme !== null and $parentTheme->value !== $theme->value) {
+        if ($parentTheme instanceof ThemeId and $parentTheme->value !== $theme->value) {
             $load_parent_css = $themeconf['load_parent_css'] ?? $load_css;
             $load_parent_local_head = $themeconf['load_parent_local_head'] ?? $load_local_head;
             $this->setTheme(

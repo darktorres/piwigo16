@@ -259,7 +259,7 @@ test('mkgetdir throws a RuntimeException carrying the untranslated message when 
     chmod($parent, 0o555);
     $dir = $parent . '/child';
 
-    expect(fn () => FilesystemHelper::mkgetdir($dir, CurrentConfigTestFactory::get(), FilesystemHelper::MKGETDIR_DIE_ON_ERROR))
+    expect(fn (): bool => FilesystemHelper::mkgetdir($dir, CurrentConfigTestFactory::get(), FilesystemHelper::MKGETDIR_DIE_ON_ERROR))
         ->toThrow(RuntimeException::class, $dir . ' no write access');
 });
 
@@ -284,7 +284,7 @@ test('mkgetdir delegates the fatal message to the installed HtmlRenderingInterfa
             Paths::class => Paths::fromRoot(sys_get_temp_dir()),
         ],
         function () use ($dir): void {
-            expect(fn () => FilesystemHelper::mkgetdir($dir, CurrentConfigTestFactory::get(), FilesystemHelper::MKGETDIR_DIE_ON_ERROR))
+            expect(fn (): bool => FilesystemHelper::mkgetdir($dir, CurrentConfigTestFactory::get(), FilesystemHelper::MKGETDIR_DIE_ON_ERROR))
                 ->toThrow(RuntimeException::class, 'renderer-fatal:' . $dir . ' no write access');
         }
     );
@@ -343,7 +343,7 @@ test('lang() throws a RuntimeException carrying the container-type message when 
     KernelContainerOverride::withWrongTypeFor(
         Lang::class,
         function () use ($dir): void {
-            expect(fn () => FilesystemHelper::mkgetdir($dir, CurrentConfigTestFactory::get(), FilesystemHelper::MKGETDIR_DIE_ON_ERROR))
+            expect(fn (): bool => FilesystemHelper::mkgetdir($dir, CurrentConfigTestFactory::get(), FilesystemHelper::MKGETDIR_DIE_ON_ERROR))
                 ->toThrow(RuntimeException::class, 'Container returned an unexpected type for ' . Lang::class);
         }
     );
@@ -368,7 +368,7 @@ test('mkgetdir throws when an already-existing directory has lost its write perm
     mkdir($dir);
     chmod($dir, 0o500);
 
-    expect(fn () => FilesystemHelper::mkgetdir($dir, CurrentConfigTestFactory::get(), FilesystemHelper::MKGETDIR_DIE_ON_ERROR))
+    expect(fn (): bool => FilesystemHelper::mkgetdir($dir, CurrentConfigTestFactory::get(), FilesystemHelper::MKGETDIR_DIE_ON_ERROR))
         ->toThrow(RuntimeException::class, $dir . ' no write access');
 });
 

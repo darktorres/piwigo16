@@ -8,6 +8,7 @@ use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Permission\SqlCondition;
 use Piwigo\Search\Projection\CategoryIdUppercats;
+use Piwigo\Search\Projection\Search;
 use Piwigo\Search\SearchRepository;
 
 /**
@@ -97,7 +98,7 @@ test('findSavedSearchByUuid() returns the matching row', function (): void {
 
     expect($row)
         ->not->toBeNull();
-    if ($row === null) {
+    if (! $row instanceof Search) {
         throw new RuntimeException('unreachable');
     }
     expect($row->searchUuid)
@@ -126,7 +127,7 @@ test('findSavedSearchByUuid() filters out a numeric-string rules key on decode',
 
     expect($row)
         ->not->toBeNull();
-    if ($row === null) {
+    if (! $row instanceof Search) {
         throw new RuntimeException('unreachable');
     }
     expect($row->rules)
@@ -146,7 +147,7 @@ test('findSavedSearchByUuid() maps a null created_on to null, not the entity ins
 
     expect($row)
         ->not->toBeNull();
-    if ($row === null) {
+    if (! $row instanceof Search) {
         throw new RuntimeException('unreachable');
     }
     expect($row->createdOn)
@@ -240,7 +241,7 @@ test('insertSavedSearch() returns the new autoincrement id', function (): void {
     $row = $repo->findSavedSearchById($id);
     expect($row)
         ->not->toBeNull();
-    if ($row === null) {
+    if (! $row instanceof Search) {
         throw new RuntimeException('unreachable');
     }
     expect($row->createdBy)
@@ -262,7 +263,7 @@ test('insertSavedSearch() stores forked_from', function (): void {
 
     expect($row)
         ->not->toBeNull();
-    if ($row === null) {
+    if (! $row instanceof Search) {
         throw new RuntimeException('unreachable');
     }
     expect($row->forkedFrom)

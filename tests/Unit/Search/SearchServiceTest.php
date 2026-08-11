@@ -31,6 +31,7 @@ use Piwigo\Permission\SqlCondition;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Search\Event\QsearchGetImagesSqlScopes;
 use Piwigo\Search\Event\QsearchResults;
+use Piwigo\Search\Projection\Search;
 use Piwigo\Search\QExpression;
 use Piwigo\Search\QResults;
 use Piwigo\Search\QsearchClause;
@@ -382,7 +383,7 @@ test('getSearchInfo() returns the stored row', function (): void {
     $info = searchServiceTestService()
         ->getSearchInfo('psk-20260712-infotest01');
 
-    if ($info === null) {
+    if (! $info instanceof Search) {
         throw new LogicException('expected a Search projection, got null');
     }
 
@@ -495,7 +496,7 @@ test('saveSearch() persists the rules under a fresh uuid and returns a matching 
 
         $info = searchServiceTestService()
             ->getSearchInfo($uuid);
-        if ($info === null) {
+        if (! $info instanceof Search) {
             throw new LogicException('expected a persisted Search row, got null');
         }
 
@@ -528,7 +529,7 @@ test('saveSearch() threads a real forkedFrom id into the persisted row', functio
 
         $info = searchServiceTestService()
             ->getSearchInfo($uuid);
-        if ($info === null) {
+        if (! $info instanceof Search) {
             throw new LogicException('expected a persisted Search row, got null');
         }
 
@@ -616,7 +617,7 @@ test('splitAllwords() throws when preg_split() hits the backtrack limit', functi
     ini_set('pcre.backtrack_limit', '0');
 
     try {
-        expect(static fn () => SearchService::splitAllwords('nature travel'))
+        expect(static fn (): ?array => SearchService::splitAllwords('nature travel'))
             ->toThrow(Exception::class, 'splitAllwords(): preg_split() failed');
     } finally {
         ini_set('pcre.backtrack_limit', $originalLimit === false ? '1000000' : $originalLimit);
@@ -776,7 +777,7 @@ test('getRegularSearchResults() skips a criterion entirely when its own display 
     // works".
     $currentConfig = CurrentConfigTestFactory::get();
     $filtersViews = $currentConfig->filtersViews;
-    if ($filtersViews === null) {
+    if (! $filtersViews instanceof FilterViewsSelection) {
         throw new RuntimeException('beforeEach() always sets a real, non-null filtersViews.');
     }
     $filters = $filtersViews->filters;
@@ -1520,7 +1521,7 @@ test('qsearchGetTextTokenSearchSql() throws when preg_split() hits the backtrack
     ini_set('pcre.backtrack_limit', '0');
 
     try {
-        expect(fn () => searchServiceTestService()->qsearchGetTextTokenSearchSql(new QSingleToken('hello-world', 0, null), ['name']))
+        expect(fn (): array => searchServiceTestService()->qsearchGetTextTokenSearchSql(new QSingleToken('hello-world', 0, null), ['name']))
             ->toThrow(Exception::class, 'qsearchGetTextTokenSearchSql(): preg_split() failed');
     } finally {
         ini_set('pcre.backtrack_limit', $originalLimit === false ? '1000000' : $originalLimit);
@@ -2096,7 +2097,7 @@ test('getQuickSearchResultsNoCache() throws when a QsearchGetScopes handler retu
     EventDispatcherTestFactory::get()->addEventHandler(QsearchGetScopes::class, $handler);
 
     try {
-        expect(fn () => searchServiceTestService()->getQuickSearchResultsNoCache('family', []))
+        expect(fn (): array => searchServiceTestService()->getQuickSearchResultsNoCache('family', []))
             ->toThrow(Error::class, 'must return an instance of');
     } finally {
         EventDispatcherTestFactory::get()->removeEventHandler(QsearchGetScopes::class, $handler);
@@ -2195,7 +2196,7 @@ test('getQuickSearchResultsNoCache() applies a custom images_where clause', func
 test('getValidatedSearchInfo() calls fatalError() for an invalid identifier', function (): void {
     $service = searchServiceTestServiceWithRenderer(new SearchServiceTestFatalSignalHtmlRenderer());
 
-    expect(fn () => $service->getValidatedSearchInfo('not-a-valid-identifier', null))
+    expect(fn (): ?Search => $service->getValidatedSearchInfo('not-a-valid-identifier', null))
         ->toThrow(RuntimeException::class, 'fatalError: Invalid search identifier');
 });
 
@@ -2207,7 +2208,7 @@ test('getValidatedSearchInfo() calls fatalError() when a uuid search is looked u
 
     $service = searchServiceTestServiceWithRenderer(new SearchServiceTestFatalSignalHtmlRenderer());
 
-    expect(fn () => $service->getValidatedSearchInfo((string) $id, null))
+    expect(fn (): ?Search => $service->getValidatedSearchInfo((string) $id, null))
         ->toThrow(RuntimeException::class, 'fatalError: this search is not reachable with its id, need the search_uuid instead');
 });
 
@@ -2255,14 +2256,14 @@ test('getValidatedSearchArray() calls badRequest() when the search is not found'
     // pattern at all, so getValidatedSearchInfo()'s earlier "Invalid
     // search identifier" fatalError() fires first instead of ever
     // reaching the not-found badRequest() this test means to exercise.
-    expect(fn () => $service->getValidatedSearchArray('psk-20260712-doesnotexi', null))
+    expect(fn (): array|false => $service->getValidatedSearchArray('psk-20260712-doesnotexi', null))
         ->toThrow(RuntimeException::class, 'badRequest: this search identifier does not exist');
 });
 
 test('getSearchResults() calls badRequest() when the search identifier does not exist', function (): void {
     $service = searchServiceTestServiceWithRenderer(new SearchServiceTestFatalSignalHtmlRenderer());
 
-    expect(fn () => $service->getSearchResults('psk-20260712-doesnotexist', null))
+    expect(fn (): array => $service->getSearchResults('psk-20260712-doesnotexist', null))
         ->toThrow(RuntimeException::class, 'badRequest: this search identifier does not exist');
 });
 
@@ -2321,7 +2322,7 @@ test('getQuickSearchResultsNoCache() throws when the default user language resol
         ->forget('default_user');
 
     try {
-        expect(fn () => searchServiceTestService()->getQuickSearchResultsNoCache('nature', []))
+        expect(fn (): array => searchServiceTestService()->getQuickSearchResultsNoCache('nature', []))
             ->toThrow(LogicException::class, 'qsearch: \Piwigo\Search\Inflector\InflectorZz does not implement InflectorInterface');
     } finally {
         $conn->executeStatement('UPDATE user_infos SET language = ? WHERE user_id = 2', [$originalLanguage]);

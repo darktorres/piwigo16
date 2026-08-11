@@ -31,7 +31,7 @@ final readonly class FilterViewsSelection
                 continue;
             }
             $definition = FilterViewDefinition::tryFromArray($entry);
-            if ($definition !== null) {
+            if ($definition instanceof FilterViewDefinition) {
                 $filters[$key] = $definition;
             }
         }

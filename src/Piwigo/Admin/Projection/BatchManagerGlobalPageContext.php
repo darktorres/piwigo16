@@ -75,7 +75,7 @@ final readonly class BatchManagerGlobalPageContext implements TemplatePageContex
             $result['navbar'] = $this->navbar;
         }
 
-        if ($this->thumbParams !== null) {
+        if ($this->thumbParams instanceof DerivativeParams) {
             $result['thumb_params'] = $this->thumbParams;
         }
 

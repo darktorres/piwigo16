@@ -113,7 +113,7 @@ final readonly class AuthRepository
         $row = null;
 
         $usernameVo = Username::tryFrom($usernameOrEmail);
-        if ($usernameVo !== null) {
+        if ($usernameVo instanceof Username) {
             $row = (clone $qb)->where('u.username = :value')
                 ->setParameter('value', $usernameVo)
                 ->getQuery()
@@ -122,7 +122,7 @@ final readonly class AuthRepository
 
         if (! is_array($row)) {
             $emailVo = Email::tryFrom($usernameOrEmail);
-            if ($emailVo !== null) {
+            if ($emailVo instanceof Email) {
                 $row = $qb->where('u.mailAddress = :value')
                     ->setParameter('value', $emailVo)
                     ->getQuery()

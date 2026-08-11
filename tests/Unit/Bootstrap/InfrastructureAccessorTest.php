@@ -35,6 +35,6 @@ test('entityManager resolves the container\'s own single EntityManagerInterface 
 test('entityManager throws when the container returns an unexpected type', function (): void {
     KernelContainerOverride::withWrongTypeFor(
         EntityManagerInterface::class,
-        static fn () => InfrastructureAccessor::entityManager()
+        static fn (): EntityManagerInterface => InfrastructureAccessor::entityManager()
     );
 })->throws(LogicException::class, 'Container returned an unexpected type for ' . EntityManagerInterface::class);

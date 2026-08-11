@@ -158,7 +158,7 @@ test('CurrentTemplateTestFactory::get throws when the container returns an unexp
     try {
         KernelContainerOverride::withWrongTypeFor(
             CurrentTemplate::class,
-            static fn () => CurrentTemplateTestFactory::get(),
+            static fn (): CurrentTemplate => CurrentTemplateTestFactory::get(),
         );
     } finally {
         Kernel::boot(Paths::fromRoot($root));

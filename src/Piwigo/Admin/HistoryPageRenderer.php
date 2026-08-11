@@ -88,8 +88,8 @@ final class HistoryPageRenderer
 
         if ($form_param['user_id'] !== -1) {
             $form_param_user_id = UserId::tryFrom($form_param['user_id']);
-            $form_param_username = $form_param_user_id === null ? null : new UserRepository(EntityManagerFactory::build($conn), $eventDispatcher, $currentConfig)
-                ->findUsernameById($form_param_user_id);
+            $form_param_username = $form_param_user_id instanceof UserId ? new UserRepository(EntityManagerFactory::build($conn), $eventDispatcher, $currentConfig)
+                ->findUsernameById($form_param_user_id) : null;
             $form_param['user_name'] = $form_param_username?->value;
             $form_param['user_id'] = $form_param['user_name'] === null ? -1 : $form_param['user_id'];
         }

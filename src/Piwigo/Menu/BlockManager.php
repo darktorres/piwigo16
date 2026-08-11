@@ -32,7 +32,7 @@ final class BlockManager
     /**
      * @var DisplayBlock[]
      */
-    private $display_blocks = [];
+    private array $display_blocks = [];
 
     /**
      * @param string $id

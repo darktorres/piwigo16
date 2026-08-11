@@ -412,7 +412,7 @@ final class NotificationByMailSenderTest extends IntegrationTestCase
         // A forced delivery failure always raises MailService::mail()'s
         // own deliberate E_USER_WARNING in this CLI process, which
         // failOnWarning="true" would otherwise turn into a test failure.
-        $result = $this->suppressMailerWarning(fn () => $this->sender->sendMailNotifications('send', [$this->user1OriginalRow['check_key']]));
+        $result = $this->suppressMailerWarning(fn (): array => $this->sender->sendMailNotifications('send', [$this->user1OriginalRow['check_key']]));
 
         self::assertSame([$this->user1OriginalRow['check_key']], $result);
         // incMailSentFailed() (inside the per-user loop) then
@@ -436,7 +436,7 @@ final class NotificationByMailSenderTest extends IntegrationTestCase
         CurrentConfigTestFactory::get()->smtpHost = '127.0.0.1:1';
         CurrentConfigTestFactory::get()->nbmSendDetailedContent = false;
 
-        $result = $this->suppressMailerWarning(fn () => $this->sender->sendMailNotifications('send', [$this->user1OriginalRow['check_key']]));
+        $result = $this->suppressMailerWarning(fn (): array => $this->sender->sendMailNotifications('send', [$this->user1OriginalRow['check_key']]));
 
         self::assertSame([$this->user1OriginalRow['check_key']], $result);
         self::assertSame(
@@ -517,7 +517,7 @@ final class NotificationByMailSenderTest extends IntegrationTestCase
         CurrentConfigTestFactory::get()->smtpHost = '127.0.0.1:1';
         self::assertSame(1, $this->user1Enabled());
 
-        $result = $this->suppressMailerWarning(fn () => $this->sender->doSubscribeUnsubscribeNotificationByMail(
+        $result = $this->suppressMailerWarning(fn (): array => $this->sender->doSubscribeUnsubscribeNotificationByMail(
             true,
             false,
             [$this->user1OriginalRow['check_key']]
@@ -629,7 +629,7 @@ final class NotificationByMailSenderTest extends IntegrationTestCase
         CurrentConfigTestFactory::get()->smtpHost = '127.0.0.1:1';
         CurrentConfigTestFactory::get()->nbmComplementaryMailContent = 'A note from the admin.';
 
-        $result = $this->suppressMailerWarning(fn () => $this->sender->sendMailNotifications('send', [$checkKey]));
+        $result = $this->suppressMailerWarning(fn (): array => $this->sender->sendMailNotifications('send', [$checkKey]));
 
         self::assertSame([$checkKey], $result);
         self::assertSame(

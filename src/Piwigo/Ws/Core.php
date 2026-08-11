@@ -56,6 +56,7 @@ use Piwigo\Image\SrcImage;
 use Piwigo\Lang\Translator;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Rate\RateService;
+use Piwigo\Search\Projection\Search;
 use Piwigo\Search\SearchRepository;
 use Piwigo\Tag\TagService;
 use Piwigo\Users\CurrentUser;
@@ -781,7 +782,7 @@ final readonly class Core
         // when visiting a photo (which is currently, in version 14, the only event registered
         // by pwg.history.log) we should also increment images.hit
         $historyImageId = ImageId::tryFrom($params['image_id']);
-        if ($historyImageId !== null) {
+        if ($historyImageId instanceof ImageId) {
             $this->imageRepository->incrementVisitCounter($historyImageId);
         }
 
@@ -960,7 +961,7 @@ final readonly class Core
         // this row is the one we just INSERTed above (via $search_id =
         // Connection::lastInsertId()) with rules we just encoded ourselves,
         // so it's guaranteed to be found with a non-null, decoded array.
-        assert($storedSearch !== null && is_array($storedSearch->rules));
+        assert($storedSearch instanceof Search && is_array($storedSearch->rules));
 
         $page['search'] = $storedSearch->rules;
 

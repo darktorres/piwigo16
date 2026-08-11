@@ -7,6 +7,7 @@ namespace Piwigo\Tests\Integration;
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\Schema\Name\OptionallyQualifiedName;
 use Doctrine\DBAL\Schema\Name\UnqualifiedName;
+use Doctrine\DBAL\Schema\PrimaryKeyConstraint;
 use LogicException;
 use Override;
 use Piwigo\Admin\Maintenance\DbMaintenanceRepository;
@@ -383,11 +384,11 @@ final class DbMaintenanceRepositoryTest extends IntegrationTestCase
             $primaryKey = $schemaManager->introspectTablePrimaryKeyConstraint(
                 OptionallyQualifiedName::unquoted($tableName)
             );
-            $introspectedPkColumns = $primaryKey === null ? [] : array_map(
+            $introspectedPkColumns = $primaryKey instanceof PrimaryKeyConstraint ? array_map(
                 static fn (UnqualifiedName $column): string => $column->getIdentifier()
                     ->getValue(),
                 $primaryKey->getColumnNames(),
-            );
+            ) : [];
 
             // SHOW CREATE TABLE is MySQL-only syntax. Postgres's own
             // pg_get_constraintdef() reports the exact same "PRIMARY KEY

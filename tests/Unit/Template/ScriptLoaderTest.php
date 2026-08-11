@@ -11,6 +11,7 @@ use Piwigo\Core\Paths;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Http\ResponseReadyException;
 use Piwigo\PluginConfig\EventDispatcher;
+use Piwigo\Template\Combinable;
 use Piwigo\Template\CurrentTemplate;
 use Piwigo\Template\Script;
 use Piwigo\Template\ScriptLoader;
@@ -282,7 +283,7 @@ test('urlService() throws when no URL service has been set', function (): void {
     // urlService()'s own, more specific "no URL service set" guard.
     $loader = new ScriptLoader();
 
-    expect(fn () => $loader->getHeadScripts(new AccessLevelChecker(CurrentUserTestFactory::get(), CurrentConfigTestFactory::get())))
+    expect(fn (): array => $loader->getHeadScripts(new AccessLevelChecker(CurrentUserTestFactory::get(), CurrentConfigTestFactory::get())))
         ->toThrow(RuntimeException::class, 'ScriptLoader: no URL service set (RequestBootstrap not run yet?)');
 });
 
@@ -296,9 +297,9 @@ test('htmlRenderer throws when the container returns an unexpected type', functi
     $loader = new ScriptLoader();
     $method = new ReflectionMethod(ScriptLoader::class, 'htmlRenderer');
 
-    expect(fn () => KernelContainerOverride::withWrongTypeFor(
+    expect(fn (): mixed => KernelContainerOverride::withWrongTypeFor(
         HtmlRenderingInterface::class,
-        static fn () => $method->invoke($loader)
+        static fn (): mixed => $method->invoke($loader)
     ))->toThrow(LogicException::class, 'Container returned an unexpected type for ' . HtmlRenderingInterface::class);
 });
 
@@ -310,45 +311,45 @@ test('urlService() throws when the container returns an unexpected type', functi
     // container resolve (both guards happen to share the same message).
     $method = new ReflectionMethod(ScriptLoader::class, 'urlService');
 
-    expect(fn () => KernelContainerOverride::withWrongTypeFor(
+    expect(fn (): mixed => KernelContainerOverride::withWrongTypeFor(
         UrlServiceInterface::class,
-        static fn () => $method->invoke(null)
+        static fn (): mixed => $method->invoke(null)
     ))->toThrow(RuntimeException::class, 'ScriptLoader: no URL service set (RequestBootstrap not run yet?)');
 });
 
 test('eventDispatcher() throws when the container returns an unexpected type', function (): void {
     $method = new ReflectionMethod(ScriptLoader::class, 'eventDispatcher');
 
-    expect(fn () => KernelContainerOverride::withWrongTypeFor(
+    expect(fn (): mixed => KernelContainerOverride::withWrongTypeFor(
         EventDispatcher::class,
-        static fn () => $method->invoke(null)
+        static fn (): mixed => $method->invoke(null)
     ))->toThrow(RuntimeException::class, 'ScriptLoader: no EventDispatcher set (RequestBootstrap not run yet?)');
 });
 
 test('currentTemplate() throws when the container returns an unexpected type', function (): void {
     $method = new ReflectionMethod(ScriptLoader::class, 'currentTemplate');
 
-    expect(fn () => KernelContainerOverride::withWrongTypeFor(
+    expect(fn (): mixed => KernelContainerOverride::withWrongTypeFor(
         CurrentTemplate::class,
-        static fn () => $method->invoke(null)
+        static fn (): mixed => $method->invoke(null)
     ))->toThrow(RuntimeException::class, 'ScriptLoader: no CurrentTemplate set (RequestBootstrap not run yet?)');
 });
 
 test('currentConfig() throws when the container returns an unexpected type', function (): void {
     $method = new ReflectionMethod(ScriptLoader::class, 'currentConfig');
 
-    expect(fn () => KernelContainerOverride::withWrongTypeFor(
+    expect(fn (): mixed => KernelContainerOverride::withWrongTypeFor(
         CurrentConfig::class,
-        static fn () => $method->invoke(null)
+        static fn (): mixed => $method->invoke(null)
     ))->toThrow(RuntimeException::class, 'ScriptLoader: no CurrentConfig set (RequestBootstrap not run yet?)');
 });
 
 test('paths() throws when the container returns an unexpected type', function (): void {
     $method = new ReflectionMethod(ScriptLoader::class, 'paths');
 
-    expect(fn () => KernelContainerOverride::withWrongTypeFor(
+    expect(fn (): mixed => KernelContainerOverride::withWrongTypeFor(
         Paths::class,
-        static fn () => $method->invoke(null)
+        static fn (): mixed => $method->invoke(null)
     ))->toThrow(RuntimeException::class, 'ScriptLoader: no Paths set (RequestBootstrap not run yet?)');
 });
 
@@ -839,9 +840,9 @@ test('cmpByModeAndOrder sorts a remote script before a same-mode, same-order loc
         $localFirst->add('remote-script', 0, [], 'https://cdn.example.com/remote.js');
         $headB = $localFirst->getHeadScripts(new AccessLevelChecker(CurrentUserTestFactory::get(), CurrentConfigTestFactory::get()));
 
-        expect(array_map(fn ($s) => $s->id, $headA))
+        expect(array_map(fn (Combinable $s): string => $s->id, $headA))
             ->toBe(['remote-script', 'local-script'])
-            ->and(array_map(fn ($s) => $s->id, $headB))
+            ->and(array_map(fn (Combinable $s): string => $s->id, $headB))
             ->toBe(['remote-script', 'local-script']);
     } finally {
         file_combiner_test_rrmdir_scriptloader($root);
@@ -1491,7 +1492,7 @@ test('cmpByModeAndOrder sorts a remote script strictly before a local one at the
     // which calls self::urlService() -- needs a booted Kernel.
     expect(KernelContainerOverride::with([
         Paths::class => Paths::fromRoot(sys_get_temp_dir()),
-    ], fn () => scriptLoaderCmp($remote, $local)))->toBe(-1);
+    ], fn (): int => scriptLoaderCmp($remote, $local)))->toBe(-1);
 });
 
 test('cmpByModeAndOrder sorts a local script strictly after a remote one at the same mode/order (direct comparator invocation)', function (): void {
@@ -1509,5 +1510,5 @@ test('cmpByModeAndOrder sorts a local script strictly after a remote one at the 
     // which calls self::urlService() -- needs a booted Kernel.
     expect(KernelContainerOverride::with([
         Paths::class => Paths::fromRoot(sys_get_temp_dir()),
-    ], fn () => scriptLoaderCmp($local, $remote)))->toBe(1);
+    ], fn (): int => scriptLoaderCmp($local, $remote)))->toBe(1);
 });

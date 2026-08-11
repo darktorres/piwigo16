@@ -12,6 +12,7 @@ use Piwigo\Bootstrap\RequestPipeline;
 use Piwigo\Core\Kernel;
 use Piwigo\Http\Middleware\ExceptionHandlerMiddleware;
 use Piwigo\Tests\Support\KernelContainerOverride;
+use Psr\Http\Message\ResponseInterface;
 
 /**
  * Confirms RequestPipeline::handle() runs the real pipeline end-to-end.
@@ -81,7 +82,7 @@ final class RequestPipelineTest extends TestCase
         // real middleware needs to resolve at all before the guard fires.
         KernelContainerOverride::withWrongTypeFor(
             ExceptionHandlerMiddleware::class,
-            static fn () => RequestPipeline::handle(new ServerRequest('GET', '/anything'))
+            static fn (): ResponseInterface => RequestPipeline::handle(new ServerRequest('GET', '/anything'))
         );
     }
 }

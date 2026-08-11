@@ -347,7 +347,7 @@ final class ActivityRepository extends EntityRepository implements LoginActivity
         $expr = Criteria::expr();
         $criteriaObj = Criteria::create();
 
-        if ($criteria->performedBy !== null) {
+        if ($criteria->performedBy instanceof UserId) {
             $criteriaObj->andWhere($expr->eq('performedBy', $criteria->performedBy));
         }
 
@@ -359,11 +359,11 @@ final class ActivityRepository extends EntityRepository implements LoginActivity
             $criteriaObj->andWhere($expr->eq('object', $criteria->object));
         }
 
-        if ($criteria->minDate !== null) {
+        if ($criteria->minDate instanceof SqlDateTime) {
             $criteriaObj->andWhere($expr->gte('occuredOn', $criteria->minDate));
         }
 
-        if ($criteria->maxDate !== null) {
+        if ($criteria->maxDate instanceof SqlDateTime) {
             $criteriaObj->andWhere($expr->lte('occuredOn', $criteria->maxDate));
         }
 

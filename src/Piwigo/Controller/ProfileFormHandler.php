@@ -214,10 +214,10 @@ final readonly class ProfileFormHandler
                 if (is_string($username_for_update) and $username_for_update !== '' and $username_for_update !== '0') {
                     $username = $username_for_update;
                     $usernameVo = Username::tryFrom($username);
-                    if ($usernameVo === null) {
+                    if (! $usernameVo instanceof Username) {
                         $this->pageState->addError($this->lang->t('invalid login format'));
                         unset($post['redirect']);
-                    } elseif ($username !== $userdata['username'] and $this->userService->getUserId($usernameVo) !== null) {
+                    } elseif ($username !== $userdata['username'] and $this->userService->getUserId($usernameVo) instanceof UserId) {
                         $this->pageState->addError($this->lang->t('this login is already used'));
                         unset($post['redirect']);
                     } else {
@@ -377,7 +377,7 @@ final readonly class ProfileFormHandler
 
         $current_user_email = $this->currentUser->get()
             ->email;
-        $email_notifications_infos = $current_user_email !== null ?
+        $email_notifications_infos = $current_user_email instanceof Email ?
           $this->lang->t('The email <em>%s</em> will be used to notify you when your API key is about to expire.', $current_user_email->value)
           : $this->lang->t('You have no email address, so you will not be notified when your API key is about to expire.');
 

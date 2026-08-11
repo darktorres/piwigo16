@@ -72,7 +72,7 @@ test('fromRow throws with the real debug type of a non-null but invalid id', fun
     $row = fullTagRow();
     $row['id'] = 'not-a-number';
 
-    expect(fn () => Tag::fromRow($row))
+    expect(fn (): Tag => Tag::fromRow($row))
         ->toThrow(InvalidArgumentException::class, 'Expected a positive tag id, got string');
 });
 

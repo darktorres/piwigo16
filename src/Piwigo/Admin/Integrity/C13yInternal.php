@@ -227,7 +227,7 @@ final readonly class C13yInternal
                     if (isset($name)) {
                         $name_ok = false;
                         while (! $name_ok) {
-                            $name_ok = ($this->userService->getUserId(Username::from($name)) === null);
+                            $name_ok = (! $this->userService->getUserId(Username::from($name)) instanceof UserId);
                             if (! $name_ok) {
                                 $name .= $this->sessionService->generateKey(1);
                             }
@@ -259,7 +259,7 @@ final readonly class C13yInternal
                         $this->userService->updateStatusForUsers([UserId::from($id)], $status);
 
                         $updated_username = $this->userService->getUsername(UserId::from($id));
-                        $this->pageState->addInfo(sprintf($this->lang->t('Status of user "%s" updated'), $updated_username === null ? '' : $updated_username->value));
+                        $this->pageState->addInfo(sprintf($this->lang->t('Status of user "%s" updated'), $updated_username instanceof Username ? $updated_username->value : ''));
 
                         $result = true;
                     }

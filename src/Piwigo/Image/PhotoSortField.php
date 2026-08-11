@@ -182,7 +182,7 @@ enum PhotoSortField
             }
 
             $field = self::fromSortFieldToken(strtolower($matches[1]));
-            if ($field === null) {
+            if (! $field instanceof \Piwigo\Image\PhotoSortField) {
                 return null;
             }
 

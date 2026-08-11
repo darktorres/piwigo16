@@ -117,15 +117,9 @@ final class DerivativeImage
         return $paths;
     }
 
-    /**
-     * @var string
-     */
-    private $rel_path = '';
+    private string $rel_path = '';
 
-    /**
-     * @var string
-     */
-    private $rel_url = '';
+    private string $rel_url = '';
 
     private bool $is_cached = true;
 
@@ -172,7 +166,7 @@ final class DerivativeImage
         $rel_path = '';
         $rel_url = '';
         self::build($src_image, self::currentConfig(), $params, $rel_path, $rel_url);
-        if ($params === null) {
+        if (! $params instanceof DerivativeParams) {
             return $src_image->getUrl();
         }
         $default_url = self::urlService()->getRootUrl() . $rel_url;
@@ -342,7 +336,7 @@ final class DerivativeImage
 
     public function getUrl(): string
     {
-        if ($this->params === null) {
+        if (! $this->params instanceof DerivativeParams) {
             return $this->src_image->getUrl();
         }
         $default_url = self::urlService()->getRootUrl() . $this->rel_url;
@@ -358,7 +352,7 @@ final class DerivativeImage
 
     public function sameAsSource(): bool
     {
-        return $this->params === null;
+        return ! $this->params instanceof DerivativeParams;
     }
 
     /**
@@ -366,7 +360,7 @@ final class DerivativeImage
      */
     public function getType()
     {
-        if ($this->params === null) {
+        if (! $this->params instanceof DerivativeParams) {
             return 'Original';
         }
         return $this->params->type;
@@ -378,7 +372,7 @@ final class DerivativeImage
     public function getSize(): ?array
     {
         $src_size = $this->src_image->getSize();
-        if ($this->params === null || $src_size === null) {
+        if (! $this->params instanceof DerivativeParams || $src_size === null) {
             return $src_size;
         }
         return $this->params->computeFinalSize($src_size);
@@ -386,10 +380,8 @@ final class DerivativeImage
 
     /**
      * Returns the size as CSS rule.
-     *
-     * @return string
      */
-    public function getSizeCss()
+    public function getSizeCss(): string
     {
         $size = $this->getSize();
         if ((bool) $size) {
@@ -401,10 +393,8 @@ final class DerivativeImage
 
     /**
      * Returns the size as HTML attributes.
-     *
-     * @return string
      */
-    public function getSizeHtm()
+    public function getSizeHtm(): string
     {
         $size = $this->getSize();
         if ((bool) $size) {
@@ -416,10 +406,8 @@ final class DerivativeImage
 
     /**
      * Returns literal size: $widthx$height.
-     *
-     * @return string
      */
-    public function getSizeHr()
+    public function getSizeHr(): string
     {
         $size = $this->getSize();
         if ((bool) $size) {
@@ -458,9 +446,8 @@ final class DerivativeImage
      *
      * @param int $maxw
      * @param int $maxh
-     * @return string
      */
-    public function getScaledSizeHtm($maxw = 9999, $maxh = 9999)
+    public function getScaledSizeHtm($maxw = 9999, $maxh = 9999): string
     {
         $size = $this->getScaledSize($maxw, $maxh);
         if ((bool) $size) {

@@ -13,6 +13,7 @@ use Piwigo\Tests\Support\CurrentUserTestFactory;
 use Piwigo\Tests\Support\KernelContainerOverride;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\UserStatus;
+use Symfony\Component\Console\Application;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
 
@@ -81,7 +82,7 @@ test('buildApplication attaches a real CurrentUser (guest) globally', function (
 test('buildApplication initializes CurrentConfigService with a real, resolved ConfigService', function (): void {
     CliBootstrap::buildApplication();
 
-    expect(fn () => CurrentConfigServiceTestFactory::get()->get())->not->toThrow(LogicException::class);
+    expect(fn (): ConfigService => CurrentConfigServiceTestFactory::get()->get())->not->toThrow(LogicException::class);
 });
 
 test('run() installs the shutdown handler, builds the Application and executes the given argv', function (): void {
@@ -112,21 +113,21 @@ test('run() installs the shutdown handler, builds the Application and executes t
 test('buildApplication throws when the container returns an unexpected type for ConfigService', function (): void {
     KernelContainerOverride::withWrongTypeFor(
         ConfigService::class,
-        static fn () => CliBootstrap::buildApplication()
+        static fn (): Application => CliBootstrap::buildApplication()
     );
 })->throws(LogicException::class, 'Container returned an unexpected type for ' . ConfigService::class);
 
 test('buildApplication throws when the container returns an unexpected type for CurrentUser', function (): void {
     KernelContainerOverride::withWrongTypeFor(
         CurrentUser::class,
-        static fn () => CliBootstrap::buildApplication()
+        static fn (): Application => CliBootstrap::buildApplication()
     );
 })->throws(LogicException::class, 'Container returned an unexpected type for ' . CurrentUser::class);
 
 test('buildApplication throws when the container returns an unexpected type for CurrentConfigService', function (): void {
     KernelContainerOverride::withWrongTypeFor(
         CurrentConfigService::class,
-        static fn () => CliBootstrap::buildApplication()
+        static fn (): Application => CliBootstrap::buildApplication()
     );
 })->throws(LogicException::class, 'Container returned an unexpected type for ' . CurrentConfigService::class);
 

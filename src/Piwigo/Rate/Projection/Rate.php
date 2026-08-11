@@ -46,13 +46,13 @@ final readonly class Rate
     {
         $userIdValue = $row['user_id'] ?? null;
         $userId = $userIdValue instanceof UserId ? $userIdValue : UserId::tryFrom($userIdValue);
-        if ($userId === null) {
+        if (! $userId instanceof UserId) {
             throw new InvalidArgumentException(sprintf('Expected a positive user id, got %s', get_debug_type($userIdValue)));
         }
 
         $elementIdValue = $row['element_id'] ?? null;
         $elementId = $elementIdValue instanceof ImageId ? $elementIdValue : ImageId::tryFrom($elementIdValue);
-        if ($elementId === null) {
+        if (! $elementId instanceof ImageId) {
             throw new InvalidArgumentException(sprintf('Expected a positive element id, got %s', get_debug_type($elementIdValue)));
         }
 

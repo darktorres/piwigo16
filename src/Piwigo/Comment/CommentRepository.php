@@ -20,6 +20,7 @@ use Piwigo\Common\Dto\PaginatedResult;
 use Piwigo\Common\ValueObject\CommentId;
 use Piwigo\Common\ValueObject\ImageId;
 use Piwigo\Common\ValueObject\SqlDateTime;
+use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Core\CommentCounterInterface;
 use Piwigo\Core\Env;
 use Piwigo\Image\ImageCategoryEntity;
@@ -81,7 +82,7 @@ final class CommentRepository extends EntityRepository implements CommentCounter
         $em->persist($entity);
         $em->flush();
 
-        assert($entity->id !== null);
+        assert($entity->id instanceof CommentId);
 
         return $entity->id;
     }
@@ -310,7 +311,7 @@ final class CommentRepository extends EntityRepository implements CommentCounter
 
         $conditions = [new SqlCondition('1=1')];
 
-        if ($includeAuthorId && $criteria->authorId !== null) {
+        if ($includeAuthorId && $criteria->authorId instanceof UserId) {
             $conditions[] = new SqlCondition('author_id = :authorId', [
                 'authorId' => $criteria->authorId->value,
             ], [
@@ -318,7 +319,7 @@ final class CommentRepository extends EntityRepository implements CommentCounter
             ]);
         }
 
-        if ($criteria->imageId !== null) {
+        if ($criteria->imageId instanceof ImageId) {
             $conditions[] = new SqlCondition('image_id = :imageId', [
                 'imageId' => $criteria->imageId->value,
             ], [
@@ -326,7 +327,7 @@ final class CommentRepository extends EntityRepository implements CommentCounter
             ]);
         }
 
-        if ($criteria->minDate !== null) {
+        if ($criteria->minDate instanceof SqlDateTime) {
             $conditions[] = new SqlCondition('date >= :minDate', [
                 'minDate' => $criteria->minDate->value,
             ], [
@@ -334,7 +335,7 @@ final class CommentRepository extends EntityRepository implements CommentCounter
             ]);
         }
 
-        if ($criteria->maxDate !== null) {
+        if ($criteria->maxDate instanceof SqlDateTime) {
             $conditions[] = new SqlCondition('date <= :maxDate', [
                 'maxDate' => $criteria->maxDate->value,
             ], [
@@ -378,7 +379,7 @@ final class CommentRepository extends EntityRepository implements CommentCounter
             default => null,
         };
 
-        if ($statusCondition !== null) {
+        if ($statusCondition instanceof SqlCondition) {
             $conditions[] = $statusCondition;
         }
 
@@ -423,19 +424,19 @@ final class CommentRepository extends EntityRepository implements CommentCounter
 
         $criteriaObj = Criteria::create();
 
-        if ($includeAuthorId && $criteria->authorId !== null) {
+        if ($includeAuthorId && $criteria->authorId instanceof UserId) {
             $criteriaObj->andWhere($expr->eq('authorId', $criteria->authorId->value));
         }
 
-        if ($criteria->imageId !== null) {
+        if ($criteria->imageId instanceof ImageId) {
             $criteriaObj->andWhere($expr->eq('imageId', $criteria->imageId));
         }
 
-        if ($criteria->minDate !== null) {
+        if ($criteria->minDate instanceof SqlDateTime) {
             $criteriaObj->andWhere($expr->gte('date', $criteria->minDate));
         }
 
-        if ($criteria->maxDate !== null) {
+        if ($criteria->maxDate instanceof SqlDateTime) {
             $criteriaObj->andWhere($expr->lte('date', $criteria->maxDate));
         }
 

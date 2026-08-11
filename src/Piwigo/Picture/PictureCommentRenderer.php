@@ -10,6 +10,7 @@ use Piwigo\Comment\CommentEntity;
 use Piwigo\Comment\CommentService;
 use Piwigo\Common\Enum\SortOrder;
 use Piwigo\Common\ValueObject\CommentId;
+use Piwigo\Common\ValueObject\Email;
 use Piwigo\Common\ValueObject\ImageId;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\DateHelper;
@@ -77,7 +78,7 @@ final class PictureCommentRenderer
         $commentAction = null;
 
         $pictureCommentSubmitRequest = PictureCommentSubmitRequest::fromGlobals();
-        $showComments = array_any($related_categories, fn ($category) => (bool) $category['commentable']);
+        $showComments = array_any($related_categories, fn (array $category): bool => (bool) $category['commentable']);
 
         if ($showComments and $pictureCommentSubmitRequest->contentPresent) {
             if ($accessLevelChecker->isAGuest() and ! $currentConfig->commentsForall) {
@@ -236,7 +237,7 @@ final class PictureCommentRenderer
                             'comment_to_edit' => $row->id->value,
                         ]
                     );
-                    if ($editCommentId !== null and $row->id->equals($editCommentId)) {
+                    if ($editCommentId instanceof CommentId and $row->id->equals($editCommentId)) {
                         $tplComment['IN_EDIT'] = true;
                         $key = new EphemeralKeyService($currentConfig)
                             ->generate(2, (string) $imageId);
@@ -272,7 +273,7 @@ final class PictureCommentRenderer
         ));
 
         $showAddCommentForm = true;
-        if ($editCommentId !== null) {
+        if ($editCommentId instanceof CommentId) {
             $showAddCommentForm = false;
         }
         if ($accessLevelChecker->isAGuest() and ! $currentConfig->commentsForall) {
@@ -285,7 +286,7 @@ final class PictureCommentRenderer
 
             $userEmail = $currentUser->get()
                 ->email;
-            $userEmailEmpty = $userEmail === null;
+            $userEmailEmpty = ! $userEmail instanceof Email;
 
             $tplVar = [
                 'F_ACTION' => $url_self,

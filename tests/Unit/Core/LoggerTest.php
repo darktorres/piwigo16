@@ -698,7 +698,7 @@ test('contextToString formats every case var_export() can produce: multiple keys
 test('levelToCode includes the actual unrecognized level in its exception message, not just the level constant name', function (): void {
     // Kills line 480's UnwrapConcat (dropping the 'Unknown severity
     // level ' prefix, throwing with just the bare level number instead).
-    expect(fn () => Logger::levelToCode(999))
+    expect(fn (): string => Logger::levelToCode(999))
         ->toThrow(RuntimeException::class, 'Unknown severity level 999');
 });
 
@@ -905,7 +905,7 @@ test('codeToLevel converts every known severity code, case-insensitively, to its
 });
 
 test('codeToLevel throws for an unrecognized severity code', function (): void {
-    expect(fn () => Logger::codeToLevel('NOT_A_LEVEL'))
+    expect(fn (): int => Logger::codeToLevel('NOT_A_LEVEL'))
         ->toThrow(RuntimeException::class, 'Unknown severity code NOT_A_LEVEL');
 });
 

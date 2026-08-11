@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Piwigo\Image\ImageRect;
 use Piwigo\Image\SizingParams;
 
 /**
@@ -139,7 +140,7 @@ test('compute crops horizontally when the width ratio exceeds the height ratio',
     $scaleSize = null;
     $params->compute([300, 300], null, $cropRect, $scaleSize);
 
-    if ($cropRect === null) {
+    if (! $cropRect instanceof ImageRect) {
         throw new RuntimeException('Expected compute() to produce a crop rect');
     }
     expect($cropRect->l)
@@ -161,7 +162,7 @@ test('compute crops vertically when the height ratio exceeds the width ratio', f
     $scaleSize = null;
     $params->compute([300, 300], null, $cropRect, $scaleSize);
 
-    if ($cropRect === null) {
+    if (! $cropRect instanceof ImageRect) {
         throw new RuntimeException('Expected compute() to produce a crop rect');
     }
     expect($cropRect->l)
@@ -247,7 +248,7 @@ test('compute enters the crop-eligibility block from width ratio alone, not requ
     $scaleSize = null;
     $params->compute([200, 150], null, $cropRect, $scaleSize);
 
-    if ($cropRect === null) {
+    if (! $cropRect instanceof ImageRect) {
         throw new RuntimeException('Expected compute() to produce a crop rect');
     }
     expect($cropRect->l)
@@ -265,7 +266,7 @@ test('compute enters the crop-eligibility block from height ratio alone, not req
     $scaleSize = null;
     $params->compute([150, 200], null, $cropRect, $scaleSize);
 
-    if ($cropRect === null) {
+    if (! $cropRect instanceof ImageRect) {
         throw new RuntimeException('Expected compute() to produce a crop rect');
     }
     expect($cropRect->t)
@@ -351,7 +352,7 @@ test('compute\'s vertical max-crop-pixels floors the fractional ideal-crop dista
     $scaleSize = null;
     $params->compute([300, 300], null, $cropRect, $scaleSize);
 
-    if ($cropRect === null) {
+    if (! $cropRect instanceof ImageRect) {
         throw new RuntimeException('Expected compute() to produce a crop rect');
     }
     expect($cropRect->t)
@@ -369,7 +370,7 @@ test('compute\'s horizontal max-crop-pixels uses real rounding, not floor or cei
     $scaleSize = null;
     $params->compute([100, 300], null, $cropRect, $scaleSize);
 
-    if ($cropRect === null) {
+    if (! $cropRect instanceof ImageRect) {
         throw new RuntimeException('Expected compute() to produce a crop rect');
     }
     expect($cropRect->l)
@@ -389,7 +390,7 @@ test('compute\'s horizontal max-crop-pixels uses real rounding, not floor or cei
     $scaleSize = null;
     $params->compute([100, 300], null, $cropRect, $scaleSize);
 
-    if ($cropRect === null) {
+    if (! $cropRect instanceof ImageRect) {
         throw new RuntimeException('Expected compute() to produce a crop rect');
     }
     expect($cropRect->l)
@@ -406,7 +407,7 @@ test('compute\'s vertical max-crop-pixels uses real rounding, not floor or ceil,
     $scaleSize = null;
     $params->compute([300, 100], null, $cropRect, $scaleSize);
 
-    if ($cropRect === null) {
+    if (! $cropRect instanceof ImageRect) {
         throw new RuntimeException('Expected compute() to produce a crop rect');
     }
     expect($cropRect->t)
@@ -423,7 +424,7 @@ test('compute\'s vertical max-crop-pixels uses real rounding, not floor or ceil,
     $scaleSize = null;
     $params->compute([300, 100], null, $cropRect, $scaleSize);
 
-    if ($cropRect === null) {
+    if (! $cropRect instanceof ImageRect) {
         throw new RuntimeException('Expected compute() to produce a crop rect');
     }
     expect($cropRect->t)

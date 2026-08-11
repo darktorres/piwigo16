@@ -9,6 +9,7 @@ use Piwigo\Admin\Extensions\Projection\NewVersionsInfo;
 use Piwigo\Cache\PermissionCacheInvalidator;
 use Piwigo\Config\ConfigService;
 use Piwigo\Config\CurrentConfig;
+use Piwigo\Config\UpdateNotification;
 use Piwigo\Core\ActivitySystem;
 use Piwigo\Core\AppInfo;
 use Piwigo\Core\ContainerDetector;
@@ -182,7 +183,7 @@ final readonly class CoreUpdateService
 
         $notify = false;
         $lastNotificationSetting = $this->currentConfig->updateNotifyLastNotification;
-        if ($lastNotificationSetting === null) {
+        if (! $lastNotificationSetting instanceof UpdateNotification) {
             $notify = true;
         } else {
             $lastNotification = $lastNotificationSetting->notifiedOn;

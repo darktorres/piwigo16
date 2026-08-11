@@ -74,7 +74,7 @@ final readonly class Comment
         // either the VO directly or a raw scalar.
         $idValue = $row['id'] ?? null;
         $id = $idValue instanceof CommentId ? $idValue : CommentId::tryFrom($idValue);
-        if ($id === null) {
+        if (! $id instanceof CommentId) {
             throw new InvalidArgumentException(sprintf('Expected a positive comment id, got %s', get_debug_type($idValue)));
         }
 
@@ -82,7 +82,7 @@ final readonly class Comment
         // array hydration -- accept either shape, same as `id` above.
         $imageIdValue = $row['image_id'] ?? null;
         $imageId = $imageIdValue instanceof ImageId ? $imageIdValue : ImageId::tryFrom($imageIdValue);
-        if ($imageId === null) {
+        if (! $imageId instanceof ImageId) {
             throw new InvalidArgumentException(sprintf('Expected a positive image id, got %s', get_debug_type($imageIdValue)));
         }
 

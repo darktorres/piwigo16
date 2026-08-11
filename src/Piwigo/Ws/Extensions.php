@@ -392,7 +392,7 @@ final readonly class Extensions
 
         // Reset ignored extension
         if ($params['reset']) {
-            if ($type !== null) {
+            if ($type instanceof ExtensionType) {
                 $updateChecker->resetIgnoredForType($type);
             } else {
                 $updateChecker->resetAllIgnored();
@@ -402,7 +402,7 @@ final readonly class Extensions
             return true;
         }
 
-        if (in_array($params['id'], [null, ''], true) or $type === null) {
+        if (in_array($params['id'], [null, ''], true) or ! $type instanceof ExtensionType) {
             return new WsErrorResponse(403, 'Invalid parameters');
         }
 

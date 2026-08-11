@@ -20,6 +20,6 @@ test('currentConfig throws when the container returns an unexpected type', funct
     // this identical guard shape.
     KernelContainerOverride::withWrongTypeFor(
         CurrentConfig::class,
-        static fn () => RequestBootstrap::currentConfig(),
+        static fn (): CurrentConfig => RequestBootstrap::currentConfig(),
     );
 })->throws(LogicException::class, 'Container returned an unexpected type for ' . CurrentConfig::class);

@@ -80,7 +80,7 @@ test('refuses to clear a resolved path that does not look like the Latte cache d
         $command = new CacheClearCommand(new ArrayAdapter(), $wrongDir);
         $tester = new CommandTester($command);
 
-        expect(fn () => $tester->execute([]))->toThrow(RuntimeException::class);
+        expect(fn (): int => $tester->execute([]))->toThrow(RuntimeException::class);
         expect(is_dir($wrongDir))
             ->toBeTrue();
         expect(file_exists($wrongDir . '/innocent-bystander.txt'))->toBeTrue();
@@ -100,7 +100,7 @@ test('the Latte cache dir guard requires both the "latte" name and the "template
         $command = new CacheClearCommand(new ArrayAdapter(), $wrongDir);
         $tester = new CommandTester($command);
 
-        expect(fn () => $tester->execute([]))->toThrow(RuntimeException::class);
+        expect(fn (): int => $tester->execute([]))->toThrow(RuntimeException::class);
         expect(is_dir($wrongDir))
             ->toBeTrue();
     } finally {

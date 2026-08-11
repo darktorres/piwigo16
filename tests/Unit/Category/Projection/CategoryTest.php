@@ -152,12 +152,12 @@ test('fromRow defaults every nullable column to null/default when absent', funct
 });
 
 test('fromRow throws when id is missing', function (): void {
-    expect(fn () => Category::fromRow([]))
+    expect(fn (): Category => Category::fromRow([]))
         ->toThrow(InvalidArgumentException::class, 'Expected a positive category id, got null');
 });
 
 test('fromRow throws with the real debug type of a non-null but invalid id', function (): void {
-    expect(fn () => Category::fromRow([
+    expect(fn (): Category => Category::fromRow([
         'id' => 'not-a-number',
     ]))
         ->toThrow(InvalidArgumentException::class, 'Expected a positive category id, got string');
@@ -180,7 +180,7 @@ test('fromEntity throws when the entity has no id yet (not persisted)', function
     $entity = fullCategoryEntity();
     $entity->id = null;
 
-    expect(fn () => Category::fromEntity($entity))
+    expect(fn (): Category => Category::fromEntity($entity))
         ->toThrow(InvalidArgumentException::class, 'Category::fromEntity(): entity has no id (not yet persisted)');
 });
 

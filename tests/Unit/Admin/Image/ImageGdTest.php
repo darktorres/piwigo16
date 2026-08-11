@@ -66,7 +66,7 @@ test('construct throws for an unsupported file extension', function (): void {
     $path = imageGdTestMarker() . '/photo.bmp';
     file_put_contents($path, 'not a real bmp, extension alone is enough to hit the guard');
 
-    expect(fn () => new ImageGd($path))
+    expect(fn (): ImageGd => new ImageGd($path))
         ->toThrow(ImageProcessingException::class, '[Image GD] unsupported file extension');
 });
 
@@ -80,7 +80,7 @@ test('construct throws when the jpeg content cannot be decoded', function (): vo
     // expected-to-warn call is the only reliable way to swallow it.
     set_error_handler(static fn (): bool => true);
     try {
-        expect(fn () => new ImageGd($path))
+        expect(fn (): ImageGd => new ImageGd($path))
             ->toThrow(ImageProcessingException::class, '[Image GD] unable to decode image');
     } finally {
         restore_error_handler();
@@ -792,7 +792,7 @@ test('compose throws when the overlay uses a different image backend', function 
         }
     };
 
-    expect(fn () => $img->compose($overlay, 0, 0, 100))
+    expect(fn (): bool => $img->compose($overlay, 0, 0, 100))
         ->toThrow(LogicException::class, 'ImageBackend::compose(): overlay must use the same image backend');
 });
 
@@ -813,7 +813,7 @@ test('crop throws when the requested target size overflows GD\'s internal alloca
     // source image actually decoded above.
     set_error_handler(static fn (): bool => true, E_WARNING);
     try {
-        expect(fn () => $img->crop(100000, 100000, 0, 0))
+        expect(fn (): bool => $img->crop(100000, 100000, 0, 0))
             ->toThrow(ImageProcessingException::class, '[Image GD] imagecreatetruecolor() failed');
     } finally {
         restore_error_handler();
@@ -831,7 +831,7 @@ test('resize throws when the requested target size overflows GD\'s internal allo
 
     set_error_handler(static fn (): bool => true, E_WARNING);
     try {
-        expect(fn () => $img->resize(100000, 100000))
+        expect(fn (): bool => $img->resize(100000, 100000))
             ->toThrow(ImageProcessingException::class, '[Image GD] imagecreatetruecolor() failed');
     } finally {
         restore_error_handler();

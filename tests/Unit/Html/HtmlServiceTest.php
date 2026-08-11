@@ -769,7 +769,7 @@ test('renderElementName throws when a render_element_name handler returns someth
     EventDispatcherTestFactory::get()->addEventHandler(RenderElementName::class, $handler);
 
     try {
-        expect(static fn () => $service->renderElementName([
+        expect(static fn (): string => $service->renderElementName([
             'name' => 'My Photo Title',
         ]))
             ->toThrow(Error::class, 'must return an instance of');
@@ -850,7 +850,7 @@ test('renderElementDescription throws when a render_element_description handler 
     EventDispatcherTestFactory::get()->addEventHandler(RenderElementDescription::class, $handler);
 
     try {
-        expect(static fn () => $service->renderElementDescription([
+        expect(static fn (): string => $service->renderElementDescription([
             'comment' => 'A lovely shot.',
         ]))
             ->toThrow(Error::class, 'must return an instance of');
@@ -1256,7 +1256,7 @@ test('getThumbnailTitle throws when a get_thumbnail_title handler returns someth
     EventDispatcherTestFactory::get()->addEventHandler(GetThumbnailTitle::class, $handler);
 
     try {
-        expect(static fn () => $service->getThumbnailTitle([], 'My Photo'))
+        expect(static fn (): string => $service->getThumbnailTitle([], 'My Photo'))
             ->toThrow(Error::class, 'must return an instance of');
     } finally {
         EventDispatcherTestFactory::get()->removeEventHandler(GetThumbnailTitle::class, $handler);
@@ -1271,7 +1271,7 @@ test('getCatDisplayName throws when a render_category_name handler returns somet
     EventDispatcherTestFactory::get()->addEventHandler(RenderCategoryName::class, $handler);
 
     try {
-        expect(static fn () => $service->getCatDisplayName([[
+        expect(static fn (): string => $service->getCatDisplayName([[
             'id' => 1,
             'name' => 'Nature',
         ]], null))
@@ -1447,7 +1447,7 @@ test('getCatDisplayNameCache throws when a render_category_name handler returns 
     EventDispatcherTestFactory::get()->addEventHandler(RenderCategoryName::class, $handler);
 
     try {
-        expect(static fn () => $service->getCatDisplayNameCache('5', null))
+        expect(static fn (): string => $service->getCatDisplayNameCache('5', null))
             ->toThrow(Error::class, 'must return an instance of');
     } finally {
         EventDispatcherTestFactory::get()->removeEventHandler(RenderCategoryName::class, $handler);

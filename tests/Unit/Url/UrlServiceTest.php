@@ -1519,7 +1519,7 @@ test('parseSectionUrl rejects a search token with no usable identifier', functio
     $service = UrlServiceTestFactory::build(new UrlServiceTestHtmlRenderer());
     $i = 0;
 
-    expect(fn () => $service->parseSectionUrl(['search', 'no-digits-here'], $i, new UrlServiceTestRedirectService()))
+    expect(fn (): array => $service->parseSectionUrl(['search', 'no-digits-here'], $i, new UrlServiceTestRedirectService()))
         ->toThrow(RuntimeException::class, 'badRequest: search identifier is missing');
 });
 
@@ -1547,7 +1547,7 @@ test('parseSectionUrl rejects a malformed list token', function (): void {
     $service = UrlServiceTestFactory::build($htmlRenderer);
     $i = 0;
 
-    expect(fn () => $service->parseSectionUrl(['list', 'not-a-list'], $i, new UrlServiceTestRedirectService()))
+    expect(fn (): array => $service->parseSectionUrl(['list', 'not-a-list'], $i, new UrlServiceTestRedirectService()))
         ->toThrow(RuntimeException::class, 'badRequest: wrong format on list GET parameter');
 });
 
@@ -1583,7 +1583,7 @@ test('parseWellKnownParamsUrl rejects an unrecognized chronology style', functio
     $service = UrlServiceTestFactory::build($htmlRenderer);
     $i = 0;
 
-    expect(fn () => $service->parseWellKnownParamsUrl(['created-bogus'], $i))
+    expect(fn (): array => $service->parseWellKnownParamsUrl(['created-bogus'], $i))
         ->toThrow(RuntimeException::class, 'fatalError: bad chronology field (style)');
 });
 
@@ -1592,7 +1592,7 @@ test('parseWellKnownParamsUrl rejects a non-numeric chronology date token', func
     $service = UrlServiceTestFactory::build($htmlRenderer);
     $i = 0;
 
-    expect(fn () => $service->parseWellKnownParamsUrl(['created-monthly-not-a-number'], $i))
+    expect(fn (): array => $service->parseWellKnownParamsUrl(['created-monthly-not-a-number'], $i))
         ->toThrow(RuntimeException::class, 'fatalError: bad chronology field (date)');
 });
 
@@ -1840,7 +1840,7 @@ test('parseSectionUrl rejects a bare tags token with no tag identifiers', functi
 
     // badRequest() throws before TagService is ever constructed, so this
     // never touches the DB either.
-    expect(fn () => $service->parseSectionUrl(['tags'], $i, new UrlServiceTestRedirectService()))
+    expect(fn (): array => $service->parseSectionUrl(['tags'], $i, new UrlServiceTestRedirectService()))
         ->toThrow(RuntimeException::class, 'badRequest: at least one tag required');
 });
 
@@ -2125,7 +2125,7 @@ test('filterState() throws when the container returns an unexpected type', funct
         $service = UrlServiceTestFactory::build();
         $method = new ReflectionMethod(UrlService::class, 'filterState');
 
-        expect(fn () => $method->invoke($service))
+        expect(fn (): mixed => $method->invoke($service))
             ->toThrow(LogicException::class, 'Container returned an unexpected type for ' . FilterState::class);
     });
 });
@@ -2135,7 +2135,7 @@ test('translator() throws when the container returns an unexpected type', functi
         $service = UrlServiceTestFactory::build();
         $method = new ReflectionMethod(UrlService::class, 'translator');
 
-        expect(fn () => $method->invoke($service))
+        expect(fn (): mixed => $method->invoke($service))
             ->toThrow(LogicException::class, 'Container returned an unexpected type for ' . Translator::class);
     });
 });
@@ -2149,7 +2149,7 @@ test('currentLogger() throws when the container returns an unexpected type', fun
         $service = UrlServiceTestFactory::build();
         $method = new ReflectionMethod(UrlService::class, 'currentLogger');
 
-        expect(fn () => $method->invoke($service))
+        expect(fn (): mixed => $method->invoke($service))
             ->toThrow(LogicException::class, 'Container returned an unexpected type for ' . CurrentLogger::class);
     });
 });
@@ -2161,7 +2161,7 @@ test('sessionService() throws when the container returns an unexpected type', fu
         $service = UrlServiceTestFactory::build();
         $method = new ReflectionMethod(UrlService::class, 'sessionService');
 
-        expect(fn () => $method->invoke($service))
+        expect(fn (): mixed => $method->invoke($service))
             ->toThrow(LogicException::class, 'Container returned an unexpected type for ' . SessionService::class);
     });
 });

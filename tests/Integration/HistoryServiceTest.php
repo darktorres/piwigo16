@@ -348,8 +348,11 @@ final class HistoryServiceTest extends IntegrationTestCase
      * own IpAddress::tryFrom() correctly rejects that malformed value
      * rather than storing it, so logVisit() stores nothing rather than a
      * corrupted partial address; the graceful `ip_address_graceful` Type
-     * then round-trips that as an empty, space-padded CHAR(39) read (same
-     * padding behavior HistoryRepositoryTest's own IP tests cover).
+     * then round-trips that as an empty CHAR(39) read -- space-padded on
+     * Postgres (`char(n)` preserves trailing spaces on SELECT), trimmed
+     * back to '' on MySQL (CHAR strips trailing spaces on SELECT by
+     * default, confirmed live: this project's own MySQL config carries no
+     * PAD_CHAR_TO_FULL_LENGTH SQL mode).
      */
     public function testLogVisitGracefullyDropsAnOverLongUnrepresentableIpAddress(): void
     {
@@ -360,7 +363,10 @@ final class HistoryServiceTest extends IntegrationTestCase
         try {
             $this->service->logVisit();
 
-            self::assertSame(str_repeat(' ', 39), $this->fetchLastHistoryColumn('ip'));
+            self::assertSame(
+                $this->dbDriver === 'pgsql' ? str_repeat(' ', 39) : '',
+                $this->fetchLastHistoryColumn('ip')
+            );
         } finally {
             unset($_SERVER['REMOTE_ADDR']);
         }

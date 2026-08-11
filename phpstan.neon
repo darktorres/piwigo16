@@ -105,54 +105,25 @@ parameters:
             identifier: dba.keyValue
             path: tests/Integration/ImageStdParamsTest.php
         -
-            # config.value is jsonb; phpstan-dba substitutes a generic
-            # date-shaped sample ('1970-01-01') for an unresolvable bound
-            # parameter when building its EXPLAIN-able query, which isn't
-            # valid JSON. Tool limitation, not a real bug -- the app always
-            # writes a real json_encode()'d string here.
-            identifier: dba.syntaxError
-            path: src/Piwigo/Admin/Install/InstallWizard.php
-        -
-            # Same config.value jsonb-placeholder limitation as
-            # InstallWizard.php above, plus (same query) MySQL's
-            # `ON DUPLICATE KEY UPDATE` inside driver-conditional code,
-            # validated against the one Postgres connection phpstan-dba
-            # has -- upsertConfig()'s own docblock documents the
-            # MySQL/Postgres split; only the branch matching the
-            # configured driver ever actually executes.
+            # MySQL's `ON DUPLICATE KEY UPDATE` / Postgres's `ON CONFLICT`
+            # inside driver-conditional code (upsertConfig()'s own docblock
+            # documents the split) -- phpstan-dba validates the string
+            # literal from BOTH branches against whichever one connection
+            # it currently has; only the branch matching the configured
+            # driver ever actually executes.
             identifier: dba.syntaxError
             path: tests/Contract/ContractTestCase.php
         -
-            # Same config.value jsonb-placeholder limitation as
-            # InstallWizard.php above.
-            identifier: dba.syntaxError
-            path: tests/Contract/WsUploadTest.php
-        -
-            # Same config.value jsonb-placeholder limitation as
-            # InstallWizard.php above.
-            identifier: dba.syntaxError
-            path: tests/Contract/WsUsersMutationTest.php
-        -
-            # Same config.value jsonb-placeholder limitation as
-            # InstallWizard.php above, plus (same query) the same
-            # MySQL-dialect-vs-Postgres-connection limitation as
+            # Same MySQL-dialect-vs-Postgres-connection limitation as
             # ContractTestCase.php above (seedFlag()'s own comment
             # documents the ON DUPLICATE KEY UPDATE / ON CONFLICT split).
             identifier: dba.syntaxError
             path: tests/Integration/NoPhotoYetRendererTest.php
         -
-            # MySQL's backtick-quoted identifiers inside driver-conditional
-            # code (the mysqli branch of a pgsql/mysqli split), validated
-            # against the one Postgres connection phpstan-dba has -- only
-            # the branch matching the configured driver ever actually
-            # executes.
-            identifier: dba.syntaxError
-            path: tests/Integration/IntegrationTestCase.php
-        -
             # MySQL-only `REPLACE INTO` inside driver-conditional code,
-            # validated against the one Postgres connection phpstan-dba
-            # has (own comment documents the ON CONFLICT portable
-            # equivalent) -- same shape as IntegrationTestCase.php above.
+            # validated against whichever one connection phpstan-dba has
+            # (own comment documents the ON CONFLICT portable equivalent)
+            # -- same shape as ContractTestCase.php above.
             identifier: dba.syntaxError
             path: tests/Integration/SessionRepositoryTest.php
         -
@@ -178,3 +149,60 @@ parameters:
             # WsCategoriesMutationTest.php above.
             identifier: dba.syntaxError
             path: tests/Integration/RequestBootstrapConnectTest.php
+        -
+            # pg_advisory_unlock()/pg_try_advisory_lock() are Postgres-only
+            # functions, validated against whichever one connection
+            # phpstan-dba has -- only the branch matching the configured
+            # driver ever actually executes (own docblock documents the
+            # MySQL GET_LOCK()/RELEASE_LOCK() split).
+            identifier: dba.syntaxError
+            path: src/Piwigo/Db/AdvisorySessionLock.php
+        -
+            # setval()/pg_get_serial_sequence() are Postgres-only, validated
+            # against whichever one connection phpstan-dba has -- only the
+            # branch matching the configured driver ever actually executes
+            # (own comment documents the MySQL AUTO_INCREMENT equivalent).
+            identifier: dba.syntaxError
+            path: tests/Integration/HistoryServiceTest.php
+        -
+            # history.ip is genuinely `ip` on Postgres but `IP` on MySQL
+            # (a pre-existing cross-platform column-name-case discrepancy
+            # baked into the migrations, confirmed live) -- MySQL's own
+            # column-name matching is case-insensitive regardless, so the
+            # lowercase literal here is correct and works at runtime; only
+            # phpstan-dba's schema lookup does exact-case matching against
+            # its currently-configured mysqli connection.
+            identifier: dba.keyValue
+            path: tests/Integration/HistoryServiceTest.php
+        -
+            # comments.validated/user_mail_notification.enabled are real
+            # boolean columns on Postgres but MySQL's native tinyint(1) has
+            # no true boolean type -- a raw insert()/fetch() array must
+            # stay portable across both (PHP bool binds/reads correctly on
+            # either platform's driver), but phpstan-dba only ever
+            # resolves the schema type for whichever one connection it
+            # currently has, flagging the other platform's representation
+            # as a type mismatch.
+            identifier: dba.keyValue
+            path: tests/Integration/CommentServiceTest.php
+        -
+            # Same cross-driver boolean-vs-tinyint(1) portability
+            # requirement as CommentServiceTest.php above, but on the read
+            # side: a raw (unmapped) fetch returns a native PHP bool on
+            # Postgres, a numeric 1/0 on MySQL (own comment already
+            # documents this) -- the (int) cast is required for Postgres
+            # portability even though phpstan-dba's currently-configured
+            # mysqli connection already reports the column as int, making
+            # the cast look redundant from that one connection's view alone.
+            identifier: cast.useless
+            path: tests/Integration/NotificationByMailSenderTest.php
+        -
+            # images.rating_score is declared FLOAT on MySQL (DBAL returns
+            # a native float) but numeric(5,4) on Postgres (DBAL returns a
+            # string, to preserve exact decimal precision) -- the (float)
+            # cast is required for Postgres portability even though
+            # phpstan-dba's currently-configured mysqli connection already
+            # reports the column as float, making the cast look redundant
+            # from that one connection's view alone.
+            identifier: cast.useless
+            path: tests/Contract/WsHelperTest.php

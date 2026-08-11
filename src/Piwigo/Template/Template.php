@@ -741,7 +741,6 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
      *
      * @param string|null $tpl_var
      */
-    #[Override]
     public function getTemplateVars($tpl_var = null): mixed
     {
         return $this->smarty->getTemplateVars($tpl_var);

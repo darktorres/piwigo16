@@ -47,12 +47,4 @@ interface TemplateInterface
     public function setFilenames(array $filename_array): bool;
 
     public function clearAssign(string $tpl_var): void;
-
-    /**
-     * Mirrors assign()'s own arbitrary-value contract -- returns whatever
-     * was assigned, unmodified.
-     */
-    // Same blind spot as CalendarBase::generateCategoryContent() -- heavily used, just not traced through the interface.
-    // @phpstan-ignore shipmonk.deadMethod
-    public function getTemplateVars(?string $tpl_var = null): mixed;
 }

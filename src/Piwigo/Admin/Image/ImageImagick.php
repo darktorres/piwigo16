@@ -112,14 +112,12 @@ final class ImageImagick implements ImageInterface
     #[Override]
     public function sharpen(int|float $amount): bool
     {
-        // Real bug, found live by a new unit test that actually asserted on
-        // the pixel data instead of just the boolean return: Imagick::
-        // convolveImage() has required an ImagickKernel object (not a raw
-        // matrix array) since imagick 3.5.0 -- passing the bare array always
-        // threw a TypeError. ImageDerivativeController's own real call site
-        // (the only one) doesn't catch it, so any real request for a
-        // derivative with a configured sharpen level fatally errored
-        // instead of degrading -- confirmed uncaught up the stack.
+        // Imagick::convolveImage() has required an ImagickKernel object
+        // (not a raw matrix array) since imagick 3.5.0 -- passing the bare
+        // array always threw a TypeError. ImageDerivativeController's own
+        // real call site (the only one) doesn't catch it, so any real
+        // request for a derivative with a configured sharpen level fatally
+        // errored instead of degrading.
         $m = ImageBackend::getSharpenMatrix($amount);
         return $this->image->convolveImage(ImagickKernel::fromMatrix($m));
     }

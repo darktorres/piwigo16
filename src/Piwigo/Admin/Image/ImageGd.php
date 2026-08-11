@@ -65,9 +65,9 @@ final class ImageGd implements ImageInterface
         // coordinates) — real callers do pass floats here (e.g. i.php's
         // $crop_rect->width()/->l are int|float, since ImageRect::cropH()/
         // cropV() accumulate floor()'s float return type), which threw a
-        // TypeError under this backend before this cast was added (verified
-        // directly: imagecreatetruecolor(900.0, ...) throws "must be of type
-        // int, float given" under strict_types).
+        // TypeError under this backend before this cast was added
+        // (imagecreatetruecolor(900.0, ...) throws "must be of type int,
+        // float given" under strict_types).
         $width = (int) $width;
         $height = (int) $height;
         $x = (int) $x;

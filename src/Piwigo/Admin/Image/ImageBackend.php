@@ -333,9 +333,8 @@ final class ImageBackend implements ImageInterface
             // uploaded via CurrentConfig::uploadFormAllTypes()) -- no
             // rotation is knowable, same as the "not a JPEG" case just
             // below, which this is a strict superset of. No caller of this
-            // method catches an exception from it (confirmed via a full
-            // grep of every real call site), so throwing here was a latent
-            // crash, not a deliberate validation gate.
+            // method catches an exception from it, so throwing here was a
+            // latent crash, not a deliberate validation gate.
             return null;
         }
         [$width, $height, $type] = $size;

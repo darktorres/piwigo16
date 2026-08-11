@@ -77,10 +77,10 @@ final class ImageExtImagick implements ImageInterface
         // vanished/unreadable source path makes escapeshellarg() quote an
         // empty string, and identify treats a missing filename as "read
         // the image from stdin" instead of failing fast; without this
-        // redirect, a process whose own stdin is left open (confirmed live
-        // under pest-plugin-mutate's worker harness, unlike a normal CLI
-        // run) hangs here indefinitely instead of reaching the
-        // Corrupt-image exception below.
+        // redirect, a process whose own stdin is left open (as under
+        // pest-plugin-mutate's worker harness, unlike a normal CLI run)
+        // hangs here indefinitely instead of reaching the Corrupt-image
+        // exception below.
         $command = escapeshellarg($this->imagickdir) . 'identify -format "%wx%h" '
             . escapeshellarg((string) realpath($this->source_filepath)) . ' < /dev/null';
         $returnarray = [];

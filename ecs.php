@@ -36,6 +36,16 @@ return ECSConfig::configure()
         // Gitignored runtime user-uploaded content, never source code.
         __DIR__ . '/upload',
         __DIR__ . '/vendor',
+        // PHP's stream-wrapper engine calls these methods reflectively by
+        // their exact snake_case name (php.net/manual/en/class.streamwrapper.php)
+        // -- not renameable, so exempt from the PSR-1 camelCase check.
+        // Each file is a single-purpose stream-wrapper test double, so a
+        // whole-file skip doesn't hide real method-naming debt.
+        CamelCapsMethodNameSniff::class => [
+            __DIR__ . '/tests/Integration/ThemesStandardPagesLogoStreamWrapper.php',
+            __DIR__ . '/tests/Unit/Image/ImageServiceTestFailedOpenStreamWrapper.php',
+            __DIR__ . '/tests/Unit/Template/TemplateInstanceTestFakeStatStreamWrapper.php',
+        ],
     ])
     ->withRootFiles()
     ->withPreparedSets(

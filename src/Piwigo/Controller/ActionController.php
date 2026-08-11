@@ -205,7 +205,7 @@ final readonly class ActionController implements ControllerInterface
             }
             $http_headers['Content-Length'] = (string) @filesize($file);
             if (function_exists('mime_content_type')) {
-                // Real bug fix: legacy assigned mime_content_type()'s
+                // Legacy assigned mime_content_type()'s
                 // string|false result to $ctype directly, then checked
                 // isset($ctype) below -- isset(false) is true, so a
                 // failed lookup produced an empty "Content-Type: "

@@ -186,9 +186,9 @@ final class ImageDerivativeController implements ControllerInterface
                 // enclosing catch entirely, a throw does not). Without this
                 // catch-and-rethrow, the generic catch (\Exception) below
                 // would silently swallow a real 403 Forbidden/404/500 and
-                // let this method continue as if nothing happened --
-                // confirmed live, a real anonymous request for a private
-                // album's derivative was served instead of denied.
+                // let this method continue as if nothing happened -- a real
+                // anonymous request for a private album's derivative would
+                // be served instead of denied.
                 throw $e;
             } catch (Exception $e) {
                 $logger->error($e->getMessage(), 'i.php');
@@ -601,8 +601,7 @@ final class ImageDerivativeController implements ControllerInterface
             }
         }
 
-        // Real bug, found via a fixture-regeneration discrepancy and
-        // confirmed present identically in the 16.x-rewrite reference
+        // Present identically in the 16.x-rewrite reference
         // (Image/DerivativePipeline.php): this used to unconditionally
         // prepend './' when the bare request path resolves to a real file,
         // "to match #images.path" (findByPath() below) -- but
@@ -684,8 +683,7 @@ final class ImageDerivativeController implements ControllerInterface
                 continue;
             }
 
-            // Real bug, found live via a candidate-reuse test that never
-            // observed any reuse regardless of fixture setup: SizingParams::
+            // SizingParams::
             // $max_crop is untyped (@var float per its own docblock, but
             // *every* real construction site -- classic()'s implicit
             // default, square()'s literal 1 -- assigns a plain *int*; even
@@ -732,8 +730,8 @@ final class ImageDerivativeController implements ControllerInterface
             // $this->derivativePath's full absolute path) -- a plain
             // str_replace() against the whole path is unsafe whenever an
             // unrelated path segment happens to contain "-{token}" as a
-            // substring; found live in this exact sandbox, where the
-            // repository directory itself is "piwigo17-rewrite-sql" and
+            // substring; this repository's own directory name is
+            // "piwigo17-rewrite-sql" and
             // the 'square' type's own token is "sq" ('-sq' matches inside
             // "rewrite-sql"), silently corrupting the candidate path to
             // ".../piwigo17-rewrite-thl/..." when reusing from 'thumb'
@@ -753,9 +751,8 @@ final class ImageDerivativeController implements ControllerInterface
             $this->srcPath = $candidate_path;
             // Part III: the "0 changes needed" redirect below (serve()'s own
             // "no change required" branch) must send the browser to this
-            // *candidate derivative*, not the true original -- found live
-            // while retiring this class's own remaining PHPWG_ROOT_PATH
-            // reads: a raw filesystem-relative link straight into _data/i/
+            // *candidate derivative*, not the true original: a raw
+            // filesystem-relative link straight into _data/i/
             // (the same link shape parseRequest()'s own $this->srcUrl fix
             // just closed for the true-original case) would 404, since
             // _data/i/ is deliberately unreachable now (SEC-33/35/38/47).

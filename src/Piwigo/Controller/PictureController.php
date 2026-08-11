@@ -272,8 +272,7 @@ final readonly class PictureController implements ControllerInterface
                                     'flat' => true,
                                 ]
                             );
-                            // Real bug, found while adding coverage for this
-                            // branch: the legacy equivalent's own raw
+                            // The legacy equivalent's own raw
                             // set_status_header()+redirect_http() pair
                             // worked because legacy redirect_http() never
                             // re-issued the status line itself -- the
@@ -285,7 +284,7 @@ final readonly class PictureController implements ControllerInterface
                             // `header(..., true, $response->getStatusCode())`,
                             // which unconditionally overwrites whatever a
                             // prior setStatusHeader() call already sent --
-                            // confirmed live, every recent_pics redirect came
+                            // every recent_pics redirect came
                             // back 302, never the intended 301. Passing the
                             // real status straight into redirectHttp() (which
                             // already accepts one) is the fix; the separate
@@ -332,10 +331,6 @@ final readonly class PictureController implements ControllerInterface
 
         $this->eventDispatcher->dispatchNotify(new LocBeginPicture());
 
-        // +-----------------------------------------------------------------+
-        // |                            initialization                        |
-        // +-----------------------------------------------------------------+
-
         // caching first_rank, last_rank, current_rank in the displayed
         // section. This should also help in readability.
         $first_rank = 0;
@@ -373,10 +368,6 @@ final readonly class PictureController implements ControllerInterface
         );
 
         $url_self = $this->urlService->duplicatePictureUrl();
-
-        // +-----------------------------------------------------------------+
-        // |                                actions                           |
-        // +-----------------------------------------------------------------+
 
         // Set by the 'edit_comment' action case below (only when
         // can_manage_comment('edit', ...) passes), threaded explicitly into
@@ -572,7 +563,6 @@ final readonly class PictureController implements ControllerInterface
         $url_link = null;
         $template = $this->currentTemplate->get();
 
-        // ---------- incrementation of the number of hits
         $inc_hit_count = ! $content_present;
         // don't increment counter if in the Mozilla Firefox prefetch
         $http_x_moz = $_SERVER['HTTP_X_MOZ'] ?? null;
@@ -593,7 +583,6 @@ final readonly class PictureController implements ControllerInterface
                 ->incrementVisitCounter(ImageId::from($image_id));
         }
 
-        // -------------------------------------------------- related categories
         // Row shape is mixed, not uniformly string|null -- see
         // PictureCommentRenderer::render()'s own param docblock for the
         // real per-column breakdown.
@@ -602,7 +591,6 @@ final readonly class PictureController implements ControllerInterface
             $this->permissionService->getPermissionCriteria()
         );
         usort($related_categories, CategoryService::compareByGlobalRank(...));
-        // ---------------------- first, prev, current, next & last picture management
         $picture = [];
 
         $ids = [(string) $image_id];
@@ -797,7 +785,6 @@ final readonly class PictureController implements ControllerInterface
         $picture = $this->eventDispatcher->dispatchChange(new PicturePicturesData($picture))
             ->picture;
 
-        // ---------------------------------------------------- navigation management
         $nav = [];
         foreach (['first', 'previous', 'next', 'last', 'current'] as $which_image) {
             if (isset($picture[$which_image])) {
@@ -964,8 +951,6 @@ final readonly class PictureController implements ControllerInterface
             $u_metadata = $url_metadata;
         }
 
-        // -------------------------------------------------- upper menu management
-
         // admin links
         $u_set_as_representative = null;
         $u_photo_admin = null;
@@ -1011,7 +996,6 @@ final readonly class PictureController implements ControllerInterface
             ];
         }
 
-        // ------------------------------------------------------ picture information
         $info_author = null;
         $info_creation_date = null;
         $info_dimensions = null;
@@ -1090,10 +1074,9 @@ final readonly class PictureController implements ControllerInterface
         // $infoVisits is a pre-formatted display string like its
         // info_dimensions/info_filesize siblings above, so this needs
         // the same explicit stringification they get implicitly from
-        // their own string-returning sources (real bug found live: a
-        // real picture.php request threw
-        // "PicturePageContext::__construct(): Argument #27 ($infoVisits)
-        // must be of type string, int given").
+        // their own string-returning sources (a real picture.php request
+        // once threw "PicturePageContext::__construct(): Argument #27
+        // ($infoVisits) must be of type string, int given").
         $info_visits = (string) $picture['current']['hit'];
 
         // file
@@ -1126,10 +1109,9 @@ final readonly class PictureController implements ControllerInterface
 
         // related categories
         //
-        // Real bug, found while adding coverage for this branch:
         // findVisibleCategoriesForImage()'s own 'id' column comes back as a
         // native PHP int (DbConnection::params()'s own
-        // MYSQLI_OPT_INT_AND_FLOAT_NATIVE => true, confirmed live), never a
+        // MYSQLI_OPT_INT_AND_FLOAT_NATIVE => true), never a
         // string. The old code left $related_cat0_id at that native int
         // type but force-cast $page_category['id'] to string before
         // comparing them with strict `===` -- `5 === "5"` is always false,
@@ -1177,7 +1159,6 @@ final readonly class PictureController implements ControllerInterface
         $pdf_nb_pages = null;
 
         if (in_array(strtolower(StringHelper::getExtension($picture['current']['file'])), ['pdf'], true)) {
-            // Real bug, found while adding coverage for this branch:
             // $picture['current']['path'] is the raw images.path
             // column, root-relative (e.g. 'upload/2026/07/x.pdf'),
             // same as every other real filesystem read of this
@@ -1191,7 +1172,7 @@ final readonly class PictureController implements ControllerInterface
             // (public/) under a real Apache/mod_php request, one
             // level below the real upload root -- silently
             // returning false (never a real page count) on every
-            // live request; confirmed live via a real PDF upload.
+            // live request.
             $pdf_nb_pages = $this->imageService
                 ->countPdfPages($this->paths->root . $picture['current']['path']);
         }
@@ -1258,10 +1239,6 @@ final readonly class PictureController implements ControllerInterface
             relatedCategories: $related_categories_display !== [] ? $related_categories_display : null,
         ));
 
-        // +-------------------------------------------------------------+
-        // |                          sub pages                           |
-        // +-------------------------------------------------------------+
-
         $this->pictureRateRenderer
             ->render($image_id, $urlService, $picture, $url_self);
         if ($this->currentConfig->activateComments) {
@@ -1297,7 +1274,6 @@ final readonly class PictureController implements ControllerInterface
             $template->parsePictureButtons();
             $template->parse('picture', false);
         }
-        // -------------------------------------------------- log informations
         $current_image_id = $picture['current']['id'];
         $this->historyService
             ->logVisit(

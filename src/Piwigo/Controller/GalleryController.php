@@ -147,7 +147,6 @@ final readonly class GalleryController implements ControllerInterface
 
         $galleryDisplay = GalleryDisplayRequest::fromGlobals();
 
-        // ---------------------------------------- change of image display order
         if ($galleryDisplay->hasImageOrder) {
             if ($galleryDisplay->validImageOrder !== null) {
                 $this->sessionService->setSessionVar('image_order', $galleryDisplay->validImageOrder);
@@ -168,7 +167,6 @@ final readonly class GalleryController implements ControllerInterface
             }
         }
 
-        // -------------------------------------------------- initialization
         // navigation bar
         $navigationBar = [];
         if (count($page_items) > $page_nb_image_page) {
@@ -198,21 +196,15 @@ final readonly class GalleryController implements ControllerInterface
         // them know
         $use_standard_pages = $this->currentConfig->useStandardPages;
 
-        // -------------------------------------------------- page title
         $title = $section_context->title;
         $template_title = $section_context->sectionTitle;
         $nb_items = count($page_items);
 
-        // -------------------------------------------------- menubar
         $categoryCountCategories = new MenubarRenderer()
             ->render($this->lang, new AccessLevelChecker($this->currentUser, $this->currentConfig), $urlService, $this->filterState, $this->sectionContextRegistry, $this->sessionService, $this->deploymentPolicy, $this->currentUser, $this->currentTemplate, $this->currentConfig, $this->eventDispatcher, $this->translator, $this->currentLogger);
 
         $template->setFilename('index', 'index.tpl');
 
-        // +-----------------------------------------------------------------+
-        // |  index page (categories, thumbnails, search, calendar, etc.)    |
-        // +-----------------------------------------------------------------+
-        // ------------------------------------------------- template init
         $this->pageState->setBodyId('theCategoryPage');
 
         $u_mode_normal = null;
@@ -515,7 +507,6 @@ final readonly class GalleryController implements ControllerInterface
             $template->clearAssign('U_MODE_FLAT');
         }
 
-        // -------------------------------------------- main part : thumbnails
         if ($page_start === 0
           and ! $section_context->flat
           and $section_context->chronologyField === null
@@ -611,7 +602,6 @@ final readonly class GalleryController implements ControllerInterface
             imageDerivatives: $image_derivatives,
         ));
 
-        // ---------------------------------------------------------- end
         new PageHeaderRenderer()
             ->render($title, $this->eventDispatcher, $this->pageState, $this->currentTemplate, $this->currentConfig);
         $this->eventDispatcher->dispatchNotify(new LocEndIndex());
@@ -620,7 +610,6 @@ final readonly class GalleryController implements ControllerInterface
         $template->parseIndexButtons();
         $template->parse('index', false);
 
-        // ------------------------------------------------ log informations
         $this->historyService
             ->logVisit(
                 section: $section_context->section->value,

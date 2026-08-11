@@ -293,7 +293,7 @@ final readonly class CommentsController implements ControllerInterface
 
         // which status to filter on ?
         if (! $this->accessControl->isAdmin()) {
-            // Real bug found live -- comments.validated
+            // comments.validated
             // is a genuine `boolean` column on Postgres (not the
             // smallint-with-integer-range convention this codebase uses
             // elsewhere), so the bare `validated=1` literal that's valid
@@ -314,10 +314,6 @@ final readonly class CommentsController implements ControllerInterface
         $whereClauses[] = $commentsPermissionCriteria->visibleCategoriesCondition('category_id');
         $whereClauses[] = $commentsPermissionCriteria->visibleImagesCondition('ic.image_id');
         $whereClauses[] = $commentsPermissionCriteria->imageAccessCondition('ic.image_id');
-
-        // +-----------------------------------------------------------+
-        // |                   comments management                     |
-        // +-----------------------------------------------------------+
 
         $action = $commentsRequest->action;
         $comment_id = $commentsRequest->actionCommentId;
@@ -403,10 +399,6 @@ final readonly class CommentsController implements ControllerInterface
         // straight into PageHeaderRenderer::render() below) -- no other
         // file reads $GLOBALS['title']. Plain local, not global.
 
-        // +---------------------------------------------------------------+
-        // |                    page header and options                    |
-        // +---------------------------------------------------------------+
-
         $title = $this->lang->t('User comments');
         $this->pageState->setBodyId('theCommentsPage');
 
@@ -416,10 +408,6 @@ final readonly class CommentsController implements ControllerInterface
         ]);
         $keyword_param = $commentsRequest->keywordDisplay;
         $author_param = $commentsRequest->authorDisplay;
-
-        // +---------------------------------------------------------------+
-        // |                      form construction                        |
-        // +---------------------------------------------------------------+
 
         // Search in a particular category
         $categoriesOptions = $this->categoryService
@@ -438,15 +426,7 @@ final readonly class CommentsController implements ControllerInterface
             $item_number_options[$option] = is_numeric($option) ? $option : $this->lang->t($option);
         }
 
-        // +---------------------------------------------------------------+
-        // |                        navigation bar                         |
-        // +---------------------------------------------------------------+
-
         $start = $commentsRequest->start;
-
-        // +---------------------------------------------------------------+
-        // |                     last comments display                     |
-        // +---------------------------------------------------------------+
 
         $comments = [];
         $element_ids = [];
@@ -653,9 +633,6 @@ final readonly class CommentsController implements ControllerInterface
                 ->render($this->lang, new AccessLevelChecker($this->currentUser, $this->currentConfig), $urlService, $this->filterState, $this->sectionContextRegistry, $this->sessionService, $this->deploymentPolicy, $this->currentUser, $this->currentTemplate, $this->currentConfig, $this->eventDispatcher, $this->translator, $this->currentLogger);
         }
 
-        // +---------------------------------------------------------------+
-        // |                      html code display                        |
-        // +---------------------------------------------------------------+
         new PageHeaderRenderer()
             ->render($title, $this->eventDispatcher, $this->pageState, $this->currentTemplate, $this->currentConfig);
         $this->eventDispatcher->dispatchNotify(new LocEndComments());

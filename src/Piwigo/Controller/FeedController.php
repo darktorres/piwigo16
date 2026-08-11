@@ -121,10 +121,6 @@ final readonly class FeedController implements ControllerInterface
         $rss_link = $this->urlService->getGalleryHomeUrl();
         $rss_items = [];
 
-        // +-------------------------------------------------------------------+
-        // |                            Feed creation                          |
-        // +-------------------------------------------------------------------+
-
         $news = [];
         if (! $image_only) {
             $news = $notificationService->news($feed_last_check?->format('Y-m-d H:i:s'), $dbnow, true, true);
@@ -169,7 +165,7 @@ final readonly class FeedController implements ControllerInterface
             }
         }
 
-        // Real bug found via PHPStan: CurrentConfig::recentPostDates() was retyped
+        // CurrentConfig::recentPostDates() was retyped
         // to return a NotificationConfig object, but this caller still
         // checked is_array() against it -- always false, so RSS recent-post-
         // date limits always fell back to getRecentPostDatesArray()'s own

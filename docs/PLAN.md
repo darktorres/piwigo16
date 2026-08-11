@@ -100,7 +100,7 @@ onto the original scope.
 | P21 | Admin controller migration | Done | 4 |
 | P22 | Frontend controller migration | Done | 7 |
 | P23 | Legacy deletion & cleanup | Done, gaps found in later audits (see below) | 123 |
-| P24 | Post-P23 remediation & hardening (globals/DBAL/event/l10n coupling retirement, coverage + mutation-testing hardening, SQL bound-parameter sweep, singleton/DI elimination, type correctness + mixed elimination + superglobal/array-offset access — the original plan's P27, merged in, see above) | In progress — remediation sub-tracks done, 2 gaps found (see below); singleton/DI campaign **complete** (Phases 0–12F, zero shims remain); type-correctness/mixed-elimination sub-track real progress (Request DTO migration, Phase 4), not complete | 405 `(p24)` + 16 `(sql)` + 74 `(di)`/`(lang)` + 89 `(p27)` |
+| P24 | Post-P23 remediation & hardening (globals/DBAL/event/l10n coupling retirement, coverage + mutation-testing hardening, SQL bound-parameter sweep, singleton/DI elimination, type correctness + mixed elimination + superglobal/array-offset access — the original plan's P27, merged in, see above — plus the table-prefix + `Tables::` removal) | In progress — remediation sub-tracks done, 2 gaps found (see below); singleton/DI campaign **complete** (Phases 0–12F, zero shims remain); type-correctness/mixed-elimination sub-track real progress (Request DTO migration, Phase 4), not complete; table-prefix + `Tables::` removal **complete** | 405 `(p24)` + 16 `(sql)` + 74 `(di)`/`(lang)` + 89 `(p27)` + 62 (table-prefix removal) |
 | P25 | REST resource layer + OpenAPI (WS API removed) | Not started | 0 |
 | P26 | Security hardening | Not started | 0 |
 | P27 | Plugin / Theme contracts + bundled extensions | Not started | 0 |
@@ -1089,6 +1089,78 @@ accessor over raw offset access" discipline SEC-40 already established:
 Full per-item detail, exact reader-file lists, and the deptrac constraint
 on where new `Session`-exposed VOs may legally live all live in the
 campaign's own plan file, not reproduced here.
+
+**Table-prefix + `Tables::` removal** (2026-08-09–2026-08-10, `refactor(db)`/
+`fix(test)`/`docs`, 62 commits — complete). `PIWIGO_DB_PREFIX` (upstream's
+`$prefixeTable`, defaulting to `piwigo_`) removed entirely, not just made
+non-configurable: tables get their bare names (`sites`, `users`, `config`,
+...) unconditionally. The prefix existed to let multiple installs share
+one database — a real constraint on 2000s-era shared cPanel hosting, no
+longer the mainstream deployment shape (current hosts allow multiple
+databases; this project's own `docker-compose.yml`/`deploy/helm/` already
+assume one dedicated database per install). **This supersedes P14's own
+claim** that `AbstractRepository`+`Piwigo\Db\Tables::` (DBAL) "had become
+the real, working, tested pattern for query-heavy repositories, not a
+legacy-only shim" — `Tables::`'s 39 static methods (`Tables::images()`, …)
+were deleted outright, not simplified: their opacity to static analysis
+(`'SELECT * FROM ' . Tables::images()` is not a literal string) defeated
+`staabm/phpstan-dba` (real-schema-aware SQL validation, wired into this
+repo's PHPStan) and IDE SQL-injection/autocomplete, both of which only
+recognize a literal SQL string. Every call site — 129 in `src/Piwigo`,
+~1,540 more in `tests/` — was inlined to its literal table name from a
+verified `Tables::method() -> 'bare_name'` mapping, then the class was
+deleted along with `TablePrefixListener` (the ORM-metadata-level
+prefixer) and every `PIWIGO_DB_PREFIX` reference across install flow,
+backup manifests, deploy config, migrations, and CLI tooling.
+
+Real, previously-undiagnosed bugs found along the way, not just
+mechanical renames: `UniqueExecLock`/`PwgImages`/`UploadService`'s
+`GET_LOCK()` lock-name hashes used `db_prefix` as hash *entropy* (server-
+wide MySQL lock names need a per-install disambiguator) — switched to
+`db_credentials->database` instead, still unique per install and more
+reliably so than a prefix ever was; a leftover `bmDbPrefix()` call site in
+`BatchManagerGlobalPageRendererTest.php` that survived an earlier cleanup
+pass; a real column-name-case mismatch (`HistoryServiceTest.php`'s `'IP'`
+vs. the Postgres migration's real lowercase `ip`); a real int/bool type
+mismatch (`CommentServiceTest.php`'s `'validated' => 1` vs. the actual
+boolean column). Once every table name became a literal, phpstan-dba
+could resolve exact live-schema column types everywhere for the first
+time, surfacing ~178 new real findings (all fixed — mostly now-provably-
+dead `is_numeric()`/`(int)` defensive wrappers around schema-known-int
+reads) plus 4 confirmed tool limitations, each root-caused against the
+live schema or existing code rather than guessed, now documented and
+narrowly suppressed in `phpstan.neon` (replacing the old blanket
+`dba.keyValue` suppression that existed only because `Tables::` made
+every table name non-literal): synthetic jsonb-placeholder sample values,
+MySQL-dialect SQL validated against the one Postgres connection the tool
+has, Postgres `::text` casts misparsed as named bind placeholders, and
+dynamically-shaped `tearDown()` snapshot-restore arrays. A full,
+non-parallel `composer test:integration` run (apparently the first in a
+while) also surfaced 2 pre-existing Kernel-boot test-isolation bugs
+(`InstallBootstrapTest`'s idempotency test still expected `Kernel::boot()`'s
+old silent-ignore-on-mismatch behavior after that method was deliberately
+changed to throw instead; `RequestBootstrapConfigureTest` was missing a
+`Kernel::reset()` before booting with a non-default root) and 5 stale
+hardcoded fixture-photo hash references left over from an earlier fixture
+regen (`WsImagesMaintenanceTest`, `WsTopLevelTest`,
+`CategoryRepositoryTest`, `CategoryServiceTest`, `NotificationRepositoryTest`)
+— all fixed, unrelated to the prefix removal itself but found only
+because this pass finally exercised the full suite end to end.
+
+Verified green: full-repo `vendor/bin/phpstan analyse` (0 errors),
+`composer lint:php` (0 errors), `composer test` (5196 passed),
+`composer test:integration` (2041 passed, 4 skipped, 0 failed),
+`composer test:contract` (595 passed, 0 failed) — all against Postgres
+(`.env.test`'s current driver); not independently re-verified against
+MySQL this pass. One item deliberately deferred, not forgotten: `ecs.php`
+has excluded `tests/` from ECS's scope since this project's very first
+commit (`chore(p0)`), originally with a "deferred to P5" comment that a
+later cleanup sweep stripped while leaving the exclusion itself in place
+— silently making it permanent. Un-skipping it surfaces 882 fixable
+findings, several genuinely wrong for this codebase's established style
+(e.g. forcing every Pest `expect()->toBe()` chain and every array onto
+multiple lines); needs its own properly-scoped pass with the disruptive
+fixers explicitly excluded, not folded into this one.
 
 ### Epoch G — REST/OpenAPI (P25)
 

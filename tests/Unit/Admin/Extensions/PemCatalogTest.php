@@ -25,8 +25,8 @@ use Piwigo\Users\CurrentUser;
 // this suite seeds it against this repo's real root, same convention as
 // every other Unit test touching CurrentPaths (e.g. ExtensionTypeTest).
 //
-// [Mutation] The above architectural gap -- confirmed the SAME conclusion
-// independently reached by ExtensionUpdateCheckerTest's own docblock --
+// [Mutation] The above architectural gap -- the same conclusion
+// ExtensionUpdateCheckerTest's own docblock independently reaches --
 // means getVersionsToCheck()'s own URL/$getData construction (Lines
 // 64/66/67), its `(bool) $pemVersions = @unserialize(...)` cast (Line
 // 70), and its final `return $versionsToCheck;` (Line 116,
@@ -40,7 +40,7 @@ use Piwigo\Users\CurrentUser;
 // Lines 64/66/67/70 are covered (the code runs) but structurally
 // unobservable (the function's own return value is identical regardless
 // of what URL/getData get built, since the outer HTTP call fails either
-// way). Verified by tracing, not assumed from the docblock alone.
+// way).
 //
 // Line 383's `$extractPathRealpath === false` guard is a genuine
 // TOCTOU-only defensive check: file_exists($extractPath . '/obsolete.list')
@@ -63,7 +63,7 @@ use Piwigo\Users\CurrentUser;
 //
 // Line 433's FalseToTrue mutation (`$lines !== false` ->
 // `$lines !== true`, getLocallyMergedExtensions()'s own file-read guard)
-// is genuinely inert, confirmed via hand-mutation against the new
+// is genuinely inert, per hand-mutation against the new
 // "cannot be read" test below: unlike ExtensionScanner.php's own
 // analogous guards (which feed a string-typed, strict_types=1 param and
 // throw a real TypeError when broken), `foreach (false as $x)` just
@@ -111,7 +111,7 @@ test('compareByRevisionDate sorts descending, newest first', function (): void {
 });
 
 test('compareByRevisionDate treats an identical date as a tie, not "$a is later"', function (): void {
-    // Real gap, found via mutation testing: the same-date branch only
+    // The same-date branch only
     // takes the `< ? 1 : -1` path once, via the `-1` (a is not-later)
     // arm -- a `<` -> `<=` mutation flips this specific case's result to
     // 1 without breaking either directional assertion above.
@@ -132,7 +132,7 @@ test('compareByName sorts case-insensitively by extension_name', function (): vo
 
     expect(PemCatalog::compareByName($a, $b))->toBeGreaterThan(0);
     expect(PemCatalog::compareByName($b, $a))->toBeLessThan(0);
-    // Real gap, found via mutation testing: 'Same' vs 'same' can't tell a
+    // 'Same' vs 'same' can't tell a
     // real strtolower() from a removed one on the *second* argument alone,
     // since 'same' is already lowercase -- both sides need real uppercase
     // to force each of the two strtolower() calls to matter independently.
@@ -162,7 +162,7 @@ test('compareByName falls back to an empty name for a non-scalar extension_name'
 });
 
 test('compareByName string-casts a real scalar extension_name instead of comparing it raw', function (): void {
-    // Real gap, found via mutation testing: removing the (string) cast on
+    // Removing the (string) cast on
     // an already-string value is invisible -- an int forces it to matter
     // (strtolower()/strcmp() both require a real string argument).
     expect(PemCatalog::compareByName([
@@ -170,7 +170,7 @@ test('compareByName string-casts a real scalar extension_name instead of compari
     ], [
         'extension_name' => '3',
     ]))->toBeLessThan(0);
-    // Real gap, found via mutation testing: the case above only forces
+    // The case above only forces
     // $a's own (string) cast (a separate line/mutation from $b's) --
     // this file declares strict_types=1, so a removed cast on $b leaves
     // a real int flowing into strtolower(), which throws a TypeError
@@ -226,7 +226,7 @@ test('compareByAuthor string-casts a real scalar author_name instead of comparin
         'author_name' => '3',
         'extension_name' => 'x',
     ]))->toBeLessThan(0);
-    // Real gap, found via mutation testing: same "$a's cast alone can't
+    // Same "$a's cast alone can't
     // prove $b's separate cast line" reasoning as compareByName above --
     // $a stays a plain string here so only $b's removed (string) cast
     // can be what forces strcasecmp()'s real int-vs-string TypeError
@@ -274,7 +274,7 @@ test('getLocallyMergedExtensions parses the real install/obsolete_extensions.lis
 });
 
 test('getLocallyMergedExtensions reads the paths->root-prefixed file, not a bare CWD-relative one', function (): void {
-    // Real gap, found via mutation testing: a ConcatRemoveLeft mutation
+    // A ConcatRemoveLeft mutation
     // that drops $this->paths->root entirely leaves a bare
     // 'install/obsolete_extensions.list', which is CWD-relative rather
     // than root-relative. A Paths root that genuinely differs from the
@@ -294,11 +294,11 @@ test('getLocallyMergedExtensions reads the paths->root-prefixed file, not a bare
 });
 
 test('getLocallyMergedExtensions returns an empty array, not a crash, when the list file cannot be read', function (): void {
-    // Real gap, found via mutation testing: a real, unreadable file (0000,
+    // A real, unreadable file (0000,
     // torres owns it but no read bit for anyone) -- file() genuinely
     // returns false here, not a mock, matching this project's own
     // established permission-denied convention (torres is a non-root user
-    // in this environment, confirmed via `id`, so owning a file does not
+    // in this environment, per `id`, so owning a file does not
     // bypass its own permission bits).
     $root = pem_catalog_test_marker();
     mkdir($root . '/install', 0o777, true);
@@ -352,7 +352,7 @@ function pem_catalog_rrmdir(string $dir): void
 }
 
 test('deleteObsoleteFiles logs the real function name and old-files list, not just any debug line', function (): void {
-    // Real gap, found via mutation testing: every other deleteObsoleteFiles
+    // Every other deleteObsoleteFiles
     // test here passes a Logger::OFF instance (see
     // pem_catalog_delete_obsolete_files()), so nothing ever observed the
     // debug() calls' own message content -- a ConcatRemoveLeft/Right/
@@ -387,7 +387,7 @@ test('deleteObsoleteFiles logs the real function name and old-files list, not ju
 });
 
 test('deleteObsoleteFiles logs the real function name and full path before deleting each entry', function (): void {
-    // Real gap, found via mutation testing: same underlying issue as the
+    // Same underlying issue as the
     // sibling "old-files list" test above, for the OTHER debug() call --
     // the one right before each individual file/dir is actually removed.
     $logDir = sys_get_temp_dir() . '/piwigo-pem-catalog-test-log-' . bin2hex(random_bytes(8));
@@ -444,7 +444,7 @@ test('deleteObsoleteFiles refuses to delete a path traversal entry outside the e
 });
 
 test('deleteObsoleteFiles trims whitespace/slashes and skips a blank line, then still processes a later real entry', function (): void {
-    // Real gap, found via mutation testing: a single-entry list can't
+    // A single-entry list can't
     // distinguish `continue` from `break` on the blank-line skip, since
     // there's nothing left to process either way. A blank line followed
     // by a real, still-to-be-deleted file forces continue's "keep going"
@@ -457,7 +457,7 @@ test('deleteObsoleteFiles trims whitespace/slashes and skips a blank line, then 
     pem_catalog_delete_obsolete_files(ExtensionType::Plugin, $extractPath);
 
     expect(file_exists($extractPath . '/old-file.php'))->toBeFalse();
-    // Real gap, found via mutation testing: an EmptyStringToNotEmpty
+    // An EmptyStringToNotEmpty
     // mutation on the blank-line guard falls through into treating the
     // extract directory itself (path = extractPath + '/' + '') as a
     // listed entry -- is_dir() is true for it, so it gets wholesale
@@ -483,8 +483,8 @@ test('deleteObsoleteFiles skips a listed entry that does not actually exist on d
 });
 
 // [Mutation] Line 387's $trashPath construction
-// (`$type->scanDirectory(...) . 'trash'`) is verified difficult to
-// exercise deterministically without root, not assumed untestable: the
+// (`$type->scanDirectory(...) . 'trash'`) is difficult to
+// exercise deterministically without root, not simply untestable: the
 // test below's own scenario, despite its name, does NOT actually reach
 // this path -- FilesystemHelper::deltree() tries a plain rmdir() FIRST
 // and only falls back to $trash_path if that fails, and an empty
@@ -492,15 +492,15 @@ test('deleteObsoleteFiles skips a listed entry that does not actually exist on d
 // directly. Forcing the fallback needs rmdir() to fail while dirname()'s
 // own is_writable() check still passes (required for the later rename()
 // attempt) -- tried making the extract directory itself read-only
-// (blocks BOTH rmdir() and rename(), confirmed via a direct probe: both
-// return false) and making an inner file undeletable so the directory
+// (blocks BOTH rmdir() and rename() -- both return false, per a direct
+// probe) and making an inner file undeletable so the directory
 // isn't empty (rmdir() correctly fails with ENOTEMPTY, but the
 // subsequent rename() ALSO failed in a direct probe -- Linux's rename()
 // needs write access on the moved directory's own inode, not just its
 // parent, to update its own '..' entry). No non-root technique found
 // that reliably triggers a real trash-path rename() in this sandbox.
 test('deleteObsoleteFiles moves a listed directory to trash rather than unlinking it', function (): void {
-    // Real gap, found via mutation testing: every other test here lists
+    // Every other test here lists
     // only plain files (is_file() -> @unlink()) -- nothing exercised the
     // is_dir() -> FilesystemHelper::deltree() branch. See the docblock
     // above for why this does NOT reach the trash-path fallback itself.
@@ -525,7 +525,7 @@ test('deleteObsoleteFiles does nothing when there is no obsolete.list at all', f
 });
 
 test('deleteObsoleteFiles does nothing, not a crash, when obsolete.list exists but cannot be read', function (): void {
-    // Real gap, found via mutation testing: a real, unreadable file (0000)
+    // A real, unreadable file (0000)
     // -- file() genuinely returns false here, same established
     // permission-denied convention as this file's own sibling
     // getLocallyMergedExtensions test above. file_exists() (the guard

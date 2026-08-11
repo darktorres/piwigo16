@@ -203,7 +203,7 @@ test('processObsoleteList deletes every listed file plus the list itself, leavin
 
     expect(file_exists($root . 'stale.php'))->toBeFalse();
     expect(file_exists($root . 'obsolete.list'))->toBeFalse();
-    // Real gap, found via mutation testing: a broken `$path = $this->paths
+    // A broken `$path = $this->paths
     // ->root . $oldFile` (dropping $oldFile) makes $path resolve to the
     // root directory itself on every loop iteration -- since the root is a
     // real directory, that mutation still deletes stale.php/obsolete.list

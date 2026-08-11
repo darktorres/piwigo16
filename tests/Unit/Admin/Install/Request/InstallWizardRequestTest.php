@@ -39,7 +39,7 @@ test('fromArrays returns defaults for an empty GET/POST', function (): void {
 });
 
 test('fromArrays falls back to the localhost default when dbhost is explicitly submitted empty', function (): void {
-    // Real gap, found via mutation testing: the "defaults for an empty
+    // The "defaults for an empty
     // GET/POST" test above only covers a *missing* dbhost key -- an
     // explicitly-submitted empty string is a different code path
     // (is_string() is true, only the `!== ''` check routes it to the
@@ -120,7 +120,7 @@ test('fromArrays rejects a non-numeric dbport', function (): void {
 });
 
 test('fromArrays leaves dbport null when submitted as a non-string numeric value', function (): void {
-    // Real gap, found via mutation testing: is_string($dbport_raw) is
+    // is_string($dbport_raw) is
     // the guard requiring dbport to have arrived as a string (as real
     // $_POST values always do). Passing a genuinely numeric, non-string
     // value distinguishes the real all-AND condition from either

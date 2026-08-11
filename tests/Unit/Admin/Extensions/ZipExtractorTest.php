@@ -50,29 +50,29 @@ function zip_extractor_rrmdir(string $dir): void
 }
 
 // [Mutation] Remaining untested mutations after mutation testing, all
-// verified genuinely inert via hand-mutation + a full filtered rerun --
+// genuinely inert, per hand-mutation + a full filtered rerun --
 // zero new tests needed, triaged into 4 groups:
 //
 // 1. For-loop bound mutations on `for ($i = 0; $i < $zip->numFiles;
 //    $i++)` (SmallerToSmallerOrEqual, DecrementInteger -- listFilenames()
 //    Line 46, extract()'s size-accumulation loop Line 92, extract()'s
 //    main loop Line 121) plus their sibling `$stat === false` guards
-//    (FalseToTrue, Lines 48/94/123): confirmed via a direct probe
+//    (FalseToTrue, Lines 48/94/123): a direct probe
 //    (`ZipArchive::statIndex()` on an out-of-range index, negative or
-//    >= numFiles) that it returns `false` just like any other stat
+//    >= numFiles) shows it returns `false` just like any other stat
 //    failure -- the existing `if ($stat === false) { continue; }` guard
 //    already absorbs one extra out-of-bounds iteration at either end
 //    with zero observable difference in the final result.
 //
 // 2. `$zip->close()` removal (RemoveMethodCall -- Lines 53/86/99/136/
 //    158/198, one per early-return/success path): pure resource
-//    cleanup, confirmed via a direct probe that an unclosed ZipArchive
+//    cleanup -- a direct probe shows an unclosed ZipArchive
 //    doesn't hold any OS-level lock preventing the underlying file from
 //    being unlinked afterward -- no black-box assertion in this suite
 //    (or any suite, short of inspecting open file descriptors) can
 //    distinguish a closed archive from an unclosed one. Same reasoning
 //    for the 3 `fclose($source)`/`fclose($dest)` removals (Lines
-//    182/189/190) -- also confirmed `stream_copy_to_stream()` itself
+//    182/189/190) -- `stream_copy_to_stream()` itself also
 //    fully flushes without needing the later fclose() (the existing
 //    "extract writes files..." test still passes byte-for-byte with
 //    Line 190's fclose($dest) removed).
@@ -94,19 +94,19 @@ function zip_extractor_rrmdir(string $dir): void
 //      '')` is ALWAYS true (every string starts with the empty string)
 //      -- so `substr($storedName, 0)` (0-length prefix) is itself a
 //      no-op, making it irrelevant whether the branch is entered or not.
-//    - Line 151: confirmed via a direct, real extract() call that
+//    - Line 151: a direct, real extract() call shows
 //      `$destPath === ''` always makes EVERY entry fail the zip-slip
 //      containment check a few lines later (normalizePath('') resolves
 //      to the bare root '/', and no real entry's own normalized path
 //      can satisfy containment under just '/') -- extract() returns
 //      null regardless of whether this specific ternary takes its true
-//      or false branch, confirmed both with and without the mutation.
+//      or false branch, both with and without the mutation.
 //
 // 4. Lines 179/180 (`$source`/`$dest` failure detection,
 //    `if ($source === false || $dest === false)`): when $source
 //    genuinely fails, the ternary on the line above ALSO sets $dest to
 //    false, so mutating either half of this `||` individually still
-//    lets the other half catch the same real failure -- confirmed via
+//    lets the other half catch the same real failure -- per
 //    hand-mutation of each independently.
 //
 // Line 227's ConcatRemoveLeft (`'/' . implode('/', $resolved)` in
@@ -116,7 +116,7 @@ function zip_extractor_rrmdir(string $dir): void
 // each other (the zip-slip containment check), never against an
 // externally-supplied absolute path -- dropping the leading '/'
 // uniformly from BOTH sides of that self-consistent comparison changes
-// nothing. Confirmed via the full zip-slip test suite still passing
+// nothing. The full zip-slip test suite still passes
 // byte-for-byte with the mutation applied.
 
 beforeEach(function (): void {
@@ -398,10 +398,10 @@ test('extract returns null when the archive has more than MAX_ENTRIES entries', 
     $archive = zip_extractor_test_marker() . '/entry-bomb.zip';
     $zip = new ZipArchive();
     $zip->open($archive, ZipArchive::CREATE);
-    // MAX_ENTRIES is 20000 (private const, confirmed by direct read) --
+    // MAX_ENTRIES is 20000 (private const, per direct read) --
     // 20001 empty entries is the smallest archive that trips it, and
-    // addFromString('') keeps this fast (well under a second, confirmed
-    // empirically) despite the entry count.
+    // addFromString('') keeps this fast (well under a second)
+    // despite the entry count.
     for ($i = 0; $i < 20001; $i++) {
         $zip->addFromString('f' . $i . '.txt', '');
     }
@@ -418,7 +418,7 @@ test('extract returns null when the archive has more than MAX_ENTRIES entries', 
 });
 
 test('extract accepts an archive with exactly MAX_ENTRIES entries', function (): void {
-    // Real gap, found via mutation testing: the sibling "more than
+    // The sibling "more than
     // MAX_ENTRIES" test above uses 20001 (one past the boundary), which
     // can't tell a `>` from a `>=` -- both reject 20001. Exactly 20000
     // must still be *accepted* to prove the real boundary.
@@ -444,13 +444,13 @@ test('extract returns null when the archive\'s total uncompressed size exceeds M
     $archive = zip_extractor_test_marker() . '/size-bomb.zip';
     $bigFile = zip_extractor_test_marker() . '/big.bin';
 
-    // MAX_UNCOMPRESSED_BYTES is 500 * 1024 * 1024 (private const, confirmed
-    // by direct read) -- a genuinely 501MB-on-disk fixture would be slow to
+    // MAX_UNCOMPRESSED_BYTES is 500 * 1024 * 1024 (private const, per
+    // direct read) -- a genuinely 501MB-on-disk fixture would be slow to
     // write and wasteful to keep around, so this uses a *sparse* file
     // instead: fseek() past the end + a single fwrite() sets the file's
     // logical size (what filesize()/ZipArchive read for the entry's
     // uncompressed size) to 525,000,000 bytes while the filesystem only
-    // allocates a few real disk blocks for it (confirmed via `du` showing
+    // allocates a few real disk blocks for it (`du` shows only
     // 4.0K of actual usage against a 501M logical size) -- and the
     // resulting archive compresses those actual zero bytes down to ~500KB
     // in well under a second, since DEFLATE handles a run of zeros
@@ -531,7 +531,7 @@ test('extract strips a leading "./" from destPath before writing', function (): 
 });
 
 test('extract rejects an archive whose total uncompressed size is exactly one byte over MAX_UNCOMPRESSED_BYTES', function (): void {
-    // Real gap, found via mutation testing: DecrementInteger on the
+    // DecrementInteger on the
     // accumulator's `= 0` initializer (`= -1`) shifts every running total
     // down by exactly one byte, so it takes exactly
     // MAX_UNCOMPRESSED_BYTES + 1 real bytes -- not the "525,000,000 over"
@@ -567,10 +567,10 @@ test('extract rejects an archive whose total uncompressed size is exactly one by
 });
 
 test('extract with a bare "." removePrefix does not strip any entry name, even one that looks like a prefix match', function (): void {
-    // Real gap, found via mutation testing: EmptyStringToNotEmpty on the
+    // EmptyStringToNotEmpty on the
     // `$removePrefix = '';` assignment inside the `=== '.'` branch
     // replaces it with pest-plugin-mutate's own fixed placeholder text
-    // ('PEST Mutator was here!', confirmed deterministic across this
+    // ('PEST Mutator was here!', deterministic across this
     // codebase -- see e.g. SessionServiceTest.php's own docblock). A
     // normal archive (no entry coincidentally named after that
     // placeholder) can't tell the two apart, since "stripping" a prefix
@@ -595,7 +595,7 @@ test('extract with a bare "." removePrefix does not strip any entry name, even o
 });
 
 test('extract does not double a removePrefix that already ends with a trailing slash', function (): void {
-    // Real gap, found via mutation testing: BooleanAndToBooleanOr and
+    // BooleanAndToBooleanOr and
     // StrEndsWithToStrStartsWith on `$removePrefix !== '' && !
     // str_ends_with($removePrefix, '/')` both only diverge from the
     // correct code when removePrefix is passed in already ending with
@@ -621,7 +621,7 @@ test('extract does not double a removePrefix that already ends with a trailing s
 });
 
 test('extract strips exactly the two-character "./" prefix from destPath, not just the leading dot', function (): void {
-    // Real gap, found via mutation testing: DecrementInteger on
+    // DecrementInteger on
     // `substr($destPath, 2)` (-> `substr($destPath, 1)`) leaves a stray
     // leading slash in destPath. Since zip_extractor_test_marker()
     // itself starts with '/', prefixing it with './' produces a raw
@@ -646,7 +646,7 @@ test('extract strips exactly the two-character "./" prefix from destPath, not ju
 });
 
 test('extract strips a trailing slash from destPath before joining entry names onto it', function (): void {
-    // Real gap, found via mutation testing: UnwrapRtrim on `$destPath =
+    // UnwrapRtrim on `$destPath =
     // rtrim($destPath, '/');` removes the rtrim() entirely. As with the
     // "./" test above, a doubled trailing/joining slash resolves to the
     // identical real file on Linux, so this asserts on the exact
@@ -667,7 +667,7 @@ test('extract strips a trailing slash from destPath before joining entry names o
 });
 
 test('extract does not strip removePrefix from an entry whose stored name does not actually start with it', function (): void {
-    // Real gap, found via mutation testing: BooleanAndToBooleanOr on
+    // BooleanAndToBooleanOr on
     // `$removePrefix !== '' && str_starts_with($storedName,
     // $removePrefix)` -- with a non-empty removePrefix, the `||` mutant
     // short-circuits to true from the first operand alone, so EVERY
@@ -694,7 +694,7 @@ test('extract does not strip removePrefix from an entry whose stored name does n
 });
 
 test('extract rejects an entry that resolves to a sibling directory sharing destPath as a string prefix', function (): void {
-    // Real gap, found via mutation testing: ConcatRemoveRight on the
+    // ConcatRemoveRight on the
     // zip-slip guard's `str_starts_with($normalizedFilename,
     // $normalizedDestPath . '/')` drops the '/' boundary -- without it,
     // an entry resolving to ".../extracted-evil/hack.php" would pass a
@@ -719,7 +719,7 @@ test('extract rejects an entry that resolves to a sibling directory sharing dest
 });
 
 test('extract continues processing later entries after marking one as already_a_directory', function (): void {
-    // Real gap, found via mutation testing: ContinueToBreak on the
+    // ContinueToBreak on the
     // already_a_directory branch's `continue` -- the sibling existing
     // test's already_a_directory entry happens to be LAST in its
     // archive, so continue vs break produce the same result there.
@@ -744,13 +744,13 @@ test('extract continues processing later entries after marking one as already_a_
 });
 
 test('extract does not create a destination file when the archive entry itself cannot be read as a stream', function (): void {
-    // Real gap, found via mutation testing: two FalseToTrue mutants on
+    // Two FalseToTrue mutants on
     // `$dest = $source !== false ? @fopen($filename, 'wb') : false;`
     // (`!== true` and the else-arm `: true`) and an IfNegated mutant on
     // `if (is_resource($source)) { fclose($source); }` all require a
     // genuinely-reachable `$source === false` to distinguish -- getStream()
     // returns false for an AES-encrypted entry when no password was set
-    // (extract() never calls setPassword()), confirmed live: a real,
+    // (extract() never calls setPassword()) -- a real,
     // naturally-occurring case, not a mock.
     $archive = zip_extractor_test_marker() . '/encrypted.zip';
     $zip = new ZipArchive();
@@ -771,7 +771,7 @@ test('extract does not create a destination file when the archive entry itself c
 });
 
 test('extract continues processing later entries after a write_error result', function (): void {
-    // Real gap, found via mutation testing: ContinueToBreak on the
+    // ContinueToBreak on the
     // write_error branch's `continue`. Reuses the encrypted-entry
     // technique above to reach write_error without any filesystem
     // permission trickery.
@@ -796,11 +796,11 @@ test('extract continues processing later entries after a write_error result', fu
 });
 
 test('extract sets each extracted file\'s mtime to the archive entry\'s stored mtime', function (): void {
-    // Real gap, found via mutation testing: RemoveFunctionCall on
+    // RemoveFunctionCall on
     // `touch($filename, $stat['mtime']);`. A fixed, clearly-not-"now"
     // mtime is used (rather than relying on the archive's own
     // just-created timestamp, which could coincidentally be within a
-    // second of "now" either way) -- confirmed live that
+    // second of "now" either way) --
     // ZipArchive::setMtimeName()/statIndex() round-trip this exact
     // integer with no DOS-time rounding.
     $archive = zip_extractor_test_marker() . '/a.zip';
@@ -822,7 +822,7 @@ test('extract sets each extracted file\'s mtime to the archive entry\'s stored m
 });
 
 test('extract rejects a zip-slip entry that escapes destPath through a "./.." segment sequence', function (): void {
-    // Real gap, found via mutation testing: normalizePath()'s `$segment
+    // NormalizePath()'s `$segment
     // === '' || $segment === '.'` guard must skip BOTH kinds of no-op
     // segment so a later '..' pops a REAL ancestor directory, not the
     // no-op placeholder itself -- otherwise "extracted/./../evil.txt"
@@ -845,7 +845,7 @@ test('extract rejects a zip-slip entry that escapes destPath through a "./.." se
 });
 
 test('extract rejects a zip-slip entry that escapes destPath through a doubled "/" segment sequence', function (): void {
-    // Real gap, found via mutation testing: normalizePath()'s `$segment
+    // NormalizePath()'s `$segment
     // === ''` half of the same guard must ALSO skip the segment produced
     // by a doubled '/' -- otherwise a later '..' pops that empty
     // placeholder instead of a REAL ancestor directory, letting an entry
@@ -867,7 +867,7 @@ test('extract rejects a zip-slip entry that escapes destPath through a doubled "
 });
 
 test('extract rejects a zip-slip entry that escapes destPath through a single ".." segment', function (): void {
-    // Real gap, found via mutation testing: IfNegated and
+    // IfNegated and
     // IdenticalToNotIdentical both invert `if ($segment === '..')`
     // identically -- under either mutant, EVERY non-'..' segment
     // triggers an (empty-array, harmless no-op) pop instead of being
@@ -893,7 +893,7 @@ test('extract rejects a zip-slip entry that escapes destPath through a single ".
 });
 
 test('extract accepts an entry whose stored path uses ".." to reference a sibling within destPath', function (): void {
-    // Real gap, found via mutation testing: ArrayPopToArrayShift on the
+    // ArrayPopToArrayShift on the
     // '..' handler -- normalizePath() must remove the MOST RECENTLY
     // pushed segment (the nearest enclosing directory), not the FIRST
     // one ever pushed, or an entry like "subdir/../other.txt" (a normal,
@@ -922,7 +922,7 @@ test('extract accepts an entry whose stored path uses ".." to reference a siblin
 });
 
 test('extract rejects a zip-slip entry that escapes destPath through consecutive ".." segments after a real one', function (): void {
-    // Real gap, found via mutation testing: ContinueToBreak on the '..'
+    // ContinueToBreak on the '..'
     // handler exits normalizePath()'s whole segment loop after popping
     // for just the FIRST '..' it sees, instead of moving on to evaluate
     // the REST of the path -- so "a/../../evil.txt" (a genuine two-level
@@ -947,8 +947,8 @@ test('extract rejects a zip-slip entry that escapes destPath through consecutive
 
 // ZipExtractor::listFilenames()/extract() each guard `$zip->statIndex($i)
 // === false` for every $i in [0, $zip->numFiles) -- ZipArchive's own
-// documented `array|false` return contract for statIndex(). Verified
-// empirically (not assumed) that this cannot actually happen once open()
+// documented `array|false` return contract for statIndex(). This cannot
+// actually happen once open()
 // has succeeded, across every corruption strategy a real attacker or a
 // genuinely damaged download could produce: an out-of-range filename-length
 // field in one central-directory record (cascades into a full open()
@@ -957,7 +957,7 @@ test('extract rejects a zip-slip entry that escapes destPath through consecutive
 // open(), not per-entry), a truncated/malformed Zip64 extra field (same),
 // and even a TOCTOU truncation of the underlying file *after* a successful
 // open() (libzip has already parsed and cached the whole central directory
-// in memory by then, confirmed via a live truncate-then-statIndex() spike --
+// in memory by then, per a live truncate-then-statIndex() spike --
 // every entry still stat'd correctly). Every real-world path that could
 // make one specific entry unstat-able instead makes the whole archive
 // unopenable, which the `$zip->open($archive) !== true` guard already

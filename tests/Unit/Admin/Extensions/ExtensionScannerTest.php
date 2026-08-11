@@ -32,7 +32,7 @@ use Piwigo\Users\User;
 // seeded against this repo's own real root (not a disposable temp dir) so
 // the real language/ tree is genuinely reachable.
 // [Mutation] Remaining untested mutations after mutation testing, all
-// verified per-instance via hand-mutation (not assumed by category
+// checked per-instance via hand-mutation (not assumed by category
 // alone), triaged into 3 groups:
 //
 // 1. RemoveBooleanCast on `if ((bool) preg_match(...))` (~20 sites across
@@ -51,14 +51,14 @@ use Piwigo\Users\User;
 //    FalseToTrue (`=== false` -> `=== true`) or RemoveEarlyReturn (drops
 //    `return null;`) both make that test fail for real (an uncaught
 //    TypeError -- strict_types=1 means preg_match()'s string-typed $data
-//    param can't silently coerce a bool `false`), confirmed by running
+//    param can't silently coerce a bool `false`), per running
 //    each "cannot be read" test filtered, standalone, against the
 //    hand-mutated source. `pest --mutate` doesn't credit an uncaught
 //    fatal-error crash as "tested" the way it credits a normal assertion
 //    failure -- a real, if narrower, blind spot alongside the
 //    already-documented subprocess-coverage one.
 //
-// 3. Individually-verified inert mutations, each confirmed via
+// 3. Individually-checked inert mutations, each per
 //    hand-mutation + a full filtered rerun (not inferred from the others):
 //    - Line 64 BooleanOrToBooleanAnd (the '.'/'..' directory-entry
 //      guard): '.' and '..' both already fail the very next line's
@@ -78,7 +78,7 @@ use Piwigo\Users\User;
 //      without this -- but the resulting fallback through
 //      iconv()/mb_convert_encoding() is itself case-insensitive for
 //      charset names, producing byte-identical output either way
-//      (confirmed via a direct probe comparing the "fast path identity"
+//      (per a direct probe comparing the "fast path identity"
 //      output against the "iconv utf-8 -> UTF-8" output for the same
 //      string).
 //    - Line 339 EmptyStringToNotEmpty (`implode('', $lines)` in
@@ -139,7 +139,6 @@ test('scan skips a language directory with no common.po', function (): void {
         ->not->toHaveKey('index.php');
 });
 
-// ---------------------------------------------------------------------
 // Below: real coverage-gap closure for scan()/scanPlugin()/scanTheme()/
 // scanLanguage()'s remaining untested branches (guard-failure returns,
 // the Lang::load() description success path, the webmaster-gated
@@ -273,7 +272,7 @@ test('scan skips a plugin directory with no main.inc.php', function (): void {
 });
 
 test('scan trims trailing whitespace from every regex-captured plugin header value', function (): void {
-    // Real gap, found via mutation testing: the "full fixture plugin"
+    // The "full fixture plugin"
     // header block has no trailing whitespace on any line, so trim()
     // never actually had anything to strip -- these patterns' `.+`
     // capture is greedy up to the newline, so trailing spaces before it
@@ -312,7 +311,7 @@ test('scan trims trailing whitespace from every regex-captured plugin header val
 });
 
 test('scan skips a directory entry with an invalid id but keeps scanning the rest', function (): void {
-    // Real gap, found via mutation testing: a directory containing only
+    // A directory containing only
     // '.'/'..' plus valid-id entries never actually reaches the
     // regex-mismatch branch at all (both are caught by the earlier '.'/
     // '..' guard), so `continue` vs `break` there was never exercised. An
@@ -324,8 +323,8 @@ test('scan skips a directory entry with an invalid id but keeps scanning the res
     // 'zzz_valid_plugin', assuming alphabetical iteration) did NOT
     // actually catch this, and a follow-up fixed-name-pair attempt didn't
     // reliably catch it either: readdir()'s real order on this filesystem
-    // is neither alphabetical nor stable creation order -- confirmed via
-    // direct, repeated probing that the SAME two literal names can come
+    // is neither alphabetical nor stable creation order -- per
+    // direct, repeated probing, the SAME two literal names can come
     // back in either relative order across different runs (a randomized
     // per-mount directory-hash seed is the likely cause, same security
     // rationale as ext4 htree's own hash-flood mitigation -- this
@@ -366,7 +365,7 @@ test('scan skips a directory entry with an invalid id but keeps scanning the res
 });
 
 test('scan defaults name/version/uri/description/author for a plugin whose main.inc.php has no matching headers', function (): void {
-    // Real gap, found via mutation testing: every other plugin test uses
+    // Every other plugin test uses
     // a fully-populated header block, so nothing ever exercised the
     // initial $plugin = [...] default values themselves (name falls back
     // to the directory id, version to '0', the rest to '').
@@ -406,13 +405,13 @@ test('scan skips a plugin whose main.inc.php cannot be read', function (): void 
         // for anyone) -- file_get_contents() genuinely returns false here,
         // not a mock, matching UploadServiceTest::sanitizeSvgIfNeeded's
         // own established permission-denied convention (torres is a
-        // non-root user in this environment, confirmed via `id`, so
+        // non-root user in this environment, per `id`, so
         // owning a file does not bypass its own permission bits). A
         // directory standing in for main.inc.php was tried first and
         // rejected: file_get_contents() against a directory returns ''
         // (an E_NOTICE, not E_WARNING) on this PHP version, not false --
         // it would silently fall through to a defaulted, non-null return
-        // instead of exercising this guard at all, confirmed via direct
+        // instead of exercising this guard at all, per direct
         // `php -r` experimentation before writing this test.
         // file_exists() (scanPlugin()'s own earlier guard) stays true
         // regardless of the chmod -- only the later read fails -- so this
@@ -699,7 +698,7 @@ test('scan skips a language whose common.po cannot be read', function (): void {
 });
 
 test('scan does not append an empty, whitespace-only X-Piwigo-Country to the language name', function (): void {
-    // Real gap, found via mutation testing: the real bundled en_UK fixture
+    // The real bundled en_UK fixture
     // (see the very first test in this file) always has a genuinely
     // non-empty country ("Great Britain"), so it can't tell a real
     // trim()-then-empty-check from a removed one -- a header value that's
@@ -729,12 +728,11 @@ test('scan does not append an empty, whitespace-only X-Piwigo-Country to the lan
     }
 });
 
-// ---------------------------------------------------------------------
 // Below: second mutation-testing pass. Same fixture-root/no-DB-bootstrap
 // technique as the section above.
 
 test('scan sorts languages by name via nameCompare, not raw directory listing order', function (): void {
-    // Real gap, found via mutation testing: `if ($type === ExtensionType::Language)`
+    // `if ($type === ExtensionType::Language)`
     // gates the uasort()/nameCompare() call -- neither of this file's
     // existing language tests scans more than one language whose name
     // ordering could differ from its directory-listing order, so nothing
@@ -778,7 +776,7 @@ test('scan sorts languages by name via nameCompare, not raw directory listing or
 });
 
 test('scan rejects a plugin directory that is a symlink even when its target is a real directory', function (): void {
-    // Real gap, found via mutation testing: `!is_dir($path) || is_link($path) || ...`
+    // `!is_dir($path) || is_link($path) || ...`
     // -- a symlink pointing at a real directory satisfies is_dir() too (it
     // follows the link), so the is_link() rejection has to be checked
     // independently of is_dir(), not gated behind it.
@@ -808,7 +806,7 @@ test('scan rejects a plugin directory that is a symlink even when its target is 
 });
 
 test('scan only reads the first 2048 bytes of a plugin main.inc.php header block', function (): void {
-    // Real gap, found via mutation testing: file_get_contents()'s own
+    // file_get_contents()'s own
     // offset (0) and length (2048) arguments -- every other plugin
     // fixture's header block sits well within that window, so nothing
     // ever told the exact (offset=0, length=2048) read from an
@@ -838,7 +836,7 @@ test('scan only reads the first 2048 bytes of a plugin main.inc.php header block
 });
 
 test('scan gates hasSettings on a case-insensitive "webmaster" marker, not just the lowercase literal', function (): void {
-    // Real gap, found via mutation testing: strtolower($val[1]) === 'webmaster'
+    // strtolower($val[1]) === 'webmaster'
     // -- every existing webmaster-gated fixture already writes the header
     // in lowercase ("Has Settings: webmaster"), which can't tell a real
     // strtolower() from a removed one. The regex's own [Ww]ebmaster class
@@ -866,7 +864,7 @@ test('scan gates hasSettings on a case-insensitive "webmaster" marker, not just 
 });
 
 test('scan skips a theme directory with no themeconf.inc.php', function (): void {
-    // Real gap, found via mutation testing: `!is_dir($path) || !file_exists(...)`
+    // `!is_dir($path) || !file_exists(...)`
     // -- unlike the equivalent plugin test, nothing exercised a theme
     // directory that exists but is missing its own marker file.
     $root = extensionScannerFixtureRoot();
@@ -884,7 +882,7 @@ test('scan skips a theme directory with no themeconf.inc.php', function (): void
 });
 
 test('scan falls back to the header Description when Lang::load() returns an empty plugin description.txt', function (): void {
-    // Real gap, found via mutation testing: is_string($desc) && $desc !== ''
+    // is_string($desc) && $desc !== ''
     // -- every plugin fixture with a description.txt writes real,
     // non-empty content, so nothing ever exercised the empty-string case
     // (an empty description.txt genuinely returns '' from Lang::load(),
@@ -910,7 +908,7 @@ test('scan falls back to the header Description when Lang::load() returns an emp
 });
 
 test('scan trims whitespace from a lang-loaded plugin description', function (): void {
-    // Real gap, found via mutation testing: trim($desc) -- the shared
+    // trim($desc) -- the shared
     // extensionScannerFixturePlugin() helper's description.txt content has
     // no surrounding whitespace, so trim() never had anything to strip.
     $root = extensionScannerFixtureRoot();
@@ -975,7 +973,7 @@ test('scan trims whitespace from a lang-loaded theme description', function (): 
 });
 
 test('scan reports activable/mobile/use_standard_pages as false, not just non-empty, for an explicitly false theme_conf', function (): void {
-    // Real gap, found via mutation testing: SqlDialect::getBoolean($val[1])
+    // SqlDialect::getBoolean($val[1])
     // -- the only "fully populated" theme fixture in this file sets all 3
     // flags to true, and SqlDialect::getBoolean()'s own (bool) cast
     // fallback treats *any* non-"false" non-empty string as true --
@@ -1016,7 +1014,7 @@ test('scan reports activable/mobile/use_standard_pages as false, not just non-em
 });
 
 test('scan omits admin_uri for a theme with no admin/admin.inc.php', function (): void {
-    // Real gap, found via mutation testing: file_exists($path . '/admin/admin.inc.php')
+    // file_exists($path . '/admin/admin.inc.php')
     // -- both existing fixtures that create an 'admin/' subdirectory
     // (padded_header_theme, headerless_theme) never assert admin_uri's
     // *absence*, so a mutant that checks file_exists($path) (the theme's
@@ -1041,7 +1039,7 @@ test('scan omits admin_uri for a theme with no admin/admin.inc.php', function ()
 });
 
 test('scan prefixes admin_uri with the real root url, not just the relative admin.php path', function (): void {
-    // Real gap, found via mutation testing: $urlService->getRootUrl() . 'admin.php?...'
+    // $urlService->getRootUrl() . 'admin.php?...'
     // -- the existing "full_fixture_theme" test's own toContain() check is
     // deliberately a substring match (its own comment explains why: the
     // untouched RootPathOverride/SectionContextRegistry state makes
@@ -1073,7 +1071,7 @@ test('scan prefixes admin_uri with the real root url, not just the relative admi
 });
 
 test('scan reconstructs a multi-line theme_conf value by rejoining file() lines without inserting a separator', function (): void {
-    // Real gap, found via mutation testing: implode('', $lines) -- every
+    // implode('', $lines) -- every
     // other theme fixture's header/config values sit entirely on a single
     // physical line, so nothing tells a real empty-glue join from a
     // non-empty one: inserted glue text lands strictly *between* file()
@@ -1102,7 +1100,7 @@ test('scan reconstructs a multi-line theme_conf value by rejoining file() lines 
 });
 
 test('scan rejects a language directory that is a symlink even when its target is a real directory', function (): void {
-    // Real gap, found via mutation testing: `!is_dir($path) || is_link($path) || ...`
+    // `!is_dir($path) || is_link($path) || ...`
     // -- language's own guard has the exact same is_link()-gated-behind-
     // is_dir() shape as the plugin guard above, and needs the same real,
     // non-mocked symlink to distinguish.
@@ -1133,7 +1131,7 @@ test('scan rejects a language directory that is a symlink even when its target i
 });
 
 test('scan actually uses the caller-supplied targetCharset, not just the default fallback', function (): void {
-    // Real gap, found via mutation testing: `$targetCharset ?? 'utf-8'` --
+    // `$targetCharset ?? 'utf-8'` --
     // every existing language test passes 'utf-8' as $targetCharset, which
     // is also exactly the default fallback, so nothing can tell a real
     // caller-supplied charset from the ignored-argument fallback.
@@ -1170,7 +1168,7 @@ test('scan actually uses the caller-supplied targetCharset, not just the default
 });
 
 test('scan defaults uri/author for a language whose common.po has no matching Language-Name header', function (): void {
-    // Real gap, found via mutation testing: every other language fixture's
+    // Every other language fixture's
     // common.po carries an "X-Piwigo-Language-Name" header, so nothing
     // ever exercised the initial $language = [...] default array itself
     // ('name'/'code' default to the directory id, 'version' to
@@ -1198,7 +1196,7 @@ test('scan defaults uri/author for a language whose common.po has no matching La
 });
 
 test('scan does not corrupt language name/country when charset conversion fails for an unrecognized target charset', function (): void {
-    // Real gap, found via mutation testing: `if ($converted !== false)` /
+    // `if ($converted !== false)` /
     // `if ($convertedCountry !== false)` -- every existing language test
     // passes 'utf-8' as $targetCharset, which CharsetHelper::convertCharset()
     // short-circuits as an identity no-op (source === dest, never returns
@@ -1240,7 +1238,7 @@ test('scan does not corrupt language name/country when charset conversion fails 
 });
 
 test('scan escapes special HTML characters in a language name', function (): void {
-    // Real gap, found via mutation testing: array_map(htmlspecialchars(...), $language)
+    // array_map(htmlspecialchars(...), $language)
     // -- the existing "escapes special HTML characters" test above only
     // covers scanPlugin()'s own htmlspecialchars() pass, not
     // scanLanguage()'s separate one.

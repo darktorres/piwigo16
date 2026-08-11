@@ -52,7 +52,7 @@ test('getExtents returns an empty array when the directory does not exist', func
     // opendir() on a genuinely missing path raises a real PHP warning even
     // though getExtents() itself already handles the false return
     // gracefully -- a plain @ does NOT stop PHPUnit's ErrorHandler from
-    // surfacing it regardless (confirmed: @ only affects
+    // surfacing it regardless (@ only affects
     // error_reporting(), not whether the handler chain runs), so a real
     // no-op error handler for the duration of this one expected-to-warn
     // call is the only reliable way to swallow it, matching ImageGdTest's

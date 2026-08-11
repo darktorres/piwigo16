@@ -86,8 +86,6 @@ function installServiceTestLang(): Lang
     );
 }
 
-// --------------------------------------------------- PHP5_HOSTING_HTACCESS
-
 test('PHP5_HOSTING_HTACCESS carries the expected hosting directives', function (): void {
     // Same reasoning as the Integration original -- this legacy-hosting
     // compat data is otherwise only ever read, never re-derived, so this
@@ -97,8 +95,6 @@ test('PHP5_HOSTING_HTACCESS carries the expected hosting directives', function (
         ->and(InstallService::PHP5_HOSTING_HTACCESS['ovh.net'])->toBe('SetEnv PHP_VER 5')
         ->and(InstallService::PHP5_HOSTING_HTACCESS['free.fr'])->toBe('php 1');
 });
-
-// --------------------------------------------------------- executeSqlfile
 
 test('executeSqlfile() creates tables and skips DROP TABLE', function (): void {
     $conn = DbConnection::build();
@@ -156,8 +152,6 @@ test('executeSqlfile() throws a RuntimeException when the file does not exist', 
     }
 });
 
-// ------------------------------------------------------- installDbConnect
-
 $installServiceTestEnvVars = ['PIWIGO_DB_HOST', 'PIWIGO_DB_USER', 'PIWIGO_DB_PASSWORD', 'PIWIGO_DB_BASE', 'PIWIGO_DB_PREFIX', 'PIWIGO_DB_DRIVER', 'PIWIGO_DB_PORT'];
 $installServiceTestOriginalEnv = [];
 
@@ -212,7 +206,7 @@ test('installDbConnect() returns null and records an error for a wrong password'
     // Specific content, not just "some non-empty string" -- proves this
     // really is the driver's authentication failure, distinct from the
     // "unknown database" branch below. Real wording (and username
-    // quoting style) differs per driver, confirmed live against the real
+    // quoting style) differs per driver, per the real
     // server -- MySQL: "Access denied ... 'user'@'host'" (single-quoted);
     // Postgres: 'password authentication failed for user "user"'.
     if ($driver === 'pgsql') {
@@ -255,12 +249,10 @@ test('installDbConnect() returns null and records an error for an unknown databa
 // environment's real server is pinned at or above that exact floor, so it
 // can never itself report a version below it.
 
-// ------------------------------------------------------ activateCoreThemes
-
 /**
  * Deliberately NOT a file-wide beforeEach()/afterEach() -- Pest's hooks
  * apply to every test() in the file regardless of where they're declared
- * relative to that test (confirmed live), and booting Kernel here would
+ * relative to that test, and booting Kernel here would
  * change DbConnection::build()'s own credential-resolution path (it
  * prefers the container-shared DbCredentials once Kernel::isBooted()),
  * silently breaking the installDbConnect() tests above, which rely on a
@@ -276,7 +268,7 @@ function installServiceTestBootKernel(): void
     // root an earlier-booted Kernel in the same process already carries)
     // fails autowiring with "Parameter $root of __construct() has no
     // value defined or guessable", same as ExtensionScannerTest.php's own
-    // beforeEach() -- confirmed live.
+    // beforeEach().
     Kernel::boot(Paths::fromRoot(dirname(__DIR__, 4)));
     CurrentConfigServiceTestFactory::get()->set(installServiceTestConfigService());
 }
@@ -351,8 +343,6 @@ test('activateCoreThemes() activates nothing when no default template theme dire
         installServiceTestResetKernel();
     }
 });
-
-// ----------------------------------------------------- activateCorePlugins
 
 test('activateCorePlugins() scans but auto-activates nothing, even when a real fs entry is found', function (): void {
     // activateCorePlugins()'s own docblock: "No core plugins are

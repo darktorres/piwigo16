@@ -71,7 +71,7 @@ use Piwigo\Users\CurrentUser;
 // real repo tree and the real DB.
 //
 // [Mutation] Every remaining untested mutation after mutation testing is
-// confirmed genuinely inert via hand-mutation + a full filtered rerun --
+// genuinely inert, per hand-mutation + a full filtered rerun --
 // zero new tests needed, all downstream of the SAME "PEM server always
 // unreachable" architecture this file's own docblock above already
 // establishes:
@@ -92,7 +92,7 @@ use Piwigo\Users\CurrentUser;
 //   after the first hit -- $extensionsNeedUpdate (and the final
 //   $_SESSION write) ends up identically [] in every case.
 // - checkUpdatedExtensions()'s own `!is_array(...) || ... === []`
-//   guard (BooleanOrToBooleanAnd) is inert too, verified by tracing
+//   guard (BooleanOrToBooleanAnd) is inert too, per tracing
 //   BOTH ways the mutation can misfire (a real non-empty record for
 //   one type, null/[] for another): the `??` operator on the very next
 //   line already suppresses any warning from indexing a wrong-shaped
@@ -202,10 +202,10 @@ function extensionUpdateChecker(): ExtensionUpdateChecker
     // beforeEach()-booted fixture Paths) and CurrentUserTestFactory::get() --
     // not a fresh, disconnected instance -- for scan()'s own themesDir()
     // lookup and PreferencesService::getAdminThemePref() fallback to
-    // resolve correctly. Found live: a fresh CurrentConfig here silently
-    // pointed scan() at the real project themes/ directory instead of
+    // resolve correctly. Without them, a fresh CurrentConfig here silently
+    // points scan() at the real project themes/ directory instead of
     // the disposable fixture root, and a fresh, never-.set() CurrentUser
-    // threw once scan() actually reached a real theme with no
+    // throws once scan() actually reaches a real theme with no
     // screenshot.png.
     $repo = EntityManagerFactory::build(DbConnection::build())->getRepository(ExtensionIgnoredUpdateEntity::class);
 

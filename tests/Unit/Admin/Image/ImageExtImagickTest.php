@@ -103,7 +103,7 @@ function imageExtImagickTestFrameCount(string $path): int
  * that follow it in a real VP8X chunk. webpInfo() only inspects byte 15
  * ('X') and byte 20 (the flags byte) -- both present here -- so it reports
  * has-animation=true, but getimagesize() genuinely can't extract real
- * dimensions from a file this short and returns false (confirmed live).
+ * dimensions from a file this short and returns false.
  * No external ImageMagick CLI involved in building this fixture.
  */
 function imageExtImagickTestMakeTruncatedAnimatedWebp(string $path): void
@@ -247,8 +247,8 @@ test('construct concatenates the imagickdir prefix directly onto the identify bi
 });
 
 // [Mutation] Line 84's ConcatRemoveRight mutant (dropping the trailing
-// ' < /dev/null') is real and severe -- confirmed via a direct, bounded
-// probe (`timeout 5 bash -c 'identify -format "%wx%h" ""'`) that removing
+// ' < /dev/null') is real and severe -- a direct, bounded
+// probe (`timeout 5 bash -c 'identify -format "%wx%h" ""'`) shows removing
 // the redirect genuinely HANGS in this sandbox for exactly the scenario
 // the constructor's own docblock above describes (a vanished/empty
 // filename makes identify read from stdin instead of failing fast). This
@@ -265,13 +265,13 @@ test('construct concatenates the imagickdir prefix directly onto the identify bi
 test('construct concatenates the imagickdir prefix directly onto the identify binary name, not merely anywhere in the command', function (): void {
     imageExtImagickTestSkipIfUnavailable();
 
-    // Real gap, found via mutation testing: the sibling "concatenates the
+    // The sibling "concatenates the
     // imagickdir prefix" test above uses a NONEXISTENT dir, which can't
     // discriminate a swapped concatenation order from the real one --
     // with `identify` unprefixed (found via PATH regardless) and the
     // nonexistent dir glued onto the file path argument instead, BOTH the
     // correct and the reordered command end up throwing the exact same
-    // "Corrupt image" exception (verified via hand-mutation). Same
+    // "Corrupt image" exception, per hand-mutation. Same
     // "real symlink in a private, never-on-PATH-alone directory"
     // technique as write()'s own imagickdir-prefix test below: this needs
     // a real, working target to tell the two orderings apart.
@@ -294,8 +294,8 @@ test('construct concatenates the imagickdir prefix directly onto the identify bi
 
 // [Mutation] Line 88's EmptyStringToNotEmpty mutant (the
 // `$returnarray[0] === ''` guard) is a defensive check this environment's
-// real `identify` binary never appears to trigger: empirically confirmed
-// (probed a 0-byte file, a truncated GIF header, and raw null bytes) that
+// real `identify` binary never appears to trigger:
+// a probe (a 0-byte file, a truncated GIF header, and raw null bytes) shows
 // every real failure path leaves $returnarray completely EMPTY (identify
 // writes errors to stderr, which this command never captures via `2>&1`)
 // rather than populating element 0 with an empty string -- so the
@@ -305,14 +305,14 @@ test('construct concatenates the imagickdir prefix directly onto the identify bi
 // `$returnarray[0] === ''` scenario via a real subprocess call.
 //
 // Line 88's RemoveBooleanCast mutant (`!(bool) preg_match(...)` -> `!
-// preg_match(...)`) is genuinely inert, verified via hand-mutation:
+// preg_match(...)`) is genuinely inert, per hand-mutation:
 // preg_match() returns `int|false`, and PHP's `!` operator already
 // coerces that to the correct boolean regardless of an explicit `(bool)`
 // cast -- 0 and false are both falsy, any nonzero match count is truthy,
 // with or without the cast.
 //
 // Line 92's DecrementInteger mutant (`(int) $match[1]` -> `(int)
-// $match[0]`) is genuinely inert for this specific regex, verified via
+// $match[0]`) is genuinely inert for this specific regex, per
 // hand-mutation: the pattern is `/^(\d+)x(\d+)$/`, so $match[0] (the full
 // match, e.g. "12x9") and $match[1] (just the width group, e.g. "12")
 // always share the same LEADING digit run -- PHP's (int) cast on a
@@ -320,7 +320,7 @@ test('construct concatenates the imagickdir prefix directly onto the identify bi
 // `(int) "12"` both evaluate to 12 for any real width x height pair.
 //
 // Line 245's RemoveStringCast mutant (`(string) $params` -> `$params`)
-// is genuinely inert, verified via hand-mutation: $params is declared
+// is genuinely inert, per hand-mutation: $params is declared
 // `int|float|string|null`, the preceding `in_array(..., true)` guard
 // already excludes null, and PHP's `.=` concatenation operator coerces
 // any remaining int/float/string operand to string automatically, with
@@ -383,7 +383,7 @@ test('construct treats an uppercase .WEBP extension as webp case-insensitively',
     // strtolower(), 'WEBP' !== 'webp' would skip the animated-webp branch
     // entirely and fall through to the multi-frame `identify` command,
     // which can't parse concatenated per-frame dimensions and throws
-    // instead (confirmed live: "20x1420x14" fails the single-pair regex).
+    // instead ("20x1420x14" fails the single-pair regex).
     $path = imageExtImagickTestMarker() . '/animated-uppercase.WEBP';
     imageExtImagickTestMakeAnimatedWebp($path, 20, 14);
 
@@ -715,7 +715,7 @@ test('write throws when the destination path has no directory component at all',
     $image = imageExtImagickTestMake($path);
 
     // pathinfo('') is the one real value that omits the 'dirname' key
-    // entirely (confirmed live: only 'basename'/'filename' come back, both
+    // entirely (only 'basename'/'filename' come back, both
     // empty strings) -- every non-empty path, even a bare filename with no
     // slash, still gets a 'dirname' of '.'.
     expect(fn (): bool => $image->write(''))
@@ -768,7 +768,7 @@ test('write triggers E_USER_WARNING for each line of real CLI failure output', f
 // redirections are positionally independent from the surrounding words in
 // a simple command -- `cmd arg1 arg2 < /dev/null 2>&1` and
 // `cmd < /dev/null 2>&1 arg1 arg2` parse to the exact same argv and the
-// exact same redirects, confirmed via a direct probe
+// exact same redirects, per a direct probe
 // (`bash -c 'printf "%s|" arg1 arg2 < /dev/null 2>&1'` vs
 // `bash -c 'printf "%s|" < /dev/null 2>&1 arg1 arg2'` -- byte-identical
 // output both times) rather than assumed from the diff alone.
@@ -776,7 +776,7 @@ test('write triggers E_USER_WARNING for each line of real CLI failure output', f
 test('write logs a real ERROR line via the logger when the CLI call fails, with an empty message (the CLI output is the payload, in context)', function (): void {
     imageExtImagickTestSkipIfUnavailable();
 
-    // Real gap, found via mutation testing: the sibling "triggers
+    // The sibling "triggers
     // E_USER_WARNING" test above only asserts on trigger_error() output,
     // never on the $logger->error('', 'i.php', $returnarray) call right
     // before it -- so neither removing that call (RemoveMethodCall) nor
@@ -785,8 +785,8 @@ test('write logs a real ERROR line via the logger when the CLI call fails, with 
     // formatMessage() appends the $returnarray context as an indented
     // block right after the message -- with an empty message, the log
     // line's own "[i.php]\t" category marker is followed IMMEDIATELY by a
-    // newline (verified by reading Logger::formatMessage() directly, not
-    // assumed): a non-empty message would put real text there instead.
+    // newline (per Logger::formatMessage() itself): a non-empty message
+    // would put real text there instead.
     $logDir = sys_get_temp_dir() . '/piwigo-imageextimagick-test-log-' . bin2hex(random_bytes(8));
     mkdir($logDir, 0o777, true);
     imageExtImagickTestCurrentLogger()
@@ -872,13 +872,13 @@ test('write concatenates the imagickdir prefix directly onto the convert/magick 
 
     $image->imagickdir = imageExtImagickTestMarker() . '/';
 
-    // Real gap, found via mutation testing: without also starving PATH,
+    // Without also starving PATH,
     // dropping the imagickdir prefix entirely (ConcatRemoveLeft) is
     // INDISTINGUISHABLE from the real code -- $commandName is *also*
-    // resolvable via PATH (confirmed: imageExtImagickTestRealBinaryPath()
+    // resolvable via PATH (imageExtImagickTestRealBinaryPath()
     // above found it via `command -v`), so a version that relies on PATH
     // alone succeeds just as well as the prefixed one, producing the same
-    // output. Starving PATH first (confirmed via a direct probe: an
+    // output. Starving PATH first (per a direct probe: an
     // unprefixed command genuinely fails with status 127, while the
     // absolute-prefixed one still succeeds) makes the prefix load-bearing
     // for real. Save+restore is mandatory here -- a bare clear would
@@ -962,7 +962,7 @@ test('write adds the -layers coalesce flag to the logged command for an animated
         // Frame count alone (this file's own earlier "-layers coalesce"
         // test) doesn't actually discriminate whether the flag was really
         // added -- a simple, non-optimized 2-frame animation round-trips
-        // to the same frame count either way (confirmed live). The
+        // to the same frame count either way. The
         // *logged* $exec command is the only real, non-mocked window onto
         // whether the flag itself was actually built into the command.
         $logContent = file_get_contents($logDir . '/coalesce.log');
@@ -1056,7 +1056,7 @@ test('write does not log an error when the CLI call succeeds with no output at a
             ->toBeTrue();
 
         // A real, successful convert/magick call genuinely produces zero
-        // lines of CLI output (confirmed live) -- count($returnarray)
+        // lines of CLI output -- count($returnarray)
         // stays 0, so $logger->error()/trigger_error() must never fire.
         $logContent = file_get_contents($logDir . '/success.log');
         if ($logContent === false) {

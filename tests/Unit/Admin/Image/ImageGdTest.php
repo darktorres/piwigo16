@@ -19,7 +19,7 @@ use Piwigo\PluginConfig\EventDispatcher;
  * compose() (see below), crop($width, $height, ...)/resize($width,
  * $height) pass their own method *arguments* straight into
  * imagecreatetruecolor(), completely independent of the already-decoded
- * source image's real size. Confirmed live: imagecreatetruecolor(100000,
+ * source image's real size. imagecreatetruecolor(100000,
  * 100000) returns false with a real "product of memory allocation
  * multiplication would exceed INT_MAX" warning (width*height*4 bytes >
  * PHP_INT_MAX's 32-bit-truncated internal check) -- reachable by simply
@@ -104,7 +104,7 @@ test('construct decodes a real PNG', function (): void {
 });
 
 test('construct decodes a real .jpeg (not just .jpg) extension', function (): void {
-    // Real gap, found via mutation testing: every existing jpeg-flavored
+    // Every existing jpeg-flavored
     // test here uses a .jpg path -- removing 'jpeg' from the
     // in_array(['jpg', 'jpeg']) check was invisible without a real
     // .jpeg-suffixed file.
@@ -140,7 +140,7 @@ test('construct decodes a real GIF', function (): void {
 });
 
 test('construct lowercases the file extension before matching it', function (): void {
-    // Real gap, found via mutation testing: every existing decode test
+    // Every existing decode test
     // here uses a lowercase extension -- removing the strtolower() call
     // wrapping StringHelper::getExtension() was invisible without a real
     // uppercase-suffixed file, which would otherwise fall through to the
@@ -208,24 +208,23 @@ test('destroy is a true no-op returning true', function (): void {
         ->toBeTrue();
 });
 
-// ---------------------------------------------------------------------
 // Mutation-testing gap closure (G1, when-i-run-the-mutable-cookie.md):
 // a fresh scoped rerun (2026-08-10) found 20 untested. 1 new real test
 // closed above (resize()'s own imagealphablending(false) call). The
-// rest confirmed inert/unreachable/already-documented this pass, none
+// rest are inert/unreachable/already-documented this pass, none
 // needing a new test:
 // - crop()'s own IDENTICAL imagealphablending($dest, false)/
 //   imagesavealpha($dest, true)/imageantialias($dest, true) setup
-//   (TrueToFalse/RemoveFunctionCall/IfNegated): verified directly (not
-//   assumed) that this trio has NO observable effect on crop()'s own
+//   (TrueToFalse/RemoveFunctionCall/IfNegated): this trio has NO
+//   observable effect on crop()'s own
 //   output, even with the exact same alpha-transparent source the new
 //   resize() test above uses -- crop() merges via imagecopymerge(),
 //   which has a real, well-known PHP/GD alpha-handling limitation (the
 //   same "php bug #23815" compose()'s own docblock already references
 //   for the identical reason) that makes it ignore all three regardless.
 // - resize()'s own `imagesavealpha($dest, true)` call: a SEPARATE,
-//   narrower finding from the alphablending call above -- verified
-//   directly that it's redundant specifically for imagecopyresampled()
+//   narrower finding from the alphablending call above -- it's redundant
+//   specifically for imagecopyresampled()
 //   onto a fresh truecolor canvas (probed with alphablending(false)
 //   alone, no savealpha call at all: byte-identical alpha result).
 // - Both `if (function_exists('imageantialias'))` guards (crop() and
@@ -242,15 +241,14 @@ test('destroy is a true no-op returning true', function (): void {
 // - compose()'s own FIRST imagecopy() call ("Copy the blank image into
 //   the destination image where the source goes", RemoveFunctionCall +
 //   DecrementInteger/IncrementInteger x2 on its dst_x/dst_y literals):
-//   confirmed PROVABLY DEAD CODE by reading the next statement -- the
+//   PROVABLY DEAD CODE, per reading the next statement -- the
 //   very next line unconditionally overwrites the ENTIRE $cut canvas
 //   with the overlay image at the same (0,0) origin and the SAME
 //   $ow/$oh dimensions $cut was just allocated at, so nothing this
 //   first call writes can ever survive to be read. Not removed as part
 //   of this mutation-gap-closure pass (out of scope -- a source-level
-//   dead-code cleanup deserves its own dedicated, independently-
-//   verified change), but worth flagging for one.
-// ---------------------------------------------------------------------
+//   dead-code cleanup deserves its own dedicated, independently-checked
+//   change), but worth flagging for one.
 
 test('crop produces a real image of exactly the requested size, taken from the correct region', function (): void {
     $path = imageGdTestMarker() . '/crop.png';
@@ -289,7 +287,7 @@ test('crop produces a real image of exactly the requested size, taken from the c
 });
 
 test('crop accepts real float width/height/x/y without a TypeError', function (): void {
-    // Real gap, found via mutation testing: every existing crop() test
+    // Every existing crop() test
     // passes int literals, never exercising the (int) casts this
     // method's own docblock says were added specifically because GD's
     // native functions throw a TypeError on a float argument -- a real
@@ -315,7 +313,7 @@ test('crop accepts real float width/height/x/y without a TypeError', function ()
 });
 
 test('crop writes into every pixel of the destination canvas, including the far edge', function (): void {
-    // Real gap, found via mutation testing: the existing crop-region test
+    // The existing crop-region test
     // only samples pixel (0,0) -- never the opposite corner, which is
     // exactly where imagecopymerge()'s dst_x/dst_y literals (both 0) land.
     // Shifting either to -1 leaves that far corner as the freshly-
@@ -387,7 +385,7 @@ test('resize accepts real float width/height without a TypeError', function (): 
 });
 
 test('resize writes into every pixel of the destination canvas, including both edges', function (): void {
-    // Real gap, found via mutation testing: neither existing resize test
+    // Neither existing resize test
     // samples pixel colors at all. imagecopyresampled()'s dst_x/dst_y
     // literals (both 0) place the resampled content within the
     // destination canvas -- shifting either by +-1 leaves one edge (the
@@ -423,7 +421,7 @@ test('resize writes into every pixel of the destination canvas, including both e
 });
 
 test('resize samples from the correct source region, not shifted by one pixel', function (): void {
-    // Real gap, found via mutation testing: imagecopyresampled()'s src_x/
+    // imagecopyresampled()'s src_x/
     // src_y literals (both 0) determine which part of the source image
     // feeds the resampled output. A 1:1 resize (same target size as
     // source) turns this into a plain identity copy, so a 3-quadrant
@@ -467,13 +465,13 @@ test('resize samples from the correct source region, not shifted by one pixel', 
 });
 
 test('resize preserves the real alpha channel via imagecopyresampled(), not silently flattening it to opaque', function (): void {
-    // Real gap, found via mutation testing: TrueToFalse/RemoveFunctionCall
+    // TrueToFalse/RemoveFunctionCall
     // on resize()'s own imagealphablending($dest, false) call -- no
     // existing resize test uses a source with real alpha transparency,
     // only opaque colors. Without it, a semi-transparent source pixel
     // comes back fully opaque AND color-shifted (blended against GD's
-    // default black canvas instead of copied raw) -- confirmed live via
-    // a hand-mutated probe before writing this assertion.
+    // default black canvas instead of copied raw), per
+    // a hand-mutated probe run before writing this assertion.
     // imagecopyresampled() genuinely honors this flag, unlike crop()'s
     // own imagecopymerge()-based pipeline (see that method's own test
     // docblock below -- imagecopymerge() has a well-known, long-standing
@@ -481,7 +479,7 @@ test('resize preserves the real alpha channel via imagecopyresampled(), not sile
     // references as "php bug #23815", making the identical
     // alphablending call genuinely inert THERE).
     // The adjacent `imagesavealpha($dest, true)` call is a SEPARATE
-    // finding: verified directly that it is redundant for this pipeline
+    // finding: it is redundant for this pipeline
     // specifically -- imagecopyresampled() onto a fresh truecolor canvas
     // preserves the source's alpha channel structurally regardless of
     // this flag (probed with alphablending(false) alone, no savealpha
@@ -539,7 +537,7 @@ test('rotate produces a real image with width/height swapped for a 90-degree tur
 });
 
 test('rotate fills newly exposed corners with the documented background color', function (): void {
-    // Real gap, found via mutation testing: the existing rotate test only
+    // The existing rotate test only
     // uses a 90-degree turn, which is an exact geometric swap with no
     // newly-exposed background pixels at all (every output pixel maps to
     // a real source pixel). imagerotate()'s 3rd argument (background
@@ -611,7 +609,7 @@ test('sharpen applies a real convolution and reports success', function (): void
 });
 
 test('sharpen leaves a uniform region at exactly its original value', function (): void {
-    // Real gap, found via mutation testing: the existing sharpen test
+    // The existing sharpen test
     // only checks the boolean return value, never any actual pixel data.
     // ImageBackend::getSharpenMatrix() always normalizes its kernel to sum
     // to exactly 1 (every cell divided by the matrix's own total), so for
@@ -703,7 +701,7 @@ test('write falls back to JPEG for any other destination extension', function ()
 });
 
 test('write lowercases the destination extension before matching it', function (): void {
-    // Real gap, found via mutation testing: every existing write() test
+    // Every existing write() test
     // uses a lowercase destination extension -- removing the strtolower()
     // call wrapping StringHelper::getExtension() was invisible without a
     // real uppercase-suffixed destination, which would otherwise fall
@@ -806,7 +804,7 @@ test('crop throws when the requested target size overflows GD\'s internal alloca
     $img = new ImageGd($path);
 
     // 100000 x 100000 x 4 bytes/pixel overflows imagecreatetruecolor()'s
-    // internal INT_MAX allocation-size check (confirmed live: it returns
+    // internal INT_MAX allocation-size check -- it returns
     // false with a real "product of memory allocation multiplication
     // would exceed INT_MAX" warning) -- crop()'s own $width/$height
     // arguments feed that call directly, regardless of the small 5x5
@@ -849,7 +847,7 @@ test('rotate returns false when imagerotate() itself fails', function (): void {
 
     // NAN is a valid float (rotate()'s own signature accepts int|float),
     // and libgd's imagerotate() rejects it at its own internal memory-
-    // allocation-multiplication check, confirmed live: returns false with
+    // allocation-multiplication check -- returns false with
     // a real "one parameter to a memory allocation multiplication is
     // negative or zero" warning, rather than throwing.
     set_error_handler(static fn (): bool => true, E_WARNING);
@@ -902,7 +900,7 @@ test('compose merges a same-backend overlay onto the base image', function (): v
 });
 
 test('compose accepts real float x/y/opacity without a TypeError', function (): void {
-    // Real gap, found via mutation testing: every existing compose() test
+    // Every existing compose() test
     // passes int literals for x/y/opacity, never exercising the (int)
     // casts this method's own docblock says were added specifically
     // because GD's native functions throw a TypeError on a float argument
@@ -933,7 +931,7 @@ test('compose accepts real float x/y/opacity without a TypeError', function (): 
 });
 
 test('compose samples the cut region and the overlay from the correct offsets, not shifted by one pixel', function (): void {
-    // Real gap, found via mutation testing: the "merges a same-backend
+    // The "merges a same-backend
     // overlay" test above uses a solid-colored overlay and only samples
     // pixel (2,2) -- the overlay's own top-left corner, unaffected by an
     // off-by-one in any of the several imagecopy()/imagecopymerge()

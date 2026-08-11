@@ -1122,6 +1122,28 @@ test('setExtent registers a brand-new handle even when overwrite is false (nothi
         ->toBe(realpath($extDir . 'first.tpl'));
 });
 
+test('setExtent forwards $theme through to setExtents instead of silently dropping it', function (): void {
+    $t = TemplateTestFactory::build();
+    $dir = CurrentPathsTestFactory::get()->root . '/ext/';
+    mkdir($dir, 0o777, true);
+    file_put_contents($dir . 'file.tpl', 'x');
+    $savedGet = $_GET;
+    $_GET = [
+        '/mypath' => '1',
+    ];
+
+    try {
+        $result = $t->setExtent('file.tpl', ['myhandle', 'mypath', 'mytheme'], $dir, true, 'mytheme');
+    } finally {
+        $_GET = $savedGet;
+    }
+
+    expect($result)
+        ->toBeTrue()
+        ->and($t->getExtent('orig.tpl', 'myhandle'))
+        ->toBe(realpath($dir . 'file.tpl'));
+});
+
 test('setExtents (array form) registers a handle when handle/param/theme all read from their correct array indices', function (): void {
     $t = TemplateTestFactory::build();
     $dir = CurrentPathsTestFactory::get()->root . '/ext/';

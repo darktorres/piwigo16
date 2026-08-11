@@ -623,7 +623,7 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
     {
         return $this->setExtents([
             $filename => $param,
-        ], $dir, $overwrite);
+        ], $dir, $overwrite, $theme);
     }
 
     /**

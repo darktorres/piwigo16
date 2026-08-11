@@ -29,7 +29,7 @@ test('toArray flattens every property to its real Smarty template variable name'
             'L_SECTION' => 'Authorize users to add comments on selected albums',
             'L_CAT_OPTIONS_TRUE' => 'Authorized',
             'L_CAT_OPTIONS_FALSE' => 'Forbidden',
-            'PWG_TOKEN' => 'token123',
+            'CSRF_TOKEN' => 'token123',
             'ADMIN_PAGE_TITLE' => 'Properties of abums',
             'category_option_true' => [
                 1 => 'Holidays',

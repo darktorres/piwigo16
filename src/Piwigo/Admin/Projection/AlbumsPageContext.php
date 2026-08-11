@@ -42,7 +42,7 @@ final readonly class AlbumsPageContext implements TemplatePageContext
             'delay_before_autoOpen' => $this->delayBeforeAutoOpen,
             'POS_PREF' => $this->posPref,
             'album_data' => $this->albumData,
-            'PWG_TOKEN' => $this->pwgToken,
+            'CSRF_TOKEN' => $this->pwgToken,
             'nb_albums' => $this->nbAlbums,
             'ADMIN_PAGE_TITLE' => $this->adminPageTitle,
             'light_album_manager' => $this->lightAlbumManager,

@@ -27,7 +27,7 @@ test('toArray flattens every property to its real Smarty template variable name'
     expect($context->toArray())
         ->toBe([
             'F_ACTION' => '/admin.php?page=tags',
-            'PWG_TOKEN' => 'token123',
+            'CSRF_TOKEN' => 'token123',
             'orphan_tag_names_array' => '[]',
             'warning_tags' => '',
             'message_tags' => 'Orphan tags deleted',

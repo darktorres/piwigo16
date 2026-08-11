@@ -31,7 +31,7 @@ use Piwigo\Validation\InputValidator;
  * its own, so each handler validates the token itself before calling it;
  * gating on isWebmaster() alone would not stop a cross-origin
  * auto-submitting POST form from a logged-in webmaster's browser.
- * PWG_TOKEN below feeds the hidden pwg_token field in both forms,
+ * CSRF_TOKEN below feeds the hidden pwg_token field in both forms,
  * matching the convention used by
  * themes_standard_pages.tpl/plugins_installed.tpl.
  */

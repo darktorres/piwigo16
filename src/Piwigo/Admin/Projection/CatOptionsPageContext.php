@@ -42,7 +42,7 @@ final readonly class CatOptionsPageContext implements TemplatePageContext
             'L_SECTION' => $this->section,
             'L_CAT_OPTIONS_TRUE' => $this->catOptionsTrueLabel,
             'L_CAT_OPTIONS_FALSE' => $this->catOptionsFalseLabel,
-            'PWG_TOKEN' => $this->pwgToken,
+            'CSRF_TOKEN' => $this->pwgToken,
             'ADMIN_PAGE_TITLE' => $this->adminPageTitle,
             'category_option_true' => $this->categoryOptionTrue->options,
             'category_option_true_selected' => $this->categoryOptionTrue->selected,

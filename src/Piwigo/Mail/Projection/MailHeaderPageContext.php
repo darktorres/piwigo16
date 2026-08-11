@@ -33,7 +33,7 @@ final readonly class MailHeaderPageContext implements TemplatePageContext
             'GALLERY_URL' => $this->galleryUrl,
             'GALLERY_TITLE' => $this->galleryTitle,
             'VERSION' => $this->version,
-            'PHPWG_URL' => $this->phpwgUrl,
+            'APP_URL' => $this->phpwgUrl,
             'CONTENT_ENCODING' => $this->contentEncoding,
             'CONTACT_MAIL' => $this->contactMail,
         ];

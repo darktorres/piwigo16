@@ -53,7 +53,7 @@ test('toArray flattens every property to its real Smarty template variable name'
             'selection' => [1, 2, 3],
             'all_elements' => [1, 2, 3],
             'START' => 0,
-            'PWG_TOKEN' => 'abc123',
+            'CSRF_TOKEN' => 'abc123',
             'U_DISPLAY' => '/admin.php?page=batch_manager',
             'F_ACTION' => '/admin.php?page=batch_manager',
             'ADMIN_PAGE_TITLE' => 'Batch Manager',

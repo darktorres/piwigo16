@@ -26,7 +26,7 @@ test('toArray flattens every property, and omits footer_elements when null', fun
             'METADATA_LIST' => 'iptc, exif',
             'U_HELP' => '/admin/popuphelp.php?page=synchronize',
             'ADMIN_PAGE_TITLE' => 'Synchronize',
-            'PWG_TOKEN' => 'abc123',
+            'CSRF_TOKEN' => 'abc123',
         ]);
 });
 

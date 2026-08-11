@@ -44,7 +44,7 @@ final readonly class ConfigurationPageContext implements TemplatePageContext
     {
         $result = [
             'U_HELP' => $this->uHelp,
-            'PWG_TOKEN' => $this->pwgToken,
+            'CSRF_TOKEN' => $this->pwgToken,
             'F_ACTION' => $this->fAction,
             'isWebmaster' => $this->isWebmaster,
             'ADMIN_PAGE_TITLE' => $this->adminPageTitle,

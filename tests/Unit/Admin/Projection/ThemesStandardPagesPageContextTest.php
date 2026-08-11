@@ -30,7 +30,7 @@ test('toArray flattens every fixed property, and omits save_error when null', fu
             'is_standard_pages_used' => true,
             'standard_pages_used_by' => ['Elegant'],
             'std_pgs_selected_logo_path' => null,
-            'PWG_TOKEN' => 'abc123',
+            'CSRF_TOKEN' => 'abc123',
             'isWebmaster' => 1,
             'ADMIN_PAGE_TITLE' => 'Themes',
         ]);
@@ -62,7 +62,7 @@ test('toArray includes save_error when set', function (): void {
             'is_standard_pages_used' => false,
             'standard_pages_used_by' => [],
             'std_pgs_selected_logo_path' => '/logo.php',
-            'PWG_TOKEN' => 'abc123',
+            'CSRF_TOKEN' => 'abc123',
             'isWebmaster' => 0,
             'ADMIN_PAGE_TITLE' => 'Themes',
             'save_error' => 'Invalid image file.',

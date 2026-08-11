@@ -41,7 +41,7 @@ final readonly class UserActivityPageContext implements TemplatePageContext
     {
         return [
             'ADMIN_PAGE_TITLE' => $this->adminPageTitle,
-            'PWG_TOKEN' => $this->pwgToken,
+            'CSRF_TOKEN' => $this->pwgToken,
             'INHERIT' => $this->inherit,
             'CACHE_KEYS' => $this->cacheKeys,
             'ulist' => $this->ulist,

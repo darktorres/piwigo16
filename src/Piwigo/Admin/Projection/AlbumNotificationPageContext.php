@@ -45,7 +45,7 @@ final readonly class AlbumNotificationPageContext implements TemplatePageContext
         $result = [
             'CATEGORIES_NAV' => $this->categoriesNav,
             'F_ACTION' => $this->fAction,
-            'PWG_TOKEN' => $this->pwgToken,
+            'CSRF_TOKEN' => $this->pwgToken,
         ];
 
         if ($this->saveSuccess !== null) {

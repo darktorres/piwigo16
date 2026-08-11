@@ -24,7 +24,7 @@ test('toArray flattens every property', function (): void {
     expect($context->toArray())
         ->toBe([
             'PROMOTE_MOBILE_APPS' => true,
-            'PHPWG_URL' => 'https://piwigo.org',
+            'APP_URL' => 'https://piwigo.org',
             'ENABLE_FORMATS' => true,
             'DISPLAY_FORMATS' => false,
             'HAVE_FORMATS_ORIGINAL' => true,

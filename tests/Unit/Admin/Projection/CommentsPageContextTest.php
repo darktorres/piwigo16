@@ -14,7 +14,7 @@ test('toArray flattens every property to its real Smarty template variable name'
     expect($context->toArray())
         ->toBe([
             'F_ACTION' => '/admin.php?page=comments',
-            'PWG_TOKEN' => 'token123',
+            'CSRF_TOKEN' => 'token123',
             'ADMIN_PAGE_TITLE' => 'User comments',
         ]);
 });

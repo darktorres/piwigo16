@@ -112,7 +112,7 @@ test('render() assigns the comments page context and tabsheet without any real t
             ->toContain('admin.php?page=comments')
             ->and($template->getTemplateVars('ADMIN_CONTENT'))
             ->toBe('title=User comments');
-        $pwgToken = $template->getTemplateVars('PWG_TOKEN');
+        $pwgToken = $template->getTemplateVars('CSRF_TOKEN');
         expect(is_string($pwgToken) && $pwgToken !== '')
             ->toBeTrue();
     } finally {

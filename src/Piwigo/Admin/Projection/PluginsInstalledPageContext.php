@@ -52,7 +52,7 @@ final readonly class PluginsInstalledPageContext implements TemplatePageContext
         return [
             'plugins' => $this->plugins,
             'count_types_plugins' => $this->countTypesPlugins,
-            'PWG_TOKEN' => $this->pwgToken,
+            'CSRF_TOKEN' => $this->pwgToken,
             'base_url' => $this->baseUrl,
             'show_details' => $this->showDetails,
             'max_inactive_before_hide' => $this->maxInactiveBeforeHide,

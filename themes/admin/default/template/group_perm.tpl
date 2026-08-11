@@ -3,7 +3,7 @@
 
 <form method="post" action="{$F_ACTION}">
   {$DOUBLE_SELECT}
-  <input type="hidden" name="pwg_token" value="{$PWG_TOKEN}">
+  <input type="hidden" name="pwg_token" value="{$CSRF_TOKEN}">
 </form>
 
 <p>{'Only private albums are listed'|@translate}</p>

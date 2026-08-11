@@ -31,7 +31,7 @@ test('toArray flattens every fixed property, and omits navbar/STORAGE_CATEGORY/E
                 0 => 'Everybody',
             ],
             'ADMIN_PAGE_TITLE' => 'Batch Manager',
-            'PWG_TOKEN' => 'abc123',
+            'CSRF_TOKEN' => 'abc123',
             'ACTIVE_PLUGINS' => ['foo'],
             'per_page' => 5,
             'elements' => [],
@@ -74,7 +74,7 @@ test('toArray includes navbar/STORAGE_CATEGORY/ELEMENT_IDS when set', function (
                 0 => 'Everybody',
             ],
             'ADMIN_PAGE_TITLE' => 'Batch Manager',
-            'PWG_TOKEN' => 'abc123',
+            'CSRF_TOKEN' => 'abc123',
             'ACTIVE_PLUGINS' => ['foo'],
             'per_page' => 5,
             'elements' => [[

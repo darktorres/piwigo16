@@ -6,7 +6,7 @@
 
 <script>
     const nbFormats = {count($FORMATS)}
-    const pwg_token = "{$PWG_TOKEN}"
+    const pwg_token = "{$CSRF_TOKEN}"
     const str_confirm_delete_format = "{'Delete %s format ?'|@translate}"
     const str_confirm_msg = '{"Yes, I am sure"|@translate}';
     const str_cancel_msg = "{"No, I have changed my mind"|@translate}";

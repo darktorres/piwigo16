@@ -17,7 +17,7 @@ test('toArray flattens every fixed property, and omits the 2 optional keys when 
     expect($context->toArray())
         ->toBe([
             'VERSION' => '16.3.0',
-            'PHPWG_URL' => 'https://piwigo.example',
+            'APP_URL' => 'https://piwigo.example',
             'VITALS_SCRIPT_URL' => '/dist/vitals.js',
             'debug' => [],
         ]);
@@ -40,7 +40,7 @@ test('toArray includes CONTACT_MAIL/TOGGLE_MOBILE_THEME_URL when set, and passes
     expect($context->toArray())
         ->toBe([
             'VERSION' => '16.3.0',
-            'PHPWG_URL' => 'https://piwigo.example',
+            'APP_URL' => 'https://piwigo.example',
             'VITALS_SCRIPT_URL' => '/dist/vitals.js',
             'debug' => [
                 'TIME' => '0.123 s',

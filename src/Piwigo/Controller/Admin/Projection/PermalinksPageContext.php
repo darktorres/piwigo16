@@ -55,7 +55,7 @@ final readonly class PermalinksPageContext implements TemplatePageContext
             'SORT_OLD_DATE_DELETED' => $this->sortOldDateDeleted,
             'SORT_OLD_LAST_HIT' => $this->sortOldLastHit,
             'SORT_OLD_HIT' => $this->sortOldHit,
-            'PWG_TOKEN' => $this->pwgToken,
+            'CSRF_TOKEN' => $this->pwgToken,
             'U_HELP' => $this->helpUrl,
             'deleted_permalinks' => $this->deletedPermalinks,
             'ADMIN_PAGE_TITLE' => $this->adminPageTitle,

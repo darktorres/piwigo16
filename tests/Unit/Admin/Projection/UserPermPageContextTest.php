@@ -25,7 +25,7 @@ test('toArray flattens every property, and omits categories_because_of_groups wh
             'L_CAT_OPTIONS_TRUE' => 'Authorized',
             'L_CAT_OPTIONS_FALSE' => 'Forbidden',
             'F_ACTION' => '/admin.php?page=user_perm&user_id=3',
-            'PWG_TOKEN' => 'token123',
+            'CSRF_TOKEN' => 'token123',
             'category_option_true' => [
                 1 => 'Holidays',
             ],

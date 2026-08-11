@@ -49,7 +49,7 @@
 <h1 class="">{if !isset($is_first_login)}{'Forgot your password?'|translate}{else}{'Welcome !'|translate}<br>{'It\'s your first login !'|translate}{/if}</h1>
     <form id="lostPassword" class="properties" action="{$form_action}?action={$action}{if isset($key)}&amp;key={$key}{/if}" method="post">
 
-      <input type="hidden" name="pwg_token" value="{$PWG_TOKEN}">
+      <input type="hidden" name="pwg_token" value="{$CSRF_TOKEN}">
   {if $action eq 'lost'}
 
       <p class="form-instructions">{'Please enter your username or email address.'|@translate} {'You will receive a link to create a new password via email.'|@translate}</p>

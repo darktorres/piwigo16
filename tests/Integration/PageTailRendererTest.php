@@ -31,7 +31,7 @@ use Piwigo\Users\User;
 
 /**
  * Only the debug-info (showQueries/showGt) and mobile-theme-toggle
- * branches of prepareTail() below -- everything else (VERSION/PHPWG_URL/
+ * branches of prepareTail() below -- everything else (VERSION/APP_URL/
  * VITALS_SCRIPT_URL assignment, the webmaster-contact branch,
  * telemetrySender->send()) is already exercised indirectly by every
  * Browser suite page-load test (every real Controller reaches

@@ -49,7 +49,7 @@ final readonly class SiteUpdatePageContext implements TemplatePageContext
             'METADATA_LIST' => $this->metadataList,
             'U_HELP' => $this->helpUrl,
             'ADMIN_PAGE_TITLE' => $this->adminPageTitle,
-            'PWG_TOKEN' => $this->pwgToken,
+            'CSRF_TOKEN' => $this->pwgToken,
         ];
 
         if ($this->footerElements !== null) {

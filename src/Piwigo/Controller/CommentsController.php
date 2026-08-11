@@ -604,7 +604,7 @@ final class CommentsController implements ControllerInterface
                         $tpl_comment['KEY'] = $key;
                         $tpl_comment['IMAGE_ID'] = $image_id;
                         $tpl_comment['CONTENT'] = $comment['content'];
-                        $tpl_comment['PWG_TOKEN'] = new CsrfService($this->currentConfig)->getToken();
+                        $tpl_comment['CSRF_TOKEN'] = new CsrfService($this->currentConfig)->getToken();
                         $tpl_comment['U_CANCEL'] = $url_self;
                     }
                 }

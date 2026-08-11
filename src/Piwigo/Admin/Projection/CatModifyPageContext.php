@@ -96,7 +96,7 @@ final readonly class CatModifyPageContext implements TemplatePageContext
             'NB_SUBCATS' => $this->nbSubcats,
             'U_MANAGE_RANKS' => $this->uManageRanks,
             'CACHE_KEYS' => $this->cacheKeys,
-            'PWG_TOKEN' => $this->pwgToken,
+            'CSRF_TOKEN' => $this->pwgToken,
         ];
 
         if ($this->catCommentable !== null) {

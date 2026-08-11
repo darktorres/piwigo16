@@ -55,7 +55,7 @@ final readonly class FilterPanelPageContext implements TemplatePageContext
             'selection' => $this->selection,
             'all_elements' => $this->allElements,
             'START' => $this->start,
-            'PWG_TOKEN' => $this->pwgToken,
+            'CSRF_TOKEN' => $this->pwgToken,
             'U_DISPLAY' => $this->uDisplay,
             'F_ACTION' => $this->fAction,
             'ADMIN_PAGE_TITLE' => $this->adminPageTitle,

@@ -1,6 +1,6 @@
 {footer_script}
 var data = {json_encode($album_data)};
-var pwg_token = "{$PWG_TOKEN}";
+var pwg_token = "{$CSRF_TOKEN}";
 var str_show_sub = "{'Show sub-albums'|@translate|escape:javascript}";
 var str_hide_sub = "{'Hide sub-albums'|@translate|escape:javascript}";
 var str_manage_sub_album = "{'Manage sub-albums'|@translate|escape:javascript}";

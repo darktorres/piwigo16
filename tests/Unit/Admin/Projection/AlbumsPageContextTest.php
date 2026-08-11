@@ -32,7 +32,7 @@ test('toArray flattens every property to its real Smarty template variable name'
                 'id' => '1',
                 'name' => 'Holidays',
             ]],
-            'PWG_TOKEN' => 'abc123',
+            'CSRF_TOKEN' => 'abc123',
             'nb_albums' => 12,
             'ADMIN_PAGE_TITLE' => 'Albums',
             'light_album_manager' => 0,

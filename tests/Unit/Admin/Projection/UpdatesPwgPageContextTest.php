@@ -31,7 +31,7 @@ test('toArray flattens every fixed property, and omits the 12 optional keys when
             'STEP' => 0,
             'PIWIGO_CURRENT_VERSION' => '16.3.0',
             'UPGRADE_TO' => '',
-            'PWG_TOKEN' => 'abc123',
+            'CSRF_TOKEN' => 'abc123',
             'ADMIN_PAGE_TITLE' => 'Updates',
         ]);
 });
@@ -65,7 +65,7 @@ test('toArray includes every optional key when set', function (): void {
             'STEP' => 3,
             'PIWIGO_CURRENT_VERSION' => '16.3.0',
             'UPGRADE_TO' => '17.0.0',
-            'PWG_TOKEN' => 'abc123',
+            'CSRF_TOKEN' => 'abc123',
             'ADMIN_PAGE_TITLE' => 'Updates',
             'CONTAINER_VERSION' => '1.2.3',
             'DOCKER_UPDATE_GUIDE_URL' => 'https://piwigo.example/guide-update-docker',

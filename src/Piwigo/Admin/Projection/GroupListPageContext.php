@@ -35,7 +35,7 @@ final readonly class GroupListPageContext implements TemplatePageContext
     {
         return [
             'F_ADD_ACTION' => $this->addAction,
-            'PWG_TOKEN' => $this->pwgToken,
+            'CSRF_TOKEN' => $this->pwgToken,
             'CACHE_KEYS' => $this->cacheKeys,
             'ADMIN_PAGE_TITLE' => $this->adminPageTitle,
             'groups' => $this->groups,

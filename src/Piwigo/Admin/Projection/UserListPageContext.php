@@ -83,7 +83,7 @@ final readonly class UserListPageContext implements TemplatePageContext
             'ACTIVATE_COMMENTS' => $this->activateComments,
             'Double_Password' => $this->doublePassword,
             'U_HISTORY' => $this->uHistory,
-            'PWG_TOKEN' => $this->pwgToken,
+            'CSRF_TOKEN' => $this->pwgToken,
             'NB_IMAGE_PAGE' => $this->nbImagePage,
             'RECENT_PERIOD' => $this->recentPeriod,
             'theme_options' => $this->themeOptions,

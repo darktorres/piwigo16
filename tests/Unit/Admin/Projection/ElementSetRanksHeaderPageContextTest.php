@@ -28,7 +28,7 @@ test('toArray flattens every property to its real Smarty template variable name'
         ->toBe([
             'CATEGORIES_NAV' => '<a href="/admin.php">Home</a>',
             'F_ACTION' => '/admin.php',
-            'PWG_TOKEN' => 'token123',
+            'CSRF_TOKEN' => 'token123',
             'image_order_options' => [
                 '' => '',
                 'file ASC' => 'File name, A to Z',

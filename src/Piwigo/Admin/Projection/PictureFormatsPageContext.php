@@ -36,7 +36,7 @@ final readonly class PictureFormatsPageContext implements TemplatePageContext
             'ADD_FORMATS_URL' => $this->addFormatsUrl,
             'IMG_SQUARE_SRC' => $this->imgSquareSrc,
             'FORMATS' => $this->formats,
-            'PWG_TOKEN' => $this->pwgToken,
+            'CSRF_TOKEN' => $this->pwgToken,
         ];
     }
 }

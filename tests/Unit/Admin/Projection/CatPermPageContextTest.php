@@ -43,7 +43,7 @@ test('toArray flattens every fixed property, and omits save_success/nb_users_gra
                 2 => 'jane',
             ],
             'users_selected' => [2],
-            'PWG_TOKEN' => 'abc123',
+            'CSRF_TOKEN' => 'abc123',
             'INHERIT' => true,
             'CACHE_KEYS' => [
                 'groups' => 'x',

@@ -9,7 +9,7 @@
     to show the origin of the script...
 *}
 
-  {'Powered by'|translate}	<a href="{$PHPWG_URL}" class="Piwigo">Piwigo</a>
+  {'Powered by'|translate}	<a href="{$APP_URL}" class="Piwigo">Piwigo</a>
   {$VERSION}
   {if isset($CONTACT_MAIL)}
   - <a href="mailto:{$CONTACT_MAIL}?subject={'A comment on your site'|translate|@escape:url}">{'Contact webmaster'|translate}</a>

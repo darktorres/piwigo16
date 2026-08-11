@@ -40,7 +40,7 @@ final readonly class UpdatesExtPageContext implements TemplatePageContext
         return [
             'UPDATES_EXTENSION' => $this->updatesExtension,
             'SHOW_RESET' => $this->showReset,
-            'PWG_TOKEN' => $this->pwgToken,
+            'CSRF_TOKEN' => $this->pwgToken,
             'EXT_TYPE' => $this->extType,
             'isWebmaster' => $this->isWebmaster,
             'ADMIN_PAGE_TITLE' => $this->adminPageTitle,

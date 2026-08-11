@@ -17,7 +17,7 @@ jQuery(document).ready(function(){
 {/literal}{/footer_script}
 
 <form method="post" name="notification_by_mail" id="notification_by_mail" action="{$F_ACTION}">
-  <input type="hidden" name="pwg_token" value="{$PWG_TOKEN}">
+  <input type="hidden" name="pwg_token" value="{$CSRF_TOKEN}">
 
   {if isset($REPOST_SUBMIT_NAME)}
   <fieldset>

@@ -27,7 +27,7 @@ test('toArray flattens every fixed property, and omits key/username_or_email/is_
             'form_action' => '/password.php',
             'action' => 'lost',
             'username' => null,
-            'PWG_TOKEN' => 'abc123',
+            'CSRF_TOKEN' => 'abc123',
             'language_options' => [
                 'en_GB' => 'English',
             ],
@@ -59,7 +59,7 @@ test('toArray includes key/username_or_email/is_first_login when set', function 
             'form_action' => '/password.php',
             'action' => 'reset',
             'username' => 'jane',
-            'PWG_TOKEN' => 'abc123',
+            'CSRF_TOKEN' => 'abc123',
             'key' => 'abcdef0123456789abcd',
             'username_or_email' => 'jane',
             'is_first_login' => true,

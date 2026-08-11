@@ -27,7 +27,7 @@ final readonly class CommentsPageContext implements TemplatePageContext
     {
         return [
             'F_ACTION' => $this->formAction,
-            'PWG_TOKEN' => $this->pwgToken,
+            'CSRF_TOKEN' => $this->pwgToken,
             'ADMIN_PAGE_TITLE' => $this->adminPageTitle,
         ];
     }

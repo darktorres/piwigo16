@@ -8,7 +8,7 @@ contact us on http://piwigo.org to find a solution on how
 to show the origin of the script... --> *}
       
             {'Sent by'|translate} <a href="{$GALLERY_URL}">{$GALLERY_TITLE}</a>
-            - {'Powered by'|translate} <a href="{$PHPWG_URL}" class="Piwigo">Piwigo</a>
+            - {'Powered by'|translate} <a href="{$APP_URL}" class="Piwigo">Piwigo</a>
             {if not empty($VERSION)}{$VERSION}{/if}
             
             - {'Contact'|translate}

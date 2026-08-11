@@ -88,7 +88,7 @@ final readonly class ProfileFormPageContext implements TemplatePageContext
             'API_SELECTED_EXPIRATION' => $this->apiSelectedExpiration,
             'API_CAN_MANAGE' => $this->apiCanManage,
             'API_EMAIL_INFOS' => $this->apiEmailInfos,
-            'PWG_TOKEN' => $this->pwgToken,
+            'CSRF_TOKEN' => $this->pwgToken,
         ];
 
         if ($this->languageSelection !== null) {

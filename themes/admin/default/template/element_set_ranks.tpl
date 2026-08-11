@@ -42,7 +42,7 @@ jQuery('.thumbnail').tipTip({
 {/footer_script}
 
 <form action="{$F_ACTION}" method="post" id="element_set_ranks">
-<input type="hidden" name="pwg_token" value="{$PWG_TOKEN}">
+<input type="hidden" name="pwg_token" value="{$CSRF_TOKEN}">
 {if !empty($thumbnails)}
   <fieldset>
     <legend><span class="icon-sort-alt-down icon-blue"></span>{'Manual order'|@translate}</legend>

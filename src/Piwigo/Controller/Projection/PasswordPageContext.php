@@ -46,7 +46,7 @@ final readonly class PasswordPageContext implements TemplatePageContext
             'form_action' => $this->formAction,
             'action' => $this->action,
             'username' => $this->username,
-            'PWG_TOKEN' => $this->pwgToken,
+            'CSRF_TOKEN' => $this->pwgToken,
         ];
 
         if ($this->key !== null) {

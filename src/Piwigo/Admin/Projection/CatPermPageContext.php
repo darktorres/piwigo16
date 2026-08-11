@@ -61,7 +61,7 @@ final readonly class CatPermPageContext implements TemplatePageContext
             'groups_selected' => $this->groupsSelected,
             'users' => $this->users,
             'users_selected' => $this->usersSelected,
-            'PWG_TOKEN' => $this->pwgToken,
+            'CSRF_TOKEN' => $this->pwgToken,
             'INHERIT' => $this->inherit,
             'CACHE_KEYS' => $this->cacheKeys,
         ];

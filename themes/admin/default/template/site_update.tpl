@@ -65,7 +65,7 @@ $('#syncFiles label').click(function () {
 
 {if isset($introduction)}
 <form action="" method="post" id="update">
-	<input type="hidden" name="pwg_token" value="{$PWG_TOKEN}">
+	<input type="hidden" name="pwg_token" value="{$CSRF_TOKEN}">
 
 	<fieldset id="syncFiles">
 		<legend><span class="icon-docs icon-blue"></span>{'synchronize files structure with database'|@translate}</legend>

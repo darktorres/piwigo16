@@ -51,7 +51,7 @@ final readonly class UpdatesPwgPageContext implements TemplatePageContext
             'STEP' => $this->step,
             'PIWIGO_CURRENT_VERSION' => $this->piwigoCurrentVersion,
             'UPGRADE_TO' => $this->upgradeTo,
-            'PWG_TOKEN' => $this->pwgToken,
+            'CSRF_TOKEN' => $this->pwgToken,
             'ADMIN_PAGE_TITLE' => $this->adminPageTitle,
         ];
 

@@ -118,7 +118,7 @@ final readonly class PictureModifyPageContext implements TemplatePageContext
             'represented_albums' => $this->representedAlbums,
             'STORAGE_ALBUM' => $this->storageAlbum,
             'CACHE_KEYS' => $this->cacheKeys,
-            'PWG_TOKEN' => $this->pwgToken,
+            'CSRF_TOKEN' => $this->pwgToken,
         ];
 
         if ($this->saveSuccess !== null) {

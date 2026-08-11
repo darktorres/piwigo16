@@ -93,7 +93,7 @@ const str_must_not_empty = "{'must not be empty'|translate|escape:javascript}";
         <div class="row-flex input-container username">
           <i class="gallery-icon-user"></i>
           <p id="username">{$USERNAME}</p>
-          <input id="pwg_token" type="hidden" value="{$PWG_TOKEN}" />
+          <input id="pwg_token" type="hidden" value="{$CSRF_TOKEN}" />
         </div>
       </div>
       <div class="column-flex">

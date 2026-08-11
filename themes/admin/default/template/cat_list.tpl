@@ -25,7 +25,7 @@ jQuery(document).ready(function(){
       <p>{"Add Album"|@translate}
     </div>
     <form action="{$F_ACTION}" method="post">
-      <input type="hidden" name="pwg_token" value="{$PWG_TOKEN}">
+      <input type="hidden" name="pwg_token" value="{$CSRF_TOKEN}">
       <label for="virtual_name">{"Album name"|@translate}</label>
       <input type="text" name="virtual_name" placeholder="{"Album name"|@translate}">
       <button name="submitAdd" type="submit" class="buttonLike">

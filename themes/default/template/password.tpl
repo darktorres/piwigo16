@@ -13,7 +13,7 @@
 <form id="lostPassword" action="{$form_action}?action={$action}{if isset($key)}&amp;key={$key}{/if}" method="post">
 <fieldset>
   {if !isset($is_first_login)}<legend>{'Forgot your password?'|translate}</legend>{/if}
-  <input type="hidden" name="pwg_token" value="{$PWG_TOKEN}">
+  <input type="hidden" name="pwg_token" value="{$CSRF_TOKEN}">
 
   {if $action eq 'lost'}
   <div class="message">{'Please enter your username or email address.'|@translate} {'You will receive a link to create a new password via email.'|@translate}</div>

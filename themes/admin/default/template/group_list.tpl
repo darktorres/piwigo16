@@ -1,6 +1,6 @@
 {include file='include/colorbox.inc.tpl'}
 {footer_script}
-var pwg_token = "{$PWG_TOKEN}";
+var pwg_token = "{$CSRF_TOKEN}";
 var str_member_default = "{'member'|@translate|@escape:'javascript'}"
 var str_members_default = "{'members'|@translate|@escape:'javascript'}"
 var str_group_created = "{'Group added'|@translate|@escape:'javascript'}"
@@ -191,7 +191,7 @@ usersCache.selectize(jQuery('select.UserSearch'));
             <br/>
             <a id="addGroupClose" onclick="hideAddGroupForm()">{'Cancel'|@translate}</a>
           </div>
-          <input type="hidden" name="pwg_token" value="{$PWG_TOKEN}">
+          <input type="hidden" name="pwg_token" value="{$CSRF_TOKEN}">
         </fieldset>
       </form>
     </div>

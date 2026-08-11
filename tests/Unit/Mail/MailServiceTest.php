@@ -1356,7 +1356,7 @@ test('mail converts a text/html content into plain text (tags stripped) for the 
     expect($result['email']->getTextBody())->not->toContain('<strong>');
 });
 
-test('mail assigns every real GALLERY_TITLE/GALLERY_URL/VERSION/PHPWG_URL/CONTACT_MAIL template variable, all visible in the plain-text footer together', function (): void {
+test('mail assigns every real GALLERY_TITLE/GALLERY_URL/VERSION/APP_URL/CONTACT_MAIL template variable, all visible in the plain-text footer together', function (): void {
     Kernel::boot(Paths::fromRoot(dirname(__DIR__, 3) . '/'));
     CurrentConfigTestFactory::get()->mailSenderEmail = 'sender@example.test';
     CurrentConfigTestFactory::get()->mailAllowHtml = false;

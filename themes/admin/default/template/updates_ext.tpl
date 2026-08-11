@@ -3,7 +3,7 @@
 {combine_css path="themes/default/js/plugins/jquery.jgrowl.css"}
 
 {footer_script require='jquery.ui.effect-blind,jquery.ajaxmanager,jquery.jgrowl'}
-var pwg_token = '{$PWG_TOKEN}';
+var pwg_token = '{$CSRF_TOKEN}';
 var extType = '{$EXT_TYPE}';
 var confirmMsg  = '{'Are you sure?'|@translate|@escape:'javascript'}';
 var errorHead   = '{'ERROR'|@translate|@escape:'javascript'}';

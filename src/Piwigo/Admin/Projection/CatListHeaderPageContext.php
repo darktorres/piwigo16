@@ -35,7 +35,7 @@ final readonly class CatListHeaderPageContext implements TemplatePageContext
             'ADMIN_PAGE_TITLE' => $this->adminPageTitle,
             'CATEGORIES_NAV' => $this->categoriesNav,
             'F_ACTION' => $this->formAction,
-            'PWG_TOKEN' => $this->pwgToken,
+            'CSRF_TOKEN' => $this->pwgToken,
             'sort_orders' => $this->sortOrders,
             'sort_order_checked' => $this->sortOrderChecked,
         ];

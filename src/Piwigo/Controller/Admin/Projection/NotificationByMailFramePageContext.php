@@ -36,7 +36,7 @@ final readonly class NotificationByMailFramePageContext implements TemplatePageC
     public function toArray(): array
     {
         $result = [
-            'PWG_TOKEN' => $this->pwgToken,
+            'CSRF_TOKEN' => $this->pwgToken,
             'U_HELP' => $this->helpUrl,
             'F_ACTION' => $this->fAction,
             'ADMIN_PAGE_TITLE' => $this->adminPageTitle,

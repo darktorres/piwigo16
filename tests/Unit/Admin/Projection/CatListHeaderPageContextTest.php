@@ -21,7 +21,7 @@ test('toArray flattens every property to its real Smarty template variable name'
             'ADMIN_PAGE_TITLE' => 'Album list management',
             'CATEGORIES_NAV' => '<a href="/admin.php">Home</a>',
             'F_ACTION' => '/admin.php?page=cat_list',
-            'PWG_TOKEN' => 'token123',
+            'CSRF_TOKEN' => 'token123',
             'sort_orders' => [
                 'name ASC' => 'Album name, A to Z',
             ],

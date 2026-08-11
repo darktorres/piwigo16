@@ -28,7 +28,7 @@ test('toArray flattens every property to its real Smarty template variable name'
                 ]],
             ],
             'SHOW_RESET' => true,
-            'PWG_TOKEN' => 'abc123',
+            'CSRF_TOKEN' => 'abc123',
             'EXT_TYPE' => 'extensions',
             'isWebmaster' => 1,
             'ADMIN_PAGE_TITLE' => 'Updates',

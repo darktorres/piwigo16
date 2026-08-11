@@ -102,7 +102,7 @@ nb_days = "{'%d days'|@translate}";
 //per page is too long for the popin
 nb_photos = "{'%d photos'|@translate}";
 nb_photos_per_page = "{'%d photos per page'|@translate}";
-pwg_token = '{$PWG_TOKEN}';
+pwg_token = '{$CSRF_TOKEN}';
 has_group = "{$filter_group}";
 
 let register_dates_str = '{$register_dates}';

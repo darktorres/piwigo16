@@ -47,7 +47,7 @@ final readonly class UserPermPageContext implements TemplatePageContext
             'L_CAT_OPTIONS_TRUE' => $this->catOptionsTrueLabel,
             'L_CAT_OPTIONS_FALSE' => $this->catOptionsFalseLabel,
             'F_ACTION' => $this->formAction,
-            'PWG_TOKEN' => $this->pwgToken,
+            'CSRF_TOKEN' => $this->pwgToken,
             'category_option_true' => $this->categoryOptionTrue->options,
             'category_option_true_selected' => $this->categoryOptionTrue->selected,
             'category_option_false' => $this->categoryOptionFalse->options,

@@ -55,7 +55,7 @@ final readonly class BatchManagerUnitPageContext implements TemplatePageContext
             'U_ELEMENTS_PAGE' => $this->uElementsPage,
             'level_options' => $this->levelOptions,
             'ADMIN_PAGE_TITLE' => $this->adminPageTitle,
-            'PWG_TOKEN' => $this->pwgToken,
+            'CSRF_TOKEN' => $this->pwgToken,
             'ACTIVE_PLUGINS' => $this->activePlugins,
             'per_page' => $this->perPage,
             'elements' => $this->elements,

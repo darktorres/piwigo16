@@ -36,7 +36,7 @@ test('toArray flattens every property to its real Smarty template variable name'
     expect($context->toArray())
         ->toBe([
             'ADMIN_PAGE_TITLE' => 'Users',
-            'PWG_TOKEN' => 'abc123',
+            'CSRF_TOKEN' => 'abc123',
             'INHERIT' => true,
             'CACHE_KEYS' => [
                 'users' => 'def456',

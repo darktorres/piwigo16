@@ -22,7 +22,7 @@ test('toArray flattens every property to its real Smarty template variable name'
     expect($context->toArray())
         ->toBe([
             'F_ADD_ACTION' => '/admin.php?page=group_list',
-            'PWG_TOKEN' => 'token123',
+            'CSRF_TOKEN' => 'token123',
             'CACHE_KEYS' => [
                 'groups' => 'groups_5_20',
                 'users' => 'users_3_10',

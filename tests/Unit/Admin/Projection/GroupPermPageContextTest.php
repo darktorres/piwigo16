@@ -24,7 +24,7 @@ test('toArray flattens every property to its real Smarty template variable name'
             'L_CAT_OPTIONS_TRUE' => 'Authorized',
             'L_CAT_OPTIONS_FALSE' => 'Forbidden',
             'F_ACTION' => '/admin.php?page=group_perm&group_id=3',
-            'PWG_TOKEN' => 'token123',
+            'CSRF_TOKEN' => 'token123',
             'category_option_true' => [
                 1 => 'Holidays',
             ],

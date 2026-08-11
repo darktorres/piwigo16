@@ -100,7 +100,7 @@ let related_categories_ids = {$selected_category|json_encode};
         </div>
         <div class="right-side">
           <div>
-            <a href="{$PHPWG_URL}/mobile-applications" target="_blank"><span class="go-to-porg icon-link-1">{"Discover"|@translate|escape:javascript}</span></a>
+            <a href="{$APP_URL}/mobile-applications" target="_blank"><span class="go-to-porg icon-link-1">{"Discover"|@translate|escape:javascript}</span></a>
           </div>
         </div>
       </div>

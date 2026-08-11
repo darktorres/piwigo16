@@ -40,7 +40,7 @@ final readonly class PageTailPageContext implements TemplatePageContext
     {
         $result = [
             'VERSION' => $this->version,
-            'PHPWG_URL' => $this->phpwgUrl,
+            'APP_URL' => $this->phpwgUrl,
             'VITALS_SCRIPT_URL' => $this->vitalsScriptUrl,
             'debug' => $this->debug,
         ];

@@ -302,7 +302,7 @@ pluginValues = [];
   		</div>
 		{/if}
 		<div class="bottom-save-bar">
-			<input type="hidden" name="pwg_token" value="{$PWG_TOKEN}">
+			<input type="hidden" name="pwg_token" value="{$CSRF_TOKEN}">
 			<div class="badge-container global-unsaved-badge" style="display: none;">
 				<div class="badge-unsaved">
 					<i class="icon-attention"></i>

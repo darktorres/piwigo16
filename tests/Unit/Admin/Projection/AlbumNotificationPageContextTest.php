@@ -21,7 +21,7 @@ test('toArray flattens every fixed property, and omits the 6 optional keys when 
         ->toBe([
             'CATEGORIES_NAV' => 'Home / Holidays',
             'F_ACTION' => '/admin.php?page=album-5-notification',
-            'PWG_TOKEN' => 'abc123',
+            'CSRF_TOKEN' => 'abc123',
         ]);
 });
 
@@ -46,7 +46,7 @@ test('toArray includes every optional key when set', function (): void {
         ->toBe([
             'CATEGORIES_NAV' => 'Home / Holidays',
             'F_ACTION' => '/admin.php?page=album-5-notification',
-            'PWG_TOKEN' => 'abc123',
+            'CSRF_TOKEN' => 'abc123',
             'save_success' => '1 mail was sent. (jane)',
             'auth_key_duration' => '2 hours',
             'no_group_in_gallery' => true,

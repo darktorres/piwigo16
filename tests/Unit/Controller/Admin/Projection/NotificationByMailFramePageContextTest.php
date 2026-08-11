@@ -16,7 +16,7 @@ test('toArray flattens every fixed property, and omits save_success/REPOST_SUBMI
 
     expect($context->toArray())
         ->toBe([
-            'PWG_TOKEN' => 'abc123',
+            'CSRF_TOKEN' => 'abc123',
             'U_HELP' => '/admin/popuphelp.php?page=notification_by_mail',
             'F_ACTION' => '/admin.php?page=notification_by_mail',
             'ADMIN_PAGE_TITLE' => 'Send mail to users',
@@ -35,7 +35,7 @@ test('toArray includes save_success/REPOST_SUBMIT_NAME when set', function (): v
 
     expect($context->toArray())
         ->toBe([
-            'PWG_TOKEN' => 'abc123',
+            'CSRF_TOKEN' => 'abc123',
             'U_HELP' => '/admin/popuphelp.php?page=notification_by_mail',
             'F_ACTION' => '/admin.php?page=notification_by_mail',
             'ADMIN_PAGE_TITLE' => 'Send mail to users',

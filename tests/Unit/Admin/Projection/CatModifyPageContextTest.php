@@ -52,7 +52,7 @@ test('toArray flattens every fixed property, and omits every optional key when n
         ->not->toHaveKeys(['CAT_COMMENTABLE', 'U_MANAGE_ELEMENTS', 'INFO_CREATION_SINCE', 'INFO_CREATION', 'CAT_FULL_DIR', 'CAT_DIR_NAME', 'CAT_MIN_DIR', 'U_SYNC', 'representant', 'parent_category'])
         ->and($result['CAT_ID'])->toBe(5)
         ->and($result['CAT_NAME'])->toBe('Holidays')
-        ->and($result['PWG_TOKEN'])->toBe('abc123');
+        ->and($result['CSRF_TOKEN'])->toBe('abc123');
 });
 
 test('toArray includes every optional key when set', function (): void {

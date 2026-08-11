@@ -311,7 +311,7 @@ $(document).ready(function() {
 <div id="batchManagerGlobal">
   <form action="{$F_ACTION}" method="post">
   <input type="hidden" name="start" value="{$START}">
-  <input type="hidden" name="pwg_token" value="{$PWG_TOKEN}">
+  <input type="hidden" name="pwg_token" value="{$CSRF_TOKEN}">
   {include file='include/batch_manager_filter.inc.tpl' 
   title={'Batch Manager Filter'|@translate}
   searchPlaceholder={'Filters'|@translate}

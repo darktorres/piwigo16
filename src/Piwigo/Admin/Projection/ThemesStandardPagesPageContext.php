@@ -53,7 +53,7 @@ final readonly class ThemesStandardPagesPageContext implements TemplatePageConte
             'is_standard_pages_used' => $this->isStandardPagesUsed,
             'standard_pages_used_by' => $this->standardPagesUsedBy,
             'std_pgs_selected_logo_path' => $this->stdPgsSelectedLogoPath,
-            'PWG_TOKEN' => $this->pwgToken,
+            'CSRF_TOKEN' => $this->pwgToken,
             'isWebmaster' => $this->isWebmaster,
             'ADMIN_PAGE_TITLE' => $this->adminPageTitle,
         ];

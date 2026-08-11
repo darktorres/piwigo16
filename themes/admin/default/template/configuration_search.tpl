@@ -239,7 +239,7 @@ for(const filter_name of filters_names){
       <button class="buttonLike"  type="submit" name="submit" {if $isWebmaster != 1}disabled{/if}><i class="icon-floppy"></i> {'Save Settings'|@translate}</button>
     </div>
   </div>
-  <input type="hidden" name="pwg_token" value="{$PWG_TOKEN}">
+  <input type="hidden" name="pwg_token" value="{$CSRF_TOKEN}">
 </div>
 
 </form>

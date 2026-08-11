@@ -45,7 +45,7 @@ final readonly class PhotosAddDirectPageContext implements TemplatePageContext
     {
         return [
             'PROMOTE_MOBILE_APPS' => $this->promoteMobileApps,
-            'PHPWG_URL' => $this->phpwgUrl,
+            'APP_URL' => $this->phpwgUrl,
             'ENABLE_FORMATS' => $this->enableFormats,
             'DISPLAY_FORMATS' => $this->displayFormats,
             'HAVE_FORMATS_ORIGINAL' => $this->haveFormatsOriginal,

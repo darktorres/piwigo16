@@ -62,7 +62,7 @@ $(".delete-site-button").each(function() {
 </p>
 
 <form action="{$F_ACTION}" method="post" id="createSite" style="display:none">
-  <input type="hidden" name="pwg_token" value="{$PWG_TOKEN}">
+  <input type="hidden" name="pwg_token" value="{$CSRF_TOKEN}">
   <fieldset>
     <legend>{'create a new site'|@translate}</legend>
 

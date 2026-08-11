@@ -67,7 +67,7 @@
 			<p><label for="website_url">{'Website'|@translate} :</label></p>
 			<p><input type="text" name="website_url" id="website_url" value="{$comment.WEBSITE_URL}" size="40"></p>
 			<p><input type="hidden" name="key" value="{$comment.KEY}">
-				<input type="hidden" name="pwg_token" value="{$comment.PWG_TOKEN}">
+				<input type="hidden" name="pwg_token" value="{$comment.CSRF_TOKEN}">
 				<input type="hidden" name="image_id" value="{$comment.IMAGE_ID|@default:$current.id}">
 				<input type="submit" value="{'Submit'|@translate}">
 			</p>

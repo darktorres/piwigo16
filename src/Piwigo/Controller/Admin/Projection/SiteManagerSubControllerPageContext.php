@@ -33,7 +33,7 @@ final readonly class SiteManagerSubControllerPageContext implements TemplatePage
     {
         return [
             'F_ACTION' => $this->formAction,
-            'PWG_TOKEN' => $this->pwgToken,
+            'CSRF_TOKEN' => $this->pwgToken,
             'ADMIN_PAGE_TITLE' => $this->adminPageTitle,
             'sites' => $this->sites,
         ];

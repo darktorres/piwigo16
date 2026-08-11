@@ -43,7 +43,7 @@ final readonly class ElementSetRanksHeaderPageContext implements TemplatePageCon
         return [
             'CATEGORIES_NAV' => $this->categoriesNav,
             'F_ACTION' => $this->formAction,
-            'PWG_TOKEN' => $this->pwgToken,
+            'CSRF_TOKEN' => $this->pwgToken,
             'image_order_options' => $this->imageOrderOptions,
             'image_order_choice' => $this->imageOrderChoice,
             'thumbnails' => $this->thumbnails,

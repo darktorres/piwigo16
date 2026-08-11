@@ -55,7 +55,7 @@ test('toArray uses an empty prefix by default, and omits language_selection when
             'true' => 'Yes',
             'false' => 'No',
         ])
-        ->and($result['PWG_TOKEN'])->toBe('abc123');
+        ->and($result['CSRF_TOKEN'])->toBe('abc123');
 });
 
 test('toArray prefixes every dynamic key with the GUEST_ prefix, and includes language_selection when set', function (): void {

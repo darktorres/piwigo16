@@ -15,7 +15,7 @@ var activate_msg = '\n{'Do you want to activate anyway?'|@translate|@escape:'jav
 var deactivate_all_msg = '{'Deactivate all'|@translate}';
 
 /* group action */
-const pwg_token = '{$PWG_TOKEN}';
+const pwg_token = '{$CSRF_TOKEN}';
 const nb_plugin = {
   'all' : {$count_types_plugins["active"]} + {$count_types_plugins["inactive"]} + {$count_types_plugins["missing"]} + {$count_types_plugins["merged"]},
   'active' : {$count_types_plugins["active"]},

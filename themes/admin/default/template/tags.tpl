@@ -1,5 +1,5 @@
 {footer_script}
-var pwg_token = "{$PWG_TOKEN}";
+var pwg_token = "{$CSRF_TOKEN}";
 var orphan_tag_names = {$orphan_tag_names_array};
 var str_delete = '{'Delete tag "%s"?'|@translate}';
 var str_delete_tags = '{'Delete tags \{%s\}?'|@translate}';

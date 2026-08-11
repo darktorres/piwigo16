@@ -23,6 +23,6 @@ test('toArray flattens every property to its real Smarty template variable name'
                 'ext' => 'webp',
                 'label' => 'WEBP',
             ]],
-            'PWG_TOKEN' => 'token123',
+            'CSRF_TOKEN' => 'token123',
         ]);
 });

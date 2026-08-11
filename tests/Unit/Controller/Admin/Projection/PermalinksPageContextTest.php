@@ -47,7 +47,7 @@ test('toArray flattens every property to its real Smarty template variable name'
             'SORT_OLD_DATE_DELETED' => '<a href="?dpsf=date_deleted">↓</a>',
             'SORT_OLD_LAST_HIT' => '<a href="?dpsf=last_hit">↓</a>',
             'SORT_OLD_HIT' => '<a href="?dpsf=hit">↓</a>',
-            'PWG_TOKEN' => 'abc123',
+            'CSRF_TOKEN' => 'abc123',
             'U_HELP' => '/admin/popuphelp.php?page=permalinks',
             'deleted_permalinks' => [[
                 'cat_id' => 2,

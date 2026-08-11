@@ -117,10 +117,6 @@ final readonly class BatchManagerGlobalPageRenderer
 
         $batchManagerGlobalRequest = BatchManagerGlobalRequest::fromGlobals($this->inputValidator);
 
-        // +-------------------------------------------------------------------+
-        // |                            current selection                          |
-        // +-------------------------------------------------------------------+
-
         $collection = [];
         if ($batchManagerGlobalRequest->nbPhotosDeletedPresent) {
             // let's fake a collection (we don't know the image_ids so we use 0 as a
@@ -150,10 +146,6 @@ final readonly class BatchManagerGlobalPageRenderer
                 }
             }
         }
-
-        // +-------------------------------------------------------------------+
-        // |                       global mode form submission                     |
-        // +-------------------------------------------------------------------+
 
         // Locally-typed snapshot of $_SESSION['bulk_manager_filter']. It is always
         // written as an array by BatchManagerSubController (which runs before
@@ -464,9 +456,6 @@ final readonly class BatchManagerGlobalPageRenderer
             }
         }
 
-        // +-------------------------------------------------------------------+
-        // |                             template init                             |
-        // +-------------------------------------------------------------------+
         $template->setFilenames([
             'batch_manager_global' => 'batch_manager_global.tpl',
         ]);
@@ -481,14 +470,7 @@ final readonly class BatchManagerGlobalPageRenderer
         new FilterPanelRenderer()
             ->render($this->lang, $template, $base_url, $collection, $cat_elements_id, $page_start, $this->urlService, $this->eventDispatcher, $this->pageState, $this->tagService, $this->htmlRenderer, $this->currentConfig);
 
-        // +-------------------------------------------------------------------+
-        // |                            caddie options                             |
-        // +-------------------------------------------------------------------+
         $in_caddie = $prefilter_value === 'caddie';
-
-        // +-------------------------------------------------------------------+
-        // |                           global mode form                            |
-        // +-------------------------------------------------------------------+
 
         $associated_tags = null;
         if (count($cat_elements_id) > 0) {
@@ -515,10 +497,6 @@ final readonly class BatchManagerGlobalPageRenderer
         }
         $gen_deriv_map = $del_deriv_map;
         $del_deriv_map[ImageStdParams::CUSTOM] = $this->lang->t(ImageStdParams::CUSTOM);
-
-        // +-------------------------------------------------------------------+
-        // |                        global mode thumbnails                         |
-        // +-------------------------------------------------------------------+
 
         // how many items to display on this page
         if ($batchManagerGlobalRequest->displayRequested) {
@@ -623,7 +601,6 @@ final readonly class BatchManagerGlobalPageRenderer
 
         $this->eventDispatcher->dispatchNotify(new LocEndElementSetGlobal());
 
-        // ----------------------------------------------------------- sending html code
         $template->assignVarFromHandle('ADMIN_CONTENT', 'batch_manager_global');
     }
 }

@@ -99,10 +99,6 @@ final readonly class BatchManagerUnitPageRenderer
 
         $this->eventDispatcher->dispatchNotify(new LocBeginElementSetUnit());
 
-        // +-------------------------------------------------------------------+
-        // |                        unit mode form submission                      |
-        // +-------------------------------------------------------------------+
-
         $batchManagerUnitRequest = BatchManagerUnitRequest::fromGlobals($this->inputValidator);
 
         if ($batchManagerUnitRequest->isSubmitted) {
@@ -202,10 +198,6 @@ final readonly class BatchManagerUnitPageRenderer
             $collection = $batchManagerUnitRequest->selection;
         }
 
-        // +-------------------------------------------------------------------+
-        // |                             template init                             |
-        // +-------------------------------------------------------------------+
-
         $template->setFilenames(
             [
                 'batch_manager_unit' => 'batch_manager_unit.tpl',
@@ -221,9 +213,6 @@ final readonly class BatchManagerUnitPageRenderer
 
         new FilterPanelRenderer()
             ->render($this->lang, $template, $base_url, $collection, $cat_elements_id, $page_start, $this->urlService, $this->eventDispatcher, $this->pageState, $this->tagService, $this->htmlRenderer, $this->currentConfig);
-        // +-------------------------------------------------------------------+
-        // |                        global mode thumbnails                         |
-        // +-------------------------------------------------------------------+
 
         // how many items to display on this page
         if ($batchManagerUnitRequest->displayRequested) {
@@ -506,10 +495,6 @@ final readonly class BatchManagerUnitPageRenderer
         ));
 
         $this->eventDispatcher->dispatchNotify(new LocEndElementSetUnit());
-
-        // +-------------------------------------------------------------------+
-        // |                           sending html code                           |
-        // +-------------------------------------------------------------------+
 
         $template->assignVarFromHandle('ADMIN_CONTENT', 'batch_manager_unit');
     }

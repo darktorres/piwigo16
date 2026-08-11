@@ -117,17 +117,9 @@ final readonly class AdminShell
 
         $this->eventDispatcher->dispatchNotify(new LocBeginAdmin());
 
-        // +-------------------------------------------------------------------+
-        // | Check Access and exit when user status is not ok                  |
-        // +-------------------------------------------------------------------+
-
         $this->accessControl->checkStatus(AccessLevel::Administrator);
 
         $adminShellRequest = AdminShellRequest::fromGlobals($this->inputValidator);
-
-        // +-------------------------------------------------------------------+
-        // | Filesystem checks                                                 |
-        // +-------------------------------------------------------------------+
 
         if ($this->currentConfig->fsQuickCheckPeriod > 0) {
             $perform_fsqc = false;
@@ -152,10 +144,6 @@ final readonly class AdminShell
                 $this->filesystemIntegrityChecker->fsQuickCheck();
             }
         }
-
-        // +-------------------------------------------------------------------+
-        // | Direct actions                                                    |
-        // +-------------------------------------------------------------------+
 
         // save plugins_new display order (AJAX action)
         if ($adminShellRequest->pluginsNewOrderPresent) {
@@ -193,18 +181,10 @@ final readonly class AdminShell
             $this->redirectService->redirect($redirect_url);
         }
 
-        // +-------------------------------------------------------------------+
-        // | Synchronize user informations                                     |
-        // +-------------------------------------------------------------------+
-
         // sync_user() is only useful when external authentication is activated
         if ($this->deploymentPolicy->externalAuthentification) {
             $this->userService->syncUsers();
         }
-
-        // +-------------------------------------------------------------------+
-        // | Variables init                                                    |
-        // +-------------------------------------------------------------------+
 
         $change_theme_url = $this->urlService->getRootUrl() . 'admin.php?';
         $test_get = $adminShellRequest->testGet;
@@ -273,10 +253,6 @@ final readonly class AdminShell
         $this->inputValidator
             ->validate('tab', $_GET, false, '/^[a-zA-Z\d_-]+$/');
 
-        // +-------------------------------------------------------------------+
-        // | Template init                                                     |
-        // +-------------------------------------------------------------------+
-
         $title = $this->lang->t('Piwigo Administration'); // for the PageHeaderRenderer::render() call below
         $this->pageState->setPageBanner('<h1>' . $this->lang->t('Piwigo Administration') . '</h1>');
         $this->pageState->setBodyId('theAdminPage');
@@ -339,10 +315,6 @@ final readonly class AdminShell
         $this->pageState->setNbOrphans($nb_orphans);
 
         $u_orphans = $link_start . 'batch_manager&amp;filter=prefilter-no_album';
-
-        // +-------------------------------------------------------------------+
-        // | Refresh permissions                                               |
-        // +-------------------------------------------------------------------+
 
         // Only for pages witch change permissions
         if (
@@ -485,19 +457,11 @@ final readonly class AdminShell
             displayBell: $display_bell,
         ));
 
-        // +-------------------------------------------------------------------+
-        // | Include specific page                                             |
-        // +-------------------------------------------------------------------+
-
         $this->eventDispatcher->dispatchNotify(new LocBeginAdminPage());
 
         // SEC-19: sub-controllers read input from this PSR-7 request
         // (getQueryParams()/getParsedBody()), not $_GET/$_POST directly.
         AdminDispatcher::dispatch($page_slug, RequestFactory::fromGlobals());
-
-        // +-------------------------------------------------------------------+
-        // | Sending html code                                                 |
-        // +-------------------------------------------------------------------+
 
         // Add the Piwigo Official menu
         $template->assignContext(new AdminShellPostDispatchPageContext(

@@ -35,10 +35,10 @@ final class AdminUiHelper
             // -- every real HTTP entry point's cwd is wherever Apache/PHP-FPM
             // started the process (typically the document root, `public/`),
             // NOT this project's root where `template-extension/` actually
-            // lives, so the former relative default silently resolved to a
+            // lives, so a relative default would silently resolve to a
             // nonexistent directory (opendir() returning false) on every
-            // real request, confirmed live: the whole "extend for templates"
-            // feature never applied a single replacement in production.
+            // real request, and the "extend for templates" feature would
+            // never apply a single replacement in production.
             $start = rtrim($paths->root, '/') . '/template-extension';
         }
 
@@ -124,7 +124,7 @@ final class AdminUiHelper
         // Mutation-testing note: this int/float-0 normalization is
         // behaviorally inert -- number_format(0, 0) and number_format(0.0, 0)
         // both render '0', so no test can ever distinguish either branch of
-        // this ternary (confirmed live); not a coverage gap.
+        // this ternary; not a coverage gap.
         $numbers = ($numbers === 0 || $numbers === 0.0) ? 0 : $numbers;
 
         while ($numbers >= 1000) {

@@ -77,16 +77,8 @@ final readonly class AlbumNotificationPageRenderer
         $template = $this->currentTemplate->get();
         $save_success = null;
 
-        // +-------------------------------------------------------------------+
-        // |                       variable initialization                     |
-        // +-------------------------------------------------------------------+
-
         $category_id = $category['id'];
         $page['cat'] = $category_id;
-
-        // +-------------------------------------------------------------------+
-        // |                           form submission                         |
-        // +-------------------------------------------------------------------+
 
         // info by email to an access granted group of category informations
         $albumNotificationSubmit = AlbumNotificationSubmitRequest::fromGlobals($this->inputValidator);
@@ -225,10 +217,6 @@ final readonly class AlbumNotificationPageRenderer
             $this->urlService->unsetMakeFullUrl();
         }
 
-        // +-------------------------------------------------------------------+
-        // |                       template initialization                     |
-        // +-------------------------------------------------------------------+
-
         $template->setFilename('album_notification', 'album_notification.tpl');
 
         // $page['cat'] was set to $category['id'] (a real int) above, in
@@ -256,10 +244,6 @@ final readonly class AlbumNotificationPageRenderer
             assert($auth_key_since !== false);
             $auth_key_duration_value = DateHelper::timeSince($auth_key_since, 'second', null, false);
         }
-
-        // +-------------------------------------------------------------------+
-        // |                          form construction                        |
-        // +-------------------------------------------------------------------+
 
         $all_group_ids = array_map(
             static fn (Group $group): int => $group->id->value,
@@ -333,10 +317,6 @@ final readonly class AlbumNotificationPageRenderer
             groupMailOptions: $group_mail_options,
             userOptions: $user_options,
         ));
-
-        // +-------------------------------------------------------------------+
-        // |                           sending html code                       |
-        // +-------------------------------------------------------------------+
 
         $template->assignVarFromHandle('ADMIN_CONTENT', 'album_notification');
     }

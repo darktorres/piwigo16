@@ -99,28 +99,32 @@ test('PHP5_HOSTING_HTACCESS carries the expected hosting directives', function (
 
 // --------------------------------------------------------- executeSqlfile
 
-test('executeSqlfile() creates tables, applies prefix replacement, and skips DROP TABLE', function (): void {
+test('executeSqlfile() creates tables and skips DROP TABLE', function (): void {
     $conn = DbConnection::build();
-    $prefix = 'itest_p17unit_' . bin2hex(random_bytes(6)) . '_';
+    // A unique table name baked directly into the SQL, not a shared
+    // literal like 'gizmo' -- this suite's DB is shared/persistent across
+    // composer test's own parallel runner, so a fixed name risks a real
+    // collision with a concurrently-running instance of this same test.
+    $table = 'itest_p17unit_' . bin2hex(random_bytes(6)) . '_gizmo';
     $sqlFile = sys_get_temp_dir() . '/piwigo-install-service-' . bin2hex(random_bytes(6)) . '.sql';
     file_put_contents(
         $sqlFile,
         "-- a comment line, must be ignored\n"
         . "\n"
-        . "CREATE TABLE PREFIX_gizmo (\n"
+        . "CREATE TABLE {$table} (\n"
         . "  id INT NOT NULL,\n"
         . "  label VARCHAR(64) NOT NULL\n"
         . ");\n"
-        . "INSERT INTO PREFIX_gizmo (id, label) VALUES (42, 'widget-forty-two');\n"
-        . "DROP TABLE PREFIX_gizmo;\n"
+        . "INSERT INTO {$table} (id, label) VALUES (42, 'widget-forty-two');\n"
+        . "DROP TABLE {$table};\n"
     );
 
     try {
-        InstallService::executeSqlfile($conn, $sqlFile, 'PREFIX_', $prefix);
+        InstallService::executeSqlfile($conn, $sqlFile);
 
         // The DROP TABLE line was skipped -- the table (and its row) must
         // still exist.
-        $row = $conn->fetchAssociative('SELECT id, label FROM ' . $prefix . 'gizmo WHERE id = 42');
+        $row = $conn->fetchAssociative('SELECT id, label FROM ' . $table . ' WHERE id = 42');
         if (! is_array($row)) {
             throw new LogicException('expected an array row');
         }
@@ -129,7 +133,7 @@ test('executeSqlfile() creates tables, applies prefix replacement, and skips DRO
             ->toBe(42)
             ->and($row['label'])->toBe('widget-forty-two');
     } finally {
-        $conn->executeStatement('DROP TABLE IF EXISTS ' . $prefix . 'gizmo');
+        $conn->executeStatement('DROP TABLE IF EXISTS ' . $table);
         unlink($sqlFile);
     }
 });
@@ -144,7 +148,7 @@ test('executeSqlfile() throws a RuntimeException when the file does not exist', 
     // let it fail the suite.
     set_error_handler(static fn (): bool => true);
     try {
-        expect(fn () => InstallService::executeSqlfile($conn, $missing, 'PREFIX_', 'itest_'))
+        expect(fn () => InstallService::executeSqlfile($conn, $missing))
             ->toThrow(RuntimeException::class, 'Unable to read SQL file: ' . $missing);
     } finally {
         restore_error_handler();
@@ -304,7 +308,7 @@ test('activateCoreThemes() does not activate the non-selectable default placehol
     // needs a real logged-in CurrentUser this test never sets -- same
     // technique ExtensionScannerTest.php already established.
     file_put_contents($themesDir . $themeId . '/screenshot.png', 'not a real png -- only its existence is checked');
-    CurrentConfigTestFactory::get()->setThemesDir($themesDir);
+    CurrentConfigTestFactory::get()->themesDir = $themesDir;
 
     try {
         InstallService::activateCoreThemes(LangTestFactory::get(), CurrentUserTestFactory::get(), CurrentConfigServiceTestFactory::get(), CurrentConfigTestFactory::get(), CurrentPathsTestFactory::get(), EventDispatcherTestFactory::get());
@@ -320,7 +324,7 @@ test('activateCoreThemes() does not activate the non-selectable default placehol
 test('activateCoreThemes() activates nothing when no default template theme directory is found on disk', function (): void {
     installServiceTestBootKernel();
     $emptyThemesDir = installServiceTestFixtureRoot('themes-empty');
-    CurrentConfigTestFactory::get()->setThemesDir($emptyThemesDir);
+    CurrentConfigTestFactory::get()->themesDir = $emptyThemesDir;
 
     try {
         InstallService::activateCoreThemes(LangTestFactory::get(), CurrentUserTestFactory::get(), CurrentConfigServiceTestFactory::get(), CurrentConfigTestFactory::get(), CurrentPathsTestFactory::get(), EventDispatcherTestFactory::get());

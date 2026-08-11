@@ -59,8 +59,8 @@ test('handle() fatal-errors when the requested theme is not among the scanned th
     $emptyThemesDir = $root . 'empty-themes/';
     mkdir($emptyThemesDir, 0o777, true);
     $currentConfig = CurrentConfigTestFactory::get();
-    $originalThemesDir = $currentConfig->themesDir();
-    $currentConfig->setThemesDir(rtrim($emptyThemesDir, '/'));
+    $originalThemesDir = $currentConfig->themesDir;
+    $currentConfig->themesDir = rtrim($emptyThemesDir, '/');
 
     try {
         $subController = new ThemeSubController(
@@ -90,7 +90,7 @@ test('handle() fatal-errors when the requested theme is not among the scanned th
             ->toContain('Invalid theme');
     } finally {
         unset($_GET['theme']);
-        $currentConfig->setThemesDir($originalThemesDir);
+        $currentConfig->themesDir = $originalThemesDir;
         Kernel::reset();
         themeSubControllerTestRrmdir($root);
     }

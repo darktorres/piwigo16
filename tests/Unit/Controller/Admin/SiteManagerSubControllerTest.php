@@ -32,8 +32,8 @@ function siteManagerSubControllerTestRoot(): string
     $root = sys_get_temp_dir() . '/piwigo-site-manager-subcontroller-test-' . bin2hex(random_bytes(8)) . '/';
     mkdir($root, 0o777, true);
     Kernel::boot(Paths::fromRoot($root));
-    CurrentConfigTestFactory::get()->setDataLocation('data/');
-    CurrentConfigTestFactory::get()->setDataDirChecked('1');
+    CurrentConfigTestFactory::get()->dataLocation = 'data/';
+    CurrentConfigTestFactory::get()->dataDirChecked = '1';
 
     return $root;
 }
@@ -62,7 +62,7 @@ test('handle() fatal-errors when synchronization is disabled', function (): void
         CurrentTemplate::current()->set($template);
 
         $currentConfig = CurrentConfigTestFactory::get();
-        $currentConfig->setEnableSynchronization(false);
+        $currentConfig->enableSynchronization = false;
 
         $subController = Kernel::container()->get(SiteManagerSubController::class);
         if (! $subController instanceof SiteManagerSubController) {

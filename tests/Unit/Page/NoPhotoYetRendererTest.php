@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use Piwigo\Auth\AccessLevelChecker;
 use Piwigo\Common\ValueObject\LangCode;
+use Piwigo\Common\ValueObject\ThemeId;
 use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Config\ConfigEntry;
 use Piwigo\Config\ConfigService;
@@ -11,7 +12,6 @@ use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\DeploymentPolicy;
 use Piwigo\Core\AdminContext;
 use Piwigo\Core\ErrorCollector;
-use Piwigo\Core\InstallationFlag;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\PageState;
 use Piwigo\Core\Paths;
@@ -19,8 +19,6 @@ use Piwigo\Core\ProcessCache;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Image\ImageEntity;
-use Piwigo\Lang\Translator;
-use Piwigo\Mail\MailService;
 use Piwigo\Page\NoPhotoYetRenderer;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Session\SessionEntity;
@@ -29,7 +27,6 @@ use Piwigo\Template\CurrentTemplate;
 use Piwigo\Tests\Support\CurrentConfigServiceTestFactory;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Tests\Support\CurrentUserTestFactory;
-use Piwigo\Tests\Support\HtmlServiceTestFactory;
 use Piwigo\Tests\Support\LangTestFactory;
 use Piwigo\Tests\Support\TemplateTestFactory;
 use Piwigo\Tests\Support\UrlServiceTestFactory;
@@ -55,8 +52,8 @@ function noPhotoYetTestRoot(): string
     $root = sys_get_temp_dir() . '/piwigo-no-photo-yet-test-' . bin2hex(random_bytes(8)) . '/';
     mkdir($root, 0o777, true);
     Kernel::boot(Paths::fromRoot($root));
-    CurrentConfigTestFactory::get()->setDataLocation('data/');
-    CurrentConfigTestFactory::get()->setDataDirChecked('1');
+    CurrentConfigTestFactory::get()->dataLocation = 'data/';
+    CurrentConfigTestFactory::get()->dataDirChecked = '1';
 
     return $root;
 }
@@ -77,22 +74,6 @@ function noPhotoYetTestRrmdir(string $dir): void
     rmdir($dir);
 }
 
-function noPhotoYetTestMailService(): MailService
-{
-    return new MailService(
-        LangTestFactory::get(),
-        new CurrentConfig(),
-        new DeploymentPolicy(),
-        new PageState(),
-        Paths::fromRoot(sys_get_temp_dir()),
-        new SessionService(EntityManagerFactory::build(DbConnection::build())->getRepository(SessionEntity::class), new CurrentConfig()),
-        new Translator(new CurrentConfig()),
-        new EventDispatcher(),
-        CurrentUserTestFactory::get(),
-        UrlServiceTestFactory::build(),
-    );
-}
-
 function noPhotoYetTestRenderer(AdminContext $adminContext): NoPhotoYetRenderer
 {
     $conn = DbConnection::build();
@@ -108,17 +89,13 @@ function noPhotoYetTestRenderer(AdminContext $adminContext): NoPhotoYetRenderer
         $adminContext,
         new SessionService(EntityManagerFactory::build($conn)->getRepository(SessionEntity::class), new CurrentConfig()),
         new EventDispatcher(),
-        new DeploymentPolicy(),
         CurrentUserTestFactory::get(),
         CurrentTemplate::current(),
-        noPhotoYetTestMailService(),
         CurrentConfigTestFactory::get(),
         new PageState(),
         new ErrorCollector(new DeploymentPolicy(), Paths::fromRoot(sys_get_temp_dir())),
         new ProcessCache(),
         CurrentConfigServiceTestFactory::get(),
-        HtmlServiceTestFactory::build(),
-        new InstallationFlag(),
     );
 }
 
@@ -130,7 +107,7 @@ test('render() does nothing when the admin context is active', function (): void
         username: null,
         email: null,
         language: LangCode::from('en_UK'),
-        theme: '',
+        theme: ThemeId::from('default'),
         status: UserStatus::Guest,
         enabledHigh: false,
     ));
@@ -166,7 +143,7 @@ test('render() does nothing when photos already exist, only refreshing the no_ph
         username: null,
         email: null,
         language: LangCode::from('en_UK'),
-        theme: '',
+        theme: ThemeId::from('default'),
         status: UserStatus::Guest,
         enabledHigh: false,
     ));

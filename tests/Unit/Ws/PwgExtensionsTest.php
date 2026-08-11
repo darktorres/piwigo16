@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Piwigo\Common\ValueObject\LangCode;
+use Piwigo\Common\ValueObject\ThemeId;
 use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Paths;
@@ -53,8 +54,8 @@ function pwgExtensionsTestRoot(): string
     $root = sys_get_temp_dir() . '/piwigo-extensions-test-' . bin2hex(random_bytes(8)) . '/';
     mkdir($root, 0o777, true);
     Kernel::boot(Paths::fromRoot($root));
-    CurrentConfigTestFactory::get()->setDataLocation('data/');
-    CurrentConfigTestFactory::get()->setDataDirChecked('1');
+    CurrentConfigTestFactory::get()->dataLocation = 'data/';
+    CurrentConfigTestFactory::get()->dataDirChecked = '1';
 
     return $root;
 }
@@ -82,7 +83,7 @@ function pwgExtensionsTestSetUser(bool $isWebmaster): void
         username: null,
         email: null,
         language: LangCode::from('en_UK'),
-        theme: '',
+        theme: ThemeId::from('default'),
         status: $isWebmaster ? UserStatus::Webmaster : UserStatus::Admin,
         enabledHigh: false,
     ));
@@ -158,7 +159,7 @@ test('update returns a 401 PwgError when extensions install is disabled', functi
     $root = pwgExtensionsTestRoot();
 
     try {
-        CurrentConfigTestFactory::get()->setEnableExtensionsInstall(false);
+        CurrentConfigTestFactory::get()->enableExtensionsInstall = false;
 
         $ws = pwgExtensionsTestSubject();
         $server = Kernel::container()->get(PwgServer::class);

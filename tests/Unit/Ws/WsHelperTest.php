@@ -5,6 +5,7 @@ declare(strict_types=1);
 use Piwigo\Auth\AccessControl;
 use Piwigo\Auth\AccessLevelChecker;
 use Piwigo\Common\ValueObject\LangCode;
+use Piwigo\Common\ValueObject\ThemeId;
 use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\ApiKeyRequestFlag;
@@ -39,14 +40,14 @@ use Piwigo\Ws\WsHelper;
 function wsHelperTestSubject(bool $isAdmin, bool $guestAccess = true): WsHelper
 {
     $currentConfig = new CurrentConfig();
-    $currentConfig->setGuestAccess($guestAccess);
+    $currentConfig->guestAccess = $guestAccess;
     $currentUser = new CurrentUser($currentConfig);
     $currentUser->set(new User(
         id: UserId::from($isAdmin ? 1 : 2),
         username: null,
         email: null,
         language: LangCode::from('en_UK'),
-        theme: '',
+        theme: ThemeId::from('default'),
         status: $isAdmin ? UserStatus::Admin : UserStatus::Guest,
         enabledHigh: false,
     ));
@@ -335,7 +336,7 @@ function wsHelperTestServer(): PwgServer
         username: null,
         email: null,
         language: LangCode::from('en_UK'),
-        theme: '',
+        theme: ThemeId::from('default'),
         status: UserStatus::Admin,
         enabledHigh: false,
     ));

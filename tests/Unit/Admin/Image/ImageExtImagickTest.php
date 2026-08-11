@@ -282,7 +282,7 @@ test('construct concatenates the imagickdir prefix directly onto the identify bi
     $privateBinPath = imageExtImagickTestMarker() . '/identify';
     symlink($realBinaryPath, $privateBinPath);
     imageExtImagickTestCurrentConfig()
-        ->setExtImagickDir(imageExtImagickTestMarker() . '/');
+        ->extImagickDir = imageExtImagickTestMarker() . '/';
 
     $image = imageExtImagickTestMake($path);
 

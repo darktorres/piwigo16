@@ -7,6 +7,7 @@ use Piwigo\Admin\CoreTabs;
 use Piwigo\Auth\AccessControl;
 use Piwigo\Auth\AccessLevelChecker;
 use Piwigo\Common\ValueObject\LangCode;
+use Piwigo\Common\ValueObject\ThemeId;
 use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Controller\Admin\HistorySubController;
@@ -44,8 +45,8 @@ function historySubControllerTestRoot(): string
     $root = sys_get_temp_dir() . '/piwigo-history-subcontroller-test-' . bin2hex(random_bytes(8)) . '/';
     mkdir($root, 0o777, true);
     Kernel::boot(Paths::fromRoot($root));
-    CurrentConfigTestFactory::get()->setDataLocation('data/');
-    CurrentConfigTestFactory::get()->setDataDirChecked('1');
+    CurrentConfigTestFactory::get()->dataLocation = 'data/';
+    CurrentConfigTestFactory::get()->dataDirChecked = '1';
 
     return $root;
 }
@@ -75,7 +76,7 @@ function historySubControllerTestAccessControl(): AccessControl
         username: null,
         email: null,
         language: LangCode::from('en_UK'),
-        theme: '',
+        theme: ThemeId::from('default'),
         status: UserStatus::Admin,
         enabledHigh: false,
     ));

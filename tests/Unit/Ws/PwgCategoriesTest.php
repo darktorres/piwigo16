@@ -5,6 +5,7 @@ declare(strict_types=1);
 use Piwigo\Auth\AccessControl;
 use Piwigo\Auth\AccessLevelChecker;
 use Piwigo\Common\ValueObject\LangCode;
+use Piwigo\Common\ValueObject\ThemeId;
 use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\ApiKeyRequestFlag;
@@ -72,7 +73,7 @@ function pwgCategoriesTestServer(): PwgServer
         username: null,
         email: null,
         language: LangCode::from('en_UK'),
-        theme: '',
+        theme: ThemeId::from('default'),
         status: UserStatus::Admin,
         enabledHigh: false,
     ));
@@ -92,7 +93,7 @@ beforeEach(function (): void {
         username: null,
         email: null,
         language: LangCode::from('en_UK'),
-        theme: '',
+        theme: ThemeId::from('default'),
         status: UserStatus::Admin,
         enabledHigh: false,
     ));

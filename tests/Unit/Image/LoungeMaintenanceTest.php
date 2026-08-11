@@ -23,7 +23,7 @@ afterEach(function (): void {
 
 test('needsEmptying returns false when loungeActive is disabled', function (): void {
     $currentConfig = new CurrentConfig();
-    $currentConfig->setLoungeActive(false);
+    $currentConfig->loungeActive = false;
 
     $result = LoungeMaintenance::needsEmptying($currentConfig);
 
@@ -33,7 +33,7 @@ test('needsEmptying returns false when loungeActive is disabled', function (): v
 
 test('needsEmptying returns false during an in-progress pwg.images.upload request', function (): void {
     $currentConfig = new CurrentConfig();
-    $currentConfig->setLoungeActive(true);
+    $currentConfig->loungeActive = true;
     $_REQUEST['method'] = 'pwg.images.upload';
 
     $result = LoungeMaintenance::needsEmptying($currentConfig);
@@ -44,7 +44,7 @@ test('needsEmptying returns false during an in-progress pwg.images.upload reques
 
 test('needsEmptying returns false during an in-progress pwg.images.uploadAsync request', function (): void {
     $currentConfig = new CurrentConfig();
-    $currentConfig->setLoungeActive(true);
+    $currentConfig->loungeActive = true;
     $_REQUEST['method'] = 'pwg.images.uploadAsync';
 
     $result = LoungeMaintenance::needsEmptying($currentConfig);

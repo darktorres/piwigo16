@@ -59,8 +59,8 @@ test('handle() fatal-errors when both extension install and core update are disa
 
     try {
         $currentConfig = CurrentConfigTestFactory::get();
-        $currentConfig->setEnableExtensionsInstall(false);
-        $currentConfig->setEnableCoreUpdate(false);
+        $currentConfig->enableExtensionsInstall = false;
+        $currentConfig->enableCoreUpdate = false;
 
         $subController = Kernel::container()->get(UpdatesSubController::class);
         if (! $subController instanceof UpdatesSubController) {

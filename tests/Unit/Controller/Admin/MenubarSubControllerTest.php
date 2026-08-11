@@ -5,6 +5,7 @@ declare(strict_types=1);
 use Nyholm\Psr7\ServerRequest;
 use Piwigo\Admin\CoreTabs;
 use Piwigo\Common\ValueObject\LangCode;
+use Piwigo\Common\ValueObject\ThemeId;
 use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Controller\Admin\MenubarSubController;
 use Piwigo\Core\Kernel;
@@ -39,8 +40,8 @@ function menubarSubControllerTestRoot(): string
     $root = sys_get_temp_dir() . '/piwigo-menubar-subcontroller-test-' . bin2hex(random_bytes(8)) . '/';
     mkdir($root, 0o777, true);
     Kernel::boot(Paths::fromRoot($root));
-    CurrentConfigTestFactory::get()->setDataLocation('data/');
-    CurrentConfigTestFactory::get()->setDataDirChecked('1');
+    CurrentConfigTestFactory::get()->dataLocation = 'data/';
+    CurrentConfigTestFactory::get()->dataDirChecked = '1';
 
     return $root;
 }
@@ -81,7 +82,7 @@ test('handle renders the real menubar-order admin screen with no registered bloc
             username: null,
             email: null,
             language: LangCode::from('en_UK'),
-            theme: '',
+            theme: ThemeId::from('default'),
             status: UserStatus::Webmaster,
             enabledHigh: false,
         ));

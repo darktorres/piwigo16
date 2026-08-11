@@ -5,6 +5,7 @@ declare(strict_types=1);
 use Piwigo\Auth\AccessControl;
 use Piwigo\Auth\AccessLevelChecker;
 use Piwigo\Common\ValueObject\LangCode;
+use Piwigo\Common\ValueObject\ThemeId;
 use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\ApiKeyRequestFlag;
@@ -64,7 +65,7 @@ function pwgCommentsTestServer(): PwgServer
         username: null,
         email: null,
         language: LangCode::from('en_UK'),
-        theme: '',
+        theme: ThemeId::from('default'),
         status: UserStatus::Admin,
         enabledHigh: false,
     ));
@@ -102,7 +103,7 @@ afterEach(function (): void {
 });
 
 test('getList returns a 403 PwgError when comments are disabled', function (): void {
-    CurrentConfigTestFactory::get()->setActivateComments(false);
+    CurrentConfigTestFactory::get()->activateComments = false;
     $ws = pwgCommentsTestSubject();
     $server = pwgCommentsTestServer();
 
@@ -119,7 +120,7 @@ test('getList returns a 403 PwgError when comments are disabled', function (): v
 });
 
 test('getList returns a 401 PwgError for a status outside the allowlist', function (): void {
-    CurrentConfigTestFactory::get()->setActivateComments(true);
+    CurrentConfigTestFactory::get()->activateComments = true;
     $ws = pwgCommentsTestSubject();
     $server = pwgCommentsTestServer();
 
@@ -139,7 +140,7 @@ test('getList returns a 401 PwgError for a status outside the allowlist', functi
 });
 
 test('getList returns a 401 PwgError for a per_page outside the allowed set', function (): void {
-    CurrentConfigTestFactory::get()->setActivateComments(true);
+    CurrentConfigTestFactory::get()->activateComments = true;
     $ws = pwgCommentsTestSubject();
     $server = pwgCommentsTestServer();
 
@@ -159,7 +160,7 @@ test('getList returns a 401 PwgError for a per_page outside the allowed set', fu
 });
 
 test('getList returns a 401 PwgError for an unparsable f_min_date', function (): void {
-    CurrentConfigTestFactory::get()->setActivateComments(true);
+    CurrentConfigTestFactory::get()->activateComments = true;
     $ws = pwgCommentsTestSubject();
     $server = pwgCommentsTestServer();
 
@@ -179,7 +180,7 @@ test('getList returns a 401 PwgError for an unparsable f_min_date', function ():
 });
 
 test('getList returns a 401 PwgError for an unparsable f_max_date', function (): void {
-    CurrentConfigTestFactory::get()->setActivateComments(true);
+    CurrentConfigTestFactory::get()->activateComments = true;
     $ws = pwgCommentsTestSubject();
     $server = pwgCommentsTestServer();
 

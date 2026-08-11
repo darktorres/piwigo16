@@ -86,8 +86,8 @@ test('c13y_version adds no anomaly against this environment\'s real, above-minim
 });
 
 test('c13y_exif adds no anomaly since this environment\'s real exif_read_data function exists', function (): void {
-    CurrentConfigTestFactory::get()->setShowExif(true);
-    CurrentConfigTestFactory::get()->setUseExif(true);
+    CurrentConfigTestFactory::get()->showExif = true;
+    CurrentConfigTestFactory::get()->useExif = true;
     $checkIntegrity = c13yInternalTestCheckIntegrity();
 
     c13yInternalTestSubject()

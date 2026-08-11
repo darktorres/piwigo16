@@ -6,6 +6,7 @@ use Piwigo\Category\CategoryDefaultRenderer;
 use Piwigo\Comment\CommentEntity;
 use Piwigo\Common\Enum\Section;
 use Piwigo\Common\ValueObject\LangCode;
+use Piwigo\Common\ValueObject\ThemeId;
 use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\Kernel;
@@ -44,8 +45,8 @@ function categoryDefaultTestRoot(): string
     $root = sys_get_temp_dir() . '/piwigo-category-default-test-' . bin2hex(random_bytes(8)) . '/';
     mkdir($root, 0o777, true);
     Kernel::boot(Paths::fromRoot($root));
-    CurrentConfigTestFactory::get()->setDataLocation('data/');
-    CurrentConfigTestFactory::get()->setDataDirChecked('1');
+    CurrentConfigTestFactory::get()->dataLocation = 'data/';
+    CurrentConfigTestFactory::get()->dataDirChecked = '1';
 
     return $root;
 }
@@ -84,7 +85,7 @@ test('render() returns no slideshow url and assigns an empty thumbnail set for a
         username: null,
         email: null,
         language: LangCode::from('en_UK'),
-        theme: '',
+        theme: ThemeId::from('default'),
         status: UserStatus::Normal,
         enabledHigh: false,
     ));

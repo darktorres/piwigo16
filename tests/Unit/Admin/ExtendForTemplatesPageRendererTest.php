@@ -8,6 +8,7 @@ use Piwigo\Auth\AccessLevelChecker;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Category\CategoryService;
 use Piwigo\Common\ValueObject\LangCode;
+use Piwigo\Common\ValueObject\ThemeId;
 use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Config\ConfigEntry;
 use Piwigo\Config\ConfigService;
@@ -57,8 +58,8 @@ function extendForTemplatesTestRoot(): string
     // directory genuinely doesn't exist.
     mkdir($root . 'template-extension', 0o777, true);
     Kernel::boot(Paths::fromRoot($root));
-    CurrentConfigTestFactory::get()->setDataLocation('data/');
-    CurrentConfigTestFactory::get()->setDataDirChecked('1');
+    CurrentConfigTestFactory::get()->dataLocation = 'data/';
+    CurrentConfigTestFactory::get()->dataDirChecked = '1';
 
     return $root;
 }
@@ -88,7 +89,7 @@ function extendForTemplatesTestAccessControl(): AccessControl
         username: null,
         email: null,
         language: LangCode::from('en_UK'),
-        theme: '',
+        theme: ThemeId::from('default'),
         status: UserStatus::Admin,
         enabledHigh: false,
     ));

@@ -45,7 +45,7 @@ test('checkThemeInstalled returns true when the theme directory has a real theme
 
     try {
         $currentConfig = new CurrentConfig();
-        $currentConfig->setThemesDir('themes');
+        $currentConfig->themesDir = 'themes';
         mkdir($root . 'themes/my_theme', 0o777, true);
         file_put_contents($root . 'themes/my_theme/themeconf.inc.php', '<?php');
 
@@ -63,7 +63,7 @@ test('checkThemeInstalled returns false when the theme directory has no themecon
 
     try {
         $currentConfig = new CurrentConfig();
-        $currentConfig->setThemesDir('themes');
+        $currentConfig->themesDir = 'themes';
         mkdir($root . 'themes/empty_theme', 0o777, true);
 
         $result = ThemeCatalog::checkThemeInstalled('empty_theme', Paths::fromRoot($root), $currentConfig);
@@ -80,7 +80,7 @@ test('checkThemeInstalled returns false for a theme id with no real directory at
 
     try {
         $currentConfig = new CurrentConfig();
-        $currentConfig->setThemesDir('themes');
+        $currentConfig->themesDir = 'themes';
         mkdir($root . 'themes', 0o777, true);
 
         $result = ThemeCatalog::checkThemeInstalled('not_a_real_theme', Paths::fromRoot($root), $currentConfig);

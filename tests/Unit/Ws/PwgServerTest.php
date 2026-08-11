@@ -5,6 +5,7 @@ declare(strict_types=1);
 use Piwigo\Auth\AccessControl;
 use Piwigo\Auth\AccessLevelChecker;
 use Piwigo\Common\ValueObject\LangCode;
+use Piwigo\Common\ValueObject\ThemeId;
 use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\ApiKeyRequestFlag;
@@ -63,7 +64,7 @@ function pwgServerTestAccessControl(bool $isAdmin): AccessControl
         username: null,
         email: null,
         language: LangCode::from('en_UK'),
-        theme: '',
+        theme: ThemeId::from('default'),
         status: $isAdmin ? UserStatus::Admin : UserStatus::Normal,
         enabledHigh: false,
     ));
@@ -340,7 +341,7 @@ test('invoke returns a 401 for an admin_only method called by a non-admin', func
 
 test('invoke returns a 401 when an active API key request targets a config-forbidden method', function (): void {
     $currentConfig = new CurrentConfig();
-    $currentConfig->setApiKeyForbiddenMethods(['test.forbidden']);
+    $currentConfig->apiKeyForbiddenMethods = ['test.forbidden'];
     $apiKeyFlag = new ApiKeyRequestFlag();
     $apiKeyFlag->activate();
     $server = new PwgServer(new EventDispatcher(), pwgServerTestAccessControl(true), $apiKeyFlag, $currentConfig);
@@ -592,7 +593,7 @@ test('isAuthorizedMethodForAPIKEY allows any method when no API key is active', 
 
 test('isAuthorizedMethodForAPIKEY blocks a config-forbidden method once the API key flag is active', function (): void {
     $currentConfig = new CurrentConfig();
-    $currentConfig->setApiKeyForbiddenMethods(['pwg.users.setInfo']);
+    $currentConfig->apiKeyForbiddenMethods = ['pwg.users.setInfo'];
     $apiKeyFlag = new ApiKeyRequestFlag();
     $apiKeyFlag->activate();
     $server = new PwgServer(new EventDispatcher(), pwgServerTestAccessControl(true), $apiKeyFlag, $currentConfig);
@@ -607,7 +608,7 @@ test('isAuthorizedMethodForAPIKEY also blocks via a ws_session_login_api_key ses
     $originalSession = $_SESSION ?? [];
     $_SESSION['connected_with'] = 'ws_session_login_api_key';
     $currentConfig = new CurrentConfig();
-    $currentConfig->setApiKeyForbiddenMethods(['pwg.users.setInfo']);
+    $currentConfig->apiKeyForbiddenMethods = ['pwg.users.setInfo'];
     $server = new PwgServer(new EventDispatcher(), pwgServerTestAccessControl(true), new ApiKeyRequestFlag(), $currentConfig);
 
     try {

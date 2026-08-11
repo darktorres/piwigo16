@@ -1664,8 +1664,8 @@ test('get_graphics_library_label formats the imagick-extension library and versi
     // CLI is installed here). Same "force ext_imagick CLI unavailable"
     // technique as get_graphics_library()'s own sibling test.
     Kernel::boot(Paths::fromRoot(sys_get_temp_dir()));
-    $original = CurrentConfigTestFactory::get()->extImagickDir();
-    CurrentConfigTestFactory::get()->setExtImagickDir('/totally/nonexistent/dir/');
+    $original = CurrentConfigTestFactory::get()->extImagickDir;
+    CurrentConfigTestFactory::get()->extImagickDir = '/totally/nonexistent/dir/';
 
     try {
         $label = PwgImage::get_graphics_library_label();
@@ -1680,7 +1680,7 @@ test('get_graphics_library_label formats the imagick-extension library and versi
             ->and($label)
             ->toMatch('/^ImageMagick ImageMagick \d+\.\d+\.\d+/');
     } finally {
-        CurrentConfigTestFactory::get()->setExtImagickDir($original);
+        CurrentConfigTestFactory::get()->extImagickDir = $original;
         Kernel::reset();
     }
 });

@@ -117,7 +117,7 @@ final class CurrentConfig
     /**
      * Enable the Piwigo web-service (API) endpoint.
      */
-    public private(set) bool $allowWebServices = true;
+    public bool $allowWebServices = true;
 
     // === alternative_pem_url ===
     /**

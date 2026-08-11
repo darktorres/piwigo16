@@ -6,6 +6,7 @@ use Nyholm\Psr7\ServerRequest;
 use Piwigo\Auth\AccessControl;
 use Piwigo\Auth\AccessLevelChecker;
 use Piwigo\Common\ValueObject\LangCode;
+use Piwigo\Common\ValueObject\ThemeId;
 use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Controller\VitalsController;
@@ -48,7 +49,7 @@ function vitalsTestAccessControl(): AccessControl
         username: null,
         email: null,
         language: LangCode::from('en_UK'),
-        theme: '',
+        theme: ThemeId::from('default'),
         status: UserStatus::Guest,
         enabledHigh: false,
     ));

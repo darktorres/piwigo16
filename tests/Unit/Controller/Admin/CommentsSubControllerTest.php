@@ -7,6 +7,7 @@ use Piwigo\Admin\CoreTabs;
 use Piwigo\Auth\AccessControl;
 use Piwigo\Auth\AccessLevelChecker;
 use Piwigo\Common\ValueObject\LangCode;
+use Piwigo\Common\ValueObject\ThemeId;
 use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Controller\Admin\CommentsSubController;
@@ -43,8 +44,8 @@ function commentsSubControllerTestRoot(): string
     $root = sys_get_temp_dir() . '/piwigo-comments-subcontroller-test-' . bin2hex(random_bytes(8)) . '/';
     mkdir($root, 0o777, true);
     Kernel::boot(Paths::fromRoot($root));
-    CurrentConfigTestFactory::get()->setDataLocation('data/');
-    CurrentConfigTestFactory::get()->setDataDirChecked('1');
+    CurrentConfigTestFactory::get()->dataLocation = 'data/';
+    CurrentConfigTestFactory::get()->dataDirChecked = '1';
 
     return $root;
 }
@@ -74,7 +75,7 @@ function commentsSubControllerTestAccessControl(): AccessControl
         username: null,
         email: null,
         language: LangCode::from('en_UK'),
-        theme: '',
+        theme: ThemeId::from('default'),
         status: UserStatus::Admin,
         enabledHigh: false,
     ));
@@ -89,7 +90,7 @@ function commentsSubControllerTestAccessControl(): AccessControl
 test('handle() delegates to CommentsPageRenderer::render() with every one of its own constructor deps', function (): void {
     $root = commentsSubControllerTestRoot();
     session_id(str_replace('.', '-', uniqid('comments-subcontroller-test-', true)));
-    CurrentConfigTestFactory::get()->setSecretKey('test-secret-key');
+    CurrentConfigTestFactory::get()->secretKey = 'test-secret-key';
 
     try {
         $template = TemplateTestFactory::build();

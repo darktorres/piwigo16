@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use Piwigo\Bootstrap\PageTail;
 use Piwigo\Common\ValueObject\LangCode;
+use Piwigo\Common\ValueObject\ThemeId;
 use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Config\ConfigEntry;
 use Piwigo\Config\ConfigService;
@@ -64,10 +65,10 @@ test('renderToString returns the real parsed footer output, with update-check an
     Kernel::boot(Paths::fromRoot($root));
 
     try {
-        CurrentConfigTestFactory::get()->setDataLocation('data/');
-        CurrentConfigTestFactory::get()->setDataDirChecked('1');
-        CurrentConfigTestFactory::get()->setUpdateNotifyCheckPeriod(0);
-        CurrentConfigTestFactory::get()->setSendPiwigoInfos(false);
+        CurrentConfigTestFactory::get()->dataLocation = 'data/';
+        CurrentConfigTestFactory::get()->dataDirChecked = '1';
+        CurrentConfigTestFactory::get()->updateNotifyCheckPeriod = 0;
+        CurrentConfigTestFactory::get()->sendPiwigoInfos = false;
 
         $currentLogger = Kernel::container()->get(CurrentLogger::class);
         if (! $currentLogger instanceof CurrentLogger) {
@@ -89,7 +90,7 @@ test('renderToString returns the real parsed footer output, with update-check an
             username: null,
             email: null,
             language: LangCode::from('en_UK'),
-            theme: '',
+            theme: ThemeId::from('default'),
             status: UserStatus::Guest,
             enabledHigh: false,
         ));

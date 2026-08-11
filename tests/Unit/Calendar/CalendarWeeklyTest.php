@@ -71,7 +71,7 @@ test('initialize sets date_field/date_field_dql to date_creation for any non-"po
 });
 
 test('initialize builds the Monday-first week/day SQL expressions when weekStartsOn is monday', function (): void {
-    CurrentConfigTestFactory::get()->setWeekStartsOn('monday');
+    CurrentConfigTestFactory::get()->weekStartsOn = 'monday';
     $calendar = calendarWeeklyTestSubject();
     $calendar->chronology_field = 'created';
 
@@ -82,7 +82,7 @@ test('initialize builds the Monday-first week/day SQL expressions when weekStart
 });
 
 test('initialize keeps the default Sunday-first week/day SQL expressions when weekStartsOn is not monday', function (): void {
-    CurrentConfigTestFactory::get()->setWeekStartsOn('sunday');
+    CurrentConfigTestFactory::get()->weekStartsOn = 'sunday';
     $calendar = calendarWeeklyTestSubject();
     $calendar->chronology_field = 'created';
 

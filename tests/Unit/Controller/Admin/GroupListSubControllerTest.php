@@ -5,6 +5,7 @@ declare(strict_types=1);
 use Nyholm\Psr7\ServerRequest;
 use Piwigo\Admin\CoreTabs;
 use Piwigo\Common\ValueObject\LangCode;
+use Piwigo\Common\ValueObject\ThemeId;
 use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Controller\Admin\GroupListSubController;
 use Piwigo\Core\Kernel;
@@ -44,8 +45,8 @@ function groupListSubControllerTestRoot(): string
     $root = sys_get_temp_dir() . '/piwigo-group-list-subcontroller-test-' . bin2hex(random_bytes(8)) . '/';
     mkdir($root, 0o777, true);
     Kernel::boot(Paths::fromRoot($root));
-    CurrentConfigTestFactory::get()->setDataLocation('data/');
-    CurrentConfigTestFactory::get()->setDataDirChecked('1');
+    CurrentConfigTestFactory::get()->dataLocation = 'data/';
+    CurrentConfigTestFactory::get()->dataDirChecked = '1';
 
     return $root;
 }
@@ -82,7 +83,7 @@ test('handle() denies access with a 401 for a logged-in non-admin user', functio
             username: null,
             email: null,
             language: LangCode::from('en_UK'),
-            theme: '',
+            theme: ThemeId::from('default'),
             status: UserStatus::Normal,
             enabledHigh: false,
         ));

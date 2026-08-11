@@ -321,7 +321,7 @@ test('countOrphans computes the real difference (not sum) between all images and
     CurrentConfigServiceTestFactory::get()->set(new ConfigService($configRepo, new EventDispatcher(), CurrentConfigTestFactory::get()));
 
     try {
-        expect(CurrentConfigTestFactory::get()->countOrphans())->toBeNull();
+        expect(CurrentConfigTestFactory::get()->countOrphans)->toBeNull();
         expect($repo->countImagesInCategories())
             ->toBeGreaterThan(0);
 
@@ -333,7 +333,7 @@ test('countOrphans computes the real difference (not sum) between all images and
             ->toBeGreaterThan(0)
             ->and($result)
             ->toBeLessThanOrEqual($totalImagesNearby)
-            ->and(CurrentConfigTestFactory::get()->countOrphans())->toBe($result);
+            ->and(CurrentConfigTestFactory::get()->countOrphans)->toBe($result);
     } finally {
         $conn->executeStatement('DELETE FROM config' . " WHERE param = 'count_orphans'");
         $conn->executeStatement('DELETE FROM images WHERE id = ?', [$orphanId]);

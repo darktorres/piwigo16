@@ -5,6 +5,7 @@ declare(strict_types=1);
 use Piwigo\Auth\AccessLevelChecker;
 use Piwigo\Comment\AvailableCommentsCounter;
 use Piwigo\Common\ValueObject\LangCode;
+use Piwigo\Common\ValueObject\ThemeId;
 use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Users\CurrentUser;
@@ -36,7 +37,7 @@ test('count returns the memoized value directly, without recomputing it', functi
         username: null,
         email: null,
         language: LangCode::from('en_UK'),
-        theme: '',
+        theme: ThemeId::from('default'),
         status: UserStatus::Admin,
         enabledHigh: false,
         rawAttributes: [
@@ -59,7 +60,7 @@ test('count computes a real value on a cache miss and memoizes it back onto the 
         username: null,
         email: null,
         language: LangCode::from('en_UK'),
-        theme: '',
+        theme: ThemeId::from('default'),
         status: UserStatus::Admin,
         enabledHigh: false,
     ));

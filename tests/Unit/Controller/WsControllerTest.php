@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use Nyholm\Psr7\ServerRequest;
 use Piwigo\Common\ValueObject\LangCode;
+use Piwigo\Common\ValueObject\ThemeId;
 use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Config\ConfigEntry;
 use Piwigo\Config\ConfigService;
@@ -33,7 +34,7 @@ use Piwigo\Users\UserStatus;
  * `checkStatus(AccessLevel::Free)` (the lowest access tier) never denies
  * any real user, and the real happy path always ends in a literal
  * `exit()` after `PwgServer::run()` (see the class's own docblock) --
- * genuinely un-testable normally. But `allowWebServices(false)` reaches
+ * genuinely un-testable normally. But `allowWebServices = false` reaches
  * `HtmlService::pageForbidden()` BEFORE either of those, which throws via
  * `RedirectService::redirectHtml()` -- the SAME expensive-looking
  * "wall" U3 originally deferred `PictureCoiSubController` for, now
@@ -70,11 +71,11 @@ test('invoke returns a real 403 forbidden page when web services are disabled', 
     Kernel::boot(Paths::fromRoot($root));
 
     try {
-        CurrentConfigTestFactory::get()->setDataLocation('data/');
-        CurrentConfigTestFactory::get()->setDataDirChecked('1');
-        CurrentConfigTestFactory::get()->setAllowWebServices(false);
-        CurrentConfigTestFactory::get()->setUpdateNotifyCheckPeriod(0);
-        CurrentConfigTestFactory::get()->setSendPiwigoInfos(false);
+        CurrentConfigTestFactory::get()->dataLocation = 'data/';
+        CurrentConfigTestFactory::get()->dataDirChecked = '1';
+        CurrentConfigTestFactory::get()->allowWebServices = false;
+        CurrentConfigTestFactory::get()->updateNotifyCheckPeriod = 0;
+        CurrentConfigTestFactory::get()->sendPiwigoInfos = false;
 
         $lang = Kernel::container()->get(Lang::class);
         if (! $lang instanceof Lang) {
@@ -104,7 +105,7 @@ test('invoke returns a real 403 forbidden page when web services are disabled', 
             username: null,
             email: null,
             language: LangCode::from('en_UK'),
-            theme: '',
+            theme: ThemeId::from('default'),
             status: UserStatus::Guest,
             enabledHigh: false,
         ));

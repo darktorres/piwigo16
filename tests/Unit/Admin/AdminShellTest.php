@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use Piwigo\Admin\AdminShell;
 use Piwigo\Common\ValueObject\LangCode;
+use Piwigo\Common\ValueObject\ThemeId;
 use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Paths;
@@ -58,8 +59,8 @@ test('runDispatch denies access with a 401 for a logged-in non-admin user', func
     Kernel::boot(Paths::fromRoot($root));
 
     try {
-        CurrentConfigTestFactory::get()->setDataLocation('data/');
-        CurrentConfigTestFactory::get()->setDataDirChecked('1');
+        CurrentConfigTestFactory::get()->dataLocation = 'data/';
+        CurrentConfigTestFactory::get()->dataDirChecked = '1';
 
         $template = TemplateTestFactory::build();
         CurrentTemplate::current()->set($template);
@@ -69,7 +70,7 @@ test('runDispatch denies access with a 401 for a logged-in non-admin user', func
             username: null,
             email: null,
             language: LangCode::from('en_UK'),
-            theme: '',
+            theme: ThemeId::from('default'),
             status: UserStatus::Normal,
             enabledHigh: false,
         ));

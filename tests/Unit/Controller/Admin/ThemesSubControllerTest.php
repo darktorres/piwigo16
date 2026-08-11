@@ -5,6 +5,7 @@ declare(strict_types=1);
 use Nyholm\Psr7\ServerRequest;
 use Piwigo\Admin\CoreTabs;
 use Piwigo\Common\ValueObject\LangCode;
+use Piwigo\Common\ValueObject\ThemeId;
 use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Controller\Admin\ThemesSubController;
 use Piwigo\Core\Kernel;
@@ -62,19 +63,19 @@ test('handle dispatches ?tab=standard_pages to the real standard-pages renderer'
     unset($_POST['submit'], $_FILES['std_pgs_logo']);
 
     try {
-        CurrentConfigTestFactory::get()->setDataLocation('data/');
-        CurrentConfigTestFactory::get()->setDataDirChecked('1');
+        CurrentConfigTestFactory::get()->dataLocation = 'data/';
+        CurrentConfigTestFactory::get()->dataDirChecked = '1';
 
         $emptyThemesDir = $root . 'empty-themes/';
         mkdir($emptyThemesDir, 0o777, true);
-        CurrentConfigTestFactory::get()->setThemesDir(rtrim($emptyThemesDir, '/'));
+        CurrentConfigTestFactory::get()->themesDir = rtrim($emptyThemesDir, '/');
 
         CurrentUserTestFactory::get()->set(new User(
             id: UserId::from(1),
             username: null,
             email: null,
             language: LangCode::from('en_UK'),
-            theme: '',
+            theme: ThemeId::from('default'),
             status: UserStatus::Webmaster,
             enabledHigh: false,
         ));

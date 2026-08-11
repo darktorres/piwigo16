@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use Piwigo\Auth\AccessLevelChecker;
 use Piwigo\Common\ValueObject\LangCode;
+use Piwigo\Common\ValueObject\ThemeId;
 use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\DeploymentPolicy;
@@ -75,16 +76,16 @@ test('render skips every real DB-backed block when no listener has registered an
     Kernel::boot(Paths::fromRoot($root));
 
     try {
-        CurrentConfigTestFactory::get()->setDataLocation('data/');
-        CurrentConfigTestFactory::get()->setDataDirChecked('1');
-        CurrentConfigTestFactory::get()->setMenubarFilterIcon(false);
+        CurrentConfigTestFactory::get()->dataLocation = 'data/';
+        CurrentConfigTestFactory::get()->dataDirChecked = '1';
+        CurrentConfigTestFactory::get()->menubarFilterIcon = false;
 
         CurrentUserTestFactory::get()->set(new User(
             id: UserId::from(2),
             username: null,
             email: null,
             language: LangCode::from('en_UK'),
-            theme: '',
+            theme: ThemeId::from('default'),
             status: UserStatus::Guest,
             enabledHigh: false,
         ));

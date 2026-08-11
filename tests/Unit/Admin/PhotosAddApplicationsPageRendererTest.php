@@ -36,8 +36,8 @@ function photosAddApplicationsTestRoot(): string
     // templates_c compile directory and (unless setDataDirChecked('1')
     // already skips it) hits a real DB write via CurrentConfigService --
     // same technique PictureCommentRendererTest.php already established.
-    CurrentConfigTestFactory::get()->setDataLocation('data/');
-    CurrentConfigTestFactory::get()->setDataDirChecked('1');
+    CurrentConfigTestFactory::get()->dataLocation = 'data/';
+    CurrentConfigTestFactory::get()->dataDirChecked = '1';
 
     return $root;
 }

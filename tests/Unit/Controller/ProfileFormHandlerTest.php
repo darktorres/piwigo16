@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Piwigo\Common\ValueObject\LangCode;
+use Piwigo\Common\ValueObject\ThemeId;
 use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Controller\ProfileFormHandler;
 use Piwigo\Core\Kernel;
@@ -48,8 +49,8 @@ function profileFormHandlerTestRoot(): string
     $root = sys_get_temp_dir() . '/piwigo-profile-form-handler-test-' . bin2hex(random_bytes(8)) . '/';
     mkdir($root, 0o777, true);
     Kernel::boot(Paths::fromRoot($root));
-    CurrentConfigTestFactory::get()->setDataLocation('data/');
-    CurrentConfigTestFactory::get()->setDataDirChecked('1');
+    CurrentConfigTestFactory::get()->dataLocation = 'data/';
+    CurrentConfigTestFactory::get()->dataDirChecked = '1';
 
     return $root;
 }
@@ -105,7 +106,7 @@ test('loadIntoTemplate populates the real profile form template context', functi
             username: null,
             email: null,
             language: LangCode::from('en_UK'),
-            theme: '',
+            theme: ThemeId::from('default'),
             status: UserStatus::Normal,
             enabledHigh: false,
         ));

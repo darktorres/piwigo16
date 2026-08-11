@@ -54,11 +54,10 @@ final readonly class SectionInitializer
         } else {
             // PHP auto-casts a purely-numeric query-string key (e.g. "?1")
             // to a real int array key -- a bare numeric token (no id-name
-            // suffix) crashed the original mysqli-based escaping call with
-            // a TypeError (?string required), found live via
-            // picture.php?1. Cast back to the string this variable was
-            // always meant to hold (see Request\SectionUrlRequest's own
-            // docblock).
+            // suffix) crashes the original mysqli-based escaping call with
+            // a TypeError (?string required) via picture.php?1. Cast back
+            // to the string this variable was always meant to hold (see
+            // Request\SectionUrlRequest's own docblock).
             $rewritten = SectionUrlRequest::fromGlobals()->firstGetKey;
 
             // the $_GET keys are not protected in include/common.inc.php, only the values
@@ -81,9 +80,6 @@ final readonly class SectionInitializer
         $image_id = null;
         $image_file = null;
 
-        // +-----------------------------------------------------------------------+
-        // |                             picture page                              |
-        // +-----------------------------------------------------------------------+
         // the first token must be the identifier for the picture
         if (PageFilterHelper::scriptBasename($this->currentConfig) === 'picture') {
             $token = $tokens[$next_token];

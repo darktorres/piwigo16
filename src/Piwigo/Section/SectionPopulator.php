@@ -260,9 +260,6 @@ final readonly class SectionPopulator
             $page_category = $page['category'];
         }
 
-        // +-----------------------------------------------------------------------+
-        // |                              category                                 |
-        // +-----------------------------------------------------------------------+
         if ($section === Section::Categories) {
             if (isset($page['combined_categories'])) {
                 /** @var list<array<string, mixed>> $combined_categories_for_title */
@@ -403,9 +400,6 @@ final readonly class SectionPopulator
         }
         // special sections
         else {
-            // +-----------------------------------------------------------------------+
-            // |                            tags section                               |
-            // +-----------------------------------------------------------------------+
             if ($section === Section::Tags) {
                 // parse_section_url() (functions_url.inc.php) always sets 'tags'
                 // alongside 'section' => 'tags'
@@ -417,8 +411,8 @@ final readonly class SectionPopulator
                     // referencing some unrelated $page['tags'] write elsewhere in
                     // the codebase -- but the real, original (pre-L10) behavior of
                     // *this* code path is find_tags()'s row shape (array with an
-                    // 'id' key, confirmed via `git log -p` on this file's prior
-                    // revision), so this is a real defensive check, not dead code.
+                    // 'id' key, per `git log -p` on this file's prior revision),
+                    // so this is a real defensive check, not dead code.
                     $tag_id = is_array($tag) ? ($tag['id'] ?? null) : null;
                     if (is_numeric($tag_id)) {
                         // same cross-file $page[...] false-narrowing as above --
@@ -450,11 +444,7 @@ final readonly class SectionPopulator
                         'items' => $items,
                     ]
                 );
-            }
-            // +-----------------------------------------------------------------------+
-            // |                           search section                              |
-            // +-----------------------------------------------------------------------+
-            elseif ($section === Section::Search) {
+            } elseif ($section === Section::Search) {
                 // parse_section_url() (functions_url.inc.php) always sets 'search'
                 // alongside 'section' => 'search'; 'super_order_by' is genuinely
                 // optional (SearchService::getSearchResults()'s 2nd param is ?bool)
@@ -481,11 +471,7 @@ final readonly class SectionPopulator
                                     . $this->lang->t('Search results') . '</a>',
                     ]
                 );
-            }
-            // +-----------------------------------------------------------------------+
-            // |                           favorite section                            |
-            // +-----------------------------------------------------------------------+
-            elseif ($section === Section::Favorites) {
+            } elseif ($section === Section::Favorites) {
                 $this->userService->checkUserFavorites();
 
                 $page = array_merge(
@@ -530,11 +516,7 @@ final readonly class SectionPopulator
                         ));
                     }
                 }
-            }
-            // +-----------------------------------------------------------------------+
-            // |                       recent pictures section                         |
-            // +-----------------------------------------------------------------------+
-            elseif ($section === Section::RecentPics) {
+            } elseif ($section === Section::RecentPics) {
                 if (! isset($page['super_order_by'])) {
                     $order_by = str_replace(
                         'ORDER BY ',
@@ -565,11 +547,7 @@ final readonly class SectionPopulator
                         ),
                     ]
                 );
-            }
-            // +-----------------------------------------------------------------------+
-            // |                 recently updated categories section                   |
-            // +-----------------------------------------------------------------------+
-            elseif ($section === Section::RecentCats) {
+            } elseif ($section === Section::RecentCats) {
                 $page = array_merge(
                     $page,
                     [
@@ -579,11 +557,7 @@ final readonly class SectionPopulator
                                     . $this->lang->t('Recent albums') . '</a>',
                     ]
                 );
-            }
-            // +-----------------------------------------------------------------------+
-            // |                        most visited section                           |
-            // +-----------------------------------------------------------------------+
-            elseif ($section === Section::MostVisited) {
+            } elseif ($section === Section::MostVisited) {
                 $page['super_order_by'] = true;
 
                 $top_number = $this->currentConfig->topNumber;
@@ -598,11 +572,7 @@ final readonly class SectionPopulator
                         'items' => $this->repo->findTopByHitsImageIds($forbiddenConditionDql, $top_number),
                     ]
                 );
-            }
-            // +-----------------------------------------------------------------------+
-            // |                          best rated section                           |
-            // +-----------------------------------------------------------------------+
-            elseif ($section === Section::BestRated) {
+            } elseif ($section === Section::BestRated) {
                 $page['super_order_by'] = true;
 
                 $top_number = $this->currentConfig->topNumber;
@@ -617,11 +587,7 @@ final readonly class SectionPopulator
                         'items' => $this->repo->findTopRatedImageIds($forbiddenConditionDql, $top_number),
                     ]
                 );
-            }
-            // +-----------------------------------------------------------------------+
-            // |                             list section                              |
-            // +-----------------------------------------------------------------------+
-            elseif ($section === Section::ListView) {
+            } elseif ($section === Section::ListView) {
                 // parse_section_url() (functions_url.inc.php) always sets 'list'
                 // (a dummy [Db\NoMatchSentinel::ID] or a real id list)
                 // alongside 'section' => 'list'
@@ -643,9 +609,6 @@ final readonly class SectionPopulator
             }
         }
 
-        // +-----------------------------------------------------------------------+
-        // |                             chronology                                |
-        // +-----------------------------------------------------------------------+
         if (isset($page['chronology_field'])) {
             unset($page['is_homepage']);
 

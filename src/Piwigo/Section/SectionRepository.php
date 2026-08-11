@@ -159,9 +159,9 @@ SELECT id
 
     /**
      * Image ids for the "most_visited" section, capped at $limit -- the
-     * caller's own `ORDER BY hit DESC, id DESC` is a hardcoded literal
-     * (confirmed via reading SectionPopulator.php's own real call site),
-     * not CurrentConfig::orderBy()'s genuinely open-ended admin-typed
+     * caller's own `ORDER BY hit DESC, id DESC` is a hardcoded literal,
+     * per SectionPopulator.php's own real call site, not
+     * CurrentConfig::orderBy()'s genuinely open-ended admin-typed
      * text, so this is real DQL.
      *
      * @return list<string>

@@ -572,9 +572,9 @@ final class ActivityRepository extends EntityRepository implements LoginActivity
                 userAgent: is_string($row['user_agent']) ? $row['user_agent'] : null,
                 counter: $row['counter'],
                 // MIN()/MAX() around a custom-Typed column don't get the
-                // column's own Type applied during hydration (confirmed
-                // live) -- these come back as plain driver strings, not
-                // SqlDateTime instances, unlike a bare `a.occuredOn` select.
+                // column's own Type applied during hydration -- these come
+                // back as plain driver strings, not SqlDateTime instances,
+                // unlike a bare `a.occuredOn` select.
                 firstEncounter: is_string($row['first_encounter']) ? $row['first_encounter'] : null,
                 lastEncounter: is_string($row['last_encounter']) ? $row['last_encounter'] : null,
             ),

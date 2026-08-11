@@ -88,7 +88,7 @@ lint-css:
 
 # ─── Static analysis ────────────────────────────────────────────────────
 
-# PHPStan + Psalm
+# PHPStan (composer.json's analyse script; Psalm isn't wired in here)
 analyse:
     composer analyse
 

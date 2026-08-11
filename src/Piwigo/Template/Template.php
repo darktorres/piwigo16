@@ -489,7 +489,8 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
                 $themeconf['parent'],
                 $path,
                 is_bool($load_parent_css) ? $load_parent_css : $load_css,
-                is_bool($load_parent_local_head) ? $load_parent_local_head : $load_local_head
+                is_bool($load_parent_local_head) ? $load_parent_local_head : $load_local_head,
+                $colorscheme
             );
         }
 

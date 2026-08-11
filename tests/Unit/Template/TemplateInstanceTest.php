@@ -189,6 +189,32 @@ function template_instance_test_assoc(mixed $value): array
 }
 
 /**
+ * append('themeconf', ..., merge: true) merges every call's keys into one
+ * flat template var (see "setTheme merges themeconf directly into the flat
+ * 'themeconf' template var" above) -- a later call's keys always win over
+ * an earlier one's for the same key, so the recursive parent call's own
+ * append is never independently observable through the final merged
+ * getThemeconf() state (the outer/child call's own append always happens
+ * last and always re-sets 'colorscheme'). Spying on each individual
+ * append('themeconf', ...) call is the only way to see what the parent
+ * call itself actually received.
+ */
+final class TemplateInstanceTestThemeconfAppendSpy extends Smarty
+{
+    /** @var list<array<string, mixed>> */
+    public array $themeconfAppends = [];
+
+    public function append($tpl_var, $value = null, $merge = false, $nocache = false)
+    {
+        if ($tpl_var === 'themeconf' && is_array($value)) {
+            $this->themeconfAppends[] = $value;
+        }
+
+        return parent::append($tpl_var, $value, $merge, $nocache);
+    }
+}
+
+/**
  * @return array<string, string|null>
  */
 function template_instance_test_save_server_keys(): array
@@ -931,6 +957,33 @@ test('setTheme preserves an already-set colorscheme instead of overwriting it', 
 
     expect($t->getThemeconf('colorscheme'))
         ->toBe('theme-defined');
+});
+
+test('setTheme forwards $colorscheme into its own recursive parent-theme call instead of always defaulting to "dark"', function (): void {
+    $root = rtrim(CurrentPathsTestFactory::get()->root, '/');
+    template_instance_test_write_themeconf($root . '/cs-child-theme', [
+        'marker' => 'child',
+        'parent' => 'cs-parent-theme',
+    ]);
+    template_instance_test_write_themeconf($root . '/cs-parent-theme', [
+        'marker' => 'parent',
+    ]);
+    $t = TemplateTestFactory::build();
+    $spy = new TemplateInstanceTestThemeconfAppendSpy();
+    $t->smarty = $spy;
+
+    $t->setTheme($root, 'cs-child-theme', 'template', true, true, 'caller-scheme');
+
+    // The parent's own recursive setTheme() call appends its themeconf
+    // entry before this (outer, child) call resumes and appends its own --
+    // same ordering as the "setTheme recurses into a distinct parent
+    // theme" themes[] test above.
+    expect($spy->themeconfAppends)
+        ->toHaveCount(2)
+        ->and($spy->themeconfAppends[0]['id'])->toBe('cs-parent-theme')
+        ->and($spy->themeconfAppends[0]['colorscheme'])->toBe('caller-scheme')
+        ->and($spy->themeconfAppends[1]['id'])->toBe('cs-child-theme')
+        ->and($spy->themeconfAppends[1]['colorscheme'])->toBe('caller-scheme');
 });
 
 test('setTheme merges themeconf directly into the flat "themeconf" template var, not nested under an index', function (): void {

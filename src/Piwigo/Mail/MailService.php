@@ -1100,7 +1100,7 @@ final class MailService implements MailerInterface
      * all, and can block the entire synchronous HTTP request indefinitely
      * if the local MTA hangs trying to actually deliver (rather than
      * failing fast) -- see BoundedSendmailTransport's own docblock for the
-     * confirmed reproduction. Swapped for that bounded replacement here.
+     * reproduction details. Swapped for that bounded replacement here.
      *
      * The `smtp://` DSN path (a real, explicitly admin-configured SMTP
      * host) is unaffected -- Symfony's own SocketStream already has an

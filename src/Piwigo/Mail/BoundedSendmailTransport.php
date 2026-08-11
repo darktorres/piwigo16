@@ -20,12 +20,12 @@ use Symfony\Component\Process\Process;
  * `sendmail_path` is configured, i.e. whenever MailService::mail() isn't
  * using an explicit SMTP host). That upstream transport shells out via a
  * raw proc_open() (Symfony\Component\Mailer\Transport\Smtp\Stream\
- * ProcessStream) with no timeout mechanism of any kind -- a real,
- * confirmed bug: a slow/unreachable local MTA (trying to actually deliver
- * over the network rather than failing fast) blocks fclose()/proc_close()
- * indefinitely, hanging the whole synchronous HTTP request (observed
- * >2 minutes before being killed in RegisterControllerTest.php, e.g. for
- * the default-checked "send password by mail" registration option).
+ * ProcessStream) with no timeout mechanism of any kind -- a real bug: a
+ * slow/unreachable local MTA (trying to actually deliver over the network
+ * rather than failing fast) blocks fclose()/proc_close() indefinitely,
+ * hanging the whole synchronous HTTP request (RegisterControllerTest.php
+ * recorded over 2 minutes before being killed, e.g. for the
+ * default-checked "send password by mail" registration option).
  *
  * Uses Symfony\Component\Process\Process instead, the same
  * setTimeout()-bounded subprocess mechanism already used by

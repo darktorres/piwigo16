@@ -139,8 +139,8 @@ final class ConfigRepository extends EntityRepository
      * "insert if absent" guarantee, and would either silently overwrite
      * the winning process's row or throw a real primary-key violation
      * depending on timing) -- a plain, portable `INSERT` via
-     * `Connection::insert()`, not `persist()`/`flush()`: empirically
-     * verified that a caught {@see \Doctrine\DBAL\Exception\UniqueConstraintViolationException}
+     * `Connection::insert()`, not `persist()`/`flush()`: a caught
+     * {@see \Doctrine\DBAL\Exception\UniqueConstraintViolationException}
      * from a failed `flush()` leaves the EntityManager permanently
      * closed (`Doctrine\ORM\UnitOfWork::commit()`'s own `finally` branch
      * calls `$em->close()` on any failure, and `clear()` cannot undo
@@ -156,10 +156,10 @@ final class ConfigRepository extends EntityRepository
      * caller, which still deals in a plain PHP string -- rather than
      * requiring every "raw" caller to pre-encode by hand the way
      * `upsert()`'s own callers must (see e.g. Menu\MenubarRenderer).
-     * Real bug found and fixed here: this repository's only real caller,
-     * Core\UniqueExecLock, wrote its plain `$exec_id . '-' . time()`
-     * token straight through, which passed silently when `value` was
-     * still a plain `text` column but is genuinely invalid JSON now.
+     * This repository's only real caller, Core\UniqueExecLock, writes
+     * its plain `$exec_id . '-' . time()` token straight through --
+     * valid when `value` was still a plain `text` column, but genuinely
+     * invalid JSON now.
      *
      * Stays on DBAL -- DQL has no INSERT support at all, and this
      * method's whole reason to exist is the atomic insert-if-absent

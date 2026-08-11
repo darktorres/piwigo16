@@ -384,10 +384,9 @@ final readonly class ConfigService
      * $param === null loads every row (the common case -- every real call
      * site except one); a non-null $param loads just that one row by
      * primary key. Narrower than the legacy load_conf_from_db()'s
-     * arbitrary raw-SQL $condition string -- grepping every real call
-     * site found exactly one non-trivial usage (a single-param equality
-     * filter), so a parameterized find() covers the real need without a
-     * string-interpolation surface.
+     * arbitrary raw-SQL $condition string -- every real call site needs
+     * at most a single-param equality filter, so a parameterized find()
+     * covers the real need without a string-interpolation surface.
      *
      * A row whose param isn't in KEY_TO_PROPERTY is a genuinely dynamic/
      * unschematized key (confGetParam()'s own real use case) -- silently

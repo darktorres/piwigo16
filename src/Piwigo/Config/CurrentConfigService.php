@@ -33,12 +33,13 @@ use LogicException;
  * real consumer of this exact check, reusing an already-`set()` instance
  * instead of re-resolving and reloading.
  *
- * `set()`'s real value beyond "who is the current instance" -- confirmed by
- * reading ~25 Integration tests that call it directly with a manually-built
- * `ConfigService` (`IntegrationTestCase::buildConfigRepository()`'s own,
- * deliberately separate `EntityManager`) -- is letting a whole subtree of
- * not-yet-container-booted or test-scoped callers see a specific instance,
- * the same job `CurrentTemplate::set()` already does for `Template`.
+ * `set()`'s real value beyond "who is the current instance" is letting
+ * a whole subtree of not-yet-container-booted or test-scoped callers
+ * see a specific instance, the same job `CurrentTemplate::set()`
+ * already does for `Template`. ~25 Integration tests rely on this,
+ * calling it directly with a manually-built `ConfigService`
+ * (`IntegrationTestCase::buildConfigRepository()`'s own, deliberately
+ * separate `EntityManager`).
  */
 final class CurrentConfigService
 {

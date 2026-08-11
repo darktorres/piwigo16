@@ -11,7 +11,7 @@ use Piwigo\Bootstrap\RequestBootstrap;
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
-// Page logic lives in Piwigo\Controller\ActionController (config/routes.php's
+// Page logic lives in Piwigo\Controller\ActionController (RouteDefinitions's
 // `/action.php` route); this file is pure bootstrap + dispatch.
 // session_cache_limiter('public') stays here (not in the controller) --
 // it must run before session_start(), which RequestBootstrap::
@@ -24,7 +24,6 @@ use Piwigo\Core\Paths;
 use Piwigo\Http\RequestFactory;
 use Piwigo\Http\ResponseEmitter;
 
-// ----------------------------------------------------------- include
 $paths = Paths::fromRoot(dirname(__DIR__));
 session_cache_limiter('public');
 RequestBootstrap::bootEntryPoint($paths);

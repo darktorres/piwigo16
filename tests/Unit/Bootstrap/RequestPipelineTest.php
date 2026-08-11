@@ -13,7 +13,7 @@ use Piwigo\Core\Paths;
  * its own (every real HTTP request through the app goes through it, but
  * nothing imports the class name directly in an existing test).
  *
- * A request path that matches no real route in config/routes.php is a
+ * A request path that matches no real route in RouteDefinitions is a
  * real, deterministic, cheap branch through the *entire* pipeline:
  * ExceptionHandlerMiddleware/SecurityHeadersMiddleware/SessionMiddleware/
  * ServerTimingMiddleware/SentryMiddleware all just wrap the response:
@@ -27,9 +27,9 @@ use Piwigo\Core\Paths;
  * `SessionMiddleware` really does call `session_start()` here (see
  * `SessionMiddlewareTest.php`'s own docblock -- it genuinely activates
  * under Pest's CLI runner, not a silent no-op), so this closes the
- * session in `finally` via `session_write_close()` -- confirmed live
- * that leaving it active breaks `CsrfServiceTest.php`'s own
- * `session_id()` calls whenever both files land in the same worker.
+ * session in `finally` via `session_write_close()` -- leaving it active
+ * breaks `CsrfServiceTest.php`'s own `session_id()` calls whenever both
+ * files land in the same worker.
  */
 function requestPipelineTestRrmdir(string $dir): void
 {

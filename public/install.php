@@ -33,15 +33,12 @@ Env::loadEnvFile($paths->root);
 
 InstallBootstrap::boot($paths);
 
-// ----------------------------------------------------- variable initialization
-
 $dbCredentials = InstallBootstrap::dbCredentials();
 
 // SessionBootstrap::register() carries the same internal PHPWG_INSTALLED
 // guard, so it stays a no-op at this point of a fresh install.
 SessionBootstrap::register();
 
-// ---------------------------------------------------------------- orchestration
 $wizard = new InstallWizard(
     RequestBootstrap::lang(),
     $paths,

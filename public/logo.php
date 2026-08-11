@@ -22,7 +22,6 @@ use Piwigo\Core\Paths;
 use Piwigo\Http\RequestFactory;
 use Piwigo\Http\ResponseEmitter;
 
-// ----------------------------------------------------------- include
 $paths = Paths::fromRoot(dirname(__DIR__));
 RequestBootstrap::bootEntryPoint($paths);
 

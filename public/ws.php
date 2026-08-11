@@ -12,7 +12,7 @@ use Piwigo\Bootstrap\RequestBootstrap;
 // +-----------------------------------------------------------------------+
 
 // Page logic lives in Piwigo\Controller\WsController
-// (config/routes.php's `/ws.php` route); this file is pure bootstrap +
+// (RouteDefinitions's `/ws.php` route); this file is pure bootstrap +
 // dispatch, matching every other controller's root file. The
 // ~100-method registration catalog is Piwigo\Ws\WsDefaultMethods.
 require __DIR__ . '/../vendor/autoload.php';
@@ -22,7 +22,6 @@ use Piwigo\Core\Paths;
 use Piwigo\Http\RequestFactory;
 use Piwigo\Http\ResponseEmitter;
 
-// ----------------------------------------------------------- include
 $paths = Paths::fromRoot(dirname(__DIR__));
 RequestBootstrap::bootEntryPoint($paths, isWs: true);
 

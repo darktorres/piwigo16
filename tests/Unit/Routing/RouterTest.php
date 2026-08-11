@@ -192,7 +192,7 @@ test('dispatch matches a wildcard-tail route pattern for both i.php URL styles',
     // where the query string never becomes part of the URI path Router
     // matches against, so the routable path is bare "/i.php") and
     // PATH_INFO ("/i.php/upload/...", where the routable path has a real
-    // tail). config/routes.php's own '/i.php{tail}' pattern (tail
+    // tail). RouteDefinitions's own '/i.php{tail}' pattern (tail
     // requirement '.*', default '') must match both shapes with the same
     // one route.
     $routes = new RouteCollection();
@@ -457,7 +457,7 @@ test('dispatch without MOUNT_DEPTH_ATTRIBUTE set does not match a route one dire
     // this fixes (a request for a nested entry point falls through to
     // NotFound rather than being silently misrouted, since this
     // RouteCollection has no "/popuphelp.php"-shaped route to accidentally
-    // match, unlike the real config/routes.php).
+    // match, unlike the real RouteDefinitions).
     $routes = new RouteCollection();
     $routes->add('admin_popuphelp', new Route('/admin/popuphelp.php', defaults: [
         '_controller' => 'AdminPopuphelpController',

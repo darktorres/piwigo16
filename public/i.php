@@ -12,7 +12,7 @@ use Piwigo\Bootstrap\RequestBootstrap;
 // +-----------------------------------------------------------------------+
 
 // Page logic lives in Piwigo\Controller\ImageDerivativeController
-// (config/routes.php's `/i.php{tail}` route); this file is pure
+// (RouteDefinitions's `/i.php{tail}` route); this file is pure
 // bootstrap + dispatch, same RequestBootstrap::bootEntryPoint() +
 // RequestPipeline::handle() shape as index.php.
 require __DIR__ . '/../vendor/autoload.php';

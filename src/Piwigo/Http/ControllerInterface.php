@@ -8,7 +8,7 @@ use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 
 /**
- * A frontend controller resolved by config/routes.php's `_controller`
+ * A frontend controller resolved by RouteDefinitions's `_controller`
  * default and invoked by Piwigo\Http\Middleware\ControllerInvokerMiddleware.
  * `__invoke()`, not PSR-15's `handle()` (Psr\Http\Server\
  * RequestHandlerInterface) -- deliberately distinct from a generic
@@ -30,8 +30,7 @@ use Psr\Http\Message\ServerRequestInterface;
  * implementations (Piwigo\Controller\AboutController etc.) stay in
  * L4Integration and depend downward on this interface instead, the same
  * direction every other cross-layer contract in this codebase already
- * uses (confirmed via a real DependsOnDisallowedLayer violation caught by
- * `deptrac analyse`, not assumed).
+ * uses.
  */
 interface ControllerInterface
 {

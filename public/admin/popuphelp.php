@@ -9,7 +9,7 @@ use Piwigo\Bootstrap\RequestBootstrap;
 // +-----------------------------------------------------------------------+
 
 // Page logic lives in Piwigo\Controller\Admin\AdminPopuphelpController
-// (config/routes.php's `/admin/popuphelp.php` route); this file is pure
+// (RouteDefinitions's `/admin/popuphelp.php` route); this file is pure
 // bootstrap + dispatch, matching every other controller's root-file shape.
 // This file sits two directories below the real repo root (public/admin/,
 // not just admin/) -- Paths::fromRoot(dirname(__DIR__, 2)) points at the

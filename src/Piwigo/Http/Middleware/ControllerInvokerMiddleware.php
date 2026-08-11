@@ -22,7 +22,7 @@ use Psr\Http\Server\RequestHandlerInterface;
  * container and invokes it, instead of calling $handler->handle() onward.
  *
  * Resolves Piwigo\Http\ControllerInterface (->__invoke()) -- real
- * Controllers exist for config/routes.php's
+ * Controllers exist for RouteDefinitions's
  * `_controller` defaults to reference.
  */
 final readonly class ControllerInvokerMiddleware implements MiddlewareInterface

@@ -59,8 +59,8 @@ function convert_lang_php_to_po(string $phpFile, string $locale, array $pairs): 
     // (datepicker.inc.tpl, photos_add_direct.tpl) to pick the right
     // jQuery UI/plupload locale JS file -- losing these would silently
     // break admin-panel JS localization for every non-English-code
-    // locale that has one. 'charset' is NOT preserved: verified zero
-    // real consumers anywhere outside the .lang.php files themselves.
+    // locale that has one. 'charset' is NOT preserved: no real consumers
+    // exist anywhere outside the .lang.php files themselves.
     $parent = is_string($lang_info['parent'] ?? null) ? $lang_info['parent'] : '';
     $jqueryCode = is_string($lang_info['jquery_code'] ?? null) ? $lang_info['jquery_code'] : '';
     $pluploadCode = is_string($lang_info['plupload_code'] ?? null) ? $lang_info['plupload_code'] : '';

@@ -13,7 +13,7 @@ use Piwigo\Bootstrap\RequestBootstrap;
 
 // The PSR-15 middleware pipeline (RequestPipeline::handle()) is live
 // traffic's actual dispatcher. Page logic lives in
-// Piwigo\Controller\AboutController (config/routes.php's `/about.php`
+// Piwigo\Controller\AboutController (RouteDefinitions's `/about.php`
 // route); this file is pure bootstrap + dispatch.
 require __DIR__ . '/../vendor/autoload.php';
 
@@ -22,7 +22,6 @@ use Piwigo\Core\Paths;
 use Piwigo\Http\RequestFactory;
 use Piwigo\Http\ResponseEmitter;
 
-// ----------------------------------------------------------- include
 $paths = Paths::fromRoot(dirname(__DIR__));
 RequestBootstrap::bootEntryPoint($paths);
 

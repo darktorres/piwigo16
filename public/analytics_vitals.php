@@ -14,7 +14,7 @@ use Piwigo\Bootstrap\RequestBootstrap;
 // web-vitals RUM beacon endpoint. Bare bootstrap + dispatch, same shape
 // as every other root controller file (e.g. about.php) — .htaccess
 // rewrites the clean /analytics/vitals URL
-// here; config/routes.php's own route matches that clean path, not this
+// here; RouteDefinitions's own route matches that clean path, not this
 // filename (Router::pathInfo() falls back to the raw REQUEST_URI once
 // SCRIPT_NAME stops being a prefix of it, same mechanism the bare "/" ->
 // index_directory_root route already relies on).
@@ -25,7 +25,6 @@ use Piwigo\Core\Paths;
 use Piwigo\Http\RequestFactory;
 use Piwigo\Http\ResponseEmitter;
 
-// ----------------------------------------------------------- include
 $paths = Paths::fromRoot(dirname(__DIR__));
 RequestBootstrap::bootEntryPoint($paths);
 

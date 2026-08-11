@@ -11,7 +11,7 @@ use Piwigo\Bootstrap\RequestBootstrap;
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 
-// Page logic lives in Piwigo\Controller\CommentsController (config/routes.php's
+// Page logic lives in Piwigo\Controller\CommentsController (RouteDefinitions's
 // `/comments.php` route); this file is pure bootstrap + dispatch.
 require __DIR__ . '/../vendor/autoload.php';
 
@@ -20,7 +20,6 @@ use Piwigo\Core\Paths;
 use Piwigo\Http\RequestFactory;
 use Piwigo\Http\ResponseEmitter;
 
-// ----------------------------------------------------------- include
 $paths = Paths::fromRoot(dirname(__DIR__));
 RequestBootstrap::bootEntryPoint($paths);
 

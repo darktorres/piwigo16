@@ -268,10 +268,8 @@ final class SrcImage
             // for originals, not just derivatives -- upload/ is
             // deliberately unreachable now, and a raw link here also
             // bypassed ActionController's own HD-access check (part=e)
-            // entirely, a real, separate bug found live (a real picture
-            // page's <img> was broken -- decoded+diffed the Visual
-            // Regression failure rather than dismissing it as a flake).
-            // ActionController (routed action.php, config/routes.php)
+            // entirely.
+            // ActionController (routed action.php, RouteDefinitions)
             // already re-checks both permission and HD-access on every
             // request; UrlService::getActionUrl() is the same helper
             // Admin\PictureModifyPageRenderer/BatchManagerUnitPageRenderer

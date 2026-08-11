@@ -173,8 +173,13 @@ the current, live (post-migration) schema.
   but not in worker mode (app kept booted in memory across requests).
 - **`bin/piwigo import:legacy`** — the one-way legacy-install migration
   tool described under "Key design decisions" below doesn't exist yet.
-- **opcache.preload** — `config/preload.php` exists and lists hot classes,
-  but isn't enabled in any shipped `php.ini`; this is left as a
+- **opcache.preload** — two artifacts exist: `config/preload.php` (an
+  early, ~19-class curated list) and `tools/opcache-preload.php` (a
+  later, broader script that preloads every `Piwigo\`-namespaced class
+  via Composer's classmap; measured admin.php ~30-45% faster, index.php
+  ~40-50% faster, identification.php ~65-68% faster). The broader script
+  is activated via a system-level `php.ini` kept outside this repo, so
+  neither is enabled in any shipped `php.ini` here; this is left as a
   deployment-time optimization, not something CI/local dev needs.
 - **Mobile/tablet device detection** — `Core\DeviceHelper::getDevice()`
   has a single writer, and it unconditionally sets `'desktop'` on every

@@ -8,9 +8,6 @@ declare(strict_types=1);
 // | For copyright and license information, please view the COPYING.txt    |
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
-// +-----------------------------------------------------------------------+
-// |                          define and include                           |
-// +-----------------------------------------------------------------------+
 use Doctrine\DBAL\ParameterType;
 use Piwigo\Auth\AccessLevelChecker;
 use Piwigo\Bootstrap\RedirectService;
@@ -37,14 +34,7 @@ require __DIR__ . '/../vendor/autoload.php';
 $paths = Paths::fromRoot(dirname(__DIR__));
 RequestBootstrap::bootEntryPoint($paths);
 
-// +-----------------------------------------------------------------------+
-// | Check Access and exit when user status is not ok                      |
-// +-----------------------------------------------------------------------+
 RequestBootstrap::accessControl()->checkStatus(AccessLevel::Guest);
-
-// +-----------------------------------------------------------------------+
-// |                     generate random element list                      |
-// +-----------------------------------------------------------------------+
 
 // top_number/nb_image_page are DB-backed smallint columns (default 15);
 // see include/config_default.inc.php and install/piwigo_structure-mysql.sql.
@@ -83,10 +73,6 @@ $types = [
     ...$condition->types,
     'limit' => ParameterType::INTEGER,
 ];
-
-// +-----------------------------------------------------------------------+
-// |                                redirect                               |
-// +-----------------------------------------------------------------------+
 
 // This file never calls RequestPipeline::handle() -- it's a raw
 // top-level script, so nothing else catches ResponseReadyException here.

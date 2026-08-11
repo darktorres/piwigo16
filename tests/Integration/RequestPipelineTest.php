@@ -16,17 +16,14 @@ use Psr\Http\Message\ResponseInterface;
 
 /**
  * Confirms RequestPipeline::handle() runs the real pipeline end-to-end.
- * config/routes.php now has real routes and every root frontend file
- * (about.php first, the rest incrementally) actually calls this for live
- * traffic -- an unmatched path (used throughout this file) still correctly
- * 404s, same as before any routes existed. A real registered route
- * (/about.php) is deliberately *not* exercised here: its controller needs
- * the full legacy include/common.inc.php bootstrap (real $template/$page/
- * $user/$conf globals, check_status()/l10n()/etc. free functions) that
- * only a real HTTP request through Apache -- or
- * RequestBootstrap::bootEntryPoint() itself -- provides; live-curl
- * verification against the real instance is
- * the actual end-to-end proof for that.
+ * RouteDefinitions has real routes, and every root frontend file actually
+ * calls this for live traffic -- an unmatched path (used throughout this
+ * file) still correctly 404s. A real registered route (/about.php) is
+ * deliberately *not* exercised here: its controller renders a real Smarty
+ * template against a real DB connection, heavier than this class's own
+ * fast/cheap coverage aims for -- tests/Browser/AboutControllerTest.php is
+ * the real end-to-end proof for that, driving the actual route through a
+ * real browser against the real app.
  *
  * handle()'s own local `$notFound` RequestHandlerInterface (its
  * `->handle()` body returning the literal 'Not Found' 404) is

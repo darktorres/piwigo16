@@ -109,10 +109,10 @@ foreach (array_slice($argv ?? [], 1) as $cliDumpPath) {
     // a portable dump -- Unserializer has no inverse step, so the loaded
     // ProcessedCodeCoverageData's own file keys are still relative at this
     // point. Restoring them to real absolute paths before merging is
-    // required: merging as-is silently DOUBLED the file count in this
-    // dataset (844 -> 1688, confirmed live) instead of unioning by path,
-    // because the relative keys never matched our own absolute-path-keyed
-    // accumulator's existing entries for the same files.
+    // required: merging as-is silently doubles the file count instead of
+    // unioning by path, because the relative keys never match our own
+    // absolute-path-keyed accumulator's existing entries for the same
+    // files.
     if ($loaded['basePath'] !== '') {
         // @phpstan-ignore method.internalClass
         foreach ($loaded['codeCoverage']->coveredFiles() as $relativeFile) {

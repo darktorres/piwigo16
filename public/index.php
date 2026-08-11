@@ -12,7 +12,7 @@ use Piwigo\Bootstrap\RequestBootstrap;
 // +-----------------------------------------------------------------------+
 
 // Page logic lives in Piwigo\Controller\GalleryController
-// (config/routes.php's `/index.php` route); this file is pure
+// (RouteDefinitions's `/index.php` route); this file is pure
 // bootstrap + dispatch, matching every other controller's root file.
 require __DIR__ . '/../vendor/autoload.php';
 
@@ -21,7 +21,6 @@ use Piwigo\Core\Paths;
 use Piwigo\Http\RequestFactory;
 use Piwigo\Http\ResponseEmitter;
 
-// ----------------------------------------------------------- include
 // Filesystem paths go through $paths; URL generation goes through
 // UrlService's own request-derived mount prefix -- no single constant or
 // string serves both purposes.

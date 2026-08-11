@@ -18,7 +18,6 @@ final class Css extends Combinable
      * @param string $path
      * @param string|false $version false disables version-based cache
      *   busting, mirroring Combinable::$version's own contract
-     * @param int $order
      */
     public function __construct(
         $id,

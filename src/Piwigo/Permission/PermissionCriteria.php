@@ -11,9 +11,9 @@ use Doctrine\DBAL\ParameterType;
  * Typed replacement for
  * {@see PermissionService::getSqlConditionFandFAsCondition()}'s own
  * `array<string,string> $conditionFields` (condition-type-name =>
- * column-name) + raw `SqlCondition` return -- confirmed by reading that
- * method's own full body, exactly 4 condition types, each independently
- * optional (null = no restriction on that dimension):
+ * column-name) + raw `SqlCondition` return -- that method's own full body
+ * has exactly 4 condition types, each independently optional (null = no
+ * restriction on that dimension):
  *
  * - `forbidden_categories` -> $forbiddenCategoryIds (NOT IN)
  * - `visible_categories` -> $visibleCategoryIds (IN)

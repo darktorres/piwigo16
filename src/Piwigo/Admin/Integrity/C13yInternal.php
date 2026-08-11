@@ -171,7 +171,7 @@ final class C13yInternal
             if (! array_key_exists($id, $status)) {
                 $c13y->add_anomaly(
                     $this->lang->t($data['l10n_non_existent']),
-                    'c13y_correction_user',
+                    $this->c13y_correction_user(...),
                     [
                         'id' => $id,
                         'action' => 'creation',
@@ -180,7 +180,7 @@ final class C13yInternal
             } elseif (($data['status'] ?? null) !== null and ($status[$id] ?? '') !== $data['status']) {
                 $c13y->add_anomaly(
                     $this->lang->t($data['l10n_bad_status']),
-                    'c13y_correction_user',
+                    $this->c13y_correction_user(...),
                     [
                         'id' => $id,
                         'action' => 'status',

@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 namespace Piwigo\Admin\Integrity;
 
+use Closure;
 use LogicException;
 use Piwigo\Admin\AdminUiHelper;
 use Piwigo\Admin\Integrity\Event\ListCheckIntegrity;
@@ -23,6 +24,7 @@ use Piwigo\Core\PageState;
 use Piwigo\Lang\Translator;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Template\CurrentTemplate;
+use ReflectionFunction;
 
 final class CheckIntegrity
 {
@@ -43,7 +45,7 @@ final class CheckIntegrity
      * @var list<array{
      *   id: string,
      *   anomaly: string,
-     *   correction_fct: ?string,
+     *   correction_fct: string|Closure|null,
      *   correction_fct_args: ?array<string, mixed>,
      *   correction_msg: ?string,
      *   is_callable: bool,
@@ -110,7 +112,7 @@ final class CheckIntegrity
             $not_corrected_count = 0;
 
             foreach ($this->retrieve_list as $i => $c13y) {
-                if (! in_array($c13y['correction_fct'], [null, '0', ''], true) and
+                if ($c13y['correction_fct'] !== null and
                     $c13y['is_callable'] and
                     in_array($c13y['id'], $c13y_selection, true)) {
                     $args = is_array($c13y['correction_fct_args']) ? $c13y['correction_fct_args'] : [];
@@ -230,7 +232,7 @@ final class CheckIntegrity
                         throw new LogicException('$c13y[\'ignored\'] cannot be false');
                     }
                 } else {
-                    if (! in_array($c13y['correction_fct'], [null, '0', ''], true)) {
+                    if ($c13y['correction_fct'] !== null) {
                         if (isset($c13y['corrected'])) {
                             if ((bool) $c13y['corrected']) {
                                 $c13y_display['show_correction_success_fct'] = true;
@@ -279,19 +281,31 @@ final class CheckIntegrity
     /**
      * Add anomaly data.
      *
-     * $correction_fct is a callable-string looked up dynamically (see
-     * is_callable() below) -- the sole in-tree caller
-     * (C13yInternal::c13y_user()) passes the literal string
-     * 'c13y_correction_user', which is actually a C13yInternal instance
-     * method, not a bare global function; is_callable() on that bare
-     * string is therefore false and this correction path silently never
-     * fires. Pre-existing; left unfixed here.
+     * $correction_fct accepts either a bare global function name (e.g.
+     * tests pass 'strlen', or a deliberately non-existent name to prove
+     * is_callable is false -- a plain string type never gets validated
+     * against real function existence, unlike PHP's own `callable` type,
+     * which would reject a bad name outright instead of gracefully
+     * recording an anomaly with a broken correction reference), or a
+     * bound instance method via first-class-callable syntax (e.g.
+     * C13yInternal::c13y_user() passes $this->c13y_correction_user(...)).
+     * The id hash is derived from a stable label (the plain string as-is,
+     * or the Closure's bare method name via Reflection) rather than the
+     * value itself, since a Closure can't be string-concatenated -- for
+     * every value already in use, the label equals the exact string that
+     * used to be concatenated directly, so existing ignore-list ids are
+     * unaffected.
      *
      * @param ?array<string, mixed> $correction_fct_args
      */
-    public function add_anomaly(string $anomaly, ?string $correction_fct = null, ?array $correction_fct_args = null, ?string $correction_msg = null): void
+    public function add_anomaly(string $anomaly, string|Closure|null $correction_fct = null, ?array $correction_fct_args = null, ?string $correction_msg = null): void
     {
-        $id = md5($anomaly . $correction_fct . serialize($correction_fct_args) . $correction_msg);
+        $correctionFctLabel = match (true) {
+            $correction_fct === null => null,
+            is_string($correction_fct) => $correction_fct,
+            default => (new ReflectionFunction($correction_fct))->getName(),
+        };
+        $id = md5($anomaly . $correctionFctLabel . serialize($correction_fct_args) . $correction_msg);
 
         if (in_array($id, array_map(strval(...), array_filter($this->ignore_list, is_scalar(...))), true)) {
             $this->build_ignore_list[] = $id;

@@ -62,7 +62,8 @@ final class CliBootstrap
      * Split out from run() so tests can inspect the registered command set
      * (tests/Unit/Bootstrap/CliBootstrapTest.php) without actually running
      * one -- ContainerDefinitionsTest.php's "every entry resolves" shape,
-     * applied to config/commands.php instead of config/container.php.
+     * applied to `CommandDefinitions::all()` instead of
+     * `config/container.php`'s own definitions array.
      *
      * `$paths` defaults to null (unlike `RequestBootstrap::bootEntryPoint()`,
      * which requires it) so existing tests calling `buildApplication()` with no

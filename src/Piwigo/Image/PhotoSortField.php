@@ -10,9 +10,8 @@ use Piwigo\Db\SqlDialect;
 /**
  * Typed replacement for {@see \Piwigo\Ws\WsHelper::stdImageSqlOrder()}'s
  * own regex+switch-based per-token sort-field parser -- the WS `order`
- * param's 8 real sortable tokens (confirmed by reading that method's own
- * full body), each optionally suffixed `asc`/`desc`(`ending`),
- * comma-chained.
+ * param's 8 real sortable tokens, each optionally suffixed
+ * `asc`/`desc`(`ending`), comma-chained.
  *
  * Deliberately scoped to `stdImageSqlOrder()`'s own replacement, not
  * `CurrentConfig::orderBy()`/`orderByInsideCategory()`'s own stored value
@@ -38,7 +37,7 @@ use Piwigo\Db\SqlDialect;
  * `parseOrderByFragment()`/`dqlOrderProperty()` are an opt-in translation
  * used only inside a repository method's own DQL conversion, with
  * `CurrentConfig::orderBy()`'s stored string and every caller's signature
- * left untouched -- confirmed against
+ * left untouched, matching
  * {@see \Piwigo\Image\ImageRepository::findIdsWithConditions()}'s own
  * docblock.
  *
@@ -132,8 +131,7 @@ enum PhotoSortField
     /**
      * Token match for `Controller\Admin\ConfigurationSubController.php`'s
      * own `$sort_fields` vocabulary -- the exact 8 field slugs it validates
-     * `order_by`/`order_by_inside_category` entries against (re-confirmed
-     * via a fresh read of its real save-handler code for this sub-item).
+     * `order_by`/`order_by_inside_category` entries against.
      * Deliberately separate from {@see fromToken()}: that one carries
      * `WsHelper::stdImageSqlOrder()`'s own legacy WS-param aliases
      * (`date_created`/`date_posted`/`rand`/`random`), none of which are

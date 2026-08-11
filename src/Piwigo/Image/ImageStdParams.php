@@ -98,7 +98,7 @@ final class ImageStdParams
      * Genuinely nullable, not just defensively typed: this property has no
      * default value, and is only ever populated by setWatermark()/
      * loadFromDb() -- a caller reaching save()/applyGlobal() before
-     * either of those ran (confirmed live, a real Integration test hits
+     * either of those ran (a real Integration test hits
      * this) sees a real null here, not just a theoretical one.
      */
     private ?WatermarkParams $watermark = null;

@@ -13,7 +13,7 @@ namespace Piwigo\Search;
  * positional `?` values, same convention `SearchService::
  * qsearchGetImages()`'s own `photo`/`file`/`author` cases already use for
  * `$fileLike`/`qsearchGetTextTokenSearchSql()` (unlike the numeric-range
- * scopes' `get_sql()`, which hand-embeds already-validated numeric
+ * scopes' `getSql()`, which hand-embeds already-validated numeric
  * literals directly and needs no params at all).
  *
  * Fixes a real latent gap, not just a type: the old `array<mixed>` payload

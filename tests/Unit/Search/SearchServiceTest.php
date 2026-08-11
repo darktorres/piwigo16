@@ -1220,7 +1220,7 @@ test('getQuickSearchResultsNoCache() widens a match via the default-language Inf
     // Every OTHER test in this file exercises the Inflector-loading
     // machinery only incidentally (via its own default 'en' language)
     // without ever observing that a generated variant actually reaches
-    // the query -- confirmed live: InflectorEn::get_variants('nature')
+    // the query -- confirmed live: InflectorEn::getVariants('nature')
     // really does return ['natures']. A throwaway 'natures' tag (only
     // reachable via the variant, not the literal search term 'nature')
     // proves qsearchGetTextTokenSearchSql()'s own `array_merge([term],

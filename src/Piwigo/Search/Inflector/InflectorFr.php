@@ -66,7 +66,7 @@ final class InflectorFr implements InflectorInterface
      * @return array<int, string>
      */
     #[Override]
-    public function get_variants(string $word): array
+    public function getVariants(string $word): array
     {
         $res = [];
 

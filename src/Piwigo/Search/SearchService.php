@@ -1123,7 +1123,7 @@ final readonly class SearchService
                 case 'width':
                 case 'height':
                     assert($scope !== null);
-                    $clauses[] = $scope->get_sql($scopeId, $token);
+                    $clauses[] = $scope->getSql($scopeId, $token);
 
                     break;
                 case 'ratio':
@@ -1134,42 +1134,42 @@ final readonly class SearchService
                     // `width*1.0` forces decimal-context arithmetic on
                     // both platforms; NULLIF(height, 0) guards a
                     // genuinely zero height the same way.
-                    $clauses[] = $scope->get_sql('width*1.0/NULLIF(height, 0)', $token);
+                    $clauses[] = $scope->getSql('width*1.0/NULLIF(height, 0)', $token);
 
                     break;
                 case 'size':
                     assert($scope !== null);
-                    $clauses[] = $scope->get_sql('width*height', $token);
+                    $clauses[] = $scope->getSql('width*height', $token);
 
                     break;
                 case 'hits':
                     assert($scope !== null);
-                    $clauses[] = $scope->get_sql('hit', $token);
+                    $clauses[] = $scope->getSql('hit', $token);
 
                     break;
                 case 'score':
                     assert($scope !== null);
-                    $clauses[] = $scope->get_sql('rating_score', $token);
+                    $clauses[] = $scope->getSql('rating_score', $token);
 
                     break;
                 case 'filesize':
                     assert($scope !== null);
-                    $clauses[] = $scope->get_sql('1024*filesize', $token);
+                    $clauses[] = $scope->getSql('1024*filesize', $token);
 
                     break;
                 case 'created':
                     assert($scope !== null);
-                    $clauses[] = $scope->get_sql('date_creation', $token);
+                    $clauses[] = $scope->getSql('date_creation', $token);
 
                     break;
                 case 'posted':
                     assert($scope !== null);
-                    $clauses[] = $scope->get_sql('date_available', $token);
+                    $clauses[] = $scope->getSql('date_available', $token);
 
                     break;
                 case 'id':
                     assert($scope !== null);
-                    $clauses[] = $scope->get_sql($scopeId, $token);
+                    $clauses[] = $scope->getSql($scopeId, $token);
 
                     break;
                 default:
@@ -1552,7 +1552,7 @@ final readonly class SearchService
                 if (strlen($token->term) > 2
                     && ($token->modifier & (QSingleToken::QST_QUOTED | QSingleToken::QST_WILDCARD)) === 0
                     && strcspn($token->term, '\'0123456789') === strlen($token->term)) {
-                    $token->variants = array_unique(array_diff($inflector->get_variants($token->term), [$token->term]));
+                    $token->variants = array_unique(array_diff($inflector->getVariants($token->term), [$token->term]));
                 }
             }
         }

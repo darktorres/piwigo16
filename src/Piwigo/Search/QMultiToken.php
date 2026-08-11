@@ -79,7 +79,7 @@ class QMultiToken implements Stringable
      * @param int $level the depth from root in the tree (number of opened and unclosed opening brackets)
      * @param QExpression $root the root expression tree, used to resolve scope names (e.g. 'tag:') at every recursion level
      */
-    protected function parse_expression(string $q, int &$qi, int $level, QExpression $root): void
+    protected function parseExpression(string $q, int &$qi, int $level, QExpression $root): void
     {
         $crt_token = '';
         $crt_modifier = 0;
@@ -95,10 +95,10 @@ class QMultiToken implements Stringable
                         }
                         $sub = new self();
                         $qi++;
-                        $sub->parse_expression($q, $qi, $level + 1, $root);
+                        $sub->parseExpression($q, $qi, $level + 1, $root);
                         $sub->modifier = $crt_modifier;
                         if (isset($crt_scope) && $crt_scope->is_text) {
-                            $sub->apply_scope($crt_scope); // eg. 'tag:(John OR Bill)'
+                            $sub->applyScope($crt_scope); // eg. 'tag:(John OR Bill)'
                         }
                         $this->tokens[] = $sub;
                         $crt_modifier = 0;
@@ -152,7 +152,7 @@ class QMultiToken implements Stringable
                         // else white space go on..
                         // no break
                     default:
-                        if (! (bool) $crt_scope || ! $crt_scope->process_char($ch, $crt_token)) {
+                        if (! (bool) $crt_scope || ! $crt_scope->processChar($ch, $crt_token)) {
                             if (in_array($ch, [' ', ',', '.', ';', '!', '?'], true)) { // white space
                                 $this->push($crt_token, $crt_modifier, $crt_scope);
                             } else {
@@ -235,7 +235,7 @@ class QMultiToken implements Stringable
      * Applies recursively a search scope to all sub single tokens. We allow 'tag:(John Bill)' but we cannot evaluate
      * scopes on expressions so we rewrite as '(tag:John tag:Bill)'
      */
-    private function apply_scope(QSearchScope $scope): void
+    private function applyScope(QSearchScope $scope): void
     {
         foreach ($this->tokens as $token) {
             if ($token instanceof QSingleToken) {
@@ -243,7 +243,7 @@ class QMultiToken implements Stringable
                     $token->scope = $scope;
                 }
             } else {
-                $token->apply_scope($scope);
+                $token->applyScope($scope);
             }
         }
     }
@@ -254,7 +254,7 @@ class QMultiToken implements Stringable
     }
 
     /* because evaluations occur left to right, we ensure that 'a OR b c d' is interpreted as 'a OR (b c d)' */
-    protected function check_operator_priority(): void
+    protected function checkOperatorPriority(): void
     {
         // Always overwritten at $i == 1 before being read at $i >= 2; the
         // initializer only keeps analysis sound.
@@ -262,7 +262,7 @@ class QMultiToken implements Stringable
         for ($i = 0; $i < count($this->tokens); $i++) {
             $token = $this->tokens[$i];
             if ($token instanceof self) {
-                $token->check_operator_priority();
+                $token->checkOperatorPriority();
             }
             if ($i === 1) {
                 $crt_prio = self::priority($token->modifier);
@@ -292,7 +292,7 @@ class QMultiToken implements Stringable
                 $sub->modifier = $sub->tokens[0]->modifier & QSingleToken::QST_OR;
                 $sub->tokens[0]->modifier &= ~QSingleToken::QST_OR;
 
-                $sub->check_operator_priority();
+                $sub->checkOperatorPriority();
             } else {
                 $crt_prio = $prio;
             }

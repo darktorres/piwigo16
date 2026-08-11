@@ -48,7 +48,7 @@ final class QSingleToken implements Stringable
 
     /**
      * Set by QSearchScope::parse() (or a subclass override) -- exactly one
-     * of the 2 concrete subclasses in this namespace. Each get_sql() still
+     * of the 2 concrete subclasses in this namespace. Each getSql() still
      * discriminates with an is_array()/isset() runtime check before
      * reading a key, but the declared type itself can be a real union of
      * both real writers' shapes; null until a real scope parses this

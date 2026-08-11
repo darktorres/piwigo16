@@ -36,20 +36,20 @@ class QSearchScope
         return true;
     }
 
-    public function process_char(string &$ch, string &$crt_token): bool
+    public function processChar(string &$ch, string &$crt_token): bool
     {
         return false;
     }
 
     /**
-     * Only QNumericRangeScope and QDateRangeScope support get_sql() —
+     * Only QNumericRangeScope and QDateRangeScope support getSql() —
      * qsearch_get_images() only calls it for scope ids backed by one of
      * those two subclasses (width/height/ratio/size/hits/score/filesize/id/
      * created/posted), never for a plain QSearchScope (tag/photo/file/
      * author, which have their own dedicated SQL building).
      */
-    public function get_sql(string $field, QSingleToken $token): string
+    public function getSql(string $field, QSingleToken $token): string
     {
-        throw new LogicException(static::class . ' does not support get_sql()');
+        throw new LogicException(static::class . ' does not support getSql()');
     }
 }

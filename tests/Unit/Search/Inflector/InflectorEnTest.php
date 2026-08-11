@@ -5,7 +5,7 @@ declare(strict_types=1);
 use Piwigo\Search\Inflector\InflectorEn;
 
 /**
- * Piwigo\Search\Inflector\InflectorEn::get_variants() -- the quick-search
+ * Piwigo\Search\Inflector\InflectorEn::getVariants() -- the quick-search
  * word-stemming engine (generates plural/singular/verb-form variants of a
  * search term so e.g. searching "cat" also matches "cats"). Had zero
  * dedicated coverage despite being pure, deterministic, side-effect-free
@@ -17,61 +17,61 @@ use Piwigo\Search\Inflector\InflectorEn;
 test('a regular singular word gets its "s"-suffixed plural as a variant', function (): void {
     $inflector = new InflectorEn();
 
-    expect($inflector->get_variants('cat'))
+    expect($inflector->getVariants('cat'))
         ->toBe(['cats']);
 });
 
 test('a regular plural word gets its singular as a variant', function (): void {
     $inflector = new InflectorEn();
 
-    expect($inflector->get_variants('cats'))
+    expect($inflector->getVariants('cats'))
         ->toBe(['cat']);
 });
 
 test('an irregular exception word maps directly to its counterpart', function (): void {
     $inflector = new InflectorEn();
 
-    expect($inflector->get_variants('man'))
+    expect($inflector->getVariants('man'))
         ->toBe(['men']);
-    expect($inflector->get_variants('men'))
+    expect($inflector->getVariants('men'))
         ->toBe(['man']);
 });
 
 test('an uncountable exception word (0 in the exceptions map) has no variants', function (): void {
     $inflector = new InflectorEn();
 
-    expect($inflector->get_variants('fish'))
+    expect($inflector->getVariants('fish'))
         ->toBe([]);
 });
 
 test('a consonant+y word pluralizes via the "ies" rule', function (): void {
     $inflector = new InflectorEn();
 
-    expect($inflector->get_variants('city'))
+    expect($inflector->getVariants('city'))
         ->toBe(['cities']);
-    expect($inflector->get_variants('cities'))
+    expect($inflector->getVariants('cities'))
         ->toBe(['city']);
 });
 
 test('an x/ch/ss/sh-ending word pluralizes via the "es" rule', function (): void {
     $inflector = new InflectorEn();
 
-    expect($inflector->get_variants('box'))
+    expect($inflector->getVariants('box'))
         ->toBe(['boxes']);
-    expect($inflector->get_variants('boxes'))
+    expect($inflector->getVariants('boxes'))
         ->toBe(['box']);
 });
 
 test('a hive/quiz/bus/octopus-style word uses its dedicated pluralization rule', function (): void {
     $inflector = new InflectorEn();
 
-    expect($inflector->get_variants('hive'))
+    expect($inflector->getVariants('hive'))
         ->toBe(['hives']);
-    expect($inflector->get_variants('quiz'))
+    expect($inflector->getVariants('quiz'))
         ->toBe(['quizzes']);
-    expect($inflector->get_variants('bus'))
+    expect($inflector->getVariants('bus'))
         ->toBe(['buses']);
-    expect($inflector->get_variants('octopus'))
+    expect($inflector->getVariants('octopus'))
         ->toBe(['octopuses']);
 });
 
@@ -80,7 +80,7 @@ test('a word over 4 chars ending in "er" also gets an -ing variant (er2ing branc
 
     // 'runner' (6 chars, > 4 and > 5) exercises both the pluralizer and
     // the er2ing branch: 'runners' (plural) then 'running' (er->ing).
-    expect($inflector->get_variants('runner'))
+    expect($inflector->getVariants('runner'))
         ->toBe(['runners', 'running']);
 });
 
@@ -90,7 +90,7 @@ test('a word over 5 chars ending in "ing" also gets an -er variant plus that var
     // 'running' (7 chars): the generic pluralizer fallback ('runnings'),
     // then ing2er ('runner'), then the pluralizer re-applied to that new
     // 'runner' variant ('runners').
-    expect($inflector->get_variants('running'))
+    expect($inflector->getVariants('running'))
         ->toBe(['runnings', 'runner', 'runners']);
 });
 
@@ -99,7 +99,7 @@ test('a short word (<=4 chars) never reaches the er2ing branch', function (): vo
 
     // 'car' (3 chars) only gets the plain pluralizer variant -- too short
     // for either the er2ing or ing2er branch to run at all.
-    expect($inflector->get_variants('car'))
+    expect($inflector->getVariants('car'))
         ->toBe(['cars']);
 });
 
@@ -120,17 +120,17 @@ test('a short word (<=4 chars) never reaches the er2ing branch', function (): vo
 test('further irregular exception words map to their counterparts', function (): void {
     $inflector = new InflectorEn();
 
-    expect($inflector->get_variants('virus'))
+    expect($inflector->getVariants('virus'))
         ->toBe(['viruses']);
-    expect($inflector->get_variants('person'))
+    expect($inflector->getVariants('person'))
         ->toBe(['people']);
-    expect($inflector->get_variants('woman'))
+    expect($inflector->getVariants('woman'))
         ->toBe(['women']);
-    expect($inflector->get_variants('child'))
+    expect($inflector->getVariants('child'))
         ->toBe(['children']);
-    expect($inflector->get_variants('mouse'))
+    expect($inflector->getVariants('mouse'))
         ->toBe(['mice']);
-    expect($inflector->get_variants('ox'))
+    expect($inflector->getVariants('ox'))
         ->toBe(['oxen']);
 });
 
@@ -144,13 +144,13 @@ test('the zombie/serie/movie exceptions need a case- or direction-sensitive witn
     // and becomes 'zomby' (not 'zombie'), and 'movies' becomes 'movy'.
     $inflector = new InflectorEn();
 
-    expect($inflector->get_variants('zombie'))
+    expect($inflector->getVariants('zombie'))
         ->toBe(['zombies']);
-    expect($inflector->get_variants('zombies'))
+    expect($inflector->getVariants('zombies'))
         ->toBe(['zombie']);
-    expect($inflector->get_variants('movie'))
+    expect($inflector->getVariants('movie'))
         ->toBe(['movies']);
-    expect($inflector->get_variants('movies'))
+    expect($inflector->getVariants('movies'))
         ->toBe(['movie']);
 
     // 'serie' is worse: its reverse key 'series' is unconditionally
@@ -163,8 +163,8 @@ test('the zombie/serie/movie exceptions need a case- or direction-sensitive witn
     // value verbatim ('series', lowercase) regardless of the input's
     // case, while the regex fallback preserves the input's original
     // case. Confirmed live: blanking the entry turns
-    // get_variants('SERIE') from ['series'] into ['SERIEs'].
-    expect($inflector->get_variants('SERIE'))
+    // getVariants('SERIE') from ['series'] into ['SERIEs'].
+    expect($inflector->getVariants('SERIE'))
         ->toBe(['series']);
 });
 
@@ -178,9 +178,9 @@ test('the move/moves exception is only provably exercised in the moves->move dir
     // by blanking the entry.
     $inflector = new InflectorEn();
 
-    expect($inflector->get_variants('move'))
+    expect($inflector->getVariants('move'))
         ->toBe(['moves']);
-    expect($inflector->get_variants('moves'))
+    expect($inflector->getVariants('moves'))
         ->toBe(['move']);
 });
 
@@ -188,16 +188,16 @@ test('further pluralizer rules produce their specific irregular plurals', functi
     $inflector = new InflectorEn();
 
     // '/^(ax|test)is$/' => '\1es' (line 70)
-    expect($inflector->get_variants('axis'))
+    expect($inflector->getVariants('axis'))
         ->toBe(['axes']);
     // '/(alias|status)$/' => '\1es' (line 71)
-    expect($inflector->get_variants('status'))
+    expect($inflector->getVariants('status'))
         ->toBe(['statuses']);
     // '/(buffal|tomat)o$/' => '\1oes' (line 73)
-    expect($inflector->get_variants('tomato'))
+    expect($inflector->getVariants('tomato'))
         ->toBe(['tomatoes']);
     // '/([ti])um$/' => '\1a' (line 74)
-    expect($inflector->get_variants('datum'))
+    expect($inflector->getVariants('datum'))
         ->toBe(['data']);
     // '/([ti])a$/' => '\1a' (line 75) is a self-mapping rule (its
     // replacement just reconstructs the same 2-char suffix it matched);
@@ -205,15 +205,15 @@ test('further pluralizer rules produce their specific irregular plurals', functi
     // proves it correctly suppresses the word (no wrongly-appended
     // 'medias') while the singularizer's own line 88 rule fires.
     // '/sis$/' => 'ses' (line 76)
-    expect($inflector->get_variants('thesis'))
+    expect($inflector->getVariants('thesis'))
         ->toBe(['theses']);
     // '/(?:([^f])fe|([lr])f)$/' => '\1\2ves' (line 77)
-    expect($inflector->get_variants('knife'))
+    expect($inflector->getVariants('knife'))
         ->toBe(['knives']);
     // '/(matr|vert|ind)(?:ix|ex)$/' => '\1ices' (line 81) -- without it,
     // 'index' would fall through to the generic (x|ch|ss|sh)$ rule and
     // wrongly become 'indexes' instead of 'indices'.
-    expect($inflector->get_variants('index'))
+    expect($inflector->getVariants('index'))
         ->toBe(['indices']);
 });
 
@@ -224,63 +224,63 @@ test('further singularizer rules produce their specific irregular singulars', fu
     // witness is that it suppresses the word so the generic '/s$/' =>
     // '' rule never wrongly strips a single 's' off ('glasses' would
     // otherwise also produce 'glas').
-    expect($inflector->get_variants('glass'))
+    expect($inflector->getVariants('glass'))
         ->toBe(['glasses']);
     // '/([ti])a$/' => '\1um' (line 88) -- shares its witness with the
     // pluralizer's line 75 self-mapping rule above: 'media' producing
     // exactly ['medium'] proves both that this rule fires and that the
     // pluralizer rule adds nothing.
-    expect($inflector->get_variants('media'))
+    expect($inflector->getVariants('media'))
         ->toBe(['medium']);
     // the big analy|ba|diagno|parenthe|progno|synop|the alternation
     // (line 89) -- 'analyses' also exercises this rule's own (a)naly
     // branch, but does NOT distinguish line 90 (see the documented
     // equivalence below the last test in this file).
-    expect($inflector->get_variants('diagnoses'))
+    expect($inflector->getVariants('diagnoses'))
         ->toBe(['diagnosis']);
-    expect($inflector->get_variants('analyses'))
+    expect($inflector->getVariants('analyses'))
         ->toBe(['analysis']);
     // '/([^f])ves$/' => '\1fe' (line 91)
-    expect($inflector->get_variants('caves'))
+    expect($inflector->getVariants('caves'))
         ->toBe(['cafe']);
     // '/(hive)s$/' => '\1' (line 92) -- without it, 'hives' would fall
     // through to the ([^f])ves$ rule and wrongly become 'hife'.
-    expect($inflector->get_variants('hives'))
+    expect($inflector->getVariants('hives'))
         ->toBe(['hive']);
     // '/(tive)s$/' => '\1' (line 93) -- without it, 'natives' would fall
     // through to ([^f])ves$ and wrongly become 'natife'.
-    expect($inflector->get_variants('natives'))
+    expect($inflector->getVariants('natives'))
         ->toBe(['native']);
     // '/([lr])ves$/' => '\1f' (line 94)
-    expect($inflector->get_variants('wolves'))
+    expect($inflector->getVariants('wolves'))
         ->toBe(['wolf']);
     // '/(o)es$/' => '\1' (line 98)
-    expect($inflector->get_variants('heroes'))
+    expect($inflector->getVariants('heroes'))
         ->toBe(['hero']);
     // '/(shoe)s$/' => '\1' (line 99) -- without it, 'shoes' would fall
     // through to (o)es$ and wrongly become 'sho'.
-    expect($inflector->get_variants('shoes'))
+    expect($inflector->getVariants('shoes'))
         ->toBe(['shoe']);
     // '/(cris|test)(is|es)$/' => '\1is' (line 100)
-    expect($inflector->get_variants('crises'))
+    expect($inflector->getVariants('crises'))
         ->toBe(['crisis']);
     // '/^(a)x[ie]s$/' => '\1xis' (line 101)
-    expect($inflector->get_variants('axes'))
+    expect($inflector->getVariants('axes'))
         ->toBe(['axis']);
     // '/(alias|status)(es)?$/' => '\1' (line 102)
-    expect($inflector->get_variants('aliases'))
+    expect($inflector->getVariants('aliases'))
         ->toBe(['alias']);
     // '/(vert|ind)ices$/' => '\1ex' (line 103)
-    expect($inflector->get_variants('indices'))
+    expect($inflector->getVariants('indices'))
         ->toBe(['index']);
     // '/(matr)ices$/' => '\1ix' (line 104)
-    expect($inflector->get_variants('matrices'))
+    expect($inflector->getVariants('matrices'))
         ->toBe(['matrix']);
     // '/(quiz)zes$/' => '\1' (line 105)
-    expect($inflector->get_variants('quizzes'))
+    expect($inflector->getVariants('quizzes'))
         ->toBe(['quiz']);
     // '/(database)s$/' => '\1' (line 106)
-    expect($inflector->get_variants('databases'))
+    expect($inflector->getVariants('databases'))
         ->toBe(['database']);
 });
 
@@ -292,7 +292,7 @@ test('er2ing correctly excludes be/draw/liv-ending words from the generic -ing r
     // the generic rule.
     $inflector = new InflectorEn();
 
-    expect($inflector->get_variants('liver'))
+    expect($inflector->getVariants('liver'))
         ->toBe(['livers']);
 });
 
@@ -302,17 +302,17 @@ test('ing2er correctly excludes snow/rain, th/hous/dur/spr/wedd, and liv/draw-en
     // '/(snow|rain)ing$/' => '\1' (line 116) drops the "ing" entirely,
     // keeping just the "snow"/"rain" prefix, instead of becoming
     // 'snower'.
-    expect($inflector->get_variants('snowing'))
+    expect($inflector->getVariants('snowing'))
         ->toBe(['snowings', 'snow', 'snows']);
     // '/(th|hous|dur|spr|wedd)ing$/' => '\0' (line 117) leaves the word
     // untouched instead of becoming 'wedder' -- also requires ing2er's
     // array_reverse (line 114) to check this exclusion before the
     // generic rule.
-    expect($inflector->get_variants('wedding'))
+    expect($inflector->getVariants('wedding'))
         ->toBe(['weddings']);
     // '/(liv|draw)ing$/' => '\0' (line 118) leaves the word untouched
     // instead of becoming 'drawer'.
-    expect($inflector->get_variants('drawing'))
+    expect($inflector->getVariants('drawing'))
         ->toBe(['drawings']);
 });
 
@@ -322,9 +322,9 @@ test('the exceptions lookup is case-insensitive via strtolower', function (): vo
     // of the exception table.
     $inflector = new InflectorEn();
 
-    expect($inflector->get_variants('MAN'))
+    expect($inflector->getVariants('MAN'))
         ->toBe(['men']);
-    expect($inflector->get_variants('Fish'))
+    expect($inflector->getVariants('Fish'))
         ->toBe([]);
 });
 
@@ -344,7 +344,7 @@ test('an exception value that IS an empty string is never pushed as a variant', 
     $exceptions['blankword'] = '';
     $property->setValue($inflector, $exceptions);
 
-    expect($inflector->get_variants('blankword'))
+    expect($inflector->getVariants('blankword'))
         ->toBe([]);
 });
 
@@ -353,10 +353,10 @@ test('strlen(word) > 4 is the exact threshold for entering the er2ing branch', f
 
     // 'over' is exactly 4 chars: too short to enter er2ing (line 143),
     // so no 'oving' variant is produced even though it ends in 'er'.
-    expect($inflector->get_variants('over'))
+    expect($inflector->getVariants('over'))
         ->toBe(['overs']);
     // 'diner' is exactly 5 chars: long enough to enter er2ing.
-    expect($inflector->get_variants('diner'))
+    expect($inflector->getVariants('diner'))
         ->toBe(['diners', 'dining']);
 });
 
@@ -365,10 +365,10 @@ test('strlen(word) > 5 is the exact threshold for entering the ing2er branch', f
 
     // 'swing' is exactly 5 chars: too short to enter ing2er (line 146),
     // so no 'swer' variant is produced even though it ends in 'ing'.
-    expect($inflector->get_variants('swing'))
+    expect($inflector->getVariants('swing'))
         ->toBe(['swings']);
     // 'boring' is exactly 6 chars: long enough to enter ing2er.
-    expect($inflector->get_variants('boring'))
+    expect($inflector->getVariants('boring'))
         ->toBe(['borings', 'borer', 'borers']);
 });
 
@@ -380,7 +380,7 @@ test('run() applies its regex rules case-insensitively', function (): void {
     // rather than 'BOXes'.
     $inflector = new InflectorEn();
 
-    expect($inflector->get_variants('BOX'))
+    expect($inflector->getVariants('BOX'))
         ->toBe(['BOXes']);
 });
 
@@ -392,7 +392,7 @@ test('run() applies its regex rules case-insensitively', function (): void {
  * - Line 64's DecrementInteger (`-1` instead of `0`) and IncrementInteger
  *   (`1` instead of `0`) on `$this->exceptions[$v] = 0;` (the
  *   uncountable-word marker): the only place this value is ever read is
- *   `is_string($rc)` in get_variants() -- the exact integer is never
+ *   `is_string($rc)` in getVariants() -- the exact integer is never
  *   compared, echoed, or otherwise used, so any int value makes
  *   is_string() false and produces the identical `[]` result. Confirmed
  *   live: the uncountable-word test ('fish' => []) still passes with

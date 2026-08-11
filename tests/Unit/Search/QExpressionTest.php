@@ -74,7 +74,7 @@ function qexprDateData(QSingleToken $token): array
 /**
  * Deliberately bypasses QSingleToken::$scope_data's declared type (via
  * Reflection, not a direct property write) to construct malformed/
- * missing-index shapes for testing get_sql()'s own defensive fallbacks --
+ * missing-index shapes for testing getSql()'s own defensive fallbacks --
  * these shapes are unreachable through real parsing, only through
  * QSearchScope::parse()'s own writers, which never produce them.
  */
@@ -241,10 +241,10 @@ test('QNumericRangeScope parses an explicit min..max range', function (): void {
     $token = $expr->stokens[0];
 
     expect(qexprRangeData($token)['range'])->toBe([100.0, 500.0]);
-    // get_sql() appends a trailing space per clause before implode(' AND
+    // getSql() appends a trailing space per clause before implode(' AND
     // ', ...) adds its own -- the double space between clauses is the
     // real, exact output, not a typo.
-    expect(qexprScope($token->scope)->get_sql('images.filesize', $token))
+    expect(qexprScope($token->scope)->getSql('images.filesize', $token))
         ->toBe('(images.filesize >=100  AND images.filesize <=500 )');
 });
 
@@ -254,7 +254,7 @@ test('QNumericRangeScope applies a strict lower bound for a > prefix', function 
 
     expect(qexprRangeData($token)['range'][0])->toBe(800.0);
     expect(qexprRangeData($token)['strict'][0])->toBe(1);
-    expect(qexprScope($token->scope)->get_sql('images.width', $token))
+    expect(qexprScope($token->scope)->getSql('images.width', $token))
         ->toBe('(images.width >800 )');
 });
 
@@ -283,7 +283,7 @@ test('QDateRangeScope parses a year-only value to a full-year range with time-of
 
     expect(qexprDateData($token)[0])->toBe('2024-1-1');
     expect(qexprDateData($token)[1])->toBe('2024-12-31 23:59:59');
-    expect(qexprScope($token->scope)->get_sql('images.date_available', $token))
+    expect(qexprScope($token->scope)->getSql('images.date_available', $token))
         ->toBe("(images.date_available >= '2024-1-1' AND images.date_available <= '2024-12-31 23:59:59')");
 });
 
@@ -298,7 +298,7 @@ test('QDateRangeScope parses an explicit date..date range', function (): void {
 test('QDateRangeScope rejects a non-date value and drops the token', function (): void {
     $expr = new QExpression('created:not-a-date', qexprScopes());
 
-    // parse() returning false makes QMultiToken::parse_expression() remove
+    // parse() returning false makes QMultiToken::parseExpression() remove
     // the token entirely -- confirmed by an otherwise-untouched sibling
     // word surviving alone.
     $expr2 = new QExpression('created:not-a-date hello', qexprScopes());
@@ -307,15 +307,15 @@ test('QDateRangeScope rejects a non-date value and drops the token', function ()
     expect($expr2->stokens[0]->term)->toBe('hello');
 });
 
-test('a plain QSearchScope throws on get_sql (only range scopes support it)', function (): void {
+test('a plain QSearchScope throws on getSql (only range scopes support it)', function (): void {
     $expr = new QExpression('tag:sunset', qexprScopes());
     $token = $expr->stokens[0];
     $scope = qexprScope($token->scope);
 
     // exact message text (not just the exception class) pins the
-    // static::class . ' does not support get_sql()' concatenation order.
-    expect(fn () => $scope->get_sql('images.tag', $token))
-        ->toThrow(LogicException::class, 'Piwigo\Search\QSearchScope does not support get_sql()');
+    // static::class . ' does not support getSql()' concatenation order.
+    expect(fn () => $scope->getSql('images.tag', $token))
+        ->toThrow(LogicException::class, 'Piwigo\Search\QSearchScope does not support getSql()');
 });
 
 test('operator priority regroups "a OR b c" as "a OR (b c)"', function (): void {
@@ -336,7 +336,7 @@ test('operator priority regroups "a OR b c" as "a OR (b c)"', function (): void 
 
 test('operator priority regroups a 4-term "a OR b c d" so the whole AND-run joins the group', function (): void {
     // Distinct from the 3-term test above: the inner regroup loop
-    // (QMultiToken::check_operator_priority()'s own `for ($j = $i + 1; ...)`)
+    // (QMultiToken::checkOperatorPriority()'s own `for ($j = $i + 1; ...)`)
     // only actually iterates once there's a 4th term to pull in -- with
     // only 3 terms the loop's own condition is never true.
     $expr = new QExpression('a OR b c d', qexprScopes());
@@ -456,24 +456,24 @@ test('QDateRangeScope trailing wildcard sets the upper range only', function ():
     expect(qexprDateData($token)[1])->toBe('');
 });
 
-test('QDateRangeScope get_sql returns IS NOT NULL for an empty wildcarded nullable range', function (): void {
+test('QDateRangeScope getSql returns IS NOT NULL for an empty wildcarded nullable range', function (): void {
     $expr = new QExpression('created:*', qexprScopes());
     $token = $expr->stokens[0];
 
     // leading-wildcard-with-empty-term also exercises the WILDCARD_BEGIN
-    // parse() branch itself (range = ['', $str]) before get_sql() collapses
+    // parse() branch itself (range = ['', $str]) before getSql() collapses
     // both sides to an empty clause list.
     expect(qexprDateData($token))
         ->toBe(['', '']);
-    expect(qexprScope($token->scope)->get_sql('images.date_creation', $token))
+    expect(qexprScope($token->scope)->getSql('images.date_creation', $token))
         ->toBe('images.date_creation IS NOT NULL');
 });
 
-test('QDateRangeScope get_sql returns IS NULL for a plain empty nullable range', function (): void {
+test('QDateRangeScope getSql returns IS NULL for a plain empty nullable range', function (): void {
     $expr = new QExpression('created:', qexprScopes());
     $token = $expr->stokens[0];
 
-    expect(qexprScope($token->scope)->get_sql('images.date_creation', $token))
+    expect(qexprScope($token->scope)->getSql('images.date_creation', $token))
         ->toBe('images.date_creation IS NULL');
 });
 
@@ -523,7 +523,7 @@ test('QDateRangeScope::parse rejects a fully-empty range on a non-nullable scope
  *   default at a fresh key 3 instead of a fresh key 2 still appends it as
  *   the 3rd element in insertion order, producing the exact same joined
  *   string.
- * - Line 81's RemoveArrayItem (get_sql()'s `['', '']` non-array fallback,
+ * - Line 81's RemoveArrayItem (getSql()'s `['', '']` non-array fallback,
  *   shrunk to `['']`) is masked by the very next 2 lines, which read
  *   $date_range[0]/[1] through `?? ''` rather than direct indexing -- a
  *   missing array key is exactly what `??` is for, so the fallback's own
@@ -581,20 +581,20 @@ test('QDateRangeScope\'s non-nullable empty-range guard reads range[0], not rang
     expect(qexprDateData($expr->stokens[0]))->toBe(['2020-12-31 23:59:59', '']);
 });
 
-test('QDateRangeScope get_sql falls back to a fully-empty date-range shape when scope_data was never set', function (): void {
+test('QDateRangeScope getSql falls back to a fully-empty date-range shape when scope_data was never set', function (): void {
     // Constructed directly (unreachable through the tokenizer -- parse()
-    // always writes a well-formed scope_data before get_sql() is ever
-    // called against a real token) to pin get_sql()'s own defensive
+    // always writes a well-formed scope_data before getSql() is ever
+    // called against a real token) to pin getSql()'s own defensive
     // ['', ''] fallback: with scope_data left null, both elements must be
     // exactly '' or the clause list stops being empty.
     $scope = new QDateRangeScope('created', []);
     $token = new QSingleToken('junk', 0, $scope);
 
-    expect($scope->get_sql('images.date_creation', $token))
+    expect($scope->getSql('images.date_creation', $token))
         ->toBe('images.date_creation IS NULL');
 });
 
-test('QDateRangeScope get_sql falls back the lower date bound to empty when scope_data is missing index 0', function (): void {
+test('QDateRangeScope getSql falls back the lower date bound to empty when scope_data is missing index 0', function (): void {
     // Constructed directly -- a well-formed array missing only index 0
     // (unlike the fully-null case above) exercises the coalesce's own
     // fallback value on line 82 specifically.
@@ -604,18 +604,18 @@ test('QDateRangeScope get_sql falls back the lower date bound to empty when scop
         1 => '2020-06-30 23:59:59',
     ]);
 
-    expect($scope->get_sql('images.date_creation', $token))
+    expect($scope->getSql('images.date_creation', $token))
         ->toBe("(images.date_creation <= '2020-06-30 23:59:59')");
 });
 
-test('QDateRangeScope get_sql falls back the upper date bound to empty when scope_data is missing index 1', function (): void {
+test('QDateRangeScope getSql falls back the upper date bound to empty when scope_data is missing index 1', function (): void {
     $scope = new QDateRangeScope('created', []);
     $token = new QSingleToken('junk', 0, $scope);
     qexprSetScopeData($token, [
         0 => '2020-01-01',
     ]);
 
-    expect($scope->get_sql('images.date_creation', $token))
+    expect($scope->getSql('images.date_creation', $token))
         ->toBe("(images.date_creation >= '2020-01-01')");
 });
 
@@ -625,8 +625,8 @@ test('QNumericRangeScope applies a strict upper bound for a < prefix', function 
 
     expect(qexprRangeData($token)['range'])->toBe(['', 800.0]);
     expect(qexprRangeData($token)['strict'][1])->toBe(1);
-    // strict[1]=1 must suppress the '=' in get_sql()'s upper-bound clause.
-    expect(qexprScope($token->scope)->get_sql('images.width', $token))
+    // strict[1]=1 must suppress the '=' in getSql()'s upper-bound clause.
+    expect(qexprScope($token->scope)->getSql('images.width', $token))
         ->toBe('(images.width <800 )');
 });
 
@@ -683,7 +683,7 @@ test('QNumericRangeScope rounds a decimal k-suffixed value using its requested p
  * incl. every test in this file, suite still passed every time, mutation
  * reverted immediately after). Grouped by why:
  * - parse()'s `(bool)` casts guarding every `elseif`/`if` branch condition
- *   (lines 42, 44, 52, 54, 64, 80) and get_sql()'s own (line 119) are each
+ *   (lines 42, 44, 52, 54, 64, 80) and getSql()'s own (line 119) are each
  *   the sole operand of an `if`/`elseif`, which already performs the same
  *   truthy conversion.
  * - The '' literals at lines 37/40/43/45 (the one-sided '>'/'<'/wildcard
@@ -783,21 +783,21 @@ test('QNumericRangeScope skips upper-bound rounding when the requested precision
     expect(qexprRangeData($token)['range'][1])->toBe(6500.0);
 });
 
-test('QNumericRangeScope get_sql falls back to a fully-empty range/strict shape when scope_data was never set', function (): void {
+test('QNumericRangeScope getSql falls back to a fully-empty range/strict shape when scope_data was never set', function (): void {
     // Constructed directly (unreachable through the tokenizer -- parse()
-    // always writes a well-formed scope_data before get_sql() is ever
-    // called against a real token) to pin get_sql()'s own defensive
+    // always writes a well-formed scope_data before getSql() is ever
+    // called against a real token) to pin getSql()'s own defensive
     // ['', ''] / [0, 0] fallback literals: with scope_data left null, both
     // fallback arrays must be exactly right or the clause list stops
     // being empty.
     $scope = new QNumericRangeScope('width', []);
     $token = new QSingleToken('junk', 0, $scope);
 
-    expect($scope->get_sql('images.width', $token))
+    expect($scope->getSql('images.width', $token))
         ->toBe('images.width IS NULL');
 });
 
-test('QNumericRangeScope get_sql only trusts scope_data[\'range\'] when it is itself an array', function (): void {
+test('QNumericRangeScope getSql only trusts scope_data[\'range\'] when it is itself an array', function (): void {
     // Constructed directly -- pins is_array($scope_data) && is_array(...)
     // as an AND: a non-array 'range' value must fall back to ['', ''],
     // not be indexed into directly.
@@ -808,11 +808,11 @@ test('QNumericRangeScope get_sql only trusts scope_data[\'range\'] when it is it
         'strict' => [0, 0],
     ]);
 
-    expect($scope->get_sql('images.width', $token))
+    expect($scope->getSql('images.width', $token))
         ->toBe('images.width IS NULL');
 });
 
-test('QNumericRangeScope get_sql only trusts scope_data[\'strict\'] when it is itself an array, reading index 0', function (): void {
+test('QNumericRangeScope getSql only trusts scope_data[\'strict\'] when it is itself an array, reading index 0', function (): void {
     // Constructed directly -- a valid 'range' but a non-array 'strict'
     // must fall back to [0, 0], and this also exercises the fallback's
     // own first element (a malformed fallback missing/wrong at index 0
@@ -824,11 +824,11 @@ test('QNumericRangeScope get_sql only trusts scope_data[\'strict\'] when it is i
         'strict' => 'oops',
     ]);
 
-    expect($scope->get_sql('images.width', $token))
+    expect($scope->getSql('images.width', $token))
         ->toBe('(images.width >=800 )');
 });
 
-test('QNumericRangeScope get_sql strict fallback is correct at index 1 too', function (): void {
+test('QNumericRangeScope getSql strict fallback is correct at index 1 too', function (): void {
     // Same as above but exercising the fallback's second element via the
     // upper-bound clause -- a malformed fallback missing/wrong at index 1
     // would flip the '=' sign (or fail outright) here instead.
@@ -839,11 +839,11 @@ test('QNumericRangeScope get_sql strict fallback is correct at index 1 too', fun
         'strict' => null,
     ]);
 
-    expect($scope->get_sql('images.width', $token))
+    expect($scope->getSql('images.width', $token))
         ->toBe('(images.width <=800 )');
 });
 
-test('QNumericRangeScope get_sql reads strict[1], not strict[0], for the upper-bound clause', function (): void {
+test('QNumericRangeScope getSql reads strict[1], not strict[0], for the upper-bound clause', function (): void {
     // Constructed directly -- the real tokenizer/parse() never produces an
     // asymmetric strict pair together with both range bounds present at
     // once (an explicit '..' range or a bare value always yields
@@ -857,7 +857,7 @@ test('QNumericRangeScope get_sql reads strict[1], not strict[0], for the upper-b
         'strict' => [0, 1],
     ];
 
-    expect($scope->get_sql('images.width', $token))
+    expect($scope->getSql('images.width', $token))
         ->toBe('(images.width >=100  AND images.width <800 )');
 });
 
@@ -872,19 +872,19 @@ test('QNumericRangeScope rejects a non-numeric value on a non-nullable scope and
     expect($expr->stokens[0]->term)->toBe('hello');
 });
 
-test('QNumericRangeScope get_sql returns IS NULL for a plain empty nullable range', function (): void {
+test('QNumericRangeScope getSql returns IS NULL for a plain empty nullable range', function (): void {
     $expr = new QExpression('score:', qexprScopes());
     $token = $expr->stokens[0];
 
-    expect(qexprScope($token->scope)->get_sql('images.rating_score', $token))
+    expect(qexprScope($token->scope)->getSql('images.rating_score', $token))
         ->toBe('images.rating_score IS NULL');
 });
 
-test('QNumericRangeScope get_sql returns IS NOT NULL for an empty wildcarded nullable range', function (): void {
+test('QNumericRangeScope getSql returns IS NOT NULL for an empty wildcarded nullable range', function (): void {
     $expr = new QExpression('score:*', qexprScopes());
     $token = $expr->stokens[0];
 
-    expect(qexprScope($token->scope)->get_sql('images.rating_score', $token))
+    expect(qexprScope($token->scope)->getSql('images.rating_score', $token))
         ->toBe('images.rating_score IS NOT NULL');
 });
 
@@ -969,7 +969,7 @@ test('an empty parenthesized group is dropped entirely', function (): void {
 
 test('a scope alias is stored lowercased regardless of its declared casing', function (): void {
     // QExpression::__construct() indexes $this->scopes by strtolower($alias),
-    // but the tokenizer (QMultiToken::parse_expression()'s `case ':'`) also
+    // but the tokenizer (QMultiToken::parseExpression()'s `case ':'`) also
     // looks up strtolower($crt_token) -- so a non-lowercased stored alias
     // would never match a real query, which always arrives lowercased at
     // the lookup site.
@@ -982,7 +982,7 @@ test('a scope alias is stored lowercased regardless of its declared casing', fun
 });
 
 test('a stray closing paren at the top level is ignored, parsing continues past it', function (): void {
-    // QExpression::__construct() calls parse_expression() with a hardcoded
+    // QExpression::__construct() calls parseExpression() with a hardcoded
     // level of 0 -- only level > 0 (i.e. inside a real opened paren) makes
     // ')' stop the parse. At level 0 a ')' is simply consumed and parsing
     // carries on, so both words survive as separate tokens.
@@ -996,7 +996,7 @@ test('a stray closing paren at the top level is ignored, parsing continues past 
 
 /**
  * 2 more of QExpression's mutation-sweep sites are proven equivalent:
- * the literal `0` passed as build_single_tokens()'s initial $this_is_not
+ * the literal `0` passed as buildSingleTokens()'s initial $this_is_not
  * (line 48) is immediately XORed then masked with `& QST_NOT` (0x02) at
  * line 55 -- XORing with 1 instead of 0 only ever flips bit 0x01 (QUOTED),
  * which the following `& QST_NOT` mask discards regardless, so the 2
@@ -1008,8 +1008,8 @@ test('a stray closing paren at the top level is ignored, parsing continues past 
  * turn and the full suite (including the tests below) still passed both
  * times; each mutation was reverted immediately after.
  */
-test('a plain unnegated word never picks up QST_NOT via build_single_tokens', function (): void {
-    // build_single_tokens()'s $crt_is_not computation ANDs the XOR result
+test('a plain unnegated word never picks up QST_NOT via buildSingleTokens', function (): void {
+    // buildSingleTokens()'s $crt_is_not computation ANDs the XOR result
     // with QST_NOT -- pins that AND (not OR) so an all-zero modifier stays
     // falsy instead of being forced truthy by a stray OR with QST_NOT.
     $expr = new QExpression('hello', qexprScopes());
@@ -1018,7 +1018,7 @@ test('a plain unnegated word never picks up QST_NOT via build_single_tokens', fu
 });
 
 test('a negated wildcard-end token keeps both its NOT and WILDCARD_END bits in stoken_modifiers', function (): void {
-    // build_single_tokens()'s truthy-$crt_is_not branch ORs QST_NOT into a
+    // buildSingleTokens()'s truthy-$crt_is_not branch ORs QST_NOT into a
     // copy of the token's full modifier -- pins the OR (not AND), which
     // would otherwise wipe every other bit (here QST_WILDCARD_END) off the
     // stored stoken_modifiers entry.
@@ -1333,7 +1333,7 @@ test('a sub-expression\'s QST_BREAK marking preserves the first token\'s other e
     expect($first->modifier & QSingleToken::QST_BREAK)->toBe(QSingleToken::QST_BREAK);
 });
 
-test('check_operator_priority recurses into an already-nested sub-expression to regroup it too', function (): void {
+test('checkOperatorPriority recurses into an already-nested sub-expression to regroup it too', function (): void {
     // Lines 261-262: without this recursive descent (however it's
     // suppressed -- skipped index, disabled instanceof check, or a
     // removed call), a parenthesized group's OWN internal operator
@@ -1416,8 +1416,8 @@ test('regrouping into a sub-expression transfers only the OR bit from the first 
     expect($first->modifier & QSingleToken::QST_NOT)->toBe(QSingleToken::QST_NOT);
 });
 
-test('a freshly regrouped sub-expression recurses check_operator_priority into an element swept up from a nested group', function (): void {
-    // Line 292's `$sub->check_operator_priority();` -- the parenthesized
+test('a freshly regrouped sub-expression recurses checkOperatorPriority into an element swept up from a nested group', function (): void {
+    // Line 292's `$sub->checkOperatorPriority();` -- the parenthesized
     // group here gets swept into the (b, c, group) run by the OUTER
     // scan's inner loop before the outer loop itself ever visits that
     // index directly, so its own internal 'x OR y z' regrouping ONLY
@@ -1467,7 +1467,7 @@ test('a freshly regrouped sub-expression recurses check_operator_priority into a
  *   Since an OR-flagged modifier's priority stays strictly less than a
  *   non-OR modifier's priority under both substitutions (-1 < 1, and
  *   0 < 2, same as the real 0 < 1), every comparison in
- *   check_operator_priority() resolves identically either way. (The
+ *   checkOperatorPriority() resolves identically either way. (The
  *   *other* two possible perturbations of this same ternary -- collapsing
  *   both branches to equal values, which WOULD break that ordering -- are
  *   real bugs already caught by the "regroups" tests above, not among

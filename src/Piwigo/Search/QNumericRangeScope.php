@@ -98,7 +98,7 @@ final class QNumericRangeScope extends QSearchScope
     }
 
     #[Override]
-    public function get_sql(string $field, QSingleToken $token): string
+    public function getSql(string $field, QSingleToken $token): string
     {
         // QSingleToken::$scope_data's own declared type already covers this
         // shape; still discriminated at runtime since the property is a

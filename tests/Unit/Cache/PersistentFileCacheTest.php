@@ -12,7 +12,7 @@ use Piwigo\Tests\Support\CurrentPathsTestFactory;
 /**
  * PersistentFileCache is the only concrete subclass of the abstract
  * Piwigo\Cache\PersistentCache -- this exercises that abstract class's own
- * real logic (make_key()'s scalar/serialize()-fallback key building,
+ * real logic (makeKey()'s scalar/serialize()-fallback key building,
  * default_lifetime, instance_key) plus the abstract get()/set()/purge()
  * contract PersistentFileCache implements it against, through a real
  * temp-directory-backed filesystem, not a fake. Same isolated-temp-root
@@ -86,19 +86,19 @@ afterEach(function (): void {
     Kernel::reset();
 });
 
-test('make_key hashes a scalar array key joined by & plus the instance key', function (): void {
+test('makeKey hashes a scalar array key joined by & plus the instance key', function (): void {
     $cache = new PersistentFileCache(persistentFileCacheTestNewCurrentConfig(), CurrentPathsTestFactory::get());
 
-    $key = $cache->make_key(['category', 12, 'thumbnails']);
+    $key = $cache->makeKey(['category', 12, 'thumbnails']);
 
     expect($key)
         ->toBe(md5('category&12&thumbnails' . AppInfo::VERSION));
 });
 
-test('make_key falls back to serialize() for a non-scalar array part', function (): void {
+test('makeKey falls back to serialize() for a non-scalar array part', function (): void {
     $cache = new PersistentFileCache(persistentFileCacheTestNewCurrentConfig(), CurrentPathsTestFactory::get());
 
-    $key = $cache->make_key([
+    $key = $cache->makeKey([
         'category', [
             'nested' => true,
         ]]);
@@ -109,19 +109,19 @@ test('make_key falls back to serialize() for a non-scalar array part', function 
         ]) . AppInfo::VERSION));
 });
 
-test('make_key hashes a bare string key plus the instance key, with no & joining', function (): void {
+test('makeKey hashes a bare string key plus the instance key, with no & joining', function (): void {
     $cache = new PersistentFileCache(persistentFileCacheTestNewCurrentConfig(), CurrentPathsTestFactory::get());
 
-    $key = $cache->make_key('plain_string_key');
+    $key = $cache->makeKey('plain_string_key');
 
     expect($key)
         ->toBe(md5('plain_string_key' . AppInfo::VERSION));
 });
 
-test('make_key on an empty array key still hashes just the instance key', function (): void {
+test('makeKey on an empty array key still hashes just the instance key', function (): void {
     $cache = new PersistentFileCache(persistentFileCacheTestNewCurrentConfig(), CurrentPathsTestFactory::get());
 
-    $key = $cache->make_key([]);
+    $key = $cache->makeKey([]);
 
     expect($key)
         ->toBe(md5(AppInfo::VERSION));
@@ -131,7 +131,7 @@ test('get returns false and leaves $value untouched for a never-cached key', fun
     $cache = new PersistentFileCache(persistentFileCacheTestNewCurrentConfig(), CurrentPathsTestFactory::get());
     $value = 'sentinel-untouched';
 
-    $found = $cache->get($cache->make_key('missing'), $value);
+    $found = $cache->get($cache->makeKey('missing'), $value);
 
     expect($found)
         ->toBeFalse()
@@ -141,7 +141,7 @@ test('get returns false and leaves $value untouched for a never-cached key', fun
 
 test('set then get round-trips the exact cached value', function (): void {
     $cache = new PersistentFileCache(persistentFileCacheTestNewCurrentConfig(), CurrentPathsTestFactory::get());
-    $key = $cache->make_key(['round_trip']);
+    $key = $cache->makeKey(['round_trip']);
 
     $written = $cache->set($key, [
         'section' => 'best_rated',
@@ -171,7 +171,7 @@ test('set self-heals by creating the missing cache dir when the first write atte
     $dir = CurrentPathsTestFactory::get()->root . persistentFileCacheTestNewCurrentConfig()->dataLocation . 'cache/';
     rmdir($dir);
     $cache = new PersistentFileCache(persistentFileCacheTestNewCurrentConfig(), CurrentPathsTestFactory::get());
-    $key = $cache->make_key(['self-heal']);
+    $key = $cache->makeKey(['self-heal']);
 
     set_error_handler(static fn (): bool => true);
     try {
@@ -204,7 +204,7 @@ test('set returns false when both the initial write and the mkgetdir-then-retry 
     rmdir($dir);
     chmod($dataRoot, 0o555);
     $cache = new PersistentFileCache(persistentFileCacheTestNewCurrentConfig(), CurrentPathsTestFactory::get());
-    $key = $cache->make_key(['self-heal-fails']);
+    $key = $cache->makeKey(['self-heal-fails']);
 
     set_error_handler(static fn (): bool => true);
     try {
@@ -226,7 +226,7 @@ test('get returns false at the exact expiry boundary (expire === now), not just 
     // -- get()'s own internal time() call happens microseconds after
     // this one, on the same real clock tick in practice.
     $cache = new PersistentFileCache(persistentFileCacheTestNewCurrentConfig(), CurrentPathsTestFactory::get());
-    $key = $cache->make_key(['exact-boundary-expiry']);
+    $key = $cache->makeKey(['exact-boundary-expiry']);
     $dir = CurrentPathsTestFactory::get()->root . persistentFileCacheTestNewCurrentConfig()->dataLocation . 'cache/';
     file_put_contents($dir . $key . '.cache', serialize([
         'expire' => time(),
@@ -244,7 +244,7 @@ test('get returns false at the exact expiry boundary (expire === now), not just 
 
 test('get returns false for a value whose lifetime already expired', function (): void {
     $cache = new PersistentFileCache(persistentFileCacheTestNewCurrentConfig(), CurrentPathsTestFactory::get());
-    $key = $cache->make_key(['already_expired']);
+    $key = $cache->makeKey(['already_expired']);
 
     $cache->set($key, 'stale-payload', -10);
 
@@ -259,8 +259,8 @@ test('get returns false for a value whose lifetime already expired', function ()
 
 test('purge(true) deletes every cache file regardless of age', function (): void {
     $cache = new PersistentFileCache(persistentFileCacheTestNewCurrentConfig(), CurrentPathsTestFactory::get());
-    $freshKey = $cache->make_key(['fresh']);
-    $oldKey = $cache->make_key(['old']);
+    $freshKey = $cache->makeKey(['fresh']);
+    $oldKey = $cache->makeKey(['old']);
     $cache->set($freshKey, 'fresh-value');
     $cache->set($oldKey, 'old-value');
 
@@ -276,8 +276,8 @@ test('purge(true) deletes every cache file regardless of age', function (): void
 
 test('purge(false) deletes only files older than default_lifetime, keeping fresh ones', function (): void {
     $cache = new PersistentFileCache(persistentFileCacheTestNewCurrentConfig(), CurrentPathsTestFactory::get());
-    $freshKey = $cache->make_key(['fresh_partial_purge']);
-    $oldKey = $cache->make_key(['old_partial_purge']);
+    $freshKey = $cache->makeKey(['fresh_partial_purge']);
+    $oldKey = $cache->makeKey(['old_partial_purge']);
     $cache->set($freshKey, 'fresh-value');
     $cache->set($oldKey, 'old-value');
 
@@ -319,7 +319,7 @@ test('get returns false when the file is unreadable despite existing (a Unix dom
     // rather than throwing -- the one realistic, deterministic way to
     // reach this branch without a genuine TOCTOU race.
     $cache = new PersistentFileCache(persistentFileCacheTestNewCurrentConfig(), CurrentPathsTestFactory::get());
-    $key = $cache->make_key(['blocked-by-socket']);
+    $key = $cache->makeKey(['blocked-by-socket']);
     $dir = CurrentPathsTestFactory::get()->root . persistentFileCacheTestNewCurrentConfig()->dataLocation . 'cache/';
     $path = $dir . $key . '.cache';
 
@@ -355,7 +355,7 @@ test('get returns false when the file is unreadable despite existing (a Unix dom
 
 test('get returns false for a cache file whose payload is not an array at all', function (): void {
     $cache = new PersistentFileCache(persistentFileCacheTestNewCurrentConfig(), CurrentPathsTestFactory::get());
-    $key = $cache->make_key(['scalar-payload']);
+    $key = $cache->makeKey(['scalar-payload']);
     $dir = CurrentPathsTestFactory::get()->root . persistentFileCacheTestNewCurrentConfig()->dataLocation . 'cache/';
     file_put_contents($dir . $key . '.cache', serialize('just-a-scalar-string'));
 
@@ -370,7 +370,7 @@ test('get returns false for a cache file whose payload is not an array at all', 
 
 test('get returns false for a cache file whose payload array is missing the data key', function (): void {
     $cache = new PersistentFileCache(persistentFileCacheTestNewCurrentConfig(), CurrentPathsTestFactory::get());
-    $key = $cache->make_key(['missing-data-key']);
+    $key = $cache->makeKey(['missing-data-key']);
     $dir = CurrentPathsTestFactory::get()->root . persistentFileCacheTestNewCurrentConfig()->dataLocation . 'cache/';
     file_put_contents($dir . $key . '.cache', serialize([
         'expire' => time() + 3600,
@@ -387,7 +387,7 @@ test('get returns false for a cache file whose payload array is missing the data
 
 test('get returns false when the stored expire value is not an int', function (): void {
     $cache = new PersistentFileCache(persistentFileCacheTestNewCurrentConfig(), CurrentPathsTestFactory::get());
-    $key = $cache->make_key(['non-int-expire']);
+    $key = $cache->makeKey(['non-int-expire']);
     $dir = CurrentPathsTestFactory::get()->root . persistentFileCacheTestNewCurrentConfig()->dataLocation . 'cache/';
     file_put_contents($dir . $key . '.cache', serialize([
         'expire' => 'not-an-int',
@@ -414,14 +414,14 @@ test('set fires the opportunistic purge(false), not purge(true), on the exact 1-
     $cache = new PersistentFileCache(persistentFileCacheTestNewCurrentConfig(), CurrentPathsTestFactory::get());
     $dir = CurrentPathsTestFactory::get()->root . persistentFileCacheTestNewCurrentConfig()->dataLocation . 'cache/';
 
-    $staleKey = $cache->make_key(['exact-seed-stale']);
-    $freshKey = $cache->make_key(['exact-seed-fresh']);
+    $staleKey = $cache->makeKey(['exact-seed-stale']);
+    $freshKey = $cache->makeKey(['exact-seed-fresh']);
     $cache->set($staleKey, 'stale-value');
     $cache->set($freshKey, 'fresh-value');
     touch($dir . $staleKey . '.cache', time() - $cache->default_lifetime - 60);
 
     mt_srand(115);
-    $written = $cache->set($cache->make_key(['exact-seed-trigger']), 'trigger-value');
+    $written = $cache->set($cache->makeKey(['exact-seed-trigger']), 'trigger-value');
 
     expect($written)
         ->toBeTrue()
@@ -444,12 +444,12 @@ test('set does not fire the opportunistic purge on an mt_rand() draw one past th
     $cache = new PersistentFileCache(persistentFileCacheTestNewCurrentConfig(), CurrentPathsTestFactory::get());
     $dir = CurrentPathsTestFactory::get()->root . persistentFileCacheTestNewCurrentConfig()->dataLocation . 'cache/';
 
-    $staleKey = $cache->make_key(['off-by-one-seed-stale']);
+    $staleKey = $cache->makeKey(['off-by-one-seed-stale']);
     $cache->set($staleKey, 'stale-value');
     touch($dir . $staleKey . '.cache', time() - $cache->default_lifetime - 60);
 
     mt_srand(74);
-    $cache->set($cache->make_key(['off-by-one-seed-trigger']), 'trigger-value');
+    $cache->set($cache->makeKey(['off-by-one-seed-trigger']), 'trigger-value');
 
     expect(is_file($dir . $staleKey . '.cache'))->toBeTrue();
 });
@@ -503,7 +503,7 @@ test('purge(false) keeps a file exactly at the age cutoff boundary, not just str
     // happens microseconds after this one, on the same real clock tick
     // in practice.
     $cache = new PersistentFileCache(persistentFileCacheTestNewCurrentConfig(), CurrentPathsTestFactory::get());
-    $key = $cache->make_key(['exact-purge-boundary']);
+    $key = $cache->makeKey(['exact-purge-boundary']);
     $cache->set($key, 'boundary-value');
     $dir = CurrentPathsTestFactory::get()->root . persistentFileCacheTestNewCurrentConfig()->dataLocation . 'cache/';
     touch($dir . $key . '.cache', time() - $cache->default_lifetime);
@@ -523,12 +523,12 @@ test('set eventually fires its opportunistic purge(false) over many calls, sweep
     $cache = new PersistentFileCache(persistentFileCacheTestNewCurrentConfig(), CurrentPathsTestFactory::get());
     $dir = CurrentPathsTestFactory::get()->root . persistentFileCacheTestNewCurrentConfig()->dataLocation . 'cache/';
 
-    $staleKey = $cache->make_key(['stale-sentinel-for-opportunistic-purge']);
+    $staleKey = $cache->makeKey(['stale-sentinel-for-opportunistic-purge']);
     $cache->set($staleKey, 'stale-value');
     touch($dir . $staleKey . '.cache', time() - $cache->default_lifetime - 60);
 
     for ($i = 0; $i < 2000; $i++) {
-        $cache->set($cache->make_key(['opportunistic-purge-churn', $i]), 'churn-value');
+        $cache->set($cache->makeKey(['opportunistic-purge-churn', $i]), 'churn-value');
     }
 
     expect(is_file($dir . $staleKey . '.cache'))->toBeFalse();

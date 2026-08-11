@@ -18,7 +18,7 @@ use Piwigo\Core\AppInfo;
  *
  * get()/set()'s cached value is genuinely arbitrary by design -- matches
  * PSR-16 CacheInterface's own get(string $key, mixed $default = null):
- * mixed / set(string $key, mixed $value, ...): bool contract. make_key()'s
+ * mixed / set(string $key, mixed $value, ...): bool contract. makeKey()'s
  * $key parts are scalar-checked (with a serialize() fallback) at their own
  * use site rather than assumed.
  */
@@ -32,7 +32,7 @@ abstract class PersistentCache
      * @param array<int|string, mixed>|string $key
      * @return string a key that can be safely be used with get/set methods
      */
-    public function make_key(array|string $key): string
+    public function makeKey(array|string $key): string
     {
         if (is_array($key)) {
             $parts = array_map(
@@ -57,7 +57,7 @@ abstract class PersistentCache
 
     /**
      * Sets a key/value pair in the persistent cache.
-     * @param string $key - it should be the return value of make_key function
+     * @param string $key - it should be the return value of makeKey function
      * @param mixed $value
      * @param int $lifetime
      * @return bool false on error

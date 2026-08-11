@@ -1262,13 +1262,14 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
 
             if ((bool) count($scripts->async)) {
                 $content[] = '<script type="text/javascript">';
-                $content[] = '(function() {
-var s,after = document.getElementsByTagName(\'script\')[document.getElementsByTagName(\'script\').length-1];';
+                $content[] = <<<'JS'
+                (function() {
+                var s,after = document.getElementsByTagName('script')[document.getElementsByTagName('script').length-1];
+                JS;
                 foreach ($scripts->async as $script) {
-                    $content[] =
-                      's=document.createElement(\'script\'); s.type=\'text/javascript\'; s.async=true; s.src=\''
-                      . $this->make_script_src($script)
-                      . '\';';
+                    $content[] = <<<JS
+                    s=document.createElement('script'); s.type='text/javascript'; s.async=true; s.src='{$this->make_script_src($script)}';
+                    JS;
                     $content[] = 'after = after.parentNode.insertBefore(s, after);';
                 }
                 $content[] = '})();';

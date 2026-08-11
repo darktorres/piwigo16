@@ -94,10 +94,6 @@ final readonly class ElementSetRanksPageRenderer
 
         $category_id = $elementSetRanksRequest->catId;
 
-        // +-------------------------------------------------------------------+
-        // |                       global mode form submission                 |
-        // +-------------------------------------------------------------------+
-
         $image_order_choice = $elementSetRanksRequest->imageOrderChoice;
 
         if ($elementSetRanksRequest->isSubmitted) {
@@ -136,9 +132,6 @@ final readonly class ElementSetRanksPageRenderer
             $template->assignContext(new ElementSetRanksSaveSuccessPageContext($message));
         }
 
-        // +-------------------------------------------------------------------+
-        // |                             template init                         |
-        // +-------------------------------------------------------------------+
         $template->setFilenames(
             [
                 'element_set_ranks' => 'element_set_ranks.tpl',
@@ -164,10 +157,6 @@ final readonly class ElementSetRanksPageRenderer
             $category->uppercats,
             $this->urlService->getRootUrl() . 'admin.php?page=album-'
         );
-
-        // +-------------------------------------------------------------------+
-        // |                              thumbnails                           |
-        // +-------------------------------------------------------------------+
 
         $thumbnails = [];
 
@@ -214,10 +203,6 @@ final readonly class ElementSetRanksPageRenderer
             thumbnails: $thumbnails,
             imageOrder: $image_order_tpl,
         ));
-
-        // +-------------------------------------------------------------------+
-        // |                          sending html code                        |
-        // +-------------------------------------------------------------------+
 
         $template->assignVarFromHandle('ADMIN_CONTENT', 'element_set_ranks');
     }

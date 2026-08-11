@@ -119,7 +119,7 @@ final readonly class CategoryRepository
      * Accepts either query-builder flavor -- {@see SqlCondition}'s own
      * `sql`/`parameters`/`types` shape applies identically via
      * `andWhere()`/`setParameter()` on both DBAL's and DQL's query
-     * builders, confirmed empirically: a DQL consumer
+     * builders: a DQL consumer
      * just passes a DQL property path (e.g. `c.id`) into the same
      * {@see PermissionCriteria} `*Condition()` methods a DBAL consumer
      * already uses with a raw column name.
@@ -488,16 +488,14 @@ final readonly class CategoryRepository
         // override" from "current config order" for. Its own raw "ORDER BY
         // ..." SQL-fragment shape means QueryBuilder::orderBy() prepends its
         // own "ORDER BY " keyword, so the prefix must be stripped here or
-        // the query becomes "ORDER BY ORDER BY ..." (a real syntax error,
-        // caught live via CategoryServiceTest).
-        // Real bug found live -- CurrentConfig::orderBy()
-        // is raw, sysadmin-settable SQL text (order_by/order_by_custom),
-        // commonly containing the well-known "RAND()" random-order value
-        // (Image\PhotoSortField::Random's own token). Unlike the DQL path
-        // above (routes through the portable DqlFunction\RandFunction
-        // automatically), this raw-DBAL fallback needs the literal
-        // translated by hand -- confirmed live: "function rand() does not
-        // exist" against a real Postgres server otherwise.
+        // the query becomes "ORDER BY ORDER BY ..." (a real syntax error).
+        // CurrentConfig::orderBy() is raw, sysadmin-settable SQL text
+        // (order_by/order_by_custom), commonly containing the well-known
+        // "RAND()" random-order value (Image\PhotoSortField::Random's own
+        // token). Unlike the DQL path above (routes through the portable
+        // DqlFunction\RandFunction automatically), this raw-DBAL fallback
+        // needs the literal translated by hand -- otherwise "function
+        // rand() does not exist" against a real Postgres server.
         $qb->orderBy(str_ireplace(
             'RAND()',
             SqlDialect::randomFunction() . '()',
@@ -966,7 +964,7 @@ final readonly class CategoryRepository
         // reaching this shared entity, and the array bind unwraps back to
         // raw ints with an explicit ArrayParameterType::INTEGER (Doctrine's
         // IN-clause array binding doesn't route through a field's custom
-        // Type reliably, verified against the installed doctrine/orm source).
+        // Type reliably).
         $catIds = array_map(CategoryId::from(...), $ids);
 
         $em = $this->em;
@@ -1741,8 +1739,7 @@ final readonly class CategoryRepository
      * Writes `images` (Image domain table, no association from
      * CategoryEntity, queried directly same as
      * {@see findStorageLinkedImageIds()} above). DQL's built-in
-     * `CONCAT()` accepting 3+ arguments (confirmed against
-     * `vendor/doctrine/orm/.../ConcatFunction.php`, same as
+     * `CONCAT()` accepting 3+ arguments (same as
      * {@see \Piwigo\Category\CategoryRepository::
      * findAllForPermalinksDisplay()}'s own use) collapses the nested
      * `CONCAT(CONCAT(:fulldir, '/'), file)` shape into one flat call.
@@ -2198,8 +2195,7 @@ final readonly class CategoryRepository
      * -- see {@see findNextId()}'s own docblock for that distinction), but
      * DQL's standard `CASE WHEN ... THEN ... ELSE ... END` is a clean,
      * portable drop-in for it, and `CONCAT()` accepting more than 2
-     * arguments (confirmed against
-     * `vendor/doctrine/orm/.../ConcatFunction.php`) covers the rest.
+     * arguments covers the rest.
      *
      * @return list<CategoryPermalinkDisplayRow>
      */
@@ -3438,9 +3434,8 @@ final readonly class CategoryRepository
         }
 
         if ($criteria->publicOnly) {
-            // Real bugs found live -- double-quoted
-            // "public" is a STRING LITERAL under MySQL's own lenient
-            // default (non-ANSI_QUOTES) SQL mode, but Postgres always
+            // Double-quoted "public" is a STRING LITERAL under MySQL's own
+            // lenient default (non-ANSI_QUOTES) SQL mode, but Postgres always
             // treats double-quotes as an IDENTIFIER reference (never a
             // string literal), so this failed outright there; switched to
             // the single-quoted form both platforms treat identically.

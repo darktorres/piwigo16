@@ -1680,8 +1680,8 @@ final readonly class CategoryService
             throw new Exception("getCategoryRepresentantProperties(): image {$imageId} does not exist (stale representative_picture_id?)");
         }
         // DerivativeImage::thumbUrl()/url() take array<string, mixed>|SrcImage
-        // by design -- confirmed cross-domain-generic in the Image module's
-        // own pass (see SrcImage::__construct()'s docblock), not a gap.
+        // by design -- cross-domain-generic, matching
+        // SrcImage::__construct()'s own docblock, not a gap.
         $rowArray = $row->toArray();
         if ($size === null) {
             $src = DerivativeImage::thumbUrl($rowArray);

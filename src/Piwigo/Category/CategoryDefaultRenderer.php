@@ -191,15 +191,14 @@ final readonly class CategoryDefaultRenderer
             switch ($section) {
                 case Section::BestRated:
                     // `rating_score` is a native DBAL float|null, never a
-                    // string/int -- a real bug found live: the
-                    // original `is_string(...) || is_int(...)` guard
-                    // (written for mysqli's always-string legacy fetch
-                    // mode) was always false here, so the best-rated
-                    // special page's thumbnail name label always rendered
-                    // "() Name" instead of "(4.5) Name", silently, since
-                    // $row was untyped `mixed` before this domain's
-                    // Projection retype made the always-false condition
-                    // visible to PHPStan.
+                    // string/int -- the original `is_string(...) ||
+                    // is_int(...)` guard (written for mysqli's
+                    // always-string legacy fetch mode) was always false
+                    // here, so the best-rated special page's thumbnail
+                    // name label always rendered "() Name" instead of
+                    // "(4.5) Name", silently, since $row was untyped
+                    // `mixed` before this domain's Projection retype made
+                    // the always-false condition visible to PHPStan.
                     $ratingScore = $row['rating_score'];
                     $name = '(' . ($ratingScore !== null ? (string) $ratingScore : '') . ') ' . $name;
                     break;

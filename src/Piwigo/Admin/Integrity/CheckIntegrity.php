@@ -341,7 +341,9 @@ final class CheckIntegrity
     public function get_htlm_links_more_info(): string
     {
         $pwg_links = AdminUiHelper::pwgUrl();
-        $link_fmt = '<a href="%s" onclick="window.open(this.href, \'\'); return false;">%s</a>';
+        $link_fmt = <<<'HTML'
+        <a href="%s" onclick="window.open(this.href, ''); return false;">%s</a>
+        HTML;
         return
           sprintf(
               $this->lang->t('Go to %s or %s for more informations'),

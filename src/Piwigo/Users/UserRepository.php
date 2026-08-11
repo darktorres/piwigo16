@@ -1133,14 +1133,14 @@ final readonly class UserRepository implements WebmasterMailProviderInterface
     }
 
     /**
-     * Real bug found live -- $orderBySql is raw,
+     * $orderBySql is raw,
      * sysadmin-settable SQL text (order_by/order_by_custom, or a plain
      * "ORDER BY RAND()" fallback both real callers and this class's own
      * unparseable-order-by test fixture use), commonly containing the
      * well-known "RAND()" random-order value. Same real gap already fixed
      * once for {@see \Piwigo\Category\CategoryRepository}'s own raw-DBAL
-     * fallback -- confirmed live: "function rand() does not exist"
-     * against a real Postgres server otherwise.
+     * fallback -- otherwise "function rand() does not exist"
+     * against a real Postgres server.
      */
     private static function normalizeOrderBySql(string $orderBySql): string
     {
@@ -1433,9 +1433,9 @@ final readonly class UserRepository implements WebmasterMailProviderInterface
      * A null `registrationDate` (real for some users --
      * {@see findEarliestRegistrationDate()}'s own docblock) reproduces the
      * original's own `MONTH(NULL)`/`YEAR(NULL)` -> `'-00'` formatting
-     * exactly (confirmed against `16.x-rewrite`'s reference
+     * exactly, matching `16.x-rewrite`'s reference
      * `findRegistrationMonthsYears()` -- same unfiltered-null behavior
-     * there, not something to correct here).
+     * there, not something to correct here.
      *
      * @return list<string>
      */

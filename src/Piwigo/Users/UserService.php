@@ -404,14 +404,14 @@ final readonly class UserService implements DefaultLanguageProviderInterface
             Email::tryFrom($mailAddress),
         );
 
-        // Real bug fixed here: this used to call
+        // This used to call
         // $this->groupRepo->addMembers($userId, $defaultGroupIds) directly,
         // passing the arguments in the wrong shape entirely --
         // addMembers(GroupId $groupId, list<UserId> $userIds) adds many
         // users to ONE group, but the call needs the opposite (add ONE new
         // user to EACH of several default groups). That wrote
         // (group_id, user_id) = ($userId, each default group's id) to
-        // user_group -- backwards. Confirmed against 16.x-rewrite's
+        // user_group -- backwards. Matches 16.x-rewrite's
         // correct ['user_id' => $userId, 'group_id' => $groupId] per
         // default group; no test exercised registration + default-group
         // assignment together, so this was never caught. Looping per
@@ -478,7 +478,6 @@ final readonly class UserService implements DefaultLanguageProviderInterface
         // loaded into Config's backing store, so has() is false and every
         // user silently fell through to 'normal' status, including the
         // webmaster and guest accounts install.php itself just created.
-        // Found live via a real fixture-regen run, not assumed.
         $webmasterId = (string) $this->currentConfig->webmasterId;
         $guestId = (string) $this->currentConfig->guestId;
         $defaultUserId = (string) $this->currentConfig->defaultUserId;
@@ -756,16 +755,15 @@ final readonly class UserService implements DefaultLanguageProviderInterface
         // mixed for the remainder of this function. Merged back in just
         // before the final return instead.
         //
-        // Real bug found live (via a failing AdminShellTest purge-logic
-        // assertion): this used to only accept a raw JSON *string*,
+        // This used to only accept a raw JSON *string*,
         // matching fetchUserInfosWithThemeName()'s old raw-DBAL return
         // shape. fetchUserInfosWithThemeName() hydrates `preferences` via
         // UserInfoEntity's `json`-typed column -- already a decoded PHP
         // array by the time it reaches here, never a string. is_string()
         // was therefore always false, silently discarding every real
         // user's preferences on every single login (test and
-        // production alike) -- confirmed live via CurrentUser::get()
-        // ->preferences coming back `[]` immediately after a real login,
+        // production alike): CurrentUser::get()
+        // ->preferences comes back `[]` immediately after a real login,
         // despite the DB row genuinely holding real preference data.
         // ArrayHelper::safeJsonDecode() already accepts array|string
         // (passes an array straight through unchanged), so widening the

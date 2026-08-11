@@ -203,10 +203,13 @@ function template_instance_test_assoc(mixed $value): array
 final class TemplateInstanceTestThemeconfAppendSpy extends Smarty
 {
     /**
-     * @var list<array<string, mixed>>
+     * @var list<array<mixed>>
      */
     public array $themeconfAppends = [];
 
+    /**
+     * @param array<int|string, mixed>|string $tpl_var
+     */
     public function append($tpl_var, $value = null, $merge = false, $nocache = false)
     {
         if ($tpl_var === 'themeconf' && is_array($value)) {

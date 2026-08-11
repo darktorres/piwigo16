@@ -310,7 +310,7 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
                 static fn (TemplateExtension $e): array => [$e->handle, $e->param, $e->theme],
                 $this->currentConfig->extentsForTemplates,
             );
-            $this->setExtents($rawExtents, $this->paths->root . 'template-extension/', true, $theme?->value ?? '');
+            $this->setExtents($rawExtents, $this->paths->root . 'template-extension/', true, $theme->value ?? '');
         }
     }
 

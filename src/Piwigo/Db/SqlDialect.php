@@ -37,7 +37,7 @@ final class SqlDialect
     public const string REQUIRED_POSTGRES_VERSION = '18.4';
 
     /**
-     * Real bug found live -- callers building a raw
+     * Callers building a raw
      * SQL fragment from this (not DQL, which already has its own portable
      * {@see \Piwigo\Db\DqlFunction\RandFunction}) always got the literal
      * MySQL name, so a real WS "sort by random" request (via
@@ -133,7 +133,7 @@ final class SqlDialect
      *
      * Postgres has no `SUBDATE()` -- `$date - make_interval(days =>
      * $period)` is the real equivalent, with an explicit `::timestamp`
-     * cast on `$date` first (verified live: bare subtraction of an
+     * cast on `$date` first: bare subtraction of an
      * `interval` from an untyped string literal/bound parameter fails
      * outright with `ERROR: invalid input syntax for type interval` --
      * Postgres can't infer `date`/`timestamp` from context here the way

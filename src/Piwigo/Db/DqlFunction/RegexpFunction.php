@@ -24,8 +24,8 @@ use Override;
  * which resolves to `SIMILAR TO` -- a genuinely different
  * pattern-matching dialect than POSIX `REGEXP`, not just a syntax rename
  * (`SIMILAR TO` implicitly anchors the *whole* string, so a
- * substring-search POSIX pattern like `(^|,)123(,|$)` never matches --
- * confirmed live: `'1,2' SIMILAR TO '(^|,)2(,|$)'` is `false`, while
+ * substring-search POSIX pattern like `(^|,)123(,|$)` never matches:
+ * `'1,2' SIMILAR TO '(^|,)2(,|$)'` is `false`, while
  * `'1,2' ~ '(^|,)2(,|$)'` is `true`).
  */
 final class RegexpFunction extends FunctionNode

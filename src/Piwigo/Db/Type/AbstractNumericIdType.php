@@ -17,7 +17,7 @@ use Piwigo\Common\ValueObject\NumericId;
  * `IntegerType::convertToPHPValue()` declares return type `?int`, and PHP
  * requires covariant overrides, so a subclass can't narrow that to
  * `?GroupId`. The base `Type` class declares it `mixed`, which is safely
- * narrowable (confirmed against the installed doctrine/dbal 4.4.4 source).
+ * narrowable.
  *
  * `convertToDatabaseValue()` is strict (VO-only) on purpose: every real
  * caller across every domain -- including ones outside this VO's own

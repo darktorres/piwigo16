@@ -105,9 +105,9 @@ final readonly class BatchWriter
         $params = [];
         foreach ($data as $key => $value) {
             // A raw PHP bool binds inconsistently through mysqli/DBAL
-            // (confirmed live: false arrived as '' rather than 0, tripping
-            // a strict-mode "Incorrect integer value" error on a tinyint
-            // column) -- normalize to int first, same convention already
+            // (false arrives as '' rather than 0, tripping a strict-mode
+            // "Incorrect integer value" error on a tinyint column) --
+            // normalize to int first, same convention already
             // used at other real call sites (e.g. SqlDialect::booleanToInt()
             // callers building their own $insert arrays).
             $value = SqlDialect::booleanToInt($value);

@@ -68,10 +68,10 @@ final class EntityManagerFactory
      * run mutating Piwigo\Db\DqlFunction\* between runs) would silently
      * keep getting the *first* process's compiled SQL back from
      * `_data/cache/` on disk, never re-invoking the mutated getSql() at
-     * all. Confirmed live: editing a DqlFunction class's getSql() to
-     * return a hardcoded sentinel string had zero effect on a repeated
+     * all: editing a DqlFunction class's getSql() to
+     * return a hardcoded sentinel string has zero effect on a repeated
      * identical DQL query's generated SQL until this pool's on-disk
-     * files were deleted.
+     * files are deleted.
      */
     public static function build(?Connection $conn = null, ?CacheItemPoolInterface $cache = null): EntityManagerInterface
     {
@@ -116,7 +116,7 @@ final class EntityManagerFactory
         // Overrides Doctrine ORM's own built-in DATE_SUB -- see
         // DateSubFunction's own docblock for the real Postgres bug this
         // fixes (custom function lookup runs before the built-in one in
-        // Doctrine's own parser, confirmed by reading its source).
+        // Doctrine's own parser).
         $config->addCustomDatetimeFunction('DATE_SUB', DateSubFunction::class);
         $config->addCustomStringFunction('DATE_FORMAT_YEAR_MONTH', DateFormatYearMonthFunction::class);
         $config->addCustomStringFunction('DATE_FORMAT_MONTH_DAY', DateFormatMonthDayFunction::class);
@@ -155,7 +155,7 @@ final class EntityManagerFactory
      * Not a hardcoded file list: matching by filename suffix against
      * whatever the classmap currently contains self-updates as entities
      * are added/removed, matching this codebase's actual convention
-     * (confirmed live: 38 of 40 real `#[ORM\Entity]` classes follow it;
+     * (38 of 40 real `#[ORM\Entity]` classes follow it;
      * the 2 exceptions -- ImageStdParams/ConfigEntry, both stable
      * config-shape entities rarely edited -- are a known, accepted gap).
      *
@@ -163,12 +163,11 @@ final class EntityManagerFactory
      * design as build() itself (that's about never reusing a whole
      * EntityManager/Configuration instance across calls). build() has 201
      * real call sites across this codebase and is called ~35 times in a
-     * single admin.php request (confirmed live); the hash is invariant for
+     * single admin.php request; the hash is invariant for
      * the entire duration of one request (entity files cannot change
      * mid-request), so recomputing it fresh on every one of those 35 calls
-     * is pure redundant work -- confirmed live, via a controlled stash/
-     * restore A/B comparison under identical conditions, that skipping this
-     * memoization made real `%D` timing *worse* than the original
+     * is pure redundant work -- skipping this
+     * memoization makes real `%D` timing *worse* than the original
      * Reflection-rebuild-every-call baseline this cache exists to beat
      * (~35 calls x ~2-3ms each is real, additive per-request cost, even
      * though each individual call is cheap in isolation). A plain static

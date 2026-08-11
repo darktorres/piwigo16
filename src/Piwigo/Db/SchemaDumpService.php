@@ -167,8 +167,7 @@ final readonly class SchemaDumpService
                 // \restrict/\unrestrict (pg_dump 18+, a psql meta-command
                 // pair guarding against executing this file with plain
                 // `psql -f` unless the matching random token is echoed
-                // back) carry a freshly-random token on every single dump
-                // -- confirmed live by dumping twice in a row and diffing.
+                // back) carry a freshly-random token on every single dump.
                 // Not schema content at all, and the single biggest
                 // non-determinism source in a schema dump.
                 return ! str_starts_with($trimmed, '-- Dumped from database version')

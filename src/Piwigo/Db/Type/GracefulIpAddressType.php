@@ -27,7 +27,7 @@ final class GracefulIpAddressType extends AbstractGracefulEmptyStringVoType
     /**
      * `history.IP` is `CHAR(39)`, not `VARCHAR` (`rate.anonymous_id`,
      * the same "NOT NULL DEFAULT ''" family, IS `VARCHAR` -- no padding)
-     * -- confirmed live via a real Integration test: the driver returns
+     * -- the driver returns
      * a real, valid IP right-padded with spaces to the column's fixed
      * width, which `filter_var()` then rejects outright. `rtrim()`
      * first, so both a real IP and the column's own `''` sentinel

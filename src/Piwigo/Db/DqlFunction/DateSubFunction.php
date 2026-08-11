@@ -24,17 +24,17 @@ use Override;
  * before the built-in one in Doctrine's own parser) with a genuinely
  * portable getSql().
  *
- * Real bug found live -- the built-in resolves to
+ * The built-in resolves to
  * `Doctrine\DBAL\Platforms\PostgreSQLPlatform::getDateArithmeticIntervalExpression()`'s
  * `(date_expr - interval_expr)`, with no explicit cast on $date_expr.
  * Against a real column reference that's fine (already typed by the
  * column itself), but against a bare bound parameter -- or any other
  * expression Postgres can't type from context -- the subtraction itself
  * resolves to `interval`, not `timestamp` ("operator does not exist:
- * timestamp without time zone >= interval"), confirmed live via
+ * timestamp without time zone >= interval"), the way
  * ImageRepository::findIdsAddedSameDayAsLatest()'s own
- * `DATE_SUB(:lastDate, 1, 'day')` failing exactly this way -- and
- * confirmed an explicit ORM-level parameter Type doesn't help either:
+ * `DATE_SUB(:lastDate, 1, 'day')` fails exactly this way -- and
+ * an explicit ORM-level parameter Type doesn't help either:
  * DBAL's own PgSQL driver Statement::bindValue() only accepts the
  * low-level ParameterType enum, so nothing sends the driver a real
  * timestamp OID over the wire regardless of which ORM Type converts the

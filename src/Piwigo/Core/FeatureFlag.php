@@ -4,10 +4,8 @@ declare(strict_types=1);
 
 namespace Piwigo\Core;
 
-use RuntimeException;
-
 /**
- * Read-only feature-flag checks, backed by config/feature-flags.php.
+ * Read-only feature-flag checks, backed by FeatureFlagDefinitions.
  *
  * SEC-58's own threat ("unauthorized feature-flag change") needs authz,
  * which needs CurrentUser -- a service with no write/toggle path has
@@ -18,20 +16,23 @@ use RuntimeException;
 final class FeatureFlag
 {
     /**
-     * `$configPath` defaults to null and falls back to the real
-     * `config/feature-flags.php`, mirroring `CliBootstrap::buildApplication()`'s
-     * `$commandsFile` parameter -- the only seam for
-     * tests/Unit/Core/FeatureFlagTest.php to exercise the
-     * must-return-an-array guard against a disposable fixture file instead
-     * of ever having to overwrite the real, shared production file
-     * mid-suite.
+     * `$overrideFlags` defaults to null and falls back to the real
+     * `FeatureFlagDefinitions::all()`, mirroring
+     * `CliBootstrap::buildApplication()`'s `$overrideCommands` parameter --
+     * the only seam for tests/Unit/Core/FeatureFlagTest.php to exercise
+     * the `=== true` (not merely truthy) guard against a disposable
+     * fixture array instead of ever having to overwrite the real, shared
+     * production flag list. Typed `array<string, mixed>`, not
+     * `array<string, bool>` -- the guard exists precisely because PHP
+     * doesn't enforce a generic array's value types at runtime, so the
+     * test deliberately passes non-bool values (e.g. 'yes', 1) to prove
+     * the guard catches what the type system alone cannot.
+     *
+     * @param array<string, mixed>|null $overrideFlags
      */
-    public static function isEnabled(string $flag, ?string $configPath = null): bool
+    public static function isEnabled(string $flag, ?array $overrideFlags = null): bool
     {
-        $flags = require $configPath ?? dirname(__DIR__, 3) . '/config/feature-flags.php';
-        if (! is_array($flags)) {
-            throw new RuntimeException('config/feature-flags.php must return an array of flag => bool.');
-        }
+        $flags = $overrideFlags ?? FeatureFlagDefinitions::all();
 
         return ($flags[$flag] ?? false) === true;
     }

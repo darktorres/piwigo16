@@ -8,6 +8,7 @@ use Piwigo\Common\ValueObject\ThemeId;
 use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Config\ConfigEntry;
 use Piwigo\Config\ConfigService;
+use Piwigo\Config\CurrentConfig;
 use Piwigo\Controller\WsController;
 use Piwigo\Core\CurrentLogger;
 use Piwigo\Core\Kernel;
@@ -25,6 +26,7 @@ use Piwigo\Tests\Support\CurrentUserTestFactory;
 use Piwigo\Tests\Support\TemplateTestFactory;
 use Piwigo\Users\User;
 use Piwigo\Users\UserStatus;
+use ReflectionProperty;
 
 /**
  * Piwigo\Controller\WsController -- the web-service dispatcher entry
@@ -73,7 +75,12 @@ test('invoke returns a real 403 forbidden page when web services are disabled', 
     try {
         CurrentConfigTestFactory::get()->dataLocation = 'data/';
         CurrentConfigTestFactory::get()->dataDirChecked = '1';
-        CurrentConfigTestFactory::get()->allowWebServices = false;
+        // allowWebServices is private(set) (SchemaIntegrityTest enforces
+        // it) -- same ReflectionProperty::setValue() pattern
+        // UserServiceTest already uses for a private(set) CurrentConfig
+        // property, since the real hydration path (ConfigService::
+        // hydrate()) itself always writes through Reflection too.
+        new ReflectionProperty(CurrentConfig::class, 'allowWebServices')->setValue(CurrentConfigTestFactory::get(), false);
         CurrentConfigTestFactory::get()->updateNotifyCheckPeriod = 0;
         CurrentConfigTestFactory::get()->sendPiwigoInfos = false;
 

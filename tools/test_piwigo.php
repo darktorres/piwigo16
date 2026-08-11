@@ -308,7 +308,7 @@ function add_picture(array $option, string $cookies, ?string $pwg_token, mysqli 
 
     $query = '
     SELECT count(*)
-    FROM piwigo_images
+    FROM images
   ;';
 
     $res = $mysqli->query($query);

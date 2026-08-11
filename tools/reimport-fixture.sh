@@ -52,7 +52,7 @@
 # script lets psql's own preamble SELECT print straight to the terminal).
 #
 
-# `piwigo_sites` id=1's own `galleries_url` is committed in the fixture as
+# `sites` id=1's own `galleries_url` is committed in the fixture as
 # an absolute filesystem path (Piwigo\Core\Paths::$root . 'galleries/',
 # matching exactly what Admin\Install\InstallWizard seeds it with on a real
 # install) -- inherently tied to wherever *that* install's checkout lived,
@@ -63,7 +63,7 @@
 # correction for its own separate (non-shell-script) import path, since
 # PHPUnit's Integration/Contract suites never invoke this script.
 #
-# `piwigo_categories.lastmodified` is `TIMESTAMP ... ON UPDATE
+# `categories.lastmodified` is `TIMESTAMP ... ON UPDATE
 # CURRENT_TIMESTAMP` -- a MySQL-server-enforced column, invisible to and
 # unfixable by any PHP-level Env::now()/PIWIGO_TEST_NOW freeze, since MySQL
 # stamps it with the real server clock the instant *any* real INSERT (a
@@ -75,7 +75,7 @@
 # CatModifyPageRenderer's own INFO_LAST_MODIFIED) silently drifts by
 # however many real days have passed since the fixture was last
 # regenerated -- the exact same class of drift the "CREATED" card
-# (piwigo_activity.occured_on, a real INSERT column) was already fixed
+# (activity.occured_on, a real INSERT column) was already fixed
 # for by routing pwg_activity() through pwg_now() instead. lastmodified
 # has no PHP-level equivalent (MySQL applies it after any statement
 # completes, with no INSERT-time override available for a fresh row),

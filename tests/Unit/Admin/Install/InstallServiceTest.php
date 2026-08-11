@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Doctrine\DBAL\Connection;
 use Piwigo\Admin\Install\InstallService;
 use Piwigo\Config\ConfigEntry;
 use Piwigo\Config\ConfigService;
@@ -180,7 +181,7 @@ test('installDbConnect() returns a working connection and records no errors for 
 
     $conn = InstallService::installDbConnect($infos, $errors, installServiceTestLang());
 
-    if (! $conn instanceof Doctrine\DBAL\Connection) {
+    if (! $conn instanceof Connection) {
         throw new LogicException('expected a working Connection, got null');
     }
     expect($errors)

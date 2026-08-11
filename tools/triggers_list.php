@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 
+use Symfony\Component\Mime\Email;
+
 if (PHP_SAPI !== 'cli') {
     http_response_code(403);
     exit('CLI only');
@@ -809,7 +811,7 @@ $core = [
     [
         'name' => 'before_send_mail',
         'type' => 'trigger_change',
-        'vars' => ['bool', 'result', 'mixed', 'to', 'array', 'arguments', \Symfony\Component\Mime\Email::class, 'mail'],
+        'vars' => ['bool', 'result', 'mixed', 'to', 'array', 'arguments', Email::class, 'mail'],
         'files' => ['include\functions_mail.inc.php (pwg_mail)'],
     ],
     [

@@ -12,7 +12,6 @@ use Piwigo\Core\Paths;
 use Piwigo\Event\Template\CombinedCssPostfilter;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Template\Combinable;
-use Piwigo\Template\CurrentTemplate;
 use Piwigo\Template\Event\CombinablePreparse;
 use Piwigo\Template\FileCombiner;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;

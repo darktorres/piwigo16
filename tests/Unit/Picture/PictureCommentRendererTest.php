@@ -14,7 +14,6 @@ use Piwigo\Mail\MailService;
 use Piwigo\Picture\PictureCommentRenderer;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Session\SessionService;
-use Piwigo\Template\CurrentTemplate;
 use Piwigo\Template\Template;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Tests\Support\CurrentPathsTestFactory;

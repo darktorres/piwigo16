@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Doctrine\DBAL\Connection;
+use Doctrine\ORM\EntityManagerInterface;
 use Piwigo\Common\ValueObject\ImageId;
 use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Db\DbConnection;
@@ -72,7 +73,7 @@ function rateTestRepo(): RateRepository
  * EntityManager access (for find()) alongside the repo, same
  * CaddieRepositoryTest.php precedent.
  *
- * @return array{0: RateRepository, 1: Doctrine\ORM\EntityManagerInterface}
+ * @return array{0: RateRepository, 1: EntityManagerInterface}
  */
 function rateTestRepoWithEm(): array
 {

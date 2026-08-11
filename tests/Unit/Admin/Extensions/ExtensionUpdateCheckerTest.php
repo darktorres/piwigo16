@@ -3,7 +3,6 @@
 declare(strict_types=1);
 
 use Piwigo\Admin\Extensions\ExtensionIgnoredUpdateEntity;
-use Piwigo\Admin\Extensions\ExtensionIgnoredUpdateRepository;
 use Piwigo\Admin\Extensions\ExtensionScanner;
 use Piwigo\Admin\Extensions\ExtensionType;
 use Piwigo\Admin\Extensions\ExtensionUpdateChecker;

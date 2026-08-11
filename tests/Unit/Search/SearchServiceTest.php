@@ -28,6 +28,7 @@ use Piwigo\Mail\MailService;
 use Piwigo\Permission\PermissionRepository;
 use Piwigo\Permission\PermissionService;
 use Piwigo\Permission\SqlCondition;
+use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Search\Event\QsearchGetImagesSqlScopes;
 use Piwigo\Search\Event\QsearchResults;
 use Piwigo\Search\QExpression;
@@ -197,7 +198,7 @@ function searchServiceTestMakeService(HtmlRenderingInterface $htmlRenderer): Sea
             new CategoryRepository(EntityManagerFactory::build($conn), CurrentConfigTestFactory::get()),
             new PermissionService(new PermissionRepository(EntityManagerFactory::build($conn)), EntityManagerFactory::build($conn)->getRepository(GroupEntity::class), new CategoryRepository(EntityManagerFactory::build($conn), CurrentConfigTestFactory::get()), CurrentUserTestFactory::get(), searchServiceTestFilterState(), $accessLevelChecker),
             CurrentConfigTestFactory::get(),
-            new \Piwigo\PluginConfig\EventDispatcher(),
+            new EventDispatcher(),
             TranslatorTestFactory::get(),
             $accessLevelChecker
         ),

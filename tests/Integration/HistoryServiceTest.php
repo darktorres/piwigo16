@@ -17,7 +17,6 @@ use Piwigo\Core\Logger;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
 use Piwigo\History\HistoryEntity;
-use Piwigo\History\HistoryRepository;
 use Piwigo\History\HistoryService;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;

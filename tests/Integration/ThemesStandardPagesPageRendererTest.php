@@ -18,7 +18,6 @@ use Piwigo\Core\Paths;
 use Piwigo\Db\DbConnection;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Storage\StorageRegistry;
-use Piwigo\Template\CurrentTemplate;
 use Piwigo\Tests\Support\CurrentConfigServiceTestFactory;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Tests\Support\CurrentPathsTestFactory;

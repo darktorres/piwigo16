@@ -7,7 +7,6 @@ use Piwigo\Controller\Admin\AlbumSubController;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Paths;
 use Piwigo\Http\ResponseReadyException;
-use Piwigo\Template\CurrentTemplate;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Tests\Support\CurrentTemplateTestFactory;
 use Piwigo\Tests\Support\TemplateTestFactory;

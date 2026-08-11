@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Doctrine\DBAL\Connection;
+use Doctrine\ORM\EntityManagerInterface;
 use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
@@ -91,7 +92,7 @@ function historyTestRepo(): HistoryRepository
  * EntityManager access (for find()) alongside the repo, same
  * CaddieRepositoryTest.php precedent.
  *
- * @return array{0: HistoryRepository, 1: Doctrine\ORM\EntityManagerInterface}
+ * @return array{0: HistoryRepository, 1: EntityManagerInterface}
  */
 function historyTestRepoWithEm(): array
 {

@@ -49,7 +49,6 @@ namespace Piwigo\Tests\Integration {
     use Piwigo\Session\SessionService;
     use Piwigo\Tag\TagEntity;
     use Piwigo\Tag\TagService;
-    use Piwigo\Template\CurrentTemplate;
     use Piwigo\Tests\Support\CurrentConfigServiceTestFactory;
     use Piwigo\Tests\Support\CurrentConfigTestFactory;
     use Piwigo\Tests\Support\CurrentPathsTestFactory;

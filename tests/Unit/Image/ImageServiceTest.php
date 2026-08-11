@@ -12,7 +12,6 @@ use Piwigo\Activity\ActivityService;
 use Piwigo\Common\ValueObject\CategoryId;
 use Piwigo\Common\ValueObject\ImageId;
 use Piwigo\Config\ConfigEntry;
-use Piwigo\Config\ConfigRepository;
 use Piwigo\Config\ConfigService;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\CurrentConfigService;

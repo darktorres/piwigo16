@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Doctrine\ORM\EntityManagerInterface;
 use Piwigo\Common\ValueObject\Permalink;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
@@ -104,7 +105,7 @@ function permalinkRepoTestDeleteCategory(int $catId): void
  * EntityManager access (for find()) alongside the repo, so this builds
  * both from the same connection.
  *
- * @return array{0: PermalinkRepository, 1: Doctrine\ORM\EntityManagerInterface}
+ * @return array{0: PermalinkRepository, 1: EntityManagerInterface}
  */
 function permalinkRepoTestWithEm(): array
 {

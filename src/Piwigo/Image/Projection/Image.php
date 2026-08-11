@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace Piwigo\Image\Projection;
 
+use LogicException;
 use Piwigo\Common\ValueObject\CategoryId;
 use Piwigo\Common\ValueObject\ImageId;
 use Piwigo\Common\ValueObject\Md5Sum;
-use Piwigo\Common\ValueObject\SqlDateTime;
 use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Image\ImageEntity;
 
@@ -62,7 +62,7 @@ final readonly class Image
     public static function fromEntity(ImageEntity $entity): self
     {
         return new self(
-            id: $entity->id ?? throw new \LogicException('ImageEntity::$id is only null before persist; fromEntity() expects an already-persisted entity'),
+            id: $entity->id ?? throw new LogicException('ImageEntity::$id is only null before persist; fromEntity() expects an already-persisted entity'),
             file: $entity->file,
             dateAvailable: $entity->dateAvailable?->value,
             dateCreation: $entity->dateCreation?->value,

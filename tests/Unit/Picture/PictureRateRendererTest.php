@@ -10,7 +10,6 @@ use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Picture\PictureRateRenderer;
 use Piwigo\Rate\RateEntity;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
-use Piwigo\Tests\Support\CurrentPathsTestFactory;
 use Piwigo\Tests\Support\CurrentTemplateTestFactory;
 use Piwigo\Tests\Support\CurrentUserTestFactory;
 use Piwigo\Tests\Support\TemplateTestFactory;

@@ -8,7 +8,6 @@ use Piwigo\Admin\Extensions\ExtensionLifecycle;
 use Piwigo\Admin\Extensions\ExtensionRepository;
 use Piwigo\Admin\Extensions\PemCatalog;
 use Piwigo\Admin\Extensions\PluginMigrationEntity;
-use Piwigo\Admin\Extensions\PluginMigrationRepository;
 use Piwigo\Admin\Extensions\ZipExtractor;
 use Piwigo\Admin\ThemesInstalledPageRenderer;
 use Piwigo\Auth\AccessControl;

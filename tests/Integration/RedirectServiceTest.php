@@ -15,7 +15,6 @@ use Piwigo\Core\Logger;
 use Piwigo\Core\UniqueExecLock;
 use Piwigo\Http\ResponseReadyException;
 use Piwigo\PluginConfig\EventDispatcher;
-use Piwigo\Template\CurrentTemplate;
 use Piwigo\Tests\Support\CurrentConfigServiceTestFactory;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Tests\Support\CurrentPathsTestFactory;

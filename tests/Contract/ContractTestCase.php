@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Contract;
 
+use Closure;
+use CurlHandle;
 use JsonSchema\Validator;
 use Override;
 use Piwigo\Db\DbConnection;
@@ -264,9 +266,9 @@ abstract class ContractTestCase extends IntegrationTestCase
      * consumed byte count -- returning anything else aborts the transfer.
      * @param list<string> $sink
      */
-    private static function collectHeaderInto(array &$sink): \Closure
+    private static function collectHeaderInto(array &$sink): Closure
     {
-        return static function (\CurlHandle $ch, string $headerLine) use (&$sink): int {
+        return static function (CurlHandle $ch, string $headerLine) use (&$sink): int {
             $sink[] = $headerLine;
 
             return strlen($headerLine);

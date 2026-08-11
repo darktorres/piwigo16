@@ -32,7 +32,6 @@ use Piwigo\Image\SrcImage;
 use Piwigo\Menu\BlockManager;
 use Piwigo\Menu\Event\BlockManagerRegisterBlocks;
 use Piwigo\PluginConfig\EventDispatcher;
-use Piwigo\Template\CurrentTemplate;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Tests\Support\CurrentTemplateTestFactory;
 use Piwigo\Tests\Support\CurrentUserTestFactory;

@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Piwigo\Page;
 
 use Piwigo\Auth\AccessLevelChecker;
-use Piwigo\Common\ValueObject\ThemeId;
 use Piwigo\Config\ConfigService;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\CurrentConfigService;

@@ -19,7 +19,6 @@ use Piwigo\Core\Kernel;
 use Piwigo\Event\Picture\GetElementUrl;
 use Piwigo\Http\ResponseReadyException;
 use Piwigo\PluginConfig\EventDispatcher;
-use Piwigo\Template\CurrentTemplate;
 use Piwigo\Tests\Support\CurrentConfigServiceTestFactory;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Tests\Support\CurrentTemplateTestFactory;

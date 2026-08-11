@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Doctrine\DBAL\Connection;
+use Doctrine\ORM\EntityManagerInterface;
 use Piwigo\Caddie\CaddieEntity;
 use Piwigo\Caddie\CaddieRepository;
 use Piwigo\Common\ValueObject\ImageId;
@@ -67,7 +68,7 @@ function caddieTestRepo(): CaddieRepository
  * both from the same connection instead of trying to pull the
  * EntityManager back out of an already-constructed repo.
  *
- * @return array{0: CaddieRepository, 1: Doctrine\ORM\EntityManagerInterface}
+ * @return array{0: CaddieRepository, 1: EntityManagerInterface}
  */
 function caddieTestRepoWithEm(): array
 {

@@ -5,6 +5,7 @@ declare(strict_types=1);
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\Exception\UniqueConstraintViolationException;
 use Doctrine\DBAL\TransactionIsolationLevel;
+use Doctrine\ORM\EntityManagerInterface;
 use Piwigo\Common\ValueObject\ImageId;
 use Piwigo\Common\ValueObject\TagId;
 use Piwigo\Db\DbConnection;
@@ -13,7 +14,6 @@ use Piwigo\Image\ImageFilterCriteria;
 use Piwigo\Permission\PermissionCriteria;
 use Piwigo\Tag\ImageTagEntity;
 use Piwigo\Tag\Projection\ImageTagLink;
-use Piwigo\Tag\Projection\Tag;
 use Piwigo\Tag\TagEntity;
 use Piwigo\Tag\TagRepository;
 
@@ -146,7 +146,7 @@ function tagTestRepoFor(Connection $conn): TagRepository
  * EntityManager access (for find()) alongside the repo, same
  * CaddieRepositoryTest.php precedent.
  *
- * @return array{0: TagRepository, 1: Doctrine\ORM\EntityManagerInterface}
+ * @return array{0: TagRepository, 1: EntityManagerInterface}
  */
 function tagTestRepoWithEm(): array
 {

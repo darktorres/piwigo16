@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Doctrine\ORM\EntityManagerInterface;
 use Piwigo\Common\ValueObject\CategoryId;
 use Piwigo\Common\ValueObject\GroupId;
 use Piwigo\Common\ValueObject\UserId;
@@ -75,7 +76,7 @@ function groupTestRepo(): GroupRepository
  * EntityManager access (for find()) alongside the repo, same
  * CaddieRepositoryTest.php precedent.
  *
- * @return array{0: GroupRepository, 1: Doctrine\ORM\EntityManagerInterface}
+ * @return array{0: GroupRepository, 1: EntityManagerInterface}
  */
 function groupTestRepoWithEm(): array
 {

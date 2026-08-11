@@ -16,7 +16,6 @@ use Piwigo\Core\Paths;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Group\GroupEntity;
-use Piwigo\Html\HtmlService;
 use Piwigo\Permission\PermissionRepository;
 use Piwigo\Permission\PermissionService;
 use Piwigo\PluginConfig\EventDispatcher;

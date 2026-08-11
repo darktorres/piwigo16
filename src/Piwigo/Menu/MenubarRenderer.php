@@ -94,7 +94,6 @@ final class MenubarRenderer
             $query_search = htmlspecialchars($qsearch_q);
         }
 
-        // --------------------------------------------------------------- external links
         if ((bool) ($block = $menu->getBlock('mbLinks')) and ! self::emptyValue($currentConfig->links)) {
             $block->data = [];
             foreach ($currentConfig->links as $url => $link) {
@@ -119,9 +118,7 @@ final class MenubarRenderer
             }
         }
 
-        // -------------------------------------------------------------- categories
         $block = $menu->getBlock('mbCategories');
-        // ------------------------------------------------------------------------ filter
         $u_stop_filter = null;
         $u_start_filter = null;
         if ($currentConfig->menubarFilterIcon and ! self::emptyValue($currentConfig->filterPages) and (bool) PageFilterHelper::getFilterPageValue($currentConfig, 'used')) {
@@ -154,7 +151,6 @@ final class MenubarRenderer
             $block->template = 'menubar_categories.tpl';
         }
 
-        // ------------------------------------------------------------ related categories
         $block = $menu->getBlock('mbRelatedCategories');
 
         $page_items = $section_context?->items;
@@ -193,7 +189,6 @@ final class MenubarRenderer
             }
         }
 
-        // ------------------------------------------------------------------------ tags
         $block = $menu->getBlock('mbTags');
         if ($block !== null and PageFilterHelper::scriptBasename($currentConfig) !== 'picture') {
             $block->data = [];
@@ -217,7 +212,6 @@ final class MenubarRenderer
             }
         }
 
-        // ----------------------------------------------------------- special categories
         if (($block = $menu->getBlock('mbSpecials')) !== null) {
             $block->data = [];
             if (! $accessLevelChecker->isAGuest()) {// favorites
@@ -294,7 +288,6 @@ final class MenubarRenderer
             $block->template = 'menubar_specials.tpl';
         }
 
-        // ---------------------------------------------------------------------- summary
         if (($block = $menu->getBlock('mbMenu')) !== null) {
             $block->data = [];
             // quick search block will be displayed only if data['qsearch'] is set
@@ -350,7 +343,6 @@ final class MenubarRenderer
             $block->template = 'menubar_menu.tpl';
         }
 
-        // --------------------------------------------------------------- identification
         $u_login = null;
         $u_lost_password = null;
         $authorize_remembering = null;

@@ -938,17 +938,7 @@ $core = [
         'infos' => 'New in 2.6.2.',
     ],
 ];
-?>
-<!DOCTYPE html>
-<html xmlns="http://www.w3.org/1999/xhtml" lang="en" dir="ltr">
-<head>
-  <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-  <title>Piwigo Core Triggers</title>
-
-  <link rel="stylesheet" type="text/css" href="//code.jquery.com/ui/1.9.2/themes/base/jquery-ui.css">
-  <link rel="stylesheet" type="text/css" href="//ajax.aspnetcdn.com/ajax/jquery.dataTables/1.9.4/css/jquery.dataTables_themeroller.css">
-
-  <style type="text/css">
+$css = <<<'CSS'
   /* BEGIN CSS RESET
     http://meyerweb.com/eric/tools/css/reset
     v2.0 | 20110126 | License: none (public domain) */
@@ -982,86 +972,9 @@ $core = [
   tfoot input {width:80%;}
   tfoot .search_input {color:#999;}
   tfoot select.search_input option:not(:first-child) {color:#222;}
-  </style>
-</head>
+CSS;
 
-<body>
-
-<div id="the_header">
-  <h1>Piwigo Core Triggers</h1>
-</div> <!-- the_header -->
-
-<div id="the_page">
-  <table id="list">
-  <thead>
-    <tr>
-      <th>Name</th>
-      <th>Type</th>
-      <th>Variables</th>
-      <th>Usage in the core</th>
-      <th>Commentary</th>
-    </tr>
-  </thead>
-  <tbody>
-
-  <?php
-    foreach ($core as $trigger) {
-        echo '
-    <tr>
-      <td>' . $trigger['name'] . '</td>
-      <td>' . $trigger['type'] . '</td>
-      <td>';
-        for ($i = 0; $i < count($trigger['vars']); $i += 2) {
-            if ($i > 0) {
-                echo ', ';
-            }
-            echo $trigger['vars'][$i] . ' ' . (! in_array($trigger['vars'][$i + 1] ?? null, [null, '0'], true) ? '<i>$' . $trigger['vars'][$i + 1] . '</i>' : null);
-        }
-        echo '
-      </td>
-      <td>';
-        $f = 1;
-        foreach ($trigger['files'] as $file) {
-            if (! (bool) $f) {
-                echo '<br>';
-            } $f = 0;
-            echo preg_replace('#\((.+)\)#', '(<i>$1</i>)', (string) $file);
-        }
-        echo '
-      </td>
-      <td>' . @$trigger['infos'] . '</td>
-    </tr>';
-    }
-?>
-
-  </tbody>
-  <tfoot>
-    <tr>
-      <td><input type="text" value="Name" class="search_input"></td>
-      <td>
-        <select class="search_input">
-          <option value="">Type</option>
-          <option value="trigger_notify">trigger_notify</option>
-          <option value="trigger_change">trigger_change</option>
-        </select>
-      </td>
-      <td><input type="text" value="Variables" class="search_input"></td>
-      <td><input type="text" value="Usage" class="search_input"></td>
-      <td><input type="text" value="Commentary" class="search_input"></td>
-    </tr>
-  </tfoot>
-  </table>
-</div> <!-- the_page -->
-
-<div id="the_footer">
-  Copyright &copy; 2002-2016 <a href="http://piwigo.org">Piwigo Team</a>
-</div> <!-- the_footer -->
-
-
-<script type="text/javascript" src="//code.jquery.com/jquery-1.9.1.min.js"></script>
-<script type="text/javascript" src="//ajax.aspnetcdn.com/ajax/jquery.dataTables/1.9.4/jquery.dataTables.min.js"></script>
-
-<script type="text/javascript">
+$js = <<<'JS'
 var oTable = $('#list').dataTable({
   "bJQueryUI": true,
   "aaSorting": [ [0,'asc'] ],
@@ -1111,7 +1024,107 @@ $("tfoot select").change(function () {
     $(this).removeClass("search_input");
   }
 });
+JS;
+
+echo <<<HTML
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" dir="ltr">
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+  <title>Piwigo Core Triggers</title>
+
+  <link rel="stylesheet" type="text/css" href="//code.jquery.com/ui/1.9.2/themes/base/jquery-ui.css">
+  <link rel="stylesheet" type="text/css" href="//ajax.aspnetcdn.com/ajax/jquery.dataTables/1.9.4/css/jquery.dataTables_themeroller.css">
+
+  <style type="text/css">
+{$css}
+  </style>
+</head>
+
+<body>
+
+<div id="the_header">
+  <h1>Piwigo Core Triggers</h1>
+</div> <!-- the_header -->
+
+<div id="the_page">
+  <table id="list">
+  <thead>
+    <tr>
+      <th>Name</th>
+      <th>Type</th>
+      <th>Variables</th>
+      <th>Usage in the core</th>
+      <th>Commentary</th>
+    </tr>
+  </thead>
+  <tbody>
+HTML . "\n";
+
+$rows = '';
+foreach ($core as $trigger) {
+    $vars_html = '';
+    for ($i = 0; $i < count($trigger['vars']); $i += 2) {
+        if ($i > 0) {
+            $vars_html .= ', ';
+        }
+        $vars_html .= $trigger['vars'][$i] . ' ' . (! in_array($trigger['vars'][$i + 1] ?? null, [null, '0'], true) ? '<i>$' . $trigger['vars'][$i + 1] . '</i>' : null);
+    }
+
+    $files_html = '';
+    $f = 1;
+    foreach ($trigger['files'] as $file) {
+        if (! (bool) $f) {
+            $files_html .= '<br>';
+        }
+        $f = 0;
+        $files_html .= preg_replace('#\((.+)\)#', '(<i>$1</i>)', (string) $file);
+    }
+
+    $rows .= <<<HTML
+
+        <tr>
+          <td>{$trigger['name']}</td>
+          <td>{$trigger['type']}</td>
+          <td>{$vars_html}</td>
+          <td>{$files_html}</td>
+          <td>
+    HTML . @$trigger['infos'] . "</td>\n        </tr>\n";
+}
+echo $rows;
+
+echo <<<HTML
+  </tbody>
+  <tfoot>
+    <tr>
+      <td><input type="text" value="Name" class="search_input"></td>
+      <td>
+        <select class="search_input">
+          <option value="">Type</option>
+          <option value="trigger_notify">trigger_notify</option>
+          <option value="trigger_change">trigger_change</option>
+        </select>
+      </td>
+      <td><input type="text" value="Variables" class="search_input"></td>
+      <td><input type="text" value="Usage" class="search_input"></td>
+      <td><input type="text" value="Commentary" class="search_input"></td>
+    </tr>
+  </tfoot>
+  </table>
+</div> <!-- the_page -->
+
+<div id="the_footer">
+  Copyright &copy; 2002-2016 <a href="http://piwigo.org">Piwigo Team</a>
+</div> <!-- the_footer -->
+
+
+<script type="text/javascript" src="//code.jquery.com/jquery-1.9.1.min.js"></script>
+<script type="text/javascript" src="//ajax.aspnetcdn.com/ajax/jquery.dataTables/1.9.4/jquery.dataTables.min.js"></script>
+
+<script type="text/javascript">
+{$js}
 </script>
 
 </body>
 </html>
+HTML . "\n";

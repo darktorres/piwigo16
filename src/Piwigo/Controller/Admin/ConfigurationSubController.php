@@ -10,7 +10,7 @@ use Override;
 use Piwigo\Activity\ActivityService;
 use Piwigo\Admin\CoreTabs;
 use Piwigo\Admin\CoreTabsContext;
-use Piwigo\Admin\Image\PwgImage;
+use Piwigo\Admin\Image\ImageBackend;
 use Piwigo\Admin\Tabsheet;
 use Piwigo\Admin\Upload\UploadService;
 use Piwigo\Auth\AccessControl;
@@ -643,7 +643,7 @@ final class ConfigurationSubController implements AdminSubControllerInterface
                 // we only load the derivatives if it was not already loaded: it occurs
                 // when submitting the form and an error remains
                 if (! $this->sizesLoadedInTpl) {
-                    $is_gd = (PwgImage::getLibrary() === 'gd') ? true : false;
+                    $is_gd = (ImageBackend::getLibrary() === 'gd') ? true : false;
 
                     $sizes = [
                         'original_resize_maxwidth' => $this->currentConfig->originalResizeMaxwidth,

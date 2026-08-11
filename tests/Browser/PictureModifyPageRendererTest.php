@@ -648,7 +648,7 @@ it('swaps width/height and flips the FORMAT flag for a photo with a stored 90/27
     // H::makeTestImage() draws a fixed 200x150 (landscape) canvas, with no
     // EXIF orientation tag -- images.rotation stays 0 (no auto-rotation)
     // through a normal API upload. Written directly instead of via a real
-    // EXIF Orientation tag: Admin\Image\PwgImage::getRotationAngle()
+    // EXIF Orientation tag: Admin\Image\ImageBackend::getRotationAngle()
     // needs a real embedded EXIF segment GD's own imagejpeg() can't
     // write, and ImageDerivativeControllerTest's own
     // idcSetImageRotationCode() already established this exact "UPDATE
@@ -658,7 +658,7 @@ it('swaps width/height and flips the FORMAT flag for a photo with a stored 90/27
     $imageId = H::uploadPhotoViaApi($image, $albumId, 'PM Rotation Photo');
     @unlink($image);
 
-    // Rotation code 1 == 90 degrees (Admin\Image\PwgImage::
+    // Rotation code 1 == 90 degrees (Admin\Image\ImageBackend::
     // getRotationCodeFromAngle()) -- in [1, 3], the swap branch under
     // test; code 2 (180 degrees) deliberately does NOT swap width/height,
     // so only 1 or 3 exercise this line.

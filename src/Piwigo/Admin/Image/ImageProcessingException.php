@@ -8,7 +8,7 @@ use RuntimeException;
 
 /**
  * Replaces the 17 real die() calls across
- * ImageGd.php/PwgImage.php/ImageExtImagick.php/Admin\Upload\UploadService.php
+ * ImageGd.php/ImageBackend.php/ImageExtImagick.php/Admin\Upload\UploadService.php
  * (mid-request image-processing/upload failures -- corrupt image, missing
  * library, unsupported/forbidden file type, directory creation/write
  * failure). A plain throw, not a Piwigo\Http\ResponseReadyException: that

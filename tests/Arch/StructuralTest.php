@@ -241,7 +241,7 @@ test('Kernel::container() is only called from src/Piwigo/Bootstrap/', function (
 
     $shimAllowedFiles = [
         '/src/Piwigo/Admin/Upload/UploadService.php',
-        '/src/Piwigo/Admin/Image/PwgImage.php',
+        '/src/Piwigo/Admin/Image/ImageBackend.php',
         '/src/Piwigo/Core/FilesystemHelper.php',
         '/src/Piwigo/Core/CoverageCollector.php',
         '/src/Piwigo/Core/ErrorCollector.php',

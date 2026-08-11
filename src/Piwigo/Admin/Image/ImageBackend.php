@@ -27,7 +27,7 @@ use Piwigo\Core\TimingHelper;
 use Piwigo\Event\Lifecycle\LoadImageLibrary;
 use Piwigo\PluginConfig\EventDispatcher;
 
-final class PwgImage implements ImageInterface
+final class ImageBackend implements ImageInterface
 {
     /**
      * @var ImageInterface|null null until either a 'load_image_library'
@@ -76,7 +76,7 @@ final class PwgImage implements ImageInterface
             'ext_imagick' => new ImageExtImagick($this->source_filepath, $this->currentLogger, $this->currentConfig),
             'imagick' => new ImageImagick($this->source_filepath),
             'gd' => new ImageGd($this->source_filepath),
-            default => throw new Exception("PwgImage: unknown image library '{$this->library}'"),
+            default => throw new Exception("ImageBackend: unknown image library '{$this->library}'"),
         };
     }
 
@@ -85,7 +85,7 @@ final class PwgImage implements ImageInterface
     // arbitrary $method string against an arbitrary backend). Explicit
     // one-liners here give real signature checking for the exact same
     // public surface real callers already use (e.g. tests/Unit/Admin/
-    // Image/PwgImageTest.php's `$img->getWidth()`).
+    // Image/ImageBackendTest.php's `$img->getWidth()`).
     #[Override]
     public function getWidth(): int|float
     {
@@ -166,7 +166,7 @@ final class PwgImage implements ImageInterface
     private function getImage(): ImageInterface
     {
         if (! $this->image instanceof ImageInterface) {
-            throw new LogicException('PwgImage: no image library instantiated');
+            throw new LogicException('ImageBackend: no image library instantiated');
         }
         return $this->image;
     }

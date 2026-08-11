@@ -100,7 +100,7 @@ use RuntimeException;
 //   the only way `>` and `>=` diverge is an exact tie, and a tie
 //   reassigns $maxImageId to its own current value -- unobservable either
 //   way, same "self-reassignment at a boundary" reasoning as
-//   PwgImage.php's own dest_ratio==img_ratio finding.
+//   ImageBackend.php's own dest_ratio==img_ratio finding.
 // - emptyLounge()'s `$idx + 1` lookahead index (IncrementInteger to
 //   `$idx + 2`): verified directly (not assumed) that
 //   associateImagesToCategories() re-queries findMaxRanksByCategory()

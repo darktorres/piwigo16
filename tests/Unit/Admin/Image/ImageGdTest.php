@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
+use Piwigo\Admin\Image\ImageBackend;
 use Piwigo\Admin\Image\ImageGd;
 use Piwigo\Admin\Image\ImageInterface;
 use Piwigo\Admin\Image\ImageProcessingException;
-use Piwigo\Admin\Image\PwgImage;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\CurrentLogger;
 use Piwigo\PluginConfig\EventDispatcher;
@@ -613,7 +613,7 @@ test('sharpen applies a real convolution and reports success', function (): void
 test('sharpen leaves a uniform region at exactly its original value', function (): void {
     // Real gap, found via mutation testing: the existing sharpen test
     // only checks the boolean return value, never any actual pixel data.
-    // PwgImage::getSharpenMatrix() always normalizes its kernel to sum
+    // ImageBackend::getSharpenMatrix() always normalizes its kernel to sum
     // to exactly 1 (every cell divided by the matrix's own total), so for
     // any uniform (flat-color) region, imageconvolution()'s div=1/offset=0
     // literals must leave every channel completely unchanged -- any
@@ -735,7 +735,7 @@ test('compose throws when the overlay uses a different image backend', function 
     imagejpeg($gdImg, $path);
     $img = new ImageGd($path);
 
-    $overlay = new PwgImage($path, new CurrentLogger(), new EventDispatcher(), new CurrentConfig(), 'gd');
+    $overlay = new ImageBackend($path, new CurrentLogger(), new EventDispatcher(), new CurrentConfig(), 'gd');
     // Swap in a fake, non-ImageGd backend to force the mismatch --
     // ImageImagick/ImageExtImagick both need a real ext_imagick/imagick
     // setup this suite doesn't otherwise depend on, and this class's own
@@ -781,7 +781,7 @@ test('compose throws when the overlay uses a different image backend', function 
             return true;
         }
 
-        public function compose(PwgImage $overlay, int|float $x, int|float $y, int|float $opacity): bool
+        public function compose(ImageBackend $overlay, int|float $x, int|float $y, int|float $opacity): bool
         {
             return true;
         }
@@ -793,7 +793,7 @@ test('compose throws when the overlay uses a different image backend', function 
     };
 
     expect(fn () => $img->compose($overlay, 0, 0, 100))
-        ->toThrow(LogicException::class, 'PwgImage::compose(): overlay must use the same image backend');
+        ->toThrow(LogicException::class, 'ImageBackend::compose(): overlay must use the same image backend');
 });
 
 test('crop throws when the requested target size overflows GD\'s internal allocation check', function (): void {
@@ -884,7 +884,7 @@ test('compose merges a same-backend overlay onto the base image', function (): v
     imagepng($overlayImg, $overlayPath);
 
     $img = new ImageGd($basePath);
-    $overlay = new PwgImage($overlayPath, new CurrentLogger(), new EventDispatcher(), new CurrentConfig(), 'gd');
+    $overlay = new ImageBackend($overlayPath, new CurrentLogger(), new EventDispatcher(), new CurrentConfig(), 'gd');
 
     expect($img->compose($overlay, 2, 2, 100))
         ->toBeTrue();
@@ -924,7 +924,7 @@ test('compose accepts real float x/y/opacity without a TypeError', function (): 
     imagepng($overlayImg, $overlayPath);
 
     $img = new ImageGd($basePath);
-    $overlay = new PwgImage($overlayPath, new CurrentLogger(), new EventDispatcher(), new CurrentConfig(), 'gd');
+    $overlay = new ImageBackend($overlayPath, new CurrentLogger(), new EventDispatcher(), new CurrentConfig(), 'gd');
 
     $result = $img->compose($overlay, 2.0, 2.0, 100.0);
 
@@ -969,7 +969,7 @@ test('compose samples the cut region and the overlay from the correct offsets, n
     imagepng($overlayImg, $overlayPath);
 
     $img = new ImageGd($basePath);
-    $overlay = new PwgImage($overlayPath, new CurrentLogger(), new EventDispatcher(), new CurrentConfig(), 'gd');
+    $overlay = new ImageBackend($overlayPath, new CurrentLogger(), new EventDispatcher(), new CurrentConfig(), 'gd');
 
     expect($img->compose($overlay, 2, 2, 100))
         ->toBeTrue();

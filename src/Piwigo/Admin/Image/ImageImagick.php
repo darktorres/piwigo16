@@ -120,21 +120,21 @@ final class ImageImagick implements ImageInterface
         // (the only one) doesn't catch it, so any real request for a
         // derivative with a configured sharpen level fatally errored
         // instead of degrading -- confirmed uncaught up the stack.
-        $m = PwgImage::getSharpenMatrix($amount);
+        $m = ImageBackend::getSharpenMatrix($amount);
         return $this->image->convolveImage(ImagickKernel::fromMatrix($m));
     }
 
     #[Override]
-    public function compose(PwgImage $overlay, int|float $x, int|float $y, int|float $opacity): bool
+    public function compose(ImageBackend $overlay, int|float $x, int|float $y, int|float $opacity): bool
     {
         // compose() reaches into the overlay's own backend object to get
         // its raw Imagick instance — only valid when both images use the
         // same backend (always true in practice: i.php constructs both
-        // via `new PwgImage(...)`, which resolves the backend from the
+        // via `new ImageBackend(...)`, which resolves the backend from the
         // single \Piwigo\Config\CurrentConfig::graphicsLibrary() setting).
         $overlay_backend = $overlay->image;
         if (! $overlay_backend instanceof self) {
-            throw new LogicException('PwgImage::compose(): overlay must use the same image backend');
+            throw new LogicException('ImageBackend::compose(): overlay must use the same image backend');
         }
         $ioverlay = $overlay_backend->image;
         /*if ($ioverlay->getImageAlphaChannel() !== Imagick::ALPHACHANNEL_OPAQUE)

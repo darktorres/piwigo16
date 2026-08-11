@@ -51,7 +51,7 @@ final class ImageExtImagick implements ImageInterface
         $this->imagickdir = $imagick_dir;
 
         if (strtolower(StringHelper::getExtension($this->source_filepath)) === 'webp') {
-            $webp_info = PwgImage::webpInfo($this->source_filepath);
+            $webp_info = ImageBackend::webpInfo($this->source_filepath);
 
             if ($webp_info->hasAnimation) {
                 $this->is_animated_webp = true;
@@ -175,7 +175,7 @@ final class ImageExtImagick implements ImageInterface
     #[Override]
     public function sharpen(int|float $amount): bool
     {
-        $m = PwgImage::getSharpenMatrix($amount);
+        $m = ImageBackend::getSharpenMatrix($amount);
 
         $param = 'convolve "' . count($m) . ':';
         foreach ($m as $line) {
@@ -188,13 +188,13 @@ final class ImageExtImagick implements ImageInterface
     }
 
     #[Override]
-    public function compose(PwgImage $overlay, int|float $x, int|float $y, int|float $opacity): bool
+    public function compose(ImageBackend $overlay, int|float $x, int|float $y, int|float $opacity): bool
     {
         // See ImageImagick::compose()'s comment: only valid when both
         // images use the same backend, always true in practice.
         $overlay_backend = $overlay->image;
         if (! $overlay_backend instanceof self) {
-            throw new LogicException('PwgImage::compose(): overlay must use the same image backend');
+            throw new LogicException('ImageBackend::compose(): overlay must use the same image backend');
         }
         $overlay_realpath = realpath($overlay_backend->source_filepath);
         if ($overlay_realpath === false) {
@@ -225,13 +225,13 @@ final class ImageExtImagick implements ImageInterface
         // to detect IM version and when we know which version supports this
         // option
         //
-        if (version_compare(PwgImage::$ext_imagick_version, '6.6') > 0) {
+        if (version_compare(ImageBackend::$ext_imagick_version, '6.6') > 0) {
             $this->addCommand('sampling-factor', '4:2:2');
         }
 
         // [SEC-16] escapeshellarg() on the dir prefix and both real paths
         // below -- see the constructor's own note above.
-        $exec = escapeshellarg($this->imagickdir) . PwgImage::getExtImagickCommand();
+        $exec = escapeshellarg($this->imagickdir) . ImageBackend::getExtImagickCommand();
         $exec .= ' ' . escapeshellarg((string) realpath($this->source_filepath));
 
         // If the image is animated webp add a filter to avoid breaking the animation

@@ -609,7 +609,7 @@ final class Users
      * does return WsErrorResponse|array<int|string, mixed>) is known to return,
      * the same "resolve, narrow, or throw" idiom already used throughout
      * this codebase for other statically-unknowable-but-really-fixed-shape
-     * values (e.g. PwgImage::currentConfig()'s container resolve).
+     * values (e.g. ImageBackend::currentConfig()'s container resolve).
      *
      * @return WsErrorResponse|array<int|string, mixed>
      */

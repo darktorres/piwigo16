@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Admin;
 
 use Piwigo\Activity\ActivityService;
-use Piwigo\Admin\Image\PwgImage;
+use Piwigo\Admin\Image\ImageBackend;
 use Piwigo\Admin\Maintenance\DbMaintenanceRepository;
 use Piwigo\Admin\Maintenance\FilesystemIntegrityChecker;
 use Piwigo\Admin\Maintenance\MaintenanceActionDispatcher;
@@ -125,7 +125,7 @@ final class MaintenanceEnvPageRenderer
             : null;
 
         // graphics library
-        $graphics_library = PwgImage::getGraphicsLibraryLabel();
+        $graphics_library = ImageBackend::getGraphicsLibraryLabel();
         $graphics_library_value = $graphics_library !== '' ? $graphics_library : null;
 
         $maint_unlock_gallery = null;

@@ -150,12 +150,12 @@ final class ImageGd implements ImageInterface
     #[Override]
     public function sharpen(int|float $amount): bool
     {
-        $m = PwgImage::getSharpenMatrix($amount);
+        $m = ImageBackend::getSharpenMatrix($amount);
         return imageconvolution($this->image, $m, 1, 0);
     }
 
     #[Override]
-    public function compose(PwgImage $overlay, int|float $x, int|float $y, int|float $opacity): bool
+    public function compose(ImageBackend $overlay, int|float $x, int|float $y, int|float $opacity): bool
     {
         // see crop()'s comment: GD's native imagecopy()/imagecopymerge()
         // require int arguments — real callers pass floats here too (i.php's
@@ -169,7 +169,7 @@ final class ImageGd implements ImageInterface
         // images use the same backend, always true in practice.
         $overlay_backend = $overlay->image;
         if (! $overlay_backend instanceof self) {
-            throw new LogicException('PwgImage::compose(): overlay must use the same image backend');
+            throw new LogicException('ImageBackend::compose(): overlay must use the same image backend');
         }
         $ioverlay = $overlay_backend->image;
         /* A replacement for php's imagecopymerge() function that supports the alpha channel

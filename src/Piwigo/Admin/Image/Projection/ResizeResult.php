@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Admin\Image\Projection;
 
 /**
- * {@see \Piwigo\Admin\Image\PwgImage::pwgResize()}'s own fixed result
+ * {@see \Piwigo\Admin\Image\ImageBackend::pwgResize()}'s own fixed result
  * shape.
  */
 final readonly class ResizeResult

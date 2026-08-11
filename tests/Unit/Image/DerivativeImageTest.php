@@ -106,7 +106,7 @@ use RuntimeException;
 //   mathematical-identity self-reassignment -- verified algebraically
 //   that both branches compute the IDENTICAL final ($maxw, $maxh) at
 //   that exact tie, same "wrongly taken branch reassigns to its own
-//   current value" reasoning as PwgImage.php's own dest_ratio===
+//   current value" reasoning as ImageBackend.php's own dest_ratio===
 //   img_ratio finding. `(float)`/floor()'s own casts are additionally
 //   inert on their own terms too: `/` between two ints already produces
 //   a type-correct result PHP's numeric comparisons don't care about,

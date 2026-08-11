@@ -301,7 +301,7 @@ final class Groups
      * does return WsErrorResponse|array{paging: NamedStruct, groups: NamedArray})
      * is known to return, the same "resolve, narrow, or throw" idiom
      * already used throughout this codebase for other statically-
-     * unknowable-but-really-fixed-shape values (e.g. PwgImage::
+     * unknowable-but-really-fixed-shape values (e.g. ImageBackend::
      * currentConfig()'s container resolve). Kept as a plain (non-sealed)
      * `array` here -- unlike getList() itself, this method never literally
      * constructs the array, only narrows an already-built one, so PHPStan

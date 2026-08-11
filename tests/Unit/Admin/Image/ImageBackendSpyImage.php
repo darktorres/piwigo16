@@ -4,17 +4,18 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Unit\Admin\Image;
 
+use Piwigo\Admin\Image\ImageBackend;
 use Piwigo\Admin\Image\ImageInterface;
-use Piwigo\Admin\Image\PwgImage;
 
 /**
- * Same call-recording contract as PwgImageSpyImage, but write() controls
- * the destination file directly -- $writeBytes=null never creates it at
- * all (getResizeResult()'s own filesize() call observes a genuinely
- * missing file), otherwise it writes exactly that many bytes (exact
- * control over the "X KB" computation).
+ * Records every call pwgResize() makes on the underlying ImageInterface,
+ * in order -- several pwgResize() mutations (skipping strip()/crop()/
+ * rotate(), or calling rotate() when the resolved rotation is exactly 0)
+ * produce a destination file with the exact same final dimensions as the
+ * unmutated code, so asserting on width/height/file-existence alone can't
+ * catch them. Asserting on the real call sequence can.
  */
-final class PwgImageSpyImageFileControl implements ImageInterface
+final class ImageBackendSpyImage implements ImageInterface
 {
     /**
      * @var list<string>
@@ -24,7 +25,6 @@ final class PwgImageSpyImageFileControl implements ImageInterface
     public function __construct(
         private readonly int|float $width,
         private readonly int|float $height,
-        private readonly ?int $writeBytes,
     ) {}
 
     public function getWidth(): int|float
@@ -39,13 +39,13 @@ final class PwgImageSpyImageFileControl implements ImageInterface
 
     public function setCompressionQuality(int $quality): bool
     {
-        $this->calls[] = 'setCompressionQuality';
+        $this->calls[] = "setCompressionQuality({$quality})";
         return true;
     }
 
     public function crop(int|float $width, int|float $height, int|float $x, int|float $y): bool
     {
-        $this->calls[] = 'crop';
+        $this->calls[] = "crop({$width},{$height},{$x},{$y})";
         return true;
     }
 
@@ -57,23 +57,23 @@ final class PwgImageSpyImageFileControl implements ImageInterface
 
     public function rotate(int|float $rotation): bool
     {
-        $this->calls[] = 'rotate';
+        $this->calls[] = "rotate({$rotation})";
         return true;
     }
 
     public function resize(int|float $width, int|float $height): bool
     {
-        $this->calls[] = 'resize';
+        $this->calls[] = "resize({$width},{$height})";
         return true;
     }
 
     public function sharpen(int|float $amount): bool
     {
-        $this->calls[] = 'sharpen';
+        $this->calls[] = "sharpen({$amount})";
         return true;
     }
 
-    public function compose(PwgImage $overlay, int|float $x, int|float $y, int|float $opacity): bool
+    public function compose(ImageBackend $overlay, int|float $x, int|float $y, int|float $opacity): bool
     {
         $this->calls[] = 'compose';
         return true;
@@ -82,9 +82,7 @@ final class PwgImageSpyImageFileControl implements ImageInterface
     public function write(string $destination_filepath): bool
     {
         $this->calls[] = 'write';
-        if ($this->writeBytes !== null) {
-            file_put_contents($destination_filepath, str_repeat('x', $this->writeBytes));
-        }
+        touch($destination_filepath);
         return true;
     }
 }

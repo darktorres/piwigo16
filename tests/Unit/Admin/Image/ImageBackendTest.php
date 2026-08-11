@@ -6,12 +6,12 @@ namespace Piwigo\Tests\Unit\Admin\Image;
 
 use Exception;
 use LogicException;
+use Piwigo\Admin\Image\ImageBackend;
 use Piwigo\Admin\Image\ImageInterface;
 use Piwigo\Admin\Image\ImageProcessingException;
 use Piwigo\Admin\Image\Projection\ResizeCrop;
 use Piwigo\Admin\Image\Projection\ResizeDimensions;
 use Piwigo\Admin\Image\Projection\WebpInfo;
-use Piwigo\Admin\Image\PwgImage;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\CurrentLogger;
 use Piwigo\Core\Kernel;
@@ -88,34 +88,34 @@ function pwgImageTestMarker(): string
 }
 
 /**
- * PwgImage takes CurrentLogger via constructor injection, forwarded only
+ * ImageBackend takes CurrentLogger via constructor injection, forwarded only
  * to the 'ext_imagick' branch (ImageExtImagick::write()'s own read) -- a
  * fresh, never-set() instance is safe here since every test in this file
  * uses 'gd' or lets getLibrary() fall back to it (this environment has no
  * ext_imagick/imagick binary available, see this file's own docblock).
  */
-function pwgImageTestMake(string $sourceFilepath, ?string $library = null): PwgImage
+function pwgImageTestMake(string $sourceFilepath, ?string $library = null): ImageBackend
 {
-    return new PwgImage($sourceFilepath, new CurrentLogger(), EventDispatcherTestFactory::get(), new CurrentConfig(), $library);
+    return new ImageBackend($sourceFilepath, new CurrentLogger(), EventDispatcherTestFactory::get(), new CurrentConfig(), $library);
 }
 
 /**
- * Builds a PwgImage whose underlying ImageInterface is a PwgImageSpyImage
+ * Builds a ImageBackend whose underlying ImageInterface is a ImageBackendSpyImage
  * reporting the given (fake) width/height -- via the same 'load_image_library'
  * event short-circuit as the "plugin-provided image instance" test below, so
  * no real image decode ever happens. $sourceFilepath only needs a real file
  * on disk when getRotationAngle() will read its EXIF data (automatic
  * rotation tests) -- pwgResize() never reads pixels through this double.
  *
- * @return array{0: PwgImage, 1: PwgImageSpyImage}
+ * @return array{0: ImageBackend, 1: ImageBackendSpyImage}
  */
 function pwgImageTestMakeSpy(string $sourceFilepath, int|float $width, int|float $height): array
 {
-    $spy = new PwgImageSpyImage($width, $height);
+    $spy = new ImageBackendSpyImage($width, $height);
     $handler = function (LoadImageLibrary $event) use ($spy): void {
         $target = $event->value;
-        if (! $target instanceof PwgImage) {
-            throw new RuntimeException('load_image_library: expected a PwgImage instance');
+        if (! $target instanceof ImageBackend) {
+            throw new RuntimeException('load_image_library: expected a ImageBackend instance');
         }
         $target->image = $spy;
     };
@@ -130,19 +130,19 @@ function pwgImageTestMakeSpy(string $sourceFilepath, int|float $width, int|float
 }
 
 /**
- * Same shape as pwgImageTestMakeSpy(), but for PwgImageSpyImageFileControl
+ * Same shape as pwgImageTestMakeSpy(), but for ImageBackendSpyImageFileControl
  * -- exact control over the destination file getResizeResult() later
  * inspects via filesize().
  *
- * @return array{0: PwgImage, 1: PwgImageSpyImageFileControl}
+ * @return array{0: ImageBackend, 1: ImageBackendSpyImageFileControl}
  */
 function pwgImageTestMakeFileControlSpy(string $sourceFilepath, int|float $width, int|float $height, ?int $writeBytes): array
 {
-    $spy = new PwgImageSpyImageFileControl($width, $height, $writeBytes);
+    $spy = new ImageBackendSpyImageFileControl($width, $height, $writeBytes);
     $handler = function (LoadImageLibrary $event) use ($spy): void {
         $target = $event->value;
-        if (! $target instanceof PwgImage) {
-            throw new RuntimeException('load_image_library: expected a PwgImage instance');
+        if (! $target instanceof ImageBackend) {
+            throw new RuntimeException('load_image_library: expected a ImageBackend instance');
         }
         $target->image = $spy;
     };
@@ -164,7 +164,7 @@ function pwgImageTestMakeFileControlSpy(string $sourceFilepath, int|float $width
  * a real PHP-engine-level fact (a disabled function, an unloaded
  * extension) that this class has no injection seam for: a real PHP
  * engine genuinely enforcing real `-d`/`-n` flags, not a mock of
- * PwgImage or of any global function it calls, and the subprocess exits
+ * ImageBackend or of any global function it calls, and the subprocess exits
  * on its own without leaking any state back into this shared PHPUnit
  * process the way an in-process override would.
  *
@@ -244,7 +244,7 @@ test('construct accepts an uppercase file extension case-insensitively', functio
 });
 
 test('getResizeDimensions leaves dimensions unchanged when both fit within the max bounds', function (): void {
-    $result = PwgImage::getResizeDimensions(100, 100, 200, 200);
+    $result = ImageBackend::getResizeDimensions(100, 100, 200, 200);
 
     expect($result)
         ->toEqual(new ResizeDimensions(100, 100));
@@ -253,7 +253,7 @@ test('getResizeDimensions leaves dimensions unchanged when both fit within the m
 test('getResizeDimensions scales down on the width-bound side', function (): void {
     // ratio_width=2 > ratio_height=1 -> the "else" branch: width pinned to
     // max_width, height derived from ratio_width.
-    $result = PwgImage::getResizeDimensions(800, 400, 400, 400);
+    $result = ImageBackend::getResizeDimensions(800, 400, 400, 400);
 
     // round() always returns float in PHP -- $max_width itself passes
     // through unrounded (still the plain int param), but the derived side
@@ -265,7 +265,7 @@ test('getResizeDimensions scales down on the width-bound side', function (): voi
 test('getResizeDimensions scales down on the height-bound side', function (): void {
     // ratio_height=2 > ratio_width=1 -> the "if" branch: height pinned to
     // max_height, width derived from ratio_height.
-    $result = PwgImage::getResizeDimensions(400, 800, 400, 400);
+    $result = ImageBackend::getResizeDimensions(400, 800, 400, 400);
 
     expect($result)
         ->toEqual(new ResizeDimensions(200.0, 400));
@@ -276,14 +276,14 @@ test('getResizeDimensions rounds (not floors) the width-bound side when the frac
     // on a whole-number ratio (round(400/2) = 200 exactly), so round()
     // and floor() coincide there. height=401 (vs. 400) shifts the raw
     // value to 200.5, where round() (201) and floor() (200) differ.
-    $result = PwgImage::getResizeDimensions(800, 401, 400, 400);
+    $result = ImageBackend::getResizeDimensions(800, 401, 400, 400);
 
     expect($result)
         ->toEqual(new ResizeDimensions(400, 201.0));
 });
 
 test('getResizeDimensions rounds (not floors) the height-bound side when the fraction is >= 0.5', function (): void {
-    $result = PwgImage::getResizeDimensions(401, 800, 400, 400);
+    $result = ImageBackend::getResizeDimensions(401, 800, 400, 400);
 
     expect($result)
         ->toEqual(new ResizeDimensions(201.0, 400));
@@ -295,7 +295,7 @@ test('getResizeDimensions crops a portrait image against a landscape-ish max, sw
     // (0.333) selects the destHeight/y-crop branch (round()-derived
     // height/y come back as float; width/x pass through as the untouched
     // int params).
-    $result = PwgImage::getResizeDimensions(100, 300, 160, 120, null, true, true);
+    $result = ImageBackend::getResizeDimensions(100, 300, 160, 120, null, true, true);
 
     expect($result)
         ->toEqual(new ResizeDimensions(100, 133.0, new ResizeCrop(100, 133.0, 0, 84.0)));
@@ -306,7 +306,7 @@ test('getResizeDimensions crops a landscape image, selecting the destWidth/x-cro
     // < img_ratio(3) selects the destWidth/x-crop branch instead (here
     // width/x are the round()-derived floats; height/y pass through as
     // untouched ints).
-    $result = PwgImage::getResizeDimensions(300, 100, 200, 200, null, true);
+    $result = ImageBackend::getResizeDimensions(300, 100, 200, 200, null, true);
 
     expect($result)
         ->toEqual(new ResizeDimensions(100.0, 100, new ResizeCrop(100.0, 100, 100.0, 0)));
@@ -318,7 +318,7 @@ test('getResizeDimensions rounds (not floors) the destHeight/y crop math when th
     // land on 133 there, so a round()->floor() mutation is invisible.
     // width=101 (vs. 100) shifts the fraction to 134.667/82.5, where
     // round() (135/83) and floor() (134/82) genuinely differ.
-    $result = PwgImage::getResizeDimensions(101, 300, 160, 120, null, true, true);
+    $result = ImageBackend::getResizeDimensions(101, 300, 160, 120, null, true, true);
 
     expect($result)
         ->toEqual(new ResizeDimensions(101, 135.0, new ResizeCrop(101, 135.0, 0, 83.0)));
@@ -329,7 +329,7 @@ test('getResizeDimensions rounds (not floors) the destWidth/x crop math when the
     // the destWidth/x-crop branch instead: height=101, max 200x150
     // yields a raw destWidth of 134.667/x of 82.667, where round()
     // (135/83) and floor() (134/82) genuinely differ.
-    $result = PwgImage::getResizeDimensions(300, 101, 200, 150, null, true);
+    $result = ImageBackend::getResizeDimensions(300, 101, 200, 150, null, true);
 
     expect($result)
         ->toEqual(new ResizeDimensions(135.0, 101, new ResizeCrop(135.0, 101, 83.0, 0)));
@@ -340,14 +340,14 @@ test('getResizeDimensions does not swap max dimensions for a square (tied width/
     // `<=` only matters when width and height are exactly equal -- a
     // square source with a non-square max makes the (wrongly) swapped
     // vs. not-swapped outcome genuinely different.
-    $result = PwgImage::getResizeDimensions(200, 200, 160, 120, null, true);
+    $result = ImageBackend::getResizeDimensions(200, 200, 160, 120, null, true);
 
     expect($result)
         ->toEqual(new ResizeDimensions(160, 120.0, new ResizeCrop(200, 150.0, 0, 25.0)));
 });
 
 test('getResizeDimensions swaps width/height for a 90-degree rotation before and after computing the max-size fit', function (): void {
-    $result = PwgImage::getResizeDimensions(100, 200, 50, 100, 90, false);
+    $result = ImageBackend::getResizeDimensions(100, 200, 50, 100, 90, false);
 
     // Pre-swap: destination_width=$max_width (int, unchanged), destination_
     // height=round(...) (float); the post-computation rotate_for_dimensions
@@ -361,7 +361,7 @@ test('getResizeDimensions swaps width/height for a 270-degree rotation too, not 
     // test uses 90 -- a mutation shrinking/growing/dropping the [90, 270]
     // array (269, 271, or [90] alone) all still swap for 90 but silently
     // stop swapping for 270, which none of the existing tests would catch.
-    $result = PwgImage::getResizeDimensions(100, 200, 50, 100, 270, false);
+    $result = ImageBackend::getResizeDimensions(100, 200, 50, 100, 270, false);
 
     expect($result)
         ->toEqual(new ResizeDimensions(25.0, 50));
@@ -382,7 +382,7 @@ test('getResizeDimensions applies neither crop offset when dest_ratio exactly eq
     // 0/0 defaults -- there is no external observable difference between
     // `>` and `>=` (or `<`/`<=` on line 241, same reasoning) at this exact
     // boundary. Provably inert, not an untested gap.
-    $result = PwgImage::getResizeDimensions(200, 100, 100, 50, null, true);
+    $result = ImageBackend::getResizeDimensions(200, 100, 100, 50, null, true);
 
     expect($result)
         ->toEqual(new ResizeDimensions(100, 50.0));
@@ -404,7 +404,7 @@ test('getResizeDimensions rounds (not ceils) the destWidth/destHeight crop-branc
     // with max(101, 97) instead so the division itself lands on a
     // fraction < 0.5: destWidth = round(100 * 101 / 97) = round(104.123..)
     // = 104 (round and floor agree; ceil would give 105).
-    $result = PwgImage::getResizeDimensions(300, 100, 101, 97, null, true);
+    $result = ImageBackend::getResizeDimensions(300, 100, 101, 97, null, true);
 
     expect($result)
         ->toEqual(new ResizeDimensions(101.0, 97, new ResizeCrop(104.0, 100, 98.0, 0)));
@@ -420,7 +420,7 @@ test('getResizeDimensions rounds (not ceils) the final destination_width when th
     // selects this branch: round(203 / 2.0833..) = round(97.44) = 97
     // (ceil would give 98). Verified directly against the real function
     // (not hand-derived) before asserting.
-    $result = PwgImage::getResizeDimensions(203, 100, 100, 48, null, false);
+    $result = ImageBackend::getResizeDimensions(203, 100, 100, 48, null, false);
 
     expect($result->width)
         ->toBe(97.0);
@@ -434,38 +434,38 @@ test('getResizeDimensions rounds (not ceils) the final destination_height when t
     // ratio_width=2.0833.., so ratio_width >= ratio_height selects this
     // branch: round(203 / 2.0833..) = round(97.44) = 97 (ceil would give
     // 98). Verified directly against the real function before asserting.
-    $result = PwgImage::getResizeDimensions(100, 203, 48, 100, null, false);
+    $result = ImageBackend::getResizeDimensions(100, 203, 48, 100, null, false);
 
     expect($result->height)
         ->toBe(97.0);
 });
 
 test('getRotationCodeFromAngle maps every known angle, treating null the same as 0', function (): void {
-    expect(PwgImage::getRotationCodeFromAngle(null))->toBe(0);
-    expect(PwgImage::getRotationCodeFromAngle(0))->toBe(0);
-    expect(PwgImage::getRotationCodeFromAngle(90))->toBe(1);
-    expect(PwgImage::getRotationCodeFromAngle(180))->toBe(2);
-    expect(PwgImage::getRotationCodeFromAngle(270))->toBe(3);
+    expect(ImageBackend::getRotationCodeFromAngle(null))->toBe(0);
+    expect(ImageBackend::getRotationCodeFromAngle(0))->toBe(0);
+    expect(ImageBackend::getRotationCodeFromAngle(90))->toBe(1);
+    expect(ImageBackend::getRotationCodeFromAngle(180))->toBe(2);
+    expect(ImageBackend::getRotationCodeFromAngle(270))->toBe(3);
 });
 
 test('getRotationCodeFromAngle throws for an unexpected angle', function (): void {
-    expect(fn () => PwgImage::getRotationCodeFromAngle(45))
+    expect(fn () => ImageBackend::getRotationCodeFromAngle(45))
         ->toThrow(Exception::class, 'getRotationCodeFromAngle(): unexpected rotation angle 45');
 });
 
 test('getRotationAngleFromCode maps every known code, wrapping modulo 4', function (): void {
-    expect(PwgImage::getRotationAngleFromCode(0))->toBe(0);
-    expect(PwgImage::getRotationAngleFromCode(1))->toBe(90);
-    expect(PwgImage::getRotationAngleFromCode(2))->toBe(180);
-    expect(PwgImage::getRotationAngleFromCode(3))->toBe(270);
+    expect(ImageBackend::getRotationAngleFromCode(0))->toBe(0);
+    expect(ImageBackend::getRotationAngleFromCode(1))->toBe(90);
+    expect(ImageBackend::getRotationAngleFromCode(2))->toBe(180);
+    expect(ImageBackend::getRotationAngleFromCode(3))->toBe(270);
     // ImageDerivativeController's own caller passes a native Doctrine int,
     // but the signature also accepts a numeric-string (legacy mysqli-style
     // caller) -- and the mod-4 wrap covers a value one full cycle past 3.
-    expect(PwgImage::getRotationAngleFromCode('4'))->toBe(0);
+    expect(ImageBackend::getRotationAngleFromCode('4'))->toBe(0);
 });
 
 test('getRotationAngleFromCode throws for an unexpected code', function (): void {
-    expect(fn () => PwgImage::getRotationAngleFromCode(-1))
+    expect(fn () => ImageBackend::getRotationAngleFromCode(-1))
         ->toThrow(Exception::class);
 });
 
@@ -477,7 +477,7 @@ test('getRotationAngle returns null for a non-JPEG source', function (): void {
     }
     imagepng($img, $path);
 
-    expect(PwgImage::getRotationAngle($path))->toBeNull();
+    expect(ImageBackend::getRotationAngle($path))->toBeNull();
 });
 
 test('getRotationAngle returns 0 for a JPEG with no EXIF orientation tag', function (): void {
@@ -488,11 +488,11 @@ test('getRotationAngle returns 0 for a JPEG with no EXIF orientation tag', funct
     }
     imagejpeg($img, $path);
 
-    expect(PwgImage::getRotationAngle($path))->toBe(0);
+    expect(ImageBackend::getRotationAngle($path))->toBe(0);
 });
 
 test('getSharpenMatrix returns a normalized 3x3 kernel centered on the amount-derived weight', function (): void {
-    $matrix = PwgImage::getSharpenMatrix(50);
+    $matrix = ImageBackend::getSharpenMatrix(50);
 
     expect($matrix)
         ->toHaveCount(3);
@@ -514,7 +514,7 @@ test('getSharpenMatrix computes exact, real weight values for a known amount', f
     // then divided by the same norm, so the center/corner *ratio* -29.0
     // is exact and stable regardless of floating-point precision in the
     // individual cells.
-    $matrix = PwgImage::getSharpenMatrix(50);
+    $matrix = ImageBackend::getSharpenMatrix(50);
 
     expect($matrix[1][1] / $matrix[0][0])->toBe(-29.0);
     // The center/corner ratio alone can't tell a real normalization pass
@@ -529,7 +529,7 @@ test('webpInfo detects the simple lossy VP8 format', function (): void {
     $path = pwgImageTestMarker() . '/lossy.webp';
     file_put_contents($path, "RIFF\x00\x00\x00\x00" . 'WEBPVP8 ' . str_repeat("\x00", 9));
 
-    expect(PwgImage::webpInfo($path))->toEqual(new WebpInfo('VP8', false, false));
+    expect(ImageBackend::webpInfo($path))->toEqual(new WebpInfo('VP8', false, false));
 });
 
 test('webpInfo detects a transparent lossless VP8L format', function (): void {
@@ -537,7 +537,7 @@ test('webpInfo detects a transparent lossless VP8L format', function (): void {
     $buf = "RIFF\x00\x00\x00\x00" . 'WEBPVP8L' . str_repeat("\x00", 8) . chr(0x10);
     file_put_contents($path, $buf);
 
-    expect(PwgImage::webpInfo($path))->toEqual(new WebpInfo('VP8L', false, true));
+    expect(ImageBackend::webpInfo($path))->toEqual(new WebpInfo('VP8L', false, true));
 });
 
 test('webpInfo detects a non-transparent lossless VP8L format', function (): void {
@@ -545,7 +545,7 @@ test('webpInfo detects a non-transparent lossless VP8L format', function (): voi
     $buf = "RIFF\x00\x00\x00\x00" . 'WEBPVP8L' . str_repeat("\x00", 8) . chr(0x00);
     file_put_contents($path, $buf);
 
-    expect(PwgImage::webpInfo($path))->toEqual(new WebpInfo('VP8L', false, false));
+    expect(ImageBackend::webpInfo($path))->toEqual(new WebpInfo('VP8L', false, false));
 });
 
 test('webpInfo detects an animated, transparent extended VP8X format', function (): void {
@@ -553,7 +553,7 @@ test('webpInfo detects an animated, transparent extended VP8X format', function 
     $buf = "RIFF\x00\x00\x00\x00" . 'WEBPVP8X' . str_repeat("\x00", 4) . chr(0x12) . str_repeat("\x00", 4);
     file_put_contents($path, $buf);
 
-    expect(PwgImage::webpInfo($path))->toEqual(new WebpInfo('VP8X', true, true));
+    expect(ImageBackend::webpInfo($path))->toEqual(new WebpInfo('VP8X', true, true));
 });
 
 test('webpInfo detects an extended VP8X format that is animated but not transparent', function (): void {
@@ -566,7 +566,7 @@ test('webpInfo detects an extended VP8X format that is animated but not transpar
     $buf = "RIFF\x00\x00\x00\x00" . 'WEBPVP8X' . str_repeat("\x00", 4) . chr(0x02) . str_repeat("\x00", 4);
     file_put_contents($path, $buf);
 
-    expect(PwgImage::webpInfo($path))->toEqual(new WebpInfo('VP8X', true, false));
+    expect(ImageBackend::webpInfo($path))->toEqual(new WebpInfo('VP8X', true, false));
 });
 
 test('webpInfo correctly reports no transparency for a VP8L flags byte with an adjacent, unrelated bit set', function (): void {
@@ -581,7 +581,7 @@ test('webpInfo correctly reports no transparency for a VP8L flags byte with an a
     $buf = "RIFF\x00\x00\x00\x00" . 'WEBPVP8L' . str_repeat("\x00", 8) . chr(0x01);
     file_put_contents($path, $buf);
 
-    expect(PwgImage::webpInfo($path))->toEqual(new WebpInfo('VP8L', false, false));
+    expect(ImageBackend::webpInfo($path))->toEqual(new WebpInfo('VP8L', false, false));
 });
 
 test('webpInfo correctly reports no animation or transparency for a VP8X flags byte with an adjacent, unrelated bit set', function (): void {
@@ -593,7 +593,7 @@ test('webpInfo correctly reports no animation or transparency for a VP8X flags b
     $buf = "RIFF\x00\x00\x00\x00" . 'WEBPVP8X' . str_repeat("\x00", 4) . chr(0x01) . str_repeat("\x00", 4);
     file_put_contents($path, $buf);
 
-    expect(PwgImage::webpInfo($path))->toEqual(new WebpInfo('VP8X', false, false));
+    expect(ImageBackend::webpInfo($path))->toEqual(new WebpInfo('VP8X', false, false));
 });
 
 test('webpInfo detects an extended VP8X format that is transparent but not animated', function (): void {
@@ -601,14 +601,14 @@ test('webpInfo detects an extended VP8X format that is transparent but not anima
     $buf = "RIFF\x00\x00\x00\x00" . 'WEBPVP8X' . str_repeat("\x00", 4) . chr(0x10) . str_repeat("\x00", 4);
     file_put_contents($path, $buf);
 
-    expect(PwgImage::webpInfo($path))->toEqual(new WebpInfo('VP8X', false, true));
+    expect(ImageBackend::webpInfo($path))->toEqual(new WebpInfo('VP8X', false, true));
 });
 
 test('webpInfo throws for a file that is not a real WEBP container', function (): void {
     $path = pwgImageTestMarker() . '/not-webp.webp';
     file_put_contents($path, str_repeat('x', 30));
 
-    expect(fn () => PwgImage::webpInfo($path))
+    expect(fn () => ImageBackend::webpInfo($path))
         ->toThrow(Exception::class, 'webpInfo(): not a valid webp image');
 });
 
@@ -627,16 +627,16 @@ test('webpInfo throws for a buffer exactly one byte short of the 25-byte minimum
         ->toBe(24);
     file_put_contents($path, $buf);
 
-    expect(fn () => PwgImage::webpInfo($path))
+    expect(fn () => ImageBackend::webpInfo($path))
         ->toThrow(Exception::class, 'webpInfo(): not a valid webp image');
 });
 
 test('isGd reports GD as available in this environment', function (): void {
-    expect(PwgImage::isGd())->toBeTrue();
+    expect(ImageBackend::isGd())->toBeTrue();
 });
 
 test('getLibrary resolves an explicit "gd" request without probing imagick at all', function (): void {
-    expect(PwgImage::getLibrary('gd', 'jpg'))->toBe('gd');
+    expect(ImageBackend::getLibrary('gd', 'jpg'))->toBe('gd');
 });
 
 test('getLibrary falls back to auto for an unrecognized library name, resolving to the same real library "auto" itself would', function (): void {
@@ -645,7 +645,7 @@ test('getLibrary falls back to auto for an unrecognized library name, resolving 
     // are real possibilities depending on what's installed where these
     // tests run), an unrecognized $library name must resolve to that
     // exact same result, per getLibrary()'s own default-case fallback.
-    expect(PwgImage::getLibrary('not-a-real-library', 'jpg'))->toBe(PwgImage::getLibrary('auto', 'jpg'));
+    expect(ImageBackend::getLibrary('not-a-real-library', 'jpg'))->toBe(ImageBackend::getLibrary('auto', 'jpg'));
 });
 
 test('getGraphicsLibraryLabel formats the resolved library and version', function (): void {
@@ -655,7 +655,7 @@ test('getGraphicsLibraryLabel formats the resolved library and version', functio
     // in this environment, confirmed via `command -v magick`) is
     // getLibrary()'s first real "auto" pick, so this asserts the exact,
     // real label format for it.
-    $label = PwgImage::getGraphicsLibraryLabel();
+    $label = ImageBackend::getGraphicsLibraryLabel();
 
     expect($label)
         ->toStartWith('External ImageMagick ')
@@ -705,7 +705,7 @@ test('constructor uses a plugin-provided image instance and skips its own librar
             return true;
         }
 
-        public function compose(PwgImage $overlay, int|float $x, int|float $y, int|float $opacity): bool
+        public function compose(ImageBackend $overlay, int|float $x, int|float $y, int|float $opacity): bool
         {
             return true;
         }
@@ -718,8 +718,8 @@ test('constructor uses a plugin-provided image instance and skips its own librar
 
     $handler = function (LoadImageLibrary $event) use ($fake): void {
         $target = $event->value;
-        if (! $target instanceof PwgImage) {
-            throw new RuntimeException('load_image_library: expected a PwgImage instance');
+        if (! $target instanceof ImageBackend) {
+            throw new RuntimeException('load_image_library: expected a ImageBackend instance');
         }
         $target->image = $fake;
     };
@@ -742,10 +742,10 @@ test('constructor uses a plugin-provided image instance and skips its own librar
 });
 
 test('an instance built without going through the constructor throws LogicException on first real method call', function (): void {
-    $img = new ReflectionClass(PwgImage::class)->newInstanceWithoutConstructor();
+    $img = new ReflectionClass(ImageBackend::class)->newInstanceWithoutConstructor();
 
     expect(fn () => $img->getWidth())
-        ->toThrow(LogicException::class, 'PwgImage: no image library instantiated');
+        ->toThrow(LogicException::class, 'ImageBackend: no image library instantiated');
 });
 
 test('destroy delegates to a GD-backed image that implements it', function (): void {
@@ -973,7 +973,7 @@ test('webpInfo throws when the file cannot be opened for reading', function (): 
     // is ever reached.
     set_error_handler(static fn (): bool => true);
     try {
-        expect(fn () => PwgImage::webpInfo($path))
+        expect(fn () => ImageBackend::webpInfo($path))
             ->toThrow(Exception::class, "webpInfo(): fopen({$path}): Failed");
     } finally {
         restore_error_handler();
@@ -985,7 +985,7 @@ test('webpInfo throws for a well-formed VP8 header with an unrecognized sub-form
     // Valid up through byte 14 ('VP8'), but byte 15 is neither ' ', 'L' nor 'X'.
     file_put_contents($path, "RIFF\x00\x00\x00\x00" . 'WEBPVP8?' . str_repeat("\x00", 9));
 
-    expect(fn () => PwgImage::webpInfo($path))
+    expect(fn () => ImageBackend::webpInfo($path))
         ->toThrow(Exception::class, 'webpInfo(): could not detect webp type');
 });
 
@@ -1005,7 +1005,7 @@ test('getRotationAngle returns null when getimagesize() fails to read the file, 
     // above.
     set_error_handler(static fn (): bool => true);
     try {
-        expect(PwgImage::getRotationAngle($path))->toBeNull();
+        expect(ImageBackend::getRotationAngle($path))->toBeNull();
     } finally {
         restore_error_handler();
     }
@@ -1015,21 +1015,21 @@ test('getRotationAngle maps EXIF orientation 3 to a 180-degree rotation', functi
     $path = pwgImageTestMarker() . '/orientation-3.jpg';
     file_put_contents($path, pwgImageMakeJpegWithOrientation(3));
 
-    expect(PwgImage::getRotationAngle($path))->toBe(180);
+    expect(ImageBackend::getRotationAngle($path))->toBe(180);
 });
 
 test('getRotationAngle maps EXIF orientation 6 to a 270-degree rotation', function (): void {
     $path = pwgImageTestMarker() . '/orientation-6.jpg';
     file_put_contents($path, pwgImageMakeJpegWithOrientation(6));
 
-    expect(PwgImage::getRotationAngle($path))->toBe(270);
+    expect(ImageBackend::getRotationAngle($path))->toBe(270);
 });
 
 test('getRotationAngle maps EXIF orientation 8 to a 90-degree rotation', function (): void {
     $path = pwgImageTestMarker() . '/orientation-8.jpg';
     file_put_contents($path, pwgImageMakeJpegWithOrientation(8));
 
-    expect(PwgImage::getRotationAngle($path))->toBe(90);
+    expect(ImageBackend::getRotationAngle($path))->toBe(90);
 });
 
 test('getRotationAngle maps EXIF orientation 4 to a 180-degree rotation', function (): void {
@@ -1041,25 +1041,25 @@ test('getRotationAngle maps EXIF orientation 4 to a 180-degree rotation', functi
     $path = pwgImageTestMarker() . '/orientation-4.jpg';
     file_put_contents($path, pwgImageMakeJpegWithOrientation(4));
 
-    expect(PwgImage::getRotationAngle($path))->toBe(180);
+    expect(ImageBackend::getRotationAngle($path))->toBe(180);
 });
 
 test('getRotationAngle maps EXIF orientation 5 to a 270-degree rotation', function (): void {
     $path = pwgImageTestMarker() . '/orientation-5.jpg';
     file_put_contents($path, pwgImageMakeJpegWithOrientation(5));
 
-    expect(PwgImage::getRotationAngle($path))->toBe(270);
+    expect(ImageBackend::getRotationAngle($path))->toBe(270);
 });
 
 test('getRotationAngle maps EXIF orientation 7 to a 90-degree rotation', function (): void {
     $path = pwgImageTestMarker() . '/orientation-7.jpg';
     file_put_contents($path, pwgImageMakeJpegWithOrientation(7));
 
-    expect(PwgImage::getRotationAngle($path))->toBe(90);
+    expect(ImageBackend::getRotationAngle($path))->toBe(90);
 });
 
 test('isExtImagick returns false when the configured binary directory has no real ImageMagick binary', function (): void {
-    // PwgImage's own private currentConfig() resolver is a fresh,
+    // ImageBackend's own private currentConfig() resolver is a fresh,
     // unmemoized instance pre-boot -- unlike FilesystemHelper's
     // mkgetdir()/getFsDirectories() (which take CurrentConfig as a real,
     // explicit param specifically because of this exact coupling), is_
@@ -1067,7 +1067,7 @@ test('isExtImagick returns false when the configured binary directory has no rea
     // getExtImagickCommand() have too many real callers across too many
     // files for that to be proportional here -- so this test boots Kernel
     // instead, so this call's own CurrentConfigTestFactory::get() mutation
-    // and PwgImage's internal resolve both reach the same real,
+    // and ImageBackend's internal resolve both reach the same real,
     // container-shared instance.
     Kernel::boot(Paths::fromRoot(sys_get_temp_dir()));
     $original = CurrentConfigTestFactory::get()->extImagickDir;
@@ -1078,7 +1078,7 @@ test('isExtImagick returns false when the configured binary directory has no rea
     CurrentConfigTestFactory::get()->extImagickDir = '/totally/nonexistent/dir/';
 
     try {
-        expect(PwgImage::isExtImagick())->toBeFalse();
+        expect(ImageBackend::isExtImagick())->toBeFalse();
     } finally {
         CurrentConfigTestFactory::get()->extImagickDir = $original;
         Kernel::reset();
@@ -1093,15 +1093,15 @@ test('isExtImagick detects the real, installed magick binary and parses its vers
     // real `magick` CLI is genuinely installed in this environment
     // (confirmed via `command -v magick`), so this exercises the actual
     // success path end to end, not a mock.
-    PwgImage::$ext_imagick_version = '';
+    ImageBackend::$ext_imagick_version = '';
 
-    expect(PwgImage::isExtImagick())->toBeTrue()
-        ->and(PwgImage::$ext_imagick_version)->toMatch('/^\d+\.\d+\.\d+/');
+    expect(ImageBackend::isExtImagick())->toBeTrue()
+        ->and(ImageBackend::$ext_imagick_version)->toMatch('/^\d+\.\d+\.\d+/');
 });
 
 test('getGraphicsLibrary reports a real ImageMagick PHP-extension version when ext_imagick itself is unavailable', function (): void {
     // Same "boot Kernel so this test's own CurrentConfigTestFactory::get()
-    // mutation and PwgImage's internal currentConfig() resolve reach the
+    // mutation and ImageBackend's internal currentConfig() resolve reach the
     // same real, container-shared instance" reasoning as the
     // isExtImagick() test above.
     Kernel::boot(Paths::fromRoot(sys_get_temp_dir()));
@@ -1112,7 +1112,7 @@ test('getGraphicsLibrary reports a real ImageMagick PHP-extension version when e
         // isExtImagick() forced false above; the 'imagick' PHP extension
         // (confirmed present in this environment) is getLibrary()'s next
         // fallback in its 'auto' chain.
-        $library = PwgImage::getGraphicsLibrary();
+        $library = ImageBackend::getGraphicsLibrary();
 
         expect($library)
             ->toBeString();
@@ -1141,7 +1141,7 @@ test('webpInfo throws when fread() fails after a successful fopen()', function (
 
     set_error_handler(static fn (): bool => true);
     try {
-        expect(fn () => PwgImage::webpInfo($dir))
+        expect(fn () => ImageBackend::webpInfo($dir))
             ->toThrow(Exception::class, "webpInfo(): fread({$dir}): Failed");
     } finally {
         restore_error_handler();
@@ -1159,7 +1159,7 @@ test('getRotationAngle returns null when exif_read_data() is unavailable, withou
 
     $script = 'echo json_encode(['
         . '"exif_available" => function_exists("exif_read_data"), '
-        . '"result" => \Piwigo\Admin\Image\PwgImage::getRotationAngle(' . var_export($path, true) . '),'
+        . '"result" => \Piwigo\Admin\Image\ImageBackend::getRotationAngle(' . var_export($path, true) . '),'
         . ']);';
     // php.ini's disable_functions genuinely makes the disabled function
     // both uncallable and, crucially, function_exists()-false -- a real
@@ -1180,7 +1180,7 @@ test('getRotationAngle returns null when exif_read_data() is unavailable, withou
 test('isExtImagick returns false when exec() itself is unavailable, without ever calling it', function (): void {
     $script = 'echo json_encode(['
         . '"exec_available" => function_exists("exec"), '
-        . '"result" => \Piwigo\Admin\Image\PwgImage::isExtImagick(),'
+        . '"result" => \Piwigo\Admin\Image\ImageBackend::isExtImagick(),'
         . ']);';
     // Same disable_functions technique as the exif_read_data test above,
     // targeting isExtImagick()'s own `function_exists('exec')` guard.
@@ -1198,14 +1198,14 @@ test('isExtImagick returns false when exec() itself is unavailable, without ever
 test('getGraphicsLibrary resolves through the gd case and appends a real GD version string', function (): void {
     // Boots Kernel inside the subprocess itself (rather than calling
     // CurrentConfigTestFactory::get(), which shares no state with this
-    // isolated process either way) so PwgImage's own internal
+    // isolated process either way) so ImageBackend's own internal
     // currentConfig() resolve reaches this exact mutated instance --
     // same reasoning as the isExtImagick() test above's own doc.
     $script = '\Piwigo\Core\Kernel::boot(\Piwigo\Core\Paths::fromRoot(sys_get_temp_dir()));'
         . '\Piwigo\Core\Kernel::container()->get(\Piwigo\Config\CurrentConfig::class)->extImagickDir = "/totally/nonexistent/dir/";'
         . 'echo json_encode(['
         . '"imagick_extension_loaded" => extension_loaded("imagick"), '
-        . '"result" => \Piwigo\Admin\Image\PwgImage::getGraphicsLibrary(),'
+        . '"result" => \Piwigo\Admin\Image\ImageBackend::getGraphicsLibrary(),'
         . ']);';
     // `-n` starts PHP with none of this host's configured extensions
     // loaded, then `-d extension=gd` loads only GD back -- a real,
@@ -1381,7 +1381,7 @@ test('getSharpenMatrix rounds to exactly 2 decimal places, not 1 or 3', function
     // amount=33.333 is chosen so round(...,1)=35.3, round(...,2)=35.33,
     // round(...,3)=35.333 all genuinely differ (verified directly against
     // the real function, not hand-derived).
-    $matrix = PwgImage::getSharpenMatrix(33.333);
+    $matrix = ImageBackend::getSharpenMatrix(33.333);
 
     expect($matrix[1][1])->toBe(1.2927186242224662);
     expect($matrix[0][0])->toBe(-0.036589828027808274);
@@ -1500,7 +1500,7 @@ test('getResizeResult reports a real, accurately-scaled elapsed-time measurement
             return true;
         }
 
-        public function compose(PwgImage $overlay, int|float $x, int|float $y, int|float $opacity): bool
+        public function compose(ImageBackend $overlay, int|float $x, int|float $y, int|float $opacity): bool
         {
             return true;
         }
@@ -1514,8 +1514,8 @@ test('getResizeResult reports a real, accurately-scaled elapsed-time measurement
     };
     $handler = function (LoadImageLibrary $event) use ($slowImage): void {
         $target = $event->value;
-        if (! $target instanceof PwgImage) {
-            throw new RuntimeException('load_image_library: expected a PwgImage instance');
+        if (! $target instanceof ImageBackend) {
+            throw new RuntimeException('load_image_library: expected a ImageBackend instance');
         }
         $target->image = $slowImage;
     };
@@ -1552,7 +1552,7 @@ test('currentConfig throws LogicException when the container returns an unexpect
     try {
         KernelContainerOverride::withWrongTypeFor(
             CurrentConfig::class,
-            static fn () => PwgImage::getLibrary(),
+            static fn () => ImageBackend::getLibrary(),
         );
     } finally {
         Kernel::reset();
@@ -1564,7 +1564,7 @@ test('getLibrary lowercases the requested library name before matching', functio
     // -- every existing getLibrary() test already passes an
     // already-lowercase library name, so UnwrapStrtolower (comparing the
     // raw, unlowercased value instead) was never observed to matter.
-    expect(PwgImage::getLibrary('GD', 'jpg'))->toBe('gd');
+    expect(ImageBackend::getLibrary('GD', 'jpg'))->toBe('gd');
 });
 
 test('getLibrary never selects imagick for a gif extension, even when imagick is available', function (): void {
@@ -1576,7 +1576,7 @@ test('getLibrary never selects imagick for a gif extension, even when imagick is
     // directly (not 'auto') isolates this to the imagick-specific guard:
     // falling through it lands on the 'gd' case, which this environment's
     // own isGd() always confirms available.
-    expect(PwgImage::getLibrary('imagick', 'gif'))->toBe('gd');
+    expect(ImageBackend::getLibrary('imagick', 'gif'))->toBe('gd');
 });
 
 test('getGraphicsLibraryLabel formats the imagick-extension library and version when ext_imagick is unavailable', function (): void {
@@ -1591,7 +1591,7 @@ test('getGraphicsLibraryLabel formats the imagick-extension library and version 
     CurrentConfigTestFactory::get()->extImagickDir = '/totally/nonexistent/dir/';
 
     try {
-        $label = PwgImage::getGraphicsLibraryLabel();
+        $label = ImageBackend::getGraphicsLibraryLabel();
 
         // getGraphicsLibrary()'s own 'imagick' case captures the WHOLE
         // "ImageMagick X.X.X" phrase from Imagick::getVersion() (not just
@@ -1615,7 +1615,7 @@ test('getGraphicsLibraryLabel formats the gd library and version when no imagick
     // prove the label array's own 'gd' entry is real, not just non-empty.
     $script = '\Piwigo\Core\Kernel::boot(\Piwigo\Core\Paths::fromRoot(sys_get_temp_dir()));'
         . '\Piwigo\Core\Kernel::container()->get(\Piwigo\Config\CurrentConfig::class)->extImagickDir = "/totally/nonexistent/dir/";'
-        . 'echo \Piwigo\Admin\Image\PwgImage::getGraphicsLibraryLabel();';
+        . 'echo \Piwigo\Admin\Image\ImageBackend::getGraphicsLibraryLabel();';
     $proc = pwgImageRunSubprocess(['-n', '-d', 'extension=gd'], $script);
 
     expect($proc['exit'])->toBe(0, 'subprocess failed: ' . $proc['stderr']);
@@ -1655,10 +1655,10 @@ test('getExtImagickCommand/isExtImagick/getGraphicsLibrary correctly locate and 
         $script = '\Piwigo\Core\Kernel::boot(\Piwigo\Core\Paths::fromRoot(sys_get_temp_dir()));'
             . '\Piwigo\Core\Kernel::container()->get(\Piwigo\Config\CurrentConfig::class)->extImagickDir = ' . var_export($dir . '/', true) . ';'
             . 'echo json_encode(['
-            . '"command" => \Piwigo\Admin\Image\PwgImage::getExtImagickCommand(),'
-            . '"is_ext" => \Piwigo\Admin\Image\PwgImage::isExtImagick(),'
-            . '"version" => \Piwigo\Admin\Image\PwgImage::$ext_imagick_version,'
-            . '"library" => \Piwigo\Admin\Image\PwgImage::getGraphicsLibrary(),'
+            . '"command" => \Piwigo\Admin\Image\ImageBackend::getExtImagickCommand(),'
+            . '"is_ext" => \Piwigo\Admin\Image\ImageBackend::isExtImagick(),'
+            . '"version" => \Piwigo\Admin\Image\ImageBackend::$ext_imagick_version,'
+            . '"library" => \Piwigo\Admin\Image\ImageBackend::getGraphicsLibrary(),'
             . ']);';
         $proc = pwgImageRunSubprocess([], $script);
 
@@ -1724,7 +1724,7 @@ test('destroy falls back to true when the underlying image has no destroy method
             return true;
         }
 
-        public function compose(PwgImage $overlay, int|float $x, int|float $y, int|float $opacity): bool
+        public function compose(ImageBackend $overlay, int|float $x, int|float $y, int|float $opacity): bool
         {
             return true;
         }
@@ -1736,8 +1736,8 @@ test('destroy falls back to true when the underlying image has no destroy method
     };
     $handler = function (LoadImageLibrary $event) use ($fake): void {
         $target = $event->value;
-        if (! $target instanceof PwgImage) {
-            throw new RuntimeException('load_image_library: expected a PwgImage instance');
+        if (! $target instanceof ImageBackend) {
+            throw new RuntimeException('load_image_library: expected a ImageBackend instance');
         }
         $target->image = $fake;
     };
@@ -1758,7 +1758,7 @@ test('destroy coerces and genuinely forwards the underlying image\'s own destroy
     // RemoveEarlyReturn on `return (bool) $image->destroy();` -- the only
     // existing destroy() test uses ImageGd::destroy(), which always
     // returns bool(true) unconditionally, so neither the cast nor the
-    // early return can be distinguished from PwgImage::destroy()'s own
+    // early return can be distinguished from ImageBackend::destroy()'s own
     // unconditional `return true;` fallback by that test alone. A fake
     // destroy() returning a non-bool falsy value (int 0, not declared by
     // ImageInterface at all, called dynamically) proves both: without the
@@ -1807,7 +1807,7 @@ test('destroy coerces and genuinely forwards the underlying image\'s own destroy
             return true;
         }
 
-        public function compose(PwgImage $overlay, int|float $x, int|float $y, int|float $opacity): bool
+        public function compose(ImageBackend $overlay, int|float $x, int|float $y, int|float $opacity): bool
         {
             return true;
         }
@@ -1824,8 +1824,8 @@ test('destroy coerces and genuinely forwards the underlying image\'s own destroy
     };
     $handler = function (LoadImageLibrary $event) use ($fake): void {
         $target = $event->value;
-        if (! $target instanceof PwgImage) {
-            throw new RuntimeException('load_image_library: expected a PwgImage instance');
+        if (! $target instanceof ImageBackend) {
+            throw new RuntimeException('load_image_library: expected a ImageBackend instance');
         }
         $target->image = $fake;
     };

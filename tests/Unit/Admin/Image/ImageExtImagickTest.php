@@ -3,10 +3,10 @@
 declare(strict_types=1);
 
 use PHPUnit\Framework\Assert;
+use Piwigo\Admin\Image\ImageBackend;
 use Piwigo\Admin\Image\ImageExtImagick;
 use Piwigo\Admin\Image\ImageInterface;
 use Piwigo\Admin\Image\ImageProcessingException;
-use Piwigo\Admin\Image\PwgImage;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\CurrentLogger;
 use Piwigo\Core\Kernel;
@@ -18,7 +18,7 @@ use Piwigo\Tests\Support\CurrentConfigTestFactory;
  * __construct()'s "identify couldn't determine dimensions" guard throws
  * ImageProcessingException. Tests here only run the real external
  * `identify` binary when it's genuinely available in this environment
- * (same check PwgImage::isExtImagick() itself uses) -- no fake/mocked
+ * (same check ImageBackend::isExtImagick() itself uses) -- no fake/mocked
  * binary, this exercises the real shell-exec path. This file also drives
  * rotate()/sharpen()/setCompressionQuality()/compose()/write() through
  * the same real CLI, plus __construct()'s animated-WebP branch, matching
@@ -35,7 +35,7 @@ function imageExtImagickTestMarker(): string
 
 function imageExtImagickTestSkipIfUnavailable(): void
 {
-    if (! PwgImage::isExtImagick()) {
+    if (! ImageBackend::isExtImagick()) {
         Assert::markTestSkipped('No external ImageMagick (magick/convert) binary available in this environment.');
     }
 }
@@ -68,7 +68,7 @@ function imageExtImagickTestMakeJpeg(string $path, int $width, int $height, int 
 
 /**
  * Builds a real, tiny 2-frame animated WebP via the external ImageMagick
- * CLI. __construct()'s animated-WebP branch reads PwgImage::webpInfo()'s
+ * CLI. __construct()'s animated-WebP branch reads ImageBackend::webpInfo()'s
  * real VP8X extended-header animation bit, so a genuine multi-frame WebP
  * container is required here -- no lighter-weight way to set that bit
  * without one.
@@ -98,7 +98,7 @@ function imageExtImagickTestFrameCount(string $path): int
 
 /**
  * Builds a hand-crafted, deliberately truncated WebP: a real RIFF/WEBP/VP8X
- * header (25 bytes, the minimum PwgImage::webpInfo() itself reads) with
+ * header (25 bytes, the minimum ImageBackend::webpInfo() itself reads) with
  * the animation flag bit set, but cut off before the width/height fields
  * that follow it in a real VP8X chunk. webpInfo() only inspects byte 15
  * ('X') and byte 20 (the flags byte) -- both present here -- so it reports
@@ -162,7 +162,7 @@ function imageExtImagickTestMake(string $path): ImageExtImagick
 
 /**
  * Resolves the real, absolute path of a binary via the same `command -v`
- * idiom PwgImage::getExtImagickCommand() itself uses internally --
+ * idiom ImageBackend::getExtImagickCommand() itself uses internally --
  * used to build a private, non-PATH symlink to the real magick/convert
  * binary (see the write() imagickdir-prefix test below).
  */
@@ -235,7 +235,7 @@ test('construct concatenates the imagickdir prefix directly onto the identify bi
     // write()'s own [SEC-16] comment -- so this genuinely points exec() at
     // a nonexistent path regardless of which real binary this environment
     // already resolves 'identify' to via PATH. Same convention as
-    // PwgImageTest's own isExtImagick() "nonexistent dir" tests.
+    // ImageBackendTest's own isExtImagick() "nonexistent dir" tests.
     imageExtImagickTestCurrentConfig()
         ->extImagickDir = '/totally/nonexistent/dir/';
 
@@ -402,7 +402,7 @@ test('construct throws when an animated webp is too short for getimagesize to re
 
     $path = imageExtImagickTestMarker() . '/truncated-animated.webp';
     imageExtImagickTestMakeTruncatedAnimatedWebp($path);
-    expect(PwgImage::webpInfo($path)->hasAnimation)->toBeTrue();
+    expect(ImageBackend::webpInfo($path)->hasAnimation)->toBeTrue();
     expect(getimagesize($path))
         ->toBeFalse();
 
@@ -540,11 +540,11 @@ test('write adds the sampling-factor command only when ext_imagick_version compa
     // imageExtImagickTestSkipIfUnavailable() itself already refreshed this
     // to the real, live detected version via isExtImagick() -- captured
     // here so it can be restored, not assumed to start at ''.
-    $originalVersion = PwgImage::$ext_imagick_version;
+    $originalVersion = ImageBackend::$ext_imagick_version;
 
     try {
         // Strictly greater than '6.6' -- the addCommand() call must fire.
-        PwgImage::$ext_imagick_version = '7.0';
+        ImageBackend::$ext_imagick_version = '7.0';
         $imageGreater = imageExtImagickTestMake($path);
         $imageGreater->write(imageExtImagickTestMarker() . '/sampling-greater-out.jpg');
         expect($imageGreater->commands['sampling-factor'] ?? null)->toBe('4:2:2');
@@ -552,13 +552,13 @@ test('write adds the sampling-factor command only when ext_imagick_version compa
         // Exactly '6.6' (version_compare() returns 0) -- *not* greater, so
         // the addCommand() call must *not* fire. This exact-equality case
         // is what actually discriminates >, >=, and <= from each other.
-        PwgImage::$ext_imagick_version = '6.6';
+        ImageBackend::$ext_imagick_version = '6.6';
         $imageEqual = imageExtImagickTestMake($path);
         $imageEqual->write(imageExtImagickTestMarker() . '/sampling-equal-out.jpg');
         expect($imageEqual->commands)
             ->not->toHaveKey('sampling-factor');
     } finally {
-        PwgImage::$ext_imagick_version = $originalVersion;
+        ImageBackend::$ext_imagick_version = $originalVersion;
     }
 });
 
@@ -571,10 +571,10 @@ test('sharpen builds the morphology convolve command and produces a valid deriva
     $image = imageExtImagickTestMake($path);
 
     // Independently rebuild the expected command string from the same
-    // shared matrix PwgImage::getSharpenMatrix() produces -- this locks
+    // shared matrix ImageBackend::getSharpenMatrix() produces -- this locks
     // down ImageExtImagick::sharpen()'s own string-builder logic
     // (untested until now), not the matrix math itself.
-    $m = PwgImage::getSharpenMatrix(50);
+    $m = ImageBackend::getSharpenMatrix(50);
     $expectedParam = 'convolve "' . count($m) . ':';
     foreach ($m as $line) {
         $expectedParam .= ' ';
@@ -613,7 +613,7 @@ test('compose throws a LogicException when the overlay uses a different image ba
     imageExtImagickTestMakeJpeg($basePath, 20, 14, 10, 10, 10);
     imageExtImagickTestMakeJpeg($overlayPath, 8, 8, 200, 200, 200);
     $base = imageExtImagickTestMake($basePath);
-    $overlay = new PwgImage($overlayPath, imageExtImagickTestCurrentLogger(), new EventDispatcher(), imageExtImagickTestCurrentConfig(), 'ext_imagick');
+    $overlay = new ImageBackend($overlayPath, imageExtImagickTestCurrentLogger(), new EventDispatcher(), imageExtImagickTestCurrentConfig(), 'ext_imagick');
     // Swap in a fake, non-ImageExtImagick backend to force the mismatch --
     // same idea as ImageGdTest's own compose()-mismatch test, this class's
     // guard only cares that it's genuinely not `self` (ImageExtImagick).
@@ -658,7 +658,7 @@ test('compose throws a LogicException when the overlay uses a different image ba
             return true;
         }
 
-        public function compose(PwgImage $overlay, int|float $x, int|float $y, int|float $opacity): bool
+        public function compose(ImageBackend $overlay, int|float $x, int|float $y, int|float $opacity): bool
         {
             return true;
         }
@@ -670,7 +670,7 @@ test('compose throws a LogicException when the overlay uses a different image ba
     };
 
     expect(fn () => $base->compose($overlay, 0, 0, 50))
-        ->toThrow(LogicException::class, 'PwgImage::compose(): overlay must use the same image backend');
+        ->toThrow(LogicException::class, 'ImageBackend::compose(): overlay must use the same image backend');
 });
 
 test('compose throws when the overlay source path cannot be resolved', function (): void {
@@ -681,7 +681,7 @@ test('compose throws when the overlay source path cannot be resolved', function 
     imageExtImagickTestMakeJpeg($basePath, 20, 14, 10, 10, 10);
     imageExtImagickTestMakeJpeg($overlayPath, 8, 8, 200, 200, 200);
     $base = imageExtImagickTestMake($basePath);
-    $overlay = new PwgImage($overlayPath, imageExtImagickTestCurrentLogger(), new EventDispatcher(), imageExtImagickTestCurrentConfig(), 'ext_imagick');
+    $overlay = new ImageBackend($overlayPath, imageExtImagickTestCurrentLogger(), new EventDispatcher(), imageExtImagickTestCurrentConfig(), 'ext_imagick');
     expect($overlay->image)
         ->toBeInstanceOf(ImageExtImagick::class);
     // The overlay backend was legitimately constructed from a real file,
@@ -865,7 +865,7 @@ test('write concatenates the imagickdir prefix directly onto the convert/magick 
     // correct and the reordered command end up trying (and failing) to
     // execute a nonexistent path, so this needs a real, working target to
     // tell them apart.
-    $commandName = PwgImage::getExtImagickCommand();
+    $commandName = ImageBackend::getExtImagickCommand();
     $realBinaryPath = imageExtImagickTestRealBinaryPath($commandName);
     $privateBinPath = imageExtImagickTestMarker() . '/' . $commandName;
     symlink($realBinaryPath, $privateBinPath);

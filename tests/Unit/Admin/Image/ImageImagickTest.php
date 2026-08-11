@@ -3,15 +3,15 @@
 declare(strict_types=1);
 
 use PHPUnit\Framework\Assert;
+use Piwigo\Admin\Image\ImageBackend;
 use Piwigo\Admin\Image\ImageImagick;
-use Piwigo\Admin\Image\PwgImage;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\CurrentLogger;
 use Piwigo\PluginConfig\EventDispatcher;
 
 /**
  * Only runs the real ext-imagick extension when it's genuinely available in
- * this environment (same PwgImage::isImagick() check
+ * this environment (same ImageBackend::isImagick() check
  * tests/Unit/Admin/Image/ImageExtImagickTest.php uses for its own external
  * `identify` binary) -- no fake/mocked Imagick, this exercises the real
  * extension. Real JPEG fixture images are generated on the fly via GD
@@ -61,7 +61,7 @@ function imageImagickTestMakeJpeg(string $path, int $width, int $height, int $r,
 
 function imageImagickTestSkipIfUnavailable(): void
 {
-    if (! PwgImage::isImagick()) {
+    if (! ImageBackend::isImagick()) {
         Assert::markTestSkipped('ext-imagick is not available in this environment.');
     }
 }
@@ -384,7 +384,7 @@ test('compose composites a same-backend overlay and preserves the base dimension
     imageImagickTestMakeJpeg($basePath, 200, 120, 0, 0, 0);
     imageImagickTestMakeJpeg($overlayPath, 50, 50, 255, 255, 255);
     $base = new ImageImagick($basePath);
-    $overlay = new PwgImage($overlayPath, new CurrentLogger(), new EventDispatcher(), new CurrentConfig(), 'imagick');
+    $overlay = new ImageBackend($overlayPath, new CurrentLogger(), new EventDispatcher(), new CurrentConfig(), 'imagick');
 
     $result = $base->compose($overlay, 10, 10, 50);
 
@@ -417,7 +417,7 @@ test('compose only dims a shared overlay once across repeated calls', function (
     imageImagickTestMakeJpeg($basePath, 200, 120, 0, 0, 0);
     imageImagickTestMakeJpeg($overlayPath, 50, 50, 255, 255, 255);
     $base = new ImageImagick($basePath);
-    $overlay = new PwgImage($overlayPath, new CurrentLogger(), new EventDispatcher(), new CurrentConfig(), 'imagick');
+    $overlay = new ImageBackend($overlayPath, new CurrentLogger(), new EventDispatcher(), new CurrentConfig(), 'imagick');
     $overlayBackend = $overlay->image;
     expect($overlayBackend)
         ->toBeInstanceOf(ImageImagick::class);
@@ -455,10 +455,10 @@ test('compose throws when the overlay uses a different image backend', function 
     imageImagickTestMakeJpeg($basePath, 200, 120, 0, 0, 0);
     imageImagickTestMakeJpeg($overlayPath, 50, 50, 255, 255, 255);
     $base = new ImageImagick($basePath);
-    $overlay = new PwgImage($overlayPath, new CurrentLogger(), new EventDispatcher(), new CurrentConfig(), 'gd');
+    $overlay = new ImageBackend($overlayPath, new CurrentLogger(), new EventDispatcher(), new CurrentConfig(), 'gd');
 
     expect(fn () => $base->compose($overlay, 0, 0, 50))
-        ->toThrow(LogicException::class, 'PwgImage::compose(): overlay must use the same image backend');
+        ->toThrow(LogicException::class, 'ImageBackend::compose(): overlay must use the same image backend');
 });
 
 test('crop accepts real float width/height/x/y without a TypeError', function (): void {
@@ -637,7 +637,7 @@ test('compose does not dim the overlay when opacity is exactly 100 (not strictly
     imageImagickTestMakeJpeg($basePath, 100, 80, 0, 0, 0);
     imageImagickTestMakeJpeg($overlayPath, 40, 40, 255, 255, 255);
     $base = new ImageImagick($basePath);
-    $overlay = new PwgImage($overlayPath, new CurrentLogger(), new EventDispatcher(), new CurrentConfig(), 'imagick');
+    $overlay = new ImageBackend($overlayPath, new CurrentLogger(), new EventDispatcher(), new CurrentConfig(), 'imagick');
     $overlayBackend = $overlay->image;
     expect($overlayBackend)
         ->toBeInstanceOf(ImageImagick::class);
@@ -659,7 +659,7 @@ test('compose dims the overlay when opacity is 99, one below the threshold', fun
     imageImagickTestMakeJpeg($basePath, 100, 80, 0, 0, 0);
     imageImagickTestMakeJpeg($overlayPath, 40, 40, 255, 255, 255);
     $base = new ImageImagick($basePath);
-    $overlay = new PwgImage($overlayPath, new CurrentLogger(), new EventDispatcher(), new CurrentConfig(), 'imagick');
+    $overlay = new ImageBackend($overlayPath, new CurrentLogger(), new EventDispatcher(), new CurrentConfig(), 'imagick');
     $overlayBackend = $overlay->image;
     expect($overlayBackend)
         ->toBeInstanceOf(ImageImagick::class);
@@ -693,7 +693,7 @@ test('compose dims the overlay alpha by exactly opacity/100 before compositing',
     imageImagickTestMakeAlphaPng($overlayPath, 100, 100, 255, 255, 255);
 
     $base = new ImageImagick($basePath);
-    $overlay = new PwgImage($overlayPath, new CurrentLogger(), new EventDispatcher(), new CurrentConfig(), 'imagick');
+    $overlay = new ImageBackend($overlayPath, new CurrentLogger(), new EventDispatcher(), new CurrentConfig(), 'imagick');
 
     $result = $base->compose($overlay, 0, 0, 37);
     expect($result)
@@ -740,7 +740,7 @@ test('compose\'s alpha-dimming step genuinely changes the composited pixel color
     imageImagickTestMakeAlphaPng($overlayPath, 50, 50, 255, 255, 255);
 
     $base = new ImageImagick($basePath);
-    $overlay = new PwgImage($overlayPath, new CurrentLogger(), new EventDispatcher(), new CurrentConfig(), 'imagick');
+    $overlay = new ImageBackend($overlayPath, new CurrentLogger(), new EventDispatcher(), new CurrentConfig(), 'imagick');
 
     $result = $base->compose($overlay, 0, 0, 37);
 
@@ -761,7 +761,7 @@ test('compose accepts real float x/y without a TypeError', function (): void {
     imageImagickTestMakeJpeg($basePath, 100, 80, 0, 0, 0);
     imageImagickTestMakeJpeg($overlayPath, 20, 20, 255, 255, 255);
     $base = new ImageImagick($basePath);
-    $overlay = new PwgImage($overlayPath, new CurrentLogger(), new EventDispatcher(), new CurrentConfig(), 'imagick');
+    $overlay = new ImageBackend($overlayPath, new CurrentLogger(), new EventDispatcher(), new CurrentConfig(), 'imagick');
 
     $result = $base->compose($overlay, 5.0, 5.0, 80);
 

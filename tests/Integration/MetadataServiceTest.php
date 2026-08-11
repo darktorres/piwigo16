@@ -111,7 +111,7 @@ namespace Piwigo\Tests\Integration {
          * APP13 segment (the real "8BIM"/0x0404 IPTC-NAA resource block format)
          * spliced in right after the SOI marker -- same "getimagesize()/
          * iptcparse() need genuinely valid marker-segment bytes" reasoning as
-         * PwgImageTest's own EXIF-orientation helper (Admin\Image domain),
+         * ImageBackendTest's own EXIF-orientation helper (Admin\Image domain),
          * confirmed live: neither ImageMagick's `-set`/`-define` nor a
          * synthetic `xc:` canvas actually persists an IPTC profile either.
          *
@@ -985,7 +985,7 @@ namespace Piwigo\Tests\Integration {
 
             // file_get_contents() on a missing file emits a real E_WARNING --
             // swallowed for this one call, same established pattern as
-            // PwgImageTest's fopen()/getimagesize() failure cases.
+            // ImageBackendTest's fopen()/getimagesize() failure cases.
             set_error_handler(static fn (): bool => true);
             try {
                 $result = $method->invoke($this->service, $this->scratchDir . '/does-not-exist.svg');

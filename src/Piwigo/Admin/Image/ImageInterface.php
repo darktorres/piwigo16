@@ -29,7 +29,7 @@ interface ImageInterface
 
     public function sharpen(int|float $amount): bool;
 
-    public function compose(PwgImage $overlay, int|float $x, int|float $y, int|float $opacity): bool;
+    public function compose(ImageBackend $overlay, int|float $x, int|float $y, int|float $opacity): bool;
 
     public function write(string $destination_filepath): bool;
 }

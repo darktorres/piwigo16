@@ -291,7 +291,7 @@ it('warns when upload_form_chunk_size is configured larger than PHP\'s real uplo
 //   with a literal string argument always resolves the real global
 //   built-in -- it can't be namespaced away, and this environment always
 //   has it loaded (confirmed live: `php -m` lists gd for both the apache2
-//   and cli SAPIs). Same underlying check as PwgImage::isGd() (also just
+//   and cli SAPIs). Same underlying check as ImageBackend::isGd() (also just
 //   `function_exists('gd_info')`), which the "computes the GD..." test
 //   above only ever observes returning true.
 //

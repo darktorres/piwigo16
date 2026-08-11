@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Admin\Image\Projection;
 
 /**
- * {@see \Piwigo\Admin\Image\PwgImage::webpInfo()}'s own fixed result
+ * {@see \Piwigo\Admin\Image\ImageBackend::webpInfo()}'s own fixed result
  * shape.
  */
 final readonly class WebpInfo

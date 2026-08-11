@@ -130,7 +130,7 @@ function idcUploadSizedPhoto(object $test, string $albumName, int $width, int $h
  * Writes images.rotation directly -- ImageDerivativeController's
  * __invoke() reads this column (via ImageRepository::findByPath()) to set
  * $this->rotationAngle *without* any live EXIF re-read whenever it's
- * already non-null (PwgImage::getRotationAngleFromCode(): 0=0deg,
+ * already non-null (ImageBackend::getRotationAngleFromCode(): 0=0deg,
  * 1=90deg, 2=180deg, 3=270deg) -- writing it directly, before the first
  * derivative request for the photo, exercises that "already resolved"
  * branch deterministically, without depending on a GD-generated JPEG
@@ -680,7 +680,7 @@ it('applies the stored rotation angle before crop/scale, swapping width/height f
     // Set *before* the first derivative request for this photo: a fresh
     // upload's own images.rotation starts NULL, in which case __invoke()
     // would compute rotationAngle from a live EXIF re-read instead
-    // (PwgImage::getRotationAngle()) -- writing the code directly
+    // (ImageBackend::getRotationAngle()) -- writing the code directly
     // exercises the "already resolved" branch
     // (getRotationAngleFromCode($row->rotation)) deterministically.
     idcSetImageRotationCode($imageId, 1);
@@ -1113,7 +1113,7 @@ it('resolves the rotation angle live from EXIF when the DB rotation column is st
     // A fresh upload's own images.rotation is never actually left NULL by
     // UploadService::addUploadedFile() (it always writes a real code, 0
     // included, from a live EXIF read at upload time -- see
-    // PwgImage::getRotationCodeFromAngle()'s own null=>0 case) -- the
+    // ImageBackend::getRotationCodeFromAngle()'s own null=>0 case) -- the
     // NULL branch this test targets only exists for a row that reached the
     // DB some other way (e.g. a legacy row a schema migration never
     // populated the newer column for). Writing NULL directly reproduces
@@ -1629,7 +1629,7 @@ it('serves the correct Content-Type for an already-cached webp derivative', func
     // before ever reaching sendDerivative(). Pre-seeding the cached file
     // directly and relying on the "already generated" fast path
     // (need_generate=false) exercises the Content-Type switch this test
-    // targets without ever constructing a PwgImage from the webp source at
+    // targets without ever constructing a ImageBackend from the webp source at
     // all -- exactly how a real request for an already-generated webp
     // derivative behaves in production too, regardless of backend.
     $page = H::loginAsAdmin($this);

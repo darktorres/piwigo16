@@ -11,8 +11,8 @@ use InvalidArgumentException;
 use LogicException;
 use Override;
 use Piwigo\Activity\ActivityService;
+use Piwigo\Admin\Image\ImageBackend;
 use Piwigo\Admin\Image\ImageProcessingException;
-use Piwigo\Admin\Image\PwgImage;
 use Piwigo\Admin\Upload\UploadService;
 use Piwigo\Config\ConfigEntry;
 use Piwigo\Config\ConfigLoader;
@@ -452,7 +452,7 @@ final class UploadServiceTest extends IntegrationTestCase
         self::assertSame(48, $this->rowInt($row['height']));
         self::assertSame($expectedMd5, $row['md5sum']);
         // A plain GD-generated PNG carries no EXIF orientation (and isn't
-        // even a JPEG) -- PwgImage::getRotationAngle() returns null for
+        // even a JPEG) -- ImageBackend::getRotationAngle() returns null for
         // any non-JPEG source, which getRotationCodeFromAngle() maps to
         // rotation code 0.
         self::assertSame(0, $this->rowInt($row['rotation']));
@@ -664,7 +664,7 @@ final class UploadServiceTest extends IntegrationTestCase
     }
 
     /**
-     * addUploadedFile()'s own `if (PwgImage::getLibrary() !== 'gd')`
+     * addUploadedFile()'s own `if (ImageBackend::getLibrary() !== 'gd')`
      * guard around originalResize()/needResize()/pwgResize() -- this
      * environment's real ImageMagick CLI makes CurrentConfig::
      * graphicsLibrary()'s own 'auto' default resolve to 'ext_imagick'
@@ -676,8 +676,8 @@ final class UploadServiceTest extends IntegrationTestCase
      */
     public function testAddUploadedFileResizesTheOriginalWhenItExceedsTheConfiguredMaxDimensions(): void
     {
-        if (PwgImage::getLibrary() === 'gd') {
-            self::markTestSkipped('No non-GD image library (ext_imagick/imagick) available in this environment -- addUploadedFile() never reaches its own originalResize()/needResize()/pwgResize() block when PwgImage::getLibrary() is gd.');
+        if (ImageBackend::getLibrary() === 'gd') {
+            self::markTestSkipped('No non-GD image library (ext_imagick/imagick) available in this environment -- addUploadedFile() never reaches its own originalResize()/needResize()/pwgResize() block when ImageBackend::getLibrary() is gd.');
         }
 
         CurrentConfigTestFactory::get()->originalResize = true;
@@ -1544,7 +1544,7 @@ final class UploadServiceTest extends IntegrationTestCase
     }
 
     /**
-     * Real gap: `escapeshellarg($ext_imagick_dir) . PwgImage::
+     * Real gap: `escapeshellarg($ext_imagick_dir) . ImageBackend::
      * getExtImagickCommand()` -- a bogus configured dir must genuinely
      * be prepended into the exec() command (making the whole invocation
      * fail, since a slash-containing command name bypasses PATH lookup

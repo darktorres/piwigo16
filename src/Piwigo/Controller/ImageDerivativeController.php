@@ -7,7 +7,7 @@ namespace Piwigo\Controller;
 use Doctrine\DBAL\Connection;
 use Exception;
 use Override;
-use Piwigo\Admin\Image\PwgImage;
+use Piwigo\Admin\Image\ImageBackend;
 use Piwigo\Common\ValueObject\ImageId;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Controller\Request\ImageDerivativeRequest;
@@ -171,11 +171,11 @@ final class ImageDerivativeController implements ControllerInterface
                     // orientation / non-JPEG source" -- get_rotation_code_
                     // from_angle()'s own docblock confirms that means the
                     // same thing as an explicit 0 (no rotation).
-                    $this->rotationAngle = PwgImage::getRotationAngle($this->srcPath) ?? 0;
+                    $this->rotationAngle = ImageBackend::getRotationAngle($this->srcPath) ?? 0;
 
-                    $imageRepo->updateRotation($image_id, PwgImage::getRotationCodeFromAngle($this->rotationAngle));
+                    $imageRepo->updateRotation($image_id, ImageBackend::getRotationCodeFromAngle($this->rotationAngle));
                 } else {
-                    $this->rotationAngle = PwgImage::getRotationAngleFromCode($row->rotation);
+                    $this->rotationAngle = ImageBackend::getRotationAngleFromCode($row->rotation);
                 }
             } catch (ResponseReadyException $e) {
                 // Part III: a real, security-critical regression this catch
@@ -257,7 +257,7 @@ final class ImageDerivativeController implements ControllerInterface
         ignore_user_abort(true);
         @set_time_limit(0);
 
-        $image = new PwgImage($this->srcPath, $this->currentLogger, $this->eventDispatcher, $this->currentConfig);
+        $image = new ImageBackend($this->srcPath, $this->currentLogger, $this->eventDispatcher, $this->currentConfig);
         $timing['load'] = $this->timeStep($step);
 
         $changes = 0;
@@ -299,7 +299,7 @@ final class ImageDerivativeController implements ControllerInterface
 
         if ($params->willWatermark($d_size, $this->imageStdParams)) {
             $wm = $this->imageStdParams->getWatermark();
-            $wm_image = new PwgImage($this->paths->root . $wm->file, $this->currentLogger, $this->eventDispatcher, $this->currentConfig);
+            $wm_image = new ImageBackend($this->paths->root . $wm->file, $this->currentLogger, $this->eventDispatcher, $this->currentConfig);
             $wm_size = [(int) $wm_image->getWidth(), (int) $wm_image->getHeight()];
             if ($d_size[0] < $wm_size[0] or $d_size[1] < $wm_size[1]) {
                 $wm_scaling_params = SizingParams::classic($d_size[0], $d_size[1]);
@@ -612,7 +612,7 @@ final class ImageDerivativeController implements ControllerInterface
         // confirmed as a broken next/previous-photo thumbnail on a real
         // picture page, not just a theoretical mismatch. The './' served no
         // filesystem purpose of its own ('./' is an inert path segment --
-        // is_file()/filemtime()/PwgImage all resolve it identically with or
+        // is_file()/filemtime()/ImageBackend all resolve it identically with or
         // without it), and doesn't affect the str_contains() checks below
         // (pwg_representative/themes/plugins), which don't care about a
         // leading './' either -- so leaving $req bare here is a pure fix,

@@ -2024,7 +2024,7 @@ final class Images
         // itself really does return WsErrorResponse|array<string, mixed>) is
         // known to return, the same "resolve, narrow, or throw" idiom
         // already used throughout this codebase for other statically-
-        // unknowable-but-really-fixed-shape values (e.g. PwgImage::
+        // unknowable-but-really-fixed-shape values (e.g. ImageBackend::
         // currentConfig()'s container resolve).
         if (! $result instanceof WsErrorResponse && ! is_array($result)) {
             throw new LogicException('pwg.images.getInfo returned an unexpected type');

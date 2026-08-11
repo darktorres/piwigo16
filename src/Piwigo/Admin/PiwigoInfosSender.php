@@ -9,7 +9,7 @@ use Piwigo\Activity\ActivityService;
 use Piwigo\Admin\Extensions\ExtensionRepository;
 use Piwigo\Admin\Extensions\ExtensionScanner;
 use Piwigo\Admin\Extensions\ExtensionType;
-use Piwigo\Admin\Image\PwgImage;
+use Piwigo\Admin\Image\ImageBackend;
 use Piwigo\Bootstrap\RequestBootstrap;
 use Piwigo\Config\ConfigService;
 use Piwigo\Config\CurrentConfig;
@@ -136,7 +136,7 @@ final class PiwigoInfosSender implements TelemetrySenderInterface
                 'db_version' => $dbInfo->version(),
                 'php_datetime' => date('Y-m-d H:i:s'),
                 'db_datetime' => $dbCurrentDate,
-                'graphics_library' => PwgImage::getGraphicsLibrary(),
+                'graphics_library' => ImageBackend::getGraphicsLibrary(),
             ],
             'general_stats' => $this->installationStats->getGeneralStatistics()
                 ->toArray(),

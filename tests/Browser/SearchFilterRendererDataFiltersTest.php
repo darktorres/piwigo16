@@ -125,7 +125,7 @@ it('renders real per-filter numeric buckets, author/added_by lookups, and a 3+-f
     // Explicitly enabled (rather than relying on whatever `rate` happens
     // to already be) -- this test's own 'ratings' criterion (rating_score
     // 2-3, the only bucket the "square" photo satisfies) is what narrows
-    // the 3+-filter intersection down to it; PwgImages::filteredSearchCreate()
+    // the 3+-filter intersection down to it; Images::filteredSearchCreate()
     // only persists 'ratings' onto the search row when rateEnabled() is
     // true at creation time, so an ambient-disabled `rate` silently drops
     // it from the active-filter set, breaking the ratio-bucket assertions

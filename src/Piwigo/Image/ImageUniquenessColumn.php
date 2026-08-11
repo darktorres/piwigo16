@@ -6,7 +6,7 @@ namespace Piwigo\Image;
 
 /**
  * {@see ImageRepository::existsWithColumnValue()}'s `$column` parameter,
- * enumerated -- {@see \Piwigo\Ws\PwgImages}'s own upload-uniqueness
+ * enumerated -- {@see \Piwigo\Ws\Images}'s own upload-uniqueness
  * check already bounds it to exactly these 2 values via a `match()` on
  * `CurrentConfig::uniquenessMode()` before it ever reaches this method.
  */

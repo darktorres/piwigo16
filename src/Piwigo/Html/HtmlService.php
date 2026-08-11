@@ -374,7 +374,7 @@ final class HtmlService implements HtmlRenderingInterface
      * `render_comment_content` plugin hook (registered via
      * `EventDispatcher::addTypedHandler()` in
      * `Bootstrap\RequestBootstrap::finalize()`) -- every real caller
-     * (Ws\PwgComments, Picture\PictureCommentRenderer,
+     * (Ws\Comments, Picture\PictureCommentRenderer,
      * Controller\CommentsController) reaches it through
      * `dispatchChange(new RenderCommentContent(...))`, not directly.
      */

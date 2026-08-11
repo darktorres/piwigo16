@@ -587,7 +587,7 @@ final class WsUploadTest extends ContractTestCase
     }
 
     /**
-     * upload()'s update_mode=true branch (Ws\PwgImages.php ~1654-1660):
+     * upload()'s update_mode=true branch (Ws\Images.php ~1654-1660):
      * looks up an existing photo by its stored `file` value within the
      * target category and, if found, replaces that photo's file in place
      * (add_status='update', same image_id) instead of inserting a new row.
@@ -606,7 +606,7 @@ final class WsUploadTest extends ContractTestCase
     public function testUploadUpdateModeReplacesAnExistingPhotoByFilenameInCategory(): void
     {
         // Real bug, found live: update_mode's own match
-        // (Ws\PwgImages::getIdsByFilenameInCategory()'s `WHERE i.file =
+        // (Ws\Images::getIdsByFilenameInCategory()'s `WHERE i.file =
         // :filename AND ic.category_id = :categoryId`, an INNER JOIN onto
         // image_category) can only ever find a photo that's genuinely
         // associated with the target category through image_category --

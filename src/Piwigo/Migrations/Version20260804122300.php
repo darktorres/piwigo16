@@ -225,7 +225,7 @@ final class Version20260804122300 extends AbstractMigration
               `rating_score` float(5,2) unsigned default NULL COMMENT 'bayesian average of rate ratings, recomputed by RateService::updateRatingScore',
               `path` varchar(255) NOT NULL default '' COMMENT 'full relative filesystem path to the original file',
               `storage_category_id` smallint(5) unsigned default NULL COMMENT 'album the file is physically stored under, distinct from possibly multiple image_category memberships',
-              `level` tinyint unsigned NOT NULL default '0' COMMENT 'minimum permission level required to view the image, see PwgImages::setPrivacyLevel and available_permission_levels',
+              `level` tinyint unsigned NOT NULL default '0' COMMENT 'minimum permission level required to view the image, see Images::setPrivacyLevel and available_permission_levels',
               `md5sum` char(32) default NULL COMMENT 'MD5 checksum of the original file, computed lazily for duplicate detection',
               `added_by` mediumint(8) unsigned default NULL COMMENT 'uploading user id',
               `rotation` tinyint unsigned default NULL COMMENT 'pending quarter-turn rotation to apply when rendering, 0 to 3',
@@ -514,7 +514,7 @@ final class Version20260804122300 extends AbstractMigration
         $this->addSql("COMMENT ON COLUMN images.rating_score IS 'bayesian average of rate ratings, recomputed by RateService::updateRatingScore'");
         $this->addSql("COMMENT ON COLUMN images.path IS 'full relative filesystem path to the original file'");
         $this->addSql("COMMENT ON COLUMN images.storage_category_id IS 'album the file is physically stored under, distinct from possibly multiple image_category memberships'");
-        $this->addSql("COMMENT ON COLUMN images.level IS 'minimum permission level required to view the image, see PwgImages::setPrivacyLevel and available_permission_levels'");
+        $this->addSql("COMMENT ON COLUMN images.level IS 'minimum permission level required to view the image, see Images::setPrivacyLevel and available_permission_levels'");
         $this->addSql("COMMENT ON COLUMN images.md5sum IS 'MD5 checksum of the original file, computed lazily for duplicate detection'");
         $this->addSql("COMMENT ON COLUMN images.added_by IS 'uploading user id'");
         $this->addSql("COMMENT ON COLUMN images.rotation IS 'pending quarter-turn rotation to apply when rendering, 0 to 3'");

@@ -274,7 +274,7 @@ final class WsUsersTest extends ContractTestCase
     public function testGetListMaxLevelInvalidReturnsError(): void
     {
         // max_level is not a registered ws.php param (reachable only via the
-        // shape's open tail -- see PwgUsers::getList()'s own docblock).
+        // shape's open tail -- see Users::getList()'s own docblock).
         $response = $this->wsAdmin('pwg.users.getList', [
             'max_level' => 3,
         ]);

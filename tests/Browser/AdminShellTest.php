@@ -122,7 +122,7 @@ it('shows the pending-comments counter when at least one unvalidated comment exi
     @unlink($image);
 
     // There is no pwg.comments.add WS method (confirmed: nothing in
-    // Piwigo\Ws\PwgComments registers one) -- a real comment only ever
+    // Piwigo\Ws\Comments registers one) -- a real comment only ever
     // gets created through picture.php's own form action, so a direct
     // insert is the established way to seed one for a test (same shape as
     // PictureControllerTest's own pictureInsertComment() helper).

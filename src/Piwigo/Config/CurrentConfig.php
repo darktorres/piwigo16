@@ -2175,7 +2175,7 @@ final class CurrentConfig
     // A raw SQL "ORDER BY ..." fragment string, not a structured
     // {field,dir}[] shape -- every real reader across BatchManager*/
     // SearchService/CategoryService/CalendarRenderer/TagService/
-    // SectionPopulator/Ws/PwgCategories/GalleryController treats it as one.
+    // SectionPopulator/Ws/Categories/GalleryController treats it as one.
     // Default matches install/config.sql's seed row.
     public string $orderBy = 'ORDER BY date_available DESC, file ASC, id ASC';
 

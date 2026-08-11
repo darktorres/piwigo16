@@ -6,7 +6,7 @@ namespace Piwigo\Category\Projection;
 
 /**
  * {@see \Piwigo\Category\CategoryRepository::findAdminListForWs()}'s own
- * row shape -- {@see \Piwigo\Ws\PwgCategories::getAdminList()}'s real (and
+ * row shape -- {@see \Piwigo\Ws\Categories::getAdminList()}'s real (and
  * only) consumer, its paginated admin category rollup. Same raw
  * `Connection::fetchAllAssociative()` DBAL row reasoning as
  * {@see CategoryListForWsRow} -- narrowed to each real `categories`-table

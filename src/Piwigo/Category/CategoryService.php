@@ -439,7 +439,7 @@ final readonly class CategoryService
     }
 
     /**
-     * The 4 real callers (`CategoryCatsRenderer`, `Ws\PwgCategories`)
+     * The 4 real callers (`CategoryCatsRenderer`, `Ws\Categories`)
      * build {@see RandomImageCategoryQuery} explicitly from their own
      * differently-sourced category row -- see that DTO's docblock.
      */
@@ -1256,7 +1256,7 @@ final readonly class CategoryService
      * category
      *
      * $categories is raw request input (Admin\AlbumsPageRenderer's $_POST-
-     * derived array, Ws\PwgCategories' $order_new WS param) -- already
+     * derived array, Ws\Categories' $order_new WS param) -- already
      * defensively is_array()/is_int()/is_string()-checked per element; a
      * real validating shape belongs to a dedicated Request DTO, not a
      * retroactive narrow here.
@@ -1401,9 +1401,9 @@ final readonly class CategoryService
      * Change the **commentable** property on a set of categories. Unlike
      * {@see setCatVisible()}, this has no parent/child cascade of its own
      * -- callers wanting to also apply the change to sub-albums pass their
-     * own already-expanded id list (e.g. Ws\PwgCategories::setInfo()'s
+     * own already-expanded id list (e.g. Ws\Categories::setInfo()'s
      * `apply_commentable_to_subalbums`). Same `bool|string` acceptance as
-     * setCatVisible() -- Ws\PwgCategories::setInfo()'s own $params still
+     * setCatVisible() -- Ws\Categories::setInfo()'s own $params still
      * carry the WS API's 'true'/'false' string wire format.
      *
      * @param int[] $categories
@@ -2051,7 +2051,7 @@ final readonly class CategoryService
     }
 
     /**
-     * Clears $categoryId's representative image -- Ws\PwgCategories::
+     * Clears $categoryId's representative image -- Ws\Categories::
      * deleteRepresentative()'s own action; caller clears the
      * EntityManager afterward (same contract as
      * {@see setRepresentativeImage()} above).

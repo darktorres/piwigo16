@@ -344,7 +344,7 @@ test('countOrphans computes the real difference (not sum) between all images and
 
 test('getRowWithCondition returns the real image row when one genuinely matches, not just null', function (): void {
     // Real gap, found via mutation testing: AlwaysReturnNull -- this
-    // method's only real caller (Ws\PwgImages::getInfo(), already
+    // method's only real caller (Ws\Images::getInfo(), already
     // Unit-tested) only ever exercises the "image_id not found" 404
     // branch (a deliberately nonexistent id), which returns null under
     // both the real code and this mutation identically. A real,

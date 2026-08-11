@@ -181,7 +181,7 @@ final readonly class SearchService
      * (reached from SearchFilterRenderer::render(), which passes
      * SectionContext::section, always available there, and returns the
      * resolved id up its own call chain to GalleryController) and
-     * Ws\PwgImages::filteredSearchCreate() (a WS method that never runs
+     * Ws\Images::filteredSearchCreate() (a WS method that never runs
      * SectionPopulator, passes null section and no out-param --
      * `$page['section']` is never 'search' for a WS request either, so
      * nothing is written for that caller).
@@ -659,7 +659,7 @@ final readonly class SearchService
      * <forbidden>` shape. $criterion is AND-combined with $forbidden
      * unparenthesized -- every real criterion built above already wraps
      * its own internal OR-joined clauses in parens itself when it has any,
-     * same convention {@see \Piwigo\Ws\PwgCategories} already established.
+     * same convention {@see \Piwigo\Ws\Categories} already established.
      *
      * @return list<int>
      */

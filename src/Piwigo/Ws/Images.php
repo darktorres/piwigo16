@@ -68,7 +68,7 @@ use Piwigo\Ws\Request\UploadedFileRequest;
  * (addImageCategoryRelations/mergeChunks/removeChunks) are internal,
  * never WS-registered themselves.
  */
-final class PwgImages
+final class Images
 {
     /**
      * Advisory-lock acquisition timeout for add()'s check_uniqueness race

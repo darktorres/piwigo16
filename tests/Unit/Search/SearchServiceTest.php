@@ -450,7 +450,7 @@ test('saveSearch() persists the rules under a fresh uuid and returns a matching 
     // saveSearch() has no dedicated test anywhere -- not even in the
     // Integration original (a real spec gap, same shape as
     // TagRepositoryTest.php's own findByIdsOrAll() finding this
-    // session). 2 real production callers (Ws\PwgImages::
+    // session). 2 real production callers (Ws\Images::
     // filteredSearchCreate(), Controller\SearchController) depend on
     // its own [uuid, url] contract.
     //

@@ -65,7 +65,7 @@ final class WsImagesUploadConcurrencyTest extends ContractTestCase
     }
 
     /**
-     * Mirrors Ws\PwgImages::add()'s own private lock-name formula exactly
+     * Mirrors Ws\Images::add()'s own private lock-name formula exactly
      * (see that method's own docblock) -- 'md5sum' is the only
      * uniqueness_column this suite exercises, matching
      * CurrentConfig::uniquenessMode()'s own default ('md5sum', unless

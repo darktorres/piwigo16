@@ -6,7 +6,7 @@ namespace Piwigo\Image\Projection;
 
 /**
  * {@see \Piwigo\Image\ImageRepository::findUploadInfoById()}'s own row
- * shape -- `Ws\PwgImages::addFile()`'s "what's the current state of this
+ * shape -- `Ws\Images::addFile()`'s "what's the current state of this
  * image, before we merge in a bigger chunked upload" lookup.
  *
  * `toArray()` exists for that one caller's own dynamic `foreach (['width',

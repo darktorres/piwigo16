@@ -85,7 +85,7 @@ final class UploadService
      * Advisory-lock acquisition timeout for addUploadedFile()'s
      * uploadDetectDuplicate() race fix -- generous enough to cover a
      * concurrent upload's own full image-processing pipeline (resize,
-     * representative generation), same reasoning as PwgImages::
+     * representative generation), same reasoning as Images::
      * UPLOAD_UNIQUENESS_LOCK_TIMEOUT_SECONDS.
      */
     private const int DUP_DETECT_LOCK_TIMEOUT_SECONDS = 30;
@@ -268,7 +268,7 @@ final class UploadService
      * @param Server|null $service Not a required parameter: the one
      *   non-WS real caller, Job\Handler\BatchUploadHandler::
      *   __invoke(BatchUploadJob $job), is a genuine queued-job handler
-     *   with no Server in scope at all. PwgImages.php's 5 real WS
+     *   with no Server in scope at all. Images.php's 5 real WS
      *   callers (addFile()/add()/addSimple()/upload()/uploadAsync(), each
      *   already carrying its own Server $service param) pass it
      *   through; BatchUploadHandler passes nothing.
@@ -311,7 +311,7 @@ final class UploadService
             // GET_LOCK() names are capped at 64 characters -- hashed (with the
             // database name folded into the hashed input for the same
             // collision-avoidance reasoning as add()'s own lock, see
-            // PwgImages::add()) rather than concatenated literally.
+            // Images::add()) rather than concatenated literally.
             $dup_detect_lock_name = 'piwigo_iud_' . sha1($this->dbCredentials->database . ':' . $md5sum);
             $dup_detect_lock_acquired = AdvisorySessionLock::acquire(
                 $dup_detect_lock_conn,

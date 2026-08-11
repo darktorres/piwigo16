@@ -65,7 +65,7 @@ final class GroupRepository extends EntityRepository
 
     /**
      * Ids of every group whose name matches $namePattern (an already-built
-     * SQL LIKE pattern, e.g. `%foo%`) -- Ws\PwgUsers::getList()'s own
+     * SQL LIKE pattern, e.g. `%foo%`) -- Ws\Users::getList()'s own
      * "filter" param, which also searches group membership.
      *
      * @return list<int>
@@ -188,7 +188,7 @@ final class GroupRepository extends EntityRepository
 
         // is_default is a real tinyint(1) column now (Group domain Stage
         // 1a) -- ws.groups.getList's own JSON response returns this row
-        // straight through (PwgGroups::getList()), and its schema
+        // straight through (Groups::getList()), and its schema
         // (tests/Contract/schemas/pwg.groups.getList.json) only allows
         // string|boolean, not the raw int a tinyint fetch would otherwise
         // produce. Normalized to real bool here, once, matching every
@@ -641,7 +641,7 @@ final class GroupRepository extends EntityRepository
 
     /**
      * Raw (user_id, group_id) membership pairs for every id in $userIds --
-     * Ws\PwgUsers::getList()'s own "which groups does each returned user
+     * Ws\Users::getList()'s own "which groups does each returned user
      * belong to" step, the reverse direction of
      * {@see findMembersByGroupIds()} above (that one is keyed by group,
      * this one by user).
@@ -668,7 +668,7 @@ final class GroupRepository extends EntityRepository
         // (Gotcha #1) -- ug.userId/ug.groupId hydrate into real
         // UserId/GroupId VOs under a partial-field DQL select, so this
         // extracts ->value explicitly with an instanceof check. Callers
-        // (Ws\PwgUsers::getList()) expect raw scalars under the
+        // (Ws\Users::getList()) expect raw scalars under the
         // 'user_id'/'group_id' keys, unchanged from the DBAL shape.
         $result = [];
         foreach ($rows as $row) {

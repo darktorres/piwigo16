@@ -10,7 +10,7 @@ use Piwigo\Cache\CachePools;
 use Piwigo\Db\DbConnection;
 
 /**
- * Ws\PwgImages::getInfo()/addComment() -- branches WsImagesTest/
+ * Ws\Images::getInfo()/addComment() -- branches WsImagesTest/
  * WsImagesMutationTest don't reach: getInfo()'s access-denied guard for a
  * photo with no visible category, its unvalidated-comments filter for
  * non-admins, and its format=rest response shape; addComment()'s

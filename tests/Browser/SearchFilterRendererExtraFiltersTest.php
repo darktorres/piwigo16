@@ -64,7 +64,7 @@ function extraFiltersSettledContent(Webpage|PendingAwaitablePage|AwaitableWebpag
  * SearchService::saveSearch()/the WS API entirely -- needed to construct
  * `rules` shapes neither ever produces: a JSON object with no top-level
  * "fields" key at all, or a per-field value that isn't the array shape
- * every real writer (Ws\PwgImages::filteredSearchCreate()) always builds.
+ * every real writer (Ws\Images::filteredSearchCreate()) always builds.
  * SearchFilterRenderer::render()'s own defensive
  * `!isset($mySearch['fields']) || !is_array($mySearch['fields'])` (and the
  * per-field `! is_array($searchFields[x])`) re-narrowing only exists to
@@ -300,7 +300,7 @@ it('unsets the ratings search field and hides the ratings filter panel entirely 
         extraFiltersSetImageAttrs($imageId, ratingScore: 2.5);
 
         // Explicitly enabled (rather than relying on whatever `rate`
-        // happens to already be) because PwgImages::filteredSearchCreate()
+        // happens to already be) because Images::filteredSearchCreate()
         // only persists the 'ratings' field onto the search row in the
         // first place when Config\CurrentConfig::rateEnabled() is true at
         // CREATION time -- a separate read from the one render() makes

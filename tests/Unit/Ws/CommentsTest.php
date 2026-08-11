@@ -18,12 +18,12 @@ use Piwigo\Tests\Unit\Auth\AccessControlTestFakeRedirectServiceNeverCalled;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\User;
 use Piwigo\Users\UserStatus;
-use Piwigo\Ws\PwgComments;
+use Piwigo\Ws\Comments;
 use Piwigo\Ws\Server;
 use Piwigo\Ws\WsErrorResponse;
 
 /**
- * Piwigo\Ws\PwgComments -- the `pwg.userComments.*` WS methods (3
+ * Piwigo\Ws\Comments -- the `pwg.userComments.*` WS methods (3
  * registrations, all admin_only). Resolved via
  * `Kernel::container()->get()` (same rationale as
  * `UpdatesSubControllerTest.php`) since `CommentService` alone has 11
@@ -40,11 +40,11 @@ use Piwigo\Ws\WsErrorResponse;
  * `delete()`/`validate()` both cover their CSRF-token-mismatch 403
  * guard, same established pattern as `PwgPermissionsTest.php`.
  */
-function pwgCommentsTestSubject(): PwgComments
+function pwgCommentsTestSubject(): Comments
 {
-    $ws = Kernel::container()->get(PwgComments::class);
-    if (! $ws instanceof PwgComments) {
-        throw new LogicException('Container returned an unexpected type for ' . PwgComments::class);
+    $ws = Kernel::container()->get(Comments::class);
+    if (! $ws instanceof Comments) {
+        throw new LogicException('Container returned an unexpected type for ' . Comments::class);
     }
 
     return $ws;

@@ -28,12 +28,12 @@ use Piwigo\Tests\Unit\Auth\AccessControlTestFakeRedirectServiceNeverCalled;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\User;
 use Piwigo\Users\UserStatus;
-use Piwigo\Ws\PwgPermissions;
+use Piwigo\Ws\Permissions;
 use Piwigo\Ws\Server;
 use Piwigo\Ws\WsErrorResponse;
 
 /**
- * Piwigo\Ws\PwgPermissions -- the `pwg.permissions.*` WS methods (3
+ * Piwigo\Ws\Permissions -- the `pwg.permissions.*` WS methods (3
  * registrations, all admin_only per WsDefaultMethods). No dedicated
  * Integration/Browser spec of its own.
  *
@@ -65,7 +65,7 @@ afterEach(function (): void {
     Kernel::reset();
 });
 
-function pwgPermissionsTestSubject(): PwgPermissions
+function pwgPermissionsTestSubject(): Permissions
 {
     $conn = DbConnection::build();
     $currentConfig = new CurrentConfig();
@@ -99,7 +99,7 @@ function pwgPermissionsTestSubject(): PwgPermissions
         new AccessLevelChecker($currentUser, $currentConfig),
     );
 
-    return new PwgPermissions($permissionService, $categoryService, $currentConfig);
+    return new Permissions($permissionService, $categoryService, $currentConfig);
 }
 
 /**

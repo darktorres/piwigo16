@@ -9,7 +9,7 @@ use Override;
 use Piwigo\Db\DbConnection;
 
 /**
- * Ws\PwgImages maintenance/format methods:
+ * Ws\Images maintenance/format methods:
  * setMd5sum (0/13), syncMetadata (0/34), deleteOrphans (0/11),
  * formats.delete (0/57), formats.searchImage (0/59), checkFiles (0/25) --
  * all admin_only + post_only, all reachable through the real WS route.
@@ -548,7 +548,7 @@ final class WsImagesMaintenanceTest extends ContractTestCase
         try {
             // formatsDelete()'s own unlink() failure path deliberately
             // trigger_error()s an E_USER_WARNING as its own failure-signaling
-            // mechanism (see PwgImages.php) -- that's this test's whole
+            // mechanism (see Images.php) -- that's this test's whole
             // point, not a bug.
             $response = $this->callWs('pwg.images.formats.delete', [
                 'format_id' => $formatId,

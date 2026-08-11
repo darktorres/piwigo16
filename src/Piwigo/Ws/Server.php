@@ -563,7 +563,7 @@ Request format: ' . @$this->requestFormat . ' Response format: ' . @$this->respo
     /**
      * Checks the forbidden-methods list against $methodName itself, not
      * against the original HTTP request's method -- this keeps the check
-     * correct for recursive invoke() calls (e.g. PwgPermissions::add()/
+     * correct for recursive invoke() calls (e.g. Permissions::add()/
      * remove() calling $service->invoke('pwg.permissions.getList', ...)
      * after their own mutation).
      */

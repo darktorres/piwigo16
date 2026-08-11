@@ -26,7 +26,7 @@ use Piwigo\Users\CurrentUser;
  *
  * createVirtualCategory() delegates to the constructor-injected
  * CategoryService::createVirtualCategory() -- the same method the WS API
- * (Ws\PwgCategories) calls directly -- and only adds a typed return shape
+ * (Ws\Categories) calls directly -- and only adds a typed return shape
  * for admin call sites.
  *
  * Controller\Admin\CatOptionsSubController and AlbumSubController call

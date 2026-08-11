@@ -36,7 +36,7 @@ use Piwigo\Tag\TagService;
  * `pwg.tags.*` WS methods (8 registrations) -- registered via callable
  * arrays in WsDefaultMethods.
  */
-final class PwgTags
+final class Tags
 {
     public function __construct(
         private readonly TagService $tagService,

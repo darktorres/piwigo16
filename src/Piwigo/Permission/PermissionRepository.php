@@ -354,7 +354,7 @@ final readonly class PermissionRepository
 
     /**
      * Every direct user_access row, optionally filtered to $catIds ([]
-     * means unfiltered) -- Ws\PwgPermissions::getList()'s own "direct
+     * means unfiltered) -- Ws\Permissions::getList()'s own "direct
      * users" block.
      *
      * @param  list<int>  $catIds
@@ -387,7 +387,7 @@ final readonly class PermissionRepository
 
     /**
      * Every indirect (via group membership) user access row, optionally
-     * filtered to $catIds ([] means unfiltered) -- Ws\PwgPermissions::
+     * filtered to $catIds ([] means unfiltered) -- Ws\Permissions::
      * getList()'s own "indirect users" block.
      *
      * @param  list<int>  $catIds
@@ -421,7 +421,7 @@ final readonly class PermissionRepository
 
     /**
      * Every direct group_access row, optionally filtered to $catIds ([]
-     * means unfiltered) -- Ws\PwgPermissions::getList()'s own "groups"
+     * means unfiltered) -- Ws\Permissions::getList()'s own "groups"
      * block.
      *
      * @param  list<int>  $catIds

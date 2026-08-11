@@ -679,7 +679,7 @@ test('src/Piwigo/ reads $_POST/$_GET/$_REQUEST/$_FILES only inside a Request DTO
     //   - Ws/Server.php: isPost()'s own `$_POST !== []` -- a minimal
     //     single-fact reader (matches this same file's own docblock),
     //     not a bag of request data a DTO wrapper would help.
-    //   - Ws/PwgImages.php: upload()'s own `$_FILES !== []` top-level
+    //   - Ws/Images.php: upload()'s own `$_FILES !== []` top-level
     //     existence check -- governs a broader condition ("was ANY file
     //     posted") than the 'file' key specifically, which
     //     Ws\Request\UploadedFileRequest already covers.
@@ -701,7 +701,7 @@ test('src/Piwigo/ reads $_POST/$_GET/$_REQUEST/$_FILES only inside a Request DTO
         'Bootstrap/UserBootstrap.php',
         'Bootstrap/RequestBootstrap.php',
         'Ws/Server.php',
-        'Ws/PwgImages.php',
+        'Ws/Images.php',
         'Admin/BatchManagerGlobalPageRenderer.php',
     ];
     $unexpected = array_values(array_filter(
@@ -1106,7 +1106,7 @@ test('src/Piwigo/ contains no die()/exit() calls outside the documented allowlis
         // ... there is no real PSR-7 Response to construct"). Same
         // mechanism reached from Bootstrap/UserBootstrap.php's api_key
         // gate and Admin/Upload/UploadService.php's IN_WS branch.
-        // Ws/PwgImages.php's own upload-error sites return `new
+        // Ws/Images.php's own upload-error sites return `new
         // WsErrorResponse(...)` instead of a raw die(), the same real
         // error-response mechanism this file already uses everywhere
         // else, so upload errors honor the request's real format=/
@@ -1174,7 +1174,7 @@ test('src/Piwigo/ contains no die()/exit() calls outside the documented allowlis
         // throw Piwigo\Admin\Image\ImageProcessingException instead of
         // die(): Http\Middleware\ExceptionHandlerMiddleware catches/logs/
         // Sentry-reports any \Throwable for the real HTTP callers
-        // (Ws/PwgImages.php, Controller/ImageDerivativeController.php),
+        // (Ws/Images.php, Controller/ImageDerivativeController.php),
         // and Symfony Messenger's own consumer loop does the same for the
         // Job/BatchUploadJob.php background-job caller. UploadService.php's
         // only remaining site is its own IN_WS branch's exit() (see the

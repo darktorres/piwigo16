@@ -10,7 +10,7 @@ use Piwigo\Cache\CachePools;
 use Piwigo\Db\DbConnection;
 
 /**
- * Ws\PwgImages::setInfo() (pwg.images.setInfo) -- had zero dedicated test
+ * Ws\Images::setInfo() (pwg.images.setInfo) -- had zero dedicated test
  * coverage: single_value_mode (fill_if_empty/replace/invalid),
  * multiple_value_mode (append/replace/invalid) for tag_ids, the categories
  * relation param (which delegates to the private addImageCategoryRelations()),

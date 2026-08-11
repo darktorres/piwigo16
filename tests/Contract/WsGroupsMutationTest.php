@@ -7,7 +7,7 @@ namespace Piwigo\Tests\Contract;
 use Override;
 
 /**
- * Ws\PwgGroups::delete()'s own `if ($deleted_groups === false) { return
+ * Ws\Groups::delete()'s own `if ($deleted_groups === false) { return
  * new WsErrorResponse(500, 'There is no group to delete'); }` branch is NOT
  * chased here: GroupService::delete() only returns `false` when
  * `count($groupIds) === 0`, but `group_id` is registered with

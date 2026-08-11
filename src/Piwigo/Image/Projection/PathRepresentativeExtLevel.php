@@ -7,7 +7,7 @@ namespace Piwigo\Image\Projection;
 /**
  * {@see \Piwigo\Image\ImageRepository::findPathsAndLevelForIds()}'s own
  * row shape (same 3 columns as {@see PathRepresentativeExt}, plus
- * `level`) -- {@see \Piwigo\Ws\PwgCategories::getList()}'s real (and
+ * `level`) -- {@see \Piwigo\Ws\Categories::getList()}'s real (and
  * only) consumer, its "does the viewer's privacy level allow this
  * thumbnail" check.
  *

@@ -613,7 +613,7 @@ test('countImagesPerTagUnrestricted() counts every image_tag link regardless of 
 test('massInsertImageTags() with ignore=true silently skips a duplicate, unlike the default', function (): void {
     // Image 1 already has tag 1 in the fixture -- proves $options['ignore']
     // actually reaches BatchWriter's own INSERT IGNORE, per this method's
-    // own docblock (Ws\PwgTags::merge()'s real "already tagged" collision
+    // own docblock (Ws\Tags::merge()'s real "already tagged" collision
     // case), not just that the default (no 'ignore' key at all) still
     // throws.
     expect(fn () => tagTestRepo()->massInsertImageTags([[

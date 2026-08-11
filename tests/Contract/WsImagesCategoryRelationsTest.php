@@ -9,7 +9,7 @@ use Override;
 use Piwigo\Db\DbConnection;
 
 /**
- * Ws\PwgImages::addImageCategoryRelations() -- a private helper only
+ * Ws\Images::addImageCategoryRelations() -- a private helper only
  * reachable through pwg.images.setInfo()'s `categories` parameter (or
  * pwg.images.add(), already exercised for its "digits prefix" branch by
  * WsImagesChunkedUploadTest). Covers the branches WsImagesSetInfoTest

@@ -16,8 +16,8 @@ use Piwigo\Url\UrlService;
  * Piwigo\Bootstrap\PresentationAccessor -- same "unexpected type" gap
  * shape as AdminAccessorTest.php/CoreDomainAccessorTest.php: all 5
  * accessors' own \LogicException guards had zero coverage even though
- * the happy path is exercised elsewhere (Ws\PwgExtensions.php/
- * Ws\PwgImages.php's own real usage, per this class's own docblock).
+ * the happy path is exercised elsewhere (Ws\Extensions.php/
+ * Ws\Images.php's own real usage, per this class's own docblock).
  * Also true of the `instanceof` check itself -- the wrong-type tests
  * below only prove the throw side; nothing proved a real, correctly
  * -typed instance is let through. Same Kernel::boot()-with-a-real-Paths

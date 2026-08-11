@@ -13,7 +13,7 @@ use Piwigo\Common\ValueObject\GroupId;
  * narrower `id`/`name`/`is_default` selection.
  *
  * `toArray()` preserves the exact snake_case shape
- * {@see \Piwigo\Ws\PwgGroups::getList()}'s own JSON/XML response already
+ * {@see \Piwigo\Ws\Groups::getList()}'s own JSON/XML response already
  * commits to (`tests/Contract/schemas/pwg.groups.getList.json` requires
  * `is_default`/`nb_users` literally) -- the WS call site converts back to
  * an array via `toArray()` before handing rows to `NamedArray`, same

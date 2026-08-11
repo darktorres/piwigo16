@@ -21,7 +21,7 @@ final readonly class ApiKeyCreated
     ) {}
 
     /**
-     * {@see \Piwigo\Ws\PwgUsers::createApiKey()} returns this directly as
+     * {@see \Piwigo\Ws\Users::createApiKey()} returns this directly as
      * the WS RPC response -- unbox to array at that wire-format boundary.
      *
      * @return array{auth_key: string, apikey_secret: string, apikey_name: string, user_id: int, created_on: string, duration: int, key_type: string, expired_on: string}

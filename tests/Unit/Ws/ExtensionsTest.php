@@ -13,12 +13,12 @@ use Piwigo\Tests\Support\CurrentUserTestFactory;
 use Piwigo\Tests\Support\TemplateTestFactory;
 use Piwigo\Users\User;
 use Piwigo\Users\UserStatus;
-use Piwigo\Ws\PwgExtensions;
+use Piwigo\Ws\Extensions;
 use Piwigo\Ws\Server;
 use Piwigo\Ws\WsErrorResponse;
 
 /**
- * Piwigo\Ws\PwgExtensions -- the `pwg.plugins.*`/`pwg.themes.performAction`/
+ * Piwigo\Ws\Extensions -- the `pwg.plugins.*`/`pwg.themes.performAction`/
  * `pwg.extensions.*` WS methods (6 registrations, all admin_only).
  * Resolved via `Kernel::container()->get()` (same rationale as
  * `UpdatesSubControllerTest.php`) -- 17 constructor deps, none of which
@@ -39,11 +39,11 @@ use Piwigo\Ws\WsErrorResponse;
  * `checkUpdates()` have no guard of their own at all and are not
  * attempted here.
  */
-function pwgExtensionsTestSubject(): PwgExtensions
+function pwgExtensionsTestSubject(): Extensions
 {
-    $ws = Kernel::container()->get(PwgExtensions::class);
-    if (! $ws instanceof PwgExtensions) {
-        throw new LogicException('Container returned an unexpected type for ' . PwgExtensions::class);
+    $ws = Kernel::container()->get(Extensions::class);
+    if (! $ws instanceof Extensions) {
+        throw new LogicException('Container returned an unexpected type for ' . Extensions::class);
     }
 
     return $ws;

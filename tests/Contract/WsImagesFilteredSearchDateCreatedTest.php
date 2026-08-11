@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Tests\Contract;
 
 /**
- * Ws\PwgImages::filteredSearchCreate()'s date_created_custom branches --
+ * Ws\Images::filteredSearchCreate()'s date_created_custom branches --
  * WsImagesFilteredSearchTest.php covers date_posted_custom's y/m/d format
  * parsing plus one date_created_custom 'd' case, but not
  * date_created_custom's own missing/wrong-preset guards or its y/m format

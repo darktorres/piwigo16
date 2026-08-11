@@ -11,7 +11,7 @@ use Piwigo\Cache\CachePools;
 use Piwigo\Db\DbConnection;
 
 /**
- * Ws\PwgImages::upload() (`pwg.images.upload`) -- covers only the START of
+ * Ws\Images::upload() (`pwg.images.upload`) -- covers only the START of
  * the method (buffer-directory setup, the chunked/multipart file-name
  * resolution chain, the output-stream/input-stream plumbing, and the
  * format_of/update_mode branches, all above source line 1660). This is a

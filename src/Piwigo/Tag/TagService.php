@@ -155,7 +155,7 @@ final readonly class TagService
      */
     public function findTags(array $ids = [], array $urlNames = [], array $names = []): array
     {
-        // Unboxed back to array at this public boundary -- Ws\PwgTags::
+        // Unboxed back to array at this public boundary -- Ws\Tags::
         // getImages() mutates $tag['id'] on the rows this returns, which
         // needs real array semantics, not a readonly Tag object (same
         // "narrow once, unbox where genuinely needed" shape as
@@ -337,7 +337,7 @@ final readonly class TagService
      * Return the list of image ids corresponding to given tags. AND & OR
      * mode supported.
      *
-     * $filterCriteria is only ever populated by Ws\PwgTags::getImages()'s
+     * $filterCriteria is only ever populated by Ws\Tags::getImages()'s
      * own `WsHelper::stdImageSqlFilterCriteria()` output -- see
      * {@see ImageFilterCriteria}'s own docblock.
      *
@@ -512,7 +512,7 @@ final readonly class TagService
 
     /**
      * Inserts a brand-new tag row from an already-validated name/url_name
-     * pair -- Ws\PwgTags::duplicate()'s own "copy this tag under a new
+     * pair -- Ws\Tags::duplicate()'s own "copy this tag under a new
      * name" step, unlike tagIdFromTagName() below which looks up an
      * existing tag first. Stays without an explicit `lastmodified`, same
      * as TagRepository::insertWithoutTimestamp()'s own docblock.
@@ -525,7 +525,7 @@ final readonly class TagService
     /**
      * Raw {tag_id, image_id} association copy, bypassing addTags()'s
      * before/after comparison and updateImagesLastmodified() side effect --
-     * Ws\PwgTags::duplicate()/merge() already know exactly which rows to
+     * Ws\Tags::duplicate()/merge() already know exactly which rows to
      * copy and log their own activity entries separately.
      *
      * @param  list<array{image_id: int|string, tag_id: int|string}>  $inserts
@@ -841,7 +841,7 @@ final readonly class TagService
     }
 
     /**
-     * Renames a tag -- Ws\PwgTags::rename()'s own single-tag update.
+     * Renames a tag -- Ws\Tags::rename()'s own single-tag update.
      */
     public function renameTag(TagId $id, string $name, string $urlName): void
     {

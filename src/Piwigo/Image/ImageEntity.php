@@ -44,7 +44,7 @@ use Piwigo\Common\ValueObject\UserId;
  * zero-dates a malformed value on write today, so moving that same
  * rejection earlier (a clear PHP exception instead of a DB-level error
  * or silent corruption) is not a new regression at the WS boundary
- * (`Ws\PwgImages`'s 3 `date_creation` call sites), just an earlier,
+ * (`Ws\Images`'s 3 `date_creation` call sites), just an earlier,
  * clearer failure of a write that was never actually safe.
  *
  * `lastmodified` doesn't share the zero-date risk and is strict-typed

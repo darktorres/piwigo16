@@ -9,13 +9,13 @@ use Override;
 use Piwigo\Db\DbConnection;
 
 /**
- * Ws\PwgImages::uploadCompleted() (pwg.images.uploadCompleted) -- had zero
+ * Ws\Images::uploadCompleted() (pwg.images.uploadCompleted) -- had zero
  * dedicated test coverage. admin_only, CSRF-token-gated; notifies the caller the
  * lounge should be emptied and returns the target category's fresh photo
  * count.
  *
  * uploadCompleted()'s own preg_split() failure guard (image_id, the same
- * `/[\s,;\|]/` pattern used by several other Ws\PwgImages methods) is
+ * `/[\s,;\|]/` pattern used by several other Ws\Images methods) is
  * unreachable from a black-box Contract test in this environment -- see
  * WsImagesTest's exist() section for the full writeup (a plain
  * non-backtracking pattern can't be made to exceed PCRE's default

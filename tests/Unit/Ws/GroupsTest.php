@@ -18,12 +18,12 @@ use Piwigo\Tests\Unit\Auth\AccessControlTestFakeRedirectServiceNeverCalled;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\User;
 use Piwigo\Users\UserStatus;
-use Piwigo\Ws\PwgGroups;
+use Piwigo\Ws\Groups;
 use Piwigo\Ws\Server;
 use Piwigo\Ws\WsErrorResponse;
 
 /**
- * Piwigo\Ws\PwgGroups -- the `pwg.groups.*` WS methods (8 registrations).
+ * Piwigo\Ws\Groups -- the `pwg.groups.*` WS methods (8 registrations).
  * Resolved via `Kernel::container()->get()` (same rationale as
  * `UpdatesSubControllerTest.php`) since `GroupService` alone has 7
  * further constructor deps none of the branches under test touch. No
@@ -46,11 +46,11 @@ use Piwigo\Ws\WsErrorResponse;
  * attempted here. The real group CRUD logic behind every CSRF guard
  * needs real group/user rows and is not attempted here either.
  */
-function pwgGroupsTestSubject(): PwgGroups
+function pwgGroupsTestSubject(): Groups
 {
-    $ws = Kernel::container()->get(PwgGroups::class);
-    if (! $ws instanceof PwgGroups) {
-        throw new LogicException('Container returned an unexpected type for ' . PwgGroups::class);
+    $ws = Kernel::container()->get(Groups::class);
+    if (! $ws instanceof Groups) {
+        throw new LogicException('Container returned an unexpected type for ' . Groups::class);
     }
 
     return $ws;

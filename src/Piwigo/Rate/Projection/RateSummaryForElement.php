@@ -9,7 +9,7 @@ namespace Piwigo\Rate\Projection;
  * row shape -- the picture page's rating-summary widget
  * ({@see \Piwigo\Picture\PictureRateRenderer}) and
  * `pwg.images.getInfo`'s own rating block
- * ({@see \Piwigo\Ws\PwgImages}, via
+ * ({@see \Piwigo\Ws\Images}, via
  * {@see \Piwigo\Rate\RateService::getRateSummaryForElement()}).
  */
 final readonly class RateSummaryForElement

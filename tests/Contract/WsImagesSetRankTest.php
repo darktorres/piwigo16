@@ -9,7 +9,7 @@ use Override;
 use Piwigo\Db\DbConnection;
 
 /**
- * Ws\PwgImages::setRank() -- WsImagesMutationTest covers the multi-image
+ * Ws\Images::setRank() -- WsImagesMutationTest covers the multi-image
  * "reorder" branch and a plain single-image success. This file covers the
  * remaining single-image branches: not-found guards, and the two rank
  * resolution outcomes (clamped to max_rank+1, or defaulted to 1 when the

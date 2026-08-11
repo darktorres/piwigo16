@@ -39,7 +39,7 @@ use Piwigo\Users\UserService;
  * updates.class.php (src/Piwigo/Admin/updates.php) no longer exists in this
  * codebase -- every real caller now goes through this class instead:
  * Bootstrap\PageTail::render() constructs it directly, while
- * Ws\PwgExtensions::checkUpdates() and UpdatesPwgPageRenderer resolve it via
+ * Ws\Extensions::checkUpdates() and UpdatesPwgPageRenderer resolve it via
  * Bootstrap\AdminAccessor::coreUpdateService().
  */
 final readonly class CoreUpdateService

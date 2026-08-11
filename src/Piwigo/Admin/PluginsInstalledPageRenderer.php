@@ -37,7 +37,7 @@ use Piwigo\Users\PreferencesService;
  * No CSRF gap here (confirmed by direct read and by tracing
  * plugins_installated.js's real activate/deactivate/delete/restore flow to
  * the already token-protected ws.php?method=pwg.plugins.performAction --
- * Piwigo\Ws\PwgExtensions::pluginsPerformAction() checks get_pwg_token()
+ * Piwigo\Ws\Extensions::pluginsPerformAction() checks get_pwg_token()
  * against $params['pwg_token'] itself).
  */
 final class PluginsInstalledPageRenderer

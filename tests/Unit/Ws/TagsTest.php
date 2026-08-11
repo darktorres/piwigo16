@@ -17,12 +17,12 @@ use Piwigo\Tests\Unit\Auth\AccessControlTestFakeRedirectServiceNeverCalled;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\User;
 use Piwigo\Users\UserStatus;
-use Piwigo\Ws\PwgTags;
 use Piwigo\Ws\Server;
+use Piwigo\Ws\Tags;
 use Piwigo\Ws\WsErrorResponse;
 
 /**
- * Piwigo\Ws\PwgTags -- the `pwg.tags.*` WS methods (8 registrations).
+ * Piwigo\Ws\Tags -- the `pwg.tags.*` WS methods (8 registrations).
  * Resolved via `Kernel::container()->get()` (same rationale as
  * `UpdatesSubControllerTest.php`) since `TagService` alone has several
  * further constructor deps none of the branches under test touch. No
@@ -37,11 +37,11 @@ use Piwigo\Ws\WsErrorResponse;
  * own and go straight into real `tagService` reads/writes, so are not
  * attempted here.
  */
-function pwgTagsTestSubject(): PwgTags
+function pwgTagsTestSubject(): Tags
 {
-    $ws = Kernel::container()->get(PwgTags::class);
-    if (! $ws instanceof PwgTags) {
-        throw new LogicException('Container returned an unexpected type for ' . PwgTags::class);
+    $ws = Kernel::container()->get(Tags::class);
+    if (! $ws instanceof Tags) {
+        throw new LogicException('Container returned an unexpected type for ' . Tags::class);
     }
 
     return $ws;

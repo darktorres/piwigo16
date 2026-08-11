@@ -691,7 +691,7 @@ final class WsCategoriesMutationTest extends ContractTestCase
     }
 
     // delete()'s and move()'s own `preg_split() === false` guards (both the
-    // same `/[\s,;\|]/` pattern used by several Ws\PwgImages methods, for
+    // same `/[\s,;\|]/` pattern used by several Ws\Images methods, for
     // the scalar-string `category_id` branch) are unreachable from a
     // black-box Contract test: preg_split() only returns false on a genuine
     // PCRE engine error, this pattern has no quantifiers/groups to ever

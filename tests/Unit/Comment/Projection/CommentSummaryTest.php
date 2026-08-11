@@ -62,7 +62,7 @@ test('fromRow throws when id is missing', function (): void {
     // missing" test: this table's `id` column is the real NOT NULL
     // primary key, always present for a real fetched row -- a loud
     // failure here isn't a behavior change any real caller
-    // (PwgImages::getInfo()) could actually hit.
+    // (Images::getInfo()) could actually hit.
     $row = fullCommentSummaryRow();
     $row['id'] = null;
 

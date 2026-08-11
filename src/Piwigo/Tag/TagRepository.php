@@ -677,7 +677,7 @@ final class TagRepository extends EntityRepository
     }
 
     /**
-     * Renames a tag -- Ws\PwgTags::rename()'s own single-tag name/url_name
+     * Renames a tag -- Ws\Tags::rename()'s own single-tag name/url_name
      * update. Goes through the ORM entity (unlike insert()/
      * insertWithoutTimestamp() above) since this mutates an already-persisted
      * row rather than creating one -- Doctrine's change-tracking only
@@ -799,7 +799,7 @@ final class TagRepository extends EntityRepository
 
     /**
      * $ignore matches Category\CategoryRepository::massInsertGroupAccess()'s
-     * own `ignore` convention -- Ws\PwgTags::merge() needs INSERT IGNORE so
+     * own `ignore` convention -- Ws\Tags::merge() needs INSERT IGNORE so
      * an image already tagged with the destination tag doesn't collide with
      * one it's picking up from a merged-away tag.
      *
@@ -867,7 +867,7 @@ final class TagRepository extends EntityRepository
 
     /**
      * Comma-joined tag ids per image, for images linked to any of $tagIds
-     * -- Ws\PwgTags::getImages()'s own "OR mode" per-image tag list.
+     * -- Ws\Tags::getImages()'s own "OR mode" per-image tag list.
      *
      * Runs as real DQL: MySQL's `GROUP_CONCAT()` is exposed via a portable
      * custom DQL function ({@see \Piwigo\Db\DqlFunction\GroupConcatFunction},
@@ -973,7 +973,7 @@ final class TagRepository extends EntityRepository
     }
 
     /**
-     * Every tag name except $excludeId's own -- Ws\PwgTags::rename()'s
+     * Every tag name except $excludeId's own -- Ws\Tags::rename()'s
      * own "is the new name already taken by a different tag" check.
      *
      * Single-table, static WHERE, no join DQL can't express. t.name is a

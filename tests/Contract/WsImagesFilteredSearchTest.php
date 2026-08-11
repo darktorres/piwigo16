@@ -9,7 +9,7 @@ use Override;
 use Piwigo\Db\DbConnection;
 
 /**
- * Ws\PwgImages::filteredSearchCreate() (`pwg.images.filteredSearch.create`) --
+ * Ws\Images::filteredSearchCreate() (`pwg.images.filteredSearch.create`) --
  * was 0/154 lines covered. Pure request
  * validation + Search\SearchRepository::insertSearch() persistence, no file
  * I/O -- every branch is reachable through the WS route itself, so
@@ -24,7 +24,7 @@ use Piwigo\Db\DbConnection;
  * element at the WS layer itself -- with a *different* message ("<name>
  * must only contain positive and not null integers") -- before
  * filteredSearchCreate() ever runs. Confirmed live: a non-numeric tags[]
- * entry never reaches PwgImages.php's own check at all.
+ * entry never reaches Images.php's own check at all.
  */
 final class WsImagesFilteredSearchTest extends ContractTestCase
 {

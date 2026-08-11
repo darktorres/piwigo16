@@ -107,7 +107,7 @@ final class UserRepository implements WebmasterMailProviderInterface
      * This helper's own 3 callers (findAuthorizedFavoriteImageIds() /
      * findVisibleFavoriteImageIds() / findVisibleFavoriteImages()) are all
      * fed a `PermissionService::getSqlConditionFandFAsCondition()` result
-     * by their real caller ({@see \Piwigo\Ws\PwgUsers}/
+     * by their real caller ({@see \Piwigo\Ws\Users}/
      * {@see \Piwigo\Section\SectionPopulator}), same genuinely dynamic,
      * cross-cutting permission-condition blocker documented in
      * {@see \Piwigo\Image\ImageRepository::applyCondition()}'s own
@@ -949,7 +949,7 @@ final class UserRepository implements WebmasterMailProviderInterface
      * "add_to_favorites" action, unlike deleteFavoritesForImages() above
      * which is a bulk removal. $ignoreDuplicate matches
      * Category\CategoryRepository::massInsertGroupAccess()'s own `ignore`
-     * convention -- Ws\PwgUsers::favoritesAdd() needs INSERT IGNORE so a
+     * convention -- Ws\Users::favoritesAdd() needs INSERT IGNORE so a
      * repeat "add favorite" call for an already-favorited image (the
      * `(user_id, image_id)` primary key) stays a no-op instead of a
      * duplicate-key error; PictureController's own call keeps the
@@ -1149,7 +1149,7 @@ final class UserRepository implements WebmasterMailProviderInterface
 
     /**
      * Every column of every favorite image for $userId matching
-     * $condition -- Ws\PwgUsers::favoritesGetList()'s own full row
+     * $condition -- Ws\Users::favoritesGetList()'s own full row
      * listing, a different contract from
      * {@see findVisibleFavoriteImageIds()} above (that one is
      * `image_id`-only, this one is `i.*`).
@@ -1524,7 +1524,7 @@ final class UserRepository implements WebmasterMailProviderInterface
     /**
      * The condition list shared by findListForWs() below -- a `1=1` base
      * plus one condition per non-null UserListCriteria field, mirroring
-     * Ws\PwgUsers::getList()'s own original "appended only when its
+     * Ws\Users::getList()'s own original "appended only when its
      * corresponding $params key is present" chain.
      */
     private static function buildListForWsCondition(UserListCriteria $criteria): SqlCondition
@@ -1617,7 +1617,7 @@ final class UserRepository implements WebmasterMailProviderInterface
     }
 
     /**
-     * Ws\PwgUsers::getList()'s own paginated, dynamically-columned user
+     * Ws\Users::getList()'s own paginated, dynamically-columned user
      * listing; see buildListForWsCondition() above for how each criteria
      * field maps to its own WHERE condition. $displayColumns is the
      * already-built `field expr => alias` map (always includes at least
@@ -1644,7 +1644,7 @@ final class UserRepository implements WebmasterMailProviderInterface
      * the SELECT list. `GROUP BY`'s functional-dependency exception,
      * unlike `DISTINCT`'s strict same-row-literal requirement, also
      * permits the `ORDER BY LOWER(username)`-style expressions
-     * Ws\PwgUsers::getList() can build, which aren't literally present in
+     * Ws\Users::getList() can build, which aren't literally present in
      * the SELECT list. The total count uses a separate `COUNT(DISTINCT
      * u.id)` query rather than a window function or
      * `SQL_CALC_FOUND_ROWS`/`FOUND_ROWS()` (MySQL-only, no Postgres

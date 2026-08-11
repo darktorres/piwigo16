@@ -6,7 +6,7 @@ use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
 
 /**
  * Narrows the `result.users[0].id` of a pwg.users.add WS response to an
- * int. PwgUsers::add() (src/Piwigo/Ws/PwgUsers.php) internally
+ * int. Users::add() (src/Piwigo/Ws/Users.php) internally
  * re-invokes pwg.users.getList and returns its {users: [...]} shape
  * directly, so that's the real path; a flatter {id: ...} shape is also
  * tolerated defensively in case that internal call ever changes.

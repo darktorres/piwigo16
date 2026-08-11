@@ -19,7 +19,7 @@ use Piwigo\Url\UrlService;
  * (arch-test-restricted to `Bootstrap/` + root `index.php`,
  * `tests/Arch/StructuralTest.php`). Same shape as
  * `Bootstrap\RedirectService::userService()`, consumed cross-namespace by
- * `Ws\PwgExtensions.php`/`Ws\PwgImages.php` -- `Admin`/`Bootstrap`/
+ * `Ws\Extensions.php`/`Ws\Images.php` -- `Admin`/`Bootstrap`/
  * `Command`/`Controller`/`Job`/`Ws` are all the same deptrac
  * `L4Integration` layer, so this same-layer dependency is architecturally
  * allowed.

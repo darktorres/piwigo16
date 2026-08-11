@@ -46,7 +46,7 @@ use Piwigo\Users\UserService;
  * (6 registrations, all admin_only) -- registered via callable arrays in
  * include/ws_default_methods.inc.php.
  */
-final class PwgExtensions
+final class Extensions
 {
     public function __construct(
         private readonly Lang $lang,

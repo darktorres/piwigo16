@@ -11,14 +11,14 @@ use Piwigo\Common\ValueObject\UserId;
 /**
  * Replaces the ad hoc `list<SqlCondition> $whereClauses` (plus a
  * string-keyed 'author_id' entry used purely as a removable marker) that
- * `Ws\PwgComments::getList()` used to build once and mutate/reuse across
+ * `Ws\Comments::getList()` used to build once and mutate/reuse across
  * 4 different sub-queries. One immutable object built once from
  * `$params`, passed unchanged to all 4 `CommentRepository` methods below
  * -- each decides for itself which fields it honors (see their own
  * docblocks).
  *
  * $authorId/$imageId/$minDate/$maxDate are real VOs, not raw scalars --
- * the one real caller (`Ws\PwgComments::getList()`) already has
+ * the one real caller (`Ws\Comments::getList()`) already has
  * WsParamType::ID-guaranteed ints and date_format()-produced
  * `Y-m-d H:i:s` strings, so building the VOs there (instead of at every
  * consumption site) is a pure typing win. `CommentEntity::$authorId`

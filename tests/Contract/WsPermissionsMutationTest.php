@@ -7,7 +7,7 @@ namespace Piwigo\Tests\Contract;
 use Override;
 
 /**
- * Ws\PwgPermissions::getList()'s 3 "malformed row" guards (direct-users,
+ * Ws\Permissions::getList()'s 3 "malformed row" guards (direct-users,
  * indirect-users, and groups loops -- each `! isset($row['cat_id']) ||
  * ! is_numeric($row['cat_id'])` then `continue;`) are NOT chased here:
  * PermissionRepository::findDirectUserAccessRows()/

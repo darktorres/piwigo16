@@ -204,7 +204,7 @@ final class PictureCommentRenderer
                 // explicitly (CommentRepository::insert()), but
                 // formatDate()'s own `false` "no date" sentinel is the
                 // correct fallback here, not an assert() -- matches
-                // PwgComments::getList()'s own identical guard for this
+                // Comments::getList()'s own identical guard for this
                 // same column.
                 $rowDate = $row->date ?? false;
 

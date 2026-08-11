@@ -11,7 +11,7 @@ use Piwigo\Cache\CachePools;
 use Piwigo\Db\DbConnection;
 
 /**
- * Remaining Ws\PwgImages upload-pipeline gaps not covered by
+ * Remaining Ws\Images upload-pipeline gaps not covered by
  * WsImagesChunkedUploadTest/WsUploadTest/WsImagesMaintenanceTest:
  * add()'s image_id-not-found guard, filename-uniqueness-mode duplicate
  * rejection, and high_sum branch (which also exercises removeChunks()'s
@@ -653,7 +653,7 @@ final class WsImagesUploadGapsTest extends ContractTestCase
 
         try {
             // uploadAsync()'s own "trick to bypass get_sql_condition_FandF"
-            // (Ws\PwgImages.php ~1919-1925) only fires when the requested
+            // (Ws\Images.php ~1919-1925) only fires when the requested
             // level is both non-zero and strictly greater than the caller's
             // *own* current level -- fixture_admin's own level defaults to 8
             // (the fixture's webmaster row, tests/Fixtures/piwigo-17.0.sql),

@@ -10,7 +10,7 @@ use Piwigo\Db\DbConnection;
 use RuntimeException;
 
 /**
- * Ws\PwgTags::delete()'s own `else { return ['id' => []]; }` branch (when
+ * Ws\Tags::delete()'s own `else { return ['id' => []]; }` branch (when
  * $tag_ids is empty) is NOT chased here: `tag_id` is registered with
  * WsParamFlag::FORCE_ARRAY and no WsParamFlag::OPTIONAL/'default' key
  * (mandatory), so Server::invoke() itself rejects any request that
@@ -545,7 +545,7 @@ final class WsTagsMutationTest extends ContractTestCase
     }
 
     /**
-     * duplicate()'s own RenderTagUrl dispatch site (PwgTags::duplicate())
+     * duplicate()'s own RenderTagUrl dispatch site (Tags::duplicate())
      * -- distinct from rename()'s own, see this file's own docblock above
      * for why it now fails loud too.
      */

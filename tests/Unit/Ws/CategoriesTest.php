@@ -19,12 +19,12 @@ use Piwigo\Tests\Unit\Auth\AccessControlTestFakeRedirectServiceNeverCalled;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Users\User;
 use Piwigo\Users\UserStatus;
-use Piwigo\Ws\PwgCategories;
+use Piwigo\Ws\Categories;
 use Piwigo\Ws\Server;
 use Piwigo\Ws\WsErrorResponse;
 
 /**
- * Piwigo\Ws\PwgCategories -- the `pwg.categories.*` WS methods (13 public
+ * Piwigo\Ws\Categories -- the `pwg.categories.*` WS methods (13 public
  * methods). Resolved via `Kernel::container()->get()` (same rationale
  * as `UpdatesSubControllerTest.php`) -- 14 constructor deps, none
  * touched by the guard branches under test. No dedicated Integration/
@@ -48,11 +48,11 @@ use Piwigo\Ws\WsErrorResponse;
  * `calculateOrphans()` (none of which have a CSRF/pure guard of their
  * own -- confirmed by reading each), are not attempted here.
  */
-function pwgCategoriesTestSubject(): PwgCategories
+function pwgCategoriesTestSubject(): Categories
 {
-    $ws = Kernel::container()->get(PwgCategories::class);
-    if (! $ws instanceof PwgCategories) {
-        throw new LogicException('Container returned an unexpected type for ' . PwgCategories::class);
+    $ws = Kernel::container()->get(Categories::class);
+    if (! $ws instanceof Categories) {
+        throw new LogicException('Container returned an unexpected type for ' . Categories::class);
     }
 
     return $ws;

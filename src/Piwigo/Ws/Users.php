@@ -54,7 +54,7 @@ use Piwigo\Users\UserStatus;
  * `pwg.users.*` WS methods (16 registrations) -- registered via callable
  * arrays in WsDefaultMethods.
  */
-final class PwgUsers
+final class Users
 {
     public function __construct(
         private readonly UserService $userService,
@@ -1011,7 +1011,7 @@ final class PwgUsers
 
         // realEscapeString() dropped: ApiKeyRepository::insert() parameterizes
         // apikey_name instead of interpolating it, same "dead pre-escaping"
-        // rationale as Ws\PwgTags::rename().
+        // rationale as Ws\Tags::rename().
         $key_name = $params['key_name'];
         // the guard above already rejects any duration outside [1, 999999], so
         // it can never be 0 here.

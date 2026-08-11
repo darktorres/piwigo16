@@ -55,7 +55,7 @@ use Piwigo\Users\UserService;
  * `pwg.categories.*` WS methods (12 registrations) -- registered via
  * callable arrays in include/ws_default_methods.inc.php.
  */
-final class PwgCategories
+final class Categories
 {
     public function __construct(
         private readonly CategoryService $categoryService,
@@ -359,7 +359,7 @@ final class PwgCategories
      *   through unchanged).
      * Genuinely dynamic response shape: tree_output controls whether
      * categories nest recursively or come back flat, same rationale as
-     * Ws\PwgUsers::getList()'s own client-controlled response shape.
+     * Ws\Users::getList()'s own client-controlled response shape.
      * @return WsErrorResponse|array<int|string, mixed>
      */
     public function getList(array $params, Server &$service): WsErrorResponse|array

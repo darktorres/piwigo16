@@ -8,7 +8,7 @@ use Piwigo\Permission\SqlCondition;
 
 /**
  * Replaces the `list<string> $where_clauses`
- * `Ws\PwgCategories::getImages()` used to build -- an
+ * `Ws\Categories::getImages()` used to build -- an
  * {@see ImageFilterCriteria}, a `category_id IN (...)` restriction to the
  * already-resolved, permission-filtered category id set, and a
  * `visible_images`-only permission condition (`PermissionService::

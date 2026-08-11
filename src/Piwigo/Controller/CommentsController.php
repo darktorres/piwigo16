@@ -548,7 +548,7 @@ final class CommentsController implements ControllerInterface
                 // comments.date is nullable -- every real
                 // insert still sets it explicitly, but formatDate()'s own
                 // `false` "no date" sentinel is the correct fallback,
-                // matching PwgComments::getList()'s own identical guard
+                // matching Comments::getList()'s own identical guard
                 // for this same column.
                 $date = is_string($comment['date']) ? $comment['date'] : false;
 

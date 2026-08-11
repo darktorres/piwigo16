@@ -210,7 +210,7 @@ final class WsImagesMutationTest extends ContractTestCase
     }
 
     // delete()'s own preg_split() failure guard (image_id, the same
-    // `/[\s,;\|]/` pattern used by several other Ws\PwgImages methods) is
+    // `/[\s,;\|]/` pattern used by several other Ws\Images methods) is
     // unreachable from a black-box Contract test: preg_split() only
     // returns false on a genuine PCRE engine error, this pattern has no
     // quantifiers/groups to ever backtrack, and this test process (a

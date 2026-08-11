@@ -9,7 +9,7 @@ use Piwigo\Common\ValueObject\CommentId;
 use Piwigo\Common\ValueObject\SqlDateTime;
 
 /**
- * Typed row shape for {@see \Piwigo\Ws\PwgImages::getInfo()}'s own
+ * Typed row shape for {@see \Piwigo\Ws\Images::getInfo()}'s own
  * "related comments" block (`pwg.images.getInfo`'s `SELECT id, date,
  * author, content FROM comments ...`).
  *

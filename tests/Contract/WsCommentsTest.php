@@ -10,7 +10,7 @@ use Piwigo\Cache\CachePools;
 use Piwigo\Db\DbConnection;
 
 /**
- * Ws\PwgComments::getList()'s summary/date-range "unable to compute" guards
+ * Ws\Comments::getList()'s summary/date-range "unable to compute" guards
  * (`$summary === null` / `$dates === null`, WsErrorResponse 500) are NOT chased
  * here: CommentRepository::findSummaryCounts()/findDateRange() each run a
  * bare `SELECT count(*)/sum(...)/MIN()/MAX() FROM ... WHERE ...` with no
@@ -420,7 +420,7 @@ final class WsCommentsTest extends ContractTestCase
      * author_id = CurrentConfig::guestId() for real, the only way to reach
      * this branch through the real WS route.
      *
-     * PwgImages::getInfo() only populates its own 'comment_post' (the
+     * Images::getInfo() only populates its own 'comment_post' (the
      * ephemeral key addComment() needs) for a guest caller when
      * CurrentConfig::commentsForall() is true -- 'false' in the fixture
      * config, confirmed by reading getInfo()'s own

@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Tests\Contract;
 
 /**
- * Ws\PwgImages::search() (pwg.images.search) -- WsImagesFilteredSearchTest
+ * Ws\Images::search() (pwg.images.search) -- WsImagesFilteredSearchTest
  * covers the sibling filteredSearch.create() endpoint, but nothing exercised
  * search() itself yet. Covers the `order` param branch (super_order_by /
  * CurrentConfig::setOrderBy()) and the general non-empty-results shape.

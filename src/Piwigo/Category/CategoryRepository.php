@@ -219,7 +219,7 @@ final class CategoryRepository
 
     /**
      * A single category's id/name/permalink, or null if it doesn't exist --
-     * Ws\PwgImages::add()'s own "resolve the just-associated category, for
+     * Ws\Images::add()'s own "resolve the just-associated category, for
      * the response URL" lookup. Unlike findAllIdNamePermalink() above
      * (every row, cache warm-up), this is a single-id lookup.
      *
@@ -880,7 +880,7 @@ final class CategoryRepository
 
     /**
      * image_id for every link outside $excludeIds, NOT deduplicated
-     * (matches Ws\PwgCategories::calculateOrphans()'s own large-category
+     * (matches Ws\Categories::calculateOrphans()'s own large-category
      * fallback path, which dedupes in PHP after intersecting against the
      * recursive image id set) -- a different contract from
      * {@see findNonOrphanImageIds()} above (that one is DISTINCT and
@@ -2401,7 +2401,7 @@ final class CategoryRepository
 
     /**
      * Same generic dynamic-field update as updateCategoryAfterInsert()
-     * above, distinct name/call site -- Ws\PwgCategories::setInfo()'s own
+     * above, distinct name/call site -- Ws\Categories::setInfo()'s own
      * name/comment edit, not a post-insert patch.
      *
      * @param array<string, mixed> $data
@@ -3252,7 +3252,7 @@ final class CategoryRepository
     }
 
     /**
-     * Whether a category with this id exists -- Ws\PwgCategories'
+     * Whether a category with this id exists -- Ws\Categories'
      * setRepresentative()'s own existence check.
      *
      * Single-table, static WHERE, COUNT aggregate.
@@ -3270,7 +3270,7 @@ final class CategoryRepository
     }
 
     /**
-     * Ids from $ids that really exist -- Ws\PwgCategories' own "do these
+     * Ids from $ids that really exist -- Ws\Categories' own "do these
      * categories really exist" checks (getImages()/delete()).
      *
      * @param  list<int>  $ids
@@ -3297,7 +3297,7 @@ final class CategoryRepository
 
     /**
      * id/image_order for categories matching already-built $conditions --
-     * Ws\PwgCategories::getImages()'s own "which categories are we
+     * Ws\Categories::getImages()'s own "which categories are we
      * fetching images for" step.
      *
      * @param  list<SqlCondition>  $conditions
@@ -3318,7 +3318,7 @@ final class CategoryRepository
      * Real DQL -- single-table, no join. The caller's own `RLIKE`/`REGEXP`
      * operator splice is solved by
      * {@see \Piwigo\Db\DqlFunction\RegexpFunction} (registered, already
-     * used elsewhere in this file); {@see \Piwigo\Ws\PwgCategories} builds
+     * used elsewhere in this file); {@see \Piwigo\Ws\Categories} builds
      * `c.`-prefixed DQL property paths and the portable `REGEXP(...) =
      * true` DQL function instead of a raw SQL fragment.
      */
@@ -3398,7 +3398,7 @@ final class CategoryRepository
     }
 
     /**
-     * Ws\PwgCategories::getList()'s own paginated category rollup. Builds
+     * Ws\Categories::getList()'s own paginated category rollup. Builds
      * its own scope/forbidden-categories/public-only conditions internally
      * via {@see categoryScopeCondition()} and SqlCondition::combine(), from
      * a typed CategoryListCriteria. $searchTerm/$searchLimit/$limit/
@@ -3503,7 +3503,7 @@ final class CategoryRepository
     }
 
     /**
-     * Ws\PwgCategories::getAdminList()'s own paginated category rollup, via
+     * Ws\Categories::getAdminList()'s own paginated category rollup, via
      * CategoryAdminListCriteria (no forbidden-categories/public-only fields
      * at all -- this WS method is admin-only). Always computes the total,
      * unlike {@see findListForWs()}'s own $limit-gated fetch.
@@ -3549,7 +3549,7 @@ final class CategoryRepository
     }
 
     /**
-     * Subcategory counts grouped by parent id -- Ws\PwgCategories::
+     * Subcategory counts grouped by parent id -- Ws\Categories::
      * getAdminList()'s own non-recursive "nb_categories" column.
      *
      * @param  list<int>  $parentIds
@@ -3588,7 +3588,7 @@ final class CategoryRepository
     }
 
     /**
-     * id/id_uppercat/rank for $ids -- Ws\PwgCategories::setRank()'s own
+     * id/id_uppercat/rank for $ids -- Ws\Categories::setRank()'s own
      * "does the category really exist" check plus the sibling data it
      * needs afterward.
      *
@@ -3628,7 +3628,7 @@ final class CategoryRepository
 
     /**
      * Ids of every category directly under $parentId (or top-level, when
-     * null), ordered by id -- Ws\PwgCategories::setRank()'s own
+     * null), ordered by id -- Ws\Categories::setRank()'s own
      * "does the caller-provided order cover every sibling" check, which
      * relies on this exact id-ascending order to compare against the
      * caller's own numerically-sorted id list.
@@ -3659,7 +3659,7 @@ final class CategoryRepository
 
     /**
      * Ids of every sibling of $excludeId under $parentId (or top-level,
-     * when null), ordered by rank -- Ws\PwgCategories::setRank()'s own
+     * when null), ordered by rank -- Ws\Categories::setRank()'s own
      * "insert the new category into its siblings' existing rank order"
      * step.
      *
@@ -3691,7 +3691,7 @@ final class CategoryRepository
     }
 
     /**
-     * id/name/dir/uppercats for $ids -- Ws\PwgCategories::move()'s own
+     * id/name/dir/uppercats for $ids -- Ws\Categories::move()'s own
      * "reject physical categories, and remember every ancestor to
      * refresh" step. A different 4-column shape from
      * {@see findCategoriesForMove()} above (that one is

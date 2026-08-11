@@ -11,7 +11,7 @@ use Piwigo\Core\TemplatePageContext;
 /**
  * The template variable set assigned by
  * {@see \Piwigo\Controller\ProfileController}. `$defaultUserValues`
- * stays a loose row shape -- it's `Ws\PwgUsers`-style default-user row
+ * stays a loose row shape -- it's `Ws\Users`-style default-user row
  * data with 3 fields coerced to JS-literal 'true'/'false' strings for
  * profile.tpl's own inline JS, not a fixed structural shape worth
  * minting its own DTO for here.

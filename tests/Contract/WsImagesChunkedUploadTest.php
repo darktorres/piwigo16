@@ -10,7 +10,7 @@ use Override;
 use Piwigo\Db\DbConnection;
 
 /**
- * Ws\PwgImages's older, 2-step chunked-upload API: addChunk, add --
+ * Ws\Images's older, 2-step chunked-upload API: addChunk, add --
  * pwg.images.addChunk buffers base64 chunks to disk keyed by
  * original_sum, pwg.images.add merges them and creates the photo. Distinct
  * from the newer addSimple/upload multipart flow covered in

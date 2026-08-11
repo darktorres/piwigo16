@@ -6,7 +6,7 @@ namespace Piwigo\Permission\Projection;
 
 /**
  * {@see \Piwigo\Permission\PermissionRepository::findGroupAccessRows()}'s
- * own row shape -- feeds {@see \Piwigo\Ws\PwgPermissions::getList()}'s own
+ * own row shape -- feeds {@see \Piwigo\Ws\Permissions::getList()}'s own
  * per-category group-id grouping.
  */
 final readonly class GroupAccessRow

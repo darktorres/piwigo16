@@ -15,7 +15,7 @@ use Doctrine\DBAL\Platforms\PostgreSQLPlatform;
  * bigint-key derivation, why a poll loop is needed to emulate
  * `GET_LOCK()`'s blocking-with-a-timeout since `pg_try_advisory_lock()`
  * never blocks at all). `UniqueExecLock` and two other real, independent
- * call sites (`Ws\PwgImages::add()`'s upload-uniqueness lock,
+ * call sites (`Ws\Images::add()`'s upload-uniqueness lock,
  * `Admin\Upload\UploadService::upload()`'s duplicate-detection lock) each
  * build their own already-hashed, MySQL-shaped lock-name string (capped at
  * MySQL's own 64-character `GET_LOCK()` limit) and use it verbatim for the

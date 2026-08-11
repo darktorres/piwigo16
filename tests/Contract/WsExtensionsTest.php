@@ -11,7 +11,7 @@ use Piwigo\Core\Env;
 use Piwigo\Db\DbConnection;
 
 /**
- * Covers PwgExtensions' 6 admin_only WS methods. Deliberately never
+ * Covers Extensions' 6 admin_only WS methods. Deliberately never
  * exercises any branch that reaches PemCatalog::extractArchive() (the
  * plugin/theme/language "update" action) or CoreUpdateService::
  * checkPiwigoUpgrade() (pwg.extensions.checkUpdates) -- both perform a
@@ -69,7 +69,7 @@ final class WsExtensionsTest extends ContractTestCase
     /**
      * Creates a user with status='admin' (passes the WS layer's admin_only
      * gate, which accepts admin OR webmaster) but not 'webmaster' -- the
-     * only way to reach PwgExtensions' own stricter
+     * only way to reach Extensions' own stricter
      * AccessControl::isWebmaster() guards. Logs the session onto that user
      * and returns a token valid for it; tearDown() deletes the user.
      */

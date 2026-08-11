@@ -8,7 +8,7 @@ use Piwigo\Common\ValueObject\CategoryId;
 
 /**
  * Replaces the `list<string> $where`
- * `Ws\PwgCategories::getAdminList()` used to build -- a `1=1`
+ * `Ws\Categories::getAdminList()` used to build -- a `1=1`
  * base plus exactly one of 3 mutually-exclusive scope conditions
  * (non-recursive-with-cat_id / non-recursive-without / recursive), same
  * scope-condition shape as {@see CategoryListCriteria} but with no

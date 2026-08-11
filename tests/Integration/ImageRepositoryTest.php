@@ -952,7 +952,7 @@ final class ImageRepositoryTest extends IntegrationTestCase
 
     /**
      * [SEC-20] regression: findIdsByMd5sum()'s own real caller
-     * (Ws\PwgImages::add()'s `original_sum` param) has zero WS-level type
+     * (Ws\Images::add()'s `original_sum` param) has zero WS-level type
      * constraints -- a value containing SQL syntax must be treated as a
      * literal, matching nothing, not injected as SQL structure.
      */
@@ -978,7 +978,7 @@ final class ImageRepositoryTest extends IntegrationTestCase
 
     /**
      * [SEC-20] regression: existsWithColumnValue()'s own real caller
-     * (Ws\PwgImages::add()'s unvalidated original_sum/original_filename
+     * (Ws\Images::add()'s unvalidated original_sum/original_filename
      * params) has zero WS-level type constraints -- a value containing SQL
      * syntax must be treated as a literal, matching nothing, not injected
      * as a tautology.

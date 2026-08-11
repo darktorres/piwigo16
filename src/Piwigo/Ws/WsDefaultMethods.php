@@ -27,15 +27,15 @@ final class WsDefaultMethods
     // instance methods (e.g. $this->pwgCore->getVersion(...)), not static
     // ClassName::method() calls.
     public function __construct(
-        private readonly PwgCategories $pwgCategories,
+        private readonly Categories $pwgCategories,
         private readonly Core $pwgCore,
-        private readonly PwgPermissions $pwgPermissions,
-        private readonly PwgComments $pwgComments,
-        private readonly PwgExtensions $pwgExtensions,
-        private readonly PwgGroups $pwgGroups,
-        private readonly PwgTags $pwgTags,
-        private readonly PwgUsers $pwgUsers,
-        private readonly PwgImages $pwgImages,
+        private readonly Permissions $pwgPermissions,
+        private readonly Comments $pwgComments,
+        private readonly Extensions $pwgExtensions,
+        private readonly Groups $pwgGroups,
+        private readonly Tags $pwgTags,
+        private readonly Users $pwgUsers,
+        private readonly Images $pwgImages,
         private readonly CurrentConfig $currentConfig,
         private readonly AccessControl $accessControl,
         private readonly CurrentUser $currentUser,

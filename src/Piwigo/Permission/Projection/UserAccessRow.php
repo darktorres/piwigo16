@@ -8,7 +8,7 @@ namespace Piwigo\Permission\Projection;
  * Shared row shape for {@see \Piwigo\Permission\PermissionRepository::findDirectUserAccessRows()}
  * and {@see \Piwigo\Permission\PermissionRepository::findIndirectUserAccessRows()}
  * (identical `user_id`/`cat_id` pair, one direct via `user_access`, one via
- * group membership) -- both feed {@see \Piwigo\Ws\PwgPermissions::getList()}'s
+ * group membership) -- both feed {@see \Piwigo\Ws\Permissions::getList()}'s
  * own per-category user-id grouping.
  */
 final readonly class UserAccessRow

@@ -154,7 +154,7 @@ final class ImageRepository extends EntityRepository
 
     /**
      * Applies whichever of name/author/comment/date_creation the caller
-     * actually supplied -- Ws\PwgImages::addChunk()'s own "apply the
+     * actually supplied -- Ws\Images::addChunk()'s own "apply the
      * caller-supplied upload metadata fields, sparse" step. A null
      * parameter means "not supplied", not "clear this field" -- these 4
      * fields are never intentionally nulled through this path.
@@ -291,7 +291,7 @@ final class ImageRepository extends EntityRepository
 
     /**
      * image_id/ext for format rows matching $formatIds (their own primary
-     * key, `format_id`, not `image_id`) -- Ws\PwgImages::formatsDelete()'s
+     * key, `format_id`, not `image_id`) -- Ws\Images::formatsDelete()'s
      * own "which images/extensions are these formats for" lookup, before
      * deleting them via deleteFormatsByIds() below.
      *
@@ -427,7 +427,7 @@ final class ImageRepository extends EntityRepository
 
     /**
      * Same 3 columns as {@see findPathsForFileDeletion()}, plus `level` --
-     * Ws\PwgCategories::getList()'s own "does the viewer's privacy level
+     * Ws\Categories::getList()'s own "does the viewer's privacy level
      * allow this thumbnail" check.
      *
      * @param  list<int>  $imageIds
@@ -464,7 +464,7 @@ final class ImageRepository extends EntityRepository
     }
 
     /**
-     * Bulk-sets `level` for a batch of image ids -- Ws\PwgImages::
+     * Bulk-sets `level` for a batch of image ids -- Ws\Images::
      * setPrivacyLevel()'s own WS write. Caller clears the EntityManager
      * afterward (same "caller clears" convention documented elsewhere,
      * e.g. CategoryService::setRepresentativeImage()) since this bypasses
@@ -543,7 +543,7 @@ final class ImageRepository extends EntityRepository
 
     /**
      * Applies a dynamic subset of `images` scalar fields, raw column names
-     * as caller-supplied keys -- Ws\PwgImages::setInfo()'s own
+     * as caller-supplied keys -- Ws\Images::setInfo()'s own
      * "single_value_mode fill_if_empty/replace" business logic decides at
      * runtime which of name/author/comment/level/date_creation/file
      * actually changes, so this stays a generic column=>value bag rather
@@ -711,7 +711,7 @@ final class ImageRepository extends EntityRepository
 
     /**
      * Number of lounge rows for $categoryId not yet linked into
-     * `image_category` -- Ws\PwgImages::upload()'s own "how many photos
+     * `image_category` -- Ws\Images::upload()'s own "how many photos
      * are still awaiting validation in this category" response field.
      */
     public function countLoungeImagesPendingForCategory(CategoryId $categoryId): int
@@ -946,7 +946,7 @@ final class ImageRepository extends EntityRepository
 
     /**
      * Breaks image_category links for one $imageId, scoped to a specific
-     * set of $categoryIds -- Ws\PwgImages::addImageCategoryRelations()'s
+     * set of $categoryIds -- Ws\Images::addImageCategoryRelations()'s
      * own replace-mode cleanup of associations no longer present in the
      * caller's requested category list. Unlike deleteImageCategoryLinks()
      * above (many images, one category), this is one image, many
@@ -1073,7 +1073,7 @@ final class ImageRepository extends EntityRepository
     }
 
     /**
-     * path/file/md5sum/width/height/filesize for $imageId -- Ws\PwgImages::
+     * path/file/md5sum/width/height/filesize for $imageId -- Ws\Images::
      * addFile()'s own "what's the current state of this image, before we
      * merge in a bigger chunked upload" lookup.
      *
@@ -1106,7 +1106,7 @@ final class ImageRepository extends EntityRepository
     }
 
     /**
-     * Whether at least one image has $value in $column -- Ws\PwgImages::
+     * Whether at least one image has $value in $column -- Ws\Images::
      * add()'s own upload-time uniqueness check ($column is one of
      * `md5sum`/`file`, selected from CurrentConfig::uniquenessMode(),
      * never caller-controlled; $value is always raw, untrusted client
@@ -1179,7 +1179,7 @@ final class ImageRepository extends EntityRepository
     }
 
     /**
-     * Every image's id/file (unfiltered) -- Ws\PwgImages::
+     * Every image's id/file (unfiltered) -- Ws\Images::
      * formatsSearchImage()'s own "build a filename-without-extension index
      * of every photo" scan.
      *
@@ -1203,7 +1203,7 @@ final class ImageRepository extends EntityRepository
     }
 
     /**
-     * Every image_format row's image_id/ext (unfiltered) -- Ws\PwgImages::
+     * Every image_format row's image_id/ext (unfiltered) -- Ws\Images::
      * formatsSearchImage()'s own "which formats already exist per image"
      * scan.
      *
@@ -1781,7 +1781,7 @@ final class ImageRepository extends EntityRepository
 
     /**
      * image_id list for $categoryId ordered by rank ascending --
-     * Ws\PwgImages::setRank()'s own multi-image "return the new order"
+     * Ws\Images::setRank()'s own multi-image "return the new order"
      * response.
      *
      * @return list<int|string>
@@ -1803,7 +1803,7 @@ final class ImageRepository extends EntityRepository
     }
 
     /**
-     * Whether $imageId is associated to $categoryId -- Ws\PwgImages::
+     * Whether $imageId is associated to $categoryId -- Ws\Images::
      * setRank()'s own "is this image even in that category" guard.
      */
     public function isImageInCategory(ImageId $imageId, CategoryId $categoryId): bool
@@ -1825,7 +1825,7 @@ final class ImageRepository extends EntityRepository
     /**
      * Current highest `rank` for one category (singular -- unlike
      * findMaxRanksByCategory() above, which takes a batch) --
-     * Ws\PwgImages::setRank()'s own "what's the current max rank" lookup.
+     * Ws\Images::setRank()'s own "what's the current max rank" lookup.
      * Returns null when no image in this category has a rank set yet.
      *
      * A bare aggregate with no GROUP BY always returns exactly one row
@@ -1848,7 +1848,7 @@ final class ImageRepository extends EntityRepository
 
     /**
      * Bumps `rank` by 1 for every image in $categoryId whose rank is >=
-     * $rank -- Ws\PwgImages::setRank()'s own "make room" step before
+     * $rank -- Ws\Images::setRank()'s own "make room" step before
      * inserting a new rank value.
      */
     public function incrementRanksFromForCategory(CategoryId $categoryId, int $rank): void
@@ -1868,7 +1868,7 @@ final class ImageRepository extends EntityRepository
 
     /**
      * Sets `rank` for one (imageId, categoryId) image_category row --
-     * Ws\PwgImages::setRank()'s own final write.
+     * Ws\Images::setRank()'s own final write.
      */
     public function updateRankForImageInCategory(ImageId $imageId, CategoryId $categoryId, int $rank): void
     {
@@ -2350,7 +2350,7 @@ final class ImageRepository extends EntityRepository
 
     /**
      * Ids of images already at $filename within $categoryId -- Ws\
-     * PwgImages::upload()'s own "update_mode" replace-existing lookup.
+     * Images::upload()'s own "update_mode" replace-existing lookup.
      *
      * @return list<int>
      */
@@ -2371,7 +2371,7 @@ final class ImageRepository extends EntityRepository
     }
 
     /**
-     * `path` for $imageId, or null if it doesn't exist -- Ws\PwgImages::
+     * `path` for $imageId, or null if it doesn't exist -- Ws\Images::
      * checkFiles()'s own "does the client's local file match ours" lookup.
      * Real DQL -- single-table, static WHERE on the primary key.
      */
@@ -2392,7 +2392,7 @@ final class ImageRepository extends EntityRepository
     }
 
     /**
-     * id/name/representative_ext/path for $imageId -- Ws\PwgImages::
+     * id/name/representative_ext/path for $imageId -- Ws\Images::
      * upload()'s own "what does the just-uploaded/replaced photo look
      * like" lookup, used to build the response's thumbnail URLs.
      */
@@ -2418,7 +2418,7 @@ final class ImageRepository extends EntityRepository
     }
 
     /**
-     * Number of images linked to $categoryId -- Ws\PwgImages::upload()'s
+     * Number of images linked to $categoryId -- Ws\Images::upload()'s
      * own "how many photos are now in this category" response field.
      */
     public function countImagesInCategory(CategoryId $categoryId): int
@@ -2438,12 +2438,12 @@ final class ImageRepository extends EntityRepository
     /**
      * Whether $imageId is reachable via at least one category satisfying
      * $criteria -- Controller\PictureController's own "can this image
-     * still be accessed differently" fallback check, and Ws\PwgImages::
+     * still be accessed differently" fallback check, and Ws\Images::
      * rate()'s own accessibility gate. Applying $criteria->maxLevel here
      * is a harmless redundant check for PictureController's own caller
      * (which already independently confirms `$row['level'] <=
      * $user_level` a few lines above for this exact same image), while
-     * correctly gating Ws\PwgImages::rate()'s own caller, which performs
+     * correctly gating Ws\Images::rate()'s own caller, which performs
      * no such check itself.
      */
     public function isImageAccessibleWithCondition(ImageId $imageId, PermissionCriteria $criteria): bool
@@ -2469,12 +2469,12 @@ final class ImageRepository extends EntityRepository
 
     /**
      * Every column of $imageId's own row, if it satisfies $criteria --
-     * Ws\PwgImages::getInfo()'s own image lookup. Both
+     * Ws\Images::getInfo()'s own image lookup. Both
      * $criteria->visibleImageIds and $criteria->maxLevel apply here (not
      * visibleImageIds alone).
      *
      * Stays on DBAL -- the blocker is `SELECT *` itself: this row is
-     * {@see \Piwigo\Ws\PwgImages::getInfo()}'s own public WS response
+     * {@see \Piwigo\Ws\Images::getInfo()}'s own public WS response
      * shape, read/re-emitted with its raw snake_case column names
      * (`$image_row['rating_score']`, etc.) as real external API contract.
      * DQL always hydrates through the entity's own (camelCase) property
@@ -2511,11 +2511,11 @@ final class ImageRepository extends EntityRepository
     /**
      * Categories $imageId belongs to that satisfy $criteria, with each
      * category's own display-relevant columns (including `commentable`,
-     * unlike findVisibleCategoriesForImage() below) -- Ws\PwgImages::
+     * unlike findVisibleCategoriesForImage() below) -- Ws\Images::
      * getInfo()'s own "related categories" block.
      *
      * `commentable` hydrates as a real `bool` -- safe because the one
-     * real caller ({@see \Piwigo\Ws\PwgImages::getInfo()}) already
+     * real caller ({@see \Piwigo\Ws\Images::getInfo()}) already
      * `(bool)`-casts it and `unset()`s the key immediately after, before
      * the row ever reaches its own JSON response. `c.id`/`c.permalink`
      * are custom-Typed (`category_id`/`permalink`), so `getArrayResult()`
@@ -2558,7 +2558,7 @@ final class ImageRepository extends EntityRepository
 
     /**
      * Whether $imageId belongs to at least one commentable category
-     * satisfying $criteria -- Ws\PwgImages::addComment()'s own "can this
+     * satisfying $criteria -- Ws\Images::addComment()'s own "can this
      * image receive a comment" check. $criteria->visibleImageIds and
      * $criteria->imageAccessIds both apply here, against `ic.imageId`
      * (not maxLevel).
@@ -2688,7 +2688,7 @@ final class ImageRepository extends EntityRepository
     }
 
     /**
-     * id keyed by md5sum, for a batch of md5sums -- Ws\PwgImages::exist()'s
+     * id keyed by md5sum, for a batch of md5sums -- Ws\Images::exist()'s
      * own bulk "which of these already-uploaded checksums exist" check.
      * $md5sums are client-supplied and parameter-bound.
      *
@@ -2719,7 +2719,7 @@ final class ImageRepository extends EntityRepository
     }
 
     /**
-     * id keyed by filename, for a batch of filenames -- Ws\PwgImages::
+     * id keyed by filename, for a batch of filenames -- Ws\Images::
      * exist()'s own bulk "which of these filenames already exist" check.
      * $filenames are client-supplied and parameter-bound.
      *
@@ -2838,7 +2838,7 @@ final class ImageRepository extends EntityRepository
 
     /**
      * Every column of every image matching $criteria, joined against
-     * `image_category` and deduplicated by image id -- Ws\PwgCategories::
+     * `image_category` and deduplicated by image id -- Ws\Categories::
      * getImages()'s own paginated listing. $criteria's 3 conditions
      * (filter/category scope/visible-images permission) are combined
      * internally via SqlCondition::combine(). $orderByClause is an
@@ -2910,7 +2910,7 @@ final class ImageRepository extends EntityRepository
     }
 
     /**
-     * Whether an image with this id exists -- Ws\PwgCategories::
+     * Whether an image with this id exists -- Ws\Categories::
      * setRepresentative()'s own existence check.
      * Real DQL -- single-table, static WHERE on the primary key.
      */
@@ -2927,7 +2927,7 @@ final class ImageRepository extends EntityRepository
     }
 
     /**
-     * Which of $ids are real image ids -- Ws\PwgImages::syncMetadata()'s
+     * Which of $ids are real image ids -- Ws\Images::syncMetadata()'s
      * own "filter the caller's list down to images that actually exist"
      * step.
      *
@@ -2953,7 +2953,7 @@ final class ImageRepository extends EntityRepository
 
     /**
      * image_id/category_id link rows for $imageIds matching $condition --
-     * Ws\PwgCategories::getImages()'s own "which albums (that the caller
+     * Ws\Categories::getImages()'s own "which albums (that the caller
      * may see) is each returned photo linked to" step. The one real
      * caller only ever applies forbiddenCategoryIds, against the
      * unqualified `category_id`. `categoryId` hydrates as a

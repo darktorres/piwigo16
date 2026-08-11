@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Piwigo\Ws\Request;
 
 /**
- * Validated `$_FILES[$key]` shape for PwgImages::addSimple()/upload()/
+ * Validated `$_FILES[$key]` shape for Images::addSimple()/upload()/
  * uploadAsync(). `Server::invoke()`'s own
  * `call_user_func_array($method['callback'], [$params, &$this])` dispatch
  * (confirmed by reading it directly) calls every `Ws\*` method with

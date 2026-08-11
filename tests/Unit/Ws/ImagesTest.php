@@ -10,12 +10,12 @@ use Piwigo\Core\Paths;
 use Piwigo\Tests\Support\CurrentUserTestFactory;
 use Piwigo\Users\User;
 use Piwigo\Users\UserStatus;
-use Piwigo\Ws\PwgImages;
+use Piwigo\Ws\Images;
 use Piwigo\Ws\Server;
 use Piwigo\Ws\WsErrorResponse;
 
 /**
- * Piwigo\Ws\PwgImages -- the `pwg.images.*` WS methods (26 public
+ * Piwigo\Ws\Images -- the `pwg.images.*` WS methods (26 public
  * methods, the largest class in the B4 legacy WS API bucket). Resolved
  * via `Kernel::container()->get()` (same rationale as
  * `UpdatesSubControllerTest.php`) -- 25 constructor deps (incl.
@@ -40,11 +40,11 @@ use Piwigo\Ws\WsErrorResponse;
  * `syncMetadata`) needs real upload/file/DB state disproportionate for
  * a guard-branch test and is not attempted here.
  */
-function pwgImagesTestSubject(): PwgImages
+function pwgImagesTestSubject(): Images
 {
-    $ws = Kernel::container()->get(PwgImages::class);
-    if (! $ws instanceof PwgImages) {
-        throw new LogicException('Container returned an unexpected type for ' . PwgImages::class);
+    $ws = Kernel::container()->get(Images::class);
+    if (! $ws instanceof Images) {
+        throw new LogicException('Container returned an unexpected type for ' . Images::class);
     }
 
     return $ws;
@@ -55,7 +55,7 @@ function pwgImagesTestSubject(): PwgImages
  * -- a bare, unregistered Server only needs to satisfy the method's
  * own type, same rationale as `PwgPermissionsTest.php`'s own
  * pwgPermissionsTestServer() helper. Unlike most other Ws\Pwg* classes
- * in this campaign, PwgImages' methods take `Server $service` by
+ * in this campaign, Images' methods take `Server $service` by
  * value (not by reference), so the container-resolved instance can be
  * passed directly.
  */

@@ -8,9 +8,8 @@ namespace Piwigo\Permalink;
  * Typed replacement for `Controller\Admin\PermalinksSubController::
  * parseSortVariables()`'s own bare column-name string
  * (`$sortable_by = ['cat_id', 'permalink', 'date_deleted', 'last_hit',
- * 'hit']`, confirmed via reading that method's own real call site) --
- * same "bounded token set, not genuinely open-ended admin text" shape as
- * `Image\PhotoSortField`. Always ascending -- the real caller's own
+ * 'hit']`) -- same "bounded token set, not genuinely open-ended admin
+ * text" shape as `Image\PhotoSortField`. Always ascending -- the real caller's own
  * `$ret[] = $field` shape carries no direction, matching
  * `PermalinkRepository::findAllOrderedBy()`'s own former no-direction
  * `$qb->orderBy($orderByColumn)` call.

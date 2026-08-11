@@ -1466,7 +1466,16 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
     }
 
     /**
-     * @toto : description of Template::prefilterWhiteSpace
+     * Strips leading tab/space indentation immediately before each
+     * recognized Smarty block/include tag (and their closing counterparts,
+     * where applicable), so the compiled template's literal output doesn't
+     * carry stray leading whitespace from the source .tpl's own
+     * indentation. `\s*$` is greedy enough to also eat the source's final
+     * trailing newline when a recognized tag is the very last line with
+     * nothing following -- a pre-existing quirk of this regex (see
+     * TemplateTest.php's own "prefilterWhiteSpace strips leading
+     * whitespace..." test), invisible in real compiled HTML output and not
+     * worth a regex behavior change on its own.
      *
      * @param string $source
      * @param Smarty $smarty

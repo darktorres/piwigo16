@@ -21,13 +21,13 @@ use Symfony\Component\Process\Process;
  * usable from CLI commands (see sibling commands
  * in this directory); this command has not yet been migrated to use them.
  *
- * Real bug found live -- this always shelled out to
+ * Without branching per platform, this would always shell out to
  * `mysql` regardless of `PIWIGO_DB_DRIVER`, so `bin/piwigo user:list`
- * against a real Postgres install didn't just produce wrong output, it
- * hung for the full 60s Process timeout (the `mysql` binary has no idea
- * how to speak the Postgres wire protocol on a Postgres port) and then
- * failed outright. Branches per platform, matching every other real CLI-
- * shelling call site in this codebase (IntegrationTestCase, RegenerateFixtureTest).
+ * against a real Postgres install wouldn't just produce wrong output, it
+ * would hang for the full 60s Process timeout (the `mysql` binary has no
+ * idea how to speak the Postgres wire protocol on a Postgres port) and
+ * then fail outright. Branches per platform, matching every other real
+ * CLI-shelling call site in this codebase (IntegrationTestCase, RegenerateFixtureTest).
  */
 #[AsCommand(name: 'user:list', description: 'List registered users (id, username, email, status, registered)')]
 final class UserListCommand extends Command

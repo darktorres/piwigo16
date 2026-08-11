@@ -135,11 +135,11 @@ final readonly class ActivityService implements ActivityLoggerInterface
             $userAgent = strip_tags($userAgentHeader);
         }
 
-        // we want to know if the login is automatic with remember_me (auto_login)
-        // or with an authentication key provided in the URL (auth_key_login)
+        // we want to know if the login is automatic with remember_me (autoLogin)
+        // or with an authentication key provided in the URL (authKeyLogin)
         if ($object === 'user' && $action === 'login') {
             $calledFunctions = array_flip(array_column(debug_backtrace(), 'function'));
-            foreach (['auto_login', 'auth_key_login'] as $authFunction) {
+            foreach (['autoLogin', 'authKeyLogin'] as $authFunction) {
                 if (isset($calledFunctions[$authFunction])) {
                     $details['auth_function'] = $authFunction;
                 }

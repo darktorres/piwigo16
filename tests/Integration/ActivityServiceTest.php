@@ -443,17 +443,17 @@ namespace Piwigo\Tests\Integration {
 
         public function testRecordDetectsTheAutoLoginAuthFunctionFromTheCallStack(): void
         {
-            // No real caller in this rewrite is literally named auto_login()
-            // yet (grep-confirmed) -- ActivityService::record() still walks
-            // debug_backtrace() looking for that bare function/method name, so
-            // this closes the gap directly against a same-named private
-            // helper below rather than a real call site.
+            // AuthService::autoLogin() is the real caller
+            // ActivityService::record() detects via debug_backtrace() --
+            // this closes the same path directly against a same-named
+            // private helper below rather than exercising the full
+            // remember-me cookie flow.
             try {
-                $this->auto_login();
+                $this->autoLogin();
 
                 $details = $this->fetchDetails('user', 555, 'login');
                 self::assertIsArray($details);
-                self::assertSame('auto_login', $details['auth_function']);
+                self::assertSame('autoLogin', $details['auth_function']);
             } finally {
                 $this->conn->executeStatement('DELETE FROM activity WHERE object_id = 555');
             }
@@ -462,11 +462,11 @@ namespace Piwigo\Tests\Integration {
         public function testRecordDetectsTheAuthKeyLoginAuthFunctionFromTheCallStack(): void
         {
             try {
-                $this->auth_key_login();
+                $this->authKeyLogin();
 
                 $details = $this->fetchDetails('user', 556, 'login');
                 self::assertIsArray($details);
-                self::assertSame('auth_key_login', $details['auth_function']);
+                self::assertSame('authKeyLogin', $details['auth_function']);
             } finally {
                 $this->conn->executeStatement('DELETE FROM activity WHERE object_id = 556');
             }
@@ -475,10 +475,10 @@ namespace Piwigo\Tests\Integration {
         public function testRecordDoesNotDetectAuthFunctionForANonLoginAction(): void
         {
             // Distinguishes the `&&` from a `||` mutant: object is 'user' and
-            // the call stack literally contains auto_login(), but the action
+            // the call stack literally contains autoLogin(), but the action
             // isn't 'login', so auth_function detection must not run at all.
             try {
-                $this->auto_login('add', 779);
+                $this->autoLogin('add', 779);
 
                 $details = $this->fetchDetails('user', 779, 'add');
                 self::assertIsArray($details);
@@ -637,20 +637,21 @@ namespace Piwigo\Tests\Integration {
             }
         }
 
-        // Named literally auto_login()/auth_key_login() on purpose -- see the
+        // Named literally autoLogin()/authKeyLogin() on purpose -- see the
         // two test methods above; ActivityService::record() matches on the
-        // bare function/method name from debug_backtrace(), not this class's
-        // own naming convention. $action/$objectId are overridable so
-        // test_record_does_not_detect_auth_function_for_a_non_login_action()
-        // can reuse this same literally-named call site with a non-'login'
-        // action, rather than needing its own identically-named sibling method
-        // (PHP allows only one method per name).
-        private function auto_login(string $action = 'login', int $objectId = 555): void
+        // bare function/method name from debug_backtrace() against
+        // AuthService's own real autoLogin()/authKeyLogin() method names.
+        // $action/$objectId are overridable so
+        // testRecordDoesNotDetectAuthFunctionForANonLoginAction() can reuse
+        // this same literally-named call site with a non-'login' action,
+        // rather than needing its own identically-named sibling method (PHP
+        // allows only one method per name).
+        private function autoLogin(string $action = 'login', int $objectId = 555): void
         {
             $this->service->record('user', $objectId, $action);
         }
 
-        private function auth_key_login(): void
+        private function authKeyLogin(): void
         {
             $this->service->record('user', 556, 'login');
         }

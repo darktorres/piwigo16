@@ -358,13 +358,12 @@ final class CommentRepository extends EntityRepository implements CommentCounter
     {
         $conditions = self::buildApiConditions($criteria, $includeAuthorId);
 
-        // Real bug found live -- a bare 0/1 integer
-        // literal spliced into raw SQL text is rejected outright against
-        // a genuine PostgreSQL boolean column ("operator does not exist:
-        // boolean = integer"). The identical value bound as a real
-        // parameter is correctly coerced by the driver on both platforms
-        // (confirmed live), so binding rather than splicing fixes this
-        // portably with no per-platform branch needed.
+        // A bare 0/1 integer literal spliced into raw SQL text is rejected
+        // outright against a genuine PostgreSQL boolean column ("operator
+        // does not exist: boolean = integer"). The identical value bound
+        // as a real parameter is correctly coerced by the driver on both
+        // platforms, so binding rather than splicing fixes this portably
+        // with no per-platform branch needed.
         $statusCondition = match ($criteria->status) {
             'pending' => new SqlCondition('validated = :validated', [
                 'validated' => 0,
@@ -408,9 +407,9 @@ final class CommentRepository extends EntityRepository implements CommentCounter
      * (`CommentEntity`, alias `c`), no JOIN, and `addCriteria()` only
      * touches WHERE/ORDER/LIMIT, so the callers' own aggregate
      * `->select()`/`->groupBy()` calls are untouched. `contains()`
-     * translates to `LIKE '%value%'` (confirmed via
+     * translates to `LIKE '%value%'`, per
      * `QueryExpressionVisitor::walkComparison()`'s own
-     * `Comparison::CONTAINS` case).
+     * `Comparison::CONTAINS` case.
      */
     private static function applyApiConditions(\Doctrine\ORM\QueryBuilder $qb, CommentApiCriteria $criteria, bool $includeAuthorId): void
     {
@@ -694,8 +693,8 @@ final class CommentRepository extends EntityRepository implements CommentCounter
      * composes fragments" contract as {@see countAvailableWithConditions()}),
      * combined via {@see applyConditions()}. $sortByColumn/$sortOrder
      * concatenate directly into ORDER BY with no further validation --
-     * caller must restrict these to a known-safe set first (confirmed:
-     * Controller\CommentsController's own real caller validates both
+     * caller must restrict these to a known-safe set first
+     * (Controller\CommentsController's own real caller validates both
      * against small fixed allowlists before this point), same contract as
      * {@see findForImage()}'s own $order.
      *
@@ -736,7 +735,7 @@ final class CommentRepository extends EntityRepository implements CommentCounter
      * the row data instead of a second round-trip. `GROUP BY comment_id`
      * here (not `DISTINCT`), so the window function (evaluated after
      * GROUP BY, before LIMIT/OFFSET) reports the correct post-grouping
-     * row count -- unlike its confirmed-wrong behavior on `SELECT
+     * row count -- unlike its incorrect behavior on `SELECT
      * DISTINCT` queries, see
      * {@see \Piwigo\Users\UserRepository::findListForWs()}'s own
      * docblock.
@@ -922,8 +921,8 @@ final class CommentRepository extends EntityRepository implements CommentCounter
      * so picking exactly one row's worth of `author` per `author_id`
      * needs an explicit aggregate. `MIN(author)` (standard SQL-92,
      * portable across every DBAL platform) gives a deterministic pick;
-     * confirmed no test asserts on which specific `author` value comes
-     * back, only `author_id`/`nb_authors`.
+     * no test asserts on which specific `author` value comes back, only
+     * `author_id`/`nb_authors`.
      *
      * @return list<array<string, mixed>>
      */

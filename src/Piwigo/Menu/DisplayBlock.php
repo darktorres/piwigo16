@@ -16,83 +16,63 @@ namespace Piwigo\Menu;
  */
 final class DisplayBlock
 {
-    /**
-     * @var int
-     */
-    private $position;
+    private int $position;
 
     /**
-     * @var string|null null until setTitle() is called (the constructor
-     *   never sets it) — getTitle() falls back to the registered block's
-     *   own name in that case
+     * null until setTitle() is called (the constructor never sets it) —
+     * getTitle() falls back to the registered block's own name in that case
      */
-    private $title;
+    private ?string $title = null;
 
     /**
      * Genuinely polymorphic by design -- MenubarRenderer sets this to a
      * different shape per block type (categories/tags/links/...), matching
-     * the plugin-block-registration pattern.
-     *
-     * @var mixed
+     * the plugin-block-registration pattern. Stays null (not every
+     * registered block's id is one MenubarRenderer knows how to fill in;
+     * menubar.tpl's own `empty($block->template)` check tolerates that).
      */
-    public $data;
+    public mixed $data = null;
 
     /**
-     * @var string
+     * Only ever set by MenubarRenderer for the specific block ids it knows
+     * about -- stays null for any other registered (e.g. plugin) block,
+     * which is why menubar.tpl checks `empty($block->template)` rather
+     * than reading it unconditionally.
      */
-    public $template;
+    public ?string $template = null;
 
     /**
      * @var string|null never assigned by any in-tree caller today -- stays
      *   at its default null (see BlockManager::apply()'s own null check).
      */
-    // @phpstan-ignore shipmonk.deadProperty.neverWritten
-    public $raw_content;
+    public ?string $raw_content = null;
 
     /**
      * Zero real readers/writers anywhere in the codebase today -- reserved
      * slot, same rationale as Core\PageState::$bodyData.
-     *
-     * @var mixed
      */
-    // @phpstan-ignore shipmonk.deadProperty.neverWritten
-    public $id;
+    public mixed $id = null;
 
-    /**
-     * @param RegisteredBlock $registeredBlock
-     */
     public function __construct(
-        private $registeredBlock
+        private RegisteredBlock $registeredBlock
     ) {}
 
-    /**
-     * @return RegisteredBlock
-     */
-    public function getBlock()
+    public function getBlock(): RegisteredBlock
     {
         return $this->registeredBlock;
     }
 
-    /**
-     * @return int
-     */
-    public function getPosition()
+    public function getPosition(): int
     {
         return $this->position;
     }
 
-    /**
-     * @param int $position
-     */
-    public function setPosition($position): void
+    public function setPosition(int $position): void
     {
         $this->position = $position;
     }
 
-    /**
-     * @return string
-     */
-    public function getTitle()
+    public function getTitle(): string
     {
         if (isset($this->title)) {
             return $this->title;
@@ -101,10 +81,7 @@ final class DisplayBlock
         }
     }
 
-    /**
-     * @param string $title
-     */
-    public function setTitle($title): void
+    public function setTitle(string $title): void
     {
         $this->title = $title;
     }

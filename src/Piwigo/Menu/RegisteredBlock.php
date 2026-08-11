@@ -16,37 +16,23 @@ namespace Piwigo\Menu;
  */
 final class RegisteredBlock
 {
-    /**
-     * @param string $id
-     * @param string $name
-     * @param string $owner
-     */
     public function __construct(
-        private $id,
-        private $name,
-        private $owner
+        private string $id,
+        private string $name,
+        private string $owner
     ) {}
 
-    /**
-     * @return string
-     */
-    public function getId()
+    public function getId(): string
     {
         return $this->id;
     }
 
-    /**
-     * @return string
-     */
-    public function getName()
+    public function getName(): string
     {
         return $this->name;
     }
 
-    /**
-     * @return string
-     */
-    public function getOwner()
+    public function getOwner(): string
     {
         return $this->owner;
     }

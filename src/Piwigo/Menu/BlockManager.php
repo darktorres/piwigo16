@@ -27,18 +27,15 @@ final class BlockManager
     /**
      * @var RegisteredBlock[]
      */
-    private $registered_blocks = [];
+    private array $registered_blocks = [];
 
     /**
      * @var DisplayBlock[]
      */
     private array $display_blocks = [];
 
-    /**
-     * @param string $id
-     */
     public function __construct(
-        private $id,
+        private string $id,
         private readonly EventDispatcher $eventDispatcher,
         private readonly CurrentTemplate $currentTemplate,
         private readonly CurrentConfig $currentConfig,
@@ -52,10 +49,7 @@ final class BlockManager
         $this->eventDispatcher->dispatchNotify(new BlockManagerRegisterBlocks($this));
     }
 
-    /**
-     * @return string
-     */
-    public function getId()
+    public function getId(): string
     {
         return $this->id;
     }
@@ -63,17 +57,15 @@ final class BlockManager
     /**
      * @return RegisteredBlock[]
      */
-    public function getRegisteredBlocks()
+    public function getRegisteredBlocks(): array
     {
         return $this->registered_blocks;
     }
 
     /**
      * Add a block with the menu. Usually called in 'blockmanager_register_blocks' event.
-     *
-     * @param RegisteredBlock $block
      */
-    public function registerBlock($block): bool
+    public function registerBlock(RegisteredBlock $block): bool
     {
         if (isset($this->registered_blocks[$block->getId()])) {
             return false;
@@ -115,42 +107,32 @@ final class BlockManager
 
     /**
      * Returns true if the block is hidden.
-     *
-     * @param string $block_id
      */
-    public function isHidden($block_id): bool
+    public function isHidden(string $block_id): bool
     {
         return ! isset($this->display_blocks[$block_id]);
     }
 
     /**
      * Remove a block from the displayed blocks.
-     *
-     * @param string $block_id
      */
-    public function hideBlock($block_id): void
+    public function hideBlock(string $block_id): void
     {
         unset($this->display_blocks[$block_id]);
     }
 
     /**
      * Returns a visible block.
-     *
-     * @param string $block_id
-     * @return DisplayBlock|null
      */
-    public function getBlock($block_id)
+    public function getBlock(string $block_id): ?DisplayBlock
     {
         return $this->display_blocks[$block_id] ?? null;
     }
 
     /**
      * Changes the position of a block.
-     *
-     * @param string $block_id
-     * @param int $position
      */
-    public function setBlockPosition($block_id, $position): void
+    public function setBlockPosition(string $block_id, int $position): void
     {
         if (isset($this->display_blocks[$block_id])) {
             $this->display_blocks[$block_id]->setPosition($position);
@@ -172,11 +154,8 @@ final class BlockManager
 
     /**
      * Parse the menu and assign the result in a template variable.
-     *
-     * @param string $var
-     * @param string $file
      */
-    public function apply($var, $file): void
+    public function apply(string $var, string $file): void
     {
         $template = $this->currentTemplate->get();
 

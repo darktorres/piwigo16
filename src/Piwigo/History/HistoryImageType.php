@@ -10,9 +10,9 @@ namespace Piwigo\History;
  * exact DB-stored values. Unlike its sibling `history.section` (kept a
  * plain string -- see `HistoryRepository::getSectionEnumOptions()`'s own
  * docblock), this column has no plugin-widening mechanism anywhere in
- * this codebase (confirmed via grep at retyping time): a real, closed,
- * core-defined set, safe for the same `enumType` treatment as
- * {@see \Piwigo\Category\CategoryStatus}/{@see \Piwigo\Users\UserStatus}.
+ * this codebase: a real, closed, core-defined set, safe for the same
+ * `enumType` treatment as {@see \Piwigo\Category\CategoryStatus}/
+ * {@see \Piwigo\Users\UserStatus}.
  */
 enum HistoryImageType: string
 {

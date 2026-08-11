@@ -536,9 +536,9 @@ final class HistoryRepository extends EntityRepository implements LastVisitLooku
      * static WHERE, AVG() is a standard DQL function. `ORDER BY` dropped
      * from the DQL form: a bare aggregate SELECT (no GROUP BY) always
      * collapses to a single row, so ordering the input rows before
-     * aggregating can't change the one-row result -- verified this
-     * matches the original's own real behavior, not just a DQL
-     * limitation papered over.
+     * aggregating can't change the one-row result -- this matches the
+     * original's own real behavior, not just a DQL limitation papered
+     * over.
      *
      * Average daily page views across the trailing 12-ish months (this
      * year, plus last year from $afterMonth onward) -- Admin\

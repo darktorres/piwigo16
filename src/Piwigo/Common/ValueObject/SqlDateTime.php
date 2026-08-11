@@ -67,7 +67,7 @@ final readonly class SqlDateTime implements StringVo
 
     public static function now(): self
     {
-        return new self((new DateTimeImmutable())->format('Y-m-d H:i:s'));
+        return new self(new DateTimeImmutable()->format('Y-m-d H:i:s'));
     }
 
     public function toDateTimeImmutable(): DateTimeImmutable

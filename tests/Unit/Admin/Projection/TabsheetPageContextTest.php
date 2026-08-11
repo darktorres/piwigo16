@@ -12,7 +12,7 @@ test('toArray flattens the sheets map and the selected key, omitting the titlena
         ],
     ];
 
-    expect((new TabsheetPageContext(sheets: $sheets, selected: 'properties', titlenameKey: null, titlenameValue: null))->toArray())
+    expect(new TabsheetPageContext(sheets: $sheets, selected: 'properties', titlenameKey: null, titlenameValue: null)->toArray())
         ->toBe([
             'tabsheet' => $sheets,
             'tabsheet_selected' => 'properties',
@@ -27,7 +27,8 @@ test('toArray assigns the bracketed selected caption under the dynamic titlename
         ],
     ];
 
-    $result = (new TabsheetPageContext(sheets: $sheets, selected: 'properties', titlenameKey: 'MY_TITLE', titlenameValue: '[Properties]'))->toArray();
+    $result = new TabsheetPageContext(sheets: $sheets, selected: 'properties', titlenameKey: 'MY_TITLE', titlenameValue: '[Properties]')
+        ->toArray();
 
     expect($result['MY_TITLE'])->toBe('[Properties]');
 });

@@ -108,7 +108,7 @@ final class MailService implements MailerInterface
      * hang indefinitely on a slow/unreachable mail transport -- see
      * buildMailer()'s own docblock.
      */
-    private const MAIL_TRANSPORT_TIMEOUT_SECONDS = 10.0;
+    private const float MAIL_TRANSPORT_TIMEOUT_SECONDS = 10.0;
 
     /**
      * Optional-with-lazy-default rather than required: the dependency is

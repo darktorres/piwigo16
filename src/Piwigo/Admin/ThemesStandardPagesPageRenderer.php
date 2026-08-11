@@ -37,22 +37,22 @@ use Piwigo\Users\CurrentUser;
  * that reach this renderer go through that same admin.php routing, so this
  * class performs no check_status() call of its own.
  */
-final class ThemesStandardPagesPageRenderer
+final readonly class ThemesStandardPagesPageRenderer
 {
     public function __construct(
-        private readonly Lang $lang,
-        private readonly AccessControl $accessControl,
-        private readonly RedirectServiceInterface $redirectService,
-        private readonly UrlServiceInterface $urlService,
-        private readonly ConfigService $configService,
-        private readonly StorageRegistry $storageRegistry,
-        private readonly PageState $pageState,
-        private readonly CurrentTemplate $currentTemplate,
-        private readonly HtmlRenderingInterface $htmlRenderer,
-        private readonly CurrentConfig $currentConfig,
-        private readonly Paths $paths,
-        private readonly CurrentUser $currentUser,
-        private readonly EventDispatcher $eventDispatcher,
+        private Lang $lang,
+        private AccessControl $accessControl,
+        private RedirectServiceInterface $redirectService,
+        private UrlServiceInterface $urlService,
+        private ConfigService $configService,
+        private StorageRegistry $storageRegistry,
+        private PageState $pageState,
+        private CurrentTemplate $currentTemplate,
+        private HtmlRenderingInterface $htmlRenderer,
+        private CurrentConfig $currentConfig,
+        private Paths $paths,
+        private CurrentUser $currentUser,
+        private EventDispatcher $eventDispatcher,
     ) {}
 
     public function render(): void

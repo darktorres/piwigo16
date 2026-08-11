@@ -62,9 +62,9 @@ function filesystemHelperTestRrmdir(string $dir): void
  */
 function filesystemHelperTestMakeFatalRenderer(stdClass $capture): HtmlRenderingInterface
 {
-    return new class($capture) implements HtmlRenderingInterface {
+    return new readonly class($capture) implements HtmlRenderingInterface {
         public function __construct(
-            private readonly stdClass $capture
+            private stdClass $capture
         ) {}
 
         public function getCatDisplayName(array $catInformations, ?string $url = ''): string

@@ -71,12 +71,12 @@ test('fractionToChar does not clamp a slightly out-of-range fraction (only the r
     // [0,255], so no clamping kicks in despite the negative fraction.
     expect(DerivativeUrlCodec::fractionToChar(-1.0))->toBe('H');
     // codepoint = 97 + round(2.0*25) = 147 -- also within [0,255].
-    expect(ord(DerivativeUrlCodec::fractionToChar(2.0)))->toBe(147);
+    expect(ord(DerivativeUrlCodec::fractionToChar(2.0)[0]))->toBe(147);
 });
 
 test('fractionToChar clamps a codepoint that would fall outside 0..255', function (): void {
-    expect(ord(DerivativeUrlCodec::fractionToChar(-10.0)))->toBe(0);
-    expect(ord(DerivativeUrlCodec::fractionToChar(20.0)))->toBe(255);
+    expect(ord(DerivativeUrlCodec::fractionToChar(-10.0)[0]))->toBe(0);
+    expect(ord(DerivativeUrlCodec::fractionToChar(20.0)[0]))->toBe(255);
 });
 
 test('fractionToChar clamps a codepoint of exactly -1 to 0, not left unclamped', function (): void {
@@ -86,7 +86,7 @@ test('fractionToChar clamps a codepoint of exactly -1 to 0, not left unclamped',
     // anything further negative agrees on both. Left unclamped, chr(-1)
     // wraps to byte 255 (PHP's chr() wraps via modulo-256 semantics),
     // sharply different from the real, clamped chr(0).
-    expect(ord(DerivativeUrlCodec::fractionToChar(-3.92)))->toBe(0);
+    expect(ord(DerivativeUrlCodec::fractionToChar(-3.92)[0]))->toBe(0);
 });
 
 test('fractionToChar clamps a codepoint of exactly 256 to 255, not left unclamped', function (): void {
@@ -95,7 +95,7 @@ test('fractionToChar clamps a codepoint of exactly 256 to 255, not left unclampe
     // value where `> 256` (false) and `> 255` (true) actually disagree;
     // anything further above agrees on both. Left unclamped, chr(256)
     // wraps to byte 0, sharply different from the real, clamped chr(255).
-    expect(ord(DerivativeUrlCodec::fractionToChar(6.36)))->toBe(255);
+    expect(ord(DerivativeUrlCodec::fractionToChar(6.36)[0]))->toBe(255);
 });
 
 /**

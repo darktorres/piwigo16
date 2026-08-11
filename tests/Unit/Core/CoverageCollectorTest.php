@@ -366,7 +366,7 @@ test('the real deferred shutdown handler writes a genuine per-request pcov dump 
         // process and the subprocess resolve CoverageCollector::class to
         // the same real absolute path -- a hardcoded path baked in one
         // worktree breaks under any other.
-        $collectorFile = (new ReflectionClass(CoverageCollector::class))->getFileName();
+        $collectorFile = new ReflectionClass(CoverageCollector::class)->getFileName();
         expect($collectorFile)
             ->toBeString();
         assert(is_string($collectorFile));

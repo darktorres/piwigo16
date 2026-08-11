@@ -21,7 +21,7 @@ use Override;
  */
 final readonly class LangCode implements StringVo
 {
-    private const PATTERN = '/^[a-z]{2,3}_[A-Z]{2}$/';
+    private const string PATTERN = '/^[a-z]{2,3}_[A-Z]{2}$/';
 
     private function __construct(
         public string $value

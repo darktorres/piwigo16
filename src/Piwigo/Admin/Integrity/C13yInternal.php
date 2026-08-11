@@ -26,15 +26,15 @@ use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Session\SessionService;
 use Piwigo\Users\UserService;
 
-final class C13yInternal
+final readonly class C13yInternal
 {
     public function __construct(
-        private readonly Lang $lang,
-        private readonly SessionService $sessionService,
-        private readonly EventDispatcher $eventDispatcher,
-        private readonly PageState $pageState,
-        private readonly UserService $userService,
-        private readonly CurrentConfig $currentConfig,
+        private Lang $lang,
+        private SessionService $sessionService,
+        private EventDispatcher $eventDispatcher,
+        private PageState $pageState,
+        private UserService $userService,
+        private CurrentConfig $currentConfig,
     ) {}
 
     /**

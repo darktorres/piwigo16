@@ -715,7 +715,7 @@ test('findCommaJoinedTagIdsByImageIds() groups by image', function (): void {
     $byImageId = tagTestRepo()
         ->findCommaJoinedTagIdsByImageIds([1, 2, 3], [1, 2, 3]);
 
-    $tagIdsForImage1 = array_map('intval', explode(',', $byImageId[1] ?? ''));
+    $tagIdsForImage1 = array_map(intval(...), explode(',', $byImageId[1] ?? ''));
     sort($tagIdsForImage1);
     expect($tagIdsForImage1)
         ->toBe([1, 2, 3])

@@ -22,16 +22,16 @@ use Psr\Http\Message\ServerRequestInterface;
  * to new Piwigo\Rate\RateRepository report methods, same rationale as
  * RatingSubController.
  */
-final class RatingUserSubController implements AdminSubControllerInterface
+final readonly class RatingUserSubController implements AdminSubControllerInterface
 {
     public function __construct(
-        private readonly Lang $lang,
-        private readonly AccessControl $accessControl,
-        private readonly UrlServiceInterface $urlService,
-        private readonly ImageStdParams $imageStdParams,
-        private readonly CurrentTemplate $currentTemplate,
-        private readonly CurrentConfig $currentConfig,
-        private readonly EventDispatcher $eventDispatcher,
+        private Lang $lang,
+        private AccessControl $accessControl,
+        private UrlServiceInterface $urlService,
+        private ImageStdParams $imageStdParams,
+        private CurrentTemplate $currentTemplate,
+        private CurrentConfig $currentConfig,
+        private EventDispatcher $eventDispatcher,
     ) {}
 
     #[Override]

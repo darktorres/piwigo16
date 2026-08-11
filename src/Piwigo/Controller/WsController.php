@@ -39,14 +39,14 @@ use Psr\Http\Message\ServerRequestInterface;
  * ends the script right after -- no LegacyRenderCapture/ResponseFactory
  * involved, since there's no Smarty/Template rendering here at all.
  */
-final class WsController implements ControllerInterface
+final readonly class WsController implements ControllerInterface
 {
     public function __construct(
-        private readonly AccessControl $accessControl,
-        private readonly RedirectServiceInterface $redirectService,
-        private readonly HtmlService $htmlService,
-        private readonly CurrentConfig $currentConfig,
-        private readonly WsInitializer $wsInitializer,
+        private AccessControl $accessControl,
+        private RedirectServiceInterface $redirectService,
+        private HtmlService $htmlService,
+        private CurrentConfig $currentConfig,
+        private WsInitializer $wsInitializer,
     ) {}
 
     #[Override]

@@ -29,20 +29,20 @@ use Piwigo\Validation\InputValidator;
  * GroupService::addAccess()/removeAccess()'s
  * equivalent shape for the group-level case.
  */
-final class UserPermPageRenderer
+final readonly class UserPermPageRenderer
 {
     public function __construct(
-        private readonly Lang $lang,
-        private readonly AccessControl $accessControl,
-        private readonly RedirectServiceInterface $redirectService,
-        private readonly UrlServiceInterface $urlService,
-        private readonly CurrentTemplate $currentTemplate,
-        private readonly PermissionService $permissionService,
-        private readonly CategoryService $categoryService,
-        private readonly UserService $userService,
-        private readonly HtmlRenderingInterface $htmlRenderer,
-        private readonly InputValidator $inputValidator,
-        private readonly CurrentConfig $currentConfig,
+        private Lang $lang,
+        private AccessControl $accessControl,
+        private RedirectServiceInterface $redirectService,
+        private UrlServiceInterface $urlService,
+        private CurrentTemplate $currentTemplate,
+        private PermissionService $permissionService,
+        private CategoryService $categoryService,
+        private UserService $userService,
+        private HtmlRenderingInterface $htmlRenderer,
+        private InputValidator $inputValidator,
+        private CurrentConfig $currentConfig,
     ) {}
 
     public function render(): void

@@ -30,10 +30,10 @@ use Piwigo\Permission\SqlCondition;
  * NotificationRepository}) in favor of a directly-injected
  * `EntityManagerInterface`.
  */
-final class CalendarRepository
+final readonly class CalendarRepository
 {
     public function __construct(
-        private readonly EntityManagerInterface $em,
+        private EntityManagerInterface $em,
     ) {}
 
     /**

@@ -23,11 +23,11 @@ use Override;
  */
 final readonly class Permalink implements StringVo
 {
-    private const MAX_LENGTH = 64;
+    private const int MAX_LENGTH = 64;
 
-    private const CHARSET_PATTERN = '#^[a-zA-Z0-9_/-]+$#';
+    private const string CHARSET_PATTERN = '#^[a-zA-Z0-9_/-]+$#';
 
-    private const NUMERIC_PATTERN = '#^(\d)+(-.*)?$#';
+    private const string NUMERIC_PATTERN = '#^(\d)+(-.*)?$#';
 
     private function __construct(
         public string $value

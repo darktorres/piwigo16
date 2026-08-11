@@ -70,24 +70,24 @@ use Psr\Http\Message\ServerRequestInterface;
  * since a bare string can't resolve to a private method from outside the
  * class.
  */
-final class NotificationByMailSubController implements AdminSubControllerInterface
+final readonly class NotificationByMailSubController implements AdminSubControllerInterface
 {
     public function __construct(
-        private readonly Lang $lang,
-        private readonly AccessControl $accessControl,
-        private readonly RedirectServiceInterface $redirectService,
-        private readonly UrlServiceInterface $urlService,
-        private readonly ConfigService $configService,
-        private readonly CoreTabs $coreTabs,
-        private readonly SessionService $sessionService,
-        private readonly Translator $translator,
-        private readonly EventDispatcher $eventDispatcher,
-        private readonly CurrentTemplate $currentTemplate,
-        private readonly HtmlRenderingInterface $htmlRenderer,
-        private readonly NotificationByMailSender $notificationByMailSender,
-        private readonly CurrentConfig $currentConfig,
-        private readonly InputValidator $inputValidator,
-        private readonly PageState $pageState,
+        private Lang $lang,
+        private AccessControl $accessControl,
+        private RedirectServiceInterface $redirectService,
+        private UrlServiceInterface $urlService,
+        private ConfigService $configService,
+        private CoreTabs $coreTabs,
+        private SessionService $sessionService,
+        private Translator $translator,
+        private EventDispatcher $eventDispatcher,
+        private CurrentTemplate $currentTemplate,
+        private HtmlRenderingInterface $htmlRenderer,
+        private NotificationByMailSender $notificationByMailSender,
+        private CurrentConfig $currentConfig,
+        private InputValidator $inputValidator,
+        private PageState $pageState,
     ) {}
 
     #[Override]

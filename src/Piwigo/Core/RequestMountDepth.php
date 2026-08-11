@@ -26,10 +26,10 @@ namespace Piwigo\Core;
  * request. `Piwigo\Auth\CookieService` resolves this via its own private
  * lazy requestMountDepth() helper.
  */
-final class RequestMountDepth
+final readonly class RequestMountDepth
 {
     public function __construct(
-        private readonly int $depth = 0,
+        private int $depth = 0,
     ) {}
 
     public function current(): int

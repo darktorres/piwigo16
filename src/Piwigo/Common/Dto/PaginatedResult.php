@@ -18,18 +18,10 @@ namespace Piwigo\Common\Dto;
 final readonly class PaginatedResult
 {
     /**
-     * @var list<T>
-     */
-    public array $rows;
-
-    public ?int $total;
-
-    /**
      * @param list<T> $rows
      */
-    public function __construct(array $rows, ?int $total)
-    {
-        $this->rows = $rows;
-        $this->total = $total;
-    }
+    public function __construct(
+        public array $rows,
+        public ?int $total
+    ) {}
 }

@@ -36,24 +36,24 @@ use Piwigo\Users\CurrentUser;
  * testable service abstraction here would require a larger refactor
  * (tus upload support) and is out of scope for this job handler.
  */
-final class BatchUploadHandler
+final readonly class BatchUploadHandler
 {
     public function __construct(
-        private readonly Lang $lang,
-        private readonly UrlServiceInterface $urlService,
-        private readonly CurrentLogger $currentLogger,
-        private readonly StorageRegistry $storageRegistry,
-        private readonly EventDispatcher $eventDispatcher,
-        private readonly ConfigService $configService,
-        private readonly EntityManagerInterface $entityManager,
-        private readonly ActivityService $activityService,
-        private readonly MetadataService $metadataService,
-        private readonly ImageService $imageService,
-        private readonly CurrentConfig $currentConfig,
-        private readonly WsContext $wsContext,
-        private readonly CurrentUser $currentUser,
-        private readonly Paths $paths,
-        private readonly DbCredentials $dbCredentials,
+        private Lang $lang,
+        private UrlServiceInterface $urlService,
+        private CurrentLogger $currentLogger,
+        private StorageRegistry $storageRegistry,
+        private EventDispatcher $eventDispatcher,
+        private ConfigService $configService,
+        private EntityManagerInterface $entityManager,
+        private ActivityService $activityService,
+        private MetadataService $metadataService,
+        private ImageService $imageService,
+        private CurrentConfig $currentConfig,
+        private WsContext $wsContext,
+        private CurrentUser $currentUser,
+        private Paths $paths,
+        private DbCredentials $dbCredentials,
     ) {}
 
     public function __invoke(BatchUploadJob $job): int

@@ -67,30 +67,30 @@ use Psr\Http\Message\ServerRequestInterface;
  * (delete/validate/edit, including its own check_pwg_token()/redirect()
  * calls) all happens before any rendering starts.
  */
-final class CommentsController implements ControllerInterface
+final readonly class CommentsController implements ControllerInterface
 {
     public function __construct(
-        private readonly Lang $lang,
-        private readonly AccessControl $accessControl,
-        private readonly RedirectServiceInterface $redirectService,
-        private readonly UrlServiceInterface $urlService,
-        private readonly FilterState $filterState,
-        private readonly SectionContextRegistry $sectionContextRegistry,
-        private readonly SessionService $sessionService,
-        private readonly EventDispatcher $eventDispatcher,
-        private readonly DeploymentPolicy $deploymentPolicy,
-        private readonly ImageStdParams $imageStdParams,
-        private readonly PageState $pageState,
-        private readonly CurrentUser $currentUser,
-        private readonly CurrentTemplate $currentTemplate,
-        private readonly PermissionService $permissionService,
-        private readonly CategoryService $categoryService,
-        private readonly HtmlService $htmlService,
-        private readonly MailerInterface $mailer,
-        private readonly CurrentConfig $currentConfig,
-        private readonly InputValidator $inputValidator,
-        private readonly Translator $translator,
-        private readonly CurrentLogger $currentLogger,
+        private Lang $lang,
+        private AccessControl $accessControl,
+        private RedirectServiceInterface $redirectService,
+        private UrlServiceInterface $urlService,
+        private FilterState $filterState,
+        private SectionContextRegistry $sectionContextRegistry,
+        private SessionService $sessionService,
+        private EventDispatcher $eventDispatcher,
+        private DeploymentPolicy $deploymentPolicy,
+        private ImageStdParams $imageStdParams,
+        private PageState $pageState,
+        private CurrentUser $currentUser,
+        private CurrentTemplate $currentTemplate,
+        private PermissionService $permissionService,
+        private CategoryService $categoryService,
+        private HtmlService $htmlService,
+        private MailerInterface $mailer,
+        private CurrentConfig $currentConfig,
+        private InputValidator $inputValidator,
+        private Translator $translator,
+        private CurrentLogger $currentLogger,
     ) {}
 
     #[Override]

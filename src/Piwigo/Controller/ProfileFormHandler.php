@@ -48,25 +48,25 @@ use Piwigo\Users\UserService;
  * non-`ControllerInterface` helper class, the same pattern
  * `LegacyRenderCapture` uses.
  */
-final class ProfileFormHandler
+final readonly class ProfileFormHandler
 {
     public function __construct(
-        private readonly Lang $lang,
-        private readonly RedirectServiceInterface $redirectService,
-        private readonly AdminContext $adminContext,
-        private readonly EventDispatcher $eventDispatcher,
-        private readonly PageState $pageState,
-        private readonly CurrentUser $currentUser,
-        private readonly CurrentTemplate $currentTemplate,
-        private readonly EntityManagerInterface $entityManager,
-        private readonly ActivityService $activityService,
-        private readonly UserService $userService,
-        private readonly PasswordService $passwordService,
-        private readonly AuthService $authService,
-        private readonly HtmlRenderingInterface $htmlRenderer,
-        private readonly MailService $mailService,
-        private readonly CurrentConfig $currentConfig,
-        private readonly Paths $paths,
+        private Lang $lang,
+        private RedirectServiceInterface $redirectService,
+        private AdminContext $adminContext,
+        private EventDispatcher $eventDispatcher,
+        private PageState $pageState,
+        private CurrentUser $currentUser,
+        private CurrentTemplate $currentTemplate,
+        private EntityManagerInterface $entityManager,
+        private ActivityService $activityService,
+        private UserService $userService,
+        private PasswordService $passwordService,
+        private AuthService $authService,
+        private HtmlRenderingInterface $htmlRenderer,
+        private MailService $mailService,
+        private CurrentConfig $currentConfig,
+        private Paths $paths,
     ) {}
 
     // ------------------------------------------------------ update & customization

@@ -628,9 +628,9 @@ final class MailServiceTest extends IntegrationTestCase
         // and delegates every method it doesn't need to override to it,
         // rather than extending the final class directly.
         $realRepo = new MailRecipientRepository(EntityManagerFactory::build($this->conn));
-        $repo = new class($realRepo) implements MailRecipientRepositoryInterface {
+        $repo = new readonly class($realRepo) implements MailRecipientRepositoryInterface {
             public function __construct(
-                private readonly MailRecipientRepositoryInterface $real
+                private MailRecipientRepositoryInterface $real
             ) {}
 
             #[Override]
@@ -676,9 +676,9 @@ final class MailServiceTest extends IntegrationTestCase
         // deterministic way to exercise it, same reasoning/seam as the
         // empty-string-language test above.
         $realRepo = new MailRecipientRepository(EntityManagerFactory::build($this->conn));
-        $repo = new class($realRepo) implements MailRecipientRepositoryInterface {
+        $repo = new readonly class($realRepo) implements MailRecipientRepositoryInterface {
             public function __construct(
-                private readonly MailRecipientRepositoryInterface $real
+                private MailRecipientRepositoryInterface $real
             ) {}
 
             #[Override]

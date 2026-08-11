@@ -7,10 +7,10 @@ namespace Piwigo\Tests\Unit\Image;
 use Override;
 use Piwigo\Core\ThemeConfProviderInterface;
 
-final class SrcImageTestFakeThemeConfProvider implements ThemeConfProviderInterface
+final readonly class SrcImageTestFakeThemeConfProvider implements ThemeConfProviderInterface
 {
     public function __construct(
-        private readonly string $mimeIconDir
+        private string $mimeIconDir
     ) {}
 
     #[Override]

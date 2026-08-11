@@ -134,7 +134,7 @@ test('entityMtimeHash() hashes only Piwigo *Entity.php mtimes, filtered and sort
     // `if ($mtime !== false)` -- both invert the guard to "only keep
     // entries where filemtime() failed", which for the real, existing
     // entity files on disk is always empty.
-    $sourceFile = (new ReflectionClass(EntityManagerFactory::class))->getFileName();
+    $sourceFile = new ReflectionClass(EntityManagerFactory::class)->getFileName();
     expect($sourceFile)
         ->not->toBeFalse();
 

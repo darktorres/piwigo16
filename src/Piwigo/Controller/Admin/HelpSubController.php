@@ -25,17 +25,17 @@ use Psr\Http\Message\ServerRequestInterface;
  * sub-batch to Piwigo\Controller\Admin\AdminPopuphelpController, its own
  * config/routes.php entry rather than a page slug here.
  */
-final class HelpSubController implements AdminSubControllerInterface
+final readonly class HelpSubController implements AdminSubControllerInterface
 {
     public function __construct(
-        private readonly Lang $lang,
-        private readonly AccessControl $accessControl,
-        private readonly UrlServiceInterface $urlService,
-        private readonly CoreTabs $coreTabs,
-        private readonly EventDispatcher $eventDispatcher,
-        private readonly PageState $pageState,
-        private readonly CurrentUser $currentUser,
-        private readonly CurrentTemplate $currentTemplate,
+        private Lang $lang,
+        private AccessControl $accessControl,
+        private UrlServiceInterface $urlService,
+        private CoreTabs $coreTabs,
+        private EventDispatcher $eventDispatcher,
+        private PageState $pageState,
+        private CurrentUser $currentUser,
+        private CurrentTemplate $currentTemplate,
     ) {}
 
     #[Override]

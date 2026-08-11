@@ -33,14 +33,14 @@ use Piwigo\PluginConfig\EventDispatcher;
  * `pwg.userComments.*` WS methods (3 registrations, all admin_only) --
  * registered via callable arrays in include/ws_default_methods.inc.php.
  */
-final class Comments
+final readonly class Comments
 {
     public function __construct(
-        private readonly CommentService $commentService,
-        private readonly Lang $lang,
-        private readonly CurrentConfig $currentConfig,
-        private readonly UrlServiceInterface $urlService,
-        private readonly EventDispatcher $eventDispatcher,
+        private CommentService $commentService,
+        private Lang $lang,
+        private CurrentConfig $currentConfig,
+        private UrlServiceInterface $urlService,
+        private EventDispatcher $eventDispatcher,
     ) {}
 
     /**

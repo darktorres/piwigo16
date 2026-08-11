@@ -27,20 +27,20 @@ use Piwigo\Template\CurrentTemplate;
 use Piwigo\Validation\InputValidator;
 use Psr\Http\Message\ServerRequestInterface;
 
-final class PermalinksSubController implements AdminSubControllerInterface
+final readonly class PermalinksSubController implements AdminSubControllerInterface
 {
     public function __construct(
-        private readonly Lang $lang,
-        private readonly RedirectServiceInterface $redirectService,
-        private readonly UrlServiceInterface $urlService,
-        private readonly CoreTabs $coreTabs,
-        private readonly CurrentTemplate $currentTemplate,
-        private readonly PermalinkService $permalinkService,
-        private readonly CategoryService $categoryService,
-        private readonly HtmlRenderingInterface $htmlRenderer,
-        private readonly InputValidator $inputValidator,
-        private readonly EventDispatcher $eventDispatcher,
-        private readonly CurrentConfig $currentConfig,
+        private Lang $lang,
+        private RedirectServiceInterface $redirectService,
+        private UrlServiceInterface $urlService,
+        private CoreTabs $coreTabs,
+        private CurrentTemplate $currentTemplate,
+        private PermalinkService $permalinkService,
+        private CategoryService $categoryService,
+        private HtmlRenderingInterface $htmlRenderer,
+        private InputValidator $inputValidator,
+        private EventDispatcher $eventDispatcher,
+        private CurrentConfig $currentConfig,
     ) {}
 
     #[Override]

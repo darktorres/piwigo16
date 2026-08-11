@@ -28,11 +28,11 @@ use Piwigo\Ws\Event\WsInvokeAllowed;
  * isInvokeAllowed()/stdGetUrls() are the only methods that need a
  * collaborator (AccessControl/CurrentUser respectively).
  */
-final class WsHelper
+final readonly class WsHelper
 {
     public function __construct(
-        private readonly AccessControl $accessControl,
-        private readonly CurrentUser $currentUser,
+        private AccessControl $accessControl,
+        private CurrentUser $currentUser,
     ) {}
 
     /**

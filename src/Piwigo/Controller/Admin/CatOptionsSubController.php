@@ -15,10 +15,10 @@ use Psr\Http\Message\ServerRequestInterface;
  * Piwigo\Admin\Category\CategoryAdminService::setCategoryOption()
  * (consolidating 8 switch-case branches into one parameterized method).
  */
-final class CatOptionsSubController implements AdminSubControllerInterface
+final readonly class CatOptionsSubController implements AdminSubControllerInterface
 {
     public function __construct(
-        private readonly CatOptionsPageRenderer $catOptionsPageRenderer,
+        private CatOptionsPageRenderer $catOptionsPageRenderer,
     ) {}
 
     #[Override]

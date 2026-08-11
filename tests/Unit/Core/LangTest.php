@@ -111,9 +111,9 @@ function langTestLoad(Lang $lang, string $filename, string $dirname, mixed $opti
 
 function langTestMakeFatalRenderer(stdClass $capture): HtmlRenderingInterface
 {
-    return new class($capture) implements HtmlRenderingInterface {
+    return new readonly class($capture) implements HtmlRenderingInterface {
         public function __construct(
-            private readonly stdClass $capture
+            private stdClass $capture
         ) {}
 
         public function getCatDisplayName(array $catInformations, ?string $url = ''): string
@@ -194,10 +194,10 @@ function langTestMakeFatalRenderer(stdClass $capture): HtmlRenderingInterface
 
 function langTestMakeProvider(?string $defaultLanguage = null, ?string $currentLanguage = null): DefaultLanguageProviderInterface
 {
-    return new class($defaultLanguage, $currentLanguage) implements DefaultLanguageProviderInterface {
+    return new readonly class($defaultLanguage, $currentLanguage) implements DefaultLanguageProviderInterface {
         public function __construct(
-            private readonly ?string $defaultLanguage,
-            private readonly ?string $currentLanguage,
+            private ?string $defaultLanguage,
+            private ?string $currentLanguage,
         ) {}
 
         public function getDefaultLanguage(): string

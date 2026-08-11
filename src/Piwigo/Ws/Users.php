@@ -54,30 +54,30 @@ use Piwigo\Users\UserStatus;
  * `pwg.users.*` WS methods (16 registrations) -- registered via callable
  * arrays in WsDefaultMethods.
  */
-final class Users
+final readonly class Users
 {
     public function __construct(
-        private readonly UserService $userService,
-        private readonly AuthService $authService,
-        private readonly ApiKeyService $apiKeyService,
-        private readonly GroupService $groupService,
-        private readonly ImageService $imageService,
-        private readonly AccessControl $accessControl,
-        private readonly CurrentUser $currentUser,
-        private readonly CurrentConfig $currentConfig,
-        private readonly EventDispatcher $eventDispatcher,
-        private readonly Lang $lang,
-        private readonly Translator $translator,
-        private readonly SessionService $sessionService,
-        private readonly UrlServiceInterface $urlService,
-        private readonly MailService $mailService,
-        private readonly PermissionService $permissionService,
-        private readonly PageState $pageState,
-        private readonly CurrentLogger $currentLogger,
-        private readonly PasswordService $passwordService,
-        private readonly PreferencesService $preferencesService,
-        private readonly ConfigService $configService,
-        private readonly WsHelper $wsHelper,
+        private UserService $userService,
+        private AuthService $authService,
+        private ApiKeyService $apiKeyService,
+        private GroupService $groupService,
+        private ImageService $imageService,
+        private AccessControl $accessControl,
+        private CurrentUser $currentUser,
+        private CurrentConfig $currentConfig,
+        private EventDispatcher $eventDispatcher,
+        private Lang $lang,
+        private Translator $translator,
+        private SessionService $sessionService,
+        private UrlServiceInterface $urlService,
+        private MailService $mailService,
+        private PermissionService $permissionService,
+        private PageState $pageState,
+        private CurrentLogger $currentLogger,
+        private PasswordService $passwordService,
+        private PreferencesService $preferencesService,
+        private ConfigService $configService,
+        private WsHelper $wsHelper,
     ) {}
 
     /**

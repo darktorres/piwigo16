@@ -303,7 +303,8 @@ final class CheckIntegrity
         $correctionFctLabel = match (true) {
             $correction_fct === null => null,
             is_string($correction_fct) => $correction_fct,
-            default => (new ReflectionFunction($correction_fct))->getName(),
+            default => new ReflectionFunction($correction_fct)
+                ->getName(),
         };
         $id = md5($anomaly . $correctionFctLabel . serialize($correction_fct_args) . $correction_msg);
 

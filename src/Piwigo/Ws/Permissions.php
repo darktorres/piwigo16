@@ -22,12 +22,12 @@ use Piwigo\Permission\PermissionService;
  * `pwg.permissions.*` WS methods (3 registrations, all admin_only) --
  * registered via callable arrays in WsDefaultMethods.
  */
-final class Permissions
+final readonly class Permissions
 {
     public function __construct(
-        private readonly PermissionService $permissionService,
-        private readonly CategoryService $categoryService,
-        private readonly CurrentConfig $currentConfig,
+        private PermissionService $permissionService,
+        private CategoryService $categoryService,
+        private CurrentConfig $currentConfig,
     ) {}
 
     /**

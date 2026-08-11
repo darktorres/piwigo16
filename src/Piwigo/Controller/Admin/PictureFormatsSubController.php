@@ -21,17 +21,17 @@ use Psr\Http\Message\ServerRequestInterface;
  * flat, read-only page, pure delegate. Confirmed via direct read: no write
  * logic at all.
  */
-final class PictureFormatsSubController implements AdminSubControllerInterface
+final readonly class PictureFormatsSubController implements AdminSubControllerInterface
 {
     public function __construct(
-        private readonly Lang $lang,
-        private readonly AccessControl $accessControl,
-        private readonly UrlServiceInterface $urlService,
-        private readonly ImageStdParams $imageStdParams,
-        private readonly CurrentTemplate $currentTemplate,
-        private readonly HtmlRenderingInterface $htmlRenderer,
-        private readonly InputValidator $inputValidator,
-        private readonly CurrentConfig $currentConfig,
+        private Lang $lang,
+        private AccessControl $accessControl,
+        private UrlServiceInterface $urlService,
+        private ImageStdParams $imageStdParams,
+        private CurrentTemplate $currentTemplate,
+        private HtmlRenderingInterface $htmlRenderer,
+        private InputValidator $inputValidator,
+        private CurrentConfig $currentConfig,
     ) {}
 
     #[Override]

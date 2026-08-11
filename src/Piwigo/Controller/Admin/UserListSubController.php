@@ -29,23 +29,23 @@ use Psr\Http\Message\ServerRequestInterface;
  * page); only defines one page-local helper, now
  * UserListPageRenderer::webmasterIdIsLocal().
  */
-final class UserListSubController implements AdminSubControllerInterface
+final readonly class UserListSubController implements AdminSubControllerInterface
 {
     public function __construct(
-        private readonly Lang $lang,
-        private readonly UrlServiceInterface $urlService,
-        private readonly CoreTabs $coreTabs,
-        private readonly EventDispatcher $eventDispatcher,
-        private readonly PageState $pageState,
-        private readonly CurrentUser $currentUser,
-        private readonly CurrentTemplate $currentTemplate,
-        private readonly UserService $userService,
-        private readonly PreferencesService $preferencesService,
-        private readonly GroupService $groupService,
-        private readonly HtmlRenderingInterface $htmlRenderer,
-        private readonly CurrentConfig $currentConfig,
-        private readonly InputValidator $inputValidator,
-        private readonly Paths $paths,
+        private Lang $lang,
+        private UrlServiceInterface $urlService,
+        private CoreTabs $coreTabs,
+        private EventDispatcher $eventDispatcher,
+        private PageState $pageState,
+        private CurrentUser $currentUser,
+        private CurrentTemplate $currentTemplate,
+        private UserService $userService,
+        private PreferencesService $preferencesService,
+        private GroupService $groupService,
+        private HtmlRenderingInterface $htmlRenderer,
+        private CurrentConfig $currentConfig,
+        private InputValidator $inputValidator,
+        private Paths $paths,
     ) {}
 
     #[Override]

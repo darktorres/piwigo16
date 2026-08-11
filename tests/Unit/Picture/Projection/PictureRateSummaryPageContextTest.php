@@ -11,7 +11,7 @@ test('toArray flattens the rate summary', function (): void {
         'average' => 4.2,
     ];
 
-    expect((new PictureRateSummaryPageContext($summary))->toArray())
+    expect(new PictureRateSummaryPageContext($summary)->toArray())
         ->toBe([
             'rate_summary' => $summary,
         ]);

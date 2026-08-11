@@ -102,11 +102,11 @@ use Piwigo\Permission\SqlCondition;
  * `EntityManagerInterface::find()`'s return type isn't
  * DQL-string-shape-dependent.
  */
-final class CategoryRepository
+final readonly class CategoryRepository
 {
     public function __construct(
-        private readonly EntityManagerInterface $em,
-        private readonly CurrentConfig $currentConfig,
+        private EntityManagerInterface $em,
+        private CurrentConfig $currentConfig,
     ) {}
 
     private function find(CategoryId $id): ?CategoryEntity

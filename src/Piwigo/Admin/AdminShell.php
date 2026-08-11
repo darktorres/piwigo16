@@ -64,30 +64,30 @@ use Piwigo\Validation\InputValidator;
  * no_md5sum_number/nb_orphans/nb_photos_total, consumed by
  * IntroSubController/PageHeaderRenderer/FilterPanelRenderer/SiteUpdateSubController.
  */
-final class AdminShell
+final readonly class AdminShell
 {
     public function __construct(
-        private readonly Lang $lang,
-        private readonly AccessControl $accessControl,
-        private readonly RedirectServiceInterface $redirectService,
-        private readonly UrlServiceInterface $urlService,
-        private readonly ConfigService $configService,
-        private readonly Paths $paths,
-        private readonly FilesystemIntegrityChecker $filesystemIntegrityChecker,
-        private readonly CoreTabs $coreTabs,
-        private readonly SessionService $sessionService,
-        private readonly EventDispatcher $eventDispatcher,
-        private readonly DeploymentPolicy $deploymentPolicy,
-        private readonly PageState $pageState,
-        private readonly CurrentUser $currentUser,
-        private readonly CurrentTemplate $currentTemplate,
-        private readonly CommentService $commentService,
-        private readonly ImageService $imageService,
-        private readonly PreferencesService $preferencesService,
-        private readonly UserService $userService,
-        private readonly HtmlService $htmlService,
-        private readonly CurrentConfig $currentConfig,
-        private readonly InputValidator $inputValidator,
+        private Lang $lang,
+        private AccessControl $accessControl,
+        private RedirectServiceInterface $redirectService,
+        private UrlServiceInterface $urlService,
+        private ConfigService $configService,
+        private Paths $paths,
+        private FilesystemIntegrityChecker $filesystemIntegrityChecker,
+        private CoreTabs $coreTabs,
+        private SessionService $sessionService,
+        private EventDispatcher $eventDispatcher,
+        private DeploymentPolicy $deploymentPolicy,
+        private PageState $pageState,
+        private CurrentUser $currentUser,
+        private CurrentTemplate $currentTemplate,
+        private CommentService $commentService,
+        private ImageService $imageService,
+        private PreferencesService $preferencesService,
+        private UserService $userService,
+        private HtmlService $htmlService,
+        private CurrentConfig $currentConfig,
+        private InputValidator $inputValidator,
     ) {}
 
     /**

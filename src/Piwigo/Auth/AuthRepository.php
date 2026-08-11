@@ -44,7 +44,7 @@ use Piwigo\Users\UserInfoEntity;
  */
 final readonly class AuthRepository
 {
-    private const DATETIME_FORMAT = 'Y-m-d H:i:s';
+    private const string DATETIME_FORMAT = 'Y-m-d H:i:s';
 
     public function __construct(
         private EntityManagerInterface $em,

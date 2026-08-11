@@ -16,7 +16,7 @@ use Override;
  */
 final readonly class PluginId implements StringVo
 {
-    private const PATTERN = '/^[a-zA-Z0-9_-]{1,64}$/';
+    private const string PATTERN = '/^[a-zA-Z0-9_-]{1,64}$/';
 
     private function __construct(
         public string $value

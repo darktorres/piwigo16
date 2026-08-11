@@ -299,7 +299,7 @@ final readonly class TagService
         }
 
         $tags = [];
-        $tagIds = array_map(static fn (int $id): TagId => TagId::from($id), array_keys($tagCounters));
+        $tagIds = array_map(TagId::from(...), array_keys($tagCounters));
         foreach ($this->repo->findByIdsOrAll($tagIds) as $tag) {
             if (! isset($tagCounters[$tag->id->value])) {
                 continue;

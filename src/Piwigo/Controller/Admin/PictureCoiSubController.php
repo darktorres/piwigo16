@@ -16,10 +16,10 @@ use Psr\Http\Message\ServerRequestInterface;
  * directly-instantiated (no service layer) image write method on this
  * repository.
  */
-final class PictureCoiSubController implements AdminSubControllerInterface
+final readonly class PictureCoiSubController implements AdminSubControllerInterface
 {
     public function __construct(
-        private readonly PictureCoiPageRenderer $pictureCoiPageRenderer,
+        private PictureCoiPageRenderer $pictureCoiPageRenderer,
     ) {}
 
     #[Override]

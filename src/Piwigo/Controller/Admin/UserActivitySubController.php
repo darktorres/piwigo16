@@ -28,23 +28,23 @@ use Psr\Http\Message\ServerRequestInterface;
  * logic at all (aside from the ?type=download_logs CSV-export branch,
  * which streams directly and exits, never touching persistent state).
  */
-final class UserActivitySubController implements AdminSubControllerInterface
+final readonly class UserActivitySubController implements AdminSubControllerInterface
 {
     public function __construct(
-        private readonly Lang $lang,
-        private readonly AccessControl $accessControl,
-        private readonly UrlServiceInterface $urlService,
-        private readonly CoreTabs $coreTabs,
-        private readonly CurrentTemplate $currentTemplate,
-        private readonly ActivityService $activityService,
-        private readonly UserService $userService,
-        private readonly ImageService $imageService,
-        private readonly CategoryService $categoryService,
-        private readonly GroupService $groupService,
-        private readonly HtmlRenderingInterface $htmlRenderer,
-        private readonly CurrentConfig $currentConfig,
-        private readonly InputValidator $inputValidator,
-        private readonly EventDispatcher $eventDispatcher,
+        private Lang $lang,
+        private AccessControl $accessControl,
+        private UrlServiceInterface $urlService,
+        private CoreTabs $coreTabs,
+        private CurrentTemplate $currentTemplate,
+        private ActivityService $activityService,
+        private UserService $userService,
+        private ImageService $imageService,
+        private CategoryService $categoryService,
+        private GroupService $groupService,
+        private HtmlRenderingInterface $htmlRenderer,
+        private CurrentConfig $currentConfig,
+        private InputValidator $inputValidator,
+        private EventDispatcher $eventDispatcher,
     ) {}
 
     #[Override]

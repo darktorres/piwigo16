@@ -37,25 +37,25 @@ use Psr\Http\Message\ServerRequestInterface;
  * admin.php gates every page behind check_status(AccessLevel::Administrator)
  * before dispatch, so this controller does not duplicate that check.
  */
-final class PhotosAddSubController implements AdminSubControllerInterface
+final readonly class PhotosAddSubController implements AdminSubControllerInterface
 {
     public function __construct(
-        private readonly Lang $lang,
-        private readonly CurrentLogger $currentLogger,
-        private readonly StorageRegistry $storageRegistry,
-        private readonly EventDispatcher $eventDispatcher,
-        private readonly CurrentTemplate $currentTemplate,
-        private readonly ConfigService $configService,
-        private readonly EntityManagerInterface $entityManager,
-        private readonly PhotosAddDirectPageRenderer $photosAddDirectPageRenderer,
-        private readonly ActivityService $activityService,
-        private readonly MetadataService $metadataService,
-        private readonly ImageService $imageService,
-        private readonly CurrentConfig $currentConfig,
-        private readonly WsContext $wsContext,
-        private readonly CurrentUser $currentUser,
-        private readonly Paths $paths,
-        private readonly DbCredentials $dbCredentials,
+        private Lang $lang,
+        private CurrentLogger $currentLogger,
+        private StorageRegistry $storageRegistry,
+        private EventDispatcher $eventDispatcher,
+        private CurrentTemplate $currentTemplate,
+        private ConfigService $configService,
+        private EntityManagerInterface $entityManager,
+        private PhotosAddDirectPageRenderer $photosAddDirectPageRenderer,
+        private ActivityService $activityService,
+        private MetadataService $metadataService,
+        private ImageService $imageService,
+        private CurrentConfig $currentConfig,
+        private WsContext $wsContext,
+        private CurrentUser $currentUser,
+        private Paths $paths,
+        private DbCredentials $dbCredentials,
     ) {}
 
     #[Override]

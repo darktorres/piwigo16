@@ -399,7 +399,7 @@ final class CommentRepositoryTest extends IntegrationTestCase
     public function testCountValidatedByImageIdsKeysTheResultByImageId(): void
     {
         $beforeCounts = $this->repo->countValidatedByImageIds([1]);
-        $before = $beforeCounts === [] ? 0 : array_values($beforeCounts)[0];
+        $before = $beforeCounts === [] ? 0 : array_first($beforeCounts);
 
         $this->insertFixtureComment([
             'validated' => true,
@@ -414,7 +414,7 @@ final class CommentRepositoryTest extends IntegrationTestCase
         // entirely (not present with a zero count), so a single-entry
         // result is exactly image 1's own count.
         self::assertCount(1, $counts);
-        self::assertSame($before + 1, array_values($counts)[0]);
+        self::assertSame($before + 1, array_first($counts));
     }
 
     /**

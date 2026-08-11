@@ -14,10 +14,10 @@ use Psr\Http\Message\ServerRequestInterface;
  * and its per-tag usage counters/alt-names
  * rendering live in TagsPageRenderer itself.
  */
-final class TagsSubController implements AdminSubControllerInterface
+final readonly class TagsSubController implements AdminSubControllerInterface
 {
     public function __construct(
-        private readonly TagsPageRenderer $tagsPageRenderer,
+        private TagsPageRenderer $tagsPageRenderer,
     ) {}
 
     #[Override]

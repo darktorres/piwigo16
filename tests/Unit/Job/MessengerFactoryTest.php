@@ -66,14 +66,7 @@ test('transport()\'s anonymous ConnectionRegistry answers "default" for getDefau
     // tests/Integration/MessengerRoundTripTest.php, so the return value
     // isn't needed here.
     MessengerFactory::transport($connection, CurrentPathsTestFactory::get());
-
-    $registryClass = null;
-    foreach (get_declared_classes() as $declared) {
-        if (str_contains($declared, '@anonymous') && is_a($declared, ConnectionRegistry::class, true)) {
-            $registryClass = $declared;
-            break;
-        }
-    }
+    $registryClass = array_find(get_declared_classes(), fn ($declared) => str_contains($declared, '@anonymous') && is_a($declared, ConnectionRegistry::class, true));
     if ($registryClass === null) {
         throw new RuntimeException('Could not locate transport()\'s anonymous ConnectionRegistry class.');
     }

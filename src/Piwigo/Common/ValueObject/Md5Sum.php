@@ -16,7 +16,7 @@ use Override;
  */
 final readonly class Md5Sum implements StringVo
 {
-    private const PATTERN = '/^[0-9a-f]{32}$/';
+    private const string PATTERN = '/^[0-9a-f]{32}$/';
 
     private function __construct(
         public string $value

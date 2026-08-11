@@ -43,23 +43,23 @@ use Psr\Http\Message\ServerRequestInterface;
  * UpdatesSubController's own "ext" tab call uses. This controller's own
  * `ADMIN_PAGE_TITLE` override still applies after that renderer call.
  */
-final class LanguagesSubController implements AdminSubControllerInterface
+final readonly class LanguagesSubController implements AdminSubControllerInterface
 {
     public function __construct(
-        private readonly Lang $lang,
-        private readonly AccessControl $accessControl,
-        private readonly UrlServiceInterface $urlService,
-        private readonly ConfigService $configService,
-        private readonly CoreTabs $coreTabs,
-        private readonly PageState $pageState,
-        private readonly CurrentTemplate $currentTemplate,
-        private readonly ExtensionUpdateChecker $extensionUpdateChecker,
-        private readonly LanguagesNewPageRenderer $languagesNewPageRenderer,
-        private readonly LanguagesInstalledPageRenderer $languagesInstalledPageRenderer,
-        private readonly HtmlRenderingInterface $htmlRenderer,
-        private readonly CurrentConfig $currentConfig,
-        private readonly InputValidator $inputValidator,
-        private readonly EventDispatcher $eventDispatcher,
+        private Lang $lang,
+        private AccessControl $accessControl,
+        private UrlServiceInterface $urlService,
+        private ConfigService $configService,
+        private CoreTabs $coreTabs,
+        private PageState $pageState,
+        private CurrentTemplate $currentTemplate,
+        private ExtensionUpdateChecker $extensionUpdateChecker,
+        private LanguagesNewPageRenderer $languagesNewPageRenderer,
+        private LanguagesInstalledPageRenderer $languagesInstalledPageRenderer,
+        private HtmlRenderingInterface $htmlRenderer,
+        private CurrentConfig $currentConfig,
+        private InputValidator $inputValidator,
+        private EventDispatcher $eventDispatcher,
     ) {}
 
     #[Override]

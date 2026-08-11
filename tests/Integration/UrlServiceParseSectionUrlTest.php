@@ -231,7 +231,7 @@ final class UrlServiceParseSectionUrlTest extends IntegrationTestCase
         try {
             $service->parseSectionUrl(['category', '999999'], $i, $this->redirect());
             self::fail('Expected a RuntimeException from pageNotFound()');
-        } catch (RuntimeException $e) {
+        } catch (RuntimeException) {
             self::assertSame('Requested album does not exist', $htmlRenderer->lastMessage);
         }
     }
@@ -263,7 +263,7 @@ final class UrlServiceParseSectionUrlTest extends IntegrationTestCase
         try {
             $service->parseSectionUrl(['category', '1', '999999'], $i, $this->redirect());
             self::fail('Expected a RuntimeException from pageNotFound()');
-        } catch (RuntimeException $e) {
+        } catch (RuntimeException) {
             self::assertSame('Requested album does not exist', $htmlRenderer->lastMessage);
         }
     }
@@ -346,7 +346,7 @@ final class UrlServiceParseSectionUrlTest extends IntegrationTestCase
         try {
             $service->parseSectionUrl(['category', 'no-such-permalink-anywhere'], $i, $this->redirect());
             self::fail('Expected a RuntimeException from pageNotFound()');
-        } catch (RuntimeException $e) {
+        } catch (RuntimeException) {
             self::assertSame('Permalink for album not found', $htmlRenderer->lastMessage);
         }
     }
@@ -395,7 +395,7 @@ final class UrlServiceParseSectionUrlTest extends IntegrationTestCase
         try {
             $service->parseSectionUrl(['tags', '999999'], $i, $this->redirect());
             self::fail('Expected a RuntimeException from pageNotFound()');
-        } catch (RuntimeException $e) {
+        } catch (RuntimeException) {
             self::assertSame('Requested tag does not exist', $htmlRenderer->lastMessage);
         }
     }
@@ -411,7 +411,7 @@ final class UrlServiceParseSectionUrlTest extends IntegrationTestCase
             // token-scan loop breaks before collecting any id/name at all.
             $service->parseSectionUrl(['tags', 'start-0'], $i, $this->redirect());
             self::fail('Expected a RuntimeException from badRequest()');
-        } catch (RuntimeException $e) {
+        } catch (RuntimeException) {
             self::assertSame('at least one tag required', $htmlRenderer->lastMessage);
         }
     }

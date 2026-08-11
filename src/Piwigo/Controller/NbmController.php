@@ -39,26 +39,26 @@ use Psr\Http\Message\ServerRequestInterface;
  * link target (distinct from admin/notification_by_mail.php, the admin
  * sender page).
  */
-final class NbmController implements ControllerInterface
+final readonly class NbmController implements ControllerInterface
 {
     public function __construct(
-        private readonly Lang $lang,
-        private readonly AccessControl $accessControl,
-        private readonly UrlServiceInterface $urlService,
-        private readonly FilterState $filterState,
-        private readonly SectionContextRegistry $sectionContextRegistry,
-        private readonly SessionService $sessionService,
-        private readonly EventDispatcher $eventDispatcher,
-        private readonly DeploymentPolicy $deploymentPolicy,
-        private readonly PageState $pageState,
-        private readonly CurrentUser $currentUser,
-        private readonly CurrentTemplate $currentTemplate,
-        private readonly HtmlService $htmlService,
-        private readonly NotificationByMailSender $notificationByMailSender,
-        private readonly CurrentConfig $currentConfig,
-        private readonly Translator $translator,
-        private readonly CurrentLogger $currentLogger,
-        private readonly Paths $paths,
+        private Lang $lang,
+        private AccessControl $accessControl,
+        private UrlServiceInterface $urlService,
+        private FilterState $filterState,
+        private SectionContextRegistry $sectionContextRegistry,
+        private SessionService $sessionService,
+        private EventDispatcher $eventDispatcher,
+        private DeploymentPolicy $deploymentPolicy,
+        private PageState $pageState,
+        private CurrentUser $currentUser,
+        private CurrentTemplate $currentTemplate,
+        private HtmlService $htmlService,
+        private NotificationByMailSender $notificationByMailSender,
+        private CurrentConfig $currentConfig,
+        private Translator $translator,
+        private CurrentLogger $currentLogger,
+        private Paths $paths,
     ) {}
 
     #[Override]

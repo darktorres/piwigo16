@@ -40,15 +40,15 @@ use Psr\Http\Message\ServerRequestInterface;
  * mid-render. The `output=content_only` branch returns $help_content
  * directly since by that point it is already fully computed.
  */
-final class AdminPopuphelpController implements ControllerInterface
+final readonly class AdminPopuphelpController implements ControllerInterface
 {
     public function __construct(
-        private readonly Lang $lang,
-        private readonly AccessControl $accessControl,
-        private readonly EventDispatcher $eventDispatcher,
-        private readonly PageState $pageState,
-        private readonly CurrentTemplate $currentTemplate,
-        private readonly CurrentConfig $currentConfig,
+        private Lang $lang,
+        private AccessControl $accessControl,
+        private EventDispatcher $eventDispatcher,
+        private PageState $pageState,
+        private CurrentTemplate $currentTemplate,
+        private CurrentConfig $currentConfig,
     ) {}
 
     #[Override]

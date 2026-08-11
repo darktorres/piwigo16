@@ -39,24 +39,24 @@ use Piwigo\Validation\InputValidator;
  * so the original album_notification.php's own (redundant) check_status()
  * call is dropped here -- same precedent as PhotosAddSubController.
  */
-final class AlbumNotificationPageRenderer
+final readonly class AlbumNotificationPageRenderer
 {
     public function __construct(
-        private readonly Lang $lang,
-        private readonly RedirectServiceInterface $redirectService,
-        private readonly UrlServiceInterface $urlService,
-        private readonly Translator $translator,
-        private readonly EventDispatcher $eventDispatcher,
-        private readonly CurrentTemplate $currentTemplate,
-        private readonly ImageService $imageService,
-        private readonly UserService $userService,
-        private readonly AuthService $authService,
-        private readonly GroupService $groupService,
-        private readonly CategoryService $categoryService,
-        private readonly HtmlService $htmlService,
-        private readonly MailService $mailService,
-        private readonly CurrentConfig $currentConfig,
-        private readonly InputValidator $inputValidator,
+        private Lang $lang,
+        private RedirectServiceInterface $redirectService,
+        private UrlServiceInterface $urlService,
+        private Translator $translator,
+        private EventDispatcher $eventDispatcher,
+        private CurrentTemplate $currentTemplate,
+        private ImageService $imageService,
+        private UserService $userService,
+        private AuthService $authService,
+        private GroupService $groupService,
+        private CategoryService $categoryService,
+        private HtmlService $htmlService,
+        private MailService $mailService,
+        private CurrentConfig $currentConfig,
+        private InputValidator $inputValidator,
     ) {}
 
     /**

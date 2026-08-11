@@ -47,25 +47,25 @@ use Piwigo\Users\UserService;
  * to hook into), so the token goes before the trailing '&amp;theme=' so
  * the template's own {$theme.ID} concatenation still works.
  */
-final class ThemesInstalledPageRenderer
+final readonly class ThemesInstalledPageRenderer
 {
     public function __construct(
-        private readonly Lang $lang,
-        private readonly AccessControl $accessControl,
-        private readonly RedirectServiceInterface $redirectService,
-        private readonly UrlServiceInterface $urlService,
-        private readonly ConfigService $configService,
-        private readonly CurrentLogger $currentLogger,
-        private readonly EventDispatcher $eventDispatcher,
-        private readonly PageState $pageState,
-        private readonly CurrentTemplate $currentTemplate,
-        private readonly ActivityService $activityService,
-        private readonly UserService $userService,
-        private readonly HtmlRenderingInterface $htmlRenderer,
-        private readonly CurrentConfig $currentConfig,
-        private readonly WsContext $wsContext,
-        private readonly CurrentUser $currentUser,
-        private readonly Paths $paths,
+        private Lang $lang,
+        private AccessControl $accessControl,
+        private RedirectServiceInterface $redirectService,
+        private UrlServiceInterface $urlService,
+        private ConfigService $configService,
+        private CurrentLogger $currentLogger,
+        private EventDispatcher $eventDispatcher,
+        private PageState $pageState,
+        private CurrentTemplate $currentTemplate,
+        private ActivityService $activityService,
+        private UserService $userService,
+        private HtmlRenderingInterface $htmlRenderer,
+        private CurrentConfig $currentConfig,
+        private WsContext $wsContext,
+        private CurrentUser $currentUser,
+        private Paths $paths,
     ) {}
 
     /**

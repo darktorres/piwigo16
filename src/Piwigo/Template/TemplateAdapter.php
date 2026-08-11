@@ -15,10 +15,10 @@ use Piwigo\Config\CurrentConfig;
 use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\SrcImage;
 
-final class TemplateAdapter
+final readonly class TemplateAdapter
 {
     public function __construct(
-        private readonly CurrentConfig $currentConfig,
+        private CurrentConfig $currentConfig,
     ) {}
 
     /**

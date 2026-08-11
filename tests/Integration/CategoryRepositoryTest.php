@@ -632,7 +632,7 @@ namespace Piwigo\Tests\Integration {
             try {
                 $range = $this->repo->findDateRangeByCategory([1], self::noPermissionRestriction());
                 self::assertCount(1, $range);
-                $entry = array_values($range)[0];
+                $entry = array_first($range);
 
                 self::assertSame('2019-06-15 10:00:00', $entry->from);
                 self::assertSame('2019-06-15 10:00:00', $entry->to);

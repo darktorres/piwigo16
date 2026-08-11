@@ -11,11 +11,11 @@ use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\ApiKeyRequestFlag;
 use Piwigo\Core\Kernel;
 
-final class SessionService
+final readonly class SessionService
 {
     public function __construct(
-        private readonly SessionRepository $repo,
-        private readonly CurrentConfig $currentConfig,
+        private SessionRepository $repo,
+        private CurrentConfig $currentConfig,
     ) {}
 
     /**

@@ -25,20 +25,20 @@ use Psr\Http\Message\ServerRequestInterface;
  * Piwigo\Admin\AlbumsPageRenderer. The page's own auto-order write logic
  * calls Piwigo\Admin\Category\CategoryAdminService::getCategoriesRefDate().
  */
-final class AlbumsSubController implements AdminSubControllerInterface
+final readonly class AlbumsSubController implements AdminSubControllerInterface
 {
     public function __construct(
-        private readonly Lang $lang,
-        private readonly UrlServiceInterface $urlService,
-        private readonly CoreTabs $coreTabs,
-        private readonly EventDispatcher $eventDispatcher,
-        private readonly CurrentUser $currentUser,
-        private readonly CurrentTemplate $currentTemplate,
-        private readonly CategoryAdminService $categoryAdminService,
-        private readonly CategoryService $categoryService,
-        private readonly HtmlRenderingInterface $htmlRenderer,
-        private readonly CurrentConfig $currentConfig,
-        private readonly InputValidator $inputValidator,
+        private Lang $lang,
+        private UrlServiceInterface $urlService,
+        private CoreTabs $coreTabs,
+        private EventDispatcher $eventDispatcher,
+        private CurrentUser $currentUser,
+        private CurrentTemplate $currentTemplate,
+        private CategoryAdminService $categoryAdminService,
+        private CategoryService $categoryService,
+        private HtmlRenderingInterface $htmlRenderer,
+        private CurrentConfig $currentConfig,
+        private InputValidator $inputValidator,
     ) {}
 
     #[Override]

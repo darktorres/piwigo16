@@ -55,26 +55,26 @@ use Piwigo\Users\UserService;
  * `pwg.categories.*` WS methods (12 registrations) -- registered via
  * callable arrays in include/ws_default_methods.inc.php.
  */
-final class Categories
+final readonly class Categories
 {
     public function __construct(
-        private readonly CategoryService $categoryService,
-        private readonly PermissionService $permissionService,
-        private readonly ActivityService $activityService,
-        private readonly UserService $userService,
-        private readonly ImageService $imageService,
-        private readonly CategoryRepository $categoryRepository,
-        private readonly HtmlRenderingInterface $htmlRenderer,
-        private readonly UrlServiceInterface $urlService,
-        private readonly EventDispatcher $eventDispatcher,
-        private readonly CurrentConfig $currentConfig,
-        private readonly CurrentUser $currentUser,
-        private readonly AccessControl $accessControl,
-        private readonly EntityManagerInterface $entityManager,
-        private readonly SessionService $sessionService,
-        private readonly PageState $pageState,
-        private readonly ImageStdParams $imageStdParams,
-        private readonly WsHelper $wsHelper,
+        private CategoryService $categoryService,
+        private PermissionService $permissionService,
+        private ActivityService $activityService,
+        private UserService $userService,
+        private ImageService $imageService,
+        private CategoryRepository $categoryRepository,
+        private HtmlRenderingInterface $htmlRenderer,
+        private UrlServiceInterface $urlService,
+        private EventDispatcher $eventDispatcher,
+        private CurrentConfig $currentConfig,
+        private CurrentUser $currentUser,
+        private AccessControl $accessControl,
+        private EntityManagerInterface $entityManager,
+        private SessionService $sessionService,
+        private PageState $pageState,
+        private ImageStdParams $imageStdParams,
+        private WsHelper $wsHelper,
     ) {}
 
     /**

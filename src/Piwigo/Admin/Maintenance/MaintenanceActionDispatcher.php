@@ -45,29 +45,29 @@ use Piwigo\Validation\InputValidator;
  * `check_upgrade` renders an "Update to Piwigo %s" link when a new
  * version is available.
  */
-final class MaintenanceActionDispatcher
+final readonly class MaintenanceActionDispatcher
 {
     public function __construct(
-        private readonly RedirectServiceInterface $redirectService,
-        private readonly UrlServiceInterface $urlService,
-        private readonly ConfigService $configService,
-        private readonly FilesystemIntegrityChecker $filesystemIntegrityChecker,
-        private readonly SessionService $sessionService,
-        private readonly Translator $translator,
-        private readonly EventDispatcher $eventDispatcher,
-        private readonly PageState $pageState,
-        private readonly CurrentTemplate $currentTemplate,
-        private readonly DbMaintenanceRepository $dbMaintenanceRepository,
-        private readonly ActivityService $activityService,
-        private readonly RateService $rateService,
-        private readonly CategoryService $categoryService,
-        private readonly TagService $tagService,
-        private readonly HtmlRenderingInterface $htmlRenderer,
-        private readonly Lang $lang,
-        private readonly CurrentConfig $currentConfig,
-        private readonly InputValidator $inputValidator,
-        private readonly Paths $paths,
-        private readonly ?PersistentCache $persistentCache = null,
+        private RedirectServiceInterface $redirectService,
+        private UrlServiceInterface $urlService,
+        private ConfigService $configService,
+        private FilesystemIntegrityChecker $filesystemIntegrityChecker,
+        private SessionService $sessionService,
+        private Translator $translator,
+        private EventDispatcher $eventDispatcher,
+        private PageState $pageState,
+        private CurrentTemplate $currentTemplate,
+        private DbMaintenanceRepository $dbMaintenanceRepository,
+        private ActivityService $activityService,
+        private RateService $rateService,
+        private CategoryService $categoryService,
+        private TagService $tagService,
+        private HtmlRenderingInterface $htmlRenderer,
+        private Lang $lang,
+        private CurrentConfig $currentConfig,
+        private InputValidator $inputValidator,
+        private Paths $paths,
+        private ?PersistentCache $persistentCache = null,
     ) {}
 
     public function dispatch(string $action): void

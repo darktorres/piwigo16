@@ -43,23 +43,23 @@ use Piwigo\Users\CurrentUser;
  * needed here, unlike PluginsInstalledPageRenderer's own dead-code
  * cleanup.
  */
-final class PluginsNewPageRenderer
+final readonly class PluginsNewPageRenderer
 {
     public function __construct(
-        private readonly Lang $lang,
-        private readonly AccessControl $accessControl,
-        private readonly RedirectServiceInterface $redirectService,
-        private readonly UrlServiceInterface $urlService,
-        private readonly CurrentLogger $currentLogger,
-        private readonly SessionService $sessionService,
-        private readonly PageState $pageState,
-        private readonly CurrentTemplate $currentTemplate,
-        private readonly ActivityService $activityService,
-        private readonly HtmlRenderingInterface $htmlRenderer,
-        private readonly CurrentConfig $currentConfig,
-        private readonly CurrentUser $currentUser,
-        private readonly Paths $paths,
-        private readonly EventDispatcher $eventDispatcher,
+        private Lang $lang,
+        private AccessControl $accessControl,
+        private RedirectServiceInterface $redirectService,
+        private UrlServiceInterface $urlService,
+        private CurrentLogger $currentLogger,
+        private SessionService $sessionService,
+        private PageState $pageState,
+        private CurrentTemplate $currentTemplate,
+        private ActivityService $activityService,
+        private HtmlRenderingInterface $htmlRenderer,
+        private CurrentConfig $currentConfig,
+        private CurrentUser $currentUser,
+        private Paths $paths,
+        private EventDispatcher $eventDispatcher,
     ) {}
 
     /**

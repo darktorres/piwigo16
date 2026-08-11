@@ -1033,7 +1033,7 @@ final readonly class SearchFilterRenderer
             // Admin\StatsPageRenderer), not `Env::now()`.
             $thresholds = [];
             foreach (array_keys($labelForThreshold) as $threshold) {
-                $thresholds[$threshold] = (new DateTime())->modify($this->intervalForThreshold($threshold))->format('Y-m-d H:i:s');
+                $thresholds[$threshold] = new DateTime()->modify($this->intervalForThreshold($threshold))->format('Y-m-d H:i:s');
             }
 
             $filterRows = $this->repo->findDistinctImageRows(["{$dqlField} AS date"], $filterCondition);

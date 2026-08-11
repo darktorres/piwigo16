@@ -68,12 +68,12 @@ test('dispatch works against the real RouteDefinitions::all() route collection',
 
 test('dispatch resolves the request context host from a non-empty URI host, not overriding it with the localhost fallback', function (): void {
     $routes = new RouteCollection();
-    $routes->add('host_pinned', (new Route(
+    $routes->add('host_pinned', new Route(
         '/host-check',
         defaults: [
             '_controller' => 'HostPinnedController',
         ],
-    ))->setHost('example.com'));
+    )->setHost('example.com'));
 
     $result = new Router($routes)
         ->dispatch(new ServerRequest('GET', 'http://example.com/host-check'));
@@ -86,12 +86,12 @@ test('dispatch resolves the request context host from a non-empty URI host, not 
 
 test('dispatch falls back to "localhost" as the request context host when the URI has no host', function (): void {
     $routes = new RouteCollection();
-    $routes->add('host_fallback', (new Route(
+    $routes->add('host_fallback', new Route(
         '/host-fallback',
         defaults: [
             '_controller' => 'HostFallbackController',
         ],
-    ))->setHost('localhost'));
+    )->setHost('localhost'));
 
     // A bare-path URI (no scheme://host authority) leaves Uri::getHost() ''.
     $result = new Router($routes)
@@ -105,12 +105,12 @@ test('dispatch falls back to "localhost" as the request context host when the UR
 
 test('dispatch resolves the request context scheme from a non-empty URI scheme, not overriding it with the http fallback', function (): void {
     $routes = new RouteCollection();
-    $routes->add('scheme_pinned', (new Route(
+    $routes->add('scheme_pinned', new Route(
         '/scheme-check',
         defaults: [
             '_controller' => 'SchemePinnedController',
         ],
-    ))->setSchemes(['https']));
+    )->setSchemes(['https']));
 
     $result = new Router($routes)
         ->dispatch(new ServerRequest('GET', 'https://example.com/scheme-check'));
@@ -123,12 +123,12 @@ test('dispatch resolves the request context scheme from a non-empty URI scheme, 
 
 test('dispatch falls back to "http" as the request context scheme when the URI has no scheme', function (): void {
     $routes = new RouteCollection();
-    $routes->add('scheme_fallback', (new Route(
+    $routes->add('scheme_fallback', new Route(
         '/scheme-fallback',
         defaults: [
             '_controller' => 'SchemeFallbackController',
         ],
-    ))->setSchemes(['http']));
+    )->setSchemes(['http']));
 
     // A bare-path URI leaves Uri::getScheme() ''.
     $result = new Router($routes)

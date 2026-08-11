@@ -30,12 +30,12 @@ use Piwigo\Users\CurrentUser;
  * CommentService's constructor. Same interface-segregation reasoning as
  * AccessLevelChecker's own extraction from AccessControl.
  */
-final class AvailableCommentsCounter
+final readonly class AvailableCommentsCounter
 {
     public function __construct(
-        private readonly CurrentUser $currentUser,
-        private readonly CurrentConfig $currentConfig,
-        private readonly AccessLevelChecker $accessLevelChecker,
+        private CurrentUser $currentUser,
+        private CurrentConfig $currentConfig,
+        private AccessLevelChecker $accessLevelChecker,
     ) {}
 
     public function count(): int

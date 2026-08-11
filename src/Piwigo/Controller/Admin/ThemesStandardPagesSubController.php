@@ -17,10 +17,10 @@ use Psr\Http\Message\ServerRequestInterface;
  * CSRF-gates its `confUpdateParam()` calls via
  * `CsrfService::checkOrFail()` before any write.
  */
-final class ThemesStandardPagesSubController implements AdminSubControllerInterface
+final readonly class ThemesStandardPagesSubController implements AdminSubControllerInterface
 {
     public function __construct(
-        private readonly ThemesStandardPagesPageRenderer $themesStandardPagesPageRenderer,
+        private ThemesStandardPagesPageRenderer $themesStandardPagesPageRenderer,
     ) {}
 
     #[Override]

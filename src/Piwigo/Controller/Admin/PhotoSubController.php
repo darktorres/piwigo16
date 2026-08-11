@@ -36,24 +36,24 @@ use Psr\Http\Message\ServerRequestInterface;
  * Tab dispatch is restricted to the KNOWN_TABS allowlist with a safe
  * "properties" fallback; there is no dynamic `include` based on user input.
  */
-final class PhotoSubController implements AdminSubControllerInterface
+final readonly class PhotoSubController implements AdminSubControllerInterface
 {
     private const array KNOWN_TABS = ['properties', 'coi', 'formats'];
 
     public function __construct(
-        private readonly Lang $lang,
-        private readonly AccessControl $accessControl,
-        private readonly UrlServiceInterface $urlService,
-        private readonly CoreTabs $coreTabs,
-        private readonly ImageStdParams $imageStdParams,
-        private readonly CurrentTemplate $currentTemplate,
-        private readonly PictureModifyPageRenderer $pictureModifyPageRenderer,
-        private readonly PictureCoiPageRenderer $pictureCoiPageRenderer,
-        private readonly ImageService $imageService,
-        private readonly HtmlRenderingInterface $htmlRenderer,
-        private readonly CurrentConfig $currentConfig,
-        private readonly InputValidator $inputValidator,
-        private readonly EventDispatcher $eventDispatcher,
+        private Lang $lang,
+        private AccessControl $accessControl,
+        private UrlServiceInterface $urlService,
+        private CoreTabs $coreTabs,
+        private ImageStdParams $imageStdParams,
+        private CurrentTemplate $currentTemplate,
+        private PictureModifyPageRenderer $pictureModifyPageRenderer,
+        private PictureCoiPageRenderer $pictureCoiPageRenderer,
+        private ImageService $imageService,
+        private HtmlRenderingInterface $htmlRenderer,
+        private CurrentConfig $currentConfig,
+        private InputValidator $inputValidator,
+        private EventDispatcher $eventDispatcher,
     ) {}
 
     #[Override]

@@ -489,12 +489,10 @@ test('invoke clamps a param above maxValue down to maxValue', function (): void 
 
 test('invoke calls the real registered callback with the checked params and a reference to the service itself', function (): void {
     $server = pwgServerTestServer();
-    $server->addMethod('test.method', function (array $params, Server &$service): array {
-        return [
-            'echo' => $params,
-            'sameService' => $service->hasMethod('test.method'),
-        ];
-    }, ['name']);
+    $server->addMethod('test.method', fn (array $params, Server &$service): array => [
+        'echo' => $params,
+        'sameService' => $service->hasMethod('test.method'),
+    ], ['name']);
 
     $result = $server->invoke('test.method', [
         'name' => 'Alps',

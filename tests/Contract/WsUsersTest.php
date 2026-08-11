@@ -88,7 +88,7 @@ final class WsUsersTest extends ContractTestCase
         self::assertSame('ok', $response['stat']);
         $usernames = $this->usernameColumn($response);
         $sorted = $usernames;
-        usort($sorted, static fn (string $a, string $b): int => strcasecmp($a, $b));
+        usort($sorted, strcasecmp(...));
         self::assertSame($sorted, $usernames);
     }
 

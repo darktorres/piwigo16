@@ -174,7 +174,7 @@ final class NotificationByMailSender
                     ->getMailSenderName();
             $this->sendAsName = $sendAsName;
 
-            $sendAsMailAddress = (new UserRepository(EntityManagerFactory::build(DbConnection::build()), $this->eventDispatcher, $this->currentConfig))->getWebmasterMailAddress();
+            $sendAsMailAddress = new UserRepository(EntityManagerFactory::build(DbConnection::build()), $this->eventDispatcher, $this->currentConfig)->getWebmasterMailAddress();
             $this->sendAsMailAddress = $sendAsMailAddress;
 
             $this->sendAsMailFormatted = $this->mailer

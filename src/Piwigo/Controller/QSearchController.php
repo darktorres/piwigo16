@@ -20,12 +20,12 @@ use Psr\Http\Message\ServerRequestInterface;
  * type is honored by PHPStan understanding that call as terminating every
  * path, same as every other controller's check_status() call this phase.
  */
-final class QSearchController implements ControllerInterface
+final readonly class QSearchController implements ControllerInterface
 {
     public function __construct(
-        private readonly AccessControl $accessControl,
-        private readonly RedirectServiceInterface $redirectService,
-        private readonly UrlServiceInterface $urlService,
+        private AccessControl $accessControl,
+        private RedirectServiceInterface $redirectService,
+        private UrlServiceInterface $urlService,
     ) {}
 
     #[Override]

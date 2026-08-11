@@ -19,11 +19,11 @@ use Piwigo\Core\Paths;
  * ported here verbatim as a proper service so Piwigo\Job's handlers have a
  * real, autoloadable delegation target.
  */
-final class DerivativeCacheService
+final readonly class DerivativeCacheService
 {
     public function __construct(
-        private readonly CurrentConfig $currentConfig,
-        private readonly Paths $paths,
+        private CurrentConfig $currentConfig,
+        private Paths $paths,
     ) {}
 
     /**

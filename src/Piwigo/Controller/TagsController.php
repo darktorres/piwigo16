@@ -40,25 +40,25 @@ use Psr\Http\Message\ServerRequestInterface;
  * Replaces tags.php -- the front-end tag cloud/letter-index browsing page
  * (distinct from the admin album's orphan-tag management page).
  */
-final class TagsController implements ControllerInterface
+final readonly class TagsController implements ControllerInterface
 {
     public function __construct(
-        private readonly Lang $lang,
-        private readonly AccessControl $accessControl,
-        private readonly UrlServiceInterface $urlService,
-        private readonly FilterState $filterState,
-        private readonly SectionContextRegistry $sectionContextRegistry,
-        private readonly SessionService $sessionService,
-        private readonly EventDispatcher $eventDispatcher,
-        private readonly DeploymentPolicy $deploymentPolicy,
-        private readonly PageState $pageState,
-        private readonly CurrentUser $currentUser,
-        private readonly CurrentTemplate $currentTemplate,
-        private readonly TagService $tagService,
-        private readonly HtmlService $htmlService,
-        private readonly CurrentConfig $currentConfig,
-        private readonly Translator $translator,
-        private readonly CurrentLogger $currentLogger,
+        private Lang $lang,
+        private AccessControl $accessControl,
+        private UrlServiceInterface $urlService,
+        private FilterState $filterState,
+        private SectionContextRegistry $sectionContextRegistry,
+        private SessionService $sessionService,
+        private EventDispatcher $eventDispatcher,
+        private DeploymentPolicy $deploymentPolicy,
+        private PageState $pageState,
+        private CurrentUser $currentUser,
+        private CurrentTemplate $currentTemplate,
+        private TagService $tagService,
+        private HtmlService $htmlService,
+        private CurrentConfig $currentConfig,
+        private Translator $translator,
+        private CurrentLogger $currentLogger,
     ) {}
 
     #[Override]

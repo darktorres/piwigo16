@@ -900,7 +900,8 @@ final class Template implements ThemeConfProviderInterface, TemplateInterface
             // timings) -- debug.tpl's own markup treats
             // template_name/template_data as optional, so this degrades
             // gracefully instead of reproducing the crash.
-            (new Debug())->display_debug($this->smarty->createTemplate('string:'), true);
+            new Debug()
+                ->display_debug($this->smarty->createTemplate('string:'), true);
         }
     }
 

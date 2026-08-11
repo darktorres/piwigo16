@@ -14,12 +14,12 @@ use Piwigo\Core\RedirectServiceInterface;
  * needs `HtmlRenderingInterface`/`RedirectServiceInterface` to deny
  * access.
  */
-final class AccessControl
+final readonly class AccessControl
 {
     public function __construct(
-        private readonly HtmlRenderingInterface $htmlRenderer,
-        private readonly RedirectServiceInterface $redirectService,
-        private readonly AccessLevelChecker $accessLevelChecker,
+        private HtmlRenderingInterface $htmlRenderer,
+        private RedirectServiceInterface $redirectService,
+        private AccessLevelChecker $accessLevelChecker,
     ) {}
 
     public function getUserStatus(string $userStatus = ''): string

@@ -36,17 +36,17 @@ use Piwigo\Tag\TagService;
  * `pwg.tags.*` WS methods (8 registrations) -- registered via callable
  * arrays in WsDefaultMethods.
  */
-final class Tags
+final readonly class Tags
 {
     public function __construct(
-        private readonly TagService $tagService,
-        private readonly ActivityService $activityService,
-        private readonly HtmlRenderingInterface $htmlRenderer,
-        private readonly UrlServiceInterface $urlService,
-        private readonly EventDispatcher $eventDispatcher,
-        private readonly EntityManagerInterface $entityManager,
-        private readonly WsHelper $wsHelper,
-        private readonly CurrentConfig $currentConfig,
+        private TagService $tagService,
+        private ActivityService $activityService,
+        private HtmlRenderingInterface $htmlRenderer,
+        private UrlServiceInterface $urlService,
+        private EventDispatcher $eventDispatcher,
+        private EntityManagerInterface $entityManager,
+        private WsHelper $wsHelper,
+        private CurrentConfig $currentConfig,
     ) {}
 
     /**

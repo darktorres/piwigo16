@@ -20,17 +20,17 @@ use Psr\Http\Message\ServerRequestInterface;
  * Page slug "menubar" -- a flat page, pure delegate. Its write path goes
  * through Piwigo\Config\ConfigRepository::upsert().
  */
-final class MenubarSubController implements AdminSubControllerInterface
+final readonly class MenubarSubController implements AdminSubControllerInterface
 {
     public function __construct(
-        private readonly Lang $lang,
-        private readonly AccessControl $accessControl,
-        private readonly UrlServiceInterface $urlService,
-        private readonly CoreTabs $coreTabs,
-        private readonly EventDispatcher $eventDispatcher,
-        private readonly PageState $pageState,
-        private readonly CurrentTemplate $currentTemplate,
-        private readonly CurrentConfig $currentConfig,
+        private Lang $lang,
+        private AccessControl $accessControl,
+        private UrlServiceInterface $urlService,
+        private CoreTabs $coreTabs,
+        private EventDispatcher $eventDispatcher,
+        private PageState $pageState,
+        private CurrentTemplate $currentTemplate,
+        private CurrentConfig $currentConfig,
     ) {}
 
     #[Override]

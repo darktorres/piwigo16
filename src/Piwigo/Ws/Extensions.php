@@ -46,26 +46,26 @@ use Piwigo\Users\UserService;
  * (6 registrations, all admin_only) -- registered via callable arrays in
  * include/ws_default_methods.inc.php.
  */
-final class Extensions
+final readonly class Extensions
 {
     public function __construct(
-        private readonly Lang $lang,
-        private readonly UrlServiceInterface $urlService,
-        private readonly HtmlRenderingInterface $htmlRenderer,
-        private readonly CurrentTemplate $currentTemplate,
-        private readonly AccessControl $accessControl,
-        private readonly CurrentConfig $currentConfig,
-        private readonly ConfigService $configService,
-        private readonly ActivityService $activityService,
-        private readonly UserService $userService,
-        private readonly ExtensionUpdateChecker $extensionUpdateChecker,
-        private readonly CoreUpdateService $coreUpdateService,
-        private readonly RedirectServiceInterface $redirectService,
-        private readonly PemCatalog $pemCatalog,
-        private readonly WsContext $wsContext,
-        private readonly Paths $paths,
-        private readonly CurrentUser $currentUser,
-        private readonly EventDispatcher $eventDispatcher,
+        private Lang $lang,
+        private UrlServiceInterface $urlService,
+        private HtmlRenderingInterface $htmlRenderer,
+        private CurrentTemplate $currentTemplate,
+        private AccessControl $accessControl,
+        private CurrentConfig $currentConfig,
+        private ConfigService $configService,
+        private ActivityService $activityService,
+        private UserService $userService,
+        private ExtensionUpdateChecker $extensionUpdateChecker,
+        private CoreUpdateService $coreUpdateService,
+        private RedirectServiceInterface $redirectService,
+        private PemCatalog $pemCatalog,
+        private WsContext $wsContext,
+        private Paths $paths,
+        private CurrentUser $currentUser,
+        private EventDispatcher $eventDispatcher,
     ) {}
 
     /**

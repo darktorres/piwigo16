@@ -35,19 +35,19 @@ use Piwigo\Validation\InputValidator;
  * matching the convention used by
  * themes_standard_pages.tpl/plugins_installed.tpl.
  */
-final class UpdatesPwgPageRenderer
+final readonly class UpdatesPwgPageRenderer
 {
     public function __construct(
-        private readonly Lang $lang,
-        private readonly AccessControl $accessControl,
-        private readonly RedirectServiceInterface $redirectService,
-        private readonly PageState $pageState,
-        private readonly CurrentTemplate $currentTemplate,
-        private readonly CoreUpdateService $coreUpdateService,
-        private readonly ExtensionUpdateChecker $extensionUpdateChecker,
-        private readonly HtmlRenderingInterface $htmlRenderer,
-        private readonly CurrentConfig $currentConfig,
-        private readonly InputValidator $inputValidator,
+        private Lang $lang,
+        private AccessControl $accessControl,
+        private RedirectServiceInterface $redirectService,
+        private PageState $pageState,
+        private CurrentTemplate $currentTemplate,
+        private CoreUpdateService $coreUpdateService,
+        private ExtensionUpdateChecker $extensionUpdateChecker,
+        private HtmlRenderingInterface $htmlRenderer,
+        private CurrentConfig $currentConfig,
+        private InputValidator $inputValidator,
     ) {}
 
     public function render(): void

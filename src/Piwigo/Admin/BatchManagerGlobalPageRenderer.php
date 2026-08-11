@@ -65,30 +65,30 @@ use Piwigo\Validation\InputValidator;
  * 'duplicates' prefilter, and is passed in here as an explicit parameter
  * for this file's own duplicates-mode thumbnail ordering.
  */
-final class BatchManagerGlobalPageRenderer
+final readonly class BatchManagerGlobalPageRenderer
 {
     public function __construct(
-        private readonly Lang $lang,
-        private readonly RedirectServiceInterface $redirectService,
-        private readonly UrlServiceInterface $urlService,
-        private readonly CurrentLogger $currentLogger,
-        private readonly SessionService $sessionService,
-        private readonly Translator $translator,
-        private readonly EventDispatcher $eventDispatcher,
-        private readonly ImageStdParams $imageStdParams,
-        private readonly PageState $pageState,
-        private readonly CurrentUser $currentUser,
-        private readonly CurrentTemplate $currentTemplate,
-        private readonly EntityManagerInterface $entityManager,
-        private readonly ActivityService $activityService,
-        private readonly TagService $tagService,
-        private readonly CategoryService $categoryService,
-        private readonly ImageService $imageService,
-        private readonly HtmlService $htmlRenderer,
-        private readonly CurrentConfig $currentConfig,
-        private readonly InputValidator $inputValidator,
-        private readonly FilterState $filterState,
-        private readonly Paths $paths,
+        private Lang $lang,
+        private RedirectServiceInterface $redirectService,
+        private UrlServiceInterface $urlService,
+        private CurrentLogger $currentLogger,
+        private SessionService $sessionService,
+        private Translator $translator,
+        private EventDispatcher $eventDispatcher,
+        private ImageStdParams $imageStdParams,
+        private PageState $pageState,
+        private CurrentUser $currentUser,
+        private CurrentTemplate $currentTemplate,
+        private EntityManagerInterface $entityManager,
+        private ActivityService $activityService,
+        private TagService $tagService,
+        private CategoryService $categoryService,
+        private ImageService $imageService,
+        private HtmlService $htmlRenderer,
+        private CurrentConfig $currentConfig,
+        private InputValidator $inputValidator,
+        private FilterState $filterState,
+        private Paths $paths,
     ) {}
 
     /**

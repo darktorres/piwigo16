@@ -15,10 +15,10 @@ namespace Piwigo\Core;
  * dispatched through ws.php), never mutated afterward during a request --
  * no "current instance" concept needed at all.
  */
-final class WsContext
+final readonly class WsContext
 {
     public function __construct(
-        private readonly bool $active = false,
+        private bool $active = false,
     ) {}
 
     public function isActive(): bool

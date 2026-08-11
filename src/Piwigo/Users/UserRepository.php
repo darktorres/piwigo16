@@ -84,12 +84,12 @@ use RuntimeException;
  * hidden behind a same-file helper method; a wrapper collapses every
  * `getResult()` below to `mixed`.
  */
-final class UserRepository implements WebmasterMailProviderInterface
+final readonly class UserRepository implements WebmasterMailProviderInterface
 {
     public function __construct(
-        private readonly EntityManagerInterface $em,
-        private readonly EventDispatcher $eventDispatcher,
-        private readonly CurrentConfig $currentConfig,
+        private EntityManagerInterface $em,
+        private EventDispatcher $eventDispatcher,
+        private CurrentConfig $currentConfig,
     ) {}
 
     private function find(UserId $userId): ?UserInfoEntity
@@ -643,7 +643,7 @@ final class UserRepository implements WebmasterMailProviderInterface
      */
     public function findDistinctUserIdsInTable(string $table): array
     {
-        return array_values(array_filter(array_map(static fn (mixed $v): ?UserId => UserId::tryFrom($v), $this->em
+        return array_values(array_filter(array_map(UserId::tryFrom(...), $this->em
             ->getConnection()
             ->createQueryBuilder()
             ->select('DISTINCT user_id')

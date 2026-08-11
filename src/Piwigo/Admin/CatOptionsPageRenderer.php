@@ -29,22 +29,22 @@ use Piwigo\Validation\InputValidator;
  * Piwigo\Admin\Category\CategoryAdminService::setCategoryOption()
  * (consolidating 8 switch-case branches into one parameterized method).
  */
-final class CatOptionsPageRenderer
+final readonly class CatOptionsPageRenderer
 {
     public function __construct(
-        private readonly Lang $lang,
-        private readonly AccessControl $accessControl,
-        private readonly RedirectServiceInterface $redirectService,
-        private readonly UrlServiceInterface $urlService,
-        private readonly CoreTabs $coreTabs,
-        private readonly CurrentTemplate $currentTemplate,
-        private readonly CategoryAdminService $categoryAdminService,
-        private readonly ActivityService $activityService,
-        private readonly CategoryService $categoryService,
-        private readonly HtmlRenderingInterface $htmlRenderer,
-        private readonly InputValidator $inputValidator,
-        private readonly EventDispatcher $eventDispatcher,
-        private readonly CurrentConfig $currentConfig,
+        private Lang $lang,
+        private AccessControl $accessControl,
+        private RedirectServiceInterface $redirectService,
+        private UrlServiceInterface $urlService,
+        private CoreTabs $coreTabs,
+        private CurrentTemplate $currentTemplate,
+        private CategoryAdminService $categoryAdminService,
+        private ActivityService $activityService,
+        private CategoryService $categoryService,
+        private HtmlRenderingInterface $htmlRenderer,
+        private InputValidator $inputValidator,
+        private EventDispatcher $eventDispatcher,
+        private CurrentConfig $currentConfig,
     ) {}
 
     public function render(): void

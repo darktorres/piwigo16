@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 
+use Piwigo\Job\MessengerFactory;
+
 /**
  * OPcache preload script (opcache.preload, PHP_INI_SYSTEM scope, takes
  * effect only after a full server restart -- see the browser-test-speed
@@ -93,7 +95,7 @@ foreach (array_keys($classMap) as $symbol) {
         ! str_starts_with($symbol, 'Piwigo\\')
         || str_starts_with($symbol, 'Piwigo\\Tests\\')
         || str_starts_with($symbol, 'Piwigo\\Tools\\')
-        || $symbol === 'Piwigo\\Job\\MessengerFactory'
+        || $symbol === MessengerFactory::class
     ) {
         continue;
     }

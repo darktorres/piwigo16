@@ -36,23 +36,23 @@ use Piwigo\Users\PreferencesService;
  * being set) requires webmaster status and a valid CSRF token before
  * calling PemCatalog::extractArchive() -- unlike ThemesInstalledPageRenderer.
  */
-final class ThemesNewPageRenderer
+final readonly class ThemesNewPageRenderer
 {
     public function __construct(
-        private readonly Lang $lang,
-        private readonly AccessControl $accessControl,
-        private readonly RedirectServiceInterface $redirectService,
-        private readonly UrlServiceInterface $urlService,
-        private readonly CurrentLogger $currentLogger,
-        private readonly PageState $pageState,
-        private readonly CurrentTemplate $currentTemplate,
-        private readonly ActivityService $activityService,
-        private readonly PreferencesService $preferencesService,
-        private readonly HtmlRenderingInterface $htmlRenderer,
-        private readonly CurrentConfig $currentConfig,
-        private readonly CurrentUser $currentUser,
-        private readonly Paths $paths,
-        private readonly EventDispatcher $eventDispatcher,
+        private Lang $lang,
+        private AccessControl $accessControl,
+        private RedirectServiceInterface $redirectService,
+        private UrlServiceInterface $urlService,
+        private CurrentLogger $currentLogger,
+        private PageState $pageState,
+        private CurrentTemplate $currentTemplate,
+        private ActivityService $activityService,
+        private PreferencesService $preferencesService,
+        private HtmlRenderingInterface $htmlRenderer,
+        private CurrentConfig $currentConfig,
+        private CurrentUser $currentUser,
+        private Paths $paths,
+        private EventDispatcher $eventDispatcher,
     ) {}
 
     /**

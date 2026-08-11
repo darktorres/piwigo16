@@ -452,7 +452,7 @@ test('callablesEqual does not reflect a non-Closure removal target when the regi
     $dispatcher = new EventDispatcher();
     $dispatcher->addEventHandler('e', static fn (mixed $data): mixed => $data);
 
-    $removed = $dispatcher->removeEventHandler('e', [$obj, 'handle']);
+    $removed = $dispatcher->removeEventHandler('e', $obj->handle(...));
 
     expect($removed)
         ->toBeFalse();
@@ -469,7 +469,7 @@ test('callablesEqual does not reflect a non-Closure registered handler when the 
         }
     };
     $dispatcher = new EventDispatcher();
-    $dispatcher->addEventHandler('e', [$obj, 'handle']);
+    $dispatcher->addEventHandler('e', $obj->handle(...));
 
     $removed = $dispatcher->removeEventHandler('e', static fn (mixed $data): mixed => $data);
 

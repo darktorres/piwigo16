@@ -10,7 +10,7 @@ test('toArray flattens the navbar array', function (): void {
         'NB_PAGE' => 3,
     ];
 
-    expect((new CategoryCatsNavbarPageContext($navbar))->toArray())
+    expect(new CategoryCatsNavbarPageContext($navbar)->toArray())
         ->toBe([
             'cats_navbar' => $navbar,
         ]);

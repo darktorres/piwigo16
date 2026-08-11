@@ -14,10 +14,10 @@ use Psr\Http\Message\ServerRequestInterface;
  * Piwigo\Admin\Category\CategoryAdminService::createVirtualCategory(),
  * which returns a typed CreateCategoryResult.
  */
-final class CatListSubController implements AdminSubControllerInterface
+final readonly class CatListSubController implements AdminSubControllerInterface
 {
     public function __construct(
-        private readonly CatListPageRenderer $catListPageRenderer,
+        private CatListPageRenderer $catListPageRenderer,
     ) {}
 
     #[Override]

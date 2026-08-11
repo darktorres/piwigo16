@@ -345,7 +345,8 @@ test('sharpen applies a real convolution and reports success, actually changing 
     $sharpenedPath = imageImagickTestMarker() . '/sharpened-out.jpg';
     $untouchedPath = imageImagickTestMarker() . '/sharpen-untouched.jpg';
     $image->write($sharpenedPath);
-    (new ImageImagick($path))->write($untouchedPath);
+    new ImageImagick($path)
+        ->write($untouchedPath);
 
     expect(md5_file($sharpenedPath))
         ->not->toBe(md5_file($untouchedPath), 'sharpen() must actually alter the pixel data via a real convolveImage() call');
@@ -403,7 +404,8 @@ test('compose composites a same-backend overlay and preserves the base dimension
     $composedPath = imageImagickTestMarker() . '/composed.jpg';
     $untouchedPath = imageImagickTestMarker() . '/untouched.jpg';
     $base->write($composedPath);
-    (new ImageImagick($basePath))->write($untouchedPath);
+    new ImageImagick($basePath)
+        ->write($untouchedPath);
 
     expect(md5_file($composedPath))
         ->not->toBe(md5_file($untouchedPath), 'compose() must actually alter the base image pixel data');

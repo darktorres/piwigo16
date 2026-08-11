@@ -110,18 +110,18 @@ use Piwigo\Users\CurrentUser;
  * depend on this L3Presentation class directly can depend on that
  * interface instead -- see its own docblock.
  */
-final class HtmlService implements HtmlRenderingInterface
+final readonly class HtmlService implements HtmlRenderingInterface
 {
     public function __construct(
-        private readonly CurrentConfig $currentConfig,
-        private readonly EventDispatcher $eventDispatcher,
-        private readonly ProcessCache $processCache,
-        private readonly ErrorCollector $errorCollector,
-        private readonly CurrentUser $currentUser,
-        private readonly CurrentTemplate $currentTemplate,
-        private readonly PageState $pageState,
-        private readonly Translator $translator,
-        private readonly ?CategoryRepository $categoryRepo = null,
+        private CurrentConfig $currentConfig,
+        private EventDispatcher $eventDispatcher,
+        private ProcessCache $processCache,
+        private ErrorCollector $errorCollector,
+        private CurrentUser $currentUser,
+        private CurrentTemplate $currentTemplate,
+        private PageState $pageState,
+        private Translator $translator,
+        private ?CategoryRepository $categoryRepo = null,
     ) {}
 
     private function categoryRepo(): CategoryRepository

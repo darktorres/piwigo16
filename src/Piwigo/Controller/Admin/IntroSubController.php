@@ -79,29 +79,29 @@ use Psr\Http\Message\ServerRequestInterface;
  * rather than a free function, avoiding the "cannot redeclare function"
  * fatal error a top-level function risks if the file is loaded twice.
  */
-final class IntroSubController implements AdminSubControllerInterface
+final readonly class IntroSubController implements AdminSubControllerInterface
 {
     public function __construct(
-        private readonly Lang $lang,
-        private readonly UrlServiceInterface $urlService,
-        private readonly LoadedPlugins $loadedPlugins,
-        private readonly CurrentLogger $currentLogger,
-        private readonly FilesystemIntegrityChecker $filesystemIntegrityChecker,
-        private readonly SessionService $sessionService,
-        private readonly Translator $translator,
-        private readonly EventDispatcher $eventDispatcher,
-        private readonly PageState $pageState,
-        private readonly CurrentUser $currentUser,
-        private readonly CurrentTemplate $currentTemplate,
-        private readonly InstallationStats $installationStats,
-        private readonly CommentService $commentService,
-        private readonly ActivityService $activityService,
-        private readonly PreferencesService $preferencesService,
-        private readonly ImageService $imageService,
-        private readonly CategoryService $categoryService,
-        private readonly UserService $userService,
-        private readonly CurrentConfig $currentConfig,
-        private readonly Paths $paths,
+        private Lang $lang,
+        private UrlServiceInterface $urlService,
+        private LoadedPlugins $loadedPlugins,
+        private CurrentLogger $currentLogger,
+        private FilesystemIntegrityChecker $filesystemIntegrityChecker,
+        private SessionService $sessionService,
+        private Translator $translator,
+        private EventDispatcher $eventDispatcher,
+        private PageState $pageState,
+        private CurrentUser $currentUser,
+        private CurrentTemplate $currentTemplate,
+        private InstallationStats $installationStats,
+        private CommentService $commentService,
+        private ActivityService $activityService,
+        private PreferencesService $preferencesService,
+        private ImageService $imageService,
+        private CategoryService $categoryService,
+        private UserService $userService,
+        private CurrentConfig $currentConfig,
+        private Paths $paths,
     ) {}
 
     #[Override]
@@ -192,7 +192,7 @@ final class IntroSubController implements AdminSubControllerInterface
         $newsletter_subscribe_base_url = null;
         $newsletter_old_newsletters_url = null;
         if ($this->currentConfig->showNewsletterSubscription and ($this->preferencesService->getShowNewsletterSubscription() ?? true)) {
-            $register_date = (new UserRepository(EntityManagerFactory::build($conn), $this->eventDispatcher, $this->currentConfig))
+            $register_date = new UserRepository(EntityManagerFactory::build($conn), $this->eventDispatcher, $this->currentConfig)
                 ->findEarliestRegistrationDate();
             $nb_cats = $this->categoryService->countAllCategories();
             $nb_images = $this->imageService->getTotalImageCount();

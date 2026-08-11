@@ -33,7 +33,7 @@ use Piwigo\Users\CurrentUser;
  * setCategoryOption(), setCategoryPermissions(), and saveImageOrder() as
  * single typed methods instead of repeating raw SQL/branching inline.
  */
-final class CategoryAdminService
+final readonly class CategoryAdminService
 {
     public function __construct(
         private CategoryService $categoryService,

@@ -48,22 +48,22 @@ use Piwigo\Users\UserService;
  * PageTail::render() passes the concrete instance. See
  * TelemetrySenderInterface's own docblock.
  */
-final class PiwigoInfosSender implements TelemetrySenderInterface
+final readonly class PiwigoInfosSender implements TelemetrySenderInterface
 {
     public function __construct(
-        private readonly Lang $lang,
-        private readonly CurrentLogger $currentLogger,
-        private readonly ImageStdParams $imageStdParams,
-        private readonly ConfigService $configService,
-        private readonly InstallationStats $installationStats,
-        private readonly ActivityService $activityService,
-        private readonly UserService $userService,
-        private readonly ImageService $imageService,
-        private readonly UrlServiceInterface $urlService,
-        private readonly CurrentConfig $currentConfig,
-        private readonly Paths $paths,
-        private readonly CurrentUser $currentUser,
-        private readonly EventDispatcher $eventDispatcher,
+        private Lang $lang,
+        private CurrentLogger $currentLogger,
+        private ImageStdParams $imageStdParams,
+        private ConfigService $configService,
+        private InstallationStats $installationStats,
+        private ActivityService $activityService,
+        private UserService $userService,
+        private ImageService $imageService,
+        private UrlServiceInterface $urlService,
+        private CurrentConfig $currentConfig,
+        private Paths $paths,
+        private CurrentUser $currentUser,
+        private EventDispatcher $eventDispatcher,
     ) {}
 
     #[Override]

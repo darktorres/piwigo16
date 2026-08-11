@@ -1389,7 +1389,7 @@ it('resolves a source file located one directory above the app root via the "../
     // directory's own group bits despite not owning it.
     $token = uniqid();
     $filename = 'ct_uplevel_' . $token . '.jpg';
-    $diskPath = dirname(dirname(__DIR__, 2)) . '/' . $filename;
+    $diskPath = dirname(__DIR__, 3) . '/' . $filename;
 
     $source = H::makeTestImage('CT Uplevel');
     copy($source, $diskPath);

@@ -41,17 +41,17 @@ use Piwigo\Core\Paths;
  * SCHEMA default for the same key, so removing this class's involvement
  * changes nothing.
  */
-final class DeploymentPolicy
+final readonly class DeploymentPolicy
 {
     public function __construct(
-        public readonly int $showPhpErrors = 30719,
-        public readonly bool $showPhpErrorsOnFrontend = true,
-        public readonly bool $apacheAuthentication = false,
-        public readonly bool $externalAuthentification = false,
+        public int $showPhpErrors = 30719,
+        public bool $showPhpErrorsOnFrontend = true,
+        public bool $apacheAuthentication = false,
+        public bool $externalAuthentification = false,
         /**
          * @var list<string>
          */
-        public readonly array $allowedHosts = [],
+        public array $allowedHosts = [],
     ) {}
 
     public static function load(Paths $paths): self

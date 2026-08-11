@@ -210,6 +210,7 @@ final class TemplateInstanceTestThemeconfAppendSpy extends Smarty
     /**
      * @param array<int|string, mixed>|string $tpl_var
      */
+    #[Override]
     public function append($tpl_var, $value = null, $merge = false, $nocache = false)
     {
         if ($tpl_var === 'themeconf' && is_array($value)) {
@@ -1675,7 +1676,7 @@ test('loadExternalFilters derives the callback_key from an [object, method] arra
     // object element (not a string) exercises array_map()'s
     // get_debug_type() fallback; the 'getExtent' element exercises its
     // is_string() branch -- both sides of the same ternary in one call.
-    $t->setPrefilter('tail', [$t, 'getExtent']);
+    $t->setPrefilter('tail', $t->getExtent(...));
     $before = $t->smarty->compile_id;
 
     $t->loadExternalFilters('tail');

@@ -15,10 +15,10 @@ use Piwigo\Config\CurrentConfig;
  * `PageTailRenderer`), and `Category\CategoryCatsRenderer`
  * (L2aCoreDomain) needs to construct it directly.
  */
-final class PaginationService
+final readonly class PaginationService
 {
     public function __construct(
-        private readonly CurrentConfig $currentConfig,
+        private CurrentConfig $currentConfig,
     ) {}
 
     /**

@@ -41,12 +41,12 @@ use Psr\Http\Message\ServerRequestInterface;
  * Flysystem disk (Admin\ThemesStandardPagesPageRenderer already writes
  * through it), so there's no raw-filesystem-path concern to hand-roll here.
  */
-final class CustomLogoController implements ControllerInterface
+final readonly class CustomLogoController implements ControllerInterface
 {
     public function __construct(
-        private readonly AccessControl $accessControl,
-        private readonly StorageRegistry $storageRegistry,
-        private readonly CurrentConfig $currentConfig,
+        private AccessControl $accessControl,
+        private StorageRegistry $storageRegistry,
+        private CurrentConfig $currentConfig,
     ) {}
 
     #[Override]

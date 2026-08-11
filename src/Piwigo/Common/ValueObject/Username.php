@@ -18,7 +18,7 @@ use Override;
  */
 final readonly class Username implements StringVo
 {
-    private const MAX_LENGTH = 100;
+    private const int MAX_LENGTH = 100;
 
     private function __construct(
         public string $value

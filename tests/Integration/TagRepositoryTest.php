@@ -426,7 +426,7 @@ final class TagRepositoryTest extends IntegrationTestCase
     {
         $byImageId = $this->repo->findCommaJoinedTagIdsByImageIds([1, 2, 3], [1, 2, 3]);
 
-        $tagIdsForImage1 = array_map('intval', explode(',', $byImageId[1] ?? ''));
+        $tagIdsForImage1 = array_map(intval(...), explode(',', $byImageId[1] ?? ''));
         sort($tagIdsForImage1);
         self::assertSame([1, 2, 3], $tagIdsForImage1);
         self::assertSame('1', $byImageId[2] ?? null);

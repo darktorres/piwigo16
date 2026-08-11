@@ -26,17 +26,17 @@ use Piwigo\Validation\InputValidator;
 /**
  * Ported from admin/picture_coi.php (page slug "picture_coi").
  */
-final class PictureCoiPageRenderer
+final readonly class PictureCoiPageRenderer
 {
     public function __construct(
-        private readonly AccessControl $accessControl,
-        private readonly RedirectServiceInterface $redirectService,
-        private readonly ImageStdParams $imageStdParams,
-        private readonly CurrentTemplate $currentTemplate,
-        private readonly HtmlRenderingInterface $htmlRenderer,
-        private readonly CurrentConfig $currentConfig,
-        private readonly InputValidator $inputValidator,
-        private readonly Paths $paths,
+        private AccessControl $accessControl,
+        private RedirectServiceInterface $redirectService,
+        private ImageStdParams $imageStdParams,
+        private CurrentTemplate $currentTemplate,
+        private HtmlRenderingInterface $htmlRenderer,
+        private CurrentConfig $currentConfig,
+        private InputValidator $inputValidator,
+        private Paths $paths,
     ) {}
 
     public function render(): void

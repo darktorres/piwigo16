@@ -59,16 +59,16 @@ use Piwigo\Ws\WsInitializer;
  * logoutUser()) are called directly, not through free-function wrappers,
  * since this class sits right next to the real service already.
  */
-final class UserBootstrap
+final readonly class UserBootstrap
 {
     public function __construct(
-        private readonly AccessLevelChecker $accessLevelChecker,
-        private readonly RedirectServiceInterface $redirectService,
-        private readonly UrlServiceInterface $urlService,
-        private readonly ApiKeyRequestFlag $apiKeyRequestFlag,
-        private readonly CurrentLogger $currentLogger,
-        private readonly WsContext $wsContext,
-        private readonly DeploymentPolicy $deploymentPolicy,
+        private AccessLevelChecker $accessLevelChecker,
+        private RedirectServiceInterface $redirectService,
+        private UrlServiceInterface $urlService,
+        private ApiKeyRequestFlag $apiKeyRequestFlag,
+        private CurrentLogger $currentLogger,
+        private WsContext $wsContext,
+        private DeploymentPolicy $deploymentPolicy,
     ) {}
 
     public function initialize(): void

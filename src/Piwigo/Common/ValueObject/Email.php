@@ -18,7 +18,7 @@ use Override;
  */
 final readonly class Email implements StringVo
 {
-    private const MAX_LENGTH = 255;
+    private const int MAX_LENGTH = 255;
 
     private function __construct(
         public string $value

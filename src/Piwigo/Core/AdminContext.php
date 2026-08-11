@@ -21,10 +21,10 @@ namespace Piwigo\Core;
  * early-crash-fallback shape) resolve this via their own private lazy
  * helpers instead.
  */
-final class AdminContext
+final readonly class AdminContext
 {
     public function __construct(
-        private readonly bool $active = false,
+        private bool $active = false,
     ) {}
 
     public function isActive(): bool

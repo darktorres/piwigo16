@@ -6,15 +6,15 @@ use Doctrine\DBAL\ArrayParameterType;
 use Piwigo\Permission\SqlCondition;
 
 test('isEmpty is true only for an empty sql string', function (): void {
-    expect((new SqlCondition(''))->isEmpty())
+    expect(new SqlCondition('')->isEmpty())
         ->toBeTrue()
-        ->and((new SqlCondition('1 = 1'))->isEmpty())
+        ->and(new SqlCondition('1 = 1')->isEmpty())
         ->toBeFalse()
-        ->and((new SqlCondition('x IN (:x)', [
+        ->and(new SqlCondition('x IN (:x)', [
             'x' => [1],
         ], [
             'x' => ArrayParameterType::INTEGER,
-        ]))->isEmpty())->toBeFalse();
+        ])->isEmpty())->toBeFalse();
 });
 
 test('combine with zero non-empty conditions returns an empty condition', function (): void {

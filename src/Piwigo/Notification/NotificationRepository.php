@@ -41,10 +41,10 @@ use Piwigo\Users\UserInfoEntity;
  * directly-injected `EntityManagerInterface` instead of extending
  * `AbstractRepository`, same shape as {@see \Piwigo\Telemetry\TelemetryService}.
  */
-final class NotificationRepository
+final readonly class NotificationRepository
 {
     public function __construct(
-        private readonly EntityManagerInterface $em,
+        private EntityManagerInterface $em,
     ) {}
 
     public function countByType(string $type, ?string $start, ?string $end, SqlCondition $restrictCondition): int

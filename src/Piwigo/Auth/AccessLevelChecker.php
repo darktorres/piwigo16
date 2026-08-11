@@ -26,11 +26,11 @@ use Piwigo\Users\CurrentUser;
  * `AccessControl` composes this class internally for its own
  * identically-named methods rather than duplicating the logic.
  */
-final class AccessLevelChecker
+final readonly class AccessLevelChecker
 {
     public function __construct(
-        private readonly CurrentUser $currentUser,
-        private readonly CurrentConfig $currentConfig,
+        private CurrentUser $currentUser,
+        private CurrentConfig $currentConfig,
     ) {}
 
     public function getUserStatus(string $userStatus = ''): string

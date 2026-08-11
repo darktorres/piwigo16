@@ -41,10 +41,10 @@ use Piwigo\Permission\SqlCondition;
  * stay on raw DBAL (via `$this->em->getConnection()`) for that same
  * reason.
  */
-final class SectionRepository
+final readonly class SectionRepository
 {
     public function __construct(
-        private readonly EntityManagerInterface $em,
+        private EntityManagerInterface $em,
     ) {}
 
     /**

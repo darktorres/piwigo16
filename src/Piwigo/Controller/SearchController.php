@@ -34,24 +34,24 @@ use Psr\Http\Message\ServerRequestInterface;
  * `never` (calls header()+exit() directly), same exit()-based-termination
  * limitation as every other controller this phase.
  */
-final class SearchController implements ControllerInterface
+final readonly class SearchController implements ControllerInterface
 {
     public function __construct(
-        private readonly Lang $lang,
-        private readonly AccessControl $accessControl,
-        private readonly RedirectServiceInterface $redirectService,
-        private readonly UrlServiceInterface $urlService,
-        private readonly EventDispatcher $eventDispatcher,
-        private readonly CurrentUser $currentUser,
-        private readonly SearchService $searchService,
-        private readonly PermissionService $permissionService,
-        private readonly PreferencesService $preferencesService,
-        private readonly CategoryService $categoryService,
-        private readonly TagService $tagService,
-        private readonly ImageService $imageService,
-        private readonly HtmlRenderingInterface $htmlRenderer,
-        private readonly CurrentConfig $currentConfig,
-        private readonly InputValidator $inputValidator,
+        private Lang $lang,
+        private AccessControl $accessControl,
+        private RedirectServiceInterface $redirectService,
+        private UrlServiceInterface $urlService,
+        private EventDispatcher $eventDispatcher,
+        private CurrentUser $currentUser,
+        private SearchService $searchService,
+        private PermissionService $permissionService,
+        private PreferencesService $preferencesService,
+        private CategoryService $categoryService,
+        private TagService $tagService,
+        private ImageService $imageService,
+        private HtmlRenderingInterface $htmlRenderer,
+        private CurrentConfig $currentConfig,
+        private InputValidator $inputValidator,
     ) {}
 
     #[Override]

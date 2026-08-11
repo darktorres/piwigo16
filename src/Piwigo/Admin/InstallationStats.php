@@ -20,7 +20,7 @@ use Piwigo\Users\UserService;
  * history, no single domain owns it, same "administrative machinery"
  * shape as PiwigoInfosSender/PluginLoader in this same namespace.
  */
-final class InstallationStats
+final readonly class InstallationStats
 {
     public function __construct(
         private RateService $rateService,

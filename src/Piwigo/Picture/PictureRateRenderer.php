@@ -23,14 +23,14 @@ use Piwigo\Users\CurrentUser;
  * constructor deps" shape, this class has only one real caller
  * (PictureController).
  */
-final class PictureRateRenderer
+final readonly class PictureRateRenderer
 {
     public function __construct(
-        private readonly AccessControl $accessControl,
-        private readonly RateRepository $repo,
-        private readonly CurrentUser $currentUser,
-        private readonly CurrentTemplate $currentTemplate,
-        private readonly CurrentConfig $currentConfig,
+        private AccessControl $accessControl,
+        private RateRepository $repo,
+        private CurrentUser $currentUser,
+        private CurrentTemplate $currentTemplate,
+        private CurrentConfig $currentConfig,
     ) {}
 
     /**

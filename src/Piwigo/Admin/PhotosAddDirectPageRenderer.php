@@ -57,30 +57,30 @@ use Piwigo\Validation\InputValidator;
  * its JS trigger (themes/admin/default/js/photos_add_direct.js) carries
  * no token of its own, so the check must happen here.
  */
-final class PhotosAddDirectPageRenderer
+final readonly class PhotosAddDirectPageRenderer
 {
     public function __construct(
-        private readonly Lang $lang,
-        private readonly RedirectServiceInterface $redirectService,
-        private readonly UrlServiceInterface $urlService,
-        private readonly CurrentLogger $currentLogger,
-        private readonly StorageRegistry $storageRegistry,
-        private readonly EventDispatcher $eventDispatcher,
-        private readonly PageState $pageState,
-        private readonly CurrentUser $currentUser,
-        private readonly CurrentTemplate $currentTemplate,
-        private readonly ConfigService $configService,
-        private readonly EntityManagerInterface $entityManager,
-        private readonly HtmlRenderingInterface $htmlRenderer,
-        private readonly ActivityService $activityService,
-        private readonly MetadataService $metadataService,
-        private readonly ImageService $imageService,
-        private readonly PreferencesService $preferencesService,
-        private readonly CurrentConfig $currentConfig,
-        private readonly InputValidator $inputValidator,
-        private readonly WsContext $wsContext,
-        private readonly Paths $paths,
-        private readonly DbCredentials $dbCredentials,
+        private Lang $lang,
+        private RedirectServiceInterface $redirectService,
+        private UrlServiceInterface $urlService,
+        private CurrentLogger $currentLogger,
+        private StorageRegistry $storageRegistry,
+        private EventDispatcher $eventDispatcher,
+        private PageState $pageState,
+        private CurrentUser $currentUser,
+        private CurrentTemplate $currentTemplate,
+        private ConfigService $configService,
+        private EntityManagerInterface $entityManager,
+        private HtmlRenderingInterface $htmlRenderer,
+        private ActivityService $activityService,
+        private MetadataService $metadataService,
+        private ImageService $imageService,
+        private PreferencesService $preferencesService,
+        private CurrentConfig $currentConfig,
+        private InputValidator $inputValidator,
+        private WsContext $wsContext,
+        private Paths $paths,
+        private DbCredentials $dbCredentials,
     ) {}
 
     /**
@@ -125,7 +125,7 @@ final class PhotosAddDirectPageRenderer
         }
 
         if ($this->preferencesService->getPromoteMobileApps() ?? true) {
-            $register_date = (new UserRepository(EntityManagerFactory::build($conn), $this->eventDispatcher, $this->currentConfig))
+            $register_date = new UserRepository(EntityManagerFactory::build($conn), $this->eventDispatcher, $this->currentConfig)
                 ->findEarliestRegistrationDate();
             $nb_cats = new CategoryRepository(EntityManagerFactory::build($conn), $this->currentConfig)
                 ->countAllCategories();

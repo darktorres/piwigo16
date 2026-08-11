@@ -275,7 +275,7 @@ final readonly class PermalinkRepository implements OldPermalinkLookupInterface
         $entities = $qb->getQuery()
             ->getResult();
 
-        return array_map(static fn (OldPermalinkEntity $op): OldPermalink => OldPermalink::fromEntity($op), $entities);
+        return array_map(OldPermalink::fromEntity(...), $entities);
     }
 
     /**

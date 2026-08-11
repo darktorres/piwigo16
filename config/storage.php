@@ -24,46 +24,44 @@ use Piwigo\Core\Paths;
  *
  * @return array<string, Closure():Filesystem>
  */
-return static function (Paths $paths, CurrentConfig $currentConfig): array {
-    return [
-        // User photo uploads: upload/YYYY/MM/DD/
-        'uploads' => static fn (): Filesystem => new Filesystem(
-            new LocalFilesystemAdapter(rtrim($paths->root . $currentConfig->uploadDir, '/')),
-        ),
+return static fn (Paths $paths, CurrentConfig $currentConfig): array => [
+    // User photo uploads: upload/YYYY/MM/DD/
+    'uploads' => static fn (): Filesystem => new Filesystem(
+        new LocalFilesystemAdapter(rtrim($paths->root . $currentConfig->uploadDir, '/')),
+    ),
 
-        // Derivative/thumbnail tree: _data/i/
-        'derivatives' => static fn (): Filesystem => new Filesystem(
-            new LocalFilesystemAdapter($paths->root . $currentConfig->dataLocation . 'i'),
-        ),
+    // Derivative/thumbnail tree: _data/i/
+    'derivatives' => static fn (): Filesystem => new Filesystem(
+        new LocalFilesystemAdapter($paths->root . $currentConfig->dataLocation . 'i'),
+    ),
 
-        // Watermark PNG files: local/watermarks/
-        'watermarks' => static fn (): Filesystem => new Filesystem(
-            new LocalFilesystemAdapter($paths->siteLocal . 'watermarks'),
-        ),
+    // Watermark PNG files: local/watermarks/
+    'watermarks' => static fn (): Filesystem => new Filesystem(
+        new LocalFilesystemAdapter($paths->siteLocal . 'watermarks'),
+    ),
 
-        // Theme files
-        'themes' => static fn (): Filesystem => new Filesystem(
-            new LocalFilesystemAdapter($paths->root . $currentConfig->themesDir),
-        ),
+    // Theme files
+    'themes' => static fn (): Filesystem => new Filesystem(
+        new LocalFilesystemAdapter($paths->root . $currentConfig->themesDir),
+    ),
 
-        // Plugin files
-        'plugins' => static fn (): Filesystem => new Filesystem(
-            new LocalFilesystemAdapter(rtrim($paths->plugins, '/')),
-        ),
+    // Plugin files
+    'plugins' => static fn (): Filesystem => new Filesystem(
+        new LocalFilesystemAdapter(rtrim($paths->plugins, '/')),
+    ),
 
-        // Data exports
-        'exports' => static fn (): Filesystem => new Filesystem(
-            new LocalFilesystemAdapter($paths->root . $currentConfig->dataLocation . 'exports'),
-        ),
+    // Data exports
+    'exports' => static fn (): Filesystem => new Filesystem(
+        new LocalFilesystemAdapter($paths->root . $currentConfig->dataLocation . 'exports'),
+    ),
 
-        // Site-local overrides: local/watermarks/, local/logo/, local/config/, …
-        'local' => static fn (): Filesystem => new Filesystem(
-            new LocalFilesystemAdapter($paths->siteLocal),
-        ),
+    // Site-local overrides: local/watermarks/, local/logo/, local/config/, …
+    'local' => static fn (): Filesystem => new Filesystem(
+        new LocalFilesystemAdapter($paths->siteLocal),
+    ),
 
-        // Temporary scratch space (chunk assembly, image processing)
-        'temp' => static fn (): Filesystem => new Filesystem(
-            new LocalFilesystemAdapter(sys_get_temp_dir() . '/piwigo'),
-        ),
-    ];
-};
+    // Temporary scratch space (chunk assembly, image processing)
+    'temp' => static fn (): Filesystem => new Filesystem(
+        new LocalFilesystemAdapter(sys_get_temp_dir() . '/piwigo'),
+    ),
+];

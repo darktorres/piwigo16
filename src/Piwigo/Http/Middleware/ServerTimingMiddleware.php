@@ -18,10 +18,10 @@ use Psr\Http\Server\RequestHandlerInterface;
  * been wired up here yet, even though Config and CurrentUser (both now
  * implemented) could support it.
  */
-final class ServerTimingMiddleware implements MiddlewareInterface
+final readonly class ServerTimingMiddleware implements MiddlewareInterface
 {
     public function __construct(
-        private readonly ServerTiming $serverTiming
+        private ServerTiming $serverTiming
     ) {}
 
     #[Override]

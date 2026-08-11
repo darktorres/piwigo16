@@ -16,10 +16,10 @@ use Piwigo\Config\CurrentConfig;
  * legacy $conf global, so CurrentConfig::secretKey() reflects the real,
  * admin/install-set secret_key on every live request.
  */
-final class EphemeralKeyService
+final readonly class EphemeralKeyService
 {
     public function __construct(
-        private readonly CurrentConfig $currentConfig,
+        private CurrentConfig $currentConfig,
     ) {}
 
     /**

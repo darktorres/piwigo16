@@ -77,16 +77,7 @@ final class PictureCommentRenderer
         $commentAction = null;
 
         $pictureCommentSubmitRequest = PictureCommentSubmitRequest::fromGlobals();
-
-        // the picture is commentable if it belongs at least to one category
-        // which is commentable
-        $showComments = false;
-        foreach ($related_categories as $category) {
-            if ((bool) $category['commentable']) {
-                $showComments = true;
-                break;
-            }
-        }
+        $showComments = array_any($related_categories, fn ($category) => (bool) $category['commentable']);
 
         if ($showComments and $pictureCommentSubmitRequest->contentPresent) {
             if ($accessLevelChecker->isAGuest() and ! $currentConfig->commentsForall) {

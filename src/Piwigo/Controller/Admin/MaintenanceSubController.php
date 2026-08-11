@@ -43,22 +43,22 @@ use Psr\Http\Message\ServerRequestInterface;
  * Piwigo\Admin\MaintenanceActionsPageRenderer/MaintenanceEnvPageRenderer/
  * MaintenanceSysPageRenderer.
  */
-final class MaintenanceSubController implements AdminSubControllerInterface
+final readonly class MaintenanceSubController implements AdminSubControllerInterface
 {
     public function __construct(
-        private readonly Lang $lang,
-        private readonly AccessControl $accessControl,
-        private readonly RedirectServiceInterface $redirectService,
-        private readonly UrlServiceInterface $urlService,
-        private readonly CoreTabs $coreTabs,
-        private readonly PageState $pageState,
-        private readonly CurrentTemplate $currentTemplate,
-        private readonly MaintenanceEnvPageRenderer $maintenanceEnvPageRenderer,
-        private readonly MaintenanceActionsPageRenderer $maintenanceActionsPageRenderer,
-        private readonly HtmlRenderingInterface $htmlRenderer,
-        private readonly CurrentConfig $currentConfig,
-        private readonly InputValidator $inputValidator,
-        private readonly EventDispatcher $eventDispatcher,
+        private Lang $lang,
+        private AccessControl $accessControl,
+        private RedirectServiceInterface $redirectService,
+        private UrlServiceInterface $urlService,
+        private CoreTabs $coreTabs,
+        private PageState $pageState,
+        private CurrentTemplate $currentTemplate,
+        private MaintenanceEnvPageRenderer $maintenanceEnvPageRenderer,
+        private MaintenanceActionsPageRenderer $maintenanceActionsPageRenderer,
+        private HtmlRenderingInterface $htmlRenderer,
+        private CurrentConfig $currentConfig,
+        private InputValidator $inputValidator,
+        private EventDispatcher $eventDispatcher,
     ) {}
 
     #[Override]

@@ -26,17 +26,17 @@ use Psr\Http\Message\ServerRequestInterface;
  * report methods landing directly on their existing repositories rather
  * than a new Admin\Rating-namespaced class.
  */
-final class RatingSubController implements AdminSubControllerInterface
+final readonly class RatingSubController implements AdminSubControllerInterface
 {
     public function __construct(
-        private readonly Lang $lang,
-        private readonly AccessControl $accessControl,
-        private readonly UrlServiceInterface $urlService,
-        private readonly CurrentTemplate $currentTemplate,
-        private readonly CategoryService $categoryService,
-        private readonly CurrentConfig $currentConfig,
-        private readonly InputValidator $inputValidator,
-        private readonly EventDispatcher $eventDispatcher,
+        private Lang $lang,
+        private AccessControl $accessControl,
+        private UrlServiceInterface $urlService,
+        private CurrentTemplate $currentTemplate,
+        private CategoryService $categoryService,
+        private CurrentConfig $currentConfig,
+        private InputValidator $inputValidator,
+        private EventDispatcher $eventDispatcher,
     ) {}
 
     #[Override]

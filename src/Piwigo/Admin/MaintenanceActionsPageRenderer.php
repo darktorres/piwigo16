@@ -54,31 +54,31 @@ use Piwigo\Validation\InputValidator;
  * The action-dispatch switch itself lives in the shared
  * Piwigo\Admin\Maintenance\MaintenanceActionDispatcher.
  */
-final class MaintenanceActionsPageRenderer
+final readonly class MaintenanceActionsPageRenderer
 {
     public function __construct(
-        private readonly AccessControl $accessControl,
-        private readonly RedirectServiceInterface $redirectService,
-        private readonly UrlServiceInterface $urlService,
-        private readonly ConfigService $configService,
-        private readonly FilesystemIntegrityChecker $filesystemIntegrityChecker,
-        private readonly SessionService $sessionService,
-        private readonly Translator $translator,
-        private readonly EventDispatcher $eventDispatcher,
-        private readonly ImageStdParams $imageStdParams,
-        private readonly PageState $pageState,
-        private readonly CurrentTemplate $currentTemplate,
-        private readonly DbMaintenanceRepository $dbMaintenanceRepository,
-        private readonly ActivityService $activityService,
-        private readonly RateService $rateService,
-        private readonly CategoryService $categoryService,
-        private readonly TagService $tagService,
-        private readonly HtmlRenderingInterface $htmlRenderer,
-        private readonly Lang $lang,
-        private readonly CurrentConfig $currentConfig,
-        private readonly InputValidator $inputValidator,
-        private readonly Paths $paths,
-        private readonly ?PersistentCache $persistentCache = null,
+        private AccessControl $accessControl,
+        private RedirectServiceInterface $redirectService,
+        private UrlServiceInterface $urlService,
+        private ConfigService $configService,
+        private FilesystemIntegrityChecker $filesystemIntegrityChecker,
+        private SessionService $sessionService,
+        private Translator $translator,
+        private EventDispatcher $eventDispatcher,
+        private ImageStdParams $imageStdParams,
+        private PageState $pageState,
+        private CurrentTemplate $currentTemplate,
+        private DbMaintenanceRepository $dbMaintenanceRepository,
+        private ActivityService $activityService,
+        private RateService $rateService,
+        private CategoryService $categoryService,
+        private TagService $tagService,
+        private HtmlRenderingInterface $htmlRenderer,
+        private Lang $lang,
+        private CurrentConfig $currentConfig,
+        private InputValidator $inputValidator,
+        private Paths $paths,
+        private ?PersistentCache $persistentCache = null,
     ) {}
 
     /**

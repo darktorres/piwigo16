@@ -76,36 +76,36 @@ use Piwigo\Ws\Request\HistorySearchPageRequest;
  * mixed>`-typed WS method parameter) is raw, unvalidated WS-protocol
  * request data; every real read narrows defensively at its own use site.
  */
-final class Core
+final readonly class Core
 {
     public function __construct(
-        private readonly AuthService $authService,
-        private readonly HistoryService $historyService,
-        private readonly ImageService $imageService,
-        private readonly CategoryService $categoryService,
-        private readonly TagService $tagService,
-        private readonly GroupService $groupService,
-        private readonly UserService $userService,
-        private readonly CommentService $commentService,
-        private readonly ActivityService $activityService,
-        private readonly RateService $rateService,
-        private readonly CurrentConfig $currentConfig,
-        private readonly AccessControl $accessControl,
-        private readonly CurrentUser $currentUser,
-        private readonly EventDispatcher $eventDispatcher,
-        private readonly HtmlRenderingInterface $htmlRenderer,
-        private readonly UrlServiceInterface $urlService,
-        private readonly EntityManagerInterface $entityManager,
-        private readonly ApiKeyRequestFlag $apiKeyRequestFlag,
-        private readonly Connection $connection,
-        private readonly ImageRepository $imageRepository,
-        private readonly Paths $paths,
-        private readonly Lang $lang,
-        private readonly InputValidator $inputValidator,
-        private readonly Translator $translator,
-        private readonly ConfigService $configService,
-        private readonly ImageStdParams $imageStdParams,
-        private readonly WsHelper $wsHelper,
+        private AuthService $authService,
+        private HistoryService $historyService,
+        private ImageService $imageService,
+        private CategoryService $categoryService,
+        private TagService $tagService,
+        private GroupService $groupService,
+        private UserService $userService,
+        private CommentService $commentService,
+        private ActivityService $activityService,
+        private RateService $rateService,
+        private CurrentConfig $currentConfig,
+        private AccessControl $accessControl,
+        private CurrentUser $currentUser,
+        private EventDispatcher $eventDispatcher,
+        private HtmlRenderingInterface $htmlRenderer,
+        private UrlServiceInterface $urlService,
+        private EntityManagerInterface $entityManager,
+        private ApiKeyRequestFlag $apiKeyRequestFlag,
+        private Connection $connection,
+        private ImageRepository $imageRepository,
+        private Paths $paths,
+        private Lang $lang,
+        private InputValidator $inputValidator,
+        private Translator $translator,
+        private ConfigService $configService,
+        private ImageStdParams $imageStdParams,
+        private WsHelper $wsHelper,
     ) {}
 
     /**
@@ -585,7 +585,7 @@ final class Core
         $connections_mode = $this->currentConfig->activityDisplayConnections;
         $admin_ids = [];
         if ($connections_mode === 'admins_only') {
-            $admin_ids = (new UserRepository(EntityManagerFactory::build(DbConnection::build()), $this->eventDispatcher, $this->currentConfig))->findAdminIds();
+            $admin_ids = new UserRepository(EntityManagerFactory::build(DbConnection::build()), $this->eventDispatcher, $this->currentConfig)->findAdminIds();
         }
 
         $criteria = new ActivityListCriteria(

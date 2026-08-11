@@ -28,19 +28,19 @@ use Psr\Http\Message\ServerRequestInterface;
  * inline" precedent as HistorySubController -- no new service was
  * warranted.
  */
-final class StatsSubController implements AdminSubControllerInterface
+final readonly class StatsSubController implements AdminSubControllerInterface
 {
     public function __construct(
-        private readonly Lang $lang,
-        private readonly AccessControl $accessControl,
-        private readonly UrlServiceInterface $urlService,
-        private readonly ConfigService $configService,
-        private readonly CoreTabs $coreTabs,
-        private readonly CurrentUser $currentUser,
-        private readonly CurrentTemplate $currentTemplate,
-        private readonly HistoryService $historyService,
-        private readonly CurrentConfig $currentConfig,
-        private readonly EventDispatcher $eventDispatcher,
+        private Lang $lang,
+        private AccessControl $accessControl,
+        private UrlServiceInterface $urlService,
+        private ConfigService $configService,
+        private CoreTabs $coreTabs,
+        private CurrentUser $currentUser,
+        private CurrentTemplate $currentTemplate,
+        private HistoryService $historyService,
+        private CurrentConfig $currentConfig,
+        private EventDispatcher $eventDispatcher,
     ) {}
 
     #[Override]

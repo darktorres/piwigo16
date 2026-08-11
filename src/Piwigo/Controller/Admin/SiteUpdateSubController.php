@@ -85,31 +85,31 @@ use Psr\Http\Message\ServerRequestInterface;
  * `install.php`/`upgrade.php` as its only definers), since this class
  * never calls `syncMetadata()`.
  */
-final class SiteUpdateSubController implements AdminSubControllerInterface
+final readonly class SiteUpdateSubController implements AdminSubControllerInterface
 {
     public function __construct(
-        private readonly Lang $lang,
-        private readonly RedirectServiceInterface $redirectService,
-        private readonly UrlServiceInterface $urlService,
-        private readonly CurrentLogger $currentLogger,
-        private readonly CoreTabs $coreTabs,
-        private readonly SessionService $sessionService,
-        private readonly EventDispatcher $eventDispatcher,
-        private readonly PageState $pageState,
-        private readonly CurrentUser $currentUser,
-        private readonly CurrentTemplate $currentTemplate,
-        private readonly EntityManagerInterface $entityManager,
-        private readonly ActivityService $activityService,
-        private readonly MetadataService $metadataService,
-        private readonly PermissionService $permissionService,
-        private readonly CategoryService $categoryService,
-        private readonly TagService $tagService,
-        private readonly HtmlRenderingInterface $htmlRenderer,
-        private readonly CurrentConfig $currentConfig,
-        private readonly InputValidator $inputValidator,
-        private readonly Translator $translator,
-        private readonly FilterState $filterState,
-        private readonly Paths $paths,
+        private Lang $lang,
+        private RedirectServiceInterface $redirectService,
+        private UrlServiceInterface $urlService,
+        private CurrentLogger $currentLogger,
+        private CoreTabs $coreTabs,
+        private SessionService $sessionService,
+        private EventDispatcher $eventDispatcher,
+        private PageState $pageState,
+        private CurrentUser $currentUser,
+        private CurrentTemplate $currentTemplate,
+        private EntityManagerInterface $entityManager,
+        private ActivityService $activityService,
+        private MetadataService $metadataService,
+        private PermissionService $permissionService,
+        private CategoryService $categoryService,
+        private TagService $tagService,
+        private HtmlRenderingInterface $htmlRenderer,
+        private CurrentConfig $currentConfig,
+        private InputValidator $inputValidator,
+        private Translator $translator,
+        private FilterState $filterState,
+        private Paths $paths,
     ) {}
 
     private function imageService(Connection $conn): ImageService
@@ -490,7 +490,7 @@ final class SiteUpdateSubController implements AdminSubControllerInterface
                         $this->permissionService
                             ->addPermissionOnCategory($category_ids, array_map(
                                 static fn (UserId $id): int => $id->value,
-                                (new UserRepository(EntityManagerFactory::build($conn), $this->eventDispatcher, $this->currentConfig))->findAdminIds()
+                                new UserRepository(EntityManagerFactory::build($conn), $this->eventDispatcher, $this->currentConfig)->findAdminIds()
                             ));
                     }
                 }

@@ -16,10 +16,10 @@ use Psr\Http\Message\ServerRequestInterface;
  * grantUserAccess()), mirroring GroupService::addAccess()/removeAccess()'s
  * existing shape for the group-level equivalent.
  */
-final class UserPermSubController implements AdminSubControllerInterface
+final readonly class UserPermSubController implements AdminSubControllerInterface
 {
     public function __construct(
-        private readonly UserPermPageRenderer $userPermPageRenderer,
+        private UserPermPageRenderer $userPermPageRenderer,
     ) {}
 
     #[Override]

@@ -24,19 +24,19 @@ use Piwigo\Template\CurrentTemplate;
 /**
  * Ported from admin/group_list.php (page slug "group_list").
  */
-final class GroupListPageRenderer
+final readonly class GroupListPageRenderer
 {
     public function __construct(
-        private readonly Lang $lang,
-        private readonly AccessControl $accessControl,
-        private readonly RedirectServiceInterface $redirectService,
-        private readonly UrlServiceInterface $urlService,
-        private readonly CoreTabs $coreTabs,
-        private readonly Translator $translator,
-        private readonly CurrentTemplate $currentTemplate,
-        private readonly HtmlRenderingInterface $htmlRenderer,
-        private readonly EventDispatcher $eventDispatcher,
-        private readonly CurrentConfig $currentConfig,
+        private Lang $lang,
+        private AccessControl $accessControl,
+        private RedirectServiceInterface $redirectService,
+        private UrlServiceInterface $urlService,
+        private CoreTabs $coreTabs,
+        private Translator $translator,
+        private CurrentTemplate $currentTemplate,
+        private HtmlRenderingInterface $htmlRenderer,
+        private EventDispatcher $eventDispatcher,
+        private CurrentConfig $currentConfig,
     ) {}
 
     public function render(): void

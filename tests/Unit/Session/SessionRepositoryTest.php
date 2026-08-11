@@ -104,7 +104,7 @@ test('gc() deletes only sessions older than the cutoff and returns the count', f
         $repo->write($oldId, 'stale');
         $conn->executeStatement(
             'UPDATE sessions SET expiration = ? WHERE id = ?',
-            [(new DateTimeImmutable('-1 year'))->format('Y-m-d H:i:s'), $oldId],
+            [new DateTimeImmutable('-1 year')->format('Y-m-d H:i:s'), $oldId],
         );
         $repo->write($freshId, 'fresh');
 

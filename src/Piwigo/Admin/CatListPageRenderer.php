@@ -45,24 +45,24 @@ use Piwigo\Validation\InputValidator;
  * render as bare `href="albums"` / `href="permalinks"` instead of
  * `admin.php?page=albums` / `admin.php?page=permalinks`.
  */
-final class CatListPageRenderer
+final readonly class CatListPageRenderer
 {
     public function __construct(
-        private readonly Lang $lang,
-        private readonly RedirectServiceInterface $redirectService,
-        private readonly UrlServiceInterface $urlService,
-        private readonly CoreTabs $coreTabs,
-        private readonly SessionService $sessionService,
-        private readonly EventDispatcher $eventDispatcher,
-        private readonly PageState $pageState,
-        private readonly CurrentUser $currentUser,
-        private readonly CurrentTemplate $currentTemplate,
-        private readonly CategoryAdminService $categoryAdminService,
-        private readonly ActivityService $activityService,
-        private readonly CategoryService $categoryService,
-        private readonly HtmlService $htmlRenderer,
-        private readonly CurrentConfig $currentConfig,
-        private readonly InputValidator $inputValidator,
+        private Lang $lang,
+        private RedirectServiceInterface $redirectService,
+        private UrlServiceInterface $urlService,
+        private CoreTabs $coreTabs,
+        private SessionService $sessionService,
+        private EventDispatcher $eventDispatcher,
+        private PageState $pageState,
+        private CurrentUser $currentUser,
+        private CurrentTemplate $currentTemplate,
+        private CategoryAdminService $categoryAdminService,
+        private ActivityService $activityService,
+        private CategoryService $categoryService,
+        private HtmlService $htmlRenderer,
+        private CurrentConfig $currentConfig,
+        private InputValidator $inputValidator,
     ) {}
 
     public function render(): void

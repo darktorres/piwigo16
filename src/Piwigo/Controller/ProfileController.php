@@ -61,33 +61,33 @@ use Psr\Http\Message\ServerRequestInterface;
  * check_pwg_token() and ProfileFormHandler::saveFromPost()'s own
  * redirect() both happen before any rendering starts.
  */
-final class ProfileController implements ControllerInterface
+final readonly class ProfileController implements ControllerInterface
 {
     public function __construct(
-        private readonly Lang $lang,
-        private readonly AccessControl $accessControl,
-        private readonly RedirectServiceInterface $redirectService,
-        private readonly UrlServiceInterface $urlService,
-        private readonly FilterState $filterState,
-        private readonly SectionContextRegistry $sectionContextRegistry,
-        private readonly AdminContext $adminContext,
-        private readonly SessionService $sessionService,
-        private readonly EventDispatcher $eventDispatcher,
-        private readonly DeploymentPolicy $deploymentPolicy,
-        private readonly PageState $pageState,
-        private readonly CurrentUser $currentUser,
-        private readonly CurrentTemplate $currentTemplate,
-        private readonly EntityManagerInterface $entityManager,
-        private readonly ActivityService $activityService,
-        private readonly UserService $userService,
-        private readonly PasswordService $passwordService,
-        private readonly AuthService $authService,
-        private readonly HtmlService $htmlService,
-        private readonly MailService $mailService,
-        private readonly CurrentConfig $currentConfig,
-        private readonly Translator $translator,
-        private readonly CurrentLogger $currentLogger,
-        private readonly Paths $paths,
+        private Lang $lang,
+        private AccessControl $accessControl,
+        private RedirectServiceInterface $redirectService,
+        private UrlServiceInterface $urlService,
+        private FilterState $filterState,
+        private SectionContextRegistry $sectionContextRegistry,
+        private AdminContext $adminContext,
+        private SessionService $sessionService,
+        private EventDispatcher $eventDispatcher,
+        private DeploymentPolicy $deploymentPolicy,
+        private PageState $pageState,
+        private CurrentUser $currentUser,
+        private CurrentTemplate $currentTemplate,
+        private EntityManagerInterface $entityManager,
+        private ActivityService $activityService,
+        private UserService $userService,
+        private PasswordService $passwordService,
+        private AuthService $authService,
+        private HtmlService $htmlService,
+        private MailService $mailService,
+        private CurrentConfig $currentConfig,
+        private Translator $translator,
+        private CurrentLogger $currentLogger,
+        private Paths $paths,
     ) {}
 
     #[Override]

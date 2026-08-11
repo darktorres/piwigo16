@@ -25,10 +25,10 @@ use Doctrine\DBAL\Platforms\PostgreSQLPlatform;
  * make_interval(days => n)` is the real one (`NOW()` itself is already
  * portable, needs no branch of its own).
  */
-final class SqlDialectExecutor
+final readonly class SqlDialectExecutor
 {
     public function __construct(
-        private readonly Connection $conn,
+        private Connection $conn,
     ) {}
 
     /**

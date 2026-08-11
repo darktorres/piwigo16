@@ -168,29 +168,7 @@ final readonly class HistoryService
             $historySectionsCache = $cachedSections;
 
             $this->currentConfig->historySectionsCache = $historySectionsCache;
-
-            // Real bug found live -- a case-insensitive
-            // match used to store $pageSection verbatim, relying on MySQL's
-            // own ENUM-column side effect (inserting a value that matches
-            // an enum member case-insensitively is silently stored/read
-            // back in that member's own canonical casing) to normalize it.
-            // PostgreSQL's portable `section` column is a plain VARCHAR
-            // (this column's set of valid values is plugin-extensible at
-            // runtime, so it was deliberately never given a static CHECK
-            // constraint the way image_type's fixed set was) with no such
-            // implicit normalization -- stores whatever string it's given,
-            // verbatim. Resolving to the canonical cached casing explicitly
-            // here makes the real, intended behavior (treat a
-            // case-insensitive match as *the same* section) portable
-            // instead of an accidental MySQL-ENUM-specific side effect.
-            $canonicalMatch = null;
-            foreach ($historySectionsCache as $knownSection) {
-                if (strtolower($knownSection) === strtolower($pageSection)) {
-                    $canonicalMatch = $knownSection;
-
-                    break;
-                }
-            }
+            $canonicalMatch = array_find($historySectionsCache, fn ($knownSection) => strtolower($knownSection) === strtolower($pageSection));
 
             if ($canonicalMatch !== null) {
                 $section = $canonicalMatch;

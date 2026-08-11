@@ -32,13 +32,13 @@ use Piwigo\Users\CurrentUser;
  * `pwg.groups.*` WS methods (8 registrations) -- registered via callable
  * arrays in include/ws_default_methods.inc.php.
  */
-final class Groups
+final readonly class Groups
 {
     public function __construct(
-        private readonly GroupService $groupService,
-        private readonly CurrentUser $currentUser,
-        private readonly AuditService $auditService,
-        private readonly CurrentConfig $currentConfig,
+        private GroupService $groupService,
+        private CurrentUser $currentUser,
+        private AuditService $auditService,
+        private CurrentConfig $currentConfig,
     ) {}
 
     /**

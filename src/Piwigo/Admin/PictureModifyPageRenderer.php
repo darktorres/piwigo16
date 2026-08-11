@@ -60,32 +60,32 @@ use Piwigo\Validation\InputValidator;
  * CsrfService::checkOrFail()), and its own template link (U_SYNC) carries
  * one, the same way U_DELETE protects itself.
  */
-final class PictureModifyPageRenderer
+final readonly class PictureModifyPageRenderer
 {
     public function __construct(
-        private readonly Lang $lang,
-        private readonly AccessControl $accessControl,
-        private readonly RedirectServiceInterface $redirectService,
-        private readonly UrlServiceInterface $urlService,
-        private readonly ProcessCache $processCache,
-        private readonly SessionService $sessionService,
-        private readonly EventDispatcher $eventDispatcher,
-        private readonly PageState $pageState,
-        private readonly CurrentUser $currentUser,
-        private readonly CurrentTemplate $currentTemplate,
-        private readonly EntityManagerInterface $entityManager,
-        private readonly ActivityService $activityService,
-        private readonly MetadataService $metadataService,
-        private readonly RateService $rateService,
-        private readonly UserService $userService,
-        private readonly TagService $tagService,
-        private readonly CategoryService $categoryService,
-        private readonly PermissionService $permissionService,
-        private readonly HtmlRenderingInterface $htmlRenderer,
-        private readonly CurrentConfig $currentConfig,
-        private readonly InputValidator $inputValidator,
-        private readonly Translator $translator,
-        private readonly Paths $paths,
+        private Lang $lang,
+        private AccessControl $accessControl,
+        private RedirectServiceInterface $redirectService,
+        private UrlServiceInterface $urlService,
+        private ProcessCache $processCache,
+        private SessionService $sessionService,
+        private EventDispatcher $eventDispatcher,
+        private PageState $pageState,
+        private CurrentUser $currentUser,
+        private CurrentTemplate $currentTemplate,
+        private EntityManagerInterface $entityManager,
+        private ActivityService $activityService,
+        private MetadataService $metadataService,
+        private RateService $rateService,
+        private UserService $userService,
+        private TagService $tagService,
+        private CategoryService $categoryService,
+        private PermissionService $permissionService,
+        private HtmlRenderingInterface $htmlRenderer,
+        private CurrentConfig $currentConfig,
+        private InputValidator $inputValidator,
+        private Translator $translator,
+        private Paths $paths,
     ) {}
 
     public function render(string $adminPhotoBaseUrl): void
@@ -326,7 +326,7 @@ final class PictureModifyPageRenderer
 
         $added_by = 'N/A';
         $row_added_by = UserId::tryFrom($row['added_by']);
-        $added_by_username = $row_added_by === null ? null : (new UserRepository(EntityManagerFactory::build($conn), $this->eventDispatcher, $this->currentConfig))
+        $added_by_username = $row_added_by === null ? null : new UserRepository(EntityManagerFactory::build($conn), $this->eventDispatcher, $this->currentConfig)
             ->findUsernameById($row_added_by);
         if ($added_by_username !== null) {
             $row['added_by'] = $added_by_username->value;

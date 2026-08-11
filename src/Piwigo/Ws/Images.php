@@ -68,7 +68,7 @@ use Piwigo\Ws\Request\UploadedFileRequest;
  * (addImageCategoryRelations/mergeChunks/removeChunks) are internal,
  * never WS-registered themselves.
  */
-final class Images
+final readonly class Images
 {
     /**
      * Advisory-lock acquisition timeout for add()'s check_uniqueness race
@@ -79,31 +79,31 @@ final class Images
     private const int UPLOAD_UNIQUENESS_LOCK_TIMEOUT_SECONDS = 30;
 
     public function __construct(
-        private readonly PermissionService $permissionService,
-        private readonly CategoryService $categoryService,
-        private readonly SearchService $searchService,
-        private readonly TagService $tagService,
-        private readonly ImageService $imageService,
-        private readonly ActivityService $activityService,
-        private readonly RateService $rateService,
-        private readonly MetadataService $metadataService,
-        private readonly CommentService $commentService,
-        private readonly UploadService $uploadService,
-        private readonly CurrentConfig $currentConfig,
-        private readonly UrlServiceInterface $urlService,
-        private readonly EventDispatcher $eventDispatcher,
-        private readonly EntityManagerInterface $entityManager,
-        private readonly Lang $lang,
-        private readonly CurrentLogger $currentLogger,
-        private readonly CurrentUser $currentUser,
-        private readonly AccessControl $accessControl,
-        private readonly HtmlService $htmlService,
-        private readonly Paths $paths,
-        private readonly StorageRegistry $storageRegistry,
-        private readonly ImageRepository $imageRepository,
-        private readonly ImageStdParams $imageStdParams,
-        private readonly WsHelper $wsHelper,
-        private readonly DbCredentials $dbCredentials,
+        private PermissionService $permissionService,
+        private CategoryService $categoryService,
+        private SearchService $searchService,
+        private TagService $tagService,
+        private ImageService $imageService,
+        private ActivityService $activityService,
+        private RateService $rateService,
+        private MetadataService $metadataService,
+        private CommentService $commentService,
+        private UploadService $uploadService,
+        private CurrentConfig $currentConfig,
+        private UrlServiceInterface $urlService,
+        private EventDispatcher $eventDispatcher,
+        private EntityManagerInterface $entityManager,
+        private Lang $lang,
+        private CurrentLogger $currentLogger,
+        private CurrentUser $currentUser,
+        private AccessControl $accessControl,
+        private HtmlService $htmlService,
+        private Paths $paths,
+        private StorageRegistry $storageRegistry,
+        private ImageRepository $imageRepository,
+        private ImageStdParams $imageStdParams,
+        private WsHelper $wsHelper,
+        private DbCredentials $dbCredentials,
     ) {}
 
     /**

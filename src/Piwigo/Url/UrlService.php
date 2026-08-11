@@ -1082,7 +1082,7 @@ final class UrlService implements UrlServiceInterface
         $currentUserId = $this->currentUser->get()
             ->id;
 
-        $imageIds = (new UserRepository(EntityManagerFactory::build($this->conn ??= DbConnection::build()), $this->eventDispatcher, $this->currentConfig))
+        $imageIds = new UserRepository(EntityManagerFactory::build($this->conn ??= DbConnection::build()), $this->eventDispatcher, $this->currentConfig)
             ->findFavoriteImageIds($currentUserId);
 
         $favorites = [];

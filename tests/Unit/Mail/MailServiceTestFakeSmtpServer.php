@@ -26,7 +26,7 @@ if (! is_array($argv)) {
     fwrite(STDERR, "no argv\n");
     exit(1);
 }
-$args = array_values(array_filter($argv, 'is_string'));
+$args = array_values(array_filter($argv, is_string(...)));
 
 $mode = $args[1] ?? 'success';
 $port = (int) ($args[2] ?? '0');

@@ -59,19 +59,19 @@ use Psr\Http\Message\ServerRequestInterface;
  * much later, once the pipeline dispatches) would run after
  * session_start() already fired and have no effect.
  */
-final class ActionController implements ControllerInterface
+final readonly class ActionController implements ControllerInterface
 {
     public function __construct(
-        private readonly AccessControl $accessControl,
-        private readonly UrlServiceInterface $urlService,
-        private readonly EventDispatcher $eventDispatcher,
-        private readonly CurrentUser $currentUser,
-        private readonly HistoryService $historyService,
-        private readonly PermissionService $permissionService,
-        private readonly ImageService $imageService,
-        private readonly CurrentConfig $currentConfig,
-        private readonly InputValidator $inputValidator,
-        private readonly Paths $paths,
+        private AccessControl $accessControl,
+        private UrlServiceInterface $urlService,
+        private EventDispatcher $eventDispatcher,
+        private CurrentUser $currentUser,
+        private HistoryService $historyService,
+        private PermissionService $permissionService,
+        private ImageService $imageService,
+        private CurrentConfig $currentConfig,
+        private InputValidator $inputValidator,
+        private Paths $paths,
     ) {}
 
     #[Override]

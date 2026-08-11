@@ -10,7 +10,7 @@ test('toArray flattens the comment_add bag', function (): void {
         'KEY' => 'abc',
     ];
 
-    expect((new PictureCommentAddPageContext($bag))->toArray())
+    expect(new PictureCommentAddPageContext($bag)->toArray())
         ->toBe([
             'comment_add' => $bag,
         ]);

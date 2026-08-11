@@ -28,10 +28,10 @@ use Piwigo\Csrf\Request\CsrfTokenRequest;
  * per-method-injection style as CategoryService's ActivityLoggerInterface
  * params.
  */
-final class CsrfService
+final readonly class CsrfService
 {
     public function __construct(
-        private readonly CurrentConfig $currentConfig,
+        private CurrentConfig $currentConfig,
     ) {}
 
     /**

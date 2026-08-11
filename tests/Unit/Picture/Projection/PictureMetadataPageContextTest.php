@@ -5,7 +5,7 @@ declare(strict_types=1);
 use Piwigo\Picture\Projection\PictureMetadataPageContext;
 
 test('toArray omits metadata entirely when null', function (): void {
-    expect((new PictureMetadataPageContext(null))->toArray())
+    expect(new PictureMetadataPageContext(null)->toArray())
         ->toBe([]);
 });
 
@@ -25,7 +25,7 @@ test('toArray includes metadata when set', function (): void {
         ],
     ];
 
-    expect((new PictureMetadataPageContext($metadata))->toArray())
+    expect(new PictureMetadataPageContext($metadata)->toArray())
         ->toBe([
             'metadata' => $metadata,
         ]);

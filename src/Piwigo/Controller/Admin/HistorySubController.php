@@ -25,17 +25,17 @@ use Psr\Http\Message\ServerRequestInterface;
  * hardcoding `'id'`/`'username'` literally, matching every sibling admin
  * page that reads the same user table.
  */
-final class HistorySubController implements AdminSubControllerInterface
+final readonly class HistorySubController implements AdminSubControllerInterface
 {
     public function __construct(
-        private readonly Lang $lang,
-        private readonly AccessControl $accessControl,
-        private readonly UrlServiceInterface $urlService,
-        private readonly CoreTabs $coreTabs,
-        private readonly CurrentTemplate $currentTemplate,
-        private readonly CurrentConfig $currentConfig,
-        private readonly EventDispatcher $eventDispatcher,
-        private readonly InputValidator $inputValidator,
+        private Lang $lang,
+        private AccessControl $accessControl,
+        private UrlServiceInterface $urlService,
+        private CoreTabs $coreTabs,
+        private CurrentTemplate $currentTemplate,
+        private CurrentConfig $currentConfig,
+        private EventDispatcher $eventDispatcher,
+        private InputValidator $inputValidator,
     ) {}
 
     #[Override]

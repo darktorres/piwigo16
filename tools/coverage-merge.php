@@ -72,9 +72,9 @@ $webDumpDir = $root . '/_data/coverage-raw/web';
 $htmlDir = $root . '/_data/coverage-raw/html';
 
 $filter = new Filter();
-$filter->includeFiles((new FileIteratorFacade())->getFilesAsArray($srcDir, '.php'));
+$filter->includeFiles(new FileIteratorFacade()->getFilesAsArray($srcDir, '.php'));
 
-$coverage = new CodeCoverage((new Selector())->select($filter), $filter);
+$coverage = new CodeCoverage(new Selector()->select($filter), $filter);
 
 $webFiles = is_dir($webDumpDir) ? glob($webDumpDir . '/*.raw') : [];
 $webFiles = $webFiles !== false ? $webFiles : [];
@@ -143,8 +143,9 @@ echo count($webFiles) . " web request dump(s) merged.\n\n";
 // @phpstan-ignore method.internal
 $report = $coverage->getReport();
 // @phpstan-ignore new.internalClass, method.internalClass, method.internalClass
-echo (new Text(Thresholds::default(), true))->process($report);
+echo new Text(Thresholds::default(), true)->process($report);
 
 // @phpstan-ignore new.internalClass, method.internalClass, method.internalClass
-(new HtmlReport())->process($report, $htmlDir);
+new HtmlReport()
+    ->process($report, $htmlDir);
 echo "\nHTML report written to {$htmlDir}\n";

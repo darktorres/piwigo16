@@ -17,10 +17,10 @@ use Psr\Http\Message\ServerRequestInterface;
  * ['toggle_is_default'] is unused dead validation, nothing in the file
  * ever acts on those params -- preserved exactly, not "fixed").
  */
-final class GroupListSubController implements AdminSubControllerInterface
+final readonly class GroupListSubController implements AdminSubControllerInterface
 {
     public function __construct(
-        private readonly GroupListPageRenderer $groupListPageRenderer,
+        private GroupListPageRenderer $groupListPageRenderer,
     ) {}
 
     #[Override]

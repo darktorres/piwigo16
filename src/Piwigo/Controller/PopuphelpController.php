@@ -37,15 +37,15 @@ use Psr\Http\Message\ServerRequestInterface;
  * ResponseReadyException on an invalid value with a clean 400 response --
  * there is no partial HTML to preserve.
  */
-final class PopuphelpController implements ControllerInterface
+final readonly class PopuphelpController implements ControllerInterface
 {
     public function __construct(
-        private readonly Lang $lang,
-        private readonly AccessControl $accessControl,
-        private readonly EventDispatcher $eventDispatcher,
-        private readonly PageState $pageState,
-        private readonly CurrentTemplate $currentTemplate,
-        private readonly CurrentConfig $currentConfig,
+        private Lang $lang,
+        private AccessControl $accessControl,
+        private EventDispatcher $eventDispatcher,
+        private PageState $pageState,
+        private CurrentTemplate $currentTemplate,
+        private CurrentConfig $currentConfig,
     ) {}
 
     #[Override]

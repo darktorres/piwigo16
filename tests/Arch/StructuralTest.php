@@ -820,14 +820,7 @@ function findStringKeyedDispatchCallSites(string $dir, array $allowlist): array
         if ($source === false) {
             continue;
         }
-
-        $hit = false;
-        foreach ($methodNames as $name) {
-            if (str_contains($source, $name)) {
-                $hit = true;
-                break;
-            }
-        }
+        $hit = array_any($methodNames, fn ($name) => str_contains($source, $name));
         if (! $hit) {
             continue;
         }
@@ -936,14 +929,7 @@ function findBareCallSites(string $dir, array $names): array
         if ($source === false) {
             continue;
         }
-
-        $hit = false;
-        foreach ($names as $name) {
-            if (str_contains($source, $name)) {
-                $hit = true;
-                break;
-            }
-        }
+        $hit = array_any($names, fn ($name) => str_contains($source, $name));
         if (! $hit) {
             continue;
         }

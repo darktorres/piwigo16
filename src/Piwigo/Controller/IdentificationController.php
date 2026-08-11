@@ -53,29 +53,29 @@ use Psr\Http\Message\ServerRequestInterface;
  * Every redirect() in this file (both the "already logged in" and the
  * "successful login" paths) happens *before* any rendering starts.
  */
-final class IdentificationController implements ControllerInterface
+final readonly class IdentificationController implements ControllerInterface
 {
     public function __construct(
-        private readonly Lang $lang,
-        private readonly AccessControl $accessControl,
-        private readonly RedirectServiceInterface $redirectService,
-        private readonly UrlServiceInterface $urlService,
-        private readonly FilterState $filterState,
-        private readonly SectionContextRegistry $sectionContextRegistry,
-        private readonly SessionService $sessionService,
-        private readonly EventDispatcher $eventDispatcher,
-        private readonly DeploymentPolicy $deploymentPolicy,
-        private readonly PageState $pageState,
-        private readonly CurrentUser $currentUser,
-        private readonly CurrentTemplate $currentTemplate,
-        private readonly UserService $userService,
-        private readonly AuthService $authService,
-        private readonly HtmlService $htmlService,
-        private readonly CurrentConfig $currentConfig,
-        private readonly InputValidator $inputValidator,
-        private readonly Translator $translator,
-        private readonly CurrentLogger $currentLogger,
-        private readonly Paths $paths,
+        private Lang $lang,
+        private AccessControl $accessControl,
+        private RedirectServiceInterface $redirectService,
+        private UrlServiceInterface $urlService,
+        private FilterState $filterState,
+        private SectionContextRegistry $sectionContextRegistry,
+        private SessionService $sessionService,
+        private EventDispatcher $eventDispatcher,
+        private DeploymentPolicy $deploymentPolicy,
+        private PageState $pageState,
+        private CurrentUser $currentUser,
+        private CurrentTemplate $currentTemplate,
+        private UserService $userService,
+        private AuthService $authService,
+        private HtmlService $htmlService,
+        private CurrentConfig $currentConfig,
+        private InputValidator $inputValidator,
+        private Translator $translator,
+        private CurrentLogger $currentLogger,
+        private Paths $paths,
     ) {}
 
     #[Override]

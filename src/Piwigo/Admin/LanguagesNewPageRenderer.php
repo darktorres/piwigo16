@@ -44,25 +44,25 @@ use Piwigo\Users\UserService;
  * already gates on is_webmaster() and check_pwg_token() -- no CSRF fix
  * needed here, unlike LanguagesInstalledPageRenderer.
  */
-final class LanguagesNewPageRenderer
+final readonly class LanguagesNewPageRenderer
 {
     public function __construct(
-        private readonly Lang $lang,
-        private readonly AccessControl $accessControl,
-        private readonly RedirectServiceInterface $redirectService,
-        private readonly UrlServiceInterface $urlService,
-        private readonly ConfigService $configService,
-        private readonly CurrentLogger $currentLogger,
-        private readonly PageState $pageState,
-        private readonly CurrentTemplate $currentTemplate,
-        private readonly ActivityService $activityService,
-        private readonly UserService $userService,
-        private readonly HtmlRenderingInterface $htmlRenderer,
-        private readonly CurrentConfig $currentConfig,
-        private readonly WsContext $wsContext,
-        private readonly CurrentUser $currentUser,
-        private readonly Paths $paths,
-        private readonly EventDispatcher $eventDispatcher,
+        private Lang $lang,
+        private AccessControl $accessControl,
+        private RedirectServiceInterface $redirectService,
+        private UrlServiceInterface $urlService,
+        private ConfigService $configService,
+        private CurrentLogger $currentLogger,
+        private PageState $pageState,
+        private CurrentTemplate $currentTemplate,
+        private ActivityService $activityService,
+        private UserService $userService,
+        private HtmlRenderingInterface $htmlRenderer,
+        private CurrentConfig $currentConfig,
+        private WsContext $wsContext,
+        private CurrentUser $currentUser,
+        private Paths $paths,
+        private EventDispatcher $eventDispatcher,
     ) {}
 
     /**

@@ -14,10 +14,10 @@ use Piwigo\Core\UrlServiceInterface;
  * getUrl() callers below can assert on the exact rel_url build() computed
  * with no extra prefix/suffix to account for.
  */
-final class DerivativeImageTestFakeUrlService implements UrlServiceInterface
+final readonly class DerivativeImageTestFakeUrlService implements UrlServiceInterface
 {
     public function __construct(
-        private readonly string $rootUrl = ''
+        private string $rootUrl = ''
     ) {}
 
     #[Override]

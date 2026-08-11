@@ -30,18 +30,18 @@ use Piwigo\Users\UserService;
  * the original cat_perm.php's own (redundant) check_status() call is
  * dropped here -- same precedent as PhotosAddSubController.
  */
-final class CatPermPageRenderer
+final readonly class CatPermPageRenderer
 {
     public function __construct(
-        private readonly Lang $lang,
-        private readonly RedirectServiceInterface $redirectService,
-        private readonly UrlServiceInterface $urlService,
-        private readonly CurrentTemplate $currentTemplate,
-        private readonly CategoryAdminService $categoryAdminService,
-        private readonly GroupService $groupService,
-        private readonly UserService $userService,
-        private readonly HtmlService $htmlService,
-        private readonly CurrentConfig $currentConfig,
+        private Lang $lang,
+        private RedirectServiceInterface $redirectService,
+        private UrlServiceInterface $urlService,
+        private CurrentTemplate $currentTemplate,
+        private CategoryAdminService $categoryAdminService,
+        private GroupService $groupService,
+        private UserService $userService,
+        private HtmlService $htmlService,
+        private CurrentConfig $currentConfig,
     ) {}
 
     /**

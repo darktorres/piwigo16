@@ -229,7 +229,7 @@ final class UserBootstrapTest extends IntegrationTestCase
     public function testInitializeLogsInViaWsUploadAsyncAndMarksTheSessionConnectedWith(): void
     {
         $plainPassword = 'upload-async-pass-' . bin2hex(random_bytes(4));
-        $hash = (new PasswordService(new PasswordRepository(EntityManagerFactory::build($this->conn)), new DeploymentPolicy()))->hash($plainPassword);
+        $hash = new PasswordService(new PasswordRepository(EntityManagerFactory::build($this->conn)), new DeploymentPolicy())->hash($plainPassword);
         $username = 'upload_async_user_' . bin2hex(random_bytes(4));
         $this->conn->executeStatement(
             'INSERT INTO users (username, password, mail_address) VALUES (?, ?, NULL)',

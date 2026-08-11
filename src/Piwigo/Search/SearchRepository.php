@@ -54,10 +54,10 @@ use Piwigo\Search\Projection\Search;
  * $fromSql; $rules matches Search Projection's own already-documented
  * JSON rules-bag rationale.
  */
-final class SearchRepository
+final readonly class SearchRepository
 {
     public function __construct(
-        private readonly EntityManagerInterface $em,
+        private EntityManagerInterface $em,
     ) {}
 
     /**

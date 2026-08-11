@@ -22,18 +22,18 @@ use Psr\Http\Message\ServerRequestInterface;
  * -- a flat page, pure delegate to Piwigo\Admin\ExtendForTemplatesPageRenderer.
  * Its config write goes through ConfigService, not raw SQL.
  */
-final class ExtendForTemplatesSubController implements AdminSubControllerInterface
+final readonly class ExtendForTemplatesSubController implements AdminSubControllerInterface
 {
     public function __construct(
-        private readonly Lang $lang,
-        private readonly AccessControl $accessControl,
-        private readonly UrlServiceInterface $urlService,
-        private readonly ConfigService $configService,
-        private readonly PageState $pageState,
-        private readonly CurrentTemplate $currentTemplate,
-        private readonly CategoryService $categoryService,
-        private readonly CurrentConfig $currentConfig,
-        private readonly Paths $paths,
+        private Lang $lang,
+        private AccessControl $accessControl,
+        private UrlServiceInterface $urlService,
+        private ConfigService $configService,
+        private PageState $pageState,
+        private CurrentTemplate $currentTemplate,
+        private CategoryService $categoryService,
+        private CurrentConfig $currentConfig,
+        private Paths $paths,
     ) {}
 
     #[Override]

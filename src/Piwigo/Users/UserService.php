@@ -1463,7 +1463,7 @@ final readonly class UserService implements DefaultLanguageProviderInterface
 
         if (isset($update_status) and count($user_ids_for_status) > 0) {
             $this->repo->updateStatusForUsers(
-                array_values(array_map(static fn (int $id): UserId => UserId::from($id), $user_ids_for_status)),
+                array_values(array_map(UserId::from(...), $user_ids_for_status)),
                 $update_status
             );
 
@@ -1478,7 +1478,7 @@ final readonly class UserService implements DefaultLanguageProviderInterface
 
         if (count($updates_infos) > 0) {
             $this->repo->updateInfosForUsers(
-                array_map(static fn (int $id): UserId => UserId::from($id), $user_ids),
+                array_map(UserId::from(...), $user_ids),
                 $updates_infos
             );
         }
@@ -1494,7 +1494,7 @@ final readonly class UserService implements DefaultLanguageProviderInterface
             }
 
             $this->groupRepo->removeAllMembershipsForUsers(
-                array_map(static fn (int $id): UserId => UserId::from($id), $user_ids)
+                array_map(UserId::from(...), $user_ids)
             );
 
             // we remove all provided groups that do not really exist
@@ -1509,7 +1509,7 @@ final readonly class UserService implements DefaultLanguageProviderInterface
             // group is associated
 
             if (count($group_ids) > 0) {
-                $memberIds = array_map(static fn (int $id): UserId => UserId::from($id), $user_ids);
+                $memberIds = array_map(UserId::from(...), $user_ids);
                 foreach ($group_ids as $group_id) {
                     $this->groupRepo->addMembers(GroupId::from($group_id), $memberIds);
                 }

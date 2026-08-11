@@ -54,13 +54,13 @@ use Piwigo\Users\UserService;
  * drains that same buffer as a string instead of echoing it, feeding the
  * thrown exception's Response body.
  */
-final class RedirectService implements RedirectServiceInterface
+final readonly class RedirectService implements RedirectServiceInterface
 {
     public function __construct(
-        private readonly Lang $lang,
-        private readonly UserService $userService,
-        private readonly EventDispatcher $eventDispatcher,
-        private readonly PageState $pageState,
+        private Lang $lang,
+        private UserService $userService,
+        private EventDispatcher $eventDispatcher,
+        private PageState $pageState,
     ) {}
 
     private static function currentUser(): CurrentUser

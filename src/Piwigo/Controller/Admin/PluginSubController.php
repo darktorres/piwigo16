@@ -32,13 +32,13 @@ use Psr\Http\Message\ServerRequestInterface;
  * real denial-of-service bug found and fixed
  * (an unreindexed unset() during empty-segment filtering).
  */
-final class PluginSubController implements AdminSubControllerInterface
+final readonly class PluginSubController implements AdminSubControllerInterface
 {
     public function __construct(
-        private readonly LoadedPlugins $loadedPlugins,
-        private readonly HtmlRenderingInterface $htmlRenderer,
-        private readonly InputValidator $inputValidator,
-        private readonly Paths $paths,
+        private LoadedPlugins $loadedPlugins,
+        private HtmlRenderingInterface $htmlRenderer,
+        private InputValidator $inputValidator,
+        private Paths $paths,
     ) {}
 
     #[Override]

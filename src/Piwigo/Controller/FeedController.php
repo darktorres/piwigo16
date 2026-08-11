@@ -45,20 +45,20 @@ use Psr\Http\Message\ServerRequestInterface;
  * leave outside of any capture -- same exit()-based-termination limitation
  * as every other controller.
  */
-final class FeedController implements ControllerInterface
+final readonly class FeedController implements ControllerInterface
 {
     public function __construct(
-        private readonly Lang $lang,
-        private readonly AccessControl $accessControl,
-        private readonly RedirectServiceInterface $redirectService,
-        private readonly UrlServiceInterface $urlService,
-        private readonly CurrentUser $currentUser,
-        private readonly NotificationService $notificationService,
-        private readonly UserService $userService,
-        private readonly HtmlRenderingInterface $htmlRenderer,
-        private readonly CurrentConfig $currentConfig,
-        private readonly InputValidator $inputValidator,
-        private readonly Paths $paths,
+        private Lang $lang,
+        private AccessControl $accessControl,
+        private RedirectServiceInterface $redirectService,
+        private UrlServiceInterface $urlService,
+        private CurrentUser $currentUser,
+        private NotificationService $notificationService,
+        private UserService $userService,
+        private HtmlRenderingInterface $htmlRenderer,
+        private CurrentConfig $currentConfig,
+        private InputValidator $inputValidator,
+        private Paths $paths,
     ) {}
 
     #[Override]

@@ -43,25 +43,25 @@ use Psr\Http\Message\ServerRequestInterface;
  * this sub-controller's own 4-value allowlist (with a safe 'properties'
  * fallback for anything else) is additional defense-in-depth.
  */
-final class AlbumSubController implements AdminSubControllerInterface
+final readonly class AlbumSubController implements AdminSubControllerInterface
 {
     private const array KNOWN_TABS = ['properties', 'sort_order', 'permissions', 'notification'];
 
     public function __construct(
-        private readonly Lang $lang,
-        private readonly UrlServiceInterface $urlService,
-        private readonly CoreTabs $coreTabs,
-        private readonly EventDispatcher $eventDispatcher,
-        private readonly PageState $pageState,
-        private readonly CurrentUser $currentUser,
-        private readonly CurrentTemplate $currentTemplate,
-        private readonly ElementSetRanksPageRenderer $elementSetRanksPageRenderer,
-        private readonly CatPermPageRenderer $catPermPageRenderer,
-        private readonly AlbumNotificationPageRenderer $albumNotificationPageRenderer,
-        private readonly ActivityService $activityService,
-        private readonly CategoryService $categoryService,
-        private readonly HtmlRenderingInterface $htmlRenderer,
-        private readonly CurrentConfig $currentConfig,
+        private Lang $lang,
+        private UrlServiceInterface $urlService,
+        private CoreTabs $coreTabs,
+        private EventDispatcher $eventDispatcher,
+        private PageState $pageState,
+        private CurrentUser $currentUser,
+        private CurrentTemplate $currentTemplate,
+        private ElementSetRanksPageRenderer $elementSetRanksPageRenderer,
+        private CatPermPageRenderer $catPermPageRenderer,
+        private AlbumNotificationPageRenderer $albumNotificationPageRenderer,
+        private ActivityService $activityService,
+        private CategoryService $categoryService,
+        private HtmlRenderingInterface $htmlRenderer,
+        private CurrentConfig $currentConfig,
     ) {}
 
     #[Override]

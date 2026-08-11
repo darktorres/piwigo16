@@ -23,10 +23,10 @@ use Psr\Http\Message\ServerRequestInterface;
  * 404s outside test mode -- this route must never be reachable in
  * production (it would let anyone read recent server-side error text).
  */
-final class TestErrorsController implements ControllerInterface
+final readonly class TestErrorsController implements ControllerInterface
 {
     public function __construct(
-        private readonly ErrorCollector $errorCollector,
+        private ErrorCollector $errorCollector,
     ) {}
 
     #[Override]

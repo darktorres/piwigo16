@@ -88,7 +88,8 @@ test('getMonthOfLastYears(\'all\') takes the <= 1 row fallback branch, zero-fill
     $result = statsGetMonthOfLastYearsInvoke();
 
     $today = new DateTime();
-    $oneYearAgo = (new DateTime())->sub(new DateInterval('P1Y'));
+    $oneYearAgo = new DateTime()
+        ->sub(new DateInterval('P1Y'));
 
     expect(array_key_first($result))
         ->toBe($oneYearAgo->format('Y-m'));

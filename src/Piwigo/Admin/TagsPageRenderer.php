@@ -23,19 +23,19 @@ use Piwigo\Template\CurrentTemplate;
 /**
  * Ported from admin/tags.php (page slug "tags").
  */
-final class TagsPageRenderer
+final readonly class TagsPageRenderer
 {
     public function __construct(
-        private readonly Lang $lang,
-        private readonly AccessControl $accessControl,
-        private readonly RedirectServiceInterface $redirectService,
-        private readonly UrlServiceInterface $urlService,
-        private readonly CoreTabs $coreTabs,
-        private readonly EventDispatcher $eventDispatcher,
-        private readonly CurrentTemplate $currentTemplate,
-        private readonly TagService $tagService,
-        private readonly HtmlRenderingInterface $htmlRenderer,
-        private readonly CurrentConfig $currentConfig,
+        private Lang $lang,
+        private AccessControl $accessControl,
+        private RedirectServiceInterface $redirectService,
+        private UrlServiceInterface $urlService,
+        private CoreTabs $coreTabs,
+        private EventDispatcher $eventDispatcher,
+        private CurrentTemplate $currentTemplate,
+        private TagService $tagService,
+        private HtmlRenderingInterface $htmlRenderer,
+        private CurrentConfig $currentConfig,
     ) {}
 
     public function render(): void

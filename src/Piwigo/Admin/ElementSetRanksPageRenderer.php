@@ -40,19 +40,19 @@ use Piwigo\Template\CurrentTemplate;
  * AlbumSubController's own already-validated $category array, so it stays
  * a real, load-bearing check.
  */
-final class ElementSetRanksPageRenderer
+final readonly class ElementSetRanksPageRenderer
 {
     public function __construct(
-        private readonly Lang $lang,
-        private readonly RedirectServiceInterface $redirectService,
-        private readonly UrlServiceInterface $urlService,
-        private readonly ErrorCollector $errorCollector,
-        private readonly ImageStdParams $imageStdParams,
-        private readonly CurrentTemplate $currentTemplate,
-        private readonly CategoryAdminService $categoryAdminService,
-        private readonly ImageService $imageService,
-        private readonly HtmlRenderingInterface $htmlRenderer,
-        private readonly CurrentConfig $currentConfig,
+        private Lang $lang,
+        private RedirectServiceInterface $redirectService,
+        private UrlServiceInterface $urlService,
+        private ErrorCollector $errorCollector,
+        private ImageStdParams $imageStdParams,
+        private CurrentTemplate $currentTemplate,
+        private CategoryAdminService $categoryAdminService,
+        private ImageService $imageService,
+        private HtmlRenderingInterface $htmlRenderer,
+        private CurrentConfig $currentConfig,
     ) {}
 
     public function render(): void

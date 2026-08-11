@@ -1454,10 +1454,10 @@ test('getResizeResult reports a real, accurately-scaled elapsed-time measurement
     // proves the exact ' ms' suffix (ConcatRemoveLeft) and the 2-decimal
     // format (DecrementInteger/IncrementInteger on number_format()'s own
     // literal 2) via the regex itself.
-    $slowImage = new class(200, 100) implements ImageInterface {
+    $slowImage = new readonly class(200, 100) implements ImageInterface {
         public function __construct(
-            private readonly int|float $width,
-            private readonly int|float $height
+            private int|float $width,
+            private int|float $height
         ) {}
 
         public function getWidth(): int|float

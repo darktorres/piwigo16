@@ -437,7 +437,7 @@ final class BrowserTestHelpers
         int $timeoutMs = 30_000
     ): void {
         // @phpstan-ignore new.internalClass, method.internalClass
-        (new GuessLocator(self::nativePage($page)))
+        new GuessLocator(self::nativePage($page))
             ->for($text)
             ->click([
                 'timeout' => $timeoutMs,

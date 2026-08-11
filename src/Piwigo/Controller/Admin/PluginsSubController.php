@@ -47,27 +47,27 @@ use Psr\Http\Message\ServerRequestInterface;
  * Piwigo\Admin\UpdatesExtPageRenderer, after which this controller's own
  * `ADMIN_PAGE_TITLE` override still applies.
  */
-final class PluginsSubController implements AdminSubControllerInterface
+final readonly class PluginsSubController implements AdminSubControllerInterface
 {
     public function __construct(
-        private readonly Lang $lang,
-        private readonly AccessControl $accessControl,
-        private readonly UrlServiceInterface $urlService,
-        private readonly ConfigService $configService,
-        private readonly CurrentLogger $currentLogger,
-        private readonly CoreTabs $coreTabs,
-        private readonly SessionService $sessionService,
-        private readonly EventDispatcher $eventDispatcher,
-        private readonly PageState $pageState,
-        private readonly CurrentTemplate $currentTemplate,
-        private readonly ExtensionUpdateChecker $extensionUpdateChecker,
-        private readonly PluginsNewPageRenderer $pluginsNewPageRenderer,
-        private readonly PreferencesService $preferencesService,
-        private readonly HtmlRenderingInterface $htmlRenderer,
-        private readonly CurrentConfig $currentConfig,
-        private readonly InputValidator $inputValidator,
-        private readonly CurrentUser $currentUser,
-        private readonly Paths $paths,
+        private Lang $lang,
+        private AccessControl $accessControl,
+        private UrlServiceInterface $urlService,
+        private ConfigService $configService,
+        private CurrentLogger $currentLogger,
+        private CoreTabs $coreTabs,
+        private SessionService $sessionService,
+        private EventDispatcher $eventDispatcher,
+        private PageState $pageState,
+        private CurrentTemplate $currentTemplate,
+        private ExtensionUpdateChecker $extensionUpdateChecker,
+        private PluginsNewPageRenderer $pluginsNewPageRenderer,
+        private PreferencesService $preferencesService,
+        private HtmlRenderingInterface $htmlRenderer,
+        private CurrentConfig $currentConfig,
+        private InputValidator $inputValidator,
+        private CurrentUser $currentUser,
+        private Paths $paths,
     ) {}
 
     #[Override]

@@ -47,24 +47,24 @@ use Psr\Http\Message\ServerRequestInterface;
  * tab); this controller's `ADMIN_PAGE_TITLE` assignment still overrides
  * after that call.
  */
-final class ThemesSubController implements AdminSubControllerInterface
+final readonly class ThemesSubController implements AdminSubControllerInterface
 {
     public function __construct(
-        private readonly Lang $lang,
-        private readonly AccessControl $accessControl,
-        private readonly UrlServiceInterface $urlService,
-        private readonly ConfigService $configService,
-        private readonly CoreTabs $coreTabs,
-        private readonly PageState $pageState,
-        private readonly CurrentTemplate $currentTemplate,
-        private readonly ExtensionUpdateChecker $extensionUpdateChecker,
-        private readonly ThemesNewPageRenderer $themesNewPageRenderer,
-        private readonly ThemesStandardPagesPageRenderer $themesStandardPagesPageRenderer,
-        private readonly ThemesInstalledPageRenderer $themesInstalledPageRenderer,
-        private readonly HtmlRenderingInterface $htmlRenderer,
-        private readonly CurrentConfig $currentConfig,
-        private readonly InputValidator $inputValidator,
-        private readonly EventDispatcher $eventDispatcher,
+        private Lang $lang,
+        private AccessControl $accessControl,
+        private UrlServiceInterface $urlService,
+        private ConfigService $configService,
+        private CoreTabs $coreTabs,
+        private PageState $pageState,
+        private CurrentTemplate $currentTemplate,
+        private ExtensionUpdateChecker $extensionUpdateChecker,
+        private ThemesNewPageRenderer $themesNewPageRenderer,
+        private ThemesStandardPagesPageRenderer $themesStandardPagesPageRenderer,
+        private ThemesInstalledPageRenderer $themesInstalledPageRenderer,
+        private HtmlRenderingInterface $htmlRenderer,
+        private CurrentConfig $currentConfig,
+        private InputValidator $inputValidator,
+        private EventDispatcher $eventDispatcher,
     ) {}
 
     #[Override]

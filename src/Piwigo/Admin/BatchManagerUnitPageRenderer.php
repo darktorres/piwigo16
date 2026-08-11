@@ -57,31 +57,31 @@ use Piwigo\Validation\InputValidator;
  * (isset($_POST['submit'])) already has its own check_pwg_token() call --
  * no CSRF gap here.
  */
-final class BatchManagerUnitPageRenderer
+final readonly class BatchManagerUnitPageRenderer
 {
     public function __construct(
-        private readonly Lang $lang,
-        private readonly RedirectServiceInterface $redirectService,
-        private readonly UrlServiceInterface $urlService,
-        private readonly ProcessCache $processCache,
-        private readonly LoadedPlugins $loadedPlugins,
-        private readonly SessionService $sessionService,
-        private readonly EventDispatcher $eventDispatcher,
-        private readonly PageState $pageState,
-        private readonly CurrentUser $currentUser,
-        private readonly CurrentTemplate $currentTemplate,
-        private readonly EntityManagerInterface $entityManager,
-        private readonly ActivityService $activityService,
-        private readonly TagService $tagService,
-        private readonly PermissionService $permissionService,
-        private readonly CategoryService $categoryService,
-        private readonly ImageService $imageService,
-        private readonly UserService $userService,
-        private readonly HtmlService $htmlRenderer,
-        private readonly CurrentConfig $currentConfig,
-        private readonly InputValidator $inputValidator,
-        private readonly Translator $translator,
-        private readonly Paths $paths,
+        private Lang $lang,
+        private RedirectServiceInterface $redirectService,
+        private UrlServiceInterface $urlService,
+        private ProcessCache $processCache,
+        private LoadedPlugins $loadedPlugins,
+        private SessionService $sessionService,
+        private EventDispatcher $eventDispatcher,
+        private PageState $pageState,
+        private CurrentUser $currentUser,
+        private CurrentTemplate $currentTemplate,
+        private EntityManagerInterface $entityManager,
+        private ActivityService $activityService,
+        private TagService $tagService,
+        private PermissionService $permissionService,
+        private CategoryService $categoryService,
+        private ImageService $imageService,
+        private UserService $userService,
+        private HtmlService $htmlRenderer,
+        private CurrentConfig $currentConfig,
+        private InputValidator $inputValidator,
+        private Translator $translator,
+        private Paths $paths,
     ) {}
 
     /**

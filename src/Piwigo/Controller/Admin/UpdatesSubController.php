@@ -49,22 +49,22 @@ use Psr\Http\Message\ServerRequestInterface;
  * include/ws_functions/pwg.extensions.php all still construct it
  * directly, and none of those are admin pages.
  */
-final class UpdatesSubController implements AdminSubControllerInterface
+final readonly class UpdatesSubController implements AdminSubControllerInterface
 {
     public function __construct(
-        private readonly Lang $lang,
-        private readonly AccessControl $accessControl,
-        private readonly UrlServiceInterface $urlService,
-        private readonly ConfigService $configService,
-        private readonly CoreTabs $coreTabs,
-        private readonly PageState $pageState,
-        private readonly CurrentTemplate $currentTemplate,
-        private readonly ExtensionUpdateChecker $extensionUpdateChecker,
-        private readonly UpdatesPwgPageRenderer $updatesPwgPageRenderer,
-        private readonly HtmlRenderingInterface $htmlRenderer,
-        private readonly CurrentConfig $currentConfig,
-        private readonly InputValidator $inputValidator,
-        private readonly EventDispatcher $eventDispatcher,
+        private Lang $lang,
+        private AccessControl $accessControl,
+        private UrlServiceInterface $urlService,
+        private ConfigService $configService,
+        private CoreTabs $coreTabs,
+        private PageState $pageState,
+        private CurrentTemplate $currentTemplate,
+        private ExtensionUpdateChecker $extensionUpdateChecker,
+        private UpdatesPwgPageRenderer $updatesPwgPageRenderer,
+        private HtmlRenderingInterface $htmlRenderer,
+        private CurrentConfig $currentConfig,
+        private InputValidator $inputValidator,
+        private EventDispatcher $eventDispatcher,
     ) {}
 
     #[Override]

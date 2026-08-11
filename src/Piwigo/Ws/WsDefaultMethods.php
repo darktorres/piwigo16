@@ -19,7 +19,7 @@ use Piwigo\Image\ImageStdParams;
 use Piwigo\Users\CurrentUser;
 use Piwigo\Ws\Event\WsAddMethods;
 
-final class WsDefaultMethods
+final readonly class WsDefaultMethods
 {
     // Each Pwg* class used by register() is injected as a constructor
     // property; the property list here and the instance-method callbacks
@@ -27,19 +27,19 @@ final class WsDefaultMethods
     // instance methods (e.g. $this->pwgCore->getVersion(...)), not static
     // ClassName::method() calls.
     public function __construct(
-        private readonly Categories $pwgCategories,
-        private readonly Core $pwgCore,
-        private readonly Permissions $pwgPermissions,
-        private readonly Comments $pwgComments,
-        private readonly Extensions $pwgExtensions,
-        private readonly Groups $pwgGroups,
-        private readonly Tags $pwgTags,
-        private readonly Users $pwgUsers,
-        private readonly Images $pwgImages,
-        private readonly CurrentConfig $currentConfig,
-        private readonly AccessControl $accessControl,
-        private readonly CurrentUser $currentUser,
-        private readonly ImageStdParams $imageStdParams,
+        private Categories $pwgCategories,
+        private Core $pwgCore,
+        private Permissions $pwgPermissions,
+        private Comments $pwgComments,
+        private Extensions $pwgExtensions,
+        private Groups $pwgGroups,
+        private Tags $pwgTags,
+        private Users $pwgUsers,
+        private Images $pwgImages,
+        private CurrentConfig $currentConfig,
+        private AccessControl $accessControl,
+        private CurrentUser $currentUser,
+        private ImageStdParams $imageStdParams,
     ) {}
 
     /**

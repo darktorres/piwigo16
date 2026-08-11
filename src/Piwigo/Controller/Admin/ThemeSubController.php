@@ -32,17 +32,17 @@ use Psr\Http\Message\ServerRequestInterface;
  * $_GET['theme'] parsing/validation is extracted into
  * Request\ThemeIdRequest -- see that class's own docblock.
  */
-final class ThemeSubController implements AdminSubControllerInterface
+final readonly class ThemeSubController implements AdminSubControllerInterface
 {
     public function __construct(
-        private readonly Lang $lang,
-        private readonly UrlServiceInterface $urlService,
-        private readonly HtmlRenderingInterface $htmlRenderer,
-        private readonly CurrentConfig $currentConfig,
-        private readonly InputValidator $inputValidator,
-        private readonly Paths $paths,
-        private readonly CurrentUser $currentUser,
-        private readonly EventDispatcher $eventDispatcher,
+        private Lang $lang,
+        private UrlServiceInterface $urlService,
+        private HtmlRenderingInterface $htmlRenderer,
+        private CurrentConfig $currentConfig,
+        private InputValidator $inputValidator,
+        private Paths $paths,
+        private CurrentUser $currentUser,
+        private EventDispatcher $eventDispatcher,
     ) {}
 
     #[Override]

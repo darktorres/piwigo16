@@ -27,22 +27,22 @@ use Psr\Http\Message\ServerRequestInterface;
  * directly for its own group-category permission grant/deny; nothing
  * new to extract.
  */
-final class GroupPermSubController implements AdminSubControllerInterface
+final readonly class GroupPermSubController implements AdminSubControllerInterface
 {
     public function __construct(
-        private readonly Lang $lang,
-        private readonly AccessControl $accessControl,
-        private readonly RedirectServiceInterface $redirectService,
-        private readonly UrlServiceInterface $urlService,
-        private readonly CurrentUser $currentUser,
-        private readonly CurrentTemplate $currentTemplate,
-        private readonly AuditService $auditService,
-        private readonly CategoryService $categoryService,
-        private readonly GroupService $groupService,
-        private readonly PermissionService $permissionService,
-        private readonly HtmlRenderingInterface $htmlRenderer,
-        private readonly InputValidator $inputValidator,
-        private readonly CurrentConfig $currentConfig,
+        private Lang $lang,
+        private AccessControl $accessControl,
+        private RedirectServiceInterface $redirectService,
+        private UrlServiceInterface $urlService,
+        private CurrentUser $currentUser,
+        private CurrentTemplate $currentTemplate,
+        private AuditService $auditService,
+        private CategoryService $categoryService,
+        private GroupService $groupService,
+        private PermissionService $permissionService,
+        private HtmlRenderingInterface $htmlRenderer,
+        private InputValidator $inputValidator,
+        private CurrentConfig $currentConfig,
     ) {}
 
     #[Override]

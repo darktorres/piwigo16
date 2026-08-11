@@ -17,10 +17,10 @@ use RuntimeException;
  * `fromArray()`/`fromArrays()` static factories) pass an explicit
  * `InputValidator` instance instead.
  */
-final class InputValidator
+final readonly class InputValidator
 {
     public function __construct(
-        private readonly ?HtmlRenderingInterface $htmlRenderer = null,
+        private ?HtmlRenderingInterface $htmlRenderer = null,
     ) {}
 
     private function fatalError(string $msg): never

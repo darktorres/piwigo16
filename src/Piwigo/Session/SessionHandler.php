@@ -10,11 +10,11 @@ use SessionHandlerInterface;
 use Throwable;
 
 // see https://php.watch/versions/8.4/session_set_save_handler-alt-signature-deprecated
-final class SessionHandler implements SessionHandlerInterface
+final readonly class SessionHandler implements SessionHandlerInterface
 {
     public function __construct(
-        private readonly SessionService $service,
-        private readonly CurrentLogger $currentLogger,
+        private SessionService $service,
+        private CurrentLogger $currentLogger,
     ) {}
 
     #[Override]

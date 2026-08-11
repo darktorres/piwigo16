@@ -468,17 +468,15 @@ namespace Piwigo\Tests\Integration {
             // that passes pwgLogin()'s own password_verify() check, so
             // execution reaches the finalize_login trigger rather than
             // being rejected earlier for a wrong password.
-            $handler = static function (FinalizeLogin $event): FinalizeLogin {
-                return new FinalizeLogin(
-                    [
-                        'can_login' => false,
-                        'reason' => 'blocked_by_test_handler',
-                        'authenticated' => $event->state['authenticated'],
-                    ],
-                    $event->userFound,
-                    $event->rememberMe,
-                );
-            };
+            $handler = (static fn (FinalizeLogin $event): FinalizeLogin => new FinalizeLogin(
+                [
+                    'can_login' => false,
+                    'reason' => 'blocked_by_test_handler',
+                    'authenticated' => $event->state['authenticated'],
+                ],
+                $event->userFound,
+                $event->rememberMe,
+            ));
             EventDispatcherTestFactory::get()->addTypedHandler(FinalizeLogin::class, $handler);
 
             try {

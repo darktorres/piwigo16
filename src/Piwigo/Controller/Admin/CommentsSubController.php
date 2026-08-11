@@ -20,16 +20,16 @@ use Psr\Http\Message\ServerRequestInterface;
  * glue, no data access of its own (comment moderation itself is a client-side
  * ws.php/AJAX flow against the existing CommentService).
  */
-final class CommentsSubController implements AdminSubControllerInterface
+final readonly class CommentsSubController implements AdminSubControllerInterface
 {
     public function __construct(
-        private readonly Lang $lang,
-        private readonly AccessControl $accessControl,
-        private readonly UrlServiceInterface $urlService,
-        private readonly CoreTabs $coreTabs,
-        private readonly CurrentTemplate $currentTemplate,
-        private readonly EventDispatcher $eventDispatcher,
-        private readonly CurrentConfig $currentConfig,
+        private Lang $lang,
+        private AccessControl $accessControl,
+        private UrlServiceInterface $urlService,
+        private CoreTabs $coreTabs,
+        private CurrentTemplate $currentTemplate,
+        private EventDispatcher $eventDispatcher,
+        private CurrentConfig $currentConfig,
     ) {}
 
     #[Override]

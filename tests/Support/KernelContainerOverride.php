@@ -70,8 +70,8 @@ final class KernelContainerOverride
         Kernel::reset();
         $container = Container::build($definitions, $paths instanceof Paths ? $paths : null);
 
-        (new ReflectionProperty(Kernel::class, 'container'))->setValue(null, $container);
-        (new ReflectionProperty(Kernel::class, 'booted'))->setValue(null, true);
+        new ReflectionProperty(Kernel::class, 'container')->setValue(null, $container);
+        new ReflectionProperty(Kernel::class, 'booted')->setValue(null, true);
 
         try {
             return $fn();

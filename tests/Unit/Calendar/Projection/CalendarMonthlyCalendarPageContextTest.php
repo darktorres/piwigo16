@@ -12,7 +12,7 @@ test('toArray flattens the tpl var under the chronology_calendar key', function 
         ],
     ];
 
-    expect((new CalendarMonthlyCalendarPageContext($tplVar))->toArray())
+    expect(new CalendarMonthlyCalendarPageContext($tplVar)->toArray())
         ->toBe([
             'chronology_calendar' => $tplVar,
         ]);

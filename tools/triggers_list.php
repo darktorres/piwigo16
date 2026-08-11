@@ -940,7 +940,7 @@ $core = [
         'infos' => 'New in 2.6.2.',
     ],
 ];
-$css = <<<'CSS'
+$css = <<<'CSS_WRAP'
   /* BEGIN CSS RESET
     http://meyerweb.com/eric/tools/css/reset
     v2.0 | 20110126 | License: none (public domain) */
@@ -974,7 +974,7 @@ $css = <<<'CSS'
   tfoot input {width:80%;}
   tfoot .search_input {color:#999;}
   tfoot select.search_input option:not(:first-child) {color:#222;}
-CSS;
+CSS_WRAP;
 
 $js = <<<'JS'
 var oTable = $('#list').dataTable({

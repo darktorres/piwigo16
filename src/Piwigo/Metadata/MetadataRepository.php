@@ -50,7 +50,7 @@ final readonly class MetadataRepository
             ->getQuery()
             ->getResult();
 
-        return array_map(static fn (ImageEntity $i): MetadataImage => MetadataImage::fromEntity($i), $images);
+        return array_map(MetadataImage::fromEntity(...), $images);
     }
 
     /**

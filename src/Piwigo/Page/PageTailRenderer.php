@@ -92,7 +92,7 @@ final readonly class PageTailRenderer
 
         $contactMail = null;
         if (! $this->accessLevelChecker->isAGuest()) {
-            $contactMail = (new UserRepository(EntityManagerFactory::build(DbConnection::build()), $this->eventDispatcher, $this->currentConfig))->getWebmasterMailAddress();
+            $contactMail = new UserRepository(EntityManagerFactory::build(DbConnection::build()), $this->eventDispatcher, $this->currentConfig)->getWebmasterMailAddress();
         }
 
         $this->telemetrySender->send();

@@ -16,11 +16,11 @@ use Piwigo\Bootstrap\PresentationAccessor;
 /**
  * WsErrorResponse object can be returned from any web service function implementation.
  */
-final class WsErrorResponse
+final readonly class WsErrorResponse
 {
-    private readonly int $code;
+    private int $code;
 
-    private readonly string $codeText;
+    private string $codeText;
 
     public function __construct(
         int $code,

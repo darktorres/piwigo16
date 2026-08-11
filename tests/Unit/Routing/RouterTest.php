@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use Nyholm\Psr7\ServerRequest;
+use Piwigo\Bootstrap\RouteDefinitions;
 use Piwigo\Routing\RouteMatchStatus;
 use Piwigo\Routing\Router;
 use Symfony\Component\Routing\Route;
@@ -56,8 +57,8 @@ test('dispatch returns MethodNotAllowed when the path matches but the method doe
         ->toBe(RouteMatchStatus::MethodNotAllowed);
 });
 
-test('fromFile loads a RouteCollection from a real file', function (): void {
-    $router = Router::fromFile(__DIR__ . '/../../../config/routes.php');
+test('dispatch works against the real RouteDefinitions::all() route collection', function (): void {
+    $router = new Router(RouteDefinitions::all());
 
     $result = $router->dispatch(new ServerRequest('GET', '/anything'));
 
@@ -415,18 +416,6 @@ test('dispatch treats an explicit MOUNT_DEPTH_ATTRIBUTE of exactly 0 the same as
         ->toBe(RouteMatchStatus::Found);
     expect($result->handler)
         ->toBe('AboutController');
-});
-
-test('fromFile throws when the required file does not return a RouteCollection', function (): void {
-    $path = sys_get_temp_dir() . '/piwigo-router-bad-' . bin2hex(random_bytes(8)) . '.php';
-    file_put_contents($path, "<?php\nreturn ['not' => 'a route collection'];\n");
-
-    try {
-        expect(static fn () => Router::fromFile($path))
-            ->toThrow(RuntimeException::class, "{$path} must return a RouteCollection");
-    } finally {
-        unlink($path);
-    }
 });
 
 test('dispatch throws when a matched route has no _controller default', function (): void {

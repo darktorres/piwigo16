@@ -49,16 +49,6 @@ final readonly class Router
         private RouteCollection $routes,
     ) {}
 
-    public static function fromFile(string $path): self
-    {
-        $routes = require $path;
-        if (! $routes instanceof RouteCollection) {
-            throw new RuntimeException("{$path} must return a RouteCollection");
-        }
-
-        return new self($routes);
-    }
-
     public function dispatch(ServerRequestInterface $request): RouteResult
     {
         $uri = $request->getUri();

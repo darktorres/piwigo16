@@ -22,6 +22,7 @@ use Piwigo\Audit\AuditRepository;
 use Piwigo\Auth\UserFailedLoginEntity;
 use Piwigo\Auth\UserFailedLoginRepository;
 use Piwigo\Bootstrap\RedirectService;
+use Piwigo\Bootstrap\RouteDefinitions;
 use Piwigo\Cache\CacheFactory;
 use Piwigo\Cache\PersistentCache;
 use Piwigo\Cache\PersistentFileCache;
@@ -209,9 +210,9 @@ return [
     // Piwigo\Template\CurrentTemplate::current()->get() instead.
     WebmasterMailProviderInterface::class => get(UserRepository::class),
 
-    // Unresolvable string param (the routes file path) -- Router::fromFile()
-    // needs a path autowire can't provide.
-    Router::class => factory(static fn (): Router => Router::fromFile(dirname(__DIR__) . '/config/routes.php')),
+    // RouteCollection has no container entry of its own -- a real
+    // constructor param autowire can't provide.
+    Router::class => factory(static fn (): Router => new Router(RouteDefinitions::all())),
 
     // Factory binding -- the value never actually varies per request
     // (always built from the same config/storage.php), so there's nothing

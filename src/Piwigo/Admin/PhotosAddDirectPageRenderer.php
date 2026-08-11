@@ -107,10 +107,6 @@ final readonly class PhotosAddDirectPageRenderer
 
         $photosAddDirectRequest = PhotosAddDirectRequest::fromGlobals($this->currentConfig->isFormatsEnabled, $this->inputValidator);
 
-        // +-------------------------------------------------------------------+
-        // |                        batch management request                   |
-        // +-------------------------------------------------------------------+
-
         if ($photosAddDirectRequest->batchPresent) {
             new CsrfService($this->currentConfig)
                 ->checkOrFail($this->htmlRenderer, $this->redirectService);
@@ -145,10 +141,6 @@ final readonly class PhotosAddDirectPageRenderer
         } else {
             $promote_mobile_apps = false;
         }
-
-        // +-------------------------------------------------------------------+
-        // |                             Formats Mode                          |
-        // +-------------------------------------------------------------------+
 
         $display_formats = $photosAddDirectRequest->displayFormats;
 
@@ -197,15 +189,7 @@ final readonly class PhotosAddDirectPageRenderer
             }
         }
 
-        // +-------------------------------------------------------------------+
-        // |                             prepare form                          |
-        // +-------------------------------------------------------------------+
-
         $this->prepareUploadForm($conn, $photosAddDirectRequest);
-
-        // +-------------------------------------------------------------------+
-        // |                           sending html code                       |
-        // +-------------------------------------------------------------------+
 
         $this->eventDispatcher->dispatchNotify(new LocEndPhotoAddDirect());
 
@@ -241,10 +225,6 @@ final readonly class PhotosAddDirectPageRenderer
         $htmlRenderer = $this->htmlRenderer;
 
         $uploadService = new UploadService($this->lang, $this->currentLogger, $this->storageRegistry, $this->eventDispatcher, $this->configService, $this->entityManager, $this->activityService, $this->metadataService, $this->imageService, $this->currentConfig, $this->wsContext, $this->currentUser, $this->paths, $this->dbCredentials);
-
-        // +-------------------------------------------------------------------+
-        // | Photo selection                                                    |
-        // +-------------------------------------------------------------------+
 
         $f_add_action = self::baseUrl($this->urlService);
         $chunk_size = $this->currentConfig->uploadFormChunkSize;
@@ -298,10 +278,6 @@ final readonly class PhotosAddDirectPageRenderer
         $upload_file_types = implode(', ', $unique_exts);
         $file_exts = implode(',', $unique_exts);
 
-        // +-------------------------------------------------------------------+
-        // | Categories                                                         |
-        // +-------------------------------------------------------------------+
-
         // we need to know the category in which the last photo was added
         $selected_category = [];
         $add_to_album = null;
@@ -340,10 +316,6 @@ final readonly class PhotosAddDirectPageRenderer
         $selected_level = $photosAddDirectRequest->postLevel;
         $level_options = PermissionService::getPrivacyLevelOptions($this->currentConfig, $this->lang);
         $level_options_selected = [$selected_level];
-
-        // +-------------------------------------------------------------------+
-        // | Setup errors/warnings                                              |
-        // +-------------------------------------------------------------------+
 
         // Errors
         $setup_errors = [];

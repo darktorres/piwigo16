@@ -37,8 +37,8 @@ use Piwigo\Users\CurrentUser;
  * slug, dispatched by PluginsSubController) -- browse the PEM catalog and
  * install a new plugin.
  *
- * Already correctly protected before this port (confirmed by direct read):
- * its one real mutation (revision and extension both present, install)
+ * Already correctly protected before this port -- its one real mutation
+ * (revision and extension both present, install)
  * already gates on is_webmaster() and check_pwg_token() -- no CSRF fix
  * needed here, unlike PluginsInstalledPageRenderer's own dead-code
  * cleanup.
@@ -90,7 +90,6 @@ final readonly class PluginsNewPageRenderer
 
         $pluginsNewRequest = PluginsNewRequest::fromGlobals();
 
-        // ------------------------------------------------------automatic installation
         if ($pluginsNewRequest->revision !== null and $pluginsNewRequest->extension !== null) {
             if (! $this->accessControl->isWebmaster()) {
                 $this->pageState->addError($this->lang->t('Webmaster status is required.'));
@@ -106,7 +105,6 @@ final readonly class PluginsNewPageRenderer
             }
         }
 
-        // --------------------------------------------------------------install result
         if ($pluginsNewRequest->installStatusPresent) {
             switch ($pluginsNewRequest->installStatus) {
                 case 'ok':
@@ -147,7 +145,6 @@ final readonly class PluginsNewPageRenderer
             }
         }
 
-        // ---------------------------------------------------------------Order options
         $order_options = [
             'date' => $this->lang->t('Post date'),
             'revision' => $this->lang->t('Last revisions'),
@@ -155,10 +152,6 @@ final readonly class PluginsNewPageRenderer
             'author' => $this->lang->t('Author'),
             'downloads' => $this->lang->t('Number of downloads'),
         ];
-
-        // +-----------------------------------------------------------------------+
-        // |                     start template output                             |
-        // +-----------------------------------------------------------------------+
 
         // Beta test : show plugins of last version on PEM if the current version isn't present
         // If the current version in known, give the current and last version's compatible plugins

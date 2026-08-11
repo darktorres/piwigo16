@@ -34,8 +34,8 @@ use Piwigo\Users\PreferencesService;
  * "plugins" page slug, dispatched by PluginsSubController) -- lists
  * installed plugins.
  *
- * No CSRF gap here (confirmed by direct read and by tracing
- * plugins_installated.js's real activate/deactivate/delete/restore flow to
+ * No CSRF gap here -- plugins_installated.js's real
+ * activate/deactivate/delete/restore flow traces to
  * the already token-protected ws.php?method=pwg.plugins.performAction --
  * Piwigo\Ws\Extensions::pluginsPerformAction() checks get_pwg_token()
  * against $params['pwg_token'] itself).
@@ -84,7 +84,6 @@ final class PluginsInstalledPageRenderer
         uasort($fs_plugins, $htmlRenderer->nameCompare(...));
         $db_plugins_by_id = $extension_repository->findAll(ExtensionType::Plugin);
 
-        // --------------------------------------------------------Incompatible Plugins
         if ($pluginsDisplay->isIncompatiblePluginsRequest) {
             $incompatible_plugins_raw = $pem_catalog->getIncompatibleExtensions(ExtensionType::Plugin, $fs_plugins, ExtensionType::Plugin->defaultIds());
 
@@ -105,8 +104,6 @@ final class PluginsInstalledPageRenderer
             echo json_encode($incompatible_plugins);
             exit;
         }
-
-        // --------------------------------------------------------Get the menu with the depreciated version
 
         $plugin_menu_links_deprec_event = $eventDispatcher->dispatchChange(new GetAdminPluginMenuLinks([]));
 
@@ -130,10 +127,6 @@ final class PluginsInstalledPageRenderer
                 $settings_url_for_plugin_deprec[$matches[1]] = $menu_link_url;
             }
         }
-
-        // +-----------------------------------------------------------------------+
-        // |                     start template output                             |
-        // +-----------------------------------------------------------------------+
 
         $merged_extensions = $pem_catalog->getLocallyMergedExtensions();
         $merged_plugins = false;

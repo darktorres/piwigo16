@@ -123,10 +123,6 @@ final readonly class PictureModifyPageRenderer
         // represent
         $represented_albums = $this->categoryService->getCategoryIdsRepresentedByImage($image_id);
 
-        // +-------------------------------------------------------------------+
-        // |                             delete photo                          |
-        // +-------------------------------------------------------------------+
-
         if ($pictureModifyRequest->deletePresent) {
             new CsrfService($this->currentConfig)
                 ->checkOrFail($this->htmlRenderer, $this->redirectService);
@@ -150,10 +146,6 @@ final readonly class PictureModifyPageRenderer
 
             $this->redirectService->redirect($this->urlService->makeIndexUrl());
         }
-
-        // +-------------------------------------------------------------------+
-        // |                          synchronize metadata                     |
-        // +-------------------------------------------------------------------+
 
         if ($pictureModifyRequest->syncMetadataPresent) {
             new CsrfService($this->currentConfig)
@@ -279,10 +271,6 @@ final readonly class PictureModifyPageRenderer
         }
 
         $image_file = $row['file'];
-
-        // +-------------------------------------------------------------------+
-        // |                             template init                         |
-        // +-------------------------------------------------------------------+
 
         $template->setFilenames(
             [

@@ -285,8 +285,7 @@ final class Version20260804122302 extends AbstractMigration
         $this->addSql("COMMENT ON COLUMN config.comment IS 'human-readable description of the param, seeded for built-in settings by install/config.sql'");
 
         // `section` deliberately has NO CHECK constraint, unlike every
-        // other enum-shaped column in this schema -- real, found live
-        // while auditing this table: `HistoryRepository::
+        // other enum-shaped column in this schema: `HistoryRepository::
         // getSectionEnumOptions()`/`alterSectionEnum()` widen the MySQL
         // native ENUM at runtime (`ALTER TABLE ... CHANGE section section
         // enum(...)`) whenever a plugin introduces a new section value

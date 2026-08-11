@@ -19,7 +19,7 @@ use Override;
  * Image\ImageEntity's own docblock). No-op on Postgres: that platform
  * rejects the sentinel outright at the SQL level (`'0000-00-00
  * 00:00:00'::timestamp` is a real "date/time field value out of range"
- * error, confirmed live), so no row there can ever carry it. Closes the
+ * error), so no row there can ever carry it. Closes the
  * data-layer gap the former Db\Type\GracefulSqlDateTimeType only papered
  * over for a single narrow ORM read path -- this fixes every consumer,
  * including the raw-DBAL reads (Controller\PictureController and most of

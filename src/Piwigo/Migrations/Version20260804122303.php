@@ -22,12 +22,12 @@ use Override;
  * Postgres), rather than duplicated as two independent statement lists.
  *
  * Each definition becomes its own `addSql()` call, not one batched
- * multi-statement string -- verified against `AbstractMigration::
- * addSql()`'s own source: it wraps the whole string as a single `Query`
- * object, executed as one statement later, so a `;`-separated batch of 40
- * `ALTER TABLE`s in one call would not reliably execute past the first
- * one (mysqli's default single-query execution path has no multi-
- * statement support to rely on here).
+ * multi-statement string -- per `AbstractMigration::addSql()`'s own
+ * source: it wraps the whole string as a single `Query` object, executed
+ * as one statement later, so a `;`-separated batch of 40 `ALTER TABLE`s
+ * in one call would not reliably execute past the first one (mysqli's
+ * default single-query execution path has no multi-statement support to
+ * rely on here).
  */
 final class Version20260804122303 extends AbstractMigration
 {

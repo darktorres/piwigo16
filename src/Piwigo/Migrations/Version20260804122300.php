@@ -27,8 +27,8 @@ use Override;
  * subtly different column width/default/comment across 39 tables is a
  * real risk worth avoiding, not a hypothetical one).
  *
- * PostgreSQL: hand-translated, verified live against a real PostgreSQL
- * 18.4 server (tsvector/GIN generated columns, `DROP DATABASE ... WITH
+ * PostgreSQL: hand-translated against a real PostgreSQL 18.4 server
+ * (tsvector/GIN generated columns, `DROP DATABASE ... WITH
  * (FORCE)`-adjacent Postgres-specific behavior, `CHECK` constraint
  * introspection format, etc.). Translation rules applied uniformly across
  * every table in this migration set:
@@ -43,9 +43,9 @@ use Override;
  * - `tinyint(1)` columns that are real boolean flags (not a genuinely
  *   numeric small value like `level`/`rotation`/`rate`) -> Postgres
  *   `boolean` -- matches Doctrine DBAL's own real `Types::BOOLEAN`
- *   per-platform translation (confirmed live via a `SchemaTool` probe
- *   this same session: `TINYINT` on MySQL, `BOOLEAN` on Postgres for the
- *   identical mapped field), not an arbitrary choice.
+ *   per-platform translation (a `SchemaTool` probe against the identical
+ *   mapped field produces `TINYINT` on MySQL, `BOOLEAN` on Postgres), not
+ *   an arbitrary choice.
  * - `... CHARACTER SET utf8mb4 COLLATE utf8mb4_bin` (MySQL's
  *   case-sensitive/binary-comparison collation) -> Postgres
  *   `COLLATE "C"` (byte-order, case-sensitive comparison), the closest
@@ -63,10 +63,9 @@ use Override;
  * - `FULLTEXT KEY ... WITH PARSER ngram` -> a generated `tsvector` column
  *   (`'simple'` text search config -- whitespace/punctuation tokenizer,
  *   no stemming/stopwords, the closest behavioral match to ngram's
- *   language-agnostic, non-stemmed matching) + a `GIN` index. Verified
- *   live: insert -> generated column computes correctly ->
- *   both a plain `to_tsquery()` match and a `term:*` prefix-match query
- *   work against it.
+ *   language-agnostic, non-stemmed matching) + a `GIN` index. On insert,
+ *   the generated column computes correctly, and both a plain
+ *   `to_tsquery()` match and a `term:*` prefix-match query work against it.
  * - MySQL tolerates the same bare index name (`lastmodified`) reused
  *   across multiple tables (its own index namespace is per-table);
  *   Postgres requires index names unique per-schema, so every Postgres
@@ -302,7 +301,7 @@ final class Version20260804122300 extends AbstractMigration
         // once here since this is the first migration to need it.
         //
         // Every `lastmodified` column below is declared `timestamp(0)`, not
-        // bare `timestamp` -- real bug found live:
+        // bare `timestamp`:
         // PostgreSQL's bare `timestamp` defaults to microsecond
         // precision, but MySQL's `TIMESTAMP` (this schema's other real
         // target, see the *-mysql.sql reference) has zero fractional
@@ -316,10 +315,10 @@ final class Version20260804122300 extends AbstractMigration
         // now()`), matching MySQL's real behavior exactly.
         //
         // This same rule applies to every OTHER `sql_datetime`-Doctrine-Type
-        // column in this schema, not just `lastmodified` -- confirmed live:
+        // column in this schema, not just `lastmodified`:
         // `user_infos.activation_key_expire`,
         // populated via a raw `NOW() + INTERVAL '1 hour'` test fixture
-        // insert (same class of write as this trigger's own `now()`), threw
+        // insert (same class of write as this trigger's own `now()`), throws
         // the identical `SqlDateTime::from()` rejection once read back
         // through `UserService::getUserData()`'s full-entity hydration. Every
         // bare-`timestamp` column below and in the other 2 migration files
@@ -331,8 +330,8 @@ final class Version20260804122300 extends AbstractMigration
         // one, closing the gap for the whole schema at once rather than
         // patching call sites as each one gets hit. `search_filter_view.
         // created_at` is deliberately NOT included here: that table has no
-        // Doctrine entity / `sql_datetime` mapping at all (confirmed zero
-        // real callers of the `search_filter_view` table beyond its own
+        // Doctrine entity / `sql_datetime` mapping at all (no real callers
+        // of the `search_filter_view` table exist beyond its own
         // definition), so it never routes through `SqlDateTime::from()` and
         // isn't exposed to this bug.
         $this->addSql('CREATE FUNCTION set_lastmodified() RETURNS trigger AS $$ BEGIN NEW.lastmodified = now(); RETURN NEW; END; $$ LANGUAGE plpgsql');

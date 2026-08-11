@@ -102,12 +102,12 @@ enum PhotoSortField
      * handling already carved out).
      *
      * `Rank` is quoted because `rank` is a genuine reserved word on both
-     * platforms (confirmed live: a bare `SELECT rank FROM ...` fails
+     * platforms (a bare `SELECT rank FROM ...` fails
      * outright on MySQL, "You have an error in your SQL syntax"), but the
      * quoting character itself isn't portable -- backticks are MySQL-only,
      * and MySQL's default (non-ANSI_QUOTES) SQL mode treats a
      * double-quoted `"rank"` as a *string literal*, not an identifier
-     * reference (confirmed live), so this can't be a single hardcoded
+     * reference, so this can't be a single hardcoded
      * literal the way most of this method's other cases are. No
      * `Connection` is available in this plain enum method (same
      * constraint {@see \Piwigo\Db\SqlDialect::randomFunction()} already

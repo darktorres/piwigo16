@@ -4,31 +4,31 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Integration;
 
-use Override;
-use Piwigo\Core\Kernel;
-use LogicException;
-use Piwigo\Group\GroupEntity;
-use Piwigo\PluginConfig\EventDispatcher;
-use Piwigo\Activity\ActivityEntity;
-use Piwigo\Tests\Support\CurrentUserTestFactory;
-use InvalidArgumentException;
 use Doctrine\DBAL\Connection;
+use InvalidArgumentException;
+use LogicException;
+use Override;
+use Piwigo\Activity\ActivityEntity;
 use Piwigo\Activity\ActivityService;
 use Piwigo\Audit\AuditLogEntity;
 use Piwigo\Audit\AuditService;
 use Piwigo\Common\ValueObject\CategoryId;
 use Piwigo\Common\ValueObject\GroupId;
 use Piwigo\Common\ValueObject\UserId;
-use Piwigo\Config\CurrentConfig;
-use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Config\ConfigEntry;
 use Piwigo\Config\ConfigLoader;
 use Piwigo\Config\ConfigService;
-use Piwigo\Tests\Support\CurrentConfigServiceTestFactory;
+use Piwigo\Config\CurrentConfig;
+use Piwigo\Core\Kernel;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
+use Piwigo\Group\GroupEntity;
 use Piwigo\Group\GroupRepository;
 use Piwigo\Group\GroupService;
+use Piwigo\PluginConfig\EventDispatcher;
+use Piwigo\Tests\Support\CurrentConfigServiceTestFactory;
+use Piwigo\Tests\Support\CurrentConfigTestFactory;
+use Piwigo\Tests\Support\CurrentUserTestFactory;
 
 /**
  * Most of this file covers only the validation paths that fail before
@@ -96,7 +96,7 @@ final class GroupServiceTest extends IntegrationTestCase
         CurrentConfigServiceTestFactory::get()->set(new ConfigService(EntityManagerFactory::build($this->conn)->getRepository(ConfigEntry::class), new EventDispatcher(), CurrentConfigTestFactory::get()));
     }
 
-    public function test_create_rejects_an_already_used_name(): void
+    public function testCreateRejectsAnAlreadyUsedName(): void
     {
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessageIsOrContains('This name is already used by another group.');
@@ -104,7 +104,7 @@ final class GroupServiceTest extends IntegrationTestCase
         $this->service->create('Editors', false);
     }
 
-    public function test_create_rejects_an_empty_name(): void
+    public function testCreateRejectsAnEmptyName(): void
     {
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessageIsOrContains('Name field must not be empty');
@@ -112,7 +112,7 @@ final class GroupServiceTest extends IntegrationTestCase
         $this->service->create('   ', false);
     }
 
-    public function test_duplicate_rejects_an_already_used_copy_name(): void
+    public function testDuplicateRejectsAnAlreadyUsedCopyName(): void
     {
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessageIsOrContains('This name is already used by another group.');
@@ -120,7 +120,7 @@ final class GroupServiceTest extends IntegrationTestCase
         $this->service->duplicate(GroupId::from(1), 'Editors');
     }
 
-    public function test_duplicate_rejects_a_missing_source_group(): void
+    public function testDuplicateRejectsAMissingSourceGroup(): void
     {
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessageIsOrContains('This group does not exist.');
@@ -128,85 +128,91 @@ final class GroupServiceTest extends IntegrationTestCase
         $this->service->duplicate(GroupId::from(999999), 'p18-test-' . bin2hex(random_bytes(4)));
     }
 
-    public function test_update_rejects_an_empty_name(): void
+    public function testUpdateRejectsAnEmptyName(): void
     {
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessageIsOrContains('Name field must not be empty');
 
-        $this->service->update(GroupId::from(1), ['name' => '   ']);
+        $this->service->update(GroupId::from(1), [
+            'name' => '   ',
+        ]);
     }
 
-    public function test_update_rejects_a_missing_group(): void
+    public function testUpdateRejectsAMissingGroup(): void
     {
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessageIsOrContains('This group does not exist.');
 
-        $this->service->update(GroupId::from(999999), ['name' => 'Anything']);
+        $this->service->update(GroupId::from(999999), [
+            'name' => 'Anything',
+        ]);
     }
 
-    public function test_update_rejects_an_already_used_name(): void
+    public function testUpdateRejectsAnAlreadyUsedName(): void
     {
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessageIsOrContains('This name is already used by another group.');
 
-        $this->service->update(GroupId::from(1), ['name' => 'Reviewers']);
+        $this->service->update(GroupId::from(1), [
+            'name' => 'Reviewers',
+        ]);
     }
 
-    public function test_add_members_returns_false_for_a_missing_group(): void
+    public function testAddMembersReturnsFalseForAMissingGroup(): void
     {
         self::assertFalse($this->service->addMembers(GroupId::from(999999), [UserId::from(1)]));
     }
 
-    public function test_remove_members_returns_false_for_a_missing_group(): void
+    public function testRemoveMembersReturnsFalseForAMissingGroup(): void
     {
         self::assertFalse($this->service->removeMembers(GroupId::from(999999), [UserId::from(1)]));
     }
 
-    public function test_merge_returns_false_when_a_group_is_missing(): void
+    public function testMergeReturnsFalseWhenAGroupIsMissing(): void
     {
         self::assertFalse($this->service->merge(GroupId::from(1), [GroupId::from(999999)]));
     }
 
-    public function test_delete_returns_empty_array_when_no_ids_exist(): void
+    public function testDeleteReturnsEmptyArrayWhenNoIdsExist(): void
     {
         self::assertSame([], $this->service->delete([GroupId::from(999999)]));
     }
 
-    public function test_get_name_returns_a_fixture_groups_name(): void
+    public function testGetNameReturnsAFixtureGroupsName(): void
     {
         self::assertSame('Editors', $this->service->getName(GroupId::from(1)));
         self::assertNull($this->service->getName(GroupId::from(999999)));
     }
 
-    public function test_get_authorized_category_ids_returns_fixture_access(): void
+    public function testGetAuthorizedCategoryIdsReturnsFixtureAccess(): void
     {
         $ids = $this->service->getAuthorizedCategoryIds(GroupId::from(1));
 
         self::assertSame([1, 2], array_map(static fn (CategoryId $id): int => $id->value, $ids));
     }
 
-    public function test_get_all_basic_returns_fixture_groups(): void
+    public function testGetAllBasicReturnsFixtureGroups(): void
     {
         $names = array_column($this->service->getAllBasic(), 'name');
 
         self::assertSame(['Editors', 'Guests', 'Reviewers'], $names);
     }
 
-    public function test_get_list_with_member_counts_returns_fixture_groups(): void
+    public function testGetListWithMemberCountsReturnsFixtureGroups(): void
     {
         $rows = $this->service->getListWithMemberCounts();
 
         self::assertNotEmpty($rows);
     }
 
-    public function test_get_member_usernames_delegates_to_the_repository(): void
+    public function testGetMemberUsernamesDelegatesToTheRepository(): void
     {
         $names = $this->service->getMemberUsernames(GroupId::from(1));
 
         self::assertSame(['fixture_admin', 'regular_user'], $names);
     }
 
-    public function test_delete_with_no_ids_triggers_a_warning_and_returns_false(): void
+    public function testDeleteWithNoIdsTriggersAWarningAndReturnsFalse(): void
     {
         // trigger_error(E_USER_WARNING) would otherwise trip
         // failOnWarning="true" -- a real no-op error handler for the
@@ -223,7 +229,7 @@ final class GroupServiceTest extends IntegrationTestCase
         self::assertFalse($result);
     }
 
-    public function test_delete_flips_email_admin_on_new_user_to_all_when_the_configured_group_is_among_the_requested_ids(): void
+    public function testDeleteFlipsEmailAdminOnNewUserToAllWhenTheConfiguredGroupIsAmongTheRequestedIds(): void
     {
         // 999999 isn't a real group (groups only has ids 1-3), so
         // repo->delete() finds nothing and delete() returns [] the same
@@ -242,7 +248,7 @@ final class GroupServiceTest extends IntegrationTestCase
         }
     }
 
-    public function test_delete_leaves_email_admin_on_new_user_untouched_when_no_requested_id_matches_the_configured_group(): void
+    public function testDeleteLeavesEmailAdminOnNewUserUntouchedWhenNoRequestedIdMatchesTheConfiguredGroup(): void
     {
         $this->configService->confUpdateParam('email_admin_on_new_user', 'group:555555', true);
 
@@ -256,7 +262,7 @@ final class GroupServiceTest extends IntegrationTestCase
         }
     }
 
-    public function test_remove_access_revokes_only_the_requested_categorys_access(): void
+    public function testRemoveAccessRevokesOnlyTheRequestedCategorysAccess(): void
     {
         $groupId = $this->service->create('p18-test-remove-access-' . bin2hex(random_bytes(4)), false);
 
@@ -272,7 +278,7 @@ final class GroupServiceTest extends IntegrationTestCase
         }
     }
 
-    public function test_add_access_authorizes_new_categories_then_is_a_noop_once_all_are_already_authorized(): void
+    public function testAddAccessAuthorizesNewCategoriesThenIsANoopOnceAllAreAlreadyAuthorized(): void
     {
         $groupId = $this->service->create('p18-test-add-access-' . bin2hex(random_bytes(4)), false);
 
@@ -298,7 +304,7 @@ final class GroupServiceTest extends IntegrationTestCase
         }
     }
 
-    public function test_add_access_authorizes_only_the_not_yet_authorized_categories_from_a_mixed_request(): void
+    public function testAddAccessAuthorizesOnlyTheNotYetAuthorizedCategoriesFromAMixedRequest(): void
     {
         $groupId = $this->service->create('p18-test-add-access-mixed-' . bin2hex(random_bytes(4)), false);
 
@@ -317,7 +323,7 @@ final class GroupServiceTest extends IntegrationTestCase
         }
     }
 
-    public function test_duplicate_copies_members_and_logs_a_user_edit_activity_associated_with_the_source_group(): void
+    public function testDuplicateCopiesMembersAndLogsAUserEditActivityAssociatedWithTheSourceGroup(): void
     {
         $sourceId = $this->service->create('p18-test-dup-source-' . bin2hex(random_bytes(4)), false);
         $this->service->addMembers($sourceId, [UserId::from(1), UserId::from(4)]);
@@ -343,7 +349,7 @@ final class GroupServiceTest extends IntegrationTestCase
         }
     }
 
-    public function test_merge_logs_a_user_edit_activity_associated_with_the_destination_group_for_each_moved_member(): void
+    public function testMergeLogsAUserEditActivityAssociatedWithTheDestinationGroupForEachMovedMember(): void
     {
         $destinationId = $this->service->create('p18-test-merge-dest-' . bin2hex(random_bytes(4)), false);
         $sourceId = $this->service->create('p18-test-merge-source-' . bin2hex(random_bytes(4)), false);
@@ -405,8 +411,10 @@ final class GroupServiceTest extends IntegrationTestCase
     {
         $detailsColumn = $this->dbDriver === 'pgsql' ? 'details::text' : 'details';
         $this->conn->executeStatement(
-            'DELETE FROM ' . 'activity' . " WHERE object = 'user' AND action = 'edit' AND {$detailsColumn} LIKE :assoc",
-            ['assoc' => '%"associated": ' . $associatedGroupId . '%']
+            'DELETE FROM activity' . " WHERE object = 'user' AND action = 'edit' AND {$detailsColumn} LIKE :assoc",
+            [
+                'assoc' => '%"associated": ' . $associatedGroupId . '%',
+            ]
         );
     }
 }

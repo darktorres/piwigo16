@@ -4,51 +4,50 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Integration;
 
-use Override;
-use Piwigo\Config\ConfigRepository;
-use Piwigo\Users\UserRepository;
-use Piwigo\Tests\Support\HtmlServiceTestFactory;
-use Piwigo\Config\DeploymentPolicy;
-use Piwigo\Core\InstallationFlag;
-use Piwigo\Core\ProcessCache;
-use Piwigo\Core\PageState;
-use Piwigo\Core\Paths;
-use Piwigo\Lang\Translator;
-use Piwigo\Core\UrlServiceInterface;
-use LogicException;
 use Doctrine\DBAL\Connection;
+use LogicException;
+use Override;
 use Piwigo\Activity\ActivityEntity;
 use Piwigo\Activity\ActivityService;
 use Piwigo\Common\ValueObject\LangCode;
+use Piwigo\Common\ValueObject\ThemeId;
 use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Common\ValueObject\Username;
 use Piwigo\Config\ConfigEntry;
 use Piwigo\Config\ConfigLoader;
 use Piwigo\Config\ConfigService;
 use Piwigo\Config\CurrentConfig;
-use Piwigo\Tests\Support\CurrentConfigTestFactory;
-use Piwigo\Tests\Support\CurrentConfigServiceTestFactory;
+use Piwigo\Config\DeploymentPolicy;
+use Piwigo\Core\InstallationFlag;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Lang;
-use Piwigo\Tests\Support\LangTestFactory;
+use Piwigo\Core\PageState;
+use Piwigo\Core\Paths;
+use Piwigo\Core\ProcessCache;
+use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Event\Lifecycle\LoadingLang;
 use Piwigo\Event\Mail\BeforeParseMailTemplate;
 use Piwigo\Event\Mail\BeforeSendMail;
 use Piwigo\Group\GroupEntity;
+use Piwigo\Lang\Translator;
 use Piwigo\Mail\MailRecipientRepository;
 use Piwigo\Mail\MailRecipientRepositoryInterface;
 use Piwigo\Mail\MailService;
 use Piwigo\PluginConfig\EventDispatcher;
-use Piwigo\Tests\Support\EventDispatcherTestFactory;
 use Piwigo\Session\SessionEntity;
 use Piwigo\Session\SessionService;
+use Piwigo\Tests\Support\CurrentConfigServiceTestFactory;
+use Piwigo\Tests\Support\CurrentConfigTestFactory;
+use Piwigo\Tests\Support\CurrentUserTestFactory;
+use Piwigo\Tests\Support\EventDispatcherTestFactory;
+use Piwigo\Tests\Support\HtmlServiceTestFactory;
+use Piwigo\Tests\Support\LangTestFactory;
 use Piwigo\Tests\Support\TranslatorTestFactory;
 use Piwigo\Users\CurrentUser;
-use Piwigo\Tests\Support\CurrentUserTestFactory;
-use Piwigo\Common\ValueObject\ThemeId;
 use Piwigo\Users\User;
+use Piwigo\Users\UserRepository;
 use Piwigo\Users\UserService;
 use Piwigo\Users\UserStatus;
 use RuntimeException;
@@ -144,7 +143,7 @@ final class MailServiceTest extends IntegrationTestCase
     #[Override]
     protected function tearDown(): void
     {
-        $this->conn->executeStatement('UPDATE ' . 'users' . ' SET mail_address = NULL WHERE id = 3');
+        $this->conn->executeStatement('UPDATE users SET mail_address = NULL WHERE id = 3');
         $currentConfig = CurrentConfigTestFactory::get();
         $currentConfig->smtpHost = '';
         $currentConfig->debugMail = false;
@@ -174,7 +173,7 @@ final class MailServiceTest extends IntegrationTestCase
             new ActivityService(EntityManagerFactory::build($this->conn)->getRepository(ActivityEntity::class)),
             HtmlServiceTestFactory::build(),
             $this->conn,
-            new SessionService(EntityManagerFactory::build($this->conn)->getRepository(SessionEntity::class),CurrentConfigTestFactory::get()),
+            new SessionService(EntityManagerFactory::build($this->conn)->getRepository(SessionEntity::class), CurrentConfigTestFactory::get()),
             new EventDispatcher(),
             new DeploymentPolicy(),
             CurrentUserTestFactory::get(),
@@ -215,7 +214,8 @@ final class MailServiceTest extends IntegrationTestCase
 
     private function setCurrentUserToFixtureAdmin(): void
     {
-        $data = $this->buildUserService()->buildUser(UserId::from(1));
+        $data = $this->buildUserService()
+            ->buildUser(UserId::from(1));
         CurrentUserTestFactory::get()->set(User::fromUserArray($data));
     }
 
@@ -273,20 +273,22 @@ final class MailServiceTest extends IntegrationTestCase
             throw new RuntimeException('expected the before_send_mail handler to have captured a real Email');
         }
 
-        return ['email' => $capturedEmail];
+        return [
+            'email' => $capturedEmail,
+        ];
     }
 
-    public function test_mailNotificationAdmins_returns_false_for_an_empty_subject(): void
+    public function testMailNotificationAdminsReturnsFalseForAnEmptySubject(): void
     {
         self::assertFalse($this->mailer->mailNotificationAdmins('', 'content'));
     }
 
-    public function test_mailNotificationAdmins_returns_false_for_empty_content(): void
+    public function testMailNotificationAdminsReturnsFalseForEmptyContent(): void
     {
         self::assertFalse($this->mailer->mailNotificationAdmins('subject', ''));
     }
 
-    public function test_mailNotificationAdmins_sends_to_the_only_admin_and_fails_delivery_deterministically(): void
+    public function testMailNotificationAdminsSendsToTheOnlyAdminAndFailsDeliveryDeterministically(): void
     {
         CurrentConfigTestFactory::get()->smtpHost = '127.0.0.1:1';
 
@@ -295,7 +297,7 @@ final class MailServiceTest extends IntegrationTestCase
         self::assertFalse($result);
     }
 
-    public function test_mailNotificationAdmins_builds_subject_and_content_from_lang_args_arrays(): void
+    public function testMailNotificationAdminsBuildsSubjectAndContentFromLangArgsArrays(): void
     {
         CurrentConfigTestFactory::get()->smtpHost = '127.0.0.1:1';
         $subject = LangTestFactory::get()->buildArgs('Registration of %s', 'someuser');
@@ -309,12 +311,12 @@ final class MailServiceTest extends IntegrationTestCase
         self::assertFalse($result);
     }
 
-    public function test_mailAdmins_returns_false_when_content_and_tpl_are_both_empty(): void
+    public function testMailAdminsReturnsFalseWhenContentAndTplAreBothEmpty(): void
     {
         self::assertFalse($this->mailer->mailAdmins([], []));
     }
 
-    public function test_mailAdmins_returns_true_when_excluding_the_current_user_leaves_no_admin(): void
+    public function testMailAdminsReturnsTrueWhenExcludingTheCurrentUserLeavesNoAdmin(): void
     {
         // user 1 (fixture_admin) is the fixture's only webmaster/admin --
         // excluding it as the current user (the default) empties the
@@ -323,54 +325,66 @@ final class MailServiceTest extends IntegrationTestCase
         // reaching mail().
         $this->setCurrentUserToFixtureAdmin();
 
-        self::assertTrue($this->mailer->mailAdmins(['content' => 'hi'], []));
+        self::assertTrue($this->mailer->mailAdmins([
+            'content' => 'hi',
+        ], []));
     }
 
-    public function test_mailAdmins_sends_to_the_admin_and_fails_delivery_deterministically(): void
+    public function testMailAdminsSendsToTheAdminAndFailsDeliveryDeterministically(): void
     {
         CurrentConfigTestFactory::get()->smtpHost = '127.0.0.1:1';
 
-        $result = $this->suppressMailerWarning(fn () => $this->mailer->mailAdmins(['content' => 'hi'], []));
+        $result = $this->suppressMailerWarning(fn () => $this->mailer->mailAdmins([
+            'content' => 'hi',
+        ], []));
 
         self::assertFalse($result);
     }
 
-    public function test_mailAdmins_only_webmasters_still_finds_the_webmaster(): void
+    public function testMailAdminsOnlyWebmastersStillFindsTheWebmaster(): void
     {
         CurrentConfigTestFactory::get()->smtpHost = '127.0.0.1:1';
 
-        $result = $this->suppressMailerWarning(fn () => $this->mailer->mailAdmins(['content' => 'hi'], [], true, true));
+        $result = $this->suppressMailerWarning(fn () => $this->mailer->mailAdmins([
+            'content' => 'hi',
+        ], [], true, true));
 
         self::assertFalse($result);
     }
 
-    public function test_mailGroup_returns_false_for_group_zero(): void
+    public function testMailGroupReturnsFalseForGroupZero(): void
     {
-        self::assertFalse($this->mailer->mailGroup(0, ['content' => 'hi'], []));
+        self::assertFalse($this->mailer->mailGroup(0, [
+            'content' => 'hi',
+        ], []));
     }
 
-    public function test_mailGroup_returns_false_when_content_and_tpl_are_both_empty(): void
+    public function testMailGroupReturnsFalseWhenContentAndTplAreBothEmpty(): void
     {
         self::assertFalse($this->mailer->mailGroup(1, [], []));
     }
 
-    public function test_mailGroup_returns_true_for_a_group_with_no_language_matches(): void
+    public function testMailGroupReturnsTrueForAGroupWithNoLanguageMatches(): void
     {
-        self::assertTrue($this->mailer->mailGroup(99999, ['content' => 'hi'], []));
+        self::assertTrue($this->mailer->mailGroup(99999, [
+            'content' => 'hi',
+        ], []));
     }
 
-    public function test_mailGroup_sends_to_the_single_real_recipient_and_fails_delivery_deterministically(): void
+    public function testMailGroupSendsToTheSingleRealRecipientAndFailsDeliveryDeterministically(): void
     {
         // Group 1 has user 1 (real email) and user 3 (NULL email, filtered
         // out at the query level) -- exactly one real send attempt.
         CurrentConfigTestFactory::get()->smtpHost = '127.0.0.1:1';
 
-        $result = $this->suppressMailerWarning(fn () => $this->mailer->mailGroup(1, ['content' => 'hi']));
+        $result = $this->suppressMailerWarning(fn () => $this->mailer->mailGroup(1, [
+            'content' => 'hi',
+        ]));
 
         self::assertFalse($result);
     }
 
-    public function test_mailGroup_builds_an_auth_key_link_for_a_normal_status_recipient_with_a_real_email(): void
+    public function testMailGroupBuildsAnAuthKeyLinkForANormalStatusRecipientWithARealEmail(): void
     {
         // Temporary, restored in tearDown: user 3 (status 'normal', so
         // AuthService::createUserAuthKey() actually succeeds, unlike user
@@ -378,30 +392,39 @@ final class MailServiceTest extends IntegrationTestCase
         // real-email member, giving a single deterministic recipient that
         // exercises the authkey!==false LINK-building branch.
         $this->conn->executeStatement(
-            "UPDATE " . 'users' . " SET mail_address = 'temp3@example.test' WHERE id = 3"
+            'UPDATE users' . " SET mail_address = 'temp3@example.test' WHERE id = 3"
         );
         CurrentConfigTestFactory::get()->smtpHost = '127.0.0.1:1';
 
-        $result = $this->suppressMailerWarning(fn () => $this->mailer->mailGroup(2, ['content' => 'hi'], ['assign' => ['LINK' => 'http://example.test/link']]));
+        $result = $this->suppressMailerWarning(fn () => $this->mailer->mailGroup(2, [
+            'content' => 'hi',
+        ], [
+            'assign' => [
+                'LINK' => 'http://example.test/link',
+            ],
+        ]));
 
         self::assertFalse($result);
     }
 
-    public function test_mail_returns_true_immediately_when_to_and_cc_and_bcc_are_all_empty(): void
+    public function testMailReturnsTrueImmediatelyWhenToAndCcAndBccAreAllEmpty(): void
     {
         self::assertTrue($this->mailer->mail('', []));
     }
 
-    public function test_mail_attempts_delivery_when_only_cc_is_set_and_to_is_empty(): void
+    public function testMailAttemptsDeliveryWhenOnlyCcIsSetAndToIsEmpty(): void
     {
         CurrentConfigTestFactory::get()->smtpHost = '127.0.0.1:1';
 
-        $result = $this->suppressMailerWarning(fn () => $this->mailer->mail('', ['Cc' => 'cc@example.test', 'content' => 'hi']));
+        $result = $this->suppressMailerWarning(fn () => $this->mailer->mail('', [
+            'Cc' => 'cc@example.test',
+            'content' => 'hi',
+        ]));
 
         self::assertFalse($result);
     }
 
-    public function test_sendMailTest_dumps_a_labelled_error_file_when_debug_mail_is_enabled(): void
+    public function testSendMailTestDumpsALabelledErrorFileWhenDebugMailIsEnabled(): void
     {
         $currentConfig = CurrentConfigTestFactory::get();
         $currentConfig->smtpHost = '127.0.0.1:1';
@@ -411,8 +434,15 @@ final class MailServiceTest extends IntegrationTestCase
         self::assertIsArray($before);
 
         $result = $this->suppressMailerWarning(fn () => $this->mailer->mail(
-            ['name' => 'Someone', 'email' => 'someone@example.test'],
-            ['subject' => 'hi', 'content' => 'body', 'content_format' => 'text/plain']
+            [
+                'name' => 'Someone',
+                'email' => 'someone@example.test',
+            ],
+            [
+                'subject' => 'hi',
+                'content' => 'body',
+                'content_format' => 'text/plain',
+            ]
         ));
         self::assertFalse($result);
 
@@ -429,7 +459,7 @@ final class MailServiceTest extends IntegrationTestCase
         unlink($created[0]);
     }
 
-    public function test_sendMailTest_returns_early_when_the_target_file_cannot_be_opened(): void
+    public function testSendMailTestReturnsEarlyWhenTheTargetFileCannotBeOpened(): void
     {
         $currentConfig = CurrentConfigTestFactory::get();
         $currentConfig->smtpHost = '127.0.0.1:1';
@@ -455,8 +485,15 @@ final class MailServiceTest extends IntegrationTestCase
         self::assertIsArray($before);
 
         $result = $this->suppressMailerWarning(fn () => $this->mailer->mail(
-            ['name' => 'Someone', 'email' => 'someone@example.test'],
-            ['subject' => 'hi', 'content' => 'body', 'content_format' => 'text/plain']
+            [
+                'name' => 'Someone',
+                'email' => 'someone@example.test',
+            ],
+            [
+                'subject' => 'hi',
+                'content' => 'body',
+                'content_format' => 'text/plain',
+            ]
         ));
         self::assertFalse($result);
 
@@ -465,7 +502,7 @@ final class MailServiceTest extends IntegrationTestCase
         self::assertSame($before, $after);
     }
 
-    public function test_switchLangTo_loads_language_files_and_notifies_loading_lang_for_a_language_not_yet_cached(): void
+    public function testSwitchLangToLoadsLanguageFilesAndNotifiesLoadingLangForALanguageNotYetCached(): void
     {
         $notified = false;
         $handler = static function () use (&$notified): void {
@@ -496,7 +533,7 @@ final class MailServiceTest extends IntegrationTestCase
         }
     }
 
-    public function test_switchLangTo_replays_every_registered_plugin_language_file_for_a_language_not_yet_cached(): void
+    public function testSwitchLangToReplaysEveryRegisteredPluginLanguageFileForALanguageNotYetCached(): void
     {
         // Simulates what a real plugin's own 'loading_lang' handler would
         // have registered earlier in the request: Lang::load() with a
@@ -509,7 +546,9 @@ final class MailServiceTest extends IntegrationTestCase
         // foreach's own body (MailService.php lines ~453-456), not just
         // the empty-map zero-iteration case the sibling test alone would
         // leave covered.
-        LangTestFactory::get()->load('missing.lang', 'my-plugin/', ['language' => 'en_UK']);
+        LangTestFactory::get()->load('missing.lang', 'my-plugin/', [
+            'language' => 'en_UK',
+        ]);
 
         try {
             // Must not throw/warn even though 'my-plugin/missing.lang.php'
@@ -524,7 +563,9 @@ final class MailServiceTest extends IntegrationTestCase
             // overwrite), so the original entry -- not the 'de_DE' the loop
             // passed through -- is what's still on record afterward.
             self::assertSame(
-                ['language' => 'en_UK'],
+                [
+                    'language' => 'en_UK',
+                ],
                 LangTestFactory::get()->languageFiles()['my-plugin/']['missing.lang']
             );
         } finally {
@@ -537,7 +578,7 @@ final class MailServiceTest extends IntegrationTestCase
         }
     }
 
-    public function test_switchLangBack_is_a_no_op_when_the_stack_is_empty(): void
+    public function testSwitchLangBackIsANoOpWhenTheStackIsEmpty(): void
     {
         // A fresh $this->mailer (this file's own setUp(), a brand new
         // instance) starts with an empty $switchLangStack -- calling
@@ -553,7 +594,7 @@ final class MailServiceTest extends IntegrationTestCase
         $this->mailer->switchLangBack();
     }
 
-    public function test_mailGroup_filters_recipients_by_an_explicit_language_selected_argument(): void
+    public function testMailGroupFiltersRecipientsByAnExplicitLanguageSelectedArgument(): void
     {
         // Same fixture shape as the "single real recipient" test above
         // (group 1: user 1 real+English, user 3 NULL email) -- explicitly
@@ -561,12 +602,15 @@ final class MailServiceTest extends IntegrationTestCase
         // non-empty ternary branch, not just its default-null fallback.
         CurrentConfigTestFactory::get()->smtpHost = '127.0.0.1:1';
 
-        $result = $this->suppressMailerWarning(fn () => $this->mailer->mailGroup(1, ['content' => 'hi', 'language_selected' => 'en_UK']));
+        $result = $this->suppressMailerWarning(fn () => $this->mailer->mailGroup(1, [
+            'content' => 'hi',
+            'language_selected' => 'en_UK',
+        ]));
 
         self::assertFalse($result);
     }
 
-    public function test_mailGroup_skips_an_empty_string_language_entry(): void
+    public function testMailGroupSkipsAnEmptyStringLanguageEntry(): void
     {
         // MailRecipientRepository::findDistinctLanguagesInGroup()'s own
         // real implementation already array_filter()s out empty-string
@@ -584,8 +628,10 @@ final class MailServiceTest extends IntegrationTestCase
         // and delegates every method it doesn't need to override to it,
         // rather than extending the final class directly.
         $realRepo = new MailRecipientRepository(EntityManagerFactory::build($this->conn));
-        $repo = new class ($realRepo) implements MailRecipientRepositoryInterface {
-            public function __construct(private readonly MailRecipientRepositoryInterface $real) {}
+        $repo = new class($realRepo) implements MailRecipientRepositoryInterface {
+            public function __construct(
+                private readonly MailRecipientRepositoryInterface $real
+            ) {}
 
             #[Override]
             public function findAdminsAndWebmasters(array $userStatuses, ?int $groupId, ?int $excludeUserId): array
@@ -610,10 +656,12 @@ final class MailServiceTest extends IntegrationTestCase
         // The single '' entry is `continue`d over without ever reaching
         // findByGroupAndLanguage()/switchLangTo() -- $return stays at its
         // initial `true`, same as the real "no matching users" outcome.
-        self::assertTrue($mailer->mailGroup(1, ['content' => 'hi']));
+        self::assertTrue($mailer->mailGroup(1, [
+            'content' => 'hi',
+        ]));
     }
 
-    public function test_mailGroup_skips_a_language_whose_per_language_lookup_comes_back_with_no_users(): void
+    public function testMailGroupSkipsALanguageWhosePerLanguageLookupComesBackWithNoUsers(): void
     {
         // findDistinctLanguagesInGroup() and findByGroupAndLanguage() run
         // the exact same WHERE predicates (group_id + non-empty email [+
@@ -628,8 +676,10 @@ final class MailServiceTest extends IntegrationTestCase
         // deterministic way to exercise it, same reasoning/seam as the
         // empty-string-language test above.
         $realRepo = new MailRecipientRepository(EntityManagerFactory::build($this->conn));
-        $repo = new class ($realRepo) implements MailRecipientRepositoryInterface {
-            public function __construct(private readonly MailRecipientRepositoryInterface $real) {}
+        $repo = new class($realRepo) implements MailRecipientRepositoryInterface {
+            public function __construct(
+                private readonly MailRecipientRepositoryInterface $real
+            ) {}
 
             #[Override]
             public function findAdminsAndWebmasters(array $userStatuses, ?int $groupId, ?int $excludeUserId): array
@@ -651,43 +701,59 @@ final class MailServiceTest extends IntegrationTestCase
         };
         $mailer = $this->mailServiceWithRecipientRepo($repo);
 
-        self::assertTrue($mailer->mailGroup(1, ['content' => 'hi']));
+        self::assertTrue($mailer->mailGroup(1, [
+            'content' => 'hi',
+        ]));
     }
 
-    public function test_mailGroup_builds_an_auth_key_link_for_the_optional_IMG_assign_slot_too(): void
+    public function testMailGroupBuildsAnAuthKeyLinkForTheOptionalIMGAssignSlotToo(): void
     {
         // Same user-3-temp-email fixture trick as the LINK-only test
         // above, this time also supplying an IMG assign slot with its own
         // 'link' key to exercise that separate auth-key-appending branch.
         $this->conn->executeStatement(
-            "UPDATE " . 'users' . " SET mail_address = 'temp3@example.test' WHERE id = 3"
+            'UPDATE users' . " SET mail_address = 'temp3@example.test' WHERE id = 3"
         );
         CurrentConfigTestFactory::get()->smtpHost = '127.0.0.1:1';
 
         $result = $this->suppressMailerWarning(fn () => $this->mailer->mailGroup(
             2,
-            ['content' => 'hi'],
-            ['assign' => ['LINK' => 'http://example.test/link', 'IMG' => ['link' => 'http://example.test/img.png']]]
+            [
+                'content' => 'hi',
+            ],
+            [
+                'assign' => [
+                    'LINK' => 'http://example.test/link',
+                    'IMG' => [
+                        'link' => 'http://example.test/img.png',
+                    ],
+                ],
+            ]
         ));
 
         self::assertFalse($result);
     }
 
-    public function test_mail_auto_adds_a_bcc_to_the_webmaster_when_send_bcc_mail_webmaster_is_enabled(): void
+    public function testMailAutoAddsABccToTheWebmasterWhenSendBccMailWebmasterIsEnabled(): void
     {
         $currentConfig = CurrentConfigTestFactory::get();
         $currentConfig->smtpHost = '127.0.0.1:1';
         $currentConfig->sendBccMailWebmaster = true;
 
         $result = $this->suppressMailerWarning(fn () => $this->mailer->mail(
-            ['name' => 'Someone', 'email' => 'someone@example.test'],
-            ['content' => 'hi']
+            [
+                'name' => 'Someone',
+                'email' => 'someone@example.test',
+            ],
+            [
+                'content' => 'hi',
+            ]
         ));
 
         self::assertFalse($result);
     }
 
-    public function test_mail_sets_a_custom_template_dir_then_falls_back_to_raw_content_when_the_filename_does_not_exist(): void
+    public function testMailSetsACustomTemplateDirThenFallsBackToRawContentWhenTheFilenameDoesNotExist(): void
     {
         // 'dirname' set (any value -- Smarty's addTemplateDir() appends
         // rather than validates/replaces, so this alone can't hide the
@@ -698,15 +764,24 @@ final class MailServiceTest extends IntegrationTestCase
         CurrentConfigTestFactory::get()->smtpHost = '127.0.0.1:1';
 
         $result = $this->suppressMailerWarning(fn () => $this->mailer->mail(
-            ['name' => 'Someone', 'email' => 'someone@example.test'],
-            ['content' => 'hi'],
-            ['filename' => 'this_template_does_not_exist', 'dirname' => '_data/mail_templates_extra', 'assign' => []]
+            [
+                'name' => 'Someone',
+                'email' => 'someone@example.test',
+            ],
+            [
+                'content' => 'hi',
+            ],
+            [
+                'filename' => 'this_template_does_not_exist',
+                'dirname' => '_data/mail_templates_extra',
+                'assign' => [],
+            ]
         ));
 
         self::assertFalse($result);
     }
 
-    public function test_mail_builds_an_smtp_dsn_with_the_default_port_url_encoded_auth_and_encryption_when_configured(): void
+    public function testMailBuildsAnSmtpDsnWithTheDefaultPortUrlEncodedAuthAndEncryptionWhenConfigured(): void
     {
         // No colon in smtp_host -> defaults to port 25; a configured
         // smtp_user/password -> rawurlencode()d DSN auth; smtp_secure
@@ -721,14 +796,19 @@ final class MailServiceTest extends IntegrationTestCase
         $currentConfig->smtpSecure = 'tls';
 
         $result = $this->suppressMailerWarning(fn () => $this->mailer->mail(
-            ['name' => 'Someone', 'email' => 'someone@example.test'],
-            ['content' => 'hi']
+            [
+                'name' => 'Someone',
+                'email' => 'someone@example.test',
+            ],
+            [
+                'content' => 'hi',
+            ]
         ));
 
         self::assertFalse($result);
     }
 
-    public function test_formatEmail_strips_newlines_from_the_email_itself_not_just_the_name(): void
+    public function testFormatEmailStripsNewlinesFromTheEmailItselfNotJustTheName(): void
     {
         // Real gap found via mutation testing: the sibling "strips
         // newlines from both name and email" Unit test (Unit/Mail/
@@ -741,7 +821,7 @@ final class MailServiceTest extends IntegrationTestCase
         );
     }
 
-    public function test_getCleanRecipientsList_returns_an_empty_list_for_a_literal_bool_false(): void
+    public function testGetCleanRecipientsListReturnsAnEmptyListForALiteralBoolFalse(): void
     {
         // Real gap found via mutation testing: the sibling "returns an
         // empty list for a literal int 0..." Unit test names false in
@@ -750,7 +830,7 @@ final class MailServiceTest extends IntegrationTestCase
         self::assertSame([], $this->mailer->getCleanRecipientsList(false));
     }
 
-    public function test_switchLangTo_loads_admin_lang_translations_for_a_language_not_yet_cached(): void
+    public function testSwitchLangToLoadsAdminLangTranslationsForALanguageNotYetCached(): void
     {
         // "Access type" is translated in language/fr_FR/admin.po ("Type
         // d'accès") but never appears anywhere in language/fr_FR/
@@ -769,7 +849,7 @@ final class MailServiceTest extends IntegrationTestCase
         }
     }
 
-    public function test_switchLangTo_restores_the_cached_languages_own_data_and_translator_dictionary_when_reusing_it(): void
+    public function testSwitchLangToRestoresTheCachedLanguagesOwnDataAndTranslatorDictionaryWhenReusingIt(): void
     {
         // First pass genuinely populates the switchLangLanguages cache
         // entry for 'fr_FR' (the real re-init branch, exercised by the
@@ -781,7 +861,9 @@ final class MailServiceTest extends IntegrationTestCase
         // real Translator dictionary with a marker that was never part
         // of the 'fr_FR' cache entry captured above -- Lang::loadArray()
         // writes both at once (its own docblock).
-        LangTestFactory::get()->loadArray(['switch_lang_to_cached_restore_marker' => 'CORRUPTED']);
+        LangTestFactory::get()->loadArray([
+            'switch_lang_to_cached_restore_marker' => 'CORRUPTED',
+        ]);
 
         try {
             // Second switchLangTo('fr_FR') call hits the ELSE/cached
@@ -801,28 +883,34 @@ final class MailServiceTest extends IntegrationTestCase
         }
     }
 
-    public function test_switchLangBack_restores_the_saved_languages_own_data_and_translator_dictionary_not_just_langInfo(): void
+    public function testSwitchLangBackRestoresTheSavedLanguagesOwnDataAndTranslatorDictionaryNotJustLangInfo(): void
     {
         // Populates $switchLangLanguages[originalLanguage] with the
         // CURRENT (pre-switch) Lang::snapshot()/Translator dictionary
         // state -- "considered OK on first call" (switchLangTo()'s own
         // comment).
-        LangTestFactory::get()->loadArray(['switch_lang_back_restore_marker' => 'ORIGINAL']);
+        LangTestFactory::get()->loadArray([
+            'switch_lang_back_restore_marker' => 'ORIGINAL',
+        ]);
 
         $this->mailer->switchLangTo('fr_FR');
 
         // Corrupt the CURRENT (now fr_FR) data/dictionary --
         // switchLangBack() must overwrite these FROM the snapshot
         // captured above, not leave this corruption in place.
-        LangTestFactory::get()->loadArray(['switch_lang_back_restore_marker' => 'CORRUPTED']);
+        LangTestFactory::get()->loadArray([
+            'switch_lang_back_restore_marker' => 'CORRUPTED',
+        ]);
 
         $this->mailer->switchLangBack();
 
-        self::assertSame(['switch_lang_back_restore_marker' => 'ORIGINAL'], LangTestFactory::get()->snapshot());
+        self::assertSame([
+            'switch_lang_back_restore_marker' => 'ORIGINAL',
+        ], LangTestFactory::get()->snapshot());
         self::assertSame('ORIGINAL', TranslatorTestFactory::get()->translate('switch_lang_back_restore_marker'));
     }
 
-    public function test_mail_falls_back_the_cache_keys_lang_code_segment_to_an_empty_string_when_lang_info_has_no_code(): void
+    public function testMailFallsBackTheCacheKeysLangCodeSegmentToAnEmptyStringWhenLangInfoHasNoCode(): void
     {
         // BeforeParseMailTemplate's own real, observable cacheKey payload
         // is the only way to inspect $cacheKey from outside -- it's
@@ -846,8 +934,15 @@ final class MailServiceTest extends IntegrationTestCase
 
         try {
             $this->mailCaptureBeforeSend(
-                ['name' => 'Someone', 'email' => 'someone@example.test'],
-                ['subject' => 'x', 'content' => 'y', 'theme' => 'clear']
+                [
+                    'name' => 'Someone',
+                    'email' => 'someone@example.test',
+                ],
+                [
+                    'subject' => 'x',
+                    'content' => 'y',
+                    'theme' => 'clear',
+                ]
             );
         } finally {
             EventDispatcherTestFactory::get()->removeEventHandler(BeforeParseMailTemplate::class, $handler);
@@ -856,7 +951,7 @@ final class MailServiceTest extends IntegrationTestCase
         self::assertSame('text/plain--clear', $capturedCacheKey);
     }
 
-    public function test_mail_leaves_plain_text_content_untouched_when_both_content_format_and_content_type_are_plain(): void
+    public function testMailLeavesPlainTextContentUntouchedWhenBothContentFormatAndContentTypeArePlain(): void
     {
         // content_format defaults to 'text/plain' (unset here) and
         // mail_allow_html is forced false (contentType list is ONLY
@@ -874,8 +969,14 @@ final class MailServiceTest extends IntegrationTestCase
         CurrentConfigTestFactory::get()->mailAllowHtml = false;
 
         $result = $this->mailCaptureBeforeSend(
-            ['name' => 'Someone', 'email' => 'someone@example.test'],
-            ['subject' => 'x', 'content' => 'Keep <this> tag as-is']
+            [
+                'name' => 'Someone',
+                'email' => 'someone@example.test',
+            ],
+            [
+                'subject' => 'x',
+                'content' => 'Keep <this> tag as-is',
+            ]
         );
 
         $textBody = $result['email']->getTextBody();
@@ -883,7 +984,7 @@ final class MailServiceTest extends IntegrationTestCase
         self::assertStringContainsString('Keep <this> tag as-is', $textBody);
     }
 
-    public function test_mail_wraps_the_converted_html_part_in_an_opening_and_closing_paragraph_tag(): void
+    public function testMailWrapsTheConvertedHtmlPartInAnOpeningAndClosingParagraphTag(): void
     {
         // content_format defaults to 'text/plain' and mail_allow_html is
         // forced true (contentType list includes 'text/html') -- for
@@ -896,11 +997,20 @@ final class MailServiceTest extends IntegrationTestCase
         // the sibling Unit test's own docblock) -- the tag itself is
         // never removed or reordered by that pass, only decorated.
         CurrentConfigTestFactory::get()->mailAllowHtml = true;
-        LangTestFactory::get()->setLangInfo(['code' => 'en', 'direction' => 'ltr']);
+        LangTestFactory::get()->setLangInfo([
+            'code' => 'en',
+            'direction' => 'ltr',
+        ]);
 
         $result = $this->mailCaptureBeforeSend(
-            ['name' => 'Someone', 'email' => 'someone@example.test'],
-            ['subject' => 'x', 'content' => 'MarkerContentXYZ']
+            [
+                'name' => 'Someone',
+                'email' => 'someone@example.test',
+            ],
+            [
+                'subject' => 'x',
+                'content' => 'MarkerContentXYZ',
+            ]
         );
 
         $htmlBody = $result['email']->getHtmlBody();
@@ -908,7 +1018,7 @@ final class MailServiceTest extends IntegrationTestCase
         self::assertMatchesRegularExpression('/<p[^>]*>\s*MarkerContentXYZ\s*<\/p>/', $htmlBody);
     }
 
-    public function test_mail_turns_off_full_url_mode_before_returning(): void
+    public function testMailTurnsOffFullUrlModeBeforeReturning(): void
     {
         $urlService = Kernel::container()->get(UrlServiceInterface::class);
         self::assertInstanceOf(UrlServiceInterface::class, $urlService);
@@ -916,14 +1026,19 @@ final class MailServiceTest extends IntegrationTestCase
         CurrentConfigTestFactory::get()->smtpHost = '127.0.0.1:1';
 
         $this->suppressMailerWarning(fn () => $this->mailer->mail(
-            ['name' => 'Someone', 'email' => 'someone@example.test'],
-            ['content' => 'hi']
+            [
+                'name' => 'Someone',
+                'email' => 'someone@example.test',
+            ],
+            [
+                'content' => 'hi',
+            ]
         ));
 
         self::assertSame($before, $urlService->getRootUrl());
     }
 
-    public function test_mail_builds_a_still_parseable_smtp_dsn_when_both_smtp_user_and_host_are_configured(): void
+    public function testMailBuildsAStillParseableSmtpDsnWhenBothSmtpUserAndHostAreConfigured(): void
     {
         // Confirmed via a direct parse_url() check: reordering dsnAuth
         // ('user:pass@') BEFORE the 'smtp://' scheme instead of after it
@@ -944,14 +1059,19 @@ final class MailServiceTest extends IntegrationTestCase
         $currentConfig->smtpPassword = 'p@ss w/ord';
 
         $result = $this->suppressMailerWarning(fn () => $this->mailer->mail(
-            ['name' => 'Someone', 'email' => 'someone@example.test'],
-            ['content' => 'hi']
+            [
+                'name' => 'Someone',
+                'email' => 'someone@example.test',
+            ],
+            [
+                'content' => 'hi',
+            ]
         ));
 
         self::assertFalse($result);
     }
 
-    public function test_generateSuccessResetPasswordMail_turns_off_full_url_mode_before_returning(): void
+    public function testGenerateSuccessResetPasswordMailTurnsOffFullUrlModeBeforeReturning(): void
     {
         // Unlike generateResetPasswordMail/generateSetPasswordMail/
         // generateCodeVerificationMail (see Unit/Mail/MailServiceTest.php's

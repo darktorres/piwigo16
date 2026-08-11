@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Contract;
 
+use Doctrine\DBAL\Connection;
 use Override;
 use Piwigo\Cache\CachePools;
-use Doctrine\DBAL\Connection;
 use Piwigo\Db\DbConnection;
 
 /**
@@ -59,18 +59,20 @@ final class WsAlternateFormatsTest extends ContractTestCase
         return $body;
     }
 
-    public function test_format_php_encodes_a_successful_response_as_a_serialized_array(): void
+    public function testFormatPhpEncodesASuccessfulResponseAsASerializedArray(): void
     {
         $body = $this->rawCall('php', 'method=pwg.getVersion');
 
-        $decoded = unserialize($body, ['allowed_classes' => false]);
+        $decoded = unserialize($body, [
+            'allowed_classes' => false,
+        ]);
         self::assertIsArray($decoded);
         self::assertSame('ok', $decoded['stat']);
         self::assertIsString($decoded['result']);
         self::assertMatchesRegularExpression('/^\d+\.\d+/', $decoded['result']);
     }
 
-    public function test_format_xmlrpc_encodes_a_successful_response(): void
+    public function testFormatXmlrpcEncodesASuccessfulResponse(): void
     {
         $body = $this->rawCall('xmlrpc', 'method=pwg.getVersion');
 
@@ -78,7 +80,7 @@ final class WsAlternateFormatsTest extends ContractTestCase
         self::assertMatchesRegularExpression('#<string>\d+\.\d+.*</string>#', $body);
     }
 
-    public function test_format_xmlrpc_encodes_a_pwgerror_as_a_fault(): void
+    public function testFormatXmlrpcEncodesAPwgerrorAsAFault(): void
     {
         $body = $this->rawCall('xmlrpc', 'method=pwg.not.a.real.method');
 
@@ -88,7 +90,7 @@ final class WsAlternateFormatsTest extends ContractTestCase
         self::assertStringContainsString('Method name is not valid', $body);
     }
 
-    public function test_missing_method_name_returns_invalid_method_error(): void
+    public function testMissingMethodNameReturnsInvalidMethodError(): void
     {
         // No `method=` field at all -- WsRawRequest::fromGlobals()->method
         // stays null, hitting PwgRestRequestHandler::handleRequest()'s own
@@ -104,7 +106,7 @@ final class WsAlternateFormatsTest extends ContractTestCase
         self::assertSame('Missing "method" name', $decoded['message']);
     }
 
-    public function test_empty_available_permission_levels_config_falls_back_to_the_default_set(): void
+    public function testEmptyAvailablePermissionLevelsConfigFallsBackToTheDefaultSet(): void
     {
         $this->upsertConfig('available_permission_levels', '[]');
         CachePools::config()->clear();
@@ -115,7 +117,9 @@ final class WsAlternateFormatsTest extends ContractTestCase
             // fallback to [0, 1, 2, 4, 8] is what keeps this method
             // registration (and every other 'level'-typed param
             // registration) from crashing on every single WS request.
-            $response = $this->ws('reflection.getMethodDetails', ['methodName' => 'pwg.images.setPrivacyLevel']);
+            $response = $this->ws('reflection.getMethodDetails', [
+                'methodName' => 'pwg.images.setPrivacyLevel',
+            ]);
 
             self::assertSame('ok', $response['stat']);
             $result = $response['result'];
@@ -126,7 +130,7 @@ final class WsAlternateFormatsTest extends ContractTestCase
             self::assertIsArray($byName['level']);
             self::assertSame(8, $byName['level']['maxValue']);
         } finally {
-            $this->conn->executeStatement("DELETE FROM " . 'config' . " WHERE param = 'available_permission_levels'");
+            $this->conn->executeStatement('DELETE FROM config' . " WHERE param = 'available_permission_levels'");
             CachePools::config()->clear();
         }
     }

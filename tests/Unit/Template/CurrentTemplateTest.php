@@ -2,14 +2,14 @@
 
 declare(strict_types=1);
 
-use Piwigo\Tests\Support\TemplateTestFactory;
 use Piwigo\Config\CurrentConfig;
-use Piwigo\Tests\Support\CurrentConfigTestFactory;
-use Piwigo\Tests\Support\CurrentPathsTestFactory;
-use Piwigo\Tests\Support\KernelContainerOverride;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Paths;
 use Piwigo\Template\CurrentTemplate;
+use Piwigo\Tests\Support\CurrentConfigTestFactory;
+use Piwigo\Tests\Support\CurrentPathsTestFactory;
+use Piwigo\Tests\Support\KernelContainerOverride;
+use Piwigo\Tests\Support\TemplateTestFactory;
 
 /**
  * Piwigo\Template\CurrentTemplate is normally shared via the DI
@@ -67,7 +67,8 @@ afterEach(function (): void {
 test('get throws when no Template has ever been set', function (): void {
     $currentTemplate = new CurrentTemplate();
 
-    expect($currentTemplate->isInitialized())->toBeFalse();
+    expect($currentTemplate->isInitialized())
+        ->toBeFalse();
 
     $currentTemplate->get();
 })->throws(LogicException::class, 'CurrentTemplate not initialised -- call Piwigo\Bootstrap\RequestBootstrap::finalize() first.');
@@ -78,18 +79,22 @@ test('set publishes a Template instance that get returns and isInitialized repor
 
     $currentTemplate->set($template);
 
-    expect($currentTemplate->isInitialized())->toBeTrue()
-        ->and($currentTemplate->get())->toBe($template);
+    expect($currentTemplate->isInitialized())
+        ->toBeTrue()
+        ->and($currentTemplate->get())
+        ->toBe($template);
 });
 
 test('reset clears the published instance so get throws again', function (): void {
     $currentTemplate = new CurrentTemplate();
     $currentTemplate->set(TemplateTestFactory::build());
-    expect($currentTemplate->isInitialized())->toBeTrue();
+    expect($currentTemplate->isInitialized())
+        ->toBeTrue();
 
     $currentTemplate->reset();
 
-    expect($currentTemplate->isInitialized())->toBeFalse();
+    expect($currentTemplate->isInitialized())
+        ->toBeFalse();
     $currentTemplate->get();
 })->throws(LogicException::class);
 
@@ -112,8 +117,10 @@ test('current() falls back to a memoized instance when Kernel is not booted', fu
 
     $second = CurrentTemplate::current();
 
-    expect($second)->toBe($first)
-        ->and($second->isInitialized())->toBeTrue();
+    expect($second)
+        ->toBe($first)
+        ->and($second->isInitialized())
+        ->toBeTrue();
 
     // Restore for this test's own afterEach() (CurrentPathsTestFactory::get() would
     // otherwise throw against the now-reset container).

@@ -4,22 +4,22 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Integration;
 
+use Doctrine\DBAL\Connection;
+use LogicException;
 use Override;
 use Piwigo\Auth\AccessLevelChecker;
-use Piwigo\Core\Kernel;
-use LogicException;
-use Piwigo\Core\FilterState;
-use Piwigo\Db\EntityManagerFactory;
-use Piwigo\Group\GroupEntity;
-use Piwigo\Tests\Support\CurrentUserTestFactory;
-use Doctrine\DBAL\Connection;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Config\ConfigLoader;
 use Piwigo\Config\CurrentConfig;
+use Piwigo\Core\FilterState;
+use Piwigo\Core\Kernel;
 use Piwigo\Db\DbConnection;
+use Piwigo\Db\EntityManagerFactory;
+use Piwigo\Group\GroupEntity;
 use Piwigo\Permission\ForbiddenCategoriesCache;
 use Piwigo\Permission\PermissionRepository;
 use Piwigo\Permission\PermissionService;
+use Piwigo\Tests\Support\CurrentUserTestFactory;
 use Symfony\Component\Cache\Adapter\ArrayAdapter;
 
 /**
@@ -81,29 +81,29 @@ final class ForbiddenCategoriesCacheTest extends IntegrationTestCase
     protected function tearDown(): void
     {
         $visibleLiteral = $this->dbDriver === 'pgsql' ? 'true' : '1';
-        $this->conn->executeStatement('UPDATE ' . 'categories' . " SET status = 'public', visible = {$visibleLiteral}");
+        $this->conn->executeStatement('UPDATE categories' . " SET status = 'public', visible = {$visibleLiteral}");
         parent::tearDown();
     }
 
-    public function test_get_for_user_returns_the_underlying_forbidden_categories(): void
+    public function testGetForUserReturnsTheUnderlyingForbiddenCategories(): void
     {
-        $this->conn->executeStatement('UPDATE ' . 'categories' . " SET status = 'private' WHERE id = 1");
+        $this->conn->executeStatement('UPDATE categories' . " SET status = 'private' WHERE id = 1");
 
         self::assertSame('1', $this->cache->getForUser(2, 'normal'));
     }
 
-    public function test_get_for_user_serves_a_cache_hit_without_reflecting_a_db_change(): void
+    public function testGetForUserServesACacheHitWithoutReflectingADbChange(): void
     {
         self::assertSame('0', $this->cache->getForUser(2, 'normal'));
 
-        $this->conn->executeStatement('UPDATE ' . 'categories' . " SET status = 'private' WHERE id = 1");
+        $this->conn->executeStatement('UPDATE categories' . " SET status = 'private' WHERE id = 1");
 
         self::assertSame('0', $this->cache->getForUser(2, 'normal'), 'a cache hit must not re-query the DB');
     }
 
-    public function test_get_for_user_uses_a_separate_cache_entry_per_user(): void
+    public function testGetForUserUsesASeparateCacheEntryPerUser(): void
     {
-        $this->conn->executeStatement('UPDATE ' . 'categories' . " SET status = 'private' WHERE id = 1");
+        $this->conn->executeStatement('UPDATE categories' . " SET status = 'private' WHERE id = 1");
 
         self::assertSame('1', $this->cache->getForUser(2, 'normal'));
         // Fixture: user 1 is a member of group 1 ("Editors"), which has

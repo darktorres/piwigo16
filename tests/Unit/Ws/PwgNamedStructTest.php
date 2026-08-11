@@ -16,10 +16,20 @@ use Piwigo\Ws\PwgNamedStruct;
  * branch had no coverage anywhere.
  */
 test('explicit xmlAttributes flips the given list into a name => position map', function (): void {
-    $struct = new PwgNamedStruct(['id' => 7, 'name' => 'Alps'], ['id']);
+    $struct = new PwgNamedStruct([
+        'id' => 7,
+        'name' => 'Alps',
+    ], ['id']);
 
-    expect($struct->_xmlAttributes)->toBe(['id' => 0])
-        ->and($struct->_content)->toBe(['id' => 7, 'name' => 'Alps']);
+    expect($struct->_xmlAttributes)
+        ->toBe([
+            'id' => 0,
+        ])
+        ->and($struct->_content)
+        ->toBe([
+            'id' => 7,
+            'name' => 'Alps',
+        ]);
 });
 
 test('null xmlAttributes auto-detects scalar content keys instead of flipping a list', function (): void {
@@ -28,14 +38,25 @@ test('null xmlAttributes auto-detects scalar content keys instead of flipping a 
     // meaningfully different $_xmlAttributes for identical input,
     // and that the auto-detect branch really does walk $_content
     // (not simply an empty/flipped-nothing result).
-    $struct = new PwgNamedStruct(['id' => 7, 'name' => 'Alps']);
+    $struct = new PwgNamedStruct([
+        'id' => 7,
+        'name' => 'Alps',
+    ]);
 
-    expect($struct->_xmlAttributes)->toBe(['id' => 1, 'name' => 1]);
+    expect($struct->_xmlAttributes)
+        ->toBe([
+            'id' => 1,
+            'name' => 1,
+        ]);
 });
 
 test('null xmlAttributes auto-detect skips non-scalar values and keys forced into xmlElements', function (): void {
     $struct = new PwgNamedStruct(
-        ['id' => 7, 'name' => 'Alps', 'comments' => ['first', 'second']],
+        [
+            'id' => 7,
+            'name' => 'Alps',
+            'comments' => ['first', 'second'],
+        ],
         null,
         ['name'],
     );
@@ -43,14 +64,24 @@ test('null xmlAttributes auto-detect skips non-scalar values and keys forced int
     // 'comments' is an array (not scalar/null) so it's never a candidate;
     // 'name' is scalar but explicitly forced to stay an xml element via
     // $xmlElements, so only 'id' ends up in _xmlAttributes.
-    expect($struct->_xmlAttributes)->toBe(['id' => 1]);
+    expect($struct->_xmlAttributes)
+        ->toBe([
+            'id' => 1,
+        ]);
 });
 
 test('null xmlAttributes auto-detect excludes the "" and 0 keys even when scalar', function (): void {
     // Note: a literal '0' array key is normalized to the int key 0 by PHP
     // itself before this constructor ever sees it, so only these two
     // distinct key shapes are reachable through a real foreach here.
-    $struct = new PwgNamedStruct(['id' => 7, '' => 'blank', 0 => 'zero']);
+    $struct = new PwgNamedStruct([
+        'id' => 7,
+        '' => 'blank',
+        0 => 'zero',
+    ]);
 
-    expect($struct->_xmlAttributes)->toBe(['id' => 1]);
+    expect($struct->_xmlAttributes)
+        ->toBe([
+            'id' => 1,
+        ]);
 });

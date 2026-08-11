@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Contract;
 
-use Override;
-use RuntimeException;
 use Doctrine\DBAL\Connection;
+use Override;
 use Piwigo\Db\DbConnection;
+use RuntimeException;
 
 /**
  * Ws\PwgTags::delete()'s own `else { return ['id' => []]; }` branch (when
@@ -40,7 +40,7 @@ final class WsTagsMutationTest extends ContractTestCase
         if ($this->tagId !== null) {
             $token = $this->getPwgToken();
             $this->callWs('pwg.tags.delete', [
-                'tag_id'    => [$this->tagId],
+                'tag_id' => [$this->tagId],
                 'pwg_token' => $token,
             ]);
             $this->tagId = null;
@@ -60,40 +60,46 @@ final class WsTagsMutationTest extends ContractTestCase
     private static function tagResult(array $response): array
     {
         $result = $response['result'] ?? null;
-        if (!is_array($result)) {
+        if (! is_array($result)) {
             self::fail('WS response "result" is not an array');
         }
 
         return $result;
     }
 
-    /** @param array<string, mixed> $response */
+    /**
+     * @param array<string, mixed> $response
+     */
     private static function tagResultId(array $response): int
     {
         $result = self::tagResult($response);
-        $id     = $result['id'] ?? null;
-        if (!is_int($id) && !(is_string($id) && is_numeric($id))) {
+        $id = $result['id'] ?? null;
+        if (! is_int($id) && ! (is_string($id) && is_numeric($id))) {
             self::fail('WS response "result.id" is missing or not numeric');
         }
 
         return (int) $id;
     }
 
-    /** @param array<string, mixed> $response */
+    /**
+     * @param array<string, mixed> $response
+     */
     private static function tagResultName(array $response): string
     {
         $result = self::tagResult($response);
-        $name   = $result['name'] ?? null;
-        if (!is_string($name)) {
+        $name = $result['name'] ?? null;
+        if (! is_string($name)) {
             self::fail('WS response "result.name" is missing or not a string');
         }
 
         return $name;
     }
 
-    public function test_add_returns_tag_shape(): void
+    public function testAddReturnsTagShape(): void
     {
-        $response = $this->callWs('pwg.tags.add', ['name' => 'ct_tag_' . uniqid()]);
+        $response = $this->callWs('pwg.tags.add', [
+            'name' => 'ct_tag_' . uniqid(),
+        ]);
 
         self::assertSame('ok', $response['stat']);
         self::assertMatchesSchema('pwg.tags.add', $response);
@@ -101,16 +107,18 @@ final class WsTagsMutationTest extends ContractTestCase
         $this->tagId = self::tagResultId($response);
     }
 
-    public function test_rename_returns_tag_object(): void
+    public function testRenameReturnsTagObject(): void
     {
-        $add = $this->callWs('pwg.tags.add', ['name' => 'ct_tag_' . uniqid()]);
+        $add = $this->callWs('pwg.tags.add', [
+            'name' => 'ct_tag_' . uniqid(),
+        ]);
         $this->tagId = self::tagResultId($add);
         $token = $this->getPwgToken();
 
-        $newName  = 'ct_tag_renamed_' . $this->tagId;
+        $newName = 'ct_tag_renamed_' . $this->tagId;
         $response = $this->callWs('pwg.tags.rename', [
-            'tag_id'    => $this->tagId,
-            'new_name'  => $newName,
+            'tag_id' => $this->tagId,
+            'new_name' => $newName,
             'pwg_token' => $token,
         ]);
 
@@ -118,15 +126,17 @@ final class WsTagsMutationTest extends ContractTestCase
         self::assertSame($newName, self::tagResultName($response));
     }
 
-    public function test_duplicate_returns_new_tag_info(): void
+    public function testDuplicateReturnsNewTagInfo(): void
     {
-        $add = $this->callWs('pwg.tags.add', ['name' => 'ct_tag_' . uniqid()]);
+        $add = $this->callWs('pwg.tags.add', [
+            'name' => 'ct_tag_' . uniqid(),
+        ]);
         $this->tagId = self::tagResultId($add);
         $token = $this->getPwgToken();
 
         $copyName = 'ct_tag_copy_' . $this->tagId;
         $response = $this->callWs('pwg.tags.duplicate', [
-            'tag_id'    => $this->tagId,
+            'tag_id' => $this->tagId,
             'copy_name' => $copyName,
             'pwg_token' => $token,
         ]);
@@ -137,42 +147,48 @@ final class WsTagsMutationTest extends ContractTestCase
 
         // clean up the copy too
         $this->callWs('pwg.tags.delete', [
-            'tag_id'    => [$copyId],
+            'tag_id' => [$copyId],
             'pwg_token' => $token,
         ]);
     }
 
-    public function test_merge_returns_ok(): void
+    public function testMergeReturnsOk(): void
     {
         $token = $this->getPwgToken();
-        $src   = $this->callWs('pwg.tags.add', ['name' => 'ct_merge_src_' . uniqid()]);
-        $dst   = $this->callWs('pwg.tags.add', ['name' => 'ct_merge_dst_' . uniqid()]);
+        $src = $this->callWs('pwg.tags.add', [
+            'name' => 'ct_merge_src_' . uniqid(),
+        ]);
+        $dst = $this->callWs('pwg.tags.add', [
+            'name' => 'ct_merge_dst_' . uniqid(),
+        ]);
         $srcId = self::tagResultId($src);
         $dstId = self::tagResultId($dst);
 
         $response = $this->callWs('pwg.tags.merge', [
-            'merge_tag_id'       => [$srcId],
+            'merge_tag_id' => [$srcId],
             'destination_tag_id' => $dstId,
-            'pwg_token'          => $token,
+            'pwg_token' => $token,
         ]);
 
         self::assertSame('ok', $response['stat']);
 
         // src was consumed by merge; delete dst
         $this->callWs('pwg.tags.delete', [
-            'tag_id'    => [$dstId],
+            'tag_id' => [$dstId],
             'pwg_token' => $token,
         ]);
     }
 
-    public function test_delete_returns_ok(): void
+    public function testDeleteReturnsOk(): void
     {
-        $add   = $this->callWs('pwg.tags.add', ['name' => 'ct_tag_' . uniqid()]);
-        $id    = self::tagResultId($add);
+        $add = $this->callWs('pwg.tags.add', [
+            'name' => 'ct_tag_' . uniqid(),
+        ]);
+        $id = self::tagResultId($add);
         $token = $this->getPwgToken();
 
         $response = $this->callWs('pwg.tags.delete', [
-            'tag_id'    => [$id],
+            'tag_id' => [$id],
             'pwg_token' => $token,
         ]);
 
@@ -180,7 +196,7 @@ final class WsTagsMutationTest extends ContractTestCase
         // already deleted
     }
 
-    public function test_delete_invalid_token_returns_error(): void
+    public function testDeleteInvalidTokenReturnsError(): void
     {
         $response = $this->callWs('pwg.tags.delete', [
             'tag_id' => [1],
@@ -192,7 +208,7 @@ final class WsTagsMutationTest extends ContractTestCase
         self::assertSame('Invalid security token', $response['message']);
     }
 
-    public function test_delete_with_a_nonexistent_tag_id_returns_error(): void
+    public function testDeleteWithANonexistentTagIdReturnsError(): void
     {
         $token = $this->getPwgToken();
 
@@ -206,7 +222,7 @@ final class WsTagsMutationTest extends ContractTestCase
         self::assertSame('All tags does not exist.', $response['message']);
     }
 
-    public function test_rename_invalid_token_returns_error(): void
+    public function testRenameInvalidTokenReturnsError(): void
     {
         $response = $this->callWs('pwg.tags.rename', [
             'tag_id' => 1,
@@ -219,7 +235,7 @@ final class WsTagsMutationTest extends ContractTestCase
         self::assertSame('Invalid security token', $response['message']);
     }
 
-    public function test_rename_a_nonexistent_tag_returns_error(): void
+    public function testRenameANonexistentTagReturnsError(): void
     {
         $token = $this->getPwgToken();
 
@@ -234,12 +250,16 @@ final class WsTagsMutationTest extends ContractTestCase
         self::assertSame('This tag does not exist.', $response['message']);
     }
 
-    public function test_rename_to_an_already_used_name_returns_error(): void
+    public function testRenameToAnAlreadyUsedNameReturnsError(): void
     {
         $token = $this->getPwgToken();
-        $add = $this->callWs('pwg.tags.add', ['name' => 'ct_tag_a_' . uniqid()]);
+        $add = $this->callWs('pwg.tags.add', [
+            'name' => 'ct_tag_a_' . uniqid(),
+        ]);
         $this->tagId = self::tagResultId($add);
-        $otherAdd = $this->callWs('pwg.tags.add', ['name' => 'ct_tag_b_' . uniqid()]);
+        $otherAdd = $this->callWs('pwg.tags.add', [
+            'name' => 'ct_tag_b_' . uniqid(),
+        ]);
         $otherId = self::tagResultId($otherAdd);
         $otherName = self::tagResultName($otherAdd);
 
@@ -254,11 +274,14 @@ final class WsTagsMutationTest extends ContractTestCase
             self::assertSame(1003, $response['err']);
             self::assertSame('This name is already token', $response['message']);
         } finally {
-            $this->callWs('pwg.tags.delete', ['tag_id' => [$otherId], 'pwg_token' => $token]);
+            $this->callWs('pwg.tags.delete', [
+                'tag_id' => [$otherId],
+                'pwg_token' => $token,
+            ]);
         }
     }
 
-    public function test_duplicate_a_nonexistent_tag_returns_error(): void
+    public function testDuplicateANonexistentTagReturnsError(): void
     {
         $token = $this->getPwgToken();
 
@@ -273,12 +296,16 @@ final class WsTagsMutationTest extends ContractTestCase
         self::assertSame('This tag does not exist.', $response['message']);
     }
 
-    public function test_duplicate_with_a_name_already_taken_returns_error(): void
+    public function testDuplicateWithANameAlreadyTakenReturnsError(): void
     {
         $token = $this->getPwgToken();
-        $add = $this->callWs('pwg.tags.add', ['name' => 'ct_tag_' . uniqid()]);
+        $add = $this->callWs('pwg.tags.add', [
+            'name' => 'ct_tag_' . uniqid(),
+        ]);
         $this->tagId = self::tagResultId($add);
-        $otherAdd = $this->callWs('pwg.tags.add', ['name' => 'ct_tag_taken_' . uniqid()]);
+        $otherAdd = $this->callWs('pwg.tags.add', [
+            'name' => 'ct_tag_taken_' . uniqid(),
+        ]);
         $otherId = self::tagResultId($otherAdd);
         $otherName = self::tagResultName($otherAdd);
 
@@ -293,14 +320,19 @@ final class WsTagsMutationTest extends ContractTestCase
             self::assertSame(1003, $response['err']);
             self::assertSame('This name is already taken.', $response['message']);
         } finally {
-            $this->callWs('pwg.tags.delete', ['tag_id' => [$otherId], 'pwg_token' => $token]);
+            $this->callWs('pwg.tags.delete', [
+                'tag_id' => [$otherId],
+                'pwg_token' => $token,
+            ]);
         }
     }
 
-    public function test_duplicate_copies_the_tags_image_associations(): void
+    public function testDuplicateCopiesTheTagsImageAssociations(): void
     {
         $token = $this->getPwgToken();
-        $add = $this->callWs('pwg.tags.add', ['name' => 'ct_tag_with_images_' . uniqid()]);
+        $add = $this->callWs('pwg.tags.add', [
+            'name' => 'ct_tag_with_images_' . uniqid(),
+        ]);
         $this->tagId = self::tagResultId($add);
         // fixture image 1 always exists.
         $this->callWs('pwg.images.setInfo', [
@@ -323,10 +355,13 @@ final class WsTagsMutationTest extends ContractTestCase
         $copyId = self::tagResultId($response);
 
         // clean up the copy + the association it created
-        $this->callWs('pwg.tags.delete', ['tag_id' => [$copyId], 'pwg_token' => $token]);
+        $this->callWs('pwg.tags.delete', [
+            'tag_id' => [$copyId],
+            'pwg_token' => $token,
+        ]);
     }
 
-    public function test_merge_invalid_token_returns_error(): void
+    public function testMergeInvalidTokenReturnsError(): void
     {
         $response = $this->callWs('pwg.tags.merge', [
             'merge_tag_id' => [1],
@@ -339,11 +374,15 @@ final class WsTagsMutationTest extends ContractTestCase
         self::assertSame('Invalid security token', $response['message']);
     }
 
-    public function test_merge_moves_the_source_tags_images_into_the_destination(): void
+    public function testMergeMovesTheSourceTagsImagesIntoTheDestination(): void
     {
         $token = $this->getPwgToken();
-        $src = $this->callWs('pwg.tags.add', ['name' => 'ct_merge_img_src_' . uniqid()]);
-        $dst = $this->callWs('pwg.tags.add', ['name' => 'ct_merge_img_dst_' . uniqid()]);
+        $src = $this->callWs('pwg.tags.add', [
+            'name' => 'ct_merge_img_src_' . uniqid(),
+        ]);
+        $dst = $this->callWs('pwg.tags.add', [
+            'name' => 'ct_merge_img_dst_' . uniqid(),
+        ]);
         $srcId = self::tagResultId($src);
         $dstId = self::tagResultId($dst);
 
@@ -367,23 +406,30 @@ final class WsTagsMutationTest extends ContractTestCase
         self::assertIsArray($result['images_in_merged_tag']);
         self::assertContains(1, $result['images_in_merged_tag']);
 
-        $this->callWs('pwg.tags.delete', ['tag_id' => [$dstId], 'pwg_token' => $token]);
+        $this->callWs('pwg.tags.delete', [
+            'tag_id' => [$dstId],
+            'pwg_token' => $token,
+        ]);
     }
 
-    public function test_add_with_a_duplicate_name_returns_error(): void
+    public function testAddWithADuplicateNameReturnsError(): void
     {
         $name = 'ct_tag_dup_' . uniqid();
-        $first = $this->callWs('pwg.tags.add', ['name' => $name]);
+        $first = $this->callWs('pwg.tags.add', [
+            'name' => $name,
+        ]);
         $this->tagId = self::tagResultId($first);
 
-        $response = $this->callWs('pwg.tags.add', ['name' => $name]);
+        $response = $this->callWs('pwg.tags.add', [
+            'name' => $name,
+        ]);
 
         self::assertSame('fail', $response['stat']);
         self::assertSame(1003, $response['err']);
         self::assertSame('Tag "' . $name . '" already exists', $response['message']);
     }
 
-    public function test_duplicate_invalid_token_returns_error(): void
+    public function testDuplicateInvalidTokenReturnsError(): void
     {
         $response = $this->callWs('pwg.tags.duplicate', [
             'tag_id' => 1,
@@ -396,7 +442,7 @@ final class WsTagsMutationTest extends ContractTestCase
         self::assertSame('Invalid security token', $response['message']);
     }
 
-    public function test_merge_with_a_nonexistent_tag_returns_error(): void
+    public function testMergeWithANonexistentTagReturnsError(): void
     {
         $token = $this->getPwgToken();
 
@@ -430,7 +476,7 @@ final class WsTagsMutationTest extends ContractTestCase
      * tag name so it's a complete no-op for every other concurrent request
      * against this shared dev server while active.
      */
-    public function test_rename_throws_when_a_render_tag_url_handler_returns_something_other_than_a_render_tag_url_instance(): void
+    public function testRenameThrowsWhenARenderTagUrlHandlerReturnsSomethingOtherThanARenderTagUrlInstance(): void
     {
         $renameMarker = 'ct_tag_url_fallback_rename_' . uniqid();
         $pluginId = 'pwgtest-tags-render-url-fallback';
@@ -466,14 +512,16 @@ final class WsTagsMutationTest extends ContractTestCase
             PHP);
 
         $this->conn->executeStatement(
-            "INSERT INTO " . 'plugins' . " (id, state, version) VALUES (?, 'active', '1.0.0')",
+            'INSERT INTO plugins' . " (id, state, version) VALUES (?, 'active', '1.0.0')",
             [$pluginId]
         );
 
         try {
             $token = $this->getPwgToken();
 
-            $add = $this->callWs('pwg.tags.add', ['name' => 'ct_tag_url_fallback_src_' . uniqid()]);
+            $add = $this->callWs('pwg.tags.add', [
+                'name' => 'ct_tag_url_fallback_src_' . uniqid(),
+            ]);
             $this->tagId = self::tagResultId($add);
 
             // display_errors is off (Core\ErrorCollector::install() forces
@@ -490,7 +538,7 @@ final class WsTagsMutationTest extends ContractTestCase
 
             self::assertSame(500, $status);
         } finally {
-            $this->conn->executeStatement('DELETE FROM ' . 'plugins' . ' WHERE id = ?', [$pluginId]);
+            $this->conn->executeStatement('DELETE FROM plugins WHERE id = ?', [$pluginId]);
             @unlink($mainFile);
             @rmdir($pluginDir);
         }
@@ -501,7 +549,7 @@ final class WsTagsMutationTest extends ContractTestCase
      * -- distinct from rename()'s own, see this file's own docblock above
      * for why it now fails loud too.
      */
-    public function test_duplicate_throws_when_a_render_tag_url_handler_returns_something_other_than_a_render_tag_url_instance(): void
+    public function testDuplicateThrowsWhenARenderTagUrlHandlerReturnsSomethingOtherThanARenderTagUrlInstance(): void
     {
         $duplicateMarker = 'ct_tag_url_fallback_duplicate_' . uniqid();
         $pluginId = 'pwgtest-tags-render-url-fallback-dup';
@@ -537,14 +585,16 @@ final class WsTagsMutationTest extends ContractTestCase
             PHP);
 
         $this->conn->executeStatement(
-            "INSERT INTO " . 'plugins' . " (id, state, version) VALUES (?, 'active', '1.0.0')",
+            'INSERT INTO plugins' . " (id, state, version) VALUES (?, 'active', '1.0.0')",
             [$pluginId]
         );
 
         try {
             $token = $this->getPwgToken();
 
-            $add = $this->callWs('pwg.tags.add', ['name' => 'ct_tag_url_fallback_dup_src_' . uniqid()]);
+            $add = $this->callWs('pwg.tags.add', [
+                'name' => 'ct_tag_url_fallback_dup_src_' . uniqid(),
+            ]);
             $this->tagId = self::tagResultId($add);
 
             // See test_rename_throws_...()'s own comment above for why this
@@ -557,7 +607,7 @@ final class WsTagsMutationTest extends ContractTestCase
 
             self::assertSame(500, $status);
         } finally {
-            $this->conn->executeStatement('DELETE FROM ' . 'plugins' . ' WHERE id = ?', [$pluginId]);
+            $this->conn->executeStatement('DELETE FROM plugins WHERE id = ?', [$pluginId]);
             @unlink($mainFile);
             @rmdir($pluginDir);
         }
@@ -578,7 +628,9 @@ final class WsTagsMutationTest extends ContractTestCase
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
         curl_setopt($ch, CURLOPT_POST, true);
         curl_setopt($ch, CURLOPT_USERAGENT, self::USER_AGENT);
-        curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query(array_merge(['method' => $method], $params)));
+        curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query(array_merge([
+            'method' => $method,
+        ], $params)));
         curl_setopt($ch, CURLOPT_COOKIEJAR, $this->cookieJar());
         curl_setopt($ch, CURLOPT_COOKIEFILE, $this->cookieJar());
         curl_setopt($ch, CURLOPT_HTTPHEADER, $this->testHeader());

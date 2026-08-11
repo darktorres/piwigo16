@@ -9,8 +9,8 @@ use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Group\GroupAccessEntity;
 use Piwigo\Group\GroupEntity;
-use Piwigo\Group\Projection\Group;
 use Piwigo\Group\GroupRepository;
+use Piwigo\Group\Projection\Group;
 use Piwigo\Group\UserGroupEntity;
 
 /**
@@ -100,7 +100,8 @@ function groupTestName(): string
 }
 
 test('findAllBasic() returns fixture groups ordered by name', function (): void {
-    $groups = groupTestRepo()->findAllBasic();
+    $groups = groupTestRepo()
+        ->findAllBasic();
 
     // GroupEntity and its own Group Projection DTO happen to share the
     // same public property names (name/isDefault), so a mapping step
@@ -108,7 +109,8 @@ test('findAllBasic() returns fixture groups ordered by name', function (): void 
     // wouldn't be caught by the field checks below alone.
     expect($groups[0] ?? null)->toBeInstanceOf(Group::class);
     $names = array_column($groups, 'name');
-    expect($names)->toBe(['Editors', 'Guests', 'Reviewers'])
+    expect($names)
+        ->toBe(['Editors', 'Guests', 'Reviewers'])
         ->and($groups[0]->isDefault)->toBeFalse();
 });
 
@@ -122,8 +124,10 @@ test('exists() is true for a fixture group and false for a bogus id', function (
 test('nameExists() matches a fixture name', function (): void {
     $repo = groupTestRepo();
 
-    expect($repo->nameExists('Editors'))->toBeTrue()
-        ->and($repo->nameExists('Does Not Exist'))->toBeFalse();
+    expect($repo->nameExists('Editors'))
+        ->toBeTrue()
+        ->and($repo->nameExists('Does Not Exist'))
+        ->toBeFalse();
 });
 
 test('nameExists() excludes the given group id', function (): void {
@@ -134,9 +138,11 @@ test('nameExists() excludes the given group id', function (): void {
 });
 
 test('findExistingIds() returns only the ids that exist', function (): void {
-    $ids = groupTestRepo()->findExistingIds([GroupId::from(1), GroupId::from(2), GroupId::from(999999)]);
+    $ids = groupTestRepo()
+        ->findExistingIds([GroupId::from(1), GroupId::from(2), GroupId::from(999999)]);
 
-    expect(groupTestValues($ids))->toBe([1, 2]);
+    expect(groupTestValues($ids))
+        ->toBe([1, 2]);
 });
 
 test('findExistingIds() returns empty for an empty input', function (): void {
@@ -161,8 +167,10 @@ test('insert() then findName() round-trips', function (): void {
     $id = $repo->insert($name, false);
 
     try {
-        expect($repo->findName($id))->toBe($name)
-            ->and($repo->isDefault($id))->toBeFalse();
+        expect($repo->findName($id))
+            ->toBe($name)
+            ->and($repo->isDefault($id))
+            ->toBeFalse();
     } finally {
         $repo->delete([$id]);
     }
@@ -173,7 +181,8 @@ test('insert() with is_default true round-trips', function (): void {
     $id = $repo->insert(groupTestName(), true);
 
     try {
-        expect($repo->isDefault($id))->toBeTrue();
+        expect($repo->isDefault($id))
+            ->toBeTrue();
     } finally {
         $repo->delete([$id]);
     }
@@ -186,15 +195,20 @@ test('update() changes name and is_default', function (): void {
 
     try {
         $newName = $name . '-renamed';
-        $repo->update($id, ['name' => $newName, 'is_default' => true]);
+        $repo->update($id, [
+            'name' => $newName,
+            'is_default' => true,
+        ]);
 
         // A fresh repo/EntityManager, not the same $repo the update() call
         // itself mutated -- reading back through the SAME EntityManager's
         // own identity map would show the in-memory change regardless of
         // whether flush() actually persisted it.
         $reread = groupTestRepo();
-        expect($reread->findName($id))->toBe($newName)
-            ->and($reread->isDefault($id))->toBeTrue();
+        expect($reread->findName($id))
+            ->toBe($newName)
+            ->and($reread->isDefault($id))
+            ->toBeTrue();
     } finally {
         $repo->delete([$id]);
     }
@@ -210,15 +224,20 @@ test('update() on a nonexistent group id is a silent no-op', function (): void {
     // 999999 isn't in the fixture (groups has ids 1-3 only) --
     // find() returns null, and update() must return without throwing
     // rather than crash on a null entity.
-    groupTestRepo()->update(GroupId::from(999999), ['name' => 'should-never-be-written']);
+    groupTestRepo()
+        ->update(GroupId::from(999999), [
+            'name' => 'should-never-be-written',
+        ]);
 
     expect(groupTestRepo()->findName(GroupId::from(999999)))->toBeNull();
 });
 
 test('findMemberUserIds() returns fixture members', function (): void {
-    $ids = groupTestRepo()->findMemberUserIds(GroupId::from(1));
+    $ids = groupTestRepo()
+        ->findMemberUserIds(GroupId::from(1));
 
-    expect(groupTestValues($ids))->toBe([1, 3]);
+    expect(groupTestValues($ids))
+        ->toBe([1, 3]);
 });
 
 test('findMemberUserIds() is empty for a group with no members', function (): void {
@@ -226,7 +245,8 @@ test('findMemberUserIds() is empty for a group with no members', function (): vo
     $id = $repo->insert(groupTestName(), false);
 
     try {
-        expect($repo->findMemberUserIds($id))->toBe([]);
+        expect($repo->findMemberUserIds($id))
+            ->toBe([]);
     } finally {
         $repo->delete([$id]);
     }
@@ -242,10 +262,12 @@ test('addMembers() then removeMembers() round-trips', function (): void {
 
     try {
         $repo->addMembers($groupId, [UserId::from(2)]);
-        expect(groupTestValues($repo->findMemberUserIds($groupId)))->toBe([2]);
+        expect(groupTestValues($repo->findMemberUserIds($groupId)))
+            ->toBe([2]);
 
         $repo->removeMembers($groupId, [UserId::from(2)]);
-        expect($repo->findMemberUserIds($groupId))->toBe([]);
+        expect($repo->findMemberUserIds($groupId))
+            ->toBe([]);
     } finally {
         $repo->delete([$groupId]);
     }
@@ -263,7 +285,8 @@ test('addMembers() silently ignores an already-existing membership', function ()
         // IGNORE here.
         $repo->addMembers($groupId, [UserId::from(2)]);
 
-        expect(groupTestValues($repo->findMemberUserIds($groupId)))->toBe([2]);
+        expect(groupTestValues($repo->findMemberUserIds($groupId)))
+            ->toBe([2]);
     } finally {
         $repo->delete([$groupId]);
     }
@@ -272,11 +295,15 @@ test('addMembers() silently ignores an already-existing membership', function ()
 test('addMembers() clears the identity map, so a later find() sees the real insert instead of a stale cached null', function (): void {
     [$repo, $em] = groupTestRepoWithEm();
     $groupId = $repo->insert(groupTestName(), false);
-    $key = ['groupId' => $groupId, 'userId' => UserId::from(2)];
+    $key = [
+        'groupId' => $groupId,
+        'userId' => UserId::from(2),
+    ];
 
     try {
         $trackedMissing = $em->find(UserGroupEntity::class, $key);
-        expect($trackedMissing)->toBeNull();
+        expect($trackedMissing)
+            ->toBeNull();
 
         $repo->addMembers($groupId, [UserId::from(2)]);
 
@@ -290,11 +317,15 @@ test('removeMembers() clears the identity map, so a later find() sees the real d
     [$repo, $em] = groupTestRepoWithEm();
     $groupId = $repo->insert(groupTestName(), false);
     $repo->addMembers($groupId, [UserId::from(2)]);
-    $key = ['groupId' => $groupId, 'userId' => UserId::from(2)];
+    $key = [
+        'groupId' => $groupId,
+        'userId' => UserId::from(2),
+    ];
 
     try {
         $tracked = $em->find(UserGroupEntity::class, $key);
-        expect($tracked)->not->toBeNull();
+        expect($tracked)
+            ->not->toBeNull();
 
         $repo->removeMembers($groupId, [UserId::from(2)]);
 
@@ -322,8 +353,10 @@ test('removeAllMembershipsForUsers() deletes every membership row for that user 
     try {
         $repo->removeAllMembershipsForUsers([UserId::from(2)]);
 
-        expect($repo->findMemberUserIds($groupA))->toBe([])
-            ->and($repo->findMemberUserIds($groupB))->toBe([]);
+        expect($repo->findMemberUserIds($groupA))
+            ->toBe([])
+            ->and($repo->findMemberUserIds($groupB))
+            ->toBe([]);
     } finally {
         $repo->delete([$groupA, $groupB]);
     }
@@ -333,11 +366,15 @@ test('removeAllMembershipsForUsers() clears the identity map, so a later find() 
     [$repo, $em] = groupTestRepoWithEm();
     $groupId = $repo->insert(groupTestName(), false);
     $repo->addMembers($groupId, [UserId::from(2)]);
-    $key = ['groupId' => $groupId, 'userId' => UserId::from(2)];
+    $key = [
+        'groupId' => $groupId,
+        'userId' => UserId::from(2),
+    ];
 
     try {
         $tracked = $em->find(UserGroupEntity::class, $key);
-        expect($tracked)->not->toBeNull();
+        expect($tracked)
+            ->not->toBeNull();
 
         $repo->removeAllMembershipsForUsers([UserId::from(2)]);
 
@@ -356,12 +393,14 @@ test('removeAllMembershipsForUsers() with an empty list is a no-op', function ()
 });
 
 test('findMembersByGroupIds() returns the raw user_id/group_id pairs for the given groups', function (): void {
-    $pairs = groupTestRepo()->findMembersByGroupIds([1]);
+    $pairs = groupTestRepo()
+        ->findMembersByGroupIds([1]);
 
     $userIds = array_map(static fn (array $row): int => is_numeric($row['user_id']) ? (int) $row['user_id'] : 0, $pairs);
     sort($userIds);
 
-    expect($userIds)->toBe([1, 3]);
+    expect($userIds)
+        ->toBe([1, 3]);
 });
 
 test('findMembersByGroupIds() returns empty for an empty input', function (): void {
@@ -369,11 +408,13 @@ test('findMembersByGroupIds() returns empty for an empty input', function (): vo
 });
 
 test('findMembershipsForUserIds() returns the raw user_id/group_id pairs for the given users', function (): void {
-    $pairs = groupTestRepo()->findMembershipsForUserIds([1]);
+    $pairs = groupTestRepo()
+        ->findMembershipsForUserIds([1]);
 
     $groupIds = array_map(static fn (array $row): int => is_numeric($row['group_id']) ? (int) $row['group_id'] : 0, $pairs);
 
-    expect($groupIds)->toContain(1);
+    expect($groupIds)
+        ->toContain(1);
 });
 
 test('findMembershipsForUserIds() returns empty for an empty input', function (): void {
@@ -407,10 +448,14 @@ test('delete() removes groups and their access and membership rows', function ()
 
     $deleted = $repo->delete([$groupId]);
 
-    expect($deleted)->toHaveKey($groupId->value)
-        ->and($repo->exists($groupId))->toBeFalse()
-        ->and($repo->findMemberUserIds($groupId))->toBe([])
-        ->and($repo->getAuthorizedCategoryIds($groupId))->toBe([]);
+    expect($deleted)
+        ->toHaveKey($groupId->value)
+        ->and($repo->exists($groupId))
+        ->toBeFalse()
+        ->and($repo->findMemberUserIds($groupId))
+        ->toBe([])
+        ->and($repo->getAuthorizedCategoryIds($groupId))
+        ->toBe([]);
 });
 
 test('delete() returns empty array when none of the ids exist', function (): void {
@@ -422,9 +467,11 @@ test('delete() with an empty list is a no-op', function (): void {
 });
 
 test('getAuthorizedCategoryIds() returns fixture access', function (): void {
-    $ids = groupTestRepo()->getAuthorizedCategoryIds(GroupId::from(1));
+    $ids = groupTestRepo()
+        ->getAuthorizedCategoryIds(GroupId::from(1));
 
-    expect(groupTestValues($ids))->toBe([1, 2]);
+    expect(groupTestValues($ids))
+        ->toBe([1, 2]);
 });
 
 test('addAccess() then removeAccess() round-trips', function (): void {
@@ -433,10 +480,12 @@ test('addAccess() then removeAccess() round-trips', function (): void {
 
     try {
         $repo->addAccess($groupId, [CategoryId::from(1), CategoryId::from(2)]);
-        expect(groupTestValues($repo->getAuthorizedCategoryIds($groupId)))->toBe([1, 2]);
+        expect(groupTestValues($repo->getAuthorizedCategoryIds($groupId)))
+            ->toBe([1, 2]);
 
         $repo->removeAccess($groupId, [CategoryId::from(1)]);
-        expect(groupTestValues($repo->getAuthorizedCategoryIds($groupId)))->toBe([2]);
+        expect(groupTestValues($repo->getAuthorizedCategoryIds($groupId)))
+            ->toBe([2]);
     } finally {
         $repo->delete([$groupId]);
     }
@@ -446,11 +495,15 @@ test('removeAccess() clears the identity map, so a later find() sees the real de
     [$repo, $em] = groupTestRepoWithEm();
     $groupId = $repo->insert(groupTestName(), false);
     $repo->addAccess($groupId, [CategoryId::from(1)]);
-    $key = ['groupId' => $groupId, 'catId' => CategoryId::from(1)];
+    $key = [
+        'groupId' => $groupId,
+        'catId' => CategoryId::from(1),
+    ];
 
     try {
         $tracked = $em->find(GroupAccessEntity::class, $key);
-        expect($tracked)->not->toBeNull();
+        expect($tracked)
+            ->not->toBeNull();
 
         $repo->removeAccess($groupId, [CategoryId::from(1)]);
 
@@ -470,9 +523,11 @@ test('removeAccess() with an empty list is a no-op', function (): void {
 
 test('getAccessibleCategoryIdsForUser() follows group membership', function (): void {
     // Fixture: user 1 is in group 1, group 1 has access to cats 1 and 2.
-    $ids = groupTestRepo()->getAccessibleCategoryIdsForUser(UserId::from(1));
+    $ids = groupTestRepo()
+        ->getAccessibleCategoryIdsForUser(UserId::from(1));
 
-    expect(groupTestValues($ids))->toBe([1, 2]);
+    expect(groupTestValues($ids))
+        ->toBe([1, 2]);
 });
 
 test('getAccessibleCategoryIdsForUser() is empty for a groupless user', function (): void {
@@ -480,7 +535,8 @@ test('getAccessibleCategoryIdsForUser() is empty for a groupless user', function
 });
 
 test('findWithMemberCounts() returns fixture groups with counts', function (): void {
-    $rows = groupTestRepo()->findWithMemberCounts([], null, 'name ASC', 10, 0);
+    $rows = groupTestRepo()
+        ->findWithMemberCounts([], null, 'name ASC', 10, 0);
 
     $byName = [];
     foreach ($rows as $row) {
@@ -493,23 +549,29 @@ test('findWithMemberCounts() returns fixture groups with counts', function (): v
 });
 
 test('findWithMemberCounts() filters by group ids', function (): void {
-    $rows = groupTestRepo()->findWithMemberCounts([GroupId::from(1)], null, 'name ASC', 10, 0);
+    $rows = groupTestRepo()
+        ->findWithMemberCounts([GroupId::from(1)], null, 'name ASC', 10, 0);
 
-    expect($rows)->toHaveCount(1)
+    expect($rows)
+        ->toHaveCount(1)
         ->and($rows[0]->name)->toBe('Editors');
 });
 
 test('findWithMemberCounts() filters by name like', function (): void {
-    $rows = groupTestRepo()->findWithMemberCounts([], 'editors', 'name ASC', 10, 0);
+    $rows = groupTestRepo()
+        ->findWithMemberCounts([], 'editors', 'name ASC', 10, 0);
 
-    expect($rows)->toHaveCount(1)
+    expect($rows)
+        ->toHaveCount(1)
         ->and($rows[0]->name)->toBe('Editors');
 });
 
 test('findWithMemberCounts() respects per_page and page', function (): void {
-    $rows = groupTestRepo()->findWithMemberCounts([], null, 'name ASC', 1, 1);
+    $rows = groupTestRepo()
+        ->findWithMemberCounts([], null, 'name ASC', 1, 1);
 
-    expect($rows)->toHaveCount(1)
+    expect($rows)
+        ->toHaveCount(1)
         ->and($rows[0]->name)->toBe('Guests');
 });
 
@@ -520,9 +582,11 @@ test('findIdsByNameLike() matches a wildcard pattern', function (): void {
     // an earlier version of this method wrongly assumed VO hydration
     // here (an instanceof GroupId check that never matched a raw int),
     // silently always returning [] regardless of $namePattern.
-    expect(groupTestRepo()->findIdsByNameLike('%dit%'))->toBe([1]);
+    expect(groupTestRepo()->findIdsByNameLike('%dit%'))
+        ->toBe([1]);
 });
 
 test('findIdsByNameLike() returns empty for no match', function (): void {
-    expect(groupTestRepo()->findIdsByNameLike('%no-such-group%'))->toBe([]);
+    expect(groupTestRepo()->findIdsByNameLike('%no-such-group%'))
+        ->toBe([]);
 });

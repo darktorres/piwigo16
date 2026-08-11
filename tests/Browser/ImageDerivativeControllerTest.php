@@ -16,7 +16,6 @@ use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
  * lightbox instead of a raw image response), and the "0 changes needed"
  * 301 redirect to the true original via action.php.
  */
-
 function idcDerivativePath(string $imagePath, string $suffix, string $ext = 'jpg'): string
 {
     $withoutExt = preg_replace('/\.\w+$/', '', $imagePath);
@@ -30,7 +29,9 @@ function idcDerivativePath(string $imagePath, string $suffix, string $ext = 'jpg
 function idcCreateTestPhoto(object $test, string $albumName): int
 {
     $page = H::loginAsAdmin($test);
-    $album = H::wsCall($page, 'pwg.categories.add', ['name' => $albumName . ' ' . uniqid()]);
+    $album = H::wsCall($page, 'pwg.categories.add', [
+        'name' => $albumName . ' ' . uniqid(),
+    ]);
     $albumResult = $album['result'] ?? null;
     if (! is_array($albumResult) || ! is_numeric($albumResult['id'] ?? null)) {
         throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($album, true));
@@ -73,7 +74,11 @@ function idcGet(string $path, array $extraHeaders = []): array
         }
     }
 
-    return ['status' => $status, 'headers' => $headers, 'body' => $body];
+    return [
+        'status' => $status,
+        'headers' => $headers,
+        'body' => $body,
+    ];
 }
 
 /**
@@ -90,7 +95,9 @@ function idcUploadSizedPhoto(object $test, string $albumName, int $width, int $h
 {
     assert($width >= 1 && $height >= 1);
     $page = H::loginAsAdmin($test);
-    $album = H::wsCall($page, 'pwg.categories.add', ['name' => $albumName . ' ' . uniqid()]);
+    $album = H::wsCall($page, 'pwg.categories.add', [
+        'name' => $albumName . ' ' . uniqid(),
+    ]);
     $albumResult = $album['result'] ?? null;
     if (! is_array($albumResult) || ! is_numeric($albumResult['id'] ?? null)) {
         throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($album, true));
@@ -148,7 +155,9 @@ function idcDerivativeDiskPath(string $imagePath, string $suffix, string $ext = 
     return dirname(__DIR__, 2) . '/_data/i/' . idcDerivativePath($imagePath, $suffix, $ext);
 }
 
-/** @return array{red: int, green: int, blue: int} */
+/**
+ * @return array{red: int, green: int, blue: int}
+ */
 function idcPixel(GdImage $image, int $x, int $y): array
 {
     $rgb = imagecolorat($image, $x, $y);
@@ -157,7 +166,11 @@ function idcPixel(GdImage $image, int $x, int $y): array
     }
     $colors = imagecolorsforindex($image, $rgb);
 
-    return ['red' => $colors['red'], 'green' => $colors['green'], 'blue' => $colors['blue']];
+    return [
+        'red' => $colors['red'],
+        'green' => $colors['green'],
+        'blue' => $colors['blue'],
+    ];
 }
 
 /**
@@ -216,7 +229,10 @@ function idcAdminCurl(string $url, array $fields, string $cookieJar): array
     $body = curl_exec($ch);
     $status = curl_getinfo($ch, CURLINFO_RESPONSE_CODE);
 
-    return ['status' => $status, 'body' => is_string($body) ? $body : ''];
+    return [
+        'status' => $status,
+        'body' => is_string($body) ? $body : '',
+    ];
 }
 
 /**
@@ -234,7 +250,9 @@ function idcAdminPwgToken(string $cookieJar): string
         'login' => 'Login',
     ], $cookieJar);
 
-    $statusResult = idcAdminCurl($baseUrl . '/ws.php?format=json', ['method' => 'pwg.session.getStatus'], $cookieJar);
+    $statusResult = idcAdminCurl($baseUrl . '/ws.php?format=json', [
+        'method' => 'pwg.session.getStatus',
+    ], $cookieJar);
     $decodedStatus = json_decode($statusResult['body'], true);
     $statusResultData = is_array($decodedStatus) ? ($decodedStatus['result'] ?? null) : null;
     $pwgTokenRaw = is_array($statusResultData) ? ($statusResultData['pwg_token'] ?? null) : null;
@@ -302,7 +320,8 @@ it("sends 304 Not Modified when If-Modified-Since matches the cached derivative'
     $first = idcGet($path);
     expect($first['status'])->toBe(200);
     $lastModified = $first['headers']['last-modified'] ?? null;
-    expect($lastModified)->not->toBeNull();
+    expect($lastModified)
+        ->not->toBeNull();
 
     $second = idcGet($path, ['If-Modified-Since: ' . $lastModified]);
     expect($second['status'])->toBe(304);
@@ -316,7 +335,8 @@ it('returns a JSON url payload for an ajaxload request instead of the raw image 
     $result = idcGet($path);
     expect($result['status'])->toBe(200);
     $decoded = json_decode($result['body'], true);
-    expect($decoded)->toBeArray();
+    expect($decoded)
+        ->toBeArray();
     expect(is_array($decoded) ? ($decoded['url'] ?? null) : null)->toBeString();
 });
 
@@ -342,8 +362,10 @@ it('redirects to the original via action.php when the requested size needs no re
     $status = curl_getinfo($ch, CURLINFO_RESPONSE_CODE);
     $location = curl_getinfo($ch, CURLINFO_REDIRECT_URL);
 
-    expect($status)->toBe(301);
-    expect($location)->toContain('action.php');
+    expect($status)
+        ->toBe(301);
+    expect($location)
+        ->toContain('action.php');
 });
 
 it('rejects a malformed derivative request with no type/extension separator', function (): void {
@@ -429,9 +451,12 @@ it('serves a theme asset through the derivative pipeline and redirects to the ra
     $status = curl_getinfo($ch, CURLINFO_RESPONSE_CODE);
     $location = curl_getinfo($ch, CURLINFO_REDIRECT_URL);
 
-    expect($status)->toBe(301);
-    expect($location)->not->toContain('action.php');
-    expect($location)->toContain('light-default.jpg');
+    expect($status)
+        ->toBe(301);
+    expect($location)
+        ->not->toContain('action.php');
+    expect($location)
+        ->toContain('light-default.jpg');
 });
 
 it('sends a no-store, short-lived Expires header for a cache-busted (b=) request', function (): void {
@@ -502,7 +527,10 @@ it('composites an opaque watermark onto a freshly-generated derivative', functio
         $status = curl_getinfo($ch, CURLINFO_RESPONSE_CODE);
         unset($ch);
 
-        return ['status' => $status, 'body' => is_string($body) ? $body : ''];
+        return [
+            'status' => $status,
+            'body' => is_string($body) ? $body : '',
+        ];
     };
 
     $baseUrl = H::baseUrl();
@@ -513,12 +541,15 @@ it('composites an opaque watermark onto a freshly-generated derivative', functio
         'login' => 'Login',
     ]);
 
-    $statusResult = $curl($baseUrl . '/ws.php?format=json', ['method' => 'pwg.session.getStatus']);
+    $statusResult = $curl($baseUrl . '/ws.php?format=json', [
+        'method' => 'pwg.session.getStatus',
+    ]);
     $decodedStatus = json_decode($statusResult['body'], true);
     $statusResultData = is_array($decodedStatus) ? ($decodedStatus['result'] ?? null) : null;
     $pwgTokenRaw = is_array($statusResultData) ? ($statusResultData['pwg_token'] ?? null) : null;
     $pwgToken = is_string($pwgTokenRaw) || is_int($pwgTokenRaw) ? (string) $pwgTokenRaw : '';
-    expect($pwgToken)->not->toBe('');
+    expect($pwgToken)
+        ->not->toBe('');
 
     // A small, fully-opaque pure-red PNG -- composited at xpos=0/ypos=0
     // (top-left) with opacity=100 and a 1x1 min_size threshold so it
@@ -636,7 +667,9 @@ it('applies the stored rotation angle before crop/scale, swapping width/height f
     imagejpeg($img, $srcPath, 95);
 
     $page = H::loginAsAdmin($this);
-    $album = H::wsCall($page, 'pwg.categories.add', ['name' => 'Derivative Rotation Album ' . uniqid()]);
+    $album = H::wsCall($page, 'pwg.categories.add', [
+        'name' => 'Derivative Rotation Album ' . uniqid(),
+    ]);
     $albumResult = $album['result'] ?? null;
     if (! is_array($albumResult) || ! is_numeric($albumResult['id'] ?? null)) {
         throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($album, true));
@@ -666,8 +699,10 @@ it('applies the stored rotation angle before crop/scale, swapping width/height f
     if ($decoded === false) {
         throw new RuntimeException('Failed to decode the derivative response body as an image');
     }
-    expect(imagesx($decoded))->toBe(50);
-    expect(imagesy($decoded))->toBe(100);
+    expect(imagesx($decoded))
+        ->toBe(50);
+    expect(imagesy($decoded))
+        ->toBe(100);
 
     // Color varied along Y before rotation (red top, blue bottom, constant
     // across the full width); after a +/-90-degree rotation it varies
@@ -744,8 +779,10 @@ it('scales an oversized watermark down to fit the destination before compositing
         if ($decoded === false) {
             throw new RuntimeException('Failed to decode the derivative response body as an image');
         }
-        expect(imagesx($decoded))->toBe(240);
-        expect(imagesy($decoded))->toBe(180);
+        expect(imagesx($decoded))
+            ->toBe(240);
+        expect(imagesy($decoded))
+            ->toBe(180);
 
         // The scaled watermark (SizingParams::classic(240,180) applied to
         // the 300x60 source -- width is the binding ratio, landing at
@@ -828,8 +865,10 @@ it('tiles a repeated watermark at valid offsets and skips offsets that would ove
         if ($decoded === false) {
             throw new RuntimeException('Failed to decode the derivative response body as an image');
         }
-        expect(imagesx($decoded))->toBe(240);
-        expect(imagesy($decoded))->toBe(180);
+        expect(imagesx($decoded))
+            ->toBe(240);
+        expect(imagesy($decoded))
+            ->toBe(180);
 
         // Primary composite: x=round(0.40*(240-40))=100, y=round(0.50*(180-30))=75.
         // xpad = 40 + max(30, round(40/4)) = 70.
@@ -913,8 +952,10 @@ it('reuses an already-cached, fresher sibling derivative instead of regenerating
         if ($decoded === false) {
             throw new RuntimeException('Failed to decode the derivative response body as an image');
         }
-        expect(imagesx($decoded))->toBe(432);
-        expect(imagesy($decoded))->toBe(324);
+        expect(imagesx($decoded))
+            ->toBe(432);
+        expect(imagesy($decoded))
+            ->toBe(324);
 
         $center = idcPixel($decoded, 216, 162);
         expect($center['red'])->toBeGreaterThan(180);
@@ -963,8 +1004,10 @@ it('regenerates from the true original when the only candidate sibling derivativ
         if ($decoded === false) {
             throw new RuntimeException('Failed to decode the derivative response body as an image');
         }
-        expect(imagesx($decoded))->toBe(432);
-        expect(imagesy($decoded))->toBe(324);
+        expect(imagesx($decoded))
+            ->toBe(432);
+        expect(imagesy($decoded))
+            ->toBe(324);
 
         // Regenerated from the true, blue-ish original -- not the
         // stale red candidate.
@@ -1001,8 +1044,10 @@ it('parses a PATH_INFO-style request when question_mark_in_urls is disabled', fu
         if ($decoded === false) {
             throw new RuntimeException('Failed to decode the derivative response body as an image');
         }
-        expect(imagesx($decoded))->toBe(144);
-        expect(imagesy($decoded))->toBe(108);
+        expect(imagesx($decoded))
+            ->toBe(144);
+        expect(imagesy($decoded))
+            ->toBe(108);
     } finally {
         H::restoreConfig($snapshot);
     }
@@ -1130,10 +1175,13 @@ it('sends a long-lived Expires header when both the source file and the derivati
         expect($result['status'])->toBe(200);
         expect($result['headers']['cache-control'] ?? null)->not->toBe('no-store, max-age=100');
         $expires = $result['headers']['expires'] ?? null;
-        expect($expires)->not->toBeNull();
+        expect($expires)
+            ->not->toBeNull();
         $expiresTs = strtotime((string) $expires);
-        expect($expiresTs)->toBeGreaterThan(time() + 9 * 24 * 3600);
-        expect($expiresTs)->toBeLessThan(time() + 11 * 24 * 3600);
+        expect($expiresTs)
+            ->toBeGreaterThan(time() + 9 * 24 * 3600);
+        expect($expiresTs)
+            ->toBeLessThan(time() + 11 * 24 * 3600);
     } finally {
         H::restoreDerivativeConfig($snapshot);
     }
@@ -1208,8 +1256,10 @@ it('generates a custom size once its own key is registered, averaging sharpen ac
         if ($decoded === false) {
             throw new RuntimeException('Failed to decode the derivative response body as an image');
         }
-        expect(imagesx($decoded))->toBe(133);
-        expect(imagesy($decoded))->toBe(100);
+        expect(imagesx($decoded))
+            ->toBe(133);
+        expect(imagesy($decoded))
+            ->toBe(100);
     } finally {
         H::restoreDerivativeConfig($snapshot);
     }
@@ -1318,8 +1368,10 @@ it('clamps the JPEG compression quality to 75 when generating a 4xlarge derivati
             throw new RuntimeException('Failed to decode the derivative response body as an image');
         }
         // 200x150 rotated 90 degrees: width/height swap, no scaling needed.
-        expect(imagesx($decoded))->toBe(150);
-        expect(imagesy($decoded))->toBe(200);
+        expect(imagesx($decoded))
+            ->toBe(150);
+        expect(imagesy($decoded))
+            ->toBe(200);
     } finally {
         H::restoreDerivativeConfig($snapshot);
     }
@@ -1411,8 +1463,10 @@ it('exercises every candidate-selection outcome in trySwitchSource() for a class
     if ($decoded === false) {
         throw new RuntimeException('Failed to decode the derivative response body as an image');
     }
-    expect(imagesx($decoded))->toBe(547);
-    expect(imagesy($decoded))->toBe(594);
+    expect(imagesx($decoded))
+        ->toBe(547);
+    expect(imagesy($decoded))
+        ->toBe(594);
 });
 
 it('reuses a larger cropped-type sibling via the max_crop!=0 candidate branch, with some candidates excluded by watermark mismatch', function (): void {
@@ -1497,8 +1551,10 @@ it('reuses a larger cropped-type sibling via the max_crop!=0 candidate branch, w
         if ($decoded === false) {
             throw new RuntimeException('Failed to decode the derivative response body as an image');
         }
-        expect(imagesx($decoded))->toBe(120);
-        expect(imagesy($decoded))->toBe(120);
+        expect(imagesx($decoded))
+            ->toBe(120);
+        expect(imagesy($decoded))
+            ->toBe(120);
 
         $center = idcPixel($decoded, 60, 60);
         expect($center['red'])->toBeGreaterThan(180);
@@ -1517,7 +1573,9 @@ it('reuses a larger cropped-type sibling via the max_crop!=0 candidate branch, w
 
 it('serves the correct Content-Type for a gif derivative', function (): void {
     $page = H::loginAsAdmin($this);
-    $album = H::wsCall($page, 'pwg.categories.add', ['name' => 'Derivative Gif Album ' . uniqid()]);
+    $album = H::wsCall($page, 'pwg.categories.add', [
+        'name' => 'Derivative Gif Album ' . uniqid(),
+    ]);
     $albumResult = $album['result'] ?? null;
     if (! is_array($albumResult) || ! is_numeric($albumResult['id'] ?? null)) {
         throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($album, true));
@@ -1575,7 +1633,9 @@ it('serves the correct Content-Type for an already-cached webp derivative', func
     // all -- exactly how a real request for an already-generated webp
     // derivative behaves in production too, regardless of backend.
     $page = H::loginAsAdmin($this);
-    $album = H::wsCall($page, 'pwg.categories.add', ['name' => 'Derivative Webp Album ' . uniqid()]);
+    $album = H::wsCall($page, 'pwg.categories.add', [
+        'name' => 'Derivative Webp Album ' . uniqid(),
+    ]);
     $albumResult = $album['result'] ?? null;
     if (! is_array($albumResult) || ! is_numeric($albumResult['id'] ?? null)) {
         throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($album, true));

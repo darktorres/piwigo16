@@ -48,16 +48,19 @@ it('shows the public status and all 3 granted groups for category 1', function (
     $page->assertRadioNotSelected('status', 'private');
 
     $groupsSelected = $page->attribute('[data-selectize=groups]', 'data-value');
-    expect($groupsSelected)->not->toBeNull();
+    expect($groupsSelected)
+        ->not->toBeNull();
     $decodedGroups = json_decode((string) $groupsSelected, true);
     if (! is_array($decodedGroups)) {
         throw new RuntimeException('expected an array from data-value JSON, got: ' . var_export($decodedGroups, true));
     }
     sort($decodedGroups);
-    expect($decodedGroups)->toBe([1, 2, 3]);
+    expect($decodedGroups)
+        ->toBe([1, 2, 3]);
 
     $usersSelected = $page->attribute('[data-selectize=users]', 'data-value');
-    expect(json_decode((string) $usersSelected, true))->toBe([]);
+    expect(json_decode((string) $usersSelected, true))
+        ->toBe([]);
 });
 
 it('shows the private status and the single granted group for category 2', function (): void {
@@ -71,12 +74,15 @@ it('shows the private status and the single granted group for category 2', funct
     $page->assertRadioNotSelected('status', 'public');
 
     $groupsSelected = $page->attribute('[data-selectize=groups]', 'data-value');
-    expect(json_decode((string) $groupsSelected, true))->toBe([1]);
+    expect(json_decode((string) $groupsSelected, true))
+        ->toBe([1]);
 });
 
 it('submits a status/group permission change and persists it', function (): void {
     $page = H::loginAsAdmin($this);
-    $album = H::wsCall($page, 'pwg.categories.add', ['name' => 'Cat Perm Submit Album ' . uniqid()]);
+    $album = H::wsCall($page, 'pwg.categories.add', [
+        'name' => 'Cat Perm Submit Album ' . uniqid(),
+    ]);
     $albumResult = $album['result'] ?? null;
     if (! is_array($albumResult) || ! is_numeric($albumResult['id'] ?? null)) {
         throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($album, true));

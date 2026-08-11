@@ -4,19 +4,19 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Integration;
 
-use Override;
-use RuntimeException;
-use Piwigo\Core\Kernel;
-use LogicException;
-use Piwigo\Tests\Support\UrlServiceTestFactory;
 use Doctrine\DBAL\Connection;
+use LogicException;
+use Override;
 use Piwigo\Common\Enum\Section;
 use Piwigo\Config\ConfigLoader;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\HtmlRenderingInterface;
+use Piwigo\Core\Kernel;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Db\DbConnection;
+use Piwigo\Tests\Support\UrlServiceTestFactory;
 use Piwigo\Url\UrlService;
+use RuntimeException;
 
 /**
  * Records the message passed to whichever of badRequest()/pageNotFound()/
@@ -196,7 +196,7 @@ final class UrlServiceParseSectionUrlTest extends IntegrationTestCase
     #[Override]
     protected function tearDown(): void
     {
-        $this->conn->executeStatement('UPDATE ' . 'categories' . ' SET permalink = NULL WHERE id IN (1, 2)');
+        $this->conn->executeStatement('UPDATE categories SET permalink = NULL WHERE id IN (1, 2)');
         parent::tearDown();
     }
 
@@ -210,10 +210,11 @@ final class UrlServiceParseSectionUrlTest extends IntegrationTestCase
         return new UrlServiceParseSectionUrlTestRedirectService();
     }
 
-    public function test_parse_section_url_resolves_a_category_by_plain_numeric_id(): void
+    public function testParseSectionUrlResolvesACategoryByPlainNumericId(): void
     {
         $i = 0;
-        $page = $this->service()->parseSectionUrl(['category', '1'], $i, $this->redirect());
+        $page = $this->service()
+            ->parseSectionUrl(['category', '1'], $i, $this->redirect());
 
         self::assertSame(Section::Categories, $page['section']);
         self::assertIsArray($page['category']);
@@ -221,7 +222,7 @@ final class UrlServiceParseSectionUrlTest extends IntegrationTestCase
         self::assertSame(2, $i);
     }
 
-    public function test_parse_section_url_page_not_founds_for_a_nonexistent_category_id(): void
+    public function testParseSectionUrlPageNotFoundsForANonexistentCategoryId(): void
     {
         $htmlRenderer = new UrlServiceParseSectionUrlTestHtmlRenderer();
         $service = UrlServiceTestFactory::build($htmlRenderer);
@@ -235,12 +236,13 @@ final class UrlServiceParseSectionUrlTest extends IntegrationTestCase
         }
     }
 
-    public function test_parse_section_url_resolves_combined_categories(): void
+    public function testParseSectionUrlResolvesCombinedCategories(): void
     {
         $i = 0;
         // 2 consecutive numeric tokens under 'category/' -- the 1st is the
         // primary category, the 2nd a combined one.
-        $page = $this->service()->parseSectionUrl(['category', '1', '2'], $i, $this->redirect());
+        $page = $this->service()
+            ->parseSectionUrl(['category', '1', '2'], $i, $this->redirect());
 
         self::assertIsArray($page['category']);
         self::assertSame(1, $page['category']['id']);
@@ -252,7 +254,7 @@ final class UrlServiceParseSectionUrlTest extends IntegrationTestCase
         self::assertSame(3, $i);
     }
 
-    public function test_parse_section_url_page_not_founds_for_a_nonexistent_combined_category(): void
+    public function testParseSectionUrlPageNotFoundsForANonexistentCombinedCategory(): void
     {
         $htmlRenderer = new UrlServiceParseSectionUrlTestHtmlRenderer();
         $service = UrlServiceTestFactory::build($htmlRenderer);
@@ -266,20 +268,23 @@ final class UrlServiceParseSectionUrlTest extends IntegrationTestCase
         }
     }
 
-    public function test_parse_section_url_resolves_a_category_by_its_permalink(): void
+    public function testParseSectionUrlResolvesACategoryByItsPermalink(): void
     {
-        $this->conn->executeStatement("UPDATE " . 'categories' . " SET permalink = 'sub-album' WHERE id = 2");
+        $this->conn->executeStatement('UPDATE categories' . " SET permalink = 'sub-album' WHERE id = 2");
 
         $i = 0;
-        $page = $this->service()->parseSectionUrl(['category', 'sub-album'], $i, $this->redirect());
+        $page = $this->service()
+            ->parseSectionUrl(['category', 'sub-album'], $i, $this->redirect());
 
         self::assertIsArray($page['category']);
         self::assertSame(2, $page['category']['id']);
-        self::assertSame(['cat_permalink' => 'sub-album'], $page['hit_by']);
+        self::assertSame([
+            'cat_permalink' => 'sub-album',
+        ], $page['hit_by']);
         self::assertSame(2, $i);
     }
 
-    public function test_parse_section_url_resolves_a_multi_segment_permalink(): void
+    public function testParseSectionUrlResolvesAMultiSegmentPermalink(): void
     {
         // A permalink value can itself contain a literal '/' (a
         // "path-style" permalink, independent of the real category
@@ -288,22 +293,25 @@ final class UrlServiceParseSectionUrlTest extends IntegrationTestCase
         // progressive-join accumulation (`$maybe_permalinks[] =
         // $maybe_permalinks[count-1] . '/' . $tokens[$current_token]`)
         // that a 2nd token needs.
-        $this->conn->executeStatement("UPDATE " . 'categories' . " SET permalink = 'parent-word/child-word' WHERE id = 2");
+        $this->conn->executeStatement('UPDATE categories' . " SET permalink = 'parent-word/child-word' WHERE id = 2");
 
         $i = 0;
-        $page = $this->service()->parseSectionUrl(['category', 'parent-word', 'child-word'], $i, $this->redirect());
+        $page = $this->service()
+            ->parseSectionUrl(['category', 'parent-word', 'child-word'], $i, $this->redirect());
 
         self::assertIsArray($page['category']);
         self::assertSame(2, $page['category']['id']);
-        self::assertSame(['cat_permalink' => 'parent-word/child-word'], $page['hit_by']);
+        self::assertSame([
+            'cat_permalink' => 'parent-word/child-word',
+        ], $page['hit_by']);
         // Both tokens consumed -- the match was found at the longest
         // (2-token) combination, not a shorter prefix.
         self::assertSame(3, $i);
     }
 
-    public function test_parse_section_url_resolves_a_second_combined_category_via_permalink(): void
+    public function testParseSectionUrlResolvesASecondCombinedCategoryViaPermalink(): void
     {
-        $this->conn->executeStatement("UPDATE " . 'categories' . " SET permalink = 'sub-album' WHERE id = 2");
+        $this->conn->executeStatement('UPDATE categories' . " SET permalink = 'sub-album' WHERE id = 2");
 
         $i = 0;
         // Primary category resolved by plain numeric id (category 1); the
@@ -311,7 +319,8 @@ final class UrlServiceParseSectionUrlTest extends IntegrationTestCase
         // exercises the permalink branch's own "$category !== null" ->
         // combined_category_ids[] arm (test_parse_section_url_resolves_combined_categories()
         // above only exercises that arm via 2 numeric ids).
-        $page = $this->service()->parseSectionUrl(['category', '1', 'sub-album'], $i, $this->redirect());
+        $page = $this->service()
+            ->parseSectionUrl(['category', '1', 'sub-album'], $i, $this->redirect());
 
         self::assertIsArray($page['category']);
         self::assertSame(1, $page['category']['id']);
@@ -328,7 +337,7 @@ final class UrlServiceParseSectionUrlTest extends IntegrationTestCase
         self::assertSame(3, $i);
     }
 
-    public function test_parse_section_url_page_not_founds_for_an_unresolvable_permalink(): void
+    public function testParseSectionUrlPageNotFoundsForAnUnresolvablePermalink(): void
     {
         $htmlRenderer = new UrlServiceParseSectionUrlTestHtmlRenderer();
         $service = UrlServiceTestFactory::build($htmlRenderer);
@@ -342,10 +351,11 @@ final class UrlServiceParseSectionUrlTest extends IntegrationTestCase
         }
     }
 
-    public function test_parse_section_url_resolves_tags_by_numeric_id(): void
+    public function testParseSectionUrlResolvesTagsByNumericId(): void
     {
         $i = 0;
-        $page = $this->service()->parseSectionUrl(['tags', '1'], $i, $this->redirect());
+        $page = $this->service()
+            ->parseSectionUrl(['tags', '1'], $i, $this->redirect());
 
         self::assertSame(Section::Tags, $page['section']);
         self::assertIsArray($page['tags']);
@@ -356,7 +366,7 @@ final class UrlServiceParseSectionUrlTest extends IntegrationTestCase
         self::assertSame(2, $i);
     }
 
-    public function test_parse_section_url_resolves_tags_by_url_name(): void
+    public function testParseSectionUrlResolvesTagsByUrlName(): void
     {
         // A non-numeric token (or CurrentConfig::tagUrlStyle() === 'tag',
         // forcing even a numeric-looking token down this path) is
@@ -364,7 +374,8 @@ final class UrlServiceParseSectionUrlTest extends IntegrationTestCase
         // $requested_tag_ids -- the sibling test above only ever exercises
         // the numeric-id arm.
         $i = 0;
-        $page = $this->service()->parseSectionUrl(['tags', 'nature'], $i, $this->redirect());
+        $page = $this->service()
+            ->parseSectionUrl(['tags', 'nature'], $i, $this->redirect());
 
         self::assertSame(Section::Tags, $page['section']);
         self::assertIsArray($page['tags']);
@@ -375,7 +386,7 @@ final class UrlServiceParseSectionUrlTest extends IntegrationTestCase
         self::assertSame(2, $i);
     }
 
-    public function test_parse_section_url_page_not_founds_when_no_tag_matches(): void
+    public function testParseSectionUrlPageNotFoundsWhenNoTagMatches(): void
     {
         $htmlRenderer = new UrlServiceParseSectionUrlTestHtmlRenderer();
         $service = UrlServiceTestFactory::build($htmlRenderer);
@@ -389,7 +400,7 @@ final class UrlServiceParseSectionUrlTest extends IntegrationTestCase
         }
     }
 
-    public function test_parse_section_url_rejects_a_tags_token_with_no_ids_or_names(): void
+    public function testParseSectionUrlRejectsATagsTokenWithNoIdsOrNames(): void
     {
         $htmlRenderer = new UrlServiceParseSectionUrlTestHtmlRenderer();
         $service = UrlServiceTestFactory::build($htmlRenderer);

@@ -4,13 +4,15 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Unit\Common\ValueObject;
 
-use Override;
 use InvalidArgumentException;
+use Override;
 use Piwigo\Common\ValueObject\ThemeId;
 use Piwigo\Common\ValueObject\Username;
 use Piwigo\Tests\Unit\Common\ValueObject\Contract\StringVoContract;
 
-/** @extends StringVoContract<Username> */
+/**
+ * @extends StringVoContract<Username>
+ */
 final class UsernameTest extends StringVoContract
 {
     #[Override]
@@ -31,19 +33,21 @@ final class UsernameTest extends StringVoContract
         return ThemeId::class;
     }
 
-    /** @return iterable<string, array{string}> */
+    /**
+     * @return iterable<string, array{string}>
+     */
     #[Override]
     public static function invalidSamples(): iterable
     {
-        yield 'empty'              => [''];
-        yield 'leading space'      => [' admin'];
-        yield 'trailing space'     => ['admin '];
-        yield 'tab'                => ["admin\t"];
-        yield 'newline'            => ["admin\n"];
-        yield 'null byte'          => ["adm\x00in"];
-        yield 'embedded control'   => ["adm\x01in"];
-        yield 'DEL char'           => ["adm\x7Fin"];
-        yield 'over 100 chars'     => [str_repeat('a', 101)];
+        yield 'empty' => [''];
+        yield 'leading space' => [' admin'];
+        yield 'trailing space' => ['admin '];
+        yield 'tab' => ["admin\t"];
+        yield 'newline' => ["admin\n"];
+        yield 'null byte' => ["adm\x00in"];
+        yield 'embedded control' => ["adm\x01in"];
+        yield 'DEL char' => ["adm\x7Fin"];
+        yield 'over 100 chars' => [str_repeat('a', 101)];
     }
 
     public function testCaseSensitiveBinaryCollation(): void

@@ -4,21 +4,21 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Integration;
 
-use Override;
-use LogicException;
-use Piwigo\PluginConfig\EventDispatcher;
-use Piwigo\Tests\Support\TemplateTestFactory;
 use Doctrine\DBAL\Connection;
+use LogicException;
+use Override;
 use Piwigo\Admin\Maintenance\FilesystemIntegrityChecker;
 use Piwigo\Config\ConfigLoader;
 use Piwigo\Config\ConfigService;
 use Piwigo\Config\CurrentConfig;
-use Piwigo\Tests\Support\CurrentConfigTestFactory;
-use Piwigo\Tests\Support\CurrentConfigServiceTestFactory;
-use Piwigo\Tests\Support\CurrentPathsTestFactory;
 use Piwigo\Core\Kernel;
 use Piwigo\Db\DbConnection;
+use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Template\CurrentTemplate;
+use Piwigo\Tests\Support\CurrentConfigServiceTestFactory;
+use Piwigo\Tests\Support\CurrentConfigTestFactory;
+use Piwigo\Tests\Support\CurrentPathsTestFactory;
+use Piwigo\Tests\Support\TemplateTestFactory;
 
 /**
  * fsQuickCheck()/imagesIntegrity() need a real DB
@@ -92,7 +92,7 @@ final class FilesystemIntegrityCheckerTest extends IntegrationTestCase
         // previous test method's write is the only source of a stale row,
         // and confUpdateParam()'s own cache-clearing doesn't help a test
         // that reads it back with raw SQL.
-        $this->conn->executeStatement("DELETE FROM " . 'config' . " WHERE param = 'fs_quick_check_last_check'");
+        $this->conn->executeStatement('DELETE FROM config' . " WHERE param = 'fs_quick_check_last_check'");
 
         CurrentTemplate::current()->set(TemplateTestFactory::build(CurrentPathsTestFactory::get()->root . 'themes/admin', 'default'));
     }
@@ -100,13 +100,15 @@ final class FilesystemIntegrityCheckerTest extends IntegrationTestCase
     #[Override]
     protected function tearDown(): void
     {
-        $this->conn->executeStatement("DELETE FROM " . 'config' . " WHERE param = 'fs_quick_check_last_check'");
+        $this->conn->executeStatement('DELETE FROM config' . " WHERE param = 'fs_quick_check_last_check'");
         CurrentTemplate::current()->reset();
         Kernel::reset();
         parent::tearDown();
     }
 
-    /** @param array<int<0, max>|string, mixed> $params */
+    /**
+     * @param array<int<0, max>|string, mixed> $params
+     */
     private function fetchOneInt(string $sql, array $params = []): int
     {
         $value = $this->conn->fetchOne($sql, $params);
@@ -125,7 +127,7 @@ final class FilesystemIntegrityCheckerTest extends IntegrationTestCase
      */
     private function fsQuickCheckLastCheckRaw(): ?string
     {
-        $raw = $this->conn->fetchOne("SELECT value FROM " . 'config' . " WHERE param = 'fs_quick_check_last_check'");
+        $raw = $this->conn->fetchOne('SELECT value FROM config' . " WHERE param = 'fs_quick_check_last_check'");
         if ($raw === false) {
             return null;
         }
@@ -139,7 +141,7 @@ final class FilesystemIntegrityCheckerTest extends IntegrationTestCase
 
     // ------------------------------------------------------- period guard
 
-    public function test_fs_quick_check_writes_nothing_when_the_period_is_disabled(): void
+    public function testFsQuickCheckWritesNothingWhenThePeriodIsDisabled(): void
     {
         $currentConfig = Kernel::container()->get(CurrentConfig::class);
         if (! $currentConfig instanceof CurrentConfig) {
@@ -152,7 +154,7 @@ final class FilesystemIntegrityCheckerTest extends IntegrationTestCase
         self::assertNull($this->fsQuickCheckLastCheckRaw());
     }
 
-    public function test_fs_quick_check_writes_the_last_check_timestamp_and_no_header_message_when_the_period_is_enabled(): void
+    public function testFsQuickCheckWritesTheLastCheckTimestampAndNoHeaderMessageWhenThePeriodIsEnabled(): void
     {
         // CurrentConfig::reset() in setUp() leaves fsQuickCheckPeriod at
         // its own property-initializer default (86400, nonzero) -- this
@@ -168,7 +170,7 @@ final class FilesystemIntegrityCheckerTest extends IntegrationTestCase
 
     // -------------------------------------------------- run-once guard
 
-    public function test_fs_quick_check_is_a_no_op_on_a_second_call_within_the_same_request(): void
+    public function testFsQuickCheckIsANoOpOnASecondCallWithinTheSameRequest(): void
     {
         $this->checker->fsQuickCheck();
         self::assertNotNull($this->fsQuickCheckLastCheckRaw());
@@ -178,7 +180,7 @@ final class FilesystemIntegrityCheckerTest extends IntegrationTestCase
         // block the next call, fsQuickCheck() would overwrite this
         // sentinel with a fresh date('c') value.
         $this->conn->executeStatement(
-            "UPDATE " . 'config' . " SET value = '\"sentinel-unchanged\"' WHERE param = 'fs_quick_check_last_check'"
+            'UPDATE config' . " SET value = '\"sentinel-unchanged\"' WHERE param = 'fs_quick_check_last_check'"
         );
 
         $this->checker->fsQuickCheck();
@@ -186,11 +188,11 @@ final class FilesystemIntegrityCheckerTest extends IntegrationTestCase
         self::assertSame('sentinel-unchanged', $this->fsQuickCheckLastCheckRaw());
     }
 
-    public function test_reset_allows_fs_quick_check_to_run_again(): void
+    public function testResetAllowsFsQuickCheckToRunAgain(): void
     {
         $this->checker->fsQuickCheck();
         $this->conn->executeStatement(
-            "UPDATE " . 'config' . " SET value = '\"sentinel-before-reset\"' WHERE param = 'fs_quick_check_last_check'"
+            'UPDATE config' . " SET value = '\"sentinel-before-reset\"' WHERE param = 'fs_quick_check_last_check'"
         );
         // The raw UPDATE above bypasses ConfigRepository's own
         // EntityManager (the private, standalone one buildConfigRepository()
@@ -215,14 +217,14 @@ final class FilesystemIntegrityCheckerTest extends IntegrationTestCase
 
     // --------------------------------------------------- empty-ids guard
 
-    public function test_fs_quick_check_returns_early_without_error_when_the_images_table_is_empty(): void
+    public function testFsQuickCheckReturnsEarlyWithoutErrorWhenTheImagesTableIsEmpty(): void
     {
         // With zero images, both id-sampling queries (issue1827 + random)
         // return zero rows, so $fs_quick_check_ids stays empty. Without
         // the `count($fs_quick_check_ids) < 1` guard, the next query would
         // build the syntactically invalid `WHERE id IN ()` (implode() of
         // an empty array) and fetchAllAssociative() would throw.
-        $this->conn->executeStatement('DELETE FROM ' . 'images');
+        $this->conn->executeStatement('DELETE FROM images');
 
         try {
             $this->checker->fsQuickCheck();
@@ -245,22 +247,22 @@ final class FilesystemIntegrityCheckerTest extends IntegrationTestCase
 
     // ------------------------------------------------- duplicate paths
 
-    public function test_fs_quick_check_reports_the_correct_duplicate_path_count_in_a_header_message(): void
+    public function testFsQuickCheckReportsTheCorrectDuplicatePathCountInAHeaderMessage(): void
     {
         // Pairing one new row against each of fixture images 1 and 2's own
         // (already-confirmed-existing) paths creates exactly 2
         // duplicate-path groups without needing any new files on disk.
-        $path1 = $this->conn->fetchOne('SELECT path FROM ' . 'images' . ' WHERE id = 1');
-        $path2 = $this->conn->fetchOne('SELECT path FROM ' . 'images' . ' WHERE id = 2');
+        $path1 = $this->conn->fetchOne('SELECT path FROM images WHERE id = 1');
+        $path2 = $this->conn->fetchOne('SELECT path FROM images WHERE id = 2');
         self::assertIsString($path1);
         self::assertIsString($path2);
 
         $this->conn->executeStatement(
-            'INSERT INTO ' . 'images' . ' (file, path) VALUES (?, ?), (?, ?)',
+            'INSERT INTO images (file, path) VALUES (?, ?), (?, ?)',
             ['fsic-dup-a.jpg', $path1, 'fsic-dup-b.jpg', $path2]
         );
         $newIds = $this->conn->fetchFirstColumn(
-            "SELECT id FROM " . 'images' . " WHERE file IN ('fsic-dup-a.jpg', 'fsic-dup-b.jpg')"
+            'SELECT id FROM images' . " WHERE file IN ('fsic-dup-a.jpg', 'fsic-dup-b.jpg')"
         );
         self::assertCount(2, $newIds);
 
@@ -273,7 +275,7 @@ final class FilesystemIntegrityCheckerTest extends IntegrationTestCase
             );
         } finally {
             $this->conn->executeStatement(
-                'DELETE FROM ' . 'images' . ' WHERE id IN (?, ?)',
+                'DELETE FROM images WHERE id IN (?, ?)',
                 $newIds
             );
         }
@@ -281,7 +283,7 @@ final class FilesystemIntegrityCheckerTest extends IntegrationTestCase
 
     // ---------------------------------------------------- imagesIntegrity()
 
-    public function test_images_integrity_deletes_image_category_rows_whose_image_no_longer_exists(): void
+    public function testImagesIntegrityDeletesImageCategoryRowsWhoseImageNoLongerExists(): void
     {
         // image_category.image_id carries a real ON DELETE CASCADE
         // FK back to images, so a genuine orphan can never arise
@@ -292,34 +294,34 @@ final class FilesystemIntegrityCheckerTest extends IntegrationTestCase
         // UserServiceTest's own orphan-user-group test uses.
         $this->disableForeignKeyChecks($this->conn);
         $this->conn->executeStatement(
-            'INSERT INTO ' . 'image_category' . ' (image_id, category_id) VALUES (777777, 1)'
+            'INSERT INTO image_category (image_id, category_id) VALUES (777777, 1)'
         );
         $this->enableForeignKeyChecks($this->conn);
 
         try {
             self::assertSame(
                 1,
-                $this->fetchOneInt('SELECT COUNT(*) FROM ' . 'image_category' . ' WHERE image_id = 777777')
+                $this->fetchOneInt('SELECT COUNT(*) FROM image_category WHERE image_id = 777777')
             );
 
             $this->checker->imagesIntegrity();
 
             self::assertSame(
                 0,
-                $this->fetchOneInt('SELECT COUNT(*) FROM ' . 'image_category' . ' WHERE image_id = 777777')
+                $this->fetchOneInt('SELECT COUNT(*) FROM image_category WHERE image_id = 777777')
             );
         } finally {
-            $this->conn->executeStatement('DELETE FROM ' . 'image_category' . ' WHERE image_id = 777777');
+            $this->conn->executeStatement('DELETE FROM image_category WHERE image_id = 777777');
         }
     }
 
-    public function test_images_integrity_leaves_valid_image_category_rows_untouched_when_there_are_no_orphans(): void
+    public function testImagesIntegrityLeavesValidImageCategoryRowsUntouchedWhenThereAreNoOrphans(): void
     {
-        $before = $this->fetchOneInt('SELECT COUNT(*) FROM ' . 'image_category');
+        $before = $this->fetchOneInt('SELECT COUNT(*) FROM image_category');
         self::assertGreaterThan(0, $before, 'the fixture must have at least one real image_category row for this to be a meaningful assertion');
 
         $this->checker->imagesIntegrity();
 
-        self::assertSame($before, $this->fetchOneInt('SELECT COUNT(*) FROM ' . 'image_category'));
+        self::assertSame($before, $this->fetchOneInt('SELECT COUNT(*) FROM image_category'));
     }
 }

@@ -515,7 +515,6 @@ test('str2url\'s stripping-empties-the-result fallback still replaces spaces wit
  * stub, not to handle a reachable runtime case -- confirmed live: both
  * str2url tests above pass identically with the cast removed.
  */
-
 test('getNameFromFile strips the extension and replaces underscores with spaces', function (): void {
     expect(StringHelper::getNameFromFile('my_holiday_photo.jpg'))->toBe('my holiday photo');
 });

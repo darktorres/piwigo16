@@ -68,7 +68,9 @@ function makePicturePageContextForTest(
         infoFilesize: $infoFilesize,
         infoVisits: '42',
         infoFile: 'photo.jpg',
-        displayInfo: ['file' => true],
+        displayInfo: [
+            'file' => true,
+        ],
         pdfNbPages: $pdfNbPages,
         elementContent: '',
         uPrefetch: $uPrefetch,
@@ -79,52 +81,79 @@ function makePicturePageContextForTest(
 }
 
 test('toArray flattens every fixed property, and omits every optional key when null', function (): void {
-    $result = makePicturePageContextForTest()->toArray();
+    $result = makePicturePageContextForTest()
+        ->toArray();
 
-    expect($result)->not->toHaveKeys(['first', 'previous', 'next', 'last', 'current', 'U_SLIDESHOW_STOP', 'slideshow', 'U_SLIDESHOW_START', 'U_METADATA', 'U_SET_AS_REPRESENTATIVE', 'U_PHOTO_ADMIN', 'U_CADDIE', 'favorite', 'COMMENT_IMG', 'INFO_AUTHOR', 'INFO_CREATION_DATE', 'INFO_DIMENSIONS', 'INFO_FILESIZE', 'PDF_NB_PAGES', 'U_PREFETCH', 'related_tags', 'related_categories'])
+    expect($result)
+        ->not->toHaveKeys(['first', 'previous', 'next', 'last', 'current', 'U_SLIDESHOW_STOP', 'slideshow', 'U_SLIDESHOW_START', 'U_METADATA', 'U_SET_AS_REPRESENTATIVE', 'U_PHOTO_ADMIN', 'U_CADDIE', 'favorite', 'COMMENT_IMG', 'INFO_AUTHOR', 'INFO_CREATION_DATE', 'INFO_DIMENSIONS', 'INFO_FILESIZE', 'PDF_NB_PAGES', 'U_PREFETCH', 'related_tags', 'related_categories'])
         ->and($result['SECTION_TITLE'])->toBe('Holidays')
         ->and($result['INFO_VISITS'])->toBe('42')
-        ->and($result['display_info'])->toBe(['file' => true]);
+        ->and($result['display_info'])->toBe([
+            'file' => true,
+        ]);
 });
 
 test('toArray includes navCurrent under "current" when set', function (): void {
-    $result = makePicturePageContextForTest(navCurrent: ['id' => '5', 'url' => '/picture.php?id=5'])->toArray();
+    $result = makePicturePageContextForTest(navCurrent: [
+        'id' => '5',
+        'url' => '/picture.php?id=5',
+    ])->toArray();
 
-    expect($result['current'])->toBe(['id' => '5', 'url' => '/picture.php?id=5']);
+    expect($result['current'])->toBe([
+        'id' => '5',
+        'url' => '/picture.php?id=5',
+    ]);
 });
 
 test('toArray includes U_SLIDESHOW_STOP and slideshow together', function (): void {
     $result = makePicturePageContextForTest(
         uSlideshowStop: '/picture.php?id=5',
-        slideshowNav: ['U_STOP_REPEAT' => '/picture.php?id=5&slideshow=abc'],
+        slideshowNav: [
+            'U_STOP_REPEAT' => '/picture.php?id=5&slideshow=abc',
+        ],
     )->toArray();
 
     expect($result['U_SLIDESHOW_STOP'])->toBe('/picture.php?id=5')
-        ->and($result['slideshow'])->toBe(['U_STOP_REPEAT' => '/picture.php?id=5&slideshow=abc'])
-        ->and($result)->not->toHaveKey('U_SLIDESHOW_START');
+        ->and($result['slideshow'])->toBe([
+            'U_STOP_REPEAT' => '/picture.php?id=5&slideshow=abc',
+        ])
+        ->and($result)
+        ->not->toHaveKey('U_SLIDESHOW_START');
 });
 
 test('toArray includes U_SLIDESHOW_START alone', function (): void {
-    $result = makePicturePageContextForTest(uSlideshowStart: '/picture.php?id=5&slideshow=')->toArray();
+    $result = makePicturePageContextForTest(uSlideshowStart: '/picture.php?id=5&slideshow=')
+        ->toArray();
 
     expect($result['U_SLIDESHOW_START'])->toBe('/picture.php?id=5&slideshow=')
-        ->and($result)->not->toHaveKey('U_SLIDESHOW_STOP')
-        ->and($result)->not->toHaveKey('slideshow');
+        ->and($result)
+        ->not->toHaveKey('U_SLIDESHOW_STOP')
+        ->and($result)
+        ->not->toHaveKey('slideshow');
 });
 
 test('toArray includes PDF_NB_PAGES alone, including a false page count', function (): void {
-    $result = makePicturePageContextForTest(pdfNbPages: false)->toArray();
+    $result = makePicturePageContextForTest(pdfNbPages: false)
+        ->toArray();
 
     expect($result['PDF_NB_PAGES'])->toBeFalse();
 });
 
 test('toArray includes related_tags and related_categories when set', function (): void {
     $result = makePicturePageContextForTest(
-        relatedTags: [['id' => 3, 'name' => 'sunset', 'URL' => '/index.php?/tags/3']],
+        relatedTags: [[
+            'id' => 3,
+            'name' => 'sunset',
+            'URL' => '/index.php?/tags/3',
+        ]],
         relatedCategories: ['<a href="/index.php?/category/1">Holidays</a>'],
     )->toArray();
 
-    expect($result['related_tags'])->toBe([['id' => 3, 'name' => 'sunset', 'URL' => '/index.php?/tags/3']])
+    expect($result['related_tags'])->toBe([[
+        'id' => 3,
+        'name' => 'sunset',
+        'URL' => '/index.php?/tags/3',
+    ]])
         ->and($result['related_categories'])->toBe(['<a href="/index.php?/category/1">Holidays</a>']);
 });
 
@@ -134,7 +163,10 @@ test('toArray includes every other optional key when set', function (): void {
         uSetAsRepresentative: '/picture.php?/5&action=set_as_representative',
         uPhotoAdmin: '/admin.php?page=photo-5',
         uCaddie: '/picture.php?/5&action=add_to_caddie',
-        favorite: ['IS_FAVORITE' => true, 'U_FAVORITE' => '/picture.php?/5&action=remove_from_favorites'],
+        favorite: [
+            'IS_FAVORITE' => true,
+            'U_FAVORITE' => '/picture.php?/5&action=remove_from_favorites',
+        ],
         commentImg: '<p>A description</p>',
         infoAuthor: 'admin',
         infoCreationDate: '<a href="#">July 1, 2026</a>',
@@ -147,7 +179,10 @@ test('toArray includes every other optional key when set', function (): void {
         ->and($result['U_SET_AS_REPRESENTATIVE'])->toBe('/picture.php?/5&action=set_as_representative')
         ->and($result['U_PHOTO_ADMIN'])->toBe('/admin.php?page=photo-5')
         ->and($result['U_CADDIE'])->toBe('/picture.php?/5&action=add_to_caddie')
-        ->and($result['favorite'])->toBe(['IS_FAVORITE' => true, 'U_FAVORITE' => '/picture.php?/5&action=remove_from_favorites'])
+        ->and($result['favorite'])->toBe([
+            'IS_FAVORITE' => true,
+            'U_FAVORITE' => '/picture.php?/5&action=remove_from_favorites',
+        ])
         ->and($result['COMMENT_IMG'])->toBe('<p>A description</p>')
         ->and($result['INFO_AUTHOR'])->toBe('admin')
         ->and($result['INFO_CREATION_DATE'])->toBe('<a href="#">July 1, 2026</a>')

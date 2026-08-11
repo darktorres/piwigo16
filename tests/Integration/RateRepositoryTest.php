@@ -4,22 +4,21 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Integration;
 
-use Override;
-use Piwigo\Core\Kernel;
+use Doctrine\DBAL\Connection;
 use LogicException;
+use Override;
 use Piwigo\Common\ValueObject\ImageId;
 use Piwigo\Common\ValueObject\UserId;
+use Piwigo\Config\ConfigLoader;
+use Piwigo\Config\CurrentConfig;
+use Piwigo\Core\Kernel;
+use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
-use Piwigo\Rate\Projection\ImageThumbInfo;
 use Piwigo\Rate\Projection\RaterInfo;
 use Piwigo\Rate\Projection\RateSummary;
 use Piwigo\Rate\Projection\RateSummaryForElement;
 use Piwigo\Rate\Projection\RatingReportRow;
 use Piwigo\Rate\RateEntity;
-use Doctrine\DBAL\Connection;
-use Piwigo\Config\CurrentConfig;
-use Piwigo\Config\ConfigLoader;
-use Piwigo\Db\DbConnection;
 use Piwigo\Rate\RateRepository;
 
 /**
@@ -63,7 +62,7 @@ final class RateRepositoryTest extends IntegrationTestCase
         $this->repo = EntityManagerFactory::build($this->conn)->getRepository(RateEntity::class);
     }
 
-    public function test_find_element_ids_for_user_and_anonymous_id(): void
+    public function testFindElementIdsForUserAndAnonymousId(): void
     {
         // fixture: user_id 1 rated element 1 and element 3, both with
         // anonymous_id ''
@@ -73,12 +72,12 @@ final class RateRepositoryTest extends IntegrationTestCase
         self::assertSame([1, 3], $ids);
     }
 
-    public function test_find_element_ids_returns_empty_for_no_match(): void
+    public function testFindElementIdsReturnsEmptyForNoMatch(): void
     {
         self::assertSame([], $this->repo->findElementIdsForUserAndAnonymousId(UserId::from(1), '10.0.0'));
     }
 
-    public function test_delete_by_user_anonymous_and_elements(): void
+    public function testDeleteByUserAnonymousAndElements(): void
     {
         $this->repo->insertRate(ImageId::from(5), UserId::from(2), 'disp-a', 3);
 
@@ -87,7 +86,7 @@ final class RateRepositoryTest extends IntegrationTestCase
         self::assertSame([], $this->repo->findElementIdsForUserAndAnonymousId(UserId::from(2), 'disp-a'));
     }
 
-    public function test_delete_by_user_anonymous_and_elements_is_a_no_op_for_empty_ids(): void
+    public function testDeleteByUserAnonymousAndElementsIsANoOpForEmptyIds(): void
     {
         $this->repo->insertRate(ImageId::from(5), UserId::from(2), 'disp-b', 3);
 
@@ -100,7 +99,7 @@ final class RateRepositoryTest extends IntegrationTestCase
         }
     }
 
-    public function test_reassign_anonymous_id(): void
+    public function testReassignAnonymousId(): void
     {
         $this->repo->insertRate(ImageId::from(5), UserId::from(2), 'disp-c-old', 3);
 
@@ -114,7 +113,7 @@ final class RateRepositoryTest extends IntegrationTestCase
         }
     }
 
-    public function test_delete_existing_rate_scoped_to_anonymous_id(): void
+    public function testDeleteExistingRateScopedToAnonymousId(): void
     {
         $this->repo->insertRate(ImageId::from(5), UserId::from(2), 'disp-d', 1);
 
@@ -128,7 +127,7 @@ final class RateRepositoryTest extends IntegrationTestCase
         }
     }
 
-    public function test_delete_existing_rate_with_null_anonymous_id_matches_any(): void
+    public function testDeleteExistingRateWithNullAnonymousIdMatchesAny(): void
     {
         $this->repo->insertRate(ImageId::from(5), UserId::from(2), 'disp-e', 1);
 
@@ -137,7 +136,7 @@ final class RateRepositoryTest extends IntegrationTestCase
         self::assertSame(0, $this->fetchRateCount(5, 2));
     }
 
-    public function test_insert_rate(): void
+    public function testInsertRate(): void
     {
         $this->repo->insertRate(ImageId::from(5), UserId::from(2), 'disp-f', 3);
 
@@ -167,7 +166,7 @@ final class RateRepositoryTest extends IntegrationTestCase
      * treatment as this project's documented HttpClientService-only
      * skip list, just via a schema constraint instead of a network call.
      */
-    public function test_find_rate_summaries_matches_the_fixture(): void
+    public function testFindRateSummariesMatchesTheFixture(): void
     {
         $summaries = $this->repo->findRateSummaries();
 
@@ -179,13 +178,16 @@ final class RateRepositoryTest extends IntegrationTestCase
         self::assertArrayNotHasKey(5, $summaries);
     }
 
-    public function test_update_rating_scores(): void
+    public function testUpdateRatingScores(): void
     {
         $original = $this->fetchRatingScore(1);
 
         try {
             $this->repo->updateRatingScores([
-                ['id' => 1, 'ratingScore' => 4.75],
+                [
+                    'id' => 1,
+                    'ratingScore' => 4.75,
+                ],
             ]);
 
             self::assertSame(4.75, $this->fetchRatingScore(1));
@@ -199,7 +201,7 @@ final class RateRepositoryTest extends IntegrationTestCase
         }
     }
 
-    public function test_update_rating_scores_is_a_no_op_for_an_empty_list(): void
+    public function testUpdateRatingScoresIsANoOpForAnEmptyList(): void
     {
         $original = $this->fetchRatingScore(1);
 
@@ -208,7 +210,7 @@ final class RateRepositoryTest extends IntegrationTestCase
         self::assertSame($original, $this->fetchRatingScore(1));
     }
 
-    public function test_find_image_ids_with_stale_rating_score(): void
+    public function testFindImageIdsWithStaleRatingScore(): void
     {
         // element 4 (rating_score 2.00) has a rate row in the fixture, so
         // it's not "stale"; simulate its rate being deleted without the
@@ -247,7 +249,7 @@ final class RateRepositoryTest extends IntegrationTestCase
         }
     }
 
-    public function test_clear_rating_scores(): void
+    public function testClearRatingScores(): void
     {
         $original1 = $this->fetchRatingScore(1);
         $original2 = $this->fetchRatingScore(2);
@@ -275,7 +277,7 @@ final class RateRepositoryTest extends IntegrationTestCase
         }
     }
 
-    public function test_clear_rating_scores_is_a_no_op_for_empty_ids(): void
+    public function testClearRatingScoresIsANoOpForEmptyIds(): void
     {
         $original = $this->fetchRatingScore(1);
 
@@ -289,23 +291,28 @@ final class RateRepositoryTest extends IntegrationTestCase
      * element1(=4) and element4(=2); user4 rated element2(=3). images
      * rating_score: 1=>4.50, 2=>3.00, 3=>5.00, 4=>2.00, 5=>NULL.
      */
-    public function test_find_usernames_by_id_maps_id_to_username(): void
+    public function testFindUsernamesByIdMapsIdToUsername(): void
     {
         $usernames = $this->repo->findUsernamesById();
 
         ksort($usernames);
         self::assertSame(
-            [1 => 'fixture_admin', 2 => 'guest', 3 => 'regular_user', 4 => 'power_user'],
+            [
+                1 => 'fixture_admin',
+                2 => 'guest',
+                3 => 'regular_user',
+                4 => 'power_user',
+            ],
             $usernames
         );
     }
 
-    public function test_count_rated_elements_with_no_filters(): void
+    public function testCountRatedElementsWithNoFilters(): void
     {
         self::assertSame(4, $this->repo->countRatedElements(null, false, []));
     }
 
-    public function test_count_rated_elements_filtered_by_category(): void
+    public function testCountRatedElementsFilteredByCategory(): void
     {
         // category 1 -> images [1,2,3], all three rated at least once
         self::assertSame(3, $this->repo->countRatedElements(null, false, [1]));
@@ -313,7 +320,7 @@ final class RateRepositoryTest extends IntegrationTestCase
         self::assertSame(1, $this->repo->countRatedElements(null, false, [2]));
     }
 
-    public function test_count_rated_elements_filtered_by_user(): void
+    public function testCountRatedElementsFilteredByUser(): void
     {
         // user 1 rated elements 1 and 3
         self::assertSame(2, $this->repo->countRatedElements(UserId::from(1), false, []));
@@ -321,7 +328,7 @@ final class RateRepositoryTest extends IntegrationTestCase
         self::assertSame(3, $this->repo->countRatedElements(UserId::from(1), true, []));
     }
 
-    public function test_find_rating_report_matches_the_fixture(): void
+    public function testFindRatingReportMatchesTheFixture(): void
     {
         $rows = $this->repo->findRatingReport(null, false, [], 'score', 10, 0);
 
@@ -340,7 +347,7 @@ final class RateRepositoryTest extends IntegrationTestCase
         self::assertSame(5.0, $byId[3]->sumRates);
     }
 
-    public function test_find_rating_report_filters_by_category(): void
+    public function testFindRatingReportFiltersByCategory(): void
     {
         $rows = $this->repo->findRatingReport(null, false, [2], 'i.id ASC', 10, 0);
 
@@ -348,7 +355,7 @@ final class RateRepositoryTest extends IntegrationTestCase
         self::assertSame(4, $rows[0]->id);
     }
 
-    public function test_find_rating_report_orders_and_paginates(): void
+    public function testFindRatingReportOrdersAndPaginates(): void
     {
         $rows = $this->repo->findRatingReport(null, false, [], 'sum_rates', 2, 0);
 
@@ -356,7 +363,7 @@ final class RateRepositoryTest extends IntegrationTestCase
         self::assertSame([1, 3], array_map(static fn (RatingReportRow $r): int => $r->id, $rows));
     }
 
-    public function test_find_rate_rows_for_element(): void
+    public function testFindRateRowsForElement(): void
     {
         $rows = $this->repo->findRateRowsForElement(ImageId::from(1));
 
@@ -365,17 +372,17 @@ final class RateRepositoryTest extends IntegrationTestCase
         self::assertSame([1, 1], array_map(static fn (ImageId $id): int => $id->value, array_column($rows, 'elementId')));
     }
 
-    public function test_find_rate_rows_for_element_returns_empty_for_an_unrated_element(): void
+    public function testFindRateRowsForElementReturnsEmptyForAnUnratedElement(): void
     {
         self::assertSame([], $this->repo->findRateRowsForElement(ImageId::from(5)));
     }
 
-    public function test_count_all_rates_matches_the_fixture(): void
+    public function testCountAllRatesMatchesTheFixture(): void
     {
         self::assertSame(5, $this->repo->countAllRates());
     }
 
-    public function test_find_users_with_status_by_id_username(): void
+    public function testFindUsersWithStatusByIdUsername(): void
     {
         $users = $this->repo->findUsersWithStatusByIdUsername();
 
@@ -389,7 +396,7 @@ final class RateRepositoryTest extends IntegrationTestCase
         self::assertEquals(new RaterInfo(2, 'guest', 'guest'), $byId[2]);
     }
 
-    public function test_find_all_rates_ordered_by_date_desc_matches_the_fixture(): void
+    public function testFindAllRatesOrderedByDateDescMatchesTheFixture(): void
     {
         $rows = $this->repo->findAllRatesOrderedByDateDesc();
 
@@ -400,7 +407,7 @@ final class RateRepositoryTest extends IntegrationTestCase
         self::assertSame([1, 1, 3, 3, 4], $rowUserIds);
     }
 
-    public function test_find_image_thumb_info_by_ids(): void
+    public function testFindImageThumbInfoByIds(): void
     {
         $rows = $this->repo->findImageThumbInfoByIds([1, 4]);
 
@@ -414,12 +421,12 @@ final class RateRepositoryTest extends IntegrationTestCase
         self::assertSame('fixture-photo-4.jpg', $byId[4]->file);
     }
 
-    public function test_find_image_thumb_info_by_ids_is_a_no_op_for_empty_ids(): void
+    public function testFindImageThumbInfoByIdsIsANoOpForEmptyIds(): void
     {
         self::assertSame([], $this->repo->findImageThumbInfoByIds([]));
     }
 
-    public function test_find_average_rate_per_element(): void
+    public function testFindAverageRatePerElement(): void
     {
         $averages = $this->repo->findAverageRatePerElement();
 
@@ -430,7 +437,7 @@ final class RateRepositoryTest extends IntegrationTestCase
         self::assertArrayNotHasKey(5, $averages);
     }
 
-    public function test_find_top_rated_image_ids_orders_by_rating_score_desc(): void
+    public function testFindTopRatedImageIdsOrdersByRatingScoreDesc(): void
     {
         // rating_score: 3=5.00, 1=4.50, 2=3.00, 4=2.00, 5=NULL (sorts last)
         self::assertSame([3, 1, 2], $this->repo->findTopRatedImageIds(3));
@@ -441,7 +448,7 @@ final class RateRepositoryTest extends IntegrationTestCase
      * fixture: element 1 has 2 rates (5 from user 1, 4 from user 3) ->
      * count=2, average=ROUND((5+4)/2, 2)=4.5.
      */
-    public function test_find_rate_summary_for_element_matches_the_fixture(): void
+    public function testFindRateSummaryForElementMatchesTheFixture(): void
     {
         self::assertEquals(new RateSummaryForElement(2, 4.5), $this->repo->findRateSummaryForElement(ImageId::from(1)));
     }
@@ -453,27 +460,27 @@ final class RateRepositoryTest extends IntegrationTestCase
      * "count" cast and the `average` null-fallback as the has-rates case
      * above, just with the opposite values.
      */
-    public function test_find_rate_summary_for_element_is_zero_for_an_unrated_element(): void
+    public function testFindRateSummaryForElementIsZeroForAnUnratedElement(): void
     {
         self::assertEquals(new RateSummaryForElement(0, null), $this->repo->findRateSummaryForElement(ImageId::from(5)));
     }
 
-    public function test_find_user_rate_returns_the_users_own_rate(): void
+    public function testFindUserRateReturnsTheUsersOwnRate(): void
     {
         self::assertSame(5, $this->repo->findUserRate(ImageId::from(1), UserId::from(1), null));
     }
 
-    public function test_find_user_rate_matches_a_non_null_anonymous_id(): void
+    public function testFindUserRateMatchesANonNullAnonymousId(): void
     {
         self::assertSame(5, $this->repo->findUserRate(ImageId::from(1), UserId::from(1), ''));
     }
 
-    public function test_find_user_rate_returns_null_when_the_anonymous_id_does_not_match(): void
+    public function testFindUserRateReturnsNullWhenTheAnonymousIdDoesNotMatch(): void
     {
         self::assertNull($this->repo->findUserRate(ImageId::from(1), UserId::from(1), 'no-such-anonymous-id'));
     }
 
-    public function test_find_user_rate_returns_null_for_a_user_with_no_rate_on_that_element(): void
+    public function testFindUserRateReturnsNullForAUserWithNoRateOnThatElement(): void
     {
         self::assertNull($this->repo->findUserRate(ImageId::from(1), UserId::from(999999), null));
     }

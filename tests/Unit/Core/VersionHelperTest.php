@@ -33,10 +33,20 @@ test('safeVersionCompare recognizes every one of its 14 documented operator alia
     // itself (int vs bool), not just the value, is what a dropped
     // alias breaks.
     $expected = [
-        '<' => true, 'lt' => true, '<=' => true, 'le' => true,
-        '>' => false, 'gt' => false, '>=' => false, 'ge' => false,
-        '==' => false, '=' => false, 'eq' => false,
-        '!=' => true, '<>' => true, 'ne' => true,
+        '<' => true,
+        'lt' => true,
+        '<=' => true,
+        'le' => true,
+        '>' => false,
+        'gt' => false,
+        '>=' => false,
+        'ge' => false,
+        '==' => false,
+        '=' => false,
+        'eq' => false,
+        '!=' => true,
+        '<>' => true,
+        'ne' => true,
     ];
 
     foreach ($expected as $op => $expectedResult) {
@@ -95,7 +105,6 @@ test('safeVersionCompare lowercases a single trailing letter before taking its o
  * just the ones this file's tests happen to exercise -- confirmed
  * live with $op = '' explicitly.
  */
-
 test('getBranchFromVersion takes only the first dot-separated segment', function (): void {
     expect(VersionHelper::getBranchFromVersion('11.1.2'))->toBe('11');
     expect(VersionHelper::getBranchFromVersion('17.0'))->toBe('17');

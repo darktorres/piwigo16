@@ -6,11 +6,11 @@ use Piwigo\Config\ConfigEntry;
 use Piwigo\Config\ConfigService;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\CurrentConfigService;
-use Piwigo\Tests\Support\CurrentConfigServiceTestFactory;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Paths;
 use Piwigo\Db\EntityManagerFactory;
 use Piwigo\PluginConfig\EventDispatcher;
+use Piwigo\Tests\Support\CurrentConfigServiceTestFactory;
 
 /**
  * Piwigo\Config\CurrentConfigService is a container-shared instance; each
@@ -35,7 +35,8 @@ afterEach(function (): void {
 test('get throws when no ConfigService has ever been set', function (): void {
     $currentConfigService = new CurrentConfigService();
 
-    expect($currentConfigService->isSet())->toBeFalse();
+    expect($currentConfigService->isSet())
+        ->toBeFalse();
 
     $currentConfigService->get();
 })->throws(LogicException::class, 'CurrentConfigService not initialised -- call Piwigo\Bootstrap\RequestBootstrap::connect()/CliBootstrap::run()/InstallBootstrap::activateConfigService() first.');
@@ -46,18 +47,22 @@ test('set publishes a ConfigService instance that get returns and isSet reports 
 
     $currentConfigService->set($configService);
 
-    expect($currentConfigService->isSet())->toBeTrue()
-        ->and($currentConfigService->get())->toBe($configService);
+    expect($currentConfigService->isSet())
+        ->toBeTrue()
+        ->and($currentConfigService->get())
+        ->toBe($configService);
 });
 
 test('reset clears the published instance so get throws again', function (): void {
     $currentConfigService = new CurrentConfigService();
     $currentConfigService->set(current_config_service_test_config_service());
-    expect($currentConfigService->isSet())->toBeTrue();
+    expect($currentConfigService->isSet())
+        ->toBeTrue();
 
     $currentConfigService->reset();
 
-    expect($currentConfigService->isSet())->toBeFalse();
+    expect($currentConfigService->isSet())
+        ->toBeFalse();
     $currentConfigService->get();
 })->throws(LogicException::class);
 
@@ -73,8 +78,10 @@ test('CurrentConfigServiceTestFactory::get falls back to a memoized instance whe
 
     $second = CurrentConfigServiceTestFactory::get();
 
-    expect($second)->toBe($first)
-        ->and($second->isSet())->toBeTrue();
+    expect($second)
+        ->toBe($first)
+        ->and($second->isSet())
+        ->toBeTrue();
 });
 
 test('CurrentConfigServiceTestFactory::get resolves the container-shared instance once Kernel is booted', function (): void {

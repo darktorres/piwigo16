@@ -11,19 +11,26 @@ test('toArray flattens every fixed property, and omits U_REGISTER/U_LOST_PASSWOR
         authorizeRemembering: true,
         register: null,
         lostPassword: null,
-        languageOptions: ['en_GB' => 'English', 'fr_FR' => 'French'],
+        languageOptions: [
+            'en_GB' => 'English',
+            'fr_FR' => 'French',
+        ],
         currentLanguage: 'en_GB',
         helpLink: 'https://upstream.example.invalid/help/',
     );
 
-    expect($context->toArray())->toBe([
-        'U_REDIRECT' => '',
-        'F_LOGIN_ACTION' => '/identification.php',
-        'authorize_remembering' => true,
-        'language_options' => ['en_GB' => 'English', 'fr_FR' => 'French'],
-        'current_language' => 'en_GB',
-        'HELP_LINK' => 'https://upstream.example.invalid/help/',
-    ]);
+    expect($context->toArray())
+        ->toBe([
+            'U_REDIRECT' => '',
+            'F_LOGIN_ACTION' => '/identification.php',
+            'authorize_remembering' => true,
+            'language_options' => [
+                'en_GB' => 'English',
+                'fr_FR' => 'French',
+            ],
+            'current_language' => 'en_GB',
+            'HELP_LINK' => 'https://upstream.example.invalid/help/',
+        ]);
 });
 
 test('toArray includes U_REGISTER/U_LOST_PASSWORD when set', function (): void {
@@ -33,19 +40,24 @@ test('toArray includes U_REGISTER/U_LOST_PASSWORD when set', function (): void {
         authorizeRemembering: false,
         register: '/register.php',
         lostPassword: '/password.php',
-        languageOptions: ['fr_FR' => 'French'],
+        languageOptions: [
+            'fr_FR' => 'French',
+        ],
         currentLanguage: 'fr_FR',
         helpLink: 'https://upstream.example.invalid/help/fr/',
     );
 
-    expect($context->toArray())->toBe([
-        'U_REDIRECT' => '/admin.php',
-        'F_LOGIN_ACTION' => '/identification.php',
-        'authorize_remembering' => false,
-        'U_REGISTER' => '/register.php',
-        'U_LOST_PASSWORD' => '/password.php',
-        'language_options' => ['fr_FR' => 'French'],
-        'current_language' => 'fr_FR',
-        'HELP_LINK' => 'https://upstream.example.invalid/help/fr/',
-    ]);
+    expect($context->toArray())
+        ->toBe([
+            'U_REDIRECT' => '/admin.php',
+            'F_LOGIN_ACTION' => '/identification.php',
+            'authorize_remembering' => false,
+            'U_REGISTER' => '/register.php',
+            'U_LOST_PASSWORD' => '/password.php',
+            'language_options' => [
+                'fr_FR' => 'French',
+            ],
+            'current_language' => 'fr_FR',
+            'HELP_LINK' => 'https://upstream.example.invalid/help/fr/',
+        ]);
 });

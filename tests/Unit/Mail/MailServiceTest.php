@@ -4,15 +4,10 @@ declare(strict_types=1);
 
 use Piwigo\Auth\AuthService;
 use Piwigo\Common\ValueObject\LangCode;
-use Symfony\Component\Mime\Email;
-use Symfony\Component\Mailer\Mailer;
-use Piwigo\Mail\BoundedSendmailTransport;
 use Piwigo\Config\CurrentConfig;
-use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Config\DeploymentPolicy;
-use Piwigo\Core\Lang;
-use Piwigo\Tests\Support\LangTestFactory;
 use Piwigo\Core\Kernel;
+use Piwigo\Core\Lang;
 use Piwigo\Core\PageState;
 use Piwigo\Core\Paths;
 use Piwigo\Core\UrlServiceInterface;
@@ -22,17 +17,21 @@ use Piwigo\Event\Mail\BeforeParseMailTemplate;
 use Piwigo\Event\Mail\BeforeSendMail;
 use Piwigo\Event\Mail\RenderLostPasswordMailContent;
 use Piwigo\Lang\Translator;
-use Piwigo\Tests\Support\TranslatorTestFactory;
+use Piwigo\Mail\BoundedSendmailTransport;
 use Piwigo\Mail\MailRecipientRepositoryInterface;
 use Piwigo\Mail\MailService;
 use Piwigo\Mail\Projection\EmailRecipient;
-use Piwigo\Mail\Projection\MailContent;
 use Piwigo\PluginConfig\EventDispatcher;
-use Piwigo\Tests\Support\EventDispatcherTestFactory;
 use Piwigo\Session\SessionService;
-use Piwigo\Users\CurrentUser;
+use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Tests\Support\CurrentUserTestFactory;
+use Piwigo\Tests\Support\EventDispatcherTestFactory;
+use Piwigo\Tests\Support\LangTestFactory;
+use Piwigo\Tests\Support\TranslatorTestFactory;
+use Piwigo\Users\CurrentUser;
 use Piwigo\Users\User;
+use Symfony\Component\Mailer\Mailer;
+use Symfony\Component\Mime\Email;
 
 /**
  * Every MailService::__construct() collaborator is resolved from a real
@@ -97,7 +96,7 @@ function mail_service_test_build(
 // getMailSenderEmail()) construct the service with this real fake.
 function mail_service_with_fake_webmaster(): MailService
 {
-    return mail_service_test_build(new class implements WebmasterMailProviderInterface {
+    return mail_service_test_build(new class() implements WebmasterMailProviderInterface {
         #[Override]
         public function getWebmasterMailAddress(): string
         {
@@ -179,7 +178,11 @@ function mail_service_start_fake_smtp(string $mode, int $port): array
     @unlink($markerFile);
     @unlink($readyFile);
 
-    $descriptors = [0 => ['pipe', 'r'], 1 => ['pipe', 'w'], 2 => ['pipe', 'w']];
+    $descriptors = [
+        0 => ['pipe', 'r'],
+        1 => ['pipe', 'w'],
+        2 => ['pipe', 'w'],
+    ];
     $proc = proc_open(['php', __DIR__ . '/MailServiceTestFakeSmtpServer.php', $mode, (string) $port, $markerFile, $readyFile], $descriptors, $pipes);
     if (! is_resource($proc)) {
         throw new RuntimeException('failed to start the fake SMTP test server');
@@ -274,13 +277,15 @@ afterEach(function (): void {
 test('formatEmail wraps a name and email into "name <email>"', function (): void {
     $service = mail_service_test_build();
 
-    expect($service->formatEmail('Jane Doe', 'jane@example.test'))->toBe('"Jane Doe" <jane@example.test>');
+    expect($service->formatEmail('Jane Doe', 'jane@example.test'))
+        ->toBe('"Jane Doe" <jane@example.test>');
 });
 
 test('formatEmail returns a bare "<email>" when name is empty', function (): void {
     $service = mail_service_test_build();
 
-    expect($service->formatEmail('', 'jane@example.test'))->toBe('<jane@example.test>');
+    expect($service->formatEmail('', 'jane@example.test'))
+        ->toBe('<jane@example.test>');
 });
 
 test('formatEmail strips newlines from both name and email (header injection)', function (): void {
@@ -316,75 +321,90 @@ test('formatEmail trims surrounding whitespace from both name and email', functi
 test('getMailSenderEmail falls back to the webmaster address when mail_sender_email is unset', function (): void {
     $service = mail_service_with_fake_webmaster();
 
-    expect($service->getMailSenderEmail())->toBe('webmaster@example.test');
+    expect($service->getMailSenderEmail())
+        ->toBe('webmaster@example.test');
 });
 
 test('unformatEmail parses a "name <email>" string', function (): void {
     $service = mail_service_test_build();
 
-    expect($service->unformatEmail('Jane Doe <jane@example.test>'))->toEqual(new EmailRecipient('jane@example.test', 'Jane Doe'));
+    expect($service->unformatEmail('Jane Doe <jane@example.test>'))
+        ->toEqual(new EmailRecipient('jane@example.test', 'Jane Doe'));
 });
 
 test('unformatEmail trims surrounding whitespace from both the parsed email and name', function (): void {
     $service = mail_service_test_build();
 
-    expect($service->unformatEmail('  Jane Doe  <  jane@example.test  >'))->toEqual(new EmailRecipient('jane@example.test', 'Jane Doe'));
+    expect($service->unformatEmail('  Jane Doe  <  jane@example.test  >'))
+        ->toEqual(new EmailRecipient('jane@example.test', 'Jane Doe'));
 });
 
 test('unformatEmail trims surrounding whitespace from a bare email string', function (): void {
     $service = mail_service_test_build();
 
-    expect($service->unformatEmail('  jane@example.test  '))->toEqual(new EmailRecipient('jane@example.test', ''));
+    expect($service->unformatEmail('  jane@example.test  '))
+        ->toEqual(new EmailRecipient('jane@example.test', ''));
 });
 
 test('unformatEmail treats a bare email string as email with no name', function (): void {
     $service = mail_service_test_build();
 
-    expect($service->unformatEmail('jane@example.test'))->toEqual(new EmailRecipient('jane@example.test', ''));
+    expect($service->unformatEmail('jane@example.test'))
+        ->toEqual(new EmailRecipient('jane@example.test', ''));
 });
 
 test('unformatEmail accepts an array input with email and name keys', function (): void {
     $service = mail_service_test_build();
 
-    expect($service->unformatEmail(['email' => 'jane@example.test', 'name' => 'Jane']))->toEqual(new EmailRecipient('jane@example.test', 'Jane'));
+    expect($service->unformatEmail([
+        'email' => 'jane@example.test',
+        'name' => 'Jane',
+    ]))->toEqual(new EmailRecipient('jane@example.test', 'Jane'));
 });
 
 test('unformatEmail throws on an array input missing the email key, with the exact real method name in the message', function (): void {
     $service = mail_service_test_build();
 
-    expect(fn (): EmailRecipient => $service->unformatEmail(['name' => 'Jane']))
+    expect(fn (): EmailRecipient => $service->unformatEmail([
+        'name' => 'Jane',
+    ]))
         ->toThrow(InvalidArgumentException::class, 'Piwigo\Mail\MailService::unformatEmail(): array input must contain a string "email" key');
 });
 
 test('getCleanRecipientsList returns an empty list for empty input', function (): void {
     $service = mail_service_test_build();
 
-    expect($service->getCleanRecipientsList(null))->toBe([])
-        ->and($service->getCleanRecipientsList(''))->toBe([])
+    expect($service->getCleanRecipientsList(null))
+        ->toBe([])
+        ->and($service->getCleanRecipientsList(''))
+        ->toBe([])
         ->and($service->getCleanRecipientsList([]))->toBe([]);
 });
 
 test('getCleanRecipientsList parses a comma-separated string', function (): void {
     $service = mail_service_test_build();
 
-    expect($service->getCleanRecipientsList('a@test.com,Bob <b@test.com>'))->toEqual([
-        new EmailRecipient('a@test.com', ''),
-        new EmailRecipient('b@test.com', 'Bob'),
-    ]);
+    expect($service->getCleanRecipientsList('a@test.com,Bob <b@test.com>'))
+        ->toEqual([
+            new EmailRecipient('a@test.com', ''),
+            new EmailRecipient('b@test.com', 'Bob'),
+        ]);
 });
 
 test('getCleanRecipientsList returns an empty list for a literal int 0, matching its own null/""/[]/false peers', function (): void {
     $service = mail_service_test_build();
 
-    expect($service->getCleanRecipientsList(0))->toBe([]);
+    expect($service->getCleanRecipientsList(0))
+        ->toBe([]);
 });
 
 test('getCleanRecipientsList deduplicates by email', function (): void {
     $service = mail_service_test_build();
 
-    expect($service->getCleanRecipientsList('a@test.com,a@test.com'))->toEqual([
-        new EmailRecipient('a@test.com', ''),
-    ]);
+    expect($service->getCleanRecipientsList('a@test.com,a@test.com'))
+        ->toEqual([
+            new EmailRecipient('a@test.com', ''),
+        ]);
 });
 
 test('getCleanRecipientsList keeps every entry after a duplicate in the middle of the list, not just up to the first duplicate', function (): void {
@@ -397,10 +417,11 @@ test('getCleanRecipientsList keeps every entry after a duplicate in the middle o
     // here is write-only and unobservable either way.
     $service = mail_service_test_build();
 
-    expect($service->getCleanRecipientsList('a@test.com,a@test.com,b@test.com'))->toEqual([
-        new EmailRecipient('a@test.com', ''),
-        new EmailRecipient('b@test.com', ''),
-    ]);
+    expect($service->getCleanRecipientsList('a@test.com,a@test.com,b@test.com'))
+        ->toEqual([
+            new EmailRecipient('a@test.com', ''),
+            new EmailRecipient('b@test.com', ''),
+        ]);
 });
 
 test('getCleanRecipientsList accepts a plain array of emails', function (): void {
@@ -441,7 +462,10 @@ test('getCleanRecipientsList decides "simple array of emails" vs "hashmap" from 
     // 'email', a string) it would instead treat the whole array as ONE
     // hashmap recipient via unformatEmail(), silently dropping the first
     // entry -- these two behaviors produce different counts.
-    expect($service->getCleanRecipientsList(['a@test.com', 'email' => 'b@test.com']))->toEqual([
+    expect($service->getCleanRecipientsList([
+        'a@test.com',
+        'email' => 'b@test.com',
+    ]))->toEqual([
         new EmailRecipient('a@test.com', ''),
         new EmailRecipient('b@test.com', ''),
     ]);
@@ -459,7 +483,10 @@ test('getCleanRecipientsList falls back to an empty email for a non-scalar item 
 test('getCleanRecipientsList accepts a single hashmap recipient', function (): void {
     $service = mail_service_test_build();
 
-    expect($service->getCleanRecipientsList(['email' => 'a@test.com', 'name' => 'A']))->toEqual([
+    expect($service->getCleanRecipientsList([
+        'email' => 'a@test.com',
+        'name' => 'A',
+    ]))->toEqual([
         new EmailRecipient('a@test.com', 'A'),
     ]);
 });
@@ -471,7 +498,9 @@ test('getCleanRecipientsList falls back to a scalar-cast email for a non-array, 
     // branch; the second item (a bare int) is neither an array nor a
     // string, so it takes the scalar-cast fallback instead of
     // unformatEmail().
-    expect($service->getCleanRecipientsList([['email' => 'a@test.com'], 42]))->toEqual([
+    expect($service->getCleanRecipientsList([[
+        'email' => 'a@test.com',
+    ], 42]))->toEqual([
         new EmailRecipient('a@test.com', ''),
         new EmailRecipient('42', ''),
     ]);
@@ -480,7 +509,9 @@ test('getCleanRecipientsList falls back to a scalar-cast email for a non-array, 
 test('getCleanRecipientsList trims a whitespace-padded scalar item inside an array of hashmaps', function (): void {
     $service = mail_service_test_build();
 
-    expect($service->getCleanRecipientsList([['email' => 'a@test.com'], '  99  ']))->toEqual([
+    expect($service->getCleanRecipientsList([[
+        'email' => 'a@test.com',
+    ], '  99  ']))->toEqual([
         new EmailRecipient('a@test.com', ''),
         new EmailRecipient('99', ''),
     ]);
@@ -489,7 +520,9 @@ test('getCleanRecipientsList trims a whitespace-padded scalar item inside an arr
 test('getCleanRecipientsList falls back to an empty email for a non-scalar item inside an array of hashmaps', function (): void {
     $service = mail_service_test_build();
 
-    expect($service->getCleanRecipientsList([['email' => 'a@test.com'], null]))->toEqual([
+    expect($service->getCleanRecipientsList([[
+        'email' => 'a@test.com',
+    ], null]))->toEqual([
         new EmailRecipient('a@test.com', ''),
         new EmailRecipient('', ''),
     ]);
@@ -503,9 +536,10 @@ test('getCleanRecipientsList falls back to a single, empty-email recipient for a
     // genuinely reachable non-scalar, non-array PHP value here is an
     // object, which the final `else` branch's own is_scalar() fallback (as
     // opposed to a hard TypeError) exists to absorb.
-    expect($service->getCleanRecipientsList(new stdClass()))->toEqual([
-        new EmailRecipient('', ''),
-    ]);
+    expect($service->getCleanRecipientsList(new stdClass()))
+        ->toEqual([
+            new EmailRecipient('', ''),
+        ]);
 });
 
 test('getCleanRecipientsList string-casts a non-array, non-string scalar $data before exploding it', function (): void {
@@ -513,21 +547,24 @@ test('getCleanRecipientsList string-casts a non-array, non-string scalar $data b
     // file's own strict_types=1 and throw a TypeError instead.
     $service = mail_service_test_build();
 
-    expect($service->getCleanRecipientsList(42))->toEqual([
-        new EmailRecipient('42', ''),
-    ]);
+    expect($service->getCleanRecipientsList(42))
+        ->toEqual([
+            new EmailRecipient('42', ''),
+        ]);
 });
 
 test('getStrictEmailList strips names, keeping only the bare email addresses', function (): void {
     $service = mail_service_test_build();
 
-    expect($service->getStrictEmailList('Jane <jane@test.com>, bob@test.com'))->toBe('jane@test.com,bob@test.com');
+    expect($service->getStrictEmailList('Jane <jane@test.com>, bob@test.com'))
+        ->toBe('jane@test.com,bob@test.com');
 });
 
 test('getStrictEmailList deduplicates identical addresses after stripping names', function (): void {
     $service = mail_service_test_build();
 
-    expect($service->getStrictEmailList('Jane <jane@test.com>, jane@test.com'))->toBe('jane@test.com');
+    expect($service->getStrictEmailList('Jane <jane@test.com>, jane@test.com'))
+        ->toBe('jane@test.com');
 });
 
 test('getMailTemplate resolves the real, absolute theme root and the given email-format subdirectory', function (): void {
@@ -552,21 +589,26 @@ test('getMailTemplate resolves the real, absolute theme root and the given email
     $htmlTemplate = $service->getMailTemplate('text/html');
     $plainTemplate = $service->getMailTemplate('text/plain');
 
-    expect($htmlTemplate->smarty->getTemplateDir())->toBe([$fakeRoot->root . 'themes/default/template/mail/text/html/']);
-    expect($plainTemplate->smarty->getTemplateDir())->toBe([$fakeRoot->root . 'themes/default/template/mail/text/plain/']);
+    expect($htmlTemplate->smarty->getTemplateDir())
+        ->toBe([$fakeRoot->root . 'themes/default/template/mail/text/html/']);
+    expect($plainTemplate->smarty->getTemplateDir())
+        ->toBe([$fakeRoot->root . 'themes/default/template/mail/text/plain/']);
 });
 
 test('getStrEmailFormat maps the html flag to a MIME content type', function (): void {
     $service = mail_service_test_build();
 
-    expect($service->getStrEmailFormat(true))->toBe('text/html')
-        ->and($service->getStrEmailFormat(false))->toBe('text/plain');
+    expect($service->getStrEmailFormat(true))
+        ->toBe('text/html')
+        ->and($service->getStrEmailFormat(false))
+        ->toBe('text/plain');
 });
 
 test('moveCssToBody returns an empty string unchanged', function (): void {
     $service = mail_service_test_build();
 
-    expect($service->moveCssToBody(''))->toBe('');
+    expect($service->moveCssToBody(''))
+        ->toBe('');
 });
 
 test('moveCssToBody inlines a <style> block into the element it targets', function (): void {
@@ -575,7 +617,8 @@ test('moveCssToBody inlines a <style> block into the element it targets', functi
     $html = '<html><head><style>p { color: red; }</style></head><body><p>hi</p></body></html>';
     $result = $service->moveCssToBody($html);
 
-    expect($result)->toContain('style="color: red;"');
+    expect($result)
+        ->toContain('style="color: red;"');
 });
 
 test('getMailSenderName falls back to gallery_title when mail_sender_name is unset', function (): void {
@@ -583,7 +626,8 @@ test('getMailSenderName falls back to gallery_title when mail_sender_name is uns
     CurrentConfigTestFactory::get()->galleryTitle = 'My Gallery';
     $service = mail_service_test_build();
 
-    expect($service->getMailSenderName())->toBe('My Gallery');
+    expect($service->getMailSenderName())
+        ->toBe('My Gallery');
 });
 
 test('getMailSenderName uses mail_sender_name when configured', function (): void {
@@ -591,7 +635,8 @@ test('getMailSenderName uses mail_sender_name when configured', function (): voi
     CurrentConfigTestFactory::get()->mailSenderName = 'Custom Sender';
     $service = mail_service_test_build();
 
-    expect($service->getMailSenderName())->toBe('Custom Sender');
+    expect($service->getMailSenderName())
+        ->toBe('Custom Sender');
 });
 
 test('getMailSenderEmail uses the configured mail_sender_email without falling back to the webmaster address', function (): void {
@@ -603,7 +648,8 @@ test('getMailSenderEmail uses the configured mail_sender_email without falling b
     // (which would otherwise need a real DB connection) is ever reached.
     $service = mail_service_test_build();
 
-    expect($service->getMailSenderEmail())->toBe('sender@example.test');
+    expect($service->getMailSenderEmail())
+        ->toBe('sender@example.test');
 });
 
 test('getMailConfiguration reports use_smtp false when smtp_host is unset', function (): void {
@@ -641,11 +687,16 @@ test('generateResetPasswordMail builds an HTML mail with the reset link and gall
 
     $mail = $service->generateResetPasswordMail('jane', 'https://example.test/password.php?key=abc', 'My Gallery', '2 hours');
 
-    expect($mail->subject)->toBe('[My Gallery] Password Reset');
-    expect($mail->contentFormat)->toBe('text/html');
-    expect($mail->content)->toContain('jane');
-    expect($mail->content)->toContain('https://example.test/password.php?key=abc');
-    expect($mail->content)->toContain('2 hours');
+    expect($mail->subject)
+        ->toBe('[My Gallery] Password Reset');
+    expect($mail->contentFormat)
+        ->toBe('text/html');
+    expect($mail->content)
+        ->toContain('jane');
+    expect($mail->content)
+        ->toContain('https://example.test/password.php?key=abc');
+    expect($mail->content)
+        ->toContain('2 hours');
 });
 
 test('generateSetPasswordMail builds an HTML mail with the activation link and a welcome subject', function (): void {
@@ -654,11 +705,16 @@ test('generateSetPasswordMail builds an HTML mail with the activation link and a
 
     $mail = $service->generateSetPasswordMail('jane', 'https://example.test/password.php?key=xyz', 'My Gallery', '48 hours');
 
-    expect($mail->subject)->toBe('Welcome to My Gallery');
-    expect($mail->contentFormat)->toBe('text/html');
-    expect($mail->content)->toContain('jane');
-    expect($mail->content)->toContain('https://example.test/password.php?key=xyz');
-    expect($mail->content)->toContain('48 hours');
+    expect($mail->subject)
+        ->toBe('Welcome to My Gallery');
+    expect($mail->contentFormat)
+        ->toBe('text/html');
+    expect($mail->content)
+        ->toContain('jane');
+    expect($mail->content)
+        ->toContain('https://example.test/password.php?key=xyz');
+    expect($mail->content)
+        ->toContain('48 hours');
 });
 
 test('generateCodeVerificationMail embeds the raw verification code and the current gallery title', function (): void {
@@ -668,9 +724,12 @@ test('generateCodeVerificationMail embeds the raw verification code and the curr
 
     $mail = $service->generateCodeVerificationMail('482913');
 
-    expect($mail->subject)->toBe('[My Gallery] Your verification code');
-    expect($mail->contentFormat)->toBe('text/html');
-    expect($mail->content)->toContain('482913');
+    expect($mail->subject)
+        ->toBe('[My Gallery] Your verification code');
+    expect($mail->contentFormat)
+        ->toBe('text/html');
+    expect($mail->content)
+        ->toContain('482913');
 });
 
 test('generateSuccessResetPasswordMail omits the API-key-revocation notice when there are no API keys', function (): void {
@@ -679,8 +738,10 @@ test('generateSuccessResetPasswordMail omits the API-key-revocation notice when 
 
     $mail = $service->generateSuccessResetPasswordMail('jane', 0);
 
-    expect($mail->content)->toContain('Hello jane,');
-    expect($mail->content)->not->toContain('API keys');
+    expect($mail->content)
+        ->toContain('Hello jane,');
+    expect($mail->content)
+        ->not->toContain('API keys');
 });
 
 test('generateSuccessResetPasswordMail includes the API-key-revocation notice with the real key count when there are some', function (): void {
@@ -689,8 +750,10 @@ test('generateSuccessResetPasswordMail includes the API-key-revocation notice wi
 
     $mail = $service->generateSuccessResetPasswordMail('jane', 3);
 
-    expect($mail->content)->toContain('Hello jane,');
-    expect($mail->content)->toContain('3 API keys');
+    expect($mail->content)
+        ->toContain('Hello jane,');
+    expect($mail->content)
+        ->toContain('3 API keys');
 });
 
 // The 4 generate*Mail tests below assert the exact, full concatenated
@@ -705,14 +768,17 @@ test('generateResetPasswordMail assembles the exact HTML content, in order, from
 
     $mail = $service->generateResetPasswordMail('jane', 'https://example.test/password.php?key=abc', 'My Gallery', '2 hours');
 
-    expect($mail->subject)->toBe('[My Gallery] Password Reset');
-    expect($mail->contentFormat)->toBe('text/html');
-    expect($mail->content)->toBe(
-        '<p style="margin: 20px 0">Someone requested that the password be reset for the following user account: jane</p>'
-        . '<p style="margin: 20px 0">To reset your password, visit the following address: <a href="https://example.test/password.php?key=abc">Change my password</a></p>'
-        . '<p style="text-align: center; font-size: 70%;">https://example.test/password.php?key=abc</p>'
-        . '<p style="margin: 20px 0;">This link is valid for 2 hours. After this time, you will need to request a new link. If this was a mistake, just ignore this email and nothing will happen.</p>'
-    );
+    expect($mail->subject)
+        ->toBe('[My Gallery] Password Reset');
+    expect($mail->contentFormat)
+        ->toBe('text/html');
+    expect($mail->content)
+        ->toBe(
+            '<p style="margin: 20px 0">Someone requested that the password be reset for the following user account: jane</p>'
+                . '<p style="margin: 20px 0">To reset your password, visit the following address: <a href="https://example.test/password.php?key=abc">Change my password</a></p>'
+                . '<p style="text-align: center; font-size: 70%;">https://example.test/password.php?key=abc</p>'
+                . '<p style="margin: 20px 0;">This link is valid for 2 hours. After this time, you will need to request a new link. If this was a mistake, just ignore this email and nothing will happen.</p>'
+        );
 });
 
 test('generateResetPasswordMail throws when a render_lost_password_mail_content handler returns something other than a RenderLostPasswordMailContent instance', function (): void {
@@ -741,7 +807,8 @@ test('generateResetPasswordMail uses the render_lost_password_mail_content handl
         EventDispatcherTestFactory::get()->removeEventHandler(RenderLostPasswordMailContent::class, $handler);
     }
 
-    expect($mail->content)->toBe('REPLACED CONTENT');
+    expect($mail->content)
+        ->toBe('REPLACED CONTENT');
 });
 
 test('generateSetPasswordMail assembles the exact HTML content, in order, from every concatenated piece', function (): void {
@@ -750,14 +817,17 @@ test('generateSetPasswordMail assembles the exact HTML content, in order, from e
 
     $mail = $service->generateSetPasswordMail('jane', 'https://example.test/password.php?key=xyz', 'My Gallery', '48 hours');
 
-    expect($mail->subject)->toBe('Welcome to My Gallery');
-    expect($mail->contentFormat)->toBe('text/html');
-    expect($mail->content)->toBe(
-        '<p style="margin: 20px 0">A photo library administrator has created the following account for you: jane</p>'
-        . '<p style="margin: 20px 0">To set your password, visit the following address: <a href="https://example.test/password.php?key=xyz">Activate</a></p>'
-        . '<p style="text-align: center; font-size: 70%; margin: 20px 0;">https://example.test/password.php?key=xyz</p>'
-        . '<p style="margin: 20px 0;">This link is valid for 48 hours. After this time, you will need to request a new link. If this was a mistake, just ignore this email and nothing will happen.</p>'
-    );
+    expect($mail->subject)
+        ->toBe('Welcome to My Gallery');
+    expect($mail->contentFormat)
+        ->toBe('text/html');
+    expect($mail->content)
+        ->toBe(
+            '<p style="margin: 20px 0">A photo library administrator has created the following account for you: jane</p>'
+                . '<p style="margin: 20px 0">To set your password, visit the following address: <a href="https://example.test/password.php?key=xyz">Activate</a></p>'
+                . '<p style="text-align: center; font-size: 70%; margin: 20px 0;">https://example.test/password.php?key=xyz</p>'
+                . '<p style="margin: 20px 0;">This link is valid for 48 hours. After this time, you will need to request a new link. If this was a mistake, just ignore this email and nothing will happen.</p>'
+        );
 });
 
 test('generateSetPasswordMail uses the render_lost_password_mail_content handler\'s own replacement when it returns a real string', function (): void {
@@ -772,7 +842,8 @@ test('generateSetPasswordMail uses the render_lost_password_mail_content handler
         EventDispatcherTestFactory::get()->removeEventHandler(RenderLostPasswordMailContent::class, $handler);
     }
 
-    expect($mail->content)->toBe('REPLACED CONTENT');
+    expect($mail->content)
+        ->toBe('REPLACED CONTENT');
 });
 
 test('generateCodeVerificationMail assembles the exact HTML content, in order, from every concatenated piece', function (): void {
@@ -782,12 +853,15 @@ test('generateCodeVerificationMail assembles the exact HTML content, in order, f
 
     $mail = $service->generateCodeVerificationMail('482913');
 
-    expect($mail->subject)->toBe('[My Gallery] Your verification code');
-    expect($mail->contentFormat)->toBe('text/html');
-    expect($mail->content)->toBe(
-        '<p style="margin: 20px 0">Here is your verification code: <br /><span style="font-size: 16px">482913</span></p>'
-        . '<p style="margin: 20px 0;">If this was a mistake, just ignore this email and nothing will happen.</p>'
-    );
+    expect($mail->subject)
+        ->toBe('[My Gallery] Your verification code');
+    expect($mail->contentFormat)
+        ->toBe('text/html');
+    expect($mail->content)
+        ->toBe(
+            '<p style="margin: 20px 0">Here is your verification code: <br /><span style="font-size: 16px">482913</span></p>'
+                . '<p style="margin: 20px 0;">If this was a mistake, just ignore this email and nothing will happen.</p>'
+        );
 });
 
 test('generateSuccessResetPasswordMail assembles the exact HTML content with no API-key notice when there are none', function (): void {
@@ -796,13 +870,16 @@ test('generateSuccessResetPasswordMail assembles the exact HTML content with no 
 
     $mail = $service->generateSuccessResetPasswordMail('jane', 0);
 
-    expect($mail->subject)->toBe('[Piwigo] Your password has been reset');
-    expect($mail->contentFormat)->toBe('text/html');
-    expect($mail->content)->toBe(
-        '<p style="margin-top: 20px;">Hello jane,</p>'
-        . '<p style="margin-bottom: 20px;">Your password was successfully reset.</p>'
-        . '<p>If this wasn\'t you, please change your password immediately or contact your webmaster.</p>'
-    );
+    expect($mail->subject)
+        ->toBe('[Piwigo] Your password has been reset');
+    expect($mail->contentFormat)
+        ->toBe('text/html');
+    expect($mail->content)
+        ->toBe(
+            '<p style="margin-top: 20px;">Hello jane,</p>'
+                . '<p style="margin-bottom: 20px;">Your password was successfully reset.</p>'
+                . '<p>If this wasn\'t you, please change your password immediately or contact your webmaster.</p>'
+        );
 });
 
 test('generateSuccessResetPasswordMail includes the API-key-revocation notice at exactly 1 key, the boundary right above the ">0" guard', function (): void {
@@ -811,7 +888,8 @@ test('generateSuccessResetPasswordMail includes the API-key-revocation notice at
 
     $mail = $service->generateSuccessResetPasswordMail('jane', 1);
 
-    expect($mail->content)->toContain('1 API keys');
+    expect($mail->content)
+        ->toContain('1 API keys');
 });
 
 // generateResetPasswordMail/generateSetPasswordMail/generateCodeVerificationMail's
@@ -848,18 +926,20 @@ test('generateSuccessResetPasswordMail assembles the exact HTML content, in orde
 
     $mail = $service->generateSuccessResetPasswordMail('jane', 3);
 
-    expect($mail->content)->toBe(
-        '<p style="margin-top: 20px;">Hello jane,</p>'
-        . '<p style="margin-bottom: 20px;">Your password was successfully reset.</p>'
-        . '<p>If this wasn\'t you, please change your password immediately or contact your webmaster.</p>'
-        . '<p style="margin: 20px 0;">If you changed your password because you think it was stolen, we recommend revoking your 3 API keys <a href="' . $rootUrl . 'profile.php">in your profile</a>.</p>'
-    );
+    expect($mail->content)
+        ->toBe(
+            '<p style="margin-top: 20px;">Hello jane,</p>'
+                . '<p style="margin-bottom: 20px;">Your password was successfully reset.</p>'
+                . '<p>If this wasn\'t you, please change your password immediately or contact your webmaster.</p>'
+                . '<p style="margin: 20px 0;">If you changed your password because you think it was stolen, we recommend revoking your 3 API keys <a href="' . $rootUrl . 'profile.php">in your profile</a>.</p>'
+        );
 });
 
 test('mail returns true immediately for an empty $to with no Cc/Bcc, without building anything', function (): void {
     $service = mail_service_test_build();
 
-    expect($service->mail(''))->toBeTrue();
+    expect($service->mail(''))
+        ->toBeTrue();
 });
 
 test('emptyValue treats 0, 0.0 and false as empty, same as null/""/[]', function (mixed $value): void {
@@ -871,7 +951,8 @@ test('emptyValue treats 0, 0.0 and false as empty, same as null/""/[]', function
     // reachable runtime behavior (PHP doesn't enforce docblock types).
     $emptyValue = new ReflectionMethod(MailService::class, 'emptyValue');
 
-    expect($emptyValue->invoke(null, $value))->toBeTrue();
+    expect($emptyValue->invoke(null, $value))
+        ->toBeTrue();
 })->with([0, 0.0, false]);
 
 test('mail actually appends a real, non-falsy auth_key to the generated links', function (): void {
@@ -880,7 +961,11 @@ test('mail actually appends a real, non-falsy auth_key to the generated links', 
     CurrentConfigTestFactory::get()->mailAllowHtml = false;
     $service = mail_service_test_build();
 
-    $result = mail_service_capture_send($service, 'bob@example.test', ['subject' => 'x', 'content' => 'y', 'auth_key' => 'REAL123']);
+    $result = mail_service_capture_send($service, 'bob@example.test', [
+        'subject' => 'x',
+        'content' => 'y',
+        'auth_key' => 'REAL123',
+    ]);
 
     expect($result['email']->getTextBody())->toContain('auth=REAL123');
 });
@@ -891,10 +976,14 @@ test('mail builds a To address for every recipient in a comma-separated list', f
     CurrentConfigTestFactory::get()->mailAllowHtml = false;
     $service = mail_service_test_build();
 
-    $result = mail_service_capture_send($service, 'bob@example.test, jane@example.test', ['subject' => 'x', 'content' => 'y']);
+    $result = mail_service_capture_send($service, 'bob@example.test, jane@example.test', [
+        'subject' => 'x',
+        'content' => 'y',
+    ]);
 
     $toAddresses = array_map(static fn ($a): string => $a->getAddress(), $result['email']->getTo());
-    expect($toAddresses)->toBe(['bob@example.test', 'jane@example.test']);
+    expect($toAddresses)
+        ->toBe(['bob@example.test', 'jane@example.test']);
 });
 
 test('mail defaults the From address to the configured mail sender email/name when args[from] is absent', function (): void {
@@ -904,7 +993,10 @@ test('mail defaults the From address to the configured mail sender email/name wh
     CurrentConfigTestFactory::get()->mailSenderName = 'Test Sender';
     $service = mail_service_test_build();
 
-    $result = mail_service_capture_send($service, 'bob@example.test', ['subject' => 'x', 'content' => 'y']);
+    $result = mail_service_capture_send($service, 'bob@example.test', [
+        'subject' => 'x',
+        'content' => 'y',
+    ]);
 
     expect($result['email']->getFrom()[0]->getAddress())->toBe('sender@example.test');
     expect($result['email']->getFrom()[0]->getName())->toBe('Test Sender');
@@ -916,7 +1008,14 @@ test('mail uses an explicit args[from] instead of the configured default', funct
     CurrentConfigTestFactory::get()->mailAllowHtml = false;
     $service = mail_service_test_build();
 
-    $result = mail_service_capture_send($service, 'bob@example.test', ['subject' => 'x', 'content' => 'y', 'from' => ['email' => 'other@example.test', 'name' => 'Other']]);
+    $result = mail_service_capture_send($service, 'bob@example.test', [
+        'subject' => 'x',
+        'content' => 'y',
+        'from' => [
+            'email' => 'other@example.test',
+            'name' => 'Other',
+        ],
+    ]);
 
     expect($result['email']->getFrom()[0]->getAddress())->toBe('other@example.test');
     expect($result['email']->getFrom()[0]->getName())->toBe('Other');
@@ -929,7 +1028,10 @@ test('mail defaults reply-to to the same address/name it resolved for From', fun
     CurrentConfigTestFactory::get()->mailSenderName = 'Test Sender';
     $service = mail_service_test_build();
 
-    $result = mail_service_capture_send($service, 'bob@example.test', ['subject' => 'x', 'content' => 'y']);
+    $result = mail_service_capture_send($service, 'bob@example.test', [
+        'subject' => 'x',
+        'content' => 'y',
+    ]);
 
     expect($result['email']->getReplyTo()[0]->getAddress())->toBe('sender@example.test');
     expect($result['email']->getReplyTo()[0]->getName())->toBe('Test Sender');
@@ -942,7 +1044,8 @@ test('mail uses explicit reply_to_mail_address/reply_to_name instead of falling 
     $service = mail_service_test_build();
 
     $result = mail_service_capture_send($service, 'bob@example.test', [
-        'subject' => 'x', 'content' => 'y',
+        'subject' => 'x',
+        'content' => 'y',
         'reply_to_mail_address' => 'reply@example.test',
         'reply_to_name' => 'Reply Guy',
     ]);
@@ -957,7 +1060,9 @@ test('mail defaults the subject to exactly "Piwigo" when absent', function (): v
     CurrentConfigTestFactory::get()->mailAllowHtml = false;
     $service = mail_service_test_build();
 
-    $result = mail_service_capture_send($service, 'bob@example.test', ['content' => 'y']);
+    $result = mail_service_capture_send($service, 'bob@example.test', [
+        'content' => 'y',
+    ]);
 
     expect($result['email']->getSubject())->toBe('Piwigo');
 });
@@ -968,7 +1073,10 @@ test('mail strips embedded newlines and surrounding whitespace from the subject 
     CurrentConfigTestFactory::get()->mailAllowHtml = false;
     $service = mail_service_test_build();
 
-    $result = mail_service_capture_send($service, 'bob@example.test', ['subject' => "  Hi\r\nBcc: evil@test  ", 'content' => 'y']);
+    $result = mail_service_capture_send($service, 'bob@example.test', [
+        'subject' => "  Hi\r\nBcc: evil@test  ",
+        'content' => 'y',
+    ]);
 
     expect($result['email']->getSubject())->toBe('HiBcc: evil@test');
 });
@@ -979,7 +1087,11 @@ test('mail builds a Cc address when args[Cc] is a real, non-empty value', functi
     CurrentConfigTestFactory::get()->mailAllowHtml = false;
     $service = mail_service_test_build();
 
-    $result = mail_service_capture_send($service, 'bob@example.test', ['subject' => 'x', 'content' => 'y', 'Cc' => 'cc@example.test']);
+    $result = mail_service_capture_send($service, 'bob@example.test', [
+        'subject' => 'x',
+        'content' => 'y',
+        'Cc' => 'cc@example.test',
+    ]);
 
     expect($result['email']->getCc())->toHaveCount(1);
     expect($result['email']->getCc()[0]->getAddress())->toBe('cc@example.test');
@@ -991,7 +1103,10 @@ test('mail adds no Cc address at all when args[Cc] is absent', function (): void
     CurrentConfigTestFactory::get()->mailAllowHtml = false;
     $service = mail_service_test_build();
 
-    $result = mail_service_capture_send($service, 'bob@example.test', ['subject' => 'x', 'content' => 'y']);
+    $result = mail_service_capture_send($service, 'bob@example.test', [
+        'subject' => 'x',
+        'content' => 'y',
+    ]);
 
     expect($result['email']->getCc())->toBe([]);
 });
@@ -1003,10 +1118,15 @@ test('mail Bcc\'s only the explicit recipient when send_bcc_mail_webmaster is fa
     CurrentConfigTestFactory::get()->sendBccMailWebmaster = false;
     $service = mail_service_with_fake_webmaster();
 
-    $result = mail_service_capture_send($service, 'bob@example.test', ['subject' => 'x', 'content' => 'y', 'Bcc' => 'bcc@example.test']);
+    $result = mail_service_capture_send($service, 'bob@example.test', [
+        'subject' => 'x',
+        'content' => 'y',
+        'Bcc' => 'bcc@example.test',
+    ]);
 
     $bccAddresses = array_map(static fn ($a): string => $a->getAddress(), $result['email']->getBcc());
-    expect($bccAddresses)->toBe(['bcc@example.test']);
+    expect($bccAddresses)
+        ->toBe(['bcc@example.test']);
 });
 
 test('mail Bcc\'s the webmaster address when send_bcc_mail_webmaster is true, even with no explicit Bcc', function (): void {
@@ -1016,10 +1136,14 @@ test('mail Bcc\'s the webmaster address when send_bcc_mail_webmaster is true, ev
     CurrentConfigTestFactory::get()->sendBccMailWebmaster = true;
     $service = mail_service_with_fake_webmaster();
 
-    $result = mail_service_capture_send($service, 'bob@example.test', ['subject' => 'x', 'content' => 'y']);
+    $result = mail_service_capture_send($service, 'bob@example.test', [
+        'subject' => 'x',
+        'content' => 'y',
+    ]);
 
     $bccAddresses = array_map(static fn ($a): string => $a->getAddress(), $result['email']->getBcc());
-    expect($bccAddresses)->toBe(['webmaster@example.test']);
+    expect($bccAddresses)
+        ->toBe(['webmaster@example.test']);
 });
 
 test('mail replaces an unset theme with the configured mail_theme', function (): void {
@@ -1029,7 +1153,10 @@ test('mail replaces an unset theme with the configured mail_theme', function ():
     CurrentConfigTestFactory::get()->mailTheme = 'dark';
     $service = mail_service_test_build();
 
-    $result = mail_service_capture_send($service, 'bob@example.test', ['subject' => 'x', 'content' => 'y']);
+    $result = mail_service_capture_send($service, 'bob@example.test', [
+        'subject' => 'x',
+        'content' => 'y',
+    ]);
 
     expect($result['args']['theme'])->toBe('dark');
 });
@@ -1041,7 +1168,11 @@ test('mail replaces an invalid theme with the configured mail_theme instead of l
     CurrentConfigTestFactory::get()->mailTheme = 'dark';
     $service = mail_service_test_build();
 
-    $result = mail_service_capture_send($service, 'bob@example.test', ['subject' => 'x', 'content' => 'y', 'theme' => 'bogus']);
+    $result = mail_service_capture_send($service, 'bob@example.test', [
+        'subject' => 'x',
+        'content' => 'y',
+        'theme' => 'bogus',
+    ]);
 
     expect($result['args']['theme'])->toBe('dark');
 });
@@ -1052,7 +1183,11 @@ test('mail preserves an explicit, valid theme ("clear")', function (): void {
     CurrentConfigTestFactory::get()->mailAllowHtml = false;
     $service = mail_service_test_build();
 
-    $result = mail_service_capture_send($service, 'bob@example.test', ['subject' => 'x', 'content' => 'y', 'theme' => 'clear']);
+    $result = mail_service_capture_send($service, 'bob@example.test', [
+        'subject' => 'x',
+        'content' => 'y',
+        'theme' => 'clear',
+    ]);
 
     expect($result['args']['theme'])->toBe('clear');
 });
@@ -1063,7 +1198,11 @@ test('mail preserves an explicit, valid theme ("dark")', function (): void {
     CurrentConfigTestFactory::get()->mailAllowHtml = false;
     $service = mail_service_test_build();
 
-    $result = mail_service_capture_send($service, 'bob@example.test', ['subject' => 'x', 'content' => 'y', 'theme' => 'dark']);
+    $result = mail_service_capture_send($service, 'bob@example.test', [
+        'subject' => 'x',
+        'content' => 'y',
+        'theme' => 'dark',
+    ]);
 
     expect($result['args']['theme'])->toBe('dark');
 });
@@ -1074,7 +1213,9 @@ test('mail defaults args[content] to an empty string when the key is entirely ab
     CurrentConfigTestFactory::get()->mailAllowHtml = false;
     $service = mail_service_test_build();
 
-    $result = mail_service_capture_send($service, 'bob@example.test', ['subject' => 'x']);
+    $result = mail_service_capture_send($service, 'bob@example.test', [
+        'subject' => 'x',
+    ]);
 
     expect($result['args']['content'])->toBe('');
 });
@@ -1086,7 +1227,10 @@ test('mail decomposes a "[Title] Subtitle" subject into mail_title/mail_subtitle
     CurrentConfigTestFactory::get()->galleryTitle = 'My Gallery';
     $service = mail_service_test_build();
 
-    $result = mail_service_capture_send($service, 'bob@example.test', ['subject' => '[Foo] Bar baz', 'content' => 'y']);
+    $result = mail_service_capture_send($service, 'bob@example.test', [
+        'subject' => '[Foo] Bar baz',
+        'content' => 'y',
+    ]);
 
     expect($result['email']->getTextBody())->toContain("Foo\n Bar baz");
 });
@@ -1098,7 +1242,11 @@ test('mail does not decompose the subject when mail_title was already explicitly
     CurrentConfigTestFactory::get()->galleryTitle = 'My Gallery';
     $service = mail_service_test_build();
 
-    $result = mail_service_capture_send($service, 'bob@example.test', ['subject' => '[Foo] Bar baz', 'content' => 'y', 'mail_title' => 'PresetTitle']);
+    $result = mail_service_capture_send($service, 'bob@example.test', [
+        'subject' => '[Foo] Bar baz',
+        'content' => 'y',
+        'mail_title' => 'PresetTitle',
+    ]);
 
     // Since mail_title is preset, the decomposition guard's own `&&` never
     // runs at all; mail_subtitle (still unset) falls through to its own
@@ -1115,10 +1263,16 @@ test('mail includes the html part only when mail_allow_html is true and email_fo
     // own later call) so LangTestFactory::get() below resolves the same
     // container-shared instance mail()'s own real $this->lang->langInfo()
     // read will see once mail_service_capture_send() actually sends.
-    LangTestFactory::get()->setLangInfo(['code' => 'en', 'direction' => 'ltr']);
+    LangTestFactory::get()->setLangInfo([
+        'code' => 'en',
+        'direction' => 'ltr',
+    ]);
     $service = mail_service_test_build();
 
-    $result = mail_service_capture_send($service, 'bob@example.test', ['subject' => 'x', 'content' => 'y']);
+    $result = mail_service_capture_send($service, 'bob@example.test', [
+        'subject' => 'x',
+        'content' => 'y',
+    ]);
 
     expect($result['email']->getHtmlBody())->not->toBeNull();
 });
@@ -1130,7 +1284,11 @@ test('mail omits the html part when mail_allow_html is true but email_format exp
     CurrentConfigTestFactory::get()->mailAllowHtml = true;
     $service = mail_service_test_build();
 
-    $result = mail_service_capture_send($service, 'bob@example.test', ['subject' => 'x', 'content' => 'y', 'email_format' => 'text/plain']);
+    $result = mail_service_capture_send($service, 'bob@example.test', [
+        'subject' => 'x',
+        'content' => 'y',
+        'email_format' => 'text/plain',
+    ]);
 
     expect($result['email']->getHtmlBody())->toBeNull();
 });
@@ -1142,7 +1300,10 @@ test('mail omits the html part entirely when mail_allow_html is false', function
     CurrentConfigTestFactory::get()->mailAllowHtml = false;
     $service = mail_service_test_build();
 
-    $result = mail_service_capture_send($service, 'bob@example.test', ['subject' => 'x', 'content' => 'y']);
+    $result = mail_service_capture_send($service, 'bob@example.test', [
+        'subject' => 'x',
+        'content' => 'y',
+    ]);
 
     expect($result['email']->getHtmlBody())->toBeNull();
 });
@@ -1152,7 +1313,10 @@ test('mail converts a text/plain content into HTML: paragraph-wrapped, escaped, 
     CurrentConfigTestFactory::get()->mailSenderEmail = 'sender@example.test';
     CurrentConfigTestFactory::get()->mailAllowHtml = false;
     CurrentConfigTestFactory::get()->mailAllowHtml = true;
-    LangTestFactory::get()->setLangInfo(['code' => 'en', 'direction' => 'ltr']);
+    LangTestFactory::get()->setLangInfo([
+        'code' => 'en',
+        'direction' => 'ltr',
+    ]);
     $service = mail_service_test_build();
 
     $result = mail_service_capture_send($service, 'bob@example.test', [
@@ -1182,7 +1346,11 @@ test('mail converts a text/html content into plain text (tags stripped) for the 
     CurrentConfigTestFactory::get()->mailAllowHtml = false;
     $service = mail_service_test_build();
 
-    $result = mail_service_capture_send($service, 'bob@example.test', ['subject' => 'x', 'content' => '<strong>Bold</strong> text', 'content_format' => 'text/html']);
+    $result = mail_service_capture_send($service, 'bob@example.test', [
+        'subject' => 'x',
+        'content' => '<strong>Bold</strong> text',
+        'content_format' => 'text/html',
+    ]);
 
     expect($result['email']->getTextBody())->toContain('Bold text');
     expect($result['email']->getTextBody())->not->toContain('<strong>');
@@ -1196,13 +1364,20 @@ test('mail assigns every real GALLERY_TITLE/GALLERY_URL/VERSION/PHPWG_URL/CONTAC
     CurrentConfigTestFactory::get()->showVersion = true;
     $service = mail_service_test_build();
 
-    $result = mail_service_capture_send($service, 'bob@example.test', ['subject' => 'x', 'content' => 'y']);
+    $result = mail_service_capture_send($service, 'bob@example.test', [
+        'subject' => 'x',
+        'content' => 'y',
+    ]);
     $body = $result['email']->getTextBody();
 
-    expect($body)->toContain('Sent by "My Real Gallery"')
-        ->and($body)->toMatch('/Sent by "My Real Gallery" \S+/')
-        ->and($body)->toContain('Powered by "Piwigo 16.3.0" https://upstream.example.invalid')
-        ->and($body)->toContain('Contact: sender@example.test');
+    expect($body)
+        ->toContain('Sent by "My Real Gallery"')
+        ->and($body)
+        ->toMatch('/Sent by "My Real Gallery" \S+/')
+        ->and($body)
+        ->toContain('Powered by "Piwigo 16.3.0" https://upstream.example.invalid')
+        ->and($body)
+        ->toContain('Contact: sender@example.test');
 });
 
 test('mail omits the version number entirely from the footer when show_version is false', function (): void {
@@ -1212,7 +1387,10 @@ test('mail omits the version number entirely from the footer when show_version i
     CurrentConfigTestFactory::get()->showVersion = false;
     $service = mail_service_test_build();
 
-    $result = mail_service_capture_send($service, 'bob@example.test', ['subject' => 'x', 'content' => 'y']);
+    $result = mail_service_capture_send($service, 'bob@example.test', [
+        'subject' => 'x',
+        'content' => 'y',
+    ]);
 
     expect($result['email']->getTextBody())->toContain('Powered by "Piwigo" ')
         ->and($result['email']->getTextBody())->not->toContain('16.3.0');
@@ -1223,10 +1401,16 @@ test('mail assigns the real CONTENT_ENCODING charset into the html header\'s met
     CurrentConfigTestFactory::get()->mailSenderEmail = 'sender@example.test';
     CurrentConfigTestFactory::get()->mailAllowHtml = false;
     CurrentConfigTestFactory::get()->mailAllowHtml = true;
-    LangTestFactory::get()->setLangInfo(['code' => 'en', 'direction' => 'ltr']);
+    LangTestFactory::get()->setLangInfo([
+        'code' => 'en',
+        'direction' => 'ltr',
+    ]);
     $service = mail_service_test_build();
 
-    $result = mail_service_capture_send($service, 'bob@example.test', ['subject' => 'x', 'content' => 'y']);
+    $result = mail_service_capture_send($service, 'bob@example.test', [
+        'subject' => 'x',
+        'content' => 'y',
+    ]);
 
     expect($result['email']->getHtmlBody())->toContain('charset=utf-8');
 });
@@ -1253,13 +1437,18 @@ test('mail fires the before_parse_mail_template event with the real cache key an
     };
     EventDispatcherTestFactory::get()->addTypedHandler(BeforeParseMailTemplate::class, $handler);
     try {
-        mail_service_capture_send($service, 'bob@example.test', ['subject' => 'x', 'content' => 'y']);
+        mail_service_capture_send($service, 'bob@example.test', [
+            'subject' => 'x',
+            'content' => 'y',
+        ]);
     } finally {
         EventDispatcherTestFactory::get()->removeEventHandler(BeforeParseMailTemplate::class, $handler);
     }
 
-    expect($capturedContentType)->toBe('text/plain');
-    expect($capturedCacheKey)->toContain('text/plain');
+    expect($capturedContentType)
+        ->toBe('text/plain');
+    expect($capturedCacheKey)
+        ->toContain('text/plain');
 });
 
 test('mail keys its per-request template cache by auth_key too, not reusing one auth_key\'s rendered link for another', function (): void {
@@ -1268,8 +1457,16 @@ test('mail keys its per-request template cache by auth_key too, not reusing one 
     CurrentConfigTestFactory::get()->mailAllowHtml = false;
     $service = mail_service_test_build();
 
-    $result1 = mail_service_capture_send($service, 'bob@example.test', ['subject' => 'x', 'content' => 'y', 'auth_key' => 'AAA']);
-    $result2 = mail_service_capture_send($service, 'bob@example.test', ['subject' => 'x', 'content' => 'y', 'auth_key' => 'BBB']);
+    $result1 = mail_service_capture_send($service, 'bob@example.test', [
+        'subject' => 'x',
+        'content' => 'y',
+        'auth_key' => 'AAA',
+    ]);
+    $result2 = mail_service_capture_send($service, 'bob@example.test', [
+        'subject' => 'x',
+        'content' => 'y',
+        'auth_key' => 'BBB',
+    ]);
 
     expect($result1['email']->getTextBody())->toContain('auth=AAA')
         ->and($result1['email']->getTextBody())->not->toContain('auth=BBB')
@@ -1300,10 +1497,17 @@ test('mail keeps the html and plain-text cache entries of the SAME call separate
     Kernel::boot(Paths::fromRoot(dirname(__DIR__, 3) . '/'));
     CurrentConfigTestFactory::get()->mailSenderEmail = 'sender@example.test';
     CurrentConfigTestFactory::get()->mailAllowHtml = true;
-    LangTestFactory::get()->setLangInfo(['code' => 'en', 'direction' => 'ltr']);
+    LangTestFactory::get()->setLangInfo([
+        'code' => 'en',
+        'direction' => 'ltr',
+    ]);
     $service = mail_service_test_build();
 
-    $result = mail_service_capture_send($service, 'bob@example.test', ['subject' => 'x', 'content' => 'y', 'auth_key' => 'ZZZ']);
+    $result = mail_service_capture_send($service, 'bob@example.test', [
+        'subject' => 'x',
+        'content' => 'y',
+        'auth_key' => 'ZZZ',
+    ]);
 
     expect($result['email']->getTextBody())->not->toContain('<html')
         ->and($result['email']->getTextBody())->not->toContain('<!DOCTYPE')
@@ -1316,11 +1520,23 @@ test('mail keys its per-request template cache by lang_info[code] too, not reusi
     CurrentConfigTestFactory::get()->mailAllowHtml = true;
     $service = mail_service_test_build();
 
-    LangTestFactory::get()->setLangInfo(['code' => 'en', 'direction' => 'ltr']);
-    $result1 = mail_service_capture_send($service, 'bob@example.test', ['subject' => 'x', 'content' => 'y']);
+    LangTestFactory::get()->setLangInfo([
+        'code' => 'en',
+        'direction' => 'ltr',
+    ]);
+    $result1 = mail_service_capture_send($service, 'bob@example.test', [
+        'subject' => 'x',
+        'content' => 'y',
+    ]);
 
-    LangTestFactory::get()->setLangInfo(['code' => 'ar', 'direction' => 'rtl']);
-    $result2 = mail_service_capture_send($service, 'bob@example.test', ['subject' => 'x', 'content' => 'y']);
+    LangTestFactory::get()->setLangInfo([
+        'code' => 'ar',
+        'direction' => 'rtl',
+    ]);
+    $result2 = mail_service_capture_send($service, 'bob@example.test', [
+        'subject' => 'x',
+        'content' => 'y',
+    ]);
 
     expect($result1['email']->getHtmlBody())->toContain('dir="ltr"');
     expect($result2['email']->getHtmlBody())->toContain('dir="rtl"');
@@ -1336,11 +1552,22 @@ test('mail keys its per-request template cache by theme too, not reusing one the
     Kernel::boot(Paths::fromRoot(dirname(__DIR__, 3) . '/'));
     CurrentConfigTestFactory::get()->mailSenderEmail = 'sender@example.test';
     CurrentConfigTestFactory::get()->mailAllowHtml = true;
-    LangTestFactory::get()->setLangInfo(['code' => 'en', 'direction' => 'ltr']);
+    LangTestFactory::get()->setLangInfo([
+        'code' => 'en',
+        'direction' => 'ltr',
+    ]);
     $service = mail_service_test_build();
 
-    $clearResult = mail_service_capture_send($service, 'bob@example.test', ['subject' => 'x', 'content' => 'y', 'theme' => 'clear']);
-    $darkResult = mail_service_capture_send($service, 'bob@example.test', ['subject' => 'x', 'content' => 'y', 'theme' => 'dark']);
+    $clearResult = mail_service_capture_send($service, 'bob@example.test', [
+        'subject' => 'x',
+        'content' => 'y',
+        'theme' => 'clear',
+    ]);
+    $darkResult = mail_service_capture_send($service, 'bob@example.test', [
+        'subject' => 'x',
+        'content' => 'y',
+        'theme' => 'dark',
+    ]);
 
     $clearHtmlBody = $clearResult['email']->getHtmlBody();
     $darkHtmlBody = $darkResult['email']->getHtmlBody();
@@ -1350,20 +1577,30 @@ test('mail keys its per-request template cache by theme too, not reusing one the
     $clearBody = strtolower($clearHtmlBody);
     $darkBody = strtolower($darkHtmlBody);
 
-    expect($clearBody)->toContain('#e06900') // clear-theme-only accent color
-        ->and($clearBody)->not->toContain('#c9224c') // dark-theme-only accent color
-        ->and($darkBody)->toContain('#c9224c')
-        ->and($darkBody)->not->toContain('#e06900');
+    expect($clearBody)
+        ->toContain('#e06900') // clear-theme-only accent color
+        ->and($clearBody)
+        ->not->toContain('#c9224c') // dark-theme-only accent color
+        ->and($darkBody)
+        ->toContain('#c9224c')
+        ->and($darkBody)
+        ->not->toContain('#e06900');
 });
 
 test('mail inlines the global mail CSS into the html part\'s elements, on top of the selected theme\'s own CSS', function (): void {
     Kernel::boot(Paths::fromRoot(dirname(__DIR__, 3) . '/'));
     CurrentConfigTestFactory::get()->mailSenderEmail = 'sender@example.test';
     CurrentConfigTestFactory::get()->mailAllowHtml = true;
-    LangTestFactory::get()->setLangInfo(['code' => 'en', 'direction' => 'ltr']);
+    LangTestFactory::get()->setLangInfo([
+        'code' => 'en',
+        'direction' => 'ltr',
+    ]);
     $service = mail_service_test_build();
 
-    $result = mail_service_capture_send($service, 'bob@example.test', ['subject' => 'x', 'content' => 'y']);
+    $result = mail_service_capture_send($service, 'bob@example.test', [
+        'subject' => 'x',
+        'content' => 'y',
+    ]);
 
     expect($result['email']->getHtmlBody())->toContain('Verdana');
 });
@@ -1374,7 +1611,10 @@ test('mail computes GALLERY_URL as a genuine absolute URL (setMakeFullUrl active
     CurrentConfigTestFactory::get()->mailAllowHtml = false;
     $service = mail_service_test_build();
 
-    $result = mail_service_capture_send($service, 'bob@example.test', ['subject' => 'x', 'content' => 'y']);
+    $result = mail_service_capture_send($service, 'bob@example.test', [
+        'subject' => 'x',
+        'content' => 'y',
+    ]);
 
     expect($result['email']->getTextBody())->toMatch('/Sent by "[^"]*" http/');
 });
@@ -1386,7 +1626,10 @@ test('mail Bcc\'s the webmaster with an explicitly empty name, not a null/missin
     CurrentConfigTestFactory::get()->sendBccMailWebmaster = true;
     $service = mail_service_with_fake_webmaster();
 
-    $result = mail_service_capture_send($service, 'bob@example.test', ['subject' => 'x', 'content' => 'y']);
+    $result = mail_service_capture_send($service, 'bob@example.test', [
+        'subject' => 'x',
+        'content' => 'y',
+    ]);
 
     expect($result['email']->getBcc()[0]->getName())->toBe('');
 });
@@ -1413,12 +1656,16 @@ test('mail defaults the smtp port to 25 when smtp_host has no explicit ":port" s
 
     try {
         $service = mail_service_test_build();
-        $service->mail('bob@example.test', ['subject' => 'x', 'content' => 'y']);
+        $service->mail('bob@example.test', [
+            'subject' => 'x',
+            'content' => 'y',
+        ]);
     } finally {
         restore_error_handler();
     }
 
-    expect($capturedWarning)->toContain('127.0.0.1:25');
+    expect($capturedWarning)
+        ->toContain('127.0.0.1:25');
 });
 
 test('mail actually reaches a real Transport and sends when no before_send_mail listener intercepts it', function (): void {
@@ -1433,15 +1680,20 @@ test('mail actually reaches a real Transport and sends when no before_send_mail 
 
     try {
         $service = mail_service_test_build();
-        $ret = $service->mail('bob@example.test', ['subject' => 'x', 'content' => 'y']);
+        $ret = $service->mail('bob@example.test', [
+            'subject' => 'x',
+            'content' => 'y',
+        ]);
 
         // A default `true` `before_send_mail` result (no listener attached)
         // and $ret's own `true` initial value would be indistinguishable
         // from a mutant that skips the whole send block outright -- the
         // marker file only exists if the real fake server actually
         // accepted a real connection, proving the send genuinely happened.
-        expect($ret)->toBeTrue();
-        expect(file_exists($markerFile))->toBeTrue();
+        expect($ret)
+            ->toBeTrue();
+        expect(file_exists($markerFile))
+            ->toBeTrue();
     } finally {
         mail_service_stop_fake_smtp($proc, $markerFile);
     }
@@ -1471,16 +1723,22 @@ test('mail returns false and logs a Mailer Error when the real Transport rejects
 
     try {
         $service = mail_service_test_build();
-        $ret = $service->mail('bob@example.test', ['subject' => 'x', 'content' => 'y']);
+        $ret = $service->mail('bob@example.test', [
+            'subject' => 'x',
+            'content' => 'y',
+        ]);
 
-        expect($ret)->toBeFalse();
+        expect($ret)
+            ->toBeFalse();
         // Exact "Mailer Error: <real transport message>" prefix (not just
         // toContain('Mailer Error') anywhere) -- kills the concatenation's
         // own ConcatSwitchSides, which would put the transport's real
         // message BEFORE the "Mailer Error: " label instead of after it.
         $realWarning = current(array_filter($capturedWarnings, static fn (string $w): bool => str_starts_with($w, 'Mailer Error: ')));
-        expect($realWarning)->not->toBeFalse();
-        expect($realWarning)->toContain('Mailer Error: Expected response code');
+        expect($realWarning)
+            ->not->toBeFalse();
+        expect($realWarning)
+            ->toContain('Mailer Error: Expected response code');
     } finally {
         restore_error_handler();
         mail_service_stop_fake_smtp($proc, $markerFile);
@@ -1489,8 +1747,15 @@ test('mail returns false and logs a Mailer Error when the real Transport rejects
 
 test('switchLangTo pushes the current language and translations, switchLangBack fully restores them (not just CurrentUser::language)', function (): void {
     Kernel::boot(Paths::fromRoot(dirname(__DIR__, 3) . '/'));
-    CurrentUserTestFactory::get()->set(User::fromUserArray(['id' => 1, 'username' => 'tester', 'status' => 'normal', 'language' => 'en_UK']));
-    LangTestFactory::get()->setLangInfo(['code' => 'en_UK_marker']);
+    CurrentUserTestFactory::get()->set(User::fromUserArray([
+        'id' => 1,
+        'username' => 'tester',
+        'status' => 'normal',
+        'language' => 'en_UK',
+    ]));
+    LangTestFactory::get()->setLangInfo([
+        'code' => 'en_UK_marker',
+    ]);
     $service = mail_service_test_build();
 
     $service->switchLangTo('fr_FR');
@@ -1510,13 +1775,23 @@ test('switchLangTo pushes the current language and translations, switchLangBack 
 
 test('switchLangTo resets lang_info/the translation dictionary before reloading, rather than merging fresh data on top of stale state', function (): void {
     Kernel::boot(Paths::fromRoot(dirname(__DIR__, 3) . '/'));
-    CurrentUserTestFactory::get()->set(User::fromUserArray(['id' => 1, 'username' => 'tester', 'status' => 'normal', 'language' => 'en_UK']));
+    CurrentUserTestFactory::get()->set(User::fromUserArray([
+        'id' => 1,
+        'username' => 'tester',
+        'status' => 'normal',
+        'language' => 'en_UK',
+    ]));
     // Neither key below is ever set by a real language file -- if they
     // survive switchLangTo('fr_FR'), the reset (not the reload itself)
     // was skipped: Lang::load()'s own internal array_merge($old, $fresh)
     // would otherwise carry stale keys forward indefinitely.
-    LangTestFactory::get()->setLangInfo(['code' => 'xx', 'my_custom_marker' => 'stale']);
-    LangTestFactory::get()->loadArray(['my_data_marker_key' => 'stale-data']);
+    LangTestFactory::get()->setLangInfo([
+        'code' => 'xx',
+        'my_custom_marker' => 'stale',
+    ]);
+    LangTestFactory::get()->loadArray([
+        'my_data_marker_key' => 'stale-data',
+    ]);
     $service = mail_service_test_build();
 
     $service->switchLangTo('fr_FR');
@@ -1527,7 +1802,12 @@ test('switchLangTo resets lang_info/the translation dictionary before reloading,
 
 test('switchLangTo fires the loading_lang event while reloading a language for the first time', function (): void {
     Kernel::boot(Paths::fromRoot(dirname(__DIR__, 3) . '/'));
-    CurrentUserTestFactory::get()->set(User::fromUserArray(['id' => 1, 'username' => 'tester', 'status' => 'normal', 'language' => 'en_UK']));
+    CurrentUserTestFactory::get()->set(User::fromUserArray([
+        'id' => 1,
+        'username' => 'tester',
+        'status' => 'normal',
+        'language' => 'en_UK',
+    ]));
     $service = mail_service_test_build();
 
     $fired = false;
@@ -1541,7 +1821,8 @@ test('switchLangTo fires the loading_lang event while reloading a language for t
         EventDispatcherTestFactory::get()->removeEventHandler(LoadingLang::class, $handler);
     }
 
-    expect($fired)->toBeTrue();
+    expect($fired)
+        ->toBeTrue();
 });
 
 test('switchLangTo/switchLangBack nest in real LIFO order across more than one push', function (): void {
@@ -1549,7 +1830,12 @@ test('switchLangTo/switchLangBack nest in real LIFO order across more than one p
     // round trip can't distinguish pop (LIFO) from shift (FIFO) since
     // there's only one element either way -- this needs two nested pushes.
     Kernel::boot(Paths::fromRoot(dirname(__DIR__, 3) . '/'));
-    CurrentUserTestFactory::get()->set(User::fromUserArray(['id' => 1, 'username' => 'tester', 'status' => 'normal', 'language' => 'en_UK']));
+    CurrentUserTestFactory::get()->set(User::fromUserArray([
+        'id' => 1,
+        'username' => 'tester',
+        'status' => 'normal',
+        'language' => 'en_UK',
+    ]));
     $service = mail_service_test_build();
 
     $service->switchLangTo('fr_FR');
@@ -1565,7 +1851,12 @@ test('switchLangTo/switchLangBack nest in real LIFO order across more than one p
 
 test('switchLangTo reuses its own cache for a language already switched to once, without reloading language files again', function (): void {
     Kernel::boot(Paths::fromRoot(dirname(__DIR__, 3) . '/'));
-    CurrentUserTestFactory::get()->set(User::fromUserArray(['id' => 1, 'username' => 'tester', 'status' => 'normal', 'language' => 'en_UK']));
+    CurrentUserTestFactory::get()->set(User::fromUserArray([
+        'id' => 1,
+        'username' => 'tester',
+        'status' => 'normal',
+        'language' => 'en_UK',
+    ]));
     $service = mail_service_test_build();
     $service->switchLangTo('fr_FR');
     $service->switchLangBack();
@@ -1581,7 +1872,8 @@ test('switchLangTo reuses its own cache for a language already switched to once,
         EventDispatcherTestFactory::get()->removeEventHandler(LoadingLang::class, $handler);
     }
 
-    expect($loadingLangCalls)->toBe(0);
+    expect($loadingLangCalls)
+        ->toBe(0);
     expect(LangTestFactory::get()->langInfo()['code'] ?? null)->toBe('fr');
 });
 
@@ -1596,15 +1888,24 @@ test('switchLangTo only ever snapshots the ORIGINAL starting language once per r
     // widened the guard (re-snapshotting on every distinct language)
     // can't slip through unnoticed.
     Kernel::boot(Paths::fromRoot(dirname(__DIR__, 3) . '/'));
-    CurrentUserTestFactory::get()->set(User::fromUserArray(['id' => 1, 'username' => 'tester', 'status' => 'normal', 'language' => 'en_UK']));
+    CurrentUserTestFactory::get()->set(User::fromUserArray([
+        'id' => 1,
+        'username' => 'tester',
+        'status' => 'normal',
+        'language' => 'en_UK',
+    ]));
     $service = mail_service_test_build();
 
-    LangTestFactory::get()->setLangInfo(['code' => 'marker-en']);
+    LangTestFactory::get()->setLangInfo([
+        'code' => 'marker-en',
+    ]);
     $service->switchLangTo('fr_FR');
     $service->switchLangBack();
 
     CurrentUserTestFactory::get()->updateLanguage(LangCode::from('de_DE'));
-    LangTestFactory::get()->setLangInfo(['code' => 'marker-de']);
+    LangTestFactory::get()->setLangInfo([
+        'code' => 'marker-de',
+    ]);
     $service->switchLangTo('es_ES');
     $service->switchLangBack();
 
@@ -1614,7 +1915,12 @@ test('switchLangTo only ever snapshots the ORIGINAL starting language once per r
 
 test('switchLangTo replays every plugin language file already loaded this request, in the newly-switched-to language', function (): void {
     Kernel::boot(Paths::fromRoot(dirname(__DIR__, 3) . '/'));
-    CurrentUserTestFactory::get()->set(User::fromUserArray(['id' => 1, 'username' => 'tester', 'status' => 'normal', 'language' => 'en_UK']));
+    CurrentUserTestFactory::get()->set(User::fromUserArray([
+        'id' => 1,
+        'username' => 'tester',
+        'status' => 'normal',
+        'language' => 'en_UK',
+    ]));
     $dir = sys_get_temp_dir() . '/piwigo-mailservice-plugin-test-' . getmypid() . '/';
 
     try {
@@ -1622,7 +1928,9 @@ test('switchLangTo replays every plugin language file already loaded this reques
         // A real Lang::load() call for a plugin ($dirname non-empty) both
         // loads it AND registers it into Lang::languageFiles() -- the
         // exact list switchLangTo()'s own plugin-file replay loop reads.
-        LangTestFactory::get()->load('plugin.lang', $dir, ['language' => 'fr_FR']);
+        LangTestFactory::get()->load('plugin.lang', $dir, [
+            'language' => 'fr_FR',
+        ]);
 
         mail_service_write_po($dir . 'language/de_DE/plugin.po', 'Deutscher Marker');
         $service = mail_service_test_build();
@@ -1644,13 +1952,15 @@ test('buildMailer wraps native://default in the bounded sendmail transport, but 
     if (! $nativeMailer instanceof Mailer) {
         throw new RuntimeException('expected buildMailer() to return a Mailer');
     }
-    expect($transportProperty->getValue($nativeMailer))->toBeInstanceOf(BoundedSendmailTransport::class);
+    expect($transportProperty->getValue($nativeMailer))
+        ->toBeInstanceOf(BoundedSendmailTransport::class);
 
     $smtpMailer = $buildMailer->invoke($service, 'smtp://127.0.0.1:2525');
     if (! $smtpMailer instanceof Mailer) {
         throw new RuntimeException('expected buildMailer() to return a Mailer');
     }
-    expect($transportProperty->getValue($smtpMailer))->not->toBeInstanceOf(BoundedSendmailTransport::class);
+    expect($transportProperty->getValue($smtpMailer))
+        ->not->toBeInstanceOf(BoundedSendmailTransport::class);
 });
 
 // moveCssToBody's own early `$content === ''` return (line 1027-1029) is

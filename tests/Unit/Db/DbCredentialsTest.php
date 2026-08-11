@@ -33,12 +33,18 @@ afterEach(function () use ($envVars, &$originalEnvVars): void {
 test('fromEnv() falls back to defaults when no env vars are set', function (): void {
     $credentials = DbCredentials::fromEnv();
 
-    expect($credentials->host)->toBe('localhost')
-        ->and($credentials->user)->toBe('')
-        ->and($credentials->password)->toBe('')
-        ->and($credentials->database)->toBe('')
-        ->and($credentials->port)->toBeNull()
-        ->and($credentials->driver)->toBe('mysqli');
+    expect($credentials->host)
+        ->toBe('localhost')
+        ->and($credentials->user)
+        ->toBe('')
+        ->and($credentials->password)
+        ->toBe('')
+        ->and($credentials->database)
+        ->toBe('')
+        ->and($credentials->port)
+        ->toBeNull()
+        ->and($credentials->driver)
+        ->toBe('mysqli');
 });
 
 test('fromEnv() falls back to the default host when PIWIGO_DB_HOST is explicitly empty, not just when unset', function (): void {
@@ -62,12 +68,18 @@ test('fromEnv() reads every PIWIGO_DB_* var when set', function (): void {
 
     $credentials = DbCredentials::fromEnv();
 
-    expect($credentials->host)->toBe('db.example.test')
-        ->and($credentials->user)->toBe('piwigo_app')
-        ->and($credentials->password)->toBe('s3cret')
-        ->and($credentials->database)->toBe('piwigo_prod')
-        ->and($credentials->port)->toBe(33061)
-        ->and($credentials->driver)->toBe('pgsql');
+    expect($credentials->host)
+        ->toBe('db.example.test')
+        ->and($credentials->user)
+        ->toBe('piwigo_app')
+        ->and($credentials->password)
+        ->toBe('s3cret')
+        ->and($credentials->database)
+        ->toBe('piwigo_prod')
+        ->and($credentials->port)
+        ->toBe(33061)
+        ->and($credentials->driver)
+        ->toBe('pgsql');
 });
 
 test('fromEnv() treats an empty or non-numeric PIWIGO_DB_PORT the same as unset, not as port 0', function (): void {
@@ -137,9 +149,12 @@ test('DbCredentialsTestFactory::get returns a fresh read on every call when Kern
     putenv('PIWIGO_DB_HOST=second.example.test');
     $second = DbCredentialsTestFactory::get();
 
-    expect($second)->not->toBe($first)
-        ->and($first->host)->toBe('first.example.test')
-        ->and($second->host)->toBe('second.example.test');
+    expect($second)
+        ->not->toBe($first)
+        ->and($first->host)
+        ->toBe('first.example.test')
+        ->and($second->host)
+        ->toBe('second.example.test');
 });
 
 test('DbCredentialsTestFactory::get returns the same container-shared instance across calls once Kernel is booted', function (): void {
@@ -149,8 +164,10 @@ test('DbCredentialsTestFactory::get returns the same container-shared instance a
     $first = DbCredentialsTestFactory::get();
     $second = DbCredentialsTestFactory::get();
 
-    expect($second)->toBe($first)
-        ->and($first->host)->toBe('booted.example.test');
+    expect($second)
+        ->toBe($first)
+        ->and($first->host)
+        ->toBe('booted.example.test');
 });
 
 test('reload() re-derives every property from the current environment, mutating this instance in place', function (): void {
@@ -169,28 +186,41 @@ test('reload() re-derives every property from the current environment, mutating 
     // Same object identity -- reload() mutates in place, it doesn't
     // replace the instance (the whole point: every other consumer
     // holding this same reference sees the update too).
-    expect($credentials)->toBe($before)
-        ->and($credentials->host)->toBe('reloaded.example.test')
-        ->and($credentials->user)->toBe('reloaded_user')
-        ->and($credentials->password)->toBe('reloaded_pass')
-        ->and($credentials->database)->toBe('reloaded_db')
-        ->and($credentials->port)->toBe(5432)
-        ->and($credentials->driver)->toBe('pgsql');
+    expect($credentials)
+        ->toBe($before)
+        ->and($credentials->host)
+        ->toBe('reloaded.example.test')
+        ->and($credentials->user)
+        ->toBe('reloaded_user')
+        ->and($credentials->password)
+        ->toBe('reloaded_pass')
+        ->and($credentials->database)
+        ->toBe('reloaded_db')
+        ->and($credentials->port)
+        ->toBe(5432)
+        ->and($credentials->driver)
+        ->toBe('pgsql');
 });
 
 test('seed() putenvs each non-null value and reload()s this same instance in place', function (): void {
     $credentials = DbCredentials::fromEnv();
 
-    $credentials->seed(['PIWIGO_DB_HOST' => 'seeded.example.test', 'PIWIGO_DB_USER' => null]);
+    $credentials->seed([
+        'PIWIGO_DB_HOST' => 'seeded.example.test',
+        'PIWIGO_DB_USER' => null,
+    ]);
 
-    expect($credentials->host)->toBe('seeded.example.test');
+    expect($credentials->host)
+        ->toBe('seeded.example.test');
 });
 
 test('seed() on the container-shared instance is visible to every other consumer holding it', function (): void {
     Kernel::boot();
     $before = DbCredentialsTestFactory::get();
 
-    $before->seed(['PIWIGO_DB_HOST' => 'seeded-shared.example.test']);
+    $before->seed([
+        'PIWIGO_DB_HOST' => 'seeded-shared.example.test',
+    ]);
 
     expect(DbCredentialsTestFactory::get())->toBe($before)
         ->and(DbCredentialsTestFactory::get()->host)->toBe('seeded-shared.example.test');
@@ -198,16 +228,20 @@ test('seed() on the container-shared instance is visible to every other consumer
 
 test('toMysqlArgs() includes -p only when a password is set', function (): void {
     $withoutPassword = new DbCredentials(host: 'localhost', user: 'root', password: '', database: 'piwigo');
-    expect($withoutPassword->toMysqlArgs())->toBe(['-hlocalhost', '-uroot']);
+    expect($withoutPassword->toMysqlArgs())
+        ->toBe(['-hlocalhost', '-uroot']);
 
     $withPassword = new DbCredentials(host: 'localhost', user: 'root', password: 'secret', database: 'piwigo');
-    expect($withPassword->toMysqlArgs())->toBe(['-hlocalhost', '-uroot', '-psecret']);
+    expect($withPassword->toMysqlArgs())
+        ->toBe(['-hlocalhost', '-uroot', '-psecret']);
 });
 
 test('toMysqlArgs() includes -P only when a port is set', function (): void {
     $withoutPort = new DbCredentials(host: 'localhost', user: 'root', password: '', database: 'piwigo');
-    expect($withoutPort->toMysqlArgs())->toBe(['-hlocalhost', '-uroot']);
+    expect($withoutPort->toMysqlArgs())
+        ->toBe(['-hlocalhost', '-uroot']);
 
     $withPort = new DbCredentials(host: 'localhost', user: 'root', password: '', database: 'piwigo', port: 33061);
-    expect($withPort->toMysqlArgs())->toBe(['-hlocalhost', '-uroot', '-P33061']);
+    expect($withPort->toMysqlArgs())
+        ->toBe(['-hlocalhost', '-uroot', '-P33061']);
 });

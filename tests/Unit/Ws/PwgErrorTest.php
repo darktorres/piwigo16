@@ -47,9 +47,12 @@ test('code just below the HTTP range (399) does not call setStatusHeader', funct
     try {
         $error = new PwgError(399, 'Not an HTTP code');
 
-        expect($calls)->toBe([])
-            ->and($error->code())->toBe(399)
-            ->and($error->message())->toBe('Not an HTTP code');
+        expect($calls)
+            ->toBe([])
+            ->and($error->code())
+            ->toBe(399)
+            ->and($error->message())
+            ->toBe('Not an HTTP code');
     } finally {
         EventDispatcherTestFactory::get()->removeEventHandler(SetStatusHeader::class, $handler);
     }
@@ -65,9 +68,12 @@ test('code at the lower HTTP boundary (400) calls setStatusHeader', function ():
     try {
         $error = new PwgError(400, 'Bad request');
 
-        expect($calls)->toBe([[400, 'Bad request']])
-            ->and($error->code())->toBe(400)
-            ->and($error->message())->toBe('Bad request');
+        expect($calls)
+            ->toBe([[400, 'Bad request']])
+            ->and($error->code())
+            ->toBe(400)
+            ->and($error->message())
+            ->toBe('Bad request');
     } finally {
         EventDispatcherTestFactory::get()->removeEventHandler(SetStatusHeader::class, $handler);
     }
@@ -86,9 +92,12 @@ test('code comfortably inside the HTTP range (404) calls setStatusHeader', funct
     try {
         $error = new PwgError(404, 'Not found');
 
-        expect($calls)->toBe([[404, 'Not found']])
-            ->and($error->code())->toBe(404)
-            ->and($error->message())->toBe('Not found');
+        expect($calls)
+            ->toBe([[404, 'Not found']])
+            ->and($error->code())
+            ->toBe(404)
+            ->and($error->message())
+            ->toBe('Not found');
     } finally {
         EventDispatcherTestFactory::get()->removeEventHandler(SetStatusHeader::class, $handler);
     }
@@ -104,9 +113,12 @@ test('code at the upper HTTP boundary (599) calls setStatusHeader', function ():
     try {
         $error = new PwgError(599, 'Custom 599');
 
-        expect($calls)->toBe([[599, 'Custom 599']])
-            ->and($error->code())->toBe(599)
-            ->and($error->message())->toBe('Custom 599');
+        expect($calls)
+            ->toBe([[599, 'Custom 599']])
+            ->and($error->code())
+            ->toBe(599)
+            ->and($error->message())
+            ->toBe('Custom 599');
     } finally {
         EventDispatcherTestFactory::get()->removeEventHandler(SetStatusHeader::class, $handler);
     }
@@ -122,9 +134,12 @@ test('code just past the HTTP range (600) does not call setStatusHeader', functi
     try {
         $error = new PwgError(600, 'Not an HTTP code either');
 
-        expect($calls)->toBe([])
-            ->and($error->code())->toBe(600)
-            ->and($error->message())->toBe('Not an HTTP code either');
+        expect($calls)
+            ->toBe([])
+            ->and($error->code())
+            ->toBe(600)
+            ->and($error->message())
+            ->toBe('Not an HTTP code either');
     } finally {
         EventDispatcherTestFactory::get()->removeEventHandler(SetStatusHeader::class, $handler);
     }
@@ -144,9 +159,12 @@ test('code comfortably outside the HTTP range (1003) does not call setStatusHead
     try {
         $error = new PwgError(1003, 'Invalid param foo');
 
-        expect($calls)->toBe([])
-            ->and($error->code())->toBe(1003)
-            ->and($error->message())->toBe('Invalid param foo');
+        expect($calls)
+            ->toBe([])
+            ->and($error->code())
+            ->toBe(1003)
+            ->and($error->message())
+            ->toBe('Invalid param foo');
     } finally {
         EventDispatcherTestFactory::get()->removeEventHandler(SetStatusHeader::class, $handler);
     }

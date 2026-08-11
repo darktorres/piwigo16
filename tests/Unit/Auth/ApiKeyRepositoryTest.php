@@ -5,7 +5,6 @@ declare(strict_types=1);
 use Doctrine\DBAL\Connection;
 use Piwigo\Auth\ApiKeyRepository;
 use Piwigo\Auth\Projection\ApiKey;
-use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
 
@@ -68,16 +67,17 @@ test('insert() persists every column as given', function (): void {
             ->setParameter('authKey', $row['auth_key'])
             ->fetchAssociative();
 
-        expect($stored)->toBe([
-            'auth_key' => $row['auth_key'],
-            'apikey_secret' => 'ut-secret',
-            'apikey_name' => 'unit test key',
-            'user_id' => API_KEY_TEST_USER_ID,
-            'created_on' => '2026-08-01 12:00:00',
-            'duration' => 30,
-            'expired_on' => '2026-09-01 12:00:00',
-            'key_type' => 'api_key',
-        ]);
+        expect($stored)
+            ->toBe([
+                'auth_key' => $row['auth_key'],
+                'apikey_secret' => 'ut-secret',
+                'apikey_name' => 'unit test key',
+                'user_id' => API_KEY_TEST_USER_ID,
+                'created_on' => '2026-08-01 12:00:00',
+                'duration' => 30,
+                'expired_on' => '2026-09-01 12:00:00',
+                'key_type' => 'api_key',
+            ]);
     } finally {
         apiKeyTestDelete($conn, $row['auth_key']);
     }
@@ -104,7 +104,8 @@ test('countByAuthKeyAndUser() counts only rows matching both the auth key and th
 
         expect($repo->countByAuthKeyAndUser($row['auth_key'], API_KEY_TEST_USER_ID))->toBe(1)
             ->and($repo->countByAuthKeyAndUser($row['auth_key'], 999999))->toBe(0)
-            ->and($repo->countByAuthKeyAndUser('nonexistent-key', API_KEY_TEST_USER_ID))->toBe(0);
+            ->and($repo->countByAuthKeyAndUser('nonexistent-key', API_KEY_TEST_USER_ID))
+            ->toBe(0);
     } finally {
         apiKeyTestDelete($conn, $row['auth_key']);
     }
@@ -127,11 +128,12 @@ test('revoke() sets revoked_on and leaves every other column untouched', functio
             ->setParameter('authKey', $row['auth_key'])
             ->fetchAssociative();
 
-        expect($stored)->toBe([
-            'revoked_on' => '2026-08-05 10:00:00',
-            'apikey_name' => 'unit test key',
-            'duration' => 30,
-        ]);
+        expect($stored)
+            ->toBe([
+                'revoked_on' => '2026-08-05 10:00:00',
+                'apikey_name' => 'unit test key',
+                'duration' => 30,
+            ]);
     } finally {
         apiKeyTestDelete($conn, $row['auth_key']);
     }
@@ -183,7 +185,8 @@ test('updateName() renames only the row matching both the auth key and the user'
             ->setParameter('authKey', $row['auth_key'])
             ->fetchOne();
 
-        expect($name)->toBe('renamed key');
+        expect($name)
+            ->toBe('renamed key');
     } finally {
         apiKeyTestDelete($conn, $row['auth_key']);
     }
@@ -229,7 +232,8 @@ test('updateName() accepts null to clear the name', function (): void {
             ->setParameter('authKey', $row['auth_key'])
             ->fetchOne();
 
-        expect($name)->toBeNull();
+        expect($name)
+            ->toBeNull();
     } finally {
         apiKeyTestDelete($conn, $row['auth_key']);
     }
@@ -275,7 +279,8 @@ test('updateLastNotifiedOn() records when the near-expiration email was sent', f
             ->setParameter('authKey', $row['auth_key'])
             ->fetchOne();
 
-        expect($lastNotifiedOn)->toBe('2026-08-06 08:00:00');
+        expect($lastNotifiedOn)
+            ->toBe('2026-08-06 08:00:00');
     } finally {
         apiKeyTestDelete($conn, $row['auth_key']);
     }
@@ -283,8 +288,12 @@ test('updateLastNotifiedOn() records when the near-expiration email was sent', f
 
 test('findByUser() returns only api_key-typed rows for that user, not auth_key-typed (login) rows', function (): void {
     $conn = DbConnection::build();
-    $apiRow = apiKeyTestRow(['key_type' => 'api_key']);
-    $loginRow = apiKeyTestRow(['key_type' => 'auth_key']);
+    $apiRow = apiKeyTestRow([
+        'key_type' => 'api_key',
+    ]);
+    $loginRow = apiKeyTestRow([
+        'key_type' => 'auth_key',
+    ]);
 
     try {
         $repo = apiKeyTestRepo();
@@ -294,8 +303,10 @@ test('findByUser() returns only api_key-typed rows for that user, not auth_key-t
         $found = $repo->findByUser(API_KEY_TEST_USER_ID);
         $foundAuthKeys = array_map(static fn ($k) => $k->authKey, $found);
 
-        expect($foundAuthKeys)->toContain($apiRow['auth_key'])
-            ->and($foundAuthKeys)->not->toContain($loginRow['auth_key'])
+        expect($foundAuthKeys)
+            ->toContain($apiRow['auth_key'])
+            ->and($foundAuthKeys)
+            ->not->toContain($loginRow['auth_key'])
             // Not just duck-typed by a same-named property -- proves
             // findByUser() really maps through ApiKey::fromEntity(),
             // not the raw UserAuthKeyEntity (which also happens to

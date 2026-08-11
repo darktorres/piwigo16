@@ -10,14 +10,16 @@ use Piwigo\Core\ServerTiming;
 test('all is empty before anything starts', function (): void {
     $timing = new ServerTiming();
 
-    expect($timing->all())->toBe([]);
+    expect($timing->all())
+        ->toBe([]);
 });
 
 test('a started-but-not-stopped timing does not appear in all()', function (): void {
     $timing = new ServerTiming();
     $timing->start('db');
 
-    expect($timing->all())->toBe([]);
+    expect($timing->all())
+        ->toBe([]);
 });
 
 test('stop records a non-negative duration under the started name', function (): void {
@@ -25,7 +27,8 @@ test('stop records a non-negative duration under the started name', function ():
     $timing->start('db');
     $timing->stop('db');
 
-    expect($timing->all())->toHaveKey('db');
+    expect($timing->all())
+        ->toHaveKey('db');
     expect($timing->all()['db'])->toBeGreaterThanOrEqual(0.0);
 });
 
@@ -70,15 +73,18 @@ test('stop() scales elapsed seconds to milliseconds by exactly 1000, not a nearb
 
     $duration = $timing->all()['op'];
 
-    expect($duration)->toBeGreaterThanOrEqual(120_000.0)
-        ->and($duration)->toBeLessThan(120_100.0);
+    expect($duration)
+        ->toBeGreaterThanOrEqual(120_000.0)
+        ->and($duration)
+        ->toBeLessThan(120_100.0);
 });
 
 test('stop on a name that was never started is a no-op', function (): void {
     $timing = new ServerTiming();
     $timing->stop('never-started');
 
-    expect($timing->all())->toBe([]);
+    expect($timing->all())
+        ->toBe([]);
 });
 
 test('multiple names are tracked independently', function (): void {
@@ -88,7 +94,8 @@ test('multiple names are tracked independently', function (): void {
     $timing->stop('db');
     $timing->stop('render');
 
-    expect(array_keys($timing->all()))->toBe(['db', 'render']);
+    expect(array_keys($timing->all()))
+        ->toBe(['db', 'render']);
 });
 
 test('reset clears all recorded timings', function (): void {
@@ -98,7 +105,8 @@ test('reset clears all recorded timings', function (): void {
 
     $timing->reset();
 
-    expect($timing->all())->toBe([]);
+    expect($timing->all())
+        ->toBe([]);
 });
 
 test('start accepts an already-captured timestamp instead of capturing its own', function (): void {

@@ -11,11 +11,12 @@ test('toArray nests every counter under metadata_result', function (): void {
         errors: 2,
     );
 
-    expect($context->toArray())->toBe([
-        'metadata_result' => [
-            'NB_ELEMENTS_DONE' => 10,
-            'NB_ELEMENTS_CANDIDATES' => 12,
-            'NB_ERRORS' => 2,
-        ],
-    ]);
+    expect($context->toArray())
+        ->toBe([
+            'metadata_result' => [
+                'NB_ELEMENTS_DONE' => 10,
+                'NB_ELEMENTS_CANDIDATES' => 12,
+                'NB_ERRORS' => 2,
+            ],
+        ]);
 });

@@ -4,39 +4,39 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Integration;
 
-use Override;
-use LogicException;
-use Piwigo\Tests\Support\HtmlServiceTestFactory;
-use Piwigo\Url\RootPathOverride;
-use Piwigo\Tests\Support\UrlServiceTestFactory;
-use Piwigo\Core\ProcessCache;
-use Piwigo\Tests\Support\LangTestFactory;
-use Piwigo\Tests\Support\TemplateTestFactory;
-use Error;
 use Doctrine\DBAL\Connection;
+use Error;
+use LogicException;
+use Override;
 use Piwigo\Category\CategoryDefaultRenderer;
-use Piwigo\Common\Enum\Section;
 use Piwigo\Comment\CommentEntity;
 use Piwigo\Comment\CommentRepository;
-use Piwigo\Config\CurrentConfig;
-use Piwigo\Tests\Support\CurrentConfigTestFactory;
+use Piwigo\Common\Enum\Section;
 use Piwigo\Config\ConfigLoader;
 use Piwigo\Config\ConfigService;
-use Piwigo\Tests\Support\CurrentPathsTestFactory;
+use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\Kernel;
-use Piwigo\Tests\Support\PageStateTestFactory;
+use Piwigo\Core\ProcessCache;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Event\Location\LocIndexThumbnailsSelection;
 use Piwigo\Image\ImageEntity;
 use Piwigo\Image\ImageRepository;
-use Piwigo\Tests\Support\ImageStdParamsTestFactory;
 use Piwigo\PluginConfig\EventDispatcher;
-use Piwigo\Tests\Support\EventDispatcherTestFactory;
 use Piwigo\Session\SessionEntity;
 use Piwigo\Session\SessionService;
 use Piwigo\Template\Template;
+use Piwigo\Tests\Support\CurrentConfigTestFactory;
+use Piwigo\Tests\Support\CurrentPathsTestFactory;
 use Piwigo\Tests\Support\CurrentUserTestFactory;
+use Piwigo\Tests\Support\EventDispatcherTestFactory;
+use Piwigo\Tests\Support\HtmlServiceTestFactory;
+use Piwigo\Tests\Support\ImageStdParamsTestFactory;
+use Piwigo\Tests\Support\LangTestFactory;
+use Piwigo\Tests\Support\PageStateTestFactory;
+use Piwigo\Tests\Support\TemplateTestFactory;
+use Piwigo\Tests\Support\UrlServiceTestFactory;
+use Piwigo\Url\RootPathOverride;
 use Piwigo\Users\User;
 
 /**
@@ -130,15 +130,18 @@ final class CategoryDefaultRendererTest extends IntegrationTestCase
     {
         // Restore the fixture's real hit=0 for id=3 in case a test mutated
         // it via setImageHit() below.
-        $this->conn->executeStatement('UPDATE ' . 'images' . ' SET hit = 0 WHERE id = 3');
+        $this->conn->executeStatement('UPDATE images SET hit = 0 WHERE id = 3');
         parent::tearDown();
     }
 
     private function setImageHit(int $imageId, int $hit): void
     {
         $this->conn->executeStatement(
-            'UPDATE ' . 'images' . ' SET hit = :hit WHERE id = :id',
-            ['hit' => $hit, 'id' => $imageId]
+            'UPDATE images SET hit = :hit WHERE id = :id',
+            [
+                'hit' => $hit,
+                'id' => $imageId,
+            ]
         );
     }
 
@@ -170,7 +173,7 @@ final class CategoryDefaultRendererTest extends IntegrationTestCase
         return is_string($vars) ? $vars : '';
     }
 
-    public function test_render_orders_thumbnails_by_rank_not_by_the_ids_own_numeric_order(): void
+    public function testRenderOrdersThumbnailsByRankNotByTheIdsOwnNumericOrder(): void
     {
         $this->seedUser(showNbHits: false, showNbComments: false);
 
@@ -191,7 +194,7 @@ final class CategoryDefaultRendererTest extends IntegrationTestCase
         self::assertTrue($posPhoto1 < $posPhoto2, 'Photo 1 (rank 1) must render before Photo 2 (rank 2)');
     }
 
-    public function test_render_returns_the_slideshow_url_for_the_first_ranked_picture(): void
+    public function testRenderReturnsTheSlideshowUrlForTheFirstRankedPicture(): void
     {
         $this->seedUser(showNbHits: false, showNbComments: false);
         $urlService = UrlServiceTestFactory::build();
@@ -204,14 +207,19 @@ final class CategoryDefaultRendererTest extends IntegrationTestCase
         // this proves the renderer threads through the *correct* picture
         // (id 3, file fixture-photo-3.jpg), not a mixed-up start/first item.
         $expected = $urlService->addUrlParams(
-            $urlService->duplicatePictureUrl(['image_id' => 3, 'image_file' => 'fixture-photo-3.jpg'], ['start']),
-            ['slideshow' => '']
+            $urlService->duplicatePictureUrl([
+                'image_id' => 3,
+                'image_file' => 'fixture-photo-3.jpg',
+            ], ['start']),
+            [
+                'slideshow' => '',
+            ]
         );
 
         self::assertSame($expected, $slideshowUrl);
     }
 
-    public function test_render_returns_null_and_renders_no_thumbnails_when_the_selection_is_empty(): void
+    public function testRenderReturnsNullAndRendersNoThumbnailsWhenTheSelectionIsEmpty(): void
     {
         $this->seedUser(showNbHits: true, showNbComments: false);
 
@@ -226,7 +234,7 @@ final class CategoryDefaultRendererTest extends IntegrationTestCase
         }
     }
 
-    public function test_render_prefixes_the_name_with_the_rating_score_for_the_best_rated_section(): void
+    public function testRenderPrefixesTheNameWithTheRatingScoreForTheBestRatedSection(): void
     {
         $this->seedUser(showNbHits: false, showNbComments: false);
 
@@ -237,7 +245,7 @@ final class CategoryDefaultRendererTest extends IntegrationTestCase
         self::assertStringContainsString('(5) Photo 3', $html);
     }
 
-    public function test_render_prefixes_the_name_with_the_hit_count_for_most_visited_when_show_nb_hits_is_disabled(): void
+    public function testRenderPrefixesTheNameWithTheHitCountForMostVisitedWhenShowNbHitsIsDisabled(): void
     {
         $this->seedUser(showNbHits: false, showNbComments: false);
 
@@ -254,7 +262,7 @@ final class CategoryDefaultRendererTest extends IntegrationTestCase
         self::assertStringContainsString('(17) Photo 3', $html);
     }
 
-    public function test_render_does_not_prefix_the_name_for_most_visited_when_show_nb_hits_is_enabled(): void
+    public function testRenderDoesNotPrefixTheNameForMostVisitedWhenShowNbHitsIsEnabled(): void
     {
         $this->seedUser(showNbHits: true, showNbComments: false);
         // Same distinct, nonzero hit count as the disabled-path test above,
@@ -276,7 +284,7 @@ final class CategoryDefaultRendererTest extends IntegrationTestCase
         self::assertStringContainsString('17 hits', $html);
     }
 
-    public function test_render_throws_when_a_loc_index_thumbnails_selection_handler_returns_something_other_than_a_loc_index_thumbnails_selection_instance(): void
+    public function testRenderThrowsWhenALocIndexThumbnailsSelectionHandlerReturnsSomethingOtherThanALocIndexThumbnailsSelectionInstance(): void
     {
         // addEventHandler(), not addTypedHandler() -- a real plugin
         // handler is untyped from PHPStan's perspective, and this test
@@ -295,7 +303,7 @@ final class CategoryDefaultRendererTest extends IntegrationTestCase
         }
     }
 
-    public function test_render_shows_the_validated_comment_count_when_show_nb_comments_is_enabled(): void
+    public function testRenderShowsTheValidatedCommentCountWhenShowNbCommentsIsEnabled(): void
     {
         $this->seedUser(showNbHits: false, showNbComments: true);
 

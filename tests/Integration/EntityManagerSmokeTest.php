@@ -4,12 +4,12 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Integration;
 
-use Override;
-use LogicException;
 use Doctrine\ORM\EntityManagerInterface;
-use Piwigo\Config\CurrentConfig;
+use LogicException;
+use Override;
 use Piwigo\Config\ConfigEntry;
 use Piwigo\Config\ConfigLoader;
+use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\Container;
 use Piwigo\Core\Kernel;
 
@@ -54,7 +54,7 @@ final class EntityManagerSmokeTest extends IntegrationTestCase
         parent::tearDown();
     }
 
-    public function test_container_resolved_entity_manager_maps_config_entry_correctly(): void
+    public function testContainerResolvedEntityManagerMapsConfigEntryCorrectly(): void
     {
         $container = Container::build();
         $em = $container->get(EntityManagerInterface::class);
@@ -65,7 +65,7 @@ final class EntityManagerSmokeTest extends IntegrationTestCase
         self::assertSame(['param'], $metadata->getIdentifierFieldNames());
     }
 
-    public function test_container_resolved_entity_manager_persist_flush_remove_round_trip(): void
+    public function testContainerResolvedEntityManagerPersistFlushRemoveRoundTrip(): void
     {
         $container = Container::build();
         $em = $container->get(EntityManagerInterface::class);

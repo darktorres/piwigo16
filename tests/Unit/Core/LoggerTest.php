@@ -63,13 +63,18 @@ test('accepts severity as a string code, converting it to the matching level con
     // code correctly filters out the info() call, the mutant lets it
     // through too.
     $dir = $this->root . '/string-severity-dir';
-    $logger = new Logger(['directory' => $dir, 'filename' => 'x.txt', 'severity' => 'ERROR']);
+    $logger = new Logger([
+        'directory' => $dir,
+        'filename' => 'x.txt',
+        'severity' => 'ERROR',
+    ]);
 
     $logger->info('should not appear');
     $logger->error('should appear');
 
     $content = file_get_contents($dir . '/x.txt');
-    expect($content)->not->toBeFalse();
+    expect($content)
+        ->not->toBeFalse();
     assert(is_string($content));
 
     expect($content)
@@ -80,14 +85,19 @@ test('accepts severity as a string code, converting it to the matching level con
 test('constructs a default log_YYYY-MM-DD.txt filename when none is given, creating the directory on first write', function (): void {
     $dir = $this->root . '/fresh-dir';
 
-    $logger = new Logger(['directory' => $dir]);
+    $logger = new Logger([
+        'directory' => $dir,
+    ]);
     $logger->write('hello there');
 
     $expectedFile = $dir . '/log_' . date('Y-m-d') . '.txt';
 
-    expect(is_dir($dir))->toBeTrue()
-        ->and(file_exists($expectedFile))->toBeTrue()
-        ->and(file_get_contents($expectedFile))->toBe('hello there');
+    expect(is_dir($dir))
+        ->toBeTrue()
+        ->and(file_exists($expectedFile))
+        ->toBeTrue()
+        ->and(file_get_contents($expectedFile))
+        ->toBe('hello there');
 });
 
 test('creates a nested log directory recursively, protected with .htaccess and index.htm', function (): void {
@@ -101,10 +111,14 @@ test('creates a nested log directory recursively, protected with .htaccess and i
     // "constructs a default filename" test above never checks for.
     $dir = $this->root . '/a/b/c';
 
-    $logger = new Logger(['directory' => $dir, 'filename' => 'nested.txt']);
+    $logger = new Logger([
+        'directory' => $dir,
+        'filename' => 'nested.txt',
+    ]);
     $logger->write('deep');
 
-    expect(is_dir($dir))->toBeTrue()
+    expect(is_dir($dir))
+        ->toBeTrue()
         ->and(file_exists($dir . '/.htaccess'))->toBeTrue()
         ->and(file_exists($dir . '/index.htm'))->toBeTrue()
         ->and(file_get_contents($dir . '/nested.txt'))->toBe('deep');
@@ -152,12 +166,17 @@ test('treats an explicitly empty filename the same as an omitted one, generating
     // inside it, which throws instead of succeeding. Confirmed live.
     $dir = $this->root . '/empty-filename-dir';
 
-    $logger = new Logger(['directory' => $dir, 'filename' => '']);
+    $logger = new Logger([
+        'directory' => $dir,
+        'filename' => '',
+    ]);
     $logger->write('hi');
 
     $expectedFile = $dir . '/log_' . date('Y-m-d') . '.txt';
-    expect(file_exists($expectedFile))->toBeTrue()
-        ->and(file_get_contents($expectedFile))->toBe('hi');
+    expect(file_exists($expectedFile))
+        ->toBeTrue()
+        ->and(file_get_contents($expectedFile))
+        ->toBe('hi');
 });
 
 test('reads a configured archiveDays and purges on construction when the random check happens to hit', function (): void {
@@ -178,9 +197,14 @@ test('reads a configured archiveDays and purges on construction when the random 
     touch($oldFile, time() - (10 * 86400));
 
     mt_srand(115);
-    new Logger(['directory' => $dir, 'filename' => 'unused.txt', 'archiveDays' => 1]);
+    new Logger([
+        'directory' => $dir,
+        'filename' => 'unused.txt',
+        'archiveDays' => 1,
+    ]);
 
-    expect(file_exists($oldFile))->toBeFalse();
+    expect(file_exists($oldFile))
+        ->toBeFalse();
 });
 
 test('does not purge on construction when archiveDays is configured but the random check misses', function (): void {
@@ -200,9 +224,14 @@ test('does not purge on construction when archiveDays is configured but the rand
     touch($oldFile, time() - (10 * 86400));
 
     mt_srand(1);
-    new Logger(['directory' => $dir, 'filename' => 'unused.txt', 'archiveDays' => 1]);
+    new Logger([
+        'directory' => $dir,
+        'filename' => 'unused.txt',
+        'archiveDays' => 1,
+    ]);
 
-    expect(file_exists($oldFile))->toBeTrue();
+    expect(file_exists($oldFile))
+        ->toBeTrue();
 });
 
 test('throws writefail when the target file already exists but has lost its write permission', function (): void {
@@ -212,7 +241,10 @@ test('throws writefail when the target file already exists but has lost its writ
     file_put_contents($dir . '/' . $filename, 'old content');
     chmod($dir . '/' . $filename, 0o444);
 
-    $logger = new Logger(['directory' => $dir, 'filename' => $filename]);
+    $logger = new Logger([
+        'directory' => $dir,
+        'filename' => $filename,
+    ]);
 
     expect(fn () => $logger->write('new content'))
         ->toThrow(RuntimeException::class, 'The file could not be written to. Check that appropriate permissions have been set.');
@@ -244,7 +276,9 @@ test('write() on a severity-OFF logger still normalizes a never-set directory to
     // path), while the mutant throws a ValueError ("Path must not be
     // empty") instead -- a different exception hierarchy entirely, so
     // asserting RuntimeException specifically distinguishes them.
-    $logger = new Logger(['severity' => Logger::OFF]);
+    $logger = new Logger([
+        'severity' => Logger::OFF,
+    ]);
 
     expect(fn () => $logger->write('bypasses the severity gate'))
         ->toThrow(RuntimeException::class);
@@ -255,7 +289,10 @@ test('throws openfail when fopen cannot create the target file inside a locked d
     mkdir($dir, 0o777, true);
     chmod($dir, 0o555);
 
-    $logger = new Logger(['directory' => $dir, 'filename' => 'unwritable.txt']);
+    $logger = new Logger([
+        'directory' => $dir,
+        'filename' => 'unwritable.txt',
+    ]);
 
     set_error_handler(static fn (): bool => true);
     try {
@@ -277,21 +314,29 @@ test('throws openfail when fopen cannot create the target file inside a locked d
  */
 test('closes the underlying file handle on destruction after a successful write', function (): void {
     $dir = $this->root . '/destruct-dir';
-    $logger = new Logger(['directory' => $dir, 'filename' => 'destruct.txt']);
+    $logger = new Logger([
+        'directory' => $dir,
+        'filename' => 'destruct.txt',
+    ]);
     $logger->write('line');
 
     $prop = new ReflectionProperty(Logger::class, '_fileHandle');
     $handle = $prop->getValue($logger);
-    expect(is_resource($handle))->toBeTrue();
+    expect(is_resource($handle))
+        ->toBeTrue();
 
     unset($logger);
 
-    expect(is_resource($handle))->toBeFalse();
+    expect(is_resource($handle))
+        ->toBeFalse();
 });
 
 test('notice/warn/alert/critical/emergency each write a line tagged with their own level code and message', function (): void {
     $dir = $this->root . '/levels-dir';
-    $logger = new Logger(['directory' => $dir, 'filename' => 'levels.txt']);
+    $logger = new Logger([
+        'directory' => $dir,
+        'filename' => 'levels.txt',
+    ]);
 
     $logger->notice('storage nearing capacity', 'storage');
     $logger->warn('slow query detected', 'db');
@@ -327,18 +372,28 @@ test('formatMessage builds the line with a leading bracket, a newline-prefixed i
     //   line's own content runs directly into whatever the next log
     //   call writes, with no separator.
     $dir = $this->root . '/format-message-dir';
-    $logger = new Logger(['directory' => $dir, 'filename' => 'format.txt']);
+    $logger = new Logger([
+        'directory' => $dir,
+        'filename' => 'format.txt',
+    ]);
 
-    $logger->info('test message', 'cat1', ['key1' => 'value1']);
+    $logger->info('test message', 'cat1', [
+        'key1' => 'value1',
+    ]);
 
     $content = file_get_contents($dir . '/format.txt');
-    expect($content)->not->toBeFalse();
+    expect($content)
+        ->not->toBeFalse();
     assert(is_string($content));
 
-    expect(str_starts_with($content, '['))->toBeTrue()
-        ->and(str_contains($content, '[exec=unkonwn]'))->toBeTrue()
-        ->and(str_contains($content, "test message\n  key1: 'value1'"))->toBeTrue()
-        ->and(str_ends_with($content, "\n"))->toBeTrue();
+    expect(str_starts_with($content, '['))
+        ->toBeTrue()
+        ->and(str_contains($content, '[exec=unkonwn]'))
+        ->toBeTrue()
+        ->and(str_contains($content, "test message\n  key1: 'value1'"))
+        ->toBeTrue()
+        ->and(str_ends_with($content, "\n"))
+        ->toBeTrue();
 });
 
 test('pageState() throws when the container returns an unexpected type for PageState', function (): void {
@@ -358,7 +413,10 @@ test('pageState() throws when the container returns an unexpected type for PageS
     KernelContainerOverride::withWrongTypeFor(
         PageState::class,
         function () use ($dir): void {
-            $logger = new Logger(['directory' => $dir, 'filename' => 'unreachable.txt']);
+            $logger = new Logger([
+                'directory' => $dir,
+                'filename' => 'unreachable.txt',
+            ]);
             $logger->info('anything');
         }
     );
@@ -381,15 +439,22 @@ test('pageState() reuses the container-shared instance once booted, not a fresh 
     $dir = $this->root . '/pagestate-shared-dir';
 
     KernelContainerOverride::with(
-        [PageState::class => $sharedPageState],
+        [
+            PageState::class => $sharedPageState,
+        ],
         function () use ($dir): void {
-            $logger = new Logger(['directory' => $dir, 'filename' => 'shared.txt']);
+            $logger = new Logger([
+                'directory' => $dir,
+                'filename' => 'shared.txt',
+            ]);
             $logger->info('hello');
 
             $content = file_get_contents($dir . '/shared.txt');
-            expect($content)->not->toBeFalse();
+            expect($content)
+                ->not->toBeFalse();
             assert(is_string($content));
-            expect($content)->toContain('[exec=shared-marker-uuid]');
+            expect($content)
+                ->toContain('[exec=shared-marker-uuid]');
         }
     );
 });
@@ -446,7 +511,11 @@ test('getTimestamp computes a real, current sub-second microsecond value, not a 
     // assertions -- otherwise this test would only catch the mutation
     // about half the time it happens to run.
     $dir = $this->root . '/timestamp-dir';
-    $logger = new Logger(['directory' => $dir, 'filename' => 'ts.txt', 'dateFormat' => 'u']);
+    $logger = new Logger([
+        'directory' => $dir,
+        'filename' => 'ts.txt',
+        'dateFormat' => 'u',
+    ]);
 
     // Targets [0.5, 0.9) specifically, not the full [0.5, 1.0): a
     // handful of microseconds of real work happen between this loop
@@ -477,12 +546,14 @@ test('getTimestamp computes a real, current sub-second microsecond value, not a 
     $after = microtime(true);
 
     $content = file_get_contents($dir . '/ts.txt');
-    expect($content)->not->toBeFalse();
+    expect($content)
+        ->not->toBeFalse();
     assert(is_string($content));
 
     preg_match('/\[(.*?)\]/', $content, $matches);
     $loggedRaw = $matches[1] ?? '';
-    expect($loggedRaw)->toMatch('/^\d{6}$/');
+    expect($loggedRaw)
+        ->toMatch('/^\d{6}$/');
 
     $logged = (int) $loggedRaw;
     $afterMicro = (int) round(fmod($after, 1) * 1_000_000);
@@ -490,7 +561,8 @@ test('getTimestamp computes a real, current sub-second microsecond value, not a 
     // consistently under 1ms in this environment; any of the mutations
     // above produce a difference of hundreds of thousands of
     // microseconds or an entirely wrong-shaped string.
-    expect(abs($logged - $afterMicro))->toBeLessThan(50_000);
+    expect(abs($logged - $afterMicro))
+        ->toBeLessThan(50_000);
 });
 
 test('contextToString formats every case var_export() can produce: multiple keys, nested arrays, an empty array, and escaped characters', function (): void {
@@ -535,19 +607,25 @@ test('contextToString formats every case var_export() can produce: multiple keys
     // context and a deeper 3-level-nested one with zero difference
     // either way.
     $dir = $this->root . '/context-dir';
-    $logger = new Logger(['directory' => $dir, 'filename' => 'context.txt']);
+    $logger = new Logger([
+        'directory' => $dir,
+        'filename' => 'context.txt',
+    ]);
 
     $logger->info('msg', 'cat', [
         'first' => 'one',
         'second' => 'two',
-        'nested' => ['inner' => 'val'],
+        'nested' => [
+            'inner' => 'val',
+        ],
         'empty' => [],
         'backslash' => 'a\\b',
         'quote' => "it's",
     ]);
 
     $content = file_get_contents($dir . '/context.txt');
-    expect($content)->not->toBeFalse();
+    expect($content)
+        ->not->toBeFalse();
     assert(is_string($content));
 
     expect($content)
@@ -562,7 +640,8 @@ test('contextToString formats every case var_export() can produce: multiple keys
         // context's own trailing PHP_EOL survives, then gets indented
         // by indent() into a stray blank "  " line before the final
         // newline formatMessage() itself appends -- confirmed live.
-        ->and(str_ends_with($content, "quote: 'it's'\n"))->toBeTrue();
+        ->and(str_ends_with($content, "quote: 'it's'\n"))
+        ->toBeTrue();
 });
 
 test('levelToCode includes the actual unrecognized level in its exception message, not just the level constant name', function (): void {
@@ -578,7 +657,10 @@ test('throws writefail when fwrite itself fails on an already-open handle (e.g. 
     // fwrite() legitimately return false without touching filesystem
     // permissions (which open()'s own is_writable() check would catch
     // earlier instead).
-    $logger = new Logger(['directory' => '/dev', 'filename' => 'full']);
+    $logger = new Logger([
+        'directory' => '/dev',
+        'filename' => 'full',
+    ]);
 
     set_error_handler(static fn (): bool => true);
     try {
@@ -618,13 +700,18 @@ test('purge returns without touching anything when glob() itself fails (e.g. an 
         return true;
     });
     try {
-        $logger = new Logger(['directory' => $dir, 'filename' => 'irrelevant.txt', 'archiveDays' => 1]);
+        $logger = new Logger([
+            'directory' => $dir,
+            'filename' => 'irrelevant.txt',
+            'archiveDays' => 1,
+        ]);
         $logger->purge();
     } finally {
         restore_error_handler();
     }
 
-    expect($unexpectedWarnings)->toBe([]);
+    expect($unexpectedWarnings)
+        ->toBe([]);
 });
 
 test('purge deletes only files older than the archive window, matching the configured glob pattern', function (): void {
@@ -650,9 +737,12 @@ test('purge deletes only files older than the archive window, matching the confi
     ]);
     $logger->purge();
 
-    expect(file_exists($oldFile))->toBeFalse()
-        ->and(file_exists($recentFile))->toBeTrue()
-        ->and(file_exists($otherExtension))->toBeTrue();
+    expect(file_exists($oldFile))
+        ->toBeFalse()
+        ->and(file_exists($recentFile))
+        ->toBeTrue()
+        ->and(file_exists($otherExtension))
+        ->toBeTrue();
 });
 
 test('purge deletes only files exactly at the archive-window boundary, keeping them, not past it', function (): void {
@@ -678,7 +768,8 @@ test('purge deletes only files exactly at the archive-window boundary, keeping t
     ]);
     $logger->purge();
 
-    expect(file_exists($boundaryFile))->toBeTrue();
+    expect(file_exists($boundaryFile))
+        ->toBeTrue();
 });
 
 test('purge deletes a file exactly one second past the archive-window boundary', function (): void {
@@ -705,7 +796,8 @@ test('purge deletes a file exactly one second past the archive-window boundary',
     ]);
     $logger->purge();
 
-    expect(file_exists($pastBoundaryFile))->toBeFalse();
+    expect(file_exists($pastBoundaryFile))
+        ->toBeFalse();
 });
 
 /**
@@ -737,13 +829,17 @@ test('purge(), called directly on a severity-OFF logger, treats a never-normaliz
     $originalCwd = getcwd();
     chdir($dir);
     try {
-        $logger = new Logger(['severity' => Logger::OFF, 'archiveDays' => 1]);
+        $logger = new Logger([
+            'severity' => Logger::OFF,
+            'archiveDays' => 1,
+        ]);
         $logger->purge();
     } finally {
         chdir(is_string($originalCwd) ? $originalCwd : '/');
     }
 
-    expect(file_exists($oldFile))->toBeFalse();
+    expect(file_exists($oldFile))
+        ->toBeFalse();
 });
 
 test('codeToLevel converts every known severity code, case-insensitively, to its matching level constant', function (): void {

@@ -9,7 +9,8 @@ test('toArray flattens save_error', function (): void {
         saveError: 'Some checksums are missing.',
     );
 
-    expect($context->toArray())->toBe([
-        'save_error' => 'Some checksums are missing.',
-    ]);
+    expect($context->toArray())
+        ->toBe([
+            'save_error' => 'Some checksums are missing.',
+        ]);
 });

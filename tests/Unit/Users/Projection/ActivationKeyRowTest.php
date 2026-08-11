@@ -20,9 +20,12 @@ function fullActivationKeyRow(): array
 test('fromRow narrows every column to its real type', function (): void {
     $row = ActivationKeyRow::fromRow(fullActivationKeyRow());
 
-    expect($row->userId)->toEqual(UserId::from(7))
-        ->and($row->status)->toBe('normal')
-        ->and($row->activationKey)->toBe('$2y$10$abcdefghijklmnopqrstuv');
+    expect($row->userId)
+        ->toEqual(UserId::from(7))
+        ->and($row->status)
+        ->toBe('normal')
+        ->and($row->activationKey)
+        ->toBe('$2y$10$abcdefghijklmnopqrstuv');
 });
 
 test('fromRow defaults status/activationKey to empty string when absent, given a valid user_id', function (): void {
@@ -32,9 +35,12 @@ test('fromRow defaults status/activationKey to empty string when absent, given a
 
     $activationKeyRow = ActivationKeyRow::fromRow($row);
 
-    expect($activationKeyRow->userId)->toEqual(UserId::from(7))
-        ->and($activationKeyRow->status)->toBe('')
-        ->and($activationKeyRow->activationKey)->toBe('');
+    expect($activationKeyRow->userId)
+        ->toEqual(UserId::from(7))
+        ->and($activationKeyRow->status)
+        ->toBe('')
+        ->and($activationKeyRow->activationKey)
+        ->toBe('');
 });
 
 test('fromRow throws when user_id is missing', function (): void {

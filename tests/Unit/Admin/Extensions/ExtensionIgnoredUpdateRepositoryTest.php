@@ -85,8 +85,10 @@ test('findIgnoredIdsByType() returns only rows for the requested type', function
 
         $pluginIds = $repo->findIgnoredIdsByType(ExtensionType::Plugin);
 
-        expect($pluginIds)->toContain($pluginId)
-            ->and($pluginIds)->not->toContain($themeId);
+        expect($pluginIds)
+            ->toContain($pluginId)
+            ->and($pluginIds)
+            ->not->toContain($themeId);
     } finally {
         extensionIgnoredTestPurge($conn, ExtensionType::Plugin, $pluginId);
         extensionIgnoredTestPurge($conn, ExtensionType::Theme, $themeId);

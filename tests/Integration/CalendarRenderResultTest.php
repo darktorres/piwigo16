@@ -22,7 +22,7 @@ final class CalendarRenderResultTest extends IntegrationTestCase
      * $chronologyDate swapped (both are list<int|string>, the easiest
      * pair to accidentally transpose) -- would fail this assertion.
      */
-    public function test_constructor_maps_each_argument_to_its_own_property_without_transposition(): void
+    public function testConstructorMapsEachArgumentToItsOwnPropertyWithoutTransposition(): void
     {
         $result = new CalendarRenderResult(
             items: [42, 17, 99],
@@ -45,7 +45,7 @@ final class CalendarRenderResultTest extends IntegrationTestCase
      * style/view straight through -- see that class's own docblock) --
      * both real call sites of the constructor pass empty items/chronologyDate too.
      */
-    public function test_nullable_style_and_view_parameters_accept_null_alongside_empty_lists(): void
+    public function testNullableStyleAndViewParametersAcceptNullAlongsideEmptyLists(): void
     {
         $result = new CalendarRenderResult(
             items: [],
@@ -68,7 +68,7 @@ final class CalendarRenderResultTest extends IntegrationTestCase
      * literal string 'any' (CalendarRenderer's own sanitization only
      * casts non-'any', non-empty tokens to int).
      */
-    public function test_chronology_date_accepts_a_mix_of_int_and_any_string_tokens(): void
+    public function testChronologyDateAcceptsAMixOfIntAndAnyStringTokens(): void
     {
         $result = new CalendarRenderResult(
             items: [1],

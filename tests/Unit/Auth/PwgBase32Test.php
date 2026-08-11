@@ -95,7 +95,7 @@ test('decode rejects a padding count of 6 when those chars are not the true trai
     // === 6) is the only thing that rejects this; without it, rtrim()
     // silently strips the misplaced '=' run per-block and this decodes
     // "successfully" to a wrong value instead of failing.
-    expect(PwgBase32::decode('AB======' . 'ABCDEFGH'))->toBeFalse();
+    expect(PwgBase32::decode('AB======ABCDEFGH'))->toBeFalse();
 });
 
 test('decode rejects a padding count of 1 when that char is not the true trailing block', function (): void {
@@ -103,7 +103,7 @@ test('decode rejects a padding count of 1 when that char is not the true trailin
     // 1 -- 'ABCDEFG=' ends its own (non-final) block in a single '=',
     // followed by a full valid block, so the misplaced pad char would
     // otherwise rtrim() away silently instead of being rejected.
-    expect(PwgBase32::decode('ABCDEFG=' . 'ABCDEFGH'))->toBeFalse();
+    expect(PwgBase32::decode('ABCDEFG=ABCDEFGH'))->toBeFalse();
 });
 
 test('decode a lone padding character returns an empty string', function (): void {

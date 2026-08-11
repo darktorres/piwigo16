@@ -4,17 +4,17 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Integration;
 
-use Override;
-use Piwigo\Core\Kernel;
-use LogicException;
-use Piwigo\Db\EntityManagerFactory;
+use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\Schema\Name\OptionallyQualifiedName;
 use Doctrine\DBAL\Schema\Name\UnqualifiedName;
-use Doctrine\DBAL\Connection;
+use LogicException;
+use Override;
 use Piwigo\Admin\Maintenance\DbMaintenanceRepository;
-use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\ConfigLoader;
+use Piwigo\Config\CurrentConfig;
+use Piwigo\Core\Kernel;
 use Piwigo\Db\DbConnection;
+use Piwigo\Db\EntityManagerFactory;
 
 /**
  * Fixture: history/history_summary/search/
@@ -56,11 +56,13 @@ final class DbMaintenanceRepositoryTest extends IntegrationTestCase
         $this->repo = new DbMaintenanceRepository(EntityManagerFactory::build($this->conn));
     }
 
-    public function test_purge_history_detail_deletes_every_row(): void
+    public function testPurgeHistoryDetailDeletesEveryRow(): void
     {
         $this->conn->createQueryBuilder()
             ->insert('history')
-            ->values(['user_id' => ':userId'])
+            ->values([
+                'user_id' => ':userId',
+            ])
             ->setParameter('userId', 1)
             ->executeStatement();
 
@@ -69,11 +71,13 @@ final class DbMaintenanceRepositoryTest extends IntegrationTestCase
         self::assertSame(0, $this->countRows('history'));
     }
 
-    public function test_purge_history_summary_deletes_every_row(): void
+    public function testPurgeHistorySummaryDeletesEveryRow(): void
     {
         $this->conn->createQueryBuilder()
             ->insert('history_summary')
-            ->values(['year' => ':year'])
+            ->values([
+                'year' => ':year',
+            ])
             ->setParameter('year', 2026)
             ->executeStatement();
 
@@ -82,17 +86,25 @@ final class DbMaintenanceRepositoryTest extends IntegrationTestCase
         self::assertSame(0, $this->countRows('history_summary'));
     }
 
-    public function test_purge_unused_feeds_only_removes_never_checked_feeds(): void
+    public function testPurgeUnusedFeedsOnlyRemovesNeverCheckedFeeds(): void
     {
         $this->conn->createQueryBuilder()
             ->insert('user_feed')
-            ->values(['id' => ':id', 'user_id' => ':userId', 'last_check' => 'NULL'])
+            ->values([
+                'id' => ':id',
+                'user_id' => ':userId',
+                'last_check' => 'NULL',
+            ])
             ->setParameter('id', 'never-checked')
             ->setParameter('userId', 1)
             ->executeStatement();
         $this->conn->createQueryBuilder()
             ->insert('user_feed')
-            ->values(['id' => ':id', 'user_id' => ':userId', 'last_check' => ':lastCheck'])
+            ->values([
+                'id' => ':id',
+                'user_id' => ':userId',
+                'last_check' => ':lastCheck',
+            ])
             ->setParameter('id', 'checked-once')
             ->setParameter('userId', 1)
             ->setParameter('lastCheck', '2026-07-01 00:00:00')
@@ -108,15 +120,17 @@ final class DbMaintenanceRepositoryTest extends IntegrationTestCase
                 ->fetchFirstColumn();
             self::assertSame(['checked-once'], $remaining);
         } finally {
-            $this->conn->executeStatement('DELETE FROM ' . 'user_feed');
+            $this->conn->executeStatement('DELETE FROM user_feed');
         }
     }
 
-    public function test_purge_search_history_deletes_every_row(): void
+    public function testPurgeSearchHistoryDeletesEveryRow(): void
     {
         $this->conn->createQueryBuilder()
             ->insert('search')
-            ->values(['created_by' => ':createdBy'])
+            ->values([
+                'created_by' => ':createdBy',
+            ])
             ->setParameter('createdBy', 1)
             ->executeStatement();
 
@@ -125,13 +139,16 @@ final class DbMaintenanceRepositoryTest extends IntegrationTestCase
         self::assertSame(0, $this->countRows('search'));
     }
 
-    public function test_count_lounge_items_matches_real_rows(): void
+    public function testCountLoungeItemsMatchesRealRows(): void
     {
         self::assertSame(0, $this->repo->countLoungeItems());
 
         $this->conn->createQueryBuilder()
             ->insert('lounge')
-            ->values(['image_id' => ':imageId', 'category_id' => ':categoryId'])
+            ->values([
+                'image_id' => ':imageId',
+                'category_id' => ':categoryId',
+            ])
             ->setParameter('imageId', 1)
             ->setParameter('categoryId', 1)
             ->executeStatement();
@@ -139,11 +156,11 @@ final class DbMaintenanceRepositoryTest extends IntegrationTestCase
         try {
             self::assertSame(1, $this->repo->countLoungeItems());
         } finally {
-            $this->conn->executeStatement('DELETE FROM ' . 'lounge');
+            $this->conn->executeStatement('DELETE FROM lounge');
         }
     }
 
-    public function test_delete_orphan_tags_removes_a_tag_with_no_linked_image_older_than_a_day(): void
+    public function testDeleteOrphanTagsRemovesATagWithNoLinkedImageOlderThanADay(): void
     {
         $this->conn->createQueryBuilder()
             ->insert('tags')
@@ -178,7 +195,7 @@ final class DbMaintenanceRepositoryTest extends IntegrationTestCase
         }
     }
 
-    public function test_delete_orphan_tags_keeps_a_tag_linked_to_an_image(): void
+    public function testDeleteOrphanTagsKeepsATagLinkedToAnImage(): void
     {
         $this->conn->createQueryBuilder()
             ->insert('tags')
@@ -195,7 +212,10 @@ final class DbMaintenanceRepositoryTest extends IntegrationTestCase
 
         $this->conn->createQueryBuilder()
             ->insert('image_tag')
-            ->values(['image_id' => ':imageId', 'tag_id' => ':tagId'])
+            ->values([
+                'image_id' => ':imageId',
+                'tag_id' => ':tagId',
+            ])
             ->setParameter('imageId', 1)
             ->setParameter('tagId', $tagId)
             ->executeStatement();
@@ -225,7 +245,7 @@ final class DbMaintenanceRepositoryTest extends IntegrationTestCase
         }
     }
 
-    public function test_purge_sessions_for_deleted_users_keeps_sessions_for_real_users(): void
+    public function testPurgeSessionsForDeletedUsersKeepsSessionsForRealUsers(): void
     {
         // Fixture already has a real session for user 1, plus however
         // many incidental anonymous/guest sessions (empty `data`, no
@@ -253,11 +273,15 @@ final class DbMaintenanceRepositoryTest extends IntegrationTestCase
         self::assertIsString($realUserSession, 'the real session for user 1 must survive the purge');
     }
 
-    public function test_purge_sessions_for_deleted_users_removes_a_session_for_a_nonexistent_user(): void
+    public function testPurgeSessionsForDeletedUsersRemovesASessionForANonexistentUser(): void
     {
         $this->conn->createQueryBuilder()
             ->insert('sessions')
-            ->values(['id' => ':id', 'data' => ':data', 'expiration' => ':expiration'])
+            ->values([
+                'id' => ':id',
+                'data' => ':data',
+                'expiration' => ':expiration',
+            ])
             ->setParameter('id', 'orphan-session')
             ->setParameter('data', 'pwg_uid|i:999999;')
             ->setParameter('expiration', '2030-01-01 00:00:00')
@@ -292,7 +316,7 @@ final class DbMaintenanceRepositoryTest extends IntegrationTestCase
     // narrowing for `$session['data']` (a raw DBAL row typing as
     // `array<string, mixed>`), not a reachable runtime state.
 
-    public function test_repair_optimize_all_tables_completes_without_throwing(): void
+    public function testRepairOptimizeAllTablesCompletesWithoutThrowing(): void
     {
         // Per this method's own docblock, REPAIR/ALTER .../OPTIMIZE issue
         // no meaningful return value to assert on -- completing without an
@@ -326,12 +350,13 @@ final class DbMaintenanceRepositoryTest extends IntegrationTestCase
      * method's own PK columns feed into) cares about the constraint's
      * real column order, not table column-definition order.
      */
-    public function test_repair_optimize_all_tables_introspection_matches_raw_show_tables_and_create_table(): void
+    public function testRepairOptimizeAllTablesIntrospectionMatchesRawShowTablesAndCreateTable(): void
     {
         $schemaManager = $this->conn->createSchemaManager();
 
         $introspectedTableNames = array_map(
-            static fn (OptionallyQualifiedName $name): string => $name->getUnqualifiedName()->getValue(),
+            static fn (OptionallyQualifiedName $name): string => $name->getUnqualifiedName()
+                ->getValue(),
             $schemaManager->introspectTableNames(),
         );
         sort($introspectedTableNames);
@@ -357,7 +382,8 @@ final class DbMaintenanceRepositoryTest extends IntegrationTestCase
                 OptionallyQualifiedName::unquoted($tableName)
             );
             $introspectedPkColumns = $primaryKey === null ? [] : array_map(
-                static fn (UnqualifiedName $column): string => $column->getIdentifier()->getValue(),
+                static fn (UnqualifiedName $column): string => $column->getIdentifier()
+                    ->getValue(),
                 $primaryKey->getColumnNames(),
             );
 

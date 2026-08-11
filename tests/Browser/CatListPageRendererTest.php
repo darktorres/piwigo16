@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
 
-
 function catListPageCategoryExists(int $categoryId): bool
 {
     $db = H::connect();
@@ -16,7 +15,9 @@ function catListPageCategoryExists(int $categoryId): bool
 
 it('renders the root-level album list', function (): void {
     $page = H::loginAsAdmin($this);
-    $album = H::wsCall($page, 'pwg.categories.add', ['name' => 'Cat List Root Album ' . uniqid()]);
+    $album = H::wsCall($page, 'pwg.categories.add', [
+        'name' => 'Cat List Root Album ' . uniqid(),
+    ]);
     $albumResult = $album['result'] ?? null;
     if (! is_array($albumResult) || ! is_numeric($albumResult['id'] ?? null)) {
         throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($album, true));
@@ -31,13 +32,18 @@ it('renders the root-level album list', function (): void {
 
 it('navigates into a parent album\'s own children list', function (): void {
     $page = H::loginAsAdmin($this);
-    $parent = H::wsCall($page, 'pwg.categories.add', ['name' => 'Cat List Parent ' . uniqid()]);
+    $parent = H::wsCall($page, 'pwg.categories.add', [
+        'name' => 'Cat List Parent ' . uniqid(),
+    ]);
     $parentResult = $parent['result'] ?? null;
     if (! is_array($parentResult) || ! is_numeric($parentResult['id'] ?? null)) {
         throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($parent, true));
     }
     $parentId = (int) $parentResult['id'];
-    $child = H::wsCall($page, 'pwg.categories.add', ['name' => 'Cat List Child ' . uniqid(), 'parent' => (string) $parentId]);
+    $child = H::wsCall($page, 'pwg.categories.add', [
+        'name' => 'Cat List Child ' . uniqid(),
+        'parent' => (string) $parentId,
+    ]);
     $childResult = $child['result'] ?? null;
     $childName = is_array($childResult) && is_string($childResult['name'] ?? null) ? $childResult['name'] : '';
 
@@ -66,7 +72,9 @@ it('creates a new virtual album at the root via submitAdd, and reports success',
 
 it('creates a new virtual album under a parent via submitAdd + parent_id', function (): void {
     $page = H::loginAsAdmin($this);
-    $parent = H::wsCall($page, 'pwg.categories.add', ['name' => 'Cat List Add Parent ' . uniqid()]);
+    $parent = H::wsCall($page, 'pwg.categories.add', [
+        'name' => 'Cat List Add Parent ' . uniqid(),
+    ]);
     $parentResult = $parent['result'] ?? null;
     if (! is_array($parentResult) || ! is_numeric($parentResult['id'] ?? null)) {
         throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($parent, true));
@@ -101,13 +109,16 @@ it('rejects creating a virtual album with an empty name and reports an error', f
 
 it('deletes a virtual album and redirects with a session confirmation message', function (): void {
     $page = H::loginAsAdmin($this);
-    $album = H::wsCall($page, 'pwg.categories.add', ['name' => 'Cat List Delete Me ' . uniqid()]);
+    $album = H::wsCall($page, 'pwg.categories.add', [
+        'name' => 'Cat List Delete Me ' . uniqid(),
+    ]);
     $albumResult = $album['result'] ?? null;
     if (! is_array($albumResult) || ! is_numeric($albumResult['id'] ?? null)) {
         throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($album, true));
     }
     $albumId = (int) $albumResult['id'];
-    expect(catListPageCategoryExists($albumId))->toBeTrue();
+    expect(catListPageCategoryExists($albumId))
+        ->toBeTrue();
 
     $token = H::pwgToken($page);
     $result = H::rawGet($page, '/admin.php?page=cat_list&delete=' . $albumId . '&pwg_token=' . $token);
@@ -116,18 +127,24 @@ it('deletes a virtual album and redirects with a session confirmation message', 
     // header, opaque under fetch(manual), status always 0 (see this
     // suite's own empty_caddie test for the same Fetch API caveat).
     expect($result['status'])->toBe(0);
-    expect(catListPageCategoryExists($albumId))->toBeFalse();
+    expect(catListPageCategoryExists($albumId))
+        ->toBeFalse();
 });
 
 it('deletes a virtual child album and redirects back to its own parent_id listing', function (): void {
     $page = H::loginAsAdmin($this);
-    $parent = H::wsCall($page, 'pwg.categories.add', ['name' => 'Cat List Delete Parent ' . uniqid()]);
+    $parent = H::wsCall($page, 'pwg.categories.add', [
+        'name' => 'Cat List Delete Parent ' . uniqid(),
+    ]);
     $parentResult = $parent['result'] ?? null;
     if (! is_array($parentResult) || ! is_numeric($parentResult['id'] ?? null)) {
         throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($parent, true));
     }
     $parentId = (int) $parentResult['id'];
-    $child = H::wsCall($page, 'pwg.categories.add', ['name' => 'Cat List Delete Child ' . uniqid(), 'parent' => (string) $parentId]);
+    $child = H::wsCall($page, 'pwg.categories.add', [
+        'name' => 'Cat List Delete Child ' . uniqid(),
+        'parent' => (string) $parentId,
+    ]);
     $childResult = $child['result'] ?? null;
     if (! is_array($childResult) || ! is_numeric($childResult['id'] ?? null)) {
         throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($child, true));
@@ -181,7 +198,9 @@ it('deletes a virtual child album and redirects back to its own parent_id listin
             'login' => 'Login',
         ]);
 
-        $statusResponse = $curl(H::baseUrl() . '/ws.php?format=json', ['method' => 'pwg.session.getStatus']);
+        $statusResponse = $curl(H::baseUrl() . '/ws.php?format=json', [
+            'method' => 'pwg.session.getStatus',
+        ]);
         // CURLOPT_HEADER=true prefixes the body with response headers;
         // isolate the JSON payload after the blank-line separator.
         $statusParts = explode("\r\n\r\n", $statusResponse);
@@ -195,8 +214,10 @@ it('deletes a virtual child album and redirects back to its own parent_id listin
 
         $deleteResponse = $curl(H::baseUrl() . '/admin.php?page=cat_list&delete=' . $childId . '&parent_id=' . $parentId . '&pwg_token=' . $token);
 
-        expect($deleteResponse)->toContain('Location:');
-        expect($deleteResponse)->toContain('parent_id=' . $parentId);
+        expect($deleteResponse)
+            ->toContain('Location:');
+        expect($deleteResponse)
+            ->toContain('parent_id=' . $parentId);
     } finally {
         @unlink($cookieJar);
     }
@@ -230,7 +251,9 @@ it('assigns U_SYNC (not U_DELETE) for a non-virtual (real dir) category when syn
 
 it('rejects a delete request without a valid CSRF token', function (): void {
     $page = H::loginAsAdmin($this);
-    $album = H::wsCall($page, 'pwg.categories.add', ['name' => 'Cat List Delete Guard ' . uniqid()]);
+    $album = H::wsCall($page, 'pwg.categories.add', [
+        'name' => 'Cat List Delete Guard ' . uniqid(),
+    ]);
     $albumResult = $album['result'] ?? null;
     if (! is_array($albumResult) || ! is_numeric($albumResult['id'] ?? null)) {
         throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($album, true));
@@ -240,5 +263,6 @@ it('rejects a delete request without a valid CSRF token', function (): void {
     $result = H::rawGet($page, '/admin.php?page=cat_list&delete=' . $albumId);
 
     expect($result['status'])->toBe(400);
-    expect(catListPageCategoryExists($albumId))->toBeTrue();
+    expect(catListPageCategoryExists($albumId))
+        ->toBeTrue();
 });

@@ -2,35 +2,35 @@
 
 declare(strict_types=1);
 
-use Piwigo\Config\ConfigService;
 use Doctrine\ORM\EntityManagerInterface;
 use Piwigo\Activity\ActivityService;
-use Piwigo\Metadata\MetadataService;
-use Piwigo\Image\ImageService;
-use Piwigo\Core\WsContext;
-use Piwigo\Users\CurrentUser;
-use Piwigo\Tests\Support\EventDispatcherTestFactory;
-use Piwigo\Bootstrap\InfrastructureAccessor;
-use Piwigo\Tests\Support\UrlServiceTestFactory;
-use Piwigo\Image\ImageStdParams;
-use Piwigo\Tests\Support\ImageStdParamsTestFactory;
-use Piwigo\Image\DerivativeParams;
-use Piwigo\Image\SizingParams;
 use Piwigo\Admin\Image\ImageProcessingException;
 use Piwigo\Admin\Upload\UploadService;
+use Piwigo\Bootstrap\InfrastructureAccessor;
+use Piwigo\Config\ConfigService;
 use Piwigo\Config\CurrentConfig;
-use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Core\CurrentLogger;
 use Piwigo\Core\Kernel;
-use Piwigo\Tests\Support\LangTestFactory;
 use Piwigo\Core\Logger;
-use Piwigo\Tests\Support\CurrentPathsTestFactory;
-use Piwigo\Tests\Support\DbCredentialsTestFactory;
 use Piwigo\Core\Paths;
+use Piwigo\Core\WsContext;
 use Piwigo\Db\DbConnection;
 use Piwigo\Event\Picture\UploadFile;
+use Piwigo\Image\DerivativeParams;
+use Piwigo\Image\ImageService;
+use Piwigo\Image\ImageStdParams;
+use Piwigo\Image\SizingParams;
+use Piwigo\Metadata\MetadataService;
 use Piwigo\Storage\StorageRegistry;
+use Piwigo\Tests\Support\CurrentConfigTestFactory;
+use Piwigo\Tests\Support\CurrentPathsTestFactory;
+use Piwigo\Tests\Support\DbCredentialsTestFactory;
+use Piwigo\Tests\Support\EventDispatcherTestFactory;
+use Piwigo\Tests\Support\ImageStdParamsTestFactory;
 use Piwigo\Tests\Support\KernelContainerOverride;
+use Piwigo\Tests\Support\LangTestFactory;
+use Piwigo\Tests\Support\UrlServiceTestFactory;
+use Piwigo\Users\CurrentUser;
 
 // Marker-based filesystem safety: this suite writes real files to verify
 // [SEC-21]'s SVG sanitizer, so every path must be scoped to a unique
@@ -41,7 +41,7 @@ use Piwigo\Tests\Support\KernelContainerOverride;
 // passed to it -- so this suite doesn't need to seed it at all.
 function upload_service_test_marker(): string
 {
-    /** @var string|null $marker */
+    /** @var string|null */
     static $marker = null;
 
     return $marker ??= sys_get_temp_dir() . '/piwigo-upload-service-test-' . bin2hex(random_bytes(8));
@@ -136,10 +136,15 @@ beforeEach(function (): void {
     // needResize() reads Piwigo\Core\CurrentLogger directly (an info-level
     // log line on its own "too big" branch) -- OFF severity is a real,
     // side-effect-free logger, never touching the filesystem.
-    upload_service_test_current_logger()->set(new Logger(['severity' => Logger::OFF]));
+    upload_service_test_current_logger()
+        ->set(new Logger([
+            'severity' => Logger::OFF,
+        ]));
 });
 
-/** Recursively removes a directory tree (uploadFile* handlers create a nested pwg_representative/ subdirectory). */
+/**
+ * Recursively removes a directory tree (uploadFile* handlers create a nested pwg_representative/ subdirectory).
+ */
 function upload_service_rrmdir(string $dir): void
 {
     if (! is_dir($dir)) {
@@ -177,7 +182,8 @@ function upload_service_call_sanitize(string $path, ?string $finfoType): void
  */
 function upload_service_test_upload(callable $handler, ?string $representativeExt, string $filePath): ?string
 {
-    return $handler(new UploadFile($representativeExt, $filePath))->representativeExt;
+    return $handler(new UploadFile($representativeExt, $filePath))
+        ->representativeExt;
 }
 
 test('sanitizeSvgIfNeeded strips a <script> element from a genuine SVG', function (): void {
@@ -187,9 +193,12 @@ test('sanitizeSvgIfNeeded strips a <script> element from a genuine SVG', functio
     upload_service_call_sanitize($path, 'image/svg+xml');
 
     $result = file_get_contents($path);
-    expect($result)->not->toContain('<script')
-        ->and($result)->not->toContain('alert(1)')
-        ->and($result)->toContain('circle');
+    expect($result)
+        ->not->toContain('<script')
+        ->and($result)
+        ->not->toContain('alert(1)')
+        ->and($result)
+        ->toContain('circle');
 });
 
 test('sanitizeSvgIfNeeded strips on*= event-handler attributes', function (): void {
@@ -199,9 +208,12 @@ test('sanitizeSvgIfNeeded strips on*= event-handler attributes', function (): vo
     upload_service_call_sanitize($path, 'image/svg');
 
     $result = file_get_contents($path);
-    expect($result)->not->toContain('onload')
-        ->and($result)->not->toContain('onclick')
-        ->and($result)->not->toContain('alert');
+    expect($result)
+        ->not->toContain('onload')
+        ->and($result)
+        ->not->toContain('onclick')
+        ->and($result)
+        ->not->toContain('alert');
 });
 
 test('sanitizeSvgIfNeeded strips a DOCTYPE declaration, not replacing it with some other text', function (): void {
@@ -211,9 +223,12 @@ test('sanitizeSvgIfNeeded strips a DOCTYPE declaration, not replacing it with so
     upload_service_call_sanitize($path, 'image/svg+xml');
 
     $result = file_get_contents($path);
-    expect($result)->not->toContain('DOCTYPE')
-        ->and($result)->not->toContain('DTD')
-        ->and($result)->toContain('circle');
+    expect($result)
+        ->not->toContain('DOCTYPE')
+        ->and($result)
+        ->not->toContain('DTD')
+        ->and($result)
+        ->toContain('circle');
 });
 
 test('sanitizeSvgIfNeeded leaves a clean SVG intact', function (): void {
@@ -224,8 +239,10 @@ test('sanitizeSvgIfNeeded leaves a clean SVG intact', function (): void {
     upload_service_call_sanitize($path, 'image/svg+xml');
 
     $result = file_get_contents($path);
-    expect($result)->toContain('circle')
-        ->and($result)->toContain('fill="red"');
+    expect($result)
+        ->toContain('circle')
+        ->and($result)
+        ->toContain('fill="red"');
 });
 
 test('sanitizeSvgIfNeeded does nothing for a non-SVG MIME type', function (): void {
@@ -234,7 +251,8 @@ test('sanitizeSvgIfNeeded does nothing for a non-SVG MIME type', function (): vo
 
     upload_service_call_sanitize($path, 'image/jpeg');
 
-    expect(file_get_contents($path))->toBe('not-really-a-jpeg-but-that-does-not-matter-here');
+    expect(file_get_contents($path))
+        ->toBe('not-really-a-jpeg-but-that-does-not-matter-here');
 });
 
 test('sanitizeSvgIfNeeded does nothing when finfo type is null', function (): void {
@@ -243,7 +261,8 @@ test('sanitizeSvgIfNeeded does nothing when finfo type is null', function (): vo
 
     upload_service_call_sanitize($path, null);
 
-    expect(file_get_contents($path))->toBe('raw-bytes');
+    expect(file_get_contents($path))
+        ->toBe('raw-bytes');
 });
 
 test('sanitizeSvgIfNeeded leaves malformed XML untouched rather than throwing', function (): void {
@@ -252,7 +271,8 @@ test('sanitizeSvgIfNeeded leaves malformed XML untouched rather than throwing', 
 
     upload_service_call_sanitize($path, 'image/svg+xml');
 
-    expect(file_get_contents($path))->toBe('<svg><unclosed>');
+    expect(file_get_contents($path))
+        ->toBe('<svg><unclosed>');
 });
 
 test('sanitizeSvgIfNeeded returns without modifying anything when the source file cannot be read', function (): void {
@@ -279,22 +299,26 @@ test('sanitizeSvgIfNeeded returns without modifying anything when the source fil
         chmod($path, 0o644);
     }
 
-    expect(file_get_contents($path))->toContain('circle');
+    expect(file_get_contents($path))
+        ->toContain('circle');
 });
 
 test('getUploadFormConfig returns the 4 known fields', function (): void {
-    $config = upload_service_test_make()->getUploadFormConfig();
+    $config = upload_service_test_make()
+        ->getUploadFormConfig();
 
-    expect(array_keys($config))->toBe([
-        'original_resize',
-        'original_resize_maxwidth',
-        'original_resize_maxheight',
-        'original_resize_quality',
-    ]);
+    expect(array_keys($config))
+        ->toBe([
+            'original_resize',
+            'original_resize_maxwidth',
+            'original_resize_maxheight',
+            'original_resize_quality',
+        ]);
 });
 
 test('getUploadFormConfig returns the exact default/min/max/pattern/can_be_null shape for every field', function (): void {
-    $config = upload_service_test_make()->getUploadFormConfig();
+    $config = upload_service_test_make()
+        ->getUploadFormConfig();
 
     expect($config['original_resize'])->toBe([
         'default' => false,
@@ -338,10 +362,12 @@ test('fileUploadErrorMessage maps every UPLOAD_ERR_* constant to a non-empty mes
         UPLOAD_ERR_NO_FILE, UPLOAD_ERR_NO_TMP_DIR, UPLOAD_ERR_CANT_WRITE,
         UPLOAD_ERR_EXTENSION,
     ] as $code) {
-        expect($service->fileUploadErrorMessage($code))->not->toBe('');
+        expect($service->fileUploadErrorMessage($code))
+            ->not->toBe('');
     }
 
-    expect($service->fileUploadErrorMessage(-1))->toBe('Unknown upload error');
+    expect($service->fileUploadErrorMessage(-1))
+        ->toBe('Unknown upload error');
 });
 
 test('fileUploadErrorMessage embeds the real upload_max_filesize value for UPLOAD_ERR_INI_SIZE', function (): void {
@@ -354,13 +380,15 @@ test('fileUploadErrorMessage embeds the real upload_max_filesize value for UPLOA
 test('getIniSize converts a shorthand ini value to bytes', function (): void {
     $service = upload_service_test_make();
 
-    expect($service->getIniSize('memory_limit', true))->not->toBeFalse();
+    expect($service->getIniSize('memory_limit', true))
+        ->not->toBeFalse();
 });
 
 test('getIniSize returns the raw ini value unconverted when in_bytes is false', function (): void {
     $service = upload_service_test_make();
 
-    expect($service->getIniSize('upload_max_filesize', false))->toBe(ini_get('upload_max_filesize'));
+    expect($service->getIniSize('upload_max_filesize', false))
+        ->toBe(ini_get('upload_max_filesize'));
 });
 
 function upload_service_convert_shorthand(string|false $value): int|string|false
@@ -373,11 +401,16 @@ function upload_service_convert_shorthand(string|false $value): int|string|false
 }
 
 test('convertShorthandNotationToBytes multiplies K/M/G suffixes and passes through a bare number', function (): void {
-    expect(upload_service_convert_shorthand('8K'))->toBe(8 * 1024);
-    expect(upload_service_convert_shorthand('8M'))->toBe(8 * 1024 * 1024);
-    expect(upload_service_convert_shorthand('2G'))->toBe(2 * 1024 * 1024 * 1024);
-    expect(upload_service_convert_shorthand('1024'))->toBe('1024');
-    expect(upload_service_convert_shorthand(false))->toBeFalse();
+    expect(upload_service_convert_shorthand('8K'))
+        ->toBe(8 * 1024);
+    expect(upload_service_convert_shorthand('8M'))
+        ->toBe(8 * 1024 * 1024);
+    expect(upload_service_convert_shorthand('2G'))
+        ->toBe(2 * 1024 * 1024 * 1024);
+    expect(upload_service_convert_shorthand('1024'))
+        ->toBe('1024');
+    expect(upload_service_convert_shorthand(false))
+        ->toBeFalse();
 });
 
 function upload_service_is_falsy(mixed $value): bool
@@ -391,10 +424,12 @@ function upload_service_is_falsy(mixed $value): bool
 
 test('isFalsy matches PHP\'s own empty() falsy set exactly, including the ones empty() shares with loose equality traps', function (): void {
     foreach ([null, false, 0, 0.0, '0', '', []] as $falsy) {
-        expect(upload_service_is_falsy($falsy))->toBeTrue();
+        expect(upload_service_is_falsy($falsy))
+            ->toBeTrue();
     }
     foreach (['0.0', ' ', '00', [0], true, 1, -1] as $truthy) {
-        expect(upload_service_is_falsy($truthy))->toBeFalse();
+        expect(upload_service_is_falsy($truthy))
+            ->toBeFalse();
     }
 });
 
@@ -402,11 +437,13 @@ test('isValidImageExtension returns the lowercased, deduplicated picture extensi
     $service = upload_service_test_make();
     $result = $service->isValidImageExtension('JPG');
 
-    expect($result)->toBe(array_unique($result));
+    expect($result)
+        ->toBe(array_unique($result));
     foreach ($result as $extension) {
         expect($extension)->toBe(strtolower($extension));
     }
-    expect($result)->toContain('jpg');
+    expect($result)
+        ->toContain('jpg');
 });
 
 test('isValidImageExtension actually deduplicates case-variant extensions, not just extensions that happen not to collide', function (): void {
@@ -422,8 +459,10 @@ test('isValidImageExtension actually deduplicates case-variant extensions, not j
         $service = upload_service_test_make();
         $result = $service->isValidImageExtension('JPG');
 
-        expect($result)->toHaveCount(2)
-            ->and(array_values($result))->toBe(['jpg', 'png']);
+        expect($result)
+            ->toHaveCount(2)
+            ->and(array_values($result))
+            ->toBe(['jpg', 'png']);
     } finally {
         CurrentConfigTestFactory::get()->pictureExtensions = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
     }
@@ -435,14 +474,16 @@ test('isValidImageExtension returns the lowercased, deduplicated file extensions
         $service = upload_service_test_make();
         $result = $service->isValidImageExtension('PDF');
 
-        expect($result)->toBe(array_unique($result));
+        expect($result)
+            ->toBe(array_unique($result));
         foreach ($result as $extension) {
             expect($extension)->toBe(strtolower($extension));
         }
         // 'pdf' is a CurrentConfig::fileExtensions() default entry but not a
         // CurrentConfig::pictureExtensions() one -- only reachable here
         // through the uploadFormAllTypes()-true branch above.
-        expect($result)->toContain('pdf');
+        expect($result)
+            ->toContain('pdf');
     } finally {
         CurrentConfigTestFactory::get()->uploadFormAllTypes = false;
     }
@@ -483,14 +524,18 @@ test('addUploadError initializes uploads_error when it is missing or not an arra
 
     $service->addUploadError('7', 'boom');
 
-    expect($_SESSION['uploads_error'])->toBe(['7' => ['boom']]);
+    expect($_SESSION['uploads_error'])->toBe([
+        '7' => ['boom'],
+    ]);
 
     // The `! is_array(...)` half of the same guard -- a stray non-array
     // value (e.g. left over from unrelated code) is replaced, not merged
     // into.
     $_SESSION['uploads_error'] = 'not-an-array';
     $service->addUploadError('8', 'also boom');
-    expect($_SESSION['uploads_error'])->toBe(['8' => ['also boom']]);
+    expect($_SESSION['uploads_error'])->toBe([
+        '8' => ['also boom'],
+    ]);
 
     $_SESSION['uploads_error'] = [];
 });
@@ -510,11 +555,14 @@ test('pwgImageInfos reads real width/height/filesize from a generated image', fu
         throw new RuntimeException('filesize failed');
     }
 
-    expect($infos->width)->toBe(37);
-    expect($infos->height)->toBe(21);
+    expect($infos->width)
+        ->toBe(37);
+    expect($infos->height)
+        ->toBe(21);
     // Exact floor(bytes / 1024), not just "some float" -- distinguishes
     // floor() from round()/ceil() and /1024 from *1024.
-    expect($infos->filesize)->toBe(floor($realBytes / 1024));
+    expect($infos->filesize)
+        ->toBe(floor($realBytes / 1024));
 });
 
 test('pwgImageInfos returns null width/height when getimagesize() can\'t read the file, instead of throwing', function (): void {
@@ -527,8 +575,10 @@ test('pwgImageInfos returns null width/height when getimagesize() can\'t read th
     $service = upload_service_test_make();
     $infos = $service->pwgImageInfos($path);
 
-    expect($infos->width)->toBeNull();
-    expect($infos->height)->toBeNull();
+    expect($infos->width)
+        ->toBeNull();
+    expect($infos->height)
+        ->toBeNull();
 });
 
 test('pwgImageInfos throws when filesize() fails for a path that does not exist at all', function (): void {
@@ -567,7 +617,8 @@ test('needResize is false when the image already fits within the max bounds', fu
     }
     imagejpeg($img, $path);
 
-    expect(upload_service_need_resize($path, 200, 200))->toBeFalse();
+    expect(upload_service_need_resize($path, 200, 200))
+        ->toBeFalse();
 });
 
 test('needResize is true when the image exceeds either max bound', function (): void {
@@ -578,7 +629,8 @@ test('needResize is true when the image exceeds either max bound', function (): 
     }
     imagejpeg($img, $path);
 
-    expect(upload_service_need_resize($path, 200, 200))->toBeTrue();
+    expect(upload_service_need_resize($path, 200, 200))
+        ->toBeTrue();
 });
 
 test('needResize is false for a non-picture extension, without even reading the file', function (): void {
@@ -594,7 +646,8 @@ test('needResize is false when getimagesize() cannot decode a picture-extension 
     $path = upload_service_test_marker() . '/broken.jpg';
     file_put_contents($path, 'not a real jpeg at all');
 
-    expect(upload_service_need_resize($path, 100, 100))->toBeFalse();
+    expect(upload_service_need_resize($path, 100, 100))
+        ->toBeFalse();
 });
 
 /**
@@ -645,7 +698,8 @@ test('needResize swaps width/height for a rotated EXIF orientation before compar
     $path = upload_service_test_marker() . '/rotated.jpg';
     file_put_contents($path, upload_service_make_jpeg_with_orientation(6, 50, 200));
 
-    expect(upload_service_need_resize($path, 100, 300))->toBeTrue();
+    expect(upload_service_need_resize($path, 100, 300))
+        ->toBeTrue();
 });
 
 test('needResize fully swaps both width AND height, not just one of them, for a 270-degree rotation', function (): void {
@@ -659,7 +713,8 @@ test('needResize fully swaps both width AND height, not just one of them, for a 
     $path = upload_service_test_marker() . '/rotated-270-both-swapped.jpg';
     file_put_contents($path, upload_service_make_jpeg_with_orientation(6, 50, 200));
 
-    expect(upload_service_need_resize($path, 300, 100))->toBeFalse();
+    expect(upload_service_need_resize($path, 300, 100))
+        ->toBeFalse();
 });
 
 test('needResize also swaps width/height for a 90-degree rotation (EXIF orientation 7/8)', function (): void {
@@ -670,7 +725,8 @@ test('needResize also swaps width/height for a 90-degree rotation (EXIF orientat
     $path = upload_service_test_marker() . '/rotated-90.jpg';
     file_put_contents($path, upload_service_make_jpeg_with_orientation(8, 50, 200));
 
-    expect(upload_service_need_resize($path, 300, 100))->toBeFalse();
+    expect(upload_service_need_resize($path, 300, 100))
+        ->toBeFalse();
 });
 
 test('needResize does not resize when width/height exactly equal the max bounds', function (): void {
@@ -683,7 +739,8 @@ test('needResize does not resize when width/height exactly equal the max bounds'
     }
     imagejpeg($img, $path);
 
-    expect(upload_service_need_resize($path, 200, 100))->toBeFalse();
+    expect(upload_service_need_resize($path, 200, 100))
+        ->toBeFalse();
 });
 
 test('needResize is case-insensitive about the file extension', function (): void {
@@ -694,13 +751,19 @@ test('needResize is case-insensitive about the file extension', function (): voi
     }
     imagejpeg($img, $path);
 
-    expect(upload_service_need_resize($path, 200, 200))->toBeTrue();
+    expect(upload_service_need_resize($path, 200, 200))
+        ->toBeTrue();
 });
 
 test('needResize logs the exact current/max dimensions when a resize is needed', function (): void {
     $logDir = upload_service_test_marker() . '/logs';
     mkdir($logDir, 0o777, true);
-    upload_service_test_current_logger()->set(new Logger(['severity' => Logger::INFO, 'directory' => $logDir, 'filename' => 'needresize.log']));
+    upload_service_test_current_logger()
+        ->set(new Logger([
+            'severity' => Logger::INFO,
+            'directory' => $logDir,
+            'filename' => 'needresize.log',
+        ]));
 
     try {
         $path = upload_service_test_marker() . '/logged-too-big.jpg';
@@ -713,9 +776,12 @@ test('needResize logs the exact current/max dimensions when a resize is needed',
         upload_service_need_resize($path, 200, 20);
 
         $logged = file_get_contents($logDir . '/needresize.log');
-        expect($logged)->toContain($path . ' is too big (current=500x50px Vs max=200x20px)');
+        expect($logged)
+            ->toContain($path . ' is too big (current=500x50px Vs max=200x20px)');
     } finally {
-        upload_service_test_current_logger()->set(new Logger(['severity' => Logger::OFF]));
+        upload_service_test_current_logger()->set(new Logger([
+            'severity' => Logger::OFF,
+        ]));
     }
 });
 
@@ -725,8 +791,10 @@ test('saveUploadFormConfig returns false without writing anything when given no 
     $formErrors = [];
 
     expect($service->saveUploadFormConfig([], $errors, $formErrors))->toBeFalse();
-    expect($errors)->toBe([]);
-    expect($formErrors)->toBe([]);
+    expect($errors)
+        ->toBe([]);
+    expect($formErrors)
+        ->toBe([]);
 });
 
 test('saveUploadFormConfig collects a range error and a field-keyed form_errors marker, without persisting anything', function (): void {
@@ -735,11 +803,18 @@ test('saveUploadFormConfig collects a range error and a field-keyed form_errors 
     $formErrors = [];
 
     // 999999 is far above original_resize_maxwidth's own max (20000).
-    $result = $service->saveUploadFormConfig(['original_resize_maxwidth' => '999999'], $errors, $formErrors);
+    $result = $service->saveUploadFormConfig([
+        'original_resize_maxwidth' => '999999',
+    ], $errors, $formErrors);
 
-    expect($result)->toBeFalse();
-    expect($errors)->toHaveCount(1);
-    expect($formErrors)->toBe(['original_resize_maxwidth' => '[500 .. 20000]']);
+    expect($result)
+        ->toBeFalse();
+    expect($errors)
+        ->toHaveCount(1);
+    expect($formErrors)
+        ->toBe([
+            'original_resize_maxwidth' => '[500 .. 20000]',
+        ]);
 });
 
 test('saveUploadFormConfig keeps processing later fields after skipping an unknown one, not stopping the whole loop', function (): void {
@@ -751,20 +826,26 @@ test('saveUploadFormConfig keeps processing later fields after skipping an unkno
         $formErrors = [];
 
         $result = $service->saveUploadFormConfig(
-            ['totally_unknown_field' => 'whatever', 'original_resize_maxheight' => '1500'],
+            [
+                'totally_unknown_field' => 'whatever',
+                'original_resize_maxheight' => '1500',
+            ],
             $errors,
             $formErrors
         );
 
-        expect($result)->toBeTrue()
-            ->and($errors)->toBe([]);
+        expect($result)
+            ->toBeTrue()
+            ->and($errors)
+            ->toBe([]);
 
         $conn = DbConnection::build();
         try {
-            $stored = $conn->fetchOne('SELECT value FROM ' . 'config' . " WHERE param = 'original_resize_maxheight'");
-            expect($stored)->toBe('1500');
+            $stored = $conn->fetchOne('SELECT value FROM config' . " WHERE param = 'original_resize_maxheight'");
+            expect($stored)
+                ->toBe('1500');
         } finally {
-            $conn->executeStatement("UPDATE " . 'config' . " SET value = '2016' WHERE param = 'original_resize_maxheight'");
+            $conn->executeStatement('UPDATE config' . " SET value = '2016' WHERE param = 'original_resize_maxheight'");
             InfrastructureAccessor::entityManager()->clear();
         }
     } finally {
@@ -785,10 +866,14 @@ test('saveUploadFormConfig rejects a value that only satisfies the pattern check
         $errors = [];
         $formErrors = [];
 
-        $result = $service->saveUploadFormConfig(['original_resize_maxheight' => ' 15000'], $errors, $formErrors);
+        $result = $service->saveUploadFormConfig([
+            'original_resize_maxheight' => ' 15000',
+        ], $errors, $formErrors);
 
-        expect($result)->toBeFalse();
-        expect($errors)->toHaveCount(1);
+        expect($result)
+            ->toBeFalse();
+        expect($errors)
+            ->toHaveCount(1);
     } finally {
         Kernel::reset();
     }
@@ -805,10 +890,14 @@ test('saveUploadFormConfig rejects a below-minimum value that only satisfies the
         $errors = [];
         $formErrors = [];
 
-        $result = $service->saveUploadFormConfig(['original_resize_maxheight' => '100'], $errors, $formErrors);
+        $result = $service->saveUploadFormConfig([
+            'original_resize_maxheight' => '100',
+        ], $errors, $formErrors);
 
-        expect($result)->toBeFalse();
-        expect($errors)->toHaveCount(1);
+        expect($result)
+            ->toBeFalse();
+        expect($errors)
+            ->toHaveCount(1);
     } finally {
         Kernel::reset();
     }
@@ -822,18 +911,26 @@ test('saveUploadFormConfig accepts a value exactly at the min or max boundary', 
 
         $errorsMin = [];
         $formErrorsMin = [];
-        $resultMin = $service->saveUploadFormConfig(['original_resize_maxheight' => '300'], $errorsMin, $formErrorsMin);
-        expect($resultMin)->toBeTrue()
-            ->and($errorsMin)->toBe([]);
+        $resultMin = $service->saveUploadFormConfig([
+            'original_resize_maxheight' => '300',
+        ], $errorsMin, $formErrorsMin);
+        expect($resultMin)
+            ->toBeTrue()
+            ->and($errorsMin)
+            ->toBe([]);
 
         $errorsMax = [];
         $formErrorsMax = [];
-        $resultMax = $service->saveUploadFormConfig(['original_resize_maxheight' => '20000'], $errorsMax, $formErrorsMax);
-        expect($resultMax)->toBeTrue()
-            ->and($errorsMax)->toBe([]);
+        $resultMax = $service->saveUploadFormConfig([
+            'original_resize_maxheight' => '20000',
+        ], $errorsMax, $formErrorsMax);
+        expect($resultMax)
+            ->toBeTrue()
+            ->and($errorsMax)
+            ->toBe([]);
 
         $conn = DbConnection::build();
-        $conn->executeStatement("UPDATE " . 'config' . " SET value = '2016' WHERE param = 'original_resize_maxheight'");
+        $conn->executeStatement('UPDATE config' . " SET value = '2016' WHERE param = 'original_resize_maxheight'");
         InfrastructureAccessor::entityManager()->clear();
     } finally {
         Kernel::reset();
@@ -851,13 +948,17 @@ test('saveUploadFormConfig accepts a real int value without a TypeError, not jus
         $errors = [];
         $formErrors = [];
 
-        $result = $service->saveUploadFormConfig(['original_resize_maxheight' => 1500], $errors, $formErrors);
+        $result = $service->saveUploadFormConfig([
+            'original_resize_maxheight' => 1500,
+        ], $errors, $formErrors);
 
-        expect($result)->toBeTrue()
-            ->and($errors)->toBe([]);
+        expect($result)
+            ->toBeTrue()
+            ->and($errors)
+            ->toBe([]);
 
         $conn = DbConnection::build();
-        $conn->executeStatement("UPDATE " . 'config' . " SET value = '2016' WHERE param = 'original_resize_maxheight'");
+        $conn->executeStatement('UPDATE config' . " SET value = '2016' WHERE param = 'original_resize_maxheight'");
         InfrastructureAccessor::entityManager()->clear();
     } finally {
         Kernel::reset();
@@ -879,11 +980,16 @@ test('saveUploadFormConfig silently skips a field name absent from getUploadForm
         // 'totally_unknown_field' never appears in getUploadFormConfig()'s own
         // 4-key map -- the `continue` on the very first isset() guard, before
         // any min/max/pattern lookup even happens.
-        $result = $service->saveUploadFormConfig(['totally_unknown_field' => 'whatever'], $errors, $formErrors);
+        $result = $service->saveUploadFormConfig([
+            'totally_unknown_field' => 'whatever',
+        ], $errors, $formErrors);
 
-        expect($result)->toBeTrue();
-        expect($errors)->toBe([]);
-        expect($formErrors)->toBe([]);
+        expect($result)
+            ->toBeTrue();
+        expect($errors)
+            ->toBe([]);
+        expect($formErrors)
+            ->toBe([]);
     } finally {
         Kernel::reset();
     }
@@ -900,11 +1006,16 @@ test('saveUploadFormConfig skips a numeric field whose posted value is non-scala
         // is_scalar($value) is false for an array -- hits the "should never
         // actually skip a field in practice" narrowing `continue`, not the
         // pattern/min/max check below it.
-        $result = $service->saveUploadFormConfig(['original_resize_maxwidth' => ['not', 'scalar']], $errors, $formErrors);
+        $result = $service->saveUploadFormConfig([
+            'original_resize_maxwidth' => ['not', 'scalar'],
+        ], $errors, $formErrors);
 
-        expect($result)->toBeTrue();
-        expect($errors)->toBe([]);
-        expect($formErrors)->toBe([]);
+        expect($result)
+            ->toBeTrue();
+        expect($errors)
+            ->toBe([]);
+        expect($formErrors)
+            ->toBe([]);
     } finally {
         Kernel::reset();
     }
@@ -920,17 +1031,22 @@ test('saveUploadFormConfig sets the boolean field true whenever it is present, e
 
         // isset($value) is true for '0' (it's non-null) -- the boolean toggle's
         // own "present at all" semantics, distinct from isFalsy()'s falsy set.
-        $result = $service->saveUploadFormConfig(['original_resize' => '0'], $errors, $formErrors);
+        $result = $service->saveUploadFormConfig([
+            'original_resize' => '0',
+        ], $errors, $formErrors);
 
-        expect($result)->toBeTrue();
-        expect($errors)->toBe([]);
+        expect($result)
+            ->toBeTrue();
+        expect($errors)
+            ->toBe([]);
 
         $conn = DbConnection::build();
         try {
-            $stored = $conn->fetchOne('SELECT value FROM ' . 'config' . " WHERE param = 'original_resize'");
-            expect($stored)->toBe('true');
+            $stored = $conn->fetchOne('SELECT value FROM config' . " WHERE param = 'original_resize'");
+            expect($stored)
+                ->toBe('true');
         } finally {
-            $conn->executeStatement("UPDATE " . 'config' . " SET value = 'false' WHERE param = 'original_resize'");
+            $conn->executeStatement('UPDATE config' . " SET value = 'false' WHERE param = 'original_resize'");
             InfrastructureAccessor::entityManager()->clear();
         }
     } finally {
@@ -949,18 +1065,24 @@ test('saveUploadFormConfig persists a valid in-range numeric field', function ()
         // 1500 is within original_resize_maxheight's [300 .. 20000] range --
         // the (bool) preg_match(...) and $value >= $min and $value <= $max
         // success branch, distinct from the out-of-range test above.
-        $result = $service->saveUploadFormConfig(['original_resize_maxheight' => '1500'], $errors, $formErrors);
+        $result = $service->saveUploadFormConfig([
+            'original_resize_maxheight' => '1500',
+        ], $errors, $formErrors);
 
-        expect($result)->toBeTrue();
-        expect($errors)->toBe([]);
-        expect($formErrors)->toBe([]);
+        expect($result)
+            ->toBeTrue();
+        expect($errors)
+            ->toBe([]);
+        expect($formErrors)
+            ->toBe([]);
 
         $conn = DbConnection::build();
         try {
-            $stored = $conn->fetchOne('SELECT value FROM ' . 'config' . " WHERE param = 'original_resize_maxheight'");
-            expect($stored)->toBe('1500');
+            $stored = $conn->fetchOne('SELECT value FROM config' . " WHERE param = 'original_resize_maxheight'");
+            expect($stored)
+                ->toBe('1500');
         } finally {
-            $conn->executeStatement("UPDATE " . 'config' . " SET value = '2016' WHERE param = 'original_resize_maxheight'");
+            $conn->executeStatement('UPDATE config' . " SET value = '2016' WHERE param = 'original_resize_maxheight'");
             InfrastructureAccessor::entityManager()->clear();
         }
     } finally {
@@ -998,8 +1120,11 @@ test('readyForUploadMessage returns null when the real upload directory exists a
     // KernelContainerOverride::with() rebinds Paths::class for this test's
     // own scope -- CurrentPaths is a pure shim, reading whatever the live
     // container has, not an independently-settable static.
-    KernelContainerOverride::with([Paths::class => Paths::fromRoot($root)], function (): void {
-        expect(upload_service_test_make()->readyForUploadMessage())->toBeNull();
+    KernelContainerOverride::with([
+        Paths::class => Paths::fromRoot($root),
+    ], function (): void {
+        expect(upload_service_test_make()->readyForUploadMessage())
+            ->toBeNull();
     });
 });
 
@@ -1009,7 +1134,9 @@ test('readyForUploadMessage reports a missing-directory message when the parent 
     CurrentConfigTestFactory::get()->uploadDir = 'upload/';
 
     try {
-        KernelContainerOverride::with([Paths::class => Paths::fromRoot($root)], function (): void {
+        KernelContainerOverride::with([
+            Paths::class => Paths::fromRoot($root),
+        ], function (): void {
             expect(upload_service_test_make()->readyForUploadMessage())
                 ->toBe('Create the "upload/" directory at the root of your Piwigo installation');
         });
@@ -1024,15 +1151,19 @@ test('readyForUploadMessage reports a chmod message and fixes an unwritable exis
     chmod($root . 'upload', 0o555);
     CurrentConfigTestFactory::get()->uploadDir = 'upload/';
 
-    KernelContainerOverride::with([Paths::class => Paths::fromRoot($root)], function () use ($root): void {
-        $message = upload_service_test_make()->readyForUploadMessage();
+    KernelContainerOverride::with([
+        Paths::class => Paths::fromRoot($root),
+    ], function () use ($root): void {
+        $message = upload_service_test_make()
+            ->readyForUploadMessage();
 
         // @chmod(0777) inside the method itself is expected to succeed for a
         // directory this test process owns, so the real branch exercised here
         // is the re-check passing -- confirmed by the directory actually
         // ending up writable, not by asserting a specific returned message.
         expect(is_writable($root . 'upload'))->toBeTrue();
-        expect($message)->toBeNull();
+        expect($message)
+            ->toBeNull();
     });
 });
 
@@ -1044,12 +1175,15 @@ function upload_service_prepare_directory(string $directory): void
 
 test('prepareDirectoryStatic creates a missing directory tree', function (): void {
     $dir = upload_service_test_marker() . '/nested/deep/dir';
-    expect(is_dir($dir))->toBeFalse();
+    expect(is_dir($dir))
+        ->toBeFalse();
 
     upload_service_prepare_directory($dir);
 
-    expect(is_dir($dir))->toBeTrue();
-    expect(is_writable($dir))->toBeTrue();
+    expect(is_dir($dir))
+        ->toBeTrue();
+    expect(is_writable($dir))
+        ->toBeTrue();
     // secureDirectory()'s own index.htm write -- confirms that call
     // actually runs, not just the mkdir()/chmod() above.
     expect(file_get_contents($dir . '/index.htm'))->toBe('Not allowed!');
@@ -1062,7 +1196,8 @@ test('prepareDirectoryStatic fixes permissions on an existing unwritable directo
 
     upload_service_prepare_directory($dir);
 
-    expect(is_writable($dir))->toBeTrue();
+    expect(is_writable($dir))
+        ->toBeTrue();
 });
 
 test('prepareDirectoryStatic throws when mkdir() fails under a real unwritable parent directory', function (): void {
@@ -1085,7 +1220,8 @@ test('prepareDirectoryStatic throws when mkdir() fails under a real unwritable p
     try {
         expect(fn () => upload_service_prepare_directory($target))
             ->toThrow(ImageProcessingException::class, 'cannot create directory "' . $target . '"');
-        expect(is_dir($target))->toBeFalse();
+        expect(is_dir($target))
+            ->toBeFalse();
     } finally {
         restore_error_handler();
         chmod($parent, 0o777);
@@ -1208,16 +1344,24 @@ test('uploadFileVideo returns null for a non-matching extension without even att
 test('uploadFileVideo logs the exact file_path/representative_ext it was called with', function (): void {
     $logDir = upload_service_test_marker() . '/video-logs';
     mkdir($logDir, 0o777, true);
-    upload_service_test_current_logger()->set(new Logger(['severity' => Logger::INFO, 'directory' => $logDir, 'filename' => 'video.log']));
+    upload_service_test_current_logger()
+        ->set(new Logger([
+            'severity' => Logger::INFO,
+            'directory' => $logDir,
+            'filename' => 'video.log',
+        ]));
 
     try {
         $path = upload_service_test_marker() . '/whatever.mp4';
         upload_service_test_upload(UploadService::uploadFileVideo(...), 'already-set', $path);
 
         $logged = file_get_contents($logDir . '/video.log');
-        expect($logged)->toContain('uploadFileVideo, $file_path = ' . $path . ', $representative_ext = already-set');
+        expect($logged)
+            ->toContain('uploadFileVideo, $file_path = ' . $path . ', $representative_ext = already-set');
     } finally {
-        upload_service_test_current_logger()->set(new Logger(['severity' => Logger::OFF]));
+        upload_service_test_current_logger()->set(new Logger([
+            'severity' => Logger::OFF,
+        ]));
     }
 });
 
@@ -1240,7 +1384,9 @@ test('the 5 ext_imagick-only handlers return the incoming representative_ext unm
     }
 });
 
-/** @return array{0: int, 1: int} */
+/**
+ * @return array{0: int, 1: int}
+ */
 function upload_service_optimal_dimensions(): array
 {
     $method = new ReflectionMethod(UploadService::class, 'getOptimalDimensionsForRepresentative');
@@ -1273,8 +1419,10 @@ test('getOptimalDimensionsForRepresentative computes the exact 1.5x margin from 
 
         [$w, $h] = upload_service_optimal_dimensions();
 
-        expect($w)->toBe((int) (1234 * 1.5))
-            ->and($h)->toBe((int) (5678 * 1.5));
+        expect($w)
+            ->toBe((int) (1234 * 1.5))
+            ->and($h)
+            ->toBe((int) (5678 * 1.5));
     } finally {
         $typeMapProp->setValue($stdParams, $originalTypeMap);
         $disabledMapProp->setValue($stdParams, $originalDisabledMap);
@@ -1298,8 +1446,10 @@ test('getOptimalDimensionsForRepresentative also reads a disabled-by-default typ
 
         [$w, $h] = upload_service_optimal_dimensions();
 
-        expect($w)->toBe((int) (222 * 1.5))
-            ->and($h)->toBe((int) (444 * 1.5));
+        expect($w)
+            ->toBe((int) (222 * 1.5))
+            ->and($h)
+            ->toBe((int) (444 * 1.5));
     } finally {
         $typeMapProp->setValue($stdParams, $originalTypeMap);
         $disabledMapProp->setValue($stdParams, $originalDisabledMap);
@@ -1319,8 +1469,10 @@ test('getOptimalDimensionsForRepresentative falls back to the exact 2000x2000 sa
 
         [$w, $h] = upload_service_optimal_dimensions();
 
-        expect($w)->toBe(3000)
-            ->and($h)->toBe(3000);
+        expect($w)
+            ->toBe(3000)
+            ->and($h)
+            ->toBe(3000);
     } finally {
         $typeMapProp->setValue($stdParams, $originalTypeMap);
         $disabledMapProp->setValue($stdParams, $originalDisabledMap);
@@ -1330,8 +1482,10 @@ test('getOptimalDimensionsForRepresentative falls back to the exact 2000x2000 sa
 test('getOptimalDimensionsForRepresentative returns a positive width/height pair', function (): void {
     [$w, $h] = upload_service_optimal_dimensions();
 
-    expect($w)->toBeGreaterThan(0);
-    expect($h)->toBeGreaterThan(0);
+    expect($w)
+        ->toBeGreaterThan(0);
+    expect($h)
+        ->toBeGreaterThan(0);
 });
 
 /**
@@ -1373,10 +1527,13 @@ test('uploadFileTiff converts a real TIFF into a representative image via the ex
 
     $result = upload_service_test_upload(UploadService::uploadFileTiff(...), null, $tiff);
 
-    expect($result)->not->toBeNull();
+    expect($result)
+        ->not->toBeNull();
     $representativePath = $dir . '/pwg_representative/photo.' . $result;
-    expect(file_exists($representativePath))->toBeTrue();
-    expect(filesize($representativePath))->toBeGreaterThan(0);
+    expect(file_exists($representativePath))
+        ->toBeTrue();
+    expect(filesize($representativePath))
+        ->toBeGreaterThan(0);
 });
 
 test('uploadFilePdf converts a real PDF into a representative jpg via the ext_imagick CLI', function (): void {
@@ -1388,10 +1545,13 @@ test('uploadFilePdf converts a real PDF into a representative jpg via the ext_im
 
     $result = upload_service_test_upload(UploadService::uploadFilePdf(...), null, $pdf);
 
-    expect($result)->toBe('jpg');
+    expect($result)
+        ->toBe('jpg');
     $representativePath = $dir . '/pwg_representative/document.jpg';
-    expect(file_exists($representativePath))->toBeTrue();
-    expect(filesize($representativePath))->toBeGreaterThan(0);
+    expect(file_exists($representativePath))
+        ->toBeTrue();
+    expect(filesize($representativePath))
+        ->toBeGreaterThan(0);
 });
 
 test('uploadFilePsd converts a real PSD into a representative png via the ext_imagick CLI', function (): void {
@@ -1403,10 +1563,13 @@ test('uploadFilePsd converts a real PSD into a representative png via the ext_im
 
     $result = upload_service_test_upload(UploadService::uploadFilePsd(...), null, $psd);
 
-    expect($result)->toBe('png');
+    expect($result)
+        ->toBe('png');
     $representativePath = $dir . '/pwg_representative/layered.png';
-    expect(file_exists($representativePath))->toBeTrue();
-    expect(filesize($representativePath))->toBeGreaterThan(0);
+    expect(file_exists($representativePath))
+        ->toBeTrue();
+    expect(filesize($representativePath))
+        ->toBeGreaterThan(0);
 });
 
 test('uploadFileEps converts a real EPS into a representative png via the ext_imagick CLI', function (): void {
@@ -1418,10 +1581,13 @@ test('uploadFileEps converts a real EPS into a representative png via the ext_im
 
     $result = upload_service_test_upload(UploadService::uploadFileEps(...), null, $eps);
 
-    expect($result)->toBe('png');
+    expect($result)
+        ->toBe('png');
     $representativePath = $dir . '/pwg_representative/vector.png';
-    expect(file_exists($representativePath))->toBeTrue();
-    expect(filesize($representativePath))->toBeGreaterThan(0);
+    expect(file_exists($representativePath))
+        ->toBeTrue();
+    expect(filesize($representativePath))
+        ->toBeGreaterThan(0);
 });
 
 test('uploadFileTiff appends the -quality 98 flag and converts to jpg when tiffRepresentativeExt is configured to jpg', function (): void {
@@ -1440,10 +1606,13 @@ test('uploadFileTiff appends the -quality 98 flag and converts to jpg when tiffR
 
         $result = upload_service_test_upload(UploadService::uploadFileTiff(...), null, $tiff);
 
-        expect($result)->toBe('jpg');
+        expect($result)
+            ->toBe('jpg');
         $representativePath = $dir . '/pwg_representative/photo-jpgext.jpg';
-        expect(file_exists($representativePath))->toBeTrue();
-        expect(filesize($representativePath))->toBeGreaterThan(0);
+        expect(file_exists($representativePath))
+            ->toBeTrue();
+        expect(filesize($representativePath))
+            ->toBeGreaterThan(0);
     } finally {
         CurrentConfigTestFactory::get()->tiffRepresentativeExt = 'png';
     }
@@ -1484,16 +1653,24 @@ test('uploadFileHeic converts a real image into a representative jpg via the ext
 
     $result = upload_service_test_upload(UploadService::uploadFileHeic(...), null, $heic);
 
-    expect($result)->toBe('jpg');
+    expect($result)
+        ->toBe('jpg');
     $representativePath = $dir . '/pwg_representative/photo.jpg';
-    expect(file_exists($representativePath))->toBeTrue();
-    expect(filesize($representativePath))->toBeGreaterThan(0);
+    expect(file_exists($representativePath))
+        ->toBeTrue();
+    expect(filesize($representativePath))
+        ->toBeGreaterThan(0);
 });
 
 test('uploadFileHeic logs its exact ImageMagick exec string, including the resize/quality flags', function (): void {
     $logDir = upload_service_test_marker() . '/heic-logs';
     mkdir($logDir, 0o777, true);
-    upload_service_test_current_logger()->set(new Logger(['severity' => Logger::INFO, 'directory' => $logDir, 'filename' => 'heic.log']));
+    upload_service_test_current_logger()
+        ->set(new Logger([
+            'severity' => Logger::INFO,
+            'directory' => $logDir,
+            'filename' => 'heic.log',
+        ]));
 
     try {
         $dir = upload_service_test_marker();
@@ -1503,10 +1680,13 @@ test('uploadFileHeic logs its exact ImageMagick exec string, including the resiz
         upload_service_test_upload(UploadService::uploadFileHeic(...), null, $heic);
 
         $logged = file_get_contents($logDir . '/heic.log');
-        expect($logged)->toContain('uploadFileHeic, exec = ')
+        expect($logged)
+            ->toContain('uploadFileHeic, exec = ')
             ->toContain('-sampling-factor 4:2:0 -quality 85 -interlace JPEG -colorspace sRGB -auto-orient +repage -resize "');
     } finally {
-        upload_service_test_current_logger()->set(new Logger(['severity' => Logger::OFF]));
+        upload_service_test_current_logger()->set(new Logger([
+            'severity' => Logger::OFF,
+        ]));
     }
 });
 
@@ -1641,7 +1821,12 @@ test('the 5 ext_imagick handlers reject a real, otherwise-convertible file whose
 test('the 5 ext_imagick handlers log the exact file_path/representative_ext they were called with', function (): void {
     $logDir = upload_service_test_marker() . '/handler-logs';
     mkdir($logDir, 0o777, true);
-    upload_service_test_current_logger()->set(new Logger(['severity' => Logger::INFO, 'directory' => $logDir, 'filename' => 'handlers.log']));
+    upload_service_test_current_logger()
+        ->set(new Logger([
+            'severity' => Logger::INFO,
+            'directory' => $logDir,
+            'filename' => 'handlers.log',
+        ]));
 
     try {
         upload_service_test_upload(UploadService::uploadFilePdf(...), 'pdf-ext', '/whatever/document.pdf');
@@ -1651,13 +1836,16 @@ test('the 5 ext_imagick handlers log the exact file_path/representative_ext they
         upload_service_test_upload(UploadService::uploadFileEps(...), 'eps-ext', '/whatever/vector.eps');
 
         $logged = file_get_contents($logDir . '/handlers.log');
-        expect($logged)->toContain('uploadFilePdf, $file_path = /whatever/document.pdf, $representative_ext = pdf-ext')
+        expect($logged)
+            ->toContain('uploadFilePdf, $file_path = /whatever/document.pdf, $representative_ext = pdf-ext')
             ->toContain('uploadFileHeic, $file_path = /whatever/photo.heic, $representative_ext = heic-ext')
             ->toContain('uploadFileTiff, $file_path = /whatever/photo.tiff, $representative_ext = tiff-ext')
             ->toContain('uploadFilePsd, $file_path = /whatever/layered.psd, $representative_ext = psd-ext')
             ->toContain('uploadFileEps, $file_path = /whatever/vector.eps, $representative_ext = eps-ext');
     } finally {
-        upload_service_test_current_logger()->set(new Logger(['severity' => Logger::OFF]));
+        upload_service_test_current_logger()->set(new Logger([
+            'severity' => Logger::OFF,
+        ]));
     }
 });
 
@@ -1697,5 +1885,6 @@ test('uploadFilePdf actually applies pdfJpgQuality to the generated representati
         throw new RuntimeException('filesize (quality-high.jpg) failed');
     }
 
-    expect($lowSize)->toBeLessThan((int) ($highSize / 2));
+    expect($lowSize)
+        ->toBeLessThan((int) ($highSize / 2));
 });

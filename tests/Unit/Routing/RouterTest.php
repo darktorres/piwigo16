@@ -12,34 +12,48 @@ test('dispatch returns Found with the controller and path args', function (): vo
     $routes = new RouteCollection();
     $routes->add('picture', new Route(
         '/picture/{id}',
-        defaults: ['_controller' => 'Piwigo\\Handler\\PictureHandler'],
+        defaults: [
+            '_controller' => 'Piwigo\\Handler\\PictureHandler',
+        ],
         methods: ['GET'],
     ));
 
-    $result = new Router($routes)->dispatch(new ServerRequest('GET', '/picture/42'));
+    $result = new Router($routes)
+        ->dispatch(new ServerRequest('GET', '/picture/42'));
 
-    expect($result->status)->toBe(RouteMatchStatus::Found);
-    expect($result->handler)->toBe('Piwigo\\Handler\\PictureHandler');
-    expect($result->args)->toBe(['id' => '42']);
+    expect($result->status)
+        ->toBe(RouteMatchStatus::Found);
+    expect($result->handler)
+        ->toBe('Piwigo\\Handler\\PictureHandler');
+    expect($result->args)
+        ->toBe([
+            'id' => '42',
+        ]);
 });
 
 test('dispatch returns NotFound for an unmatched path', function (): void {
-    $result = new Router(new RouteCollection())->dispatch(new ServerRequest('GET', '/nope'));
+    $result = new Router(new RouteCollection())
+        ->dispatch(new ServerRequest('GET', '/nope'));
 
-    expect($result->status)->toBe(RouteMatchStatus::NotFound);
+    expect($result->status)
+        ->toBe(RouteMatchStatus::NotFound);
 });
 
 test('dispatch returns MethodNotAllowed when the path matches but the method does not', function (): void {
     $routes = new RouteCollection();
     $routes->add('picture', new Route(
         '/picture/{id}',
-        defaults: ['_controller' => 'X'],
+        defaults: [
+            '_controller' => 'X',
+        ],
         methods: ['POST'],
     ));
 
-    $result = new Router($routes)->dispatch(new ServerRequest('GET', '/picture/42'));
+    $result = new Router($routes)
+        ->dispatch(new ServerRequest('GET', '/picture/42'));
 
-    expect($result->status)->toBe(RouteMatchStatus::MethodNotAllowed);
+    expect($result->status)
+        ->toBe(RouteMatchStatus::MethodNotAllowed);
 });
 
 test('fromFile loads a RouteCollection from a real file', function (): void {
@@ -47,61 +61,82 @@ test('fromFile loads a RouteCollection from a real file', function (): void {
 
     $result = $router->dispatch(new ServerRequest('GET', '/anything'));
 
-    expect($result->status)->toBe(RouteMatchStatus::NotFound);
+    expect($result->status)
+        ->toBe(RouteMatchStatus::NotFound);
 });
 
 test('dispatch resolves the request context host from a non-empty URI host, not overriding it with the localhost fallback', function (): void {
     $routes = new RouteCollection();
     $routes->add('host_pinned', (new Route(
         '/host-check',
-        defaults: ['_controller' => 'HostPinnedController'],
+        defaults: [
+            '_controller' => 'HostPinnedController',
+        ],
     ))->setHost('example.com'));
 
-    $result = new Router($routes)->dispatch(new ServerRequest('GET', 'http://example.com/host-check'));
+    $result = new Router($routes)
+        ->dispatch(new ServerRequest('GET', 'http://example.com/host-check'));
 
-    expect($result->status)->toBe(RouteMatchStatus::Found);
-    expect($result->handler)->toBe('HostPinnedController');
+    expect($result->status)
+        ->toBe(RouteMatchStatus::Found);
+    expect($result->handler)
+        ->toBe('HostPinnedController');
 });
 
 test('dispatch falls back to "localhost" as the request context host when the URI has no host', function (): void {
     $routes = new RouteCollection();
     $routes->add('host_fallback', (new Route(
         '/host-fallback',
-        defaults: ['_controller' => 'HostFallbackController'],
+        defaults: [
+            '_controller' => 'HostFallbackController',
+        ],
     ))->setHost('localhost'));
 
     // A bare-path URI (no scheme://host authority) leaves Uri::getHost() ''.
-    $result = new Router($routes)->dispatch(new ServerRequest('GET', '/host-fallback'));
+    $result = new Router($routes)
+        ->dispatch(new ServerRequest('GET', '/host-fallback'));
 
-    expect($result->status)->toBe(RouteMatchStatus::Found);
-    expect($result->handler)->toBe('HostFallbackController');
+    expect($result->status)
+        ->toBe(RouteMatchStatus::Found);
+    expect($result->handler)
+        ->toBe('HostFallbackController');
 });
 
 test('dispatch resolves the request context scheme from a non-empty URI scheme, not overriding it with the http fallback', function (): void {
     $routes = new RouteCollection();
     $routes->add('scheme_pinned', (new Route(
         '/scheme-check',
-        defaults: ['_controller' => 'SchemePinnedController'],
+        defaults: [
+            '_controller' => 'SchemePinnedController',
+        ],
     ))->setSchemes(['https']));
 
-    $result = new Router($routes)->dispatch(new ServerRequest('GET', 'https://example.com/scheme-check'));
+    $result = new Router($routes)
+        ->dispatch(new ServerRequest('GET', 'https://example.com/scheme-check'));
 
-    expect($result->status)->toBe(RouteMatchStatus::Found);
-    expect($result->handler)->toBe('SchemePinnedController');
+    expect($result->status)
+        ->toBe(RouteMatchStatus::Found);
+    expect($result->handler)
+        ->toBe('SchemePinnedController');
 });
 
 test('dispatch falls back to "http" as the request context scheme when the URI has no scheme', function (): void {
     $routes = new RouteCollection();
     $routes->add('scheme_fallback', (new Route(
         '/scheme-fallback',
-        defaults: ['_controller' => 'SchemeFallbackController'],
+        defaults: [
+            '_controller' => 'SchemeFallbackController',
+        ],
     ))->setSchemes(['http']));
 
     // A bare-path URI leaves Uri::getScheme() ''.
-    $result = new Router($routes)->dispatch(new ServerRequest('GET', '/scheme-fallback'));
+    $result = new Router($routes)
+        ->dispatch(new ServerRequest('GET', '/scheme-fallback'));
 
-    expect($result->status)->toBe(RouteMatchStatus::Found);
-    expect($result->handler)->toBe('SchemeFallbackController');
+    expect($result->status)
+        ->toBe(RouteMatchStatus::Found);
+    expect($result->handler)
+        ->toBe('SchemeFallbackController');
 });
 
 test('dispatch strips the app mount-point prefix derived from SCRIPT_NAME before matching', function (): void {
@@ -109,29 +144,44 @@ test('dispatch strips the app mount-point prefix derived from SCRIPT_NAME before
     // /piwigo17/about.php, not /about.php -- confirmed via a real
     // live-curl 404 before this fix (Router::pathInfo()'s own docblock).
     $routes = new RouteCollection();
-    $routes->add('about', new Route('/about.php', defaults: ['_controller' => 'AboutController']));
+    $routes->add('about', new Route('/about.php', defaults: [
+        '_controller' => 'AboutController',
+    ]));
 
-    $request = new ServerRequest('GET', '/piwigo17/about.php', serverParams: ['SCRIPT_NAME' => '/piwigo17/about.php']);
-    $result = new Router($routes)->dispatch($request);
+    $request = new ServerRequest('GET', '/piwigo17/about.php', serverParams: [
+        'SCRIPT_NAME' => '/piwigo17/about.php',
+    ]);
+    $result = new Router($routes)
+        ->dispatch($request);
 
-    expect($result->status)->toBe(RouteMatchStatus::Found);
-    expect($result->handler)->toBe('AboutController');
+    expect($result->status)
+        ->toBe(RouteMatchStatus::Found);
+    expect($result->handler)
+        ->toBe('AboutController');
 });
 
 test('dispatch matches unprefixed paths unchanged when the app is mounted at the domain root', function (): void {
     $routes = new RouteCollection();
-    $routes->add('about', new Route('/about.php', defaults: ['_controller' => 'AboutController']));
+    $routes->add('about', new Route('/about.php', defaults: [
+        '_controller' => 'AboutController',
+    ]));
 
-    $request = new ServerRequest('GET', '/about.php', serverParams: ['SCRIPT_NAME' => '/about.php']);
-    $result = new Router($routes)->dispatch($request);
+    $request = new ServerRequest('GET', '/about.php', serverParams: [
+        'SCRIPT_NAME' => '/about.php',
+    ]);
+    $result = new Router($routes)
+        ->dispatch($request);
 
-    expect($result->status)->toBe(RouteMatchStatus::Found);
+    expect($result->status)
+        ->toBe(RouteMatchStatus::Found);
 });
 
 test('dispatch falls back to the raw path when SCRIPT_NAME is absent (e.g. CLI/test requests)', function (): void {
-    $result = new Router(new RouteCollection())->dispatch(new ServerRequest('GET', '/anything'));
+    $result = new Router(new RouteCollection())
+        ->dispatch(new ServerRequest('GET', '/anything'));
 
-    expect($result->status)->toBe(RouteMatchStatus::NotFound);
+    expect($result->status)
+        ->toBe(RouteMatchStatus::NotFound);
 });
 
 test('dispatch matches a wildcard-tail route pattern for both i.php URL styles', function (): void {
@@ -146,21 +196,36 @@ test('dispatch matches a wildcard-tail route pattern for both i.php URL styles',
     $routes = new RouteCollection();
     $routes->add('derivative_image', new Route(
         '/i.php{tail}',
-        defaults: ['_controller' => 'ImageDerivativeController', 'tail' => ''],
-        requirements: ['tail' => '.*'],
+        defaults: [
+            '_controller' => 'ImageDerivativeController',
+            'tail' => '',
+        ],
+        requirements: [
+            'tail' => '.*',
+        ],
     ));
 
-    $bare = new Router($routes)->dispatch(new ServerRequest('GET', '/i.php', serverParams: ['SCRIPT_NAME' => '/i.php']));
-    expect($bare->status)->toBe(RouteMatchStatus::Found);
-    expect($bare->handler)->toBe('ImageDerivativeController');
+    $bare = new Router($routes)
+        ->dispatch(new ServerRequest('GET', '/i.php', serverParams: [
+            'SCRIPT_NAME' => '/i.php',
+        ]));
+    expect($bare->status)
+        ->toBe(RouteMatchStatus::Found);
+    expect($bare->handler)
+        ->toBe('ImageDerivativeController');
 
-    $withPathInfo = new Router($routes)->dispatch(new ServerRequest(
-        'GET',
-        '/i.php/upload/2026/08/01/20260801000000-abc-th.jpg',
-        serverParams: ['SCRIPT_NAME' => '/i.php'],
-    ));
-    expect($withPathInfo->status)->toBe(RouteMatchStatus::Found);
-    expect($withPathInfo->handler)->toBe('ImageDerivativeController');
+    $withPathInfo = new Router($routes)
+        ->dispatch(new ServerRequest(
+            'GET',
+            '/i.php/upload/2026/08/01/20260801000000-abc-th.jpg',
+            serverParams: [
+                'SCRIPT_NAME' => '/i.php',
+            ],
+        ));
+    expect($withPathInfo->status)
+        ->toBe(RouteMatchStatus::Found);
+    expect($withPathInfo->handler)
+        ->toBe('ImageDerivativeController');
 });
 
 test('dispatch strips one extra SCRIPT_NAME directory level per MOUNT_DEPTH_ATTRIBUTE, for an entry point one subdirectory below the app root', function (): void {
@@ -170,17 +235,24 @@ test('dispatch strips one extra SCRIPT_NAME directory level per MOUNT_DEPTH_ATTR
     // by the extra "admin" segment and either 404s or -- worse -- silently
     // matches a different, wrong route.
     $routes = new RouteCollection();
-    $routes->add('admin_popuphelp', new Route('/admin/popuphelp.php', defaults: ['_controller' => 'AdminPopuphelpController']));
+    $routes->add('admin_popuphelp', new Route('/admin/popuphelp.php', defaults: [
+        '_controller' => 'AdminPopuphelpController',
+    ]));
 
     $request = new ServerRequest(
         'GET',
         '/piwigo17/admin/popuphelp.php',
-        serverParams: ['SCRIPT_NAME' => '/piwigo17/admin/popuphelp.php'],
+        serverParams: [
+            'SCRIPT_NAME' => '/piwigo17/admin/popuphelp.php',
+        ],
     )->withAttribute(Router::MOUNT_DEPTH_ATTRIBUTE, 1);
-    $result = new Router($routes)->dispatch($request);
+    $result = new Router($routes)
+        ->dispatch($request);
 
-    expect($result->status)->toBe(RouteMatchStatus::Found);
-    expect($result->handler)->toBe('AdminPopuphelpController');
+    expect($result->status)
+        ->toBe(RouteMatchStatus::Found);
+    expect($result->handler)
+        ->toBe('AdminPopuphelpController');
 });
 
 /**
@@ -205,7 +277,9 @@ test('dispatch strips one extra SCRIPT_NAME directory level per MOUNT_DEPTH_ATTR
  */
 test('dispatch converts backslash-style SCRIPT_NAME separators (as IIS reports them) to forward slashes before deriving the mount prefix', function (): void {
     $routes = new RouteCollection();
-    $routes->add('about', new Route('/about.php', defaults: ['_controller' => 'AboutController']));
+    $routes->add('about', new Route('/about.php', defaults: [
+        '_controller' => 'AboutController',
+    ]));
 
     // The request URI path always uses forward slashes (URL syntax); only
     // SCRIPT_NAME -- an IIS server variable in this scenario -- reports
@@ -215,12 +289,17 @@ test('dispatch converts backslash-style SCRIPT_NAME separators (as IIS reports t
     $request = new ServerRequest(
         'GET',
         '/piwigo17/about.php',
-        serverParams: ['SCRIPT_NAME' => '\\piwigo17\\about.php'],
+        serverParams: [
+            'SCRIPT_NAME' => '\\piwigo17\\about.php',
+        ],
     );
-    $result = new Router($routes)->dispatch($request);
+    $result = new Router($routes)
+        ->dispatch($request);
 
-    expect($result->status)->toBe(RouteMatchStatus::Found);
-    expect($result->handler)->toBe('AboutController');
+    expect($result->status)
+        ->toBe(RouteMatchStatus::Found);
+    expect($result->handler)
+        ->toBe('AboutController');
 });
 
 test('dispatch clamps a negative MOUNT_DEPTH_ATTRIBUTE to 0 instead of skipping the mount-prefix strip entirely', function (): void {
@@ -231,17 +310,24 @@ test('dispatch clamps a negative MOUNT_DEPTH_ATTRIBUTE to 0 instead of skipping 
     // directory) would be treated as the prefix to strip -- consuming the
     // whole path and collapsing it to '/'.
     $routes = new RouteCollection();
-    $routes->add('about', new Route('/about.php', defaults: ['_controller' => 'AboutController']));
+    $routes->add('about', new Route('/about.php', defaults: [
+        '_controller' => 'AboutController',
+    ]));
 
     $request = new ServerRequest(
         'GET',
         '/piwigo17/about.php',
-        serverParams: ['SCRIPT_NAME' => '/piwigo17/about.php'],
+        serverParams: [
+            'SCRIPT_NAME' => '/piwigo17/about.php',
+        ],
     )->withAttribute(Router::MOUNT_DEPTH_ATTRIBUTE, -5);
-    $result = new Router($routes)->dispatch($request);
+    $result = new Router($routes)
+        ->dispatch($request);
 
-    expect($result->status)->toBe(RouteMatchStatus::Found);
-    expect($result->handler)->toBe('AboutController');
+    expect($result->status)
+        ->toBe(RouteMatchStatus::Found);
+    expect($result->handler)
+        ->toBe('AboutController');
 });
 
 /**
@@ -268,13 +354,20 @@ test('dispatch clamps a negative MOUNT_DEPTH_ATTRIBUTE to 0 instead of skipping 
  */
 test('dispatch treats a totally empty SCRIPT_NAME the same as an absent one, matching a root route from a root-path request', function (): void {
     $routes = new RouteCollection();
-    $routes->add('root', new Route('/', defaults: ['_controller' => 'RootController']));
+    $routes->add('root', new Route('/', defaults: [
+        '_controller' => 'RootController',
+    ]));
 
-    $request = new ServerRequest('GET', '', serverParams: ['SCRIPT_NAME' => '']);
-    $result = new Router($routes)->dispatch($request);
+    $request = new ServerRequest('GET', '', serverParams: [
+        'SCRIPT_NAME' => '',
+    ]);
+    $result = new Router($routes)
+        ->dispatch($request);
 
-    expect($result->status)->toBe(RouteMatchStatus::Found);
-    expect($result->handler)->toBe('RootController');
+    expect($result->status)
+        ->toBe(RouteMatchStatus::Found);
+    expect($result->handler)
+        ->toBe('RootController');
 });
 
 /**
@@ -304,17 +397,24 @@ test('dispatch treats a totally empty SCRIPT_NAME the same as an absent one, mat
  */
 test('dispatch treats an explicit MOUNT_DEPTH_ATTRIBUTE of exactly 0 the same as omitting it entirely', function (): void {
     $routes = new RouteCollection();
-    $routes->add('about', new Route('/about.php', defaults: ['_controller' => 'AboutController']));
+    $routes->add('about', new Route('/about.php', defaults: [
+        '_controller' => 'AboutController',
+    ]));
 
     $request = new ServerRequest(
         'GET',
         '/piwigo17/about.php',
-        serverParams: ['SCRIPT_NAME' => '/piwigo17/about.php'],
+        serverParams: [
+            'SCRIPT_NAME' => '/piwigo17/about.php',
+        ],
     )->withAttribute(Router::MOUNT_DEPTH_ATTRIBUTE, 0);
-    $result = new Router($routes)->dispatch($request);
+    $result = new Router($routes)
+        ->dispatch($request);
 
-    expect($result->status)->toBe(RouteMatchStatus::Found);
-    expect($result->handler)->toBe('AboutController');
+    expect($result->status)
+        ->toBe(RouteMatchStatus::Found);
+    expect($result->handler)
+        ->toBe('AboutController');
 });
 
 test('fromFile throws when the required file does not return a RouteCollection', function (): void {
@@ -345,13 +445,20 @@ test('dispatch falls back to the raw path when SCRIPT_NAME is not actually a pre
     // different vhost), so pathInfo() must still fall back to the raw
     // path unchanged rather than mangling it with substr().
     $routes = new RouteCollection();
-    $routes->add('about', new Route('/about.php', defaults: ['_controller' => 'AboutController']));
+    $routes->add('about', new Route('/about.php', defaults: [
+        '_controller' => 'AboutController',
+    ]));
 
-    $request = new ServerRequest('GET', '/about.php', serverParams: ['SCRIPT_NAME' => '/some-other-app/index.php']);
-    $result = new Router($routes)->dispatch($request);
+    $request = new ServerRequest('GET', '/about.php', serverParams: [
+        'SCRIPT_NAME' => '/some-other-app/index.php',
+    ]);
+    $result = new Router($routes)
+        ->dispatch($request);
 
-    expect($result->status)->toBe(RouteMatchStatus::Found);
-    expect($result->handler)->toBe('AboutController');
+    expect($result->status)
+        ->toBe(RouteMatchStatus::Found);
+    expect($result->handler)
+        ->toBe('AboutController');
 });
 
 test('dispatch without MOUNT_DEPTH_ATTRIBUTE set does not match a route one directory below the app root', function (): void {
@@ -362,14 +469,20 @@ test('dispatch without MOUNT_DEPTH_ATTRIBUTE set does not match a route one dire
     // RouteCollection has no "/popuphelp.php"-shaped route to accidentally
     // match, unlike the real config/routes.php).
     $routes = new RouteCollection();
-    $routes->add('admin_popuphelp', new Route('/admin/popuphelp.php', defaults: ['_controller' => 'AdminPopuphelpController']));
+    $routes->add('admin_popuphelp', new Route('/admin/popuphelp.php', defaults: [
+        '_controller' => 'AdminPopuphelpController',
+    ]));
 
     $request = new ServerRequest(
         'GET',
         '/piwigo17/admin/popuphelp.php',
-        serverParams: ['SCRIPT_NAME' => '/piwigo17/admin/popuphelp.php'],
+        serverParams: [
+            'SCRIPT_NAME' => '/piwigo17/admin/popuphelp.php',
+        ],
     );
-    $result = new Router($routes)->dispatch($request);
+    $result = new Router($routes)
+        ->dispatch($request);
 
-    expect($result->status)->toBe(RouteMatchStatus::NotFound);
+    expect($result->status)
+        ->toBe(RouteMatchStatus::NotFound);
 });

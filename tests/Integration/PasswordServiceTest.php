@@ -4,17 +4,17 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Integration;
 
-use Override;
-use Piwigo\Core\Kernel;
-use LogicException;
-use Piwigo\Db\EntityManagerFactory;
 use Doctrine\DBAL\Connection;
+use LogicException;
+use Override;
 use Piwigo\Auth\PasswordRepository;
 use Piwigo\Auth\PasswordService;
-use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\ConfigLoader;
+use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\DeploymentPolicy;
+use Piwigo\Core\Kernel;
 use Piwigo\Db\DbConnection;
+use Piwigo\Db\EntityManagerFactory;
 
 /**
  * PasswordService::hash()/verify()/verifyLegacyPhpass() use native
@@ -77,14 +77,14 @@ final class PasswordServiceTest extends IntegrationTestCase
         $this->service = new PasswordService(new PasswordRepository(EntityManagerFactory::build($this->conn)), new DeploymentPolicy());
     }
 
-    public function test_hash_produces_a_bcrypt_hash(): void
+    public function testHashProducesABcryptHash(): void
     {
         $hash = $this->service->hash('correcthorsebatterystaple');
 
         self::assertStringStartsWith('$2y$', $hash);
     }
 
-    public function test_verify_accepts_its_own_hash_and_rejects_a_wrong_password(): void
+    public function testVerifyAcceptsItsOwnHashAndRejectsAWrongPassword(): void
     {
         $hash = $this->service->hash('hunter2');
 
@@ -92,7 +92,7 @@ final class PasswordServiceTest extends IntegrationTestCase
         self::assertFalse($this->service->verify('wrong', $hash));
     }
 
-    public function test_hash_reads_cost_from_test_mode(): void
+    public function testHashReadsCostFromTestMode(): void
     {
         // pwg_test_mode_is_active() reads the X-Piwigo-Env header
         // (include/env.inc.php); PHP_SAPI is 'cli' here, so it only needs
@@ -106,7 +106,7 @@ final class PasswordServiceTest extends IntegrationTestCase
         self::assertStringStartsWith('$2y$04$', $hash);
     }
 
-    public function test_verify_accepts_a_legacy_phpass_hash_and_rejects_a_wrong_password(): void
+    public function testVerifyAcceptsALegacyPhpassHashAndRejectsAWrongPassword(): void
     {
         // Precomputed with a fixed salt via the (now-removed) vendored
         // phpass library, cross-checked byte-for-byte against
@@ -117,7 +117,7 @@ final class PasswordServiceTest extends IntegrationTestCase
         self::assertFalse($this->service->verify('wrongpassword', $phpassHash));
     }
 
-    public function test_verify_accepts_a_legacy_phpass_hash_without_touching_the_db(): void
+    public function testVerifyAcceptsALegacyPhpassHashWithoutTouchingTheDb(): void
     {
         // No $userId passed: verify()'s `$userId === null` branch returns
         // true immediately, before reaching the rehash write.
@@ -126,7 +126,7 @@ final class PasswordServiceTest extends IntegrationTestCase
         self::assertTrue($this->service->verify('legacyPhpassPassw0rd!', $phpassHash));
     }
 
-    public function test_verify_rehashes_a_legacy_phpass_hash_when_a_user_id_is_given(): void
+    public function testVerifyRehashesALegacyPhpassHashWhenAUserIdIsGiven(): void
     {
         $phpassHash = '$P$5testsalt/.6ES3kLR5L.kwZkBtHpD/';
 
@@ -146,17 +146,17 @@ final class PasswordServiceTest extends IntegrationTestCase
 
         // Restore the fixture row for later tests in this run.
         $this->conn->executeStatement(
-            'UPDATE ' . 'users' . " SET password = '\$2y\$04\$xGZfKCZNROjaLMYm0nOuKugaMf/IEPCzJsuk9lpjDwZrK.RZLusGy' WHERE id = 3"
+            'UPDATE users' . " SET password = '\$2y\$04\$xGZfKCZNROjaLMYm0nOuKugaMf/IEPCzJsuk9lpjDwZrK.RZLusGy' WHERE id = 3"
         );
     }
 
-    public function test_verify_legacy_phpass_rejects_malformed_hashes(): void
+    public function testVerifyLegacyPhpassRejectsMalformedHashes(): void
     {
         self::assertFalse($this->service->verifyLegacyPhpass('anything', 'not-a-phpass-hash'));
         self::assertFalse($this->service->verifyLegacyPhpass('anything', '$2y$04$tooshortforbcryptbutwrongprefix'));
     }
 
-    public function test_verify_legacy_phpass_rejects_a_correctly_sized_hash_with_the_wrong_prefix(): void
+    public function testVerifyLegacyPhpassRejectsACorrectlySizedHashWithTheWrongPrefix(): void
     {
         // Exactly 34 chars (passes the length guard), but the first 3
         // chars are neither '$P$' nor '$H$' -- a distinct rejection branch
@@ -173,7 +173,7 @@ final class PasswordServiceTest extends IntegrationTestCase
         self::assertFalse($this->service->verifyLegacyPhpass('legacyPhpassPassw0rd!', $wrongPrefixHash));
     }
 
-    public function test_verify_legacy_phpass_rejects_a_hash_with_an_out_of_range_cost_factor(): void
+    public function testVerifyLegacyPhpassRejectsAHashWithAnOutOfRangeCostFactor(): void
     {
         // Correct '$P$' prefix and 34-char length, but hash[3] (the cost
         // log2 character) is '.' -- itoa64 index 0, below the 7-30 valid

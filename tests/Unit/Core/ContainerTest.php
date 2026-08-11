@@ -5,7 +5,6 @@ declare(strict_types=1);
 use DI\Definition\Exception\InvalidDefinition;
 use Piwigo\Core\Container;
 use Piwigo\Core\Paths;
-
 use function DI\factory;
 
 test('build returns a ContainerInterface', function (): void {
@@ -27,7 +26,7 @@ test('build honors extraDefinitions overrides', function (): void {
     // Reuses a built-in interface (Countable) rather than a named fixture
     // class, matching tests/Arch/StructuralTest.php's own convention.
     $container = Container::build([
-        Countable::class => factory(static fn (): Countable => new class () implements Countable {
+        Countable::class => factory(static fn (): Countable => new class() implements Countable {
             public function count(): int
             {
                 return 42;
@@ -38,7 +37,8 @@ test('build honors extraDefinitions overrides', function (): void {
     expect($container->has(Countable::class))->toBeTrue();
 
     $countable = $container->get(Countable::class);
-    expect($countable instanceof Countable && $countable->count() === 42)->toBeTrue();
+    expect($countable instanceof Countable && $countable->count() === 42)
+        ->toBeTrue();
 });
 
 test('build without a $paths argument does not register a Paths definition at all', function (): void {

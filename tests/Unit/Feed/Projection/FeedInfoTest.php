@@ -7,8 +7,10 @@ use Piwigo\Feed\Projection\FeedInfo;
 test('constructs with the given user id and a null last check', function (): void {
     $info = new FeedInfo(1, null);
 
-    expect($info->userId)->toBe(1)
-        ->and($info->lastCheck)->toBeNull();
+    expect($info->userId)
+        ->toBe(1)
+        ->and($info->lastCheck)
+        ->toBeNull();
 });
 
 test('constructs with the given user id and last check', function (): void {
@@ -16,6 +18,8 @@ test('constructs with the given user id and last check', function (): void {
 
     $info = new FeedInfo(1, $lastCheck);
 
-    expect($info->userId)->toBe(1)
-        ->and($info->lastCheck)->toBe($lastCheck);
+    expect($info->userId)
+        ->toBe(1)
+        ->and($info->lastCheck)
+        ->toBe($lastCheck);
 });

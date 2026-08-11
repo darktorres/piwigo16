@@ -4,15 +4,15 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Integration;
 
-use Override;
-use Piwigo\Core\Kernel;
 use LogicException;
-use Piwigo\Db\EntityManagerFactory;
+use Override;
 use Piwigo\Admin\Maintenance\DbMaintenanceRepository;
 use Piwigo\Command\MaintenancePurgeHistoryCommand;
-use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\ConfigLoader;
+use Piwigo\Config\CurrentConfig;
+use Piwigo\Core\Kernel;
 use Piwigo\Db\DbConnection;
+use Piwigo\Db\EntityManagerFactory;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Tester\CommandTester;
 
@@ -41,12 +41,14 @@ final class MaintenancePurgeHistoryCommandTest extends IntegrationTestCase
         ConfigLoader::applyEnvOverrides();
     }
 
-    public function test_purges_history_detail_and_summary(): void
+    public function testPurgesHistoryDetailAndSummary(): void
     {
         $conn = DbConnection::build();
         $conn->createQueryBuilder()
             ->insert('history')
-            ->values(['user_id' => ':userId'])
+            ->values([
+                'user_id' => ':userId',
+            ])
             ->setParameter('userId', 1)
             ->executeStatement();
 

@@ -7,14 +7,16 @@ use Piwigo\Url\RootPathOverride;
 test('current returns null before any push', function (): void {
     $rootPathOverride = new RootPathOverride();
 
-    expect($rootPathOverride->current())->toBeNull();
+    expect($rootPathOverride->current())
+        ->toBeNull();
 });
 
 test('push then current returns the pushed path', function (): void {
     $rootPathOverride = new RootPathOverride();
     $rootPathOverride->push('/gallery/');
 
-    expect($rootPathOverride->current())->toBe('/gallery/');
+    expect($rootPathOverride->current())
+        ->toBe('/gallery/');
 });
 
 test('a nested push keeps the outermost path, and current stays set until the matching pop', function (): void {
@@ -24,13 +26,16 @@ test('a nested push keeps the outermost path, and current stays set until the ma
 
     // The 2nd (nested) push does NOT overwrite $path -- only a push from
     // count===0 does.
-    expect($rootPathOverride->current())->toBe('/outer/');
+    expect($rootPathOverride->current())
+        ->toBe('/outer/');
 
     $rootPathOverride->pop();
-    expect($rootPathOverride->current())->toBe('/outer/');
+    expect($rootPathOverride->current())
+        ->toBe('/outer/');
 
     $rootPathOverride->pop();
-    expect($rootPathOverride->current())->toBeNull();
+    expect($rootPathOverride->current())
+        ->toBeNull();
 });
 
 test('pop() on an already-empty stack is a no-op, not a negative count', function (): void {
@@ -43,13 +48,16 @@ test('pop() on an already-empty stack is a no-op, not a negative count', functio
     $rootPathOverride = new RootPathOverride();
     $rootPathOverride->pop();
 
-    expect($rootPathOverride->current())->toBeNull();
+    expect($rootPathOverride->current())
+        ->toBeNull();
 
     $rootPathOverride->push('/after-stray-pop/');
-    expect($rootPathOverride->current())->toBe('/after-stray-pop/');
+    expect($rootPathOverride->current())
+        ->toBe('/after-stray-pop/');
 
     $rootPathOverride->pop();
-    expect($rootPathOverride->current())->toBeNull();
+    expect($rootPathOverride->current())
+        ->toBeNull();
 });
 
 test('reset clears an active override', function (): void {
@@ -58,7 +66,8 @@ test('reset clears an active override', function (): void {
 
     $rootPathOverride->reset();
 
-    expect($rootPathOverride->current())->toBeNull();
+    expect($rootPathOverride->current())
+        ->toBeNull();
 });
 
 test('a fresh push after reset behaves like the very first push, not a nested one', function (): void {
@@ -74,7 +83,8 @@ test('a fresh push after reset behaves like the very first push, not a nested on
 
     $rootPathOverride->push('/after-reset/');
 
-    expect($rootPathOverride->current())->toBe('/after-reset/');
+    expect($rootPathOverride->current())
+        ->toBe('/after-reset/');
 });
 
 test('pop() back to an empty stack clears the stored path, not just the ref count', function (): void {
@@ -90,7 +100,8 @@ test('pop() back to an empty stack clears the stored path, not just the ref coun
 
     $path = new ReflectionClass(RootPathOverride::class)->getProperty('path');
 
-    expect($path->getValue($rootPathOverride))->toBeNull();
+    expect($path->getValue($rootPathOverride))
+        ->toBeNull();
 });
 
 test('current() ignores a stale path once the ref count is back to zero', function (): void {
@@ -106,5 +117,6 @@ test('current() ignores a stale path once the ref count is back to zero', functi
     $path = new ReflectionClass(RootPathOverride::class)->getProperty('path');
     $path->setValue($rootPathOverride, '/leaked/');
 
-    expect($rootPathOverride->current())->toBeNull();
+    expect($rootPathOverride->current())
+        ->toBeNull();
 });

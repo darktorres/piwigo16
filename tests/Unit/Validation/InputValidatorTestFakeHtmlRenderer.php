@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Unit\Validation;
 
-use Override;
 use LogicException;
-use RuntimeException;
+use Override;
 use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\RedirectServiceInterface;
+use RuntimeException;
 
 /**
  * Records whether fatalError() was actually delegated to by

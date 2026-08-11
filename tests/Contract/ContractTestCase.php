@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Contract;
 
+use JsonSchema\Validator;
 use Override;
 use Piwigo\Db\DbConnection;
-use JsonSchema\Validator;
 use Piwigo\Tests\Integration\IntegrationTestCase;
 
 /**
@@ -42,7 +42,7 @@ abstract class ContractTestCase extends IntegrationTestCase
         $this->setUpConnectionFromEnv();
         $this->requireBaseUrl();
 
-        if (!self::$fixtureReady) {
+        if (! self::$fixtureReady) {
             $this->resetDatabase();
             $this->loadFixture(dirname(__DIR__, 2) . '/tests/Fixtures/piwigo-17.0.sql');
             $this->markTestInstalled();
@@ -85,7 +85,9 @@ abstract class ContractTestCase extends IntegrationTestCase
         return $this->callWs($method, $params, $allowPhpWarnings);
     }
 
-    /** Establishes an admin session on the current cookie jar via pwg.session.login. */
+    /**
+     * Establishes an admin session on the current cookie jar via pwg.session.login.
+     */
     protected function loginAsAdmin(): void
     {
         $this->callWs('pwg.session.login', [
@@ -128,7 +130,7 @@ abstract class ContractTestCase extends IntegrationTestCase
         curl_setopt($ch, CURLOPT_POST, true);
         curl_setopt($ch, CURLOPT_USERAGENT, $userAgent);
         curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query([
-            'login'    => '1',
+            'login' => '1',
             'username' => 'fixture_admin',
             'password' => 'fixture_admin',
         ]));
@@ -137,7 +139,7 @@ abstract class ContractTestCase extends IntegrationTestCase
         curl_setopt($ch, CURLOPT_FOLLOWLOCATION, false);
         curl_setopt($ch, CURLOPT_HTTPHEADER, $this->testHeader());
 
-        $body   = curl_exec($ch);
+        $body = curl_exec($ch);
         $status = curl_getinfo($ch, CURLINFO_HTTP_CODE);
         unset($ch);
 
@@ -165,7 +167,7 @@ abstract class ContractTestCase extends IntegrationTestCase
     {
         $status = $this->callWs('pwg.session.getStatus', []);
         $result = $status['result'] ?? null;
-        if (!is_array($result)) {
+        if (! is_array($result)) {
             return '';
         }
 
@@ -190,16 +192,16 @@ abstract class ContractTestCase extends IntegrationTestCase
         $validator = new Validator();
         $validator->validate($subject, $schema);
 
-        if (!$validator->isValid()) {
+        if (! $validator->isValid()) {
             /**
              * justinrainbow/json-schema's BaseConstraint::getErrors() is
              * declared to return plain `array`, but every element is built
              * by addError() with this exact shape (see
              * vendor/justinrainbow/json-schema/src/JsonSchema/Constraints/BaseConstraint.php).
-             * @var list<array{property: string, pointer: string, message: string, constraint: array{name: string, params: array<string, mixed>}, context: int}> $errors
+             * @var list<array{property: string, pointer: string, message: string, constraint: array{name: string, params: array<string, mixed>}, context: int}>
              */
             $errors = $validator->getErrors();
-            $lines  = array_map(
+            $lines = array_map(
                 static fn (array $e): string => sprintf('  [%s] %s', $e['property'], $e['message']),
                 $errors
             );
@@ -226,13 +228,15 @@ abstract class ContractTestCase extends IntegrationTestCase
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
         curl_setopt($ch, CURLOPT_POST, true);
         curl_setopt($ch, CURLOPT_USERAGENT, $userAgent);
-        curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query(array_merge(['method' => $method], $params)));
+        curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query(array_merge([
+            'method' => $method,
+        ], $params)));
         curl_setopt($ch, CURLOPT_COOKIEJAR, $cookieJar);
         curl_setopt($ch, CURLOPT_COOKIEFILE, $cookieJar);
         curl_setopt($ch, CURLOPT_HTTPHEADER, $this->testHeader());
         curl_setopt($ch, CURLOPT_HEADERFUNCTION, self::collectHeaderInto($responseHeaders));
 
-        $body   = curl_exec($ch);
+        $body = curl_exec($ch);
         $status = curl_getinfo($ch, CURLINFO_HTTP_CODE);
         unset($ch); // curl_close() is deprecated in PHP 8.4+
 
@@ -319,7 +323,7 @@ abstract class ContractTestCase extends IntegrationTestCase
             ? 'ON CONFLICT (param) DO UPDATE SET value = EXCLUDED.value'
             : 'ON DUPLICATE KEY UPDATE value = VALUES(value)';
         $conn->executeStatement(
-            'INSERT INTO ' . 'config' . " (param, value) VALUES (?, ?) {$onConflict}",
+            'INSERT INTO config' . " (param, value) VALUES (?, ?) {$onConflict}",
             [$param, $value]
         );
     }
@@ -346,7 +350,9 @@ abstract class ContractTestCase extends IntegrationTestCase
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
         curl_setopt($ch, CURLOPT_POST, true);
         curl_setopt($ch, CURLOPT_USERAGENT, self::USER_AGENT);
-        curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query(array_merge(['method' => $method], $params)));
+        curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query(array_merge([
+            'method' => $method,
+        ], $params)));
         curl_setopt($ch, CURLOPT_COOKIEJAR, $cookieJar);
         curl_setopt($ch, CURLOPT_COOKIEFILE, $cookieJar);
         curl_setopt($ch, CURLOPT_HTTPHEADER, $this->testHeader());

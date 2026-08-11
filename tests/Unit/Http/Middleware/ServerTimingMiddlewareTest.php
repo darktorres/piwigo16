@@ -12,7 +12,7 @@ use Psr\Http\Server\RequestHandlerInterface;
 
 function serverTimingPassthroughHandler(): RequestHandlerInterface
 {
-    return new class implements RequestHandlerInterface {
+    return new class() implements RequestHandlerInterface {
         #[Override]
         public function handle(ServerRequestInterface $request): ResponseInterface
         {
@@ -34,9 +34,11 @@ test('no header when disabled', function (): void {
     $timing->start('boot');
     $timing->stop('boot');
 
-    $response = new ServerTimingMiddleware($timing)->process(new ServerRequest('GET', '/'), serverTimingPassthroughHandler());
+    $response = new ServerTimingMiddleware($timing)
+        ->process(new ServerRequest('GET', '/'), serverTimingPassthroughHandler());
 
-    expect($response->hasHeader('Server-Timing'))->toBeFalse();
+    expect($response->hasHeader('Server-Timing'))
+        ->toBeFalse();
 });
 
 test('no header when explicitly set to an empty string, not just when unset', function (): void {
@@ -49,17 +51,21 @@ test('no header when explicitly set to an empty string, not just when unset', fu
     $timing->start('boot');
     $timing->stop('boot');
 
-    $response = new ServerTimingMiddleware($timing)->process(new ServerRequest('GET', '/'), serverTimingPassthroughHandler());
+    $response = new ServerTimingMiddleware($timing)
+        ->process(new ServerRequest('GET', '/'), serverTimingPassthroughHandler());
 
-    expect($response->hasHeader('Server-Timing'))->toBeFalse();
+    expect($response->hasHeader('Server-Timing'))
+        ->toBeFalse();
 });
 
 test('no header when enabled but nothing was recorded', function (): void {
     putenv('SERVER_TIMING_ENABLED=1');
 
-    $response = new ServerTimingMiddleware(new ServerTiming())->process(new ServerRequest('GET', '/'), serverTimingPassthroughHandler());
+    $response = new ServerTimingMiddleware(new ServerTiming())
+        ->process(new ServerRequest('GET', '/'), serverTimingPassthroughHandler());
 
-    expect($response->hasHeader('Server-Timing'))->toBeFalse();
+    expect($response->hasHeader('Server-Timing'))
+        ->toBeFalse();
 });
 
 test('header lists recorded timings when enabled', function (): void {
@@ -68,7 +74,9 @@ test('header lists recorded timings when enabled', function (): void {
     $timing->start('boot');
     $timing->stop('boot');
 
-    $response = new ServerTimingMiddleware($timing)->process(new ServerRequest('GET', '/'), serverTimingPassthroughHandler());
+    $response = new ServerTimingMiddleware($timing)
+        ->process(new ServerRequest('GET', '/'), serverTimingPassthroughHandler());
 
-    expect($response->getHeaderLine('Server-Timing'))->toStartWith('boot;dur=');
+    expect($response->getHeaderLine('Server-Timing'))
+        ->toStartWith('boot;dur=');
 });

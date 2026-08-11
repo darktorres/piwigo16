@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Integration;
 
-use Override;
 use LogicException;
 use Nyholm\Psr7\ServerRequest;
+use Override;
 use PHPUnit\Framework\TestCase;
 use Piwigo\Bootstrap\RequestPipeline;
 use Piwigo\Core\Kernel;
@@ -50,7 +50,7 @@ final class RequestPipelineTest extends TestCase
         Kernel::reset();
     }
 
-    public function test_handle_returns_404_for_an_unmatched_path(): void
+    public function testHandleReturns404ForAnUnmatchedPath(): void
     {
         Kernel::boot();
 
@@ -59,7 +59,7 @@ final class RequestPipelineTest extends TestCase
         self::assertSame(404, $response->getStatusCode());
     }
 
-    public function test_handle_response_carries_baseline_security_headers(): void
+    public function testHandleResponseCarriesBaselineSecurityHeaders(): void
     {
         Kernel::boot();
 
@@ -68,7 +68,7 @@ final class RequestPipelineTest extends TestCase
         self::assertSame('nosniff', $response->getHeaderLine('X-Content-Type-Options'));
     }
 
-    public function test_handle_throws_when_the_container_returns_an_unexpected_type_for_a_middleware(): void
+    public function testHandleThrowsWhenTheContainerReturnsAnUnexpectedTypeForAMiddleware(): void
     {
         $this->expectException(LogicException::class);
         $this->expectExceptionMessageIsOrContains(

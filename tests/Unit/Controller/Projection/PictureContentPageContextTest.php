@@ -10,15 +10,24 @@ test('toArray flattens every fixed property, and omits U_ORIGINAL/PDF_VIEWER_FIL
         altImg: 'photo.jpg',
         cookiePath: '/piwigo/',
         pdfViewerFilesizeThreshold: null,
-        current: ['id' => 5, 'file' => 'photo.jpg', 'TITLE_ESC' => 'Photo'],
+        current: [
+            'id' => 5,
+            'file' => 'photo.jpg',
+            'TITLE_ESC' => 'Photo',
+        ],
     );
 
     $result = $context->toArray();
 
-    expect($result)->not->toHaveKeys(['U_ORIGINAL', 'PDF_VIEWER_FILESIZE_THRESHOLD'])
+    expect($result)
+        ->not->toHaveKeys(['U_ORIGINAL', 'PDF_VIEWER_FILESIZE_THRESHOLD'])
         ->and($result['ALT_IMG'])->toBe('photo.jpg')
         ->and($result['COOKIE_PATH'])->toBe('/piwigo/')
-        ->and($result['current'])->toBe(['id' => 5, 'file' => 'photo.jpg', 'TITLE_ESC' => 'Photo']);
+        ->and($result['current'])->toBe([
+            'id' => 5,
+            'file' => 'photo.jpg',
+            'TITLE_ESC' => 'Photo',
+        ]);
 });
 
 test('toArray includes U_ORIGINAL when set', function (): void {

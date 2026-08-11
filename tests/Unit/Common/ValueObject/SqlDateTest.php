@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Unit\Common\ValueObject;
 
-use InvalidArgumentException;
 use DateTimeImmutable;
+use InvalidArgumentException;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Piwigo\Common\ValueObject\SqlDate;
@@ -18,19 +18,21 @@ final class SqlDateTest extends TestCase
         self::assertSame('2026-05-18', $d->value);
     }
 
-    /** @return iterable<string, array{string}> */
+    /**
+     * @return iterable<string, array{string}>
+     */
     public static function invalidStrings(): iterable
     {
-        yield 'with time'              => ['2026-05-18 12:34:56'];
-        yield 'feb 30'                 => ['2026-02-30'];
-        yield 'month 13'               => ['2026-13-01'];
-        yield 'day 32'                 => ['2026-05-32'];
-        yield 'wrong separator'        => ['2026/05/18'];
-        yield 'two-digit year'         => ['26-05-18'];
-        yield 'iso week'               => ['2026-W21-1'];
-        yield 'trailing chars'         => ['2026-05-18 UTC'];
-        yield 'empty'                  => [''];
-        yield 'garbage'                => ['not-a-date'];
+        yield 'with time' => ['2026-05-18 12:34:56'];
+        yield 'feb 30' => ['2026-02-30'];
+        yield 'month 13' => ['2026-13-01'];
+        yield 'day 32' => ['2026-05-32'];
+        yield 'wrong separator' => ['2026/05/18'];
+        yield 'two-digit year' => ['26-05-18'];
+        yield 'iso week' => ['2026-W21-1'];
+        yield 'trailing chars' => ['2026-05-18 UTC'];
+        yield 'empty' => [''];
+        yield 'garbage' => ['not-a-date'];
     }
 
     #[DataProvider('invalidStrings')]
@@ -47,14 +49,16 @@ final class SqlDateTest extends TestCase
         self::assertSame('2026-05-18', $d->value);
     }
 
-    /** @return iterable<string, array{mixed}> */
+    /**
+     * @return iterable<string, array{mixed}>
+     */
     public static function tryFromNullCases(): iterable
     {
-        yield 'int'        => [123];
-        yield 'null'       => [null];
-        yield 'array'      => [[]];
-        yield 'feb 30'     => ['2026-02-30'];
-        yield 'garbage'    => ['garbage'];
+        yield 'int' => [123];
+        yield 'null' => [null];
+        yield 'array' => [[]];
+        yield 'feb 30' => ['2026-02-30'];
+        yield 'garbage' => ['garbage'];
     }
 
     #[DataProvider('tryFromNullCases')]
@@ -65,8 +69,8 @@ final class SqlDateTest extends TestCase
 
     public function testFromDateTimeRoundTrips(): void
     {
-        $dt  = new DateTimeImmutable('2026-05-18 12:34:56');
-        $vo  = SqlDate::fromDateTime($dt);
+        $dt = new DateTimeImmutable('2026-05-18 12:34:56');
+        $vo = SqlDate::fromDateTime($dt);
         self::assertSame('2026-05-18', $vo->value);
     }
 

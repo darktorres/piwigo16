@@ -4,28 +4,27 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Integration;
 
-use Override;
-use LogicException;
-use Doctrine\ORM\EntityManagerInterface;
-use Piwigo\Tests\Support\LangTestFactory;
-use Piwigo\Config\DeploymentPolicy;
-use Piwigo\Tests\Support\UrlServiceTestFactory;
 use Doctrine\DBAL\Connection;
+use Doctrine\ORM\EntityManagerInterface;
+use LogicException;
+use Override;
 use Piwigo\Auth\ApiKeyRepository;
 use Piwigo\Auth\ApiKeyService;
-use Piwigo\Auth\Projection\ApiKeySummary;
 use Piwigo\Auth\PasswordRepository;
 use Piwigo\Auth\PasswordService;
+use Piwigo\Auth\Projection\ApiKeySummary;
 use Piwigo\Common\ValueObject\Email;
 use Piwigo\Common\ValueObject\Username;
-use Piwigo\Config\CurrentConfig;
-use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Config\ConfigLoader;
+use Piwigo\Config\DeploymentPolicy;
 use Piwigo\Core\MailerInterface;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Session\SessionEntity;
 use Piwigo\Session\SessionService;
+use Piwigo\Tests\Support\CurrentConfigTestFactory;
+use Piwigo\Tests\Support\LangTestFactory;
+use Piwigo\Tests\Support\UrlServiceTestFactory;
 
 /**
  * Records every mail() call for assertion instead of actually delivering
@@ -36,13 +35,18 @@ use Piwigo\Session\SessionService;
  */
 final class ApiKeyServiceLifecycleTestSpyMailer implements MailerInterface
 {
-    /** @var list<array{to: string|array<int|string, mixed>, args: array<string, mixed>}> */
+    /**
+     * @var list<array{to: string|array<int|string, mixed>, args: array<string, mixed>}>
+     */
     public array $calls = [];
 
     #[Override]
     public function mail(string|array $to, array $args = [], array $tpl = []): bool
     {
-        $this->calls[] = ['to' => $to, 'args' => $args];
+        $this->calls[] = [
+            'to' => $to,
+            'args' => $args,
+        ];
 
         return true;
     }
@@ -104,7 +108,7 @@ final class ApiKeyServiceLifecycleTest extends IntegrationTestCase
         ConfigLoader::applyEnvOverrides();
 
         $this->conn = DbConnection::build();
-        $userId = $this->conn->fetchOne("SELECT id FROM " . 'users' . " WHERE username = 'fixture_admin'");
+        $userId = $this->conn->fetchOne('SELECT id FROM users' . " WHERE username = 'fixture_admin'");
         self::assertIsNumeric($userId);
         $this->userId = $userId;
 
@@ -115,28 +119,28 @@ final class ApiKeyServiceLifecycleTest extends IntegrationTestCase
             new ApiKeyRepository($this->em),
             new PasswordService(new PasswordRepository(EntityManagerFactory::build($this->conn)), new DeploymentPolicy()),
             UrlServiceTestFactory::build(),
-            new SessionService($this->em->getRepository(SessionEntity::class),CurrentConfigTestFactory::get()),
+            new SessionService($this->em->getRepository(SessionEntity::class), CurrentConfigTestFactory::get()),
             CurrentConfigTestFactory::get(),
         );
 
-        $this->conn->executeStatement('DELETE FROM ' . 'user_auth_keys' . " WHERE user_id = ? AND key_type = 'api_key'", [$this->userId]);
+        $this->conn->executeStatement('DELETE FROM user_auth_keys' . " WHERE user_id = ? AND key_type = 'api_key'", [$this->userId]);
     }
 
     #[Override]
     protected function tearDown(): void
     {
-        $this->conn->executeStatement('DELETE FROM ' . 'user_auth_keys' . " WHERE user_id = ? AND key_type = 'api_key'", [$this->userId]);
+        $this->conn->executeStatement('DELETE FROM user_auth_keys' . " WHERE user_id = ? AND key_type = 'api_key'", [$this->userId]);
         parent::tearDown();
     }
 
-    public function test_revoke_returns_a_not_found_message_for_an_unknown_key(): void
+    public function testRevokeReturnsANotFoundMessageForAnUnknownKey(): void
     {
         $result = $this->service->revoke($this->userId, 'pkid-does-not-exist');
 
         self::assertSame('API Key not found', $result);
     }
 
-    public function test_revoke_returns_a_not_found_message_when_the_key_belongs_to_a_different_user(): void
+    public function testRevokeReturnsANotFoundMessageWhenTheKeyBelongsToADifferentUser(): void
     {
         $created = $this->service->create($this->userId, 30, 'Owned By Admin');
 
@@ -148,14 +152,14 @@ final class ApiKeyServiceLifecycleTest extends IntegrationTestCase
         self::assertSame('API Key not found', $result);
     }
 
-    public function test_edit_returns_a_not_found_message_for_an_unknown_key(): void
+    public function testEditReturnsANotFoundMessageForAnUnknownKey(): void
     {
         $result = $this->service->edit($this->userId, 'pkid-does-not-exist', 'New Name');
 
         self::assertSame('API Key not found', $result);
     }
 
-    public function test_edit_returns_true_and_persists_the_new_name_for_a_real_key(): void
+    public function testEditReturnsTrueAndPersistsTheNewNameForARealKey(): void
     {
         $created = $this->service->create($this->userId, 30, 'Original Name');
 
@@ -168,14 +172,14 @@ final class ApiKeyServiceLifecycleTest extends IntegrationTestCase
         self::assertSame('Renamed Key', $available[0]->apikeyName);
     }
 
-    public function test_get_reports_an_hours_only_expiration_message_for_a_key_expiring_within_the_same_day(): void
+    public function testGetReportsAnHoursOnlyExpirationMessageForAKeyExpiringWithinTheSameDay(): void
     {
         $created = $this->service->create($this->userId, 30, 'Hours Left Key');
         // PIWIGO_TEST_NOW freezes Env::now() at 2026-08-01 00:00:00 -- 3
         // hours ahead keeps DateHelper::dateDiff()'s ->days at 0 so the
         // hours branch fires, not the days one.
         $this->conn->executeStatement(
-            'UPDATE ' . 'user_auth_keys' . " SET expired_on = '2026-08-01 03:00:00' WHERE auth_key = ?",
+            'UPDATE user_auth_keys' . " SET expired_on = '2026-08-01 03:00:00' WHERE auth_key = ?",
             [$created->authKey]
         );
         $this->em->clear();
@@ -188,13 +192,13 @@ final class ApiKeyServiceLifecycleTest extends IntegrationTestCase
         self::assertSame('3 hours', $key->expiration);
     }
 
-    public function test_get_reports_a_minutes_only_expiration_message_for_a_key_expiring_within_the_hour(): void
+    public function testGetReportsAMinutesOnlyExpirationMessageForAKeyExpiringWithinTheHour(): void
     {
         $created = $this->service->create($this->userId, 30, 'Minutes Left Key');
         // 45 minutes ahead of the frozen 2026-08-01 00:00:00 "now" -- both
         // ->days and ->h stay 0, so the minutes branch fires.
         $this->conn->executeStatement(
-            'UPDATE ' . 'user_auth_keys' . " SET expired_on = '2026-08-01 00:45:00' WHERE auth_key = ?",
+            'UPDATE user_auth_keys' . " SET expired_on = '2026-08-01 00:45:00' WHERE auth_key = ?",
             [$created->authKey]
         );
         $this->em->clear();
@@ -207,7 +211,7 @@ final class ApiKeyServiceLifecycleTest extends IntegrationTestCase
         self::assertSame('45 minutes', $key->expiration);
     }
 
-    public function test_notify_expiration_uses_the_plural_days_wording_when_more_than_one_day_remains(): void
+    public function testNotifyExpirationUsesThePluralDaysWordingWhenMoreThanOneDayRemains(): void
     {
         $mailer = new ApiKeyServiceLifecycleTestSpyMailer();
         $service = new ApiKeyService(
@@ -216,7 +220,7 @@ final class ApiKeyServiceLifecycleTest extends IntegrationTestCase
             new ApiKeyRepository($this->em),
             new PasswordService(new PasswordRepository(EntityManagerFactory::build($this->conn)), new DeploymentPolicy()),
             UrlServiceTestFactory::build(),
-            new SessionService($this->em->getRepository(SessionEntity::class),CurrentConfigTestFactory::get()),
+            new SessionService($this->em->getRepository(SessionEntity::class), CurrentConfigTestFactory::get()),
             CurrentConfigTestFactory::get(),
         );
 
@@ -231,7 +235,7 @@ final class ApiKeyServiceLifecycleTest extends IntegrationTestCase
         self::assertStringNotContainsString('will expire in 5 day.', $content);
     }
 
-    public function test_notify_expiration_uses_the_singular_day_wording_when_one_day_or_less_remains(): void
+    public function testNotifyExpirationUsesTheSingularDayWordingWhenOneDayOrLessRemains(): void
     {
         $mailer = new ApiKeyServiceLifecycleTestSpyMailer();
         $service = new ApiKeyService(
@@ -240,7 +244,7 @@ final class ApiKeyServiceLifecycleTest extends IntegrationTestCase
             new ApiKeyRepository($this->em),
             new PasswordService(new PasswordRepository(EntityManagerFactory::build($this->conn)), new DeploymentPolicy()),
             UrlServiceTestFactory::build(),
-            new SessionService($this->em->getRepository(SessionEntity::class),CurrentConfigTestFactory::get()),
+            new SessionService($this->em->getRepository(SessionEntity::class), CurrentConfigTestFactory::get()),
             CurrentConfigTestFactory::get(),
         );
 

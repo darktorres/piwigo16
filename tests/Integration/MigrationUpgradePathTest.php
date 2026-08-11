@@ -4,18 +4,18 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Integration;
 
-use Override;
-use Doctrine\Migrations\Version\Version;
-use Piwigo\Migrations\UpgradePathProbe\Version00000000000002;
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\Schema\Column;
 use Doctrine\Migrations\Configuration\EntityManager\ExistingEntityManager;
 use Doctrine\Migrations\Configuration\Migration\ConfigurationArray;
 use Doctrine\Migrations\DependencyFactory;
 use Doctrine\Migrations\Tools\Console\Command\MigrateCommand;
+use Doctrine\Migrations\Version\Version;
+use Override;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Migrations\UpgradePathProbe\Version00000000000001;
+use Piwigo\Migrations\UpgradePathProbe\Version00000000000002;
 use Symfony\Component\Console\Input\ArrayInput;
 use Symfony\Component\Console\Output\BufferedOutput;
 
@@ -101,10 +101,14 @@ final class MigrationUpgradePathTest extends IntegrationTestCase
 
     private function runMigrate(DependencyFactory $dependencyFactory, string $version): int
     {
-        $input = new ArrayInput(['version' => $version, '--allow-no-migration' => true]);
+        $input = new ArrayInput([
+            'version' => $version,
+            '--allow-no-migration' => true,
+        ]);
         $input->setInteractive(false);
 
-        return new MigrateCommand($dependencyFactory)->run($input, new BufferedOutput());
+        return new MigrateCommand($dependencyFactory)
+            ->run($input, new BufferedOutput());
     }
 
     /**
@@ -113,16 +117,18 @@ final class MigrationUpgradePathTest extends IntegrationTestCase
      */
     private function columnNames(string $tableName): array
     {
-        $columns = $this->conn->createSchemaManager()->introspectTableColumnsByUnquotedName($tableName);
+        $columns = $this->conn->createSchemaManager()
+            ->introspectTableColumnsByUnquotedName($tableName);
 
         return array_map(static function (Column $column): string {
             $objectName = $column->getObjectName();
 
-            return $objectName->getIdentifier()->getValue();
+            return $objectName->getIdentifier()
+                ->getValue();
         }, $columns);
     }
 
-    public function test_migrate_applies_only_the_delta_against_an_already_migrated_database(): void
+    public function testMigrateAppliesOnlyTheDeltaAgainstAnAlreadyMigratedDatabase(): void
     {
         $dependencyFactory = $this->buildDependencyFactory();
 
@@ -133,7 +139,8 @@ final class MigrationUpgradePathTest extends IntegrationTestCase
         self::assertContains('id', $columnsAfterFirstRun);
         self::assertNotContains('probe_value', $columnsAfterFirstRun);
 
-        $executedAfterFirstRun = $dependencyFactory->getMetadataStorage()->getExecutedMigrations();
+        $executedAfterFirstRun = $dependencyFactory->getMetadataStorage()
+            ->getExecutedMigrations();
         self::assertCount(1, $executedAfterFirstRun);
 
         // The real "upgrade an already-migrated install" case: a second
@@ -148,7 +155,8 @@ final class MigrationUpgradePathTest extends IntegrationTestCase
         $columnsAfterSecondRun = $this->columnNames($this->probeTable());
         self::assertContains('probe_value', $columnsAfterSecondRun);
 
-        $executedAfterSecondRun = $dependencyFactory->getMetadataStorage()->getExecutedMigrations();
+        $executedAfterSecondRun = $dependencyFactory->getMetadataStorage()
+            ->getExecutedMigrations();
         self::assertCount(2, $executedAfterSecondRun);
         self::assertTrue($executedAfterSecondRun->hasMigration(new Version(Version00000000000001::class)));
         self::assertTrue($executedAfterSecondRun->hasMigration(new Version(Version00000000000002::class)));

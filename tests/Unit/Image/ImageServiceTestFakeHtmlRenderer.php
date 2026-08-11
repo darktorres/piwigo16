@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Piwigo\Tests\Unit\Image;
 
 use Override;
-use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\HtmlRenderingInterface;
+use Piwigo\Core\RedirectServiceInterface;
 
 final class ImageServiceTestFakeHtmlRenderer implements HtmlRenderingInterface
 {

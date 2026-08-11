@@ -4,10 +4,11 @@ declare(strict_types=1);
 
 use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
 
-
 it('adds a batch of photo ids to the caddie and redirects to the batch manager', function (): void {
     $page = H::loginAsAdmin($this);
-    $album = H::wsCall($page, 'pwg.categories.add', ['name' => 'Photos Add Direct Batch Album ' . uniqid()]);
+    $album = H::wsCall($page, 'pwg.categories.add', [
+        'name' => 'Photos Add Direct Batch Album ' . uniqid(),
+    ]);
     $albumResult = $album['result'] ?? null;
     if (! is_array($albumResult) || ! is_numeric($albumResult['id'] ?? null)) {
         throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($album, true));
@@ -40,7 +41,9 @@ it('rejects a batch caddie request without a valid CSRF token', function (): voi
 
 it('preselects a valid album= and shows its display name', function (): void {
     $page = H::loginAsAdmin($this);
-    $album = H::wsCall($page, 'pwg.categories.add', ['name' => 'Photos Add Direct Preselect Album ' . uniqid()]);
+    $album = H::wsCall($page, 'pwg.categories.add', [
+        'name' => 'Photos Add Direct Preselect Album ' . uniqid(),
+    ]);
     $albumResult = $album['result'] ?? null;
     if (! is_array($albumResult) || ! is_numeric($albumResult['id'] ?? null)) {
         throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($album, true));
@@ -85,7 +88,9 @@ it('lists a real photo\'s existing formats when formats= targets a valid origina
 
     try {
         $page = H::loginAsAdmin($this);
-        $album = H::wsCall($page, 'pwg.categories.add', ['name' => 'Photos Add Direct Formats Album ' . uniqid()]);
+        $album = H::wsCall($page, 'pwg.categories.add', [
+            'name' => 'Photos Add Direct Formats Album ' . uniqid(),
+        ]);
         $albumResult = $album['result'] ?? null;
         if (! is_array($albumResult) || ! is_numeric($albumResult['id'] ?? null)) {
             throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($album, true));
@@ -167,7 +172,10 @@ it('skips the mobile-app-promotion computation entirely once the user has dismis
     // browser's url-encoded POST body delivers exactly this, not a JSON
     // boolean. This is the only way a real admin ever flips
     // 'promote-mobile-apps' to false; there's no admin.php GET param for it.
-    $prefResponse = H::wsCall($page, 'pwg.users.preferences.set', ['param' => 'promote-mobile-apps', 'value' => 'false']);
+    $prefResponse = H::wsCall($page, 'pwg.users.preferences.set', [
+        'param' => 'promote-mobile-apps',
+        'value' => 'false',
+    ]);
     $prefResult = $prefResponse['result'] ?? null;
     if (! is_array($prefResult)) {
         throw new RuntimeException('pwg.users.preferences.set did not return an array result: ' . var_export($prefResponse, true));
@@ -197,7 +205,10 @@ it('skips the mobile-app-promotion computation entirely once the user has dismis
         // outright -- setting it back to the literal default (true) is
         // behaviorally identical to the pristine unset state, since
         // getPromoteMobileApps() ?? true's own default is also true.
-        H::wsCall($page, 'pwg.users.preferences.set', ['param' => 'promote-mobile-apps', 'value' => 'true']);
+        H::wsCall($page, 'pwg.users.preferences.set', [
+            'param' => 'promote-mobile-apps',
+            'value' => 'true',
+        ]);
     }
 });
 

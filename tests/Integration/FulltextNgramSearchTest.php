@@ -4,16 +4,16 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Integration;
 
-use Override;
 use Doctrine\DBAL\Connection;
+use Override;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Config\ConfigLoader;
-use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Core\Env;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Tag\TagEntity;
 use Piwigo\Tag\TagRepository;
+use Piwigo\Tests\Support\CurrentConfigTestFactory;
 
 /**
  * `categories`/`images`/`tags`' own `FULLTEXT` indexes use `WITH PARSER
@@ -82,7 +82,7 @@ final class FulltextNgramSearchTest extends IntegrationTestCase
         $this->tagRepo = $em->getRepository(TagEntity::class);
     }
 
-    public function test_ngram_parser_finds_cjk_substrings_the_default_parser_cannot(): void
+    public function testNgramParserFindsCjkSubstringsTheDefaultParserCannot(): void
     {
         // Chinese "beautiful landscape photo" -- no word-separating
         // whitespace, unmatchable by MySQL's default whitespace-tokenizing
@@ -90,14 +90,14 @@ final class FulltextNgramSearchTest extends IntegrationTestCase
         $catId = $this->insertCategory('美丽的风景照片');
 
         $hits = $this->fetchCount(
-            'SELECT COUNT(*) FROM ' . 'categories' . " WHERE id = ? AND MATCH(name, comment) AGAINST('风景' IN BOOLEAN MODE)",
+            'SELECT COUNT(*) FROM categories' . " WHERE id = ? AND MATCH(name, comment) AGAINST('风景' IN BOOLEAN MODE)",
             [$catId]
         );
 
         self::assertSame(1, $hits, 'a CJK substring must be findable via ngram tokenization');
     }
 
-    public function test_ngram_parser_finds_a_word_containing_a_stopword_fragment(): void
+    public function testNgramParserFindsAWordContainingAStopwordFragment(): void
     {
         // "cat" contains "at" (a default INNODB stopword) -- a word
         // containing a stopword fragment must still be findable through
@@ -106,14 +106,14 @@ final class FulltextNgramSearchTest extends IntegrationTestCase
         $catId = $this->insertCategory('My Cats and Vacation Photos');
 
         $hits = $this->fetchCount(
-            'SELECT COUNT(*) FROM ' . 'categories' . " WHERE id = ? AND MATCH(name, comment) AGAINST('cat' IN BOOLEAN MODE)",
+            'SELECT COUNT(*) FROM categories' . " WHERE id = ? AND MATCH(name, comment) AGAINST('cat' IN BOOLEAN MODE)",
             [$catId]
         );
 
         self::assertSame(1, $hits, 'a word containing a stopword fragment ("at" inside "Cats") must still be findable');
     }
 
-    public function test_ngram_parser_finds_a_tag_containing_a_stopword_fragment(): void
+    public function testNgramParserFindsATagContainingAStopwordFragment(): void
     {
         // Real tag write path (TagRepository::insert(), a direct
         // persist()+flush(), not BatchWriter) -- a separate real write
@@ -122,21 +122,21 @@ final class FulltextNgramSearchTest extends IntegrationTestCase
         $tagId = $this->tagRepo->insert($tag, $tag);
 
         $hits = $this->fetchCount(
-            'SELECT COUNT(*) FROM ' . 'tags' . " WHERE id = ? AND MATCH(name) AGAINST('at' IN BOOLEAN MODE)",
+            'SELECT COUNT(*) FROM tags' . " WHERE id = ? AND MATCH(name) AGAINST('at' IN BOOLEAN MODE)",
             [$tagId->value]
         );
 
         self::assertSame(1, $hits, 'a tag name containing a stopword fragment ("at" inside "vacation") must still be findable');
     }
 
-    public function test_ngram_parser_still_matches_an_ordinary_word_without_any_stopword_fragment(): void
+    public function testNgramParserStillMatchesAnOrdinaryWordWithoutAnyStopwordFragment(): void
     {
         // Non-regression check: an ordinary word with no stopword-fragment
         // interaction at all must keep matching.
         $catId = $this->insertCategory('Mountain Landscape');
 
         $hits = $this->fetchCount(
-            'SELECT COUNT(*) FROM ' . 'categories' . " WHERE id = ? AND MATCH(name, comment) AGAINST('mountain' IN BOOLEAN MODE)",
+            'SELECT COUNT(*) FROM categories' . " WHERE id = ? AND MATCH(name, comment) AGAINST('mountain' IN BOOLEAN MODE)",
             [$catId]
         );
 

@@ -16,7 +16,7 @@ use DI\Definition\Helper\FactoryDefinitionHelper;
 function loadContainerDefinitions(): array
 {
     $loaded = require __DIR__ . '/../../../config/container.php';
-    if (!is_array($loaded)) {
+    if (! is_array($loaded)) {
         throw new RuntimeException('config/container.php must return an array of service definitions');
     }
     return $loaded;
@@ -35,31 +35,34 @@ function isContainerEntryLoadable(string $name): bool
 test('every config/container.php key is a loadable class or interface', function (): void {
     $missing = [];
     foreach (array_keys(loadContainerDefinitions()) as $key) {
-        if (!isContainerEntryLoadable((string) $key)) {
+        if (! isContainerEntryLoadable((string) $key)) {
             $missing[] = $key;
         }
     }
-    expect($missing)->toBe([]);
+    expect($missing)
+        ->toBe([]);
 });
 
 test('every factory closure return type in config/container.php is loadable', function (): void {
     $missing = [];
     foreach (loadContainerDefinitions() as $key => $definition) {
-        if (!($definition instanceof FactoryDefinitionHelper)) {
+        if (! ($definition instanceof FactoryDefinitionHelper)) {
             continue;
         }
-        $callable = $definition->getDefinition((string) $key)->getCallable();
-        if (!($callable instanceof Closure)) {
+        $callable = $definition->getDefinition((string) $key)
+            ->getCallable();
+        if (! ($callable instanceof Closure)) {
             continue;
         }
         $rf = new ReflectionFunction($callable);
         $returnType = $rf->getReturnType();
-        if (!($returnType instanceof ReflectionNamedType) || $returnType->isBuiltin()) {
+        if (! ($returnType instanceof ReflectionNamedType) || $returnType->isBuiltin()) {
             continue;
         }
-        if (!isContainerEntryLoadable($returnType->getName())) {
+        if (! isContainerEntryLoadable($returnType->getName())) {
             $missing[] = "{$key} → {$returnType->getName()}";
         }
     }
-    expect($missing)->toBe([]);
+    expect($missing)
+        ->toBe([]);
 });

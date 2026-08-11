@@ -17,7 +17,9 @@ use Piwigo\Admin\Image\PwgImage;
  */
 final class PwgImageSpyImage implements ImageInterface
 {
-    /** @var list<string> */
+    /**
+     * @var list<string>
+     */
     public array $calls = [];
 
     public function __construct(

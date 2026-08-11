@@ -88,7 +88,9 @@ it('rejects an install request from a non-webmaster session', function (): void 
 
     try {
         $adminPage = H::visitPwg($this, '/identification.php');
-        $adminPage = $adminPage->fill('username', $username)->fill('password', $password)->click('login');
+        $adminPage = $adminPage->fill('username', $username)
+            ->fill('password', $password)
+            ->click('login');
         H::assertNoServerErrors($adminPage, 'plain-admin post-login page');
 
         $adminPage = H::navigateOk($adminPage, '/admin.php?page=languages&tab=new&revision=1');

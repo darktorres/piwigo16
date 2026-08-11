@@ -2,30 +2,30 @@
 
 declare(strict_types=1);
 
-use Piwigo\Tests\Support\TemplateTestFactory;
+use Piwigo\Auth\AccessLevelChecker;
 use Piwigo\Common\ValueObject\LangCode;
+use Piwigo\Common\ValueObject\ThemeId;
 use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Common\ValueObject\Username;
-use Piwigo\Tests\Support\UrlServiceTestFactory;
-use Piwigo\Mail\MailService;
-use Piwigo\Tests\Support\LangTestFactory;
-use Piwigo\Auth\AccessLevelChecker;
-use Piwigo\PluginConfig\EventDispatcher;
-use Piwigo\Tests\Support\PageStateTestFactory;
-use Piwigo\Tests\Support\HtmlServiceTestFactory;
-use Piwigo\Tests\Support\CurrentConfigTestFactory;
-use Piwigo\Tests\Support\CurrentPathsTestFactory;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Paths;
 use Piwigo\Http\ResponseReadyException;
+use Piwigo\Mail\MailService;
 use Piwigo\Picture\PictureCommentRenderer;
+use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Session\SessionService;
-use Piwigo\Tests\Support\SessionServiceTestFactory;
 use Piwigo\Template\CurrentTemplate;
 use Piwigo\Template\Template;
-use Piwigo\Url\UrlService;
+use Piwigo\Tests\Support\CurrentConfigTestFactory;
+use Piwigo\Tests\Support\CurrentPathsTestFactory;
 use Piwigo\Tests\Support\CurrentUserTestFactory;
-use Piwigo\Common\ValueObject\ThemeId;
+use Piwigo\Tests\Support\HtmlServiceTestFactory;
+use Piwigo\Tests\Support\LangTestFactory;
+use Piwigo\Tests\Support\PageStateTestFactory;
+use Piwigo\Tests\Support\SessionServiceTestFactory;
+use Piwigo\Tests\Support\TemplateTestFactory;
+use Piwigo\Tests\Support\UrlServiceTestFactory;
+use Piwigo\Url\UrlService;
 use Piwigo\Users\User;
 use Piwigo\Users\UserStatus;
 
@@ -134,8 +134,12 @@ test('render does nothing when no related category is commentable', function ():
     $renderer = new PictureCommentRenderer();
 
     $renderer->render(LangTestFactory::get(), new AccessLevelChecker(CurrentUserTestFactory::get(), CurrentConfigTestFactory::get()), null, 42, 0, makePictureCommentUrlService(), [
-        ['commentable' => false],
-        ['commentable' => 0],
+        [
+            'commentable' => false,
+        ],
+        [
+            'commentable' => 0,
+        ],
     ], '/picture.php', makePictureCommentSessionService(), new EventDispatcher(), PageStateTestFactory::get(), CurrentUserTestFactory::get(), CurrentTemplate::current(), CurrentConfigTestFactory::get(), pictureCommentRendererTestMailService(), HtmlServiceTestFactory::build());
 
     expect(CurrentTemplate::current()->get()->get_template_vars('comments'))->toBeNull()
@@ -206,8 +210,12 @@ test('render only counts the first commentable related category then stops (`bre
     $exception = null;
     try {
         $renderer->render(LangTestFactory::get(), new AccessLevelChecker(CurrentUserTestFactory::get(), CurrentConfigTestFactory::get()), null, 42, 0, makePictureCommentUrlService(), [
-            ['commentable' => true],
-            ['id' => 999], // no 'commentable' key -- only reached by `continue`
+            [
+                'commentable' => true,
+            ],
+            [
+                'id' => 999,
+            ], // no 'commentable' key -- only reached by `continue`
         ], '/picture.php', makePictureCommentSessionService(), new EventDispatcher(), PageStateTestFactory::get(), CurrentUserTestFactory::get(), CurrentTemplate::current(), CurrentConfigTestFactory::get(), pictureCommentRendererTestMailService(), HtmlServiceTestFactory::build());
     } catch (ResponseReadyException $e) {
         $exception = $e;
@@ -215,14 +223,18 @@ test('render only counts the first commentable related category then stops (`bre
         restore_error_handler();
     }
 
-    expect($capturedWarning)->toBeNull();
-    expect($exception)->toBeInstanceOf(ResponseReadyException::class);
+    expect($capturedWarning)
+        ->toBeNull();
+    expect($exception)
+        ->toBeInstanceOf(ResponseReadyException::class);
     if (! $exception instanceof ResponseReadyException) {
         return; // unreachable -- the assertion above already failed the test otherwise.
     }
     $response = $exception->response();
-    expect($response->getStatusCode())->toBe(200)
-        ->and((string) $response->getBody())->toBe('Session expired');
+    expect($response->getStatusCode())
+        ->toBe(200)
+        ->and((string) $response->getBody())
+        ->toBe('Session expired');
 });
 
 test('render rejects a posted comment as "ugly spammer" when no related category is commentable', function (): void {
@@ -232,19 +244,24 @@ test('render rejects a posted comment as "ugly spammer" when no related category
     $exception = null;
     try {
         $renderer->render(LangTestFactory::get(), new AccessLevelChecker(CurrentUserTestFactory::get(), CurrentConfigTestFactory::get()), null, 42, 0, makePictureCommentUrlService(), [
-            ['commentable' => false],
+            [
+                'commentable' => false,
+            ],
         ], '/picture.php', makePictureCommentSessionService(), new EventDispatcher(), PageStateTestFactory::get(), CurrentUserTestFactory::get(), CurrentTemplate::current(), CurrentConfigTestFactory::get(), pictureCommentRendererTestMailService(), HtmlServiceTestFactory::build());
     } catch (ResponseReadyException $e) {
         $exception = $e;
     }
 
-    expect($exception)->toBeInstanceOf(ResponseReadyException::class);
+    expect($exception)
+        ->toBeInstanceOf(ResponseReadyException::class);
     if (! $exception instanceof ResponseReadyException) {
         return; // unreachable -- the assertion above already failed the test otherwise.
     }
     $response = $exception->response();
-    expect($response->getStatusCode())->toBe(403)
-        ->and((string) $response->getBody())->toBe('ugly spammer');
+    expect($response->getStatusCode())
+        ->toBe(403)
+        ->and((string) $response->getBody())
+        ->toBe('ugly spammer');
 });
 
 test('render rejects a posted comment as "Session expired" for a guest when comments_forall is off', function (): void {
@@ -264,19 +281,24 @@ test('render rejects a posted comment as "Session expired" for a guest when comm
     $exception = null;
     try {
         $renderer->render(LangTestFactory::get(), new AccessLevelChecker(CurrentUserTestFactory::get(), CurrentConfigTestFactory::get()), null, 42, 0, makePictureCommentUrlService(), [
-            ['commentable' => true],
+            [
+                'commentable' => true,
+            ],
         ], '/picture.php', makePictureCommentSessionService(), new EventDispatcher(), PageStateTestFactory::get(), CurrentUserTestFactory::get(), CurrentTemplate::current(), CurrentConfigTestFactory::get(), pictureCommentRendererTestMailService(), HtmlServiceTestFactory::build());
     } catch (ResponseReadyException $e) {
         $exception = $e;
     }
 
-    expect($exception)->toBeInstanceOf(ResponseReadyException::class);
+    expect($exception)
+        ->toBeInstanceOf(ResponseReadyException::class);
     if (! $exception instanceof ResponseReadyException) {
         return; // unreachable -- the assertion above already failed the test otherwise.
     }
     $response = $exception->response();
-    expect($response->getStatusCode())->toBe(200)
-        ->and((string) $response->getBody())->toBe('Session expired');
+    expect($response->getStatusCode())
+        ->toBe(200)
+        ->and((string) $response->getBody())
+        ->toBe('Session expired');
 });
 
 test('render lets a guest post a comment when comments_forall is on', function (): void {
@@ -297,7 +319,9 @@ test('render lets a guest post a comment when comments_forall is on', function (
 
     $renderer = new PictureCommentRenderer();
     $renderer->render(LangTestFactory::get(), new AccessLevelChecker(CurrentUserTestFactory::get(), CurrentConfigTestFactory::get()), null, 42, 0, makePictureCommentUrlService(), [
-        ['commentable' => false],
+        [
+            'commentable' => false,
+        ],
     ], '/picture.php', makePictureCommentSessionService(), new EventDispatcher(), PageStateTestFactory::get(), CurrentUserTestFactory::get(), CurrentTemplate::current(), CurrentConfigTestFactory::get(), pictureCommentRendererTestMailService(), HtmlServiceTestFactory::build());
 
     expect(CurrentTemplate::current()->get()->get_template_vars('comments'))->toBeNull();
@@ -340,7 +364,9 @@ test('render does not reject a logged-in (non-guest) user\'s posted comment even
     // (which needs a real CommentRepository row -- DB-write territory)
     // is never entered either.
     $renderer->render(LangTestFactory::get(), new AccessLevelChecker(CurrentUserTestFactory::get(), CurrentConfigTestFactory::get()), null, 999999999, 0, makePictureCommentUrlService(), [
-        ['commentable' => true],
+        [
+            'commentable' => true,
+        ],
     ], '/picture.php', makePictureCommentSessionService(), new EventDispatcher(), PageStateTestFactory::get(), CurrentUserTestFactory::get(), CurrentTemplate::current(), CurrentConfigTestFactory::get(), pictureCommentRendererTestMailService(), HtmlServiceTestFactory::build());
 
     expect(CurrentTemplate::current()->get()->get_template_vars('COMMENT_LIST'))->toBe('STATIC-COMMENT-LIST-CONTENT')

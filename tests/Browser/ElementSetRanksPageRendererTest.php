@@ -24,9 +24,12 @@ it('renders one ranked thumbnail per photo, in rank order, with the legacy off-b
     $page = H::navigateOk($page, '/admin.php?page=album&cat_id=1&tab=sort_order');
     $page->assertNoJavaScriptErrors();
 
-    expect($page->value('input[name="rank_of_image[1]"]'))->toBe('20');
-    expect($page->value('input[name="rank_of_image[2]"]'))->toBe('30');
-    expect($page->value('input[name="rank_of_image[3]"]'))->toBe('40');
+    expect($page->value('input[name="rank_of_image[1]"]'))
+        ->toBe('20');
+    expect($page->value('input[name="rank_of_image[2]"]'))
+        ->toBe('30');
+    expect($page->value('input[name="rank_of_image[3]"]'))
+        ->toBe('40');
     $page->assertPresent('img[alt="Photo 1"]');
     $page->assertPresent('img[alt="Photo 2"]');
     $page->assertPresent('img[alt="Photo 3"]');
@@ -49,9 +52,11 @@ it('renders one ranked thumbnail per photo, in rank order, with the legacy off-b
 // case above.
 it('renders no manual-order thumbnails block for an album with no photos', function (): void {
     $page = H::loginAsAdmin($this);
-    $album = H::wsCall($page, 'pwg.categories.add', ['name' => 'Empty Ranks Test Album ' . uniqid()]);
+    $album = H::wsCall($page, 'pwg.categories.add', [
+        'name' => 'Empty Ranks Test Album ' . uniqid(),
+    ]);
     $albumResult = $album['result'] ?? null;
-    if (!is_array($albumResult) || !isset($albumResult['id']) || !is_numeric($albumResult['id'])) {
+    if (! is_array($albumResult) || ! isset($albumResult['id']) || ! is_numeric($albumResult['id'])) {
         throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($album, true));
     }
     $albumId = (int) $albumResult['id'];
@@ -70,7 +75,9 @@ it('renders no manual-order thumbnails block for an album with no photos', funct
     $page->assertMissing('ul.thumbnails');
 
     H::wsCall($page, 'pwg.categories.delete', [
-        'category_id' => $albumId, 'photo_deletion_mode' => 'no_delete', 'pwg_token' => $pwgToken,
+        'category_id' => $albumId,
+        'photo_deletion_mode' => 'no_delete',
+        'pwg_token' => $pwgToken,
     ]);
 });
 
@@ -97,7 +104,9 @@ it('renders no manual-order thumbnails block for an album with no photos', funct
  */
 it('rejects a save-order submission with no CSRF token as a bad request', function (): void {
     $page = H::loginAsAdmin($this);
-    $album = H::wsCall($page, 'pwg.categories.add', ['name' => 'Ranks CSRF Missing Token Album ' . uniqid()]);
+    $album = H::wsCall($page, 'pwg.categories.add', [
+        'name' => 'Ranks CSRF Missing Token Album ' . uniqid(),
+    ]);
     $albumResult = $album['result'] ?? null;
     if (! is_array($albumResult) || ! is_numeric($albumResult['id'] ?? null)) {
         throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($album, true));
@@ -117,13 +126,17 @@ it('rejects a save-order submission with no CSRF token as a bad request', functi
     expect($result['body'])->toContain('missing token');
 
     H::wsCall($page, 'pwg.categories.delete', [
-        'category_id' => $albumId, 'photo_deletion_mode' => 'no_delete', 'pwg_token' => H::pwgToken($page),
+        'category_id' => $albumId,
+        'photo_deletion_mode' => 'no_delete',
+        'pwg_token' => H::pwgToken($page),
     ]);
 });
 
 it('rejects a save-order submission with a wrong CSRF token as access denied', function (): void {
     $page = H::loginAsAdmin($this);
-    $album = H::wsCall($page, 'pwg.categories.add', ['name' => 'Ranks CSRF Wrong Token Album ' . uniqid()]);
+    $album = H::wsCall($page, 'pwg.categories.add', [
+        'name' => 'Ranks CSRF Wrong Token Album ' . uniqid(),
+    ]);
     $albumResult = $album['result'] ?? null;
     if (! is_array($albumResult) || ! is_numeric($albumResult['id'] ?? null)) {
         throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($album, true));
@@ -144,13 +157,17 @@ it('rejects a save-order submission with a wrong CSRF token as access denied', f
     expect($result['body'])->toContain('You are not authorized to access the requested page');
 
     H::wsCall($page, 'pwg.categories.delete', [
-        'category_id' => $albumId, 'photo_deletion_mode' => 'no_delete', 'pwg_token' => H::pwgToken($page),
+        'category_id' => $albumId,
+        'photo_deletion_mode' => 'no_delete',
+        'pwg_token' => H::pwgToken($page),
     ]);
 });
 
 it('saves a manual rank_of_image POST as the real image_category rank order', function (): void {
     $page = H::loginAsAdmin($this);
-    $album = H::wsCall($page, 'pwg.categories.add', ['name' => 'Ranks Manual Save Album ' . uniqid()]);
+    $album = H::wsCall($page, 'pwg.categories.add', [
+        'name' => 'Ranks Manual Save Album ' . uniqid(),
+    ]);
     $albumResult = $album['result'] ?? null;
     if (! is_array($albumResult) || ! is_numeric($albumResult['id'] ?? null)) {
         throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($album, true));
@@ -194,21 +211,30 @@ it('saves a manual rank_of_image POST as the real image_category rank order', fu
     $fetchedRows = H::dbFetchAll($db, sprintf('SELECT image_id, %1$s FROM image_category WHERE category_id = %2$d ORDER BY %1$s', $rankIdentifier, $albumId));
     $rows = [];
     foreach ($fetchedRows as $row) {
-        $rows[] = ['image_id' => (int) $row['image_id'], 'rank' => (int) $row['rank']];
+        $rows[] = [
+            'image_id' => (int) $row['image_id'],
+            'rank' => (int) $row['rank'],
+        ];
     }
     H::dbClose($db);
 
-    expect(array_column($rows, 'image_id'))->toBe([$imageIdB, $imageIdC, $imageIdA]);
-    expect(array_column($rows, 'rank'))->toBe([1, 2, 3]);
+    expect(array_column($rows, 'image_id'))
+        ->toBe([$imageIdB, $imageIdC, $imageIdA]);
+    expect(array_column($rows, 'rank'))
+        ->toBe([1, 2, 3]);
 
     H::wsCall($page, 'pwg.categories.delete', [
-        'category_id' => $albumId, 'photo_deletion_mode' => 'no_delete', 'pwg_token' => H::pwgToken($page),
+        'category_id' => $albumId,
+        'photo_deletion_mode' => 'no_delete',
+        'pwg_token' => H::pwgToken($page),
     ]);
 });
 
 it('builds a comma-joined user_define image_order string, filtering out an invalid sort field', function (): void {
     $page = H::loginAsAdmin($this);
-    $album = H::wsCall($page, 'pwg.categories.add', ['name' => 'Ranks Order Fields Album ' . uniqid()]);
+    $album = H::wsCall($page, 'pwg.categories.add', [
+        'name' => 'Ranks Order Fields Album ' . uniqid(),
+    ]);
     $albumResult = $album['result'] ?? null;
     if (! is_array($albumResult) || ! is_numeric($albumResult['id'] ?? null)) {
         throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($album, true));
@@ -236,13 +262,17 @@ it('builds a comma-joined user_define image_order string, filtering out an inval
     expect($row['image_order'])->toBe('file ASC,name DESC');
 
     H::wsCall($page, 'pwg.categories.delete', [
-        'category_id' => $albumId, 'photo_deletion_mode' => 'no_delete', 'pwg_token' => H::pwgToken($page),
+        'category_id' => $albumId,
+        'photo_deletion_mode' => 'no_delete',
+        'pwg_token' => H::pwgToken($page),
     ]);
 });
 
 it('persists the literal `rank` ASC order string for the manual "rank" choice, with its own distinct success message', function (): void {
     $page = H::loginAsAdmin($this);
-    $album = H::wsCall($page, 'pwg.categories.add', ['name' => 'Ranks Rank Choice Album ' . uniqid()]);
+    $album = H::wsCall($page, 'pwg.categories.add', [
+        'name' => 'Ranks Rank Choice Album ' . uniqid(),
+    ]);
     $albumResult = $album['result'] ?? null;
     if (! is_array($albumResult) || ! is_numeric($albumResult['id'] ?? null)) {
         throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($album, true));
@@ -269,13 +299,17 @@ it('persists the literal `rank` ASC order string for the manual "rank" choice, w
     expect($row['image_order'])->toBe('`rank` ASC');
 
     H::wsCall($page, 'pwg.categories.delete', [
-        'category_id' => $albumId, 'photo_deletion_mode' => 'no_delete', 'pwg_token' => H::pwgToken($page),
+        'category_id' => $albumId,
+        'photo_deletion_mode' => 'no_delete',
+        'pwg_token' => H::pwgToken($page),
     ]);
 });
 
 it('falls back to the filename-derived name when a photo has no explicit name', function (): void {
     $page = H::loginAsAdmin($this);
-    $album = H::wsCall($page, 'pwg.categories.add', ['name' => 'Ranks NoName Album ' . uniqid()]);
+    $album = H::wsCall($page, 'pwg.categories.add', [
+        'name' => 'Ranks NoName Album ' . uniqid(),
+    ]);
     $albumResult = $album['result'] ?? null;
     if (! is_array($albumResult) || ! is_numeric($albumResult['id'] ?? null)) {
         throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($album, true));
@@ -314,6 +348,8 @@ it('falls back to the filename-derived name when a photo has no explicit name', 
     $page->assertPresent('img[alt="' . $expectedName . '"]');
 
     H::wsCall($page, 'pwg.categories.delete', [
-        'category_id' => $albumId, 'photo_deletion_mode' => 'no_delete', 'pwg_token' => H::pwgToken($page),
+        'category_id' => $albumId,
+        'photo_deletion_mode' => 'no_delete',
+        'pwg_token' => H::pwgToken($page),
     ]);
 });

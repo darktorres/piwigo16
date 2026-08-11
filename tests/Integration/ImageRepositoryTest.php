@@ -4,19 +4,19 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Integration;
 
+use Doctrine\DBAL\Connection;
+use LogicException;
 use Override;
 use Piwigo\Common\ValueObject\CategoryId;
 use Piwigo\Common\ValueObject\ImageId;
-use Piwigo\Core\Kernel;
-use LogicException;
-use Piwigo\Db\EntityManagerFactory;
-use Piwigo\Image\ImageEntity;
-use Doctrine\DBAL\Connection;
-use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\ConfigLoader;
+use Piwigo\Config\CurrentConfig;
+use Piwigo\Core\Kernel;
 use Piwigo\Db\DbConnection;
+use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Db\SqlDialect;
 use Piwigo\Image\CategoryImagesCriteria;
+use Piwigo\Image\ImageEntity;
 use Piwigo\Image\ImageFilterCriteria;
 use Piwigo\Image\ImageRepository;
 use Piwigo\Image\ImageTextField;
@@ -66,12 +66,12 @@ final class ImageRepositoryTest extends IntegrationTestCase
     #[Override]
     protected function tearDown(): void
     {
-        $this->conn->executeStatement('UPDATE ' . 'images' . " SET hit = 0, coi = NULL WHERE id IN (1, 2)");
-        $this->conn->executeStatement('DELETE FROM ' . 'image_format');
+        $this->conn->executeStatement('UPDATE images SET hit = 0, coi = NULL WHERE id IN (1, 2)');
+        $this->conn->executeStatement('DELETE FROM image_format');
         parent::tearDown();
     }
 
-    public function test_increment_visit_counter_increments_hit(): void
+    public function testIncrementVisitCounterIncrementsHit(): void
     {
         $before = $this->conn->createQueryBuilder()
             ->select('hit')
@@ -94,7 +94,7 @@ final class ImageRepositoryTest extends IntegrationTestCase
         self::assertSame($before + 1, $after);
     }
 
-    public function test_increment_visit_counter_does_not_change_other_rows(): void
+    public function testIncrementVisitCounterDoesNotChangeOtherRows(): void
     {
         $before = $this->conn->createQueryBuilder()
             ->select('hit')
@@ -117,7 +117,7 @@ final class ImageRepositoryTest extends IntegrationTestCase
         self::assertSame($before, $after);
     }
 
-    public function test_update_coi_sets_the_column(): void
+    public function testUpdateCoiSetsTheColumn(): void
     {
         $this->repo->updateCoi(ImageId::from(1), 'ABCD');
 
@@ -131,7 +131,7 @@ final class ImageRepositoryTest extends IntegrationTestCase
         self::assertSame('ABCD', $coi);
     }
 
-    public function test_update_coi_with_null_clears_the_column(): void
+    public function testUpdateCoiWithNullClearsTheColumn(): void
     {
         $this->repo->updateCoi(ImageId::from(1), 'ABCD');
 
@@ -147,7 +147,7 @@ final class ImageRepositoryTest extends IntegrationTestCase
         self::assertNull($coi);
     }
 
-    public function test_find_by_id_returns_a_typed_image_projection(): void
+    public function testFindByIdReturnsATypedImageProjection(): void
     {
         $image = $this->repo->findById(ImageId::from(1));
 
@@ -158,12 +158,12 @@ final class ImageRepositoryTest extends IntegrationTestCase
         self::assertSame(150, $image->height);
     }
 
-    public function test_find_by_id_returns_null_for_a_nonexistent_image(): void
+    public function testFindByIdReturnsNullForANonexistentImage(): void
     {
         self::assertNull($this->repo->findById(ImageId::from(999999)));
     }
 
-    public function test_find_by_path_returns_the_matching_image(): void
+    public function testFindByPathReturnsTheMatchingImage(): void
     {
         $path = $this->conn->createQueryBuilder()
             ->select('path')
@@ -180,12 +180,12 @@ final class ImageRepositoryTest extends IntegrationTestCase
         self::assertSame($path, $image->path);
     }
 
-    public function test_find_by_path_returns_null_for_an_unknown_path(): void
+    public function testFindByPathReturnsNullForAnUnknownPath(): void
     {
         self::assertNull($this->repo->findByPath('upload/does/not/exist.jpg'));
     }
 
-    public function test_find_by_ids_returns_typed_images_keyed_by_id(): void
+    public function testFindByIdsReturnsTypedImagesKeyedById(): void
     {
         $images = $this->repo->findByIds(['1', '2']);
 
@@ -202,12 +202,12 @@ final class ImageRepositoryTest extends IntegrationTestCase
         self::assertSame([1, 2], $ids);
     }
 
-    public function test_find_by_ids_returns_empty_array_for_empty_input(): void
+    public function testFindByIdsReturnsEmptyArrayForEmptyInput(): void
     {
         self::assertSame([], $this->repo->findByIds([]));
     }
 
-    public function test_find_format_by_id_returns_a_typed_image_format(): void
+    public function testFindFormatByIdReturnsATypedImageFormat(): void
     {
         $formatId = $this->insertFormat(1, 'webp', 12345);
 
@@ -220,12 +220,12 @@ final class ImageRepositoryTest extends IntegrationTestCase
         self::assertSame(12345, $format->filesize);
     }
 
-    public function test_find_format_by_id_returns_null_for_a_missing_format(): void
+    public function testFindFormatByIdReturnsNullForAMissingFormat(): void
     {
         self::assertNull($this->repo->findFormatById(999_999));
     }
 
-    public function test_find_formats_for_image_returns_every_format_for_that_image(): void
+    public function testFindFormatsForImageReturnsEveryFormatForThatImage(): void
     {
         $this->insertFormat(1, 'webp', 100);
         $this->insertFormat(1, 'avif', 200);
@@ -239,12 +239,12 @@ final class ImageRepositoryTest extends IntegrationTestCase
         self::assertSame(['avif', 'webp'], $exts);
     }
 
-    public function test_find_formats_for_image_returns_empty_for_an_image_with_no_formats(): void
+    public function testFindFormatsForImageReturnsEmptyForAnImageWithNoFormats(): void
     {
         self::assertSame([], $this->repo->findFormatsForImage(ImageId::from(1)));
     }
 
-    public function test_find_full_formats_by_image_ids_returns_every_matching_row(): void
+    public function testFindFullFormatsByImageIdsReturnsEveryMatchingRow(): void
     {
         $this->insertFormat(1, 'webp', 100);
         $this->insertFormat(2, 'avif', 200);
@@ -257,7 +257,7 @@ final class ImageRepositoryTest extends IntegrationTestCase
         self::assertSame([1, 2], $imageIds);
     }
 
-    public function test_find_full_formats_by_image_ids_returns_empty_for_empty_input(): void
+    public function testFindFullFormatsByImageIdsReturnsEmptyForEmptyInput(): void
     {
         self::assertSame([], $this->repo->findFullFormatsByImageIds([]));
     }
@@ -279,18 +279,18 @@ final class ImageRepositoryTest extends IntegrationTestCase
         return (int) $this->conn->lastInsertId();
     }
 
-    public function test_try_acquire_lounge_lock_then_find_lounge_lock_value_round_trips(): void
+    public function testTryAcquireLoungeLockThenFindLoungeLockValueRoundTrips(): void
     {
         try {
             $this->repo->tryAcquireLoungeLock('exec123-1700000000');
 
             self::assertSame('exec123-1700000000', $this->repo->findLoungeLockValue());
         } finally {
-            $this->conn->executeStatement("DELETE FROM " . 'config' . " WHERE param = 'empty_lounge_running'");
+            $this->conn->executeStatement('DELETE FROM config' . " WHERE param = 'empty_lounge_running'");
         }
     }
 
-    public function test_try_acquire_lounge_lock_is_a_noop_once_held(): void
+    public function testTryAcquireLoungeLockIsANoopOnceHeld(): void
     {
         try {
             $this->repo->tryAcquireLoungeLock('exec123-1700000000');
@@ -298,16 +298,16 @@ final class ImageRepositoryTest extends IntegrationTestCase
 
             self::assertSame('exec123-1700000000', $this->repo->findLoungeLockValue());
         } finally {
-            $this->conn->executeStatement("DELETE FROM " . 'config' . " WHERE param = 'empty_lounge_running'");
+            $this->conn->executeStatement('DELETE FROM config' . " WHERE param = 'empty_lounge_running'");
         }
     }
 
-    public function test_find_lounge_lock_value_returns_null_when_no_lock_held(): void
+    public function testFindLoungeLockValueReturnsNullWhenNoLockHeld(): void
     {
         self::assertNull($this->repo->findLoungeLockValue());
     }
 
-    public function test_update_coi_is_a_noop_for_a_nonexistent_image(): void
+    public function testUpdateCoiIsANoopForANonexistentImage(): void
     {
         $this->repo->updateCoi(ImageId::from(999_999), 'ABCD');
 
@@ -321,28 +321,28 @@ final class ImageRepositoryTest extends IntegrationTestCase
         self::assertNull($coi);
     }
 
-    public function test_find_formats_by_image_ids_returns_empty_array_for_empty_input(): void
+    public function testFindFormatsByImageIdsReturnsEmptyArrayForEmptyInput(): void
     {
         self::assertSame([], $this->repo->findFormatsByImageIds([]));
     }
 
-    public function test_delete_images_is_a_noop_for_empty_ids(): void
+    public function testDeleteImagesIsANoopForEmptyIds(): void
     {
-        $before = $this->conn->fetchOne('SELECT COUNT(*) FROM ' . 'images');
+        $before = $this->conn->fetchOne('SELECT COUNT(*) FROM images');
 
         $this->repo->deleteImages([]);
 
-        $after = $this->conn->fetchOne('SELECT COUNT(*) FROM ' . 'images');
+        $after = $this->conn->fetchOne('SELECT COUNT(*) FROM images');
         self::assertSame($before, $after);
     }
 
-    public function test_find_orphan_image_ids_excludes_ids_present_in_lounged_ids(): void
+    public function testFindOrphanImageIdsExcludesIdsPresentInLoungedIds(): void
     {
         // Every fixture image already belongs to exactly one album -- break
         // image 3's own link so it's a real orphan for this test, then
         // restore the exact original row.
         $this->conn->executeStatement(
-            'DELETE FROM ' . 'image_category' . ' WHERE image_id = 3 AND category_id = 1'
+            'DELETE FROM image_category WHERE image_id = 3 AND category_id = 1'
         );
 
         try {
@@ -352,14 +352,15 @@ final class ImageRepositoryTest extends IntegrationTestCase
             $withLoungedIds = $this->repo->findOrphanImageIds([3]);
             self::assertNotContains(3, $withLoungedIds);
         } finally {
-            $rank = $this->conn->getDatabasePlatform()->quoteSingleIdentifier('rank');
+            $rank = $this->conn->getDatabasePlatform()
+                ->quoteSingleIdentifier('rank');
             $this->conn->executeStatement(
-                'INSERT INTO ' . 'image_category' . " (image_id, category_id, {$rank}) VALUES (3, 1, 3)"
+                'INSERT INTO image_category' . " (image_id, category_id, {$rank}) VALUES (3, 1, 3)"
             );
         }
     }
 
-    public function test_touch_lastmodified_is_a_noop_for_empty_ids(): void
+    public function testTouchLastmodifiedIsANoopForEmptyIds(): void
     {
         $before = $this->conn->createQueryBuilder()
             ->select('lastmodified')
@@ -380,7 +381,7 @@ final class ImageRepositoryTest extends IntegrationTestCase
         self::assertSame($before, $after);
     }
 
-    public function test_update_rotation_sets_the_column_for_an_existing_image(): void
+    public function testUpdateRotationSetsTheColumnForAnExistingImage(): void
     {
         try {
             $this->repo->updateRotation(ImageId::from(1), 3);
@@ -394,11 +395,11 @@ final class ImageRepositoryTest extends IntegrationTestCase
 
             self::assertSame(3, is_numeric($rotation) ? (int) $rotation : null);
         } finally {
-            $this->conn->executeStatement('UPDATE ' . 'images' . ' SET rotation = 0 WHERE id = 1');
+            $this->conn->executeStatement('UPDATE images SET rotation = 0 WHERE id = 1');
         }
     }
 
-    public function test_update_rotation_is_a_noop_for_a_nonexistent_image(): void
+    public function testUpdateRotationIsANoopForANonexistentImage(): void
     {
         $this->repo->updateRotation(ImageId::from(999_999), 2);
 
@@ -412,27 +413,27 @@ final class ImageRepositoryTest extends IntegrationTestCase
         self::assertSame(0, is_numeric($rotation) ? (int) $rotation : null);
     }
 
-    public function test_mass_insert_lounge_is_a_noop_for_empty_inserts(): void
+    public function testMassInsertLoungeIsANoopForEmptyInserts(): void
     {
-        $before = $this->conn->fetchOne('SELECT COUNT(*) FROM ' . 'lounge');
+        $before = $this->conn->fetchOne('SELECT COUNT(*) FROM lounge');
 
         $this->repo->massInsertLounge([]);
 
-        $after = $this->conn->fetchOne('SELECT COUNT(*) FROM ' . 'lounge');
+        $after = $this->conn->fetchOne('SELECT COUNT(*) FROM lounge');
         self::assertSame($before, $after);
     }
 
-    public function test_mass_insert_image_category_is_a_noop_for_empty_inserts(): void
+    public function testMassInsertImageCategoryIsANoopForEmptyInserts(): void
     {
-        $before = $this->conn->fetchOne('SELECT COUNT(*) FROM ' . 'image_category');
+        $before = $this->conn->fetchOne('SELECT COUNT(*) FROM image_category');
 
         $this->repo->massInsertImageCategory([]);
 
-        $after = $this->conn->fetchOne('SELECT COUNT(*) FROM ' . 'image_category');
+        $after = $this->conn->fetchOne('SELECT COUNT(*) FROM image_category');
         self::assertSame($before, $after);
     }
 
-    public function test_update_dimensions_sets_width_and_height_for_an_existing_image(): void
+    public function testUpdateDimensionsSetsWidthAndHeightForAnExistingImage(): void
     {
         try {
             $this->repo->updateDimensions(1, 999, 888);
@@ -448,11 +449,11 @@ final class ImageRepositoryTest extends IntegrationTestCase
             self::assertSame(999, is_numeric($row['width']) ? (int) $row['width'] : null);
             self::assertSame(888, is_numeric($row['height']) ? (int) $row['height'] : null);
         } finally {
-            $this->conn->executeStatement('UPDATE ' . 'images' . ' SET width = 200, height = 150 WHERE id = 1');
+            $this->conn->executeStatement('UPDATE images SET width = 200, height = 150 WHERE id = 1');
         }
     }
 
-    public function test_update_dimensions_is_a_noop_for_a_nonexistent_image(): void
+    public function testUpdateDimensionsIsANoopForANonexistentImage(): void
     {
         $this->repo->updateDimensions(999_999, 111, 222);
 
@@ -468,7 +469,7 @@ final class ImageRepositoryTest extends IntegrationTestCase
         self::assertSame(150, is_numeric($row['height']) ? (int) $row['height'] : null);
     }
 
-    public function test_update_descriptive_fields_is_a_noop_for_a_nonexistent_image(): void
+    public function testUpdateDescriptiveFieldsIsANoopForANonexistentImage(): void
     {
         $nameBefore = $this->conn->createQueryBuilder()
             ->select('name')
@@ -489,7 +490,7 @@ final class ImageRepositoryTest extends IntegrationTestCase
         self::assertSame($nameBefore, $nameAfter);
     }
 
-    public function test_update_descriptive_fields_sets_date_creation_when_supplied(): void
+    public function testUpdateDescriptiveFieldsSetsDateCreationWhenSupplied(): void
     {
         try {
             $this->repo->updateDescriptiveFields(ImageId::from(1), dateCreation: '2020-05-01 00:00:00');
@@ -503,11 +504,11 @@ final class ImageRepositoryTest extends IntegrationTestCase
 
             self::assertSame('2020-05-01 00:00:00', $dateCreation);
         } finally {
-            $this->conn->executeStatement('UPDATE ' . 'images' . ' SET date_creation = NULL WHERE id = 1');
+            $this->conn->executeStatement('UPDATE images SET date_creation = NULL WHERE id = 1');
         }
     }
 
-    public function test_update_format_filesize_updates_an_existing_format(): void
+    public function testUpdateFormatFilesizeUpdatesAnExistingFormat(): void
     {
         $formatId = $this->insertFormat(1, 'webp', 100);
 
@@ -523,7 +524,7 @@ final class ImageRepositoryTest extends IntegrationTestCase
         self::assertSame(999, is_numeric($filesize) ? (int) $filesize : null);
     }
 
-    public function test_update_format_filesize_is_a_noop_for_a_nonexistent_format(): void
+    public function testUpdateFormatFilesizeIsANoopForANonexistentFormat(): void
     {
         $formatId = $this->insertFormat(1, 'webp', 100);
 
@@ -539,37 +540,37 @@ final class ImageRepositoryTest extends IntegrationTestCase
         self::assertSame(100, is_numeric($filesize) ? (int) $filesize : null);
     }
 
-    public function test_mass_insert_formats_is_a_noop_for_empty_inserts(): void
+    public function testMassInsertFormatsIsANoopForEmptyInserts(): void
     {
-        $before = $this->conn->fetchOne('SELECT COUNT(*) FROM ' . 'image_format');
+        $before = $this->conn->fetchOne('SELECT COUNT(*) FROM image_format');
 
         $this->repo->massInsertFormats([]);
 
-        $after = $this->conn->fetchOne('SELECT COUNT(*) FROM ' . 'image_format');
+        $after = $this->conn->fetchOne('SELECT COUNT(*) FROM image_format');
         self::assertSame($before, $after);
     }
 
-    public function test_find_image_ids_and_exts_by_format_ids_returns_empty_array_for_empty_input(): void
+    public function testFindImageIdsAndExtsByFormatIdsReturnsEmptyArrayForEmptyInput(): void
     {
         self::assertSame([], $this->repo->findImageIdsAndExtsByFormatIds([]));
     }
 
-    public function test_delete_formats_by_ids_is_a_noop_for_empty_ids(): void
+    public function testDeleteFormatsByIdsIsANoopForEmptyIds(): void
     {
         $formatId = $this->insertFormat(1, 'webp', 100);
 
         $this->repo->deleteFormatsByIds([]);
 
-        $count = $this->conn->fetchOne('SELECT COUNT(*) FROM ' . 'image_format' . ' WHERE format_id = ' . $formatId);
+        $count = $this->conn->fetchOne('SELECT COUNT(*) FROM image_format WHERE format_id = ' . $formatId);
         self::assertSame(1, $count);
     }
 
-    public function test_find_paths_and_level_for_ids_returns_empty_array_for_empty_input(): void
+    public function testFindPathsAndLevelForIdsReturnsEmptyArrayForEmptyInput(): void
     {
         self::assertSame([], $this->repo->findPathsAndLevelForIds([]));
     }
 
-    public function test_update_text_field_for_images_is_a_noop_for_empty_ids(): void
+    public function testUpdateTextFieldForImagesIsANoopForEmptyIds(): void
     {
         $before = $this->conn->createQueryBuilder()
             ->select('name')
@@ -590,7 +591,7 @@ final class ImageRepositoryTest extends IntegrationTestCase
         self::assertSame($before, $after);
     }
 
-    public function test_mass_update_fields_is_a_noop_for_empty_datas(): void
+    public function testMassUpdateFieldsIsANoopForEmptyDatas(): void
     {
         $before = $this->conn->createQueryBuilder()
             ->select('name')
@@ -614,7 +615,7 @@ final class ImageRepositoryTest extends IntegrationTestCase
         self::assertSame($before, $after);
     }
 
-    public function test_update_fields_is_a_noop_for_empty_updates(): void
+    public function testUpdateFieldsIsANoopForEmptyUpdates(): void
     {
         $before = $this->conn->createQueryBuilder()
             ->select('name')
@@ -635,17 +636,17 @@ final class ImageRepositoryTest extends IntegrationTestCase
         self::assertSame($before, $after);
     }
 
-    public function test_mass_insert_images_is_a_noop_for_empty_inserts(): void
+    public function testMassInsertImagesIsANoopForEmptyInserts(): void
     {
-        $before = $this->conn->fetchOne('SELECT COUNT(*) FROM ' . 'images');
+        $before = $this->conn->fetchOne('SELECT COUNT(*) FROM images');
 
         $this->repo->massInsertImages([]);
 
-        $after = $this->conn->fetchOne('SELECT COUNT(*) FROM ' . 'images');
+        $after = $this->conn->fetchOne('SELECT COUNT(*) FROM images');
         self::assertSame($before, $after);
     }
 
-    public function test_find_oldest_lounge_age_info_returns_null_when_the_oldest_lounged_images_date_available_is_not_scalar(): void
+    public function testFindOldestLoungeAgeInfoReturnsNullWhenTheOldestLoungedImagesDateAvailableIsNotScalar(): void
     {
         // date_available is nullable on `images` -- a lounge row pointing at
         // an image whose date_available is genuinely NULL must trip the
@@ -654,36 +655,36 @@ final class ImageRepositoryTest extends IntegrationTestCase
         // this single row is guaranteed to be the "oldest" (ORDER BY
         // image_id ASC LIMIT 1) one found.
         $this->conn->executeStatement(
-            "INSERT INTO " . 'images' . " (file, path, date_available) VALUES ('lounge-null-date.jpg', 'upload/lounge-null-date.jpg', NULL)"
+            'INSERT INTO images' . " (file, path, date_available) VALUES ('lounge-null-date.jpg', 'upload/lounge-null-date.jpg', NULL)"
         );
         $imageId = (int) $this->conn->lastInsertId();
 
         $this->conn->executeStatement(
-            'INSERT INTO ' . 'lounge' . ' (image_id, category_id) VALUES (?, ?)',
+            'INSERT INTO lounge (image_id, category_id) VALUES (?, ?)',
             [$imageId, 1]
         );
 
         try {
             self::assertNull($this->repo->findOldestLoungeAgeInfo());
         } finally {
-            $this->conn->executeStatement('DELETE FROM ' . 'lounge' . ' WHERE image_id = ?', [$imageId]);
-            $this->conn->executeStatement('DELETE FROM ' . 'images' . ' WHERE id = ?', [$imageId]);
+            $this->conn->executeStatement('DELETE FROM lounge WHERE image_id = ?', [$imageId]);
+            $this->conn->executeStatement('DELETE FROM images WHERE id = ?', [$imageId]);
         }
     }
 
-    public function test_delete_image_category_links_for_category_ids_is_a_noop_for_empty_category_ids(): void
+    public function testDeleteImageCategoryLinksForCategoryIdsIsANoopForEmptyCategoryIds(): void
     {
         // Fixture: image 1 is linked to category 1 (image_category rows
         // (1,1),(2,1),(3,1),(4,2),(5,2)).
-        $before = $this->conn->fetchOne('SELECT COUNT(*) FROM ' . 'image_category' . ' WHERE image_id = 1');
+        $before = $this->conn->fetchOne('SELECT COUNT(*) FROM image_category WHERE image_id = 1');
 
         $this->repo->deleteImageCategoryLinksForCategoryIds(ImageId::from(1), []);
 
-        $after = $this->conn->fetchOne('SELECT COUNT(*) FROM ' . 'image_category' . ' WHERE image_id = 1');
+        $after = $this->conn->fetchOne('SELECT COUNT(*) FROM image_category WHERE image_id = 1');
         self::assertSame($before, $after);
     }
 
-    public function test_find_earliest_date_available_returns_null_when_no_images_exist(): void
+    public function testFindEarliestDateAvailableReturnsNullWhenNoImagesExist(): void
     {
         // Same beginTransaction()/rollBack() convention as
         // FilterResolverTest's own "images table is empty" tests --
@@ -692,7 +693,7 @@ final class ImageRepositoryTest extends IntegrationTestCase
         $this->conn->beginTransaction();
 
         try {
-            $this->conn->executeStatement('DELETE FROM ' . 'images');
+            $this->conn->executeStatement('DELETE FROM images');
 
             self::assertNull($this->repo->findEarliestDateAvailable());
         } finally {
@@ -700,7 +701,7 @@ final class ImageRepositoryTest extends IntegrationTestCase
         }
     }
 
-    public function test_find_ids_added_same_day_as_latest_excludes_older_images(): void
+    public function testFindIdsAddedSameDayAsLatestExcludesOlderImages(): void
     {
         // Every fixture image already shares the same date_available (the
         // "latest" day) -- add one genuinely older image to prove the
@@ -710,7 +711,7 @@ final class ImageRepositoryTest extends IntegrationTestCase
 
         try {
             $this->conn->executeStatement(
-                "INSERT INTO " . 'images' . " (file, path, date_available) VALUES ('older-photo.jpg', 'upload/older-photo.jpg', '2020-01-01 00:00:00')"
+                'INSERT INTO images' . " (file, path, date_available) VALUES ('older-photo.jpg', 'upload/older-photo.jpg', '2020-01-01 00:00:00')"
             );
             $olderId = (int) $this->conn->lastInsertId();
 
@@ -723,17 +724,17 @@ final class ImageRepositoryTest extends IntegrationTestCase
         }
     }
 
-    public function test_find_history_display_info_by_ids_returns_empty_array_for_empty_input(): void
+    public function testFindHistoryDisplayInfoByIdsReturnsEmptyArrayForEmptyInput(): void
     {
         self::assertSame([], $this->repo->findHistoryDisplayInfoByIds([]));
     }
 
-    public function test_find_most_recent_image_category_info_returns_null_when_no_image_is_linked_to_a_category(): void
+    public function testFindMostRecentImageCategoryInfoReturnsNullWhenNoImageIsLinkedToACategory(): void
     {
         $this->conn->beginTransaction();
 
         try {
-            $this->conn->executeStatement('DELETE FROM ' . 'image_category');
+            $this->conn->executeStatement('DELETE FROM image_category');
 
             self::assertNull($this->repo->findMostRecentImageCategoryInfo());
         } finally {
@@ -741,7 +742,7 @@ final class ImageRepositoryTest extends IntegrationTestCase
         }
     }
 
-    public function test_find_most_recent_image_category_info_returns_the_real_joined_row(): void
+    public function testFindMostRecentImageCategoryInfoReturnsTheRealJoinedRow(): void
     {
         // This method uses a blind `instanceof CategoryId` check with a
         // silent `return null` fallback, so a wrong VO-hydration
@@ -755,60 +756,60 @@ final class ImageRepositoryTest extends IntegrationTestCase
         );
     }
 
-    public function test_delete_image_category_rows_for_image_ids_is_a_noop_for_empty_ids(): void
+    public function testDeleteImageCategoryRowsForImageIdsIsANoopForEmptyIds(): void
     {
-        $before = $this->conn->fetchOne('SELECT COUNT(*) FROM ' . 'image_category');
+        $before = $this->conn->fetchOne('SELECT COUNT(*) FROM image_category');
 
         $this->repo->deleteImageCategoryRowsForImageIds([]);
 
-        $after = $this->conn->fetchOne('SELECT COUNT(*) FROM ' . 'image_category');
+        $after = $this->conn->fetchOne('SELECT COUNT(*) FROM image_category');
         self::assertSame($before, $after);
     }
 
-    public function test_find_ids_by_filename_in_category_returns_matching_image_ids(): void
+    public function testFindIdsByFilenameInCategoryReturnsMatchingImageIds(): void
     {
         // Fixture: image 1 is 'fixture-photo-1.jpg', linked to category 1.
         self::assertSame([1], $this->repo->findIdsByFilenameInCategory('fixture-photo-1.jpg', CategoryId::from(1)));
     }
 
-    public function test_find_ids_by_filename_in_category_returns_empty_for_a_filename_not_in_that_category(): void
+    public function testFindIdsByFilenameInCategoryReturnsEmptyForAFilenameNotInThatCategory(): void
     {
         // Image 1 matches the filename but is only linked to category 1,
         // not category 2 (category 2 holds images 4 and 5).
         self::assertSame([], $this->repo->findIdsByFilenameInCategory('fixture-photo-1.jpg', CategoryId::from(2)));
     }
 
-    public function test_find_upload_result_info_by_id_returns_null_for_a_nonexistent_image(): void
+    public function testFindUploadResultInfoByIdReturnsNullForANonexistentImage(): void
     {
         self::assertNull($this->repo->findUploadResultInfoById(ImageId::from(999_999)));
     }
 
-    public function test_find_ids_by_md5sums_returns_empty_array_for_empty_input(): void
+    public function testFindIdsByMd5sumsReturnsEmptyArrayForEmptyInput(): void
     {
         self::assertSame([], $this->repo->findIdsByMd5sums([]));
     }
 
-    public function test_find_ids_by_filenames_returns_empty_array_for_empty_input(): void
+    public function testFindIdsByFilenamesReturnsEmptyArrayForEmptyInput(): void
     {
         self::assertSame([], $this->repo->findIdsByFilenames([]));
     }
 
-    public function test_find_existing_ids_returns_empty_array_for_empty_input(): void
+    public function testFindExistingIdsReturnsEmptyArrayForEmptyInput(): void
     {
         self::assertSame([], $this->repo->findExistingIds([]));
     }
 
-    public function test_find_category_links_for_image_ids_with_condition_returns_empty_array_for_empty_image_ids(): void
+    public function testFindCategoryLinksForImageIdsWithConditionReturnsEmptyArrayForEmptyImageIds(): void
     {
         self::assertSame([], $this->repo->findCategoryLinksForImageIdsWithCondition([], self::noPermissionRestriction()));
     }
 
-    public function test_find_ids_and_paths_by_storage_category_ids_returns_empty_array_for_empty_input(): void
+    public function testFindIdsAndPathsByStorageCategoryIdsReturnsEmptyArrayForEmptyInput(): void
     {
         self::assertSame([], $this->repo->findIdsAndPathsByStorageCategoryIds([]));
     }
 
-    public function test_find_add_method_breakdown_groups_by_storage_category_presence(): void
+    public function testFindAddMethodBreakdownGroupsByStorageCategoryPresence(): void
     {
         // Every fixture image has storage_category_id NULL (added via the
         // API, never a filesystem sync) -- temporarily give image 1 a real
@@ -816,7 +817,7 @@ final class ImageRepositoryTest extends IntegrationTestCase
         // and both array_map() mapping passes, actually run against real
         // grouped data.
         try {
-            $this->conn->executeStatement('UPDATE ' . 'images' . ' SET storage_category_id = 1 WHERE id = 1');
+            $this->conn->executeStatement('UPDATE images SET storage_category_id = 1 WHERE id = 1');
 
             $breakdown = $this->repo->findAddMethodBreakdown();
 
@@ -833,7 +834,7 @@ final class ImageRepositoryTest extends IntegrationTestCase
             self::assertSame('2026-08-01 00:00:00', $byMethod['sync']->lastAddedOn);
             self::assertSame('2026-08-01 00:00:00', $byMethod['api']->lastAddedOn);
         } finally {
-            $this->conn->executeStatement('UPDATE ' . 'images' . ' SET storage_category_id = NULL WHERE id = 1');
+            $this->conn->executeStatement('UPDATE images SET storage_category_id = NULL WHERE id = 1');
         }
     }
 
@@ -848,19 +849,19 @@ final class ImageRepositoryTest extends IntegrationTestCase
      * a real running-max comparison, never by "whichever row happened to
      * be first/last processed".
      */
-    public function test_find_add_method_breakdown_tracks_the_true_maximum_and_returns_a_reindexed_list(): void
+    public function testFindAddMethodBreakdownTracksTheTrueMaximumAndReturnsAReindexedList(): void
     {
         $this->conn->beginTransaction();
 
         try {
             $this->conn->executeStatement(
-                "INSERT INTO " . 'images' . " (file, date_available) VALUES ('p18-earliest.jpg', '2010-01-01 00:00:00')"
+                'INSERT INTO images' . " (file, date_available) VALUES ('p18-earliest.jpg', '2010-01-01 00:00:00')"
             );
             $this->conn->executeStatement(
-                "INSERT INTO " . 'images' . " (file, date_available) VALUES ('p18-max.jpg', '2030-01-01 00:00:00')"
+                'INSERT INTO images' . " (file, date_available) VALUES ('p18-max.jpg', '2030-01-01 00:00:00')"
             );
             $this->conn->executeStatement(
-                "INSERT INTO " . 'images' . " (file, date_available) VALUES ('p18-middle.jpg', '2020-01-01 00:00:00')"
+                'INSERT INTO images' . " (file, date_available) VALUES ('p18-middle.jpg', '2020-01-01 00:00:00')"
             );
 
             $breakdown = $this->repo->findAddMethodBreakdown();
@@ -885,7 +886,7 @@ final class ImageRepositoryTest extends IntegrationTestCase
     // '2e7ee450c4a4cffe42945205029782b9'; every fixture image's `author`
     // is NULL.
 
-    public function test_find_by_id_or_file_pattern_matches_by_id(): void
+    public function testFindByIdOrFilePatternMatchesById(): void
     {
         $row = $this->repo->findByIdOrFilePattern(1, null);
 
@@ -893,7 +894,7 @@ final class ImageRepositoryTest extends IntegrationTestCase
         self::assertSame('fixture-photo-1.jpg', $row->file);
     }
 
-    public function test_find_by_id_or_file_pattern_matches_by_file_pattern(): void
+    public function testFindByIdOrFilePatternMatchesByFilePattern(): void
     {
         $row = $this->repo->findByIdOrFilePattern(0, 'fixture-photo-2');
 
@@ -901,7 +902,7 @@ final class ImageRepositoryTest extends IntegrationTestCase
         self::assertSame(2, $row->id->value);
     }
 
-    public function test_find_by_id_or_file_pattern_returns_false_for_no_match(): void
+    public function testFindByIdOrFilePatternReturnsFalseForNoMatch(): void
     {
         self::assertFalse($this->repo->findByIdOrFilePattern(999_999, null));
     }
@@ -914,17 +915,17 @@ final class ImageRepositoryTest extends IntegrationTestCase
      * always bound as a literal LIKE value -- it matches nothing rather
      * than tautologically matching every row.
      */
-    public function test_find_by_id_or_file_pattern_treats_sql_syntax_as_a_literal_value(): void
+    public function testFindByIdOrFilePatternTreatsSqlSyntaxAsALiteralValue(): void
     {
         self::assertFalse($this->repo->findByIdOrFilePattern(0, "fixture-photo-1' OR '1'='1"));
     }
 
-    public function test_find_ids_by_md5sum_returns_the_matching_image(): void
+    public function testFindIdsByMd5sumReturnsTheMatchingImage(): void
     {
         self::assertSame([1], $this->repo->findIdsByMd5sum('2e7ee450c4a4cffe42945205029782b9'));
     }
 
-    public function test_find_ids_by_md5sum_returns_empty_for_no_match(): void
+    public function testFindIdsByMd5sumReturnsEmptyForNoMatch(): void
     {
         self::assertSame([], $this->repo->findIdsByMd5sum('no-such-md5sum'));
     }
@@ -936,12 +937,12 @@ final class ImageRepositoryTest extends IntegrationTestCase
      * conversion, so the id comes back as a raw driver scalar that must be
      * explicitly cast to int, not already an int/ImageId.
      */
-    public function test_find_image_ids_without_md5sum_returns_the_real_ids_as_ints(): void
+    public function testFindImageIdsWithoutMd5sumReturnsTheRealIdsAsInts(): void
     {
         $this->conn->beginTransaction();
 
         try {
-            $this->conn->executeStatement('UPDATE ' . 'images' . ' SET md5sum = NULL WHERE id = 2');
+            $this->conn->executeStatement('UPDATE images SET md5sum = NULL WHERE id = 2');
 
             self::assertSame([2], $this->repo->findImageIdsWithoutMd5sum());
         } finally {
@@ -955,22 +956,22 @@ final class ImageRepositoryTest extends IntegrationTestCase
      * constraints -- a value containing SQL syntax must be treated as a
      * literal, matching nothing, not injected as SQL structure.
      */
-    public function test_find_ids_by_md5sum_treats_sql_syntax_as_a_literal_value(): void
+    public function testFindIdsByMd5sumTreatsSqlSyntaxAsALiteralValue(): void
     {
         self::assertSame([], $this->repo->findIdsByMd5sum("x' OR '1'='1"));
     }
 
-    public function test_exists_with_column_value_is_true_for_a_matching_md5sum(): void
+    public function testExistsWithColumnValueIsTrueForAMatchingMd5sum(): void
     {
         self::assertTrue($this->repo->existsWithColumnValue(ImageUniquenessColumn::Md5sum, '2e7ee450c4a4cffe42945205029782b9'));
     }
 
-    public function test_exists_with_column_value_is_true_for_a_matching_file(): void
+    public function testExistsWithColumnValueIsTrueForAMatchingFile(): void
     {
         self::assertTrue($this->repo->existsWithColumnValue(ImageUniquenessColumn::File, 'fixture-photo-1.jpg'));
     }
 
-    public function test_exists_with_column_value_is_false_for_no_match(): void
+    public function testExistsWithColumnValueIsFalseForNoMatch(): void
     {
         self::assertFalse($this->repo->existsWithColumnValue(ImageUniquenessColumn::Md5sum, 'no-such-md5sum'));
     }
@@ -982,7 +983,7 @@ final class ImageRepositoryTest extends IntegrationTestCase
      * syntax must be treated as a literal, matching nothing, not injected
      * as a tautology.
      */
-    public function test_exists_with_column_value_treats_sql_syntax_as_a_literal_value(): void
+    public function testExistsWithColumnValueTreatsSqlSyntaxAsALiteralValue(): void
     {
         self::assertFalse($this->repo->existsWithColumnValue(ImageUniquenessColumn::File, "fixture-photo-1.jpg' OR '1'='1"));
     }
@@ -996,12 +997,12 @@ final class ImageRepositoryTest extends IntegrationTestCase
         return new PermissionCriteria(null, null, null, null, null, null);
     }
 
-    public function test_is_image_accessible_with_condition_is_true_with_no_restriction(): void
+    public function testIsImageAccessibleWithConditionIsTrueWithNoRestriction(): void
     {
         self::assertTrue($this->repo->isImageAccessibleWithCondition(ImageId::from(1), self::noPermissionRestriction()));
     }
 
-    public function test_is_image_accessible_with_condition_applies_the_given_condition(): void
+    public function testIsImageAccessibleWithConditionAppliesTheGivenCondition(): void
     {
         // fixture: image 1 belongs to category 1 -- excluding it via
         // forbiddenCategoryIds (checked against ic.category_id) excludes
@@ -1009,7 +1010,7 @@ final class ImageRepositoryTest extends IntegrationTestCase
         self::assertFalse($this->repo->isImageAccessibleWithCondition(ImageId::from(1), new PermissionCriteria([1], null, null, null, null, null)));
     }
 
-    public function test_find_row_with_condition_returns_the_matching_row(): void
+    public function testFindRowWithConditionReturnsTheMatchingRow(): void
     {
         $row = $this->repo->findRowWithCondition(ImageId::from(1), self::noPermissionRestriction());
 
@@ -1017,12 +1018,12 @@ final class ImageRepositoryTest extends IntegrationTestCase
         self::assertSame('fixture-photo-1.jpg', $row['file']);
     }
 
-    public function test_find_row_with_condition_returns_null_when_the_condition_excludes_it(): void
+    public function testFindRowWithConditionReturnsNullWhenTheConditionExcludesIt(): void
     {
         self::assertNull($this->repo->findRowWithCondition(ImageId::from(1), new PermissionCriteria(null, null, [999_999], null, null, null)));
     }
 
-    public function test_find_related_categories_for_image_returns_matching_rows(): void
+    public function testFindRelatedCategoriesForImageReturnsMatchingRows(): void
     {
         $rows = $this->repo->findRelatedCategoriesForImage(ImageId::from(1), self::noPermissionRestriction());
 
@@ -1031,22 +1032,22 @@ final class ImageRepositoryTest extends IntegrationTestCase
         self::assertTrue($rows[0]['commentable']);
     }
 
-    public function test_find_related_categories_for_image_applies_the_given_condition(): void
+    public function testFindRelatedCategoriesForImageAppliesTheGivenCondition(): void
     {
         self::assertSame([], $this->repo->findRelatedCategoriesForImage(ImageId::from(1), new PermissionCriteria([1], null, null, null, null, null)));
     }
 
-    public function test_is_image_commentable_with_condition_is_true_for_a_commentable_category(): void
+    public function testIsImageCommentableWithConditionIsTrueForACommentableCategory(): void
     {
         self::assertTrue($this->repo->isImageCommentableWithCondition(ImageId::from(1), self::noPermissionRestriction()));
     }
 
-    public function test_is_image_commentable_with_condition_applies_the_given_condition(): void
+    public function testIsImageCommentableWithConditionAppliesTheGivenCondition(): void
     {
         self::assertFalse($this->repo->isImageCommentableWithCondition(ImageId::from(1), new PermissionCriteria([1], null, null, null, null, null)));
     }
 
-    public function test_find_visible_categories_for_image_returns_matching_rows(): void
+    public function testFindVisibleCategoriesForImageReturnsMatchingRows(): void
     {
         $rows = $this->repo->findVisibleCategoriesForImage(ImageId::from(1), self::noPermissionRestriction());
 
@@ -1054,38 +1055,38 @@ final class ImageRepositoryTest extends IntegrationTestCase
         self::assertSame(1, $rows[0]['id']);
     }
 
-    public function test_find_visible_categories_for_image_applies_the_given_condition(): void
+    public function testFindVisibleCategoriesForImageAppliesTheGivenCondition(): void
     {
         self::assertSame([], $this->repo->findVisibleCategoriesForImage(ImageId::from(1), new PermissionCriteria([1], null, null, null, null, null)));
     }
 
-    public function test_has_accessible_image_with_author_is_false_when_no_image_has_an_author(): void
+    public function testHasAccessibleImageWithAuthorIsFalseWhenNoImageHasAnAuthor(): void
     {
         self::assertFalse($this->repo->hasAccessibleImageWithAuthor(self::noPermissionRestriction()));
     }
 
-    public function test_has_accessible_image_with_author_is_true_once_one_image_has_an_author(): void
+    public function testHasAccessibleImageWithAuthorIsTrueOnceOneImageHasAnAuthor(): void
     {
-        $this->conn->executeStatement('UPDATE ' . 'images' . " SET author = 'fixture-author' WHERE id = 1");
+        $this->conn->executeStatement('UPDATE images' . " SET author = 'fixture-author' WHERE id = 1");
 
         try {
             self::assertTrue($this->repo->hasAccessibleImageWithAuthor(self::noPermissionRestriction()));
         } finally {
-            $this->conn->executeStatement('UPDATE ' . 'images' . ' SET author = NULL WHERE id = 1');
+            $this->conn->executeStatement('UPDATE images SET author = NULL WHERE id = 1');
         }
     }
 
-    public function test_is_image_accessible_via_category_with_condition_is_true_with_no_restriction(): void
+    public function testIsImageAccessibleViaCategoryWithConditionIsTrueWithNoRestriction(): void
     {
         self::assertTrue($this->repo->isImageAccessibleViaCategoryWithCondition(ImageId::from(1), self::noPermissionRestriction()));
     }
 
-    public function test_is_image_accessible_via_category_with_condition_applies_the_given_condition(): void
+    public function testIsImageAccessibleViaCategoryWithConditionAppliesTheGivenCondition(): void
     {
         self::assertFalse($this->repo->isImageAccessibleViaCategoryWithCondition(ImageId::from(1), new PermissionCriteria([1], null, null, null, null, null)));
     }
 
-    public function test_find_with_conditions_paginated_returns_matching_rows_and_total(): void
+    public function testFindWithConditionsPaginatedReturnsMatchingRowsAndTotal(): void
     {
         $criteria = new CategoryImagesCriteria(new ImageFilterCriteria(), [1], new SqlCondition(''));
         $result = $this->repo->findWithConditionsPaginated($criteria, '', 10, 0);
@@ -1094,7 +1095,7 @@ final class ImageRepositoryTest extends IntegrationTestCase
         self::assertSame(3, $result->total);
     }
 
-    public function test_find_with_conditions_paginated_respects_the_limit(): void
+    public function testFindWithConditionsPaginatedRespectsTheLimit(): void
     {
         $criteria = new CategoryImagesCriteria(new ImageFilterCriteria(), [1], new SqlCondition(''));
         $result = $this->repo->findWithConditionsPaginated($criteria, '', 1, 0);
@@ -1103,7 +1104,7 @@ final class ImageRepositoryTest extends IntegrationTestCase
         self::assertSame(3, $result->total);
     }
 
-    public function test_find_with_conditions_paginated_applies_the_filter_condition(): void
+    public function testFindWithConditionsPaginatedAppliesTheFilterCondition(): void
     {
         // fixture: category 1's images are 1 (rating_score 4.50), 2
         // (3.00), 3 (5.00) -- minRate: 4.0 keeps only 1 and 3.
@@ -1114,7 +1115,7 @@ final class ImageRepositoryTest extends IntegrationTestCase
         self::assertSame(2, $result->total);
     }
 
-    public function test_find_with_conditions_paginated_applies_the_visible_images_condition(): void
+    public function testFindWithConditionsPaginatedAppliesTheVisibleImagesCondition(): void
     {
         $criteria = new CategoryImagesCriteria(new ImageFilterCriteria(), [1], new SqlCondition('i.id = -1'));
         $result = $this->repo->findWithConditionsPaginated($criteria, '', 10, 0);
@@ -1123,7 +1124,7 @@ final class ImageRepositoryTest extends IntegrationTestCase
         self::assertSame(0, $result->total);
     }
 
-    public function test_find_category_links_for_image_ids_with_condition_returns_matching_rows(): void
+    public function testFindCategoryLinksForImageIdsWithConditionReturnsMatchingRows(): void
     {
         $rows = $this->repo->findCategoryLinksForImageIdsWithCondition([1, 2], self::noPermissionRestriction());
 
@@ -1133,12 +1134,12 @@ final class ImageRepositoryTest extends IntegrationTestCase
         self::assertSame(['1:1', '2:1'], $pairs);
     }
 
-    public function test_find_category_links_for_image_ids_with_condition_applies_the_given_condition(): void
+    public function testFindCategoryLinksForImageIdsWithConditionAppliesTheGivenCondition(): void
     {
         self::assertSame([], $this->repo->findCategoryLinksForImageIdsWithCondition([1, 2], new PermissionCriteria([1], null, null, null, null, null)));
     }
 
-    public function test_find_for_missing_derivatives_matches_the_given_filter_condition(): void
+    public function testFindForMissingDerivativesMatchesTheGivenFilterCondition(): void
     {
         // fixture ratings: 1=>4.50, 2=>3.00, 3=>5.00, 4=>2.00, 5=>NULL --
         // minRate: 4.6 keeps only image 3 (a NULL rating never satisfies a
@@ -1150,7 +1151,7 @@ final class ImageRepositoryTest extends IntegrationTestCase
         self::assertSame(3, $rows[0]->id);
     }
 
-    public function test_find_for_missing_derivatives_filters_by_ids(): void
+    public function testFindForMissingDerivativesFiltersByIds(): void
     {
         $criteria = new MissingDerivativesCriteria(new ImageFilterCriteria(), [2, 3]);
         $rows = $this->repo->findForMissingDerivatives($criteria, 999_999, 10);
@@ -1160,46 +1161,52 @@ final class ImageRepositoryTest extends IntegrationTestCase
         self::assertSame([2, 3], $ids);
     }
 
-    public function test_count_lounge_images_pending_for_category_counts_unlinked_lounge_rows(): void
+    public function testCountLoungeImagesPendingForCategoryCountsUnlinkedLoungeRows(): void
     {
         // `lounge.image_id` FK-references `images.id`, and every fixture
         // image (1-5) already has an image_category link -- a disposable
         // image row (with none) is the only way to reach the "pending"
         // (not yet linked into image_category) branch this method counts.
-        $this->conn->insert('images', ['file' => 'p18-test-lounge-pending.jpg']);
+        $this->conn->insert('images', [
+            'file' => 'p18-test-lounge-pending.jpg',
+        ]);
         $imageId = (int) $this->conn->lastInsertId();
-        $this->conn->insert('lounge', ['image_id' => $imageId, 'category_id' => 1]);
+        $this->conn->insert('lounge', [
+            'image_id' => $imageId,
+            'category_id' => 1,
+        ]);
 
         try {
             self::assertSame(1, $this->repo->countLoungeImagesPendingForCategory(CategoryId::from(1)));
         } finally {
-            $this->conn->executeStatement('DELETE FROM ' . 'images' . ' WHERE id = ?', [$imageId]);
+            $this->conn->executeStatement('DELETE FROM images WHERE id = ?', [$imageId]);
         }
     }
 
-    public function test_is_image_in_category_is_true_for_a_real_link(): void
+    public function testIsImageInCategoryIsTrueForARealLink(): void
     {
         self::assertTrue($this->repo->isImageInCategory(ImageId::from(1), CategoryId::from(1)));
     }
 
-    public function test_is_image_in_category_is_false_for_no_link(): void
+    public function testIsImageInCategoryIsFalseForNoLink(): void
     {
         self::assertFalse($this->repo->isImageInCategory(ImageId::from(1), CategoryId::from(2)));
     }
 
-    public function test_find_max_rank_for_category_returns_the_highest_rank(): void
+    public function testFindMaxRankForCategoryReturnsTheHighestRank(): void
     {
         self::assertSame(3, $this->repo->findMaxRankForCategory(CategoryId::from(1)));
     }
 
-    public function test_find_max_rank_for_category_returns_null_for_no_ranked_images(): void
+    public function testFindMaxRankForCategoryReturnsNullForNoRankedImages(): void
     {
         self::assertNull($this->repo->findMaxRankForCategory(CategoryId::from(999_999)));
     }
 
-    public function test_increment_ranks_from_for_category_bumps_ranks_at_or_above_the_given_rank(): void
+    public function testIncrementRanksFromForCategoryBumpsRanksAtOrAboveTheGivenRank(): void
     {
-        $rankIdentifier = $this->conn->getDatabasePlatform()->quoteSingleIdentifier('rank');
+        $rankIdentifier = $this->conn->getDatabasePlatform()
+            ->quoteSingleIdentifier('rank');
         try {
             $this->repo->incrementRanksFromForCategory(CategoryId::from(1), 2);
 
@@ -1217,13 +1224,14 @@ final class ImageRepositoryTest extends IntegrationTestCase
             // and rank are numerically identical by construction (1/1,
             // 2/2, 3/3) -- restoring rank = image_id is exact, not an
             // approximation.
-            $this->conn->executeStatement("UPDATE " . 'image_category' . " SET {$rankIdentifier} = image_id WHERE category_id = 1");
+            $this->conn->executeStatement('UPDATE image_category' . " SET {$rankIdentifier} = image_id WHERE category_id = 1");
         }
     }
 
-    public function test_update_rank_for_image_in_category_sets_the_rank(): void
+    public function testUpdateRankForImageInCategorySetsTheRank(): void
     {
-        $rankIdentifier = $this->conn->getDatabasePlatform()->quoteSingleIdentifier('rank');
+        $rankIdentifier = $this->conn->getDatabasePlatform()
+            ->quoteSingleIdentifier('rank');
         try {
             $this->repo->updateRankForImageInCategory(ImageId::from(1), CategoryId::from(1), 99);
 
@@ -1236,21 +1244,21 @@ final class ImageRepositoryTest extends IntegrationTestCase
                 ->fetchOne();
             self::assertSame(99, $rank);
         } finally {
-            $this->conn->executeStatement("UPDATE " . 'image_category' . " SET {$rankIdentifier} = 1 WHERE image_id = 1 AND category_id = 1");
+            $this->conn->executeStatement('UPDATE image_category' . " SET {$rankIdentifier} = 1 WHERE image_id = 1 AND category_id = 1");
         }
     }
 
-    public function test_count_images_in_category_counts_linked_images(): void
+    public function testCountImagesInCategoryCountsLinkedImages(): void
     {
         self::assertSame(3, $this->repo->countImagesInCategory(CategoryId::from(1)));
     }
 
-    public function test_find_associated_category_ids_returns_the_real_categories(): void
+    public function testFindAssociatedCategoryIdsReturnsTheRealCategories(): void
     {
         self::assertSame([1], $this->repo->findAssociatedCategoryIds(ImageId::from(1)));
     }
 
-    public function test_update_level_for_images_sets_the_level_and_returns_the_affected_count(): void
+    public function testUpdateLevelForImagesSetsTheLevelAndReturnsTheAffectedCount(): void
     {
         try {
             $affected = $this->repo->updateLevelForImages([1, 2], 5);
@@ -1258,14 +1266,19 @@ final class ImageRepositoryTest extends IntegrationTestCase
             self::assertSame(2, $affected);
             self::assertSame(
                 5,
-                $this->conn->createQueryBuilder()->select('level')->from('images')->where('id = 1')->executeQuery()->fetchOne()
+                $this->conn->createQueryBuilder()
+                    ->select('level')
+                    ->from('images')
+                    ->where('id = 1')
+                    ->executeQuery()
+                    ->fetchOne()
             );
         } finally {
-            $this->conn->executeStatement('UPDATE ' . 'images' . ' SET level = 0 WHERE id IN (1, 2)');
+            $this->conn->executeStatement('UPDATE images SET level = 0 WHERE id IN (1, 2)');
         }
     }
 
-    public function test_find_paths_for_file_deletion_returns_the_matching_rows(): void
+    public function testFindPathsForFileDeletionReturnsTheMatchingRows(): void
     {
         $rows = $this->repo->findPathsForFileDeletion([1, 2]);
 
@@ -1274,18 +1287,18 @@ final class ImageRepositoryTest extends IntegrationTestCase
         self::assertSame([1, 2], $ids);
     }
 
-    public function test_find_next_id_returns_one_more_than_the_current_max(): void
+    public function testFindNextIdReturnsOneMoreThanTheCurrentMax(): void
     {
         // findNextId() returns COALESCE(MAX(id)+1, 1), verified here
         // against the real, non-empty fixture table -- the empty-table
         // branch isn't practically testable against this shared fixture
         // DB.
-        $maxId = $this->conn->fetchOne('SELECT MAX(id) FROM ' . 'images');
+        $maxId = $this->conn->fetchOne('SELECT MAX(id) FROM images');
 
         self::assertSame((is_numeric($maxId) ? $maxId : 0) + 1, $this->repo->findNextId());
     }
 
-    public function test_find_ids_not_in_categories_excludes_linked_images(): void
+    public function testFindIdsNotInCategoriesExcludesLinkedImages(): void
     {
         // The non-empty branch's DQL NOT IN (subquery) is built via a
         // separate QueryBuilder's own getDQL() string interpolated into
@@ -1296,31 +1309,31 @@ final class ImageRepositoryTest extends IntegrationTestCase
         self::assertSame([4, 5], $ids);
     }
 
-    public function test_find_ids_not_in_categories_returns_every_image_for_no_categories(): void
+    public function testFindIdsNotInCategoriesReturnsEveryImageForNoCategories(): void
     {
         $ids = $this->repo->findIdsNotInCategories([]);
         sort($ids);
         self::assertSame([1, 2, 3, 4, 5], $ids);
     }
 
-    public function test_find_ids_not_in_categories_returns_empty_when_every_image_is_linked(): void
+    public function testFindIdsNotInCategoriesReturnsEmptyWhenEveryImageIsLinked(): void
     {
         self::assertSame([], $this->repo->findIdsNotInCategories([1, 2]));
     }
 
-    public function test_find_ids_in_categories_returns_linked_images(): void
+    public function testFindIdsInCategoriesReturnsLinkedImages(): void
     {
         $ids = $this->repo->findIdsInCategories([2]);
         sort($ids);
         self::assertSame([4, 5], $ids);
     }
 
-    public function test_find_ids_in_categories_returns_empty_for_no_categories(): void
+    public function testFindIdsInCategoriesReturnsEmptyForNoCategories(): void
     {
         self::assertSame([], $this->repo->findIdsInCategories([]));
     }
 
-    public function test_find_existing_associations_returns_real_values_not_an_empty_array(): void
+    public function testFindExistingAssociationsReturnsRealValuesNotAnEmptyArray(): void
     {
         // This method uses a *blind* `instanceof CategoryId` check (no
         // raw-int fallback, unlike sibling methods in this file) -- if
@@ -1337,10 +1350,13 @@ final class ImageRepositoryTest extends IntegrationTestCase
         self::assertSame([4], $existing[2]);
     }
 
-    public function test_find_max_ranks_by_category_returns_real_values_not_an_empty_array(): void
+    public function testFindMaxRanksByCategoryReturnsRealValuesNotAnEmptyArray(): void
     {
         self::assertSame(
-            ['1' => 3, '2' => 2],
+            [
+                '1' => 3,
+                '2' => 2,
+            ],
             $this->repo->findMaxRanksByCategory([1, 2])
         );
     }
@@ -1351,7 +1367,7 @@ final class ImageRepositoryTest extends IntegrationTestCase
      * `c.id` comes back as a raw scalar that must be explicitly mapped to
      * int here, not already an int/ImageId.
      */
-    public function test_find_represented_category_ids_returns_the_real_category(): void
+    public function testFindRepresentedCategoryIdsReturnsTheRealCategory(): void
     {
         // Fixture: category 1's representative_picture_id is image 1;
         // category 2's is image 4.
@@ -1368,22 +1384,24 @@ final class ImageRepositoryTest extends IntegrationTestCase
      * pass-through of the raw value would error against the database, and
      * a wrong default could spuriously match a real category.
      */
-    public function test_find_represented_category_ids_treats_non_numeric_ids_as_a_harmless_zero(): void
+    public function testFindRepresentedCategoryIdsTreatsNonNumericIdsAsAHarmlessZero(): void
     {
         self::assertSame([], $this->repo->findRepresentedCategoryIds(['not-a-number']));
     }
 
-    public function test_find_virtually_associated_category_rows_returns_real_categories(): void
+    public function testFindVirtuallyAssociatedCategoryRowsReturnsRealCategories(): void
     {
         // Every fixture image has storage_category_id NULL, so the "OR
         // i.storageCategoryId IS NULL" branch always applies -- image 1's
         // real category_id membership (category 1) must come back, not [].
         $rows = $this->repo->findVirtuallyAssociatedCategoryRows([1]);
 
-        self::assertSame([['id' => 1]], $rows);
+        self::assertSame([[
+            'id' => 1,
+        ]], $rows);
     }
 
-    public function test_find_category_links_for_image_returns_the_real_category(): void
+    public function testFindCategoryLinksForImageReturnsTheRealCategory(): void
     {
         $rows = $this->repo->findCategoryLinksForImage(ImageId::from(1));
 
@@ -1394,14 +1412,17 @@ final class ImageRepositoryTest extends IntegrationTestCase
         ]], $rows);
     }
 
-    public function test_find_lounge_rows_returns_the_real_rows(): void
+    public function testFindLoungeRowsReturnsTheRealRows(): void
     {
         // No fixture lounge data exists, so this inserts its own within
         // a rolled-back transaction.
         $this->conn->beginTransaction();
 
         try {
-            $this->conn->insert('lounge', ['image_id' => 1, 'category_id' => 2]);
+            $this->conn->insert('lounge', [
+                'image_id' => 1,
+                'category_id' => 2,
+            ]);
 
             self::assertEquals(
                 [new ImageCategoryLink(1, 2)],
@@ -1412,13 +1433,19 @@ final class ImageRepositoryTest extends IntegrationTestCase
         }
     }
 
-    public function test_delete_lounge_up_to_removes_matching_rows_only(): void
+    public function testDeleteLoungeUpToRemovesMatchingRowsOnly(): void
     {
         $this->conn->beginTransaction();
 
         try {
-            $this->conn->insert('lounge', ['image_id' => 1, 'category_id' => 2]);
-            $this->conn->insert('lounge', ['image_id' => 3, 'category_id' => 2]);
+            $this->conn->insert('lounge', [
+                'image_id' => 1,
+                'category_id' => 2,
+            ]);
+            $this->conn->insert('lounge', [
+                'image_id' => 3,
+                'category_id' => 2,
+            ]);
 
             $this->repo->deleteLoungeUpTo(1);
 
@@ -1428,12 +1455,15 @@ final class ImageRepositoryTest extends IntegrationTestCase
         }
     }
 
-    public function test_find_lounged_image_ids_returns_the_real_ids(): void
+    public function testFindLoungedImageIdsReturnsTheRealIds(): void
     {
         $this->conn->beginTransaction();
 
         try {
-            $this->conn->insert('lounge', ['image_id' => 4, 'category_id' => 1]);
+            $this->conn->insert('lounge', [
+                'image_id' => 4,
+                'category_id' => 1,
+            ]);
 
             self::assertSame([4], $this->repo->findLoungedImageIds());
         } finally {
@@ -1441,7 +1471,7 @@ final class ImageRepositoryTest extends IntegrationTestCase
         }
     }
 
-    public function test_find_dissociable_image_ids_returns_images_not_stored_under_the_category(): void
+    public function testFindDissociableImageIdsReturnsImagesNotStoredUnderTheCategory(): void
     {
         // Fixture: images 1-3 are in category 1, none has a
         // storage_category_id set, so all 3 are dissociable from it.
@@ -1450,7 +1480,7 @@ final class ImageRepositoryTest extends IntegrationTestCase
         self::assertSame([1, 2, 3], $ids);
     }
 
-    public function test_delete_image_category_links_removes_only_the_given_images_and_category(): void
+    public function testDeleteImageCategoryLinksRemovesOnlyTheGivenImagesAndCategory(): void
     {
         $this->conn->beginTransaction();
 
@@ -1464,13 +1494,13 @@ final class ImageRepositoryTest extends IntegrationTestCase
         }
     }
 
-    public function test_count_images_in_categories_counts_distinct_images(): void
+    public function testCountImagesInCategoriesCountsDistinctImages(): void
     {
         // Fixture: 5 distinct images across image_category.
         self::assertSame(5, $this->repo->countImagesInCategories());
     }
 
-    public function test_count_image_category_links_counts_every_row(): void
+    public function testCountImageCategoryLinksCountsEveryRow(): void
     {
         // Fixture has 5 image_category rows, all distinct images -- same
         // figure as countImagesInCategories() here, but a genuinely
@@ -1487,7 +1517,7 @@ final class ImageRepositoryTest extends IntegrationTestCase
      * `int` return type; without it, strict_types=1 would throw a
      * TypeError on this exact call rather than silently pass.
      */
-    public function test_count_all_images_returns_the_real_total(): void
+    public function testCountAllImagesReturnsTheRealTotal(): void
     {
         self::assertSame(5, $this->repo->countAllImages());
     }
@@ -1498,7 +1528,7 @@ final class ImageRepositoryTest extends IntegrationTestCase
      * conversion, so the ids come back as raw driver scalars that must be
      * explicitly mapped to int.
      */
-    public function test_find_ids_visible_in_categories_recently_available_returns_the_real_ids_as_ints(): void
+    public function testFindIdsVisibleInCategoriesRecentlyAvailableReturnsTheRealIdsAsInts(): void
     {
         // Fixture: images 1-3 are in category 1, all dated 2026-08-01 --
         // a 10-year lookback comfortably covers that against Env::now()'s
@@ -1511,7 +1541,7 @@ final class ImageRepositoryTest extends IntegrationTestCase
         self::assertSame([1, 2, 3], $ids);
     }
 
-    public function test_find_thumbnail_rows_for_category_ordered_by_rank_returns_real_rows_in_rank_order(): void
+    public function testFindThumbnailRowsForCategoryOrderedByRankReturnsRealRowsInRankOrder(): void
     {
         // Fixture: category 1 has images 1,2,3 at ranks 1,2,3.
         $rows = $this->repo->findThumbnailRowsForCategoryOrderedByRank(CategoryId::from(1));
@@ -1519,22 +1549,22 @@ final class ImageRepositoryTest extends IntegrationTestCase
         self::assertSame([1, 2, 3], array_column($rows, 'id'));
     }
 
-    public function test_find_image_ids_ordered_by_rank_for_category_returns_real_ids_in_rank_order(): void
+    public function testFindImageIdsOrderedByRankForCategoryReturnsRealIdsInRankOrder(): void
     {
         self::assertSame([1, 2, 3], $this->repo->findImageIdsOrderedByRankForCategory(CategoryId::from(1)));
     }
 
-    public function test_find_category_ids_for_image_returns_the_real_categories(): void
+    public function testFindCategoryIdsForImageReturnsTheRealCategories(): void
     {
         self::assertSame([1], $this->repo->findCategoryIdsForImage(ImageId::from(1)));
     }
 
-    public function test_find_orphan_image_category_link_ids_returns_empty_when_every_link_has_a_real_image(): void
+    public function testFindOrphanImageCategoryLinkIdsReturnsEmptyWhenEveryLinkHasARealImage(): void
     {
         self::assertSame([], $this->repo->findOrphanImageCategoryLinkIds());
     }
 
-    public function test_find_orphan_image_category_link_ids_returns_links_with_no_real_image(): void
+    public function testFindOrphanImageCategoryLinkIdsReturnsLinksWithNoRealImage(): void
     {
         // image_category.image_id FK-references images.id ON DELETE
         // CASCADE, so a genuine orphan can only exist the way it would in
@@ -1544,7 +1574,10 @@ final class ImageRepositoryTest extends IntegrationTestCase
 
         try {
             $this->disableForeignKeyChecks($this->conn);
-            $this->conn->insert('image_category', ['image_id' => 999999, 'category_id' => 1]);
+            $this->conn->insert('image_category', [
+                'image_id' => 999999,
+                'category_id' => 1,
+            ]);
             $this->enableForeignKeyChecks($this->conn);
 
             self::assertSame([999999], $this->repo->findOrphanImageCategoryLinkIds());

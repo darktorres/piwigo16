@@ -4,18 +4,18 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Integration;
 
-use Override;
-use Piwigo\Core\Kernel;
-use LogicException;
-use Piwigo\Db\EntityManagerFactory;
-use Piwigo\Group\GroupEntity;
 use Doctrine\DBAL\Connection;
+use LogicException;
+use Override;
 use Piwigo\Common\ValueObject\CategoryId;
 use Piwigo\Common\ValueObject\GroupId;
 use Piwigo\Common\ValueObject\UserId;
-use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\ConfigLoader;
+use Piwigo\Config\CurrentConfig;
+use Piwigo\Core\Kernel;
 use Piwigo\Db\DbConnection;
+use Piwigo\Db\EntityManagerFactory;
+use Piwigo\Group\GroupEntity;
 use Piwigo\Group\GroupRepository;
 
 final class GroupRepositoryTest extends IntegrationTestCase
@@ -59,7 +59,7 @@ final class GroupRepositoryTest extends IntegrationTestCase
         return array_map(static fn (GroupId|UserId|CategoryId $id): int => $id->value, $ids);
     }
 
-    public function test_find_all_basic_returns_fixture_groups_ordered_by_name(): void
+    public function testFindAllBasicReturnsFixtureGroupsOrderedByName(): void
     {
         $groups = $this->repo->findAllBasic();
 
@@ -68,48 +68,48 @@ final class GroupRepositoryTest extends IntegrationTestCase
         self::assertFalse($groups[0]->isDefault);
     }
 
-    public function test_exists_is_true_for_a_fixture_group_and_false_for_a_bogus_id(): void
+    public function testExistsIsTrueForAFixtureGroupAndFalseForABogusId(): void
     {
         self::assertTrue($this->repo->exists(GroupId::from(1)));
         self::assertFalse($this->repo->exists(GroupId::from(999999)));
     }
 
-    public function test_name_exists_matches_a_fixture_name(): void
+    public function testNameExistsMatchesAFixtureName(): void
     {
         self::assertTrue($this->repo->nameExists('Editors'));
         self::assertFalse($this->repo->nameExists('Does Not Exist'));
     }
 
-    public function test_name_exists_excludes_the_given_group_id(): void
+    public function testNameExistsExcludesTheGivenGroupId(): void
     {
         self::assertFalse($this->repo->nameExists('Editors', GroupId::from(1)));
         self::assertTrue($this->repo->nameExists('Editors', GroupId::from(2)));
     }
 
-    public function test_find_existing_ids_returns_only_the_ids_that_exist(): void
+    public function testFindExistingIdsReturnsOnlyTheIdsThatExist(): void
     {
         $ids = $this->repo->findExistingIds([GroupId::from(1), GroupId::from(2), GroupId::from(999999)]);
 
         self::assertSame([1, 2], self::values($ids));
     }
 
-    public function test_find_existing_ids_returns_empty_for_an_empty_input(): void
+    public function testFindExistingIdsReturnsEmptyForAnEmptyInput(): void
     {
         self::assertSame([], $this->repo->findExistingIds([]));
     }
 
-    public function test_find_name_returns_a_fixture_groups_name(): void
+    public function testFindNameReturnsAFixtureGroupsName(): void
     {
         self::assertSame('Editors', $this->repo->findName(GroupId::from(1)));
         self::assertNull($this->repo->findName(GroupId::from(999999)));
     }
 
-    public function test_is_default_reflects_the_fixture_column(): void
+    public function testIsDefaultReflectsTheFixtureColumn(): void
     {
         self::assertFalse($this->repo->isDefault(GroupId::from(1)));
     }
 
-    public function test_insert_then_find_name_round_trips(): void
+    public function testInsertThenFindNameRoundTrips(): void
     {
         $name = 'p18-test-' . bin2hex(random_bytes(4));
 
@@ -121,7 +121,7 @@ final class GroupRepositoryTest extends IntegrationTestCase
         $this->repo->delete([$id]);
     }
 
-    public function test_insert_with_is_default_true_round_trips(): void
+    public function testInsertWithIsDefaultTrueRoundTrips(): void
     {
         $name = 'p18-test-' . bin2hex(random_bytes(4));
 
@@ -132,13 +132,16 @@ final class GroupRepositoryTest extends IntegrationTestCase
         $this->repo->delete([$id]);
     }
 
-    public function test_update_changes_name_and_is_default(): void
+    public function testUpdateChangesNameAndIsDefault(): void
     {
         $name = 'p18-test-' . bin2hex(random_bytes(4));
         $id = $this->repo->insert($name, false);
 
         $newName = $name . '-renamed';
-        $this->repo->update($id, ['name' => $newName, 'is_default' => true]);
+        $this->repo->update($id, [
+            'name' => $newName,
+            'is_default' => true,
+        ]);
 
         self::assertSame($newName, $this->repo->findName($id));
         self::assertTrue($this->repo->isDefault($id));
@@ -146,31 +149,33 @@ final class GroupRepositoryTest extends IntegrationTestCase
         $this->repo->delete([$id]);
     }
 
-    public function test_update_with_no_fields_is_a_noop(): void
+    public function testUpdateWithNoFieldsIsANoop(): void
     {
         $this->repo->update(GroupId::from(1), []);
 
         self::assertSame('Editors', $this->repo->findName(GroupId::from(1)));
     }
 
-    public function test_update_on_a_nonexistent_group_id_is_a_silent_noop(): void
+    public function testUpdateOnANonexistentGroupIdIsASilentNoop(): void
     {
         // 999999 isn't in the fixture (groups has ids 1-3 only) --
         // find() returns null, and update() must return without throwing
         // rather than crash on a null entity.
-        $this->repo->update(GroupId::from(999999), ['name' => 'should-never-be-written']);
+        $this->repo->update(GroupId::from(999999), [
+            'name' => 'should-never-be-written',
+        ]);
 
         self::assertNull($this->repo->findName(GroupId::from(999999)));
     }
 
-    public function test_find_member_user_ids_returns_fixture_members(): void
+    public function testFindMemberUserIdsReturnsFixtureMembers(): void
     {
         $ids = $this->repo->findMemberUserIds(GroupId::from(1));
 
         self::assertSame([1, 3], self::values($ids));
     }
 
-    public function test_find_member_user_ids_is_empty_for_a_group_with_no_members(): void
+    public function testFindMemberUserIdsIsEmptyForAGroupWithNoMembers(): void
     {
         $name = 'p18-test-' . bin2hex(random_bytes(4));
         $id = $this->repo->insert($name, false);
@@ -180,14 +185,14 @@ final class GroupRepositoryTest extends IntegrationTestCase
         $this->repo->delete([$id]);
     }
 
-    public function test_find_member_usernames_returns_fixture_usernames(): void
+    public function testFindMemberUsernamesReturnsFixtureUsernames(): void
     {
         $names = $this->repo->findMemberUsernames(GroupId::from(1));
 
         self::assertSame(['fixture_admin', 'regular_user'], $names);
     }
 
-    public function test_add_members_then_remove_members_round_trips(): void
+    public function testAddMembersThenRemoveMembersRoundTrips(): void
     {
         $groupId = $this->repo->insert('p18-test-' . bin2hex(random_bytes(4)), false);
 
@@ -200,7 +205,7 @@ final class GroupRepositoryTest extends IntegrationTestCase
         $this->repo->delete([$groupId]);
     }
 
-    public function test_add_members_silently_ignores_an_already_existing_membership(): void
+    public function testAddMembersSilentlyIgnoresAnAlreadyExistingMembership(): void
     {
         $groupId = $this->repo->insert('p18-test-' . bin2hex(random_bytes(4)), false);
         $this->repo->addMembers($groupId, [UserId::from(2)]);
@@ -215,14 +220,14 @@ final class GroupRepositoryTest extends IntegrationTestCase
         $this->repo->delete([$groupId]);
     }
 
-    public function test_remove_members_with_an_empty_list_is_a_noop(): void
+    public function testRemoveMembersWithAnEmptyListIsANoop(): void
     {
         $this->repo->removeMembers(GroupId::from(1), []);
 
         self::assertSame([1, 3], self::values($this->repo->findMemberUserIds(GroupId::from(1))));
     }
 
-    public function test_remove_all_memberships_for_users_deletes_every_membership_row_for_that_user_across_groups(): void
+    public function testRemoveAllMembershipsForUsersDeletesEveryMembershipRowForThatUserAcrossGroups(): void
     {
         $groupA = $this->repo->insert('p18-test-' . bin2hex(random_bytes(4)), false);
         $groupB = $this->repo->insert('p18-test-' . bin2hex(random_bytes(4)), false);
@@ -237,14 +242,14 @@ final class GroupRepositoryTest extends IntegrationTestCase
         $this->repo->delete([$groupA, $groupB]);
     }
 
-    public function test_remove_all_memberships_for_users_with_an_empty_list_is_a_noop(): void
+    public function testRemoveAllMembershipsForUsersWithAnEmptyListIsANoop(): void
     {
         $this->repo->removeAllMembershipsForUsers([]);
 
         self::assertSame([1, 3], self::values($this->repo->findMemberUserIds(GroupId::from(1))));
     }
 
-    public function test_find_members_by_group_ids_returns_the_raw_user_id_group_id_pairs_for_the_given_groups(): void
+    public function testFindMembersByGroupIdsReturnsTheRawUserIdGroupIdPairsForTheGivenGroups(): void
     {
         $pairs = $this->repo->findMembersByGroupIds([1]);
 
@@ -253,12 +258,12 @@ final class GroupRepositoryTest extends IntegrationTestCase
         self::assertSame([1, 3], $userIds);
     }
 
-    public function test_find_members_by_group_ids_returns_empty_for_an_empty_input(): void
+    public function testFindMembersByGroupIdsReturnsEmptyForAnEmptyInput(): void
     {
         self::assertSame([], $this->repo->findMembersByGroupIds([]));
     }
 
-    public function test_find_memberships_for_user_ids_returns_the_raw_user_id_group_id_pairs_for_the_given_users(): void
+    public function testFindMembershipsForUserIdsReturnsTheRawUserIdGroupIdPairsForTheGivenUsers(): void
     {
         $pairs = $this->repo->findMembershipsForUserIds([1]);
 
@@ -266,12 +271,12 @@ final class GroupRepositoryTest extends IntegrationTestCase
         self::assertContains(1, $groupIds);
     }
 
-    public function test_find_memberships_for_user_ids_returns_empty_for_an_empty_input(): void
+    public function testFindMembershipsForUserIdsReturnsEmptyForAnEmptyInput(): void
     {
         self::assertSame([], $this->repo->findMembershipsForUserIds([]));
     }
 
-    public function test_find_names_by_ids_returns_names_keyed_by_id(): void
+    public function testFindNamesByIdsReturnsNamesKeyedById(): void
     {
         $name = 'p18-test-' . bin2hex(random_bytes(4));
         $groupId = $this->repo->insert($name, false);
@@ -284,7 +289,7 @@ final class GroupRepositoryTest extends IntegrationTestCase
         $this->repo->delete([$groupId]);
     }
 
-    public function test_find_names_by_ids_returns_empty_for_an_empty_input(): void
+    public function testFindNamesByIdsReturnsEmptyForAnEmptyInput(): void
     {
         self::assertSame([], $this->repo->findNamesByIds([]));
     }
@@ -301,7 +306,7 @@ final class GroupRepositoryTest extends IntegrationTestCase
     // site -- a pure DQL-scalar-hydration narrowing guard PHPStan can't
     // otherwise verify statically.
 
-    public function test_delete_removes_groups_and_their_access_and_membership_rows(): void
+    public function testDeleteRemovesGroupsAndTheirAccessAndMembershipRows(): void
     {
         $groupId = $this->repo->insert('p18-test-' . bin2hex(random_bytes(4)), false);
         $this->repo->addMembers($groupId, [UserId::from(2)]);
@@ -315,24 +320,24 @@ final class GroupRepositoryTest extends IntegrationTestCase
         self::assertSame([], $this->repo->getAuthorizedCategoryIds($groupId));
     }
 
-    public function test_delete_returns_empty_array_when_none_of_the_ids_exist(): void
+    public function testDeleteReturnsEmptyArrayWhenNoneOfTheIdsExist(): void
     {
         self::assertSame([], $this->repo->delete([GroupId::from(999999)]));
     }
 
-    public function test_delete_with_an_empty_list_is_a_noop(): void
+    public function testDeleteWithAnEmptyListIsANoop(): void
     {
         self::assertSame([], $this->repo->delete([]));
     }
 
-    public function test_get_authorized_category_ids_returns_fixture_access(): void
+    public function testGetAuthorizedCategoryIdsReturnsFixtureAccess(): void
     {
         $ids = $this->repo->getAuthorizedCategoryIds(GroupId::from(1));
 
         self::assertSame([1, 2], self::values($ids));
     }
 
-    public function test_add_access_then_remove_access_round_trips(): void
+    public function testAddAccessThenRemoveAccessRoundTrips(): void
     {
         $groupId = $this->repo->insert('p18-test-' . bin2hex(random_bytes(4)), false);
 
@@ -345,14 +350,14 @@ final class GroupRepositoryTest extends IntegrationTestCase
         $this->repo->delete([$groupId]);
     }
 
-    public function test_remove_access_with_an_empty_list_is_a_noop(): void
+    public function testRemoveAccessWithAnEmptyListIsANoop(): void
     {
         $this->repo->removeAccess(GroupId::from(1), []);
 
         self::assertSame([1, 2], self::values($this->repo->getAuthorizedCategoryIds(GroupId::from(1))));
     }
 
-    public function test_get_accessible_category_ids_for_user_follows_group_membership(): void
+    public function testGetAccessibleCategoryIdsForUserFollowsGroupMembership(): void
     {
         // Fixture: user 1 is in group 1, group 1 has access to cats 1 and 2.
         $ids = $this->repo->getAccessibleCategoryIdsForUser(UserId::from(1));
@@ -360,12 +365,12 @@ final class GroupRepositoryTest extends IntegrationTestCase
         self::assertSame([1, 2], self::values($ids));
     }
 
-    public function test_get_accessible_category_ids_for_user_is_empty_for_a_groupless_user(): void
+    public function testGetAccessibleCategoryIdsForUserIsEmptyForAGrouplessUser(): void
     {
         self::assertSame([], $this->repo->getAccessibleCategoryIdsForUser(UserId::from(2)));
     }
 
-    public function test_find_with_member_counts_returns_fixture_groups_with_counts(): void
+    public function testFindWithMemberCountsReturnsFixtureGroupsWithCounts(): void
     {
         $rows = $this->repo->findWithMemberCounts([], null, 'name ASC', 10, 0);
 
@@ -379,7 +384,7 @@ final class GroupRepositoryTest extends IntegrationTestCase
         self::assertSame(1, $byName['Reviewers']);
     }
 
-    public function test_find_with_member_counts_filters_by_group_ids(): void
+    public function testFindWithMemberCountsFiltersByGroupIds(): void
     {
         $rows = $this->repo->findWithMemberCounts([GroupId::from(1)], null, 'name ASC', 10, 0);
 
@@ -387,7 +392,7 @@ final class GroupRepositoryTest extends IntegrationTestCase
         self::assertSame('Editors', $rows[0]->name);
     }
 
-    public function test_find_with_member_counts_filters_by_name_like(): void
+    public function testFindWithMemberCountsFiltersByNameLike(): void
     {
         $rows = $this->repo->findWithMemberCounts([], 'editors', 'name ASC', 10, 0);
 
@@ -395,7 +400,7 @@ final class GroupRepositoryTest extends IntegrationTestCase
         self::assertSame('Editors', $rows[0]->name);
     }
 
-    public function test_find_with_member_counts_respects_per_page_and_page(): void
+    public function testFindWithMemberCountsRespectsPerPageAndPage(): void
     {
         $rows = $this->repo->findWithMemberCounts([], null, 'name ASC', 1, 1);
 
@@ -403,7 +408,7 @@ final class GroupRepositoryTest extends IntegrationTestCase
         self::assertSame('Guests', $rows[0]->name);
     }
 
-    public function test_find_ids_by_name_like_matches_a_wildcard_pattern(): void
+    public function testFindIdsByNameLikeMatchesAWildcardPattern(): void
     {
         // g.id is the custom `group_id` Doctrine Type, but
         // getSingleColumnResult() uses HYDRATE_SCALAR_COLUMN (a raw
@@ -413,7 +418,7 @@ final class GroupRepositoryTest extends IntegrationTestCase
         self::assertSame([1], $this->repo->findIdsByNameLike('%dit%'));
     }
 
-    public function test_find_ids_by_name_like_returns_empty_for_no_match(): void
+    public function testFindIdsByNameLikeReturnsEmptyForNoMatch(): void
     {
         self::assertSame([], $this->repo->findIdsByNameLike('%no-such-group%'));
     }

@@ -16,7 +16,8 @@ test('toArray flattens every fixed property, and omits save_success when null', 
 
     $result = $context->toArray();
 
-    expect($result)->not->toHaveKey('save_success')
+    expect($result)
+        ->not->toHaveKey('save_success')
         ->and($result['U_HELP'])->toBe('/admin/popuphelp.php?page=configuration')
         ->and($result['PWG_TOKEN'])->toBe('abc123')
         ->and($result['F_ACTION'])->toBe('/admin.php?page=configuration&section=main')

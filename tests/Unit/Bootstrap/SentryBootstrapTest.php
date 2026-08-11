@@ -81,11 +81,12 @@ test('resolveOptions casts a real, non-empty traces_sample_rate to float and pas
 
     $options = SentryBootstrap::resolveOptions();
 
-    expect($options)->toBe([
-        'dsn' => 'https://fake@fake.ingest.sentry.io/1',
-        'traces_sample_rate' => 0.75,
-        'environment' => 'testing',
-    ]);
+    expect($options)
+        ->toBe([
+            'dsn' => 'https://fake@fake.ingest.sentry.io/1',
+            'traces_sample_rate' => 0.75,
+            'environment' => 'testing',
+        ]);
 });
 
 // No test here calls the real \Sentry\init() (via SentryBootstrap::init())

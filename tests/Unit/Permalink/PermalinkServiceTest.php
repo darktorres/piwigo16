@@ -75,10 +75,13 @@ function permalinkServiceTestSlug(string $suffix = ''): string
 beforeEach(function (): void {
     Kernel::boot(Paths::fromRoot(dirname(__DIR__, 3) . '/'));
     PageStateTestFactory::get()->reset();
-    permalinkServiceTestRepo()->clearCategoryPermalink(2);
+    permalinkServiceTestRepo()
+        ->clearCategoryPermalink(2);
 
     $conn = DbConnection::build();
-    $conn->insert('categories', ['name' => permalinkServiceTestSlug('other-cat-')]);
+    $conn->insert('categories', [
+        'name' => permalinkServiceTestSlug('other-cat-'),
+    ]);
     $this->otherCatId = (int) $conn->lastInsertId();
 });
 
@@ -96,12 +99,16 @@ test('deleteCatPermalink() forgets the cat_names ProcessCache entry to force reg
     $slug = permalinkServiceTestSlug();
 
     $service->setCatPermalink(2, $slug, false);
-    $processCache->set('cat_names', ['stale' => true]);
-    expect($processCache->has('cat_names'))->toBeTrue();
+    $processCache->set('cat_names', [
+        'stale' => true,
+    ]);
+    expect($processCache->has('cat_names'))
+        ->toBeTrue();
 
     $service->deleteCatPermalink(2, false);
 
-    expect($processCache->has('cat_names'))->toBeFalse();
+    expect($processCache->has('cat_names'))
+        ->toBeFalse();
 });
 
 test('setCatPermalink() forgets the cat_names ProcessCache entry to force regeneration', function (): void {
@@ -109,12 +116,17 @@ test('setCatPermalink() forgets the cat_names ProcessCache entry to force regene
     $processCache = new ProcessCache();
     $service = new PermalinkService(LangTestFactory::get(), $repo, $processCache, PageStateTestFactory::get());
     $slug = permalinkServiceTestSlug();
-    $processCache->set('cat_names', ['stale' => true]);
-    expect($processCache->has('cat_names'))->toBeTrue();
+    $processCache->set('cat_names', [
+        'stale' => true,
+    ]);
+    expect($processCache->has('cat_names'))
+        ->toBeTrue();
 
-    expect($service->setCatPermalink(2, $slug, false))->toBeTrue();
+    expect($service->setCatPermalink(2, $slug, false))
+        ->toBeTrue();
 
-    expect($processCache->has('cat_names'))->toBeFalse();
+    expect($processCache->has('cat_names'))
+        ->toBeFalse();
 });
 
 test('setCatPermalink() then deleteCatPermalink() round-trips', function (): void {
@@ -122,17 +134,22 @@ test('setCatPermalink() then deleteCatPermalink() round-trips', function (): voi
     $service = permalinkServiceTestService($repo);
     $slug = permalinkServiceTestSlug();
 
-    expect($service->setCatPermalink(2, $slug, false))->toBeTrue()
-        ->and($repo->findPermalinkByCategoryId(2))->toBe($slug);
+    expect($service->setCatPermalink(2, $slug, false))
+        ->toBeTrue()
+        ->and($repo->findPermalinkByCategoryId(2))
+        ->toBe($slug);
 
-    expect($service->deleteCatPermalink(2, false))->toBeTrue()
-        ->and($repo->findPermalinkByCategoryId(2))->toBeNull();
+    expect($service->deleteCatPermalink(2, false))
+        ->toBeTrue()
+        ->and($repo->findPermalinkByCategoryId(2))
+        ->toBeNull();
 });
 
 test('setCatPermalink() rejects a numeric permalink and records the exact error message, prefix and translated text alike', function (): void {
     $service = permalinkServiceTestService(permalinkServiceTestRepo());
 
-    expect($service->setCatPermalink(2, '12345', false))->toBeFalse();
+    expect($service->setCatPermalink(2, '12345', false))
+        ->toBeFalse();
 
     // The full exact message, not just the '{12345} ' prefix -- a bare
     // prefix check can't tell a real concatenation of the translated
@@ -144,19 +161,22 @@ test('setCatPermalink() rejects a numeric permalink and records the exact error 
 test('setCatPermalink() rejects disallowed characters', function (): void {
     $service = permalinkServiceTestService(permalinkServiceTestRepo());
 
-    expect($service->setCatPermalink(2, 'not valid!', false))->toBeFalse();
+    expect($service->setCatPermalink(2, 'not valid!', false))
+        ->toBeFalse();
 });
 
 test('setCatPermalink() rejects a leading/trailing slash (trim() makes it differ from the sanitized form)', function (): void {
     $service = permalinkServiceTestService(permalinkServiceTestRepo());
 
-    expect($service->setCatPermalink(2, '/foo/', false))->toBeFalse();
+    expect($service->setCatPermalink(2, '/foo/', false))
+        ->toBeFalse();
 });
 
 test('setCatPermalink() rejects a double slash (collapsed to a single one by the sanitizer)', function (): void {
     $service = permalinkServiceTestService(permalinkServiceTestRepo());
 
-    expect($service->setCatPermalink(2, 'foo//bar', false))->toBeFalse();
+    expect($service->setCatPermalink(2, 'foo//bar', false))
+        ->toBeFalse();
 });
 
 test('setCatPermalink() rejects an already-used permalink and records the exact error message', function (): void {
@@ -165,9 +185,11 @@ test('setCatPermalink() rejects an already-used permalink and records the exact 
     $slug = permalinkServiceTestSlug();
 
     try {
-        expect($service->setCatPermalink(2, $slug, false))->toBeTrue();
+        expect($service->setCatPermalink(2, $slug, false))
+            ->toBeTrue();
 
-        expect($service->setCatPermalink($this->otherCatId, $slug, false))->toBeFalse();
+        expect($service->setCatPermalink($this->otherCatId, $slug, false))
+            ->toBeFalse();
 
         $expected = sprintf(LangTestFactory::get()->t('Permalink %s is already used by album %s'), $slug, 2);
         expect(PageStateTestFactory::get()->errors)->toBe([$expected]);
@@ -180,14 +202,17 @@ test('setCatPermalink() is a no-op success when unchanged', function (): void {
     $service = permalinkServiceTestService(permalinkServiceTestRepo());
     $slug = permalinkServiceTestSlug();
 
-    expect($service->setCatPermalink(2, $slug, false))->toBeTrue()
-        ->and($service->setCatPermalink(2, $slug, false))->toBeTrue();
+    expect($service->setCatPermalink(2, $slug, false))
+        ->toBeTrue()
+        ->and($service->setCatPermalink(2, $slug, false))
+        ->toBeTrue();
 });
 
 test('deleteCatPermalink() with no permalink set succeeds as a no-op', function (): void {
     $service = permalinkServiceTestService(permalinkServiceTestRepo());
 
-    expect($service->deleteCatPermalink(2, false))->toBeTrue();
+    expect($service->deleteCatPermalink(2, false))
+        ->toBeTrue();
 });
 
 test('setCatPermalink() then deleteCatPermalink() with save records history and blocks reuse on another category', function (): void {
@@ -196,12 +221,15 @@ test('setCatPermalink() then deleteCatPermalink() with save records history and 
     $slug = permalinkServiceTestSlug();
 
     try {
-        expect($service->setCatPermalink(2, $slug, true))->toBeTrue()
-            ->and($service->deleteCatPermalink(2, true))->toBeTrue();
+        expect($service->setCatPermalink(2, $slug, true))
+            ->toBeTrue()
+            ->and($service->deleteCatPermalink(2, true))
+            ->toBeTrue();
 
         // Now historically used -- setting it on a DIFFERENT category must
         // be rejected until the history entry is removed.
-        expect($service->setCatPermalink($this->otherCatId, $slug, false))->toBeFalse();
+        expect($service->setCatPermalink($this->otherCatId, $slug, false))
+            ->toBeFalse();
 
         $expected = sprintf(LangTestFactory::get()->t('Permalink %s has been previously used by album %s. Delete from the permalink history first'), $slug, 2);
         expect(PageStateTestFactory::get()->errors)->toBe([$expected]);
@@ -216,14 +244,17 @@ test('deleteOldPermalinkByValue() removes a recorded history entry', function ()
     $slug = permalinkServiceTestSlug();
     $repo->insertOldPermalinkDeleted(2, $slug);
 
-    expect($service->deleteOldPermalinkByValue($slug))->toBeTrue()
-        ->and($repo->findOldCategoryId($slug))->toBeNull();
+    expect($service->deleteOldPermalinkByValue($slug))
+        ->toBeTrue()
+        ->and($repo->findOldCategoryId($slug))
+        ->toBeNull();
 });
 
 test('deleteOldPermalinkByValue() returns false and records an error when unmatched', function (): void {
     $service = permalinkServiceTestService(permalinkServiceTestRepo());
 
-    expect($service->deleteOldPermalinkByValue(permalinkServiceTestSlug('never-used-')))->toBeFalse()
+    expect($service->deleteOldPermalinkByValue(permalinkServiceTestSlug('never-used-')))
+        ->toBeFalse()
         ->and(PageStateTestFactory::get()->errors)->not->toBe([]);
 });
 
@@ -243,9 +274,11 @@ test('deleteCatPermalink() with save rejects when the live permalink was histori
     $repo->insertOldPermalinkDeleted($this->otherCatId, $slug);
 
     try {
-        expect($service->deleteCatPermalink(2, true))->toBeFalse()
+        expect($service->deleteCatPermalink(2, true))
+            ->toBeFalse()
             ->and(PageStateTestFactory::get()->errors)->not->toBe([])
-            ->and($repo->findPermalinkByCategoryId(2))->toBe($slug);
+            ->and($repo->findPermalinkByCategoryId(2))
+            ->toBe($slug);
     } finally {
         $repo->deleteOldPermalink($this->otherCatId, $slug);
     }
@@ -278,9 +311,12 @@ test('deleteCatPermalink() with save marks an already-recorded history row delet
         ->executeStatement();
 
     try {
-        expect($service->deleteCatPermalink(2, true))->toBeTrue()
-            ->and($repo->findPermalinkByCategoryId(2))->toBeNull()
-            ->and($repo->findOldCategoryId($slug))->toBe(2);
+        expect($service->deleteCatPermalink(2, true))
+            ->toBeTrue()
+            ->and($repo->findPermalinkByCategoryId(2))
+            ->toBeNull()
+            ->and($repo->findOldCategoryId($slug))
+            ->toBe(2);
 
         $dateDeleted = $conn->createQueryBuilder()
             ->select('date_deleted')
@@ -289,7 +325,8 @@ test('deleteCatPermalink() with save marks an already-recorded history row delet
             ->setParameter('permalink', $slug)
             ->fetchOne();
 
-        expect($dateDeleted)->not->toBe('2020-01-01 00:00:00');
+        expect($dateDeleted)
+            ->not->toBe('2020-01-01 00:00:00');
     } finally {
         $repo->deleteOldPermalink(2, $slug);
     }
@@ -300,16 +337,22 @@ test('setCatPermalink() clears the reclaimed permalink\'s own stale history row'
     $service = permalinkServiceTestService($repo);
     $slug = permalinkServiceTestSlug();
 
-    expect($service->setCatPermalink(2, $slug, true))->toBeTrue()
-        ->and($service->deleteCatPermalink(2, true))->toBeTrue()
-        ->and($repo->findOldCategoryId($slug))->toBe(2);
+    expect($service->setCatPermalink(2, $slug, true))
+        ->toBeTrue()
+        ->and($service->deleteCatPermalink(2, true))
+        ->toBeTrue()
+        ->and($repo->findOldCategoryId($slug))
+        ->toBe(2);
 
     // Re-claiming the SAME permalink back onto the SAME category it was
     // historically deleted from must succeed AND clear that now-stale
     // history row -- distinct from the cross-category rejection above.
-    expect($service->setCatPermalink(2, $slug, true))->toBeTrue()
-        ->and($repo->findOldCategoryId($slug))->toBeNull()
-        ->and($repo->findPermalinkByCategoryId(2))->toBe($slug);
+    expect($service->setCatPermalink(2, $slug, true))
+        ->toBeTrue()
+        ->and($repo->findOldCategoryId($slug))
+        ->toBeNull()
+        ->and($repo->findPermalinkByCategoryId(2))
+        ->toBe($slug);
 });
 
 test('setCatPermalink() fails when its own internal delete of the old permalink is rejected', function (): void {
@@ -329,8 +372,10 @@ test('setCatPermalink() fails when its own internal delete of the old permalink 
     $repo->insertOldPermalinkDeleted($this->otherCatId, $oldSlug);
 
     try {
-        expect($service->setCatPermalink(2, $newSlug, true))->toBeFalse()
-            ->and($repo->findPermalinkByCategoryId(2))->toBe($oldSlug);
+        expect($service->setCatPermalink(2, $newSlug, true))
+            ->toBeFalse()
+            ->and($repo->findPermalinkByCategoryId(2))
+            ->toBe($oldSlug);
     } finally {
         $repo->deleteOldPermalink($this->otherCatId, $oldSlug);
     }

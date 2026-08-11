@@ -4,24 +4,24 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Integration;
 
-use Override;
-use Piwigo\Core\Kernel;
-use LogicException;
-use Piwigo\Db\EntityManagerFactory;
-use Piwigo\Tests\Support\LangTestFactory;
-use Piwigo\PluginConfig\EventDispatcher;
 use Doctrine\DBAL\Connection;
+use LogicException;
+use Override;
 use Piwigo\Config\ConfigLoader;
 use Piwigo\Config\CurrentConfig;
-use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Core\FilterState;
-use Piwigo\Tests\Support\PageStateTestFactory;
+use Piwigo\Core\Kernel;
 use Piwigo\Db\DbConnection;
+use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Filter\FilterService;
 use Piwigo\Lang\Translator;
+use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Session\SessionEntity;
 use Piwigo\Session\SessionService;
+use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Tests\Support\CurrentUserTestFactory;
+use Piwigo\Tests\Support\LangTestFactory;
+use Piwigo\Tests\Support\PageStateTestFactory;
 use Piwigo\Users\User;
 
 /**
@@ -74,16 +74,28 @@ final class FilterServiceInitializeFromRequestTest extends IntegrationTestCase
         // 'used'=true (real default) + 'add_notes'=true, forced directly
         // rather than depending on PageFilterHelper::scriptBasename()'s own
         // $_SERVER-based page-name resolution in a CLI test process.
-        $currentConfig->filterPages = ['default' => ['used' => true, 'cancel' => false, 'add_notes' => true]];
+        $currentConfig->filterPages = [
+            'default' => [
+                'used' => true,
+                'cancel' => false,
+                'add_notes' => true,
+            ],
+        ];
 
         $this->conn = DbConnection::build();
 
-        CurrentUserTestFactory::get()->set(User::fromUserArray(['id' => 1, 'status' => 'admin', 'level' => 8, 'forbidden_categories' => '', 'recent_period' => 7]));
+        CurrentUserTestFactory::get()->set(User::fromUserArray([
+            'id' => 1,
+            'status' => 'admin',
+            'level' => 8,
+            'forbidden_categories' => '',
+            'recent_period' => 7,
+        ]));
 
         $_SESSION = [];
         PageStateTestFactory::get()->reset();
         $this->filterState = new FilterState();
-        $this->sessionService = new SessionService(EntityManagerFactory::build($this->conn)->getRepository(SessionEntity::class),CurrentConfigTestFactory::get());
+        $this->sessionService = new SessionService(EntityManagerFactory::build($this->conn)->getRepository(SessionEntity::class), CurrentConfigTestFactory::get());
         $this->translator = new Translator(CurrentConfigTestFactory::get());
     }
 
@@ -124,7 +136,7 @@ final class FilterServiceInitializeFromRequestTest extends IntegrationTestCase
         return $ids;
     }
 
-    public function test_initialize_computes_and_persists_the_filter_from_a_get_param_and_adds_the_header_note(): void
+    public function testInitializeComputesAndPersistsTheFilterFromAGetParamAndAddsTheHeaderNote(): void
     {
         $_GET['filter'] = 'start-recent-30';
 
@@ -159,7 +171,7 @@ final class FilterServiceInitializeFromRequestTest extends IntegrationTestCase
         self::assertEqualsCanonicalizing([1, 2], array_keys($unserializedCategories));
     }
 
-    public function test_initialize_reads_cached_categories_from_the_session_without_recomputing_when_not_stale(): void
+    public function testInitializeReadsCachedCategoriesFromTheSessionWithoutRecomputingWhenNotStale(): void
     {
         $_GET['filter'] = 'start-recent-14';
         new FilterService($this->filterState, $this->sessionService, $this->translator, LangTestFactory::get(), CurrentConfigTestFactory::get(), new EventDispatcher(), $this->conn)->initializeFromRequest(PageStateTestFactory::get(), CurrentUserTestFactory::get());
@@ -170,11 +182,11 @@ final class FilterServiceInitializeFromRequestTest extends IntegrationTestCase
         // proves the 2nd call read the session's own serialized snapshot
         // instead of re-querying the DB.
         $this->conn->executeStatement(
-            "INSERT INTO " . 'images' . " (file, path, date_available) VALUES ('cache-probe.jpg', 'upload/cache-probe.jpg', '2026-08-01 00:00:00')"
+            'INSERT INTO images' . " (file, path, date_available) VALUES ('cache-probe.jpg', 'upload/cache-probe.jpg', '2026-08-01 00:00:00')"
         );
         $newImageId = (int) $this->conn->lastInsertId();
         $this->conn->executeStatement(
-            'INSERT INTO ' . 'image_category' . ' (image_id, category_id) VALUES (?, 2)',
+            'INSERT INTO image_category (image_id, category_id) VALUES (?, 2)',
             [$newImageId]
         );
 
@@ -186,11 +198,11 @@ final class FilterServiceInitializeFromRequestTest extends IntegrationTestCase
             self::assertTrue($this->filterState->isEnabled());
             self::assertSame(2, $this->filterState->categories()[2]['nb_images']);
         } finally {
-            $this->conn->executeStatement('DELETE FROM ' . 'images' . ' WHERE id = ?', [$newImageId]);
+            $this->conn->executeStatement('DELETE FROM images WHERE id = ?', [$newImageId]);
         }
     }
 
-    public function test_initialize_recomputes_when_the_cached_check_key_belongs_to_a_different_user(): void
+    public function testInitializeRecomputesWhenTheCachedCheckKeyBelongsToADifferentUser(): void
     {
         $_SESSION['pwg_filter_enabled'] = true;
         $_SESSION['pwg_filter_check_key'] = [
@@ -215,7 +227,7 @@ final class FilterServiceInitializeFromRequestTest extends IntegrationTestCase
         self::assertEqualsCanonicalizing([1, 2], array_keys($this->filterState->categories()));
     }
 
-    public function test_initialize_recomputes_when_the_cached_check_key_is_older_than_30_seconds(): void
+    public function testInitializeRecomputesWhenTheCachedCheckKeyIsOlderThan30Seconds(): void
     {
         $_SESSION['pwg_filter_enabled'] = true;
         $_SESSION['pwg_filter_check_key'] = [
@@ -236,7 +248,7 @@ final class FilterServiceInitializeFromRequestTest extends IntegrationTestCase
         self::assertGreaterThan(time() - 5, $checkKey['time']);
     }
 
-    public function test_initialize_disables_and_clears_the_session_when_the_page_filter_is_cancelled(): void
+    public function testInitializeDisablesAndClearsTheSessionWhenThePageFilterIsCancelled(): void
     {
         $_GET['filter'] = 'start-recent-7';
         new FilterService($this->filterState, $this->sessionService, $this->translator, LangTestFactory::get(), CurrentConfigTestFactory::get(), new EventDispatcher(), $this->conn)->initializeFromRequest(PageStateTestFactory::get(), CurrentUserTestFactory::get());
@@ -247,7 +259,13 @@ final class FilterServiceInitializeFromRequestTest extends IntegrationTestCase
         if (! $currentConfig instanceof CurrentConfig) {
             throw new LogicException('Container returned an unexpected type for ' . CurrentConfig::class);
         }
-        $currentConfig->filterPages = ['default' => ['used' => true, 'cancel' => true, 'add_notes' => true]];
+        $currentConfig->filterPages = [
+            'default' => [
+                'used' => true,
+                'cancel' => true,
+                'add_notes' => true,
+            ],
+        ];
         $this->filterState->reset();
 
         new FilterService($this->filterState, $this->sessionService, $this->translator, LangTestFactory::get(), CurrentConfigTestFactory::get(), new EventDispatcher(), $this->conn)->initializeFromRequest(PageStateTestFactory::get(), CurrentUserTestFactory::get());
@@ -260,7 +278,7 @@ final class FilterServiceInitializeFromRequestTest extends IntegrationTestCase
         self::assertArrayNotHasKey('pwg_filter_visible_images', $_SESSION);
     }
 
-    public function test_initialize_disables_when_no_get_param_and_no_prior_session_state_exists(): void
+    public function testInitializeDisablesWhenNoGetParamAndNoPriorSessionStateExists(): void
     {
         // Never touched $_GET['filter'] or $_SESSION at all -- the plain
         // "nothing ever enabled this" default path.
@@ -269,7 +287,7 @@ final class FilterServiceInitializeFromRequestTest extends IntegrationTestCase
         self::assertFalse($this->filterState->isEnabled());
     }
 
-    public function test_initialize_treats_a_malformed_filter_value_as_disabled(): void
+    public function testInitializeTreatsAMalformedFilterValueAsDisabled(): void
     {
         $_GET['filter'] = 'not-a-real-filter-token';
 
@@ -278,7 +296,7 @@ final class FilterServiceInitializeFromRequestTest extends IntegrationTestCase
         self::assertFalse($this->filterState->isEnabled());
     }
 
-    public function test_initialize_falls_back_to_the_default_check_key_when_the_cached_session_value_is_malformed(): void
+    public function testInitializeFallsBackToTheDefaultCheckKeyWhenTheCachedSessionValueIsMalformed(): void
     {
         $_SESSION['pwg_filter_enabled'] = true;
         // Genuinely malformed -- not even an array, unlike the "different
@@ -304,7 +322,7 @@ final class FilterServiceInitializeFromRequestTest extends IntegrationTestCase
         self::assertEqualsCanonicalizing([1, 2], array_keys($this->filterState->categories()));
     }
 
-    public function test_initialize_falls_back_to_a_sentinel_when_every_category_is_forbidden(): void
+    public function testInitializeFallsBackToASentinelWhenEveryCategoryIsForbidden(): void
     {
         // forbidden_categories excludes both fixture categories (1, 2) --
         // findComputedCategoriesRollup()'s own `c.id NOT IN (...)` filter
@@ -315,7 +333,13 @@ final class FilterServiceInitializeFromRequestTest extends IntegrationTestCase
         // (the empty implode()), and for visible_images too since
         // `category_id IN (-1)` then matches no real image_category row
         // either.
-        CurrentUserTestFactory::get()->set(User::fromUserArray(['id' => 1, 'status' => 'admin', 'level' => 8, 'forbidden_categories' => '1,2', 'recent_period' => 7]));
+        CurrentUserTestFactory::get()->set(User::fromUserArray([
+            'id' => 1,
+            'status' => 'admin',
+            'level' => 8,
+            'forbidden_categories' => '1,2',
+            'recent_period' => 7,
+        ]));
         $_GET['filter'] = 'start-recent-30';
 
         new FilterService($this->filterState, $this->sessionService, $this->translator, LangTestFactory::get(), CurrentConfigTestFactory::get(), new EventDispatcher(), $this->conn)->initializeFromRequest(PageStateTestFactory::get(), CurrentUserTestFactory::get());

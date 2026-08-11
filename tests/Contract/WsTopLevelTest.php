@@ -4,15 +4,15 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Contract;
 
-use Override;
-use Piwigo\Tests\Support\ImageStdParamsTestFactory;
-use Piwigo\Core\Kernel;
-use Piwigo\Bootstrap\InfrastructureAccessor;
-use Piwigo\Ws\PwgServer;
-use Piwigo\Ws\PwgCore;
 use Doctrine\DBAL\Connection;
+use Override;
+use Piwigo\Bootstrap\InfrastructureAccessor;
+use Piwigo\Core\Kernel;
 use Piwigo\Core\Paths;
 use Piwigo\Db\DbConnection;
+use Piwigo\Tests\Support\ImageStdParamsTestFactory;
+use Piwigo\Ws\PwgCore;
+use Piwigo\Ws\PwgServer;
 
 final class WsTopLevelTest extends ContractTestCase
 {
@@ -24,7 +24,8 @@ final class WsTopLevelTest extends ContractTestCase
         parent::setUp();
         $this->conn = DbConnection::build();
     }
-    public function test_getVersion_returns_version_string(): void
+
+    public function testGetVersionReturnsVersionString(): void
     {
         $response = $this->wsAdmin('pwg.getVersion');
 
@@ -36,7 +37,7 @@ final class WsTopLevelTest extends ContractTestCase
         self::assertMatchesRegularExpression('/^\d+\.\d+/', $result);
     }
 
-    public function test_getInfos_returns_install_statistics(): void
+    public function testGetInfosReturnsInstallStatistics(): void
     {
         $response = $this->wsAdmin('pwg.getInfos');
 
@@ -55,7 +56,7 @@ final class WsTopLevelTest extends ContractTestCase
         self::assertContains('nb_categories', $names);
     }
 
-    public function test_getCacheSize_returns_size_info(): void
+    public function testGetCacheSizeReturnsSizeInfo(): void
     {
         $response = $this->wsAdmin('pwg.getCacheSize');
 
@@ -63,7 +64,7 @@ final class WsTopLevelTest extends ContractTestCase
         self::assertMatchesSchema('pwg.getCacheSize', $response);
     }
 
-    public function test_getCacheSize_forbidden_for_guest(): void
+    public function testGetCacheSizeForbiddenForGuest(): void
     {
         $response = $this->ws('pwg.getCacheSize');
 
@@ -96,7 +97,7 @@ final class WsTopLevelTest extends ContractTestCase
      * always null (public/_data has no templates_c/ at all), confirmed
      * live before the fix by the same manual WS call above.
      */
-    public function test_getCacheSize_computes_real_byte_sizes_from_du(): void
+    public function testGetCacheSizeComputesRealByteSizesFromDu(): void
     {
         $response = $this->wsAdmin('pwg.getCacheSize');
 
@@ -142,7 +143,7 @@ final class WsTopLevelTest extends ContractTestCase
      * against the real, current enabled set instead of a hardcoded list
      * that assumes every defined type is active.
      */
-    public function test_getCacheSize_msizes_breaks_down_by_derivative_type_with_a_correct_total(): void
+    public function testGetCacheSizeMsizesBreaksDownByDerivativeTypeWithACorrectTotal(): void
     {
         $response = $this->wsAdmin('pwg.getCacheSize');
 
@@ -175,9 +176,11 @@ final class WsTopLevelTest extends ContractTestCase
         self::assertSame($sumOfParts, $msizes['all'], "'all' must equal the sum of every other msizes entry");
     }
 
-    public function test_getMissingDerivatives_returns_url_list(): void
+    public function testGetMissingDerivativesReturnsUrlList(): void
     {
-        $response = $this->wsAdmin('pwg.getMissingDerivatives', ['max_urls' => 10]);
+        $response = $this->wsAdmin('pwg.getMissingDerivatives', [
+            'max_urls' => 10,
+        ]);
 
         self::assertSame('ok', $response['stat']);
         self::assertMatchesSchema('pwg.getMissingDerivatives', $response);
@@ -188,16 +191,18 @@ final class WsTopLevelTest extends ContractTestCase
         self::assertIsArray($result['urls']);
     }
 
-    public function test_getMissingDerivatives_invalid_types_returns_error(): void
+    public function testGetMissingDerivativesInvalidTypesReturnsError(): void
     {
-        $response = $this->wsAdmin('pwg.getMissingDerivatives', ['types' => ['not-a-real-derivative-type']]);
+        $response = $this->wsAdmin('pwg.getMissingDerivatives', [
+            'types' => ['not-a-real-derivative-type'],
+        ]);
 
         self::assertSame('fail', $response['stat']);
         self::assertSame(1003, $response['err']);
         self::assertSame('Invalid types', $response['message']);
     }
 
-    public function test_getMissingDerivatives_ids_filter_only_considers_the_given_image(): void
+    public function testGetMissingDerivativesIdsFilterOnlyConsidersTheGivenImage(): void
     {
         // fixture image 1's real on-disk file (dedicated fixture asset,
         // never touched by other Contract test files) is missing its
@@ -214,7 +219,10 @@ final class WsTopLevelTest extends ContractTestCase
         // this value every time, since UploadService picks the suffix via
         // random_bytes()).
         $expectedHash = $this->dbDriver === 'pgsql' ? '2e7e2ce3' : '2e7e6c90';
-        $response = $this->wsAdmin('pwg.getMissingDerivatives', ['ids' => [1], 'max_urls' => 5000]);
+        $response = $this->wsAdmin('pwg.getMissingDerivatives', [
+            'ids' => [1],
+            'max_urls' => 5000,
+        ]);
 
         self::assertSame('ok', $response['stat']);
         $result = $response['result'];
@@ -228,12 +236,14 @@ final class WsTopLevelTest extends ContractTestCase
         }
     }
 
-    public function test_getMissingDerivatives_paginates_when_max_urls_is_reached(): void
+    public function testGetMissingDerivativesPaginatesWhenMaxUrlsIsReached(): void
     {
         // A max_urls this low forces the do/while loop to stop mid-scan
         // (real fixture data has more than one image with a missing
         // derivative) and report a next_page cursor to resume from.
-        $response = $this->wsAdmin('pwg.getMissingDerivatives', ['max_urls' => 1]);
+        $response = $this->wsAdmin('pwg.getMissingDerivatives', [
+            'max_urls' => 1,
+        ]);
 
         self::assertSame('ok', $response['stat']);
         $result = $response['result'];
@@ -277,7 +287,7 @@ final class WsTopLevelTest extends ContractTestCase
      * ImageService -> Lang -> Paths, whose value the container can't
      * guess without one.
      */
-    public function test_getMissingDerivatives_with_an_empty_gallery_returns_an_empty_array_early(): void
+    public function testGetMissingDerivativesWithAnEmptyGalleryReturnsAnEmptyArrayEarly(): void
     {
         Kernel::boot(Paths::fromRoot(dirname(__DIR__, 2)));
 
@@ -286,7 +296,7 @@ final class WsTopLevelTest extends ContractTestCase
             $conn->beginTransaction();
 
             try {
-                $conn->executeStatement('DELETE FROM ' . 'images');
+                $conn->executeStatement('DELETE FROM images');
 
                 $service = Kernel::container()->get(PwgServer::class);
                 self::assertInstanceOf(PwgServer::class, $service);
@@ -333,23 +343,26 @@ final class WsTopLevelTest extends ContractTestCase
      * exist on disk: SrcImage falls back to the theme's own bundled
      * mimetypes/pdf.png icon (or unknown.png) purely from the extension.
      */
-    public function test_getMissingDerivatives_skips_a_non_picture_file_rendered_as_a_mimetype_icon(): void
+    public function testGetMissingDerivativesSkipsANonPictureFileRenderedAsAMimetypeIcon(): void
     {
         $this->conn->executeStatement(
-            'INSERT INTO ' . 'images' . ' (file, path) VALUES (?, ?)',
+            'INSERT INTO images (file, path) VALUES (?, ?)',
             ['pwgcore-mimetype-' . uniqid() . '.pdf', 'upload/pwgcore-mimetype-throwaway.pdf']
         );
         $imageId = (int) $this->conn->lastInsertId();
 
         try {
-            $response = $this->wsAdmin('pwg.getMissingDerivatives', ['ids' => [$imageId], 'max_urls' => 5000]);
+            $response = $this->wsAdmin('pwg.getMissingDerivatives', [
+                'ids' => [$imageId],
+                'max_urls' => 5000,
+            ]);
 
             self::assertSame('ok', $response['stat']);
             $result = $response['result'];
             self::assertIsArray($result);
             self::assertSame([], $result['urls']);
         } finally {
-            $this->conn->executeStatement('DELETE FROM ' . 'images' . ' WHERE id = ?', [$imageId]);
+            $this->conn->executeStatement('DELETE FROM images WHERE id = ?', [$imageId]);
         }
     }
 
@@ -369,7 +382,7 @@ final class WsTopLevelTest extends ContractTestCase
      * largest type that's still enabled by default, and 200x150 is well
      * under it too, so it exercises the exact same code path.
      */
-    public function test_getMissingDerivatives_skips_a_type_the_source_is_already_big_enough_for(): void
+    public function testGetMissingDerivativesSkipsATypeTheSourceIsAlreadyBigEnoughFor(): void
     {
         $response = $this->wsAdmin('pwg.getMissingDerivatives', [
             'ids' => [1],
@@ -398,16 +411,18 @@ final class WsTopLevelTest extends ContractTestCase
      * doesn't depend on any other test file's own on-disk derivative
      * cache state, unlike the plain max_urls=1 pagination test above).
      */
-    public function test_getMissingDerivatives_stops_mid_batch_once_max_urls_is_reached(): void
+    public function testGetMissingDerivativesStopsMidBatchOnceMaxUrlsIsReached(): void
     {
         $this->conn->executeStatement(
-            'INSERT INTO ' . 'images' . ' (file, path, width, height) VALUES (?, ?, ?, ?)',
+            'INSERT INTO images (file, path, width, height) VALUES (?, ?, ?, ?)',
             ['pwgcore-huge-' . uniqid() . '.jpg', 'upload/pwgcore-huge-throwaway.jpg', 6000, 4500]
         );
         $imageId = (int) $this->conn->lastInsertId();
 
         try {
-            $response = $this->wsAdmin('pwg.getMissingDerivatives', ['max_urls' => 2]);
+            $response = $this->wsAdmin('pwg.getMissingDerivatives', [
+                'max_urls' => 2,
+            ]);
 
             self::assertSame('ok', $response['stat']);
             $result = $response['result'];
@@ -418,7 +433,7 @@ final class WsTopLevelTest extends ContractTestCase
             self::assertIsArray($urls);
             self::assertGreaterThanOrEqual(2, count($urls));
         } finally {
-            $this->conn->executeStatement('DELETE FROM ' . 'images' . ' WHERE id = ?', [$imageId]);
+            $this->conn->executeStatement('DELETE FROM images WHERE id = ?', [$imageId]);
         }
     }
 
@@ -440,61 +455,70 @@ final class WsTopLevelTest extends ContractTestCase
      * and WsImagesMutationTest::insertThrowawayImage() already established
      * -- uses a throwaway image instead of fixture image 1.
      */
-    public function test_ratesDelete_removes_all_rates_for_a_user(): void
+    public function testRatesDeleteRemovesAllRatesForAUser(): void
     {
         $status = $this->wsAdmin('pwg.session.getStatus');
         $statusResult = $status['result'];
         self::assertIsArray($statusResult);
         $userId = $this->conn->fetchOne(
-            'SELECT id FROM ' . 'users' . ' WHERE username = ?',
+            'SELECT id FROM users WHERE username = ?',
             ['fixture_admin']
         );
         self::assertIsNumeric($userId);
 
         $filename = 'ratesdelete-throwaway-' . uniqid() . '.jpg';
         $this->conn->executeStatement(
-            'INSERT INTO ' . 'images' . ' (file, path, md5sum) VALUES (?, ?, ?)',
+            'INSERT INTO images (file, path, md5sum) VALUES (?, ?, ?)',
             [$filename, 'upload/' . $filename, md5($filename)]
         );
         $imageId = (int) $this->conn->lastInsertId();
 
         try {
             $this->conn->executeStatement(
-                'INSERT INTO ' . 'image_category' . ' (image_id, category_id) VALUES (?, ?)',
+                'INSERT INTO image_category (image_id, category_id) VALUES (?, ?)',
                 [$imageId, 1]
             );
 
-            $rateResponse = $this->wsAdmin('pwg.images.rate', ['image_id' => $imageId, 'rate' => 5]);
+            $rateResponse = $this->wsAdmin('pwg.images.rate', [
+                'image_id' => $imageId,
+                'rate' => 5,
+            ]);
             self::assertSame('ok', $rateResponse['stat']);
 
             $before = $this->conn->fetchOne(
-                'SELECT COUNT(*) FROM ' . 'rate' . ' WHERE user_id = ? AND element_id = ?',
+                'SELECT COUNT(*) FROM rate WHERE user_id = ? AND element_id = ?',
                 [$userId, $imageId]
             );
             self::assertSame(1, $before);
 
-            $response = $this->wsAdmin('pwg.rates.delete', ['user_id' => $userId, 'image_id' => $imageId]);
+            $response = $this->wsAdmin('pwg.rates.delete', [
+                'user_id' => $userId,
+                'image_id' => $imageId,
+            ]);
 
             self::assertSame('ok', $response['stat']);
             self::assertSame(1, $response['result']);
 
             $after = $this->conn->fetchOne(
-                'SELECT COUNT(*) FROM ' . 'rate' . ' WHERE user_id = ? AND element_id = ?',
+                'SELECT COUNT(*) FROM rate WHERE user_id = ? AND element_id = ?',
                 [$userId, $imageId]
             );
             self::assertSame(0, $after);
         } finally {
-            $this->conn->executeStatement('DELETE FROM ' . 'images' . ' WHERE id = ?', [$imageId]);
+            $this->conn->executeStatement('DELETE FROM images WHERE id = ?', [$imageId]);
         }
     }
 
-    public function test_ratesDelete_with_no_matching_rate_returns_zero(): void
+    public function testRatesDeleteWithNoMatchingRateReturnsZero(): void
     {
         $userId = $this->conn->fetchOne(
-            'SELECT id FROM ' . 'users' . ' WHERE username = ?',
+            'SELECT id FROM users WHERE username = ?',
             ['fixture_admin']
         );
-        $response = $this->wsAdmin('pwg.rates.delete', ['user_id' => $userId, 'image_id' => 999999]);
+        $response = $this->wsAdmin('pwg.rates.delete', [
+            'user_id' => $userId,
+            'image_id' => 999999,
+        ]);
 
         self::assertSame('ok', $response['stat']);
         self::assertSame(0, $response['result']);
@@ -513,25 +537,25 @@ final class WsTopLevelTest extends ContractTestCase
      * recomputes every image's rating_score from a global average over the
      * whole rate table, not just the touched row.
      */
-    public function test_ratesDelete_with_anonymous_id_only_removes_the_matching_rate(): void
+    public function testRatesDeleteWithAnonymousIdOnlyRemovesTheMatchingRate(): void
     {
         $guestId = $this->conn->fetchOne(
-            'SELECT id FROM ' . 'users' . ' WHERE username = ?',
+            'SELECT id FROM users WHERE username = ?',
             ['guest']
         );
         $this->conn->executeStatement(
-            'INSERT INTO ' . 'images' . ' (file, path) VALUES (?, ?)',
+            'INSERT INTO images (file, path) VALUES (?, ?)',
             ['pwgcore-throwaway-' . uniqid() . '.jpg', 'upload/pwgcore-throwaway.jpg']
         );
         $imageId = (int) $this->conn->lastInsertId();
 
         try {
             $this->conn->executeStatement(
-                'INSERT INTO ' . 'rate' . ' (user_id, element_id, anonymous_id, rate, date) VALUES (?, ?, ?, 4, CURRENT_DATE)',
+                'INSERT INTO rate (user_id, element_id, anonymous_id, rate, date) VALUES (?, ?, ?, 4, CURRENT_DATE)',
                 [$guestId, $imageId, 'anon-a']
             );
             $this->conn->executeStatement(
-                'INSERT INTO ' . 'rate' . ' (user_id, element_id, anonymous_id, rate, date) VALUES (?, ?, ?, 2, CURRENT_DATE)',
+                'INSERT INTO rate (user_id, element_id, anonymous_id, rate, date) VALUES (?, ?, ?, 2, CURRENT_DATE)',
                 [$guestId, $imageId, 'anon-b']
             );
 
@@ -545,7 +569,7 @@ final class WsTopLevelTest extends ContractTestCase
             self::assertSame(1, $response['result']);
 
             $remaining = $this->conn->fetchAllAssociative(
-                'SELECT anonymous_id FROM ' . 'rate' . ' WHERE user_id = ? AND element_id = ?',
+                'SELECT anonymous_id FROM rate WHERE user_id = ? AND element_id = ?',
                 [$guestId, $imageId]
             );
             self::assertSame(['anon-b'], array_column($remaining, 'anonymous_id'));
@@ -554,8 +578,11 @@ final class WsTopLevelTest extends ContractTestCase
             // method (not raw SQL) so RateService::updateRatingScore() gets
             // one final recompute against the fully-restored rate
             // table before the throwaway image itself is removed.
-            $this->wsAdmin('pwg.rates.delete', ['user_id' => $guestId, 'image_id' => $imageId]);
-            $this->conn->executeStatement('DELETE FROM ' . 'images' . ' WHERE id = ?', [$imageId]);
+            $this->wsAdmin('pwg.rates.delete', [
+                'user_id' => $guestId,
+                'image_id' => $imageId,
+            ]);
+            $this->conn->executeStatement('DELETE FROM images WHERE id = ?', [$imageId]);
         }
     }
 }

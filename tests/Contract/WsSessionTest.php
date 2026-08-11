@@ -6,7 +6,7 @@ namespace Piwigo\Tests\Contract;
 
 final class WsSessionTest extends ContractTestCase
 {
-    public function test_getStatus_response_matches_schema(): void
+    public function testGetStatusResponseMatchesSchema(): void
     {
         $response = $this->ws('pwg.session.getStatus');
 
@@ -14,7 +14,7 @@ final class WsSessionTest extends ContractTestCase
         self::assertMatchesSchema('session.getStatus', $response);
     }
 
-    public function test_getStatus_returns_guest_for_anonymous_call(): void
+    public function testGetStatusReturnsGuestForAnonymousCall(): void
     {
         $response = $this->ws('pwg.session.getStatus');
 
@@ -24,7 +24,7 @@ final class WsSessionTest extends ContractTestCase
         self::assertSame('guest', $result['status']);
     }
 
-    public function test_getStatus_returns_admin_after_login(): void
+    public function testGetStatusReturnsAdminAfterLogin(): void
     {
         $response = $this->wsAdmin('pwg.session.getStatus');
 
@@ -41,7 +41,7 @@ final class WsSessionTest extends ContractTestCase
      * doesn't support receiving them) -- every other test in this file uses
      * the fixed USER_AGENT constant, so this branch is otherwise never hit.
      */
-    public function test_getStatus_omits_save_visits_and_connected_with_for_piwigo_remote_sync_user_agent(): void
+    public function testGetStatusOmitsSaveVisitsAndConnectedWithForPiwigoRemoteSyncUserAgent(): void
     {
         $response = $this->wsWithUserAgent('PiwigoRemoteSync/1.0', 'pwg.session.getStatus');
 
@@ -52,8 +52,10 @@ final class WsSessionTest extends ContractTestCase
         self::assertArrayNotHasKey('connected_with', $result);
     }
 
-    /** Contrast with the PiwigoRemoteSync test above: a normal client keeps both fields. */
-    public function test_getStatus_includes_save_visits_and_connected_with_for_a_normal_user_agent(): void
+    /**
+     * Contrast with the PiwigoRemoteSync test above: a normal client keeps both fields.
+     */
+    public function testGetStatusIncludesSaveVisitsAndConnectedWithForANormalUserAgent(): void
     {
         $response = $this->ws('pwg.session.getStatus');
 
@@ -70,7 +72,7 @@ final class WsSessionTest extends ContractTestCase
      * compatibility exception from the PiwigoRemoteSync one above -- keyed
      * on str_starts_with() against a different literal prefix).
      */
-    public function test_getStatus_omits_available_sizes_for_apache_http_client_user_agent(): void
+    public function testGetStatusOmitsAvailableSizesForApacheHttpClientUserAgent(): void
     {
         $response = $this->wsWithUserAgent('Apache-HttpClient/4.5.13 (Java/1.8)', 'pwg.session.getStatus');
 
@@ -80,7 +82,7 @@ final class WsSessionTest extends ContractTestCase
         self::assertArrayNotHasKey('available_sizes', $result);
     }
 
-    public function test_login_with_bad_credentials_returns_fail(): void
+    public function testLoginWithBadCredentialsReturnsFail(): void
     {
         $response = $this->ws('pwg.session.login', [
             'username' => 'nobody',
@@ -92,7 +94,7 @@ final class WsSessionTest extends ContractTestCase
         self::assertArrayHasKey('message', $response);
     }
 
-    public function test_logout_returns_ok(): void
+    public function testLogoutReturnsOk(): void
     {
         $this->loginAsAdmin();
         $response = $this->callWs('pwg.session.logout', []);
@@ -100,7 +102,7 @@ final class WsSessionTest extends ContractTestCase
         self::assertSame('ok', $response['stat']);
     }
 
-    public function test_logout_clears_session(): void
+    public function testLogoutClearsSession(): void
     {
         $this->loginAsAdmin();
         $this->callWs('pwg.session.logout', []);
@@ -138,7 +140,7 @@ final class WsSessionTest extends ContractTestCase
         return $authKey . ':' . $secret;
     }
 
-    public function test_login_via_api_key_header_returns_error(): void
+    public function testLoginViaApiKeyHeaderReturnsError(): void
     {
         // sessionLogin() itself refuses to run at all once
         // ApiKeyRequestFlag is active for this request (set by
@@ -170,7 +172,7 @@ final class WsSessionTest extends ContractTestCase
         self::assertSame('Cannot use this method with an api key', $decoded['message']);
     }
 
-    public function test_logout_via_api_key_header_returns_error(): void
+    public function testLogoutViaApiKeyHeaderReturnsError(): void
     {
         $apiKeyHeader = $this->createApiKeyHeaderValue();
 
@@ -179,7 +181,9 @@ final class WsSessionTest extends ContractTestCase
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
         curl_setopt($ch, CURLOPT_POST, true);
         curl_setopt($ch, CURLOPT_USERAGENT, self::USER_AGENT);
-        curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query(['method' => 'pwg.session.logout']));
+        curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query([
+            'method' => 'pwg.session.logout',
+        ]));
         curl_setopt($ch, CURLOPT_HTTPHEADER, array_merge($this->testHeader(), ['X-Piwigo-Api: ' . $apiKeyHeader]));
 
         $body = curl_exec($ch);
@@ -193,7 +197,7 @@ final class WsSessionTest extends ContractTestCase
         self::assertSame('Cannot use this method with an api key', $decoded['message']);
     }
 
-    public function test_login_via_pkid_authentication_key(): void
+    public function testLoginViaPkidAuthenticationKey(): void
     {
         // sessionLogin()'s pkid-format branch: authenticates directly via
         // username=<pkid> (not fixture_admin's real username/password).
@@ -234,7 +238,9 @@ final class WsSessionTest extends ContractTestCase
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
         curl_setopt($ch, CURLOPT_POST, true);
         curl_setopt($ch, CURLOPT_USERAGENT, self::USER_AGENT);
-        curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query(array_merge(['method' => $method], $params)));
+        curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query(array_merge([
+            'method' => $method,
+        ], $params)));
         curl_setopt($ch, CURLOPT_COOKIEJAR, $cookieJar);
         curl_setopt($ch, CURLOPT_COOKIEFILE, $cookieJar);
         curl_setopt($ch, CURLOPT_HTTPHEADER, $this->testHeader());
@@ -267,7 +273,9 @@ final class WsSessionTest extends ContractTestCase
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
         curl_setopt($ch, CURLOPT_POST, true);
         curl_setopt($ch, CURLOPT_USERAGENT, $userAgent);
-        curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query(array_merge(['method' => $method], $params)));
+        curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query(array_merge([
+            'method' => $method,
+        ], $params)));
         curl_setopt($ch, CURLOPT_COOKIEJAR, $cookieJar);
         curl_setopt($ch, CURLOPT_COOKIEFILE, $cookieJar);
         curl_setopt($ch, CURLOPT_HTTPHEADER, $this->testHeader());

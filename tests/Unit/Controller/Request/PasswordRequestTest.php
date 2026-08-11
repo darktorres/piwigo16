@@ -8,47 +8,73 @@ use Piwigo\Validation\InputValidator;
 test('fromArrays returns defaults for an empty GET/POST', function (): void {
     $request = PasswordRequest::fromArrays([], [], new InputValidator());
 
-    expect($request->action)->toBeNull()
-        ->and($request->isSubmitted)->toBeFalse()
-        ->and($request->keyPresent)->toBeFalse()
-        ->and($request->key)->toBeNull()
-        ->and($request->usernameOrEmailPresent)->toBeFalse()
-        ->and($request->usernameOrEmail)->toBe('')
-        ->and($request->userCode)->toBe('')
-        ->and($request->newPassword)->toBe('')
-        ->and($request->passwordConf)->toBe('');
+    expect($request->action)
+        ->toBeNull()
+        ->and($request->isSubmitted)
+        ->toBeFalse()
+        ->and($request->keyPresent)
+        ->toBeFalse()
+        ->and($request->key)
+        ->toBeNull()
+        ->and($request->usernameOrEmailPresent)
+        ->toBeFalse()
+        ->and($request->usernameOrEmail)
+        ->toBe('')
+        ->and($request->userCode)
+        ->toBe('')
+        ->and($request->newPassword)
+        ->toBe('')
+        ->and($request->passwordConf)
+        ->toBe('');
 });
 
 test('fromArrays parses a recognized action', function (): void {
-    $request = PasswordRequest::fromArrays(['action' => 'reset'], [], new InputValidator());
+    $request = PasswordRequest::fromArrays([
+        'action' => 'reset',
+    ], [], new InputValidator());
 
-    expect($request->action)->toBe('reset');
+    expect($request->action)
+        ->toBe('reset');
 });
 
 test('fromArrays rejects an unrecognized action', function (): void {
-    expect(fn (): PasswordRequest => PasswordRequest::fromArrays(['action' => 'not_a_real_action'], [], new InputValidator()))
+    expect(fn (): PasswordRequest => PasswordRequest::fromArrays([
+        'action' => 'not_a_real_action',
+    ], [], new InputValidator()))
         ->toThrow(RuntimeException::class);
 });
 
 test('fromArrays reports keyPresent and key together', function (): void {
-    $request = PasswordRequest::fromArrays(['key' => 'abc123'], [], new InputValidator());
+    $request = PasswordRequest::fromArrays([
+        'key' => 'abc123',
+    ], [], new InputValidator());
 
-    expect($request->keyPresent)->toBeTrue()
-        ->and($request->key)->toBe('abc123');
+    expect($request->keyPresent)
+        ->toBeTrue()
+        ->and($request->key)
+        ->toBe('abc123');
 });
 
 test('fromArrays reports usernameOrEmailPresent for an intentionally empty string', function (): void {
-    $request = PasswordRequest::fromArrays([], ['username_or_email' => ''], new InputValidator());
+    $request = PasswordRequest::fromArrays([], [
+        'username_or_email' => '',
+    ], new InputValidator());
 
-    expect($request->usernameOrEmailPresent)->toBeTrue()
-        ->and($request->usernameOrEmail)->toBe('');
+    expect($request->usernameOrEmailPresent)
+        ->toBeTrue()
+        ->and($request->usernameOrEmail)
+        ->toBe('');
 });
 
 test('fromArrays reports usernameOrEmailPresent false for a non-string value', function (): void {
-    $request = PasswordRequest::fromArrays([], ['username_or_email' => ['x']], new InputValidator());
+    $request = PasswordRequest::fromArrays([], [
+        'username_or_email' => ['x'],
+    ], new InputValidator());
 
-    expect($request->usernameOrEmailPresent)->toBeFalse()
-        ->and($request->usernameOrEmail)->toBe('');
+    expect($request->usernameOrEmailPresent)
+        ->toBeFalse()
+        ->and($request->usernameOrEmail)
+        ->toBe('');
 });
 
 test('fromArrays parses a full reset submission', function (): void {
@@ -59,10 +85,14 @@ test('fromArrays parses a full reset submission', function (): void {
         'passwordConf' => 'newpass',
     ], new InputValidator());
 
-    expect($request->isSubmitted)->toBeTrue()
-        ->and($request->userCode)->toBe('123456')
-        ->and($request->newPassword)->toBe('newpass')
-        ->and($request->passwordConf)->toBe('newpass');
+    expect($request->isSubmitted)
+        ->toBeTrue()
+        ->and($request->userCode)
+        ->toBe('123456')
+        ->and($request->newPassword)
+        ->toBe('newpass')
+        ->and($request->passwordConf)
+        ->toBe('newpass');
 });
 
 test('fromArrays falls back to an empty string for non-string user_code/use_new_pwd/passwordConf values', function (): void {
@@ -76,7 +106,10 @@ test('fromArrays falls back to an empty string for non-string user_code/use_new_
         'passwordConf' => ['z'],
     ], new InputValidator());
 
-    expect($request->userCode)->toBe('')
-        ->and($request->newPassword)->toBe('')
-        ->and($request->passwordConf)->toBe('');
+    expect($request->userCode)
+        ->toBe('')
+        ->and($request->newPassword)
+        ->toBe('')
+        ->and($request->passwordConf)
+        ->toBe('');
 });

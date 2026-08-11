@@ -2,19 +2,19 @@
 
 declare(strict_types=1);
 
-use Piwigo\Tests\Support\TemplateTestFactory;
 use Piwigo\Auth\AccessControl;
-use Piwigo\Db\EntityManagerFactory;
-use Piwigo\Rate\RateEntity;
-use Piwigo\Tests\Support\CurrentUserTestFactory;
-use Piwigo\Tests\Support\UrlServiceTestFactory;
-use Piwigo\Tests\Support\CurrentConfigTestFactory;
-use Piwigo\Tests\Support\CurrentPathsTestFactory;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Paths;
 use Piwigo\Db\DbConnection;
+use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Picture\PictureRateRenderer;
+use Piwigo\Rate\RateEntity;
 use Piwigo\Template\CurrentTemplate;
+use Piwigo\Tests\Support\CurrentConfigTestFactory;
+use Piwigo\Tests\Support\CurrentPathsTestFactory;
+use Piwigo\Tests\Support\CurrentUserTestFactory;
+use Piwigo\Tests\Support\TemplateTestFactory;
+use Piwigo\Tests\Support\UrlServiceTestFactory;
 
 /**
  * Same "point CurrentPaths at a fresh temp root" Template setup as

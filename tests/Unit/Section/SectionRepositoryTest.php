@@ -27,71 +27,90 @@ function sectionTestRepo(): SectionRepository
 }
 
 test('escapeToken() escapes a value without surrounding quotes', function (): void {
-    $escaped = sectionTestRepo()->escapeToken("o'brien");
+    $escaped = sectionTestRepo()
+        ->escapeToken("o'brien");
 
     // escapeToken() routes through Connection::quote() -- the real
     // per-driver quoting mechanism. Postgres doubles an embedded quote
     // (SQL-standard escaping); mysqli backslash-escapes it instead.
     $expected = getenv('PIWIGO_DB_DRIVER') === 'pgsql' ? "o''brien" : "o\\'brien";
-    expect($escaped)->toBe($expected)
-        ->and($escaped)->not->toStartWith("'")
-        ->and($escaped)->not->toEndWith("'");
+    expect($escaped)
+        ->toBe($expected)
+        ->and($escaped)
+        ->not->toStartWith("'")
+        ->and($escaped)
+        ->not->toEndWith("'");
 });
 
 test('escapeToken() leaves a plain value unchanged', function (): void {
-    expect(sectionTestRepo()->escapeToken('plain-value'))->toBe('plain-value');
+    expect(sectionTestRepo()->escapeToken('plain-value'))
+        ->toBe('plain-value');
 });
 
 test('findVisibleSubcategoryIds() returns direct subcategories', function (): void {
-    expect(sectionTestRepo()->findVisibleSubcategoryIds('1', new SqlCondition('')))->toBe(['2']);
+    expect(sectionTestRepo()->findVisibleSubcategoryIds('1', new SqlCondition('')))
+        ->toBe(['2']);
 });
 
 test('findVisibleSubcategoryIds() returns empty for a leaf category', function (): void {
-    expect(sectionTestRepo()->findVisibleSubcategoryIds('1,2', new SqlCondition('')))->toBe([]);
+    expect(sectionTestRepo()->findVisibleSubcategoryIds('1,2', new SqlCondition('')))
+        ->toBe([]);
 });
 
 test('findTopRatedImageIds() returns ids ordered by rating desc', function (): void {
-    expect(sectionTestRepo()->findTopRatedImageIds(new SqlCondition(''), 3))->toBe(['3', '1', '2']);
+    expect(sectionTestRepo()->findTopRatedImageIds(new SqlCondition(''), 3))
+        ->toBe(['3', '1', '2']);
 });
 
 test('findTopRatedImageIds() respects the limit', function (): void {
-    expect(sectionTestRepo()->findTopRatedImageIds(new SqlCondition(''), 1))->toBe(['3']);
+    expect(sectionTestRepo()->findTopRatedImageIds(new SqlCondition(''), 1))
+        ->toBe(['3']);
 });
 
 test('findTopByHitsImageIds() returns ids ordered by hit desc', function (): void {
     $conn = DbConnection::build();
-    $conn->executeStatement('UPDATE ' . 'images' . ' SET hit = 5 WHERE id = 2');
-    $conn->executeStatement('UPDATE ' . 'images' . ' SET hit = 10 WHERE id = 4');
+    $conn->executeStatement('UPDATE images SET hit = 5 WHERE id = 2');
+    $conn->executeStatement('UPDATE images SET hit = 10 WHERE id = 4');
 
     try {
-        expect(sectionTestRepo()->findTopByHitsImageIds(new SqlCondition(''), 5))->toBe(['4', '2']);
+        expect(sectionTestRepo()->findTopByHitsImageIds(new SqlCondition(''), 5))
+            ->toBe(['4', '2']);
     } finally {
-        $conn->executeStatement('UPDATE ' . 'images' . ' SET hit = 0 WHERE id IN (2, 4)');
+        $conn->executeStatement('UPDATE images SET hit = 0 WHERE id IN (2, 4)');
     }
 });
 
 test('findTopByHitsImageIds() returns empty when no image has a hit', function (): void {
-    expect(sectionTestRepo()->findTopByHitsImageIds(new SqlCondition(''), 5))->toBe([]);
+    expect(sectionTestRepo()->findTopByHitsImageIds(new SqlCondition(''), 5))
+        ->toBe([]);
 });
 
 test('findSectionImageIds() returns image ids for a category, as real numeric strings via the raw-SQL/queryColumn() path', function (): void {
-    $ids = sectionTestRepo()->findSectionImageIds(
-        whereSql: 'category_id = :catId',
-        forbiddenSql: '',
-        orderBySql: 'ORDER BY id ASC',
-        params: ['catId' => 1],
-    );
+    $ids = sectionTestRepo()
+        ->findSectionImageIds(
+            whereSql: 'category_id = :catId',
+            forbiddenSql: '',
+            orderBySql: 'ORDER BY id ASC',
+            params: [
+                'catId' => 1,
+            ],
+        );
 
-    expect($ids)->toBe(['1', '2', '3']);
+    expect($ids)
+        ->toBe(['1', '2', '3']);
 });
 
 test('findSectionImageIds() returns empty for a category with no images', function (): void {
-    $ids = sectionTestRepo()->findSectionImageIds(
-        whereSql: 'category_id = :catId',
-        forbiddenSql: '',
-        orderBySql: 'ORDER BY id ASC',
-        params: ['catId' => 999999],
-    );
+    $ids = sectionTestRepo()
+        ->findSectionImageIds(
+            whereSql: 'category_id = :catId',
+            forbiddenSql: '',
+            orderBySql: 'ORDER BY id ASC',
+            params: [
+                'catId' => 999999,
+            ],
+        );
 
-    expect($ids)->toBe([]);
+    expect($ids)
+        ->toBe([]);
 });

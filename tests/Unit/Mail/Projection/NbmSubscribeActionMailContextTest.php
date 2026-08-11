@@ -11,11 +11,12 @@ test('toArray flattens the dynamic section-action-by key alongside the 2 fixed g
         galleryUrl: 'https://example.test/',
     );
 
-    expect($context->toArray())->toBe([
-        'subscribe_by_admin' => true,
-        'GOTO_GALLERY_TITLE' => 'My Gallery',
-        'GOTO_GALLERY_URL' => 'https://example.test/',
-    ]);
+    expect($context->toArray())
+        ->toBe([
+            'subscribe_by_admin' => true,
+            'GOTO_GALLERY_TITLE' => 'My Gallery',
+            'GOTO_GALLERY_URL' => 'https://example.test/',
+        ]);
 });
 
 test('toArray uses the unsubscribe-by-himself key for that combination', function (): void {
@@ -25,9 +26,10 @@ test('toArray uses the unsubscribe-by-himself key for that combination', functio
         galleryUrl: 'https://example.test/',
     );
 
-    expect($context->toArray())->toBe([
-        'unsubscribe_by_himself' => true,
-        'GOTO_GALLERY_TITLE' => 'My Gallery',
-        'GOTO_GALLERY_URL' => 'https://example.test/',
-    ]);
+    expect($context->toArray())
+        ->toBe([
+            'unsubscribe_by_himself' => true,
+            'GOTO_GALLERY_TITLE' => 'My Gallery',
+            'GOTO_GALLERY_URL' => 'https://example.test/',
+        ]);
 });

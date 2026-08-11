@@ -49,7 +49,8 @@ test('findIgnoredAnomalyIdsForVersion returns only ids scoped to that version', 
         $ids = $repo->findIgnoredAnomalyIdsForVersion($version);
         sort($ids);
 
-        expect($ids)->toBe(['exif_missing', 'user_orphan']);
+        expect($ids)
+            ->toBe(['exif_missing', 'user_orphan']);
     } finally {
         integrityIgnoredAnomalyTestPurgeVersion($conn, $version);
         integrityIgnoredAnomalyTestPurgeVersion($conn, $otherVersion);
@@ -68,7 +69,8 @@ test('syncForVersion inserts newly-ignored ids and deletes ids no longer in the 
         $ids = $repo->findIgnoredAnomalyIdsForVersion($version);
         sort($ids);
 
-        expect($ids)->toBe(['b', 'c']);
+        expect($ids)
+            ->toBe(['b', 'c']);
     } finally {
         integrityIgnoredAnomalyTestPurgeVersion($conn, $version);
     }
@@ -91,7 +93,8 @@ test('syncForVersion leaves an already-ignored id\'s own ignored_at untouched on
             ->setParameter('a', 'still_ignored')
             ->fetchOne();
 
-        expect($ignoredAt)->toBe('2026-08-01 12:00:00');
+        expect($ignoredAt)
+            ->toBe('2026-08-01 12:00:00');
     } finally {
         integrityIgnoredAnomalyTestPurgeVersion($conn, $version);
     }
@@ -112,13 +115,16 @@ test('purgeOlderThan deletes rows ignored before the threshold, keeps rows at or
         // purgeOlderThan() is deliberately global (no version filter) --
         // >=2 rather than ===2 so this doesn't depend on no other old-dated
         // row existing anywhere else in the shared test DB at the same time.
-        expect($deleted)->toBeGreaterThanOrEqual(2);
+        expect($deleted)
+            ->toBeGreaterThanOrEqual(2);
 
         $remainingIds = $repo->findIgnoredAnomalyIdsForVersion($recentVersion);
-        expect($remainingIds)->toBe(['recent_one']);
+        expect($remainingIds)
+            ->toBe(['recent_one']);
 
         $purgedIds = $repo->findIgnoredAnomalyIdsForVersion($oldVersion);
-        expect($purgedIds)->toBe([]);
+        expect($purgedIds)
+            ->toBe([]);
     } finally {
         integrityIgnoredAnomalyTestPurgeVersion($conn, $oldVersion);
         integrityIgnoredAnomalyTestPurgeVersion($conn, $recentVersion);

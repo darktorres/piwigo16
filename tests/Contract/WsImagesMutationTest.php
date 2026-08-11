@@ -4,21 +4,27 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Contract;
 
-use Override;
 use Doctrine\DBAL\Connection;
+use Override;
 use Piwigo\Db\DbConnection;
 
 final class WsImagesMutationTest extends ContractTestCase
 {
-    /** Fixture image id — must not be deleted by these tests. */
+    /**
+     * Fixture image id — must not be deleted by these tests.
+     */
     private const int FIXTURE_IMAGE_ID = 1;
 
-    /** Fixture category id. */
+    /**
+     * Fixture category id.
+     */
     private const int FIXTURE_CAT_ID = 1;
 
     private Connection $conn;
 
-    /** @var list<int> throwaway image ids inserted by a test, deleted in tearDown if a test didn't already remove them. */
+    /**
+     * @var list<int> throwaway image ids inserted by a test, deleted in tearDown if a test didn't already remove them.
+     */
     private array $throwawayImageIds = [];
 
     #[Override]
@@ -33,7 +39,7 @@ final class WsImagesMutationTest extends ContractTestCase
     protected function tearDown(): void
     {
         foreach ($this->throwawayImageIds as $id) {
-            $this->conn->executeStatement('DELETE FROM ' . 'images' . ' WHERE id = ?', [$id]);
+            $this->conn->executeStatement('DELETE FROM images WHERE id = ?', [$id]);
         }
         parent::tearDown();
     }
@@ -55,7 +61,7 @@ final class WsImagesMutationTest extends ContractTestCase
         ));
 
         $this->conn->executeStatement(
-            'INSERT INTO ' . 'images' . ' (file, path, md5sum) VALUES (?, ?, ?)',
+            'INSERT INTO images (file, path, md5sum) VALUES (?, ?, ?)',
             [$filename, 'upload/2026/08/01/' . $filename, md5($filename)]
         );
         $id = (int) $this->conn->lastInsertId();
@@ -63,7 +69,7 @@ final class WsImagesMutationTest extends ContractTestCase
 
         foreach ($categoryIds as $catId) {
             $this->conn->executeStatement(
-                'INSERT INTO ' . 'image_category' . ' (image_id, category_id) VALUES (?, ?)',
+                'INSERT INTO image_category (image_id, category_id) VALUES (?, ?)',
                 [$id, $catId]
             );
         }
@@ -71,17 +77,17 @@ final class WsImagesMutationTest extends ContractTestCase
         return $id;
     }
 
-    public function test_setPrivacyLevel_returns_ok(): void
+    public function testSetPrivacyLevelReturnsOk(): void
     {
         $response = $this->callWs('pwg.images.setPrivacyLevel', [
             'image_id' => [self::FIXTURE_IMAGE_ID],
-            'level'    => 0,
+            'level' => 0,
         ]);
 
         self::assertSame('ok', $response['stat']);
     }
 
-    public function test_setPrivacyLevel_with_a_level_outside_the_available_set_returns_error(): void
+    public function testSetPrivacyLevelWithALevelOutsideTheAvailableSetReturnsError(): void
     {
         // 'level' is only registered with WsParamType::INT|POSITIVE plus a
         // 'maxValue' (the highest of CurrentConfig::availablePermissionLevels(),
@@ -92,7 +98,7 @@ final class WsImagesMutationTest extends ContractTestCase
         // default) to reach setPrivacyLevel()'s own in_array() guard.
         $response = $this->callWs('pwg.images.setPrivacyLevel', [
             'image_id' => [self::FIXTURE_IMAGE_ID],
-            'level'    => 3,
+            'level' => 3,
         ]);
 
         self::assertSame('fail', $response['stat']);
@@ -100,18 +106,18 @@ final class WsImagesMutationTest extends ContractTestCase
         self::assertSame('Invalid level', $response['message']);
     }
 
-    public function test_setRank_returns_ok(): void
+    public function testSetRankReturnsOk(): void
     {
         $response = $this->callWs('pwg.images.setRank', [
-            'image_id'    => self::FIXTURE_IMAGE_ID,
+            'image_id' => self::FIXTURE_IMAGE_ID,
             'category_id' => self::FIXTURE_CAT_ID,
-            'rank'        => 1,
+            'rank' => 1,
         ]);
 
         self::assertSame('ok', $response['stat']);
     }
 
-    public function test_setRank_with_multiple_image_ids_reorders_the_category(): void
+    public function testSetRankWithMultipleImageIdsReordersTheCategory(): void
     {
         // image_category is (image_id, category_id, rank) with no
         // separate id column -- fixture category 1 contains images 1, 2 and 3
@@ -120,7 +126,7 @@ final class WsImagesMutationTest extends ContractTestCase
         // rank" branch below it -- and reading them all back keeps this
         // assertion exact rather than assuming only a subset is present.
         $response = $this->callWs('pwg.images.setRank', [
-            'image_id'    => [3, 2, 1],
+            'image_id' => [3, 2, 1],
             'category_id' => self::FIXTURE_CAT_ID,
         ]);
 
@@ -133,71 +139,71 @@ final class WsImagesMutationTest extends ContractTestCase
         self::assertSame([3, 2, 1], array_values($imageIds));
     }
 
-    public function test_setCategory_returns_ok(): void
+    public function testSetCategoryReturnsOk(): void
     {
-        $token    = $this->getPwgToken();
+        $token = $this->getPwgToken();
         $response = $this->callWs('pwg.images.setCategory', [
-            'image_id'    => [self::FIXTURE_IMAGE_ID],
+            'image_id' => [self::FIXTURE_IMAGE_ID],
             'category_id' => self::FIXTURE_CAT_ID,
-            'pwg_token'   => $token,
+            'pwg_token' => $token,
         ]);
 
         self::assertSame('ok', $response['stat']);
     }
 
-    public function test_setCategory_unknown_category_returns_404(): void
+    public function testSetCategoryUnknownCategoryReturns404(): void
     {
         $response = $this->callWs('pwg.images.setCategory', [
-            'image_id'    => [self::FIXTURE_IMAGE_ID],
+            'image_id' => [self::FIXTURE_IMAGE_ID],
             'category_id' => 999999,
-            'pwg_token'   => $this->getPwgToken(),
+            'pwg_token' => $this->getPwgToken(),
         ]);
 
         self::assertSame('fail', $response['stat']);
         self::assertSame(404, $response['err']);
     }
 
-    public function test_setCategory_dissociate_removes_the_association(): void
+    public function testSetCategoryDissociateRemovesTheAssociation(): void
     {
         $imageId = $this->insertThrowawayImage([self::FIXTURE_CAT_ID]);
 
         $response = $this->callWs('pwg.images.setCategory', [
-            'image_id'    => [$imageId],
+            'image_id' => [$imageId],
             'category_id' => self::FIXTURE_CAT_ID,
-            'action'      => 'dissociate',
-            'pwg_token'   => $this->getPwgToken(),
+            'action' => 'dissociate',
+            'pwg_token' => $this->getPwgToken(),
         ]);
 
         self::assertSame('ok', $response['stat']);
         $remaining = $this->conn->fetchOne(
-            'SELECT COUNT(*) FROM ' . 'image_category' . ' WHERE image_id = ? AND category_id = ?',
+            'SELECT COUNT(*) FROM image_category WHERE image_id = ? AND category_id = ?',
             [$imageId, self::FIXTURE_CAT_ID]
         );
         self::assertSame(0, $remaining);
     }
 
-    public function test_setCategory_move_reassigns_the_association(): void
+    public function testSetCategoryMoveReassignsTheAssociation(): void
     {
         $otherCatId = self::FIXTURE_CAT_ID + 1;
-        $imageId    = $this->insertThrowawayImage([self::FIXTURE_CAT_ID]);
+        $imageId = $this->insertThrowawayImage([self::FIXTURE_CAT_ID]);
 
         $response = $this->callWs('pwg.images.setCategory', [
-            'image_id'    => [$imageId],
+            'image_id' => [$imageId],
             'category_id' => $otherCatId,
-            'action'      => 'move',
-            'pwg_token'   => $this->getPwgToken(),
+            'action' => 'move',
+            'pwg_token' => $this->getPwgToken(),
         ]);
 
         self::assertSame('ok', $response['stat']);
 
         $stillInOld = $this->conn->fetchOne(
-            'SELECT COUNT(*) FROM ' . 'image_category' . ' WHERE image_id = ? AND category_id = ?',
+            'SELECT COUNT(*) FROM image_category WHERE image_id = ? AND category_id = ?',
             [$imageId, self::FIXTURE_CAT_ID]
         );
         self::assertSame(0, $stillInOld);
 
         $nowInNew = $this->conn->fetchOne(
-            'SELECT COUNT(*) FROM ' . 'image_category' . ' WHERE image_id = ? AND category_id = ?',
+            'SELECT COUNT(*) FROM image_category WHERE image_id = ? AND category_id = ?',
             [$imageId, $otherCatId]
         );
         self::assertSame(1, $nowInNew);
@@ -212,26 +218,26 @@ final class WsImagesMutationTest extends ContractTestCase
     // pcre.backtrack_limit/pcre.recursion_limit to force one artificially
     // either -- see WsImagesTest's exist() section for the full writeup.
 
-    public function test_delete_removes_the_image(): void
+    public function testDeleteRemovesTheImage(): void
     {
         $imageId = $this->insertThrowawayImage();
 
         $response = $this->callWs('pwg.images.delete', [
-            'image_id'  => (string) $imageId,
+            'image_id' => (string) $imageId,
             'pwg_token' => $this->getPwgToken(),
         ]);
 
         self::assertSame('ok', $response['stat']);
         self::assertSame(1, $response['result']);
 
-        $remaining = $this->conn->fetchOne('SELECT COUNT(*) FROM ' . 'images' . ' WHERE id = ?', [$imageId]);
+        $remaining = $this->conn->fetchOne('SELECT COUNT(*) FROM images WHERE id = ?', [$imageId]);
         self::assertSame(0, $remaining);
     }
 
-    public function test_delete_invalid_token_returns_error(): void
+    public function testDeleteInvalidTokenReturnsError(): void
     {
         $response = $this->callWs('pwg.images.delete', [
-            'image_id'  => (string) self::FIXTURE_IMAGE_ID,
+            'image_id' => (string) self::FIXTURE_IMAGE_ID,
             'pwg_token' => 'wrong',
         ]);
 
@@ -239,13 +245,15 @@ final class WsImagesMutationTest extends ContractTestCase
         self::assertSame(403, $response['err']);
     }
 
-    public function test_addComment_response_matches_schema(): void
+    public function testAddCommentResponseMatchesSchema(): void
     {
         // The ephemeral key must come from the server; getInfo returns one in
         // result.comment_post_data.key (valid_after_seconds=2, so sleep first).
-        $info       = $this->callWs('pwg.images.getInfo', ['image_id' => self::FIXTURE_IMAGE_ID]);
+        $info = $this->callWs('pwg.images.getInfo', [
+            'image_id' => self::FIXTURE_IMAGE_ID,
+        ]);
         $infoResult = $info['result'] ?? null;
-        $key        = '';
+        $key = '';
         if (is_array($infoResult)) {
             $commentPost = $infoResult['comment_post'] ?? null;
             if (is_array($commentPost) && is_string($commentPost['key'] ?? null)) {
@@ -256,9 +264,9 @@ final class WsImagesMutationTest extends ContractTestCase
 
         $response = $this->callWs('pwg.images.addComment', [
             'image_id' => self::FIXTURE_IMAGE_ID,
-            'author'   => 'ContractTest',
-            'content'  => 'Automated contract test comment ' . uniqid(),
-            'key'      => $key,
+            'author' => 'ContractTest',
+            'content' => 'Automated contract test comment ' . uniqid(),
+            'key' => $key,
         ]);
 
         self::assertSame('ok', $response['stat']);
@@ -271,13 +279,13 @@ final class WsImagesMutationTest extends ContractTestCase
         self::assertArrayHasKey('id', $comment);
     }
 
-    public function test_addComment_with_an_invalid_key_is_rejected(): void
+    public function testAddCommentWithAnInvalidKeyIsRejected(): void
     {
         $response = $this->callWs('pwg.images.addComment', [
             'image_id' => self::FIXTURE_IMAGE_ID,
-            'author'   => 'ContractTest',
-            'content'  => 'Automated contract test comment ' . uniqid(),
-            'key'      => 'not-a-real-ephemeral-key',
+            'author' => 'ContractTest',
+            'content' => 'Automated contract test comment ' . uniqid(),
+            'key' => 'not-a-real-ephemeral-key',
         ]);
 
         self::assertSame('fail', $response['stat']);
@@ -288,7 +296,7 @@ final class WsImagesMutationTest extends ContractTestCase
         );
     }
 
-    public function test_emptyLounge_returns_rows(): void
+    public function testEmptyLoungeReturnsRows(): void
     {
         $response = $this->callWs('pwg.images.emptyLounge', []);
 
@@ -298,19 +306,19 @@ final class WsImagesMutationTest extends ContractTestCase
         self::assertArrayHasKey('rows', $result);
     }
 
-    public function test_rate_invalid_value_returns_fail(): void
+    public function testRateInvalidValueReturnsFail(): void
     {
         // rate value 99 is not in rate_items ([1,2,3,4,5]); contract: returns stat=fail with err 403
         $response = $this->callWs('pwg.images.rate', [
             'image_id' => self::FIXTURE_IMAGE_ID,
-            'rate'     => 99,
+            'rate' => 99,
         ]);
 
         self::assertSame('fail', $response['stat']);
         self::assertSame(403, $response['err']);
     }
 
-    public function test_rate_valid_value_returns_ok(): void
+    public function testRateValidValueReturnsOk(): void
     {
         // rate() requires the image to be joined to at least one (non-forbidden)
         // category -- a throwaway image avoids nudging the shared fixture's
@@ -319,20 +327,20 @@ final class WsImagesMutationTest extends ContractTestCase
 
         $response = $this->callWs('pwg.images.rate', [
             'image_id' => $imageId,
-            'rate'     => 4,
+            'rate' => 4,
         ]);
 
         self::assertSame('ok', $response['stat']);
         self::assertIsArray($response['result']);
     }
 
-    public function test_rate_on_unassociated_image_returns_404(): void
+    public function testRateOnUnassociatedImageReturns404(): void
     {
         $imageId = $this->insertThrowawayImage();
 
         $response = $this->callWs('pwg.images.rate', [
             'image_id' => $imageId,
-            'rate'     => 4,
+            'rate' => 4,
         ]);
 
         self::assertSame('fail', $response['stat']);

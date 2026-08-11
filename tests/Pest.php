@@ -2,7 +2,8 @@
 
 declare(strict_types=1);
 
-uses()->in('tests/Arch', 'tests/Integration', 'tests/Contract', 'tests/Browser');
+uses()
+    ->in('tests/Arch', 'tests/Integration', 'tests/Contract', 'tests/Browser');
 
 /**
  * Doctrine's EntityManager/UnitOfWork graph is reference-cyclic (confirmed
@@ -31,9 +32,10 @@ uses()->in('tests/Arch', 'tests/Integration', 'tests/Contract', 'tests/Browser')
  * defines zero tests of its own). uses()->afterEach()->in() is the actual
  * directory-scoped mechanism.
  */
-uses()->afterEach(function (): void {
-    gc_collect_cycles();
-})->in('Unit');
+uses()
+    ->afterEach(function (): void {
+        gc_collect_cycles();
+    })->in('Unit');
 
 /**
  * glob() with a false-safe, reindexed return -- keeps callers' types

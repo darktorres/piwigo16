@@ -4,18 +4,18 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Integration;
 
-use Override;
-use Piwigo\Core\Kernel;
 use LogicException;
-use Piwigo\Db\EntityManagerFactory;
-use Piwigo\Tests\Support\LangTestFactory;
-use Piwigo\Config\CurrentConfig;
+use Override;
 use Piwigo\Config\ConfigLoader;
-use Piwigo\Tests\Support\PageStateTestFactory;
+use Piwigo\Config\CurrentConfig;
+use Piwigo\Core\Kernel;
 use Piwigo\Core\ProcessCache;
 use Piwigo\Db\DbConnection;
+use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Permalink\PermalinkRepository;
 use Piwigo\Permalink\PermalinkService;
+use Piwigo\Tests\Support\LangTestFactory;
+use Piwigo\Tests\Support\PageStateTestFactory;
 
 final class PermalinkServiceTest extends IntegrationTestCase
 {
@@ -59,7 +59,7 @@ final class PermalinkServiceTest extends IntegrationTestCase
         parent::tearDown();
     }
 
-    public function test_set_cat_permalink_then_delete_round_trips(): void
+    public function testSetCatPermalinkThenDeleteRoundTrips(): void
     {
         $slug = 'p17-service-test-' . bin2hex(random_bytes(4));
 
@@ -70,7 +70,7 @@ final class PermalinkServiceTest extends IntegrationTestCase
         self::assertNull($this->repo->findPermalinkByCategoryId(1));
     }
 
-    public function test_set_cat_permalink_rejects_a_numeric_permalink(): void
+    public function testSetCatPermalinkRejectsANumericPermalink(): void
     {
         $result = $this->service->setCatPermalink(1, '12345', false);
 
@@ -78,14 +78,14 @@ final class PermalinkServiceTest extends IntegrationTestCase
         self::assertNotSame([], PageStateTestFactory::get()->errors);
     }
 
-    public function test_set_cat_permalink_rejects_disallowed_characters(): void
+    public function testSetCatPermalinkRejectsDisallowedCharacters(): void
     {
         $result = $this->service->setCatPermalink(1, 'not valid!', false);
 
         self::assertFalse($result);
     }
 
-    public function test_set_cat_permalink_rejects_an_already_used_permalink(): void
+    public function testSetCatPermalinkRejectsAnAlreadyUsedPermalink(): void
     {
         $slug = 'p17-service-test-' . bin2hex(random_bytes(4));
         self::assertTrue($this->service->setCatPermalink(1, $slug, false));
@@ -97,7 +97,7 @@ final class PermalinkServiceTest extends IntegrationTestCase
         $this->repo->clearCategoryPermalink(2);
     }
 
-    public function test_set_cat_permalink_is_a_noop_success_when_unchanged(): void
+    public function testSetCatPermalinkIsANoopSuccessWhenUnchanged(): void
     {
         $slug = 'p17-service-test-' . bin2hex(random_bytes(4));
         self::assertTrue($this->service->setCatPermalink(1, $slug, false));
@@ -105,12 +105,12 @@ final class PermalinkServiceTest extends IntegrationTestCase
         self::assertTrue($this->service->setCatPermalink(1, $slug, false));
     }
 
-    public function test_delete_cat_permalink_with_no_permalink_set_succeeds_as_a_noop(): void
+    public function testDeleteCatPermalinkWithNoPermalinkSetSucceedsAsANoop(): void
     {
         self::assertTrue($this->service->deleteCatPermalink(1, false));
     }
 
-    public function test_set_then_delete_with_save_records_and_blocks_reuse(): void
+    public function testSetThenDeleteWithSaveRecordsAndBlocksReuse(): void
     {
         $slug = 'p17-service-test-' . bin2hex(random_bytes(4));
         self::assertTrue($this->service->setCatPermalink(1, $slug, true));
@@ -124,7 +124,7 @@ final class PermalinkServiceTest extends IntegrationTestCase
         $this->repo->deleteOldPermalink(1, $slug);
     }
 
-    public function test_delete_old_permalink_by_value_removes_a_recorded_history_entry(): void
+    public function testDeleteOldPermalinkByValueRemovesARecordedHistoryEntry(): void
     {
         $slug = 'p17-service-test-' . bin2hex(random_bytes(4));
         $this->repo->insertOldPermalinkDeleted(1, $slug);
@@ -133,7 +133,7 @@ final class PermalinkServiceTest extends IntegrationTestCase
         self::assertNull($this->repo->findOldCategoryId($slug));
     }
 
-    public function test_delete_old_permalink_by_value_returns_false_and_records_an_error_when_unmatched(): void
+    public function testDeleteOldPermalinkByValueReturnsFalseAndRecordsAnErrorWhenUnmatched(): void
     {
         $result = $this->service->deleteOldPermalinkByValue('never-used-' . bin2hex(random_bytes(4)));
 
@@ -141,7 +141,7 @@ final class PermalinkServiceTest extends IntegrationTestCase
         self::assertNotSame([], PageStateTestFactory::get()->errors);
     }
 
-    public function test_delete_cat_permalink_with_save_rejects_when_the_live_permalink_was_historically_owned_by_a_different_category(): void
+    public function testDeleteCatPermalinkWithSaveRejectsWhenTheLivePermalinkWasHistoricallyOwnedByADifferentCategory(): void
     {
         $slug = 'p17-service-test-' . bin2hex(random_bytes(4));
 
@@ -168,7 +168,7 @@ final class PermalinkServiceTest extends IntegrationTestCase
         }
     }
 
-    public function test_delete_cat_permalink_with_save_marks_an_already_recorded_history_row_deleted_again(): void
+    public function testDeleteCatPermalinkWithSaveMarksAnAlreadyRecordedHistoryRowDeletedAgain(): void
     {
         $slug = 'p17-service-test-' . bin2hex(random_bytes(4));
 
@@ -191,7 +191,7 @@ final class PermalinkServiceTest extends IntegrationTestCase
         $this->repo->deleteOldPermalink(1, $slug);
     }
 
-    public function test_set_cat_permalink_clears_the_reclaimed_permalinks_own_stale_history_row(): void
+    public function testSetCatPermalinkClearsTheReclaimedPermalinksOwnStaleHistoryRow(): void
     {
         $slug = 'p17-service-test-' . bin2hex(random_bytes(4));
 
@@ -209,7 +209,7 @@ final class PermalinkServiceTest extends IntegrationTestCase
         self::assertSame($slug, $this->repo->findPermalinkByCategoryId(1));
     }
 
-    public function test_set_cat_permalink_fails_when_its_own_internal_delete_of_the_old_permalink_is_rejected(): void
+    public function testSetCatPermalinkFailsWhenItsOwnInternalDeleteOfTheOldPermalinkIsRejected(): void
     {
         $oldSlug = 'p17-service-test-old-' . bin2hex(random_bytes(4));
         $newSlug = 'p17-service-test-new-' . bin2hex(random_bytes(4));

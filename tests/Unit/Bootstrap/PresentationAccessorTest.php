@@ -49,7 +49,8 @@ test('every accessor returns its real, correctly-typed instance from a real cont
         PresentationAccessor::pictureRateRenderer(),
     ];
 
-    expect($instances)->toHaveCount(5);
+    expect($instances)
+        ->toHaveCount(5);
 });
 
 test('htmlService throws when the container returns an unexpected type', function (): void {

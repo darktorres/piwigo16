@@ -20,15 +20,24 @@ test('toArray uses an empty prefix by default, and omits language_selection when
         nbHits: 'true',
         redirect: '/index.php',
         fAction: '/profile.php',
-        radioOptions: ['true' => 'Yes', 'false' => 'No'],
+        radioOptions: [
+            'true' => 'Yes',
+            'false' => 'No',
+        ],
         templateSelection: ThemeId::from('default'),
-        templateOptions: ['default' => 'Default'],
+        templateOptions: [
+            'default' => 'Default',
+        ],
         languageSelection: null,
-        languageOptions: ['en_GB' => 'English'],
+        languageOptions: [
+            'en_GB' => 'English',
+        ],
         specialUser: false,
         inAdmin: false,
         apiCurrentDate: '2026-08-09',
-        apiExpiration: [7 => '7 days (August 16, 2026)'],
+        apiExpiration: [
+            7 => '7 days (August 16, 2026)',
+        ],
         apiSelectedExpiration: 7,
         apiCanManage: true,
         apiEmailInfos: 'The email <em>jane@example.test</em> will be used...',
@@ -37,11 +46,15 @@ test('toArray uses an empty prefix by default, and omits language_selection when
 
     $result = $context->toArray();
 
-    expect($result)->not->toHaveKey('language_selection')
+    expect($result)
+        ->not->toHaveKey('language_selection')
         ->and($result['USERNAME'])->toBe('jane')
         ->and($result['EMAIL'])->toBe('jane@example.test')
         ->and($result['F_ACTION'])->toBe('/profile.php')
-        ->and($result['radio_options'])->toBe(['true' => 'Yes', 'false' => 'No'])
+        ->and($result['radio_options'])->toBe([
+            'true' => 'Yes',
+            'false' => 'No',
+        ])
         ->and($result['PWG_TOKEN'])->toBe('abc123');
 });
 
@@ -59,11 +72,18 @@ test('toArray prefixes every dynamic key with the GUEST_ prefix, and includes la
         nbHits: 'false',
         redirect: '',
         fAction: '/admin.php?page=configuration',
-        radioOptions: ['true' => 'Yes', 'false' => 'No'],
+        radioOptions: [
+            'true' => 'Yes',
+            'false' => 'No',
+        ],
         templateSelection: ThemeId::from('default'),
-        templateOptions: ['default' => 'Default'],
+        templateOptions: [
+            'default' => 'Default',
+        ],
         languageSelection: 'en_GB',
-        languageOptions: ['en_GB' => 'English'],
+        languageOptions: [
+            'en_GB' => 'English',
+        ],
         specialUser: true,
         inAdmin: true,
         apiCurrentDate: '2026-08-09',
@@ -76,8 +96,10 @@ test('toArray prefixes every dynamic key with the GUEST_ prefix, and includes la
 
     $result = $context->toArray();
 
-    expect($result)->toHaveKeys(['GUEST_USERNAME', 'GUEST_EMAIL', 'GUEST_F_ACTION'])
-        ->and($result)->not->toHaveKeys(['USERNAME', 'EMAIL', 'F_ACTION'])
+    expect($result)
+        ->toHaveKeys(['GUEST_USERNAME', 'GUEST_EMAIL', 'GUEST_F_ACTION'])
+        ->and($result)
+        ->not->toHaveKeys(['USERNAME', 'EMAIL', 'F_ACTION'])
         ->and($result['GUEST_USERNAME'])->toBe('guest')
         ->and($result['SPECIAL_USER'])->toBeTrue()
         ->and($result['language_selection'])->toBe('en_GB');

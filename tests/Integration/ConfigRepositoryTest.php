@@ -4,16 +4,16 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Integration;
 
-use Override;
-use Piwigo\Core\Kernel;
-use LogicException;
 use Doctrine\ORM\EntityManager;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\ORMSetup;
-use Piwigo\Config\CurrentConfig;
+use LogicException;
+use Override;
 use Piwigo\Config\ConfigEntry;
 use Piwigo\Config\ConfigLoader;
 use Piwigo\Config\ConfigRepository;
+use Piwigo\Config\CurrentConfig;
+use Piwigo\Core\Kernel;
 use Piwigo\Db\DbConnection;
 
 /**
@@ -64,7 +64,7 @@ final class ConfigRepositoryTest extends IntegrationTestCase
         $this->repo = $repo;
     }
 
-    public function test_find_returns_a_real_fixture_row(): void
+    public function testFindReturnsARealFixtureRow(): void
     {
         $entry = $this->repo->find('secret_key');
 
@@ -74,12 +74,12 @@ final class ConfigRepositoryTest extends IntegrationTestCase
         self::assertNotSame('', $entry->value);
     }
 
-    public function test_find_returns_null_for_a_missing_param(): void
+    public function testFindReturnsNullForAMissingParam(): void
     {
         self::assertNull($this->repo->find('this_param_does_not_exist_anywhere'));
     }
 
-    public function test_findAll_returns_every_fixture_row(): void
+    public function testFindAllReturnsEveryFixtureRow(): void
     {
         $entries = $this->repo->findAll();
 
@@ -89,7 +89,7 @@ final class ConfigRepositoryTest extends IntegrationTestCase
         self::assertContains('gallery_title', $params);
     }
 
-    public function test_upsert_creates_a_new_row(): void
+    public function testUpsertCreatesANewRow(): void
     {
         $param = 'p14_test_upsert_new_' . bin2hex(random_bytes(4));
 
@@ -108,7 +108,7 @@ final class ConfigRepositoryTest extends IntegrationTestCase
         $fresh->deleteByParam($param);
     }
 
-    public function test_upsert_updates_an_existing_row(): void
+    public function testUpsertUpdatesAnExistingRow(): void
     {
         $param = 'p14_test_upsert_existing_' . bin2hex(random_bytes(4));
         $this->repo->upsert($param, self::jsonValue('first'));
@@ -122,7 +122,7 @@ final class ConfigRepositoryTest extends IntegrationTestCase
         $fresh->deleteByParam($param);
     }
 
-    public function test_upsert_updates_the_comment_of_an_existing_row_when_given_one(): void
+    public function testUpsertUpdatesTheCommentOfAnExistingRowWhenGivenOne(): void
     {
         $param = 'p14_test_upsert_comment_' . bin2hex(random_bytes(4));
         $this->repo->upsert($param, self::jsonValue('first'), 'original comment');
@@ -147,7 +147,7 @@ final class ConfigRepositoryTest extends IntegrationTestCase
         $fresh2->deleteByParam($param);
     }
 
-    public function test_deleteByParam_removes_the_row(): void
+    public function testDeleteByParamRemovesTheRow(): void
     {
         $param = 'p14_test_delete_' . bin2hex(random_bytes(4));
         $this->repo->upsert($param, self::jsonValue('temp'));
@@ -163,7 +163,7 @@ final class ConfigRepositoryTest extends IntegrationTestCase
      * key -- without it, the generated UPDATE would carry no WHERE clause
      * at all and overwrite every row's value, not just the targeted one.
      */
-    public function test_mass_update_values_updates_only_the_matching_param_row(): void
+    public function testMassUpdateValuesUpdatesOnlyTheMatchingParamRow(): void
     {
         $paramA = 'p14_test_mass_update_a_' . bin2hex(random_bytes(4));
         $paramB = 'p14_test_mass_update_b_' . bin2hex(random_bytes(4));
@@ -171,7 +171,10 @@ final class ConfigRepositoryTest extends IntegrationTestCase
         $this->repo->upsert($paramB, self::jsonValue('original-b'));
 
         $this->repo->massUpdateValues([
-            ['param' => $paramA, 'value' => self::jsonValue('updated-a')],
+            [
+                'param' => $paramA,
+                'value' => self::jsonValue('updated-a'),
+            ],
         ]);
 
         $fresh = $this->freshRepo();
@@ -186,7 +189,7 @@ final class ConfigRepositoryTest extends IntegrationTestCase
         $fresh->deleteByParam($paramB);
     }
 
-    public function test_insert_ignore_raw_value_creates_a_row_then_is_a_silent_noop_on_a_second_call(): void
+    public function testInsertIgnoreRawValueCreatesARowThenIsASilentNoopOnASecondCall(): void
     {
         $param = 'p14_test_insert_ignore_' . bin2hex(random_bytes(4));
 
@@ -206,7 +209,7 @@ final class ConfigRepositoryTest extends IntegrationTestCase
      * value containing a literal double quote round-trips as inert data
      * rather than breaking out into raw SQL.
      */
-    public function test_insert_ignore_raw_value_and_find_raw_value_round_trip_a_value_containing_a_double_quote(): void
+    public function testInsertIgnoreRawValueAndFindRawValueRoundTripAValueContainingADoubleQuote(): void
     {
         $param = 'p14_test_quote_' . bin2hex(random_bytes(4));
         $value = 'value with a " double quote and a \' single quote';
@@ -218,7 +221,7 @@ final class ConfigRepositoryTest extends IntegrationTestCase
         $this->repo->deleteByParam($param);
     }
 
-    public function test_find_raw_value_returns_false_for_a_missing_param(): void
+    public function testFindRawValueReturnsFalseForAMissingParam(): void
     {
         self::assertFalse($this->repo->findRawValue('this_param_does_not_exist_anywhere'));
     }
@@ -229,7 +232,7 @@ final class ConfigRepositoryTest extends IntegrationTestCase
      * insertIgnoreRawValue()'s own json_encode(string) path never would --
      * exercising findRawValue()'s "decoded value isn't a string" fallback.
      */
-    public function test_find_raw_value_returns_false_when_the_stored_value_does_not_decode_to_a_string(): void
+    public function testFindRawValueReturnsFalseWhenTheStoredValueDoesNotDecodeToAString(): void
     {
         $param = 'p14_test_non_string_decode_' . bin2hex(random_bytes(4));
         $this->repo->upsert($param, '123');
@@ -239,7 +242,7 @@ final class ConfigRepositoryTest extends IntegrationTestCase
         $this->repo->deleteByParam($param);
     }
 
-    public function test_count_by_param_reflects_presence_and_absence(): void
+    public function testCountByParamReflectsPresenceAndAbsence(): void
     {
         $param = 'p14_test_count_' . bin2hex(random_bytes(4));
 

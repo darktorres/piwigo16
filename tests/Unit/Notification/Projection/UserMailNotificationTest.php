@@ -28,13 +28,20 @@ function fullUserMailNotificationRow(): array
 test('fromRow narrows every column to its real type', function (): void {
     $notification = UserMailNotification::fromRow(fullUserMailNotificationRow());
 
-    expect($notification->userId)->toEqual(UserId::from(1))
-        ->and($notification->checkKey)->toBe('abcdef1234567890')
-        ->and($notification->username)->toBe('fixture_admin')
-        ->and($notification->mailAddress)->toBe('fixture_admin@example.test')
-        ->and($notification->enabled)->toBeTrue()
-        ->and($notification->lastSend)->toBe('2026-07-01 00:00:00')
-        ->and($notification->status)->toBe('webmaster');
+    expect($notification->userId)
+        ->toEqual(UserId::from(1))
+        ->and($notification->checkKey)
+        ->toBe('abcdef1234567890')
+        ->and($notification->username)
+        ->toBe('fixture_admin')
+        ->and($notification->mailAddress)
+        ->toBe('fixture_admin@example.test')
+        ->and($notification->enabled)
+        ->toBeTrue()
+        ->and($notification->lastSend)
+        ->toBe('2026-07-01 00:00:00')
+        ->and($notification->status)
+        ->toBe('webmaster');
 });
 
 test('fromRow keeps an already-hydrated UserId instance as-is', function (): void {
@@ -54,8 +61,10 @@ test('fromRow defaults every nullable column to null when absent', function (): 
 
     $notification = UserMailNotification::fromRow($row);
 
-    expect($notification->lastSend)->toBeNull()
-        ->and($notification->status)->toBeNull();
+    expect($notification->lastSend)
+        ->toBeNull()
+        ->and($notification->status)
+        ->toBeNull();
     // The NOT NULL columns (user_id/check_key/username/mail_address) fall
     // back to their type's zero value instead -- never actually null for a
     // real fetched row. See the dedicated tests below for those fallbacks'
@@ -70,9 +79,12 @@ test('fromRow defaults the NOT NULL string columns to their type\'s zero value w
 
     $notification = UserMailNotification::fromRow($row);
 
-    expect($notification->checkKey)->toBe('')
-        ->and($notification->username)->toBe('')
-        ->and($notification->mailAddress)->toBe('');
+    expect($notification->checkKey)
+        ->toBe('')
+        ->and($notification->username)
+        ->toBe('')
+        ->and($notification->mailAddress)
+        ->toBe('');
 });
 
 test('fromRow defaults enabled to false when absent', function (): void {
@@ -114,13 +126,14 @@ test('fromRow casts a native scalar enabled column, matching mysqli-native-types
 test('toArray round-trips the exact same DB column shape fromRow narrowed', function (): void {
     $roundTripped = UserMailNotification::fromRow(fullUserMailNotificationRow())->toArray();
 
-    expect($roundTripped)->toBe([
-        'user_id' => 1,
-        'check_key' => 'abcdef1234567890',
-        'username' => 'fixture_admin',
-        'mail_address' => 'fixture_admin@example.test',
-        'enabled' => true,
-        'last_send' => '2026-07-01 00:00:00',
-        'status' => 'webmaster',
-    ]);
+    expect($roundTripped)
+        ->toBe([
+            'user_id' => 1,
+            'check_key' => 'abcdef1234567890',
+            'username' => 'fixture_admin',
+            'mail_address' => 'fixture_admin@example.test',
+            'enabled' => true,
+            'last_send' => '2026-07-01 00:00:00',
+            'status' => 'webmaster',
+        ]);
 });

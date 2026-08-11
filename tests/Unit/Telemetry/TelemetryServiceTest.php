@@ -7,7 +7,6 @@ use Doctrine\DBAL\Platforms\MySQLPlatform;
 use Doctrine\DBAL\Platforms\OraclePlatform;
 use Doctrine\DBAL\Platforms\PostgreSQLPlatform;
 use Piwigo\Config\ConfigEntry;
-use Piwigo\Config\ConfigRepository;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Telemetry\TelemetryService;
@@ -48,9 +47,11 @@ test('resolveInstallId() generates and persists a random id on first use', funct
     $conn = DbConnection::build();
 
     try {
-        $id = telemetryTestService()->resolveInstallId();
+        $id = telemetryTestService()
+            ->resolveInstallId();
 
-        expect($id)->toMatch('/^[0-9a-f]{32}$/');
+        expect($id)
+            ->toMatch('/^[0-9a-f]{32}$/');
 
         $stored = $conn->createQueryBuilder()
             ->select('value')
@@ -59,7 +60,8 @@ test('resolveInstallId() generates and persists a random id on first use', funct
             ->setParameter('param', 'telemetry_install_id')
             ->fetchOne();
 
-        expect(is_string($stored) ? json_decode($stored, true) : null)->toBe($id);
+        expect(is_string($stored) ? json_decode($stored, true) : null)
+            ->toBe($id);
     } finally {
         $conn->createQueryBuilder()
             ->delete('config')
@@ -75,9 +77,11 @@ test('resolveInstallId() returns the same id on a later call instead of regenera
     try {
         $service = telemetryTestService();
         $first = $service->resolveInstallId();
-        $second = telemetryTestService()->resolveInstallId();
+        $second = telemetryTestService()
+            ->resolveInstallId();
 
-        expect($second)->toBe($first);
+        expect($second)
+            ->toBe($first);
     } finally {
         $conn->createQueryBuilder()
             ->delete('config')
@@ -93,16 +97,21 @@ test('resolveInstallId() regenerates when the stored value decodes to something 
     try {
         $conn->createQueryBuilder()
             ->insert('config')
-            ->values(['param' => ':param', 'value' => ':value'])
+            ->values([
+                'param' => ':param',
+                'value' => ':value',
+            ])
             ->setParameter('param', 'telemetry_install_id')
             // Valid JSON, but a number, not a string -- is_string() must
             // reject it, not just any non-null/non-empty-string decode.
             ->setParameter('value', '12345')
             ->executeStatement();
 
-        $id = telemetryTestService()->resolveInstallId();
+        $id = telemetryTestService()
+            ->resolveInstallId();
 
-        expect($id)->toMatch('/^[0-9a-f]{32}$/');
+        expect($id)
+            ->toMatch('/^[0-9a-f]{32}$/');
     } finally {
         $conn->createQueryBuilder()
             ->delete('config')
@@ -124,26 +133,31 @@ test('detectDriverLabel() distinguishes MariaDB from plain MySQL/MariaDB\'s own 
 
     $mariaDbEm = DqlPlatformQueryTestFactory::entityManagerForPlatform(new MariaDBPlatform());
     $mariaDbService = new TelemetryService($mariaDbEm, $mariaDbEm->getRepository(ConfigEntry::class));
-    expect($method->invoke($mariaDbService))->toBe('mariadb');
+    expect($method->invoke($mariaDbService))
+        ->toBe('mariadb');
 
     $mysqlEm = DqlPlatformQueryTestFactory::entityManagerForPlatform(new MySQLPlatform());
     $mysqlService = new TelemetryService($mysqlEm, $mysqlEm->getRepository(ConfigEntry::class));
-    expect($method->invoke($mysqlService))->toBe('mysql');
+    expect($method->invoke($mysqlService))
+        ->toBe('mysql');
 
     $pgsqlEm = DqlPlatformQueryTestFactory::entityManagerForPlatform(new PostgreSQLPlatform());
     $pgsqlService = new TelemetryService($pgsqlEm, $pgsqlEm->getRepository(ConfigEntry::class));
-    expect($method->invoke($pgsqlService))->toBe('pgsql');
+    expect($method->invoke($pgsqlService))
+        ->toBe('pgsql');
 
     $oracleEm = DqlPlatformQueryTestFactory::entityManagerForPlatform(new OraclePlatform());
     $oracleService = new TelemetryService($oracleEm, $oracleEm->getRepository(ConfigEntry::class));
-    expect($method->invoke($oracleService))->toBe('unknown');
+    expect($method->invoke($oracleService))
+        ->toBe('unknown');
 });
 
 test('buildPayload() assembles a real, structurally-complete payload', function (): void {
     $conn = DbConnection::build();
 
     try {
-        $payload = telemetryTestService()->buildPayload();
+        $payload = telemetryTestService()
+            ->buildPayload();
 
         // This test runs against whichever real connection PIWIGO_DB_DRIVER
         // selects (confirmed live under both: pgsql resolves
@@ -154,11 +168,16 @@ test('buildPayload() assembles a real, structurally-complete payload', function 
         // MariaDB-vs-MySQL-vs-Postgres instanceof branches themselves are
         // covered driver-independently by the dedicated detectDriverLabel()
         // test above, via DqlPlatformQueryTestFactory fakes.
-        expect($payload->installId)->toMatch('/^[0-9a-f]{32}$/')
-            ->and($payload->environment->phpVersion)->toBe(PHP_VERSION)
-            ->and($payload->environment->osFamily)->toBe(PHP_OS_FAMILY)
-            ->and($payload->database->driver)->toBe(getenv('PIWIGO_DB_DRIVER') === 'pgsql' ? 'pgsql' : 'mysql')
-            ->and($payload->database->serverVersion)->not->toBe('');
+        expect($payload->installId)
+            ->toMatch('/^[0-9a-f]{32}$/')
+            ->and($payload->environment->phpVersion)
+            ->toBe(PHP_VERSION)
+            ->and($payload->environment->osFamily)
+            ->toBe(PHP_OS_FAMILY)
+            ->and($payload->database->driver)
+            ->toBe(getenv('PIWIGO_DB_DRIVER') === 'pgsql' ? 'pgsql' : 'mysql')
+            ->and($payload->database->serverVersion)
+            ->not->toBe('');
     } finally {
         $conn->createQueryBuilder()
             ->delete('config')
@@ -172,18 +191,34 @@ test('buildPayload() gallery/extension stats match real raw COUNT(*) queries', f
     $conn = DbConnection::build();
 
     try {
-        $payload = telemetryTestService()->buildPayload();
+        $payload = telemetryTestService()
+            ->buildPayload();
 
-        $realImageCount = $conn->createQueryBuilder()->select('COUNT(*)')->from('images')->fetchOne();
-        $realUserCount = $conn->createQueryBuilder()->select('COUNT(*)')->from('users')->fetchOne();
-        $realPluginCount = $conn->createQueryBuilder()->select('COUNT(*)')->from('plugins')->fetchOne();
-        expect($realImageCount)->toBeInt();
-        expect($realUserCount)->toBeInt();
-        expect($realPluginCount)->toBeInt();
+        $realImageCount = $conn->createQueryBuilder()
+            ->select('COUNT(*)')
+            ->from('images')
+            ->fetchOne();
+        $realUserCount = $conn->createQueryBuilder()
+            ->select('COUNT(*)')
+            ->from('users')
+            ->fetchOne();
+        $realPluginCount = $conn->createQueryBuilder()
+            ->select('COUNT(*)')
+            ->from('plugins')
+            ->fetchOne();
+        expect($realImageCount)
+            ->toBeInt();
+        expect($realUserCount)
+            ->toBeInt();
+        expect($realPluginCount)
+            ->toBeInt();
 
-        expect($payload->gallery->imageCount)->toBe($realImageCount)
-            ->and($payload->gallery->userCount)->toBe($realUserCount)
-            ->and($payload->extensions->pluginCount)->toBe($realPluginCount);
+        expect($payload->gallery->imageCount)
+            ->toBe($realImageCount)
+            ->and($payload->gallery->userCount)
+            ->toBe($realUserCount)
+            ->and($payload->extensions->pluginCount)
+            ->toBe($realPluginCount);
     } finally {
         $conn->createQueryBuilder()
             ->delete('config')

@@ -8,7 +8,9 @@ use Override;
 
 final class WsPluginsTest extends ContractTestCase
 {
-    /** @var list<string> */
+    /**
+     * @var list<string>
+     */
     private array $pluginDirsToRemove = [];
 
     #[Override]
@@ -52,7 +54,7 @@ final class WsPluginsTest extends ContractTestCase
      * installed in the DB, so 'state' must resolve to the 'uninstalled'
      * fallback.
      */
-    public function test_getList_includes_a_real_plugin_directory_from_disk(): void
+    public function testGetListIncludesARealPluginDirectoryFromDisk(): void
     {
         $pluginId = 'ct_fake_plugin_' . uniqid();
         $dir = dirname(__DIR__, 2) . '/plugins/' . $pluginId;
@@ -83,7 +85,7 @@ final class WsPluginsTest extends ContractTestCase
         self::assertSame('A throwaway plugin directory for Contract test coverage.', $entry['description']);
     }
 
-    public function test_getList_response_matches_schema(): void
+    public function testGetListResponseMatchesSchema(): void
     {
         $response = $this->wsAdmin('pwg.plugins.getList');
 
@@ -91,14 +93,14 @@ final class WsPluginsTest extends ContractTestCase
         self::assertMatchesSchema('pwg.plugins.getList', $response);
     }
 
-    public function test_getList_result_is_an_array(): void
+    public function testGetListResultIsAnArray(): void
     {
         $response = $this->wsAdmin('pwg.plugins.getList');
 
         self::assertIsArray($response['result']);
     }
 
-    public function test_getList_forbidden_for_guest(): void
+    public function testGetListForbiddenForGuest(): void
     {
         $response = $this->ws('pwg.plugins.getList');
 

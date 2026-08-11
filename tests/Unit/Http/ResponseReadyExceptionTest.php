@@ -14,8 +14,10 @@ test('carries the response it was constructed with, and a real, non-empty messag
     $response = new Response(500);
     $exception = new ResponseReadyException($response);
 
-    expect($exception->response())->toBe($response);
-    expect($exception->getMessage())->toBe(
-        'A response was constructed but not yet emitted -- this exception must be caught by one of the 3 dispatch-context catch points, never allowed to reach a generic error handler.',
-    );
+    expect($exception->response())
+        ->toBe($response);
+    expect($exception->getMessage())
+        ->toBe(
+            'A response was constructed but not yet emitted -- this exception must be caught by one of the 3 dispatch-context catch points, never allowed to reach a generic error handler.',
+        );
 });

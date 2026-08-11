@@ -50,11 +50,12 @@ test('record() inserts a new row when no (plugin_id, version) pair exists yet', 
             ->setParameter('version', '1.0.0')
             ->fetchAssociative();
 
-        expect($row)->toBe([
-            'plugin_id' => 'unit_test_plugin_migration',
-            'version' => '1.0.0',
-            'executed_at' => '2026-08-01 12:00:00',
-        ]);
+        expect($row)
+            ->toBe([
+                'plugin_id' => 'unit_test_plugin_migration',
+                'version' => '1.0.0',
+                'executed_at' => '2026-08-01 12:00:00',
+            ]);
     } finally {
         pluginMigrationTestDelete($conn, $pluginId, '1.0.0');
     }
@@ -77,13 +78,14 @@ test('record() updates executed_at in place when the same (plugin_id, version) p
             ->setParameter('version', '2.0.0')
             ->fetchAllAssociative();
 
-        expect($rows)->toBe([
-            [
-                'plugin_id' => 'unit_test_plugin_migration_2',
-                'version' => '2.0.0',
-                'executed_at' => '2026-08-02 09:30:00',
-            ],
-        ]);
+        expect($rows)
+            ->toBe([
+                [
+                    'plugin_id' => 'unit_test_plugin_migration_2',
+                    'version' => '2.0.0',
+                    'executed_at' => '2026-08-02 09:30:00',
+                ],
+            ]);
     } finally {
         pluginMigrationTestDelete($conn, $pluginId, '2.0.0');
     }
@@ -106,7 +108,8 @@ test('record() keeps separate rows for the same plugin at different versions (co
             ->setParameter('pluginId', $pluginId->value)
             ->fetchFirstColumn();
 
-        expect($rows)->toBe(['1.0.0', '1.1.0']);
+        expect($rows)
+            ->toBe(['1.0.0', '1.1.0']);
     } finally {
         pluginMigrationTestDelete($conn, $pluginId, '1.0.0');
         pluginMigrationTestDelete($conn, $pluginId, '1.1.0');

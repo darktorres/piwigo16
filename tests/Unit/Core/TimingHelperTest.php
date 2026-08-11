@@ -2,8 +2,8 @@
 
 declare(strict_types=1);
 
-use Piwigo\Tests\Support\PageStateTestFactory;
 use Piwigo\Core\TimingHelper;
+use Piwigo\Tests\Support\PageStateTestFactory;
 
 /**
  * Piwigo\Core\TimingHelper -- had zero dedicated coverage.
@@ -22,16 +22,20 @@ test('getMoment returns a float (microtime with microsecond precision)', functio
     $moment = TimingHelper::getMoment();
     $after = microtime(true);
 
-    expect($moment)->toBeGreaterThanOrEqual($before);
-    expect($moment)->toBeLessThanOrEqual($after);
+    expect($moment)
+        ->toBeGreaterThanOrEqual($before);
+    expect($moment)
+        ->toBeLessThanOrEqual($after);
 });
 
 test('microSeconds returns a 16-digit numeric string (10-digit unix timestamp + 6 fractional digits)', function (): void {
     $result = TimingHelper::microSeconds();
 
-    expect($result)->toMatch('/^\d{16}$/');
+    expect($result)
+        ->toMatch('/^\d{16}$/');
     // the first 10 digits are a real, current unix timestamp.
-    expect((int) substr($result, 0, 10))->toBeGreaterThan(1_700_000_000);
+    expect((int) substr($result, 0, 10))
+        ->toBeGreaterThan(1_700_000_000);
 });
 
 test('microSeconds puts the real timestamp first and the real leading 6 fractional digits last, not shifted or reordered', function (): void {
@@ -66,9 +70,11 @@ test('microSeconds puts the real timestamp first and the real leading 6 fraction
     $resultTimestamp = (int) substr($result, 0, 10);
     $resultFraction = (int) substr($result, 10);
 
-    expect($resultTimestamp)->toBeGreaterThanOrEqual($beforeTimestamp)
+    expect($resultTimestamp)
+        ->toBeGreaterThanOrEqual($beforeTimestamp)
         ->toBeLessThanOrEqual($afterTimestamp)
-        ->and($resultFraction)->toBeGreaterThanOrEqual($beforeFraction)
+        ->and($resultFraction)
+        ->toBeGreaterThanOrEqual($beforeFraction)
         ->toBeLessThanOrEqual($afterFraction);
 });
 
@@ -91,5 +97,6 @@ test('debug appends a formatted line with elapsed time and query count to PageSt
     TimingHelper::debug('hello world', PageStateTestFactory::get());
 
     $appended = substr(PageStateTestFactory::get()->debugOutput, strlen($before));
-    expect($appended)->toMatch('/^<p>\[\d+\.\d{3} s, 5 queries\] : hello world<\/p>\n$/');
+    expect($appended)
+        ->toMatch('/^<p>\[\d+\.\d{3} s, 5 queries\] : hello world<\/p>\n$/');
 });

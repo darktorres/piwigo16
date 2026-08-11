@@ -41,7 +41,10 @@ test('encode_struct skips an integer array key in both scan loops, writing no el
     // list's expected leading 0), so encode()'s bare 'array' case routes
     // this through encode_struct(), not encode_array().
     $encoder = new PwgRestEncoder();
-    $response = [3 => 'numeric-key-value', 'label' => 'kept'];
+    $response = [
+        3 => 'numeric-key-value',
+        'label' => 'kept',
+    ];
 
     $result = $encoder->encodeResponse($response);
 
@@ -51,13 +54,18 @@ test('encode_struct skips an integer array key in both scan loops, writing no el
     <label>kept</label>
     </rsp>
     EOD;
-    expect($result)->toBe($expected)
-        ->and($result)->not->toContain('numeric-key-value');
+    expect($result)
+        ->toBe($expected)
+        ->and($result)
+        ->not->toContain('numeric-key-value');
 });
 
 test('encode_struct skips a null-valued key in both scan loops, omitting the element entirely', function (): void {
     $encoder = new PwgRestEncoder();
-    $response = ['title' => 'Kept', 'subtitle' => null];
+    $response = [
+        'title' => 'Kept',
+        'subtitle' => null,
+    ];
 
     $result = $encoder->encodeResponse($response);
 
@@ -67,8 +75,10 @@ test('encode_struct skips a null-valued key in both scan loops, omitting the ele
     <title>Kept</title>
     </rsp>
     EOD;
-    expect($result)->toBe($expected)
-        ->and($result)->not->toContain('<subtitle');
+    expect($result)
+        ->toBe($expected)
+        ->and($result)
+        ->not->toContain('<subtitle');
 });
 
 test('encode_struct with skip_underscore=true skips a leading-underscore key, in both scan loops', function (): void {
@@ -91,9 +101,12 @@ test('encode_struct with skip_underscore=true skips a leading-underscore key, in
     <label>Public</label>
     </rsp>
     EOD;
-    expect($result)->toBe($expected)
-        ->and($result)->not->toContain('TopSecret')
-        ->and($result)->not->toContain('_secret');
+    expect($result)
+        ->toBe($expected)
+        ->and($result)
+        ->not->toContain('TopSecret')
+        ->and($result)
+        ->not->toContain('_secret');
 });
 
 test('encode() writes empty content for a NULL list element, reached only via encode_array(), never encode_struct()', function (): void {
@@ -113,7 +126,8 @@ test('encode() writes empty content for a NULL list element, reached only via en
     <item></item><item>x</item>
     </rsp>
     EOD;
-    expect($result)->toBe($expected);
+    expect($result)
+        ->toBe($expected);
 });
 
 test('encode() trigger_error()s an E_USER_WARNING for a resource value and writes no content for it', function (): void {
@@ -124,7 +138,8 @@ test('encode() trigger_error()s an E_USER_WARNING for a resource value and write
     // resource, not a mock/stub of the class under test.
     $encoder = new PwgRestEncoder();
     $resource = fopen('php://memory', 'r');
-    expect($resource)->not->toBeFalse();
+    expect($resource)
+        ->not->toBeFalse();
     // assert() is a genuine no-op at runtime in this environment
     // (zend.assertions=-1) -- the expect() above is the real runtime guard;
     // this exists only so PHPStan narrows $resource from resource|false to
@@ -145,7 +160,8 @@ test('encode() trigger_error()s an E_USER_WARNING for a resource value and write
         fclose($resource);
     }
 
-    expect($captured)->toBe([[E_USER_WARNING, 'Invalid type resource']]);
+    expect($captured)
+        ->toBe([[E_USER_WARNING, 'Invalid type resource']]);
 
     $expected = <<<EOD
     <?xml version="1.0" encoding="utf-8" ?>
@@ -153,7 +169,8 @@ test('encode() trigger_error()s an E_USER_WARNING for a resource value and write
 
     </rsp>
     EOD;
-    expect($result)->toBe($expected);
+    expect($result)
+        ->toBe($expected);
 });
 
 /**
@@ -186,7 +203,8 @@ test('encodeResponse renders a PwgError as a stat="fail" response, never routing
     \t<err code="1003" msg="Bad param &lt;x&gt;" />
     </rsp>
     EOD;
-    expect($result)->toBe($expected);
+    expect($result)
+        ->toBe($expected);
 });
 
 test('encode_struct pulls a later xml_attributes-designated key out even after an earlier numeric key in the same struct (first scan loop)', function (): void {
@@ -205,14 +223,24 @@ test('encode_struct pulls a later xml_attributes-designated key out even after a
     // entry's `continue` becomes `break`, aborting the whole loop before
     // it ever reaches 'id').
     $encoder = new PwgRestEncoder();
-    $response = ['group' => new PwgNamedStruct([5 => 'ignored-numeric', 'id' => 7, 'name' => 'bar'], ['id'])];
+    $response = [
+        'group' => new PwgNamedStruct([
+            5 => 'ignored-numeric',
+            'id' => 7,
+            'name' => 'bar',
+        ], ['id']),
+    ];
 
     $result = $encoder->encodeResponse($response);
 
-    expect($result)->toContain('<group id="7">')
-        ->and($result)->toContain('<name>bar</name>')
-        ->and($result)->not->toContain('<id>')
-        ->and($result)->not->toContain('ignored-numeric');
+    expect($result)
+        ->toContain('<group id="7">')
+        ->and($result)
+        ->toContain('<name>bar</name>')
+        ->and($result)
+        ->not->toContain('<id>')
+        ->and($result)
+        ->not->toContain('ignored-numeric');
 });
 
 test('encode_struct casts an integer attribute key to string before writing it', function (): void {
@@ -226,12 +254,21 @@ test('encode_struct casts an integer attribute key to string before writing it',
     // in this file uses only string keys ('id'), so none of them force
     // this cast to actually do anything.
     $encoder = new PwgRestEncoder();
-    $response = ['group' => [PwgResponseEncoder::ATTRIBUTES_KEY => [0 => 'attr-value'], 'label' => 'Public']];
+    $response = [
+        'group' => [
+            PwgResponseEncoder::ATTRIBUTES_KEY => [
+                0 => 'attr-value',
+            ],
+            'label' => 'Public',
+        ],
+    ];
 
     $result = $encoder->encodeResponse($response);
 
-    expect($result)->toContain('<group 0="attr-value">')
-        ->and($result)->toContain('<label>Public</label>');
+    expect($result)
+        ->toContain('<group 0="attr-value">')
+        ->and($result)
+        ->toContain('<label>Public</label>');
 });
 
 test('encode_struct (skip_underscore path) still special-cases a non-underscore ATTRIBUTES_KEY property as an xml attribute source', function (): void {
@@ -255,15 +292,22 @@ test('encode_struct (skip_underscore path) still special-cases a non-underscore 
     // genuinely is '_', so checking it wrongly skips this entry too).
     $encoder = new PwgRestEncoder();
     $response = new stdClass();
-    $response->{PwgResponseEncoder::ATTRIBUTES_KEY} = ['id' => 9];
+    $response->{PwgResponseEncoder::ATTRIBUTES_KEY} = [
+        'id' => 9,
+    ];
     $response->label = 'Public';
-    $wrapper = ['group' => $response];
+    $wrapper = [
+        'group' => $response,
+    ];
 
     $result = $encoder->encodeResponse($wrapper);
 
-    expect($result)->toContain('<group id="9">')
-        ->and($result)->toContain('<label>Public</label>')
-        ->and($result)->not->toContain('attributes_xml_');
+    expect($result)
+        ->toContain('<group id="9">')
+        ->and($result)
+        ->toContain('<label>Public</label>')
+        ->and($result)
+        ->not->toContain('attributes_xml_');
 });
 
 test('encode_struct (skip_underscore path) checks the key\'s first character, not a shifted index', function (): void {
@@ -298,9 +342,12 @@ test('encode_struct (skip_underscore path) checks the key\'s first character, no
         restore_error_handler();
     }
 
-    expect($captured)->toBe([])
-        ->and($result)->toContain('<label>Public</label>')
-        ->and($result)->not->toContain('should-be-skipped-silently');
+    expect($captured)
+        ->toBe([])
+        ->and($result)
+        ->toContain('<label>Public</label>')
+        ->and($result)
+        ->not->toContain('should-be-skipped-silently');
 });
 
 test('encode_struct (skip_underscore path, first scan loop) only skips the underscore-prefixed entry itself, not every entry after it', function (): void {
@@ -312,16 +359,24 @@ test('encode_struct (skip_underscore path, first scan loop) only skips the under
     $encoder = new PwgRestEncoder();
     $response = new stdClass();
     $response->_secret = 'hide-me';
-    $response->{PwgResponseEncoder::ATTRIBUTES_KEY} = ['id' => 9];
+    $response->{PwgResponseEncoder::ATTRIBUTES_KEY} = [
+        'id' => 9,
+    ];
     $response->label = 'Public';
-    $wrapper = ['group' => $response];
+    $wrapper = [
+        'group' => $response,
+    ];
 
     $result = $encoder->encodeResponse($wrapper);
 
-    expect($result)->toContain('<group id="9">')
-        ->and($result)->toContain('<label>Public</label>')
-        ->and($result)->not->toContain('hide-me')
-        ->and($result)->not->toContain('_secret');
+    expect($result)
+        ->toContain('<group id="9">')
+        ->and($result)
+        ->toContain('<label>Public</label>')
+        ->and($result)
+        ->not->toContain('hide-me')
+        ->and($result)
+        ->not->toContain('_secret');
 });
 
 test('encode_struct omits a null-valued xml_attributes-designated key entirely, never as an empty attribute (first scan loop)', function (): void {
@@ -332,13 +387,21 @@ test('encode_struct omits a null-valued xml_attributes-designated key entirely, 
     // through to write_attribute('id', null), rendering a real but empty
     // `id=""` attribute instead of omitting 'id' altogether).
     $encoder = new PwgRestEncoder();
-    $response = ['group' => new PwgNamedStruct(['id' => null, 'name' => 'foo'], ['id'])];
+    $response = [
+        'group' => new PwgNamedStruct([
+            'id' => null,
+            'name' => 'foo',
+        ], ['id']),
+    ];
 
     $result = $encoder->encodeResponse($response);
 
-    expect($result)->toContain('<group>')
-        ->and($result)->not->toContain('id=')
-        ->and($result)->toContain('<name>foo</name>');
+    expect($result)
+        ->toContain('<group>')
+        ->and($result)
+        ->not->toContain('id=')
+        ->and($result)
+        ->toContain('<name>foo</name>');
 });
 
 test('encode_struct (first scan loop) only skips a null-valued entry itself, not every entry after it', function (): void {
@@ -347,13 +410,22 @@ test('encode_struct (first scan loop) only skips a null-valued entry itself, not
     // so a `break` instead of `continue` aborts the loop on 'skip' and
     // 'id' never gets pulled out as an attribute.
     $encoder = new PwgRestEncoder();
-    $response = ['group' => new PwgNamedStruct(['skip' => null, 'id' => 9, 'name' => 'foo'], ['id'])];
+    $response = [
+        'group' => new PwgNamedStruct([
+            'skip' => null,
+            'id' => 9,
+            'name' => 'foo',
+        ], ['id']),
+    ];
 
     $result = $encoder->encodeResponse($response);
 
-    expect($result)->toContain('<group id="9">')
-        ->and($result)->toContain('<name>foo</name>')
-        ->and($result)->not->toContain('<skip');
+    expect($result)
+        ->toContain('<group id="9">')
+        ->and($result)
+        ->toContain('<name>foo</name>')
+        ->and($result)
+        ->not->toContain('<skip');
 });
 
 test('encode_struct (second, element-writing scan loop) only skips a null-valued entry itself, not every entry after it', function (): void {
@@ -362,13 +434,20 @@ test('encode_struct (second, element-writing scan loop) only skips a null-valued
     // `break` instead of `continue` would abort the whole element-writing
     // loop and 'last' would never be written at all.
     $encoder = new PwgRestEncoder();
-    $response = ['first' => 'A', 'middle' => null, 'last' => 'B'];
+    $response = [
+        'first' => 'A',
+        'middle' => null,
+        'last' => 'B',
+    ];
 
     $result = $encoder->encodeResponse($response);
 
-    expect($result)->toContain('<first>A</first>')
-        ->and($result)->toContain('<last>B</last>')
-        ->and($result)->not->toContain('<middle');
+    expect($result)
+        ->toContain('<first>A</first>')
+        ->and($result)
+        ->toContain('<last>B</last>')
+        ->and($result)
+        ->not->toContain('<middle');
 });
 
 test('encode() routes a plain PHP array through encode_struct() with skip_underscore=false, unlike the generic object fallback', function (): void {
@@ -379,12 +458,17 @@ test('encode() routes a plain PHP array through encode_struct() with skip_unders
     // silently drop any underscore-prefixed key -- which a plain PHP
     // array response must NOT do.
     $encoder = new PwgRestEncoder();
-    $response = ['_hidden' => 'should-appear', 'visible' => 'yes'];
+    $response = [
+        '_hidden' => 'should-appear',
+        'visible' => 'yes',
+    ];
 
     $result = $encoder->encodeResponse($response);
 
-    expect($result)->toContain('<_hidden>should-appear</_hidden>')
-        ->and($result)->toContain('<visible>yes</visible>');
+    expect($result)
+        ->toContain('<_hidden>should-appear</_hidden>')
+        ->and($result)
+        ->toContain('<visible>yes</visible>');
 });
 
 test('encode() routes a PwgNamedArray through encode_array()/its own _content, not the generic object fallback', function (): void {
@@ -399,8 +483,10 @@ test('encode() routes a PwgNamedArray through encode_array()/its own _content, n
 
     $result = $encoder->encodeResponse($response);
 
-    expect($result)->toContain('<item>a</item>')
-        ->and($result)->toContain('<item>b</item>');
+    expect($result)
+        ->toContain('<item>a</item>')
+        ->and($result)
+        ->toContain('<item>b</item>');
 });
 
 test('encode() routes a PwgNamedStruct through encode_struct()/its own _content, not the generic object fallback', function (): void {
@@ -416,11 +502,14 @@ test('encode() routes a PwgNamedStruct through encode_struct()/its own _content,
     // -- this response is encoded directly at the top level (no
     // enclosing parent element for an attribute to attach to).
     $encoder = new PwgRestEncoder();
-    $response = new PwgNamedStruct(['title' => 'Hello'], []);
+    $response = new PwgNamedStruct([
+        'title' => 'Hello',
+    ], []);
 
     $result = $encoder->encodeResponse($response);
 
-    expect($result)->toContain('<title>Hello</title>');
+    expect($result)
+        ->toContain('<title>Hello</title>');
 });
 
 test('encode() encodes a PwgNamedStruct without skipping its own underscore-prefixed keys', function (): void {
@@ -434,10 +523,15 @@ test('encode() encodes a PwgNamedStruct without skipping its own underscore-pref
     // above has no underscore-prefixed _content key, so it can't
     // distinguish this mutant on its own.
     $encoder = new PwgRestEncoder();
-    $response = new PwgNamedStruct(['_hidden' => 'should-appear', 'label' => 'Public'], []);
+    $response = new PwgNamedStruct([
+        '_hidden' => 'should-appear',
+        'label' => 'Public',
+    ], []);
 
     $result = $encoder->encodeResponse($response);
 
-    expect($result)->toContain('<_hidden>should-appear</_hidden>')
-        ->and($result)->toContain('<label>Public</label>');
+    expect($result)
+        ->toContain('<_hidden>should-appear</_hidden>')
+        ->and($result)
+        ->toContain('<label>Public</label>');
 });

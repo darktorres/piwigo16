@@ -69,60 +69,60 @@ use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
  */
 $routes = [
     // ── Gallery (anonymous) ──────────────────────────────────────────────
-    'gallery-home'      => ['/index.php', false],
-    'identification'     => ['/identification.php', false],
-    'register'           => ['/register.php', false],
-    'password'           => ['/password.php', false],
-    'about'              => ['/about.php', false],
-    'tags'               => ['/tags.php', false],
+    'gallery-home' => ['/index.php', false],
+    'identification' => ['/identification.php', false],
+    'register' => ['/register.php', false],
+    'password' => ['/password.php', false],
+    'about' => ['/about.php', false],
+    'tags' => ['/tags.php', false],
     // notification.php mints a new per-request feed subscription ID (see
     // NotificationController::findAvailableFeedId()) -- but the rendered
     // .tpl (notification.tpl) only ever puts that ID inside <a href>/
     // <link href> attribute values, never in visible text, so the
     // rendered pixels are stable across requests despite the underlying
     // data changing every time.
-    'notification'       => ['/notification.php', false],
+    'notification' => ['/notification.php', false],
     // nbm.php with no subscribe/unsubscribe query param is a deterministic
     // "Unknown identifier" error page (NbmController's else branch) -- no
     // per-request randomness like notification.php's feed ID, so a plain
     // baseline needs no special normalization.
-    'nbm'                => ['/nbm.php', false],
-    'search'             => ['/search.php', false],
-    'comments'           => ['/comments.php', false],
-    'category-1'         => ['/index.php?/category/1', false],
-    'category-2'         => ['/index.php?/category/2', false],
-    'random'             => ['/random.php', false],
+    'nbm' => ['/nbm.php', false],
+    'search' => ['/search.php', false],
+    'comments' => ['/comments.php', false],
+    'category-1' => ['/index.php?/category/1', false],
+    'category-2' => ['/index.php?/category/2', false],
+    'random' => ['/random.php', false],
 
     // ── Gallery (auth required) ──────────────────────────────────────────
-    'favorites'          => ['/index.php?/favorites', true],
-    'profile'            => ['/profile.php', true],
+    'favorites' => ['/index.php?/favorites', true],
+    'profile' => ['/profile.php', true],
 
     // ── Admin — Dashboard ───────────────────────────────────────────────────
-    'admin-dashboard'    => ['/admin.php', true],
+    'admin-dashboard' => ['/admin.php', true],
 
     // ── Admin — Albums ────────────────────────────────────────────────────
-    'admin-albums'       => ['/admin.php?page=albums', true],
-    'admin-album'        => ['/admin.php?page=album&cat_id=1', true],
-    'admin-album-perms'  => ['/admin.php?page=album&cat_id=1&tab=permissions', true],
-    'admin-cat-options'  => ['/admin.php?page=cat_options', true],
+    'admin-albums' => ['/admin.php?page=albums', true],
+    'admin-album' => ['/admin.php?page=album&cat_id=1', true],
+    'admin-album-perms' => ['/admin.php?page=album&cat_id=1&tab=permissions', true],
+    'admin-cat-options' => ['/admin.php?page=cat_options', true],
 
     // ── Admin — Photos ────────────────────────────────────────────────────
-    'admin-photos-add'   => ['/admin.php?page=photos_add', true],
-    'admin-batch'        => ['/admin.php?page=batch_manager', true],
+    'admin-photos-add' => ['/admin.php?page=photos_add', true],
+    'admin-batch' => ['/admin.php?page=batch_manager', true],
 
     // ── Admin — Users ─────────────────────────────────────────────────────
-    'admin-users'        => ['/admin.php?page=user_list', true],
-    'admin-groups'       => ['/admin.php?page=group_list', true],
-    'admin-group-perm'   => ['/admin.php?page=group_perm&group_id=1', true],
-    'admin-user-perm'    => ['/admin.php?page=user_perm&user_id=1', true],
+    'admin-users' => ['/admin.php?page=user_list', true],
+    'admin-groups' => ['/admin.php?page=group_list', true],
+    'admin-group-perm' => ['/admin.php?page=group_perm&group_id=1', true],
+    'admin-user-perm' => ['/admin.php?page=user_perm&user_id=1', true],
 
     // ── Admin — Configuration / Tools ─────────────────────────────────────
-    'admin-config'       => ['/admin.php?page=configuration', true],
-    'admin-maintenance'  => ['/admin.php?page=maintenance', true],
-    'admin-history'      => ['/admin.php?page=history', true],
-    'admin-tags'         => ['/admin.php?page=tags', true],
-    'admin-comments'     => ['/admin.php?page=comments', true],
-    'admin-permalinks'   => ['/admin.php?page=permalinks', true],
+    'admin-config' => ['/admin.php?page=configuration', true],
+    'admin-maintenance' => ['/admin.php?page=maintenance', true],
+    'admin-history' => ['/admin.php?page=history', true],
+    'admin-tags' => ['/admin.php?page=tags', true],
+    'admin-comments' => ['/admin.php?page=comments', true],
+    'admin-permalinks' => ['/admin.php?page=permalinks', true],
 ];
 
 foreach ($routes as $name => [$path, $needsAuth]) {

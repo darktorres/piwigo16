@@ -4,27 +4,26 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Integration;
 
-use Override;
-use Piwigo\Common\ValueObject\UserId;
-use Piwigo\Config\ConfigRepository;
-use Piwigo\PluginConfig\EventDispatcher;
-use Piwigo\Tests\Support\ImageStdParamsTestFactory;
-use Piwigo\Tests\Support\CurrentUserTestFactory;
 use Doctrine\DBAL\Connection;
+use Override;
 use Piwigo\Bootstrap\PresentationAccessor;
+use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Config\ConfigEntry;
 use Piwigo\Config\ConfigLoader;
 use Piwigo\Config\ConfigService;
-use Piwigo\Tests\Support\CurrentConfigTestFactory;
-use Piwigo\Tests\Support\CurrentConfigServiceTestFactory;
 use Piwigo\Core\Kernel;
-use Piwigo\Tests\Support\LangTestFactory;
 use Piwigo\Core\Paths;
-use Piwigo\Tests\Support\PageStateTestFactory;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Mail\NotificationByMailSender;
 use Piwigo\Notification\Projection\UserMailNotification;
+use Piwigo\PluginConfig\EventDispatcher;
+use Piwigo\Tests\Support\CurrentConfigServiceTestFactory;
+use Piwigo\Tests\Support\CurrentConfigTestFactory;
+use Piwigo\Tests\Support\CurrentUserTestFactory;
+use Piwigo\Tests\Support\ImageStdParamsTestFactory;
+use Piwigo\Tests\Support\LangTestFactory;
+use Piwigo\Tests\Support\PageStateTestFactory;
 
 /**
  * Piwigo\Mail\NotificationByMailSender::incMailSentSuccess()/
@@ -84,7 +83,9 @@ final class NotificationByMailSenderTest extends IntegrationTestCase
 
     private Connection $conn;
 
-    /** @var array{check_key: string, enabled: int, last_send: ?string} */
+    /**
+     * @var array{check_key: string, enabled: int, last_send: ?string}
+     */
     private array $user1OriginalRow;
 
     #[Override]
@@ -131,7 +132,7 @@ final class NotificationByMailSenderTest extends IntegrationTestCase
 
         $this->conn = $conn;
         $row = $this->conn->fetchAssociative(
-            'SELECT check_key, enabled, last_send FROM ' . 'user_mail_notification' . ' WHERE user_id = 1'
+            'SELECT check_key, enabled, last_send FROM user_mail_notification WHERE user_id = 1'
         );
         self::assertIsArray($row);
         // enabled is a genuine boolean column -- a raw (unmapped) fetch
@@ -156,9 +157,9 @@ final class NotificationByMailSenderTest extends IntegrationTestCase
         // Idempotent even for tests that never touch user 4 -- belt-and-
         // suspenders cleanup so a failed assertion mid-test (which skips a
         // test-local finally-block restore) can't leak into later tests.
-        $this->conn->executeStatement('DELETE FROM ' . 'user_mail_notification' . ' WHERE user_id = 4');
-        $this->conn->executeStatement('DELETE FROM ' . 'user_auth_keys' . ' WHERE user_id = 4');
-        $this->conn->executeStatement('UPDATE ' . 'users' . ' SET mail_address = NULL WHERE id = 4');
+        $this->conn->executeStatement('DELETE FROM user_mail_notification WHERE user_id = 4');
+        $this->conn->executeStatement('DELETE FROM user_auth_keys WHERE user_id = 4');
+        $this->conn->executeStatement('UPDATE users SET mail_address = NULL WHERE id = 4');
         CurrentConfigTestFactory::get()->smtpHost = '';
         CurrentConfigTestFactory::get()->nbmListAllEnabledUsersToSend = false;
         CurrentConfigTestFactory::get()->nbmSendDetailedContent = true;
@@ -229,7 +230,7 @@ final class NotificationByMailSenderTest extends IntegrationTestCase
     private function setUser1LastSend(?string $lastSend): void
     {
         $this->conn->executeStatement(
-            'UPDATE ' . 'user_mail_notification' . ' SET last_send = ? WHERE user_id = 1',
+            'UPDATE user_mail_notification SET last_send = ? WHERE user_id = 1',
             [$lastSend]
         );
     }
@@ -237,7 +238,7 @@ final class NotificationByMailSenderTest extends IntegrationTestCase
     private function restoreUser1Row(): void
     {
         $this->conn->executeStatement(
-            'UPDATE ' . 'user_mail_notification' . ' SET enabled = ?, last_send = ? WHERE user_id = 1',
+            'UPDATE user_mail_notification SET enabled = ?, last_send = ? WHERE user_id = 1',
             [$this->user1OriginalRow['enabled'], $this->user1OriginalRow['last_send']]
         );
     }
@@ -245,7 +246,7 @@ final class NotificationByMailSenderTest extends IntegrationTestCase
     private function user1Enabled(): int
     {
         $value = $this->conn->fetchOne(
-            'SELECT enabled FROM ' . 'user_mail_notification' . ' WHERE user_id = 1'
+            'SELECT enabled FROM user_mail_notification WHERE user_id = 1'
         );
 
         return (int) $value;
@@ -269,7 +270,7 @@ final class NotificationByMailSenderTest extends IntegrationTestCase
         }
     }
 
-    public function test_incMailSentSuccess_records_an_info_message(): void
+    public function testIncMailSentSuccessRecordsAnInfoMessage(): void
     {
         $this->sender->incMailSentSuccess($this->fakeUser());
 
@@ -279,7 +280,7 @@ final class NotificationByMailSenderTest extends IntegrationTestCase
         );
     }
 
-    public function test_incMailSentFailed_records_an_error_message(): void
+    public function testIncMailSentFailedRecordsAnErrorMessage(): void
     {
         $this->sender->incMailSentFailed($this->fakeUser());
 
@@ -289,7 +290,7 @@ final class NotificationByMailSenderTest extends IntegrationTestCase
         );
     }
 
-    public function test_displayCounterInfo_reports_no_mail_to_send_when_nothing_was_attempted(): void
+    public function testDisplayCounterInfoReportsNoMailToSendWhenNothingWasAttempted(): void
     {
         $this->sender->displayCounterInfo();
 
@@ -297,7 +298,7 @@ final class NotificationByMailSenderTest extends IntegrationTestCase
         self::assertSame([], PageStateTestFactory::get()->errors);
     }
 
-    public function test_displayCounterInfo_reports_only_a_success_count_when_nothing_failed(): void
+    public function testDisplayCounterInfoReportsOnlyASuccessCountWhenNothingFailed(): void
     {
         $this->sender->incMailSentSuccess($this->fakeUser());
         PageStateTestFactory::get()->reset();
@@ -308,7 +309,7 @@ final class NotificationByMailSenderTest extends IntegrationTestCase
         self::assertSame([], PageStateTestFactory::get()->errors);
     }
 
-    public function test_displayCounterInfo_reports_both_failure_and_success_counts_when_some_succeeded(): void
+    public function testDisplayCounterInfoReportsBothFailureAndSuccessCountsWhenSomeSucceeded(): void
     {
         $this->sender->incMailSentSuccess($this->fakeUser());
         $this->sender->incMailSentFailed($this->fakeUser());
@@ -320,7 +321,7 @@ final class NotificationByMailSenderTest extends IntegrationTestCase
         self::assertSame(['1 mail has been sent.'], PageStateTestFactory::get()->infos);
     }
 
-    public function test_displayCounterInfo_reports_only_a_failure_count_when_nothing_succeeded(): void
+    public function testDisplayCounterInfoReportsOnlyAFailureCountWhenNothingSucceeded(): void
     {
         $this->sender->incMailSentFailed($this->fakeUser());
         PageStateTestFactory::get()->reset();
@@ -331,7 +332,7 @@ final class NotificationByMailSenderTest extends IntegrationTestCase
         self::assertSame([], PageStateTestFactory::get()->infos);
     }
 
-    public function test_assignVarsNbmMailContent_builds_a_real_mail_template_without_error(): void
+    public function testAssignVarsNbmMailContentBuildsARealMailTemplateWithoutError(): void
     {
         // No fatal/exception is the real assertion here: this exercises the
         // full UrlService full-url toggling + MailService::getMailTemplate()
@@ -349,12 +350,12 @@ final class NotificationByMailSenderTest extends IntegrationTestCase
         $this->sender->assignVarsNbmMailContent($this->fakeUser());
     }
 
-    public function test_sendMailNotifications_returns_an_empty_list_for_an_unrecognised_action(): void
+    public function testSendMailNotificationsReturnsAnEmptyListForAnUnrecognisedAction(): void
     {
         self::assertSame([], $this->sender->sendMailNotifications('not_a_real_action'));
     }
 
-    public function test_sendMailNotifications_send_action_reports_no_user_when_the_check_key_list_matches_nothing(): void
+    public function testSendMailNotificationsSendActionReportsNoUserWhenTheCheckKeyListMatchesNothing(): void
     {
         $result = $this->sender->sendMailNotifications('send', ['this-check-key-does-not-exist']);
 
@@ -362,7 +363,7 @@ final class NotificationByMailSenderTest extends IntegrationTestCase
         self::assertSame(['No user to be notified by mail.'], PageStateTestFactory::get()->errors);
     }
 
-    public function test_sendMailNotifications_list_to_send_returns_only_users_with_pending_news(): void
+    public function testSendMailNotificationsListToSendReturnsOnlyUsersWithPendingNews(): void
     {
         // Far enough in the past that every fixture photo (date_available
         // 2026-08-01, see NotificationServiceTest's own confirmed
@@ -376,7 +377,7 @@ final class NotificationByMailSenderTest extends IntegrationTestCase
         self::assertSame([], PageStateTestFactory::get()->errors);
     }
 
-    public function test_sendMailNotifications_list_to_send_excludes_a_user_with_no_pending_news(): void
+    public function testSendMailNotificationsListToSendExcludesAUserWithNoPendingNews(): void
     {
         // A last_send at (not before) the fixed test clock leaves no room
         // for any fixture photo to count as "new" -- the inverse fixture
@@ -388,7 +389,7 @@ final class NotificationByMailSenderTest extends IntegrationTestCase
         self::assertSame([], $result);
     }
 
-    public function test_sendMailNotifications_list_to_send_returns_the_raw_list_unfiltered_when_quick_list_is_enabled(): void
+    public function testSendMailNotificationsListToSendReturnsTheRawListUnfilteredWhenQuickListIsEnabled(): void
     {
         // Quick-list mode (nbm_list_all_enabled_users_to_send) skips the
         // per-user newsExists() check entirely -- confirmed by pairing it
@@ -403,7 +404,7 @@ final class NotificationByMailSenderTest extends IntegrationTestCase
         self::assertSame($this->user1OriginalRow['check_key'], $result[0]->checkKey);
     }
 
-    public function test_sendMailNotifications_send_action_records_a_failed_mail_and_treats_the_check_key_on_delivery_failure(): void
+    public function testSendMailNotificationsSendActionRecordsAFailedMailAndTreatsTheCheckKeyOnDeliveryFailure(): void
     {
         $this->setUser1LastSend('2000-01-01 00:00:00');
         CurrentConfigTestFactory::get()->smtpHost = '127.0.0.1:1';
@@ -429,7 +430,7 @@ final class NotificationByMailSenderTest extends IntegrationTestCase
         self::assertSame([], PageStateTestFactory::get()->infos);
     }
 
-    public function test_sendMailNotifications_send_action_uses_the_newsExists_only_branch_when_detailed_content_is_disabled(): void
+    public function testSendMailNotificationsSendActionUsesTheNewsExistsOnlyBranchWhenDetailedContentIsDisabled(): void
     {
         $this->setUser1LastSend('2000-01-01 00:00:00');
         CurrentConfigTestFactory::get()->smtpHost = '127.0.0.1:1';
@@ -447,19 +448,19 @@ final class NotificationByMailSenderTest extends IntegrationTestCase
         );
     }
 
-    public function test_findAvailableCheckKey_returns_a_key_not_already_taken(): void
+    public function testFindAvailableCheckKeyReturnsAKeyNotAlreadyTaken(): void
     {
         $key = $this->sender->findAvailableCheckKey();
 
         self::assertNotSame($this->user1OriginalRow['check_key'], $key);
         $taken = $this->conn->fetchOne(
-            'SELECT COUNT(*) FROM ' . 'user_mail_notification' . ' WHERE check_key = ?',
+            'SELECT COUNT(*) FROM user_mail_notification WHERE check_key = ?',
             [$key]
         );
         self::assertSame(0, $taken);
     }
 
-    public function test_getUserNotifications_delegates_to_the_notification_by_mail_service(): void
+    public function testGetUserNotificationsDelegatesToTheNotificationByMailService(): void
     {
         $result = $this->sender->getUserNotifications('subscribe', [$this->user1OriginalRow['check_key']], '');
 
@@ -468,7 +469,7 @@ final class NotificationByMailSenderTest extends IntegrationTestCase
         self::assertSame('fixture_admin', $result[0]->username);
     }
 
-    public function test_checkSendmailTimeout_and_startTime_reflect_a_freshly_constructed_sender(): void
+    public function testCheckSendmailTimeoutAndStartTimeReflectAFreshlyConstructedSender(): void
     {
         // A freshly-constructed sender's own $startTime is effectively
         // "now" (Piwigo\Core\TimingHelper::getMoment(), a real wall-clock
@@ -485,7 +486,7 @@ final class NotificationByMailSenderTest extends IntegrationTestCase
         self::assertFalse($this->sender->isSendmailTimeout());
     }
 
-    public function test_beginUsersEnv_uses_the_configured_nbm_send_mail_as_name_instead_of_the_mail_sender_name_fallback(): void
+    public function testBeginUsersEnvUsesTheConfiguredNbmSendMailAsNameInsteadOfTheMailSenderNameFallback(): void
     {
         // sendAsName has no public getter, and MailService::mail() is
         // never actually reached here -- this exercises nbm_send_mail_as's
@@ -502,7 +503,7 @@ final class NotificationByMailSenderTest extends IntegrationTestCase
         $this->sender->endUsersEnv();
     }
 
-    public function test_doSubscribeUnsubscribeNotificationByMail_ignores_an_empty_check_key_list(): void
+    public function testDoSubscribeUnsubscribeNotificationByMailIgnoresAnEmptyCheckKeyList(): void
     {
         $result = $this->sender->doSubscribeUnsubscribeNotificationByMail(true, false, []);
 
@@ -511,7 +512,7 @@ final class NotificationByMailSenderTest extends IntegrationTestCase
         self::assertSame([], PageStateTestFactory::get()->errors);
     }
 
-    public function test_doSubscribeUnsubscribeNotificationByMail_records_a_failed_mail_and_leaves_enabled_unchanged_on_delivery_failure(): void
+    public function testDoSubscribeUnsubscribeNotificationByMailRecordsAFailedMailAndLeavesEnabledUnchangedOnDeliveryFailure(): void
     {
         CurrentConfigTestFactory::get()->smtpHost = '127.0.0.1:1';
         self::assertSame(1, $this->user1Enabled());
@@ -545,7 +546,7 @@ final class NotificationByMailSenderTest extends IntegrationTestCase
         self::assertSame(1, $this->user1Enabled());
     }
 
-    public function test_doSubscribeUnsubscribeNotificationByMail_stops_the_loop_early_when_the_sendmail_timeout_is_already_exceeded(): void
+    public function testDoSubscribeUnsubscribeNotificationByMailStopsTheLoopEarlyWhenTheSendmailTimeoutIsAlreadyExceeded(): void
     {
         $sender = $this->senderWithImmediateTimeout();
 
@@ -567,7 +568,7 @@ final class NotificationByMailSenderTest extends IntegrationTestCase
         self::assertSame(['No mail to be sent.', '0 users updated.'], PageStateTestFactory::get()->infos);
     }
 
-    public function test_sendMailNotifications_list_to_send_stops_early_when_the_sendmail_timeout_is_already_exceeded(): void
+    public function testSendMailNotificationsListToSendStopsEarlyWhenTheSendmailTimeoutIsAlreadyExceeded(): void
     {
         $sender = $this->senderWithImmediateTimeout();
         $this->setUser1LastSend('2000-01-01 00:00:00');
@@ -582,7 +583,7 @@ final class NotificationByMailSenderTest extends IntegrationTestCase
         self::assertSame([], PageStateTestFactory::get()->errors);
     }
 
-    public function test_sendMailNotifications_send_action_stops_early_when_the_sendmail_timeout_is_already_exceeded(): void
+    public function testSendMailNotificationsSendActionStopsEarlyWhenTheSendmailTimeoutIsAlreadyExceeded(): void
     {
         $sender = $this->senderWithImmediateTimeout();
         $this->setUser1LastSend('2000-01-01 00:00:00');
@@ -599,7 +600,7 @@ final class NotificationByMailSenderTest extends IntegrationTestCase
         self::assertSame(['No mail to be sent.'], PageStateTestFactory::get()->infos);
     }
 
-    public function test_sendMailNotifications_send_action_builds_an_auth_key_link_and_a_never_sent_before_and_custom_content_mail_for_an_eligible_user(): void
+    public function testSendMailNotificationsSendActionBuildsAnAuthKeyLinkAndANeverSentBeforeAndCustomContentMailForAnEligibleUser(): void
     {
         // User 4 (power_user, status 'normal' -- unlike user 1's
         // 'webmaster', which AuthService::createUserAuthKey() always
@@ -612,7 +613,7 @@ final class NotificationByMailSenderTest extends IntegrationTestCase
         // nbm_complementary_mail_content so the per-user
         // customize-content branch (never empty here, no plugin handler
         // registered) fires too.
-        $this->conn->executeStatement("UPDATE " . 'users' . " SET mail_address = 'temp4@example.test' WHERE id = 4");
+        $this->conn->executeStatement('UPDATE users' . " SET mail_address = 'temp4@example.test' WHERE id = 4");
         // check_key is varchar(16) -- must stay within that limit.
         $checkKey = 'user4-tmp-key';
         // enabled is a genuine boolean column -- a bare `1` literal in the
@@ -622,7 +623,7 @@ final class NotificationByMailSenderTest extends IntegrationTestCase
         // confirmed live).
         $enabledLiteral = $this->dbDriver === 'pgsql' ? 'true' : '1';
         $this->conn->executeStatement(
-            'INSERT INTO ' . 'user_mail_notification' . " (user_id, check_key, enabled, last_send) VALUES (?, ?, {$enabledLiteral}, NULL)",
+            'INSERT INTO user_mail_notification' . " (user_id, check_key, enabled, last_send) VALUES (?, ?, {$enabledLiteral}, NULL)",
             [4, $checkKey]
         );
         CurrentConfigTestFactory::get()->smtpHost = '127.0.0.1:1';
@@ -640,7 +641,7 @@ final class NotificationByMailSenderTest extends IntegrationTestCase
         );
 
         $authKeyCount = $this->conn->fetchOne(
-            'SELECT COUNT(*) FROM ' . 'user_auth_keys' . " WHERE user_id = 4 AND key_type = 'auth_key'"
+            'SELECT COUNT(*) FROM user_auth_keys' . " WHERE user_id = 4 AND key_type = 'auth_key'"
         );
         self::assertSame(1, $authKeyCount);
     }

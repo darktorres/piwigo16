@@ -19,9 +19,12 @@ function fullGroupRow(): array
 test('fromRow narrows every column to its real type', function (): void {
     $group = Group::fromRow(fullGroupRow());
 
-    expect($group->id->value)->toBe(2)
-        ->and($group->name)->toBe('Editors')
-        ->and($group->isDefault)->toBeTrue();
+    expect($group->id->value)
+        ->toBe(2)
+        ->and($group->name)
+        ->toBe('Editors')
+        ->and($group->isDefault)
+        ->toBeTrue();
 });
 
 test('fromRow treats a falsy is_default as false', function (): void {
@@ -30,7 +33,8 @@ test('fromRow treats a falsy is_default as false', function (): void {
 
     $group = Group::fromRow($row);
 
-    expect($group->isDefault)->toBeFalse();
+    expect($group->isDefault)
+        ->toBeFalse();
 });
 
 test('fromRow throws when id is null, defaulting the invalid id to 0, not -1', function (): void {
@@ -62,17 +66,21 @@ test('fromRow defaults name to empty string and is_default to false when absent,
 
     $group = Group::fromRow($row);
 
-    expect($group->id->value)->toBe(2)
-        ->and($group->name)->toBe('')
-        ->and($group->isDefault)->toBeFalse();
+    expect($group->id->value)
+        ->toBe(2)
+        ->and($group->name)
+        ->toBe('')
+        ->and($group->isDefault)
+        ->toBeFalse();
 });
 
 test('toArray round-trips the exact same DB column shape fromRow narrowed', function (): void {
     $roundTripped = Group::fromRow(fullGroupRow())->toArray();
 
-    expect($roundTripped)->toBe([
-        'id' => 2,
-        'name' => 'Editors',
-        'is_default' => true,
-    ]);
+    expect($roundTripped)
+        ->toBe([
+            'id' => 2,
+            'name' => 'Editors',
+            'is_default' => true,
+        ]);
 });

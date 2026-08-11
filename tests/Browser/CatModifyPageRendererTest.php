@@ -33,7 +33,8 @@ it('shows the real photo/sub-album counts for a parent album with sub-albums', f
     $page = H::navigateOk($page, '/admin.php?page=album&cat_id=1&tab=properties');
     $page->assertNoJavaScriptErrors();
 
-    expect($page->value('#cat-name'))->toBe('Sample Album');
+    expect($page->value('#cat-name'))
+        ->toBe('Sample Album');
     $page->assertSeeIn('.cat-photos .cat-modify-info-content', '3 photos');
     $page->assertSeeIn('.cat-photos .cat-modify-info-subcontent', '5 including sub-albums');
     $page->assertSeeIn('.cat-albums .cat-modify-info-content', '1 sub-albums');
@@ -45,7 +46,8 @@ it('shows the real photo count and zero sub-albums for a leaf album', function (
     $page = H::navigateOk($page, '/admin.php?page=album&cat_id=2&tab=properties');
     $page->assertNoJavaScriptErrors();
 
-    expect($page->value('#cat-name'))->toBe('Nested Sub Album');
+    expect($page->value('#cat-name'))
+        ->toBe('Nested Sub Album');
     $page->assertSeeIn('.cat-photos .cat-modify-info-content', '2 photos');
     $page->assertSeeIn('.cat-photos .cat-modify-info-subcontent', '2 including sub-albums');
     $page->assertSeeIn('.cat-albums .cat-modify-info-content', '0 sub-albums');
@@ -60,9 +62,11 @@ it('shows the real photo count and zero sub-albums for a leaf album', function (
 it('shows the empty-album placeholder and no manage-photos link for a freshly created album', function (): void {
     $page = H::loginAsAdmin($this);
     $albumName = 'Empty Modify Test Album ' . uniqid();
-    $album = H::wsCall($page, 'pwg.categories.add', ['name' => $albumName]);
+    $album = H::wsCall($page, 'pwg.categories.add', [
+        'name' => $albumName,
+    ]);
     $albumResult = $album['result'] ?? null;
-    if (!is_array($albumResult) || !isset($albumResult['id']) || !is_numeric($albumResult['id'])) {
+    if (! is_array($albumResult) || ! isset($albumResult['id']) || ! is_numeric($albumResult['id'])) {
         throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($album, true));
     }
     $albumId = (int) $albumResult['id'];
@@ -71,7 +75,8 @@ it('shows the empty-album placeholder and no manage-photos link for a freshly cr
     $page = H::navigateOk($page, '/admin.php?page=album&cat_id=' . $albumId . '&tab=properties');
     $page->assertNoJavaScriptErrors();
 
-    expect($page->value('#cat-name'))->toBe($albumName);
+    expect($page->value('#cat-name'))
+        ->toBe($albumName);
     $page->assertSeeIn('.cat-photos .cat-modify-info-content', '0 photos');
     $page->assertSeeIn('.cat-albums .cat-modify-info-content', '0 sub-albums');
     $page->assertMissing('.icon-th.tiptip');
@@ -83,13 +88,17 @@ it('shows the empty-album placeholder and no manage-photos link for a freshly cr
     );
 
     H::wsCall($page, 'pwg.categories.delete', [
-        'category_id' => $albumId, 'photo_deletion_mode' => 'no_delete', 'pwg_token' => $pwgToken,
+        'category_id' => $albumId,
+        'photo_deletion_mode' => 'no_delete',
+        'pwg_token' => $pwgToken,
     ]);
 });
 
 it('formats a multi-date info-title ("added between") when its photos span more than one date', function (): void {
     $page = H::loginAsAdmin($this);
-    $album = H::wsCall($page, 'pwg.categories.add', ['name' => 'Multi Date Test Album ' . uniqid()]);
+    $album = H::wsCall($page, 'pwg.categories.add', [
+        'name' => 'Multi Date Test Album ' . uniqid(),
+    ]);
     $albumResult = $album['result'] ?? null;
     if (! is_array($albumResult) || ! is_numeric($albumResult['id'] ?? null)) {
         throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($album, true));
@@ -123,7 +132,8 @@ it('formats a multi-date info-title ("added between") when its photos span more 
         if ($minPos === false || $maxPos === false) {
             throw new RuntimeException('expected both years to be present in the response body');
         }
-        expect($minPos)->toBeLessThan($maxPos);
+        expect($minPos)
+            ->toBeLessThan($maxPos);
     } finally {
         H::dbClose($db);
     }

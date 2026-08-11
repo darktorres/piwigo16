@@ -2,22 +2,22 @@
 
 declare(strict_types=1);
 
-use Piwigo\Permission\ImageVisibilityChecker;
-use Piwigo\Db\DbConnection;
-use Piwigo\Permission\PermissionRepository;
-use Piwigo\Db\EntityManagerFactory;
-use Piwigo\Users\CurrentUser;
-use Piwigo\Image\DerivativeParams;
-use Piwigo\Http\ResponseReadyException;
-use Piwigo\Core\Paths;
-use Piwigo\PluginConfig\EventDispatcher;
-use Piwigo\Tests\Support\UrlServiceTestFactory;
-use Piwigo\Image\DerivativeUrlCodec;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Controller\ImageDerivativeController;
 use Piwigo\Core\CurrentLogger;
 use Piwigo\Core\Logger;
+use Piwigo\Core\Paths;
+use Piwigo\Db\DbConnection;
+use Piwigo\Db\EntityManagerFactory;
+use Piwigo\Http\ResponseReadyException;
+use Piwigo\Image\DerivativeParams;
+use Piwigo\Image\DerivativeUrlCodec;
 use Piwigo\Image\ImageStdParams;
+use Piwigo\Permission\ImageVisibilityChecker;
+use Piwigo\Permission\PermissionRepository;
+use Piwigo\PluginConfig\EventDispatcher;
+use Piwigo\Tests\Support\UrlServiceTestFactory;
+use Piwigo\Users\CurrentUser;
 
 // ImageDerivativeController's own trySwitchSource() redirects to an
 // already-cached *different* derivative type when it's an exact match for
@@ -64,7 +64,8 @@ test('derivativeUrlPath substitutes the type token and keeps the rest of the suf
         $currentConfig,
     );
 
-    expect($result)->toBe('i.php?/upload/2026/08/01/20260801000000-2e7ed83c-2s.jpg');
+    expect($result)
+        ->toBe('i.php?/upload/2026/08/01/20260801000000-2e7ed83c-2s.jpg');
 });
 
 test('derivativeUrlPath omits .php when php_extension_in_urls is disabled', function (): void {
@@ -74,7 +75,8 @@ test('derivativeUrlPath omits .php when php_extension_in_urls is disabled', func
 
     $result = callDerivativeUrlPath('foo-sq.jpg', ImageStdParams::SQUARE, ImageStdParams::THUMB, $currentConfig);
 
-    expect($result)->toBe('i?/foo-th.jpg');
+    expect($result)
+        ->toBe('i?/foo-th.jpg');
 });
 
 test('derivativeUrlPath omits the leading ? when question_mark_in_urls is disabled', function (): void {
@@ -84,7 +86,8 @@ test('derivativeUrlPath omits the leading ? when question_mark_in_urls is disabl
 
     $result = callDerivativeUrlPath('foo-sq.jpg', ImageStdParams::SQUARE, ImageStdParams::THUMB, $currentConfig);
 
-    expect($result)->toBe('i.php/foo-th.jpg');
+    expect($result)
+        ->toBe('i.php/foo-th.jpg');
 });
 
 test('derivativeUrlPath prefixes the app-mount-relative i.php URL, unaware of the app root itself', function (): void {
@@ -99,8 +102,10 @@ test('derivativeUrlPath prefixes the app-mount-relative i.php URL, unaware of th
     // $this->srcUrl fix uses for the true-original redirect case.
     $result = callDerivativeUrlPath('upload/2026/08/01/foo-2s.jpg', ImageStdParams::XXSMALL, ImageStdParams::LARGE, $currentConfig);
 
-    expect($result)->toBe('i.php?/upload/2026/08/01/foo-la.jpg');
-    expect($result)->not->toContain('..');
+    expect($result)
+        ->toBe('i.php?/upload/2026/08/01/foo-la.jpg');
+    expect($result)
+        ->not->toContain('..');
 });
 
 // parseCustomParams()'s own null-token guard: every real HTTP request path
@@ -146,14 +151,18 @@ test('parseCustomParams() rejects a genuinely empty token array', function (): v
     // instead of the real, controlled 400 -- a real behavioral
     // difference either way.
     $currentLogger = new CurrentLogger();
-    $currentLogger->set(new Logger(['severity' => Logger::OFF]));
+    $currentLogger->set(new Logger([
+        'severity' => Logger::OFF,
+    ]));
     $controller = new ImageDerivativeController(Paths::fromRoot(dirname(__DIR__, 3)), $currentLogger, new EventDispatcher(), new ImageStdParams(), imageDerivativeControllerTestImageVisibilityChecker(), UrlServiceTestFactory::build(), new CurrentConfig());
 
     $exception = callIerrorFor400($controller, []);
 
     $response = $exception->response();
-    expect($response->getStatusCode())->toBe(400)
-        ->and((string) $response->getBody())->toBe('Empty array while parsing Sizing');
+    expect($response->getStatusCode())
+        ->toBe(400)
+        ->and((string) $response->getBody())
+        ->toBe('Empty array while parsing Sizing');
 });
 
 test('parseCustomParams() parses a single bare "s"-prefixed size token', function (): void {
@@ -171,9 +180,12 @@ test('parseCustomParams() parses a single bare "s"-prefixed size token', functio
 
     $params = callParseCustomParams($controller, ['s100x100']);
 
-    expect($params->sizing->ideal_size)->toBe([100, 100])
-        ->and($params->sizing->max_crop)->toBe(0)
-        ->and($params->sizing->min_size)->toBeNull();
+    expect($params->sizing->ideal_size)
+        ->toBe([100, 100])
+        ->and($params->sizing->max_crop)
+        ->toBe(0)
+        ->and($params->sizing->min_size)
+        ->toBeNull();
 });
 
 test('parseCustomParams() parses a single bare "e"-prefixed exact-crop token', function (): void {
@@ -185,9 +197,12 @@ test('parseCustomParams() parses a single bare "e"-prefixed exact-crop token', f
 
     $params = callParseCustomParams($controller, ['e50x50']);
 
-    expect($params->sizing->ideal_size)->toBe([50, 50])
-        ->and($params->sizing->max_crop)->toBe(1)
-        ->and($params->sizing->min_size)->toBe([50, 50]);
+    expect($params->sizing->ideal_size)
+        ->toBe([50, 50])
+        ->and($params->sizing->max_crop)
+        ->toBe(1)
+        ->and($params->sizing->min_size)
+        ->toBe([50, 50]);
 });
 
 test('parseCustomParams() rejects a plain size token with no crop/min-size tokens following it', function (): void {
@@ -202,14 +217,18 @@ test('parseCustomParams() rejects a plain size token with no crop/min-size token
     // to the pre-existing null-token guard a few lines down, which
     // throws the *identical* ResponseReadyException(400, 'Sizing arr').
     $currentLogger = new CurrentLogger();
-    $currentLogger->set(new Logger(['severity' => Logger::OFF]));
+    $currentLogger->set(new Logger([
+        'severity' => Logger::OFF,
+    ]));
     $controller = new ImageDerivativeController(Paths::fromRoot(dirname(__DIR__, 3)), $currentLogger, new EventDispatcher(), new ImageStdParams(), imageDerivativeControllerTestImageVisibilityChecker(), UrlServiceTestFactory::build(), new CurrentConfig());
 
     $exception = callIerrorFor400($controller, ['100x100', 'a']);
 
     $response = $exception->response();
-    expect($response->getStatusCode())->toBe(400)
-        ->and((string) $response->getBody())->toBe('Sizing arr');
+    expect($response->getStatusCode())
+        ->toBe(400)
+        ->and((string) $response->getBody())
+        ->toBe('Sizing arr');
 });
 
 test('parseCustomParams() 400s a plain size token that is the only token given, instead of falling through to a TypeError', function (): void {
@@ -223,14 +242,18 @@ test('parseCustomParams() 400s a plain size token that is the only token given, 
     // -- a real, directly observable difference (handled error response
     // vs. an uncaught fatal).
     $currentLogger = new CurrentLogger();
-    $currentLogger->set(new Logger(['severity' => Logger::OFF]));
+    $currentLogger->set(new Logger([
+        'severity' => Logger::OFF,
+    ]));
     $controller = new ImageDerivativeController(Paths::fromRoot(dirname(__DIR__, 3)), $currentLogger, new EventDispatcher(), new ImageStdParams(), imageDerivativeControllerTestImageVisibilityChecker(), UrlServiceTestFactory::build(), new CurrentConfig());
 
     $exception = callIerrorFor400($controller, ['100x100']);
 
     $response = $exception->response();
-    expect($response->getStatusCode())->toBe(400)
-        ->and((string) $response->getBody())->toBe('Sizing arr');
+    expect($response->getStatusCode())
+        ->toBe(400)
+        ->and((string) $response->getBody())
+        ->toBe('Sizing arr');
 });
 
 test('parseCustomParams() accepts a size+crop+min-size token triple, exactly at the 2-remaining-tokens boundary', function (): void {
@@ -244,9 +267,12 @@ test('parseCustomParams() accepts a size+crop+min-size token triple, exactly at 
 
     $params = callParseCustomParams($controller, ['100x100', 'n', '50x50']);
 
-    expect($params->sizing->ideal_size)->toBe([100, 100])
-        ->and($params->sizing->max_crop)->toBe(DerivativeUrlCodec::charToFraction('n'))
-        ->and($params->sizing->min_size)->toBe([50, 50]);
+    expect($params->sizing->ideal_size)
+        ->toBe([100, 100])
+        ->and($params->sizing->max_crop)
+        ->toBe(DerivativeUrlCodec::charToFraction('n'))
+        ->and($params->sizing->min_size)
+        ->toBe([50, 50]);
 });
 
 test('parseCustomParams() takes the min-size token from the front of the remaining tokens, not the back', function (): void {
@@ -260,7 +286,8 @@ test('parseCustomParams() takes the min-size token from the front of the remaini
 
     $params = callParseCustomParams($controller, ['100x100', 'n', '50x50', 'ignored-extra']);
 
-    expect($params->sizing->min_size)->toBe([50, 50]);
+    expect($params->sizing->min_size)
+        ->toBe([50, 50]);
 });
 
 /**
@@ -295,7 +322,10 @@ test('ierror() builds a real redirect response for a 301 code, decoding entities
     // $extraHeaders here, asserted present on the response).
     $dir = sys_get_temp_dir() . '/piwigo-idc-ierror-redirect-test-' . bin2hex(random_bytes(8));
     mkdir($dir, 0o777, true);
-    $logger = new Logger(['directory' => $dir, 'filename' => 'ierror-redirect.txt']);
+    $logger = new Logger([
+        'directory' => $dir,
+        'filename' => 'ierror-redirect.txt',
+    ]);
     $currentLogger = new CurrentLogger();
     $currentLogger->set($logger);
 
@@ -308,7 +338,9 @@ test('ierror() builds a real redirect response for a 301 code, decoding entities
         $controller,
         'https://example.test/target?a=1&amp;b=2',
         301,
-        ['X-i' => 'No change'],
+        [
+            'X-i' => 'No change',
+        ],
     );
 
     $contents = file_get_contents($dir . '/ierror-redirect.txt');
@@ -322,14 +354,20 @@ test('ierror() builds a real redirect response for a 301 code, decoding entities
     @rmdir($dir);
 
     $response = $exception->response();
-    expect($response->getStatusCode())->toBe(301)
-        ->and($response->getHeaderLine('Location'))->toBe('https://example.test/target?a=1&b=2')
-        ->and($response->getHeaderLine('X-i'))->toBe('No change');
+    expect($response->getStatusCode())
+        ->toBe(301)
+        ->and($response->getHeaderLine('Location'))
+        ->toBe('https://example.test/target?a=1&b=2')
+        ->and($response->getHeaderLine('X-i'))
+        ->toBe('No change');
 
-    expect($contents)->not->toBeFalse();
+    expect($contents)
+        ->not->toBeFalse();
     assert(is_string($contents));
-    expect($contents)->toContain('301 https://example.test/target?a=1&b=2')
-        ->and($contents)->toContain('/i.php/upload/2026/08/01/bar-th.jpg');
+    expect($contents)
+        ->toContain('301 https://example.test/target?a=1&b=2')
+        ->and($contents)
+        ->toContain('/i.php/upload/2026/08/01/bar-th.jpg');
 });
 
 test('ierror() builds a real redirect response for a 302 code too', function (): void {
@@ -338,14 +376,18 @@ test('ierror() builds a real redirect response for a 302 code too', function ():
     // call takes the redirect branch regardless of how the *302*
     // literal alone is mutated).
     $currentLogger = new CurrentLogger();
-    $currentLogger->set(new Logger(['severity' => Logger::OFF]));
+    $currentLogger->set(new Logger([
+        'severity' => Logger::OFF,
+    ]));
     $controller = new ImageDerivativeController(Paths::fromRoot(dirname(__DIR__, 3)), $currentLogger, new EventDispatcher(), new ImageStdParams(), imageDerivativeControllerTestImageVisibilityChecker(), UrlServiceTestFactory::build(), new CurrentConfig());
 
     $exception = callIerror($controller, 'https://example.test/target-302', 302);
 
     $response = $exception->response();
-    expect($response->getStatusCode())->toBe(302)
-        ->and($response->getHeaderLine('Location'))->toBe('https://example.test/target-302');
+    expect($response->getStatusCode())
+        ->toBe(302)
+        ->and($response->getHeaderLine('Location'))
+        ->toBe('https://example.test/target-302');
 });
 
 test('ierror() logs the exact code+message concatenation and the real request URI for a non-redirect code', function (): void {
@@ -363,7 +405,10 @@ test('ierror() logs the exact code+message concatenation and the real request UR
     // URI would be silently missing from the log either way).
     $dir = sys_get_temp_dir() . '/piwigo-idc-ierror-test-' . bin2hex(random_bytes(8));
     mkdir($dir, 0o777, true);
-    $logger = new Logger(['directory' => $dir, 'filename' => 'ierror.txt']);
+    $logger = new Logger([
+        'directory' => $dir,
+        'filename' => 'ierror.txt',
+    ]);
     $currentLogger = new CurrentLogger();
     $currentLogger->set($logger);
 
@@ -383,16 +428,22 @@ test('ierror() logs the exact code+message concatenation and the real request UR
     @unlink($dir . '/ierror.txt');
     @rmdir($dir);
 
-    expect($exception->response()->getStatusCode())->toBe(404);
-    expect($contents)->not->toBeFalse();
+    expect($exception->response()->getStatusCode())
+        ->toBe(404);
+    expect($contents)
+        ->not->toBeFalse();
     assert(is_string($contents));
-    expect($contents)->toContain('404 Db file path not found')
-        ->and($contents)->toContain('/i.php/upload/2026/08/01/foo-th.jpg');
+    expect($contents)
+        ->toContain('404 Db file path not found')
+        ->and($contents)
+        ->toContain('/i.php/upload/2026/08/01/foo-th.jpg');
 });
 
 test('parseCustomParams() 400s its own "impossible" null-token guard when invoked with a malformed token array', function (): void {
     $currentLogger = new CurrentLogger();
-    $currentLogger->set(new Logger(['severity' => Logger::OFF]));
+    $currentLogger->set(new Logger([
+        'severity' => Logger::OFF,
+    ]));
 
     $controller = new ImageDerivativeController(Paths::fromRoot(dirname(__DIR__, 3)), $currentLogger, new EventDispatcher(), new ImageStdParams(), imageDerivativeControllerTestImageVisibilityChecker(), UrlServiceTestFactory::build(), new CurrentConfig());
     $method = new ReflectionMethod(ImageDerivativeController::class, 'parseCustomParams');
@@ -408,11 +459,14 @@ test('parseCustomParams() 400s its own "impossible" null-token guard when invoke
         $exception = $e;
     }
 
-    expect($exception)->toBeInstanceOf(ResponseReadyException::class);
+    expect($exception)
+        ->toBeInstanceOf(ResponseReadyException::class);
     if (! $exception instanceof ResponseReadyException) {
         return; // unreachable -- the assertion above already failed the test otherwise.
     }
     $response = $exception->response();
-    expect($response->getStatusCode())->toBe(400)
-        ->and((string) $response->getBody())->toBe('Sizing arr');
+    expect($response->getStatusCode())
+        ->toBe(400)
+        ->and((string) $response->getBody())
+        ->toBe('Sizing arr');
 });

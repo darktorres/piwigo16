@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-use Piwigo\Image\WatermarkParams;
 use Piwigo\Image\DerivativeParams;
 use Piwigo\Image\SizingParams;
+use Piwigo\Image\WatermarkParams;
 use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
 
 /**
@@ -50,17 +50,50 @@ function ctFloatFromMixed(mixed $value, float $default): float
 function ctDefaultDerivativeSizes(): array
 {
     return [
-        'square' => ['w' => 120, 'h' => 120],
-        'thumb' => ['w' => 144, 'h' => 144],
-        '2small' => ['w' => 240, 'h' => 240],
-        'xsmall' => ['w' => 432, 'h' => 324],
-        'small' => ['w' => 576, 'h' => 432],
-        'medium' => ['w' => 792, 'h' => 594],
-        'large' => ['w' => 1008, 'h' => 756],
-        'xlarge' => ['w' => 1224, 'h' => 918],
-        'xxlarge' => ['w' => 1656, 'h' => 1242],
-        '3xlarge' => ['w' => 2232, 'h' => 1674],
-        '4xlarge' => ['w' => 3000, 'h' => 2250],
+        'square' => [
+            'w' => 120,
+            'h' => 120,
+        ],
+        'thumb' => [
+            'w' => 144,
+            'h' => 144,
+        ],
+        '2small' => [
+            'w' => 240,
+            'h' => 240,
+        ],
+        'xsmall' => [
+            'w' => 432,
+            'h' => 324,
+        ],
+        'small' => [
+            'w' => 576,
+            'h' => 432,
+        ],
+        'medium' => [
+            'w' => 792,
+            'h' => 594,
+        ],
+        'large' => [
+            'w' => 1008,
+            'h' => 756,
+        ],
+        'xlarge' => [
+            'w' => 1224,
+            'h' => 918,
+        ],
+        'xxlarge' => [
+            'w' => 1656,
+            'h' => 1242,
+        ],
+        '3xlarge' => [
+            'w' => 2232,
+            'h' => 1674,
+        ],
+        '4xlarge' => [
+            'w' => 3000,
+            'h' => 2250,
+        ],
     ];
 }
 
@@ -100,7 +133,8 @@ function ctDecodedDerivatives(): array
 {
     $snapshot = H::snapshotDerivativeConfig();
     $settings = $snapshot['settings'];
-    expect($settings)->not->toBeNull();
+    expect($settings)
+        ->not->toBeNull();
     assert(is_array($settings));
 
     $watermarkJson = $settings['watermark_json'] ?? null;
@@ -153,7 +187,12 @@ function ctDecodedDerivatives(): array
         $d[$name] = $params;
     }
 
-    return ['d' => $d, 'q' => $q, 'w' => $w, 'c' => $c];
+    return [
+        'd' => $d,
+        'q' => $q,
+        'w' => $w,
+        'c' => $c,
+    ];
 }
 
 /**
@@ -217,7 +256,9 @@ function ctWatermarkFileFromSettings(string $errorMessage): string
     return $file;
 }
 
-/** @return array<string, mixed> */
+/**
+ * @return array<string, mixed>
+ */
 function ctArr(mixed $value): array
 {
     assert(is_array($value));
@@ -258,7 +299,9 @@ function ctMainCheckboxes(): array
     ];
 }
 
-/** @return list<string> */
+/**
+ * @return list<string>
+ */
 function ctCommentsCheckboxes(): array
 {
     return [
@@ -269,7 +312,9 @@ function ctCommentsCheckboxes(): array
     ];
 }
 
-/** @return list<string> */
+/**
+ * @return list<string>
+ */
 function ctDisplayCheckboxes(): array
 {
     return [
@@ -451,16 +496,21 @@ it('saves the display tab and persists real config values', function (): void {
             'pwg_token' => $token,
             'nb_categories_page' => '20',
             'display_fromto' => '1',
-            'picture_informations' => ['author' => '1', 'file' => '1'],
+            'picture_informations' => [
+                'author' => '1',
+                'file' => '1',
+            ],
         ]);
 
         expect($result['status'])->toBe(200);
         expect(H::configValue('nb_categories_page'))->toBe(json_encode('20'));
         expect(H::configValue('display_fromto'))->toBe(json_encode('true'));
         $pictureInformations = H::configValue('picture_informations');
-        expect($pictureInformations)->not->toBeNull();
+        expect($pictureInformations)
+            ->not->toBeNull();
         $decoded = json_decode((string) $pictureInformations, true);
-        expect($decoded)->toBeArray();
+        expect($decoded)
+            ->toBeArray();
         assert(is_array($decoded));
         expect($decoded['author'])->toBeTrue();
         expect($decoded['file'])->toBeTrue();
@@ -508,18 +558,28 @@ it('saves the search tab and persists real config values', function (): void {
         $result = H::adminPost($page, ctConfigSection('search'), [
             'submit' => '1',
             'pwg_token' => $token,
-            'filters_views_box' => ['words' => '1', 'tags' => '1'],
+            'filters_views_box' => [
+                'words' => '1',
+                'tags' => '1',
+            ],
             'filters_views' => [
-                'words' => ['access' => 'everybody'],
-                'tags' => ['access' => 'everybody', 'default' => '1'],
+                'words' => [
+                    'access' => 'everybody',
+                ],
+                'tags' => [
+                    'access' => 'everybody',
+                    'default' => '1',
+                ],
             ],
         ]);
 
         expect($result['status'])->toBe(200);
         $stored = H::configValue('filters_views');
-        expect($stored)->not->toBeNull();
+        expect($stored)
+            ->not->toBeNull();
         $decoded = json_decode((string) $stored, true);
-        expect($decoded)->toBeArray();
+        expect($decoded)
+            ->toBeArray();
         assert(is_array($decoded));
         expect(ctArr($decoded['words'])['access'])->toBe('everybody');
         expect(ctArr($decoded['tags'])['access'])->toBe('everybody');
@@ -583,7 +643,8 @@ it('saves the default tab (guest profile) and persists real user_infos values', 
         expect((int) $updated['nb_image_page'])->toBe(25);
         expect((int) $updated['recent_period'])->toBe(10);
     } finally {
-        H::dbQuery($db,
+        H::dbQuery(
+            $db,
             'UPDATE user_infos SET nb_image_page = ' . (int) $guestRow['nb_image_page']
             . ', recent_period = ' . (int) $guestRow['recent_period'] . ' WHERE user_id = 2'
         );
@@ -667,7 +728,12 @@ it('sizes tab: rejects a thumb size that is not strictly larger than the square 
             'pwg_token' => $token,
             'submit' => '1',
             'resize_quality' => '90',
-            'd' => ctDerivativesPayload(['thumb' => ['w' => 100, 'h' => 100]]),
+            'd' => ctDerivativesPayload([
+                'thumb' => [
+                    'w' => 100,
+                    'h' => 100,
+                ],
+            ]),
         ]);
 
         expect($result['status'])->toBe(200);
@@ -691,7 +757,12 @@ it('sizes tab: rejects a non-thumb size that is not strictly larger than the pre
             'pwg_token' => $token,
             'submit' => '1',
             'resize_quality' => '90',
-            'd' => ctDerivativesPayload(['small' => ['w' => 100, 'h' => 100]]),
+            'd' => ctDerivativesPayload([
+                'small' => [
+                    'w' => 100,
+                    'h' => 100,
+                ],
+            ]),
         ]);
 
         expect($result['status'])->toBe(200);
@@ -973,7 +1044,9 @@ it('shows the webmaster-required warning for a plain "admin"-status user', funct
     try {
         $adminPage = H::visitPwg($this, '/identification.php');
         H::assertNoServerErrors($adminPage, 'plain-admin identification page');
-        $adminPage = $adminPage->fill('username', $username)->fill('password', $password)->click('login');
+        $adminPage = $adminPage->fill('username', $username)
+            ->fill('password', $password)
+            ->click('login');
         H::assertNoServerErrors($adminPage, 'plain-admin post-login page');
 
         $adminPage = H::navigateOk($adminPage, ctConfigSection('main'));
@@ -1011,7 +1084,10 @@ it('uploads a real PNG watermark image and rejects a non-PNG upload', function (
         $status = curl_getinfo($ch, CURLINFO_RESPONSE_CODE);
         unset($ch);
 
-        return ['status' => $status, 'body' => is_string($body) ? $body : ''];
+        return [
+            'status' => $status,
+            'body' => is_string($body) ? $body : '',
+        ];
     };
 
     $baseUrl = H::baseUrl();
@@ -1022,12 +1098,15 @@ it('uploads a real PNG watermark image and rejects a non-PNG upload', function (
         'login' => 'Login',
     ]);
 
-    $statusResult = $curl($baseUrl . '/ws.php?format=json', ['method' => 'pwg.session.getStatus']);
+    $statusResult = $curl($baseUrl . '/ws.php?format=json', [
+        'method' => 'pwg.session.getStatus',
+    ]);
     $decodedStatus = json_decode($statusResult['body'], true);
     $statusResultData = is_array($decodedStatus) ? ($decodedStatus['result'] ?? null) : null;
     $pwgTokenRaw = is_array($statusResultData) ? ($statusResultData['pwg_token'] ?? null) : null;
     $pwgToken = is_string($pwgTokenRaw) || is_int($pwgTokenRaw) ? (string) $pwgTokenRaw : '';
-    expect($pwgToken)->not->toBe('');
+    expect($pwgToken)
+        ->not->toBe('');
 
     $watermarkUrl = $baseUrl . '/' . ltrim(ctConfigSection('watermark'), '/');
     $baseFields = [
@@ -1087,11 +1166,14 @@ it('uploads a real PNG watermark image and rejects a non-PNG upload', function (
         if (! is_string($watermarkFile) || $watermarkFile === '') {
             throw new RuntimeException('Could not find a watermark file entry in derivative_settings: ' . var_export($settings, true));
         }
-        expect($watermarkFile)->not->toBe('');
-        expect($watermarkFile)->toContain('watermarks/');
+        expect($watermarkFile)
+            ->not->toBe('');
+        expect($watermarkFile)
+            ->toContain('watermarks/');
 
         $uploadedPath = __DIR__ . '/../../' . ltrim($watermarkFile, '/');
-        expect(file_exists($uploadedPath))->toBeTrue();
+        expect(file_exists($uploadedPath))
+            ->toBeTrue();
         @unlink($uploadedPath);
     } finally {
         @unlink($cookieJar);
@@ -1394,7 +1476,10 @@ it('avoids a watermark filename collision by appending a numbered suffix on a re
         $status = curl_getinfo($ch, CURLINFO_RESPONSE_CODE);
         unset($ch);
 
-        return ['status' => $status, 'body' => is_string($body) ? $body : ''];
+        return [
+            'status' => $status,
+            'body' => is_string($body) ? $body : '',
+        ];
     };
 
     $baseUrl = H::baseUrl();
@@ -1405,12 +1490,15 @@ it('avoids a watermark filename collision by appending a numbered suffix on a re
         'login' => 'Login',
     ]);
 
-    $statusResult = $curl($baseUrl . '/ws.php?format=json', ['method' => 'pwg.session.getStatus']);
+    $statusResult = $curl($baseUrl . '/ws.php?format=json', [
+        'method' => 'pwg.session.getStatus',
+    ]);
     $decodedStatus = json_decode($statusResult['body'], true);
     $statusResultData = is_array($decodedStatus) ? ($decodedStatus['result'] ?? null) : null;
     $pwgTokenRaw = is_array($statusResultData) ? ($statusResultData['pwg_token'] ?? null) : null;
     $pwgToken = is_string($pwgTokenRaw) || is_int($pwgTokenRaw) ? (string) $pwgTokenRaw : '';
-    expect($pwgToken)->not->toBe('');
+    expect($pwgToken)
+        ->not->toBe('');
 
     $watermarkUrl = $baseUrl . '/' . ltrim(ctConfigSection('watermark'), '/');
     $baseFields = [
@@ -1454,10 +1542,13 @@ it('avoids a watermark filename collision by appending a numbered suffix on a re
         expect($firstResult['body'])->toContain('Your configuration settings are saved');
 
         $firstStoredFile = ctWatermarkFileFromSettings('Could not find a watermark file entry after the first upload');
-        expect($firstStoredFile)->toContain($sharedName . '.png');
-        expect($firstStoredFile)->not->toContain($sharedName . '-1.png');
+        expect($firstStoredFile)
+            ->toContain($sharedName . '.png');
+        expect($firstStoredFile)
+            ->not->toContain($sharedName . '-1.png');
         $firstStoredPath = __DIR__ . '/../../' . ltrim($firstStoredFile, '/');
-        expect(file_exists($firstStoredPath))->toBeTrue();
+        expect(file_exists($firstStoredPath))
+            ->toBeTrue();
 
         // Same reported original filename again -- getWatermarkFilename()
         // must find the first upload already on disk (via its own
@@ -1470,13 +1561,16 @@ it('avoids a watermark filename collision by appending a numbered suffix on a re
         expect($secondResult['body'])->toContain('Your configuration settings are saved');
 
         $secondStoredFile = ctWatermarkFileFromSettings('Could not find a watermark file entry after the second upload');
-        expect($secondStoredFile)->toContain($sharedName . '-1.png');
+        expect($secondStoredFile)
+            ->toContain($sharedName . '-1.png');
         $secondStoredPath = __DIR__ . '/../../' . ltrim($secondStoredFile, '/');
-        expect(file_exists($secondStoredPath))->toBeTrue();
+        expect(file_exists($secondStoredPath))
+            ->toBeTrue();
 
         // Both files must still exist side by side -- the first was never
         // overwritten by the second.
-        expect(file_exists($firstStoredPath))->toBeTrue();
+        expect(file_exists($firstStoredPath))
+            ->toBeTrue();
     } finally {
         @unlink($cookieJar);
         @unlink($firstPath);
@@ -1579,11 +1673,14 @@ it('sizes tab: resubmitting identical derivative values leaves an unchanged type
         ];
 
         $token = H::pwgToken($page);
-        $first = H::adminPost($page, ctConfigSection('sizes'), array_merge(['pwg_token' => $token], $payload));
+        $first = H::adminPost($page, ctConfigSection('sizes'), array_merge([
+            'pwg_token' => $token,
+        ], $payload));
         expect($first['status'])->toBe(200);
         expect($first['body'])->toContain('Your configuration settings are saved');
 
-        $lastModAfterFirst = ctDecodedDerivatives()['d']['square']->last_mod_time;
+        $lastModAfterFirst = ctDecodedDerivatives()['d']['square']
+            ->last_mod_time;
 
         // A real elapsed-time gap (not just "same request"): if
         // processSizes()'s own same-value detection (comparing ideal_size/
@@ -1594,13 +1691,17 @@ it('sizes tab: resubmitting identical derivative values leaves an unchanged type
         sleep(2);
 
         $token = H::pwgToken($page);
-        $second = H::adminPost($page, ctConfigSection('sizes'), array_merge(['pwg_token' => $token], $payload));
+        $second = H::adminPost($page, ctConfigSection('sizes'), array_merge([
+            'pwg_token' => $token,
+        ], $payload));
         expect($second['status'])->toBe(200);
         expect($second['body'])->toContain('Your configuration settings are saved');
 
-        $lastModAfterSecond = ctDecodedDerivatives()['d']['square']->last_mod_time;
+        $lastModAfterSecond = ctDecodedDerivatives()['d']['square']
+            ->last_mod_time;
 
-        expect($lastModAfterSecond)->toBe($lastModAfterFirst);
+        expect($lastModAfterSecond)
+            ->toBe($lastModAfterFirst);
     } finally {
         H::restoreDerivativeConfig($snapshot);
     }
@@ -1726,7 +1827,10 @@ it('watermark tab: reports a write-access error for a genuinely unwritable uploa
             $status = curl_getinfo($ch, CURLINFO_RESPONSE_CODE);
             unset($ch);
 
-            return ['status' => $status, 'body' => is_string($body) ? $body : ''];
+            return [
+                'status' => $status,
+                'body' => is_string($body) ? $body : '',
+            ];
         };
 
         $baseUrl = H::baseUrl();
@@ -1737,12 +1841,15 @@ it('watermark tab: reports a write-access error for a genuinely unwritable uploa
             'login' => 'Login',
         ]);
 
-        $statusResult = $curl($baseUrl . '/ws.php?format=json', ['method' => 'pwg.session.getStatus']);
+        $statusResult = $curl($baseUrl . '/ws.php?format=json', [
+            'method' => 'pwg.session.getStatus',
+        ]);
         $decodedStatus = json_decode($statusResult['body'], true);
         $statusResultData = is_array($decodedStatus) ? ($decodedStatus['result'] ?? null) : null;
         $pwgTokenRaw = is_array($statusResultData) ? ($statusResultData['pwg_token'] ?? null) : null;
         $pwgToken = is_string($pwgTokenRaw) || is_int($pwgTokenRaw) ? (string) $pwgTokenRaw : '';
-        expect($pwgToken)->not->toBe('');
+        expect($pwgToken)
+            ->not->toBe('');
 
         $watermarkUrl = $baseUrl . '/' . ltrim(ctConfigSection('watermark'), '/');
         $pngPath = tempnam(sys_get_temp_dir(), 'pwg_watermark_') . '.png';
@@ -1859,7 +1966,10 @@ it('watermark tab: lowering the size threshold bumps last_mod_time for a still-e
         $unchanged = H::adminPost($page, ctConfigSection('watermark'), [
             'pwg_token' => $token,
             'submit' => '1',
-            'w' => $watermarkFields + ['minw' => '500', 'minh' => '500'],
+            'w' => $watermarkFields + [
+                'minw' => '500',
+                'minh' => '500',
+            ],
         ]);
         expect($unchanged['status'])->toBe(200);
         expect($unchanged['body'])->toContain('Your configuration settings are saved');
@@ -1870,7 +1980,10 @@ it('watermark tab: lowering the size threshold bumps last_mod_time for a still-e
         $changed = H::adminPost($page, ctConfigSection('watermark'), [
             'pwg_token' => $token,
             'submit' => '1',
-            'w' => $watermarkFields + ['minw' => '300', 'minh' => '300'],
+            'w' => $watermarkFields + [
+                'minw' => '300',
+                'minh' => '300',
+            ],
         ]);
         expect($changed['status'])->toBe(200);
         expect($changed['body'])->toContain('Your configuration settings are saved');
@@ -1972,7 +2085,9 @@ it('sizes/watermark tabs: a plain "admin"-status user\'s submission is silently 
     try {
         $adminPage = H::visitPwg($this, '/identification.php');
         H::assertNoServerErrors($adminPage, 'plain-admin identification page');
-        $adminPage = $adminPage->fill('username', $username)->fill('password', $password)->click('login');
+        $adminPage = $adminPage->fill('username', $username)
+            ->fill('password', $password)
+            ->click('login');
         H::assertNoServerErrors($adminPage, 'plain-admin post-login page');
 
         $sizesToken = H::pwgToken($adminPage);
@@ -2031,7 +2146,9 @@ it('sizes tab: ignores a malformed non-array "d" entry instead of crashing', fun
             'pwg_token' => $token,
             'submit' => '1',
             'resize_quality' => '90',
-            'd' => array_merge(ctDerivativesPayload(), ['bogus_type' => 'not-an-array']),
+            'd' => array_merge(ctDerivativesPayload(), [
+                'bogus_type' => 'not-an-array',
+            ]),
         ]);
 
         expect($result['status'])->toBe(200);
@@ -2058,7 +2175,12 @@ it('sizes tab: rejects a thumb size with a non-positive width and height', funct
             'pwg_token' => $token,
             'submit' => '1',
             'resize_quality' => '90',
-            'd' => ctDerivativesPayload(['thumb' => ['w' => 0, 'h' => 0]]),
+            'd' => ctDerivativesPayload([
+                'thumb' => [
+                    'w' => 0,
+                    'h' => 0,
+                ],
+            ]),
         ]);
 
         expect($result['status'])->toBe(200);
@@ -2125,7 +2247,8 @@ it('sizes tab: changing an already-enabled type\'s own dimensions bumps its last
         expect($baseline['status'])->toBe(200);
         expect($baseline['body'])->toContain('Your configuration settings are saved');
 
-        $lastModBefore = ctDecodedDerivatives()['d']['4xlarge']->last_mod_time;
+        $lastModBefore = ctDecodedDerivatives()['d']['4xlarge']
+            ->last_mod_time;
 
         // A real elapsed-time gap -- same rationale as the "resubmitting
         // identical derivative values" test above.
@@ -2136,7 +2259,12 @@ it('sizes tab: changing an already-enabled type\'s own dimensions bumps its last
         // -- exercising the "already enabled, size/crop genuinely
         // changed" branch, distinct from the enable/disable toggle test
         // above (which never changes an already-enabled type's own size).
-        $changedPayload = ctDerivativesPayload(['4xlarge' => ['w' => 3200, 'h' => 2400]]);
+        $changedPayload = ctDerivativesPayload([
+            '4xlarge' => [
+                'w' => 3200,
+                'h' => 2400,
+            ],
+        ]);
         unset($changedPayload['3xlarge']['enabled']);
 
         $token = H::pwgToken($page);
@@ -2149,8 +2277,10 @@ it('sizes tab: changing an already-enabled type\'s own dimensions bumps its last
         expect($changed['status'])->toBe(200);
         expect($changed['body'])->toContain('Your configuration settings are saved');
 
-        $lastModAfter = ctDecodedDerivatives()['d']['4xlarge']->last_mod_time;
-        expect($lastModAfter)->toBeGreaterThan($lastModBefore);
+        $lastModAfter = ctDecodedDerivatives()['d']['4xlarge']
+            ->last_mod_time;
+        expect($lastModAfter)
+            ->toBeGreaterThan($lastModBefore);
     } finally {
         H::restoreDerivativeConfig($snapshot);
     }
@@ -2207,8 +2337,10 @@ it('sizes tab: reconciles a min_size that drifted out of sync with an unchanged 
         expect($result['body'])->toContain('Your configuration settings are saved');
 
         $reconciled = ctDecodedDerivatives()['d']['small'];
-        expect($reconciled->last_mod_time)->toBeGreaterThan($seededLastMod);
-        expect($reconciled->sizing->min_size)->toBe([$idealW, $idealH]);
+        expect($reconciled->last_mod_time)
+            ->toBeGreaterThan($seededLastMod);
+        expect($reconciled->sizing->min_size)
+            ->toBe([$idealW, $idealH]);
     } finally {
         H::restoreDerivativeConfig($snapshot);
     }

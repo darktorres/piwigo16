@@ -7,40 +7,54 @@ use Piwigo\Feed\FeedHelper;
 test('datetimeToTs converts a datetime string to a Unix timestamp', function (): void {
     $helper = new FeedHelper();
 
-    expect($helper->datetimeToTs('2005-07-14 23:01:37'))->toBe(strtotime('2005-07-14 23:01:37'));
+    expect($helper->datetimeToTs('2005-07-14 23:01:37'))
+        ->toBe(strtotime('2005-07-14 23:01:37'));
 });
 
 test('datetimeToTs returns false for an unparseable string', function (): void {
     $helper = new FeedHelper();
 
-    expect($helper->datetimeToTs('not a date'))->toBeFalse();
+    expect($helper->datetimeToTs('not a date'))
+        ->toBeFalse();
 });
 
 test('ts8601 matches PHP\'s own ISO 8601 date() format', function (): void {
     $helper = new FeedHelper();
     $ts = 1_100_000_000;
 
-    expect($helper->ts8601($ts))->toBe(date('Y-m-d\\TH:i:sP', $ts));
+    expect($helper->ts8601($ts))
+        ->toBe(date('Y-m-d\\TH:i:sP', $ts));
 });
 
 test('generateRss2Feed escapes the channel title and link', function (): void {
     $helper = new FeedHelper();
 
     $feed = $helper->generateRss2Feed(
-        ['title' => 'My <Gallery>', 'link' => 'https://example.test/?a=1&b=2', 'encoding' => 'utf-8'],
+        [
+            'title' => 'My <Gallery>',
+            'link' => 'https://example.test/?a=1&b=2',
+            'encoding' => 'utf-8',
+        ],
         [],
     );
 
-    expect($feed)->toContain('<title>My &lt;Gallery&gt;</title>')
-        ->and($feed)->toContain('<link>https://example.test/?a=1&amp;b=2</link>')
-        ->and($feed)->toContain('encoding="utf-8"');
+    expect($feed)
+        ->toContain('<title>My &lt;Gallery&gt;</title>')
+        ->and($feed)
+        ->toContain('<link>https://example.test/?a=1&amp;b=2</link>')
+        ->and($feed)
+        ->toContain('encoding="utf-8"');
 });
 
 test('generateRss2Feed strips tags from the item title but escapes the description', function (): void {
     $helper = new FeedHelper();
 
     $feed = $helper->generateRss2Feed(
-        ['title' => 't', 'link' => 'l', 'encoding' => 'utf-8'],
+        [
+            'title' => 't',
+            'link' => 'l',
+            'encoding' => 'utf-8',
+        ],
         [[
             'title' => '<b>Bold</b> title',
             'link' => 'https://example.test/item',
@@ -51,15 +65,21 @@ test('generateRss2Feed strips tags from the item title but escapes the descripti
         ]],
     );
 
-    expect($feed)->toContain('<title>Bold title</title>')
-        ->and($feed)->toContain('<description>&lt;p&gt;hello&lt;/p&gt;</description>');
+    expect($feed)
+        ->toContain('<title>Bold title</title>')
+        ->and($feed)
+        ->toContain('<description>&lt;p&gt;hello&lt;/p&gt;</description>');
 });
 
 test('generateRss2Feed wraps the description in CDATA when html is true', function (): void {
     $helper = new FeedHelper();
 
     $feed = $helper->generateRss2Feed(
-        ['title' => 't', 'link' => 'l', 'encoding' => 'utf-8'],
+        [
+            'title' => 't',
+            'link' => 'l',
+            'encoding' => 'utf-8',
+        ],
         [[
             'title' => 'title',
             'link' => 'https://example.test/item',
@@ -70,14 +90,19 @@ test('generateRss2Feed wraps the description in CDATA when html is true', functi
         ]],
     );
 
-    expect($feed)->toContain('<description><![CDATA[<p>hello</p>]]></description>');
+    expect($feed)
+        ->toContain('<description><![CDATA[<p>hello</p>]]></description>');
 });
 
 test('generateRss2Feed falls back to the link for guid when guid is empty', function (): void {
     $helper = new FeedHelper();
 
     $feed = $helper->generateRss2Feed(
-        ['title' => 't', 'link' => 'l', 'encoding' => 'utf-8'],
+        [
+            'title' => 't',
+            'link' => 'l',
+            'encoding' => 'utf-8',
+        ],
         [[
             'title' => 'title',
             'link' => 'https://example.test/item',
@@ -88,14 +113,19 @@ test('generateRss2Feed falls back to the link for guid when guid is empty', func
         ]],
     );
 
-    expect($feed)->toContain('<guid isPermaLink="false">https://example.test/item</guid>');
+    expect($feed)
+        ->toContain('<guid isPermaLink="false">https://example.test/item</guid>');
 });
 
 test('generateRss2Feed omits author and pubDate when empty', function (): void {
     $helper = new FeedHelper();
 
     $feed = $helper->generateRss2Feed(
-        ['title' => 't', 'link' => 'l', 'encoding' => 'utf-8'],
+        [
+            'title' => 't',
+            'link' => 'l',
+            'encoding' => 'utf-8',
+        ],
         [[
             'title' => 'title',
             'link' => 'https://example.test/item',
@@ -107,8 +137,10 @@ test('generateRss2Feed omits author and pubDate when empty', function (): void {
         ]],
     );
 
-    expect($feed)->not->toContain('<author>')
-        ->and($feed)->not->toContain('<pubDate>');
+    expect($feed)
+        ->not->toContain('<author>')
+        ->and($feed)
+        ->not->toContain('<pubDate>');
 });
 
 test('generateRss2Feed produces the exact well-formed RSS document, byte for byte', function (): void {
@@ -127,7 +159,11 @@ test('generateRss2Feed produces the exact well-formed RSS document, byte for byt
     $helper = new FeedHelper();
 
     $feed = $helper->generateRss2Feed(
-        ['title' => 'My Gallery & Co', 'link' => 'https://example.test/?a=1&b=2', 'encoding' => 'utf-8'],
+        [
+            'title' => 'My Gallery & Co',
+            'link' => 'https://example.test/?a=1&b=2',
+            'encoding' => 'utf-8',
+        ],
         [[
             'title' => '<b>Bold</b> & Title',
             'link' => 'https://example.test/item?x=1&y=2',
@@ -140,17 +176,21 @@ test('generateRss2Feed produces the exact well-formed RSS document, byte for byt
     );
 
     $matched = preg_match('/<lastBuildDate>([^<]+)<\/lastBuildDate>/', $feed, $matches);
-    expect($matched)->toBe(1);
+    expect($matched)
+        ->toBe(1);
     assert(isset($matches[1]));
 
     $lastBuildDate = DateTimeImmutable::createFromFormat(\DATE_RFC2822, $matches[1]);
-    expect($lastBuildDate)->not->toBeFalse();
+    expect($lastBuildDate)
+        ->not->toBeFalse();
     assert($lastBuildDate instanceof DateTimeImmutable);
-    expect(abs($lastBuildDate->getTimestamp() - time()))->toBeLessThan(5);
+    expect(abs($lastBuildDate->getTimestamp() - time()))
+        ->toBeLessThan(5);
 
     $normalized = preg_replace('/<lastBuildDate>[^<]*<\/lastBuildDate>/', '<lastBuildDate>DATE</lastBuildDate>', $feed);
 
-    $pubDate = new DateTimeImmutable('2020-06-15T10:30:00+00:00')->format(\DATE_RFC2822);
+    $pubDate = new DateTimeImmutable('2020-06-15T10:30:00+00:00')
+        ->format(\DATE_RFC2822);
     $expected = '<?xml version="1.0" encoding="utf-8"?>' . "\n"
         . "<rss version=\"2.0\">\n"
         . "  <channel>\n"
@@ -169,7 +209,8 @@ test('generateRss2Feed produces the exact well-formed RSS document, byte for byt
         . "  </channel>\n"
         . "</rss>\n";
 
-    expect($normalized)->toBe($expected);
+    expect($normalized)
+        ->toBe($expected);
 });
 
 test('generateRss2Feed treats missing channel keys the same as empty strings', function (): void {
@@ -182,9 +223,12 @@ test('generateRss2Feed treats missing channel keys the same as empty strings', f
 
     $feed = $helper->generateRss2Feed([], []);
 
-    expect($feed)->toContain('encoding=""?>')
-        ->and($feed)->toContain("    <title></title>\n")
-        ->and($feed)->toContain("    <link></link>\n");
+    expect($feed)
+        ->toContain('encoding=""?>')
+        ->and($feed)
+        ->toContain("    <title></title>\n")
+        ->and($feed)
+        ->toContain("    <link></link>\n");
 });
 
 test('generateRss2Feed treats missing item keys the same as their defaults', function (): void {
@@ -195,24 +239,39 @@ test('generateRss2Feed treats missing item keys the same as their defaults', fun
     $helper = new FeedHelper();
 
     $feed = $helper->generateRss2Feed(
-        ['title' => 't', 'link' => 'l', 'encoding' => 'utf-8'],
+        [
+            'title' => 't',
+            'link' => 'l',
+            'encoding' => 'utf-8',
+        ],
         [[]],
     );
 
-    expect($feed)->toContain("      <title></title>\n")
-        ->and($feed)->toContain("      <link></link>\n")
-        ->and($feed)->toContain("      <description></description>\n")
-        ->and($feed)->not->toContain('<author>')
-        ->and($feed)->not->toContain('<pubDate>')
-        ->and($feed)->not->toContain('CDATA')
-        ->and($feed)->toContain('<guid isPermaLink="false"></guid>');
+    expect($feed)
+        ->toContain("      <title></title>\n")
+        ->and($feed)
+        ->toContain("      <link></link>\n")
+        ->and($feed)
+        ->toContain("      <description></description>\n")
+        ->and($feed)
+        ->not->toContain('<author>')
+        ->and($feed)
+        ->not->toContain('<pubDate>')
+        ->and($feed)
+        ->not->toContain('CDATA')
+        ->and($feed)
+        ->toContain('<guid isPermaLink="false"></guid>');
 });
 
 test('generateRss2Feed includes author and pubDate when set', function (): void {
     $helper = new FeedHelper();
 
     $feed = $helper->generateRss2Feed(
-        ['title' => 't', 'link' => 'l', 'encoding' => 'utf-8'],
+        [
+            'title' => 't',
+            'link' => 'l',
+            'encoding' => 'utf-8',
+        ],
         [[
             'title' => 'title',
             'link' => 'https://example.test/item',
@@ -224,6 +283,8 @@ test('generateRss2Feed includes author and pubDate when set', function (): void 
         ]],
     );
 
-    expect($feed)->toContain('<author>Jane</author>')
-        ->and($feed)->toContain('<pubDate>');
+    expect($feed)
+        ->toContain('<author>Jane</author>')
+        ->and($feed)
+        ->toContain('<pubDate>');
 });

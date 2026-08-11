@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Unit\Html;
 
-use Override;
-use RuntimeException;
 use LogicException;
+use Override;
 use Piwigo\Core\RedirectServiceInterface;
+use RuntimeException;
 
 /**
  * Captures redirectHttp()'s url argument then throws, matching

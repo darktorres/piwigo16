@@ -43,30 +43,54 @@ function baseImageArgs(): array
 test('constructs with distinct values for every property', function (): void {
     $image = new ImageEntity(...baseImageArgs());
 
-    expect($image->id)->toBeNull()
-        ->and($image->file)->toBe('sunset-beach.jpg')
-        ->and($image->dateAvailable)->toEqual(SqlDateTime::from('2026-07-20 09:15:00'))
-        ->and($image->dateCreation)->toEqual(SqlDateTime::from('2026-07-18 16:42:30'))
-        ->and($image->name)->toBe('Sunset at the beach')
-        ->and($image->comment)->toBe('Golden hour shot from the pier')
-        ->and($image->author)->toBe('jane.doe')
-        ->and($image->hit)->toBe(154)
-        ->and($image->filesize)->toBe(2048576)
-        ->and($image->width)->toBe(1920)
-        ->and($image->height)->toBe(1080)
-        ->and($image->coi)->toBe('TLBR')
-        ->and($image->representativeExt)->toBe('webp')
-        ->and($image->dateMetadataUpdate)->toBe('2026-07-19')
-        ->and($image->ratingScore)->toBe(4.75)
-        ->and($image->path)->toBe('galleries/2026/07/sunset-beach.jpg')
-        ->and($image->storageCategoryId)->toEqual(CategoryId::from(9))
-        ->and($image->level)->toBe(2)
-        ->and($image->md5sum)->toEqual(Md5Sum::from('9e107d9d372bb6826bd81d3542a419d6'))
-        ->and($image->addedBy)->toEqual(UserId::from(11))
-        ->and($image->rotation)->toBe(3)
-        ->and($image->latitude)->toBe(43.2965)
-        ->and($image->longitude)->toBe(5.3698)
-        ->and($image->lastmodified)->toEqual(SqlDateTime::from('2026-07-26 08:00:00'));
+    expect($image->id)
+        ->toBeNull()
+        ->and($image->file)
+        ->toBe('sunset-beach.jpg')
+        ->and($image->dateAvailable)
+        ->toEqual(SqlDateTime::from('2026-07-20 09:15:00'))
+        ->and($image->dateCreation)
+        ->toEqual(SqlDateTime::from('2026-07-18 16:42:30'))
+        ->and($image->name)
+        ->toBe('Sunset at the beach')
+        ->and($image->comment)
+        ->toBe('Golden hour shot from the pier')
+        ->and($image->author)
+        ->toBe('jane.doe')
+        ->and($image->hit)
+        ->toBe(154)
+        ->and($image->filesize)
+        ->toBe(2048576)
+        ->and($image->width)
+        ->toBe(1920)
+        ->and($image->height)
+        ->toBe(1080)
+        ->and($image->coi)
+        ->toBe('TLBR')
+        ->and($image->representativeExt)
+        ->toBe('webp')
+        ->and($image->dateMetadataUpdate)
+        ->toBe('2026-07-19')
+        ->and($image->ratingScore)
+        ->toBe(4.75)
+        ->and($image->path)
+        ->toBe('galleries/2026/07/sunset-beach.jpg')
+        ->and($image->storageCategoryId)
+        ->toEqual(CategoryId::from(9))
+        ->and($image->level)
+        ->toBe(2)
+        ->and($image->md5sum)
+        ->toEqual(Md5Sum::from('9e107d9d372bb6826bd81d3542a419d6'))
+        ->and($image->addedBy)
+        ->toEqual(UserId::from(11))
+        ->and($image->rotation)
+        ->toBe(3)
+        ->and($image->latitude)
+        ->toBe(43.2965)
+        ->and($image->longitude)
+        ->toBe(5.3698)
+        ->and($image->lastmodified)
+        ->toEqual(SqlDateTime::from('2026-07-26 08:00:00'));
 });
 
 test('id is never assignable through the constructor, always starts null', function (): void {
@@ -74,7 +98,8 @@ test('id is never assignable through the constructor, always starts null', funct
 
     // $id is declared outside the constructor (Doctrine's GeneratedValue PK) --
     // only the ORM's reflection-based hydration ever fills it in.
-    expect($image->id)->toBeNull();
+    expect($image->id)
+        ->toBeNull();
 });
 
 test('constructs with dateAvailable null', function (): void {
@@ -83,7 +108,8 @@ test('constructs with dateAvailable null', function (): void {
 
     $image = new ImageEntity(...$args);
 
-    expect($image->dateAvailable)->toBeNull();
+    expect($image->dateAvailable)
+        ->toBeNull();
 });
 
 test('constructs with dateCreation null', function (): void {
@@ -92,7 +118,8 @@ test('constructs with dateCreation null', function (): void {
 
     $image = new ImageEntity(...$args);
 
-    expect($image->dateCreation)->toBeNull();
+    expect($image->dateCreation)
+        ->toBeNull();
 });
 
 test('constructs with name null', function (): void {
@@ -101,7 +128,8 @@ test('constructs with name null', function (): void {
 
     $image = new ImageEntity(...$args);
 
-    expect($image->name)->toBeNull();
+    expect($image->name)
+        ->toBeNull();
 });
 
 test('constructs with comment null', function (): void {
@@ -110,7 +138,8 @@ test('constructs with comment null', function (): void {
 
     $image = new ImageEntity(...$args);
 
-    expect($image->comment)->toBeNull();
+    expect($image->comment)
+        ->toBeNull();
 });
 
 test('constructs with author null', function (): void {
@@ -119,7 +148,8 @@ test('constructs with author null', function (): void {
 
     $image = new ImageEntity(...$args);
 
-    expect($image->author)->toBeNull();
+    expect($image->author)
+        ->toBeNull();
 });
 
 test('constructs with filesize null', function (): void {
@@ -128,7 +158,8 @@ test('constructs with filesize null', function (): void {
 
     $image = new ImageEntity(...$args);
 
-    expect($image->filesize)->toBeNull();
+    expect($image->filesize)
+        ->toBeNull();
 });
 
 test('constructs with width null', function (): void {
@@ -137,7 +168,8 @@ test('constructs with width null', function (): void {
 
     $image = new ImageEntity(...$args);
 
-    expect($image->width)->toBeNull();
+    expect($image->width)
+        ->toBeNull();
 });
 
 test('constructs with height null', function (): void {
@@ -146,7 +178,8 @@ test('constructs with height null', function (): void {
 
     $image = new ImageEntity(...$args);
 
-    expect($image->height)->toBeNull();
+    expect($image->height)
+        ->toBeNull();
 });
 
 test('constructs with coi null', function (): void {
@@ -155,7 +188,8 @@ test('constructs with coi null', function (): void {
 
     $image = new ImageEntity(...$args);
 
-    expect($image->coi)->toBeNull();
+    expect($image->coi)
+        ->toBeNull();
 });
 
 test('constructs with representativeExt null', function (): void {
@@ -164,7 +198,8 @@ test('constructs with representativeExt null', function (): void {
 
     $image = new ImageEntity(...$args);
 
-    expect($image->representativeExt)->toBeNull();
+    expect($image->representativeExt)
+        ->toBeNull();
 });
 
 test('constructs with dateMetadataUpdate null', function (): void {
@@ -173,7 +208,8 @@ test('constructs with dateMetadataUpdate null', function (): void {
 
     $image = new ImageEntity(...$args);
 
-    expect($image->dateMetadataUpdate)->toBeNull();
+    expect($image->dateMetadataUpdate)
+        ->toBeNull();
 });
 
 test('constructs with ratingScore null', function (): void {
@@ -182,7 +218,8 @@ test('constructs with ratingScore null', function (): void {
 
     $image = new ImageEntity(...$args);
 
-    expect($image->ratingScore)->toBeNull();
+    expect($image->ratingScore)
+        ->toBeNull();
 });
 
 test('constructs with storageCategoryId null', function (): void {
@@ -191,7 +228,8 @@ test('constructs with storageCategoryId null', function (): void {
 
     $image = new ImageEntity(...$args);
 
-    expect($image->storageCategoryId)->toBeNull();
+    expect($image->storageCategoryId)
+        ->toBeNull();
 });
 
 test('constructs with md5sum null', function (): void {
@@ -200,7 +238,8 @@ test('constructs with md5sum null', function (): void {
 
     $image = new ImageEntity(...$args);
 
-    expect($image->md5sum)->toBeNull();
+    expect($image->md5sum)
+        ->toBeNull();
 });
 
 test('constructs with addedBy null', function (): void {
@@ -209,7 +248,8 @@ test('constructs with addedBy null', function (): void {
 
     $image = new ImageEntity(...$args);
 
-    expect($image->addedBy)->toBeNull();
+    expect($image->addedBy)
+        ->toBeNull();
 });
 
 test('constructs with rotation null', function (): void {
@@ -218,7 +258,8 @@ test('constructs with rotation null', function (): void {
 
     $image = new ImageEntity(...$args);
 
-    expect($image->rotation)->toBeNull();
+    expect($image->rotation)
+        ->toBeNull();
 });
 
 test('constructs with latitude null', function (): void {
@@ -227,7 +268,8 @@ test('constructs with latitude null', function (): void {
 
     $image = new ImageEntity(...$args);
 
-    expect($image->latitude)->toBeNull();
+    expect($image->latitude)
+        ->toBeNull();
 });
 
 test('constructs with longitude null', function (): void {
@@ -236,5 +278,6 @@ test('constructs with longitude null', function (): void {
 
     $image = new ImageEntity(...$args);
 
-    expect($image->longitude)->toBeNull();
+    expect($image->longitude)
+        ->toBeNull();
 });

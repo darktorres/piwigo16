@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Integration;
 
-use Override;
-use Piwigo\Db\EntityManagerFactory;
 use Doctrine\DBAL\Connection;
+use Override;
 use Piwigo\Db\DbConnection;
+use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Permission\SqlCondition;
 use Piwigo\Section\SectionRepository;
 
@@ -46,7 +46,7 @@ final class SectionRepositoryTest extends IntegrationTestCase
         $this->repo = new SectionRepository(EntityManagerFactory::build($this->conn));
     }
 
-    public function test_escape_token_escapes_a_value_without_surrounding_quotes(): void
+    public function testEscapeTokenEscapesAValueWithoutSurroundingQuotes(): void
     {
         $escaped = $this->repo->escapeToken("o'brien");
 
@@ -60,50 +60,50 @@ final class SectionRepositoryTest extends IntegrationTestCase
         self::assertStringEndsNotWith("'", $escaped);
     }
 
-    public function test_escape_token_leaves_a_plain_value_unchanged(): void
+    public function testEscapeTokenLeavesAPlainValueUnchanged(): void
     {
         self::assertSame('plain-value', $this->repo->escapeToken('plain-value'));
     }
 
-    public function test_find_visible_subcategory_ids_returns_direct_subcategories(): void
+    public function testFindVisibleSubcategoryIdsReturnsDirectSubcategories(): void
     {
         $ids = $this->repo->findVisibleSubcategoryIds('1', new SqlCondition(''));
 
         self::assertSame(['2'], $ids);
     }
 
-    public function test_find_visible_subcategory_ids_returns_empty_for_a_leaf_category(): void
+    public function testFindVisibleSubcategoryIdsReturnsEmptyForALeafCategory(): void
     {
         self::assertSame([], $this->repo->findVisibleSubcategoryIds('1,2', new SqlCondition('')));
     }
 
-    public function test_find_top_rated_image_ids_returns_ids_ordered_by_rating_desc(): void
+    public function testFindTopRatedImageIdsReturnsIdsOrderedByRatingDesc(): void
     {
         $ids = $this->repo->findTopRatedImageIds(new SqlCondition(''), 3);
 
         self::assertSame(['3', '1', '2'], $ids);
     }
 
-    public function test_find_top_rated_image_ids_respects_the_limit(): void
+    public function testFindTopRatedImageIdsRespectsTheLimit(): void
     {
         self::assertSame(['3'], $this->repo->findTopRatedImageIds(new SqlCondition(''), 1));
     }
 
-    public function test_find_top_by_hits_image_ids_returns_ids_ordered_by_hit_desc(): void
+    public function testFindTopByHitsImageIdsReturnsIdsOrderedByHitDesc(): void
     {
-        $this->conn->executeStatement('UPDATE ' . 'images' . ' SET hit = 5 WHERE id = 2');
-        $this->conn->executeStatement('UPDATE ' . 'images' . ' SET hit = 10 WHERE id = 4');
+        $this->conn->executeStatement('UPDATE images SET hit = 5 WHERE id = 2');
+        $this->conn->executeStatement('UPDATE images SET hit = 10 WHERE id = 4');
 
         try {
             $ids = $this->repo->findTopByHitsImageIds(new SqlCondition(''), 5);
 
             self::assertSame(['4', '2'], $ids);
         } finally {
-            $this->conn->executeStatement('UPDATE ' . 'images' . ' SET hit = 0 WHERE id IN (2, 4)');
+            $this->conn->executeStatement('UPDATE images SET hit = 0 WHERE id IN (2, 4)');
         }
     }
 
-    public function test_find_top_by_hits_image_ids_returns_empty_when_no_image_has_a_hit(): void
+    public function testFindTopByHitsImageIdsReturnsEmptyWhenNoImageHasAHit(): void
     {
         self::assertSame([], $this->repo->findTopByHitsImageIds(new SqlCondition(''), 5));
     }

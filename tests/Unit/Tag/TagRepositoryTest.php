@@ -175,9 +175,12 @@ test('findAllTags() returns every fixture tag', function (): void {
     // a real 'natures' tag).
     $names = array_column(tagTestRepo()->findAllTags(), 'name');
 
-    expect($names)->toContain('family')
-        ->and($names)->toContain('nature')
-        ->and($names)->toContain('travel');
+    expect($names)
+        ->toContain('family')
+        ->and($names)
+        ->toContain('nature')
+        ->and($names)
+        ->toContain('travel');
 });
 
 test('findByIdsUrlNamesOrNames() returns empty for no criteria', function (): void {
@@ -185,45 +188,57 @@ test('findByIdsUrlNamesOrNames() returns empty for no criteria', function (): vo
 });
 
 test('findByIdsUrlNamesOrNames() matches by id', function (): void {
-    $rows = tagTestRepo()->findByIdsUrlNamesOrNames([1], [], []);
+    $rows = tagTestRepo()
+        ->findByIdsUrlNamesOrNames([1], [], []);
 
-    expect($rows)->toHaveCount(1)
+    expect($rows)
+        ->toHaveCount(1)
         ->and($rows[0]->name)->toBe('nature');
 });
 
 test('findByIdsUrlNamesOrNames() matches by url_name', function (): void {
-    $rows = tagTestRepo()->findByIdsUrlNamesOrNames([], ['travel'], []);
+    $rows = tagTestRepo()
+        ->findByIdsUrlNamesOrNames([], ['travel'], []);
 
-    expect($rows)->toHaveCount(1)
+    expect($rows)
+        ->toHaveCount(1)
         ->and($rows[0]->name)->toBe('travel');
 });
 
 test('findByIdsUrlNamesOrNames() matches by name', function (): void {
-    $rows = tagTestRepo()->findByIdsUrlNamesOrNames([], [], ['family']);
+    $rows = tagTestRepo()
+        ->findByIdsUrlNamesOrNames([], [], ['family']);
 
-    expect($rows)->toHaveCount(1)
+    expect($rows)
+        ->toHaveCount(1)
         ->and($rows[0]->name)->toBe('family');
 });
 
 test('findByIdsUrlNamesOrNames() combines criteria with OR', function (): void {
-    $rows = tagTestRepo()->findByIdsUrlNamesOrNames([1], ['travel'], []);
+    $rows = tagTestRepo()
+        ->findByIdsUrlNamesOrNames([1], ['travel'], []);
 
     $names = array_column($rows, 'name');
     sort($names);
-    expect($names)->toBe(['nature', 'travel']);
+    expect($names)
+        ->toBe(['nature', 'travel']);
 });
 
 test('findByIdsUrlNamesOrNames() accepts numeric string ids', function (): void {
-    $rows = tagTestRepo()->findByIdsUrlNamesOrNames(['2'], [], []);
+    $rows = tagTestRepo()
+        ->findByIdsUrlNamesOrNames(['2'], [], []);
 
-    expect($rows)->toHaveCount(1)
+    expect($rows)
+        ->toHaveCount(1)
         ->and($rows[0]->name)->toBe('travel');
 });
 
 test('findByIdsOrAll() filters to the given ids when under the 1000-id threshold', function (): void {
-    $rows = tagTestRepo()->findByIdsOrAll([TagId::from(1)]);
+    $rows = tagTestRepo()
+        ->findByIdsOrAll([TagId::from(1)]);
 
-    expect($rows)->toHaveCount(1)
+    expect($rows)
+        ->toHaveCount(1)
         ->and($rows[0]->name)->toBe('nature');
 });
 
@@ -248,9 +263,12 @@ test('findByIdsOrAll() falls back to every tag at exactly the 1000-id threshold'
 
     $names = array_column(tagTestRepo()->findByIdsOrAll($ids), 'name');
 
-    expect($names)->toContain('family')
-        ->and($names)->toContain('nature')
-        ->and($names)->toContain('travel');
+    expect($names)
+        ->toContain('family')
+        ->and($names)
+        ->toContain('nature')
+        ->and($names)
+        ->toContain('travel');
 });
 
 test('findTagIdsByImageIds() returns empty for no ids', function (): void {
@@ -258,7 +276,8 @@ test('findTagIdsByImageIds() returns empty for no ids', function (): void {
 });
 
 test('findTagIdsByImageIds() matches the fixture', function (): void {
-    $rows = tagTestRepo()->findTagIdsByImageIds([1, 2]);
+    $rows = tagTestRepo()
+        ->findTagIdsByImageIds([1, 2]);
 
     $pairs = array_map(
         static fn (ImageTagLink $row): string => $row->imageId . ':' . $row->tagId->value,
@@ -266,7 +285,8 @@ test('findTagIdsByImageIds() matches the fixture', function (): void {
     );
     sort($pairs);
 
-    expect($pairs)->toBe(['1:1', '1:2', '1:3', '2:1']);
+    expect($pairs)
+        ->toBe(['1:1', '1:2', '1:3', '2:1']);
 });
 
 test('findImageIdsForTagIds() returns empty for no ids', function (): void {
@@ -274,15 +294,20 @@ test('findImageIdsForTagIds() returns empty for no ids', function (): void {
 });
 
 test('findImageIdsForTagIds() matches the fixture', function (): void {
-    $ids = tagTestRepo()->findImageIdsForTagIds([TagId::from(1)]);
+    $ids = tagTestRepo()
+        ->findImageIdsForTagIds([TagId::from(1)]);
     sort($ids);
 
-    expect($ids)->toBe([1, 2, 3]);
+    expect($ids)
+        ->toBe([1, 2, 3]);
 });
 
 test('deleteImageTagByTagIds() is a no-op for no ids', function (): void {
     $conn = DbConnection::build();
-    $conn->insert('image_tag', ['image_id' => 4, 'tag_id' => 3]);
+    $conn->insert('image_tag', [
+        'image_id' => 4,
+        'tag_id' => 3,
+    ]);
 
     try {
         tagTestRepo()->deleteImageTagByTagIds([]);
@@ -292,18 +317,29 @@ test('deleteImageTagByTagIds() is a no-op for no ids', function (): void {
         // carries no ORDER BY (order is not part of its contract -- both
         // real callers in TagService just treat the result as a set), so
         // sort before comparing, same idiom as the sibling test above.
-        $imageIds = tagTestRepo()->findImageIdsForTagIds([TagId::from(3)]);
+        $imageIds = tagTestRepo()
+            ->findImageIdsForTagIds([TagId::from(3)]);
         sort($imageIds);
-        expect($imageIds)->toBe([1, 4]);
+        expect($imageIds)
+            ->toBe([1, 4]);
     } finally {
-        $conn->delete('image_tag', ['image_id' => 4, 'tag_id' => 3]);
+        $conn->delete('image_tag', [
+            'image_id' => 4,
+            'tag_id' => 3,
+        ]);
     }
 });
 
 test('deleteImageTagByTagIds() removes every link to that tag', function (): void {
     $conn = DbConnection::build();
-    $conn->insert('image_tag', ['image_id' => 4, 'tag_id' => 3]);
-    $conn->insert('image_tag', ['image_id' => 5, 'tag_id' => 3]);
+    $conn->insert('image_tag', [
+        'image_id' => 4,
+        'tag_id' => 3,
+    ]);
+    $conn->insert('image_tag', [
+        'image_id' => 5,
+        'tag_id' => 3,
+    ]);
 
     try {
         tagTestRepo()->deleteImageTagByTagIds([TagId::from(3)]);
@@ -314,13 +350,19 @@ test('deleteImageTagByTagIds() removes every link to that tag', function (): voi
         expect(tagTestRepo()->findImageIdsForTagIds([TagId::from(3)]))->toBe([]);
     } finally {
         // restore the fixture's own image1<->tag3 link for later tests
-        $conn->insert('image_tag', ['image_id' => 1, 'tag_id' => 3]);
+        $conn->insert('image_tag', [
+            'image_id' => 1,
+            'tag_id' => 3,
+        ]);
     }
 });
 
 test('deleteImageTagByImageIds() is a no-op for no ids', function (): void {
     $conn = DbConnection::build();
-    $conn->insert('image_tag', ['image_id' => 5, 'tag_id' => 2]);
+    $conn->insert('image_tag', [
+        'image_id' => 5,
+        'tag_id' => 2,
+    ]);
 
     try {
         tagTestRepo()->deleteImageTagByImageIds([]);
@@ -329,43 +371,65 @@ test('deleteImageTagByImageIds() is a no-op for no ids', function (): void {
         // survive this no-op call.
         expect(tagTestRepo()->findImageIdsForTagIds([TagId::from(2)]))->toBe([1, 5]);
     } finally {
-        $conn->delete('image_tag', ['image_id' => 5, 'tag_id' => 2]);
+        $conn->delete('image_tag', [
+            'image_id' => 5,
+            'tag_id' => 2,
+        ]);
     }
 });
 
 test('deleteImageTagByImageIds() removes every link from that image', function (): void {
     $conn = DbConnection::build();
-    $conn->insert('image_tag', ['image_id' => 5, 'tag_id' => 2]);
-    $conn->insert('image_tag', ['image_id' => 5, 'tag_id' => 3]);
+    $conn->insert('image_tag', [
+        'image_id' => 5,
+        'tag_id' => 2,
+    ]);
+    $conn->insert('image_tag', [
+        'image_id' => 5,
+        'tag_id' => 3,
+    ]);
 
-    tagTestRepo()->deleteImageTagByImageIds([5]);
+    tagTestRepo()
+        ->deleteImageTagByImageIds([5]);
 
     expect(tagTestRepo()->findTagIdsByImageIds([5]))->toBe([]);
 });
 
 test('deleteImageTagByImageAndTagIds() is a no-op for empty image ids', function (): void {
     $conn = DbConnection::build();
-    $conn->insert('image_tag', ['image_id' => 4, 'tag_id' => 3]);
+    $conn->insert('image_tag', [
+        'image_id' => 4,
+        'tag_id' => 3,
+    ]);
 
     try {
         tagTestRepo()->deleteImageTagByImageAndTagIds([], [TagId::from(3)]);
 
         expect(tagTestRepo()->findImageIdsForTagIds([TagId::from(3)]))->toBe([1, 4]);
     } finally {
-        $conn->delete('image_tag', ['image_id' => 4, 'tag_id' => 3]);
+        $conn->delete('image_tag', [
+            'image_id' => 4,
+            'tag_id' => 3,
+        ]);
     }
 });
 
 test('deleteImageTagByImageAndTagIds() is a no-op for empty tag ids', function (): void {
     $conn = DbConnection::build();
-    $conn->insert('image_tag', ['image_id' => 4, 'tag_id' => 3]);
+    $conn->insert('image_tag', [
+        'image_id' => 4,
+        'tag_id' => 3,
+    ]);
 
     try {
         tagTestRepo()->deleteImageTagByImageAndTagIds([4], []);
 
         expect(tagTestRepo()->findImageIdsForTagIds([TagId::from(3)]))->toBe([1, 4]);
     } finally {
-        $conn->delete('image_tag', ['image_id' => 4, 'tag_id' => 3]);
+        $conn->delete('image_tag', [
+            'image_id' => 4,
+            'tag_id' => 3,
+        ]);
     }
 });
 
@@ -374,8 +438,14 @@ test('deleteImageTagByImageAndTagIds() removes only the intersection', function 
     // (the requested image/tag intersection) should be removed -- the
     // (image 4, tag 2) link must survive untouched.
     $conn = DbConnection::build();
-    $conn->insert('image_tag', ['image_id' => 4, 'tag_id' => 2]);
-    $conn->insert('image_tag', ['image_id' => 4, 'tag_id' => 3]);
+    $conn->insert('image_tag', [
+        'image_id' => 4,
+        'tag_id' => 2,
+    ]);
+    $conn->insert('image_tag', [
+        'image_id' => 4,
+        'tag_id' => 3,
+    ]);
 
     try {
         tagTestRepo()->deleteImageTagByImageAndTagIds([4], [TagId::from(3)]);
@@ -384,18 +454,24 @@ test('deleteImageTagByImageAndTagIds() removes only the intersection', function 
         // survives alongside the (image 4, tag 2) one this test added.
         expect(tagTestRepo()->findImageIdsForTagIds([TagId::from(2)]))->toBe([1, 4]);
 
-        $remaining = tagTestRepo()->findTagIdsByImageIds([4]);
-        expect($remaining)->toHaveCount(1)
+        $remaining = tagTestRepo()
+            ->findTagIdsByImageIds([4]);
+        expect($remaining)
+            ->toHaveCount(1)
             ->and($remaining[0]->tagId->value)->toBe(2);
     } finally {
-        $conn->delete('image_tag', ['image_id' => 4, 'tag_id' => 2]);
+        $conn->delete('image_tag', [
+            'image_id' => 4,
+            'tag_id' => 2,
+        ]);
     }
 });
 
 test('deleteByIds() is a no-op for no ids', function (): void {
     tagTestRepo()->deleteByIds([]);
 
-    expect(tagTestRepo()->findIdByName('nature'))->not->toBeNull();
+    expect(tagTestRepo()->findIdByName('nature'))
+        ->not->toBeNull();
 });
 
 test('deleteByIds() removes the disposable tag', function (): void {
@@ -404,14 +480,16 @@ test('deleteByIds() removes the disposable tag', function (): void {
 
     $repo->deleteByIds([$id]);
 
-    expect($repo->findIdByName('nature'))->not->toBeNull();
+    expect($repo->findIdByName('nature'))
+        ->not->toBeNull();
 });
 
 test('deleteByIds() clears the identity map, so a later find() sees the real deletion instead of a stale cached entity', function (): void {
     [$repo, $em] = tagTestRepoWithEm();
     $id = $repo->insert(tagTestName(), tagTestName());
     $tracked = $em->find(TagEntity::class, $id);
-    expect($tracked)->not->toBeNull();
+    expect($tracked)
+        ->not->toBeNull();
 
     $repo->deleteByIds([$id]);
 
@@ -419,33 +497,42 @@ test('deleteByIds() clears the identity map, so a later find() sees the real del
 });
 
 test('findIdByNameLikeAnyPattern() matches an exact pattern', function (): void {
-    $id = tagTestRepo()->findIdByNameLikeAnyPattern(['nature']);
+    $id = tagTestRepo()
+        ->findIdByNameLikeAnyPattern(['nature']);
 
-    expect($id)->not->toBeNull();
+    expect($id)
+        ->not->toBeNull();
     if ($id === null) {
         throw new RuntimeException('unreachable');
     }
-    expect($id->value)->toBe(1);
+    expect($id->value)
+        ->toBe(1);
 });
 
 test('findIdByNameLikeAnyPattern() matches a wildcard pattern', function (): void {
-    $id = tagTestRepo()->findIdByNameLikeAnyPattern(['nat%']);
+    $id = tagTestRepo()
+        ->findIdByNameLikeAnyPattern(['nat%']);
 
-    expect($id)->not->toBeNull();
+    expect($id)
+        ->not->toBeNull();
     if ($id === null) {
         throw new RuntimeException('unreachable');
     }
-    expect($id->value)->toBe(1);
+    expect($id->value)
+        ->toBe(1);
 });
 
 test('findIdByNameLikeAnyPattern() tries every pattern until one matches', function (): void {
-    $id = tagTestRepo()->findIdByNameLikeAnyPattern(['no-such-tag', 'trav%']);
+    $id = tagTestRepo()
+        ->findIdByNameLikeAnyPattern(['no-such-tag', 'trav%']);
 
-    expect($id)->not->toBeNull();
+    expect($id)
+        ->not->toBeNull();
     if ($id === null) {
         throw new RuntimeException('unreachable');
     }
-    expect($id->value)->toBe(2);
+    expect($id->value)
+        ->toBe(2);
 });
 
 test('findIdByNameLikeAnyPattern() returns null for no match', function (): void {
@@ -473,11 +560,13 @@ test('updateNameAndUrlName() renames an existing tag', function (): void {
         $repo->updateNameAndUrlName($id, $newName, $newName . '-url');
 
         $renamedId = $repo->findIdByName($newName);
-        expect($renamedId)->not->toBeNull();
+        expect($renamedId)
+            ->not->toBeNull();
         if ($renamedId === null) {
             throw new RuntimeException('unreachable');
         }
-        expect($renamedId->value)->toBe($id->value);
+        expect($renamedId->value)
+            ->toBe($id->value);
     } finally {
         $repo->deleteByIds([$id]);
     }
@@ -485,9 +574,11 @@ test('updateNameAndUrlName() renames an existing tag', function (): void {
 
 test('updateNameAndUrlName() is a silent no-op for a nonexistent id', function (): void {
     $name = tagTestName();
-    tagTestRepo()->updateNameAndUrlName(TagId::from(999999), $name, $name);
+    tagTestRepo()
+        ->updateNameAndUrlName(TagId::from(999999), $name, $name);
 
-    expect(tagTestRepo()->findIdByName($name))->toBeNull();
+    expect(tagTestRepo()->findIdByName($name))
+        ->toBeNull();
 });
 
 test('countImagesPerTagUnrestricted() counts every image_tag link regardless of permissions', function (): void {
@@ -499,8 +590,14 @@ test('countImagesPerTagUnrestricted() counts every image_tag link regardless of 
     $repo = tagTestRepo();
     $tagId = $repo->insert(tagTestName(), tagTestName());
     $repo->massInsertImageTags([
-        ['image_id' => 4, 'tag_id' => $tagId->value],
-        ['image_id' => 5, 'tag_id' => $tagId->value],
+        [
+            'image_id' => 4,
+            'tag_id' => $tagId->value,
+        ],
+        [
+            'image_id' => 5,
+            'tag_id' => $tagId->value,
+        ],
     ]);
 
     try {
@@ -508,7 +605,7 @@ test('countImagesPerTagUnrestricted() counts every image_tag link regardless of 
 
         expect($counters[$tagId->value] ?? null)->toBe(2);
     } finally {
-        DbConnection::build()->executeStatement('DELETE FROM ' . 'image_tag' . ' WHERE tag_id = ?', [$tagId->value]);
+        DbConnection::build()->executeStatement('DELETE FROM image_tag WHERE tag_id = ?', [$tagId->value]);
         $repo->deleteByIds([$tagId]);
     }
 });
@@ -519,37 +616,52 @@ test('massInsertImageTags() with ignore=true silently skips a duplicate, unlike 
     // own docblock (Ws\PwgTags::merge()'s real "already tagged" collision
     // case), not just that the default (no 'ignore' key at all) still
     // throws.
-    expect(fn () => tagTestRepo()->massInsertImageTags([['image_id' => 1, 'tag_id' => 1]]))
+    expect(fn () => tagTestRepo()->massInsertImageTags([[
+        'image_id' => 1,
+        'tag_id' => 1,
+    ]]))
         ->toThrow(UniqueConstraintViolationException::class);
 
-    tagTestRepo()->massInsertImageTags([['image_id' => 1, 'tag_id' => 1]], ignore: true);
+    tagTestRepo()
+        ->massInsertImageTags([[
+            'image_id' => 1,
+            'tag_id' => 1,
+        ]], ignore: true);
 });
 
 test('massInsertImageTags() clears the identity map, so a later find() sees the real insert instead of a stale cached null', function (): void {
     [$repo, $em] = tagTestRepoWithEm();
     $tagId = $repo->insert(tagTestName(), tagTestName());
-    $key = ['imageId' => ImageId::from(4), 'tagId' => $tagId];
+    $key = [
+        'imageId' => ImageId::from(4),
+        'tagId' => $tagId,
+    ];
 
     try {
         expect($em->find(ImageTagEntity::class, $key))->toBeNull();
 
         $repo->massInsertImageTags([
-            ['image_id' => 4, 'tag_id' => $tagId->value],
+            [
+                'image_id' => 4,
+                'tag_id' => $tagId->value,
+            ],
         ]);
 
         expect($em->find(ImageTagEntity::class, $key))->not->toBeNull();
     } finally {
-        DbConnection::build()->executeStatement('DELETE FROM ' . 'image_tag' . ' WHERE tag_id = ?', [$tagId->value]);
+        DbConnection::build()->executeStatement('DELETE FROM image_tag WHERE tag_id = ?', [$tagId->value]);
         $repo->deleteByIds([$tagId]);
     }
 });
 
 test('findCommaJoinedTagIdsByImageIds() groups by image', function (): void {
-    $byImageId = tagTestRepo()->findCommaJoinedTagIdsByImageIds([1, 2, 3], [1, 2, 3]);
+    $byImageId = tagTestRepo()
+        ->findCommaJoinedTagIdsByImageIds([1, 2, 3], [1, 2, 3]);
 
     $tagIdsForImage1 = array_map('intval', explode(',', $byImageId[1] ?? ''));
     sort($tagIdsForImage1);
-    expect($tagIdsForImage1)->toBe([1, 2, 3])
+    expect($tagIdsForImage1)
+        ->toBe([1, 2, 3])
         ->and($byImageId[2] ?? null)->toBe('1')
         ->and($byImageId[3] ?? null)->toBe('1');
 });
@@ -571,7 +683,8 @@ test('countExistingIds() returns zero for an empty input', function (): void {
 });
 
 test('countImagesPerTag() counts distinct images per tag', function (): void {
-    $counters = tagTestRepo()->countImagesPerTag([], tagTestNoPermissionRestriction());
+    $counters = tagTestRepo()
+        ->countImagesPerTag([], tagTestNoPermissionRestriction());
 
     expect($counters[1] ?? null)->toBe(3)
         ->and($counters[2] ?? null)->toBe(1)
@@ -579,7 +692,9 @@ test('countImagesPerTag() counts distinct images per tag', function (): void {
 });
 
 test('countImagesPerTag() filters by the given tag ids', function (): void {
-    expect(tagTestRepo()->countImagesPerTag([1], tagTestNoPermissionRestriction()))->toBe([1 => 3]);
+    expect(tagTestRepo()->countImagesPerTag([1], tagTestNoPermissionRestriction()))->toBe([
+        1 => 3,
+    ]);
 });
 
 test('countImagesPerTag() applies the given condition', function (): void {
@@ -589,7 +704,8 @@ test('countImagesPerTag() applies the given condition', function (): void {
 test('findCommonTags() returns tags used by the given images with counts', function (): void {
     // $itemsCsv/$excludedTagIdsCsv are bound as query parameters, not
     // spliced into the SQL.
-    $rows = tagTestRepo()->findCommonTags([1, 2, 3], 10, []);
+    $rows = tagTestRepo()
+        ->findCommonTags([1, 2, 3], 10, []);
 
     $byId = array_column($rows, 'counter', 'id');
     expect($byId[1] ?? null)->toBe(3)
@@ -598,9 +714,11 @@ test('findCommonTags() returns tags used by the given images with counts', funct
 });
 
 test('findCommonTags() orders by counter descending and respects max tags', function (): void {
-    $rows = tagTestRepo()->findCommonTags([1, 2, 3], 1, []);
+    $rows = tagTestRepo()
+        ->findCommonTags([1, 2, 3], 1, []);
 
-    expect($rows)->toHaveCount(1)
+    expect($rows)
+        ->toHaveCount(1)
         ->and($rows[0]['id'])->toBe(1)
         ->and($rows[0]['name'])->toBe('nature')
         ->and($rows[0]['url_name'])->toBe('nature')
@@ -611,7 +729,8 @@ test('findCommonTags() excludes the given tag ids', function (): void {
     $ids = array_column(tagTestRepo()->findCommonTags([1, 2, 3], 10, [1]), 'id');
     sort($ids);
 
-    expect($ids)->toBe([2, 3]);
+    expect($ids)
+        ->toBe([2, 3]);
 });
 
 test('findCommonTags() returns empty for no matching images', function (): void {
@@ -625,17 +744,20 @@ test('findCommonTags() with maxTags=0 returns every matching tag, not zero rows'
     $ids = array_column(tagTestRepo()->findCommonTags([1, 2, 3], 0, []), 'id');
     sort($ids);
 
-    expect($ids)->toBe([1, 2, 3]);
+    expect($ids)
+        ->toBe([1, 2, 3]);
 });
 
 test('findImageIdsForTags() binds named parameters', function (): void {
     // Otherwise only exercised indirectly via TagServiceTest's own
     // getImageIdsForTags() tests -- this is the first direct test of its
     // own typed params.
-    $ids = tagTestRepo()->findImageIdsForTags([1], 'AND', false, tagTestNoPermissionRestriction());
+    $ids = tagTestRepo()
+        ->findImageIdsForTags([1], 'AND', false, tagTestNoPermissionRestriction());
     sort($ids);
 
-    expect($ids)->toBe([1, 2, 3]);
+    expect($ids)
+        ->toBe([1, 2, 3]);
 });
 
 test('findImageIdsForTags() in AND mode with multiple tag ids requires every tag, not just one', function (): void {
@@ -643,9 +765,11 @@ test('findImageIdsForTags() in AND mode with multiple tag ids requires every tag
     // `count($tagIds) > 1` HAVING clause at all -- only image 1 has BOTH
     // tags 1 and 2 (images 2/3 only have tag 1), so this is what proves
     // AND mode's own multi-tag intersection, not a union.
-    $ids = tagTestRepo()->findImageIdsForTags([1, 2], 'AND', false, tagTestNoPermissionRestriction());
+    $ids = tagTestRepo()
+        ->findImageIdsForTags([1, 2], 'AND', false, tagTestNoPermissionRestriction());
 
-    expect($ids)->toBe([1]);
+    expect($ids)
+        ->toBe([1]);
 });
 
 test('findImageIdsForTags() in OR mode with multiple tag ids returns the union, not the AND-mode intersection', function (): void {
@@ -655,10 +779,12 @@ test('findImageIdsForTags() in OR mode with multiple tag ids returns the union, 
     // widened to `||`, since mode==='AND' is already true there either
     // way. Tag 2 alone only links image 1; the union with tag 1 (images
     // 1/2/3) is [1, 2, 3], not the AND-mode intersection [1].
-    $ids = tagTestRepo()->findImageIdsForTags([1, 2], 'OR', false, tagTestNoPermissionRestriction());
+    $ids = tagTestRepo()
+        ->findImageIdsForTags([1, 2], 'OR', false, tagTestNoPermissionRestriction());
     sort($ids);
 
-    expect($ids)->toBe([1, 2, 3]);
+    expect($ids)
+        ->toBe([1, 2, 3]);
 });
 
 test('findImageIdsForTags() applies an ImageFilterCriteria', function (): void {
@@ -666,16 +792,18 @@ test('findImageIdsForTags() applies an ImageFilterCriteria', function (): void {
     // fragment this method still accepts) reaches the query and stays
     // correctly bound -- fixture: tag 1 tags images 1 (rating_score
     // 4.50), 2 (3.00), 3 (5.00); minRate: 4.0 excludes image 2.
-    $ids = tagTestRepo()->findImageIdsForTags(
-        [1],
-        'AND',
-        false,
-        tagTestNoPermissionRestriction(),
-        new ImageFilterCriteria(minRate: 4.0),
-    );
+    $ids = tagTestRepo()
+        ->findImageIdsForTags(
+            [1],
+            'AND',
+            false,
+            tagTestNoPermissionRestriction(),
+            new ImageFilterCriteria(minRate: 4.0),
+        );
     sort($ids);
 
-    expect($ids)->toBe([1, 3]);
+    expect($ids)
+        ->toBe([1, 3]);
 });
 
 test('findImageIdsForTags() only applies the PermissionCriteria when usePermissions is true', function (): void {
@@ -689,28 +817,35 @@ test('findImageIdsForTags() only applies the PermissionCriteria when usePermissi
     // must be silently ignored when they don't.
     $forbidCategory1 = new PermissionCriteria([1], null, null, null, null, null);
 
-    $withPermissions = tagTestRepo()->findImageIdsForTags([1], 'AND', true, $forbidCategory1);
+    $withPermissions = tagTestRepo()
+        ->findImageIdsForTags([1], 'AND', true, $forbidCategory1);
 
-    $withoutPermissions = tagTestRepo()->findImageIdsForTags([1], 'AND', false, $forbidCategory1);
+    $withoutPermissions = tagTestRepo()
+        ->findImageIdsForTags([1], 'AND', false, $forbidCategory1);
     sort($withoutPermissions);
 
-    expect($withPermissions)->toBe([])
-        ->and($withoutPermissions)->toBe([1, 2, 3]);
+    expect($withPermissions)
+        ->toBe([])
+        ->and($withoutPermissions)
+        ->toBe([1, 2, 3]);
 });
 
 test('existsById() is true for a real tag', function (): void {
-    expect(tagTestRepo()->existsById(1))->toBeTrue();
+    expect(tagTestRepo()->existsById(1))
+        ->toBeTrue();
 });
 
 test('existsById() is false for an unknown id', function (): void {
-    expect(tagTestRepo()->existsById(999999))->toBeFalse();
+    expect(tagTestRepo()->existsById(999999))
+        ->toBeFalse();
 });
 
 test('findTagsForImage() returns every tag linked to that image', function (): void {
     $names = array_column(tagTestRepo()->findTagsForImage(ImageId::from(1)), 'name');
     sort($names);
 
-    expect($names)->toBe(['family', 'nature', 'travel']);
+    expect($names)
+        ->toBe(['family', 'nature', 'travel']);
 });
 
 test('findTagsForImage() returns empty for an image with no tags', function (): void {
@@ -722,11 +857,13 @@ test('findTagsByIds() returns empty for no ids', function (): void {
 });
 
 test('findTagsByIds() matches the given ids', function (): void {
-    $rows = tagTestRepo()->findTagsByIds([1, 2]);
+    $rows = tagTestRepo()
+        ->findTagsByIds([1, 2]);
 
     $names = array_column($rows, 'name');
     sort($names);
-    expect($names)->toBe(['nature', 'travel']);
+    expect($names)
+        ->toBe(['nature', 'travel']);
 });
 
 test('findIdsByNameLike() matches a wildcard pattern', function (): void {
@@ -734,19 +871,23 @@ test('findIdsByNameLike() matches a wildcard pattern', function (): void {
     // Inflector-variant test briefly inserts a real 'natures' tag (also
     // matching '%nat%'), a separate file so a separate --parallel
     // worker; confirmed live this raced.
-    expect(tagTestRepo()->findIdsByNameLike('%nat%'))->toContain(1);
+    expect(tagTestRepo()->findIdsByNameLike('%nat%'))
+        ->toContain(1);
 });
 
 test('findIdsByNameLike() returns empty for no match', function (): void {
-    expect(tagTestRepo()->findIdsByNameLike('%no-such-tag%'))->toBe([]);
+    expect(tagTestRepo()->findIdsByNameLike('%no-such-tag%'))
+        ->toBe([]);
 });
 
 test('existsByName() is true for a real tag', function (): void {
-    expect(tagTestRepo()->existsByName('nature'))->toBeTrue();
+    expect(tagTestRepo()->existsByName('nature'))
+        ->toBeTrue();
 });
 
 test('existsByName() is false for an unknown name', function (): void {
-    expect(tagTestRepo()->existsByName('no-such-tag'))->toBeFalse();
+    expect(tagTestRepo()->existsByName('no-such-tag'))
+        ->toBeFalse();
 });
 
 test('findOtherNames() excludes the given id', function (): void {
@@ -755,11 +896,15 @@ test('findOtherNames() excludes the given id', function (): void {
     // tag" query, and (same root cause as the sibling findIdsByNameLike()
     // test above) another file can have a real, non-disposable-shaped
     // tag alive at the same instant under --parallel.
-    $names = tagTestRepo()->findOtherNames(1);
+    $names = tagTestRepo()
+        ->findOtherNames(1);
 
-    expect($names)->not->toContain('nature')
-        ->and($names)->toContain('family')
-        ->and($names)->toContain('travel');
+    expect($names)
+        ->not->toContain('nature')
+        ->and($names)
+        ->toContain('family')
+        ->and($names)
+        ->toContain('travel');
 });
 
 test('countAll() reflects a freshly inserted tag', function (): void {
@@ -782,11 +927,16 @@ test('countAll() reflects a freshly inserted tag', function (): void {
     try {
         $conn->setTransactionIsolation(TransactionIsolationLevel::REPEATABLE_READ);
         $conn->beginTransaction();
-        $raw = $conn->createQueryBuilder()->select('COUNT(*)')->from('tags')->executeQuery()->fetchOne();
+        $raw = $conn->createQueryBuilder()
+            ->select('COUNT(*)')
+            ->from('tags')
+            ->executeQuery()
+            ->fetchOne();
         $actual = $repo->countAll();
         $conn->commit();
 
-        expect($actual)->toBe(is_numeric($raw) ? (int) $raw : -1);
+        expect($actual)
+            ->toBe(is_numeric($raw) ? (int) $raw : -1);
     } finally {
         $repo->deleteByIds([$id]);
     }
@@ -797,17 +947,28 @@ test('countAllImageTagLinks() reflects a freshly inserted link', function (): vo
     // sibling test above, for the identical reason -- see its comment.
     $conn = DbConnection::build();
     $repo = tagTestRepoFor($conn);
-    $conn->insert('image_tag', ['image_id' => 5, 'tag_id' => 2]);
+    $conn->insert('image_tag', [
+        'image_id' => 5,
+        'tag_id' => 2,
+    ]);
 
     try {
         $conn->setTransactionIsolation(TransactionIsolationLevel::REPEATABLE_READ);
         $conn->beginTransaction();
-        $raw = $conn->createQueryBuilder()->select('COUNT(*)')->from('image_tag')->executeQuery()->fetchOne();
+        $raw = $conn->createQueryBuilder()
+            ->select('COUNT(*)')
+            ->from('image_tag')
+            ->executeQuery()
+            ->fetchOne();
         $actual = $repo->countAllImageTagLinks();
         $conn->commit();
 
-        expect($actual)->toBe(is_numeric($raw) ? (int) $raw : -1);
+        expect($actual)
+            ->toBe(is_numeric($raw) ? (int) $raw : -1);
     } finally {
-        $conn->delete('image_tag', ['image_id' => 5, 'tag_id' => 2]);
+        $conn->delete('image_tag', [
+            'image_id' => 5,
+            'tag_id' => 2,
+        ]);
     }
 });

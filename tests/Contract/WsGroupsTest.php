@@ -6,7 +6,7 @@ namespace Piwigo\Tests\Contract;
 
 final class WsGroupsTest extends ContractTestCase
 {
-    public function test_getList_response_matches_schema(): void
+    public function testGetListResponseMatchesSchema(): void
     {
         $response = $this->wsAdmin('pwg.groups.getList');
 
@@ -14,12 +14,12 @@ final class WsGroupsTest extends ContractTestCase
         self::assertMatchesSchema('pwg.groups.getList', $response);
     }
 
-    public function test_getList_returns_paging_and_groups(): void
+    public function testGetListReturnsPagingAndGroups(): void
     {
         $response = $this->wsAdmin('pwg.groups.getList');
 
         $result = $response['result'];
-        if (!is_array($result)) {
+        if (! is_array($result)) {
             self::fail('pwg.groups.getList result is not an array');
         }
         self::assertArrayHasKey('paging', $result);
@@ -27,7 +27,7 @@ final class WsGroupsTest extends ContractTestCase
         self::assertIsArray($result['groups']);
     }
 
-    public function test_getList_forbidden_for_guest(): void
+    public function testGetListForbiddenForGuest(): void
     {
         $response = $this->ws('pwg.groups.getList');
 

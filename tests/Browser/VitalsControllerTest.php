@@ -38,7 +38,9 @@ function vitalsPostJson(array $payload): int
     return $status;
 }
 
-/** Reads today's real (unfrozen -- RotatingFileHandler rotates on the real wall clock) app log file. */
+/**
+ * Reads today's real (unfrozen -- RotatingFileHandler rotates on the real wall clock) app log file.
+ */
 function vitalsTodaysAppLog(): string
 {
     $path = dirname(__DIR__, 2) . '/_data/logs/piwigo-' . date('Y-m-d') . '.log';
@@ -74,7 +76,8 @@ it('logs a valid, known metric and returns an empty 204 response', function (): 
         'url' => 'https://gallery.example.test/picture.php?image_id=7',
     ]);
 
-    expect($status)->toBe(204);
+    expect($status)
+        ->toBe(204);
 
     $entry = vitalsFindLogEntry($uniqueId);
     if ($entry === null) {
@@ -104,13 +107,16 @@ it('silently drops an unrecognized metric name -- still 204, but nothing is logg
         'url' => 'https://gallery.example.test/',
     ]);
 
-    expect($status)->toBe(204);
-    expect(vitalsFindLogEntry($uniqueId))->toBeNull();
+    expect($status)
+        ->toBe(204);
+    expect(vitalsFindLogEntry($uniqueId))
+        ->toBeNull();
 });
 
 it('silently drops a malformed (non-JSON) body -- still 204, nothing logged', function (): void {
     $ch = curl_init(H::baseUrl() . '/analytics/vitals');
-    expect($ch)->not->toBeFalse();
+    expect($ch)
+        ->not->toBeFalse();
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
     curl_setopt($ch, CURLOPT_POST, true);
     curl_setopt($ch, CURLOPT_POSTFIELDS, 'this is not json{{{');
@@ -119,7 +125,8 @@ it('silently drops a malformed (non-JSON) body -- still 204, nothing logged', fu
     $status = curl_getinfo($ch, CURLINFO_RESPONSE_CODE);
     unset($ch);
 
-    expect($status)->toBe(204);
+    expect($status)
+        ->toBe(204);
 });
 
 it('silently drops a well-formed JSON body missing required fields -- still 204', function (): void {
@@ -134,13 +141,16 @@ it('silently drops a well-formed JSON body missing required fields -- still 204'
         'url' => 'https://gallery.example.test/',
     ]);
 
-    expect($status)->toBe(204);
-    expect(vitalsFindLogEntry($uniqueId))->toBeNull();
+    expect($status)
+        ->toBe(204);
+    expect(vitalsFindLogEntry($uniqueId))
+        ->toBeNull();
 });
 
 it('silently drops a completely empty request body -- still 204, nothing logged', function (): void {
     $ch = curl_init(H::baseUrl() . '/analytics/vitals');
-    expect($ch)->not->toBeFalse();
+    expect($ch)
+        ->not->toBeFalse();
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
     curl_setopt($ch, CURLOPT_POST, true);
     // Deliberately no CURLOPT_POSTFIELDS at all -- parseMetric()'s own
@@ -152,12 +162,14 @@ it('silently drops a completely empty request body -- still 204, nothing logged'
     $status = curl_getinfo($ch, CURLINFO_RESPONSE_CODE);
     unset($ch);
 
-    expect($status)->toBe(204);
+    expect($status)
+        ->toBe(204);
 });
 
 it('silently drops a well-formed JSON body that decodes to a non-array -- still 204, nothing logged', function (): void {
     $ch = curl_init(H::baseUrl() . '/analytics/vitals');
-    expect($ch)->not->toBeFalse();
+    expect($ch)
+        ->not->toBeFalse();
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
     curl_setopt($ch, CURLOPT_POST, true);
     // A bare JSON string is valid JSON (json_decode() succeeds, no
@@ -170,7 +182,8 @@ it('silently drops a well-formed JSON body that decodes to a non-array -- still 
     $status = curl_getinfo($ch, CURLINFO_RESPONSE_CODE);
     unset($ch);
 
-    expect($status)->toBe(204);
+    expect($status)
+        ->toBe(204);
 });
 
 it('silently drops a metric with a non-string id/rating/url -- still 204', function (): void {
@@ -189,5 +202,6 @@ it('silently drops a metric with a non-string id/rating/url -- still 204', funct
         'url' => ['not', 'a', 'string'],
     ]);
 
-    expect($status)->toBe(204);
+    expect($status)
+        ->toBe(204);
 });

@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
+use Piwigo\Bootstrap\CoreDomainAccessor;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Paths;
-use Piwigo\Bootstrap\CoreDomainAccessor;
 use Piwigo\Image\ImageService;
 use Piwigo\Tests\Support\KernelContainerOverride;
 use Piwigo\Users\UserService;

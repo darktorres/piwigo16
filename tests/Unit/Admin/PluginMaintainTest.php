@@ -5,14 +5,14 @@ declare(strict_types=1);
 use Piwigo\Admin\PluginMaintain;
 use Piwigo\Auth\AccessControl;
 use Piwigo\Common\ValueObject\LangCode;
+use Piwigo\Common\ValueObject\ThemeId;
 use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Common\ValueObject\Username;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Paths;
 use Piwigo\Core\WsContext;
-use Piwigo\Tests\Support\KernelContainerOverride;
 use Piwigo\Tests\Support\CurrentUserTestFactory;
-use Piwigo\Common\ValueObject\ThemeId;
+use Piwigo\Tests\Support\KernelContainerOverride;
 use Piwigo\Users\User;
 use Piwigo\Users\UserStatus;
 
@@ -74,18 +74,23 @@ test('autoUpdate() triggers its deprecation warning for an admin user outside a 
         // WS-context one. The user status must be seeded INSIDE the
         // callback, once the container exists.
         KernelContainerOverride::with(
-            [Paths::class => Paths::fromRoot(sys_get_temp_dir())],
+            [
+                Paths::class => Paths::fromRoot(sys_get_temp_dir()),
+            ],
             static function (): void {
                 pluginMaintainSetUserStatus(UserStatus::Admin);
-                pluginMaintainBuild()->autoUpdate();
+                pluginMaintainBuild()
+                    ->autoUpdate();
             }
         );
     } finally {
         restore_error_handler();
     }
 
-    expect($capturedLevel)->toBe(E_USER_WARNING);
-    expect($capturedMessage)->toBe('Function PluginMaintain::autoUpdate deprecated');
+    expect($capturedLevel)
+        ->toBe(E_USER_WARNING);
+    expect($capturedMessage)
+        ->toBe('Function PluginMaintain::autoUpdate deprecated');
 });
 
 test('autoUpdate() stays silent for a webmaster user (a higher status than admin, but not exactly "admin")', function (): void {
@@ -103,17 +108,21 @@ test('autoUpdate() stays silent for a webmaster user (a higher status than admin
 
     try {
         KernelContainerOverride::with(
-            [Paths::class => Paths::fromRoot(sys_get_temp_dir())],
+            [
+                Paths::class => Paths::fromRoot(sys_get_temp_dir()),
+            ],
             static function (): void {
                 pluginMaintainSetUserStatus(UserStatus::Webmaster);
-                pluginMaintainBuild()->autoUpdate();
+                pluginMaintainBuild()
+                    ->autoUpdate();
             }
         );
     } finally {
         restore_error_handler();
     }
 
-    expect($triggered)->toBeTrue();
+    expect($triggered)
+        ->toBeTrue();
 });
 
 test('autoUpdate() stays silent for a normal (non-admin) user', function (): void {
@@ -126,17 +135,21 @@ test('autoUpdate() stays silent for a normal (non-admin) user', function (): voi
 
     try {
         KernelContainerOverride::with(
-            [Paths::class => Paths::fromRoot(sys_get_temp_dir())],
+            [
+                Paths::class => Paths::fromRoot(sys_get_temp_dir()),
+            ],
             static function (): void {
                 pluginMaintainSetUserStatus(UserStatus::Normal);
-                pluginMaintainBuild()->autoUpdate();
+                pluginMaintainBuild()
+                    ->autoUpdate();
             }
         );
     } finally {
         restore_error_handler();
     }
 
-    expect($triggered)->toBeFalse();
+    expect($triggered)
+        ->toBeFalse();
 });
 
 test('autoUpdate() stays silent for an admin user inside an active WS request', function (): void {
@@ -163,12 +176,14 @@ test('autoUpdate() stays silent for an admin user inside an active WS request', 
             ],
             static function (): void {
                 pluginMaintainSetUserStatus(UserStatus::Admin);
-                pluginMaintainBuild()->autoUpdate();
+                pluginMaintainBuild()
+                    ->autoUpdate();
             }
         );
     } finally {
         restore_error_handler();
     }
 
-    expect($triggered)->toBeFalse();
+    expect($triggered)
+        ->toBeFalse();
 });

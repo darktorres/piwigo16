@@ -4,17 +4,17 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Integration;
 
-use Override;
-use Piwigo\Core\Kernel;
+use Doctrine\DBAL\Connection;
 use LogicException;
+use Override;
+use Piwigo\Config\ConfigLoader;
+use Piwigo\Config\CurrentConfig;
+use Piwigo\Core\Kernel;
+use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
 use Piwigo\PluginConfig\PluginEntity;
-use Piwigo\PluginConfig\Projection\Plugin;
-use Doctrine\DBAL\Connection;
-use Piwigo\Config\CurrentConfig;
-use Piwigo\Config\ConfigLoader;
-use Piwigo\Db\DbConnection;
 use Piwigo\PluginConfig\PluginRepository;
+use Piwigo\PluginConfig\Projection\Plugin;
 
 final class PluginRepositoryTest extends IntegrationTestCase
 {
@@ -59,7 +59,7 @@ final class PluginRepositoryTest extends IntegrationTestCase
         // test_get_db_plugins_filters_by_a_malformed_id_finds_nothing()
         // below instead.
         $this->conn->executeStatement(
-            "INSERT INTO " . 'plugins' . " (id, state, version) VALUES
+            'INSERT INTO plugins' . " (id, state, version) VALUES
              ('c13y', 'active', '2.1'),
              ('nut2', 'inactive', '1.0'),
              ('o-brien', 'active', '3.0')"
@@ -69,25 +69,25 @@ final class PluginRepositoryTest extends IntegrationTestCase
     #[Override]
     protected function tearDown(): void
     {
-        $this->conn->executeStatement('DELETE FROM ' . 'plugins');
+        $this->conn->executeStatement('DELETE FROM plugins');
         parent::tearDown();
     }
 
-    public function test_get_db_plugins_returns_every_row_when_unfiltered(): void
+    public function testGetDbPluginsReturnsEveryRowWhenUnfiltered(): void
     {
         $plugins = $this->repo->getDbPlugins();
 
         self::assertCount(3, $plugins);
     }
 
-    public function test_get_db_plugins_filters_by_state(): void
+    public function testGetDbPluginsFiltersByState(): void
     {
         $plugins = $this->repo->getDbPlugins('active');
 
         self::assertSame(['c13y', 'o-brien'], array_map(static fn (Plugin $p): string => $p->id->value, $plugins));
     }
 
-    public function test_get_db_plugins_filters_by_id(): void
+    public function testGetDbPluginsFiltersById(): void
     {
         $plugins = $this->repo->getDbPlugins('', 'nut2');
 
@@ -95,14 +95,14 @@ final class PluginRepositoryTest extends IntegrationTestCase
         self::assertSame('inactive', $plugins[0]->state);
     }
 
-    public function test_get_db_plugins_filters_by_state_and_id_together(): void
+    public function testGetDbPluginsFiltersByStateAndIdTogether(): void
     {
         $plugins = $this->repo->getDbPlugins('active', 'nut2');
 
         self::assertSame([], $plugins);
     }
 
-    public function test_get_db_plugins_filters_by_an_id_containing_a_hyphen(): void
+    public function testGetDbPluginsFiltersByAnIdContainingAHyphen(): void
     {
         $plugins = $this->repo->getDbPlugins('', 'o-brien');
 
@@ -110,7 +110,7 @@ final class PluginRepositoryTest extends IntegrationTestCase
         self::assertSame('o-brien', $plugins[0]->id->value);
     }
 
-    public function test_get_db_plugins_filters_by_a_malformed_id_finds_nothing(): void
+    public function testGetDbPluginsFiltersByAMalformedIdFindsNothing(): void
     {
         // A quote can never be part of a real PluginId (charset
         // [a-zA-Z0-9_-] only) -- must return an empty, graceful result
@@ -121,7 +121,7 @@ final class PluginRepositoryTest extends IntegrationTestCase
         self::assertSame([], $plugins);
     }
 
-    public function test_update_version_persists_the_new_version(): void
+    public function testUpdateVersionPersistsTheNewVersion(): void
     {
         $this->repo->updateVersion('c13y', '2.2');
 
@@ -135,7 +135,7 @@ final class PluginRepositoryTest extends IntegrationTestCase
         self::assertSame('2.2', $version);
     }
 
-    public function test_update_version_does_not_touch_other_plugins(): void
+    public function testUpdateVersionDoesNotTouchOtherPlugins(): void
     {
         $this->repo->updateVersion('c13y', '2.2');
 
@@ -149,7 +149,7 @@ final class PluginRepositoryTest extends IntegrationTestCase
         self::assertSame('1.0', $version);
     }
 
-    public function test_update_version_is_a_no_op_for_an_unknown_plugin_id(): void
+    public function testUpdateVersionIsANoOpForAnUnknownPluginId(): void
     {
         // must not throw despite there being no matching row to update
         $this->repo->updateVersion('this-plugin-id-does-not-exist', '9.9');

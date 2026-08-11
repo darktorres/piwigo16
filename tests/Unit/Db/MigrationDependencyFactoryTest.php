@@ -25,7 +25,10 @@ test('build() preserves config/migrations.php\'s own migrations_paths entry', fu
     // would never make it into $migrationsConfig, and
     // getMigrationDirectories() would come back empty instead of matching
     // the real config file's own value.
-    $conn = DriverManager::getConnection(['driver' => 'pdo_sqlite', 'memory' => true]);
+    $conn = DriverManager::getConnection([
+        'driver' => 'pdo_sqlite',
+        'memory' => true,
+    ]);
     $em = EntityManagerFactory::build($conn);
 
     $dependencyFactory = MigrationDependencyFactory::build($em);
@@ -34,26 +37,34 @@ test('build() preserves config/migrations.php\'s own migrations_paths entry', fu
     // hardcoded, so a future change to config/migrations.php's own
     // migrations_paths doesn't desynchronize this expectation.
     $sourceFile = (new ReflectionClass(MigrationDependencyFactory::class))->getFileName();
-    expect($sourceFile)->not->toBeFalse();
+    expect($sourceFile)
+        ->not->toBeFalse();
     /** @var array<string, mixed> $expectedRaw */
     $expectedRaw = require dirname((string) $sourceFile, 4) . '/config/migrations.php';
     expect($expectedRaw['migrations_paths'])->not->toBeEmpty();
 
-    expect($dependencyFactory->getConfiguration()->getMigrationDirectories())->toBe($expectedRaw['migrations_paths']);
+    expect($dependencyFactory->getConfiguration()->getMigrationDirectories())
+        ->toBe($expectedRaw['migrations_paths']);
 });
 
 test('build() names the migrations ledger table migration_versions', function (): void {
     // Kills line 61's RemoveArrayItem (table_storage => [], silently
     // falling back to Doctrine Migrations' own unprefixed
     // 'doctrine_migration_versions' default).
-    $conn = DriverManager::getConnection(['driver' => 'pdo_sqlite', 'memory' => true]);
+    $conn = DriverManager::getConnection([
+        'driver' => 'pdo_sqlite',
+        'memory' => true,
+    ]);
     $em = EntityManagerFactory::build($conn);
 
     $dependencyFactory = MigrationDependencyFactory::build($em);
 
-    $metadataStorageConfiguration = $dependencyFactory->getConfiguration()->getMetadataStorageConfiguration();
-    expect($metadataStorageConfiguration)->toBeInstanceOf(TableMetadataStorageConfiguration::class);
+    $metadataStorageConfiguration = $dependencyFactory->getConfiguration()
+        ->getMetadataStorageConfiguration();
+    expect($metadataStorageConfiguration)
+        ->toBeInstanceOf(TableMetadataStorageConfiguration::class);
     assert($metadataStorageConfiguration instanceof TableMetadataStorageConfiguration);
 
-    expect($metadataStorageConfiguration->getTableName())->toBe('migration_versions');
+    expect($metadataStorageConfiguration->getTableName())
+        ->toBe('migration_versions');
 });

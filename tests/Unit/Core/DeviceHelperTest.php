@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Core\DeviceHelper;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Session\SessionEntity;
 use Piwigo\Session\SessionService;
+use Piwigo\Tests\Support\CurrentConfigTestFactory;
 
 /**
  * getDeviceVar()/getMobileThemeVar()/setSessionVar() read/write $_SESSION
@@ -46,11 +46,13 @@ test('getDevice returns an existing session value as-is', function (): void {
 test('mobileTheme is false when the mobile_theme config is empty or "0", without touching the session', function (): void {
     CurrentConfigTestFactory::get()->mobileTheme = '';
     expect(DeviceHelper::mobileTheme(deviceHelperTestSessionService(), CurrentConfigTestFactory::get()))->toBeFalse();
-    expect($_SESSION)->toBe([]);
+    expect($_SESSION)
+        ->toBe([]);
 
     CurrentConfigTestFactory::get()->mobileTheme = '0';
     expect(DeviceHelper::mobileTheme(deviceHelperTestSessionService(), CurrentConfigTestFactory::get()))->toBeFalse();
-    expect($_SESSION)->toBe([]);
+    expect($_SESSION)
+        ->toBe([]);
 });
 
 test('mobileTheme falls back to getDevice() === "mobile" when no GET override or session value exists', function (): void {

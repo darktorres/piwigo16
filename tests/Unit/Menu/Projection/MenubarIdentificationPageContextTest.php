@@ -19,7 +19,8 @@ test('toArray is empty when every field is null', function (): void {
         uAdmin: null,
     );
 
-    expect($context->toArray())->toBe([]);
+    expect($context->toArray())
+        ->toBe([]);
 });
 
 test('toArray includes the guest-branch keys when set', function (): void {
@@ -37,14 +38,15 @@ test('toArray includes the guest-branch keys when set', function (): void {
         uAdmin: null,
     );
 
-    expect($context->toArray())->toBe([
-        'QUERY_SEARCH' => 'sunset',
-        'U_START_FILTER' => '/index.php?filter=start-recent-30',
-        'U_LOGIN' => '/identification.php',
-        'U_LOST_PASSWORD' => '/password.php',
-        'AUTHORIZE_REMEMBERING' => true,
-        'U_REGISTER' => '/register.php',
-    ]);
+    expect($context->toArray())
+        ->toBe([
+            'QUERY_SEARCH' => 'sunset',
+            'U_START_FILTER' => '/index.php?filter=start-recent-30',
+            'U_LOGIN' => '/identification.php',
+            'U_LOST_PASSWORD' => '/password.php',
+            'AUTHORIZE_REMEMBERING' => true,
+            'U_REGISTER' => '/register.php',
+        ]);
 });
 
 test('toArray includes the identified-user-branch keys when set', function (): void {
@@ -62,11 +64,12 @@ test('toArray includes the identified-user-branch keys when set', function (): v
         uAdmin: '/admin.php',
     );
 
-    expect($context->toArray())->toBe([
-        'U_STOP_FILTER' => '/index.php?filter=stop',
-        'USERNAME' => 'jane',
-        'U_PROFILE' => '/profile.php',
-        'U_LOGOUT' => '/?act=logout',
-        'U_ADMIN' => '/admin.php',
-    ]);
+    expect($context->toArray())
+        ->toBe([
+            'U_STOP_FILTER' => '/index.php?filter=stop',
+            'USERNAME' => 'jane',
+            'U_PROFILE' => '/profile.php',
+            'U_LOGOUT' => '/?act=logout',
+            'U_ADMIN' => '/admin.php',
+        ]);
 });

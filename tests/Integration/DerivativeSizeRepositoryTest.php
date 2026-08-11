@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Integration;
 
-use Override;
-use LogicException;
 use Doctrine\DBAL\Connection;
+use LogicException;
+use Override;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Image\DerivativeSizeEntity;
@@ -55,7 +55,7 @@ final class DerivativeSizeRepositoryTest extends IntegrationTestCase
         }
 
         $this->conn = DbConnection::build();
-        $this->originalRows = $this->conn->fetchAllAssociative('SELECT * FROM ' . 'derivative_size');
+        $this->originalRows = $this->conn->fetchAllAssociative('SELECT * FROM derivative_size');
 
         $repo = EntityManagerFactory::build($this->conn)->getRepository(DerivativeSizeEntity::class);
         $this->repo = $repo;
@@ -64,7 +64,7 @@ final class DerivativeSizeRepositoryTest extends IntegrationTestCase
     #[Override]
     protected function tearDown(): void
     {
-        $this->conn->executeStatement('DELETE FROM ' . 'derivative_size');
+        $this->conn->executeStatement('DELETE FROM derivative_size');
         foreach ($this->originalRows as $row) {
             $this->conn->insert('derivative_size', $row);
         }
@@ -87,7 +87,7 @@ final class DerivativeSizeRepositoryTest extends IntegrationTestCase
         );
     }
 
-    public function test_sync_enabled_throws_when_given_an_entity_that_is_not_actually_enabled(): void
+    public function testSyncEnabledThrowsWhenGivenAnEntityThatIsNotActuallyEnabled(): void
     {
         $this->expectException(LogicException::class);
         $this->expectExceptionMessageIsOrContains('syncPartition(): every entity must already have enabled=1');
@@ -95,7 +95,7 @@ final class DerivativeSizeRepositoryTest extends IntegrationTestCase
         $this->repo->syncEnabled([$this->newSize('p17-test-mismatch', enabled: 0)]);
     }
 
-    public function test_sync_disabled_throws_when_given_an_entity_that_is_actually_enabled(): void
+    public function testSyncDisabledThrowsWhenGivenAnEntityThatIsActuallyEnabled(): void
     {
         $this->expectException(LogicException::class);
         $this->expectExceptionMessageIsOrContains('syncPartition(): every entity must already have enabled=0');
@@ -103,9 +103,9 @@ final class DerivativeSizeRepositoryTest extends IntegrationTestCase
         $this->repo->syncDisabled([$this->newSize('p17-test-mismatch', enabled: 1)]);
     }
 
-    public function test_sync_enabled_removes_a_previously_enabled_row_that_is_absent_from_the_new_set(): void
+    public function testSyncEnabledRemovesAPreviouslyEnabledRowThatIsAbsentFromTheNewSet(): void
     {
-        $this->conn->executeStatement('DELETE FROM ' . 'derivative_size');
+        $this->conn->executeStatement('DELETE FROM derivative_size');
 
         $this->repo->syncEnabled([
             $this->newSize('p17-test-keep', enabled: 1),
@@ -127,9 +127,9 @@ final class DerivativeSizeRepositoryTest extends IntegrationTestCase
         self::assertSame(['p17-test-keep'], $namesAfterSecondSync);
     }
 
-    public function test_sync_disabled_removes_a_previously_disabled_row_that_is_absent_from_the_new_set_without_touching_the_enabled_partition(): void
+    public function testSyncDisabledRemovesAPreviouslyDisabledRowThatIsAbsentFromTheNewSetWithoutTouchingTheEnabledPartition(): void
     {
-        $this->conn->executeStatement('DELETE FROM ' . 'derivative_size');
+        $this->conn->executeStatement('DELETE FROM derivative_size');
 
         $this->repo->syncEnabled([$this->newSize('p17-test-enabled-untouched', enabled: 1)]);
         $this->repo->syncDisabled([

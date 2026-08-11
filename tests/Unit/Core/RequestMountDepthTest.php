@@ -11,8 +11,12 @@ use Piwigo\Core\RequestMountDepth;
  * private lazy requestMountDepth() helper.
  */
 test('current reflects the value given at construction', function (): void {
-    expect(new RequestMountDepth()->current())->toBe(0)
-        ->and(new RequestMountDepth(0)->current())->toBe(0)
-        ->and(new RequestMountDepth(1)->current())->toBe(1)
-        ->and(new RequestMountDepth(2)->current())->toBe(2);
+    expect(new RequestMountDepth()->current())
+        ->toBe(0)
+        ->and(new RequestMountDepth(0)->current())
+        ->toBe(0)
+        ->and(new RequestMountDepth(1)->current())
+        ->toBe(1)
+        ->and(new RequestMountDepth(2)->current())
+        ->toBe(2);
 });

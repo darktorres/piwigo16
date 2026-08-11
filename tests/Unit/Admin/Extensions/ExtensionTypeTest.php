@@ -2,13 +2,13 @@
 
 declare(strict_types=1);
 
-use Piwigo\Admin\PluginLoader;
 use Piwigo\Admin\Extensions\ExtensionType;
-use Piwigo\Tests\Support\CurrentConfigTestFactory;
+use Piwigo\Admin\PluginLoader;
 use Piwigo\Core\ActivitySystem;
-use Piwigo\Tests\Support\CurrentPathsTestFactory;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Paths;
+use Piwigo\Tests\Support\CurrentConfigTestFactory;
+use Piwigo\Tests\Support\CurrentPathsTestFactory;
 
 beforeEach(function (): void {
     CurrentConfigTestFactory::get()->reset();

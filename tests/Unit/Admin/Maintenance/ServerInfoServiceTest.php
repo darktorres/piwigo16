@@ -5,62 +5,76 @@ declare(strict_types=1);
 use Piwigo\Admin\Maintenance\ServerInfoService;
 
 test('curatedInfo reports the real running PHP/SAPI/OS', function (): void {
-    $info = new ServerInfoService()->curatedInfo();
+    $info = new ServerInfoService()
+        ->curatedInfo();
 
-    expect($info->phpVersion)->toBe(PHP_VERSION)
-        ->and($info->sapi)->toBe(PHP_SAPI)
-        ->and($info->os)->toBe(PHP_OS);
+    expect($info->phpVersion)
+        ->toBe(PHP_VERSION)
+        ->and($info->sapi)
+        ->toBe(PHP_SAPI)
+        ->and($info->os)
+        ->toBe(PHP_OS);
 });
 
 test('curatedInfo lists real loaded extensions', function (): void {
-    $info = new ServerInfoService()->curatedInfo();
+    $info = new ServerInfoService()
+        ->curatedInfo();
 
     // Every PHP install running this test suite has at least 'Core'
     // loaded; asserting a fixed, real extension name (not a count) avoids
     // the test being fragile to the exact extension set.
-    expect($info->extensions)->toContain('Core');
+    expect($info->extensions)
+        ->toContain('Core');
 });
 
 test('curatedInfo does not leak a full phpinfo() dump', function (): void {
     // SEC-22's whole point: no server filesystem paths, no environment
     // variables, no per-module build configuration -- only the fields
     // this class explicitly curates.
-    $info = new ServerInfoService()->curatedInfo();
+    $info = new ServerInfoService()
+        ->curatedInfo();
 
-    expect(array_keys(get_object_vars($info)))->toBe(['phpVersion', 'sapi', 'os', 'extensions', 'ini']);
+    expect(array_keys(get_object_vars($info)))
+        ->toBe(['phpVersion', 'sapi', 'os', 'extensions', 'ini']);
 });
 
 test('renderHtml embeds the curated info and escapes it', function (): void {
-    $html = new ServerInfoService()->renderHtml();
+    $html = new ServerInfoService()
+        ->renderHtml();
 
-    expect($html)->toContain(htmlspecialchars(PHP_VERSION))
+    expect($html)
+        ->toContain(htmlspecialchars(PHP_VERSION))
         ->toContain('Loaded extensions')
         ->not->toContain('phpinfo()');
 });
 
 test('curatedInfo sorts the loaded extensions', function (): void {
-    $info = new ServerInfoService()->curatedInfo();
+    $info = new ServerInfoService()
+        ->curatedInfo();
 
     $sorted = $info->extensions;
     sort($sorted);
 
-    expect($info->extensions)->toBe($sorted);
+    expect($info->extensions)
+        ->toBe($sorted);
 });
 
 test('curatedInfo reports every curated ini setting, not an empty set', function (): void {
-    $info = new ServerInfoService()->curatedInfo();
+    $info = new ServerInfoService()
+        ->curatedInfo();
 
-    expect(array_keys($info->ini))->toBe([
-        'memory_limit',
-        'upload_max_filesize',
-        'post_max_size',
-        'max_execution_time',
-        'max_input_time',
-        'max_file_uploads',
-        'default_charset',
-        'date.timezone',
-        'display_errors',
-    ]);
+    expect(array_keys($info->ini))
+        ->toBe([
+            'memory_limit',
+            'upload_max_filesize',
+            'post_max_size',
+            'max_execution_time',
+            'max_input_time',
+            'max_file_uploads',
+            'default_charset',
+            'date.timezone',
+            'display_errors',
+        ]);
 });
 
 test('renderHtml renders every accumulated section of the page, not just the last write', function (): void {
@@ -68,7 +82,8 @@ test('renderHtml renders every accumulated section of the page, not just the las
     $info = $service->curatedInfo();
     $html = $service->renderHtml();
 
-    expect($html)->toContain('<!DOCTYPE html>')
+    expect($html)
+        ->toContain('<!DOCTYPE html>')
         ->toContain('<h1>Server information</h1>')
         ->toContain('<table border="1" cellpadding="4">')
         ->toContain('<tr><th>PHP version</th><td>' . htmlspecialchars($info->phpVersion) . '</td></tr>')
@@ -98,9 +113,11 @@ test('renderHtml escapes an ini value containing real HTML metacharacters', func
     ini_set('display_errors', '<script>alert(1)</script>&"\'');
 
     try {
-        $html = new ServerInfoService()->renderHtml();
+        $html = new ServerInfoService()
+            ->renderHtml();
 
-        expect($html)->toContain(htmlspecialchars('<script>alert(1)</script>&"\''))
+        expect($html)
+            ->toContain(htmlspecialchars('<script>alert(1)</script>&"\''))
             ->not->toContain('<script>alert(1)</script>');
     } finally {
         ini_set('display_errors', $previous);

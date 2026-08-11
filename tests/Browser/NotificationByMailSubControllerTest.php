@@ -2,19 +2,20 @@
 
 declare(strict_types=1);
 
-use PgSql\Connection;
 use Pest\Browser\Api\AwaitableWebpage;
 use Pest\Browser\Api\PendingAwaitablePage;
 use Pest\Browser\Api\Webpage;
+use PgSql\Connection;
 use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
-
 
 function nbmDbConnect(): mysqli|Connection
 {
     return H::connect();
 }
 
-/** @return array{check_key: string, enabled: int, last_send: ?string}|null */
+/**
+ * @return array{check_key: string, enabled: int, last_send: ?string}|null
+ */
 function nbmUserMailNotificationRow(int $userId): ?array
 {
     $db = nbmDbConnect();
@@ -35,7 +36,9 @@ function nbmUserMailNotificationRow(int $userId): ?array
     ];
 }
 
-/** @param array{check_key: string, enabled: int, last_send: ?string}|null $row */
+/**
+ * @param array{check_key: string, enabled: int, last_send: ?string}|null $row
+ */
 function nbmSetUserMailNotificationRow(int $userId, ?array $row): void
 {
     $db = nbmDbConnect();
@@ -177,7 +180,11 @@ it('unsubscribes a user from category-based notifications', function (): void {
     $page = H::loginAsAdmin($this);
     $token = H::pwgToken($page);
 
-    nbmSetUserMailNotificationRow(4, ['check_key' => 'ct00unsubscrib', 'enabled' => 1, 'last_send' => null]);
+    nbmSetUserMailNotificationRow(4, [
+        'check_key' => 'ct00unsubscrib',
+        'enabled' => 1,
+        'last_send' => null,
+    ]);
 
     try {
         $result = nbmPost($page, 'subscribe', [
@@ -189,7 +196,8 @@ it('unsubscribes a user from category-based notifications', function (): void {
         expect($result['status'])->toBe(200);
         expect($result['body'])->not->toContain('Fatal error');
         $updated = nbmUserMailNotificationRow(4);
-        expect($updated)->not->toBeNull();
+        expect($updated)
+            ->not->toBeNull();
         assert($updated !== null);
         expect($updated['enabled'])->toBe(0);
     } finally {
@@ -206,7 +214,8 @@ it('subscribes a user to category-based notifications', function (): void {
     $token = H::pwgToken($page);
 
     $snapshot = nbmUserMailNotificationRow(3);
-    expect($snapshot)->not->toBeNull();
+    expect($snapshot)
+        ->not->toBeNull();
     assert($snapshot !== null);
 
     try {
@@ -219,7 +228,8 @@ it('subscribes a user to category-based notifications', function (): void {
         expect($result['status'])->toBe(200);
         expect($result['body'])->not->toContain('Fatal error');
         $updated = nbmUserMailNotificationRow(3);
-        expect($updated)->not->toBeNull();
+        expect($updated)
+            ->not->toBeNull();
         assert($updated !== null);
         expect($updated['enabled'])->toBe(1);
     } finally {
@@ -232,7 +242,8 @@ it('sends a notification email to selected users', function (): void {
     $token = H::pwgToken($page);
 
     $snapshot = nbmUserMailNotificationRow(1);
-    expect($snapshot)->not->toBeNull();
+    expect($snapshot)
+        ->not->toBeNull();
     assert($snapshot !== null);
 
     try {
@@ -278,7 +289,11 @@ it('keeps a user enabled and pre-selected on redisplay when the real unsubscribe
 
     $originalMailAddress = nbmUserMailAddress(4);
     nbmSetUserMailAddress(4, 'ct00nbm285@example.test');
-    nbmSetUserMailNotificationRow(4, ['check_key' => 'ct00mailfail285', 'enabled' => 1, 'last_send' => null]);
+    nbmSetUserMailNotificationRow(4, [
+        'check_key' => 'ct00mailfail285',
+        'enabled' => 1,
+        'last_send' => null,
+    ]);
 
     try {
         $result = nbmPost($page, 'subscribe', [
@@ -300,7 +315,8 @@ it('keeps a user enabled and pre-selected on redisplay when the real unsubscribe
         // Real DB state: the failed send means $doUpdate stayed false, so
         // `enabled` was never actually flipped.
         $updated = nbmUserMailNotificationRow(4);
-        expect($updated)->not->toBeNull();
+        expect($updated)
+            ->not->toBeNull();
         assert($updated !== null);
         expect($updated['enabled'])->toBe(1);
 
@@ -345,7 +361,9 @@ it('returns the customize-mail-content unchanged when nbm_send_html_mail is disa
 it('rejects a mutating submission with a missing CSRF token', function (): void {
     $page = H::loginAsAdmin($this);
 
-    $result = nbmPost($page, 'param', ['param_submit' => '1']);
+    $result = nbmPost($page, 'param', [
+        'param_submit' => '1',
+    ]);
 
     expect($result['status'])->toBe(400);
 });
@@ -354,7 +372,8 @@ it('self-heals a missing notification-subscription row on a plain page load', fu
     $page = H::loginAsAdmin($this);
 
     $snapshot = nbmUserMailNotificationRow(1);
-    expect($snapshot)->not->toBeNull();
+    expect($snapshot)
+        ->not->toBeNull();
     assert($snapshot !== null);
     nbmSetUserMailNotificationRow(1, null);
 
@@ -363,7 +382,8 @@ it('self-heals a missing notification-subscription row on a plain page load', fu
         $page->assertNoJavaScriptErrors();
 
         $recreated = nbmUserMailNotificationRow(1);
-        expect($recreated)->not->toBeNull();
+        expect($recreated)
+            ->not->toBeNull();
     } finally {
         nbmSetUserMailNotificationRow(1, $snapshot);
     }
@@ -379,7 +399,11 @@ it('reports a repost for falsify with the estimated-time message when the sendma
     $token = H::pwgToken($page);
 
     $timeoutSnapshot = nbmForceInstantSendmailTimeout();
-    nbmSetUserMailNotificationRow(4, ['check_key' => 'ct00falsifytmo', 'enabled' => 1, 'last_send' => null]);
+    nbmSetUserMailNotificationRow(4, [
+        'check_key' => 'ct00falsifytmo',
+        'enabled' => 1,
+        'last_send' => null,
+    ]);
 
     try {
         $result = nbmPost($page, 'subscribe', [
@@ -417,7 +441,11 @@ it('reports a repost for trueify with the estimated-time message when the sendma
     $token = H::pwgToken($page);
 
     $timeoutSnapshot = nbmForceInstantSendmailTimeout();
-    nbmSetUserMailNotificationRow(4, ['check_key' => 'ct00trueifytmo', 'enabled' => 0, 'last_send' => null]);
+    nbmSetUserMailNotificationRow(4, [
+        'check_key' => 'ct00trueifytmo',
+        'enabled' => 0,
+        'last_send' => null,
+    ]);
 
     try {
         $result = nbmPost($page, 'subscribe', [
@@ -442,7 +470,8 @@ it('reports a repost for send_submit with the batch-timing estimate when the sen
 
     $timeoutSnapshot = nbmForceInstantSendmailTimeout();
     $snapshot = nbmUserMailNotificationRow(1);
-    expect($snapshot)->not->toBeNull();
+    expect($snapshot)
+        ->not->toBeNull();
     assert($snapshot !== null);
 
     try {
@@ -476,12 +505,17 @@ it('renders only the previously-selected user as checked when redisplaying the s
     $token = H::pwgToken($page);
 
     $snapshot = nbmUserMailNotificationRow(1);
-    expect($snapshot)->not->toBeNull();
+    expect($snapshot)
+        ->not->toBeNull();
     assert($snapshot !== null);
 
     $originalMailAddress = nbmUserMailAddress(4);
     nbmSetUserMailAddress(4, 'ct00sendlistun@example.test');
-    nbmSetUserMailNotificationRow(4, ['check_key' => 'ct00sendlistun', 'enabled' => 1, 'last_send' => null]);
+    nbmSetUserMailNotificationRow(4, [
+        'check_key' => 'ct00sendlistun',
+        'enabled' => 1,
+        'last_send' => null,
+    ]);
 
     try {
         $result = nbmPost($page, 'send', [
@@ -518,7 +552,8 @@ it('cleans up newly-inserted notification rows and redirects when the plain-load
     $page = H::loginAsAdmin($this);
 
     $snapshot = nbmUserMailNotificationRow(1);
-    expect($snapshot)->not->toBeNull();
+    expect($snapshot)
+        ->not->toBeNull();
     assert($snapshot !== null);
 
     $timeoutSnapshot = nbmForceInstantSendmailTimeout();
@@ -542,7 +577,8 @@ it('cleans up newly-inserted notification rows and redirects when the plain-load
         // before the self-heal could ever "stick" -- unlike the plain
         // self-heal test above (no forced timeout there), which expects
         // the opposite outcome.
-        expect(nbmUserMailNotificationRow(1))->toBeNull();
+        expect(nbmUserMailNotificationRow(1))
+            ->toBeNull();
     } finally {
         nbmSetUserMailNotificationRow(1, $snapshot);
         H::restoreConfig($enabledSnapshot);

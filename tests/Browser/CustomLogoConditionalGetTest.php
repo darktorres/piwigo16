@@ -12,14 +12,15 @@ use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
  * short-circuit, and the exact Content-Type/Content-Disposition/
  * Last-Modified headers a real 200 response carries.
  */
-
 const CUSTOM_LOGO_CONDITIONAL_PATH = 'logo/browser-test-logo-conditional.png';
 
 afterEach(function (): void {
     H::clearCustomLogo(CUSTOM_LOGO_CONDITIONAL_PATH);
 });
 
-/** @return array{status: int, headers: string} */
+/**
+ * @return array{status: int, headers: string}
+ */
 function customLogoRawGet(?string $ifModifiedSince = null): array
 {
     $ch = curl_init(H::baseUrl() . '/logo.php');
@@ -40,7 +41,10 @@ function customLogoRawGet(?string $ifModifiedSince = null): array
     $status = curl_getinfo($ch, CURLINFO_RESPONSE_CODE);
     unset($ch);
 
-    return ['status' => $status, 'headers' => $response];
+    return [
+        'status' => $status,
+        'headers' => $response,
+    ];
 }
 
 it('serves the real PNG content-type, disposition and Last-Modified headers on a plain GET', function (): void {
@@ -51,9 +55,12 @@ it('serves the real PNG content-type, disposition and Last-Modified headers on a
     expect($result['status'])->toBe(200);
 
     $headerBlock = strtolower(explode("\r\n\r\n", $result['headers'], 2)[0]);
-    expect($headerBlock)->toContain('content-type: image/png')
-        ->and($headerBlock)->toContain('content-disposition: inline; filename="browser-test-logo-conditional.png"')
-        ->and($headerBlock)->toContain('last-modified:');
+    expect($headerBlock)
+        ->toContain('content-type: image/png')
+        ->and($headerBlock)
+        ->toContain('content-disposition: inline; filename="browser-test-logo-conditional.png"')
+        ->and($headerBlock)
+        ->toContain('last-modified:');
 });
 
 it('returns 304 with an empty body when If-Modified-Since is present, regardless of its value', function (): void {
@@ -69,5 +76,6 @@ it('returns 304 with an empty body when If-Modified-Since is present, regardless
     expect($result['status'])->toBe(304);
 
     $body = explode("\r\n\r\n", $result['headers'], 2)[1] ?? '';
-    expect(trim($body))->toBe('');
+    expect(trim($body))
+        ->toBe('');
 });

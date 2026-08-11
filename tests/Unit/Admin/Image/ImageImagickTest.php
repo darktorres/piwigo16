@@ -3,11 +3,11 @@
 declare(strict_types=1);
 
 use PHPUnit\Framework\Assert;
-use Piwigo\PluginConfig\EventDispatcher;
-use Piwigo\Config\CurrentConfig;
 use Piwigo\Admin\Image\ImageImagick;
 use Piwigo\Admin\Image\PwgImage;
+use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\CurrentLogger;
+use Piwigo\PluginConfig\EventDispatcher;
 
 /**
  * Only runs the real ext-imagick extension when it's genuinely available in
@@ -28,7 +28,7 @@ use Piwigo\Core\CurrentLogger;
  */
 function imageImagickTestMarker(): string
 {
-    /** @var string|null $marker */
+    /** @var string|null */
     static $marker = null;
 
     return $marker ??= sys_get_temp_dir() . '/piwigo-image-imagick-test-' . bin2hex(random_bytes(8));
@@ -157,7 +157,8 @@ function imageImagickTestAssertPrehalving(int $srcWidth, int $srcHeight, int $ta
     imageImagickTestMakeStripes($path, $srcWidth, $srcHeight);
 
     $image = new ImageImagick($path);
-    expect($image->resize($targetWidth, $targetHeight))->toBeTrue();
+    expect($image->resize($targetWidth, $targetHeight))
+        ->toBeTrue();
     $actualPath = imageImagickTestMarker() . '/prehalving-actual.jpg';
     $image->write($actualPath);
 
@@ -182,10 +183,13 @@ function imageImagickTestAssertPrehalving(int $srcWidth, int $srcHeight, int $ta
         $twoStepPath = imageImagickTestMarker() . '/prehalving-twostep.jpg';
         $twoStep->writeImage($twoStepPath);
 
-        expect(md5_file($actualPath))->toBe(md5_file($twoStepPath), 'resize() must take the pre-halving scaleImage() path here, landing on the exact halved intermediate size')
-            ->and(md5_file($actualPath))->not->toBe(md5_file($oneStepPath), 'the pre-halving path must actually alter the output vs a naive single-pass resize');
+        expect(md5_file($actualPath))
+            ->toBe(md5_file($twoStepPath), 'resize() must take the pre-halving scaleImage() path here, landing on the exact halved intermediate size')
+            ->and(md5_file($actualPath))
+            ->not->toBe(md5_file($oneStepPath), 'the pre-halving path must actually alter the output vs a naive single-pass resize');
     } else {
-        expect(md5_file($actualPath))->toBe(md5_file($oneStepPath), 'resize() must NOT take the pre-halving scaleImage() path here');
+        expect(md5_file($actualPath))
+            ->toBe(md5_file($oneStepPath), 'resize() must NOT take the pre-halving scaleImage() path here');
     }
 }
 
@@ -208,7 +212,8 @@ test('construct throws for content that is not a real image', function (): void 
     $path = imageImagickTestMarker() . '/photo.jpg';
     file_put_contents($path, 'this is plain text, not a real JPEG');
 
-    expect(fn () => new ImageImagick($path))->toThrow(ImagickException::class);
+    expect(fn () => new ImageImagick($path))
+        ->toThrow(ImagickException::class);
 });
 
 test('get_width and get_height report the real source dimensions', function (): void {
@@ -219,8 +224,10 @@ test('get_width and get_height report the real source dimensions', function (): 
 
     $image = new ImageImagick($path);
 
-    expect($image->get_width())->toBe(200)
-        ->and($image->get_height())->toBe(120);
+    expect($image->get_width())
+        ->toBe(200)
+        ->and($image->get_height())
+        ->toBe(120);
 });
 
 test('crop reduces the reported dimensions to the cropped region', function (): void {
@@ -232,9 +239,12 @@ test('crop reduces the reported dimensions to the cropped region', function (): 
 
     $result = $image->crop(80, 60, 10, 10);
 
-    expect($result)->toBeTrue()
-        ->and($image->get_width())->toBe(80)
-        ->and($image->get_height())->toBe(60);
+    expect($result)
+        ->toBeTrue()
+        ->and($image->get_width())
+        ->toBe(80)
+        ->and($image->get_height())
+        ->toBe(60);
 });
 
 test('resize takes the direct path for a source not more than 3x the target width', function (): void {
@@ -248,9 +258,12 @@ test('resize takes the direct path for a source not more than 3x the target widt
 
     $result = $image->resize(90, 54);
 
-    expect($result)->toBeTrue()
-        ->and($image->get_width())->toBe(90)
-        ->and($image->get_height())->toBe(54);
+    expect($result)
+        ->toBeTrue()
+        ->and($image->get_width())
+        ->toBe(90)
+        ->and($image->get_height())
+        ->toBe(54);
 });
 
 test('resize takes the pre-halving path for an even source more than 3x the target width', function (): void {
@@ -265,9 +278,12 @@ test('resize takes the pre-halving path for an even source more than 3x the targ
 
     $result = $image->resize(40, 24);
 
-    expect($result)->toBeTrue()
-        ->and($image->get_width())->toBe(40)
-        ->and($image->get_height())->toBe(24);
+    expect($result)
+        ->toBeTrue()
+        ->and($image->get_width())
+        ->toBe(40)
+        ->and($image->get_height())
+        ->toBe(24);
 });
 
 test('rotate by 90 degrees swaps the reported width and height', function (): void {
@@ -279,9 +295,12 @@ test('rotate by 90 degrees swaps the reported width and height', function (): vo
 
     $result = $image->rotate(90);
 
-    expect($result)->toBeTrue()
-        ->and($image->get_width())->toBe(120)
-        ->and($image->get_height())->toBe(200);
+    expect($result)
+        ->toBeTrue()
+        ->and($image->get_width())
+        ->toBe(120)
+        ->and($image->get_height())
+        ->toBe(200);
 });
 
 test('set_compression_quality and strip both report success', function (): void {
@@ -291,8 +310,10 @@ test('set_compression_quality and strip both report success', function (): void 
     imageImagickTestMakeJpeg($path, 100, 80, 5, 5, 5);
     $image = new ImageImagick($path);
 
-    expect($image->set_compression_quality(60))->toBeTrue()
-        ->and($image->strip())->toBeTrue();
+    expect($image->set_compression_quality(60))
+        ->toBeTrue()
+        ->and($image->strip())
+        ->toBeTrue();
 });
 
 test('sharpen applies a real convolution and reports success, actually changing the pixel data', function (): void {
@@ -318,14 +339,16 @@ test('sharpen applies a real convolution and reports success, actually changing 
 
     $result = $image->sharpen(50);
 
-    expect($result)->toBeTrue();
+    expect($result)
+        ->toBeTrue();
 
     $sharpenedPath = imageImagickTestMarker() . '/sharpened-out.jpg';
     $untouchedPath = imageImagickTestMarker() . '/sharpen-untouched.jpg';
     $image->write($sharpenedPath);
     (new ImageImagick($path))->write($untouchedPath);
 
-    expect(md5_file($sharpenedPath))->not->toBe(md5_file($untouchedPath), 'sharpen() must actually alter the pixel data via a real convolveImage() call');
+    expect(md5_file($sharpenedPath))
+        ->not->toBe(md5_file($untouchedPath), 'sharpen() must actually alter the pixel data via a real convolveImage() call');
 });
 
 test('write persists the image to the destination path with the current dimensions', function (): void {
@@ -339,13 +362,18 @@ test('write persists the image to the destination path with the current dimensio
 
     $result = $image->write($destPath);
 
-    expect($result)->toBeTrue();
-    expect($destPath)->toBeFile();
-    expect(filesize($destPath))->toBeGreaterThan(0);
+    expect($result)
+        ->toBeTrue();
+    expect($destPath)
+        ->toBeFile();
+    expect(filesize($destPath))
+        ->toBeGreaterThan(0);
 
     $reloaded = new ImageImagick($destPath);
-    expect($reloaded->get_width())->toBe(50)
-        ->and($reloaded->get_height())->toBe(30);
+    expect($reloaded->get_width())
+        ->toBe(50)
+        ->and($reloaded->get_height())
+        ->toBe(30);
 });
 
 test('compose composites a same-backend overlay and preserves the base dimensions', function (): void {
@@ -360,9 +388,12 @@ test('compose composites a same-backend overlay and preserves the base dimension
 
     $result = $base->compose($overlay, 10, 10, 50);
 
-    expect($result)->toBeTrue()
-        ->and($base->get_width())->toBe(200)
-        ->and($base->get_height())->toBe(120);
+    expect($result)
+        ->toBeTrue()
+        ->and($base->get_width())
+        ->toBe(200)
+        ->and($base->get_height())
+        ->toBe(120);
 
     // Dimensions alone don't prove compositing actually happened -- write
     // the composed image out and compare it against a fresh, untouched
@@ -374,7 +405,8 @@ test('compose composites a same-backend overlay and preserves the base dimension
     $base->write($composedPath);
     (new ImageImagick($basePath))->write($untouchedPath);
 
-    expect(md5_file($composedPath))->not->toBe(md5_file($untouchedPath), 'compose() must actually alter the base image pixel data');
+    expect(md5_file($composedPath))
+        ->not->toBe(md5_file($untouchedPath), 'compose() must actually alter the base image pixel data');
 });
 
 test('compose only dims a shared overlay once across repeated calls', function (): void {
@@ -387,7 +419,8 @@ test('compose only dims a shared overlay once across repeated calls', function (
     $base = new ImageImagick($basePath);
     $overlay = new PwgImage($overlayPath, new CurrentLogger(), new EventDispatcher(), new CurrentConfig(), 'imagick');
     $overlayBackend = $overlay->image;
-    expect($overlayBackend)->toBeInstanceOf(ImageImagick::class);
+    expect($overlayBackend)
+        ->toBeInstanceOf(ImageImagick::class);
     // dirtyTrickXrepeatApplied gates the alpha-dimming evaluateImage() call
     // to run exactly once per overlay instance, even across multiple
     // compose() calls onto different x-repeat/y-repeat tile positions --
@@ -396,17 +429,22 @@ test('compose only dims a shared overlay once across repeated calls', function (
     // just "the 2nd call doesn't throw".
     $dirtyFlag = new ReflectionProperty(ImageImagick::class, 'dirtyTrickXrepeatApplied');
 
-    expect($dirtyFlag->getValue($overlayBackend))->toBeFalse('a freshly constructed overlay must start undimmed');
+    expect($dirtyFlag->getValue($overlayBackend))
+        ->toBeFalse('a freshly constructed overlay must start undimmed');
 
     $firstResult = $base->compose($overlay, 0, 0, 50);
 
-    expect($firstResult)->toBeTrue()
-        ->and($dirtyFlag->getValue($overlayBackend))->toBeTrue('opacity<100 on the first call must dim the overlay and record it');
+    expect($firstResult)
+        ->toBeTrue()
+        ->and($dirtyFlag->getValue($overlayBackend))
+        ->toBeTrue('opacity<100 on the first call must dim the overlay and record it');
 
     $secondResult = $base->compose($overlay, 20, 20, 50);
 
-    expect($secondResult)->toBeTrue()
-        ->and($dirtyFlag->getValue($overlayBackend))->toBeTrue('the flag must stay set (not get reset) across the second call onto the same overlay');
+    expect($secondResult)
+        ->toBeTrue()
+        ->and($dirtyFlag->getValue($overlayBackend))
+        ->toBeTrue('the flag must stay set (not get reset) across the second call onto the same overlay');
 });
 
 test('compose throws when the overlay uses a different image backend', function (): void {
@@ -439,9 +477,12 @@ test('crop accepts real float width/height/x/y without a TypeError', function ()
 
     $result = $image->crop(60.0, 40.0, 10.0, 5.0);
 
-    expect($result)->toBeTrue()
-        ->and($image->get_width())->toBe(60)
-        ->and($image->get_height())->toBe(40);
+    expect($result)
+        ->toBeTrue()
+        ->and($image->get_width())
+        ->toBe(60)
+        ->and($image->get_height())
+        ->toBe(40);
 });
 
 test('rotate resets the image orientation metadata to top-left', function (): void {
@@ -454,11 +495,13 @@ test('rotate resets the image orientation metadata to top-left', function (): vo
     // assertion below can only pass because rotate() actively resets it,
     // not because it happened to already be top-left.
     $image->image->setImageOrientation(Imagick::ORIENTATION_BOTTOMRIGHT);
-    expect($image->image->getImageOrientation())->toBe(Imagick::ORIENTATION_BOTTOMRIGHT);
+    expect($image->image->getImageOrientation())
+        ->toBe(Imagick::ORIENTATION_BOTTOMRIGHT);
 
     $image->rotate(90);
 
-    expect($image->image->getImageOrientation())->toBe(Imagick::ORIENTATION_TOPLEFT);
+    expect($image->image->getImageOrientation())
+        ->toBe(Imagick::ORIENTATION_TOPLEFT);
 });
 
 test('resize switches the image to line-interlaced (progressive) encoding', function (): void {
@@ -467,11 +510,13 @@ test('resize switches the image to line-interlaced (progressive) encoding', func
     $path = imageImagickTestMarker() . '/resize-interlace.jpg';
     imageImagickTestMakeJpeg($path, 100, 60, 10, 10, 200);
     $image = new ImageImagick($path);
-    expect($image->image->getInterlaceScheme())->not->toBe(Imagick::INTERLACE_LINE);
+    expect($image->image->getInterlaceScheme())
+        ->not->toBe(Imagick::INTERLACE_LINE);
 
     $image->resize(50, 30);
 
-    expect($image->image->getInterlaceScheme())->toBe(Imagick::INTERLACE_LINE);
+    expect($image->image->getInterlaceScheme())
+        ->toBe(Imagick::INTERLACE_LINE);
 });
 
 test('resize accepts real float width/height without a TypeError', function (): void {
@@ -485,9 +530,12 @@ test('resize accepts real float width/height without a TypeError', function (): 
 
     $result = $image->resize(60.0, 40.0);
 
-    expect($result)->toBeTrue()
-        ->and($image->get_width())->toBe(60)
-        ->and($image->get_height())->toBe(40);
+    expect($result)
+        ->toBeTrue()
+        ->and($image->get_width())
+        ->toBe(60)
+        ->and($image->get_height())
+        ->toBe(40);
 });
 
 // [Mutation] resize()'s resizeImage(..., 0.9) blur argument literal
@@ -591,13 +639,16 @@ test('compose does not dim the overlay when opacity is exactly 100 (not strictly
     $base = new ImageImagick($basePath);
     $overlay = new PwgImage($overlayPath, new CurrentLogger(), new EventDispatcher(), new CurrentConfig(), 'imagick');
     $overlayBackend = $overlay->image;
-    expect($overlayBackend)->toBeInstanceOf(ImageImagick::class);
+    expect($overlayBackend)
+        ->toBeInstanceOf(ImageImagick::class);
     $dirtyFlag = new ReflectionProperty(ImageImagick::class, 'dirtyTrickXrepeatApplied');
 
     $result = $base->compose($overlay, 0, 0, 100);
 
-    expect($result)->toBeTrue()
-        ->and($dirtyFlag->getValue($overlayBackend))->toBeFalse('opacity===100 is not "< 100" -- the dimming step must be skipped');
+    expect($result)
+        ->toBeTrue()
+        ->and($dirtyFlag->getValue($overlayBackend))
+        ->toBeFalse('opacity===100 is not "< 100" -- the dimming step must be skipped');
 });
 
 test('compose dims the overlay when opacity is 99, one below the threshold', function (): void {
@@ -610,13 +661,16 @@ test('compose dims the overlay when opacity is 99, one below the threshold', fun
     $base = new ImageImagick($basePath);
     $overlay = new PwgImage($overlayPath, new CurrentLogger(), new EventDispatcher(), new CurrentConfig(), 'imagick');
     $overlayBackend = $overlay->image;
-    expect($overlayBackend)->toBeInstanceOf(ImageImagick::class);
+    expect($overlayBackend)
+        ->toBeInstanceOf(ImageImagick::class);
     $dirtyFlag = new ReflectionProperty(ImageImagick::class, 'dirtyTrickXrepeatApplied');
 
     $result = $base->compose($overlay, 0, 0, 99);
 
-    expect($result)->toBeTrue()
-        ->and($dirtyFlag->getValue($overlayBackend))->toBeTrue('opacity 99 is "< 100" -- the dimming step must run');
+    expect($result)
+        ->toBeTrue()
+        ->and($dirtyFlag->getValue($overlayBackend))
+        ->toBeTrue('opacity 99 is "< 100" -- the dimming step must run');
 });
 
 test('compose dims the overlay alpha by exactly opacity/100 before compositing', function (): void {
@@ -642,7 +696,8 @@ test('compose dims the overlay alpha by exactly opacity/100 before compositing',
     $overlay = new PwgImage($overlayPath, new CurrentLogger(), new EventDispatcher(), new CurrentConfig(), 'imagick');
 
     $result = $base->compose($overlay, 0, 0, 37);
-    expect($result)->toBeTrue();
+    expect($result)
+        ->toBeTrue();
     $actualPath = imageImagickTestMarker() . '/dim-actual.jpg';
     $base->write($actualPath);
 
@@ -659,7 +714,8 @@ test('compose dims the overlay alpha by exactly opacity/100 before compositing',
     $expectedPath = imageImagickTestMarker() . '/dim-expected.jpg';
     $rawBase->writeImage($expectedPath);
 
-    expect(md5_file($actualPath))->toBe(md5_file($expectedPath));
+    expect(md5_file($actualPath))
+        ->toBe(md5_file($expectedPath));
 });
 
 test('compose\'s alpha-dimming step genuinely changes the composited pixel color, not just the encoded bytes', function (): void {
@@ -707,7 +763,8 @@ test('compose accepts real float x/y without a TypeError', function (): void {
 
     $result = $base->compose($overlay, 5.0, 5.0, 80);
 
-    expect($result)->toBeTrue();
+    expect($result)
+        ->toBeTrue();
 });
 
 test('write encodes JPEG output using the exact 4:2:2 sampling factors [2, 1]', function (): void {
@@ -721,14 +778,16 @@ test('write encodes JPEG output using the exact 4:2:2 sampling factors [2, 1]', 
     $image = new ImageImagick($path);
     $actualPath = imageImagickTestMarker() . '/sampling-actual.jpg';
 
-    expect($image->write($actualPath))->toBeTrue();
+    expect($image->write($actualPath))
+        ->toBeTrue();
 
     $rawMatching = new Imagick($path);
     $rawMatching->setSamplingFactors([2, 1]);
     $expectedPath = imageImagickTestMarker() . '/sampling-expected.jpg';
     $rawMatching->writeImage($expectedPath);
 
-    expect(md5_file($actualPath))->toBe(md5_file($expectedPath));
+    expect(md5_file($actualPath))
+        ->toBe(md5_file($expectedPath));
 
     // Sanity check that the sampling factors are actually observable on
     // this fixture -- a different (4:4:4, no subsampling) factor set must
@@ -739,5 +798,6 @@ test('write encodes JPEG output using the exact 4:2:2 sampling factors [2, 1]', 
     $differentPath = imageImagickTestMarker() . '/sampling-different.jpg';
     $rawDifferent->writeImage($differentPath);
 
-    expect(md5_file($expectedPath))->not->toBe(md5_file($differentPath));
+    expect(md5_file($expectedPath))
+        ->not->toBe(md5_file($differentPath));
 });

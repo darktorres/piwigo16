@@ -4,25 +4,25 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Integration;
 
-use Override;
-use Piwigo\PluginConfig\EventDispatcher;
-use Piwigo\Tests\Support\EventDispatcherTestFactory;
-use Piwigo\Core\Kernel;
 use LogicException;
-use Piwigo\Tests\Support\TemplateTestFactory;
+use Override;
 use Piwigo\Bootstrap\RedirectService;
 use Piwigo\Config\ConfigLoader;
 use Piwigo\Config\ConfigService;
 use Piwigo\Config\CurrentConfig;
-use Piwigo\Tests\Support\CurrentConfigTestFactory;
-use Piwigo\Tests\Support\CurrentConfigServiceTestFactory;
-use Piwigo\Tests\Support\CurrentPathsTestFactory;
-use Piwigo\Tests\Support\LangTestFactory;
+use Piwigo\Core\Kernel;
 use Piwigo\Core\Logger;
-use Piwigo\Tests\Support\PageStateTestFactory;
 use Piwigo\Core\UniqueExecLock;
 use Piwigo\Http\ResponseReadyException;
+use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Template\CurrentTemplate;
+use Piwigo\Tests\Support\CurrentConfigServiceTestFactory;
+use Piwigo\Tests\Support\CurrentConfigTestFactory;
+use Piwigo\Tests\Support\CurrentPathsTestFactory;
+use Piwigo\Tests\Support\EventDispatcherTestFactory;
+use Piwigo\Tests\Support\LangTestFactory;
+use Piwigo\Tests\Support\PageStateTestFactory;
+use Piwigo\Tests\Support\TemplateTestFactory;
 use Piwigo\Users\UserService;
 
 /**
@@ -77,7 +77,8 @@ final class RedirectServiceTest extends IntegrationTestCase
         // ScriptLoader::urlService() -- unset by default, real
         // RequestBootstrap-only wiring this test never boots.
 
-        $this->currentConfig()->sendPiwigoInfos = false;
+        $this->currentConfig()
+            ->sendPiwigoInfos = false;
 
         // Deliberately NOT initialised here: CurrentTemplate::current()->reset()/
         // Lang::reset() are the actual precondition the early-crash branch
@@ -89,11 +90,14 @@ final class RedirectServiceTest extends IntegrationTestCase
     #[Override]
     protected function tearDown(): void
     {
-        UniqueExecLock::ends(new Logger(['severity' => Logger::OFF]), 'check_for_updates');
+        UniqueExecLock::ends(new Logger([
+            'severity' => Logger::OFF,
+        ]), 'check_for_updates');
         UniqueExecLock::reset();
         CurrentTemplate::current()->reset();
         LangTestFactory::get()->reset();
-        $this->currentConfig()->reset();
+        $this->currentConfig()
+            ->reset();
         parent::tearDown();
     }
 
@@ -126,7 +130,7 @@ final class RedirectServiceTest extends IntegrationTestCase
         return $userService;
     }
 
-    public function test_redirectHtml_builds_a_guest_user_and_a_fresh_template_when_neither_was_initialised_yet(): void
+    public function testRedirectHtmlBuildsAGuestUserAndAFreshTemplateWhenNeitherWasInitialisedYet(): void
     {
         // Preconditions for the early-crash branch: neither CurrentTemplate
         // nor Lang's own langInfo has been initialised (setUp() already
@@ -135,7 +139,9 @@ final class RedirectServiceTest extends IntegrationTestCase
         self::assertFalse(CurrentTemplate::current()->isInitialized());
         self::assertFalse(LangTestFactory::get()->isLangInfoInitialized());
 
-        $execId = UniqueExecLock::begins(new Logger(['severity' => Logger::OFF]), 'check_for_updates');
+        $execId = UniqueExecLock::begins(new Logger([
+            'severity' => Logger::OFF,
+        ]), 'check_for_updates');
         self::assertTrue($execId);
 
         $body = null;
@@ -158,7 +164,7 @@ final class RedirectServiceTest extends IntegrationTestCase
         self::assertStringContainsString('href="http://example.test/target.php"', $body);
     }
 
-    public function test_redirectHtml_defaults_the_message_to_a_translated_redirection_notice_when_msg_is_empty(): void
+    public function testRedirectHtmlDefaultsTheMessageToATranslatedRedirectionNoticeWhenMsgIsEmpty(): void
     {
         // Skip the early-crash branch entirely: a real Template + Lang
         // info already initialised, exactly like every other real request
@@ -170,36 +176,48 @@ final class RedirectServiceTest extends IntegrationTestCase
         // reads pointed at an empty array (confirmed live: a real
         // "Undefined array key" warning under this suite's own
         // failOnWarning=true).
-        LangTestFactory::get()->setLangInfo(['code' => 'en_UK', 'direction' => 'ltr']);
+        LangTestFactory::get()->setLangInfo([
+            'code' => 'en_UK',
+            'direction' => 'ltr',
+        ]);
         CurrentTemplate::current()->set(TemplateTestFactory::build(CurrentPathsTestFactory::get()->root . 'themes', 'default'));
 
-        $execId = UniqueExecLock::begins(new Logger(['severity' => Logger::OFF]), 'check_for_updates');
+        $execId = UniqueExecLock::begins(new Logger([
+            'severity' => Logger::OFF,
+        ]), 'check_for_updates');
         self::assertTrue($execId);
 
         $body = null;
         try {
             new RedirectService(LangTestFactory::get(), $this->userService(), EventDispatcherTestFactory::get(), PageStateTestFactory::get())->redirectHtml('http://example.test/other.php', '');
         } catch (ResponseReadyException $e) {
-            $body = (string) $e->response()->getBody();
+            $body = (string) $e->response()
+                ->getBody();
         }
 
         self::assertStringContainsString(nl2br(LangTestFactory::get()->t('Redirection...')), $body);
     }
 
-    public function test_redirect_calls_redirectHtml_when_a_nonzero_refresh_time_is_given(): void
+    public function testRedirectCallsRedirectHtmlWhenANonzeroRefreshTimeIsGiven(): void
     {
         // Ordering note: see test_redirectHtml_defaults_the_message_to_a_translated_redirection_notice_when_msg_is_empty()'s
         // own comment -- Lang::setLangInfo() must run before Template's
         // own construction snapshots it.
-        LangTestFactory::get()->setLangInfo(['code' => 'en_UK', 'direction' => 'ltr']);
+        LangTestFactory::get()->setLangInfo([
+            'code' => 'en_UK',
+            'direction' => 'ltr',
+        ]);
         CurrentTemplate::current()->set(TemplateTestFactory::build(CurrentPathsTestFactory::get()->root . 'themes', 'default'));
         // Would take the redirectHttp() branch (a bare 302, no rendered
         // body) if $refresh_time were ignored -- forcing the http method
         // here proves it's genuinely $refresh_time, not
         // defaultRedirectMethod(), driving the else branch.
-        $this->currentConfig()->defaultRedirectMethod = 'http';
+        $this->currentConfig()
+            ->defaultRedirectMethod = 'http';
 
-        $execId = UniqueExecLock::begins(new Logger(['severity' => Logger::OFF]), 'check_for_updates');
+        $execId = UniqueExecLock::begins(new Logger([
+            'severity' => Logger::OFF,
+        ]), 'check_for_updates');
         self::assertTrue($execId);
 
         $status = null;

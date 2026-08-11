@@ -48,7 +48,7 @@ final class BackupCreateCommandTest extends IntegrationTestCase
         parent::tearDown();
     }
 
-    public function test_execute_reports_success_and_the_real_archive_path(): void
+    public function testExecuteReportsSuccessAndTheRealArchivePath(): void
     {
         $command = new BackupCreateCommand(new BackupService());
         $tester = new CommandTester($command);

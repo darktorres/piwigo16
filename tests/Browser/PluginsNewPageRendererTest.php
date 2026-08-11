@@ -149,7 +149,9 @@ it('rejects an automatic-install request from a non-webmaster session', function
 
     try {
         $adminPage = H::visitPwg($this, '/identification.php');
-        $adminPage = $adminPage->fill('username', $username)->fill('password', $password)->click('login');
+        $adminPage = $adminPage->fill('username', $username)
+            ->fill('password', $password)
+            ->click('login');
         H::assertNoServerErrors($adminPage, 'plain-admin post-login page');
 
         $adminPage = H::navigateOk($adminPage, '/admin.php?page=plugins&tab=new&revision=1&extension=1');

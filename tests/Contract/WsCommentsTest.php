@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Contract;
 
+use Doctrine\DBAL\Connection;
 use Override;
 use Piwigo\Cache\CachePools;
-use Doctrine\DBAL\Connection;
 use Piwigo\Db\DbConnection;
 
 /**
@@ -41,7 +41,9 @@ final class WsCommentsTest extends ContractTestCase
 {
     private Connection $conn;
 
-    /** @var list<int> */
+    /**
+     * @var list<int>
+     */
     private array $commentIdsToDelete = [];
 
     #[Override]
@@ -56,7 +58,7 @@ final class WsCommentsTest extends ContractTestCase
     {
         if ($this->commentIdsToDelete !== []) {
             $this->conn->executeStatement(
-                'DELETE FROM ' . 'comments' . ' WHERE id IN (' . implode(',', array_fill(0, count($this->commentIdsToDelete), '?')) . ')',
+                'DELETE FROM comments WHERE id IN (' . implode(',', array_fill(0, count($this->commentIdsToDelete), '?')) . ')',
                 $this->commentIdsToDelete
             );
             $this->commentIdsToDelete = [];
@@ -64,24 +66,24 @@ final class WsCommentsTest extends ContractTestCase
         parent::tearDown();
     }
 
-    public function test_userComments_getList_response_matches_schema(): void
+    public function testUserCommentsGetListResponseMatchesSchema(): void
     {
         $response = $this->wsAdmin('pwg.userComments.getList', [
             'per_page' => 10,
-            'page'     => 0,
-            'status'   => 'all',
+            'page' => 0,
+            'status' => 'all',
         ]);
 
         self::assertSame('ok', $response['stat']);
         self::assertMatchesSchema('pwg.userComments.getList', $response);
     }
 
-    public function test_userComments_getList_contains_summary_and_comments(): void
+    public function testUserCommentsGetListContainsSummaryAndComments(): void
     {
         $response = $this->wsAdmin('pwg.userComments.getList', [
             'per_page' => 10,
-            'page'     => 0,
-            'status'   => 'all',
+            'page' => 0,
+            'status' => 'all',
         ]);
 
         $result = $response['result'];
@@ -91,21 +93,23 @@ final class WsCommentsTest extends ContractTestCase
         self::assertIsArray($result['comments']);
     }
 
-    public function test_userComments_getList_forbidden_for_guest(): void
+    public function testUserCommentsGetListForbiddenForGuest(): void
     {
         $response = $this->ws('pwg.userComments.getList', [
             'per_page' => 10,
-            'page'     => 0,
-            'status'   => 'all',
+            'page' => 0,
+            'status' => 'all',
         ]);
 
         self::assertSame('fail', $response['stat']);
     }
 
-    public function test_userComments_getList_invalid_status_returns_error(): void
+    public function testUserCommentsGetListInvalidStatusReturnsError(): void
     {
         $response = $this->wsAdmin('pwg.userComments.getList', [
-            'per_page' => 10, 'page' => 0, 'status' => 'not-a-real-status',
+            'per_page' => 10,
+            'page' => 0,
+            'status' => 'not-a-real-status',
         ]);
 
         self::assertSame('fail', $response['stat']);
@@ -113,10 +117,12 @@ final class WsCommentsTest extends ContractTestCase
         self::assertSame('Status must be: all, pending or validated', $response['message']);
     }
 
-    public function test_userComments_getList_invalid_per_page_returns_error(): void
+    public function testUserCommentsGetListInvalidPerPageReturnsError(): void
     {
         $response = $this->wsAdmin('pwg.userComments.getList', [
-            'per_page' => 7, 'page' => 0, 'status' => 'all',
+            'per_page' => 7,
+            'page' => 0,
+            'status' => 'all',
         ]);
 
         self::assertSame('fail', $response['stat']);
@@ -124,10 +130,13 @@ final class WsCommentsTest extends ContractTestCase
         self::assertSame('Per page must be: 5, 10, 25 or 50', $response['message']);
     }
 
-    public function test_userComments_getList_invalid_f_min_date_returns_error(): void
+    public function testUserCommentsGetListInvalidFMinDateReturnsError(): void
     {
         $response = $this->wsAdmin('pwg.userComments.getList', [
-            'per_page' => 10, 'page' => 0, 'status' => 'all', 'f_min_date' => 'not-a-date',
+            'per_page' => 10,
+            'page' => 0,
+            'status' => 'all',
+            'f_min_date' => 'not-a-date',
         ]);
 
         self::assertSame('fail', $response['stat']);
@@ -135,10 +144,13 @@ final class WsCommentsTest extends ContractTestCase
         self::assertSame('Invalid f_min_date', $response['message']);
     }
 
-    public function test_userComments_getList_invalid_f_max_date_returns_error(): void
+    public function testUserCommentsGetListInvalidFMaxDateReturnsError(): void
     {
         $response = $this->wsAdmin('pwg.userComments.getList', [
-            'per_page' => 10, 'page' => 0, 'status' => 'all', 'f_max_date' => 'not-a-date',
+            'per_page' => 10,
+            'page' => 0,
+            'status' => 'all',
+            'f_max_date' => 'not-a-date',
         ]);
 
         self::assertSame('fail', $response['stat']);
@@ -146,12 +158,14 @@ final class WsCommentsTest extends ContractTestCase
         self::assertSame('Invalid f_max_date', $response['message']);
     }
 
-    public function test_userComments_getList_filters_by_pending_status(): void
+    public function testUserCommentsGetListFiltersByPendingStatus(): void
     {
         // fixture comment id 5 (image 4) is the only pending (validated=0)
         // comment -- confirmed live via a direct DB read.
         $response = $this->wsAdmin('pwg.userComments.getList', [
-            'per_page' => 10, 'page' => 0, 'status' => 'pending',
+            'per_page' => 10,
+            'page' => 0,
+            'status' => 'pending',
         ]);
 
         self::assertSame('ok', $response['stat']);
@@ -166,10 +180,12 @@ final class WsCommentsTest extends ContractTestCase
         }
     }
 
-    public function test_userComments_getList_filters_by_validated_status(): void
+    public function testUserCommentsGetListFiltersByValidatedStatus(): void
     {
         $response = $this->wsAdmin('pwg.userComments.getList', [
-            'per_page' => 10, 'page' => 0, 'status' => 'validated',
+            'per_page' => 10,
+            'page' => 0,
+            'status' => 'validated',
         ]);
 
         self::assertSame('ok', $response['stat']);
@@ -184,10 +200,13 @@ final class WsCommentsTest extends ContractTestCase
         }
     }
 
-    public function test_userComments_getList_filters_by_image_id(): void
+    public function testUserCommentsGetListFiltersByImageId(): void
     {
         $response = $this->wsAdmin('pwg.userComments.getList', [
-            'per_page' => 10, 'page' => 0, 'status' => 'all', 'image_id' => 4,
+            'per_page' => 10,
+            'page' => 0,
+            'status' => 'all',
+            'image_id' => 4,
         ]);
 
         self::assertSame('ok', $response['stat']);
@@ -203,13 +222,15 @@ final class WsCommentsTest extends ContractTestCase
         }
     }
 
-    public function test_userComments_getList_search_overrides_other_filters(): void
+    public function testUserCommentsGetListSearchOverridesOtherFilters(): void
     {
         // 'search' resets $where_clauses to '1=1' and only applies the
         // content LIKE filter -- confirmed via reading getList()'s own
         // source ("reset all filters during search").
         $response = $this->wsAdmin('pwg.userComments.getList', [
-            'per_page' => 10, 'page' => 0, 'status' => 'all',
+            'per_page' => 10,
+            'page' => 0,
+            'status' => 'all',
             'image_id' => 999999, // would otherwise exclude every real comment
             'search' => 'Fixture comment',
         ]);
@@ -227,16 +248,18 @@ final class WsCommentsTest extends ContractTestCase
         }
     }
 
-    public function test_userComments_getList_returns_error_when_comments_are_disabled(): void
+    public function testUserCommentsGetListReturnsErrorWhenCommentsAreDisabled(): void
     {
         $this->conn->executeStatement(
-            "UPDATE " . 'config' . " SET value = 'false' WHERE param = 'activate_comments'"
+            'UPDATE config' . " SET value = 'false' WHERE param = 'activate_comments'"
         );
         CachePools::config()->clear();
 
         try {
             $response = $this->wsAdmin('pwg.userComments.getList', [
-                'per_page' => 10, 'page' => 0, 'status' => 'all',
+                'per_page' => 10,
+                'page' => 0,
+                'status' => 'all',
             ]);
 
             self::assertSame('fail', $response['stat']);
@@ -244,7 +267,7 @@ final class WsCommentsTest extends ContractTestCase
             self::assertSame('Comments are disabled', $response['message']);
         } finally {
             $this->conn->executeStatement(
-                "UPDATE " . 'config' . " SET value = 'true' WHERE param = 'activate_comments'"
+                'UPDATE config' . " SET value = 'true' WHERE param = 'activate_comments'"
             );
             CachePools::config()->clear();
         }
@@ -258,10 +281,13 @@ final class WsCommentsTest extends ContractTestCase
      * clause actually applied, robust to any other concurrently-created
      * comments from other authors.
      */
-    public function test_userComments_getList_filters_by_author_id(): void
+    public function testUserCommentsGetListFiltersByAuthorId(): void
     {
         $response = $this->wsAdmin('pwg.userComments.getList', [
-            'per_page' => 10, 'page' => 0, 'status' => 'all', 'author_id' => 1,
+            'per_page' => 10,
+            'page' => 0,
+            'status' => 'all',
+            'author_id' => 1,
         ]);
 
         self::assertSame('ok', $response['stat']);
@@ -288,10 +314,13 @@ final class WsCommentsTest extends ContractTestCase
      * authors. Filtering the main `comments` list to author_id=1 must not
      * shrink `filters.nb_authors` down to just that one author.
      */
-    public function test_userComments_getList_nb_authors_ignores_the_author_id_filter(): void
+    public function testUserCommentsGetListNbAuthorsIgnoresTheAuthorIdFilter(): void
     {
         $response = $this->wsAdmin('pwg.userComments.getList', [
-            'per_page' => 10, 'page' => 0, 'status' => 'all', 'author_id' => 1,
+            'per_page' => 10,
+            'page' => 0,
+            'status' => 'all',
+            'author_id' => 1,
         ]);
 
         self::assertSame('ok', $response['stat']);
@@ -320,10 +349,13 @@ final class WsCommentsTest extends ContractTestCase
      * 'search' (which would reset the date filter entirely, per this
      * class's own docblock).
      */
-    public function test_userComments_getList_filters_by_f_min_date(): void
+    public function testUserCommentsGetListFiltersByFMinDate(): void
     {
         $before = $this->wsAdmin('pwg.userComments.getList', [
-            'per_page' => 10, 'page' => 0, 'status' => 'all', 'image_id' => 4,
+            'per_page' => 10,
+            'page' => 0,
+            'status' => 'all',
+            'image_id' => 4,
             'f_min_date' => '2020-01-01',
         ]);
         self::assertSame('ok', $before['stat']);
@@ -333,7 +365,10 @@ final class WsCommentsTest extends ContractTestCase
         self::assertNotEmpty($beforeResult['comments'], 'a threshold before the fixture date must still include it');
 
         $after = $this->wsAdmin('pwg.userComments.getList', [
-            'per_page' => 10, 'page' => 0, 'status' => 'all', 'image_id' => 4,
+            'per_page' => 10,
+            'page' => 0,
+            'status' => 'all',
+            'image_id' => 4,
             'f_min_date' => '2030-01-01',
         ]);
         self::assertSame('ok', $after['stat']);
@@ -346,10 +381,13 @@ final class WsCommentsTest extends ContractTestCase
      * f_max_date's `date_format($max_date, 'Y-m-d 23:59:59')` +
      * `date <= '...'` clause -- the mirror image of f_min_date above.
      */
-    public function test_userComments_getList_filters_by_f_max_date(): void
+    public function testUserCommentsGetListFiltersByFMaxDate(): void
     {
         $after = $this->wsAdmin('pwg.userComments.getList', [
-            'per_page' => 10, 'page' => 0, 'status' => 'all', 'image_id' => 4,
+            'per_page' => 10,
+            'page' => 0,
+            'status' => 'all',
+            'image_id' => 4,
             'f_max_date' => '2030-01-01',
         ]);
         self::assertSame('ok', $after['stat']);
@@ -359,7 +397,10 @@ final class WsCommentsTest extends ContractTestCase
         self::assertNotEmpty($afterResult['comments'], 'a threshold after the fixture date must still include it');
 
         $before = $this->wsAdmin('pwg.userComments.getList', [
-            'per_page' => 10, 'page' => 0, 'status' => 'all', 'image_id' => 4,
+            'per_page' => 10,
+            'page' => 0,
+            'status' => 'all',
+            'image_id' => 4,
             'f_max_date' => '2020-01-01',
         ]);
         self::assertSame('ok', $before['stat']);
@@ -389,15 +430,17 @@ final class WsCommentsTest extends ContractTestCase
      * test_userComments_getList_returns_error_when_comments_are_disabled()
      * above.
      */
-    public function test_userComments_getList_shows_the_raw_author_name_for_an_anonymous_comment(): void
+    public function testUserCommentsGetListShowsTheRawAuthorNameForAnAnonymousComment(): void
     {
         $this->conn->executeStatement(
-            "UPDATE " . 'config' . " SET value = 'true' WHERE param = 'comments_forall'"
+            'UPDATE config' . " SET value = 'true' WHERE param = 'comments_forall'"
         );
         CachePools::config()->clear();
 
         try {
-            $info = $this->ws('pwg.images.getInfo', ['image_id' => 1]);
+            $info = $this->ws('pwg.images.getInfo', [
+                'image_id' => 1,
+            ]);
             $infoResult = $info['result'] ?? null;
             self::assertIsArray($infoResult);
             $commentPost = $infoResult['comment_post'] ?? null;
@@ -429,7 +472,10 @@ final class WsCommentsTest extends ContractTestCase
             $this->commentIdsToDelete[] = (int) $commentId;
 
             $response = $this->wsAdmin('pwg.userComments.getList', [
-                'per_page' => 10, 'page' => 0, 'status' => 'all', 'search' => $marker,
+                'per_page' => 10,
+                'page' => 0,
+                'status' => 'all',
+                'search' => $marker,
             ]);
 
             self::assertSame('ok', $response['stat']);
@@ -444,7 +490,7 @@ final class WsCommentsTest extends ContractTestCase
             }
         } finally {
             $this->conn->executeStatement(
-                "UPDATE " . 'config' . " SET value = 'false' WHERE param = 'comments_forall'"
+                'UPDATE config' . " SET value = 'false' WHERE param = 'comments_forall'"
             );
             CachePools::config()->clear();
         }

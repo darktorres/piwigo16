@@ -9,7 +9,9 @@ use Piwigo\Core\ThemeConfProviderInterface;
 
 final class SrcImageTestFakeThemeConfProvider implements ThemeConfProviderInterface
 {
-    public function __construct(private readonly string $mimeIconDir) {}
+    public function __construct(
+        private readonly string $mimeIconDir
+    ) {}
 
     #[Override]
     public function themeConf(string $key): string

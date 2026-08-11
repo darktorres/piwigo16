@@ -18,12 +18,18 @@ test('fromArray narrows every numeric bound to its real type', function (): void
         'max_ratio' => '2.5',
     ]);
 
-    expect($filter->minWidth)->toBe(100)
-        ->and($filter->maxWidth)->toBe(200)
-        ->and($filter->minHeight)->toBe(50)
-        ->and($filter->maxHeight)->toBe(75)
-        ->and($filter->minRatio)->toBe(1.5)
-        ->and($filter->maxRatio)->toBe(2.5);
+    expect($filter->minWidth)
+        ->toBe(100)
+        ->and($filter->maxWidth)
+        ->toBe(200)
+        ->and($filter->minHeight)
+        ->toBe(50)
+        ->and($filter->maxHeight)
+        ->toBe(75)
+        ->and($filter->minRatio)
+        ->toBe(1.5)
+        ->and($filter->maxRatio)
+        ->toBe(2.5);
 });
 
 test('fromArray defaults every bound to null when absent or non-numeric', function (): void {
@@ -31,16 +37,25 @@ test('fromArray defaults every bound to null when absent or non-numeric', functi
         'min_width' => 'not-a-number',
     ]);
 
-    expect($filter->minWidth)->toBeNull()
-        ->and($filter->maxWidth)->toBeNull()
-        ->and($filter->minHeight)->toBeNull()
-        ->and($filter->maxHeight)->toBeNull()
-        ->and($filter->minRatio)->toBeNull()
-        ->and($filter->maxRatio)->toBeNull();
+    expect($filter->minWidth)
+        ->toBeNull()
+        ->and($filter->maxWidth)
+        ->toBeNull()
+        ->and($filter->minHeight)
+        ->toBeNull()
+        ->and($filter->maxHeight)
+        ->toBeNull()
+        ->and($filter->minRatio)
+        ->toBeNull()
+        ->and($filter->maxRatio)
+        ->toBeNull();
 });
 
 test('isEmpty is true only when every bound is null', function (): void {
-    expect(new DimensionFilter()->isEmpty())->toBeTrue();
-    expect(new DimensionFilter(minWidth: 100)->isEmpty())->toBeFalse();
-    expect(new DimensionFilter(maxRatio: 2.5)->isEmpty())->toBeFalse();
+    expect(new DimensionFilter()->isEmpty())
+        ->toBeTrue();
+    expect(new DimensionFilter(minWidth: 100)->isEmpty())
+        ->toBeFalse();
+    expect(new DimensionFilter(maxRatio: 2.5)->isEmpty())
+        ->toBeFalse();
 });

@@ -11,9 +11,10 @@ test('toArray flattens every property to its real Smarty template variable name'
         deactivateUrl: '/?no_photo_yet=browse',
     );
 
-    expect($context->toArray())->toBe([
-        'step' => 1,
-        'U_LOGIN' => 'identification.php',
-        'deactivate_url' => '/?no_photo_yet=browse',
-    ]);
+    expect($context->toArray())
+        ->toBe([
+            'step' => 1,
+            'U_LOGIN' => 'identification.php',
+            'deactivate_url' => '/?no_photo_yet=browse',
+        ]);
 });

@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\DeploymentPolicy;
+use Piwigo\Core\ErrorCollector;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Paths;
-use Piwigo\Core\ErrorCollector;
 
 /**
  * Each test constructs its own fresh instance directly -- no reset()/
@@ -37,11 +37,13 @@ test('reset actually clears isActive back to false, not leaving it true', functi
     $errorCollector = new ErrorCollector(new DeploymentPolicy(), Paths::fromRoot(sys_get_temp_dir()));
     $prop = new ReflectionProperty(ErrorCollector::class, 'active');
     $prop->setValue($errorCollector, true);
-    expect($errorCollector->isActive())->toBeTrue();
+    expect($errorCollector->isActive())
+        ->toBeTrue();
 
     $errorCollector->reset();
 
-    expect($errorCollector->isActive())->toBeFalse();
+    expect($errorCollector->isActive())
+        ->toBeFalse();
 });
 
 test('drain returns an empty array when nothing was collected', function (): void {
@@ -52,7 +54,8 @@ test('drain returns exactly what was collected', function (): void {
     $errorCollector = new ErrorCollector(new DeploymentPolicy(), Paths::fromRoot(sys_get_temp_dir()));
     seedCollected($errorCollector, ['[WARNING] foo in bar.php:1', '[NOTICE] baz in qux.php:2']);
 
-    expect($errorCollector->drain())->toBe(['[WARNING] foo in bar.php:1', '[NOTICE] baz in qux.php:2']);
+    expect($errorCollector->drain())
+        ->toBe(['[WARNING] foo in bar.php:1', '[NOTICE] baz in qux.php:2']);
 });
 
 test('drain clears the buffer, unlike collected()', function (): void {
@@ -61,7 +64,8 @@ test('drain clears the buffer, unlike collected()', function (): void {
 
     $errorCollector->drain();
 
-    expect($errorCollector->collected())->toBe([]);
+    expect($errorCollector->collected())
+        ->toBe([]);
 });
 
 test('a second drain after a first returns empty', function (): void {
@@ -70,7 +74,8 @@ test('a second drain after a first returns empty', function (): void {
 
     $errorCollector->drain();
 
-    expect($errorCollector->drain())->toBe([]);
+    expect($errorCollector->drain())
+        ->toBe([]);
 });
 
 /**
@@ -118,7 +123,8 @@ test('writeTestErrorsLog is a no-op when test mode is not active, never touching
         }
     }
 
-    expect(is_dir($root))->toBeFalse(); // the root directory itself was never even created, let alone written into
+    expect(is_dir($root))
+        ->toBeFalse(); // the root directory itself was never even created, let alone written into
 });
 
 test('writeTestErrorsLog creates _data/logs/ when it does not exist yet, instead of silently failing', function (): void {
@@ -148,11 +154,13 @@ test('writeTestErrorsLog creates _data/logs/ when it does not exist yet, instead
 
         $logPath = $root . '_data/logs/test_errors.log';
         expect(is_dir($root . '_data/logs'))->toBeTrue()
-            ->and(file_exists($logPath))->toBeTrue()
+            ->and(file_exists($logPath))
+            ->toBeTrue()
             // Exact match (not toContain()) -- kills line 163's
             // ConcatRemoveRight (would drop the trailing "\n") and
             // ConcatSwitchSides (would reorder to "\n" . $entry).
-            ->and(file_get_contents($logPath))->toBe("[WARNING] irrelevant in file.php:1\n");
+            ->and(file_get_contents($logPath))
+            ->toBe("[WARNING] irrelevant in file.php:1\n");
     } finally {
         Kernel::reset();
         exec('rm -rf ' . escapeshellarg($root));
@@ -176,7 +184,8 @@ test('writeTestErrorsLog appends the entry directly when _data/logs/ already exi
         $method->invoke(null, '[NOTICE] second in file.php:2', Paths::fromRoot($root));
 
         $logPath = $root . '_data/logs/test_errors.log';
-        expect(file_get_contents($logPath))->toBe("[WARNING] first in file.php:1\n[NOTICE] second in file.php:2\n");
+        expect(file_get_contents($logPath))
+            ->toBe("[WARNING] first in file.php:1\n[NOTICE] second in file.php:2\n");
     } finally {
         Kernel::reset();
         exec('rm -rf ' . escapeshellarg($root));
@@ -201,12 +210,14 @@ test('currentConfig resolves the container-shared CurrentConfig instance when Ke
     try {
         Kernel::boot(Paths::fromRoot($root));
         $containerInstance = Kernel::container()->get(CurrentConfig::class);
-        expect($containerInstance)->toBeInstanceOf(CurrentConfig::class);
+        expect($containerInstance)
+            ->toBeInstanceOf(CurrentConfig::class);
 
         $method = new ReflectionMethod(ErrorCollector::class, 'currentConfig');
         $resolved = $method->invoke(null);
 
-        expect($resolved)->toBe($containerInstance);
+        expect($resolved)
+            ->toBe($containerInstance);
     } finally {
         Kernel::reset();
         exec('rm -rf ' . escapeshellarg($root));
@@ -251,7 +262,8 @@ test('flush does not record a non-fatal error_get_last() type as if it were fata
     // bare @trigger_error() regardless of the `@`, surfacing it as a
     // risky-test warning instead of leaving error_get_last() alone.
     $autoloadPath = dirname(__DIR__, 3) . '/vendor/autoload.php';
-    expect(is_file($autoloadPath))->toBeTrue();
+    expect(is_file($autoloadPath))
+        ->toBeTrue();
     $marker = sys_get_temp_dir() . '/piwigo-error-collector-nonfatal-' . bin2hex(random_bytes(8)) . '.json';
 
     $script = '<?php' . "\n"
@@ -271,7 +283,8 @@ test('flush does not record a non-fatal error_get_last() type as if it were fata
         2 => ['pipe', 'w'],
     ];
     $proc = proc_open([PHP_BINARY, $scriptFile], $descriptors, $pipes);
-    expect($proc)->toBeResource();
+    expect($proc)
+        ->toBeResource();
     if ($proc === false) {
         throw new RuntimeException('proc_open failed');
     }
@@ -285,11 +298,13 @@ test('flush does not record a non-fatal error_get_last() type as if it were fata
 
     try {
         expect($exit)->toBe(0, 'ErrorCollector non-fatal subprocess exited non-zero: stdout=' . $stdout . ' stderr=' . $stderr)
-            ->and(file_exists($marker))->toBeTrue();
+            ->and(file_exists($marker))
+            ->toBeTrue();
 
         /** @var list<string> $collected */
         $collected = json_decode((string) file_get_contents($marker), true);
-        expect($collected)->toBe([]);
+        expect($collected)
+            ->toBe([]);
     } finally {
         @unlink($marker);
     }
@@ -313,7 +328,8 @@ test('flush records a synthetic entry for a genuine E_PARSE fatal (malformed req
     // live, distinct from eval()'s own catchable-ParseError behavior
     // this file's docblock already ruled out.
     $autoloadPath = dirname(__DIR__, 3) . '/vendor/autoload.php';
-    expect(is_file($autoloadPath))->toBeTrue();
+    expect(is_file($autoloadPath))
+        ->toBeTrue();
     $marker = sys_get_temp_dir() . '/piwigo-error-collector-parse-' . bin2hex(random_bytes(8)) . '.json';
     $brokenFile = sys_get_temp_dir() . '/piwigo-error-collector-broken-' . bin2hex(random_bytes(8)) . '.php';
     file_put_contents($brokenFile, "<?php\nthis is not valid php syntax {{{\n");
@@ -336,7 +352,8 @@ test('flush records a synthetic entry for a genuine E_PARSE fatal (malformed req
         2 => ['pipe', 'w'],
     ];
     $proc = proc_open([PHP_BINARY, $scriptFile], $descriptors, $pipes);
-    expect($proc)->toBeResource();
+    expect($proc)
+        ->toBeResource();
     if ($proc === false) {
         throw new RuntimeException('proc_open failed');
     }
@@ -351,11 +368,13 @@ test('flush records a synthetic entry for a genuine E_PARSE fatal (malformed req
 
     try {
         expect($exit)->not->toBe(0)
-            ->and(file_exists($marker))->toBeTrue('ErrorCollector E_PARSE subprocess never wrote its marker: stdout=' . $stdout . ' stderr=' . $stderr);
+            ->and(file_exists($marker))
+            ->toBeTrue('ErrorCollector E_PARSE subprocess never wrote its marker: stdout=' . $stdout . ' stderr=' . $stderr);
 
         /** @var list<string> $collected */
         $collected = json_decode((string) file_get_contents($marker), true);
-        expect($collected)->toHaveCount(1)
+        expect($collected)
+            ->toHaveCount(1)
             // label() itself deliberately has no E_PARSE arm (see the
             // "label falls back to the PHP code" test above) -- '[PHP]',
             // not '[ERROR]', is the real, correct label here.
@@ -372,7 +391,8 @@ test('flush returns immediately when nothing was collected', function (): void {
     $method = new ReflectionMethod(ErrorCollector::class, 'flush');
     $method->invoke($errorCollector);
 
-    expect($errorCollector->collected())->toBe([]);
+    expect($errorCollector->collected())
+        ->toBe([]);
 });
 
 test('flush records a synthetic entry for a genuine E_ERROR fatal (memory-limit exhaustion) in a real subprocess', function (): void {
@@ -387,7 +407,8 @@ test('flush records a synthetic entry for a genuine E_ERROR fatal (memory-limit 
     // this class's sibling "can only be produced by really crashing"
     // branch.
     $autoloadPath = dirname(__DIR__, 3) . '/vendor/autoload.php';
-    expect(is_file($autoloadPath))->toBeTrue();
+    expect(is_file($autoloadPath))
+        ->toBeTrue();
     $marker = sys_get_temp_dir() . '/piwigo-error-collector-oom-' . bin2hex(random_bytes(8)) . '.json';
 
     $script = '<?php' . "\n"
@@ -412,7 +433,8 @@ test('flush records a synthetic entry for a genuine E_ERROR fatal (memory-limit 
         2 => ['pipe', 'w'],
     ];
     $proc = proc_open([PHP_BINARY, $scriptFile], $descriptors, $pipes);
-    expect($proc)->toBeResource();
+    expect($proc)
+        ->toBeResource();
     if ($proc === false) {
         throw new RuntimeException('proc_open failed');
     }
@@ -428,12 +450,15 @@ test('flush records a synthetic entry for a genuine E_ERROR fatal (memory-limit 
         // A memory-exhaustion fatal is PHP's own uncatchable "Fatal error"
         // -- the subprocess exits non-zero (it never reaches a normal
         // `exit(0)`), same as any other fatal PHP error.
-        expect($exit)->not->toBe(0)
-            ->and(file_exists($marker))->toBeTrue('ErrorCollector OOM subprocess never wrote its marker: stdout=' . $stdout . ' stderr=' . $stderr);
+        expect($exit)
+            ->not->toBe(0)
+            ->and(file_exists($marker))
+            ->toBeTrue('ErrorCollector OOM subprocess never wrote its marker: stdout=' . $stdout . ' stderr=' . $stderr);
 
         /** @var list<string> $collected */
         $collected = json_decode((string) file_get_contents($marker), true);
-        expect($collected)->toHaveCount(1)
+        expect($collected)
+            ->toHaveCount(1)
             ->and($collected[0])->toStartWith('[ERROR] Allowed memory size of')
             ->and($collected[0])->toContain('exhausted');
     } finally {
@@ -444,33 +469,45 @@ test('flush records a synthetic entry for a genuine E_ERROR fatal (memory-limit 
 test('label maps E_NOTICE/E_USER_NOTICE to the NOTICE code', function (): void {
     $method = new ReflectionMethod(ErrorCollector::class, 'label');
 
-    expect($method->invoke(null, E_NOTICE))->toBe('NOTICE')
-        ->and($method->invoke(null, E_USER_NOTICE))->toBe('NOTICE');
+    expect($method->invoke(null, E_NOTICE))
+        ->toBe('NOTICE')
+        ->and($method->invoke(null, E_USER_NOTICE))
+        ->toBe('NOTICE');
 });
 
 test('label maps E_ERROR/E_USER_ERROR/E_CORE_ERROR/E_COMPILE_ERROR to the ERROR code', function (): void {
     $method = new ReflectionMethod(ErrorCollector::class, 'label');
 
-    expect($method->invoke(null, E_ERROR))->toBe('ERROR')
-        ->and($method->invoke(null, E_USER_ERROR))->toBe('ERROR')
-        ->and($method->invoke(null, E_CORE_ERROR))->toBe('ERROR')
-        ->and($method->invoke(null, E_COMPILE_ERROR))->toBe('ERROR');
+    expect($method->invoke(null, E_ERROR))
+        ->toBe('ERROR')
+        ->and($method->invoke(null, E_USER_ERROR))
+        ->toBe('ERROR')
+        ->and($method->invoke(null, E_CORE_ERROR))
+        ->toBe('ERROR')
+        ->and($method->invoke(null, E_COMPILE_ERROR))
+        ->toBe('ERROR');
 });
 
 test('label maps E_WARNING/E_USER_WARNING/E_CORE_WARNING/E_COMPILE_WARNING to the WARNING code', function (): void {
     $method = new ReflectionMethod(ErrorCollector::class, 'label');
 
-    expect($method->invoke(null, E_WARNING))->toBe('WARNING')
-        ->and($method->invoke(null, E_USER_WARNING))->toBe('WARNING')
-        ->and($method->invoke(null, E_CORE_WARNING))->toBe('WARNING')
-        ->and($method->invoke(null, E_COMPILE_WARNING))->toBe('WARNING');
+    expect($method->invoke(null, E_WARNING))
+        ->toBe('WARNING')
+        ->and($method->invoke(null, E_USER_WARNING))
+        ->toBe('WARNING')
+        ->and($method->invoke(null, E_CORE_WARNING))
+        ->toBe('WARNING')
+        ->and($method->invoke(null, E_COMPILE_WARNING))
+        ->toBe('WARNING');
 });
 
 test('label maps E_DEPRECATED/E_USER_DEPRECATED to the DEPRECATED code', function (): void {
     $method = new ReflectionMethod(ErrorCollector::class, 'label');
 
-    expect($method->invoke(null, E_DEPRECATED))->toBe('DEPRECATED')
-        ->and($method->invoke(null, E_USER_DEPRECATED))->toBe('DEPRECATED');
+    expect($method->invoke(null, E_DEPRECATED))
+        ->toBe('DEPRECATED')
+        ->and($method->invoke(null, E_USER_DEPRECATED))
+        ->toBe('DEPRECATED');
 });
 
 test('label falls back to the PHP code for a type matching none of the known categories', function (): void {
@@ -482,7 +519,8 @@ test('label falls back to the PHP code for a type matching none of the known cat
     // arm without relying on some made-up out-of-range integer.
     $method = new ReflectionMethod(ErrorCollector::class, 'label');
 
-    expect($method->invoke(null, E_PARSE))->toBe('PHP');
+    expect($method->invoke(null, E_PARSE))
+        ->toBe('PHP');
 });
 
 /**
@@ -507,7 +545,8 @@ test('flush leaves a non-empty buffer untouched when headers are already sent', 
     // header-emission loop runs for real, flush() never drains or
     // otherwise mutates $this->collected: it is byte-for-byte identical
     // to what was seeded either way.
-    expect($errorCollector->collected())->toBe($seeded);
+    expect($errorCollector->collected())
+        ->toBe($seeded);
 });
 
 /**
@@ -542,7 +581,8 @@ test('flush never calls header() when headers are already sent, even with a non-
     // header() at least once (`X-PHP-Error-1: ...` at minimum); the
     // correct guard calls it zero times.
     $autoloadPath = dirname(__DIR__, 3) . '/vendor/autoload.php';
-    expect(is_file($autoloadPath))->toBeTrue();
+    expect(is_file($autoloadPath))
+        ->toBeTrue();
     $marker = sys_get_temp_dir() . '/piwigo-error-collector-headerssent-' . bin2hex(random_bytes(8)) . '.json';
 
     $script = '<?php' . "\n"
@@ -571,7 +611,8 @@ test('flush never calls header() when headers are already sent, even with a non-
         2 => ['pipe', 'w'],
     ];
     $proc = proc_open([PHP_BINARY, $scriptFile], $descriptors, $pipes);
-    expect($proc)->toBeResource();
+    expect($proc)
+        ->toBeResource();
     if ($proc === false) {
         throw new RuntimeException('proc_open failed');
     }
@@ -585,7 +626,8 @@ test('flush never calls header() when headers are already sent, even with a non-
 
     try {
         expect($exit)->toBe(0, 'ErrorCollector headers-sent subprocess exited non-zero: stdout=' . $stdout . ' stderr=' . $stderr)
-            ->and(file_exists($marker))->toBeTrue();
+            ->and(file_exists($marker))
+            ->toBeTrue();
 
         /** @var array{sentBeforeFlush: bool, headerCalls: int} $result */
         $result = json_decode((string) file_get_contents($marker), true);

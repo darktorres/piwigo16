@@ -41,7 +41,8 @@ it('shows the missing-checksum counter when at least one photo has no md5sum', f
         $page->assertNoJavaScriptErrors();
 
         $html = H::rawWebpage($page)->content();
-        expect($html)->toContain('id="md5sum_to_add" data-origin="' . $expectedCount . '"');
+        expect($html)
+            ->toContain('id="md5sum_to_add" data-origin="' . $expectedCount . '"');
     } finally {
         $md5sum = $original['md5sum'];
         H::dbQuery($db, sprintf('UPDATE images SET md5sum = %s WHERE id = 1', $md5sum === null ? 'NULL' : "'" . H::dbEscape($db, (string) $md5sum) . "'"));

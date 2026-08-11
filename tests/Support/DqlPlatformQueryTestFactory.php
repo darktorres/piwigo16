@@ -47,7 +47,10 @@ final class DqlPlatformQueryTestFactory
 {
     public static function entityManagerForPlatform(AbstractPlatform $platform): EntityManagerInterface
     {
-        $conn = DriverManager::getConnection(['driver' => 'pdo_sqlite', 'memory' => true]);
+        $conn = DriverManager::getConnection([
+            'driver' => 'pdo_sqlite',
+            'memory' => true,
+        ]);
         new ReflectionProperty(Connection::class, 'platform')->setValue($conn, $platform);
 
         return EntityManagerFactory::build($conn, new ArrayAdapter());

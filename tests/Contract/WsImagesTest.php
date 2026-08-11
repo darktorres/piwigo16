@@ -4,17 +4,21 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Contract;
 
+use Doctrine\DBAL\Connection;
 use Override;
 use Piwigo\Cache\CachePools;
-use Doctrine\DBAL\Connection;
 use Piwigo\Db\DbConnection;
 
 final class WsImagesTest extends ContractTestCase
 {
-    /** Image ID 1 is the first photo seeded by the fixture. */
+    /**
+     * Image ID 1 is the first photo seeded by the fixture.
+     */
     private const int FIXTURE_IMAGE_ID = 1;
 
-    /** Fixture image 1's real md5sum (tests/Fixtures/piwigo-17.0.sql). */
+    /**
+     * Fixture image 1's real md5sum (tests/Fixtures/piwigo-17.0.sql).
+     */
     private const string FIXTURE_IMAGE_MD5 = '2e7ee450c4a4cffe42945205029782b9';
 
     private Connection $conn;
@@ -26,17 +30,21 @@ final class WsImagesTest extends ContractTestCase
         $this->conn = DbConnection::build();
     }
 
-    public function test_getInfo_response_matches_schema(): void
+    public function testGetInfoResponseMatchesSchema(): void
     {
-        $response = $this->wsAdmin('pwg.images.getInfo', ['image_id' => self::FIXTURE_IMAGE_ID]);
+        $response = $this->wsAdmin('pwg.images.getInfo', [
+            'image_id' => self::FIXTURE_IMAGE_ID,
+        ]);
 
         self::assertSame('ok', $response['stat']);
         self::assertMatchesSchema('images.getInfo', $response);
     }
 
-    public function test_getInfo_returns_expected_fields(): void
+    public function testGetInfoReturnsExpectedFields(): void
     {
-        $response = $this->wsAdmin('pwg.images.getInfo', ['image_id' => self::FIXTURE_IMAGE_ID]);
+        $response = $this->wsAdmin('pwg.images.getInfo', [
+            'image_id' => self::FIXTURE_IMAGE_ID,
+        ]);
 
         $result = $response['result'];
         self::assertIsArray($result);
@@ -48,20 +56,23 @@ final class WsImagesTest extends ContractTestCase
         self::assertNotEmpty($result['categories'], 'Fixture image must belong to at least one album');
     }
 
-    public function test_getInfo_on_missing_image_returns_404(): void
+    public function testGetInfoOnMissingImageReturns404(): void
     {
         // ws.php sends HTTP 404 for PwgError(404, ...) — not 200+stat=fail.
         // The contract is: HTTP 404, body may or may not be valid JSON.
         $url = $this->baseUrl . '/ws.php?format=json';
-        $ch  = curl_init($url);
+        $ch = curl_init($url);
         self::assertNotFalse($ch);
 
         curl_setopt_array($ch, [
             CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_POST           => true,
-            CURLOPT_USERAGENT      => self::USER_AGENT,
-            CURLOPT_POSTFIELDS     => http_build_query(['method' => 'pwg.images.getInfo', 'image_id' => 999999]),
-            CURLOPT_HTTPHEADER     => $this->testHeader(),
+            CURLOPT_POST => true,
+            CURLOPT_USERAGENT => self::USER_AGENT,
+            CURLOPT_POSTFIELDS => http_build_query([
+                'method' => 'pwg.images.getInfo',
+                'image_id' => 999999,
+            ]),
+            CURLOPT_HTTPHEADER => $this->testHeader(),
         ]);
 
         curl_exec($ch);
@@ -91,7 +102,7 @@ final class WsImagesTest extends ContractTestCase
     // unreachable from a black-box Contract test in this environment, not
     // just unattempted.
 
-    public function test_exist_response_matches_schema(): void
+    public function testExistResponseMatchesSchema(): void
     {
         $response = $this->wsAdmin('pwg.images.exist', [
             'md5sum_list' => 'nonexistentmd5sumvalue0000000000',
@@ -101,7 +112,7 @@ final class WsImagesTest extends ContractTestCase
         self::assertMatchesSchema('pwg.images.exist', $response);
     }
 
-    public function test_exist_returns_null_for_unknown_md5(): void
+    public function testExistReturnsNullForUnknownMd5(): void
     {
         $response = $this->wsAdmin('pwg.images.exist', [
             'md5sum_list' => 'nonexistentmd5sumvalue0000000000',
@@ -112,7 +123,7 @@ final class WsImagesTest extends ContractTestCase
         self::assertNull($result['nonexistentmd5sumvalue0000000000']);
     }
 
-    public function test_exist_returns_id_for_a_known_md5(): void
+    public function testExistReturnsIdForAKnownMd5(): void
     {
         // CurrentConfig::uniquenessMode()'s default ('md5sum') is what's in
         // effect here -- no config row override needed.
@@ -125,7 +136,7 @@ final class WsImagesTest extends ContractTestCase
         self::assertSame(self::FIXTURE_IMAGE_ID, $result[self::FIXTURE_IMAGE_MD5]);
     }
 
-    public function test_exist_in_filename_mode_returns_id_for_a_known_filename(): void
+    public function testExistInFilenameModeReturnsIdForAKnownFilename(): void
     {
         $this->upsertConfig('uniqueness_mode', '"filename"');
         // Raw SQL bypasses ConfigService::confUpdateParam()'s own cache
@@ -146,13 +157,13 @@ final class WsImagesTest extends ContractTestCase
             self::assertNull($result['nonexistent-file.jpg']);
         } finally {
             $this->conn->executeStatement(
-                "DELETE FROM " . 'config' . " WHERE param = 'uniqueness_mode'"
+                'DELETE FROM config' . " WHERE param = 'uniqueness_mode'"
             );
             CachePools::config()->clear();
         }
     }
 
-    public function test_checkUpload_response_matches_schema(): void
+    public function testCheckUploadResponseMatchesSchema(): void
     {
         $response = $this->wsAdmin('pwg.images.checkUpload');
 
@@ -160,7 +171,7 @@ final class WsImagesTest extends ContractTestCase
         self::assertMatchesSchema('pwg.images.checkUpload', $response);
     }
 
-    public function test_checkUpload_contains_ready_for_upload_flag(): void
+    public function testCheckUploadContainsReadyForUploadFlag(): void
     {
         $response = $this->wsAdmin('pwg.images.checkUpload');
 
@@ -170,7 +181,7 @@ final class WsImagesTest extends ContractTestCase
         self::assertIsBool($result['ready_for_upload']);
     }
 
-    public function test_checkUpload_reports_not_ready_when_the_upload_directory_is_not_writable(): void
+    public function testCheckUploadReportsNotReadyWhenTheUploadDirectoryIsNotWritable(): void
     {
         // UploadService::readyForUploadMessage()'s "directory exists but
         // isn't writable" branch: point CurrentConfig::uploadDir() (a plain
@@ -205,7 +216,7 @@ final class WsImagesTest extends ContractTestCase
             self::assertStringContainsString('chmod 777', $result['message']);
         } finally {
             chmod($absDir, 0o755);
-            $this->conn->executeStatement("DELETE FROM " . 'config' . " WHERE param = 'upload_dir'");
+            $this->conn->executeStatement('DELETE FROM config' . " WHERE param = 'upload_dir'");
             CachePools::config()->clear();
             rmdir($absDir);
         }

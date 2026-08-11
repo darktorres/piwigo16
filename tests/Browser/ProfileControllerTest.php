@@ -46,12 +46,13 @@ use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
  * setCategoryPrivate()), rather than silently working around it by
  * skipping the theme field or weakening an assertion.
  */
-
 const PROFILE_TEST_USER = 'regular_user';
 
 const PROFILE_TEST_PASS = 'regular_user_pass';
 
-/** Idempotently registers the 'default' theme -- see this file's own docblock for why this is necessary. */
+/**
+ * Idempotently registers the 'default' theme -- see this file's own docblock for why this is necessary.
+ */
 function profileEnsureDefaultThemeRegistered(): void
 {
     $db = H::connect();
@@ -86,7 +87,9 @@ function profileLogin(object $test): Webpage|PendingAwaitablePage|AwaitableWebpa
     return $page;
 }
 
-/** @return array{nb_image_page: int, recent_period: int} */
+/**
+ * @return array{nb_image_page: int, recent_period: int}
+ */
 function profileUserSettings(): array
 {
     $db = H::connect();
@@ -95,7 +98,10 @@ function profileUserSettings(): array
         throw new RuntimeException('regular_user user_infos row not found');
     }
 
-    return ['nb_image_page' => (int) $row['nb_image_page'], 'recent_period' => (int) $row['recent_period']];
+    return [
+        'nb_image_page' => (int) $row['nb_image_page'],
+        'recent_period' => (int) $row['recent_period'],
+    ];
 }
 
 /**
@@ -143,7 +149,8 @@ it('saves nb_image_page/recent_period and redirects to the gallery home on succe
     // confirmed live (independent of this assertion) that this fixture's
     // own mount/URL config resolves that to exactly the site root.
     $currentUrl = H::rawWebpage($page)->url();
-    expect($currentUrl)->toBe(H::baseUrl() . '/');
+    expect($currentUrl)
+        ->toBe(H::baseUrl() . '/');
 
     $settings = profileUserSettings();
     expect($settings['nb_image_page'])->toBe(17);
@@ -163,10 +170,12 @@ it('rejects a negative recent_period and leaves the stored settings untouched', 
 
     $page->assertSee('Recent period must be a positive integer value');
     $currentUrl = H::rawWebpage($page)->url();
-    expect($currentUrl)->toContain('profile.php');
+    expect($currentUrl)
+        ->toContain('profile.php');
 
     $after = profileUserSettings();
-    expect($after)->toBe($before);
+    expect($after)
+        ->toBe($before);
 });
 
 it('rejects an empty nb_image_page and leaves the stored settings untouched', function (): void {
@@ -185,13 +194,17 @@ it('rejects an empty nb_image_page and leaves the stored settings untouched', fu
     // for this string, confirmed by reading the .po file directly).
     $page->assertSee('The number of photos per page must be a non-zero integer');
     $currentUrl = H::rawWebpage($page)->url();
-    expect($currentUrl)->toContain('profile.php');
+    expect($currentUrl)
+        ->toContain('profile.php');
 
     $after = profileUserSettings();
-    expect($after)->toBe($before);
+    expect($after)
+        ->toBe($before);
 });
 
-/** @return array{email: string, password: string}|null */
+/**
+ * @return array{email: string, password: string}|null
+ */
 function profileUserAuthRow(): ?array
 {
     $db = H::connect();
@@ -202,7 +215,10 @@ function profileUserAuthRow(): ?array
         return null;
     }
 
-    return ['email' => (string) ($row['mail_address'] ?? ''), 'password' => (string) ($row['password'] ?? '')];
+    return [
+        'email' => (string) ($row['mail_address'] ?? ''),
+        'password' => (string) ($row['password'] ?? ''),
+    ];
 }
 
 /** @param array<string, string> $overrides */
@@ -263,7 +279,8 @@ it('rejects a new-password submission whose confirmation does not match', functi
 
     expect($result['status'])->toBe(200);
     expect($result['body'])->toContain('The passwords do not match');
-    expect(profileUserAuthRow())->toBe($before);
+    expect(profileUserAuthRow())
+        ->toBe($before);
 });
 
 it('rejects a password change when the current password is wrong', function (): void {
@@ -281,7 +298,8 @@ it('rejects a password change when the current password is wrong', function (): 
 
     expect($result['status'])->toBe(200);
     expect($result['body'])->toContain('Current password is wrong');
-    expect(profileUserAuthRow())->toBe($before);
+    expect(profileUserAuthRow())
+        ->toBe($before);
 });
 
 it('rejects a malformed mail_address and leaves the stored email address untouched', function (): void {
@@ -308,7 +326,8 @@ it('rejects a malformed mail_address and leaves the stored email address untouch
     // Lang::t() source-code key ("example :") -- same rationale as this
     // file's own 'rejects an empty nb_image_page...' test above.
     expect($result['body'])->toContain('mail address must be like xxx@yyy.eee (example: jack@altern.org)');
-    expect(profileUserAuthRow())->toBe($before);
+    expect(profileUserAuthRow())
+        ->toBe($before);
 });
 
 it('omits the 3 boolFields from the POST and leaves expand/show_nb_hits/show_nb_comments untouched', function (): void {
@@ -351,7 +370,8 @@ it('omits the 3 boolFields from the POST and leaves expand/show_nb_hits/show_nb_
         // The 3 boolFields columns must be byte-for-byte unchanged -- not
         // just "still a valid tinyint" -- proving the continue really
         // skipped them rather than coercing an absent value to 0/false.
-        expect(profileUserToggleSettings())->toBe($beforeToggles);
+        expect(profileUserToggleSettings())
+            ->toBe($beforeToggles);
     } finally {
         profileSetImageSettings($beforeSettings['nb_image_page'], $beforeSettings['recent_period']);
     }
@@ -368,7 +388,8 @@ it('changes both the email address and password given the correct current passwo
     $page = profileLogin($this);
     H::navigateOk($page, '/profile.php');
     $before = profileUserAuthRow();
-    expect($before)->not->toBeNull();
+    expect($before)
+        ->not->toBeNull();
     assert(is_array($before));
 
     $newEmail = 'ct-regular-user-' . uniqid() . '@example.test';
@@ -388,7 +409,8 @@ it('changes both the email address and password given the correct current passwo
         ]));
 
         $after = profileUserAuthRow();
-        expect($after)->not->toBeNull();
+        expect($after)
+            ->not->toBeNull();
         assert(is_array($after));
         expect($after['email'])->toBe($newEmail);
         expect($after['email'])->not->toBe($before['email']);
@@ -398,7 +420,9 @@ it('changes both the email address and password given the correct current passwo
         // hashed and persisted (self::passwordService()->hash()), not
         // just accepted and discarded.
         $freshPage = H::visitPwg($this, '/identification.php');
-        $freshPage = $freshPage->fill('username', PROFILE_TEST_USER)->fill('password', 'a-brand-new-password-9')->click('login');
+        $freshPage = $freshPage->fill('username', PROFILE_TEST_USER)
+            ->fill('password', 'a-brand-new-password-9')
+            ->click('login');
         $freshPage->assertPresent('a[href*="act=logout"]');
     } finally {
         // A raw DB restore, not a second app-level password-change round
@@ -471,7 +495,10 @@ function profileCurlLoginSession(string $username, string $password): array
         $status = curl_getinfo($ch, CURLINFO_RESPONSE_CODE);
         unset($ch);
 
-        return ['status' => $status, 'body' => is_string($body) ? $body : ''];
+        return [
+            'status' => $status,
+            'body' => is_string($body) ? $body : '',
+        ];
     };
 
     $baseUrl = H::baseUrl();
@@ -482,7 +509,11 @@ function profileCurlLoginSession(string $username, string $password): array
         'login' => 'Login',
     ]);
 
-    return ['curl' => $curl, 'cookieJar' => $cookieJar, 'baseUrl' => $baseUrl];
+    return [
+        'curl' => $curl,
+        'cookieJar' => $cookieJar,
+        'baseUrl' => $baseUrl,
+    ];
 }
 
 it('fatal-errors on an array-valued lang cookie (hacking attempt)', function (): void {
@@ -559,7 +590,8 @@ it('switches the interface language via a valid, different lang cookie and persi
     H::dbClose($db);
 
     $originalLanguage = profileUserLanguage();
-    expect($originalLanguage)->toBe('en_UK');
+    expect($originalLanguage)
+        ->toBe('en_UK');
 
     try {
         $session = profileCurlLoginSession(PROFILE_TEST_USER, PROFILE_TEST_PASS);
@@ -583,7 +615,8 @@ it('switches the interface language via a valid, different lang cookie and persi
         // BatchWriter DB UPDATE actually landed in user_infos, not just
         // CurrentUser::updateLanguage()'s in-memory state and not just "no
         // error was thrown".
-        expect(profileUserLanguage())->toBe('fr_FR');
+        expect(profileUserLanguage())
+            ->toBe('fr_FR');
 
         @unlink($session['cookieJar']);
     } finally {
@@ -594,7 +627,9 @@ it('switches the interface language via a valid, different lang cookie and persi
     }
 });
 
-/** @return array{nb_image_page: int, recent_period: int} the guest (default_user_id=2) row's own current custom-settings values */
+/**
+ * @return array{nb_image_page: int, recent_period: int} the guest (default_user_id=2) row's own current custom-settings values
+ */
 function profileGuestDefaults(): array
 {
     $db = H::connect();
@@ -604,7 +639,10 @@ function profileGuestDefaults(): array
         throw new RuntimeException('guest (user_id=2) user_infos row not found');
     }
 
-    return ['nb_image_page' => (int) $row['nb_image_page'], 'recent_period' => (int) $row['recent_period']];
+    return [
+        'nb_image_page' => (int) $row['nb_image_page'],
+        'recent_period' => (int) $row['recent_period'],
+    ];
 }
 
 function profileSetImageSettings(int $nbImagePage, int $recentPeriod): void

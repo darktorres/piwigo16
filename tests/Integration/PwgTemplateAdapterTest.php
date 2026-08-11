@@ -5,18 +5,18 @@ declare(strict_types=1);
 namespace Piwigo\Tests\Integration;
 
 use Override;
-use Piwigo\PluginConfig\EventDispatcher;
-use Piwigo\Tests\Support\CurrentConfigTestFactory;
-use Piwigo\Tests\Support\ImageStdParamsTestFactory;
 use Piwigo\Config\ConfigEntry;
 use Piwigo\Config\ConfigLoader;
 use Piwigo\Config\ConfigService;
-use Piwigo\Tests\Support\CurrentConfigServiceTestFactory;
 use Piwigo\Core\Kernel;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Image\DerivativeImage;
+use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Template\PwgTemplateAdapter;
+use Piwigo\Tests\Support\CurrentConfigServiceTestFactory;
+use Piwigo\Tests\Support\CurrentConfigTestFactory;
+use Piwigo\Tests\Support\ImageStdParamsTestFactory;
 
 /**
  * Piwigo\Template\PwgTemplateAdapter -- the Smarty-registered object behind
@@ -65,7 +65,9 @@ final class PwgTemplateAdapterTest extends IntegrationTestCase
         parent::tearDown();
     }
 
-    /** @return array<string, mixed> */
+    /**
+     * @return array<string, mixed>
+     */
     private function fakeImageInfos(): array
     {
         return [
@@ -76,7 +78,7 @@ final class PwgTemplateAdapterTest extends IntegrationTestCase
         ];
     }
 
-    public function test_derivative_builds_a_real_derivative_image(): void
+    public function testDerivativeBuildsARealDerivativeImage(): void
     {
         $derivative = $this->adapter->derivative('thumb', $this->fakeImageInfos());
 
@@ -87,7 +89,7 @@ final class PwgTemplateAdapterTest extends IntegrationTestCase
         self::assertInstanceOf(DerivativeImage::class, $derivative);
     }
 
-    public function test_derivative_url_returns_a_real_url_string(): void
+    public function testDerivativeUrlReturnsARealUrlString(): void
     {
         $url = $this->adapter->derivative_url('thumb', $this->fakeImageInfos());
 

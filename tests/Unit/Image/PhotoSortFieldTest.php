@@ -83,22 +83,38 @@ test('fromSortFieldToken rejects fromToken-only aliases', function (string $toke
 test('parseOrderByFragment parses a real multi-field CurrentConfig::orderBy() string', function (): void {
     $entries = PhotoSortField::parseOrderByFragment('ORDER BY date_available DESC, file ASC, id ASC');
 
-    expect($entries)->toBe([
-        ['field' => PhotoSortField::DateAvailable, 'dir' => 'DESC'],
-        ['field' => PhotoSortField::File, 'dir' => 'ASC'],
-        ['field' => PhotoSortField::Id, 'dir' => 'ASC'],
-    ]);
+    expect($entries)
+        ->toBe([
+            [
+                'field' => PhotoSortField::DateAvailable,
+                'dir' => 'DESC',
+            ],
+            [
+                'field' => PhotoSortField::File,
+                'dir' => 'ASC',
+            ],
+            [
+                'field' => PhotoSortField::Id,
+                'dir' => 'ASC',
+            ],
+        ]);
 });
 
 test('parseOrderByFragment parses the backtick-quoted rank entry', function (): void {
     expect(PhotoSortField::parseOrderByFragment('ORDER BY `rank` ASC'))->toBe([
-        ['field' => PhotoSortField::Rank, 'dir' => 'ASC'],
+        [
+            'field' => PhotoSortField::Rank,
+            'dir' => 'ASC',
+        ],
     ]);
 });
 
 test('parseOrderByFragment is case-insensitive on the ORDER BY prefix and direction', function (): void {
     expect(PhotoSortField::parseOrderByFragment('order by id desc'))->toBe([
-        ['field' => PhotoSortField::Id, 'dir' => 'DESC'],
+        [
+            'field' => PhotoSortField::Id,
+            'dir' => 'DESC',
+        ],
     ]);
 });
 
@@ -111,7 +127,10 @@ test('parseOrderByFragment trims whitespace the ORDER BY prefix regex would not 
     // prefix regex fails to match at all (its `^` anchor can never
     // skip past the NUL) and the whole fragment is wrongly rejected.
     expect(PhotoSortField::parseOrderByFragment("\0ORDER BY id ASC"))->toBe([
-        ['field' => PhotoSortField::Id, 'dir' => 'ASC'],
+        [
+            'field' => PhotoSortField::Id,
+            'dir' => 'ASC',
+        ],
     ]);
 });
 
@@ -123,7 +142,10 @@ test('parseOrderByFragment lowercases the captured field token before matching i
     // isn't lowercased first would never match any of them and the
     // whole fragment would be wrongly rejected as unparseable.
     expect(PhotoSortField::parseOrderByFragment('ORDER BY ID ASC'))->toBe([
-        ['field' => PhotoSortField::Id, 'dir' => 'ASC'],
+        [
+            'field' => PhotoSortField::Id,
+            'dir' => 'ASC',
+        ],
     ]);
 });
 

@@ -4,16 +4,16 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Integration;
 
-use Override;
-use Piwigo\Core\Kernel;
 use LogicException;
+use Override;
+use Piwigo\Config\ConfigLoader;
+use Piwigo\Config\CurrentConfig;
+use Piwigo\Core\Kernel;
+use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Site\SiteEntity;
-use Piwigo\Tests\Support\CurrentPathsTestFactory;
-use Piwigo\Config\CurrentConfig;
-use Piwigo\Config\ConfigLoader;
-use Piwigo\Db\DbConnection;
 use Piwigo\Site\SiteRepository;
+use Piwigo\Tests\Support\CurrentPathsTestFactory;
 
 final class SiteRepositoryTest extends IntegrationTestCase
 {
@@ -57,12 +57,12 @@ final class SiteRepositoryTest extends IntegrationTestCase
         parent::tearDown();
     }
 
-    public function test_count_by_url_returns_zero_when_unused(): void
+    public function testCountByUrlReturnsZeroWhenUnused(): void
     {
         self::assertSame(0, $this->repo->countByUrl('p17-test-does-not-exist-' . bin2hex(random_bytes(4))));
     }
 
-    public function test_insert_then_count_by_url_round_trips(): void
+    public function testInsertThenCountByUrlRoundTrips(): void
     {
         $url = 'p17-test-' . bin2hex(random_bytes(4));
 
@@ -71,7 +71,7 @@ final class SiteRepositoryTest extends IntegrationTestCase
         self::assertSame(1, $this->repo->countByUrl($url));
     }
 
-    public function test_find_galleries_url_by_id_returns_the_inserted_url(): void
+    public function testFindGalleriesUrlByIdReturnsTheInsertedUrl(): void
     {
         $url = 'p17-test-' . bin2hex(random_bytes(4));
         $this->repo->insert($url);
@@ -81,7 +81,7 @@ final class SiteRepositoryTest extends IntegrationTestCase
         self::assertSame($url, $this->repo->findGalleriesUrlById((int) $id));
     }
 
-    public function test_find_galleries_url_by_id_returns_null_when_unused(): void
+    public function testFindGalleriesUrlByIdReturnsNullWhenUnused(): void
     {
         // sites.id is a real tinyint unsigned column (MySQL) / smallint
         // (Postgres) -- 999_999 overflows both, but only Postgres errors
@@ -93,7 +93,7 @@ final class SiteRepositoryTest extends IntegrationTestCase
         self::assertNull($this->repo->findGalleriesUrlById(254));
     }
 
-    public function test_delete_removes_the_row(): void
+    public function testDeleteRemovesTheRow(): void
     {
         // Real DQL replacement for the now-deleted CategoryRepository::
         // deleteSiteRow() (a real deptrac boundary -- Category is
@@ -107,7 +107,7 @@ final class SiteRepositoryTest extends IntegrationTestCase
         self::assertNull($this->repo->findGalleriesUrlById($id));
     }
 
-    public function test_delete_on_an_unknown_id_is_a_silent_noop(): void
+    public function testDeleteOnAnUnknownIdIsASilentNoop(): void
     {
         $this->expectNotToPerformAssertions();
 
@@ -116,18 +116,20 @@ final class SiteRepositoryTest extends IntegrationTestCase
         $this->repo->delete(254);
     }
 
-    public function test_find_all_galleries_urls_returns_the_id_to_url_map(): void
+    public function testFindAllGalleriesUrlsReturnsTheIdToUrlMap(): void
     {
         // Real DQL replacement for the now-deleted CategoryRepository::
         // findSiteGalleriesUrls() (a real deptrac boundary -- Category is
         // L2aCoreDomain, Site is L2bExtendedDomain).
         self::assertSame(
-            [1 => CurrentPathsTestFactory::get()->root . 'galleries/'],
+            [
+                1 => CurrentPathsTestFactory::get()->root . 'galleries/',
+            ],
             $this->repo->findAllGalleriesUrls()
         );
     }
 
-    public function test_find_galleries_url_for_category_returns_null_when_the_category_has_no_linked_site(): void
+    public function testFindGalleriesUrlForCategoryReturnsNullWhenTheCategoryHasNoLinkedSite(): void
     {
         // Both fixture categories have site_id NULL -- the join predicate
         // is never satisfied against a NULL, so the query returns no row
@@ -136,7 +138,7 @@ final class SiteRepositoryTest extends IntegrationTestCase
         self::assertNull($this->repo->findGalleriesUrlForCategory(1));
     }
 
-    public function test_find_galleries_url_for_category_returns_the_joined_sites_row(): void
+    public function testFindGalleriesUrlForCategoryReturnsTheJoinedSitesRow(): void
     {
         // Fixture has exactly one sites row (id 1); temporarily point
         // category 1 at it.
@@ -153,7 +155,7 @@ final class SiteRepositoryTest extends IntegrationTestCase
         }
     }
 
-    public function test_find_all_includes_the_seeded_local_site(): void
+    public function testFindAllIncludesTheSeededLocalSite(): void
     {
         $rows = $this->repo->findAllSites();
 
@@ -166,7 +168,7 @@ final class SiteRepositoryTest extends IntegrationTestCase
         self::assertContains(CurrentPathsTestFactory::get()->root . 'galleries/', $urls);
     }
 
-    public function test_find_all_includes_a_newly_inserted_site(): void
+    public function testFindAllIncludesANewlyInsertedSite(): void
     {
         $url = 'p17-test-' . bin2hex(random_bytes(4));
         $this->repo->insert($url);
@@ -176,7 +178,7 @@ final class SiteRepositoryTest extends IntegrationTestCase
         self::assertContains($url, $urls);
     }
 
-    public function test_find_category_and_image_counts_by_site_groups_by_site_and_ignores_categories_with_no_site(): void
+    public function testFindCategoryAndImageCountsBySiteGroupsBySiteAndIgnoresCategoriesWithNoSite(): void
     {
         // Every real fixture category has site_id NULL (a single-site
         // install) -- 2 disposable categories (of this method's own real
@@ -210,7 +212,10 @@ final class SiteRepositoryTest extends IntegrationTestCase
             $counts = $this->repo->findCategoryAndImageCountsBySite();
 
             self::assertArrayHasKey($siteId, $counts);
-            self::assertSame(['nb_categories' => 2, 'nb_images' => 1], $counts[$siteId]);
+            self::assertSame([
+                'nb_categories' => 2,
+                'nb_images' => 1,
+            ], $counts[$siteId]);
         } finally {
             $conn->executeStatement(sprintf('DELETE FROM images WHERE id = %d', $imageId));
             $conn->executeStatement(sprintf('DELETE FROM categories WHERE id IN (%d, %d)', $catWithImageId, $catWithoutImageId));

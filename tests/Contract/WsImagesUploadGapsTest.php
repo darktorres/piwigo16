@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Contract;
 
-use Override;
-use Piwigo\Cache\CachePools;
 use CURLFile;
 use Doctrine\DBAL\Connection;
+use Override;
+use Piwigo\Cache\CachePools;
 use Piwigo\Db\DbConnection;
 
 /**
@@ -32,15 +32,21 @@ use Piwigo\Db\DbConnection;
  */
 final class WsImagesUploadGapsTest extends ContractTestCase
 {
-    /** 1x1 white PNG, base64-decoded at runtime to avoid binary in source. */
+    /**
+     * 1x1 white PNG, base64-decoded at runtime to avoid binary in source.
+     */
     private const string TINY_PNG_B64 = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwADhQGAWjR9awAAAABJRU5ErkJggg==';
 
     private Connection $conn;
 
-    /** @var list<int> */
+    /**
+     * @var list<int>
+     */
     private array $imageIdsToDelete = [];
 
-    /** @var list<int> */
+    /**
+     * @var list<int>
+     */
     private array $categoryIdsToDelete = [];
 
     #[Override]
@@ -56,7 +62,10 @@ final class WsImagesUploadGapsTest extends ContractTestCase
     {
         foreach ($this->imageIdsToDelete as $imageId) {
             $token = $this->getPwgToken();
-            $this->callWs('pwg.images.delete', ['image_id' => (string) $imageId, 'pwg_token' => $token]);
+            $this->callWs('pwg.images.delete', [
+                'image_id' => (string) $imageId,
+                'pwg_token' => $token,
+            ]);
         }
         foreach (array_reverse($this->categoryIdsToDelete) as $categoryId) {
             $token = $this->getPwgToken();
@@ -66,7 +75,7 @@ final class WsImagesUploadGapsTest extends ContractTestCase
                 'pwg_token' => $token,
             ]);
         }
-        $this->conn->executeStatement("DELETE FROM " . 'config' . " WHERE param = 'uniqueness_mode'");
+        $this->conn->executeStatement('DELETE FROM config' . " WHERE param = 'uniqueness_mode'");
         CachePools::config()->clear();
         parent::tearDown();
     }
@@ -125,7 +134,7 @@ final class WsImagesUploadGapsTest extends ContractTestCase
 
     // -------------------------------------------------------------------- add()
 
-    public function test_add_with_an_unknown_image_id_returns_404(): void
+    public function testAddWithAnUnknownImageIdReturns404(): void
     {
         $sum = md5($this->pngBytes() . uniqid());
 
@@ -139,7 +148,7 @@ final class WsImagesUploadGapsTest extends ContractTestCase
         self::assertSame('image_id not found', $response['message']);
     }
 
-    public function test_add_in_filename_uniqueness_mode_rejects_a_known_filename(): void
+    public function testAddInFilenameUniquenessModeRejectsAKnownFilename(): void
     {
         $this->upsertConfig('uniqueness_mode', '"filename"');
         CachePools::config()->clear();
@@ -154,16 +163,22 @@ final class WsImagesUploadGapsTest extends ContractTestCase
         self::assertSame('file already exists', $response['message']);
     }
 
-    public function test_add_with_high_sum_uses_the_high_chunk_and_cleans_up_the_thumb_chunk(): void
+    public function testAddWithHighSumUsesTheHighChunkAndCleansUpTheThumbChunk(): void
     {
         $sum = md5($this->pngBytes() . uniqid());
 
         $high = $this->callWs('pwg.images.addChunk', [
-            'data' => self::TINY_PNG_B64, 'original_sum' => $sum, 'type' => 'high', 'position' => 0,
+            'data' => self::TINY_PNG_B64,
+            'original_sum' => $sum,
+            'type' => 'high',
+            'position' => 0,
         ]);
         self::assertSame('ok', $high['stat']);
         $thumb = $this->callWs('pwg.images.addChunk', [
-            'data' => self::TINY_PNG_B64, 'original_sum' => $sum, 'type' => 'thumb', 'position' => 0,
+            'data' => self::TINY_PNG_B64,
+            'original_sum' => $sum,
+            'type' => 'thumb',
+            'position' => 0,
         ]);
         self::assertSame('ok', $thumb['stat']);
 
@@ -190,13 +205,13 @@ final class WsImagesUploadGapsTest extends ContractTestCase
         self::assertFileDoesNotExist($bufferDir . $sum . '-thumb-00000.block');
 
         $tagIds = $this->conn->fetchFirstColumn(
-            'SELECT tag_id FROM ' . 'image_tag' . ' WHERE image_id = ? ORDER BY tag_id',
+            'SELECT tag_id FROM image_tag WHERE image_id = ? ORDER BY tag_id',
             [(int) $imageId]
         );
         self::assertSame([1, 2], $tagIds);
     }
 
-    public function test_add_cleans_up_a_stale_leftover_merged_file_before_building_a_fresh_one(): void
+    public function testAddCleansUpAStaleLeftoverMergedFileBeforeBuildingAFreshOne(): void
     {
         // mergeChunks()'s own is_file()+unlink() housekeeping at the top:
         // simulate a merge left behind by a previous, incomplete request.
@@ -205,7 +220,10 @@ final class WsImagesUploadGapsTest extends ContractTestCase
         file_put_contents($bufferDir . $sum . '-original', 'stale leftover content, must be replaced');
 
         $chunk = $this->callWs('pwg.images.addChunk', [
-            'data' => self::TINY_PNG_B64, 'original_sum' => $sum, 'type' => 'file', 'position' => 0,
+            'data' => self::TINY_PNG_B64,
+            'original_sum' => $sum,
+            'type' => 'file',
+            'position' => 0,
         ]);
         self::assertSame('ok', $chunk['stat']);
 
@@ -229,7 +247,7 @@ final class WsImagesUploadGapsTest extends ContractTestCase
 
     // -------------------------------------------------------------- setCategory
 
-    public function test_setCategory_with_an_invalid_token_returns_error(): void
+    public function testSetCategoryWithAnInvalidTokenReturnsError(): void
     {
         $response = $this->callWs('pwg.images.setCategory', [
             'image_id' => [1],
@@ -244,35 +262,41 @@ final class WsImagesUploadGapsTest extends ContractTestCase
 
     // --------------------------------------------------- formats.searchImage
 
-    public function test_formatsSearchImage_reports_multiple_when_two_photos_share_a_basename(): void
+    public function testFormatsSearchImageReportsMultipleWhenTwoPhotosShareABasename(): void
     {
         $base = 'dup-basename-' . uniqid();
         $this->conn->executeStatement(
-            'INSERT INTO ' . 'images' . ' (file, path, md5sum) VALUES (?, ?, ?)',
+            'INSERT INTO images (file, path, md5sum) VALUES (?, ?, ?)',
             [$base . '.jpg', 'upload/' . $base . '.jpg', md5($base . 'a')]
         );
         $firstId = (int) $this->conn->lastInsertId();
         $this->conn->executeStatement(
-            'INSERT INTO ' . 'images' . ' (file, path, md5sum) VALUES (?, ?, ?)',
+            'INSERT INTO images (file, path, md5sum) VALUES (?, ?, ?)',
             [$base . '.tif', 'upload/' . $base . '.tif', md5($base . 'b')]
         );
         $secondId = (int) $this->conn->lastInsertId();
 
         try {
             $response = $this->callWs('pwg.images.formats.searchImage', [
-                'filename_list' => json_encode(['a' => $base . '.tif']),
+                'filename_list' => json_encode([
+                    'a' => $base . '.tif',
+                ]),
             ]);
 
             self::assertSame('ok', $response['stat']);
-            self::assertSame(['a' => ['status' => 'multiple']], $response['result']);
+            self::assertSame([
+                'a' => [
+                    'status' => 'multiple',
+                ],
+            ], $response['result']);
         } finally {
-            $this->conn->executeStatement('DELETE FROM ' . 'images' . ' WHERE id IN (?, ?)', [$firstId, $secondId]);
+            $this->conn->executeStatement('DELETE FROM images WHERE id IN (?, ?)', [$firstId, $secondId]);
         }
     }
 
     // ------------------------------------------------------------------ upload()
 
-    public function test_upload_with_more_than_one_chunk_and_not_the_last_returns_a_null_result(): void
+    public function testUploadWithMoreThanOneChunkAndNotTheLastReturnsANullResult(): void
     {
         $token = $this->getPwgToken();
         $name = 'chunked-upload-gap-' . uniqid() . '.jpg';
@@ -298,7 +322,7 @@ final class WsImagesUploadGapsTest extends ContractTestCase
 
     // -------------------------------------------------------------- uploadAsync()
 
-    public function test_uploadAsync_with_more_than_one_chunk_and_not_the_last_reports_the_uploaded_ids(): void
+    public function testUploadAsyncWithMoreThanOneChunkAndNotTheLastReportsTheUploadedIds(): void
     {
         $bytes = $this->pngBytes() . uniqid();
         $sum = md5($bytes);
@@ -312,7 +336,9 @@ final class WsImagesUploadGapsTest extends ContractTestCase
         ], 'file', $bytes);
 
         self::assertSame('ok', $response['stat']);
-        self::assertSame(['message' => 'chunks uploaded = 1'], $response['result']);
+        self::assertSame([
+            'message' => 'chunks uploaded = 1',
+        ], $response['result']);
 
         // fixture_admin is user id 1 -- uploadAsync()'s own chunk filename
         // pattern is "<sum>-u<uid>-<chunk+1>of<chunks>.chunk"; this test
@@ -322,7 +348,7 @@ final class WsImagesUploadGapsTest extends ContractTestCase
         unlink($chunkPath);
     }
 
-    public function test_uploadAsync_success_sweeps_stale_buffer_files_older_than_a_week(): void
+    public function testUploadAsyncSuccessSweepsStaleBufferFilesOlderThanAWeek(): void
     {
         $bufferDir = dirname(__DIR__, 2) . '/upload/buffer/';
         $staleChunk = $bufferDir . 'gap-stale-' . uniqid() . '.chunk';
@@ -421,7 +447,7 @@ final class WsImagesUploadGapsTest extends ContractTestCase
     //   test_uploadAsync_merge_already_in_progress_reports_the_uploaded_chunk_list()
     //   above).
 
-    public function test_uploadAsync_missing_file_field_returns_error(): void
+    public function testUploadAsyncMissingFileFieldReturnsError(): void
     {
         // No $_FILES['file'] entry at all (a regular, non-multipart POST) --
         // UploadedFileRequest::fromFilesKey('file')->tmpName is null,
@@ -440,7 +466,7 @@ final class WsImagesUploadGapsTest extends ContractTestCase
         self::assertSame('missing uploaded chunk file', $response['message']);
     }
 
-    public function test_uploadAsync_merge_already_in_progress_reports_the_uploaded_chunk_list(): void
+    public function testUploadAsyncMergeAlreadyInProgressReportsTheUploadedChunkList(): void
     {
         $bytes = $this->pngBytes() . uniqid();
         $sum = md5($bytes);
@@ -464,7 +490,9 @@ final class WsImagesUploadGapsTest extends ContractTestCase
             ], 'file', $bytes);
 
             self::assertSame('ok', $response['stat']);
-            self::assertSame(['message' => 'chunks uploaded = 1'], $response['result']);
+            self::assertSame([
+                'message' => 'chunks uploaded = 1',
+            ], $response['result']);
         } finally {
             @unlink($outputFilepath);
             // The request above still writes its own real chunk file
@@ -477,7 +505,7 @@ final class WsImagesUploadGapsTest extends ContractTestCase
         }
     }
 
-    public function test_uploadAsync_cannot_create_the_merge_file_returns_error(): void
+    public function testUploadAsyncCannotCreateTheMergeFileReturnsError(): void
     {
         $bytes = $this->pngBytes() . uniqid();
         $sum = md5($bytes);
@@ -516,7 +544,7 @@ final class WsImagesUploadGapsTest extends ContractTestCase
         }
     }
 
-    public function test_uploadAsync_merge_read_failure_on_one_chunk_returns_error(): void
+    public function testUploadAsyncMergeReadFailureOnOneChunkReturnsError(): void
     {
         $bytes = $this->pngBytes() . uniqid();
         $sum = md5($bytes);
@@ -572,7 +600,7 @@ final class WsImagesUploadGapsTest extends ContractTestCase
         }
     }
 
-    public function test_uploadAsync_merged_md5_mismatch_returns_error(): void
+    public function testUploadAsyncMergedMd5MismatchReturnsError(): void
     {
         $bytes = $this->pngBytes() . uniqid();
         // A well-formed but wrong original_sum: the per-chunk chunk_sum
@@ -607,18 +635,18 @@ final class WsImagesUploadGapsTest extends ContractTestCase
         }
     }
 
-    public function test_uploadAsync_sets_tags_and_applies_a_higher_privacy_level(): void
+    public function testUploadAsyncSetsTagsAndAppliesAHigherPrivacyLevel(): void
     {
         $bytes = $this->pngBytes() . uniqid();
         $sum = md5($bytes);
 
         $adminUserId = $this->conn->fetchOne(
-            "SELECT id FROM " . 'users' . " WHERE username = 'fixture_admin'"
+            'SELECT id FROM users' . " WHERE username = 'fixture_admin'"
         );
         self::assertIsNumeric($adminUserId);
 
         $originalLevel = $this->conn->fetchOne(
-            'SELECT level FROM ' . 'user_infos' . ' WHERE user_id = ?',
+            'SELECT level FROM user_infos WHERE user_id = ?',
             [$adminUserId]
         );
         self::assertIsNumeric($originalLevel);
@@ -634,7 +662,7 @@ final class WsImagesUploadGapsTest extends ContractTestCase
             // on every request (UserBootstrap::buildUser()), so this is
             // visible to the WS call below without re-logging in.
             $this->conn->executeStatement(
-                'UPDATE ' . 'user_infos' . ' SET level = 0 WHERE user_id = ?',
+                'UPDATE user_infos SET level = 0 WHERE user_id = ?',
                 [$adminUserId]
             );
 
@@ -657,19 +685,19 @@ final class WsImagesUploadGapsTest extends ContractTestCase
             $this->imageIdsToDelete[] = (int) $imageId;
 
             $tagIds = $this->conn->fetchFirstColumn(
-                'SELECT tag_id FROM ' . 'image_tag' . ' WHERE image_id = ? ORDER BY tag_id',
+                'SELECT tag_id FROM image_tag WHERE image_id = ? ORDER BY tag_id',
                 [(int) $imageId]
             );
             self::assertSame([1, 2], $tagIds);
 
             $storedLevel = $this->conn->fetchOne(
-                'SELECT level FROM ' . 'images' . ' WHERE id = ?',
+                'SELECT level FROM images WHERE id = ?',
                 [(int) $imageId]
             );
             self::assertSame(4, $storedLevel);
         } finally {
             $this->conn->executeStatement(
-                'UPDATE ' . 'user_infos' . ' SET level = ? WHERE user_id = ?',
+                'UPDATE user_infos SET level = ? WHERE user_id = ?',
                 [$originalLevel, $adminUserId]
             );
         }

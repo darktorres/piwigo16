@@ -4,48 +4,48 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Integration;
 
-use Override;
-use Piwigo\Users\UserService;
-use Piwigo\Tests\Support\LangTestFactory;
-use Piwigo\Users\UserRepository;
-use Piwigo\Tests\Support\CurrentConfigTestFactory;
-use Piwigo\Group\GroupEntity;
-use Piwigo\Activity\ActivityService;
-use Piwigo\Activity\ActivityEntity;
-use Piwigo\Tests\Support\HtmlServiceTestFactory;
-use Piwigo\Config\DeploymentPolicy;
-use Piwigo\Tests\Support\CurrentPathsTestFactory;
-use Piwigo\Core\InstallationFlag;
-use Piwigo\Core\ProcessCache;
-use Piwigo\Core\FilterState;
-use LogicException;
-use Piwigo\Auth\AccessLevelChecker;
-use Piwigo\Tests\Support\TranslatorTestFactory;
-use Piwigo\Core\CurrentLogger;
 use Doctrine\DBAL\Connection;
 use Doctrine\ORM\EntityManagerInterface;
+use LogicException;
+use Override;
+use Piwigo\Activity\ActivityEntity;
+use Piwigo\Activity\ActivityService;
+use Piwigo\Auth\AccessLevelChecker;
 use Piwigo\Bootstrap\RedirectService;
 use Piwigo\Category\CategoryEntity;
-use Piwigo\Common\ValueObject\CategoryId;
-use Piwigo\Common\ValueObject\SqlDateTime;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Category\CategoryService;
 use Piwigo\Category\CategoryStatus;
+use Piwigo\Common\ValueObject\CategoryId;
+use Piwigo\Common\ValueObject\SqlDateTime;
+use Piwigo\Config\DeploymentPolicy;
+use Piwigo\Core\CurrentLogger;
+use Piwigo\Core\FilterState;
+use Piwigo\Core\InstallationFlag;
 use Piwigo\Core\Kernel;
+use Piwigo\Core\ProcessCache;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
+use Piwigo\Group\GroupEntity;
 use Piwigo\Mail\MailService;
 use Piwigo\Permission\PermissionRepository;
 use Piwigo\Permission\PermissionService;
-use Piwigo\Tests\Support\PageStateTestFactory;
 use Piwigo\PluginConfig\EventDispatcher;
-use Piwigo\Tests\Support\EventDispatcherTestFactory;
 use Piwigo\Search\QSingleToken;
 use Piwigo\Search\SearchRepository;
 use Piwigo\Search\SearchService;
 use Piwigo\Session\SessionEntity;
 use Piwigo\Session\SessionService;
+use Piwigo\Tests\Support\CurrentConfigTestFactory;
+use Piwigo\Tests\Support\CurrentPathsTestFactory;
 use Piwigo\Tests\Support\CurrentUserTestFactory;
+use Piwigo\Tests\Support\EventDispatcherTestFactory;
+use Piwigo\Tests\Support\HtmlServiceTestFactory;
+use Piwigo\Tests\Support\LangTestFactory;
+use Piwigo\Tests\Support\PageStateTestFactory;
+use Piwigo\Tests\Support\TranslatorTestFactory;
+use Piwigo\Users\UserRepository;
+use Piwigo\Users\UserService;
 
 /**
  * Covers qsearchGetTextTokenSearchSql()'s real per-platform FULLTEXT/
@@ -127,7 +127,7 @@ final class SearchFulltextPortabilityTest extends IntegrationTestCase
     protected function tearDown(): void
     {
         foreach ($this->insertedCategoryIds as $id) {
-            $this->conn->executeStatement('DELETE FROM ' . 'categories' . ' WHERE id = ?', [$id]);
+            $this->conn->executeStatement('DELETE FROM categories WHERE id = ?', [$id]);
         }
 
         parent::tearDown();
@@ -170,7 +170,7 @@ final class SearchFulltextPortabilityTest extends IntegrationTestCase
         self::assertNotSame([], $clauses);
 
         $rows = $this->conn->fetchAllAssociative(
-            'SELECT id FROM ' . 'categories' . ' WHERE id IN (' . implode(',', $this->insertedCategoryIds) . ') AND (' . implode(' OR ', $clauses) . ')',
+            'SELECT id FROM categories WHERE id IN (' . implode(',', $this->insertedCategoryIds) . ') AND (' . implode(' OR ', $clauses) . ')',
             $values
         );
 
@@ -180,7 +180,7 @@ final class SearchFulltextPortabilityTest extends IntegrationTestCase
         );
     }
 
-    public function test_plain_fulltext_search_matches_a_word_in_the_name(): void
+    public function testPlainFulltextSearchMatchesAWordInTheName(): void
     {
         $mountainId = $this->insertCategory('Mountain View Sunset', 'a beautiful blue sky day');
         $oceanId = $this->insertCategory('Ocean Waves', 'calm water');
@@ -191,7 +191,7 @@ final class SearchFulltextPortabilityTest extends IntegrationTestCase
         self::assertNotContains($oceanId, $matches);
     }
 
-    public function test_quoted_phrase_fulltext_search_matches_an_adjacent_phrase_in_the_comment(): void
+    public function testQuotedPhraseFulltextSearchMatchesAnAdjacentPhraseInTheComment(): void
     {
         $mountainId = $this->insertCategory('Mountain View Sunset', 'a beautiful blue sky day');
         $this->insertCategory('Ocean Waves', 'a blue distant sky somewhere');
@@ -203,7 +203,7 @@ final class SearchFulltextPortabilityTest extends IntegrationTestCase
         self::assertSame([$mountainId], $matches);
     }
 
-    public function test_wildcard_end_fulltext_search_matches_a_prefix(): void
+    public function testWildcardEndFulltextSearchMatchesAPrefix(): void
     {
         $mountainId = $this->insertCategory('Mountain View Sunset', 'a beautiful blue sky day');
         $oceanId = $this->insertCategory('Ocean Waves', 'calm water');
@@ -220,7 +220,7 @@ final class SearchFulltextPortabilityTest extends IntegrationTestCase
      * case-insensitive `~*` operator, not a bare `~` -- see
      * qsearchGetTextTokenSearchSql()'s own docblock.
      */
-    public function test_short_term_regexp_search_matches_a_whole_word_case_insensitively_but_not_a_substring(): void
+    public function testShortTermRegexpSearchMatchesAWholeWordCaseInsensitivelyButNotASubstring(): void
     {
         $catId = $this->insertCategory('Cat Show 2026', 'feline exhibition');
         $decoyId = $this->insertCategory('Data Export', 'concatenate values here');

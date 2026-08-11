@@ -2,13 +2,13 @@
 
 declare(strict_types=1);
 
-use Piwigo\PluginConfig\EventDispatcher;
-use Piwigo\Config\CurrentConfig;
 use Piwigo\Admin\Image\ImageGd;
 use Piwigo\Admin\Image\ImageInterface;
 use Piwigo\Admin\Image\ImageProcessingException;
 use Piwigo\Admin\Image\PwgImage;
+use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\CurrentLogger;
+use Piwigo\PluginConfig\EventDispatcher;
 
 /**
  * __construct()'s 2 real failure branches (unsupported extension,
@@ -43,7 +43,7 @@ use Piwigo\Core\CurrentLogger;
  */
 function imageGdTestMarker(): string
 {
-    /** @var string|null $marker */
+    /** @var string|null */
     static $marker = null;
 
     return $marker ??= sys_get_temp_dir() . '/piwigo-image-gd-test-' . bin2hex(random_bytes(8));
@@ -97,8 +97,10 @@ test('construct decodes a real PNG', function (): void {
 
     $img = new ImageGd($path);
 
-    expect($img->get_width())->toBe(33);
-    expect($img->get_height())->toBe(21);
+    expect($img->get_width())
+        ->toBe(33);
+    expect($img->get_height())
+        ->toBe(21);
 });
 
 test('construct decodes a real .jpeg (not just .jpg) extension', function (): void {
@@ -115,8 +117,10 @@ test('construct decodes a real .jpeg (not just .jpg) extension', function (): vo
 
     $img = new ImageGd($path);
 
-    expect($img->get_width())->toBe(19);
-    expect($img->get_height())->toBe(11);
+    expect($img->get_width())
+        ->toBe(19);
+    expect($img->get_height())
+        ->toBe(11);
 });
 
 test('construct decodes a real GIF', function (): void {
@@ -129,8 +133,10 @@ test('construct decodes a real GIF', function (): void {
 
     $img = new ImageGd($path);
 
-    expect($img->get_width())->toBe(17);
-    expect($img->get_height())->toBe(9);
+    expect($img->get_width())
+        ->toBe(17);
+    expect($img->get_height())
+        ->toBe(9);
 });
 
 test('construct lowercases the file extension before matching it', function (): void {
@@ -148,8 +154,10 @@ test('construct lowercases the file extension before matching it', function (): 
 
     $img = new ImageGd($path);
 
-    expect($img->get_width())->toBe(15);
-    expect($img->get_height())->toBe(8);
+    expect($img->get_width())
+        ->toBe(15);
+    expect($img->get_height())
+        ->toBe(8);
 });
 
 test('get_width and get_height report the real decoded dimensions, not transposed', function (): void {
@@ -162,8 +170,10 @@ test('get_width and get_height report the real decoded dimensions, not transpose
 
     $img = new ImageGd($path);
 
-    expect($img->get_width())->toBe(64);
-    expect($img->get_height())->toBe(12);
+    expect($img->get_width())
+        ->toBe(64);
+    expect($img->get_height())
+        ->toBe(12);
 });
 
 test('strip is a true no-op', function (): void {
@@ -175,11 +185,14 @@ test('strip is a true no-op', function (): void {
     imagejpeg($gdImg, $path);
     $img = new ImageGd($path);
 
-    expect($img->strip())->toBeTrue();
+    expect($img->strip())
+        ->toBeTrue();
     // A genuine no-op: dimensions (the only cheaply-observable state)
     // stay exactly what they were before the call.
-    expect($img->get_width())->toBe(5);
-    expect($img->get_height())->toBe(5);
+    expect($img->get_width())
+        ->toBe(5);
+    expect($img->get_height())
+        ->toBe(5);
 });
 
 test('destroy is a true no-op returning true', function (): void {
@@ -191,7 +204,8 @@ test('destroy is a true no-op returning true', function (): void {
     imagejpeg($gdImg, $path);
     $img = new ImageGd($path);
 
-    expect($img->destroy())->toBeTrue();
+    expect($img->destroy())
+        ->toBeTrue();
 });
 
 // ---------------------------------------------------------------------
@@ -259,9 +273,12 @@ test('crop produces a real image of exactly the requested size, taken from the c
     $img = new ImageGd($path);
     $result = $img->crop(10, 20, 10, 0);
 
-    expect($result)->toBeTrue();
-    expect($img->get_width())->toBe(10);
-    expect($img->get_height())->toBe(20);
+    expect($result)
+        ->toBeTrue();
+    expect($img->get_width())
+        ->toBe(10);
+    expect($img->get_height())
+        ->toBe(20);
     $color = imagecolorat($img->image, 0, 0);
     if ($color === false) {
         throw new RuntimeException('imagecolorat failed');
@@ -289,9 +306,12 @@ test('crop accepts real float width/height/x/y without a TypeError', function ()
     $img = new ImageGd($path);
     $result = $img->crop(10.0, 20.0, 10.0, 0.0);
 
-    expect($result)->toBeTrue();
-    expect($img->get_width())->toBe(10);
-    expect($img->get_height())->toBe(20);
+    expect($result)
+        ->toBeTrue();
+    expect($img->get_width())
+        ->toBe(10);
+    expect($img->get_height())
+        ->toBe(20);
 });
 
 test('crop writes into every pixel of the destination canvas, including the far edge', function (): void {
@@ -316,7 +336,8 @@ test('crop writes into every pixel of the destination canvas, including the far 
     $img = new ImageGd($path);
     $result = $img->crop(10, 10, 0, 0);
 
-    expect($result)->toBeTrue();
+    expect($result)
+        ->toBeTrue();
     $color = imagecolorat($img->image, 9, 9);
     if ($color === false) {
         throw new RuntimeException('imagecolorat failed');
@@ -338,9 +359,12 @@ test('resize produces a real image scaled to exactly the requested dimensions', 
 
     $result = $img->resize(40, 20);
 
-    expect($result)->toBeTrue();
-    expect($img->get_width())->toBe(40);
-    expect($img->get_height())->toBe(20);
+    expect($result)
+        ->toBeTrue();
+    expect($img->get_width())
+        ->toBe(40);
+    expect($img->get_height())
+        ->toBe(20);
 });
 
 test('resize accepts real float width/height without a TypeError', function (): void {
@@ -354,9 +378,12 @@ test('resize accepts real float width/height without a TypeError', function (): 
 
     $result = $img->resize(40.0, 20.0);
 
-    expect($result)->toBeTrue();
-    expect($img->get_width())->toBe(40);
-    expect($img->get_height())->toBe(20);
+    expect($result)
+        ->toBeTrue();
+    expect($img->get_width())
+        ->toBe(40);
+    expect($img->get_height())
+        ->toBe(20);
 });
 
 test('resize writes into every pixel of the destination canvas, including both edges', function (): void {
@@ -381,7 +408,8 @@ test('resize writes into every pixel of the destination canvas, including both e
     $img = new ImageGd($path);
     $result = $img->resize(10, 10);
 
-    expect($result)->toBeTrue();
+    expect($result)
+        ->toBeTrue();
     foreach ([[0, 0], [9, 9]] as [$px, $py]) {
         $color = imagecolorat($img->image, $px, $py);
         if ($color === false) {
@@ -420,7 +448,8 @@ test('resize samples from the correct source region, not shifted by one pixel', 
     $img = new ImageGd($path);
     $result = $img->resize(20, 20);
 
-    expect($result)->toBeTrue();
+    expect($result)
+        ->toBeTrue();
 
     $atRed = imagecolorat($img->image, 9, 9);
     $atBlue = imagecolorat($img->image, 10, 9);
@@ -500,9 +529,12 @@ test('rotate produces a real image with width/height swapped for a 90-degree tur
 
     $result = $img->rotate(90);
 
-    expect($result)->toBeTrue();
-    expect($img->get_width())->toBe(10);
-    expect($img->get_height())->toBe(30);
+    expect($result)
+        ->toBeTrue();
+    expect($img->get_width())
+        ->toBe(10);
+    expect($img->get_height())
+        ->toBe(30);
 });
 
 test('rotate fills newly exposed corners with the documented background color', function (): void {
@@ -527,7 +559,8 @@ test('rotate fills newly exposed corners with the documented background color', 
 
     $result = $img->rotate(45);
 
-    expect($result)->toBeTrue();
+    expect($result)
+        ->toBeTrue();
     // The extreme (0,0) corner of the enlarged bounding canvas sits well
     // outside the rotated (now diamond-shaped) red square -- a real
     // background pixel, far from any anti-aliased edge.
@@ -552,8 +585,10 @@ test('set_compression_quality stores the requested quality and reports success',
 
     $result = $img->set_compression_quality(42);
 
-    expect($result)->toBeTrue();
-    expect($img->quality)->toBe(42);
+    expect($result)
+        ->toBeTrue();
+    expect($img->quality)
+        ->toBe(42);
 });
 
 test('sharpen applies a real convolution and reports success', function (): void {
@@ -570,7 +605,8 @@ test('sharpen applies a real convolution and reports success', function (): void
     imagejpeg($gdImg, $path);
     $img = new ImageGd($path);
 
-    expect($img->sharpen(50))->toBeTrue();
+    expect($img->sharpen(50))
+        ->toBeTrue();
 });
 
 test('sharpen leaves a uniform region at exactly its original value', function (): void {
@@ -594,7 +630,8 @@ test('sharpen leaves a uniform region at exactly its original value', function (
     imagepng($gdImg, $path);
     $img = new ImageGd($path);
 
-    expect($img->sharpen(50))->toBeTrue();
+    expect($img->sharpen(50))
+        ->toBeTrue();
 
     $color = imagecolorat($img->image, 5, 5);
     if ($color === false) {
@@ -616,7 +653,8 @@ test('write saves as PNG when the destination extension is .png', function (): v
     imagejpeg($gdImg, $path);
     $img = new ImageGd($path);
 
-    expect($img->write($dest))->toBeTrue();
+    expect($img->write($dest))
+        ->toBeTrue();
     $info = getimagesize($dest);
     if ($info === false) {
         throw new RuntimeException('getimagesize failed');
@@ -634,7 +672,8 @@ test('write saves as GIF when the destination extension is .gif', function (): v
     imagejpeg($gdImg, $path);
     $img = new ImageGd($path);
 
-    expect($img->write($dest))->toBeTrue();
+    expect($img->write($dest))
+        ->toBeTrue();
     $info = getimagesize($dest);
     if ($info === false) {
         throw new RuntimeException('getimagesize failed');
@@ -653,7 +692,8 @@ test('write falls back to JPEG for any other destination extension', function ()
     $img = new ImageGd($path);
     $img->set_compression_quality(77);
 
-    expect($img->write($dest))->toBeTrue();
+    expect($img->write($dest))
+        ->toBeTrue();
     $info = getimagesize($dest);
     if ($info === false) {
         throw new RuntimeException('getimagesize failed');
@@ -676,7 +716,8 @@ test('write lowercases the destination extension before matching it', function (
     imagejpeg($gdImg, $path);
     $img = new ImageGd($path);
 
-    expect($img->write($dest))->toBeTrue();
+    expect($img->write($dest))
+        ->toBeTrue();
     $info = getimagesize($dest);
     if ($info === false) {
         throw new RuntimeException('getimagesize failed');
@@ -698,7 +739,7 @@ test('compose throws when the overlay uses a different image backend', function 
     // ImageImagick/ImageExtImagick both need a real ext_imagick/imagick
     // setup this suite doesn't otherwise depend on, and this class's own
     // guard only cares that it's genuinely not `self` (ImageGd).
-    $overlay->image = new class implements ImageInterface {
+    $overlay->image = new class() implements ImageInterface {
         public function get_width(): int
         {
             return 1;
@@ -817,7 +858,8 @@ test('rotate returns false when imagerotate() itself fails', function (): void {
         restore_error_handler();
     }
 
-    expect($result)->toBeFalse();
+    expect($result)
+        ->toBeFalse();
 });
 
 test('compose merges a same-backend overlay onto the base image', function (): void {
@@ -843,10 +885,13 @@ test('compose merges a same-backend overlay onto the base image', function (): v
     $img = new ImageGd($basePath);
     $overlay = new PwgImage($overlayPath, new CurrentLogger(), new EventDispatcher(), new CurrentConfig(), 'gd');
 
-    expect($img->compose($overlay, 2, 2, 100))->toBeTrue();
+    expect($img->compose($overlay, 2, 2, 100))
+        ->toBeTrue();
     // Base image dimensions are untouched by composing a smaller overlay.
-    expect($img->get_width())->toBe(20);
-    expect($img->get_height())->toBe(20);
+    expect($img->get_width())
+        ->toBe(20);
+    expect($img->get_height())
+        ->toBe(20);
     $color = imagecolorat($img->image, 2, 2);
     if ($color === false) {
         throw new RuntimeException('imagecolorat failed');
@@ -882,7 +927,8 @@ test('compose accepts real float x/y/opacity without a TypeError', function (): 
 
     $result = $img->compose($overlay, 2.0, 2.0, 100.0);
 
-    expect($result)->toBeTrue();
+    expect($result)
+        ->toBeTrue();
 });
 
 test('compose samples the cut region and the overlay from the correct offsets, not shifted by one pixel', function (): void {
@@ -924,7 +970,8 @@ test('compose samples the cut region and the overlay from the correct offsets, n
     $img = new ImageGd($basePath);
     $overlay = new PwgImage($overlayPath, new CurrentLogger(), new EventDispatcher(), new CurrentConfig(), 'gd');
 
-    expect($img->compose($overlay, 2, 2, 100))->toBeTrue();
+    expect($img->compose($overlay, 2, 2, 100))
+        ->toBeTrue();
 
     // (5,5) = local overlay coordinate (3,3), the last pixel still inside
     // the top-left (green) quadrant -- any 1px shift in either direction,

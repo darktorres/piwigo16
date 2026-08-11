@@ -4,24 +4,24 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Integration;
 
-use Piwigo\Tests\Support\CurrentPathsTestFactory;
-use Piwigo\Activity\ActivityService;
-use Override;
 use LogicException;
-use Piwigo\PluginConfig\EventDispatcher;
+use Override;
+use Piwigo\Activity\ActivityService;
 use Piwigo\Admin\LoadedPlugins;
 use Piwigo\Admin\PluginLoader;
 use Piwigo\Auth\AccessControl;
 use Piwigo\Config\ConfigLoader;
 use Piwigo\Config\CurrentConfig;
-use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Core\ActivitySystem;
 use Piwigo\Core\Kernel;
-use Piwigo\Tests\Support\PageStateTestFactory;
 use Piwigo\Core\Paths;
 use Piwigo\Core\WsContext;
 use Piwigo\Db\DbConnection;
+use Piwigo\PluginConfig\EventDispatcher;
+use Piwigo\Tests\Support\CurrentConfigTestFactory;
+use Piwigo\Tests\Support\CurrentPathsTestFactory;
 use Piwigo\Tests\Support\KernelContainerOverride;
+use Piwigo\Tests\Support\PageStateTestFactory;
 
 /**
  * PluginLoader::loadPlugins()/loadPlugin() -- each test that needs a
@@ -97,9 +97,9 @@ final class PluginLoaderTest extends IntegrationTestCase
     #[Override]
     protected function tearDown(): void
     {
-        DbConnection::build()->executeStatement('DELETE FROM ' . 'plugins');
+        DbConnection::build()->executeStatement('DELETE FROM plugins');
         DbConnection::build()->executeStatement(
-            'DELETE FROM ' . 'activity' . ' WHERE object = ? AND object_id = ? AND action = ?',
+            'DELETE FROM activity WHERE object = ? AND object_id = ? AND action = ?',
             ['system', ActivitySystem::Plugin, 'autoupdate']
         );
         parent::tearDown();
@@ -127,7 +127,7 @@ final class PluginLoaderTest extends IntegrationTestCase
 
     private function pluginLoaderTestMarker(): string
     {
-        /** @var string|null $marker */
+        /** @var string|null */
         static $marker = null;
 
         return $marker ??= sys_get_temp_dir() . '/piwigo-plugin-loader-test-' . bin2hex(random_bytes(8));
@@ -167,33 +167,37 @@ final class PluginLoaderTest extends IntegrationTestCase
         );
     }
 
-    public function test_load_plugins_stays_empty_and_skips_the_db_query_when_plugins_are_disabled(): void
+    public function testLoadPluginsStaysEmptyAndSkipsTheDbQueryWhenPluginsAreDisabled(): void
     {
         CurrentConfigTestFactory::get()->enablePlugins = false;
 
         PluginLoader::loadPlugins($this->loadedPlugins, new EventDispatcher(), $this->activityService, CurrentConfigTestFactory::get(), $this->wsContext(), $this->accessControl(), PageStateTestFactory::get(), CurrentPathsTestFactory::get());
 
-        expect($this->loadedPlugins->get())->toBe([]);
+        expect($this->loadedPlugins->get())
+            ->toBe([]);
     }
 
-    public function test_load_plugins_skips_an_active_plugin_whose_main_inc_php_file_is_missing(): void
+    public function testLoadPluginsSkipsAnActivePluginWhoseMainIncPhpFileIsMissing(): void
     {
         $root = $this->pluginLoaderTestMarker() . '/no-file/';
         mkdir($root . 'plugins', 0o777, true);
         CurrentConfigTestFactory::get()->enablePlugins = true;
 
         DbConnection::build()->executeStatement(
-            "INSERT INTO " . 'plugins' . " (id, state, version) VALUES ('ghost-plugin', 'active', '1.0')"
+            'INSERT INTO plugins' . " (id, state, version) VALUES ('ghost-plugin', 'active', '1.0')"
         );
 
-        KernelContainerOverride::with([Paths::class => Paths::fromRoot($root)], function (): void {
+        KernelContainerOverride::with([
+            Paths::class => Paths::fromRoot($root),
+        ], function (): void {
             PluginLoader::loadPlugins($this->loadedPlugins, new EventDispatcher(), $this->activityService, CurrentConfigTestFactory::get(), $this->wsContext(), $this->accessControl(), PageStateTestFactory::get(), CurrentPathsTestFactory::get());
 
-            expect($this->loadedPlugins->get())->toBe([]);
+            expect($this->loadedPlugins->get())
+                ->toBe([]);
         });
     }
 
-    public function test_load_plugins_loads_an_active_plugin_with_a_real_main_inc_php(): void
+    public function testLoadPluginsLoadsAnActivePluginWithARealMainIncPhp(): void
     {
         $root = $this->pluginLoaderTestMarker() . '/real-file/';
         $pluginDir = $root . 'plugins/loadable-plugin';
@@ -201,24 +205,28 @@ final class PluginLoaderTest extends IntegrationTestCase
         $marker = $pluginDir . '/loaded.marker';
         file_put_contents(
             $pluginDir . '/main.inc.php',
-            "<?php file_put_contents(" . var_export($marker, true) . ", 'loaded');"
+            '<?php file_put_contents(' . var_export($marker, true) . ", 'loaded');"
         );
         CurrentConfigTestFactory::get()->enablePlugins = true;
 
         DbConnection::build()->executeStatement(
-            "INSERT INTO " . 'plugins' . " (id, state, version) VALUES ('loadable-plugin', 'active', '1.0')"
+            'INSERT INTO plugins' . " (id, state, version) VALUES ('loadable-plugin', 'active', '1.0')"
         );
 
-        KernelContainerOverride::with([Paths::class => Paths::fromRoot($root)], function () use ($marker): void {
+        KernelContainerOverride::with([
+            Paths::class => Paths::fromRoot($root),
+        ], function () use ($marker): void {
             PluginLoader::loadPlugins($this->loadedPlugins, new EventDispatcher(), $this->activityService, CurrentConfigTestFactory::get(), $this->wsContext(), $this->accessControl(), PageStateTestFactory::get(), CurrentPathsTestFactory::get());
 
-            expect($this->loadedPlugins->get())->toHaveKey('loadable-plugin');
+            expect($this->loadedPlugins->get())
+                ->toHaveKey('loadable-plugin');
             expect($this->loadedPlugins->get()['loadable-plugin']['version'])->toBe('1.0');
-            expect(file_exists($marker))->toBeTrue();
+            expect(file_exists($marker))
+                ->toBeTrue();
         });
     }
 
-    public function test_load_plugins_ignores_an_inactive_plugin(): void
+    public function testLoadPluginsIgnoresAnInactivePlugin(): void
     {
         $root = $this->pluginLoaderTestMarker() . '/inactive/';
         $pluginDir = $root . 'plugins/inactive-plugin';
@@ -227,19 +235,22 @@ final class PluginLoaderTest extends IntegrationTestCase
         CurrentConfigTestFactory::get()->enablePlugins = true;
 
         DbConnection::build()->executeStatement(
-            "INSERT INTO " . 'plugins' . " (id, state, version) VALUES ('inactive-plugin', 'inactive', '1.0')"
+            'INSERT INTO plugins' . " (id, state, version) VALUES ('inactive-plugin', 'inactive', '1.0')"
         );
 
-        KernelContainerOverride::with([Paths::class => Paths::fromRoot($root)], function (): void {
+        KernelContainerOverride::with([
+            Paths::class => Paths::fromRoot($root),
+        ], function (): void {
             PluginLoader::loadPlugins($this->loadedPlugins, new EventDispatcher(), $this->activityService, CurrentConfigTestFactory::get(), $this->wsContext(), $this->accessControl(), PageStateTestFactory::get(), CurrentPathsTestFactory::get());
 
-            expect($this->loadedPlugins->get())->toBe([]);
+            expect($this->loadedPlugins->get())
+                ->toBe([]);
         });
     }
 
     // ---------------------------------------- autoupdatePlugin(), real update
 
-    public function test_autoupdate_plugin_runs_the_real_maintain_update_persists_the_new_version_and_logs_activity(): void
+    public function testAutoupdatePluginRunsTheRealMaintainUpdatePersistsTheNewVersionAndLogsActivity(): void
     {
         $id = 'pl-autoupdate-' . bin2hex(random_bytes(4));
         $root = $this->pluginLoaderTestMarker() . '/autoupdate-ok/';
@@ -257,24 +268,27 @@ PHP);
         CurrentConfigTestFactory::get()->enablePlugins = true;
 
         DbConnection::build()->executeStatement(
-            "INSERT INTO " . 'plugins' . " (id, state, version) VALUES (?, 'active', '1.0')",
+            'INSERT INTO plugins' . " (id, state, version) VALUES (?, 'active', '1.0')",
             [$id]
         );
 
-        KernelContainerOverride::with([Paths::class => Paths::fromRoot($root)], function () use ($id): void {
+        KernelContainerOverride::with([
+            Paths::class => Paths::fromRoot($root),
+        ], function () use ($id): void {
             PluginLoader::loadPlugins($this->loadedPlugins, new EventDispatcher(), $this->activityService, CurrentConfigTestFactory::get(), $this->wsContext(), $this->accessControl(), PageStateTestFactory::get(), CurrentPathsTestFactory::get());
 
             expect(PageStateTestFactory::get()->errors)->toBe(['updated from 1.0 to 2.0']);
             expect($this->loadedPlugins->get()[$id]['version'])->toBe('2.0');
 
             $storedVersion = DbConnection::build()->fetchOne(
-                'SELECT version FROM ' . 'plugins' . ' WHERE id = ?',
+                'SELECT version FROM plugins WHERE id = ?',
                 [$id]
             );
-            expect($storedVersion)->toBe('2.0');
+            expect($storedVersion)
+                ->toBe('2.0');
 
             $row = DbConnection::build()->fetchAssociative(
-                'SELECT object_id, details FROM ' . 'activity'
+                'SELECT object_id, details FROM activity'
                 . " WHERE object = 'system' AND action = 'autoupdate' ORDER BY activity_id DESC LIMIT 1"
             );
             self::assertIsArray($row);
@@ -294,11 +308,12 @@ PHP);
             ksort($expectedDetails);
             self::assertIsArray($actualDetails);
             ksort($actualDetails);
-            expect($actualDetails)->toBe($expectedDetails);
+            expect($actualDetails)
+                ->toBe($expectedDetails);
         });
     }
 
-    public function test_autoupdate_plugin_throws_when_the_maintain_class_does_not_extend_plugin_maintain(): void
+    public function testAutoupdatePluginThrowsWhenTheMaintainClassDoesNotExtendPluginMaintain(): void
     {
         // Same "does not extend" contract ExtensionLifecycleTest's own
         // test_build_plugin_maintain_throws_when_the_class_php_class_does_not_extend_plugin_maintain()
@@ -314,19 +329,21 @@ PHP);
         CurrentConfigTestFactory::get()->enablePlugins = true;
 
         DbConnection::build()->executeStatement(
-            "INSERT INTO " . 'plugins' . " (id, state, version) VALUES (?, 'active', '1.0')",
+            'INSERT INTO plugins' . " (id, state, version) VALUES (?, 'active', '1.0')",
             [$id]
         );
 
         $this->expectException(LogicException::class);
         $this->expectExceptionMessageIsOrContains("PluginLoader::autoupdatePlugin(): {$classname} does not extend PluginMaintain");
 
-        KernelContainerOverride::with([Paths::class => Paths::fromRoot($root)], function (): void {
+        KernelContainerOverride::with([
+            Paths::class => Paths::fromRoot($root),
+        ], function (): void {
             PluginLoader::loadPlugins($this->loadedPlugins, new EventDispatcher(), $this->activityService, CurrentConfigTestFactory::get(), $this->wsContext(), $this->accessControl(), PageStateTestFactory::get(), CurrentPathsTestFactory::get());
         });
     }
 
-    public function test_autoupdate_plugin_skips_the_db_and_activity_write_for_an_auto_to_auto_update(): void
+    public function testAutoupdatePluginSkipsTheDbAndActivityWriteForAnAutoToAutoUpdate(): void
     {
         // Bonus behavioral lock-in for the exact quirk autoupdatePlugin()'s
         // own comment documents ("avoid registering an 'auto' to 'auto'
@@ -342,18 +359,21 @@ PHP);
         CurrentConfigTestFactory::get()->enablePlugins = true;
 
         DbConnection::build()->executeStatement(
-            "INSERT INTO " . 'plugins' . " (id, state, version) VALUES (?, 'active', 'auto')",
+            'INSERT INTO plugins' . " (id, state, version) VALUES (?, 'active', 'auto')",
             [$id]
         );
 
-        KernelContainerOverride::with([Paths::class => Paths::fromRoot($root)], function () use ($id): void {
+        KernelContainerOverride::with([
+            Paths::class => Paths::fromRoot($root),
+        ], function () use ($id): void {
             PluginLoader::loadPlugins($this->loadedPlugins, new EventDispatcher(), $this->activityService, CurrentConfigTestFactory::get(), $this->wsContext(), $this->accessControl(), PageStateTestFactory::get(), CurrentPathsTestFactory::get());
 
             $storedVersion = DbConnection::build()->fetchOne(
-                'SELECT version FROM ' . 'plugins' . ' WHERE id = ?',
+                'SELECT version FROM plugins WHERE id = ?',
                 [$id]
             );
-            expect($storedVersion)->toBe('auto');
+            expect($storedVersion)
+                ->toBe('auto');
 
             // activity.details is a genuine json/jsonb column on both
             // platforms -- LIKE against it directly errors on Postgres
@@ -362,11 +382,12 @@ PHP);
             // RequestBootstrapConnectTest/GroupServiceTest).
             $detailsColumn = $this->dbDriver === 'pgsql' ? 'details::text' : 'details';
             $activityCount = DbConnection::build()->fetchOne(
-                'SELECT COUNT(*) FROM ' . 'activity'
+                'SELECT COUNT(*) FROM activity'
                 . " WHERE object = 'system' AND action = 'autoupdate' AND {$detailsColumn} LIKE ?",
                 ['%' . $id . '%']
             );
-            expect(is_numeric($activityCount) ? (int) $activityCount : -1)->toBe(0);
+            expect(is_numeric($activityCount) ? (int) $activityCount : -1)
+                ->toBe(0);
         });
     }
 }

@@ -4,15 +4,15 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Integration;
 
-use Override;
-use Piwigo\Core\Kernel;
-use LogicException;
 use Doctrine\DBAL\Schema\Column;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Tools\SchemaValidator;
-use Piwigo\Config\CurrentConfig;
+use LogicException;
+use Override;
 use Piwigo\Config\ConfigEntry;
 use Piwigo\Config\ConfigLoader;
+use Piwigo\Config\CurrentConfig;
+use Piwigo\Core\Kernel;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
 
@@ -82,25 +82,27 @@ final class SchemaParityTest extends IntegrationTestCase
         $this->em = EntityManagerFactory::build(DbConnection::build());
     }
 
-    public function test_mapped_entity_metadata_has_no_validation_errors(): void
+    public function testMappedEntityMetadataHasNoValidationErrors(): void
     {
         $validator = new SchemaValidator($this->em);
 
         self::assertSame([], $validator->validateMapping(), 'Entity mapping metadata must have zero validation errors');
     }
 
-    public function test_config_table_columns_match_config_entry_mapping(): void
+    public function testConfigTableColumnsMatchConfigEntryMapping(): void
     {
         $metadata = $this->em->getClassMetadata(ConfigEntry::class);
         $tableName = $metadata->getTableName();
         if ($tableName === '') {
             self::fail('ConfigEntry metadata has no table name');
         }
-        $sm = $this->em->getConnection()->createSchemaManager();
+        $sm = $this->em->getConnection()
+            ->createSchemaManager();
         $columns = $sm->introspectTableColumnsByUnquotedName($tableName);
         $columnNames = array_map(static function (Column $column): string {
             $objectName = $column->getObjectName();
-            return $objectName->getIdentifier()->getValue();
+            return $objectName->getIdentifier()
+                ->getValue();
         }, $columns);
 
         foreach (['param', 'value', 'comment'] as $mappedField) {

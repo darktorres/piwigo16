@@ -10,30 +10,43 @@ const THEMES_STD_PAGES_SKIN_OPTIONS = ['default', 'cobalt', 'green'];
 test('fromArrays reports not submitted when the submit key is absent', function (): void {
     $request = ThemesStandardPagesSubmitRequest::fromArrays([], [], THEMES_STD_PAGES_LOGO_OPTIONS, THEMES_STD_PAGES_SKIN_OPTIONS);
 
-    expect($request->isSubmitted)->toBeFalse();
+    expect($request->isSubmitted)
+        ->toBeFalse();
 });
 
 test('fromArrays treats a missing use_standard_pages as unchecked', function (): void {
-    $request = ThemesStandardPagesSubmitRequest::fromArrays(['submit' => ''], [], THEMES_STD_PAGES_LOGO_OPTIONS, THEMES_STD_PAGES_SKIN_OPTIONS);
+    $request = ThemesStandardPagesSubmitRequest::fromArrays([
+        'submit' => '',
+    ], [], THEMES_STD_PAGES_LOGO_OPTIONS, THEMES_STD_PAGES_SKIN_OPTIONS);
 
-    expect($request->useStandardPages)->toBeFalse();
+    expect($request->useStandardPages)
+        ->toBeFalse();
 });
 
 test('fromArrays treats "0" as unchecked and any other value as checked', function (): void {
-    $unchecked = ThemesStandardPagesSubmitRequest::fromArrays(['use_standard_pages' => '0'], [], THEMES_STD_PAGES_LOGO_OPTIONS, THEMES_STD_PAGES_SKIN_OPTIONS);
-    $checked = ThemesStandardPagesSubmitRequest::fromArrays(['use_standard_pages' => '1'], [], THEMES_STD_PAGES_LOGO_OPTIONS, THEMES_STD_PAGES_SKIN_OPTIONS);
+    $unchecked = ThemesStandardPagesSubmitRequest::fromArrays([
+        'use_standard_pages' => '0',
+    ], [], THEMES_STD_PAGES_LOGO_OPTIONS, THEMES_STD_PAGES_SKIN_OPTIONS);
+    $checked = ThemesStandardPagesSubmitRequest::fromArrays([
+        'use_standard_pages' => '1',
+    ], [], THEMES_STD_PAGES_LOGO_OPTIONS, THEMES_STD_PAGES_SKIN_OPTIONS);
 
-    expect($unchecked->useStandardPages)->toBeFalse()
-        ->and($checked->useStandardPages)->toBeTrue();
+    expect($unchecked->useStandardPages)
+        ->toBeFalse()
+        ->and($checked->useStandardPages)
+        ->toBeTrue();
 });
 
 test('fromArrays treats an explicitly empty use_standard_pages as unchecked', function (): void {
     // Distinct from the "0"/missing cases above -- '' is its own explicit
     // rejection branch (`$use_standard_pages_raw !== ''`), not covered by
     // either.
-    $request = ThemesStandardPagesSubmitRequest::fromArrays(['use_standard_pages' => ''], [], THEMES_STD_PAGES_LOGO_OPTIONS, THEMES_STD_PAGES_SKIN_OPTIONS);
+    $request = ThemesStandardPagesSubmitRequest::fromArrays([
+        'use_standard_pages' => '',
+    ], [], THEMES_STD_PAGES_LOGO_OPTIONS, THEMES_STD_PAGES_SKIN_OPTIONS);
 
-    expect($request->useStandardPages)->toBeFalse();
+    expect($request->useStandardPages)
+        ->toBeFalse();
 });
 
 test('fromArrays accepts a logo/skin matching the given option lists', function (): void {
@@ -42,8 +55,10 @@ test('fromArrays accepts a logo/skin matching the given option lists', function 
         'std_pgs_selected_skin' => 'cobalt',
     ], [], THEMES_STD_PAGES_LOGO_OPTIONS, THEMES_STD_PAGES_SKIN_OPTIONS);
 
-    expect($request->selectedLogo)->toBe('custom_logo')
-        ->and($request->selectedSkin)->toBe('cobalt');
+    expect($request->selectedLogo)
+        ->toBe('custom_logo')
+        ->and($request->selectedSkin)
+        ->toBe('cobalt');
 });
 
 test('fromArrays returns null logo/skin for an unrecognized value', function (): void {
@@ -52,35 +67,51 @@ test('fromArrays returns null logo/skin for an unrecognized value', function ():
         'std_pgs_selected_skin' => 'evil_skin',
     ], [], THEMES_STD_PAGES_LOGO_OPTIONS, THEMES_STD_PAGES_SKIN_OPTIONS);
 
-    expect($request->selectedLogo)->toBeNull()
-        ->and($request->selectedSkin)->toBeNull();
+    expect($request->selectedLogo)
+        ->toBeNull()
+        ->and($request->selectedSkin)
+        ->toBeNull();
 });
 
 test('fromArrays recognizes a real logo upload', function (): void {
     $request = ThemesStandardPagesSubmitRequest::fromArrays([], [
-        'std_pgs_logo' => ['tmp_name' => '/tmp/phpXXXX', 'name' => 'my logo.png'],
+        'std_pgs_logo' => [
+            'tmp_name' => '/tmp/phpXXXX',
+            'name' => 'my logo.png',
+        ],
     ], THEMES_STD_PAGES_LOGO_OPTIONS, THEMES_STD_PAGES_SKIN_OPTIONS);
 
-    expect($request->logoTmpName)->toBe('/tmp/phpXXXX')
-        ->and($request->logoName)->toBe('my logo.png');
+    expect($request->logoTmpName)
+        ->toBe('/tmp/phpXXXX')
+        ->and($request->logoName)
+        ->toBe('my logo.png');
 });
 
 test('fromArrays reports no upload when tmp_name is empty', function (): void {
     $request = ThemesStandardPagesSubmitRequest::fromArrays([], [
-        'std_pgs_logo' => ['tmp_name' => '', 'name' => 'my logo.png'],
+        'std_pgs_logo' => [
+            'tmp_name' => '',
+            'name' => 'my logo.png',
+        ],
     ], THEMES_STD_PAGES_LOGO_OPTIONS, THEMES_STD_PAGES_SKIN_OPTIONS);
 
-    expect($request->logoTmpName)->toBeNull()
-        ->and($request->logoName)->toBe('');
+    expect($request->logoTmpName)
+        ->toBeNull()
+        ->and($request->logoName)
+        ->toBe('');
 });
 
 test('fromArrays accepts a real tmp_name but falls back to an empty logoName when name is absent', function (): void {
     $request = ThemesStandardPagesSubmitRequest::fromArrays([], [
-        'std_pgs_logo' => ['tmp_name' => '/tmp/phpXXXX'],
+        'std_pgs_logo' => [
+            'tmp_name' => '/tmp/phpXXXX',
+        ],
     ], THEMES_STD_PAGES_LOGO_OPTIONS, THEMES_STD_PAGES_SKIN_OPTIONS);
 
-    expect($request->logoTmpName)->toBe('/tmp/phpXXXX')
-        ->and($request->logoName)->toBe('');
+    expect($request->logoTmpName)
+        ->toBe('/tmp/phpXXXX')
+        ->and($request->logoName)
+        ->toBe('');
 });
 
 test('fromArrays accepts a real tmp_name but falls back to an empty logoName when name is not a string', function (): void {
@@ -90,11 +121,16 @@ test('fromArrays accepts a real tmp_name but falls back to an empty logoName whe
         // plain array<array-key, mixed>, so a non-string 'name' is still
         // a genuine input this method's own type checks must reject
         // without a TypeError.
-        'std_pgs_logo' => ['tmp_name' => '/tmp/phpYYYY', 'name' => 12345],
+        'std_pgs_logo' => [
+            'tmp_name' => '/tmp/phpYYYY',
+            'name' => 12345,
+        ],
     ], THEMES_STD_PAGES_LOGO_OPTIONS, THEMES_STD_PAGES_SKIN_OPTIONS);
 
-    expect($request->logoTmpName)->toBe('/tmp/phpYYYY')
-        ->and($request->logoName)->toBe('');
+    expect($request->logoTmpName)
+        ->toBe('/tmp/phpYYYY')
+        ->and($request->logoName)
+        ->toBe('');
 });
 
 test('fromArrays requires a real array, not just an ArrayAccess-like value, for the upload field', function (): void {
@@ -103,7 +139,7 @@ test('fromArrays requires a real array, not just an ArrayAccess-like value, for 
     // required. An ArrayAccess object can satisfy every other clause
     // while failing is_array(), which is the only way to prove the first
     // AND isn't accidentally an OR with the isset() check next to it.
-    $fakeUpload = new class implements ArrayAccess {
+    $fakeUpload = new class() implements ArrayAccess {
         public function offsetExists(mixed $offset): bool
         {
             return true;
@@ -123,11 +159,13 @@ test('fromArrays requires a real array, not just an ArrayAccess-like value, for 
         'std_pgs_logo' => $fakeUpload,
     ], THEMES_STD_PAGES_LOGO_OPTIONS, THEMES_STD_PAGES_SKIN_OPTIONS);
 
-    expect($request->logoTmpName)->toBeNull();
+    expect($request->logoTmpName)
+        ->toBeNull();
 });
 
 test('fromArrays reports no upload when the file field is absent', function (): void {
     $request = ThemesStandardPagesSubmitRequest::fromArrays([], [], THEMES_STD_PAGES_LOGO_OPTIONS, THEMES_STD_PAGES_SKIN_OPTIONS);
 
-    expect($request->logoTmpName)->toBeNull();
+    expect($request->logoTmpName)
+        ->toBeNull();
 });

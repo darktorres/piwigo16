@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Contract;
 
-use Override;
 use Doctrine\DBAL\Connection;
+use Override;
 use Piwigo\Db\DbConnection;
 
 /**
@@ -39,10 +39,14 @@ final class WsImagesSetRankTest extends ContractTestCase
 
     private Connection $conn;
 
-    /** @var list<int> */
+    /**
+     * @var list<int>
+     */
     private array $imageIdsToDelete = [];
 
-    /** @var list<int> */
+    /**
+     * @var list<int>
+     */
     private array $categoryIdsToDelete = [];
 
     #[Override]
@@ -57,12 +61,12 @@ final class WsImagesSetRankTest extends ContractTestCase
     protected function tearDown(): void
     {
         foreach ($this->imageIdsToDelete as $imageId) {
-            $this->conn->executeStatement('DELETE FROM ' . 'image_category' . ' WHERE image_id = ?', [$imageId]);
-            $this->conn->executeStatement('DELETE FROM ' . 'images' . ' WHERE id = ?', [$imageId]);
+            $this->conn->executeStatement('DELETE FROM image_category WHERE image_id = ?', [$imageId]);
+            $this->conn->executeStatement('DELETE FROM images WHERE id = ?', [$imageId]);
         }
         foreach (array_reverse($this->categoryIdsToDelete) as $categoryId) {
-            $this->conn->executeStatement('DELETE FROM ' . 'image_category' . ' WHERE category_id = ?', [$categoryId]);
-            $this->conn->executeStatement('DELETE FROM ' . 'categories' . ' WHERE id = ?', [$categoryId]);
+            $this->conn->executeStatement('DELETE FROM image_category WHERE category_id = ?', [$categoryId]);
+            $this->conn->executeStatement('DELETE FROM categories WHERE id = ?', [$categoryId]);
         }
         parent::tearDown();
     }
@@ -94,7 +98,7 @@ final class WsImagesSetRankTest extends ContractTestCase
     {
         $filename = 'setrank-test-' . uniqid() . '.jpg';
         $this->conn->executeStatement(
-            'INSERT INTO ' . 'images' . ' (file, path, md5sum) VALUES (?, ?, ?)',
+            'INSERT INTO images (file, path, md5sum) VALUES (?, ?, ?)',
             [$filename, 'upload/2026/08/01/' . $filename, md5($filename)]
         );
         $id = (int) $this->conn->lastInsertId();
@@ -103,14 +107,14 @@ final class WsImagesSetRankTest extends ContractTestCase
         $rankIdentifier = $this->conn->getDatabasePlatform()
             ->quoteSingleIdentifier('rank');
         $this->conn->executeStatement(
-            "INSERT INTO " . 'image_category' . " (image_id, category_id, {$rankIdentifier}) VALUES (?, ?, ?)",
+            'INSERT INTO image_category' . " (image_id, category_id, {$rankIdentifier}) VALUES (?, ?, ?)",
             [$id, $categoryId, $rank]
         );
 
         return $id;
     }
 
-    public function test_rank_omitted_returns_missing_param_error(): void
+    public function testRankOmittedReturnsMissingParamError(): void
     {
         $response = $this->callWs('pwg.images.setRank', [
             'image_id' => self::FIXTURE_IMAGE_ID,
@@ -122,7 +126,7 @@ final class WsImagesSetRankTest extends ContractTestCase
         self::assertSame('rank is missing', $response['message']);
     }
 
-    public function test_unknown_image_id_returns_404(): void
+    public function testUnknownImageIdReturns404(): void
     {
         $response = $this->callWs('pwg.images.setRank', [
             'image_id' => 999999,
@@ -135,7 +139,7 @@ final class WsImagesSetRankTest extends ContractTestCase
         self::assertSame('image_id not found', $response['message']);
     }
 
-    public function test_image_not_associated_to_the_category_returns_404(): void
+    public function testImageNotAssociatedToTheCategoryReturns404(): void
     {
         $freshCatId = $this->createFreshCategory();
 
@@ -150,7 +154,7 @@ final class WsImagesSetRankTest extends ContractTestCase
         self::assertSame('This image is not associated to this category', $response['message']);
     }
 
-    public function test_rank_defaults_to_one_when_the_category_has_no_ranked_images(): void
+    public function testRankDefaultsToOneWhenTheCategoryHasNoRankedImages(): void
     {
         $freshCatId = $this->createFreshCategory();
         $imageId = $this->insertThrowawayImage($freshCatId, null);
@@ -165,18 +169,22 @@ final class WsImagesSetRankTest extends ContractTestCase
         ]);
 
         self::assertSame('ok', $response['stat']);
-        self::assertSame(['image_id' => $imageId, 'category_id' => $freshCatId, 'rank' => 1], $response['result']);
+        self::assertSame([
+            'image_id' => $imageId,
+            'category_id' => $freshCatId,
+            'rank' => 1,
+        ], $response['result']);
 
         $rankIdentifier = $this->conn->getDatabasePlatform()
             ->quoteSingleIdentifier('rank');
         $stored = $this->conn->fetchOne(
-            "SELECT {$rankIdentifier} FROM " . 'image_category' . ' WHERE image_id = ? AND category_id = ?',
+            "SELECT {$rankIdentifier} FROM " . 'image_category WHERE image_id = ? AND category_id = ?',
             [$imageId, $freshCatId]
         );
         self::assertSame(1, is_numeric($stored) ? (int) $stored : 0);
     }
 
-    public function test_rank_above_the_current_max_is_clamped_to_max_plus_one(): void
+    public function testRankAboveTheCurrentMaxIsClampedToMaxPlusOne(): void
     {
         $freshCatId = $this->createFreshCategory();
         $this->insertThrowawayImage($freshCatId, 1);
@@ -189,6 +197,10 @@ final class WsImagesSetRankTest extends ContractTestCase
         ]);
 
         self::assertSame('ok', $response['stat']);
-        self::assertSame(['image_id' => $secondImageId, 'category_id' => $freshCatId, 'rank' => 2], $response['result']);
+        self::assertSame([
+            'image_id' => $secondImageId,
+            'category_id' => $freshCatId,
+            'rank' => 2,
+        ], $response['result']);
     }
 }

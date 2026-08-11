@@ -3,10 +3,10 @@
 declare(strict_types=1);
 
 use Piwigo\Controller\Admin\NotificationByMailSubController;
-use Piwigo\Tests\Support\PageStateTestFactory;
 use Piwigo\Core\TimingHelper;
-use Piwigo\Tests\Support\TranslatorTestFactory;
 use Piwigo\Mail\NotificationByMailSender;
+use Piwigo\Tests\Support\PageStateTestFactory;
+use Piwigo\Tests\Support\TranslatorTestFactory;
 
 /**
  * NotificationByMailSubController::doTimeoutTreatment()'s own
@@ -100,25 +100,30 @@ test('doTimeoutTreatment computes a real, positive estimated-time when some (but
     // real.
     $sender = nbmSubReflectSender(TimingHelper::getMoment() - 5.0, true);
 
-    $post = ['cat_true' => ['ct_treated_1', 'ct_treated_2', 'ct_untreated']];
+    $post = [
+        'cat_true' => ['ct_treated_1', 'ct_treated_2', 'ct_untreated'],
+    ];
     $errorCountBefore = count(PageStateTestFactory::get()->errors);
 
     $result = nbmSubCallDoTimeoutTreatment($sender, 'cat_true', $post, ['ct_treated_1', 'ct_treated_2']);
 
-    expect($result)->toBeTrue();
+    expect($result)
+        ->toBeTrue();
     // array_diff() drops the 2 already-treated keys, leaving only the
     // untreated one for a real repost.
     assert(is_array($post['cat_true']));
     expect(array_values($post['cat_true']))->toBe(['ct_untreated']);
 
     $errors = PageStateTestFactory::get()->errors;
-    expect(count($errors))->toBe($errorCountBefore + 1);
+    expect(count($errors))
+        ->toBe($errorCountBefore + 1);
     $message = $errors[count($errors) - 1];
     // English plural, untranslated (no admin.lang loaded in this Unit
     // suite) source wording -- "[Estimated time: %d seconds]" with a
     // real, positive digit substituted (not the "0 seconds" every
     // Browser-suite repost test's own forced-immediate-timeout produces).
-    expect($message)->toMatch('/\[Estimated time: (\d+) seconds\]\.$/');
+    expect($message)
+        ->toMatch('/\[Estimated time: (\d+) seconds\]\.$/');
     if (preg_match('/\[Estimated time: (\d+) seconds\]\.$/', $message, $matches) !== 1) {
         throw new RuntimeException('could not extract the estimated-time digit from: ' . $message);
     }
@@ -139,15 +144,19 @@ test('doTimeoutTreatment computes the exact ceil()\'d estimated-time, not floor(
     $before = TimingHelper::getMoment();
     $sender = nbmSubReflectSender($before - 10.0, true);
 
-    $post = ['cat_true' => ['t1', 't2']];
+    $post = [
+        'cat_true' => ['t1', 't2'],
+    ];
     $errorCountBefore = count(PageStateTestFactory::get()->errors);
 
     nbmSubCallDoTimeoutTreatment($sender, 'cat_true', $post, ['t1', 't2']);
 
     $errors = PageStateTestFactory::get()->errors;
     $message = $errors[count($errors) - 1];
-    expect($message)->toEndWith('[Estimated time: 11 seconds].');
-    expect(count($errors))->toBe($errorCountBefore + 1);
+    expect($message)
+        ->toEndWith('[Estimated time: 11 seconds].');
+    expect(count($errors))
+        ->toBe($errorCountBefore + 1);
 });
 
 test('doTimeoutTreatment leaves the estimated-time at exactly 0 when nobody has been treated yet', function (): void {
@@ -160,13 +169,16 @@ test('doTimeoutTreatment leaves the estimated-time at exactly 0 when nobody has 
     // treated_count of 0 for this exact input).
     $sender = nbmSubReflectSender(TimingHelper::getMoment() - 5.0, true);
 
-    $post = ['cat_true' => ['t1']];
+    $post = [
+        'cat_true' => ['t1'],
+    ];
 
     nbmSubCallDoTimeoutTreatment($sender, 'cat_true', $post, []);
 
     $errors = PageStateTestFactory::get()->errors;
     $message = $errors[count($errors) - 1];
-    expect($message)->toEndWith('[Estimated time: 0 seconds].');
+    expect($message)
+        ->toEndWith('[Estimated time: 0 seconds].');
 });
 
 test('doTimeoutTreatment does nothing when the post key is set but not an array', function (): void {
@@ -175,12 +187,15 @@ test('doTimeoutTreatment does nothing when the post key is set but not an array'
     // from a mutated `or` -- a set-but-non-array value distinguishes
     // them (isset() true, is_array() false).
     $sender = nbmSubReflectSender(TimingHelper::getMoment() - 5.0, true);
-    $post = ['cat_true' => 'not-an-array'];
+    $post = [
+        'cat_true' => 'not-an-array',
+    ];
     $errorCountBefore = count(PageStateTestFactory::get()->errors);
 
     $result = nbmSubCallDoTimeoutTreatment($sender, 'cat_true', $post, ['t1']);
 
-    expect($result)->toBeFalse();
+    expect($result)
+        ->toBeFalse();
     expect(count(PageStateTestFactory::get()->errors))->toBe($errorCountBefore);
 });
 
@@ -190,7 +205,9 @@ test('doTimeoutTreatment drops non-string entries from the reposted selection', 
     // actually excludes anything -- can't tell it apart from a mutated
     // unwrapped version that skips the filter entirely.
     $sender = nbmSubReflectSender(TimingHelper::getMoment() - 5.0, true);
-    $post = ['cat_true' => ['t1', 42, 't2']];
+    $post = [
+        'cat_true' => ['t1', 42, 't2'],
+    ];
 
     nbmSubCallDoTimeoutTreatment($sender, 'cat_true', $post, []);
 

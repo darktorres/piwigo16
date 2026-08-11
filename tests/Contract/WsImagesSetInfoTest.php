@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Contract;
 
+use Doctrine\DBAL\Connection;
 use Override;
 use Piwigo\Cache\CachePools;
-use Doctrine\DBAL\Connection;
 use Piwigo\Db\DbConnection;
 
 /**
@@ -30,7 +30,7 @@ final class WsImagesSetInfoTest extends ContractTestCase
     #[Override]
     protected function tearDown(): void
     {
-        $this->conn->executeStatement("DELETE FROM " . 'config' . " WHERE param = 'allow_html_descriptions'");
+        $this->conn->executeStatement('DELETE FROM config' . " WHERE param = 'allow_html_descriptions'");
         CachePools::config()->clear();
         parent::tearDown();
     }
@@ -49,7 +49,7 @@ final class WsImagesSetInfoTest extends ContractTestCase
         return (int) $value;
     }
 
-    public function test_setInfo_invalid_token_returns_error(): void
+    public function testSetInfoInvalidTokenReturnsError(): void
     {
         // admin_only is checked before the pwg_token comparison
         // (PwgServer::invoke()'s own gate order) -- a guest caller never
@@ -66,7 +66,7 @@ final class WsImagesSetInfoTest extends ContractTestCase
         self::assertSame(403, $response['err']);
     }
 
-    public function test_setInfo_unknown_image_returns_404(): void
+    public function testSetInfoUnknownImageReturns404(): void
     {
         $response = $this->callWs('pwg.images.setInfo', [
             'image_id' => 999999,
@@ -77,7 +77,7 @@ final class WsImagesSetInfoTest extends ContractTestCase
         self::assertSame(404, $response['err']);
     }
 
-    public function test_setInfo_invalid_single_value_mode_returns_error(): void
+    public function testSetInfoInvalidSingleValueModeReturnsError(): void
     {
         $response = $this->callWsAllowingServerError('pwg.images.setInfo', [
             'image_id' => 1,
@@ -92,7 +92,7 @@ final class WsImagesSetInfoTest extends ContractTestCase
         self::assertStringContainsString('single_value_mode', $response['message']);
     }
 
-    public function test_setInfo_invalid_multiple_value_mode_returns_error(): void
+    public function testSetInfoInvalidMultipleValueModeReturnsError(): void
     {
         $response = $this->callWsAllowingServerError('pwg.images.setInfo', [
             'image_id' => 1,
@@ -107,12 +107,12 @@ final class WsImagesSetInfoTest extends ContractTestCase
         self::assertStringContainsString('multiple_value_mode', $response['message']);
     }
 
-    public function test_setInfo_fill_if_empty_sets_an_empty_field(): void
+    public function testSetInfoFillIfEmptySetsAnEmptyField(): void
     {
-        $original = $this->conn->fetchOne('SELECT author FROM ' . 'images' . ' WHERE id = 1');
+        $original = $this->conn->fetchOne('SELECT author FROM images WHERE id = 1');
 
         try {
-            $this->conn->executeStatement("UPDATE " . 'images' . " SET author = '' WHERE id = 1");
+            $this->conn->executeStatement('UPDATE images' . " SET author = '' WHERE id = 1");
 
             $response = $this->callWs('pwg.images.setInfo', [
                 'image_id' => 1,
@@ -123,24 +123,24 @@ final class WsImagesSetInfoTest extends ContractTestCase
 
             self::assertSame('ok', $response['stat']);
 
-            $newAuthor = $this->conn->fetchOne('SELECT author FROM ' . 'images' . ' WHERE id = 1');
+            $newAuthor = $this->conn->fetchOne('SELECT author FROM images WHERE id = 1');
             self::assertIsString($newAuthor);
             self::assertStringStartsWith('Filled Author ', $newAuthor);
         } finally {
             $this->conn->executeStatement(
-                'UPDATE ' . 'images' . ' SET author = ? WHERE id = 1',
+                'UPDATE images SET author = ? WHERE id = 1',
                 [$original]
             );
         }
     }
 
-    public function test_setInfo_fill_if_empty_leaves_a_non_empty_field_untouched(): void
+    public function testSetInfoFillIfEmptyLeavesANonEmptyFieldUntouched(): void
     {
-        $original = $this->conn->fetchOne('SELECT author FROM ' . 'images' . ' WHERE id = 1');
+        $original = $this->conn->fetchOne('SELECT author FROM images WHERE id = 1');
 
         try {
             $this->conn->executeStatement(
-                "UPDATE " . 'images' . " SET author = 'Pre-Existing Author' WHERE id = 1"
+                'UPDATE images' . " SET author = 'Pre-Existing Author' WHERE id = 1"
             );
 
             $response = $this->callWs('pwg.images.setInfo', [
@@ -152,23 +152,23 @@ final class WsImagesSetInfoTest extends ContractTestCase
 
             self::assertSame('ok', $response['stat']);
 
-            $newAuthor = $this->conn->fetchOne('SELECT author FROM ' . 'images' . ' WHERE id = 1');
+            $newAuthor = $this->conn->fetchOne('SELECT author FROM images WHERE id = 1');
             self::assertSame('Pre-Existing Author', $newAuthor);
         } finally {
             $this->conn->executeStatement(
-                'UPDATE ' . 'images' . ' SET author = ? WHERE id = 1',
+                'UPDATE images SET author = ? WHERE id = 1',
                 [$original]
             );
         }
     }
 
-    public function test_setInfo_replace_mode_overwrites_a_non_empty_field(): void
+    public function testSetInfoReplaceModeOverwritesANonEmptyField(): void
     {
-        $original = $this->conn->fetchOne('SELECT author FROM ' . 'images' . ' WHERE id = 1');
+        $original = $this->conn->fetchOne('SELECT author FROM images WHERE id = 1');
 
         try {
             $this->conn->executeStatement(
-                "UPDATE " . 'images' . " SET author = 'Old Author' WHERE id = 1"
+                'UPDATE images' . " SET author = 'Old Author' WHERE id = 1"
             );
 
             $newValue = 'Replaced Author ' . uniqid();
@@ -181,11 +181,11 @@ final class WsImagesSetInfoTest extends ContractTestCase
 
             self::assertSame('ok', $response['stat']);
 
-            $newAuthor = $this->conn->fetchOne('SELECT author FROM ' . 'images' . ' WHERE id = 1');
+            $newAuthor = $this->conn->fetchOne('SELECT author FROM images WHERE id = 1');
             self::assertSame($newValue, $newAuthor);
         } finally {
             $this->conn->executeStatement(
-                'UPDATE ' . 'images' . ' SET author = ? WHERE id = 1',
+                'UPDATE images SET author = ? WHERE id = 1',
                 [$original]
             );
         }
@@ -199,14 +199,14 @@ final class WsImagesSetInfoTest extends ContractTestCase
     // so Xdebug can't attribute a real hit to that source line. Not a real
     // gap; no test added for it here.
 
-    public function test_setInfo_file_param_is_forbidden_on_synchronized_photos(): void
+    public function testSetInfoFileParamIsForbiddenOnSynchronizedPhotos(): void
     {
         // storage_category_id != 0 marks a photo as added by directory
         // synchronization rather than upload -- setInfo() refuses to let
         // the `file` column be edited for those.
         $filename = 'sync-photo-' . uniqid() . '.jpg';
         $this->conn->executeStatement(
-            'INSERT INTO ' . 'images' . ' (file, path, md5sum, storage_category_id) VALUES (?, ?, ?, ?)',
+            'INSERT INTO images (file, path, md5sum, storage_category_id) VALUES (?, ?, ?, ?)',
             [$filename, 'upload/' . $filename, md5($filename), 1]
         );
         $imageId = (int) $this->conn->lastInsertId();
@@ -225,18 +225,18 @@ final class WsImagesSetInfoTest extends ContractTestCase
                 $response['message']
             );
         } finally {
-            $this->conn->executeStatement('DELETE FROM ' . 'images' . ' WHERE id = ?', [$imageId]);
+            $this->conn->executeStatement('DELETE FROM images WHERE id = ?', [$imageId]);
         }
     }
 
-    public function test_setInfo_file_param_that_strips_to_empty_is_silently_dropped(): void
+    public function testSetInfoFileParamThatStripsToEmptyIsSilentlyDropped(): void
     {
         // strip_tags('0') is still '0' (nothing to strip) -- the explicit
         // === '0' check exists precisely so a literal "0" filename isn't
         // treated as a real value, matching PHP's own "0" == falsy
         // convention. Since 'file' is the *only* field sent, $update ends
         // up empty and updateFields() is never even called.
-        $original = $this->conn->fetchOne('SELECT file FROM ' . 'images' . ' WHERE id = 1');
+        $original = $this->conn->fetchOne('SELECT file FROM images WHERE id = 1');
         self::assertIsString($original);
 
         $response = $this->callWs('pwg.images.setInfo', [
@@ -247,11 +247,11 @@ final class WsImagesSetInfoTest extends ContractTestCase
 
         self::assertSame('ok', $response['stat']);
 
-        $newFile = $this->conn->fetchOne('SELECT file FROM ' . 'images' . ' WHERE id = 1');
+        $newFile = $this->conn->fetchOne('SELECT file FROM images WHERE id = 1');
         self::assertSame($original, $newFile);
     }
 
-    public function test_setInfo_tag_list_and_tag_ids_together_is_rejected(): void
+    public function testSetInfoTagListAndTagIdsTogetherIsRejected(): void
     {
         // tag_list is the batch-manager unit mode's own temporary
         // $_REQUEST['tag_list'] array param (TagListRequest) -- mutually
@@ -268,10 +268,10 @@ final class WsImagesSetInfoTest extends ContractTestCase
         self::assertSame('Do not use tag_list and tag_ids at the same time.', $response['message']);
     }
 
-    public function test_setInfo_tag_list_creates_and_sets_tags_by_name(): void
+    public function testSetInfoTagListCreatesAndSetsTagsByName(): void
     {
         $originalTags = $this->conn->fetchFirstColumn(
-            'SELECT tag_id FROM ' . 'image_tag' . ' WHERE image_id = 1'
+            'SELECT tag_id FROM image_tag WHERE image_id = 1'
         );
         $tagName = 'setinfo-taglist-' . uniqid();
 
@@ -285,26 +285,26 @@ final class WsImagesSetInfoTest extends ContractTestCase
             self::assertSame('ok', $response['stat'], (string) json_encode($response));
 
             $afterTagNames = $this->conn->fetchFirstColumn(
-                'SELECT t.name FROM ' . 'tags' . ' t
-                 INNER JOIN ' . 'image_tag' . ' it ON it.tag_id = t.id
+                'SELECT t.name FROM tags' . ' t
+                 INNER JOIN image_tag' . ' it ON it.tag_id = t.id
                  WHERE it.image_id = 1'
             );
             self::assertContains($tagName, $afterTagNames);
         } finally {
-            $this->conn->executeStatement('DELETE FROM ' . 'image_tag' . ' WHERE image_id = 1');
+            $this->conn->executeStatement('DELETE FROM image_tag WHERE image_id = 1');
             foreach ($originalTags as $tagId) {
                 $this->conn->executeStatement(
-                    'INSERT INTO ' . 'image_tag' . ' (image_id, tag_id) VALUES (1, ?)',
+                    'INSERT INTO image_tag (image_id, tag_id) VALUES (1, ?)',
                     [$tagId]
                 );
             }
-            $this->conn->executeStatement('DELETE FROM ' . 'tags' . ' WHERE name = ?', [$tagName]);
+            $this->conn->executeStatement('DELETE FROM tags WHERE name = ?', [$tagName]);
         }
     }
 
-    public function test_setInfo_strips_disallowed_html_tags_when_html_descriptions_are_disabled(): void
+    public function testSetInfoStripsDisallowedHtmlTagsWhenHtmlDescriptionsAreDisabled(): void
     {
-        $original = $this->conn->fetchOne('SELECT comment FROM ' . 'images' . ' WHERE id = 1');
+        $original = $this->conn->fetchOne('SELECT comment FROM images WHERE id = 1');
 
         $this->upsertConfig('allow_html_descriptions', 'false');
         CachePools::config()->clear();
@@ -319,27 +319,27 @@ final class WsImagesSetInfoTest extends ContractTestCase
 
             self::assertSame('ok', $response['stat']);
 
-            $newComment = $this->conn->fetchOne('SELECT comment FROM ' . 'images' . ' WHERE id = 1');
+            $newComment = $this->conn->fetchOne('SELECT comment FROM images WHERE id = 1');
             self::assertIsString($newComment);
             self::assertStringNotContainsString('<script>', $newComment);
             self::assertStringContainsString('<b>bold kept</b>', $newComment);
         } finally {
             $this->conn->executeStatement(
-                'UPDATE ' . 'images' . ' SET comment = ? WHERE id = 1',
+                'UPDATE images SET comment = ? WHERE id = 1',
                 [$original]
             );
         }
     }
 
-    public function test_setInfo_categories_replace_mode_replaces_associations(): void
+    public function testSetInfoCategoriesReplaceModeReplacesAssociations(): void
     {
         $originalCats = $this->conn->fetchFirstColumn(
-            'SELECT category_id FROM ' . 'image_category' . ' WHERE image_id = 1'
+            'SELECT category_id FROM image_category WHERE image_id = 1'
         );
 
         try {
             $newCatId = $this->conn->fetchOne(
-                'SELECT id FROM ' . 'categories' . ' WHERE id != 1 ORDER BY id LIMIT 1'
+                'SELECT id FROM categories WHERE id != 1 ORDER BY id LIMIT 1'
             );
             self::assertIsNumeric($newCatId);
 
@@ -353,14 +353,14 @@ final class WsImagesSetInfoTest extends ContractTestCase
             self::assertSame('ok', $response['stat']);
 
             $afterCats = $this->conn->fetchFirstColumn(
-                'SELECT category_id FROM ' . 'image_category' . ' WHERE image_id = 1'
+                'SELECT category_id FROM image_category WHERE image_id = 1'
             );
             self::assertSame([$newCatId], array_map(self::toIntOrFail(...), $afterCats));
         } finally {
-            $this->conn->executeStatement('DELETE FROM ' . 'image_category' . ' WHERE image_id = 1');
+            $this->conn->executeStatement('DELETE FROM image_category WHERE image_id = 1');
             foreach ($originalCats as $catId) {
                 $this->conn->executeStatement(
-                    'INSERT INTO ' . 'image_category' . ' (image_id, category_id) VALUES (1, ?)',
+                    'INSERT INTO image_category (image_id, category_id) VALUES (1, ?)',
                     [$catId]
                 );
             }
@@ -379,7 +379,7 @@ final class WsImagesSetInfoTest extends ContractTestCase
      * swallowed rather than ever reaching the caller as an error. Out of
      * scope to fix here; this only documents the current, real behavior.
      */
-    public function test_setInfo_categories_with_an_unknown_category_silently_swallows_the_error(): void
+    public function testSetInfoCategoriesWithAnUnknownCategorySilentlySwallowsTheError(): void
     {
         $response = $this->callWsAllowingServerError('pwg.images.setInfo', [
             'image_id' => 1,
@@ -390,10 +390,10 @@ final class WsImagesSetInfoTest extends ContractTestCase
         self::assertSame('ok', $response['stat']);
     }
 
-    public function test_setInfo_tag_ids_replace_mode_sets_exact_tag_set(): void
+    public function testSetInfoTagIdsReplaceModeSetsExactTagSet(): void
     {
         $originalTags = $this->conn->fetchFirstColumn(
-            'SELECT tag_id FROM ' . 'image_tag' . ' WHERE image_id = 1'
+            'SELECT tag_id FROM image_tag WHERE image_id = 1'
         );
 
         try {
@@ -407,30 +407,30 @@ final class WsImagesSetInfoTest extends ContractTestCase
             self::assertSame('ok', $response['stat']);
 
             $afterTags = $this->conn->fetchFirstColumn(
-                'SELECT tag_id FROM ' . 'image_tag' . ' WHERE image_id = 1'
+                'SELECT tag_id FROM image_tag WHERE image_id = 1'
             );
             self::assertSame([1], array_map(self::toIntOrFail(...), $afterTags));
         } finally {
-            $this->conn->executeStatement('DELETE FROM ' . 'image_tag' . ' WHERE image_id = 1');
+            $this->conn->executeStatement('DELETE FROM image_tag WHERE image_id = 1');
             foreach ($originalTags as $tagId) {
                 $this->conn->executeStatement(
-                    'INSERT INTO ' . 'image_tag' . ' (image_id, tag_id) VALUES (1, ?)',
+                    'INSERT INTO image_tag (image_id, tag_id) VALUES (1, ?)',
                     [$tagId]
                 );
             }
         }
     }
 
-    public function test_setInfo_tag_ids_append_mode_keeps_existing_tags(): void
+    public function testSetInfoTagIdsAppendModeKeepsExistingTags(): void
     {
         $originalTags = $this->conn->fetchFirstColumn(
-            'SELECT tag_id FROM ' . 'image_tag' . ' WHERE image_id = 1'
+            'SELECT tag_id FROM image_tag WHERE image_id = 1'
         );
 
         try {
-            $this->conn->executeStatement('DELETE FROM ' . 'image_tag' . ' WHERE image_id = 1');
+            $this->conn->executeStatement('DELETE FROM image_tag WHERE image_id = 1');
             $this->conn->executeStatement(
-                'INSERT INTO ' . 'image_tag' . ' (image_id, tag_id) VALUES (1, 1)'
+                'INSERT INTO image_tag (image_id, tag_id) VALUES (1, 1)'
             );
 
             $response = $this->callWs('pwg.images.setInfo', [
@@ -443,15 +443,15 @@ final class WsImagesSetInfoTest extends ContractTestCase
             self::assertSame('ok', $response['stat']);
 
             $afterTags = array_map(self::toIntOrFail(...), $this->conn->fetchFirstColumn(
-                'SELECT tag_id FROM ' . 'image_tag' . ' WHERE image_id = 1'
+                'SELECT tag_id FROM image_tag WHERE image_id = 1'
             ));
             sort($afterTags);
             self::assertSame([1, 2], $afterTags);
         } finally {
-            $this->conn->executeStatement('DELETE FROM ' . 'image_tag' . ' WHERE image_id = 1');
+            $this->conn->executeStatement('DELETE FROM image_tag WHERE image_id = 1');
             foreach ($originalTags as $tagId) {
                 $this->conn->executeStatement(
-                    'INSERT INTO ' . 'image_tag' . ' (image_id, tag_id) VALUES (1, ?)',
+                    'INSERT INTO image_tag (image_id, tag_id) VALUES (1, ?)',
                     [$tagId]
                 );
             }

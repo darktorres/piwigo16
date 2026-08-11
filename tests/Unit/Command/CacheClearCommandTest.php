@@ -30,9 +30,12 @@ test('removes an existing Latte compiled-template cache dir', function () use ($
     $tester = new CommandTester($command);
     $exitCode = $tester->execute([]);
 
-    expect($exitCode)->toBe(0)
-        ->and(is_dir($latteDir))->toBeFalse()
-        ->and($tester->getDisplay())->toContain('Removed Latte compiled-template cache');
+    expect($exitCode)
+        ->toBe(0)
+        ->and(is_dir($latteDir))
+        ->toBeFalse()
+        ->and($tester->getDisplay())
+        ->toContain('Removed Latte compiled-template cache');
 });
 
 test('reports an already-empty Latte cache dir without erroring', function () use ($latteDir): void {
@@ -40,8 +43,10 @@ test('reports an already-empty Latte cache dir without erroring', function () us
     $tester = new CommandTester($command);
     $exitCode = $tester->execute([]);
 
-    expect($exitCode)->toBe(0)
-        ->and($tester->getDisplay())->toContain('already empty');
+    expect($exitCode)
+        ->toBe(0)
+        ->and($tester->getDisplay())
+        ->toContain('already empty');
 });
 
 test('removes a Latte compiled-template cache dir containing a nested subdirectory', function () use ($latteDir): void {
@@ -53,9 +58,12 @@ test('removes a Latte compiled-template cache dir containing a nested subdirecto
     $tester = new CommandTester($command);
     $exitCode = $tester->execute([]);
 
-    expect($exitCode)->toBe(0)
-        ->and(is_dir($latteDir))->toBeFalse()
-        ->and($tester->getDisplay())->toContain('Removed Latte compiled-template cache');
+    expect($exitCode)
+        ->toBe(0)
+        ->and(is_dir($latteDir))
+        ->toBeFalse()
+        ->and($tester->getDisplay())
+        ->toContain('Removed Latte compiled-template cache');
 });
 
 test('refuses to clear a resolved path that does not look like the Latte cache dir', function (): void {
@@ -73,7 +81,8 @@ test('refuses to clear a resolved path that does not look like the Latte cache d
         $tester = new CommandTester($command);
 
         expect(fn () => $tester->execute([]))->toThrow(RuntimeException::class);
-        expect(is_dir($wrongDir))->toBeTrue();
+        expect(is_dir($wrongDir))
+            ->toBeTrue();
         expect(file_exists($wrongDir . '/innocent-bystander.txt'))->toBeTrue();
     } finally {
         exec('rm -rf ' . escapeshellarg($wrongDir));
@@ -92,7 +101,8 @@ test('the Latte cache dir guard requires both the "latte" name and the "template
         $tester = new CommandTester($command);
 
         expect(fn () => $tester->execute([]))->toThrow(RuntimeException::class);
-        expect(is_dir($wrongDir))->toBeTrue();
+        expect(is_dir($wrongDir))
+            ->toBeTrue();
     } finally {
         exec('rm -rf ' . escapeshellarg(dirname($wrongDir)));
     }
@@ -101,7 +111,8 @@ test('the Latte cache dir guard requires both the "latte" name and the "template
 test('defaultLatteCacheDir resolves to _data/templates_c/latte under the real project root', function (): void {
     $method = new ReflectionMethod(CacheClearCommand::class, 'defaultLatteCacheDir');
 
-    expect($method->invoke(null))->toBe(dirname(__DIR__, 3) . '/_data/templates_c/latte');
+    expect($method->invoke(null))
+        ->toBe(dirname(__DIR__, 3) . '/_data/templates_c/latte');
 });
 
 test('removeDir returns without removing anything when a subdirectory cannot be listed (permission denied)', function () use ($latteDir): void {
@@ -133,7 +144,8 @@ test('removeDir returns without removing anything when a subdirectory cannot be 
         // stat()ed at all from here anymore -- 0o000 blocks traversal
         // even for the owner, which is exactly why scandir() failed
         // above in the first place).
-        expect(is_dir($unreadable))->toBeTrue();
+        expect(is_dir($unreadable))
+            ->toBeTrue();
     } finally {
         chmod($unreadable, 0o775);
     }
@@ -145,12 +157,15 @@ test('clears the injected PSR-6 cache pool', function (): void {
     $item->set('some-value');
     $pool->save($item);
 
-    expect($pool->getItem('some-key')->isHit())->toBeTrue();
+    expect($pool->getItem('some-key')->isHit())
+        ->toBeTrue();
 
     $command = new CacheClearCommand($pool);
     $tester = new CommandTester($command);
     $tester->execute([]);
 
-    expect($pool->getItem('some-key')->isHit())->toBeFalse()
-        ->and($tester->getDisplay())->toContain('Cleared the PSR-6 cache pool.');
+    expect($pool->getItem('some-key')->isHit())
+        ->toBeFalse()
+        ->and($tester->getDisplay())
+        ->toContain('Cleared the PSR-6 cache pool.');
 });

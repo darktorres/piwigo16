@@ -6,7 +6,7 @@ namespace Piwigo\Tests\Contract;
 
 final class WsPermissionsTest extends ContractTestCase
 {
-    public function test_getList_response_matches_schema(): void
+    public function testGetListResponseMatchesSchema(): void
     {
         $response = $this->wsAdmin('pwg.permissions.getList');
 
@@ -14,19 +14,19 @@ final class WsPermissionsTest extends ContractTestCase
         self::assertMatchesSchema('pwg.permissions.getList', $response);
     }
 
-    public function test_getList_result_key_is_categories(): void
+    public function testGetListResultKeyIsCategories(): void
     {
         $response = $this->wsAdmin('pwg.permissions.getList');
 
         $result = $response['result'];
-        if (!is_array($result)) {
+        if (! is_array($result)) {
             self::fail('pwg.permissions.getList result is not an array');
         }
         self::assertArrayHasKey('categories', $result);
         self::assertIsArray($result['categories']);
     }
 
-    public function test_getList_forbidden_for_guest(): void
+    public function testGetListForbiddenForGuest(): void
     {
         $response = $this->ws('pwg.permissions.getList');
 

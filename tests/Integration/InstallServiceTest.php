@@ -4,25 +4,25 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Integration;
 
-use Override;
-use LogicException;
-use RuntimeException;
-use Piwigo\PluginConfig\EventDispatcher;
-use Piwigo\Tests\Support\EventDispatcherTestFactory;
 use Doctrine\DBAL\Connection;
+use LogicException;
+use Override;
 use Piwigo\Admin\Install\InstallService;
 use Piwigo\Config\ConfigLoader;
 use Piwigo\Config\ConfigService;
 use Piwigo\Config\CurrentConfig;
-use Piwigo\Tests\Support\CurrentConfigTestFactory;
-use Piwigo\Tests\Support\CurrentConfigServiceTestFactory;
 use Piwigo\Core\AppInfo;
-use Piwigo\Tests\Support\CurrentPathsTestFactory;
 use Piwigo\Core\Kernel;
-use Piwigo\Tests\Support\LangTestFactory;
 use Piwigo\Db\DbConnection;
-use Piwigo\Tests\Support\DbCredentialsTestFactory;
+use Piwigo\PluginConfig\EventDispatcher;
+use Piwigo\Tests\Support\CurrentConfigServiceTestFactory;
+use Piwigo\Tests\Support\CurrentConfigTestFactory;
+use Piwigo\Tests\Support\CurrentPathsTestFactory;
 use Piwigo\Tests\Support\CurrentUserTestFactory;
+use Piwigo\Tests\Support\DbCredentialsTestFactory;
+use Piwigo\Tests\Support\EventDispatcherTestFactory;
+use Piwigo\Tests\Support\LangTestFactory;
+use RuntimeException;
 
 /**
  * InstallService is a bag of static helpers pulled verbatim out of the
@@ -98,7 +98,7 @@ final class InstallServiceTest extends IntegrationTestCase
 
     // --------------------------------------------------- PHP5_HOSTING_HTACCESS
 
-    public function test_php5_hosting_htaccess_constant_has_the_expected_hosting_directives(): void
+    public function testPhp5HostingHtaccessConstantHasTheExpectedHostingDirectives(): void
     {
         // PHPStan proves each of these from the constant's own current
         // literal value, hence "redundant" -- but that's exactly the
@@ -117,7 +117,7 @@ final class InstallServiceTest extends IntegrationTestCase
 
     // --------------------------------------------------------- executeSqlfile
 
-    public function test_executeSqlfile_creates_tables_and_skips_drop_table(): void
+    public function testExecuteSqlfileCreatesTablesAndSkipsDropTable(): void
     {
         $sqlFile = sys_get_temp_dir() . '/piwigo-install-service-' . bin2hex(random_bytes(6)) . '.sql';
         file_put_contents(
@@ -151,7 +151,7 @@ final class InstallServiceTest extends IntegrationTestCase
         }
     }
 
-    public function test_executeSqlfile_throws_a_runtimeexception_when_the_file_does_not_exist(): void
+    public function testExecuteSqlfileThrowsARuntimeexceptionWhenTheFileDoesNotExist(): void
     {
         $missing = sys_get_temp_dir() . '/piwigo-install-service-does-not-exist-' . bin2hex(random_bytes(6)) . '.sql';
 
@@ -178,7 +178,7 @@ final class InstallServiceTest extends IntegrationTestCase
 
     // ------------------------------------------------------- installDbConnect
 
-    public function test_installDbConnect_returns_a_working_connection_and_records_no_errors_for_valid_credentials(): void
+    public function testInstallDbConnectReturnsAWorkingConnectionAndRecordsNoErrorsForValidCredentials(): void
     {
         $infos = [];
         $errors = [];
@@ -191,7 +191,7 @@ final class InstallServiceTest extends IntegrationTestCase
         self::assertSame(1, $this->fetchOneInt($conn->fetchOne('SELECT 1')));
     }
 
-    public function test_installDbConnect_returns_null_and_records_an_error_for_a_wrong_password(): void
+    public function testInstallDbConnectReturnsNullAndRecordsAnErrorForAWrongPassword(): void
     {
         DbCredentialsTestFactory::get()->seed([
             'PIWIGO_DB_HOST' => $this->dbHost,
@@ -225,7 +225,7 @@ final class InstallServiceTest extends IntegrationTestCase
         self::assertSame([], $infos);
     }
 
-    public function test_installDbConnect_returns_null_and_records_an_error_for_an_unknown_database_name(): void
+    public function testInstallDbConnectReturnsNullAndRecordsAnErrorForAnUnknownDatabaseName(): void
     {
         // A bogus dbname (rather than an unreachable host/IP) fails fast --
         // both drivers reply immediately once the TCP connection itself
@@ -319,7 +319,7 @@ final class InstallServiceTest extends IntegrationTestCase
      * currently a no-op end to end -- this locks in that real, current
      * behavior rather than a hypothetical future one.
      */
-    public function test_activateCoreThemes_does_not_activate_the_non_selectable_default_placeholder_theme(): void
+    public function testActivateCoreThemesDoesNotActivateTheNonSelectableDefaultPlaceholderTheme(): void
     {
         $this->bootKernelAndConfigService();
 
@@ -330,24 +330,25 @@ final class InstallServiceTest extends IntegrationTestCase
             $themesDir . $themeId . '/themeconf.inc.php',
             "<?php\n/*\nTheme Name: Default Template Test Fixture\nVersion: 3.1.4\nDescription: synthetic fixture for InstallServiceTest\nAuthor: p17-test\n*/\n"
         );
-        $this->currentConfig()->themesDir = $themesDir;
+        $this->currentConfig()
+            ->themesDir = $themesDir;
 
         try {
-            $this->conn->executeStatement('DELETE FROM ' . 'themes');
+            $this->conn->executeStatement('DELETE FROM themes');
 
             InstallService::activateCoreThemes(LangTestFactory::get(), CurrentUserTestFactory::get(), CurrentConfigServiceTestFactory::get(), CurrentConfigTestFactory::get(), CurrentPathsTestFactory::get(), EventDispatcherTestFactory::get());
 
-            self::assertFalse($this->conn->fetchAssociative('SELECT id FROM ' . 'themes' . ' WHERE id = ' . $this->conn->quote($themeId)));
-            self::assertSame(0, $this->fetchOneInt($this->conn->fetchOne('SELECT COUNT(*) FROM ' . 'themes')));
+            self::assertFalse($this->conn->fetchAssociative('SELECT id FROM themes WHERE id = ' . $this->conn->quote($themeId)));
+            self::assertSame(0, $this->fetchOneInt($this->conn->fetchOne('SELECT COUNT(*) FROM themes')));
         } finally {
-            $this->conn->executeStatement('DELETE FROM ' . 'themes');
+            $this->conn->executeStatement('DELETE FROM themes');
             unlink($themesDir . $themeId . '/themeconf.inc.php');
             rmdir($themesDir . $themeId);
             rmdir($themesDir);
         }
     }
 
-    public function test_activateCoreThemes_activates_nothing_when_no_default_template_theme_directory_is_found(): void
+    public function testActivateCoreThemesActivatesNothingWhenNoDefaultTemplateThemeDirectoryIsFound(): void
     {
         $this->bootKernelAndConfigService();
 
@@ -356,27 +357,28 @@ final class InstallServiceTest extends IntegrationTestCase
         // An explicitly empty scan directory proves the "nothing found on
         // disk" branch directly, regardless of what this repo's own real
         // themes/ directory currently contains.
-        $this->currentConfig()->themesDir = $emptyThemesDir;
+        $this->currentConfig()
+            ->themesDir = $emptyThemesDir;
 
         try {
-            $this->conn->executeStatement('DELETE FROM ' . 'themes');
+            $this->conn->executeStatement('DELETE FROM themes');
 
             InstallService::activateCoreThemes(LangTestFactory::get(), CurrentUserTestFactory::get(), CurrentConfigServiceTestFactory::get(), CurrentConfigTestFactory::get(), CurrentPathsTestFactory::get(), EventDispatcherTestFactory::get());
 
-            self::assertSame(0, $this->fetchOneInt($this->conn->fetchOne('SELECT COUNT(*) FROM ' . 'themes')));
+            self::assertSame(0, $this->fetchOneInt($this->conn->fetchOne('SELECT COUNT(*) FROM themes')));
         } finally {
-            $this->conn->executeStatement('DELETE FROM ' . 'themes');
+            $this->conn->executeStatement('DELETE FROM themes');
             rmdir($emptyThemesDir);
         }
     }
 
     // ----------------------------------------------------- activateCorePlugins
 
-    public function test_activateCorePlugins_scans_but_auto_activates_nothing(): void
+    public function testActivateCorePluginsScansButAutoActivatesNothing(): void
     {
         $this->bootKernelAndConfigService();
 
-        $before = $this->fetchOneInt($this->conn->fetchOne('SELECT COUNT(*) FROM ' . 'plugins'));
+        $before = $this->fetchOneInt($this->conn->fetchOne('SELECT COUNT(*) FROM plugins'));
 
         // Real production plugins/ directory (only an index.php placeholder
         // in this repo -- confirmed by direct read) -- InstallService's own
@@ -386,7 +388,7 @@ final class InstallServiceTest extends IntegrationTestCase
         // to exercise the same real "no-op by design" behavior.
         InstallService::activateCorePlugins(LangTestFactory::get(), CurrentPathsTestFactory::get(), CurrentUserTestFactory::get(), EventDispatcherTestFactory::get(), CurrentConfigTestFactory::get());
 
-        $after = $this->fetchOneInt($this->conn->fetchOne('SELECT COUNT(*) FROM ' . 'plugins'));
+        $after = $this->fetchOneInt($this->conn->fetchOne('SELECT COUNT(*) FROM plugins'));
         self::assertSame($before, $after);
         self::assertSame(0, $after);
     }

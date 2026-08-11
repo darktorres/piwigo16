@@ -49,20 +49,22 @@ test('insert() persists every column and returns the real auto-generated id', fu
     $marker = 'ut_audit_' . bin2hex(random_bytes(6));
 
     try {
-        $id = auditTestRepo()->insert(
-            actorId: 1,
-            action: 'create',
-            entityType: $marker,
-            entityId: 42,
-            beforeJson: null,
-            afterJson: '{"name":"test"}',
-            ipAddress: IpAddress::from('203.0.113.20'),
-            createdAt: SqlDateTime::from('2026-08-01 12:00:00'),
-            prevHash: null,
-            rowHash: str_repeat('a', 64),
-        );
+        $id = auditTestRepo()
+            ->insert(
+                actorId: 1,
+                action: 'create',
+                entityType: $marker,
+                entityId: 42,
+                beforeJson: null,
+                afterJson: '{"name":"test"}',
+                ipAddress: IpAddress::from('203.0.113.20'),
+                createdAt: SqlDateTime::from('2026-08-01 12:00:00'),
+                prevHash: null,
+                rowHash: str_repeat('a', 64),
+            );
 
-        expect($id)->toBeGreaterThan(0);
+        expect($id)
+            ->toBeGreaterThan(0);
 
         $stored = $conn->createQueryBuilder()
             ->select('actor_id', 'action', 'entity_id', 'before_json', 'after_json', 'ip_address', 'created_at', 'prev_hash', 'row_hash')
@@ -80,19 +82,23 @@ test('insert() persists every column and returns the real auto-generated id', fu
         // '{"name": "test"}') -- compare the decoded value, not the raw
         // string, to avoid coupling this test to that formatting detail.
         $afterJson = $stored['after_json'];
-        expect(is_string($afterJson) ? json_decode($afterJson, true) : null)->toBe(['name' => 'test']);
+        expect(is_string($afterJson) ? json_decode($afterJson, true) : null)
+            ->toBe([
+                'name' => 'test',
+            ]);
         unset($stored['after_json']);
 
-        expect($stored)->toBe([
-            'actor_id' => 1,
-            'action' => 'create',
-            'entity_id' => 42,
-            'before_json' => null,
-            'ip_address' => '203.0.113.20',
-            'created_at' => '2026-08-01 12:00:00',
-            'prev_hash' => null,
-            'row_hash' => str_repeat('a', 64),
-        ]);
+        expect($stored)
+            ->toBe([
+                'actor_id' => 1,
+                'action' => 'create',
+                'entity_id' => 42,
+                'before_json' => null,
+                'ip_address' => '203.0.113.20',
+                'created_at' => '2026-08-01 12:00:00',
+                'prev_hash' => null,
+                'row_hash' => str_repeat('a', 64),
+            ]);
     } finally {
         auditTestPurge($conn, $marker);
     }
@@ -111,7 +117,8 @@ test('findLatestRowHash() returns the most recently inserted row\'s hash, bypass
         // its own) -- assert it's the real chain tip we just wrote, not
         // that it's exclusively ours (another process could insert
         // between our 2nd insert and this read in a shared test DB).
-        expect($repo->findLatestRowHash())->toBe(str_repeat('b', 64));
+        expect($repo->findLatestRowHash())
+            ->toBe(str_repeat('b', 64));
     } finally {
         auditTestPurge($conn, $marker);
     }
@@ -139,7 +146,8 @@ test('findLatestRowHash() really does bypass the identity map (HINT_REFRESH), no
             ->setParameter('id', $id)
             ->executeStatement();
 
-        expect($repo->findLatestRowHash())->toBe(str_repeat('c', 64));
+        expect($repo->findLatestRowHash())
+            ->toBe(str_repeat('c', 64));
     } finally {
         auditTestPurge($conn, $marker);
     }
@@ -150,7 +158,8 @@ test('findLatestRowHash() returns null only when the table is genuinely empty', 
     // returns a real, non-null 64-char hash when rows exist (the
     // null-when-empty branch is exercised by tests/Integration/
     // AuditRepositoryTest.php against its own isolated fixture DB).
-    expect(auditTestRepo()->findLatestRowHash())->not->toBeNull();
+    expect(auditTestRepo()->findLatestRowHash())
+        ->not->toBeNull();
 });
 
 test('findAllInOrder() returns every row as an AuditLogEntry, in ascending id order', function (): void {
@@ -165,7 +174,8 @@ test('findAllInOrder() returns every row as an AuditLogEntry, in ascending id or
         $all = $repo->findAllInOrder();
         $ours = array_values(array_filter($all, static fn (AuditLogEntry $e): bool => $e->entityType === $marker));
 
-        expect($ours)->toHaveCount(2)
+        expect($ours)
+            ->toHaveCount(2)
             ->and($ours[0]->id)->toBe($firstId)
             ->and($ours[0]->action)->toBe('create')
             ->and($ours[1]->id)->toBe($secondId)
@@ -198,7 +208,8 @@ test('findAllInOrder() really does bypass the identity map (HINT_REFRESH), not j
         $all = $repo->findAllInOrder();
         $ours = array_values(array_filter($all, static fn (AuditLogEntry $e): bool => $e->entityType === $marker));
 
-        expect($ours)->toHaveCount(1)
+        expect($ours)
+            ->toHaveCount(1)
             ->and($ours[0]->rowHash)->toBe(str_repeat('d', 64));
     } finally {
         auditTestPurge($conn, $marker);

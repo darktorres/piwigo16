@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Contract;
 
-use Override;
 use Doctrine\DBAL\Connection;
+use Override;
 use Piwigo\Db\DbConnection;
 
 final class WsCategoriesMutationTest extends ContractTestCase
@@ -14,10 +14,14 @@ final class WsCategoriesMutationTest extends ContractTestCase
 
     private Connection $conn;
 
-    /** @var list<int> */
+    /**
+     * @var list<int>
+     */
     private array $categoryIdsToDelete = [];
 
-    /** @var list<int> */
+    /**
+     * @var list<int>
+     */
     private array $imageIdsToDelete = [];
 
     #[Override]
@@ -34,29 +38,33 @@ final class WsCategoriesMutationTest extends ContractTestCase
         if ($this->categoryId !== null) {
             $token = $this->getPwgToken();
             $this->callWs('pwg.categories.delete', [
-                'category_id'         => $this->categoryId,
+                'category_id' => $this->categoryId,
                 'photo_deletion_mode' => 'no_delete',
-                'pwg_token'           => $token,
+                'pwg_token' => $token,
             ]);
             $this->categoryId = null;
         }
 
         foreach ($this->imageIdsToDelete as $imageId) {
-            $this->conn->executeStatement('DELETE FROM ' . 'image_category' . ' WHERE image_id = ?', [$imageId]);
-            $this->conn->executeStatement('DELETE FROM ' . 'images' . ' WHERE id = ?', [$imageId]);
+            $this->conn->executeStatement('DELETE FROM image_category WHERE image_id = ?', [$imageId]);
+            $this->conn->executeStatement('DELETE FROM images WHERE id = ?', [$imageId]);
         }
         foreach (array_reverse($this->categoryIdsToDelete) as $categoryId) {
-            $this->conn->executeStatement('DELETE FROM ' . 'image_category' . ' WHERE category_id = ?', [$categoryId]);
-            $this->conn->executeStatement('DELETE FROM ' . 'categories' . ' WHERE id = ?', [$categoryId]);
+            $this->conn->executeStatement('DELETE FROM image_category WHERE category_id = ?', [$categoryId]);
+            $this->conn->executeStatement('DELETE FROM categories WHERE id = ?', [$categoryId]);
         }
 
         parent::tearDown();
     }
 
-    /** Creates a virtual category via the WS API and marks it for cleanup in tearDown(). */
+    /**
+     * Creates a virtual category via the WS API and marks it for cleanup in tearDown().
+     */
     private function createCategory(string $name, ?int $parentId = null): int
     {
-        $params = ['name' => $name];
+        $params = [
+            'name' => $name,
+        ];
         if ($parentId !== null) {
             $params['parent'] = $parentId;
         }
@@ -85,7 +93,7 @@ final class WsCategoriesMutationTest extends ContractTestCase
         ));
 
         $this->conn->executeStatement(
-            'INSERT INTO ' . 'images' . ' (file, path, md5sum, date_available) VALUES (?, ?, ?, ?)',
+            'INSERT INTO images (file, path, md5sum, date_available) VALUES (?, ?, ?, ?)',
             [$filename, 'upload/2026/08/01/' . $filename, md5($filename), '2026-08-01 00:00:00']
         );
         $id = (int) $this->conn->lastInsertId();
@@ -111,7 +119,7 @@ final class WsCategoriesMutationTest extends ContractTestCase
             ->quoteSingleIdentifier('rank');
         foreach ($orderedIds as $index => $categoryId) {
             $this->conn->executeStatement(
-                "UPDATE " . 'categories' . " SET {$rank} = ? WHERE id = ?",
+                'UPDATE categories' . " SET {$rank} = ? WHERE id = ?",
                 [$index + 1, $categoryId]
             );
         }
@@ -125,7 +133,7 @@ final class WsCategoriesMutationTest extends ContractTestCase
         $rankIdentifier = $this->conn->getDatabasePlatform()
             ->quoteSingleIdentifier('rank');
         $ids = $this->conn->fetchFirstColumn(
-            "SELECT id FROM " . 'categories' . " WHERE id_uppercat = ? ORDER BY {$rankIdentifier} ASC",
+            'SELECT id FROM categories' . " WHERE id_uppercat = ? ORDER BY {$rankIdentifier} ASC",
             [$parentId]
         );
 
@@ -136,9 +144,11 @@ final class WsCategoriesMutationTest extends ContractTestCase
         }, $ids);
     }
 
-    public function test_add_returns_category_shape(): void
+    public function testAddReturnsCategoryShape(): void
     {
-        $response = $this->callWs('pwg.categories.add', ['name' => 'ct_album_' . uniqid()]);
+        $response = $this->callWs('pwg.categories.add', [
+            'name' => 'ct_album_' . uniqid(),
+        ]);
 
         self::assertSame('ok', $response['stat']);
         self::assertMatchesSchema('pwg.categories.add', $response);
@@ -146,7 +156,7 @@ final class WsCategoriesMutationTest extends ContractTestCase
         $this->categoryId = $this->extractResultId($response);
     }
 
-    public function test_add_with_an_explicit_invalid_token_returns_error(): void
+    public function testAddWithAnExplicitInvalidTokenReturnsError(): void
     {
         // pwg_token is WsParamFlag::OPTIONAL for add() -- every other add()
         // test omits it entirely; this exercises the branch where it's
@@ -161,43 +171,49 @@ final class WsCategoriesMutationTest extends ContractTestCase
         self::assertSame('Invalid security token', $response['message']);
     }
 
-    public function test_setInfo_updates_name(): void
+    public function testSetInfoUpdatesName(): void
     {
-        $add = $this->callWs('pwg.categories.add', ['name' => 'ct_album_' . uniqid()]);
+        $add = $this->callWs('pwg.categories.add', [
+            'name' => 'ct_album_' . uniqid(),
+        ]);
         $this->categoryId = $this->extractResultId($add);
 
         $response = $this->callWs('pwg.categories.setInfo', [
             'category_id' => $this->categoryId,
-            'name'        => 'ct_album_renamed_' . $this->categoryId,
+            'name' => 'ct_album_renamed_' . $this->categoryId,
         ]);
 
         self::assertSame('ok', $response['stat']);
     }
 
-    public function test_setRepresentative_returns_ok(): void
+    public function testSetRepresentativeReturnsOk(): void
     {
-        $add = $this->callWs('pwg.categories.add', ['name' => 'ct_album_' . uniqid()]);
+        $add = $this->callWs('pwg.categories.add', [
+            'name' => 'ct_album_' . uniqid(),
+        ]);
         $this->categoryId = $this->extractResultId($add);
 
         // Associate fixture image 1 with this album first
         $token = $this->getPwgToken();
         $this->callWs('pwg.images.setCategory', [
-            'image_id'    => [1],
+            'image_id' => [1],
             'category_id' => $this->categoryId,
-            'pwg_token'   => $token,
+            'pwg_token' => $token,
         ]);
 
         $response = $this->callWs('pwg.categories.setRepresentative', [
             'category_id' => $this->categoryId,
-            'image_id'    => 1,
+            'image_id' => 1,
         ]);
 
         self::assertSame('ok', $response['stat']);
     }
 
-    public function test_deleteRepresentative_returns_ok(): void
+    public function testDeleteRepresentativeReturnsOk(): void
     {
-        $add = $this->callWs('pwg.categories.add', ['name' => 'ct_album_' . uniqid()]);
+        $add = $this->callWs('pwg.categories.add', [
+            'name' => 'ct_album_' . uniqid(),
+        ]);
         $this->categoryId = $this->extractResultId($add);
 
         $response = $this->callWs('pwg.categories.deleteRepresentative', [
@@ -207,18 +223,22 @@ final class WsCategoriesMutationTest extends ContractTestCase
         self::assertSame('ok', $response['stat']);
     }
 
-    public function test_move_returns_move_shape(): void
+    public function testMoveReturnsMoveShape(): void
     {
-        $token  = $this->getPwgToken();
-        $parent = $this->callWs('pwg.categories.add', ['name' => 'ct_parent_' . uniqid()]);
-        $child  = $this->callWs('pwg.categories.add', ['name' => 'ct_child_' . uniqid()]);
+        $token = $this->getPwgToken();
+        $parent = $this->callWs('pwg.categories.add', [
+            'name' => 'ct_parent_' . uniqid(),
+        ]);
+        $child = $this->callWs('pwg.categories.add', [
+            'name' => 'ct_child_' . uniqid(),
+        ]);
         $parentId = $this->extractResultId($parent);
-        $childId  = $this->extractResultId($child);
+        $childId = $this->extractResultId($child);
 
         $response = $this->callWs('pwg.categories.move', [
             'category_id' => $childId,
-            'parent'      => $parentId,
-            'pwg_token'   => $token,
+            'parent' => $parentId,
+            'pwg_token' => $token,
         ]);
 
         self::assertSame('ok', $response['stat']);
@@ -226,15 +246,17 @@ final class WsCategoriesMutationTest extends ContractTestCase
 
         // clean up
         $this->callWs('pwg.categories.delete', [
-            'category_id'         => $parentId,
+            'category_id' => $parentId,
             'photo_deletion_mode' => 'no_delete',
-            'pwg_token'           => $token,
+            'pwg_token' => $token,
         ]);
     }
 
-    public function test_calculateOrphans_returns_orphan_info(): void
+    public function testCalculateOrphansReturnsOrphanInfo(): void
     {
-        $add = $this->callWs('pwg.categories.add', ['name' => 'ct_album_' . uniqid()]);
+        $add = $this->callWs('pwg.categories.add', [
+            'name' => 'ct_album_' . uniqid(),
+        ]);
         $this->categoryId = $this->extractResultId($add);
 
         $response = $this->callWs('pwg.categories.calculateOrphans', [
@@ -245,16 +267,18 @@ final class WsCategoriesMutationTest extends ContractTestCase
         self::assertMatchesSchema('pwg.categories.calculateOrphans', $response);
     }
 
-    public function test_delete_returns_ok(): void
+    public function testDeleteReturnsOk(): void
     {
-        $add   = $this->callWs('pwg.categories.add', ['name' => 'ct_album_' . uniqid()]);
-        $id    = $this->extractResultId($add);
+        $add = $this->callWs('pwg.categories.add', [
+            'name' => 'ct_album_' . uniqid(),
+        ]);
+        $id = $this->extractResultId($add);
         $token = $this->getPwgToken();
 
         $response = $this->callWs('pwg.categories.delete', [
-            'category_id'         => $id,
+            'category_id' => $id,
             'photo_deletion_mode' => 'no_delete',
-            'pwg_token'           => $token,
+            'pwg_token' => $token,
         ]);
 
         self::assertSame('ok', $response['stat']);
@@ -263,15 +287,17 @@ final class WsCategoriesMutationTest extends ContractTestCase
 
     // ------------------------------------------------------------------ add
 
-    public function test_add_rejects_a_blank_name(): void
+    public function testAddRejectsABlankName(): void
     {
-        $response = $this->callWsAllowingServerError('pwg.categories.add', ['name' => '   ']);
+        $response = $this->callWsAllowingServerError('pwg.categories.add', [
+            'name' => '   ',
+        ]);
 
         self::assertSame('fail', $response['stat']);
         self::assertSame(500, $response['err']);
     }
 
-    public function test_add_stores_the_provided_comment(): void
+    public function testAddStoresTheProvidedComment(): void
     {
         $add = $this->callWs('pwg.categories.add', [
             'name' => 'ct_album_' . uniqid(),
@@ -279,22 +305,24 @@ final class WsCategoriesMutationTest extends ContractTestCase
         ]);
         $this->categoryId = $this->extractResultId($add);
 
-        $stored = $this->conn->fetchOne('SELECT comment FROM ' . 'categories' . ' WHERE id = ?', [$this->categoryId]);
+        $stored = $this->conn->fetchOne('SELECT comment FROM categories WHERE id = ?', [$this->categoryId]);
         self::assertIsString($stored);
         self::assertStringContainsString('a real comment', $stored);
     }
 
     // --------------------------------------------------------------- setRank
 
-    public function test_setRank_unknown_category_returns_404(): void
+    public function testSetRankUnknownCategoryReturns404(): void
     {
-        $response = $this->callWs('pwg.categories.setRank', ['category_id' => [999999]]);
+        $response = $this->callWs('pwg.categories.setRank', [
+            'category_id' => [999999],
+        ]);
 
         self::assertSame('fail', $response['stat']);
         self::assertSame(404, $response['err']);
     }
 
-    public function test_setRank_single_category_moves_before_its_siblings(): void
+    public function testSetRankSingleCategoryMovesBeforeItsSiblings(): void
     {
         $parentId = $this->createCategory('ct_rank_parent_' . uniqid());
         $child1 = $this->createCategory('ct_rank_child1_' . uniqid(), $parentId);
@@ -303,7 +331,10 @@ final class WsCategoriesMutationTest extends ContractTestCase
         $this->assignRanks([$child1, $child2, $child3]);
         self::assertSame([$child1, $child2, $child3], $this->siblingOrder($parentId));
 
-        $response = $this->callWs('pwg.categories.setRank', ['category_id' => [$child3], 'rank' => 1]);
+        $response = $this->callWs('pwg.categories.setRank', [
+            'category_id' => [$child3],
+            'rank' => 1,
+        ]);
 
         self::assertSame('ok', $response['stat']);
         self::assertSame([$child3, $child1, $child2], $this->siblingOrder($parentId));
@@ -314,7 +345,7 @@ final class WsCategoriesMutationTest extends ContractTestCase
      * the old-order loop -- $was_inserted stays false, and the category is
      * appended at the very end instead (rather than left out entirely).
      */
-    public function test_setRank_single_category_with_a_rank_beyond_siblings_appends_it_last(): void
+    public function testSetRankSingleCategoryWithARankBeyondSiblingsAppendsItLast(): void
     {
         $parentId = $this->createCategory('ct_rank_parent_' . uniqid());
         $child1 = $this->createCategory('ct_rank_child1_' . uniqid(), $parentId);
@@ -322,13 +353,16 @@ final class WsCategoriesMutationTest extends ContractTestCase
         $this->assignRanks([$child1, $child2]);
         self::assertSame([$child1, $child2], $this->siblingOrder($parentId));
 
-        $response = $this->callWs('pwg.categories.setRank', ['category_id' => [$child1], 'rank' => 99]);
+        $response = $this->callWs('pwg.categories.setRank', [
+            'category_id' => [$child1],
+            'rank' => 99,
+        ]);
 
         self::assertSame('ok', $response['stat']);
         self::assertSame([$child2, $child1], $this->siblingOrder($parentId));
     }
 
-    public function test_setRank_multiple_categories_reorders_them_all(): void
+    public function testSetRankMultipleCategoriesReordersThemAll(): void
     {
         $parentId = $this->createCategory('ct_rank_parent_' . uniqid());
         $child1 = $this->createCategory('ct_rank_child1_' . uniqid(), $parentId);
@@ -337,13 +371,15 @@ final class WsCategoriesMutationTest extends ContractTestCase
         $this->assignRanks([$child1, $child2, $child3]);
         self::assertSame([$child1, $child2, $child3], $this->siblingOrder($parentId));
 
-        $response = $this->callWs('pwg.categories.setRank', ['category_id' => [$child3, $child1, $child2]]);
+        $response = $this->callWs('pwg.categories.setRank', [
+            'category_id' => [$child3, $child1, $child2],
+        ]);
 
         self::assertSame('ok', $response['stat']);
         self::assertSame([$child3, $child1, $child2], $this->siblingOrder($parentId));
     }
 
-    public function test_setRank_multiple_categories_missing_a_sibling_returns_error(): void
+    public function testSetRankMultipleCategoriesMissingASiblingReturnsError(): void
     {
         $parentId = $this->createCategory('ct_rank_parent_' . uniqid());
         $child1 = $this->createCategory('ct_rank_child1_' . uniqid(), $parentId);
@@ -354,7 +390,9 @@ final class WsCategoriesMutationTest extends ContractTestCase
         // 2 ids given, but the parent really has 3 children -- setRank()
         // only reaches this "count > 1" validation branch when more than
         // one id is provided.
-        $response = $this->callWs('pwg.categories.setRank', ['category_id' => [$child2, $child1]]);
+        $response = $this->callWs('pwg.categories.setRank', [
+            'category_id' => [$child2, $child1],
+        ]);
 
         self::assertSame('fail', $response['stat']);
         self::assertSame(1003, $response['err']);
@@ -363,7 +401,7 @@ final class WsCategoriesMutationTest extends ContractTestCase
 
     // -------------------------------------------------------------- setInfo
 
-    public function test_setInfo_invalid_token_returns_error(): void
+    public function testSetInfoInvalidTokenReturnsError(): void
     {
         $categoryId = $this->createCategory('ct_album_' . uniqid());
 
@@ -376,15 +414,17 @@ final class WsCategoriesMutationTest extends ContractTestCase
         self::assertSame(403, $response['err']);
     }
 
-    public function test_setInfo_unknown_category_returns_404(): void
+    public function testSetInfoUnknownCategoryReturns404(): void
     {
-        $response = $this->callWs('pwg.categories.setInfo', ['category_id' => 999999]);
+        $response = $this->callWs('pwg.categories.setInfo', [
+            'category_id' => 999999,
+        ]);
 
         self::assertSame('fail', $response['stat']);
         self::assertSame(404, $response['err']);
     }
 
-    public function test_setInfo_invalid_status_returns_error(): void
+    public function testSetInfoInvalidStatusReturnsError(): void
     {
         $categoryId = $this->createCategory('ct_album_' . uniqid());
 
@@ -398,10 +438,10 @@ final class WsCategoriesMutationTest extends ContractTestCase
         self::assertSame('Invalid status, only public/private', $response['message']);
     }
 
-    public function test_setInfo_changes_status_to_private(): void
+    public function testSetInfoChangesStatusToPrivate(): void
     {
         $categoryId = $this->createCategory('ct_album_' . uniqid());
-        $before = $this->conn->fetchOne('SELECT status FROM ' . 'categories' . ' WHERE id = ?', [$categoryId]);
+        $before = $this->conn->fetchOne('SELECT status FROM categories WHERE id = ?', [$categoryId]);
         self::assertSame('public', $before);
 
         $response = $this->callWs('pwg.categories.setInfo', [
@@ -410,11 +450,11 @@ final class WsCategoriesMutationTest extends ContractTestCase
         ]);
 
         self::assertSame('ok', $response['stat']);
-        $after = $this->conn->fetchOne('SELECT status FROM ' . 'categories' . ' WHERE id = ?', [$categoryId]);
+        $after = $this->conn->fetchOne('SELECT status FROM categories WHERE id = ?', [$categoryId]);
         self::assertSame('private', $after);
     }
 
-    public function test_setInfo_invalid_visible_param_returns_error(): void
+    public function testSetInfoInvalidVisibleParamReturnsError(): void
     {
         $categoryId = $this->createCategory('ct_album_' . uniqid());
 
@@ -435,13 +475,13 @@ final class WsCategoriesMutationTest extends ContractTestCase
      */
     private function fetchCategoryBoolColumn(string $column, int $categoryId): int
     {
-        $value = $this->conn->fetchOne('SELECT ' . $column . ' FROM ' . 'categories' . ' WHERE id = ?', [$categoryId]);
+        $value = $this->conn->fetchOne('SELECT ' . $column . ' FROM categories WHERE id = ?', [$categoryId]);
         self::assertTrue(is_bool($value) || is_numeric($value), $column . ' must be a boolean or numeric value');
 
         return (int) (bool) $value;
     }
 
-    public function test_setInfo_sets_visible_false(): void
+    public function testSetInfoSetsVisibleFalse(): void
     {
         $categoryId = $this->createCategory('ct_album_' . uniqid());
         self::assertSame(1, $this->fetchCategoryBoolColumn('visible', $categoryId));
@@ -462,7 +502,7 @@ final class WsCategoriesMutationTest extends ContractTestCase
      * strip_tags()-vs-allowHtmlDescriptions() branch through the exact same
      * loop iteration and was never independently verified.
      */
-    public function test_setInfo_updates_comment(): void
+    public function testSetInfoUpdatesComment(): void
     {
         $categoryId = $this->createCategory('ct_album_' . uniqid());
 
@@ -472,12 +512,12 @@ final class WsCategoriesMutationTest extends ContractTestCase
         ]);
 
         self::assertSame('ok', $response['stat']);
-        $stored = $this->conn->fetchOne('SELECT comment FROM ' . 'categories' . ' WHERE id = ?', [$categoryId]);
+        $stored = $this->conn->fetchOne('SELECT comment FROM categories WHERE id = ?', [$categoryId]);
         self::assertIsString($stored);
         self::assertStringContainsString('a fresh comment', $stored);
     }
 
-    public function test_setInfo_sets_commentable_and_applies_to_subalbums(): void
+    public function testSetInfoSetsCommentableAndAppliesToSubalbums(): void
     {
         $parentId = $this->createCategory('ct_commentable_parent_' . uniqid());
         $childId = $this->createCategory('ct_commentable_child_' . uniqid(), $parentId);
@@ -493,7 +533,7 @@ final class WsCategoriesMutationTest extends ContractTestCase
         self::assertSame(0, $this->fetchCategoryBoolColumn('commentable', $childId), 'apply_commentable_to_subalbums must propagate to the child');
     }
 
-    public function test_setInfo_sets_commentable_without_subalbums(): void
+    public function testSetInfoSetsCommentableWithoutSubalbums(): void
     {
         $parentId = $this->createCategory('ct_commentable_parent_' . uniqid());
         $childId = $this->createCategory('ct_commentable_child_' . uniqid(), $parentId);
@@ -510,7 +550,7 @@ final class WsCategoriesMutationTest extends ContractTestCase
 
     // ------------------------------------------------------- setRepresentative
 
-    public function test_setRepresentative_unknown_category_returns_404(): void
+    public function testSetRepresentativeUnknownCategoryReturns404(): void
     {
         $response = $this->callWs('pwg.categories.setRepresentative', [
             'category_id' => 999999,
@@ -522,7 +562,7 @@ final class WsCategoriesMutationTest extends ContractTestCase
         self::assertSame('category_id not found', $response['message']);
     }
 
-    public function test_setRepresentative_unknown_image_returns_404(): void
+    public function testSetRepresentativeUnknownImageReturns404(): void
     {
         $categoryId = $this->createCategory('ct_album_' . uniqid());
 
@@ -538,9 +578,11 @@ final class WsCategoriesMutationTest extends ContractTestCase
 
     // ---------------------------------------------------- deleteRepresentative
 
-    public function test_deleteRepresentative_unknown_category_returns_404(): void
+    public function testDeleteRepresentativeUnknownCategoryReturns404(): void
     {
-        $response = $this->callWs('pwg.categories.deleteRepresentative', ['category_id' => 999999]);
+        $response = $this->callWs('pwg.categories.deleteRepresentative', [
+            'category_id' => 999999,
+        ]);
 
         self::assertSame('fail', $response['stat']);
         self::assertSame(404, $response['err']);
@@ -556,7 +598,7 @@ final class WsCategoriesMutationTest extends ContractTestCase
      * test_deleteRepresentative_returns_ok above only covers the opposite
      * (no images) path.
      */
-    public function test_deleteRepresentative_with_images_and_random_representative_disallowed_returns_401(): void
+    public function testDeleteRepresentativeWithImagesAndRandomRepresentativeDisallowedReturns401(): void
     {
         $categoryId = $this->createCategory('ct_album_' . uniqid());
         $imageId = $this->insertThrowawayImage();
@@ -579,20 +621,24 @@ final class WsCategoriesMutationTest extends ContractTestCase
 
     // ---------------------------------------------------- refreshRepresentative
 
-    public function test_refreshRepresentative_unknown_category_returns_404(): void
+    public function testRefreshRepresentativeUnknownCategoryReturns404(): void
     {
-        $response = $this->callWsAllowingServerError('pwg.categories.refreshRepresentative', ['category_id' => 999999]);
+        $response = $this->callWsAllowingServerError('pwg.categories.refreshRepresentative', [
+            'category_id' => 999999,
+        ]);
 
         self::assertSame('fail', $response['stat']);
         self::assertSame(404, $response['err']);
         self::assertSame('category_id not found', $response['message']);
     }
 
-    public function test_refreshRepresentative_no_images_returns_401(): void
+    public function testRefreshRepresentativeNoImagesReturns401(): void
     {
         $categoryId = $this->createCategory('ct_album_' . uniqid());
 
-        $response = $this->callWsAllowingServerError('pwg.categories.refreshRepresentative', ['category_id' => $categoryId]);
+        $response = $this->callWsAllowingServerError('pwg.categories.refreshRepresentative', [
+            'category_id' => $categoryId,
+        ]);
 
         self::assertSame('fail', $response['stat']);
         self::assertSame(401, $response['err']);
@@ -618,7 +664,7 @@ final class WsCategoriesMutationTest extends ContractTestCase
     // getCategoryRepresentantProperties()'s stricter `int` parameter type,
     // not a reachable real-world branch.
 
-    public function test_refreshRepresentative_returns_new_representative_properties(): void
+    public function testRefreshRepresentativeReturnsNewRepresentativeProperties(): void
     {
         $categoryId = $this->createCategory('ct_album_' . uniqid());
         $imageId = $this->insertThrowawayImage();
@@ -630,7 +676,9 @@ final class WsCategoriesMutationTest extends ContractTestCase
         ]);
         self::assertSame('ok', $assoc['stat']);
 
-        $response = $this->callWs('pwg.categories.refreshRepresentative', ['category_id' => $categoryId]);
+        $response = $this->callWs('pwg.categories.refreshRepresentative', [
+            'category_id' => $categoryId,
+        ]);
 
         self::assertSame('ok', $response['stat']);
         $result = $response['result'];
@@ -638,7 +686,7 @@ final class WsCategoriesMutationTest extends ContractTestCase
         self::assertArrayHasKey('src', $result);
         self::assertArrayHasKey('url', $result);
 
-        $representativeId = $this->conn->fetchOne('SELECT representative_picture_id FROM ' . 'categories' . ' WHERE id = ?', [$categoryId]);
+        $representativeId = $this->conn->fetchOne('SELECT representative_picture_id FROM categories WHERE id = ?', [$categoryId]);
         self::assertSame($imageId, $representativeId, 'the only associated image must become the new representative');
     }
 
@@ -657,7 +705,7 @@ final class WsCategoriesMutationTest extends ContractTestCase
 
     // ---------------------------------------------------------------- delete
 
-    public function test_delete_invalid_token_returns_error(): void
+    public function testDeleteInvalidTokenReturnsError(): void
     {
         $categoryId = $this->createCategory('ct_album_' . uniqid());
 
@@ -671,7 +719,7 @@ final class WsCategoriesMutationTest extends ContractTestCase
         self::assertSame(403, $response['err']);
     }
 
-    public function test_delete_invalid_photo_deletion_mode_returns_error(): void
+    public function testDeleteInvalidPhotoDeletionModeReturnsError(): void
     {
         $categoryId = $this->createCategory('ct_album_' . uniqid());
         $token = $this->getPwgToken();
@@ -689,7 +737,7 @@ final class WsCategoriesMutationTest extends ContractTestCase
         self::assertStringContainsString('invalid parameter photo_deletion_mode', $message);
     }
 
-    public function test_delete_with_only_non_positive_category_ids_returns_null(): void
+    public function testDeleteWithOnlyNonPositiveCategoryIdsReturnsNull(): void
     {
         $token = $this->getPwgToken();
 
@@ -703,7 +751,7 @@ final class WsCategoriesMutationTest extends ContractTestCase
         self::assertNull($response['result']);
     }
 
-    public function test_delete_with_unknown_category_id_returns_null(): void
+    public function testDeleteWithUnknownCategoryIdReturnsNull(): void
     {
         $token = $this->getPwgToken();
 
@@ -719,7 +767,7 @@ final class WsCategoriesMutationTest extends ContractTestCase
 
     // ------------------------------------------------------------------ move
 
-    public function test_move_invalid_token_returns_error(): void
+    public function testMoveInvalidTokenReturnsError(): void
     {
         $categoryId = $this->createCategory('ct_album_' . uniqid());
 
@@ -733,7 +781,7 @@ final class WsCategoriesMutationTest extends ContractTestCase
         self::assertSame(403, $response['err']);
     }
 
-    public function test_move_with_no_valid_category_ids_returns_error(): void
+    public function testMoveWithNoValidCategoryIdsReturnsError(): void
     {
         $token = $this->getPwgToken();
 
@@ -748,7 +796,7 @@ final class WsCategoriesMutationTest extends ContractTestCase
         self::assertSame('Invalid category_id input parameter, no category to move', $response['message']);
     }
 
-    public function test_move_unknown_category_returns_error(): void
+    public function testMoveUnknownCategoryReturnsError(): void
     {
         $token = $this->getPwgToken();
 
@@ -763,7 +811,7 @@ final class WsCategoriesMutationTest extends ContractTestCase
         self::assertSame('Category 999999 does not exist', $response['message']);
     }
 
-    public function test_move_unknown_parent_returns_error(): void
+    public function testMoveUnknownParentReturnsError(): void
     {
         $categoryId = $this->createCategory('ct_album_' . uniqid());
         $token = $this->getPwgToken();
@@ -779,7 +827,7 @@ final class WsCategoriesMutationTest extends ContractTestCase
         self::assertSame('Unknown parent category id', $response['message']);
     }
 
-    public function test_move_physical_category_returns_error(): void
+    public function testMovePhysicalCategoryReturnsError(): void
     {
         $categoryId = $this->createCategory('ct_physical_' . uniqid());
         // move() only refuses categories with a non-empty `dir` (a real,
@@ -787,7 +835,7 @@ final class WsCategoriesMutationTest extends ContractTestCase
         // virtual one (dir=NULL), so simulating a physical category needs a
         // direct raw-SQL write; this only exercises move()'s own guard, it
         // doesn't pretend to be a real filesystem sync.
-        $this->conn->executeStatement('UPDATE ' . 'categories' . ' SET dir = ? WHERE id = ?', ['some_physical_dir', $categoryId]);
+        $this->conn->executeStatement('UPDATE categories SET dir = ? WHERE id = ?', ['some_physical_dir', $categoryId]);
         $token = $this->getPwgToken();
 
         $response = $this->callWs('pwg.categories.move', [
@@ -812,7 +860,7 @@ final class WsCategoriesMutationTest extends ContractTestCase
      * verifies. Genuinely reachable via a real WS call: attempting to move
      * a parent album into its own child.
      */
-    public function test_move_into_its_own_subcategory_returns_error(): void
+    public function testMoveIntoItsOwnSubcategoryReturnsError(): void
     {
         $parentId = $this->createCategory('ct_move_into_own_child_' . uniqid());
         $childId = $this->createCategory('ct_move_into_own_child_sub_' . uniqid(), $parentId);
@@ -831,7 +879,7 @@ final class WsCategoriesMutationTest extends ContractTestCase
 
     // -------------------------------------------------------- calculateOrphans
 
-    public function test_calculateOrphans_counts_images_that_would_become_orphan(): void
+    public function testCalculateOrphansCountsImagesThatWouldBecomeOrphan(): void
     {
         $categoryId = $this->createCategory('ct_orphans_' . uniqid());
         $orphanImageId = $this->insertThrowawayImage();
@@ -891,7 +939,7 @@ final class WsCategoriesMutationTest extends ContractTestCase
      * fixture category 1 so they count as "associated outside" rather than
      * "becoming orphan".
      */
-    public function test_calculateOrphans_at_1000_images_uses_the_php_based_computation(): void
+    public function testCalculateOrphansAt1000ImagesUsesThePhpBasedComputation(): void
     {
         $categoryId = $this->createCategory('ct_orphans_bulk_' . uniqid());
         $prefix = 'ct_orphans_bulk_' . uniqid() . '_';
@@ -907,7 +955,7 @@ final class WsCategoriesMutationTest extends ContractTestCase
             // and accepts the bare parameter unchanged.
             $textCast = $this->dbDriver === 'pgsql' ? '::text' : '';
             $this->conn->executeStatement(
-                'INSERT INTO ' . 'images' . " (file, path, md5sum, date_available)
+                'INSERT INTO images' . " (file, path, md5sum, date_available)
                  SELECT CONCAT(?{$textCast}, n), CONCAT(?{$textCast}, n), MD5(CONCAT(?{$textCast}, n)), ?
                  FROM (
                      WITH RECURSIVE seq AS (
@@ -921,14 +969,14 @@ final class WsCategoriesMutationTest extends ContractTestCase
             );
 
             $imageIds = $this->conn->fetchFirstColumn(
-                'SELECT id FROM ' . 'images' . ' WHERE file LIKE ? ORDER BY id',
+                'SELECT id FROM images WHERE file LIKE ? ORDER BY id',
                 [$prefix . '%']
             );
             self::assertCount(1000, $imageIds, 'bulk insert must have produced exactly 1000 real image rows');
 
             $this->conn->executeStatement(
-                'INSERT INTO ' . 'image_category' . ' (image_id, category_id)
-                 SELECT id, ? FROM ' . 'images' . ' WHERE file LIKE ?',
+                'INSERT INTO image_category' . ' (image_id, category_id)
+                 SELECT id, ? FROM images WHERE file LIKE ?',
                 [$categoryId, $prefix . '%']
             );
 
@@ -939,7 +987,7 @@ final class WsCategoriesMutationTest extends ContractTestCase
             $sharedImageIds = array_slice($imageIds, 0, 4);
             foreach ($sharedImageIds as $imageId) {
                 $this->conn->executeStatement(
-                    'INSERT INTO ' . 'image_category' . ' (image_id, category_id) VALUES (?, ?)',
+                    'INSERT INTO image_category (image_id, category_id) VALUES (?, ?)',
                     [$imageId, 1]
                 );
             }
@@ -961,7 +1009,7 @@ final class WsCategoriesMutationTest extends ContractTestCase
             // this single statement also removes both image_category rows
             // per shared image (the $categoryId link and the fixture
             // category 1 link) as well as the 996 orphan-only links.
-            $this->conn->executeStatement('DELETE FROM ' . 'images' . ' WHERE file LIKE ?', [$prefix . '%']);
+            $this->conn->executeStatement('DELETE FROM images WHERE file LIKE ?', [$prefix . '%']);
         }
     }
 
@@ -978,13 +1026,13 @@ final class WsCategoriesMutationTest extends ContractTestCase
     private function extractResultId(array $response): int
     {
         $result = $response['result'] ?? null;
-        if (!is_array($result)) {
+        if (! is_array($result)) {
             $encoded = json_encode($response);
             self::fail('WS response result is not an array: ' . ($encoded === false ? 'null' : $encoded));
         }
 
         $id = $result['id'] ?? null;
-        if (!is_numeric($id)) {
+        if (! is_numeric($id)) {
             $encoded = json_encode($response);
             self::fail('WS response result.id is not numeric: ' . ($encoded === false ? 'null' : $encoded));
         }

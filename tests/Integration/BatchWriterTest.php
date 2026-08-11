@@ -4,12 +4,12 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Integration;
 
-use Override;
-use Throwable;
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\Exception\UniqueConstraintViolationException;
+use Override;
 use Piwigo\Db\BatchWriter;
 use Piwigo\Db\DbConnection;
+use Throwable;
 
 /**
  * BatchWriter's happy paths (singleInsert()/massInsert()/singleUpdate()/
@@ -107,10 +107,16 @@ final class BatchWriterTest extends IntegrationTestCase
         // $updateData is only ever built from $dbfields['update'], so an
         // empty 'update' list would hit this same guard indirectly, but
         // singleUpdate() is the direct, minimal way in.
-        $this->writer->singleUpdate(self::TABLE, [], ['id' => 20]);
+        $this->writer->singleUpdate(self::TABLE, [], [
+            'id' => 20,
+        ]);
 
         self::assertSame([
-            ['id' => 20, 'name' => 'unchanged', 'note' => 'stays-put'],
+            [
+                'id' => 20,
+                'name' => 'unchanged',
+                'note' => 'stays-put',
+            ],
         ], $this->fetchAllRows());
     }
 
@@ -120,8 +126,14 @@ final class BatchWriterTest extends IntegrationTestCase
 
         try {
             $this->writer->massInsert(self::TABLE, ['id', 'name'], [
-                ['id' => 10, 'name' => 'first-name'],
-                ['id' => 11, 'name' => 'first-name'], // duplicate `name` -> unique violation
+                [
+                    'id' => 10,
+                    'name' => 'first-name',
+                ],
+                [
+                    'id' => 11,
+                    'name' => 'first-name',
+                ], // duplicate `name` -> unique violation
             ]);
         } catch (Throwable $e) {
             $thrown = $e;
@@ -143,9 +155,18 @@ final class BatchWriterTest extends IntegrationTestCase
         $thrown = null;
 
         try {
-            $this->writer->massUpdate(self::TABLE, ['primary' => ['id'], 'update' => ['name']], [
-                ['id' => 1, 'name' => 'zeta'],
-                ['id' => 2, 'name' => 'zeta'], // duplicate `name` -> unique violation
+            $this->writer->massUpdate(self::TABLE, [
+                'primary' => ['id'],
+                'update' => ['name'],
+            ], [
+                [
+                    'id' => 1,
+                    'name' => 'zeta',
+                ],
+                [
+                    'id' => 2,
+                    'name' => 'zeta',
+                ], // duplicate `name` -> unique violation
             ]);
         } catch (Throwable $e) {
             $thrown = $e;
@@ -153,8 +174,16 @@ final class BatchWriterTest extends IntegrationTestCase
 
         self::assertInstanceOf(UniqueConstraintViolationException::class, $thrown);
         self::assertSame([
-            ['id' => 1, 'name' => 'alpha', 'note' => null],
-            ['id' => 2, 'name' => 'beta', 'note' => null],
+            [
+                'id' => 1,
+                'name' => 'alpha',
+                'note' => null,
+            ],
+            [
+                'id' => 2,
+                'name' => 'beta',
+                'note' => null,
+            ],
         ], $this->fetchAllRows());
     }
 
@@ -166,13 +195,22 @@ final class BatchWriterTest extends IntegrationTestCase
 
         $this->writer->singleUpdate(
             self::TABLE,
-            ['name' => '', 'note' => 'updated-note'],
-            ['id' => 5],
+            [
+                'name' => '',
+                'note' => 'updated-note',
+            ],
+            [
+                'id' => 5,
+            ],
             BatchWriter::SKIP_EMPTY
         );
 
         self::assertSame([
-            ['id' => 5, 'name' => 'kappa', 'note' => 'updated-note'],
+            [
+                'id' => 5,
+                'name' => 'kappa',
+                'note' => 'updated-note',
+            ],
         ], $this->fetchAllRows());
     }
 
@@ -184,13 +222,21 @@ final class BatchWriterTest extends IntegrationTestCase
 
         $this->writer->singleUpdate(
             self::TABLE,
-            ['note' => ''],
-            ['id' => 6],
+            [
+                'note' => '',
+            ],
+            [
+                'id' => 6,
+            ],
             BatchWriter::SKIP_EMPTY
         );
 
         self::assertSame([
-            ['id' => 6, 'name' => 'lambda', 'note' => 'stays-put'],
+            [
+                'id' => 6,
+                'name' => 'lambda',
+                'note' => 'stays-put',
+            ],
         ], $this->fetchAllRows());
     }
 
@@ -202,13 +248,25 @@ final class BatchWriterTest extends IntegrationTestCase
 
         $this->writer->singleUpdate(
             self::TABLE,
-            ['name' => 'updated-seven'],
-            ['note' => null]
+            [
+                'name' => 'updated-seven',
+            ],
+            [
+                'note' => null,
+            ]
         );
 
         self::assertSame([
-            ['id' => 7, 'name' => 'updated-seven', 'note' => null],
-            ['id' => 8, 'name' => 'row-eight', 'note' => 'has-note'],
+            [
+                'id' => 7,
+                'name' => 'updated-seven',
+                'note' => null,
+            ],
+            [
+                'id' => 8,
+                'name' => 'row-eight',
+                'note' => 'has-note',
+            ],
         ], $this->fetchAllRows());
     }
 
@@ -281,10 +339,18 @@ final class BatchWriterTest extends IntegrationTestCase
             );
 
             // WHERE-side: match via the backtick column, change a plain one.
-            $this->writer->singleUpdate($table, ['id' => 99], [$column => 'target']);
+            $this->writer->singleUpdate($table, [
+                'id' => 99,
+            ], [
+                $column => 'target',
+            ]);
 
             self::assertSame(
-                [1 => false, 99 => true, 2 => true],
+                [
+                    1 => false,
+                    99 => true,
+                    2 => true,
+                ],
                 [
                     1 => (bool) $this->conn->fetchOne('SELECT COUNT(*) FROM ' . $quotedTable . ' WHERE id = 1'),
                     99 => (bool) $this->conn->fetchOne('SELECT COUNT(*) FROM ' . $quotedTable . ' WHERE id = 99'),
@@ -294,7 +360,11 @@ final class BatchWriterTest extends IntegrationTestCase
             );
 
             // SET-side: change the backtick column's own value.
-            $this->writer->singleUpdate($table, [$column => 'updated'], ['id' => 99]);
+            $this->writer->singleUpdate($table, [
+                $column => 'updated',
+            ], [
+                'id' => 99,
+            ]);
 
             self::assertSame(
                 'updated',

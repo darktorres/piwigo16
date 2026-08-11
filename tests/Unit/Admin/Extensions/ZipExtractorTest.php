@@ -14,7 +14,7 @@ use Piwigo\Config\CurrentConfig;
 // to prevent).
 function zip_extractor_test_marker(): string
 {
-    /** @var string|null $marker */
+    /** @var string|null */
     static $marker = null;
 
     return $marker ??= sys_get_temp_dir() . '/piwigo-zip-extractor-test-' . bin2hex(random_bytes(8));
@@ -134,16 +134,19 @@ test('listFilenames returns every stored entry name', function (): void {
         'plugin_id/lib/helper.php' => '<?php',
     ]);
 
-    $names = new ZipExtractor()->listFilenames($archive);
+    $names = new ZipExtractor()
+        ->listFilenames($archive);
 
-    expect($names)->toBe(['plugin_id/main.inc.php', 'plugin_id/lib/helper.php']);
+    expect($names)
+        ->toBe(['plugin_id/main.inc.php', 'plugin_id/lib/helper.php']);
 });
 
 test('listFilenames returns null for a non-archive file', function (): void {
     $notAZip = zip_extractor_test_marker() . '/not-a-zip.zip';
     file_put_contents($notAZip, 'not a zip');
 
-    expect(new ZipExtractor()->listFilenames($notAZip))->toBeNull();
+    expect(new ZipExtractor()->listFilenames($notAZip))
+        ->toBeNull();
 });
 
 test('extract writes files under destPath with the prefix stripped', function (): void {
@@ -154,9 +157,11 @@ test('extract writes files under destPath with the prefix stripped', function ()
     ]);
     $dest = zip_extractor_test_marker() . '/extracted';
 
-    $result = new ZipExtractor()->extract($archive, $dest, 'plugin_id', new CurrentConfig());
+    $result = new ZipExtractor()
+        ->extract($archive, $dest, 'plugin_id', new CurrentConfig());
 
-    expect($result)->not->toBeNull();
+    expect($result)
+        ->not->toBeNull();
     expect(file_get_contents($dest . '/main.inc.php'))->toBe('<?php // main');
     expect(file_get_contents($dest . '/lib/helper.php'))->toBe('<?php // helper');
 });
@@ -174,10 +179,13 @@ test('extract rejects a zip-slip entry that would escape destPath', function ():
         unlink($escapePath);
     }
 
-    $result = new ZipExtractor()->extract($archive, $dest, 'plugin_id', new CurrentConfig());
+    $result = new ZipExtractor()
+        ->extract($archive, $dest, 'plugin_id', new CurrentConfig());
 
-    expect($result)->toBeNull();
-    expect(file_exists($escapePath))->toBeFalse();
+    expect($result)
+        ->toBeNull();
+    expect(file_exists($escapePath))
+        ->toBeFalse();
     if (file_exists($escapePath)) {
         unlink($escapePath);
     }
@@ -191,20 +199,24 @@ test('extract rejects an entry with an absolute path', function (): void {
     ]);
     $dest = zip_extractor_test_marker() . '/extracted';
 
-    $result = new ZipExtractor()->extract($archive, $dest, 'plugin_id', new CurrentConfig());
+    $result = new ZipExtractor()
+        ->extract($archive, $dest, 'plugin_id', new CurrentConfig());
 
-    expect($result)->toBeNull();
+    expect($result)
+        ->toBeNull();
 });
 
 test('extract returns null for an archive that does not exist', function (): void {
-    $result = new ZipExtractor()->extract(
-        zip_extractor_test_marker() . '/does-not-exist.zip',
-        zip_extractor_test_marker() . '/extracted',
-        'plugin_id',
-        new CurrentConfig(),
-    );
+    $result = new ZipExtractor()
+        ->extract(
+            zip_extractor_test_marker() . '/does-not-exist.zip',
+            zip_extractor_test_marker() . '/extracted',
+            'plugin_id',
+            new CurrentConfig(),
+        );
 
-    expect($result)->toBeNull();
+    expect($result)
+        ->toBeNull();
 });
 
 test('extract with onlyStoredName extracts just that one entry', function (): void {
@@ -215,9 +227,11 @@ test('extract with onlyStoredName extracts just that one entry', function (): vo
     ]);
     $dest = zip_extractor_test_marker() . '/extracted';
 
-    $result = new ZipExtractor()->extract($archive, $dest, 'plugin_id', new CurrentConfig(), null, 'plugin_id/lib/helper.php');
+    $result = new ZipExtractor()
+        ->extract($archive, $dest, 'plugin_id', new CurrentConfig(), null, 'plugin_id/lib/helper.php');
 
-    expect($result)->not->toBeNull();
+    expect($result)
+        ->not->toBeNull();
     expect(file_exists($dest . '/main.inc.php'))->toBeFalse();
     expect(file_get_contents($dest . '/lib/helper.php'))->toBe('<?php // helper');
 });
@@ -229,9 +243,11 @@ test('extract with a bare "." removePrefix does not strip anything', function ()
     ]);
     $dest = zip_extractor_test_marker() . '/extracted';
 
-    $result = new ZipExtractor()->extract($archive, $dest, '.', new CurrentConfig());
+    $result = new ZipExtractor()
+        ->extract($archive, $dest, '.', new CurrentConfig());
 
-    expect($result)->not->toBeNull();
+    expect($result)
+        ->not->toBeNull();
     expect(file_get_contents($dest . '/main.inc.php'))->toBe('<?php // main');
 });
 
@@ -247,12 +263,14 @@ test('extract marks the directory entry that exactly matches removePrefix as fil
     ]);
     $dest = zip_extractor_test_marker() . '/extracted';
 
-    $result = new ZipExtractor()->extract($archive, $dest, 'plugin_id', new CurrentConfig());
+    $result = new ZipExtractor()
+        ->extract($archive, $dest, 'plugin_id', new CurrentConfig());
 
-    expect($result)->toEqual([
-        new ExtractedFileEntry('plugin_id/', 'plugin_id/', 'filtered'),
-        new ExtractedFileEntry($dest . '/main.inc.php', 'plugin_id/main.inc.php', 'ok'),
-    ]);
+    expect($result)
+        ->toEqual([
+            new ExtractedFileEntry('plugin_id/', 'plugin_id/', 'filtered'),
+            new ExtractedFileEntry($dest . '/main.inc.php', 'plugin_id/main.inc.php', 'ok'),
+        ]);
     expect(is_dir($dest . '/plugin_id'))->toBeFalse();
     expect(file_get_contents($dest . '/main.inc.php'))->toBe('<?php // main');
 });
@@ -265,12 +283,14 @@ test('extract recursively creates a nested directory entry and lists it with ok 
     ]);
     $dest = zip_extractor_test_marker() . '/extracted';
 
-    $result = new ZipExtractor()->extract($archive, $dest, 'plugin_id', new CurrentConfig());
+    $result = new ZipExtractor()
+        ->extract($archive, $dest, 'plugin_id', new CurrentConfig());
 
-    expect($result)->toEqual([
-        new ExtractedFileEntry($dest . '/assets/img/', 'plugin_id/assets/img/', 'ok'),
-        new ExtractedFileEntry($dest . '/assets/img/logo.png', 'plugin_id/assets/img/logo.png', 'ok'),
-    ]);
+    expect($result)
+        ->toEqual([
+            new ExtractedFileEntry($dest . '/assets/img/', 'plugin_id/assets/img/', 'ok'),
+            new ExtractedFileEntry($dest . '/assets/img/logo.png', 'plugin_id/assets/img/logo.png', 'ok'),
+        ]);
     expect(is_dir($dest . '/assets/img'))->toBeTrue();
     expect(file_get_contents($dest . '/assets/img/logo.png'))->toBe('PNGDATA');
 });
@@ -286,12 +306,14 @@ test('extract marks a file entry as already_a_directory when its target path was
     ]);
     $dest = zip_extractor_test_marker() . '/extracted';
 
-    $result = new ZipExtractor()->extract($archive, $dest, 'plugin_id', new CurrentConfig());
+    $result = new ZipExtractor()
+        ->extract($archive, $dest, 'plugin_id', new CurrentConfig());
 
-    expect($result)->toEqual([
-        new ExtractedFileEntry($dest . '/foo/', 'plugin_id/foo/', 'ok'),
-        new ExtractedFileEntry($dest . '/foo', 'plugin_id/foo', 'already_a_directory'),
-    ]);
+    expect($result)
+        ->toEqual([
+            new ExtractedFileEntry($dest . '/foo/', 'plugin_id/foo/', 'ok'),
+            new ExtractedFileEntry($dest . '/foo', 'plugin_id/foo', 'already_a_directory'),
+        ]);
     expect(is_dir($dest . '/foo'))->toBeTrue();
     expect(is_file($dest . '/foo'))->toBeFalse();
 });
@@ -305,11 +327,13 @@ test('extract overwrites an existing destination file with the archive contents'
     mkdir($dest, 0o777, true);
     file_put_contents($dest . '/main.inc.php', '<?php // old');
 
-    $result = new ZipExtractor()->extract($archive, $dest, 'plugin_id', new CurrentConfig());
+    $result = new ZipExtractor()
+        ->extract($archive, $dest, 'plugin_id', new CurrentConfig());
 
-    expect($result)->toEqual([
-        new ExtractedFileEntry($dest . '/main.inc.php', 'plugin_id/main.inc.php', 'ok'),
-    ]);
+    expect($result)
+        ->toEqual([
+            new ExtractedFileEntry($dest . '/main.inc.php', 'plugin_id/main.inc.php', 'ok'),
+        ]);
     expect(file_get_contents($dest . '/main.inc.php'))->toBe('<?php // new');
 });
 
@@ -330,14 +354,16 @@ test('extract records a write_error result and leaves the file unwritten when th
     // status instead of a PHPUnit\Framework\Error\Warning.
     set_error_handler(static fn (): bool => true, E_WARNING);
     try {
-        $result = new ZipExtractor()->extract($archive, $dest, 'plugin_id', new CurrentConfig());
+        $result = new ZipExtractor()
+            ->extract($archive, $dest, 'plugin_id', new CurrentConfig());
     } finally {
         restore_error_handler();
     }
 
-    expect($result)->toEqual([
-        new ExtractedFileEntry($dest . '/main.inc.php', 'plugin_id/main.inc.php', 'write_error'),
-    ]);
+    expect($result)
+        ->toEqual([
+            new ExtractedFileEntry($dest . '/main.inc.php', 'plugin_id/main.inc.php', 'write_error'),
+        ]);
     expect(file_exists($dest . '/main.inc.php'))->toBeFalse();
 });
 
@@ -348,9 +374,11 @@ test('extract applies the given chmod mode to each extracted file', function ():
     ]);
     $dest = zip_extractor_test_marker() . '/extracted';
 
-    $result = new ZipExtractor()->extract($archive, $dest, 'plugin_id', new CurrentConfig(), 0o640);
+    $result = new ZipExtractor()
+        ->extract($archive, $dest, 'plugin_id', new CurrentConfig(), 0o640);
 
-    expect($result)->not->toBeNull();
+    expect($result)
+        ->not->toBeNull();
     expect(fileperms($dest . '/main.inc.php') & 0o777)->toBe(0o640);
 });
 
@@ -359,9 +387,11 @@ test('extract returns null for a corrupt (non-zip) archive file', function (): v
     file_put_contents($corrupt, 'this is not a zip file');
     $dest = zip_extractor_test_marker() . '/extracted';
 
-    $result = new ZipExtractor()->extract($corrupt, $dest, 'plugin_id', new CurrentConfig());
+    $result = new ZipExtractor()
+        ->extract($corrupt, $dest, 'plugin_id', new CurrentConfig());
 
-    expect($result)->toBeNull();
+    expect($result)
+        ->toBeNull();
 });
 
 test('extract returns null when the archive has more than MAX_ENTRIES entries', function (): void {
@@ -378,10 +408,13 @@ test('extract returns null when the archive has more than MAX_ENTRIES entries', 
     $zip->close();
     $dest = zip_extractor_test_marker() . '/extracted';
 
-    $result = new ZipExtractor()->extract($archive, $dest, '.', new CurrentConfig());
+    $result = new ZipExtractor()
+        ->extract($archive, $dest, '.', new CurrentConfig());
 
-    expect($result)->toBeNull();
-    expect(is_dir($dest))->toBeFalse();
+    expect($result)
+        ->toBeNull();
+    expect(is_dir($dest))
+        ->toBeFalse();
 });
 
 test('extract accepts an archive with exactly MAX_ENTRIES entries', function (): void {
@@ -398,10 +431,13 @@ test('extract accepts an archive with exactly MAX_ENTRIES entries', function ():
     $zip->close();
     $dest = zip_extractor_test_marker() . '/extracted';
 
-    $result = new ZipExtractor()->extract($archive, $dest, '.', new CurrentConfig());
+    $result = new ZipExtractor()
+        ->extract($archive, $dest, '.', new CurrentConfig());
 
-    expect($result)->not->toBeNull();
-    expect(is_dir($dest))->toBeTrue();
+    expect($result)
+        ->not->toBeNull();
+    expect(is_dir($dest))
+        ->toBeTrue();
 });
 
 test('extract returns null when the archive\'s total uncompressed size exceeds MAX_UNCOMPRESSED_BYTES', function (): void {
@@ -435,10 +471,13 @@ test('extract returns null when the archive\'s total uncompressed size exceeds M
     unlink($bigFile);
     $dest = zip_extractor_test_marker() . '/extracted';
 
-    $result = new ZipExtractor()->extract($archive, $dest, '.', new CurrentConfig());
+    $result = new ZipExtractor()
+        ->extract($archive, $dest, '.', new CurrentConfig());
 
-    expect($result)->toBeNull();
-    expect(is_dir($dest))->toBeFalse();
+    expect($result)
+        ->toBeNull();
+    expect(is_dir($dest))
+        ->toBeFalse();
 });
 
 test('extract accepts an archive whose total uncompressed size is exactly MAX_UNCOMPRESSED_BYTES', function (): void {
@@ -464,10 +503,13 @@ test('extract accepts an archive whose total uncompressed size is exactly MAX_UN
     unlink($bigFile);
     $dest = zip_extractor_test_marker() . '/extracted';
 
-    $result = new ZipExtractor()->extract($archive, $dest, '.', new CurrentConfig());
+    $result = new ZipExtractor()
+        ->extract($archive, $dest, '.', new CurrentConfig());
 
-    expect($result)->not->toBeNull();
-    expect(is_dir($dest))->toBeTrue();
+    expect($result)
+        ->not->toBeNull();
+    expect(is_dir($dest))
+        ->toBeTrue();
 });
 
 test('extract strips a leading "./" from destPath before writing', function (): void {
@@ -480,9 +522,11 @@ test('extract strips a leading "./" from destPath before writing', function (): 
     // path would carry a literal "./" segment).
     $dest = './' . zip_extractor_test_marker() . '/extracted';
 
-    $result = new ZipExtractor()->extract($archive, $dest, 'plugin_id', new CurrentConfig());
+    $result = new ZipExtractor()
+        ->extract($archive, $dest, 'plugin_id', new CurrentConfig());
 
-    expect($result)->not->toBeNull();
+    expect($result)
+        ->not->toBeNull();
     expect(file_get_contents(zip_extractor_test_marker() . '/extracted/main.inc.php'))->toBe('<?php // main');
 });
 
@@ -513,10 +557,13 @@ test('extract rejects an archive whose total uncompressed size is exactly one by
     unlink($bigFile);
     $dest = zip_extractor_test_marker() . '/extracted';
 
-    $result = new ZipExtractor()->extract($archive, $dest, '.', new CurrentConfig());
+    $result = new ZipExtractor()
+        ->extract($archive, $dest, '.', new CurrentConfig());
 
-    expect($result)->toBeNull();
-    expect(is_dir($dest))->toBeFalse();
+    expect($result)
+        ->toBeNull();
+    expect(is_dir($dest))
+        ->toBeFalse();
 });
 
 test('extract with a bare "." removePrefix does not strip any entry name, even one that looks like a prefix match', function (): void {
@@ -537,11 +584,13 @@ test('extract with a bare "." removePrefix does not strip any entry name, even o
     ]);
     $dest = zip_extractor_test_marker() . '/extracted';
 
-    $result = new ZipExtractor()->extract($archive, $dest, '.', new CurrentConfig());
+    $result = new ZipExtractor()
+        ->extract($archive, $dest, '.', new CurrentConfig());
 
-    expect($result)->toEqual([
-        new ExtractedFileEntry($dest . '/PEST Mutator was here!/main.inc.php', 'PEST Mutator was here!/main.inc.php', 'ok'),
-    ]);
+    expect($result)
+        ->toEqual([
+            new ExtractedFileEntry($dest . '/PEST Mutator was here!/main.inc.php', 'PEST Mutator was here!/main.inc.php', 'ok'),
+        ]);
     expect(file_get_contents($dest . '/PEST Mutator was here!/main.inc.php'))->toBe('<?php // main');
 });
 
@@ -561,11 +610,13 @@ test('extract does not double a removePrefix that already ends with a trailing s
     ]);
     $dest = zip_extractor_test_marker() . '/extracted';
 
-    $result = new ZipExtractor()->extract($archive, $dest, 'plugin_id/', new CurrentConfig());
+    $result = new ZipExtractor()
+        ->extract($archive, $dest, 'plugin_id/', new CurrentConfig());
 
-    expect($result)->toEqual([
-        new ExtractedFileEntry($dest . '/main.inc.php', 'plugin_id/main.inc.php', 'ok'),
-    ]);
+    expect($result)
+        ->toEqual([
+            new ExtractedFileEntry($dest . '/main.inc.php', 'plugin_id/main.inc.php', 'ok'),
+        ]);
     expect(file_get_contents($dest . '/main.inc.php'))->toBe('<?php // main');
 });
 
@@ -585,11 +636,13 @@ test('extract strips exactly the two-character "./" prefix from destPath, not ju
     ]);
     $dest = './' . zip_extractor_test_marker() . '/extracted';
 
-    $result = new ZipExtractor()->extract($archive, $dest, 'plugin_id', new CurrentConfig());
+    $result = new ZipExtractor()
+        ->extract($archive, $dest, 'plugin_id', new CurrentConfig());
 
-    expect($result)->toEqual([
-        new ExtractedFileEntry(zip_extractor_test_marker() . '/extracted/main.inc.php', 'plugin_id/main.inc.php', 'ok'),
-    ]);
+    expect($result)
+        ->toEqual([
+            new ExtractedFileEntry(zip_extractor_test_marker() . '/extracted/main.inc.php', 'plugin_id/main.inc.php', 'ok'),
+        ]);
 });
 
 test('extract strips a trailing slash from destPath before joining entry names onto it', function (): void {
@@ -604,11 +657,13 @@ test('extract strips a trailing slash from destPath before joining entry names o
     ]);
     $dest = zip_extractor_test_marker() . '/extracted/';
 
-    $result = new ZipExtractor()->extract($archive, $dest, 'plugin_id', new CurrentConfig());
+    $result = new ZipExtractor()
+        ->extract($archive, $dest, 'plugin_id', new CurrentConfig());
 
-    expect($result)->toEqual([
-        new ExtractedFileEntry(zip_extractor_test_marker() . '/extracted/main.inc.php', 'plugin_id/main.inc.php', 'ok'),
-    ]);
+    expect($result)
+        ->toEqual([
+            new ExtractedFileEntry(zip_extractor_test_marker() . '/extracted/main.inc.php', 'plugin_id/main.inc.php', 'ok'),
+        ]);
 });
 
 test('extract does not strip removePrefix from an entry whose stored name does not actually start with it', function (): void {
@@ -626,12 +681,14 @@ test('extract does not strip removePrefix from an entry whose stored name does n
     ]);
     $dest = zip_extractor_test_marker() . '/extracted';
 
-    $result = new ZipExtractor()->extract($archive, $dest, 'plugin_id', new CurrentConfig());
+    $result = new ZipExtractor()
+        ->extract($archive, $dest, 'plugin_id', new CurrentConfig());
 
-    expect($result)->toEqual([
-        new ExtractedFileEntry($dest . '/main.inc.php', 'plugin_id/main.inc.php', 'ok'),
-        new ExtractedFileEntry($dest . '/unrelated/readme.txt', 'unrelated/readme.txt', 'ok'),
-    ]);
+    expect($result)
+        ->toEqual([
+            new ExtractedFileEntry($dest . '/main.inc.php', 'plugin_id/main.inc.php', 'ok'),
+            new ExtractedFileEntry($dest . '/unrelated/readme.txt', 'unrelated/readme.txt', 'ok'),
+        ]);
     expect(file_get_contents($dest . '/main.inc.php'))->toBe('<?php // main');
     expect(file_get_contents($dest . '/unrelated/readme.txt'))->toBe('not part of the plugin');
 });
@@ -652,10 +709,13 @@ test('extract rejects an entry that resolves to a sibling directory sharing dest
     $dest = zip_extractor_test_marker() . '/extracted';
     $siblingEscapePath = zip_extractor_test_marker() . '/extracted-evil/hack.php';
 
-    $result = new ZipExtractor()->extract($archive, $dest, 'plugin_id', new CurrentConfig());
+    $result = new ZipExtractor()
+        ->extract($archive, $dest, 'plugin_id', new CurrentConfig());
 
-    expect($result)->toBeNull();
-    expect(file_exists($siblingEscapePath))->toBeFalse();
+    expect($result)
+        ->toBeNull();
+    expect(file_exists($siblingEscapePath))
+        ->toBeFalse();
 });
 
 test('extract continues processing later entries after marking one as already_a_directory', function (): void {
@@ -671,13 +731,15 @@ test('extract continues processing later entries after marking one as already_a_
     ]);
     $dest = zip_extractor_test_marker() . '/extracted';
 
-    $result = new ZipExtractor()->extract($archive, $dest, 'plugin_id', new CurrentConfig());
+    $result = new ZipExtractor()
+        ->extract($archive, $dest, 'plugin_id', new CurrentConfig());
 
-    expect($result)->toEqual([
-        new ExtractedFileEntry($dest . '/foo/', 'plugin_id/foo/', 'ok'),
-        new ExtractedFileEntry($dest . '/foo', 'plugin_id/foo', 'already_a_directory'),
-        new ExtractedFileEntry($dest . '/after.txt', 'plugin_id/after.txt', 'ok'),
-    ]);
+    expect($result)
+        ->toEqual([
+            new ExtractedFileEntry($dest . '/foo/', 'plugin_id/foo/', 'ok'),
+            new ExtractedFileEntry($dest . '/foo', 'plugin_id/foo', 'already_a_directory'),
+            new ExtractedFileEntry($dest . '/after.txt', 'plugin_id/after.txt', 'ok'),
+        ]);
     expect(file_get_contents($dest . '/after.txt'))->toBe('still extracted');
 });
 
@@ -698,11 +760,13 @@ test('extract does not create a destination file when the archive entry itself c
     $zip->close();
     $dest = zip_extractor_test_marker() . '/extracted';
 
-    $result = new ZipExtractor()->extract($archive, $dest, 'plugin_id', new CurrentConfig());
+    $result = new ZipExtractor()
+        ->extract($archive, $dest, 'plugin_id', new CurrentConfig());
 
-    expect($result)->toEqual([
-        new ExtractedFileEntry($dest . '/secret.txt', 'plugin_id/secret.txt', 'write_error'),
-    ]);
+    expect($result)
+        ->toEqual([
+            new ExtractedFileEntry($dest . '/secret.txt', 'plugin_id/secret.txt', 'write_error'),
+        ]);
     expect(file_exists($dest . '/secret.txt'))->toBeFalse();
 });
 
@@ -720,12 +784,14 @@ test('extract continues processing later entries after a write_error result', fu
     $zip->close();
     $dest = zip_extractor_test_marker() . '/extracted';
 
-    $result = new ZipExtractor()->extract($archive, $dest, 'plugin_id', new CurrentConfig());
+    $result = new ZipExtractor()
+        ->extract($archive, $dest, 'plugin_id', new CurrentConfig());
 
-    expect($result)->toEqual([
-        new ExtractedFileEntry($dest . '/secret.txt', 'plugin_id/secret.txt', 'write_error'),
-        new ExtractedFileEntry($dest . '/after.txt', 'plugin_id/after.txt', 'ok'),
-    ]);
+    expect($result)
+        ->toEqual([
+            new ExtractedFileEntry($dest . '/secret.txt', 'plugin_id/secret.txt', 'write_error'),
+            new ExtractedFileEntry($dest . '/after.txt', 'plugin_id/after.txt', 'ok'),
+        ]);
     expect(file_get_contents($dest . '/after.txt'))->toBe('still extracted');
 });
 
@@ -747,9 +813,11 @@ test('extract sets each extracted file\'s mtime to the archive entry\'s stored m
     $zip->close();
     $dest = zip_extractor_test_marker() . '/extracted';
 
-    $result = new ZipExtractor()->extract($archive, $dest, 'plugin_id', new CurrentConfig());
+    $result = new ZipExtractor()
+        ->extract($archive, $dest, 'plugin_id', new CurrentConfig());
 
-    expect($result)->not->toBeNull();
+    expect($result)
+        ->not->toBeNull();
     expect(filemtime($dest . '/main.inc.php'))->toBe($fixedMtime);
 });
 
@@ -767,9 +835,11 @@ test('extract rejects a zip-slip entry that escapes destPath through a "./.." se
     ]);
     $dest = zip_extractor_test_marker() . '/extracted';
 
-    $result = new ZipExtractor()->extract($archive, $dest, 'plugin_id', new CurrentConfig());
+    $result = new ZipExtractor()
+        ->extract($archive, $dest, 'plugin_id', new CurrentConfig());
 
-    expect($result)->toBeNull();
+    expect($result)
+        ->toBeNull();
     expect(file_exists(zip_extractor_test_marker() . '/evil.txt'))->toBeFalse();
     expect(file_exists($dest . '/evil.txt'))->toBeFalse();
 });
@@ -787,9 +857,11 @@ test('extract rejects a zip-slip entry that escapes destPath through a doubled "
     ]);
     $dest = zip_extractor_test_marker() . '/extracted';
 
-    $result = new ZipExtractor()->extract($archive, $dest, 'plugin_id', new CurrentConfig());
+    $result = new ZipExtractor()
+        ->extract($archive, $dest, 'plugin_id', new CurrentConfig());
 
-    expect($result)->toBeNull();
+    expect($result)
+        ->toBeNull();
     expect(file_exists(zip_extractor_test_marker() . '/evil.txt'))->toBeFalse();
     expect(file_exists($dest . '/evil.txt'))->toBeFalse();
 });
@@ -812,9 +884,11 @@ test('extract rejects a zip-slip entry that escapes destPath through a single ".
     ]);
     $dest = zip_extractor_test_marker() . '/extracted';
 
-    $result = new ZipExtractor()->extract($archive, $dest, 'plugin_id', new CurrentConfig());
+    $result = new ZipExtractor()
+        ->extract($archive, $dest, 'plugin_id', new CurrentConfig());
 
-    expect($result)->toBeNull();
+    expect($result)
+        ->toBeNull();
     expect(file_exists(zip_extractor_test_marker() . '/evil.txt'))->toBeFalse();
 });
 
@@ -836,12 +910,14 @@ test('extract accepts an entry whose stored path uses ".." to reference a siblin
     ]);
     $dest = zip_extractor_test_marker() . '/extracted';
 
-    $result = new ZipExtractor()->extract($archive, $dest, 'plugin_id', new CurrentConfig());
+    $result = new ZipExtractor()
+        ->extract($archive, $dest, 'plugin_id', new CurrentConfig());
 
-    expect($result)->toEqual([
-        new ExtractedFileEntry($dest . '/subdir/', 'plugin_id/subdir/', 'ok'),
-        new ExtractedFileEntry($dest . '/subdir/../other.txt', 'plugin_id/subdir/../other.txt', 'ok'),
-    ]);
+    expect($result)
+        ->toEqual([
+            new ExtractedFileEntry($dest . '/subdir/', 'plugin_id/subdir/', 'ok'),
+            new ExtractedFileEntry($dest . '/subdir/../other.txt', 'plugin_id/subdir/../other.txt', 'ok'),
+        ]);
     expect(file_get_contents($dest . '/other.txt'))->toBe('<?php // other');
 });
 
@@ -861,9 +937,11 @@ test('extract rejects a zip-slip entry that escapes destPath through consecutive
     ]);
     $dest = zip_extractor_test_marker() . '/extracted';
 
-    $result = new ZipExtractor()->extract($archive, $dest, 'plugin_id', new CurrentConfig());
+    $result = new ZipExtractor()
+        ->extract($archive, $dest, 'plugin_id', new CurrentConfig());
 
-    expect($result)->toBeNull();
+    expect($result)
+        ->toBeNull();
     expect(file_exists(zip_extractor_test_marker() . '/evil.txt'))->toBeFalse();
 });
 

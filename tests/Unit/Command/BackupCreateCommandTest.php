@@ -29,8 +29,10 @@ test('a database connection failure is reported as a formatted error', function 
 
         $exitCode = $tester->execute([]);
 
-        expect($exitCode)->toBe(Command::FAILURE);
-        expect($tester->getDisplay())->toContain('Backup failed:');
+        expect($exitCode)
+            ->toBe(Command::FAILURE);
+        expect($tester->getDisplay())
+            ->toContain('Backup failed:');
     } finally {
         if ($originalPort === false) {
             putenv('PIWIGO_DB_PORT');

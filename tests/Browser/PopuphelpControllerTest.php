@@ -12,7 +12,6 @@ use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
  * fallback -- see language/en_UK/help/maintenance.html, a real, existing
  * help topic in this fixture).
  */
-
 it('renders a real, existing help topic\'s content', function (): void {
     $page = H::gotoOk($this, '/popuphelp.php?page=maintenance');
 
@@ -35,7 +34,8 @@ it('renders the page shell with empty help content for a well-formed but unknown
     // markers) still renders, with no 2nd <h2> from a real help file's own
     // heading, unlike the 'maintenance' case above.
     $html = H::rawWebpage($page)->content();
-    expect(substr_count($html, '<h2>'))->toBe(1);
+    expect(substr_count($html, '<h2>'))
+        ->toBe(1);
     $page->assertPresent('#closeLink');
 });
 

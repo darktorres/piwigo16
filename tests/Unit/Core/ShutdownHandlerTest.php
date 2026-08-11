@@ -28,18 +28,21 @@ afterEach(function (): void {
 });
 
 test('install() wires a real SIGTERM handler', function (): void {
-    expect(pcntl_signal_get_handler(SIGTERM))->toBe(SIG_DFL);
+    expect(pcntl_signal_get_handler(SIGTERM))
+        ->toBe(SIG_DFL);
 
     ShutdownHandler::install();
 
-    expect(pcntl_signal_get_handler(SIGTERM))->toBeInstanceOf(Closure::class);
+    expect(pcntl_signal_get_handler(SIGTERM))
+        ->toBeInstanceOf(Closure::class);
 });
 
 test('install() is idempotent', function (): void {
     ShutdownHandler::install();
     ShutdownHandler::install();
 
-    expect(pcntl_signal_get_handler(SIGTERM))->toBeInstanceOf(Closure::class);
+    expect(pcntl_signal_get_handler(SIGTERM))
+        ->toBeInstanceOf(Closure::class);
 });
 
 test('install() genuinely records that it ran, not leaving $installed false', function (): void {
@@ -57,7 +60,8 @@ test('install() genuinely records that it ran, not leaving $installed false', fu
 
     $installed = new ReflectionProperty(ShutdownHandler::class, 'installed');
 
-    expect($installed->getValue())->toBeTrue();
+    expect($installed->getValue())
+        ->toBeTrue();
 });
 
 /**
@@ -76,7 +80,6 @@ test('install() genuinely records that it ran, not leaving $installed false', fu
  * (including the new $installed-reflection one above) passes
  * identically with this mutation applied.
  */
-
 test('registered callbacks run when the signal handler fires', function (): void {
     $ran = [];
     ShutdownHandler::register(function () use (&$ran): void {
@@ -89,7 +92,8 @@ test('registered callbacks run when the signal handler fires', function (): void
     $runAll = new ReflectionMethod(ShutdownHandler::class, 'runAll');
     $runAll->invoke(null);
 
-    expect($ran)->toBe(['first', 'second']);
+    expect($ran)
+        ->toBe(['first', 'second']);
 });
 
 test('reset() clears registered callbacks', function (): void {
@@ -103,7 +107,8 @@ test('reset() clears registered callbacks', function (): void {
     $runAll = new ReflectionMethod(ShutdownHandler::class, 'runAll');
     $runAll->invoke(null);
 
-    expect($ran)->toBeFalse();
+    expect($ran)
+        ->toBeFalse();
 });
 
 /**
@@ -128,7 +133,8 @@ test('a real SIGTERM signal delivered to a subprocess runs its registered callba
     // are observed from the outside, without risking this test's own
     // process.
     $autoloadPath = dirname(__DIR__, 3) . '/vendor/autoload.php';
-    expect(is_file($autoloadPath))->toBeTrue();
+    expect(is_file($autoloadPath))
+        ->toBeTrue();
     $marker = sys_get_temp_dir() . '/piwigo-shutdownhandler-sigterm-' . bin2hex(random_bytes(8)) . '.marker';
 
     $script = 'require ' . var_export($autoloadPath, true) . ';'
@@ -143,7 +149,8 @@ test('a real SIGTERM signal delivered to a subprocess runs its registered callba
         2 => ['pipe', 'w'],
     ];
     $proc = proc_open($cmd, $descriptors, $pipes);
-    expect($proc)->toBeResource();
+    expect($proc)
+        ->toBeResource();
     if ($proc === false) {
         throw new RuntimeException('proc_open failed');
     }
@@ -164,9 +171,12 @@ test('a real SIGTERM signal delivered to a subprocess runs its registered callba
 
     try {
         expect($sent)->toBeTrue()
-            ->and($exit)->toBe(143, 'ShutdownHandler subprocess exited unexpectedly: stdout=' . $stdout . ' stderr=' . $stderr)
-            ->and(file_exists($marker))->toBeTrue()
-            ->and(file_get_contents($marker))->toBe('ran');
+            ->and($exit)
+            ->toBe(143, 'ShutdownHandler subprocess exited unexpectedly: stdout=' . $stdout . ' stderr=' . $stderr)
+            ->and(file_exists($marker))
+            ->toBeTrue()
+            ->and(file_get_contents($marker))
+            ->toBe('ran');
     } finally {
         @unlink($marker);
     }

@@ -2,14 +2,14 @@
 
 declare(strict_types=1);
 
-use Piwigo\Config\CurrentConfig;
-use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Config\ConfigLoader;
+use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\ApiKeyRequestFlag;
 use Piwigo\Core\Kernel;
 use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Session\SessionEntity;
 use Piwigo\Session\SessionService;
+use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Tests\Support\KernelContainerOverride;
 use Piwigo\Tests\Support\SessionServiceTestFactory;
 
@@ -62,8 +62,10 @@ afterEach(function () use (&$originalDbHost): void {
 test('generateKey returns a string of the requested length', function (): void {
     $service = makeSessionService();
 
-    expect(strlen($service->generateKey(20)))->toBe(20)
-        ->and(strlen($service->generateKey(5)))->toBe(5);
+    expect(strlen($service->generateKey(20)))
+        ->toBe(20)
+        ->and(strlen($service->generateKey(5)))
+        ->toBe(5);
 });
 
 test('generateKey throws for a size below 1', function (): void {
@@ -78,7 +80,8 @@ test('generateKey does not throw for a size of exactly 1', function (): void {
     // size and must succeed, returning exactly a 1-character key.
     $service = makeSessionService();
 
-    expect(strlen($service->generateKey(1)))->toBe(1);
+    expect(strlen($service->generateKey(1)))
+        ->toBe(1);
 });
 
 test('generateKey never contains + or /', function (): void {
@@ -86,7 +89,9 @@ test('generateKey never contains + or /', function (): void {
 
     for ($i = 0; $i < 20; $i++) {
         $key = $service->generateKey(32);
-        expect($key)->not->toContain('+')->not->toContain('/');
+        expect($key)
+            ->not->toContain('+')
+            ->not->toContain('/');
     }
 });
 
@@ -111,7 +116,8 @@ test('generateKey only ever contains alphanumeric characters', function (): void
 
     for ($i = 0; $i < 100; $i++) {
         $key = $service->generateKey(64);
-        expect(ctype_alnum($key))->toBeTrue();
+        expect(ctype_alnum($key))
+            ->toBeTrue();
     }
 });
 
@@ -143,8 +149,10 @@ test('sessionOpen and sessionClose always return true', function (): void {
     // this test guards; loosening either signature back to plain `bool`
     // would make this assertion meaningful again.
     // @phpstan-ignore pest.expectation.redundant
-    expect($service->sessionOpen())->toBeTrue()
-        ->and($service->sessionClose())->toBeTrue();
+    expect($service->sessionOpen())
+        ->toBeTrue()
+        ->and($service->sessionClose())
+        ->toBeTrue();
 });
 
 test('getRemoteAddrSessionHash returns empty string when session_use_ip_address is off', function (): void {
@@ -152,7 +160,8 @@ test('getRemoteAddrSessionHash returns empty string when session_use_ip_address 
     $currentConfig->sessionUseIpAddress = false;
     $service = makeSessionService($currentConfig);
 
-    expect($service->getRemoteAddrSessionHash())->toBe('');
+    expect($service->getRemoteAddrSessionHash())
+        ->toBe('');
 });
 
 test('getRemoteAddrSessionHash hashes only the first two octets of an ipv4 REMOTE_ADDR when enabled', function (): void {
@@ -165,7 +174,8 @@ test('getRemoteAddrSessionHash hashes only the first two octets of an ipv4 REMOT
     $service = makeSessionService($currentConfig);
     $_SERVER['REMOTE_ADDR'] = '127.0.0.1';
 
-    expect($service->getRemoteAddrSessionHash())->toBe('7F00');
+    expect($service->getRemoteAddrSessionHash())
+        ->toBe('7F00');
 });
 
 test('getRemoteAddrSessionHash returns empty string for an ipv6 REMOTE_ADDR', function (): void {
@@ -174,7 +184,8 @@ test('getRemoteAddrSessionHash returns empty string for an ipv6 REMOTE_ADDR', fu
     $service = makeSessionService($currentConfig);
     $_SERVER['REMOTE_ADDR'] = '::1';
 
-    expect($service->getRemoteAddrSessionHash())->toBe('');
+    expect($service->getRemoteAddrSessionHash())
+        ->toBe('');
 });
 
 test('getRemoteAddrSessionHash returns empty string instead of throwing when REMOTE_ADDR is unset', function (): void {
@@ -190,7 +201,8 @@ test('getRemoteAddrSessionHash returns empty string instead of throwing when REM
     $currentConfig->sessionUseIpAddress = true;
     $service = makeSessionService($currentConfig);
 
-    expect($service->getRemoteAddrSessionHash())->toBe('');
+    expect($service->getRemoteAddrSessionHash())
+        ->toBe('');
 });
 
 test('remoteAddrHash returns empty string immediately when useIpAddress is false, without falling through to REMOTE_ADDR parsing', function (): void {
@@ -261,19 +273,24 @@ test('remoteAddrHash ignores the 3rd and 4th octets of an ipv4 REMOTE_ADDR', fun
     // never change the formatted output. Only shifting the *offset*
     // (this test's mutant) changes which octets get consumed.
 
-    expect($hashA)->toBe('0A14')
-        ->and($hashB)->toBe('0A14')
-        ->and($hashA)->toBe($hashB);
+    expect($hashA)
+        ->toBe('0A14')
+        ->and($hashB)
+        ->toBe('0A14')
+        ->and($hashA)
+        ->toBe($hashB);
 });
 
 test('setSessionVar/unsetSessionVar round-trip through $_SESSION', function (): void {
     $service = makeSessionService();
     $_SESSION = [];
 
-    expect($service->setSessionVar('foo', 'bar'))->toBeTrue()
+    expect($service->setSessionVar('foo', 'bar'))
+        ->toBeTrue()
         ->and($_SESSION['pwg_foo'] ?? null)->toBe('bar');
 
-    expect($service->unsetSessionVar('foo'))->toBeTrue()
+    expect($service->unsetSessionVar('foo'))
+        ->toBeTrue()
         ->and(isset($_SESSION['pwg_foo']))->toBeFalse();
 });
 
@@ -281,8 +298,10 @@ test('setSessionVar/unsetSessionVar return false when no session is active', fun
     $service = makeSessionService();
     unset($_SESSION);
 
-    expect($service->setSessionVar('foo', 'bar'))->toBeFalse()
-        ->and($service->unsetSessionVar('foo'))->toBeFalse();
+    expect($service->setSessionVar('foo', 'bar'))
+        ->toBeFalse()
+        ->and($service->unsetSessionVar('foo'))
+        ->toBeFalse();
 });
 
 test('sessionWrite short-circuits to true without touching the repository when the request is api_key-authenticated', function (): void {
@@ -308,7 +327,8 @@ test('sessionWrite short-circuits to true without touching the repository when t
     // above, reaching this line at all (rather than erroring out on an
     // unreachable DB connection) is the real thing under test.
     // @phpstan-ignore pest.expectation.redundant
-    expect($service->sessionWrite('some-session-id', 'some-data'))->toBeTrue();
+    expect($service->sessionWrite('some-session-id', 'some-data'))
+        ->toBeTrue();
 });
 
 test('sessionWrite throws when the container returns an unexpected type for ApiKeyRequestFlag', function (): void {
@@ -339,7 +359,8 @@ test('SessionServiceTestFactory::get returns a fresh read on every call when Ker
     $first = SessionServiceTestFactory::get();
     $second = SessionServiceTestFactory::get();
 
-    expect($first)->not->toBe($second);
+    expect($first)
+        ->not->toBe($second);
 });
 
 test('SessionServiceTestFactory::get returns the same container-shared instance across calls once Kernel is booted', function (): void {
@@ -349,85 +370,118 @@ test('SessionServiceTestFactory::get returns the same container-shared instance 
     $first = SessionServiceTestFactory::get();
     $second = SessionServiceTestFactory::get();
 
-    expect($first)->toBe($second);
+    expect($first)
+        ->toBe($second);
 });
 
 test('getFilterEnabled defaults to false when unset and casts a truthy stored value to true', function (): void {
     $service = makeSessionService();
     $_SESSION = [];
 
-    expect($service->getFilterEnabled())->toBeFalse();
+    expect($service->getFilterEnabled())
+        ->toBeFalse();
 
     $_SESSION['pwg_filter_enabled'] = 1;
-    expect($service->getFilterEnabled())->toBeTrue();
+    expect($service->getFilterEnabled())
+        ->toBeTrue();
 
     $_SESSION['pwg_filter_enabled'] = false;
-    expect($service->getFilterEnabled())->toBeFalse();
+    expect($service->getFilterEnabled())
+        ->toBeFalse();
 });
 
 test('getFilterCheckKey returns null when unset or missing a required key, and the exact shape when complete', function (): void {
     $service = makeSessionService();
     $_SESSION = [];
 
-    expect($service->getFilterCheckKey())->toBeNull();
+    expect($service->getFilterCheckKey())
+        ->toBeNull();
 
-    $_SESSION['pwg_filter_check_key'] = ['user' => 1, 'recent_period' => 2, 'time' => 3];
-    expect($service->getFilterCheckKey())->toBeNull();
+    $_SESSION['pwg_filter_check_key'] = [
+        'user' => 1,
+        'recent_period' => 2,
+        'time' => 3,
+    ];
+    expect($service->getFilterCheckKey())
+        ->toBeNull();
 
-    $_SESSION['pwg_filter_check_key'] = ['user' => 1, 'recent_period' => 2, 'time' => 3, 'date' => 4];
-    expect($service->getFilterCheckKey())->toBe(['user' => 1, 'recent_period' => 2, 'time' => 3, 'date' => 4]);
+    $_SESSION['pwg_filter_check_key'] = [
+        'user' => 1,
+        'recent_period' => 2,
+        'time' => 3,
+        'date' => 4,
+    ];
+    expect($service->getFilterCheckKey())
+        ->toBe([
+            'user' => 1,
+            'recent_period' => 2,
+            'time' => 3,
+            'date' => 4,
+        ]);
 });
 
 test('getFilterCategoriesSerialized returns null when unset or non-string, and the string when set', function (): void {
     $service = makeSessionService();
     $_SESSION = [];
 
-    expect($service->getFilterCategoriesSerialized())->toBeNull();
+    expect($service->getFilterCategoriesSerialized())
+        ->toBeNull();
 
     $_SESSION['pwg_filter_categories'] = 123;
-    expect($service->getFilterCategoriesSerialized())->toBeNull();
+    expect($service->getFilterCategoriesSerialized())
+        ->toBeNull();
 
     $_SESSION['pwg_filter_categories'] = 'a:1:{i:0;i:5;}';
-    expect($service->getFilterCategoriesSerialized())->toBe('a:1:{i:0;i:5;}');
+    expect($service->getFilterCategoriesSerialized())
+        ->toBe('a:1:{i:0;i:5;}');
 });
 
 test('getFilterVisibleCategories preserves the -1 sentinel and a real CSV string, and returns null when unset', function (): void {
     $service = makeSessionService();
     $_SESSION = [];
 
-    expect($service->getFilterVisibleCategories())->toBeNull();
+    expect($service->getFilterVisibleCategories())
+        ->toBeNull();
 
     $_SESSION['pwg_filter_visible_categories'] = -1;
-    expect($service->getFilterVisibleCategories())->toBe('-1');
+    expect($service->getFilterVisibleCategories())
+        ->toBe('-1');
 
     $_SESSION['pwg_filter_visible_categories'] = '1,2,3';
-    expect($service->getFilterVisibleCategories())->toBe('1,2,3');
+    expect($service->getFilterVisibleCategories())
+        ->toBe('1,2,3');
 });
 
 test('getFilterVisibleImages preserves the -1 sentinel and a real CSV string, and returns null when unset', function (): void {
     $service = makeSessionService();
     $_SESSION = [];
 
-    expect($service->getFilterVisibleImages())->toBeNull();
+    expect($service->getFilterVisibleImages())
+        ->toBeNull();
 
     $_SESSION['pwg_filter_visible_images'] = -1;
-    expect($service->getFilterVisibleImages())->toBe('-1');
+    expect($service->getFilterVisibleImages())
+        ->toBe('-1');
 
     $_SESSION['pwg_filter_visible_images'] = '4,5,6';
-    expect($service->getFilterVisibleImages())->toBe('4,5,6');
+    expect($service->getFilterVisibleImages())
+        ->toBe('4,5,6');
 });
 
 test('getDeviceVar returns null when unset or non-string, and the string when set', function (): void {
     $service = makeSessionService();
     $_SESSION = [];
 
-    expect($service->getDeviceVar())->toBeNull();
+    expect($service->getDeviceVar())
+        ->toBeNull();
 
     $_SESSION['pwg_device'] = 123;
-    expect($service->getDeviceVar())->toBeNull();
+    expect($service->getDeviceVar())
+        ->toBeNull();
 
     $_SESSION['pwg_device'] = 'mobile';
-    expect($service->getDeviceVar())->toBe('mobile');
+    expect($service->getDeviceVar())
+        ->toBe('mobile');
 });
 
 test('getMobileThemeVar returns null for an unset or non-bool value, and the strict bool when set', function (): void {
@@ -436,124 +490,154 @@ test('getMobileThemeVar returns null for an unset or non-bool value, and the str
     $service = makeSessionService();
     $_SESSION = [];
 
-    expect($service->getMobileThemeVar())->toBeNull();
+    expect($service->getMobileThemeVar())
+        ->toBeNull();
 
     $_SESSION['pwg_mobile_theme'] = 1;
-    expect($service->getMobileThemeVar())->toBeNull();
+    expect($service->getMobileThemeVar())
+        ->toBeNull();
 
     $_SESSION['pwg_mobile_theme'] = true;
-    expect($service->getMobileThemeVar())->toBeTrue();
+    expect($service->getMobileThemeVar())
+        ->toBeTrue();
 
     $_SESSION['pwg_mobile_theme'] = false;
-    expect($service->getMobileThemeVar())->toBeFalse();
+    expect($service->getMobileThemeVar())
+        ->toBeFalse();
 });
 
 test('getIndexDeriv returns null when unset or non-string, and the string when set', function (): void {
     $service = makeSessionService();
     $_SESSION = [];
 
-    expect($service->getIndexDeriv())->toBeNull();
+    expect($service->getIndexDeriv())
+        ->toBeNull();
 
     $_SESSION['pwg_index_deriv'] = 123;
-    expect($service->getIndexDeriv())->toBeNull();
+    expect($service->getIndexDeriv())
+        ->toBeNull();
 
     $_SESSION['pwg_index_deriv'] = '2small';
-    expect($service->getIndexDeriv())->toBe('2small');
+    expect($service->getIndexDeriv())
+        ->toBe('2small');
 });
 
 test('getPluginsShowDetails returns null for an unset or non-bool value, and the strict bool when set', function (): void {
     $service = makeSessionService();
     $_SESSION = [];
 
-    expect($service->getPluginsShowDetails())->toBeNull();
+    expect($service->getPluginsShowDetails())
+        ->toBeNull();
 
     $_SESSION['pwg_plugins_show_details'] = 1;
-    expect($service->getPluginsShowDetails())->toBeNull();
+    expect($service->getPluginsShowDetails())
+        ->toBeNull();
 
     $_SESSION['pwg_plugins_show_details'] = true;
-    expect($service->getPluginsShowDetails())->toBeTrue();
+    expect($service->getPluginsShowDetails())
+        ->toBeTrue();
 
     $_SESSION['pwg_plugins_show_details'] = false;
-    expect($service->getPluginsShowDetails())->toBeFalse();
+    expect($service->getPluginsShowDetails())
+        ->toBeFalse();
 });
 
 test('getPluginsNewOrder returns null when unset, non-string, or empty, and the string when set', function (): void {
     $service = makeSessionService();
     $_SESSION = [];
 
-    expect($service->getPluginsNewOrder())->toBeNull();
+    expect($service->getPluginsNewOrder())
+        ->toBeNull();
 
     $_SESSION['pwg_plugins_new_order'] = '';
-    expect($service->getPluginsNewOrder())->toBeNull();
+    expect($service->getPluginsNewOrder())
+        ->toBeNull();
 
     $_SESSION['pwg_plugins_new_order'] = 123;
-    expect($service->getPluginsNewOrder())->toBeNull();
+    expect($service->getPluginsNewOrder())
+        ->toBeNull();
 
     $_SESSION['pwg_plugins_new_order'] = 'name';
-    expect($service->getPluginsNewOrder())->toBe('name');
+    expect($service->getPluginsNewOrder())
+        ->toBe('name');
 });
 
 test('getCommentsOrder returns null when unset or non-string, and the string when set', function (): void {
     $service = makeSessionService();
     $_SESSION = [];
 
-    expect($service->getCommentsOrder())->toBeNull();
+    expect($service->getCommentsOrder())
+        ->toBeNull();
 
     $_SESSION['pwg_comments_order'] = 123;
-    expect($service->getCommentsOrder())->toBeNull();
+    expect($service->getCommentsOrder())
+        ->toBeNull();
 
     $_SESSION['pwg_comments_order'] = 'desc';
-    expect($service->getCommentsOrder())->toBe('desc');
+    expect($service->getCommentsOrder())
+        ->toBe('desc');
 });
 
 test('getImageOrder returns null when unset or non-numeric, and the int when set', function (): void {
     $service = makeSessionService();
     $_SESSION = [];
 
-    expect($service->getImageOrder())->toBeNull();
+    expect($service->getImageOrder())
+        ->toBeNull();
 
     $_SESSION['pwg_image_order'] = 'abc';
-    expect($service->getImageOrder())->toBeNull();
+    expect($service->getImageOrder())
+        ->toBeNull();
 
     $_SESSION['pwg_image_order'] = '3';
-    expect($service->getImageOrder())->toBe(3);
+    expect($service->getImageOrder())
+        ->toBe(3);
 
     $_SESSION['pwg_image_order'] = 7;
-    expect($service->getImageOrder())->toBe(7);
+    expect($service->getImageOrder())
+        ->toBe(7);
 });
 
 test('isShowMetadataEnabled is a pure presence check, ignoring the stored value', function (): void {
     $service = makeSessionService();
     $_SESSION = [];
 
-    expect($service->isShowMetadataEnabled())->toBeFalse();
+    expect($service->isShowMetadataEnabled())
+        ->toBeFalse();
 
     $_SESSION['pwg_show_metadata'] = 1;
-    expect($service->isShowMetadataEnabled())->toBeTrue();
+    expect($service->isShowMetadataEnabled())
+        ->toBeTrue();
 });
 
 test('getRefererImageId returns null when unset or non-numeric, and the int when set', function (): void {
     $service = makeSessionService();
     $_SESSION = [];
 
-    expect($service->getRefererImageId())->toBeNull();
+    expect($service->getRefererImageId())
+        ->toBeNull();
 
     $_SESSION['pwg_referer_image_id'] = 'abc';
-    expect($service->getRefererImageId())->toBeNull();
+    expect($service->getRefererImageId())
+        ->toBeNull();
 
     $_SESSION['pwg_referer_image_id'] = '42';
-    expect($service->getRefererImageId())->toBe(42);
+    expect($service->getRefererImageId())
+        ->toBe(42);
 });
 
 test('getPictureDeriv returns null when unset or non-string, and the string when set', function (): void {
     $service = makeSessionService();
     $_SESSION = [];
 
-    expect($service->getPictureDeriv())->toBeNull();
+    expect($service->getPictureDeriv())
+        ->toBeNull();
 
     $_SESSION['pwg_picture_deriv'] = 123;
-    expect($service->getPictureDeriv())->toBeNull();
+    expect($service->getPictureDeriv())
+        ->toBeNull();
 
     $_SESSION['pwg_picture_deriv'] = '2large';
-    expect($service->getPictureDeriv())->toBe('2large');
+    expect($service->getPictureDeriv())
+        ->toBe('2large');
 });

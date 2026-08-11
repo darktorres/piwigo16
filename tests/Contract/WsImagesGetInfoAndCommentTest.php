@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Contract;
 
+use Doctrine\DBAL\Connection;
 use Override;
 use Piwigo\Cache\CachePools;
-use Doctrine\DBAL\Connection;
 use Piwigo\Db\DbConnection;
 
 /**
@@ -29,10 +29,14 @@ final class WsImagesGetInfoAndCommentTest extends ContractTestCase
 {
     private Connection $conn;
 
-    /** @var list<int> */
+    /**
+     * @var list<int>
+     */
     private array $imageIdsToDelete = [];
 
-    /** @var list<int> */
+    /**
+     * @var list<int>
+     */
     private array $userIdsToDelete = [];
 
     #[Override]
@@ -46,15 +50,18 @@ final class WsImagesGetInfoAndCommentTest extends ContractTestCase
     protected function tearDown(): void
     {
         foreach ($this->imageIdsToDelete as $imageId) {
-            $this->conn->executeStatement('DELETE FROM ' . 'comments' . ' WHERE image_id = ?', [$imageId]);
-            $this->conn->executeStatement('DELETE FROM ' . 'images' . ' WHERE id = ?', [$imageId]);
+            $this->conn->executeStatement('DELETE FROM comments WHERE image_id = ?', [$imageId]);
+            $this->conn->executeStatement('DELETE FROM images WHERE id = ?', [$imageId]);
         }
         if ($this->userIdsToDelete !== []) {
             $this->loginAsAdmin();
             $token = $this->getPwgToken();
-            $this->callWs('pwg.users.delete', ['user_id' => $this->userIdsToDelete, 'pwg_token' => $token]);
+            $this->callWs('pwg.users.delete', [
+                'user_id' => $this->userIdsToDelete,
+                'pwg_token' => $token,
+            ]);
         }
-        $this->conn->executeStatement("UPDATE " . 'config' . " SET value = 'true' WHERE param = 'activate_comments'");
+        $this->conn->executeStatement('UPDATE config' . " SET value = 'true' WHERE param = 'activate_comments'");
         CachePools::config()->clear();
         parent::tearDown();
     }
@@ -63,7 +70,7 @@ final class WsImagesGetInfoAndCommentTest extends ContractTestCase
     {
         $filename = 'getinfo-orphan-' . uniqid() . '.jpg';
         $this->conn->executeStatement(
-            'INSERT INTO ' . 'images' . ' (file, path, md5sum) VALUES (?, ?, ?)',
+            'INSERT INTO images (file, path, md5sum) VALUES (?, ?, ?)',
             [$filename, 'upload/2026/08/01/' . $filename, md5($filename)]
         );
         $id = (int) $this->conn->lastInsertId();
@@ -74,7 +81,7 @@ final class WsImagesGetInfoAndCommentTest extends ContractTestCase
 
     // --------------------------------------------------------------- getInfo
 
-    public function test_getInfo_on_an_orphan_photo_is_access_denied_for_a_guest(): void
+    public function testGetInfoOnAnOrphanPhotoIsAccessDeniedForAGuest(): void
     {
         $imageId = $this->insertOrphanImage();
 
@@ -82,20 +89,24 @@ final class WsImagesGetInfoAndCommentTest extends ContractTestCase
         // this fixture -- SrcImage::get_size()'s getimagesize() call warns
         // "Failed to open stream" on the deliberately-missing file
         // (confirmed live, before the permission check below even runs).
-        $response = $this->ws('pwg.images.getInfo', ['image_id' => $imageId], allowPhpWarnings: true);
+        $response = $this->ws('pwg.images.getInfo', [
+            'image_id' => $imageId,
+        ], allowPhpWarnings: true);
 
         self::assertSame('fail', $response['stat']);
         self::assertSame(401, $response['err']);
         self::assertSame('Access denied', $response['message']);
     }
 
-    public function test_getInfo_on_an_orphan_photo_still_works_for_an_admin(): void
+    public function testGetInfoOnAnOrphanPhotoStillWorksForAnAdmin(): void
     {
         $imageId = $this->insertOrphanImage();
 
         // Same deliberately-missing-file getimagesize() warning as the
         // guest variant above.
-        $response = $this->wsAdmin('pwg.images.getInfo', ['image_id' => $imageId], allowPhpWarnings: true);
+        $response = $this->wsAdmin('pwg.images.getInfo', [
+            'image_id' => $imageId,
+        ], allowPhpWarnings: true);
 
         self::assertSame('ok', $response['stat']);
         $result = $response['result'];
@@ -104,36 +115,53 @@ final class WsImagesGetInfoAndCommentTest extends ContractTestCase
         self::assertSame([], $result['categories']);
     }
 
-    public function test_getInfo_hides_unvalidated_comments_from_a_guest_but_shows_them_to_an_admin(): void
+    public function testGetInfoHidesUnvalidatedCommentsFromAGuestButShowsThemToAnAdmin(): void
     {
         // Fixture comment id 5 on image 4 has validated=0 ("Pending comment
         // for moderation") -- confirmed live via a direct DB read before
         // writing this assertion, and it's the only comment on image 4.
-        $guestResponse = $this->ws('pwg.images.getInfo', ['image_id' => 4]);
+        $guestResponse = $this->ws('pwg.images.getInfo', [
+            'image_id' => 4,
+        ]);
         self::assertSame('ok', $guestResponse['stat']);
         $guestResult = $guestResponse['result'];
         self::assertIsArray($guestResult);
-        self::assertSame(['page' => 0, 'per_page' => 10, 'count' => 0, 'total_count' => 0], $guestResult['comments_paging']);
+        self::assertSame([
+            'page' => 0,
+            'per_page' => 10,
+            'count' => 0,
+            'total_count' => 0,
+        ], $guestResult['comments_paging']);
 
-        $adminResponse = $this->wsAdmin('pwg.images.getInfo', ['image_id' => 4]);
+        $adminResponse = $this->wsAdmin('pwg.images.getInfo', [
+            'image_id' => 4,
+        ]);
         self::assertSame('ok', $adminResponse['stat']);
         $adminResult = $adminResponse['result'];
         self::assertIsArray($adminResult);
-        self::assertSame(['page' => 0, 'per_page' => 10, 'count' => 1, 'total_count' => 1], $adminResult['comments_paging']);
+        self::assertSame([
+            'page' => 0,
+            'per_page' => 10,
+            'count' => 1,
+            'total_count' => 1,
+        ], $adminResult['comments_paging']);
     }
 
-    public function test_getInfo_rest_format_wraps_the_result_in_an_image_struct(): void
+    public function testGetInfoRestFormatWrapsTheResultInAnImageStruct(): void
     {
         $url = $this->baseUrl . '/ws.php?format=rest';
-        $ch  = curl_init($url);
+        $ch = curl_init($url);
         self::assertNotFalse($ch);
 
         curl_setopt_array($ch, [
             CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_POST           => true,
-            CURLOPT_USERAGENT      => self::USER_AGENT,
-            CURLOPT_POSTFIELDS     => http_build_query(['method' => 'pwg.images.getInfo', 'image_id' => 1]),
-            CURLOPT_HTTPHEADER     => $this->testHeader(),
+            CURLOPT_POST => true,
+            CURLOPT_USERAGENT => self::USER_AGENT,
+            CURLOPT_POSTFIELDS => http_build_query([
+                'method' => 'pwg.images.getInfo',
+                'image_id' => 1,
+            ]),
+            CURLOPT_HTTPHEADER => $this->testHeader(),
         ]);
 
         $body = curl_exec($ch);
@@ -151,9 +179,9 @@ final class WsImagesGetInfoAndCommentTest extends ContractTestCase
 
     // ------------------------------------------------------------ addComment
 
-    public function test_addComment_when_comments_are_disabled_returns_error(): void
+    public function testAddCommentWhenCommentsAreDisabledReturnsError(): void
     {
-        $this->conn->executeStatement("UPDATE " . 'config' . " SET value = 'false' WHERE param = 'activate_comments'");
+        $this->conn->executeStatement('UPDATE config' . " SET value = 'false' WHERE param = 'activate_comments'");
         CachePools::config()->clear();
 
         $response = $this->ws('pwg.images.addComment', [
@@ -168,7 +196,7 @@ final class WsImagesGetInfoAndCommentTest extends ContractTestCase
         self::assertSame('Comments are disabled', $response['message']);
     }
 
-    public function test_addComment_on_a_nonexistent_image_returns_invalid_param(): void
+    public function testAddCommentOnANonexistentImageReturnsInvalidParam(): void
     {
         $response = $this->ws('pwg.images.addComment', [
             'image_id' => 999999,
@@ -188,7 +216,7 @@ final class WsImagesGetInfoAndCommentTest extends ContractTestCase
      * user's comment is neither auto-validated (that requires admin) nor
      * auto-rejected, landing on the 'moderate' switch case.
      */
-    public function test_addComment_from_a_registered_non_admin_user_is_moderated(): void
+    public function testAddCommentFromARegisteredNonAdminUserIsModerated(): void
     {
         $this->loginAsAdmin();
         $adminToken = $this->getPwgToken();
@@ -210,10 +238,15 @@ final class WsImagesGetInfoAndCommentTest extends ContractTestCase
         self::assertIsInt($userId);
         $this->userIdsToDelete[] = $userId;
 
-        $login = $this->callWs('pwg.session.login', ['username' => $username, 'password' => $password]);
+        $login = $this->callWs('pwg.session.login', [
+            'username' => $username,
+            'password' => $password,
+        ]);
         self::assertSame('ok', $login['stat']);
 
-        $info = $this->callWs('pwg.images.getInfo', ['image_id' => 1]);
+        $info = $this->callWs('pwg.images.getInfo', [
+            'image_id' => 1,
+        ]);
         $infoResult = $info['result'];
         self::assertIsArray($infoResult);
         $commentPost = $infoResult['comment_post'];
@@ -242,7 +275,7 @@ final class WsImagesGetInfoAndCommentTest extends ContractTestCase
         self::assertFalse($comment['validation']);
 
         $validated = $this->conn->fetchOne(
-            'SELECT validated FROM ' . 'comments' . ' WHERE content = ?',
+            'SELECT validated FROM comments WHERE content = ?',
             [$content]
         );
         // (int) alone, not a is_bool()/is_numeric() guard first --
@@ -251,6 +284,6 @@ final class WsImagesGetInfoAndCommentTest extends ContractTestCase
         // normalizes either representation the same safe way.
         self::assertSame(0, (int) $validated);
 
-        $this->conn->executeStatement('DELETE FROM ' . 'comments' . ' WHERE content = ?', [$content]);
+        $this->conn->executeStatement('DELETE FROM comments WHERE content = ?', [$content]);
     }
 }

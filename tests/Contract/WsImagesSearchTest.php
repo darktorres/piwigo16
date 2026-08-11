@@ -30,9 +30,11 @@ namespace Piwigo\Tests\Contract;
  */
 final class WsImagesSearchTest extends ContractTestCase
 {
-    public function test_search_without_order_returns_a_valid_paging_shape(): void
+    public function testSearchWithoutOrderReturnsAValidPagingShape(): void
     {
-        $response = $this->ws('pwg.images.search', ['query' => 'Photo 1']);
+        $response = $this->ws('pwg.images.search', [
+            'query' => 'Photo 1',
+        ]);
 
         self::assertSame('ok', $response['stat']);
         $result = $response['result'];
@@ -45,7 +47,7 @@ final class WsImagesSearchTest extends ContractTestCase
         self::assertGreaterThanOrEqual(1, $paging['count']);
     }
 
-    public function test_search_with_order_by_name_sorts_results_ascending(): void
+    public function testSearchWithOrderByNameSortsResultsAscending(): void
     {
         // 'order' non-empty -> WsHelper::stdImageSqlOrder() returns a non-''
         // clause, which flips search()'s own super_order_by branch
@@ -55,7 +57,10 @@ final class WsImagesSearchTest extends ContractTestCase
         // comma splits into two independent tokens, and a direction word
         // alone ("ASC"/"DESC") isn't a recognized sortable field, so it's
         // silently dropped rather than erroring.
-        $response = $this->ws('pwg.images.search', ['query' => 'Photo', 'order' => 'name asc']);
+        $response = $this->ws('pwg.images.search', [
+            'query' => 'Photo',
+            'order' => 'name asc',
+        ]);
 
         self::assertSame('ok', $response['stat']);
         $result = $response['result'];
@@ -80,9 +85,12 @@ final class WsImagesSearchTest extends ContractTestCase
         self::assertContains(1, $ids);
     }
 
-    public function test_search_with_order_by_id_desc_sorts_results_descending(): void
+    public function testSearchWithOrderByIdDescSortsResultsDescending(): void
     {
-        $response = $this->ws('pwg.images.search', ['query' => 'Photo', 'order' => 'id desc']);
+        $response = $this->ws('pwg.images.search', [
+            'query' => 'Photo',
+            'order' => 'id desc',
+        ]);
 
         self::assertSame('ok', $response['stat']);
         $result = $response['result'];

@@ -22,19 +22,20 @@ test('toArray flattens every fixed property, and omits the 3 optional keys when 
         headElements: [],
     );
 
-    expect($context->toArray())->toBe([
-        'GALLERY_TITLE' => 'My Gallery',
-        'PAGE_BANNER' => 'My Gallery',
-        'BODY_ID' => 'theBody',
-        'CONTENT_ENCODING' => 'utf-8',
-        'PAGE_TITLE' => 'Photos',
-        'U_HOME' => 'https://example.test/',
-        'LEVEL_SEPARATOR' => ' / ',
-        'SHOW_MOBILE_APP_BANNER' => true,
-        'BODY_CLASSES' => ['theme-dark'],
-        'BODY_DATA' => '{}',
-        'head_elements' => [],
-    ]);
+    expect($context->toArray())
+        ->toBe([
+            'GALLERY_TITLE' => 'My Gallery',
+            'PAGE_BANNER' => 'My Gallery',
+            'BODY_ID' => 'theBody',
+            'CONTENT_ENCODING' => 'utf-8',
+            'PAGE_TITLE' => 'Photos',
+            'U_HOME' => 'https://example.test/',
+            'LEVEL_SEPARATOR' => ' / ',
+            'SHOW_MOBILE_APP_BANNER' => true,
+            'BODY_CLASSES' => ['theme-dark'],
+            'BODY_DATA' => '{}',
+            'head_elements' => [],
+        ]);
 });
 
 test('toArray includes header_notes/meta_ref/page_refresh when set', function (): void {
@@ -51,7 +52,10 @@ test('toArray includes header_notes/meta_ref/page_refresh when set', function ()
         bodyData: '{}',
         headerNotes: ['Maintenance scheduled'],
         metaRef: 1,
-        pageRefresh: ['TIME' => '5', 'U_REFRESH' => 'https://example.test/next'],
+        pageRefresh: [
+            'TIME' => '5',
+            'U_REFRESH' => 'https://example.test/next',
+        ],
         headElements: ['<meta name="robots" content="noindex,nofollow">'],
     );
 
@@ -59,6 +63,9 @@ test('toArray includes header_notes/meta_ref/page_refresh when set', function ()
 
     expect($result['header_notes'])->toBe(['Maintenance scheduled'])
         ->and($result['meta_ref'])->toBe(1)
-        ->and($result['page_refresh'])->toBe(['TIME' => '5', 'U_REFRESH' => 'https://example.test/next'])
+        ->and($result['page_refresh'])->toBe([
+            'TIME' => '5',
+            'U_REFRESH' => 'https://example.test/next',
+        ])
         ->and($result['head_elements'])->toBe(['<meta name="robots" content="noindex,nofollow">']);
 });

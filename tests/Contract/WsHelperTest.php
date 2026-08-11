@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Contract;
 
+use Doctrine\DBAL\Connection;
 use Override;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Paths;
-use Doctrine\DBAL\Connection;
 use Piwigo\Db\DbConnection;
 use Piwigo\Ws\WsHelper;
 
@@ -69,7 +69,10 @@ final class WsHelperTest extends ContractTestCase
      */
     private function searchIds(string $query, array $extraParams = []): array
     {
-        $response = $this->ws('pwg.images.search', array_merge(['query' => $query, 'order' => 'id asc'], $extraParams));
+        $response = $this->ws('pwg.images.search', array_merge([
+            'query' => $query,
+            'order' => 'id asc',
+        ], $extraParams));
         self::assertSame('ok', $response['stat']);
         $result = $response['result'];
         self::assertIsArray($result);
@@ -81,7 +84,7 @@ final class WsHelperTest extends ContractTestCase
 
     // ------------------------------------------------- stdImageSqlFilterCriteria
 
-    public function test_stdImageSqlFilterCriteria_invalid_date_sends_an_error_response_and_stops(): void
+    public function testStdImageSqlFilterCriteriaInvalidDateSendsAnErrorResponseAndStops(): void
     {
         // All 5 fixture images start with hit=0 -- the f_min_hit test
         // below seeds its own nonzero value rather than relying on the
@@ -118,7 +121,7 @@ final class WsHelperTest extends ContractTestCase
      */
     private function fetchFixtureImageIdsWithRating(callable $matches): array
     {
-        $rows = $this->conn->fetchAllAssociative('SELECT id, rating_score FROM ' . 'images' . ' WHERE id IN (1, 2, 3, 4, 5)');
+        $rows = $this->conn->fetchAllAssociative('SELECT id, rating_score FROM images WHERE id IN (1, 2, 3, 4, 5)');
         $matching = [];
         foreach ($rows as $row) {
             // id is a real, never-null PK; rating_score genuinely can be
@@ -134,157 +137,200 @@ final class WsHelperTest extends ContractTestCase
         return $matching;
     }
 
-    public function test_stdImageSqlFilterCriteria_f_min_rate_keeps_only_images_at_or_above(): void
+    public function testStdImageSqlFilterCriteriaFMinRateKeepsOnlyImagesAtOrAbove(): void
     {
         $expected = $this->fetchFixtureImageIdsWithRating(static fn (float $rating): bool => $rating >= 4.0);
         self::assertNotEmpty($expected, 'at least one fixture image must genuinely have a rating >= 4 for this test to prove anything');
 
-        $ids = $this->searchIds('Photo', ['f_min_rate' => 4]);
+        $ids = $this->searchIds('Photo', [
+            'f_min_rate' => 4,
+        ]);
         sort($ids);
         self::assertSame($expected, $ids);
     }
 
-    public function test_stdImageSqlFilterCriteria_f_max_rate_keeps_only_images_at_or_below(): void
+    public function testStdImageSqlFilterCriteriaFMaxRateKeepsOnlyImagesAtOrBelow(): void
     {
         $expected = $this->fetchFixtureImageIdsWithRating(static fn (float $rating): bool => $rating <= 3.0);
         self::assertNotEmpty($expected, 'at least one fixture image must genuinely have a rating <= 3 for this test to prove anything');
 
-        $ids = $this->searchIds('Photo', ['f_max_rate' => 3]);
+        $ids = $this->searchIds('Photo', [
+            'f_max_rate' => 3,
+        ]);
         sort($ids);
         self::assertSame($expected, $ids);
     }
 
-    public function test_stdImageSqlFilterCriteria_f_min_hit_keeps_only_images_at_or_above(): void
+    public function testStdImageSqlFilterCriteriaFMinHitKeepsOnlyImagesAtOrAbove(): void
     {
         // All 5 fixture images start with hit=0 -- seed a real nonzero
         // value on image 1 so the filter has something to actually
         // discriminate on.
-        $this->conn->executeStatement('UPDATE ' . 'images' . ' SET hit = 4 WHERE id = 1');
+        $this->conn->executeStatement('UPDATE images SET hit = 4 WHERE id = 1');
 
         try {
-            $ids = $this->searchIds('Photo', ['f_min_hit' => 1]);
+            $ids = $this->searchIds('Photo', [
+                'f_min_hit' => 1,
+            ]);
             self::assertSame([1], $ids);
         } finally {
-            $this->conn->executeStatement('UPDATE ' . 'images' . ' SET hit = 0 WHERE id = 1');
+            $this->conn->executeStatement('UPDATE images SET hit = 0 WHERE id = 1');
         }
     }
 
-    public function test_stdImageSqlFilterCriteria_f_min_ratio_excludes_a_squarer_image(): void
+    public function testStdImageSqlFilterCriteriaFMinRatioExcludesASquarerImage(): void
     {
         // fixture image 1 is 200x150 (ratio 1.333) -- a min_ratio above
         // that excludes it.
-        $ids = $this->searchIds('Photo 1', ['f_min_ratio' => 2]);
+        $ids = $this->searchIds('Photo 1', [
+            'f_min_ratio' => 2,
+        ]);
         self::assertSame([], $ids);
     }
 
-    public function test_stdImageSqlFilterCriteria_f_max_ratio_excludes_a_wider_image(): void
+    public function testStdImageSqlFilterCriteriaFMaxRatioExcludesAWiderImage(): void
     {
         // fixture image 1 is 200x150 (ratio 1.333) -- a max_ratio below
         // that excludes it; a max_ratio above it keeps it.
-        $excluded = $this->searchIds('Photo 1', ['f_max_ratio' => 1]);
+        $excluded = $this->searchIds('Photo 1', [
+            'f_max_ratio' => 1,
+        ]);
         self::assertSame([], $excluded);
 
-        $included = $this->searchIds('Photo 1', ['f_max_ratio' => 2]);
+        $included = $this->searchIds('Photo 1', [
+            'f_max_ratio' => 2,
+        ]);
         self::assertSame([1], $included);
     }
 
-    public function test_stdImageSqlFilterCriteria_f_max_hit_keeps_only_images_at_or_below(): void
+    public function testStdImageSqlFilterCriteriaFMaxHitKeepsOnlyImagesAtOrBelow(): void
     {
         // All 5 fixture images start with hit=0 -- seed a real nonzero
         // value on image 1 so the filter has something to actually
         // discriminate on.
-        $this->conn->executeStatement('UPDATE ' . 'images' . ' SET hit = 4 WHERE id = 1');
+        $this->conn->executeStatement('UPDATE images SET hit = 4 WHERE id = 1');
 
         try {
-            $ids = $this->searchIds('Photo', ['f_max_hit' => 3]);
+            $ids = $this->searchIds('Photo', [
+                'f_max_hit' => 3,
+            ]);
             self::assertSame([2, 3, 4, 5], $ids);
         } finally {
-            $this->conn->executeStatement('UPDATE ' . 'images' . ' SET hit = 0 WHERE id = 1');
+            $this->conn->executeStatement('UPDATE images SET hit = 0 WHERE id = 1');
         }
     }
 
-    public function test_stdImageSqlFilterCriteria_f_min_date_available_keeps_only_images_at_or_after(): void
+    public function testStdImageSqlFilterCriteriaFMinDateAvailableKeepsOnlyImagesAtOrAfter(): void
     {
         // Every fixture image shares date_available='2026-08-01 00:00:00'.
-        $included = $this->searchIds('Photo 1', ['f_min_date_available' => '2026-07-01']);
+        $included = $this->searchIds('Photo 1', [
+            'f_min_date_available' => '2026-07-01',
+        ]);
         self::assertSame([1], $included);
 
-        $excluded = $this->searchIds('Photo 1', ['f_min_date_available' => '2026-09-01']);
+        $excluded = $this->searchIds('Photo 1', [
+            'f_min_date_available' => '2026-09-01',
+        ]);
         self::assertSame([], $excluded);
     }
 
-    public function test_stdImageSqlFilterCriteria_f_max_date_available_keeps_only_images_strictly_before(): void
+    public function testStdImageSqlFilterCriteriaFMaxDateAvailableKeepsOnlyImagesStrictlyBefore(): void
     {
-        $included = $this->searchIds('Photo 1', ['f_max_date_available' => '2026-09-01']);
+        $included = $this->searchIds('Photo 1', [
+            'f_max_date_available' => '2026-09-01',
+        ]);
         self::assertSame([1], $included);
 
-        $excluded = $this->searchIds('Photo 1', ['f_max_date_available' => '2026-07-01']);
+        $excluded = $this->searchIds('Photo 1', [
+            'f_max_date_available' => '2026-07-01',
+        ]);
         self::assertSame([], $excluded);
     }
 
-    public function test_stdImageSqlFilterCriteria_f_min_date_created_keeps_only_images_at_or_after(): void
+    public function testStdImageSqlFilterCriteriaFMinDateCreatedKeepsOnlyImagesAtOrAfter(): void
     {
         // Every fixture image starts with date_creation=NULL -- `date_creation
         // >= '...'` is always false (NULL) against it, so a real value is
         // seeded first, same rationale as the f_min_hit test above.
-        $this->conn->executeStatement("UPDATE " . 'images' . " SET date_creation = '2026-01-15 00:00:00' WHERE id = 1");
+        $this->conn->executeStatement('UPDATE images' . " SET date_creation = '2026-01-15 00:00:00' WHERE id = 1");
 
         try {
-            $included = $this->searchIds('Photo 1', ['f_min_date_created' => '2026-01-10']);
+            $included = $this->searchIds('Photo 1', [
+                'f_min_date_created' => '2026-01-10',
+            ]);
             self::assertSame([1], $included);
 
-            $excluded = $this->searchIds('Photo 1', ['f_min_date_created' => '2026-01-20']);
+            $excluded = $this->searchIds('Photo 1', [
+                'f_min_date_created' => '2026-01-20',
+            ]);
             self::assertSame([], $excluded);
         } finally {
-            $this->conn->executeStatement('UPDATE ' . 'images' . ' SET date_creation = NULL WHERE id = 1');
+            $this->conn->executeStatement('UPDATE images SET date_creation = NULL WHERE id = 1');
         }
     }
 
-    public function test_stdImageSqlFilterCriteria_f_max_date_created_keeps_only_images_strictly_before(): void
+    public function testStdImageSqlFilterCriteriaFMaxDateCreatedKeepsOnlyImagesStrictlyBefore(): void
     {
-        $this->conn->executeStatement("UPDATE " . 'images' . " SET date_creation = '2026-01-15 00:00:00' WHERE id = 1");
+        $this->conn->executeStatement('UPDATE images' . " SET date_creation = '2026-01-15 00:00:00' WHERE id = 1");
 
         try {
-            $included = $this->searchIds('Photo 1', ['f_max_date_created' => '2026-01-20']);
+            $included = $this->searchIds('Photo 1', [
+                'f_max_date_created' => '2026-01-20',
+            ]);
             self::assertSame([1], $included);
 
-            $excluded = $this->searchIds('Photo 1', ['f_max_date_created' => '2026-01-10']);
+            $excluded = $this->searchIds('Photo 1', [
+                'f_max_date_created' => '2026-01-10',
+            ]);
             self::assertSame([], $excluded);
         } finally {
-            $this->conn->executeStatement('UPDATE ' . 'images' . ' SET date_creation = NULL WHERE id = 1');
+            $this->conn->executeStatement('UPDATE images SET date_creation = NULL WHERE id = 1');
         }
     }
 
-    public function test_stdImageSqlFilterCriteria_f_max_level_keeps_a_public_level_zero_image(): void
+    public function testStdImageSqlFilterCriteriaFMaxLevelKeepsAPublicLevelZeroImage(): void
     {
-        $ids = $this->searchIds('Photo 1', ['f_max_level' => 0]);
+        $ids = $this->searchIds('Photo 1', [
+            'f_max_level' => 0,
+        ]);
         self::assertSame([1], $ids);
     }
 
     // -------------------------------------------------------- stdImageSqlOrder
 
-    public function test_stdImageSqlOrder_date_posted_alias_and_date_created_alias_are_accepted(): void
+    public function testStdImageSqlOrderDatePostedAliasAndDateCreatedAliasAreAccepted(): void
     {
-        $postedResponse = $this->ws('pwg.images.search', ['query' => 'Photo 1', 'order' => 'date_posted asc']);
+        $postedResponse = $this->ws('pwg.images.search', [
+            'query' => 'Photo 1',
+            'order' => 'date_posted asc',
+        ]);
         self::assertSame('ok', $postedResponse['stat']);
 
-        $createdResponse = $this->ws('pwg.images.search', ['query' => 'Photo 1', 'order' => 'date_created asc']);
+        $createdResponse = $this->ws('pwg.images.search', [
+            'query' => 'Photo 1',
+            'order' => 'date_created asc',
+        ]);
         self::assertSame('ok', $createdResponse['stat']);
     }
 
-    public function test_stdImageSqlOrder_random_alias_is_accepted(): void
+    public function testStdImageSqlOrderRandomAliasIsAccepted(): void
     {
-        $response = $this->ws('pwg.images.search', ['query' => 'Photo', 'order' => 'random']);
+        $response = $this->ws('pwg.images.search', [
+            'query' => 'Photo',
+            'order' => 'random',
+        ]);
 
         self::assertSame('ok', $response['stat']);
     }
 
-    public function test_stdImageSqlOrder_drops_an_unrecognized_field_but_keeps_the_valid_one(): void
+    public function testStdImageSqlOrderDropsAnUnrecognizedFieldButKeepsTheValidOne(): void
     {
         // Comma-separated tokens are parsed independently -- an
         // unrecognized field name is silently dropped rather than erroring,
         // while a valid one still takes effect.
-        $ids = $this->searchIds('Photo', ['order' => 'not_a_real_column, id desc']);
+        $ids = $this->searchIds('Photo', [
+            'order' => 'not_a_real_column, id desc',
+        ]);
         $sorted = $ids;
         rsort($sorted, SORT_NUMERIC);
         self::assertSame($sorted, $ids);
@@ -301,35 +347,39 @@ final class WsHelperTest extends ContractTestCase
      * comma) would be a real MySQL syntax error -- a 500 here, not a
      * quietly-wrong sort order.
      */
-    public function test_stdImageSqlOrder_joins_multiple_valid_fields_with_a_comma(): void
+    public function testStdImageSqlOrderJoinsMultipleValidFieldsWithAComma(): void
     {
         // All 5 fixture images share hit=0 -- ties on the primary sort key
         // fall through to the secondary "id desc", which only takes effect
         // if the 2 fields were joined into one real ORDER BY clause.
-        $ids = $this->searchIds('Photo', ['order' => 'hit asc, id desc']);
+        $ids = $this->searchIds('Photo', [
+            'order' => 'hit asc, id desc',
+        ]);
         self::assertSame([5, 4, 3, 2, 1], $ids);
     }
 
     // ---------------------------------------------------------------- stdGetUrls
 
-    public function test_stdGetUrls_uses_the_element_url_service_for_a_non_original_representative(): void
+    public function testStdGetUrlsUsesTheElementUrlServiceForANonOriginalRepresentative(): void
     {
         // representative_ext non-empty -> SrcImage::is_original() is false
         // (IS_MIMETYPE branch instead) -- stdGetUrls()'s else branch
         // (urlService->getElementUrl()) instead of the is_original()
         // element_url/get_url() branch.
         $this->conn->executeStatement(
-            'INSERT INTO ' . 'images' . ' (file, path, md5sum, representative_ext, width, height) VALUES (?, ?, ?, ?, ?, ?)',
+            'INSERT INTO images (file, path, md5sum, representative_ext, width, height) VALUES (?, ?, ?, ?, ?, ?)',
             ['video-helper-test.mp4', 'upload/video-helper-test.mp4', md5('video-helper-test'), 'mp4', 200, 150]
         );
         $imageId = (int) $this->conn->lastInsertId();
         $this->conn->executeStatement(
-            'INSERT INTO ' . 'image_category' . ' (image_id, category_id) VALUES (?, 1)',
+            'INSERT INTO image_category (image_id, category_id) VALUES (?, 1)',
             [$imageId]
         );
 
         try {
-            $response = $this->ws('pwg.images.getInfo', ['image_id' => $imageId]);
+            $response = $this->ws('pwg.images.getInfo', [
+                'image_id' => $imageId,
+            ]);
 
             self::assertSame('ok', $response['stat']);
             $result = $response['result'];
@@ -339,14 +389,14 @@ final class WsHelperTest extends ContractTestCase
             self::assertIsString($result['download_url']);
             self::assertStringContainsString('part=e&download', $result['download_url']);
         } finally {
-            $this->conn->executeStatement('DELETE FROM ' . 'image_category' . ' WHERE image_id = ?', [$imageId]);
-            $this->conn->executeStatement('DELETE FROM ' . 'images' . ' WHERE id = ?', [$imageId]);
+            $this->conn->executeStatement('DELETE FROM image_category WHERE image_id = ?', [$imageId]);
+            $this->conn->executeStatement('DELETE FROM images WHERE id = ?', [$imageId]);
         }
     }
 
     // -------------------------------------------------- categoriesFlatlistToTree
 
-    public function test_categoriesFlatlistToTree_nests_a_child_under_its_parent(): void
+    public function testCategoriesFlatlistToTreeNestsAChildUnderItsParent(): void
     {
         // fixture category 2 ("Nested Sub Album") is a real child of
         // category 1 ("Sample Album") -- confirmed live via a direct DB
@@ -378,7 +428,7 @@ final class WsHelperTest extends ContractTestCase
      * route (categories.id is a real int PK), so this calls the
      * real public static method directly with a genuinely malformed row.
      */
-    public function test_categoriesFlatlistToTree_skips_a_row_with_a_non_scalar_id(): void
+    public function testCategoriesFlatlistToTreeSkipsARowWithANonScalarId(): void
     {
         Kernel::boot(Paths::fromRoot(dirname(__DIR__, 2)));
         try {
@@ -386,8 +436,13 @@ final class WsHelperTest extends ContractTestCase
             self::assertInstanceOf(WsHelper::class, $wsHelper);
 
             $tree = $wsHelper->categoriesFlatlistToTree([
-                ['id' => ['not', 'scalar']],
-                ['id' => 1, 'name' => 'Valid Root'],
+                [
+                    'id' => ['not', 'scalar'],
+                ],
+                [
+                    'id' => 1,
+                    'name' => 'Valid Root',
+                ],
             ]);
         } finally {
             Kernel::reset();
@@ -402,7 +457,7 @@ final class WsHelperTest extends ContractTestCase
      * guard instead: categories.id_uppercat is a real nullable int
      * FK, never a non-scalar value through the real WS route.
      */
-    public function test_categoriesFlatlistToTree_skips_a_child_row_with_a_non_scalar_uppercat_id(): void
+    public function testCategoriesFlatlistToTreeSkipsAChildRowWithANonScalarUppercatId(): void
     {
         Kernel::boot(Paths::fromRoot(dirname(__DIR__, 2)));
         try {
@@ -410,8 +465,15 @@ final class WsHelperTest extends ContractTestCase
             self::assertInstanceOf(WsHelper::class, $wsHelper);
 
             $tree = $wsHelper->categoriesFlatlistToTree([
-                ['id' => 1, 'name' => 'Root'],
-                ['id' => 2, 'id_uppercat' => ['not', 'scalar'], 'name' => 'Bad Child'],
+                [
+                    'id' => 1,
+                    'name' => 'Root',
+                ],
+                [
+                    'id' => 2,
+                    'id_uppercat' => ['not', 'scalar'],
+                    'name' => 'Bad Child',
+                ],
             ]);
         } finally {
             Kernel::reset();

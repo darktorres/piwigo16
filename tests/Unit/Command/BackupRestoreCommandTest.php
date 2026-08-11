@@ -33,30 +33,41 @@ test('aborts when the file argument is an empty string', function (): void {
     $command = new BackupRestoreCommand(new BackupService());
     $tester = new CommandTester($command);
 
-    $exitCode = $tester->execute(['file' => '']);
+    $exitCode = $tester->execute([
+        'file' => '',
+    ]);
 
-    expect($exitCode)->toBe(Command::INVALID)
-        ->and($tester->getDisplay())->toContain('Missing required argument: file')
+    expect($exitCode)
+        ->toBe(Command::INVALID)
+        ->and($tester->getDisplay())
+        ->toContain('Missing required argument: file')
         // Proves the missing-argument branch actually returns instead of
         // falling through into the is_file() check below it -- an empty
         // $file would also fail that check, printing its own "not found"
         // error, which toContain() alone wouldn't catch layering on top of.
-        ->and($tester->getDisplay())->not->toContain('not found');
+        ->and($tester->getDisplay())
+        ->not->toContain('not found');
 });
 
 test('aborts when the file does not exist', function (): void {
     $command = new BackupRestoreCommand(new BackupService());
     $tester = new CommandTester($command);
 
-    $exitCode = $tester->execute(['file' => '/nonexistent/piwigo-backup.tar.gz', '--force' => true]);
+    $exitCode = $tester->execute([
+        'file' => '/nonexistent/piwigo-backup.tar.gz',
+        '--force' => true,
+    ]);
 
-    expect($exitCode)->toBe(Command::INVALID)
-        ->and($tester->getDisplay())->toContain('not found');
+    expect($exitCode)
+        ->toBe(Command::INVALID)
+        ->and($tester->getDisplay())
+        ->toContain('not found');
 });
 
 test('aborts without --force even when the file exists', function (): void {
     $tmpFile = tempnam(sys_get_temp_dir(), 'piwigo-backup-test-');
-    expect($tmpFile)->not->toBeFalse();
+    expect($tmpFile)
+        ->not->toBeFalse();
     if ($tmpFile === false) {
         return;
     }
@@ -65,10 +76,14 @@ test('aborts without --force even when the file exists', function (): void {
         $command = new BackupRestoreCommand(new BackupService());
         $tester = new CommandTester($command);
 
-        $exitCode = $tester->execute(['file' => $tmpFile]);
+        $exitCode = $tester->execute([
+            'file' => $tmpFile,
+        ]);
 
-        expect($exitCode)->toBe(Command::INVALID)
-            ->and($tester->getDisplay())->toContain('Refusing to restore without --force');
+        expect($exitCode)
+            ->toBe(Command::INVALID)
+            ->and($tester->getDisplay())
+            ->toContain('Refusing to restore without --force');
     } finally {
         unlink($tmpFile);
     }
@@ -76,7 +91,8 @@ test('aborts without --force even when the file exists', function (): void {
 
 test('a valid file with --force reaches the backup service', function (): void {
     $tmpFile = tempnam(sys_get_temp_dir(), 'piwigo-backup-test-');
-    expect($tmpFile)->not->toBeFalse();
+    expect($tmpFile)
+        ->not->toBeFalse();
     if ($tmpFile === false) {
         return;
     }
@@ -86,17 +102,24 @@ test('a valid file with --force reaches the backup service', function (): void {
         $command = new BackupRestoreCommand(new BackupService());
         $tester = new CommandTester($command);
 
-        $exitCode = $tester->execute(['file' => $tmpFile, '--force' => true, '--database' => 'piwigo_test_bogus']);
+        $exitCode = $tester->execute([
+            'file' => $tmpFile,
+            '--force' => true,
+            '--database' => 'piwigo_test_bogus',
+        ]);
 
-        expect($exitCode)->toBe(Command::FAILURE)
-            ->and($tester->getDisplay())->toContain('Restore failed');
+        expect($exitCode)
+            ->toBe(Command::FAILURE)
+            ->and($tester->getDisplay())
+            ->toContain('Restore failed');
     } finally {
         unlink($tmpFile);
     }
 });
 
 test('resolveTargetDatabase prefers a real --database value over the env fallback', function (): void {
-    expect(backup_restore_resolve_target_database('my_custom_db'))->toBe('my_custom_db');
+    expect(backup_restore_resolve_target_database('my_custom_db'))
+        ->toBe('my_custom_db');
 });
 
 test('resolveTargetDatabase falls back to DbCredentials::fromEnv() for an empty or absent --database', function (): void {
@@ -104,8 +127,10 @@ test('resolveTargetDatabase falls back to DbCredentials::fromEnv() for an empty 
     putenv('PIWIGO_DB_BASE=fallback_db');
 
     try {
-        expect(backup_restore_resolve_target_database(''))->toBe('fallback_db')
-            ->and(backup_restore_resolve_target_database(null))->toBe('fallback_db');
+        expect(backup_restore_resolve_target_database(''))
+            ->toBe('fallback_db')
+            ->and(backup_restore_resolve_target_database(null))
+            ->toBe('fallback_db');
     } finally {
         putenv($original === false ? 'PIWIGO_DB_BASE' : 'PIWIGO_DB_BASE=' . $original);
     }

@@ -22,7 +22,9 @@ final class WsPermissionsMutationTest extends ContractTestCase
 {
     private ?int $privateCatId = null;
 
-    /** @var list<int> */
+    /**
+     * @var list<int>
+     */
     private array $groupIdsToDelete = [];
 
     #[Override]
@@ -38,9 +40,9 @@ final class WsPermissionsMutationTest extends ContractTestCase
         if ($this->privateCatId !== null) {
             $token = $this->getPwgToken();
             $this->callWs('pwg.categories.delete', [
-                'category_id'         => $this->privateCatId,
+                'category_id' => $this->privateCatId,
                 'photo_deletion_mode' => 'no_delete',
-                'pwg_token'           => $token,
+                'pwg_token' => $token,
             ]);
             $this->privateCatId = null;
         }
@@ -49,7 +51,7 @@ final class WsPermissionsMutationTest extends ContractTestCase
             $token = $this->getPwgToken();
             foreach ($this->groupIdsToDelete as $groupId) {
                 $this->callWs('pwg.groups.delete', [
-                    'group_id'  => $groupId,
+                    'group_id' => $groupId,
                     'pwg_token' => $token,
                 ]);
             }
@@ -106,48 +108,48 @@ final class WsPermissionsMutationTest extends ContractTestCase
         return (int) $id;
     }
 
-    public function test_add_permission_returns_ok(): void
+    public function testAddPermissionReturnsOk(): void
     {
         $token = $this->getPwgToken();
-        $cat   = $this->callWs('pwg.categories.add', [
-            'name'   => 'ct_private_' . uniqid(),
+        $cat = $this->callWs('pwg.categories.add', [
+            'name' => 'ct_private_' . uniqid(),
             'status' => 'private',
         ]);
         $this->privateCatId = self::resultId($cat);
 
-        $users  = $this->callWs('pwg.users.getList', []);
+        $users = $this->callWs('pwg.users.getList', []);
         $userId = self::firstUserId($users);
 
         $response = $this->callWs('pwg.permissions.add', [
-            'cat_id'    => [$this->privateCatId],
-            'user_id'   => [$userId],
+            'cat_id' => [$this->privateCatId],
+            'user_id' => [$userId],
             'pwg_token' => $token,
         ]);
 
         self::assertSame('ok', $response['stat']);
     }
 
-    public function test_remove_permission_returns_ok(): void
+    public function testRemovePermissionReturnsOk(): void
     {
         $token = $this->getPwgToken();
-        $cat   = $this->callWs('pwg.categories.add', [
-            'name'   => 'ct_private_' . uniqid(),
+        $cat = $this->callWs('pwg.categories.add', [
+            'name' => 'ct_private_' . uniqid(),
             'status' => 'private',
         ]);
         $this->privateCatId = self::resultId($cat);
 
-        $users  = $this->callWs('pwg.users.getList', []);
+        $users = $this->callWs('pwg.users.getList', []);
         $userId = self::firstUserId($users);
 
         $this->callWs('pwg.permissions.add', [
-            'cat_id'    => [$this->privateCatId],
-            'user_id'   => [$userId],
+            'cat_id' => [$this->privateCatId],
+            'user_id' => [$userId],
             'pwg_token' => $token,
         ]);
 
         $response = $this->callWs('pwg.permissions.remove', [
-            'cat_id'    => [$this->privateCatId],
-            'user_id'   => [$userId],
+            'cat_id' => [$this->privateCatId],
+            'user_id' => [$userId],
             'pwg_token' => $token,
         ]);
 
@@ -159,7 +161,7 @@ final class WsPermissionsMutationTest extends ContractTestCase
      * groupAccess mass-insert) -- WsPermissionsMutationTest's other tests
      * only ever pass user_id, never group_id.
      */
-    public function test_add_group_permission_grants_group_access_to_the_category(): void
+    public function testAddGroupPermissionGrantsGroupAccessToTheCategory(): void
     {
         $token = $this->getPwgToken();
         $cat = $this->callWs('pwg.categories.add', [
@@ -187,7 +189,7 @@ final class WsPermissionsMutationTest extends ContractTestCase
         self::assertContains(1, $entry['groups']);
     }
 
-    public function test_remove_group_permission_revokes_group_access(): void
+    public function testRemoveGroupPermissionRevokesGroupAccess(): void
     {
         $token = $this->getPwgToken();
         $cat = $this->callWs('pwg.categories.add', [
@@ -221,7 +223,7 @@ final class WsPermissionsMutationTest extends ContractTestCase
         }
     }
 
-    public function test_getList_too_many_filters_returns_error(): void
+    public function testGetListTooManyFiltersReturnsError(): void
     {
         $response = $this->callWs('pwg.permissions.getList', [
             'cat_id' => [1],
@@ -233,7 +235,7 @@ final class WsPermissionsMutationTest extends ContractTestCase
         self::assertSame('Too many parameters, provide cat_id OR user_id OR group_id', $response['message']);
     }
 
-    public function test_getList_filters_by_group_id(): void
+    public function testGetListFiltersByGroupId(): void
     {
         $token = $this->getPwgToken();
         $cat = $this->callWs('pwg.categories.add', [
@@ -247,7 +249,9 @@ final class WsPermissionsMutationTest extends ContractTestCase
             'pwg_token' => $token,
         ]);
 
-        $matching = $this->callWs('pwg.permissions.getList', ['group_id' => [1]]);
+        $matching = $this->callWs('pwg.permissions.getList', [
+            'group_id' => [1],
+        ]);
         self::assertSame('ok', $matching['stat']);
         $matchingResult = $matching['result'];
         self::assertIsArray($matchingResult);
@@ -255,7 +259,9 @@ final class WsPermissionsMutationTest extends ContractTestCase
         $matchingIds = array_column($matchingResult['categories'], 'id');
         self::assertContains($this->privateCatId, $matchingIds);
 
-        $nonMatching = $this->callWs('pwg.permissions.getList', ['group_id' => [999999]]);
+        $nonMatching = $this->callWs('pwg.permissions.getList', [
+            'group_id' => [999999],
+        ]);
         self::assertSame('ok', $nonMatching['stat']);
         $nonMatchingResult = $nonMatching['result'];
         self::assertIsArray($nonMatchingResult);
@@ -282,10 +288,12 @@ final class WsPermissionsMutationTest extends ContractTestCase
      * inner join through user_group also finds nothing), the groups
      * loop is left as the first and only one to touch this category.
      */
-    public function test_add_group_permission_with_a_memberless_group_sets_the_category_via_the_groups_loop(): void
+    public function testAddGroupPermissionWithAMemberlessGroupSetsTheCategoryViaTheGroupsLoop(): void
     {
         $token = $this->getPwgToken();
-        $group = $this->callWs('pwg.groups.add', ['name' => 'ct_permless_group_' . uniqid()]);
+        $group = $this->callWs('pwg.groups.add', [
+            'name' => 'ct_permless_group_' . uniqid(),
+        ]);
         $groupResult = $group['result'] ?? null;
         self::assertIsArray($groupResult);
         $groups = $groupResult['groups'] ?? null;
@@ -304,8 +312,8 @@ final class WsPermissionsMutationTest extends ContractTestCase
 
         $setInfo = $this->callWs('pwg.categories.setInfo', [
             'category_id' => $this->privateCatId,
-            'status'      => 'private',
-            'pwg_token'   => $token,
+            'status' => 'private',
+            'pwg_token' => $token,
         ]);
         self::assertSame('ok', $setInfo['stat']);
 
@@ -335,7 +343,7 @@ final class WsPermissionsMutationTest extends ContractTestCase
      * test_getList_filters_by_group_id() above only ever exercises the
      * sibling group_id filter.
      */
-    public function test_getList_filters_by_user_id_with_no_match_excludes_the_category(): void
+    public function testGetListFiltersByUserIdWithNoMatchExcludesTheCategory(): void
     {
         $token = $this->getPwgToken();
         $cat = $this->callWs('pwg.categories.add', [
@@ -344,16 +352,18 @@ final class WsPermissionsMutationTest extends ContractTestCase
         ]);
         $this->privateCatId = self::resultId($cat);
 
-        $users  = $this->callWs('pwg.users.getList', []);
+        $users = $this->callWs('pwg.users.getList', []);
         $userId = self::firstUserId($users);
 
         $this->callWs('pwg.permissions.add', [
-            'cat_id'    => [$this->privateCatId],
-            'user_id'   => [$userId],
+            'cat_id' => [$this->privateCatId],
+            'user_id' => [$userId],
             'pwg_token' => $token,
         ]);
 
-        $matching = $this->callWs('pwg.permissions.getList', ['user_id' => [$userId]]);
+        $matching = $this->callWs('pwg.permissions.getList', [
+            'user_id' => [$userId],
+        ]);
         self::assertSame('ok', $matching['stat']);
         $matchingResult = $matching['result'];
         self::assertIsArray($matchingResult);
@@ -361,14 +371,16 @@ final class WsPermissionsMutationTest extends ContractTestCase
         $matchingIds = array_column($matchingResult['categories'], 'id');
         self::assertContains($this->privateCatId, $matchingIds);
 
-        $nonMatching = $this->callWs('pwg.permissions.getList', ['user_id' => [999999]]);
+        $nonMatching = $this->callWs('pwg.permissions.getList', [
+            'user_id' => [999999],
+        ]);
         self::assertSame('ok', $nonMatching['stat']);
         $nonMatchingResult = $nonMatching['result'];
         self::assertIsArray($nonMatchingResult);
         self::assertSame([], $nonMatchingResult['categories'], 'a category with no matching direct or indirect user must be unset from the result');
     }
 
-    public function test_add_with_an_invalid_token_returns_error(): void
+    public function testAddWithAnInvalidTokenReturnsError(): void
     {
         $cat = $this->callWs('pwg.categories.add', [
             'name' => 'ct_private_wrong_token_' . uniqid(),
@@ -377,8 +389,8 @@ final class WsPermissionsMutationTest extends ContractTestCase
         $this->privateCatId = self::resultId($cat);
 
         $response = $this->callWs('pwg.permissions.add', [
-            'cat_id'    => [$this->privateCatId],
-            'user_id'   => [1],
+            'cat_id' => [$this->privateCatId],
+            'user_id' => [1],
             'pwg_token' => 'wrong',
         ]);
 
@@ -387,11 +399,11 @@ final class WsPermissionsMutationTest extends ContractTestCase
         self::assertSame('Invalid security token', $response['message']);
     }
 
-    public function test_remove_with_an_invalid_token_returns_error(): void
+    public function testRemoveWithAnInvalidTokenReturnsError(): void
     {
         $response = $this->callWs('pwg.permissions.remove', [
-            'cat_id'    => [1],
-            'user_id'   => [1],
+            'cat_id' => [1],
+            'user_id' => [1],
             'pwg_token' => 'wrong',
         ]);
 
@@ -406,7 +418,7 @@ final class WsPermissionsMutationTest extends ContractTestCase
      * group_id test in this file passes the (default `false`) `recursive`
      * omitted entirely, only ever reaching getUppercatIds().
      */
-    public function test_add_recursive_group_permission_also_grants_access_to_a_subcategory(): void
+    public function testAddRecursiveGroupPermissionAlsoGrantsAccessToASubcategory(): void
     {
         $token = $this->getPwgToken();
         $parent = $this->callWs('pwg.categories.add', [
@@ -430,7 +442,9 @@ final class WsPermissionsMutationTest extends ContractTestCase
         ]);
         self::assertSame('ok', $response['stat']);
 
-        $childList = $this->callWs('pwg.permissions.getList', ['cat_id' => [$childId]]);
+        $childList = $this->callWs('pwg.permissions.getList', [
+            'cat_id' => [$childId],
+        ]);
         self::assertSame('ok', $childList['stat']);
         $childResult = $childList['result'];
         self::assertIsArray($childResult);
@@ -445,9 +459,9 @@ final class WsPermissionsMutationTest extends ContractTestCase
         // $this->privateCatId handling) would orphan the child rather than
         // remove it, so it's deleted explicitly here first.
         $this->callWs('pwg.categories.delete', [
-            'category_id'         => $childId,
+            'category_id' => $childId,
             'photo_deletion_mode' => 'no_delete',
-            'pwg_token'           => $token,
+            'pwg_token' => $token,
         ]);
     }
 }

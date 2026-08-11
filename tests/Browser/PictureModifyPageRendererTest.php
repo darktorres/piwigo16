@@ -2,19 +2,20 @@
 
 declare(strict_types=1);
 
-use PgSql\Connection;
 use Pest\Browser\Api\AwaitableWebpage;
 use Pest\Browser\Api\PendingAwaitablePage;
 use Pest\Browser\Api\Webpage;
+use PgSql\Connection;
 use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
-
 
 function pictureModifyDbConnect(): mysqli|Connection
 {
     return H::connect();
 }
 
-/** @return array{name: ?string, author: ?string, comment: ?string, level: int, date_creation: ?string}|null */
+/**
+ * @return array{name: ?string, author: ?string, comment: ?string, level: int, date_creation: ?string}|null
+ */
 function pictureModifyImageRow(int $imageId): ?array
 {
     $db = pictureModifyDbConnect();
@@ -193,7 +194,10 @@ function pictureModifyCurlLoginSession(string $username, string $password): arra
         $status = curl_getinfo($ch, CURLINFO_RESPONSE_CODE);
         unset($ch);
 
-        return ['status' => $status, 'body' => is_string($body) ? $body : ''];
+        return [
+            'status' => $status,
+            'body' => is_string($body) ? $body : '',
+        ];
     };
 
     $baseUrl = H::baseUrl();
@@ -204,12 +208,18 @@ function pictureModifyCurlLoginSession(string $username, string $password): arra
         'login' => 'Login',
     ]);
 
-    return ['curl' => $curl, 'cookieJar' => $cookieJar, 'baseUrl' => $baseUrl];
+    return [
+        'curl' => $curl,
+        'cookieJar' => $cookieJar,
+        'baseUrl' => $baseUrl,
+    ];
 }
 
 it('updates a photo\'s title/author/comment/level/date, sets a tag, and reports success', function (): void {
     $page = H::loginAsAdmin($this);
-    $album = H::wsCall($page, 'pwg.categories.add', ['name' => 'Photo Modify Album ' . uniqid()]);
+    $album = H::wsCall($page, 'pwg.categories.add', [
+        'name' => 'Photo Modify Album ' . uniqid(),
+    ]);
     $albumResult = $album['result'] ?? null;
     if (! is_array($albumResult) || ! is_numeric($albumResult['id'] ?? null)) {
         throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($album, true));
@@ -219,7 +229,8 @@ it('updates a photo\'s title/author/comment/level/date, sets a tag, and reports 
     $imageId = H::uploadPhotoViaApi($image, $albumId, 'Original Name');
     @unlink($image);
 
-    expect(pictureModifyImageHasTag($imageId, 1))->toBeFalse();
+    expect(pictureModifyImageHasTag($imageId, 1))
+        ->toBeFalse();
 
     $result = H::adminPost($page, '/admin.php?page=photo&image_id=' . $imageId, [
         'pwg_token' => H::pwgToken($page),
@@ -254,12 +265,15 @@ it('updates a photo\'s title/author/comment/level/date, sets a tag, and reports 
     expect($row['comment'])->toBe('Updated description');
     expect($row['level'])->toBe(2);
     expect($row['date_creation'])->toBe('2026-01-15 00:00:00');
-    expect(pictureModifyImageHasTag($imageId, 1))->toBeTrue();
+    expect(pictureModifyImageHasTag($imageId, 1))
+        ->toBeTrue();
 });
 
 it('rejects a photo-modify submission with a missing CSRF token', function (): void {
     $page = H::loginAsAdmin($this);
-    $album = H::wsCall($page, 'pwg.categories.add', ['name' => 'Photo Modify CSRF Album ' . uniqid()]);
+    $album = H::wsCall($page, 'pwg.categories.add', [
+        'name' => 'Photo Modify CSRF Album ' . uniqid(),
+    ]);
     $albumResult = $album['result'] ?? null;
     if (! is_array($albumResult) || ! is_numeric($albumResult['id'] ?? null)) {
         throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($album, true));
@@ -281,7 +295,9 @@ it('rejects a photo-modify submission with a missing CSRF token', function (): v
 
 it('sets a plain (non-array) tag name and assigns the photo as its new album representative', function (): void {
     $page = H::loginAsAdmin($this);
-    $album = H::wsCall($page, 'pwg.categories.add', ['name' => 'Photo Modify Represent Album ' . uniqid()]);
+    $album = H::wsCall($page, 'pwg.categories.add', [
+        'name' => 'Photo Modify Represent Album ' . uniqid(),
+    ]);
     $albumResult = $album['result'] ?? null;
     if (! is_array($albumResult) || ! is_numeric($albumResult['id'] ?? null)) {
         throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($album, true));
@@ -303,7 +319,8 @@ it('sets a plain (non-array) tag name and assigns the photo as its new album rep
     ]);
 
     expect($result['status'])->toBe(200);
-    expect(pictureModifyImageHasTag($imageId, 2))->toBeTrue();
+    expect(pictureModifyImageHasTag($imageId, 2))
+        ->toBeTrue();
 
     $db = pictureModifyDbConnect();
     $assoc = H::dbFetchAssoc($db, sprintf('SELECT representative_picture_id FROM categories WHERE id = %d', $albumId));
@@ -313,7 +330,9 @@ it('sets a plain (non-array) tag name and assigns the photo as its new album rep
 
 it('synchronizes metadata from file via the sync_metadata CSRF-gated action', function (): void {
     $page = H::loginAsAdmin($this);
-    $album = H::wsCall($page, 'pwg.categories.add', ['name' => 'Photo Modify Sync Album ' . uniqid()]);
+    $album = H::wsCall($page, 'pwg.categories.add', [
+        'name' => 'Photo Modify Sync Album ' . uniqid(),
+    ]);
     $albumResult = $album['result'] ?? null;
     if (! is_array($albumResult) || ! is_numeric($albumResult['id'] ?? null)) {
         throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($album, true));
@@ -333,7 +352,9 @@ it('synchronizes metadata from file via the sync_metadata CSRF-gated action', fu
 
 it('deletes the photo via the CSRF-gated delete action and redirects to the gallery root', function (): void {
     $page = H::loginAsAdmin($this);
-    $album = H::wsCall($page, 'pwg.categories.add', ['name' => 'Photo Modify Delete Album ' . uniqid()]);
+    $album = H::wsCall($page, 'pwg.categories.add', [
+        'name' => 'Photo Modify Delete Album ' . uniqid(),
+    ]);
     $albumResult = $album['result'] ?? null;
     if (! is_array($albumResult) || ! is_numeric($albumResult['id'] ?? null)) {
         throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($album, true));
@@ -350,7 +371,8 @@ it('deletes the photo via the CSRF-gated delete action and redirects to the gall
     $result = H::rawGet($page, '/admin.php?page=photo&image_id=' . $imageId . '&delete=1&pwg_token=' . $token);
 
     expect($result['status'])->toBe(0);
-    expect(pictureModifyImageRow($imageId))->toBeNull();
+    expect(pictureModifyImageRow($imageId))
+        ->toBeNull();
 });
 
 it('honors the session edit context as the delete redirect target instead of the default gallery root', function (): void {
@@ -368,12 +390,16 @@ it('honors the session edit context as the delete redirect target instead of the
     $curl = $session['curl'];
     $baseUrl = $session['baseUrl'];
 
-    $albumResponse = $curl($baseUrl . '/ws.php?format=json', ['method' => 'pwg.categories.add', 'name' => 'PM Delete Context Album ' . uniqid()]);
+    $albumResponse = $curl($baseUrl . '/ws.php?format=json', [
+        'method' => 'pwg.categories.add',
+        'name' => 'PM Delete Context Album ' . uniqid(),
+    ]);
     $albumData = json_decode($albumResponse['body'], true);
     $albumResult = is_array($albumData) ? ($albumData['result'] ?? null) : null;
     $albumIdRaw = is_array($albumResult) ? ($albumResult['id'] ?? null) : null;
     $albumId = is_numeric($albumIdRaw) ? (int) $albumIdRaw : 0;
-    expect($albumId)->toBeGreaterThan(0);
+    expect($albumId)
+        ->toBeGreaterThan(0);
 
     $image = H::makeTestImage(uniqid());
     $imageId = H::uploadPhotoViaApi($image, $albumId, 'PM Delete Context Photo');
@@ -382,12 +408,15 @@ it('honors the session edit context as the delete redirect target instead of the
     $view = $curl($baseUrl . '/picture.php?/' . $imageId . '/category/' . $albumId);
     expect($view['status'])->toBe(200);
 
-    $statusResponse = $curl($baseUrl . '/ws.php?format=json', ['method' => 'pwg.session.getStatus']);
+    $statusResponse = $curl($baseUrl . '/ws.php?format=json', [
+        'method' => 'pwg.session.getStatus',
+    ]);
     $statusData = json_decode($statusResponse['body'], true);
     $statusResult = is_array($statusData) ? ($statusData['result'] ?? null) : null;
     $pwgTokenRaw = is_array($statusResult) ? ($statusResult['pwg_token'] ?? null) : null;
     $pwgToken = is_string($pwgTokenRaw) ? $pwgTokenRaw : '';
-    expect($pwgToken)->not->toBe('');
+    expect($pwgToken)
+        ->not->toBe('');
 
     // Raw curl, redirects NOT followed, capturing the real Location header
     // via CURLINFO_REDIRECT_URL -- see pictureModifyCurlLoginSession()'s
@@ -407,19 +436,24 @@ it('honors the session edit context as the delete redirect target instead of the
     unset($ch);
     @unlink($session['cookieJar']);
 
-    expect($status)->toBe(302);
+    expect($status)
+        ->toBe(302);
     // The default (no-context) redirect target is a bare gallery-root
     // index URL with no album segment at all -- 'category/{albumId}' can
     // only appear here via this renderer's own str_replace() against the
     // session-recorded custom_context, proving the context branch (not
     // the plain makeIndexUrl() fallback one line below it) is what fired.
-    expect(is_string($location) ? $location : '')->toContain('category/' . $albumId);
-    expect(pictureModifyImageRow($imageId))->toBeNull();
+    expect(is_string($location) ? $location : '')
+        ->toContain('category/' . $albumId);
+    expect(pictureModifyImageRow($imageId))
+        ->toBeNull();
 });
 
 it('renders U_JUMPTO from the session edit context, ahead of the authorized-category fallback', function (): void {
     $page = H::loginAsAdmin($this);
-    $album = H::wsCall($page, 'pwg.categories.add', ['name' => 'PM Jumpto Album ' . uniqid()]);
+    $album = H::wsCall($page, 'pwg.categories.add', [
+        'name' => 'PM Jumpto Album ' . uniqid(),
+    ]);
     $albumResult = $album['result'] ?? null;
     if (! is_array($albumResult) || ! is_numeric($albumResult['id'] ?? null)) {
         throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($album, true));
@@ -496,7 +530,9 @@ it('fatal-errors instead of silently falling back when a picture_modify_before_u
 
     try {
         $page = H::loginAsAdmin($this);
-        $album = H::wsCall($page, 'pwg.categories.add', ['name' => 'PM Bogus Hook Album ' . uniqid()]);
+        $album = H::wsCall($page, 'pwg.categories.add', [
+            'name' => 'PM Bogus Hook Album ' . uniqid(),
+        ]);
         $albumResult = $album['result'] ?? null;
         if (! is_array($albumResult) || ! is_numeric($albumResult['id'] ?? null)) {
             throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($album, true));
@@ -553,7 +589,9 @@ it('sets a newly-represented album as representative even when it already has a 
     // own explicit call can change either one.
     $page = H::loginAsAdmin($this);
 
-    $albumB = H::wsCall($page, 'pwg.categories.add', ['name' => 'PM New Thumb Album B ' . uniqid()]);
+    $albumB = H::wsCall($page, 'pwg.categories.add', [
+        'name' => 'PM New Thumb Album B ' . uniqid(),
+    ]);
     $albumBResult = $albumB['result'] ?? null;
     if (! is_array($albumBResult) || ! is_numeric($albumBResult['id'] ?? null)) {
         throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($albumB, true));
@@ -562,9 +600,12 @@ it('sets a newly-represented album as representative even when it already has a 
     $imageX = H::makeTestImage(uniqid());
     $imageXId = H::uploadPhotoViaApi($imageX, $albumBId, 'PM New Thumb Photo X');
     @unlink($imageX);
-    expect(pictureModifyCategoryRepresentativeId($albumBId))->toBe($imageXId);
+    expect(pictureModifyCategoryRepresentativeId($albumBId))
+        ->toBe($imageXId);
 
-    $albumC = H::wsCall($page, 'pwg.categories.add', ['name' => 'PM New Thumb Album C ' . uniqid()]);
+    $albumC = H::wsCall($page, 'pwg.categories.add', [
+        'name' => 'PM New Thumb Album C ' . uniqid(),
+    ]);
     $albumCResult = $albumC['result'] ?? null;
     if (! is_array($albumCResult) || ! is_numeric($albumCResult['id'] ?? null)) {
         throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($albumC, true));
@@ -573,7 +614,8 @@ it('sets a newly-represented album as representative even when it already has a 
     $imageY = H::makeTestImage(uniqid());
     $imageYId = H::uploadPhotoViaApi($imageY, $albumCId, 'PM New Thumb Photo Y (edit target)');
     @unlink($imageY);
-    expect(pictureModifyCategoryRepresentativeId($albumCId))->toBe($imageYId);
+    expect(pictureModifyCategoryRepresentativeId($albumCId))
+        ->toBe($imageYId);
 
     // Edit photo Y: associate it into B too (alongside its existing album
     // C), but only represent B -- $represented_albums (read BEFORE this
@@ -589,12 +631,15 @@ it('sets a newly-represented album as representative even when it already has a 
     ]);
 
     expect($result['status'])->toBe(200);
-    expect(pictureModifyCategoryRepresentativeId($albumBId))->toBe($imageYId);
+    expect(pictureModifyCategoryRepresentativeId($albumBId))
+        ->toBe($imageYId);
 });
 
 it('swaps width/height and flips the FORMAT flag for a photo with a stored 90/270-degree rotation', function (): void {
     $page = H::loginAsAdmin($this);
-    $album = H::wsCall($page, 'pwg.categories.add', ['name' => 'PM Rotation Album ' . uniqid()]);
+    $album = H::wsCall($page, 'pwg.categories.add', [
+        'name' => 'PM Rotation Album ' . uniqid(),
+    ]);
     $albumResult = $album['result'] ?? null;
     if (! is_array($albumResult) || ! is_numeric($albumResult['id'] ?? null)) {
         throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($album, true));
@@ -669,10 +714,12 @@ it('resolves storage_category_id from a filesystem-synced photo, marks it unlink
         expect($created['body'])->toContain('1 photos added in the database');
 
         $imageId = pictureModifyImageIdByFile($file);
-        expect($imageId)->not->toBeNull();
+        expect($imageId)
+            ->not->toBeNull();
         assert($imageId !== null);
         $categoryId = pictureModifyCategoryIdByDir(1, $dir);
-        expect($categoryId)->not->toBeNull();
+        expect($categoryId)
+            ->not->toBeNull();
 
         $result = H::rawGet($page, '/admin.php?page=photo&image_id=' . $imageId);
         expect($result['status'])->toBe(200);

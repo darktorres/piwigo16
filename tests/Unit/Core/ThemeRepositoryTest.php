@@ -66,13 +66,15 @@ test('findAllIdsAndNames() returns every row as a ThemeListing, ordered by name'
         themeRepositoryTestInsert($conn, 'ut_theme_zebra', '1.0', 'Zebra Theme');
         themeRepositoryTestInsert($conn, 'ut_theme_alpha', '1.0', 'Alpha Theme');
 
-        $all = themeRepositoryTestRepo()->findAllIdsAndNames();
+        $all = themeRepositoryTestRepo()
+            ->findAllIdsAndNames();
         $ours = array_values(array_filter($all, static fn (ThemeListing $t): bool => in_array($t->id, $ids, true)));
 
-        expect($ours)->toEqual([
-            new ThemeListing('ut_theme_alpha', 'Alpha Theme'),
-            new ThemeListing('ut_theme_zebra', 'Zebra Theme'),
-        ]);
+        expect($ours)
+            ->toEqual([
+                new ThemeListing('ut_theme_alpha', 'Alpha Theme'),
+                new ThemeListing('ut_theme_zebra', 'Zebra Theme'),
+            ]);
     } finally {
         foreach ($ids as $id) {
             themeRepositoryTestDelete($conn, $id);
@@ -93,11 +95,14 @@ test('findAllIdsAndNames() drops rows with a null name but keeps scanning past t
         themeRepositoryTestInsert($conn, $noNameId, '1.0', null);
         themeRepositoryTestInsert($conn, $afterId, '1.0', 'After No-Name Theme');
 
-        $all = themeRepositoryTestRepo()->findAllIdsAndNames();
+        $all = themeRepositoryTestRepo()
+            ->findAllIdsAndNames();
         $ids = array_map(static fn (ThemeListing $t): string => $t->id, $all);
 
-        expect($ids)->not->toContain($noNameId)
-            ->and($ids)->toContain($afterId);
+        expect($ids)
+            ->not->toContain($noNameId)
+            ->and($ids)
+            ->toContain($afterId);
     } finally {
         themeRepositoryTestDelete($conn, $noNameId);
         themeRepositoryTestDelete($conn, $afterId);

@@ -5,9 +5,9 @@ declare(strict_types=1);
 use Doctrine\DBAL\DriverManager;
 use Doctrine\Persistence\ConnectionRegistry;
 use Piwigo\Core\Kernel;
-use Piwigo\Tests\Support\CurrentPathsTestFactory;
 use Piwigo\Core\Paths;
 use Piwigo\Job\MessengerFactory;
+use Piwigo\Tests\Support\CurrentPathsTestFactory;
 use Psr\Container\ContainerInterface;
 use Psr\Container\NotFoundExceptionInterface;
 use Symfony\Component\Messenger\Envelope;
@@ -83,8 +83,12 @@ test('transport()\'s anonymous ConnectionRegistry answers "default" for getDefau
     // ConnectionRegistry -- no further runtime check needed.
     $registry = new $registryClass($connection);
 
-    expect($registry->getDefaultConnectionName())->toBe('default')
-        ->and($registry->getConnections())->toBe(['default' => $connection]);
+    expect($registry->getDefaultConnectionName())
+        ->toBe('default')
+        ->and($registry->getConnections())
+        ->toBe([
+            'default' => $connection,
+        ]);
 });
 
 test('containerOf-built container throws Psr NotFoundExceptionInterface for a service id it was not given', function (): void {
@@ -97,9 +101,12 @@ test('containerOf-built container throws Psr NotFoundExceptionInterface for a se
         throw new RuntimeException('containerOf() did not return a ContainerInterface');
     }
 
-    expect($container->has('async'))->toBeTrue()
-        ->and($container->get('async'))->toBe('the-async-sender')
-        ->and($container->has('missing'))->toBeFalse();
+    expect($container->has('async'))
+        ->toBeTrue()
+        ->and($container->get('async'))
+        ->toBe('the-async-sender')
+        ->and($container->has('missing'))
+        ->toBeFalse();
 
     // Pest's toThrow() only special-cases its first argument via
     // class_exists(), which is false for an interface -- passing
@@ -112,10 +119,12 @@ test('containerOf-built container throws Psr NotFoundExceptionInterface for a se
         $container->get('missing');
     } catch (NotFoundExceptionInterface $e) {
         $threw = true;
-        expect($e->getMessage())->toBe('Service "missing" not found.');
+        expect($e->getMessage())
+            ->toBe('Service "missing" not found.');
     }
 
-    expect($threw)->toBeTrue();
+    expect($threw)
+        ->toBeTrue();
 });
 
 test('config() reads config/messenger.php relative to CurrentPathsTestFactory::get()->root, not the working directory', function (): void {
@@ -151,7 +160,10 @@ test('config() reads config/messenger.php relative to CurrentPathsTestFactory::g
             'handlers' => [],
         ]);
 
-        $connection = DriverManager::getConnection(['driver' => 'pdo_sqlite', 'memory' => true]);
+        $connection = DriverManager::getConnection([
+            'driver' => 'pdo_sqlite',
+            'memory' => true,
+        ]);
         $transport = MessengerFactory::transport($connection, Paths::fromRoot($root));
 
         $transport->send(new Envelope(new stdClass()));
@@ -160,7 +172,10 @@ test('config() reads config/messenger.php relative to CurrentPathsTestFactory::g
         // DB the bootstrap reflector inspects.
         // @phpstan-ignore dba.syntaxError
         $rows = $connection->fetchAllAssociative('SELECT queue_name FROM mutation_sweep_messages');
-        expect($rows)->toBe([['queue_name' => 'mutation_sweep_queue']]);
+        expect($rows)
+            ->toBe([[
+                'queue_name' => 'mutation_sweep_queue',
+            ]]);
     } finally {
         unlink($root . '/config/messenger.php');
         rmdir($root . '/config');

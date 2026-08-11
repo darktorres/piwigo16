@@ -23,7 +23,8 @@ function callGetMinLocalDir(?string $localDir): ?string
 }
 
 test('getMinLocalDir returns a short path (3 or fewer segments) unchanged', function (): void {
-    expect(callGetMinLocalDir('galleries/pets/rex'))->toBe('galleries/pets/rex');
+    expect(callGetMinLocalDir('galleries/pets/rex'))
+        ->toBe('galleries/pets/rex');
 });
 
 test('getMinLocalDir abbreviates a long path to its first 2 and last segments', function (): void {
@@ -45,5 +46,6 @@ test('getMinLocalDir passes a null input straight through, not an empty string',
     // (string) null casts to '' for explode()'s own count check (<=3), but
     // the branch returns the original $local_dir parameter, not the cast
     // value -- so null in means null out, never ''.
-    expect(callGetMinLocalDir(null))->toBeNull();
+    expect(callGetMinLocalDir(null))
+        ->toBeNull();
 });

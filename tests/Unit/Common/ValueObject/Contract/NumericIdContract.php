@@ -27,7 +27,9 @@ use Piwigo\Common\ValueObject\NumericId;
  */
 abstract class NumericIdContract extends TestCase
 {
-    /** @return class-string<T> */
+    /**
+     * @return class-string<T>
+     */
     abstract protected static function voClass(): string;
 
     /**
@@ -43,7 +45,7 @@ abstract class NumericIdContract extends TestCase
     public function testFromAcceptsPositiveInt(): void
     {
         $class = static::voClass();
-        $id    = $class::from(42);
+        $id = $class::from(42);
         self::assertSame('42', (string) $id);
     }
 
@@ -86,34 +88,36 @@ abstract class NumericIdContract extends TestCase
         // `instanceof self` apart from a mutated bare `true` -- an equal
         // *value* from an entirely different NumericId type must still
         // compare unequal.
-        $class      = static::voClass();
+        $class = static::voClass();
         $otherClass = static::otherVoClass();
         self::assertFalse($class::from(5)->equals($otherClass::from(5)));
     }
 
-    /** @return iterable<string, array{mixed, ?string}> */
+    /**
+     * @return iterable<string, array{mixed, ?string}>
+     */
     public static function tryFromCases(): iterable
     {
-        yield 'positive int'    => [42, '42'];
-        yield 'numeric string'  => ['42', '42'];
-        yield 'zero int'        => [0, null];
+        yield 'positive int' => [42, '42'];
+        yield 'numeric string' => ['42', '42'];
+        yield 'zero int' => [0, null];
         // ctype_digit('0') is true, so '0' reaches tryFrom()'s own
         // separate numeric-string `$int > 0` boundary check -- 'zero int'
         // above only exercises the sibling int branch's own `0`, not this
         // one's (each is its own mutable literal).
-        yield 'zero string'     => ['0', null];
-        yield 'negative int'    => [-1, null];
-        yield 'decimal string'  => ['1.5', null];
-        yield 'alpha'           => ['abc', null];
-        yield 'null'            => [null, null];
-        yield 'array'           => [[], null];
-        yield 'float'           => [1.5, null];
+        yield 'zero string' => ['0', null];
+        yield 'negative int' => [-1, null];
+        yield 'decimal string' => ['1.5', null];
+        yield 'alpha' => ['abc', null];
+        yield 'null' => [null, null];
+        yield 'array' => [[], null];
+        yield 'float' => [1.5, null];
     }
 
     #[DataProvider('tryFromCases')]
     public function testTryFrom(mixed $input, ?string $expected): void
     {
-        $class  = static::voClass();
+        $class = static::voClass();
         $result = $class::tryFrom($input);
         if ($expected === null) {
             self::assertNull($result);
@@ -126,9 +130,9 @@ abstract class NumericIdContract extends TestCase
     public function testEqualsAndStringable(): void
     {
         $class = static::voClass();
-        $a     = $class::from(11);
-        $b     = $class::from(11);
-        $c     = $class::from(12);
+        $a = $class::from(11);
+        $b = $class::from(11);
+        $c = $class::from(12);
         self::assertTrue($a->equals($b));
         self::assertFalse($a->equals($c));
         self::assertSame('11', (string) $a);

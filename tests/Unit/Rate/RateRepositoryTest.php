@@ -125,8 +125,12 @@ function rateTestFetchRatingScore(Connection $conn, int $imageId): ?float
  */
 function rateTestInsertImage(Connection $conn): int
 {
-    $conn->createQueryBuilder()->insert('images')
-        ->values(['file' => ':file', 'path' => ':path'])
+    $conn->createQueryBuilder()
+        ->insert('images')
+        ->values([
+            'file' => ':file',
+            'path' => ':path',
+        ])
         ->setParameter('file', 'rate-test.jpg')
         ->setParameter('path', 'upload/rate-test.jpg')
         ->executeStatement();
@@ -137,10 +141,12 @@ function rateTestInsertImage(Connection $conn): int
 test('findElementIdsForUserAndAnonymousId() matches the fixture', function (): void {
     // fixture: user_id 1 rated element 1 and element 3, both with
     // anonymous_id ''
-    $ids = rateTestRepo()->findElementIdsForUserAndAnonymousId(UserId::from(1), '');
+    $ids = rateTestRepo()
+        ->findElementIdsForUserAndAnonymousId(UserId::from(1), '');
     sort($ids);
 
-    expect($ids)->toBe([1, 3]);
+    expect($ids)
+        ->toBe([1, 3]);
 });
 
 test('findElementIdsForUserAndAnonymousId() returns empty for no match', function (): void {
@@ -192,7 +198,8 @@ test('deleteExistingRate() scoped to anonymous_id spares a mismatched one', func
         // Mismatched anonymous_id -- must not delete.
         $repo->deleteExistingRate(ImageId::from(5), UserId::from(2), 'wrong-ip');
 
-        expect(rateTestFetchCount($conn, 5, 2))->toBe(1);
+        expect(rateTestFetchCount($conn, 5, 2))
+            ->toBe(1);
     } finally {
         $repo->deleteExistingRate(ImageId::from(5), UserId::from(2), null);
     }
@@ -205,7 +212,8 @@ test('deleteExistingRate() with a null anonymous_id matches any', function (): v
 
     $repo->deleteExistingRate(ImageId::from(5), UserId::from(2), null);
 
-    expect(rateTestFetchCount($conn, 5, 2))->toBe(0);
+    expect(rateTestFetchCount($conn, 5, 2))
+        ->toBe(0);
 });
 
 test('insertRate() persists the given rate', function (): void {
@@ -222,7 +230,8 @@ test('insertRate() persists the given rate', function (): void {
             ->executeQuery()
             ->fetchOne();
 
-        expect($value)->toBe(3);
+        expect($value)
+            ->toBe(3);
     } finally {
         $repo->deleteExistingRate(ImageId::from(5), UserId::from(2), null);
     }
@@ -234,14 +243,16 @@ test('findRateSummaries() matches the fixture', function (): void {
     // identically-shaped one below) is unreachable through any real
     // row: `rate.element_id`/`users.id` are both NOT NULL integer PKs
     // enforced by the schema.
-    $summaries = rateTestRepo()->findRateSummaries();
+    $summaries = rateTestRepo()
+        ->findRateSummaries();
 
     // element 1: rates 5 (user 1) + 4 (user 3)
     expect($summaries[1])->toEqual(new RateSummary(2, 9.0))
         // element 2: rate 3 (user 4)
         ->and($summaries[2])->toEqual(new RateSummary(1, 3.0))
         // element 5 has no rate at all
-        ->and($summaries)->not->toHaveKey(5);
+        ->and($summaries)
+        ->not->toHaveKey(5);
 });
 
 test('updateRatingScores() persists the given score', function (): void {
@@ -250,12 +261,20 @@ test('updateRatingScores() persists the given score', function (): void {
 
     try {
         rateTestRepo()->updateRatingScores([
-            ['id' => $imageId, 'ratingScore' => 4.75],
+            [
+                'id' => $imageId,
+                'ratingScore' => 4.75,
+            ],
         ]);
 
-        expect(rateTestFetchRatingScore($conn, $imageId))->toBe(4.75);
+        expect(rateTestFetchRatingScore($conn, $imageId))
+            ->toBe(4.75);
     } finally {
-        $conn->createQueryBuilder()->delete('images')->where('id = :id')->setParameter('id', $imageId)->executeStatement();
+        $conn->createQueryBuilder()
+            ->delete('images')
+            ->where('id = :id')
+            ->setParameter('id', $imageId)
+            ->executeStatement();
     }
 });
 
@@ -266,18 +285,24 @@ test('updateRatingScores() clears the identity map, so a later find() sees the r
 
     try {
         $tracked = $em->find(ImageEntity::class, $imageIdVo);
-        expect($tracked)->not->toBeNull();
+        expect($tracked)
+            ->not->toBeNull();
 
         $repo->updateRatingScores([
-            ['id' => $imageId, 'ratingScore' => 4.75],
+            [
+                'id' => $imageId,
+                'ratingScore' => 4.75,
+            ],
         ]);
 
         $refetched = $em->find(ImageEntity::class, $imageIdVo);
-        expect($refetched)->not->toBeNull();
+        expect($refetched)
+            ->not->toBeNull();
         if (! $refetched instanceof ImageEntity) {
             throw new RuntimeException('unreachable');
         }
-        expect($refetched->ratingScore)->toBe(4.75);
+        expect($refetched->ratingScore)
+            ->toBe(4.75);
     } finally {
         DbConnection::build()->createQueryBuilder()->delete('images')->where('id = :id')->setParameter('id', $imageId)->executeStatement();
     }
@@ -287,9 +312,11 @@ test('updateRatingScores() is a no-op for an empty list', function (): void {
     $conn = DbConnection::build();
     $original = rateTestFetchRatingScore($conn, 1);
 
-    rateTestRepo()->updateRatingScores([]);
+    rateTestRepo()
+        ->updateRatingScores([]);
 
-    expect(rateTestFetchRatingScore($conn, 1))->toBe($original);
+    expect(rateTestFetchRatingScore($conn, 1))
+        ->toBe($original);
 });
 
 test('findImageIdsWithStaleRatingScore() finds an image with a leftover score but no rate row', function (): void {
@@ -303,15 +330,20 @@ test('findImageIdsWithStaleRatingScore() finds an image with a leftover score bu
         ->where('element_id = 4')
         ->executeQuery()
         ->fetchAssociative();
-    expect($deletedRow)->toBeArray();
+    expect($deletedRow)
+        ->toBeArray();
     if (! is_array($deletedRow)) {
         throw new RuntimeException('unreachable');
     }
 
-    $conn->createQueryBuilder()->delete('rate')->where('element_id = 4')->executeStatement();
+    $conn->createQueryBuilder()
+        ->delete('rate')
+        ->where('element_id = 4')
+        ->executeStatement();
 
     try {
-        expect(rateTestRepo()->findImageIdsWithStaleRatingScore())->toBe([4]);
+        expect(rateTestRepo()->findImageIdsWithStaleRatingScore())
+            ->toBe([4]);
     } finally {
         $conn->createQueryBuilder()
             ->insert('rate')
@@ -335,19 +367,42 @@ test('clearRatingScores() nulls only the given ids', function (): void {
     $conn = DbConnection::build();
     $imageId1 = rateTestInsertImage($conn);
     $imageId2 = rateTestInsertImage($conn);
-    $conn->createQueryBuilder()->update('images')->set('rating_score', ':score')->where('id = :id')->setParameter('score', 4.5)->setParameter('id', $imageId1)->executeStatement();
-    $conn->createQueryBuilder()->update('images')->set('rating_score', ':score')->where('id = :id')->setParameter('score', 3.0)->setParameter('id', $imageId2)->executeStatement();
+    $conn->createQueryBuilder()
+        ->update('images')
+        ->set('rating_score', ':score')
+        ->where('id = :id')
+        ->setParameter('score', 4.5)
+        ->setParameter('id', $imageId1)
+        ->executeStatement();
+    $conn->createQueryBuilder()
+        ->update('images')
+        ->set('rating_score', ':score')
+        ->where('id = :id')
+        ->setParameter('score', 3.0)
+        ->setParameter('id', $imageId2)
+        ->executeStatement();
 
     try {
         rateTestRepo()->clearRatingScores([$imageId1, $imageId2]);
 
-        expect(rateTestFetchRatingScore($conn, $imageId1))->toBeNull()
-            ->and(rateTestFetchRatingScore($conn, $imageId2))->toBeNull()
+        expect(rateTestFetchRatingScore($conn, $imageId1))
+            ->toBeNull()
+            ->and(rateTestFetchRatingScore($conn, $imageId2))
+            ->toBeNull()
             // untouched
-            ->and(rateTestFetchRatingScore($conn, 3))->toBe(5.0);
+            ->and(rateTestFetchRatingScore($conn, 3))
+            ->toBe(5.0);
     } finally {
-        $conn->createQueryBuilder()->delete('images')->where('id = :id')->setParameter('id', $imageId1)->executeStatement();
-        $conn->createQueryBuilder()->delete('images')->where('id = :id')->setParameter('id', $imageId2)->executeStatement();
+        $conn->createQueryBuilder()
+            ->delete('images')
+            ->where('id = :id')
+            ->setParameter('id', $imageId1)
+            ->executeStatement();
+        $conn->createQueryBuilder()
+            ->delete('images')
+            ->where('id = :id')
+            ->setParameter('id', $imageId2)
+            ->executeStatement();
     }
 });
 
@@ -355,27 +410,41 @@ test('clearRatingScores() clears the identity map, so a later find() sees the re
     [$repo, $em] = rateTestRepoWithEm();
     $conn = DbConnection::build();
     $imageId = rateTestInsertImage($conn);
-    $conn->createQueryBuilder()->update('images')->set('rating_score', ':score')->where('id = :id')->setParameter('score', 4.5)->setParameter('id', $imageId)->executeStatement();
+    $conn->createQueryBuilder()
+        ->update('images')
+        ->set('rating_score', ':score')
+        ->where('id = :id')
+        ->setParameter('score', 4.5)
+        ->setParameter('id', $imageId)
+        ->executeStatement();
     $imageIdVo = ImageId::from($imageId);
 
     try {
         $tracked = $em->find(ImageEntity::class, $imageIdVo);
-        expect($tracked)->not->toBeNull();
+        expect($tracked)
+            ->not->toBeNull();
         if (! $tracked instanceof ImageEntity) {
             throw new RuntimeException('unreachable');
         }
-        expect($tracked->ratingScore)->not->toBeNull();
+        expect($tracked->ratingScore)
+            ->not->toBeNull();
 
         $repo->clearRatingScores([$imageId]);
 
         $refetched = $em->find(ImageEntity::class, $imageIdVo);
-        expect($refetched)->not->toBeNull();
+        expect($refetched)
+            ->not->toBeNull();
         if (! $refetched instanceof ImageEntity) {
             throw new RuntimeException('unreachable');
         }
-        expect($refetched->ratingScore)->toBeNull();
+        expect($refetched->ratingScore)
+            ->toBeNull();
     } finally {
-        $conn->createQueryBuilder()->delete('images')->where('id = :id')->setParameter('id', $imageId)->executeStatement();
+        $conn->createQueryBuilder()
+            ->delete('images')
+            ->where('id = :id')
+            ->setParameter('id', $imageId)
+            ->executeStatement();
     }
 });
 
@@ -383,16 +452,25 @@ test('clearRatingScores() is a no-op for empty ids', function (): void {
     $conn = DbConnection::build();
     $original = rateTestFetchRatingScore($conn, 1);
 
-    rateTestRepo()->clearRatingScores([]);
+    rateTestRepo()
+        ->clearRatingScores([]);
 
-    expect(rateTestFetchRatingScore($conn, 1))->toBe($original);
+    expect(rateTestFetchRatingScore($conn, 1))
+        ->toBe($original);
 });
 
 test('findUsernamesById() maps id to username', function (): void {
-    $usernames = rateTestRepo()->findUsernamesById();
+    $usernames = rateTestRepo()
+        ->findUsernamesById();
     ksort($usernames);
 
-    expect($usernames)->toBe([1 => 'fixture_admin', 2 => 'guest', 3 => 'regular_user', 4 => 'power_user']);
+    expect($usernames)
+        ->toBe([
+            1 => 'fixture_admin',
+            2 => 'guest',
+            3 => 'regular_user',
+            4 => 'power_user',
+        ]);
 });
 
 test('countRatedElements() with no filters', function (): void {
@@ -418,9 +496,11 @@ test('countRatedElements() filtered by user', function (): void {
 });
 
 test('findRatingReport() matches the fixture', function (): void {
-    $rows = rateTestRepo()->findRatingReport(null, false, [], 'score', 10, 0);
+    $rows = rateTestRepo()
+        ->findRatingReport(null, false, [], 'score', 10, 0);
 
-    expect($rows)->toHaveCount(4);
+    expect($rows)
+        ->toHaveCount(4);
     $byId = [];
     foreach ($rows as $row) {
         $byId[$row->id] = $row;
@@ -435,25 +515,34 @@ test('findRatingReport() matches the fixture', function (): void {
 });
 
 test('findRatingReport() filters by category', function (): void {
-    $rows = rateTestRepo()->findRatingReport(null, false, [2], 'i.id ASC', 10, 0);
+    $rows = rateTestRepo()
+        ->findRatingReport(null, false, [2], 'i.id ASC', 10, 0);
 
-    expect($rows)->toHaveCount(1)
+    expect($rows)
+        ->toHaveCount(1)
         ->and($rows[0]->id)->toBe(4);
 });
 
 test('findRatingReport() orders and paginates', function (): void {
-    $rows = rateTestRepo()->findRatingReport(null, false, [], 'sum_rates', 2, 0);
+    $rows = rateTestRepo()
+        ->findRatingReport(null, false, [], 'sum_rates', 2, 0);
 
-    expect($rows)->toHaveCount(2)
-        ->and(array_map(static fn (RatingReportRow $r): int => $r->id, $rows))->toBe([1, 3]);
+    expect($rows)
+        ->toHaveCount(2)
+        ->and(array_map(static fn (RatingReportRow $r): int => $r->id, $rows))
+        ->toBe([1, 3]);
 });
 
 test('findRateRowsForElement() returns every rate for that element', function (): void {
-    $rows = rateTestRepo()->findRateRowsForElement(ImageId::from(1));
+    $rows = rateTestRepo()
+        ->findRateRowsForElement(ImageId::from(1));
 
-    expect($rows)->toHaveCount(2)
-        ->and(array_sum(array_column($rows, 'rate')))->toBe(9)
-        ->and(array_map(static fn (ImageId $id): int => $id->value, array_column($rows, 'elementId')))->toBe([1, 1]);
+    expect($rows)
+        ->toHaveCount(2)
+        ->and(array_sum(array_column($rows, 'rate')))
+        ->toBe(9)
+        ->and(array_map(static fn (ImageId $id): int => $id->value, array_column($rows, 'elementId')))
+        ->toBe([1, 1]);
 });
 
 test('findRateRowsForElement() returns empty for an unrated element', function (): void {
@@ -461,13 +550,16 @@ test('findRateRowsForElement() returns empty for an unrated element', function (
 });
 
 test('countAllRates() matches the fixture', function (): void {
-    expect(rateTestRepo()->countAllRates())->toBe(5);
+    expect(rateTestRepo()->countAllRates())
+        ->toBe(5);
 });
 
 test('findUsersWithStatusByIdUsername() returns every rater with their status', function (): void {
-    $users = rateTestRepo()->findUsersWithStatusByIdUsername();
+    $users = rateTestRepo()
+        ->findUsersWithStatusByIdUsername();
 
-    expect($users)->toHaveCount(4);
+    expect($users)
+        ->toHaveCount(4);
     $byId = [];
     foreach ($users as $user) {
         $byId[$user->id] = $user;
@@ -478,19 +570,25 @@ test('findUsersWithStatusByIdUsername() returns every rater with their status', 
 });
 
 test('findAllRatesOrderedByDateDesc() matches the fixture', function (): void {
-    $rows = rateTestRepo()->findAllRatesOrderedByDateDesc();
+    $rows = rateTestRepo()
+        ->findAllRatesOrderedByDateDesc();
 
-    expect($rows)->toHaveCount(5)
-        ->and(array_sum(array_column($rows, 'rate')))->toBe(19);
+    expect($rows)
+        ->toHaveCount(5)
+        ->and(array_sum(array_column($rows, 'rate')))
+        ->toBe(19);
     $rowUserIds = array_map(static fn (UserId $id): int => $id->value, array_column($rows, 'userId'));
     sort($rowUserIds);
-    expect($rowUserIds)->toBe([1, 1, 3, 3, 4]);
+    expect($rowUserIds)
+        ->toBe([1, 1, 3, 3, 4]);
 });
 
 test('findImageThumbInfoByIds() returns the requested images', function (): void {
-    $rows = rateTestRepo()->findImageThumbInfoByIds([1, 4]);
+    $rows = rateTestRepo()
+        ->findImageThumbInfoByIds([1, 4]);
 
-    expect($rows)->toHaveCount(2);
+    expect($rows)
+        ->toHaveCount(2);
     $byId = [];
     foreach ($rows as $row) {
         $byId[$row->id] = $row;
@@ -520,21 +618,25 @@ test('findImageThumbInfoByIds() is a no-op for empty ids', function (): void {
 });
 
 test('findAverageRatePerElement() matches the fixture', function (): void {
-    $averages = rateTestRepo()->findAverageRatePerElement();
+    $averages = rateTestRepo()
+        ->findAverageRatePerElement();
 
     expect($averages[1])->toBe(4.5)
         ->and($averages[2])->toBe(3.0)
         ->and($averages[3])->toBe(5.0)
         ->and($averages[4])->toBe(2.0)
-        ->and($averages)->not->toHaveKey(5);
+        ->and($averages)
+        ->not->toHaveKey(5);
 });
 
 test('findTopRatedImageIds() orders by rating_score desc', function (): void {
     // rating_score: 3=5.00, 1=4.50, 2=3.00, 4=2.00, 5=NULL (sorts last)
     $repo = rateTestRepo();
 
-    expect($repo->findTopRatedImageIds(3))->toBe([3, 1, 2])
-        ->and($repo->findTopRatedImageIds(10))->toBe([3, 1, 2, 4, 5]);
+    expect($repo->findTopRatedImageIds(3))
+        ->toBe([3, 1, 2])
+        ->and($repo->findTopRatedImageIds(10))
+        ->toBe([3, 1, 2, 4, 5]);
 });
 
 test('findRateSummaryForElement() matches the fixture', function (): void {

@@ -31,9 +31,21 @@ function category_service_pure_helpers_test_lang(): Lang
 }
 
 test('compareByGlobalRank sorts naturally by the global_rank string', function (): void {
-    expect(CategoryService::compareByGlobalRank(['global_rank' => '1.2'], ['global_rank' => '1.10']))->toBeLessThan(0);
-    expect(CategoryService::compareByGlobalRank(['global_rank' => '1.10'], ['global_rank' => '1.2']))->toBeGreaterThan(0);
-    expect(CategoryService::compareByGlobalRank(['global_rank' => null], ['global_rank' => null]))->toBe(0);
+    expect(CategoryService::compareByGlobalRank([
+        'global_rank' => '1.2',
+    ], [
+        'global_rank' => '1.10',
+    ]))->toBeLessThan(0);
+    expect(CategoryService::compareByGlobalRank([
+        'global_rank' => '1.10',
+    ], [
+        'global_rank' => '1.2',
+    ]))->toBeGreaterThan(0);
+    expect(CategoryService::compareByGlobalRank([
+        'global_rank' => null,
+    ], [
+        'global_rank' => null,
+    ]))->toBe(0);
 });
 
 test('compareByGlobalRank casts non-string scalars to string before comparing', function (): void {
@@ -41,24 +53,48 @@ test('compareByGlobalRank casts non-string scalars to string before comparing', 
     // requires strings, and this file is declare(strict_types=1), so if
     // either (string) cast were dropped this would throw a TypeError
     // instead of comparing naturally.
-    expect(CategoryService::compareByGlobalRank(['global_rank' => 5], ['global_rank' => 10]))->toBeLessThan(0);
+    expect(CategoryService::compareByGlobalRank([
+        'global_rank' => 5,
+    ], [
+        'global_rank' => 10,
+    ]))->toBeLessThan(0);
 });
 
 test('compareByRank sorts numerically by the rank column, treating non-numeric as 0', function (): void {
-    expect(CategoryService::compareByRank(['rank' => 5], ['rank' => 2]))->toBe(3);
-    expect(CategoryService::compareByRank(['rank' => 2], ['rank' => 5]))->toBe(-3);
-    expect(CategoryService::compareByRank(['rank' => 'not-numeric'], ['rank' => 3]))->toBe(-3);
+    expect(CategoryService::compareByRank([
+        'rank' => 5,
+    ], [
+        'rank' => 2,
+    ]))->toBe(3);
+    expect(CategoryService::compareByRank([
+        'rank' => 2,
+    ], [
+        'rank' => 5,
+    ]))->toBe(-3);
+    expect(CategoryService::compareByRank([
+        'rank' => 'not-numeric',
+    ], [
+        'rank' => 3,
+    ]))->toBe(-3);
 });
 
 test('compareByRank truncates fractional ranks on both sides via the (int) cast', function (): void {
     // Fractional values force the (int) cast to actually narrow something --
     // without it, subtracting two floats returns a float, which the method's
     // own `: int` return type (under strict_types=1) rejects with a TypeError.
-    expect(CategoryService::compareByRank(['rank' => 5.9], ['rank' => 2.9]))->toBe(3);
+    expect(CategoryService::compareByRank([
+        'rank' => 5.9,
+    ], [
+        'rank' => 2.9,
+    ]))->toBe(3);
 });
 
 test('compareByRank falls back to 0 for a non-numeric rank on the right side too', function (): void {
-    expect(CategoryService::compareByRank(['rank' => 5], ['rank' => 'bogus']))->toBe(5);
+    expect(CategoryService::compareByRank([
+        'rank' => 5,
+    ], [
+        'rank' => 'bogus',
+    ]))->toBe(5);
 });
 
 test('isRecentCategory is false when either date is null or empty', function (): void {
@@ -137,7 +173,8 @@ test('filterMenuRows returns every row unfiltered when expanded and no visible-c
 
     $result = CategoryService::filterMenuRows($rows, null, true, false, '');
 
-    expect($result)->toBe($rows);
+    expect($result)
+        ->toBe($rows);
 });
 
 test('filterMenuRows restricts to direct children of the current category page when not expanded and not filtered', function (): void {
@@ -146,14 +183,17 @@ test('filterMenuRows restricts to direct children of the current category page w
         catMenuRow(2, 5),
         catMenuRow(3, 7),
     ];
-    $categoryPage = ['uppercats' => '5,9'];
+    $categoryPage = [
+        'uppercats' => '5,9',
+    ];
 
     $result = CategoryService::filterMenuRows($rows, $categoryPage, false, false, '');
 
     // Row 1 (top-level, id_uppercat null) always passes; row 2's
     // id_uppercat (5) is in the page's own uppercats chain; row 3's (7)
     // is not.
-    expect(array_column($result, 'id'))->toBe([1, 2]);
+    expect(array_column($result, 'id'))
+        ->toBe([1, 2]);
 });
 
 test('filterMenuRows restricts to the visible-categories csv when a filter is active', function (): void {
@@ -161,7 +201,8 @@ test('filterMenuRows restricts to the visible-categories csv when a filter is ac
 
     $result = CategoryService::filterMenuRows($rows, null, true, true, '1,3');
 
-    expect(array_column($result, 'id'))->toBe([1, 3]);
+    expect(array_column($result, 'id'))
+        ->toBe([1, 3]);
 });
 
 test('filterMenuRows treats a categoryPage with no uppercats key as having no uppercat restriction', function (): void {
@@ -172,15 +213,19 @@ test('filterMenuRows treats a categoryPage with no uppercats key as having no up
 
     $result = CategoryService::filterMenuRows($rows, [], false, false, '');
 
-    expect(array_column($result, 'id'))->toBe([1]);
+    expect(array_column($result, 'id'))
+        ->toBe([1]);
 });
 
 test('filterMenuRows treats an empty-string uppercats value the same as absent', function (): void {
     $rows = [catMenuRow(1, null), catMenuRow(2, 0)];
 
-    $result = CategoryService::filterMenuRows($rows, ['uppercats' => ''], false, false, '');
+    $result = CategoryService::filterMenuRows($rows, [
+        'uppercats' => '',
+    ], false, false, '');
 
-    expect(array_column($result, 'id'))->toBe([1]);
+    expect(array_column($result, 'id'))
+        ->toBe([1]);
 });
 
 test('filterMenuRows string-casts a non-string scalar uppercats value before exploding it', function (): void {
@@ -189,9 +234,12 @@ test('filterMenuRows string-casts a non-string scalar uppercats value before exp
     // explode() would receive a raw int under strict_types and throw.
     $rows = [catMenuRow(1, null), catMenuRow(2, 0)];
 
-    $result = CategoryService::filterMenuRows($rows, ['uppercats' => 0], false, false, '');
+    $result = CategoryService::filterMenuRows($rows, [
+        'uppercats' => 0,
+    ], false, false, '');
 
-    expect(array_column($result, 'id'))->toBe([1, 2]);
+    expect(array_column($result, 'id'))
+        ->toBe([1, 2]);
 });
 
 // A mutation-testing sweep found 3 confirmed-equivalent mutants inside
@@ -218,7 +266,8 @@ test('filterMenuRows string-casts a non-string scalar uppercats value before exp
 test('getDisplayImagesCount reports a flat photo count when there are no sub-albums', function (): void {
     $result = CategoryService::getDisplayImagesCount(category_service_pure_helpers_test_lang(), 0, 12, 0);
 
-    expect($result)->toBe('12 photos');
+    expect($result)
+        ->toBe('12 photos');
 });
 
 test('getDisplayImagesCount returns an empty string when there are no images at all', function (): void {
@@ -234,7 +283,8 @@ test('getDisplayImagesCount splits direct vs sub-album counts when both exist', 
     // the recursive self-call formats the direct-count portion first.
     $result = CategoryService::getDisplayImagesCount(category_service_pure_helpers_test_lang(), 5, 20, 2, true, ' | ');
 
-    expect($result)->toBe('5 photos | 15 photos in 2 sub-albums');
+    expect($result)
+        ->toBe('5 photos | 15 photos in 2 sub-albums');
 });
 
 test('getDisplayImagesCount only recurses into the direct-count split when direct images are strictly fewer than the total', function (): void {
@@ -303,7 +353,9 @@ test('removeComputedCategory decrements the parent\'s own counters and bubbles u
 test('removeComputedCategory subtracts both the removed leaf itself and its own sub-category count from the parent', function (): void {
     // The removed category's own count_categories (4) must be added to the
     // flat "1" for the leaf itself -- 1 + 4, not 1 - 4.
-    $cats = [1 => catComputedRow(1, null, 3, 50, 10)];
+    $cats = [
+        1 => catComputedRow(1, null, 3, 50, 10),
+    ];
     $removed = catComputedRow(2, 1, 0, 5, 4);
     $removed['nb_images'] = 5;
 
@@ -313,7 +365,9 @@ test('removeComputedCategory subtracts both the removed leaf itself and its own 
 });
 
 test('removeComputedCategory does nothing when the category has no known parent in the map', function (): void {
-    $cats = [1 => catComputedRow(1, null, 3, 50, 2)];
+    $cats = [
+        1 => catComputedRow(1, null, 3, 50, 2),
+    ];
     $original = $cats[1];
     $removed = catComputedRow(9, null, 0, 5, 0);
     $removed['nb_images'] = 5;

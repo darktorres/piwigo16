@@ -4,14 +4,14 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Integration;
 
-use Override;
-use Piwigo\Core\Kernel;
 use LogicException;
+use Override;
 use Piwigo\Admin\Integrity\IntegrityIgnoredAnomalyEntity;
 use Piwigo\Auth\UserFailedLoginEntity;
 use Piwigo\Command\MaintenancePurgeFailedLoginsCommand;
 use Piwigo\Config\ConfigLoader;
 use Piwigo\Config\CurrentConfig;
+use Piwigo\Core\Kernel;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
 use Symfony\Component\Console\Command\Command;
@@ -42,7 +42,7 @@ final class MaintenancePurgeFailedLoginsCommandTest extends IntegrationTestCase
         ConfigLoader::applyEnvOverrides();
     }
 
-    public function test_purges_old_failed_logins_and_stale_integrity_ignores_but_keeps_recent_ones(): void
+    public function testPurgesOldFailedLoginsAndStaleIntegrityIgnoresButKeepsRecentOnes(): void
     {
         $conn = DbConnection::build();
         $em = EntityManagerFactory::build($conn);
@@ -63,17 +63,17 @@ final class MaintenancePurgeFailedLoginsCommandTest extends IntegrationTestCase
 
             self::assertSame(Command::SUCCESS, $exitCode);
 
-            $remainingFailedLogins = $conn->fetchOne('SELECT COUNT(*) FROM ' . 'user_failed_logins' . ' WHERE user_id = 1');
+            $remainingFailedLogins = $conn->fetchOne('SELECT COUNT(*) FROM user_failed_logins WHERE user_id = 1');
             self::assertSame(1, $remainingFailedLogins);
 
-            $remainingOld = $conn->fetchOne("SELECT COUNT(*) FROM " . 'integrity_ignored_anomalies' . " WHERE anomaly_id = 'old-anomaly'");
+            $remainingOld = $conn->fetchOne('SELECT COUNT(*) FROM integrity_ignored_anomalies' . " WHERE anomaly_id = 'old-anomaly'");
             self::assertSame(0, $remainingOld);
 
-            $remainingRecent = $conn->fetchOne("SELECT COUNT(*) FROM " . 'integrity_ignored_anomalies' . " WHERE anomaly_id = 'recent-anomaly'");
+            $remainingRecent = $conn->fetchOne('SELECT COUNT(*) FROM integrity_ignored_anomalies' . " WHERE anomaly_id = 'recent-anomaly'");
             self::assertSame(1, $remainingRecent);
         } finally {
-            $conn->executeStatement('DELETE FROM ' . 'user_failed_logins' . ' WHERE user_id = 1');
-            $conn->executeStatement("DELETE FROM " . 'integrity_ignored_anomalies' . " WHERE anomaly_id IN ('old-anomaly', 'recent-anomaly')");
+            $conn->executeStatement('DELETE FROM user_failed_logins WHERE user_id = 1');
+            $conn->executeStatement('DELETE FROM integrity_ignored_anomalies' . " WHERE anomaly_id IN ('old-anomaly', 'recent-anomaly')");
         }
     }
 }

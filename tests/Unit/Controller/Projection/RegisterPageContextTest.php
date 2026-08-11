@@ -13,20 +13,25 @@ test('toArray flattens every property to its real Smarty template variable name'
         formLogin: 'alice',
         formEmail: 'alice@example.test',
         obligatoryUserMailAddress: true,
-        languageOptions: ['en_UK' => 'English'],
+        languageOptions: [
+            'en_UK' => 'English',
+        ],
         currentLanguage: LangCode::from('en_UK'),
         helpLink: 'https://upstream.example.invalid/help/',
     );
 
-    expect($context->toArray())->toBe([
-        'U_HOME' => '/index.php',
-        'F_KEY' => 'key123',
-        'F_ACTION' => 'register.php',
-        'F_LOGIN' => 'alice',
-        'F_EMAIL' => 'alice@example.test',
-        'obligatory_user_mail_address' => true,
-        'language_options' => ['en_UK' => 'English'],
-        'current_language' => 'en_UK',
-        'HELP_LINK' => 'https://upstream.example.invalid/help/',
-    ]);
+    expect($context->toArray())
+        ->toBe([
+            'U_HOME' => '/index.php',
+            'F_KEY' => 'key123',
+            'F_ACTION' => 'register.php',
+            'F_LOGIN' => 'alice',
+            'F_EMAIL' => 'alice@example.test',
+            'obligatory_user_mail_address' => true,
+            'language_options' => [
+                'en_UK' => 'English',
+            ],
+            'current_language' => 'en_UK',
+            'HELP_LINK' => 'https://upstream.example.invalid/help/',
+        ]);
 });

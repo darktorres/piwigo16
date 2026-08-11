@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Piwigo\Tests\Integration;
 
 use Override;
-use Piwigo\Db\DbConnection;
 use Piwigo\Command\UserListCommand;
+use Piwigo\Db\DbConnection;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Tester\CommandTester;
 
@@ -25,14 +25,14 @@ final class UserListCommandTest extends IntegrationTestCase
         parent::setUp();
         $this->setUpConnectionFromEnv();
 
-        if (!self::$fixtureReady) {
+        if (! self::$fixtureReady) {
             $this->resetDatabase();
             $this->loadFixture(dirname(__DIR__, 2) . '/tests/Fixtures/piwigo-17.0.sql');
             self::$fixtureReady = true;
         }
     }
 
-    public function test_lists_users_from_the_fixture(): void
+    public function testListsUsersFromTheFixture(): void
     {
         $command = new UserListCommand();
         $tester = new CommandTester($command);
@@ -44,7 +44,7 @@ final class UserListCommandTest extends IntegrationTestCase
         self::assertStringContainsString('Username', $tester->getDisplay());
     }
 
-    public function test_reports_a_formatted_error_and_fails_when_the_mysql_query_itself_fails(): void
+    public function testReportsAFormattedErrorAndFailsWhenTheMysqlQueryItselfFails(): void
     {
         // Same "point PIWIGO_DB_PORT at a closed local port for a fast,
         // real connection-refused failure" trick already established this
@@ -66,7 +66,7 @@ final class UserListCommandTest extends IntegrationTestCase
         }
     }
 
-    public function test_reports_no_users_found_against_an_empty_database(): void
+    public function testReportsNoUsersFoundAgainstAnEmptyDatabase(): void
     {
         // Destructive against the shared fixture DB (empties the two
         // tables this command queries) -- reloads the full fixture again

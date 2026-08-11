@@ -18,20 +18,24 @@ beforeEach(function (): void {
  */
 function cookieServiceTestWithMountDepth(int $depth, callable $fn): mixed
 {
-    return KernelContainerOverride::with([RequestMountDepth::class => new RequestMountDepth($depth)], $fn);
+    return KernelContainerOverride::with([
+        RequestMountDepth::class => new RequestMountDepth($depth),
+    ], $fn);
 }
 
 test('cookiePath falls back to SCRIPT_NAME when no rewrite headers are present', function (): void {
     $_SERVER['SCRIPT_NAME'] = '/piwigo/index.php';
 
-    expect(new CookieService()->cookiePath())->toBe('/piwigo/');
+    expect(new CookieService()->cookiePath())
+        ->toBe('/piwigo/');
 });
 
 test('cookiePath prefers REDIRECT_SCRIPT_NAME when set', function (): void {
     $_SERVER['SCRIPT_NAME'] = '/should-not-be-used/index.php';
     $_SERVER['REDIRECT_SCRIPT_NAME'] = '/redirected/index.php';
 
-    expect(new CookieService()->cookiePath())->toBe('/redirected/');
+    expect(new CookieService()->cookiePath())
+        ->toBe('/redirected/');
 });
 
 test('cookiePath strips the PATH_INFO suffix from REDIRECT_URL before deriving the directory', function (): void {
@@ -41,7 +45,8 @@ test('cookiePath strips the PATH_INFO suffix from REDIRECT_URL before deriving t
     $_SERVER['REDIRECT_URL'] = '/piwigo/index.php/foo/bar';
     $_SERVER['PATH_INFO'] = '/foo/bar';
 
-    expect(new CookieService()->cookiePath())->toBe('/piwigo/');
+    expect(new CookieService()->cookiePath())
+        ->toBe('/piwigo/');
 });
 
 test('setCookieVar writes the pwg_-prefixed key into $_COOKIE', function (): void {
@@ -86,7 +91,8 @@ test('setCookieVar treats a non-numeric expire as absent, defaulting to a far-fu
     // param type this method doesn't even accept.
     $result = $service->setCookieVar('sessionpref', 'value', null);
 
-    expect($result)->toBeTrue();
+    expect($result)
+        ->toBeTrue();
     expect($_COOKIE['pwg_sessionpref'] ?? null)->toBe('value');
 });
 
@@ -102,7 +108,8 @@ test('setCookieVar does not throw for a non-scalar value', function (): void {
 
     $result = $service->setCookieVar('arraypref', ['not', 'scalar']);
 
-    expect($result)->toBeTrue();
+    expect($result)
+        ->toBeTrue();
     // $_COOKIE itself mirrors the raw, unstringified value (a separate
     // assignment from the setcookie() wire value) -- checked directly,
     // not through an accessor: both real named readers narrow to
@@ -113,13 +120,15 @@ test('setCookieVar does not throw for a non-scalar value', function (): void {
 test('getDisplayThumbnailPref returns null when the cookie is unset', function (): void {
     unset($_COOKIE['pwg_display_thumbnail']);
 
-    expect(new CookieService()->getDisplayThumbnailPref())->toBeNull();
+    expect(new CookieService()->getDisplayThumbnailPref())
+        ->toBeNull();
 });
 
 test('getDisplayThumbnailPref returns the raw cookie value when set', function (): void {
     $_COOKIE['pwg_display_thumbnail'] = 'no_display_thumbnail';
 
-    expect(new CookieService()->getDisplayThumbnailPref())->toBe('no_display_thumbnail');
+    expect(new CookieService()->getDisplayThumbnailPref())
+        ->toBe('no_display_thumbnail');
 });
 
 test('getDisplayThumbnailPref narrows a non-string cookie value to null', function (): void {
@@ -129,19 +138,22 @@ test('getDisplayThumbnailPref narrows a non-string cookie value to null', functi
     // real preference string.
     $_COOKIE['pwg_display_thumbnail'] = ['not', 'scalar'];
 
-    expect(new CookieService()->getDisplayThumbnailPref())->toBeNull();
+    expect(new CookieService()->getDisplayThumbnailPref())
+        ->toBeNull();
 });
 
 test('getAnonymousRaterId returns null when the cookie is unset', function (): void {
     unset($_COOKIE['pwg_anonymous_rater']);
 
-    expect(new CookieService()->getAnonymousRaterId())->toBeNull();
+    expect(new CookieService()->getAnonymousRaterId())
+        ->toBeNull();
 });
 
 test('getAnonymousRaterId returns the raw cookie value when set', function (): void {
     $_COOKIE['pwg_anonymous_rater'] = '10.0.0.1';
 
-    expect(new CookieService()->getAnonymousRaterId())->toBe('10.0.0.1');
+    expect(new CookieService()->getAnonymousRaterId())
+        ->toBe('10.0.0.1');
 });
 
 test('cookiePath does not throw when PATH_INFO is present but not a string', function (): void {
@@ -152,13 +164,15 @@ test('cookiePath does not throw when PATH_INFO is present but not a string', fun
     $_SERVER['REDIRECT_URL'] = '/piwigo/index.php';
     $_SERVER['PATH_INFO'] = ['not', 'a', 'string'];
 
-    expect(new CookieService()->cookiePath())->toBe('/piwigo/');
+    expect(new CookieService()->cookiePath())
+        ->toBe('/piwigo/');
 });
 
 test('cookiePath defaults to just a trailing slash when no script-name source is present at all', function (): void {
     unset($_SERVER['SCRIPT_NAME']);
 
-    expect(new CookieService()->cookiePath())->toBe('/');
+    expect(new CookieService()->cookiePath())
+        ->toBe('/');
 });
 
 test('cookiePath does not double the trailing slash when the directory already ends in one after truncation', function (): void {
@@ -169,7 +183,8 @@ test('cookiePath does not double the trailing slash when the directory already e
     // a second slash.
     $_SERVER['SCRIPT_NAME'] = '/a//index.php';
 
-    expect(new CookieService()->cookiePath())->toBe('/a/');
+    expect(new CookieService()->cookiePath())
+        ->toBe('/a/');
 });
 
 test('cookiePath strips a trailing non-slash character down to the containing directory', function (): void {
@@ -177,13 +192,15 @@ test('cookiePath strips a trailing non-slash character down to the containing di
     // strlen()-1 boundary for "already ends in /" both matter here.
     $_SERVER['SCRIPT_NAME'] = 'index.php';
 
-    expect(new CookieService()->cookiePath())->toBe('/');
+    expect(new CookieService()->cookiePath())
+        ->toBe('/');
 });
 
 test('cookiePath leaves an already-slash-terminated path alone, not appending a second slash', function (): void {
     $_SERVER['SCRIPT_NAME'] = '/piwigo/sub/';
 
-    expect(new CookieService()->cookiePath())->toBe('/piwigo/sub/');
+    expect(new CookieService()->cookiePath())
+        ->toBe('/piwigo/sub/');
 });
 
 test('cookiePath does not append any ../ when mount depth is exactly 0', function (): void {
@@ -192,7 +209,8 @@ test('cookiePath does not append any ../ when mount depth is exactly 0', functio
     // booted), so this needs no explicit setup.
     $_SERVER['SCRIPT_NAME'] = '/piwigo/index.php';
 
-    expect(new CookieService()->cookiePath())->toBe('/piwigo/');
+    expect(new CookieService()->cookiePath())
+        ->toBe('/piwigo/');
 });
 
 test('cookiePath repeats ../ exactly once per mount depth level, not just once', function (): void {
@@ -202,7 +220,8 @@ test('cookiePath repeats ../ exactly once per mount depth level, not just once',
     cookieServiceTestWithMountDepth(2, function (): void {
         $_SERVER['SCRIPT_NAME'] = '/piwigo/admin/deep/popuphelp.php';
 
-        expect(new CookieService()->cookiePath())->toBe('/piwigo/');
+        expect(new CookieService()->cookiePath())
+            ->toBe('/piwigo/');
     });
 });
 
@@ -211,7 +230,8 @@ test('cookiePath throws when the container returns an unexpected type for Reques
 
     KernelContainerOverride::withWrongTypeFor(
         RequestMountDepth::class,
-        static fn () => new CookieService()->cookiePath()
+        static fn () => new CookieService()
+            ->cookiePath()
     );
 })->throws(LogicException::class, 'Container returned an unexpected type for ' . RequestMountDepth::class);
 
@@ -231,7 +251,8 @@ test('cookiePath requires both the redirect-vs-path-info mismatch and the suffix
     $_SERVER['REDIRECT_URL'] = '/foo/bar';
     $_SERVER['PATH_INFO'] = '/foo/bar';
 
-    expect(new CookieService()->cookiePath())->toBe('/foo/');
+    expect(new CookieService()->cookiePath())
+        ->toBe('/foo/');
 });
 
 test('setCookieVar casts a scalar non-string value to a string before handing it to setcookie()', function (): void {
@@ -251,7 +272,8 @@ test('setCookieVar casts a scalar non-string value to a string before handing it
 
     $result = $service->setCookieVar('intpref', 42);
 
-    expect($result)->toBeTrue();
+    expect($result)
+        ->toBeTrue();
     expect($_COOKIE['pwg_intpref'] ?? null)->toBe(42);
 });
 
@@ -274,6 +296,7 @@ test('cookiePath normalizes back to the real app root when the entry file is one
     cookieServiceTestWithMountDepth(1, function (): void {
         $_SERVER['SCRIPT_NAME'] = '/piwigo/admin/popuphelp.php';
 
-        expect(new CookieService()->cookiePath())->toBe('/piwigo/');
+        expect(new CookieService()->cookiePath())
+            ->toBe('/piwigo/');
     });
 });

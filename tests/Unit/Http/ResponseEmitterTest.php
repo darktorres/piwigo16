@@ -13,13 +13,17 @@ use Piwigo\Http\ResponseEmitter;
 // makes the same call: no ResponseEmitterTest.php exists there either.
 // The body-echo path below is the part that's reliably testable in CLI.
 test('emit sends the response body', function (): void {
-    $response = new Response(200, ['X-Piwigo-Test' => 'value'], 'hello world');
+    $response = new Response(200, [
+        'X-Piwigo-Test' => 'value',
+    ], 'hello world');
 
     ob_start();
-    new ResponseEmitter()->emit($response);
+    new ResponseEmitter()
+        ->emit($response);
     $output = ob_get_clean();
 
-    expect($output)->toBe('hello world');
+    expect($output)
+        ->toBe('hello world');
 });
 
 // The comment above is only half right: headers_sent() is live-confirmed to
@@ -38,7 +42,11 @@ test('emit sends the response body', function (): void {
  */
 function responseEmitterTestStartServer(string $docRoot): array
 {
-    $descriptors = [0 => ['pipe', 'r'], 1 => ['pipe', 'w'], 2 => ['pipe', 'w']];
+    $descriptors = [
+        0 => ['pipe', 'r'],
+        1 => ['pipe', 'w'],
+        2 => ['pipe', 'w'],
+    ];
 
     for ($attempt = 0; $attempt < 5; $attempt++) {
         $port = random_int(20_000, 60_000);
@@ -135,9 +143,12 @@ test('emit sends the real status code, custom reason phrase, custom header, and 
     try {
         $raw = responseEmitterTestRawResponse($port, 'mode=basic');
 
-        expect($raw)->toContain("HTTP/1.1 404 Custom Reason\r\n")
-            ->and($raw)->toContain("X-Piwigo-Test: hello\r\n")
-            ->and($raw)->toEndWith('body-content');
+        expect($raw)
+            ->toContain("HTTP/1.1 404 Custom Reason\r\n")
+            ->and($raw)
+            ->toContain("X-Piwigo-Test: hello\r\n")
+            ->and($raw)
+            ->toEndWith('body-content');
     } finally {
         responseEmitterTestStopServer($proc);
         responseEmitterTestCleanupDocRoot($docRoot);
@@ -156,7 +167,8 @@ test('emit sends every value of a multi-value header as its own line, replacing 
     try {
         $raw = responseEmitterTestRawResponse($port, 'mode=multivalue');
 
-        expect($raw)->toContain("X-Multi: a\r\nX-Multi: b\r\n");
+        expect($raw)
+            ->toContain("X-Multi: a\r\nX-Multi: b\r\n");
     } finally {
         responseEmitterTestStopServer($proc);
         responseEmitterTestCleanupDocRoot($docRoot);
@@ -182,8 +194,10 @@ test('emit\'s first header value replaces the SAPI\'s own default header of the 
     try {
         $raw = responseEmitterTestRawResponse($port, 'mode=powered-by-override');
 
-        expect($raw)->toContain('X-Powered-By: PiwigoCustom')
-            ->and(substr_count($raw, 'X-Powered-By:'))->toBe(1);
+        expect($raw)
+            ->toContain('X-Powered-By: PiwigoCustom')
+            ->and(substr_count($raw, 'X-Powered-By:'))
+            ->toBe(1);
     } finally {
         responseEmitterTestStopServer($proc);
         responseEmitterTestCleanupDocRoot($docRoot);

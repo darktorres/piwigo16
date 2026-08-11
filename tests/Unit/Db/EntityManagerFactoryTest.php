@@ -23,7 +23,10 @@ test('build() returns a real EntityManager and registers every custom Doctrine t
     // become true if addType() is only ever called once it's already
     // true) -- confirmed live real code leaves all 6 registered after a
     // single build() call.
-    $conn = DriverManager::getConnection(['driver' => 'pdo_sqlite', 'memory' => true]);
+    $conn = DriverManager::getConnection([
+        'driver' => 'pdo_sqlite',
+        'memory' => true,
+    ]);
 
     $em = EntityManagerFactory::build($conn);
 
@@ -33,7 +36,10 @@ test('build() returns a real EntityManager and registers every custom Doctrine t
 });
 
 test('build() is safe to call more than once without throwing on double type registration', function (): void {
-    $conn = DriverManager::getConnection(['driver' => 'pdo_sqlite', 'memory' => true]);
+    $conn = DriverManager::getConnection([
+        'driver' => 'pdo_sqlite',
+        'memory' => true,
+    ]);
 
     EntityManagerFactory::build($conn);
 
@@ -50,11 +56,15 @@ test('build() configures a real entity source path, not an empty one', function 
     // getAllMetadata() finds 28 real entities with the real path, and
     // throws a genuine Doctrine MappingException ("Specifying source
     // file paths... is required") with an empty one.
-    $conn = DriverManager::getConnection(['driver' => 'pdo_sqlite', 'memory' => true]);
+    $conn = DriverManager::getConnection([
+        'driver' => 'pdo_sqlite',
+        'memory' => true,
+    ]);
 
     $em = EntityManagerFactory::build($conn);
 
-    expect($em->getMetadataFactory()->getAllMetadata())->not->toBeEmpty();
+    expect($em->getMetadataFactory()->getAllMetadata())
+        ->not->toBeEmpty();
 });
 
 test('build() uses the given connection, not a freshly built one', function (): void {
@@ -63,11 +73,15 @@ test('build() uses the given connection, not a freshly built one', function (): 
     // that real code's returned EntityManager wraps the EXACT connection
     // instance passed in, not a different one silently built from real
     // env credentials.
-    $conn = DriverManager::getConnection(['driver' => 'pdo_sqlite', 'memory' => true]);
+    $conn = DriverManager::getConnection([
+        'driver' => 'pdo_sqlite',
+        'memory' => true,
+    ]);
 
     $em = EntityManagerFactory::build($conn);
 
-    expect($em->getConnection())->toBe($conn);
+    expect($em->getConnection())
+        ->toBe($conn);
 });
 
 /**
@@ -121,7 +135,8 @@ test('entityMtimeHash() hashes only Piwigo *Entity.php mtimes, filtered and sort
     // entries where filemtime() failed", which for the real, existing
     // entity files on disk is always empty.
     $sourceFile = (new ReflectionClass(EntityManagerFactory::class))->getFileName();
-    expect($sourceFile)->not->toBeFalse();
+    expect($sourceFile)
+        ->not->toBeFalse();
 
     /** @var array<string, string> $classMap */
     $classMap = require dirname((string) $sourceFile, 4) . '/vendor/composer/autoload_classmap.php';
@@ -140,12 +155,14 @@ test('entityMtimeHash() hashes only Piwigo *Entity.php mtimes, filtered and sort
     // Sanity check on the test's own fixture data, not the mutation
     // target: if this ever goes empty the test below would trivially
     // pass against md5(''), so assert real entity files really matched.
-    expect($expectedMtimes)->not->toBeEmpty();
+    expect($expectedMtimes)
+        ->not->toBeEmpty();
 
     $expectedHash = md5(implode(',', $expectedMtimes));
 
     $method = new ReflectionMethod(EntityManagerFactory::class, 'entityMtimeHash');
     $actualHash = $method->invoke(null);
 
-    expect($actualHash)->toBe($expectedHash);
+    expect($actualHash)
+        ->toBe($expectedHash);
 });

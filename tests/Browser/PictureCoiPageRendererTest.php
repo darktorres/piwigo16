@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
 
-
 function pictureCoiValue(int $imageId): ?string
 {
     $db = H::connect();
@@ -16,7 +15,9 @@ function pictureCoiValue(int $imageId): ?string
 
 it('renders the coi editor for a photo with no center of interest set yet', function (): void {
     $page = H::loginAsAdmin($this);
-    $album = H::wsCall($page, 'pwg.categories.add', ['name' => 'Picture Coi Album ' . uniqid()]);
+    $album = H::wsCall($page, 'pwg.categories.add', [
+        'name' => 'Picture Coi Album ' . uniqid(),
+    ]);
     $albumResult = $album['result'] ?? null;
     if (! is_array($albumResult) || ! is_numeric($albumResult['id'] ?? null)) {
         throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($album, true));
@@ -26,7 +27,8 @@ it('renders the coi editor for a photo with no center of interest set yet', func
     $imageId = H::uploadPhotoViaApi($image, $albumId, 'Picture Coi Photo');
     @unlink($image);
 
-    expect(pictureCoiValue($imageId))->toBeNull();
+    expect(pictureCoiValue($imageId))
+        ->toBeNull();
 
     $page = H::navigateOk($page, '/admin.php?page=picture_coi&image_id=' . $imageId);
 
@@ -36,7 +38,9 @@ it('renders the coi editor for a photo with no center of interest set yet', func
 
 it('submits a new center of interest, persists it, and invalidates derivative-URL-style config', function (): void {
     $page = H::loginAsAdmin($this);
-    $album = H::wsCall($page, 'pwg.categories.add', ['name' => 'Picture Coi Submit Album ' . uniqid()]);
+    $album = H::wsCall($page, 'pwg.categories.add', [
+        'name' => 'Picture Coi Submit Album ' . uniqid(),
+    ]);
     $albumResult = $album['result'] ?? null;
     if (! is_array($albumResult) || ! is_numeric($albumResult['id'] ?? null)) {
         throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($album, true));
@@ -55,13 +59,17 @@ it('submits a new center of interest, persists it, and invalidates derivative-UR
     ]);
 
     expect($result['status'])->toBe(200);
-    expect(pictureCoiValue($imageId))->not->toBeNull();
-    expect(pictureCoiValue($imageId))->toHaveLength(4);
+    expect(pictureCoiValue($imageId))
+        ->not->toBeNull();
+    expect(pictureCoiValue($imageId))
+        ->toHaveLength(4);
 });
 
 it('carries a real representative_ext into the deleted derivative_infos when set', function (): void {
     $page = H::loginAsAdmin($this);
-    $album = H::wsCall($page, 'pwg.categories.add', ['name' => 'Picture Coi RepExt Album ' . uniqid()]);
+    $album = H::wsCall($page, 'pwg.categories.add', [
+        'name' => 'Picture Coi RepExt Album ' . uniqid(),
+    ]);
     $albumResult = $album['result'] ?? null;
     if (! is_array($albumResult) || ! is_numeric($albumResult['id'] ?? null)) {
         throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($album, true));
@@ -88,7 +96,8 @@ it('carries a real representative_ext into the deleted derivative_infos when set
         ]);
 
         expect($result['status'])->toBe(200);
-        expect(pictureCoiValue($imageId))->not->toBeNull();
+        expect(pictureCoiValue($imageId))
+            ->not->toBeNull();
     } finally {
         H::dbClose($db);
     }
@@ -108,7 +117,9 @@ it('resets a "questionmark" derivative_url_style (1) back to "auto" (0) for this
     H::setConfigValue('derivative_url_style', '1');
 
     $page = H::loginAsAdmin($this);
-    $album = H::wsCall($page, 'pwg.categories.add', ['name' => 'Picture Coi UrlStyle Album ' . uniqid()]);
+    $album = H::wsCall($page, 'pwg.categories.add', [
+        'name' => 'Picture Coi UrlStyle Album ' . uniqid(),
+    ]);
     $albumResult = $album['result'] ?? null;
     if (! is_array($albumResult) || ! is_numeric($albumResult['id'] ?? null)) {
         throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($album, true));

@@ -4,51 +4,40 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Integration;
 
-use Override;
-use Piwigo\Auth\AccessLevelChecker;
-use Piwigo\Common\Enum\Section;
-use Piwigo\Common\ValueObject\Email;
-use Piwigo\Common\ValueObject\Username;
-use Piwigo\PluginConfig\EventDispatcher;
-use Piwigo\Tests\Support\EventDispatcherTestFactory;
-use Piwigo\Db\EntityManagerFactory;
-use Piwigo\Category\CategoryRepository;
-use Piwigo\Tests\Support\TranslatorTestFactory;
-use Piwigo\Users\UserRepository;
-use Piwigo\Tests\Support\HtmlServiceTestFactory;
-use Piwigo\Config\DeploymentPolicy;
-use Piwigo\Core\InstallationFlag;
-use Piwigo\Core\ProcessCache;
-use LogicException;
-use Piwigo\Tests\Support\TemplateTestFactory;
-use Piwigo\Tests\Support\UrlServiceTestFactory;
-use Piwigo\Tests\Support\ImageStdParamsTestFactory;
 use Doctrine\DBAL\Connection;
+use LogicException;
+use Override;
 use Piwigo\Activity\ActivityEntity;
 use Piwigo\Activity\ActivityService;
+use Piwigo\Auth\AccessLevelChecker;
 use Piwigo\Bootstrap\RedirectService;
+use Piwigo\Category\CategoryRepository;
 use Piwigo\Category\CategoryService;
+use Piwigo\Common\Enum\Section;
+use Piwigo\Common\ValueObject\Email;
 use Piwigo\Common\ValueObject\LangCode;
+use Piwigo\Common\ValueObject\ThemeId;
 use Piwigo\Common\ValueObject\UserId;
+use Piwigo\Common\ValueObject\Username;
 use Piwigo\Config\ConfigLoader;
 use Piwigo\Config\ConfigService;
 use Piwigo\Config\CurrentConfig;
-use Piwigo\Tests\Support\CurrentConfigTestFactory;
-use Piwigo\Tests\Support\CurrentConfigServiceTestFactory;
+use Piwigo\Config\DeploymentPolicy;
 use Piwigo\Core\CurrentLogger;
-use Piwigo\Tests\Support\CurrentPathsTestFactory;
 use Piwigo\Core\FilterState;
+use Piwigo\Core\InstallationFlag;
 use Piwigo\Core\Kernel;
-use Piwigo\Tests\Support\LangTestFactory;
 use Piwigo\Core\Logger;
-use Piwigo\Tests\Support\PageStateTestFactory;
+use Piwigo\Core\ProcessCache;
 use Piwigo\Core\RequestMountDepth;
 use Piwigo\Db\DbConnection;
+use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Group\GroupEntity;
 use Piwigo\Http\ResponseReadyException;
 use Piwigo\Mail\MailService;
 use Piwigo\Permission\PermissionRepository;
 use Piwigo\Permission\PermissionService;
+use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Search\SearchRepository;
 use Piwigo\Search\SearchService;
 use Piwigo\Section\SectionContextRegistry;
@@ -60,9 +49,20 @@ use Piwigo\Tag\TagEntity;
 use Piwigo\Tag\TagService;
 use Piwigo\Template\CurrentTemplate;
 use Piwigo\Template\Template;
+use Piwigo\Tests\Support\CurrentConfigServiceTestFactory;
+use Piwigo\Tests\Support\CurrentConfigTestFactory;
+use Piwigo\Tests\Support\CurrentPathsTestFactory;
 use Piwigo\Tests\Support\CurrentUserTestFactory;
-use Piwigo\Common\ValueObject\ThemeId;
+use Piwigo\Tests\Support\EventDispatcherTestFactory;
+use Piwigo\Tests\Support\HtmlServiceTestFactory;
+use Piwigo\Tests\Support\ImageStdParamsTestFactory;
+use Piwigo\Tests\Support\LangTestFactory;
+use Piwigo\Tests\Support\PageStateTestFactory;
+use Piwigo\Tests\Support\TemplateTestFactory;
+use Piwigo\Tests\Support\TranslatorTestFactory;
+use Piwigo\Tests\Support\UrlServiceTestFactory;
 use Piwigo\Users\User;
+use Piwigo\Users\UserRepository;
 use Piwigo\Users\UserService;
 use Piwigo\Users\UserStatus;
 
@@ -135,7 +135,10 @@ final class SectionPopulatorTest extends IntegrationTestCase
         ConfigLoader::applyDefaults();
         ConfigLoader::applyEnvOverrides();
         CurrentConfigServiceTestFactory::get()->set(new ConfigService($this->buildConfigRepository(), new EventDispatcher(), CurrentConfigTestFactory::get()));
-        LangTestFactory::get()->setLangInfo(['code' => 'en_UK', 'direction' => 'ltr']);
+        LangTestFactory::get()->setLangInfo([
+            'code' => 'en_UK',
+            'direction' => 'ltr',
+        ]);
         CurrentConfigTestFactory::get()->sendPiwigoInfos = false;
         CurrentConfigTestFactory::get()->questionMarkInUrls = false;
 
@@ -146,7 +149,7 @@ final class SectionPopulatorTest extends IntegrationTestCase
         $accessLevelChecker = new AccessLevelChecker(CurrentUserTestFactory::get(), CurrentConfigTestFactory::get());
         $this->permissionService = new PermissionService(new PermissionRepository($em), $em->getRepository(GroupEntity::class), $categoryRepo, CurrentUserTestFactory::get(), $this->filterState, $accessLevelChecker);
         $this->categoryService = new CategoryService(LangTestFactory::get(), $categoryRepo, $this->permissionService, CurrentConfigTestFactory::get(), new EventDispatcher(), TranslatorTestFactory::get(), $accessLevelChecker);
-        $this->sessionService = new SessionService($em->getRepository(SessionEntity::class),CurrentConfigTestFactory::get());
+        $this->sessionService = new SessionService($em->getRepository(SessionEntity::class), CurrentConfigTestFactory::get());
         $this->tagService = new TagService(LangTestFactory::get(), $em->getRepository(TagEntity::class), $this->permissionService, new ActivityService($em->getRepository(ActivityEntity::class)), new EventDispatcher(), CurrentUserTestFactory::get(), CurrentConfigTestFactory::get(), new CurrentLogger(), $this->sessionService);
         $mailer = Kernel::container()->get(MailService::class);
         self::assertInstanceOf(MailService::class, $mailer);
@@ -154,7 +157,9 @@ final class SectionPopulatorTest extends IntegrationTestCase
         $this->searchService = new SearchService(new AccessLevelChecker(CurrentUserTestFactory::get(), CurrentConfigTestFactory::get()), new SearchRepository($em), $this->permissionService, $this->categoryService, $mailer, HtmlServiceTestFactory::build(), new RedirectService(LangTestFactory::get(), $this->userService, EventDispatcherTestFactory::get(), PageStateTestFactory::get()), $this->sessionService, new EventDispatcher(), CurrentUserTestFactory::get(), LangTestFactory::get(), CurrentConfigTestFactory::get(), new CurrentLogger(), new DeploymentPolicy(), CurrentPathsTestFactory::get(), $this->tagService);
         $this->sectionRepo = new SectionRepository($em);
         $this->currentLogger = new CurrentLogger();
-        $this->currentLogger->set(new Logger(['severity' => Logger::OFF]));
+        $this->currentLogger->set(new Logger([
+            'severity' => Logger::OFF,
+        ]));
         // Must be the container-shared instance, not a fresh new
         // SectionContextRegistry() -- UrlService::duplicateIndexUrl()
         // (called by the permalink-redirect test below) reads it through
@@ -249,12 +254,13 @@ final class SectionPopulatorTest extends IntegrationTestCase
         ));
     }
 
-    public function test_populate_sets_flat_mode_for_a_bare_picture_id_with_no_category(): void
+    public function testPopulateSetsFlatModeForABarePictureIdWithNoCategory(): void
     {
         $_SERVER['SCRIPT_NAME'] = '/piwigo17/picture.php';
         $_SERVER['PATH_INFO'] = '/1';
 
-        $this->makePopulator()->populate();
+        $this->makePopulator()
+            ->populate();
 
         $ctx = $this->sectionContextRegistry->current();
         self::assertNotNull($ctx);
@@ -263,14 +269,17 @@ final class SectionPopulatorTest extends IntegrationTestCase
         self::assertNull($ctx->category);
     }
 
-    public function test_populate_redirects_when_index_has_a_matching_random_redirect_candidate(): void
+    public function testPopulateRedirectsWhenIndexHasAMatchingRandomRedirectCandidate(): void
     {
-        CurrentConfigTestFactory::get()->randomIndexRedirect = ['random.php' => ''];
+        CurrentConfigTestFactory::get()->randomIndexRedirect = [
+            'random.php' => '',
+        ];
         $_SERVER['SCRIPT_NAME'] = '/piwigo17/index.php';
         $_SERVER['PATH_INFO'] = '/';
 
         try {
-            $this->makePopulator()->populate();
+            $this->makePopulator()
+                ->populate();
             self::fail('populate() should have thrown ResponseReadyException.');
         } catch (ResponseReadyException $e) {
             $response = $e->response();
@@ -279,7 +288,7 @@ final class SectionPopulatorTest extends IntegrationTestCase
         }
     }
 
-    public function test_populate_triggers_a_warning_for_an_unknown_script_basename(): void
+    public function testPopulateTriggersAWarningForAnUnknownScriptBasename(): void
     {
         $_SERVER['SCRIPT_NAME'] = '/piwigo17/somethingelse.php';
         $_SERVER['PATH_INFO'] = '/';
@@ -290,7 +299,8 @@ final class SectionPopulatorTest extends IntegrationTestCase
             return true;
         }, E_USER_WARNING);
         try {
-            $this->makePopulator()->populate();
+            $this->makePopulator()
+                ->populate();
         } finally {
             restore_error_handler();
         }
@@ -301,7 +311,7 @@ final class SectionPopulatorTest extends IntegrationTestCase
         self::assertSame(Section::Categories, $ctx->section);
     }
 
-    public function test_populate_clears_an_incompatible_session_image_order(): void
+    public function testPopulateClearsAnIncompatibleSessionImageOrder(): void
     {
         // Order index 11 ("Permissions", 'level DESC') is only visible
         // when AccessControl::isAdmin() -- false for regular_user, so
@@ -312,7 +322,8 @@ final class SectionPopulatorTest extends IntegrationTestCase
         $_SERVER['SCRIPT_NAME'] = '/piwigo17/index.php';
         $_SERVER['PATH_INFO'] = '/category/1';
 
-        $this->makePopulator()->populate();
+        $this->makePopulator()
+            ->populate();
 
         self::assertArrayNotHasKey('pwg_image_order', $_SESSION);
         $ctx = $this->sectionContextRegistry->current();
@@ -324,12 +335,13 @@ final class SectionPopulatorTest extends IntegrationTestCase
         self::assertTrue($ctx->superOrderBy);
     }
 
-    public function test_populate_builds_a_combined_categories_context_and_merges_their_image_ids(): void
+    public function testPopulateBuildsACombinedCategoriesContextAndMergesTheirImageIds(): void
     {
         $_SERVER['SCRIPT_NAME'] = '/piwigo17/index.php';
         $_SERVER['PATH_INFO'] = '/category/1/2';
 
-        $this->makePopulator()->populate();
+        $this->makePopulator()
+            ->populate();
 
         $ctx = $this->sectionContextRegistry->current();
         self::assertNotNull($ctx);
@@ -346,14 +358,15 @@ final class SectionPopulatorTest extends IntegrationTestCase
         self::assertCount(0, $ctx->items);
     }
 
-    public function test_populate_applies_the_categorys_own_custom_image_order(): void
+    public function testPopulateAppliesTheCategorysOwnCustomImageOrder(): void
     {
         $this->conn->executeStatement("UPDATE categories SET image_order = 'name ASC' WHERE id = 1");
         $_SERVER['SCRIPT_NAME'] = '/piwigo17/index.php';
         $_SERVER['PATH_INFO'] = '/category/1';
 
         try {
-            $this->makePopulator()->populate();
+            $this->makePopulator()
+                ->populate();
         } finally {
             $this->conn->executeStatement('UPDATE categories SET image_order = NULL WHERE id = 1');
         }
@@ -363,7 +376,7 @@ final class SectionPopulatorTest extends IntegrationTestCase
         self::assertCount(3, $ctx->items);
     }
 
-    public function test_populate_denies_access_when_a_tag_has_zero_linked_images(): void
+    public function testPopulateDeniesAccessWhenATagHasZeroLinkedImages(): void
     {
         $this->conn->executeStatement(
             "INSERT INTO tags (id, name, url_name, lastmodified) VALUES (4, 'empty-tag', 'empty-tag', NOW())"
@@ -372,7 +385,8 @@ final class SectionPopulatorTest extends IntegrationTestCase
         $_SERVER['PATH_INFO'] = '/tags/4';
 
         try {
-            $this->makePopulator()->populate();
+            $this->makePopulator()
+                ->populate();
             self::fail('populate() should have thrown ResponseReadyException.');
         } catch (ResponseReadyException $e) {
             // regular_user is a real, non-guest CurrentUser -- accessDenied()
@@ -383,14 +397,17 @@ final class SectionPopulatorTest extends IntegrationTestCase
         }
     }
 
-    public function test_populate_stores_qsearch_details_for_a_quick_search(): void
+    public function testPopulateStoresQsearchDetailsForAQuickSearch(): void
     {
         $searchRepo = new SearchRepository(EntityManagerFactory::build($this->conn));
-        $searchId = $searchRepo->insertSavedSearch(['q' => 'nature'], '2026-07-12 00:00:00', 3, 'psk-20260712-abcdefghij', null);
+        $searchId = $searchRepo->insertSavedSearch([
+            'q' => 'nature',
+        ], '2026-07-12 00:00:00', 3, 'psk-20260712-abcdefghij', null);
         $_SERVER['SCRIPT_NAME'] = '/piwigo17/index.php';
         $_SERVER['PATH_INFO'] = '/search/' . $searchId;
 
-        $this->makePopulator()->populate();
+        $this->makePopulator()
+            ->populate();
 
         $ctx = $this->sectionContextRegistry->current();
         self::assertNotNull($ctx);
@@ -401,7 +418,12 @@ final class SectionPopulatorTest extends IntegrationTestCase
             'q' => 'nature',
             'unmatched_terms' => [],
             'matching_tags' => [
-                ['id' => 1, 'name' => 'nature', 'url_name' => 'nature', 'lastmodified' => '2026-08-01 00:00:00'],
+                [
+                    'id' => 1,
+                    'name' => 'nature',
+                    'url_name' => 'nature',
+                    'lastmodified' => '2026-08-01 00:00:00',
+                ],
             ],
             'matching_cats' => [],
         ], $ctx->qsearchDetails);
@@ -409,13 +431,14 @@ final class SectionPopulatorTest extends IntegrationTestCase
         self::assertCount(3, $ctx->items);
     }
 
-    public function test_populate_lists_favorites_and_assigns_the_remove_all_template_var(): void
+    public function testPopulateListsFavoritesAndAssignsTheRemoveAllTemplateVar(): void
     {
         $this->setAdminUser();
         $_SERVER['SCRIPT_NAME'] = '/piwigo17/index.php';
         $_SERVER['PATH_INFO'] = '/favorites';
 
-        $this->makePopulator()->populate();
+        $this->makePopulator()
+            ->populate();
 
         $ctx = $this->sectionContextRegistry->current();
         self::assertNotNull($ctx);
@@ -427,7 +450,7 @@ final class SectionPopulatorTest extends IntegrationTestCase
         self::assertArrayHasKey('U_FAVORITE', $favoriteVar);
     }
 
-    public function test_populate_deletes_all_favorites_and_redirects(): void
+    public function testPopulateDeletesAllFavoritesAndRedirects(): void
     {
         $this->conn->executeStatement(
             'INSERT INTO favorites (user_id, image_id) VALUES (3, 2)'
@@ -437,7 +460,8 @@ final class SectionPopulatorTest extends IntegrationTestCase
         $_GET['action'] = 'remove_all_from_favorites';
 
         try {
-            $this->makePopulator()->populate();
+            $this->makePopulator()
+                ->populate();
             self::fail('populate() should have thrown ResponseReadyException.');
         } catch (ResponseReadyException $e) {
             $response = $e->response();
@@ -452,12 +476,13 @@ final class SectionPopulatorTest extends IntegrationTestCase
         self::assertSame(0, $remaining);
     }
 
-    public function test_populate_builds_the_recent_pics_section(): void
+    public function testPopulateBuildsTheRecentPicsSection(): void
     {
         $_SERVER['SCRIPT_NAME'] = '/piwigo17/index.php';
         $_SERVER['PATH_INFO'] = '/recent_pics';
 
-        $this->makePopulator()->populate();
+        $this->makePopulator()
+            ->populate();
 
         $ctx = $this->sectionContextRegistry->current();
         self::assertNotNull($ctx);
@@ -465,12 +490,13 @@ final class SectionPopulatorTest extends IntegrationTestCase
         self::assertStringContainsString('Recent photos', strip_tags($ctx->title));
     }
 
-    public function test_populate_builds_the_most_visited_section(): void
+    public function testPopulateBuildsTheMostVisitedSection(): void
     {
         $_SERVER['SCRIPT_NAME'] = '/piwigo17/index.php';
         $_SERVER['PATH_INFO'] = '/most_visited';
 
-        $this->makePopulator()->populate();
+        $this->makePopulator()
+            ->populate();
 
         $ctx = $this->sectionContextRegistry->current();
         self::assertNotNull($ctx);
@@ -479,12 +505,13 @@ final class SectionPopulatorTest extends IntegrationTestCase
         self::assertStringContainsString('Most visited', strip_tags($ctx->title));
     }
 
-    public function test_populate_builds_the_best_rated_section(): void
+    public function testPopulateBuildsTheBestRatedSection(): void
     {
         $_SERVER['SCRIPT_NAME'] = '/piwigo17/index.php';
         $_SERVER['PATH_INFO'] = '/best_rated';
 
-        $this->makePopulator()->populate();
+        $this->makePopulator()
+            ->populate();
 
         $ctx = $this->sectionContextRegistry->current();
         self::assertNotNull($ctx);
@@ -493,12 +520,13 @@ final class SectionPopulatorTest extends IntegrationTestCase
         self::assertStringContainsString('Best rated', strip_tags($ctx->title));
     }
 
-    public function test_populate_builds_the_list_section(): void
+    public function testPopulateBuildsTheListSection(): void
     {
         $_SERVER['SCRIPT_NAME'] = '/piwigo17/index.php';
         $_SERVER['PATH_INFO'] = '/list/1,2,3';
 
-        $this->makePopulator()->populate();
+        $this->makePopulator()
+            ->populate();
 
         $ctx = $this->sectionContextRegistry->current();
         self::assertNotNull($ctx);
@@ -510,7 +538,7 @@ final class SectionPopulatorTest extends IntegrationTestCase
         self::assertStringContainsString('Random photos', strip_tags($ctx->title));
     }
 
-    public function test_populate_redirects_permanently_on_a_permalink_mismatch(): void
+    public function testPopulateRedirectsPermanentlyOnAPermalinkMismatch(): void
     {
         CurrentConfigTestFactory::get()->categoryUrlStyle = 'id-name';
         $_SERVER['SCRIPT_NAME'] = '/piwigo17/index.php';
@@ -521,7 +549,8 @@ final class SectionPopulatorTest extends IntegrationTestCase
         $_SERVER['PATH_INFO'] = '/category/1-wrong-name';
 
         try {
-            $this->makePopulator()->populate();
+            $this->makePopulator()
+                ->populate();
             self::fail('populate() should have thrown ResponseReadyException.');
         } catch (ResponseReadyException $e) {
             $response = $e->response();

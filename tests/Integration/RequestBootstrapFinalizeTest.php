@@ -4,29 +4,29 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Integration;
 
-use Override;
-use Piwigo\Core\Kernel;
 use LogicException;
-use Piwigo\Tests\Support\UrlServiceTestFactory;
+use Override;
 use Piwigo\Bootstrap\RequestBootstrap;
 use Piwigo\Common\ValueObject\Email;
 use Piwigo\Common\ValueObject\LangCode;
+use Piwigo\Common\ValueObject\ThemeId;
 use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Common\ValueObject\Username;
 use Piwigo\Config\ConfigLoader;
 use Piwigo\Config\ConfigService;
 use Piwigo\Config\CurrentConfig;
-use Piwigo\Tests\Support\CurrentConfigTestFactory;
-use Piwigo\Tests\Support\CurrentConfigServiceTestFactory;
-use Piwigo\Tests\Support\LangTestFactory;
-use Piwigo\Tests\Support\PageStateTestFactory;
+use Piwigo\Core\Kernel;
 use Piwigo\Event\Picture\GetElementUrl;
 use Piwigo\Http\ResponseReadyException;
 use Piwigo\PluginConfig\EventDispatcher;
-use Piwigo\Tests\Support\EventDispatcherTestFactory;
 use Piwigo\Template\CurrentTemplate;
+use Piwigo\Tests\Support\CurrentConfigServiceTestFactory;
+use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Tests\Support\CurrentUserTestFactory;
-use Piwigo\Common\ValueObject\ThemeId;
+use Piwigo\Tests\Support\EventDispatcherTestFactory;
+use Piwigo\Tests\Support\LangTestFactory;
+use Piwigo\Tests\Support\PageStateTestFactory;
+use Piwigo\Tests\Support\UrlServiceTestFactory;
 use Piwigo\Users\User;
 use Piwigo\Users\UserStatus;
 
@@ -99,7 +99,7 @@ final class RequestBootstrapFinalizeTest extends IntegrationTestCase
         parent::tearDown();
     }
 
-    public function test_finalize_adds_a_stale_auth_key_error_message(): void
+    public function testFinalizeAddsAStaleAuthKeyErrorMessage(): void
     {
         PageStateTestFactory::get()->markAuthKeyInvalid();
 
@@ -115,7 +115,7 @@ final class RequestBootstrapFinalizeTest extends IntegrationTestCase
         );
     }
 
-    public function test_finalize_uses_the_mobile_theme_when_the_session_mobile_theme_flag_is_set(): void
+    public function testFinalizeUsesTheMobileThemeWhenTheSessionMobileThemeFlagIsSet(): void
     {
         $currentConfig = Kernel::container()->get(CurrentConfig::class);
         if (! $currentConfig instanceof CurrentConfig) {
@@ -137,7 +137,7 @@ final class RequestBootstrapFinalizeTest extends IntegrationTestCase
         }
     }
 
-    public function test_finalize_calls_noPhotoYetRenderer_when_noPhotoYet_config_is_unset(): void
+    public function testFinalizeCallsNoPhotoYetRendererWhenNoPhotoYetConfigIsUnset(): void
     {
         // The real fixture DOES seed a 'no_photo_yet' row ("false") --
         // real production connect() would call ConfigService::
@@ -163,7 +163,7 @@ final class RequestBootstrapFinalizeTest extends IntegrationTestCase
         self::assertNull($currentConfig->noPhotoYet);
     }
 
-    public function test_finalize_adds_a_header_warning_when_guest_must_be_guest_is_flagged(): void
+    public function testFinalizeAddsAHeaderWarningWhenGuestMustBeGuestIsFlagged(): void
     {
         CurrentUserTestFactory::get()->set(new User(
             id: UserId::from(2),
@@ -173,7 +173,9 @@ final class RequestBootstrapFinalizeTest extends IntegrationTestCase
             theme: ThemeId::from('default'),
             status: UserStatus::Guest,
             enabledHigh: false,
-            internalStatus: ['guest_must_be_guest' => true],
+            internalStatus: [
+                'guest_must_be_guest' => true,
+            ],
         ));
 
         RequestBootstrap::finalize();
@@ -188,7 +190,7 @@ final class RequestBootstrapFinalizeTest extends IntegrationTestCase
         );
     }
 
-    public function test_finalize_throws_a_503_when_the_gallery_is_locked_for_a_non_admin_non_identification_request(): void
+    public function testFinalizeThrowsA503WhenTheGalleryIsLockedForANonAdminNonIdentificationRequest(): void
     {
         $currentConfig = Kernel::container()->get(CurrentConfig::class);
         if (! $currentConfig instanceof CurrentConfig) {
@@ -210,7 +212,7 @@ final class RequestBootstrapFinalizeTest extends IntegrationTestCase
         }
     }
 
-    public function test_finalize_registers_the_url_protection_handlers_when_originalUrlProtection_is_configured(): void
+    public function testFinalizeRegistersTheUrlProtectionHandlersWhenOriginalUrlProtectionIsConfigured(): void
     {
         $currentConfig = Kernel::container()->get(CurrentConfig::class);
         if (! $currentConfig instanceof CurrentConfig) {
@@ -222,7 +224,10 @@ final class RequestBootstrapFinalizeTest extends IntegrationTestCase
 
         $result = EventDispatcherTestFactory::get()->dispatchChange(new GetElementUrl(
             'http://original.example/x.jpg',
-            ['id' => 42, 'path' => 'x.jpg']
+            [
+                'id' => 42,
+                'path' => 'x.jpg',
+            ]
         ));
 
         self::assertSame(

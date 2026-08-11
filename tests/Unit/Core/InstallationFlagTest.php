@@ -15,14 +15,16 @@ use Piwigo\Core\InstallationFlag;
  * sharing this same process.
  */
 test('isActive is false before mark() has ever been called', function (): void {
-    expect(new InstallationFlag()->isActive())->toBeFalse();
+    expect(new InstallationFlag()->isActive())
+        ->toBeFalse();
 });
 
 test('mark() makes isActive true', function (): void {
     $flag = new InstallationFlag();
     $flag->mark();
 
-    expect($flag->isActive())->toBeTrue();
+    expect($flag->isActive())
+        ->toBeTrue();
 });
 
 test('reset() clears the marked flag back to false, not just leaving it unset', function (): void {
@@ -31,9 +33,11 @@ test('reset() clears the marked flag back to false, not just leaving it unset', 
     // this exact assignment, isActive() stays true after reset().
     $flag = new InstallationFlag();
     $flag->mark();
-    expect($flag->isActive())->toBeTrue();
+    expect($flag->isActive())
+        ->toBeTrue();
 
     $flag->reset();
 
-    expect($flag->isActive())->toBeFalse();
+    expect($flag->isActive())
+        ->toBeFalse();
 });

@@ -4,15 +4,15 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Integration;
 
-use Override;
-use Piwigo\Core\Kernel;
 use LogicException;
-use Piwigo\Db\EntityManagerFactory;
+use Override;
 use Piwigo\Admin\Maintenance\DbMaintenanceRepository;
 use Piwigo\Command\MaintenanceOrphanTagsCommand;
-use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\ConfigLoader;
+use Piwigo\Config\CurrentConfig;
+use Piwigo\Core\Kernel;
 use Piwigo\Db\DbConnection;
+use Piwigo\Db\EntityManagerFactory;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Tester\CommandTester;
 
@@ -41,7 +41,7 @@ final class MaintenanceOrphanTagsCommandTest extends IntegrationTestCase
         ConfigLoader::applyEnvOverrides();
     }
 
-    public function test_deletes_an_orphan_tag_and_reports_the_count(): void
+    public function testDeletesAnOrphanTagAndReportsTheCount(): void
     {
         $conn = DbConnection::build();
         $conn->createQueryBuilder()

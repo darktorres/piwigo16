@@ -7,12 +7,12 @@ use Piwigo\Common\ValueObject\ThemeId;
 use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Common\ValueObject\Username;
 use Piwigo\Config\CurrentConfig;
-use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Core\AppInfo;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Paths;
-use Piwigo\Users\CurrentUser;
+use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Tests\Support\CurrentUserTestFactory;
+use Piwigo\Users\CurrentUser;
 use Piwigo\Users\User;
 use Piwigo\Users\UserStatus;
 
@@ -31,7 +31,8 @@ afterEach(function (): void {
 test('isInitialized is false before attachGlobals runs', function (): void {
     $currentUser = new CurrentUser(new CurrentConfig());
 
-    expect($currentUser->isInitialized())->toBeFalse();
+    expect($currentUser->isInitialized())
+        ->toBeFalse();
 });
 
 test('get throws before attachGlobals or set has run', function (): void {
@@ -45,13 +46,20 @@ test('attachGlobals seeds a guest user', function (): void {
     $currentUser->attachGlobals();
     $user = $currentUser->get();
 
-    expect($user->status)->toBe(UserStatus::Guest)
-        ->and($user->username)->toBeNull()
-        ->and($user->email)->toBeNull()
-        ->and($user->enabledHigh)->toBeFalse()
-        ->and($user->language)->toEqual(LangCode::from(AppInfo::DEFAULT_LANGUAGE))
-        ->and($user->theme)->toEqual(ThemeId::from(AppInfo::DEFAULT_TEMPLATE))
-        ->and($user->id->value)->toBe(new CurrentConfig()->guestId);
+    expect($user->status)
+        ->toBe(UserStatus::Guest)
+        ->and($user->username)
+        ->toBeNull()
+        ->and($user->email)
+        ->toBeNull()
+        ->and($user->enabledHigh)
+        ->toBeFalse()
+        ->and($user->language)
+        ->toEqual(LangCode::from(AppInfo::DEFAULT_LANGUAGE))
+        ->and($user->theme)
+        ->toEqual(ThemeId::from(AppInfo::DEFAULT_TEMPLATE))
+        ->and($user->id->value)
+        ->toBe(new CurrentConfig()->guestId);
 });
 
 test('attachGlobals is idempotent -- does not clobber a real set() user', function (): void {
@@ -69,7 +77,8 @@ test('attachGlobals is idempotent -- does not clobber a real set() user', functi
 
     $currentUser->attachGlobals();
 
-    expect($currentUser->get())->toBe($real);
+    expect($currentUser->get())
+        ->toBe($real);
 });
 
 test('updateLanguage replaces the instance with a language-updated copy', function (): void {
@@ -78,17 +87,20 @@ test('updateLanguage replaces the instance with a language-updated copy', functi
 
     $currentUser->updateLanguage(LangCode::from('fr_FR'));
 
-    expect($currentUser->get()->language)->toEqual(LangCode::from('fr_FR'));
+    expect($currentUser->get()->language)
+        ->toEqual(LangCode::from('fr_FR'));
 });
 
 test('reset clears the real-user-resolved flag back to false', function (): void {
     $currentUser = new CurrentUser(new CurrentConfig());
     $currentUser->markRealUserResolved();
-    expect($currentUser->wasRealUserResolved())->toBeTrue();
+    expect($currentUser->wasRealUserResolved())
+        ->toBeTrue();
 
     $currentUser->reset();
 
-    expect($currentUser->wasRealUserResolved())->toBeFalse();
+    expect($currentUser->wasRealUserResolved())
+        ->toBeFalse();
 });
 
 test('current() falls back to a memoized instance when Kernel is not booted', function (): void {
@@ -106,8 +118,10 @@ test('current() falls back to a memoized instance when Kernel is not booted', fu
 
     $second = CurrentUserTestFactory::get();
 
-    expect($second)->toBe($first)
-        ->and($second->isInitialized())->toBeTrue();
+    expect($second)
+        ->toBe($first)
+        ->and($second->isInitialized())
+        ->toBeTrue();
 });
 
 test('current() resolves the container-shared instance once Kernel is booted', function (): void {

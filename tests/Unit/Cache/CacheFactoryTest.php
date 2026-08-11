@@ -2,8 +2,8 @@
 
 declare(strict_types=1);
 
-use Psr\Cache\CacheItemPoolInterface;
 use Piwigo\Cache\CacheFactory;
+use Psr\Cache\CacheItemPoolInterface;
 use Symfony\Component\Cache\Adapter\ApcuAdapter;
 use Symfony\Component\Cache\Adapter\FilesystemAdapter;
 use Symfony\Component\Cache\Exception\CacheException;
@@ -60,9 +60,11 @@ test('buildFilesystem points the adapter at the real repo root\'s _data/cache/ d
     // internally (confirmed present via direct source read).
     $pool = CacheFactory::create('filesystem');
 
-    $directory = new ReflectionProperty($pool, 'directory')->getValue($pool);
+    $directory = new ReflectionProperty($pool, 'directory')
+        ->getValue($pool);
 
-    expect($directory)->toBe(dirname(__DIR__, 3) . '/_data/cache/piwigo/');
+    expect($directory)
+        ->toBe(dirname(__DIR__, 3) . '/_data/cache/piwigo/');
 });
 
 test('the PIWIGO_CACHE_ADAPTER env var is honored when no explicit param is given', function (): void {

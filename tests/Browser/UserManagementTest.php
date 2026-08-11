@@ -16,7 +16,7 @@ use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
 function wsAddedUserId(array $response): int
 {
     $result = $response['result'] ?? null;
-    if (!is_array($result)) {
+    if (! is_array($result)) {
         throw new RuntimeException('pwg.users.add response missing result: ' . var_export($response, true));
     }
 
@@ -44,18 +44,18 @@ function wsAddedUserId(array $response): int
 function wsListedUsers(array $response): array
 {
     $result = $response['result'] ?? null;
-    if (!is_array($result)) {
+    if (! is_array($result)) {
         throw new RuntimeException('pwg.users.getList response missing result: ' . var_export($response, true));
     }
 
     $users = $result['users'] ?? null;
-    if (!is_array($users)) {
+    if (! is_array($users)) {
         throw new RuntimeException('pwg.users.getList response missing users: ' . var_export($response, true));
     }
 
     $out = [];
     foreach ($users as $user) {
-        if (!is_array($user)) {
+        if (! is_array($user)) {
             continue;
         }
 
@@ -75,26 +75,32 @@ it('creates and deletes a user', function (): void {
 
     $username = 'browser_test_user_' . uniqid();
     $create = H::wsCall($page, 'pwg.users.add', [
-        'username'  => $username,
-        'password'  => 'SecurePass123!',
-        'email'     => $username . '@example.test',
+        'username' => $username,
+        'password' => 'SecurePass123!',
+        'email' => $username . '@example.test',
         'pwg_token' => $pwgToken,
     ]);
     expect($create['stat'])->toBe('ok');
     $userId = wsAddedUserId($create);
-    expect($userId)->toBeGreaterThan(0);
+    expect($userId)
+        ->toBeGreaterThan(0);
 
     $list = H::wsCall($page, 'pwg.users.getList');
     expect($list['stat'])->toBe('ok');
     $usernames = array_column(wsListedUsers($list), 'username');
-    expect($usernames)->toContain($username);
+    expect($usernames)
+        ->toContain($username);
 
-    $delete = H::wsCall($page, 'pwg.users.delete', ['user_id' => $userId, 'pwg_token' => $pwgToken]);
+    $delete = H::wsCall($page, 'pwg.users.delete', [
+        'user_id' => $userId,
+        'pwg_token' => $pwgToken,
+    ]);
     expect($delete['stat'])->toBe('ok');
 
     $afterDelete = H::wsCall($page, 'pwg.users.getList');
     $afterUsernames = array_column(wsListedUsers($afterDelete), 'username');
-    expect($afterUsernames)->not->toContain($username);
+    expect($afterUsernames)
+        ->not->toContain($username);
 });
 
 it('admin user list page loads without errors', function (): void {

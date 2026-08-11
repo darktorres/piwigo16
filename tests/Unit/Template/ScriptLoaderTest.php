@@ -6,17 +6,17 @@ use Piwigo\Auth\AccessLevelChecker;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\ErrorCollector;
 use Piwigo\Core\HtmlRenderingInterface;
+use Piwigo\Core\Kernel;
+use Piwigo\Core\Paths;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Http\ResponseReadyException;
 use Piwigo\PluginConfig\EventDispatcher;
-use Piwigo\Tests\Support\CurrentConfigTestFactory;
-use Piwigo\Core\Kernel;
-use Piwigo\Core\Paths;
 use Piwigo\Template\CurrentTemplate;
 use Piwigo\Template\Script;
 use Piwigo\Template\ScriptLoader;
-use Piwigo\Tests\Support\KernelContainerOverride;
+use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Tests\Support\CurrentUserTestFactory;
+use Piwigo\Tests\Support\KernelContainerOverride;
 
 // Most of this file inspects/invokes ScriptLoader's private state and
 // methods via reflection for precise control over dependency graphs and
@@ -85,7 +85,8 @@ test('add registers a new script with its load_mode and precedents', function ()
 
     $registered = scriptLoaderRegistered($loader);
 
-    expect($registered)->toHaveKey('my-script')
+    expect($registered)
+        ->toHaveKey('my-script')
         ->and($registered['my-script']->load_mode)->toBe(1)
         ->and($registered['my-script']->precedents)->toBe(['jquery']);
 });
@@ -144,7 +145,8 @@ test('a script with no precedents has topological order 0', function (): void {
     $loader = new ScriptLoader();
     $loader->add('standalone', 0, [], 'themes/default/js/foo.js');
 
-    expect(scriptLoaderTopologicalOrder($loader, 'standalone'))->toBe(0);
+    expect(scriptLoaderTopologicalOrder($loader, 'standalone'))
+        ->toBe(0);
 });
 
 test('a script depending on one precedent has topological order 1', function (): void {
@@ -152,7 +154,8 @@ test('a script depending on one precedent has topological order 1', function ():
     $loader->add('base', 0, [], 'themes/default/js/base.js');
     $loader->add('dependent', 0, ['base'], 'themes/default/js/dependent.js');
 
-    expect(scriptLoaderTopologicalOrder($loader, 'dependent'))->toBe(1);
+    expect(scriptLoaderTopologicalOrder($loader, 'dependent'))
+        ->toBe(1);
 });
 
 test('topological order follows the longest dependency chain', function (): void {
@@ -161,9 +164,12 @@ test('topological order follows the longest dependency chain', function (): void
     $loader->add('b', 0, ['a'], 'themes/default/js/b.js');
     $loader->add('c', 0, ['b'], 'themes/default/js/c.js');
 
-    expect(scriptLoaderTopologicalOrder($loader, 'a'))->toBe(0)
-        ->and(scriptLoaderTopologicalOrder($loader, 'b'))->toBe(1)
-        ->and(scriptLoaderTopologicalOrder($loader, 'c'))->toBe(2);
+    expect(scriptLoaderTopologicalOrder($loader, 'a'))
+        ->toBe(0)
+        ->and(scriptLoaderTopologicalOrder($loader, 'b'))
+        ->toBe(1)
+        ->and(scriptLoaderTopologicalOrder($loader, 'c'))
+        ->toBe(2);
 });
 
 test('topological order takes the max across multiple precedents', function (): void {
@@ -173,7 +179,8 @@ test('topological order takes the max across multiple precedents', function (): 
     $loader->add('deep', 0, ['deep-base'], 'themes/default/js/deep.js');
     $loader->add('joins-both', 0, ['shallow', 'deep'], 'themes/default/js/joins.js');
 
-    expect(scriptLoaderTopologicalOrder($loader, 'joins-both'))->toBe(2);
+    expect(scriptLoaderTopologicalOrder($loader, 'joins-both'))
+        ->toBe(2);
 });
 
 test('clear resets registered scripts and inline scripts', function (): void {
@@ -183,8 +190,10 @@ test('clear resets registered scripts and inline scripts', function (): void {
 
     $loader->clear();
 
-    expect(scriptLoaderRegistered($loader))->toBe([])
-        ->and($loader->inline_scripts)->toBe([]);
+    expect(scriptLoaderRegistered($loader))
+        ->toBe([])
+        ->and($loader->inline_scripts)
+        ->toBe([]);
 });
 
 test('add_inline records the code verbatim', function (): void {
@@ -192,7 +201,8 @@ test('add_inline records the code verbatim', function (): void {
 
     $loader->add_inline('console.log("hello");', []);
 
-    expect($loader->inline_scripts)->toBe(['console.log("hello");']);
+    expect($loader->inline_scripts)
+        ->toBe(['console.log("hello");']);
 });
 
 test('urlService() throws when no URL service has been set', function (): void {
@@ -298,12 +308,14 @@ test('add_inline auto-loads an undefined but known required script', function ()
 
     $loader->add_inline('console.log(1);', ['jquery']);
 
-    expect(scriptLoaderRegistered($loader))->toHaveKey('jquery');
+    expect(scriptLoaderRegistered($loader))
+        ->toHaveKey('jquery');
 });
 
 test('add() warns when adding a head script after the head has already been written', function (): void {
     $loader = new ScriptLoader();
-    new ReflectionProperty($loader, 'did_head')->setValue($loader, true);
+    new ReflectionProperty($loader, 'did_head')
+        ->setValue($loader, true);
 
     $caught = null;
     set_error_handler(static function (int $errno, string $errstr) use (&$caught): bool {
@@ -317,12 +329,14 @@ test('add() warns when adding a head script after the head has already been writ
         restore_error_handler();
     }
 
-    expect($caught)->toBe('Attempt to add script late-script but the head has been written');
+    expect($caught)
+        ->toBe('Attempt to add script late-script but the head has been written');
 });
 
 test('add() does not warn for a footer-mode script even after the head has been written', function (): void {
     $loader = new ScriptLoader();
-    new ReflectionProperty($loader, 'did_head')->setValue($loader, true);
+    new ReflectionProperty($loader, 'did_head')
+        ->setValue($loader, true);
 
     $caught = null;
     set_error_handler(static function (int $errno, string $errstr) use (&$caught): bool {
@@ -336,7 +350,8 @@ test('add() does not warn for a footer-mode script even after the head has been 
         restore_error_handler();
     }
 
-    expect($caught)->toBeNull();
+    expect($caught)
+        ->toBeNull();
 });
 
 test('add() warns when adding a script (any load_mode) after the footer has already been written', function (): void {
@@ -346,7 +361,8 @@ test('add() warns when adding a script (any load_mode) after the footer has alre
     // never reached by any existing test calling add() directly (only
     // indirectly, via add_inline()'s own separate did_footer warning).
     $loader = new ScriptLoader();
-    new ReflectionProperty($loader, 'did_footer')->setValue($loader, true);
+    new ReflectionProperty($loader, 'did_footer')
+        ->setValue($loader, true);
 
     $caught = null;
     set_error_handler(static function (int $errno, string $errstr) use (&$caught): bool {
@@ -360,7 +376,8 @@ test('add() warns when adding a script (any load_mode) after the footer has alre
         restore_error_handler();
     }
 
-    expect($caught)->toBe('Attempt to add script late-script but the footer has been written');
+    expect($caught)
+        ->toBe('Attempt to add script late-script but the footer has been written');
 });
 
 test('add() runs fill_well_known against a newly-registered script', function (): void {
@@ -381,7 +398,8 @@ test('add() auto-registers every UI core dependency when the exact known jquery.
     $loader->add('jquery.ui', 0, [], 'themes/default/js/ui/minified/jquery.ui.core.min.js');
 
     $registered = scriptLoaderRegistered($loader);
-    expect($registered)->toHaveKeys(['jquery.ui.widget', 'jquery.ui.position', 'jquery.ui.mouse']);
+    expect($registered)
+        ->toHaveKeys(['jquery.ui.widget', 'jquery.ui.position', 'jquery.ui.mouse']);
 });
 
 test('add() does not auto-register UI core dependencies for a jquery.ui script at a non-default path', function (): void {
@@ -390,7 +408,8 @@ test('add() does not auto-register UI core dependencies for a jquery.ui script a
     $loader->add('jquery.ui', 0, [], 'themes/custom/js/jquery.ui.js');
 
     $registered = scriptLoaderRegistered($loader);
-    expect($registered)->not->toHaveKey('jquery.ui.widget');
+    expect($registered)
+        ->not->toHaveKey('jquery.ui.widget');
 });
 
 test('add() auto-loads an undefined precedent that is a known script', function (): void {
@@ -398,7 +417,8 @@ test('add() auto-loads an undefined precedent that is a known script', function 
 
     $loader->add('my-plugin', 0, ['jquery'], 'themes/default/js/plugin.js');
 
-    expect(scriptLoaderRegistered($loader))->toHaveKey('jquery');
+    expect(scriptLoaderRegistered($loader))
+        ->toHaveKey('jquery');
 });
 
 test('add() merging precedents twice with an overlapping id keeps the result deduplicated', function (): void {
@@ -482,7 +502,8 @@ test('get_head_scripts warns and excludes a script whose path was explicitly set
 
     $loader = new ScriptLoader();
     $loader->add('empty-path-script', 0, [], 'themes/default/js/foo.js');
-    scriptLoaderRegistered($loader)['empty-path-script']->path = '';
+    scriptLoaderRegistered($loader)['empty-path-script']
+        ->path = '';
 
     $caught = null;
     set_error_handler(static function (int $errno, string $errstr) use (&$caught): bool {
@@ -496,8 +517,10 @@ test('get_head_scripts warns and excludes a script whose path was explicitly set
         restore_error_handler();
     }
 
-    expect($caught)->toBe('Script empty-path-script has an undefined path')
-        ->and($head)->toBe([]);
+    expect($caught)
+        ->toBe('Script empty-path-script has an undefined path')
+        ->and($head)
+        ->toBe([]);
 });
 
 test('add() does not downgrade load_mode when the new load_mode is exactly equal, not strictly lower', function (): void {
@@ -555,7 +578,8 @@ test('get_footer_scripts skips check_load_dep when the head was already written 
     // Force did_head=true WITHOUT actually running check_load_dep (unlike
     // a real get_head_scripts() call) -- if get_footer_scripts() ran it
     // anyway (ignoring did_head), 'precedent' would still get downgraded.
-    new ReflectionProperty($loader, 'did_head')->setValue($loader, true);
+    new ReflectionProperty($loader, 'did_head')
+        ->setValue($loader, true);
 
     try {
         $loader->get_footer_scripts(new AccessLevelChecker(CurrentUserTestFactory::get(), CurrentConfigTestFactory::get()));
@@ -592,7 +616,8 @@ test('get_footer_scripts marks did_footer, which then makes add_inline warn', fu
             restore_error_handler();
         }
 
-        expect($caught)->toBe('Attempt to add inline script but the footer has been written');
+        expect($caught)
+            ->toBe('Attempt to add inline script but the footer has been written');
     } finally {
         rmdir($root);
         CurrentConfigTestFactory::get()->reset();
@@ -620,9 +645,11 @@ test('get_footer_scripts separates sync (load_mode=1) and async (load_mode=2) sc
         $sync = $footerScripts->sync;
         $async = $footerScripts->async;
 
-        expect($sync)->toHaveCount(1)
+        expect($sync)
+            ->toHaveCount(1)
             ->and($sync[0]->id)->toBe('sync-script')
-            ->and($async)->toHaveCount(1)
+            ->and($async)
+            ->toHaveCount(1)
             ->and($async[0]->id)->toBe('async-script');
     } finally {
         file_combiner_test_rrmdir_scriptloader($root);
@@ -649,7 +676,8 @@ test('get_footer_scripts excludes scripts already claimed by get_head_scripts', 
         $loader->get_head_scripts(new AccessLevelChecker(CurrentUserTestFactory::get(), CurrentConfigTestFactory::get()));
         $sync = $loader->get_footer_scripts(new AccessLevelChecker(CurrentUserTestFactory::get(), CurrentConfigTestFactory::get()))->sync;
 
-        expect($sync)->toHaveCount(1)
+        expect($sync)
+            ->toHaveCount(1)
             ->and($sync[0]->id)->toBe('footer-script');
     } finally {
         file_combiner_test_rrmdir_scriptloader($root);
@@ -709,7 +737,8 @@ test('get_head_scripts computes and uses each script\'s topological order to sor
         // is unreachable here, narrowing it away for toBeLessThan()'s
         // numeric-only parameter type.
         assert(is_int($basePos) && is_int($dependentPos));
-        expect($basePos)->toBeLessThan($dependentPos);
+        expect($basePos)
+            ->toBeLessThan($dependentPos);
     } finally {
         file_combiner_test_rrmdir_scriptloader($root);
         CurrentConfigTestFactory::get()->reset();
@@ -743,8 +772,10 @@ test('cmp_by_mode_and_order sorts a remote script before a same-mode, same-order
         $localFirst->add('remote-script', 0, [], 'https://cdn.example.com/remote.js');
         $headB = $localFirst->get_head_scripts(new AccessLevelChecker(CurrentUserTestFactory::get(), CurrentConfigTestFactory::get()));
 
-        expect(array_map(fn ($s) => $s->id, $headA))->toBe(['remote-script', 'local-script'])
-            ->and(array_map(fn ($s) => $s->id, $headB))->toBe(['remote-script', 'local-script']);
+        expect(array_map(fn ($s) => $s->id, $headA))
+            ->toBe(['remote-script', 'local-script'])
+            ->and(array_map(fn ($s) => $s->id, $headB))
+            ->toBe(['remote-script', 'local-script']);
     } finally {
         file_combiner_test_rrmdir_scriptloader($root);
         CurrentConfigTestFactory::get()->reset();
@@ -769,7 +800,8 @@ test('get_head_scripts collects every mode=0 script up to (not including) the fi
     try {
         $head = $loader->get_head_scripts(new AccessLevelChecker(CurrentUserTestFactory::get(), CurrentConfigTestFactory::get()));
 
-        expect($head)->toHaveCount(1)
+        expect($head)
+            ->toHaveCount(1)
             ->and($head[0]->id)->toBe('head-script');
     } finally {
         file_combiner_test_rrmdir_scriptloader($root);
@@ -802,8 +834,10 @@ test('get_head_scripts warns and excludes a head-mode script whose path was neve
         restore_error_handler();
     }
 
-    expect($caught)->toBe('Script no-path-script has an undefined path')
-        ->and($head)->toBe([]);
+    expect($caught)
+        ->toBe('Script no-path-script has an undefined path')
+        ->and($head)
+        ->toBe([]);
 });
 
 test('get_head_scripts marks did_head, which then makes a subsequent head-mode add() warn', function (): void {
@@ -826,7 +860,8 @@ test('get_head_scripts marks did_head, which then makes a subsequent head-mode a
         restore_error_handler();
     }
 
-    expect($caught)->toBe('Attempt to add script late-script but the head has been written');
+    expect($caught)
+        ->toBe('Attempt to add script late-script but the head has been written');
 });
 
 test('get_footer_scripts sorts within the same load_mode by topological order too', function (): void {
@@ -847,7 +882,8 @@ test('get_footer_scripts sorts within the same load_mode by topological order to
     try {
         $sync = $loader->get_footer_scripts(new AccessLevelChecker(CurrentUserTestFactory::get(), CurrentConfigTestFactory::get()))->sync;
 
-        expect($sync)->toHaveCount(2)
+        expect($sync)
+            ->toHaveCount(2)
             ->and($sync[0]->id)->toBe('base')
             ->and($sync[1]->id)->toBe('dependent');
     } finally {
@@ -877,7 +913,8 @@ test('get_footer_scripts excludes mode=0 scripts even when get_head_scripts was 
         // weren't filtered back out by its own load_mode>0 check.
         $sync = $loader->get_footer_scripts(new AccessLevelChecker(CurrentUserTestFactory::get(), CurrentConfigTestFactory::get()))->sync;
 
-        expect($sync)->toHaveCount(1)
+        expect($sync)
+            ->toHaveCount(1)
             ->and($sync[0]->id)->toBe('footer-script');
     } finally {
         file_combiner_test_rrmdir_scriptloader($root);
@@ -900,7 +937,9 @@ test('check_load_dep converges over multiple passes for a 3-level async dependen
         // 'a'/'b' and 'b'/'c' are load_mode=2 on both sides) -- needs a
         // booted Kernel, unlike the plain-local-precedent check_load_dep
         // tests elsewhere in this file.
-        KernelContainerOverride::with([Paths::class => Paths::fromRoot(sys_get_temp_dir())], function () use ($loader): void {
+        KernelContainerOverride::with([
+            Paths::class => Paths::fromRoot(sys_get_temp_dir()),
+        ], function () use ($loader): void {
             // Must run inside this closure -- KernelContainerOverride::with()
             // builds its own fresh container (and therefore its own fresh
             // CurrentConfig instance) before invoking it; setting this
@@ -930,7 +969,8 @@ test('check_load_dep skips a precedent id that was never registered, instead of 
     $loader = new ScriptLoader();
     $loader->add('has-unknown-precedent', 1, ['totally-unrecognized-id'], 'themes/default/js/x.js');
     $registered = scriptLoaderRegistered($loader);
-    expect($registered)->not->toHaveKey('totally-unrecognized-id');
+    expect($registered)
+        ->not->toHaveKey('totally-unrecognized-id');
 
     $method = new ReflectionMethod(ScriptLoader::class, 'check_load_dep');
     $method->invoke(null, $registered);
@@ -976,7 +1016,8 @@ test('fill_well_known does not overwrite an already-explicit path, even for a kn
 test('fill_well_known does not fill in a path for a known id whose path was explicitly set to the empty string', function (): void {
     $loader = new ScriptLoader();
     $loader->add('jquery', 0, [], 'themes/default/js/jquery.min.js');
-    scriptLoaderRegistered($loader)['jquery']->path = '';
+    scriptLoaderRegistered($loader)['jquery']
+        ->path = '';
 
     // Re-running fill_well_known() directly (add() only calls it once, at
     // registration) -- with path forced to '', it must still be
@@ -993,8 +1034,10 @@ test('fill_well_known requires jquery and jquery.ui.effect for a jquery.ui.effec
     $loader->add('jquery.ui.effect-slide', 0, [], null);
 
     $script = scriptLoaderRegistered($loader)['jquery.ui.effect-slide'];
-    expect($script->precedents)->toBe(['jquery', 'jquery.ui.effect'])
-        ->and($script->path)->toBe('themes/default/js/ui/minified/jquery.ui.effect-slide.min.js');
+    expect($script->precedents)
+        ->toBe(['jquery', 'jquery.ui.effect'])
+        ->and($script->path)
+        ->toBe('themes/default/js/ui/minified/jquery.ui.effect-slide.min.js');
 });
 
 test('fill_well_known requires every UI core dependency for an unlisted jquery.ui.* script, filling its path from the ui dir', function (): void {
@@ -1003,14 +1046,17 @@ test('fill_well_known requires every UI core dependency for an unlisted jquery.u
     $loader->add('jquery.ui.dialog', 0, [], null);
 
     $script = scriptLoaderRegistered($loader)['jquery.ui.dialog'];
-    expect($script->precedents)->toBe(['jquery', 'jquery.ui', 'jquery.ui.widget', 'jquery.ui.position', 'jquery.ui.mouse'])
-        ->and($script->path)->toBe('themes/default/js/ui/minified/jquery.ui.dialog.min.js');
+    expect($script->precedents)
+        ->toBe(['jquery', 'jquery.ui', 'jquery.ui.widget', 'jquery.ui.position', 'jquery.ui.mouse'])
+        ->and($script->path)
+        ->toBe('themes/default/js/ui/minified/jquery.ui.dialog.min.js');
 });
 
 test('fill_well_known fills a jquery.ui.effect-* path even when explicitly set to the empty string', function (): void {
     $loader = new ScriptLoader();
     $loader->add('jquery.ui.effect-slide', 0, [], 'themes/custom/slide.js');
-    scriptLoaderRegistered($loader)['jquery.ui.effect-slide']->path = '';
+    scriptLoaderRegistered($loader)['jquery.ui.effect-slide']
+        ->path = '';
 
     $method = new ReflectionMethod(ScriptLoader::class, 'fill_well_known');
     $method->invoke(null, 'jquery.ui.effect-slide', scriptLoaderRegistered($loader)['jquery.ui.effect-slide']);
@@ -1022,7 +1068,8 @@ test('fill_well_known fills a jquery.ui.effect-* path even when explicitly set t
 test('fill_well_known fills a jquery.ui.* path even when explicitly set to the empty string', function (): void {
     $loader = new ScriptLoader();
     $loader->add('jquery.ui.dialog', 0, [], 'themes/custom/dialog.js');
-    scriptLoaderRegistered($loader)['jquery.ui.dialog']->path = '';
+    scriptLoaderRegistered($loader)['jquery.ui.dialog']
+        ->path = '';
 
     $method = new ReflectionMethod(ScriptLoader::class, 'fill_well_known');
     $method->invoke(null, 'jquery.ui.dialog', scriptLoaderRegistered($loader)['jquery.ui.dialog']);
@@ -1051,7 +1098,8 @@ test('load_known_required_script recognizes a jquery.ui.* id even when not expli
     // is only recognized via the str_starts_with('jquery.ui.') fallback.
     $loader->add('needs-dialog', 0, ['jquery.ui.dialog'], 'themes/default/js/foo.js');
 
-    expect(scriptLoaderRegistered($loader))->toHaveKey('jquery.ui.dialog');
+    expect(scriptLoaderRegistered($loader))
+        ->toHaveKey('jquery.ui.dialog');
 });
 
 test('load_known_required_script returns false and does not register an unknown id', function (): void {
@@ -1060,8 +1108,10 @@ test('load_known_required_script returns false and does not register an unknown 
 
     $result = $method->invoke($loader, 'totally-unknown-script', 0);
 
-    expect($result)->toBeFalse()
-        ->and(scriptLoaderRegistered($loader))->not->toHaveKey('totally-unknown-script');
+    expect($result)
+        ->toBeFalse()
+        ->and(scriptLoaderRegistered($loader))
+        ->not->toHaveKey('totally-unknown-script');
 });
 
 test('compute_script_topological_order succeeds at exactly the recursion limit boundary', function (): void {
@@ -1071,10 +1121,11 @@ test('compute_script_topological_order succeeds at exactly the recursion limit b
     $loader = new ScriptLoader();
     $loader->add('a0', 0, [], 'themes/default/js/a0.js');
     for ($i = 1; $i <= 4; $i++) {
-        $loader->add("a{$i}", 0, ["a" . ($i - 1)], "themes/default/js/a{$i}.js");
+        $loader->add("a{$i}", 0, ['a' . ($i - 1)], "themes/default/js/a{$i}.js");
     }
 
-    expect(scriptLoaderTopologicalOrder($loader, 'a4'))->toBe(4);
+    expect(scriptLoaderTopologicalOrder($loader, 'a4'))
+        ->toBe(4);
 });
 
 test('compute_script_topological_order fatal-errors exactly one level past the recursion limit', function (): void {
@@ -1085,7 +1136,7 @@ test('compute_script_topological_order fatal-errors exactly one level past the r
     $loader = new ScriptLoader();
     $loader->add('a0', 0, [], 'themes/default/js/a0.js');
     for ($i = 1; $i <= 5; $i++) {
-        $loader->add("a{$i}", 0, ["a" . ($i - 1)], "themes/default/js/a{$i}.js");
+        $loader->add("a{$i}", 0, ['a' . ($i - 1)], "themes/default/js/a{$i}.js");
     }
 
     // HtmlService::fatalError() always calls
@@ -1120,7 +1171,8 @@ test('compute_script_topological_order fatal-errors exactly one level past the r
 
     // fatalError()'s own $showTrace=true default appends a backtrace
     // after the message.
-    expect($caught)->toStartWith('combined script circular dependency');
+    expect($caught)
+        ->toStartWith('combined script circular dependency');
 });
 
 test('compute_script_topological_order warns and returns 0 for a script id that was never registered', function (): void {
@@ -1142,8 +1194,10 @@ test('compute_script_topological_order warns and returns 0 for a script id that 
         restore_error_handler();
     }
 
-    expect($caught)->toBe('Undefined script never-registered-id is required by someone')
-        ->and($order)->toBe(0);
+    expect($caught)
+        ->toBe('Undefined script never-registered-id is required by someone')
+        ->and($order)
+        ->toBe(0);
 });
 
 test('compute_script_topological_order does not recompute an already-memoized order', function (): void {
@@ -1157,7 +1211,8 @@ test('compute_script_topological_order does not recompute an already-memoized or
     $registered = scriptLoaderRegistered($loader);
     $registered['standalone']->extra['order'] = 999;
 
-    expect(scriptLoaderTopologicalOrder($loader, 'standalone'))->toBe(999);
+    expect(scriptLoaderTopologicalOrder($loader, 'standalone'))
+        ->toBe(999);
 });
 
 test('add_inline auto-loads a required script\'s own transitive sub-dependencies at load_mode=1 (footer-sync)', function (): void {
@@ -1202,7 +1257,9 @@ test('check_load_dep needs a second pass to cascade an unconditional downgrade t
     try {
         // 'mid'/'bottom' are both load_mode=2 -- check_load_dep() reaches
         // self::urlService() for that pair, needing a booted Kernel.
-        KernelContainerOverride::with([Paths::class => Paths::fromRoot(sys_get_temp_dir())], function () use ($loader): void {
+        KernelContainerOverride::with([
+            Paths::class => Paths::fromRoot(sys_get_temp_dir()),
+        ], function () use ($loader): void {
             $method = new ReflectionMethod(ScriptLoader::class, 'check_load_dep');
             $method->invoke(null, scriptLoaderRegistered($loader));
         });
@@ -1240,7 +1297,9 @@ test('check_load_dep needs a further pass unlocked by the async branch\'s own ch
         // Several node pairs here are load_mode=2 on both sides --
         // check_load_dep() reaches self::urlService(), needing a booted
         // Kernel.
-        KernelContainerOverride::with([Paths::class => Paths::fromRoot(sys_get_temp_dir())], function () use ($loader): void {
+        KernelContainerOverride::with([
+            Paths::class => Paths::fromRoot(sys_get_temp_dir()),
+        ], function () use ($loader): void {
             $method = new ReflectionMethod(ScriptLoader::class, 'check_load_dep');
             $method->invoke(null, scriptLoaderRegistered($loader));
         });
@@ -1279,7 +1338,8 @@ test('cmp_by_mode_and_order returns the raw topological-order difference, withou
     $s2 = new Script(0, 'aaa-early-id', 'themes/default/js/b.js');
     $s2->extra['order'] = 3;
 
-    expect(scriptLoaderCmp($s1, $s2))->toBe(-2);
+    expect(scriptLoaderCmp($s1, $s2))
+        ->toBe(-2);
 });
 
 test('cmp_by_mode_and_order falls through to strcmp when orders match but are non-zero, even if one script is remote', function (): void {
@@ -1294,7 +1354,8 @@ test('cmp_by_mode_and_order falls through to strcmp when orders match but are no
     $s2 = new Script(0, 'remote-id', 'https://cdn.example.com/x.js');
     $s2->extra['order'] = 5;
 
-    expect(scriptLoaderCmp($s1, $s2))->toBe(strcmp('local-id', 'remote-id'));
+    expect(scriptLoaderCmp($s1, $s2))
+        ->toBe(strcmp('local-id', 'remote-id'));
 });
 
 test('cmp_by_mode_and_order sorts a remote script strictly before a local one at the same mode/order (direct comparator invocation)', function (): void {
@@ -1311,7 +1372,9 @@ test('cmp_by_mode_and_order sorts a remote script strictly before a local one at
 
     // order===0 on both sides reaches the remote/local xor tiebreak,
     // which calls self::urlService() -- needs a booted Kernel.
-    expect(KernelContainerOverride::with([Paths::class => Paths::fromRoot(sys_get_temp_dir())], fn () => scriptLoaderCmp($remote, $local)))->toBe(-1);
+    expect(KernelContainerOverride::with([
+        Paths::class => Paths::fromRoot(sys_get_temp_dir()),
+    ], fn () => scriptLoaderCmp($remote, $local)))->toBe(-1);
 });
 
 test('cmp_by_mode_and_order sorts a local script strictly after a remote one at the same mode/order (direct comparator invocation)', function (): void {
@@ -1327,5 +1390,7 @@ test('cmp_by_mode_and_order sorts a local script strictly after a remote one at 
 
     // order===0 on both sides reaches the remote/local xor tiebreak,
     // which calls self::urlService() -- needs a booted Kernel.
-    expect(KernelContainerOverride::with([Paths::class => Paths::fromRoot(sys_get_temp_dir())], fn () => scriptLoaderCmp($local, $remote)))->toBe(1);
+    expect(KernelContainerOverride::with([
+        Paths::class => Paths::fromRoot(sys_get_temp_dir()),
+    ], fn () => scriptLoaderCmp($local, $remote)))->toBe(1);
 });

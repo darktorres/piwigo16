@@ -11,19 +11,27 @@ test('fromBulkFilter reads each flag as presence-only, ignoring a non-null value
         'duplicates_date' => null,
     ]);
 
-    expect($flags->filename)->toBeTrue()
-        ->and($flags->checksum)->toBeTrue()
+    expect($flags->filename)
+        ->toBeTrue()
+        ->and($flags->checksum)
+        ->toBeTrue()
         // isset() treats an explicit null value as "not set" -- same as
         // the key being absent entirely, unlike array_key_exists().
-        ->and($flags->date)->toBeFalse()
-        ->and($flags->dimensions)->toBeFalse();
+        ->and($flags->date)
+        ->toBeFalse()
+        ->and($flags->dimensions)
+        ->toBeFalse();
 });
 
 test('fromBulkFilter defaults every flag to false when its key is absent', function (): void {
     $flags = DuplicateFieldFlags::fromBulkFilter([]);
 
-    expect($flags->filename)->toBeFalse()
-        ->and($flags->checksum)->toBeFalse()
-        ->and($flags->date)->toBeFalse()
-        ->and($flags->dimensions)->toBeFalse();
+    expect($flags->filename)
+        ->toBeFalse()
+        ->and($flags->checksum)
+        ->toBeFalse()
+        ->and($flags->date)
+        ->toBeFalse()
+        ->and($flags->dimensions)
+        ->toBeFalse();
 });

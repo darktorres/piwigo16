@@ -2,27 +2,27 @@
 
 declare(strict_types=1);
 
-use Piwigo\Auth\AccessLevelChecker;
-use Piwigo\Db\EntityManagerFactory;
-use Piwigo\Group\GroupEntity;
-use Piwigo\Common\ValueObject\LangCode;
-use Piwigo\Common\ValueObject\UserId;
-use Piwigo\Common\ValueObject\Username;
-use Piwigo\Core\Paths;
-use Piwigo\Permission\SqlCondition;
 use Doctrine\DBAL\ArrayParameterType;
 use Doctrine\DBAL\ParameterType;
+use Piwigo\Auth\AccessLevelChecker;
 use Piwigo\Category\CategoryRepository;
-use Piwigo\Tests\Support\CurrentConfigTestFactory;
+use Piwigo\Common\ValueObject\LangCode;
+use Piwigo\Common\ValueObject\ThemeId;
+use Piwigo\Common\ValueObject\UserId;
+use Piwigo\Common\ValueObject\Username;
 use Piwigo\Core\FilterState;
 use Piwigo\Core\Kernel;
-use Piwigo\Tests\Support\LangTestFactory;
+use Piwigo\Core\Paths;
 use Piwigo\Db\DbConnection;
-use Piwigo\Tests\Support\TranslatorTestFactory;
+use Piwigo\Db\EntityManagerFactory;
+use Piwigo\Group\GroupEntity;
 use Piwigo\Permission\PermissionRepository;
 use Piwigo\Permission\PermissionService;
+use Piwigo\Permission\SqlCondition;
+use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Tests\Support\CurrentUserTestFactory;
-use Piwigo\Common\ValueObject\ThemeId;
+use Piwigo\Tests\Support\LangTestFactory;
+use Piwigo\Tests\Support\TranslatorTestFactory;
 use Piwigo\Users\User;
 use Piwigo\Users\UserStatus;
 
@@ -138,23 +138,33 @@ test('getPermissionCriteria returns every field null when nothing applies', func
 
     $criteria = $service->getPermissionCriteria();
 
-    expect($criteria->forbiddenCategoryIds)->toBeNull()
-        ->and($criteria->visibleCategoryIds)->toBeNull()
-        ->and($criteria->visibleImageIds)->toBeNull()
+    expect($criteria->forbiddenCategoryIds)
+        ->toBeNull()
+        ->and($criteria->visibleCategoryIds)
+        ->toBeNull()
+        ->and($criteria->visibleImageIds)
+        ->toBeNull()
         // level=0 (seedPermissionUser()'s own default) with image_access_type
         // '' (not 'NOT IN') satisfies $forbiddenImagesApplies, so maxLevel is
         // 0, not null -- pins the "applies" gate independently of the
         // access-list/type pair below.
-        ->and($criteria->maxLevel)->toBe(0)
-        ->and($criteria->imageAccessIds)->toBeNull()
-        ->and($criteria->imageAccessIsAllowlist)->toBeNull();
+        ->and($criteria->maxLevel)
+        ->toBe(0)
+        ->and($criteria->imageAccessIds)
+        ->toBeNull()
+        ->and($criteria->imageAccessIsAllowlist)
+        ->toBeNull();
 
     // Every *Condition() builder must return an empty fragment for a null
     // field, so callers can combine them unconditionally.
-    expect($criteria->forbiddenCategoriesCondition('category_id')->isEmpty())->toBeTrue()
-        ->and($criteria->visibleCategoriesCondition('category_id')->isEmpty())->toBeTrue()
-        ->and($criteria->visibleImagesCondition('id')->isEmpty())->toBeTrue()
-        ->and($criteria->imageAccessCondition('category_id')->isEmpty())->toBeTrue();
+    expect($criteria->forbiddenCategoriesCondition('category_id')->isEmpty())
+        ->toBeTrue()
+        ->and($criteria->visibleCategoriesCondition('category_id')->isEmpty())
+        ->toBeTrue()
+        ->and($criteria->visibleImagesCondition('id')->isEmpty())
+        ->toBeTrue()
+        ->and($criteria->imageAccessCondition('category_id')->isEmpty())
+        ->toBeTrue();
 });
 
 test('getPermissionCriteria computes forbiddenCategoryIds from the user forbidden categories, bound via forbiddenCategoriesCondition', function (): void {
@@ -163,13 +173,21 @@ test('getPermissionCriteria computes forbiddenCategoryIds from the user forbidde
 
     $criteria = $service->getPermissionCriteria();
 
-    expect($criteria->forbiddenCategoryIds)->toBe([2, 3]);
+    expect($criteria->forbiddenCategoryIds)
+        ->toBe([2, 3]);
 
     $condition = $criteria->forbiddenCategoriesCondition('category_id');
 
-    expect($condition->sql)->toBe('category_id NOT IN (:permForbiddenCategoryIds)')
-        ->and($condition->parameters)->toBe(['permForbiddenCategoryIds' => [2, 3]])
-        ->and($condition->types)->toBe(['permForbiddenCategoryIds' => ArrayParameterType::INTEGER]);
+    expect($condition->sql)
+        ->toBe('category_id NOT IN (:permForbiddenCategoryIds)')
+        ->and($condition->parameters)
+        ->toBe([
+            'permForbiddenCategoryIds' => [2, 3],
+        ])
+        ->and($condition->types)
+        ->toBe([
+            'permForbiddenCategoryIds' => ArrayParameterType::INTEGER,
+        ]);
 });
 
 test('getPermissionCriteria computes visibleCategoryIds/visibleImageIds from FilterState, each bound via its own *Condition builder', function (): void {
@@ -179,18 +197,34 @@ test('getPermissionCriteria computes visibleCategoryIds/visibleImageIds from Fil
 
     $criteria = $service->getPermissionCriteria();
 
-    expect($criteria->visibleCategoryIds)->toBe([1, 2])
-        ->and($criteria->visibleImageIds)->toBe([10, 11]);
+    expect($criteria->visibleCategoryIds)
+        ->toBe([1, 2])
+        ->and($criteria->visibleImageIds)
+        ->toBe([10, 11]);
 
     $catCondition = $criteria->visibleCategoriesCondition('category_id');
     $imgCondition = $criteria->visibleImagesCondition('id');
 
-    expect($catCondition->sql)->toBe('category_id IN (:permVisibleCategoryIds)')
-        ->and($catCondition->parameters)->toBe(['permVisibleCategoryIds' => [1, 2]])
-        ->and($catCondition->types)->toBe(['permVisibleCategoryIds' => ArrayParameterType::INTEGER])
-        ->and($imgCondition->sql)->toBe('id IN (:permVisibleImageIds)')
-        ->and($imgCondition->parameters)->toBe(['permVisibleImageIds' => [10, 11]])
-        ->and($imgCondition->types)->toBe(['permVisibleImageIds' => ArrayParameterType::INTEGER]);
+    expect($catCondition->sql)
+        ->toBe('category_id IN (:permVisibleCategoryIds)')
+        ->and($catCondition->parameters)
+        ->toBe([
+            'permVisibleCategoryIds' => [1, 2],
+        ])
+        ->and($catCondition->types)
+        ->toBe([
+            'permVisibleCategoryIds' => ArrayParameterType::INTEGER,
+        ])
+        ->and($imgCondition->sql)
+        ->toBe('id IN (:permVisibleImageIds)')
+        ->and($imgCondition->parameters)
+        ->toBe([
+            'permVisibleImageIds' => [10, 11],
+        ])
+        ->and($imgCondition->types)
+        ->toBe([
+            'permVisibleImageIds' => ArrayParameterType::INTEGER,
+        ]);
 });
 
 test('getPermissionCriteria always computes maxLevel alongside visibleImageIds, not one gating the other', function (): void {
@@ -203,14 +237,23 @@ test('getPermissionCriteria always computes maxLevel alongside visibleImageIds, 
 
     $criteria = $service->getPermissionCriteria();
 
-    expect($criteria->visibleImageIds)->toBe([10, 11])
-        ->and($criteria->maxLevel)->toBe(3);
+    expect($criteria->visibleImageIds)
+        ->toBe([10, 11])
+        ->and($criteria->maxLevel)
+        ->toBe(3);
 
     $levelCondition = $criteria->maxLevelCondition('level');
 
-    expect($levelCondition->sql)->toBe('level <= :permMaxLevel')
-        ->and($levelCondition->parameters)->toBe(['permMaxLevel' => 3])
-        ->and($levelCondition->types)->toBe(['permMaxLevel' => ParameterType::INTEGER]);
+    expect($levelCondition->sql)
+        ->toBe('level <= :permMaxLevel')
+        ->and($levelCondition->parameters)
+        ->toBe([
+            'permMaxLevel' => 3,
+        ])
+        ->and($levelCondition->types)
+        ->toBe([
+            'permMaxLevel' => ParameterType::INTEGER,
+        ]);
 });
 
 test('getPermissionCriteria computes maxLevel from the user level, bound via maxLevelCondition', function (): void {
@@ -219,13 +262,21 @@ test('getPermissionCriteria computes maxLevel from the user level, bound via max
 
     $criteria = $service->getPermissionCriteria();
 
-    expect($criteria->maxLevel)->toBe(5);
+    expect($criteria->maxLevel)
+        ->toBe(5);
 
     $condition = $criteria->maxLevelCondition('i.level');
 
-    expect($condition->sql)->toBe('i.level <= :permMaxLevel')
-        ->and($condition->parameters)->toBe(['permMaxLevel' => 5])
-        ->and($condition->types)->toBe(['permMaxLevel' => ParameterType::INTEGER]);
+    expect($condition->sql)
+        ->toBe('i.level <= :permMaxLevel')
+        ->and($condition->parameters)
+        ->toBe([
+            'permMaxLevel' => 5,
+        ])
+        ->and($condition->types)
+        ->toBe([
+            'permMaxLevel' => ParameterType::INTEGER,
+        ]);
 });
 
 test('getPermissionCriteria computes imageAccessIds/imageAccessIsAllowlist from the user access list, bound via imageAccessCondition', function (): void {
@@ -234,14 +285,23 @@ test('getPermissionCriteria computes imageAccessIds/imageAccessIsAllowlist from 
 
     $criteria = $service->getPermissionCriteria();
 
-    expect($criteria->imageAccessIds)->toBe([7, 8])
-        ->and($criteria->imageAccessIsAllowlist)->toBeFalse();
+    expect($criteria->imageAccessIds)
+        ->toBe([7, 8])
+        ->and($criteria->imageAccessIsAllowlist)
+        ->toBeFalse();
 
     $condition = $criteria->imageAccessCondition('category_id');
 
-    expect($condition->sql)->toBe('category_id NOT IN (:permImageAccessIds)')
-        ->and($condition->parameters)->toBe(['permImageAccessIds' => [7, 8]])
-        ->and($condition->types)->toBe(['permImageAccessIds' => ArrayParameterType::INTEGER]);
+    expect($condition->sql)
+        ->toBe('category_id NOT IN (:permImageAccessIds)')
+        ->and($condition->parameters)
+        ->toBe([
+            'permImageAccessIds' => [7, 8],
+        ])
+        ->and($condition->types)
+        ->toBe([
+            'permImageAccessIds' => ArrayParameterType::INTEGER,
+        ]);
 });
 
 test('imageAccessCondition builds an IN clause, not NOT IN, when imageAccessIsAllowlist is true', function (): void {
@@ -250,11 +310,13 @@ test('imageAccessCondition builds an IN clause, not NOT IN, when imageAccessIsAl
 
     $criteria = $service->getPermissionCriteria();
 
-    expect($criteria->imageAccessIsAllowlist)->toBeTrue();
+    expect($criteria->imageAccessIsAllowlist)
+        ->toBeTrue();
 
     $condition = $criteria->imageAccessCondition('category_id');
 
-    expect($condition->sql)->toBe('category_id IN (:permImageAccessIds)');
+    expect($condition->sql)
+        ->toBe('category_id IN (:permImageAccessIds)');
 });
 
 test('every *Condition builder uses a distinct placeholder name, so combining several in one query never collides', function (): void {
@@ -277,7 +339,8 @@ test('every *Condition builder uses a distinct placeholder name, so combining se
     // any two shared a placeholder name, this count would be lower than 5
     // (a later setParameter()-equivalent silently overwriting an earlier
     // one in the merged array).
-    expect($combined->parameters)->toHaveCount(5);
+    expect($combined->parameters)
+        ->toHaveCount(5);
 });
 
 test('getPermissionCriteria treats a non-string scalar image_access_type as empty, not as a truthy bypass', function (): void {
@@ -289,13 +352,18 @@ test('getPermissionCriteria treats a non-string scalar image_access_type as empt
     // `===`), which would wrongly let a malformed "field  (list)" clause (no
     // operator between field and list) through even though there is no real
     // access-type operator to use.
-    seedPermissionUserRaw(['image_access_type' => false, 'image_access_list' => '7,8']);
+    seedPermissionUserRaw([
+        'image_access_type' => false,
+        'image_access_list' => '7,8',
+    ]);
     $service = makePermissionService();
 
     $criteria = $service->getPermissionCriteria();
 
-    expect($criteria->imageAccessIds)->toBeNull()
-        ->and($criteria->imageAccessIsAllowlist)->toBeNull();
+    expect($criteria->imageAccessIds)
+        ->toBeNull()
+        ->and($criteria->imageAccessIsAllowlist)
+        ->toBeNull();
 });
 
 test('getPermissionCriteria treats a genuinely absent image_access_type as empty', function (): void {
@@ -305,13 +373,17 @@ test('getPermissionCriteria treats a genuinely absent image_access_type as empty
     // rather than the cast). Same expected result as the bool-false case: an
     // absent/non-scalar access type must not enable the raw access-list
     // clause below.
-    seedPermissionUserRaw(['image_access_list' => '7,8']);
+    seedPermissionUserRaw([
+        'image_access_list' => '7,8',
+    ]);
     $service = makePermissionService();
 
     $criteria = $service->getPermissionCriteria();
 
-    expect($criteria->imageAccessIds)->toBeNull()
-        ->and($criteria->imageAccessIsAllowlist)->toBeNull();
+    expect($criteria->imageAccessIds)
+        ->toBeNull()
+        ->and($criteria->imageAccessIsAllowlist)
+        ->toBeNull();
 });
 
 test('getPermissionCriteria treats a non-string scalar image_access_list as empty, not as a truthy bypass', function (): void {
@@ -320,26 +392,35 @@ test('getPermissionCriteria treats a non-string scalar image_access_list as empt
     // image_access_type is set to a real, distinct-from-'NOT IN' value
     // ('IN') purely so the type-side gate is satisfied, isolating the list
     // side's own cast for this assertion.
-    seedPermissionUserRaw(['image_access_type' => 'IN', 'image_access_list' => false]);
+    seedPermissionUserRaw([
+        'image_access_type' => 'IN',
+        'image_access_list' => false,
+    ]);
     $service = makePermissionService();
 
     $criteria = $service->getPermissionCriteria();
 
-    expect($criteria->imageAccessIds)->toBeNull()
-        ->and($criteria->imageAccessIsAllowlist)->toBeNull();
+    expect($criteria->imageAccessIds)
+        ->toBeNull()
+        ->and($criteria->imageAccessIsAllowlist)
+        ->toBeNull();
 });
 
 test('getPermissionCriteria treats a genuinely absent image_access_list as empty', function (): void {
     // No 'image_access_list' key at all -- exercises the fallback ''
     // literal (not its cast) the same way the image_access_type test above
     // exercises its own.
-    seedPermissionUserRaw(['image_access_type' => 'IN']);
+    seedPermissionUserRaw([
+        'image_access_type' => 'IN',
+    ]);
     $service = makePermissionService();
 
     $criteria = $service->getPermissionCriteria();
 
-    expect($criteria->imageAccessIds)->toBeNull()
-        ->and($criteria->imageAccessIsAllowlist)->toBeNull();
+    expect($criteria->imageAccessIds)
+        ->toBeNull()
+        ->and($criteria->imageAccessIsAllowlist)
+        ->toBeNull();
 });
 
 test('getPermissionCriteria requires both a non-empty access list AND a non-empty access type for imageAccessIds', function (): void {
@@ -355,8 +436,10 @@ test('getPermissionCriteria requires both a non-empty access list AND a non-empt
 
     $criteria = $service->getPermissionCriteria();
 
-    expect($criteria->imageAccessIds)->toBeNull()
-        ->and($criteria->imageAccessIsAllowlist)->toBeNull();
+    expect($criteria->imageAccessIds)
+        ->toBeNull()
+        ->and($criteria->imageAccessIsAllowlist)
+        ->toBeNull();
 });
 
 test('getPermissionCriteria requires both a non-empty access list AND a non-empty access type, not just a list', function (): void {
@@ -369,8 +452,10 @@ test('getPermissionCriteria requires both a non-empty access list AND a non-empt
 
     $criteria = $service->getPermissionCriteria();
 
-    expect($criteria->imageAccessIds)->toBeNull()
-        ->and($criteria->imageAccessIsAllowlist)->toBeNull();
+    expect($criteria->imageAccessIds)
+        ->toBeNull()
+        ->and($criteria->imageAccessIsAllowlist)
+        ->toBeNull();
 });
 
 test('getPermissionCriteria throws for a corrupted image_access_type', function (): void {
@@ -391,9 +476,12 @@ test('getPermissionCriteria suppresses maxLevel/imageAccessIds together when acc
 
     $criteria = $service->getPermissionCriteria();
 
-    expect($criteria->maxLevel)->toBeNull()
-        ->and($criteria->imageAccessIds)->toBeNull()
-        ->and($criteria->imageAccessIsAllowlist)->toBeNull();
+    expect($criteria->maxLevel)
+        ->toBeNull()
+        ->and($criteria->imageAccessIds)
+        ->toBeNull()
+        ->and($criteria->imageAccessIsAllowlist)
+        ->toBeNull();
 });
 
 test('csvToIntList returns an empty list for an empty string', function (): void {
@@ -407,13 +495,15 @@ test('csvToIntList returns an empty list for an empty string', function (): void
     // emptyValue(), Piwigo\Core\LangTest's getParentLanguage()).
     $method = new ReflectionMethod(PermissionService::class, 'csvToIntList');
 
-    expect($method->invoke(null, ''))->toBe([]);
+    expect($method->invoke(null, ''))
+        ->toBe([]);
 });
 
 test('csvToIntList parses a real comma-separated list into ints', function (): void {
     $method = new ReflectionMethod(PermissionService::class, 'csvToIntList');
 
-    expect($method->invoke(null, '3,7,12'))->toBe([3, 7, 12]);
+    expect($method->invoke(null, '3,7,12'))
+        ->toBe([3, 7, 12]);
 });
 
 test('getPrivacyLevelOptions labels level 0 as Everybody and stacks the rest', function (): void {
@@ -422,13 +512,14 @@ test('getPrivacyLevelOptions labels level 0 as Everybody and stacks the rest', f
     // The shared $label accumulator walks levels high-to-low and keeps
     // growing until it hits 0, which resets it to "Everybody" instead of
     // appending -- so lower levels list every higher level before them.
-    expect($options)->toBe([
-        8 => 'Level 8',
-        4 => 'Level 8, Level 4',
-        2 => 'Level 8, Level 4, Level 2',
-        1 => 'Level 8, Level 4, Level 2, Level 1',
-        0 => 'Everybody',
-    ]);
+    expect($options)
+        ->toBe([
+            8 => 'Level 8',
+            4 => 'Level 8, Level 4',
+            2 => 'Level 8, Level 4, Level 2',
+            1 => 'Level 8, Level 4, Level 2, Level 1',
+            0 => 'Everybody',
+        ]);
 });
 
 test('getPrivacyLevelOptions follows CurrentConfig::availablePermissionLevels when overridden', function (): void {
@@ -436,10 +527,11 @@ test('getPrivacyLevelOptions follows CurrentConfig::availablePermissionLevels wh
 
     $options = PermissionService::getPrivacyLevelOptions(CurrentConfigTestFactory::get(), LangTestFactory::get());
 
-    expect($options)->toBe([
-        5 => 'Level 5',
-        0 => 'Everybody',
-    ]);
+    expect($options)
+        ->toBe([
+            5 => 'Level 5',
+            0 => 'Everybody',
+        ]);
 });
 
 test('getPrivacyLevelOptions does not prepend a stray separator before the very first stacked label', function (): void {
@@ -452,7 +544,9 @@ test('getPrivacyLevelOptions does not prepend a stray separator before the very 
     // *output* key, so it maps the already-`sprintf()`-formatted 'Level 2'
     // string, not the 'Level %d' format string itself.
     CurrentConfigTestFactory::get()->availablePermissionLevels = [0, 1, 2];
-    LangTestFactory::get()->loadArray(['Level 2' => 'X']);
+    LangTestFactory::get()->loadArray([
+        'Level 2' => 'X',
+    ]);
 
     $options = PermissionService::getPrivacyLevelOptions(CurrentConfigTestFactory::get(), LangTestFactory::get());
 

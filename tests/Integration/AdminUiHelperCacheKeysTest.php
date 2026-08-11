@@ -2,8 +2,8 @@
 
 declare(strict_types=1);
 
-use Piwigo\Tests\Support\UrlServiceTestFactory;
 use Piwigo\Admin\AdminUiHelper;
+use Piwigo\Tests\Support\UrlServiceTestFactory;
 use Piwigo\Url\UrlService;
 
 /**
@@ -25,7 +25,8 @@ function adminUiHelperUrlService(): UrlService
 test('getAdminClientCacheKeys returns all 5 known table keys plus _hash when nothing specific is requested', function (): void {
     $keys = AdminUiHelper::getAdminClientCacheKeys(adminUiHelperUrlService());
 
-    expect(array_keys($keys))->toBe(['_hash', 'categories', 'groups', 'images', 'tags', 'users']);
+    expect(array_keys($keys))
+        ->toBe(['_hash', 'categories', 'groups', 'images', 'tags', 'users']);
     expect($keys['_hash'])->toBe(md5(adminUiHelperUrlService()->getAbsoluteRootUrl()));
     foreach (['categories', 'groups', 'images', 'tags', 'users'] as $item) {
         expect($keys[$item])->toMatch('/^\d+_\d+$/');
@@ -35,18 +36,21 @@ test('getAdminClientCacheKeys returns all 5 known table keys plus _hash when not
 test('getAdminClientCacheKeys with a single scalar string requested returns just that key plus _hash', function (): void {
     $keys = AdminUiHelper::getAdminClientCacheKeys(adminUiHelperUrlService(), 'tags');
 
-    expect(array_keys($keys))->toBe(['_hash', 'tags']);
+    expect(array_keys($keys))
+        ->toBe(['_hash', 'tags']);
     expect($keys['tags'])->toMatch('/^\d+_\d+$/');
 });
 
 test('getAdminClientCacheKeys filters an array request down to only the known table names', function (): void {
     $keys = AdminUiHelper::getAdminClientCacheKeys(adminUiHelperUrlService(), ['users', 'not-a-real-table', 'groups']);
 
-    expect(array_keys($keys))->toBe(['_hash', 'users', 'groups']);
+    expect(array_keys($keys))
+        ->toBe(['_hash', 'users', 'groups']);
 });
 
 test('getAdminClientCacheKeys returns just _hash when every requested key is unknown', function (): void {
     $keys = AdminUiHelper::getAdminClientCacheKeys(adminUiHelperUrlService(), ['not-a-real-table']);
 
-    expect(array_keys($keys))->toBe(['_hash']);
+    expect(array_keys($keys))
+        ->toBe(['_hash']);
 });

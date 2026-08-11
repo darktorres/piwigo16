@@ -29,7 +29,8 @@ test('add registers a new css by id', function (): void {
 
     $registered = cssLoaderRegisteredCss($loader);
 
-    expect($registered)->toHaveKey('my-css')
+    expect($registered)
+        ->toHaveKey('my-css')
         ->and($registered['my-css']->path)->toBe('themes/default/css/foo.css');
 });
 
@@ -61,7 +62,8 @@ test('adding the same id twice with a higher order replaces the first registrati
 
     $registered = cssLoaderRegisteredCss($loader);
 
-    expect($registered)->toHaveCount(1)
+    expect($registered)
+        ->toHaveCount(1)
         ->and($registered['my-css']->path)->toBe('themes/default/css/v2.css');
 });
 
@@ -72,7 +74,8 @@ test('adding the same id twice with a lower order keeps the first registration',
 
     $registered = cssLoaderRegisteredCss($loader);
 
-    expect($registered)->toHaveCount(1)
+    expect($registered)
+        ->toHaveCount(1)
         ->and($registered['my-css']->path)->toBe('themes/default/css/v1.css');
 });
 
@@ -102,7 +105,8 @@ test('clear resets registered CSS', function (): void {
 
     $loader->clear();
 
-    expect(cssLoaderRegisteredCss($loader))->toBe([]);
+    expect(cssLoaderRegisteredCss($loader))
+        ->toBe([]);
 });
 
 test('clear resets the declaration counter back to 0, not just the registered array', function (): void {
@@ -138,7 +142,8 @@ test('get_css sorts registered CSS by order before combining', function (): void
     /** @var array<string, Css> $sorted */
     $sorted = $method->invoke($loader);
 
-    expect(array_keys($sorted))->toBe(['low-priority', 'high-priority']);
+    expect(array_keys($sorted))
+        ->toBe(['low-priority', 'high-priority']);
 });
 
 test('shouldReplace requires the existing order to be strictly less than order*1000', function (): void {
@@ -150,8 +155,10 @@ test('shouldReplace requires the existing order to be strictly less than order*1
     // and also distinguishes a *999 off-by-one, which would wrongly say
     // false there since 2999 < 2997 is false. No dependency on the
     // declaration counter, unlike testing this through add() directly.
-    expect($method->invoke(null, new Css('id', 'path', '0', 3000), 3, '0'))->toBeFalse();
-    expect($method->invoke(null, new Css('id', 'path', '0', 2999), 3, '0'))->toBeTrue();
+    expect($method->invoke(null, new Css('id', 'path', '0', 3000), 3, '0'))
+        ->toBeFalse();
+    expect($method->invoke(null, new Css('id', 'path', '0', 2999), 3, '0'))
+        ->toBeTrue();
 });
 
 test('cmp_by_order subtracts orders, not adds them', function (): void {
@@ -160,14 +167,19 @@ test('cmp_by_order subtracts orders, not adds them', function (): void {
     // would leave the sign unchanged either way).
     $method = new ReflectionMethod(CssLoader::class, 'cmp_by_order');
 
-    expect($method->invoke(null, new Css('a', 'a.css', '0', 3), new Css('b', 'b.css', '0', 5)))->toBeLessThan(0);
-    expect($method->invoke(null, new Css('a', 'a.css', '0', 5), new Css('b', 'b.css', '0', 3)))->toBeGreaterThan(0);
+    expect($method->invoke(null, new Css('a', 'a.css', '0', 3), new Css('b', 'b.css', '0', 5)))
+        ->toBeLessThan(0);
+    expect($method->invoke(null, new Css('a', 'a.css', '0', 5), new Css('b', 'b.css', '0', 3)))
+        ->toBeGreaterThan(0);
 });
 
 test('shouldReplace always replaces when either the existing or new version is false', function (): void {
     $method = new ReflectionMethod(CssLoader::class, 'shouldReplace');
 
-    expect($method->invoke(null, new Css('id', 'path', false, 5000), 0, '1.0'))->toBeTrue();
-    expect($method->invoke(null, new Css('id', 'path', '1.0', 5000), 0, false))->toBeTrue();
-    expect($method->invoke(null, new Css('id', 'path', '1.0', 5000), 0, '1.0'))->toBeFalse();
+    expect($method->invoke(null, new Css('id', 'path', false, 5000), 0, '1.0'))
+        ->toBeTrue();
+    expect($method->invoke(null, new Css('id', 'path', '1.0', 5000), 0, false))
+        ->toBeTrue();
+    expect($method->invoke(null, new Css('id', 'path', '1.0', 5000), 0, '1.0'))
+        ->toBeFalse();
 });

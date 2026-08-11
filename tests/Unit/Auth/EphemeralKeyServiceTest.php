@@ -28,7 +28,8 @@ test('generate then verify round-trips immediately', function (): void {
     $signature = hash_hmac('sha256', (string) $issuedAt . substr('127.0.0.1', 0, 5) . '0', 'test-secret-key');
     $key = (string) $issuedAt . ':0:' . $signature;
 
-    expect($service->verify($key))->toBeTrue();
+    expect($service->verify($key))
+        ->toBeTrue();
 });
 
 test('generate then verify round-trips immediately using generate()\'s own real output', function (): void {
@@ -44,7 +45,8 @@ test('generate then verify round-trips immediately using generate()\'s own real 
 
     $key = $service->generate(-1);
 
-    expect($service->verify($key))->toBeTrue();
+    expect($service->verify($key))
+        ->toBeTrue();
 });
 
 test('generate then verify round-trips with non-empty additionalDataToHash, hashed on both sides', function (): void {
@@ -58,7 +60,8 @@ test('generate then verify round-trips with non-empty additionalDataToHash, hash
 
     $key = $service->generate(-1, 'real-form-token');
 
-    expect($service->verify($key, 'real-form-token'))->toBeTrue();
+    expect($service->verify($key, 'real-form-token'))
+        ->toBeTrue();
 });
 
 test('generate then verify round-trips when REMOTE_ADDR is absent, both sides defaulting the same way', function (): void {
@@ -71,14 +74,16 @@ test('generate then verify round-trips when REMOTE_ADDR is absent, both sides de
 
     $key = $service->generate(-1);
 
-    expect($service->verify($key))->toBeTrue();
+    expect($service->verify($key))
+        ->toBeTrue();
 });
 
 test('verify rejects a key before its valid_after_seconds window has elapsed', function (): void {
     $service = new EphemeralKeyService(CurrentConfigTestFactory::get());
     $key = $service->generate(1000);
 
-    expect($service->verify($key))->toBeFalse();
+    expect($service->verify($key))
+        ->toBeFalse();
 });
 
 test('verify rejects a key older than the 60 minute expiration', function (): void {
@@ -87,21 +92,26 @@ test('verify rejects a key older than the 60 minute expiration', function (): vo
     $signature = hash_hmac('sha256', (string) $issuedAt . substr('127.0.0.1', 0, 5) . '0', 'test-secret-key');
     $key = (string) $issuedAt . ':0:' . $signature;
 
-    expect($service->verify($key))->toBeFalse();
+    expect($service->verify($key))
+        ->toBeFalse();
 });
 
 test('verify rejects a malformed key with the wrong number of parts', function (): void {
     $service = new EphemeralKeyService(CurrentConfigTestFactory::get());
 
-    expect($service->verify('not-a-valid-key'))->toBeFalse()
-        ->and($service->verify('1:2:3:4'))->toBeFalse();
+    expect($service->verify('not-a-valid-key'))
+        ->toBeFalse()
+        ->and($service->verify('1:2:3:4'))
+        ->toBeFalse();
 });
 
 test('verify rejects a key with the right shape but non-numeric issuedAt/validAfterSeconds parts', function (): void {
     $service = new EphemeralKeyService(CurrentConfigTestFactory::get());
 
-    expect($service->verify('not-a-number:0:somesignature'))->toBeFalse()
-        ->and($service->verify('123.0:not-a-number:somesignature'))->toBeFalse();
+    expect($service->verify('not-a-number:0:somesignature'))
+        ->toBeFalse()
+        ->and($service->verify('123.0:not-a-number:somesignature'))
+        ->toBeFalse();
 });
 
 test('verify rejects a non-numeric issuedAt even when its leading digits and a matching signature would otherwise pass', function (): void {
@@ -125,7 +135,8 @@ test('verify rejects a non-numeric issuedAt even when its leading digits and a m
     );
     $key = $issuedAtRaw . ':' . $validAfterSecondsRaw . ':' . $signature;
 
-    expect($service->verify($key))->toBeFalse();
+    expect($service->verify($key))
+        ->toBeFalse();
 });
 
 test('verify rejects a tampered signature', function (): void {
@@ -133,7 +144,8 @@ test('verify rejects a tampered signature', function (): void {
     $key = $service->generate(0);
     $tampered = substr($key, 0, -1) . (str_ends_with($key, 'a') ? 'b' : 'a');
 
-    expect($service->verify($tampered))->toBeFalse();
+    expect($service->verify($tampered))
+        ->toBeFalse();
 });
 
 test('verify rejects a key generated with different additional data', function (): void {
@@ -146,8 +158,10 @@ test('verify rejects a key generated with different additional data', function (
     $signature = hash_hmac('sha256', (string) $issuedAt . substr('127.0.0.1', 0, 5) . '0form-a', 'test-secret-key');
     $key = (string) $issuedAt . ':0:' . $signature;
 
-    expect($service->verify($key, 'form-b'))->toBeFalse()
-        ->and($service->verify($key, 'form-a'))->toBeTrue();
+    expect($service->verify($key, 'form-b'))
+        ->toBeFalse()
+        ->and($service->verify($key, 'form-a'))
+        ->toBeTrue();
 });
 
 test('verify rejects a key generated from a different remote address', function (): void {
@@ -156,7 +170,8 @@ test('verify rejects a key generated from a different remote address', function 
     $key = $service->generate(0);
 
     $_SERVER['REMOTE_ADDR'] = '192.168.1.1';
-    expect($service->verify($key))->toBeFalse();
+    expect($service->verify($key))
+        ->toBeFalse();
 });
 
 test('verify accepts a key when only the first 5 chars of the remote address match', function (): void {
@@ -168,7 +183,8 @@ test('verify accepts a key when only the first 5 chars of the remote address mat
     $key = $service->generate(-1);
 
     $_SERVER['REMOTE_ADDR'] = '192.100.2.2';
-    expect($service->verify($key))->toBeTrue();
+    expect($service->verify($key))
+        ->toBeTrue();
 });
 
 test('generate produces a different signature when the secret key changes', function (): void {
@@ -177,7 +193,8 @@ test('generate produces a different signature when the secret key changes', func
 
     CurrentConfigTestFactory::get()->secretKey = 'a-different-secret';
 
-    expect($service->verify($key))->toBeFalse();
+    expect($service->verify($key))
+        ->toBeFalse();
 });
 
 test('generate does not throw when REMOTE_ADDR is not a string', function (): void {
@@ -193,5 +210,6 @@ test('generate does not throw when REMOTE_ADDR is not a string', function (): vo
     $_SERVER['REMOTE_ADDR'] = ['not', 'a', 'string'];
     $service = new EphemeralKeyService(CurrentConfigTestFactory::get());
 
-    expect(fn () => $service->generate(0))->not->toThrow(TypeError::class);
+    expect(fn () => $service->generate(0))
+        ->not->toThrow(TypeError::class);
 });

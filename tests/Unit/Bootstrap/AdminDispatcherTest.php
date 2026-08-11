@@ -97,7 +97,7 @@ test('dispatch resolves the map relative to CurrentPaths root and calls handle()
     );
 
     try {
-        $stub = new class implements AdminSubControllerInterface {
+        $stub = new class() implements AdminSubControllerInterface {
             public bool $handled = false;
 
             public ?ServerRequestInterface $request = null;
@@ -121,8 +121,10 @@ test('dispatch resolves the map relative to CurrentPaths root and calls handle()
             }
         );
 
-        expect($stub->handled)->toBeTrue()
-            ->and($stub->request)->toBe($request);
+        expect($stub->handled)
+            ->toBeTrue()
+            ->and($stub->request)
+            ->toBe($request);
     } finally {
         unlink($decoyRoot . 'config/admin_pages.php');
         rmdir($decoyRoot . 'config');

@@ -15,7 +15,9 @@ use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
  */
 it('renders the group list with real groups, member counts, and member names', function (): void {
     $page = H::loginAsAdmin($this);
-    $group = H::wsCall($page, 'pwg.groups.add', ['name' => 'Group List Test Group ' . uniqid()]);
+    $group = H::wsCall($page, 'pwg.groups.add', [
+        'name' => 'Group List Test Group ' . uniqid(),
+    ]);
     $groupResult = $group['result'] ?? null;
     $groups = is_array($groupResult) ? ($groupResult['groups'] ?? null) : null;
     $firstGroup = is_array($groups) ? ($groups[0] ?? null) : null;

@@ -23,10 +23,14 @@ function fullMailRecipientRow(): array
 test('fromRow narrows every column to its real type', function (): void {
     $recipient = MailRecipient::fromRow(fullMailRecipientRow());
 
-    expect($recipient->userId)->toBe(3)
-        ->and($recipient->name)->toBe('regular_user')
-        ->and($recipient->email)->toBe('regular@example.test')
-        ->and($recipient->status)->toBe('normal');
+    expect($recipient->userId)
+        ->toBe(3)
+        ->and($recipient->name)
+        ->toBe('regular_user')
+        ->and($recipient->email)
+        ->toBe('regular@example.test')
+        ->and($recipient->status)
+        ->toBe('normal');
 });
 
 test('fromRow defaults status to null when absent, matching findAdminsAndWebmasters()\'s own shape', function (): void {
@@ -35,7 +39,8 @@ test('fromRow defaults status to null when absent, matching findAdminsAndWebmast
 
     $recipient = MailRecipient::fromRow($row);
 
-    expect($recipient->status)->toBeNull();
+    expect($recipient->status)
+        ->toBeNull();
     // The NOT NULL columns (user_id/name/email) fall back to their type's
     // zero value instead -- never actually null for a real fetched row.
 });
@@ -46,7 +51,8 @@ test('fromRow defaults userId to 0 when user_id is missing or non-numeric', func
 
     $recipient = MailRecipient::fromRow($row);
 
-    expect($recipient->userId)->toBe(0);
+    expect($recipient->userId)
+        ->toBe(0);
 });
 
 test('fromRow defaults name to an empty string when name is missing or non-string', function (): void {
@@ -55,7 +61,8 @@ test('fromRow defaults name to an empty string when name is missing or non-strin
 
     $recipient = MailRecipient::fromRow($row);
 
-    expect($recipient->name)->toBe('');
+    expect($recipient->name)
+        ->toBe('');
 });
 
 test('fromRow defaults email to an empty string when email is missing or non-string', function (): void {
@@ -64,16 +71,18 @@ test('fromRow defaults email to an empty string when email is missing or non-str
 
     $recipient = MailRecipient::fromRow($row);
 
-    expect($recipient->email)->toBe('');
+    expect($recipient->email)
+        ->toBe('');
 });
 
 test('toArray round-trips the exact same DB column shape fromRow narrowed', function (): void {
     $roundTripped = MailRecipient::fromRow(fullMailRecipientRow())->toArray();
 
-    expect($roundTripped)->toBe([
-        'user_id' => 3,
-        'name' => 'regular_user',
-        'email' => 'regular@example.test',
-        'status' => 'normal',
-    ]);
+    expect($roundTripped)
+        ->toBe([
+            'user_id' => 3,
+            'name' => 'regular_user',
+            'email' => 'regular@example.test',
+            'status' => 'normal',
+        ]);
 });

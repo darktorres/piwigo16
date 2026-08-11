@@ -82,10 +82,14 @@ use Piwigo\Core\Projection\ContainerInfo;
  *   mutation site below the two subprocess tests.
  */
 test('detect returns [\'none\', null] in this real, non-containerized Linux environment', function (): void {
-    expect(ini_get('open_basedir'))->toBeFalsy();
-    expect(strtoupper(substr(PHP_OS, 0, 5)))->toBe('LINUX');
-    expect(file_exists('/proc/2/sched'))->toBeTrue();
-    expect(str_starts_with((string) file_get_contents('/proc/2/sched'), 'kthreadd'))->toBeTrue();
+    expect(ini_get('open_basedir'))
+        ->toBeFalsy();
+    expect(strtoupper(substr(PHP_OS, 0, 5)))
+        ->toBe('LINUX');
+    expect(file_exists('/proc/2/sched'))
+        ->toBeTrue();
+    expect(str_starts_with((string) file_get_contents('/proc/2/sched'), 'kthreadd'))
+        ->toBeTrue();
 
     expect(ContainerDetector::detect())->toEqual(new ContainerInfo('none', null));
 });
@@ -114,7 +118,8 @@ test('detect returns [\'none\', null] in this real, non-containerized Linux envi
 test('detect returns [\'none\', null] via the else branch when open_basedir is genuinely non-empty', function (): void {
     $projectRoot = dirname(__DIR__, 3);
     $autoloadPath = $projectRoot . '/vendor/autoload.php';
-    expect(is_file($autoloadPath))->toBeTrue();
+    expect(is_file($autoloadPath))
+        ->toBeTrue();
 
     // Restricting open_basedir to the project root itself (rather than
     // some unrelated directory) keeps the subprocess able to load the
@@ -136,7 +141,8 @@ test('detect returns [\'none\', null] via the else branch when open_basedir is g
         2 => ['pipe', 'w'],
     ];
     $proc = proc_open($cmd, $descriptors, $pipes);
-    expect($proc)->toBeResource();
+    expect($proc)
+        ->toBeResource();
     if ($proc === false) {
         throw new RuntimeException('proc_open failed');
     }
@@ -147,8 +153,13 @@ test('detect returns [\'none\', null] via the else branch when open_basedir is g
     fclose($pipes[2]);
     $exit = proc_close($proc);
 
-    expect($exit)->toBe(0, 'ContainerDetector subprocess failed: ' . ($stderr === false ? '(no stderr)' : $stderr));
-    expect(json_decode((string) $stdout, true))->toBe(['type' => 'none', 'version' => null]);
+    expect($exit)
+        ->toBe(0, 'ContainerDetector subprocess failed: ' . ($stderr === false ? '(no stderr)' : $stderr));
+    expect(json_decode((string) $stdout, true))
+        ->toBe([
+            'type' => 'none',
+            'version' => null,
+        ]);
 });
 
 /**
@@ -187,7 +198,8 @@ test('detect returns [\'none\', null] via the else branch when open_basedir is g
 test('detect returns [\'Unknown\', null] when open_basedir is the literal string \'0\'', function (): void {
     $projectRoot = dirname(__DIR__, 3);
     $autoloadPath = $projectRoot . '/vendor/autoload.php';
-    expect(is_file($autoloadPath))->toBeTrue();
+    expect(is_file($autoloadPath))
+        ->toBeTrue();
 
     $script = 'require ' . var_export($autoloadPath, true) . ';'
         . 'class_exists(\Piwigo\Core\ContainerDetector::class);'
@@ -206,7 +218,8 @@ test('detect returns [\'Unknown\', null] when open_basedir is the literal string
         2 => ['pipe', 'w'],
     ];
     $proc = proc_open($cmd, $descriptors, $pipes);
-    expect($proc)->toBeResource();
+    expect($proc)
+        ->toBeResource();
     if ($proc === false) {
         throw new RuntimeException('proc_open failed');
     }
@@ -217,8 +230,13 @@ test('detect returns [\'Unknown\', null] when open_basedir is the literal string
     fclose($pipes[2]);
     $exit = proc_close($proc);
 
-    expect($exit)->toBe(0, 'ContainerDetector subprocess failed: ' . ($stderr === false ? '(no stderr)' : $stderr));
-    expect(json_decode((string) $stdout, true))->toBe(['type' => 'Unknown', 'version' => null]);
+    expect($exit)
+        ->toBe(0, 'ContainerDetector subprocess failed: ' . ($stderr === false ? '(no stderr)' : $stderr));
+    expect(json_decode((string) $stdout, true))
+        ->toBe([
+            'type' => 'Unknown',
+            'version' => null,
+        ]);
 });
 
 /**

@@ -4,17 +4,17 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Integration;
 
-use Override;
-use Piwigo\Core\Kernel;
+use Doctrine\DBAL\Connection;
 use LogicException;
+use Override;
+use Piwigo\Config\ConfigLoader;
+use Piwigo\Config\CurrentConfig;
+use Piwigo\Core\Kernel;
+use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
 use Piwigo\History\HistoryEntity;
-use Piwigo\History\Projection\HistorySummaryCount;
-use Doctrine\DBAL\Connection;
-use Piwigo\Config\CurrentConfig;
-use Piwigo\Config\ConfigLoader;
-use Piwigo\Db\DbConnection;
 use Piwigo\History\HistoryRepository;
+use Piwigo\History\Projection\HistorySummaryCount;
 
 /**
  * `history`/`history_summary` are both empty in the fixture, so every test
@@ -64,12 +64,12 @@ final class HistoryRepositoryTest extends IntegrationTestCase
         $this->repo = EntityManagerFactory::build($this->conn)->getRepository(HistoryEntity::class);
     }
 
-    public function test_find_last_summary_with_history_id_to_returns_null_when_empty(): void
+    public function testFindLastSummaryWithHistoryIdToReturnsNullWhenEmpty(): void
     {
         self::assertNull($this->repo->findLastSummaryWithHistoryIdTo());
     }
 
-    public function test_find_last_summary_with_history_id_to_returns_the_highest(): void
+    public function testFindLastSummaryWithHistoryIdToReturnsTheHighest(): void
     {
         $this->insertSummary(2026, 7, 12, 3, 10, 1, 100);
         $this->insertSummary(2026, 7, 12, 4, 5, 101, 200);
@@ -85,12 +85,12 @@ final class HistoryRepositoryTest extends IntegrationTestCase
         }
     }
 
-    public function test_find_min_history_id_returns_null_when_empty(): void
+    public function testFindMinHistoryIdReturnsNullWhenEmpty(): void
     {
         self::assertNull($this->repo->findMinHistoryId());
     }
 
-    public function test_find_min_history_id_returns_the_lowest(): void
+    public function testFindMinHistoryIdReturnsTheLowest(): void
     {
         $this->insertHistoryLine(1, '2026-07-12', '03:00:00');
         $this->insertHistoryLine(1, '2026-07-12', '04:00:00');
@@ -102,7 +102,7 @@ final class HistoryRepositoryTest extends IntegrationTestCase
         }
     }
 
-    public function test_find_grouped_counts_since_buckets_by_date_and_hour(): void
+    public function testFindGroupedCountsSinceBucketsByDateAndHour(): void
     {
         $this->insertHistoryLine(1, '2026-07-12', '03:10:00');
         $this->insertHistoryLine(1, '2026-07-12', '03:50:00');
@@ -122,7 +122,7 @@ final class HistoryRepositoryTest extends IntegrationTestCase
         }
     }
 
-    public function test_find_grouped_counts_since_respects_the_max_id(): void
+    public function testFindGroupedCountsSinceRespectsTheMaxId(): void
     {
         $id1 = $this->insertHistoryLine(1, '2026-07-12', '03:00:00');
         $this->insertHistoryLine(1, '2026-07-12', '04:00:00');
@@ -137,7 +137,7 @@ final class HistoryRepositoryTest extends IntegrationTestCase
         }
     }
 
-    public function test_find_summary_rows_for_hierarchy_returns_every_existing_level(): void
+    public function testFindSummaryRowsForHierarchyReturnsEveryExistingLevel(): void
     {
         $this->insertSummary(2026, null, null, null, 100, 1, 50); // year-only
         $this->insertSummary(2026, 7, null, null, 40, 1, 30); // year+month
@@ -158,13 +158,20 @@ final class HistoryRepositoryTest extends IntegrationTestCase
         }
     }
 
-    public function test_update_summary_rows_updates_the_matching_null_inclusive_key(): void
+    public function testUpdateSummaryRowsUpdatesTheMatchingNullInclusiveKey(): void
     {
         $this->insertSummary(2026, null, null, null, 100, 1, 50);
 
         try {
             $this->repo->updateSummaryRows([
-                ['year' => 2026, 'month' => null, 'day' => null, 'hour' => null, 'nbPages' => 150, 'historyIdTo' => 80],
+                [
+                    'year' => 2026,
+                    'month' => null,
+                    'day' => null,
+                    'hour' => null,
+                    'nbPages' => 150,
+                    'historyIdTo' => 80,
+                ],
             ]);
 
             $row = $this->fetchSummary(2026, null, null, null);
@@ -175,11 +182,19 @@ final class HistoryRepositoryTest extends IntegrationTestCase
         }
     }
 
-    public function test_insert_summary_rows_inserts_new_rows(): void
+    public function testInsertSummaryRowsInsertsNewRows(): void
     {
         try {
             $this->repo->insertSummaryRows([
-                ['year' => 2026, 'month' => 7, 'day' => 12, 'hour' => 3, 'nbPages' => 5, 'historyIdFrom' => 1, 'historyIdTo' => 5],
+                [
+                    'year' => 2026,
+                    'month' => 7,
+                    'day' => 12,
+                    'hour' => 3,
+                    'nbPages' => 5,
+                    'historyIdFrom' => 1,
+                    'historyIdTo' => 5,
+                ],
             ]);
 
             $row = $this->fetchSummary(2026, 7, 12, 3);
@@ -189,7 +204,7 @@ final class HistoryRepositoryTest extends IntegrationTestCase
         }
     }
 
-    public function test_sum_page_views_sums_only_year_only_rows(): void
+    public function testSumPageViewsSumsOnlyYearOnlyRows(): void
     {
         // month IS NULL is summarize()'s own "whole year" rollup row --
         // the month-level row below must not also get counted, or the
@@ -205,7 +220,7 @@ final class HistoryRepositoryTest extends IntegrationTestCase
         }
     }
 
-    public function test_count_all_and_latest_and_oldest_and_delete_before(): void
+    public function testCountAllAndLatestAndOldestAndDeleteBefore(): void
     {
         $id1 = $this->insertHistoryLine(1, '2026-07-10', '03:00:00');
         $id2 = $this->insertHistoryLine(1, '2026-07-11', '03:00:00');
@@ -225,14 +240,14 @@ final class HistoryRepositoryTest extends IntegrationTestCase
         }
     }
 
-    public function test_find_image_ids_by_filename(): void
+    public function testFindImageIdsByFilename(): void
     {
         $ids = $this->repo->findImageIdsByFilename('fixture-photo-1%');
 
         self::assertSame([1], $ids);
     }
 
-    public function test_search_filters_by_user_id(): void
+    public function testSearchFiltersByUserId(): void
     {
         $this->insertHistoryLine(1, '2026-07-12', '03:00:00');
         $this->insertHistoryLine(3, '2026-07-12', '03:00:00');
@@ -247,7 +262,7 @@ final class HistoryRepositoryTest extends IntegrationTestCase
         }
     }
 
-    public function test_search_with_no_criteria_returns_everything(): void
+    public function testSearchWithNoCriteriaReturnsEverything(): void
     {
         $this->insertHistoryLine(1, '2026-07-12', '03:00:00');
         $this->insertHistoryLine(3, '2026-07-12', '03:00:00');
@@ -259,7 +274,7 @@ final class HistoryRepositoryTest extends IntegrationTestCase
         }
     }
 
-    public function test_search_with_an_unmatched_filename_returns_nothing(): void
+    public function testSearchWithAnUnmatchedFilenameReturnsNothing(): void
     {
         $this->insertHistoryLine(1, '2026-07-12', '03:00:00');
 
@@ -276,7 +291,7 @@ final class HistoryRepositoryTest extends IntegrationTestCase
      * convertToDatabaseValue() (which only accepts null|IpAddress), or
      * this throws instead of matching.
      */
-    public function test_search_filters_by_ip_like_pattern(): void
+    public function testSearchFiltersByIpLikePattern(): void
     {
         $this->insertHistoryLine(1, '2026-07-12', '03:00:00');
 
@@ -297,7 +312,7 @@ final class HistoryRepositoryTest extends IntegrationTestCase
      * Browser test (tests/Browser/StatsPageRendererTest.php) can't run
      * in this worktree (Playwright isn't installed here).
      */
-    public function test_find_last_by_type_filters_and_orders_per_hierarchy_level(): void
+    public function testFindLastByTypeFiltersAndOrdersPerHierarchyLevel(): void
     {
         $this->insertSummary(2025, 6, 10, 2, 5, 1, 10);
         $this->insertSummary(2026, 7, 12, 3, 20, 11, 30);
@@ -323,7 +338,7 @@ final class HistoryRepositoryTest extends IntegrationTestCase
         }
     }
 
-    public function test_find_monthly_rows_returns_month_level_rows_most_recent_first_and_respects_limit(): void
+    public function testFindMonthlyRowsReturnsMonthLevelRowsMostRecentFirstAndRespectsLimit(): void
     {
         $this->insertSummary(2025, 6, null, null, 5, 1, 10);
         $this->insertSummary(2026, 7, null, null, 20, 11, 30);
@@ -341,7 +356,7 @@ final class HistoryRepositoryTest extends IntegrationTestCase
         }
     }
 
-    public function test_find_daily_rows_for_months_matches_only_the_three_given_year_month_pairs(): void
+    public function testFindDailyRowsForMonthsMatchesOnlyTheThreeGivenYearMonthPairs(): void
     {
         $this->insertSummary(2026, 7, 5, null, 5, 1, 10);
         $this->insertSummary(2026, 6, 5, null, 6, 11, 20);
@@ -360,7 +375,7 @@ final class HistoryRepositoryTest extends IntegrationTestCase
         }
     }
 
-    public function test_find_average_daily_page_views_since_averages_matching_day_level_rows(): void
+    public function testFindAverageDailyPageViewsSinceAveragesMatchingDayLevelRows(): void
     {
         $this->insertSummary(2026, 3, 1, null, 10, 1, 10);
         $this->insertSummary(2026, 3, 2, null, 20, 11, 20);
@@ -377,7 +392,7 @@ final class HistoryRepositoryTest extends IntegrationTestCase
         }
     }
 
-    public function test_find_average_daily_page_views_since_returns_null_when_nothing_matches(): void
+    public function testFindAverageDailyPageViewsSinceReturnsNullWhenNothingMatches(): void
     {
         self::assertNull($this->repo->findAverageDailyPageViewsSince(2026, 2025, 11));
     }
@@ -448,7 +463,8 @@ final class HistoryRepositoryTest extends IntegrationTestCase
         $qb->andWhere($day === null ? 'day IS NULL' : 'day = ' . $day);
         $qb->andWhere($hour === null ? 'hour IS NULL' : 'hour = ' . $hour);
 
-        $row = $qb->executeQuery()->fetchAssociative();
+        $row = $qb->executeQuery()
+            ->fetchAssociative();
         self::assertIsArray($row);
 
         return $row;
@@ -456,15 +472,15 @@ final class HistoryRepositoryTest extends IntegrationTestCase
 
     private function clearHistory(): void
     {
-        $this->conn->executeStatement('DELETE FROM ' . 'history');
+        $this->conn->executeStatement('DELETE FROM history');
     }
 
     private function clearSummary(): void
     {
-        $this->conn->executeStatement('DELETE FROM ' . 'history_summary');
+        $this->conn->executeStatement('DELETE FROM history_summary');
     }
 
-    public function test_update_last_visit_now_sets_last_visit_on_the_real_user_infos_row(): void
+    public function testUpdateLastVisitNowSetsLastVisitOnTheRealUserInfosRow(): void
     {
         $before = $this->conn->createQueryBuilder()
             ->select('last_visit')
@@ -485,6 +501,6 @@ final class HistoryRepositoryTest extends IntegrationTestCase
         self::assertIsString($after);
         self::assertNotSame('', $after);
 
-        $this->conn->executeStatement('UPDATE ' . 'user_infos' . ' SET last_visit = NULL WHERE user_id = 4');
+        $this->conn->executeStatement('UPDATE user_infos SET last_visit = NULL WHERE user_id = 4');
     }
 }

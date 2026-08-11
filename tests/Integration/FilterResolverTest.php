@@ -4,47 +4,47 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Integration;
 
-use Override;
-use Piwigo\Auth\AccessLevelChecker;
-use Piwigo\Core\Kernel;
-use LogicException;
-use Piwigo\Tests\Support\LangTestFactory;
-use Piwigo\Image\ImageEntity;
-use Piwigo\Activity\ActivityEntity;
-use Piwigo\PluginConfig\EventDispatcher;
-use Piwigo\Tests\Support\TranslatorTestFactory;
-use Piwigo\Core\FilterState;
-use Piwigo\Category\CategoryRepository;
-use Piwigo\Group\GroupEntity;
-use Piwigo\Tests\Support\CurrentUserTestFactory;
-use Piwigo\Caddie\CaddieEntity;
-use Piwigo\Users\UserRepository;
-use Piwigo\Tests\Support\HtmlServiceTestFactory;
-use Piwigo\Config\DeploymentPolicy;
-use Piwigo\Core\InstallationFlag;
-use Piwigo\Core\Paths;
-use Piwigo\Core\ProcessCache;
 use Doctrine\DBAL\Connection;
+use LogicException;
+use Override;
+use Piwigo\Activity\ActivityEntity;
 use Piwigo\Activity\ActivityService;
 use Piwigo\Admin\BatchManager\FilterResolver;
 use Piwigo\Admin\BatchManager\Projection\DimensionFilter;
 use Piwigo\Admin\BatchManager\Projection\DuplicateFieldFlags;
 use Piwigo\Admin\BatchManager\Projection\FilesizeFilter;
+use Piwigo\Auth\AccessLevelChecker;
+use Piwigo\Caddie\CaddieEntity;
+use Piwigo\Category\CategoryRepository;
+use Piwigo\Category\CategoryService;
 use Piwigo\Common\ValueObject\CategoryId;
 use Piwigo\Common\ValueObject\UserId;
-use Piwigo\Category\CategoryService;
-use Piwigo\Config\CurrentConfig;
-use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Config\ConfigLoader;
+use Piwigo\Config\CurrentConfig;
+use Piwigo\Config\DeploymentPolicy;
+use Piwigo\Core\FilterState;
+use Piwigo\Core\InstallationFlag;
+use Piwigo\Core\Kernel;
+use Piwigo\Core\Paths;
+use Piwigo\Core\ProcessCache;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
+use Piwigo\Group\GroupEntity;
 use Piwigo\Image\ImageDuplicateField;
+use Piwigo\Image\ImageEntity;
 use Piwigo\Image\ImageService;
 use Piwigo\Mail\MailService;
 use Piwigo\Permission\PermissionRepository;
 use Piwigo\Permission\PermissionService;
+use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Session\SessionEntity;
 use Piwigo\Session\SessionService;
+use Piwigo\Tests\Support\CurrentConfigTestFactory;
+use Piwigo\Tests\Support\CurrentUserTestFactory;
+use Piwigo\Tests\Support\HtmlServiceTestFactory;
+use Piwigo\Tests\Support\LangTestFactory;
+use Piwigo\Tests\Support\TranslatorTestFactory;
+use Piwigo\Users\UserRepository;
 use Piwigo\Users\UserService;
 
 /**
@@ -88,7 +88,7 @@ final class FilterResolverTest extends IntegrationTestCase
         $em = EntityManagerFactory::build($this->conn);
         $paths = Kernel::container()->get(Paths::class);
         self::assertInstanceOf(Paths::class, $paths);
-        $sessionService = new SessionService($em->getRepository(SessionEntity::class),CurrentConfigTestFactory::get());
+        $sessionService = new SessionService($em->getRepository(SessionEntity::class), CurrentConfigTestFactory::get());
         $imageService = new ImageService(
             LangTestFactory::get(),
             $em->getRepository(ImageEntity::class),
@@ -144,25 +144,28 @@ final class FilterResolverTest extends IntegrationTestCase
         $this->resolver = new FilterResolver($imageService, $categoryService, $caddieRepo, $userService);
     }
 
-    public function test_resolve_prefilter_favorites_returns_the_users_favorite_image_ids(): void
+    public function testResolvePrefilterFavoritesReturnsTheUsersFavoriteImageIds(): void
     {
         $ids = $this->resolver->resolvePrefilter('favorites', new DuplicateFieldFlags(), true, UserId::from(1), '');
 
         self::assertSame([1, 3, 5], $ids);
     }
 
-    public function test_resolve_prefilter_favorites_returns_empty_for_a_user_with_no_favorites(): void
+    public function testResolvePrefilterFavoritesReturnsEmptyForAUserWithNoFavorites(): void
     {
         $ids = $this->resolver->resolvePrefilter('favorites', new DuplicateFieldFlags(), true, UserId::from(999999), '');
 
         self::assertSame([], $ids);
     }
 
-    public function test_resolve_prefilter_caddie_returns_the_users_caddie_image_ids(): void
+    public function testResolvePrefilterCaddieReturnsTheUsersCaddieImageIds(): void
     {
         $this->conn->createQueryBuilder()
             ->insert('caddie')
-            ->values(['user_id' => ':user_id', 'element_id' => ':element_id'])
+            ->values([
+                'user_id' => ':user_id',
+                'element_id' => ':element_id',
+            ])
             ->setParameter('user_id', 1)
             ->setParameter('element_id', 2)
             ->executeStatement();
@@ -180,21 +183,21 @@ final class FilterResolverTest extends IntegrationTestCase
         }
     }
 
-    public function test_resolve_prefilter_no_tag_returns_only_untagged_images(): void
+    public function testResolvePrefilterNoTagReturnsOnlyUntaggedImages(): void
     {
         $ids = $this->resolver->resolvePrefilter('no_tag', new DuplicateFieldFlags(), true, UserId::from(1), '');
 
         self::assertSame([4, 5], $ids);
     }
 
-    public function test_resolve_prefilter_all_photos_returns_every_image_only_when_it_is_the_sole_filter(): void
+    public function testResolvePrefilterAllPhotosReturnsEveryImageOnlyWhenItIsTheSoleFilter(): void
     {
         $ids = $this->resolver->resolvePrefilter('all_photos', new DuplicateFieldFlags(), true, UserId::from(1), '');
 
         self::assertSame([1, 2, 3, 4, 5], $ids);
     }
 
-    public function test_resolve_prefilter_all_photos_returns_null_when_other_filters_are_also_active(): void
+    public function testResolvePrefilterAllPhotosReturnsNullWhenOtherFiltersAreAlsoActive(): void
     {
         $ids = $this->resolver->resolvePrefilter(
             'all_photos',
@@ -207,14 +210,14 @@ final class FilterResolverTest extends IntegrationTestCase
         self::assertNull($ids, 'legacy only runs the all_photos query when it is the only session filter key');
     }
 
-    public function test_resolve_prefilter_returns_null_for_prefilters_handled_elsewhere(): void
+    public function testResolvePrefilterReturnsNullForPrefiltersHandledElsewhere(): void
     {
         self::assertNull($this->resolver->resolvePrefilter('no_album', new DuplicateFieldFlags(), false, UserId::from(1), ''));
         self::assertNull($this->resolver->resolvePrefilter('no_sync_md5sum', new DuplicateFieldFlags(), false, UserId::from(1), ''));
         self::assertNull($this->resolver->resolvePrefilter('some_plugin_prefilter', new DuplicateFieldFlags(), false, UserId::from(1), ''));
     }
 
-    public function test_duplicate_photo_ids_groups_every_fixture_image_by_shared_dimensions(): void
+    public function testDuplicatePhotoIdsGroupsEveryFixtureImageBySharedDimensions(): void
     {
         $ids = $this->resolver->duplicatePhotoIds([ImageDuplicateField::Width, ImageDuplicateField::Height]);
 
@@ -222,12 +225,12 @@ final class FilterResolverTest extends IntegrationTestCase
         self::assertSame([1, 2, 3, 4, 5], $ids, 'every fixture image shares 200x150');
     }
 
-    public function test_duplicate_photo_ids_returns_empty_for_no_fields(): void
+    public function testDuplicatePhotoIdsReturnsEmptyForNoFields(): void
     {
         self::assertSame([], $this->resolver->duplicatePhotoIds([]));
     }
 
-    public function test_resolve_prefilter_duplicates_uses_checksum_field_when_flagged(): void
+    public function testResolvePrefilterDuplicatesUsesChecksumFieldWhenFlagged(): void
     {
         // Every fixture image has a distinct md5sum, so grouping by it alone
         // never finds a duplicate pair.
@@ -242,54 +245,54 @@ final class FilterResolverTest extends IntegrationTestCase
         self::assertSame([], $ids);
     }
 
-    public function test_category_exists_is_true_for_a_real_category(): void
+    public function testCategoryExistsIsTrueForARealCategory(): void
     {
         self::assertTrue($this->resolver->categoryExists(CategoryId::from(1)));
     }
 
-    public function test_category_exists_is_false_for_a_nonexistent_category(): void
+    public function testCategoryExistsIsFalseForANonexistentCategory(): void
     {
         self::assertFalse($this->resolver->categoryExists(CategoryId::from(999999)));
     }
 
-    public function test_category_image_ids_returns_the_images_linked_to_the_given_categories(): void
+    public function testCategoryImageIdsReturnsTheImagesLinkedToTheGivenCategories(): void
     {
         self::assertSame([1, 2, 3], $this->resolver->categoryImageIds([1]));
         self::assertSame([4, 5], $this->resolver->categoryImageIds([2]));
     }
 
-    public function test_category_image_ids_returns_empty_for_no_categories(): void
+    public function testCategoryImageIdsReturnsEmptyForNoCategories(): void
     {
         self::assertSame([], $this->resolver->categoryImageIds([]));
     }
 
-    public function test_level_photo_ids_matches_the_exact_level_by_default(): void
+    public function testLevelPhotoIdsMatchesTheExactLevelByDefault(): void
     {
         $ids = $this->resolver->levelPhotoIds(0, false, '');
 
         self::assertSame([1, 2, 3, 4, 5], $ids, 'every fixture image is level 0');
     }
 
-    public function test_level_photo_ids_finds_nothing_above_the_fixtures_level(): void
+    public function testLevelPhotoIdsFindsNothingAboveTheFixturesLevel(): void
     {
         self::assertSame([], $this->resolver->levelPhotoIds(4, false, ''));
     }
 
-    public function test_dimension_photo_ids_filters_by_a_real_bound(): void
+    public function testDimensionPhotoIdsFiltersByARealBound(): void
     {
         $ids = $this->resolver->dimensionPhotoIds(new DimensionFilter(minWidth: 200), '');
 
         self::assertSame([1, 2, 3, 4, 5], $ids);
     }
 
-    public function test_dimension_photo_ids_excludes_everything_above_the_fixtures_width(): void
+    public function testDimensionPhotoIdsExcludesEverythingAboveTheFixturesWidth(): void
     {
         $ids = $this->resolver->dimensionPhotoIds(new DimensionFilter(minWidth: 9999), '');
 
         self::assertSame([], $ids);
     }
 
-    public function test_dimension_photo_ids_returns_null_for_no_valid_bounds(): void
+    public function testDimensionPhotoIdsReturnsNullForNoValidBounds(): void
     {
         // Real bug found via adversarial review of the legacy inline SQL: a
         // crafted ?filter=dimension-<garbage> URL token could leave
@@ -299,7 +302,7 @@ final class FilterResolverTest extends IntegrationTestCase
         self::assertNull($this->resolver->dimensionPhotoIds(new DimensionFilter(), ''));
     }
 
-    public function test_filesize_photo_ids_filters_by_a_real_bound(): void
+    public function testFilesizePhotoIdsFiltersByARealBound(): void
     {
         // filesize is stored in KB; every fixture image is 1 KB.
         $ids = $this->resolver->filesizePhotoIds(new FilesizeFilter(min: 0.0), '');
@@ -307,17 +310,17 @@ final class FilterResolverTest extends IntegrationTestCase
         self::assertSame([1, 2, 3, 4, 5], $ids);
     }
 
-    public function test_filesize_photo_ids_excludes_everything_above_the_fixtures_size(): void
+    public function testFilesizePhotoIdsExcludesEverythingAboveTheFixturesSize(): void
     {
         self::assertSame([], $this->resolver->filesizePhotoIds(new FilesizeFilter(min: 999.0), ''));
     }
 
-    public function test_filesize_photo_ids_returns_null_for_no_valid_bounds(): void
+    public function testFilesizePhotoIdsReturnsNullForNoValidBounds(): void
     {
         self::assertNull($this->resolver->filesizePhotoIds(new FilesizeFilter(), ''));
     }
 
-    public function test_resolve_prefilter_last_import_returns_empty_when_the_images_table_is_empty(): void
+    public function testResolvePrefilterLastImportReturnsEmptyWhenTheImagesTableIsEmpty(): void
     {
         // MAX(date_available) over an empty table is NULL, which must trip
         // the `! is_string($lastDate) || $lastDate === ''` guard rather than
@@ -325,7 +328,7 @@ final class FilterResolverTest extends IntegrationTestCase
         $this->conn->beginTransaction();
 
         try {
-            $this->conn->executeStatement('DELETE FROM ' . 'images');
+            $this->conn->executeStatement('DELETE FROM images');
 
             $ids = $this->resolver->resolvePrefilter('last_import', new DuplicateFieldFlags(), true, UserId::from(1), '');
 
@@ -335,7 +338,7 @@ final class FilterResolverTest extends IntegrationTestCase
         }
     }
 
-    public function test_resolve_prefilter_last_import_returns_only_images_within_the_recent_period_of_the_true_max_date(): void
+    public function testResolvePrefilterLastImportReturnsOnlyImagesWithinTheRecentPeriodOfTheTrueMaxDate(): void
     {
         // The true max date_available across the whole table (not just the
         // fixture's own 2026-08-01 images) drives the window, so every id
@@ -343,17 +346,17 @@ final class FilterResolverTest extends IntegrationTestCase
         // becomes the new max, one sits exactly on the inclusive lower
         // boundary (max minus 1 day), and one sits 1 second outside it.
         $this->conn->executeStatement(
-            "INSERT INTO " . 'images' . " (file, path, date_available) VALUES ('last-import-max.jpg', 'upload/last-import-max.jpg', '2026-08-10 12:00:00')"
+            'INSERT INTO images' . " (file, path, date_available) VALUES ('last-import-max.jpg', 'upload/last-import-max.jpg', '2026-08-10 12:00:00')"
         );
         $maxId = (int) $this->conn->lastInsertId();
 
         $this->conn->executeStatement(
-            "INSERT INTO " . 'images' . " (file, path, date_available) VALUES ('last-import-boundary.jpg', 'upload/last-import-boundary.jpg', '2026-08-09 12:00:00')"
+            'INSERT INTO images' . " (file, path, date_available) VALUES ('last-import-boundary.jpg', 'upload/last-import-boundary.jpg', '2026-08-09 12:00:00')"
         );
         $boundaryId = (int) $this->conn->lastInsertId();
 
         $this->conn->executeStatement(
-            "INSERT INTO " . 'images' . " (file, path, date_available) VALUES ('last-import-excluded.jpg', 'upload/last-import-excluded.jpg', '2026-08-09 11:59:59')"
+            'INSERT INTO images' . " (file, path, date_available) VALUES ('last-import-excluded.jpg', 'upload/last-import-excluded.jpg', '2026-08-09 11:59:59')"
         );
         $excludedId = (int) $this->conn->lastInsertId();
 
@@ -373,36 +376,36 @@ final class FilterResolverTest extends IntegrationTestCase
             );
         } finally {
             $this->conn->executeStatement(
-                'DELETE FROM ' . 'images' . ' WHERE id IN (?, ?, ?)',
+                'DELETE FROM images WHERE id IN (?, ?, ?)',
                 [$maxId, $boundaryId, $excludedId]
             );
         }
     }
 
-    public function test_resolve_prefilter_no_virtual_album_excludes_images_linked_only_to_a_virtual_category(): void
+    public function testResolvePrefilterNoVirtualAlbumExcludesImagesLinkedOnlyToAVirtualCategory(): void
     {
         $this->conn->executeStatement(
-            "INSERT INTO " . 'categories' . " (name, dir) VALUES ('Real Album', 'real_album')"
+            'INSERT INTO categories' . " (name, dir) VALUES ('Real Album', 'real_album')"
         );
         $realCategoryId = (int) $this->conn->lastInsertId();
 
         $this->conn->executeStatement(
-            "INSERT INTO " . 'images' . " (file, path) VALUES ('no-virtual-real.jpg', 'upload/no-virtual-real.jpg')"
+            'INSERT INTO images' . " (file, path) VALUES ('no-virtual-real.jpg', 'upload/no-virtual-real.jpg')"
         );
         $realImageId = (int) $this->conn->lastInsertId();
         $this->conn->executeStatement(
-            'INSERT INTO ' . 'image_category' . ' (image_id, category_id) VALUES (?, ?)',
+            'INSERT INTO image_category (image_id, category_id) VALUES (?, ?)',
             [$realImageId, $realCategoryId]
         );
 
         $this->conn->executeStatement(
-            "INSERT INTO " . 'images' . " (file, path) VALUES ('no-virtual-virtual-only.jpg', 'upload/no-virtual-virtual-only.jpg')"
+            'INSERT INTO images' . " (file, path) VALUES ('no-virtual-virtual-only.jpg', 'upload/no-virtual-virtual-only.jpg')"
         );
         $virtualOnlyImageId = (int) $this->conn->lastInsertId();
         // Category 1 is one of the fixture's own virtual categories (dir IS
         // NULL, confirmed via direct read of tests/Fixtures/piwigo-17.0.sql).
         $this->conn->executeStatement(
-            'INSERT INTO ' . 'image_category' . ' (image_id, category_id) VALUES (?, 1)',
+            'INSERT INTO image_category (image_id, category_id) VALUES (?, 1)',
             [$virtualOnlyImageId]
         );
 
@@ -415,17 +418,17 @@ final class FilterResolverTest extends IntegrationTestCase
             self::assertSame([$realImageId], $ids);
         } finally {
             $this->conn->executeStatement(
-                'DELETE FROM ' . 'images' . ' WHERE id IN (?, ?)',
+                'DELETE FROM images WHERE id IN (?, ?)',
                 [$realImageId, $virtualOnlyImageId]
             );
             $this->conn->executeStatement(
-                'DELETE FROM ' . 'categories' . ' WHERE id = ?',
+                'DELETE FROM categories WHERE id = ?',
                 [$realCategoryId]
             );
         }
     }
 
-    public function test_resolve_prefilter_no_virtual_album_returns_all_images_when_no_virtual_categories_exist(): void
+    public function testResolvePrefilterNoVirtualAlbumReturnsAllImagesWhenNoVirtualCategoriesExist(): void
     {
         $virtualCategoryIds = array_map(
             static fn (mixed $id): int => is_numeric($id) ? (int) $id : 0,
@@ -443,7 +446,7 @@ final class FilterResolverTest extends IntegrationTestCase
         );
 
         $this->conn->executeStatement(
-            'UPDATE ' . 'categories' . " SET dir = 'temp-real-dir' WHERE dir IS NULL"
+            'UPDATE categories' . " SET dir = 'temp-real-dir' WHERE dir IS NULL"
         );
 
         try {
@@ -458,7 +461,7 @@ final class FilterResolverTest extends IntegrationTestCase
             );
         } finally {
             $this->conn->executeStatement(
-                'UPDATE ' . 'categories' . ' SET dir = NULL WHERE id IN (' . implode(',', $virtualCategoryIds) . ')'
+                'UPDATE categories SET dir = NULL WHERE id IN (' . implode(',', $virtualCategoryIds) . ')'
             );
         }
     }

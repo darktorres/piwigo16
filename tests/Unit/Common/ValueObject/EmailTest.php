@@ -4,13 +4,15 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Unit\Common\ValueObject;
 
-use Override;
 use InvalidArgumentException;
+use Override;
 use Piwigo\Common\ValueObject\Email;
 use Piwigo\Common\ValueObject\Username;
 use Piwigo\Tests\Unit\Common\ValueObject\Contract\StringVoContract;
 
-/** @extends StringVoContract<Email> */
+/**
+ * @extends StringVoContract<Email>
+ */
 final class EmailTest extends StringVoContract
 {
     #[Override]
@@ -31,21 +33,23 @@ final class EmailTest extends StringVoContract
         return Username::class;
     }
 
-    /** @return iterable<string, array{string}> */
+    /**
+     * @return iterable<string, array{string}>
+     */
     #[Override]
     public static function invalidSamples(): iterable
     {
-        yield 'empty'                => [''];
-        yield 'no at sign'           => ['user.example.com'];
-        yield 'no local part'        => ['@example.com'];
-        yield 'no domain'            => ['user@'];
-        yield 'whitespace'           => ['user @example.com'];
-        yield 'control char'         => ["user\x01@example.com"];
+        yield 'empty' => [''];
+        yield 'no at sign' => ['user.example.com'];
+        yield 'no local part' => ['@example.com'];
+        yield 'no domain' => ['user@'];
+        yield 'whitespace' => ['user @example.com'];
+        yield 'control char' => ["user\x01@example.com"];
         // Exactly at the 255-char boundary (250 + '@x.io' = 255) --
         // rejected by filter_var()'s own local-part-length rule, NOT by
         // Email::from()'s own MAX_LENGTH check (`> 255`, not `>=`). See
         // 'genuinely over 255 chars' below for that distinct branch.
-        yield 'over 255 chars'       => [str_repeat('a', 250) . '@x.io'];
+        yield 'over 255 chars' => [str_repeat('a', 250) . '@x.io'];
         yield 'genuinely over 255 chars' => [str_repeat('a', 251) . '@x.io'];
     }
 

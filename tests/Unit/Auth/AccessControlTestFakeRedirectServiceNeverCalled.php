@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Unit\Auth;
 
-use Override;
 use LogicException;
+use Override;
 use Piwigo\Core\RedirectServiceInterface;
 
 final class AccessControlTestFakeRedirectServiceNeverCalled implements RedirectServiceInterface

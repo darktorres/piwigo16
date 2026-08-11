@@ -4,17 +4,17 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Integration;
 
-use Override;
-use Piwigo\Core\Kernel;
-use LogicException;
-use Piwigo\Tests\Support\CurrentPathsTestFactory;
-use RuntimeException;
 use Doctrine\DBAL\Connection;
-use Piwigo\Config\CurrentConfig;
+use LogicException;
+use Override;
 use Piwigo\Config\ConfigLoader;
+use Piwigo\Config\CurrentConfig;
+use Piwigo\Core\Kernel;
 use Piwigo\Db\DbConnection;
 use Piwigo\Job\GenerateDerivativeJob;
 use Piwigo\Job\MessengerFactory;
+use Piwigo\Tests\Support\CurrentPathsTestFactory;
+use RuntimeException;
 
 /**
  * Proves the real Symfony Messenger mechanism end-to-end: dispatch onto
@@ -86,7 +86,7 @@ final class MessengerRoundTripTest extends IntegrationTestCase
 
     private function marker(): string
     {
-        /** @var string|null $marker */
+        /** @var string|null */
         static $marker = null;
 
         return $marker ??= 'phpwg-messenger-test-marker-' . bin2hex(random_bytes(8));
@@ -108,7 +108,7 @@ final class MessengerRoundTripTest extends IntegrationTestCase
         rmdir($dir);
     }
 
-    public function test_a_dispatched_job_is_persisted_received_and_handled_via_the_real_doctrine_transport(): void
+    public function testADispatchedJobIsPersistedReceivedAndHandledViaTheRealDoctrineTransport(): void
     {
         $currentConfig = Kernel::container()->get(CurrentConfig::class);
         if (! $currentConfig instanceof CurrentConfig) {

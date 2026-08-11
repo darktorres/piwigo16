@@ -42,19 +42,28 @@ test('is_struct returns false for a real sequential array with values that diffe
 });
 
 test('is_struct returns true for an associative array with string keys', function (): void {
-    $data = ['id' => 7, 'name' => 'Alps'];
+    $data = [
+        'id' => 7,
+        'name' => 'Alps',
+    ];
 
     expect(PwgResponseEncoder::is_struct($data))->toBeTrue();
 });
 
 test('is_struct returns true for integer keys that do not start at zero', function (): void {
-    $data = [1 => 'a', 2 => 'b'];
+    $data = [
+        1 => 'a',
+        2 => 'b',
+    ];
 
     expect(PwgResponseEncoder::is_struct($data))->toBeTrue();
 });
 
 test('is_struct returns true for integer keys with a gap', function (): void {
-    $data = [0 => 'a', 2 => 'b'];
+    $data = [
+        0 => 'a',
+        2 => 'b',
+    ];
 
     expect(PwgResponseEncoder::is_struct($data))->toBeTrue();
 });
@@ -110,7 +119,8 @@ test('flattenResponse leaves a non-array, non-wrapper scalar value completely un
 
     PwgResponseEncoder::flattenResponse($value);
 
-    expect($value)->toBe(42);
+    expect($value)
+        ->toBe(42);
 });
 
 test('flattenResponse unwraps a PwgNamedArray to its raw list content', function (): void {
@@ -118,18 +128,30 @@ test('flattenResponse unwraps a PwgNamedArray to its raw list content', function
 
     PwgResponseEncoder::flattenResponse($value);
 
-    expect($value)->toBe([10, 20, 30]);
+    expect($value)
+        ->toBe([10, 20, 30]);
 });
 
 test('flattenResponse unwraps a PwgNamedStruct, merging its attributes_xml_ marker key into the result', function (): void {
     $value = new PwgNamedStruct(
-        ['id' => 7, 'name' => 'Alps', PwgResponseEncoder::ATTRIBUTES_KEY => ['visible' => 1]],
+        [
+            'id' => 7,
+            'name' => 'Alps',
+            PwgResponseEncoder::ATTRIBUTES_KEY => [
+                'visible' => 1,
+            ],
+        ],
         []
     );
 
     PwgResponseEncoder::flattenResponse($value);
 
-    expect($value)->toBe(['id' => 7, 'name' => 'Alps', 'visible' => 1]);
+    expect($value)
+        ->toBe([
+            'id' => 7,
+            'name' => 'Alps',
+            'visible' => 1,
+        ]);
 });
 
 test('flattenResponse recursively flattens a nested PwgNamedStruct inside a plain array', function (): void {
@@ -144,14 +166,25 @@ test('flattenResponse recursively flattens a nested PwgNamedStruct inside a plai
     // proves both the loop itself ran and its body's flatten() call fired.
     $value = [
         'nested' => new PwgNamedStruct(
-            ['a' => 1, PwgResponseEncoder::ATTRIBUTES_KEY => ['x' => 2]],
+            [
+                'a' => 1,
+                PwgResponseEncoder::ATTRIBUTES_KEY => [
+                    'x' => 2,
+                ],
+            ],
             []
         ),
     ];
 
     PwgResponseEncoder::flattenResponse($value);
 
-    expect($value)->toBe(['nested' => ['a' => 1, 'x' => 2]]);
+    expect($value)
+        ->toBe([
+            'nested' => [
+                'a' => 1,
+                'x' => 2,
+            ],
+        ]);
 });
 
 test('flattenResponse recursively flattens a nested PwgNamedArray inside a plain list', function (): void {
@@ -166,5 +199,6 @@ test('flattenResponse recursively flattens a nested PwgNamedArray inside a plain
 
     PwgResponseEncoder::flattenResponse($value);
 
-    expect($value)->toBe([[1, 2, 3]]);
+    expect($value)
+        ->toBe([[1, 2, 3]]);
 });

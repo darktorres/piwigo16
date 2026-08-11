@@ -61,7 +61,9 @@ it('rewrites the piwigo_videojs plugin section name to its hyphenated form', fun
 
 it('resolves the album-N-tab page-slug alias to page=album&cat_id=N&tab=notification', function (): void {
     $page = H::loginAsAdmin($this);
-    $album = H::wsCall($page, 'pwg.categories.add', ['name' => 'AdminShell Alias Album ' . uniqid()]);
+    $album = H::wsCall($page, 'pwg.categories.add', [
+        'name' => 'AdminShell Alias Album ' . uniqid(),
+    ]);
     $albumResult = $album['result'] ?? null;
     if (! is_array($albumResult) || ! is_numeric($albumResult['id'] ?? null)) {
         throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($album, true));
@@ -76,7 +78,9 @@ it('resolves the album-N-tab page-slug alias to page=album&cat_id=N&tab=notifica
 
 it('resolves the photo-N-tab page-slug alias to page=photo&image_id=N&tab=properties', function (): void {
     $page = H::loginAsAdmin($this);
-    $album = H::wsCall($page, 'pwg.categories.add', ['name' => 'AdminShell Photo Alias Album ' . uniqid()]);
+    $album = H::wsCall($page, 'pwg.categories.add', [
+        'name' => 'AdminShell Photo Alias Album ' . uniqid(),
+    ]);
     $albumResult = $album['result'] ?? null;
     if (! is_array($albumResult) || ! is_numeric($albumResult['id'] ?? null)) {
         throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($album, true));
@@ -105,7 +109,9 @@ it('shows the pending-comments counter when at least one unvalidated comment exi
     H::setConfigValue('activate_comments', 'true');
 
     $page = H::loginAsAdmin($this);
-    $album = H::wsCall($page, 'pwg.categories.add', ['name' => 'AdminShell Comment Album ' . uniqid()]);
+    $album = H::wsCall($page, 'pwg.categories.add', [
+        'name' => 'AdminShell Comment Album ' . uniqid(),
+    ]);
     $albumResult = $album['result'] ?? null;
     if (! is_array($albumResult) || ! is_numeric($albumResult['id'] ?? null)) {
         throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($album, true));
@@ -152,7 +158,8 @@ it('re-runs the filesystem quick check when the last check is older than the con
         // strtotime() comparison) decided to call it, not merely that the
         // request didn't error.
         $after = H::configValue('fs_quick_check_last_check');
-        expect($after)->not->toBe(H::jsonEncode($staleCheck));
+        expect($after)
+            ->not->toBe(H::jsonEncode($staleCheck));
     } finally {
         H::restoreConfig($snapshot);
     }
@@ -207,7 +214,9 @@ it('purges stale whats_new_* preferences and shows the whats-new popin for a use
     // would come back false, and even if it didn't, registration_date >
     // lastMajorUpdate takes the OTHER branch), so both are overridden here
     // and restored in the finally block below.
-    H::dbQuery($db, sprintf("UPDATE user_infos SET registration_date = '2020-01-01 00:00:00', preferences = '%s' WHERE user_id = 1", H::dbEscape($db, H::jsonEncode(['whats_new_15' => true]))));
+    H::dbQuery($db, sprintf("UPDATE user_infos SET registration_date = '2020-01-01 00:00:00', preferences = '%s' WHERE user_id = 1", H::dbEscape($db, H::jsonEncode([
+        'whats_new_15' => true,
+    ]))));
 
     try {
         $page = H::loginAsAdmin($this);
@@ -224,7 +233,8 @@ it('purges stale whats_new_* preferences and shows the whats-new popin for a use
 
         $after = H::fetchAssocOrFail($db, 'SELECT preferences FROM user_infos WHERE user_id = 1');
         $prefsAfter = json_decode((string) $after['preferences'], true);
-        expect($prefsAfter)->not->toHaveKey('whats_new_15');
+        expect($prefsAfter)
+            ->not->toHaveKey('whats_new_15');
     } finally {
         $restoreRegistration = $original['registration_date'] === null
             ? 'NULL'
@@ -232,7 +242,7 @@ it('purges stale whats_new_* preferences and shows the whats-new popin for a use
         $restorePreferences = $original['preferences'] === null
             ? 'NULL'
             : "'" . H::dbEscape($db, (string) $original['preferences']) . "'";
-        H::dbQuery($db, sprintf("UPDATE user_infos SET registration_date = %s, preferences = %s WHERE user_id = 1", $restoreRegistration, $restorePreferences));
+        H::dbQuery($db, sprintf('UPDATE user_infos SET registration_date = %s, preferences = %s WHERE user_id = 1', $restoreRegistration, $restorePreferences));
         H::dbClose($db);
     }
 });

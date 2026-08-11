@@ -4,16 +4,16 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Integration;
 
-use Override;
-use Piwigo\Core\Kernel;
-use LogicException;
 use Doctrine\DBAL\Connection;
+use LogicException;
+use Override;
 use Piwigo\Audit\AuditLogEntity;
 use Piwigo\Audit\AuditRepository;
 use Piwigo\Common\ValueObject\IpAddress;
 use Piwigo\Common\ValueObject\SqlDateTime;
-use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\ConfigLoader;
+use Piwigo\Config\CurrentConfig;
+use Piwigo\Core\Kernel;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
 
@@ -54,22 +54,22 @@ final class AuditRepositoryTest extends IntegrationTestCase
 
         $this->conn = DbConnection::build();
         $this->repo = EntityManagerFactory::build($this->conn)->getRepository(AuditLogEntity::class);
-        $this->conn->executeStatement('DELETE FROM ' . 'audit_log');
+        $this->conn->executeStatement('DELETE FROM audit_log');
     }
 
     #[Override]
     protected function tearDown(): void
     {
-        $this->conn->executeStatement('DELETE FROM ' . 'audit_log');
+        $this->conn->executeStatement('DELETE FROM audit_log');
         parent::tearDown();
     }
 
-    public function test_find_latest_row_hash_returns_null_when_empty(): void
+    public function testFindLatestRowHashReturnsNullWhenEmpty(): void
     {
         self::assertNull($this->repo->findLatestRowHash());
     }
 
-    public function test_insert_returns_the_new_row_id_and_persists_every_column(): void
+    public function testInsertReturnsTheNewRowIdAndPersistsEveryColumn(): void
     {
         $id = $this->repo->insert(
             1,
@@ -105,13 +105,15 @@ final class AuditRepositoryTest extends IntegrationTestCase
         // bytes -- same reasoning as AuditService::canonicalJson()'s own
         // docblock.
         self::assertIsString($row['after_json']);
-        self::assertSame(['username' => 'alice'], json_decode($row['after_json'], true));
+        self::assertSame([
+            'username' => 'alice',
+        ], json_decode($row['after_json'], true));
         self::assertSame('10.0.0.1', $row['ip_address']);
         self::assertNull($row['prev_hash']);
         self::assertSame(str_repeat('a', 64), $row['row_hash']);
     }
 
-    public function test_insert_allows_a_null_actor_id(): void
+    public function testInsertAllowsANullActorId(): void
     {
         $id = $this->repo->insert(
             null,
@@ -137,7 +139,7 @@ final class AuditRepositoryTest extends IntegrationTestCase
         self::assertNull($actorId);
     }
 
-    public function test_find_latest_row_hash_returns_the_most_recently_inserted(): void
+    public function testFindLatestRowHashReturnsTheMostRecentlyInserted(): void
     {
         $this->repo->insert(1, 'create', 'user', 1, null, null, null, SqlDateTime::from('2026-07-12 10:00:00'), null, str_repeat('a', 64));
         $this->repo->insert(1, 'create', 'user', 2, null, null, null, SqlDateTime::from('2026-07-12 10:00:01'), str_repeat('a', 64), str_repeat('b', 64));
@@ -145,7 +147,7 @@ final class AuditRepositoryTest extends IntegrationTestCase
         self::assertSame(str_repeat('b', 64), $this->repo->findLatestRowHash());
     }
 
-    public function test_find_all_in_order_returns_rows_oldest_first_with_the_chain_linked(): void
+    public function testFindAllInOrderReturnsRowsOldestFirstWithTheChainLinked(): void
     {
         $this->repo->insert(1, 'create', 'user', 1, null, null, null, SqlDateTime::from('2026-07-12 10:00:00'), null, str_repeat('a', 64));
         $this->repo->insert(1, 'delete', 'group', 2, '{"name":"x"}', null, null, SqlDateTime::from('2026-07-12 10:00:01'), str_repeat('a', 64), str_repeat('b', 64));
@@ -159,6 +161,8 @@ final class AuditRepositoryTest extends IntegrationTestCase
         self::assertSame('delete', $rows[1]->action);
         self::assertSame(str_repeat('a', 64), $rows[1]->prevHash);
         self::assertIsString($rows[1]->beforeJson);
-        self::assertSame(['name' => 'x'], json_decode($rows[1]->beforeJson, true));
+        self::assertSame([
+            'name' => 'x',
+        ], json_decode($rows[1]->beforeJson, true));
     }
 }

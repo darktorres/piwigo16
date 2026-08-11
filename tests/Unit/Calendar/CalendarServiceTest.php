@@ -2,27 +2,27 @@
 
 declare(strict_types=1);
 
-use Piwigo\Auth\AccessLevelChecker;
-use Piwigo\Db\EntityManagerFactory;
-use Piwigo\Group\GroupEntity;
-use Piwigo\Tests\Support\CurrentConfigTestFactory;
-use Piwigo\PluginConfig\EventDispatcher;
-use Piwigo\Tests\Support\TranslatorTestFactory;
-use Piwigo\Common\ValueObject\LangCode;
-use Piwigo\Common\ValueObject\UserId;
 use Doctrine\DBAL\ArrayParameterType;
+use Piwigo\Auth\AccessLevelChecker;
 use Piwigo\Calendar\CalendarService;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Category\CategoryService;
+use Piwigo\Common\ValueObject\LangCode;
+use Piwigo\Common\ValueObject\ThemeId;
+use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Core\FilterState;
 use Piwigo\Core\Kernel;
-use Piwigo\Tests\Support\LangTestFactory;
 use Piwigo\Core\Paths;
 use Piwigo\Db\DbConnection;
+use Piwigo\Db\EntityManagerFactory;
+use Piwigo\Group\GroupEntity;
 use Piwigo\Permission\PermissionRepository;
 use Piwigo\Permission\PermissionService;
+use Piwigo\PluginConfig\EventDispatcher;
+use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Tests\Support\CurrentUserTestFactory;
-use Piwigo\Common\ValueObject\ThemeId;
+use Piwigo\Tests\Support\LangTestFactory;
+use Piwigo\Tests\Support\TranslatorTestFactory;
 use Piwigo\Users\User;
 use Piwigo\Users\UserStatus;
 
@@ -122,12 +122,24 @@ test('buildInnerSql builds a WHERE id IN clause for a non-category section', fun
     $scope = $service->buildInnerSql('tags', false, null, '', [1, 2, 3]);
     assert($scope !== null);
 
-    expect($scope->rawSqlFromWhere->sql)->toBe(' FROM ' . 'images' . "\nWHERE id IN (:innerItems)")
-        ->and($scope->rawSqlFromWhere->parameters)->toBe(['innerItems' => ['1', '2', '3']])
-        ->and($scope->rawSqlFromWhere->types)->toBe(['innerItems' => ArrayParameterType::STRING])
-        ->and($scope->joinImageCategory)->toBeFalse()
-        ->and($scope->dqlWhere->sql)->toBe('i.id IN (:innerItems)')
-        ->and($scope->dqlWhere->parameters)->toBe(['innerItems' => [1, 2, 3]]);
+    expect($scope->rawSqlFromWhere->sql)
+        ->toBe(' FROM images' . "\nWHERE id IN (:innerItems)")
+        ->and($scope->rawSqlFromWhere->parameters)
+        ->toBe([
+            'innerItems' => ['1', '2', '3'],
+        ])
+        ->and($scope->rawSqlFromWhere->types)
+        ->toBe([
+            'innerItems' => ArrayParameterType::STRING,
+        ])
+        ->and($scope->joinImageCategory)
+        ->toBeFalse()
+        ->and($scope->dqlWhere->sql)
+        ->toBe('i.id IN (:innerItems)')
+        ->and($scope->dqlWhere->parameters)
+        ->toBe([
+            'innerItems' => [1, 2, 3],
+        ]);
 });
 
 test('buildInnerSql casts each DQL item to int, defaulting a non-numeric item to 0', function (): void {
@@ -143,9 +155,16 @@ test('buildInnerSql casts each DQL item to int, defaulting a non-numeric item to
     $scope = $service->buildInnerSql('tags', false, null, '', ['5', 'abc']);
     assert($scope !== null);
 
-    expect($scope->dqlWhere->sql)->toBe('i.id IN (:innerItems)')
-        ->and($scope->dqlWhere->parameters)->toBe(['innerItems' => [5, 0]])
-        ->and($scope->dqlWhere->types)->toBe(['innerItems' => ArrayParameterType::INTEGER]);
+    expect($scope->dqlWhere->sql)
+        ->toBe('i.id IN (:innerItems)')
+        ->and($scope->dqlWhere->parameters)
+        ->toBe([
+            'innerItems' => [5, 0],
+        ])
+        ->and($scope->dqlWhere->types)
+        ->toBe([
+            'innerItems' => ArrayParameterType::INTEGER,
+        ]);
 });
 
 test('buildInnerSql returns null when there is a category context but no resolved category id', function (): void {
@@ -171,21 +190,32 @@ test('buildInnerSql browses everything visible when there is no category context
     // PermissionServiceTest.php's own singleParamKey() convention), so
     // extract whatever name was actually generated.
     $key = array_key_first($scope->rawSqlFromWhere->parameters);
-    expect($key)->toBeString();
+    expect($key)
+        ->toBeString();
     assert(is_string($key));
 
-    expect($scope->rawSqlFromWhere->sql)->toBe(
-        ' FROM ' . 'images'
-        . "\nINNER JOIN " . 'image_category' . ' ON id = image_id'
-        . "\n    WHERE level <= :{$key}"
-    )->and($scope->rawSqlFromWhere->parameters)->toBe([$key => 0]);
+    expect($scope->rawSqlFromWhere->sql)
+        ->toBe(
+            ' FROM images'
+                . "\nINNER JOIN " . 'image_category ON id = image_id'
+                . "\n    WHERE level <= :{$key}"
+        )->and($scope->rawSqlFromWhere->parameters)
+        ->toBe([
+            $key => 0,
+        ]);
 
-    expect($scope->joinImageCategory)->toBeTrue();
+    expect($scope->joinImageCategory)
+        ->toBeTrue();
     $dqlKey = array_key_first($scope->dqlWhere->parameters);
-    expect($dqlKey)->toBeString();
+    expect($dqlKey)
+        ->toBeString();
     assert(is_string($dqlKey));
-    expect($scope->dqlWhere->sql)->toBe("i.level <= :{$dqlKey}")
-        ->and($scope->dqlWhere->parameters)->toBe([$dqlKey => 0]);
+    expect($scope->dqlWhere->sql)
+        ->toBe("i.level <= :{$dqlKey}")
+        ->and($scope->dqlWhere->parameters)
+        ->toBe([
+            $dqlKey => 0,
+        ]);
 });
 
 test('buildInnerSql falls back to a forced 1 = 1 condition when no permission clause applies at all', function (): void {
@@ -208,23 +238,29 @@ test('buildInnerSql falls back to a forced 1 = 1 condition when no permission cl
         theme: ThemeId::from('default'),
         status: UserStatus::Normal,
         enabledHigh: false,
-        rawAttributes: ['image_access_type' => 'NOT IN', 'image_access_list' => ''],
+        rawAttributes: [
+            'image_access_type' => 'NOT IN',
+            'image_access_list' => '',
+        ],
     ));
     $service = makeCalendarService();
 
     $scope = $service->buildInnerSql('categories', false, null, '', []);
     assert($scope !== null);
 
-    expect($scope->rawSqlFromWhere->sql)->toBe(
-        ' FROM ' . 'images'
-        . "\nINNER JOIN " . 'image_category' . ' ON id = image_id'
-        . "\n    WHERE 1 = 1"
-    )->and($scope->rawSqlFromWhere->parameters)->toBe([]);
+    expect($scope->rawSqlFromWhere->sql)
+        ->toBe(
+            ' FROM images'
+                . "\nINNER JOIN " . 'image_category ON id = image_id'
+                . "\n    WHERE 1 = 1"
+        )->and($scope->rawSqlFromWhere->parameters)
+        ->toBe([]);
 
     // No '1 = 1' fallback needed on the DQL side -- CalendarRepository's
     // own applyCondition() helper skips an empty SqlCondition entirely
     // (no andWhere() call at all) rather than requiring non-empty text.
-    expect($scope->dqlWhere->isEmpty())->toBeTrue();
+    expect($scope->dqlWhere->isEmpty())
+        ->toBeTrue();
 });
 
 test('buildInnerSql composes forbidden/visible categories and images into the WHERE clause', function (): void {
@@ -245,29 +281,35 @@ test('buildInnerSql composes forbidden/visible categories and images into the WH
     $scope = $service->buildInnerSql('categories', false, null, '', []);
     assert($scope !== null);
 
-    expect($scope->rawSqlFromWhere->parameters)->toHaveCount(4);
+    expect($scope->rawSqlFromWhere->parameters)
+        ->toHaveCount(4);
     [$forbidKey, $visCatKey, $visImgKey, $levelKey] = array_keys($scope->rawSqlFromWhere->parameters);
 
-    expect($scope->rawSqlFromWhere->sql)->toBe(
-        ' FROM ' . 'images'
-        . "\nINNER JOIN " . 'image_category' . ' ON id = image_id'
-        . "\n    WHERE category_id NOT IN (:{$forbidKey}) AND category_id IN (:{$visCatKey}) AND id IN (:{$visImgKey}) AND level <= :{$levelKey}"
-    )->and($scope->rawSqlFromWhere->parameters)->toBe([
-        $forbidKey => [5, 6],
-        $visCatKey => [10, 20],
-        $visImgKey => [100, 200],
-        $levelKey => 2,
-    ]);
+    expect($scope->rawSqlFromWhere->sql)
+        ->toBe(
+            ' FROM images'
+                . "\nINNER JOIN " . 'image_category ON id = image_id'
+                . "\n    WHERE category_id NOT IN (:{$forbidKey}) AND category_id IN (:{$visCatKey}) AND id IN (:{$visImgKey}) AND level <= :{$levelKey}"
+        )->and($scope->rawSqlFromWhere->parameters)
+        ->toBe([
+            $forbidKey => [5, 6],
+            $visCatKey => [10, 20],
+            $visImgKey => [100, 200],
+            $levelKey => 2,
+        ]);
 
-    expect($scope->dqlWhere->parameters)->toHaveCount(4);
+    expect($scope->dqlWhere->parameters)
+        ->toHaveCount(4);
     [$dqlForbidKey, $dqlVisCatKey, $dqlVisImgKey, $dqlLevelKey] = array_keys($scope->dqlWhere->parameters);
 
-    expect($scope->dqlWhere->sql)->toBe(
-        "ic.categoryId NOT IN (:{$dqlForbidKey}) AND ic.categoryId IN (:{$dqlVisCatKey}) AND i.id IN (:{$dqlVisImgKey}) AND i.level <= :{$dqlLevelKey}"
-    )->and($scope->dqlWhere->parameters)->toBe([
-        $dqlForbidKey => [5, 6],
-        $dqlVisCatKey => [10, 20],
-        $dqlVisImgKey => [100, 200],
-        $dqlLevelKey => 2,
-    ]);
+    expect($scope->dqlWhere->sql)
+        ->toBe(
+            "ic.categoryId NOT IN (:{$dqlForbidKey}) AND ic.categoryId IN (:{$dqlVisCatKey}) AND i.id IN (:{$dqlVisImgKey}) AND i.level <= :{$dqlLevelKey}"
+        )->and($scope->dqlWhere->parameters)
+        ->toBe([
+            $dqlForbidKey => [5, 6],
+            $dqlVisCatKey => [10, 20],
+            $dqlVisImgKey => [100, 200],
+            $dqlLevelKey => 2,
+        ]);
 });

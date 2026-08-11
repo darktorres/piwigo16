@@ -4,37 +4,37 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Integration;
 
-use Override;
 use LogicException;
-use Piwigo\Tests\Support\LangTestFactory;
-use Piwigo\Tests\Support\CurrentConfigServiceTestFactory;
-use Piwigo\Validation\InputValidator;
-use Piwigo\Core\AdminContext;
-use Piwigo\PluginConfig\EventDispatcher;
-use Piwigo\Core\PageState;
-use Piwigo\Config\DeploymentPolicy;
-use Piwigo\Core\ProcessCache;
-use Piwigo\Template\CurrentTemplate;
-use Piwigo\Tests\Support\CurrentUserTestFactory;
-use ReflectionProperty;
 use mysqli_result;
-use Piwigo\Template\Template;
-use Piwigo\Db\EntityManagerFactory;
-use Piwigo\Core\AppInfo;
+use Override;
 use Piwigo\Admin\Install\InstallWizard;
 use Piwigo\Auth\PasswordRepository;
 use Piwigo\Auth\PasswordService;
 use Piwigo\Bootstrap\InstallBootstrap;
 use Piwigo\Config\CurrentConfig;
-use Piwigo\Tests\Support\CurrentConfigTestFactory;
+use Piwigo\Config\DeploymentPolicy;
+use Piwigo\Core\AdminContext;
+use Piwigo\Core\AppInfo;
 use Piwigo\Core\Env;
 use Piwigo\Core\ErrorCollector;
 use Piwigo\Core\Kernel;
+use Piwigo\Core\PageState;
 use Piwigo\Core\Paths;
+use Piwigo\Core\ProcessCache;
 use Piwigo\Db\DbConnection;
-use Piwigo\Tests\Support\DbCredentialsTestFactory;
+use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Http\ResponseReadyException;
+use Piwigo\PluginConfig\EventDispatcher;
+use Piwigo\Template\CurrentTemplate;
+use Piwigo\Template\Template;
+use Piwigo\Tests\Support\CurrentConfigServiceTestFactory;
+use Piwigo\Tests\Support\CurrentConfigTestFactory;
+use Piwigo\Tests\Support\CurrentUserTestFactory;
+use Piwigo\Tests\Support\DbCredentialsTestFactory;
 use Piwigo\Tests\Support\KernelContainerOverride;
+use Piwigo\Tests\Support\LangTestFactory;
+use Piwigo\Validation\InputValidator;
+use ReflectionProperty;
 
 /**
  * InstallWizard is install.php's whole orchestration, ported verbatim from
@@ -342,10 +342,13 @@ final class InstallWizardTest extends IntegrationTestCase
 
     private function reflectPrivate(object $object, string $property): mixed
     {
-        return new ReflectionProperty($object, $property)->getValue($object);
+        return new ReflectionProperty($object, $property)
+            ->getValue($object);
     }
 
-    /** Joins InstallWizard::$errors (a list<string>, reflected) into one message for a failed assertion. */
+    /**
+     * Joins InstallWizard::$errors (a list<string>, reflected) into one message for a failed assertion.
+     */
     private function reflectErrorsJoined(object $wizard): string
     {
         $errors = $this->reflectPrivate($wizard, 'errors');
@@ -396,7 +399,9 @@ final class InstallWizardTest extends IntegrationTestCase
         return $row === false ? null : $row;
     }
 
-    /** Runs a `SELECT COUNT(*) AS c ...` query and returns the count as a real int. */
+    /**
+     * Runs a `SELECT COUNT(*) AS c ...` query and returns the count as a real int.
+     */
     private function queryOneCount(string $dbName, string $sql): int
     {
         $row = $this->queryOne($dbName, $sql);
@@ -409,7 +414,7 @@ final class InstallWizardTest extends IntegrationTestCase
 
     // ------------------------------------------------------------- constructor
 
-    public function test_constructor_reads_the_default_data_location_when_the_local_override_sets_nothing(): void
+    public function testConstructorReadsTheDefaultDataLocationWhenTheLocalOverrideSetsNothing(): void
     {
         // Kernel is already booted (parent::setUp()'s own default real-repo
         // root) by this point -- a bare Kernel::boot($this->paths) would
@@ -420,28 +425,32 @@ final class InstallWizardTest extends IntegrationTestCase
         // whatever Paths is still bound in the live container.
         // KernelContainerOverride::with()
         // rebinds Paths::class for just this test's own scope instead.
-        KernelContainerOverride::with([Paths::class => $this->paths], function (): void {
+        KernelContainerOverride::with([
+            Paths::class => $this->paths,
+        ], function (): void {
             $wizard = new InstallWizard(LangTestFactory::get(), $this->paths, DbCredentialsTestFactory::get(), CurrentConfigServiceTestFactory::get(), CurrentConfigTestFactory::get(), new InputValidator(), new AdminContext(), new EventDispatcher(), new PageState(), new ErrorCollector(new DeploymentPolicy(), $this->paths), new ProcessCache(), new DeploymentPolicy(), new CurrentTemplate(), CurrentUserTestFactory::get());
 
             self::assertSame('_data/', $this->reflectPrivate($wizard, 'confDataLocation'));
         });
     }
 
-    public function test_constructor_throws_when_a_local_override_sets_a_non_string_data_location(): void
+    public function testConstructorThrowsWhenALocalOverrideSetsANonStringDataLocation(): void
     {
         file_put_contents($this->paths->local . 'config/config.inc.php', "<?php\n\$conf['data_location'] = 12345;\n");
 
         $this->expectException(LogicException::class);
         $this->expectExceptionMessageIsOrContains("Invalid \$conf['data_location'] configuration: expected a string.");
 
-        KernelContainerOverride::with([Paths::class => $this->paths], function (): void {
+        KernelContainerOverride::with([
+            Paths::class => $this->paths,
+        ], function (): void {
             new InstallWizard(LangTestFactory::get(), $this->paths, DbCredentialsTestFactory::get(), CurrentConfigServiceTestFactory::get(), CurrentConfigTestFactory::get(), new InputValidator(), new AdminContext(), new EventDispatcher(), new PageState(), new ErrorCollector(new DeploymentPolicy(), $this->paths), new ProcessCache(), new DeploymentPolicy(), new CurrentTemplate(), CurrentUserTestFactory::get());
         });
     }
 
     // --------------------------------------------------------- analyzeForm()
 
-    public function test_analyzeForm_collects_every_real_validation_error_while_the_connection_itself_succeeds(): void
+    public function testAnalyzeFormCollectsEveryRealValidationErrorWhileTheConnectionItselfSucceeds(): void
     {
         $this->bootInstallBootstrap();
 
@@ -478,7 +487,7 @@ final class InstallWizardTest extends IntegrationTestCase
 
     // ------------------------------------------------------------- render() (step 1)
 
-    public function test_render_outputs_the_initial_install_form_with_the_submitted_field_values_prefilled(): void
+    public function testRenderOutputsTheInitialInstallFormWithTheSubmittedFieldValuesPrefilled(): void
     {
         $this->bootInstallBootstrap();
 
@@ -513,7 +522,7 @@ final class InstallWizardTest extends IntegrationTestCase
      * file) and via install.tpl's real `{if isset($errors)}` HTML
      * rendering of it.
      */
-    public function test_render_assigns_the_collected_validation_errors_to_the_template(): void
+    public function testRenderAssignsTheCollectedValidationErrorsToTheTemplate(): void
     {
         $this->bootInstallBootstrap();
 
@@ -559,7 +568,7 @@ final class InstallWizardTest extends IntegrationTestCase
      * this is reachable only by a caller that skips straight to
      * performInstall() the way this test does.
      */
-    public function test_performInstall_throws_when_called_before_a_successful_connection(): void
+    public function testPerformInstallThrowsWhenCalledBeforeASuccessfulConnection(): void
     {
         $this->bootInstallBootstrap();
 
@@ -578,7 +587,7 @@ final class InstallWizardTest extends IntegrationTestCase
         $wizard->performInstall();
     }
 
-    public function test_performInstall_creates_the_real_schema_webmaster_user_and_site_config(): void
+    public function testPerformInstallCreatesTheRealSchemaWebmasterUserAndSiteConfig(): void
     {
         $this->bootInstallBootstrap();
         $freshDb = $this->createFreshDatabase();
@@ -681,7 +690,7 @@ final class InstallWizardTest extends IntegrationTestCase
         self::assertFileExists($this->paths->siteLocal . Env::testModeInstalledStamp());
     }
 
-    public function test_performInstall_writes_the_legacy_database_inc_php_file_outside_test_mode(): void
+    public function testPerformInstallWritesTheLegacyDatabaseIncPhpFileOutsideTestMode(): void
     {
         $this->bootInstallBootstrap();
         $freshDb = $this->createFreshDatabase();
@@ -773,7 +782,7 @@ final class InstallWizardTest extends IntegrationTestCase
      * it (same constraint as this file's own renderSuppressingHeaderWarnings()
      * elsewhere), so the call is wrapped in a real no-op handler below.
      */
-    public function test_performInstall_falls_back_to_a_downloadable_config_file_when_the_legacy_write_target_is_unwritable(): void
+    public function testPerformInstallFallsBackToADownloadableConfigFileWhenTheLegacyWriteTargetIsUnwritable(): void
     {
         $this->bootInstallBootstrap();
         $freshDb = $this->createFreshDatabase();
@@ -848,7 +857,7 @@ final class InstallWizardTest extends IntegrationTestCase
         self::assertSame('p17cfgfallback', $webmaster['username']);
     }
 
-    public function test_performInstall_records_an_error_when_the_env_file_cannot_be_written(): void
+    public function testPerformInstallRecordsAnErrorWhenTheEnvFileCannotBeWritten(): void
     {
         $this->bootInstallBootstrap();
         $freshDb = $this->createFreshDatabase();
@@ -888,7 +897,7 @@ final class InstallWizardTest extends IntegrationTestCase
 
     // ------------------------------------------------------------- boot()
 
-    public function test_boot_fatals_when_the_install_stamp_already_exists(): void
+    public function testBootFatalsWhenTheInstallStampAlreadyExists(): void
     {
         $this->bootInstallBootstrap();
         touch($this->paths->siteLocal . Env::testModeInstalledStamp());
@@ -898,16 +907,18 @@ final class InstallWizardTest extends IntegrationTestCase
         $this->submit([], []);
     }
 
-    public function test_boot_falls_back_to_the_default_language_for_an_unrecognized_requested_language(): void
+    public function testBootFallsBackToTheDefaultLanguageForAnUnrecognizedRequestedLanguage(): void
     {
         $this->bootInstallBootstrap();
 
-        $wizard = $this->submit([], ['language' => 'totally-bogus-language-xyz']);
+        $wizard = $this->submit([], [
+            'language' => 'totally-bogus-language-xyz',
+        ]);
 
         self::assertSame(AppInfo::DEFAULT_LANGUAGE, $this->reflectPrivate($wizard, 'language'));
     }
 
-    public function test_boot_picks_the_browser_language_when_none_was_requested_and_it_is_bundled(): void
+    public function testBootPicksTheBrowserLanguageWhenNoneWasRequestedAndItIsBundled(): void
     {
         $this->bootInstallBootstrap();
         $_SERVER['HTTP_ACCEPT_LANGUAGE'] = 'de-DE,de;q=0.9';
@@ -932,7 +943,7 @@ final class InstallWizardTest extends IntegrationTestCase
      * call in a `catch (ResponseReadyException $e)` that emits whatever
      * response it carries, so this needed no change on that end.
      */
-    public function test_boot_serves_and_deletes_the_temporary_database_config_file_for_a_valid_dl_param(): void
+    public function testBootServesAndDeletesTheTemporaryDatabaseConfigFileForAValidDlParam(): void
     {
         $this->bootInstallBootstrap();
 
@@ -953,7 +964,9 @@ final class InstallWizardTest extends IntegrationTestCase
         $body = null;
         $headers = [];
         try {
-            $this->submit([], ['dl' => $hash]);
+            $this->submit([], [
+                'dl' => $hash,
+            ]);
             self::fail('expected boot() to throw ResponseReadyException for a valid, existing dl= download');
         } catch (ResponseReadyException $e) {
             $response = $e->response();
@@ -996,7 +1009,7 @@ final class InstallWizardTest extends IntegrationTestCase
      * line actually runs and the response still gets built, with an empty
      * body, instead of a PHP warning breaking the response.
      */
-    public function test_boot_serves_an_empty_body_when_the_matched_dl_file_exists_but_cannot_be_read(): void
+    public function testBootServesAnEmptyBodyWhenTheMatchedDlFileExistsButCannotBeRead(): void
     {
         $this->bootInstallBootstrap();
 
@@ -1018,7 +1031,9 @@ final class InstallWizardTest extends IntegrationTestCase
         // reliable way to swallow it here.
         set_error_handler(static fn (): bool => true);
         try {
-            $this->submit([], ['dl' => $hash]);
+            $this->submit([], [
+                'dl' => $hash,
+            ]);
             self::fail('expected boot() to throw ResponseReadyException for a valid, existing dl= file');
         } catch (ResponseReadyException $e) {
             $response = $e->response();
@@ -1036,7 +1051,7 @@ final class InstallWizardTest extends IntegrationTestCase
         self::assertFileDoesNotExist($tmpFile);
     }
 
-    public function test_boot_falls_through_to_the_normal_request_body_for_a_dl_param_with_no_matching_file(): void
+    public function testBootFallsThroughToTheNormalRequestBodyForADlParamWithNoMatchingFile(): void
     {
         $this->bootInstallBootstrap();
 
@@ -1047,14 +1062,16 @@ final class InstallWizardTest extends IntegrationTestCase
         // test above alone couldn't distinguish.
         $hash = str_repeat('a', 32);
 
-        $wizard = $this->submit([], ['dl' => $hash]);
+        $wizard = $this->submit([], [
+            'dl' => $hash,
+        ]);
 
         self::assertSame(1, $this->reflectPrivate($wizard, 'step'));
     }
 
     // --------------------------------------------------------- analyzeForm(), more
 
-    public function test_analyzeForm_prints_the_errors_when_the_db_connection_itself_fails(): void
+    public function testAnalyzeFormPrintsTheErrorsWhenTheDbConnectionItselfFails(): void
     {
         $this->bootInstallBootstrap();
 
@@ -1094,7 +1111,7 @@ final class InstallWizardTest extends IntegrationTestCase
         self::assertNull($this->reflectPrivate($wizard, 'conn'));
     }
 
-    public function test_analyzeForm_rejects_a_webmaster_login_containing_a_quote_character(): void
+    public function testAnalyzeFormRejectsAWebmasterLoginContainingAQuoteCharacter(): void
     {
         $this->bootInstallBootstrap();
 
@@ -1120,7 +1137,7 @@ final class InstallWizardTest extends IntegrationTestCase
         self::assertSame(["the webmaster login may not contain the characters ' or \""], $this->reflectPrivate($wizard, 'errors'));
     }
 
-    public function test_analyzeForm_surfaces_a_malformed_mail_address_from_user_service(): void
+    public function testAnalyzeFormSurfacesAMalformedMailAddressFromUserService(): void
     {
         $this->bootInstallBootstrap();
 
@@ -1221,7 +1238,7 @@ final class InstallWizardTest extends IntegrationTestCase
      * Lang::buildArgs() calls) to _data/tmp/mail.*.ERROR.txt under this
      * test's own throwaway Paths::root.
      */
-    public function test_render_step2_emails_credentials_when_send_credentials_by_mail_was_submitted(): void
+    public function testRenderStep2EmailsCredentialsWhenSendCredentialsByMailWasSubmitted(): void
     {
         $this->bootInstallBootstrap();
         $freshDb = $this->createFreshDatabase();
@@ -1300,7 +1317,7 @@ final class InstallWizardTest extends IntegrationTestCase
      * that fetch() outcome, exactly as the source comment above it
      * ("Fire-and-forget: the response content is never read") promises.
      */
-    public function test_render_step2_disables_the_newsletter_preference_when_newsletter_subscribe_was_submitted(): void
+    public function testRenderStep2DisablesTheNewsletterPreferenceWhenNewsletterSubscribeWasSubmitted(): void
     {
         $this->bootInstallBootstrap();
         $freshDb = $this->createFreshDatabase();
@@ -1350,7 +1367,7 @@ final class InstallWizardTest extends IntegrationTestCase
      * the step-2 branch -- reachable with zero session/mail setup -- is
      * safe and cheap to exercise directly here too.
      */
-    public function test_render_throws_when_step_2_is_reached_without_a_successful_connection(): void
+    public function testRenderThrowsWhenStep2IsReachedWithoutASuccessfulConnection(): void
     {
         $this->bootInstallBootstrap();
         $wizard = $this->submit([
@@ -1365,7 +1382,8 @@ final class InstallWizardTest extends IntegrationTestCase
         // performInstall() does) without ever building a connection, the
         // exact "reached step 2 before a successful connection" state this
         // guard exists for.
-        new ReflectionProperty($wizard, 'step')->setValue($wizard, 2);
+        new ReflectionProperty($wizard, 'step')
+            ->setValue($wizard, 2);
 
         $this->expectException(LogicException::class);
         $this->expectExceptionMessageIsOrContains('render() reached step 2 before a successful analyzeForm() connection.');

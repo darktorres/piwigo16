@@ -20,7 +20,8 @@ it('renders with today\'s date pre-filled and no filter applied', function (): v
     // only ever echoed into the "current_param" JS object, confirmed
     // live via raw curl) -- both default to Env::now() (frozen by
     // PIWIGO_TEST_NOW) when no filter is applied.
-    $today = new DateTime((string) getenv('PIWIGO_TEST_NOW'))->format('Y-m-d');
+    $today = new DateTime((string) getenv('PIWIGO_TEST_NOW'))
+        ->format('Y-m-d');
     $page->assertPresent('input[name="start"][value="' . $today . '"]');
     $page->assertPresent('input[name="end"][value="' . $today . '"]');
     $page->assertNoJavaScriptErrors();

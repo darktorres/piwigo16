@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
 
-
 function languagesInstalledIsActive(string $languageId): bool
 {
     $db = H::connect();
@@ -15,7 +14,8 @@ function languagesInstalledIsActive(string $languageId): bool
 }
 
 it('activates and deactivates a real, non-default language', function (): void {
-    expect(languagesInstalledIsActive('fr_FR'))->toBeFalse();
+    expect(languagesInstalledIsActive('fr_FR'))
+        ->toBeFalse();
 
     $page = H::loginAsAdmin($this);
     $token = H::pwgToken($page);
@@ -23,7 +23,8 @@ it('activates and deactivates a real, non-default language', function (): void {
     try {
         $activateResult = H::rawGet($page, '/admin.php?page=languages&action=activate&language=fr_FR&pwg_token=' . $token);
         expect($activateResult['status'])->toBe(0);
-        expect(languagesInstalledIsActive('fr_FR'))->toBeTrue();
+        expect(languagesInstalledIsActive('fr_FR'))
+            ->toBeTrue();
 
         // The list shows the language's display name, not its raw code --
         // 'fr_FR' itself is only ever visible text nowhere on this page
@@ -34,7 +35,8 @@ it('activates and deactivates a real, non-default language', function (): void {
         H::rawGet($page, '/admin.php?page=languages&action=deactivate&language=fr_FR&pwg_token=' . $token);
     }
 
-    expect(languagesInstalledIsActive('fr_FR'))->toBeFalse();
+    expect(languagesInstalledIsActive('fr_FR'))
+        ->toBeFalse();
 });
 
 it('rejects an activate action without a valid CSRF token', function (): void {
@@ -43,7 +45,8 @@ it('rejects an activate action without a valid CSRF token', function (): void {
     $result = H::rawGet($page, '/admin.php?page=languages&action=activate&language=fr_FR');
 
     expect($result['status'])->toBe(400);
-    expect(languagesInstalledIsActive('fr_FR'))->toBeFalse();
+    expect(languagesInstalledIsActive('fr_FR'))
+        ->toBeFalse();
 });
 
 it('cannot deactivate en_UK: it is the only active language and the default', function (): void {
@@ -57,7 +60,8 @@ it('cannot deactivate en_UK: it is the only active language and the default', fu
     $result = H::rawGet($page, '/admin.php?page=languages&action=deactivate&language=en_UK&pwg_token=' . $token);
 
     expect($result['status'])->toBe(200);
-    expect(languagesInstalledIsActive('en_UK'))->toBeTrue();
+    expect(languagesInstalledIsActive('en_UK'))
+        ->toBeTrue();
 });
 
 it('reassigns users off a missing-from-disk language and deletes its stale db row on page load', function (): void {
@@ -114,7 +118,9 @@ it('shows the webmaster-required warning for a plain "admin"-status user', funct
 
     try {
         $adminPage = H::visitPwg($this, '/identification.php');
-        $adminPage = $adminPage->fill('username', $username)->fill('password', $password)->click('login');
+        $adminPage = $adminPage->fill('username', $username)
+            ->fill('password', $password)
+            ->click('login');
         H::assertNoServerErrors($adminPage, 'plain-admin post-login page');
 
         $adminPage = H::navigateOk($adminPage, '/admin.php?page=languages');

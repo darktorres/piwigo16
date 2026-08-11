@@ -11,10 +11,11 @@ test('toArray flattens every property, and omits extents when null', function ()
         extents: null,
     );
 
-    expect($context->toArray())->toBe([
-        'U_HELP' => '/admin/popuphelp.php?page=extend_for_templates',
-        'ADMIN_PAGE_TITLE' => 'Extend for templates',
-    ]);
+    expect($context->toArray())
+        ->toBe([
+            'U_HELP' => '/admin/popuphelp.php?page=extend_for_templates',
+            'ADMIN_PAGE_TITLE' => 'Extend for templates',
+        ]);
 });
 
 test('toArray includes extents when set', function (): void {

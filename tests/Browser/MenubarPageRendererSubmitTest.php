@@ -28,7 +28,8 @@ it('hides a block and repositions another, persisting the new blk_menubar config
         expect($result['body'])->toContain('Order of menubar items has been updated successfully');
 
         $stored = H::configValue('blk_menubar');
-        expect($stored)->not->toBeNull();
+        expect($stored)
+            ->not->toBeNull();
         $decoded = is_string($stored) ? json_decode($stored, true) : null;
         if (! is_array($decoded)) {
             throw new RuntimeException('blk_menubar config value did not decode to an array: ' . var_export($stored, true));

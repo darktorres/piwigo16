@@ -3,26 +3,26 @@
 declare(strict_types=1);
 
 use Piwigo\Common\ValueObject\LangCode;
+use Piwigo\Common\ValueObject\ThemeId;
 use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Common\ValueObject\Username;
 use Piwigo\Core\HtmlRenderingInterface;
+use Piwigo\Core\Kernel;
 use Piwigo\Core\Lang;
+use Piwigo\Core\Paths;
+use Piwigo\Core\TemplatePageContext;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Template\CurrentTemplate;
+use Piwigo\Template\Template;
+use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Tests\Support\CurrentUserTestFactory;
 use Piwigo\Tests\Support\KernelContainerOverride;
+use Piwigo\Tests\Support\LangTestFactory;
 use Piwigo\Tests\Support\TemplateTestFactory;
-use Piwigo\Common\ValueObject\ThemeId;
+use Piwigo\Tests\Support\TranslatorTestFactory;
 use Piwigo\Users\User;
 use Piwigo\Users\UserStatus;
 use Smarty\Smarty;
-use Piwigo\Tests\Support\CurrentConfigTestFactory;
-use Piwigo\Core\Kernel;
-use Piwigo\Core\TemplatePageContext;
-use Piwigo\Tests\Support\LangTestFactory;
-use Piwigo\Core\Paths;
-use Piwigo\Tests\Support\TranslatorTestFactory;
-use Piwigo\Template\Template;
 
 // get_php_str_val() stays a static, instance-free utility (the only
 // remaining eval() surface in this codebase) -- tested directly with no
@@ -136,17 +136,22 @@ function template_test_themes(Template $t): array
 
 test('assignContext flattens a TemplatePageContext to individually-assigned template vars', function (): void {
     $template = TemplateTestFactory::build();
-    $context = new class () implements TemplatePageContext {
+    $context = new class() implements TemplatePageContext {
         public function toArray(): array
         {
-            return ['FOO' => 'bar', 'baz' => 42];
+            return [
+                'FOO' => 'bar',
+                'baz' => 42,
+            ];
         }
     };
 
     $template->assignContext($context);
 
-    expect($template->get_template_vars('FOO'))->toBe('bar')
-        ->and($template->get_template_vars('baz'))->toBe(42);
+    expect($template->get_template_vars('FOO'))
+        ->toBe('bar')
+        ->and($template->get_template_vars('baz'))
+        ->toBe(42);
 });
 
 test('get_php_str_val evaluates a single-quoted PHP string literal', function (): void {
@@ -183,20 +188,26 @@ test('get_php_str_val checks the first character for a matching double-quote, no
 
 test('modcompiler_translate returns a cached lang lookup when compiled_template_cache_language is on', function (): void {
     CurrentConfigTestFactory::get()->compiledTemplateCacheLanguage = true;
-    LangTestFactory::get()->loadArray(['Comment' => 'Commentaire']);
+    LangTestFactory::get()->loadArray([
+        'Comment' => 'Commentaire',
+    ]);
 
     $result = TemplateTestFactory::build()->modcompiler_translate(["'Comment'"]);
 
-    expect($result)->toBe(var_export('Commentaire', true));
+    expect($result)
+        ->toBe(var_export('Commentaire', true));
 });
 
 test('modcompiler_translate falls back to a runtime Template::lang()->t() call when caching is off', function (): void {
     CurrentConfigTestFactory::get()->compiledTemplateCacheLanguage = false;
-    LangTestFactory::get()->loadArray(['Comment' => 'Commentaire']);
+    LangTestFactory::get()->loadArray([
+        'Comment' => 'Commentaire',
+    ]);
 
     $result = TemplateTestFactory::build()->modcompiler_translate(["'Comment'"]);
 
-    expect($result)->toBe("\\Piwigo\\Template\\Template::lang()->t('Comment')");
+    expect($result)
+        ->toBe("\\Piwigo\\Template\\Template::lang()->t('Comment')");
 });
 
 test('modcompiler_translate falls back to a runtime Template::lang()->t() call when the key is not in the cached lang table', function (): void {
@@ -205,7 +216,8 @@ test('modcompiler_translate falls back to a runtime Template::lang()->t() call w
 
     $result = TemplateTestFactory::build()->modcompiler_translate(["'Unknown'"]);
 
-    expect($result)->toBe("\\Piwigo\\Template\\Template::lang()->t('Unknown')");
+    expect($result)
+        ->toBe("\\Piwigo\\Template\\Template::lang()->t('Unknown')");
 });
 
 test('modcompiler_translate wraps a runtime Template::lang()->t() call in sprintf when extra params are given', function (): void {
@@ -214,7 +226,8 @@ test('modcompiler_translate wraps a runtime Template::lang()->t() call in sprint
 
     $result = TemplateTestFactory::build()->modcompiler_translate(["'%d comments'", '$count']);
 
-    expect($result)->toBe("\\Piwigo\\Template\\Template::lang()->t('%d comments',\$count)");
+    expect($result)
+        ->toBe("\\Piwigo\\Template\\Template::lang()->t('%d comments',\$count)");
 });
 
 test('modcompiler_translate_dec falls back to a runtime Template::lang()->plural() call when caching is off', function (): void {
@@ -222,36 +235,52 @@ test('modcompiler_translate_dec falls back to a runtime Template::lang()->plural
 
     $result = TemplateTestFactory::build()->modcompiler_translate_dec(['$count', "'%d comment'", "'%d comments'"]);
 
-    expect($result)->toBe("\\Piwigo\\Template\\Template::lang()->plural('%d comment','%d comments',\$count)");
+    expect($result)
+        ->toBe("\\Piwigo\\Template\\Template::lang()->plural('%d comment','%d comments',\$count)");
 });
 
 test('modcompiler_translate wraps a cached lang lookup in sprintf when extra params are given and caching is on', function (): void {
     CurrentConfigTestFactory::get()->compiledTemplateCacheLanguage = true;
-    LangTestFactory::get()->loadArray(['%d comments' => '%d commentaires']);
+    LangTestFactory::get()->loadArray([
+        '%d comments' => '%d commentaires',
+    ]);
 
     $result = TemplateTestFactory::build()->modcompiler_translate(["'%d comments'", '$count']);
 
-    expect($result)->toBe("sprintf(" . var_export('%d commentaires', true) . ',$count)');
+    expect($result)
+        ->toBe('sprintf(' . var_export('%d commentaires', true) . ',$count)');
 });
 
 test('modcompiler_translate_dec builds a plain >1 ternary from cached lang lookups when caching is on and zero is not plural', function (): void {
     CurrentConfigTestFactory::get()->compiledTemplateCacheLanguage = true;
-    LangTestFactory::get()->setLangInfo(['zero_plural' => false]);
-    LangTestFactory::get()->loadArray(['%d comment' => '%d commentaire', '%d comments' => '%d commentaires']);
+    LangTestFactory::get()->setLangInfo([
+        'zero_plural' => false,
+    ]);
+    LangTestFactory::get()->loadArray([
+        '%d comment' => '%d commentaire',
+        '%d comments' => '%d commentaires',
+    ]);
 
     $result = TemplateTestFactory::build()->modcompiler_translate_dec(['$count', "'%d comment'", "'%d comments'"]);
 
-    expect($result)->toBe("sprintf((\$tmp=(\$count))>1?'%d commentaires':'%d commentaire',\$tmp)");
+    expect($result)
+        ->toBe("sprintf((\$tmp=(\$count))>1?'%d commentaires':'%d commentaire',\$tmp)");
 });
 
 test('modcompiler_translate_dec also treats zero as plural when zero_plural is set', function (): void {
     CurrentConfigTestFactory::get()->compiledTemplateCacheLanguage = true;
-    LangTestFactory::get()->setLangInfo(['zero_plural' => true]);
-    LangTestFactory::get()->loadArray(['%d comment' => '%d commentaire', '%d comments' => '%d commentaires']);
+    LangTestFactory::get()->setLangInfo([
+        'zero_plural' => true,
+    ]);
+    LangTestFactory::get()->loadArray([
+        '%d comment' => '%d commentaire',
+        '%d comments' => '%d commentaires',
+    ]);
 
     $result = TemplateTestFactory::build()->modcompiler_translate_dec(['$count', "'%d comment'", "'%d comments'"]);
 
-    expect($result)->toBe("sprintf((\$tmp=(\$count))>1||\$tmp==0?'%d commentaires':'%d commentaire',\$tmp)");
+    expect($result)
+        ->toBe("sprintf((\$tmp=(\$count))>1||\$tmp==0?'%d commentaires':'%d commentaire',\$tmp)");
 });
 
 test('mod_explode splits on the given delimiter', function (): void {
@@ -284,13 +313,15 @@ test('postfilter_language replaces a compiled echo-string-literal with its evalu
     // the parameter type.
     $result = Template::postfilter_language("<?php echo 'Hello World';?>\n", new Smarty());
 
-    expect($result)->toBe('Hello World');
+    expect($result)
+        ->toBe('Hello World');
 });
 
 test('postfilter_language handles a double-quoted literal and leaves non-matching PHP untouched', function (): void {
     $result = Template::postfilter_language("<?php echo \"Bonjour\";?>\n<?php \$x = 1; ?>\n", new Smarty());
 
-    expect($result)->toBe("Bonjour<?php \$x = 1; ?>\n");
+    expect($result)
+        ->toBe("Bonjour<?php \$x = 1; ?>\n");
 });
 
 test('prefilter_white_space strips leading whitespace before every recognized tag, and their closing counterparts where applicable', function (): void {
@@ -303,7 +334,8 @@ test('prefilter_white_space strips leading whitespace before every recognized ta
     $result = Template::prefilter_white_space($source, new Smarty());
 
     $expected = "{if x}\n{/if}\n{foreach x}\n{/foreach}\n{section x}\n{/section}\n{footer_script}\n{/footer_script}\n{include x}\n{else}\n{combine_script x}\n{html_head}\nEND\n";
-    expect($result)->toBe($expected);
+    expect($result)
+        ->toBe($expected);
 });
 
 // --- constructor-registered is_admin/is_classic_user modifier defaults -----
@@ -339,7 +371,8 @@ test('constructor registers an is_admin modifier that reads the current user\'s 
     $registeredPlugins = $t->smarty->registered_plugins;
     $isAdmin = $registeredPlugins['modifier']['is_admin'][0];
 
-    expect($isAdmin())->toBeTrue();
+    expect($isAdmin())
+        ->toBeTrue();
 });
 
 test('constructor registers an is_classic_user modifier that reads the current user\'s own status when called with no argument', function (): void {
@@ -358,7 +391,8 @@ test('constructor registers an is_classic_user modifier that reads the current u
     $registeredPlugins = $t->smarty->registered_plugins;
     $isClassicUser = $registeredPlugins['modifier']['is_classic_user'][0];
 
-    expect($isClassicUser())->toBeTrue();
+    expect($isClassicUser())
+        ->toBeTrue();
 });
 
 // --- container-resolver LogicException guards -------------------------------
@@ -393,7 +427,9 @@ test('urlService resolver throws when the container returns an unexpected type',
 
 test('lang resolver throws when the container returns an unexpected type', function (): void {
     expect(static fn (): mixed => KernelContainerOverride::with(
-        [Lang::class => new stdClass()],
+        [
+            Lang::class => new stdClass(),
+        ],
         static fn (): Lang => Template::lang()
     ))->toThrow(LogicException::class, 'Container returned an unexpected type for ' . Lang::class);
 
@@ -405,7 +441,9 @@ test('htmlRenderer resolver throws when the container returns an unexpected type
     $t = TemplateTestFactory::build();
 
     expect(static fn (): mixed => KernelContainerOverride::with(
-        [HtmlRenderingInterface::class => new stdClass()],
+        [
+            HtmlRenderingInterface::class => new stdClass(),
+        ],
         static fn (): ?string => $t->parse('no-such-handle')
     ))->toThrow(LogicException::class, 'Container returned an unexpected type for ' . HtmlRenderingInterface::class);
 
@@ -429,7 +467,9 @@ test('currentTemplate resolver throws when the container returns an unexpected t
     $currentTemplateMethod = new ReflectionMethod(Template::class, 'currentTemplate');
 
     expect(static fn (): mixed => KernelContainerOverride::with(
-        [CurrentTemplate::class => new stdClass()],
+        [
+            CurrentTemplate::class => new stdClass(),
+        ],
         static fn (): mixed => $currentTemplateMethod->invoke($t)
     ))->toThrow(LogicException::class, 'Container returned an unexpected type for ' . CurrentTemplate::class);
 
@@ -463,7 +503,8 @@ test('set_theme lets a parent theme\'s own load_parent_css/load_parent_local_hea
     $t->set_theme($root, 'gap-child', 'template');
 
     $themes = template_test_themes($t);
-    expect($themes)->toHaveCount(2);
+    expect($themes)
+        ->toHaveCount(2);
     // The parent's own set_theme() call (and therefore its own
     // smarty->append('themes', ...)) runs during the child's recursive
     // call, before the child appends its own entry -- so the parent's

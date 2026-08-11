@@ -4,14 +4,14 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Integration;
 
-use Override;
-use Piwigo\Core\Kernel;
-use LogicException;
 use Doctrine\DBAL\Connection;
+use LogicException;
+use Override;
 use Piwigo\Audit\AuditLogEntity;
 use Piwigo\Audit\AuditService;
-use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\ConfigLoader;
+use Piwigo\Config\CurrentConfig;
+use Piwigo\Core\Kernel;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
 
@@ -51,19 +51,21 @@ final class AuditServiceTest extends IntegrationTestCase
         // The fixture seeds 3 real audit_log rows (group-creation events) --
         // cleared so every test starts from a genuinely empty table, same
         // reasoning as AuditRepositoryTest's own setUp().
-        $this->conn->executeStatement('DELETE FROM ' . 'audit_log');
+        $this->conn->executeStatement('DELETE FROM audit_log');
     }
 
     #[Override]
     protected function tearDown(): void
     {
-        $this->conn->executeStatement('DELETE FROM ' . 'audit_log');
+        $this->conn->executeStatement('DELETE FROM audit_log');
         parent::tearDown();
     }
 
-    public function test_record_persists_a_row_and_returns_its_id(): void
+    public function testRecordPersistsARowAndReturnsItsId(): void
     {
-        $id = $this->service->record(1, 'create', 'user', 42, null, ['username' => 'alice']);
+        $id = $this->service->record(1, 'create', 'user', 42, null, [
+            'username' => 'alice',
+        ]);
 
         $row = $this->conn->createQueryBuilder()
             ->select('*')
@@ -84,14 +86,16 @@ final class AuditServiceTest extends IntegrationTestCase
         // bytes -- same reasoning as AuditService::canonicalJson()'s own
         // docblock.
         self::assertIsString($row['after_json']);
-        self::assertSame(['username' => 'alice'], json_decode($row['after_json'], true));
+        self::assertSame([
+            'username' => 'alice',
+        ], json_decode($row['after_json'], true));
         self::assertSame('10.20.30.40', $row['ip_address']);
         self::assertNull($row['prev_hash']);
         self::assertIsString($row['row_hash']);
         self::assertMatchesRegularExpression('/^[0-9a-f]{64}$/', $row['row_hash']);
     }
 
-    public function test_record_links_the_second_row_to_the_first(): void
+    public function testRecordLinksTheSecondRowToTheFirst(): void
     {
         $this->service->record(1, 'create', 'user', 1);
         $secondId = $this->service->record(1, 'delete', 'group', 2);
@@ -108,21 +112,27 @@ final class AuditServiceTest extends IntegrationTestCase
         self::assertSame($secondId, $rows[1]['id']);
     }
 
-    public function test_verify_chain_is_true_for_an_empty_log(): void
+    public function testVerifyChainIsTrueForAnEmptyLog(): void
     {
         self::assertTrue($this->service->verifyChain());
     }
 
-    public function test_verify_chain_is_true_for_an_untampered_chain(): void
+    public function testVerifyChainIsTrueForAnUntamperedChain(): void
     {
-        $this->service->record(1, 'create', 'user', 1, null, ['username' => 'alice']);
-        $this->service->record(1, 'update', 'user', 1, ['username' => 'alice'], ['username' => 'alice2']);
+        $this->service->record(1, 'create', 'user', 1, null, [
+            'username' => 'alice',
+        ]);
+        $this->service->record(1, 'update', 'user', 1, [
+            'username' => 'alice',
+        ], [
+            'username' => 'alice2',
+        ]);
         $this->service->record(null, 'autoupdate', 'system', null);
 
         self::assertTrue($this->service->verifyChain());
     }
 
-    public function test_verify_chain_is_false_when_a_rows_content_is_altered(): void
+    public function testVerifyChainIsFalseWhenARowsContentIsAltered(): void
     {
         $this->service->record(1, 'create', 'user', 1);
         $this->service->record(1, 'delete', 'group', 2);
@@ -141,7 +151,7 @@ final class AuditServiceTest extends IntegrationTestCase
         self::assertFalse($this->service->verifyChain());
     }
 
-    public function test_verify_chain_is_false_when_a_stored_hash_is_altered(): void
+    public function testVerifyChainIsFalseWhenAStoredHashIsAltered(): void
     {
         $this->service->record(1, 'create', 'user', 1);
         $this->service->record(1, 'delete', 'group', 2);
@@ -157,7 +167,7 @@ final class AuditServiceTest extends IntegrationTestCase
         self::assertFalse($this->service->verifyChain());
     }
 
-    public function test_verify_chain_is_false_when_a_rows_prev_hash_is_tampered_directly(): void
+    public function testVerifyChainIsFalseWhenARowsPrevHashIsTamperedDirectly(): void
     {
         // Content and row_hash both stay internally consistent for every
         // row -- only the *link* between rows 1 and 2 is severed by

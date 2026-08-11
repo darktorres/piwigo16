@@ -14,37 +14,50 @@ use Piwigo\Image\ImageRect;
 test('constructing from [width, height] sets l/t to 0 and r/b to the given size', function (): void {
     $rect = new ImageRect([200, 100]);
 
-    expect($rect->l)->toBe(0);
-    expect($rect->t)->toBe(0);
-    expect($rect->r)->toBe(200);
-    expect($rect->b)->toBe(100);
-    expect($rect->width())->toBe(200.0);
-    expect($rect->height())->toBe(100.0);
+    expect($rect->l)
+        ->toBe(0);
+    expect($rect->t)
+        ->toBe(0);
+    expect($rect->r)
+        ->toBe(200);
+    expect($rect->b)
+        ->toBe(100);
+    expect($rect->width())
+        ->toBe(200.0);
+    expect($rect->height())
+        ->toBe(100.0);
 });
 
 test('crop_h with no coi splits the crop evenly between left and right', function (): void {
     $rect = new ImageRect([200, 100]);
     $rect->crop_h(50, null);
 
-    expect($rect->l)->toBe(25.0);
-    expect($rect->r)->toBe(175.0);
-    expect($rect->width())->toBe(150.0);
+    expect($rect->l)
+        ->toBe(25.0);
+    expect($rect->r)
+        ->toBe(175.0);
+    expect($rect->width())
+        ->toBe(150.0);
 });
 
 test('crop_h is a no-op when the requested crop is not smaller than the current width', function (): void {
     $rect = new ImageRect([200, 100]);
     $rect->crop_h(250, null);
 
-    expect($rect->l)->toBe(0);
-    expect($rect->r)->toBe(200);
+    expect($rect->l)
+        ->toBe(0);
+    expect($rect->r)
+        ->toBe(200);
 });
 
 test('crop_h with a coi spanning the whole rectangle behaves the same as no coi', function (): void {
     $rect = new ImageRect([200, 100]);
     $rect->crop_h(50, 'aaza');
 
-    expect($rect->l)->toBe(25.0);
-    expect($rect->r)->toBe(175.0);
+    expect($rect->l)
+        ->toBe(25.0);
+    expect($rect->r)
+        ->toBe(175.0);
 });
 
 test('crop_h leans the crop toward the side with less room when the coi is off-center (tight on the right)', function (): void {
@@ -54,8 +67,10 @@ test('crop_h leans the crop toward the side with less room when the coi is off-c
     // right side effectively can't be cropped as much as usual.
     $rect->crop_h(50, 'n_y_');
 
-    expect($rect->l)->toBe(42.0);
-    expect($rect->r)->toBe(192.0);
+    expect($rect->l)
+        ->toBe(42.0);
+    expect($rect->r)
+        ->toBe(192.0);
 });
 
 test('crop_h leans the crop toward the side with less room when the coi is off-center (tight on the left)', function (): void {
@@ -64,25 +79,32 @@ test('crop_h leans the crop toward the side with less room when the coi is off-c
     // the left of the coi.
     $rect->crop_h(50, 'c_n_');
 
-    expect($rect->l)->toBe(16.0);
-    expect($rect->r)->toBe(166.0);
+    expect($rect->l)
+        ->toBe(16.0);
+    expect($rect->r)
+        ->toBe(166.0);
 });
 
 test('crop_v with no coi splits the crop evenly between top and bottom', function (): void {
     $rect = new ImageRect([200, 100]);
     $rect->crop_v(20, null);
 
-    expect($rect->t)->toBe(10.0);
-    expect($rect->b)->toBe(90.0);
-    expect($rect->height())->toBe(80.0);
+    expect($rect->t)
+        ->toBe(10.0);
+    expect($rect->b)
+        ->toBe(90.0);
+    expect($rect->height())
+        ->toBe(80.0);
 });
 
 test('crop_v is a no-op when the requested crop is not smaller than the current height', function (): void {
     $rect = new ImageRect([200, 100]);
     $rect->crop_v(150, null);
 
-    expect($rect->t)->toBe(0);
-    expect($rect->b)->toBe(100);
+    expect($rect->t)
+        ->toBe(0);
+    expect($rect->b)
+        ->toBe(100);
 });
 
 test('crop_v leans the crop toward the side with less room when the coi is off-center (tight on the top)', function (): void {
@@ -90,8 +112,10 @@ test('crop_v leans the crop toward the side with less room when the coi is off-c
     // top=c (0.08*100=8), bottom=n (0.52*100=52) -- only 8px of room above the coi.
     $rect->crop_v(20, '_c_n');
 
-    expect($rect->t)->toBe(8.0);
-    expect($rect->b)->toBe(88.0);
+    expect($rect->t)
+        ->toBe(8.0);
+    expect($rect->b)
+        ->toBe(88.0);
 });
 
 test('crop_v leans the crop toward the side with less room when the coi is off-center (tight on the bottom)', function (): void {
@@ -99,8 +123,10 @@ test('crop_v leans the crop toward the side with less room when the coi is off-c
     // top=n (0.52*100=52), bottom=y (0.96*100=96) -- only 4px of room below the coi.
     $rect->crop_v(20, '_n_y');
 
-    expect($rect->t)->toBe(16.0);
-    expect($rect->b)->toBe(96.0);
+    expect($rect->t)
+        ->toBe(16.0);
+    expect($rect->b)
+        ->toBe(96.0);
 });
 
 test('crop_h is a no-op when the requested crop exactly equals the current width, not just when larger', function (): void {
@@ -110,8 +136,10 @@ test('crop_h is a no-op when the requested crop exactly equals the current width
     $rect = new ImageRect([200, 100]);
     $rect->crop_h(200, null);
 
-    expect($rect->l)->toBe(0);
-    expect($rect->r)->toBe(200);
+    expect($rect->l)
+        ->toBe(0);
+    expect($rect->r)
+        ->toBe(200);
 });
 
 test('crop_v is a no-op when the requested crop exactly equals the current height, not just when larger', function (): void {
@@ -119,8 +147,10 @@ test('crop_v is a no-op when the requested crop exactly equals the current heigh
     $rect = new ImageRect([200, 100]);
     $rect->crop_v(100, null);
 
-    expect($rect->t)->toBe(0);
-    expect($rect->b)->toBe(100);
+    expect($rect->t)
+        ->toBe(0);
+    expect($rect->b)
+        ->toBe(100);
 });
 
 /**
@@ -142,8 +172,10 @@ test('crop_h uses the exact floor()-truncated coi position, not a rounded or cei
     $rect = new ImageRect([97, 100]);
     $rect->crop_h(10, 'b_n_');
 
-    expect($rect->l)->toBe(3.0);
-    expect($rect->r)->toBe(90.0);
+    expect($rect->l)
+        ->toBe(3.0);
+    expect($rect->r)
+        ->toBe(90.0);
 });
 
 test('crop_v uses the exact floor()-truncated coi position, not a rounded or ceiling one', function (): void {
@@ -151,8 +183,10 @@ test('crop_v uses the exact floor()-truncated coi position, not a rounded or cei
     $rect = new ImageRect([100, 97]);
     $rect->crop_v(10, '_b_n');
 
-    expect($rect->t)->toBe(3.0);
-    expect($rect->b)->toBe(90.0);
+    expect($rect->t)
+        ->toBe(3.0);
+    expect($rect->b)
+        ->toBe(90.0);
 });
 
 test('crop_h uses the exact ceil()-rounded-up coi position, not a floored or rounded one', function (): void {
@@ -161,8 +195,10 @@ test('crop_h uses the exact ceil()-rounded-up coi position, not a floored or rou
     $rect = new ImageRect([97, 100]);
     $rect->crop_h(8, 'n_y_');
 
-    expect($rect->l)->toBe(5.0);
-    expect($rect->r)->toBe(94.0);
+    expect($rect->l)
+        ->toBe(5.0);
+    expect($rect->r)
+        ->toBe(94.0);
 });
 
 test('crop_v uses the exact ceil()-rounded-up coi position, not a floored or rounded one', function (): void {
@@ -170,8 +206,10 @@ test('crop_v uses the exact ceil()-rounded-up coi position, not a floored or rou
     $rect = new ImageRect([100, 97]);
     $rect->crop_v(8, '_n_y');
 
-    expect($rect->t)->toBe(5.0);
-    expect($rect->b)->toBe(94.0);
+    expect($rect->t)
+        ->toBe(5.0);
+    expect($rect->b)
+        ->toBe(94.0);
 });
 
 test('crop_h computes availableL by SUBTRACTING the current left edge from the coi position, not adding it', function (): void {
@@ -186,8 +224,10 @@ test('crop_h computes availableL by SUBTRACTING the current left edge from the c
     $rect->l = 1.0;
     $rect->crop_h(10, 'b_n_');
 
-    expect($rect->l)->toBe(3.0);
-    expect($rect->r)->toBe(89.0);
+    expect($rect->l)
+        ->toBe(3.0);
+    expect($rect->r)
+        ->toBe(89.0);
 });
 
 test('crop_v computes availableT by SUBTRACTING the current top edge from the coi position, not adding it', function (): void {
@@ -196,8 +236,10 @@ test('crop_v computes availableT by SUBTRACTING the current top edge from the co
     $rect->t = 1.0;
     $rect->crop_v(10, '_b_n');
 
-    expect($rect->t)->toBe(3.0);
-    expect($rect->b)->toBe(89.0);
+    expect($rect->t)
+        ->toBe(3.0);
+    expect($rect->b)
+        ->toBe(89.0);
 });
 
 test('crop_h defaults availableL to exactly 0.0, not a placeholder, when the coi is not to the right of the current left edge', function (): void {
@@ -211,8 +253,10 @@ test('crop_h defaults availableL to exactly 0.0, not a placeholder, when the coi
     $rect->l = 5.0;
     $rect->crop_h(30, 'a_n_');
 
-    expect($rect->l)->toBe(5.0);
-    expect($rect->r)->toBe(67.0);
+    expect($rect->l)
+        ->toBe(5.0);
+    expect($rect->r)
+        ->toBe(67.0);
 });
 
 test('crop_v defaults availableT to exactly 0.0, not a placeholder, when the coi is not below the current top edge', function (): void {
@@ -221,8 +265,10 @@ test('crop_v defaults availableT to exactly 0.0, not a placeholder, when the coi
     $rect->t = 5.0;
     $rect->crop_v(30, '_a_n');
 
-    expect($rect->t)->toBe(5.0);
-    expect($rect->b)->toBe(67.0);
+    expect($rect->t)
+        ->toBe(5.0);
+    expect($rect->b)
+        ->toBe(67.0);
 });
 
 test('crop_h defaults availableR to exactly 0.0, not a placeholder, when the coi is not to the left of the current right edge', function (): void {
@@ -232,8 +278,10 @@ test('crop_h defaults availableR to exactly 0.0, not a placeholder, when the coi
     $rect = new ImageRect([97, 100]);
     $rect->crop_h(2, 'b_z_');
 
-    expect($rect->l)->toBe(2.0);
-    expect($rect->r)->toBe(97.0);
+    expect($rect->l)
+        ->toBe(2.0);
+    expect($rect->r)
+        ->toBe(97.0);
 });
 
 test('crop_v defaults availableB to exactly 0.0, not a placeholder, when the coi is not above the current bottom edge', function (): void {
@@ -243,8 +291,10 @@ test('crop_v defaults availableB to exactly 0.0, not a placeholder, when the coi
     $rect = new ImageRect([100, 97]);
     $rect->crop_v(2, '_b_z');
 
-    expect($rect->t)->toBe(2.0);
-    expect($rect->b)->toBe(97.0);
+    expect($rect->t)
+        ->toBe(2.0);
+    expect($rect->b)
+        ->toBe(97.0);
 });
 
 test('crop_h only applies the coi-adjusted crop once the available room genuinely reaches the requested pixel count, not one short', function (): void {
@@ -256,8 +306,10 @@ test('crop_h only applies the coi-adjusted crop once the available room genuinel
     $rect = new ImageRect([97, 100]);
     $rect->crop_h(46, 'a_n_');
 
-    expect($rect->l)->toBe(0.0);
-    expect($rect->r)->toBe(51.0);
+    expect($rect->l)
+        ->toBe(0.0);
+    expect($rect->r)
+        ->toBe(51.0);
 });
 
 test('crop_v only applies the coi-adjusted crop once the available room genuinely reaches the requested pixel count, not one short', function (): void {
@@ -265,8 +317,10 @@ test('crop_v only applies the coi-adjusted crop once the available room genuinel
     $rect = new ImageRect([100, 97]);
     $rect->crop_v(46, '_a_n');
 
-    expect($rect->t)->toBe(0.0);
-    expect($rect->b)->toBe(51.0);
+    expect($rect->t)
+        ->toBe(0.0);
+    expect($rect->b)
+        ->toBe(51.0);
 });
 
 test('crop_h only widens the crop toward the tight side when it genuinely has LESS room than an even split, not exactly as much', function (): void {
@@ -280,8 +334,10 @@ test('crop_h only widens the crop toward the tight side when it genuinely has LE
     $rect = new ImageRect([97, 100]);
     $rect->crop_h(7, 'n_y_');
 
-    expect($rect->l)->toBe(3.0);
-    expect($rect->r)->toBe(93.0);
+    expect($rect->l)
+        ->toBe(3.0);
+    expect($rect->r)
+        ->toBe(93.0);
 });
 
 test('crop_v only widens the crop toward the tight side when it genuinely has LESS room than an even split, not exactly as much', function (): void {
@@ -289,8 +345,10 @@ test('crop_v only widens the crop toward the tight side when it genuinely has LE
     $rect = new ImageRect([100, 97]);
     $rect->crop_v(7, '_n_y');
 
-    expect($rect->t)->toBe(3.0);
-    expect($rect->b)->toBe(93.0);
+    expect($rect->t)
+        ->toBe(3.0);
+    expect($rect->b)
+        ->toBe(93.0);
 });
 
 /**
@@ -327,8 +385,12 @@ test('crop_h and crop_v tolerate an empty-string coi the same as null', function
     $rect->crop_h(50, '');
     $rect->crop_v(20, '');
 
-    expect($rect->l)->toBe(25.0);
-    expect($rect->r)->toBe(175.0);
-    expect($rect->t)->toBe(10.0);
-    expect($rect->b)->toBe(90.0);
+    expect($rect->l)
+        ->toBe(25.0);
+    expect($rect->r)
+        ->toBe(175.0);
+    expect($rect->t)
+        ->toBe(10.0);
+    expect($rect->b)
+        ->toBe(90.0);
 });

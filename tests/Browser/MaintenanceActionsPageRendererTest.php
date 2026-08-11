@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
 
-
 it('renders the global gallery actions fieldset with no webmaster warning for the webmaster fixture user', function (): void {
     $page = H::loginAsAdmin($this);
     $page = H::navigateOk($page, '/admin.php?page=maintenance');
@@ -39,7 +38,9 @@ it('shows the webmaster-required warning for a plain "admin"-status user', funct
     try {
         $adminPage = H::visitPwg($this, '/identification.php');
         H::assertNoServerErrors($adminPage, 'plain-admin identification page');
-        $adminPage = $adminPage->fill('username', $username)->fill('password', $password)->click('login');
+        $adminPage = $adminPage->fill('username', $username)
+            ->fill('password', $password)
+            ->click('login');
         H::assertNoServerErrors($adminPage, 'plain-admin post-login page');
 
         $adminPage = H::navigateOk($adminPage, '/admin.php?page=maintenance');
@@ -135,7 +136,9 @@ it('shows the time-since-last-calculation-derived cache size info when a real ca
 
 it('shows the empty-lounge link and counter when the upload lounge has real items', function (): void {
     $page = H::loginAsAdmin($this);
-    $album = H::wsCall($page, 'pwg.categories.add', ['name' => 'Maintenance Actions Lounge Album ' . uniqid()]);
+    $album = H::wsCall($page, 'pwg.categories.add', [
+        'name' => 'Maintenance Actions Lounge Album ' . uniqid(),
+    ]);
     $albumResult = $album['result'] ?? null;
     if (! is_array($albumResult) || ! is_numeric($albumResult['id'] ?? null)) {
         throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($album, true));
@@ -155,7 +158,8 @@ it('shows the empty-lounge link and counter when the upload lounge has real item
         // insert is the only row, so this stays correct either way.
         $countAssoc = H::dbFetchAssoc($db, sprintf('SELECT COUNT(*) AS c FROM lounge'));
         $expectedCount = is_array($countAssoc) ? (int) $countAssoc['c'] : -1;
-        expect($expectedCount)->toBeGreaterThan(0);
+        expect($expectedCount)
+            ->toBeGreaterThan(0);
 
         $page = H::navigateOk($page, '/admin.php?page=maintenance');
 

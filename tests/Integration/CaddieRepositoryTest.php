@@ -4,16 +4,16 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Integration;
 
-use Override;
-use Piwigo\Core\Kernel;
-use LogicException;
-use Piwigo\Db\EntityManagerFactory;
 use Doctrine\DBAL\Connection;
+use LogicException;
+use Override;
 use Piwigo\Caddie\CaddieEntity;
 use Piwigo\Caddie\CaddieRepository;
-use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\ConfigLoader;
+use Piwigo\Config\CurrentConfig;
+use Piwigo\Core\Kernel;
 use Piwigo\Db\DbConnection;
+use Piwigo\Db\EntityManagerFactory;
 
 /**
  * caddie is empty in the fixture and only 4 real (FK-valid) user ids exist,
@@ -54,7 +54,7 @@ final class CaddieRepositoryTest extends IntegrationTestCase
         $this->repo = EntityManagerFactory::build($this->conn)->getRepository(CaddieEntity::class);
     }
 
-    public function test_add_elements_inserts_new_rows_and_returns_the_count(): void
+    public function testAddElementsInsertsNewRowsAndReturnsTheCount(): void
     {
         try {
             $added = $this->repo->addElements(1, [1, 2, 3]);
@@ -66,7 +66,7 @@ final class CaddieRepositoryTest extends IntegrationTestCase
         }
     }
 
-    public function test_add_elements_skips_elements_already_in_the_caddie(): void
+    public function testAddElementsSkipsElementsAlreadyInTheCaddie(): void
     {
         try {
             $this->repo->addElements(3, [1, 2]);
@@ -80,12 +80,12 @@ final class CaddieRepositoryTest extends IntegrationTestCase
         }
     }
 
-    public function test_add_elements_returns_zero_for_an_empty_list(): void
+    public function testAddElementsReturnsZeroForAnEmptyList(): void
     {
         self::assertSame(0, $this->repo->addElements(4, []));
     }
 
-    public function test_add_elements_silently_skips_a_nonexistent_image_id(): void
+    public function testAddElementsSilentlySkipsANonexistentImageId(): void
     {
         $added = $this->repo->addElements(1, [999999]);
 
@@ -93,7 +93,7 @@ final class CaddieRepositoryTest extends IntegrationTestCase
         self::assertSame([], $this->fetchElementIds(1));
     }
 
-    public function test_add_elements_scopes_to_the_given_user(): void
+    public function testAddElementsScopesToTheGivenUser(): void
     {
         try {
             $this->repo->addElements(1, [1]);
@@ -107,7 +107,7 @@ final class CaddieRepositoryTest extends IntegrationTestCase
         }
     }
 
-    public function test_remove_elements_for_user_deletes_only_the_given_elements(): void
+    public function testRemoveElementsForUserDeletesOnlyTheGivenElements(): void
     {
         try {
             $this->repo->addElements(1, [1, 2, 3]);
@@ -120,7 +120,7 @@ final class CaddieRepositoryTest extends IntegrationTestCase
         }
     }
 
-    public function test_remove_elements_for_user_is_a_no_op_for_an_empty_list(): void
+    public function testRemoveElementsForUserIsANoOpForAnEmptyList(): void
     {
         try {
             $this->repo->addElements(1, [1, 2]);
@@ -136,7 +136,7 @@ final class CaddieRepositoryTest extends IntegrationTestCase
         }
     }
 
-    public function test_find_element_ids_for_user_returns_only_that_users_own_elements(): void
+    public function testFindElementIdsForUserReturnsOnlyThatUsersOwnElements(): void
     {
         try {
             $this->repo->addElements(1, [1, 2]);
@@ -150,12 +150,12 @@ final class CaddieRepositoryTest extends IntegrationTestCase
         }
     }
 
-    public function test_find_element_ids_for_user_returns_empty_for_a_user_with_no_caddie(): void
+    public function testFindElementIdsForUserReturnsEmptyForAUserWithNoCaddie(): void
     {
         self::assertSame([], $this->repo->findElementIdsForUser(4));
     }
 
-    public function test_replace_for_user_empties_the_existing_caddie_then_inserts_the_new_elements(): void
+    public function testReplaceForUserEmptiesTheExistingCaddieThenInsertsTheNewElements(): void
     {
         try {
             $this->repo->addElements(1, [1, 2, 3]);
@@ -168,7 +168,7 @@ final class CaddieRepositoryTest extends IntegrationTestCase
         }
     }
 
-    public function test_replace_for_user_empties_the_caddie_for_an_empty_replacement_list(): void
+    public function testReplaceForUserEmptiesTheCaddieForAnEmptyReplacementList(): void
     {
         try {
             $this->repo->addElements(1, [1, 2]);

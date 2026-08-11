@@ -2,10 +2,6 @@
 
 declare(strict_types=1);
 
-use Piwigo\Core\CurrentLogger;
-use Piwigo\Users\CurrentUser;
-use Piwigo\Tests\Support\CurrentUserTestFactory;
-use Piwigo\Tests\Support\UrlServiceTestFactory;
 use Piwigo\Admin\Extensions\ExtensionIgnoredUpdateEntity;
 use Piwigo\Admin\Extensions\ExtensionIgnoredUpdateRepository;
 use Piwigo\Admin\Extensions\ExtensionScanner;
@@ -15,15 +11,19 @@ use Piwigo\Admin\Extensions\PemCatalog;
 use Piwigo\Admin\Extensions\ZipExtractor;
 use Piwigo\Config\ConfigLoader;
 use Piwigo\Config\CurrentConfig;
-use Piwigo\Tests\Support\CurrentConfigTestFactory;
+use Piwigo\Core\CurrentLogger;
 use Piwigo\Core\FilesystemHelper;
 use Piwigo\Core\Kernel;
-use Piwigo\Tests\Support\LangTestFactory;
-use Piwigo\Tests\Support\CurrentPathsTestFactory;
-use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Core\Paths;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
+use Piwigo\PluginConfig\EventDispatcher;
+use Piwigo\Tests\Support\CurrentConfigTestFactory;
+use Piwigo\Tests\Support\CurrentPathsTestFactory;
+use Piwigo\Tests\Support\CurrentUserTestFactory;
+use Piwigo\Tests\Support\LangTestFactory;
+use Piwigo\Tests\Support\UrlServiceTestFactory;
+use Piwigo\Users\CurrentUser;
 
 // ExtensionScanner/PemCatalog are both `final` with no interface, and
 // PemCatalog::getServerExtensions()/getVersionsToCheck() talk to the real
@@ -277,17 +277,21 @@ test('getMergedExtensions always returns an empty list -- the fork-safe PEM doma
     // Two very different $version inputs: the request itself never sends
     // $version at all (only used to filter a response body that's never
     // reached), so both must come back identically empty.
-    expect($checker->getMergedExtensions('16.3.0'))->toBe([])
-        ->and($checker->getMergedExtensions('1.0.0'))->toBe([]);
+    expect($checker->getMergedExtensions('16.3.0'))
+        ->toBe([])
+        ->and($checker->getMergedExtensions('1.0.0'))
+        ->toBe([]);
 });
 
 test('getMissingExtensions excludes a bundled default plugin id but flags a genuine custom plugin as missing', function () use (&$fixtureRoot): void {
     fixturePlugin(requireFixtureRoot($fixtureRoot), 'LocalFilesEditor', '3.1.4', '105', 'Local Files Editor');
     fixturePlugin(requireFixtureRoot($fixtureRoot), 'zzz_custom_plugin', '0.9.2', '777', 'Custom Gallery Widget');
 
-    $missing = extensionUpdateChecker()->getMissingExtensions('16.3.0');
+    $missing = extensionUpdateChecker()
+        ->getMissingExtensions('16.3.0');
 
-    expect($missing)->toHaveKey('plugin')
+    expect($missing)
+        ->toHaveKey('plugin')
         ->and($missing['plugin'])->toHaveCount(1)
         ->and($missing['plugin'][0]['name'])->toBe('Custom Gallery Widget')
         ->and($missing['plugin'][0]['version'])->toBe('0.9.2')
@@ -297,23 +301,27 @@ test('getMissingExtensions excludes a bundled default plugin id but flags a genu
 test('getMissingExtensions never reports a language type at all -- language entries carry no PEM extension id', function () use (&$fixtureRoot): void {
     fixtureLanguage(requireFixtureRoot($fixtureRoot), 'xx_ZZ', 'Test Language');
 
-    $missing = extensionUpdateChecker()->getMissingExtensions('16.3.0');
+    $missing = extensionUpdateChecker()
+        ->getMissingExtensions('16.3.0');
 
     // ExtensionScanner::scanLanguage() never sets an 'extension' key (a
     // language's 'uri' is always ''), so getMissingExtensions()'s own
     // fsExtensionIds-empty guard skips the whole type via `continue` --
     // not merely "no language happens to be missing", the key is absent
     // entirely.
-    expect($missing)->not->toHaveKey('language');
+    expect($missing)
+        ->not->toHaveKey('language');
 });
 
 test('getMissingExtensions reports no missing plugin at all when every installed plugin is a bundled default', function () use (&$fixtureRoot): void {
     fixturePlugin(requireFixtureRoot($fixtureRoot), 'LocalFilesEditor', '3.1.4', '105', 'Local Files Editor');
     fixturePlugin(requireFixtureRoot($fixtureRoot), 'AdminTools', '2.0.0', '106', 'Admin Tools');
 
-    $missing = extensionUpdateChecker()->getMissingExtensions('16.3.0');
+    $missing = extensionUpdateChecker()
+        ->getMissingExtensions('16.3.0');
 
-    expect($missing)->toBe([]);
+    expect($missing)
+        ->toBe([]);
 });
 
 test('getMissingExtensions keeps scanning later types after skipping an earlier type with no PEM-linked extensions', function () use (&$fixtureRoot): void {
@@ -323,26 +331,34 @@ test('getMissingExtensions keeps scanning later types after skipping an earlier 
     // Plugin is ExtensionType::cases()'s first case.
     fixtureTheme(requireFixtureRoot($fixtureRoot), 'custom_theme', '1.0.0', '888', 'Custom Theme');
 
-    $missing = extensionUpdateChecker()->getMissingExtensions('16.3.0');
+    $missing = extensionUpdateChecker()
+        ->getMissingExtensions('16.3.0');
 
     // Only reached if skipping 'plugin' actually moves on to 'theme'
     // instead of aborting the whole ExtensionType::cases() loop outright.
-    expect($missing)->toHaveKey('theme')
+    expect($missing)
+        ->toHaveKey('theme')
         ->and($missing['theme'])->toHaveCount(1)
         ->and($missing['theme'][0]['name'])->toBe('Custom Theme')
         ->and($missing['theme'][0]['extension'])->toBe('888');
 });
 
 test('checkUpdatedExtensions is a no-op and never re-triggers checkExtensions when the session has no pending-update record', function (): void {
-    $_SESSION = ['unrelated_key' => 'sentinel_value'];
+    $_SESSION = [
+        'unrelated_key' => 'sentinel_value',
+    ];
 
-    extensionUpdateChecker()->checkUpdatedExtensions();
+    extensionUpdateChecker()
+        ->checkUpdatedExtensions();
 
     // checkExtensions() unconditionally starts by setting
     // $_SESSION['extensions_need_update'] = [] before doing (and DB-
     // writing) anything else -- asserting the session is byte-for-byte
     // unchanged proves it was never called, not just "didn't throw".
-    expect($_SESSION)->toBe(['unrelated_key' => 'sentinel_value']);
+    expect($_SESSION)
+        ->toBe([
+            'unrelated_key' => 'sentinel_value',
+        ]);
 });
 
 test('checkUpdatedExtensions does not re-trigger checkExtensions while the installed plugin has not yet caught up', function () use (&$fixtureRoot): void {
@@ -353,7 +369,8 @@ test('checkUpdatedExtensions does not re-trigger checkExtensions while the insta
         ],
     ];
 
-    extensionUpdateChecker()->checkUpdatedExtensions();
+    extensionUpdateChecker()
+        ->checkUpdatedExtensions();
 
     // 0.9.2 >= 5.0.0 is false, so the fs scan never finds a caught-up
     // entry -- checkExtensions() (and its real DB write) must never run,
@@ -373,7 +390,8 @@ test('checkUpdatedExtensions re-triggers checkExtensions once the installed plug
         ],
     ];
 
-    extensionUpdateChecker()->checkUpdatedExtensions();
+    extensionUpdateChecker()
+        ->checkUpdatedExtensions();
 
     // 5.0.0 >= 0.9.2 is true, so the fs scan finds the installed plugin
     // has caught up -- checkExtensions() itself runs. Its own DB-touching
@@ -398,7 +416,8 @@ test('checkUpdatedExtensions keeps checking later extension types after skipping
         ],
     ];
 
-    extensionUpdateChecker()->checkUpdatedExtensions();
+    extensionUpdateChecker()
+        ->checkUpdatedExtensions();
 
     // scanLanguage() always reports 'version' => AppInfo::VERSION (a
     // bundled language has no independent version of its own), which is

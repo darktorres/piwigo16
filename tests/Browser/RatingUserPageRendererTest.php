@@ -5,7 +5,6 @@ declare(strict_types=1);
 use PgSql\Connection;
 use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
 
-
 function ratingUserDbConnect(): mysqli|Connection
 {
     return H::connect();
@@ -20,7 +19,9 @@ function ratingUserInsertRate(int $imageId, int $userId, string $anonymousId, in
 
 it('formats an anonymous (guest) rater\'s user_key with their anonymous_id', function (): void {
     $page = H::loginAsAdmin($this);
-    $album = H::wsCall($page, 'pwg.categories.add', ['name' => 'Rating User Anon Album ' . uniqid()]);
+    $album = H::wsCall($page, 'pwg.categories.add', [
+        'name' => 'Rating User Anon Album ' . uniqid(),
+    ]);
     $albumResult = $album['result'] ?? null;
     if (! is_array($albumResult) || ! is_numeric($albumResult['id'] ?? null)) {
         throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($album, true));
@@ -50,7 +51,9 @@ it('formats an anonymous (guest) rater\'s user_key with their anonymous_id', fun
 
 it('labels a rate from a user with no matching user_infos row as "???{user_id}"', function (): void {
     $page = H::loginAsAdmin($this);
-    $album = H::wsCall($page, 'pwg.categories.add', ['name' => 'Rating User Ghost Album ' . uniqid()]);
+    $album = H::wsCall($page, 'pwg.categories.add', [
+        'name' => 'Rating User Ghost Album ' . uniqid(),
+    ]);
     $albumResult = $album['result'] ?? null;
     if (! is_array($albumResult) || ! is_numeric($albumResult['id'] ?? null)) {
         throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($album, true));

@@ -2,8 +2,6 @@
 
 declare(strict_types=1);
 
-use Piwigo\Core\Kernel;
-use Piwigo\Core\Paths;
 use Piwigo\Admin\AlbumNotificationPageRenderer;
 use Piwigo\Admin\BatchManager\FilterResolver;
 use Piwigo\Admin\BatchManagerUnitPageRenderer;
@@ -29,6 +27,8 @@ use Piwigo\Admin\ThemesStandardPagesPageRenderer;
 use Piwigo\Admin\UpdatesPwgPageRenderer;
 use Piwigo\Admin\UserPermPageRenderer;
 use Piwigo\Bootstrap\AdminAccessor;
+use Piwigo\Core\Kernel;
+use Piwigo\Core\Paths;
 use Piwigo\Tests\Support\KernelContainerOverride;
 
 /**
@@ -98,7 +98,8 @@ test('every accessor returns its real, correctly-typed instance from a real cont
         AdminAccessor::pictureCoiPageRenderer(),
     ];
 
-    expect($instances)->toHaveCount(24);
+    expect($instances)
+        ->toHaveCount(24);
 });
 
 test('categoryAdminService throws when the container returns an unexpected type', function (): void {

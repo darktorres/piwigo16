@@ -4,19 +4,19 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Integration;
 
-use Override;
-use Piwigo\Core\Kernel;
-use LogicException;
-use Piwigo\Db\EntityManagerFactory;
-use Piwigo\Common\ValueObject\UserId;
 use DateTimeImmutable;
-use Piwigo\History\HistoryRepository;
-use Piwigo\History\HistoryEntity;
 use Doctrine\DBAL\Connection;
+use LogicException;
+use Override;
 use Piwigo\Auth\AuthRepository;
-use Piwigo\Config\CurrentConfig;
+use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Config\ConfigLoader;
+use Piwigo\Config\CurrentConfig;
+use Piwigo\Core\Kernel;
 use Piwigo\Db\DbConnection;
+use Piwigo\Db\EntityManagerFactory;
+use Piwigo\History\HistoryEntity;
+use Piwigo\History\HistoryRepository;
 
 final class AuthRepositoryTest extends IntegrationTestCase
 {
@@ -50,7 +50,7 @@ final class AuthRepositoryTest extends IntegrationTestCase
         $this->repo = new AuthRepository(EntityManagerFactory::build($this->conn));
     }
 
-    public function test_find_username_and_password_returns_a_fixture_user(): void
+    public function testFindUsernameAndPasswordReturnsAFixtureUser(): void
     {
         $found = $this->repo->findUsernameAndPassword(UserId::from(1));
 
@@ -59,12 +59,12 @@ final class AuthRepositoryTest extends IntegrationTestCase
         self::assertStringStartsWith('$2y$', $found->password);
     }
 
-    public function test_find_username_and_password_returns_null_for_a_missing_user(): void
+    public function testFindUsernameAndPasswordReturnsNullForAMissingUser(): void
     {
         self::assertNull($this->repo->findUsernameAndPassword(UserId::from(999999)));
     }
 
-    public function test_update_language_persists_the_new_value(): void
+    public function testUpdateLanguagePersistsTheNewValue(): void
     {
         $this->repo->updateLanguage(UserId::from(1), 'fr_FR');
 
@@ -79,11 +79,11 @@ final class AuthRepositoryTest extends IntegrationTestCase
         self::assertSame('fr_FR', $value);
 
         $this->conn->executeStatement(
-            'UPDATE ' . 'user_infos' . " SET language = 'en_UK' WHERE user_id = 1"
+            'UPDATE user_infos' . " SET language = 'en_UK' WHERE user_id = 1"
         );
     }
 
-    public function test_update_language_is_a_no_op_for_a_nonexistent_user(): void
+    public function testUpdateLanguageIsANoOpForANonexistentUser(): void
     {
         // 999999 has no user_infos row -- em->find() returns null, so this
         // must return without writing/throwing.
@@ -92,14 +92,14 @@ final class AuthRepositoryTest extends IntegrationTestCase
         self::expectNotToPerformAssertions();
     }
 
-    public function test_clear_activation_key_is_a_no_op_for_a_nonexistent_user(): void
+    public function testClearActivationKeyIsANoOpForANonexistentUser(): void
     {
         $this->repo->clearActivationKey(UserId::from(999999));
 
         self::expectNotToPerformAssertions();
     }
 
-    public function test_clear_activation_key_nulls_both_columns_for_a_real_user(): void
+    public function testClearActivationKeyNullsBothColumnsForARealUser(): void
     {
         $now = new DateTimeImmutable('2026-08-01 00:00:00');
         $this->repo->setActivationKey(UserId::from(4), 'a-hash', $now);
@@ -119,14 +119,14 @@ final class AuthRepositoryTest extends IntegrationTestCase
         self::assertNull($row['activation_key_expire']);
     }
 
-    public function test_set_activation_key_is_a_no_op_for_a_nonexistent_user(): void
+    public function testSetActivationKeyIsANoOpForANonexistentUser(): void
     {
         $this->repo->setActivationKey(UserId::from(999999), 'a-hash', new DateTimeImmutable('2026-08-01 00:00:00'));
 
         self::expectNotToPerformAssertions();
     }
 
-    public function test_set_activation_key_persists_the_hash_and_formatted_expiry_for_a_real_user(): void
+    public function testSetActivationKeyPersistsTheHashAndFormattedExpiryForARealUser(): void
     {
         $expire = new DateTimeImmutable('2026-08-15 12:30:00');
 
@@ -149,28 +149,28 @@ final class AuthRepositoryTest extends IntegrationTestCase
         }
     }
 
-    public function test_find_last_visit_from_history_returns_null_when_the_user_has_no_history_rows(): void
+    public function testFindLastVisitFromHistoryReturnsNullWhenTheUserHasNoHistoryRows(): void
     {
         // Fixture user 4 (power_user) has no history rows -- same fixture
         // shape AuthServiceTest's hasAlreadyLoggedIn() test relies on.
         self::assertNull($this->repo->findLastVisitFromHistory(4, $this->historyLookup()));
     }
 
-    public function test_find_last_visit_from_history_returns_the_most_recent_date_and_time(): void
+    public function testFindLastVisitFromHistoryReturnsTheMostRecentDateAndTime(): void
     {
         $this->conn->executeStatement(
-            'INSERT INTO ' . 'history' . ' (date, time, user_id, IP) VALUES (?, ?, ?, ?)',
+            'INSERT INTO history (date, time, user_id, IP) VALUES (?, ?, ?, ?)',
             ['2026-07-20', '08:00:00', 4, '10.0.0.5']
         );
         $this->conn->executeStatement(
-            'INSERT INTO ' . 'history' . ' (date, time, user_id, IP) VALUES (?, ?, ?, ?)',
+            'INSERT INTO history (date, time, user_id, IP) VALUES (?, ?, ?, ?)',
             ['2026-07-25', '14:30:00', 4, '10.0.0.5']
         );
 
         try {
             self::assertSame('2026-07-25 14:30:00', $this->repo->findLastVisitFromHistory(4, $this->historyLookup()));
         } finally {
-            $this->conn->executeStatement('DELETE FROM ' . 'history' . ' WHERE user_id = 4');
+            $this->conn->executeStatement('DELETE FROM history WHERE user_id = 4');
         }
     }
 
@@ -179,7 +179,7 @@ final class AuthRepositoryTest extends IntegrationTestCase
         return EntityManagerFactory::build($this->conn)->getRepository(HistoryEntity::class);
     }
 
-    public function test_save_last_visit_from_history_persists_a_non_null_value(): void
+    public function testSaveLastVisitFromHistoryPersistsANonNullValue(): void
     {
         $this->repo->saveLastVisitFromHistory(4, '2026-07-25 14:30:00');
 
@@ -200,12 +200,12 @@ final class AuthRepositoryTest extends IntegrationTestCase
         } finally {
             $lastVisitLiteral = $this->dbDriver === 'pgsql' ? 'false' : '0';
             $this->conn->executeStatement(
-                'UPDATE ' . 'user_infos' . " SET last_visit = NULL, last_visit_from_history = {$lastVisitLiteral} WHERE user_id = 4"
+                'UPDATE user_infos' . " SET last_visit = NULL, last_visit_from_history = {$lastVisitLiteral} WHERE user_id = 4"
             );
         }
     }
 
-    public function test_save_last_visit_from_history_persists_a_null_value(): void
+    public function testSaveLastVisitFromHistoryPersistsANullValue(): void
     {
         // Prime a non-null value first so this test proves the null branch
         // actually clears it, rather than trivially observing an
@@ -227,7 +227,7 @@ final class AuthRepositoryTest extends IntegrationTestCase
 
         $lastVisitLiteral = $this->dbDriver === 'pgsql' ? 'false' : '0';
         $this->conn->executeStatement(
-            'UPDATE ' . 'user_infos' . " SET last_visit_from_history = {$lastVisitLiteral} WHERE user_id = 4"
+            'UPDATE user_infos' . " SET last_visit_from_history = {$lastVisitLiteral} WHERE user_id = 4"
         );
     }
 }

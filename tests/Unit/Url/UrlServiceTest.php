@@ -4,10 +4,8 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Unit\Url;
 
-use Piwigo\Tests\Support\UrlServiceTestFactory;
-use Piwigo\Tests\Support\CurrentUserTestFactory;
-use Piwigo\Users\User;
-use Piwigo\Tests\Support\CurrentConfigTestFactory;
+use LogicException;
+use Piwigo\Common\Enum\Section;
 use Piwigo\Config\DeploymentPolicy;
 use Piwigo\Core\CurrentLogger;
 use Piwigo\Core\FilterState;
@@ -15,15 +13,17 @@ use Piwigo\Core\Kernel;
 use Piwigo\Core\Paths;
 use Piwigo\Core\RequestMountDepth;
 use Piwigo\Core\WsContext;
-use Piwigo\Common\Enum\Section;
 use Piwigo\Lang\Translator;
 use Piwigo\Session\SessionService;
 use Piwigo\Section\SectionContext;
 use Piwigo\Section\SectionContextRegistry;
+use Piwigo\Tests\Support\CurrentConfigTestFactory;
+use Piwigo\Tests\Support\CurrentUserTestFactory;
 use Piwigo\Tests\Support\KernelContainerOverride;
+use Piwigo\Tests\Support\UrlServiceTestFactory;
 use Piwigo\Url\RootPathOverride;
 use Piwigo\Url\UrlService;
-use LogicException;
+use Piwigo\Users\User;
 use ReflectionMethod;
 use ReflectionProperty;
 use RuntimeException;
@@ -79,7 +79,9 @@ function urlServiceTestSectionContextRegistry(): SectionContextRegistry
  */
 function urlServiceTestWithMountDepth(int $depth, callable $fn): mixed
 {
-    return KernelContainerOverride::with([RequestMountDepth::class => new RequestMountDepth($depth)], $fn);
+    return KernelContainerOverride::with([
+        RequestMountDepth::class => new RequestMountDepth($depth),
+    ], $fn);
 }
 
 /**
@@ -227,42 +229,49 @@ test('getActionUrl builds action.php with id/part, adding a bare download flag w
     // example.
     $service = UrlServiceTestFactory::build();
 
-    expect($service->getActionUrl(42, 'e', false))->toBe('action.php?id=42&amp;part=e');
-    expect($service->getActionUrl(42, 'e', true))->toBe('action.php?id=42&amp;part=e&amp;download');
+    expect($service->getActionUrl(42, 'e', false))
+        ->toBe('action.php?id=42&amp;part=e');
+    expect($service->getActionUrl(42, 'e', true))
+        ->toBe('action.php?id=42&amp;part=e&amp;download');
 });
 
 test('getGalleryHomeUrl returns a remote gallery_url unchanged', function (): void {
     CurrentConfigTestFactory::get()->galleryUrl = 'https://elsewhere.example.test/gallery/';
     $service = UrlServiceTestFactory::build();
 
-    expect($service->getGalleryHomeUrl())->toBe('https://elsewhere.example.test/gallery/');
+    expect($service->getGalleryHomeUrl())
+        ->toBe('https://elsewhere.example.test/gallery/');
 });
 
 test('getGalleryHomeUrl prefixes a relative gallery_url with the root URL', function (): void {
     CurrentConfigTestFactory::get()->galleryUrl = 'my-gallery/';
     $service = UrlServiceTestFactory::build();
 
-    expect($service->getGalleryHomeUrl())->toBe('my-gallery/');
+    expect($service->getGalleryHomeUrl())
+        ->toBe('my-gallery/');
 });
 
 test('getGalleryHomeUrl falls back to makeIndexUrl when gallery_url is unset', function (): void {
     CurrentConfigTestFactory::get()->galleryUrl = null;
     $service = UrlServiceTestFactory::build();
 
-    expect($service->getGalleryHomeUrl())->toBe($service->makeIndexUrl());
+    expect($service->getGalleryHomeUrl())
+        ->toBe($service->makeIndexUrl());
 });
 
 test('getRootUrl returns an empty string at the app\'s real root (no mount depth, no override)', function (): void {
     $service = UrlServiceTestFactory::build();
 
-    expect($service->getRootUrl())->toBe('');
+    expect($service->getRootUrl())
+        ->toBe('');
 });
 
 test('getRootUrl returns a ../ prefix per RequestMountDepth level when no override is active', function (): void {
     urlServiceTestWithMountDepth(1, function (): void {
         $service = UrlServiceTestFactory::build();
 
-        expect($service->getRootUrl())->toBe('../');
+        expect($service->getRootUrl())
+            ->toBe('../');
     });
 });
 
@@ -273,7 +282,8 @@ test('getRootUrl prefers RootPathOverride over RequestMountDepth', function (): 
         $service = UrlServiceTestFactory::build(null, $rootPathOverride);
 
         try {
-            expect($service->getRootUrl())->toBe('/gallery/');
+            expect($service->getRootUrl())
+                ->toBe('/gallery/');
         } finally {
             $rootPathOverride->pop();
         }
@@ -283,39 +293,49 @@ test('getRootUrl prefers RootPathOverride over RequestMountDepth', function (): 
 test('urlIsRemote is true for http and https URLs', function (): void {
     $service = UrlServiceTestFactory::build();
 
-    expect($service->urlIsRemote('http://example.test/x'))->toBeTrue()
-        ->and($service->urlIsRemote('https://example.test/x'))->toBeTrue();
+    expect($service->urlIsRemote('http://example.test/x'))
+        ->toBeTrue()
+        ->and($service->urlIsRemote('https://example.test/x'))
+        ->toBeTrue();
 });
 
 test('urlIsRemote is false for a relative path', function (): void {
     $service = UrlServiceTestFactory::build();
 
-    expect($service->urlIsRemote('/gallery/category/1'))->toBeFalse()
-        ->and($service->urlIsRemote('category/1'))->toBeFalse();
+    expect($service->urlIsRemote('/gallery/category/1'))
+        ->toBeFalse()
+        ->and($service->urlIsRemote('category/1'))
+        ->toBeFalse();
 });
 
 test('embellishUrl collapses /./ segments', function (): void {
     $service = UrlServiceTestFactory::build();
 
-    expect($service->embellishUrl('/a/./b/./c'))->toBe('/a/b/c');
+    expect($service->embellishUrl('/a/./b/./c'))
+        ->toBe('/a/b/c');
 });
 
 test('embellishUrl resolves /../ segments', function (): void {
     $service = UrlServiceTestFactory::build();
 
-    expect($service->embellishUrl('/a/b/../c'))->toBe('/a/c');
+    expect($service->embellishUrl('/a/b/../c'))
+        ->toBe('/a/c');
 });
 
 test('addUrlParams appends a query string to a URL with none', function (): void {
     $service = UrlServiceTestFactory::build();
 
-    expect($service->addUrlParams('/x', ['a' => 'b']))->toBe('/x?a=b');
+    expect($service->addUrlParams('/x', [
+        'a' => 'b',
+    ]))->toBe('/x?a=b');
 });
 
 test('addUrlParams appends with the given separator to a URL that already has a query string', function (): void {
     $service = UrlServiceTestFactory::build();
 
-    expect($service->addUrlParams('/x?cat_id=10', ['a' => 'b']))->toBe('/x?cat_id=10&amp;a=b');
+    expect($service->addUrlParams('/x?cat_id=10', [
+        'a' => 'b',
+    ]))->toBe('/x?cat_id=10&amp;a=b');
 });
 
 test('addUrlParams returns the URL unchanged for empty params', function (): void {
@@ -327,14 +347,17 @@ test('addUrlParams returns the URL unchanged for empty params', function (): voi
 test('addUrlParams omits the value for a null param', function (): void {
     $service = UrlServiceTestFactory::build();
 
-    expect($service->addUrlParams('/x', ['download' => null]))->toBe('/x?download');
+    expect($service->addUrlParams('/x', [
+        'download' => null,
+    ]))->toBe('/x?download');
 });
 
 test('getQueryStringDiff returns empty string when QUERY_STRING is unset', function (): void {
     unset($_SERVER['QUERY_STRING']);
     $service = UrlServiceTestFactory::build();
 
-    expect($service->getQueryStringDiff())->toBe('');
+    expect($service->getQueryStringDiff())
+        ->toBe('');
 });
 
 test('getQueryStringDiff removes rejected keys and keeps the rest', function (): void {
@@ -354,37 +377,49 @@ test('getQueryStringDiff can use a plain ampersand instead of the escaped form',
 test('makeSectionInUrl returns /categories when no category param is set', function (): void {
     $service = UrlServiceTestFactory::build();
 
-    expect($service->makeSectionInUrl(['section' => 'categories']))->toBe('/categories');
+    expect($service->makeSectionInUrl([
+        'section' => 'categories',
+    ]))->toBe('/categories');
 });
 
 test('makeSectionInUrl returns an empty string for the none section', function (): void {
     $service = UrlServiceTestFactory::build();
 
-    expect($service->makeSectionInUrl(['section' => 'none']))->toBe('');
+    expect($service->makeSectionInUrl([
+        'section' => 'none',
+    ]))->toBe('');
 });
 
 test('makeSectionInUrl falls through to a bare /section for an unrecognized section name', function (): void {
     $service = UrlServiceTestFactory::build();
 
-    expect($service->makeSectionInUrl(['section' => 'favorites']))->toBe('/favorites');
+    expect($service->makeSectionInUrl([
+        'section' => 'favorites',
+    ]))->toBe('/favorites');
 });
 
 test('addWellKnownParamsInUrl appends /flat when the flat param is set', function (): void {
     $service = UrlServiceTestFactory::build();
 
-    expect($service->addWellKnownParamsInUrl('/x', ['flat' => true]))->toBe('/x/flat');
+    expect($service->addWellKnownParamsInUrl('/x', [
+        'flat' => true,
+    ]))->toBe('/x/flat');
 });
 
 test('addWellKnownParamsInUrl appends /start-N when start is greater than zero', function (): void {
     $service = UrlServiceTestFactory::build();
 
-    expect($service->addWellKnownParamsInUrl('/x', ['start' => 20]))->toBe('/x/start-20');
+    expect($service->addWellKnownParamsInUrl('/x', [
+        'start' => 20,
+    ]))->toBe('/x/start-20');
 });
 
 test('addWellKnownParamsInUrl ignores a zero start', function (): void {
     $service = UrlServiceTestFactory::build();
 
-    expect($service->addWellKnownParamsInUrl('/x', ['start' => 0]))->toBe('/x');
+    expect($service->addWellKnownParamsInUrl('/x', [
+        'start' => 0,
+    ]))->toBe('/x');
 });
 
 test('parseWellKnownParamsUrl parses flat and start tokens', function (): void {
@@ -393,8 +428,13 @@ test('parseWellKnownParamsUrl parses flat and start tokens', function (): void {
 
     $result = $service->parseWellKnownParamsUrl(['flat', 'start-40'], $i);
 
-    expect($result)->toBe(['flat' => true, 'start' => '40'])
-        ->and($i)->toBe(2);
+    expect($result)
+        ->toBe([
+            'flat' => true,
+            'start' => '40',
+        ])
+        ->and($i)
+        ->toBe(2);
 });
 
 test('parseWellKnownParamsUrl parses a chronology token', function (): void {
@@ -403,18 +443,20 @@ test('parseWellKnownParamsUrl parses a chronology token', function (): void {
 
     $result = $service->parseWellKnownParamsUrl(['created-monthly-2026-07'], $i);
 
-    expect($result)->toBe([
-        'chronology_field' => 'created',
-        'chronology_style' => 'monthly',
-        'chronology_date' => ['2026', '07'],
-    ]);
+    expect($result)
+        ->toBe([
+            'chronology_field' => 'created',
+            'chronology_style' => 'monthly',
+            'chronology_date' => ['2026', '07'],
+        ]);
 });
 
 test('getAbsoluteRootUrl trusts the Host header when allowed_hosts is unconfigured', function (): void {
     $_SERVER['HTTP_HOST'] = 'gallery.example.test';
     $service = UrlServiceTestFactory::build();
 
-    expect($service->getAbsoluteRootUrl())->toBe('http://gallery.example.test/piwigo/');
+    expect($service->getAbsoluteRootUrl())
+        ->toBe('http://gallery.example.test/piwigo/');
 });
 
 test('getAbsoluteRootUrl uses gallery_url\'s host, ignoring the Host header entirely', function (): void {
@@ -423,7 +465,8 @@ test('getAbsoluteRootUrl uses gallery_url\'s host, ignoring the Host header enti
     $_SERVER['HTTP_HOST'] = 'evil.test';
     $service = UrlServiceTestFactory::build();
 
-    expect($service->getAbsoluteRootUrl())->toBe('http://canonical.example.test/piwigo/');
+    expect($service->getAbsoluteRootUrl())
+        ->toBe('http://canonical.example.test/piwigo/');
 });
 
 test('getAbsoluteRootUrl keeps gallery_url\'s configured port', function (): void {
@@ -431,17 +474,21 @@ test('getAbsoluteRootUrl keeps gallery_url\'s configured port', function (): voi
     CurrentConfigTestFactory::get()->galleryUrl = 'https://canonical.example.test:8080/gallery/';
     $service = UrlServiceTestFactory::build();
 
-    expect($service->getAbsoluteRootUrl())->toBe('http://canonical.example.test:8080/piwigo/');
+    expect($service->getAbsoluteRootUrl())
+        ->toBe('http://canonical.example.test:8080/piwigo/');
 });
 
 test('getAbsoluteRootUrl accepts a Host that matches the allowed_hosts list', function (): void {
     CurrentConfigTestFactory::get()->urlPort = 'none';
     $_SERVER['HTTP_HOST'] = 'gallery.example.test';
 
-    KernelContainerOverride::with([DeploymentPolicy::class => new DeploymentPolicy(allowedHosts: ['gallery.example.test'])], function (): void {
+    KernelContainerOverride::with([
+        DeploymentPolicy::class => new DeploymentPolicy(allowedHosts: ['gallery.example.test']),
+    ], function (): void {
         $service = UrlServiceTestFactory::build();
 
-        expect($service->getAbsoluteRootUrl())->toBe('http://gallery.example.test/piwigo/');
+        expect($service->getAbsoluteRootUrl())
+            ->toBe('http://gallery.example.test/piwigo/');
     });
 });
 
@@ -449,10 +496,13 @@ test('getAbsoluteRootUrl [SEC-29] falls back to the first allowed host when Host
     CurrentConfigTestFactory::get()->urlPort = 'none';
     $_SERVER['HTTP_HOST'] = 'evil.test';
 
-    KernelContainerOverride::with([DeploymentPolicy::class => new DeploymentPolicy(allowedHosts: ['gallery.example.test', 'gallery-alt.example.test'])], function (): void {
+    KernelContainerOverride::with([
+        DeploymentPolicy::class => new DeploymentPolicy(allowedHosts: ['gallery.example.test', 'gallery-alt.example.test']),
+    ], function (): void {
         $service = UrlServiceTestFactory::build();
 
-        expect($service->getAbsoluteRootUrl())->toBe('http://gallery.example.test/piwigo/');
+        expect($service->getAbsoluteRootUrl())
+            ->toBe('http://gallery.example.test/piwigo/');
     });
 });
 
@@ -461,10 +511,13 @@ test('getAbsoluteRootUrl [SEC-29] falls back for a forged X-Forwarded-Host too',
     $_SERVER['HTTP_HOST'] = 'gallery.example.test';
     $_SERVER['HTTP_X_FORWARDED_HOST'] = 'evil.test';
 
-    KernelContainerOverride::with([DeploymentPolicy::class => new DeploymentPolicy(allowedHosts: ['gallery.example.test'])], function (): void {
+    KernelContainerOverride::with([
+        DeploymentPolicy::class => new DeploymentPolicy(allowedHosts: ['gallery.example.test']),
+    ], function (): void {
         $service = UrlServiceTestFactory::build();
 
-        expect($service->getAbsoluteRootUrl())->toBe('http://gallery.example.test/piwigo/');
+        expect($service->getAbsoluteRootUrl())
+            ->toBe('http://gallery.example.test/piwigo/');
     });
 });
 
@@ -479,7 +532,8 @@ test('getAbsoluteRootUrl [SEC-29] reflects a real DB-persisted gallery_url the w
     $_SERVER['HTTP_HOST'] = 'evil.test';
     $service = UrlServiceTestFactory::build();
 
-    expect($service->getAbsoluteRootUrl())->toBe('http://real-admin-configured.example.test/piwigo/');
+    expect($service->getAbsoluteRootUrl())
+        ->toBe('http://real-admin-configured.example.test/piwigo/');
 });
 
 test('getAbsoluteRootUrl treats X-Forwarded-Proto=https as HTTPS', function (): void {
@@ -487,7 +541,8 @@ test('getAbsoluteRootUrl treats X-Forwarded-Proto=https as HTTPS', function (): 
     $_SERVER['HTTP_HOST'] = 'gallery.example.test';
     $service = UrlServiceTestFactory::build();
 
-    expect($service->getAbsoluteRootUrl())->toBe('https://gallery.example.test/piwigo/');
+    expect($service->getAbsoluteRootUrl())
+        ->toBe('https://gallery.example.test/piwigo/');
     // The real side effect the guard itself performs, not just its result.
     expect($_SERVER['HTTPS'])->toBe('on');
 });
@@ -497,7 +552,8 @@ test('getAbsoluteRootUrl detects HTTPS from $_SERVER[\'HTTPS\']=on', function ()
     $_SERVER['HTTP_HOST'] = 'gallery.example.test';
     $service = UrlServiceTestFactory::build();
 
-    expect($service->getAbsoluteRootUrl())->toBe('https://gallery.example.test/piwigo/');
+    expect($service->getAbsoluteRootUrl())
+        ->toBe('https://gallery.example.test/piwigo/');
 });
 
 test('getAbsoluteRootUrl detects HTTPS from $_SERVER[\'HTTPS\']=1', function (): void {
@@ -505,7 +561,8 @@ test('getAbsoluteRootUrl detects HTTPS from $_SERVER[\'HTTPS\']=1', function ():
     $_SERVER['HTTP_HOST'] = 'gallery.example.test';
     $service = UrlServiceTestFactory::build();
 
-    expect($service->getAbsoluteRootUrl())->toBe('https://gallery.example.test/piwigo/');
+    expect($service->getAbsoluteRootUrl())
+        ->toBe('https://gallery.example.test/piwigo/');
 });
 
 test('getAbsoluteRootUrl appends a non-standard auto-detected port', function (): void {
@@ -514,7 +571,8 @@ test('getAbsoluteRootUrl appends a non-standard auto-detected port', function ()
     $_SERVER['SERVER_PORT'] = '8080';
     $service = UrlServiceTestFactory::build();
 
-    expect($service->getAbsoluteRootUrl())->toBe('http://gallery.example.test:8080/piwigo/');
+    expect($service->getAbsoluteRootUrl())
+        ->toBe('http://gallery.example.test:8080/piwigo/');
 });
 
 test('getAbsoluteRootUrl omits the standard auto-detected port 80 for http', function (): void {
@@ -523,7 +581,8 @@ test('getAbsoluteRootUrl omits the standard auto-detected port 80 for http', fun
     $_SERVER['SERVER_PORT'] = '80';
     $service = UrlServiceTestFactory::build();
 
-    expect($service->getAbsoluteRootUrl())->toBe('http://gallery.example.test/piwigo/');
+    expect($service->getAbsoluteRootUrl())
+        ->toBe('http://gallery.example.test/piwigo/');
 });
 
 test('getAbsoluteRootUrl appends an explicitly configured custom port', function (): void {
@@ -531,7 +590,8 @@ test('getAbsoluteRootUrl appends an explicitly configured custom port', function
     $_SERVER['HTTP_HOST'] = 'gallery.example.test';
     $service = UrlServiceTestFactory::build();
 
-    expect($service->getAbsoluteRootUrl())->toBe('http://gallery.example.test:9000/piwigo/');
+    expect($service->getAbsoluteRootUrl())
+        ->toBe('http://gallery.example.test:9000/piwigo/');
 });
 
 test('getAbsoluteRootUrl falls back to the Host header when gallery_url has no parseable host', function (): void {
@@ -540,7 +600,8 @@ test('getAbsoluteRootUrl falls back to the Host header when gallery_url has no p
     $_SERVER['HTTP_HOST'] = 'gallery.example.test';
     $service = UrlServiceTestFactory::build();
 
-    expect($service->getAbsoluteRootUrl())->toBe('http://gallery.example.test/piwigo/');
+    expect($service->getAbsoluteRootUrl())
+        ->toBe('http://gallery.example.test/piwigo/');
 });
 
 test('paramsForDuplication includes root_path when setMakeFullUrl\'s override is active', function (): void {
@@ -569,12 +630,16 @@ test('makePictureUrl uses the id-file style, appending a slugified filename', fu
     CurrentConfigTestFactory::get()->pictureUrlStyle = 'id-file';
     $service = UrlServiceTestFactory::build();
 
-    $url = $service->makePictureUrl(['image_id' => 42, 'image_file' => 'Summer Trip.jpg']);
+    $url = $service->makePictureUrl([
+        'image_id' => 42,
+        'image_file' => 'Summer Trip.jpg',
+    ]);
 
     // getRootUrl() is '' here (no mount depth, no override, same baseline
     // as the "getRootUrl returns an empty string" test above) -- no
     // leading slash.
-    expect($url)->toBe('picture/42-summer_trip');
+    expect($url)
+        ->toBe('picture/42-summer_trip');
 });
 
 test('makePictureUrl uses the file style directly when the filename does not start with a digit', function (): void {
@@ -583,9 +648,13 @@ test('makePictureUrl uses the file style directly when the filename does not sta
     CurrentConfigTestFactory::get()->pictureUrlStyle = 'file';
     $service = UrlServiceTestFactory::build();
 
-    $url = $service->makePictureUrl(['image_id' => 42, 'image_file' => 'sunset.jpg']);
+    $url = $service->makePictureUrl([
+        'image_id' => 42,
+        'image_file' => 'sunset.jpg',
+    ]);
 
-    expect($url)->toBe('picture/sunset');
+    expect($url)
+        ->toBe('picture/sunset');
 });
 
 test('makePictureUrl falls through the file style to the bare id when the filename starts with digits', function (): void {
@@ -596,9 +665,13 @@ test('makePictureUrl falls through the file style to the bare id when the filena
 
     // '42-something.jpg' matches /^\d+(-|$)/ -- falls through (no break) to
     // the default arm, using the bare image_id instead of the filename.
-    $url = $service->makePictureUrl(['image_id' => 42, 'image_file' => '42-something.jpg']);
+    $url = $service->makePictureUrl([
+        'image_id' => 42,
+        'image_file' => '42-something.jpg',
+    ]);
 
-    expect($url)->toBe('picture/42');
+    expect($url)
+        ->toBe('picture/42');
 });
 
 test('getRootUrl treats an empty-string section rootPath the same as no rootPath at all', function (): void {
@@ -606,7 +679,8 @@ test('getRootUrl treats an empty-string section rootPath the same as no rootPath
         urlServiceTestSectionContextRegistry()->set(new SectionContext(rootPath: ''));
         $service = UrlServiceTestFactory::build();
 
-        expect($service->getRootUrl())->toBe('../');
+        expect($service->getRootUrl())
+            ->toBe('../');
     });
 });
 
@@ -628,7 +702,8 @@ test('getAbsoluteRootUrl detects HTTPS from a case-insensitive $_SERVER[\'HTTPS\
     $_SERVER['HTTP_HOST'] = 'gallery.example.test';
     $service = UrlServiceTestFactory::build();
 
-    expect($service->getAbsoluteRootUrl())->toBe('https://gallery.example.test/piwigo/');
+    expect($service->getAbsoluteRootUrl())
+        ->toBe('https://gallery.example.test/piwigo/');
 });
 
 test('getAbsoluteRootUrl omits the standard auto-detected port 443 for https', function (): void {
@@ -638,21 +713,24 @@ test('getAbsoluteRootUrl omits the standard auto-detected port 443 for https', f
     $_SERVER['SERVER_PORT'] = '443';
     $service = UrlServiceTestFactory::build();
 
-    expect($service->getAbsoluteRootUrl())->toBe('https://gallery.example.test/piwigo/');
+    expect($service->getAbsoluteRootUrl())
+        ->toBe('https://gallery.example.test/piwigo/');
 });
 
 test('getAbsoluteRootUrl trusts a forwarded host header when allowed_hosts is unconfigured', function (): void {
     $_SERVER['HTTP_X_FORWARDED_HOST'] = 'forwarded.example.test';
     $service = UrlServiceTestFactory::build();
 
-    expect($service->getAbsoluteRootUrl())->toBe('http://forwarded.example.test/piwigo/');
+    expect($service->getAbsoluteRootUrl())
+        ->toBe('http://forwarded.example.test/piwigo/');
 });
 
 test('getAbsoluteRootUrl falls back to an empty host segment when no host header, forwarded host, or gallery_url is present', function (): void {
     CurrentConfigTestFactory::get()->urlPort = 'none';
     $service = UrlServiceTestFactory::build();
 
-    expect($service->getAbsoluteRootUrl())->toBe('http:///piwigo/');
+    expect($service->getAbsoluteRootUrl())
+        ->toBe('http:///piwigo/');
 });
 
 test('getAbsoluteRootUrl omits the port segment entirely when the auto-detected server port is unavailable', function (): void {
@@ -664,7 +742,8 @@ test('getAbsoluteRootUrl omits the port segment entirely when the auto-detected 
     unset($_SERVER['SERVER_PORT']);
     $service = UrlServiceTestFactory::build();
 
-    expect($service->getAbsoluteRootUrl())->toBe('http://gallery.example.test/piwigo/');
+    expect($service->getAbsoluteRootUrl())
+        ->toBe('http://gallery.example.test/piwigo/');
 });
 
 test('getAbsoluteRootUrl does not duplicate a port already present via the Host header', function (): void {
@@ -673,7 +752,8 @@ test('getAbsoluteRootUrl does not duplicate a port already present via the Host 
     $_SERVER['SERVER_PORT'] = '8080';
     $service = UrlServiceTestFactory::build();
 
-    expect($service->getAbsoluteRootUrl())->toBe('http://gallery.example.test:8080/piwigo/');
+    expect($service->getAbsoluteRootUrl())
+        ->toBe('http://gallery.example.test:8080/piwigo/');
 });
 
 test('getAbsoluteRootUrl falls back to the Host header when gallery_url is an empty string', function (): void {
@@ -682,7 +762,8 @@ test('getAbsoluteRootUrl falls back to the Host header when gallery_url is an em
     $_SERVER['HTTP_HOST'] = 'gallery.example.test';
     $service = UrlServiceTestFactory::build();
 
-    expect($service->getAbsoluteRootUrl())->toBe('http://gallery.example.test/piwigo/');
+    expect($service->getAbsoluteRootUrl())
+        ->toBe('http://gallery.example.test/piwigo/');
 });
 
 /**
@@ -712,7 +793,8 @@ test('getAbsoluteRootUrl falls back to the Host header when gallery_url has an e
     $_SERVER['HTTP_HOST'] = 'gallery.example.test';
     $service = UrlServiceTestFactory::build();
 
-    expect($service->getAbsoluteRootUrl())->toBe('http://gallery.example.test/piwigo/');
+    expect($service->getAbsoluteRootUrl())
+        ->toBe('http://gallery.example.test/piwigo/');
 });
 
 /**
@@ -738,31 +820,42 @@ test('getAbsoluteRootUrl falls back to the Host header when gallery_url has an e
  *   concatenation is a no-op for every scalar value.
  */
 test('addUrlParams switches the default separator to a plain ampersand inside a WS request context', function (): void {
-    KernelContainerOverride::with([WsContext::class => new WsContext(true)], function (): void {
+    KernelContainerOverride::with([
+        WsContext::class => new WsContext(true),
+    ], function (): void {
         $service = UrlServiceTestFactory::build();
 
-        expect($service->addUrlParams('/x', ['a' => 'b', 'c' => 'd']))->toBe('/x?a=b&c=d');
+        expect($service->addUrlParams('/x', [
+            'a' => 'b',
+            'c' => 'd',
+        ]))->toBe('/x?a=b&c=d');
     });
 });
 
 test('addUrlParams appends an empty value for a non-scalar param', function (): void {
     $service = UrlServiceTestFactory::build();
 
-    expect($service->addUrlParams('/x', ['a' => ['nested']]))->toBe('/x?a=');
+    expect($service->addUrlParams('/x', [
+        'a' => ['nested'],
+    ]))->toBe('/x?a=');
 });
 
 test('makeIndexUrl builds a real path when params add a section, keeping the php extension and question mark', function (): void {
     $service = UrlServiceTestFactory::build();
 
-    $url = $service->makeIndexUrl(['section' => 'categories']);
+    $url = $service->makeIndexUrl([
+        'section' => 'categories',
+    ]);
 
-    expect($url)->toBe('index.php?/categories');
+    expect($url)
+        ->toBe('index.php?/categories');
 });
 
 test('makeIndexUrl falls back to the absolute root URL when no params add anything to the path', function (): void {
     $service = UrlServiceTestFactory::build();
 
-    expect($service->makeIndexUrl())->toBe($service->getAbsoluteRootUrl(false));
+    expect($service->makeIndexUrl())
+        ->toBe($service->getAbsoluteRootUrl(false));
 });
 
 test('paramsForDuplication seeds params from the current section context', function (): void {
@@ -778,10 +871,13 @@ test('paramsForDuplication removes listed keys and applies redefinitions', funct
     urlServiceTestSectionContextRegistry()->set(new SectionContext(section: Section::Tags, start: 20));
     $service = UrlServiceTestFactory::build();
 
-    $params = $service->paramsForDuplication(['section' => 'categories'], ['start']);
+    $params = $service->paramsForDuplication([
+        'section' => 'categories',
+    ], ['start']);
 
     expect($params['section'])->toBe('categories')
-        ->and(array_key_exists('start', $params))->toBeFalse();
+        ->and(array_key_exists('start', $params))
+        ->toBeFalse();
 });
 
 /**
@@ -822,9 +918,12 @@ test('makePictureUrl prefixes the root URL before the picture path segment', fun
         CurrentConfigTestFactory::get()->pictureUrlStyle = 'id-file';
         $service = UrlServiceTestFactory::build();
 
-        $url = $service->makePictureUrl(['image_id' => 5]);
+        $url = $service->makePictureUrl([
+            'image_id' => 5,
+        ]);
 
-        expect($url)->toBe('../picture/5');
+        expect($url)
+            ->toBe('../picture/5');
     });
 });
 
@@ -832,9 +931,12 @@ test('makePictureUrl appends the php extension and question mark by default, pre
     CurrentConfigTestFactory::get()->pictureUrlStyle = 'id-file';
     $service = UrlServiceTestFactory::build();
 
-    $url = $service->makePictureUrl(['image_id' => 5]);
+    $url = $service->makePictureUrl([
+        'image_id' => 5,
+    ]);
 
-    expect($url)->toBe('picture.php?/5');
+    expect($url)
+        ->toBe('picture.php?/5');
 });
 
 test('makePictureUrl in id-file style uses an empty id segment when image_id is absent', function (): void {
@@ -845,7 +947,8 @@ test('makePictureUrl in id-file style uses an empty id segment when image_id is 
 
     $url = $service->makePictureUrl([]);
 
-    expect($url)->toBe('picture/');
+    expect($url)
+        ->toBe('picture/');
 });
 
 test('makePictureUrl in id-file style omits the filename suffix when image_file is not a string', function (): void {
@@ -854,9 +957,13 @@ test('makePictureUrl in id-file style omits the filename suffix when image_file 
     CurrentConfigTestFactory::get()->pictureUrlStyle = 'id-file';
     $service = UrlServiceTestFactory::build();
 
-    $url = $service->makePictureUrl(['image_id' => 5, 'image_file' => 123]);
+    $url = $service->makePictureUrl([
+        'image_id' => 5,
+        'image_file' => 123,
+    ]);
 
-    expect($url)->toBe('picture/5');
+    expect($url)
+        ->toBe('picture/5');
 });
 
 test('makePictureUrl in file style falls through to the bare id when image_file is not a string', function (): void {
@@ -865,9 +972,13 @@ test('makePictureUrl in file style falls through to the bare id when image_file 
     CurrentConfigTestFactory::get()->pictureUrlStyle = 'file';
     $service = UrlServiceTestFactory::build();
 
-    $url = $service->makePictureUrl(['image_id' => 5, 'image_file' => 123]);
+    $url = $service->makePictureUrl([
+        'image_id' => 5,
+        'image_file' => 123,
+    ]);
 
-    expect($url)->toBe('picture/5');
+    expect($url)
+        ->toBe('picture/5');
 });
 
 test('makePictureUrl in file style respects the ord(\'9\') boundary exactly (a lone leading 9 still falls through)', function (): void {
@@ -880,9 +991,13 @@ test('makePictureUrl in file style respects the ord(\'9\') boundary exactly (a l
     // /^\d+(-|$)/ -- both operands of the guard are false, so this falls
     // through to the bare image_id, same as the existing '42-something.jpg'
     // test above but isolating the exact '9' boundary instead of '4'.
-    $url = $service->makePictureUrl(['image_id' => 99, 'image_file' => '9-something.jpg']);
+    $url = $service->makePictureUrl([
+        'image_id' => 99,
+        'image_file' => '9-something.jpg',
+    ]);
 
-    expect($url)->toBe('picture/99');
+    expect($url)
+        ->toBe('picture/99');
 });
 
 test('makePictureUrl in file style uses the filename when it starts with digits but does not match the id-like pattern', function (): void {
@@ -894,9 +1009,13 @@ test('makePictureUrl in file style uses the filename when it starts with digits 
     // '42abc' starts with a digit (first operand false) but does not match
     // /^\d+(-|$)/ since the digit run is followed by a letter, not '-' or
     // end-of-string (second operand true) -- isolates the "or" from an "and".
-    $url = $service->makePictureUrl(['image_id' => 77, 'image_file' => '42abc.jpg']);
+    $url = $service->makePictureUrl([
+        'image_id' => 77,
+        'image_file' => '42abc.jpg',
+    ]);
 
-    expect($url)->toBe('picture/42abc');
+    expect($url)
+        ->toBe('picture/42abc');
 });
 
 test('makePictureUrl uses an empty id segment in the default style branch when image_id is absent', function (): void {
@@ -907,7 +1026,8 @@ test('makePictureUrl uses an empty id segment in the default style branch when i
 
     $url = $service->makePictureUrl([]);
 
-    expect($url)->toBe('picture/');
+    expect($url)
+        ->toBe('picture/');
 });
 
 test('makePictureUrl drops the flat param when no category is given (shorter urls)', function (): void {
@@ -916,15 +1036,21 @@ test('makePictureUrl drops the flat param when no category is given (shorter url
     CurrentConfigTestFactory::get()->pictureUrlStyle = 'id-file';
     $service = UrlServiceTestFactory::build();
 
-    $url = $service->makePictureUrl(['image_id' => 5, 'flat' => true]);
+    $url = $service->makePictureUrl([
+        'image_id' => 5,
+        'flat' => true,
+    ]);
 
-    expect($url)->toBe('picture/5');
+    expect($url)
+        ->toBe('picture/5');
 });
 
 test('addWellKnownParamsInUrl appends /start-N for the boundary value start=1', function (): void {
     $service = UrlServiceTestFactory::build();
 
-    expect($service->addWellKnownParamsInUrl('/x', ['start' => 1]))->toBe('/x/start-1');
+    expect($service->addWellKnownParamsInUrl('/x', [
+        'start' => 1,
+    ]))->toBe('/x/start-1');
 });
 
 test('addWellKnownParamsInUrl appends an empty start segment when start is a non-scalar truthy value', function (): void {
@@ -933,7 +1059,9 @@ test('addWellKnownParamsInUrl appends an empty start segment when start is a non
     // scalar -- isolates the (string) cast's own is_scalar() fallback.
     $service = UrlServiceTestFactory::build();
 
-    expect($service->addWellKnownParamsInUrl('/x', ['start' => ['nested']]))->toBe('/x/start-');
+    expect($service->addWellKnownParamsInUrl('/x', [
+        'start' => ['nested'],
+    ]))->toBe('/x/start-');
 });
 
 test('makeSectionInUrl defaults a non-array category param to an empty array', function (): void {
@@ -941,29 +1069,49 @@ test('makeSectionInUrl defaults a non-array category param to an empty array', f
 
     set_error_handler(static fn (): bool => true);
     try {
-        $result = $service->makeSectionInUrl(['section' => 'categories', 'category' => 'not-an-array']);
+        $result = $service->makeSectionInUrl([
+            'section' => 'categories',
+            'category' => 'not-an-array',
+        ]);
     } finally {
         restore_error_handler();
     }
 
-    expect($result)->toBe('/category/');
+    expect($result)
+        ->toBe('/category/');
 });
 
 test('makeSectionInUrl uses the category permalink directly when set', function (): void {
     $service = UrlServiceTestFactory::build();
 
-    $result = $service->makeSectionInUrl(['section' => 'categories', 'category' => ['id' => 7, 'name' => 'Vacation', 'permalink' => 'my-vacation']]);
+    $result = $service->makeSectionInUrl([
+        'section' => 'categories',
+        'category' => [
+            'id' => 7,
+            'name' => 'Vacation',
+            'permalink' => 'my-vacation',
+        ],
+    ]);
 
-    expect($result)->toBe('/category/my-vacation');
+    expect($result)
+        ->toBe('/category/my-vacation');
 });
 
 test('makeSectionInUrl appends the slugified name in id-name style', function (): void {
     CurrentConfigTestFactory::get()->categoryUrlStyle = 'id-name';
     $service = UrlServiceTestFactory::build();
 
-    $result = $service->makeSectionInUrl(['section' => 'categories', 'category' => ['id' => 7, 'name' => 'Vacation Photos', 'permalink' => null]]);
+    $result = $service->makeSectionInUrl([
+        'section' => 'categories',
+        'category' => [
+            'id' => 7,
+            'name' => 'Vacation Photos',
+            'permalink' => null,
+        ],
+    ]);
 
-    expect($result)->toBe('/category/7-vacation_photos');
+    expect($result)
+        ->toBe('/category/7-vacation_photos');
 });
 
 test('makeSectionInUrl appends combined categories, defaulting a non-array entry gracefully', function (): void {
@@ -972,35 +1120,65 @@ test('makeSectionInUrl appends combined categories, defaulting a non-array entry
 
     $result = $service->makeSectionInUrl([
         'section' => 'categories',
-        'category' => ['id' => 7, 'name' => 'Main', 'permalink' => null],
+        'category' => [
+            'id' => 7,
+            'name' => 'Main',
+            'permalink' => null,
+        ],
         'combined_categories' => [
             'not-an-array',
-            ['id' => 9, 'name' => 'Second', 'permalink' => null],
-            ['id' => 11, 'name' => '', 'permalink' => 'third-perma'],
+            [
+                'id' => 9,
+                'name' => 'Second',
+                'permalink' => null,
+            ],
+            [
+                'id' => 11,
+                'name' => '',
+                'permalink' => 'third-perma',
+            ],
         ],
     ]);
 
     // The 'not-an-array' entry resets to [] (no id/name/permalink), so it
     // still contributes its own '/' + '' (id) + '-' + '' (name) segment.
-    expect($result)->toBe('/category/7-main/-/9-second/third-perma');
+    expect($result)
+        ->toBe('/category/7-main/-/9-second/third-perma');
 });
 
 test('makeSectionInUrl builds a tags section in the "id" style', function (): void {
     CurrentConfigTestFactory::get()->tagUrlStyle = 'id';
     $service = UrlServiceTestFactory::build();
 
-    $result = $service->makeSectionInUrl(['section' => 'tags', 'tags' => [['id' => 3, 'url_name' => 'nature'], ['id' => 5, 'url_name' => 'travel']]]);
+    $result = $service->makeSectionInUrl([
+        'section' => 'tags',
+        'tags' => [[
+            'id' => 3,
+            'url_name' => 'nature',
+        ], [
+            'id' => 5,
+            'url_name' => 'travel',
+        ]],
+    ]);
 
-    expect($result)->toBe('/tags/3/5');
+    expect($result)
+        ->toBe('/tags/3/5');
 });
 
 test('makeSectionInUrl builds a tags section in the "tag" style using url_name', function (): void {
     CurrentConfigTestFactory::get()->tagUrlStyle = 'tag';
     $service = UrlServiceTestFactory::build();
 
-    $result = $service->makeSectionInUrl(['section' => 'tags', 'tags' => [['id' => 3, 'url_name' => 'nature']]]);
+    $result = $service->makeSectionInUrl([
+        'section' => 'tags',
+        'tags' => [[
+            'id' => 3,
+            'url_name' => 'nature',
+        ]],
+    ]);
 
-    expect($result)->toBe('/tags/nature');
+    expect($result)
+        ->toBe('/tags/nature');
 });
 
 test('makeSectionInUrl falls through the "tag" style to id-name when url_name is absent', function (): void {
@@ -1008,18 +1186,31 @@ test('makeSectionInUrl falls through the "tag" style to id-name when url_name is
     $service = UrlServiceTestFactory::build();
 
     // No url_name -- falls through (no break) to the default arm.
-    $result = $service->makeSectionInUrl(['section' => 'tags', 'tags' => [['id' => 3]]]);
+    $result = $service->makeSectionInUrl([
+        'section' => 'tags',
+        'tags' => [[
+            'id' => 3,
+        ]],
+    ]);
 
-    expect($result)->toBe('/tags/3');
+    expect($result)
+        ->toBe('/tags/3');
 });
 
 test('makeSectionInUrl builds a tags section in the default id-name style', function (): void {
     CurrentConfigTestFactory::get()->tagUrlStyle = 'id-tag';
     $service = UrlServiceTestFactory::build();
 
-    $result = $service->makeSectionInUrl(['section' => 'tags', 'tags' => [['id' => 3, 'url_name' => 'nature']]]);
+    $result = $service->makeSectionInUrl([
+        'section' => 'tags',
+        'tags' => [[
+            'id' => 3,
+            'url_name' => 'nature',
+        ]],
+    ]);
 
-    expect($result)->toBe('/tags/3-nature');
+    expect($result)
+        ->toBe('/tags/3-nature');
 });
 
 test('makeSectionInUrl defaults a non-array tags entry gracefully', function (): void {
@@ -1029,64 +1220,109 @@ test('makeSectionInUrl defaults a non-array tags entry gracefully', function ():
     // Same "reset to []" defaulting as the analogous combined_categories
     // entry above -- a non-array tag contributes its own '/' + '' (id)
     // segment (no '-name' suffix, since url_name is also unset once reset).
-    $result = $service->makeSectionInUrl(['section' => 'tags', 'tags' => ['not-an-array', ['id' => 3, 'url_name' => 'nature']]]);
+    $result = $service->makeSectionInUrl([
+        'section' => 'tags',
+        'tags' => [
+            'not-an-array', [
+                'id' => 3,
+                'url_name' => 'nature',
+            ]],
+    ]);
 
-    expect($result)->toBe('/tags//3-nature');
+    expect($result)
+        ->toBe('/tags//3-nature');
 });
 
 test('makeSectionInUrl builds a search section', function (): void {
     $service = UrlServiceTestFactory::build();
 
-    expect($service->makeSectionInUrl(['section' => 'search', 'search' => 'psk-20260101-abcdefghij']))
+    expect($service->makeSectionInUrl([
+        'section' => 'search',
+        'search' => 'psk-20260101-abcdefghij',
+    ]))
         ->toBe('/search/psk-20260101-abcdefghij');
 });
 
 test('makeSectionInUrl builds a list section from scalar ids only', function (): void {
     $service = UrlServiceTestFactory::build();
 
-    expect($service->makeSectionInUrl(['section' => 'list', 'list' => [12, 34, 'not-scalar' => ['x']]]))
+    expect($service->makeSectionInUrl([
+        'section' => 'list',
+        'list' => [
+            12,
+            34,
+            'not-scalar' => ['x'],
+        ],
+    ]))
         ->toBe('/list/12,34');
 });
 
 test('makeSectionInUrl infers the categories section from a bare category param when section is unset', function (): void {
     $service = UrlServiceTestFactory::build();
 
-    $result = $service->makeSectionInUrl(['category' => ['id' => 1, 'name' => 'Test', 'permalink' => 'test-perma']]);
+    $result = $service->makeSectionInUrl([
+        'category' => [
+            'id' => 1,
+            'name' => 'Test',
+            'permalink' => 'test-perma',
+        ],
+    ]);
 
-    expect($result)->toBe('/category/test-perma');
+    expect($result)
+        ->toBe('/category/test-perma');
 });
 
 test('makeSectionInUrl infers the tags section from a bare tags param when section is unset', function (): void {
     CurrentConfigTestFactory::get()->tagUrlStyle = 'id';
     $service = UrlServiceTestFactory::build();
 
-    $result = $service->makeSectionInUrl(['tags' => [['id' => 3, 'url_name' => 'nature']]]);
+    $result = $service->makeSectionInUrl([
+        'tags' => [[
+            'id' => 3,
+            'url_name' => 'nature',
+        ]],
+    ]);
 
-    expect($result)->toBe('/tags/3');
+    expect($result)
+        ->toBe('/tags/3');
 });
 
 test('makeSectionInUrl infers the list section from a bare list param when section is unset', function (): void {
     $service = UrlServiceTestFactory::build();
 
-    $result = $service->makeSectionInUrl(['list' => [1, 2, 3]]);
+    $result = $service->makeSectionInUrl([
+        'list' => [1, 2, 3],
+    ]);
 
-    expect($result)->toBe('/list/1,2,3');
+    expect($result)
+        ->toBe('/list/1,2,3');
 });
 
 test('makeSectionInUrl infers the search section from a bare search param when section is unset', function (): void {
     $service = UrlServiceTestFactory::build();
 
-    $result = $service->makeSectionInUrl(['search' => 'hello']);
+    $result = $service->makeSectionInUrl([
+        'search' => 'hello',
+    ]);
 
-    expect($result)->toBe('/search/hello');
+    expect($result)
+        ->toBe('/search/hello');
 });
 
 test('makeSectionInUrl treats an explicit empty-string permalink the same as unset, falling back to the id', function (): void {
     $service = UrlServiceTestFactory::build();
 
-    $result = $service->makeSectionInUrl(['section' => 'categories', 'category' => ['id' => 10, 'name' => 'Test', 'permalink' => '']]);
+    $result = $service->makeSectionInUrl([
+        'section' => 'categories',
+        'category' => [
+            'id' => 10,
+            'name' => 'Test',
+            'permalink' => '',
+        ],
+    ]);
 
-    expect($result)->toBe('/category/10');
+    expect($result)
+        ->toBe('/category/10');
 });
 
 test('makeSectionInUrl falls back to an empty slugified name when the name key is absent in id-name style', function (): void {
@@ -1098,20 +1334,35 @@ test('makeSectionInUrl falls back to an empty slugified name when the name key i
     // category param" test above.
     set_error_handler(static fn (): bool => true);
     try {
-        $result = $service->makeSectionInUrl(['section' => 'categories', 'category' => ['id' => 7, 'permalink' => null]]);
+        $result = $service->makeSectionInUrl([
+            'section' => 'categories',
+            'category' => [
+                'id' => 7,
+                'permalink' => null,
+            ],
+        ]);
     } finally {
         restore_error_handler();
     }
 
-    expect($result)->toBe('/category/7-');
+    expect($result)
+        ->toBe('/category/7-');
 });
 
 test('makeSectionInUrl falls back to an empty permalink string when the category permalink is non-scalar', function (): void {
     $service = UrlServiceTestFactory::build();
 
-    $result = $service->makeSectionInUrl(['section' => 'categories', 'category' => ['id' => 1, 'name' => 'X', 'permalink' => ['a', 'b']]]);
+    $result = $service->makeSectionInUrl([
+        'section' => 'categories',
+        'category' => [
+            'id' => 1,
+            'name' => 'X',
+            'permalink' => ['a', 'b'],
+        ],
+    ]);
 
-    expect($result)->toBe('/category/');
+    expect($result)
+        ->toBe('/category/');
 });
 
 test('makeSectionInUrl treats an explicit empty-string combined-category permalink like unset, using the id', function (): void {
@@ -1119,13 +1370,22 @@ test('makeSectionInUrl treats an explicit empty-string combined-category permali
 
     $result = $service->makeSectionInUrl([
         'section' => 'categories',
-        'category' => ['id' => 1, 'name' => 'Main', 'permalink' => 'main-perma'],
+        'category' => [
+            'id' => 1,
+            'name' => 'Main',
+            'permalink' => 'main-perma',
+        ],
         'combined_categories' => [
-            ['id' => 21, 'name' => 'Fourth', 'permalink' => ''],
+            [
+                'id' => 21,
+                'name' => 'Fourth',
+                'permalink' => '',
+            ],
         ],
     ]);
 
-    expect($result)->toBe('/category/main-perma/21');
+    expect($result)
+        ->toBe('/category/main-perma/21');
 });
 
 test('makeSectionInUrl falls back to an empty combined-category permalink string when non-scalar', function (): void {
@@ -1133,22 +1393,35 @@ test('makeSectionInUrl falls back to an empty combined-category permalink string
 
     $result = $service->makeSectionInUrl([
         'section' => 'categories',
-        'category' => ['id' => 1, 'name' => 'Main', 'permalink' => 'main-perma'],
+        'category' => [
+            'id' => 1,
+            'name' => 'Main',
+            'permalink' => 'main-perma',
+        ],
         'combined_categories' => [
-            ['id' => 31, 'name' => 'Fifth', 'permalink' => ['x']],
+            [
+                'id' => 31,
+                'name' => 'Fifth',
+                'permalink' => ['x'],
+            ],
         ],
     ]);
 
-    expect($result)->toBe('/category/main-perma/');
+    expect($result)
+        ->toBe('/category/main-perma/');
 });
 
 test('makeSectionInUrl appends an empty id segment for a tag missing its id, in "id" style', function (): void {
     CurrentConfigTestFactory::get()->tagUrlStyle = 'id';
     $service = UrlServiceTestFactory::build();
 
-    $result = $service->makeSectionInUrl(['section' => 'tags', 'tags' => [[]]]);
+    $result = $service->makeSectionInUrl([
+        'section' => 'tags',
+        'tags' => [[]],
+    ]);
 
-    expect($result)->toBe('/tags/');
+    expect($result)
+        ->toBe('/tags/');
 });
 
 test('makeSectionInUrl falls through the "tag" style to default when url_name is present but non-scalar', function (): void {
@@ -1158,9 +1431,16 @@ test('makeSectionInUrl falls through the "tag" style to default when url_name is
     // url_name is set (non-null) but not scalar -- the "isset && is_scalar"
     // guard must require BOTH, not either: an OR would wrongly try to use
     // the array as the url_name segment instead of falling through.
-    $result = $service->makeSectionInUrl(['section' => 'tags', 'tags' => [['id' => 99, 'url_name' => ['nested']]]]);
+    $result = $service->makeSectionInUrl([
+        'section' => 'tags',
+        'tags' => [[
+            'id' => 99,
+            'url_name' => ['nested'],
+        ]],
+    ]);
 
-    expect($result)->toBe('/tags/99');
+    expect($result)
+        ->toBe('/tags/99');
 });
 
 test('makeSectionInUrl omits the tag name suffix in the default style when url_name is non-scalar', function (): void {
@@ -1169,17 +1449,27 @@ test('makeSectionInUrl omits the tag name suffix in the default style when url_n
 
     // Reaches the default arm directly (not via the "tag" style fallthrough)
     // -- isolates its own "isset && is_scalar" guard on the suffix.
-    $result = $service->makeSectionInUrl(['section' => 'tags', 'tags' => [['id' => 55, 'url_name' => ['nested']]]]);
+    $result = $service->makeSectionInUrl([
+        'section' => 'tags',
+        'tags' => [[
+            'id' => 55,
+            'url_name' => ['nested'],
+        ]],
+    ]);
 
-    expect($result)->toBe('/tags/55');
+    expect($result)
+        ->toBe('/tags/55');
 });
 
 test('makeSectionInUrl appends an empty search segment when no search param is present', function (): void {
     $service = UrlServiceTestFactory::build();
 
-    $result = $service->makeSectionInUrl(['section' => 'search']);
+    $result = $service->makeSectionInUrl([
+        'section' => 'search',
+    ]);
 
-    expect($result)->toBe('/search/');
+    expect($result)
+        ->toBe('/search/');
 });
 
 test('parseSectionUrl recognizes the favorites/most_visited/best_rated/recent_pics/recent_cats tokens', function (): void {
@@ -1199,7 +1489,8 @@ test('parseSectionUrl recognizes the favorites/most_visited/best_rated/recent_pi
         $page = $service->parseSectionUrl([$token], $i, $redirect);
 
         expect($page['section'])->toBe($expectedSection)
-            ->and($i)->toBe(1);
+            ->and($i)
+            ->toBe(1);
     }
 });
 
@@ -1211,7 +1502,8 @@ test('parseSectionUrl parses a valid psk-formatted search token', function (): v
 
     expect($page['section'])->toBe(Section::Search)
         ->and($page['search'])->toBe('psk-20260101-abcdefghij')
-        ->and($i)->toBe(2);
+        ->and($i)
+        ->toBe(2);
 });
 
 test('parseSectionUrl falls back to a plain numeric search identifier', function (): void {
@@ -1265,12 +1557,13 @@ test('parseWellKnownParamsUrl parses a chronology token with an explicit calenda
 
     $result = $service->parseWellKnownParamsUrl(['created-monthly-calendar-2026-07'], $i);
 
-    expect($result)->toBe([
-        'chronology_field' => 'created',
-        'chronology_style' => 'monthly',
-        'chronology_view' => 'calendar',
-        'chronology_date' => ['2026', '07'],
-    ]);
+    expect($result)
+        ->toBe([
+            'chronology_field' => 'created',
+            'chronology_style' => 'monthly',
+            'chronology_view' => 'calendar',
+            'chronology_date' => ['2026', '07'],
+        ]);
 });
 
 test('parseWellKnownParamsUrl parses a startcat token', function (): void {
@@ -1279,7 +1572,10 @@ test('parseWellKnownParamsUrl parses a startcat token', function (): void {
 
     $result = $service->parseWellKnownParamsUrl(['startcat-15'], $i);
 
-    expect($result)->toBe(['startcat' => '15']);
+    expect($result)
+        ->toBe([
+            'startcat' => '15',
+        ]);
 });
 
 test('parseWellKnownParamsUrl rejects an unrecognized chronology style', function (): void {
@@ -1304,7 +1600,9 @@ test('getElementUrl embellishes a non-remote path with the root URL', function (
     urlServiceTestWithMountDepth(1, function (): void {
         $service = UrlServiceTestFactory::build();
 
-        expect($service->getElementUrl(['path' => 'galleries/2026/photo.jpg']))
+        expect($service->getElementUrl([
+            'path' => 'galleries/2026/photo.jpg',
+        ]))
             ->toBe('../galleries/2026/photo.jpg');
     });
 });
@@ -1312,20 +1610,25 @@ test('getElementUrl embellishes a non-remote path with the root URL', function (
 test('getElementUrl leaves a remote path unchanged', function (): void {
     $service = UrlServiceTestFactory::build();
 
-    expect($service->getElementUrl(['path' => 'https://cdn.example.test/photo.jpg']))
+    expect($service->getElementUrl([
+        'path' => 'https://cdn.example.test/photo.jpg',
+    ]))
         ->toBe('https://cdn.example.test/photo.jpg');
 });
 
 test('getElementUrl coerces a non-string path to its string form', function (): void {
     $service = UrlServiceTestFactory::build();
 
-    expect($service->getElementUrl(['path' => 123]))->toBe('123');
+    expect($service->getElementUrl([
+        'path' => 123,
+    ]))->toBe('123');
 });
 
 test('embellishUrl leaves a /../ segment unresolved when there is no preceding segment to collapse against', function (): void {
     $service = UrlServiceTestFactory::build();
 
-    expect($service->embellishUrl('a/../b'))->toBe('a/../b');
+    expect($service->embellishUrl('a/../b'))
+        ->toBe('a/../b');
 });
 
 test('getUserFavorites returns an empty array for a guest', function (): void {
@@ -1336,13 +1639,19 @@ test('getUserFavorites returns an empty array for a guest', function (): void {
     // INSIDE the callback, once the container exists (same pitfall
     // Translator/EventDispatcher hit too).
     KernelContainerOverride::with(
-        [Paths::class => Paths::fromRoot(sys_get_temp_dir())],
+        [
+            Paths::class => Paths::fromRoot(sys_get_temp_dir()),
+        ],
         static function (): void {
-            CurrentUserTestFactory::get()->set(User::fromUserArray(['id' => 2, 'status' => 'guest']));
+            CurrentUserTestFactory::get()->set(User::fromUserArray([
+                'id' => 2,
+                'status' => 'guest',
+            ]));
 
             $service = UrlServiceTestFactory::build();
 
-            expect($service->getUserFavorites())->toBe([]);
+            expect($service->getUserFavorites())
+                ->toBe([]);
         }
     );
 });
@@ -1356,7 +1665,9 @@ test('parseSectionUrl enters the categories section for a token starting with "c
     // getUserFavorites() test above, even though this test's single,
     // followerless token never reaches the loop body itself.
     KernelContainerOverride::with(
-        [Paths::class => Paths::fromRoot(sys_get_temp_dir())],
+        [
+            Paths::class => Paths::fromRoot(sys_get_temp_dir()),
+        ],
         static function (): void {
             $service = UrlServiceTestFactory::build();
             $i = 0;
@@ -1368,8 +1679,12 @@ test('parseSectionUrl enters the categories section for a token starting with "c
             // the DB.
             $page = $service->parseSectionUrl(['category'], $i, new UrlServiceTestRedirectService());
 
-            expect($page)->toBe(['section' => Section::Categories])
-                ->and($i)->toBe(1);
+            expect($page)
+                ->toBe([
+                    'section' => Section::Categories,
+                ])
+                ->and($i)
+                ->toBe(1);
         }
     );
 });
@@ -1568,7 +1883,8 @@ test('parseSectionUrl advances nextToken past both the list token and its traili
 
     $service->parseSectionUrl(['list', '12'], $i, new UrlServiceTestRedirectService());
 
-    expect($i)->toBe(2);
+    expect($i)
+        ->toBe(2);
 });
 
 test('parseWellKnownParamsUrl parses a "posted-" chronology token', function (): void {
@@ -1577,11 +1893,12 @@ test('parseWellKnownParamsUrl parses a "posted-" chronology token', function ():
 
     $result = $service->parseWellKnownParamsUrl(['posted-monthly-2026-07'], $i);
 
-    expect($result)->toBe([
-        'chronology_field' => 'posted',
-        'chronology_style' => 'monthly',
-        'chronology_date' => ['2026', '07'],
-    ]);
+    expect($result)
+        ->toBe([
+            'chronology_field' => 'posted',
+            'chronology_style' => 'monthly',
+            'chronology_date' => ['2026', '07'],
+        ]);
 });
 
 test('parseWellKnownParamsUrl accepts a "weekly" chronology style', function (): void {
@@ -1590,11 +1907,12 @@ test('parseWellKnownParamsUrl accepts a "weekly" chronology style', function ():
 
     $result = $service->parseWellKnownParamsUrl(['created-weekly-2026'], $i);
 
-    expect($result)->toBe([
-        'chronology_field' => 'created',
-        'chronology_style' => 'weekly',
-        'chronology_date' => ['2026'],
-    ]);
+    expect($result)
+        ->toBe([
+            'chronology_field' => 'created',
+            'chronology_style' => 'weekly',
+            'chronology_date' => ['2026'],
+        ]);
 });
 
 test('parseWellKnownParamsUrl leaves chronology_date unset when nothing remains after the style token', function (): void {
@@ -1603,10 +1921,11 @@ test('parseWellKnownParamsUrl leaves chronology_date unset when nothing remains 
 
     $result = $service->parseWellKnownParamsUrl(['created-monthly'], $i);
 
-    expect($result)->toBe([
-        'chronology_field' => 'created',
-        'chronology_style' => 'monthly',
-    ]);
+    expect($result)
+        ->toBe([
+            'chronology_field' => 'created',
+            'chronology_style' => 'monthly',
+        ]);
 });
 
 test('parseWellKnownParamsUrl sets chronology_date from a single remaining token', function (): void {
@@ -1615,11 +1934,12 @@ test('parseWellKnownParamsUrl sets chronology_date from a single remaining token
 
     $result = $service->parseWellKnownParamsUrl(['created-monthly-2026'], $i);
 
-    expect($result)->toBe([
-        'chronology_field' => 'created',
-        'chronology_style' => 'monthly',
-        'chronology_date' => ['2026'],
-    ]);
+    expect($result)
+        ->toBe([
+            'chronology_field' => 'created',
+            'chronology_style' => 'monthly',
+            'chronology_date' => ['2026'],
+        ]);
 });
 
 test('parseWellKnownParamsUrl parses an explicit "list" chronology view', function (): void {
@@ -1628,26 +1948,30 @@ test('parseWellKnownParamsUrl parses an explicit "list" chronology view', functi
 
     $result = $service->parseWellKnownParamsUrl(['created-monthly-list-2026-07'], $i);
 
-    expect($result)->toBe([
-        'chronology_field' => 'created',
-        'chronology_style' => 'monthly',
-        'chronology_view' => 'list',
-        'chronology_date' => ['2026', '07'],
-    ]);
+    expect($result)
+        ->toBe([
+            'chronology_field' => 'created',
+            'chronology_style' => 'monthly',
+            'chronology_view' => 'list',
+            'chronology_date' => ['2026', '07'],
+        ]);
 });
 
 test('getActionUrl prefixes action.php with a non-empty root URL', function (): void {
     urlServiceTestWithMountDepth(1, function (): void {
         $service = UrlServiceTestFactory::build();
 
-        expect($service->getActionUrl(42, 'e', false))->toBe('../action.php?id=42&amp;part=e');
+        expect($service->getActionUrl(42, 'e', false))
+            ->toBe('../action.php?id=42&amp;part=e');
     });
 });
 
 test('getElementUrl returns an empty string for a non-scalar path', function (): void {
     $service = UrlServiceTestFactory::build();
 
-    expect($service->getElementUrl(['path' => ['not', 'scalar']]))->toBe('');
+    expect($service->getElementUrl([
+        'path' => ['not', 'scalar'],
+    ]))->toBe('');
 });
 
 test('unsetMakeFullUrl pops the override pushed by setMakeFullUrl', function (): void {
@@ -1662,30 +1986,35 @@ test('unsetMakeFullUrl pops the override pushed by setMakeFullUrl', function ():
         // (scheme+host) form, distinct from the '../' the mount-depth-relative
         // path produces once the override is popped below.
         $service->setMakeFullUrl();
-        expect($service->getRootUrl())->toBe('http://gallery.example.test/');
+        expect($service->getRootUrl())
+            ->toBe('http://gallery.example.test/');
 
         $service->unsetMakeFullUrl();
-        expect($service->getRootUrl())->toBe('../');
+        expect($service->getRootUrl())
+            ->toBe('../');
     });
 });
 
 test('embellishUrl leaves a leading /../ unresolved (the offset skips a match at position 0)', function (): void {
     $service = UrlServiceTestFactory::build();
 
-    expect($service->embellishUrl('/../b'))->toBe('/../b');
+    expect($service->embellishUrl('/../b'))
+        ->toBe('/../b');
 });
 
 test('embellishUrl resolves a /../ immediately following a leading slash', function (): void {
     $service = UrlServiceTestFactory::build();
 
-    expect($service->embellishUrl('//../y'))->toBe('/y');
+    expect($service->embellishUrl('//../y'))
+        ->toBe('/y');
 });
 
 test('getGalleryHomeUrl falls back to makeIndexUrl for an empty-string gallery_url', function (): void {
     CurrentConfigTestFactory::get()->galleryUrl = '';
     $service = UrlServiceTestFactory::build();
 
-    expect($service->getGalleryHomeUrl())->toBe($service->makeIndexUrl());
+    expect($service->getGalleryHomeUrl())
+        ->toBe($service->makeIndexUrl());
 });
 
 test('getGalleryHomeUrl returns a root-relative gallery_url unchanged, ignoring a non-empty root URL', function (): void {
@@ -1693,7 +2022,8 @@ test('getGalleryHomeUrl returns a root-relative gallery_url unchanged, ignoring 
         CurrentConfigTestFactory::get()->galleryUrl = '/my-gallery';
         $service = UrlServiceTestFactory::build();
 
-        expect($service->getGalleryHomeUrl())->toBe('/my-gallery');
+        expect($service->getGalleryHomeUrl())
+            ->toBe('/my-gallery');
     });
 });
 
@@ -1702,7 +2032,8 @@ test('getGalleryHomeUrl prefixes a relative gallery_url with a non-empty root UR
         CurrentConfigTestFactory::get()->galleryUrl = 'my-gallery/';
         $service = UrlServiceTestFactory::build();
 
-        expect($service->getGalleryHomeUrl())->toBe('../my-gallery/');
+        expect($service->getGalleryHomeUrl())
+            ->toBe('../my-gallery/');
     });
 });
 
@@ -1710,34 +2041,44 @@ test('getQueryStringDiff returns empty string for an explicitly empty QUERY_STRI
     $_SERVER['QUERY_STRING'] = '';
     $service = UrlServiceTestFactory::build();
 
-    expect($service->getQueryStringDiff())->toBe('');
+    expect($service->getQueryStringDiff())
+        ->toBe('');
 });
 
 test('getQueryStringDiff does not prefix a purely-numeric query key', function (): void {
     $_SERVER['QUERY_STRING'] = '0=foo&a=1';
     $service = UrlServiceTestFactory::build();
 
-    expect($service->getQueryStringDiff())->toBe('?0=foo&amp;a=1');
+    expect($service->getQueryStringDiff())
+        ->toBe('?0=foo&amp;a=1');
 });
 
 test('getUserFavorites returns early for a guest without ever touching the database connection', function (): void {
     // Same AccessControl::current()-needs-a-booted-Kernel reasoning as the
     // sibling "returns an empty array for a guest" test above.
     KernelContainerOverride::with(
-        [Paths::class => Paths::fromRoot(sys_get_temp_dir())],
+        [
+            Paths::class => Paths::fromRoot(sys_get_temp_dir()),
+        ],
         static function (): void {
-            CurrentUserTestFactory::get()->set(User::fromUserArray(['id' => 2, 'status' => 'guest']));
+            CurrentUserTestFactory::get()->set(User::fromUserArray([
+                'id' => 2,
+                'status' => 'guest',
+            ]));
 
             $service = UrlServiceTestFactory::build();
 
-            expect($service->getUserFavorites())->toBe([]);
+            expect($service->getUserFavorites())
+                ->toBe([]);
 
             // The lazily-built Connection property must still be null -- proof
             // the DB-touching code past the guest guard never ran. A value
             // assertion alone can't distinguish this from a real query that
             // just happens to also find zero rows for this user id.
-            $conn = new ReflectionProperty($service, 'conn')->getValue($service);
-            expect($conn)->toBeNull();
+            $conn = new ReflectionProperty($service, 'conn')
+                ->getValue($service);
+            expect($conn)
+                ->toBeNull();
         }
     );
 });
@@ -1751,7 +2092,8 @@ test('filterState() returns the container-shared instance once Kernel has booted
     $service = UrlServiceTestFactory::build();
     $method = new ReflectionMethod(UrlService::class, 'filterState');
 
-    expect($method->invoke($service))->toBe($containerFilterState);
+    expect($method->invoke($service))
+        ->toBe($containerFilterState);
 });
 
 test('filterState() throws when the container returns an unexpected type', function (): void {
@@ -1806,7 +2148,8 @@ test('getAbsoluteRootUrl defaults the auto-detected port to 80 when SERVER_PORT 
     $_SERVER['SERVER_PORT'] = 'not-numeric';
     $service = UrlServiceTestFactory::build();
 
-    expect($service->getAbsoluteRootUrl())->toBe('http://gallery.example.test/piwigo/');
+    expect($service->getAbsoluteRootUrl())
+        ->toBe('http://gallery.example.test/piwigo/');
 });
 
 test('parseSectionUrl advances nextToken past the tags token itself before scanning for tag identifiers', function (): void {
@@ -1826,5 +2169,6 @@ test('parseSectionUrl advances nextToken past the tags token itself before scann
         // Expected -- see comment above.
     }
 
-    expect($i)->toBe(1);
+    expect($i)
+        ->toBe(1);
 });

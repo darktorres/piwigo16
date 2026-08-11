@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Contract;
 
-use Override;
-use Piwigo\Cache\CachePools;
 use CURLFile;
 use Doctrine\DBAL\Connection;
+use Override;
+use Piwigo\Cache\CachePools;
 use Piwigo\Db\DbConnection;
 
 /**
@@ -44,7 +44,9 @@ use Piwigo\Db\DbConnection;
  */
 final class WsImagesUploadStartTest extends ContractTestCase
 {
-    /** 1×1 white PNG, base64-decoded at runtime to avoid binary in source. */
+    /**
+     * 1×1 white PNG, base64-decoded at runtime to avoid binary in source.
+     */
     private const string TINY_PNG_B64 = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwADhQGAWjR9awAAAABJRU5ErkJggg==';
 
     private Connection $conn;
@@ -60,7 +62,7 @@ final class WsImagesUploadStartTest extends ContractTestCase
     #[Override]
     protected function tearDown(): void
     {
-        $this->conn->executeStatement("DELETE FROM " . 'config' . " WHERE param = 'enable_formats'");
+        $this->conn->executeStatement('DELETE FROM config' . " WHERE param = 'enable_formats'");
         CachePools::config()->clear();
         parent::tearDown();
     }
@@ -91,7 +93,7 @@ final class WsImagesUploadStartTest extends ContractTestCase
 
     // ------------------------------------------------ buffer directory setup
 
-    public function test_upload_buffer_directory_creation_failure_returns_error(): void
+    public function testUploadBufferDirectoryCreationFailureReturnsError(): void
     {
         // Same rationale/technique as
         // WsImagesChunkedUploadTest::test_addChunk_buffer_directory_creation_failure_returns_error --
@@ -124,7 +126,7 @@ final class WsImagesUploadStartTest extends ContractTestCase
 
     // --------------------------------------------- file name resolution chain
 
-    public function test_upload_without_a_name_field_falls_back_to_the_uploaded_files_own_name(): void
+    public function testUploadWithoutANameFieldFallsBackToTheUploadedFilesOwnName(): void
     {
         // Omitting 'name' makes chunkedUploadRequest->requestNamePresent
         // false; a genuine 'file[]' bracket-syntax field makes PHP populate
@@ -143,7 +145,7 @@ final class WsImagesUploadStartTest extends ContractTestCase
 
         try {
             $url = $this->baseUrl . '/ws.php?format=json';
-            $ch  = curl_init($url);
+            $ch = curl_init($url);
             self::assertNotFalse($ch);
             $cookieJar = $this->cookieJar();
             curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
@@ -180,7 +182,7 @@ final class WsImagesUploadStartTest extends ContractTestCase
         unlink($partPath);
     }
 
-    public function test_upload_without_a_name_or_file_field_falls_back_to_a_generated_name(): void
+    public function testUploadWithoutANameOrFileFieldFallsBackToAGeneratedName(): void
     {
         // Neither 'name' nor a 'file' field at all (some *other* field
         // still makes $_FILES non-empty, matching WsUploadTest's own
@@ -199,7 +201,7 @@ final class WsImagesUploadStartTest extends ContractTestCase
 
         try {
             $url = $this->baseUrl . '/ws.php?format=json';
-            $ch  = curl_init($url);
+            $ch = curl_init($url);
             self::assertNotFalse($ch);
             $cookieJar = $this->cookieJar();
             curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
@@ -240,7 +242,7 @@ final class WsImagesUploadStartTest extends ContractTestCase
         unlink($this->bufferDir() . '/' . $leftover[0]);
     }
 
-    public function test_upload_part_file_open_failure_returns_error(): void
+    public function testUploadPartFileOpenFailureReturnsError(): void
     {
         // Predicting the internal buffer filename (md5(requestName), the IF
         // branch above the elseif/else pair) lets a directory be planted at
@@ -274,7 +276,7 @@ final class WsImagesUploadStartTest extends ContractTestCase
 
     // --------------------------------------------------------- format_of
 
-    public function test_upload_format_of_reads_the_raw_request_body_when_no_files_are_posted(): void
+    public function testUploadFormatOfReadsTheRawRequestBodyWhenNoFilesArePosted(): void
     {
         // A plain (non-multipart) POST -- no $_FILES entry at all -- takes
         // upload()'s own php://input branch instead of the $_FILES one.
@@ -304,16 +306,16 @@ final class WsImagesUploadStartTest extends ContractTestCase
 
     // --------------------------------------------------------- update_mode
 
-    public function test_upload_update_mode_with_an_existing_matching_filename_marks_add_status_update(): void
+    public function testUploadUpdateModeWithAnExistingMatchingFilenameMarksAddStatusUpdate(): void
     {
         $filename = 'update-mode-probe-' . uniqid() . '.jpg';
         $this->conn->executeStatement(
-            'INSERT INTO ' . 'images' . ' (file, path, md5sum, width, height, filesize) VALUES (?, ?, ?, ?, ?, ?)',
+            'INSERT INTO images (file, path, md5sum, width, height, filesize) VALUES (?, ?, ?, ?, ?, ?)',
             [$filename, 'upload/2026/08/01/' . $filename, md5($filename), 1, 1, 0]
         );
         $existingId = (int) $this->conn->lastInsertId();
         $this->conn->executeStatement(
-            'INSERT INTO ' . 'image_category' . ' (image_id, category_id) VALUES (?, ?)',
+            'INSERT INTO image_category (image_id, category_id) VALUES (?, ?)',
             [$existingId, 1]
         );
 
@@ -325,7 +327,7 @@ final class WsImagesUploadStartTest extends ContractTestCase
 
             try {
                 $url = $this->baseUrl . '/ws.php?format=json';
-                $ch  = curl_init($url);
+                $ch = curl_init($url);
                 self::assertNotFalse($ch);
                 $cookieJar = $this->cookieJar();
                 curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
@@ -359,7 +361,10 @@ final class WsImagesUploadStartTest extends ContractTestCase
             self::assertSame('update', $result['add_status']);
         } finally {
             $token = $this->pwgToken();
-            $this->callWs('pwg.images.delete', ['image_id' => $existingId, 'pwg_token' => $token]);
+            $this->callWs('pwg.images.delete', [
+                'image_id' => $existingId,
+                'pwg_token' => $token,
+            ]);
         }
     }
 }

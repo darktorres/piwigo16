@@ -173,11 +173,12 @@ test('root directory PHP files are exactly the tool configs -- every entry point
     $names = array_map(basename(...), globPaths(dirname(__DIR__, 2) . '/*.php'));
     sort($names);
 
-    expect($names)->toBe([
-        'composer-unused.php',
-        'ecs.php',
-        'rector.php',
-    ]);
+    expect($names)
+        ->toBe([
+            'composer-unused.php',
+            'ecs.php',
+            'rector.php',
+        ]);
 });
 
 test('no include/require statement targets a legacy include/ or admin/ path -- both directories are gone', function (): void {
@@ -200,5 +201,6 @@ test('no include/require statement targets a legacy include/ or admin/ path -- b
 
     $violations = findLegacyIncludeTargets($files);
 
-    expect($violations)->toBe([]);
+    expect($violations)
+        ->toBe([]);
 });

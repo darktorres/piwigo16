@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-use Piwigo\Tests\Support\HtmlServiceTestFactory;
 use Piwigo\Core\InstallationFlag;
 use Piwigo\Core\Lang;
 use Piwigo\Core\Paths;
 use Piwigo\Lang\LangService;
+use Piwigo\Tests\Support\HtmlServiceTestFactory;
 use Piwigo\Tests\Support\TranslatorTestFactory;
 
 /**
@@ -40,27 +40,36 @@ afterEach(function (): void {
 });
 
 test('t delegates to Lang::t', function (): void {
-    $this->lang->loadArray(['greeting' => 'hi']);
+    $this->lang->loadArray([
+        'greeting' => 'hi',
+    ]);
 
-    expect($this->service->t('greeting'))->toBe('hi');
+    expect($this->service->t('greeting'))
+        ->toBe('hi');
 });
 
 test('t treats a null key as an empty string, matching l10n()s legacy contract', function (): void {
-    expect($this->service->t(null))->toBe('');
+    expect($this->service->t(null))
+        ->toBe('');
 });
 
 test('l10n is an alias for t', function (): void {
-    $this->lang->loadArray(['greeting' => 'hi']);
+    $this->lang->loadArray([
+        'greeting' => 'hi',
+    ]);
 
-    expect($this->service->l10n('greeting'))->toBe($this->service->t('greeting'));
+    expect($this->service->l10n('greeting'))
+        ->toBe($this->service->t('greeting'));
 });
 
 test('loadLanguageForPlugin rejects a locale not installed under language/', function (): void {
-    expect($this->service->loadLanguageForPlugin(sys_get_temp_dir(), '../../../../etc'))->toBeFalse();
+    expect($this->service->loadLanguageForPlugin(sys_get_temp_dir(), '../../../../etc'))
+        ->toBeFalse();
 });
 
 test('loadLanguageForPlugin rejects a locale with path traversal characters', function (): void {
-    expect($this->service->loadLanguageForPlugin(sys_get_temp_dir(), '..'))->toBeFalse();
+    expect($this->service->loadLanguageForPlugin(sys_get_temp_dir(), '..'))
+        ->toBeFalse();
 });
 
 test('loadLanguageForPlugin returns false when the plugin has no PO file for a real installed locale', function (): void {
@@ -93,7 +102,8 @@ test('loadLanguageForPlugin rejects a syntactically-valid but not-actually-insta
     file_put_contents($pluginDir . '/language/zz_ZZ/plugin.po', "msgid \"\"\nmsgstr \"\"\n");
 
     try {
-        expect($this->service->loadLanguageForPlugin($pluginDir, 'zz_ZZ'))->toBeFalse();
+        expect($this->service->loadLanguageForPlugin($pluginDir, 'zz_ZZ'))
+            ->toBeFalse();
     } finally {
         unlink($pluginDir . '/language/zz_ZZ/plugin.po');
         rmdir($pluginDir . '/language/zz_ZZ');
@@ -123,7 +133,8 @@ test('loadLanguageForPlugin rejects a locale that fails the installed-locale for
     file_put_contents($pluginDir . '/language/12x/plugin.po', "msgid \"\"\nmsgstr \"\"\n");
 
     try {
-        expect($service->loadLanguageForPlugin($pluginDir, '12x'))->toBeFalse();
+        expect($service->loadLanguageForPlugin($pluginDir, '12x'))
+            ->toBeFalse();
     } finally {
         unlink($pluginDir . '/language/12x/plugin.po');
         rmdir($pluginDir . '/language/12x');
@@ -150,7 +161,8 @@ test('loadLanguageForPlugin checks the installed-locale directory under this ser
     file_put_contents($pluginDir . '/language/xx_YY/plugin.po', "msgid \"\"\nmsgstr \"\"\n");
 
     try {
-        expect($service->loadLanguageForPlugin($pluginDir, 'xx_YY'))->toBeTrue();
+        expect($service->loadLanguageForPlugin($pluginDir, 'xx_YY'))
+            ->toBeTrue();
     } finally {
         unlink($pluginDir . '/language/xx_YY/plugin.po');
         rmdir($pluginDir . '/language/xx_YY');
@@ -178,7 +190,8 @@ test('loadLanguageForPlugin checks the exact locale subdirectory, not just wheth
     file_put_contents($pluginDir . '/language/ww_ZZ/plugin.po', "msgid \"\"\nmsgstr \"\"\n");
 
     try {
-        expect($service->loadLanguageForPlugin($pluginDir, 'ww_ZZ'))->toBeFalse();
+        expect($service->loadLanguageForPlugin($pluginDir, 'ww_ZZ'))
+            ->toBeFalse();
     } finally {
         unlink($pluginDir . '/language/ww_ZZ/plugin.po');
         rmdir($pluginDir . '/language/ww_ZZ');
@@ -202,7 +215,8 @@ test('loadLanguageForPlugin loads a real PO file for a real installed locale', f
         PO);
 
     try {
-        expect($this->service->loadLanguageForPlugin($pluginDir, 'en_UK'))->toBeTrue()
+        expect($this->service->loadLanguageForPlugin($pluginDir, 'en_UK'))
+            ->toBeTrue()
             ->and(TranslatorTestFactory::get()->translate('plugin_greeting'))->toBe('plugin hi');
     } finally {
         unlink($pluginDir . '/language/en_UK/plugin.po');

@@ -2,24 +2,24 @@
 
 declare(strict_types=1);
 
-use Piwigo\Tests\Support\UrlServiceTestFactory;
-use Piwigo\Tests\Support\TemplateTestFactory;
 use Piwigo\Auth\AccessLevelChecker;
 use Piwigo\Common\ValueObject\LangCode;
+use Piwigo\Common\ValueObject\ThemeId;
 use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Common\ValueObject\Username;
-use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Paths;
 use Piwigo\Event\Template\CombinedCssPostfilter;
 use Piwigo\PluginConfig\EventDispatcher;
-use Piwigo\Tests\Support\EventDispatcherTestFactory;
 use Piwigo\Template\Combinable;
 use Piwigo\Template\CurrentTemplate;
 use Piwigo\Template\Event\CombinablePreparse;
 use Piwigo\Template\FileCombiner;
+use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Tests\Support\CurrentUserTestFactory;
-use Piwigo\Common\ValueObject\ThemeId;
+use Piwigo\Tests\Support\EventDispatcherTestFactory;
+use Piwigo\Tests\Support\TemplateTestFactory;
+use Piwigo\Tests\Support\UrlServiceTestFactory;
 use Piwigo\Users\User;
 use Piwigo\Users\UserStatus;
 
@@ -109,7 +109,8 @@ test('computeForce stays false for a guest even when the file type would otherwi
     try {
         $combiner = new FileCombiner(fileCombinerTestAccessLevelChecker(), 'css', UrlServiceTestFactory::build(), Paths::fromRoot('/tmp/piwigo-file-combiner-test'), new EventDispatcher(), CurrentTemplate::current(), CurrentConfigTestFactory::get(), []);
 
-        expect(invokeComputeForce($combiner))->toBeFalse();
+        expect(invokeComputeForce($combiner))
+            ->toBeFalse();
     } finally {
         unset($_SERVER['HTTP_CACHE_CONTROL']);
     }
@@ -126,7 +127,8 @@ test('computeForce is true for an admin combining CSS with a cache-busting heade
     try {
         $combiner = new FileCombiner(fileCombinerTestAccessLevelChecker(), 'css', UrlServiceTestFactory::build(), Paths::fromRoot('/tmp/piwigo-file-combiner-test'), new EventDispatcher(), CurrentTemplate::current(), CurrentConfigTestFactory::get(), []);
 
-        expect(invokeComputeForce($combiner))->toBeTrue();
+        expect(invokeComputeForce($combiner))
+            ->toBeTrue();
     } finally {
         unset($_SERVER['HTTP_CACHE_CONTROL']);
         CurrentUserTestFactory::get()->reset();
@@ -145,7 +147,8 @@ test('computeForce is true for an admin combining JS with templateCompileCheck o
     try {
         $combiner = new FileCombiner(fileCombinerTestAccessLevelChecker(), 'js', UrlServiceTestFactory::build(), Paths::fromRoot('/tmp/piwigo-file-combiner-test'), new EventDispatcher(), CurrentTemplate::current(), CurrentConfigTestFactory::get(), []);
 
-        expect(invokeComputeForce($combiner))->toBeTrue();
+        expect(invokeComputeForce($combiner))
+            ->toBeTrue();
     } finally {
         unset($_SERVER['HTTP_CACHE_CONTROL']);
         CurrentUserTestFactory::get()->reset();
@@ -160,7 +163,8 @@ test('computeForce is false for an admin JS combine with no cache-busting header
     try {
         $combiner = new FileCombiner(fileCombinerTestAccessLevelChecker(), 'js', UrlServiceTestFactory::build(), Paths::fromRoot('/tmp/piwigo-file-combiner-test'), new EventDispatcher(), CurrentTemplate::current(), CurrentConfigTestFactory::get(), []);
 
-        expect(invokeComputeForce($combiner))->toBeFalse();
+        expect(invokeComputeForce($combiner))
+            ->toBeFalse();
     } finally {
         CurrentUserTestFactory::get()->reset();
         CurrentUserTestFactory::get()->attachGlobals();
@@ -205,7 +209,8 @@ function invokeInitialKey(FileCombiner $combiner): array
 test('initialKey is empty for JS combining', function (): void {
     $combiner = new FileCombiner(fileCombinerTestAccessLevelChecker(), 'js', UrlServiceTestFactory::build(), Paths::fromRoot('/tmp/piwigo-file-combiner-test'), new EventDispatcher(), CurrentTemplate::current(), CurrentConfigTestFactory::get(), []);
 
-    expect(invokeInitialKey($combiner))->toBe([]);
+    expect(invokeInitialKey($combiner))
+        ->toBe([]);
 });
 
 test('initialKey seeds the scheme-less absolute root URL for CSS combining, so a scheme change alone busts the cache', function (): void {
@@ -214,7 +219,8 @@ test('initialKey seeds the scheme-less absolute root URL for CSS combining, so a
 
     $key = invokeInitialKey($combiner);
 
-    expect($key)->toHaveCount(1)
+    expect($key)
+        ->toHaveCount(1)
         ->and($key[0])->toBe($urlService->getAbsoluteRootUrl(false))
         ->and($key[0])->not->toStartWith('http://')
         ->and($key[0])->not->toStartWith('https://');
@@ -223,7 +229,8 @@ test('initialKey seeds the scheme-less absolute root URL for CSS combining, so a
 test('combine returns an empty array for no combinables', function (): void {
     $combiner = new FileCombiner(fileCombinerTestAccessLevelChecker(), 'js', UrlServiceTestFactory::build(), Paths::fromRoot('/tmp/piwigo-file-combiner-test'), new EventDispatcher(), CurrentTemplate::current(), CurrentConfigTestFactory::get(), []);
 
-    expect($combiner->combine())->toBe([]);
+    expect($combiner->combine())
+        ->toBe([]);
 });
 
 test('combine returns a single non-template combinable unchanged', function (): void {
@@ -232,7 +239,8 @@ test('combine returns a single non-template combinable unchanged', function (): 
 
     $result = $combiner->combine();
 
-    expect($result)->toHaveCount(1)
+    expect($result)
+        ->toHaveCount(1)
         ->and($result[0])->toBe($combinable);
 });
 
@@ -243,7 +251,8 @@ test('combine passes remote combinables through without combining them', functio
 
     $result = $combiner->combine();
 
-    expect($result)->toHaveCount(2)
+    expect($result)
+        ->toHaveCount(2)
         ->and($result[0])->toBe($remote)
         ->and($result[1])->toBe($local);
 });
@@ -261,7 +270,8 @@ test('combine flushes pending items before appending a remote combinable, preser
 
     $result = $combiner->combine();
 
-    expect($result)->toHaveCount(2)
+    expect($result)
+        ->toHaveCount(2)
         ->and($result[0])->toBe($first)
         ->and($result[1])->toBe($remote);
 });
@@ -305,7 +315,8 @@ test('combine merges 2+ non-template files into a single combined output on disk
     try {
         $result = $combiner->combine();
 
-        expect($result)->toHaveCount(1);
+        expect($result)
+            ->toHaveCount(1);
         $combinedPath = $result[0]->path;
         // Exact hash-derived filename, replicating flush_pending()'s own
         // join('>', $key) + crc32b + base_convert(..., 16, 36) formula --
@@ -313,7 +324,8 @@ test('combine merges 2+ non-template files into a single combined output on disk
         // just "a filename got produced".
         $expectedKey = 'themes/default/js/a.js>0>themes/default/js/b.js>0';
         $expectedFile = '_data/combined/' . base_convert(hash('crc32b', $expectedKey), 16, 36) . '.js';
-        expect($combinedPath)->toBe($expectedFile);
+        expect($combinedPath)
+            ->toBe($expectedFile);
 
         // The resulting Combinable disables its own version-based cache
         // busting (the combined file's hash already encodes freshness).
@@ -326,9 +338,10 @@ test('combine merges 2+ non-template files into a single combined output on disk
         // surrounding concatenation, not just that the substrings appear
         // somewhere.
         $content = file_get_contents($root . '/' . $combinedPath);
-        expect($content)->toBe(
-            "/*BEGIN header */\n\n/*BEGIN themes/default/js/a.js */\nvar a = 1;\n\n/*BEGIN themes/default/js/b.js */\nvar b = 2;\n\n"
-        );
+        expect($content)
+            ->toBe(
+                "/*BEGIN header */\n\n/*BEGIN themes/default/js/a.js */\nvar a = 1;\n\n/*BEGIN themes/default/js/b.js */\nvar b = 2;\n\n"
+            );
     } finally {
         file_combiner_test_rrmdir($root);
     }
@@ -364,8 +377,10 @@ test('combine does not rewrite an already-combined file on a second call (cache 
         $secondResult = $combinerSecond->combine();
 
         expect($secondResult[0]->path)->toBe($firstResult[0]->path)
-            ->and(filemtime($combinedPath))->toBe($originalMtime)
-            ->and(file_get_contents($combinedPath))->toContain('var a = 1;');
+            ->and(filemtime($combinedPath))
+            ->toBe($originalMtime)
+            ->and(file_get_contents($combinedPath))
+            ->toContain('var a = 1;');
     } finally {
         file_combiner_test_rrmdir($root);
     }
@@ -422,18 +437,21 @@ test('combine merges 2+ CSS files into a single combined output, with a stripped
     try {
         $result = $combiner->combine();
 
-        expect($result)->toHaveCount(1);
+        expect($result)
+            ->toHaveCount(1);
         $combinedPath = $result[0]->path;
         $expectedKey = $urlService->getAbsoluteRootUrl(false) . '>themes/default/css/a.css>0>themes/default/css/b.css>0';
-        expect($combinedPath)->toBe('_data/combined/' . base_convert(hash('crc32b', $expectedKey), 16, 36) . '.css');
+        expect($combinedPath)
+            ->toBe('_data/combined/' . base_convert(hash('crc32b', $expectedKey), 16, 36) . '.css');
 
         // Exact output: the suspicious @import is promoted to the shared
         // "/*BEGIN header */" section (not left inline, not dropped), and
         // both files' own content follows in declaration order.
         $content = file_get_contents($root . '/' . $combinedPath);
-        expect($content)->toBe(
-            "/*BEGIN header */\n@import \"../evil.css\";\n/*BEGIN themes/default/css/a.css */\n\nbody{color:red;}\n\n/*BEGIN themes/default/css/b.css */\np{color:blue;}\n\n"
-        );
+        expect($content)
+            ->toBe(
+                "/*BEGIN header */\n@import \"../evil.css\";\n/*BEGIN themes/default/css/a.css */\n\nbody{color:red;}\n\n/*BEGIN themes/default/css/b.css */\np{color:blue;}\n\n"
+            );
     } finally {
         file_combiner_test_rrmdir($root);
     }
@@ -445,7 +463,8 @@ test('add appends a single combinable', function (): void {
 
     $combiner->add($combinable);
 
-    expect($combiner->combine())->toBe([$combinable]);
+    expect($combiner->combine())
+        ->toBe([$combinable]);
 });
 
 test('add merges an array of combinables', function (): void {
@@ -457,7 +476,8 @@ test('add merges an array of combinables', function (): void {
 
     // template_combine_files is false, so each flushes as its own
     // single-item batch and is returned unchanged, in order.
-    expect($combiner->combine())->toBe([$first, $second]);
+    expect($combiner->combine())
+        ->toBe([$first, $second]);
 });
 
 /**
@@ -581,7 +601,6 @@ function invokeProcessCombinable(FileCombiner $combiner, Combinable $combinable,
  *   this method's own final `return null;` -- same return value, same
  *   side effects (the cache write already happened above), every time.
  */
-
 test('combine reaches process_combinable for a single template combinable via flush_pending\'s own count===1 branch, updating its path to the cached file', function (): void {
     $root = sys_get_temp_dir() . '/piwigo-file-combiner-single-template-flush-' . bin2hex(random_bytes(8));
     mkdir($root . '/themes/default/js', 0o777, true);
@@ -604,7 +623,8 @@ test('combine reaches process_combinable for a single template combinable via fl
         // If flush_pending()'s own process_combinable() call for the
         // count===1 branch were skipped, $combinable would still point at
         // its original source path instead of the built cache file.
-        expect($result)->toHaveCount(1)
+        expect($result)
+            ->toHaveCount(1)
             ->and($result[0]->path)->toStartWith('_data/combined/t')
             ->and($result[0]->path)->toEndWith('.js')
             ->and($result[0]->path)->not->toBe('themes/default/js/foo.js')
@@ -640,7 +660,8 @@ test('process_combinable\'s single-file cache key is sensitive to the combinable
         $b->is_template = true;
         invokeProcessCombinable($combiner, $b, false, false, $header);
 
-        expect($a->path)->not->toBe($b->path);
+        expect($a->path)
+            ->not->toBe($b->path);
     } finally {
         CurrentTemplate::current()->reset();
         file_combiner_test_rrmdir($root);
@@ -671,7 +692,8 @@ test('process_combinable\'s single-file cache key is sensitive to the combinable
         $b->is_template = true;
         invokeProcessCombinable($combiner, $b, false, false, $header);
 
-        expect($a->path)->not->toBe($b->path);
+        expect($a->path)
+            ->not->toBe($b->path);
     } finally {
         CurrentTemplate::current()->reset();
         file_combiner_test_rrmdir($root);
@@ -705,7 +727,8 @@ test('process_combinable\'s single-file cache filename exactly matches the crc32
         $mtime = filemtime($root . '/themes/default/js/foo.js');
         $expectedKey = implode(',', ['themes/default/js/foo.js', '0', $mtime]);
         $expectedFile = '_data/combined/t' . base_convert(hash('crc32b', $expectedKey), 16, 36) . '.js';
-        expect($combinable->path)->toBe($expectedFile);
+        expect($combinable->path)
+            ->toBe($expectedFile);
     } finally {
         CurrentTemplate::current()->reset();
         file_combiner_test_rrmdir($root);
@@ -737,7 +760,8 @@ test('process_combinable reuses an already-combined template file (matching a fi
         $firstResult = invokeProcessCombinable($combiner, $combinable, false, false, $header);
         $cachedPath = $combinable->path;
 
-        expect($firstResult)->toBeNull()
+        expect($firstResult)
+            ->toBeNull()
             ->and(file_exists($root . '/' . $cachedPath))->toBeTrue();
 
         // Second call: a *fresh* Combinable with the same original
@@ -753,9 +777,12 @@ test('process_combinable reuses an already-combined template file (matching a fi
         $header2 = '';
         $secondResult = invokeProcessCombinable($combiner, $combinable2, false, false, $header2);
 
-        expect($secondResult)->toBeNull()
-            ->and($combinable2->path)->toBe($cachedPath)
-            ->and($combinable2->version)->toBeFalse();
+        expect($secondResult)
+            ->toBeNull()
+            ->and($combinable2->path)
+            ->toBe($cachedPath)
+            ->and($combinable2->version)
+            ->toBeFalse();
     } finally {
         CurrentTemplate::current()->reset();
         file_combiner_test_rrmdir($root);
@@ -783,12 +810,16 @@ test('process_combinable builds and writes a new combined JS file on a cache mis
 
         $result = invokeProcessCombinable($combiner, $combinable, false, false, $header);
 
-        expect($result)->toBeNull()
-            ->and($combinable->path)->toStartWith('_data/combined/t')
-            ->and($combinable->path)->toEndWith('.js')
+        expect($result)
+            ->toBeNull()
+            ->and($combinable->path)
+            ->toStartWith('_data/combined/t')
+            ->and($combinable->path)
+            ->toEndWith('.js')
             // The cache-miss branch never touches version -- only the
             // cache-hit short-circuit does (see the test above).
-            ->and($combinable->version)->toBe($originalVersion)
+            ->and($combinable->version)
+            ->toBe($originalVersion)
             ->and(file_exists($root . '/' . $combinable->path))->toBeTrue()
             // process_js() trims trailing whitespace/semicolons and
             // re-appends ";\n" -- confirms dispatch went through
@@ -823,9 +854,12 @@ test('process_combinable builds and writes a new combined CSS file on a cache mi
 
         $result = invokeProcessCombinable($combiner, $combinable, false, false, $header);
 
-        expect($result)->toBeNull()
-            ->and($combinable->path)->toStartWith('_data/combined/t')
-            ->and($combinable->path)->toEndWith('.css')
+        expect($result)
+            ->toBeNull()
+            ->and($combinable->path)
+            ->toStartWith('_data/combined/t')
+            ->and($combinable->path)
+            ->toEndWith('.css')
             ->and(file_exists($root . '/' . $combinable->path))->toBeTrue()
             // The {literal} markers are gone and no minification/trimming
             // happened -- process_css() (not process_js()) ran.
@@ -864,11 +898,13 @@ test('process_combinable returns rendered content directly for a template combin
 
         $result = invokeProcessCombinable($combiner, $combinable, true, false, $header);
 
-        expect($result)->toBe("var a = 42;\n")
+        expect($result)
+            ->toBe("var a = 42;\n")
             // Unlike the $return_content=false branch, the combinable's own
             // path/version are left completely untouched -- no cache file
             // was ever written for it.
-            ->and($combinable->path)->toBe('themes/default/js/foo.js')
+            ->and($combinable->path)
+            ->toBe('themes/default/js/foo.js')
             ->and(is_dir($root . '/_data/combined'))->toBeFalse();
     } finally {
         CurrentTemplate::current()->reset();
@@ -962,8 +998,10 @@ test('process_css_rec resolves a nested @import file recursively into the combin
         $header = '';
         $result = invokeProcessCombinable($combiner, $combinable, true, false, $header);
 
-        expect($result)->toBe("p { color: blue; }\n\nbody{color:red;}\n")
-            ->and($header)->toBe('');
+        expect($result)
+            ->toBe("p { color: blue; }\n\nbody{color:red;}\n")
+            ->and($header)
+            ->toBe('');
     } finally {
         file_combiner_test_rrmdir($root);
     }
@@ -989,8 +1027,10 @@ test('process_css_rec strips path-traversal, remote, and unreadable @import dire
         // from the output, with its raw @import directive preserved in
         // $header instead (@import must stay first in the final combined
         // file -- see FileCombiner::process_css_rec()'s own docblock).
-        expect($result)->toBe("\n\n\nbody{color:red;}\n")
-            ->and($header)->toBe("@import 'missing.css';@import '../evil.css';@import 'https://cdn.example.com/x.css';");
+        expect($result)
+            ->toBe("\n\n\nbody{color:red;}\n")
+            ->and($header)
+            ->toBe("@import 'missing.css';@import '../evil.css';@import 'https://cdn.example.com/x.css';");
     } finally {
         file_combiner_test_rrmdir($root);
     }
@@ -1020,8 +1060,10 @@ test('process_css_rec still strips a "\.\." @import even when the path it traver
         $header = '';
         $result = invokeProcessCombinable($combiner, $combinable, true, false, $header);
 
-        expect($result)->toBe("\n")
-            ->and($header)->toBe("@import '../sibling.css';");
+        expect($result)
+            ->toBe("\n")
+            ->and($header)
+            ->toBe("@import '../sibling.css';");
     } finally {
         file_combiner_test_rrmdir($root);
     }
@@ -1046,7 +1088,8 @@ test('process_css_rec throws when an @import target passes the is_readable() che
     if (! $socket instanceof Socket) {
         throw new RuntimeException('socket_create failed');
     }
-    expect(socket_bind($socket, $socketPath))->toBeTrue();
+    expect(socket_bind($socket, $socketPath))
+        ->toBeTrue();
 
     $combinable = new Combinable('main-css', 'themes/default/css/main.css');
     $combiner = new FileCombiner(fileCombinerTestAccessLevelChecker(), 'css', UrlServiceTestFactory::build(), Paths::fromRoot($root), new EventDispatcher(), CurrentTemplate::current(), CurrentConfigTestFactory::get(), []);
@@ -1081,16 +1124,21 @@ test('process_css_rec rewrites a relative url() reference into an embellished ab
         // The literal relative reference is gone -- proves preg_match_all
         // really searched $css's own real content (not a hardcoded ''
         // fallback) and the match actually got rewritten.
-        expect($result)->not->toContain("url('../img/bg.png')")
-            ->and($result)->toContain('url(')
+        expect($result)
+            ->not->toContain("url('../img/bg.png')")
+            ->and($result)
+            ->toContain('url(')
             // $search must be the FULL matched "url('...')" text, not just
             // the inner path -- otherwise str_replace() would only swap
             // the bare path substring, leaving a broken, doubly-nested
             // "url('url(...)')" behind.
-            ->and($result)->not->toContain("url('url(")
+            ->and($result)
+            ->not->toContain("url('url(")
             // getAbsoluteRootUrl(false), not (true) -- no scheme prefix.
-            ->and($result)->not->toContain('http://')
-            ->and($result)->not->toContain('https://');
+            ->and($result)
+            ->not->toContain('http://')
+            ->and($result)
+            ->not->toContain('https://');
     } finally {
         file_combiner_test_rrmdir($root);
     }
@@ -1114,13 +1162,16 @@ test('process_css_rec only rewrites url() references starting with "/" when chec
         $result = invokeProcessCombinable($combiner, $combinable, true, false, $header);
 
         // Absolute path (starts with '/') is left completely untouched.
-        expect($result)->toContain("url('/absolute/path.png')")
+        expect($result)
+            ->toContain("url('/absolute/path.png')")
             // 'a/b.png' doesn't start with '/' (even though its SECOND
             // character is '/') -- must still be rewritten.
-            ->and($result)->not->toContain("url('a/b.png')")
+            ->and($result)
+            ->not->toContain("url('a/b.png')")
             // 'rel/path/' doesn't start with '/' (even though its LAST
             // character is '/') -- must still be rewritten.
-            ->and($result)->not->toContain("url('rel/path/')");
+            ->and($result)
+            ->not->toContain("url('rel/path/')");
     } finally {
         file_combiner_test_rrmdir($root);
     }
@@ -1141,9 +1192,10 @@ test('process_css_rec resolves a relative url() reference against the CSS file\'
         $header = '';
         $result = invokeProcessCombinable($combiner, $combinable, true, false, $header);
 
-        $expectedRelative = 'themes/default/css/sub' . '/../img/bg.png';
+        $expectedRelative = 'themes/default/css/sub/../img/bg.png';
         $expectedEmbellished = $urlService->embellishUrl($urlService->getAbsoluteRootUrl(false) . $expectedRelative);
-        expect($result)->toBe("body{background: url({$expectedEmbellished});}\n");
+        expect($result)
+            ->toBe("body{background: url({$expectedEmbellished});}\n");
     } finally {
         file_combiner_test_rrmdir($root);
     }
@@ -1164,8 +1216,10 @@ test('process_css_rec leaves a remote or data-URI url() reference untouched', fu
         $header = '';
         $result = invokeProcessCombinable($combiner, $combinable, true, false, $header);
 
-        expect($result)->toContain("url('https://cdn.example.com/x.png')")
-            ->and($result)->toContain("url('data:image/png;base64,AAA')");
+        expect($result)
+            ->toContain("url('https://cdn.example.com/x.png')")
+            ->and($result)
+            ->toContain("url('data:image/png;base64,AAA')");
     } finally {
         file_combiner_test_rrmdir($root);
     }
@@ -1193,8 +1247,10 @@ test('process_css_rec resolves a doubly-nested @import against the correct subdi
         // own source file's line ending after the @import statement --
         // "p{color:green;}\n" from nested.css itself, plus one from
         // sub.css's own line, plus one from main.css's own line.
-        expect($result)->toBe("p{color:green;}\n\n\n")
-            ->and($header)->toBe('');
+        expect($result)
+            ->toBe("p{color:green;}\n\n\n")
+            ->and($header)
+            ->toBe('');
     } finally {
         file_combiner_test_rrmdir($root);
     }
@@ -1229,7 +1285,8 @@ test('process_combinable dispatches a non-template combinable to process_js when
         $header = '';
         $result = invokeProcessCombinable($combiner, $combinable, true, false, $header);
 
-        expect($result)->toBe("var a = 1;\n");
+        expect($result)
+            ->toBe("var a = 1;\n");
     } finally {
         file_combiner_test_rrmdir($root);
     }
@@ -1255,7 +1312,8 @@ test('process_combinable registers the template file under a handle combining th
 
         invokeProcessCombinable($combiner, $combinable, false, false, $header);
 
-        expect($template->files)->toHaveKey('js.my-handle-id');
+        expect($template->files)
+            ->toHaveKey('js.my-handle-id');
     } finally {
         CurrentTemplate::current()->reset();
         file_combiner_test_rrmdir($root);
@@ -1292,8 +1350,10 @@ test('process_combinable notifies combinable_preparse listeners before parsing a
         // assertion alone (a by-ref/closure narrowing loss, same class as
         // this codebase's other instances of the same limitation).
         assert($notifiedWith instanceof CombinablePreparse);
-        expect($notifiedWith)->not->toBeNull()
-            ->and($notifiedWith->combinable)->toBe($combinable);
+        expect($notifiedWith)
+            ->not->toBeNull()
+            ->and($notifiedWith->combinable)
+            ->toBe($combinable);
     } finally {
         EventDispatcherTestFactory::get()->reset();
         CurrentTemplate::current()->reset();
@@ -1305,6 +1365,8 @@ test('process_combinable notifies combinable_preparse listeners before parsing a
 test('process_js trims whitespace/semicolons even from a null content argument', function (): void {
     $method = new ReflectionMethod(FileCombiner::class, 'process_js');
 
-    expect($method->invoke(null, null))->toBe(";\n")
-        ->and($method->invoke(null, "  var a=1;  \n"))->toBe("var a=1;\n");
+    expect($method->invoke(null, null))
+        ->toBe(";\n")
+        ->and($method->invoke(null, "  var a=1;  \n"))
+        ->toBe("var a=1;\n");
 });

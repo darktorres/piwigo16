@@ -4,9 +4,8 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Integration;
 
-use Override;
 use LogicException;
-use stdClass;
+use Override;
 use Piwigo\Bootstrap\RequestBootstrap;
 use Piwigo\Config\ConfigService;
 use Piwigo\Core\ErrorCollector;
@@ -15,6 +14,7 @@ use Piwigo\Core\Kernel;
 use Piwigo\Core\Paths;
 use Piwigo\Tests\Support\DbCredentialsTestFactory;
 use Piwigo\Tests\Support\KernelContainerOverride;
+use stdClass;
 
 /**
  * Piwigo\Bootstrap\RequestBootstrap::bootEntryPoint() -- the real per-
@@ -128,7 +128,7 @@ final class RequestBootstrapBootEntryPointTest extends IntegrationTestCase
         parent::tearDown();
     }
 
-    public function test_bootEntryPoint_runs_coverageCollector_and_propagates_a_container_type_error_from_connect(): void
+    public function testBootEntryPointRunsCoverageCollectorAndPropagatesAContainerTypeErrorFromConnect(): void
     {
         $paths = Paths::fromRoot(dirname(__DIR__, 2));
 

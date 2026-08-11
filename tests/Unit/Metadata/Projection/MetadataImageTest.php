@@ -48,9 +48,12 @@ function metadataImageTestEntity(?string $representativeExt = 'jpg'): ImageEntit
 test('fromEntity copies id/path/representativeExt straight through', function (): void {
     $image = MetadataImage::fromEntity(metadataImageTestEntity());
 
-    expect($image->id)->toBe(42)
-        ->and($image->path)->toBe('upload/2026/08/01/photo.jpg')
-        ->and($image->representativeExt)->toBe('jpg');
+    expect($image->id)
+        ->toBe(42)
+        ->and($image->path)
+        ->toBe('upload/2026/08/01/photo.jpg')
+        ->and($image->representativeExt)
+        ->toBe('jpg');
 });
 
 test('fromEntity defaults id to 0 for a transient (never-persisted) entity', function (): void {
@@ -67,9 +70,10 @@ test('fromEntity leaves a null representativeExt as null', function (): void {
 test('toArray round-trips the exact same shape fromEntity built', function (): void {
     $roundTripped = MetadataImage::fromEntity(metadataImageTestEntity())->toArray();
 
-    expect($roundTripped)->toBe([
-        'id' => 42,
-        'path' => 'upload/2026/08/01/photo.jpg',
-        'representative_ext' => 'jpg',
-    ]);
+    expect($roundTripped)
+        ->toBe([
+            'id' => 42,
+            'path' => 'upload/2026/08/01/photo.jpg',
+            'representative_ext' => 'jpg',
+        ]);
 });

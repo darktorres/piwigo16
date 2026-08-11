@@ -89,7 +89,7 @@ function permalinkRepoTestSlug(string $prefix = 'p17-unit-test-'): string
 
 afterEach(function (): void {
     DbConnection::build()->executeStatement(
-        "UPDATE " . 'old_permalinks' . " SET hit = 42, last_hit = '2026-08-01 00:00:00' WHERE permalink = 'old-sample-album'"
+        'UPDATE old_permalinks' . " SET hit = 42, last_hit = '2026-08-01 00:00:00' WHERE permalink = 'old-sample-album'"
     );
 });
 
@@ -108,7 +108,8 @@ test('setCategoryPermalink() then findCategoryIdByPermalink() round-trips', func
 });
 
 test('findCategoryIdByPermalink() returns null when unused', function (): void {
-    expect(permalinkRepoTest()->findCategoryIdByPermalink(permalinkRepoTestSlug('p17-unit-test-does-not-exist-')))->toBeNull();
+    expect(permalinkRepoTest()->findCategoryIdByPermalink(permalinkRepoTestSlug('p17-unit-test-does-not-exist-')))
+        ->toBeNull();
 });
 
 test('findPermalinkByCategoryId() returns null when unset', function (): void {
@@ -123,7 +124,8 @@ test('findPermalinkByCategoryId() returns null for a category that does not exis
     // null here (no CategoryEntity to read ->permalink off of at all),
     // exercising the method's own `?->permalink?->value` nullsafe chain
     // on a null base, not just a real entity with a null permalink.
-    expect(permalinkRepoTest()->findPermalinkByCategoryId(999999))->toBeNull();
+    expect(permalinkRepoTest()->findPermalinkByCategoryId(999999))
+        ->toBeNull();
 });
 
 test('clearCategoryPermalink() removes it', function (): void {
@@ -144,7 +146,8 @@ test('insertOldPermalinkDeleted() then findOldCategoryId() round-trips', functio
     $repo->insertOldPermalinkDeleted(1, $slug);
 
     try {
-        expect($repo->findOldCategoryId($slug))->toBe(1);
+        expect($repo->findOldCategoryId($slug))
+            ->toBe(1);
     } finally {
         $repo->deleteOldPermalink(1, $slug);
     }
@@ -154,7 +157,8 @@ test('insertOldPermalinkDeleted() starts the hit counter at exactly zero', funct
     $conn = DbConnection::build();
     $slug = permalinkRepoTestSlug('p17-unit-old-test-');
 
-    permalinkRepoTest()->insertOldPermalinkDeleted(1, $slug);
+    permalinkRepoTest()
+        ->insertOldPermalinkDeleted(1, $slug);
 
     try {
         $hit = $conn->createQueryBuilder()
@@ -165,14 +169,16 @@ test('insertOldPermalinkDeleted() starts the hit counter at exactly zero', funct
             ->executeQuery()
             ->fetchOne();
 
-        expect($hit)->toBe(0);
+        expect($hit)
+            ->toBe(0);
     } finally {
-        $conn->executeStatement('DELETE FROM ' . 'old_permalinks' . ' WHERE permalink = ?', [$slug]);
+        $conn->executeStatement('DELETE FROM old_permalinks WHERE permalink = ?', [$slug]);
     }
 });
 
 test('findOldCategoryId() returns null when never used', function (): void {
-    expect(permalinkRepoTest()->findOldCategoryId(permalinkRepoTestSlug('p17-unit-never-used-')))->toBeNull();
+    expect(permalinkRepoTest()->findOldCategoryId(permalinkRepoTestSlug('p17-unit-never-used-')))
+        ->toBeNull();
 });
 
 test('markOldPermalinkDeleted() updates an existing row, not a duplicate insert', function (): void {
@@ -185,7 +191,8 @@ test('markOldPermalinkDeleted() updates an existing row, not a duplicate insert'
     $repo->markOldPermalinkDeleted(1, $slug);
 
     try {
-        expect($repo->findOldCategoryId($slug))->toBe(1);
+        expect($repo->findOldCategoryId($slug))
+            ->toBe(1);
     } finally {
         $repo->deleteOldPermalink(1, $slug);
     }
@@ -199,7 +206,8 @@ test('markOldPermalinkDeleted() clears the identity map, so a later find() sees 
 
     try {
         $tracked = $em->find(OldPermalinkEntity::class, $permalinkVo);
-        expect($tracked)->not->toBeNull();
+        expect($tracked)
+            ->not->toBeNull();
 
         // A distinct, later moment than the row's own insert-time
         // dateDeleted -- Env::now() is frozen for the whole test process
@@ -207,7 +215,7 @@ test('markOldPermalinkDeleted() clears the identity map, so a later find() sees 
         // write the exact same frozen value), so this backdates the row
         // directly instead of relying on wall-clock drift.
         DbConnection::build()->executeStatement(
-            "UPDATE " . 'old_permalinks' . " SET date_deleted = '2020-01-01 00:00:00' WHERE permalink = ?",
+            'UPDATE old_permalinks' . " SET date_deleted = '2020-01-01 00:00:00' WHERE permalink = ?",
             [$slug]
         );
         $em->clear();
@@ -215,7 +223,8 @@ test('markOldPermalinkDeleted() clears the identity map, so a later find() sees 
         if (! $reread instanceof OldPermalinkEntity) {
             throw new RuntimeException('unreachable');
         }
-        expect($reread->dateDeleted?->value)->toBe('2020-01-01 00:00:00');
+        expect($reread->dateDeleted?->value)
+            ->toBe('2020-01-01 00:00:00');
 
         $repo->markOldPermalinkDeleted(1, $slug);
 
@@ -223,7 +232,8 @@ test('markOldPermalinkDeleted() clears the identity map, so a later find() sees 
         if (! $refetched instanceof OldPermalinkEntity) {
             throw new RuntimeException('expected the row to still exist');
         }
-        expect($refetched->dateDeleted?->value)->not->toBe('2020-01-01 00:00:00');
+        expect($refetched->dateDeleted?->value)
+            ->not->toBe('2020-01-01 00:00:00');
     } finally {
         $repo->deleteOldPermalink(1, $slug);
     }
@@ -236,7 +246,8 @@ test('deleteOldPermalink() removes the row', function (): void {
 
     $repo->deleteOldPermalink(1, $slug);
 
-    expect($repo->findOldCategoryId($slug))->toBeNull();
+    expect($repo->findOldCategoryId($slug))
+        ->toBeNull();
 });
 
 test('deleteOldPermalink() clears the identity map, so a later find() sees the real deletion instead of a stale cached entity', function (): void {
@@ -245,7 +256,8 @@ test('deleteOldPermalink() clears the identity map, so a later find() sees the r
     $repo->insertOldPermalinkDeleted(1, $slug);
     $permalinkVo = Permalink::from($slug);
     $tracked = $em->find(OldPermalinkEntity::class, $permalinkVo);
-    expect($tracked)->not->toBeNull();
+    expect($tracked)
+        ->not->toBeNull();
 
     $repo->deleteOldPermalink(1, $slug);
 
@@ -257,8 +269,10 @@ test('deleteOldPermalinkByValue() removes the row and returns true', function ()
     $slug = permalinkRepoTestSlug('p17-unit-old-test-');
     $repo->insertOldPermalinkDeleted(1, $slug);
 
-    expect($repo->deleteOldPermalinkByValue($slug))->toBeTrue()
-        ->and($repo->findOldCategoryId($slug))->toBeNull();
+    expect($repo->deleteOldPermalinkByValue($slug))
+        ->toBeTrue()
+        ->and($repo->findOldCategoryId($slug))
+        ->toBeNull();
 });
 
 test('deleteOldPermalinkByValue() clears the identity map, so a later find() sees the real deletion instead of a stale cached entity', function (): void {
@@ -267,7 +281,8 @@ test('deleteOldPermalinkByValue() clears the identity map, so a later find() see
     $repo->insertOldPermalinkDeleted(1, $slug);
     $permalinkVo = Permalink::from($slug);
     $tracked = $em->find(OldPermalinkEntity::class, $permalinkVo);
-    expect($tracked)->not->toBeNull();
+    expect($tracked)
+        ->not->toBeNull();
 
     $repo->deleteOldPermalinkByValue($slug);
 
@@ -275,13 +290,15 @@ test('deleteOldPermalinkByValue() clears the identity map, so a later find() see
 });
 
 test('deleteOldPermalinkByValue() returns false when nothing matches', function (): void {
-    expect(permalinkRepoTest()->deleteOldPermalinkByValue(permalinkRepoTestSlug('p17-unit-never-used-')))->toBeFalse();
+    expect(permalinkRepoTest()->deleteOldPermalinkByValue(permalinkRepoTestSlug('p17-unit-never-used-')))
+        ->toBeFalse();
 });
 
 test('clearCategoryPermalink() on an unknown category is a silent no-op', function (): void {
     // em->find() returns null for a nonexistent id -- exercises the
     // early `return;` guard directly.
-    permalinkRepoTest()->clearCategoryPermalink(999999);
+    permalinkRepoTest()
+        ->clearCategoryPermalink(999999);
 })->throwsNoExceptions();
 
 test('setCategoryPermalink() on an unknown category is a silent no-op', function (): void {
@@ -289,7 +306,8 @@ test('setCategoryPermalink() on an unknown category is a silent no-op', function
 
     $repo->setCategoryPermalink(999999, permalinkRepoTestSlug());
 
-    expect($repo->findCategoryIdByPermalink('p17-unit-test-does-not-matter'))->toBeNull();
+    expect($repo->findCategoryIdByPermalink('p17-unit-test-does-not-matter'))
+        ->toBeNull();
 });
 
 test('findAllOrderedBy() applies the given order column', function (): void {
@@ -310,7 +328,8 @@ test('findAllOrderedBy() applies the given order column', function (): void {
             throw new RuntimeException('expected both slugs to be found in the result');
         }
 
-        expect($lowIndex)->toBeLessThan($highIndex);
+        expect($lowIndex)
+            ->toBeLessThan($highIndex);
     } finally {
         $repo->deleteOldPermalink(1, $lowSlug);
         $repo->deleteOldPermalink(1, $highSlug);
@@ -332,8 +351,8 @@ test('findAllOrderedBy() sorts by a column whose order genuinely differs from th
     $highSlug = permalinkRepoTestSlug('zzz-p17-unit-hit-order-test-');
     $repo->insertOldPermalinkDeleted(1, $lowSlug);
     $repo->insertOldPermalinkDeleted(1, $highSlug);
-    $conn->executeStatement('UPDATE ' . 'old_permalinks' . ' SET hit = 100 WHERE permalink = ?', [$lowSlug]);
-    $conn->executeStatement('UPDATE ' . 'old_permalinks' . ' SET hit = 1 WHERE permalink = ?', [$highSlug]);
+    $conn->executeStatement('UPDATE old_permalinks SET hit = 100 WHERE permalink = ?', [$lowSlug]);
+    $conn->executeStatement('UPDATE old_permalinks SET hit = 1 WHERE permalink = ?', [$highSlug]);
 
     try {
         $rows = $repo->findAllOrderedBy(OldPermalinkSortField::Hit);
@@ -346,7 +365,8 @@ test('findAllOrderedBy() sorts by a column whose order genuinely differs from th
 
         // Ascending by hit: highSlug (hit=1) before lowSlug (hit=100) --
         // the reverse of their own alphabetical/PK order.
-        expect(array_keys($bySlug))->toBe([$highSlug, $lowSlug]);
+        expect(array_keys($bySlug))
+            ->toBe([$highSlug, $lowSlug]);
     } finally {
         $repo->deleteOldPermalink(1, $lowSlug);
         $repo->deleteOldPermalink(1, $highSlug);
@@ -396,7 +416,8 @@ test('findPermalinkMatches() finds old and current permalinks', function (): voi
     $conn->executeStatement("UPDATE " . 'categories' . " SET permalink = 'p17-unit-sample-album' WHERE id = 2");
 
     try {
-        $matches = permalinkRepoTest()->findPermalinkMatches(['old-sample-album', 'p17-unit-sample-album']);
+        $matches = permalinkRepoTest()
+            ->findPermalinkMatches(['old-sample-album', 'p17-unit-sample-album']);
 
         // id/is_old come back as native int under this project's mysqli
         // driver config (unlike varchar columns like 'permalink').
@@ -424,7 +445,8 @@ test('touchOldPermalinkHit() increments the counter', function (): void {
         ->executeQuery()
         ->fetchOne();
 
-    expect($hit)->toBe(43);
+    expect($hit)
+        ->toBe(43);
 });
 
 test('deleteOldPermalinksForCategories() removes only rows for the given category ids', function (): void {
@@ -437,8 +459,10 @@ test('deleteOldPermalinksForCategories() removes only rows for the given categor
     try {
         $repo->deleteOldPermalinksForCategories([2]);
 
-        expect($repo->findOldCategoryId($keptSlug))->toBe(1)
-            ->and($repo->findOldCategoryId($deletedSlug))->toBeNull();
+        expect($repo->findOldCategoryId($keptSlug))
+            ->toBe(1)
+            ->and($repo->findOldCategoryId($deletedSlug))
+            ->toBeNull();
     } finally {
         $repo->deleteOldPermalink(1, $keptSlug);
     }

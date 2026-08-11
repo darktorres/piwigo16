@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Integration;
 
-use Override;
-use Piwigo\Core\Kernel;
 use LogicException;
-use Piwigo\Config\CurrentConfig;
+use Override;
 use Piwigo\Config\ConfigLoader;
+use Piwigo\Config\CurrentConfig;
+use Piwigo\Core\Kernel;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Session\SessionEntity;
@@ -72,7 +72,7 @@ final class SessionUserResolverTest extends IntegrationTestCase
         parent::tearDown();
     }
 
-    public function test_resolves_the_logged_user_id_from_a_real_session_row(): void
+    public function testResolvesTheLoggedUserIdFromARealSessionRow(): void
     {
         $cookie = 'sur-test-' . bin2hex(random_bytes(8));
         $this->repo->write($cookie, 'pwg_uid|i:3;pwg_remember|b:0;');
@@ -84,7 +84,7 @@ final class SessionUserResolverTest extends IntegrationTestCase
         $this->repo->destroy($cookie);
     }
 
-    public function test_returns_null_for_a_cookie_with_no_matching_session_row(): void
+    public function testReturnsNullForACookieWithNoMatchingSessionRow(): void
     {
         $cookie = 'sur-test-never-issued-' . bin2hex(random_bytes(8));
 
@@ -93,7 +93,7 @@ final class SessionUserResolverTest extends IntegrationTestCase
         self::assertNull($userId);
     }
 
-    public function test_returns_null_when_the_session_data_has_no_pwg_uid(): void
+    public function testReturnsNullWhenTheSessionDataHasNoPwgUid(): void
     {
         $cookie = 'sur-test-anon-' . bin2hex(random_bytes(8));
         $this->repo->write($cookie, 'some_other_key|s:5:"value";');
@@ -105,7 +105,7 @@ final class SessionUserResolverTest extends IntegrationTestCase
         $this->repo->destroy($cookie);
     }
 
-    public function test_resolves_via_the_ip_bound_composite_key_when_use_ip_address_in_key_is_true(): void
+    public function testResolvesViaTheIpBoundCompositeKeyWhenUseIpAddressInKeyIsTrue(): void
     {
         $_SERVER['REMOTE_ADDR'] = '203.0.113.5';
         $cookie = 'sur-test-ip-' . bin2hex(random_bytes(8));
@@ -119,7 +119,7 @@ final class SessionUserResolverTest extends IntegrationTestCase
         $this->repo->destroy($compositeId);
     }
 
-    public function test_returns_null_for_the_bare_cookie_when_the_row_was_written_ip_bound(): void
+    public function testReturnsNullForTheBareCookieWhenTheRowWasWrittenIpBound(): void
     {
         $_SERVER['REMOTE_ADDR'] = '203.0.113.9';
         $cookie = 'sur-test-ip-mismatch-' . bin2hex(random_bytes(8));

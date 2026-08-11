@@ -4,16 +4,16 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Integration;
 
-use Override;
-use Piwigo\Core\Kernel;
-use LogicException;
-use Piwigo\Db\EntityManagerFactory;
-use Piwigo\Tests\Support\EventDispatcherTestFactory;
 use Doctrine\DBAL\Connection;
-use Piwigo\Config\CurrentConfig;
+use LogicException;
+use Override;
 use Piwigo\Config\ConfigLoader;
+use Piwigo\Config\CurrentConfig;
+use Piwigo\Core\Kernel;
 use Piwigo\Db\DbConnection;
+use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Tests\Support\CurrentUserTestFactory;
+use Piwigo\Tests\Support\EventDispatcherTestFactory;
 use Piwigo\Users\PreferencesService;
 use Piwigo\Users\User;
 use Piwigo\Users\UserRepository;
@@ -49,17 +49,20 @@ final class PreferencesServiceTest extends IntegrationTestCase
         $this->conn = DbConnection::build();
         $this->service = new PreferencesService(new UserRepository(EntityManagerFactory::build($this->conn), EventDispatcherTestFactory::get(), $currentConfig), CurrentUserTestFactory::get());
 
-        CurrentUserTestFactory::get()->set(User::fromUserArray(['id' => 1, 'preferences' => []]));
+        CurrentUserTestFactory::get()->set(User::fromUserArray([
+            'id' => 1,
+            'preferences' => [],
+        ]));
     }
 
     #[Override]
     protected function tearDown(): void
     {
-        $this->conn->executeStatement('UPDATE ' . 'user_infos' . ' SET preferences = NULL WHERE user_id = 1');
+        $this->conn->executeStatement('UPDATE user_infos SET preferences = NULL WHERE user_id = 1');
         parent::tearDown();
     }
 
-    public function test_update_param_then_get_param_round_trips(): void
+    public function testUpdateParamThenGetParamRoundTrips(): void
     {
         $this->service->updateParam('theme', 'dark');
 
@@ -68,7 +71,7 @@ final class PreferencesServiceTest extends IntegrationTestCase
         self::assertSame('dark', CurrentUserTestFactory::get()->get()->preferences['theme']);
     }
 
-    public function test_update_param_persists_to_the_database(): void
+    public function testUpdateParamPersistsToTheDatabase(): void
     {
         $this->service->updateParam('language', 'fr_FR');
 
@@ -80,10 +83,12 @@ final class PreferencesServiceTest extends IntegrationTestCase
             ->fetchOne();
 
         self::assertIsString($value);
-        self::assertSame(['language' => 'fr_FR'], json_decode($value, true));
+        self::assertSame([
+            'language' => 'fr_FR',
+        ], json_decode($value, true));
     }
 
-    public function test_update_param_converts_the_string_true_and_false_to_bool(): void
+    public function testUpdateParamConvertsTheStringTrueAndFalseToBool(): void
     {
         $this->service->updateParam('flag_a', 'true');
         $this->service->updateParam('flag_b', 'false');
@@ -92,7 +97,7 @@ final class PreferencesServiceTest extends IntegrationTestCase
         self::assertFalse($this->service->getParam('flag_b'));
     }
 
-    public function test_delete_param_removes_a_single_key(): void
+    public function testDeleteParamRemovesASingleKey(): void
     {
         $this->service->updateParam('a', 1);
         $this->service->updateParam('b', 2);
@@ -103,7 +108,7 @@ final class PreferencesServiceTest extends IntegrationTestCase
         self::assertSame(2, $this->service->getParam('b'));
     }
 
-    public function test_delete_param_accepts_a_list_of_keys(): void
+    public function testDeleteParamAcceptsAListOfKeys(): void
     {
         $this->service->updateParam('a', 1);
         $this->service->updateParam('b', 2);
@@ -116,12 +121,12 @@ final class PreferencesServiceTest extends IntegrationTestCase
         self::assertSame(3, $this->service->getParam('c'));
     }
 
-    public function test_get_param_returns_the_default_when_unset(): void
+    public function testGetParamReturnsTheDefaultWhenUnset(): void
     {
         self::assertSame('fallback', $this->service->getParam('never-set', 'fallback'));
     }
 
-    public function test_delete_param_with_an_empty_array_is_a_noop(): void
+    public function testDeleteParamWithAnEmptyArrayIsANoop(): void
     {
         $this->service->updateParam('a', 1);
 
@@ -130,74 +135,74 @@ final class PreferencesServiceTest extends IntegrationTestCase
         self::assertSame(1, $this->service->getParam('a'));
     }
 
-    public function test_get_admin_theme_pref_returns_null_when_unset(): void
+    public function testGetAdminThemePrefReturnsNullWhenUnset(): void
     {
         self::assertNull($this->service->getAdminThemePref());
     }
 
-    public function test_get_admin_theme_pref_returns_the_stored_string(): void
+    public function testGetAdminThemePrefReturnsTheStoredString(): void
     {
         $this->service->updateParam('admin_theme', 'clear');
 
         self::assertSame('clear', $this->service->getAdminThemePref());
     }
 
-    public function test_get_admin_theme_pref_narrows_a_non_string_value_to_null(): void
+    public function testGetAdminThemePrefNarrowsANonStringValueToNull(): void
     {
         $this->service->updateParam('admin_theme', ['not', 'scalar']);
 
         self::assertNull($this->service->getAdminThemePref());
     }
 
-    public function test_get_user_manager_view_returns_null_when_unset(): void
+    public function testGetUserManagerViewReturnsNullWhenUnset(): void
     {
         self::assertNull($this->service->getUserManagerView());
     }
 
-    public function test_get_user_manager_view_returns_the_stored_string(): void
+    public function testGetUserManagerViewReturnsTheStoredString(): void
     {
         $this->service->updateParam('user-manager-view', 'thumbnails');
 
         self::assertSame('thumbnails', $this->service->getUserManagerView());
     }
 
-    public function test_get_user_manager_pagination_returns_null_when_unset(): void
+    public function testGetUserManagerPaginationReturnsNullWhenUnset(): void
     {
         self::assertNull($this->service->getUserManagerPagination());
     }
 
-    public function test_get_user_manager_pagination_returns_the_stored_value_as_int(): void
+    public function testGetUserManagerPaginationReturnsTheStoredValueAsInt(): void
     {
         $this->service->updateParam('user-manager-pagination', 20);
 
         self::assertSame(20, $this->service->getUserManagerPagination());
     }
 
-    public function test_get_user_manager_pagination_narrows_a_non_numeric_value_to_null(): void
+    public function testGetUserManagerPaginationNarrowsANonNumericValueToNull(): void
     {
         $this->service->updateParam('user-manager-pagination', 'not-a-number');
 
         self::assertNull($this->service->getUserManagerPagination());
     }
 
-    public function test_get_plugin_manager_view_returns_null_when_unset(): void
+    public function testGetPluginManagerViewReturnsNullWhenUnset(): void
     {
         self::assertNull($this->service->getPluginManagerView());
     }
 
-    public function test_get_plugin_manager_view_returns_the_stored_string(): void
+    public function testGetPluginManagerViewReturnsTheStoredString(): void
     {
         $this->service->updateParam('plugin-manager-view', 'thumbnails');
 
         self::assertSame('thumbnails', $this->service->getPluginManagerView());
     }
 
-    public function test_get_promote_mobile_apps_returns_null_when_unset(): void
+    public function testGetPromoteMobileAppsReturnsNullWhenUnset(): void
     {
         self::assertNull($this->service->getPromoteMobileApps());
     }
 
-    public function test_get_promote_mobile_apps_returns_false_when_explicitly_stored_false(): void
+    public function testGetPromoteMobileAppsReturnsFalseWhenExplicitlyStoredFalse(): void
     {
         // Explicitly false must surface as false, not be treated as
         // "absent" and silently replaced by a caller's `?? true` default.
@@ -206,38 +211,38 @@ final class PreferencesServiceTest extends IntegrationTestCase
         self::assertFalse($this->service->getPromoteMobileApps());
     }
 
-    public function test_get_promote_mobile_apps_casts_a_truthy_value_to_true(): void
+    public function testGetPromoteMobileAppsCastsATruthyValueToTrue(): void
     {
         $this->service->updateParam('promote-mobile-apps', 1);
 
         self::assertTrue($this->service->getPromoteMobileApps());
     }
 
-    public function test_get_show_newsletter_subscription_returns_null_when_unset(): void
+    public function testGetShowNewsletterSubscriptionReturnsNullWhenUnset(): void
     {
         self::assertNull($this->service->getShowNewsletterSubscription());
     }
 
-    public function test_get_show_newsletter_subscription_returns_false_when_explicitly_stored_false(): void
+    public function testGetShowNewsletterSubscriptionReturnsFalseWhenExplicitlyStoredFalse(): void
     {
         $this->service->updateParam('show_newsletter_subscription', false);
 
         self::assertFalse($this->service->getShowNewsletterSubscription());
     }
 
-    public function test_get_gallery_search_filters_returns_null_when_unset(): void
+    public function testGetGallerySearchFiltersReturnsNullWhenUnset(): void
     {
         self::assertNull($this->service->getGallerySearchFilters());
     }
 
-    public function test_get_gallery_search_filters_returns_the_stored_array(): void
+    public function testGetGallerySearchFiltersReturnsTheStoredArray(): void
     {
         $this->service->updateParam('gallery_search_filters', ['tags', 'allwords']);
 
         self::assertSame(['tags', 'allwords'], $this->service->getGallerySearchFilters());
     }
 
-    public function test_get_gallery_search_filters_narrows_a_non_array_value_to_null(): void
+    public function testGetGallerySearchFiltersNarrowsANonArrayValueToNull(): void
     {
         $this->service->updateParam('gallery_search_filters', 'not-an-array');
 

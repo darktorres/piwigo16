@@ -9,7 +9,9 @@ use Piwigo\Common\ValueObject\IpAddress;
 use Piwigo\Common\ValueObject\Username;
 use Piwigo\Tests\Unit\Common\ValueObject\Contract\StringVoContract;
 
-/** @extends StringVoContract<IpAddress> */
+/**
+ * @extends StringVoContract<IpAddress>
+ */
 final class IpAddressTest extends StringVoContract
 {
     #[Override]
@@ -30,12 +32,14 @@ final class IpAddressTest extends StringVoContract
         return Username::class;
     }
 
-    /** @return iterable<string, array{string}> */
+    /**
+     * @return iterable<string, array{string}>
+     */
     #[Override]
     public static function invalidSamples(): iterable
     {
-        yield 'empty'          => [''];
-        yield 'garbage'        => ['not an ip'];
+        yield 'empty' => [''];
+        yield 'garbage' => ['not an ip'];
         yield 'ipv4 too many octets' => ['192.168.1.1.1'];
         yield 'ipv4 octet out of range' => ['999.168.1.1'];
         yield 'truncated ipv4 prefix' => ['192.168.1'];

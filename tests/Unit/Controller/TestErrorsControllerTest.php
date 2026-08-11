@@ -2,8 +2,8 @@
 
 declare(strict_types=1);
 
-use Piwigo\Config\DeploymentPolicy;
 use Nyholm\Psr7\ServerRequest;
+use Piwigo\Config\DeploymentPolicy;
 use Piwigo\Controller\TestErrorsController;
 use Piwigo\Core\ErrorCollector;
 use Piwigo\Core\Paths;
@@ -42,6 +42,8 @@ test('returns an empty 404 response when test mode is not active', function (): 
         }
     }
 
-    expect($response->getStatusCode())->toBe(404);
-    expect((string) $response->getBody())->toBe('');
+    expect($response->getStatusCode())
+        ->toBe(404);
+    expect((string) $response->getBody())
+        ->toBe('');
 });

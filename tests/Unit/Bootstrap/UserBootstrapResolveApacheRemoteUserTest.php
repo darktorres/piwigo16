@@ -13,7 +13,7 @@ use Piwigo\Bootstrap\UserBootstrap;
  */
 final class UserBootstrapResolveApacheRemoteUserTest extends TestCase
 {
-    public function test_prefers_remote_user_when_both_are_present(): void
+    public function testPrefersRemoteUserWhenBothArePresent(): void
     {
         $result = UserBootstrap::resolveApacheRemoteUser([
             'REMOTE_USER' => 'alice',
@@ -23,7 +23,7 @@ final class UserBootstrapResolveApacheRemoteUserTest extends TestCase
         self::assertSame('alice', $result);
     }
 
-    public function test_falls_back_to_redirect_remote_user(): void
+    public function testFallsBackToRedirectRemoteUser(): void
     {
         $result = UserBootstrap::resolveApacheRemoteUser([
             'REDIRECT_REMOTE_USER' => 'bob',
@@ -32,7 +32,7 @@ final class UserBootstrapResolveApacheRemoteUserTest extends TestCase
         self::assertSame('bob', $result);
     }
 
-    public function test_returns_null_when_neither_is_present(): void
+    public function testReturnsNullWhenNeitherIsPresent(): void
     {
         $result = UserBootstrap::resolveApacheRemoteUser([
             'SOME_OTHER_KEY' => 'value',
@@ -41,7 +41,7 @@ final class UserBootstrapResolveApacheRemoteUserTest extends TestCase
         self::assertNull($result);
     }
 
-    public function test_returns_null_when_remote_user_is_not_a_string(): void
+    public function testReturnsNullWhenRemoteUserIsNotAString(): void
     {
         $result = UserBootstrap::resolveApacheRemoteUser([
             'REMOTE_USER' => ['not', 'a', 'string'],

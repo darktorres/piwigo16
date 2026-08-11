@@ -2,23 +2,23 @@
 
 declare(strict_types=1);
 
-use Piwigo\Db\DbConnection;
-use Doctrine\ORM\ORMSetup;
 use Doctrine\ORM\EntityManager;
-use Piwigo\Config\ConfigEntry;
-use Piwigo\PluginConfig\EventDispatcher;
+use Doctrine\ORM\ORMSetup;
 use Piwigo\Bootstrap\RequestBootstrap;
+use Piwigo\Config\ConfigEntry;
 use Piwigo\Config\ConfigService;
-use Piwigo\Tests\Support\CurrentConfigTestFactory;
-use Piwigo\Tests\Support\CurrentConfigServiceTestFactory;
 use Piwigo\Core\Kernel;
-use Piwigo\Tests\Support\LangTestFactory;
 use Piwigo\Core\Paths;
 use Piwigo\Core\ServerTiming;
+use Piwigo\Db\DbConnection;
 use Piwigo\Lang\Translator;
-use Piwigo\Tests\Support\TranslatorTestFactory;
-use Piwigo\Tests\Support\KernelContainerOverride;
+use Piwigo\PluginConfig\EventDispatcher;
+use Piwigo\Tests\Support\CurrentConfigServiceTestFactory;
+use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Tests\Support\CurrentUserTestFactory;
+use Piwigo\Tests\Support\KernelContainerOverride;
+use Piwigo\Tests\Support\LangTestFactory;
+use Piwigo\Tests\Support\TranslatorTestFactory;
 use Sentry\SentrySdk;
 
 /**
@@ -94,7 +94,8 @@ test('bootConfigOnly records a boot timing', function (): void {
         throw new LogicException('Container returned an unexpected type for ' . ServerTiming::class);
     }
 
-    expect($timing->all())->toHaveKey('boot');
+    expect($timing->all())
+        ->toHaveKey('boot');
     expect($timing->all()['boot'])->toBeGreaterThanOrEqual(0.0);
 });
 
@@ -172,7 +173,9 @@ test('bootConfigOnly attaches Lang globals from whatever the Translator has load
     if (! $translator instanceof Translator) {
         throw new LogicException('Container returned an unexpected type for ' . Translator::class);
     }
-    $translator->loadArray(['bootconfigonly_probe' => 'probe-value']);
+    $translator->loadArray([
+        'bootconfigonly_probe' => 'probe-value',
+    ]);
 
     RequestBootstrap::bootConfigOnly($paths);
 

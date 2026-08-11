@@ -3,8 +3,6 @@
 declare(strict_types=1);
 
 use Doctrine\DBAL\Connection;
-use Piwigo\Activity\ActivityEntity;
-use Piwigo\Activity\ActivityService;
 use Piwigo\Auth\AccessLevelChecker;
 use Piwigo\Bootstrap\RedirectService;
 use Piwigo\Cache\CachePools;
@@ -33,15 +31,14 @@ use Piwigo\Permission\SqlCondition;
 use Piwigo\Search\Event\QsearchGetImagesSqlScopes;
 use Piwigo\Search\Event\QsearchResults;
 use Piwigo\Search\QExpression;
-use Piwigo\Search\QsearchClause;
 use Piwigo\Search\QResults;
+use Piwigo\Search\QsearchClause;
 use Piwigo\Search\QSearchScope;
 use Piwigo\Search\QSingleToken;
 use Piwigo\Search\SearchRepository;
 use Piwigo\Search\SearchService;
 use Piwigo\Session\SessionEntity;
 use Piwigo\Session\SessionService;
-use Piwigo\Tag\TagEntity;
 use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Tests\Support\CurrentPathsTestFactory;
 use Piwigo\Tests\Support\CurrentUserTestFactory;
@@ -257,20 +254,62 @@ beforeEach(function (): void {
     CurrentUserTestFactory::get()->set(User::fromUserArray(searchServiceTestRealisticUserGlobal()));
     $currentConfig->defaultFiltersViews = null;
     $currentConfig->filtersViews = FilterViewsSelection::fromArray([
-        'expert' => ['access' => 'everybody', 'default' => false],
-        'words' => ['access' => 'everybody', 'default' => false],
-        'author' => ['access' => 'everybody', 'default' => false],
-        'file_type' => ['access' => 'everybody', 'default' => false],
-        'added_by' => ['access' => 'everybody', 'default' => false],
-        'album' => ['access' => 'everybody', 'default' => false],
-        'post_date' => ['access' => 'everybody', 'default' => false],
-        'creation_date' => ['access' => 'everybody', 'default' => false],
-        'ratio' => ['access' => 'everybody', 'default' => false],
-        'rating' => ['access' => 'everybody', 'default' => false],
-        'file_size' => ['access' => 'everybody', 'default' => false],
-        'height' => ['access' => 'everybody', 'default' => false],
-        'width' => ['access' => 'everybody', 'default' => false],
-        'tags' => ['access' => 'everybody', 'default' => false],
+        'expert' => [
+            'access' => 'everybody',
+            'default' => false,
+        ],
+        'words' => [
+            'access' => 'everybody',
+            'default' => false,
+        ],
+        'author' => [
+            'access' => 'everybody',
+            'default' => false,
+        ],
+        'file_type' => [
+            'access' => 'everybody',
+            'default' => false,
+        ],
+        'added_by' => [
+            'access' => 'everybody',
+            'default' => false,
+        ],
+        'album' => [
+            'access' => 'everybody',
+            'default' => false,
+        ],
+        'post_date' => [
+            'access' => 'everybody',
+            'default' => false,
+        ],
+        'creation_date' => [
+            'access' => 'everybody',
+            'default' => false,
+        ],
+        'ratio' => [
+            'access' => 'everybody',
+            'default' => false,
+        ],
+        'rating' => [
+            'access' => 'everybody',
+            'default' => false,
+        ],
+        'file_size' => [
+            'access' => 'everybody',
+            'default' => false,
+        ],
+        'height' => [
+            'access' => 'everybody',
+            'default' => false,
+        ],
+        'width' => [
+            'access' => 'everybody',
+            'default' => false,
+        ],
+        'tags' => [
+            'access' => 'everybody',
+            'default' => false,
+        ],
     ]);
     $currentConfig->orderBy = 'ORDER BY id ASC';
     $currentConfig->calendarDatefield = 'date_creation';
@@ -319,32 +358,48 @@ test('getSearchIdPattern() rejects garbage', function (): void {
 });
 
 test('getSearchInfo() returns the stored row', function (): void {
-    searchServiceTestRepo()->insertSavedSearch(['q' => 'nature'], '2026-07-12 00:00:00', 1, 'psk-20260712-infotest01', null);
+    searchServiceTestRepo()->insertSavedSearch([
+        'q' => 'nature',
+    ], '2026-07-12 00:00:00', 1, 'psk-20260712-infotest01', null);
 
-    $info = searchServiceTestService()->getSearchInfo('psk-20260712-infotest01');
+    $info = searchServiceTestService()
+        ->getSearchInfo('psk-20260712-infotest01');
 
     if ($info === null) {
         throw new LogicException('expected a Search projection, got null');
     }
 
-    expect($info->searchUuid)->toBe('psk-20260712-infotest01');
+    expect($info->searchUuid)
+        ->toBe('psk-20260712-infotest01');
 });
 
 test('getSearchInfo() returns null for an invalid identifier', function (): void {
-    expect(searchServiceTestService()->getSearchInfo('garbage'))->toBeNull();
+    expect(searchServiceTestService()->getSearchInfo('garbage'))
+        ->toBeNull();
 });
 
 test('getSearchArray() round-trips the json-encoded rules', function (): void {
-    $rules = ['q' => 'nature', 'fields' => ['allwords' => ['words' => ['nature']]]];
-    searchServiceTestRepo()->insertSavedSearch($rules, '2026-07-12 00:00:00', 1, 'psk-20260712-arraytest0', null);
+    $rules = [
+        'q' => 'nature',
+        'fields' => [
+            'allwords' => [
+                'words' => ['nature'],
+            ],
+        ],
+    ];
+    searchServiceTestRepo()
+        ->insertSavedSearch($rules, '2026-07-12 00:00:00', 1, 'psk-20260712-arraytest0', null);
 
-    $decoded = searchServiceTestService()->getSearchArray('psk-20260712-arraytest0');
+    $decoded = searchServiceTestService()
+        ->getSearchArray('psk-20260712-arraytest0');
 
-    expect($decoded)->toBe($rules);
+    expect($decoded)
+        ->toBe($rules);
 });
 
 test('getSearchArray() returns false for a missing search', function (): void {
-    expect(searchServiceTestService()->getSearchArray('psk-20260712-nosuchuid0'))->toBeFalse();
+    expect(searchServiceTestService()->getSearchArray('psk-20260712-nosuchuid0'))
+        ->toBeFalse();
 });
 
 test('getSearchArray() returns false, not true, for a real row whose rules column is genuinely NULL', function (): void {
@@ -354,31 +409,40 @@ test('getSearchArray() returns false, not true, for a real row whose rules colum
     // it. Search::$rules stays null (not decoded to []) when the raw
     // column is NULL, so `$search->rules ?? false`'s own fallback value
     // is what this test targets, not just "is rules present".
-    searchServiceTestConn()->executeStatement(
-        "INSERT INTO " . 'search' . " (search_uuid, created_on, created_by, rules) VALUES ('psk-20260712-nullrulz1', '2026-07-12 00:00:00', 1, NULL)"
-    );
+    searchServiceTestConn()
+        ->executeStatement(
+            'INSERT INTO search' . " (search_uuid, created_on, created_by, rules) VALUES ('psk-20260712-nullrulz1', '2026-07-12 00:00:00', 1, NULL)"
+        );
 
-    expect(searchServiceTestService()->getSearchArray('psk-20260712-nullrulz1'))->toBeFalse();
+    expect(searchServiceTestService()->getSearchArray('psk-20260712-nullrulz1'))
+        ->toBeFalse();
 });
 
 test('getAvailableSearchUuid() matches the expected shape', function (): void {
-    $uuid = searchServiceTestService()->getAvailableSearchUuid();
+    $uuid = searchServiceTestService()
+        ->getAvailableSearchUuid();
 
     // Case-insensitive, matching SearchService::getSearchIdPattern()'s
     // own regex -- generate_key()'s base64-derived charset includes
     // uppercase letters.
-    expect($uuid)->toMatch('/^psk-\d{8}-[a-z0-9]{10}$/i');
+    expect($uuid)
+        ->toMatch('/^psk-\d{8}-[a-z0-9]{10}$/i');
 });
 
 test('getAvailableSearchUuid() skips a colliding uuid', function (): void {
     $service = searchServiceTestService();
     $uuid = $service->getAvailableSearchUuid();
-    searchServiceTestRepo()->insertSavedSearch(['q' => 'x'], '2026-07-12 00:00:00', null, $uuid, null);
+    searchServiceTestRepo()
+        ->insertSavedSearch([
+            'q' => 'x',
+        ], '2026-07-12 00:00:00', null, $uuid, null);
 
     $next = $service->getAvailableSearchUuid();
 
-    expect($next)->not->toBe($uuid)
-        ->and(searchServiceTestRepo()->countSavedSearchByUuid($next))->toBe(0);
+    expect($next)
+        ->not->toBe($uuid)
+        ->and(searchServiceTestRepo()->countSavedSearchByUuid($next))
+        ->toBe(0);
 });
 
 test('saveSearch() persists the rules under a fresh uuid and returns a matching uuid+url pair', function (): void {
@@ -398,26 +462,34 @@ test('saveSearch() persists the rules under a fresh uuid and returns a matching 
     // of this test and the forkedFrom test below silently corrupted
     // user_id=1's real preferences column for the rest of the suite.
     $conn = searchServiceTestConn();
-    $originalPreferences = $conn->fetchOne('SELECT preferences FROM ' . 'user_infos' . ' WHERE user_id = 1');
+    $originalPreferences = $conn->fetchOne('SELECT preferences FROM user_infos WHERE user_id = 1');
 
     try {
-        $rules = ['q' => 'nature'];
+        $rules = [
+            'q' => 'nature',
+        ];
 
         [$uuid, $url] = searchServiceTestService()->saveSearch($rules, UrlServiceTestFactory::build());
 
-        expect($uuid)->toMatch('/^psk-\d{8}-[a-z0-9]{10}$/i')
-            ->and($url)->toContain($uuid);
+        expect($uuid)
+            ->toMatch('/^psk-\d{8}-[a-z0-9]{10}$/i')
+            ->and($url)
+            ->toContain($uuid);
 
-        $info = searchServiceTestService()->getSearchInfo($uuid);
+        $info = searchServiceTestService()
+            ->getSearchInfo($uuid);
         if ($info === null) {
             throw new LogicException('expected a persisted Search row, got null');
         }
 
-        expect($info->rules)->toBe($rules)
-            ->and($info->createdBy)->toBe(1)
-            ->and($info->forkedFrom)->toBeNull();
+        expect($info->rules)
+            ->toBe($rules)
+            ->and($info->createdBy)
+            ->toBe(1)
+            ->and($info->forkedFrom)
+            ->toBeNull();
     } finally {
-        $conn->executeStatement('UPDATE ' . 'user_infos' . ' SET preferences = ? WHERE user_id = 1', [$originalPreferences]);
+        $conn->executeStatement('UPDATE user_infos SET preferences = ? WHERE user_id = 1', [$originalPreferences]);
     }
 });
 
@@ -425,21 +497,28 @@ test('saveSearch() threads a real forkedFrom id into the persisted row', functio
     // Same saveSearch()-always-writes-preferences reasoning as the
     // sibling test above.
     $conn = searchServiceTestConn();
-    $originalPreferences = $conn->fetchOne('SELECT preferences FROM ' . 'user_infos' . ' WHERE user_id = 1');
+    $originalPreferences = $conn->fetchOne('SELECT preferences FROM user_infos WHERE user_id = 1');
 
     try {
-        $originalId = searchServiceTestRepo()->insertSavedSearch(['q' => 'nature'], '2026-07-12 00:00:00', 1, 'psk-20260712-forkorigin', null);
+        $originalId = searchServiceTestRepo()
+            ->insertSavedSearch([
+                'q' => 'nature',
+            ], '2026-07-12 00:00:00', 1, 'psk-20260712-forkorigin', null);
 
-        [$uuid] = searchServiceTestService()->saveSearch(['q' => 'nature refined'], UrlServiceTestFactory::build(), $originalId);
+        [$uuid] = searchServiceTestService()->saveSearch([
+            'q' => 'nature refined',
+        ], UrlServiceTestFactory::build(), $originalId);
 
-        $info = searchServiceTestService()->getSearchInfo($uuid);
+        $info = searchServiceTestService()
+            ->getSearchInfo($uuid);
         if ($info === null) {
             throw new LogicException('expected a persisted Search row, got null');
         }
 
-        expect($info->forkedFrom)->toBe($originalId);
+        expect($info->forkedFrom)
+            ->toBe($originalId);
     } finally {
-        $conn->executeStatement('UPDATE ' . 'user_infos' . ' SET preferences = ? WHERE user_id = 1', [$originalPreferences]);
+        $conn->executeStatement('UPDATE user_infos SET preferences = ? WHERE user_id = 1', [$originalPreferences]);
     }
 });
 
@@ -450,12 +529,22 @@ test('saveSearch() updates the current user\'s gallery_search_filters preference
     // top-level field names into user_infos.preferences (one combined
     // JSON column, not a per-param row).
     $conn = searchServiceTestConn();
-    $originalPreferences = $conn->fetchOne('SELECT preferences FROM ' . 'user_infos' . ' WHERE user_id = 1');
+    $originalPreferences = $conn->fetchOne('SELECT preferences FROM user_infos WHERE user_id = 1');
 
     try {
-        searchServiceTestService()->saveSearch(['q' => 'x', 'fields' => ['tags' => ['words' => [1]], 'author' => ['words' => ['a']]]], UrlServiceTestFactory::build());
+        searchServiceTestService()->saveSearch([
+            'q' => 'x',
+            'fields' => [
+                'tags' => [
+                    'words' => [1],
+                ],
+                'author' => [
+                    'words' => ['a'],
+                ],
+            ],
+        ], UrlServiceTestFactory::build());
 
-        $stored = $conn->fetchOne('SELECT preferences FROM ' . 'user_infos' . ' WHERE user_id = 1');
+        $stored = $conn->fetchOne('SELECT preferences FROM user_infos WHERE user_id = 1');
         if (! is_string($stored)) {
             throw new LogicException('expected a real JSON preferences string, got ' . get_debug_type($stored));
         }
@@ -467,7 +556,7 @@ test('saveSearch() updates the current user\'s gallery_search_filters preference
 
         expect($decoded['gallery_search_filters'] ?? null)->toBe(['tags', 'author']);
     } finally {
-        $conn->executeStatement('UPDATE ' . 'user_infos' . ' SET preferences = ? WHERE user_id = 1', [$originalPreferences]);
+        $conn->executeStatement('UPDATE user_infos SET preferences = ? WHERE user_id = 1', [$originalPreferences]);
     }
 });
 
@@ -526,86 +615,131 @@ test('qsearchGetTextTokenSearchSql() is injection-safe', function (): void {
 
     [$clauses, $values] = searchServiceTestService()->qsearchGetTextTokenSearchSql($token, ['name', 'comment']);
 
-    expect($clauses)->not->toBe([]);
+    expect($clauses)
+        ->not->toBe([]);
 
-    $count = searchServiceTestConn()->executeQuery(
-        'SELECT COUNT(*) FROM ' . 'images' . ' WHERE (' . implode(' OR ', $clauses) . ')',
-        $values
-    )->fetchOne();
+    $count = searchServiceTestConn()
+        ->executeQuery(
+            'SELECT COUNT(*) FROM images WHERE (' . implode(' OR ', $clauses) . ')',
+            $values
+        )->fetchOne();
 
-    expect(is_numeric($count) ? (int) $count : null)->toBe(0);
+    expect(is_numeric($count) ? (int) $count : null)
+        ->toBe(0);
 });
 
 test('getRegularSearchResults() filters by width and height', function (): void {
-    $search = ['fields' => [
-        'width_min' => 100, 'width_max' => 300,
-        'height_min' => 100, 'height_max' => 300,
-    ]];
+    $search = [
+        'fields' => [
+            'width_min' => 100,
+            'width_max' => 300,
+            'height_min' => 100,
+            'height_max' => 300,
+        ],
+    ];
 
-    $results = searchServiceTestService()->getRegularSearchResults($search);
+    $results = searchServiceTestService()
+        ->getRegularSearchResults($search);
 
     $items = $results['items'];
     sort($items);
-    expect($items)->toBe([1, 2, 3, 4, 5])
+    expect($items)
+        ->toBe([1, 2, 3, 4, 5])
         ->and($results['search_details']['has_filters_filled'])->toBeTrue();
 });
 
 test('getRegularSearchResults() filters by ratio', function (): void {
     // every fixture image is 200x150 -- ratio 1.333, the "Landscape"
     // bucket (1.05 < ratio < 2).
-    $search = ['fields' => ['ratios' => ['Landscape']]];
+    $search = [
+        'fields' => [
+            'ratios' => ['Landscape'],
+        ],
+    ];
 
-    $results = searchServiceTestService()->getRegularSearchResults($search);
+    $results = searchServiceTestService()
+        ->getRegularSearchResults($search);
 
     $items = $results['items'];
     sort($items);
-    expect($items)->toBe([1, 2, 3, 4, 5]);
+    expect($items)
+        ->toBe([1, 2, 3, 4, 5]);
 });
 
 test('getRegularSearchResults() filters by category', function (): void {
-    $search = ['fields' => ['cat' => ['words' => [1], 'sub_inc' => false]]];
+    $search = [
+        'fields' => [
+            'cat' => [
+                'words' => [1],
+                'sub_inc' => false,
+            ],
+        ],
+    ];
 
-    $results = searchServiceTestService()->getRegularSearchResults($search);
+    $results = searchServiceTestService()
+        ->getRegularSearchResults($search);
 
     $items = $results['items'];
     sort($items);
-    expect($items)->toBe([1, 2, 3]);
+    expect($items)
+        ->toBe([1, 2, 3]);
 });
 
 test('getRegularSearchResults() filters by tags', function (): void {
-    $search = ['fields' => ['tags' => ['words' => [1], 'mode' => 'AND']]];
+    $search = [
+        'fields' => [
+            'tags' => [
+                'words' => [1],
+                'mode' => 'AND',
+            ],
+        ],
+    ];
 
-    $results = searchServiceTestService()->getRegularSearchResults($search);
+    $results = searchServiceTestService()
+        ->getRegularSearchResults($search);
 
     $items = $results['items'];
     sort($items);
-    expect($items)->toBe([1, 2, 3]);
+    expect($items)
+        ->toBe([1, 2, 3]);
 });
 
 test('getRegularSearchResults() combines two filters via intersection', function (): void {
     // cat=1 -> {1,2,3}; tags=1 -> {1,2,3} -- intersection is still
     // {1,2,3}, proving the multi-filter array_intersect() path (not just
     // the single-filter reset() shortcut) produces a valid list<int>.
-    $search = ['fields' => [
-        'cat' => ['words' => [1], 'sub_inc' => false],
-        'tags' => ['words' => [1], 'mode' => 'AND'],
-    ]];
+    $search = [
+        'fields' => [
+            'cat' => [
+                'words' => [1],
+                'sub_inc' => false,
+            ],
+            'tags' => [
+                'words' => [1],
+                'mode' => 'AND',
+            ],
+        ],
+    ];
 
-    $results = searchServiceTestService()->getRegularSearchResults($search);
+    $results = searchServiceTestService()
+        ->getRegularSearchResults($search);
 
     $items = $results['items'];
     sort($items);
-    expect($items)->toBe([1, 2, 3]);
+    expect($items)
+        ->toBe([1, 2, 3]);
 });
 
 test('getRegularSearchResults() custom search clause', function (): void {
-    $results = searchServiceTestService()->getRegularSearchResults([], new SqlCondition('i.id = 1'));
+    $results = searchServiceTestService()
+        ->getRegularSearchResults([], new SqlCondition('i.id = 1'));
 
     expect($results['items'])->toBe([1]);
 });
 
 test('getRegularSearchResults() returns empty for no filters', function (): void {
-    $results = searchServiceTestService()->getRegularSearchResults([]);
+    $results = searchServiceTestService()
+        ->getRegularSearchResults([]);
 
     expect($results['items'])->toBe([])
         ->and($results['search_details']['has_filters_filled'])->toBeFalse();
@@ -632,24 +766,89 @@ test('getRegularSearchResults() skips a criterion entirely when its own display 
     $filters[$filterKey] = new FilterViewDefinition(access: 'admins-only', default: false);
     $currentConfig->filtersViews = new FilterViewsSelection(filters: $filters, lastFiltersConf: $filtersViews->lastFiltersConf);
 
-    $results = searchServiceTestService()->getRegularSearchResults(['fields' => $fields]);
+    $results = searchServiceTestService()
+        ->getRegularSearchResults([
+            'fields' => $fields,
+        ]);
 
     expect($results['search_details']['has_filters_filled'])->toBeFalse();
 })->with([
-    'expert' => ['expert', ['expert' => ['string' => 'x']]],
-    'allwords' => ['words', ['allwords' => ['words' => ['x'], 'fields' => ['name']]]],
-    'author' => ['author', ['author' => ['words' => ['x']]]],
-    'filetypes' => ['file_type', ['filetypes' => ['jpg']]],
-    'added_by' => ['added_by', ['added_by' => [1]]],
-    'cat' => ['album', ['cat' => ['words' => [1], 'sub_inc' => false]]],
-    'date_posted' => ['post_date', ['date_posted' => ['preset' => '24h']]],
-    'date_created' => ['creation_date', ['date_created' => ['preset' => '7d']]],
-    'ratios' => ['ratio', ['ratios' => ['Landscape']]],
-    'ratings' => ['rating', ['ratings' => ['5']]],
-    'filesize' => ['file_size', ['filesize_min' => 1, 'filesize_max' => 2]],
-    'height' => ['height', ['height_min' => 100, 'height_max' => 300]],
-    'width' => ['width', ['width_min' => 100, 'width_max' => 300]],
-    'tags' => ['tags', ['tags' => ['words' => [1], 'mode' => 'AND']]],
+    'expert' => [
+        'expert', [
+            'expert' => [
+                'string' => 'x',
+            ],
+        ]],
+    'allwords' => [
+        'words', [
+            'allwords' => [
+                'words' => ['x'],
+                'fields' => ['name'],
+            ],
+        ]],
+    'author' => [
+        'author', [
+            'author' => [
+                'words' => ['x'],
+            ],
+        ]],
+    'filetypes' => [
+        'file_type', [
+            'filetypes' => ['jpg'],
+        ]],
+    'added_by' => [
+        'added_by', [
+            'added_by' => [1],
+        ]],
+    'cat' => [
+        'album', [
+            'cat' => [
+                'words' => [1],
+                'sub_inc' => false,
+            ],
+        ]],
+    'date_posted' => [
+        'post_date', [
+            'date_posted' => [
+                'preset' => '24h',
+            ],
+        ]],
+    'date_created' => [
+        'creation_date', [
+            'date_created' => [
+                'preset' => '7d',
+            ],
+        ]],
+    'ratios' => [
+        'ratio', [
+            'ratios' => ['Landscape'],
+        ]],
+    'ratings' => [
+        'rating', [
+            'ratings' => ['5'],
+        ]],
+    'filesize' => [
+        'file_size', [
+            'filesize_min' => 1,
+            'filesize_max' => 2,
+        ]],
+    'height' => [
+        'height', [
+            'height_min' => 100,
+            'height_max' => 300,
+        ]],
+    'width' => [
+        'width', [
+            'width_min' => 100,
+            'width_max' => 300,
+        ]],
+    'tags' => [
+        'tags', [
+            'tags' => [
+                'words' => [1],
+                'mode' => 'AND',
+            ],
+        ]],
 ]);
 
 test('getRegularSearchResults() falls back to defaultFiltersViews() when filtersViews() is null', function (): void {
@@ -660,20 +859,36 @@ test('getRegularSearchResults() falls back to defaultFiltersViews() when filters
     // filtersViews() is null.
     CurrentConfigTestFactory::get()->filtersViews = null;
 
-    $results = searchServiceTestService()->getRegularSearchResults(['fields' => ['tags' => ['words' => [1], 'mode' => 'AND']]]);
+    $results = searchServiceTestService()
+        ->getRegularSearchResults([
+            'fields' => [
+                'tags' => [
+                    'words' => [1],
+                    'mode' => 'AND',
+                ],
+            ],
+        ]);
 
     $items = $results['items'];
     sort($items);
-    expect($items)->toBe([1, 2, 3])
+    expect($items)
+        ->toBe([1, 2, 3])
         ->and($results['search_details']['has_filters_filled'])->toBeTrue();
 });
 
 test('getRegularSearchResults() filters by expert string', function (): void {
     // The 'expert' criterion delegates to getQuickSearchResults() itself
     // -- "family" resolves via the tag-name quick-search path to image 1.
-    $search = ['fields' => ['expert' => ['string' => 'family']]];
+    $search = [
+        'fields' => [
+            'expert' => [
+                'string' => 'family',
+            ],
+        ],
+    ];
 
-    $results = searchServiceTestService()->getRegularSearchResults($search);
+    $results = searchServiceTestService()
+        ->getRegularSearchResults($search);
 
     expect($results['items'])->toBe([1])
         ->and($results['search_details']['has_filters_filled'])->toBeTrue();
@@ -683,9 +898,16 @@ test('getRegularSearchResults() filters by author field with no match', function
     // Every fixture image has a NULL author -- proves the criterion
     // executes end to end (well-formed empty result), not that it
     // matches anything.
-    $search = ['fields' => ['author' => ['words' => ['Someone']]]];
+    $search = [
+        'fields' => [
+            'author' => [
+                'words' => ['Someone'],
+            ],
+        ],
+    ];
 
-    $results = searchServiceTestService()->getRegularSearchResults($search);
+    $results = searchServiceTestService()
+        ->getRegularSearchResults($search);
 
     expect($results['items'])->toBe([])
         ->and($results['search_details']['has_filters_filled'])->toBeTrue();
@@ -696,25 +918,37 @@ test('getRegularSearchResults() filters by filetypes', function (): void {
     // each builds its own indexed `:filetype{$i}` clause/param pair, so
     // this is what actually exercises the loop's own per-index param
     // naming, not just its single-element degenerate case.
-    $search = ['fields' => ['filetypes' => ['png', 'jpg']]];
+    $search = [
+        'fields' => [
+            'filetypes' => ['png', 'jpg'],
+        ],
+    ];
 
-    $results = searchServiceTestService()->getRegularSearchResults($search);
+    $results = searchServiceTestService()
+        ->getRegularSearchResults($search);
 
     $items = $results['items'];
     sort($items);
-    expect($items)->toBe([1, 2, 3, 4, 5])
+    expect($items)
+        ->toBe([1, 2, 3, 4, 5])
         ->and($results['search_details']['has_filters_filled'])->toBeTrue();
 });
 
 test('getRegularSearchResults() filters by added_by', function (): void {
     // every fixture image has added_by = 1.
-    $search = ['fields' => ['added_by' => [1]]];
+    $search = [
+        'fields' => [
+            'added_by' => [1],
+        ],
+    ];
 
-    $results = searchServiceTestService()->getRegularSearchResults($search);
+    $results = searchServiceTestService()
+        ->getRegularSearchResults($search);
 
     $items = $results['items'];
     sort($items);
-    expect($items)->toBe([1, 2, 3, 4, 5])
+    expect($items)
+        ->toBe([1, 2, 3, 4, 5])
         ->and($results['search_details']['has_filters_filled'])->toBeTrue();
 });
 
@@ -723,23 +957,31 @@ test('getRegularSearchResults() filters by date_posted preset', function (): voi
     // correct regardless of the real wall-clock date the suite runs on.
     $conn = searchServiceTestConn();
     $conn->executeStatement(
-        'UPDATE ' . 'images' . ' SET date_available = ' . searchServiceTestNowMinusInterval(1, 'HOUR') . ' WHERE id IN (1, 2)'
+        'UPDATE images SET date_available = ' . searchServiceTestNowMinusInterval(1, 'HOUR') . ' WHERE id IN (1, 2)'
     );
     $conn->executeStatement(
-        'UPDATE ' . 'images' . ' SET date_available = ' . searchServiceTestNowMinusInterval(30, 'HOUR') . ' WHERE id IN (3, 4, 5)'
+        'UPDATE images SET date_available = ' . searchServiceTestNowMinusInterval(30, 'HOUR') . ' WHERE id IN (3, 4, 5)'
     );
 
     try {
-        $search = ['fields' => ['date_posted' => ['preset' => '24h']]];
-        $results = searchServiceTestService()->getRegularSearchResults($search);
+        $search = [
+            'fields' => [
+                'date_posted' => [
+                    'preset' => '24h',
+                ],
+            ],
+        ];
+        $results = searchServiceTestService()
+            ->getRegularSearchResults($search);
 
         $items = $results['items'];
         sort($items);
-        expect($items)->toBe([1, 2])
+        expect($items)
+            ->toBe([1, 2])
             ->and($results['search_details']['has_filters_filled'])->toBeTrue();
     } finally {
         $conn->executeStatement(
-            "UPDATE " . 'images' . " SET date_available = '2026-08-01 00:00:00' WHERE id IN (1,2,3,4,5)"
+            'UPDATE images' . " SET date_available = '2026-08-01 00:00:00' WHERE id IN (1,2,3,4,5)"
         );
     }
 });
@@ -747,21 +989,29 @@ test('getRegularSearchResults() filters by date_posted preset', function (): voi
 test('getRegularSearchResults() filters by date_created preset', function (): void {
     $conn = searchServiceTestConn();
     $conn->executeStatement(
-        'UPDATE ' . 'images' . ' SET date_creation = ' . searchServiceTestNowMinusInterval(1, 'DAY') . ' WHERE id IN (1, 2, 3)'
+        'UPDATE images SET date_creation = ' . searchServiceTestNowMinusInterval(1, 'DAY') . ' WHERE id IN (1, 2, 3)'
     );
     $conn->executeStatement(
-        'UPDATE ' . 'images' . ' SET date_creation = ' . searchServiceTestNowMinusInterval(60, 'DAY') . ' WHERE id IN (4, 5)'
+        'UPDATE images SET date_creation = ' . searchServiceTestNowMinusInterval(60, 'DAY') . ' WHERE id IN (4, 5)'
     );
 
     try {
-        $search = ['fields' => ['date_created' => ['preset' => '7d']]];
-        $results = searchServiceTestService()->getRegularSearchResults($search);
+        $search = [
+            'fields' => [
+                'date_created' => [
+                    'preset' => '7d',
+                ],
+            ],
+        ];
+        $results = searchServiceTestService()
+            ->getRegularSearchResults($search);
 
         $items = $results['items'];
         sort($items);
-        expect($items)->toBe([1, 2, 3]);
+        expect($items)
+            ->toBe([1, 2, 3]);
     } finally {
-        $conn->executeStatement('UPDATE ' . 'images' . ' SET date_creation = NULL WHERE id IN (1,2,3,4,5)');
+        $conn->executeStatement('UPDATE images SET date_creation = NULL WHERE id IN (1,2,3,4,5)');
     }
 });
 
@@ -789,64 +1039,91 @@ test('getRegularSearchResults() date_created custom range', function (): void {
     // populate the UN-prefixed key instead, so only a real, correct
     // prefix concat avoids colliding with them.
     $conn = searchServiceTestConn();
-    $conn->executeStatement("UPDATE " . 'images' . " SET date_creation = '2024-03-15 12:00:00' WHERE id = 1");
-    $conn->executeStatement("UPDATE " . 'images' . " SET date_creation = '2023-06-10 00:00:00' WHERE id = 2");
-    $conn->executeStatement("UPDATE " . 'images' . " SET date_creation = '2022-05-15 12:00:00' WHERE id = 3");
+    $conn->executeStatement('UPDATE images' . " SET date_creation = '2024-03-15 12:00:00' WHERE id = 1");
+    $conn->executeStatement('UPDATE images' . " SET date_creation = '2023-06-10 00:00:00' WHERE id = 2");
+    $conn->executeStatement('UPDATE images' . " SET date_creation = '2022-05-15 12:00:00' WHERE id = 3");
 
     try {
         // Mixes a 'y'/'m'/'d'-prefixed string entry of each shape plus a
         // non-string (int) entry that matches none of them -- exercises
         // dateFilterClause()'s custom-range subclause building for all 3
         // prefix shapes plus the mixed-type $custom array-building loop.
-        $search = ['fields' => ['date_created' => [
-            'preset' => 'custom',
-            'custom' => ['y2024', 'm2023-06', 'd2022-05-15', 20250101, '2023', '2022-05'],
-        ]]];
-        $results = searchServiceTestService()->getRegularSearchResults($search);
+        $search = [
+            'fields' => [
+                'date_created' => [
+                    'preset' => 'custom',
+                    'custom' => ['y2024', 'm2023-06', 'd2022-05-15', 20250101, '2023', '2022-05'],
+                ],
+            ],
+        ];
+        $results = searchServiceTestService()
+            ->getRegularSearchResults($search);
 
         $items = $results['items'];
         sort($items);
-        expect($items)->toBe([1, 2, 3]);
+        expect($items)
+            ->toBe([1, 2, 3]);
     } finally {
-        $conn->executeStatement('UPDATE ' . 'images' . ' SET date_creation = NULL WHERE id IN (1,2,3,4,5)');
+        $conn->executeStatement('UPDATE images SET date_creation = NULL WHERE id IN (1,2,3,4,5)');
     }
 });
 
 test('getRegularSearchResults() date_posted with unrecognized preset matches everything', function (): void {
     // dateFilterClause() falls back to a permissive '1=1' clause for a
     // preset that's neither a recognized threshold nor 'custom'.
-    $search = ['fields' => ['date_posted' => ['preset' => 'not-a-real-preset']]];
+    $search = [
+        'fields' => [
+            'date_posted' => [
+                'preset' => 'not-a-real-preset',
+            ],
+        ],
+    ];
 
-    $results = searchServiceTestService()->getRegularSearchResults($search);
+    $results = searchServiceTestService()
+        ->getRegularSearchResults($search);
 
     $items = $results['items'];
     sort($items);
-    expect($items)->toBe([1, 2, 3, 4, 5]);
+    expect($items)
+        ->toBe([1, 2, 3, 4, 5]);
 });
 
 test('getRegularSearchResults() filters by ratings null and numeric bucket', function (): void {
     // image5's rating_score is NULL (the '0' bucket); image1 is 4.50
     // (falls in the '5' bucket's [4,5) range).
-    $search = ['fields' => ['ratings' => ['0', '5']]];
+    $search = [
+        'fields' => [
+            'ratings' => ['0', '5'],
+        ],
+    ];
 
-    $results = searchServiceTestService()->getRegularSearchResults($search);
+    $results = searchServiceTestService()
+        ->getRegularSearchResults($search);
 
     $items = $results['items'];
     sort($items);
-    expect($items)->toBe([1, 5])
+    expect($items)
+        ->toBe([1, 5])
         ->and($results['search_details']['has_filters_filled'])->toBeTrue();
 });
 
 test('getRegularSearchResults() filters by filesize range', function (): void {
     // every fixture image's filesize is 1 (KB) -- comfortably inside a
     // [1-100, 2+100] BETWEEN range.
-    $search = ['fields' => ['filesize_min' => 1, 'filesize_max' => 2]];
+    $search = [
+        'fields' => [
+            'filesize_min' => 1,
+            'filesize_max' => 2,
+        ],
+    ];
 
-    $results = searchServiceTestService()->getRegularSearchResults($search);
+    $results = searchServiceTestService()
+        ->getRegularSearchResults($search);
 
     $items = $results['items'];
     sort($items);
-    expect($items)->toBe([1, 2, 3, 4, 5])
+    expect($items)
+        ->toBe([1, 2, 3, 4, 5])
         ->and($results['search_details']['has_filters_filled'])->toBeTrue();
 });
 
@@ -860,9 +1137,15 @@ test('getRegularSearchResults() treats a null or zero min/max as "not set" for f
     // Every fixture image would otherwise match (width/height 200x150,
     // filesize 1), so a missing/zero bound must suppress the filter
     // entirely, not just narrow the range.
-    $search = ['fields' => [$minKey => $minValue, $maxKey => $maxValue]];
+    $search = [
+        'fields' => [
+            $minKey => $minValue,
+            $maxKey => $maxValue,
+        ],
+    ];
 
-    $results = searchServiceTestService()->getRegularSearchResults($search);
+    $results = searchServiceTestService()
+        ->getRegularSearchResults($search);
 
     expect($results['search_details']['has_filters_filled'])->toBeFalse();
 })->with([
@@ -885,28 +1168,39 @@ test('getRegularSearchResults() allwords matches by album title', function (): v
     // and 5) -- exercises searchAllwords()'s category-name matching
     // sub-branch (image ids folded into the word's own field clauses),
     // and 'mode' omitted exercises the "default to AND" fallback.
-    $search = ['fields' => ['allwords' => [
-        'words' => ['Nested'],
-        'fields' => ['cat-title'],
-    ]]];
+    $search = [
+        'fields' => [
+            'allwords' => [
+                'words' => ['Nested'],
+                'fields' => ['cat-title'],
+            ],
+        ],
+    ];
 
-    $results = searchServiceTestService()->getRegularSearchResults($search);
+    $results = searchServiceTestService()
+        ->getRegularSearchResults($search);
 
     $items = $results['items'];
     sort($items);
-    expect($items)->toBe([4, 5]);
+    expect($items)
+        ->toBe([4, 5]);
 });
 
 test('getRegularSearchResults() allwords matches by tag name', function (): void {
     // 'travel' (tag 2) only tags image 1 -- exercises searchAllwords()'s
     // tag-name matching sub-branch.
-    $search = ['fields' => ['allwords' => [
-        'words' => ['travel'],
-        'fields' => ['tags'],
-        'mode' => 'OR',
-    ]]];
+    $search = [
+        'fields' => [
+            'allwords' => [
+                'words' => ['travel'],
+                'fields' => ['tags'],
+                'mode' => 'OR',
+            ],
+        ],
+    ];
 
-    $results = searchServiceTestService()->getRegularSearchResults($search);
+    $results = searchServiceTestService()
+        ->getRegularSearchResults($search);
 
     expect($results['items'])->toBe([1]);
 });
@@ -915,7 +1209,8 @@ test('getQuickSearchResultsNoCache() finds a tag-named match', function (): void
     // "family" only tags image 1 -- exercises qsearchGetTags() ->
     // qsearchEval() -> permission-filtered final query end to end,
     // including the quote()-based FULLTEXT/REGEXP clauses.
-    $results = searchServiceTestService()->getQuickSearchResultsNoCache('family', []);
+    $results = searchServiceTestService()
+        ->getQuickSearchResultsNoCache('family', []);
 
     expect($results['items'])->toBe([1]);
 });
@@ -931,24 +1226,27 @@ test('getQuickSearchResultsNoCache() widens a match via the default-language Inf
     // variants)` step actually widens the match, not just that the
     // Inflector class loads without throwing.
     $conn = searchServiceTestConn();
-    $conn->executeStatement("INSERT INTO " . 'tags' . " (name, url_name, lastmodified) VALUES ('natures', 'natures', NOW())");
+    $conn->executeStatement('INSERT INTO tags' . " (name, url_name, lastmodified) VALUES ('natures', 'natures', NOW())");
     $tagId = (int) $conn->lastInsertId();
-    $conn->executeStatement('INSERT INTO ' . 'image_tag' . ' (image_id, tag_id) VALUES (4, ?)', [$tagId]);
+    $conn->executeStatement('INSERT INTO image_tag (image_id, tag_id) VALUES (4, ?)', [$tagId]);
 
     try {
-        $results = searchServiceTestService()->getQuickSearchResultsNoCache('nature', []);
+        $results = searchServiceTestService()
+            ->getQuickSearchResultsNoCache('nature', []);
 
         $items = $results['items'];
         sort($items);
-        expect($items)->toBe([1, 2, 3, 4]);
+        expect($items)
+            ->toBe([1, 2, 3, 4]);
     } finally {
-        $conn->executeStatement('DELETE FROM ' . 'image_tag' . ' WHERE tag_id = ?', [$tagId]);
-        $conn->executeStatement('DELETE FROM ' . 'tags' . ' WHERE id = ?', [$tagId]);
+        $conn->executeStatement('DELETE FROM image_tag WHERE tag_id = ?', [$tagId]);
+        $conn->executeStatement('DELETE FROM tags WHERE id = ?', [$tagId]);
     }
 });
 
 test('getQuickSearchResultsNoCache() returns empty for no match', function (): void {
-    $results = searchServiceTestService()->getQuickSearchResultsNoCache('nosuchtermatall', []);
+    $results = searchServiceTestService()
+        ->getQuickSearchResultsNoCache('nosuchtermatall', []);
 
     expect($results['items'])->toBe([])
         ->and($results['qs']['unmatched_terms'])->not->toBe([]);
@@ -962,16 +1260,17 @@ test('getQuickSearchResultsNoCache() a term matching a real tag with zero curren
     // The sibling test above (a genuinely unrecognized word) can never
     // observe this, since it never populates tag_ids either.
     $conn = searchServiceTestConn();
-    $conn->executeStatement("INSERT INTO " . 'tags' . " (name, url_name, lastmodified) VALUES ('zqualifiesonly', 'zqualifiesonly', NOW())");
+    $conn->executeStatement('INSERT INTO tags' . " (name, url_name, lastmodified) VALUES ('zqualifiesonly', 'zqualifiesonly', NOW())");
     $tagId = (int) $conn->lastInsertId();
 
     try {
-        $results = searchServiceTestService()->getQuickSearchResultsNoCache('zqualifiesonly', []);
+        $results = searchServiceTestService()
+            ->getQuickSearchResultsNoCache('zqualifiesonly', []);
 
         expect($results['items'])->toBe([])
             ->and($results['qs']['unmatched_terms'])->toBe([]);
     } finally {
-        $conn->executeStatement('DELETE FROM ' . 'tags' . ' WHERE id = ?', [$tagId]);
+        $conn->executeStatement('DELETE FROM tags WHERE id = ?', [$tagId]);
     }
 });
 
@@ -1001,7 +1300,8 @@ test('getQuickSearchResultsNoCache() finds a category-named match', function ():
     // categories via $user['forbidden_categories'] instead of an INNER
     // JOIN against user_cache_categories, end to end. Category 2 holds
     // images 4 and 5 (image_category fixture).
-    $results = searchServiceTestService()->getQuickSearchResultsNoCache('Nested', []);
+    $results = searchServiceTestService()
+        ->getQuickSearchResultsNoCache('Nested', []);
 
     expect($results['items'])->toBe([4, 5]);
 });
@@ -1010,9 +1310,12 @@ test('getQuickSearchResultsNoCache() excludes a forbidden category match', funct
     // Same search as above, but with category 2 marked forbidden for
     // this user -- proves the NOT IN (...) replacement actually excludes
     // it, not just that it's syntactically present.
-    CurrentUserTestFactory::get()->set(User::fromUserArray(array_merge(searchServiceTestRealisticUserGlobal(), ['forbidden_categories' => '2'])));
+    CurrentUserTestFactory::get()->set(User::fromUserArray(array_merge(searchServiceTestRealisticUserGlobal(), [
+        'forbidden_categories' => '2',
+    ])));
 
-    $results = searchServiceTestService()->getQuickSearchResultsNoCache('Nested', []);
+    $results = searchServiceTestService()
+        ->getQuickSearchResultsNoCache('Nested', []);
 
     expect($results['items'])->toBe([]);
 });
@@ -1028,13 +1331,17 @@ test('getQuickSearchResultsNoCache() binds a multi-value forbidden-categories co
     // degenerate case. 'nature' only matches category-1 images, so
     // forbidding categories 2 and 3 (neither of which any fixture image
     // sits in) must still return the full match untouched.
-    CurrentUserTestFactory::get()->set(User::fromUserArray(array_merge(searchServiceTestRealisticUserGlobal(), ['forbidden_categories' => '2,3'])));
+    CurrentUserTestFactory::get()->set(User::fromUserArray(array_merge(searchServiceTestRealisticUserGlobal(), [
+        'forbidden_categories' => '2,3',
+    ])));
 
-    $results = searchServiceTestService()->getQuickSearchResultsNoCache('nature', []);
+    $results = searchServiceTestService()
+        ->getQuickSearchResultsNoCache('nature', []);
 
     $items = $results['items'];
     sort($items);
-    expect($items)->toBe([1, 2, 3]);
+    expect($items)
+        ->toBe([1, 2, 3]);
 });
 
 test('getQuickSearchResults() caches across calls', function (): void {
@@ -1050,16 +1357,17 @@ test('getQuickSearchResults() caches across calls', function (): void {
 
     $conn = searchServiceTestConn();
     $conn->executeStatement(
-        'INSERT INTO ' . 'image_tag' . ' (image_id, tag_id) VALUES (2, 3)'
+        'INSERT INTO image_tag (image_id, tag_id) VALUES (2, 3)'
     );
 
     try {
         $second = $service->getQuickSearchResults('family', []);
         expect($second['items'])->toBe($first['items'], 'a cache hit must not re-query the DB')
-            ->and($second)->not->toHaveKey('debug');
+            ->and($second)
+            ->not->toHaveKey('debug');
     } finally {
         $conn->executeStatement(
-            'DELETE FROM ' . 'image_tag' . ' WHERE image_id = 2 AND tag_id = 3'
+            'DELETE FROM image_tag WHERE image_id = 2 AND tag_id = 3'
         );
     }
 });
@@ -1071,14 +1379,17 @@ test('qsearchGetTextTokenSearchSql() falls back to REGEXP for a leading wildcard
 
     [$clauses, $values] = searchServiceTestService()->qsearchGetTextTokenSearchSql($token, ['name']);
 
-    expect($clauses)->not->toBe([]);
-    $count = searchServiceTestConn()->executeQuery(
-        'SELECT COUNT(*) FROM ' . 'images' . ' WHERE (' . implode(' OR ', $clauses) . ')',
-        $values
-    )->fetchOne();
+    expect($clauses)
+        ->not->toBe([]);
+    $count = searchServiceTestConn()
+        ->executeQuery(
+            'SELECT COUNT(*) FROM images WHERE (' . implode(' OR ', $clauses) . ')',
+            $values
+        )->fetchOne();
     // every fixture image is named "Photo N" -- "hoto" (no left boundary
     // required) matches all 5.
-    expect(is_numeric($count) ? (int) $count : null)->toBe(5);
+    expect(is_numeric($count) ? (int) $count : null)
+        ->toBe(5);
 });
 
 test('qsearchGetTextTokenSearchSql() falls back to REGEXP for a quoted trailing wildcard', function (): void {
@@ -1087,12 +1398,15 @@ test('qsearchGetTextTokenSearchSql() falls back to REGEXP for a quoted trailing 
 
     [$clauses, $values] = searchServiceTestService()->qsearchGetTextTokenSearchSql($token, ['name']);
 
-    expect($clauses)->not->toBe([]);
-    $count = searchServiceTestConn()->executeQuery(
-        'SELECT COUNT(*) FROM ' . 'images' . ' WHERE (' . implode(' OR ', $clauses) . ')',
-        $values
-    )->fetchOne();
-    expect(is_numeric($count) ? (int) $count : null)->toBe(5);
+    expect($clauses)
+        ->not->toBe([]);
+    $count = searchServiceTestConn()
+        ->executeQuery(
+            'SELECT COUNT(*) FROM images WHERE (' . implode(' OR ', $clauses) . ')',
+            $values
+        )->fetchOne();
+    expect(is_numeric($count) ? (int) $count : null)
+        ->toBe(5);
 });
 
 test('qsearchGetTextTokenSearchSql() falls back to REGEXP when every split part is short', function (): void {
@@ -1103,12 +1417,15 @@ test('qsearchGetTextTokenSearchSql() falls back to REGEXP when every split part 
 
     [$clauses, $values] = searchServiceTestService()->qsearchGetTextTokenSearchSql($token, ['name']);
 
-    expect($clauses)->not->toBe([]);
-    $count = searchServiceTestConn()->executeQuery(
-        'SELECT COUNT(*) FROM ' . 'images' . ' WHERE (' . implode(' OR ', $clauses) . ')',
-        $values
-    )->fetchOne();
-    expect(is_numeric($count) ? (int) $count : null)->toBe(0);
+    expect($clauses)
+        ->not->toBe([]);
+    $count = searchServiceTestConn()
+        ->executeQuery(
+            'SELECT COUNT(*) FROM images WHERE (' . implode(' OR ', $clauses) . ')',
+            $values
+        )->fetchOne();
+    expect(is_numeric($count) ? (int) $count : null)
+        ->toBe(0);
 });
 
 test('qsearchGetTextTokenSearchSql() stays on FULLTEXT when the longest split part is exactly 4 chars', function (): void {
@@ -1127,8 +1444,10 @@ test('qsearchGetTextTokenSearchSql() stays on FULLTEXT when the longest split pa
         // $ft is the whole original variant, hyphen included -- the
         // split-into-parts step above is only ever used for the
         // eligibility check itself, never to transform the bound value.
-        expect($clauses)->toBe(['MATCH(name, comment) AGAINST(? IN BOOLEAN MODE)'])
-            ->and($values)->toBe(['abc-defg']);
+        expect($clauses)
+            ->toBe(['MATCH(name, comment) AGAINST(? IN BOOLEAN MODE)'])
+            ->and($values)
+            ->toBe(['abc-defg']);
     }
 });
 
@@ -1139,10 +1458,12 @@ test('qsearchGetTextTokenSearchSql() wraps a quoted term in double quotes for FU
 
     if (DbCredentials::fromEnv()->driver === 'pgsql') {
         expect($clauses)->toBe(["tsv_search @@ to_tsquery('simple', ?)"])
-            ->and($values)->toBe(['nature']);
+            ->and($values)
+            ->toBe(['nature']);
     } else {
         expect($clauses)->toBe(['MATCH(name, comment) AGAINST(? IN BOOLEAN MODE)'])
-            ->and($values)->toBe(['"nature"']);
+            ->and($values)
+            ->toBe(['"nature"']);
     }
 });
 
@@ -1153,10 +1474,12 @@ test('qsearchGetTextTokenSearchSql() appends a star for a trailing wildcard FULL
 
     if (DbCredentials::fromEnv()->driver === 'pgsql') {
         expect($clauses)->toBe(["tsv_search @@ to_tsquery('simple', ?)"])
-            ->and($values)->toBe(['travel:*']);
+            ->and($values)
+            ->toBe(['travel:*']);
     } else {
         expect($clauses)->toBe(['MATCH(name, comment) AGAINST(? IN BOOLEAN MODE)'])
-            ->and($values)->toBe(['travel*']);
+            ->and($values)
+            ->toBe(['travel*']);
     }
 });
 
@@ -1184,109 +1507,131 @@ test('getQuickSearchResultsNoCache() matches the author scope when populated', f
     // Every fixture image has a NULL author -- a non-empty author: term
     // never matches, but proves the 'author' scope's non-empty branch
     // runs end to end.
-    $results = searchServiceTestService()->getQuickSearchResultsNoCache('author:someone', []);
+    $results = searchServiceTestService()
+        ->getQuickSearchResultsNoCache('author:someone', []);
 
     expect($results['items'])->toBe([]);
 });
 
 test('getQuickSearchResultsNoCache() wildcarded empty author matches authored images', function (): void {
-    $results = searchServiceTestService()->getQuickSearchResultsNoCache('author:*', []);
+    $results = searchServiceTestService()
+        ->getQuickSearchResultsNoCache('author:*', []);
 
     expect($results['items'])->toBe([]);
 });
 
 test('getQuickSearchResultsNoCache() plain empty author matches unauthored images', function (): void {
-    $results = searchServiceTestService()->getQuickSearchResultsNoCache('author:', []);
+    $results = searchServiceTestService()
+        ->getQuickSearchResultsNoCache('author:', []);
 
     $items = $results['items'];
     sort($items);
-    expect($items)->toBe([1, 2, 3, 4, 5]);
+    expect($items)
+        ->toBe([1, 2, 3, 4, 5]);
 });
 
 test('getQuickSearchResultsNoCache() filters by width and height scopes', function (): void {
     // every fixture image is 200x150.
-    $results = searchServiceTestService()->getQuickSearchResultsNoCache('width:200 height:150', []);
+    $results = searchServiceTestService()
+        ->getQuickSearchResultsNoCache('width:200 height:150', []);
 
     $items = $results['items'];
     sort($items);
-    expect($items)->toBe([1, 2, 3, 4, 5]);
+    expect($items)
+        ->toBe([1, 2, 3, 4, 5]);
 });
 
 test('getQuickSearchResultsNoCache() filters by ratio scope', function (): void {
     // 200/150 = 1.3333... -- comfortably inside the explicit range.
-    $results = searchServiceTestService()->getQuickSearchResultsNoCache('ratio:1.3..1.4', []);
+    $results = searchServiceTestService()
+        ->getQuickSearchResultsNoCache('ratio:1.3..1.4', []);
 
     $items = $results['items'];
     sort($items);
-    expect($items)->toBe([1, 2, 3, 4, 5]);
+    expect($items)
+        ->toBe([1, 2, 3, 4, 5]);
 });
 
 test('getQuickSearchResultsNoCache() filters by size scope', function (): void {
     // width*height = 200*150 = 30000 for every fixture image.
-    $results = searchServiceTestService()->getQuickSearchResultsNoCache('size:30000', []);
+    $results = searchServiceTestService()
+        ->getQuickSearchResultsNoCache('size:30000', []);
 
     $items = $results['items'];
     sort($items);
-    expect($items)->toBe([1, 2, 3, 4, 5]);
+    expect($items)
+        ->toBe([1, 2, 3, 4, 5]);
 });
 
 test('getQuickSearchResultsNoCache() filters by hits scope', function (): void {
     // every fixture image's hit counter is 0.
-    $results = searchServiceTestService()->getQuickSearchResultsNoCache('hits:0', []);
+    $results = searchServiceTestService()
+        ->getQuickSearchResultsNoCache('hits:0', []);
 
     $items = $results['items'];
     sort($items);
-    expect($items)->toBe([1, 2, 3, 4, 5]);
+    expect($items)
+        ->toBe([1, 2, 3, 4, 5]);
 });
 
 test('getQuickSearchResultsNoCache() filters by score scope excluding unrated', function (): void {
     // rating_score: 4.50/3.00/5.00/2.00/NULL for images 1-5 -- image5's
     // NULL never satisfies a numeric BETWEEN-style clause.
-    $results = searchServiceTestService()->getQuickSearchResultsNoCache('score:2..5', []);
+    $results = searchServiceTestService()
+        ->getQuickSearchResultsNoCache('score:2..5', []);
 
     $items = $results['items'];
     sort($items);
-    expect($items)->toBe([1, 2, 3, 4]);
+    expect($items)
+        ->toBe([1, 2, 3, 4]);
 });
 
 test('getQuickSearchResultsNoCache() filters by filesize scope', function (): void {
     // 1024*filesize = 1024*1 = 1024 for every fixture image.
-    $results = searchServiceTestService()->getQuickSearchResultsNoCache('filesize:1000..2000', []);
+    $results = searchServiceTestService()
+        ->getQuickSearchResultsNoCache('filesize:1000..2000', []);
 
     $items = $results['items'];
     sort($items);
-    expect($items)->toBe([1, 2, 3, 4, 5]);
+    expect($items)
+        ->toBe([1, 2, 3, 4, 5]);
 });
 
 test('getQuickSearchResultsNoCache() filters by created scope with no match', function (): void {
     // date_creation is NULL for every fixture image.
-    $results = searchServiceTestService()->getQuickSearchResultsNoCache('created:2024..2027', []);
+    $results = searchServiceTestService()
+        ->getQuickSearchResultsNoCache('created:2024..2027', []);
 
     expect($results['items'])->toBe([]);
 });
 
 test('getQuickSearchResultsNoCache() filters by posted scope', function (): void {
     // date_available is '2026-08-01 00:00:00' for every fixture image.
-    $results = searchServiceTestService()->getQuickSearchResultsNoCache('posted:2024..2027', []);
+    $results = searchServiceTestService()
+        ->getQuickSearchResultsNoCache('posted:2024..2027', []);
 
     $items = $results['items'];
     sort($items);
-    expect($items)->toBe([1, 2, 3, 4, 5]);
+    expect($items)
+        ->toBe([1, 2, 3, 4, 5]);
 });
 
 test('getQuickSearchResultsNoCache() filters by id scope', function (): void {
-    $results = searchServiceTestService()->getQuickSearchResultsNoCache('id:1..3', []);
+    $results = searchServiceTestService()
+        ->getQuickSearchResultsNoCache('id:1..3', []);
 
     $items = $results['items'];
     sort($items);
-    expect($items)->toBe([1, 2, 3]);
+    expect($items)
+        ->toBe([1, 2, 3]);
 });
 
 test('getQuickSearchResultsNoCache() filters by file scope', function (): void {
     // only image 1's filename ('fixture-photo-1.jpg') contains
     // "photo-1" -- image 10 doesn't exist, so there's no accidental
     // substring collision.
-    $results = searchServiceTestService()->getQuickSearchResultsNoCache('file:photo-1', []);
+    $results = searchServiceTestService()
+        ->getQuickSearchResultsNoCache('file:photo-1', []);
 
     expect($results['items'])->toBe([1]);
 });
@@ -1318,11 +1663,13 @@ test('getQuickSearchResultsNoCache() unhandled scope falls through the default h
     // tag-scoped token falls to the default/plugin-hook branch there,
     // contributing nothing to images_iids; the final match comes
     // entirely from qsearchGetTags()'s own tag_iids.
-    $results = searchServiceTestService()->getQuickSearchResultsNoCache('tag:nature', []);
+    $results = searchServiceTestService()
+        ->getQuickSearchResultsNoCache('tag:nature', []);
 
     $items = $results['items'];
     sort($items);
-    expect($items)->toBe([1, 2, 3]);
+    expect($items)
+        ->toBe([1, 2, 3]);
 });
 
 test('qsearchGetTags() direct call with a nullable wildcarded tag scope matches every tagged image', function (): void {
@@ -1335,11 +1682,13 @@ test('qsearchGetTags() direct call with a nullable wildcarded tag scope matches 
     $expr = new QExpression('tag:*', $scopes);
     $qsr = new QResults();
 
-    searchServiceTestService()->qsearchGetTags($expr, $qsr);
+    searchServiceTestService()
+        ->qsearchGetTags($expr, $qsr);
 
     $imageIds = $qsr->tag_iids[0];
     sort($imageIds);
-    expect($imageIds)->toBe([1, 2, 3]);
+    expect($imageIds)
+        ->toBe([1, 2, 3]);
 });
 
 test('qsearchGetTags() direct call with a nullable empty tag scope matches untagged images', function (): void {
@@ -1347,11 +1696,13 @@ test('qsearchGetTags() direct call with a nullable empty tag scope matches untag
     $expr = new QExpression('tag:', $scopes);
     $qsr = new QResults();
 
-    searchServiceTestService()->qsearchGetTags($expr, $qsr);
+    searchServiceTestService()
+        ->qsearchGetTags($expr, $qsr);
 
     $imageIds = $qsr->tag_iids[0];
     sort($imageIds);
-    expect($imageIds)->toBe([4, 5]);
+    expect($imageIds)
+        ->toBe([4, 5]);
 });
 
 test('qsearchGetCategories() direct call with a nullable wildcarded category scope matches every categorized image', function (): void {
@@ -1362,11 +1713,13 @@ test('qsearchGetCategories() direct call with a nullable wildcarded category sco
     $expr = new QExpression('category:*', $scopes);
     $qsr = new QResults();
 
-    searchServiceTestService()->qsearchGetCategories($expr, $qsr);
+    searchServiceTestService()
+        ->qsearchGetCategories($expr, $qsr);
 
     $imageIds = $qsr->cat_iids[0];
     sort($imageIds);
-    expect($imageIds)->toBe([1, 2, 3, 4, 5]);
+    expect($imageIds)
+        ->toBe([1, 2, 3, 4, 5]);
 });
 
 test('qsearchGetCategories() direct call with a nullable empty category scope matches uncategorized images', function (): void {
@@ -1374,7 +1727,8 @@ test('qsearchGetCategories() direct call with a nullable empty category scope ma
     $expr = new QExpression('category:', $scopes);
     $qsr = new QResults();
 
-    searchServiceTestService()->qsearchGetCategories($expr, $qsr);
+    searchServiceTestService()
+        ->qsearchGetCategories($expr, $qsr);
 
     expect($qsr->cat_iids[0])->toBe([]);
 });
@@ -1395,7 +1749,8 @@ test('qsearchGetImages() dispatches the hook for an unrecognized scope and appli
         $expr = new QExpression('custom_field:*', $scopes);
         $qsr = new QResults();
 
-        searchServiceTestService()->qsearchGetImages($expr, $qsr);
+        searchServiceTestService()
+            ->qsearchGetImages($expr, $qsr);
 
         expect($qsr->images_iids[0])->toBe([1]);
     } finally {
@@ -1419,11 +1774,13 @@ test('qsearchGetImages() merges params from multiple hook clauses', function ():
         $expr = new QExpression('custom_field:*', $scopes);
         $qsr = new QResults();
 
-        searchServiceTestService()->qsearchGetImages($expr, $qsr);
+        searchServiceTestService()
+            ->qsearchGetImages($expr, $qsr);
 
         $imageIds = $qsr->images_iids[0];
         sort($imageIds);
-        expect($imageIds)->toBe([1, 2]);
+        expect($imageIds)
+            ->toBe([1, 2]);
     } finally {
         EventDispatcherTestFactory::get()->removeEventHandler(QsearchGetImagesSqlScopes::class, $handler);
     }
@@ -1434,7 +1791,8 @@ test('qsearchGetImages() returns no matches for an unrecognized scope with no li
     $expr = new QExpression('custom_field:*', $scopes);
     $qsr = new QResults();
 
-    searchServiceTestService()->qsearchGetImages($expr, $qsr);
+    searchServiceTestService()
+        ->qsearchGetImages($expr, $qsr);
 
     expect($qsr->images_iids[0])->toBe([]);
 });
@@ -1443,13 +1801,15 @@ test('getQuickSearchResultsNoCache() a lone NOT-prefixed tag match produces no r
     // NOT alone (no positive criterion) can never qualify a single
     // top-level token -- exercises both qsearchGetTags()'s own NOT-ids
     // accumulation and qsearchEval()'s own NOT branch.
-    $results = searchServiceTestService()->getQuickSearchResultsNoCache('-family', []);
+    $results = searchServiceTestService()
+        ->getQuickSearchResultsNoCache('-family', []);
 
     expect($results['items'])->toBe([]);
 });
 
 test('getQuickSearchResultsNoCache() a lone NOT-prefixed category match produces no results', function (): void {
-    $results = searchServiceTestService()->getQuickSearchResultsNoCache('-Sample', []);
+    $results = searchServiceTestService()
+        ->getQuickSearchResultsNoCache('-Sample', []);
 
     expect($results['items'])->toBe([]);
 });
@@ -1465,14 +1825,14 @@ test('qsearchGetTags() narrows 2 adjacent short, non-wildcarded, non-quoted term
     // just the shared 'zna znb' tag. 'zna'/'znb' alone are each tagged
     // to image 5 (noise); 'zna znb' alone is tagged to image 4.
     $conn = searchServiceTestConn();
-    $conn->executeStatement("INSERT INTO " . 'tags' . " (name, url_name, lastmodified) VALUES ('zna', 'zna', NOW())");
+    $conn->executeStatement('INSERT INTO tags' . " (name, url_name, lastmodified) VALUES ('zna', 'zna', NOW())");
     $tagA = (int) $conn->lastInsertId();
-    $conn->executeStatement("INSERT INTO " . 'tags' . " (name, url_name, lastmodified) VALUES ('znb', 'znb', NOW())");
+    $conn->executeStatement('INSERT INTO tags' . " (name, url_name, lastmodified) VALUES ('znb', 'znb', NOW())");
     $tagB = (int) $conn->lastInsertId();
-    $conn->executeStatement("INSERT INTO " . 'tags' . " (name, url_name, lastmodified) VALUES ('zna znb', 'zna-znb', NOW())");
+    $conn->executeStatement('INSERT INTO tags' . " (name, url_name, lastmodified) VALUES ('zna znb', 'zna-znb', NOW())");
     $tagAB = (int) $conn->lastInsertId();
     $conn->executeStatement(
-        'INSERT INTO ' . 'image_tag' . ' (image_id, tag_id) VALUES (5, ?), (5, ?), (4, ?)',
+        'INSERT INTO image_tag (image_id, tag_id) VALUES (5, ?), (5, ?), (4, ?)',
         [$tagA, $tagB, $tagAB]
     );
 
@@ -1480,13 +1840,14 @@ test('qsearchGetTags() narrows 2 adjacent short, non-wildcarded, non-quoted term
         $expr = new QExpression('zna znb', []);
         $qsr = new QResults();
 
-        searchServiceTestService()->qsearchGetTags($expr, $qsr);
+        searchServiceTestService()
+            ->qsearchGetTags($expr, $qsr);
 
         expect($qsr->tag_iids[0])->toBe([4])
             ->and($qsr->tag_iids[1])->toBe([4]);
     } finally {
-        $conn->executeStatement('DELETE FROM ' . 'image_tag' . ' WHERE tag_id IN (?, ?, ?)', [$tagA, $tagB, $tagAB]);
-        $conn->executeStatement('DELETE FROM ' . 'tags' . ' WHERE id IN (?, ?, ?)', [$tagA, $tagB, $tagAB]);
+        $conn->executeStatement('DELETE FROM image_tag WHERE tag_id IN (?, ?, ?)', [$tagA, $tagB, $tagAB]);
+        $conn->executeStatement('DELETE FROM tags WHERE id IN (?, ?, ?)', [$tagA, $tagB, $tagAB]);
     }
 });
 
@@ -1502,22 +1863,24 @@ test('getQuickSearchResultsNoCache() excludes a matched tag from the display lis
     // be found (a real, valid tag match) yet excluded from the display
     // list -- unlike 'family', long enough to qualify on its own.
     $conn = searchServiceTestConn();
-    $conn->executeStatement("INSERT INTO " . 'tags' . " (name, url_name, lastmodified) VALUES ('ab', 'ab', NOW())");
+    $conn->executeStatement('INSERT INTO tags' . " (name, url_name, lastmodified) VALUES ('ab', 'ab', NOW())");
     $tagId = (int) $conn->lastInsertId();
-    $conn->executeStatement('INSERT INTO ' . 'image_tag' . ' (image_id, tag_id) VALUES (4, ?)', [$tagId]);
+    $conn->executeStatement('INSERT INTO image_tag (image_id, tag_id) VALUES (4, ?)', [$tagId]);
 
     try {
-        $results = searchServiceTestService()->getQuickSearchResultsNoCache('ab family', []);
+        $results = searchServiceTestService()
+            ->getQuickSearchResultsNoCache('ab family', []);
 
         $matchingTags = $results['qs']['matching_tags'] ?? null;
         if (! is_array($matchingTags)) {
             throw new LogicException('expected matching_tags to be an array, got ' . get_debug_type($matchingTags));
         }
 
-        expect(array_column($matchingTags, 'name'))->toBe(['family']);
+        expect(array_column($matchingTags, 'name'))
+            ->toBe(['family']);
     } finally {
-        $conn->executeStatement('DELETE FROM ' . 'image_tag' . ' WHERE tag_id = ?', [$tagId]);
-        $conn->executeStatement('DELETE FROM ' . 'tags' . ' WHERE id = ?', [$tagId]);
+        $conn->executeStatement('DELETE FROM image_tag WHERE tag_id = ?', [$tagId]);
+        $conn->executeStatement('DELETE FROM tags WHERE id = ?', [$tagId]);
     }
 });
 
@@ -1527,21 +1890,22 @@ test('getQuickSearchResultsNoCache() narrows two adjacent short terms to a share
     // exercising qsearchGetTags()'s own short-token intersection.
     $conn = searchServiceTestConn();
     $conn->executeStatement(
-        "INSERT INTO " . 'tags' . " (name, url_name, lastmodified) VALUES ('dog', 'dog', NOW())"
+        'INSERT INTO tags' . " (name, url_name, lastmodified) VALUES ('dog', 'dog', NOW())"
     );
     $tagId = (int) $conn->lastInsertId();
     $conn->executeStatement(
-        'INSERT INTO ' . 'image_tag' . ' (image_id, tag_id) VALUES (2, ?)',
+        'INSERT INTO image_tag (image_id, tag_id) VALUES (2, ?)',
         [$tagId]
     );
 
     try {
-        $results = searchServiceTestService()->getQuickSearchResultsNoCache('dog dog', []);
+        $results = searchServiceTestService()
+            ->getQuickSearchResultsNoCache('dog dog', []);
 
         expect($results['items'])->toBe([2]);
     } finally {
-        $conn->executeStatement('DELETE FROM ' . 'image_tag' . ' WHERE tag_id = ?', [$tagId]);
-        $conn->executeStatement('DELETE FROM ' . 'tags' . ' WHERE id = ?', [$tagId]);
+        $conn->executeStatement('DELETE FROM image_tag WHERE tag_id = ?', [$tagId]);
+        $conn->executeStatement('DELETE FROM tags WHERE id = ?', [$tagId]);
     }
 });
 
@@ -1554,14 +1918,14 @@ test('qsearchGetCategories() narrows 2 adjacent short, non-wildcarded, non-quote
     // would otherwise coincidentally reach the same final image set
     // regardless of whether this sub-intersection ran.
     $conn = searchServiceTestConn();
-    $conn->executeStatement("INSERT INTO " . 'categories' . " (name) VALUES ('zca')");
+    $conn->executeStatement('INSERT INTO categories' . " (name) VALUES ('zca')");
     $catA = (int) $conn->lastInsertId();
-    $conn->executeStatement("INSERT INTO " . 'categories' . " (name) VALUES ('zcb')");
+    $conn->executeStatement('INSERT INTO categories' . " (name) VALUES ('zcb')");
     $catB = (int) $conn->lastInsertId();
-    $conn->executeStatement("INSERT INTO " . 'categories' . " (name) VALUES ('zca zcb')");
+    $conn->executeStatement('INSERT INTO categories' . " (name) VALUES ('zca zcb')");
     $catAB = (int) $conn->lastInsertId();
     $conn->executeStatement(
-        'INSERT INTO ' . 'image_category' . ' (image_id, category_id) VALUES (5, ?), (5, ?), (4, ?)',
+        'INSERT INTO image_category (image_id, category_id) VALUES (5, ?), (5, ?), (4, ?)',
         [$catA, $catB, $catAB]
     );
 
@@ -1569,13 +1933,14 @@ test('qsearchGetCategories() narrows 2 adjacent short, non-wildcarded, non-quote
         $expr = new QExpression('zca zcb', []);
         $qsr = new QResults();
 
-        searchServiceTestService()->qsearchGetCategories($expr, $qsr);
+        searchServiceTestService()
+            ->qsearchGetCategories($expr, $qsr);
 
         expect($qsr->cat_iids[0])->toBe([4])
             ->and($qsr->cat_iids[1])->toBe([4]);
     } finally {
-        $conn->executeStatement('DELETE FROM ' . 'image_category' . ' WHERE category_id IN (?, ?, ?)', [$catA, $catB, $catAB]);
-        $conn->executeStatement('DELETE FROM ' . 'categories' . ' WHERE id IN (?, ?, ?)', [$catA, $catB, $catAB]);
+        $conn->executeStatement('DELETE FROM image_category WHERE category_id IN (?, ?, ?)', [$catA, $catB, $catAB]);
+        $conn->executeStatement('DELETE FROM categories WHERE id IN (?, ?, ?)', [$catA, $catB, $catAB]);
     }
 });
 
@@ -1586,20 +1951,22 @@ test('getQuickSearchResultsNoCache() excludes a matched category from the displa
     // the identical 4-term OR gate. A 2-char exact category name ('ab')
     // in a 2-token search satisfies none of the 4 conditions.
     $conn = searchServiceTestConn();
-    $conn->executeStatement("INSERT INTO " . 'categories' . " (name) VALUES ('ab')");
+    $conn->executeStatement('INSERT INTO categories' . " (name) VALUES ('ab')");
     $catId = (int) $conn->lastInsertId();
 
     try {
-        $results = searchServiceTestService()->getQuickSearchResultsNoCache('ab Sample', []);
+        $results = searchServiceTestService()
+            ->getQuickSearchResultsNoCache('ab Sample', []);
 
         $matchingCats = $results['qs']['matching_cats'] ?? null;
         if (! is_array($matchingCats)) {
             throw new LogicException('expected matching_cats to be an array, got ' . get_debug_type($matchingCats));
         }
 
-        expect(array_column($matchingCats, 'name'))->toBe(['Sample Album']);
+        expect(array_column($matchingCats, 'name'))
+            ->toBe(['Sample Album']);
     } finally {
-        $conn->executeStatement('DELETE FROM ' . 'categories' . ' WHERE id = ?', [$catId]);
+        $conn->executeStatement('DELETE FROM categories WHERE id = ?', [$catId]);
     }
 });
 
@@ -1607,11 +1974,13 @@ test('getQuickSearchResultsNoCache() narrows two adjacent short terms to a share
     // "Sub" (<=3 chars) whole-word-matches category 2's name ("Nested
     // Sub Album") -- exercises qsearchGetCategories()'s own analogous
     // short-token intersection.
-    $results = searchServiceTestService()->getQuickSearchResultsNoCache('Sub Sub', []);
+    $results = searchServiceTestService()
+        ->getQuickSearchResultsNoCache('Sub Sub', []);
 
     $items = $results['items'];
     sort($items);
-    expect($items)->toBe([4, 5]);
+    expect($items)
+        ->toBe([4, 5]);
 });
 
 test('getQuickSearchResultsNoCache() expands to subalbums when enabled', function (): void {
@@ -1621,11 +1990,13 @@ test('getQuickSearchResultsNoCache() expands to subalbums when enabled', functio
     // sub-album inclusion enabled this expands to include category 2
     // (its child, per the fixture's uppercats), pulling in images 4 and
     // 5 too.
-    $results = searchServiceTestService()->getQuickSearchResultsNoCache('Sample', []);
+    $results = searchServiceTestService()
+        ->getQuickSearchResultsNoCache('Sample', []);
 
     $items = $results['items'];
     sort($items);
-    expect($items)->toBe([1, 2, 3, 4, 5]);
+    expect($items)
+        ->toBe([1, 2, 3, 4, 5]);
 });
 
 test('getQuickSearchResultsNoCache() finds no subalbums for a leaf category match with subalbums enabled', function (): void {
@@ -1641,17 +2012,19 @@ test('getQuickSearchResultsNoCache() finds no subalbums for a leaf category matc
     // category 1 always DOES have a real child.
     CurrentConfigTestFactory::get()->quickSearchIncludeSubAlbums = true;
     $conn = searchServiceTestConn();
-    $originalUppercats = $conn->fetchOne('SELECT uppercats FROM ' . 'categories' . ' WHERE id = 2');
-    expect($originalUppercats)->toBeString();
-    $conn->executeStatement("UPDATE " . 'categories' . " SET uppercats = '999' WHERE id = 2");
+    $originalUppercats = $conn->fetchOne('SELECT uppercats FROM categories WHERE id = 2');
+    expect($originalUppercats)
+        ->toBeString();
+    $conn->executeStatement('UPDATE categories' . " SET uppercats = '999' WHERE id = 2");
 
     try {
         // "Nested" matches category 2 ("Nested Sub Album") by name only.
-        $results = searchServiceTestService()->getQuickSearchResultsNoCache('Nested', []);
+        $results = searchServiceTestService()
+            ->getQuickSearchResultsNoCache('Nested', []);
 
         expect($results['items'])->toBe([]);
     } finally {
-        $conn->executeStatement('UPDATE ' . 'categories' . ' SET uppercats = ? WHERE id = 2', [$originalUppercats]);
+        $conn->executeStatement('UPDATE categories SET uppercats = ? WHERE id = 2', [$originalUppercats]);
     }
 });
 
@@ -1661,11 +2034,13 @@ test('getQuickSearchResultsNoCache() OR keyword unions two tag matches', functio
     // (QMultiToken::parse()), exercising qsearchEval()'s own OR-modifier
     // union branch -- every other multi-term search test in this file
     // exercises the implicit AND/intersection instead.
-    $results = searchServiceTestService()->getQuickSearchResultsNoCache('family OR nature', []);
+    $results = searchServiceTestService()
+        ->getQuickSearchResultsNoCache('family OR nature', []);
 
     $items = $results['items'];
     sort($items);
-    expect($items)->toBe([1, 2, 3]);
+    expect($items)
+        ->toBe([1, 2, 3]);
 });
 
 test('getQuickSearchResultsNoCache() evaluates a parenthesized sub-group', function (): void {
@@ -1674,7 +2049,8 @@ test('getQuickSearchResultsNoCache() evaluates a parenthesized sub-group', funct
     // "nature" tags images 1,2,3; "family" tags image 1 only -- the
     // implicit AND between the group and the trailing word intersects
     // down to image 1.
-    $results = searchServiceTestService()->getQuickSearchResultsNoCache('(nature) family', []);
+    $results = searchServiceTestService()
+        ->getQuickSearchResultsNoCache('(nature) family', []);
 
     expect($results['items'])->toBe([1]);
 });
@@ -1705,7 +2081,8 @@ test('getQuickSearchResultsNoCache() falls back when a hook returns non-array it
     EventDispatcherTestFactory::get()->addTypedHandler(QsearchResults::class, $handler);
 
     try {
-        $results = searchServiceTestService()->getQuickSearchResultsNoCache('family', []);
+        $results = searchServiceTestService()
+            ->getQuickSearchResultsNoCache('family', []);
     } finally {
         EventDispatcherTestFactory::get()->removeEventHandler(QsearchResults::class, $handler);
     }
@@ -1718,7 +2095,10 @@ test('getQuickSearchResultsNoCache() falls back when a hook returns non-array it
     // did. Confirmed live: this method never discards that real match
     // just because the hook's own extra items were unusable.
     expect($results['items'])->toBe([1])
-        ->and($results['qs'])->toBe(['q' => 'family', 'unmatched_terms' => []]);
+        ->and($results['qs'])->toBe([
+            'q' => 'family',
+            'unmatched_terms' => [],
+        ]);
 });
 
 test('getQuickSearchResultsNoCache() merges extra numeric ids from a plugin hook', function (): void {
@@ -1731,21 +2111,27 @@ test('getQuickSearchResultsNoCache() merges extra numeric ids from a plugin hook
     EventDispatcherTestFactory::get()->addTypedHandler(QsearchResults::class, $handler);
 
     try {
-        $results = searchServiceTestService()->getQuickSearchResultsNoCache('family', []);
+        $results = searchServiceTestService()
+            ->getQuickSearchResultsNoCache('family', []);
     } finally {
         EventDispatcherTestFactory::get()->removeEventHandler(QsearchResults::class, $handler);
     }
 
     $items = $results['items'];
     sort($items);
-    expect($items)->toBe([1, 4]);
+    expect($items)
+        ->toBe([1, 4]);
 });
 
 test('getQuickSearchResultsNoCache() returns early for an empty query', function (): void {
-    $results = searchServiceTestService()->getQuickSearchResultsNoCache('', []);
+    $results = searchServiceTestService()
+        ->getQuickSearchResultsNoCache('', []);
 
     expect($results['items'])->toBe([])
-        ->and($results['qs'])->toBe(['q' => '', 'unmatched_terms' => []]);
+        ->and($results['qs'])->toBe([
+            'q' => '',
+            'unmatched_terms' => [],
+        ]);
 });
 
 test('getQuickSearchResultsNoCache() works with a non-default calendar datefield', function (): void {
@@ -1755,7 +2141,8 @@ test('getQuickSearchResultsNoCache() works with a non-default calendar datefield
     // search still functions correctly either way.
     CurrentConfigTestFactory::get()->calendarDatefield = 'date_available';
 
-    $results = searchServiceTestService()->getQuickSearchResultsNoCache('family', []);
+    $results = searchServiceTestService()
+        ->getQuickSearchResultsNoCache('family', []);
 
     expect($results['items'])->toBe([1]);
 });
@@ -1764,7 +2151,10 @@ test('getQuickSearchResultsNoCache() applies a custom images_where clause', func
     // "nature" alone matches images 1,2,3; a custom images_where narrows
     // that down further, proving the clause is genuinely applied (not
     // coincidentally the same result).
-    $results = searchServiceTestService()->getQuickSearchResultsNoCache('nature', ['images_where' => 'id = 2']);
+    $results = searchServiceTestService()
+        ->getQuickSearchResultsNoCache('nature', [
+            'images_where' => 'id = 2',
+        ]);
 
     expect($results['items'])->toBe([2]);
 });
@@ -1777,7 +2167,10 @@ test('getValidatedSearchInfo() calls fatalError() for an invalid identifier', fu
 });
 
 test('getValidatedSearchInfo() calls fatalError() when a uuid search is looked up by bare id', function (): void {
-    $id = searchServiceTestRepo()->insertSavedSearch(['q' => 'nature'], '2026-07-12 00:00:00', 1, 'psk-20260712-fatalidtst', null);
+    $id = searchServiceTestRepo()
+        ->insertSavedSearch([
+            'q' => 'nature',
+        ], '2026-07-12 00:00:00', 1, 'psk-20260712-fatalidtst', null);
 
     $service = searchServiceTestServiceWithRenderer(new SearchServiceTestFatalSignalHtmlRenderer());
 
@@ -1792,24 +2185,32 @@ test('getValidatedSearchInfo() looking up by uuid never triggers the id-vs-uuid 
     // -- a uuid-pattern candidate can never make $clausePattern equal
     // 'id = ?' -- to prove it's a real AND, not an accidentally widened
     // OR that would fire on any single true term.
-    searchServiceTestRepo()->insertSavedSearch(['q' => 'nature'], '2026-07-12 00:00:00', 1, 'psk-20260712-anduuidts1', null);
+    searchServiceTestRepo()
+        ->insertSavedSearch([
+            'q' => 'nature',
+        ], '2026-07-12 00:00:00', 1, 'psk-20260712-anduuidts1', null);
     $service = searchServiceTestServiceWithRenderer(new SearchServiceTestFatalSignalHtmlRenderer());
 
     $search = $service->getValidatedSearchInfo('psk-20260712-anduuidts1', null);
 
-    expect($search)->not->toBeNull();
+    expect($search)
+        ->not->toBeNull();
 });
 
 test('getValidatedSearchInfo() looking up a bare id never triggers the mismatch gate when the row has no uuid at all', function (): void {
     // Same 3-term `and` chain, this time with its own 3rd term false
     // ($search->searchUuid === null) -- together with the sibling test
     // above (2nd term false), these pin down both `and` operators.
-    $id = searchServiceTestRepo()->insertSavedSearch(['q' => 'nature'], '2026-07-12 00:00:00', 1, null, null);
+    $id = searchServiceTestRepo()
+        ->insertSavedSearch([
+            'q' => 'nature',
+        ], '2026-07-12 00:00:00', 1, null, null);
     $service = searchServiceTestServiceWithRenderer(new SearchServiceTestFatalSignalHtmlRenderer());
 
     $search = $service->getValidatedSearchInfo((string) $id, null);
 
-    expect($search)->not->toBeNull();
+    expect($search)
+        ->not->toBeNull();
 });
 
 test('getValidatedSearchArray() calls badRequest() when the search is not found', function (): void {
@@ -1833,9 +2234,13 @@ test('getSearchResults() calls badRequest() when the search identifier does not 
 });
 
 test('getSearchResults() resolves a saved quick search query', function (): void {
-    $id = searchServiceTestRepo()->insertSavedSearch(['q' => 'family'], '2026-07-12 00:00:00', 1, 'psk-20260712-quicksrch1', null);
+    $id = searchServiceTestRepo()
+        ->insertSavedSearch([
+            'q' => 'family',
+        ], '2026-07-12 00:00:00', 1, 'psk-20260712-quicksrch1', null);
 
-    $results = searchServiceTestService()->getSearchResults((string) $id, true, '');
+    $results = searchServiceTestService()
+        ->getSearchResults((string) $id, true, '');
 
     expect($results['items'])->toBe([1]);
 });
@@ -1849,13 +2254,16 @@ test('getQuickSearchResultsNoCache() writes the default-user lookup through the 
     // the 'default_user' key UserService::getDefaultUserInfo() writes
     // internally. A silently-fresh `new ProcessCache()` per call would
     // never be externally observable this way.
-    searchServiceTestProcessCache()->forget('default_user');
-    expect(searchServiceTestProcessCache()->has('default_user'))->toBeFalse();
+    searchServiceTestProcessCache()
+        ->forget('default_user');
+    expect(searchServiceTestProcessCache()->has('default_user'))
+        ->toBeFalse();
 
     try {
         searchServiceTestService()->getQuickSearchResultsNoCache('nature', []);
 
-        expect(searchServiceTestProcessCache()->has('default_user'))->toBeTrue();
+        expect(searchServiceTestProcessCache()->has('default_user'))
+            ->toBeTrue();
     } finally {
         searchServiceTestProcessCache()->forget('default_user');
     }
@@ -1869,20 +2277,23 @@ test('getQuickSearchResultsNoCache() throws when the default user language resol
     }
 
     $conn = searchServiceTestConn();
-    $originalLanguage = $conn->fetchOne('SELECT language FROM ' . 'user_infos' . ' WHERE user_id = 2');
-    expect($originalLanguage)->toBeString();
+    $originalLanguage = $conn->fetchOne('SELECT language FROM user_infos WHERE user_id = 2');
+    expect($originalLanguage)
+        ->toBeString();
     // user_id=2 is CurrentConfig::defaultUserId()'s own default (the
     // guest account) -- getDefaultLanguage() reads *this* row, entirely
     // independent of CurrentUser (id=1 in this file's own beforeEach()).
-    $conn->executeStatement("UPDATE " . 'user_infos' . " SET language = 'zz_ZZ' WHERE user_id = 2");
-    searchServiceTestProcessCache()->forget('default_user');
+    $conn->executeStatement('UPDATE user_infos' . " SET language = 'zz_ZZ' WHERE user_id = 2");
+    searchServiceTestProcessCache()
+        ->forget('default_user');
 
     try {
         expect(fn () => searchServiceTestService()->getQuickSearchResultsNoCache('nature', []))
             ->toThrow(LogicException::class, 'qsearch: \Piwigo\Search\Inflector\Inflector_zz does not implement InflectorInterface');
     } finally {
-        $conn->executeStatement('UPDATE ' . 'user_infos' . ' SET language = ? WHERE user_id = 2', [$originalLanguage]);
-        searchServiceTestProcessCache()->forget('default_user');
+        $conn->executeStatement('UPDATE user_infos SET language = ? WHERE user_id = 2', [$originalLanguage]);
+        searchServiceTestProcessCache()
+            ->forget('default_user');
     }
 });
 

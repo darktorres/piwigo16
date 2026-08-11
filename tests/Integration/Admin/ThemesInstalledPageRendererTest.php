@@ -4,35 +4,35 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Integration\Admin;
 
-use Override;
 use LogicException;
-use Piwigo\Tests\Support\TemplateTestFactory;
-use Piwigo\Tests\Support\UrlServiceTestFactory;
+use Override;
 use Piwigo\Activity\ActivityService;
-use Piwigo\Users\UserService;
-use Piwigo\Core\WsContext;
-use Piwigo\Tests\Support\LangTestFactory;
-use Piwigo\Auth\AccessControl;
-use Piwigo\Tests\Support\PageStateTestFactory;
-use Piwigo\Tests\Support\HtmlServiceTestFactory;
 use Piwigo\Admin\ThemesInstalledPageRenderer;
+use Piwigo\Auth\AccessControl;
 use Piwigo\Bootstrap\RedirectService;
 use Piwigo\Config\ConfigLoader;
 use Piwigo\Config\ConfigService;
 use Piwigo\Config\CurrentConfig;
-use Piwigo\Tests\Support\CurrentConfigTestFactory;
-use Piwigo\Tests\Support\CurrentConfigServiceTestFactory;
 use Piwigo\Core\CurrentLogger;
-use Piwigo\Tests\Support\CurrentPathsTestFactory;
 use Piwigo\Core\FilesystemHelper;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Logger;
+use Piwigo\Core\WsContext;
 use Piwigo\PluginConfig\EventDispatcher;
-use Piwigo\Tests\Support\EventDispatcherTestFactory;
 use Piwigo\Template\CurrentTemplate;
 use Piwigo\Tests\Integration\IntegrationTestCase;
+use Piwigo\Tests\Support\CurrentConfigServiceTestFactory;
+use Piwigo\Tests\Support\CurrentConfigTestFactory;
+use Piwigo\Tests\Support\CurrentPathsTestFactory;
 use Piwigo\Tests\Support\CurrentUserTestFactory;
+use Piwigo\Tests\Support\EventDispatcherTestFactory;
+use Piwigo\Tests\Support\HtmlServiceTestFactory;
+use Piwigo\Tests\Support\LangTestFactory;
+use Piwigo\Tests\Support\PageStateTestFactory;
+use Piwigo\Tests\Support\TemplateTestFactory;
+use Piwigo\Tests\Support\UrlServiceTestFactory;
 use Piwigo\Users\User;
+use Piwigo\Users\UserService;
 
 /**
  * Piwigo\Admin\ThemesInstalledPageRenderer::render() -- see
@@ -107,7 +107,9 @@ final class ThemesInstalledPageRendererTest extends IntegrationTestCase
         if (! $currentLogger instanceof CurrentLogger) {
             throw new LogicException('Container returned an unexpected type for ' . CurrentLogger::class);
         }
-        $currentLogger->set(new Logger(['severity' => Logger::OFF]));
+        $currentLogger->set(new Logger([
+            'severity' => Logger::OFF,
+        ]));
         $activityService = Kernel::container()->get(ActivityService::class);
         if (! $activityService instanceof ActivityService) {
             throw new LogicException('Container returned an unexpected type for ' . ActivityService::class);
@@ -163,7 +165,7 @@ final class ThemesInstalledPageRendererTest extends IntegrationTestCase
         file_put_contents($dir . '/screenshot.png', 'x');
     }
 
-    public function test_render_skips_default_and_builds_a_real_row_for_a_genuine_extra_theme(): void
+    public function testRenderSkipsDefaultAndBuildsARealRowForAGenuineExtraTheme(): void
     {
         $this->writeFixtureTheme('default', 'Default');
         $this->writeFixtureTheme('pwgtest-extra-theme', 'PwgTest Extra Theme');

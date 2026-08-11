@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Integration;
 
-use Override;
 use Doctrine\DBAL\Connection;
+use Override;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Lang\LangRepository;
@@ -41,17 +41,17 @@ final class LangRepositoryTest extends IntegrationTestCase
         $this->repo = $repo;
     }
 
-    public function test_find_all_rows_returns_the_fixtures_installed_language(): void
+    public function testFindAllRowsReturnsTheFixturesInstalledLanguage(): void
     {
         $rows = $this->repo->findAllRows();
 
         self::assertEquals([new LanguageListing('en_UK', 'English (Great Britain)')], $rows);
     }
 
-    public function test_find_all_rows_excludes_a_row_with_a_null_name(): void
+    public function testFindAllRowsExcludesARowWithANullName(): void
     {
         $this->conn->executeStatement(
-            "INSERT INTO " . 'languages' . " (id, version, name) VALUES ('zz_NM', '1.0.0', NULL)"
+            'INSERT INTO languages' . " (id, version, name) VALUES ('zz_NM', '1.0.0', NULL)"
         );
 
         try {
@@ -59,14 +59,14 @@ final class LangRepositoryTest extends IntegrationTestCase
 
             self::assertEquals([new LanguageListing('en_UK', 'English (Great Britain)')], $rows);
         } finally {
-            $this->conn->executeStatement("DELETE FROM " . 'languages' . " WHERE id = 'zz_NM'");
+            $this->conn->executeStatement('DELETE FROM languages' . " WHERE id = 'zz_NM'");
         }
     }
 
-    public function test_find_all_rows_orders_by_name(): void
+    public function testFindAllRowsOrdersByName(): void
     {
         $this->conn->executeStatement(
-            "INSERT INTO " . 'languages' . " (id, version, name) VALUES ('zz_AA', '1.0.0', 'AAA First')"
+            'INSERT INTO languages' . " (id, version, name) VALUES ('zz_AA', '1.0.0', 'AAA First')"
         );
 
         try {
@@ -77,7 +77,7 @@ final class LangRepositoryTest extends IntegrationTestCase
                 $rows
             );
         } finally {
-            $this->conn->executeStatement("DELETE FROM " . 'languages' . " WHERE id = 'zz_AA'");
+            $this->conn->executeStatement('DELETE FROM languages' . " WHERE id = 'zz_AA'");
         }
     }
 }

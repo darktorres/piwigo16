@@ -21,8 +21,10 @@ it('gallery title setting round-trips through the $conf write path', function ()
 
     // Reload and verify the new value persisted.
     $page = H::navigateOk($page, '/admin.php?page=configuration&section=main');
-    expect($page->value('input[name="gallery_title"]'))->toBe($newTitle);
+    expect($page->value('input[name="gallery_title"]'))
+        ->toBe($newTitle);
 
     // Restore original.
-    $page->fill('gallery_title', $originalTitle)->click('submit');
+    $page->fill('gallery_title', $originalTitle)
+        ->click('submit');
 });

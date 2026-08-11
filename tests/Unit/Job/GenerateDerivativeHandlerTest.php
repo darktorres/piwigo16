@@ -3,13 +3,13 @@
 declare(strict_types=1);
 
 use Piwigo\Config\CurrentConfig;
-use Piwigo\Tests\Support\CurrentConfigTestFactory;
-use Piwigo\Tests\Support\CurrentPathsTestFactory;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Paths;
 use Piwigo\Image\DerivativeCacheService;
 use Piwigo\Job\GenerateDerivativeJob;
 use Piwigo\Job\Handler\GenerateDerivativeHandler;
+use Piwigo\Tests\Support\CurrentConfigTestFactory;
+use Piwigo\Tests\Support\CurrentPathsTestFactory;
 
 // See tests/Unit/Image/DerivativeCacheServiceTest.php's own comment on why
 // a fresh, uniquely-named temp root per test (via Kernel::boot()) is

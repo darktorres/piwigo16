@@ -44,11 +44,13 @@ test('existsById() is false before insert() and true after', function (): void {
     $repo = feedTestRepo();
 
     try {
-        expect($repo->existsById($id))->toBeFalse();
+        expect($repo->existsById($id))
+            ->toBeFalse();
 
         $repo->insert($id, 1);
 
-        expect($repo->existsById($id))->toBeTrue();
+        expect($repo->existsById($id))
+            ->toBeTrue();
     } finally {
         feedTestDelete($conn, $id);
     }
@@ -67,15 +69,18 @@ test('findById() returns the owning user id with a null last-check for a freshly
             throw new RuntimeException('Expected a matching feed row.');
         }
 
-        expect($info->userId)->toBe(1);
-        expect($info->lastCheck)->toBeNull();
+        expect($info->userId)
+            ->toBe(1);
+        expect($info->lastCheck)
+            ->toBeNull();
     } finally {
         feedTestDelete($conn, $id);
     }
 });
 
 test('findById() returns null for an id that was never inserted', function (): void {
-    expect(feedTestRepo()->findById(feedTestId()))->toBeNull();
+    expect(feedTestRepo()->findById(feedTestId()))
+        ->toBeNull();
 });
 
 test('updateLastCheck() sets the timestamp on an existing feed', function (): void {
@@ -94,7 +99,8 @@ test('updateLastCheck() sets the timestamp on an existing feed', function (): vo
             throw new RuntimeException('Expected a matching feed row.');
         }
 
-        expect($info->lastCheck)->toEqual($now);
+        expect($info->lastCheck)
+            ->toEqual($now);
     } finally {
         feedTestDelete($conn, $id);
     }

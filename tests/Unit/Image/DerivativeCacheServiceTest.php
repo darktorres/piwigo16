@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-use Piwigo\Tests\Support\CurrentConfigTestFactory;
-use Piwigo\Tests\Support\CurrentPathsTestFactory;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Paths;
 use Piwigo\Image\DerivativeCacheService;
+use Piwigo\Tests\Support\CurrentConfigTestFactory;
+use Piwigo\Tests\Support\CurrentPathsTestFactory;
 
 // Unique per-run root: clearDerivativeCache()/deleteElementDerivatives()
 // read CurrentPathsTestFactory::get()->root . CurrentConfig::derivativeDir() internally, not
@@ -80,7 +80,8 @@ test('clearDerivativeCacheRecursive removes an emptied subdirectory', function (
 
     new DerivativeCacheService(CurrentConfigTestFactory::get(), CurrentPathsTestFactory::get())->clearDerivativeCacheRecursive($base, '#.*-th\.jpg$#');
 
-    expect(is_dir($dir))->toBeFalse();
+    expect(is_dir($dir))
+        ->toBeFalse();
 });
 
 test('clearDerivativeCacheRecursive recurses into nested directories', function (): void {
@@ -209,7 +210,9 @@ test('deleteElementDerivatives only strips a leading "../" when it is genuinely 
 });
 
 test('deleteElementDerivatives throws for a path with no extension', function (): void {
-    new DerivativeCacheService(CurrentConfigTestFactory::get(), CurrentPathsTestFactory::get())->deleteElementDerivatives(['path' => 'no_extension']);
+    new DerivativeCacheService(CurrentConfigTestFactory::get(), CurrentPathsTestFactory::get())->deleteElementDerivatives([
+        'path' => 'no_extension',
+    ]);
 })->throws(Exception::class);
 
 test('deleteElementDerivatives never attempts to iterate a failed glob() result', function (): void {
@@ -238,7 +241,8 @@ test('deleteElementDerivatives never attempts to iterate a failed glob() result'
         restore_error_handler();
     }
 
-    expect($warnings)->toHaveCount(1);
+    expect($warnings)
+        ->toHaveCount(1);
 });
 
 test('clearDerivativeCache with an explicit type list only matches those types', function (): void {
@@ -278,7 +282,9 @@ test('clearDerivativeCache re-indexes a non-sequential type array before iterati
     mkdir($derivDir, 0o777, true);
     file_put_contents($derivDir . '/photo-th.jpg', 'x');
 
-    new DerivativeCacheService(CurrentConfigTestFactory::get(), CurrentPathsTestFactory::get())->clearDerivativeCache(['a' => 'thumb']);
+    new DerivativeCacheService(CurrentConfigTestFactory::get(), CurrentPathsTestFactory::get())->clearDerivativeCache([
+        'a' => 'thumb',
+    ]);
 
     expect(file_exists($derivDir . '/photo-th.jpg'))->toBeFalse();
 });
@@ -439,8 +445,10 @@ test('clearDerivativeCache never removes the derivatives root directory itself, 
     }
 
     expect(file_exists($derivDir . '/photo-th.jpg'))->toBeFalse()
-        ->and(is_dir($derivRoot))->toBeTrue()
-        ->and($warnings)->toBe([]);
+        ->and(is_dir($derivRoot))
+        ->toBeTrue()
+        ->and($warnings)
+        ->toBe([]);
 });
 
 test('clearDerivativeCache never recurses into a stray plain FILE at the derivatives root', function (): void {
@@ -484,7 +492,8 @@ test('clearDerivativeCacheRecursive\'s own return value reflects EVERY subdirect
 
     $result = new DerivativeCacheService(CurrentConfigTestFactory::get(), CurrentPathsTestFactory::get())->clearDerivativeCacheRecursive($parent, '#-th\.jpg$#');
 
-    expect($result)->toBeFalse();
+    expect($result)
+        ->toBeFalse();
 });
 
 test('clearDerivativeCacheRecursive never calls preg_match with a genuinely empty pattern', function (): void {
@@ -503,7 +512,8 @@ test('clearDerivativeCacheRecursive never calls preg_match with a genuinely empt
 
     $result = new DerivativeCacheService(CurrentConfigTestFactory::get(), CurrentPathsTestFactory::get())->clearDerivativeCacheRecursive($dir, '');
 
-    expect($result)->toBeFalse()
+    expect($result)
+        ->toBeFalse()
         ->and(file_exists($dir . '/photo-th.jpg'))->toBeTrue();
 });
 
@@ -520,7 +530,8 @@ test('clearDerivativeCacheRecursive\'s own return value reports failure when an 
 
     $result = new DerivativeCacheService(CurrentConfigTestFactory::get(), CurrentPathsTestFactory::get())->clearDerivativeCacheRecursive($dir, '#nomatch#');
 
-    expect($result)->toBeFalse();
+    expect($result)
+        ->toBeFalse();
 });
 
 /**
@@ -557,5 +568,6 @@ test('clearDerivativeCacheRecursive returns false without throwing when the dire
         restore_error_handler();
     }
 
-    expect($result)->toBeFalse();
+    expect($result)
+        ->toBeFalse();
 });

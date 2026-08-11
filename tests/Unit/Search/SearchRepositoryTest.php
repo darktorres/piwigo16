@@ -82,21 +82,26 @@ afterEach(function (): void {
 });
 
 test('findSavedSearchByUuid() returns null for no match', function (): void {
-    expect(searchTestRepo()->findSavedSearchByUuid('no-such-uuid'))->toBeNull();
+    expect(searchTestRepo()->findSavedSearchByUuid('no-such-uuid'))
+        ->toBeNull();
 });
 
 test('findSavedSearchByUuid() returns the matching row', function (): void {
     $repo = searchTestRepo();
     $uuid = searchTestUuid();
-    $repo->insertSavedSearch(['q' => 'nature'], '2026-07-12 00:00:00', 1, $uuid, null);
+    $repo->insertSavedSearch([
+        'q' => 'nature',
+    ], '2026-07-12 00:00:00', 1, $uuid, null);
 
     $row = $repo->findSavedSearchByUuid($uuid);
 
-    expect($row)->not->toBeNull();
+    expect($row)
+        ->not->toBeNull();
     if ($row === null) {
         throw new RuntimeException('unreachable');
     }
-    expect($row->searchUuid)->toBe($uuid);
+    expect($row->searchUuid)
+        ->toBe($uuid);
 });
 
 test('findSavedSearchByUuid() filters out a numeric-string rules key on decode', function (): void {
@@ -112,31 +117,40 @@ test('findSavedSearchByUuid() filters out a numeric-string rules key on decode',
     $conn = DbConnection::build();
     $uuid = searchTestUuid();
     $conn->executeStatement(
-        'INSERT INTO ' . 'search' . ' (rules, created_on, created_by, search_uuid, forked_from) VALUES (?, ?, ?, ?, NULL)',
+        'INSERT INTO search (rules, created_on, created_by, search_uuid, forked_from) VALUES (?, ?, ?, ?, NULL)',
         ['{"5":"numeric-key-value","q":"nature"}', '2026-07-12 00:00:00', 1, $uuid]
     );
 
-    $row = searchTestRepo()->findSavedSearchByUuid($uuid);
+    $row = searchTestRepo()
+        ->findSavedSearchByUuid($uuid);
 
-    expect($row)->not->toBeNull();
+    expect($row)
+        ->not->toBeNull();
     if ($row === null) {
         throw new RuntimeException('unreachable');
     }
-    expect($row->rules)->toBe(['q' => 'nature']);
+    expect($row->rules)
+        ->toBe([
+            'q' => 'nature',
+        ]);
 });
 
 test('findSavedSearchByUuid() maps a null created_on to null, not the entity instance', function (): void {
     $repo = searchTestRepo();
     $uuid = searchTestUuid();
-    $repo->insertSavedSearch(['q' => 'nature'], null, 1, $uuid, null);
+    $repo->insertSavedSearch([
+        'q' => 'nature',
+    ], null, 1, $uuid, null);
 
     $row = $repo->findSavedSearchByUuid($uuid);
 
-    expect($row)->not->toBeNull();
+    expect($row)
+        ->not->toBeNull();
     if ($row === null) {
         throw new RuntimeException('unreachable');
     }
-    expect($row->createdOn)->toBeNull();
+    expect($row->createdOn)
+        ->toBeNull();
 });
 
 test('findIdsByClause() returns a list of ints', function (): void {
@@ -144,20 +158,24 @@ test('findIdsByClause() returns a list of ints', function (): void {
     // OTHER Unit-suite files insert a disposable image (a real, higher
     // auto-increment id) for the span of their own test, which an
     // unbounded condition here could catch mid-test under --parallel.
-    $ids = searchTestRepo()->findIdsByClause('id', 'images' . ' i', 'id > ? AND id <= ?', [0, 5]);
+    $ids = searchTestRepo()
+        ->findIdsByClause('id', 'images i', 'id > ? AND id <= ?', [0, 5]);
     sort($ids);
 
-    expect($ids)->toBe([1, 2, 3, 4, 5]);
+    expect($ids)
+        ->toBe([1, 2, 3, 4, 5]);
 });
 
 test('findIdsByClause() returns empty for no match', function (): void {
-    expect(searchTestRepo()->findIdsByClause('id', 'images' . ' i', 'id > ?', [99999]))->toBe([]);
+    expect(searchTestRepo()->findIdsByClause('id', 'images i', 'id > ?', [99999]))->toBe([]);
 });
 
 test('findRowsByClause() returns full rows', function (): void {
-    $rows = searchTestRepo()->findRowsByClause('tags', 'name = ?', ['nature']);
+    $rows = searchTestRepo()
+        ->findRowsByClause('tags', 'name = ?', ['nature']);
 
-    expect($rows)->toHaveCount(1)
+    expect($rows)
+        ->toHaveCount(1)
         ->and($rows[0]['id'])->toBe(1)
         ->and($rows[0]['name'])->toBe('nature');
 });
@@ -170,11 +188,13 @@ test('quote() escapes a value for safe inline embedding', function (): void {
     // [SEC-18] real driver escaping (Connection::quote()), not
     // addslashes() -- the quoted value must round-trip safely when
     // embedded directly into a WHERE fragment (not bound via ?).
-    $quoted = searchTestRepo()->quote("o'brien\" --");
+    $quoted = searchTestRepo()
+        ->quote("o'brien\" --");
 
     $row = DbConnection::build()->executeQuery("SELECT {$quoted} AS val")->fetchAssociative();
 
-    expect($row)->toBeArray();
+    expect($row)
+        ->toBeArray();
     if (! is_array($row)) {
         throw new RuntimeException('unreachable');
     }
@@ -182,55 +202,89 @@ test('quote() escapes a value for safe inline embedding', function (): void {
 });
 
 test('countSavedSearchByUuid() returns zero for unknown uuid', function (): void {
-    expect(searchTestRepo()->countSavedSearchByUuid('no-such-uuid'))->toBe(0);
+    expect(searchTestRepo()->countSavedSearchByUuid('no-such-uuid'))
+        ->toBe(0);
 });
 
 test('countSavedSearchByUuid() returns one after insert', function (): void {
     $repo = searchTestRepo();
     $uuid = searchTestUuid();
-    $repo->insertSavedSearch(['q' => 'travel'], '2026-07-12 00:00:00', 1, $uuid, null);
+    $repo->insertSavedSearch([
+        'q' => 'travel',
+    ], '2026-07-12 00:00:00', 1, $uuid, null);
 
-    expect($repo->countSavedSearchByUuid($uuid))->toBe(1);
+    expect($repo->countSavedSearchByUuid($uuid))
+        ->toBe(1);
 });
 
 test('insertSavedSearch() returns the new autoincrement id', function (): void {
     $repo = searchTestRepo();
 
-    $id = $repo->insertSavedSearch(['q' => 'family'], '2026-07-12 00:00:00', null, searchTestUuid(), null);
+    $id = $repo->insertSavedSearch([
+        'q' => 'family',
+    ], '2026-07-12 00:00:00', null, searchTestUuid(), null);
 
-    expect($id)->toBeGreaterThan(0);
+    expect($id)
+        ->toBeGreaterThan(0);
     $row = $repo->findSavedSearchById($id);
-    expect($row)->not->toBeNull();
+    expect($row)
+        ->not->toBeNull();
     if ($row === null) {
         throw new RuntimeException('unreachable');
     }
-    expect($row->createdBy)->toBeNull()
-        ->and($row->forkedFrom)->toBeNull();
+    expect($row->createdBy)
+        ->toBeNull()
+        ->and($row->forkedFrom)
+        ->toBeNull();
 });
 
 test('insertSavedSearch() stores forked_from', function (): void {
     $repo = searchTestRepo();
-    $parentId = $repo->insertSavedSearch(['q' => 'parent'], '2026-07-12 00:00:00', 1, searchTestUuid(), null);
-    $childId = $repo->insertSavedSearch(['q' => 'child'], '2026-07-12 00:00:00', 1, searchTestUuid(), $parentId);
+    $parentId = $repo->insertSavedSearch([
+        'q' => 'parent',
+    ], '2026-07-12 00:00:00', 1, searchTestUuid(), null);
+    $childId = $repo->insertSavedSearch([
+        'q' => 'child',
+    ], '2026-07-12 00:00:00', 1, searchTestUuid(), $parentId);
 
     $row = $repo->findSavedSearchById($childId);
 
-    expect($row)->not->toBeNull();
+    expect($row)
+        ->not->toBeNull();
     if ($row === null) {
         throw new RuntimeException('unreachable');
     }
-    expect($row->forkedFrom)->toBe($parentId);
+    expect($row->forkedFrom)
+        ->toBe($parentId);
 });
 
 test('findSavedSearchRulesByIds() returns decoded rules keyed by id', function (): void {
     $repo = searchTestRepo();
-    $firstId = $repo->insertSavedSearch(['q' => 'nature'], '2026-07-12 00:00:00', 1, searchTestUuid(), null);
-    $secondId = $repo->insertSavedSearch(['q' => 'travel', 'fields' => ['allwords' => ['words' => ['travel']]]], '2026-07-12 00:00:00', 1, searchTestUuid(), null);
+    $firstId = $repo->insertSavedSearch([
+        'q' => 'nature',
+    ], '2026-07-12 00:00:00', 1, searchTestUuid(), null);
+    $secondId = $repo->insertSavedSearch([
+        'q' => 'travel',
+        'fields' => [
+            'allwords' => [
+                'words' => ['travel'],
+            ],
+        ],
+    ], '2026-07-12 00:00:00', 1, searchTestUuid(), null);
 
     $rules = $repo->findSavedSearchRulesByIds([$firstId, $secondId]);
 
-    expect($rules[$firstId])->toBe(['q' => 'nature'])
-        ->and($rules[$secondId])->toBe(['q' => 'travel', 'fields' => ['allwords' => ['words' => ['travel']]]]);
+    expect($rules[$firstId])->toBe([
+        'q' => 'nature',
+    ])
+        ->and($rules[$secondId])->toBe([
+            'q' => 'travel',
+            'fields' => [
+                'allwords' => [
+                    'words' => ['travel'],
+                ],
+            ],
+        ]);
 });
 
 test('findSavedSearchRulesByIds() returns empty array for an empty id list', function (): void {
@@ -248,18 +302,20 @@ test('findSavedSearchRulesByIds() decodes a null rules column to null', function
     // method.
     $conn = DbConnection::build();
     $conn->executeStatement(
-        'INSERT INTO ' . 'search' . ' (rules, created_on, created_by, search_uuid, forked_from) VALUES (NULL, ?, ?, ?, NULL)',
+        'INSERT INTO search (rules, created_on, created_by, search_uuid, forked_from) VALUES (NULL, ?, ?, ?, NULL)',
         ['2026-07-12 00:00:00', 1, searchTestUuid()]
     );
     $id = (int) $conn->lastInsertId();
 
-    $rules = searchTestRepo()->findSavedSearchRulesByIds([$id]);
+    $rules = searchTestRepo()
+        ->findSavedSearchRulesByIds([$id]);
 
     expect($rules[$id])->toBeNull();
 });
 
 test('getDbVersion() returns a non-empty version string', function (): void {
-    expect(searchTestRepo()->getDbVersion())->toMatch('/^\d+\.\d+/');
+    expect(searchTestRepo()->getDbVersion())
+        ->toMatch('/^\d+\.\d+/');
 });
 
 test('countImagesGroupedBy() returns counts ordered desc', function (): void {
@@ -270,59 +326,87 @@ test('countImagesGroupedBy() returns counts ordered desc', function (): void {
     // tell a real ORDER BY counter DESC apart from GROUP BY's own
     // incidental (frequently alphabetical) scan order.
     $conn = DbConnection::build();
-    $conn->executeStatement("UPDATE " . 'images' . " SET author = 'Zzz Author' WHERE id IN (1, 2)");
-    $conn->executeStatement("UPDATE " . 'images' . " SET author = 'Aaa Author' WHERE id = 3");
+    $conn->executeStatement('UPDATE images' . " SET author = 'Zzz Author' WHERE id IN (1, 2)");
+    $conn->executeStatement('UPDATE images' . " SET author = 'Aaa Author' WHERE id = 3");
 
     try {
-        $rows = searchTestRepo()->countImagesGroupedBy('i.author', 'author', new SqlCondition('i.author IS NOT NULL'), true);
+        $rows = searchTestRepo()
+            ->countImagesGroupedBy('i.author', 'author', new SqlCondition('i.author IS NOT NULL'), true);
 
-        expect($rows)->toBe([
-            ['author' => 'Zzz Author', 'counter' => 2],
-            ['author' => 'Aaa Author', 'counter' => 1],
-        ]);
+        expect($rows)
+            ->toBe([
+                [
+                    'author' => 'Zzz Author',
+                    'counter' => 2,
+                ],
+                [
+                    'author' => 'Aaa Author',
+                    'counter' => 1,
+                ],
+            ]);
     } finally {
-        $conn->executeStatement('UPDATE ' . 'images' . ' SET author = NULL WHERE id IN (1, 2, 3)');
+        $conn->executeStatement('UPDATE images SET author = NULL WHERE id IN (1, 2, 3)');
     }
 });
 
 test('countImagesGroupedBy() returns empty for no match', function (): void {
-    expect(searchTestRepo()->countImagesGroupedBy('i.author', 'author', new SqlCondition('i.author IS NOT NULL')))->toBe([]);
+    expect(searchTestRepo()->countImagesGroupedBy('i.author', 'author', new SqlCondition('i.author IS NOT NULL')))
+        ->toBe([]);
 });
 
 test('findDistinctImageRows() returns the requested extra columns', function (): void {
-    $rows = searchTestRepo()->findDistinctImageRows(
-        ['i.ratingScore AS rating_score'],
-        new SqlCondition('i.id = :id', ['id' => 1]),
-    );
+    $rows = searchTestRepo()
+        ->findDistinctImageRows(
+            ['i.ratingScore AS rating_score'],
+            new SqlCondition('i.id = :id', [
+                'id' => 1,
+            ]),
+        );
 
-    expect($rows)->toBe([['id' => 1, 'rating_score' => 4.5]]);
+    expect($rows)
+        ->toBe([[
+            'id' => 1,
+            'rating_score' => 4.5,
+        ]]);
 });
 
 test('findDistinctImageRows() returns empty for no match', function (): void {
-    expect(searchTestRepo()->findDistinctImageRows(['i.ratingScore AS rating_score'], new SqlCondition('i.id = :id', ['id' => 99999])))->toBe([]);
+    expect(searchTestRepo()->findDistinctImageRows(['i.ratingScore AS rating_score'], new SqlCondition('i.id = :id', [
+        'id' => 99999,
+    ])))->toBe([]);
 });
 
 test('findDistinctImageColumnValues() returns grouped, ordered values', function (): void {
     // Every fixture image shares height 150 -- collapses to one row via
     // this method's own GROUP BY.
-    $values = searchTestRepo()->findDistinctImageColumnValues('i.height', new SqlCondition(''));
+    $values = searchTestRepo()
+        ->findDistinctImageColumnValues('i.height', new SqlCondition(''));
 
-    expect($values)->toBe(['150']);
+    expect($values)
+        ->toBe(['150']);
 });
 
 test('findCategoryIdsAndUppercats() returns matching rows', function (): void {
-    $rows = searchTestRepo()->findCategoryIdsAndUppercats(
-        new SqlCondition('c.id IN (:ids)', ['ids' => [1, 2]], ['ids' => ArrayParameterType::INTEGER]),
-    );
+    $rows = searchTestRepo()
+        ->findCategoryIdsAndUppercats(
+            new SqlCondition('c.id IN (:ids)', [
+                'ids' => [1, 2],
+            ], [
+                'ids' => ArrayParameterType::INTEGER,
+            ]),
+        );
 
     usort($rows, static fn (CategoryIdUppercats $a, CategoryIdUppercats $b): int => $a->id->value <=> $b->id->value);
 
-    expect($rows)->toEqual([
-        new CategoryIdUppercats(CategoryId::from(1), '1'),
-        new CategoryIdUppercats(CategoryId::from(2), '1,2'),
-    ]);
+    expect($rows)
+        ->toEqual([
+            new CategoryIdUppercats(CategoryId::from(1), '1'),
+            new CategoryIdUppercats(CategoryId::from(2), '1,2'),
+        ]);
 });
 
 test('findCategoryIdsAndUppercats() returns empty for no match', function (): void {
-    expect(searchTestRepo()->findCategoryIdsAndUppercats(new SqlCondition('c.id = :id', ['id' => 99999])))->toBe([]);
+    expect(searchTestRepo()->findCategoryIdsAndUppercats(new SqlCondition('c.id = :id', [
+        'id' => 99999,
+    ])))->toBe([]);
 });

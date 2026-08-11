@@ -9,7 +9,9 @@ use Piwigo\Common\ValueObject\LangCode;
 use Piwigo\Common\ValueObject\Username;
 use Piwigo\Tests\Unit\Common\ValueObject\Contract\StringVoContract;
 
-/** @extends StringVoContract<LangCode> */
+/**
+ * @extends StringVoContract<LangCode>
+ */
 final class LangCodeTest extends StringVoContract
 {
     #[Override]
@@ -30,19 +32,21 @@ final class LangCodeTest extends StringVoContract
         return Username::class;
     }
 
-    /** @return iterable<string, array{string}> */
+    /**
+     * @return iterable<string, array{string}>
+     */
     #[Override]
     public static function invalidSamples(): iterable
     {
-        yield 'lowercase region'  => ['en_us'];
+        yield 'lowercase region' => ['en_us'];
         yield 'uppercase language' => ['EN_US'];
         yield 'too short language' => ['e_US'];
-        yield 'too long language'  => ['engl_US'];
-        yield 'hyphen separator'   => ['en-US'];
-        yield 'no separator'       => ['enUS'];
-        yield 'empty'              => [''];
+        yield 'too long language' => ['engl_US'];
+        yield 'hyphen separator' => ['en-US'];
+        yield 'no separator' => ['enUS'];
+        yield 'empty' => [''];
         yield 'trailing whitespace' => ['en_US '];
-        yield 'leading whitespace'  => [' en_US'];
+        yield 'leading whitespace' => [' en_US'];
     }
 
     /**

@@ -2,17 +2,11 @@
 
 declare(strict_types=1);
 
-use Piwigo\Tests\Support\LangTestFactory;
-use Piwigo\Tests\Support\EventDispatcherTestFactory;
-use Piwigo\Tests\Support\PageStateTestFactory;
-use Piwigo\Template\CurrentTemplate;
-use Piwigo\Users\UserService;
 use Piwigo\Admin\Integrity\C13yInternal;
 use Piwigo\Admin\Integrity\CheckIntegrity;
 use Piwigo\Admin\Integrity\Event\ListCheckIntegrity;
 use Piwigo\Admin\Integrity\IntegrityIgnoredAnomalyEntity;
 use Piwigo\Config\ConfigLoader;
-use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Paths;
 use Piwigo\Db\DbConnection;
@@ -20,6 +14,12 @@ use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Lang\Translator;
 use Piwigo\Session\SessionEntity;
 use Piwigo\Session\SessionService;
+use Piwigo\Template\CurrentTemplate;
+use Piwigo\Tests\Support\CurrentConfigTestFactory;
+use Piwigo\Tests\Support\EventDispatcherTestFactory;
+use Piwigo\Tests\Support\LangTestFactory;
+use Piwigo\Tests\Support\PageStateTestFactory;
+use Piwigo\Users\UserService;
 
 function c13yInternalTestCheckIntegrity(): CheckIntegrity
 {
@@ -30,7 +30,7 @@ function c13yInternalTestCheckIntegrity(): CheckIntegrity
 
 function c13yInternalTestSessionService(): SessionService
 {
-    return new SessionService(EntityManagerFactory::build(DbConnection::build())->getRepository(SessionEntity::class),CurrentConfigTestFactory::get());
+    return new SessionService(EntityManagerFactory::build(DbConnection::build())->getRepository(SessionEntity::class), CurrentConfigTestFactory::get());
 }
 
 function c13yInternalTestUserService(): UserService
@@ -82,16 +82,19 @@ test('c13y_version adds no anomaly when the running PHP/MySQL already satisfy th
 
     new C13yInternal(LangTestFactory::get(), c13yInternalTestSessionService(), EventDispatcherTestFactory::get(), PageStateTestFactory::get(), c13yInternalTestUserService(), CurrentConfigTestFactory::get())->c13y_version(new ListCheckIntegrity($c13y));
 
-    expect($c13y->retrieve_list)->toBe([]);
+    expect($c13y->retrieve_list)
+        ->toBe([]);
 });
 
 test('c13y_exif adds no anomaly when exif_read_data() is available', function (): void {
-    expect(function_exists('exif_read_data'))->toBeTrue();
+    expect(function_exists('exif_read_data'))
+        ->toBeTrue();
 
     $c13y = c13yInternalTestCheckIntegrity();
     new C13yInternal(LangTestFactory::get(), c13yInternalTestSessionService(), EventDispatcherTestFactory::get(), PageStateTestFactory::get(), c13yInternalTestUserService(), CurrentConfigTestFactory::get())->c13y_exif(new ListCheckIntegrity($c13y));
 
-    expect($c13y->retrieve_list)->toBe([]);
+    expect($c13y->retrieve_list)
+        ->toBe([]);
 });
 
 // c13y_version()'s and c13y_exif()'s own add_anomaly()-calling branches
@@ -130,26 +133,33 @@ test('c13y_user flags a configured webmaster_id that has no matching user row, a
     $c13y = c13yInternalTestCheckIntegrity();
     new C13yInternal(LangTestFactory::get(), c13yInternalTestSessionService(), EventDispatcherTestFactory::get(), PageStateTestFactory::get(), c13yInternalTestUserService(), CurrentConfigTestFactory::get())->c13y_user(new ListCheckIntegrity($c13y));
 
-    expect($c13y->retrieve_list)->toHaveCount(1);
+    expect($c13y->retrieve_list)
+        ->toHaveCount(1);
     $anomaly = $c13y->retrieve_list[0];
     expect($anomaly['correction_fct'])->toBe('c13y_correction_user');
-    expect($anomaly['correction_fct_args'])->toBe(['id' => 999999, 'action' => 'creation']);
+    expect($anomaly['correction_fct_args'])->toBe([
+        'id' => 999999,
+        'action' => 'creation',
+    ]);
 
     $conn = DbConnection::build();
 
     try {
         $result = new C13yInternal(LangTestFactory::get(), c13yInternalTestSessionService(), EventDispatcherTestFactory::get(), PageStateTestFactory::get(), c13yInternalTestUserService(), CurrentConfigTestFactory::get())->c13y_correction_user(999999, 'creation');
-        expect($result)->toBeTrue();
+        expect($result)
+            ->toBeTrue();
 
-        $row = $conn->fetchAssociative('SELECT username FROM ' . 'users' . ' WHERE id = 999999');
-        expect($row)->not->toBeFalse();
+        $row = $conn->fetchAssociative('SELECT username FROM users WHERE id = 999999');
+        expect($row)
+            ->not->toBeFalse();
         expect(is_array($row) ? $row['username'] : null)->toStartWith('webmaster');
 
-        $infosRow = $conn->fetchAssociative('SELECT status FROM ' . 'user_infos' . ' WHERE user_id = 999999');
-        expect($infosRow)->not->toBeFalse();
+        $infosRow = $conn->fetchAssociative('SELECT status FROM user_infos WHERE user_id = 999999');
+        expect($infosRow)
+            ->not->toBeFalse();
     } finally {
-        $conn->executeStatement('DELETE FROM ' . 'user_infos' . ' WHERE user_id = 999999');
-        $conn->executeStatement('DELETE FROM ' . 'users' . ' WHERE id = 999999');
+        $conn->executeStatement('DELETE FROM user_infos WHERE user_id = 999999');
+        $conn->executeStatement('DELETE FROM users WHERE id = 999999');
     }
 });
 
@@ -159,11 +169,12 @@ test('c13y_user flags a real user whose status does not match the expected one, 
     CurrentConfigTestFactory::get()->webmasterId = 1;
 
     $conn = DbConnection::build();
-    $originalStatus = $conn->fetchOne('SELECT status FROM ' . 'user_infos' . ' WHERE user_id = 1');
-    expect($originalStatus)->not->toBeFalse();
+    $originalStatus = $conn->fetchOne('SELECT status FROM user_infos WHERE user_id = 1');
+    expect($originalStatus)
+        ->not->toBeFalse();
 
     try {
-        $conn->executeStatement("UPDATE " . 'user_infos' . " SET status = 'normal' WHERE user_id = 1");
+        $conn->executeStatement('UPDATE user_infos' . " SET status = 'normal' WHERE user_id = 1");
 
         $c13y = c13yInternalTestCheckIntegrity();
         new C13yInternal(LangTestFactory::get(), c13yInternalTestSessionService(), EventDispatcherTestFactory::get(), PageStateTestFactory::get(), c13yInternalTestUserService(), CurrentConfigTestFactory::get())->c13y_user(new ListCheckIntegrity($c13y));
@@ -177,16 +188,21 @@ test('c13y_user flags a real user whose status does not match the expected one, 
         if ($webmasterAnomaly === null) {
             throw new RuntimeException('Expected c13y_user() to flag the webmaster user\'s mismatched status');
         }
-        expect($webmasterAnomaly['correction_fct_args'])->toBe(['id' => 1, 'action' => 'status']);
+        expect($webmasterAnomaly['correction_fct_args'])->toBe([
+            'id' => 1,
+            'action' => 'status',
+        ]);
 
         $result = new C13yInternal(LangTestFactory::get(), c13yInternalTestSessionService(), EventDispatcherTestFactory::get(), PageStateTestFactory::get(), c13yInternalTestUserService(), CurrentConfigTestFactory::get())->c13y_correction_user(1, 'status');
-        expect($result)->toBeTrue();
+        expect($result)
+            ->toBeTrue();
 
-        $fixedStatus = $conn->fetchOne('SELECT status FROM ' . 'user_infos' . ' WHERE user_id = 1');
-        expect($fixedStatus)->toBe('webmaster');
+        $fixedStatus = $conn->fetchOne('SELECT status FROM user_infos WHERE user_id = 1');
+        expect($fixedStatus)
+            ->toBe('webmaster');
     } finally {
         $conn->executeStatement(sprintf(
-            "UPDATE %s SET status = %s WHERE user_id = 1",
+            'UPDATE %s SET status = %s WHERE user_id = 1',
             'user_infos',
             $conn->quote(is_string($originalStatus) ? $originalStatus : 'webmaster')
         ));
@@ -215,10 +231,14 @@ test('c13y_user flags a configured default_user_id distinct from guest_id that h
     $c13y = c13yInternalTestCheckIntegrity();
     new C13yInternal(LangTestFactory::get(), c13yInternalTestSessionService(), EventDispatcherTestFactory::get(), PageStateTestFactory::get(), c13yInternalTestUserService(), CurrentConfigTestFactory::get())->c13y_user(new ListCheckIntegrity($c13y));
 
-    expect($c13y->retrieve_list)->toHaveCount(1);
+    expect($c13y->retrieve_list)
+        ->toHaveCount(1);
     $anomaly = $c13y->retrieve_list[0];
     expect($anomaly['correction_fct'])->toBe('c13y_correction_user');
-    expect($anomaly['correction_fct_args'])->toBe(['id' => 999995, 'action' => 'creation']);
+    expect($anomaly['correction_fct_args'])->toBe([
+        'id' => 999995,
+        'action' => 'creation',
+    ]);
 });
 
 test('c13y_correction_user creates the guest_id slot for a "creation" action, renaming around the real "guest" username collision', function (): void {
@@ -236,17 +256,19 @@ test('c13y_correction_user creates the guest_id slot for a "creation" action, re
     $conn = DbConnection::build();
     try {
         $result = new C13yInternal(LangTestFactory::get(), c13yInternalTestSessionService(), EventDispatcherTestFactory::get(), PageStateTestFactory::get(), c13yInternalTestUserService(), CurrentConfigTestFactory::get())->c13y_correction_user(999997, 'creation');
-        expect($result)->toBeTrue();
+        expect($result)
+            ->toBeTrue();
 
-        $row = $conn->fetchAssociative('SELECT username, password FROM ' . 'users' . ' WHERE id = 999997');
-        expect($row)->not->toBeFalse();
+        $row = $conn->fetchAssociative('SELECT username, password FROM users WHERE id = 999997');
+        expect($row)
+            ->not->toBeFalse();
         expect(is_array($row) ? $row['username'] : null)->toStartWith('guest');
         // Unlike the webmaster branch (tested above), the guest_id branch
         // never sets $password -- it stays the loop's initial null.
         expect(is_array($row) ? $row['password'] : 'unexpected-fetch-failure')->toBeNull();
     } finally {
-        $conn->executeStatement('DELETE FROM ' . 'user_infos' . ' WHERE user_id = 999997');
-        $conn->executeStatement('DELETE FROM ' . 'users' . ' WHERE id = 999997');
+        $conn->executeStatement('DELETE FROM user_infos WHERE user_id = 999997');
+        $conn->executeStatement('DELETE FROM users WHERE id = 999997');
     }
 });
 
@@ -258,14 +280,16 @@ test('c13y_correction_user creates the default_user_id slot for a "creation" act
     $conn = DbConnection::build();
     try {
         $result = new C13yInternal(LangTestFactory::get(), c13yInternalTestSessionService(), EventDispatcherTestFactory::get(), PageStateTestFactory::get(), c13yInternalTestUserService(), CurrentConfigTestFactory::get())->c13y_correction_user(999996, 'creation');
-        expect($result)->toBeTrue();
+        expect($result)
+            ->toBeTrue();
 
-        $row = $conn->fetchAssociative('SELECT username FROM ' . 'users' . ' WHERE id = 999996');
-        expect($row)->not->toBeFalse();
+        $row = $conn->fetchAssociative('SELECT username FROM users WHERE id = 999996');
+        expect($row)
+            ->not->toBeFalse();
         expect(is_array($row) ? $row['username'] : null)->toStartWith('guest');
     } finally {
-        $conn->executeStatement('DELETE FROM ' . 'user_infos' . ' WHERE user_id = 999996');
-        $conn->executeStatement('DELETE FROM ' . 'users' . ' WHERE id = 999996');
+        $conn->executeStatement('DELETE FROM user_infos WHERE user_id = 999996');
+        $conn->executeStatement('DELETE FROM users WHERE id = 999996');
     }
 });
 
@@ -279,18 +303,21 @@ test('c13y_correction_user sets a real user\'s status to "guest" when its id mat
     CurrentConfigTestFactory::get()->webmasterId = 1;
 
     $conn = DbConnection::build();
-    $originalStatus = $conn->fetchOne('SELECT status FROM ' . 'user_infos' . ' WHERE user_id = 3');
-    expect($originalStatus)->not->toBeFalse();
+    $originalStatus = $conn->fetchOne('SELECT status FROM user_infos WHERE user_id = 3');
+    expect($originalStatus)
+        ->not->toBeFalse();
 
     try {
         $result = new C13yInternal(LangTestFactory::get(), c13yInternalTestSessionService(), EventDispatcherTestFactory::get(), PageStateTestFactory::get(), c13yInternalTestUserService(), CurrentConfigTestFactory::get())->c13y_correction_user(3, 'status');
-        expect($result)->toBeTrue();
+        expect($result)
+            ->toBeTrue();
 
-        $fixedStatus = $conn->fetchOne('SELECT status FROM ' . 'user_infos' . ' WHERE user_id = 3');
-        expect($fixedStatus)->toBe('guest');
+        $fixedStatus = $conn->fetchOne('SELECT status FROM user_infos WHERE user_id = 3');
+        expect($fixedStatus)
+            ->toBe('guest');
     } finally {
         $conn->executeStatement(sprintf(
-            "UPDATE %s SET status = %s WHERE user_id = 3",
+            'UPDATE %s SET status = %s WHERE user_id = 3',
             'user_infos',
             $conn->quote(is_string($originalStatus) ? $originalStatus : 'normal')
         ));
@@ -303,18 +330,21 @@ test('c13y_correction_user sets a real user\'s status to "guest" when its id mat
     CurrentConfigTestFactory::get()->webmasterId = 1;
 
     $conn = DbConnection::build();
-    $originalStatus = $conn->fetchOne('SELECT status FROM ' . 'user_infos' . ' WHERE user_id = 4');
-    expect($originalStatus)->not->toBeFalse();
+    $originalStatus = $conn->fetchOne('SELECT status FROM user_infos WHERE user_id = 4');
+    expect($originalStatus)
+        ->not->toBeFalse();
 
     try {
         $result = new C13yInternal(LangTestFactory::get(), c13yInternalTestSessionService(), EventDispatcherTestFactory::get(), PageStateTestFactory::get(), c13yInternalTestUserService(), CurrentConfigTestFactory::get())->c13y_correction_user(4, 'status');
-        expect($result)->toBeTrue();
+        expect($result)
+            ->toBeTrue();
 
-        $fixedStatus = $conn->fetchOne('SELECT status FROM ' . 'user_infos' . ' WHERE user_id = 4');
-        expect($fixedStatus)->toBe('guest');
+        $fixedStatus = $conn->fetchOne('SELECT status FROM user_infos WHERE user_id = 4');
+        expect($fixedStatus)
+            ->toBe('guest');
     } finally {
         $conn->executeStatement(sprintf(
-            "UPDATE %s SET status = %s WHERE user_id = 4",
+            'UPDATE %s SET status = %s WHERE user_id = 4',
             'user_infos',
             $conn->quote(is_string($originalStatus) ? $originalStatus : 'normal')
         ));

@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Contract;
 
+use Doctrine\DBAL\Connection;
 use Override;
+use Piwigo\Cache\CachePools;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Paths;
-use Piwigo\Cache\CachePools;
-use Doctrine\DBAL\Connection;
 use Piwigo\Core\WsError;
 use Piwigo\Core\WsParamType;
 use Piwigo\Db\DbConnection;
@@ -79,7 +79,7 @@ final class WsServerTest extends ContractTestCase
      * uses a raw curl call against the live server rather than an
      * in-process call (which would terminate the test runner itself).
      */
-    public function test_run_with_an_unrecognized_response_format_reports_the_error_and_stops(): void
+    public function testRunWithAnUnrecognizedResponseFormatReportsTheErrorAndStops(): void
     {
         $url = $this->baseUrl . '/ws.php?format=not-a-real-format&' . http_build_query([
             'method' => 'pwg.getVersion',
@@ -135,7 +135,7 @@ final class WsServerTest extends ContractTestCase
      * WsTopLevelTest::test_getMissingDerivatives_with_an_empty_gallery_returns_an_empty_array_early()'s
      * own identical fix.
      */
-    public function test_run_without_a_request_handler_returns_unknown_request_format(): void
+    public function testRunWithoutARequestHandlerReturnsUnknownRequestFormat(): void
     {
         Kernel::boot(Paths::fromRoot(dirname(__DIR__, 2)));
         $body = false;
@@ -184,7 +184,7 @@ final class WsServerTest extends ContractTestCase
      * fine, non-500 outcome; only the credential login itself needs to
      * succeed for real.
      */
-    public function test_init_reuses_the_memoized_server_when_called_twice_in_the_same_request(): void
+    public function testInitReusesTheMemoizedServerWhenCalledTwiceInTheSameRequest(): void
     {
         $url = $this->baseUrl . '/ws.php?format=json';
         $ch = curl_init($url);
@@ -222,7 +222,7 @@ final class WsServerTest extends ContractTestCase
         self::assertSame('pwg.images.uploadAsync', $result['connected_with']);
     }
 
-    public function test_invoke_with_an_unknown_method_name_returns_invalid_method(): void
+    public function testInvokeWithAnUnknownMethodNameReturnsInvalidMethod(): void
     {
         // PwgError's constructor mirrors this WS err (501) onto the real
         // HTTP status -- callWs()'s generic "< 500" sanity guard would
@@ -235,7 +235,7 @@ final class WsServerTest extends ContractTestCase
         self::assertSame('Method name is not valid', $response['message']);
     }
 
-    public function test_invoke_a_post_only_method_via_get_returns_405(): void
+    public function testInvokeAPostOnlyMethodViaGetReturns405(): void
     {
         $url = $this->baseUrl . '/ws.php?format=json&' . http_build_query([
             'method' => 'pwg.images.addComment',
@@ -268,7 +268,7 @@ final class WsServerTest extends ContractTestCase
      * 'rate' param has no WsParamFlag::OPTIONAL, so an explicitly-sent but
      * empty value is treated the same as a missing one.
      */
-    public function test_invoke_with_a_required_param_sent_empty_returns_missing_param(): void
+    public function testInvokeWithARequiredParamSentEmptyReturnsMissingParam(): void
     {
         $response = $this->ws('pwg.images.rate', [
             'image_id' => 1,
@@ -286,7 +286,7 @@ final class WsServerTest extends ContractTestCase
      * rejected by invoke() itself, before checkType() (and its own
      * scalar-only float coercion) ever runs.
      */
-    public function test_invoke_with_an_array_value_for_a_scalar_only_param_returns_invalid_param(): void
+    public function testInvokeWithAnArrayValueForAScalarOnlyParamReturnsInvalidParam(): void
     {
         $response = $this->ws('pwg.images.rate', [
             'image_id' => 1,
@@ -298,7 +298,7 @@ final class WsServerTest extends ContractTestCase
         self::assertSame('rate must be scalar', $response['message']);
     }
 
-    public function test_invoke_when_guest_access_is_disabled_returns_access_denied_for_a_non_session_method(): void
+    public function testInvokeWhenGuestAccessIsDisabledReturnsAccessDeniedForANonSessionMethod(): void
     {
         $this->upsertConfig('guest_access', 'false');
         CachePools::config()->clear();
@@ -316,7 +316,7 @@ final class WsServerTest extends ContractTestCase
             $status = $this->ws('pwg.session.getStatus');
             self::assertSame('ok', $status['stat']);
         } finally {
-            $this->conn->executeStatement("DELETE FROM " . 'config' . " WHERE param = 'guest_access'");
+            $this->conn->executeStatement('DELETE FROM config' . " WHERE param = 'guest_access'");
             CachePools::config()->clear();
         }
     }
@@ -333,7 +333,7 @@ final class WsServerTest extends ContractTestCase
      * status/body directly, matching test_invoke_a_post_only_method_via_get_returns_405()'s
      * own style above.
      */
-    public function test_invoke_when_web_services_are_disabled_returns_a_forbidden_page(): void
+    public function testInvokeWhenWebServicesAreDisabledReturnsAForbiddenPage(): void
     {
         $this->upsertConfig('allow_web_services', 'false');
         CachePools::config()->clear();
@@ -362,12 +362,12 @@ final class WsServerTest extends ContractTestCase
             // it would not produce the usual stat/err/message shape.
             self::assertNull(json_decode($body, true));
         } finally {
-            $this->conn->executeStatement("DELETE FROM " . 'config' . " WHERE param = 'allow_web_services'");
+            $this->conn->executeStatement('DELETE FROM config' . " WHERE param = 'allow_web_services'");
             CachePools::config()->clear();
         }
     }
 
-    public function test_checkType_rejects_a_non_boolean_scalar(): void
+    public function testCheckTypeRejectsANonBooleanScalar(): void
     {
         // pwg.users.setInfo's 'expand' param is WsParamType::BOOL, no
         // ACCEPT_ARRAY/FORCE_ARRAY -- a plain scalar checkType() call.
@@ -385,7 +385,7 @@ final class WsServerTest extends ContractTestCase
         self::assertSame('expand must be a boolean', $response['message']);
     }
 
-    public function test_checkType_rejects_a_non_float_scalar(): void
+    public function testCheckTypeRejectsANonFloatScalar(): void
     {
         $response = $this->ws('pwg.images.rate', [
             'image_id' => 1,
@@ -402,7 +402,7 @@ final class WsServerTest extends ContractTestCase
      * docblock for why this calls the real public static method directly
      * rather than through a WS request.
      */
-    public function test_checkType_accepts_an_array_of_booleans(): void
+    public function testCheckTypeAcceptsAnArrayOfBooleans(): void
     {
         $param = ['1', 'false', 'yes'];
         $result = PwgServer::checkType($param, WsParamType::BOOL, 'flags');
@@ -411,7 +411,7 @@ final class WsServerTest extends ContractTestCase
         self::assertSame([true, false, true], $param);
     }
 
-    public function test_checkType_rejects_an_array_containing_a_non_boolean(): void
+    public function testCheckTypeRejectsAnArrayContainingANonBoolean(): void
     {
         $param = ['1', 'not-a-boolean'];
         $result = PwgServer::checkType($param, WsParamType::BOOL, 'flags');
@@ -433,7 +433,7 @@ final class WsServerTest extends ContractTestCase
      * test_checkType_rejects_a_non_float_scalar()'s array-less scalar
      * case above.
      */
-    public function test_checkType_accepts_an_array_of_positive_floats(): void
+    public function testCheckTypeAcceptsAnArrayOfPositiveFloats(): void
     {
         $param = ['1.5', '0'];
         $result = PwgServer::checkType($param, WsParamType::FLOAT | WsParamType::POSITIVE, 'ratios');
@@ -448,7 +448,7 @@ final class WsServerTest extends ContractTestCase
      * the only way to reach the `$value < $opts['options']['min_range']`
      * half of the condition with a *true* result.
      */
-    public function test_checkType_rejects_an_array_containing_a_float_below_min_range(): void
+    public function testCheckTypeRejectsAnArrayContainingAFloatBelowMinRange(): void
     {
         $param = ['1.5', '-3.5'];
         $result = PwgServer::checkType($param, WsParamType::FLOAT | WsParamType::POSITIVE, 'ratios');
@@ -458,7 +458,7 @@ final class WsServerTest extends ContractTestCase
         self::assertSame('ratios must only contain positive floats', $result->message());
     }
 
-    public function test_reflection_getMethodList_includes_every_non_hidden_method(): void
+    public function testReflectionGetMethodListIncludesEveryNonHiddenMethod(): void
     {
         $response = $this->ws('reflection.getMethodList');
 
@@ -473,18 +473,22 @@ final class WsServerTest extends ContractTestCase
         self::assertGreaterThan(50, count($methods));
     }
 
-    public function test_reflection_getMethodDetails_with_an_unknown_method_returns_error(): void
+    public function testReflectionGetMethodDetailsWithAnUnknownMethodReturnsError(): void
     {
-        $response = $this->ws('reflection.getMethodDetails', ['methodName' => 'not.a.real.method']);
+        $response = $this->ws('reflection.getMethodDetails', [
+            'methodName' => 'not.a.real.method',
+        ]);
 
         self::assertSame('fail', $response['stat']);
         self::assertSame(1003, $response['err']);
         self::assertSame('Requested method does not exist', $response['message']);
     }
 
-    public function test_reflection_getMethodDetails_describes_a_method_with_no_params(): void
+    public function testReflectionGetMethodDetailsDescribesAMethodWithNoParams(): void
     {
-        $response = $this->ws('reflection.getMethodDetails', ['methodName' => 'pwg.getVersion']);
+        $response = $this->ws('reflection.getMethodDetails', [
+            'methodName' => 'pwg.getVersion',
+        ]);
 
         self::assertSame('ok', $response['stat']);
         self::assertSame([
@@ -495,26 +499,48 @@ final class WsServerTest extends ContractTestCase
         ], $response['result']);
     }
 
-    public function test_reflection_getMethodDetails_describes_every_param_type_flag_combination(): void
+    public function testReflectionGetMethodDetailsDescribesEveryParamTypeFlagCombination(): void
     {
-        $response = $this->ws('reflection.getMethodDetails', ['methodName' => 'pwg.images.setRank']);
+        $response = $this->ws('reflection.getMethodDetails', [
+            'methodName' => 'pwg.images.setRank',
+        ]);
 
         self::assertSame('ok', $response['stat']);
         $result = $response['result'];
         self::assertIsArray($result);
-        self::assertSame(['admin_only' => true, 'post_only' => true], $result['options']);
+        self::assertSame([
+            'admin_only' => true,
+            'post_only' => true,
+        ], $result['options']);
         $params = $result['params'];
         self::assertIsArray($params);
         self::assertSame([
-            ['name' => 'image_id', 'optional' => false, 'acceptArray' => true, 'type' => 'int positive notnull'],
-            ['name' => 'category_id', 'optional' => false, 'acceptArray' => false, 'type' => 'int positive notnull'],
-            ['name' => 'rank', 'optional' => true, 'acceptArray' => false, 'type' => 'int positive notnull'],
+            [
+                'name' => 'image_id',
+                'optional' => false,
+                'acceptArray' => true,
+                'type' => 'int positive notnull',
+            ],
+            [
+                'name' => 'category_id',
+                'optional' => false,
+                'acceptArray' => false,
+                'type' => 'int positive notnull',
+            ],
+            [
+                'name' => 'rank',
+                'optional' => true,
+                'acceptArray' => false,
+                'type' => 'int positive notnull',
+            ],
         ], $params);
     }
 
-    public function test_reflection_getMethodDetails_describes_defaultValue_maxValue_info_and_float(): void
+    public function testReflectionGetMethodDetailsDescribesDefaultValueMaxValueInfoAndFloat(): void
     {
-        $response = $this->ws('reflection.getMethodDetails', ['methodName' => 'pwg.images.search']);
+        $response = $this->ws('reflection.getMethodDetails', [
+            'methodName' => 'pwg.images.search',
+        ]);
 
         self::assertSame('ok', $response['stat']);
         $result = $response['result'];
@@ -524,15 +550,33 @@ final class WsServerTest extends ContractTestCase
         $byName = array_column($params, null, 'name');
 
         self::assertSame(
-            ['name' => 'per_page', 'optional' => true, 'acceptArray' => false, 'type' => 'int positive', 'defaultValue' => 100, 'maxValue' => 500],
+            [
+                'name' => 'per_page',
+                'optional' => true,
+                'acceptArray' => false,
+                'type' => 'int positive',
+                'defaultValue' => 100,
+                'maxValue' => 500,
+            ],
             $byName['per_page']
         );
         self::assertSame(
-            ['name' => 'order', 'optional' => true, 'acceptArray' => false, 'type' => 'mixed', 'info' => 'id, file, name, hit, rating_score, date_creation, date_available, random'],
+            [
+                'name' => 'order',
+                'optional' => true,
+                'acceptArray' => false,
+                'type' => 'mixed',
+                'info' => 'id, file, name, hit, rating_score, date_creation, date_available, random',
+            ],
             $byName['order']
         );
         self::assertSame(
-            ['name' => 'f_min_rate', 'optional' => true, 'acceptArray' => false, 'type' => 'float'],
+            [
+                'name' => 'f_min_rate',
+                'optional' => true,
+                'acceptArray' => false,
+                'type' => 'float',
+            ],
             $byName['f_min_rate']
         );
     }
@@ -545,9 +589,11 @@ final class WsServerTest extends ContractTestCase
      * bool param) above. pwg.users.setInfo's 'expand' param is
      * WsParamType::BOOL with no POSITIVE/NOTNULL.
      */
-    public function test_reflection_getMethodDetails_describes_a_bool_param(): void
+    public function testReflectionGetMethodDetailsDescribesABoolParam(): void
     {
-        $response = $this->ws('reflection.getMethodDetails', ['methodName' => 'pwg.users.setInfo']);
+        $response = $this->ws('reflection.getMethodDetails', [
+            'methodName' => 'pwg.users.setInfo',
+        ]);
 
         self::assertSame('ok', $response['stat']);
         $result = $response['result'];
@@ -557,7 +603,12 @@ final class WsServerTest extends ContractTestCase
         $byName = array_column($params, null, 'name');
 
         self::assertSame(
-            ['name' => 'expand', 'optional' => true, 'acceptArray' => false, 'type' => 'bool'],
+            [
+                'name' => 'expand',
+                'optional' => true,
+                'acceptArray' => false,
+                'type' => 'bool',
+            ],
             $byName['expand']
         );
     }
@@ -568,7 +619,7 @@ final class WsServerTest extends ContractTestCase
      * before invoke() ever runs the method body, regardless of a
      * (deliberately wrong) pwg_token.
      */
-    public function test_invoke_via_api_key_for_a_forbidden_method_returns_access_denied(): void
+    public function testInvokeViaApiKeyForAForbiddenMethodReturnsAccessDenied(): void
     {
         // api_key.create requires $_SESSION['connected_with'] === 'pwg_ui'
         // (ApiKeyService::connectedWithPwgUi()) -- loginAsAdminViaUI(), not
@@ -613,7 +664,9 @@ final class WsServerTest extends ContractTestCase
             self::assertSame('Access denied', $decoded['message']);
         } finally {
             $revokeToken = $this->getPwgToken();
-            $this->callWs('pwg.users.api_key.revoke', ['pwg_token' => $revokeToken]);
+            $this->callWs('pwg.users.api_key.revoke', [
+                'pwg_token' => $revokeToken,
+            ]);
         }
     }
 
@@ -636,7 +689,7 @@ final class WsServerTest extends ContractTestCase
      * reach isAuthorizedMethodForAPIKEY()'s own forbidden-methods check
      * (its `return false;`) through the real WS route.
      */
-    public function test_invoke_via_session_api_key_login_for_a_forbidden_method_returns_access_denied(): void
+    public function testInvokeViaSessionApiKeyLoginForAForbiddenMethodReturnsAccessDenied(): void
     {
         $this->loginAsAdminViaUI();
         $token = $this->getPwgToken();
@@ -679,7 +732,9 @@ final class WsServerTest extends ContractTestCase
             // -- "Acces Denied") rather than an actual revoke; the created
             // key is a throwaway regardless.
             $revokeToken = $this->getPwgToken();
-            $this->callWs('pwg.users.api_key.revoke', ['pwg_token' => $revokeToken]);
+            $this->callWs('pwg.users.api_key.revoke', [
+                'pwg_token' => $revokeToken,
+            ]);
         }
     }
 }

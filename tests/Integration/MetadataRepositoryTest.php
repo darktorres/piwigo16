@@ -4,14 +4,14 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Integration;
 
-use Override;
-use Piwigo\Core\Kernel;
-use LogicException;
-use Piwigo\Db\EntityManagerFactory;
 use Doctrine\DBAL\Connection;
-use Piwigo\Config\CurrentConfig;
+use LogicException;
+use Override;
 use Piwigo\Config\ConfigLoader;
+use Piwigo\Config\CurrentConfig;
+use Piwigo\Core\Kernel;
 use Piwigo\Db\DbConnection;
+use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Metadata\MetadataRepository;
 
 /**
@@ -56,12 +56,12 @@ final class MetadataRepositoryTest extends IntegrationTestCase
     #[Override]
     protected function tearDown(): void
     {
-        $this->conn->executeStatement('UPDATE ' . 'categories' . ' SET site_id = NULL, dir = NULL');
-        $this->conn->executeStatement("UPDATE " . 'images' . " SET storage_category_id = NULL, date_metadata_update = '2026-07-07'");
+        $this->conn->executeStatement('UPDATE categories SET site_id = NULL, dir = NULL');
+        $this->conn->executeStatement('UPDATE images' . " SET storage_category_id = NULL, date_metadata_update = '2026-07-07'");
         parent::tearDown();
     }
 
-    public function test_find_images_by_ids_returns_matching_rows(): void
+    public function testFindImagesByIdsReturnsMatchingRows(): void
     {
         $rows = $this->repo->findImagesByIds([1, 3]);
 
@@ -80,25 +80,25 @@ final class MetadataRepositoryTest extends IntegrationTestCase
         self::assertStringContainsString('upload/2026/08/01/', $rows[0]->path . $rows[1]->path);
     }
 
-    public function test_find_images_by_ids_returns_empty_for_no_ids(): void
+    public function testFindImagesByIdsReturnsEmptyForNoIds(): void
     {
         self::assertSame([], $this->repo->findImagesByIds([]));
     }
 
-    public function test_find_category_ids_matches_a_specific_category(): void
+    public function testFindCategoryIdsMatchesASpecificCategory(): void
     {
-        $this->conn->executeStatement("UPDATE " . 'categories' . " SET site_id = 1, dir = 'sample_album' WHERE id = 1");
-        $this->conn->executeStatement("UPDATE " . 'categories' . " SET site_id = 1, dir = 'nested' WHERE id = 2");
+        $this->conn->executeStatement('UPDATE categories' . " SET site_id = 1, dir = 'sample_album' WHERE id = 1");
+        $this->conn->executeStatement('UPDATE categories' . " SET site_id = 1, dir = 'nested' WHERE id = 2");
 
         $ids = $this->repo->findCategoryIds(1, 1, false);
 
         self::assertSame([1], $ids);
     }
 
-    public function test_find_category_ids_recursive_includes_subcategories(): void
+    public function testFindCategoryIdsRecursiveIncludesSubcategories(): void
     {
-        $this->conn->executeStatement("UPDATE " . 'categories' . " SET site_id = 1, dir = 'sample_album', uppercats = '1' WHERE id = 1");
-        $this->conn->executeStatement("UPDATE " . 'categories' . " SET site_id = 1, dir = 'nested', uppercats = '1,2' WHERE id = 2");
+        $this->conn->executeStatement('UPDATE categories' . " SET site_id = 1, dir = 'sample_album', uppercats = '1' WHERE id = 1");
+        $this->conn->executeStatement('UPDATE categories' . " SET site_id = 1, dir = 'nested', uppercats = '1,2' WHERE id = 2");
 
         $ids = $this->repo->findCategoryIds(1, 1, true);
         sort($ids);
@@ -106,16 +106,16 @@ final class MetadataRepositoryTest extends IntegrationTestCase
         self::assertSame([1, 2], $ids);
     }
 
-    public function test_find_category_ids_returns_empty_when_dir_is_null(): void
+    public function testFindCategoryIdsReturnsEmptyWhenDirIsNull(): void
     {
         // stock fixture: dir is NULL for every category.
         self::assertSame([], $this->repo->findCategoryIds(1, '', false));
     }
 
-    public function test_find_images_by_storage_category_ids_keys_by_id(): void
+    public function testFindImagesByStorageCategoryIdsKeysById(): void
     {
-        $this->conn->executeStatement('UPDATE ' . 'images' . ' SET storage_category_id = 1 WHERE id IN (1, 2, 3)');
-        $this->conn->executeStatement('UPDATE ' . 'images' . ' SET storage_category_id = 2 WHERE id IN (4, 5)');
+        $this->conn->executeStatement('UPDATE images SET storage_category_id = 1 WHERE id IN (1, 2, 3)');
+        $this->conn->executeStatement('UPDATE images SET storage_category_id = 2 WHERE id IN (4, 5)');
 
         $result = $this->repo->findImagesByStorageCategoryIds([1], false);
 
@@ -123,20 +123,20 @@ final class MetadataRepositoryTest extends IntegrationTestCase
         self::assertSame(1, $result[1]->id);
     }
 
-    public function test_find_images_by_storage_category_ids_filters_only_new(): void
+    public function testFindImagesByStorageCategoryIdsFiltersOnlyNew(): void
     {
         // The fixture's own default already sets date_metadata_update to a
         // real date for every image -- null out 2/3 to simulate "not yet
         // synced", leaving image 1 as "already synced".
-        $this->conn->executeStatement('UPDATE ' . 'images' . ' SET storage_category_id = 1 WHERE id IN (1, 2, 3)');
-        $this->conn->executeStatement('UPDATE ' . 'images' . ' SET date_metadata_update = NULL WHERE id IN (2, 3)');
+        $this->conn->executeStatement('UPDATE images SET storage_category_id = 1 WHERE id IN (1, 2, 3)');
+        $this->conn->executeStatement('UPDATE images SET date_metadata_update = NULL WHERE id IN (2, 3)');
 
         $result = $this->repo->findImagesByStorageCategoryIds([1], true);
 
         self::assertSame([2, 3], array_keys($result));
     }
 
-    public function test_find_images_by_storage_category_ids_returns_empty_for_no_categories(): void
+    public function testFindImagesByStorageCategoryIdsReturnsEmptyForNoCategories(): void
     {
         self::assertSame([], $this->repo->findImagesByStorageCategoryIds([], false));
     }

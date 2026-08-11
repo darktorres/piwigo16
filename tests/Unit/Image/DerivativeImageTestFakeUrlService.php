@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Unit\Image;
 
-use Override;
 use LogicException;
+use Override;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\UrlServiceInterface;
 
@@ -16,7 +16,9 @@ use Piwigo\Core\UrlServiceInterface;
  */
 final class DerivativeImageTestFakeUrlService implements UrlServiceInterface
 {
-    public function __construct(private readonly string $rootUrl = '') {}
+    public function __construct(
+        private readonly string $rootUrl = ''
+    ) {}
 
     #[Override]
     public function getRootUrl(): string

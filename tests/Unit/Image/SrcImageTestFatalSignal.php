@@ -6,6 +6,4 @@ namespace Piwigo\Tests\Unit\Image;
 
 use Exception;
 
-final class SrcImageTestFatalSignal extends Exception
-{
-}
+final class SrcImageTestFatalSignal extends Exception {}

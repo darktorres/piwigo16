@@ -4,50 +4,50 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Integration;
 
-use Override;
-use Doctrine\ORM\EntityManagerInterface;
-use Piwigo\Activity\ActivityService;
-use Piwigo\Metadata\MetadataService;
-use Piwigo\Image\ImageService;
-use Piwigo\Core\WsContext;
-use LogicException;
-use Piwigo\Tests\Support\HtmlServiceTestFactory;
-use Piwigo\Url\RootPathOverride;
-use Piwigo\Tests\Support\UrlServiceTestFactory;
-use Piwigo\Core\CurrentThemeConfProvider;
-use RuntimeException;
-use InvalidArgumentException;
-use Piwigo\Tests\Support\LangTestFactory;
 use Doctrine\DBAL\Connection;
+use Doctrine\ORM\EntityManagerInterface;
+use Exception;
+use InvalidArgumentException;
+use LogicException;
+use Override;
+use Piwigo\Activity\ActivityService;
 use Piwigo\Admin\Image\ImageProcessingException;
 use Piwigo\Admin\Image\PwgImage;
 use Piwigo\Admin\Upload\UploadService;
+use Piwigo\Config\ConfigEntry;
 use Piwigo\Config\ConfigLoader;
 use Piwigo\Config\ConfigService;
 use Piwigo\Config\CurrentConfig;
-use Piwigo\Tests\Support\CurrentConfigTestFactory;
-use Piwigo\Tests\Support\CurrentConfigServiceTestFactory;
 use Piwigo\Core\CurrentLogger;
+use Piwigo\Core\CurrentThemeConfProvider;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Logger;
-use Piwigo\Tests\Support\CurrentPathsTestFactory;
-use Piwigo\Tests\Support\DbCredentialsTestFactory;
 use Piwigo\Core\Paths;
 use Piwigo\Core\ThemeConfProviderInterface;
+use Piwigo\Core\WsContext;
+use Piwigo\Db\AdvisorySessionLock;
 use Piwigo\Db\DbConnection;
 use Piwigo\Event\Picture\UploadFile;
-use Piwigo\Tests\Support\ImageStdParamsTestFactory;
+use Piwigo\Image\ImageService;
+use Piwigo\Image\ImageStdParams;
+use Piwigo\Metadata\MetadataService;
 use Piwigo\PluginConfig\EventDispatcher;
-use Piwigo\Tests\Support\EventDispatcherTestFactory;
 use Piwigo\Storage\StorageRegistry;
+use Piwigo\Tests\Support\CurrentConfigServiceTestFactory;
+use Piwigo\Tests\Support\CurrentConfigTestFactory;
+use Piwigo\Tests\Support\CurrentPathsTestFactory;
+use Piwigo\Tests\Support\DbCredentialsTestFactory;
+use Piwigo\Tests\Support\EventDispatcherTestFactory;
+use Piwigo\Tests\Support\HtmlServiceTestFactory;
+use Piwigo\Tests\Support\ImageStdParamsTestFactory;
+use Piwigo\Tests\Support\KernelContainerOverride;
+use Piwigo\Tests\Support\LangTestFactory;
+use Piwigo\Tests\Support\UrlServiceTestFactory;
+use Piwigo\Url\RootPathOverride;
 use Piwigo\Url\UrlService;
 use Piwigo\Users\CurrentUser;
 use ReflectionMethod;
-use Piwigo\Tests\Support\KernelContainerOverride;
-use Piwigo\Image\ImageStdParams;
-use Piwigo\Db\AdvisorySessionLock;
-use Piwigo\Config\ConfigEntry;
-use Exception;
+use RuntimeException;
 
 /**
  * Real, minimal fake for SrcImage::setThemeConfProvider() -- only reached
@@ -160,7 +160,9 @@ final class UploadServiceTest extends IntegrationTestCase
 
     private string $marker;
 
-    /** @var list<int> */
+    /**
+     * @var list<int>
+     */
     private array $imageIdsToDelete = [];
 
     #[Override]
@@ -203,7 +205,9 @@ final class UploadServiceTest extends IntegrationTestCase
         if (! $currentLogger instanceof CurrentLogger) {
             throw new LogicException('Container returned an unexpected type for ' . CurrentLogger::class);
         }
-        $currentLogger->set(new Logger(['severity' => Logger::OFF]));
+        $currentLogger->set(new Logger([
+            'severity' => Logger::OFF,
+        ]));
         $this->currentLogger = $currentLogger;
 
         $entityManager = Kernel::container()->get(EntityManagerInterface::class);
@@ -327,19 +331,19 @@ final class UploadServiceTest extends IntegrationTestCase
             // ON DELETE CASCADE on both image_category.image_id and
             // lounge.image_id (see the schema) takes care of any
             // association rows a test created for these ids too.
-            $this->conn->executeStatement('DELETE FROM ' . 'images' . " WHERE id IN ({$ids})");
+            $this->conn->executeStatement('DELETE FROM images' . " WHERE id IN ({$ids})");
         }
         // Cleans up the one fixture-image association a test adds (image 1
         // -> category 2, not present in the stock fixture) without
         // disturbing image 1 itself, which every other test in this class
         // still relies on for duplicate-detection.
-        $this->conn->executeStatement('DELETE FROM ' . 'image_category' . ' WHERE image_id = 1 AND category_id = 2');
+        $this->conn->executeStatement('DELETE FROM image_category WHERE image_id = 1 AND category_id = 2');
         // Same belt-and-suspenders reasoning as the image_category cleanup
         // above -- addFormat()'s own tests write real image_format
         // rows against the shared fixture image 1, not a throwaway id this
         // class deletes wholesale.
-        $this->conn->executeStatement('DELETE FROM ' . 'image_format' . ' WHERE image_id = 1');
-        $this->conn->executeStatement("DELETE FROM " . 'config' . " WHERE param IN ('lounge_active', 'count_orphans')");
+        $this->conn->executeStatement('DELETE FROM image_format WHERE image_id = 1');
+        $this->conn->executeStatement('DELETE FROM config' . " WHERE param IN ('lounge_active', 'count_orphans')");
 
         self::rrmdir($this->marker);
 
@@ -397,7 +401,7 @@ final class UploadServiceTest extends IntegrationTestCase
      */
     private function fetchImageRow(int $imageId): array
     {
-        $row = $this->conn->fetchAssociative('SELECT * FROM ' . 'images' . ' WHERE id = ' . $imageId);
+        $row = $this->conn->fetchAssociative('SELECT * FROM images WHERE id = ' . $imageId);
         self::assertIsArray($row, "image #{$imageId} not found");
 
         return $row;
@@ -426,10 +430,11 @@ final class UploadServiceTest extends IntegrationTestCase
      */
     private function uploadFileExt(callable $handler, ?string $representativeExt, string $filePath): ?string
     {
-        return $handler(new UploadFile($representativeExt, $filePath))->representativeExt;
+        return $handler(new UploadFile($representativeExt, $filePath))
+            ->representativeExt;
     }
 
-    public function test_addUploadedFile_inserts_a_new_photo_and_writes_it_to_real_storage(): void
+    public function testAddUploadedFileInsertsANewPhotoAndWritesItToRealStorage(): void
     {
         $source = $this->marker . '/incoming.png';
         $this->makeImage($source, 'png', 64, 48);
@@ -463,12 +468,12 @@ final class UploadServiceTest extends IntegrationTestCase
         self::assertFileDoesNotExist($source);
     }
 
-    public function test_addUploadedFile_short_circuits_on_duplicate_md5sum_and_associates_categories(): void
+    public function testAddUploadedFileShortCircuitsOnDuplicateMd5sumAndAssociatesCategories(): void
     {
         $source = $this->marker . '/dup-source.jpg';
         file_put_contents($source, 'duplicate-upload-bytes');
 
-        $countBefore = $this->countRows('SELECT COUNT(*) FROM ' . 'images');
+        $countBefore = $this->countRows('SELECT COUNT(*) FROM images');
 
         $result = new UploadService(LangTestFactory::get(), $this->currentLogger, $this->storageRegistry, EventDispatcherTestFactory::get(), $this->configService, $this->entityManager, $this->activityService, $this->metadataService, $this->imageService, $this->currentConfig, $this->wsContext, $this->currentUser, CurrentPathsTestFactory::get(), DbCredentialsTestFactory::get())->addUploadedFile(
             $source,
@@ -487,13 +492,13 @@ final class UploadServiceTest extends IntegrationTestCase
 
         // No second row was inserted -- the short-circuit returned the
         // existing image_id instead.
-        $countAfter = $this->countRows('SELECT COUNT(*) FROM ' . 'images');
+        $countAfter = $this->countRows('SELECT COUNT(*) FROM images');
         self::assertSame($countBefore, $countAfter);
 
         // Image 1 is only linked to category 1 in the stock fixture --
         // addUploadedFileAddToCategories() still associates it to the
         // $categories given here, even on the short-circuit path.
-        $linked = $this->countRows('SELECT COUNT(*) FROM ' . 'image_category' . ' WHERE image_id = 1 AND category_id = 2');
+        $linked = $this->countRows('SELECT COUNT(*) FROM image_category WHERE image_id = 1 AND category_id = 2');
         self::assertSame(1, $linked);
     }
 
@@ -504,7 +509,7 @@ final class UploadServiceTest extends IntegrationTestCase
      * getimagesize() "Failed to open stream" from an un-prefixed relative
      * $file_path, depending on which line executes first).
      */
-    public function test_addUploadedFile_updates_an_existing_photo_in_place(): void
+    public function testAddUploadedFileUpdatesAnExistingPhotoInPlace(): void
     {
         $service = new UploadService(LangTestFactory::get(), $this->currentLogger, $this->storageRegistry, EventDispatcherTestFactory::get(), $this->configService, $this->entityManager, $this->activityService, $this->metadataService, $this->imageService, $this->currentConfig, $this->wsContext, $this->currentUser, CurrentPathsTestFactory::get(), DbCredentialsTestFactory::get());
 
@@ -514,7 +519,7 @@ final class UploadServiceTest extends IntegrationTestCase
         $id = $firstId;
         $this->imageIdsToDelete[] = $id;
 
-        $countBefore = $this->countRows('SELECT COUNT(*) FROM ' . 'images');
+        $countBefore = $this->countRows('SELECT COUNT(*) FROM images');
 
         $secondSource = $this->marker . '/second.png';
         $this->makeImage($secondSource, 'png', 20, 15);
@@ -525,7 +530,7 @@ final class UploadServiceTest extends IntegrationTestCase
 
         // Same id back -- an UPDATE, not a fresh INSERT.
         self::assertSame($id, $result);
-        $countAfter = $this->countRows('SELECT COUNT(*) FROM ' . 'images');
+        $countAfter = $this->countRows('SELECT COUNT(*) FROM images');
         self::assertSame($countBefore, $countAfter);
 
         $row = $this->fetchImageRow($id);
@@ -546,12 +551,12 @@ final class UploadServiceTest extends IntegrationTestCase
         self::assertSame(15, $size[1]);
     }
 
-    public function test_addUploadedFile_throws_when_the_given_image_id_does_not_exist(): void
+    public function testAddUploadedFileThrowsWhenTheGivenImageIdDoesNotExist(): void
     {
         $source = $this->marker . '/orphan-update.png';
         $this->makeImage($source, 'png', 10, 8);
 
-        $countBefore = $this->countRows('SELECT COUNT(*) FROM ' . 'images');
+        $countBefore = $this->countRows('SELECT COUNT(*) FROM images');
 
         $threw = null;
         try {
@@ -567,11 +572,11 @@ final class UploadServiceTest extends IntegrationTestCase
         // write, unlike the SVG-mismatch/forbidden-type rejection tests
         // below, which unlink() the source first.
         self::assertFileExists($source);
-        $countAfter = $this->countRows('SELECT COUNT(*) FROM ' . 'images');
+        $countAfter = $this->countRows('SELECT COUNT(*) FROM images');
         self::assertSame($countBefore, $countAfter);
     }
 
-    public function test_addUploadedFile_updates_the_level_when_given_on_the_update_branch(): void
+    public function testAddUploadedFileUpdatesTheLevelWhenGivenOnTheUpdateBranch(): void
     {
         $service = new UploadService(LangTestFactory::get(), $this->currentLogger, $this->storageRegistry, EventDispatcherTestFactory::get(), $this->configService, $this->entityManager, $this->activityService, $this->metadataService, $this->imageService, $this->currentConfig, $this->wsContext, $this->currentUser, CurrentPathsTestFactory::get(), DbCredentialsTestFactory::get());
 
@@ -597,7 +602,7 @@ final class UploadServiceTest extends IntegrationTestCase
         self::assertSame(4, $this->rowInt($row['level']));
     }
 
-    public function test_addUploadedFile_dispatches_the_correct_extension_for_each_raster_image_type(): void
+    public function testAddUploadedFileDispatchesTheCorrectExtensionForEachRasterImageType(): void
     {
         $service = new UploadService(LangTestFactory::get(), $this->currentLogger, $this->storageRegistry, EventDispatcherTestFactory::get(), $this->configService, $this->entityManager, $this->activityService, $this->metadataService, $this->imageService, $this->currentConfig, $this->wsContext, $this->currentUser, CurrentPathsTestFactory::get(), DbCredentialsTestFactory::get());
         $cases = [
@@ -624,7 +629,7 @@ final class UploadServiceTest extends IntegrationTestCase
         }
     }
 
-    public function test_addUploadedFile_resolves_a_non_standard_extension_via_the_finfo_fallback_when_all_types_allowed(): void
+    public function testAddUploadedFileResolvesANonStandardExtensionViaTheFinfoFallbackWhenAllTypesAllowed(): void
     {
         CurrentConfigTestFactory::get()->uploadFormAllTypes = true;
 
@@ -669,7 +674,7 @@ final class UploadServiceTest extends IntegrationTestCase
      * genuinely reachable without touching any library config -- only
      * skipped, defensively, on an environment where it truly isn't.
      */
-    public function test_addUploadedFile_resizes_the_original_when_it_exceeds_the_configured_max_dimensions(): void
+    public function testAddUploadedFileResizesTheOriginalWhenItExceedsTheConfiguredMaxDimensions(): void
     {
         if (PwgImage::get_library() === 'gd') {
             self::markTestSkipped('No non-GD image library (ext_imagick/imagick) available in this environment -- addUploadedFile() never reaches its own originalResize()/needResize()/pwg_resize() block when PwgImage::get_library() is gd.');
@@ -715,7 +720,7 @@ final class UploadServiceTest extends IntegrationTestCase
      * EventDispatcherTestFactory::get()->addEventHandler()/EventDispatcher::reset()
      * pair.
      */
-    public function test_addUploadedFile_stores_the_representative_ext_when_an_upload_file_handler_matches(): void
+    public function testAddUploadedFileStoresTheRepresentativeExtWhenAnUploadFileHandlerMatches(): void
     {
         CurrentConfigTestFactory::get()->uploadFormAllTypes = true;
 
@@ -742,7 +747,7 @@ final class UploadServiceTest extends IntegrationTestCase
         }
     }
 
-    public function test_addUploadedFile_rejects_a_mismatched_svg_mime_type_and_deletes_the_source_file(): void
+    public function testAddUploadedFileRejectsAMismatchedSvgMimeTypeAndDeletesTheSourceFile(): void
     {
         CurrentConfigTestFactory::get()->uploadFormAllTypes = true;
 
@@ -754,7 +759,7 @@ final class UploadServiceTest extends IntegrationTestCase
         $source = $this->marker . '/fake.png';
         file_put_contents($source, '<svg xmlns="http://www.w3.org/2000/svg"><circle r="5"/></svg>');
 
-        $countBefore = $this->countRows('SELECT COUNT(*) FROM ' . 'images');
+        $countBefore = $this->countRows('SELECT COUNT(*) FROM images');
 
         $threw = null;
         try {
@@ -767,11 +772,11 @@ final class UploadServiceTest extends IntegrationTestCase
         self::assertStringContainsString('does not match file MIME type', $threw->getMessage());
 
         self::assertFileDoesNotExist($source);
-        $countAfter = $this->countRows('SELECT COUNT(*) FROM ' . 'images');
+        $countAfter = $this->countRows('SELECT COUNT(*) FROM images');
         self::assertSame($countBefore, $countAfter);
     }
 
-    public function test_addUploadedFile_rejects_an_extension_absent_from_fileExtensions_even_when_all_types_are_allowed(): void
+    public function testAddUploadedFileRejectsAnExtensionAbsentFromFileExtensionsEvenWhenAllTypesAreAllowed(): void
     {
         CurrentConfigTestFactory::get()->uploadFormAllTypes = true;
 
@@ -786,7 +791,7 @@ final class UploadServiceTest extends IntegrationTestCase
         $source = $this->marker . '/payload.exe';
         file_put_contents($source, "MZ\x90\x00" . str_repeat('x', 32));
 
-        $countBefore = $this->countRows('SELECT COUNT(*) FROM ' . 'images');
+        $countBefore = $this->countRows('SELECT COUNT(*) FROM images');
 
         $threw = null;
         try {
@@ -799,18 +804,18 @@ final class UploadServiceTest extends IntegrationTestCase
         self::assertSame('unexpected file type', $threw->getMessage());
 
         self::assertFileDoesNotExist($source);
-        $countAfter = $this->countRows('SELECT COUNT(*) FROM ' . 'images');
+        $countAfter = $this->countRows('SELECT COUNT(*) FROM images');
         self::assertSame($countBefore, $countAfter);
     }
 
-    public function test_addUploadedFile_rejects_a_forbidden_file_type_and_deletes_the_source_file(): void
+    public function testAddUploadedFileRejectsAForbiddenFileTypeAndDeletesTheSourceFile(): void
     {
         CurrentConfigTestFactory::get()->uploadFormAllTypes = false;
 
         $source = $this->marker . '/notes.txt';
         file_put_contents($source, 'just some plain text, not an image at all');
 
-        $countBefore = $this->countRows('SELECT COUNT(*) FROM ' . 'images');
+        $countBefore = $this->countRows('SELECT COUNT(*) FROM images');
 
         $threw = null;
         try {
@@ -823,19 +828,19 @@ final class UploadServiceTest extends IntegrationTestCase
         self::assertSame('forbidden file type', $threw->getMessage());
 
         self::assertFileDoesNotExist($source);
-        $countAfter = $this->countRows('SELECT COUNT(*) FROM ' . 'images');
+        $countAfter = $this->countRows('SELECT COUNT(*) FROM images');
         self::assertSame($countBefore, $countAfter);
     }
 
-    public function test_add_uploaded_file_add_to_categories_flips_lounge_active_once_the_photo_count_reaches_the_threshold(): void
+    public function testAddUploadedFileAddToCategoriesFlipsLoungeActiveOnceThePhotoCountReachesTheThreshold(): void
     {
         // The fixture's own config row already has 'lounge_active' =
         // 'true' (see this class's own docblock) -- force it to 'false' here
         // so the assertion below actually proves confUpdateParam() wrote a
         // real change, not just a coincidental match with pre-existing data.
-        $this->conn->executeStatement("UPDATE " . 'config' . " SET value = 'false' WHERE param = 'lounge_active'");
+        $this->conn->executeStatement('UPDATE config' . " SET value = 'false' WHERE param = 'lounge_active'");
 
-        $countBefore = $this->countRows('SELECT COUNT(*) FROM ' . 'images');
+        $countBefore = $this->countRows('SELECT COUNT(*) FROM images');
         CurrentConfigTestFactory::get()->loungeActivateThreshold = $countBefore + 1;
         self::assertFalse(CurrentConfigTestFactory::get()->loungeActive);
 
@@ -850,11 +855,11 @@ final class UploadServiceTest extends IntegrationTestCase
         // meets the threshold set above.
         self::assertTrue(CurrentConfigTestFactory::get()->loungeActive);
 
-        $dbValue = $this->conn->fetchOne("SELECT value FROM " . 'config' . " WHERE param = 'lounge_active'");
+        $dbValue = $this->conn->fetchOne('SELECT value FROM config' . " WHERE param = 'lounge_active'");
         self::assertSame('true', $dbValue);
     }
 
-    public function test_add_uploaded_file_add_to_categories_associates_a_new_photo_to_the_given_categories_when_lounge_is_inactive(): void
+    public function testAddUploadedFileAddToCategoriesAssociatesANewPhotoToTheGivenCategoriesWhenLoungeIsInactive(): void
     {
         $source = $this->marker . '/associate.png';
         $this->makeImage($source, 'png', 10, 8);
@@ -868,10 +873,10 @@ final class UploadServiceTest extends IntegrationTestCase
         // fillLounge().
         self::assertFalse(CurrentConfigTestFactory::get()->loungeActive);
 
-        $linked = $this->countRows('SELECT COUNT(*) FROM ' . 'image_category' . ' WHERE image_id = ' . $id . ' AND category_id = 1');
+        $linked = $this->countRows('SELECT COUNT(*) FROM image_category WHERE image_id = ' . $id . ' AND category_id = 1');
         self::assertSame(1, $linked);
 
-        $inLounge = $this->countRows('SELECT COUNT(*) FROM ' . 'lounge' . ' WHERE image_id = ' . $id);
+        $inLounge = $this->countRows('SELECT COUNT(*) FROM lounge WHERE image_id = ' . $id);
         self::assertSame(0, $inLounge);
     }
 
@@ -884,7 +889,7 @@ final class UploadServiceTest extends IntegrationTestCase
      * (confirmed live with this exact ImageMagick build), which this
      * method's own rename() fallback then recovers from.
      */
-    public function test_upload_file_tiff_falls_back_to_the_split_file_rename_when_imagemagick_produces_per_page_output(): void
+    public function testUploadFileTiffFallsBackToTheSplitFileRenameWhenImagemagickProducesPerPageOutput(): void
     {
         $frame1 = $this->marker . '/frame1.png';
         $frame2 = $this->marker . '/frame2.png';
@@ -909,7 +914,7 @@ final class UploadServiceTest extends IntegrationTestCase
         self::assertFileDoesNotExist($this->marker . '/pwg_representative/multi-0.' . $result);
     }
 
-    public function test_addFormat_throws_when_the_format_of_image_does_not_exist(): void
+    public function testAddFormatThrowsWhenTheFormatOfImageDoesNotExist(): void
     {
         CurrentConfigTestFactory::get()->isFormatsEnabled = true;
         CurrentConfigTestFactory::get()->formatExtensions = ['tif'];
@@ -944,7 +949,7 @@ final class UploadServiceTest extends IntegrationTestCase
      * unauthorized-extension guard tests existed in
      * tests/Unit/Admin/Upload/UploadServiceTest.php).
      */
-    public function test_addFormat_inserts_then_updates_the_same_format_row_on_a_second_call(): void
+    public function testAddFormatInsertsThenUpdatesTheSameFormatRowOnASecondCall(): void
     {
         CurrentConfigTestFactory::get()->isFormatsEnabled = true;
         CurrentConfigTestFactory::get()->formatExtensions = ['tif'];
@@ -962,7 +967,7 @@ final class UploadServiceTest extends IntegrationTestCase
             $result2 = $service->addFormat($sourceV2, 'tif', 1);
             self::assertSame('update', $result2);
 
-            $count = $this->countRows('SELECT COUNT(*) FROM ' . 'image_format' . " WHERE image_id = 1 AND ext = 'tif'");
+            $count = $this->countRows('SELECT COUNT(*) FROM image_format' . " WHERE image_id = 1 AND ext = 'tif'");
             self::assertSame(1, $count, 'a second addFormat() call for the same image/ext should UPDATE, not duplicate, the row');
         } finally {
             CurrentConfigTestFactory::get()->isFormatsEnabled = false;
@@ -986,7 +991,7 @@ final class UploadServiceTest extends IntegrationTestCase
      * invocation failed to produce a file, 'jpg' if a genuinely available
      * delegate succeeded.
      */
-    public function test_upload_file_heic_reaches_its_tail_return_via_getOptimalDimensionsForRepresentative(): void
+    public function testUploadFileHeicReachesItsTailReturnViaGetOptimalDimensionsForRepresentative(): void
     {
         $heic = $this->marker . '/photo.heic';
         file_put_contents($heic, 'not a genuine heic payload -- only the .heic extension needs to dispatch here');
@@ -1009,7 +1014,7 @@ final class UploadServiceTest extends IntegrationTestCase
      * upload_file_* handlers pass an already-set representative_ext
      * straight through" test already exercises the same 2 lines.
      */
-    public function test_upload_file_video_passes_through_an_already_set_representative_ext(): void
+    public function testUploadFileVideoPassesThroughAnAlreadySetRepresentativeExt(): void
     {
         $result = $this->uploadFileExt(UploadService::uploadFileVideo(...), 'already-set', $this->marker . '/whatever.mp4');
 
@@ -1038,7 +1043,7 @@ final class UploadServiceTest extends IntegrationTestCase
      * build, so there is no separate "success but still logs stderr"
      * fixture to contrive here.
      */
-    public function test_upload_file_video_generates_a_poster_from_a_real_video_and_logs_ffmpegs_stderr_output(): void
+    public function testUploadFileVideoGeneratesAPosterFromARealVideoAndLogsFfmpegsStderrOutput(): void
     {
         $video = $this->marker . '/clip.mp4';
         $cmd = 'ffmpeg -y -f lavfi -i ' . escapeshellarg('color=c=blue:s=64x64:d=3') . ' -t 3 -pix_fmt yuv420p ' . escapeshellarg($video) . ' 2>&1';
@@ -1084,7 +1089,7 @@ final class UploadServiceTest extends IntegrationTestCase
      * environment where avconv truly isn't available, exercising the
      * isset($AO[0]) debug branch too. The method then returns null.
      */
-    public function test_upload_file_video_returns_null_and_falls_back_through_avconv_when_ffmpeg_cannot_decode_the_file(): void
+    public function testUploadFileVideoReturnsNullAndFallsBackThroughAvconvWhenFfmpegCannotDecodeTheFile(): void
     {
         $fake = $this->marker . '/broken.mp4';
         file_put_contents($fake, "this is not a video file, just plain text with a video-like extension\n");
@@ -1109,14 +1114,17 @@ final class UploadServiceTest extends IntegrationTestCase
      * only the current field and keep the loop going, not abort every
      * field after it.
      */
-    public function test_saveUploadFormConfig_keeps_processing_a_later_field_after_skipping_a_non_scalar_one(): void
+    public function testSaveUploadFormConfigKeepsProcessingALaterFieldAfterSkippingANonScalarOne(): void
     {
         $service = $this->newService();
         $errors = [];
         $formErrors = [];
 
         $result = $service->saveUploadFormConfig(
-            ['original_resize_maxwidth' => ['not', 'scalar'], 'original_resize_maxheight' => '1500'],
+            [
+                'original_resize_maxwidth' => ['not', 'scalar'],
+                'original_resize_maxheight' => '1500',
+            ],
             $errors,
             $formErrors
         );
@@ -1125,10 +1133,10 @@ final class UploadServiceTest extends IntegrationTestCase
             self::assertTrue($result);
             self::assertSame([], $errors);
 
-            $stored = $this->conn->fetchOne("SELECT value FROM " . 'config' . " WHERE param = 'original_resize_maxheight'");
+            $stored = $this->conn->fetchOne('SELECT value FROM config' . " WHERE param = 'original_resize_maxheight'");
             self::assertSame('1500', $stored, 'the field after the skipped non-scalar one must still be processed and persisted, not abandoned by a wrongly-broken loop');
         } finally {
-            $this->conn->executeStatement("UPDATE " . 'config' . " SET value = '2016' WHERE param = 'original_resize_maxheight'");
+            $this->conn->executeStatement('UPDATE config' . " SET value = '2016' WHERE param = 'original_resize_maxheight'");
             $this->entityManager->clear();
         }
     }
@@ -1142,9 +1150,9 @@ final class UploadServiceTest extends IntegrationTestCase
      * already-cached, now-stale ConfigEntry so a later find() re-queries
      * instead of returning the pre-write copy.
      */
-    public function test_saveUploadFormConfig_clears_the_injected_entity_managers_identity_map_after_a_successful_write(): void
+    public function testSaveUploadFormConfigClearsTheInjectedEntityManagersIdentityMapAfterASuccessfulWrite(): void
     {
-        $this->conn->executeStatement("UPDATE " . 'config' . " SET value = '2016' WHERE param = 'original_resize_maxheight'");
+        $this->conn->executeStatement('UPDATE config' . " SET value = '2016' WHERE param = 'original_resize_maxheight'");
         $this->entityManager->clear();
 
         // Populates $this->entityManager's own identity map with the
@@ -1160,7 +1168,9 @@ final class UploadServiceTest extends IntegrationTestCase
         $formErrors = [];
 
         try {
-            $result = $service->saveUploadFormConfig(['original_resize_maxheight' => '1500'], $errors, $formErrors);
+            $result = $service->saveUploadFormConfig([
+                'original_resize_maxheight' => '1500',
+            ], $errors, $formErrors);
 
             self::assertTrue($result);
             self::assertSame([], $errors);
@@ -1169,7 +1179,7 @@ final class UploadServiceTest extends IntegrationTestCase
             self::assertInstanceOf(ConfigEntry::class, $after);
             self::assertSame('1500', $after->value, 'entityManager->clear() must genuinely evict the stale cached entity so this find() re-queries instead of returning the pre-write identity-map copy');
         } finally {
-            $this->conn->executeStatement("UPDATE " . 'config' . " SET value = '2016' WHERE param = 'original_resize_maxheight'");
+            $this->conn->executeStatement('UPDATE config' . " SET value = '2016' WHERE param = 'original_resize_maxheight'");
             $this->entityManager->clear();
         }
     }
@@ -1181,13 +1191,14 @@ final class UploadServiceTest extends IntegrationTestCase
      * metacharacters would be a stored-XSS vector wherever that column is
      * later rendered.
      */
-    public function test_addUploadedFile_html_escapes_the_original_filename_before_storing_it(): void
+    public function testAddUploadedFileHtmlEscapesTheOriginalFilenameBeforeStoringIt(): void
     {
         $source = $this->marker . '/escape-test.png';
         $this->makeImage($source, 'png', 12, 9);
 
         $rawFilename = 'a & b <script>.png';
-        $imageId = $this->newService()->addUploadedFile($source, $this->urlService, $rawFilename);
+        $imageId = $this->newService()
+            ->addUploadedFile($source, $this->urlService, $rawFilename);
         $id = $imageId;
         $this->imageIdsToDelete[] = $id;
 
@@ -1205,7 +1216,7 @@ final class UploadServiceTest extends IntegrationTestCase
      * wrongly hijacking a legitimate update into returning some unrelated
      * existing image's id instead.
      */
-    public function test_addUploadedFile_never_runs_duplicate_detection_on_the_update_branch_even_with_detection_enabled(): void
+    public function testAddUploadedFileNeverRunsDuplicateDetectionOnTheUpdateBranchEvenWithDetectionEnabled(): void
     {
         CurrentConfigTestFactory::get()->uploadDetectDuplicate = true;
         try {
@@ -1273,7 +1284,9 @@ final class UploadServiceTest extends IntegrationTestCase
                 $key,
             );
             $cmd = ['psql', '-U' . $this->dbUser, '-h' . $this->dbHost, '-d' . $this->dbName, '-q', '-t', '-c', $sql];
-            $env = $this->dbPass !== '' ? array_merge(getenv(), ['PGPASSWORD' => $this->dbPass]) : null;
+            $env = $this->dbPass !== '' ? array_merge(getenv(), [
+                'PGPASSWORD' => $this->dbPass,
+            ]) : null;
         } else {
             $sql = sprintf(
                 "SELECT GET_LOCK('%s', 5); SELECT SLEEP(0.3); SELECT RELEASE_LOCK('%s');",
@@ -1291,7 +1304,10 @@ final class UploadServiceTest extends IntegrationTestCase
             $env = null;
         }
 
-        $descriptors = [1 => ['pipe', 'w'], 2 => ['pipe', 'w']];
+        $descriptors = [
+            1 => ['pipe', 'w'],
+            2 => ['pipe', 'w'],
+        ];
         $proc = proc_open($cmd, $descriptors, $pipes, null, $env);
         self::assertIsResource($proc, 'proc_open failed for the background lock-holder process');
 
@@ -1312,7 +1328,7 @@ final class UploadServiceTest extends IntegrationTestCase
      * promptly once released) a name it independently computed
      * identically.
      */
-    public function test_addUploadedFile_computes_the_duplicate_detection_lock_name_from_the_documented_database_name_and_md5sum_formula(): void
+    public function testAddUploadedFileComputesTheDuplicateDetectionLockNameFromTheDocumentedDatabaseNameAndMd5sumFormula(): void
     {
         CurrentConfigTestFactory::get()->uploadDetectDuplicate = true;
 
@@ -1330,7 +1346,8 @@ final class UploadServiceTest extends IntegrationTestCase
             usleep(50_000);
 
             $start = microtime(true);
-            $imageId = $this->newService()->addUploadedFile($source, $this->urlService, 'lock-name-probe.png', original_md5sum: $md5sum);
+            $imageId = $this->newService()
+                ->addUploadedFile($source, $this->urlService, 'lock-name-probe.png', original_md5sum: $md5sum);
             $elapsed = microtime(true) - $start;
             $this->imageIdsToDelete[] = $imageId;
 
@@ -1353,17 +1370,18 @@ final class UploadServiceTest extends IntegrationTestCase
      * short-circuit-return instead of performing a genuine new-photo
      * insert.
      */
-    public function test_addUploadedFile_does_not_treat_zero_duplicate_matches_as_a_duplicate(): void
+    public function testAddUploadedFileDoesNotTreatZeroDuplicateMatchesAsADuplicate(): void
     {
         $source = $this->marker . '/no-duplicate.png';
         $this->makeImage($source, 'png', 11, 7);
 
-        $countBefore = $this->countRows('SELECT COUNT(*) FROM ' . 'images');
+        $countBefore = $this->countRows('SELECT COUNT(*) FROM images');
 
-        $imageId = $this->newService()->addUploadedFile($source, $this->urlService, 'no-duplicate.png');
+        $imageId = $this->newService()
+            ->addUploadedFile($source, $this->urlService, 'no-duplicate.png');
         $this->imageIdsToDelete[] = $imageId;
 
-        $countAfter = $this->countRows('SELECT COUNT(*) FROM ' . 'images');
+        $countAfter = $this->countRows('SELECT COUNT(*) FROM images');
         self::assertSame($countBefore + 1, $countAfter, 'a genuinely new photo (zero real duplicate matches) must be INSERTed, not short-circuited');
         self::assertFileDoesNotExist($source);
     }
@@ -1378,7 +1396,7 @@ final class UploadServiceTest extends IntegrationTestCase
      * saveXML() would reformat (single- to double-quoted attribute) if it
      * were ever actually parsed and re-serialized.
      */
-    public function test_sanitizeSvgIfNeeded_returns_before_ever_reading_the_file_for_a_non_matching_finfo_type(): void
+    public function testSanitizeSvgIfNeededReturnsBeforeEverReadingTheFileForANonMatchingFinfoType(): void
     {
         $path = $this->marker . '/mismatched-type.xml';
         $original = "<root attr='value'/>";
@@ -1398,7 +1416,7 @@ final class UploadServiceTest extends IntegrationTestCase
      * `libxml_use_internal_errors()` (queried with no argument) can
      * observe directly.
      */
-    public function test_sanitizeSvgIfNeeded_restores_the_prior_libxml_use_internal_errors_setting_afterward(): void
+    public function testSanitizeSvgIfNeededRestoresThePriorLibxmlUseInternalErrorsSettingAfterward(): void
     {
         $path = $this->marker . '/restore-libxml.svg';
         file_put_contents($path, '<svg xmlns="http://www.w3.org/2000/svg"><circle r="5"/></svg>');
@@ -1430,7 +1448,7 @@ final class UploadServiceTest extends IntegrationTestCase
      * extension (e.g. many camera/OS uploads produce '.PDF') would
      * silently fail to dispatch to any of them.
      */
-    public function test_the_5_ext_imagick_handlers_recognize_an_uppercase_extension_case_insensitively(): void
+    public function testThe5ExtImagickHandlersRecognizeAnUppercaseExtensionCaseInsensitively(): void
     {
         $dir = $this->readonlyDir();
         // mkdir() on a permission-denied directory emits a real PHP
@@ -1463,7 +1481,7 @@ final class UploadServiceTest extends IntegrationTestCase
      * Real gap: uploadFileTiff()'s whitelist is `['tif', 'tiff']` -- a
      * bare '.tif' (distinct from '.tiff') must also be recognized.
      */
-    public function test_uploadFileTiff_also_recognizes_the_bare_tif_extension_not_just_tiff(): void
+    public function testUploadFileTiffAlsoRecognizesTheBareTifExtensionNotJustTiff(): void
     {
         $dir = $this->readonlyDir();
         set_error_handler(static fn (): bool => true);
@@ -1537,7 +1555,7 @@ final class UploadServiceTest extends IntegrationTestCase
      * produced, so their own real conversion failure is checked via real
      * on-disk file existence, not via their return value.
      */
-    public function test_the_5_ext_imagick_handlers_use_the_configured_dir_prefix_rather_than_a_bare_path_lookup(): void
+    public function testThe5ExtImagickHandlersUseTheConfiguredDirPrefixRatherThanABarePathLookup(): void
     {
         $bogusDir = sys_get_temp_dir() . '/definitely-not-a-real-imagick-dir-' . bin2hex(random_bytes(4)) . '/';
         CurrentConfigTestFactory::get()->extImagickDir = $bogusDir;
@@ -1589,7 +1607,7 @@ final class UploadServiceTest extends IntegrationTestCase
      * `convert'/usr/bin/'`), failing every conversion even though the
      * configured dir is genuinely correct.
      */
-    public function test_the_5_ext_imagick_handlers_prepend_the_configured_dir_before_the_command_name_not_after(): void
+    public function testThe5ExtImagickHandlersPrependTheConfiguredDirBeforeTheCommandNameNotAfter(): void
     {
         $realDir = $this->realExtImagickDir();
         CurrentConfigTestFactory::get()->extImagickDir = $realDir;
@@ -1639,7 +1657,7 @@ final class UploadServiceTest extends IntegrationTestCase
      * per-page-suffixed files instead of the exact expected filename,
      * which file_exists() then never finds.
      */
-    public function test_uploadFilePdf_converts_only_the_first_page_via_the_0_page_selector(): void
+    public function testUploadFilePdfConvertsOnlyTheFirstPageViaThe0PageSelector(): void
     {
         $frame1 = $this->marker . '/pdf-frame1.png';
         $frame2 = $this->marker . '/pdf-frame2.png';
@@ -1669,7 +1687,7 @@ final class UploadServiceTest extends IntegrationTestCase
      * rather than a real oversized conversion: any dropped/reordered
      * fragment breaks this exact substring.
      */
-    public function test_uploadFileHeic_builds_the_resize_geometry_from_the_exact_optimal_width_and_height(): void
+    public function testUploadFileHeicBuildsTheResizeGeometryFromTheExactOptimalWidthAndHeight(): void
     {
         $method = new ReflectionMethod(UploadService::class, 'getOptimalDimensionsForRepresentative');
         /** @var array{0: int, 1: int} $dims */
@@ -1678,7 +1696,11 @@ final class UploadServiceTest extends IntegrationTestCase
 
         $logDir = $this->marker . '/heic-geometry-logs';
         mkdir($logDir, 0o777, true);
-        $this->currentLogger->set(new Logger(['severity' => Logger::INFO, 'directory' => $logDir, 'filename' => 'heic-geometry.log']));
+        $this->currentLogger->set(new Logger([
+            'severity' => Logger::INFO,
+            'directory' => $logDir,
+            'filename' => 'heic-geometry.log',
+        ]));
 
         try {
             $heic = $this->marker . '/geometry-check.heic';
@@ -1690,7 +1712,9 @@ final class UploadServiceTest extends IntegrationTestCase
             self::assertIsString($logged);
             self::assertStringContainsString('-resize "' . $maxW . 'x' . $maxH . '>"', $logged, 'the -resize geometry must be built from exactly $w . \'x\' . $h . \'>\', with no dropped or reordered fragment');
         } finally {
-            $this->currentLogger->set(new Logger(['severity' => Logger::OFF]));
+            $this->currentLogger->set(new Logger([
+                'severity' => Logger::OFF,
+            ]));
         }
     }
 
@@ -1703,7 +1727,7 @@ final class UploadServiceTest extends IntegrationTestCase
      * own "uploadFilePdf actually applies pdfJpgQuality" test's proven
      * technique.
      */
-    public function test_uploadFileTiff_applies_the_hardcoded_quality_98_flag_only_when_representative_ext_is_jpg(): void
+    public function testUploadFileTiffAppliesTheHardcodedQuality98FlagOnlyWhenRepresentativeExtIsJpg(): void
     {
         CurrentConfigTestFactory::get()->tiffRepresentativeExt = 'jpg';
         try {
@@ -1746,7 +1770,7 @@ final class UploadServiceTest extends IntegrationTestCase
      * test at all yet; this checks the FULL message, including the
      * __METHOD__ prefix a bare substring check would miss.
      */
-    public function test_pwgImageInfos_throws_with_the_exact_method_prefixed_message_when_filesize_fails(): void
+    public function testPwgImageInfosThrowsWithTheExactMethodPrefixedMessageWhenFilesizeFails(): void
     {
         $service = $this->newService();
         $missing = $this->marker . '/does-not-exist-at-all-integration.jpg';
@@ -1773,12 +1797,13 @@ final class UploadServiceTest extends IntegrationTestCase
      * Real gap: `$filesize = floor($filesize_bytes / 1024);` --
      * distinguishes floor() from round() and from dividing by 1023/1025.
      */
-    public function test_pwgImageInfos_computes_the_exact_floor_of_bytes_over_1024_for_filesize(): void
+    public function testPwgImageInfosComputesTheExactFloorOfBytesOver1024ForFilesize(): void
     {
         $path = $this->marker . '/pwgimageinfos-filesize.png';
         $this->makeImage($path, 'png', 33, 17);
 
-        $infos = $this->newService()->pwgImageInfos($path);
+        $infos = $this->newService()
+            ->pwgImageInfos($path);
         $realBytes = filesize($path);
         if ($realBytes === false) {
             throw new RuntimeException('filesize failed');
@@ -1793,7 +1818,7 @@ final class UploadServiceTest extends IntegrationTestCase
      * (only the OTHER-execute bit differs), so this checks the exact raw
      * permission bits instead.
      */
-    public function test_readyForUploadMessage_chmods_an_unwritable_existing_directory_to_exactly_0777(): void
+    public function testReadyForUploadMessageChmodsAnUnwritableExistingDirectoryToExactly0777(): void
     {
         $root = $this->marker . '/ready-root/';
         mkdir($root . 'upload', 0o777, true);
@@ -1817,7 +1842,7 @@ final class UploadServiceTest extends IntegrationTestCase
      * 0777);` recovery -- same "exact raw bits, not just is_writable()"
      * reasoning as the readyForUploadMessage() test above.
      */
-    public function test_prepareDirectoryStatic_fixes_an_existing_unwritable_directory_to_exactly_0777(): void
+    public function testPrepareDirectoryStaticFixesAnExistingUnwritableDirectoryToExactly0777(): void
     {
         $dir = $this->marker . '/prep-perm-check';
         mkdir($dir, 0o777, true);
@@ -1835,7 +1860,7 @@ final class UploadServiceTest extends IntegrationTestCase
      * would silently produce a directory with less than the full 0777
      * this method's own docblock says it must guarantee.
      */
-    public function test_prepareDirectoryStatic_creates_a_new_directory_with_exactly_0777_regardless_of_process_umask(): void
+    public function testPrepareDirectoryStaticCreatesANewDirectoryWithExactly0777RegardlessOfProcessUmask(): void
     {
         $dir = $this->marker . '/new-dir-perm-check';
         self::assertDirectoryDoesNotExist($dir);
@@ -1853,7 +1878,7 @@ final class UploadServiceTest extends IntegrationTestCase
      * `umask($umask);` restore -- without it, the process-wide umask
      * would stay permanently zeroed for the rest of this test process.
      */
-    public function test_prepareDirectoryStatic_restores_the_process_umask_afterward_instead_of_leaving_it_at_zero(): void
+    public function testPrepareDirectoryStaticRestoresTheProcessUmaskAfterwardInsteadOfLeavingItAtZero(): void
     {
         $originalUmask = umask();
         // A known, deliberately non-zero baseline first, so the
@@ -1880,7 +1905,7 @@ final class UploadServiceTest extends IntegrationTestCase
      * same test-only seam this project's own Bootstrap\*Accessor suites
      * already use for the identical pattern.
      */
-    public function test_the_3_static_container_accessors_throw_when_the_container_returns_an_unexpected_type(): void
+    public function testThe3StaticContainerAccessorsThrowWhenTheContainerReturnsAnUnexpectedType(): void
     {
         KernelContainerOverride::withWrongTypeFor(CurrentLogger::class, static function (): void {
             $method = new ReflectionMethod(UploadService::class, 'currentLogger');

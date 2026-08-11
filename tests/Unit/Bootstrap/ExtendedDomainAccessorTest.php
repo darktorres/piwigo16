@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-use Piwigo\Core\Paths;
 use Piwigo\Activity\ActivityService;
 use Piwigo\Bootstrap\ExtendedDomainAccessor;
 use Piwigo\Core\Kernel;
+use Piwigo\Core\Paths;
 use Piwigo\Metadata\MetadataService;
 use Piwigo\Tests\Support\KernelContainerOverride;
 

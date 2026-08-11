@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Contract;
 
-use Override;
 use Doctrine\DBAL\Connection;
+use Override;
 use Piwigo\Db\DbConnection;
 
 /**
@@ -24,10 +24,14 @@ final class WsImagesCategoryRelationsTest extends ContractTestCase
 
     private Connection $conn;
 
-    /** @var list<int> */
+    /**
+     * @var list<int>
+     */
     private array $imageIdsToDelete = [];
 
-    /** @var list<int> */
+    /**
+     * @var list<int>
+     */
     private array $categoryIdsToDelete = [];
 
     #[Override]
@@ -42,12 +46,12 @@ final class WsImagesCategoryRelationsTest extends ContractTestCase
     protected function tearDown(): void
     {
         foreach ($this->imageIdsToDelete as $imageId) {
-            $this->conn->executeStatement('DELETE FROM ' . 'image_category' . ' WHERE image_id = ?', [$imageId]);
-            $this->conn->executeStatement('DELETE FROM ' . 'images' . ' WHERE id = ?', [$imageId]);
+            $this->conn->executeStatement('DELETE FROM image_category WHERE image_id = ?', [$imageId]);
+            $this->conn->executeStatement('DELETE FROM images WHERE id = ?', [$imageId]);
         }
         foreach (array_reverse($this->categoryIdsToDelete) as $categoryId) {
-            $this->conn->executeStatement('DELETE FROM ' . 'image_category' . ' WHERE category_id = ?', [$categoryId]);
-            $this->conn->executeStatement('DELETE FROM ' . 'categories' . ' WHERE id = ?', [$categoryId]);
+            $this->conn->executeStatement('DELETE FROM image_category WHERE category_id = ?', [$categoryId]);
+            $this->conn->executeStatement('DELETE FROM categories WHERE id = ?', [$categoryId]);
         }
         parent::tearDown();
     }
@@ -59,12 +63,14 @@ final class WsImagesCategoryRelationsTest extends ContractTestCase
         return $this->getPwgToken();
     }
 
-    /** @param list<int> $categoryIds */
+    /**
+     * @param list<int> $categoryIds
+     */
     private function insertThrowawayImage(array $categoryIds = []): int
     {
         $filename = 'cat-relations-test-' . uniqid() . '.jpg';
         $this->conn->executeStatement(
-            'INSERT INTO ' . 'images' . ' (file, path, md5sum) VALUES (?, ?, ?)',
+            'INSERT INTO images (file, path, md5sum) VALUES (?, ?, ?)',
             [$filename, 'upload/2026/08/01/' . $filename, md5($filename)]
         );
         $id = (int) $this->conn->lastInsertId();
@@ -72,7 +78,7 @@ final class WsImagesCategoryRelationsTest extends ContractTestCase
 
         foreach ($categoryIds as $catId) {
             $this->conn->executeStatement(
-                'INSERT INTO ' . 'image_category' . ' (image_id, category_id) VALUES (?, ?)',
+                'INSERT INTO image_category (image_id, category_id) VALUES (?, ?)',
                 [$id, $catId]
             );
         }
@@ -80,7 +86,9 @@ final class WsImagesCategoryRelationsTest extends ContractTestCase
         return $id;
     }
 
-    /** Creates a virtual category (no prior photos, no prior ranked associations) via the WS API. */
+    /**
+     * Creates a virtual category (no prior photos, no prior ranked associations) via the WS API.
+     */
     private function createFreshCategory(): int
     {
         $response = $this->callWs('pwg.categories.add', [
@@ -97,16 +105,18 @@ final class WsImagesCategoryRelationsTest extends ContractTestCase
         return $id;
     }
 
-    /** @return list<int> */
+    /**
+     * @return list<int>
+     */
     private function categoryIdsOf(int $imageId): array
     {
         return $this->conn->fetchFirstColumn(
-            'SELECT category_id FROM ' . 'image_category' . ' WHERE image_id = ?',
+            'SELECT category_id FROM image_category WHERE image_id = ?',
             [$imageId]
         );
     }
 
-    public function test_categories_empty_string_with_replace_mode_deletes_all_associations(): void
+    public function testCategoriesEmptyStringWithReplaceModeDeletesAllAssociations(): void
     {
         $imageId = $this->insertThrowawayImage([self::FIXTURE_CAT_ID]);
         self::assertSame([self::FIXTURE_CAT_ID], $this->categoryIdsOf($imageId));
@@ -122,7 +132,7 @@ final class WsImagesCategoryRelationsTest extends ContractTestCase
         self::assertSame([], $this->categoryIdsOf($imageId));
     }
 
-    public function test_categories_empty_string_with_append_mode_leaves_associations_untouched(): void
+    public function testCategoriesEmptyStringWithAppendModeLeavesAssociationsUntouched(): void
     {
         $imageId = $this->insertThrowawayImage([self::FIXTURE_CAT_ID]);
 
@@ -137,7 +147,7 @@ final class WsImagesCategoryRelationsTest extends ContractTestCase
         self::assertSame([self::FIXTURE_CAT_ID], $this->categoryIdsOf($imageId));
     }
 
-    public function test_categories_with_no_valid_digit_tokens_and_replace_mode_is_a_noop(): void
+    public function testCategoriesWithNoValidDigitTokensAndReplaceModeIsANoop(): void
     {
         $imageId = $this->insertThrowawayImage([self::FIXTURE_CAT_ID]);
 
@@ -158,7 +168,7 @@ final class WsImagesCategoryRelationsTest extends ContractTestCase
         self::assertSame([], $this->categoryIdsOf($imageId));
     }
 
-    public function test_categories_reassociating_an_already_associated_category_is_a_noop(): void
+    public function testCategoriesReassociatingAnAlreadyAssociatedCategoryIsANoop(): void
     {
         $imageId = $this->insertThrowawayImage([self::FIXTURE_CAT_ID]);
 
@@ -175,7 +185,7 @@ final class WsImagesCategoryRelationsTest extends ContractTestCase
         self::assertSame([self::FIXTURE_CAT_ID], $this->categoryIdsOf($imageId));
     }
 
-    public function test_categories_mixed_valid_and_invalid_tokens_skips_the_invalid_one(): void
+    public function testCategoriesMixedValidAndInvalidTokensSkipsTheInvalidOne(): void
     {
         $freshCatId = $this->createFreshCategory();
         $imageId = $this->insertThrowawayImage();
@@ -197,7 +207,7 @@ final class WsImagesCategoryRelationsTest extends ContractTestCase
         self::assertSame([$freshCatId], $this->categoryIdsOf($imageId));
     }
 
-    public function test_categories_auto_rank_on_a_brand_new_category_starts_at_one(): void
+    public function testCategoriesAutoRankOnABrandNewCategoryStartsAtOne(): void
     {
         $freshCatId = $this->createFreshCategory();
         $imageId = $this->insertThrowawayImage();
@@ -217,7 +227,7 @@ final class WsImagesCategoryRelationsTest extends ContractTestCase
         $rankIdentifier = $this->conn->getDatabasePlatform()
             ->quoteSingleIdentifier('rank');
         $rank = $this->conn->fetchOne(
-            "SELECT {$rankIdentifier} FROM " . 'image_category' . ' WHERE image_id = ? AND category_id = ?',
+            "SELECT {$rankIdentifier} FROM " . 'image_category WHERE image_id = ? AND category_id = ?',
             [$imageId, $freshCatId]
         );
         self::assertSame(1, is_numeric($rank) ? (int) $rank : 0);

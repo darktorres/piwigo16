@@ -12,7 +12,7 @@ use Psr\Http\Server\RequestHandlerInterface;
 
 function securityHeadersPassthroughHandler(): RequestHandlerInterface
 {
-    return new class implements RequestHandlerInterface {
+    return new class() implements RequestHandlerInterface {
         #[Override]
         public function handle(ServerRequestInterface $request): ResponseInterface
         {
@@ -22,18 +22,22 @@ function securityHeadersPassthroughHandler(): RequestHandlerInterface
 }
 
 test('the default baseline contributor adds the unconditional header set', function (): void {
-    $response = new SecurityHeadersMiddleware()->process(
-        new ServerRequest('GET', '/'),
-        securityHeadersPassthroughHandler()
-    );
+    $response = new SecurityHeadersMiddleware()
+        ->process(
+            new ServerRequest('GET', '/'),
+            securityHeadersPassthroughHandler()
+        );
 
-    expect($response->getHeaderLine('X-Content-Type-Options'))->toBe('nosniff');
-    expect($response->getHeaderLine('X-Frame-Options'))->toBe('SAMEORIGIN');
-    expect($response->getHeaderLine('Referrer-Policy'))->toBe('strict-origin-when-cross-origin');
+    expect($response->getHeaderLine('X-Content-Type-Options'))
+        ->toBe('nosniff');
+    expect($response->getHeaderLine('X-Frame-Options'))
+        ->toBe('SAMEORIGIN');
+    expect($response->getHeaderLine('Referrer-Policy'))
+        ->toBe('strict-origin-when-cross-origin');
 });
 
 test('a custom contributor list can add its own headers', function (): void {
-    $extra = new class implements SecurityHeaderContributor {
+    $extra = new class() implements SecurityHeaderContributor {
         #[Override]
         public function contribute(ResponseInterface $response): ResponseInterface
         {
@@ -46,5 +50,6 @@ test('a custom contributor list can add its own headers', function (): void {
         securityHeadersPassthroughHandler()
     );
 
-    expect($response->getHeaderLine('X-Test-Contributor'))->toBe('yes');
+    expect($response->getHeaderLine('X-Test-Contributor'))
+        ->toBe('yes');
 });

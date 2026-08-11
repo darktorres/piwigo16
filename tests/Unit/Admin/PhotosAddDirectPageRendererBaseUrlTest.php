@@ -16,7 +16,7 @@ use Piwigo\Admin\PhotosAddDirectPageRenderer;
  */
 final class PhotosAddDirectPageRendererBaseUrlTest extends TestCase
 {
-    public function test_base_url_prefixes_the_admin_page_with_the_root_url(): void
+    public function testBaseUrlPrefixesTheAdminPageWithTheRootUrl(): void
     {
         self::assertSame(
             '/piwigo/admin.php?page=photos_add',

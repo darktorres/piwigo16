@@ -31,7 +31,7 @@ final class WsApiKeyTest extends ContractTestCase
         if ($this->pkid !== null) {
             $token = $this->getPwgToken();
             $this->callWs('pwg.users.api_key.revoke', [
-                'pkid'      => $this->pkid,
+                'pkid' => $this->pkid,
                 'pwg_token' => $token,
             ]);
             $this->pkid = null;
@@ -40,13 +40,13 @@ final class WsApiKeyTest extends ContractTestCase
         parent::tearDown();
     }
 
-    public function test_create_returns_secret_and_pkid(): void
+    public function testCreateReturnsSecretAndPkid(): void
     {
         $this->loginAsAdminViaUI();
-        $token    = $this->getPwgToken();
+        $token = $this->getPwgToken();
         $response = $this->callWs('pwg.users.api_key.create', [
-            'key_name'  => 'ct_key_' . uniqid(),
-            'duration'  => 1,
+            'key_name' => 'ct_key_' . uniqid(),
+            'duration' => 1,
             'pwg_token' => $token,
         ]);
 
@@ -63,13 +63,13 @@ final class WsApiKeyTest extends ContractTestCase
         $this->pkid = $authKey;
     }
 
-    public function test_get_returns_api_key_list(): void
+    public function testGetReturnsApiKeyList(): void
     {
         $this->loginAsAdminViaUI();
-        $token  = $this->getPwgToken();
+        $token = $this->getPwgToken();
         $create = $this->callWs('pwg.users.api_key.create', [
-            'key_name'  => 'ct_key_' . uniqid(),
-            'duration'  => 1,
+            'key_name' => 'ct_key_' . uniqid(),
+            'duration' => 1,
             'pwg_token' => $token,
         ]);
         $createResult = $create['result'];
@@ -86,13 +86,13 @@ final class WsApiKeyTest extends ContractTestCase
         self::assertMatchesSchema('pwg.users.api_key.get', $response);
     }
 
-    public function test_edit_returns_ok_message(): void
+    public function testEditReturnsOkMessage(): void
     {
         $this->loginAsAdminViaUI();
-        $token  = $this->getPwgToken();
+        $token = $this->getPwgToken();
         $create = $this->callWs('pwg.users.api_key.create', [
-            'key_name'  => 'ct_key_' . uniqid(),
-            'duration'  => 1,
+            'key_name' => 'ct_key_' . uniqid(),
+            'duration' => 1,
             'pwg_token' => $token,
         ]);
         $createResult = $create['result'];
@@ -102,8 +102,8 @@ final class WsApiKeyTest extends ContractTestCase
         $this->pkid = $authKey;
 
         $response = $this->callWs('pwg.users.api_key.edit', [
-            'pkid'      => $this->pkid,
-            'key_name'  => 'ct_key_edited',
+            'pkid' => $this->pkid,
+            'key_name' => 'ct_key_edited',
             'pwg_token' => $token,
         ]);
 
@@ -111,10 +111,12 @@ final class WsApiKeyTest extends ContractTestCase
         self::assertIsString($response['result']);
     }
 
-    public function test_create_forbidden_for_guest(): void
+    public function testCreateForbiddenForGuest(): void
     {
         $response = $this->ws('pwg.users.api_key.create', [
-            'key_name' => 'x', 'duration' => 1, 'pwg_token' => 'irrelevant',
+            'key_name' => 'x',
+            'duration' => 1,
+            'pwg_token' => 'irrelevant',
         ]);
 
         self::assertSame('fail', $response['stat']);
@@ -122,7 +124,7 @@ final class WsApiKeyTest extends ContractTestCase
         self::assertSame('Acces Denied', $response['message']);
     }
 
-    public function test_create_forbidden_when_not_connected_via_pwg_ui(): void
+    public function testCreateForbiddenWhenNotConnectedViaPwgUi(): void
     {
         // pwg.session.login (not identification.php) never sets
         // $_SESSION['connected_with'] = 'pwg_ui' -- ApiKeyService::
@@ -131,7 +133,9 @@ final class WsApiKeyTest extends ContractTestCase
         $token = $this->getPwgToken();
 
         $response = $this->callWs('pwg.users.api_key.create', [
-            'key_name' => 'x', 'duration' => 1, 'pwg_token' => $token,
+            'key_name' => 'x',
+            'duration' => 1,
+            'pwg_token' => $token,
         ]);
 
         self::assertSame('fail', $response['stat']);
@@ -139,10 +143,11 @@ final class WsApiKeyTest extends ContractTestCase
         self::assertSame('Acces Denied', $response['message']);
     }
 
-    public function test_revoke_forbidden_for_guest(): void
+    public function testRevokeForbiddenForGuest(): void
     {
         $response = $this->ws('pwg.users.api_key.revoke', [
-            'pkid' => 'pkid-20260101-abcdefghijklmnopqrst', 'pwg_token' => 'irrelevant',
+            'pkid' => 'pkid-20260101-abcdefghijklmnopqrst',
+            'pwg_token' => 'irrelevant',
         ]);
 
         self::assertSame('fail', $response['stat']);
@@ -150,11 +155,12 @@ final class WsApiKeyTest extends ContractTestCase
         self::assertSame('Acces Denied', $response['message']);
     }
 
-    public function test_revoke_invalid_token_returns_error(): void
+    public function testRevokeInvalidTokenReturnsError(): void
     {
         $this->loginAsAdminViaUI();
         $response = $this->callWs('pwg.users.api_key.revoke', [
-            'pkid' => 'pkid-20260101-abcdefghijklmnopqrst', 'pwg_token' => 'wrong',
+            'pkid' => 'pkid-20260101-abcdefghijklmnopqrst',
+            'pwg_token' => 'wrong',
         ]);
 
         self::assertSame('fail', $response['stat']);
@@ -162,13 +168,14 @@ final class WsApiKeyTest extends ContractTestCase
         self::assertSame('Invalid security token', $response['message']);
     }
 
-    public function test_revoke_a_wellformed_but_nonexistent_pkid_returns_error(): void
+    public function testRevokeAWellformedButNonexistentPkidReturnsError(): void
     {
         $this->loginAsAdminViaUI();
         $token = $this->getPwgToken();
 
         $response = $this->callWs('pwg.users.api_key.revoke', [
-            'pkid' => 'pkid-20260101-abcdefghijklmnopqrst', 'pwg_token' => $token,
+            'pkid' => 'pkid-20260101-abcdefghijklmnopqrst',
+            'pwg_token' => $token,
         ]);
 
         self::assertSame('fail', $response['stat']);
@@ -176,10 +183,12 @@ final class WsApiKeyTest extends ContractTestCase
         self::assertSame('API Key not found', $response['message']);
     }
 
-    public function test_edit_forbidden_for_guest(): void
+    public function testEditForbiddenForGuest(): void
     {
         $response = $this->ws('pwg.users.api_key.edit', [
-            'pkid' => 'pkid-20260101-abcdefghijklmnopqrst', 'key_name' => 'x', 'pwg_token' => 'irrelevant',
+            'pkid' => 'pkid-20260101-abcdefghijklmnopqrst',
+            'key_name' => 'x',
+            'pwg_token' => 'irrelevant',
         ]);
 
         self::assertSame('fail', $response['stat']);
@@ -187,11 +196,13 @@ final class WsApiKeyTest extends ContractTestCase
         self::assertSame('Acces Denied', $response['message']);
     }
 
-    public function test_edit_invalid_token_returns_error(): void
+    public function testEditInvalidTokenReturnsError(): void
     {
         $this->loginAsAdminViaUI();
         $response = $this->callWs('pwg.users.api_key.edit', [
-            'pkid' => 'pkid-20260101-abcdefghijklmnopqrst', 'key_name' => 'x', 'pwg_token' => 'wrong',
+            'pkid' => 'pkid-20260101-abcdefghijklmnopqrst',
+            'key_name' => 'x',
+            'pwg_token' => 'wrong',
         ]);
 
         self::assertSame('fail', $response['stat']);
@@ -199,13 +210,15 @@ final class WsApiKeyTest extends ContractTestCase
         self::assertSame('Invalid security token', $response['message']);
     }
 
-    public function test_edit_a_wellformed_but_nonexistent_pkid_returns_error(): void
+    public function testEditAWellformedButNonexistentPkidReturnsError(): void
     {
         $this->loginAsAdminViaUI();
         $token = $this->getPwgToken();
 
         $response = $this->callWs('pwg.users.api_key.edit', [
-            'pkid' => 'pkid-20260101-abcdefghijklmnopqrst', 'key_name' => 'x', 'pwg_token' => $token,
+            'pkid' => 'pkid-20260101-abcdefghijklmnopqrst',
+            'key_name' => 'x',
+            'pwg_token' => $token,
         ]);
 
         self::assertSame('fail', $response['stat']);
@@ -213,32 +226,36 @@ final class WsApiKeyTest extends ContractTestCase
         self::assertSame('API Key not found', $response['message']);
     }
 
-    public function test_get_forbidden_for_guest(): void
+    public function testGetForbiddenForGuest(): void
     {
-        $response = $this->ws('pwg.users.api_key.get', ['pwg_token' => 'irrelevant']);
+        $response = $this->ws('pwg.users.api_key.get', [
+            'pwg_token' => 'irrelevant',
+        ]);
 
         self::assertSame('fail', $response['stat']);
         self::assertSame(401, $response['err']);
         self::assertSame('Acces Denied', $response['message']);
     }
 
-    public function test_get_invalid_token_returns_error(): void
+    public function testGetInvalidTokenReturnsError(): void
     {
         $this->loginAsAdminViaUI();
-        $response = $this->callWs('pwg.users.api_key.get', ['pwg_token' => 'wrong']);
+        $response = $this->callWs('pwg.users.api_key.get', [
+            'pwg_token' => 'wrong',
+        ]);
 
         self::assertSame('fail', $response['stat']);
         self::assertSame(403, $response['err']);
         self::assertSame('Invalid security token', $response['message']);
     }
 
-    public function test_revoke_returns_ok_message(): void
+    public function testRevokeReturnsOkMessage(): void
     {
         $this->loginAsAdminViaUI();
-        $token  = $this->getPwgToken();
+        $token = $this->getPwgToken();
         $create = $this->callWs('pwg.users.api_key.create', [
-            'key_name'  => 'ct_key_' . uniqid(),
-            'duration'  => 1,
+            'key_name' => 'ct_key_' . uniqid(),
+            'duration' => 1,
             'pwg_token' => $token,
         ]);
         $createResult = $create['result'];
@@ -247,7 +264,7 @@ final class WsApiKeyTest extends ContractTestCase
         self::assertIsString($pkid);
 
         $response = $this->callWs('pwg.users.api_key.revoke', [
-            'pkid'      => $pkid,
+            'pkid' => $pkid,
             'pwg_token' => $token,
         ]);
 

@@ -99,8 +99,10 @@ it('shows the album granted through group membership, with no private albums yet
     // albums from earlier tests, exact-array equality broke here even
     // though category 2 itself behaved correctly).
     $html = H::rawWebpage($page)->content();
-    expect(userPermSelectOptions($html, 'cat_true[]'))->not->toHaveKey(2);
-    expect(userPermSelectOptions($html, 'cat_false[]'))->not->toHaveKey(2);
+    expect(userPermSelectOptions($html, 'cat_true[]'))
+        ->not->toHaveKey(2);
+    expect(userPermSelectOptions($html, 'cat_false[]'))
+        ->not->toHaveKey(2);
 });
 
 it('lists the newly-private album as forbidden once it stops being covered by the group grant', function (): void {
@@ -115,8 +117,10 @@ it('lists the newly-private album as forbidden once it stops being covered by th
     // 2, so once it's private it must show up as forbidden, not authorized.
     // Not toBe([...]) for cat_false: see the sibling test above for why an
     // exact array can't be asserted against this shared, ever-growing list.
-    expect(userPermSelectOptions($html, 'cat_true[]'))->not->toHaveKey(2);
-    expect(userPermSelectOptions($html, 'cat_false[]'))->toHaveKey(2, 'Sample Album / Nested Sub Album');
+    expect(userPermSelectOptions($html, 'cat_true[]'))
+        ->not->toHaveKey(2);
+    expect(userPermSelectOptions($html, 'cat_false[]'))
+        ->toHaveKey(2, 'Sample Album / Nested Sub Album');
 });
 
 it('trueifies then falsifies direct user_access for a private album', function (): void {

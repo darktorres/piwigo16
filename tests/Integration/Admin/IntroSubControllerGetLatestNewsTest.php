@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-use Piwigo\Tests\Support\LangTestFactory;
-use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Controller\Admin\IntroSubController;
-use Piwigo\Tests\Support\CurrentPathsTestFactory;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Paths;
+use Piwigo\Tests\Support\CurrentConfigTestFactory;
+use Piwigo\Tests\Support\CurrentPathsTestFactory;
+use Piwigo\Tests\Support\LangTestFactory;
 
 /**
  * Piwigo\Controller\Admin\IntroSubController::getLatestNews() -- had zero
@@ -107,7 +107,8 @@ test('getLatestNews returns null when the fresh cache holds a serialized null (n
 
     $result = intronewsInvoke();
 
-    expect($result)->toBeNull();
+    expect($result)
+        ->toBeNull();
 });
 
 test('getLatestNews returns null when the fresh cache holds a malformed shape', function (): void {
@@ -118,12 +119,18 @@ test('getLatestNews returns null when the fresh cache holds a malformed shape', 
     }
     // Missing 'url' and a non-string 'posted' -- a corrupted or
     // hand-edited cache file, not this method's own real shape.
-    file_put_contents($path, serialize(['id' => 1, 'subject' => 'x', 'posted_on' => 1, 'posted' => 42]));
+    file_put_contents($path, serialize([
+        'id' => 1,
+        'subject' => 'x',
+        'posted_on' => 1,
+        'posted' => 42,
+    ]));
     touch($path, time());
 
     $result = intronewsInvoke();
 
-    expect($result)->toBeNull();
+    expect($result)
+        ->toBeNull();
 });
 
 test('getLatestNews attempts a live fetch and returns an empty array when the cache is stale and the upstream host is unreachable', function (): void {
@@ -166,5 +173,6 @@ test('getLatestNews attempts a live fetch and returns an empty array when the ca
 
     $result = intronewsInvoke();
 
-    expect($result)->toBe([]);
+    expect($result)
+        ->toBe([]);
 });

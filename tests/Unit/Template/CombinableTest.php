@@ -2,22 +2,27 @@
 
 declare(strict_types=1);
 
-use Piwigo\Tests\Support\UrlServiceTestFactory;
 use Piwigo\Template\Combinable;
+use Piwigo\Tests\Support\UrlServiceTestFactory;
 
 test('constructor sets id, path and version', function (): void {
     $combinable = new Combinable('my-id', 'themes/default/js/foo.js', '1.2.3');
 
-    expect($combinable->id)->toBe('my-id')
-        ->and($combinable->path)->toBe('themes/default/js/foo.js')
-        ->and($combinable->version)->toBe('1.2.3');
+    expect($combinable->id)
+        ->toBe('my-id')
+        ->and($combinable->path)
+        ->toBe('themes/default/js/foo.js')
+        ->and($combinable->version)
+        ->toBe('1.2.3');
 });
 
 test('constructor defaults version to 0 and is_template to false', function (): void {
     $combinable = new Combinable('my-id', 'themes/default/js/foo.js');
 
-    expect($combinable->version)->toBe('0')
-        ->and($combinable->is_template)->toBeFalse();
+    expect($combinable->version)
+        ->toBe('0')
+        ->and($combinable->is_template)
+        ->toBeFalse();
 });
 
 test('a null path leaves path unset (well-known path filled in later)', function (): void {
@@ -27,7 +32,8 @@ test('a null path leaves path unset (well-known path filled in later)', function
     // ?string $path = null default -- isset() on a null property value is
     // false regardless, which is exactly what this test verifies (a
     // well-known path gets filled in later by ScriptLoader::fill_well_known()).
-    expect(isset($combinable->path))->toBeFalse();
+    expect(isset($combinable->path))
+        ->toBeFalse();
 });
 
 test('set_path is a no-op for an empty path', function (): void {
@@ -36,7 +42,8 @@ test('set_path is a no-op for an empty path', function (): void {
     $combinable->set_path('');
     $combinable->set_path(null);
 
-    expect($combinable->path)->toBe('themes/default/js/foo.js');
+    expect($combinable->path)
+        ->toBe('themes/default/js/foo.js');
 });
 
 test('set_path overwrites a non-empty path', function (): void {
@@ -44,7 +51,8 @@ test('set_path overwrites a non-empty path', function (): void {
 
     $combinable->set_path('themes/default/js/bar.js');
 
-    expect($combinable->path)->toBe('themes/default/js/bar.js');
+    expect($combinable->path)
+        ->toBe('themes/default/js/bar.js');
 });
 
 test('is_remote is true for an absolute URL', function (): void {

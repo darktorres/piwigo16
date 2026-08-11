@@ -15,13 +15,14 @@ use Psr\Http\Server\RequestHandlerInterface;
  */
 function tracingMiddleware(string $label, ArrayObject $trace): MiddlewareInterface
 {
-    return new readonly class ($label, $trace) implements MiddlewareInterface {
+    return new readonly class($label, $trace) implements MiddlewareInterface {
         /**
          * @param ArrayObject<int, string> $trace
          */
-        public function __construct(private string $label, private ArrayObject $trace)
-        {
-        }
+        public function __construct(
+            private string $label,
+            private ArrayObject $trace
+        ) {}
 
         #[Override]
         public function process(ServerRequestInterface $request, RequestHandlerInterface $handler): ResponseInterface
@@ -40,13 +41,13 @@ function tracingMiddleware(string $label, ArrayObject $trace): MiddlewareInterfa
  */
 function terminalHandler(ArrayObject $trace): RequestHandlerInterface
 {
-    return new readonly class ($trace) implements RequestHandlerInterface {
+    return new readonly class($trace) implements RequestHandlerInterface {
         /**
          * @param ArrayObject<int, string> $trace
          */
-        public function __construct(private ArrayObject $trace)
-        {
-        }
+        public function __construct(
+            private ArrayObject $trace
+        ) {}
 
         #[Override]
         public function handle(ServerRequestInterface $request): ResponseInterface
@@ -67,8 +68,10 @@ test('runs middleware in order, then the fallback, then unwinds in reverse', fun
 
     $response = $pipeline->handle(new ServerRequest('GET', '/'));
 
-    expect((string) $response->getBody())->toBe('terminal');
-    expect((array) $trace)->toBe(['before:a', 'before:b', 'fallback', 'after:b', 'after:a']);
+    expect((string) $response->getBody())
+        ->toBe('terminal');
+    expect((array) $trace)
+        ->toBe(['before:a', 'before:b', 'fallback', 'after:b', 'after:a']);
 });
 
 test('calls the fallback directly when there is no middleware', function (): void {
@@ -77,6 +80,8 @@ test('calls the fallback directly when there is no middleware', function (): voi
 
     $response = $pipeline->handle(new ServerRequest('GET', '/'));
 
-    expect((string) $response->getBody())->toBe('terminal');
-    expect((array) $trace)->toBe(['fallback']);
+    expect((string) $response->getBody())
+        ->toBe('terminal');
+    expect((array) $trace)
+        ->toBe(['fallback']);
 });

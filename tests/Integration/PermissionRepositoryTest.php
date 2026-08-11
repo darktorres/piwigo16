@@ -4,14 +4,14 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Integration;
 
-use Override;
-use Piwigo\Core\Kernel;
-use LogicException;
-use Piwigo\Db\EntityManagerFactory;
 use Doctrine\DBAL\Connection;
-use Piwigo\Config\CurrentConfig;
+use LogicException;
+use Override;
 use Piwigo\Config\ConfigLoader;
+use Piwigo\Config\CurrentConfig;
+use Piwigo\Core\Kernel;
 use Piwigo\Db\DbConnection;
+use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Permission\PermissionRepository;
 
 /**
@@ -68,55 +68,55 @@ final class PermissionRepositoryTest extends IntegrationTestCase
         // SQL text (unlike a bound parameter, which the driver coerces
         // implicitly) is rejected outright by Postgres.
         $visibleLiteral = $this->dbDriver === 'pgsql' ? 'true' : '1';
-        $this->conn->executeStatement('UPDATE ' . 'categories' . " SET status = 'public', visible = {$visibleLiteral}");
-        $this->conn->executeStatement('DELETE FROM ' . 'user_access');
-        $this->conn->executeStatement('DELETE FROM ' . 'group_access');
+        $this->conn->executeStatement('UPDATE categories' . " SET status = 'public', visible = {$visibleLiteral}");
+        $this->conn->executeStatement('DELETE FROM user_access');
+        $this->conn->executeStatement('DELETE FROM group_access');
         parent::tearDown();
     }
 
-    public function test_find_private_category_ids_is_empty_against_the_unmodified_fixture(): void
+    public function testFindPrivateCategoryIdsIsEmptyAgainstTheUnmodifiedFixture(): void
     {
         self::assertSame([], $this->repo->findPrivateCategoryIds());
     }
 
-    public function test_find_private_category_ids_reflects_a_private_category(): void
+    public function testFindPrivateCategoryIdsReflectsAPrivateCategory(): void
     {
-        $this->conn->executeStatement('UPDATE ' . 'categories' . " SET status = 'private' WHERE id = 1");
+        $this->conn->executeStatement('UPDATE categories' . " SET status = 'private' WHERE id = 1");
 
         self::assertSame([1], $this->repo->findPrivateCategoryIds());
     }
 
-    public function test_find_locked_category_ids_is_empty_against_the_unmodified_fixture(): void
+    public function testFindLockedCategoryIdsIsEmptyAgainstTheUnmodifiedFixture(): void
     {
         self::assertSame([], $this->repo->findLockedCategoryIds());
     }
 
-    public function test_find_locked_category_ids_reflects_an_invisible_category(): void
+    public function testFindLockedCategoryIdsReflectsAnInvisibleCategory(): void
     {
         $visibleLiteral = $this->dbDriver === 'pgsql' ? 'false' : '0';
-        $this->conn->executeStatement('UPDATE ' . 'categories' . " SET visible = {$visibleLiteral} WHERE id = 2");
+        $this->conn->executeStatement('UPDATE categories' . " SET visible = {$visibleLiteral} WHERE id = 2");
 
         self::assertSame([2], $this->repo->findLockedCategoryIds());
     }
 
-    public function test_find_directly_authorized_category_ids_is_empty_for_an_unauthorized_user(): void
+    public function testFindDirectlyAuthorizedCategoryIdsIsEmptyForAnUnauthorizedUser(): void
     {
         self::assertSame([], $this->repo->findDirectlyAuthorizedCategoryIds(2));
     }
 
-    public function test_find_directly_authorized_category_ids_reflects_a_user_access_row(): void
+    public function testFindDirectlyAuthorizedCategoryIdsReflectsAUserAccessRow(): void
     {
         $this->conn->executeStatement(
-            'INSERT INTO ' . 'user_access' . ' (user_id, cat_id) VALUES (2, 1)'
+            'INSERT INTO user_access (user_id, cat_id) VALUES (2, 1)'
         );
 
         self::assertSame([1], $this->repo->findDirectlyAuthorizedCategoryIds(2));
     }
 
-    public function test_delete_user_access_removes_only_the_given_categories(): void
+    public function testDeleteUserAccessRemovesOnlyTheGivenCategories(): void
     {
         $this->conn->executeStatement(
-            'INSERT INTO ' . 'user_access' . ' (user_id, cat_id) VALUES (2, 1), (2, 2)'
+            'INSERT INTO user_access (user_id, cat_id) VALUES (2, 1), (2, 2)'
         );
 
         $this->repo->deleteUserAccess(2, [1]);
@@ -124,10 +124,10 @@ final class PermissionRepositoryTest extends IntegrationTestCase
         self::assertSame([2], $this->repo->findDirectlyAuthorizedCategoryIds(2));
     }
 
-    public function test_delete_user_access_with_an_empty_id_list_does_nothing(): void
+    public function testDeleteUserAccessWithAnEmptyIdListDoesNothing(): void
     {
         $this->conn->executeStatement(
-            'INSERT INTO ' . 'user_access' . ' (user_id, cat_id) VALUES (2, 1)'
+            'INSERT INTO user_access (user_id, cat_id) VALUES (2, 1)'
         );
 
         $this->repo->deleteUserAccess(2, []);
@@ -135,46 +135,52 @@ final class PermissionRepositoryTest extends IntegrationTestCase
         self::assertSame([1], $this->repo->findDirectlyAuthorizedCategoryIds(2));
     }
 
-    public function test_find_granted_group_ids_by_category_groups_rows_by_cat_id(): void
+    public function testFindGrantedGroupIdsByCategoryGroupsRowsByCatId(): void
     {
         $this->conn->executeStatement(
-            'INSERT INTO ' . 'group_access' . ' (group_id, cat_id) VALUES (1, 1), (2, 1), (3, 2)'
+            'INSERT INTO group_access (group_id, cat_id) VALUES (1, 1), (2, 1), (3, 2)'
         );
 
         self::assertSame(
-            [1 => [1, 2], 2 => [3]],
+            [
+                1 => [1, 2],
+                2 => [3],
+            ],
             $this->repo->findGrantedGroupIdsByCategory([1, 2])
         );
     }
 
-    public function test_find_granted_group_ids_by_category_with_an_empty_id_list_returns_empty(): void
+    public function testFindGrantedGroupIdsByCategoryWithAnEmptyIdListReturnsEmpty(): void
     {
         self::assertSame([], $this->repo->findGrantedGroupIdsByCategory([]));
     }
 
-    public function test_find_granted_user_ids_by_category_groups_rows_by_cat_id(): void
+    public function testFindGrantedUserIdsByCategoryGroupsRowsByCatId(): void
     {
         $this->conn->executeStatement(
-            'INSERT INTO ' . 'user_access' . ' (user_id, cat_id) VALUES (2, 1), (3, 1), (2, 2)'
+            'INSERT INTO user_access (user_id, cat_id) VALUES (2, 1), (3, 1), (2, 2)'
         );
 
         self::assertSame(
-            [1 => [2, 3], 2 => [2]],
+            [
+                1 => [2, 3],
+                2 => [2],
+            ],
             $this->repo->findGrantedUserIdsByCategory([1, 2])
         );
     }
 
-    public function test_find_granted_user_ids_by_category_with_an_empty_id_list_returns_empty(): void
+    public function testFindGrantedUserIdsByCategoryWithAnEmptyIdListReturnsEmpty(): void
     {
         self::assertSame([], $this->repo->findGrantedUserIdsByCategory([]));
     }
 
-    public function test_find_private_category_ids_among_with_an_empty_id_list_returns_empty(): void
+    public function testFindPrivateCategoryIdsAmongWithAnEmptyIdListReturnsEmpty(): void
     {
         self::assertSame([], $this->repo->findPrivateCategoryIdsAmong([]));
     }
 
-    public function test_mass_insert_user_access_with_no_inserts_does_nothing(): void
+    public function testMassInsertUserAccessWithNoInsertsDoesNothing(): void
     {
         $this->repo->massInsertUserAccess([]);
 

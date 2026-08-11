@@ -22,10 +22,14 @@ function fullCommentSummaryRow(): array
 test('fromRow narrows every column to its real type', function (): void {
     $summary = CommentSummary::fromRow(fullCommentSummaryRow());
 
-    expect($summary->id)->toEqual(CommentId::from(4))
-        ->and($summary->date)->toBe('2026-08-01 00:00:00')
-        ->and($summary->author)->toBe('power_user')
-        ->and($summary->content)->toBe('I keep coming back to this one.');
+    expect($summary->id)
+        ->toEqual(CommentId::from(4))
+        ->and($summary->date)
+        ->toBe('2026-08-01 00:00:00')
+        ->and($summary->author)
+        ->toBe('power_user')
+        ->and($summary->content)
+        ->toBe('I keep coming back to this one.');
 });
 
 test('fromRow keeps an already-hydrated SqlDateTime instance as-is', function (): void {
@@ -45,9 +49,12 @@ test('fromRow defaults every nullable column to null when absent', function (): 
 
     $summary = CommentSummary::fromRow($row);
 
-    expect($summary->date)->toBeNull()
-        ->and($summary->author)->toBeNull()
-        ->and($summary->content)->toBeNull();
+    expect($summary->date)
+        ->toBeNull()
+        ->and($summary->author)
+        ->toBeNull()
+        ->and($summary->content)
+        ->toBeNull();
 });
 
 test('fromRow throws when id is missing', function (): void {
@@ -79,10 +86,11 @@ test('fromRow throws with the real debug type of a non-null but invalid id', fun
 test('toArray round-trips the exact same DB column shape fromRow narrowed', function (): void {
     $roundTripped = CommentSummary::fromRow(fullCommentSummaryRow())->toArray();
 
-    expect($roundTripped)->toBe([
-        'id' => 4,
-        'date' => '2026-08-01 00:00:00',
-        'author' => 'power_user',
-        'content' => 'I keep coming back to this one.',
-    ]);
+    expect($roundTripped)
+        ->toBe([
+            'id' => 4,
+            'date' => '2026-08-01 00:00:00',
+            'author' => 'power_user',
+            'content' => 'I keep coming back to this one.',
+        ]);
 });

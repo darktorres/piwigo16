@@ -5,8 +5,8 @@ declare(strict_types=1);
 use Piwigo\Core\DateHelper;
 use Piwigo\Core\DefaultLanguageProviderInterface;
 use Piwigo\Core\Kernel;
-use Piwigo\Tests\Support\LangTestFactory;
 use Piwigo\Core\Paths;
+use Piwigo\Tests\Support\LangTestFactory;
 use Piwigo\Tests\Support\TranslatorTestFactory;
 
 /**
@@ -28,9 +28,29 @@ use Piwigo\Tests\Support\TranslatorTestFactory;
 beforeEach(function (): void {
     Kernel::boot(Paths::fromRoot(sys_get_temp_dir()));
     LangTestFactory::get()->loadArray([
-        'month' => [1 => 'January', 2 => 'February', 3 => 'March', 4 => 'April', 5 => 'May', 6 => 'June',
-            7 => 'July', 8 => 'August', 9 => 'September', 10 => 'October', 11 => 'November', 12 => 'December'],
-        'day' => [0 => 'Sunday', 1 => 'Monday', 2 => 'Tuesday', 3 => 'Wednesday', 4 => 'Thursday', 5 => 'Friday', 6 => 'Saturday'],
+        'month' => [
+            1 => 'January',
+            2 => 'February',
+            3 => 'March',
+            4 => 'April',
+            5 => 'May',
+            6 => 'June',
+            7 => 'July',
+            8 => 'August',
+            9 => 'September',
+            10 => 'October',
+            11 => 'November',
+            12 => 'December',
+        ],
+        'day' => [
+            0 => 'Sunday',
+            1 => 'Monday',
+            2 => 'Tuesday',
+            3 => 'Wednesday',
+            4 => 'Thursday',
+            5 => 'Friday',
+            6 => 'Saturday',
+        ],
     ]);
 });
 
@@ -161,9 +181,11 @@ test('str2DateTime treats an explicitly-empty format the same as no format at al
     // '2024-06-15' and would return false instead of a real DateTime.
     $date = DateHelper::str2DateTime('2024-06-15', '');
 
-    expect($date)->not->toBeFalse();
+    expect($date)
+        ->not->toBeFalse();
     assert($date instanceof DateTime);
-    expect($date->format('Y-m-d'))->toBe('2024-06-15');
+    expect($date->format('Y-m-d'))
+        ->toBe('2024-06-15');
 });
 
 test('str2DateTime string-casts a numeric original before formatting with an explicit format', function (): void {
@@ -172,9 +194,11 @@ test('str2DateTime string-casts a numeric original before formatting with an exp
     // would TypeError under this file's own strict_types=1.
     $date = DateHelper::str2DateTime(20240615, '!Ymd');
 
-    expect($date)->not->toBeFalse();
+    expect($date)
+        ->not->toBeFalse();
     assert($date instanceof DateTime);
-    expect($date->format('Y-m-d'))->toBe('2024-06-15');
+    expect($date->format('Y-m-d'))
+        ->toBe('2024-06-15');
 });
 
 test('str2DateTime resets unspecified time fields to midnight via the "!" format-reset prefix', function (): void {
@@ -184,9 +208,11 @@ test('str2DateTime resets unspecified time fields to midnight via the "!" format
     // never exactly '00:00:00' in practice.
     $date = DateHelper::str2DateTime('2024-06-15', 'Y-m-d');
 
-    expect($date)->not->toBeFalse();
+    expect($date)
+        ->not->toBeFalse();
     assert($date instanceof DateTime);
-    expect($date->format('H:i:s'))->toBe('00:00:00');
+    expect($date->format('H:i:s'))
+        ->toBe('00:00:00');
 });
 
 test('str2DateTime string-casts before tokenizing an original that reaches the unknown-format branch', function (): void {
@@ -216,9 +242,11 @@ test('str2DateTime treats a pure-digit int original with no format as a Unix tim
     // false.
     $date = DateHelper::str2DateTime(1718409600);
 
-    expect($date)->not->toBeFalse();
+    expect($date)
+        ->not->toBeFalse();
     assert($date instanceof DateTime);
-    expect($date->format('Y-m-d H:i:s'))->toBe('2024-06-15 00:00:00');
+    expect($date->format('Y-m-d H:i:s'))
+        ->toBe('2024-06-15 00:00:00');
 });
 
 test('str2DateTime returns false for exactly 2 unknown-format tokens, one short of a full date', function (): void {
@@ -233,9 +261,11 @@ test('str2DateTime defaults hour/minute/second to exactly 0 when only year/month
     // on its own is enough for line 59.
     $date = DateHelper::str2DateTime('2024-06-15');
 
-    expect($date)->not->toBeFalse();
+    expect($date)
+        ->not->toBeFalse();
     assert($date instanceof DateTime);
-    expect($date->format('H:i:s'))->toBe('00:00:00');
+    expect($date->format('H:i:s'))
+        ->toBe('00:00:00');
 });
 
 test('str2DateTime keeps a real hour token, not overwriting it with the default 0', function (): void {
@@ -244,9 +274,11 @@ test('str2DateTime keeps a real hour token, not overwriting it with the default 
     // (minute's own default 0 -> 1, proven by the trailing :00 here).
     $date = DateHelper::str2DateTime('2024-06-15 14');
 
-    expect($date)->not->toBeFalse();
+    expect($date)
+        ->not->toBeFalse();
     assert($date instanceof DateTime);
-    expect($date->format('H:i:s'))->toBe('14:00:00');
+    expect($date->format('H:i:s'))
+        ->toBe('14:00:00');
 });
 
 test('str2DateTime keeps a real minute token, not overwriting it with the default 0', function (): void {
@@ -255,9 +287,11 @@ test('str2DateTime keeps a real minute token, not overwriting it with the defaul
     // default 0 -> 1, proven by the trailing :00 here).
     $date = DateHelper::str2DateTime('2024-06-15 14:30');
 
-    expect($date)->not->toBeFalse();
+    expect($date)
+        ->not->toBeFalse();
     assert($date instanceof DateTime);
-    expect($date->format('H:i:s'))->toBe('14:30:00');
+    expect($date->format('H:i:s'))
+        ->toBe('14:30:00');
 });
 
 test('str2DateTime keeps a real, non-zero second token, not overwriting it or reusing the minute value', function (): void {
@@ -268,9 +302,11 @@ test('str2DateTime keeps a real, non-zero second token, not overwriting it or re
     // "real second" apart from "minute value reused as the second".
     $date = DateHelper::str2DateTime('2024-06-15 14:30:45');
 
-    expect($date)->not->toBeFalse();
+    expect($date)
+        ->not->toBeFalse();
     assert($date instanceof DateTime);
-    expect($date->format('H:i:s'))->toBe('14:30:45');
+    expect($date->format('H:i:s'))
+        ->toBe('14:30:45');
 });
 
 test('formatFromto returns the untranslated "N/A" key when either date is unparseable', function (): void {
@@ -304,7 +340,7 @@ test('formatDate uses the current user\'s own language as the ICU locale, not al
     // be AppInfo::DEFAULT_LANGUAGE ('en_UK') would keep producing
     // English month/day names even with a real, present current-user
     // language.
-    LangTestFactory::get()->setDefaultLanguageProvider(new class implements DefaultLanguageProviderInterface {
+    LangTestFactory::get()->setDefaultLanguageProvider(new class() implements DefaultLanguageProviderInterface {
         public function getDefaultLanguage(): string
         {
             return 'en_UK';

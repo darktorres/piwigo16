@@ -4,8 +4,9 @@ declare(strict_types=1);
 
 use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
 
-
-/** @return array{name: ?string, author: ?string, level: int, comment: ?string, date_creation: ?string} */
+/**
+ * @return array{name: ?string, author: ?string, level: int, comment: ?string, date_creation: ?string}
+ */
 function batchManagerUnitImageRow(int $imageId): array
 {
     $db = H::connect();
@@ -30,7 +31,9 @@ function batchManagerUnitImageRow(int $imageId): array
 
 it('renders the per-image thumbnail grid for a real category filter', function (): void {
     $page = H::loginAsAdmin($this);
-    $album = H::wsCall($page, 'pwg.categories.add', ['name' => 'Batch Unit Grid Album ' . uniqid()]);
+    $album = H::wsCall($page, 'pwg.categories.add', [
+        'name' => 'Batch Unit Grid Album ' . uniqid(),
+    ]);
     $albumResult = $album['result'] ?? null;
     if (! is_array($albumResult) || ! is_numeric($albumResult['id'] ?? null)) {
         throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($album, true));
@@ -64,7 +67,9 @@ it('renders the per-image thumbnail grid for a real category filter', function (
 
 it('submits the unit-mode edit form for a whole_set selection and mass-updates every field', function (): void {
     $page = H::loginAsAdmin($this);
-    $album = H::wsCall($page, 'pwg.categories.add', ['name' => 'Batch Unit Submit Album ' . uniqid()]);
+    $album = H::wsCall($page, 'pwg.categories.add', [
+        'name' => 'Batch Unit Submit Album ' . uniqid(),
+    ]);
     $albumResult = $album['result'] ?? null;
     if (! is_array($albumResult) || ! is_numeric($albumResult['id'] ?? null)) {
         throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($album, true));
@@ -101,7 +106,9 @@ it('submits the unit-mode edit form for a whole_set selection and mass-updates e
 
 it('accepts a single non-array tag string for the per-image tags field', function (): void {
     $page = H::loginAsAdmin($this);
-    $album = H::wsCall($page, 'pwg.categories.add', ['name' => 'Batch Unit Scalar Tag Album ' . uniqid()]);
+    $album = H::wsCall($page, 'pwg.categories.add', [
+        'name' => 'Batch Unit Scalar Tag Album ' . uniqid(),
+    ]);
     $albumResult = $album['result'] ?? null;
     if (! is_array($albumResult) || ! is_numeric($albumResult['id'] ?? null)) {
         throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($album, true));
@@ -155,7 +162,9 @@ it('accepts nb_photos_deleted/whole_set/selection[] as alternative ways to seed 
 
 it('highlights STORAGE_CATEGORY and honors a category-specific image_order for a physically-owning album filter', function (): void {
     $page = H::loginAsAdmin($this);
-    $album = H::wsCall($page, 'pwg.categories.add', ['name' => 'Batch Unit Storage Cat Album ' . uniqid()]);
+    $album = H::wsCall($page, 'pwg.categories.add', [
+        'name' => 'Batch Unit Storage Cat Album ' . uniqid(),
+    ]);
     $albumResult = $album['result'] ?? null;
     if (! is_array($albumResult) || ! is_numeric($albumResult['id'] ?? null)) {
         throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($album, true));
@@ -199,7 +208,9 @@ it('strips HTML tags from the description when HTML descriptions are disabled', 
 
     try {
         $page = H::loginAsAdmin($this);
-        $album = H::wsCall($page, 'pwg.categories.add', ['name' => 'Batch Unit HTML Album ' . uniqid()]);
+        $album = H::wsCall($page, 'pwg.categories.add', [
+            'name' => 'Batch Unit HTML Album ' . uniqid(),
+        ]);
         $albumResult = $album['result'] ?? null;
         if (! is_array($albumResult) || ! is_numeric($albumResult['id'] ?? null)) {
             throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($album, true));
@@ -266,7 +277,9 @@ it('falls back to 5 images per page when the configured value is not 5/10/50 and
         // setup as "renders the per-image thumbnail grid...” above) is
         // needed so $elements is non-empty and the pagination widget
         // actually renders.
-        $album = H::wsCall($page, 'pwg.categories.add', ['name' => 'Batch Unit Per Page Album ' . uniqid()]);
+        $album = H::wsCall($page, 'pwg.categories.add', [
+            'name' => 'Batch Unit Per Page Album ' . uniqid(),
+        ]);
         $albumResult = $album['result'] ?? null;
         if (! is_array($albumResult) || ! is_numeric($albumResult['id'] ?? null)) {
             throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($album, true));
@@ -304,7 +317,9 @@ it('falls back to 5 images per page when the configured value is not 5/10/50 and
 
 it('applies the duplicates-prefilter ORDER BY override ("file, id") when the session prefilter is "duplicates"', function (): void {
     $page = H::loginAsAdmin($this);
-    $album = H::wsCall($page, 'pwg.categories.add', ['name' => 'Batch Unit Dup Album ' . uniqid()]);
+    $album = H::wsCall($page, 'pwg.categories.add', [
+        'name' => 'Batch Unit Dup Album ' . uniqid(),
+    ]);
     $albumResult = $album['result'] ?? null;
     if (! is_array($albumResult) || ! is_numeric($albumResult['id'] ?? null)) {
         throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($album, true));
@@ -354,8 +369,10 @@ it('applies the duplicates-prefilter ORDER BY override ("file, id") when the ses
     H::assertNoServerErrors($page, 'batch_manager unit-mode duplicates-prefilter ORDER BY');
 
     $html = H::rawWebpage($page)->content();
-    expect($html)->toContain('value="Batch Unit Dup A"');
-    expect($html)->toContain('value="Batch Unit Dup B"');
+    expect($html)
+        ->toContain('value="Batch Unit Dup A"');
+    expect($html)
+        ->toContain('value="Batch Unit Dup B"');
 
     // Real behavioral check of the ORDER BY itself, not just that the page
     // didn't 500: both rows tie on `file` (identical basename), so "file,
@@ -363,16 +380,22 @@ it('applies the duplicates-prefilter ORDER BY override ("file, id") when the ses
     // lower id, first) must render before B.
     $posA = strpos($html, 'value="Batch Unit Dup A"');
     $posB = strpos($html, 'value="Batch Unit Dup B"');
-    expect($imageIdA)->toBeLessThan($imageIdB);
-    expect($posA)->not->toBeFalse();
-    expect($posB)->not->toBeFalse();
+    expect($imageIdA)
+        ->toBeLessThan($imageIdB);
+    expect($posA)
+        ->not->toBeFalse();
+    expect($posB)
+        ->not->toBeFalse();
     assert(is_int($posA) && is_int($posB));
-    expect($posA)->toBeLessThan($posB);
+    expect($posA)
+        ->toBeLessThan($posB);
 });
 
 it('sets the "see-out" jump-to link when the current admin is authorized for the photo\'s only category', function (): void {
     $page = H::loginAsAdmin($this);
-    $album = H::wsCall($page, 'pwg.categories.add', ['name' => 'Batch Unit Jumpto Album ' . uniqid()]);
+    $album = H::wsCall($page, 'pwg.categories.add', [
+        'name' => 'Batch Unit Jumpto Album ' . uniqid(),
+    ]);
     $albumResult = $album['result'] ?? null;
     if (! is_array($albumResult) || ! is_numeric($albumResult['id'] ?? null)) {
         throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($album, true));
@@ -417,5 +440,6 @@ it('sets the "see-out" jump-to link when the current admin is authorized for the
     // signal is the exact enabled-variant markup plus the relative
     // picture.php URL, not a leading-slash '/picture' substring.
     $html = H::settledContent($page);
-    expect($html)->toContain('class="see-out" href="picture.php');
+    expect($html)
+        ->toContain('class="see-out" href="picture.php');
 });

@@ -13,7 +13,7 @@ use Symfony\Component\Routing\RouteCollection;
 function loadRouteCollection(): RouteCollection
 {
     $routes = require __DIR__ . '/../../../config/routes.php';
-    if (!$routes instanceof RouteCollection) {
+    if (! $routes instanceof RouteCollection) {
         throw new RuntimeException('config/routes.php must return a RouteCollection');
     }
 
@@ -26,9 +26,10 @@ test('every route has a _controller default naming a loadable class', function (
         $controller = $route->getDefault('_controller');
         $loadable = is_string($controller) && $controller !== ''
             && (class_exists($controller) || interface_exists($controller));
-        if (!$loadable) {
+        if (! $loadable) {
             $missing[] = $name;
         }
     }
-    expect($missing)->toBe([]);
+    expect($missing)
+        ->toBe([]);
 });

@@ -57,7 +57,8 @@ it('renders a working custom-logo <img> on the identification page once the stan
     // confirmed live) -- so this renders as the bare relative "logo.php",
     // resolving against identification.php's own directory (the site root
     // in this deployment).
-    expect($html)->toContain('id="custom-logo" src="logo.php"');
+    expect($html)
+        ->toContain('id="custom-logo" src="logo.php"');
 
     // Not just present in markup -- the src the page actually renders must
     // itself resolve to a working URL, not a raw filesystem path.

@@ -4,29 +4,29 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Integration;
 
-use Override;
 use LogicException;
-use Piwigo\PluginConfig\EventDispatcher;
-use Piwigo\Tests\Support\TemplateTestFactory;
+use Override;
 use Piwigo\Auth\AccessLevelChecker;
-use Piwigo\Tests\Support\UrlServiceTestFactory;
 use Piwigo\Config\ConfigLoader;
 use Piwigo\Config\ConfigService;
 use Piwigo\Config\CurrentConfig;
-use Piwigo\Tests\Support\CurrentConfigTestFactory;
-use Piwigo\Tests\Support\CurrentConfigServiceTestFactory;
-use Piwigo\Tests\Support\CurrentPathsTestFactory;
-use Piwigo\Tests\Support\PageStateTestFactory;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Paths;
 use Piwigo\Core\TelemetrySenderInterface;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Page\PageTailRenderer;
+use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Session\SessionEntity;
 use Piwigo\Session\SessionService;
 use Piwigo\Template\CurrentTemplate;
+use Piwigo\Tests\Support\CurrentConfigServiceTestFactory;
+use Piwigo\Tests\Support\CurrentConfigTestFactory;
+use Piwigo\Tests\Support\CurrentPathsTestFactory;
 use Piwigo\Tests\Support\CurrentUserTestFactory;
+use Piwigo\Tests\Support\PageStateTestFactory;
+use Piwigo\Tests\Support\TemplateTestFactory;
+use Piwigo\Tests\Support\UrlServiceTestFactory;
 use Piwigo\Users\User;
 
 /**
@@ -74,13 +74,17 @@ final class PageTailRendererTest extends IntegrationTestCase
         // RequestBootstrap-only wiring this test never boots.
         CurrentTemplate::current()->set(TemplateTestFactory::build(CurrentPathsTestFactory::get()->root . 'themes', 'default'));
 
-        CurrentUserTestFactory::get()->set(User::fromUserArray(['id' => 2, 'status' => 'guest', 'username' => 'fixture_guest']));
+        CurrentUserTestFactory::get()->set(User::fromUserArray([
+            'id' => 2,
+            'status' => 'guest',
+            'username' => 'fixture_guest',
+        ]));
 
         $_SESSION = [];
 
         $this->renderer = new PageTailRenderer(
             new AccessLevelChecker(CurrentUserTestFactory::get(), CurrentConfigTestFactory::get()),
-            new class implements TelemetrySenderInterface {
+            new class() implements TelemetrySenderInterface {
                 public function send(): void
                 {
                     // No-op: telemetry sending is out of scope for this
@@ -107,7 +111,7 @@ final class PageTailRendererTest extends IntegrationTestCase
         parent::tearDown();
     }
 
-    public function test_render_to_string_includes_the_query_debug_list_when_show_queries_is_enabled(): void
+    public function testRenderToStringIncludesTheQueryDebugListWhenShowQueriesIsEnabled(): void
     {
         CurrentConfigTestFactory::get()->showQueries = true;
         CurrentConfigTestFactory::get()->showGt = false;
@@ -119,7 +123,7 @@ final class PageTailRendererTest extends IntegrationTestCase
         self::assertStringContainsString('SELECT 1 -- pagetailrenderer test query', $output);
     }
 
-    public function test_render_to_string_omits_the_debug_list_when_show_queries_is_disabled(): void
+    public function testRenderToStringOmitsTheDebugListWhenShowQueriesIsDisabled(): void
     {
         CurrentConfigTestFactory::get()->showQueries = false;
         CurrentConfigTestFactory::get()->showGt = false;
@@ -131,7 +135,7 @@ final class PageTailRendererTest extends IntegrationTestCase
         self::assertStringNotContainsString('should-not-appear', $output);
     }
 
-    public function test_render_to_string_includes_generation_time_and_query_count_when_show_gt_is_enabled(): void
+    public function testRenderToStringIncludesGenerationTimeAndQueryCountWhenShowGtIsEnabled(): void
     {
         CurrentConfigTestFactory::get()->showQueries = false;
         CurrentConfigTestFactory::get()->showGt = true;
@@ -148,7 +152,7 @@ final class PageTailRendererTest extends IntegrationTestCase
         self::assertStringContainsString('(7 SQL queries in 1.235 s)', $output);
     }
 
-    public function test_render_to_string_adds_the_mobile_theme_toggle_link_when_mobile_theme_is_active(): void
+    public function testRenderToStringAddsTheMobileThemeToggleLinkWhenMobileThemeIsActive(): void
     {
         CurrentConfigTestFactory::get()->mobileTheme = 'mobile';
         $_SESSION['pwg_mobile_theme'] = true;
@@ -166,7 +170,7 @@ final class PageTailRendererTest extends IntegrationTestCase
         }
     }
 
-    public function test_render_to_string_omits_the_mobile_theme_toggle_link_when_mobile_theme_is_disabled(): void
+    public function testRenderToStringOmitsTheMobileThemeToggleLinkWhenMobileThemeIsDisabled(): void
     {
         CurrentConfigTestFactory::get()->mobileTheme = '';
 

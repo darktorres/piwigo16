@@ -32,7 +32,6 @@ use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
  * Env::testModeIsActive() reads $_SERVER directly, so a plain Unit
  * invocation with the header cleared reaches the real branch).
  */
-
 it('drains the ErrorCollector buffer as JSON when test mode is active', function (): void {
     $body = H::httpBody('__test/errors');
 
@@ -40,27 +39,33 @@ it('drains the ErrorCollector buffer as JSON when test mode is active', function
     if (! is_array($decoded)) {
         throw new RuntimeException('expected a JSON object/array, got: ' . var_export($decoded, true));
     }
-    expect($decoded)->toHaveKey('errors');
+    expect($decoded)
+        ->toHaveKey('errors');
     $errors = $decoded['errors'];
-    expect($errors)->toBeArray();
+    expect($errors)
+        ->toBeArray();
 
     // ErrorCollector::$collected is a static, in-process buffer (see
     // ErrorCollectorTest's own docblock) -- a fresh Apache/PHP-FPM worker
     // handling this bare GET starts with an empty buffer, and nothing in
     // this request's own handling chain should trigger a PHP warning/
     // notice, so a clean request drains to an empty list.
-    expect($errors)->toBe([]);
+    expect($errors)
+        ->toBe([]);
 });
 
 it('returns a real JSON content-type header', function (): void {
     $ch = curl_init(H::baseUrl() . '/__test/errors');
-    expect($ch)->not->toBeFalse();
+    expect($ch)
+        ->not->toBeFalse();
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
     curl_setopt($ch, CURLOPT_HEADER, true);
     curl_setopt($ch, CURLOPT_HTTPHEADER, H::testHeaders());
     $response = curl_exec($ch);
     unset($ch);
-    expect($response)->toBeString();
+    expect($response)
+        ->toBeString();
 
-    expect(strtolower((string) $response))->toContain('content-type: application/json');
+    expect(strtolower((string) $response))
+        ->toContain('content-type: application/json');
 });

@@ -69,7 +69,8 @@ it('rejects a set_permalink submission without a valid CSRF token', function ():
     $db = permalinksDb();
     $permalinkValue = permalinksCategoryPermalink($db, 2);
     H::dbClose($db);
-    expect($permalinkValue)->toBeNull();
+    expect($permalinkValue)
+        ->toBeNull();
 });
 
 it('rejects a delete_permanent request without a valid CSRF token', function (): void {
@@ -104,7 +105,8 @@ it('sets a category permalink, lists it among active permalinks, clears it into 
         // uppercats-narrowing + getCatDisplayNameCache() lines).
         expect($setResult['body'])->toContain($permalink);
 
-        expect(permalinksCategoryPermalink($db, $catId))->toBe($permalink);
+        expect(permalinksCategoryPermalink($db, $catId))
+            ->toBe($permalink);
 
         // set_permalink + an empty permalink value + save=1 -> the
         // PermalinkService::deleteCatPermalink() branch. Since a real
@@ -120,9 +122,11 @@ it('sets a category permalink, lists it among active permalinks, clears it into 
         ]);
         expect($clearResult['status'])->toBe(200);
 
-        expect(permalinksCategoryPermalink($db, $catId))->toBeNull();
+        expect(permalinksCategoryPermalink($db, $catId))
+            ->toBeNull();
 
-        expect(permalinksOldPermalinkCatId($db, $permalink))->toBe($catId);
+        expect(permalinksOldPermalinkCatId($db, $permalink))
+            ->toBe($catId);
 
         // delete_permanent (GET, CSRF-gated) -> PermalinkService::
         // deleteOldPermalinkByValue(), permanently removing the history row.
@@ -132,7 +136,8 @@ it('sets a category permalink, lists it among active permalinks, clears it into 
         );
         expect($deleteResult['status'])->toBe(200);
 
-        expect(permalinksOldPermalinkCatId($db, $permalink))->toBeNull();
+        expect(permalinksOldPermalinkCatId($db, $permalink))
+            ->toBeNull();
     } finally {
         H::dbQuery($db, sprintf('UPDATE categories SET permalink = NULL WHERE id = %d', $catId));
         H::dbQuery($db, sprintf("DELETE FROM old_permalinks WHERE permalink = '%s'", H::dbEscape($db, $permalink)));

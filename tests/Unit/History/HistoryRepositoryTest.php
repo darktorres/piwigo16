@@ -105,7 +105,12 @@ function historyTestInsertLine(int $userId, string $date, string $time): int
     $conn = DbConnection::build();
     $conn->createQueryBuilder()
         ->insert('history')
-        ->values(['date' => ':date', 'time' => ':time', 'user_id' => ':userId', 'IP' => "'127.0.0.1'"])
+        ->values([
+            'date' => ':date',
+            'time' => ':time',
+            'user_id' => ':userId',
+            'IP' => "'127.0.0.1'",
+        ])
         ->setParameter('date', $date)
         ->setParameter('time', $time)
         ->setParameter('userId', $userId)
@@ -116,7 +121,11 @@ function historyTestInsertLine(int $userId, string $date, string $time): int
 
 function historyTestMinId(Connection $conn): int
 {
-    $value = $conn->createQueryBuilder()->select('MIN(id)')->from('history')->executeQuery()->fetchOne();
+    $value = $conn->createQueryBuilder()
+        ->select('MIN(id)')
+        ->from('history')
+        ->executeQuery()
+        ->fetchOne();
 
     return is_numeric($value) ? (int) $value : 0;
 }
@@ -126,8 +135,13 @@ function historyTestInsertSummary(int $year, ?int $month, ?int $day, ?int $hour,
     DbConnection::build()->createQueryBuilder()
         ->insert('history_summary')
         ->values([
-            'year' => ':year', 'month' => ':month', 'day' => ':day', 'hour' => ':hour',
-            'nb_pages' => ':nbPages', 'history_id_from' => ':idFrom', 'history_id_to' => ':idTo',
+            'year' => ':year',
+            'month' => ':month',
+            'day' => ':day',
+            'hour' => ':hour',
+            'nb_pages' => ':nbPages',
+            'history_id_from' => ':idFrom',
+            'history_id_to' => ':idTo',
         ])
         ->setParameter('year', $year)
         ->setParameter('month', $month)
@@ -153,7 +167,8 @@ function historyTestFetchSummary(Connection $conn, int $year, ?int $month, ?int 
     $qb->andWhere($day === null ? 'day IS NULL' : 'day = ' . $day);
     $qb->andWhere($hour === null ? 'hour IS NULL' : 'hour = ' . $hour);
 
-    $row = $qb->executeQuery()->fetchAssociative();
+    $row = $qb->executeQuery()
+        ->fetchAssociative();
     if (! is_array($row)) {
         throw new RuntimeException('expected a real summary row');
     }
@@ -163,16 +178,17 @@ function historyTestFetchSummary(Connection $conn, int $year, ?int $month, ?int 
 
 function historyTestClearHistory(): void
 {
-    DbConnection::build()->executeStatement('DELETE FROM ' . 'history');
+    DbConnection::build()->executeStatement('DELETE FROM history');
 }
 
 function historyTestClearSummary(): void
 {
-    DbConnection::build()->executeStatement('DELETE FROM ' . 'history_summary');
+    DbConnection::build()->executeStatement('DELETE FROM history_summary');
 }
 
 test('findLastSummaryWithHistoryIdTo() returns null when empty', function (): void {
-    expect(historyTestRepo()->findLastSummaryWithHistoryIdTo())->toBeNull();
+    expect(historyTestRepo()->findLastSummaryWithHistoryIdTo())
+        ->toBeNull();
 });
 
 test('findLastSummaryWithHistoryIdTo() returns the highest', function (): void {
@@ -180,24 +196,32 @@ test('findLastSummaryWithHistoryIdTo() returns the highest', function (): void {
     historyTestInsertSummary(2026, 7, 12, 4, 5, 101, 200);
 
     try {
-        $found = historyTestRepo()->findLastSummaryWithHistoryIdTo();
+        $found = historyTestRepo()
+            ->findLastSummaryWithHistoryIdTo();
 
-        expect($found)->not->toBeNull();
+        expect($found)
+            ->not->toBeNull();
         if ($found === null) {
             throw new RuntimeException('unreachable');
         }
-        expect($found->historyIdTo)->toBe(200)
-            ->and($found->year)->toBe(2026)
-            ->and($found->month)->toBe(7)
-            ->and($found->day)->toBe(12)
-            ->and($found->hour)->toBe(4);
+        expect($found->historyIdTo)
+            ->toBe(200)
+            ->and($found->year)
+            ->toBe(2026)
+            ->and($found->month)
+            ->toBe(7)
+            ->and($found->day)
+            ->toBe(12)
+            ->and($found->hour)
+            ->toBe(4);
     } finally {
         historyTestClearSummary();
     }
 });
 
 test('findMinHistoryId() returns null when empty', function (): void {
-    expect(historyTestRepo()->findMinHistoryId())->toBeNull();
+    expect(historyTestRepo()->findMinHistoryId())
+        ->toBeNull();
 });
 
 test('findMinHistoryId() returns the lowest', function (): void {
@@ -206,7 +230,8 @@ test('findMinHistoryId() returns the lowest', function (): void {
     $conn = DbConnection::build();
 
     try {
-        expect(historyTestRepo()->findMinHistoryId())->toBe(historyTestMinId($conn));
+        expect(historyTestRepo()->findMinHistoryId())
+            ->toBe(historyTestMinId($conn));
     } finally {
         historyTestClearHistory();
     }
@@ -218,9 +243,11 @@ test('findGroupedCountsSince() buckets by date and hour, tracking the real min/m
     historyTestInsertLine(1, '2026-07-12', '04:00:00');
 
     try {
-        $groups = historyTestRepo()->findGroupedCountsSince(0, null);
+        $groups = historyTestRepo()
+            ->findGroupedCountsSince(0, null);
 
-        expect($groups)->toHaveCount(2)
+        expect($groups)
+            ->toHaveCount(2)
             ->and($groups[0]->date)->toBe('2026-07-12')
             ->and($groups[0]->hour)->toBe(3)
             ->and($groups[0]->nbPages)->toBe(2)
@@ -246,10 +273,12 @@ test('findGroupedCountsSince() sorts buckets by date then hour, not just row/ins
     historyTestInsertLine(1, '2026-07-12', '02:00:00');
 
     try {
-        $groups = historyTestRepo()->findGroupedCountsSince(0, null);
+        $groups = historyTestRepo()
+            ->findGroupedCountsSince(0, null);
 
         $keys = array_map(static fn ($g) => $g->date . ' ' . $g->hour, $groups);
-        expect($keys)->toBe(['2026-07-12 2', '2026-07-12 5', '2026-07-13 1']);
+        expect($keys)
+            ->toBe(['2026-07-12 2', '2026-07-12 5', '2026-07-13 1']);
     } finally {
         historyTestClearHistory();
     }
@@ -266,9 +295,11 @@ test('findGroupedCountsSince() extracts a real 2-digit hour, not just a single l
     historyTestInsertLine(1, '2026-07-12', '23:10:00');
 
     try {
-        $groups = historyTestRepo()->findGroupedCountsSince(0, null);
+        $groups = historyTestRepo()
+            ->findGroupedCountsSince(0, null);
 
-        expect($groups)->toHaveCount(1)
+        expect($groups)
+            ->toHaveCount(1)
             ->and($groups[0]->hour)->toBe(23);
     } finally {
         historyTestClearHistory();
@@ -280,9 +311,11 @@ test('findGroupedCountsSince() respects the max id', function (): void {
     historyTestInsertLine(1, '2026-07-12', '04:00:00');
 
     try {
-        $groups = historyTestRepo()->findGroupedCountsSince(0, $id1);
+        $groups = historyTestRepo()
+            ->findGroupedCountsSince(0, $id1);
 
-        expect($groups)->toHaveCount(1)
+        expect($groups)
+            ->toHaveCount(1)
             ->and($groups[0]->hour)->toBe(3);
     } finally {
         historyTestClearHistory();
@@ -295,7 +328,8 @@ test('findSummaryRowsForHierarchy() returns every existing level', function (): 
     historyTestInsertSummary(2026, 8, null, null, 10, 40, 50); // different month -- should not match
 
     try {
-        $rows = historyTestRepo()->findSummaryRowsForHierarchy(2026, 7, 12, 3);
+        $rows = historyTestRepo()
+            ->findSummaryRowsForHierarchy(2026, 7, 12, 3);
 
         $keys = array_map(
             static fn (HistorySummaryCount $r): string => $r->year . '-' . ($r->month ?? 'x') . '-' . ($r->day ?? 'x') . '-' . ($r->hour ?? 'x'),
@@ -303,7 +337,8 @@ test('findSummaryRowsForHierarchy() returns every existing level', function (): 
         );
         sort($keys);
 
-        expect($keys)->toBe(['2026-7-x-x', '2026-x-x-x']);
+        expect($keys)
+            ->toBe(['2026-7-x-x', '2026-x-x-x']);
     } finally {
         historyTestClearSummary();
     }
@@ -319,7 +354,8 @@ test('findSummaryRowsForHierarchy() with a null day/hour only reaches the shallo
     historyTestInsertSummary(2026, 7, 12, null, 10, 31, 40); // year+month+day -- should not match (day given as null here)
 
     try {
-        $rows = historyTestRepo()->findSummaryRowsForHierarchy(2026, 7, null, null);
+        $rows = historyTestRepo()
+            ->findSummaryRowsForHierarchy(2026, 7, null, null);
 
         $keys = array_map(
             static fn (HistorySummaryCount $r): string => $r->year . '-' . ($r->month ?? 'x') . '-' . ($r->day ?? 'x') . '-' . ($r->hour ?? 'x'),
@@ -327,7 +363,8 @@ test('findSummaryRowsForHierarchy() with a null day/hour only reaches the shallo
         );
         sort($keys);
 
-        expect($keys)->toBe(['2026-7-x-x', '2026-x-x-x']);
+        expect($keys)
+            ->toBe(['2026-7-x-x', '2026-x-x-x']);
     } finally {
         historyTestClearSummary();
     }
@@ -345,7 +382,8 @@ test('findSummaryRowsForHierarchy() with a non-null day but a null hour reaches 
     historyTestInsertSummary(2026, 7, 12, 3, 10, 21, 30); // year+month+day+hour -- should not match (hour given as null here)
 
     try {
-        $rows = historyTestRepo()->findSummaryRowsForHierarchy(2026, 7, 12, null);
+        $rows = historyTestRepo()
+            ->findSummaryRowsForHierarchy(2026, 7, 12, null);
 
         $keys = array_map(
             static fn (HistorySummaryCount $r): string => $r->year . '-' . ($r->month ?? 'x') . '-' . ($r->day ?? 'x') . '-' . ($r->hour ?? 'x'),
@@ -353,7 +391,8 @@ test('findSummaryRowsForHierarchy() with a non-null day but a null hour reaches 
         );
         sort($keys);
 
-        expect($keys)->toBe(['2026-7-12-x', '2026-7-x-x', '2026-x-x-x']);
+        expect($keys)
+            ->toBe(['2026-7-12-x', '2026-7-x-x', '2026-x-x-x']);
     } finally {
         historyTestClearSummary();
     }
@@ -365,7 +404,14 @@ test('updateSummaryRows() updates the matching null-inclusive key', function ():
 
     try {
         historyTestRepo()->updateSummaryRows([
-            ['year' => 2026, 'month' => null, 'day' => null, 'hour' => null, 'nbPages' => 150, 'historyIdTo' => 80],
+            [
+                'year' => 2026,
+                'month' => null,
+                'day' => null,
+                'hour' => null,
+                'nbPages' => 150,
+                'historyIdTo' => 80,
+            ],
         ]);
 
         $row = historyTestFetchSummary($conn, 2026, null, null, null);
@@ -390,7 +436,14 @@ test('updateSummaryRows() scopes the update to the exact month/day/hour key, spa
 
     try {
         historyTestRepo()->updateSummaryRows([
-            ['year' => 2026, 'month' => 7, 'day' => null, 'hour' => null, 'nbPages' => 999, 'historyIdTo' => 999],
+            [
+                'year' => 2026,
+                'month' => 7,
+                'day' => null,
+                'hour' => null,
+                'nbPages' => 999,
+                'historyIdTo' => 999,
+            ],
         ]);
 
         expect(historyTestFetchSummary($conn, 2026, 7, null, null)['nb_pages'])->toBe(999)
@@ -405,7 +458,15 @@ test('insertSummaryRows() inserts new rows', function (): void {
 
     try {
         historyTestRepo()->insertSummaryRows([
-            ['year' => 2026, 'month' => 7, 'day' => 12, 'hour' => 3, 'nbPages' => 5, 'historyIdFrom' => 1, 'historyIdTo' => 5],
+            [
+                'year' => 2026,
+                'month' => 7,
+                'day' => 12,
+                'hour' => 3,
+                'nbPages' => 5,
+                'historyIdFrom' => 1,
+                'historyIdTo' => 5,
+            ],
         ]);
 
         $row = historyTestFetchSummary($conn, 2026, 7, 12, 3);
@@ -424,7 +485,8 @@ test('sumPageViews() sums only year-only rows', function (): void {
     historyTestInsertSummary(2026, 7, null, null, 999, 1, 30);
 
     try {
-        expect(historyTestRepo()->sumPageViews())->toBe(125);
+        expect(historyTestRepo()->sumPageViews())
+            ->toBe(125);
     } finally {
         historyTestClearSummary();
     }
@@ -437,14 +499,19 @@ test('countAll()/findLatestHistoryId()/findOldestHistoryId()/deleteBefore() roun
 
     try {
         $repo = historyTestRepo();
-        expect($repo->countAll())->toBe(3)
-            ->and($repo->findLatestHistoryId())->toBe($id3)
-            ->and($repo->findOldestHistoryId())->toBe($id1);
+        expect($repo->countAll())
+            ->toBe(3)
+            ->and($repo->findLatestHistoryId())
+            ->toBe($id3)
+            ->and($repo->findOldestHistoryId())
+            ->toBe($id1);
 
         $repo->deleteBefore($id3);
 
-        expect($repo->countAll())->toBe(1)
-            ->and($repo->findOldestHistoryId())->toBe($id3);
+        expect($repo->countAll())
+            ->toBe(1)
+            ->and($repo->findOldestHistoryId())
+            ->toBe($id3);
     } finally {
         historyTestClearHistory();
     }
@@ -457,7 +524,8 @@ test('deleteBefore() clears the identity map, so a later find() sees the real de
 
     try {
         $tracked = $em->find(HistoryEntity::class, $id);
-        expect($tracked)->not->toBeNull();
+        expect($tracked)
+            ->not->toBeNull();
 
         $repo->deleteBefore($afterId);
 
@@ -468,7 +536,8 @@ test('deleteBefore() clears the identity map, so a later find() sees the real de
 });
 
 test('findImageIdsByFilename() matches the fixture image', function (): void {
-    expect(historyTestRepo()->findImageIdsByFilename('fixture-photo-1%'))->toBe([1]);
+    expect(historyTestRepo()->findImageIdsByFilename('fixture-photo-1%'))
+        ->toBe([1]);
 });
 
 test('search() filters by user id', function (): void {
@@ -476,9 +545,11 @@ test('search() filters by user id', function (): void {
     historyTestInsertLine(3, '2026-07-12', '03:00:00');
 
     try {
-        $rows = historyTestRepo()->search(null, null, null, [], 1, null, null, null);
+        $rows = historyTestRepo()
+            ->search(null, null, null, [], 1, null, null, null);
 
-        expect($rows)->toHaveCount(1)
+        expect($rows)
+            ->toHaveCount(1)
             ->and($rows[0]->userId)->toBe(1);
     } finally {
         historyTestClearHistory();
@@ -514,9 +585,11 @@ test('search() filters by an IP LIKE pattern', function (): void {
     historyTestInsertLine(1, '2026-07-12', '03:00:00');
 
     try {
-        $rows = historyTestRepo()->search(null, null, null, [], null, null, null, '127.%');
+        $rows = historyTestRepo()
+            ->search(null, null, null, [], null, null, null, '127.%');
 
-        expect($rows)->toHaveCount(1)
+        expect($rows)
+            ->toHaveCount(1)
             ->and($rows[0]->ip)->toBe('127.0.0.1');
     } finally {
         historyTestClearHistory();
@@ -531,18 +604,21 @@ test('search() filters by image type, against the full real $types vocabulary', 
     // no image_type at all, via the 'none' member) survive.
     $conn = DbConnection::build();
     $pictureId = historyTestInsertLine(1, '2026-07-12', '03:00:00');
-    $conn->executeStatement('UPDATE ' . 'history' . " SET image_type = 'picture' WHERE id = ?", [$pictureId]);
+    $conn->executeStatement('UPDATE history' . " SET image_type = 'picture' WHERE id = ?", [$pictureId]);
     $highId = historyTestInsertLine(1, '2026-07-12', '03:00:01');
-    $conn->executeStatement('UPDATE ' . 'history' . " SET image_type = 'high' WHERE id = ?", [$highId]);
+    $conn->executeStatement('UPDATE history' . " SET image_type = 'high' WHERE id = ?", [$highId]);
     $noneId = historyTestInsertLine(1, '2026-07-12', '03:00:02');
 
     try {
-        $rows = historyTestRepo()->search(null, null, ['picture', 'none'], ['picture', 'high', 'other', 'none'], null, null, null, null);
+        $rows = historyTestRepo()
+            ->search(null, null, ['picture', 'none'], ['picture', 'high', 'other', 'none'], null, null, null, null);
 
         $ids = array_map(static fn ($row) => $row->userId . '-' . ($row->imageType ?? 'x'), $rows);
         sort($ids);
-        expect($rows)->toHaveCount(2)
-            ->and($ids)->toBe(['1-picture', '1-x']);
+        expect($rows)
+            ->toHaveCount(2)
+            ->and($ids)
+            ->toBe(['1-picture', '1-x']);
     } finally {
         historyTestClearHistory();
     }
@@ -555,17 +631,19 @@ test('search() binds a distinct query parameter per non-none image type, not a s
     // need 2 distinct bound values at once to prove the suffix matters.
     $conn = DbConnection::build();
     $pictureId = historyTestInsertLine(1, '2026-07-12', '03:00:00');
-    $conn->executeStatement('UPDATE ' . 'history' . " SET image_type = 'picture' WHERE id = ?", [$pictureId]);
+    $conn->executeStatement('UPDATE history' . " SET image_type = 'picture' WHERE id = ?", [$pictureId]);
     $highId = historyTestInsertLine(1, '2026-07-12', '03:00:01');
-    $conn->executeStatement('UPDATE ' . 'history' . " SET image_type = 'high' WHERE id = ?", [$highId]);
+    $conn->executeStatement('UPDATE history' . " SET image_type = 'high' WHERE id = ?", [$highId]);
     historyTestInsertLine(1, '2026-07-12', '03:00:02'); // no image_type -- excluded, 'none' isn't in $imageTypes here
 
     try {
-        $rows = historyTestRepo()->search(null, null, ['picture', 'high'], ['picture', 'high', 'other', 'none'], null, null, null, null);
+        $rows = historyTestRepo()
+            ->search(null, null, ['picture', 'high'], ['picture', 'high', 'other', 'none'], null, null, null, null);
 
         $types = array_map(static fn ($row) => $row->imageType, $rows);
         sort($types);
-        expect($types)->toBe(['high', 'picture']);
+        expect($types)
+            ->toBe(['high', 'picture']);
     } finally {
         historyTestClearHistory();
     }
@@ -594,22 +672,32 @@ test('search() maps every optional column when a row actually has them populated
     try {
         $id = historyTestInsertLine(1, '2026-07-12', '03:00:00');
         $conn->executeStatement(
-            'UPDATE ' . 'history' . " SET section = 'categories', category_id = 1, search_id = ?, tag_ids = '1,2,3', image_id = 1, image_type = 'picture' WHERE id = ?",
+            'UPDATE history' . " SET section = 'categories', category_id = 1, search_id = ?, tag_ids = '1,2,3', image_id = 1, image_type = 'picture' WHERE id = ?",
             [$searchId, $id]
         );
 
-        $rows = historyTestRepo()->search(null, null, null, [], null, null, null, null);
+        $rows = historyTestRepo()
+            ->search(null, null, null, [], null, null, null, null);
 
-        expect($rows)->toHaveCount(1);
+        expect($rows)
+            ->toHaveCount(1);
         $row = $rows[0];
-        expect($row->date)->toBe('2026-07-12')
-            ->and($row->time)->toBe('03:00:00')
-            ->and($row->section)->toBe('categories')
-            ->and($row->categoryId)->toBe(1)
-            ->and($row->searchId)->toBe($searchId)
-            ->and($row->tagIds)->toBe('1,2,3')
-            ->and($row->imageId)->toBe(1)
-            ->and($row->imageType)->toBe('picture');
+        expect($row->date)
+            ->toBe('2026-07-12')
+            ->and($row->time)
+            ->toBe('03:00:00')
+            ->and($row->section)
+            ->toBe('categories')
+            ->and($row->categoryId)
+            ->toBe(1)
+            ->and($row->searchId)
+            ->toBe($searchId)
+            ->and($row->tagIds)
+            ->toBe('1,2,3')
+            ->and($row->imageId)
+            ->toBe(1)
+            ->and($row->imageType)
+            ->toBe('picture');
     } finally {
         historyTestClearHistory();
         $conn->executeStatement('DELETE FROM ' . 'search' . ' WHERE id = ?', [$searchId]);
@@ -625,15 +713,18 @@ test('findLastByType() filters and orders per hierarchy level', function (): voi
     try {
         $repo = historyTestRepo();
         $hours = $repo->findLastByType('hour', 10);
-        expect($hours)->toHaveCount(3)
+        expect($hours)
+            ->toHaveCount(3)
             ->and($hours[0]->hour)->toBe(4)
             ->and($hours[1]->hour)->toBe(3)
             ->and($hours[2]->hour)->toBe(2);
 
-        expect($repo->findLastByType('hour', 1))->toHaveCount(1);
+        expect($repo->findLastByType('hour', 1))
+            ->toHaveCount(1);
 
         $default = $repo->findLastByType('year', 10);
-        expect($default)->toHaveCount(1)
+        expect($default)
+            ->toHaveCount(1)
             ->and($default[0]->year)->toBe(2026)
             ->and($default[0]->month)->toBeNull();
     } finally {
@@ -649,11 +740,13 @@ test('findMonthlyRows() returns month-level rows most recent first and respects 
     try {
         $repo = historyTestRepo();
         $rows = $repo->findMonthlyRows(null);
-        expect($rows)->toHaveCount(2)
+        expect($rows)
+            ->toHaveCount(2)
             ->and($rows[0]->year)->toBe(2026)
             ->and($rows[1]->year)->toBe(2025);
 
-        expect($repo->findMonthlyRows(1))->toHaveCount(1);
+        expect($repo->findMonthlyRows(1))
+            ->toHaveCount(1);
     } finally {
         historyTestClearSummary();
     }
@@ -666,12 +759,15 @@ test('findDailyRowsForMonths() matches only the three given year/month pairs', f
     historyTestInsertSummary(2024, 1, 5, null, 8, 31, 40); // not one of the 3 pairs, excluded
 
     try {
-        $rows = historyTestRepo()->findDailyRowsForMonths(2026, 7, 2026, 6, 2025, 7);
+        $rows = historyTestRepo()
+            ->findDailyRowsForMonths(2026, 7, 2026, 6, 2025, 7);
 
-        expect($rows)->toHaveCount(3);
+        expect($rows)
+            ->toHaveCount(3);
         $years = array_column($rows, 'year');
         sort($years);
-        expect($years)->toBe([2025, 2026, 2026]);
+        expect($years)
+            ->toBe([2025, 2026, 2026]);
     } finally {
         historyTestClearSummary();
     }
@@ -684,20 +780,24 @@ test('findAverageDailyPageViewsSince() averages matching day-level rows', functi
     historyTestInsertSummary(2025, 12, 1, null, 30, 31, 40); // previousYear, month > afterMonth, included
 
     try {
-        $avg = historyTestRepo()->findAverageDailyPageViewsSince(2026, 2025, 11);
+        $avg = historyTestRepo()
+            ->findAverageDailyPageViewsSince(2026, 2025, 11);
 
-        expect($avg)->not->toBeNull();
+        expect($avg)
+            ->not->toBeNull();
         if ($avg === null) {
             throw new RuntimeException('unreachable');
         }
-        expect(abs($avg - 20.0))->toBeLessThan(0.001);
+        expect(abs($avg - 20.0))
+            ->toBeLessThan(0.001);
     } finally {
         historyTestClearSummary();
     }
 });
 
 test('findAverageDailyPageViewsSince() returns null when nothing matches', function (): void {
-    expect(historyTestRepo()->findAverageDailyPageViewsSince(2026, 2025, 11))->toBeNull();
+    expect(historyTestRepo()->findAverageDailyPageViewsSince(2026, 2025, 11))
+        ->toBeNull();
 });
 
 test('updateLastVisitNow() sets last_visit on the real user_infos row', function (): void {
@@ -708,9 +808,11 @@ test('updateLastVisitNow() sets last_visit on the real user_infos row', function
         ->where('user_id = 4')
         ->executeQuery()
         ->fetchOne();
-    expect($before)->toBeNull();
+    expect($before)
+        ->toBeNull();
 
-    historyTestRepo()->updateLastVisitNow(4);
+    historyTestRepo()
+        ->updateLastVisitNow(4);
 
     try {
         $after = $conn->createQueryBuilder()
@@ -719,10 +821,12 @@ test('updateLastVisitNow() sets last_visit on the real user_infos row', function
             ->where('user_id = 4')
             ->executeQuery()
             ->fetchOne();
-        expect($after)->toBeString()
-            ->and($after)->not->toBe('');
+        expect($after)
+            ->toBeString()
+            ->and($after)
+            ->not->toBe('');
     } finally {
-        $conn->executeStatement('UPDATE ' . 'user_infos' . ' SET last_visit = NULL WHERE user_id = 4');
+        $conn->executeStatement('UPDATE user_infos SET last_visit = NULL WHERE user_id = 4');
     }
 });
 
@@ -730,11 +834,13 @@ test('updateLastVisitNow() clears the identity map, so a later find() sees the r
     [$repo, $em] = historyTestRepoWithEm();
     $userIdVo = UserId::from(4);
     $tracked = $em->find(UserInfoEntity::class, $userIdVo);
-    expect($tracked)->not->toBeNull();
+    expect($tracked)
+        ->not->toBeNull();
     if (! $tracked instanceof UserInfoEntity) {
         throw new RuntimeException('unreachable');
     }
-    expect($tracked->lastVisit)->toBeNull();
+    expect($tracked->lastVisit)
+        ->toBeNull();
 
     try {
         $repo->updateLastVisitNow(4);
@@ -743,8 +849,9 @@ test('updateLastVisitNow() clears the identity map, so a later find() sees the r
         if (! $refetched instanceof UserInfoEntity) {
             throw new RuntimeException('expected the row to still exist');
         }
-        expect($refetched->lastVisit)->not->toBeNull();
+        expect($refetched->lastVisit)
+            ->not->toBeNull();
     } finally {
-        DbConnection::build()->executeStatement('UPDATE ' . 'user_infos' . ' SET last_visit = NULL WHERE user_id = 4');
+        DbConnection::build()->executeStatement('UPDATE user_infos SET last_visit = NULL WHERE user_id = 4');
     }
 });

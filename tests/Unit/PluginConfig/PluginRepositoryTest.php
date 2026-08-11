@@ -54,10 +54,12 @@ test('getDbPlugins() with no filters returns every row', function (): void {
     try {
         pluginRepositoryTestInsert($conn, $id, 'active', '1.0.0');
 
-        $found = pluginRepositoryTestRepo()->getDbPlugins();
+        $found = pluginRepositoryTestRepo()
+            ->getDbPlugins();
         $ours = array_values(array_filter($found, static fn ($p) => $p->id->value === $id));
 
-        expect($ours)->toHaveCount(1)
+        expect($ours)
+            ->toHaveCount(1)
             ->and($ours[0]->id)->toEqual(PluginId::from($id))
             ->and($ours[0]->state)->toBe('active')
             ->and($ours[0]->version)->toBe('1.0.0');
@@ -75,11 +77,14 @@ test('getDbPlugins() filters by state', function (): void {
         pluginRepositoryTestInsert($conn, $activeId, 'active', '1.0.0');
         pluginRepositoryTestInsert($conn, $inactiveId, 'inactive', '1.0.0');
 
-        $found = pluginRepositoryTestRepo()->getDbPlugins(state: 'active');
+        $found = pluginRepositoryTestRepo()
+            ->getDbPlugins(state: 'active');
         $ids = array_map(static fn ($p) => $p->id->value, $found);
 
-        expect($ids)->toContain($activeId)
-            ->and($ids)->not->toContain($inactiveId);
+        expect($ids)
+            ->toContain($activeId)
+            ->and($ids)
+            ->not->toContain($inactiveId);
     } finally {
         pluginRepositoryTestDelete($conn, $activeId);
         pluginRepositoryTestDelete($conn, $inactiveId);
@@ -95,9 +100,11 @@ test('getDbPlugins() filters by id', function (): void {
         pluginRepositoryTestInsert($conn, $id, 'active', '1.0.0');
         pluginRepositoryTestInsert($conn, $otherId, 'active', '1.0.0');
 
-        $found = pluginRepositoryTestRepo()->getDbPlugins(id: $id);
+        $found = pluginRepositoryTestRepo()
+            ->getDbPlugins(id: $id);
 
-        expect($found)->toHaveCount(1)
+        expect($found)
+            ->toHaveCount(1)
             ->and($found[0]->id)->toEqual(PluginId::from($id));
     } finally {
         pluginRepositoryTestDelete($conn, $id);
@@ -106,7 +113,8 @@ test('getDbPlugins() filters by id', function (): void {
 });
 
 test('getDbPlugins() short-circuits to an empty result for a malformed id filter, instead of throwing', function (): void {
-    expect(pluginRepositoryTestRepo()->getDbPlugins(id: 'not a valid plugin id!!'))->toBe([]);
+    expect(pluginRepositoryTestRepo()->getDbPlugins(id: 'not a valid plugin id!!'))
+        ->toBe([]);
 });
 
 test('updateVersion() updates only the given plugin\'s version', function (): void {
@@ -117,7 +125,8 @@ test('updateVersion() updates only the given plugin\'s version', function (): vo
         pluginRepositoryTestRepo(); // warms Doctrine metadata before the raw insert below
         pluginRepositoryTestInsert($conn, $id, 'active', '1.0.0');
 
-        pluginRepositoryTestRepo()->updateVersion($id, '2.0.0');
+        pluginRepositoryTestRepo()
+            ->updateVersion($id, '2.0.0');
 
         $version = $conn->createQueryBuilder()
             ->select('version')
@@ -126,7 +135,8 @@ test('updateVersion() updates only the given plugin\'s version', function (): vo
             ->setParameter('id', $id)
             ->fetchOne();
 
-        expect($version)->toBe('2.0.0');
+        expect($version)
+            ->toBe('2.0.0');
     } finally {
         pluginRepositoryTestDelete($conn, $id);
     }

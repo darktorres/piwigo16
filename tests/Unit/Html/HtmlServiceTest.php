@@ -4,31 +4,17 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Unit\Html;
 
-use Piwigo\Category\Projection\CategoryIdNamePermalink;
-use Piwigo\Core\Paths;
-use LogicException;
-use Piwigo\Url\RootPathOverride;
-use Piwigo\Tests\Support\HtmlServiceTestFactory;
 use Error;
-use Piwigo\Tests\Support\UrlServiceTestFactory;
-use Piwigo\Tests\Support\PageStateTestFactory;
-use Piwigo\Tests\Support\TemplateTestFactory;
-use RecursiveIteratorIterator;
-use RecursiveDirectoryIterator;
 use FilesystemIterator;
-use SplFileInfo;
-use Piwigo\Common\ValueObject\ThemeId;
-use Piwigo\Users\User;
+use LogicException;
+use Piwigo\Category\Projection\CategoryIdNamePermalink;
 use Piwigo\Common\ValueObject\LangCode;
+use Piwigo\Common\ValueObject\ThemeId;
 use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Common\ValueObject\Username;
-use Piwigo\Users\UserStatus;
-use Piwigo\Http\ResponseReadyException;
-use RuntimeException;
-use Throwable;
-use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Lang;
+use Piwigo\Core\Paths;
 use Piwigo\Core\ProcessCache;
 use Piwigo\Core\UrlServiceInterface;
 use Piwigo\Event\Picture\GetElementUrl;
@@ -39,16 +25,30 @@ use Piwigo\Event\Template\RenderCategoryLiteralDescription;
 use Piwigo\Event\Template\RenderCategoryName;
 use Piwigo\Event\Template\RenderCommentContent;
 use Piwigo\Event\Template\SetStatusHeader;
-use Piwigo\Image\Event\GetSrcImageUrl;
 use Piwigo\Html\HtmlService;
+use Piwigo\Http\ResponseReadyException;
+use Piwigo\Image\Event\GetSrcImageUrl;
 use Piwigo\Image\SrcImage;
 use Piwigo\Menu\BlockManager;
 use Piwigo\Menu\Event\BlockManagerRegisterBlocks;
 use Piwigo\PluginConfig\EventDispatcher;
-use Piwigo\Tests\Support\EventDispatcherTestFactory;
 use Piwigo\Template\CurrentTemplate;
-use Piwigo\Tests\Support\KernelContainerOverride;
+use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Tests\Support\CurrentUserTestFactory;
+use Piwigo\Tests\Support\EventDispatcherTestFactory;
+use Piwigo\Tests\Support\HtmlServiceTestFactory;
+use Piwigo\Tests\Support\KernelContainerOverride;
+use Piwigo\Tests\Support\PageStateTestFactory;
+use Piwigo\Tests\Support\TemplateTestFactory;
+use Piwigo\Tests\Support\UrlServiceTestFactory;
+use Piwigo\Url\RootPathOverride;
+use Piwigo\Users\User;
+use Piwigo\Users\UserStatus;
+use RecursiveDirectoryIterator;
+use RecursiveIteratorIterator;
+use RuntimeException;
+use SplFileInfo;
+use Throwable;
 
 beforeEach(function (): void {
     // ProcessCache/ErrorCollector are both real required constructor
@@ -76,7 +76,8 @@ afterEach(function (): void {
 
 function htmlServiceTestRenderCommentContent(HtmlService $service, string $content): string
 {
-    return $service->renderCommentContent(new RenderCommentContent($content))->commentContent;
+    return $service->renderCommentContent(new RenderCommentContent($content))
+        ->commentContent;
 }
 
 /**
@@ -121,7 +122,9 @@ test('lang() throws when the container returns an unexpected type for Lang', fun
     // touching urlService().
     KernelContainerOverride::withWrongTypeFor(Lang::class, static function (): void {
         $service = HtmlServiceTestFactory::build();
-        $service->getThumbnailTitle(['hit' => 5], 'My Photo');
+        $service->getThumbnailTitle([
+            'hit' => 5,
+        ], 'My Photo');
     });
 })->throws(LogicException::class, 'Container returned an unexpected type for ' . Lang::class);
 
@@ -132,7 +135,11 @@ test('urlService() throws when the container returns an unexpected type for UrlS
     // sibling test above. getSrcImageUrlProtectionHandler() is the
     // simplest public entry point that reaches urlService() without also
     // needing lang().
-    $srcImage = new SrcImage(['id' => 7, 'path' => 'upload/2026/07/photo.jpg', 'file' => 'photo.jpg']);
+    $srcImage = new SrcImage([
+        'id' => 7,
+        'path' => 'upload/2026/07/photo.jpg',
+        'file' => 'photo.jpg',
+    ]);
 
     KernelContainerOverride::withWrongTypeFor(UrlServiceInterface::class, static function () use ($srcImage): void {
         $service = HtmlServiceTestFactory::build();
@@ -164,7 +171,8 @@ test('renderCommentContent bolds *word* only when a word character directly touc
     // actually triggers it.
     $service = HtmlServiceTestFactory::build();
 
-    expect(htmlServiceTestRenderCommentContent($service, 'a *hello* b'))->toBe('a *hello* b')
+    expect(htmlServiceTestRenderCommentContent($service, 'a *hello* b'))
+        ->toBe('a *hello* b')
         ->and(htmlServiceTestRenderCommentContent($service, 'x*hello*y'))
         ->toBe('x<span style="font-weight:bold;">hello</span>y');
 });
@@ -172,7 +180,8 @@ test('renderCommentContent bolds *word* only when a word character directly touc
 test('renderCommentContent converts newlines to br tags', function (): void {
     $service = HtmlServiceTestFactory::build();
 
-    expect(htmlServiceTestRenderCommentContent($service, "a\nb"))->toBe('a<br />' . "\n" . 'b');
+    expect(htmlServiceTestRenderCommentContent($service, "a\nb"))
+        ->toBe('a<br />' . "\n" . 'b');
 });
 
 /**
@@ -185,12 +194,19 @@ test('renderCommentContent converts newlines to br tags', function (): void {
  * input. Confirmed live: the full suite in this file passes identically
  * with each cast removed.
  */
-
 test('nameCompare sorts case-insensitively', function (): void {
     $service = HtmlServiceTestFactory::build();
 
-    expect($service->nameCompare(['name' => 'banana'], ['name' => 'Apple']))->toBeGreaterThan(0)
-        ->and($service->nameCompare(['name' => 'apple'], ['name' => 'apple']))->toBe(0);
+    expect($service->nameCompare([
+        'name' => 'banana',
+    ], [
+        'name' => 'Apple',
+    ]))->toBeGreaterThan(0)
+        ->and($service->nameCompare([
+            'name' => 'apple',
+        ], [
+            'name' => 'apple',
+        ]))->toBe(0);
 });
 
 test('nameCompare lowercases each side independently before comparing', function (): void {
@@ -202,16 +218,28 @@ test('nameCompare lowercases each side independently before comparing', function
     // can flip the sign.
     $service = HtmlServiceTestFactory::build();
 
-    expect($service->nameCompare(['name' => 'BANANA'], ['name' => 'apple']))->toBeGreaterThan(0);
-    expect($service->nameCompare(['name' => 'apple'], ['name' => 'BANANA']))->toBeLessThan(0);
+    expect($service->nameCompare([
+        'name' => 'BANANA',
+    ], [
+        'name' => 'apple',
+    ]))->toBeGreaterThan(0);
+    expect($service->nameCompare([
+        'name' => 'apple',
+    ], [
+        'name' => 'BANANA',
+    ]))->toBeLessThan(0);
 });
 
 test('nameCompare defaults a missing/non-string name to empty string on each side independently', function (): void {
     // Kills line 316/317's EmptyStringToNotEmpty.
     $service = HtmlServiceTestFactory::build();
 
-    expect($service->nameCompare([], ['name' => 'apple']))->toBeLessThan(0);
-    expect($service->nameCompare(['name' => 'apple'], []))->toBeGreaterThan(0);
+    expect($service->nameCompare([], [
+        'name' => 'apple',
+    ]))->toBeLessThan(0);
+    expect($service->nameCompare([
+        'name' => 'apple',
+    ], []))->toBeGreaterThan(0);
 });
 
 test('fatalError uses the given title, falling back to the default only when null or genuinely empty', function (): void {
@@ -227,9 +255,12 @@ test('fatalError uses the given title, falling back to the default only when nul
     $withNullTitle = $caller->call($service, 'msg', null, false);
     $withEmptyTitle = $caller->call($service, 'msg', '', false);
 
-    expect($withCustomTitle)->toContain('<h1>My Custom Title</h1>')
-        ->and($withNullTitle)->toContain('<h1>Piwigo encountered a non recoverable error</h1>')
-        ->and($withEmptyTitle)->toContain('<h1>Piwigo encountered a non recoverable error</h1>');
+    expect($withCustomTitle)
+        ->toContain('<h1>My Custom Title</h1>')
+        ->and($withNullTitle)
+        ->toContain('<h1>Piwigo encountered a non recoverable error</h1>')
+        ->and($withEmptyTitle)
+        ->toContain('<h1>Piwigo encountered a non recoverable error</h1>');
 });
 
 test('fatalError omits the backtrace entirely when showTrace is false', function (): void {
@@ -244,8 +275,10 @@ test('fatalError omits the backtrace entirely when showTrace is false', function
 
     $body = $caller->call($service, 'boom', 'T', false);
 
-    expect($body)->toContain("<b>boom</b>\n\n</pre>")
-        ->and($body)->not->toContain('#1');
+    expect($body)
+        ->toContain("<b>boom</b>\n\n</pre>")
+        ->and($body)
+        ->not->toContain('#1');
 });
 
 test('fatalError formats each real backtrace frame exactly as "#N\\t{class}::{function} {file}({line})\\n"', function (): void {
@@ -270,7 +303,8 @@ test('fatalError formats each real backtrace frame exactly as "#N\\t{class}::{fu
         __FILE__,
         $callLine,
     );
-    expect($body)->toContain($expectedFrame1);
+    expect($body)
+        ->toContain($expectedFrame1);
 });
 
 test('fatalError\'s backtrace loop covers frames 1 through the real stack depth, and no further', function (): void {
@@ -289,9 +323,12 @@ test('fatalError\'s backtrace loop covers frames 1 through the real stack depth,
     $body = $caller->call($service, 'boom', 'T', true);
     $lastValidFrame = $caller->preCallDepth;
 
-    expect($body)->toContain('#' . $lastValidFrame . "\t")
-        ->and($body)->not->toContain('#' . ($lastValidFrame + 1) . "\t")
-        ->and($body)->not->toContain("#0\t");
+    expect($body)
+        ->toContain('#' . $lastValidFrame . "\t")
+        ->and($body)
+        ->not->toContain('#' . ($lastValidFrame + 1) . "\t")
+        ->and($body)
+        ->not->toContain("#0\t");
 });
 
 test('fatalError falls back to an empty class prefix, not a placeholder, for a real frame with no class', function (): void {
@@ -306,7 +343,8 @@ test('fatalError falls back to an empty class prefix, not a placeholder, for a r
 
     $body = $caller->call($service, 'boom', 'T', true);
 
-    expect($body)->toContain("\tcall_user_func_array ");
+    expect($body)
+        ->toContain("\tcall_user_func_array ");
 });
 
 test('fatalError renders an empty, not placeholder, file/line for a real frame with neither', function (): void {
@@ -326,7 +364,8 @@ test('fatalError renders an empty, not placeholder, file/line for a real frame w
 
     $body = $caller->call($service, 'boom', 'T', true);
 
-    expect($body)->toMatch('/ \(\)$/m');
+    expect($body)
+        ->toMatch('/ \(\)$/m');
 });
 
 test('fatalError joins the backtrace immediately after the message, with no stray separator from the concat order', function (): void {
@@ -344,7 +383,8 @@ test('fatalError joins the backtrace immediately after the message, with no stra
 
     $body = $caller->call($service, 'boom', 'T', true);
 
-    expect($body)->toContain("</b>\n#1\t");
+    expect($body)
+        ->toContain("</b>\n#1\t");
 });
 
 test('fatalError trims the trailing newline off the backtrace before it reaches the display template', function (): void {
@@ -360,8 +400,10 @@ test('fatalError trims the trailing newline off the backtrace before it reaches 
 
     $body = $caller->call($service, 'boom', 'T', true);
 
-    expect($body)->not->toContain("\n\n</pre>")
-        ->and($body)->toContain(")\n</pre>");
+    expect($body)
+        ->not->toContain("\n\n</pre>")
+        ->and($body)
+        ->toContain(")\n</pre>");
 });
 
 test('fatalError pads the display with exactly 300 trailing spaces', function (): void {
@@ -375,11 +417,14 @@ test('fatalError pads the display with exactly 300 trailing spaces', function ()
 
     $body = $caller->call($service, 'boom', 'T', false);
 
-    expect($body)->toEndWith(str_repeat(' ', 300))
-        ->and(substr_count($body, ' ', strlen($body) - 301))->toBeGreaterThanOrEqual(300);
+    expect($body)
+        ->toEndWith(str_repeat(' ', 300))
+        ->and(substr_count($body, ' ', strlen($body) - 301))
+        ->toBeGreaterThanOrEqual(300);
     // The character immediately before the 300-space run must not
     // itself be a space (pins the count at exactly 300, not "at least").
-    expect(substr($body, -301, 1))->not->toBe(' ');
+    expect(substr($body, -301, 1))
+        ->not->toBe(' ');
 });
 
 test('fatalError actually disables display_errors and raises error_reporting to E_ALL', function (): void {
@@ -401,8 +446,10 @@ test('fatalError actually disables display_errors and raises error_reporting to 
     try {
         $caller->call($service, 'boom', 'T', false);
 
-        expect(ini_get('display_errors'))->toBe('')
-            ->and(error_reporting())->toBe(\E_ALL);
+        expect(ini_get('display_errors'))
+            ->toBe('')
+            ->and(error_reporting())
+            ->toBe(\E_ALL);
     } finally {
         ini_set('display_errors', $originalDisplayErrors);
         error_reporting($originalErrorReporting);
@@ -418,7 +465,8 @@ test('fatalError passes trigger_error() the tag-stripped message plus the backtr
 
     $caller->call($service, '<b>boom</b>', 'T', false);
 
-    expect($caller->capturedErrorMessage)->toBe('boom');
+    expect($caller->capturedErrorMessage)
+        ->toBe('boom');
 });
 
 test('fatalError passes trigger_error() the backtrace too, not just the stripped message, when a trace was built', function (): void {
@@ -433,8 +481,10 @@ test('fatalError passes trigger_error() the backtrace too, not just the stripped
 
     $caller->call($service, '<b>boom</b>', 'T', true);
 
-    expect($caller->capturedErrorMessage)->toContain('boom')
-        ->and($caller->capturedErrorMessage)->toContain('#1');
+    expect($caller->capturedErrorMessage)
+        ->toContain('boom')
+        ->and($caller->capturedErrorMessage)
+        ->toContain('#1');
 });
 
 test('fatalError throws a 500 response, not a neighboring status code', function (): void {
@@ -446,7 +496,8 @@ test('fatalError throws a 500 response, not a neighboring status code', function
 
     $caller->call($service, 'boom', 'T', false);
 
-    expect($caller->capturedStatusCode)->toBe(500);
+    expect($caller->capturedStatusCode)
+        ->toBe(500);
 });
 
 test('setStatusHeader sends the well-known reason phrase for a known code', function (): void {
@@ -454,7 +505,8 @@ test('setStatusHeader sends the well-known reason phrase for a known code', func
 
     // real assertion is the absence of a fatal/warning; header() is a
     // no-op under CLI SAPI
-    expect(static fn () => $service->setStatusHeader(404))->not->toThrow(Throwable::class);
+    expect(static fn () => $service->setStatusHeader(404))
+        ->not->toThrow(Throwable::class);
 });
 
 test('renderCategoryLiteralDescription strips disallowed tag markup but keeps their content and the allow-list', function (): void {
@@ -470,16 +522,21 @@ test('renderCategoryLiteralDescription strips disallowed tag markup but keeps th
 test('renderCategoryLiteralDescription treats a null description as empty', function (): void {
     $service = HtmlServiceTestFactory::build();
 
-    expect($service->renderCategoryLiteralDescription(new RenderCategoryLiteralDescription(null))->description)->toBe('');
+    expect($service->renderCategoryLiteralDescription(new RenderCategoryLiteralDescription(null))->description)
+        ->toBe('');
 });
 
 test('pwgNl2br passes through falsy scalars unchanged', function (): void {
     $service = HtmlServiceTestFactory::build();
 
-    expect($service->pwgNl2br(''))->toBe('')
-        ->and($service->pwgNl2br(0))->toBe(0)
-        ->and($service->pwgNl2br(null))->toBeNull()
-        ->and($service->pwgNl2br(false))->toBeFalse();
+    expect($service->pwgNl2br(''))
+        ->toBe('')
+        ->and($service->pwgNl2br(0))
+        ->toBe(0)
+        ->and($service->pwgNl2br(null))
+        ->toBeNull()
+        ->and($service->pwgNl2br(false))
+        ->toBeFalse();
 });
 
 test('pwgNl2br passes through a real float zero unchanged, distinctly from int 0', function (): void {
@@ -489,7 +546,8 @@ test('pwgNl2br passes through a real float zero unchanged, distinctly from int 0
     // disjunct at all.
     $service = HtmlServiceTestFactory::build();
 
-    expect($service->pwgNl2br(0.0))->toBe(0.0);
+    expect($service->pwgNl2br(0.0))
+        ->toBe(0.0);
 });
 
 test('pwgNl2br casts a real non-zero int/float to string before calling nl2br()', function (): void {
@@ -499,8 +557,10 @@ test('pwgNl2br casts a real non-zero int/float to string before calling nl2br()'
     // non-early-returned value like a real int or float.
     $service = HtmlServiceTestFactory::build();
 
-    expect($service->pwgNl2br(42))->toBe('42');
-    expect($service->pwgNl2br(3.14))->toBe('3.14');
+    expect($service->pwgNl2br(42))
+        ->toBe('42');
+    expect($service->pwgNl2br(3.14))
+        ->toBe('3.14');
 });
 
 /**
@@ -522,13 +582,16 @@ test('pwgNl2br passes through arrays unchanged', function (): void {
 test('pwgNl2br converts newlines in a non-empty string', function (): void {
     $service = HtmlServiceTestFactory::build();
 
-    expect($service->pwgNl2br("a\nb"))->toBe('a<br />' . "\n" . 'b');
+    expect($service->pwgNl2br("a\nb"))
+        ->toBe('a<br />' . "\n" . 'b');
 });
 
 test('renderElementName falls back to the filename when name is not set', function (): void {
     $service = HtmlServiceTestFactory::build();
 
-    expect($service->renderElementName(['file' => 'my-photo.jpg']))->toBe('my-photo');
+    expect($service->renderElementName([
+        'file' => 'my-photo.jpg',
+    ]))->toBe('my-photo');
 });
 
 test('renderElementName uses the given name when it is genuinely non-empty', function (): void {
@@ -537,14 +600,20 @@ test('renderElementName uses the given name when it is genuinely non-empty', fun
     // present and non-empty".
     $service = HtmlServiceTestFactory::build();
 
-    expect($service->renderElementName(['name' => 'My Photo Title', 'file' => 'my-photo.jpg']))->toBe('My Photo Title');
+    expect($service->renderElementName([
+        'name' => 'My Photo Title',
+        'file' => 'my-photo.jpg',
+    ]))->toBe('My Photo Title');
 });
 
 test('renderElementName falls back to the filename when name is explicitly an empty string, not just unset', function (): void {
     // Kills line 673's EmptyStringToNotEmpty.
     $service = HtmlServiceTestFactory::build();
 
-    expect($service->renderElementName(['name' => '', 'file' => 'my-photo.jpg']))->toBe('my-photo');
+    expect($service->renderElementName([
+        'name' => '',
+        'file' => 'my-photo.jpg',
+    ]))->toBe('my-photo');
 });
 
 test('renderElementName falls back to an empty string when neither name nor file is set', function (): void {
@@ -568,7 +637,9 @@ test('renderElementName throws when a render_element_name handler returns someth
     EventDispatcherTestFactory::get()->addEventHandler(RenderElementName::class, $handler);
 
     try {
-        expect(static fn () => $service->renderElementName(['name' => 'My Photo Title']))
+        expect(static fn () => $service->renderElementName([
+            'name' => 'My Photo Title',
+        ]))
             ->toThrow(Error::class, 'must return an instance of');
     } finally {
         EventDispatcherTestFactory::get()->removeEventHandler(RenderElementName::class, $handler);
@@ -585,14 +656,18 @@ test('renderElementDescription uses the given comment when it is genuinely non-e
     // Kills line 696's NotIdenticalToIdentical.
     $service = HtmlServiceTestFactory::build();
 
-    expect($service->renderElementDescription(['comment' => 'A lovely shot.']))->toBe('A lovely shot.');
+    expect($service->renderElementDescription([
+        'comment' => 'A lovely shot.',
+    ]))->toBe('A lovely shot.');
 });
 
 test('renderElementDescription returns empty string when comment is explicitly an empty string, not just unset', function (): void {
     // Kills line 696's EmptyStringToNotEmpty.
     $service = HtmlServiceTestFactory::build();
 
-    expect($service->renderElementDescription(['comment' => '']))->toBe('');
+    expect($service->renderElementDescription([
+        'comment' => '',
+    ]))->toBe('');
 });
 
 test('renderElementDescription never triggers render_element_description for a genuinely empty comment', function (): void {
@@ -610,7 +685,9 @@ test('renderElementDescription never triggers render_element_description for a g
     EventDispatcherTestFactory::get()->addTypedHandler(RenderElementDescription::class, $handler);
 
     try {
-        expect($service->renderElementDescription(['comment' => '']))->toBe('');
+        expect($service->renderElementDescription([
+            'comment' => '',
+        ]))->toBe('');
     } finally {
         EventDispatcherTestFactory::get()->removeEventHandler(RenderElementDescription::class, $handler);
     }
@@ -627,7 +704,9 @@ test('renderElementDescription throws when a render_element_description handler 
     EventDispatcherTestFactory::get()->addEventHandler(RenderElementDescription::class, $handler);
 
     try {
-        expect(static fn () => $service->renderElementDescription(['comment' => 'A lovely shot.']))
+        expect(static fn () => $service->renderElementDescription([
+            'comment' => 'A lovely shot.',
+        ]))
             ->toThrow(Error::class, 'must return an instance of');
     } finally {
         EventDispatcherTestFactory::get()->removeEventHandler(RenderElementDescription::class, $handler);
@@ -639,16 +718,28 @@ test('tagAlphaCompare sorts by the transliterated tag name', function (): void {
     // about (see StringHelperTest's own pwgTransliterate notes).
     $service = HtmlServiceTestFactory::build();
 
-    expect($service->tagAlphaCompare(['name' => 'zebra'], ['name' => 'apple']))->toBeGreaterThan(0);
-    expect($service->tagAlphaCompare(['name' => 'apple'], ['name' => 'apple']))->toBe(0);
+    expect($service->tagAlphaCompare([
+        'name' => 'zebra',
+    ], [
+        'name' => 'apple',
+    ]))->toBeGreaterThan(0);
+    expect($service->tagAlphaCompare([
+        'name' => 'apple',
+    ], [
+        'name' => 'apple',
+    ]))->toBe(0);
 });
 
 test('tagAlphaCompare defaults a missing/non-string name to empty string on each side independently', function (): void {
     // Kills line 332/333's EmptyStringToNotEmpty.
     $service = HtmlServiceTestFactory::build();
 
-    expect($service->tagAlphaCompare([], ['name' => 'apple']))->toBeLessThan(0);
-    expect($service->tagAlphaCompare(['name' => 'apple'], []))->toBeGreaterThan(0);
+    expect($service->tagAlphaCompare([], [
+        'name' => 'apple',
+    ]))->toBeLessThan(0);
+    expect($service->tagAlphaCompare([
+        'name' => 'apple',
+    ], []))->toBeGreaterThan(0);
 });
 
 test('tagAlphaCompare reuses an already-cached transliteration instead of recomputing it', function (): void {
@@ -659,22 +750,32 @@ test('tagAlphaCompare reuses an already-cached transliteration instead of recomp
     // pwgTransliterate('apple') is 'apple', which sorts before 'zebra';
     // the poisoned cache claims 'apple' transliterates to 'zzz-poison',
     // which sorts after).
-    htmlServiceTestProcessCache()->set(HtmlService::class . '::tagAlphaCompare', [
-        'apple' => 'zzz-poison',
-    ]);
+    htmlServiceTestProcessCache()
+        ->set(HtmlService::class . '::tagAlphaCompare', [
+            'apple' => 'zzz-poison',
+        ]);
     $service = HtmlServiceTestFactory::build();
 
-    expect($service->tagAlphaCompare(['name' => 'apple'], ['name' => 'banana']))->toBeGreaterThan(0);
+    expect($service->tagAlphaCompare([
+        'name' => 'apple',
+    ], [
+        'name' => 'banana',
+    ]))->toBeGreaterThan(0);
 });
 
 test('tagAlphaCompare treats a non-array cached value as empty and recomputes both names', function (): void {
     // Kills line 338's TernaryNegated ($transliterated stays the
     // non-array raw value instead of falling back to [], which would
     // fatal on the very next array-offset read).
-    htmlServiceTestProcessCache()->set(HtmlService::class . '::tagAlphaCompare', 'not-an-array');
+    htmlServiceTestProcessCache()
+        ->set(HtmlService::class . '::tagAlphaCompare', 'not-an-array');
     $service = HtmlServiceTestFactory::build();
 
-    expect($service->tagAlphaCompare(['name' => 'apple'], ['name' => 'zebra']))->toBeLessThan(0);
+    expect($service->tagAlphaCompare([
+        'name' => 'apple',
+    ], [
+        'name' => 'zebra',
+    ]))->toBeLessThan(0);
 });
 
 test('tagAlphaCompare computes and caches both names, keyed by class name, for a later lookup to reuse', function (): void {
@@ -684,13 +785,19 @@ test('tagAlphaCompare computes and caches both names, keyed by class name, for a
     // ConcatSwitchSides (the cache write itself, and its exact key).
     $service = HtmlServiceTestFactory::build();
 
-    $service->tagAlphaCompare(['name' => 'apple'], ['name' => 'zebra']);
-
-    $cached = htmlServiceTestProcessCache()->get(HtmlService::class . '::tagAlphaCompare');
-    expect($cached)->toBe([
-        'apple' => 'apple',
-        'zebra' => 'zebra',
+    $service->tagAlphaCompare([
+        'name' => 'apple',
+    ], [
+        'name' => 'zebra',
     ]);
+
+    $cached = htmlServiceTestProcessCache()
+        ->get(HtmlService::class . '::tagAlphaCompare');
+    expect($cached)
+        ->toBe([
+            'apple' => 'apple',
+            'zebra' => 'zebra',
+        ]);
 });
 
 /**
@@ -710,9 +817,17 @@ test('tagAlphaCompare computes and caches both names, keyed by class name, for a
 test('getTagsContentTitle pluralizes based on the number of tags', function (): void {
     $service = HtmlServiceTestFactory::build();
 
-    expect($service->getTagsContentTitle([['name' => 'one tag']]))->toContain('Tag')
-        ->and($service->getTagsContentTitle([['name' => 'one tag']]))->not->toContain('Tags');
-    expect($service->getTagsContentTitle([['name' => 'a'], ['name' => 'b']]))->toContain('Tags');
+    expect($service->getTagsContentTitle([[
+        'name' => 'one tag',
+    ]]))->toContain('Tag')
+        ->and($service->getTagsContentTitle([[
+            'name' => 'one tag',
+        ]]))->not->toContain('Tags');
+    expect($service->getTagsContentTitle([[
+        'name' => 'a',
+    ], [
+        'name' => 'b',
+    ]]))->toContain('Tags');
 });
 
 test('getTagsContentTitle builds the exact link markup, prefixed by the real root url', function (): void {
@@ -722,12 +837,16 @@ test('getTagsContentTitle builds the exact link markup, prefixed by the real roo
     // apart from the real one, and the default empty getRootUrl() used
     // by the sibling test above can't distinguish a dropped/reordered
     // getRootUrl() call specifically.
-    htmlServiceTestRootPathOverride()->push('/gallery/');
+    htmlServiceTestRootPathOverride()
+        ->push('/gallery/');
 
     try {
-        $result = HtmlServiceTestFactory::build()->getTagsContentTitle([['name' => 'a']]);
+        $result = HtmlServiceTestFactory::build()->getTagsContentTitle([[
+            'name' => 'a',
+        ]]);
 
-        expect($result)->toBe('<a href="/gallery/tags.php" title="display available tags">Tag</a> ');
+        expect($result)
+            ->toBe('<a href="/gallery/tags.php" title="display available tags">Tag</a> ');
     } finally {
         htmlServiceTestRootPathOverride()->reset();
     }
@@ -736,13 +855,21 @@ test('getTagsContentTitle builds the exact link markup, prefixed by the real roo
 test('getThumbnailTitle appends visit/comment counts and a truncated comment, HTML-escaped', function (): void {
     $service = HtmlServiceTestFactory::build();
 
-    $title = $service->getThumbnailTitle(['hit' => 5, 'nb_comments' => 2], 'My Photo', 'A <b>nice</b> shot');
+    $title = $service->getThumbnailTitle([
+        'hit' => 5,
+        'nb_comments' => 2,
+    ], 'My Photo', 'A <b>nice</b> shot');
 
-    expect($title)->toContain('My Photo');
-    expect($title)->toContain('5 visits');
-    expect($title)->toContain('2 comments');
-    expect($title)->toContain('A nice shot');
-    expect($title)->not->toContain('<b>');
+    expect($title)
+        ->toContain('My Photo');
+    expect($title)
+        ->toContain('5 visits');
+    expect($title)
+        ->toContain('2 comments');
+    expect($title)
+        ->toContain('A nice shot');
+    expect($title)
+        ->not->toContain('<b>');
 });
 
 test('getThumbnailTitle omits the parenthesized details block when hit/comments are zero or absent', function (): void {
@@ -758,9 +885,14 @@ test('getThumbnailTitle omits hit/nb_comments/rating_score at the exact int/floa
     // exactly zero", which these mutations wrongly treat as non-zero.
     $service = HtmlServiceTestFactory::build();
 
-    $title = $service->getThumbnailTitle(['hit' => 0, 'nb_comments' => 0, 'rating_score' => 0.0], 'My Photo');
+    $title = $service->getThumbnailTitle([
+        'hit' => 0,
+        'nb_comments' => 0,
+        'rating_score' => 0.0,
+    ], 'My Photo');
 
-    expect($title)->toBe('My Photo');
+    expect($title)
+        ->toBe('My Photo');
 });
 
 test('getThumbnailTitle includes hit/nb_comments/rating_score at exactly 1, not just larger values', function (): void {
@@ -772,11 +904,18 @@ test('getThumbnailTitle includes hit/nb_comments/rating_score at exactly 1, not 
     // 0.0`), never exercised by any rating_score value at all before.
     $service = HtmlServiceTestFactory::build();
 
-    $title = $service->getThumbnailTitle(['hit' => 1, 'nb_comments' => 1, 'rating_score' => 1.0], 'My Photo');
+    $title = $service->getThumbnailTitle([
+        'hit' => 1,
+        'nb_comments' => 1,
+        'rating_score' => 1.0,
+    ], 'My Photo');
 
-    expect($title)->toContain('1 visit')
-        ->and($title)->toContain('1 comment')
-        ->and($title)->toContain('rating score 1');
+    expect($title)
+        ->toContain('1 visit')
+        ->and($title)
+        ->toContain('1 comment')
+        ->and($title)
+        ->toContain('rating score 1');
 });
 
 test('getThumbnailTitle treats a string "0" the same as a real int/float zero, not as non-zero', function (): void {
@@ -787,9 +926,14 @@ test('getThumbnailTitle treats a string "0" the same as a real int/float zero, n
     // it.
     $service = HtmlServiceTestFactory::build();
 
-    $title = $service->getThumbnailTitle(['hit' => '0', 'nb_comments' => '0', 'rating_score' => '0'], 'My Photo');
+    $title = $service->getThumbnailTitle([
+        'hit' => '0',
+        'nb_comments' => '0',
+        'rating_score' => '0',
+    ], 'My Photo');
 
-    expect($title)->toBe('My Photo');
+    expect($title)
+        ->toBe('My Photo');
 });
 
 test('getThumbnailTitle casts a numeric-string nb_comments to int before passing it to plural()', function (): void {
@@ -800,9 +944,12 @@ test('getThumbnailTitle casts a numeric-string nb_comments to int before passing
     // silently coerce.
     $service = HtmlServiceTestFactory::build();
 
-    $title = $service->getThumbnailTitle(['nb_comments' => '5'], 'My Photo');
+    $title = $service->getThumbnailTitle([
+        'nb_comments' => '5',
+    ], 'My Photo');
 
-    expect($title)->toBe('My Photo (5 comments)');
+    expect($title)
+        ->toBe('My Photo (5 comments)');
 });
 
 test('getThumbnailTitle truncates a long comment to 100 characters with an ellipsis', function (): void {
@@ -811,7 +958,8 @@ test('getThumbnailTitle truncates a long comment to 100 characters with an ellip
 
     $title = $service->getThumbnailTitle([], 'Title', $longComment);
 
-    expect($title)->toBe('Title ' . str_repeat('x', 100) . '...');
+    expect($title)
+        ->toBe('Title ' . str_repeat('x', 100) . '...');
 });
 
 test('getThumbnailTitle shows the parenthesized details block for exactly one non-zero metric', function (): void {
@@ -821,9 +969,12 @@ test('getThumbnailTitle shows the parenthesized details block for exactly one no
     // boundary shifted by exactly one detail.
     $service = HtmlServiceTestFactory::build();
 
-    $title = $service->getThumbnailTitle(['hit' => 5], 'My Photo');
+    $title = $service->getThumbnailTitle([
+        'hit' => 5,
+    ], 'My Photo');
 
-    expect($title)->toBe('My Photo (5 visits)');
+    expect($title)
+        ->toBe('My Photo (5 visits)');
 });
 
 test('getThumbnailTitle joins multiple details with ", " inside a single parenthesized block', function (): void {
@@ -832,9 +983,13 @@ test('getThumbnailTitle joins multiple details with ", " inside a single parenth
     // structure, not just substring containment.
     $service = HtmlServiceTestFactory::build();
 
-    $title = $service->getThumbnailTitle(['hit' => 5, 'nb_comments' => 2], 'My Photo');
+    $title = $service->getThumbnailTitle([
+        'hit' => 5,
+        'nb_comments' => 2,
+    ], 'My Photo');
 
-    expect($title)->toBe('My Photo (5 visits, 2 comments)');
+    expect($title)
+        ->toBe('My Photo (5 visits, 2 comments)');
 });
 
 test('getThumbnailTitle strips tags from the comment before counting its length for truncation', function (): void {
@@ -854,8 +1009,10 @@ test('getThumbnailTitle strips tags from the comment before counting its length 
 
     $title = $service->getThumbnailTitle([], 'Title', $comment);
 
-    expect($title)->toBe('Title ' . str_repeat('x', 90))
-        ->and($title)->not->toContain('...');
+    expect($title)
+        ->toBe('Title ' . str_repeat('x', 90))
+        ->and($title)
+        ->not->toContain('...');
 });
 
 test('getThumbnailTitle does not append an ellipsis at exactly the 100-character boundary, only past it', function (): void {
@@ -880,7 +1037,8 @@ test('getThumbnailTitle escapes a literal & surviving tag-stripping in the final
 
     $title = $service->getThumbnailTitle([], 'Fish & Chips');
 
-    expect($title)->toBe('Fish &amp; Chips');
+    expect($title)
+        ->toBe('Fish &amp; Chips');
 });
 
 test('getThumbnailTitle strips real tag markup out of the final title, not just the comment', function (): void {
@@ -893,7 +1051,8 @@ test('getThumbnailTitle strips real tag markup out of the final title, not just 
 
     $title = $service->getThumbnailTitle([], '<b>Bold</b>');
 
-    expect($title)->toBe('Bold');
+    expect($title)
+        ->toBe('Bold');
 });
 
 test('getThumbnailTitle throws when a get_thumbnail_title handler returns something other than a GetThumbnailTitle instance', function (): void {
@@ -922,7 +1081,10 @@ test('getCatDisplayName throws when a render_category_name handler returns somet
     EventDispatcherTestFactory::get()->addEventHandler(RenderCategoryName::class, $handler);
 
     try {
-        expect(static fn () => $service->getCatDisplayName([['id' => 1, 'name' => 'Nature']], null))
+        expect(static fn () => $service->getCatDisplayName([[
+            'id' => 1,
+            'name' => 'Nature',
+        ]], null))
             ->toThrow(Error::class, 'must return an instance of');
     } finally {
         EventDispatcherTestFactory::get()->removeEventHandler(RenderCategoryName::class, $handler);
@@ -939,12 +1101,22 @@ test('getCatDisplayName joins multiple names with the level separator, and only 
     $service = HtmlServiceTestFactory::build();
 
     $result = $service->getCatDisplayName([
-        ['id' => 1, 'name' => 'Nature'],
-        ['id' => 2, 'name' => 'Portraits'],
-        ['id' => 3, 'name' => 'Travel'],
+        [
+            'id' => 1,
+            'name' => 'Nature',
+        ],
+        [
+            'id' => 2,
+            'name' => 'Portraits',
+        ],
+        [
+            'id' => 3,
+            'name' => 'Travel',
+        ],
     ], null);
 
-    expect($result)->toBe('Nature / Portraits / Travel');
+    expect($result)
+        ->toBe('Nature / Portraits / Travel');
 });
 
 test('getCatDisplayName builds one link per category, in order, when url is an empty string', function (): void {
@@ -952,18 +1124,31 @@ test('getCatDisplayName builds one link per category, in order, when url is an e
     // opening `<a href="...">` fragment, dropping everything built for
     // earlier categories in the same $url === '' branch).
     $service = HtmlServiceTestFactory::build();
-    $catA = ['id' => 3, 'name' => 'Nature', 'permalink' => null];
-    $catB = ['id' => 7, 'name' => 'Portraits', 'permalink' => null];
+    $catA = [
+        'id' => 3,
+        'name' => 'Nature',
+        'permalink' => null,
+    ];
+    $catB = [
+        'id' => 7,
+        'name' => 'Portraits',
+        'permalink' => null,
+    ];
 
     $urlService = UrlServiceTestFactory::build($service);
-    $linkA = $urlService->makeIndexUrl(['category' => $catA]);
-    $linkB = $urlService->makeIndexUrl(['category' => $catB]);
+    $linkA = $urlService->makeIndexUrl([
+        'category' => $catA,
+    ]);
+    $linkB = $urlService->makeIndexUrl([
+        'category' => $catB,
+    ]);
 
     $result = $service->getCatDisplayName([$catA, $catB], '');
 
-    expect($result)->toBe(
-        '<a href="' . $linkA . '">Nature</a> / <a href="' . $linkB . '">Portraits</a>'
-    );
+    expect($result)
+        ->toBe(
+            '<a href="' . $linkA . '">Nature</a> / <a href="' . $linkB . '">Portraits</a>'
+        );
 });
 
 test('getCatDisplayName defaults a non-string category name to empty string before dispatching the rename event', function (): void {
@@ -975,24 +1160,30 @@ test('getCatDisplayName defaults a non-string category name to empty string befo
     // literal placeholder can't satisfy.
     $service = HtmlServiceTestFactory::build();
 
-    $result = $service->getCatDisplayName([['id' => 1, 'name' => 42]], null);
+    $result = $service->getCatDisplayName([[
+        'id' => 1,
+        'name' => 42,
+    ]], null);
 
-    expect($result)->toBe('');
+    expect($result)
+        ->toBe('');
 });
 
 test('getCatDisplayNameCache joins multiple names with a <span>-wrapped separator, and only between them', function (): void {
     // Kills line 201's FalseToTrue -- the getCatDisplayNameCache()
     // sibling of getCatDisplayName()'s own line 118 finding above, same
     // "only visible with 2+ categories" gap.
-    htmlServiceTestProcessCache()->set('cat_names', [
-        '3' => new CategoryIdNamePermalink(3, 'Nature', null),
-        '7' => new CategoryIdNamePermalink(7, 'Portraits', null),
-    ]);
+    htmlServiceTestProcessCache()
+        ->set('cat_names', [
+            '3' => new CategoryIdNamePermalink(3, 'Nature', null),
+            '7' => new CategoryIdNamePermalink(7, 'Portraits', null),
+        ]);
     $service = HtmlServiceTestFactory::build();
 
     $result = $service->getCatDisplayNameCache('3,7', null);
 
-    expect($result)->toBe('Nature<span> / </span>Portraits');
+    expect($result)
+        ->toBe('Nature<span> / </span>Portraits');
 });
 
 test('getCatDisplayNameCache defaults a non-string category name to empty string before dispatching the rename event', function (): void {
@@ -1000,14 +1191,20 @@ test('getCatDisplayNameCache defaults a non-string category name to empty string
     // into the RenderCategoryName event) -- same "no handler, output IS
     // the fallback" reasoning as getCatDisplayName()'s own sibling test
     // above. With $url null, output is just the (unlinked) name itself.
-    htmlServiceTestProcessCache()->set('cat_names', [
-        '3' => ['id' => 3, 'name' => 42, 'permalink' => null],
-    ]);
+    htmlServiceTestProcessCache()
+        ->set('cat_names', [
+            '3' => [
+                'id' => 3,
+                'name' => 42,
+                'permalink' => null,
+            ],
+        ]);
     $service = HtmlServiceTestFactory::build();
 
     $result = $service->getCatDisplayNameCache('3', null);
 
-    expect($result)->toBe('');
+    expect($result)
+        ->toBe('');
 });
 
 test('getCatDisplayNameCache injects an auth param and wraps the whole chain in a single link with a class when singleLink is set', function (): void {
@@ -1018,7 +1215,8 @@ test('getCatDisplayNameCache injects an auth param and wraps the whole chain in 
 
     $result = $service->getCatDisplayNameCache('3', 'index.php?/category/', true, 'my-link-class', 'SECRETKEY');
 
-    expect($result)->toBe('<a href="index.php?/category/3&amp;auth=SECRETKEY" class="my-link-class">Nature</a>');
+    expect($result)
+        ->toBe('<a href="index.php?/category/3&amp;auth=SECRETKEY" class="my-link-class">Nature</a>');
 });
 
 test('getCatDisplayNameCache\'s singleLink href uses the LAST uppercats id, prefixed by the real root url', function (): void {
@@ -1029,17 +1227,20 @@ test('getCatDisplayNameCache\'s singleLink href uses the LAST uppercats id, pref
     // getRootUrl() is '', the default in every other test in this
     // file), and line 177's ConcatEqualToEqual (`=` instead of `.=` on
     // the opening `<a href="..."` fragment).
-    htmlServiceTestRootPathOverride()->push('/gallery/');
-    htmlServiceTestProcessCache()->set('cat_names', [
-        '3' => new CategoryIdNamePermalink(3, 'Nature', null),
-        '7' => new CategoryIdNamePermalink(7, 'Portraits', null),
-    ]);
+    htmlServiceTestRootPathOverride()
+        ->push('/gallery/');
+    htmlServiceTestProcessCache()
+        ->set('cat_names', [
+            '3' => new CategoryIdNamePermalink(3, 'Nature', null),
+            '7' => new CategoryIdNamePermalink(7, 'Portraits', null),
+        ]);
     $service = HtmlServiceTestFactory::build();
 
     try {
         $result = $service->getCatDisplayNameCache('3,7', 'index.php?/category/', true);
 
-        expect($result)->toStartWith('<a href="/gallery/index.php?/category/7"');
+        expect($result)
+            ->toStartWith('<a href="/gallery/index.php?/category/7"');
     } finally {
         htmlServiceTestRootPathOverride()->reset();
     }
@@ -1065,27 +1266,46 @@ test('getCatDisplayNameCache throws when a render_category_name handler returns 
 
 test('getCombinedCategoriesContentTitle renders a single category link without a remove-tag link', function (): void {
     $service = HtmlServiceTestFactory::build();
-    $category = ['id' => 3, 'name' => 'Nature', 'permalink' => null];
+    $category = [
+        'id' => 3,
+        'name' => 'Nature',
+        'permalink' => null,
+    ];
 
     // Independently computed from the same real UrlService primitive
     // getCombinedCategoriesContentTitle() itself delegates to (via
     // getCatDisplayName()) -- an exact-value assertion without
     // re-implementing makeSectionInUrl()'s own url-building algorithm here.
-    $expectedLink = UrlServiceTestFactory::build($service)->makeIndexUrl(['category' => $category]);
+    $expectedLink = UrlServiceTestFactory::build($service)->makeIndexUrl([
+        'category' => $category,
+    ]);
 
     $title = $service->getCombinedCategoriesContentTitle($category, []);
 
-    expect($title)->toBe('Albums <a href="' . $expectedLink . '">Nature</a>');
+    expect($title)
+        ->toBe('Albums <a href="' . $expectedLink . '">Nature</a>');
 });
 
 test('getCombinedCategoriesContentTitle appends a remove-tag link referencing the other category when combining 2', function (): void {
     $service = HtmlServiceTestFactory::build();
-    $catA = ['id' => 3, 'name' => 'Nature', 'permalink' => null];
-    $catB = ['id' => 7, 'name' => 'Portraits', 'permalink' => null];
+    $catA = [
+        'id' => 3,
+        'name' => 'Nature',
+        'permalink' => null,
+    ];
+    $catB = [
+        'id' => 7,
+        'name' => 'Portraits',
+        'permalink' => null,
+    ];
 
     $urlService = UrlServiceTestFactory::build($service);
-    $linkA = $urlService->makeIndexUrl(['category' => $catA]);
-    $linkB = $urlService->makeIndexUrl(['category' => $catB]);
+    $linkA = $urlService->makeIndexUrl([
+        'category' => $catA,
+    ]);
+    $linkB = $urlService->makeIndexUrl([
+        'category' => $catB,
+    ]);
 
     $title = $service->getCombinedCategoriesContentTitle($catA, [$catB]);
 
@@ -1102,7 +1322,8 @@ test('getCombinedCategoriesContentTitle appends a remove-tag link referencing th
         . ' + '
         . '<a href="' . $linkB . '">Portraits</a>' . $removeLinkTemplate($linkA);
 
-    expect($title)->toBe($expected);
+    expect($title)
+        ->toBe($expected);
 });
 
 test('getCombinedCategoriesContentTitle uses the current template\'s real icon_dir in the remove-link image src', function (): void {
@@ -1127,24 +1348,37 @@ test('getCombinedCategoriesContentTitle uses the current template\'s real icon_d
     // Template::__construct()'s own dataDirChecked()===null branch reaches
     // its constructor-injected $this->currentConfigService->get() (never
     // set() in this Unit test) and throws.
-    KernelContainerOverride::with([Paths::class => Paths::fromRoot($root)], function () use ($root): void {
+    KernelContainerOverride::with([
+        Paths::class => Paths::fromRoot($root),
+    ], function () use ($root): void {
         CurrentConfigTestFactory::get()->dataLocation = 'data/';
         CurrentConfigTestFactory::get()->dataDirChecked = '1';
 
         $template = TemplateTestFactory::build();
-        $template->smarty->assign('themeconf', ['icon_dir' => '/my-theme/icons']);
+        $template->smarty->assign('themeconf', [
+            'icon_dir' => '/my-theme/icons',
+        ]);
         CurrentTemplate::current()->set($template);
         // A non-empty root url is required to kill line 576's
         // ConcatRemoveRight (drops getRootUrl() from the src entirely) and
         // ConcatSwitchSides (moves getRootUrl() to prefix the whole `$title
         // .=` expression instead of just the src) -- both are unobservable
         // via toContain() alone when getRootUrl() defaults to ''.
-        htmlServiceTestRootPathOverride()->push('/gallery/');
+        htmlServiceTestRootPathOverride()
+            ->push('/gallery/');
 
         try {
             $service = HtmlServiceTestFactory::build();
-            $catA = ['id' => 3, 'name' => 'Nature', 'permalink' => null];
-            $catB = ['id' => 7, 'name' => 'Portraits', 'permalink' => null];
+            $catA = [
+                'id' => 3,
+                'name' => 'Nature',
+                'permalink' => null,
+            ];
+            $catB = [
+                'id' => 7,
+                'name' => 'Portraits',
+                'permalink' => null,
+            ];
 
             // The SHARED container-resolved RootPathOverride, not a fresh
             // one -- getCombinedCategoriesContentTitle()'s own internal
@@ -1153,8 +1387,12 @@ test('getCombinedCategoriesContentTitle uses the current template\'s real icon_d
             // reflect the pushed '/gallery/' override too, not just the
             // icon src built alongside it.
             $urlService = UrlServiceTestFactory::build($service, htmlServiceTestRootPathOverride());
-            $linkA = $urlService->makeIndexUrl(['category' => $catA]);
-            $linkB = $urlService->makeIndexUrl(['category' => $catB]);
+            $linkA = $urlService->makeIndexUrl([
+                'category' => $catA,
+            ]);
+            $linkB = $urlService->makeIndexUrl([
+                'category' => $catB,
+            ]);
             $removeLinkTemplate = static fn (string $removeUrl): string => '<a id="TagsGroupRemoveTag" href="' . $removeUrl . '" style="border:none;" title="remove this tag from the list">'
                 . '<img src="/gallery//my-theme/icons/remove_s.png" alt="x" style="vertical-align:bottom;" >'
                 . '<span class="pwg-icon pwg-icon-close" ></span></a>';
@@ -1167,11 +1405,12 @@ test('getCombinedCategoriesContentTitle uses the current template\'s real icon_d
             // that position (kills ConcatSwitchSides, which would instead
             // splice it in as "...</a>/gallery/<a id=..." between the two
             // links).
-            expect($title)->toBe(
-                'Albums <a href="' . $linkA . '">Nature</a>' . $removeLinkTemplate($linkB)
-                . ' + '
-                . '<a href="' . $linkB . '">Portraits</a>' . $removeLinkTemplate($linkA),
-            );
+            expect($title)
+                ->toBe(
+                    'Albums <a href="' . $linkA . '">Nature</a>' . $removeLinkTemplate($linkB)
+                                . ' + '
+                                . '<a href="' . $linkB . '">Portraits</a>' . $removeLinkTemplate($linkA),
+                );
         } finally {
             htmlServiceTestRootPathOverride()->reset();
             CurrentTemplate::current()->reset();
@@ -1196,22 +1435,42 @@ test('getCombinedCategoriesContentTitle folds every other category into combined
     // still has something left (2 left after unset(), 1 remains after the
     // shift) to reach that branch at all.
     $service = HtmlServiceTestFactory::build();
-    $catA = ['id' => 3, 'name' => 'Nature', 'permalink' => null];
-    $catB = ['id' => 7, 'name' => 'Portraits', 'permalink' => null];
-    $catC = ['id' => 9, 'name' => 'Travel', 'permalink' => null];
+    $catA = [
+        'id' => 3,
+        'name' => 'Nature',
+        'permalink' => null,
+    ];
+    $catB = [
+        'id' => 7,
+        'name' => 'Portraits',
+        'permalink' => null,
+    ];
+    $catC = [
+        'id' => 9,
+        'name' => 'Travel',
+        'permalink' => null,
+    ];
 
     $urlService = UrlServiceTestFactory::build($service);
     // catA's own remove-link: array_shift() takes catB (the lowest-keyed
     // remaining element after unset()), leaving catC to fold into
     // combined_categories.
-    $removeLinkA = $urlService->makeIndexUrl(['category' => $catB, 'combined_categories' => [$catC]]);
+    $removeLinkA = $urlService->makeIndexUrl([
+        'category' => $catB,
+        'combined_categories' => [$catC],
+    ]);
     // catC's own remove-link: array_shift() takes catA, leaving catB.
-    $removeLinkC = $urlService->makeIndexUrl(['category' => $catA, 'combined_categories' => [$catB]]);
+    $removeLinkC = $urlService->makeIndexUrl([
+        'category' => $catA,
+        'combined_categories' => [$catB],
+    ]);
 
     $title = $service->getCombinedCategoriesContentTitle($catA, [$catB, $catC]);
 
-    expect($title)->toContain($removeLinkA)
-        ->and($title)->toContain($removeLinkC);
+    expect($title)
+        ->toContain($removeLinkA)
+        ->and($title)
+        ->toContain($removeLinkC);
 });
 
 /**
@@ -1275,7 +1534,8 @@ test('setStatusHeader resolves the exact well-known reason phrase for every know
             $service->setStatusHeader($code);
         }
 
-        expect($captured)->toBe($expected);
+        expect($captured)
+            ->toBe($expected);
     } finally {
         EventDispatcherTestFactory::get()->removeEventHandler(SetStatusHeader::class, $handler);
     }
@@ -1296,7 +1556,8 @@ test('setStatusHeader keeps the given text unchanged when it is genuinely non-em
     try {
         $service->setStatusHeader(200, 'My Custom Reason');
 
-        expect($captured)->toBe('My Custom Reason');
+        expect($captured)
+            ->toBe('My Custom Reason');
     } finally {
         EventDispatcherTestFactory::get()->removeEventHandler(SetStatusHeader::class, $handler);
     }
@@ -1308,12 +1569,14 @@ test('registerDefaultMenubarBlocks does nothing for a BlockManager whose id is n
 
     $service->registerDefaultMenubarBlocks(new BlockManagerRegisterBlocks($menu));
 
-    expect($menu->get_registered_blocks())->toBe([]);
+    expect($menu->get_registered_blocks())
+        ->toBe([]);
 });
 
 function htmlServiceTestSrcImageUrlProtection(HtmlService $service, string $url, SrcImage $srcImage): string
 {
-    return $service->getSrcImageUrlProtectionHandler(new GetSrcImageUrl($url, $srcImage))->url;
+    return $service->getSrcImageUrlProtectionHandler(new GetSrcImageUrl($url, $srcImage))
+        ->url;
 }
 
 /**
@@ -1321,16 +1584,28 @@ function htmlServiceTestSrcImageUrlProtection(HtmlService $service, string $url,
  */
 function htmlServiceTestElementUrlProtection(HtmlService $service, string $url, array $elementInfo): string
 {
-    return $service->getElementUrlProtectionHandler(new GetElementUrl($url, $elementInfo))->url;
+    return $service->getElementUrlProtectionHandler(new GetElementUrl($url, $elementInfo))
+        ->url;
 }
 
 test('getSrcImageUrlProtectionHandler uses "e" for an original image and "r" for a non-original representative', function (): void {
     $service = HtmlServiceTestFactory::build();
-    $original = new SrcImage(['id' => 7, 'path' => 'upload/2026/07/photo.jpg', 'file' => 'photo.jpg']);
-    $representative = new SrcImage(['id' => 9, 'path' => 'upload/2026/07/video.mp4', 'file' => 'video.mp4', 'representative_ext' => 'jpg']);
+    $original = new SrcImage([
+        'id' => 7,
+        'path' => 'upload/2026/07/photo.jpg',
+        'file' => 'photo.jpg',
+    ]);
+    $representative = new SrcImage([
+        'id' => 9,
+        'path' => 'upload/2026/07/video.mp4',
+        'file' => 'video.mp4',
+        'representative_ext' => 'jpg',
+    ]);
 
-    expect($original->is_original())->toBeTrue()
-        ->and($representative->is_original())->toBeFalse();
+    expect($original->is_original())
+        ->toBeTrue()
+        ->and($representative->is_original())
+        ->toBeFalse();
 
     expect(htmlServiceTestSrcImageUrlProtection($service, 'ignored-input-url', $original))
         ->toBe('action.php?id=7&amp;part=e')
@@ -1342,18 +1617,26 @@ test('getElementUrlProtectionHandler passes a non-image extension through unchan
     CurrentConfigTestFactory::get()->originalUrlProtection = 'images';
     $service = HtmlServiceTestFactory::build();
 
-    $result = htmlServiceTestElementUrlProtection($service, 'original-url-unchanged', ['id' => 3, 'path' => 'upload/video.mp4']);
+    $result = htmlServiceTestElementUrlProtection($service, 'original-url-unchanged', [
+        'id' => 3,
+        'path' => 'upload/video.mp4',
+    ]);
 
-    expect($result)->toBe('original-url-unchanged');
+    expect($result)
+        ->toBe('original-url-unchanged');
 });
 
 test('getElementUrlProtectionHandler builds an action url for an image extension when protection is scoped to images', function (): void {
     CurrentConfigTestFactory::get()->originalUrlProtection = 'images';
     $service = HtmlServiceTestFactory::build();
 
-    $result = htmlServiceTestElementUrlProtection($service, 'ignored', ['id' => 3, 'path' => 'upload/photo.jpg']);
+    $result = htmlServiceTestElementUrlProtection($service, 'ignored', [
+        'id' => 3,
+        'path' => 'upload/photo.jpg',
+    ]);
 
-    expect($result)->toBe('action.php?id=3&amp;part=e');
+    expect($result)
+        ->toBe('action.php?id=3&amp;part=e');
 });
 
 test('getElementUrlProtectionHandler builds an action url for any extension when protection is not scoped to images', function (): void {
@@ -1361,9 +1644,13 @@ test('getElementUrlProtectionHandler builds an action url for any extension when
     // triggers, so even a non-image extension reaches the action url.
     $service = HtmlServiceTestFactory::build();
 
-    $result = htmlServiceTestElementUrlProtection($service, 'ignored', ['id' => 5, 'path' => 'upload/video.mp4']);
+    $result = htmlServiceTestElementUrlProtection($service, 'ignored', [
+        'id' => 5,
+        'path' => 'upload/video.mp4',
+    ]);
 
-    expect($result)->toBe('action.php?id=5&amp;part=e');
+    expect($result)
+        ->toBe('action.php?id=5&amp;part=e');
 });
 
 test('getElementUrlProtectionHandler defaults a missing id to an empty string, not a placeholder', function (): void {
@@ -1374,9 +1661,12 @@ test('getElementUrlProtectionHandler defaults a missing id to an empty string, n
     // provides a real 'id'.
     $service = HtmlServiceTestFactory::build();
 
-    $result = htmlServiceTestElementUrlProtection($service, 'ignored', ['path' => 'upload/video.mp4']);
+    $result = htmlServiceTestElementUrlProtection($service, 'ignored', [
+        'path' => 'upload/video.mp4',
+    ]);
 
-    expect($result)->toBe('action.php?id=&amp;part=e');
+    expect($result)
+        ->toBe('action.php?id=&amp;part=e');
 });
 
 test('getElementUrlProtectionHandler defaults a non-int-non-string id to an empty string too', function (): void {
@@ -1389,9 +1679,13 @@ test('getElementUrlProtectionHandler defaults a non-int-non-string id to an empt
     // an int nor a string is required to actually reach it.
     $service = HtmlServiceTestFactory::build();
 
-    $result = htmlServiceTestElementUrlProtection($service, 'ignored', ['id' => 3.5, 'path' => 'upload/video.mp4']);
+    $result = htmlServiceTestElementUrlProtection($service, 'ignored', [
+        'id' => 3.5,
+        'path' => 'upload/video.mp4',
+    ]);
 
-    expect($result)->toBe('action.php?id=&amp;part=e');
+    expect($result)
+        ->toBe('action.php?id=&amp;part=e');
 });
 
 test('accessDenied renders a 401 page instead of redirecting when a real (non-guest) user is already authenticated', function (): void {
@@ -1437,10 +1731,13 @@ test('accessDenied renders a 401 page instead of redirecting when a real (non-gu
     try {
         $service->accessDenied($redirectService);
     } catch (ResponseReadyException $e) {
-        expect($e->response()->getStatusCode())->toBe(401);
-        expect((string) $e->response()->getBody())->toBe($expectedHtml);
+        expect($e->response()->getStatusCode())
+            ->toBe(401);
+        expect((string) $e->response()->getBody())
+            ->toBe($expectedHtml);
     }
-    expect($redirectService->capturedUrl)->toBeNull();
+    expect($redirectService->capturedUrl)
+        ->toBeNull();
 });
 
 test('accessDenied redirects to identification.php with a double urlencoded REQUEST_URI when the user is unauthenticated', function (): void {
@@ -1455,14 +1752,16 @@ test('accessDenied redirects to identification.php with a double urlencoded REQU
         // separate "did it throw" assertion is needed.
         $service->accessDenied($redirectService);
     } catch (RuntimeException $e) {
-        expect($e->getMessage())->toBe('HTML_SERVICE_TEST_REDIRECT_HTTP_MARKER');
+        expect($e->getMessage())
+            ->toBe('HTML_SERVICE_TEST_REDIRECT_HTTP_MARKER');
     } finally {
         unset($_SERVER['REQUEST_URI']);
     }
 
-    expect($redirectService->capturedUrl)->toBe(
-        'identification.php?redirect=' . urlencode(urlencode('/gallery/index.php?/category/5'))
-    );
+    expect($redirectService->capturedUrl)
+        ->toBe(
+            'identification.php?redirect=' . urlencode(urlencode('/gallery/index.php?/category/5'))
+        );
 });
 
 test('accessDenied falls back to an empty redirect path when REQUEST_URI is missing or not a string', function (): void {
@@ -1480,7 +1779,8 @@ test('accessDenied falls back to an empty redirect path when REQUEST_URI is miss
         unset($_SERVER['REQUEST_URI']);
     }
 
-    expect($redirectService->capturedUrl)->toBe('identification.php?redirect=');
+    expect($redirectService->capturedUrl)
+        ->toBe('identification.php?redirect=');
 });
 
 test('accessDenied falls back to an empty redirect path when REQUEST_URI is genuinely unset, not just non-string', function (): void {
@@ -1504,7 +1804,8 @@ test('accessDenied falls back to an empty redirect path when REQUEST_URI is genu
         }
     }
 
-    expect($redirectService->capturedUrl)->toBe('identification.php?redirect=');
+    expect($redirectService->capturedUrl)
+        ->toBe('identification.php?redirect=');
 });
 
 test('accessDenied prefixes the identification.php redirect with the real root url', function (): void {
@@ -1512,7 +1813,8 @@ test('accessDenied prefixes the identification.php redirect with the real root u
     // and ConcatSwitchSides (reordering it after the redirect param) --
     // indistinguishable with the sibling tests' default empty
     // getRootUrl().
-    htmlServiceTestRootPathOverride()->push('/gallery/');
+    htmlServiceTestRootPathOverride()
+        ->push('/gallery/');
     $service = HtmlServiceTestFactory::build();
     $redirectService = new HtmlServiceTestCapturingRedirectHttpService();
     $_SERVER['REQUEST_URI'] = '/x';
@@ -1522,10 +1824,12 @@ test('accessDenied prefixes the identification.php redirect with the real root u
     } catch (RuntimeException) {
     } finally {
         unset($_SERVER['REQUEST_URI']);
-        htmlServiceTestRootPathOverride()->reset();
+        htmlServiceTestRootPathOverride()
+            ->reset();
     }
 
-    expect($redirectService->capturedUrl)->toBe('/gallery/identification.php?redirect=' . urlencode(urlencode('/x')));
+    expect($redirectService->capturedUrl)
+        ->toBe('/gallery/identification.php?redirect=' . urlencode(urlencode('/x')));
 });
 
 test('pageForbidden redirects to the given alternate url with a 403 status, a 5 second refresh, and the forbidden message', function (): void {
@@ -1535,19 +1839,24 @@ test('pageForbidden redirects to the given alternate url with a 403 status, a 5 
     try {
         $service->pageForbidden($redirectService, 'You lack permission.', '/custom-redirect.php');
     } catch (RuntimeException $e) {
-        expect($e->getMessage())->toBe('HTML_SERVICE_TEST_REDIRECT_HTML_MARKER');
+        expect($e->getMessage())
+            ->toBe('HTML_SERVICE_TEST_REDIRECT_HTML_MARKER');
     }
 
     // Kills line 398's 7 Concat* mutations (ConcatRemoveLeft/Right/
     // SwitchSides): toContain() alone can't tell a structurally
     // corrupted (reordered, or partially dropped-but-still-present)
     // message apart from the real one -- only an exact match can.
-    expect($redirectService->capturedUrl)->toBe('/custom-redirect.php')
-        ->and($redirectService->capturedStatus)->toBe(403)
-        ->and($redirectService->capturedRefreshTime)->toBe(5)
-        ->and($redirectService->capturedMsg)->toBe(
+    expect($redirectService->capturedUrl)
+        ->toBe('/custom-redirect.php')
+        ->and($redirectService->capturedStatus)
+        ->toBe(403)
+        ->and($redirectService->capturedRefreshTime)
+        ->toBe(5)
+        ->and($redirectService->capturedMsg)
+        ->toBe(
             '<div style="text-align:left; margin-left:5em;margin-bottom:5em;">'
-            . "\n" . '<h1 style="text-align:left; font-size:36px;">Forbidden</h1><br>You lack permission.</div>'
+                    . "\n" . '<h1 style="text-align:left; font-size:36px;">Forbidden</h1><br>You lack permission.</div>'
         );
 });
 
@@ -1561,7 +1870,8 @@ test('pageForbidden computes the default alternate url via makeIndexUrl when non
     } catch (RuntimeException) {
     }
 
-    expect($redirectService->capturedUrl)->toBe($expectedUrl);
+    expect($redirectService->capturedUrl)
+        ->toBe($expectedUrl);
 });
 
 /**
@@ -1581,7 +1891,11 @@ test('pageForbidden computes the default alternate url via makeIndexUrl when non
  */
 function htmlServiceTestStartStatusHeaderServer(string $docRoot): array
 {
-    $descriptors = [0 => ['pipe', 'r'], 1 => ['pipe', 'w'], 2 => ['pipe', 'w']];
+    $descriptors = [
+        0 => ['pipe', 'r'],
+        1 => ['pipe', 'w'],
+        2 => ['pipe', 'w'],
+    ];
 
     for ($attempt = 0; $attempt < 5; $attempt++) {
         $port = random_int(20_000, 60_000);
@@ -1679,7 +1993,8 @@ test('setStatusHeader sends a real HTTP/1.1 status line, with the given code and
     try {
         $statusLine = htmlServiceTestRawStatusLine($port, 'code=404');
 
-        expect($statusLine)->toBe('HTTP/1.1 404 Not found');
+        expect($statusLine)
+            ->toBe('HTTP/1.1 404 Not found');
     } finally {
         htmlServiceTestStopStatusHeaderServer($proc);
         unlink($docRoot . '/index.php');
@@ -1712,7 +2027,8 @@ test('setStatusHeader falls back to HTTP/1.0 for a SERVER_PROTOCOL value that is
     try {
         $statusLine = htmlServiceTestRawStatusLine($port, 'code=404');
 
-        expect($statusLine)->toBe('HTTP/1.0 404 Not found');
+        expect($statusLine)
+            ->toBe('HTTP/1.0 404 Not found');
     } finally {
         htmlServiceTestStopStatusHeaderServer($proc);
         unlink($docRoot . '/index.php');
@@ -1760,7 +2076,8 @@ test('setStatusHeader actually calls header(), not a no-op, for a real request',
     try {
         $statusLine = htmlServiceTestRawStatusLine($port, 'code=404');
 
-        expect($statusLine)->toContain('404');
+        expect($statusLine)
+            ->toContain('404');
     } finally {
         htmlServiceTestStopStatusHeaderServer($proc);
         unlink($docRoot . '/index.php');
@@ -1784,10 +2101,14 @@ test('flushPageMessages assigns only the non-empty PageState fields', function (
     HtmlServiceTestFactory::build()->flushPageMessages();
 
     $template = CurrentTemplate::current()->get();
-    expect($template->get_template_vars('errors'))->toBe(['Something went wrong'])
-        ->and($template->get_template_vars('infos'))->toBe(['Saved successfully'])
-        ->and($template->get_template_vars('warnings'))->toBeNull()
-        ->and($template->get_template_vars('messages'))->toBeNull();
+    expect($template->get_template_vars('errors'))
+        ->toBe(['Something went wrong'])
+        ->and($template->get_template_vars('infos'))
+        ->toBe(['Saved successfully'])
+        ->and($template->get_template_vars('warnings'))
+        ->toBeNull()
+        ->and($template->get_template_vars('messages'))
+        ->toBeNull();
 });
 
 test('flushPageMessages does nothing when a page refresh is already assigned', function (): void {
@@ -1795,7 +2116,10 @@ test('flushPageMessages does nothing when a page refresh is already assigned', f
     CurrentTemplate::current()->set(TemplateTestFactory::build());
     PageStateTestFactory::get()->reset();
     PageStateTestFactory::get()->addError('Should not appear');
-    CurrentTemplate::current()->get()->smarty->assign('page_refresh', ['TIME' => '5', 'U_REFRESH' => '/next']);
+    CurrentTemplate::current()->get()->smarty->assign('page_refresh', [
+        'TIME' => '5',
+        'U_REFRESH' => '/next',
+    ]);
 
     HtmlServiceTestFactory::build()->flushPageMessages();
 
@@ -1813,7 +2137,8 @@ test('flushPageMessages merges in and clears the session flash channel', functio
         HtmlServiceTestFactory::build()->flushPageMessages();
 
         expect(CurrentTemplate::current()->get()->get_template_vars('errors'))->toBe(['Live error', 'Flashed error'])
-            ->and($_SESSION)->not->toHaveKey('page_errors');
+            ->and($_SESSION)
+            ->not->toHaveKey('page_errors');
     } finally {
         unset($_SESSION['page_errors']);
     }
@@ -1838,9 +2163,13 @@ test('flushKeyedErrors assigns the keyed error bag under errors', function (): v
     CurrentConfigTestFactory::get()->dataDirChecked = '1';
     CurrentTemplate::current()->set(TemplateTestFactory::build());
 
-    HtmlServiceTestFactory::build()->flushKeyedErrors(['login_page_error' => 'Invalid username or password!']);
+    HtmlServiceTestFactory::build()->flushKeyedErrors([
+        'login_page_error' => 'Invalid username or password!',
+    ]);
 
-    expect(CurrentTemplate::current()->get()->get_template_vars('errors'))->toBe(['login_page_error' => 'Invalid username or password!']);
+    expect(CurrentTemplate::current()->get()->get_template_vars('errors'))->toBe([
+        'login_page_error' => 'Invalid username or password!',
+    ]);
 });
 
 test('flushKeyedErrors does nothing for an empty error bag', function (): void {
@@ -1869,9 +2198,15 @@ test('flushPageMessages then flushKeyedErrors overwrites errors but leaves infos
 
     $service = HtmlServiceTestFactory::build();
     $service->flushPageMessages();
-    $service->flushKeyedErrors(['login_page_error' => 'Invalid username or password!']);
+    $service->flushKeyedErrors([
+        'login_page_error' => 'Invalid username or password!',
+    ]);
 
     $template = CurrentTemplate::current()->get();
-    expect($template->get_template_vars('errors'))->toBe(['login_page_error' => 'Invalid username or password!'])
-        ->and($template->get_template_vars('infos'))->toBe(['Some info']);
+    expect($template->get_template_vars('errors'))
+        ->toBe([
+            'login_page_error' => 'Invalid username or password!',
+        ])
+        ->and($template->get_template_vars('infos'))
+        ->toBe(['Some info']);
 });

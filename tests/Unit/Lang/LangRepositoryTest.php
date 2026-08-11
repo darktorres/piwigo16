@@ -55,13 +55,15 @@ test('findAllRows() returns every row as a LanguageListing, ordered by name', fu
         langRepositoryTestInsert($conn, 'zz_ZZ', '1.0', 'Zeta Language');
         langRepositoryTestInsert($conn, 'aa_AA', '1.0', 'Alpha Language');
 
-        $all = langRepositoryTestRepo()->findAllRows();
+        $all = langRepositoryTestRepo()
+            ->findAllRows();
         $ours = array_values(array_filter($all, static fn (LanguageListing $l): bool => in_array($l->id, $ids, true)));
 
-        expect($ours)->toEqual([
-            new LanguageListing('aa_AA', 'Alpha Language'),
-            new LanguageListing('zz_ZZ', 'Zeta Language'),
-        ]);
+        expect($ours)
+            ->toEqual([
+                new LanguageListing('aa_AA', 'Alpha Language'),
+                new LanguageListing('zz_ZZ', 'Zeta Language'),
+            ]);
     } finally {
         foreach ($ids as $id) {
             langRepositoryTestDelete($conn, $id);
@@ -76,10 +78,12 @@ test('findAllRows() drops rows with a null name', function (): void {
     try {
         langRepositoryTestInsert($conn, $id, '1.0', null);
 
-        $all = langRepositoryTestRepo()->findAllRows();
+        $all = langRepositoryTestRepo()
+            ->findAllRows();
         $matching = array_filter($all, static fn (LanguageListing $l): bool => $l->id === $id);
 
-        expect($matching)->toBe([]);
+        expect($matching)
+            ->toBe([]);
     } finally {
         langRepositoryTestDelete($conn, $id);
     }

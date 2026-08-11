@@ -34,16 +34,26 @@ function fullCommentRow(): array
 test('fromRow narrows every column to its real type', function (): void {
     $comment = Comment::fromRow(fullCommentRow());
 
-    expect($comment->id)->toEqual(CommentId::from(2))
-        ->and($comment->author)->toBe('regular_user')
-        ->and($comment->authorId)->toBe(3)
-        ->and($comment->userEmail)->toBe('regular@example.test')
-        ->and($comment->date)->toBe('2026-08-01 00:00:00')
-        ->and($comment->imageId)->toEqual(ImageId::from(2))
-        ->and($comment->websiteUrl)->toBe('http://example.test')
-        ->and($comment->email)->toBe('guest@example.test')
-        ->and($comment->content)->toBe('Another perspective on this photo.')
-        ->and($comment->validated)->toBeTrue();
+    expect($comment->id)
+        ->toEqual(CommentId::from(2))
+        ->and($comment->author)
+        ->toBe('regular_user')
+        ->and($comment->authorId)
+        ->toBe(3)
+        ->and($comment->userEmail)
+        ->toBe('regular@example.test')
+        ->and($comment->date)
+        ->toBe('2026-08-01 00:00:00')
+        ->and($comment->imageId)
+        ->toEqual(ImageId::from(2))
+        ->and($comment->websiteUrl)
+        ->toBe('http://example.test')
+        ->and($comment->email)
+        ->toBe('guest@example.test')
+        ->and($comment->content)
+        ->toBe('Another perspective on this photo.')
+        ->and($comment->validated)
+        ->toBeTrue();
 });
 
 test('fromRow defaults every nullable column to null when absent, and validated to false', function (): void {
@@ -54,14 +64,22 @@ test('fromRow defaults every nullable column to null when absent, and validated 
 
     $comment = Comment::fromRow($row);
 
-    expect($comment->author)->toBeNull()
-        ->and($comment->authorId)->toBeNull()
-        ->and($comment->userEmail)->toBeNull()
-        ->and($comment->date)->toBeNull()
-        ->and($comment->websiteUrl)->toBeNull()
-        ->and($comment->email)->toBeNull()
-        ->and($comment->content)->toBeNull()
-        ->and($comment->validated)->toBeFalse();
+    expect($comment->author)
+        ->toBeNull()
+        ->and($comment->authorId)
+        ->toBeNull()
+        ->and($comment->userEmail)
+        ->toBeNull()
+        ->and($comment->date)
+        ->toBeNull()
+        ->and($comment->websiteUrl)
+        ->toBeNull()
+        ->and($comment->email)
+        ->toBeNull()
+        ->and($comment->content)
+        ->toBeNull()
+        ->and($comment->validated)
+        ->toBeFalse();
     // image_id is deliberately excluded above -- it's CommentId's sibling
     // NOT NULL FK column now, so it can't silently default to null/zero
     // either; see the dedicated "throws when image_id is invalid" test
@@ -166,16 +184,17 @@ test('fromRow casts a numeric-but-falsy-as-int validated string correctly via th
 test('toArray round-trips the exact same DB column shape fromRow narrowed', function (): void {
     $roundTripped = Comment::fromRow(fullCommentRow())->toArray();
 
-    expect($roundTripped)->toBe([
-        'id' => 2,
-        'author' => 'regular_user',
-        'author_id' => 3,
-        'user_email' => 'regular@example.test',
-        'date' => '2026-08-01 00:00:00',
-        'image_id' => 2,
-        'website_url' => 'http://example.test',
-        'email' => 'guest@example.test',
-        'content' => 'Another perspective on this photo.',
-        'validated' => true,
-    ]);
+    expect($roundTripped)
+        ->toBe([
+            'id' => 2,
+            'author' => 'regular_user',
+            'author_id' => 3,
+            'user_email' => 'regular@example.test',
+            'date' => '2026-08-01 00:00:00',
+            'image_id' => 2,
+            'website_url' => 'http://example.test',
+            'email' => 'guest@example.test',
+            'content' => 'Another perspective on this photo.',
+            'validated' => true,
+        ]);
 });

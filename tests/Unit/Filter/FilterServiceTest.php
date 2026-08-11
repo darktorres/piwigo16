@@ -3,16 +3,16 @@
 declare(strict_types=1);
 
 use Piwigo\Config\CurrentConfig;
-use Piwigo\Tests\Support\HtmlServiceTestFactory;
-use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Core\FilterState;
 use Piwigo\Core\InstallationFlag;
 use Piwigo\Core\Lang;
 use Piwigo\Core\Paths;
 use Piwigo\Filter\FilterService;
 use Piwigo\Lang\Translator;
-use Piwigo\Tests\Support\TranslatorTestFactory;
+use Piwigo\PluginConfig\EventDispatcher;
+use Piwigo\Tests\Support\HtmlServiceTestFactory;
 use Piwigo\Tests\Support\SessionServiceTestFactory;
+use Piwigo\Tests\Support\TranslatorTestFactory;
 
 // FilterService::updateCatsWithFilteredData() reads Piwigo\Core\FilterState.
 // FilterState::categories() and FilterState::set()'s $categories parameter
@@ -35,13 +35,28 @@ function filterServiceTestLang(): Lang
 
 test('updateCatsWithFilteredData leaves cats untouched when the filter is disabled', function (): void {
     $filterState = new FilterState();
-    $filterState->set(false, '', '', [1 => ['nb_images' => 999]]);
-    $cats = [0 => ['id' => 1, 'nb_images' => 5]];
+    $filterState->set(false, '', '', [
+        1 => [
+            'nb_images' => 999,
+        ],
+    ]);
+    $cats = [
+        0 => [
+            'id' => 1,
+            'nb_images' => 5,
+        ],
+    ];
     $service = new FilterService($filterState, SessionServiceTestFactory::get(), TranslatorTestFactory::get(), filterServiceTestLang(), new CurrentConfig(), new EventDispatcher());
 
     $service->updateCatsWithFilteredData($cats);
 
-    expect($cats)->toBe([0 => ['id' => 1, 'nb_images' => 5]]);
+    expect($cats)
+        ->toBe([
+            0 => [
+                'id' => 1,
+                'nb_images' => 5,
+            ],
+        ]);
 });
 
 test('updateCatsWithFilteredData overwrites the aggregate fields for a matched category id', function (): void {
@@ -55,7 +70,13 @@ test('updateCatsWithFilteredData overwrites the aggregate fields for a matched c
             'nb_images' => 20,
         ],
     ]);
-    $cats = [0 => ['id' => 1, 'nb_images' => 5, 'untouched' => 'kept']];
+    $cats = [
+        0 => [
+            'id' => 1,
+            'nb_images' => 5,
+            'untouched' => 'kept',
+        ],
+    ];
     $service = new FilterService($filterState, SessionServiceTestFactory::get(), TranslatorTestFactory::get(), filterServiceTestLang(), new CurrentConfig(), new EventDispatcher());
 
     $service->updateCatsWithFilteredData($cats);
@@ -73,30 +94,69 @@ test('updateCatsWithFilteredData overwrites the aggregate fields for a matched c
 
 test('updateCatsWithFilteredData skips a category id with no matching filter entry', function (): void {
     $filterState = new FilterState();
-    $filterState->set(true, '', '', [2 => ['nb_images' => 20]]);
-    $cats = [0 => ['id' => 1, 'nb_images' => 5]];
+    $filterState->set(true, '', '', [
+        2 => [
+            'nb_images' => 20,
+        ],
+    ]);
+    $cats = [
+        0 => [
+            'id' => 1,
+            'nb_images' => 5,
+        ],
+    ];
     $service = new FilterService($filterState, SessionServiceTestFactory::get(), TranslatorTestFactory::get(), filterServiceTestLang(), new CurrentConfig(), new EventDispatcher());
 
     $service->updateCatsWithFilteredData($cats);
 
-    expect($cats)->toBe([0 => ['id' => 1, 'nb_images' => 5]]);
+    expect($cats)
+        ->toBe([
+            0 => [
+                'id' => 1,
+                'nb_images' => 5,
+            ],
+        ]);
 });
 
 test('updateCatsWithFilteredData skips a category row with a non-int/string id', function (): void {
     $filterState = new FilterState();
-    $filterState->set(true, '', '', [1 => ['nb_images' => 20]]);
-    $cats = [0 => ['id' => null, 'nb_images' => 5]];
+    $filterState->set(true, '', '', [
+        1 => [
+            'nb_images' => 20,
+        ],
+    ]);
+    $cats = [
+        0 => [
+            'id' => null,
+            'nb_images' => 5,
+        ],
+    ];
     $service = new FilterService($filterState, SessionServiceTestFactory::get(), TranslatorTestFactory::get(), filterServiceTestLang(), new CurrentConfig(), new EventDispatcher());
 
     $service->updateCatsWithFilteredData($cats);
 
-    expect($cats)->toBe([0 => ['id' => null, 'nb_images' => 5]]);
+    expect($cats)
+        ->toBe([
+            0 => [
+                'id' => null,
+                'nb_images' => 5,
+            ],
+        ]);
 });
 
 test('updateCatsWithFilteredData matches a string category id', function (): void {
     $filterState = new FilterState();
-    $filterState->set(true, '', '', ['abc' => ['nb_images' => 30]]);
-    $cats = [0 => ['id' => 'abc', 'nb_images' => 5]];
+    $filterState->set(true, '', '', [
+        'abc' => [
+            'nb_images' => 30,
+        ],
+    ]);
+    $cats = [
+        0 => [
+            'id' => 'abc',
+            'nb_images' => 5,
+        ],
+    ];
     $service = new FilterService($filterState, SessionServiceTestFactory::get(), TranslatorTestFactory::get(), filterServiceTestLang(), new CurrentConfig(), new EventDispatcher());
 
     $service->updateCatsWithFilteredData($cats);
@@ -110,8 +170,21 @@ test('updateCatsWithFilteredData continues past a non-int/string id to still pro
     // foreach after the first non-int/string id, leaving every later
     // (even valid) category row untouched.
     $filterState = new FilterState();
-    $filterState->set(true, '', '', [2 => ['nb_images' => 99]]);
-    $cats = [0 => ['id' => null, 'nb_images' => 5], 1 => ['id' => 2, 'nb_images' => 7]];
+    $filterState->set(true, '', '', [
+        2 => [
+            'nb_images' => 99,
+        ],
+    ]);
+    $cats = [
+        0 => [
+            'id' => null,
+            'nb_images' => 5,
+        ],
+        1 => [
+            'id' => 2,
+            'nb_images' => 7,
+        ],
+    ];
     $service = new FilterService($filterState, SessionServiceTestFactory::get(), TranslatorTestFactory::get(), filterServiceTestLang(), new CurrentConfig(), new EventDispatcher());
 
     $service->updateCatsWithFilteredData($cats);
@@ -125,8 +198,21 @@ test('updateCatsWithFilteredData continues past a non-matching filter entry to s
     // foreach after the first category id with no filter entry, leaving
     // a later, genuinely matching category row untouched.
     $filterState = new FilterState();
-    $filterState->set(true, '', '', [2 => ['nb_images' => 99]]);
-    $cats = [0 => ['id' => 1, 'nb_images' => 5], 1 => ['id' => 2, 'nb_images' => 7]];
+    $filterState->set(true, '', '', [
+        2 => [
+            'nb_images' => 99,
+        ],
+    ]);
+    $cats = [
+        0 => [
+            'id' => 1,
+            'nb_images' => 5,
+        ],
+        1 => [
+            'id' => 2,
+            'nb_images' => 7,
+        ],
+    ];
     $service = new FilterService($filterState, SessionServiceTestFactory::get(), TranslatorTestFactory::get(), filterServiceTestLang(), new CurrentConfig(), new EventDispatcher());
 
     $service->updateCatsWithFilteredData($cats);
@@ -136,8 +222,17 @@ test('updateCatsWithFilteredData continues past a non-matching filter entry to s
 
 test('updateCatsWithFilteredData fills a missing aggregate field with null', function (): void {
     $filterState = new FilterState();
-    $filterState->set(true, '', '', [1 => ['nb_images' => 20]]);
-    $cats = [0 => ['id' => 1, 'nb_images' => 5]];
+    $filterState->set(true, '', '', [
+        1 => [
+            'nb_images' => 20,
+        ],
+    ]);
+    $cats = [
+        0 => [
+            'id' => 1,
+            'nb_images' => 5,
+        ],
+    ];
     $service = new FilterService($filterState, SessionServiceTestFactory::get(), TranslatorTestFactory::get(), filterServiceTestLang(), new CurrentConfig(), new EventDispatcher());
 
     $service->updateCatsWithFilteredData($cats);

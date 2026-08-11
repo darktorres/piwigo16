@@ -4,15 +4,15 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Integration;
 
+use Doctrine\DBAL\Connection;
+use LogicException;
 use Override;
 use Piwigo\Common\ValueObject\UserId;
-use Piwigo\Core\Kernel;
-use LogicException;
-use Piwigo\Db\EntityManagerFactory;
-use Doctrine\DBAL\Connection;
-use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\ConfigLoader;
+use Piwigo\Config\CurrentConfig;
+use Piwigo\Core\Kernel;
 use Piwigo\Db\DbConnection;
+use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Notification\NotificationByMailRepository;
 use Piwigo\Notification\UserMailNotificationEntity;
 
@@ -54,17 +54,17 @@ final class NotificationByMailRepositoryTest extends IntegrationTestCase
         $this->repo = EntityManagerFactory::build($this->conn)->getRepository(UserMailNotificationEntity::class);
     }
 
-    public function test_count_by_check_key_finds_an_existing_key(): void
+    public function testCountByCheckKeyFindsAnExistingKey(): void
     {
         self::assertSame(1, $this->repo->countByCheckKey('abcdef1234567890'));
     }
 
-    public function test_count_by_check_key_returns_zero_for_an_unknown_key(): void
+    public function testCountByCheckKeyReturnsZeroForAnUnknownKey(): void
     {
         self::assertSame(0, $this->repo->countByCheckKey('no-such-key'));
     }
 
-    public function test_find_user_notifications_subscribe_returns_every_subscriber(): void
+    public function testFindUserNotificationsSubscribeReturnsEverySubscriber(): void
     {
         $rows = $this->repo->findUserNotifications('subscribe', [], '');
 
@@ -72,7 +72,7 @@ final class NotificationByMailRepositoryTest extends IntegrationTestCase
         self::assertSame(['fixture_admin', 'regular_user'], $usernames);
     }
 
-    public function test_find_user_notifications_send_excludes_users_with_no_email_or_disabled(): void
+    public function testFindUserNotificationsSendExcludesUsersWithNoEmailOrDisabled(): void
     {
         // regular_user has no email and is also disabled -- excluded either way.
         $rows = $this->repo->findUserNotifications('send', [], '');
@@ -81,7 +81,7 @@ final class NotificationByMailRepositoryTest extends IntegrationTestCase
         self::assertSame('fixture_admin', $rows[0]->username);
     }
 
-    public function test_find_user_notifications_filters_by_check_key_list(): void
+    public function testFindUserNotificationsFiltersByCheckKeyList(): void
     {
         $rows = $this->repo->findUserNotifications('subscribe', ['abcdef1234567890'], '');
 
@@ -89,7 +89,7 @@ final class NotificationByMailRepositoryTest extends IntegrationTestCase
         self::assertSame('fixture_admin', $rows[0]->username);
     }
 
-    public function test_find_user_notifications_filters_by_enabled_value(): void
+    public function testFindUserNotificationsFiltersByEnabledValue(): void
     {
         $rows = $this->repo->findUserNotifications('subscribe', [], '0');
 
@@ -97,7 +97,7 @@ final class NotificationByMailRepositoryTest extends IntegrationTestCase
         self::assertSame('regular_user', $rows[0]->username);
     }
 
-    public function test_find_user_notifications_narrows_user_id_to_a_real_user_id(): void
+    public function testFindUserNotificationsNarrowsUserIdToARealUserId(): void
     {
         $rows = $this->repo->findUserNotifications('subscribe', [], '');
 
@@ -108,7 +108,7 @@ final class NotificationByMailRepositoryTest extends IntegrationTestCase
         self::assertEquals(UserId::from(1), $rows[0]->userId);
     }
 
-    public function test_delete_by_check_keys_is_a_no_op_for_an_empty_list(): void
+    public function testDeleteByCheckKeysIsANoOpForAnEmptyList(): void
     {
         $before = $this->countNotificationRows();
 
@@ -128,13 +128,17 @@ final class NotificationByMailRepositoryTest extends IntegrationTestCase
      * NotificationByMailSender::quoteCheckKeyList() (now removed);
      * confirms it deletes correctly instead.
      */
-    public function test_delete_by_check_keys_removes_a_key_containing_a_single_quote(): void
+    public function testDeleteByCheckKeysRemovesAKeyContainingASingleQuote(): void
     {
         $checkKey = "o'brien-" . bin2hex(random_bytes(4));
         // user 2 (guest) has no notification row in the fixture -- see
         // this class's own docblock.
         $this->repo->insertNotifications([
-            ['user_id' => 2, 'check_key' => $checkKey, 'enabled' => 0],
+            [
+                'user_id' => 2,
+                'check_key' => $checkKey,
+                'enabled' => 0,
+            ],
         ]);
         self::assertSame(1, $this->repo->countByCheckKey($checkKey));
 
@@ -143,7 +147,7 @@ final class NotificationByMailRepositoryTest extends IntegrationTestCase
         self::assertSame(0, $this->repo->countByCheckKey($checkKey));
     }
 
-    public function test_insert_notifications_is_a_no_op_for_an_empty_list(): void
+    public function testInsertNotificationsIsANoOpForAnEmptyList(): void
     {
         $before = $this->countNotificationRows();
 

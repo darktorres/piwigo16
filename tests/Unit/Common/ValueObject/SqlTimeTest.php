@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Unit\Common\ValueObject;
 
-use InvalidArgumentException;
 use DateTimeImmutable;
+use InvalidArgumentException;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Piwigo\Common\ValueObject\SqlTime;
@@ -18,18 +18,20 @@ final class SqlTimeTest extends TestCase
         self::assertSame('12:34:56', $t->value);
     }
 
-    /** @return iterable<string, array{string}> */
+    /**
+     * @return iterable<string, array{string}>
+     */
     public static function invalidStrings(): iterable
     {
-        yield 'with date'          => ['2026-05-18 12:34:56'];
-        yield 'hour 25'            => ['25:00:00'];
-        yield 'minute 60'          => ['12:60:00'];
-        yield 'second 60'          => ['12:00:60'];
-        yield 'wrong separator'    => ['12.34.56'];
-        yield 'no seconds'         => ['12:34'];
-        yield 'trailing chars'     => ['12:34:56 UTC'];
-        yield 'empty'              => [''];
-        yield 'garbage'            => ['not-a-time'];
+        yield 'with date' => ['2026-05-18 12:34:56'];
+        yield 'hour 25' => ['25:00:00'];
+        yield 'minute 60' => ['12:60:00'];
+        yield 'second 60' => ['12:00:60'];
+        yield 'wrong separator' => ['12.34.56'];
+        yield 'no seconds' => ['12:34'];
+        yield 'trailing chars' => ['12:34:56 UTC'];
+        yield 'empty' => [''];
+        yield 'garbage' => ['not-a-time'];
     }
 
     #[DataProvider('invalidStrings')]
@@ -46,14 +48,16 @@ final class SqlTimeTest extends TestCase
         self::assertSame('12:34:56', $t->value);
     }
 
-    /** @return iterable<string, array{mixed}> */
+    /**
+     * @return iterable<string, array{mixed}>
+     */
     public static function tryFromNullCases(): iterable
     {
-        yield 'int'        => [123];
-        yield 'null'       => [null];
-        yield 'array'      => [[]];
-        yield 'hour 25'    => ['25:00:00'];
-        yield 'garbage'    => ['garbage'];
+        yield 'int' => [123];
+        yield 'null' => [null];
+        yield 'array' => [[]];
+        yield 'hour 25' => ['25:00:00'];
+        yield 'garbage' => ['garbage'];
     }
 
     #[DataProvider('tryFromNullCases')]
@@ -64,8 +68,8 @@ final class SqlTimeTest extends TestCase
 
     public function testFromDateTimeRoundTrips(): void
     {
-        $dt  = new DateTimeImmutable('2026-05-18 12:34:56');
-        $vo  = SqlTime::fromDateTime($dt);
+        $dt = new DateTimeImmutable('2026-05-18 12:34:56');
+        $vo = SqlTime::fromDateTime($dt);
         self::assertSame('12:34:56', $vo->value);
     }
 

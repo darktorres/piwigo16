@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Unit\Auth;
 
-use Override;
 use LogicException;
+use Override;
+use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\RedirectServiceInterface;
 use RuntimeException;
-use Piwigo\Core\HtmlRenderingInterface;
 
 final class AccessControlTestFakeHtmlRendererDeniesAccess implements HtmlRenderingInterface
 {

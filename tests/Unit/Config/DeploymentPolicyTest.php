@@ -11,11 +11,16 @@ test('load() returns all-default values when local/config/config.php does not ex
 
     $policy = DeploymentPolicy::load(Paths::fromRoot($root));
 
-    expect($policy->showPhpErrors)->toBe(30719)
-        ->and($policy->showPhpErrorsOnFrontend)->toBeTrue()
-        ->and($policy->apacheAuthentication)->toBeFalse()
-        ->and($policy->externalAuthentification)->toBeFalse()
-        ->and($policy->allowedHosts)->toBe([]);
+    expect($policy->showPhpErrors)
+        ->toBe(30719)
+        ->and($policy->showPhpErrorsOnFrontend)
+        ->toBeTrue()
+        ->and($policy->apacheAuthentication)
+        ->toBeFalse()
+        ->and($policy->externalAuthentification)
+        ->toBeFalse()
+        ->and($policy->allowedHosts)
+        ->toBe([]);
 
     deployment_policy_test_rrmdir($root);
 });
@@ -30,10 +35,13 @@ test('load() returns the file\'s own values when local/config/config.php exists'
 
     $policy = DeploymentPolicy::load(Paths::fromRoot($root));
 
-    expect($policy->showPhpErrorsOnFrontend)->toBeFalse()
-        ->and($policy->allowedHosts)->toBe(['gallery.example.test'])
+    expect($policy->showPhpErrorsOnFrontend)
+        ->toBeFalse()
+        ->and($policy->allowedHosts)
+        ->toBe(['gallery.example.test'])
         // Untouched properties keep their own constructor defaults.
-        ->and($policy->showPhpErrors)->toBe(30719);
+        ->and($policy->showPhpErrors)
+        ->toBe(30719);
 
     deployment_policy_test_rrmdir($root);
 });

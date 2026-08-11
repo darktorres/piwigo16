@@ -21,11 +21,16 @@ function fullHistorySummaryCountRow(): array
 test('fromRow narrows every column to its real type', function (): void {
     $count = HistorySummaryCount::fromRow(fullHistorySummaryCountRow());
 
-    expect($count->year)->toBe(2026)
-        ->and($count->month)->toBe(7)
-        ->and($count->day)->toBe(12)
-        ->and($count->hour)->toBe(3)
-        ->and($count->nbPages)->toBe(10);
+    expect($count->year)
+        ->toBe(2026)
+        ->and($count->month)
+        ->toBe(7)
+        ->and($count->day)
+        ->toBe(12)
+        ->and($count->hour)
+        ->toBe(3)
+        ->and($count->nbPages)
+        ->toBe(10);
 });
 
 test('fromRow defaults month/day/hour to null when absent, matching the year-only bucket', function (): void {
@@ -36,9 +41,12 @@ test('fromRow defaults month/day/hour to null when absent, matching the year-onl
 
     $count = HistorySummaryCount::fromRow($row);
 
-    expect($count->month)->toBeNull()
-        ->and($count->day)->toBeNull()
-        ->and($count->hour)->toBeNull();
+    expect($count->month)
+        ->toBeNull()
+        ->and($count->day)
+        ->toBeNull()
+        ->and($count->hour)
+        ->toBeNull();
     // The NOT NULL columns (year/nb_pages) fall back to their type's zero
     // value instead -- never actually null for a real fetched row.
 });
@@ -54,18 +62,21 @@ test('fromRow defaults year/nb_pages to 0 when absent or non-numeric', function 
 
     $count = HistorySummaryCount::fromRow($row);
 
-    expect($count->year)->toBe(0)
-        ->and($count->nbPages)->toBe(0);
+    expect($count->year)
+        ->toBe(0)
+        ->and($count->nbPages)
+        ->toBe(0);
 });
 
 test('toArray round-trips the exact same DB column shape fromRow narrowed', function (): void {
     $roundTripped = HistorySummaryCount::fromRow(fullHistorySummaryCountRow())->toArray();
 
-    expect($roundTripped)->toBe([
-        'year' => 2026,
-        'month' => 7,
-        'day' => 12,
-        'hour' => 3,
-        'nb_pages' => 10,
-    ]);
+    expect($roundTripped)
+        ->toBe([
+            'year' => 2026,
+            'month' => 7,
+            'day' => 12,
+            'hour' => 3,
+            'nb_pages' => 10,
+        ]);
 });

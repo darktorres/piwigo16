@@ -6,7 +6,7 @@ namespace Piwigo\Tests\Contract;
 
 final class WsTagsTest extends ContractTestCase
 {
-    public function test_getList_response_matches_schema(): void
+    public function testGetListResponseMatchesSchema(): void
     {
         $response = $this->ws('pwg.tags.getList');
 
@@ -14,7 +14,7 @@ final class WsTagsTest extends ContractTestCase
         self::assertMatchesSchema('tags.getList', $response);
     }
 
-    public function test_getList_returns_only_used_tags(): void
+    public function testGetListReturnsOnlyUsedTags(): void
     {
         // pwg.tags.getList filters to tags attached to ≥1 image.
         // The fixture seeds 3 tags all attached to photos, so this must be non-empty.
@@ -35,7 +35,7 @@ final class WsTagsTest extends ContractTestCase
         }
     }
 
-    public function test_getAdminList_response_matches_schema(): void
+    public function testGetAdminListResponseMatchesSchema(): void
     {
         $response = $this->wsAdmin('pwg.tags.getAdminList');
 
@@ -43,7 +43,7 @@ final class WsTagsTest extends ContractTestCase
         self::assertMatchesSchema('pwg.tags.getAdminList', $response);
     }
 
-    public function test_getAdminList_returns_all_tags_including_unused(): void
+    public function testGetAdminListReturnsAllTagsIncludingUnused(): void
     {
         $adminList = $this->wsAdmin('pwg.tags.getAdminList');
         $publicList = $this->ws('pwg.tags.getList');
@@ -62,17 +62,19 @@ final class WsTagsTest extends ContractTestCase
         self::assertGreaterThanOrEqual(count($publicTags), count($adminTags));
     }
 
-    public function test_getAdminList_forbidden_for_guest(): void
+    public function testGetAdminListForbiddenForGuest(): void
     {
         $response = $this->ws('pwg.tags.getAdminList');
 
         self::assertSame('fail', $response['stat']);
     }
 
-    public function test_getImages_returns_paged_image_list(): void
+    public function testGetImagesReturnsPagedImageList(): void
     {
         // Use tag_id=1 which is seeded in the fixture
-        $response = $this->wsAdmin('pwg.tags.getImages', ['tag_id' => [1]]);
+        $response = $this->wsAdmin('pwg.tags.getImages', [
+            'tag_id' => [1],
+        ]);
 
         self::assertSame('ok', $response['stat']);
         self::assertMatchesSchema('pwg.tags.getImages', $response);
@@ -86,11 +88,14 @@ final class WsTagsTest extends ContractTestCase
      * . $order_by; }` branch -- test_getImages_returns_paged_image_list()
      * above never passes an 'order' param at all.
      */
-    public function test_getImages_accepts_an_order_param(): void
+    public function testGetImagesAcceptsAnOrderParam(): void
     {
         // fixture tag 1 ("nature") is attached to images 1, 2 and 3, per
         // image_tag -- confirmed live via a direct DB read.
-        $response = $this->wsAdmin('pwg.tags.getImages', ['tag_id' => [1], 'order' => 'id asc']);
+        $response = $this->wsAdmin('pwg.tags.getImages', [
+            'tag_id' => [1],
+            'order' => 'id asc',
+        ]);
 
         self::assertSame('ok', $response['stat']);
         $result = $response['result'];
@@ -110,9 +115,11 @@ final class WsTagsTest extends ContractTestCase
      * sort_by_counter at all (default false, alphabetical
      * tagAlphaCompare() sort).
      */
-    public function test_getList_sorts_by_counter_when_requested(): void
+    public function testGetListSortsByCounterWhenRequested(): void
     {
-        $response = $this->ws('pwg.tags.getList', ['sort_by_counter' => true]);
+        $response = $this->ws('pwg.tags.getList', [
+            'sort_by_counter' => true,
+        ]);
 
         self::assertSame('ok', $response['stat']);
         $result = $response['result'];

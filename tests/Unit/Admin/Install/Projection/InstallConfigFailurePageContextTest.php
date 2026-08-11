@@ -11,9 +11,10 @@ test('toArray flattens every property to its real Smarty template variable name'
         configFileContent: "<?php\n\$conf['dblayer'] = 'mysqli';",
     );
 
-    expect($context->toArray())->toBe([
-        'config_creation_failed' => true,
-        'config_url' => 'install.php?dl=abc123',
-        'config_file_content' => "<?php\n\$conf['dblayer'] = 'mysqli';",
-    ]);
+    expect($context->toArray())
+        ->toBe([
+            'config_creation_failed' => true,
+            'config_url' => 'install.php?dl=abc123',
+            'config_file_content' => "<?php\n\$conf['dblayer'] = 'mysqli';",
+        ]);
 });

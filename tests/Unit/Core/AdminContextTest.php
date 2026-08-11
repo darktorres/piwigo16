@@ -9,7 +9,10 @@ use Piwigo\Core\AdminContext;
  * fresh instance directly; no reset() needed for the instance API.
  */
 test('isActive reflects the value given at construction', function (): void {
-    expect(new AdminContext()->isActive())->toBeFalse()
-        ->and(new AdminContext(false)->isActive())->toBeFalse()
-        ->and(new AdminContext(true)->isActive())->toBeTrue();
+    expect(new AdminContext()->isActive())
+        ->toBeFalse()
+        ->and(new AdminContext(false)->isActive())
+        ->toBeFalse()
+        ->and(new AdminContext(true)->isActive())
+        ->toBeTrue();
 });

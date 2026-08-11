@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
+use Doctrine\DBAL\Platforms\Exception\NotSupported;
 use Doctrine\DBAL\Platforms\MySQLPlatform;
 use Doctrine\DBAL\Platforms\OraclePlatform;
 use Doctrine\DBAL\Platforms\PostgreSQLPlatform;
 use Doctrine\DBAL\Platforms\SQLitePlatform;
-use Doctrine\DBAL\Platforms\Exception\NotSupported;
 use Piwigo\Tag\TagEntity;
 use Piwigo\Tests\Support\DqlPlatformQueryTestFactory;
 
@@ -17,7 +17,7 @@ function groupConcatDql(): string
 
 test('generates a real GROUP_CONCAT(... SEPARATOR ,) call on MySQL/MariaDB', function (): void {
     expect(DqlPlatformQueryTestFactory::generatedSql(new MySQLPlatform(), groupConcatDql()))
-        ->toContain("GROUP_CONCAT(")
+        ->toContain('GROUP_CONCAT(')
         ->toContain("SEPARATOR ',')");
 });
 

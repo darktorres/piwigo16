@@ -2,8 +2,8 @@
 
 declare(strict_types=1);
 
-use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\ArrayParameterType;
+use Doctrine\DBAL\Connection;
 use Piwigo\Common\ValueObject\CategoryId;
 use Piwigo\Common\ValueObject\ImageId;
 use Piwigo\Db\AdvisorySessionLock;
@@ -99,7 +99,6 @@ function imageRepositoryTestReleaseEmptyLoungeDbLock(Connection $conn): void
  * byte-for-byte identical to the raw driver row for every input these
  * methods can ever actually receive.
  */
-
 function imageRepositoryTestInsertImage(string $path, ?string $md5sum = null): int
 {
     $conn = DbConnection::build();
@@ -136,11 +135,13 @@ test('findPathsForFileDeletion returns id as a real int and path as a real strin
     $imageId = imageRepositoryTestInsertImage('upload/2026/07/del-test.jpg');
 
     try {
-        $result = imageRepositoryTestRepo()->findPathsForFileDeletion([$imageId]);
+        $result = imageRepositoryTestRepo()
+            ->findPathsForFileDeletion([$imageId]);
 
-        expect($result)->toEqual([
-            new PathRepresentativeExt($imageId, 'upload/2026/07/del-test.jpg', null),
-        ]);
+        expect($result)
+            ->toEqual([
+                new PathRepresentativeExt($imageId, 'upload/2026/07/del-test.jpg', null),
+            ]);
     } finally {
         imageRepositoryTestDeleteImage($imageId);
     }
@@ -159,26 +160,40 @@ test('findLoungeRows returns image_id/category_id as real ints, ordered by categ
     $imageA = imageRepositoryTestInsertImage('upload/2026/07/lounge-a.jpg');
     $imageB = imageRepositoryTestInsertImage('upload/2026/07/lounge-b.jpg');
     $conn = DbConnection::build();
-    $conn->createQueryBuilder()->insert('lounge')
-        ->values(['image_id' => ':i', 'category_id' => ':c'])
-        ->setParameter('i', $imageB)->setParameter('c', 1)
+    $conn->createQueryBuilder()
+        ->insert('lounge')
+        ->values([
+            'image_id' => ':i',
+            'category_id' => ':c',
+        ])
+        ->setParameter('i', $imageB)
+        ->setParameter('c', 1)
         ->executeStatement();
-    $conn->createQueryBuilder()->insert('lounge')
-        ->values(['image_id' => ':i', 'category_id' => ':c'])
-        ->setParameter('i', $imageA)->setParameter('c', 1)
+    $conn->createQueryBuilder()
+        ->insert('lounge')
+        ->values([
+            'image_id' => ':i',
+            'category_id' => ':c',
+        ])
+        ->setParameter('i', $imageA)
+        ->setParameter('c', 1)
         ->executeStatement();
 
     try {
-        $result = imageRepositoryTestRepo()->findLoungeRows();
+        $result = imageRepositoryTestRepo()
+            ->findLoungeRows();
 
         // ORDER BY category_id ASC, image_id ASC -- both rows share
         // category 1, so imageA (the lower id) sorts first.
-        expect($result)->toEqual([
-            new ImageCategoryLink($imageA, 1),
-            new ImageCategoryLink($imageB, 1),
-        ]);
+        expect($result)
+            ->toEqual([
+                new ImageCategoryLink($imageA, 1),
+                new ImageCategoryLink($imageB, 1),
+            ]);
     } finally {
-        $conn->createQueryBuilder()->delete('lounge')->where('image_id IN (:ids)')
+        $conn->createQueryBuilder()
+            ->delete('lounge')
+            ->where('image_id IN (:ids)')
             ->setParameter('ids', [$imageA, $imageB], ArrayParameterType::INTEGER)
             ->executeStatement();
         imageRepositoryTestDeleteImage($imageA);
@@ -192,22 +207,32 @@ test('deleteLoungeUpTo removes only rows at or below the given image id', functi
     $imageB = imageRepositoryTestInsertImage('upload/2026/07/lounge-del-b.jpg');
     $conn = DbConnection::build();
     foreach ([$imageA, $imageB] as $id) {
-        $conn->createQueryBuilder()->insert('lounge')
-            ->values(['image_id' => ':i', 'category_id' => ':c'])
-            ->setParameter('i', $id)->setParameter('c', 1)
+        $conn->createQueryBuilder()
+            ->insert('lounge')
+            ->values([
+                'image_id' => ':i',
+                'category_id' => ':c',
+            ])
+            ->setParameter('i', $id)
+            ->setParameter('c', 1)
             ->executeStatement();
     }
 
     try {
         imageRepositoryTestRepo()->deleteLoungeUpTo($imageA);
 
-        $remaining = $conn->createQueryBuilder()->select('image_id')->from('lounge')
+        $remaining = $conn->createQueryBuilder()
+            ->select('image_id')
+            ->from('lounge')
             ->where('image_id IN (:ids)')
             ->setParameter('ids', [$imageA, $imageB], ArrayParameterType::INTEGER)
             ->fetchFirstColumn();
-        expect($remaining)->toBe([$imageB]);
+        expect($remaining)
+            ->toBe([$imageB]);
     } finally {
-        $conn->createQueryBuilder()->delete('lounge')->where('image_id IN (:ids)')
+        $conn->createQueryBuilder()
+            ->delete('lounge')
+            ->where('image_id IN (:ids)')
             ->setParameter('ids', [$imageA, $imageB], ArrayParameterType::INTEGER)
             ->executeStatement();
         imageRepositoryTestDeleteImage($imageA);
@@ -223,60 +248,117 @@ test('deleteImages cascades away rows from every real referencing table, and cle
     // that live, not just cite the schema.
     $repo = imageRepositoryTestRepo();
     $cached = $repo->find(ImageId::from(1));
-    expect($cached)->not->toBeNull();
+    expect($cached)
+        ->not->toBeNull();
 
     $imageId = imageRepositoryTestInsertImage('upload/2026/07/references-test.jpg');
     $bystanderId = imageRepositoryTestInsertImage('upload/2026/07/references-bystander.jpg');
     $conn = DbConnection::build();
-    $conn->createQueryBuilder()->insert('comments')
-        ->values(['image_id' => ':i', 'anonymous_id' => ':a'])
-        ->setParameter('i', $imageId)->setParameter('a', 'refs-test')->executeStatement();
-    $conn->createQueryBuilder()->insert('comments')
-        ->values(['image_id' => ':i', 'anonymous_id' => ':a'])
-        ->setParameter('i', $bystanderId)->setParameter('a', 'refs-bystander')->executeStatement();
-    $conn->createQueryBuilder()->insert('image_category')
-        ->values(['image_id' => ':i', 'category_id' => ':c'])
-        ->setParameter('i', $imageId)->setParameter('c', 1)->executeStatement();
-    $conn->createQueryBuilder()->insert('image_format')
-        ->values(['image_id' => ':i', 'ext' => ':e'])
-        ->setParameter('i', $imageId)->setParameter('e', 'webp')->executeStatement();
-    $conn->createQueryBuilder()->insert('image_tag')
-        ->values(['image_id' => ':i', 'tag_id' => ':t'])
-        ->setParameter('i', $imageId)->setParameter('t', 1)->executeStatement();
-    $conn->createQueryBuilder()->insert('favorites')
-        ->values(['user_id' => ':u', 'image_id' => ':i'])
-        ->setParameter('u', 1)->setParameter('i', $imageId)->executeStatement();
-    $conn->createQueryBuilder()->insert('rate')
-        ->values(['user_id' => ':u', 'element_id' => ':i'])
-        ->setParameter('u', 1)->setParameter('i', $imageId)->executeStatement();
-    $conn->createQueryBuilder()->insert('caddie')
-        ->values(['user_id' => ':u', 'element_id' => ':i'])
-        ->setParameter('u', 1)->setParameter('i', $imageId)->executeStatement();
+    $conn->createQueryBuilder()
+        ->insert('comments')
+        ->values([
+            'image_id' => ':i',
+            'anonymous_id' => ':a',
+        ])
+        ->setParameter('i', $imageId)
+        ->setParameter('a', 'refs-test')
+        ->executeStatement();
+    $conn->createQueryBuilder()
+        ->insert('comments')
+        ->values([
+            'image_id' => ':i',
+            'anonymous_id' => ':a',
+        ])
+        ->setParameter('i', $bystanderId)
+        ->setParameter('a', 'refs-bystander')
+        ->executeStatement();
+    $conn->createQueryBuilder()
+        ->insert('image_category')
+        ->values([
+            'image_id' => ':i',
+            'category_id' => ':c',
+        ])
+        ->setParameter('i', $imageId)
+        ->setParameter('c', 1)
+        ->executeStatement();
+    $conn->createQueryBuilder()
+        ->insert('image_format')
+        ->values([
+            'image_id' => ':i',
+            'ext' => ':e',
+        ])
+        ->setParameter('i', $imageId)
+        ->setParameter('e', 'webp')
+        ->executeStatement();
+    $conn->createQueryBuilder()
+        ->insert('image_tag')
+        ->values([
+            'image_id' => ':i',
+            'tag_id' => ':t',
+        ])
+        ->setParameter('i', $imageId)
+        ->setParameter('t', 1)
+        ->executeStatement();
+    $conn->createQueryBuilder()
+        ->insert('favorites')
+        ->values([
+            'user_id' => ':u',
+            'image_id' => ':i',
+        ])
+        ->setParameter('u', 1)
+        ->setParameter('i', $imageId)
+        ->executeStatement();
+    $conn->createQueryBuilder()
+        ->insert('rate')
+        ->values([
+            'user_id' => ':u',
+            'element_id' => ':i',
+        ])
+        ->setParameter('u', 1)
+        ->setParameter('i', $imageId)
+        ->executeStatement();
+    $conn->createQueryBuilder()
+        ->insert('caddie')
+        ->values([
+            'user_id' => ':u',
+            'element_id' => ':i',
+        ])
+        ->setParameter('u', 1)
+        ->setParameter('i', $imageId)
+        ->executeStatement();
 
     try {
         $repo->deleteImages([$imageId]);
 
         foreach (['comments', 'image_category', 'image_format', 'image_tag', 'favorites'] as $table) {
             $count = $conn->fetchOne("SELECT COUNT(*) FROM {$table} WHERE image_id = {$imageId}");
-            expect($count)->toBe(0);
+            expect($count)
+                ->toBe(0);
         }
         foreach (['rate', 'caddie'] as $table) {
             $count = $conn->fetchOne("SELECT COUNT(*) FROM {$table} WHERE element_id = {$imageId}");
-            expect($count)->toBe(0);
+            expect($count)
+                ->toBe(0);
         }
 
         // The cascade is scoped to the deleted image's own id -- a
         // bystander image's own comment row survives untouched.
-        $bystanderCount = $conn->fetchOne('SELECT COUNT(*) FROM ' . 'comments' . " WHERE image_id = {$bystanderId}");
-        expect($bystanderCount)->toBe(1);
+        $bystanderCount = $conn->fetchOne('SELECT COUNT(*) FROM comments' . " WHERE image_id = {$bystanderId}");
+        expect($bystanderCount)
+            ->toBe(1);
 
         $refetched = $repo->find(ImageId::from(1));
-        expect($refetched)->not->toBe($cached);
+        expect($refetched)
+            ->not->toBe($cached);
     } finally {
         // The image row is already gone via deleteImages() itself above
         // -- a harmless no-op delete if a genuine bug left it behind.
         imageRepositoryTestDeleteImage($imageId);
-        $conn->createQueryBuilder()->delete('comments')->where('image_id = :i')->setParameter('i', $bystanderId)->executeStatement();
+        $conn->createQueryBuilder()
+            ->delete('comments')
+            ->where('image_id = :i')
+            ->setParameter('i', $bystanderId)
+            ->executeStatement();
         imageRepositoryTestDeleteImage($bystanderId);
     }
 });
@@ -288,17 +370,20 @@ test('deleteImages removes the row for real, and clears the identity map', funct
     // of whether the identity map was cleared.
     $repo = imageRepositoryTestRepo();
     $cached = $repo->find(ImageId::from(1));
-    expect($cached)->not->toBeNull();
+    expect($cached)
+        ->not->toBeNull();
 
     $imageId = imageRepositoryTestInsertImage('upload/2026/07/delete-images-test.jpg');
 
     $repo->deleteImages([$imageId]);
 
-    $stillThere = DbConnection::build()->fetchOne('SELECT COUNT(*) FROM ' . 'images' . " WHERE id = {$imageId}");
-    expect($stillThere)->toBe(0);
+    $stillThere = DbConnection::build()->fetchOne('SELECT COUNT(*) FROM images' . " WHERE id = {$imageId}");
+    expect($stillThere)
+        ->toBe(0);
 
     $refetched = $repo->find(ImageId::from(1));
-    expect($refetched)->not->toBe($cached);
+    expect($refetched)
+        ->not->toBe($cached);
 });
 
 test('findRepresentedCategoryIds returns real ints for every category whose representative points at one of the given images', function (): void {
@@ -317,15 +402,16 @@ test('findRepresentedCategoryIds returns real ints for every category whose repr
     $repo = imageRepositoryTestRepo();
     $imageId = imageRepositoryTestInsertImage('upload/2026/07/represents-test.jpg');
     $conn = DbConnection::build();
-    $conn->executeStatement('INSERT INTO ' . 'categories' . " (name, representative_picture_id) VALUES ('mutation-sweep-repr-category', {$imageId})");
+    $conn->executeStatement('INSERT INTO categories' . " (name, representative_picture_id) VALUES ('mutation-sweep-repr-category', {$imageId})");
     $categoryId = (int) $conn->lastInsertId();
 
     try {
         $result = $repo->findRepresentedCategoryIds([$imageId]);
 
-        expect($result)->toBe([$categoryId]);
+        expect($result)
+            ->toBe([$categoryId]);
     } finally {
-        $conn->executeStatement("DELETE FROM " . 'categories' . " WHERE id = {$categoryId}");
+        $conn->executeStatement('DELETE FROM categories' . " WHERE id = {$categoryId}");
         imageRepositoryTestDeleteImage($imageId);
     }
 });
@@ -341,17 +427,29 @@ test('findExistingAssociations groups real int image ids under their real int ca
     $repo = imageRepositoryTestRepo();
     $imageId = imageRepositoryTestInsertImage('upload/2026/07/existing-assoc-test.jpg');
     $conn = DbConnection::build();
-    $conn->createQueryBuilder()->insert('image_category')
-        ->values(['image_id' => ':i', 'category_id' => ':c'])
-        ->setParameter('i', $imageId)->setParameter('c', 1)->executeStatement();
+    $conn->createQueryBuilder()
+        ->insert('image_category')
+        ->values([
+            'image_id' => ':i',
+            'category_id' => ':c',
+        ])
+        ->setParameter('i', $imageId)
+        ->setParameter('c', 1)
+        ->executeStatement();
 
     try {
         $result = $repo->findExistingAssociations([$imageId], [1]);
 
-        expect($result)->toBe([1 => [$imageId]]);
+        expect($result)
+            ->toBe([
+                1 => [$imageId],
+            ]);
     } finally {
-        $conn->createQueryBuilder()->delete('image_category')
-            ->where('image_id = :i')->setParameter('i', $imageId)->executeStatement();
+        $conn->createQueryBuilder()
+            ->delete('image_category')
+            ->where('image_id = :i')
+            ->setParameter('i', $imageId)
+            ->executeStatement();
         imageRepositoryTestDeleteImage($imageId);
     }
 });
@@ -373,23 +471,38 @@ test('findMaxRanksByCategory returns the real int max rank for a category with r
     // itself inserted).
     $repo = imageRepositoryTestRepo();
     $conn = DbConnection::build();
-    $conn->executeStatement("INSERT INTO " . 'categories' . " (name) VALUES ('mutation-sweep-max-rank-category')");
+    $conn->executeStatement('INSERT INTO categories' . " (name) VALUES ('mutation-sweep-max-rank-category')");
     $categoryId = (int) $conn->lastInsertId();
     $imageId = imageRepositoryTestInsertImage('upload/2026/07/max-rank-test.jpg');
-    $rankColumn = $conn->getDatabasePlatform()->quoteSingleIdentifier('rank');
-    $conn->createQueryBuilder()->insert('image_category')
-        ->values(['image_id' => ':i', 'category_id' => ':c', $rankColumn => ':r'])
-        ->setParameter('i', $imageId)->setParameter('c', $categoryId)->setParameter('r', 7)->executeStatement();
+    $rankColumn = $conn->getDatabasePlatform()
+        ->quoteSingleIdentifier('rank');
+    $conn->createQueryBuilder()
+        ->insert('image_category')
+        ->values([
+            'image_id' => ':i',
+            'category_id' => ':c',
+            $rankColumn => ':r',
+        ])
+        ->setParameter('i', $imageId)
+        ->setParameter('c', $categoryId)
+        ->setParameter('r', 7)
+        ->executeStatement();
 
     try {
         $result = $repo->findMaxRanksByCategory([$categoryId]);
 
-        expect($result)->toBe([$categoryId => 7]);
+        expect($result)
+            ->toBe([
+                $categoryId => 7,
+            ]);
     } finally {
-        $conn->createQueryBuilder()->delete('image_category')
-            ->where('image_id = :i')->setParameter('i', $imageId)->executeStatement();
+        $conn->createQueryBuilder()
+            ->delete('image_category')
+            ->where('image_id = :i')
+            ->setParameter('i', $imageId)
+            ->executeStatement();
         imageRepositoryTestDeleteImage($imageId);
-        $conn->executeStatement("DELETE FROM " . 'categories' . " WHERE id = {$categoryId}");
+        $conn->executeStatement('DELETE FROM categories' . " WHERE id = {$categoryId}");
     }
 });
 
@@ -399,24 +512,34 @@ test('massInsertImageCategory persists every real row it is given', function ():
     // tests above).
     $repo = imageRepositoryTestRepo();
     $cached = $repo->find(ImageId::from(1));
-    expect($cached)->not->toBeNull();
+    expect($cached)
+        ->not->toBeNull();
 
     $imageId = imageRepositoryTestInsertImage('upload/2026/07/mass-insert-test.jpg');
 
     try {
         $repo->massInsertImageCategory([
-            ['image_id' => $imageId, 'category_id' => 1, 'rank' => 3],
+            [
+                'image_id' => $imageId,
+                'category_id' => 1,
+                'rank' => 3,
+            ],
         ]);
 
         $conn = DbConnection::build();
-        $rankColumn = $conn->getDatabasePlatform()->quoteSingleIdentifier('rank');
-        $rank = $conn->fetchOne('SELECT ' . $rankColumn . ' FROM ' . 'image_category' . " WHERE image_id = {$imageId} AND category_id = 1");
-        expect($rank)->toBe(3);
+        $rankColumn = $conn->getDatabasePlatform()
+            ->quoteSingleIdentifier('rank');
+        $rank = $conn->fetchOne('SELECT ' . $rankColumn . ' FROM image_category' . " WHERE image_id = {$imageId} AND category_id = 1");
+        expect($rank)
+            ->toBe(3);
         $refetched = $repo->find(ImageId::from(1));
-        expect($refetched)->not->toBe($cached);
+        expect($refetched)
+            ->not->toBe($cached);
     } finally {
         DbConnection::build()->createQueryBuilder()->delete('image_category')
-            ->where('image_id = :i')->setParameter('i', $imageId)->executeStatement();
+            ->where('image_id = :i')
+            ->setParameter('i', $imageId)
+            ->executeStatement();
         imageRepositoryTestDeleteImage($imageId);
     }
 });
@@ -442,25 +565,32 @@ test('tryAcquireLoungeLock persists a real, JSON-round-trippable value, and clea
     // for the rest of the process.
     try {
         $cached = $repo->find(ImageId::from(1));
-        expect($cached)->not->toBeNull();
+        expect($cached)
+            ->not->toBeNull();
 
-        $conn->createQueryBuilder()->delete('config')
-            ->where('param = :p')->setParameter('p', 'empty_lounge_running')
+        $conn->createQueryBuilder()
+            ->delete('config')
+            ->where('param = :p')
+            ->setParameter('p', 'empty_lounge_running')
             ->executeStatement();
 
         try {
             $repo->tryAcquireLoungeLock('lock-value-1');
 
-            expect($repo->findLoungeLockValue())->toBe('lock-value-1');
+            expect($repo->findLoungeLockValue())
+                ->toBe('lock-value-1');
 
             // If $em->clear() didn't run, this find() would return the SAME
             // PHP object identity as $cached (the pre-clear() cached
             // instance) rather than a freshly-hydrated one.
             $refetched = $repo->find(ImageId::from(1));
-            expect($refetched)->not->toBe($cached);
+            expect($refetched)
+                ->not->toBe($cached);
         } finally {
-            $conn->createQueryBuilder()->delete('config')
-                ->where('param = :p')->setParameter('p', 'empty_lounge_running')
+            $conn->createQueryBuilder()
+                ->delete('config')
+                ->where('param = :p')
+                ->setParameter('p', 'empty_lounge_running')
                 ->executeStatement();
         }
     } finally {
@@ -486,21 +616,29 @@ test('massUpdateMd5sums updates only the md5sum column, keyed by id, and clears 
     // RemoveMethodCall ($em->clear()).
     $repo = imageRepositoryTestRepo();
     $cached = $repo->find(ImageId::from(1));
-    expect($cached)->not->toBeNull();
+    expect($cached)
+        ->not->toBeNull();
 
     $imageId = imageRepositoryTestInsertImage('upload/2026/07/md5-test.jpg', 'old0old0old0old0old0old0old0old0');
 
     try {
         $repo->massUpdateMd5sums([
-            ['id' => $imageId, 'md5sum' => 'new0new0new0new0new0new0new0new0'],
+            [
+                'id' => $imageId,
+                'md5sum' => 'new0new0new0new0new0new0new0new0',
+            ],
         ]);
 
         $md5sum = DbConnection::build()->createQueryBuilder()->select('md5sum')->from('images')
-            ->where('id = :id')->setParameter('id', $imageId)->fetchOne();
-        expect($md5sum)->toBe('new0new0new0new0new0new0new0new0');
+            ->where('id = :id')
+            ->setParameter('id', $imageId)
+            ->fetchOne();
+        expect($md5sum)
+            ->toBe('new0new0new0new0new0new0new0new0');
 
         $refetched = $repo->find(ImageId::from(1));
-        expect($refetched)->not->toBe($cached);
+        expect($refetched)
+            ->not->toBe($cached);
     } finally {
         imageRepositoryTestDeleteImage($imageId);
     }
@@ -512,9 +650,13 @@ test('findPathsForMd5sum maps id => path as a real string, not a raw driver valu
     $imageId = imageRepositoryTestInsertImage('upload/2026/07/md5sum-paths.jpg');
 
     try {
-        $result = imageRepositoryTestRepo()->findPathsForMd5sum([$imageId]);
+        $result = imageRepositoryTestRepo()
+            ->findPathsForMd5sum([$imageId]);
 
-        expect($result)->toBe([$imageId => 'upload/2026/07/md5sum-paths.jpg']);
+        expect($result)
+            ->toBe([
+                $imageId => 'upload/2026/07/md5sum-paths.jpg',
+            ]);
     } finally {
         imageRepositoryTestDeleteImage($imageId);
     }
@@ -539,7 +681,8 @@ test('findById reads a numeric-string id, not just a native int', function (): v
     if ($found === null) {
         throw new RuntimeException('expected a real Image instance');
     }
-    expect($found->id->value)->toBe(1);
+    expect($found->id->value)
+        ->toBe(1);
 });
 
 test('findById returns null for an id that does not exist, not a real Image', function (): void {
@@ -560,18 +703,28 @@ test('findIdsByFilenameInCategory returns real ints for a matching filename/cate
     // reasoning as findPathsForFileDeletion() above.
     $imageId = imageRepositoryTestInsertImage('upload/2026/07/filename-test.jpg');
     $conn = DbConnection::build();
-    $conn->createQueryBuilder()->insert('image_category')
-        ->values(['image_id' => ':i', 'category_id' => ':c'])
-        ->setParameter('i', $imageId)->setParameter('c', 1)
+    $conn->createQueryBuilder()
+        ->insert('image_category')
+        ->values([
+            'image_id' => ':i',
+            'category_id' => ':c',
+        ])
+        ->setParameter('i', $imageId)
+        ->setParameter('c', 1)
         ->executeStatement();
 
     try {
-        $result = imageRepositoryTestRepo()->findIdsByFilenameInCategory('filename-test.jpg', CategoryId::from(1));
+        $result = imageRepositoryTestRepo()
+            ->findIdsByFilenameInCategory('filename-test.jpg', CategoryId::from(1));
 
-        expect($result)->toBe([$imageId]);
+        expect($result)
+            ->toBe([$imageId]);
     } finally {
-        $conn->createQueryBuilder()->delete('image_category')
-            ->where('image_id = :i')->setParameter('i', $imageId)->executeStatement();
+        $conn->createQueryBuilder()
+            ->delete('image_category')
+            ->where('image_id = :i')
+            ->setParameter('i', $imageId)
+            ->executeStatement();
         imageRepositoryTestDeleteImage($imageId);
     }
 });
@@ -582,9 +735,11 @@ test('findIdsByMd5sum returns real ints for every image sharing the given md5sum
     $imageId = imageRepositoryTestInsertImage('upload/2026/07/md5-lookup.jpg', 'dupe0dupe0dupe0dupe0dupe0dupe0dp');
 
     try {
-        $result = imageRepositoryTestRepo()->findIdsByMd5sum('dupe0dupe0dupe0dupe0dupe0dupe0dp');
+        $result = imageRepositoryTestRepo()
+            ->findIdsByMd5sum('dupe0dupe0dupe0dupe0dupe0dupe0dp');
 
-        expect($result)->toBe([$imageId]);
+        expect($result)
+            ->toBe([$imageId]);
     } finally {
         imageRepositoryTestDeleteImage($imageId);
     }
@@ -595,25 +750,38 @@ test('findIdsVisibleInCategoriesRecentlyAvailable returns real ints for a recent
     // DecrementInteger/IncrementInteger.
     $imageId = imageRepositoryTestInsertImage('upload/2026/07/recent-test.jpg');
     $conn = DbConnection::build();
-    $conn->createQueryBuilder()->update('images')
-        ->set('date_available', ':d')->where('id = :id')
-        ->setParameter('d', date('Y-m-d H:i:s'))->setParameter('id', $imageId)
+    $conn->createQueryBuilder()
+        ->update('images')
+        ->set('date_available', ':d')
+        ->where('id = :id')
+        ->setParameter('d', date('Y-m-d H:i:s'))
+        ->setParameter('id', $imageId)
         ->executeStatement();
-    $conn->createQueryBuilder()->insert('image_category')
-        ->values(['image_id' => ':i', 'category_id' => ':c'])
-        ->setParameter('i', $imageId)->setParameter('c', 1)
+    $conn->createQueryBuilder()
+        ->insert('image_category')
+        ->values([
+            'image_id' => ':i',
+            'category_id' => ':c',
+        ])
+        ->setParameter('i', $imageId)
+        ->setParameter('c', 1)
         ->executeStatement();
 
     try {
-        $result = imageRepositoryTestRepo()->findIdsVisibleInCategoriesRecentlyAvailable('1', SqlDialect::getRecentPeriodExpression(365));
+        $result = imageRepositoryTestRepo()
+            ->findIdsVisibleInCategoriesRecentlyAvailable('1', SqlDialect::getRecentPeriodExpression(365));
 
         // Category 1 already holds the fixture's own images too (real
         // production data, not something this test controls) -- assert
         // strict membership and type instead of an exact-array match.
-        expect($result)->toContain($imageId);
+        expect($result)
+            ->toContain($imageId);
     } finally {
-        $conn->createQueryBuilder()->delete('image_category')
-            ->where('image_id = :i')->setParameter('i', $imageId)->executeStatement();
+        $conn->createQueryBuilder()
+            ->delete('image_category')
+            ->where('image_id = :i')
+            ->setParameter('i', $imageId)
+            ->executeStatement();
         imageRepositoryTestDeleteImage($imageId);
     }
 });
@@ -625,7 +793,8 @@ test('findAddMethodBreakdown reports real string/int columns for at least one re
     // TernaryNegated/DecrementInteger/IncrementInteger -- the fixture's
     // own 5 images (storage_category_id NULL => 'api') always produce
     // at least one real, non-empty group.
-    $result = imageRepositoryTestRepo()->findAddMethodBreakdown();
+    $result = imageRepositoryTestRepo()
+        ->findAddMethodBreakdown();
 
     $api = null;
     foreach ($result as $row) {
@@ -637,15 +806,18 @@ test('findAddMethodBreakdown reports real string/int columns for at least one re
     if ($api === null) {
         throw new RuntimeException('expected at least one real "api" add_method row');
     }
-    expect($api->nbFiles)->toBeGreaterThanOrEqual(5);
-    expect($api->lastAddedOn)->toBeString();
+    expect($api->nbFiles)
+        ->toBeGreaterThanOrEqual(5);
+    expect($api->lastAddedOn)
+        ->toBeString();
 });
 
 test('deleteNonStorageCategoryLinks clears the identity map after a raw write outside the ORM', function (): void {
     // Kills line 919's RemoveMethodCall ($em->clear()).
     $repo = imageRepositoryTestRepo();
     $cached = $repo->find(ImageId::from(1));
-    expect($cached)->not->toBeNull();
+    expect($cached)
+        ->not->toBeNull();
 
     // Fixture image 1's own storage_category_id is NULL and no
     // $categories keep-list is passed here, so both of the method's own
@@ -658,13 +830,15 @@ test('deleteNonStorageCategoryLinks clears the identity map after a raw write ou
         $repo->deleteNonStorageCategoryLinks([1], []);
 
         $refetched = $repo->find(ImageId::from(1));
-        expect($refetched)->not->toBe($cached);
+        expect($refetched)
+            ->not->toBe($cached);
     } finally {
         $conn = DbConnection::build();
-        $exists = $conn->fetchOne('SELECT COUNT(*) FROM ' . 'image_category' . ' WHERE image_id = 1 AND category_id = 1');
+        $exists = $conn->fetchOne('SELECT COUNT(*) FROM image_category WHERE image_id = 1 AND category_id = 1');
         if ($exists === 0) {
-            $rankColumn = $conn->getDatabasePlatform()->quoteSingleIdentifier('rank');
-            $conn->executeStatement('INSERT INTO ' . 'image_category' . " (image_id, category_id, {$rankColumn}) VALUES (1, 1, 1)");
+            $rankColumn = $conn->getDatabasePlatform()
+                ->quoteSingleIdentifier('rank');
+            $conn->executeStatement('INSERT INTO image_category' . " (image_id, category_id, {$rankColumn}) VALUES (1, 1, 1)");
         }
     }
 });
@@ -680,28 +854,43 @@ test('deleteNonStorageCategoryLinks spares the image\'s own storage_category_id 
     $conn = DbConnection::build();
     $conn->createQueryBuilder()
         ->insert('images')
-        ->values(['file' => ':file', 'path' => ':path', 'storage_category_id' => ':scid'])
+        ->values([
+            'file' => ':file',
+            'path' => ':path',
+            'storage_category_id' => ':scid',
+        ])
         ->setParameter('file', 'storagelink.jpg')
         ->setParameter('path', 'upload/2026/07/storagelink.jpg')
         ->setParameter('scid', 1)
         ->executeStatement();
     $imageId = (int) $conn->lastInsertId();
 
-    $conn->createQueryBuilder()->insert('image_category')
-        ->values(['image_id' => ':i', 'category_id' => ':c'])->setParameter('i', $imageId)->setParameter('c', 1)
+    $conn->createQueryBuilder()
+        ->insert('image_category')
+        ->values([
+            'image_id' => ':i',
+            'category_id' => ':c',
+        ])->setParameter('i', $imageId)
+        ->setParameter('c', 1)
         ->executeStatement();
-    $conn->createQueryBuilder()->insert('image_category')
-        ->values(['image_id' => ':i', 'category_id' => ':c'])->setParameter('i', $imageId)->setParameter('c', 2)
+    $conn->createQueryBuilder()
+        ->insert('image_category')
+        ->values([
+            'image_id' => ':i',
+            'category_id' => ':c',
+        ])->setParameter('i', $imageId)
+        ->setParameter('c', 2)
         ->executeStatement();
 
     try {
         imageRepositoryTestRepo()->deleteNonStorageCategoryLinks([$imageId], []);
 
-        $remaining = $conn->fetchFirstColumn('SELECT category_id FROM ' . 'image_category' . ' WHERE image_id = ' . $imageId);
-        expect($remaining)->toBe([1]);
+        $remaining = $conn->fetchFirstColumn('SELECT category_id FROM image_category WHERE image_id = ' . $imageId);
+        expect($remaining)
+            ->toBe([1]);
     } finally {
-        $conn->executeStatement('DELETE FROM ' . 'image_category' . ' WHERE image_id = ?', [$imageId]);
-        $conn->executeStatement('DELETE FROM ' . 'images' . ' WHERE id = ?', [$imageId]);
+        $conn->executeStatement('DELETE FROM image_category WHERE image_id = ?', [$imageId]);
+        $conn->executeStatement('DELETE FROM images WHERE id = ?', [$imageId]);
     }
 });
 
@@ -712,26 +901,40 @@ test('deleteNonStorageCategoryLinks also spares any category explicitly passed i
     $conn = DbConnection::build();
     $conn->createQueryBuilder()
         ->insert('images')
-        ->values(['file' => ':file', 'path' => ':path'])
+        ->values([
+            'file' => ':file',
+            'path' => ':path',
+        ])
         ->setParameter('file', 'nostoragelink.jpg')
         ->setParameter('path', 'upload/2026/07/nostoragelink.jpg')
         ->executeStatement();
     $imageId = (int) $conn->lastInsertId();
 
-    $conn->createQueryBuilder()->insert('image_category')
-        ->values(['image_id' => ':i', 'category_id' => ':c'])->setParameter('i', $imageId)->setParameter('c', 1)
+    $conn->createQueryBuilder()
+        ->insert('image_category')
+        ->values([
+            'image_id' => ':i',
+            'category_id' => ':c',
+        ])->setParameter('i', $imageId)
+        ->setParameter('c', 1)
         ->executeStatement();
-    $conn->createQueryBuilder()->insert('image_category')
-        ->values(['image_id' => ':i', 'category_id' => ':c'])->setParameter('i', $imageId)->setParameter('c', 2)
+    $conn->createQueryBuilder()
+        ->insert('image_category')
+        ->values([
+            'image_id' => ':i',
+            'category_id' => ':c',
+        ])->setParameter('i', $imageId)
+        ->setParameter('c', 2)
         ->executeStatement();
 
     try {
         imageRepositoryTestRepo()->deleteNonStorageCategoryLinks([$imageId], [2]);
 
-        $remaining = $conn->fetchFirstColumn('SELECT category_id FROM ' . 'image_category' . ' WHERE image_id = ' . $imageId);
-        expect($remaining)->toBe([2]);
+        $remaining = $conn->fetchFirstColumn('SELECT category_id FROM image_category WHERE image_id = ' . $imageId);
+        expect($remaining)
+            ->toBe([2]);
     } finally {
-        $conn->executeStatement('DELETE FROM ' . 'image_category' . ' WHERE image_id = ?', [$imageId]);
-        $conn->executeStatement('DELETE FROM ' . 'images' . ' WHERE id = ?', [$imageId]);
+        $conn->executeStatement('DELETE FROM image_category WHERE image_id = ?', [$imageId]);
+        $conn->executeStatement('DELETE FROM images WHERE id = ?', [$imageId]);
     }
 });

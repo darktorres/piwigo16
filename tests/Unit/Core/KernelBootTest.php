@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-use Piwigo\Tests\Support\CurrentPathsTestFactory;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Paths;
+use Piwigo\Tests\Support\CurrentPathsTestFactory;
 
 beforeEach(function (): void {
     Kernel::reset();
@@ -84,7 +84,8 @@ test('a rejected reboot leaves the original Paths binding intact, not corrupted'
     }
 
     $paths = CurrentPathsTestFactory::get();
-    expect($paths->root)->toBe('/tmp/piwigo-kernel-boot-test-a/');
+    expect($paths->root)
+        ->toBe('/tmp/piwigo-kernel-boot-test-a/');
 });
 
 test('reset also resets CurrentPaths, not just its own booted/container state', function (): void {

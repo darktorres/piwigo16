@@ -19,7 +19,7 @@ use ReflectionMethod;
  */
 final class SectionPopulatorEmptyValueTest extends TestCase
 {
-    public function test_matches_php_emptys_exact_truthiness_semantics(): void
+    public function testMatchesPhpEmptysExactTruthinessSemantics(): void
     {
         $method = new ReflectionMethod(SectionPopulator::class, 'emptyValue');
 

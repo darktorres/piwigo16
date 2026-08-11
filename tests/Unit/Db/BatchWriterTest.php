@@ -24,7 +24,10 @@ use Piwigo\Db\BatchWriter;
  */
 function batchWriterTestMemoryConnection(): Connection
 {
-    $conn = DriverManager::getConnection(['driver' => 'pdo_sqlite', 'memory' => true]);
+    $conn = DriverManager::getConnection([
+        'driver' => 'pdo_sqlite',
+        'memory' => true,
+    ]);
     $conn->executeStatement('CREATE TABLE t (id INTEGER PRIMARY KEY, a TEXT, b TEXT)');
     $conn->executeStatement('INSERT INTO t (id, a, b) VALUES (1, \'x\', \'y\')');
 
@@ -45,10 +48,18 @@ test('singleUpdate binds each SET field to its own distinct value, not just the 
     $conn = batchWriterTestMemoryConnection();
     $writer = new BatchWriter($conn);
 
-    $writer->singleUpdate('t', ['a' => 'newA', 'b' => 'newB'], ['id' => 1]);
+    $writer->singleUpdate('t', [
+        'a' => 'newA',
+        'b' => 'newB',
+    ], [
+        'id' => 1,
+    ]);
 
     expect($conn->fetchAssociative('SELECT a, b FROM t WHERE id = 1'))
-        ->toBe(['a' => 'newA', 'b' => 'newB']);
+        ->toBe([
+            'a' => 'newA',
+            'b' => 'newB',
+        ]);
 });
 
 test('singleUpdate treats an explicitly empty string field as NULL, not as a bound empty-string value', function (): void {
@@ -62,10 +73,15 @@ test('singleUpdate treats an explicitly empty string field as NULL, not as a bou
     $conn = batchWriterTestMemoryConnection();
     $writer = new BatchWriter($conn);
 
-    $writer->singleUpdate('t', ['a' => ''], ['id' => 1]);
+    $writer->singleUpdate('t', [
+        'a' => '',
+    ], [
+        'id' => 1,
+    ]);
 
     $row = $conn->fetchAssociative('SELECT a FROM t WHERE id = 1');
-    expect($row)->not->toBeFalse();
+    expect($row)
+        ->not->toBeFalse();
     assert(is_array($row));
     expect($row['a'])->toBeNull();
 });
@@ -81,10 +97,16 @@ test('singleUpdate continues past an empty, non-skipped field to still process a
     $conn = batchWriterTestMemoryConnection();
     $writer = new BatchWriter($conn);
 
-    $writer->singleUpdate('t', ['a' => '', 'b' => 'newB'], ['id' => 1]);
+    $writer->singleUpdate('t', [
+        'a' => '',
+        'b' => 'newB',
+    ], [
+        'id' => 1,
+    ]);
 
     $row = $conn->fetchAssociative('SELECT a, b FROM t WHERE id = 1');
-    expect($row)->not->toBeFalse();
+    expect($row)
+        ->not->toBeFalse();
     assert(is_array($row));
     expect($row['a'])->toBeNull()
         ->and($row['b'])->toBe('newB');
@@ -103,16 +125,25 @@ test('singleUpdate routes a non-scalar WHERE value to an IS NULL condition, not 
     // `code`): real code updates the NULL row; the mutant updates the
     // 'Array'-string row instead -- a different row entirely, not just
     // a different SQL string.
-    $conn = DriverManager::getConnection(['driver' => 'pdo_sqlite', 'memory' => true]);
+    $conn = DriverManager::getConnection([
+        'driver' => 'pdo_sqlite',
+        'memory' => true,
+    ]);
     $conn->executeStatement('CREATE TABLE t3 (id INTEGER PRIMARY KEY, code TEXT, note TEXT)');
     $conn->executeStatement('INSERT INTO t3 (id, code, note) VALUES (1, NULL, \'row1-orig\')');
     $conn->executeStatement('INSERT INTO t3 (id, code, note) VALUES (2, \'Array\', \'row2-orig\')');
 
     $writer = new BatchWriter($conn);
-    $writer->singleUpdate('t3', ['note' => 'updated'], ['code' => [9, 9]]);
+    $writer->singleUpdate('t3', [
+        'note' => 'updated',
+    ], [
+        'code' => [9, 9],
+    ]);
 
-    expect($conn->fetchOne('SELECT note FROM t3 WHERE id = 1'))->toBe('updated');
-    expect($conn->fetchOne('SELECT note FROM t3 WHERE id = 2'))->toBe('row2-orig');
+    expect($conn->fetchOne('SELECT note FROM t3 WHERE id = 1'))
+        ->toBe('updated');
+    expect($conn->fetchOne('SELECT note FROM t3 WHERE id = 2'))
+        ->toBe('row2-orig');
 });
 
 test('singleUpdate binds each WHERE condition to its own distinct value, not colliding across multiple conditions', function (): void {
@@ -125,14 +156,24 @@ test('singleUpdate binds each WHERE condition to its own distinct value, not col
     // invalid negative-suffixed placeholder names -- confirmed live
     // this throws the same genuine DBAL MissingNamedParameter exception
     // as line 196's own SET-loop equivalent).
-    $conn = DriverManager::getConnection(['driver' => 'pdo_sqlite', 'memory' => true]);
+    $conn = DriverManager::getConnection([
+        'driver' => 'pdo_sqlite',
+        'memory' => true,
+    ]);
     $conn->executeStatement('CREATE TABLE t2 (id INTEGER PRIMARY KEY, a TEXT, b TEXT, note TEXT)');
     $conn->executeStatement('INSERT INTO t2 (id, a, b, note) VALUES (1, \'x\', \'y\', \'orig\')');
 
     $writer = new BatchWriter($conn);
-    $writer->singleUpdate('t2', ['note' => 'updated'], ['a' => 'x', 'b' => 'y', 'id' => 1]);
+    $writer->singleUpdate('t2', [
+        'note' => 'updated',
+    ], [
+        'a' => 'x',
+        'b' => 'y',
+        'id' => 1,
+    ]);
 
-    expect($conn->fetchOne('SELECT note FROM t2 WHERE id = 1'))->toBe('updated');
+    expect($conn->fetchOne('SELECT note FROM t2 WHERE id = 1'))
+        ->toBe('updated');
 });
 
 /**

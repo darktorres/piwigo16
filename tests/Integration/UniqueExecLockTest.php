@@ -6,10 +6,10 @@ namespace Piwigo\Tests\Integration;
 
 use Override;
 use Piwigo\Core\Logger;
-use Piwigo\Db\AdvisorySessionLock;
-use Piwigo\Tests\Support\DbCredentialsTestFactory;
 use Piwigo\Core\UniqueExecLock;
+use Piwigo\Db\AdvisorySessionLock;
 use Piwigo\Db\DbConnection;
+use Piwigo\Tests\Support\DbCredentialsTestFactory;
 
 /**
  * Locking is implemented with MySQL's GET_LOCK()/RELEASE_LOCK()/
@@ -41,7 +41,9 @@ final class UniqueExecLockTest extends IntegrationTestCase
         }
 
         $this->token = 'test_lock_' . bin2hex(random_bytes(4));
-        $this->currentLogger = new Logger(['severity' => Logger::OFF]);
+        $this->currentLogger = new Logger([
+            'severity' => Logger::OFF,
+        ]);
     }
 
     #[Override]
@@ -52,18 +54,18 @@ final class UniqueExecLockTest extends IntegrationTestCase
         parent::tearDown();
     }
 
-    public function test_is_running_is_false_when_no_lock_is_held(): void
+    public function testIsRunningIsFalseWhenNoLockIsHeld(): void
     {
         self::assertFalse(UniqueExecLock::isRunning($this->token));
     }
 
-    public function test_begins_acquires_the_lock(): void
+    public function testBeginsAcquiresTheLock(): void
     {
         self::assertTrue(UniqueExecLock::begins($this->currentLogger, $this->token));
         self::assertTrue(UniqueExecLock::isRunning($this->token));
     }
 
-    public function test_begins_on_the_same_connection_succeeds_again_for_the_same_token(): void
+    public function testBeginsOnTheSameConnectionSucceedsAgainForTheSameToken(): void
     {
         // MySQL's GET_LOCK() re-acquiring an already-held name on the SAME
         // connection succeeds (it's reentrant per-connection, not a
@@ -73,7 +75,7 @@ final class UniqueExecLockTest extends IntegrationTestCase
         self::assertTrue(UniqueExecLock::begins($this->currentLogger, $this->token));
     }
 
-    public function test_begins_fails_immediately_when_a_different_connection_already_holds_the_lock(): void
+    public function testBeginsFailsImmediatelyWhenADifferentConnectionAlreadyHoldsTheLock(): void
     {
         // Default $timeout = 0 -- must return false right away, not block
         // waiting for the other connection to release it.
@@ -89,7 +91,7 @@ final class UniqueExecLockTest extends IntegrationTestCase
         }
     }
 
-    public function test_ends_releases_the_lock(): void
+    public function testEndsReleasesTheLock(): void
     {
         UniqueExecLock::begins($this->currentLogger, $this->token);
         self::assertTrue(UniqueExecLock::isRunning($this->token));
@@ -99,7 +101,7 @@ final class UniqueExecLockTest extends IntegrationTestCase
         self::assertFalse(UniqueExecLock::isRunning($this->token));
     }
 
-    public function test_ends_is_a_noop_when_the_lock_was_never_held(): void
+    public function testEndsIsANoopWhenTheLockWasNeverHeld(): void
     {
         UniqueExecLock::ends($this->currentLogger, $this->token);
 
@@ -112,7 +114,7 @@ final class UniqueExecLockTest extends IntegrationTestCase
      * including an abnormal process death. Every other test in this class
      * only exercises the explicit-ends() path.
      */
-    public function test_lock_is_released_automatically_when_its_owning_connection_closes_without_calling_ends(): void
+    public function testLockIsReleasedAutomaticallyWhenItsOwningConnectionClosesWithoutCallingEnds(): void
     {
         $otherConn = DbConnection::build();
 

@@ -29,7 +29,9 @@ function introDbConnect(): mysqli|Connection
     return H::connect();
 }
 
-/** Inserts an unlinked (orphan) image row and returns its id. */
+/**
+ * Inserts an unlinked (orphan) image row and returns its id.
+ */
 function introInsertOrphanImage(): int
 {
     $db = introDbConnect();
@@ -180,30 +182,126 @@ it('smooths the activity chart into size groups when daily counts vary by more t
     // exist before "today" at all), while staying on its own distinct
     // day-of-week from the other two seeded days.
     introInsertActivityRows([
-        ['object' => 'photo', 'action' => 'ct_intro_a', 'daysAgo' => 1],
-        ['object' => 'photo', 'action' => 'ct_intro_b1', 'daysAgo' => 2],
-        ['object' => 'photo', 'action' => 'ct_intro_b2', 'daysAgo' => 2],
-        ['object' => 'photo', 'action' => 'ct_intro_b3', 'daysAgo' => 2],
-        ['object' => 'photo', 'action' => 'ct_intro_c1', 'daysAgo' => 4],
-        ['object' => 'photo', 'action' => 'ct_intro_c2', 'daysAgo' => 4],
-        ['object' => 'photo', 'action' => 'ct_intro_c3', 'daysAgo' => 4],
-        ['object' => 'photo', 'action' => 'ct_intro_c4', 'daysAgo' => 4],
-        ['object' => 'photo', 'action' => 'ct_intro_c5', 'daysAgo' => 4],
-        ['object' => 'photo', 'action' => 'ct_intro_c6', 'daysAgo' => 4],
-        ['object' => 'photo', 'action' => 'ct_intro_c7', 'daysAgo' => 4],
-        ['object' => 'photo', 'action' => 'ct_intro_c8', 'daysAgo' => 4],
-        ['object' => 'photo', 'action' => 'ct_intro_c9', 'daysAgo' => 4],
-        ['object' => 'photo', 'action' => 'ct_intro_c10', 'daysAgo' => 4],
-        ['object' => 'photo', 'action' => 'ct_intro_c11', 'daysAgo' => 4],
-        ['object' => 'photo', 'action' => 'ct_intro_c12', 'daysAgo' => 4],
-        ['object' => 'photo', 'action' => 'ct_intro_c13', 'daysAgo' => 4],
-        ['object' => 'photo', 'action' => 'ct_intro_c14', 'daysAgo' => 4],
-        ['object' => 'photo', 'action' => 'ct_intro_c15', 'daysAgo' => 4],
-        ['object' => 'photo', 'action' => 'ct_intro_c16', 'daysAgo' => 4],
-        ['object' => 'photo', 'action' => 'ct_intro_c17', 'daysAgo' => 4],
-        ['object' => 'photo', 'action' => 'ct_intro_c18', 'daysAgo' => 4],
-        ['object' => 'photo', 'action' => 'ct_intro_c19', 'daysAgo' => 4],
-        ['object' => 'photo', 'action' => 'ct_intro_c20', 'daysAgo' => 4],
+        [
+            'object' => 'photo',
+            'action' => 'ct_intro_a',
+            'daysAgo' => 1,
+        ],
+        [
+            'object' => 'photo',
+            'action' => 'ct_intro_b1',
+            'daysAgo' => 2,
+        ],
+        [
+            'object' => 'photo',
+            'action' => 'ct_intro_b2',
+            'daysAgo' => 2,
+        ],
+        [
+            'object' => 'photo',
+            'action' => 'ct_intro_b3',
+            'daysAgo' => 2,
+        ],
+        [
+            'object' => 'photo',
+            'action' => 'ct_intro_c1',
+            'daysAgo' => 4,
+        ],
+        [
+            'object' => 'photo',
+            'action' => 'ct_intro_c2',
+            'daysAgo' => 4,
+        ],
+        [
+            'object' => 'photo',
+            'action' => 'ct_intro_c3',
+            'daysAgo' => 4,
+        ],
+        [
+            'object' => 'photo',
+            'action' => 'ct_intro_c4',
+            'daysAgo' => 4,
+        ],
+        [
+            'object' => 'photo',
+            'action' => 'ct_intro_c5',
+            'daysAgo' => 4,
+        ],
+        [
+            'object' => 'photo',
+            'action' => 'ct_intro_c6',
+            'daysAgo' => 4,
+        ],
+        [
+            'object' => 'photo',
+            'action' => 'ct_intro_c7',
+            'daysAgo' => 4,
+        ],
+        [
+            'object' => 'photo',
+            'action' => 'ct_intro_c8',
+            'daysAgo' => 4,
+        ],
+        [
+            'object' => 'photo',
+            'action' => 'ct_intro_c9',
+            'daysAgo' => 4,
+        ],
+        [
+            'object' => 'photo',
+            'action' => 'ct_intro_c10',
+            'daysAgo' => 4,
+        ],
+        [
+            'object' => 'photo',
+            'action' => 'ct_intro_c11',
+            'daysAgo' => 4,
+        ],
+        [
+            'object' => 'photo',
+            'action' => 'ct_intro_c12',
+            'daysAgo' => 4,
+        ],
+        [
+            'object' => 'photo',
+            'action' => 'ct_intro_c13',
+            'daysAgo' => 4,
+        ],
+        [
+            'object' => 'photo',
+            'action' => 'ct_intro_c14',
+            'daysAgo' => 4,
+        ],
+        [
+            'object' => 'photo',
+            'action' => 'ct_intro_c15',
+            'daysAgo' => 4,
+        ],
+        [
+            'object' => 'photo',
+            'action' => 'ct_intro_c16',
+            'daysAgo' => 4,
+        ],
+        [
+            'object' => 'photo',
+            'action' => 'ct_intro_c17',
+            'daysAgo' => 4,
+        ],
+        [
+            'object' => 'photo',
+            'action' => 'ct_intro_c18',
+            'daysAgo' => 4,
+        ],
+        [
+            'object' => 'photo',
+            'action' => 'ct_intro_c19',
+            'daysAgo' => 4,
+        ],
+        [
+            'object' => 'photo',
+            'action' => 'ct_intro_c20',
+            'daysAgo' => 4,
+        ],
     ]);
 
     try {
@@ -220,9 +318,12 @@ it('smooths the activity chart into size groups when daily counts vary by more t
         // response body directly instead of assertSee()'s visible-text
         // check.
         $html = H::rawWebpage($page)->content();
-        expect($html)->toContain('1 Activity<');
-        expect($html)->toContain('3 Activities');
-        expect($html)->toContain('20 Activities');
+        expect($html)
+            ->toContain('1 Activity<');
+        expect($html)
+            ->toContain('3 Activities');
+        expect($html)
+            ->toContain('20 Activities');
     } finally {
         introDeleteActivityRows();
     }
@@ -259,12 +360,18 @@ it('buckets storage-chart file extensions into Videos/Other/Formats groups', fun
         // The storage chart's own data is embedded verbatim as a JSON blob
         // (`const storage_details = {...}`) rather than rendered as plain
         // visible text, so this checks the raw response body directly.
-        expect($html)->toContain('"Videos"');
-        expect($html)->toContain('"MP4"');
-        expect($html)->toContain('"Other"');
-        expect($html)->toContain('"ZIP"');
-        expect($html)->toContain('"Formats"');
-        expect($html)->toContain('"CT_INTRO_RAW"');
+        expect($html)
+            ->toContain('"Videos"');
+        expect($html)
+            ->toContain('"MP4"');
+        expect($html)
+            ->toContain('"Other"');
+        expect($html)
+            ->toContain('"ZIP"');
+        expect($html)
+            ->toContain('"Formats"');
+        expect($html)
+            ->toContain('"CT_INTRO_RAW"');
     } finally {
         introDeleteImage($videoId);
         introDeleteImage($otherId);
@@ -276,16 +383,21 @@ it('adds the cached filesystem cache size onto the storage chart when configured
 
     try {
         H::setConfigValue('add_cache_to_storage_chart', 'true');
-        H::setConfigValue('cache_sizes', H::jsonEncode([['value' => 204800, 'time' => time()]]));
+        H::setConfigValue('cache_sizes', H::jsonEncode([[
+            'value' => 204800,
+            'time' => time(),
+        ]]));
 
         $page = H::loginAsAdmin($this);
         $page = H::navigateOk($page, '/admin.php');
         $page->assertNoJavaScriptErrors();
 
         $html = H::rawWebpage($page)->content();
-        expect($html)->toContain('"Cache"');
+        expect($html)
+            ->toContain('"Cache"');
         // 204800 / 1024 = 200.0 -- the exact filesize this test seeded.
-        expect($html)->toContain('"filesize":200');
+        expect($html)
+            ->toContain('"filesize":200');
     } finally {
         H::restoreConfig($snapshot);
     }
@@ -425,7 +537,8 @@ it('drops the storage-used decimal display once total disk usage exceeds 100GB',
 
     $totalKb = (float) $totalRow['total_kb'];
     $expectedGb = $totalKb / (1024.0 * 1024.0);
-    expect($expectedGb)->toBeGreaterThan(100.0);
+    expect($expectedGb)
+        ->toBeGreaterThan(100.0);
     // InstallationStats::getGeneralStatistics()'s disk_usage feeds the exact
     // same du_gb = disk_usage / (1024*1024) computation this asserts
     // against, so number_format() here with decimals forced to 0 must match
@@ -438,7 +551,8 @@ it('drops the storage-used decimal display once total disk usage exceeds 100GB',
         $page->assertNoJavaScriptErrors();
 
         $html = H::rawWebpage($page)->content();
-        expect($html)->toContain($expectedText);
+        expect($html)
+            ->toContain($expectedText);
     } finally {
         introDeleteMarkedImages($marker);
     }
@@ -491,11 +605,14 @@ it('shows the newsletter subscription promo panel for an account old enough with
         $page->assertNoJavaScriptErrors();
 
         $html = H::rawWebpage($page)->content();
-        expect($html)->toContain('class="promote-newsletter"');
-        expect($html)->toContain('value="fixture_admin@example.test"');
+        expect($html)
+            ->toContain('class="promote-newsletter"');
+        expect($html)
+            ->toContain('value="fixture_admin@example.test"');
         // AdminUiHelper::getOldNewslettersBaseUrl() -- AppInfo::URL (the
         // fork-safe, RFC 2606 `.invalid` PEM-domain stand-in) + '/newsletter'.
-        expect($html)->toContain('href="https://upstream.example.invalid/newsletter"');
+        expect($html)
+            ->toContain('href="https://upstream.example.invalid/newsletter"');
     } finally {
         $originalRegistrationStr = is_string($originalRegistration) ? $originalRegistration : '2026-08-01 00:00:00';
         introSetUserColumn(1, 'registration_date', $originalRegistrationStr);
@@ -623,24 +740,27 @@ it('skips malformed cached activity-week/day entries from a stale-but-still-"fre
         $html = $curl(H::baseUrl() . '/admin.php');
 
         foreach ([
-            'Fatal error'       => '/Fatal error/i',
-            'Parse error'       => '/Parse error/i',
-            'Warning:'          => '/\bWarning:\s/',
-            'Notice:'           => '/\bNotice:\s/',
-            'Deprecated:'       => '/\bDeprecated:\s/',
+            'Fatal error' => '/Fatal error/i',
+            'Parse error' => '/Parse error/i',
+            'Warning:' => '/\bWarning:\s/',
+            'Notice:' => '/\bNotice:\s/',
+            'Deprecated:' => '/\bDeprecated:\s/',
             'Strict Standards:' => '/\bStrict Standards:\s/',
-            'Stack trace:'      => '/Stack trace:/',
-            'Uncaught'          => '/\bUncaught\s/',
+            'Stack trace:' => '/Stack trace:/',
+            'Uncaught' => '/\bUncaught\s/',
         ] as $name => $pattern) {
-            expect(preg_match($pattern, $html))->toBe(0, "Server error marker '{$name}' found in the admin.php response");
+            expect(preg_match($pattern, $html))
+                ->toBe(0, "Server error marker '{$name}' found in the admin.php response");
         }
-        expect($html)->toContain('Piwigo Administration');
+        expect($html)
+            ->toContain('Piwigo Administration');
         // Both malformed entries were skipped via `continue` rather than
         // processed, so $activity_last_weeks ends up entirely empty -- no
         // real per-day activity count is ever rendered (contrast with this
         // file's own "smooths the activity chart..." test, which asserts
         // these exact patterns ARE present for genuine, well-formed data).
-        expect(preg_match('/\d+ Activit(y|ies)/', $html))->toBe(0);
+        expect(preg_match('/\d+ Activit(y|ies)/', $html))
+            ->toBe(0);
     } finally {
         @unlink($cookieJar);
     }

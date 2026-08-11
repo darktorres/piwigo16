@@ -6,7 +6,6 @@ use PgSql\Connection;
 use Piwigo\Cache\CachePools;
 use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
 
-
 function searchFilterDataDb(): mysqli|Connection
 {
     return H::connect();
@@ -74,17 +73,50 @@ function searchFilterDataSetImageFilesizeNull(int $imageId): void
 it('renders real per-filter numeric buckets, author/added_by lookups, and a 3+-filter intersection, across a cache-miss and a cache-hit load', function (): void {
     $snapshot = H::snapshotConfig(['filters_views', 'rate']);
     $filtersViews = json_encode([
-        'words' => ['access' => 'everybody', 'default' => true],
-        'expert' => ['access' => 'everybody', 'default' => true],
-        'tags' => ['access' => 'everybody', 'default' => true],
-        'album' => ['access' => 'everybody', 'default' => true],
-        'author' => ['access' => 'everybody', 'default' => true],
-        'added_by' => ['access' => 'everybody', 'default' => true],
-        'ratio' => ['access' => 'everybody', 'default' => true],
-        'rating' => ['access' => 'everybody', 'default' => true],
-        'file_size' => ['access' => 'everybody', 'default' => true],
-        'height' => ['access' => 'everybody', 'default' => true],
-        'width' => ['access' => 'everybody', 'default' => true],
+        'words' => [
+            'access' => 'everybody',
+            'default' => true,
+        ],
+        'expert' => [
+            'access' => 'everybody',
+            'default' => true,
+        ],
+        'tags' => [
+            'access' => 'everybody',
+            'default' => true,
+        ],
+        'album' => [
+            'access' => 'everybody',
+            'default' => true,
+        ],
+        'author' => [
+            'access' => 'everybody',
+            'default' => true,
+        ],
+        'added_by' => [
+            'access' => 'everybody',
+            'default' => true,
+        ],
+        'ratio' => [
+            'access' => 'everybody',
+            'default' => true,
+        ],
+        'rating' => [
+            'access' => 'everybody',
+            'default' => true,
+        ],
+        'file_size' => [
+            'access' => 'everybody',
+            'default' => true,
+        ],
+        'height' => [
+            'access' => 'everybody',
+            'default' => true,
+        ],
+        'width' => [
+            'access' => 'everybody',
+            'default' => true,
+        ],
     ]);
     if ($filtersViews === false) {
         throw new RuntimeException('json_encode failed for the filters_views config value');
@@ -103,14 +135,18 @@ it('renders real per-filter numeric buckets, author/added_by lookups, and a 3+-f
 
     try {
         $page = H::loginAsAdmin($this);
-        $album = H::wsCall($page, 'pwg.categories.add', ['name' => 'Search Data Filters Album ' . uniqid()]);
+        $album = H::wsCall($page, 'pwg.categories.add', [
+            'name' => 'Search Data Filters Album ' . uniqid(),
+        ]);
         $albumResult = $album['result'] ?? null;
         if (! is_array($albumResult) || ! is_numeric($albumResult['id'] ?? null)) {
             throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($album, true));
         }
         $albumId = (int) $albumResult['id'];
 
-        $tag = H::wsCall($page, 'pwg.tags.add', ['name' => 'Search Data Filter Tag ' . uniqid()]);
+        $tag = H::wsCall($page, 'pwg.tags.add', [
+            'name' => 'Search Data Filter Tag ' . uniqid(),
+        ]);
         $tagResult = $tag['result'] ?? null;
         if (! is_array($tagResult) || ! is_numeric($tagResult['id'] ?? null)) {
             throw new RuntimeException('pwg.tags.add did not return a numeric id: ' . var_export($tag, true));
@@ -129,8 +165,14 @@ it('renders real per-filter numeric buckets, author/added_by lookups, and a 3+-f
         // ratio 100/300 = 0.333 (< 0.95 -> Portrait); rating 0.5 (< 1 ->
         // bucket r=1); filesize 500 KB.
         searchFilterDataSetImageStats($portraitId, 100, 300, 0.5, 500, '2020-01-01 00:00:00');
-        H::wsCall($page, 'pwg.images.setInfo', ['image_id' => $portraitId, 'author' => 'Ansel Adams']);
-        H::wsCall($page, 'pwg.images.setInfo', ['image_id' => $portraitId, 'tag_ids' => (string) $tagId]);
+        H::wsCall($page, 'pwg.images.setInfo', [
+            'image_id' => $portraitId,
+            'author' => 'Ansel Adams',
+        ]);
+        H::wsCall($page, 'pwg.images.setInfo', [
+            'image_id' => $portraitId,
+            'tag_ids' => (string) $tagId,
+        ]);
 
         $squareImage = H::makeTestImage(uniqid());
         $squareId = H::uploadPhotoViaApi($squareImage, $albumId, 'Square Data Filter Photo');
@@ -140,8 +182,14 @@ it('renders real per-filter numeric buckets, author/added_by lookups, and a 3+-f
         // date filter's own malformed/NULL-date row gets skipped rather
         // than fatally erroring.
         searchFilterDataSetImageStats($squareId, 300, 300, 2.5, 1500, null);
-        H::wsCall($page, 'pwg.images.setInfo', ['image_id' => $squareId, 'author' => 'Ansel Adams']);
-        H::wsCall($page, 'pwg.images.setInfo', ['image_id' => $squareId, 'tag_ids' => (string) $tagId]);
+        H::wsCall($page, 'pwg.images.setInfo', [
+            'image_id' => $squareId,
+            'author' => 'Ansel Adams',
+        ]);
+        H::wsCall($page, 'pwg.images.setInfo', [
+            'image_id' => $squareId,
+            'tag_ids' => (string) $tagId,
+        ]);
 
         $panoramaImage = H::makeTestImage(uniqid());
         $panoramaId = H::uploadPhotoViaApi($panoramaImage, $albumId, 'Panorama Data Filter Photo');
@@ -149,8 +197,14 @@ it('renders real per-filter numeric buckets, author/added_by lookups, and a 3+-f
         // ratio 800/200 = 4.0 (>= 2 -> Panorama); rating 4.9 (not < 1/2/3/4
         // -> falls through to the default bucket r=5); filesize 3000 KB.
         searchFilterDataSetImageStats($panoramaId, 800, 200, 4.9, 3000, '2021-06-15 00:00:00');
-        H::wsCall($page, 'pwg.images.setInfo', ['image_id' => $panoramaId, 'author' => 'Ansel Adams']);
-        H::wsCall($page, 'pwg.images.setInfo', ['image_id' => $panoramaId, 'tag_ids' => (string) $tagId]);
+        H::wsCall($page, 'pwg.images.setInfo', [
+            'image_id' => $panoramaId,
+            'author' => 'Ansel Adams',
+        ]);
+        H::wsCall($page, 'pwg.images.setInfo', [
+            'image_id' => $panoramaId,
+            'tag_ids' => (string) $tagId,
+        ]);
 
         // Every one of these WS params is WsParamFlag::FORCE_ARRAY-declared
         // (PwgServer::makeArrayParam() coerces a bare scalar into a
@@ -216,12 +270,18 @@ it('renders real per-filter numeric buckets, author/added_by lookups, and a 3+-f
         // Landscape/Panorama must each show as the disabled, zero-count
         // checkbox state, 'square' as the sole non-zero, undisabled one.
         $html1 = H::rawWebpage($page)->content();
-        expect($html1)->toMatch('/<input type="checkbox" id="ratio-square"[^>]*>(?!.*disabled)/')
-            ->and($html1)->toContain('<label for="ratio-square">')
-            ->and(substr($html1, (int) strpos($html1, '<label for="ratio-square">'), 400))->toContain('<span class="ratio-badge">1</span>')
-            ->and($html1)->toMatch('/<input type="checkbox" id="ratio-Portrait" [^>]*disabled/')
-            ->and($html1)->toMatch('/<input type="checkbox" id="ratio-Landscape" [^>]*disabled/')
-            ->and($html1)->toMatch('/<input type="checkbox" id="ratio-Panorama" [^>]*disabled/');
+        expect($html1)
+            ->toMatch('/<input type="checkbox" id="ratio-square"[^>]*>(?!.*disabled)/')
+            ->and($html1)
+            ->toContain('<label for="ratio-square">')
+            ->and(substr($html1, (int) strpos($html1, '<label for="ratio-square">'), 400))
+            ->toContain('<span class="ratio-badge">1</span>')
+            ->and($html1)
+            ->toMatch('/<input type="checkbox" id="ratio-Portrait" [^>]*disabled/')
+            ->and($html1)
+            ->toMatch('/<input type="checkbox" id="ratio-Landscape" [^>]*disabled/')
+            ->and($html1)
+            ->toMatch('/<input type="checkbox" id="ratio-Panorama" [^>]*disabled/');
 
         // 2nd load: same search -- exercises every per-filter cache-hit
         // branch instead.
@@ -229,8 +289,10 @@ it('renders real per-filter numeric buckets, author/added_by lookups, and a 3+-f
         H::assertNoServerErrors($page, 'search data filters (2nd load, cache hit)');
         $page->assertNoJavaScriptErrors();
         $html2 = H::rawWebpage($page)->content();
-        expect($html2)->toContain('<span class="ratio-badge">1</span>')
-            ->and($html2)->toMatch('/<input type="checkbox" id="ratio-Portrait" [^>]*disabled/');
+        expect($html2)
+            ->toContain('<span class="ratio-badge">1</span>')
+            ->and($html2)
+            ->toMatch('/<input type="checkbox" id="ratio-Portrait" [^>]*disabled/');
     } finally {
         H::restoreConfig($snapshot);
     }
@@ -239,7 +301,10 @@ it('renders real per-filter numeric buckets, author/added_by lookups, and a 3+-f
 it('renders ALBUMS_FOUND/TAGS_FOUND search hints for an allwords match on both an album title and a tag name', function (): void {
     $snapshot = H::snapshotConfig(['filters_views']);
     $filtersViews = json_encode([
-        'words' => ['access' => 'everybody', 'default' => true],
+        'words' => [
+            'access' => 'everybody',
+            'default' => true,
+        ],
     ]);
     if ($filtersViews === false) {
         throw new RuntimeException('json_encode failed for the filters_views config value');
@@ -250,14 +315,18 @@ it('renders ALBUMS_FOUND/TAGS_FOUND search hints for an allwords match on both a
         $page = H::loginAsAdmin($this);
         $uniqueWord = 'zephyrus' . uniqid();
 
-        $album = H::wsCall($page, 'pwg.categories.add', ['name' => 'Album ' . $uniqueWord]);
+        $album = H::wsCall($page, 'pwg.categories.add', [
+            'name' => 'Album ' . $uniqueWord,
+        ]);
         $albumResult = $album['result'] ?? null;
         if (! is_array($albumResult) || ! is_numeric($albumResult['id'] ?? null)) {
             throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($album, true));
         }
         $albumId = (int) $albumResult['id'];
 
-        $tag = H::wsCall($page, 'pwg.tags.add', ['name' => $uniqueWord]);
+        $tag = H::wsCall($page, 'pwg.tags.add', [
+            'name' => $uniqueWord,
+        ]);
         $tagResult = $tag['result'] ?? null;
         if (! is_array($tagResult) || ! is_numeric($tagResult['id'] ?? null)) {
             throw new RuntimeException('pwg.tags.add did not return a numeric id: ' . var_export($tag, true));
@@ -267,7 +336,10 @@ it('renders ALBUMS_FOUND/TAGS_FOUND search hints for an allwords match on both a
         $image = H::makeTestImage(uniqid());
         $imageId = H::uploadPhotoViaApi($image, $albumId, 'ALBUMS_FOUND Hint Photo');
         @unlink($image);
-        H::wsCall($page, 'pwg.images.setInfo', ['image_id' => $imageId, 'tag_ids' => (string) $tagId]);
+        H::wsCall($page, 'pwg.images.setInfo', [
+            'image_id' => $imageId,
+            'tag_ids' => (string) $tagId,
+        ]);
 
         // allwords_fields omitted -- filteredSearchCreate() defaults it to
         // every available field (including 'cat-title' and 'tags'), which
@@ -309,7 +381,10 @@ it('renders ALBUMS_FOUND/TAGS_FOUND search hints for an allwords match on both a
 it('serves the author-rows cache pool across a cache-miss then cache-hit load when author is the only active search filter', function (): void {
     $snapshot = H::snapshotConfig(['filters_views']);
     $filtersViews = json_encode([
-        'author' => ['access' => 'everybody', 'default' => true],
+        'author' => [
+            'access' => 'everybody',
+            'default' => true,
+        ],
     ]);
     if ($filtersViews === false) {
         throw new RuntimeException('json_encode failed for the filters_views config value');
@@ -318,7 +393,9 @@ it('serves the author-rows cache pool across a cache-miss then cache-hit load wh
 
     try {
         $page = H::loginAsAdmin($this);
-        $album = H::wsCall($page, 'pwg.categories.add', ['name' => 'Search Author Only Album ' . uniqid()]);
+        $album = H::wsCall($page, 'pwg.categories.add', [
+            'name' => 'Search Author Only Album ' . uniqid(),
+        ]);
         $albumResult = $album['result'] ?? null;
         if (! is_array($albumResult) || ! is_numeric($albumResult['id'] ?? null)) {
             throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($album, true));
@@ -328,7 +405,10 @@ it('serves the author-rows cache pool across a cache-miss then cache-hit load wh
         $imageId = H::uploadPhotoViaApi($image, $albumId, 'Search Author Only Photo');
         @unlink($image);
         $authorName = 'Author Only ' . uniqid();
-        H::wsCall($page, 'pwg.images.setInfo', ['image_id' => $imageId, 'author' => $authorName]);
+        H::wsCall($page, 'pwg.images.setInfo', [
+            'image_id' => $imageId,
+            'author' => $authorName,
+        ]);
 
         // 'authors' alone (no categories/tags/...) is the ONLY active
         // search field.
@@ -368,7 +448,10 @@ it('serves the author-rows cache pool across a cache-miss then cache-hit load wh
 it('serves the added_by-rows cache pool across a cache-miss then cache-hit load, skipping a NULL added_by row along the way', function (): void {
     $snapshot = H::snapshotConfig(['filters_views', 'order_by']);
     $filtersViews = json_encode([
-        'added_by' => ['access' => 'everybody', 'default' => true],
+        'added_by' => [
+            'access' => 'everybody',
+            'default' => true,
+        ],
     ]);
     if ($filtersViews === false) {
         throw new RuntimeException('json_encode failed for the filters_views config value');
@@ -383,7 +466,9 @@ it('serves the added_by-rows cache pool across a cache-miss then cache-hit load,
     try {
         $page = H::loginAsAdmin($this);
         $adminId = searchFilterDataAdminUserId();
-        $album = H::wsCall($page, 'pwg.categories.add', ['name' => 'Search Added By Only Album ' . uniqid()]);
+        $album = H::wsCall($page, 'pwg.categories.add', [
+            'name' => 'Search Added By Only Album ' . uniqid(),
+        ]);
         $albumResult = $album['result'] ?? null;
         if (! is_array($albumResult) || ! is_numeric($albumResult['id'] ?? null)) {
             throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($album, true));
@@ -432,7 +517,10 @@ it('serves the added_by-rows cache pool across a cache-miss then cache-hit load,
 it('serves the height-rows cache pool across a cache-miss then cache-hit load when height is the only active search filter', function (): void {
     $snapshot = H::snapshotConfig(['filters_views', 'order_by']);
     $filtersViews = json_encode([
-        'height' => ['access' => 'everybody', 'default' => true],
+        'height' => [
+            'access' => 'everybody',
+            'default' => true,
+        ],
     ]);
     if ($filtersViews === false) {
         throw new RuntimeException('json_encode failed for the filters_views config value');
@@ -460,7 +548,9 @@ it('serves the height-rows cache pool across a cache-miss then cache-hit load wh
 
     try {
         $page = H::loginAsAdmin($this);
-        $album = H::wsCall($page, 'pwg.categories.add', ['name' => 'Search Height Only Album ' . uniqid()]);
+        $album = H::wsCall($page, 'pwg.categories.add', [
+            'name' => 'Search Height Only Album ' . uniqid(),
+        ]);
         $albumResult = $album['result'] ?? null;
         if (! is_array($albumResult) || ! is_numeric($albumResult['id'] ?? null)) {
             throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($album, true));
@@ -503,7 +593,10 @@ it('serves the height-rows cache pool across a cache-miss then cache-hit load wh
 it('serves the width-rows cache pool across a cache-miss then cache-hit load when width is the only active search filter', function (): void {
     $snapshot = H::snapshotConfig(['filters_views', 'order_by']);
     $filtersViews = json_encode([
-        'width' => ['access' => 'everybody', 'default' => true],
+        'width' => [
+            'access' => 'everybody',
+            'default' => true,
+        ],
     ]);
     if ($filtersViews === false) {
         throw new RuntimeException('json_encode failed for the filters_views config value');
@@ -520,7 +613,9 @@ it('serves the width-rows cache pool across a cache-miss then cache-hit load whe
 
     try {
         $page = H::loginAsAdmin($this);
-        $album = H::wsCall($page, 'pwg.categories.add', ['name' => 'Search Width Only Album ' . uniqid()]);
+        $album = H::wsCall($page, 'pwg.categories.add', [
+            'name' => 'Search Width Only Album ' . uniqid(),
+        ]);
         $albumResult = $album['result'] ?? null;
         if (! is_array($albumResult) || ! is_numeric($albumResult['id'] ?? null)) {
             throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($album, true));
@@ -569,7 +664,10 @@ it('serves the width-rows cache pool across a cache-miss then cache-hit load whe
 it('serves the ratios cache pool across a cache-miss then cache-hit load when ratios is the only active search filter', function (): void {
     $snapshot = H::snapshotConfig(['filters_views', 'order_by']);
     $filtersViews = json_encode([
-        'ratio' => ['access' => 'everybody', 'default' => true],
+        'ratio' => [
+            'access' => 'everybody',
+            'default' => true,
+        ],
     ]);
     if ($filtersViews === false) {
         throw new RuntimeException('json_encode failed for the filters_views config value');
@@ -589,7 +687,9 @@ it('serves the ratios cache pool across a cache-miss then cache-hit load when ra
 
     try {
         $page = H::loginAsAdmin($this);
-        $album = H::wsCall($page, 'pwg.categories.add', ['name' => 'Search Ratios Only Album ' . uniqid()]);
+        $album = H::wsCall($page, 'pwg.categories.add', [
+            'name' => 'Search Ratios Only Album ' . uniqid(),
+        ]);
         $albumResult = $album['result'] ?? null;
         if (! is_array($albumResult) || ! is_numeric($albumResult['id'] ?? null)) {
             throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($album, true));
@@ -634,7 +734,10 @@ it('serves the ratios cache pool across a cache-miss then cache-hit load when ra
 it('serves the ratings cache pool across a cache-miss then cache-hit load when ratings is the only active search filter', function (): void {
     $snapshot = H::snapshotConfig(['filters_views', 'rate']);
     $filtersViews = json_encode([
-        'rating' => ['access' => 'everybody', 'default' => true],
+        'rating' => [
+            'access' => 'everybody',
+            'default' => true,
+        ],
     ]);
     if ($filtersViews === false) {
         throw new RuntimeException('json_encode failed for the filters_views config value');
@@ -644,7 +747,9 @@ it('serves the ratings cache pool across a cache-miss then cache-hit load when r
 
     try {
         $page = H::loginAsAdmin($this);
-        $album = H::wsCall($page, 'pwg.categories.add', ['name' => 'Search Ratings Only Album ' . uniqid()]);
+        $album = H::wsCall($page, 'pwg.categories.add', [
+            'name' => 'Search Ratings Only Album ' . uniqid(),
+        ]);
         $albumResult = $album['result'] ?? null;
         if (! is_array($albumResult) || ! is_numeric($albumResult['id'] ?? null)) {
             throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($album, true));
@@ -694,7 +799,10 @@ it('serves the ratings cache pool across a cache-miss then cache-hit load when r
 it('assigns the un-narrowed FILETYPES extension counts when filetypes is the only active search filter', function (): void {
     $snapshot = H::snapshotConfig(['filters_views', 'order_by']);
     $filtersViews = json_encode([
-        'file_type' => ['access' => 'everybody', 'default' => true],
+        'file_type' => [
+            'access' => 'everybody',
+            'default' => true,
+        ],
     ]);
     if ($filtersViews === false) {
         throw new RuntimeException('json_encode failed for the filters_views config value');
@@ -713,7 +821,9 @@ it('assigns the un-narrowed FILETYPES extension counts when filetypes is the onl
 
     try {
         $page = H::loginAsAdmin($this);
-        $album = H::wsCall($page, 'pwg.categories.add', ['name' => 'Search Filetypes Only Album ' . uniqid()]);
+        $album = H::wsCall($page, 'pwg.categories.add', [
+            'name' => 'Search Filetypes Only Album ' . uniqid(),
+        ]);
         $albumResult = $album['result'] ?? null;
         if (! is_array($albumResult) || ! is_numeric($albumResult['id'] ?? null)) {
             throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($album, true));
@@ -758,8 +868,14 @@ it('assigns the un-narrowed FILETYPES extension counts when filetypes is the onl
 it('counts the "Landscape" ratio bucket and skips non-numeric/zero-dimension rows when computing ratio buckets', function (): void {
     $snapshot = H::snapshotConfig(['filters_views']);
     $filtersViews = json_encode([
-        'album' => ['access' => 'everybody', 'default' => true],
-        'ratio' => ['access' => 'everybody', 'default' => true],
+        'album' => [
+            'access' => 'everybody',
+            'default' => true,
+        ],
+        'ratio' => [
+            'access' => 'everybody',
+            'default' => true,
+        ],
     ]);
     if ($filtersViews === false) {
         throw new RuntimeException('json_encode failed for the filters_views config value');
@@ -768,7 +884,9 @@ it('counts the "Landscape" ratio bucket and skips non-numeric/zero-dimension row
 
     try {
         $page = H::loginAsAdmin($this);
-        $album = H::wsCall($page, 'pwg.categories.add', ['name' => 'Search Ratio Landscape Album ' . uniqid()]);
+        $album = H::wsCall($page, 'pwg.categories.add', [
+            'name' => 'Search Ratio Landscape Album ' . uniqid(),
+        ]);
         $albumResult = $album['result'] ?? null;
         if (! is_array($albumResult) || ! is_numeric($albumResult['id'] ?? null)) {
             throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($album, true));
@@ -811,12 +929,18 @@ it('counts the "Landscape" ratio bucket and skips non-numeric/zero-dimension row
         // Portrait/square/Panorama all stay at their zero-count, disabled
         // state (same assertion style as the big multi-filter test's own
         // ratio-bucket assertions above).
-        expect($html)->toMatch('/<input type="checkbox" id="ratio-Landscape"[^>]*>(?!.*disabled)/')
-            ->and($html)->toContain('<label for="ratio-Landscape">')
-            ->and(substr($html, (int) strpos($html, '<label for="ratio-Landscape">'), 400))->toContain('<span class="ratio-badge">1</span>')
-            ->and($html)->toMatch('/<input type="checkbox" id="ratio-Portrait" [^>]*disabled/')
-            ->and($html)->toMatch('/<input type="checkbox" id="ratio-square" [^>]*disabled/')
-            ->and($html)->toMatch('/<input type="checkbox" id="ratio-Panorama" [^>]*disabled/');
+        expect($html)
+            ->toMatch('/<input type="checkbox" id="ratio-Landscape"[^>]*>(?!.*disabled)/')
+            ->and($html)
+            ->toContain('<label for="ratio-Landscape">')
+            ->and(substr($html, (int) strpos($html, '<label for="ratio-Landscape">'), 400))
+            ->toContain('<span class="ratio-badge">1</span>')
+            ->and($html)
+            ->toMatch('/<input type="checkbox" id="ratio-Portrait" [^>]*disabled/')
+            ->and($html)
+            ->toMatch('/<input type="checkbox" id="ratio-square" [^>]*disabled/')
+            ->and($html)
+            ->toMatch('/<input type="checkbox" id="ratio-Panorama" [^>]*disabled/');
     } finally {
         H::restoreConfig($snapshot);
     }
@@ -834,8 +958,14 @@ it('counts the "Landscape" ratio bucket and skips non-numeric/zero-dimension row
 it('falls back to the arbitrary filesize bucket set when every filesize row in scope is NULL', function (): void {
     $snapshot = H::snapshotConfig(['filters_views']);
     $filtersViews = json_encode([
-        'album' => ['access' => 'everybody', 'default' => true],
-        'file_size' => ['access' => 'everybody', 'default' => true],
+        'album' => [
+            'access' => 'everybody',
+            'default' => true,
+        ],
+        'file_size' => [
+            'access' => 'everybody',
+            'default' => true,
+        ],
     ]);
     if ($filtersViews === false) {
         throw new RuntimeException('json_encode failed for the filters_views config value');
@@ -844,7 +974,9 @@ it('falls back to the arbitrary filesize bucket set when every filesize row in s
 
     try {
         $page = H::loginAsAdmin($this);
-        $album = H::wsCall($page, 'pwg.categories.add', ['name' => 'Search Filesize Null Album ' . uniqid()]);
+        $album = H::wsCall($page, 'pwg.categories.add', [
+            'name' => 'Search Filesize Null Album ' . uniqid(),
+        ]);
         $albumResult = $album['result'] ?? null;
         if (! is_array($albumResult) || ! is_numeric($albumResult['id'] ?? null)) {
             throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($album, true));
@@ -877,8 +1009,10 @@ it('falls back to the arbitrary filesize bucket set when every filesize row in s
         $page->assertNoJavaScriptErrors();
 
         $html = H::rawWebpage($page)->content();
-        expect($html)->toContain('data-min="0"')
-            ->and($html)->toContain('data-max="15"');
+        expect($html)
+            ->toContain('data-min="0"')
+            ->and($html)
+            ->toContain('data-max="15"');
     } finally {
         H::restoreConfig($snapshot);
     }

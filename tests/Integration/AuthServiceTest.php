@@ -8,22 +8,11 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Integration {
 
-    use Piwigo\Auth\UserFailedLoginRepository;
-    use Override;
-    use Piwigo\Tests\Support\CurrentPathsTestFactory;
-    use Piwigo\Core\Kernel;
-    use LogicException;
-    use Piwigo\Db\EntityManagerFactory;
-    use Piwigo\Auth\UserFailedLoginEntity;
-    use Piwigo\Activity\ActivityService;
-    use Piwigo\Activity\ActivityEntity;
-    use Piwigo\Tests\Support\HtmlServiceTestFactory;
-    use Piwigo\Config\DeploymentPolicy;
-    use Piwigo\Tests\Support\PageStateTestFactory;
-    use Piwigo\Mail\MailService;
-    use Piwigo\Tests\Support\LangTestFactory;
-    use Piwigo\Tests\Support\UrlServiceTestFactory;
     use Doctrine\DBAL\Connection;
+    use LogicException;
+    use Override;
+    use Piwigo\Activity\ActivityEntity;
+    use Piwigo\Activity\ActivityService;
     use Piwigo\Auth\ApiKeyRepository;
     use Piwigo\Auth\ApiKeyService;
     use Piwigo\Auth\AuthRepository;
@@ -32,20 +21,31 @@ namespace Piwigo\Tests\Integration {
     use Piwigo\Auth\Event\FinalizeLogin;
     use Piwigo\Auth\PasswordRepository;
     use Piwigo\Auth\PasswordService;
+    use Piwigo\Auth\UserFailedLoginEntity;
+    use Piwigo\Auth\UserFailedLoginRepository;
     use Piwigo\Common\ValueObject\LangCode;
+    use Piwigo\Common\ValueObject\ThemeId;
     use Piwigo\Common\ValueObject\UserId;
     use Piwigo\Common\ValueObject\Username;
-    use Piwigo\Config\CurrentConfig;
-    use Piwigo\Tests\Support\CurrentConfigTestFactory;
     use Piwigo\Config\ConfigLoader;
+    use Piwigo\Config\CurrentConfig;
+    use Piwigo\Config\DeploymentPolicy;
+    use Piwigo\Core\Kernel;
     use Piwigo\Db\DbConnection;
+    use Piwigo\Db\EntityManagerFactory;
     use Piwigo\Event\User\TryLogUser;
     use Piwigo\Http\ResponseReadyException;
-    use Piwigo\Tests\Support\EventDispatcherTestFactory;
+    use Piwigo\Mail\MailService;
     use Piwigo\Session\SessionEntity;
     use Piwigo\Session\SessionService;
+    use Piwigo\Tests\Support\CurrentConfigTestFactory;
+    use Piwigo\Tests\Support\CurrentPathsTestFactory;
     use Piwigo\Tests\Support\CurrentUserTestFactory;
-    use Piwigo\Common\ValueObject\ThemeId;
+    use Piwigo\Tests\Support\EventDispatcherTestFactory;
+    use Piwigo\Tests\Support\HtmlServiceTestFactory;
+    use Piwigo\Tests\Support\LangTestFactory;
+    use Piwigo\Tests\Support\PageStateTestFactory;
+    use Piwigo\Tests\Support\UrlServiceTestFactory;
     use Piwigo\Users\User;
     use Piwigo\Users\UserStatus;
 
@@ -142,7 +142,7 @@ namespace Piwigo\Tests\Integration {
                 new PasswordService(new PasswordRepository(EntityManagerFactory::build(DbConnection::build())), new DeploymentPolicy()),
                 new CookieService(),
                 $this->failedLoginRepo,
-                new SessionService(EntityManagerFactory::build(DbConnection::build())->getRepository(SessionEntity::class),CurrentConfigTestFactory::get()),
+                new SessionService(EntityManagerFactory::build(DbConnection::build())->getRepository(SessionEntity::class), CurrentConfigTestFactory::get()),
                 EventDispatcherTestFactory::get(),
                 PageStateTestFactory::get(),
                 CurrentUserTestFactory::get(),
@@ -158,10 +158,11 @@ namespace Piwigo\Tests\Integration {
          */
         private function pwgLoginResult(bool $success, string $username, ?string $password, bool $rememberMe): bool
         {
-            return $this->service->pwgLogin(new TryLogUser($success, $username, $password, $rememberMe))->success;
+            return $this->service->pwgLogin(new TryLogUser($success, $username, $password, $rememberMe))
+                ->success;
         }
 
-        public function test_calculate_auto_login_key_returns_a_key_and_username_for_a_real_user(): void
+        public function testCalculateAutoLoginKeyReturnsAKeyAndUsernameForARealUser(): void
         {
             $result = $this->service->calculateAutoLoginKey(1, 1000);
 
@@ -169,7 +170,7 @@ namespace Piwigo\Tests\Integration {
             self::assertSame('fixture_admin', $result['username']);
         }
 
-        public function test_calculate_auto_login_key_returns_false_for_a_missing_user(): void
+        public function testCalculateAutoLoginKeyReturnsFalseForAMissingUser(): void
         {
             $result = $this->service->calculateAutoLoginKey(999999, 1000);
 
@@ -177,7 +178,7 @@ namespace Piwigo\Tests\Integration {
             self::assertSame('', $result['username']);
         }
 
-        public function test_calculate_auto_login_key_is_stable_for_the_same_inputs(): void
+        public function testCalculateAutoLoginKeyIsStableForTheSameInputs(): void
         {
             $first = $this->service->calculateAutoLoginKey(1, 1000);
             $second = $this->service->calculateAutoLoginKey(1, 1000);
@@ -185,7 +186,7 @@ namespace Piwigo\Tests\Integration {
             self::assertSame($first['key'], $second['key']);
         }
 
-        public function test_calculate_auto_login_key_changes_when_the_time_changes(): void
+        public function testCalculateAutoLoginKeyChangesWhenTheTimeChanges(): void
         {
             $first = $this->service->calculateAutoLoginKey(1, 1000);
             $second = $this->service->calculateAutoLoginKey(1, 2000);
@@ -193,7 +194,7 @@ namespace Piwigo\Tests\Integration {
             self::assertNotSame($first['key'], $second['key']);
         }
 
-        public function test_calculate_auto_login_key_changes_when_the_secret_key_changes(): void
+        public function testCalculateAutoLoginKeyChangesWhenTheSecretKeyChanges(): void
         {
             $first = $this->service->calculateAutoLoginKey(1, 1000);
 
@@ -204,7 +205,7 @@ namespace Piwigo\Tests\Integration {
             self::assertNotSame($first['key'], $second['key']);
         }
 
-        public function test_try_log_user_fails_closed_when_no_handler_is_registered(): void
+        public function testTryLogUserFailsClosedWhenNoHandlerIsRegistered(): void
         {
             // No handler is registered for this event, so
             // EventDispatcher::dispatchChange() returns the same event
@@ -212,7 +213,7 @@ namespace Piwigo\Tests\Integration {
             self::assertFalse($this->service->tryLogUser('anyone', 'anything', false));
         }
 
-        public function test_find_user_by_username_or_email_matches_by_username(): void
+        public function testFindUserByUsernameOrEmailMatchesByUsername(): void
         {
             $user = $this->service->findUserByUsernameOrEmail('fixture_admin');
 
@@ -220,12 +221,12 @@ namespace Piwigo\Tests\Integration {
             self::assertSame('fixture_admin', $user->username);
         }
 
-        public function test_find_user_by_username_or_email_returns_null_for_an_unknown_identifier(): void
+        public function testFindUserByUsernameOrEmailReturnsNullForAnUnknownIdentifier(): void
         {
             self::assertNull($this->service->findUserByUsernameOrEmail('no-such-user-' . uniqid()));
         }
 
-        public function test_has_already_logged_in_is_true_for_a_user_with_no_login_activity_history(): void
+        public function testHasAlreadyLoggedInIsTrueForAUserWithNoLoginActivityHistory(): void
         {
             // Fixture user 4 (power_user) -- see this suite's own
             // fixture-shape memory notes; no login-activity rows exist for
@@ -233,7 +234,7 @@ namespace Piwigo\Tests\Integration {
             self::assertTrue($this->service->hasAlreadyLoggedIn(4, EntityManagerFactory::build($this->conn)->getRepository(ActivityEntity::class)));
         }
 
-        public function test_log_user_treats_a_non_string_lang_cookie_as_a_hacking_attempt(): void
+        public function testLogUserTreatsANonStringLangCookieAsAHackingAttempt(): void
         {
             // A real request can never send a scalar $_COOKIE['lang'] as
             // an array (only a crafted 'lang[]=x&lang[]=y' request could),
@@ -269,7 +270,8 @@ namespace Piwigo\Tests\Integration {
                 self::assertSame(500, $e->response()->getStatusCode());
                 self::assertStringContainsString(
                     '[Hacking attempt] the input parameter "lang" is not valid',
-                    (string) $e->response()->getBody()
+                    (string) $e->response()
+                        ->getBody()
                 );
             } finally {
                 restore_error_handler();
@@ -277,7 +279,7 @@ namespace Piwigo\Tests\Integration {
             }
         }
 
-        public function test_log_user_treats_an_unrecognised_language_code_as_a_hacking_attempt(): void
+        public function testLogUserTreatsAnUnrecognisedLanguageCodeAsAHackingAttempt(): void
         {
             CurrentUserTestFactory::get()->set(new User(
                 id: UserId::from(1),
@@ -299,7 +301,8 @@ namespace Piwigo\Tests\Integration {
                 self::assertSame(500, $e->response()->getStatusCode());
                 self::assertStringContainsString(
                     '[Hacking attempt] the input parameter "zz_NOT_A_REAL_LANGUAGE" is not valid',
-                    (string) $e->response()->getBody()
+                    (string) $e->response()
+                        ->getBody()
                 );
             } finally {
                 restore_error_handler();
@@ -307,7 +310,7 @@ namespace Piwigo\Tests\Integration {
             }
         }
 
-        public function test_log_user_syncs_the_language_preference_and_clears_the_lang_cookie_when_it_differs(): void
+        public function testLogUserSyncsTheLanguagePreferenceAndClearsTheLangCookieWhenItDiffers(): void
         {
             // Only 'en_UK' ships in this suite's fixture `languages` table
             // (see the two hacking-attempt tests above, which rely on
@@ -317,7 +320,7 @@ namespace Piwigo\Tests\Integration {
             // duration of this test so this exact `if` has a genuinely
             // different, valid language to accept.
             $this->conn->executeStatement(
-                "INSERT INTO " . 'languages' . " (id, version, name) VALUES ('fr_FR', '16.3.0', 'Francais')"
+                'INSERT INTO languages' . " (id, version, name) VALUES ('fr_FR', '16.3.0', 'Francais')"
             );
 
             CurrentUserTestFactory::get()->set(new User(
@@ -351,7 +354,7 @@ namespace Piwigo\Tests\Integration {
                     restore_error_handler();
                 }
 
-                $language = $this->conn->fetchOne('SELECT language FROM ' . 'user_infos' . ' WHERE user_id = 1');
+                $language = $this->conn->fetchOne('SELECT language FROM user_infos WHERE user_id = 1');
                 self::assertSame('fr_FR', $language, 'logUser() should persist the lang cookie value to user_infos.language.');
 
                 // setcookie('lang', '', ['expires' => time() - 3600]) itself
@@ -364,13 +367,13 @@ namespace Piwigo\Tests\Integration {
                 // this exact branch (including the setcookie() call) ran.
             } finally {
                 unset($_COOKIE['lang']);
-                $this->conn->executeStatement("DELETE FROM " . 'languages' . " WHERE id = 'fr_FR'");
-                $this->conn->executeStatement("UPDATE " . 'user_infos' . " SET language = 'en_UK' WHERE user_id = 1");
+                $this->conn->executeStatement('DELETE FROM languages' . " WHERE id = 'fr_FR'");
+                $this->conn->executeStatement('UPDATE user_infos' . " SET language = 'en_UK' WHERE user_id = 1");
                 unset($_SESSION['pwg_uid']);
             }
         }
 
-        public function test_auto_login_succeeds_for_a_valid_remember_me_cookie_and_marks_the_session_ui_context(): void
+        public function testAutoLoginSucceedsForAValidRememberMeCookieAndMarksTheSessionUiContext(): void
         {
             $remember_me_name = CurrentConfigTestFactory::get()->rememberMeName;
             $time = time();
@@ -425,7 +428,7 @@ namespace Piwigo\Tests\Integration {
             }
         }
 
-        public function test_auto_login_clears_the_cookie_and_returns_false_for_a_malformed_remember_me_cookie(): void
+        public function testAutoLoginClearsTheCookieAndReturnsFalseForAMalformedRememberMeCookie(): void
         {
             $remember_me_name = CurrentConfigTestFactory::get()->rememberMeName;
             // 5 dash-separated parts -- is_string() passes and explode()
@@ -449,7 +452,7 @@ namespace Piwigo\Tests\Integration {
             }
         }
 
-        public function test_pwg_login_returns_true_immediately_when_success_is_already_true(): void
+        public function testPwgLoginReturnsTrueImmediatelyWhenSuccessIsAlreadyTrue(): void
         {
             // The $success===true short-circuit at the very top of
             // pwgLogin() -- reached e.g. when a plugin's own
@@ -458,7 +461,7 @@ namespace Piwigo\Tests\Integration {
             self::assertTrue($this->pwgLoginResult(true, 'irrelevant', 'irrelevant', false));
         }
 
-        public function test_pwg_login_denies_the_login_when_a_finalize_login_handler_blocks_it(): void
+        public function testPwgLoginDeniesTheLoginWhenAFinalizeLoginHandlerBlocksIt(): void
         {
             // fixture_admin / fixture_admin, per tests/Fixtures/README.md's
             // documented install credentials -- a real username+password
@@ -467,7 +470,11 @@ namespace Piwigo\Tests\Integration {
             // being rejected earlier for a wrong password.
             $handler = static function (FinalizeLogin $event): FinalizeLogin {
                 return new FinalizeLogin(
-                    ['can_login' => false, 'reason' => 'blocked_by_test_handler', 'authenticated' => $event->state['authenticated']],
+                    [
+                        'can_login' => false,
+                        'reason' => 'blocked_by_test_handler',
+                        'authenticated' => $event->state['authenticated'],
+                    ],
                     $event->userFound,
                     $event->rememberMe,
                 );
@@ -480,14 +487,14 @@ namespace Piwigo\Tests\Integration {
                 self::assertFalse($result);
             } finally {
                 EventDispatcherTestFactory::get()->removeEventHandler(FinalizeLogin::class, $handler);
-                $this->conn->executeStatement('DELETE FROM ' . 'user_failed_logins' . ' WHERE user_id = 1');
+                $this->conn->executeStatement('DELETE FROM user_failed_logins WHERE user_id = 1');
             }
         }
 
-        public function test_pwg_login_records_a_failed_login_row_for_a_wrong_password(): void
+        public function testPwgLoginRecordsAFailedLoginRowForAWrongPassword(): void
         {
             $countFailedLoginsForFixtureAdmin = function (): int {
-                $count = $this->conn->fetchOne('SELECT COUNT(*) FROM ' . 'user_failed_logins' . ' WHERE user_id = 1');
+                $count = $this->conn->fetchOne('SELECT COUNT(*) FROM user_failed_logins WHERE user_id = 1');
                 self::assertIsNumeric($count);
 
                 return $count;
@@ -501,11 +508,11 @@ namespace Piwigo\Tests\Integration {
                 self::assertFalse($result);
                 self::assertSame($before + 1, $countFailedLoginsForFixtureAdmin());
             } finally {
-                $this->conn->executeStatement('DELETE FROM ' . 'user_failed_logins' . ' WHERE user_id = 1');
+                $this->conn->executeStatement('DELETE FROM user_failed_logins WHERE user_id = 1');
             }
         }
 
-        public function test_pwg_login_locks_out_the_username_after_max_attempts_even_with_the_correct_password(): void
+        public function testPwgLoginLocksOutTheUsernameAfterMaxAttemptsEvenWithTheCorrectPassword(): void
         {
             // Empty $_SERVER['REMOTE_ADDR'] in this CLI test process means
             // pwgLogin()'s ip-scoped check never fires (its own '$ip !== ""'
@@ -532,11 +539,11 @@ namespace Piwigo\Tests\Integration {
                 );
             } finally {
                 unset($_SESSION['fake_user_cache']);
-                $this->conn->executeStatement('DELETE FROM ' . 'user_failed_logins' . ' WHERE user_id = 1');
+                $this->conn->executeStatement('DELETE FROM user_failed_logins WHERE user_id = 1');
             }
         }
 
-        public function test_pwg_login_fast_rejects_a_locked_out_username_via_the_user_scoped_lockout_block_directly(): void
+        public function testPwgLoginFastRejectsALockedOutUsernameViaTheUserScopedLockoutBlockDirectly(): void
         {
             // A minimal, deterministic reproduction of the user-scoped
             // lockout block itself, isolated from
@@ -574,11 +581,11 @@ namespace Piwigo\Tests\Integration {
             // reason about the shape of $_SERVER through.
             $originalRemoteAddr = is_string($_SERVER['REMOTE_ADDR'] ?? null) ? $_SERVER['REMOTE_ADDR'] : '';
             $_SERVER['REMOTE_ADDR'] = '';
-            $this->conn->executeStatement('DELETE FROM ' . 'user_failed_logins' . ' WHERE user_id = 1');
+            $this->conn->executeStatement('DELETE FROM user_failed_logins WHERE user_id = 1');
             CurrentConfigTestFactory::get()->loginLockoutMaxAttempts = 1;
 
             $countFailedLoginsForFixtureAdmin = function (): int {
-                $count = $this->conn->fetchOne('SELECT COUNT(*) FROM ' . 'user_failed_logins' . ' WHERE user_id = 1');
+                $count = $this->conn->fetchOne('SELECT COUNT(*) FROM user_failed_logins WHERE user_id = 1');
                 self::assertIsNumeric($count);
 
                 return $count;
@@ -605,12 +612,12 @@ namespace Piwigo\Tests\Integration {
                 );
             } finally {
                 unset($_SESSION['fake_user_cache']);
-                $this->conn->executeStatement('DELETE FROM ' . 'user_failed_logins' . ' WHERE user_id = 1');
+                $this->conn->executeStatement('DELETE FROM user_failed_logins WHERE user_id = 1');
                 $_SERVER['REMOTE_ADDR'] = $originalRemoteAddr;
             }
         }
 
-        public function test_pwg_login_locks_out_by_ip_even_for_an_unknown_username(): void
+        public function testPwgLoginLocksOutByIpEvenForAnUnknownUsername(): void
         {
             CurrentConfigTestFactory::get()->loginLockoutMaxAttempts = 3;
             $originalRemoteAddr = $_SERVER['REMOTE_ADDR'] ?? null;
@@ -641,40 +648,40 @@ namespace Piwigo\Tests\Integration {
                 } else {
                     $_SERVER['REMOTE_ADDR'] = $originalRemoteAddr;
                 }
-                $this->conn->executeStatement("DELETE FROM " . 'user_failed_logins' . " WHERE ip = '203.0.113.55'");
+                $this->conn->executeStatement('DELETE FROM user_failed_logins' . " WHERE ip = '203.0.113.55'");
             }
         }
 
-        public function test_auth_key_login_rejects_a_key_with_an_invalid_format(): void
+        public function testAuthKeyLoginRejectsAKeyWithAnInvalidFormat(): void
         {
             self::assertFalse($this->service->authKeyLogin('not-a-valid-key-format'));
         }
 
-        public function test_auth_key_login_returns_false_for_a_wellformed_but_unknown_auth_key(): void
+        public function testAuthKeyLoginReturnsFalseForAWellformedButUnknownAuthKey(): void
         {
             // 30 lowercase alnum chars matches the auth_key format regex
             // but was never inserted into user_auth_keys.
             self::assertFalse($this->service->authKeyLogin(str_repeat('a', 30)));
         }
 
-        public function test_auth_key_login_rejects_an_expired_auth_key(): void
+        public function testAuthKeyLoginRejectsAnExpiredAuthKey(): void
         {
             $created = $this->service->createUserAuthKey(4, 'normal');
             self::assertIsArray($created);
 
             $this->conn->executeStatement(
-                'UPDATE ' . 'user_auth_keys' . " SET expired_on = '2000-01-01 00:00:00' WHERE auth_key = ?",
+                'UPDATE user_auth_keys' . " SET expired_on = '2000-01-01 00:00:00' WHERE auth_key = ?",
                 [$created['auth_key']]
             );
 
             try {
                 self::assertFalse($this->service->authKeyLogin($created['auth_key']));
             } finally {
-                $this->conn->executeStatement('DELETE FROM ' . 'user_auth_keys' . ' WHERE auth_key = ?', [$created['auth_key']]);
+                $this->conn->executeStatement('DELETE FROM user_auth_keys WHERE auth_key = ?', [$created['auth_key']]);
             }
         }
 
-        public function test_auth_key_login_rejects_an_auth_key_whose_user_status_is_no_longer_eligible(): void
+        public function testAuthKeyLoginRejectsAnAuthKeyWhoseUserStatusIsNoLongerEligible(): void
         {
             // The key was created while user 4 was 'normal' (the only
             // status createUserAuthKey() itself allows); promoting them to
@@ -684,17 +691,17 @@ namespace Piwigo\Tests\Integration {
             $created = $this->service->createUserAuthKey(4, 'normal');
             self::assertIsArray($created);
 
-            $this->conn->executeStatement("UPDATE " . 'user_infos' . " SET status = 'admin' WHERE user_id = 4");
+            $this->conn->executeStatement('UPDATE user_infos' . " SET status = 'admin' WHERE user_id = 4");
 
             try {
                 self::assertFalse($this->service->authKeyLogin($created['auth_key']));
             } finally {
-                $this->conn->executeStatement("UPDATE " . 'user_infos' . " SET status = 'normal' WHERE user_id = 4");
-                $this->conn->executeStatement('DELETE FROM ' . 'user_auth_keys' . ' WHERE auth_key = ?', [$created['auth_key']]);
+                $this->conn->executeStatement('UPDATE user_infos' . " SET status = 'normal' WHERE user_id = 4");
+                $this->conn->executeStatement('DELETE FROM user_auth_keys WHERE auth_key = ?', [$created['auth_key']]);
             }
         }
 
-        public function test_auth_key_login_rejects_an_api_key_with_the_wrong_secret(): void
+        public function testAuthKeyLoginRejectsAnApiKeyWithTheWrongSecret(): void
         {
             $mailer = Kernel::container()->get(MailService::class);
             self::assertInstanceOf(MailService::class, $mailer);
@@ -704,7 +711,7 @@ namespace Piwigo\Tests\Integration {
                 new ApiKeyRepository(EntityManagerFactory::build($this->conn)),
                 new PasswordService(new PasswordRepository(EntityManagerFactory::build($this->conn)), new DeploymentPolicy()),
                 UrlServiceTestFactory::build(),
-                new SessionService(EntityManagerFactory::build($this->conn)->getRepository(SessionEntity::class),CurrentConfigTestFactory::get()),
+                new SessionService(EntityManagerFactory::build($this->conn)->getRepository(SessionEntity::class), CurrentConfigTestFactory::get()),
                 CurrentConfigTestFactory::get(),
             );
             $created = $apiKeyService->create(4, 30, 'Wrong Secret Test Key');
@@ -717,11 +724,11 @@ namespace Piwigo\Tests\Integration {
             try {
                 self::assertFalse($this->service->authKeyLogin($created->authKey . ':' . $tamperedSecret));
             } finally {
-                $this->conn->executeStatement('DELETE FROM ' . 'user_auth_keys' . ' WHERE auth_key = ?', [$created->authKey]);
+                $this->conn->executeStatement('DELETE FROM user_auth_keys WHERE auth_key = ?', [$created->authKey]);
             }
         }
 
-        public function test_auth_key_login_rejects_a_revoked_api_key(): void
+        public function testAuthKeyLoginRejectsARevokedApiKey(): void
         {
             $mailer = Kernel::container()->get(MailService::class);
             self::assertInstanceOf(MailService::class, $mailer);
@@ -731,7 +738,7 @@ namespace Piwigo\Tests\Integration {
                 new ApiKeyRepository(EntityManagerFactory::build($this->conn)),
                 new PasswordService(new PasswordRepository(EntityManagerFactory::build($this->conn)), new DeploymentPolicy()),
                 UrlServiceTestFactory::build(),
-                new SessionService(EntityManagerFactory::build($this->conn)->getRepository(SessionEntity::class),CurrentConfigTestFactory::get()),
+                new SessionService(EntityManagerFactory::build($this->conn)->getRepository(SessionEntity::class), CurrentConfigTestFactory::get()),
                 CurrentConfigTestFactory::get(),
             );
             $created = $apiKeyService->create(4, 30, 'Revoked Test Key');
@@ -741,18 +748,18 @@ namespace Piwigo\Tests\Integration {
             try {
                 self::assertFalse($this->service->authKeyLogin($created->authKey . ':' . $created->apikeySecret));
             } finally {
-                $this->conn->executeStatement('DELETE FROM ' . 'user_auth_keys' . ' WHERE auth_key = ?', [$created->authKey]);
+                $this->conn->executeStatement('DELETE FROM user_auth_keys WHERE auth_key = ?', [$created->authKey]);
             }
         }
 
-        public function test_create_user_auth_key_returns_false_when_auth_key_duration_is_disabled(): void
+        public function testCreateUserAuthKeyReturnsFalseWhenAuthKeyDurationIsDisabled(): void
         {
             CurrentConfigTestFactory::get()->authKeyDuration = 0;
 
             self::assertFalse($this->service->createUserAuthKey(4, 'normal'));
         }
 
-        public function test_generate_password_link_computes_the_reset_link_when_not_the_first_login(): void
+        public function testGeneratePasswordLinkComputesTheResetLinkWhenNotTheFirstLogin(): void
         {
             try {
                 $result = $this->service->generatePasswordLink(4, UrlServiceTestFactory::build(), false);
@@ -760,12 +767,12 @@ namespace Piwigo\Tests\Integration {
                 self::assertStringContainsString('password.php?key=', $result['password_link']);
             } finally {
                 $this->conn->executeStatement(
-                    'UPDATE ' . 'user_infos' . ' SET activation_key = NULL, activation_key_expire = NULL WHERE user_id = 4'
+                    'UPDATE user_infos SET activation_key = NULL, activation_key_expire = NULL WHERE user_id = 4'
                 );
             }
         }
 
-        public function test_generate_password_link_still_works_for_a_user_locked_out_of_pwg_login(): void
+        public function testGeneratePasswordLinkStillWorksForAUserLockedOutOfPwgLogin(): void
         {
             // generatePasswordLink() is the password-reset escape hatch --
             // it never routes through pwgLogin()/tryLogUser()/logUser(), so
@@ -790,9 +797,9 @@ namespace Piwigo\Tests\Integration {
                 self::assertStringContainsString('password.php?key=', $result['password_link']);
             } finally {
                 $this->conn->executeStatement(
-                    'UPDATE ' . 'user_infos' . ' SET activation_key = NULL, activation_key_expire = NULL WHERE user_id = 4'
+                    'UPDATE user_infos SET activation_key = NULL, activation_key_expire = NULL WHERE user_id = 4'
                 );
-                $this->conn->executeStatement('DELETE FROM ' . 'user_failed_logins' . ' WHERE user_id = 4');
+                $this->conn->executeStatement('DELETE FROM user_failed_logins WHERE user_id = 4');
             }
         }
     }

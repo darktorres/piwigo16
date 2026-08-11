@@ -86,7 +86,8 @@ use Piwigo\Core\CharsetHelper;
  *   `string|false` return type exists to let callers detect).
  */
 test('getPwgCharset defaults to utf-8 when PWG_CHARSET is not defined', function (): void {
-    expect(defined('PWG_CHARSET'))->toBeFalse();
+    expect(defined('PWG_CHARSET'))
+        ->toBeFalse();
     expect(CharsetHelper::getPwgCharset())->toBe('utf-8');
 });
 
@@ -137,7 +138,8 @@ test('convertCharset falls through to the generic iconv branch for any other cha
     // -- confirmed live, a real difference in the actual output bytes.
     $result = CharsetHelper::convertCharset('hello', 'ascii', 'utf-16');
 
-    expect($result)->toBe("\xff\xfe" . "h\x00e\x00l\x00l\x00o\x00");
+    expect($result)
+        ->toBe("\xff\xfeh\x00e\x00l\x00l\x00o\x00");
 });
 
 test('convertCharset transliterates an unmappable character in the generic iconv branch rather than failing outright', function (): void {

@@ -4,37 +4,37 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Integration\Admin;
 
-use Override;
-use Piwigo\Tests\Support\UrlServiceTestFactory;
-use LogicException;
-use Piwigo\Config\CurrentConfig;
-use Piwigo\Tests\Support\CurrentConfigTestFactory;
-use Piwigo\Tests\Support\TemplateTestFactory;
-use Piwigo\Activity\ActivityService;
-use Piwigo\Users\UserService;
-use Piwigo\Image\ImageService;
-use Piwigo\Category\CategoryService;
-use Piwigo\Group\GroupService;
-use Piwigo\Auth\AccessControl;
-use Piwigo\Validation\InputValidator;
 use Doctrine\DBAL\Connection;
+use LogicException;
+use Override;
+use Piwigo\Activity\ActivityService;
 use Piwigo\Admin\CoreTabs;
 use Piwigo\Admin\UserActivityPageRenderer;
+use Piwigo\Auth\AccessControl;
+use Piwigo\Category\CategoryService;
 use Piwigo\Config\ConfigService;
-use Piwigo\Tests\Support\CurrentConfigServiceTestFactory;
-use Piwigo\Tests\Support\CurrentPathsTestFactory;
+use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\Kernel;
-use Piwigo\Tests\Support\LangTestFactory;
 use Piwigo\Db\DbConnection;
 use Piwigo\Event\Admin\TabsheetBeforeSelect;
+use Piwigo\Group\GroupService;
 use Piwigo\Html\HtmlService;
+use Piwigo\Image\ImageService;
 use Piwigo\PluginConfig\EventDispatcher;
-use Piwigo\Tests\Support\EventDispatcherTestFactory;
 use Piwigo\Template\CurrentTemplate;
 use Piwigo\Tests\Integration\IntegrationTestCase;
-use Piwigo\Url\UrlService;
+use Piwigo\Tests\Support\CurrentConfigServiceTestFactory;
+use Piwigo\Tests\Support\CurrentConfigTestFactory;
+use Piwigo\Tests\Support\CurrentPathsTestFactory;
 use Piwigo\Tests\Support\CurrentUserTestFactory;
+use Piwigo\Tests\Support\EventDispatcherTestFactory;
+use Piwigo\Tests\Support\LangTestFactory;
+use Piwigo\Tests\Support\TemplateTestFactory;
+use Piwigo\Tests\Support\UrlServiceTestFactory;
+use Piwigo\Url\UrlService;
 use Piwigo\Users\User;
+use Piwigo\Users\UserService;
+use Piwigo\Validation\InputValidator;
 
 /**
  * Piwigo\Admin\UserActivityPageRenderer::render() -- see
@@ -72,7 +72,9 @@ final class UserActivityPageRendererTest extends IntegrationTestCase
 
     private CoreTabs $coreTabs;
 
-    /** @var list<array<string, mixed>> */
+    /**
+     * @var list<array<string, mixed>>
+     */
     private array $deletedActivityRows = [];
 
     #[Override]
@@ -138,13 +140,13 @@ final class UserActivityPageRendererTest extends IntegrationTestCase
         parent::tearDown();
     }
 
-    public function test_no_activity_at_all_leaves_ulist_empty_instead_of_erroring(): void
+    public function testNoActivityAtAllLeavesUlistEmptyInsteadOfErroring(): void
     {
-        $rows = $this->conn->fetchAllAssociative('SELECT * FROM ' . 'activity' . " WHERE object != 'system'");
+        $rows = $this->conn->fetchAllAssociative('SELECT * FROM activity' . " WHERE object != 'system'");
         $this->deletedActivityRows = $rows;
         self::assertNotSame([], $rows, 'Fixture is expected to seed real non-system activity rows to delete/restore.');
 
-        $this->conn->executeStatement('DELETE FROM ' . 'activity' . " WHERE object != 'system'");
+        $this->conn->executeStatement('DELETE FROM activity' . " WHERE object != 'system'");
 
         $activityService = Kernel::container()->get(ActivityService::class);
         if (! $activityService instanceof ActivityService) {
@@ -186,7 +188,8 @@ final class UserActivityPageRendererTest extends IntegrationTestCase
             throw new LogicException('Container returned an unexpected type for ' . AccessControl::class);
         }
 
-        new UserActivityPageRenderer()->render(LangTestFactory::get(), $accessControl, $this->urlService, $this->coreTabs, CurrentTemplate::current(), $currentConfig, $activityService, $userService, $imageService, $categoryService, $groupService, $htmlService, new InputValidator(), EventDispatcherTestFactory::get());
+        new UserActivityPageRenderer()
+            ->render(LangTestFactory::get(), $accessControl, $this->urlService, $this->coreTabs, CurrentTemplate::current(), $currentConfig, $activityService, $userService, $imageService, $categoryService, $groupService, $htmlService, new InputValidator(), EventDispatcherTestFactory::get());
 
         $template = CurrentTemplate::current()->get();
         self::assertSame([], $template->get_template_vars('ulist'));

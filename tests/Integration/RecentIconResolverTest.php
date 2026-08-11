@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Integration;
 
-use Override;
 use LogicException;
+use Override;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Lang;
 use Piwigo\Core\ProcessCache;
@@ -62,13 +62,13 @@ final class RecentIconResolverTest extends IntegrationTestCase
         parent::tearDown();
     }
 
-    public function test_getIcon_returns_false_for_an_empty_or_zero_date(): void
+    public function testGetIconReturnsFalseForAnEmptyOrZeroDate(): void
     {
         self::assertFalse(RecentIconResolver::getIcon('', 7, $this->processCache, $this->lang));
         self::assertFalse(RecentIconResolver::getIcon('0', 7, $this->processCache, $this->lang));
     }
 
-    public function test_getIcon_returns_the_title_icon_for_a_date_within_the_recent_period(): void
+    public function testGetIconReturnsTheTitleIconForADateWithinTheRecentPeriod(): void
     {
         // PIWIGO_TEST_NOW is 2026-08-01; 7 days back is 2026-07-25, so
         // 2026-07-30 is within the recent window.
@@ -82,14 +82,14 @@ final class RecentIconResolverTest extends IntegrationTestCase
         self::assertFalse($result['IS_CHILD_DATE']);
     }
 
-    public function test_getIcon_returns_an_empty_array_for_a_date_outside_the_recent_period(): void
+    public function testGetIconReturnsAnEmptyArrayForADateOutsideTheRecentPeriod(): void
     {
         $result = RecentIconResolver::getIcon('2026-07-01', 7, $this->processCache, $this->lang);
 
         self::assertSame([], $result);
     }
 
-    public function test_getIcon_propagates_the_isChildDate_flag(): void
+    public function testGetIconPropagatesTheIsChildDateFlag(): void
     {
         $result = RecentIconResolver::getIcon('2026-07-30', 7, $this->processCache, $this->lang, true);
 
@@ -100,7 +100,7 @@ final class RecentIconResolverTest extends IntegrationTestCase
         self::assertTrue($result['IS_CHILD_DATE']);
     }
 
-    public function test_getIcon_reuses_the_per_request_cache_for_a_repeated_date(): void
+    public function testGetIconReusesThePerRequestCacheForARepeatedDate(): void
     {
         $first = RecentIconResolver::getIcon('2026-07-30', 7, $this->processCache, $this->lang);
         $second = RecentIconResolver::getIcon('2026-07-30', 7, $this->processCache, $this->lang);

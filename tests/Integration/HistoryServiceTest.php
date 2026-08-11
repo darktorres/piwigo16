@@ -4,25 +4,25 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Integration;
 
-use Override;
-use Piwigo\Core\Kernel;
-use LogicException;
-use Piwigo\Auth\AccessControl;
-use Piwigo\PluginConfig\EventDispatcher;
 use Doctrine\DBAL\Connection;
-use Piwigo\Config\CurrentConfig;
-use Piwigo\Tests\Support\CurrentConfigTestFactory;
+use LogicException;
+use Override;
+use Piwigo\Auth\AccessControl;
 use Piwigo\Config\ConfigLoader;
 use Piwigo\Config\ConfigService;
+use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\CurrentLogger;
+use Piwigo\Core\Kernel;
 use Piwigo\Core\Logger;
-use Piwigo\Tests\Support\PageStateTestFactory;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
 use Piwigo\History\HistoryEntity;
 use Piwigo\History\HistoryRepository;
 use Piwigo\History\HistoryService;
+use Piwigo\PluginConfig\EventDispatcher;
+use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Tests\Support\CurrentUserTestFactory;
+use Piwigo\Tests\Support\PageStateTestFactory;
 use Piwigo\Users\User;
 
 /**
@@ -79,13 +79,21 @@ final class HistoryServiceTest extends IntegrationTestCase
         // it as this exact value (isLoggingAllowed()'s admin/guest
         // overrides don't apply).
         $currentConfig->logConf = true;
-        CurrentUserTestFactory::get()->set(User::fromUserArray(['id' => 1, 'status' => 'normal', 'username' => 'fixture_admin']));
+        CurrentUserTestFactory::get()->set(User::fromUserArray([
+            'id' => 1,
+            'status' => 'normal',
+            'username' => 'fixture_admin',
+        ]));
         PageStateTestFactory::get()->reset();
-        $GLOBALS['logger'] = new Logger(['severity' => Logger::OFF]);
+        $GLOBALS['logger'] = new Logger([
+            'severity' => Logger::OFF,
+        ]);
 
         $this->conn = DbConnection::build();
         $currentLogger = new CurrentLogger();
-        $currentLogger->set(new Logger(['severity' => Logger::OFF]));
+        $currentLogger->set(new Logger([
+            'severity' => Logger::OFF,
+        ]));
         $accessControl = Kernel::container()->get(AccessControl::class);
         if (! $accessControl instanceof AccessControl) {
             throw new LogicException('Container returned an unexpected type for ' . AccessControl::class);
@@ -96,35 +104,47 @@ final class HistoryServiceTest extends IntegrationTestCase
     #[Override]
     protected function tearDown(): void
     {
-        $this->conn->executeStatement('DELETE FROM ' . 'history');
-        $this->conn->executeStatement('DELETE FROM ' . 'history_summary');
+        $this->conn->executeStatement('DELETE FROM history');
+        $this->conn->executeStatement('DELETE FROM history_summary');
         parent::tearDown();
     }
 
-    public function test_history_compare_orders_by_date_then_time(): void
+    public function testHistoryCompareOrdersByDateThenTime(): void
     {
-        $earlier = ['date' => '2026-07-11', 'time' => '10:00:00'];
-        $later = ['date' => '2026-07-12', 'time' => '09:00:00'];
+        $earlier = [
+            'date' => '2026-07-11',
+            'time' => '10:00:00',
+        ];
+        $later = [
+            'date' => '2026-07-12',
+            'time' => '09:00:00',
+        ];
 
         self::assertLessThan(0, $this->service->historyCompare($earlier, $later));
         self::assertGreaterThan(0, $this->service->historyCompare($later, $earlier));
         self::assertSame(0, $this->service->historyCompare($earlier, $earlier));
     }
 
-    public function test_get_history_appends_matching_rows_to_the_given_data(): void
+    public function testGetHistoryAppendsMatchingRowsToTheGivenData(): void
     {
         $this->insertHistoryLine(1, '2026-07-12', '03:00:00');
         $this->insertHistoryLine(3, '2026-07-12', '03:00:00');
 
-        $data = [['seed' => true]];
-        $result = $this->service->getHistory($data, ['fields' => ['user' => 1]], []);
+        $data = [[
+            'seed' => true,
+        ]];
+        $result = $this->service->getHistory($data, [
+            'fields' => [
+                'user' => 1,
+            ],
+        ], []);
 
         self::assertCount(2, $result);
         self::assertTrue($result[0]['seed']);
         self::assertSame(1, $result[1]['user_id']);
     }
 
-    public function test_get_history_with_no_search_fields_returns_every_line(): void
+    public function testGetHistoryWithNoSearchFieldsReturnsEveryLine(): void
     {
         $this->insertHistoryLine(1, '2026-07-12', '03:00:00');
         $this->insertHistoryLine(3, '2026-07-12', '03:00:00');
@@ -142,20 +162,42 @@ final class HistoryServiceTest extends IntegrationTestCase
      * while building the SQL OR-clauses, not just the ones that happen to
      * be first/last.
      */
-    public function test_get_history_filters_by_image_type_skipping_types_outside_the_search_filter(): void
+    public function testGetHistoryFiltersByImageTypeSkippingTypesOutsideTheSearchFilter(): void
     {
         // image_type is enum('picture','high','other') -- not a real file
         // extension.
-        $this->conn->insert('history', ['date' => '2026-07-12', 'time' => '03:00:00', 'user_id' => 1, 'ip' => '127.0.0.1', 'image_type' => 'picture']);
-        $this->conn->insert('history', ['date' => '2026-07-12', 'time' => '04:00:00', 'user_id' => 1, 'ip' => '127.0.0.1', 'image_type' => 'high']);
-        $this->conn->insert('history', ['date' => '2026-07-12', 'time' => '05:00:00', 'user_id' => 1, 'ip' => '127.0.0.1', 'image_type' => null]);
+        $this->conn->insert('history', [
+            'date' => '2026-07-12',
+            'time' => '03:00:00',
+            'user_id' => 1,
+            'ip' => '127.0.0.1',
+            'image_type' => 'picture',
+        ]);
+        $this->conn->insert('history', [
+            'date' => '2026-07-12',
+            'time' => '04:00:00',
+            'user_id' => 1,
+            'ip' => '127.0.0.1',
+            'image_type' => 'high',
+        ]);
+        $this->conn->insert('history', [
+            'date' => '2026-07-12',
+            'time' => '05:00:00',
+            'user_id' => 1,
+            'ip' => '127.0.0.1',
+            'image_type' => null,
+        ]);
 
-        $result = $this->service->getHistory([], ['fields' => ['types' => ['picture']]], ['none', 'picture', 'high']);
+        $result = $this->service->getHistory([], [
+            'fields' => [
+                'types' => ['picture'],
+            ],
+        ], ['none', 'picture', 'high']);
 
         self::assertSame(['picture'], array_column($result, 'image_type'));
     }
 
-    public function test_summarize_creates_new_summary_rows_from_scratch(): void
+    public function testSummarizeCreatesNewSummaryRowsFromScratch(): void
     {
         $this->insertHistoryLine(1, '2026-07-12', '03:10:00');
         $this->insertHistoryLine(1, '2026-07-12', '03:50:00');
@@ -170,7 +212,7 @@ final class HistoryServiceTest extends IntegrationTestCase
         self::assertSame(1, $this->fetchSummaryNbPages(2026, 7, 12, 4));
     }
 
-    public function test_summarize_merges_into_an_existing_partial_summary_on_a_later_run(): void
+    public function testSummarizeMergesIntoAnExistingPartialSummaryOnALaterRun(): void
     {
         $this->insertHistoryLine(1, '2026-07-12', '03:00:00');
         $this->service->summarize();
@@ -190,7 +232,7 @@ final class HistoryServiceTest extends IntegrationTestCase
         self::assertSame(1, $this->fetchSummaryNbPages(2026, 7, 12, 5));
     }
 
-    public function test_summarize_respects_max_lines(): void
+    public function testSummarizeRespectsMaxLines(): void
     {
         $this->insertHistoryLine(1, '2026-07-12', '03:00:00');
         $this->insertHistoryLine(1, '2026-07-13', '03:00:00');
@@ -206,7 +248,7 @@ final class HistoryServiceTest extends IntegrationTestCase
         self::assertArrayNotHasKeySummary(2026, 7, 13, null);
     }
 
-    public function test_autopurge_is_a_no_op_when_keep_lines_is_zero(): void
+    public function testAutopurgeIsANoOpWhenKeepLinesIsZero(): void
     {
         $this->insertHistoryLine(1, '2026-07-12', '03:00:00');
 
@@ -215,7 +257,7 @@ final class HistoryServiceTest extends IntegrationTestCase
         self::assertSame(1, $this->countHistory());
     }
 
-    public function test_autopurge_is_a_no_op_when_under_the_keep_lines_threshold(): void
+    public function testAutopurgeIsANoOpWhenUnderTheKeepLinesThreshold(): void
     {
         CurrentConfigTestFactory::get()->historyAutopurgeKeepLines = 10;
         $this->insertHistoryLine(1, '2026-07-12', '03:00:00');
@@ -225,7 +267,7 @@ final class HistoryServiceTest extends IntegrationTestCase
         self::assertSame(1, $this->countHistory());
     }
 
-    public function test_autopurge_is_a_no_op_when_nothing_is_summarized_yet(): void
+    public function testAutopurgeIsANoOpWhenNothingIsSummarizedYet(): void
     {
         CurrentConfigTestFactory::get()->historyAutopurgeKeepLines = 1;
         $this->insertHistoryLine(1, '2026-07-12', '03:00:00');
@@ -236,7 +278,7 @@ final class HistoryServiceTest extends IntegrationTestCase
         self::assertSame(2, $this->countHistory());
     }
 
-    public function test_autopurge_deletes_old_summarized_lines(): void
+    public function testAutopurgeDeletesOldSummarizedLines(): void
     {
         $currentConfig = CurrentConfigTestFactory::get();
         $currentConfig->historyAutopurgeKeepLines = 1;
@@ -265,7 +307,7 @@ final class HistoryServiceTest extends IntegrationTestCase
      * date, so it's the SECOND group processed for the shared month
      * bucket, forcing the "found an even smaller id" branch to run.
      */
-    public function test_summarize_tracks_the_true_minimum_history_id_across_out_of_order_groups(): void
+    public function testSummarizeTracksTheTrueMinimumHistoryIdAcrossOutOfOrderGroups(): void
     {
         $smallerId = $this->insertHistoryLine(1, '2026-07-15', '10:00:00');
         $largerId = $this->insertHistoryLine(1, '2026-07-10', '05:00:00');
@@ -285,7 +327,7 @@ final class HistoryServiceTest extends IntegrationTestCase
      * truncated at exactly 50, then trimmed back to the last full comma so
      * a partially-cut tag id is never stored.
      */
-    public function test_log_visit_truncates_an_over_long_tag_ids_string(): void
+    public function testLogVisitTruncatesAnOverLongTagIdsString(): void
     {
         $tagIds = range(100, 130);
 
@@ -309,7 +351,7 @@ final class HistoryServiceTest extends IntegrationTestCase
      * then round-trips that as an empty, space-padded CHAR(39) read (same
      * padding behavior HistoryRepositoryTest's own IP tests cover).
      */
-    public function test_log_visit_gracefully_drops_an_over_long_unrepresentable_ip_address(): void
+    public function testLogVisitGracefullyDropsAnOverLongUnrepresentableIpAddress(): void
     {
         $longIp = '0000:0000:0000:0000:0000:ffff:192.168.100.100';
         self::assertGreaterThan(39, strlen($longIp));
@@ -334,7 +376,7 @@ final class HistoryServiceTest extends IntegrationTestCase
      * always what a later SELECT reads back, regardless of which casing
      * variant was in the INSERT.
      */
-    public function test_log_visit_accepts_a_known_section_case_insensitively(): void
+    public function testLogVisitAcceptsAKnownSectionCaseInsensitively(): void
     {
         $this->service->logVisit(section: 'Tags');
 
@@ -349,7 +391,7 @@ final class HistoryServiceTest extends IntegrationTestCase
      * later tests (and other test classes sharing this DB) see the
      * schema exactly as the fixture left it.
      */
-    public function test_log_visit_widens_the_section_enum_for_a_brand_new_section(): void
+    public function testLogVisitWidensTheSectionEnumForABrandNewSection(): void
     {
         $repo = EntityManagerFactory::build($this->conn)->getRepository(HistoryEntity::class);
         $originalOptions = $repo->getSectionEnumOptions();
@@ -368,7 +410,7 @@ final class HistoryServiceTest extends IntegrationTestCase
             // into the new, narrower enum definition. Delete that row
             // first.
             $this->conn->executeStatement(
-                'DELETE FROM ' . 'history' . " WHERE section = 'my_custom_section'"
+                'DELETE FROM history' . " WHERE section = 'my_custom_section'"
             );
             $repo->alterSectionEnum($originalOptions);
             $currentConfig = CurrentConfigTestFactory::get();
@@ -388,7 +430,7 @@ final class HistoryServiceTest extends IntegrationTestCase
      * OLDER of the two gets purged -- proving real deletion happened, not
      * just that autopurge() silently no-op'd.
      */
-    public function test_log_visit_triggers_autopurge_when_the_new_id_is_a_multiple_of_autopurge_every(): void
+    public function testLogVisitTriggersAutopurgeWhenTheNewIdIsAMultipleOfAutopurgeEvery(): void
     {
         $currentConfig = CurrentConfigTestFactory::get();
         $currentConfig->historyAutopurgeEvery = 1;
@@ -418,7 +460,7 @@ final class HistoryServiceTest extends IntegrationTestCase
      * without actually inserting 999 real rows first, is to force the
      * table's own AUTO_INCREMENT counter directly.
      */
-    public function test_log_visit_summarizes_when_the_new_id_lands_on_a_multiple_of_1000(): void
+    public function testLogVisitSummarizesWhenTheNewIdLandsOnAMultipleOf1000(): void
     {
         $this->insertHistoryLine(1, '2026-07-12', '03:00:00');
         self::assertNull($this->fetchSummaryNbPages(2026, 7, 12, null));
@@ -437,7 +479,7 @@ final class HistoryServiceTest extends IntegrationTestCase
                 ['history']
             );
         } else {
-            $this->conn->executeStatement('ALTER TABLE ' . 'history' . ' AUTO_INCREMENT = 1000');
+            $this->conn->executeStatement('ALTER TABLE history AUTO_INCREMENT = 1000');
         }
 
         self::assertTrue($this->service->logVisit());
@@ -474,7 +516,8 @@ final class HistoryServiceTest extends IntegrationTestCase
         $qb->andWhere($day === null ? 'day IS NULL' : 'day = ' . $day);
         $qb->andWhere($hour === null ? 'hour IS NULL' : 'hour = ' . $hour);
 
-        $value = $qb->executeQuery()->fetchOne();
+        $value = $qb->executeQuery()
+            ->fetchOne();
 
         return is_numeric($value) ? (int) $value : null;
     }
@@ -537,7 +580,8 @@ final class HistoryServiceTest extends IntegrationTestCase
         $qb->andWhere($day === null ? 'day IS NULL' : 'day = ' . $day);
         $qb->andWhere($hour === null ? 'hour IS NULL' : 'hour = ' . $hour);
 
-        $value = $qb->executeQuery()->fetchOne();
+        $value = $qb->executeQuery()
+            ->fetchOne();
 
         return is_numeric($value) ? (int) $value : null;
     }

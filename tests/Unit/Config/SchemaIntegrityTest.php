@@ -117,15 +117,17 @@ function schemaIntegrityHookBody(ReflectionMethod $hook): string
 test('every config property is publicly readable, and write access matches the documented private(set) list', function (): void {
     foreach (schemaIntegrityConfigProperties() as $property) {
         $name = $property->getName();
-        expect($property->isPublic())->toBeTrue("CurrentConfig::\${$name} must be publicly readable.");
+        expect($property->isPublic())
+            ->toBeTrue("CurrentConfig::\${$name} must be publicly readable.");
 
         $shouldBePrivateSet = in_array($name, SCHEMA_INTEGRITY_PRIVATE_SET_LIST, true);
-        expect($property->isPrivateSet())->toBe(
-            $shouldBePrivateSet,
-            $shouldBePrivateSet
-                ? "CurrentConfig::\${$name} is on SCHEMA_INTEGRITY_PRIVATE_SET_LIST but isn't private(set)."
-                : "CurrentConfig::\${$name} is private(set) but isn't on SCHEMA_INTEGRITY_PRIVATE_SET_LIST.",
-        );
+        expect($property->isPrivateSet())
+            ->toBe(
+                $shouldBePrivateSet,
+                $shouldBePrivateSet
+                            ? "CurrentConfig::\${$name} is on SCHEMA_INTEGRITY_PRIVATE_SET_LIST but isn't private(set)."
+                            : "CurrentConfig::\${$name} is private(set) but isn't on SCHEMA_INTEGRITY_PRIVATE_SET_LIST.",
+            );
     }
 });
 
@@ -145,19 +147,21 @@ test('every public zero-arg static method not backed by a property is on the all
         $unlisted[] = $name;
     }
 
-    expect($unlisted)->toBe([], 'Public static zero-arg method(s) have no matching property and aren\'t on SCHEMA_INTEGRITY_STATIC_METHOD_ALLOW_LIST: ' . implode(', ', $unlisted));
+    expect($unlisted)
+        ->toBe([], 'Public static zero-arg method(s) have no matching property and aren\'t on SCHEMA_INTEGRITY_STATIC_METHOD_ALLOW_LIST: ' . implode(', ', $unlisted));
 });
 
 test('hooks exist only on the documented properties, and each one writes its own state', function (): void {
     foreach (schemaIntegrityConfigProperties() as $property) {
         $name = $property->getName();
         $shouldHaveHooks = in_array($name, SCHEMA_INTEGRITY_HOOKED_LIST, true);
-        expect($property->hasHooks())->toBe(
-            $shouldHaveHooks,
-            $shouldHaveHooks
-                ? "CurrentConfig::\${$name} is on SCHEMA_INTEGRITY_HOOKED_LIST but has no hooks."
-                : "CurrentConfig::\${$name} has hooks but isn't on SCHEMA_INTEGRITY_HOOKED_LIST -- a plain property should have no room for hidden logic.",
-        );
+        expect($property->hasHooks())
+            ->toBe(
+                $shouldHaveHooks,
+                $shouldHaveHooks
+                            ? "CurrentConfig::\${$name} is on SCHEMA_INTEGRITY_HOOKED_LIST but has no hooks."
+                            : "CurrentConfig::\${$name} has hooks but isn't on SCHEMA_INTEGRITY_HOOKED_LIST -- a plain property should have no room for hidden logic.",
+            );
 
         if (! $shouldHaveHooks) {
             continue;
@@ -244,16 +248,19 @@ test('every scalar/array-typed property survives a real encode()/hydrate() round
             $originalValues[$name] = $property->getValue($currentConfig);
 
             $encoded = $encode->invoke(null, $key, $original);
-            expect($encoded)->toBeString("ConfigService::encode() returned null for config key '{$key}''s non-null default.");
+            expect($encoded)
+                ->toBeString("ConfigService::encode() returned null for config key '{$key}''s non-null default.");
 
             $hydrate->invoke($configService, $key, $encoded);
             $roundTripped = $property->getValue($currentConfig);
 
-            expect($roundTripped)->toEqual($original, "CurrentConfig::\${$name} (config key '{$key}') did not round-trip through ConfigService::encode()/hydrate(): expected " . var_export($original, true) . ', got ' . var_export($roundTripped, true) . '.');
+            expect($roundTripped)
+                ->toEqual($original, "CurrentConfig::\${$name} (config key '{$key}') did not round-trip through ConfigService::encode()/hydrate(): expected " . var_export($original, true) . ', got ' . var_export($roundTripped, true) . '.');
             $checked++;
         }
 
-        expect($checked)->toBeGreaterThan(0, 'The round-trip sweep skipped every property -- check its skip conditions.');
+        expect($checked)
+            ->toBeGreaterThan(0, 'The round-trip sweep skipped every property -- check its skip conditions.');
     } finally {
         foreach ($originalValues as $name => $value) {
             new ReflectionProperty(CurrentConfig::class, $name)->setValue($currentConfig, $value);

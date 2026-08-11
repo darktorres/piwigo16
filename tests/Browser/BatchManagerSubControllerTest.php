@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-use PgSql\Connection;
 use Pest\Browser\Api\AwaitableWebpage;
 use Pest\Browser\Api\PendingAwaitablePage;
 use Pest\Browser\Api\Webpage;
+use PgSql\Connection;
 use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
 
 /**
@@ -82,7 +82,9 @@ function bmImageHasTag(int $imageId, int $tagId): bool
  */
 function bmPost(Webpage|PendingAwaitablePage|AwaitableWebpage $page, array $fields): array
 {
-    return H::adminPost($page, '/admin.php?page=batch_manager', array_merge(['pwg_token' => H::pwgToken($page)], $fields));
+    return H::adminPost($page, '/admin.php?page=batch_manager', array_merge([
+        'pwg_token' => H::pwgToken($page),
+    ], $fields));
 }
 
 it('renders the global tab with no filter, defaulting to the caddie prefilter', function (): void {
@@ -101,7 +103,8 @@ it('empty_caddie clears the caddie and redirects', function (): void {
     $page = H::loginAsAdmin($this);
     $token = H::pwgToken($page);
     bmInsertCaddie(1, 1);
-    expect(bmCaddieCount(1))->toBeGreaterThan(0);
+    expect(bmCaddieCount(1))
+        ->toBeGreaterThan(0);
 
     $result = H::adminPost($page, '/admin.php?page=batch_manager&action=empty_caddie', [
         'pwg_token' => $token,
@@ -112,7 +115,8 @@ it('empty_caddie clears the caddie and redirects', function (): void {
     // 'manual'}) -- status is always reported as 0 and the body is
     // inaccessible by the Fetch API's own spec, not a failure signal.
     expect($result['status'])->toBe(0);
-    expect(bmCaddieCount(1))->toBe(0);
+    expect(bmCaddieCount(1))
+        ->toBe(0);
 });
 
 it('empty_caddie rejects a missing CSRF token', function (): void {
@@ -122,10 +126,13 @@ it('empty_caddie rejects a missing CSRF token', function (): void {
     $result = H::adminPost($page, '/admin.php?page=batch_manager&action=empty_caddie', []);
 
     expect($result['status'])->toBe(400);
-    expect(bmCaddieCount(1))->toBeGreaterThan(0);
+    expect(bmCaddieCount(1))
+        ->toBeGreaterThan(0);
 
     bmInsertCaddie(1, 1);
-    H::adminPost($page, '/admin.php?page=batch_manager&action=empty_caddie', ['pwg_token' => H::pwgToken($page)]);
+    H::adminPost($page, '/admin.php?page=batch_manager&action=empty_caddie', [
+        'pwg_token' => H::pwgToken($page),
+    ]);
 });
 
 it('delete_orphans records a session message and redirects when photos were deleted', function (): void {
@@ -287,7 +294,9 @@ it('submitting the filter form with nothing checked resets to the default filter
     $page = H::loginAsAdmin($this);
     H::navigateOk($page, '/admin.php?page=batch_manager');
 
-    $result = bmPost($page, ['submitFilter' => '1']);
+    $result = bmPost($page, [
+        'submitFilter' => '1',
+    ]);
 
     expect($result['status'])->toBe(200);
     expect($result['body'])->not->toContain('Fatal error');
@@ -319,7 +328,9 @@ it('applies a plain (non-duplicates) prefilter via a URL filter token', function
 
 it('applies add_tags then del_tags to a whole_set selection, round-tripping the association in image_tag', function (): void {
     $page = H::loginAsAdmin($this);
-    $album = H::wsCall($page, 'pwg.categories.add', ['name' => 'Batch AddTags Album ' . uniqid()]);
+    $album = H::wsCall($page, 'pwg.categories.add', [
+        'name' => 'Batch AddTags Album ' . uniqid(),
+    ]);
     $albumResult = $album['result'] ?? null;
     if (! is_array($albumResult) || ! is_numeric($albumResult['id'] ?? null)) {
         throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($album, true));
@@ -333,7 +344,8 @@ it('applies add_tags then del_tags to a whole_set selection, round-tripping the 
     // memory notes. Default bulk_manager_filter has no 'tags' key, so
     // neither action's own redirect-on-filter-affecting-change branch
     // fires here -- both stay a normal 200 render, not an opaque redirect.
-    expect(bmImageHasTag($imageId, 1))->toBeFalse();
+    expect(bmImageHasTag($imageId, 1))
+        ->toBeFalse();
 
     $addResult = bmPost($page, [
         'submit' => '1',
@@ -348,7 +360,8 @@ it('applies add_tags then del_tags to a whole_set selection, round-tripping the 
         'add_tags' => ['~~1~~'],
     ]);
     expect($addResult['status'])->toBe(200);
-    expect(bmImageHasTag($imageId, 1))->toBeTrue();
+    expect(bmImageHasTag($imageId, 1))
+        ->toBeTrue();
 
     $delResult = bmPost($page, [
         'submit' => '1',
@@ -358,18 +371,23 @@ it('applies add_tags then del_tags to a whole_set selection, round-tripping the 
         'del_tags' => ['1'],
     ]);
     expect($delResult['status'])->toBe(200);
-    expect(bmImageHasTag($imageId, 1))->toBeFalse();
+    expect(bmImageHasTag($imageId, 1))
+        ->toBeFalse();
 });
 
 it('associates a whole_set selection with another album via the associate action', function (): void {
     $page = H::loginAsAdmin($this);
-    $sourceAlbum = H::wsCall($page, 'pwg.categories.add', ['name' => 'Batch Associate Source ' . uniqid()]);
+    $sourceAlbum = H::wsCall($page, 'pwg.categories.add', [
+        'name' => 'Batch Associate Source ' . uniqid(),
+    ]);
     $sourceResult = $sourceAlbum['result'] ?? null;
     if (! is_array($sourceResult) || ! is_numeric($sourceResult['id'] ?? null)) {
         throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($sourceAlbum, true));
     }
     $sourceAlbumId = (int) $sourceResult['id'];
-    $targetAlbum = H::wsCall($page, 'pwg.categories.add', ['name' => 'Batch Associate Target ' . uniqid()]);
+    $targetAlbum = H::wsCall($page, 'pwg.categories.add', [
+        'name' => 'Batch Associate Target ' . uniqid(),
+    ]);
     $targetResult = $targetAlbum['result'] ?? null;
     if (! is_array($targetResult) || ! is_numeric($targetResult['id'] ?? null)) {
         throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($targetAlbum, true));
@@ -397,7 +415,9 @@ it('associates a whole_set selection with another album via the associate action
     expect(is_array($afterRow) ? (int) $afterRow['c'] : -1)->toBe(1);
 });
 
-/** @return array{storage: bool, target: bool} */
+/**
+ * @return array{storage: bool, target: bool}
+ */
 function bmImageCategoryLinks(int $imageId, int $storageAlbumId, int $targetAlbumId): array
 {
     $db = bmDbConnect();
@@ -405,18 +425,25 @@ function bmImageCategoryLinks(int $imageId, int $storageAlbumId, int $targetAlbu
     $ids = array_map(static fn (array $row): int => (int) $row['category_id'], $rows);
     H::dbClose($db);
 
-    return ['storage' => in_array($storageAlbumId, $ids, true), 'target' => in_array($targetAlbumId, $ids, true)];
+    return [
+        'storage' => in_array($storageAlbumId, $ids, true),
+        'target' => in_array($targetAlbumId, $ids, true),
+    ];
 }
 
 it('moves a whole_set selection, clearing all prior album links and adding the target', function (): void {
     $page = H::loginAsAdmin($this);
-    $storageAlbum = H::wsCall($page, 'pwg.categories.add', ['name' => 'Batch Move Storage ' . uniqid()]);
+    $storageAlbum = H::wsCall($page, 'pwg.categories.add', [
+        'name' => 'Batch Move Storage ' . uniqid(),
+    ]);
     $storageResult = $storageAlbum['result'] ?? null;
     if (! is_array($storageResult) || ! is_numeric($storageResult['id'] ?? null)) {
         throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($storageAlbum, true));
     }
     $storageAlbumId = (int) $storageResult['id'];
-    $targetAlbum = H::wsCall($page, 'pwg.categories.add', ['name' => 'Batch Move Target ' . uniqid()]);
+    $targetAlbum = H::wsCall($page, 'pwg.categories.add', [
+        'name' => 'Batch Move Target ' . uniqid(),
+    ]);
     $targetResult = $targetAlbum['result'] ?? null;
     if (! is_array($targetResult) || ! is_numeric($targetResult['id'] ?? null)) {
         throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($targetAlbum, true));
@@ -426,7 +453,11 @@ it('moves a whole_set selection, clearing all prior album links and adding the t
     $imageId = H::uploadPhotoViaApi($image, $storageAlbumId, 'Batch Move Photo');
     @unlink($image);
 
-    expect(bmImageCategoryLinks($imageId, $storageAlbumId, $targetAlbumId))->toBe(['storage' => true, 'target' => false]);
+    expect(bmImageCategoryLinks($imageId, $storageAlbumId, $targetAlbumId))
+        ->toBe([
+            'storage' => true,
+            'target' => false,
+        ]);
 
     $result = bmPost($page, [
         'submit' => '1',
@@ -443,18 +474,26 @@ it('moves a whole_set selection, clearing all prior album links and adding the t
     // storage_category_id (confirmed live), so no existing link is ever
     // exempt: move() clears every prior album, including the one it was
     // uploaded to.
-    expect(bmImageCategoryLinks($imageId, $storageAlbumId, $targetAlbumId))->toBe(['storage' => false, 'target' => true]);
+    expect(bmImageCategoryLinks($imageId, $storageAlbumId, $targetAlbumId))
+        ->toBe([
+            'storage' => false,
+            'target' => true,
+        ]);
 });
 
 it('dissociates a whole_set selection from a non-storage album', function (): void {
     $page = H::loginAsAdmin($this);
-    $storageAlbum = H::wsCall($page, 'pwg.categories.add', ['name' => 'Batch Dissociate Storage ' . uniqid()]);
+    $storageAlbum = H::wsCall($page, 'pwg.categories.add', [
+        'name' => 'Batch Dissociate Storage ' . uniqid(),
+    ]);
     $storageResult = $storageAlbum['result'] ?? null;
     if (! is_array($storageResult) || ! is_numeric($storageResult['id'] ?? null)) {
         throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($storageAlbum, true));
     }
     $storageAlbumId = (int) $storageResult['id'];
-    $otherAlbum = H::wsCall($page, 'pwg.categories.add', ['name' => 'Batch Dissociate Other ' . uniqid()]);
+    $otherAlbum = H::wsCall($page, 'pwg.categories.add', [
+        'name' => 'Batch Dissociate Other ' . uniqid(),
+    ]);
     $otherResult = $otherAlbum['result'] ?? null;
     if (! is_array($otherResult) || ! is_numeric($otherResult['id'] ?? null)) {
         throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($otherAlbum, true));
@@ -472,7 +511,11 @@ it('dissociates a whole_set selection from a non-storage album', function (): vo
         'associate' => [(string) $otherAlbumId],
     ]);
     expect($associateResult['status'])->toBe(200);
-    expect(bmImageCategoryLinks($imageId, $storageAlbumId, $otherAlbumId))->toBe(['storage' => true, 'target' => true]);
+    expect(bmImageCategoryLinks($imageId, $storageAlbumId, $otherAlbumId))
+        ->toBe([
+            'storage' => true,
+            'target' => true,
+        ]);
 
     // Unlike associate (only conditionally redirects, depending on
     // prefilter), dissociate unconditionally sets $redirect = true on
@@ -487,10 +530,16 @@ it('dissociates a whole_set selection from a non-storage album', function (): vo
         'dissociate' => (string) $otherAlbumId,
     ]);
     expect($result['status'])->toBe(0);
-    expect(bmImageCategoryLinks($imageId, $storageAlbumId, $otherAlbumId))->toBe(['storage' => true, 'target' => false]);
+    expect(bmImageCategoryLinks($imageId, $storageAlbumId, $otherAlbumId))
+        ->toBe([
+            'storage' => true,
+            'target' => false,
+        ]);
 });
 
-/** @return array{name: ?string, author: ?string, level: int, date_creation: ?string} */
+/**
+ * @return array{name: ?string, author: ?string, level: int, date_creation: ?string}
+ */
 function bmImageRow(int $imageId): array
 {
     $db = bmDbConnect();
@@ -513,7 +562,9 @@ function bmImageRow(int $imageId): array
 
 it('mass-updates author, title, date_creation, and level for a whole_set selection', function (): void {
     $page = H::loginAsAdmin($this);
-    $album = H::wsCall($page, 'pwg.categories.add', ['name' => 'Batch Mass Update Album ' . uniqid()]);
+    $album = H::wsCall($page, 'pwg.categories.add', [
+        'name' => 'Batch Mass Update Album ' . uniqid(),
+    ]);
     $albumResult = $album['result'] ?? null;
     if (! is_array($albumResult) || ! is_numeric($albumResult['id'] ?? null)) {
         throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($album, true));
@@ -578,7 +629,9 @@ it('mass-updates author, title, date_creation, and level for a whole_set selecti
 
 it('adds and removes a whole_set selection from the caddie', function (): void {
     $page = H::loginAsAdmin($this);
-    $album = H::wsCall($page, 'pwg.categories.add', ['name' => 'Batch Caddie Album ' . uniqid()]);
+    $album = H::wsCall($page, 'pwg.categories.add', [
+        'name' => 'Batch Caddie Album ' . uniqid(),
+    ]);
     $albumResult = $album['result'] ?? null;
     if (! is_array($albumResult) || ! is_numeric($albumResult['id'] ?? null)) {
         throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($album, true));
@@ -611,12 +664,15 @@ it('adds and removes a whole_set selection from the caddie', function (): void {
     // see this file's own empty_caddie test for the same fetch(manual)
     // redirect-status caveat.
     expect($removeResult['status'])->toBe(0);
-    expect(bmCaddieCount($imageId))->toBe(0);
+    expect(bmCaddieCount($imageId))
+        ->toBe(0);
 });
 
 it('rejects a delete action without confirm_deletion, then deletes and records a session message once confirmed', function (): void {
     $page = H::loginAsAdmin($this);
-    $album = H::wsCall($page, 'pwg.categories.add', ['name' => 'Batch Delete Album ' . uniqid()]);
+    $album = H::wsCall($page, 'pwg.categories.add', [
+        'name' => 'Batch Delete Album ' . uniqid(),
+    ]);
     $albumResult = $album['result'] ?? null;
     if (! is_array($albumResult) || ! is_numeric($albumResult['id'] ?? null)) {
         throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($album, true));
@@ -658,7 +714,9 @@ it('rejects a delete action without confirm_deletion, then deletes and records a
 
 it('reports metadata-synchronized and generate_derivatives success/error counts', function (): void {
     $page = H::loginAsAdmin($this);
-    $album = H::wsCall($page, 'pwg.categories.add', ['name' => 'Batch Metadata Album ' . uniqid()]);
+    $album = H::wsCall($page, 'pwg.categories.add', [
+        'name' => 'Batch Metadata Album ' . uniqid(),
+    ]);
     $albumResult = $album['result'] ?? null;
     if (! is_array($albumResult) || ! is_numeric($albumResult['id'] ?? null)) {
         throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($album, true));
@@ -692,7 +750,9 @@ it('reports metadata-synchronized and generate_derivatives success/error counts'
 
 it('renders the global-mode thumbnail grid for a real category filter', function (): void {
     $page = H::loginAsAdmin($this);
-    $album = H::wsCall($page, 'pwg.categories.add', ['name' => 'Batch Thumbnails Album ' . uniqid()]);
+    $album = H::wsCall($page, 'pwg.categories.add', [
+        'name' => 'Batch Thumbnails Album ' . uniqid(),
+    ]);
     $albumResult = $album['result'] ?? null;
     if (! is_array($albumResult) || ! is_numeric($albumResult['id'] ?? null)) {
         throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($album, true));
@@ -719,7 +779,9 @@ it('renders the global-mode thumbnail grid for a real category filter', function
 
 it('builds the current selection from a selection[] array, an alternative to whole_set', function (): void {
     $page = H::loginAsAdmin($this);
-    $album = H::wsCall($page, 'pwg.categories.add', ['name' => 'Batch Selection Array Album ' . uniqid()]);
+    $album = H::wsCall($page, 'pwg.categories.add', [
+        'name' => 'Batch Selection Array Album ' . uniqid(),
+    ]);
     $albumResult = $album['result'] ?? null;
     if (! is_array($albumResult) || ! is_numeric($albumResult['id'] ?? null)) {
         throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($album, true));
@@ -737,7 +799,8 @@ it('builds the current selection from a selection[] array, an alternative to who
 
     expect($result['status'])->toBe(200);
     expect($result['body'])->not->toContain('Select at least one photo');
-    expect(bmCaddieCount(1))->toBeGreaterThan(0);
+    expect(bmCaddieCount(1))
+        ->toBeGreaterThan(0);
 
     bmPost($page, [
         'submit' => '1',
@@ -856,7 +919,10 @@ function bmCurlLoginSession(string $username, string $password): array
         $status = curl_getinfo($ch, CURLINFO_RESPONSE_CODE);
         unset($ch);
 
-        return ['status' => $status, 'body' => is_string($body) ? $body : ''];
+        return [
+            'status' => $status,
+            'body' => is_string($body) ? $body : '',
+        ];
     };
 
     $baseUrl = H::baseUrl();
@@ -867,7 +933,11 @@ function bmCurlLoginSession(string $username, string $password): array
         'login' => 'Login',
     ]);
 
-    return ['curl' => $curl, 'cookieJar' => $cookieJar, 'baseUrl' => $baseUrl];
+    return [
+        'curl' => $curl,
+        'cookieJar' => $cookieJar,
+        'baseUrl' => $baseUrl,
+    ];
 }
 
 /**
@@ -966,7 +1036,8 @@ it('resets a corrupted (non-array) session bulk_manager_filter back to the defau
     $cookieJarSessionId = bmCookieJarSessionId($session['cookieJar']);
 
     bmCorruptSessionBulkManagerFilter($cookieJarSessionId);
-    expect(bmSessionData($cookieJarSessionId))->toContain('bulk_manager_filter|s:');
+    expect(bmSessionData($cookieJarSessionId))
+        ->toContain('bulk_manager_filter|s:');
 
     // Plain GET, no submitFilter/filter param -- neither of
     // resolveSessionFilter()'s own 2 write branches runs, so the only
@@ -980,7 +1051,8 @@ it('resets a corrupted (non-array) session bulk_manager_filter back to the defau
     // same request finished rendering -- array_shift()/array_intersect()
     // further down computeCurrentSet() would otherwise have thrown a
     // TypeError against a non-array $_SESSION['bulk_manager_filter'].
-    expect(bmSessionData($cookieJarSessionId))->toContain('bulk_manager_filter|a:1:{s:9:"prefilter";s:6:"caddie";}');
+    expect(bmSessionData($cookieJarSessionId))
+        ->toContain('bulk_manager_filter|a:1:{s:9:"prefilter";s:6:"caddie";}');
 
     @unlink($session['cookieJar']);
 });
@@ -1158,7 +1230,9 @@ it('aggregates portrait/square/panorama ratio buckets from real distinct image d
     // covers the 'landscape' bucket elsewhere in this suite -- only
     // portrait (<0.95), square (0.95..1.05) and panorama (>=2) are new.
     $page = H::loginAsAdmin($this);
-    $album = H::wsCall($page, 'pwg.categories.add', ['name' => 'Batch Ratio Buckets Album ' . uniqid()]);
+    $album = H::wsCall($page, 'pwg.categories.add', [
+        'name' => 'Batch Ratio Buckets Album ' . uniqid(),
+    ]);
     $albumResult = $album['result'] ?? null;
     if (! is_array($albumResult) || ! is_numeric($albumResult['id'] ?? null)) {
         throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($album, true));
@@ -1191,7 +1265,10 @@ it('aggregates portrait/square/panorama ratio buckets from real distinct image d
     // common.po translates the lowercase "square" msgid to "Square",
     // matching Portrait/Landscape/Panorama's own capitalization (whose
     // msgids are already capitalized, so they never actually change case).
-    expect($html)->toContain('>Portrait</a>')
-        ->and($html)->toContain('>Square</a>')
-        ->and($html)->toContain('>Panorama</a>');
+    expect($html)
+        ->toContain('>Portrait</a>')
+        ->and($html)
+        ->toContain('>Square</a>')
+        ->and($html)
+        ->toContain('>Panorama</a>');
 });

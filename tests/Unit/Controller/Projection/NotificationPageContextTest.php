@@ -10,8 +10,9 @@ test('toArray flattens every property to its real Smarty template variable name'
         feedImageOnlyUrl: '/feed.php?feed=1&amp;image_only',
     );
 
-    expect($context->toArray())->toBe([
-        'U_FEED' => '/feed.php?feed=1',
-        'U_FEED_IMAGE_ONLY' => '/feed.php?feed=1&amp;image_only',
-    ]);
+    expect($context->toArray())
+        ->toBe([
+            'U_FEED' => '/feed.php?feed=1',
+            'U_FEED_IMAGE_ONLY' => '/feed.php?feed=1&amp;image_only',
+        ]);
 });

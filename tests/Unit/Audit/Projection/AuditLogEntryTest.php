@@ -28,17 +28,28 @@ function fullAuditLogEntryRow(): array
 test('fromRow narrows every column to its real type', function (): void {
     $entry = AuditLogEntry::fromRow(fullAuditLogEntryRow());
 
-    expect($entry->id)->toBe(42)
-        ->and($entry->actorId)->toBe(1)
-        ->and($entry->action)->toBe('create')
-        ->and($entry->entityType)->toBe('user')
-        ->and($entry->entityId)->toBe(7)
-        ->and($entry->beforeJson)->toBeNull()
-        ->and($entry->afterJson)->toBe('{"username":"alice"}')
-        ->and($entry->ipAddress)->toEqual(IpAddress::from('10.0.0.1'))
-        ->and($entry->createdAt)->toBe('2026-07-12 10:00:00')
-        ->and($entry->prevHash)->toBe(str_repeat('a', 64))
-        ->and($entry->rowHash)->toBe(str_repeat('b', 64));
+    expect($entry->id)
+        ->toBe(42)
+        ->and($entry->actorId)
+        ->toBe(1)
+        ->and($entry->action)
+        ->toBe('create')
+        ->and($entry->entityType)
+        ->toBe('user')
+        ->and($entry->entityId)
+        ->toBe(7)
+        ->and($entry->beforeJson)
+        ->toBeNull()
+        ->and($entry->afterJson)
+        ->toBe('{"username":"alice"}')
+        ->and($entry->ipAddress)
+        ->toEqual(IpAddress::from('10.0.0.1'))
+        ->and($entry->createdAt)
+        ->toBe('2026-07-12 10:00:00')
+        ->and($entry->prevHash)
+        ->toBe(str_repeat('a', 64))
+        ->and($entry->rowHash)
+        ->toBe(str_repeat('b', 64));
 });
 
 test('fromRow defaults every nullable column to null when absent', function (): void {
@@ -49,12 +60,18 @@ test('fromRow defaults every nullable column to null when absent', function (): 
 
     $entry = AuditLogEntry::fromRow($row);
 
-    expect($entry->actorId)->toBeNull()
-        ->and($entry->entityId)->toBeNull()
-        ->and($entry->beforeJson)->toBeNull()
-        ->and($entry->afterJson)->toBeNull()
-        ->and($entry->ipAddress)->toBeNull()
-        ->and($entry->prevHash)->toBeNull();
+    expect($entry->actorId)
+        ->toBeNull()
+        ->and($entry->entityId)
+        ->toBeNull()
+        ->and($entry->beforeJson)
+        ->toBeNull()
+        ->and($entry->afterJson)
+        ->toBeNull()
+        ->and($entry->ipAddress)
+        ->toBeNull()
+        ->and($entry->prevHash)
+        ->toBeNull();
     // The NOT NULL columns (id/action/entity_type/created_at/row_hash) fall
     // back to their type's zero value instead, matching every other
     // narrowing helper in this codebase -- never actually null for a real
@@ -69,11 +86,16 @@ test('fromRow defaults the NOT NULL columns to their type\'s zero value when abs
 
     $entry = AuditLogEntry::fromRow($row);
 
-    expect($entry->id)->toBe(0)
-        ->and($entry->action)->toBe('')
-        ->and($entry->entityType)->toBe('')
-        ->and($entry->createdAt)->toBe('')
-        ->and($entry->rowHash)->toBe('');
+    expect($entry->id)
+        ->toBe(0)
+        ->and($entry->action)
+        ->toBe('')
+        ->and($entry->entityType)
+        ->toBe('')
+        ->and($entry->createdAt)
+        ->toBe('')
+        ->and($entry->rowHash)
+        ->toBe('');
 });
 
 test('fromRow passes a real before_json string through unchanged', function (): void {
@@ -85,25 +107,27 @@ test('fromRow passes a real before_json string through unchanged', function (): 
 
     $entry = AuditLogEntry::fromRow($row);
 
-    expect($entry->beforeJson)->toBe('{"username":"old-name"}');
+    expect($entry->beforeJson)
+        ->toBe('{"username":"old-name"}');
 });
 
 test('toArray round-trips the exact same DB column shape fromRow narrowed', function (): void {
     $roundTripped = AuditLogEntry::fromRow(fullAuditLogEntryRow())->toArray();
 
-    expect($roundTripped)->toBe([
-        'id' => 42,
-        'actor_id' => 1,
-        'action' => 'create',
-        'entity_type' => 'user',
-        'entity_id' => 7,
-        'before_json' => null,
-        'after_json' => '{"username":"alice"}',
-        'ip_address' => '10.0.0.1',
-        'created_at' => '2026-07-12 10:00:00',
-        'prev_hash' => str_repeat('a', 64),
-        'row_hash' => str_repeat('b', 64),
-    ]);
+    expect($roundTripped)
+        ->toBe([
+            'id' => 42,
+            'actor_id' => 1,
+            'action' => 'create',
+            'entity_type' => 'user',
+            'entity_id' => 7,
+            'before_json' => null,
+            'after_json' => '{"username":"alice"}',
+            'ip_address' => '10.0.0.1',
+            'created_at' => '2026-07-12 10:00:00',
+            'prev_hash' => str_repeat('a', 64),
+            'row_hash' => str_repeat('b', 64),
+        ]);
 });
 
 test('toArray does not crash when ipAddress is null', function (): void {

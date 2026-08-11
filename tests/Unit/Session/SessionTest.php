@@ -9,7 +9,10 @@ test('fromSuperglobal builds an instance regardless of raw content', function ()
     // class; the actual forward-looking guard here (see the class's own
     // "no typed slots yet" docblock) is that unusual raw content doesn't
     // break construction once real parsing is added.
-    expect(static fn () => Session::fromSuperglobal(['anything' => 'goes', 'pwg_uid' => 5]))->not->toThrow(Throwable::class);
+    expect(static fn () => Session::fromSuperglobal([
+        'anything' => 'goes',
+        'pwg_uid' => 5,
+    ]))->not->toThrow(Throwable::class);
 });
 
 test('fromSuperglobal accepts an empty array', function (): void {
@@ -18,9 +21,16 @@ test('fromSuperglobal accepts an empty array', function (): void {
 
 test('persistInto leaves the target array untouched -- no typed slots yet', function (): void {
     $session = Session::fromSuperglobal([]);
-    $target = ['plugin_scratch' => 'unrelated', 'pwg_uid' => 5];
+    $target = [
+        'plugin_scratch' => 'unrelated',
+        'pwg_uid' => 5,
+    ];
 
     $session->persistInto($target);
 
-    expect($target)->toBe(['plugin_scratch' => 'unrelated', 'pwg_uid' => 5]);
+    expect($target)
+        ->toBe([
+            'plugin_scratch' => 'unrelated',
+            'pwg_uid' => 5,
+        ]);
 });

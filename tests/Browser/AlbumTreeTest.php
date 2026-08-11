@@ -49,12 +49,12 @@ function gotoAlbumsTree(Webpage|PendingAwaitablePage|AwaitableWebpage $page): We
 function wsAddedCategoryId(array $response): int
 {
     $result = $response['result'] ?? null;
-    if (!is_array($result)) {
+    if (! is_array($result)) {
         throw new RuntimeException('pwg.categories.add response missing result: ' . var_export($response, true));
     }
 
     $id = $result['id'] ?? null;
-    if (!is_numeric($id)) {
+    if (! is_numeric($id)) {
         throw new RuntimeException('pwg.categories.add did not return a numeric result.id: ' . var_export($response, true));
     }
 
@@ -73,28 +73,31 @@ function wsAddedCategoryId(array $response): int
 function wsAdminListCategories(array $response): array
 {
     $result = $response['result'] ?? null;
-    if (!is_array($result)) {
+    if (! is_array($result)) {
         throw new RuntimeException('pwg.categories.getAdminList response missing result: ' . var_export($response, true));
     }
 
     $categories = $result['categories'] ?? null;
-    if (!is_array($categories)) {
+    if (! is_array($categories)) {
         throw new RuntimeException('pwg.categories.getAdminList response missing categories: ' . var_export($response, true));
     }
 
     $out = [];
     foreach ($categories as $cat) {
-        if (!is_array($cat)) {
+        if (! is_array($cat)) {
             continue;
         }
 
         $catId = $cat['id'] ?? null;
         $catName = $cat['name'] ?? null;
-        if (!is_numeric($catId) || !is_string($catName)) {
+        if (! is_numeric($catId) || ! is_string($catName)) {
             continue;
         }
 
-        $out[] = ['id' => (int) $catId, 'name' => $catName];
+        $out[] = [
+            'id' => (int) $catId,
+            'name' => $catName,
+        ];
     }
 
     return $out;
@@ -102,23 +105,32 @@ function wsAdminListCategories(array $response): array
 
 it('tree renders and shows a created album as a node', function (): void {
     [$page, $token] = albumTreePwgToken($this);
-    $album = H::wsCall($page, 'pwg.categories.add', ['name' => 'treetest_render_' . uniqid()]);
+    $album = H::wsCall($page, 'pwg.categories.add', [
+        'name' => 'treetest_render_' . uniqid(),
+    ]);
     $id = wsAddedCategoryId($album);
 
     $page = gotoAlbumsTree($page);
     $page->assertPresent('#cat-' . $id);
 
     H::wsCall($page, 'pwg.categories.delete', [
-        'category_id' => $id, 'photo_deletion_mode' => 'no_delete', 'pwg_token' => $token,
+        'category_id' => $id,
+        'photo_deletion_mode' => 'no_delete',
+        'pwg_token' => $token,
     ]);
 });
 
 it('clicking the toggler expands and collapses a parent node', function (): void {
     [$page, $token] = albumTreePwgToken($this);
     $ts = uniqid();
-    $parent = H::wsCall($page, 'pwg.categories.add', ['name' => "treetest_parent_{$ts}"]);
+    $parent = H::wsCall($page, 'pwg.categories.add', [
+        'name' => "treetest_parent_{$ts}",
+    ]);
     $parentId = wsAddedCategoryId($parent);
-    $child = H::wsCall($page, 'pwg.categories.add', ['name' => "treetest_child_{$ts}", 'parent' => $parentId]);
+    $child = H::wsCall($page, 'pwg.categories.add', [
+        'name' => "treetest_child_{$ts}",
+        'parent' => $parentId,
+    ]);
     $childId = wsAddedCategoryId($child);
 
     $page = gotoAlbumsTree($page);
@@ -132,7 +144,9 @@ it('clicking the toggler expands and collapses a parent node', function (): void
     $page->assertMissing('#cat-' . $childId);
 
     H::wsCall($page, 'pwg.categories.delete', [
-        'category_id' => $parentId, 'photo_deletion_mode' => 'no_delete', 'pwg_token' => $token,
+        'category_id' => $parentId,
+        'photo_deletion_mode' => 'no_delete',
+        'pwg_token' => $token,
     ]);
 });
 
@@ -141,7 +155,9 @@ it('renaming an album updates the visible name in the tree', function (): void {
     $ts = uniqid();
     $originalName = "treetest_rename_{$ts}";
     $newName = "treetest_renamed_{$ts}";
-    $album = H::wsCall($page, 'pwg.categories.add', ['name' => $originalName]);
+    $album = H::wsCall($page, 'pwg.categories.add', [
+        'name' => $originalName,
+    ]);
     $id = wsAddedCategoryId($album);
 
     $page = gotoAlbumsTree($page);
@@ -158,13 +174,17 @@ it('renaming an album updates the visible name in the tree', function (): void {
     $page->assertSeeIn('#cat-' . $id . ' .move-cat-title', $newName);
 
     H::wsCall($page, 'pwg.categories.delete', [
-        'category_id' => $id, 'photo_deletion_mode' => 'no_delete', 'pwg_token' => $token,
+        'category_id' => $id,
+        'photo_deletion_mode' => 'no_delete',
+        'pwg_token' => $token,
     ]);
 });
 
 it('deleting an album removes its node from the tree', function (): void {
     [$page, $token] = albumTreePwgToken($this);
-    $album = H::wsCall($page, 'pwg.categories.add', ['name' => 'treetest_delete_' . uniqid()]);
+    $album = H::wsCall($page, 'pwg.categories.add', [
+        'name' => 'treetest_delete_' . uniqid(),
+    ]);
     $id = wsAddedCategoryId($album);
 
     $page = gotoAlbumsTree($page);
@@ -203,7 +223,9 @@ it('add-album from header creates a new node visible in the tree', function (): 
     foreach (wsAdminListCategories($list) as $cat) {
         if ($cat['name'] === $newName) {
             H::wsCall($page, 'pwg.categories.delete', [
-                'category_id' => $cat['id'], 'photo_deletion_mode' => 'no_delete', 'pwg_token' => $token,
+                'category_id' => $cat['id'],
+                'photo_deletion_mode' => 'no_delete',
+                'pwg_token' => $token,
             ]);
         }
     }

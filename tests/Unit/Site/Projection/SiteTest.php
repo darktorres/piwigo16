@@ -18,8 +18,10 @@ function fullSiteRow(): array
 test('fromRow narrows every column to its real type', function (): void {
     $site = Site::fromRow(fullSiteRow());
 
-    expect($site->id)->toBe(2)
-        ->and($site->galleriesUrl)->toBe('http://remote.example/galleries/');
+    expect($site->id)
+        ->toBe(2)
+        ->and($site->galleriesUrl)
+        ->toBe('http://remote.example/galleries/');
 });
 
 test('fromRow defaults id/galleries_url to their zero value when absent', function (): void {
@@ -29,15 +31,18 @@ test('fromRow defaults id/galleries_url to their zero value when absent', functi
 
     $site = Site::fromRow($row);
 
-    expect($site->id)->toBe(0)
-        ->and($site->galleriesUrl)->toBe('');
+    expect($site->id)
+        ->toBe(0)
+        ->and($site->galleriesUrl)
+        ->toBe('');
 });
 
 test('toArray round-trips the exact same DB column shape fromRow narrowed', function (): void {
     $roundTripped = Site::fromRow(fullSiteRow())->toArray();
 
-    expect($roundTripped)->toBe([
-        'id' => 2,
-        'galleries_url' => 'http://remote.example/galleries/',
-    ]);
+    expect($roundTripped)
+        ->toBe([
+            'id' => 2,
+            'galleries_url' => 'http://remote.example/galleries/',
+        ]);
 });

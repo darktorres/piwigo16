@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-use Pest\Browser\Api\Webpage;
-use Pest\Browser\Api\PendingAwaitablePage;
 use Pest\Browser\Api\AwaitableWebpage;
+use Pest\Browser\Api\PendingAwaitablePage;
+use Pest\Browser\Api\Webpage;
 use Piwigo\Cache\CachePools;
 use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
 
@@ -14,7 +14,9 @@ use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
  */
 function tagsControllerAddTag(Webpage|PendingAwaitablePage|AwaitableWebpage $page, string $name): int
 {
-    $result = H::wsCall($page, 'pwg.tags.add', ['name' => $name]);
+    $result = H::wsCall($page, 'pwg.tags.add', [
+        'name' => $name,
+    ]);
     $tagResult = $result['result'] ?? null;
     $tagId = is_array($tagResult) ? ($tagResult['id'] ?? null) : null;
     if (! is_numeric($tagId)) {
@@ -33,7 +35,9 @@ it('renders the tag cloud (default display mode) with a real tag', function (): 
 
 it('renders the letters display mode, grouping tags by first letter', function (): void {
     $page = H::loginAsAdmin($this);
-    $album = H::wsCall($page, 'pwg.categories.add', ['name' => 'Tags Controller Letters Album ' . uniqid()]);
+    $album = H::wsCall($page, 'pwg.categories.add', [
+        'name' => 'Tags Controller Letters Album ' . uniqid(),
+    ]);
     $albumResult = $album['result'] ?? null;
     if (! is_array($albumResult) || ! is_numeric($albumResult['id'] ?? null)) {
         throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($album, true));
@@ -115,7 +119,9 @@ it('fatal-errors instead of silently swallowing a real render_tag_name hook that
     $db = H::connect();
 
     try {
-        $album = H::wsCall($page, 'pwg.categories.add', ['name' => 'Tags Controller Hook Album ' . uniqid()]);
+        $album = H::wsCall($page, 'pwg.categories.add', [
+            'name' => 'Tags Controller Hook Album ' . uniqid(),
+        ]);
         $albumResult = $album['result'] ?? null;
         if (! is_array($albumResult) || ! is_numeric($albumResult['id'] ?? null)) {
             throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($album, true));

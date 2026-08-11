@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Contract;
 
-use Override;
 use Doctrine\DBAL\Connection;
+use Override;
 use Piwigo\Db\DbConnection;
 
 /**
@@ -54,11 +54,13 @@ final class WsImagesFilteredSearchTest extends ContractTestCase
         return $searchId;
     }
 
-    /** @return array<array-key, mixed> */
+    /**
+     * @return array<array-key, mixed>
+     */
     private function fetchRules(string $searchUuid): array
     {
         $raw = $this->conn->fetchOne(
-            'SELECT rules FROM ' . 'search' . ' WHERE search_uuid = ?',
+            'SELECT rules FROM search WHERE search_uuid = ?',
             [$searchUuid]
         );
         self::assertIsString($raw, 'no search row for uuid ' . $searchUuid);
@@ -80,7 +82,7 @@ final class WsImagesFilteredSearchTest extends ContractTestCase
     private function fetchForkedFrom(string $searchUuid): ?int
     {
         $value = $this->conn->fetchOne(
-            'SELECT forked_from FROM ' . 'search' . ' WHERE search_uuid = ?',
+            'SELECT forked_from FROM search WHERE search_uuid = ?',
             [$searchUuid]
         );
         if ($value === null) {
@@ -103,7 +105,9 @@ final class WsImagesFilteredSearchTest extends ContractTestCase
         return $value;
     }
 
-    /** @param array<array-key, mixed> $data */
+    /**
+     * @param array<array-key, mixed> $data
+     */
     private static function stringField(array $data, string $key): string
     {
         $value = $data[$key] ?? null;
@@ -128,7 +132,7 @@ final class WsImagesFilteredSearchTest extends ContractTestCase
         self::assertSame($expected, $actual);
     }
 
-    public function test_minimal_call_creates_an_empty_search(): void
+    public function testMinimalCallCreatesAnEmptySearch(): void
     {
         $response = $this->wsAdmin(self::METHOD);
         $searchId = self::searchIdOf($response);
@@ -141,51 +145,68 @@ final class WsImagesFilteredSearchTest extends ContractTestCase
 
         $rules = $this->fetchRules($searchId);
         self::assertSame(
-            ['mode' => 'AND', 'fields' => ['date_posted' => [], 'date_created' => []]],
+            [
+                'mode' => 'AND',
+                'fields' => [
+                    'date_posted' => [],
+                    'date_created' => [],
+                ],
+            ],
             $rules
         );
         self::assertNull($this->fetchForkedFrom($searchId));
     }
 
-    public function test_search_id_with_invalid_pattern_returns_error(): void
+    public function testSearchIdWithInvalidPatternReturnsError(): void
     {
-        $response = $this->wsAdmin(self::METHOD, ['search_id' => 'not-a-valid-search-id']);
+        $response = $this->wsAdmin(self::METHOD, [
+            'search_id' => 'not-a-valid-search-id',
+        ]);
 
         self::assertSame('fail', $response['stat']);
         self::assertSame(1003, $response['err']);
         self::assertSame('Invalid search_id input parameter.', $response['message']);
     }
 
-    public function test_search_id_well_formed_but_nonexistent_returns_error(): void
+    public function testSearchIdWellFormedButNonexistentReturnsError(): void
     {
         // Matches the plain-digits id branch of getSearchIdPattern() but no
         // such row exists.
-        $response = $this->wsAdmin(self::METHOD, ['search_id' => '99999999']);
+        $response = $this->wsAdmin(self::METHOD, [
+            'search_id' => '99999999',
+        ]);
 
         self::assertSame('fail', $response['stat']);
         self::assertSame(1003, $response['err']);
         self::assertSame('This search does not exist.', $response['message']);
     }
 
-    public function test_search_id_forks_an_existing_search(): void
+    public function testSearchIdForksAnExistingSearch(): void
     {
-        $first = $this->wsAdmin(self::METHOD, ['allwords' => 'mountain']);
+        $first = $this->wsAdmin(self::METHOD, [
+            'allwords' => 'mountain',
+        ]);
         $parentUuid = self::searchIdOf($first);
 
-        $second = $this->wsAdmin(self::METHOD, ['search_id' => $parentUuid, 'allwords' => 'lake']);
+        $second = $this->wsAdmin(self::METHOD, [
+            'search_id' => $parentUuid,
+            'allwords' => 'lake',
+        ]);
         $childUuid = self::searchIdOf($second);
         self::assertNotSame($parentUuid, $childUuid);
 
         $parentId = $this->conn->fetchOne(
-            'SELECT id FROM ' . 'search' . ' WHERE search_uuid = ?',
+            'SELECT id FROM search WHERE search_uuid = ?',
             [$parentUuid]
         );
         self::assertSame($parentId, $this->fetchForkedFrom($childUuid));
     }
 
-    public function test_allwords_defaults_mode_and_fields_when_omitted(): void
+    public function testAllwordsDefaultsModeAndFieldsWhenOmitted(): void
     {
-        $response = $this->wsAdmin(self::METHOD, ['allwords' => 'red fox jumps']);
+        $response = $this->wsAdmin(self::METHOD, [
+            'allwords' => 'red fox jumps',
+        ]);
         $searchId = self::searchIdOf($response);
         $fields = $this->fetchFields($searchId);
         $allwords = self::arrayField($fields, 'allwords');
@@ -199,16 +220,19 @@ final class WsImagesFilteredSearchTest extends ContractTestCase
         self::assertSame(['red', 'fox', 'jumps'], array_values($words));
     }
 
-    public function test_allwords_mode_invalid_returns_error(): void
+    public function testAllwordsModeInvalidReturnsError(): void
     {
-        $response = $this->wsAdmin(self::METHOD, ['allwords' => 'fox', 'allwords_mode' => 'XOR']);
+        $response = $this->wsAdmin(self::METHOD, [
+            'allwords' => 'fox',
+            'allwords_mode' => 'XOR',
+        ]);
 
         self::assertSame('fail', $response['stat']);
         self::assertSame(1003, $response['err']);
         self::assertSame('Invalid parameter allwords_mode', $response['message']);
     }
 
-    public function test_allwords_fields_invalid_returns_error(): void
+    public function testAllwordsFieldsInvalidReturnsError(): void
     {
         $response = $this->wsAdmin(self::METHOD, [
             'allwords' => 'fox',
@@ -220,7 +244,7 @@ final class WsImagesFilteredSearchTest extends ContractTestCase
         self::assertSame('Invalid parameter allwords_fields', $response['message']);
     }
 
-    public function test_allwords_fields_explicit_subset_is_persisted(): void
+    public function testAllwordsFieldsExplicitSubsetIsPersisted(): void
     {
         $response = $this->wsAdmin(self::METHOD, [
             'allwords' => 'fox',
@@ -234,108 +258,144 @@ final class WsImagesFilteredSearchTest extends ContractTestCase
         self::assertSame(['name', 'tags'], self::arrayField($allwords, 'fields'));
     }
 
-    public function test_tags_mode_invalid_returns_error(): void
+    public function testTagsModeInvalidReturnsError(): void
     {
-        $response = $this->wsAdmin(self::METHOD, ['tags' => [1], 'tags_mode' => 'XOR']);
+        $response = $this->wsAdmin(self::METHOD, [
+            'tags' => [1],
+            'tags_mode' => 'XOR',
+        ]);
 
         self::assertSame('fail', $response['stat']);
         self::assertSame(1003, $response['err']);
         self::assertSame('Invalid parameter tags_mode', $response['message']);
     }
 
-    public function test_tags_defaults_to_and_mode_and_is_persisted(): void
+    public function testTagsDefaultsToAndModeAndIsPersisted(): void
     {
-        $response = $this->wsAdmin(self::METHOD, ['tags' => [1, 2]]);
+        $response = $this->wsAdmin(self::METHOD, [
+            'tags' => [1, 2],
+        ]);
         $searchId = self::searchIdOf($response);
         $tags = self::arrayField($this->fetchFields($searchId), 'tags');
 
-        self::assertSameKeysAndValues(['words' => [1, 2], 'mode' => 'AND'], $tags);
+        self::assertSameKeysAndValues([
+            'words' => [1, 2],
+            'mode' => 'AND',
+        ], $tags);
     }
 
-    public function test_categories_without_withsubs_defaults_to_false(): void
+    public function testCategoriesWithoutWithsubsDefaultsToFalse(): void
     {
-        $response = $this->wsAdmin(self::METHOD, ['categories' => [1]]);
+        $response = $this->wsAdmin(self::METHOD, [
+            'categories' => [1],
+        ]);
         $searchId = self::searchIdOf($response);
         $cat = self::arrayField($this->fetchFields($searchId), 'cat');
 
-        self::assertSameKeysAndValues(['words' => [1], 'sub_inc' => false], $cat);
+        self::assertSameKeysAndValues([
+            'words' => [1],
+            'sub_inc' => false,
+        ], $cat);
     }
 
-    public function test_categories_withsubs_true_is_persisted(): void
+    public function testCategoriesWithsubsTrueIsPersisted(): void
     {
-        $response = $this->wsAdmin(self::METHOD, ['categories' => [1], 'categories_withsubs' => true]);
+        $response = $this->wsAdmin(self::METHOD, [
+            'categories' => [1],
+            'categories_withsubs' => true,
+        ]);
         $searchId = self::searchIdOf($response);
         $cat = self::arrayField($this->fetchFields($searchId), 'cat');
 
-        self::assertSameKeysAndValues(['words' => [1], 'sub_inc' => true], $cat);
+        self::assertSameKeysAndValues([
+            'words' => [1],
+            'sub_inc' => true,
+        ], $cat);
     }
 
-    public function test_authors_are_stripped_of_html_tags(): void
+    public function testAuthorsAreStrippedOfHtmlTags(): void
     {
-        $response = $this->wsAdmin(self::METHOD, ['authors' => ['<b>Alice</b>', 'Bob']]);
+        $response = $this->wsAdmin(self::METHOD, [
+            'authors' => ['<b>Alice</b>', 'Bob'],
+        ]);
         $searchId = self::searchIdOf($response);
         $author = self::arrayField($this->fetchFields($searchId), 'author');
 
-        self::assertSameKeysAndValues(['words' => ['Alice', 'Bob'], 'mode' => 'OR'], $author);
+        self::assertSameKeysAndValues([
+            'words' => ['Alice', 'Bob'],
+            'mode' => 'OR',
+        ], $author);
     }
 
-    public function test_filetypes_invalid_returns_error(): void
+    public function testFiletypesInvalidReturnsError(): void
     {
-        $response = $this->wsAdmin(self::METHOD, ['filetypes' => ['jpg', 'not a type!']]);
+        $response = $this->wsAdmin(self::METHOD, [
+            'filetypes' => ['jpg', 'not a type!'],
+        ]);
 
         self::assertSame('fail', $response['stat']);
         self::assertSame(1003, $response['err']);
         self::assertSame('Invalid parameter filetypes', $response['message']);
     }
 
-    public function test_filetypes_valid_are_persisted(): void
+    public function testFiletypesValidArePersisted(): void
     {
-        $response = $this->wsAdmin(self::METHOD, ['filetypes' => ['jpg', 'png']]);
+        $response = $this->wsAdmin(self::METHOD, [
+            'filetypes' => ['jpg', 'png'],
+        ]);
         $searchId = self::searchIdOf($response);
         $fields = $this->fetchFields($searchId);
 
         self::assertSame(['jpg', 'png'], self::arrayField($fields, 'filetypes'));
     }
 
-    public function test_added_by_is_persisted(): void
+    public function testAddedByIsPersisted(): void
     {
-        $response = $this->wsAdmin(self::METHOD, ['added_by' => [1]]);
+        $response = $this->wsAdmin(self::METHOD, [
+            'added_by' => [1],
+        ]);
         $searchId = self::searchIdOf($response);
         $fields = $this->fetchFields($searchId);
 
         self::assertSame([1], self::arrayField($fields, 'added_by'));
     }
 
-    public function test_date_posted_preset_invalid_returns_error(): void
+    public function testDatePostedPresetInvalidReturnsError(): void
     {
-        $response = $this->wsAdmin(self::METHOD, ['date_posted_preset' => '99d']);
+        $response = $this->wsAdmin(self::METHOD, [
+            'date_posted_preset' => '99d',
+        ]);
 
         self::assertSame('fail', $response['stat']);
         self::assertSame(1003, $response['err']);
         self::assertSame('Invalid parameter date_posted_preset', $response['message']);
     }
 
-    public function test_date_posted_preset_custom_without_custom_values_returns_error(): void
+    public function testDatePostedPresetCustomWithoutCustomValuesReturnsError(): void
     {
-        $response = $this->wsAdmin(self::METHOD, ['date_posted_preset' => 'custom']);
+        $response = $this->wsAdmin(self::METHOD, [
+            'date_posted_preset' => 'custom',
+        ]);
 
         self::assertSame('fail', $response['stat']);
         self::assertSame(1003, $response['err']);
         self::assertSame('date_posted_custom is missing', $response['message']);
     }
 
-    public function test_date_posted_custom_without_preset_custom_returns_error(): void
+    public function testDatePostedCustomWithoutPresetCustomReturnsError(): void
     {
         // date_posted_preset omitted entirely -- 'preset' key never gets set,
         // so the isset() guard on the date_posted_custom branch fails.
-        $response = $this->wsAdmin(self::METHOD, ['date_posted_custom' => ['y2026']]);
+        $response = $this->wsAdmin(self::METHOD, [
+            'date_posted_custom' => ['y2026'],
+        ]);
 
         self::assertSame('fail', $response['stat']);
         self::assertSame(1003, $response['err']);
         self::assertSame('date_posted_custom provided date_posted_preset is not custom', $response['message']);
     }
 
-    public function test_date_posted_custom_accepts_year_month_and_day_formats(): void
+    public function testDatePostedCustomAcceptsYearMonthAndDayFormats(): void
     {
         $response = $this->wsAdmin(self::METHOD, [
             'date_posted_preset' => 'custom',
@@ -348,7 +408,7 @@ final class WsImagesFilteredSearchTest extends ContractTestCase
         self::assertSame(['y2026', 'm2026-07', 'd2026-07-15'], self::arrayField($datePosted, 'custom'));
     }
 
-    public function test_date_posted_custom_rejects_invalid_month(): void
+    public function testDatePostedCustomRejectsInvalidMonth(): void
     {
         $response = $this->wsAdmin(self::METHOD, [
             'date_posted_preset' => 'custom',
@@ -360,7 +420,7 @@ final class WsImagesFilteredSearchTest extends ContractTestCase
         self::assertSame('date_posted_custom, invalid option m2026-13', $response['message']);
     }
 
-    public function test_date_posted_custom_rejects_invalid_day_for_month(): void
+    public function testDatePostedCustomRejectsInvalidDayForMonth(): void
     {
         // February 2026 is not a leap year -- day 30 doesn't exist.
         $response = $this->wsAdmin(self::METHOD, [
@@ -373,7 +433,7 @@ final class WsImagesFilteredSearchTest extends ContractTestCase
         self::assertSame('date_posted_custom, invalid option d2026-02-30', $response['message']);
     }
 
-    public function test_date_posted_custom_rejects_unrecognized_prefix(): void
+    public function testDatePostedCustomRejectsUnrecognizedPrefix(): void
     {
         $response = $this->wsAdmin(self::METHOD, [
             'date_posted_preset' => 'custom',
@@ -385,16 +445,18 @@ final class WsImagesFilteredSearchTest extends ContractTestCase
         self::assertSame('date_posted_custom, invalid option x2026', $response['message']);
     }
 
-    public function test_date_created_preset_invalid_returns_error(): void
+    public function testDateCreatedPresetInvalidReturnsError(): void
     {
-        $response = $this->wsAdmin(self::METHOD, ['date_created_preset' => '99d']);
+        $response = $this->wsAdmin(self::METHOD, [
+            'date_created_preset' => '99d',
+        ]);
 
         self::assertSame('fail', $response['stat']);
         self::assertSame(1003, $response['err']);
         self::assertSame('Invalid parameter date_created_preset', $response['message']);
     }
 
-    public function test_date_created_custom_accepts_day_format(): void
+    public function testDateCreatedCustomAcceptsDayFormat(): void
     {
         $response = $this->wsAdmin(self::METHOD, [
             'date_created_preset' => 'custom',
@@ -407,44 +469,54 @@ final class WsImagesFilteredSearchTest extends ContractTestCase
         self::assertSame(['d2026-01-15'], self::arrayField($dateCreated, 'custom'));
     }
 
-    public function test_ratios_invalid_returns_error(): void
+    public function testRatiosInvalidReturnsError(): void
     {
-        $response = $this->wsAdmin(self::METHOD, ['ratios' => ['square', 'not valid!']]);
+        $response = $this->wsAdmin(self::METHOD, [
+            'ratios' => ['square', 'not valid!'],
+        ]);
 
         self::assertSame('fail', $response['stat']);
         self::assertSame(1003, $response['err']);
         self::assertSame('Invalid parameter ratios', $response['message']);
     }
 
-    public function test_ratios_valid_are_persisted(): void
+    public function testRatiosValidArePersisted(): void
     {
-        $response = $this->wsAdmin(self::METHOD, ['ratios' => ['square', 'panorama']]);
+        $response = $this->wsAdmin(self::METHOD, [
+            'ratios' => ['square', 'panorama'],
+        ]);
         $searchId = self::searchIdOf($response);
         $fields = $this->fetchFields($searchId);
 
         self::assertSame(['square', 'panorama'], self::arrayField($fields, 'ratios'));
     }
 
-    public function test_expert_string_is_persisted(): void
+    public function testExpertStringIsPersisted(): void
     {
-        $response = $this->wsAdmin(self::METHOD, ['expert' => 'width > 800']);
+        $response = $this->wsAdmin(self::METHOD, [
+            'expert' => 'width > 800',
+        ]);
         $searchId = self::searchIdOf($response);
         $fields = $this->fetchFields($searchId);
 
-        self::assertSame(['string' => 'width > 800'], self::arrayField($fields, 'expert'));
+        self::assertSame([
+            'string' => 'width > 800',
+        ], self::arrayField($fields, 'expert'));
     }
 
-    public function test_ratings_are_persisted_when_rate_is_enabled(): void
+    public function testRatingsArePersistedWhenRateIsEnabled(): void
     {
         // rate=true in the fixture config (CurrentConfig::rateEnabled() default).
-        $response = $this->wsAdmin(self::METHOD, ['ratings' => ['4', '5']]);
+        $response = $this->wsAdmin(self::METHOD, [
+            'ratings' => ['4', '5'],
+        ]);
         $searchId = self::searchIdOf($response);
         $fields = $this->fetchFields($searchId);
 
         self::assertSame(['4', '5'], self::arrayField($fields, 'ratings'));
     }
 
-    public function test_size_range_filters_are_persisted(): void
+    public function testSizeRangeFiltersArePersisted(): void
     {
         $response = $this->wsAdmin(self::METHOD, [
             'filesize_min' => 100,

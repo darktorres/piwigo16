@@ -70,12 +70,13 @@ beforeEach(function (): void {
 });
 
 afterEach(function (): void {
-    DbConnection::build()->executeStatement("DELETE FROM " . 'sites' . " WHERE galleries_url LIKE 'p17-unit-test-%'");
+    DbConnection::build()->executeStatement('DELETE FROM sites' . " WHERE galleries_url LIKE 'p17-unit-test-%'");
     Kernel::reset();
 });
 
 test('countByUrl() returns zero when unused', function (): void {
-    expect(siteTestRepo()->countByUrl(siteTestUrl()))->toBe(0);
+    expect(siteTestRepo()->countByUrl(siteTestUrl()))
+        ->toBe(0);
 });
 
 test('insert() then countByUrl() round-trips', function (): void {
@@ -84,7 +85,8 @@ test('insert() then countByUrl() round-trips', function (): void {
 
     $repo->insert($url);
 
-    expect($repo->countByUrl($url))->toBe(1);
+    expect($repo->countByUrl($url))
+        ->toBe(1);
 });
 
 test('findGalleriesUrlById() returns the inserted url', function (): void {
@@ -92,17 +94,19 @@ test('findGalleriesUrlById() returns the inserted url', function (): void {
     $url = siteTestUrl();
     $repo->insert($url);
     $id = DbConnection::build()->fetchOne(
-        'SELECT id FROM ' . 'sites' . ' WHERE galleries_url = ?',
+        'SELECT id FROM sites WHERE galleries_url = ?',
         [$url]
     );
 
-    expect($repo->findGalleriesUrlById(is_numeric($id) ? $id : 0))->toBe($url);
+    expect($repo->findGalleriesUrlById(is_numeric($id) ? $id : 0))
+        ->toBe($url);
 });
 
 test('findGalleriesUrlById() returns null when unused', function (): void {
     // sites.id is tinyint unsigned (MySQL)/smallint (Postgres) -- 254
     // fits both real ranges and the fixture only ever seeds site id 1.
-    expect(siteTestRepo()->findGalleriesUrlById(254))->toBeNull();
+    expect(siteTestRepo()->findGalleriesUrlById(254))
+        ->toBeNull();
 });
 
 test('delete() removes the row', function (): void {
@@ -110,14 +114,15 @@ test('delete() removes the row', function (): void {
     $url = siteTestUrl();
     $repo->insert($url);
     $id = DbConnection::build()->fetchOne(
-        'SELECT id FROM ' . 'sites' . ' WHERE galleries_url = ?',
+        'SELECT id FROM sites WHERE galleries_url = ?',
         [$url]
     );
     $intId = is_numeric($id) ? $id : 0;
 
     $repo->delete($intId);
 
-    expect($repo->findGalleriesUrlById($intId))->toBeNull();
+    expect($repo->findGalleriesUrlById($intId))
+        ->toBeNull();
 });
 
 test('delete() on an unknown id is a silent no-op', function (): void {
@@ -125,32 +130,40 @@ test('delete() on an unknown id is a silent no-op', function (): void {
 })->throwsNoExceptions();
 
 test('findAllGalleriesUrls() returns the id-to-url map', function (): void {
-    expect(siteTestRepo()->findAllGalleriesUrls())->toBe([1 => CurrentPathsTestFactory::get()->root . 'galleries/']);
+    expect(siteTestRepo()->findAllGalleriesUrls())
+        ->toBe([
+            1 => CurrentPathsTestFactory::get()->root . 'galleries/',
+        ]);
 });
 
 test('findGalleriesUrlForCategory() returns null when the category has no linked site', function (): void {
     // Both fixture categories have site_id NULL -- the join predicate is
     // never satisfied against a NULL.
-    expect(siteTestRepo()->findGalleriesUrlForCategory(1))->toBeNull();
+    expect(siteTestRepo()->findGalleriesUrlForCategory(1))
+        ->toBeNull();
 });
 
 test('findGalleriesUrlForCategory() returns the joined sites row', function (): void {
     $conn = DbConnection::build();
-    $conn->executeStatement('UPDATE ' . 'categories' . ' SET site_id = 1 WHERE id = 1');
+    $conn->executeStatement('UPDATE categories SET site_id = 1 WHERE id = 1');
 
     try {
-        expect(siteTestRepo()->findGalleriesUrlForCategory(1))->toBe(CurrentPathsTestFactory::get()->root . 'galleries/');
+        expect(siteTestRepo()->findGalleriesUrlForCategory(1))
+            ->toBe(CurrentPathsTestFactory::get()->root . 'galleries/');
     } finally {
-        $conn->executeStatement('UPDATE ' . 'categories' . ' SET site_id = NULL WHERE id = 1');
+        $conn->executeStatement('UPDATE categories SET site_id = NULL WHERE id = 1');
     }
 });
 
 test('findAllSites() includes the seeded local site', function (): void {
-    $rows = siteTestRepo()->findAllSites();
+    $rows = siteTestRepo()
+        ->findAllSites();
 
-    expect($rows)->not->toBe([]);
+    expect($rows)
+        ->not->toBe([]);
     $urls = array_column($rows, 'galleriesUrl');
-    expect($urls)->toContain(CurrentPathsTestFactory::get()->root . 'galleries/');
+    expect($urls)
+        ->toContain(CurrentPathsTestFactory::get()->root . 'galleries/');
 });
 
 test('findAllSites() includes a newly inserted site', function (): void {
@@ -160,7 +173,8 @@ test('findAllSites() includes a newly inserted site', function (): void {
 
     $urls = array_column($repo->findAllSites(), 'galleriesUrl');
 
-    expect($urls)->toContain($url);
+    expect($urls)
+        ->toContain($url);
 });
 
 test('findCategoryAndImageCountsBySite() groups by site and ignores categories with no site', function (): void {
@@ -172,21 +186,21 @@ test('findCategoryAndImageCountsBySite() groups by site and ignores categories w
     $url = siteTestUrl();
     $repo->insert($url);
     $conn = DbConnection::build();
-    $siteId = $conn->fetchOne('SELECT id FROM ' . 'sites' . ' WHERE galleries_url = ?', [$url]);
+    $siteId = $conn->fetchOne('SELECT id FROM sites WHERE galleries_url = ?', [$url]);
     $siteId = is_numeric($siteId) ? $siteId : 0;
 
     $conn->executeStatement(
-        'INSERT INTO ' . 'categories' . " (name, site_id, uppercats) VALUES ('p17-unit-test-site-cat-with-image', ?, '999901')",
+        'INSERT INTO categories' . " (name, site_id, uppercats) VALUES ('p17-unit-test-site-cat-with-image', ?, '999901')",
         [$siteId]
     );
     $catWithImageId = (int) $conn->lastInsertId();
     $conn->executeStatement(
-        'INSERT INTO ' . 'categories' . " (name, site_id, uppercats) VALUES ('p17-unit-test-site-cat-without-image', ?, '999902')",
+        'INSERT INTO categories' . " (name, site_id, uppercats) VALUES ('p17-unit-test-site-cat-without-image', ?, '999902')",
         [$siteId]
     );
     $catWithoutImageId = (int) $conn->lastInsertId();
     $conn->executeStatement(
-        'INSERT INTO ' . 'images' . " (file, path, storage_category_id) VALUES ('p17-unit-test-site.jpg', 'p17-unit-test-site.jpg', ?)",
+        'INSERT INTO images' . " (file, path, storage_category_id) VALUES ('p17-unit-test-site.jpg', 'p17-unit-test-site.jpg', ?)",
         [$catWithImageId]
     );
     $imageId = (int) $conn->lastInsertId();
@@ -194,10 +208,14 @@ test('findCategoryAndImageCountsBySite() groups by site and ignores categories w
     try {
         $counts = $repo->findCategoryAndImageCountsBySite();
 
-        expect($counts)->toHaveKey($siteId)
-            ->and($counts[$siteId])->toBe(['nb_categories' => 2, 'nb_images' => 1]);
+        expect($counts)
+            ->toHaveKey($siteId)
+            ->and($counts[$siteId])->toBe([
+                'nb_categories' => 2,
+                'nb_images' => 1,
+            ]);
     } finally {
-        $conn->executeStatement('DELETE FROM ' . 'images' . ' WHERE id = ?', [$imageId]);
-        $conn->executeStatement('DELETE FROM ' . 'categories' . ' WHERE id IN (?, ?)', [$catWithImageId, $catWithoutImageId]);
+        $conn->executeStatement('DELETE FROM images WHERE id = ?', [$imageId]);
+        $conn->executeStatement('DELETE FROM categories WHERE id IN (?, ?)', [$catWithImageId, $catWithoutImageId]);
     }
 });

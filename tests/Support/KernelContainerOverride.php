@@ -4,12 +4,12 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Support;
 
-use Psr\Container\ContainerExceptionInterface;
-use ReflectionProperty;
-use stdClass;
 use Piwigo\Core\Container;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Paths;
+use Psr\Container\ContainerExceptionInterface;
+use ReflectionProperty;
+use stdClass;
 
 /**
  * Test-only reflection seam for the Bootstrap\*Accessor "Container
@@ -85,6 +85,8 @@ final class KernelContainerOverride
      */
     public static function withWrongTypeFor(string $class, callable $fn): mixed
     {
-        return self::with([$class => new stdClass()], $fn);
+        return self::with([
+            $class => new stdClass(),
+        ], $fn);
     }
 }

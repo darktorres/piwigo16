@@ -34,6 +34,9 @@ final class TemplateInstanceTestFakeStatStreamWrapper
      */
     public function url_stat(string $path, int $flags): array
     {
-        return ['mode' => 0100644, 'size' => 0];
+        return [
+            'mode' => 0100644,
+            'size' => 0,
+        ];
     }
 }

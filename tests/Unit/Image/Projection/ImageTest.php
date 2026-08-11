@@ -95,30 +95,54 @@ function fullImageRow(): array
 test('fromRow narrows every column to its real type', function (): void {
     $image = Image::fromRow(fullImageRow());
 
-    expect($image->id)->toEqual(ImageId::from(42))
-        ->and($image->file)->toBe('photo.jpg')
-        ->and($image->dateAvailable)->toBe('2026-08-01 12:00:00')
-        ->and($image->dateCreation)->toBe('2026-07-30 08:00:00')
-        ->and($image->name)->toBe('A photo')
-        ->and($image->comment)->toBe('A comment')
-        ->and($image->author)->toBe('torres')
-        ->and($image->hit)->toBe(7)
-        ->and($image->filesize)->toBe(123456)
-        ->and($image->width)->toBe(800)
-        ->and($image->height)->toBe(600)
-        ->and($image->coi)->toBe('TLBR')
-        ->and($image->representativeExt)->toBe('jpg')
-        ->and($image->dateMetadataUpdate)->toBe('2026-07-31')
-        ->and($image->ratingScore)->toBe(4.5)
-        ->and($image->path)->toBe('upload/2026/08/01/photo.jpg')
-        ->and($image->storageCategoryId)->toEqual(CategoryId::from(3))
-        ->and($image->level)->toBe(1)
-        ->and($image->md5sum)->toEqual(Md5Sum::from('d41d8cd98f00b204e9800998ecf8427e'))
-        ->and($image->addedBy)->toEqual(UserId::from(5))
-        ->and($image->rotation)->toBe(2)
-        ->and($image->latitude)->toBe(48.8566)
-        ->and($image->longitude)->toBe(2.3522)
-        ->and($image->lastmodified)->toBe('2026-08-01 12:00:00');
+    expect($image->id)
+        ->toEqual(ImageId::from(42))
+        ->and($image->file)
+        ->toBe('photo.jpg')
+        ->and($image->dateAvailable)
+        ->toBe('2026-08-01 12:00:00')
+        ->and($image->dateCreation)
+        ->toBe('2026-07-30 08:00:00')
+        ->and($image->name)
+        ->toBe('A photo')
+        ->and($image->comment)
+        ->toBe('A comment')
+        ->and($image->author)
+        ->toBe('torres')
+        ->and($image->hit)
+        ->toBe(7)
+        ->and($image->filesize)
+        ->toBe(123456)
+        ->and($image->width)
+        ->toBe(800)
+        ->and($image->height)
+        ->toBe(600)
+        ->and($image->coi)
+        ->toBe('TLBR')
+        ->and($image->representativeExt)
+        ->toBe('jpg')
+        ->and($image->dateMetadataUpdate)
+        ->toBe('2026-07-31')
+        ->and($image->ratingScore)
+        ->toBe(4.5)
+        ->and($image->path)
+        ->toBe('upload/2026/08/01/photo.jpg')
+        ->and($image->storageCategoryId)
+        ->toEqual(CategoryId::from(3))
+        ->and($image->level)
+        ->toBe(1)
+        ->and($image->md5sum)
+        ->toEqual(Md5Sum::from('d41d8cd98f00b204e9800998ecf8427e'))
+        ->and($image->addedBy)
+        ->toEqual(UserId::from(5))
+        ->and($image->rotation)
+        ->toBe(2)
+        ->and($image->latitude)
+        ->toBe(48.8566)
+        ->and($image->longitude)
+        ->toBe(2.3522)
+        ->and($image->lastmodified)
+        ->toBe('2026-08-01 12:00:00');
 });
 
 test('fromRow defaults every nullable column to null when absent', function (): void {
@@ -131,24 +155,42 @@ test('fromRow defaults every nullable column to null when absent', function (): 
 
     $image = Image::fromRow($row);
 
-    expect($image->dateAvailable)->toBeNull()
-        ->and($image->dateCreation)->toBeNull()
-        ->and($image->name)->toBeNull()
-        ->and($image->comment)->toBeNull()
-        ->and($image->author)->toBeNull()
-        ->and($image->filesize)->toBeNull()
-        ->and($image->width)->toBeNull()
-        ->and($image->height)->toBeNull()
-        ->and($image->coi)->toBeNull()
-        ->and($image->representativeExt)->toBeNull()
-        ->and($image->dateMetadataUpdate)->toBeNull()
-        ->and($image->ratingScore)->toBeNull()
-        ->and($image->storageCategoryId)->toBeNull()
-        ->and($image->md5sum)->toBeNull()
-        ->and($image->addedBy)->toBeNull()
-        ->and($image->rotation)->toBeNull()
-        ->and($image->latitude)->toBeNull()
-        ->and($image->longitude)->toBeNull();
+    expect($image->dateAvailable)
+        ->toBeNull()
+        ->and($image->dateCreation)
+        ->toBeNull()
+        ->and($image->name)
+        ->toBeNull()
+        ->and($image->comment)
+        ->toBeNull()
+        ->and($image->author)
+        ->toBeNull()
+        ->and($image->filesize)
+        ->toBeNull()
+        ->and($image->width)
+        ->toBeNull()
+        ->and($image->height)
+        ->toBeNull()
+        ->and($image->coi)
+        ->toBeNull()
+        ->and($image->representativeExt)
+        ->toBeNull()
+        ->and($image->dateMetadataUpdate)
+        ->toBeNull()
+        ->and($image->ratingScore)
+        ->toBeNull()
+        ->and($image->storageCategoryId)
+        ->toBeNull()
+        ->and($image->md5sum)
+        ->toBeNull()
+        ->and($image->addedBy)
+        ->toBeNull()
+        ->and($image->rotation)
+        ->toBeNull()
+        ->and($image->latitude)
+        ->toBeNull()
+        ->and($image->longitude)
+        ->toBeNull();
     // The NOT NULL columns (id/file/hit/path/level/lastmodified) fall back
     // to their type's zero value instead, matching every other narrowing
     // helper in this codebase (is_numeric(...) ? (int) ... : 0, etc.) --
@@ -178,9 +220,12 @@ test('fromRow defaults file, path, and lastmodified to an empty string when the 
 
     $image = Image::fromRow($row);
 
-    expect($image->file)->toBe('')
-        ->and($image->path)->toBe('')
-        ->and($image->lastmodified)->toBe('');
+    expect($image->file)
+        ->toBe('')
+        ->and($image->path)
+        ->toBe('')
+        ->and($image->lastmodified)
+        ->toBe('');
 });
 
 test('fromRow defaults hit and level to 0 when the row value is not numeric', function (): void {
@@ -190,8 +235,10 @@ test('fromRow defaults hit and level to 0 when the row value is not numeric', fu
 
     $image = Image::fromRow($row);
 
-    expect($image->hit)->toBe(0)
-        ->and($image->level)->toBe(0);
+    expect($image->hit)
+        ->toBe(0)
+        ->and($image->level)
+        ->toBe(0);
 });
 
 test('toArray unwraps storage_category_id, md5sum, and added_by to null (not a null-property-access warning) when those VOs are themselves null', function (): void {
@@ -212,30 +259,31 @@ test('toArray round-trips the exact same DB column shape fromRow narrowed', func
 
     $roundTripped = Image::fromRow($row)->toArray();
 
-    expect($roundTripped)->toBe([
-        'id' => 42,
-        'file' => 'photo.jpg',
-        'date_available' => '2026-08-01 12:00:00',
-        'date_creation' => '2026-07-30 08:00:00',
-        'name' => 'A photo',
-        'comment' => 'A comment',
-        'author' => 'torres',
-        'hit' => 7,
-        'filesize' => 123456,
-        'width' => 800,
-        'height' => 600,
-        'coi' => 'TLBR',
-        'representative_ext' => 'jpg',
-        'date_metadata_update' => '2026-07-31',
-        'rating_score' => 4.5,
-        'path' => 'upload/2026/08/01/photo.jpg',
-        'storage_category_id' => 3,
-        'level' => 1,
-        'md5sum' => 'd41d8cd98f00b204e9800998ecf8427e',
-        'added_by' => 5,
-        'rotation' => 2,
-        'latitude' => 48.8566,
-        'longitude' => 2.3522,
-        'lastmodified' => '2026-08-01 12:00:00',
-    ]);
+    expect($roundTripped)
+        ->toBe([
+            'id' => 42,
+            'file' => 'photo.jpg',
+            'date_available' => '2026-08-01 12:00:00',
+            'date_creation' => '2026-07-30 08:00:00',
+            'name' => 'A photo',
+            'comment' => 'A comment',
+            'author' => 'torres',
+            'hit' => 7,
+            'filesize' => 123456,
+            'width' => 800,
+            'height' => 600,
+            'coi' => 'TLBR',
+            'representative_ext' => 'jpg',
+            'date_metadata_update' => '2026-07-31',
+            'rating_score' => 4.5,
+            'path' => 'upload/2026/08/01/photo.jpg',
+            'storage_category_id' => 3,
+            'level' => 1,
+            'md5sum' => 'd41d8cd98f00b204e9800998ecf8427e',
+            'added_by' => 5,
+            'rotation' => 2,
+            'latitude' => 48.8566,
+            'longitude' => 2.3522,
+            'lastmodified' => '2026-08-01 12:00:00',
+        ]);
 });

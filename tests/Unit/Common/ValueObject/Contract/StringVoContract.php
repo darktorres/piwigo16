@@ -21,13 +21,19 @@ use Piwigo\Common\ValueObject\StringVo;
  */
 abstract class StringVoContract extends TestCase
 {
-    /** @return class-string<T> */
+    /**
+     * @return class-string<T>
+     */
     abstract protected static function voClass(): string;
 
-    /** A canonical value that must be accepted by `from()` and `tryFrom()`. */
+    /**
+     * A canonical value that must be accepted by `from()` and `tryFrom()`.
+     */
     abstract protected static function validSample(): string;
 
-    /** @return iterable<string, array{string}> Sample inputs the VO must reject. */
+    /**
+     * @return iterable<string, array{string}> Sample inputs the VO must reject.
+     */
     abstract public static function invalidSamples(): iterable;
 
     /**
@@ -44,7 +50,7 @@ abstract class StringVoContract extends TestCase
     public function testFromAcceptsValidSample(): void
     {
         $class = static::voClass();
-        $vo    = $class::from(static::validSample());
+        $vo = $class::from(static::validSample());
         self::assertSame(static::validSample(), (string) $vo);
     }
 
@@ -59,7 +65,7 @@ abstract class StringVoContract extends TestCase
     public function testTryFromAcceptsValidSample(): void
     {
         $class = static::voClass();
-        $vo    = $class::tryFrom(static::validSample());
+        $vo = $class::tryFrom(static::validSample());
         self::assertNotNull($vo);
         self::assertSame(static::validSample(), (string) $vo);
     }
@@ -71,14 +77,16 @@ abstract class StringVoContract extends TestCase
         self::assertNull($class::tryFrom($invalid));
     }
 
-    /** @return iterable<string, array{mixed}> */
+    /**
+     * @return iterable<string, array{mixed}>
+     */
     public static function nonStringInputs(): iterable
     {
-        yield 'int'   => [42];
-        yield 'null'  => [null];
+        yield 'int' => [42];
+        yield 'null' => [null];
         yield 'array' => [[]];
         yield 'float' => [1.5];
-        yield 'bool'  => [true];
+        yield 'bool' => [true];
     }
 
     #[DataProvider('nonStringInputs')]
@@ -91,8 +99,8 @@ abstract class StringVoContract extends TestCase
     public function testEqualsAndStringable(): void
     {
         $class = static::voClass();
-        $a     = $class::from(static::validSample());
-        $b     = $class::from(static::validSample());
+        $a = $class::from(static::validSample());
+        $b = $class::from(static::validSample());
         self::assertTrue($a->equals($b));
         self::assertSame(static::validSample(), (string) $a);
     }
@@ -104,10 +112,10 @@ abstract class StringVoContract extends TestCase
         // self` apart from a mutated bare `true` -- an equal-looking
         // wrapped string from an entirely different VO must still compare
         // unequal.
-        $class      = static::voClass();
+        $class = static::voClass();
         $otherClass = static::otherVoClass();
-        $a          = $class::from(static::validSample());
-        $other      = $otherClass::from(static::validSample());
+        $a = $class::from(static::validSample());
+        $other = $otherClass::from(static::validSample());
         self::assertFalse($a->equals($other));
     }
 }

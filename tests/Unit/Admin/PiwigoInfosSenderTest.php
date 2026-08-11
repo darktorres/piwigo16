@@ -2,57 +2,57 @@
 
 declare(strict_types=1);
 
-use Piwigo\Tests\Support\HtmlServiceTestFactory;
-use Piwigo\Mail\MailService;
-use Piwigo\Config\DeploymentPolicy;
-use Piwigo\Core\PageState;
-use Piwigo\Session\SessionService;
-use Piwigo\Db\EntityManagerFactory;
-use Piwigo\Session\SessionEntity;
-use Piwigo\PluginConfig\EventDispatcher;
-use Piwigo\Users\CurrentUser;
-use Piwigo\Tests\Support\UrlServiceTestFactory;
-use Piwigo\Config\ConfigService;
-use Piwigo\Config\ConfigEntry;
-use Piwigo\Rate\RateService;
-use Piwigo\Tests\Unit\Auth\AccessControlTestFakeHtmlRendererDeniesAccess;
-use Piwigo\Tests\Unit\Auth\AccessControlTestFakeRedirectServiceNeverCalled;
-use Piwigo\Rate\RateEntity;
-use Piwigo\Auth\CookieService;
-use Piwigo\History\HistoryService;
-use Piwigo\History\HistoryEntity;
-use Piwigo\Activity\ActivityService;
 use Piwigo\Activity\ActivityEntity;
-use Piwigo\Users\UserService;
-use Piwigo\Users\UserRepository;
-use Piwigo\Group\GroupEntity;
-use Piwigo\Db\DbConnection;
-use Piwigo\Core\ProcessCache;
-use Piwigo\Image\ImageService;
-use Piwigo\Image\ImageEntity;
-use Piwigo\Permission\PermissionService;
-use Piwigo\Permission\PermissionRepository;
-use Piwigo\Category\CategoryRepository;
-use Piwigo\Core\FilterState;
-use Piwigo\Category\CategoryService;
-use Piwigo\Tag\TagService;
-use Piwigo\Tag\TagEntity;
-use Piwigo\Group\GroupService;
-use Piwigo\Audit\AuditService;
-use Piwigo\Audit\AuditLogEntity;
+use Piwigo\Activity\ActivityService;
 use Piwigo\Admin\InstallationStats;
 use Piwigo\Admin\PiwigoInfosSender;
+use Piwigo\Audit\AuditLogEntity;
+use Piwigo\Audit\AuditService;
 use Piwigo\Auth\AccessControl;
 use Piwigo\Auth\AccessLevelChecker;
+use Piwigo\Auth\CookieService;
+use Piwigo\Category\CategoryRepository;
+use Piwigo\Category\CategoryService;
+use Piwigo\Config\ConfigEntry;
+use Piwigo\Config\ConfigService;
 use Piwigo\Config\CurrentConfig;
-use Piwigo\Tests\Support\CurrentConfigTestFactory;
+use Piwigo\Config\DeploymentPolicy;
 use Piwigo\Core\CurrentLogger;
+use Piwigo\Core\FilterState;
 use Piwigo\Core\InstallationFlag;
 use Piwigo\Core\Lang;
 use Piwigo\Core\Logger;
+use Piwigo\Core\PageState;
 use Piwigo\Core\Paths;
+use Piwigo\Core\ProcessCache;
+use Piwigo\Db\DbConnection;
+use Piwigo\Db\EntityManagerFactory;
+use Piwigo\Group\GroupEntity;
+use Piwigo\Group\GroupService;
+use Piwigo\History\HistoryEntity;
+use Piwigo\History\HistoryService;
+use Piwigo\Image\ImageEntity;
+use Piwigo\Image\ImageService;
 use Piwigo\Image\ImageStdParams;
 use Piwigo\Lang\Translator;
+use Piwigo\Mail\MailService;
+use Piwigo\Permission\PermissionRepository;
+use Piwigo\Permission\PermissionService;
+use Piwigo\PluginConfig\EventDispatcher;
+use Piwigo\Rate\RateEntity;
+use Piwigo\Rate\RateService;
+use Piwigo\Session\SessionEntity;
+use Piwigo\Session\SessionService;
+use Piwigo\Tag\TagEntity;
+use Piwigo\Tag\TagService;
+use Piwigo\Tests\Support\CurrentConfigTestFactory;
+use Piwigo\Tests\Support\HtmlServiceTestFactory;
+use Piwigo\Tests\Support\UrlServiceTestFactory;
+use Piwigo\Tests\Unit\Auth\AccessControlTestFakeHtmlRendererDeniesAccess;
+use Piwigo\Tests\Unit\Auth\AccessControlTestFakeRedirectServiceNeverCalled;
+use Piwigo\Users\CurrentUser;
+use Piwigo\Users\UserRepository;
+use Piwigo\Users\UserService;
 
 // send()'s real body talks to piwigo.org's PEM/telemetry endpoints over the
 // network (via the static, non-injectable Piwigo\Http\HttpClientService::
@@ -105,7 +105,9 @@ function piwigoInfosSenderTestMailService(): MailService
 
 test('send returns immediately without touching the DB or network when telemetry is disabled', function (): void {
     $currentLogger = new CurrentLogger();
-    $currentLogger->set(new Logger(['severity' => Logger::OFF]));
+    $currentLogger->set(new Logger([
+        'severity' => Logger::OFF,
+    ]));
     // No Kernel::boot() in this plain Unit test (see file docblock), so a
     // fresh, throwaway instance stands in for the container-shared one --
     // reused below as the same PiwigoInfosSender constructor argument so

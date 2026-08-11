@@ -4,27 +4,27 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Integration;
 
+use Doctrine\DBAL\Connection;
+use LogicException;
 use Override;
 use Piwigo\Auth\AccessLevelChecker;
-use Piwigo\Core\Kernel;
-use LogicException;
-use Piwigo\Core\FilterState;
-use Piwigo\Tests\Support\LangTestFactory;
-use Piwigo\Db\EntityManagerFactory;
-use Piwigo\Group\GroupEntity;
-use Piwigo\Tests\Support\CurrentUserTestFactory;
-use Piwigo\PluginConfig\EventDispatcher;
-use Piwigo\Tests\Support\TranslatorTestFactory;
-use Doctrine\DBAL\Connection;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Category\CategoryService;
 use Piwigo\Category\CategoryTreeCache;
-use Piwigo\Config\CurrentConfig;
-use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Config\ConfigLoader;
+use Piwigo\Config\CurrentConfig;
+use Piwigo\Core\FilterState;
+use Piwigo\Core\Kernel;
 use Piwigo\Db\DbConnection;
+use Piwigo\Db\EntityManagerFactory;
+use Piwigo\Group\GroupEntity;
 use Piwigo\Permission\PermissionRepository;
 use Piwigo\Permission\PermissionService;
+use Piwigo\PluginConfig\EventDispatcher;
+use Piwigo\Tests\Support\CurrentConfigTestFactory;
+use Piwigo\Tests\Support\CurrentUserTestFactory;
+use Piwigo\Tests\Support\LangTestFactory;
+use Piwigo\Tests\Support\TranslatorTestFactory;
 use Symfony\Component\Cache\Adapter\ArrayAdapter;
 
 /**
@@ -98,7 +98,7 @@ final class CategoryTreeCacheTest extends IntegrationTestCase
     #[Override]
     protected function tearDown(): void
     {
-        $this->conn->executeStatement('UPDATE ' . 'categories' . " SET status = 'public'");
+        $this->conn->executeStatement('UPDATE categories' . " SET status = 'public'");
         parent::tearDown();
     }
 
@@ -107,10 +107,14 @@ final class CategoryTreeCacheTest extends IntegrationTestCase
      */
     private static function userdata(string $forbiddenCategories = ''): array
     {
-        return ['id' => 1, 'level' => 0, 'forbidden_categories' => $forbiddenCategories];
+        return [
+            'id' => 1,
+            'level' => 0,
+            'forbidden_categories' => $forbiddenCategories,
+        ];
     }
 
-    public function test_get_for_user_merges_rollup_with_name_and_permalink(): void
+    public function testGetForUserMergesRollupWithNameAndPermalink(): void
     {
         $cats = $this->cache->getForUser(self::userdata());
 
@@ -121,7 +125,7 @@ final class CategoryTreeCacheTest extends IntegrationTestCase
         self::assertSame('Nested Sub Album', $cats[2]['name']);
     }
 
-    public function test_get_for_user_excludes_a_forbidden_category(): void
+    public function testGetForUserExcludesAForbiddenCategory(): void
     {
         $cats = $this->cache->getForUser(self::userdata('2'));
 
@@ -129,7 +133,7 @@ final class CategoryTreeCacheTest extends IntegrationTestCase
         self::assertArrayNotHasKey(2, $cats, 'a forbidden category must never appear in the merged output, including its name/permalink');
     }
 
-    public function test_get_for_user_does_not_mutate_the_caller_supplied_userdata(): void
+    public function testGetForUserDoesNotMutateTheCallerSuppliedUserdata(): void
     {
         $userdata = self::userdata();
         self::assertArrayNotHasKey('last_photo_date', $userdata);
@@ -143,27 +147,31 @@ final class CategoryTreeCacheTest extends IntegrationTestCase
         self::assertArrayNotHasKey('last_photo_date', $userdata);
     }
 
-    public function test_get_for_user_serves_a_cache_hit_without_reflecting_a_db_change(): void
+    public function testGetForUserServesACacheHitWithoutReflectingADbChange(): void
     {
         $first = $this->cache->getForUser(self::userdata());
         self::assertSame('Sample Album', $first[1]['name']);
 
         $this->conn->executeStatement(
-            'UPDATE ' . 'categories' . " SET name = 'Renamed' WHERE id = 1"
+            'UPDATE categories' . " SET name = 'Renamed' WHERE id = 1"
         );
 
         $second = $this->cache->getForUser(self::userdata());
         self::assertSame('Sample Album', $second[1]['name'], 'a cache hit must not re-query the DB');
 
         $this->conn->executeStatement(
-            'UPDATE ' . 'categories' . " SET name = 'Sample Album' WHERE id = 1"
+            'UPDATE categories' . " SET name = 'Sample Album' WHERE id = 1"
         );
     }
 
-    public function test_get_for_user_uses_a_separate_cache_entry_per_user(): void
+    public function testGetForUserUsesASeparateCacheEntryPerUser(): void
     {
         $this->cache->getForUser(self::userdata());
-        $forbiddenForOtherUser = $this->cache->getForUser(['id' => 2, 'level' => 0, 'forbidden_categories' => '2']);
+        $forbiddenForOtherUser = $this->cache->getForUser([
+            'id' => 2,
+            'level' => 0,
+            'forbidden_categories' => '2',
+        ]);
 
         self::assertArrayNotHasKey(2, $forbiddenForOtherUser);
     }

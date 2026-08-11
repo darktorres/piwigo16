@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-use PHPUnit\Framework\ExpectationFailedException;
 use Pest\Browser\Api\AwaitableWebpage;
 use Pest\Browser\Api\PendingAwaitablePage;
 use Pest\Browser\Api\Webpage;
+use PHPUnit\Framework\ExpectationFailedException;
 use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
 
 /**
@@ -126,17 +126,50 @@ function extraFiltersGlobalParamsJson(string $html): string
 it('renders every configured search filter panel without a fatal error', function (): void {
     $snapshot = H::snapshotConfig(['filters_views']);
     $filtersViews = json_encode([
-        'words' => ['access' => 'everybody', 'default' => true],
-        'tags' => ['access' => 'everybody', 'default' => true],
-        'album' => ['access' => 'everybody', 'default' => true],
-        'author' => ['access' => 'everybody', 'default' => true],
-        'added_by' => ['access' => 'everybody', 'default' => true],
-        'file_type' => ['access' => 'everybody', 'default' => true],
-        'ratio' => ['access' => 'everybody', 'default' => true],
-        'rating' => ['access' => 'everybody', 'default' => true],
-        'file_size' => ['access' => 'everybody', 'default' => true],
-        'post_date' => ['access' => 'everybody', 'default' => true],
-        'creation_date' => ['access' => 'everybody', 'default' => true],
+        'words' => [
+            'access' => 'everybody',
+            'default' => true,
+        ],
+        'tags' => [
+            'access' => 'everybody',
+            'default' => true,
+        ],
+        'album' => [
+            'access' => 'everybody',
+            'default' => true,
+        ],
+        'author' => [
+            'access' => 'everybody',
+            'default' => true,
+        ],
+        'added_by' => [
+            'access' => 'everybody',
+            'default' => true,
+        ],
+        'file_type' => [
+            'access' => 'everybody',
+            'default' => true,
+        ],
+        'ratio' => [
+            'access' => 'everybody',
+            'default' => true,
+        ],
+        'rating' => [
+            'access' => 'everybody',
+            'default' => true,
+        ],
+        'file_size' => [
+            'access' => 'everybody',
+            'default' => true,
+        ],
+        'post_date' => [
+            'access' => 'everybody',
+            'default' => true,
+        ],
+        'creation_date' => [
+            'access' => 'everybody',
+            'default' => true,
+        ],
     ]);
     if ($filtersViews === false) {
         throw new RuntimeException('json_encode failed for the filters_views config value');
@@ -145,7 +178,9 @@ it('renders every configured search filter panel without a fatal error', functio
 
     try {
         $page = H::loginAsAdmin($this);
-        $album = H::wsCall($page, 'pwg.categories.add', ['name' => 'Search Extra Filters Album ' . uniqid()]);
+        $album = H::wsCall($page, 'pwg.categories.add', [
+            'name' => 'Search Extra Filters Album ' . uniqid(),
+        ]);
         $albumResult = $album['result'] ?? null;
         if (! is_array($albumResult) || ! is_numeric($albumResult['id'] ?? null)) {
             throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($album, true));
@@ -154,7 +189,10 @@ it('renders every configured search filter panel without a fatal error', functio
         $image = H::makeTestImage(uniqid());
         $imageId = H::uploadPhotoViaApi($image, $albumId, 'Search Extra Filters Photo');
         @unlink($image);
-        H::wsCall($page, 'pwg.images.setInfo', ['image_id' => $imageId, 'author' => 'Search Filter Author']);
+        H::wsCall($page, 'pwg.images.setInfo', [
+            'image_id' => $imageId,
+            'author' => 'Search Filter Author',
+        ]);
 
         $page = H::navigateOk($page, '/search.php?cat_id=' . $albumId);
 
@@ -169,9 +207,18 @@ it('renders every configured search filter panel without a fatal error', functio
 it('renders the date-filter panel with a real threshold-based interval', function (): void {
     $snapshot = H::snapshotConfig(['filters_views']);
     $filtersViews = json_encode([
-        'words' => ['access' => 'everybody', 'default' => true],
-        'cat' => ['access' => 'everybody', 'default' => true],
-        'creation_date' => ['access' => 'everybody', 'default' => true],
+        'words' => [
+            'access' => 'everybody',
+            'default' => true,
+        ],
+        'cat' => [
+            'access' => 'everybody',
+            'default' => true,
+        ],
+        'creation_date' => [
+            'access' => 'everybody',
+            'default' => true,
+        ],
     ]);
     if ($filtersViews === false) {
         throw new RuntimeException('json_encode failed for the filters_views config value');
@@ -180,7 +227,9 @@ it('renders the date-filter panel with a real threshold-based interval', functio
 
     try {
         $page = H::loginAsAdmin($this);
-        $album = H::wsCall($page, 'pwg.categories.add', ['name' => 'Search Date Filter Album ' . uniqid()]);
+        $album = H::wsCall($page, 'pwg.categories.add', [
+            'name' => 'Search Date Filter Album ' . uniqid(),
+        ]);
         $albumResult = $album['result'] ?? null;
         if (! is_array($albumResult) || ! is_numeric($albumResult['id'] ?? null)) {
             throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($album, true));
@@ -216,8 +265,14 @@ it('renders the date-filter panel with a real threshold-based interval', functio
 it('unsets the ratings search field and hides the ratings filter panel entirely when global rating is disabled after the search was created', function (): void {
     $snapshot = H::snapshotConfig(['filters_views', 'rate']);
     $filtersViews = json_encode([
-        'words' => ['access' => 'everybody', 'default' => true],
-        'rating' => ['access' => 'everybody', 'default' => true],
+        'words' => [
+            'access' => 'everybody',
+            'default' => true,
+        ],
+        'rating' => [
+            'access' => 'everybody',
+            'default' => true,
+        ],
     ]);
     if ($filtersViews === false) {
         throw new RuntimeException('json_encode failed for the filters_views config value');
@@ -226,7 +281,9 @@ it('unsets the ratings search field and hides the ratings filter panel entirely 
 
     try {
         $page = H::loginAsAdmin($this);
-        $album = H::wsCall($page, 'pwg.categories.add', ['name' => 'Search Ratings Disabled Album ' . uniqid()]);
+        $album = H::wsCall($page, 'pwg.categories.add', [
+            'name' => 'Search Ratings Disabled Album ' . uniqid(),
+        ]);
         $albumResult = $album['result'] ?? null;
         if (! is_array($albumResult) || ! is_numeric($albumResult['id'] ?? null)) {
             throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($album, true));
@@ -289,7 +346,8 @@ it('unsets the ratings search field and hides the ratings filter panel entirely 
         H::rawWebpage($page)->navigate($searchUrl);
         H::assertNoServerErrors($page, 'search with a ratings field but rate disabled at render time');
         $page->assertNoJavaScriptErrors();
-        expect(extraFiltersSettledContent($page))->toContain('Search Ratings Disabled Photo');
+        expect(extraFiltersSettledContent($page))
+            ->toContain('Search Ratings Disabled Photo');
 
         // search_filters.inc.tpl emits this JS var literally from
         // $SHOW_FILTER_RATINGS, and only renders the ratings checkbox / the
@@ -297,13 +355,16 @@ it('unsets the ratings search field and hides the ratings filter panel entirely 
         // observable by reading the raw response body, not assertSee()'s
         // visible-text check.
         $html = H::rawWebpage($page)->content();
-        expect($html)->toContain('var show_filter_ratings = false;');
-        expect($html)->not->toContain('filter-manager-controller ratings');
+        expect($html)
+            ->toContain('var show_filter_ratings = false;');
+        expect($html)
+            ->not->toContain('filter-manager-controller ratings');
         // Proves searchFields['ratings'] was actually unset (not just
         // hidden by the template gate): $mySearch['fields'] (with
         // 'ratings' removed via the by-ref $searchFields alias) is what
         // gets json_encode()'d into the page's own `global_params` blob.
-        expect($html)->not->toContain('"ratings"');
+        expect($html)
+            ->not->toContain('"ratings"');
     } finally {
         H::restoreConfig($snapshot);
     }
@@ -312,9 +373,18 @@ it('unsets the ratings search field and hides the ratings filter panel entirely 
 it('forces a searched tag with no intersection among the other active filters back into the tag list via a second getAvailableTags() call', function (): void {
     $snapshot = H::snapshotConfig(['filters_views']);
     $filtersViews = json_encode([
-        'words' => ['access' => 'everybody', 'default' => true],
-        'tags' => ['access' => 'everybody', 'default' => true],
-        'album' => ['access' => 'everybody', 'default' => true],
+        'words' => [
+            'access' => 'everybody',
+            'default' => true,
+        ],
+        'tags' => [
+            'access' => 'everybody',
+            'default' => true,
+        ],
+        'album' => [
+            'access' => 'everybody',
+            'default' => true,
+        ],
     ]);
     if ($filtersViews === false) {
         throw new RuntimeException('json_encode failed for the filters_views config value');
@@ -323,7 +393,9 @@ it('forces a searched tag with no intersection among the other active filters ba
 
     try {
         $page = H::loginAsAdmin($this);
-        $album = H::wsCall($page, 'pwg.categories.add', ['name' => 'Search Tag Merge Album ' . uniqid()]);
+        $album = H::wsCall($page, 'pwg.categories.add', [
+            'name' => 'Search Tag Merge Album ' . uniqid(),
+        ]);
         $albumResult = $album['result'] ?? null;
         if (! is_array($albumResult) || ! is_numeric($albumResult['id'] ?? null)) {
             throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($album, true));
@@ -338,7 +410,9 @@ it('forces a searched tag with no intersection among the other active filters ba
         @unlink($image);
 
         $tagName = 'Search Tag Merge Unused Tag ' . uniqid();
-        $tag = H::wsCall($page, 'pwg.tags.add', ['name' => $tagName]);
+        $tag = H::wsCall($page, 'pwg.tags.add', [
+            'name' => $tagName,
+        ]);
         $tagResult = $tag['result'] ?? null;
         if (! is_array($tagResult) || ! is_numeric($tagResult['id'] ?? null)) {
             throw new RuntimeException('pwg.tags.add did not return a numeric id: ' . var_export($tag, true));
@@ -364,7 +438,9 @@ it('forces a searched tag with no intersection among the other active filters ba
         // that real path rather than the zero-image edge case, which is a
         // separate, pre-existing upstream gap outside this coverage pass's
         // scope.
-        $otherAlbum = H::wsCall($page, 'pwg.categories.add', ['name' => 'Search Tag Merge Other Album ' . uniqid()]);
+        $otherAlbum = H::wsCall($page, 'pwg.categories.add', [
+            'name' => 'Search Tag Merge Other Album ' . uniqid(),
+        ]);
         $otherAlbumResult = $otherAlbum['result'] ?? null;
         if (! is_array($otherAlbumResult) || ! is_numeric($otherAlbumResult['id'] ?? null)) {
             throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($otherAlbum, true));
@@ -414,7 +490,8 @@ it('forces a searched tag with no intersection among the other active filters ba
         // AlbumNotificationPageRendererTest.php's own H::rawWebpage(...)
         // ->content() use for a similarly form-hidden value).
         $html = extraFiltersSettledContent($page);
-        expect($html)->toContain($tagName);
+        expect($html)
+            ->toContain($tagName);
     } finally {
         H::restoreConfig($snapshot);
     }
@@ -423,8 +500,14 @@ it('forces a searched tag with no intersection among the other active filters ba
 it('serves the date-filter row/counter data from cache on a second load of a date-only search (no other active filter)', function (): void {
     $snapshot = H::snapshotConfig(['filters_views']);
     $filtersViews = json_encode([
-        'words' => ['access' => 'everybody', 'default' => true],
-        'creation_date' => ['access' => 'everybody', 'default' => true],
+        'words' => [
+            'access' => 'everybody',
+            'default' => true,
+        ],
+        'creation_date' => [
+            'access' => 'everybody',
+            'default' => true,
+        ],
     ]);
     if ($filtersViews === false) {
         throw new RuntimeException('json_encode failed for the filters_views config value');
@@ -433,7 +516,9 @@ it('serves the date-filter row/counter data from cache on a second load of a dat
 
     try {
         $page = H::loginAsAdmin($this);
-        $album = H::wsCall($page, 'pwg.categories.add', ['name' => 'Search Date Cache Album ' . uniqid()]);
+        $album = H::wsCall($page, 'pwg.categories.add', [
+            'name' => 'Search Date Cache Album ' . uniqid(),
+        ]);
         $albumResult = $album['result'] ?? null;
         if (! is_array($albumResult) || ! is_numeric($albumResult['id'] ?? null)) {
             throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($album, true));
@@ -479,7 +564,8 @@ it('serves the date-filter row/counter data from cache on a second load of a dat
         H::rawWebpage($page)->navigate($searchUrl);
         H::assertNoServerErrors($page, 'date-only search (1st load, cache miss)');
         $page->assertNoJavaScriptErrors();
-        expect(extraFiltersSettledContent($page))->toContain('Search Date Cache Photo');
+        expect(extraFiltersSettledContent($page))
+            ->toContain('Search Date Cache Photo');
 
         // 2nd load: same search -- exercises the is_array($cached) &&
         // is_array($cached['pre_counters']) && is_array($cached['list_of_dates'])
@@ -487,7 +573,8 @@ it('serves the date-filter row/counter data from cache on a second load of a dat
         H::rawWebpage($page)->navigate($searchUrl);
         H::assertNoServerErrors($page, 'date-only search (2nd load, cache hit)');
         $page->assertNoJavaScriptErrors();
-        expect(extraFiltersSettledContent($page))->toContain('Search Date Cache Photo');
+        expect(extraFiltersSettledContent($page))
+            ->toContain('Search Date Cache Photo');
     } finally {
         H::restoreConfig($snapshot);
     }
@@ -509,7 +596,9 @@ it('serves the date-filter row/counter data from cache on a second load of a dat
 it('falls back to an empty search-fields array (and leaves has_filters_filled false) for a directly-persisted search row whose rules JSON has no "fields" key at all', function (): void {
     $page = H::loginAsAdmin($this);
 
-    $uuid = extraFiltersInsertRawSearchRow(['mode' => 'AND']);
+    $uuid = extraFiltersInsertRawSearchRow([
+        'mode' => 'AND',
+    ]);
 
     $page = H::navigateOk($page, '/index.php?/search/' . $uuid);
     H::assertNoServerErrors($page, 'search row with rules missing the fields key entirely');
@@ -519,9 +608,18 @@ it('falls back to an empty search-fields array (and leaves has_filters_filled fa
 it('resets a non-array "tags"/"author" search-field value back to an empty array before use', function (): void {
     $snapshot = H::snapshotConfig(['filters_views']);
     $filtersViews = json_encode([
-        'album' => ['access' => 'everybody', 'default' => true],
-        'tags' => ['access' => 'everybody', 'default' => true],
-        'author' => ['access' => 'everybody', 'default' => true],
+        'album' => [
+            'access' => 'everybody',
+            'default' => true,
+        ],
+        'tags' => [
+            'access' => 'everybody',
+            'default' => true,
+        ],
+        'author' => [
+            'access' => 'everybody',
+            'default' => true,
+        ],
     ]);
     if ($filtersViews === false) {
         throw new RuntimeException('json_encode failed for the filters_views config value');
@@ -530,7 +628,9 @@ it('resets a non-array "tags"/"author" search-field value back to an empty array
 
     try {
         $page = H::loginAsAdmin($this);
-        $album = H::wsCall($page, 'pwg.categories.add', ['name' => 'Search Malformed Fields Album ' . uniqid()]);
+        $album = H::wsCall($page, 'pwg.categories.add', [
+            'name' => 'Search Malformed Fields Album ' . uniqid(),
+        ]);
         $albumResult = $album['result'] ?? null;
         if (! is_array($albumResult) || ! is_numeric($albumResult['id'] ?? null)) {
             throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($album, true));
@@ -548,7 +648,10 @@ it('resets a non-array "tags"/"author" search-field value back to an empty array
             'fields' => [
                 'tags' => 'not-an-array',
                 'author' => 'not-an-array',
-                'cat' => ['words' => [$albumId], 'sub_inc' => false],
+                'cat' => [
+                    'words' => [$albumId],
+                    'sub_inc' => false,
+                ],
             ],
         ]);
 
@@ -576,18 +679,54 @@ it('resets a non-array "tags"/"author" search-field value back to an empty array
 it('denies access to and unsets every per-filter search field whose own filters_views access rule matches nobody', function (): void {
     $snapshot = H::snapshotConfig(['filters_views', 'rate']);
     $filtersViews = json_encode([
-        'words' => ['access' => 'nobody', 'default' => true],
-        'expert' => ['access' => 'nobody', 'default' => true],
-        'tags' => ['access' => 'nobody', 'default' => true],
-        'album' => ['access' => 'everybody', 'default' => true],
-        'author' => ['access' => 'nobody', 'default' => true],
-        'added_by' => ['access' => 'nobody', 'default' => true],
-        'file_type' => ['access' => 'nobody', 'default' => true],
-        'ratio' => ['access' => 'nobody', 'default' => true],
-        'rating' => ['access' => 'nobody', 'default' => true],
-        'file_size' => ['access' => 'nobody', 'default' => true],
-        'height' => ['access' => 'nobody', 'default' => true],
-        'width' => ['access' => 'nobody', 'default' => true],
+        'words' => [
+            'access' => 'nobody',
+            'default' => true,
+        ],
+        'expert' => [
+            'access' => 'nobody',
+            'default' => true,
+        ],
+        'tags' => [
+            'access' => 'nobody',
+            'default' => true,
+        ],
+        'album' => [
+            'access' => 'everybody',
+            'default' => true,
+        ],
+        'author' => [
+            'access' => 'nobody',
+            'default' => true,
+        ],
+        'added_by' => [
+            'access' => 'nobody',
+            'default' => true,
+        ],
+        'file_type' => [
+            'access' => 'nobody',
+            'default' => true,
+        ],
+        'ratio' => [
+            'access' => 'nobody',
+            'default' => true,
+        ],
+        'rating' => [
+            'access' => 'nobody',
+            'default' => true,
+        ],
+        'file_size' => [
+            'access' => 'nobody',
+            'default' => true,
+        ],
+        'height' => [
+            'access' => 'nobody',
+            'default' => true,
+        ],
+        'width' => [
+            'access' => 'nobody',
+            'default' => true,
+        ],
     ]);
     if ($filtersViews === false) {
         throw new RuntimeException('json_encode failed for the filters_views config value');
@@ -603,7 +742,9 @@ it('denies access to and unsets every per-filter search field whose own filters_
 
     try {
         $page = H::loginAsAdmin($this);
-        $album = H::wsCall($page, 'pwg.categories.add', ['name' => 'Search Access Denied Album ' . uniqid()]);
+        $album = H::wsCall($page, 'pwg.categories.add', [
+            'name' => 'Search Access Denied Album ' . uniqid(),
+        ]);
         $albumResult = $album['result'] ?? null;
         if (! is_array($albumResult) || ! is_numeric($albumResult['id'] ?? null)) {
             throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($album, true));
@@ -613,7 +754,9 @@ it('denies access to and unsets every per-filter search field whose own filters_
         H::uploadPhotoViaApi($image, $albumId, 'Search Access Denied Photo');
         @unlink($image);
 
-        $tag = H::wsCall($page, 'pwg.tags.add', ['name' => 'Search Access Denied Tag ' . uniqid()]);
+        $tag = H::wsCall($page, 'pwg.tags.add', [
+            'name' => 'Search Access Denied Tag ' . uniqid(),
+        ]);
         $tagResult = $tag['result'] ?? null;
         if (! is_array($tagResult) || ! is_numeric($tagResult['id'] ?? null)) {
             throw new RuntimeException('pwg.tags.add did not return a numeric id: ' . var_export($tag, true));
@@ -654,7 +797,8 @@ it('denies access to and unsets every per-filter search field whose own filters_
         H::rawWebpage($page)->navigate($searchUrl);
         H::assertNoServerErrors($page, 'search with every per-filter field denied except album');
         $page->assertNoJavaScriptErrors();
-        expect(extraFiltersSettledContent($page))->toContain('Search Access Denied Photo');
+        expect(extraFiltersSettledContent($page))
+            ->toContain('Search Access Denied Photo');
 
         // Proves each field was actually unset from $mySearch['fields']
         // (not just hidden by a template gate): $GP is
@@ -663,18 +807,30 @@ it('denies access to and unsets every per-filter search field whose own filters_
         // above uses, scoped here to just the `global_params` JS blob to
         // rule out an unrelated same-named label elsewhere on the page.
         $globalParams = extraFiltersGlobalParamsJson(H::rawWebpage($page)->content());
-        expect($globalParams)->not->toContain('"allwords"')
-            ->and($globalParams)->not->toContain('"expert"')
-            ->and($globalParams)->not->toContain('"tags"')
-            ->and($globalParams)->not->toContain('"author"')
-            ->and($globalParams)->not->toContain('"added_by"')
-            ->and($globalParams)->not->toContain('"filetypes"')
-            ->and($globalParams)->not->toContain('"ratios"')
-            ->and($globalParams)->not->toContain('"ratings"')
-            ->and($globalParams)->not->toContain('"filesize_min"')
-            ->and($globalParams)->not->toContain('"height_min"')
-            ->and($globalParams)->not->toContain('"width_min"')
-            ->and($globalParams)->toContain('"cat"');
+        expect($globalParams)
+            ->not->toContain('"allwords"')
+            ->and($globalParams)
+            ->not->toContain('"expert"')
+            ->and($globalParams)
+            ->not->toContain('"tags"')
+            ->and($globalParams)
+            ->not->toContain('"author"')
+            ->and($globalParams)
+            ->not->toContain('"added_by"')
+            ->and($globalParams)
+            ->not->toContain('"filetypes"')
+            ->and($globalParams)
+            ->not->toContain('"ratios"')
+            ->and($globalParams)
+            ->not->toContain('"ratings"')
+            ->and($globalParams)
+            ->not->toContain('"filesize_min"')
+            ->and($globalParams)
+            ->not->toContain('"height_min"')
+            ->and($globalParams)
+            ->not->toContain('"width_min"')
+            ->and($globalParams)
+            ->toContain('"cat"');
     } finally {
         H::restoreConfig($snapshot);
     }
@@ -694,7 +850,9 @@ it('denies access to and unsets every per-filter search field whose own filters_
 it('skips the ALBUMS_FOUND search hint entirely when every allwords-matched album is forbidden for the current (guest) viewer', function (): void {
     $page = H::loginAsAdmin($this);
     $uniqueWord = 'forbiddenalbumhint' . uniqid();
-    $album = H::wsCall($page, 'pwg.categories.add', ['name' => 'Album ' . $uniqueWord]);
+    $album = H::wsCall($page, 'pwg.categories.add', [
+        'name' => 'Album ' . $uniqueWord,
+    ]);
     $albumResult = $album['result'] ?? null;
     if (! is_array($albumResult) || ! is_numeric($albumResult['id'] ?? null)) {
         throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($album, true));
@@ -724,7 +882,8 @@ it('skips the ALBUMS_FOUND search hint entirely when every allwords-matched albu
         // ALBUMS_FOUND -- which only ever renders a link to the matched
         // category, via getCatDisplayNameCache() -- so the meaningful check
         // is that no such link to this specific forbidden category exists.
-        expect(extraFiltersSettledContent($guestPage))->not->toContain('/category/' . $albumId);
+        expect(extraFiltersSettledContent($guestPage))
+            ->not->toContain('/category/' . $albumId);
     } finally {
         H::setCategoryPrivate($albumId, false);
     }

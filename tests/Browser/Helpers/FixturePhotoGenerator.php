@@ -20,7 +20,9 @@ use RuntimeException;
  */
 final class FixturePhotoGenerator
 {
-    /** @var list<array{int, int, int}> */
+    /**
+     * @var list<array{int, int, int}>
+     */
     private const array COLORS = [
         [220, 50, 50],
         [50, 180, 80],

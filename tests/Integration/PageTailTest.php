@@ -4,25 +4,25 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Integration;
 
-use Override;
-use Piwigo\PluginConfig\EventDispatcher;
-use Piwigo\Tests\Support\TemplateTestFactory;
 use LogicException;
-use Piwigo\Db\DbConnection;
-use Piwigo\Tests\Support\DbCredentialsTestFactory;
-use Piwigo\Db\AdvisorySessionLock;
+use Override;
 use Piwigo\Bootstrap\PageTail;
 use Piwigo\Config\ConfigLoader;
 use Piwigo\Config\ConfigService;
 use Piwigo\Config\CurrentConfig;
-use Piwigo\Tests\Support\CurrentConfigTestFactory;
-use Piwigo\Tests\Support\CurrentConfigServiceTestFactory;
 use Piwigo\Core\AppInfo;
-use Piwigo\Tests\Support\CurrentPathsTestFactory;
-use Piwigo\Core\Logger;
 use Piwigo\Core\Kernel;
+use Piwigo\Core\Logger;
 use Piwigo\Core\UniqueExecLock;
+use Piwigo\Db\AdvisorySessionLock;
+use Piwigo\Db\DbConnection;
+use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Template\CurrentTemplate;
+use Piwigo\Tests\Support\CurrentConfigServiceTestFactory;
+use Piwigo\Tests\Support\CurrentConfigTestFactory;
+use Piwigo\Tests\Support\CurrentPathsTestFactory;
+use Piwigo\Tests\Support\DbCredentialsTestFactory;
+use Piwigo\Tests\Support\TemplateTestFactory;
 
 /**
  * Piwigo\Bootstrap\PageTail -- renderToString()/render() themselves are
@@ -93,7 +93,9 @@ final class PageTailTest extends IntegrationTestCase
     #[Override]
     protected function tearDown(): void
     {
-        UniqueExecLock::ends(new Logger(['severity' => Logger::OFF]), 'check_for_updates');
+        UniqueExecLock::ends(new Logger([
+            'severity' => Logger::OFF,
+        ]), 'check_for_updates');
         UniqueExecLock::reset();
         CurrentTemplate::current()->reset();
         $currentConfig = Kernel::container()->get(CurrentConfig::class);
@@ -105,7 +107,7 @@ final class PageTailTest extends IntegrationTestCase
         parent::tearDown();
     }
 
-    public function test_renderToString_skips_the_update_check_when_another_exec_already_holds_the_fresh_lock(): void
+    public function testRenderToStringSkipsTheUpdateCheckWhenAnotherExecAlreadyHoldsTheFreshLock(): void
     {
         $currentConfig = Kernel::container()->get(CurrentConfig::class);
         if (! $currentConfig instanceof CurrentConfig) {

@@ -68,7 +68,8 @@ it('normalizes a "----------" url keyword to N/A in the persisted replacement', 
         expect($result['body'])->toContain('Templates configuration has been recorded');
 
         $raw = H::configValue('extents_for_templates');
-        expect($raw)->not->toBeNull();
+        expect($raw)
+            ->not->toBeNull();
         $decoded = json_decode((string) $raw, true);
         if (! is_array($decoded) || ! is_array($decoded['distributed/samples/my-header.tpl'] ?? null)) {
             throw new RuntimeException('expected a real replacement entry, got: ' . var_export($decoded, true));

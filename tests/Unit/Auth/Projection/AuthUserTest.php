@@ -32,11 +32,16 @@ function fullAuthUserRow(): array
 test('fromRow narrows every column to its real type', function (): void {
     $user = AuthUser::fromRow(fullAuthUserRow());
 
-    expect($user->id)->toBe('1')
-        ->and($user->username)->toBe('fixture_admin')
-        ->and($user->email)->toBe('fixture_admin@example.test')
-        ->and($user->password)->toBe('$2y$04$hash')
-        ->and($user->status)->toBe('webmaster');
+    expect($user->id)
+        ->toBe('1')
+        ->and($user->username)
+        ->toBe('fixture_admin')
+        ->and($user->email)
+        ->toBe('fixture_admin@example.test')
+        ->and($user->password)
+        ->toBe('$2y$04$hash')
+        ->and($user->status)
+        ->toBe('webmaster');
 });
 
 test('fromRow defaults status to normal when absent, matching the original\'s own ??= fallback', function (): void {
@@ -45,7 +50,8 @@ test('fromRow defaults status to normal when absent, matching the original\'s ow
 
     $user = AuthUser::fromRow($row);
 
-    expect($user->status)->toBe('normal');
+    expect($user->status)
+        ->toBe('normal');
 });
 
 test('fromRow defaults every other column to an empty string when absent', function (): void {
@@ -56,10 +62,14 @@ test('fromRow defaults every other column to an empty string when absent', funct
 
     $user = AuthUser::fromRow($row);
 
-    expect($user->id)->toBe('')
-        ->and($user->username)->toBe('')
-        ->and($user->email)->toBe('')
-        ->and($user->password)->toBe('');
+    expect($user->id)
+        ->toBe('')
+        ->and($user->username)
+        ->toBe('')
+        ->and($user->email)
+        ->toBe('')
+        ->and($user->password)
+        ->toBe('');
 });
 
 test('fromRow casts a non-string scalar id (e.g. a real DBAL int) to string', function (): void {
@@ -74,7 +84,8 @@ test('fromRow casts a non-string scalar id (e.g. a real DBAL int) to string', fu
 
     $user = AuthUser::fromRow($row);
 
-    expect($user->id)->toBe('1');
+    expect($user->id)
+        ->toBe('1');
 });
 
 test('fromRow unwraps a UserId value object id to its string value', function (): void {
@@ -91,17 +102,19 @@ test('fromRow unwraps a UserId value object id to its string value', function ()
 
     $user = AuthUser::fromRow($row);
 
-    expect($user->id)->toBe('42');
+    expect($user->id)
+        ->toBe('42');
 });
 
 test('toArray round-trips the exact same DB column shape fromRow narrowed', function (): void {
     $roundTripped = AuthUser::fromRow(fullAuthUserRow())->toArray();
 
-    expect($roundTripped)->toBe([
-        'id' => '1',
-        'username' => 'fixture_admin',
-        'email' => 'fixture_admin@example.test',
-        'password' => '$2y$04$hash',
-        'status' => 'webmaster',
-    ]);
+    expect($roundTripped)
+        ->toBe([
+            'id' => '1',
+            'username' => 'fixture_admin',
+            'email' => 'fixture_admin@example.test',
+            'password' => '$2y$04$hash',
+            'status' => 'webmaster',
+        ]);
 });

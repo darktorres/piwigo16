@@ -44,7 +44,8 @@ test('write() then read() round-trips real data', function (): void {
         $repo = sessionTestRepo();
         $repo->write($id, 'pwg_uid|i:1;');
 
-        expect($repo->read($id))->toBe('pwg_uid|i:1;');
+        expect($repo->read($id))
+            ->toBe('pwg_uid|i:1;');
     } finally {
         sessionTestDelete($conn, $id);
     }
@@ -59,14 +60,16 @@ test('write() replaces an existing row for the same id', function (): void {
         $repo->write($id, 'first');
         $repo->write($id, 'second');
 
-        expect($repo->read($id))->toBe('second');
+        expect($repo->read($id))
+            ->toBe('second');
     } finally {
         sessionTestDelete($conn, $id);
     }
 });
 
 test('read() returns an empty string for a missing id', function (): void {
-    expect(sessionTestRepo()->read(sessionTestId()))->toBe('');
+    expect(sessionTestRepo()->read(sessionTestId()))
+        ->toBe('');
 });
 
 test('destroy() removes the row', function (): void {
@@ -79,7 +82,8 @@ test('destroy() removes the row', function (): void {
 
         $repo->destroy($id);
 
-        expect($repo->read($id))->toBe('');
+        expect($repo->read($id))
+            ->toBe('');
     } finally {
         sessionTestDelete($conn, $id);
     }
@@ -99,16 +103,19 @@ test('gc() deletes only sessions older than the cutoff and returns the count', f
         // the stale in-memory row instead of seeing it as deleted.
         $repo->write($oldId, 'stale');
         $conn->executeStatement(
-            'UPDATE ' . 'sessions' . ' SET expiration = ? WHERE id = ?',
+            'UPDATE sessions SET expiration = ? WHERE id = ?',
             [(new DateTimeImmutable('-1 year'))->format('Y-m-d H:i:s'), $oldId],
         );
         $repo->write($freshId, 'fresh');
 
         $deleted = $repo->gc(3600);
 
-        expect($deleted)->toBeGreaterThanOrEqual(1)
-            ->and($repo->read($oldId))->toBe('')
-            ->and($repo->read($freshId))->toBe('fresh');
+        expect($deleted)
+            ->toBeGreaterThanOrEqual(1)
+            ->and($repo->read($oldId))
+            ->toBe('')
+            ->and($repo->read($freshId))
+            ->toBe('fresh');
     } finally {
         sessionTestDelete($conn, $oldId);
         sessionTestDelete($conn, $freshId);
@@ -129,7 +136,8 @@ test('deleteByUserId() removes matching serialized sessions, bypassing any stale
 
         $repo->deleteByUserId(987654);
 
-        expect($repo->read($id))->toBe('');
+        expect($repo->read($id))
+            ->toBe('');
     } finally {
         sessionTestDelete($conn, $id);
     }
@@ -145,7 +153,8 @@ test('deleteByUserId() does not remove a session belonging to a different user i
 
         $repo->deleteByUserId(222222);
 
-        expect($repo->read($id))->toBe('pwg_uid|i:111111;');
+        expect($repo->read($id))
+            ->toBe('pwg_uid|i:111111;');
     } finally {
         sessionTestDelete($conn, $id);
     }

@@ -43,44 +43,55 @@ function nbmTestCountRows(Connection $conn): int
 }
 
 test('countByCheckKey() finds an existing key', function (): void {
-    expect(nbmTestRepo()->countByCheckKey('abcdef1234567890'))->toBe(1);
+    expect(nbmTestRepo()->countByCheckKey('abcdef1234567890'))
+        ->toBe(1);
 });
 
 test('countByCheckKey() returns zero for an unknown key', function (): void {
-    expect(nbmTestRepo()->countByCheckKey('no-such-key'))->toBe(0);
+    expect(nbmTestRepo()->countByCheckKey('no-such-key'))
+        ->toBe(0);
 });
 
 test('findUserNotifications() subscribe returns every subscriber', function (): void {
-    $rows = nbmTestRepo()->findUserNotifications('subscribe', [], '');
+    $rows = nbmTestRepo()
+        ->findUserNotifications('subscribe', [], '');
 
     $usernames = array_map(static fn ($r) => $r->username, $rows);
-    expect($usernames)->toBe(['fixture_admin', 'regular_user']);
+    expect($usernames)
+        ->toBe(['fixture_admin', 'regular_user']);
 });
 
 test('findUserNotifications() send excludes users with no email or disabled', function (): void {
     // regular_user has no email and is also disabled -- excluded either way.
-    $rows = nbmTestRepo()->findUserNotifications('send', [], '');
+    $rows = nbmTestRepo()
+        ->findUserNotifications('send', [], '');
 
-    expect($rows)->toHaveCount(1)
+    expect($rows)
+        ->toHaveCount(1)
         ->and($rows[0]->username)->toBe('fixture_admin');
 });
 
 test('findUserNotifications() filters by check key list', function (): void {
-    $rows = nbmTestRepo()->findUserNotifications('subscribe', ['abcdef1234567890'], '');
+    $rows = nbmTestRepo()
+        ->findUserNotifications('subscribe', ['abcdef1234567890'], '');
 
-    expect($rows)->toHaveCount(1)
+    expect($rows)
+        ->toHaveCount(1)
         ->and($rows[0]->username)->toBe('fixture_admin');
 });
 
 test('findUserNotifications() filters by enabled value', function (): void {
-    $rows = nbmTestRepo()->findUserNotifications('subscribe', [], '0');
+    $rows = nbmTestRepo()
+        ->findUserNotifications('subscribe', [], '0');
 
-    expect($rows)->toHaveCount(1)
+    expect($rows)
+        ->toHaveCount(1)
         ->and($rows[0]->username)->toBe('regular_user');
 });
 
 test('findUserNotifications() narrows user_id to a real UserId', function (): void {
-    $rows = nbmTestRepo()->findUserNotifications('subscribe', [], '');
+    $rows = nbmTestRepo()
+        ->findUserNotifications('subscribe', [], '');
 
     expect($rows[0]->userId)->toEqual(UserId::from(1));
 });
@@ -89,13 +100,15 @@ test('deleteByCheckKeys() is a no-op for an empty list', function (): void {
     $conn = DbConnection::build();
     $before = nbmTestCountRows($conn);
 
-    nbmTestRepo()->deleteByCheckKeys([]);
+    nbmTestRepo()
+        ->deleteByCheckKeys([]);
 
     // Guards against building "DELETE FROM ... WHERE check_key IN ()" --
     // invalid SQL -- for an empty list; the fixture's 2 real rows must
     // survive untouched, proving the early return (not a real,
     // scoped-to-nothing DELETE) is what actually ran.
-    expect(nbmTestCountRows($conn))->toBe($before);
+    expect(nbmTestCountRows($conn))
+        ->toBe($before);
 });
 
 test('deleteByCheckKeys() removes a key containing a single quote', function (): void {
@@ -103,22 +116,30 @@ test('deleteByCheckKeys() removes a key containing a single quote', function ():
     $repo = nbmTestRepo();
     // user 2 (guest) has no notification row in the fixture.
     $repo->insertNotifications([
-        ['user_id' => 2, 'check_key' => $checkKey, 'enabled' => 0],
+        [
+            'user_id' => 2,
+            'check_key' => $checkKey,
+            'enabled' => 0,
+        ],
     ]);
-    expect($repo->countByCheckKey($checkKey))->toBe(1);
+    expect($repo->countByCheckKey($checkKey))
+        ->toBe(1);
 
     $repo->deleteByCheckKeys([$checkKey]);
 
-    expect($repo->countByCheckKey($checkKey))->toBe(0);
+    expect($repo->countByCheckKey($checkKey))
+        ->toBe(0);
 });
 
 test('insertNotifications() is a no-op for an empty list', function (): void {
     $conn = DbConnection::build();
     $before = nbmTestCountRows($conn);
 
-    nbmTestRepo()->insertNotifications([]);
+    nbmTestRepo()
+        ->insertNotifications([]);
 
-    expect(nbmTestCountRows($conn))->toBe($before);
+    expect(nbmTestCountRows($conn))
+        ->toBe($before);
 });
 
 test('nullifyBlankEmails() sets a whitespace-only email to NULL', function (): void {
@@ -132,7 +153,8 @@ test('nullifyBlankEmails() sets a whitespace-only email to NULL', function (): v
             ->setParameter('email', '   ')
             ->executeStatement();
 
-        nbmTestRepo()->nullifyBlankEmails();
+        nbmTestRepo()
+            ->nullifyBlankEmails();
 
         $email = $conn->createQueryBuilder()
             ->select('mail_address')
@@ -140,7 +162,8 @@ test('nullifyBlankEmails() sets a whitespace-only email to NULL', function (): v
             ->where('id = 4')
             ->fetchOne();
 
-        expect($email)->toBeNull();
+        expect($email)
+            ->toBeNull();
     } finally {
         $conn->createQueryBuilder()
             ->update('users')
@@ -153,7 +176,8 @@ test('nullifyBlankEmails() sets a whitespace-only email to NULL', function (): v
 test('nullifyBlankEmails() leaves a real email untouched', function (): void {
     $conn = DbConnection::build();
 
-    nbmTestRepo()->nullifyBlankEmails();
+    nbmTestRepo()
+        ->nullifyBlankEmails();
 
     $email = $conn->createQueryBuilder()
         ->select('mail_address')
@@ -161,7 +185,8 @@ test('nullifyBlankEmails() leaves a real email untouched', function (): void {
         ->where('id = 1')
         ->fetchOne();
 
-    expect($email)->toBe('fixture_admin@example.test');
+    expect($email)
+        ->toBe('fixture_admin@example.test');
 });
 
 test('findUsersWithoutNotificationRow() returns only users with a real email and no notification row yet', function (): void {
@@ -177,7 +202,8 @@ test('findUsersWithoutNotificationRow() returns only users with a real email and
             ->setParameter('email', 'power.user@example.test')
             ->executeStatement();
 
-        $result = nbmTestRepo()->findUsersWithoutNotificationRow();
+        $result = nbmTestRepo()
+            ->findUsersWithoutNotificationRow();
         $byId = [];
         foreach ($result as $row) {
             $userId = $row['user_id'];
@@ -190,7 +216,8 @@ test('findUsersWithoutNotificationRow() returns only users with a real email and
 
         // user 1 already has a notification row -- excluded.
         // user 2/3 have no real email -- excluded.
-        expect(array_keys($byId))->toBe([4])
+        expect(array_keys($byId))
+            ->toBe([4])
             ->and($byId[4]['username'])->toBe('power_user')
             ->and($byId[4]['mail_address'])->toBe('power.user@example.test');
     } finally {

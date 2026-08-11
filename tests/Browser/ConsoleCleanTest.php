@@ -9,12 +9,11 @@ use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
  * entry-point routes. Covers anonymous gallery routes and authenticated
  * admin routes.
  */
-
 $anonRoutes = [
-    'gallery home'    => '/index.php',
-    'identification'  => '/identification.php',
-    'search'          => '/search.php',
-    'tags'            => '/tags.php',
+    'gallery home' => '/index.php',
+    'identification' => '/identification.php',
+    'search' => '/search.php',
+    'tags' => '/tags.php',
 ];
 
 foreach ($anonRoutes as $name => $path) {
@@ -25,17 +24,17 @@ foreach ($anonRoutes as $name => $path) {
 }
 
 $adminRoutes = [
-    'admin dashboard'  => '/admin.php',
-    'admin albums'     => '/admin.php?page=albums',
+    'admin dashboard' => '/admin.php',
+    'admin albums' => '/admin.php?page=albums',
     'admin batch_manager (filter=all)' => '/admin.php?page=batch_manager&filter=all',
     'admin photos_add direct' => '/admin.php?page=photos_add&section=direct',
     'admin configuration' => '/admin.php?page=configuration',
-    'admin history'    => '/admin.php?page=history',
-    'admin plugins'    => '/admin.php?page=plugins',
-    'admin languages'  => '/admin.php?page=languages',
-    'admin themes'     => '/admin.php?page=themes',
+    'admin history' => '/admin.php?page=history',
+    'admin plugins' => '/admin.php?page=plugins',
+    'admin languages' => '/admin.php?page=languages',
+    'admin themes' => '/admin.php?page=themes',
     'admin maintenance' => '/admin.php?page=maintenance',
-    'admin updates'    => '/admin.php?page=updates',
+    'admin updates' => '/admin.php?page=updates',
     'admin site_manager' => '/admin.php?page=site_manager',
     'admin permalinks' => '/admin.php?page=permalinks',
     // insertNewDataUserMailNotification() runs on every GET to this page

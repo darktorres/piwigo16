@@ -4,23 +4,23 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Integration;
 
+use Doctrine\DBAL\Connection;
 use Doctrine\ORM\EntityManagerInterface;
 use Override;
-use Piwigo\Core\Kernel;
-use Piwigo\Tests\Support\LangTestFactory;
-use Piwigo\Config\DeploymentPolicy;
-use Piwigo\Tests\Support\UrlServiceTestFactory;
-use Piwigo\Tests\Support\CurrentConfigTestFactory;
-use Doctrine\DBAL\Connection;
 use Piwigo\Auth\ApiKeyRepository;
 use Piwigo\Auth\ApiKeyService;
 use Piwigo\Auth\PasswordRepository;
 use Piwigo\Auth\PasswordService;
+use Piwigo\Config\DeploymentPolicy;
+use Piwigo\Core\Kernel;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Mail\MailService;
 use Piwigo\Session\SessionEntity;
 use Piwigo\Session\SessionService;
+use Piwigo\Tests\Support\CurrentConfigTestFactory;
+use Piwigo\Tests\Support\LangTestFactory;
+use Piwigo\Tests\Support\UrlServiceTestFactory;
 
 /**
  * ApiKeyService::getAvailable() -- the only real caller is
@@ -56,7 +56,7 @@ final class ApiKeyServiceGetAvailableTest extends IntegrationTestCase
         }
 
         $this->conn = DbConnection::build();
-        $userId = $this->conn->fetchOne("SELECT id FROM " . 'users' . " WHERE username = 'fixture_admin'");
+        $userId = $this->conn->fetchOne('SELECT id FROM users' . " WHERE username = 'fixture_admin'");
         self::assertIsNumeric($userId);
         $this->userId = $userId;
 
@@ -69,26 +69,26 @@ final class ApiKeyServiceGetAvailableTest extends IntegrationTestCase
             new ApiKeyRepository($this->em),
             new PasswordService(new PasswordRepository(EntityManagerFactory::build($this->conn)), new DeploymentPolicy()),
             UrlServiceTestFactory::build(),
-            new SessionService($this->em->getRepository(SessionEntity::class),CurrentConfigTestFactory::get()),
+            new SessionService($this->em->getRepository(SessionEntity::class), CurrentConfigTestFactory::get()),
             CurrentConfigTestFactory::get(),
         );
 
-        $this->conn->executeStatement('DELETE FROM ' . 'user_auth_keys' . " WHERE user_id = ? AND key_type = 'api_key'", [$this->userId]);
+        $this->conn->executeStatement('DELETE FROM user_auth_keys' . " WHERE user_id = ? AND key_type = 'api_key'", [$this->userId]);
     }
 
     #[Override]
     protected function tearDown(): void
     {
-        $this->conn->executeStatement('DELETE FROM ' . 'user_auth_keys' . " WHERE user_id = ? AND key_type = 'api_key'", [$this->userId]);
+        $this->conn->executeStatement('DELETE FROM user_auth_keys' . " WHERE user_id = ? AND key_type = 'api_key'", [$this->userId]);
         parent::tearDown();
     }
 
-    public function test_getAvailable_returns_false_when_the_user_has_no_api_keys(): void
+    public function testGetAvailableReturnsFalseWhenTheUserHasNoApiKeys(): void
     {
         self::assertFalse($this->service->getAvailable($this->userId));
     }
 
-    public function test_getAvailable_includes_a_non_expired_non_revoked_key(): void
+    public function testGetAvailableIncludesANonExpiredNonRevokedKey(): void
     {
         $created = $this->service->create($this->userId, 30, 'Available Key');
 
@@ -99,7 +99,7 @@ final class ApiKeyServiceGetAvailableTest extends IntegrationTestCase
         self::assertSame($created->authKey, $available[0]->authKey);
     }
 
-    public function test_getAvailable_excludes_a_revoked_key(): void
+    public function testGetAvailableExcludesARevokedKey(): void
     {
         $created = $this->service->create($this->userId, 30, 'Revoked Key');
         $revokeResult = $this->service->revoke($this->userId, $created->authKey);
@@ -108,7 +108,7 @@ final class ApiKeyServiceGetAvailableTest extends IntegrationTestCase
         self::assertFalse($this->service->getAvailable($this->userId));
     }
 
-    public function test_getAvailable_excludes_an_expired_key(): void
+    public function testGetAvailableExcludesAnExpiredKey(): void
     {
         // duration is a real `int(11) unsigned` DB column -- create()
         // itself can't be called with a negative duration (a genuine DB
@@ -118,7 +118,7 @@ final class ApiKeyServiceGetAvailableTest extends IntegrationTestCase
         // API).
         $created = $this->service->create($this->userId, 30, 'Expired Key');
         $this->conn->executeStatement(
-            'UPDATE ' . 'user_auth_keys' . " SET expired_on = '2000-01-01 00:00:00' WHERE auth_key = ?",
+            'UPDATE user_auth_keys' . " SET expired_on = '2000-01-01 00:00:00' WHERE auth_key = ?",
             [$created->authKey]
         );
         // insert() persisted+flushed this row through the ORM, so the raw
@@ -130,12 +130,12 @@ final class ApiKeyServiceGetAvailableTest extends IntegrationTestCase
         self::assertFalse($this->service->getAvailable($this->userId));
     }
 
-    public function test_getAvailable_mixes_available_and_excluded_keys_in_one_call(): void
+    public function testGetAvailableMixesAvailableAndExcludedKeysInOneCall(): void
     {
         $available = $this->service->create($this->userId, 30, 'Mixed Available Key');
         $expired = $this->service->create($this->userId, 30, 'Mixed Expired Key');
         $this->conn->executeStatement(
-            'UPDATE ' . 'user_auth_keys' . " SET expired_on = '2000-01-01 00:00:00' WHERE auth_key = ?",
+            'UPDATE user_auth_keys' . " SET expired_on = '2000-01-01 00:00:00' WHERE auth_key = ?",
             [$expired->authKey]
         );
         $this->em->clear();

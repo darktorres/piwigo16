@@ -11,7 +11,9 @@ use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
  * renders a link.
  */
 
-/** @return array{id: string, userId: int, lastCheck: ?string}|null */
+/**
+ * @return array{id: string, userId: int, lastCheck: ?string}|null
+ */
 function userFeedRow(string $feedId): ?array
 {
     $db = H::connect();
@@ -31,7 +33,9 @@ function userFeedRow(string $feedId): ?array
     ];
 }
 
-/** Extracts the 50-char feed id from the U_FEED href notification.tpl renders. */
+/**
+ * Extracts the 50-char feed id from the U_FEED href notification.tpl renders.
+ */
 function extractFeedId(string $html): string
 {
     if (preg_match('/feed\.php\?feed=([0-9A-Za-z]{50})/', $html, $matches) !== 1) {
@@ -103,8 +107,10 @@ it('gives a guest visitor a bare feed.php URL (no query string) for the image-on
     // notification.php (no gallery SectionContextRegistry context, 0
     // RequestMountDepth), so U_FEED_IMAGE_ONLY is the bare relative
     // "feed.php" href -- no leading slash/domain, no query string at all.
-    expect($html)->toContain('href="feed.php">')
-        ->and($html)->toContain('feed.php?feed=' . $feedId);
+    expect($html)
+        ->toContain('href="feed.php">')
+        ->and($html)
+        ->toContain('feed.php?feed=' . $feedId);
 });
 
 it('mints a distinct feed id on each visit', function (): void {
@@ -116,7 +122,10 @@ it('mints a distinct feed id on each visit', function (): void {
     $page = H::navigateOk($page, '/notification.php');
     $secondId = extractFeedId(H::rawWebpage($page)->content());
 
-    expect($secondId)->not->toBe($firstId);
-    expect(userFeedRow($firstId))->not->toBeNull();
-    expect(userFeedRow($secondId))->not->toBeNull();
+    expect($secondId)
+        ->not->toBe($firstId);
+    expect(userFeedRow($firstId))
+        ->not->toBeNull();
+    expect(userFeedRow($secondId))
+        ->not->toBeNull();
 });

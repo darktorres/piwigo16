@@ -37,7 +37,9 @@ final class WsRestFormatTest extends ContractTestCase
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
         curl_setopt($ch, CURLOPT_POST, true);
         curl_setopt($ch, CURLOPT_USERAGENT, self::USER_AGENT);
-        curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query(['method' => $method]));
+        curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query([
+            'method' => $method,
+        ]));
         curl_setopt($ch, CURLOPT_COOKIEJAR, $cookieJar);
         curl_setopt($ch, CURLOPT_COOKIEFILE, $cookieJar);
         curl_setopt($ch, CURLOPT_HTTPHEADER, $this->testHeader());
@@ -50,7 +52,7 @@ final class WsRestFormatTest extends ContractTestCase
         return $body;
     }
 
-    public function test_checkUpload_encodes_a_true_boolean_as_1_and_omits_a_null_message(): void
+    public function testCheckUploadEncodesATrueBooleanAs1AndOmitsANullMessage(): void
     {
         $this->loginAsAdmin();
         $body = $this->restBody('pwg.images.checkUpload');
@@ -61,7 +63,7 @@ final class WsRestFormatTest extends ContractTestCase
         self::assertStringNotContainsString('<message>', $body);
     }
 
-    public function test_getCacheSize_encodes_a_plain_nested_array_as_a_struct_and_skips_a_null_leaf(): void
+    public function testGetCacheSizeEncodesAPlainNestedArrayAsAStructAndSkipsANullLeaf(): void
     {
         $this->loginAsAdmin();
         $body = $this->restBody('pwg.getCacheSize');

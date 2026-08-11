@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Unit\Category;
 
-use PHPUnit\Framework\TestCase;
 use DateTimeImmutable;
+use PHPUnit\Framework\TestCase;
 use Piwigo\Category\CategoryService;
 
 /**
@@ -26,7 +26,7 @@ final class CategoryServiceIsRecentCategoryTest extends TestCase
 {
     private const string NOW = '2026-08-01 00:00:00';
 
-    public function test_returns_false_when_last_photo_date_is_null(): void
+    public function testReturnsFalseWhenLastPhotoDateIsNull(): void
     {
         // matches get_recent_photos_sql()'s own
         // `if (!isset($user['last_photo_date'])) return '0=1';`
@@ -38,7 +38,7 @@ final class CategoryServiceIsRecentCategoryTest extends TestCase
         ));
     }
 
-    public function test_returns_false_when_date_last_is_null(): void
+    public function testReturnsFalseWhenDateLastIsNull(): void
     {
         self::assertFalse(CategoryService::isRecentCategory(
             null,
@@ -48,7 +48,7 @@ final class CategoryServiceIsRecentCategoryTest extends TestCase
         ));
     }
 
-    public function test_today_minus_period_threshold_wins_when_last_photo_date_is_recent(): void
+    public function testTodayMinusPeriodThresholdWinsWhenLastPhotoDateIsRecent(): void
     {
         // last_photo_date 2 days ago -> thresholdFromLastPhoto = 3 days ago.
         // recentPeriod=7 -> thresholdFromToday = 7 days ago. LEAST() picks
@@ -70,7 +70,7 @@ final class CategoryServiceIsRecentCategoryTest extends TestCase
         ));
     }
 
-    public function test_last_photo_date_threshold_widens_the_window_when_the_gallery_is_stale(): void
+    public function testLastPhotoDateThresholdWidensTheWindowWhenTheGalleryIsStale(): void
     {
         // last_photo_date 60 days ago -> thresholdFromLastPhoto = 61 days
         // ago, earlier than the naive 7-day threshold -- LEAST() picks it,
@@ -93,7 +93,7 @@ final class CategoryServiceIsRecentCategoryTest extends TestCase
         ));
     }
 
-    public function test_boundary_date_last_exactly_at_the_threshold_counts_as_recent(): void
+    public function testBoundaryDateLastExactlyAtTheThresholdCountsAsRecent(): void
     {
         $now = new DateTimeImmutable(self::NOW);
 

@@ -20,7 +20,9 @@ test('toArray flattens every fixed property, and omits the 5 optional keys when 
         maintSearch: '/admin.php?page=maintenance&action=search',
         maintCompiledTemplates: '/admin.php?page=maintenance&action=compiled-templates',
         maintDerivatives: '/admin.php?page=maintenance&action=derivatives',
-        purgeDerivatives: ['All' => 'all'],
+        purgeDerivatives: [
+            'All' => 'all',
+        ],
         helpUrl: '/admin/popuphelp.php?page=maintenance',
         phpwgUrl: 'https://piwigo.example',
         pwgVersion: '16.3.0',
@@ -46,7 +48,8 @@ test('toArray flattens every fixed property, and omits the 5 optional keys when 
 
     $result = $context->toArray();
 
-    expect($result)->not->toHaveKeys(['GRAPHICS_LIBRARY', 'U_MAINT_UNLOCK_GALLERY', 'U_MAINT_LOCK_GALLERY', 'U_EMPTY_LOUNGE', 'LOUNGE_COUNTER'])
+    expect($result)
+        ->not->toHaveKeys(['GRAPHICS_LIBRARY', 'U_MAINT_UNLOCK_GALLERY', 'U_MAINT_LOCK_GALLERY', 'U_EMPTY_LOUNGE', 'LOUNGE_COUNTER'])
         ->and($result['U_MAINT_CATEGORIES'])->toBe('/admin.php?page=maintenance&action=categories')
         ->and($result['pwg_token'])->toBe('abc123')
         ->and($result['isWebmaster'])->toBe(0);
@@ -68,7 +71,9 @@ test('toArray includes GRAPHICS_LIBRARY/U_MAINT_UNLOCK_GALLERY/U_EMPTY_LOUNGE/LO
         maintSearch: '/admin.php?page=maintenance&action=search',
         maintCompiledTemplates: '/admin.php?page=maintenance&action=compiled-templates',
         maintDerivatives: '/admin.php?page=maintenance&action=derivatives',
-        purgeDerivatives: ['All' => 'all'],
+        purgeDerivatives: [
+            'All' => 'all',
+        ],
         helpUrl: '/admin/popuphelp.php?page=maintenance',
         phpwgUrl: 'https://piwigo.example',
         pwgVersion: '16.3.0',
@@ -96,7 +101,8 @@ test('toArray includes GRAPHICS_LIBRARY/U_MAINT_UNLOCK_GALLERY/U_EMPTY_LOUNGE/LO
 
     expect($result['GRAPHICS_LIBRARY'])->toBe('ImageMagick 7.1.0')
         ->and($result['U_MAINT_UNLOCK_GALLERY'])->toBe('/admin.php?page=maintenance&action=unlock_gallery')
-        ->and($result)->not->toHaveKey('U_MAINT_LOCK_GALLERY')
+        ->and($result)
+        ->not->toHaveKey('U_MAINT_LOCK_GALLERY')
         ->and($result['U_EMPTY_LOUNGE'])->toBe('/admin.php?page=maintenance&action=empty_lounge')
         ->and($result['LOUNGE_COUNTER'])->toBe(5);
 });

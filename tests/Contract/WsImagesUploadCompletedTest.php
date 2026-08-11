@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Contract;
 
-use Override;
 use Doctrine\DBAL\Connection;
+use Override;
 use Piwigo\Db\DbConnection;
 
 /**
@@ -40,7 +40,7 @@ final class WsImagesUploadCompletedTest extends ContractTestCase
         return $this->getPwgToken();
     }
 
-    public function test_uploadCompleted_invalid_token_returns_error(): void
+    public function testUploadCompletedInvalidTokenReturnsError(): void
     {
         // admin_only is checked before the pwg_token comparison
         // (PwgServer::invoke()'s own gate order) -- a guest caller never
@@ -57,7 +57,7 @@ final class WsImagesUploadCompletedTest extends ContractTestCase
         self::assertSame(403, $response['err']);
     }
 
-    public function test_uploadCompleted_forbidden_for_guest(): void
+    public function testUploadCompletedForbiddenForGuest(): void
     {
         $response = $this->ws('pwg.images.uploadCompleted', [
             'pwg_token' => 'anything',
@@ -67,13 +67,13 @@ final class WsImagesUploadCompletedTest extends ContractTestCase
         self::assertSame('fail', $response['stat']);
     }
 
-    public function test_uploadCompleted_returns_the_target_category_photo_count(): void
+    public function testUploadCompletedReturnsTheTargetCategoryPhotoCount(): void
     {
         $expectedCount = $this->conn->fetchOne(
-            'SELECT COUNT(*) FROM ' . 'image_category' . ' WHERE category_id = 1'
+            'SELECT COUNT(*) FROM image_category WHERE category_id = 1'
         );
         self::assertIsNumeric($expectedCount);
-        $expectedName = $this->conn->fetchOne('SELECT name FROM ' . 'categories' . ' WHERE id = 1');
+        $expectedName = $this->conn->fetchOne('SELECT name FROM categories WHERE id = 1');
         self::assertIsString($expectedName);
 
         $response = $this->callWs('pwg.images.uploadCompleted', [
@@ -93,7 +93,7 @@ final class WsImagesUploadCompletedTest extends ContractTestCase
         self::assertStringContainsString($expectedName, $category['label']);
     }
 
-    public function test_uploadCompleted_with_no_lounge_entries_reports_nothing_moved(): void
+    public function testUploadCompletedWithNoLoungeEntriesReportsNothingMoved(): void
     {
         $response = $this->callWs('pwg.images.uploadCompleted', [
             'pwg_token' => $this->pwgToken(),
@@ -108,7 +108,7 @@ final class WsImagesUploadCompletedTest extends ContractTestCase
         self::assertTrue($moved === null || $moved === []);
     }
 
-    public function test_uploadCompleted_accepts_a_comma_separated_image_id_string(): void
+    public function testUploadCompletedAcceptsACommaSeparatedImageIdString(): void
     {
         $response = $this->callWs('pwg.images.uploadCompleted', [
             'pwg_token' => $this->pwgToken(),
@@ -120,7 +120,7 @@ final class WsImagesUploadCompletedTest extends ContractTestCase
         self::assertSame('ok', $response['stat']);
     }
 
-    public function test_uploadCompleted_accepts_an_image_id_array(): void
+    public function testUploadCompletedAcceptsAnImageIdArray(): void
     {
         $response = $this->callWs('pwg.images.uploadCompleted', [
             'pwg_token' => $this->pwgToken(),
@@ -131,7 +131,7 @@ final class WsImagesUploadCompletedTest extends ContractTestCase
         self::assertSame('ok', $response['stat']);
     }
 
-    public function test_uploadCompleted_rejects_a_nonexistent_category(): void
+    public function testUploadCompletedRejectsANonexistentCategory(): void
     {
         $response = $this->callWs('pwg.images.uploadCompleted', [
             'pwg_token' => $this->pwgToken(),

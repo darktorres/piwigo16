@@ -4,20 +4,20 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Integration;
 
-use Override;
-use Piwigo\Core\Kernel;
-use LogicException;
-use Error;
 use Doctrine\DBAL\Connection;
+use Error;
+use LogicException;
+use Override;
 use Piwigo\Config\CurrentConfig;
-use Piwigo\Tests\Support\CurrentConfigTestFactory;
-use Piwigo\Tests\Support\CurrentPathsTestFactory;
-use Piwigo\Tests\Support\LangTestFactory;
+use Piwigo\Core\Kernel;
 use Piwigo\Core\ThemeCatalog;
 use Piwigo\Db\DbConnection;
 use Piwigo\Event\Lifecycle\GetPwgThemes;
-use Piwigo\Tests\Support\TranslatorTestFactory;
+use Piwigo\Tests\Support\CurrentConfigTestFactory;
+use Piwigo\Tests\Support\CurrentPathsTestFactory;
 use Piwigo\Tests\Support\EventDispatcherTestFactory;
+use Piwigo\Tests\Support\LangTestFactory;
+use Piwigo\Tests\Support\TranslatorTestFactory;
 
 /**
  * Piwigo\Core\ThemeCatalog::getPwgThemes()/checkThemeInstalled() need a
@@ -74,31 +74,32 @@ final class ThemeCatalogTest extends IntegrationTestCase
         parent::tearDown();
     }
 
-    public function test_get_pwg_themes_skips_a_row_whose_name_is_null(): void
+    public function testGetPwgThemesSkipsARowWhoseNameIsNull(): void
     {
         // themes.name is a nullable column (schema-confirmed) --
         // is_string($name) is a real runtime guard against exactly this,
         // not defensive padding.
         $this->conn->executeStatement(
-            'INSERT INTO ' . 'themes' . " (id, version, name) VALUES ('broken-theme', '1.0', NULL)"
+            'INSERT INTO themes' . " (id, version, name) VALUES ('broken-theme', '1.0', NULL)"
         );
 
         try {
             $themes = ThemeCatalog::getPwgThemes(EventDispatcherTestFactory::get(), CurrentPathsTestFactory::get(), CurrentConfigTestFactory::get(), LangTestFactory::get());
         } finally {
-            $this->conn->executeStatement('DELETE FROM ' . 'themes' . " WHERE id = 'broken-theme'");
+            $this->conn->executeStatement('DELETE FROM themes' . " WHERE id = 'broken-theme'");
         }
 
         // The fixture's themes table is otherwise empty, so a
         // fully empty result confirms the row was skipped, not merely
         // filtered out for some unrelated reason.
-        expect($themes)->toBe([]);
+        expect($themes)
+            ->toBe([]);
     }
 
-    public function test_get_pwg_themes_skips_the_configured_mobile_theme_when_show_mobile_is_false(): void
+    public function testGetPwgThemesSkipsTheConfiguredMobileThemeWhenShowMobileIsFalse(): void
     {
         $this->conn->executeStatement(
-            'INSERT INTO ' . 'themes' . " (id, version, name) VALUES ('mobile-candidate', '1.0', 'Mobile Candidate')"
+            'INSERT INTO themes' . " (id, version, name) VALUES ('mobile-candidate', '1.0', 'Mobile Candidate')"
         );
         $currentConfig = Kernel::container()->get(CurrentConfig::class);
         if (! $currentConfig instanceof CurrentConfig) {
@@ -109,16 +110,17 @@ final class ThemeCatalogTest extends IntegrationTestCase
         try {
             $themes = ThemeCatalog::getPwgThemes(EventDispatcherTestFactory::get(), CurrentPathsTestFactory::get(), CurrentConfigTestFactory::get(), LangTestFactory::get(), showMobile: false);
         } finally {
-            $this->conn->executeStatement("DELETE FROM " . 'themes' . " WHERE id = 'mobile-candidate'");
+            $this->conn->executeStatement('DELETE FROM themes' . " WHERE id = 'mobile-candidate'");
         }
 
-        expect($themes)->toBe([]);
+        expect($themes)
+            ->toBe([]);
     }
 
-    public function test_get_pwg_themes_appends_the_mobile_suffix_and_includes_the_theme_when_show_mobile_is_true(): void
+    public function testGetPwgThemesAppendsTheMobileSuffixAndIncludesTheThemeWhenShowMobileIsTrue(): void
     {
         $this->conn->executeStatement(
-            "INSERT INTO " . 'themes' . " (id, version, name) VALUES ('default', '1.0', 'Default')"
+            'INSERT INTO themes' . " (id, version, name) VALUES ('default', '1.0', 'Default')"
         );
         $currentConfig = Kernel::container()->get(CurrentConfig::class);
         if (! $currentConfig instanceof CurrentConfig) {
@@ -129,16 +131,19 @@ final class ThemeCatalogTest extends IntegrationTestCase
         try {
             $themes = ThemeCatalog::getPwgThemes(EventDispatcherTestFactory::get(), CurrentPathsTestFactory::get(), CurrentConfigTestFactory::get(), LangTestFactory::get(), showMobile: true);
         } finally {
-            $this->conn->executeStatement("DELETE FROM " . 'themes' . " WHERE id = 'default'");
+            $this->conn->executeStatement('DELETE FROM themes' . " WHERE id = 'default'");
         }
 
         // 'default' is checkThemeInstalled()'s one real installed theme,
         // so it's the only row that survives both the mobile-suffix
         // append AND the installed-directory check.
-        expect($themes)->toBe(['default' => 'Default (Mobile)']);
+        expect($themes)
+            ->toBe([
+                'default' => 'Default (Mobile)',
+            ]);
     }
 
-    public function test_get_pwg_themes_throws_when_a_plugin_filter_returns_something_other_than_a_get_pwg_themes_instance(): void
+    public function testGetPwgThemesThrowsWhenAPluginFilterReturnsSomethingOtherThanAGetPwgThemesInstance(): void
     {
         // addEventHandler(), not addTypedHandler() -- a real plugin
         // handler is untyped from PHPStan's perspective, and this test

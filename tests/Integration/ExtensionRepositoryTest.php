@@ -4,16 +4,16 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Integration;
 
-use Override;
-use Piwigo\Core\Kernel;
-use LogicException;
-use Piwigo\Db\EntityManagerFactory;
 use Doctrine\DBAL\Connection;
+use LogicException;
+use Override;
 use Piwigo\Admin\Extensions\ExtensionRepository;
 use Piwigo\Admin\Extensions\ExtensionType;
-use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\ConfigLoader;
+use Piwigo\Config\CurrentConfig;
+use Piwigo\Core\Kernel;
 use Piwigo\Db\DbConnection;
+use Piwigo\Db\EntityManagerFactory;
 
 /**
  * Direct coverage of ExtensionRepository's own CRUD/query methods --
@@ -63,7 +63,7 @@ final class ExtensionRepositoryTest extends IntegrationTestCase
         $this->repo = new ExtensionRepository(EntityManagerFactory::build($this->conn));
     }
 
-    public function test_find_all_returns_the_fixture_language(): void
+    public function testFindAllReturnsTheFixtureLanguage(): void
     {
         $rows = $this->repo->findAll(ExtensionType::Language);
 
@@ -84,7 +84,7 @@ final class ExtensionRepositoryTest extends IntegrationTestCase
     // (raw DBAL rows type as `array<string, mixed>`), not a real runtime
     // guard.
 
-    public function test_find_returns_a_single_row(): void
+    public function testFindReturnsASingleRow(): void
     {
         $row = $this->repo->find(ExtensionType::Language, 'en_UK');
 
@@ -92,12 +92,12 @@ final class ExtensionRepositoryTest extends IntegrationTestCase
         self::assertSame('16.3.0', $row['version']);
     }
 
-    public function test_find_returns_null_for_a_missing_row(): void
+    public function testFindReturnsNullForAMissingRow(): void
     {
         self::assertNull($this->repo->find(ExtensionType::Plugin, 'no-such-plugin'));
     }
 
-    public function test_insert_plugin_then_find_and_delete_round_trips(): void
+    public function testInsertPluginThenFindAndDeleteRoundTrips(): void
     {
         $this->repo->insertPlugin('test-plugin', '1.0.0');
 
@@ -113,7 +113,7 @@ final class ExtensionRepositoryTest extends IntegrationTestCase
         self::assertNull($this->repo->find(ExtensionType::Plugin, 'test-plugin'));
     }
 
-    public function test_insert_named_creates_a_theme_row(): void
+    public function testInsertNamedCreatesAThemeRow(): void
     {
         $this->repo->insertNamed(ExtensionType::Theme, 'test-theme', '2.0.0', 'Test Theme');
 
@@ -127,7 +127,7 @@ final class ExtensionRepositoryTest extends IntegrationTestCase
         }
     }
 
-    public function test_update_plugin_state_changes_the_column(): void
+    public function testUpdatePluginStateChangesTheColumn(): void
     {
         $this->repo->insertPlugin('test-plugin-state', '1.0.0');
 
@@ -142,7 +142,7 @@ final class ExtensionRepositoryTest extends IntegrationTestCase
         }
     }
 
-    public function test_update_version_changes_the_column(): void
+    public function testUpdateVersionChangesTheColumn(): void
     {
         $this->repo->insertNamed(ExtensionType::Theme, 'test-theme-version', '1.0.0', 'T');
 
@@ -157,7 +157,7 @@ final class ExtensionRepositoryTest extends IntegrationTestCase
         }
     }
 
-    public function test_count_matches_the_number_of_rows(): void
+    public function testCountMatchesTheNumberOfRows(): void
     {
         self::assertSame(1, $this->repo->count(ExtensionType::Language));
 
@@ -169,7 +169,7 @@ final class ExtensionRepositoryTest extends IntegrationTestCase
         }
     }
 
-    public function test_find_any_theme_id_excluding_returns_another_theme(): void
+    public function testFindAnyThemeIdExcludingReturnsAnotherTheme(): void
     {
         $this->repo->insertNamed(ExtensionType::Theme, 'test-theme-a', '1.0', 'A');
         $this->repo->insertNamed(ExtensionType::Theme, 'test-theme-b', '1.0', 'B');
@@ -183,12 +183,12 @@ final class ExtensionRepositoryTest extends IntegrationTestCase
         }
     }
 
-    public function test_find_any_theme_id_excluding_returns_null_when_none_other_exists(): void
+    public function testFindAnyThemeIdExcludingReturnsNullWhenNoneOtherExists(): void
     {
         self::assertNull($this->repo->findAnyThemeIdExcluding('default'));
     }
 
-    public function test_find_user_ids_by_theme_returns_users_on_that_theme(): void
+    public function testFindUserIdsByThemeReturnsUsersOnThatTheme(): void
     {
         // fixture: all 4 users default to theme 'default' (AppInfo::DEFAULT_TEMPLATE)
         $ids = $this->repo->findUserIdsByTheme('default');
@@ -211,12 +211,12 @@ final class ExtensionRepositoryTest extends IntegrationTestCase
     // not a real runtime state reachable through this method's own
     // inputs.
 
-    public function test_find_user_ids_by_theme_returns_empty_for_an_unused_theme(): void
+    public function testFindUserIdsByThemeReturnsEmptyForAnUnusedTheme(): void
     {
         self::assertSame([], $this->repo->findUserIdsByTheme('no-such-theme'));
     }
 
-    public function test_set_theme_for_users_updates_only_the_given_users(): void
+    public function testSetThemeForUsersUpdatesOnlyTheGivenUsers(): void
     {
         try {
             $this->repo->setThemeForUsers('elegant', ['3']);
@@ -228,14 +228,14 @@ final class ExtensionRepositoryTest extends IntegrationTestCase
         }
     }
 
-    public function test_set_theme_for_users_is_a_no_op_for_empty_ids(): void
+    public function testSetThemeForUsersIsANoOpForEmptyIds(): void
     {
         $this->repo->setThemeForUsers('elegant', []);
 
         self::assertSame('default', $this->fetchUserInfoColumn(1, 'theme'));
     }
 
-    public function test_reassign_users_from_language_updates_matching_rows(): void
+    public function testReassignUsersFromLanguageUpdatesMatchingRows(): void
     {
         try {
             $this->repo->reassignUsersFromLanguage('en_UK', 'fr_FR');
@@ -247,7 +247,7 @@ final class ExtensionRepositoryTest extends IntegrationTestCase
         }
     }
 
-    public function test_set_language_for_user_ids_updates_only_the_given_users(): void
+    public function testSetLanguageForUserIdsUpdatesOnlyTheGivenUsers(): void
     {
         try {
             $this->repo->setLanguageForUserIds('fr_FR', 1, 2);

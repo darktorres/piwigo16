@@ -2,19 +2,20 @@
 
 declare(strict_types=1);
 
-use Psr\Http\Message\RequestInterface;
-use Psr\Http\Message\ResponseInterface;
-use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Nyholm\Psr7\Factory\Psr17Factory;
 use Piwigo\Http\HttpClientNetworkException;
 use Piwigo\Http\HttpClientService;
 use Piwigo\Http\HttpClientSsrfException;
+use Piwigo\Tests\Support\CurrentConfigTestFactory;
+use Psr\Http\Message\RequestInterface;
+use Psr\Http\Message\ResponseInterface;
 use Symfony\Component\HttpClient\MockHttpClient;
 use Symfony\Component\HttpClient\Response\MockResponse;
 
 function makeHttpRequest(string $method, string $uri): RequestInterface
 {
-    return new Psr17Factory()->createRequest($method, $uri);
+    return new Psr17Factory()
+        ->createRequest($method, $uri);
 }
 
 /**
@@ -32,7 +33,11 @@ function makeHttpRequest(string $method, string $uri): RequestInterface
  */
 function httpClientServiceTestStartLocalServer(string $docRoot, bool $useRouter = false): array
 {
-    $descriptors = [0 => ['pipe', 'r'], 1 => ['pipe', 'w'], 2 => ['pipe', 'w']];
+    $descriptors = [
+        0 => ['pipe', 'r'],
+        1 => ['pipe', 'w'],
+        2 => ['pipe', 'w'],
+    ];
 
     for ($attempt = 0; $attempt < 5; $attempt++) {
         $port = random_int(20_000, 60_000);
@@ -94,7 +99,8 @@ test('sendRequest rejects a non-https scheme before contacting the transport', f
 
     expect(fn (): ResponseInterface => $service->sendRequest(makeHttpRequest('GET', 'http://example.test/')))
         ->toThrow(HttpClientSsrfException::class, 'Only https:// URLs are allowed: http://example.test/');
-    expect($calls)->toBe(0);
+    expect($calls)
+        ->toBe(0);
 });
 
 test('sendRequest rejects a malformed URL missing scheme/host, with the URL embedded in the message', function (): void {
@@ -116,7 +122,9 @@ test('sendRequest rejects a URL that parse_url() itself cannot parse at all, rea
     // branch on the NEXT loop iteration. Confirmed live.
     $client = new MockHttpClient(new MockResponse('', [
         'http_code' => 302,
-        'response_headers' => ['Location' => 'https:///'],
+        'response_headers' => [
+            'Location' => 'https:///',
+        ],
     ]));
     $service = new HttpClientService($client);
 
@@ -158,22 +166,29 @@ test('sendRequest allows a genuine hostname that resolves to a public IP', funct
     // validation and wrongly throws an SSRF exception. Real DNS lookup
     // only (confirmed working in this sandbox); MockHttpClient
     // intercepts the actual HTTP request, no real internet needed.
-    $client = new MockHttpClient(new MockResponse('hello', ['http_code' => 200]));
+    $client = new MockHttpClient(new MockResponse('hello', [
+        'http_code' => 200,
+    ]));
     $service = new HttpClientService($client);
 
     $response = $service->sendRequest(makeHttpRequest('GET', 'https://example.com/'));
 
-    expect($response->getStatusCode())->toBe(200);
+    expect($response->getStatusCode())
+        ->toBe(200);
 });
 
 test('sendRequest allows a public IP host and returns the response body', function (): void {
-    $client = new MockHttpClient(new MockResponse('hello world', ['http_code' => 200]));
+    $client = new MockHttpClient(new MockResponse('hello world', [
+        'http_code' => 200,
+    ]));
     $service = new HttpClientService($client);
 
     $response = $service->sendRequest(makeHttpRequest('GET', 'https://93.184.216.34/ok'));
 
-    expect($response->getStatusCode())->toBe(200)
-        ->and((string) $response->getBody())->toBe('hello world');
+    expect($response->getStatusCode())
+        ->toBe(200)
+        ->and((string) $response->getBody())
+        ->toBe('hello world');
 });
 
 test('sendRequest forwards every response header, including multiple values for the same header, onto the PSR-7 response', function (): void {
@@ -191,14 +206,18 @@ test('sendRequest forwards every response header, including multiple values for 
 
     $response = $service->sendRequest(makeHttpRequest('GET', 'https://93.184.216.34/headers'));
 
-    expect($response->getHeaderLine('X-Single'))->toBe('one')
-        ->and($response->getHeader('X-Multi'))->toBe(['a', 'b']);
+    expect($response->getHeaderLine('X-Single'))
+        ->toBe('one')
+        ->and($response->getHeader('X-Multi'))
+        ->toBe(['a', 'b']);
 });
 
 test('sendRequest throws when a redirect target is a private IP', function (): void {
     $client = new MockHttpClient(new MockResponse('', [
         'http_code' => 302,
-        'response_headers' => ['Location' => 'https://127.0.0.1/internal'],
+        'response_headers' => [
+            'Location' => 'https://127.0.0.1/internal',
+        ],
     ]));
     $service = new HttpClientService($client);
 
@@ -210,16 +229,22 @@ test('sendRequest follows a redirect chain of safe targets to completion', funct
     $client = new MockHttpClient([
         new MockResponse('', [
             'http_code' => 302,
-            'response_headers' => ['Location' => 'https://93.184.216.35/step2'],
+            'response_headers' => [
+                'Location' => 'https://93.184.216.35/step2',
+            ],
         ]),
-        new MockResponse('done', ['http_code' => 200]),
+        new MockResponse('done', [
+            'http_code' => 200,
+        ]),
     ]);
     $service = new HttpClientService($client);
 
     $response = $service->sendRequest(makeHttpRequest('GET', 'https://93.184.216.34/start'));
 
-    expect($response->getStatusCode())->toBe(200)
-        ->and((string) $response->getBody())->toBe('done');
+    expect($response->getStatusCode())
+        ->toBe(200)
+        ->and((string) $response->getBody())
+        ->toBe('done');
 });
 
 test('sendRequest downgrades POST to GET on a 302 redirect and drops the body, headers, and forces max_redirects to 0 on every hop', function (): void {
@@ -238,11 +263,15 @@ test('sendRequest downgrades POST to GET on a 302 redirect and drops the body, h
         if (count($seen) === 1) {
             return new MockResponse('', [
                 'http_code' => 302,
-                'response_headers' => ['Location' => 'https://93.184.216.35/step2'],
+                'response_headers' => [
+                    'Location' => 'https://93.184.216.35/step2',
+                ],
             ]);
         }
 
-        return new MockResponse('done', ['http_code' => 200]);
+        return new MockResponse('done', [
+            'http_code' => 200,
+        ]);
     });
     $service = new HttpClientService($client);
 
@@ -253,15 +282,18 @@ test('sendRequest downgrades POST to GET on a 302 redirect and drops the body, h
 
     $service->sendRequest($request);
 
-    expect($seen)->toHaveCount(2);
+    expect($seen)
+        ->toHaveCount(2);
     [$firstMethod, , $firstOptions] = $seen[0];
     [$secondMethod, , $secondOptions] = $seen[1];
 
-    expect($firstMethod)->toBe('POST')
+    expect($firstMethod)
+        ->toBe('POST')
         ->and($firstOptions['body'] ?? null)->toBe('a=1')
         ->and($firstOptions['headers'] ?? [])->toContain('X-Multi: a, b')
         ->and($firstOptions['max_redirects'] ?? null)->toBe(0);
-    expect($secondMethod)->toBe('GET')
+    expect($secondMethod)
+        ->toBe('GET')
         ->and($secondOptions['body'] ?? null)->toBe('')
         ->and($secondOptions['max_redirects'] ?? null)->toBe(0);
 });
@@ -282,14 +314,17 @@ test('sendRequest makes exactly MAX_REDIRECTS + 1 requests before giving up on a
 
         return new MockResponse('', [
             'http_code' => 302,
-            'response_headers' => ['Location' => 'https://93.184.216.34/loop'],
+            'response_headers' => [
+                'Location' => 'https://93.184.216.34/loop',
+            ],
         ]);
     });
     $service = new HttpClientService($client);
 
     $service->sendRequest(makeHttpRequest('GET', 'https://93.184.216.34/loop'));
 
-    expect($count)->toBe(6);
+    expect($count)
+        ->toBe(6);
 });
 
 test('sendRequest preserves method and body on a 307 redirect', function (): void {
@@ -299,34 +334,44 @@ test('sendRequest preserves method and body on a 307 redirect', function (): voi
         if (count($seenMethods) === 1) {
             return new MockResponse('', [
                 'http_code' => 307,
-                'response_headers' => ['Location' => 'https://93.184.216.35/step2'],
+                'response_headers' => [
+                    'Location' => 'https://93.184.216.35/step2',
+                ],
             ]);
         }
 
-        return new MockResponse('done', ['http_code' => 200]);
+        return new MockResponse('done', [
+            'http_code' => 200,
+        ]);
     });
     $service = new HttpClientService($client);
 
     $request = makeHttpRequest('POST', 'https://93.184.216.34/start');
     $service->sendRequest($request);
 
-    expect($seenMethods)->toBe(['POST', 'POST']);
+    expect($seenMethods)
+        ->toBe(['POST', 'POST']);
 });
 
 test('sendRequest gives up after the max redirect count and returns the last redirect response', function (): void {
     $client = new MockHttpClient(fn (): MockResponse => new MockResponse('', [
         'http_code' => 302,
-        'response_headers' => ['Location' => 'https://93.184.216.34/loop'],
+        'response_headers' => [
+            'Location' => 'https://93.184.216.34/loop',
+        ],
     ]));
     $service = new HttpClientService($client);
 
     $response = $service->sendRequest(makeHttpRequest('GET', 'https://93.184.216.34/loop'));
 
-    expect($response->getStatusCode())->toBe(302);
+    expect($response->getStatusCode())
+        ->toBe(302);
 });
 
 test('sendRequest wraps a transport failure as HttpClientNetworkException', function (): void {
-    $client = new MockHttpClient(new MockResponse('', ['error' => 'Connection refused']));
+    $client = new MockHttpClient(new MockResponse('', [
+        'error' => 'Connection refused',
+    ]));
     $service = new HttpClientService($client);
 
     expect(fn (): ResponseInterface => $service->sendRequest(makeHttpRequest('GET', 'https://93.184.216.34/down')))
@@ -343,15 +388,22 @@ test('requestRaw returns Symfony\'s own response type, applies the same SSRF gua
     $client = new MockHttpClient(function (string $method, string $url, array $options) use (&$seenHeaders): MockResponse {
         $seenHeaders = $options['headers'] ?? [];
 
-        return new MockResponse('raw body', ['http_code' => 200]);
+        return new MockResponse('raw body', [
+            'http_code' => 200,
+        ]);
     });
     $service = new HttpClientService($client);
 
-    $response = $service->requestRaw('GET', 'https://93.184.216.34/raw', ['User-Agent' => 'Piwigo'], '');
+    $response = $service->requestRaw('GET', 'https://93.184.216.34/raw', [
+        'User-Agent' => 'Piwigo',
+    ], '');
 
-    expect($response->getStatusCode())->toBe(200)
-        ->and($response->getContent(false))->toBe('raw body')
-        ->and($seenHeaders)->toContain('User-Agent: Piwigo');
+    expect($response->getStatusCode())
+        ->toBe(200)
+        ->and($response->getContent(false))
+        ->toBe('raw body')
+        ->and($seenHeaders)
+        ->toContain('User-Agent: Piwigo');
 });
 
 test('requestRaw rejects a private IP host', function (): void {
@@ -366,32 +418,43 @@ test('requestRaw forwards extra Symfony options such as timeout to the transport
     $client = new MockHttpClient(function (string $method, string $url, array $options) use (&$seenOptions): MockResponse {
         $seenOptions = $options;
 
-        return new MockResponse('ok', ['http_code' => 200]);
+        return new MockResponse('ok', [
+            'http_code' => 200,
+        ]);
     });
     $service = new HttpClientService($client);
 
-    $service->requestRaw('GET', 'https://93.184.216.34/raw', [], '', ['timeout' => 5]);
+    $service->requestRaw('GET', 'https://93.184.216.34/raw', [], '', [
+        'timeout' => 5,
+    ]);
 
     expect($seenOptions['timeout'] ?? null)->toBe(5.0);
 });
 
 test('requestRaw exempts a trustedSelfHost from both the https-only and private-IP checks', function (): void {
-    $client = new MockHttpClient(new MockResponse('self', ['http_code' => 200]));
+    $client = new MockHttpClient(new MockResponse('self', [
+        'http_code' => 200,
+    ]));
     $service = new HttpClientService($client, trustedSelfHost: 'localhost');
 
     $response = $service->requestRaw('GET', 'http://localhost/i.php?x=1', [], '');
 
-    expect($response->getStatusCode())->toBe(200)
-        ->and($response->getContent(false))->toBe('self');
+    expect($response->getStatusCode())
+        ->toBe(200)
+        ->and($response->getContent(false))
+        ->toBe('self');
 });
 
 test('requestRaw honors a trustedSelfHost that includes a non-standard port', function (): void {
-    $client = new MockHttpClient(new MockResponse('self', ['http_code' => 200]));
+    $client = new MockHttpClient(new MockResponse('self', [
+        'http_code' => 200,
+    ]));
     $service = new HttpClientService($client, trustedSelfHost: 'localhost:8080');
 
     $response = $service->requestRaw('GET', 'http://localhost:8080/i.php?x=1', [], '');
 
-    expect($response->getStatusCode())->toBe(200);
+    expect($response->getStatusCode())
+        ->toBe(200);
 });
 
 test('requestRaw still guards a different host even when a trustedSelfHost is set', function (): void {
@@ -441,7 +504,8 @@ test('fetch() returns the real response body through a genuine self-request roun
     try {
         $result = HttpClientService::fetch('http://127.0.0.1:' . $port . '/probe.php', CurrentConfigTestFactory::get());
 
-        expect($result)->toBe('real-local-fetch-body');
+        expect($result)
+            ->toBe('real-local-fetch-body');
     } finally {
         if ($originalHost === null) {
             unset($_SERVER['HTTP_HOST']);
@@ -484,38 +548,57 @@ test('fetch() builds the GET query string, POST body/Content-Type, and User-Agen
 
     try {
         // GET with query data appended via '?' (no existing query string).
-        $getResult = HttpClientService::fetch($base, CurrentConfigTestFactory::get(), ['a' => '1', 'b' => '2'], [], 'CustomAgent/1.0');
-        expect($getResult)->toBeString();
+        $getResult = HttpClientService::fetch($base, CurrentConfigTestFactory::get(), [
+            'a' => '1',
+            'b' => '2',
+        ], [], 'CustomAgent/1.0');
+        expect($getResult)
+            ->toBeString();
         assert(is_string($getResult));
         $getDecoded = json_decode($getResult, true);
-        expect($getDecoded)->toBe([
-            'method' => 'GET',
-            'get' => ['a' => '1', 'b' => '2'],
-            'contentType' => null,
-            'body' => '',
-            'userAgent' => 'CustomAgent/1.0',
-        ]);
+        expect($getDecoded)
+            ->toBe([
+                'method' => 'GET',
+                'get' => [
+                    'a' => '1',
+                    'b' => '2',
+                ],
+                'contentType' => null,
+                'body' => '',
+                'userAgent' => 'CustomAgent/1.0',
+            ]);
 
         // GET with query data appended via '&' (URL already has a '?').
-        $ampResult = HttpClientService::fetch($base . '?existing=1', CurrentConfigTestFactory::get(), ['a' => '1'], [], 'CustomAgent/1.0');
-        expect($ampResult)->toBeString();
+        $ampResult = HttpClientService::fetch($base . '?existing=1', CurrentConfigTestFactory::get(), [
+            'a' => '1',
+        ], [], 'CustomAgent/1.0');
+        expect($ampResult)
+            ->toBeString();
         assert(is_string($ampResult));
         $ampDecoded = json_decode($ampResult, true);
         assert(is_array($ampDecoded));
-        expect($ampDecoded['get'] ?? null)->toBe(['existing' => '1', 'a' => '1']);
+        expect($ampDecoded['get'] ?? null)->toBe([
+            'existing' => '1',
+            'a' => '1',
+        ]);
 
         // POST with form-encoded body and Content-Type.
-        $postResult = HttpClientService::fetch($base, CurrentConfigTestFactory::get(), [], ['x' => 'y', 'z' => 'w'], 'CustomAgent/1.0');
-        expect($postResult)->toBeString();
+        $postResult = HttpClientService::fetch($base, CurrentConfigTestFactory::get(), [], [
+            'x' => 'y',
+            'z' => 'w',
+        ], 'CustomAgent/1.0');
+        expect($postResult)
+            ->toBeString();
         assert(is_string($postResult));
         $postDecoded = json_decode($postResult, true);
-        expect($postDecoded)->toBe([
-            'method' => 'POST',
-            'get' => [],
-            'contentType' => 'application/x-www-form-urlencoded',
-            'body' => 'x=y&z=w',
-            'userAgent' => 'CustomAgent/1.0',
-        ]);
+        expect($postDecoded)
+            ->toBe([
+                'method' => 'POST',
+                'get' => [],
+                'contentType' => 'application/x-www-form-urlencoded',
+                'body' => 'x=y&z=w',
+                'userAgent' => 'CustomAgent/1.0',
+            ]);
 
         // NOT closable: lines 174/225's EmptyStringToNotEmpty on
         // http_build_query()'s own numeric_prefix argument only matters
@@ -574,7 +657,8 @@ test('fetch() forwards the X-Piwigo-Env test-mode header on a genuine self-reque
     try {
         $result = HttpClientService::fetch('http://127.0.0.1:' . $port . '/echo.php', CurrentConfigTestFactory::get());
 
-        expect($result)->toBeString();
+        expect($result)
+            ->toBeString();
         assert(is_string($result));
         $decoded = json_decode($result, true);
         assert(is_array($decoded));
@@ -641,15 +725,18 @@ test('fetchToFile() writes the real self-requested response body into the given 
     $_SERVER['HTTP_HOST'] = '127.0.0.1:' . $port;
     $destPath = sys_get_temp_dir() . '/pwg-httpclient-test-dest-' . bin2hex(random_bytes(8));
     $handle = fopen($destPath, 'wb');
-    expect($handle)->not->toBeFalse();
+    expect($handle)
+        ->not->toBeFalse();
 
     try {
         if ($handle !== false) {
             $ok = HttpClientService::fetchToFile($handle, 'http://127.0.0.1:' . $port . '/probe.php', CurrentConfigTestFactory::get());
             fclose($handle);
 
-            expect($ok)->toBeTrue();
-            expect(file_get_contents($destPath))->toBe('real-local-file-body');
+            expect($ok)
+                ->toBeTrue();
+            expect(file_get_contents($destPath))
+                ->toBe('real-local-file-body');
         }
     } finally {
         if ($originalHost === null) {
@@ -684,7 +771,8 @@ test('fetch() propagates real content instead of throwing when guardedFetch() re
     try {
         $result = HttpClientService::fetch('http://127.0.0.1:' . $port . '/loop.php', CurrentConfigTestFactory::get());
 
-        expect($result)->toBe('');
+        expect($result)
+            ->toBe('');
     } finally {
         if ($originalHost === null) {
             unset($_SERVER['HTTP_HOST']);
@@ -711,15 +799,18 @@ test('fetchToFile() writes real content instead of throwing when guardedFetch() 
     $_SERVER['HTTP_HOST'] = '127.0.0.1:' . $port;
     $destPath = sys_get_temp_dir() . '/pwg-httpclient-test-dest-' . bin2hex(random_bytes(8));
     $handle = fopen($destPath, 'wb');
-    expect($handle)->not->toBeFalse();
+    expect($handle)
+        ->not->toBeFalse();
 
     try {
         if ($handle !== false) {
             $ok = HttpClientService::fetchToFile($handle, 'http://127.0.0.1:' . $port . '/loop.php', CurrentConfigTestFactory::get());
             fclose($handle);
 
-            expect($ok)->toBeTrue();
-            expect(file_get_contents($destPath))->toBe('');
+            expect($ok)
+                ->toBeTrue();
+            expect(file_get_contents($destPath))
+                ->toBe('');
         }
     } finally {
         if ($originalHost === null) {
@@ -742,13 +833,15 @@ test('fetchToFile() returns false instead of crashing when guardedFetch() return
     // $response->getContent() on null -- a fatal error, not the clean
     // `false` its own fire-and-forget contract requires.
     $handle = fopen(sys_get_temp_dir() . '/pwg-httpclient-nohost-' . bin2hex(random_bytes(4)), 'wb');
-    expect($handle)->not->toBeFalse();
+    expect($handle)
+        ->not->toBeFalse();
 
     try {
         if ($handle !== false) {
             $result = HttpClientService::fetchToFile($handle, 'http:///i.php', CurrentConfigTestFactory::get());
 
-            expect($result)->toBeFalse();
+            expect($result)
+                ->toBeFalse();
         }
     } finally {
         if ($handle !== false) {
@@ -778,14 +871,16 @@ test('fetchToFile() returns false, not true, when the write to the given handle 
     file_put_contents($path, '');
     chmod($path, 0o444);
     $handle = fopen($path, 'rb');
-    expect($handle)->not->toBeFalse();
+    expect($handle)
+        ->not->toBeFalse();
 
     set_error_handler(static fn (): bool => true, \E_WARNING);
     try {
         if ($handle !== false) {
             $result = HttpClientService::fetchToFile($handle, 'http://127.0.0.1:' . $port . '/probe.php', CurrentConfigTestFactory::get());
 
-            expect($result)->toBeFalse();
+            expect($result)
+                ->toBeFalse();
         }
     } finally {
         restore_error_handler();
@@ -848,7 +943,8 @@ test('guardedFetch() actually routes through the configured proxy and embeds Bas
     try {
         $result = HttpClientService::fetch('http://my-self-host.test/i.php?x=1', CurrentConfigTestFactory::get());
 
-        expect($result)->toBeString();
+        expect($result)
+            ->toBeString();
         assert(is_string($result));
         $decoded = json_decode($result, true);
         assert(is_array($decoded));
@@ -893,7 +989,8 @@ test('guardedFetch() does not route through the proxy at all when useProxy is fa
     try {
         $result = HttpClientService::fetch('http://127.0.0.1:' . $targetPort . '/direct.php', CurrentConfigTestFactory::get());
 
-        expect($result)->toBe('direct-hit');
+        expect($result)
+            ->toBe('direct-hit');
     } finally {
         if ($originalHost === null) {
             unset($_SERVER['HTTP_HOST']);
@@ -935,7 +1032,8 @@ test('guardedFetch() does not embed Basic-auth credentials into the proxy URL wh
     try {
         $result = HttpClientService::fetch('http://127.0.0.1:' . $targetPort . '/direct.php', CurrentConfigTestFactory::get());
 
-        expect($result)->toBeString();
+        expect($result)
+            ->toBeString();
         assert(is_string($result));
         $decoded = json_decode($result, true);
         assert(is_array($decoded));
@@ -956,24 +1054,30 @@ test('guardedFetch() does not embed Basic-auth credentials into the proxy URL wh
 });
 
 test('guardedRequest returns the redirect response as-is when the Location header is entirely absent', function (): void {
-    $client = new MockHttpClient(new MockResponse('', ['http_code' => 302]));
+    $client = new MockHttpClient(new MockResponse('', [
+        'http_code' => 302,
+    ]));
     $service = new HttpClientService($client);
 
     $response = $service->sendRequest(makeHttpRequest('GET', 'https://93.184.216.34/no-location-header'));
 
-    expect($response->getStatusCode())->toBe(302);
+    expect($response->getStatusCode())
+        ->toBe(302);
 });
 
 test('guardedRequest returns the redirect response as-is when the Location header is an empty string', function (): void {
     $client = new MockHttpClient(new MockResponse('', [
         'http_code' => 302,
-        'response_headers' => ['Location' => ''],
+        'response_headers' => [
+            'Location' => '',
+        ],
     ]));
     $service = new HttpClientService($client);
 
     $response = $service->sendRequest(makeHttpRequest('GET', 'https://93.184.216.34/empty-location-header'));
 
-    expect($response->getStatusCode())->toBe(302);
+    expect($response->getStatusCode())
+        ->toBe(302);
 });
 
 test('resolveRedirectTarget resolves a root-relative Location against the scheme+host+port of the current URI', function (): void {
@@ -982,18 +1086,27 @@ test('resolveRedirectTarget resolves a root-relative Location against the scheme
         $seenUrls[] = $url;
 
         return count($seenUrls) === 1
-            ? new MockResponse('', ['http_code' => 302, 'response_headers' => ['Location' => '/other-page']])
-            : new MockResponse('landed-root-relative', ['http_code' => 200]);
+            ? new MockResponse('', [
+                'http_code' => 302,
+                'response_headers' => [
+                    'Location' => '/other-page',
+                ],
+            ])
+            : new MockResponse('landed-root-relative', [
+                'http_code' => 200,
+            ]);
     });
     $service = new HttpClientService($client);
 
     $response = $service->sendRequest(makeHttpRequest('GET', 'https://93.184.216.34:8443/start'));
 
-    expect($seenUrls)->toBe([
-        'https://93.184.216.34:8443/start',
-        'https://93.184.216.34:8443/other-page',
-    ])
-        ->and((string) $response->getBody())->toBe('landed-root-relative');
+    expect($seenUrls)
+        ->toBe([
+            'https://93.184.216.34:8443/start',
+            'https://93.184.216.34:8443/other-page',
+        ])
+        ->and((string) $response->getBody())
+        ->toBe('landed-root-relative');
 });
 
 test('resolveRedirectTarget resolves a bare relative Location against the current URIs own directory', function (): void {
@@ -1002,18 +1115,27 @@ test('resolveRedirectTarget resolves a bare relative Location against the curren
         $seenUrls[] = $url;
 
         return count($seenUrls) === 1
-            ? new MockResponse('', ['http_code' => 302, 'response_headers' => ['Location' => 'step2']])
-            : new MockResponse('landed-bare-relative', ['http_code' => 200]);
+            ? new MockResponse('', [
+                'http_code' => 302,
+                'response_headers' => [
+                    'Location' => 'step2',
+                ],
+            ])
+            : new MockResponse('landed-bare-relative', [
+                'http_code' => 200,
+            ]);
     });
     $service = new HttpClientService($client);
 
     $response = $service->sendRequest(makeHttpRequest('GET', 'https://93.184.216.34/album/start'));
 
-    expect($seenUrls)->toBe([
-        'https://93.184.216.34/album/start',
-        'https://93.184.216.34/album/step2',
-    ])
-        ->and((string) $response->getBody())->toBe('landed-bare-relative');
+    expect($seenUrls)
+        ->toBe([
+            'https://93.184.216.34/album/start',
+            'https://93.184.216.34/album/step2',
+        ])
+        ->and((string) $response->getBody())
+        ->toBe('landed-bare-relative');
 });
 
 test('fetch returns false instead of throwing when the url has no host segment', function (): void {

@@ -8,17 +8,25 @@ use Piwigo\Validation\InputValidator;
 test('fromArray reports not submitted and empty defaults for an empty POST', function (): void {
     $request = AlbumNotificationSubmitRequest::fromArray([], new InputValidator());
 
-    expect($request->isSubmitted)->toBeFalse()
-        ->and($request->mailContent)->toBe('')
-        ->and($request->who)->toBeNull()
-        ->and($request->users)->toBe([])
-        ->and($request->group)->toBeNull();
+    expect($request->isSubmitted)
+        ->toBeFalse()
+        ->and($request->mailContent)
+        ->toBe('')
+        ->and($request->who)
+        ->toBeNull()
+        ->and($request->users)
+        ->toBe([])
+        ->and($request->group)
+        ->toBeNull();
 });
 
 test('fromArray reports submitted when submitEmail is present', function (): void {
-    $request = AlbumNotificationSubmitRequest::fromArray(['submitEmail' => '1'], new InputValidator());
+    $request = AlbumNotificationSubmitRequest::fromArray([
+        'submitEmail' => '1',
+    ], new InputValidator());
 
-    expect($request->isSubmitted)->toBeTrue();
+    expect($request->isSubmitted)
+        ->toBeTrue();
 });
 
 test('fromArray parses users when who is users and users is non-empty', function (): void {
@@ -27,8 +35,10 @@ test('fromArray parses users when who is users and users is non-empty', function
         'users' => ['1', '2'],
     ], new InputValidator());
 
-    expect($request->who)->toBe('users')
-        ->and($request->users)->toBe(['1', '2']);
+    expect($request->who)
+        ->toBe('users')
+        ->and($request->users)
+        ->toBe(['1', '2']);
 });
 
 test('fromArray rejects a non-digit user id when who is users', function (): void {
@@ -44,7 +54,8 @@ test('fromArray skips users validation when who is not users', function (): void
         'users' => ['1; DROP TABLE'],
     ], new InputValidator());
 
-    expect($request->users)->toBe([]);
+    expect($request->users)
+        ->toBe([]);
 });
 
 test('fromArray passes group through when who is group', function (): void {
@@ -53,7 +64,8 @@ test('fromArray passes group through when who is group', function (): void {
         'group' => '7',
     ], new InputValidator());
 
-    expect($request->group)->toBe('7');
+    expect($request->group)
+        ->toBe('7');
 });
 
 test('fromArray rejects a non-digit group when who is group and group is not empty', function (): void {
@@ -69,19 +81,26 @@ test('fromArray skips group validation when group is an empty sentinel value', f
         'group' => '',
     ], new InputValidator());
 
-    expect($request->group)->toBe('');
+    expect($request->group)
+        ->toBe('');
 });
 
 test('fromArray normalizes a non-string mail_content to an empty string', function (): void {
-    $request = AlbumNotificationSubmitRequest::fromArray(['mail_content' => ['x']], new InputValidator());
+    $request = AlbumNotificationSubmitRequest::fromArray([
+        'mail_content' => ['x'],
+    ], new InputValidator());
 
-    expect($request->mailContent)->toBe('');
+    expect($request->mailContent)
+        ->toBe('');
 });
 
 test('fromArray passes a real string mail_content through unchanged', function (): void {
-    $request = AlbumNotificationSubmitRequest::fromArray(['mail_content' => 'Hello there'], new InputValidator());
+    $request = AlbumNotificationSubmitRequest::fromArray([
+        'mail_content' => 'Hello there',
+    ], new InputValidator());
 
-    expect($request->mailContent)->toBe('Hello there');
+    expect($request->mailContent)
+        ->toBe('Hello there');
 });
 
 test('fromArray never validates group when who is not group, even for an invalid group value', function (): void {
@@ -93,5 +112,6 @@ test('fromArray never validates group when who is not group, even for an invalid
         'group' => 'not-a-number',
     ], new InputValidator());
 
-    expect($request->group)->toBe('not-a-number');
+    expect($request->group)
+        ->toBe('not-a-number');
 });

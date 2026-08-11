@@ -4,14 +4,9 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Unit\Image;
 
-use Piwigo\Tests\Support\EventDispatcherTestFactory;
 use Error;
 use Exception;
 use Piwigo\Config\CurrentConfig;
-use Piwigo\Image\WatermarkParams;
-use Piwigo\PluginConfig\EventDispatcher;
-use Piwigo\Tests\Support\CurrentConfigTestFactory;
-use Piwigo\Tests\Support\CurrentPathsTestFactory;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Paths;
 use Piwigo\Core\UrlServiceInterface;
@@ -19,9 +14,14 @@ use Piwigo\Image\DerivativeImage;
 use Piwigo\Image\DerivativeParams;
 use Piwigo\Image\Event\GetDerivativeUrl;
 use Piwigo\Image\ImageStdParams;
-use Piwigo\Tests\Support\ImageStdParamsTestFactory;
 use Piwigo\Image\SizingParams;
 use Piwigo\Image\SrcImage;
+use Piwigo\Image\WatermarkParams;
+use Piwigo\PluginConfig\EventDispatcher;
+use Piwigo\Tests\Support\CurrentConfigTestFactory;
+use Piwigo\Tests\Support\CurrentPathsTestFactory;
+use Piwigo\Tests\Support\EventDispatcherTestFactory;
+use Piwigo\Tests\Support\ImageStdParamsTestFactory;
 use Piwigo\Tests\Support\KernelContainerOverride;
 use ReflectionMethod;
 use ReflectionProperty;
@@ -375,7 +375,8 @@ test('url() computes the derivative url via a real build() call, prefixed by the
 
         $url = DerivativeImage::url(new DerivativeParams(SizingParams::classic(80, 60)), $src);
 
-        expect($url)->toBe('/gallery/i.php?/gallery/photo-cu_80x60_a.jpg');
+        expect($url)
+            ->toBe('/gallery/i.php?/gallery/photo-cu_80x60_a.jpg');
     });
 });
 
@@ -423,7 +424,8 @@ test('get_all() coerces a plain info array into a SrcImage and keys the result b
             'file' => 'photo.jpg',
         ]);
 
-        expect(array_keys($all))->toBe(['square']);
+        expect(array_keys($all))
+            ->toBe(['square']);
         expect($all['square']->src_image->id)->toBe(7);
         expect($all['square']->src_image->rel_path)->toBe('upload/2026/07/photo.jpg');
     } finally {
@@ -457,7 +459,8 @@ test('get_all() maps a disabled type to the SAME instance as its fallback enable
             'file' => 'photo.jpg',
         ]);
 
-        expect(array_keys($all))->toBe(['square', 'thumb']);
+        expect(array_keys($all))
+            ->toBe(['square', 'thumb']);
         expect($all['thumb'])->toBe($all['square']);
     } finally {
         derivativeImageTestRestoreStdParams($snapshot);
@@ -487,7 +490,8 @@ test('get_one() falls back to the mapped enabled type for a disabled type, and r
         if (! $fallback instanceof DerivativeImage) {
             throw new RuntimeException('expected a real DerivativeImage instance');
         }
-        expect($fallback->get_type())->toBe('square');
+        expect($fallback->get_type())
+            ->toBe('square');
 
         expect(DerivativeImage::get_one('does-not-exist', $infos))->toBeNull();
     } finally {
@@ -509,7 +513,7 @@ test('build() throws when the source path has no extension', function (): void {
     // mimetype-icon branch rather than IS_ORIGINAL, a different scenario.
     $src->rel_path = 'upload/2026/07/photoNoExtension';
 
-    expect(fn () => new DerivativeImage(new DerivativeParams(SizingParams::classic(50, 50)), $src,CurrentConfigTestFactory::get()))
+    expect(fn () => new DerivativeImage(new DerivativeParams(SizingParams::classic(50, 50)), $src, CurrentConfigTestFactory::get()))
         ->toThrow(Exception::class, "DerivativeImage::build(): path 'upload/2026/07/photoNoExtension' has no extension");
 });
 
@@ -524,18 +528,20 @@ test('build() strips a leading "./" from the source location and appends the cus
         'file' => 'photo.jpg',
     ]);
 
-    $derivative = new DerivativeImage(new DerivativeParams(SizingParams::classic(120, 90)), $src,CurrentConfigTestFactory::get());
+    $derivative = new DerivativeImage(new DerivativeParams(SizingParams::classic(120, 90)), $src, CurrentConfigTestFactory::get());
 
     // SizingParams::classic()'s own int max_crop=0 default never
     // satisfies add_url_tokens()'s strict `=== 0.0` fast-path check (see
     // SizingParamsTest.php's own documented finding), so the token is the
     // general 2-token form ('120x90', fractionToChar(0)='a'), not the
     // 's120x90' shorthand.
-    expect($derivative->get_path())->toBe(CurrentPathsTestFactory::get()->root . '_data/i/gallery/photo-cu_120x90_a.jpg');
+    expect($derivative->get_path())
+        ->toBe(CurrentPathsTestFactory::get()->root . '_data/i/gallery/photo-cu_120x90_a.jpg');
     // No real cached file exists on disk at that path -- build()'s own
     // filemtime() check correctly falls back to the dynamic i.php?
     // URL style rather than a direct cached-file URL.
-    expect($derivative->get_url())->toBe('i.php?/gallery/photo-cu_120x90_a.jpg');
+    expect($derivative->get_url())
+        ->toBe('i.php?/gallery/photo-cu_120x90_a.jpg');
 });
 
 test('build() strips a leading "../" from the source location', function (): void {
@@ -547,12 +553,14 @@ test('build() strips a leading "../" from the source location', function (): voi
         'file' => 'photo.jpg',
     ]);
 
-    $derivative = new DerivativeImage(new DerivativeParams(SizingParams::classic(64, 64)), $src,CurrentConfigTestFactory::get());
+    $derivative = new DerivativeImage(new DerivativeParams(SizingParams::classic(64, 64)), $src, CurrentConfigTestFactory::get());
 
-    expect($derivative->get_path())->toBe(CurrentPathsTestFactory::get()->root . '_data/i/gallery/photo-cu_64_a.jpg');
+    expect($derivative->get_path())
+        ->toBe(CurrentPathsTestFactory::get()->root . '_data/i/gallery/photo-cu_64_a.jpg');
     // Same reasoning as the leading-"./" test above: no cached file on
     // disk means the dynamic i.php? URL style, not a direct cached URL.
-    expect($derivative->get_url())->toBe('i.php?/gallery/photo-cu_64_a.jpg');
+    expect($derivative->get_url())
+        ->toBe('i.php?/gallery/photo-cu_64_a.jpg');
 });
 
 test('build() searches the whole defined-type list without an out-of-bounds read when the current type is not found in it', function (): void {
@@ -606,13 +614,15 @@ test('build() searches the whole defined-type list without an out-of-bounds read
             return true;
         });
         try {
-            $derivative = new DerivativeImage($mysteryParams, $src,CurrentConfigTestFactory::get());
+            $derivative = new DerivativeImage($mysteryParams, $src, CurrentConfigTestFactory::get());
         } finally {
             restore_error_handler();
         }
 
-        expect($derivative->get_type())->toBe('mystery');
-        expect($warnings)->toBe([]);
+        expect($derivative->get_type())
+            ->toBe('mystery');
+        expect($warnings)
+            ->toBe([]);
     } finally {
         derivativeImageTestRestoreStdParams($snapshot);
         ImageStdParamsTestFactory::get()->set_watermark($originalWatermark);
@@ -660,10 +670,12 @@ test('build() uses the source image as-is, unrotated and unwatermarked, when it 
         'height' => 40,
     ]);
 
-    $derivative = new DerivativeImage(new DerivativeParams(SizingParams::classic(200, 200)), $src,CurrentConfigTestFactory::get());
+    $derivative = new DerivativeImage(new DerivativeParams(SizingParams::classic(200, 200)), $src, CurrentConfigTestFactory::get());
 
-    expect($derivative->same_as_source())->toBeTrue();
-    expect($derivative->get_path())->toBe(CurrentPathsTestFactory::get()->root . 'upload/2026/07/photo.jpg');
+    expect($derivative->same_as_source())
+        ->toBeTrue();
+    expect($derivative->get_path())
+        ->toBe(CurrentPathsTestFactory::get()->root . 'upload/2026/07/photo.jpg');
 });
 
 test('build() does not strip a leading "../" look-alike that is not actually followed by a slash', function (): void {
@@ -681,9 +693,10 @@ test('build() does not strip a leading "../" look-alike that is not actually fol
         'file' => 'photo.jpg',
     ]);
 
-    $derivative = new DerivativeImage(new DerivativeParams(SizingParams::classic(64, 64)), $src,CurrentConfigTestFactory::get());
+    $derivative = new DerivativeImage(new DerivativeParams(SizingParams::classic(64, 64)), $src, CurrentConfigTestFactory::get());
 
-    expect($derivative->get_path())->toBe(CurrentPathsTestFactory::get()->root . '_data/i/..2026/gallery/photo-cu_64_a.jpg');
+    expect($derivative->get_path())
+        ->toBe(CurrentPathsTestFactory::get()->root . '_data/i/..2026/gallery/photo-cu_64_a.jpg');
 });
 
 /**
@@ -731,8 +744,10 @@ test('build() treats a cached file as fresh when its mtime exactly equals last_m
 
         $derivative = new DerivativeImage($params, $src, $currentConfig);
 
-        expect($derivative->is_cached())->toBeTrue();
-        expect($derivative->get_url())->toBe('_data/i/gallery/photo-cu_80x60_a.jpg');
+        expect($derivative->is_cached())
+            ->toBeTrue();
+        expect($derivative->get_url())
+            ->toBe('_data/i/gallery/photo-cu_80x60_a.jpg');
     } finally {
         $currentConfig->derivativeUrlStyle = 2;
         derivativeCacheServiceRrmdirDerivativeImageTest($root);
@@ -781,7 +796,7 @@ test('build() substitutes a smaller already-defined identity-matching type when 
             'height' => 40,
         ]);
 
-        $derivative = new DerivativeImage($mediumParams, $src,CurrentConfigTestFactory::get());
+        $derivative = new DerivativeImage($mediumParams, $src, CurrentConfigTestFactory::get());
 
         // 40x40 is an identity match for both 'medium' (200x200) and the
         // smaller 'thumb' (50x50); will_watermark(40x40) is true for
@@ -790,8 +805,10 @@ test('build() substitutes a smaller already-defined identity-matching type when 
         // will_watermark(40x40) is true again (still 30<=40) but no type
         // smaller than 'thumb' exists in the seeded map, so the inner
         // search loop's break is hit and 'thumb' is the final type.
-        expect($derivative->get_type())->toBe('thumb');
-        expect($derivative->same_as_source())->toBeFalse();
+        expect($derivative->get_type())
+            ->toBe('thumb');
+        expect($derivative->same_as_source())
+            ->toBeFalse();
         // Kills line 213's RemoveMethodCall (the recursive self::build()
         // call that recomputes rel_path/rel_url for the substituted
         // 'thumb' type) -- get_type()/same_as_source() alone can't tell
@@ -800,7 +817,8 @@ test('build() substitutes a smaller already-defined identity-matching type when 
         // itself ever runs again. Only rel_path/rel_url (and therefore
         // get_path()) would still reflect the never-recomputed initial
         // '' otherwise.
-        expect($derivative->get_path())->toBe(CurrentPathsTestFactory::get()->root . '_data/i/upload/2026/07/photo-th.jpg');
+        expect($derivative->get_path())
+            ->toBe(CurrentPathsTestFactory::get()->root . '_data/i/upload/2026/07/photo-th.jpg');
     } finally {
         derivativeImageTestRestoreStdParams($snapshot);
         ImageStdParamsTestFactory::get()->set_watermark($originalWatermark);
@@ -865,10 +883,12 @@ test('build() never substitutes a same-size candidate whose max_crop does not ma
             'height' => 10,
         ]);
 
-        $derivative = new DerivativeImage($mediumParams, $src,CurrentConfigTestFactory::get());
+        $derivative = new DerivativeImage($mediumParams, $src, CurrentConfigTestFactory::get());
 
-        expect($derivative->get_type())->toBe('medium');
-        expect($derivative->same_as_source())->toBeFalse();
+        expect($derivative->get_type())
+            ->toBe('medium');
+        expect($derivative->same_as_source())
+            ->toBeFalse();
     } finally {
         derivativeImageTestRestoreStdParams($snapshot);
         ImageStdParamsTestFactory::get()->set_watermark($originalWatermark);
@@ -891,8 +911,10 @@ test('build() routes through i.php and marks itself not cached when derivative_u
 
         $derivative = new DerivativeImage(new DerivativeParams(SizingParams::classic(80, 60)), $src, $currentConfig);
 
-        expect($derivative->is_cached())->toBeFalse();
-        expect($derivative->get_url())->toBe('i.php?/gallery/photo-cu_80x60_a.jpg');
+        expect($derivative->is_cached())
+            ->toBeFalse();
+        expect($derivative->get_url())
+            ->toBe('i.php?/gallery/photo-cu_80x60_a.jpg');
     } finally {
         $currentConfig->derivativeUrlStyle = 2;
         derivativeCacheServiceRrmdirDerivativeImageTest($root);
@@ -918,8 +940,10 @@ test('build() links directly to a static file when derivative_url_style is auto 
 
         $derivative = new DerivativeImage(new DerivativeParams(SizingParams::classic(80, 60)), $src, $currentConfig);
 
-        expect($derivative->is_cached())->toBeTrue();
-        expect($derivative->get_url())->toBe('_data/i/gallery/photo-cu_80x60_a.jpg');
+        expect($derivative->is_cached())
+            ->toBeTrue();
+        expect($derivative->get_url())
+            ->toBe('_data/i/gallery/photo-cu_80x60_a.jpg');
     } finally {
         $currentConfig->derivativeUrlStyle = 2;
         derivativeCacheServiceRrmdirDerivativeImageTest($root);
@@ -942,9 +966,10 @@ test('get_url() prefixes the computed rel_url with the real root url', function 
             'file' => 'photo.jpg',
         ]);
 
-        $derivative = new DerivativeImage(new DerivativeParams(SizingParams::classic(80, 60)), $src,CurrentConfigTestFactory::get());
+        $derivative = new DerivativeImage(new DerivativeParams(SizingParams::classic(80, 60)), $src, CurrentConfigTestFactory::get());
 
-        expect($derivative->get_url())->toBe('/gallery/i.php?/gallery/photo-cu_80x60_a.jpg');
+        expect($derivative->get_url())
+            ->toBe('/gallery/i.php?/gallery/photo-cu_80x60_a.jpg');
     });
 });
 
@@ -962,9 +987,10 @@ test('get_url() throws when a get_derivative_url handler returns something other
             'file' => 'photo.jpg',
         ]);
 
-        $derivative = new DerivativeImage(new DerivativeParams(SizingParams::classic(80, 60)), $src,CurrentConfigTestFactory::get());
+        $derivative = new DerivativeImage(new DerivativeParams(SizingParams::classic(80, 60)), $src, CurrentConfigTestFactory::get());
 
-        expect(fn () => $derivative->get_url())->toThrow(Error::class, 'must return an instance of');
+        expect(fn () => $derivative->get_url())
+            ->toThrow(Error::class, 'must return an instance of');
     } finally {
         EventDispatcherTestFactory::get()->removeEventHandler(GetDerivativeUrl::class, $handler);
     }
@@ -1015,14 +1041,18 @@ test('get_size_css()/get_size_htm()/get_size_hr() render the computed size, or a
             'width' => 400,
             'height' => 300,
         ]);
-        $derivative = new DerivativeImage(new DerivativeParams(SizingParams::classic(100, 100)), $src,CurrentConfigTestFactory::get());
+        $derivative = new DerivativeImage(new DerivativeParams(SizingParams::classic(100, 100)), $src, CurrentConfigTestFactory::get());
 
         // 400x300 scaled to fit within 100x100: width is the binding
         // dimension (ratio 4 vs 3), so height scales proportionally to 75.
-        expect($derivative->get_size())->toBe([100, 75]);
-        expect($derivative->get_size_css())->toBe('width:100px; height:75px');
-        expect($derivative->get_size_htm())->toBe('width="100" height="75"');
-        expect($derivative->get_size_hr())->toBe('100 x 75');
+        expect($derivative->get_size())
+            ->toBe([100, 75]);
+        expect($derivative->get_size_css())
+            ->toBe('width:100px; height:75px');
+        expect($derivative->get_size_htm())
+            ->toBe('width="100" height="75"');
+        expect($derivative->get_size_hr())
+            ->toBe('100 x 75');
 
         file_put_contents($root . '/upload/2026/07/broken.jpg', 'not-a-real-image-payload');
 
@@ -1040,14 +1070,20 @@ test('get_size_css()/get_size_htm()/get_size_hr() render the computed size, or a
             'width' => null,
             'height' => null,
         ]);
-        $unknownDerivative = new DerivativeImage(new DerivativeParams(SizingParams::classic(100, 100)), $unknownSrc,CurrentConfigTestFactory::get());
+        $unknownDerivative = new DerivativeImage(new DerivativeParams(SizingParams::classic(100, 100)), $unknownSrc, CurrentConfigTestFactory::get());
 
-        expect($unknownDerivative->get_size())->toBeNull();
-        expect($unknownDerivative->get_size_css())->toBe('');
-        expect($unknownDerivative->get_size_htm())->toBe('');
-        expect($unknownDerivative->get_size_hr())->toBe('');
-        expect($unknownDerivative->get_scaled_size(50, 50))->toBeNull();
-        expect($unknownDerivative->get_scaled_size_htm(50, 50))->toBe('');
+        expect($unknownDerivative->get_size())
+            ->toBeNull();
+        expect($unknownDerivative->get_size_css())
+            ->toBe('');
+        expect($unknownDerivative->get_size_htm())
+            ->toBe('');
+        expect($unknownDerivative->get_size_hr())
+            ->toBe('');
+        expect($unknownDerivative->get_scaled_size(50, 50))
+            ->toBeNull();
+        expect($unknownDerivative->get_scaled_size_htm(50, 50))
+            ->toBe('');
     } finally {
         derivativeCacheServiceRrmdirDerivativeImageTest($root);
     }
@@ -1068,10 +1104,13 @@ test('get_scaled_size()/get_scaled_size_htm() scale down proportionally, binding
         'width' => 400,
         'height' => 300,
     ]);
-    $landscape = new DerivativeImage(new DerivativeParams(SizingParams::classic(100, 100)), $landscapeSrc,CurrentConfigTestFactory::get());
-    expect($landscape->get_size())->toBe([100, 75]);
-    expect($landscape->get_scaled_size(50, 50))->toBe([50, 37]);
-    expect($landscape->get_scaled_size_htm(50, 50))->toBe('width="50" height="37"');
+    $landscape = new DerivativeImage(new DerivativeParams(SizingParams::classic(100, 100)), $landscapeSrc, CurrentConfigTestFactory::get());
+    expect($landscape->get_size())
+        ->toBe([100, 75]);
+    expect($landscape->get_scaled_size(50, 50))
+        ->toBe([50, 37]);
+    expect($landscape->get_scaled_size_htm(50, 50))
+        ->toBe('width="50" height="37"');
 
     // Portrait source (dimensions swapped): height is now the
     // overflowing dimension -- exercises the "ratio_h >= ratio_w" branch.
@@ -1082,14 +1121,18 @@ test('get_scaled_size()/get_scaled_size_htm() scale down proportionally, binding
         'width' => 300,
         'height' => 400,
     ]);
-    $portrait = new DerivativeImage(new DerivativeParams(SizingParams::classic(100, 100)), $portraitSrc,CurrentConfigTestFactory::get());
-    expect($portrait->get_size())->toBe([75, 100]);
-    expect($portrait->get_scaled_size(50, 50))->toBe([37, 50]);
-    expect($portrait->get_scaled_size_htm(50, 50))->toBe('width="37" height="50"');
+    $portrait = new DerivativeImage(new DerivativeParams(SizingParams::classic(100, 100)), $portraitSrc, CurrentConfigTestFactory::get());
+    expect($portrait->get_size())
+        ->toBe([75, 100]);
+    expect($portrait->get_scaled_size(50, 50))
+        ->toBe([37, 50]);
+    expect($portrait->get_scaled_size_htm(50, 50))
+        ->toBe('width="37" height="50"');
 
     // Within bounds already (no dimension overflows maxw/maxh): returned
     // unchanged, same shape as the un-scaled get_size().
-    expect($landscape->get_scaled_size(200, 200))->toBe([100, 75]);
+    expect($landscape->get_scaled_size(200, 200))
+        ->toBe([100, 75]);
 });
 
 test('get_scaled_size() still scales when only ONE dimension overflows, not just when both do', function (): void {
@@ -1118,11 +1161,13 @@ test('get_scaled_size() still scales when only ONE dimension overflows, not just
     ]);
     // classic(1000, 1000) never shrinks a 150x50 source -- get_size()
     // returns the real dimensions unscaled.
-    $wide = new DerivativeImage(new DerivativeParams(SizingParams::classic(1000, 1000)), $wideSrc,CurrentConfigTestFactory::get());
-    expect($wide->get_size())->toBe([150, 50]);
+    $wide = new DerivativeImage(new DerivativeParams(SizingParams::classic(1000, 1000)), $wideSrc, CurrentConfigTestFactory::get());
+    expect($wide->get_size())
+        ->toBe([150, 50]);
     // ratio_w = 150/100 = 1.5 (overflows, but not > 2); ratio_h = 50/100
     // = 0.5 (comfortably within bounds).
-    expect($wide->get_scaled_size(100, 100))->toBe([100, 33]);
+    expect($wide->get_scaled_size(100, 100))
+        ->toBe([100, 33]);
 
     $tallSrc = new SrcImage([
         'id' => 2,
@@ -1131,11 +1176,13 @@ test('get_scaled_size() still scales when only ONE dimension overflows, not just
         'width' => 50,
         'height' => 150,
     ]);
-    $tall = new DerivativeImage(new DerivativeParams(SizingParams::classic(1000, 1000)), $tallSrc,CurrentConfigTestFactory::get());
-    expect($tall->get_size())->toBe([50, 150]);
+    $tall = new DerivativeImage(new DerivativeParams(SizingParams::classic(1000, 1000)), $tallSrc, CurrentConfigTestFactory::get());
+    expect($tall->get_size())
+        ->toBe([50, 150]);
     // ratio_w = 50/100 = 0.5 (within bounds); ratio_h = 150/100 = 1.5
     // (overflows, but not > 2).
-    expect($tall->get_scaled_size(100, 100))->toBe([33, 100]);
+    expect($tall->get_scaled_size(100, 100))
+        ->toBe([33, 100]);
 });
 
 /**

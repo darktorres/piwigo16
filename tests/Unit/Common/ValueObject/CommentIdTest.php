@@ -9,7 +9,9 @@ use Piwigo\Common\ValueObject\CommentId;
 use Piwigo\Common\ValueObject\GroupId;
 use Piwigo\Tests\Unit\Common\ValueObject\Contract\NumericIdContract;
 
-/** @extends NumericIdContract<CommentId> */
+/**
+ * @extends NumericIdContract<CommentId>
+ */
 final class CommentIdTest extends NumericIdContract
 {
     #[Override]

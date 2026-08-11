@@ -5,21 +5,21 @@ declare(strict_types=1);
 namespace Piwigo\Tests\Integration;
 
 use Override;
-use Piwigo\Core\TemplateInterface;
+use PHPUnit\Framework\TestCase;
 use Piwigo\Cache\PersistentCache;
-use Piwigo\Storage\StorageRegistry;
 use Piwigo\Config\DeploymentPolicy;
 use Piwigo\Core\DefaultLanguageProviderInterface;
+use Piwigo\Core\FilterUpdaterInterface;
+use Piwigo\Core\HtmlRenderingInterface;
+use Piwigo\Core\Kernel;
+use Piwigo\Core\MailerInterface;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Core\TelemetrySenderInterface;
-use Piwigo\Core\FilterUpdaterInterface;
-use Piwigo\Core\MailerInterface;
+use Piwigo\Core\TemplateInterface;
 use Piwigo\Core\UrlServiceInterface;
-use Piwigo\Core\HtmlRenderingInterface;
+use Piwigo\Storage\StorageRegistry;
 use Piwigo\Validation\InputValidator;
 use Throwable;
-use PHPUnit\Framework\TestCase;
-use Piwigo\Core\Kernel;
 
 /**
  * Boots the Kernel, then iterates and resolves every entry defined in
@@ -126,7 +126,7 @@ final class ContainerSmokeTest extends TestCase
         InputValidator::class,
     ];
 
-    public function test_every_container_entry_resolves(): void
+    public function testEveryContainerEntryResolves(): void
     {
         Kernel::boot();
         $container = Kernel::container();
@@ -149,13 +149,13 @@ final class ContainerSmokeTest extends TestCase
 
         $lines = [];
         foreach ($failures as $serviceId => $err) {
-            $lines[] = "  [$serviceId]\n    $err";
+            $lines[] = "  [{$serviceId}]\n    {$err}";
         }
         $count = count($failures);
         self::assertSame(
             [],
             $failures,
-            "$count container " . ($count === 1 ? 'entry' : 'entries') . " failed to resolve:\n"
+            "{$count} container " . ($count === 1 ? 'entry' : 'entries') . " failed to resolve:\n"
             . implode("\n", $lines)
         );
     }

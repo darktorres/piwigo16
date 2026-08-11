@@ -9,7 +9,9 @@ use Piwigo\Common\ValueObject\CategoryId;
 use Piwigo\Common\ValueObject\TagId;
 use Piwigo\Tests\Unit\Common\ValueObject\Contract\NumericIdContract;
 
-/** @extends NumericIdContract<CategoryId> */
+/**
+ * @extends NumericIdContract<CategoryId>
+ */
 final class CategoryIdTest extends NumericIdContract
 {
     #[Override]

@@ -5,7 +5,6 @@ declare(strict_types=1);
 use PgSql\Connection;
 use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
 
-
 function albumSubDb(): mysqli|Connection
 {
     return H::connect();
@@ -38,7 +37,8 @@ it('fatal-errors with "unknown album" for a cat_id with no matching category row
     $page = H::loginAsAdmin($this);
     $page = H::navigateOk($page, '/admin.php?page=album&cat_id=999999999');
 
-    expect($page->content())->toContain('unknown album');
+    expect($page->content())
+        ->toContain('unknown album');
 });
 
 it('fatal-errors instead of silently swallowing a real render_category_name hook that returns something other than a RenderCategoryName instance', function (): void {
@@ -70,7 +70,9 @@ it('fatal-errors instead of silently swallowing a real render_category_name hook
 
     $page = H::loginAsAdmin($this);
     $categoryName = 'CT Album Sub Hook Fallback ' . uniqid();
-    $album = H::wsCall($page, 'pwg.categories.add', ['name' => $categoryName]);
+    $album = H::wsCall($page, 'pwg.categories.add', [
+        'name' => $categoryName,
+    ]);
     $albumResult = $album['result'] ?? null;
     if (! is_array($albumResult) || ! is_numeric($albumResult['id'] ?? null)) {
         throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($album, true));

@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Support;
 
-use Throwable;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\DeploymentPolicy;
 use Piwigo\Core\HtmlRenderingInterface;
@@ -20,6 +19,7 @@ use Piwigo\Section\SectionContextRegistry;
 use Piwigo\Url\RootPathOverride;
 use Piwigo\Url\UrlService;
 use Piwigo\Users\CurrentUser;
+use Throwable;
 
 /**
  * Resolves each collaborator from the real container-shared instance when

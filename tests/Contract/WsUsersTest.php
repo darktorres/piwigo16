@@ -6,17 +6,21 @@ namespace Piwigo\Tests\Contract;
 
 final class WsUsersTest extends ContractTestCase
 {
-    public function test_getList_response_matches_schema(): void
+    public function testGetListResponseMatchesSchema(): void
     {
-        $response = $this->wsAdmin('pwg.users.getList', ['display' => 'basics']);
+        $response = $this->wsAdmin('pwg.users.getList', [
+            'display' => 'basics',
+        ]);
 
         self::assertSame('ok', $response['stat']);
         self::assertMatchesSchema('users.getList', $response);
     }
 
-    public function test_getList_includes_admin_user(): void
+    public function testGetListIncludesAdminUser(): void
     {
-        $response = $this->wsAdmin('pwg.users.getList', ['display' => 'basics']);
+        $response = $this->wsAdmin('pwg.users.getList', [
+            'display' => 'basics',
+        ]);
 
         $result = $response['result'];
         self::assertIsArray($result);
@@ -27,7 +31,7 @@ final class WsUsersTest extends ContractTestCase
         self::assertContains('fixture_admin', $usernames, 'fixture_admin must appear in user list');
     }
 
-    public function test_getList_is_forbidden_for_guest(): void
+    public function testGetListIsForbiddenForGuest(): void
     {
         $response = $this->ws('pwg.users.getList');
 
@@ -35,7 +39,7 @@ final class WsUsersTest extends ContractTestCase
         self::assertArrayHasKey('err', $response);
     }
 
-    public function test_favorites_getList_response_matches_schema(): void
+    public function testFavoritesGetListResponseMatchesSchema(): void
     {
         $response = $this->wsAdmin('pwg.users.favorites.getList');
 
@@ -43,7 +47,7 @@ final class WsUsersTest extends ContractTestCase
         self::assertMatchesSchema('pwg.users.favorites.getList', $response);
     }
 
-    public function test_favorites_getList_returns_paging_and_images(): void
+    public function testFavoritesGetListReturnsPagingAndImages(): void
     {
         $response = $this->wsAdmin('pwg.users.favorites.getList');
 
@@ -53,7 +57,7 @@ final class WsUsersTest extends ContractTestCase
         self::assertArrayHasKey('images', $result);
     }
 
-    public function test_favorites_getList_fails_for_guest(): void
+    public function testFavoritesGetListFailsForGuest(): void
     {
         $response = $this->ws('pwg.users.favorites.getList');
 
@@ -63,18 +67,23 @@ final class WsUsersTest extends ContractTestCase
 
     // -------------------------------------------------------------- getList
 
-    public function test_getList_invalid_order_returns_error(): void
+    public function testGetListInvalidOrderReturnsError(): void
     {
-        $response = $this->wsAdmin('pwg.users.getList', ['order' => 'DROP TABLE users']);
+        $response = $this->wsAdmin('pwg.users.getList', [
+            'order' => 'DROP TABLE users',
+        ]);
 
         self::assertSame('fail', $response['stat']);
         self::assertSame(1003, $response['err']);
         self::assertSame('Invalid input parameter order', $response['message']);
     }
 
-    public function test_getList_order_by_username_sorts_case_insensitively(): void
+    public function testGetListOrderByUsernameSortsCaseInsensitively(): void
     {
-        $response = $this->wsAdmin('pwg.users.getList', ['display' => 'basics', 'order' => 'username ASC']);
+        $response = $this->wsAdmin('pwg.users.getList', [
+            'display' => 'basics',
+            'order' => 'username ASC',
+        ]);
 
         self::assertSame('ok', $response['stat']);
         $usernames = $this->usernameColumn($response);
@@ -83,25 +92,31 @@ final class WsUsersTest extends ContractTestCase
         self::assertSame($sorted, $usernames);
     }
 
-    public function test_getList_filters_by_username(): void
+    public function testGetListFiltersByUsername(): void
     {
-        $response = $this->wsAdmin('pwg.users.getList', ['display' => 'basics', 'username' => 'regular_user']);
+        $response = $this->wsAdmin('pwg.users.getList', [
+            'display' => 'basics',
+            'username' => 'regular_user',
+        ]);
 
         self::assertSame('ok', $response['stat']);
         $usernames = $this->usernameColumn($response);
         self::assertSame(['regular_user'], $usernames);
     }
 
-    public function test_getList_filter_matches_username_or_email(): void
+    public function testGetListFilterMatchesUsernameOrEmail(): void
     {
-        $response = $this->wsAdmin('pwg.users.getList', ['display' => 'basics', 'filter' => 'regular_user']);
+        $response = $this->wsAdmin('pwg.users.getList', [
+            'display' => 'basics',
+            'filter' => 'regular_user',
+        ]);
 
         self::assertSame('ok', $response['stat']);
         $usernames = $this->usernameColumn($response);
         self::assertSame(['regular_user'], $usernames);
     }
 
-    public function test_getList_filter_also_matches_by_group_name(): void
+    public function testGetListFilterAlsoMatchesByGroupName(): void
     {
         // 'Reviewers' is a real fixture group (id 2) whose only member is
         // regular_user (id 3, own email is NULL) -- per the fixture's
@@ -110,25 +125,33 @@ final class WsUsersTest extends ContractTestCase
         // through getList()'s own self::groupService()->getIdsByNameLike()
         // + "OR ug.group_id IN (...)" branch, not the plain username/email
         // LIKE clauses.
-        $response = $this->wsAdmin('pwg.users.getList', ['display' => 'basics', 'filter' => 'Reviewers']);
+        $response = $this->wsAdmin('pwg.users.getList', [
+            'display' => 'basics',
+            'filter' => 'Reviewers',
+        ]);
 
         self::assertSame('ok', $response['stat']);
         $usernames = $this->usernameColumn($response);
         self::assertSame(['regular_user'], $usernames);
     }
 
-    public function test_getList_min_register_valid_year_only_matches_all_fixture_users(): void
+    public function testGetListMinRegisterValidYearOnlyMatchesAllFixtureUsers(): void
     {
-        $response = $this->wsAdmin('pwg.users.getList', ['display' => 'basics', 'min_register' => '2026']);
+        $response = $this->wsAdmin('pwg.users.getList', [
+            'display' => 'basics',
+            'min_register' => '2026',
+        ]);
 
         self::assertSame('ok', $response['stat']);
         $usernames = $this->usernameColumn($response);
         self::assertContains('fixture_admin', $usernames);
     }
 
-    public function test_getList_min_register_invalid_format_returns_error(): void
+    public function testGetListMinRegisterInvalidFormatReturnsError(): void
     {
-        $response = $this->wsAdmin('pwg.users.getList', ['min_register' => 'not-a-date']);
+        $response = $this->wsAdmin('pwg.users.getList', [
+            'min_register' => 'not-a-date',
+        ]);
 
         self::assertSame('fail', $response['stat']);
         self::assertSame(1003, $response['err']);
@@ -140,30 +163,37 @@ final class WsUsersTest extends ContractTestCase
      * numeric groups) but is not a real calendar date -- the real
      * validator is SqlDateTime::from()'s own round-trip check.
      */
-    public function test_getList_min_register_shape_valid_but_calendar_invalid_returns_error(): void
+    public function testGetListMinRegisterShapeValidButCalendarInvalidReturnsError(): void
     {
-        $response = $this->wsAdmin('pwg.users.getList', ['min_register' => '2026-13-99']);
+        $response = $this->wsAdmin('pwg.users.getList', [
+            'min_register' => '2026-13-99',
+        ]);
 
         self::assertSame('fail', $response['stat']);
         self::assertSame(1003, $response['err']);
         self::assertSame('Invalid input parameter min_register', $response['message']);
     }
 
-    public function test_getList_max_register_year_month_only_computes_last_day_of_month(): void
+    public function testGetListMaxRegisterYearMonthOnlyComputesLastDayOfMonth(): void
     {
         // Fixture users all registered on 2026-08-01 -- max_register capped
         // to 2026-07 (the month before) must exclude every one of them,
         // proving the day-of-month was really computed (date('t')) rather
         // than defaulting to something that would still include 08-01.
-        $response = $this->wsAdmin('pwg.users.getList', ['display' => 'basics', 'max_register' => '2026-07']);
+        $response = $this->wsAdmin('pwg.users.getList', [
+            'display' => 'basics',
+            'max_register' => '2026-07',
+        ]);
 
         self::assertSame('ok', $response['stat']);
         self::assertSame([], $this->extractUsers($response));
     }
 
-    public function test_getList_max_register_invalid_format_returns_error(): void
+    public function testGetListMaxRegisterInvalidFormatReturnsError(): void
     {
-        $response = $this->wsAdmin('pwg.users.getList', ['max_register' => 'not-a-date']);
+        $response = $this->wsAdmin('pwg.users.getList', [
+            'max_register' => 'not-a-date',
+        ]);
 
         self::assertSame('fail', $response['stat']);
         self::assertSame(1003, $response['err']);
@@ -177,16 +207,18 @@ final class WsUsersTest extends ContractTestCase
      * so an out-of-range day ('2026-01-99') reaches SqlDateTime::from()
      * unmodified.
      */
-    public function test_getList_max_register_shape_valid_but_calendar_invalid_returns_error(): void
+    public function testGetListMaxRegisterShapeValidButCalendarInvalidReturnsError(): void
     {
-        $response = $this->wsAdmin('pwg.users.getList', ['max_register' => '2026-01-99']);
+        $response = $this->wsAdmin('pwg.users.getList', [
+            'max_register' => '2026-01-99',
+        ]);
 
         self::assertSame('fail', $response['stat']);
         self::assertSame(1003, $response['err']);
         self::assertSame('Invalid input parameter max_register', $response['message']);
     }
 
-    public function test_getList_max_register_with_explicit_day_is_used_directly(): void
+    public function testGetListMaxRegisterWithExplicitDayIsUsedDirectly(): void
     {
         // Sibling of the month-only test above, which takes the *else*
         // branch (day computed via date('t')) -- supplying all three date
@@ -194,58 +226,74 @@ final class WsUsersTest extends ContractTestCase
         // branch instead. Fixture users all registered on 2026-08-01, so
         // capping max_register at that exact date must still include them
         // (<= 2026-08-01 23:59:59).
-        $response = $this->wsAdmin('pwg.users.getList', ['display' => 'basics', 'max_register' => '2026-08-01']);
+        $response = $this->wsAdmin('pwg.users.getList', [
+            'display' => 'basics',
+            'max_register' => '2026-08-01',
+        ]);
 
         self::assertSame('ok', $response['stat']);
         $usernames = $this->usernameColumn($response);
         self::assertContains('fixture_admin', $usernames);
     }
 
-    public function test_getList_filters_by_status(): void
+    public function testGetListFiltersByStatus(): void
     {
-        $response = $this->wsAdmin('pwg.users.getList', ['display' => 'basics', 'status' => ['webmaster']]);
+        $response = $this->wsAdmin('pwg.users.getList', [
+            'display' => 'basics',
+            'status' => ['webmaster'],
+        ]);
 
         self::assertSame('ok', $response['stat']);
         $usernames = $this->usernameColumn($response);
         self::assertSame(['fixture_admin'], $usernames);
     }
 
-    public function test_getList_min_level_invalid_returns_error(): void
+    public function testGetListMinLevelInvalidReturnsError(): void
     {
-        $response = $this->wsAdmin('pwg.users.getList', ['min_level' => 3]);
+        $response = $this->wsAdmin('pwg.users.getList', [
+            'min_level' => 3,
+        ]);
 
         self::assertSame('fail', $response['stat']);
         self::assertSame(1003, $response['err']);
         self::assertSame('Invalid level', $response['message']);
     }
 
-    public function test_getList_min_level_filters_by_level(): void
+    public function testGetListMinLevelFiltersByLevel(): void
     {
-        $response = $this->wsAdmin('pwg.users.getList', ['display' => 'basics', 'min_level' => 8]);
+        $response = $this->wsAdmin('pwg.users.getList', [
+            'display' => 'basics',
+            'min_level' => 8,
+        ]);
 
         self::assertSame('ok', $response['stat']);
         $usernames = $this->usernameColumn($response);
         self::assertSame(['fixture_admin'], $usernames);
     }
 
-    public function test_getList_max_level_invalid_returns_error(): void
+    public function testGetListMaxLevelInvalidReturnsError(): void
     {
         // max_level is not a registered ws.php param (reachable only via the
         // shape's open tail -- see PwgUsers::getList()'s own docblock).
-        $response = $this->wsAdmin('pwg.users.getList', ['max_level' => 3]);
+        $response = $this->wsAdmin('pwg.users.getList', [
+            'max_level' => 3,
+        ]);
 
         self::assertSame('fail', $response['stat']);
         self::assertSame(1003, $response['err']);
         self::assertSame('Invalid level', $response['message']);
     }
 
-    public function test_getList_max_level_filters_by_level(): void
+    public function testGetListMaxLevelFiltersByLevel(): void
     {
         // max_level=0 is itself a sentinel meaning "no filter" (see the
         // in_array([null, false, 0, '0', '', []]) guard) -- 1 is the next
         // valid level in availablePermissionLevels() and still excludes
         // fixture_admin (level 8).
-        $response = $this->wsAdmin('pwg.users.getList', ['display' => 'basics', 'max_level' => 1]);
+        $response = $this->wsAdmin('pwg.users.getList', [
+            'display' => 'basics',
+            'max_level' => 1,
+        ]);
 
         self::assertSame('ok', $response['stat']);
         $usernames = $this->usernameColumn($response);
@@ -253,14 +301,17 @@ final class WsUsersTest extends ContractTestCase
         self::assertContains('regular_user', $usernames);
     }
 
-    public function test_getList_filters_by_group_id(): void
+    public function testGetListFiltersByGroupId(): void
     {
         // Group 3 ('Guests') has only power_user (id 4) as a member, per
         // the fixture's user_group rows -- exercises getList()'s
         // own 'ug.group_id IN(...)' where-clause branch (distinct from the
         // filter-by-group-name test above, which reaches the *same* SQL
         // alias through a different param).
-        $response = $this->wsAdmin('pwg.users.getList', ['display' => 'basics', 'group_id' => [3]]);
+        $response = $this->wsAdmin('pwg.users.getList', [
+            'display' => 'basics',
+            'group_id' => [3],
+        ]);
 
         self::assertSame('ok', $response['stat']);
         $usernames = $this->usernameColumn($response);
@@ -287,9 +338,11 @@ final class WsUsersTest extends ContractTestCase
     // narrowing guard, not a reachable real-usage gap -- no test added for
     // it here.
 
-    public function test_getList_excludes_given_user_ids(): void
+    public function testGetListExcludesGivenUserIds(): void
     {
-        $before = $this->wsAdmin('pwg.users.getList', ['display' => 'basics']);
+        $before = $this->wsAdmin('pwg.users.getList', [
+            'display' => 'basics',
+        ]);
         $adminId = null;
         foreach ($this->extractUsers($before) as $user) {
             if ($user['username'] === 'fixture_admin') {
@@ -298,7 +351,10 @@ final class WsUsersTest extends ContractTestCase
         }
         self::assertIsInt($adminId);
 
-        $response = $this->wsAdmin('pwg.users.getList', ['display' => 'basics', 'exclude' => [$adminId]]);
+        $response = $this->wsAdmin('pwg.users.getList', [
+            'display' => 'basics',
+            'exclude' => [$adminId],
+        ]);
 
         self::assertSame('ok', $response['stat']);
         $usernames = $this->usernameColumn($response);
@@ -318,9 +374,11 @@ final class WsUsersTest extends ContractTestCase
     // real hit to those specific source lines. Not a real gap; no
     // additional test added for it here.
 
-    public function test_getList_display_only_id_returns_bare_id_field(): void
+    public function testGetListDisplayOnlyIdReturnsBareIdField(): void
     {
-        $response = $this->wsAdmin('pwg.users.getList', ['display' => 'only_id']);
+        $response = $this->wsAdmin('pwg.users.getList', [
+            'display' => 'only_id',
+        ]);
 
         self::assertSame('ok', $response['stat']);
         $users = $this->extractUsers($response);
@@ -330,9 +388,12 @@ final class WsUsersTest extends ContractTestCase
         }
     }
 
-    public function test_getList_display_none_with_zero_per_page_returns_plain_id_list(): void
+    public function testGetListDisplayNoneWithZeroPerPageReturnsPlainIdList(): void
     {
-        $response = $this->wsAdmin('pwg.users.getList', ['display' => 'none', 'per_page' => 0]);
+        $response = $this->wsAdmin('pwg.users.getList', [
+            'display' => 'none',
+            'per_page' => 0,
+        ]);
 
         self::assertSame('ok', $response['stat']);
         $result = $response['result'];
@@ -340,9 +401,12 @@ final class WsUsersTest extends ContractTestCase
         self::assertArrayNotHasKey('paging', $result, 'display=none with per_page=0 must return a bare id list, not a paged struct');
     }
 
-    public function test_getList_total_count_display_flag_reports_the_full_count(): void
+    public function testGetListTotalCountDisplayFlagReportsTheFullCount(): void
     {
-        $limited = $this->wsAdmin('pwg.users.getList', ['display' => 'basics,total_count', 'per_page' => 1]);
+        $limited = $this->wsAdmin('pwg.users.getList', [
+            'display' => 'basics,total_count',
+            'per_page' => 1,
+        ]);
 
         self::assertSame('ok', $limited['stat']);
         $result = $limited['result'];

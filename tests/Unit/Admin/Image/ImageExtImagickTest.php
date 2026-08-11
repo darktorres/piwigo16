@@ -3,16 +3,16 @@
 declare(strict_types=1);
 
 use PHPUnit\Framework\Assert;
-use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Admin\Image\ImageExtImagick;
 use Piwigo\Admin\Image\ImageInterface;
 use Piwigo\Admin\Image\ImageProcessingException;
 use Piwigo\Admin\Image\PwgImage;
 use Piwigo\Config\CurrentConfig;
-use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Core\CurrentLogger;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Logger;
+use Piwigo\PluginConfig\EventDispatcher;
+use Piwigo\Tests\Support\CurrentConfigTestFactory;
 
 /**
  * __construct()'s "identify couldn't determine dimensions" guard throws
@@ -27,7 +27,7 @@ use Piwigo\Core\Logger;
  */
 function imageExtImagickTestMarker(): string
 {
-    /** @var string|null $marker */
+    /** @var string|null */
     static $marker = null;
 
     return $marker ??= sys_get_temp_dir() . '/piwigo-image-ext-imagick-test-' . bin2hex(random_bytes(8));
@@ -202,7 +202,10 @@ function imageExtImagickTestRrmdir(string $dir): void
 beforeEach(function (): void {
     mkdir(imageExtImagickTestMarker(), 0o777, true);
     Kernel::boot();
-    imageExtImagickTestCurrentLogger()->set(new Logger(['severity' => Logger::OFF]));
+    imageExtImagickTestCurrentLogger()
+        ->set(new Logger([
+            'severity' => Logger::OFF,
+        ]));
 });
 
 afterEach(function (): void {
@@ -233,7 +236,8 @@ test('construct concatenates the imagickdir prefix directly onto the identify bi
     // a nonexistent path regardless of which real binary this environment
     // already resolves 'identify' to via PATH. Same convention as
     // PwgImageTest's own is_ext_imagick() "nonexistent dir" tests.
-    imageExtImagickTestCurrentConfig()->extImagickDir = '/totally/nonexistent/dir/';
+    imageExtImagickTestCurrentConfig()
+        ->extImagickDir = '/totally/nonexistent/dir/';
 
     $path = imageExtImagickTestMarker() . '/prefix-src.jpg';
     imageExtImagickTestMakeJpeg($path, 12, 9, 5, 5, 5);
@@ -360,9 +364,12 @@ test('construct detects an animated WebP and reads dimensions via getimagesize i
 
     $image = imageExtImagickTestMake($path);
 
-    expect($image->is_animated_webp)->toBeTrue()
-        ->and($image->get_width())->toBe(20)
-        ->and($image->get_height())->toBe(14);
+    expect($image->is_animated_webp)
+        ->toBeTrue()
+        ->and($image->get_width())
+        ->toBe(20)
+        ->and($image->get_height())
+        ->toBe(14);
 });
 
 test('construct treats an uppercase .WEBP extension as webp case-insensitively', function (): void {
@@ -379,9 +386,12 @@ test('construct treats an uppercase .WEBP extension as webp case-insensitively',
 
     $image = imageExtImagickTestMake($path);
 
-    expect($image->is_animated_webp)->toBeTrue()
-        ->and($image->get_width())->toBe(20)
-        ->and($image->get_height())->toBe(14);
+    expect($image->is_animated_webp)
+        ->toBeTrue()
+        ->and($image->get_width())
+        ->toBe(20)
+        ->and($image->get_height())
+        ->toBe(14);
 });
 
 test('construct throws when an animated webp is too short for getimagesize to read despite a valid VP8X header', function (): void {
@@ -390,7 +400,8 @@ test('construct throws when an animated webp is too short for getimagesize to re
     $path = imageExtImagickTestMarker() . '/truncated-animated.webp';
     imageExtImagickTestMakeTruncatedAnimatedWebp($path);
     expect(PwgImage::webp_info($path)->hasAnimation)->toBeTrue();
-    expect(getimagesize($path))->toBeFalse();
+    expect(getimagesize($path))
+        ->toBeFalse();
 
     expect(fn () => imageExtImagickTestMake($path))
         ->toThrow(Exception::class, "ImageExtImagick(): getimagesize({$path}): Failed");
@@ -405,10 +416,14 @@ test('rotate by 0 degrees is a no-op that adds no command', function (): void {
 
     $result = $image->rotate(0);
 
-    expect($result)->toBeTrue()
-        ->and($image->commands)->toBe([])
-        ->and($image->get_width())->toBe(40)
-        ->and($image->get_height())->toBe(20);
+    expect($result)
+        ->toBeTrue()
+        ->and($image->commands)
+        ->toBe([])
+        ->and($image->get_width())
+        ->toBe(40)
+        ->and($image->get_height())
+        ->toBe(20);
 });
 
 test('rotate by a literal float 0.0 is also a no-op that adds no command', function (): void {
@@ -425,10 +440,14 @@ test('rotate by a literal float 0.0 is also a no-op that adds no command', funct
 
     $result = $image->rotate(0.0);
 
-    expect($result)->toBeTrue()
-        ->and($image->commands)->toBe([])
-        ->and($image->get_width())->toBe(40)
-        ->and($image->get_height())->toBe(20);
+    expect($result)
+        ->toBeTrue()
+        ->and($image->commands)
+        ->toBe([])
+        ->and($image->get_width())
+        ->toBe(40)
+        ->and($image->get_height())
+        ->toBe(20);
 });
 
 test('rotate by 90 degrees swaps width/height and queues rotate+orient commands', function (): void {
@@ -440,10 +459,17 @@ test('rotate by 90 degrees swaps width/height and queues rotate+orient commands'
 
     $result = $image->rotate(90);
 
-    expect($result)->toBeTrue()
-        ->and($image->get_width())->toBe(20)
-        ->and($image->get_height())->toBe(40)
-        ->and($image->commands)->toBe(['rotate' => -90, 'orient' => 'top-left']);
+    expect($result)
+        ->toBeTrue()
+        ->and($image->get_width())
+        ->toBe(20)
+        ->and($image->get_height())
+        ->toBe(40)
+        ->and($image->commands)
+        ->toBe([
+            'rotate' => -90,
+            'orient' => 'top-left',
+        ]);
 });
 
 test('rotate by 270 degrees swaps width/height and queues rotate+orient commands', function (): void {
@@ -461,15 +487,23 @@ test('rotate by 270 degrees swaps width/height and queues rotate+orient commands
 
     $result = $image->rotate(270);
 
-    expect($result)->toBeTrue()
-        ->and($image->get_width())->toBe(20)
-        ->and($image->get_height())->toBe(40)
-        ->and($image->commands)->toBe(['rotate' => -270, 'orient' => 'top-left']);
+    expect($result)
+        ->toBeTrue()
+        ->and($image->get_width())
+        ->toBe(20)
+        ->and($image->get_height())
+        ->toBe(40)
+        ->and($image->commands)
+        ->toBe([
+            'rotate' => -270,
+            'orient' => 'top-left',
+        ]);
 });
 
 test('set_compression_quality caps the requested quality via animatedWebpCompressionQuality for an animated webp source', function (): void {
     imageExtImagickTestSkipIfUnavailable();
-    imageExtImagickTestCurrentConfig()->animatedWebpCompressionQuality = 40;
+    imageExtImagickTestCurrentConfig()
+        ->animatedWebpCompressionQuality = 40;
 
     $path = imageExtImagickTestMarker() . '/animated-quality.webp';
     imageExtImagickTestMakeAnimatedWebp($path, 16, 10);
@@ -477,7 +511,8 @@ test('set_compression_quality caps the requested quality via animatedWebpCompres
 
     $result = $image->set_compression_quality(90);
 
-    expect($result)->toBeTrue()
+    expect($result)
+        ->toBeTrue()
         ->and($image->commands['quality'])->toBe(40);
 });
 
@@ -517,7 +552,8 @@ test('write adds the sampling-factor command only when ext_imagick_version compa
         PwgImage::$ext_imagick_version = '6.6';
         $imageEqual = imageExtImagickTestMake($path);
         $imageEqual->write(imageExtImagickTestMarker() . '/sampling-equal-out.jpg');
-        expect($imageEqual->commands)->not->toHaveKey('sampling-factor');
+        expect($imageEqual->commands)
+            ->not->toHaveKey('sampling-factor');
     } finally {
         PwgImage::$ext_imagick_version = $originalVersion;
     }
@@ -545,7 +581,8 @@ test('sharpen builds the morphology convolve command and produces a valid deriva
 
     $result = $image->sharpen(50);
 
-    expect($result)->toBeTrue()
+    expect($result)
+        ->toBeTrue()
         ->and($image->commands['morphology'])->toBe($expectedParam);
 
     // The 'morphology' command value is concatenated into the real shell
@@ -555,7 +592,8 @@ test('sharpen builds the morphology convolve command and produces a valid deriva
     // proves that raw string is actually well-formed for the shell.
     $image->write($dest);
 
-    expect(file_exists($dest))->toBeTrue();
+    expect(file_exists($dest))
+        ->toBeTrue();
     $info = getimagesize($dest);
     if ($info === false) {
         throw new RuntimeException('getimagesize failed');
@@ -576,7 +614,7 @@ test('compose throws a LogicException when the overlay uses a different image ba
     // Swap in a fake, non-ImageExtImagick backend to force the mismatch --
     // same idea as ImageGdTest's own compose()-mismatch test, this class's
     // guard only cares that it's genuinely not `self` (ImageExtImagick).
-    $overlay->image = new class implements ImageInterface {
+    $overlay->image = new class() implements ImageInterface {
         public function get_width(): int
         {
             return 1;
@@ -641,7 +679,8 @@ test('compose throws when the overlay source path cannot be resolved', function 
     imageExtImagickTestMakeJpeg($overlayPath, 8, 8, 200, 200, 200);
     $base = imageExtImagickTestMake($basePath);
     $overlay = new PwgImage($overlayPath, imageExtImagickTestCurrentLogger(), new EventDispatcher(), imageExtImagickTestCurrentConfig(), 'ext_imagick');
-    expect($overlay->image)->toBeInstanceOf(ImageExtImagick::class);
+    expect($overlay->image)
+        ->toBeInstanceOf(ImageExtImagick::class);
     // The overlay backend was legitimately constructed from a real file,
     // but that file is now gone by the time compose() actually resolves
     // it -- realpath() must fail.
@@ -707,13 +746,17 @@ test('write triggers E_USER_WARNING for each line of real CLI failure output', f
         restore_error_handler();
     }
 
-    expect($result)->toBeTrue('write() always reports success, even when the underlying CLI call fails')
-        ->and($captured)->not->toBeEmpty();
+    expect($result)
+        ->toBeTrue('write() always reports success, even when the underlying CLI call fails')
+        ->and($captured)
+        ->not->toBeEmpty();
     foreach ($captured as [$errno, $errstr]) {
         expect($errno)->toBe(E_USER_WARNING);
-        expect($errstr)->not->toBe('');
+        expect($errstr)
+            ->not->toBe('');
     }
-    expect(file_exists($dest))->toBeFalse();
+    expect(file_exists($dest))
+        ->toBeFalse();
 });
 
 // [Mutation] Line 258's ConcatSwitchSides mutant (moving
@@ -777,15 +820,21 @@ test('write adds the -layers coalesce flag and preserves every frame of an anima
     $dest = imageExtImagickTestMarker() . '/anim-write-out.webp';
     imageExtImagickTestMakeAnimatedWebp($path, 20, 14);
     $image = imageExtImagickTestMake($path);
-    expect($image->is_animated_webp)->toBeTrue();
-    expect(imageExtImagickTestFrameCount($path))->toBeGreaterThan(1);
+    expect($image->is_animated_webp)
+        ->toBeTrue();
+    expect(imageExtImagickTestFrameCount($path))
+        ->toBeGreaterThan(1);
 
     $result = $image->write($dest);
 
-    expect($result)->toBeTrue();
-    expect(file_exists($dest))->toBeTrue();
-    expect(filesize($dest))->toBeGreaterThan(0);
-    expect(imageExtImagickTestFrameCount($dest))->toBeGreaterThan(1);
+    expect($result)
+        ->toBeTrue();
+    expect(file_exists($dest))
+        ->toBeTrue();
+    expect(filesize($dest))
+        ->toBeGreaterThan(0);
+    expect(imageExtImagickTestFrameCount($dest))
+        ->toBeGreaterThan(1);
 });
 
 test('write concatenates the imagickdir prefix directly onto the convert/magick binary name', function (): void {
@@ -832,8 +881,10 @@ test('write concatenates the imagickdir prefix directly onto the convert/magick 
         putenv($originalPath === false ? 'PATH' : 'PATH=' . $originalPath);
     }
 
-    expect($result)->toBeTrue()
-        ->and(file_exists($dest))->toBeTrue();
+    expect($result)
+        ->toBeTrue()
+        ->and(file_exists($dest))
+        ->toBeTrue();
     $info = getimagesize($dest);
     if ($info === false) {
         throw new RuntimeException('getimagesize failed');
@@ -870,8 +921,10 @@ test('write casts a since-deleted source file\'s realpath() failure to an empty 
         restore_error_handler();
     }
 
-    expect($result)->toBeTrue()
-        ->and(file_exists($dest))->toBeFalse();
+    expect($result)
+        ->toBeTrue()
+        ->and(file_exists($dest))
+        ->toBeFalse();
 });
 
 test('write adds the -layers coalesce flag to the logged command for an animated webp source', function (): void {
@@ -879,14 +932,20 @@ test('write adds the -layers coalesce flag to the logged command for an animated
 
     $logDir = sys_get_temp_dir() . '/piwigo-imageextimagick-test-log-' . bin2hex(random_bytes(8));
     mkdir($logDir, 0o777, true);
-    imageExtImagickTestCurrentLogger()->set(new Logger(['severity' => Logger::DEBUG, 'directory' => $logDir, 'filename' => 'coalesce.log']));
+    imageExtImagickTestCurrentLogger()
+        ->set(new Logger([
+            'severity' => Logger::DEBUG,
+            'directory' => $logDir,
+            'filename' => 'coalesce.log',
+        ]));
 
     try {
         $path = imageExtImagickTestMarker() . '/coalesce-anim-src.webp';
         $dest = imageExtImagickTestMarker() . '/coalesce-anim-out.webp';
         imageExtImagickTestMakeAnimatedWebp($path, 20, 14);
         $image = imageExtImagickTestMake($path);
-        expect($image->is_animated_webp)->toBeTrue();
+        expect($image->is_animated_webp)
+            ->toBeTrue();
 
         $image->write($dest);
 
@@ -900,7 +959,8 @@ test('write adds the -layers coalesce flag to the logged command for an animated
         if ($logContent === false) {
             throw new RuntimeException('Failed to read the real log file written by write().');
         }
-        expect($logContent)->toContain(' -layers coalesce ');
+        expect($logContent)
+            ->toContain(' -layers coalesce ');
     } finally {
         imageExtImagickTestRrmdir($logDir);
     }
@@ -911,7 +971,12 @@ test('write omits the parameter value for every "no value" sentinel (null/0/0.0/
 
     $logDir = sys_get_temp_dir() . '/piwigo-imageextimagick-test-log-' . bin2hex(random_bytes(8));
     mkdir($logDir, 0o777, true);
-    imageExtImagickTestCurrentLogger()->set(new Logger(['severity' => Logger::DEBUG, 'directory' => $logDir, 'filename' => 'sentinel.log']));
+    imageExtImagickTestCurrentLogger()
+        ->set(new Logger([
+            'severity' => Logger::DEBUG,
+            'directory' => $logDir,
+            'filename' => 'sentinel.log',
+        ]));
 
     try {
         $path = imageExtImagickTestMarker() . '/sentinel-src.jpg';
@@ -948,7 +1013,8 @@ test('write omits the parameter value for every "no value" sentinel (null/0/0.0/
         // and critically no extra space from an empty-string append), and
         // that a real value (5) still gets its own value appended right
         // after its flag.
-        expect($logContent)->toContain(' -optnull -optzeroint -optzerofloat -optzerostr -optemptystr -optreal 5');
+        expect($logContent)
+            ->toContain(' -optnull -optzeroint -optzerofloat -optzerostr -optemptystr -optreal 5');
     } finally {
         imageExtImagickTestRrmdir($logDir);
     }
@@ -959,7 +1025,12 @@ test('write does not log an error when the CLI call succeeds with no output at a
 
     $logDir = sys_get_temp_dir() . '/piwigo-imageextimagick-test-log-' . bin2hex(random_bytes(8));
     mkdir($logDir, 0o777, true);
-    imageExtImagickTestCurrentLogger()->set(new Logger(['severity' => Logger::DEBUG, 'directory' => $logDir, 'filename' => 'success.log']));
+    imageExtImagickTestCurrentLogger()
+        ->set(new Logger([
+            'severity' => Logger::DEBUG,
+            'directory' => $logDir,
+            'filename' => 'success.log',
+        ]));
 
     try {
         $path = imageExtImagickTestMarker() . '/success-src.jpg';
@@ -969,8 +1040,10 @@ test('write does not log an error when the CLI call succeeds with no output at a
 
         $result = $image->write($dest);
 
-        expect($result)->toBeTrue()
-            ->and(file_exists($dest))->toBeTrue();
+        expect($result)
+            ->toBeTrue()
+            ->and(file_exists($dest))
+            ->toBeTrue();
 
         // A real, successful convert/magick call genuinely produces zero
         // lines of CLI output (confirmed live) -- count($returnarray)
@@ -979,7 +1052,8 @@ test('write does not log an error when the CLI call succeeds with no output at a
         if ($logContent === false) {
             throw new RuntimeException('Failed to read the real log file written by write().');
         }
-        expect($logContent)->not->toContain("\t[ERROR]\t");
+        expect($logContent)
+            ->not->toContain("\t[ERROR]\t");
     } finally {
         imageExtImagickTestRrmdir($logDir);
     }

@@ -17,7 +17,8 @@ test('createNavigationBar returns an empty bar when everything fits on one page'
 
     $navbar = $service->createNavigationBar('index.php', 10, 0, 20);
 
-    expect($navbar)->toBe([]);
+    expect($navbar)
+        ->toBe([]);
 });
 
 test('createNavigationBar computes the current page and total page count', function (): void {
@@ -28,11 +29,13 @@ test('createNavigationBar computes the current page and total page count', funct
 
     $currentPage = $navbar['CURRENT_PAGE'] ?? null;
     Assert::assertIsFloat($currentPage);
-    expect($currentPage)->toBe(3.0);
+    expect($currentPage)
+        ->toBe(3.0);
 
     $nbPage = $navbar['NB_PAGE'] ?? null;
     Assert::assertIsInt($nbPage);
-    expect($nbPage)->toBe(5);
+    expect($nbPage)
+        ->toBe(5);
 });
 
 test('createNavigationBar omits URL_FIRST/URL_PREV on the first page', function (): void {
@@ -41,10 +44,14 @@ test('createNavigationBar omits URL_FIRST/URL_PREV on the first page', function 
 
     $navbar = $service->createNavigationBar('index.php', 100, 0, 20);
 
-    expect($navbar)->not->toHaveKey('URL_FIRST');
-    expect($navbar)->not->toHaveKey('URL_PREV');
-    expect($navbar)->toHaveKey('URL_NEXT');
-    expect($navbar)->toHaveKey('URL_LAST');
+    expect($navbar)
+        ->not->toHaveKey('URL_FIRST');
+    expect($navbar)
+        ->not->toHaveKey('URL_PREV');
+    expect($navbar)
+        ->toHaveKey('URL_NEXT');
+    expect($navbar)
+        ->toHaveKey('URL_LAST');
 });
 
 test('createNavigationBar omits URL_NEXT/URL_LAST on the last page', function (): void {
@@ -53,10 +60,14 @@ test('createNavigationBar omits URL_NEXT/URL_LAST on the last page', function ()
 
     $navbar = $service->createNavigationBar('index.php', 100, 80, 20);
 
-    expect($navbar)->toHaveKey('URL_FIRST');
-    expect($navbar)->toHaveKey('URL_PREV');
-    expect($navbar)->not->toHaveKey('URL_NEXT');
-    expect($navbar)->not->toHaveKey('URL_LAST');
+    expect($navbar)
+        ->toHaveKey('URL_FIRST');
+    expect($navbar)
+        ->toHaveKey('URL_PREV');
+    expect($navbar)
+        ->not->toHaveKey('URL_NEXT');
+    expect($navbar)
+        ->not->toHaveKey('URL_LAST');
 });
 
 test('createNavigationBar clamps a negative start to zero', function (): void {
@@ -67,7 +78,8 @@ test('createNavigationBar clamps a negative start to zero', function (): void {
 
     $currentPage = $navbar['CURRENT_PAGE'] ?? null;
     Assert::assertIsFloat($currentPage);
-    expect($currentPage)->toBe(1.0);
+    expect($currentPage)
+        ->toBe(1.0);
 });
 
 /**
@@ -95,7 +107,8 @@ test('createNavigationBar clamps a start of exactly -1, one below the real bound
 
     $currentPage = $navbar['CURRENT_PAGE'] ?? null;
     Assert::assertIsFloat($currentPage);
-    expect($currentPage)->toBe(1.0);
+    expect($currentPage)
+        ->toBe(1.0);
 });
 
 test('createNavigationBar returns an empty bar when nbElement exactly equals nbElementPage', function (): void {
@@ -110,7 +123,8 @@ test('createNavigationBar returns an empty bar when nbElement exactly equals nbE
 
     $navbar = $service->createNavigationBar('index.php', 20, 0, 20);
 
-    expect($navbar)->toBe([]);
+    expect($navbar)
+        ->toBe([]);
 });
 
 test('createNavigationBar rounds the total page count up, not down or to nearest, for a non-exact division', function (): void {
@@ -158,7 +172,8 @@ test('createNavigationBar accepts numeric strings for nbElement and start', func
 
     $currentPage = $navbar['CURRENT_PAGE'] ?? null;
     Assert::assertIsFloat($currentPage);
-    expect($currentPage)->toBe(3.0);
+    expect($currentPage)
+        ->toBe(3.0);
 });
 
 test('createNavigationBar builds clean-url-style page links when requested', function (): void {
@@ -169,7 +184,8 @@ test('createNavigationBar builds clean-url-style page links when requested', fun
 
     $urlNext = $navbar['URL_NEXT'] ?? null;
     Assert::assertIsString($urlNext);
-    expect($urlNext)->toBe('index.php/category/1/start-60');
+    expect($urlNext)
+        ->toBe('index.php/category/1/start-60');
 });
 
 test('createNavigationBar builds query-string-style page links by default', function (): void {
@@ -180,7 +196,8 @@ test('createNavigationBar builds query-string-style page links by default', func
 
     $urlNext = $navbar['URL_NEXT'] ?? null;
     Assert::assertIsString($urlNext);
-    expect($urlNext)->toBe('index.php?start=60');
+    expect($urlNext)
+        ->toBe('index.php?start=60');
 });
 
 test('createNavigationBar respects a custom param name', function (): void {
@@ -191,7 +208,8 @@ test('createNavigationBar respects a custom param name', function (): void {
 
     $urlNext = $navbar['URL_NEXT'] ?? null;
     Assert::assertIsString($urlNext);
-    expect($urlNext)->toBe('index.php?offset=60');
+    expect($urlNext)
+        ->toBe('index.php?offset=60');
 });
 
 test('createNavigationBar builds the full "pages" link array around the current page, on a middle page', function (): void {

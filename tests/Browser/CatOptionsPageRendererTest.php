@@ -67,8 +67,10 @@ it('lists both public albums as authorized and none as forbidden for the status 
     $falseOptions = doubleSelectOptions($html, 'cat_false[]');
     expect($trueOptions[1] ?? null)->toBe('Sample Album')
         ->and($trueOptions[2] ?? null)->toBe('Sample Album / Nested Sub Album')
-        ->and($falseOptions)->not->toHaveKey(1)
-        ->and($falseOptions)->not->toHaveKey(2);
+        ->and($falseOptions)
+        ->not->toHaveKey(1)
+        ->and($falseOptions)
+        ->not->toHaveKey(2);
 });
 
 it('splits albums between the true/false selects once one of them is private', function (): void {
@@ -87,9 +89,11 @@ it('splits albums between the true/false selects once one of them is private', f
     $trueOptions = doubleSelectOptions($html, 'cat_true[]');
     $falseOptions = doubleSelectOptions($html, 'cat_false[]');
     expect($trueOptions[1] ?? null)->toBe('Sample Album')
-        ->and($trueOptions)->not->toHaveKey(2)
+        ->and($trueOptions)
+        ->not->toHaveKey(2)
         ->and($falseOptions[2] ?? null)->toBe('Sample Album / Nested Sub Album')
-        ->and($falseOptions)->not->toHaveKey(1);
+        ->and($falseOptions)
+        ->not->toHaveKey(1);
 });
 
 // Edge case: CatOptionsRequest::fromArrays() falls back to 'status' for any

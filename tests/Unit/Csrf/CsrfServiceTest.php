@@ -2,8 +2,8 @@
 
 declare(strict_types=1);
 
-use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Csrf\CsrfService;
+use Piwigo\Tests\Support\CurrentConfigTestFactory;
 
 // A literal, hardcoded id here (e.g. 'fixed-test-session-id') collides at
 // the OS level: /var/lib/php/sessions is a single machine-wide directory
@@ -27,7 +27,7 @@ use Piwigo\Csrf\CsrfService;
 // worker process.
 function csrfTestSessionId(): string
 {
-    /** @var string|null $id */
+    /** @var string|null */
     static $id = null;
     $id ??= str_replace('.', '-', uniqid('csrf-test-', true));
 
@@ -60,7 +60,8 @@ test('getToken is stable for the same session id and secret key', function (): v
     session_id(csrfTestSessionId());
     $service = new CsrfService(CurrentConfigTestFactory::get());
 
-    expect($service->getToken())->toBe($service->getToken());
+    expect($service->getToken())
+        ->toBe($service->getToken());
 });
 
 // [SEC-11] Regression test: getToken() must use sha256, not md5. Verified by
@@ -83,7 +84,8 @@ test('getToken changes when the secret key changes', function (): void {
 
     CurrentConfigTestFactory::get()->secretKey = 'a-different-secret';
 
-    expect($service->getToken())->not->toBe($first);
+    expect($service->getToken())
+        ->not->toBe($first);
 });
 
 test('check returns null when no token was submitted', function (): void {
@@ -98,7 +100,8 @@ test('check returns true when the submitted token matches', function (): void {
     $service = new CsrfService(CurrentConfigTestFactory::get());
     $_REQUEST['pwg_token'] = $service->getToken();
 
-    expect($service->check())->toBeTrue();
+    expect($service->check())
+        ->toBeTrue();
 });
 
 test('check returns false when the submitted token does not match', function (): void {

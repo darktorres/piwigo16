@@ -5,10 +5,10 @@ declare(strict_types=1);
 use PHPUnit\Framework\Assert;
 use Piwigo\Bootstrap\PresentationAccessor;
 use Piwigo\Config\CurrentConfig;
-use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Paths;
 use Piwigo\Mail\NotificationByMailSender;
+use Piwigo\Tests\Support\CurrentConfigTestFactory;
 
 /**
  * Piwigo\Mail\NotificationByMailSender's constructor computes
@@ -58,7 +58,8 @@ function nbm_sender_with_timeout_inputs(string $maxExecutionTime, float $percent
 
 function nbm_sendmail_timeout(NotificationByMailSender $sender): float
 {
-    $value = new ReflectionProperty($sender, 'sendmailTimeout')->getValue($sender);
+    $value = new ReflectionProperty($sender, 'sendmailTimeout')
+        ->getValue($sender);
     Assert::assertIsFloat($value);
 
     return $value;
@@ -82,7 +83,8 @@ test('sendmailTimeout falls back to the configured default exactly at the <= 0 b
     // regardless of the percent operand.
     $sender = nbm_sender_with_timeout_inputs(maxExecutionTime: '0', percent: 0.8, timeoutDefault: 55);
 
-    expect(nbm_sendmail_timeout($sender))->toBe(55.0);
+    expect(nbm_sendmail_timeout($sender))
+        ->toBe(55.0);
 });
 
 test('sendmailTimeout keeps the real computed product, unmodified, just above the fallback boundary', function (): void {
@@ -98,7 +100,8 @@ test('sendmailTimeout keeps the real computed product, unmodified, just above th
     // kill independent of the boundary tested above.
     $sender = nbm_sender_with_timeout_inputs(maxExecutionTime: '1', percent: 0.5, timeoutDefault: 55);
 
-    expect(nbm_sendmail_timeout($sender))->toBe(0.5);
+    expect(nbm_sendmail_timeout($sender))
+        ->toBe(0.5);
 });
 
 /**

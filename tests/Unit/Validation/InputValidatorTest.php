@@ -9,7 +9,9 @@ use Piwigo\Validation\InputValidator;
 test('validate accepts a scalar value matching the pattern', function (): void {
     $validator = new InputValidator();
 
-    expect($validator->validate('id', ['id' => '42'], false, ValidationPattern::ID))->toBeNull();
+    expect($validator->validate('id', [
+        'id' => '42',
+    ], false, ValidationPattern::ID))->toBeNull();
 });
 
 test('validate returns true for a missing optional parameter', function (): void {
@@ -21,7 +23,9 @@ test('validate returns true for a missing optional parameter', function (): void
 test('validate returns true for an empty-string parameter treated as absent', function (): void {
     $validator = new InputValidator();
 
-    expect($validator->validate('id', ['id' => ''], false, ValidationPattern::ID))->toBeTrue();
+    expect($validator->validate('id', [
+        'id' => '',
+    ], false, ValidationPattern::ID))->toBeTrue();
 });
 
 test('validate returns true for a literal "0" parameter treated as absent', function (): void {
@@ -29,7 +33,9 @@ test('validate returns true for a literal "0" parameter treated as absent', func
     // just like ''.
     $validator = new InputValidator();
 
-    expect($validator->validate('id', ['id' => '0'], false, ValidationPattern::ID))->toBeTrue();
+    expect($validator->validate('id', [
+        'id' => '0',
+    ], false, ValidationPattern::ID))->toBeTrue();
 });
 
 test('validate returns true for an integer 0 parameter treated as absent', function (): void {
@@ -40,7 +46,9 @@ test('validate returns true for an integer 0 parameter treated as absent', funct
     // reaching the pattern match below and returning null instead of true).
     $validator = new InputValidator();
 
-    expect($validator->validate('id', ['id' => 0], false, ValidationPattern::ID))->toBeTrue();
+    expect($validator->validate('id', [
+        'id' => 0,
+    ], false, ValidationPattern::ID))->toBeTrue();
 });
 
 test('validate returns true for a float 0.0 parameter treated as absent', function (): void {
@@ -49,7 +57,9 @@ test('validate returns true for a float 0.0 parameter treated as absent', functi
     // same-type check does not share with the integer 0 clause.
     $validator = new InputValidator();
 
-    expect($validator->validate('id', ['id' => 0.0], false, ValidationPattern::ID))->toBeTrue();
+    expect($validator->validate('id', [
+        'id' => 0.0,
+    ], false, ValidationPattern::ID))->toBeTrue();
 });
 
 test('validate raises a hacking-attempt error for a mandatory missing parameter', function (): void {
@@ -62,21 +72,29 @@ test('validate raises a hacking-attempt error for a mandatory missing parameter'
 test('validate raises a hacking-attempt error for a scalar value not matching the pattern', function (): void {
     $validator = new InputValidator();
 
-    expect(fn (): ?true => $validator->validate('id', ['id' => 'not-a-number'], false, ValidationPattern::ID))
+    expect(fn (): ?true => $validator->validate('id', [
+        'id' => 'not-a-number',
+    ], false, ValidationPattern::ID))
         ->toThrow(RuntimeException::class, '[Hacking attempt] the input parameter "id" is not valid');
 });
 
 test('validate raises a hacking-attempt error for a non-scalar value', function (): void {
     $validator = new InputValidator();
 
-    expect(fn (): ?true => $validator->validate('id', ['id' => ['nested' => 'array']], false, ValidationPattern::ID))
+    expect(fn (): ?true => $validator->validate('id', [
+        'id' => [
+            'nested' => 'array',
+        ],
+    ], false, ValidationPattern::ID))
         ->toThrow(RuntimeException::class, '[Hacking attempt] the input parameter "id" is not valid');
 });
 
 test('validate accepts every item in an array parameter matching the pattern', function (): void {
     $validator = new InputValidator();
 
-    expect($validator->validate('ids', ['ids' => ['1', '2', '3']], true, ValidationPattern::ID))->toBeNull();
+    expect($validator->validate('ids', [
+        'ids' => ['1', '2', '3'],
+    ], true, ValidationPattern::ID))->toBeNull();
 });
 
 test('validate casts a non-string scalar array item to string before matching the pattern', function (): void {
@@ -87,34 +105,46 @@ test('validate casts a non-string scalar array item to string before matching th
     // ever removed, this would throw instead of returning null.
     $validator = new InputValidator();
 
-    expect($validator->validate('ids', ['ids' => [42]], true, ValidationPattern::ID))->toBeNull();
+    expect($validator->validate('ids', [
+        'ids' => [42],
+    ], true, ValidationPattern::ID))->toBeNull();
 });
 
 test('validate raises a hacking-attempt error when an array item does not match the pattern', function (): void {
     $validator = new InputValidator();
 
-    expect(fn (): ?true => $validator->validate('ids', ['ids' => ['1', 'bad']], true, ValidationPattern::ID))
+    expect(fn (): ?true => $validator->validate('ids', [
+        'ids' => ['1', 'bad'],
+    ], true, ValidationPattern::ID))
         ->toThrow(RuntimeException::class, '[Hacking attempt] an item is not valid in input parameter "ids"');
 });
 
 test('validate raises a hacking-attempt error when an array key is not numeric', function (): void {
     $validator = new InputValidator();
 
-    expect(fn (): ?true => $validator->validate('ids', ['ids' => ['abc' => '1']], true, ValidationPattern::ID))
+    expect(fn (): ?true => $validator->validate('ids', [
+        'ids' => [
+            'abc' => '1',
+        ],
+    ], true, ValidationPattern::ID))
         ->toThrow(RuntimeException::class);
 });
 
 test('validate raises a hacking-attempt error when is_array is true but the value is not an array', function (): void {
     $validator = new InputValidator();
 
-    expect(fn (): ?true => $validator->validate('ids', ['ids' => 'not-an-array'], true, ValidationPattern::ID))
+    expect(fn (): ?true => $validator->validate('ids', [
+        'ids' => 'not-an-array',
+    ], true, ValidationPattern::ID))
         ->toThrow(RuntimeException::class, '[Hacking attempt] the input parameter "ids" should be an array');
 });
 
 test('validate accepts a custom regex pattern', function (): void {
     $validator = new InputValidator();
 
-    expect($validator->validate('mode', ['mode' => 'lost'], false, '/^(lost|reset)$/'))->toBeNull();
+    expect($validator->validate('mode', [
+        'mode' => 'lost',
+    ], false, '/^(lost|reset)$/'))->toBeNull();
 });
 
 test('validate raises a hacking-attempt error for a scalar value when the pattern is the empty string', function (): void {
@@ -129,7 +159,9 @@ test('validate raises a hacking-attempt error for a scalar value when the patter
     // RuntimeException, yet the run exits non-zero on the warning alone.
     $validator = new InputValidator();
 
-    expect(fn (): ?true => $validator->validate('mode', ['mode' => 'anything'], false, ''))
+    expect(fn (): ?true => $validator->validate('mode', [
+        'mode' => 'anything',
+    ], false, ''))
         ->toThrow(RuntimeException::class, '[Hacking attempt] the input parameter "mode" is not valid');
 });
 
@@ -141,7 +173,9 @@ test('validate raises a hacking-attempt error for an array item when the pattern
     // key check.
     $validator = new InputValidator();
 
-    expect(fn (): ?true => $validator->validate('modes', ['modes' => ['a']], true, ''))
+    expect(fn (): ?true => $validator->validate('modes', [
+        'modes' => ['a'],
+    ], true, ''))
         ->toThrow(RuntimeException::class, '[Hacking attempt] an item is not valid in input parameter "modes"');
 });
 
@@ -152,7 +186,11 @@ test('validate raises a hacking-attempt error when an array item is itself non-s
     // against.
     $validator = new InputValidator();
 
-    expect(fn (): ?true => $validator->validate('ids', ['ids' => [['nested' => 'array']]], true, ValidationPattern::ID))
+    expect(fn (): ?true => $validator->validate('ids', [
+        'ids' => [[
+            'nested' => 'array',
+        ]],
+    ], true, ValidationPattern::ID))
         ->toThrow(RuntimeException::class, '[Hacking attempt] an item is not valid in input parameter "ids"');
 });
 
@@ -202,6 +240,8 @@ test('fatalError calls the installed HtmlRenderingInterface before throwing, whe
     // fallback throw when it is NOT) -- only this flag distinguishes
     // whether the `instanceof HtmlRenderingInterface` guard actually
     // ran true and delegated to the renderer first.
-    expect($renderer->fatalErrorWasCalled)->toBeTrue()
-        ->and($renderer->lastMessage)->toBe('[Hacking attempt] the input parameter "id" is not valid');
+    expect($renderer->fatalErrorWasCalled)
+        ->toBeTrue()
+        ->and($renderer->lastMessage)
+        ->toBe('[Hacking attempt] the input parameter "id" is not valid');
 });

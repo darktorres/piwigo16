@@ -9,7 +9,9 @@ use Piwigo\Common\ValueObject\ThemeId;
 use Piwigo\Common\ValueObject\Username;
 use Piwigo\Tests\Unit\Common\ValueObject\Contract\StringVoContract;
 
-/** @extends StringVoContract<ThemeId> */
+/**
+ * @extends StringVoContract<ThemeId>
+ */
 final class ThemeIdTest extends StringVoContract
 {
     #[Override]
@@ -30,15 +32,17 @@ final class ThemeIdTest extends StringVoContract
         return Username::class;
     }
 
-    /** @return iterable<string, array{string}> */
+    /**
+     * @return iterable<string, array{string}>
+     */
     #[Override]
     public static function invalidSamples(): iterable
     {
-        yield 'empty'              => [''];
-        yield 'whitespace'         => ['my theme'];
-        yield 'slash'              => ['../etc'];
-        yield 'dot path'           => ['.'];
-        yield 'unicode'            => ['café'];
+        yield 'empty' => [''];
+        yield 'whitespace' => ['my theme'];
+        yield 'slash' => ['../etc'];
+        yield 'dot path' => ['.'];
+        yield 'unicode' => ['café'];
         yield 'too long (65 chars)' => [str_repeat('a', 65)];
     }
 }

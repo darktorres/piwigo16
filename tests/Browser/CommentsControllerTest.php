@@ -25,7 +25,6 @@ use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
  * author name so `author=` filtering isolates these rows from whatever
  * else the shared dev DB currently contains.
  */
-
 function commentsDbConnect(): mysqli|Connection
 {
     return H::connect();
@@ -49,7 +48,6 @@ function commentsInsert(int $imageId, string $author, string $content, bool $val
 
     return $id;
 }
-
 
 function commentsRowCount(int $commentId): int
 {
@@ -77,7 +75,9 @@ function commentsValidatedFlag(int $commentId): ?int
 it('lists, paginates and keyword-filters real comments for an admin', function (): void {
     $page = H::loginAsAdmin($this);
 
-    $album = H::wsCall($page, 'pwg.categories.add', ['name' => 'Comments Test Album ' . uniqid()]);
+    $album = H::wsCall($page, 'pwg.categories.add', [
+        'name' => 'Comments Test Album ' . uniqid(),
+    ]);
     $albumResult = $album['result'] ?? null;
     if (! is_array($albumResult) || ! is_numeric($albumResult['id'] ?? null)) {
         throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($album, true));
@@ -97,33 +97,40 @@ it('lists, paginates and keyword-filters real comments for an admin', function (
     // Admin sees all 3 (validated=1 restriction only applies to non-admins).
     $page = H::navigateOk($page, '/comments.php?author=' . urlencode($author));
     $html = H::rawWebpage($page)->content();
-    expect(substr_count($html, 'class="commentElement'))->toBe(3);
+    expect(substr_count($html, 'class="commentElement'))
+        ->toBe(3);
     $page->assertSee($author);
 
     // items_number overrides the page size to exactly 1 result.
     $page = H::navigateOk($page, '/comments.php?author=' . urlencode($author) . '&items_number=1');
     $html = H::rawWebpage($page)->content();
-    expect(substr_count($html, 'class="commentElement'))->toBe(1);
+    expect(substr_count($html, 'class="commentElement'))
+        ->toBe(1);
 
     // keyword narrows to the single matching comment.
     $page = H::navigateOk($page, '/comments.php?author=' . urlencode($author) . '&keyword=' . urlencode($uniqueWord));
     $html = H::rawWebpage($page)->content();
-    expect(substr_count($html, 'class="commentElement'))->toBe(1);
+    expect(substr_count($html, 'class="commentElement'))
+        ->toBe(1);
     $page->assertSee($uniqueWord);
 
     // an author that matches nothing returns zero results.
     $page = H::navigateOk($page, '/comments.php?author=' . urlencode('no-such-author-' . uniqid()));
     $html = H::rawWebpage($page)->content();
-    expect(substr_count($html, 'class="commentElement'))->toBe(0);
+    expect(substr_count($html, 'class="commentElement'))
+        ->toBe(0);
 
-    expect(commentsValidatedFlag($unvalidatedId))->toBe(0);
+    expect(commentsValidatedFlag($unvalidatedId))
+        ->toBe(0);
 });
 
 it('lets an admin validate and delete a comment via comments.php\'s own moderation actions', function (): void {
     $page = H::loginAsAdmin($this);
     $pwgToken = H::pwgToken($page);
 
-    $album = H::wsCall($page, 'pwg.categories.add', ['name' => 'Comments Moderation Album ' . uniqid()]);
+    $album = H::wsCall($page, 'pwg.categories.add', [
+        'name' => 'Comments Moderation Album ' . uniqid(),
+    ]);
     $albumResult = $album['result'] ?? null;
     if (! is_array($albumResult) || ! is_numeric($albumResult['id'] ?? null)) {
         throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($album, true));
@@ -138,20 +145,25 @@ it('lets an admin validate and delete a comment via comments.php\'s own moderati
     $toValidateId = commentsInsert($imageId, $author, 'Please validate me.', false, 3);
     $toDeleteId = commentsInsert($imageId, $author, 'Please delete me.', true, 3);
 
-    expect(commentsValidatedFlag($toValidateId))->toBe(0);
+    expect(commentsValidatedFlag($toValidateId))
+        ->toBe(0);
 
     $page = H::navigateOk($page, '/comments.php?validate=' . $toValidateId . '&pwg_token=' . $pwgToken);
-    expect(commentsValidatedFlag($toValidateId))->toBe(1);
+    expect(commentsValidatedFlag($toValidateId))
+        ->toBe(1);
 
-    expect(commentsRowCount($toDeleteId))->toBe(1);
+    expect(commentsRowCount($toDeleteId))
+        ->toBe(1);
     $page = H::navigateOk($page, '/comments.php?delete=' . $toDeleteId . '&pwg_token=' . $pwgToken);
-    expect(commentsRowCount($toDeleteId))->toBe(0);
+    expect(commentsRowCount($toDeleteId))
+        ->toBe(0);
 
     // Exactly the one remaining (now-validated) comment shows up under the
     // author filter.
     $page = H::navigateOk($page, '/comments.php?author=' . urlencode($author));
     $html = H::rawWebpage($page)->content();
-    expect(substr_count($html, 'class="commentElement'))->toBe(1);
+    expect(substr_count($html, 'class="commentElement'))
+        ->toBe(1);
 });
 
 it('lets an admin delete an anonymous (NULL author_id) comment via comments.php\'s moderation action', function (): void {
@@ -168,7 +180,9 @@ it('lets an admin delete an anonymous (NULL author_id) comment via comments.php\
     $page = H::loginAsAdmin($this);
     $pwgToken = H::pwgToken($page);
 
-    $album = H::wsCall($page, 'pwg.categories.add', ['name' => 'Comments Anon Mod Album ' . uniqid()]);
+    $album = H::wsCall($page, 'pwg.categories.add', [
+        'name' => 'Comments Anon Mod Album ' . uniqid(),
+    ]);
     $albumResult = $album['result'] ?? null;
     if (! is_array($albumResult) || ! is_numeric($albumResult['id'] ?? null)) {
         throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($album, true));
@@ -180,9 +194,11 @@ it('lets an admin delete an anonymous (NULL author_id) comment via comments.php\
 
     $toDeleteId = commentsInsert($imageId, 'guest', 'Anonymous comment to delete.', true, null);
 
-    expect(commentsRowCount($toDeleteId))->toBe(1);
+    expect(commentsRowCount($toDeleteId))
+        ->toBe(1);
     $page = H::navigateOk($page, '/comments.php?delete=' . $toDeleteId . '&pwg_token=' . $pwgToken);
-    expect(commentsRowCount($toDeleteId))->toBe(0);
+    expect(commentsRowCount($toDeleteId))
+        ->toBe(0);
 });
 
 it('returns a real 404 when comments are globally disabled', function (): void {
@@ -215,14 +231,19 @@ it('injects a non-standard comments_page_nb_comments value into the item_number 
 it('filters comments by category (including subcats) and treats an unknown category as zero matches', function (): void {
     $page = H::loginAsAdmin($this);
 
-    $parent = H::wsCall($page, 'pwg.categories.add', ['name' => 'Comments CatFilter Parent ' . uniqid()]);
+    $parent = H::wsCall($page, 'pwg.categories.add', [
+        'name' => 'Comments CatFilter Parent ' . uniqid(),
+    ]);
     $parentResult = $parent['result'] ?? null;
     if (! is_array($parentResult) || ! is_numeric($parentResult['id'] ?? null)) {
         throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($parent, true));
     }
     $parentId = (int) $parentResult['id'];
 
-    $child = H::wsCall($page, 'pwg.categories.add', ['name' => 'Comments CatFilter Child ' . uniqid(), 'parent' => (string) $parentId]);
+    $child = H::wsCall($page, 'pwg.categories.add', [
+        'name' => 'Comments CatFilter Child ' . uniqid(),
+        'parent' => (string) $parentId,
+    ]);
     $childResult = $child['result'] ?? null;
     if (! is_array($childResult) || ! is_numeric($childResult['id'] ?? null)) {
         throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($child, true));
@@ -240,13 +261,15 @@ it('filters comments by category (including subcats) and treats an unknown categ
     // album's own comment (getSubcatIds() includes descendants).
     $page = H::navigateOk($page, '/comments.php?cat=' . $parentId . '&author=' . urlencode($author));
     $html = H::rawWebpage($page)->content();
-    expect(substr_count($html, 'class="commentElement'))->toBe(1);
+    expect(substr_count($html, 'class="commentElement'))
+        ->toBe(1);
 
     // An outright nonexistent category id: getSubcatIds() returns [],
     // narrowed to the [-1] sentinel -- zero matches, not a SQL error.
     $page = H::navigateOk($page, '/comments.php?cat=999999999&author=' . urlencode($author));
     $html = H::rawWebpage($page)->content();
-    expect(substr_count($html, 'class="commentElement'))->toBe(0);
+    expect(substr_count($html, 'class="commentElement'))
+        ->toBe(0);
     H::assertNoServerErrors($page, 'comments.php with an unknown cat id');
 });
 
@@ -254,14 +277,18 @@ it('redirects a guest to identification.php when requesting a specific comment_i
     $page = H::gotoOk($this, '/comments.php?comment_id=1');
 
     $currentUrl = H::rawWebpage($page)->url();
-    expect($currentUrl)->toContain('identification.php');
-    expect($currentUrl)->toContain('redirect=');
+    expect($currentUrl)
+        ->toContain('identification.php');
+    expect($currentUrl)
+        ->toContain('redirect=');
 });
 
 it('narrows the listing to exactly one comment when an admin passes comment_id', function (): void {
     $page = H::loginAsAdmin($this);
 
-    $album = H::wsCall($page, 'pwg.categories.add', ['name' => 'Comments CommentId Album ' . uniqid()]);
+    $album = H::wsCall($page, 'pwg.categories.add', [
+        'name' => 'Comments CommentId Album ' . uniqid(),
+    ]);
     $albumResult = $album['result'] ?? null;
     if (! is_array($albumResult) || ! is_numeric($albumResult['id'] ?? null)) {
         throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($album, true));
@@ -277,14 +304,17 @@ it('narrows the listing to exactly one comment when an admin passes comment_id',
 
     $page = H::navigateOk($page, '/comments.php?comment_id=' . $firstId . '&author=' . urlencode($author));
     $html = H::rawWebpage($page)->content();
-    expect(substr_count($html, 'class="commentElement'))->toBe(1);
+    expect(substr_count($html, 'class="commentElement'))
+        ->toBe(1);
     $page->assertSee('The one comment_id should select.');
 });
 
 it('hides an unvalidated comment from a guest while an admin still sees it', function (): void {
     $page = H::loginAsAdmin($this);
 
-    $album = H::wsCall($page, 'pwg.categories.add', ['name' => 'Comments GuestVisibility Album ' . uniqid()]);
+    $album = H::wsCall($page, 'pwg.categories.add', [
+        'name' => 'Comments GuestVisibility Album ' . uniqid(),
+    ]);
     $albumResult = $album['result'] ?? null;
     if (! is_array($albumResult) || ! is_numeric($albumResult['id'] ?? null)) {
         throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($album, true));
@@ -299,18 +329,22 @@ it('hides an unvalidated comment from a guest while an admin still sees it', fun
     commentsInsert($imageId, $author, 'Unvalidated and guest-hidden.', false);
 
     $adminHtml = H::rawWebpage(H::navigateOk($page, '/comments.php?author=' . urlencode($author)))->content();
-    expect(substr_count($adminHtml, 'class="commentElement'))->toBe(2);
+    expect(substr_count($adminHtml, 'class="commentElement'))
+        ->toBe(2);
 
     $guestPage = H::gotoOk($this, '/comments.php?author=' . urlencode($author));
     $guestHtml = H::rawWebpage($guestPage)->content();
-    expect(substr_count($guestHtml, 'class="commentElement'))->toBe(1);
+    expect(substr_count($guestHtml, 'class="commentElement'))
+        ->toBe(1);
     $guestPage->assertSee('Validated and guest-visible.');
 });
 
 it('shows the edit form with a real ephemeral key for a comment the admin can manage', function (): void {
     $page = H::loginAsAdmin($this);
 
-    $album = H::wsCall($page, 'pwg.categories.add', ['name' => 'Comments EditKey Album ' . uniqid()]);
+    $album = H::wsCall($page, 'pwg.categories.add', [
+        'name' => 'Comments EditKey Album ' . uniqid(),
+    ]);
     $albumResult = $album['result'] ?? null;
     if (! is_array($albumResult) || ! is_numeric($albumResult['id'] ?? null)) {
         throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($album, true));
@@ -330,7 +364,9 @@ it('shows the edit form with a real ephemeral key for a comment the admin can ma
 it('auto-validates an admin\'s own comment edit through the real ephemeral-key round trip', function (): void {
     $page = H::loginAsAdmin($this);
 
-    $album = H::wsCall($page, 'pwg.categories.add', ['name' => 'Comments EditSubmit Album ' . uniqid()]);
+    $album = H::wsCall($page, 'pwg.categories.add', [
+        'name' => 'Comments EditSubmit Album ' . uniqid(),
+    ]);
     $albumResult = $album['result'] ?? null;
     if (! is_array($albumResult) || ! is_numeric($albumResult['id'] ?? null)) {
         throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($album, true));
@@ -374,7 +410,9 @@ it('auto-validates an admin\'s own comment edit through the real ephemeral-key r
 it('rejects an edit submission carrying an invalid ephemeral key', function (): void {
     $page = H::loginAsAdmin($this);
 
-    $album = H::wsCall($page, 'pwg.categories.add', ['name' => 'Comments EditReject Album ' . uniqid()]);
+    $album = H::wsCall($page, 'pwg.categories.add', [
+        'name' => 'Comments EditReject Album ' . uniqid(),
+    ]);
     $albumResult = $album['result'] ?? null;
     if (! is_array($albumResult) || ! is_numeric($albumResult['id'] ?? null)) {
         throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($album, true));
@@ -418,7 +456,9 @@ it('moderates (pending validation) a non-admin author\'s own comment edit when u
         H::setConfigValue('comments_page_nb_comments', '9999');
 
         $adminPage = H::loginAsAdmin($this);
-        $album = H::wsCall($adminPage, 'pwg.categories.add', ['name' => 'Comments Moderate Album ' . uniqid()]);
+        $album = H::wsCall($adminPage, 'pwg.categories.add', [
+            'name' => 'Comments Moderate Album ' . uniqid(),
+        ]);
         $albumResult = $album['result'] ?? null;
         if (! is_array($albumResult) || ! is_numeric($albumResult['id'] ?? null)) {
             throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($album, true));
@@ -435,7 +475,9 @@ it('moderates (pending validation) a non-admin author\'s own comment edit when u
 
         $userPage = H::visitPwg($this, '/identification.php');
         H::assertNoServerErrors($userPage, 'regular_user identification page');
-        $userPage = $userPage->fill('username', 'regular_user')->fill('password', 'regular_user_pass')->click('login');
+        $userPage = $userPage->fill('username', 'regular_user')
+            ->fill('password', 'regular_user_pass')
+            ->click('login');
         H::assertNoServerErrors($userPage, 'regular_user post-login page');
 
         $userPage = H::navigateOk($userPage, '/comments.php?edit=' . $commentId);
@@ -480,7 +522,9 @@ it('moderates (pending validation) a non-admin author\'s own comment edit when u
 it('falls back to the filename-derived name when a photo has no explicit name', function (): void {
     $page = H::loginAsAdmin($this);
 
-    $album = H::wsCall($page, 'pwg.categories.add', ['name' => 'Comments NoName Album ' . uniqid()]);
+    $album = H::wsCall($page, 'pwg.categories.add', [
+        'name' => 'Comments NoName Album ' . uniqid(),
+    ]);
     $albumResult = $album['result'] ?? null;
     if (! is_array($albumResult) || ! is_numeric($albumResult['id'] ?? null)) {
         throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($album, true));
@@ -510,13 +554,16 @@ it('falls back to the filename-derived name when a photo has no explicit name', 
 
     $page = H::navigateOk($page, '/comments.php?author=' . urlencode($author));
     $html = H::rawWebpage($page)->content();
-    expect($html)->toContain('alt="' . htmlspecialchars($expectedAlt) . '"');
+    expect($html)
+        ->toContain('alt="' . htmlspecialchars($expectedAlt) . '"');
 });
 
 it("shows an anonymous comment's own email when no linked user account has one", function (): void {
     $page = H::loginAsAdmin($this);
 
-    $album = H::wsCall($page, 'pwg.categories.add', ['name' => 'Comments GuestEmail Album ' . uniqid()]);
+    $album = H::wsCall($page, 'pwg.categories.add', [
+        'name' => 'Comments GuestEmail Album ' . uniqid(),
+    ]);
     $albumResult = $album['result'] ?? null;
     if (! is_array($albumResult) || ! is_numeric($albumResult['id'] ?? null)) {
         throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($album, true));
@@ -584,7 +631,9 @@ it('trigger_errors on an unrecognized comment_action from a real user_comment_ch
 
     try {
         $page = H::loginAsAdmin($this);
-        $album = H::wsCall($page, 'pwg.categories.add', ['name' => 'Comments Hook Album ' . uniqid()]);
+        $album = H::wsCall($page, 'pwg.categories.add', [
+            'name' => 'Comments Hook Album ' . uniqid(),
+        ]);
         $albumResult = $album['result'] ?? null;
         if (! is_array($albumResult) || ! is_numeric($albumResult['id'] ?? null)) {
             throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($album, true));
@@ -646,14 +695,16 @@ it('trigger_errors on an unrecognized comment_action from a real user_comment_ch
         }).then(r => r.status)
         JS;
         $status = $page->script($js);
-        expect($status)->toBe(200);
+        expect($status)
+            ->toBe(200);
 
         $testErrorsLogPath = dirname(__DIR__, 2) . '/_data/logs/test_errors.log';
         $testErrorsLog = is_file($testErrorsLogPath) ? file_get_contents($testErrorsLogPath) : false;
         if (! is_string($testErrorsLog)) {
             throw new RuntimeException("Could not read {$testErrorsLogPath}");
         }
-        expect($testErrorsLog)->toContain('Invalid comment action ct_unknown_action');
+        expect($testErrorsLog)
+            ->toContain('Invalid comment action ct_unknown_action');
     } finally {
         $db = commentsDbConnect();
         H::dbQuery($db, sprintf("DELETE FROM plugins WHERE id = '%s'", H::dbEscape($db, $pluginId)));

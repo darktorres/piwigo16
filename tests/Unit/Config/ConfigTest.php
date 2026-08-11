@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Config\FilterViewDefinition;
 use Piwigo\Config\NotificationConfig;
 use Piwigo\Config\UpdateNotification;
+use Piwigo\Tests\Support\CurrentConfigTestFactory;
 
 beforeEach(function (): void {
     CurrentConfigTestFactory::get()->reset();
@@ -53,8 +53,10 @@ test('a custom array accessor coerces and falls back to its hardcoded default', 
 test('the recentPostDates custom accessor returns a NotificationConfig VO', function (): void {
     $config = CurrentConfigTestFactory::get()->recentPostDates;
 
-    expect($config->rss->maxDates)->toBe(5)
-        ->and($config->nbm->maxCats)->toBe(9);
+    expect($config->rss->maxDates)
+        ->toBe(5)
+        ->and($config->nbm->maxCats)
+        ->toBe(9);
 });
 
 test('orderBy is a plain raw SQL-fragment string, not a structured {field,dir}[] shape', function (): void {
@@ -138,7 +140,10 @@ test('setAvailablePermissionLevels falls back to the hardcoded default set when 
 
 test('setDefaultFiltersViews replaces only well-shaped entries, falling back per-key for anything else', function (): void {
     CurrentConfigTestFactory::get()->defaultFiltersViews = [
-        'words' => ['access' => 'admin_only', 'default' => false],
+        'words' => [
+            'access' => 'admin_only',
+            'default' => false,
+        ],
         'tags' => 'not-an-array', // invalid shape -> falls back to the hardcoded default
     ];
 
@@ -166,23 +171,37 @@ test('setRandomIndexRedirect keeps only scalar values, stringified, keyed by str
 
 test('setRecentPostDates coerces valid fields and falls back per-field and per-channel', function (): void {
     CurrentConfigTestFactory::get()->recentPostDates = NotificationConfig::fromArray([
-        'RSS' => ['max_dates' => 10, 'max_elements' => 'not-an-int', 'max_cats' => 20],
+        'RSS' => [
+            'max_dates' => 10,
+            'max_elements' => 'not-an-int',
+            'max_cats' => 20,
+        ],
         // NBM entirely omitted -> the whole channel falls back to its own hardcoded default
     ]);
 
     $config = CurrentConfigTestFactory::get()->recentPostDates;
 
-    expect($config->rss->maxDates)->toBe(10)
-        ->and($config->rss->maxElements)->toBe(6) // fallback: source value wasn't an int
-        ->and($config->rss->maxCats)->toBe(20)
-        ->and($config->nbm->maxDates)->toBe(7)
-        ->and($config->nbm->maxElements)->toBe(3)
-        ->and($config->nbm->maxCats)->toBe(9);
+    expect($config->rss->maxDates)
+        ->toBe(10)
+        ->and($config->rss->maxElements)
+        ->toBe(6) // fallback: source value wasn't an int
+        ->and($config->rss->maxCats)
+        ->toBe(20)
+        ->and($config->nbm->maxDates)
+        ->toBe(7)
+        ->and($config->nbm->maxElements)
+        ->toBe(3)
+        ->and($config->nbm->maxCats)
+        ->toBe(9);
 });
 
 test('UpdateNotification::fromArray keeps only the recognized keys, and the property round-trips it', function (): void {
     expect(CurrentConfigTestFactory::get()->updateNotifyLastNotification)->toBeNull();
 
-    CurrentConfigTestFactory::get()->updateNotifyLastNotification = UpdateNotification::fromArray(['version' => '17.1.0', 'notified_on' => '2026-07-01', 'unexpected' => 'ignored']);
+    CurrentConfigTestFactory::get()->updateNotifyLastNotification = UpdateNotification::fromArray([
+        'version' => '17.1.0',
+        'notified_on' => '2026-07-01',
+        'unexpected' => 'ignored',
+    ]);
     expect(CurrentConfigTestFactory::get()->updateNotifyLastNotification)->toEqual(new UpdateNotification(version: '17.1.0', notifiedOn: '2026-07-01'));
 });

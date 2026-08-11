@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
 
-
 it('shows a fatal error when synchronization is disabled', function (): void {
     $snapshot = H::snapshotConfig(['enable_synchronization']);
     H::setConfigValue('enable_synchronization', 'false');
@@ -89,9 +88,11 @@ it('creates a new site for a real, existing directory, then deletes it via the C
 
         $db = H::connect();
         $row = H::dbFetchAssoc($db, sprintf("SELECT id FROM sites WHERE galleries_url LIKE '%%%s%%'", H::dbEscape($db, $dirName)));
-        expect($row)->not->toBeNull();
+        expect($row)
+            ->not->toBeNull();
         $siteId = is_array($row) ? (int) $row['id'] : 0;
-        expect($siteId)->toBeGreaterThan(0);
+        expect($siteId)
+            ->toBeGreaterThan(0);
 
         $listPage = H::navigateOk($page, '/admin.php?page=site_manager');
         // The source HTML entity-encodes the href as "&amp;", but a CSS
@@ -105,7 +106,8 @@ it('creates a new site for a real, existing directory, then deletes it via the C
 
         $afterRow = H::dbFetchAssoc($db, sprintf('SELECT id FROM sites WHERE id = %d', $siteId));
         H::dbClose($db);
-        expect($afterRow)->toBeNull();
+        expect($afterRow)
+            ->toBeNull();
     } finally {
         if (is_dir($absoluteDir)) {
             rmdir($absoluteDir);

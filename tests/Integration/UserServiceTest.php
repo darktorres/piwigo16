@@ -4,48 +4,48 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Integration {
 
-    use Piwigo\Core\ProcessCache;
-    use Override;
-    use Piwigo\Tests\Support\CurrentPathsTestFactory;
-    use Piwigo\Core\Kernel;
-    use Piwigo\Core\InstallationFlag;
-    use LogicException;
-    use Piwigo\PluginConfig\EventDispatcher;
-    use Piwigo\Group\GroupEntity;
-    use Piwigo\Activity\ActivityEntity;
-    use Piwigo\Tests\Support\HtmlServiceTestFactory;
-    use Piwigo\Config\DeploymentPolicy;
-    use Piwigo\Common\ValueObject\Username;
-    use Piwigo\Common\ValueObject\Email;
-    use Piwigo\Tests\Support\UrlServiceTestFactory;
-    use Piwigo\Users\Projection\DefaultUserInfo;
-    use Piwigo\Common\ValueObject\ThemeId;
-    use Piwigo\Users\User;
-    use Piwigo\Tests\Support\PageStateTestFactory;
-    use ReflectionProperty;
-    use Exception;
     use Doctrine\DBAL\Connection;
+    use Exception;
+    use LogicException;
+    use Override;
+    use Piwigo\Activity\ActivityEntity;
     use Piwigo\Activity\ActivityService;
+    use Piwigo\Common\ValueObject\Email;
     use Piwigo\Common\ValueObject\LangCode;
+    use Piwigo\Common\ValueObject\ThemeId;
     use Piwigo\Common\ValueObject\UserId;
+    use Piwigo\Common\ValueObject\Username;
     use Piwigo\Config\ConfigEntry;
+    use Piwigo\Config\ConfigLoader;
     use Piwigo\Config\ConfigService;
     use Piwigo\Config\CurrentConfig;
-    use Piwigo\Tests\Support\CurrentConfigTestFactory;
-    use Piwigo\Config\ConfigLoader;
-    use Piwigo\Tests\Support\CurrentConfigServiceTestFactory;
-    use Piwigo\Tests\Support\LangTestFactory;
+    use Piwigo\Config\DeploymentPolicy;
+    use Piwigo\Core\InstallationFlag;
+    use Piwigo\Core\Kernel;
+    use Piwigo\Core\ProcessCache;
     use Piwigo\Core\WsError;
     use Piwigo\Db\DbConnection;
     use Piwigo\Db\EntityManagerFactory;
+    use Piwigo\Group\GroupEntity;
     use Piwigo\Mail\MailService;
     use Piwigo\Permission\SqlCondition;
+    use Piwigo\PluginConfig\EventDispatcher;
     use Piwigo\Session\SessionEntity;
     use Piwigo\Session\SessionService;
+    use Piwigo\Tests\Support\CurrentConfigServiceTestFactory;
+    use Piwigo\Tests\Support\CurrentConfigTestFactory;
+    use Piwigo\Tests\Support\CurrentPathsTestFactory;
     use Piwigo\Tests\Support\CurrentUserTestFactory;
+    use Piwigo\Tests\Support\HtmlServiceTestFactory;
+    use Piwigo\Tests\Support\LangTestFactory;
+    use Piwigo\Tests\Support\PageStateTestFactory;
+    use Piwigo\Tests\Support\UrlServiceTestFactory;
+    use Piwigo\Users\Projection\DefaultUserInfo;
+    use Piwigo\Users\User;
     use Piwigo\Users\UserRepository;
     use Piwigo\Users\UserService;
     use Piwigo\Users\UserStatus;
+    use ReflectionProperty;
 
     /**
      * Covers validation/lookup (fully self-contained) and
@@ -118,7 +118,7 @@ namespace Piwigo\Tests\Integration {
             $this->conn = DbConnection::build();
             $mailer = Kernel::container()->get(MailService::class);
             self::assertInstanceOf(MailService::class, $mailer);
-            $this->service = new UserService(LangTestFactory::get(), new UserRepository(EntityManagerFactory::build($this->conn), new EventDispatcher(), CurrentConfigTestFactory::get()), EntityManagerFactory::build($this->conn)->getRepository(GroupEntity::class), $mailer, new ActivityService(EntityManagerFactory::build($this->conn)->getRepository(ActivityEntity::class)), HtmlServiceTestFactory::build(), $this->conn, new SessionService(EntityManagerFactory::build($this->conn)->getRepository(SessionEntity::class),CurrentConfigTestFactory::get()), new EventDispatcher(), new DeploymentPolicy(), CurrentUserTestFactory::get(), CurrentConfigTestFactory::get(), $installationFlag, $this->processCache, CurrentPathsTestFactory::get());
+            $this->service = new UserService(LangTestFactory::get(), new UserRepository(EntityManagerFactory::build($this->conn), new EventDispatcher(), CurrentConfigTestFactory::get()), EntityManagerFactory::build($this->conn)->getRepository(GroupEntity::class), $mailer, new ActivityService(EntityManagerFactory::build($this->conn)->getRepository(ActivityEntity::class)), HtmlServiceTestFactory::build(), $this->conn, new SessionService(EntityManagerFactory::build($this->conn)->getRepository(SessionEntity::class), CurrentConfigTestFactory::get()), new EventDispatcher(), new DeploymentPolicy(), CurrentUserTestFactory::get(), CurrentConfigTestFactory::get(), $installationFlag, $this->processCache, CurrentPathsTestFactory::get());
 
             // checkAndSaveUserInfos()'s own success path (any call that
             // doesn't return an early 'error') reaches
@@ -129,7 +129,9 @@ namespace Piwigo\Tests\Integration {
             CurrentConfigServiceTestFactory::get()->set(new ConfigService(EntityManagerFactory::build($this->conn)->getRepository(ConfigEntry::class), new EventDispatcher(), $currentConfig));
         }
 
-        /** @param array<int<0, max>|string, mixed> $params */
+        /**
+         * @param array<int<0, max>|string, mixed> $params
+         */
         private function fetchOneInt(string $sql, array $params = []): int
         {
             $value = $this->conn->fetchOne($sql, $params);
@@ -156,60 +158,60 @@ namespace Piwigo\Tests\Integration {
             unset($_SESSION['edit_context']);
         }
 
-        public function test_validate_mail_address_accepts_an_unused_address(): void
+        public function testValidateMailAddressAcceptsAnUnusedAddress(): void
         {
             self::assertSame('', $this->service->validateMailAddress(null, 'never-used-' . bin2hex(random_bytes(4)) . '@example.test'));
         }
 
-        public function test_validate_mail_address_rejects_a_malformed_address(): void
+        public function testValidateMailAddressRejectsAMalformedAddress(): void
         {
             self::assertNotSame('', $this->service->validateMailAddress(null, 'not-an-email'));
         }
 
-        public function test_validate_mail_address_rejects_an_address_already_in_use(): void
+        public function testValidateMailAddressRejectsAnAddressAlreadyInUse(): void
         {
             self::assertNotSame('', $this->service->validateMailAddress(null, 'fixture_admin@example.test'));
         }
 
-        public function test_validate_mail_address_excludes_the_given_user_id(): void
+        public function testValidateMailAddressExcludesTheGivenUserId(): void
         {
             self::assertSame('', $this->service->validateMailAddress(UserId::from(1), 'fixture_admin@example.test'));
         }
 
-        public function test_validate_login_case_rejects_an_existing_username_any_case(): void
+        public function testValidateLoginCaseRejectsAnExistingUsernameAnyCase(): void
         {
             self::assertNotSame('', $this->service->validateLoginCase('FIXTURE_ADMIN'));
         }
 
-        public function test_validate_login_case_accepts_a_free_username(): void
+        public function testValidateLoginCaseAcceptsAFreeUsername(): void
         {
             self::assertSame('', $this->service->validateLoginCase('never-used-' . bin2hex(random_bytes(4))));
         }
 
-        public function test_search_case_username_returns_the_stored_casing(): void
+        public function testSearchCaseUsernameReturnsTheStoredCasing(): void
         {
             self::assertSame('fixture_admin', $this->service->searchCaseUsername('FIXTURE_ADMIN'));
         }
 
-        public function test_get_user_id_finds_a_fixture_user(): void
+        public function testGetUserIdFindsAFixtureUser(): void
         {
             self::assertEquals(UserId::from(1), $this->service->getUserId(Username::from('fixture_admin')));
             self::assertNull($this->service->getUserId(Username::from('does-not-exist')));
         }
 
-        public function test_get_user_id_by_email_finds_a_fixture_user(): void
+        public function testGetUserIdByEmailFindsAFixtureUser(): void
         {
             self::assertEquals(UserId::from(1), $this->service->getUserIdByEmail(Email::from('fixture_admin@example.test')));
         }
 
-        public function test_get_default_user_info_and_value(): void
+        public function testGetDefaultUserInfoAndValue(): void
         {
             $info = $this->service->getDefaultUserInfo();
             self::assertInstanceOf(DefaultUserInfo::class, $info);
             self::assertNotSame('', $info->language);
         }
 
-        public function test_register_user_rejects_an_empty_login(): void
+        public function testRegisterUserRejectsAnEmptyLogin(): void
         {
             $result = $this->service->registerUser('', 'password123', null, UrlServiceTestFactory::build());
 
@@ -218,7 +220,7 @@ namespace Piwigo\Tests\Integration {
             self::assertFalse($result->duplicateUsername);
         }
 
-        public function test_register_user_sets_duplicate_username_without_revealing_it_in_errors(): void
+        public function testRegisterUserSetsDuplicateUsernameWithoutRevealingItInErrors(): void
         {
             // 'guest' (fixture) has no email on file, so the duplicate-
             // account notice email is never attempted here.
@@ -229,7 +231,7 @@ namespace Piwigo\Tests\Integration {
             self::assertSame([], $result->errors, 'the duplicate-login message must never appear in errors');
         }
 
-        public function test_register_user_duplicate_username_does_not_insert_a_new_row(): void
+        public function testRegisterUserDuplicateUsernameDoesNotInsertANewRow(): void
         {
             $countBefore = $this->conn->createQueryBuilder()
                 ->select('COUNT(*)')
@@ -256,7 +258,7 @@ namespace Piwigo\Tests\Integration {
          * is_default groups (confirmed: all 3 fixture groups are
          * is_default=0), so this test creates its own.
          */
-        public function test_register_user_adds_the_new_user_to_default_groups(): void
+        public function testRegisterUserAddsTheNewUserToDefaultGroups(): void
         {
             $groupRepo = EntityManagerFactory::build($this->conn)->getRepository(GroupEntity::class);
             $defaultGroupId = $groupRepo->insert('p18-regression-' . bin2hex(random_bytes(4)), true);
@@ -291,7 +293,7 @@ namespace Piwigo\Tests\Integration {
          * DBAL, which EffectiveForbiddenCategoriesCache::getForUser() must
          * accept directly rather than as a string.
          */
-        public function test_build_user_populates_effective_permission_fields(): void
+        public function testBuildUserPopulatesEffectivePermissionFields(): void
         {
             $user = $this->service->buildUser(UserId::from(1));
 
@@ -302,14 +304,14 @@ namespace Piwigo\Tests\Integration {
             self::assertIsString($user['last_photo_date']);
         }
 
-        public function test_get_current_language_returns_null_when_current_user_is_not_initialized(): void
+        public function testGetCurrentLanguageReturnsNullWhenCurrentUserIsNotInitialized(): void
         {
             CurrentUserTestFactory::get()->reset();
 
             self::assertNull($this->service->getCurrentLanguage());
         }
 
-        public function test_get_current_language_returns_the_initialized_current_users_own_language(): void
+        public function testGetCurrentLanguageReturnsTheInitializedCurrentUsersOwnLanguage(): void
         {
             $user = $this->service->buildUser(UserId::from(1));
             CurrentUserTestFactory::get()->set(User::fromUserArray($user));
@@ -321,73 +323,110 @@ namespace Piwigo\Tests\Integration {
             }
         }
 
-        public function test_get_username_returns_the_real_username_for_a_known_user(): void
+        public function testGetUsernameReturnsTheRealUsernameForAKnownUser(): void
         {
             self::assertEquals(Username::from('fixture_admin'), $this->service->getUsername(UserId::from(1)));
         }
 
-        public function test_get_username_returns_false_for_an_unknown_user(): void
+        public function testGetUsernameReturnsFalseForAnUnknownUser(): void
         {
             self::assertNull($this->service->getUsername(UserId::from(999999)));
         }
 
-        public function test_check_and_save_user_infos_rejects_an_empty_username(): void
+        public function testCheckAndSaveUserInfosRejectsAnEmptyUsername(): void
         {
-            $result = $this->service->checkAndSaveUserInfos(['user_id' => [4], 'username' => '   '], PageStateTestFactory::get());
+            $result = $this->service->checkAndSaveUserInfos([
+                'user_id' => [4],
+                'username' => '   ',
+            ], PageStateTestFactory::get());
 
             self::assertSame(
-                ['error' => ['code' => WsError::INVALID_PARAM, 'message' => 'Name field must not be empty']],
+                [
+                    'error' => [
+                        'code' => WsError::INVALID_PARAM,
+                        'message' => 'Name field must not be empty',
+                    ],
+                ],
                 $result
             );
         }
 
-        public function test_check_and_save_user_infos_rejects_a_nonexistent_user_id(): void
+        public function testCheckAndSaveUserInfosRejectsANonexistentUserId(): void
         {
-            $result = $this->service->checkAndSaveUserInfos(['user_id' => [999999]], PageStateTestFactory::get());
+            $result = $this->service->checkAndSaveUserInfos([
+                'user_id' => [999999],
+            ], PageStateTestFactory::get());
 
             self::assertSame(
-                ['error' => ['code' => WsError::INVALID_PARAM, 'message' => 'This user does not exist.']],
+                [
+                    'error' => [
+                        'code' => WsError::INVALID_PARAM,
+                        'message' => 'This user does not exist.',
+                    ],
+                ],
                 $result
             );
         }
 
-        public function test_check_and_save_user_infos_rejects_a_username_already_used_by_another_user(): void
+        public function testCheckAndSaveUserInfosRejectsAUsernameAlreadyUsedByAnotherUser(): void
         {
-            $result = $this->service->checkAndSaveUserInfos(['user_id' => [4], 'username' => 'fixture_admin'], PageStateTestFactory::get());
+            $result = $this->service->checkAndSaveUserInfos([
+                'user_id' => [4],
+                'username' => 'fixture_admin',
+            ], PageStateTestFactory::get());
 
             self::assertSame(
-                ['error' => ['code' => WsError::INVALID_PARAM, 'message' => LangTestFactory::get()->t('this login is already used')]],
+                [
+                    'error' => [
+                        'code' => WsError::INVALID_PARAM,
+                        'message' => LangTestFactory::get()->t('this login is already used'),
+                    ],
+                ],
                 $result
             );
         }
 
-        public function test_check_and_save_user_infos_rejects_a_username_containing_html_tags(): void
+        public function testCheckAndSaveUserInfosRejectsAUsernameContainingHtmlTags(): void
         {
-            $result = $this->service->checkAndSaveUserInfos(['user_id' => [4], 'username' => '<b>evil</b>'], PageStateTestFactory::get());
+            $result = $this->service->checkAndSaveUserInfos([
+                'user_id' => [4],
+                'username' => '<b>evil</b>',
+            ], PageStateTestFactory::get());
 
             self::assertSame(
-                ['error' => ['code' => WsError::INVALID_PARAM, 'message' => LangTestFactory::get()->t('html tags are not allowed in login')]],
+                [
+                    'error' => [
+                        'code' => WsError::INVALID_PARAM,
+                        'message' => LangTestFactory::get()->t('html tags are not allowed in login'),
+                    ],
+                ],
                 $result
             );
         }
 
-        public function test_check_and_save_user_infos_rejects_an_invalid_email(): void
+        public function testCheckAndSaveUserInfosRejectsAnInvalidEmail(): void
         {
-            $result = $this->service->checkAndSaveUserInfos(['user_id' => [4], 'email' => 'not-an-email'], PageStateTestFactory::get());
+            $result = $this->service->checkAndSaveUserInfos([
+                'user_id' => [4],
+                'email' => 'not-an-email',
+            ], PageStateTestFactory::get());
 
             self::assertArrayHasKey('error', $result);
             self::assertIsArray($result['error']);
             self::assertSame(WsError::INVALID_PARAM, $result['error']['code']);
         }
 
-        public function test_check_and_save_user_infos_rejects_a_password_change_by_a_non_webmaster_for_a_protected_user(): void
+        public function testCheckAndSaveUserInfosRejectsAPasswordChangeByANonWebmasterForAProtectedUser(): void
         {
             // Target user 1 (fixture_admin) is 'webmaster' status, so it's
             // always protected against a non-webmaster's password change
             // regardless of who the current user is -- the default guest
             // current user (id 2, per CurrentConfig::guestId() above)
             // suffices, no CurrentUserTestFactory::get()->set() needed.
-            $result = $this->service->checkAndSaveUserInfos(['user_id' => [1], 'password' => 'newpass123'], PageStateTestFactory::get());
+            $result = $this->service->checkAndSaveUserInfos([
+                'user_id' => [1],
+                'password' => 'newpass123',
+            ], PageStateTestFactory::get());
 
             self::assertSame(
                 [
@@ -400,27 +439,33 @@ namespace Piwigo\Tests\Integration {
             );
         }
 
-        public function test_check_and_save_user_infos_allows_a_password_change_by_a_webmaster(): void
+        public function testCheckAndSaveUserInfosAllowsAPasswordChangeByAWebmaster(): void
         {
-            $originalHash = $this->conn->fetchOne('SELECT password FROM ' . 'users' . ' WHERE id = 4');
+            $originalHash = $this->conn->fetchOne('SELECT password FROM users WHERE id = 4');
             self::assertIsString($originalHash);
             CurrentUserTestFactory::get()->set(CurrentUserTestFactory::get()->get()->withStatus(UserStatus::Webmaster));
 
             try {
-                $result = $this->service->checkAndSaveUserInfos(['user_id' => [4], 'password' => 'newpass123'], PageStateTestFactory::get());
+                $result = $this->service->checkAndSaveUserInfos([
+                    'user_id' => [4],
+                    'password' => 'newpass123',
+                ], PageStateTestFactory::get());
 
                 self::assertArrayNotHasKey('error', $result);
                 self::assertIsArray($result['account']);
                 self::assertArrayHasKey('password', $result['account']);
             } finally {
                 CurrentUserTestFactory::get()->reset();
-                $this->conn->executeStatement('UPDATE ' . 'users' . ' SET password = ? WHERE id = 4', [$originalHash]);
+                $this->conn->executeStatement('UPDATE users SET password = ? WHERE id = 4', [$originalHash]);
             }
         }
 
-        public function test_check_and_save_user_infos_rejects_granting_webmaster_status_by_a_non_webmaster(): void
+        public function testCheckAndSaveUserInfosRejectsGrantingWebmasterStatusByANonWebmaster(): void
         {
-            $result = $this->service->checkAndSaveUserInfos(['user_id' => [4], 'status' => 'webmaster'], PageStateTestFactory::get());
+            $result = $this->service->checkAndSaveUserInfos([
+                'user_id' => [4],
+                'status' => 'webmaster',
+            ], PageStateTestFactory::get());
 
             // Real production typo: the array key is 'code ' (trailing
             // space), not 'code' -- confirmed live via a standalone
@@ -437,52 +482,84 @@ namespace Piwigo\Tests\Integration {
             );
         }
 
-        public function test_check_and_save_user_infos_rejects_an_invalid_status_value(): void
+        public function testCheckAndSaveUserInfosRejectsAnInvalidStatusValue(): void
         {
-            $result = $this->service->checkAndSaveUserInfos(['user_id' => [4], 'status' => 'not-a-real-status'], PageStateTestFactory::get());
+            $result = $this->service->checkAndSaveUserInfos([
+                'user_id' => [4],
+                'status' => 'not-a-real-status',
+            ], PageStateTestFactory::get());
 
             self::assertSame(
-                ['error' => ['code' => WsError::INVALID_PARAM, 'message' => 'Invalid status']],
+                [
+                    'error' => [
+                        'code' => WsError::INVALID_PARAM,
+                        'message' => 'Invalid status',
+                    ],
+                ],
                 $result
             );
         }
 
-        public function test_check_and_save_user_infos_rejects_an_invalid_level(): void
+        public function testCheckAndSaveUserInfosRejectsAnInvalidLevel(): void
         {
-            $result = $this->service->checkAndSaveUserInfos(['user_id' => [4], 'level' => 99], PageStateTestFactory::get());
+            $result = $this->service->checkAndSaveUserInfos([
+                'user_id' => [4],
+                'level' => 99,
+            ], PageStateTestFactory::get());
 
             self::assertSame(
-                ['error' => ['code' => WsError::INVALID_PARAM, 'message' => 'Invalid level']],
+                [
+                    'error' => [
+                        'code' => WsError::INVALID_PARAM,
+                        'message' => 'Invalid level',
+                    ],
+                ],
                 $result
             );
         }
 
-        public function test_check_and_save_user_infos_rejects_an_invalid_language(): void
+        public function testCheckAndSaveUserInfosRejectsAnInvalidLanguage(): void
         {
-            $result = $this->service->checkAndSaveUserInfos(['user_id' => [4], 'language' => 'xx-not-real'], PageStateTestFactory::get());
+            $result = $this->service->checkAndSaveUserInfos([
+                'user_id' => [4],
+                'language' => 'xx-not-real',
+            ], PageStateTestFactory::get());
 
             self::assertSame(
-                ['error' => ['code' => WsError::INVALID_PARAM, 'message' => 'Invalid language']],
+                [
+                    'error' => [
+                        'code' => WsError::INVALID_PARAM,
+                        'message' => 'Invalid language',
+                    ],
+                ],
                 $result
             );
         }
 
-        public function test_check_and_save_user_infos_rejects_an_invalid_theme(): void
+        public function testCheckAndSaveUserInfosRejectsAnInvalidTheme(): void
         {
             // The fixture's own themes table is empty (confirmed
             // live), so any value at all is "invalid" here -- no need for
             // an implausible-sounding fake theme name.
-            $result = $this->service->checkAndSaveUserInfos(['user_id' => [4], 'theme' => 'anything'], PageStateTestFactory::get());
+            $result = $this->service->checkAndSaveUserInfos([
+                'user_id' => [4],
+                'theme' => 'anything',
+            ], PageStateTestFactory::get());
 
             self::assertSame(
-                ['error' => ['code' => WsError::INVALID_PARAM, 'message' => 'Invalid theme']],
+                [
+                    'error' => [
+                        'code' => WsError::INVALID_PARAM,
+                        'message' => 'Invalid theme',
+                    ],
+                ],
                 $result
             );
         }
 
-        public function test_check_and_save_user_infos_updates_username_and_email_for_a_single_user(): void
+        public function testCheckAndSaveUserInfosUpdatesUsernameAndEmailForASingleUser(): void
         {
-            $before = $this->conn->fetchAssociative('SELECT username, mail_address FROM ' . 'users' . ' WHERE id = 4');
+            $before = $this->conn->fetchAssociative('SELECT username, mail_address FROM users WHERE id = 4');
             self::assertIsArray($before);
             $newLogin = 'temp-login-' . bin2hex(random_bytes(4));
 
@@ -494,25 +571,35 @@ namespace Piwigo\Tests\Integration {
                 ], PageStateTestFactory::get());
 
                 self::assertSame(
-                    ['user_id' => [4], 'infos' => [], 'account' => ['username' => $newLogin, 'mail_address' => 'temp13@example.test']],
+                    [
+                        'user_id' => [4],
+                        'infos' => [],
+                        'account' => [
+                            'username' => $newLogin,
+                            'mail_address' => 'temp13@example.test',
+                        ],
+                    ],
                     $result
                 );
-                $after = $this->conn->fetchAssociative('SELECT username, mail_address FROM ' . 'users' . ' WHERE id = 4');
-                self::assertSame(['username' => $newLogin, 'mail_address' => 'temp13@example.test'], $after);
+                $after = $this->conn->fetchAssociative('SELECT username, mail_address FROM users WHERE id = 4');
+                self::assertSame([
+                    'username' => $newLogin,
+                    'mail_address' => 'temp13@example.test',
+                ], $after);
             } finally {
                 $this->conn->executeStatement(
-                    'UPDATE ' . 'users' . ' SET username = ?, mail_address = ? WHERE id = 4',
+                    'UPDATE users SET username = ?, mail_address = ? WHERE id = 4',
                     [$before['username'], $before['mail_address']]
                 );
             }
         }
 
-        public function test_check_and_save_user_infos_updates_every_user_infos_field_for_a_single_user(): void
+        public function testCheckAndSaveUserInfosUpdatesEveryUserInfosFieldForASingleUser(): void
         {
             // getPwgThemes()'s own checkThemeInstalled() call requires a
             // real themes/<id> directory on disk, not just a DB row --
             // 'default' is the one real theme directory this repo ships.
-            $this->conn->executeStatement("INSERT INTO " . 'themes' . " (id, version, name) VALUES ('default', '1.0', 'Default')");
+            $this->conn->executeStatement('INSERT INTO themes' . " (id, version, name) VALUES ('default', '1.0', 'Default')");
 
             try {
                 $result = $this->service->checkAndSaveUserInfos([
@@ -539,11 +626,15 @@ namespace Piwigo\Tests\Integration {
                     'show_nb_hits' => 0,
                     'enabled_high' => 1,
                 ];
-                self::assertSame(['user_id' => [4], 'infos' => $expectedInfos, 'account' => []], $result);
+                self::assertSame([
+                    'user_id' => [4],
+                    'infos' => $expectedInfos,
+                    'account' => [],
+                ], $result);
 
                 $after = $this->conn->fetchAssociative(
                     'SELECT level, language, theme, nb_image_page, recent_period, expand, show_nb_comments, show_nb_hits, enabled_high'
-                    . ' FROM ' . 'user_infos' . ' WHERE user_id = 4'
+                    . ' FROM user_infos WHERE user_id = 4'
                 );
                 self::assertIsArray($after);
                 // expand/show_nb_comments/show_nb_hits/enabled_high are
@@ -559,12 +650,22 @@ namespace Piwigo\Tests\Integration {
                 }
                 self::assertSame($expectedInfos, $after);
             } finally {
-                $this->conn->executeStatement("DELETE FROM " . 'themes' . " WHERE id = 'default'");
+                $this->conn->executeStatement('DELETE FROM themes' . " WHERE id = 'default'");
                 $boolLiterals = $this->dbDriver === 'pgsql'
-                    ? ['expand' => 'false', 'show_nb_comments' => 'false', 'show_nb_hits' => 'false', 'enabled_high' => 'true']
-                    : ['expand' => '0', 'show_nb_comments' => '0', 'show_nb_hits' => '0', 'enabled_high' => '1'];
+                    ? [
+                        'expand' => 'false',
+                        'show_nb_comments' => 'false',
+                        'show_nb_hits' => 'false',
+                        'enabled_high' => 'true',
+                    ]
+                    : [
+                        'expand' => '0',
+                        'show_nb_comments' => '0',
+                        'show_nb_hits' => '0',
+                        'enabled_high' => '1',
+                    ];
                 $this->conn->executeStatement(
-                    "UPDATE " . 'user_infos' . " SET level = 0, language = 'en_UK', theme = 'default',"
+                    'UPDATE user_infos' . " SET level = 0, language = 'en_UK', theme = 'default',"
                     . " nb_image_page = 15, recent_period = 7, expand = {$boolLiterals['expand']},"
                     . " show_nb_comments = {$boolLiterals['show_nb_comments']}, show_nb_hits = {$boolLiterals['show_nb_hits']},"
                     . " enabled_high = {$boolLiterals['enabled_high']}"
@@ -573,7 +674,7 @@ namespace Piwigo\Tests\Integration {
             }
         }
 
-        public function test_check_and_save_user_infos_multi_user_branch_skips_username_email_password_checks(): void
+        public function testCheckAndSaveUserInfosMultiUserBranchSkipsUsernameEmailPasswordChecks(): void
         {
             try {
                 // 'username' is set but count(user_ids) !== 1, so the
@@ -586,31 +687,46 @@ namespace Piwigo\Tests\Integration {
                     'level' => 2,
                 ], PageStateTestFactory::get());
 
-                self::assertSame(['user_id' => [3, 4], 'infos' => ['level' => 2], 'account' => []], $result);
+                self::assertSame([
+                    'user_id' => [3, 4],
+                    'infos' => [
+                        'level' => 2,
+                    ],
+                    'account' => [],
+                ], $result);
 
                 $levels = $this->conn->fetchAllAssociative(
-                    'SELECT user_id, level FROM ' . 'user_infos' . ' WHERE user_id IN (3, 4) ORDER BY user_id'
+                    'SELECT user_id, level FROM user_infos WHERE user_id IN (3, 4) ORDER BY user_id'
                 );
-                self::assertSame([['user_id' => 3, 'level' => 2], ['user_id' => 4, 'level' => 2]], $levels);
+                self::assertSame([[
+                    'user_id' => 3,
+                    'level' => 2,
+                ], [
+                    'user_id' => 4,
+                    'level' => 2,
+                ]], $levels);
             } finally {
-                $this->conn->executeStatement('UPDATE ' . 'user_infos' . ' SET level = 0 WHERE user_id IN (3, 4)');
+                $this->conn->executeStatement('UPDATE user_infos SET level = 0 WHERE user_id IN (3, 4)');
             }
         }
 
-        public function test_check_and_save_user_infos_status_guest_deletes_sessions_for_the_affected_users(): void
+        public function testCheckAndSaveUserInfosStatusGuestDeletesSessionsForTheAffectedUsers(): void
         {
             try {
-                $result = $this->service->checkAndSaveUserInfos(['user_id' => [4], 'status' => 'guest'], PageStateTestFactory::get());
+                $result = $this->service->checkAndSaveUserInfos([
+                    'user_id' => [4],
+                    'status' => 'guest',
+                ], PageStateTestFactory::get());
 
                 self::assertArrayNotHasKey('error', $result);
-                $status = $this->conn->fetchOne('SELECT status FROM ' . 'user_infos' . ' WHERE user_id = 4');
+                $status = $this->conn->fetchOne('SELECT status FROM user_infos WHERE user_id = 4');
                 self::assertSame('guest', $status);
             } finally {
-                $this->conn->executeStatement("UPDATE " . 'user_infos' . " SET status = 'normal' WHERE user_id = 4");
+                $this->conn->executeStatement('UPDATE user_infos' . " SET status = 'normal' WHERE user_id = 4");
             }
         }
 
-        public function test_check_and_save_user_infos_admin_cannot_change_status_of_another_admin_or_webmaster(): void
+        public function testCheckAndSaveUserInfosAdminCannotChangeStatusOfAnotherAdminOrWebmaster(): void
         {
             // 'normal' isn't in the ['webmaster', 'admin'] granting-restricted
             // list, so an admin current user passes that first guard --
@@ -622,48 +738,57 @@ namespace Piwigo\Tests\Integration {
             CurrentUserTestFactory::get()->set(CurrentUserTestFactory::get()->get()->withStatus(UserStatus::Admin));
 
             try {
-                $result = $this->service->checkAndSaveUserInfos(['user_id' => [1], 'status' => 'normal'], PageStateTestFactory::get());
+                $result = $this->service->checkAndSaveUserInfos([
+                    'user_id' => [1],
+                    'status' => 'normal',
+                ], PageStateTestFactory::get());
             } finally {
                 CurrentUserTestFactory::get()->reset();
             }
 
             self::assertArrayNotHasKey('error', $result);
-            $status = $this->conn->fetchOne('SELECT status FROM ' . 'user_infos' . ' WHERE user_id = 1');
+            $status = $this->conn->fetchOne('SELECT status FROM user_infos WHERE user_id = 1');
             self::assertSame('webmaster', $status);
         }
 
-        public function test_check_and_save_user_infos_group_id_removes_and_reassigns_group_membership(): void
+        public function testCheckAndSaveUserInfosGroupIdRemovesAndReassignsGroupMembership(): void
         {
             // Fixture: user 4 (power_user) starts in group 3 only.
             try {
-                $result = $this->service->checkAndSaveUserInfos(['user_id' => [4], 'group_id' => [1, 2]], PageStateTestFactory::get());
+                $result = $this->service->checkAndSaveUserInfos([
+                    'user_id' => [4],
+                    'group_id' => [1, 2],
+                ], PageStateTestFactory::get());
 
                 self::assertArrayNotHasKey('error', $result);
                 $groups = $this->conn->fetchFirstColumn(
-                    'SELECT group_id FROM ' . 'user_group' . ' WHERE user_id = 4 ORDER BY group_id'
+                    'SELECT group_id FROM user_group WHERE user_id = 4 ORDER BY group_id'
                 );
                 self::assertSame([1, 2], $groups);
             } finally {
-                $this->conn->executeStatement('DELETE FROM ' . 'user_group' . ' WHERE user_id = 4');
-                $this->conn->executeStatement('INSERT INTO ' . 'user_group' . ' (user_id, group_id) VALUES (4, 3)');
+                $this->conn->executeStatement('DELETE FROM user_group WHERE user_id = 4');
+                $this->conn->executeStatement('INSERT INTO user_group (user_id, group_id) VALUES (4, 3)');
             }
         }
 
-        public function test_check_and_save_user_infos_group_id_with_only_a_nonexistent_group_clears_membership_without_reinserting(): void
+        public function testCheckAndSaveUserInfosGroupIdWithOnlyANonexistentGroupClearsMembershipWithoutReinserting(): void
         {
             try {
-                $result = $this->service->checkAndSaveUserInfos(['user_id' => [4], 'group_id' => [999999]], PageStateTestFactory::get());
+                $result = $this->service->checkAndSaveUserInfos([
+                    'user_id' => [4],
+                    'group_id' => [999999],
+                ], PageStateTestFactory::get());
 
                 self::assertArrayNotHasKey('error', $result);
-                $groups = $this->conn->fetchFirstColumn('SELECT group_id FROM ' . 'user_group' . ' WHERE user_id = 4');
+                $groups = $this->conn->fetchFirstColumn('SELECT group_id FROM user_group WHERE user_id = 4');
                 self::assertSame([], $groups);
             } finally {
-                $this->conn->executeStatement('DELETE FROM ' . 'user_group' . ' WHERE user_id = 4');
-                $this->conn->executeStatement('INSERT INTO ' . 'user_group' . ' (user_id, group_id) VALUES (4, 3)');
+                $this->conn->executeStatement('DELETE FROM user_group WHERE user_id = 4');
+                $this->conn->executeStatement('INSERT INTO user_group (user_id, group_id) VALUES (4, 3)');
             }
         }
 
-        public function test_get_recent_photos_condition_returns_a_false_condition_when_last_photo_date_is_not_set(): void
+        public function testGetRecentPhotosConditionReturnsAFalseConditionWhenLastPhotoDateIsNotSet(): void
         {
             // Default guest CurrentUser (from IntegrationTestCase's own
             // setUp) has no 'last_photo_date' key in rawAttributes at all
@@ -672,7 +797,7 @@ namespace Piwigo\Tests\Integration {
             self::assertEquals(new SqlCondition('0=1'), $this->service->getRecentPhotosCondition('i.date_available'));
         }
 
-        public function test_get_recent_photos_condition_builds_a_least_expression_when_last_photo_date_is_set(): void
+        public function testGetRecentPhotosConditionBuildsALeastExpressionWhenLastPhotoDateIsSet(): void
         {
             $user = $this->service->buildUser(UserId::from(1));
             CurrentUserTestFactory::get()->set(User::fromUserArray($user));
@@ -697,7 +822,7 @@ namespace Piwigo\Tests\Integration {
          * a non-numeric rawAttributes['recent_period'] falls back to 0 like
          * any other malformed input, never reaching the query verbatim.
          */
-        public function test_get_recent_photos_condition_falls_back_to_zero_days_for_a_non_numeric_recent_period(): void
+        public function testGetRecentPhotosConditionFallsBackToZeroDaysForANonNumericRecentPeriod(): void
         {
             CurrentUserTestFactory::get()->set(new User(
                 id: UserId::from(1),
@@ -731,31 +856,31 @@ namespace Piwigo\Tests\Integration {
             self::assertSame('2024-01-01', $condition->parameters['recentLastPhotoDate']);
         }
 
-        public function test_sync_users_creates_missing_user_infos_for_a_base_user(): void
+        public function testSyncUsersCreatesMissingUserInfosForABaseUser(): void
         {
             $this->conn->executeStatement(
-                "INSERT INTO " . 'users' . " (username, password, mail_address) VALUES ('sync-orphan-user', NULL, NULL)"
+                'INSERT INTO users' . " (username, password, mail_address) VALUES ('sync-orphan-user', NULL, NULL)"
             );
             $newUserId = (int) $this->conn->lastInsertId();
 
             try {
                 self::assertSame(0, $this->fetchOneInt(
-                    'SELECT COUNT(*) FROM ' . 'user_infos' . ' WHERE user_id = ?',
+                    'SELECT COUNT(*) FROM user_infos WHERE user_id = ?',
                     [$newUserId]
                 ));
 
                 $this->service->syncUsers();
 
                 self::assertSame(1, $this->fetchOneInt(
-                    'SELECT COUNT(*) FROM ' . 'user_infos' . ' WHERE user_id = ?',
+                    'SELECT COUNT(*) FROM user_infos WHERE user_id = ?',
                     [$newUserId]
                 ));
             } finally {
-                $this->conn->executeStatement('DELETE FROM ' . 'users' . ' WHERE id = ?', [$newUserId]);
+                $this->conn->executeStatement('DELETE FROM users WHERE id = ?', [$newUserId]);
             }
         }
 
-        public function test_sync_users_deletes_orphaned_child_rows_not_present_in_the_base_table(): void
+        public function testSyncUsersDeletesOrphanedChildRowsNotPresentInTheBaseTable(): void
         {
             // Every one of syncUsers()'s 5 child tables carries a real
             // ON DELETE CASCADE FK back to users in this schema, so
@@ -766,20 +891,20 @@ namespace Piwigo\Tests\Integration {
             // existed in practice: a bulk import/migration that ran with
             // checks off.
             $this->disableForeignKeyChecks($this->conn);
-            $this->conn->executeStatement('INSERT INTO ' . 'user_group' . ' (user_id, group_id) VALUES (777777, 1)');
-            $this->conn->executeStatement('INSERT INTO ' . 'user_infos' . ' (user_id) VALUES (777777)');
+            $this->conn->executeStatement('INSERT INTO user_group (user_id, group_id) VALUES (777777, 1)');
+            $this->conn->executeStatement('INSERT INTO user_infos (user_id) VALUES (777777)');
             $this->enableForeignKeyChecks($this->conn);
 
-            self::assertSame(1, $this->fetchOneInt('SELECT COUNT(*) FROM ' . 'user_group' . ' WHERE user_id = 777777'));
-            self::assertSame(1, $this->fetchOneInt('SELECT COUNT(*) FROM ' . 'user_infos' . ' WHERE user_id = 777777'));
+            self::assertSame(1, $this->fetchOneInt('SELECT COUNT(*) FROM user_group WHERE user_id = 777777'));
+            self::assertSame(1, $this->fetchOneInt('SELECT COUNT(*) FROM user_infos WHERE user_id = 777777'));
 
             $this->service->syncUsers();
 
-            self::assertSame(0, $this->fetchOneInt('SELECT COUNT(*) FROM ' . 'user_group' . ' WHERE user_id = 777777'));
-            self::assertSame(0, $this->fetchOneInt('SELECT COUNT(*) FROM ' . 'user_infos' . ' WHERE user_id = 777777'));
+            self::assertSame(0, $this->fetchOneInt('SELECT COUNT(*) FROM user_group WHERE user_id = 777777'));
+            self::assertSame(0, $this->fetchOneInt('SELECT COUNT(*) FROM user_infos WHERE user_id = 777777'));
         }
 
-        public function test_register_user_notifies_admins_of_a_new_registration(): void
+        public function testRegisterUserNotifiesAdminsOfANewRegistration(): void
         {
             // webmasterId is deliberately fake (999999, see setUp) for
             // every other test in this file -- MailService's own "from"
@@ -818,12 +943,12 @@ namespace Piwigo\Tests\Integration {
                 self::assertSame([], $result->errors);
             } finally {
                 if ($result->userId !== null) {
-                    $this->conn->executeStatement('DELETE FROM ' . 'users' . ' WHERE id = ?', [$result->userId]);
+                    $this->conn->executeStatement('DELETE FROM users WHERE id = ?', [$result->userId]);
                 }
             }
         }
 
-        public function test_register_user_notifies_admins_of_a_new_registration_scoped_to_a_group(): void
+        public function testRegisterUserNotifiesAdminsOfANewRegistrationScopedToAGroup(): void
         {
             // Same reasoning/trick as
             // test_register_user_notifies_admins_of_a_new_registration()
@@ -848,17 +973,17 @@ namespace Piwigo\Tests\Integration {
                 self::assertSame([], $result->errors);
             } finally {
                 if ($result->userId !== null) {
-                    $this->conn->executeStatement('DELETE FROM ' . 'users' . ' WHERE id = ?', [$result->userId]);
+                    $this->conn->executeStatement('DELETE FROM users WHERE id = ?', [$result->userId]);
                 }
             }
         }
 
-        public function test_search_case_username_returns_the_input_unchanged_when_no_match_exists(): void
+        public function testSearchCaseUsernameReturnsTheInputUnchangedWhenNoMatchExists(): void
         {
             self::assertSame('totally-unknown-name', $this->service->searchCaseUsername('totally-unknown-name'));
         }
 
-        public function test_register_user_rejects_a_login_ending_with_a_space(): void
+        public function testRegisterUserRejectsALoginEndingWithASpace(): void
         {
             $result = $this->service->registerUser(
                 'trailing-space-' . bin2hex(random_bytes(3)) . ' ',
@@ -871,7 +996,7 @@ namespace Piwigo\Tests\Integration {
             self::assertSame([LangTestFactory::get()->t('login mustn\'t end with a space character')], $result->errors);
         }
 
-        public function test_register_user_rejects_a_login_starting_with_a_space(): void
+        public function testRegisterUserRejectsALoginStartingWithASpace(): void
         {
             $result = $this->service->registerUser(
                 ' leading-space-' . bin2hex(random_bytes(3)),
@@ -884,7 +1009,7 @@ namespace Piwigo\Tests\Integration {
             self::assertSame([LangTestFactory::get()->t('login mustn\'t start with a space character')], $result->errors);
         }
 
-        public function test_register_user_rejects_a_login_with_html_tags(): void
+        public function testRegisterUserRejectsALoginWithHtmlTags(): void
         {
             $result = $this->service->registerUser(
                 '<b>tag-' . bin2hex(random_bytes(3)) . '</b>',
@@ -897,7 +1022,7 @@ namespace Piwigo\Tests\Integration {
             self::assertSame([LangTestFactory::get()->t('html tags are not allowed in login')], $result->errors);
         }
 
-        public function test_register_user_rejects_an_invalid_mail_address(): void
+        public function testRegisterUserRejectsAnInvalidMailAddress(): void
         {
             $result = $this->service->registerUser(
                 'valid-login-' . bin2hex(random_bytes(3)),
@@ -910,7 +1035,7 @@ namespace Piwigo\Tests\Integration {
             self::assertCount(1, $result->errors);
         }
 
-        public function test_register_user_marks_duplicate_when_insensitive_case_logon_matches_an_existing_login(): void
+        public function testRegisterUserMarksDuplicateWhenInsensitiveCaseLogonMatchesAnExistingLogin(): void
         {
             // 'GUEST' (uppercase) doesn't collide with the fixture's real
             // 'guest' row under this schema's binary username collation
@@ -928,19 +1053,19 @@ namespace Piwigo\Tests\Integration {
             self::assertSame([], $result->errors);
         }
 
-        public function test_create_user_infos_does_nothing_for_an_empty_user_id_list(): void
+        public function testCreateUserInfosDoesNothingForAnEmptyUserIdList(): void
         {
-            $countBefore = $this->fetchOneInt('SELECT COUNT(*) FROM ' . 'user_infos');
+            $countBefore = $this->fetchOneInt('SELECT COUNT(*) FROM user_infos');
 
             $this->service->createUserInfos([]);
 
-            self::assertSame($countBefore, $this->fetchOneInt('SELECT COUNT(*) FROM ' . 'user_infos'));
+            self::assertSame($countBefore, $this->fetchOneInt('SELECT COUNT(*) FROM user_infos'));
         }
 
-        public function test_create_user_infos_assigns_webmaster_status_and_the_max_permission_level(): void
+        public function testCreateUserInfosAssignsWebmasterStatusAndTheMaxPermissionLevel(): void
         {
             $this->conn->executeStatement(
-                "INSERT INTO " . 'users' . " (username, password, mail_address) VALUES ('temp-webmaster-target', NULL, NULL)"
+                'INSERT INTO users' . " (username, password, mail_address) VALUES ('temp-webmaster-target', NULL, NULL)"
             );
             $tempId = (int) $this->conn->lastInsertId();
             CurrentConfigTestFactory::get()->webmasterId = $tempId;
@@ -949,19 +1074,22 @@ namespace Piwigo\Tests\Integration {
                 $this->service->createUserInfos([UserId::from($tempId)]);
 
                 $row = $this->conn->fetchAssociative(
-                    'SELECT status, level FROM ' . 'user_infos' . ' WHERE user_id = ?',
+                    'SELECT status, level FROM user_infos WHERE user_id = ?',
                     [$tempId]
                 );
-                self::assertSame(['status' => 'webmaster', 'level' => 8], $row);
+                self::assertSame([
+                    'status' => 'webmaster',
+                    'level' => 8,
+                ], $row);
             } finally {
-                $this->conn->executeStatement('DELETE FROM ' . 'users' . ' WHERE id = ?', [$tempId]);
+                $this->conn->executeStatement('DELETE FROM users WHERE id = ?', [$tempId]);
             }
         }
 
-        public function test_create_user_infos_assigns_webmaster_status_and_level_zero_when_no_permission_levels_are_configured(): void
+        public function testCreateUserInfosAssignsWebmasterStatusAndLevelZeroWhenNoPermissionLevelsAreConfigured(): void
         {
             $this->conn->executeStatement(
-                "INSERT INTO " . 'users' . " (username, password, mail_address) VALUES ('temp-webmaster-target-2', NULL, NULL)"
+                'INSERT INTO users' . " (username, password, mail_address) VALUES ('temp-webmaster-target-2', NULL, NULL)"
             );
             $tempId = (int) $this->conn->lastInsertId();
             $currentConfig = CurrentConfigTestFactory::get();
@@ -980,27 +1108,32 @@ namespace Piwigo\Tests\Integration {
                 $this->service->createUserInfos([UserId::from($tempId)]);
 
                 $row = $this->conn->fetchAssociative(
-                    'SELECT status, level FROM ' . 'user_infos' . ' WHERE user_id = ?',
+                    'SELECT status, level FROM user_infos WHERE user_id = ?',
                     [$tempId]
                 );
-                self::assertSame(['status' => 'webmaster', 'level' => 0], $row);
+                self::assertSame([
+                    'status' => 'webmaster',
+                    'level' => 0,
+                ], $row);
             } finally {
                 $currentConfig->availablePermissionLevels = [0, 1, 2, 4, 8];
-                $this->conn->executeStatement('DELETE FROM ' . 'users' . ' WHERE id = ?', [$tempId]);
+                $this->conn->executeStatement('DELETE FROM users WHERE id = ?', [$tempId]);
             }
         }
 
-        public function test_build_user_forces_guest_status_for_the_configured_guest_id(): void
+        public function testBuildUserForcesGuestStatusForTheConfiguredGuestId(): void
         {
-            $this->conn->executeStatement("UPDATE " . 'user_infos' . " SET status = 'normal' WHERE user_id = 2");
+            $this->conn->executeStatement('UPDATE user_infos' . " SET status = 'normal' WHERE user_id = 2");
 
             try {
                 $user = $this->service->buildUser(UserId::from(2));
 
                 self::assertSame('guest', $user['status']);
-                self::assertSame(['guest_must_be_guest' => true], $user['internal_status']);
+                self::assertSame([
+                    'guest_must_be_guest' => true,
+                ], $user['internal_status']);
             } finally {
-                $this->conn->executeStatement("UPDATE " . 'user_infos' . " SET status = 'guest' WHERE user_id = 2");
+                $this->conn->executeStatement('UPDATE user_infos' . " SET status = 'guest' WHERE user_id = 2");
             }
         }
 
@@ -1017,17 +1150,17 @@ namespace Piwigo\Tests\Integration {
         // "verified unreachable through the real API" shape as
         // UserRepositoryTest's findAdminIds() note.
 
-        public function test_get_theme_usage_counts_delegates_to_the_repository(): void
+        public function testGetThemeUsageCountsDelegatesToTheRepository(): void
         {
             $username = 'p24-longtail-theme-' . bin2hex(random_bytes(4));
             $theme = 'p24-longtail-theme-' . bin2hex(random_bytes(4));
             $this->conn->executeStatement(
-                "INSERT INTO " . 'users' . " (username, password, mail_address) VALUES (?, NULL, NULL)",
+                'INSERT INTO users (username, password, mail_address) VALUES (?, NULL, NULL)',
                 [$username]
             );
             $tempId = (int) $this->conn->lastInsertId();
             $this->conn->executeStatement(
-                'INSERT INTO ' . 'user_infos' . ' (user_id, theme) VALUES (?, ?)',
+                'INSERT INTO user_infos (user_id, theme) VALUES (?, ?)',
                 [$tempId, $theme]
             );
 
@@ -1037,11 +1170,11 @@ namespace Piwigo\Tests\Integration {
                 self::assertArrayHasKey($theme, $counts);
                 self::assertSame(1, $counts[$theme]);
             } finally {
-                $this->conn->executeStatement('DELETE FROM ' . 'users' . ' WHERE id = ?', [$tempId]);
+                $this->conn->executeStatement('DELETE FROM users WHERE id = ?', [$tempId]);
             }
         }
 
-        public function test_get_language_usage_counts_delegates_to_the_repository(): void
+        public function testGetLanguageUsageCountsDelegatesToTheRepository(): void
         {
             // user_infos.language is LangCode-typed (strict `ll_RR`
             // shape) -- a random-but-shape-valid code avoids colliding
@@ -1049,12 +1182,12 @@ namespace Piwigo\Tests\Integration {
             $username = 'p24-longtail-lang-' . bin2hex(random_bytes(4));
             $language = chr(random_int(97, 122)) . chr(random_int(97, 122)) . '_' . chr(random_int(65, 90)) . chr(random_int(65, 90));
             $this->conn->executeStatement(
-                "INSERT INTO " . 'users' . " (username, password, mail_address) VALUES (?, NULL, NULL)",
+                'INSERT INTO users (username, password, mail_address) VALUES (?, NULL, NULL)',
                 [$username]
             );
             $tempId = (int) $this->conn->lastInsertId();
             $this->conn->executeStatement(
-                'INSERT INTO ' . 'user_infos' . ' (user_id, language) VALUES (?, ?)',
+                'INSERT INTO user_infos (user_id, language) VALUES (?, ?)',
                 [$tempId, $language]
             );
 
@@ -1064,14 +1197,14 @@ namespace Piwigo\Tests\Integration {
                 self::assertArrayHasKey($language, $counts);
                 self::assertSame(1, $counts[$language]);
             } finally {
-                $this->conn->executeStatement('DELETE FROM ' . 'users' . ' WHERE id = ?', [$tempId]);
+                $this->conn->executeStatement('DELETE FROM users WHERE id = ?', [$tempId]);
             }
         }
 
-        public function test_get_user_data_creates_missing_user_infos_when_external_authentification_is_active(): void
+        public function testGetUserDataCreatesMissingUserInfosWhenExternalAuthentificationIsActive(): void
         {
             $this->conn->executeStatement(
-                "INSERT INTO " . 'users' . " (username, password, mail_address) VALUES ('sync-target-getdata', NULL, NULL)"
+                'INSERT INTO users' . " (username, password, mail_address) VALUES ('sync-target-getdata', NULL, NULL)"
             );
             $tempId = (int) $this->conn->lastInsertId();
             // A one-off instance with a non-default DeploymentPolicy --
@@ -1084,11 +1217,11 @@ namespace Piwigo\Tests\Integration {
             if (! $installationFlag instanceof InstallationFlag) {
                 throw new LogicException('Container returned an unexpected type for ' . InstallationFlag::class);
             }
-            $service = new UserService(LangTestFactory::get(), new UserRepository(EntityManagerFactory::build($this->conn), new EventDispatcher(), CurrentConfigTestFactory::get()), EntityManagerFactory::build($this->conn)->getRepository(GroupEntity::class), $mailer, new ActivityService(EntityManagerFactory::build($this->conn)->getRepository(ActivityEntity::class)), HtmlServiceTestFactory::build(), $this->conn, new SessionService(EntityManagerFactory::build($this->conn)->getRepository(SessionEntity::class),CurrentConfigTestFactory::get()), new EventDispatcher(), new DeploymentPolicy(externalAuthentification: true), CurrentUserTestFactory::get(), CurrentConfigTestFactory::get(), $installationFlag, new ProcessCache(), CurrentPathsTestFactory::get());
+            $service = new UserService(LangTestFactory::get(), new UserRepository(EntityManagerFactory::build($this->conn), new EventDispatcher(), CurrentConfigTestFactory::get()), EntityManagerFactory::build($this->conn)->getRepository(GroupEntity::class), $mailer, new ActivityService(EntityManagerFactory::build($this->conn)->getRepository(ActivityEntity::class)), HtmlServiceTestFactory::build(), $this->conn, new SessionService(EntityManagerFactory::build($this->conn)->getRepository(SessionEntity::class), CurrentConfigTestFactory::get()), new EventDispatcher(), new DeploymentPolicy(externalAuthentification: true), CurrentUserTestFactory::get(), CurrentConfigTestFactory::get(), $installationFlag, new ProcessCache(), CurrentPathsTestFactory::get());
 
             try {
                 self::assertSame(0, $this->fetchOneInt(
-                    'SELECT COUNT(*) FROM ' . 'user_infos' . ' WHERE user_id = ?',
+                    'SELECT COUNT(*) FROM user_infos WHERE user_id = ?',
                     [$tempId]
                 ));
 
@@ -1096,7 +1229,7 @@ namespace Piwigo\Tests\Integration {
 
                 self::assertArrayHasKey('status', $data);
                 self::assertSame(1, $this->fetchOneInt(
-                    'SELECT COUNT(*) FROM ' . 'user_infos' . ' WHERE user_id = ?',
+                    'SELECT COUNT(*) FROM user_infos WHERE user_id = ?',
                     [$tempId]
                 ));
                 // fetchUserInfosWithThemeName() hydrates these 5 columns
@@ -1106,11 +1239,11 @@ namespace Piwigo\Tests\Integration {
                     self::assertIsBool($data[$key], "{$key} should be a real bool");
                 }
             } finally {
-                $this->conn->executeStatement('DELETE FROM ' . 'users' . ' WHERE id = ?', [$tempId]);
+                $this->conn->executeStatement('DELETE FROM users WHERE id = ?', [$tempId]);
             }
         }
 
-        public function test_get_user_data_throws_for_a_user_id_absent_from_the_users_table(): void
+        public function testGetUserDataThrowsForAUserIdAbsentFromTheUsersTable(): void
         {
             $this->expectException(Exception::class);
             $this->expectExceptionMessageIsOrContains('UserService::getUserData(): no such user_id 88888888');
@@ -1118,10 +1251,10 @@ namespace Piwigo\Tests\Integration {
             $this->service->getUserData(UserId::from(88888888));
         }
 
-        public function test_get_user_data_throws_when_the_user_infos_row_is_missing(): void
+        public function testGetUserDataThrowsWhenTheUserInfosRowIsMissing(): void
         {
             $this->conn->executeStatement(
-                "INSERT INTO " . 'users' . " (username, password, mail_address) VALUES ('no-user-infos-target', NULL, NULL)"
+                'INSERT INTO users' . " (username, password, mail_address) VALUES ('no-user-infos-target', NULL, NULL)"
             );
             $tempId = (int) $this->conn->lastInsertId();
 
@@ -1131,25 +1264,25 @@ namespace Piwigo\Tests\Integration {
 
                 $this->service->getUserData(UserId::from($tempId));
             } finally {
-                $this->conn->executeStatement('DELETE FROM ' . 'users' . ' WHERE id = ?', [$tempId]);
+                $this->conn->executeStatement('DELETE FROM users WHERE id = ?', [$tempId]);
             }
         }
 
-        public function test_get_user_data_coerces_a_literal_true_or_false_scalar_value_to_a_real_bool(): void
+        public function testGetUserDataCoercesALiteralTrueOrFalseScalarValueToARealBool(): void
         {
             // getUserData()'s generic true/false-string scan (see its own
             // inline comment) applies to every merged field. `users.username`
             // has no reserved-word restriction at this layer, so a literal
             // 'true'/'false' username is a real, if odd, way to reach it.
             $this->conn->executeStatement(
-                "INSERT INTO " . 'users' . " (username, password, mail_address) VALUES ('true', NULL, NULL)"
+                'INSERT INTO users' . " (username, password, mail_address) VALUES ('true', NULL, NULL)"
             );
             $trueId = (int) $this->conn->lastInsertId();
             $this->conn->executeStatement(
-                "INSERT INTO " . 'users' . " (username, password, mail_address) VALUES ('false', NULL, NULL)"
+                'INSERT INTO users' . " (username, password, mail_address) VALUES ('false', NULL, NULL)"
             );
             $falseId = (int) $this->conn->lastInsertId();
-            $this->conn->executeStatement('INSERT INTO ' . 'user_infos' . ' (user_id) VALUES (?), (?)', [$trueId, $falseId]);
+            $this->conn->executeStatement('INSERT INTO user_infos (user_id) VALUES (?), (?)', [$trueId, $falseId]);
 
             try {
                 $trueData = $this->service->getUserData(UserId::from($trueId));
@@ -1158,11 +1291,11 @@ namespace Piwigo\Tests\Integration {
                 self::assertTrue($trueData['username']);
                 self::assertFalse($falseData['username']);
             } finally {
-                $this->conn->executeStatement('DELETE FROM ' . 'users' . ' WHERE id IN (?, ?)', [$trueId, $falseId]);
+                $this->conn->executeStatement('DELETE FROM users WHERE id IN (?, ?)', [$trueId, $falseId]);
             }
         }
 
-        public function test_get_user_data_preserves_real_non_empty_preferences_from_the_db(): void
+        public function testGetUserDataPreservesRealNonEmptyPreferencesFromTheDb(): void
         {
             // fetchUserInfosWithThemeName()'s DQL UserInfoEntity hydration
             // makes its own `preferences` column arrive already decoded as
@@ -1170,11 +1303,11 @@ namespace Piwigo\Tests\Integration {
             // string -- getUserData()'s own is_string() gate must not
             // discard a genuinely non-empty value arriving in that shape.
             $this->conn->executeStatement(
-                "INSERT INTO " . 'users' . " (username, password, mail_address) VALUES ('prefs-user', NULL, NULL)"
+                'INSERT INTO users' . " (username, password, mail_address) VALUES ('prefs-user', NULL, NULL)"
             );
             $userId = (int) $this->conn->lastInsertId();
             $this->conn->executeStatement(
-                'INSERT INTO ' . 'user_infos' . " (user_id, preferences) VALUES (?, '{\"show_whats_new_16\": false, \"admin_theme\": \"clear\"}')",
+                'INSERT INTO user_infos' . " (user_id, preferences) VALUES (?, '{\"show_whats_new_16\": false, \"admin_theme\": \"clear\"}')",
                 [$userId]
             );
 
@@ -1188,26 +1321,29 @@ namespace Piwigo\Tests\Integration {
                 $preferences = $data['preferences'];
                 self::assertIsArray($preferences);
                 ksort($preferences);
-                self::assertSame(['admin_theme' => 'clear', 'show_whats_new_16' => false], $preferences);
+                self::assertSame([
+                    'admin_theme' => 'clear',
+                    'show_whats_new_16' => false,
+                ], $preferences);
             } finally {
-                $this->conn->executeStatement('DELETE FROM ' . 'users' . ' WHERE id = ?', [$userId]);
+                $this->conn->executeStatement('DELETE FROM users WHERE id = ?', [$userId]);
             }
         }
 
-        public function test_check_user_favorites_does_nothing_when_the_user_has_no_forbidden_categories(): void
+        public function testCheckUserFavoritesDoesNothingWhenTheUserHasNoForbiddenCategories(): void
         {
             // Default guest CurrentUser's forbiddenCategories is '' --
             // the early-return guard, confirmed by asserting the
             // fixture's own favorites rows are untouched.
-            $before = $this->conn->fetchFirstColumn('SELECT image_id FROM ' . 'favorites' . ' WHERE user_id = 1 ORDER BY image_id');
+            $before = $this->conn->fetchFirstColumn('SELECT image_id FROM favorites WHERE user_id = 1 ORDER BY image_id');
 
             $this->service->checkUserFavorites();
 
-            $after = $this->conn->fetchFirstColumn('SELECT image_id FROM ' . 'favorites' . ' WHERE user_id = 1 ORDER BY image_id');
+            $after = $this->conn->fetchFirstColumn('SELECT image_id FROM favorites WHERE user_id = 1 ORDER BY image_id');
             self::assertSame($before, $after);
         }
 
-        public function test_check_user_favorites_deletes_a_favorite_that_falls_into_a_forbidden_category(): void
+        public function testCheckUserFavoritesDeletesAFavoriteThatFallsIntoAForbiddenCategory(): void
         {
             // Fixture: user 1's favorites are images 1, 3 (category 1)
             // and 5 (category 2). Forbidding category 2 makes image 5's
@@ -1222,14 +1358,14 @@ namespace Piwigo\Tests\Integration {
                 CurrentUserTestFactory::get()->reset();
             }
 
-            $after = $this->conn->fetchFirstColumn('SELECT image_id FROM ' . 'favorites' . ' WHERE user_id = 1 ORDER BY image_id');
+            $after = $this->conn->fetchFirstColumn('SELECT image_id FROM favorites WHERE user_id = 1 ORDER BY image_id');
             self::assertSame([1, 3], $after);
 
-            $this->conn->executeStatement('DELETE FROM ' . 'favorites' . ' WHERE user_id = 1');
-            $this->conn->executeStatement('INSERT INTO ' . 'favorites' . ' (user_id, image_id) VALUES (1,1),(1,3),(1,5)');
+            $this->conn->executeStatement('DELETE FROM favorites WHERE user_id = 1');
+            $this->conn->executeStatement('INSERT INTO favorites (user_id, image_id) VALUES (1,1),(1,3),(1,5)');
         }
 
-        public function test_get_default_theme_falls_back_to_the_literal_default_when_nothing_installed_matches(): void
+        public function testGetDefaultThemeFallsBackToTheLiteralDefaultWhenNothingInstalledMatches(): void
         {
             // The fixture's own themes table is empty (confirmed
             // live -- same fact SizingParams/ThemeCatalog tests elsewhere
@@ -1237,16 +1373,16 @@ namespace Piwigo\Tests\Integration {
             // default user's own theme also fails checkThemeInstalled(),
             // there's no installed theme left to fall back to at all --
             // the method's own final, hardcoded 'default' literal.
-            $this->conn->executeStatement("UPDATE " . 'user_infos' . " SET theme = 'nonexistent-theme-xyz' WHERE user_id = 2");
+            $this->conn->executeStatement('UPDATE user_infos' . " SET theme = 'nonexistent-theme-xyz' WHERE user_id = 2");
 
             try {
                 self::assertSame('default', $this->service->getDefaultTheme());
             } finally {
-                $this->conn->executeStatement("UPDATE " . 'user_infos' . " SET theme = 'default' WHERE user_id = 2");
+                $this->conn->executeStatement('UPDATE user_infos' . " SET theme = 'default' WHERE user_id = 2");
             }
         }
 
-        public function test_get_default_theme_coerces_a_non_string_cached_value_to_the_literal_default(): void
+        public function testGetDefaultThemeCoercesANonStringCachedValueToTheLiteralDefault(): void
         {
             // $this->processCache (the same instance $this->service was
             // constructed with) is a plain per-request memoization cell --
@@ -1277,14 +1413,14 @@ namespace Piwigo\Tests\Integration {
             self::assertSame('default', $this->service->getDefaultTheme());
         }
 
-        public function test_get_browser_language_returns_false_when_no_header_is_present(): void
+        public function testGetBrowserLanguageReturnsFalseWhenNoHeaderIsPresent(): void
         {
             unset($_SERVER['HTTP_ACCEPT_LANGUAGE']);
 
             self::assertFalse($this->service->getBrowserLanguage());
         }
 
-        public function test_get_browser_language_returns_false_when_the_header_has_no_parseable_codes(): void
+        public function testGetBrowserLanguageReturnsFalseWhenTheHeaderHasNoParseableCodes(): void
         {
             $_SERVER['HTTP_ACCEPT_LANGUAGE'] = ';;;';
 
@@ -1295,7 +1431,7 @@ namespace Piwigo\Tests\Integration {
             }
         }
 
-        public function test_get_browser_language_matches_the_exact_full_form(): void
+        public function testGetBrowserLanguageMatchesTheExactFullForm(): void
         {
             $_SERVER['HTTP_ACCEPT_LANGUAGE'] = 'en-UK';
 
@@ -1306,7 +1442,7 @@ namespace Piwigo\Tests\Integration {
             }
         }
 
-        public function test_get_browser_language_falls_back_to_the_short_form(): void
+        public function testGetBrowserLanguageFallsBackToTheShortForm(): void
         {
             // 'en-XX' has no exact full-form match ('en_xx'), only the
             // short-form prefix 'en' does -- exercises the fallback
@@ -1320,7 +1456,7 @@ namespace Piwigo\Tests\Integration {
             }
         }
 
-        public function test_get_browser_language_returns_false_when_nothing_matches(): void
+        public function testGetBrowserLanguageReturnsFalseWhenNothingMatches(): void
         {
             $_SERVER['HTTP_ACCEPT_LANGUAGE'] = 'zz-ZZ';
 
@@ -1331,7 +1467,7 @@ namespace Piwigo\Tests\Integration {
             }
         }
 
-        public function test_save_edit_context_ignores_a_non_numeric_image_id(): void
+        public function testSaveEditContextIgnoresANonNumericImageId(): void
         {
             CurrentUserTestFactory::get()->set(CurrentUserTestFactory::get()->get()->withStatus(UserStatus::Admin));
             $this->resetEditContext();
@@ -1346,7 +1482,7 @@ namespace Piwigo\Tests\Integration {
             }
         }
 
-        public function test_save_edit_context_and_get_edit_context_round_trip(): void
+        public function testSaveEditContextAndGetEditContextRoundTrip(): void
         {
             CurrentUserTestFactory::get()->set(CurrentUserTestFactory::get()->get()->withStatus(UserStatus::Admin));
             $this->resetEditContext();
@@ -1354,7 +1490,9 @@ namespace Piwigo\Tests\Integration {
             try {
                 $this->service->saveEditContext('/198/list/2,69,198', 198);
 
-                self::assertSame(['198' => '/198/list/2,69,198'], $_SESSION['edit_context'] ?? null);
+                self::assertSame([
+                    '198' => '/198/list/2,69,198',
+                ], $_SESSION['edit_context'] ?? null);
                 // getEditContext() strips the leading "/{imageId}/" prefix
                 // off the stored section URL.
                 self::assertSame('list/2,69,198', $this->service->getEditContext(198));
@@ -1364,17 +1502,21 @@ namespace Piwigo\Tests\Integration {
             }
         }
 
-        public function test_get_edit_context_returns_false_for_an_unknown_image(): void
+        public function testGetEditContextReturnsFalseForAnUnknownImage(): void
         {
             $this->resetEditContext();
 
             self::assertFalse($this->service->getEditContext(999999));
         }
 
-        public function test_get_edit_context_returns_false_for_a_non_string_stored_value(): void
+        public function testGetEditContextReturnsFalseForANonStringStoredValue(): void
         {
             $this->resetEditContext();
-            $_SESSION['edit_context'] = [198 => ['not' => 'a-string']];
+            $_SESSION['edit_context'] = [
+                198 => [
+                    'not' => 'a-string',
+                ],
+            ];
 
             try {
                 self::assertFalse($this->service->getEditContext(198));

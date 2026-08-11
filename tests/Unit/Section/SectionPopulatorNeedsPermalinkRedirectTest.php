@@ -17,7 +17,7 @@ use Piwigo\Section\SectionPopulator;
  */
 final class SectionPopulatorNeedsPermalinkRedirectTest extends TestCase
 {
-    public function test_no_permalink_id_name_style_matching_url_name_does_not_redirect(): void
+    public function testNoPermalinkIdNameStyleMatchingUrlNameDoesNotRedirect(): void
     {
         $result = SectionPopulator::needsPermalinkRedirect(
             null,
@@ -30,7 +30,7 @@ final class SectionPopulatorNeedsPermalinkRedirectTest extends TestCase
         self::assertFalse($result);
     }
 
-    public function test_no_permalink_id_name_style_mismatched_url_name_redirects(): void
+    public function testNoPermalinkIdNameStyleMismatchedUrlNameRedirects(): void
     {
         $result = SectionPopulator::needsPermalinkRedirect(
             null,
@@ -43,7 +43,7 @@ final class SectionPopulatorNeedsPermalinkRedirectTest extends TestCase
         self::assertTrue($result);
     }
 
-    public function test_no_permalink_non_id_name_style_never_redirects(): void
+    public function testNoPermalinkNonIdNameStyleNeverRedirects(): void
     {
         $result = SectionPopulator::needsPermalinkRedirect(
             null,
@@ -56,7 +56,7 @@ final class SectionPopulatorNeedsPermalinkRedirectTest extends TestCase
         self::assertFalse($result);
     }
 
-    public function test_falsy_string_permalink_is_treated_as_no_permalink(): void
+    public function testFalsyStringPermalinkIsTreatedAsNoPermalink(): void
     {
         $result = SectionPopulator::needsPermalinkRedirect(
             '0',
@@ -69,7 +69,7 @@ final class SectionPopulatorNeedsPermalinkRedirectTest extends TestCase
         self::assertFalse($result);
     }
 
-    public function test_matching_permalink_does_not_redirect(): void
+    public function testMatchingPermalinkDoesNotRedirect(): void
     {
         $result = SectionPopulator::needsPermalinkRedirect(
             'my-permalink',
@@ -82,7 +82,7 @@ final class SectionPopulatorNeedsPermalinkRedirectTest extends TestCase
         self::assertFalse($result);
     }
 
-    public function test_mismatched_permalink_redirects(): void
+    public function testMismatchedPermalinkRedirects(): void
     {
         $result = SectionPopulator::needsPermalinkRedirect(
             'my-permalink',
@@ -95,7 +95,7 @@ final class SectionPopulatorNeedsPermalinkRedirectTest extends TestCase
         self::assertTrue($result);
     }
 
-    public function test_permalink_set_but_hit_by_none_redirects(): void
+    public function testPermalinkSetButHitByNoneRedirects(): void
     {
         // e.g. the category was hit by its numeric id/name URL even though
         // it now has a real permalink -- must redirect to the canonical

@@ -2,20 +2,22 @@
 
 declare(strict_types=1);
 
+use Piwigo\Bootstrap\RequestPipeline;
+use Piwigo\Http\BaselineSecurityHeaders;
+use Piwigo\Http\Middleware\ControllerInvokerMiddleware;
+use Piwigo\Http\Middleware\ExceptionHandlerMiddleware;
+use Piwigo\Http\Middleware\RoutingMiddleware;
+use Piwigo\Http\Middleware\SecurityHeadersMiddleware;
+use Piwigo\Http\MiddlewarePipeline;
 use Piwigo\Http\RequestFactory;
 use Piwigo\Http\ResponseEmitter;
 use Piwigo\Http\ResponseFactory;
-use Piwigo\Http\MiddlewarePipeline;
-use Piwigo\Http\BaselineSecurityHeaders;
-use Piwigo\Http\Middleware\ExceptionHandlerMiddleware;
-use Piwigo\Http\Middleware\SecurityHeadersMiddleware;
-use Piwigo\Http\Middleware\RoutingMiddleware;
-use Piwigo\Http\Middleware\ControllerInvokerMiddleware;
 use Piwigo\Routing\Router;
 use Piwigo\Routing\RouteResult;
-use Piwigo\Bootstrap\RequestPipeline;
 
-arch()->expect('Piwigo')->toUseStrictTypes();
+arch()
+    ->expect('Piwigo')
+    ->toUseStrictTypes();
 
 /**
  * PHPStan (2.2.5, this project's pinned version) has no
@@ -69,7 +71,7 @@ test('findMissingOverrideAttributes() flags a missing #[\Override]', function ()
     // Reuses a built-in interface (rather than declaring a new named
     // fixture interface here) so this file has nothing for
     // `composer dump-autoload --strict-psr` to flag as PSR-4-noncompliant.
-    $withoutAttribute = new class () implements Countable {
+    $withoutAttribute = new class() implements Countable {
         public function count(): int
         {
             return 0;
@@ -80,7 +82,7 @@ test('findMissingOverrideAttributes() flags a missing #[\Override]', function ()
 });
 
 test('findMissingOverrideAttributes() accepts a present #[\Override]', function (): void {
-    $withAttribute = new class () implements Countable {
+    $withAttribute = new class() implements Countable {
         #[Override]
         public function count(): int
         {
@@ -119,7 +121,8 @@ test('every Piwigo\ class under src/Piwigo/ has #[\Override] on every overriding
         }
     }
 
-    expect($violations)->toBe([]);
+    expect($violations)
+        ->toBe([]);
 });
 
 // Kernel::container() is a service locator -- services must receive
@@ -134,7 +137,7 @@ test('every Piwigo\ class under src/Piwigo/ has #[\Override] on every overriding
 function findCallSites(string $dir, string $needle): array
 {
     $hits = [];
-    if (!is_dir($dir)) {
+    if (! is_dir($dir)) {
         return $hits;
     }
     $iterator = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($dir, FilesystemIterator::SKIP_DOTS));
@@ -148,7 +151,10 @@ function findCallSites(string $dir, string $needle): array
         $lines = file($file->getPathname());
         foreach ($lines !== false ? $lines : [] as $lineNumber => $line) {
             if (str_contains($line, $needle)) {
-                $hits[] = ['path' => $file->getPathname(), 'line' => $lineNumber + 1];
+                $hits[] = [
+                    'path' => $file->getPathname(),
+                    'line' => $lineNumber + 1,
+                ];
             }
         }
     }
@@ -167,7 +173,10 @@ function findCallSitesInRootPhpFiles(string $root, string $needle): array
         $lines = file($pathname);
         foreach ($lines !== false ? $lines : [] as $lineNumber => $line) {
             if (str_contains($line, $needle)) {
-                $hits[] = ['path' => $pathname, 'line' => $lineNumber + 1];
+                $hits[] = [
+                    'path' => $pathname,
+                    'line' => $lineNumber + 1,
+                ];
             }
         }
     }
@@ -195,7 +204,10 @@ function findCallSitesInBinFiles(string $root, string $needle): array
         $lines = file($pathname);
         foreach ($lines !== false ? $lines : [] as $lineNumber => $line) {
             if (str_contains($line, $needle)) {
-                $hits[] = ['path' => $pathname, 'line' => $lineNumber + 1];
+                $hits[] = [
+                    'path' => $pathname,
+                    'line' => $lineNumber + 1,
+                ];
             }
         }
     }
@@ -277,7 +289,8 @@ test('Kernel::container() is only called from src/Piwigo/Bootstrap/', function (
             && ! array_any($shimAllowedFiles, static fn (string $allowed): bool => str_ends_with($hit['path'], $allowed))
     ));
 
-    expect(describeCallSites($disallowed))->toBe([]);
+    expect(describeCallSites($disallowed))
+        ->toBe([]);
 });
 
 test('Container::build() is only called from src/Piwigo/Core/Kernel.php', function (): void {
@@ -299,7 +312,8 @@ test('Container::build() is only called from src/Piwigo/Core/Kernel.php', functi
         static fn (array $hit): bool => ! str_ends_with($hit['path'], '/src/Piwigo/Core/Kernel.php')
     ));
 
-    expect(describeCallSites($disallowed))->toBe([]);
+    expect(describeCallSites($disallowed))
+        ->toBe([]);
 });
 
 test('Kernel::reset() is only called from tests/', function (): void {
@@ -315,7 +329,8 @@ test('Kernel::reset() is only called from tests/', function (): void {
         ...findCallSitesInBinFiles($repoRoot, 'Kernel::reset('),
     ];
 
-    expect(describeCallSites($hits))->toBe([]);
+    expect(describeCallSites($hits))
+        ->toBe([]);
 });
 
 test('ShutdownHandler::reset() is only called from tests/', function (): void {
@@ -329,7 +344,8 @@ test('ShutdownHandler::reset() is only called from tests/', function (): void {
         ...findCallSitesInBinFiles($repoRoot, 'ShutdownHandler::reset('),
     ];
 
-    expect(describeCallSites($hits))->toBe([]);
+    expect(describeCallSites($hits))
+        ->toBe([]);
 });
 
 test('CurrentConfig::reset() is only called from tests/', function (): void {
@@ -347,7 +363,8 @@ test('CurrentConfig::reset() is only called from tests/', function (): void {
         ...findCallSitesInBinFiles($repoRoot, 'CurrentConfig::reset('),
     ];
 
-    expect(describeCallSites($hits))->toBe([]);
+    expect(describeCallSites($hits))
+        ->toBe([]);
 });
 
 test('SessionService::reset() is only called from tests/', function (): void {
@@ -360,7 +377,8 @@ test('SessionService::reset() is only called from tests/', function (): void {
         ...findCallSitesInBinFiles($repoRoot, 'SessionService::reset('),
     ];
 
-    expect(describeCallSites($hits))->toBe([]);
+    expect(describeCallSites($hits))
+        ->toBe([]);
 });
 
 test('UniqueExecLock::reset() is only called from tests/', function (): void {
@@ -373,7 +391,8 @@ test('UniqueExecLock::reset() is only called from tests/', function (): void {
         ...findCallSitesInBinFiles($repoRoot, 'UniqueExecLock::reset('),
     ];
 
-    expect(describeCallSites($hits))->toBe([]);
+    expect(describeCallSites($hits))
+        ->toBe([]);
 });
 
 test('CurrentConfigService::reset() is only called from tests/', function (): void {
@@ -386,7 +405,8 @@ test('CurrentConfigService::reset() is only called from tests/', function (): vo
         ...findCallSitesInBinFiles($repoRoot, 'CurrentConfigService::reset('),
     ];
 
-    expect(describeCallSites($hits))->toBe([]);
+    expect(describeCallSites($hits))
+        ->toBe([]);
 });
 
 test('Lang::reset() is only called from tests/', function (): void {
@@ -398,7 +418,8 @@ test('Lang::reset() is only called from tests/', function (): void {
         ...findCallSitesInBinFiles($repoRoot, 'Lang::reset('),
     ];
 
-    expect(describeCallSites($hits))->toBe([]);
+    expect(describeCallSites($hits))
+        ->toBe([]);
 });
 
 test('PageState::reset() is only called from tests/', function (): void {
@@ -415,7 +436,8 @@ test('PageState::reset() is only called from tests/', function (): void {
         ...findCallSitesInBinFiles($repoRoot, 'PageState::reset('),
     ];
 
-    expect(describeCallSites($hits))->toBe([]);
+    expect(describeCallSites($hits))
+        ->toBe([]);
 });
 
 test('src/Piwigo/ contains no InputValidator::createStatic() calls', function (): void {
@@ -431,7 +453,8 @@ test('src/Piwigo/ contains no InputValidator::createStatic() calls', function ()
 
     $hits = findCallSitesOutsideComments($repoRoot . '/src/Piwigo', 'InputValidator::createStatic(');
 
-    expect(describeCallSites($hits))->toBe([]);
+    expect(describeCallSites($hits))
+        ->toBe([]);
 });
 
 test('MailService::reset() is only called from tests/', function (): void {
@@ -443,7 +466,8 @@ test('MailService::reset() is only called from tests/', function (): void {
         ...findCallSitesInBinFiles($repoRoot, 'MailService::reset('),
     ];
 
-    expect(describeCallSites($hits))->toBe([]);
+    expect(describeCallSites($hits))
+        ->toBe([]);
 });
 
 test('CurrentTemplate::reset() is only called from tests/', function (): void {
@@ -455,7 +479,8 @@ test('CurrentTemplate::reset() is only called from tests/', function (): void {
         ...findCallSitesInBinFiles($repoRoot, 'CurrentTemplate::reset('),
     ];
 
-    expect(describeCallSites($hits))->toBe([]);
+    expect(describeCallSites($hits))
+        ->toBe([]);
 });
 
 test('CurrentTemplate::current() has zero remaining production callers', function (): void {
@@ -468,8 +493,7 @@ test('CurrentTemplate::current() has zero remaining production callers', functio
     // addition to the allow-list.
     $repoRoot = __DIR__ . '/../..';
 
-    $allowedFiles = [
-    ];
+    $allowedFiles = [];
 
     $hits = [
         ...findCallSitesOutsideComments($repoRoot . '/src/Piwigo', 'CurrentTemplate::current('),
@@ -481,7 +505,8 @@ test('CurrentTemplate::current() has zero remaining production callers', functio
         static fn (array $hit): bool => ! array_any($allowedFiles, static fn (string $allowed): bool => str_ends_with($hit['path'], $allowed))
     ));
 
-    expect(describeCallSites($disallowed))->toBe([]);
+    expect(describeCallSites($disallowed))
+        ->toBe([]);
 });
 
 test('RootPathOverride::reset() is only called from tests/', function (): void {
@@ -493,7 +518,8 @@ test('RootPathOverride::reset() is only called from tests/', function (): void {
         ...findCallSitesInBinFiles($repoRoot, 'RootPathOverride::reset('),
     ];
 
-    expect(describeCallSites($hits))->toBe([]);
+    expect(describeCallSites($hits))
+        ->toBe([]);
 });
 
 test('CurrentUser::reset() is only called from tests/', function (): void {
@@ -505,7 +531,8 @@ test('CurrentUser::reset() is only called from tests/', function (): void {
         ...findCallSitesInBinFiles($repoRoot, 'CurrentUser::reset('),
     ];
 
-    expect(describeCallSites($hits))->toBe([]);
+    expect(describeCallSites($hits))
+        ->toBe([]);
 });
 
 // AccessControl has no circular dependency: the 8 read-only checks --
@@ -583,7 +610,10 @@ function findCallSitesOutsideComments(string $dir, string $needle): array
 
         foreach (explode("\n", $blanked) as $lineNumber => $line) {
             if (str_contains($line, $needle)) {
-                $hits[] = ['path' => $file->getPathname(), 'line' => $lineNumber + 1];
+                $hits[] = [
+                    'path' => $file->getPathname(),
+                    'line' => $lineNumber + 1,
+                ];
             }
         }
     }
@@ -596,7 +626,8 @@ test('src/Piwigo/ contains no define() calls', function (): void {
 
     $hits = findCallSitesOutsideComments($repoRoot . '/src/Piwigo', 'define(');
 
-    expect(describeCallSites($hits))->toBe([]);
+    expect(describeCallSites($hits))
+        ->toBe([]);
 });
 
 test('src/Piwigo/ contains no PHPWG_ROOT_PATH/PWG_LOCAL_DIR reads', function (): void {
@@ -613,7 +644,8 @@ test('src/Piwigo/ contains no PHPWG_ROOT_PATH/PWG_LOCAL_DIR reads', function ():
         ...findCallSitesOutsideComments($repoRoot . '/src/Piwigo', 'PWG_LOCAL_DIR'),
     ];
 
-    expect(describeCallSites($hits))->toBe([]);
+    expect(describeCallSites($hits))
+        ->toBe([]);
 });
 
 test('src/Piwigo/ reads $_POST/$_GET/$_REQUEST/$_FILES only inside a Request DTO or a documented exception', function (): void {
@@ -677,7 +709,8 @@ test('src/Piwigo/ reads $_POST/$_GET/$_REQUEST/$_FILES only inside a Request DTO
             && array_all($allowlistedSuffixes, static fn (string $suffix): bool => ! str_ends_with($hit['path'], $suffix))
     ));
 
-    expect(describeCallSites($unexpected))->toBe([]);
+    expect(describeCallSites($unexpected))
+        ->toBe([]);
 });
 
 test('src/Piwigo/ contains no raw IN_ADMIN/IN_WS/PHPWG_INSTALLED/PHPWG_URL/PHPWG_DOMAIN/PEM_URL reads', function (): void {
@@ -713,7 +746,8 @@ test('src/Piwigo/ contains no raw IN_ADMIN/IN_WS/PHPWG_INSTALLED/PHPWG_URL/PHPWG
         static fn (array $hit): bool => ! str_ends_with($hit['path'], 'Core/InstallationFlag.php')
     ));
 
-    expect(describeCallSites($unexpected))->toBe([]);
+    expect(describeCallSites($unexpected))
+        ->toBe([]);
 });
 
 test('src/Piwigo/ contains no global $filter/$pwg_loaded_plugins/$template/$page declarations', function (): void {
@@ -734,7 +768,8 @@ test('src/Piwigo/ contains no global $filter/$pwg_loaded_plugins/$template/$page
         ...findCallSitesOutsideComments($repoRoot . '/src/Piwigo', 'global $page'),
     ];
 
-    expect(describeCallSites($hits))->toBe([]);
+    expect(describeCallSites($hits))
+        ->toBe([]);
 });
 
 test('src/Piwigo/ contains no global $conf/$prefixeTable/$last_time/$t2 declarations', function (): void {
@@ -753,7 +788,8 @@ test('src/Piwigo/ contains no global $conf/$prefixeTable/$last_time/$t2 declarat
         ...findCallSitesOutsideComments($repoRoot . '/src/Piwigo', 'global $t2'),
     ];
 
-    expect(describeCallSites($hits))->toBe([]);
+    expect(describeCallSites($hits))
+        ->toBe([]);
 });
 
 test('src/Piwigo/ contains no bare add_event_handler()/trigger_change()/trigger_notify() calls', function (): void {
@@ -772,7 +808,8 @@ test('src/Piwigo/ contains no bare add_event_handler()/trigger_change()/trigger_
         ...findCallSitesOutsideComments($repoRoot . '/src/Piwigo', 'trigger_notify('),
     ];
 
-    expect(describeCallSites($hits))->toBe([]);
+    expect(describeCallSites($hits))
+        ->toBe([]);
 });
 
 /**
@@ -866,7 +903,10 @@ function findStringKeyedDispatchCallSites(string $dir, array $allowlist): array
                 continue;
             }
 
-            $hits[] = ['path' => $file->getPathname(), 'line' => $tok[2]];
+            $hits[] = [
+                'path' => $file->getPathname(),
+                'line' => $tok[2],
+            ];
         }
     }
 
@@ -893,7 +933,8 @@ test('src/Piwigo/ contains no string-keyed EventDispatcher dispatch calls outsid
 
     $hits = findStringKeyedDispatchCallSites($repoRoot . '/src/Piwigo', $allowlist);
 
-    expect(describeCallSites($hits))->toBe([]);
+    expect(describeCallSites($hits))
+        ->toBe([]);
 });
 
 /**
@@ -965,7 +1006,10 @@ function findBareCallSites(string $dir, array $names): array
             if (! (is_string($next) && $next === '(')) {
                 continue;
             }
-            $hits[] = ['path' => $file->getPathname(), 'line' => $tok[2]];
+            $hits[] = [
+                'path' => $file->getPathname(),
+                'line' => $tok[2],
+            ];
         }
     }
 
@@ -1001,7 +1045,8 @@ test('src/Piwigo/ contains no bare calls to any retired free function', function
 
     $hits = findBareCallSites($repoRoot . '/src/Piwigo', $retiredFunctionNames);
 
-    expect(describeCallSites($hits))->toBe([]);
+    expect(describeCallSites($hits))
+        ->toBe([]);
 });
 
 /**
@@ -1158,7 +1203,8 @@ test('src/Piwigo/ contains no die()/exit() calls outside the documented allowlis
     $expected = $allowlist;
     ksort($expected);
 
-    expect($counts)->toBe($expected);
+    expect($counts)
+        ->toBe($expected);
 });
 
 /**
@@ -1168,7 +1214,11 @@ test('src/Piwigo/ contains no die()/exit() calls outside the documented allowlis
 function findMatchingBracket(string $s, int $start): int
 {
     $opening = $s[$start];
-    $closing = ['(' => ')', '[' => ']', '{' => '}'][$opening];
+    $closing = [
+        '(' => ')',
+        '[' => ']',
+        '{' => '}',
+    ][$opening];
     $depth = 0;
     $len = strlen($s);
     for ($i = $start; $i < $len; $i++) {
@@ -1264,7 +1314,11 @@ function findDuplicateServiceConstructionChains(string $dir): array
                 continue;
             }
             [$classShort] = explode('|', $key, 2);
-            $violations[] = ['path' => $file->getPathname(), 'class' => $classShort, 'count' => count($positions)];
+            $violations[] = [
+                'path' => $file->getPathname(),
+                'class' => $classShort,
+                'count' => count($positions),
+            ];
         }
     }
 
@@ -1291,7 +1345,8 @@ test('src/Piwigo/ does not repeat the same multi-dependency service construction
     sort($actual);
     sort($allowlist);
 
-    expect($actual)->toBe($allowlist);
+    expect($actual)
+        ->toBe($allowlist);
 });
 
 test('RequestFactory, ResponseEmitter, and the middleware/pipeline/routing classes declare only readonly state', function (): void {
@@ -1320,7 +1375,8 @@ test('RequestFactory, ResponseEmitter, and the middleware/pipeline/routing class
         RequestPipeline::class,
     ] as $fqcn) {
         $mutableProperties = array_filter(
-            new ReflectionClass($fqcn)->getProperties(),
+            new ReflectionClass($fqcn)
+                ->getProperties(),
             static fn (ReflectionProperty $property): bool => ! $property->isReadOnly()
         );
         $violations = array_map(
@@ -1328,7 +1384,8 @@ test('RequestFactory, ResponseEmitter, and the middleware/pipeline/routing class
             $mutableProperties
         );
 
-        expect(array_values($violations))->toBe([]);
+        expect(array_values($violations))
+            ->toBe([]);
     }
 });
 
@@ -1358,7 +1415,8 @@ test('src/Piwigo/ contains no ->smarty->assign()/->smarty->append() reach-around
         static fn (array $hit): bool => ! str_ends_with($hit['path'], '/src/Piwigo/Template/Template.php')
     ));
 
-    expect(describeCallSites($disallowed))->toBe([]);
+    expect(describeCallSites($disallowed))
+        ->toBe([]);
 });
 
 test('every tools/*.php script guards against non-CLI execution (SEC-02)', function (): void {
@@ -1376,7 +1434,8 @@ test('every tools/*.php script guards against non-CLI execution (SEC-02)', funct
         [$root . '/tools/index.php']
     ));
 
-    expect($scripts)->not->toBeEmpty();
+    expect($scripts)
+        ->not->toBeEmpty();
 
     $missingGuard = [];
     foreach ($scripts as $script) {
@@ -1390,5 +1449,6 @@ test('every tools/*.php script guards against non-CLI execution (SEC-02)', funct
         }
     }
 
-    expect($missingGuard)->toBe([]);
+    expect($missingGuard)
+        ->toBe([]);
 });

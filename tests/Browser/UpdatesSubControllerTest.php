@@ -20,7 +20,8 @@ it('fatal-errors when both the core-update and extensions-install systems are di
         $page = H::loginAsAdmin($this);
         $page = H::navigateOk($page, '/admin.php?page=updates');
 
-        expect($page->content())->toContain('update system is disabled');
+        expect($page->content())
+            ->toContain('update system is disabled');
     } finally {
         H::restoreConfig($snapshot);
     }

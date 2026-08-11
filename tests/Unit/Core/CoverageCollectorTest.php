@@ -166,7 +166,8 @@ test('registerIfActive reaches the real pcov activation path when both guards pa
     // ContainerDetectorTest's own identical claim for a different
     // extension) -- pcov is always loaded for this process, so line 65's
     // guard genuinely evaluates false and falls through to \pcov\start().
-    expect(extension_loaded('pcov'))->toBeTrue();
+    expect(extension_loaded('pcov'))
+        ->toBeTrue();
 
     try {
         // Not throwing here means both early returns were skipped, the
@@ -205,7 +206,8 @@ test('registerIfActive reaches the real pcov activation path when both guards pa
  */
 test('registerIfActive returns before touching pcov when the extension is not loaded, via a genuinely separate php -n subprocess', function (): void {
     $autoloadPath = dirname(__DIR__, 3) . '/vendor/autoload.php';
-    expect(is_file($autoloadPath))->toBeTrue();
+    expect(is_file($autoloadPath))
+        ->toBeTrue();
 
     $script = 'require ' . var_export($autoloadPath, true) . ';'
         . '$_SERVER["HTTP_X_PIWIGO_ENV"] = "test";'
@@ -222,7 +224,8 @@ test('registerIfActive returns before touching pcov when the extension is not lo
         2 => ['pipe', 'w'],
     ];
     $proc = proc_open($cmd, $descriptors, $pipes);
-    expect($proc)->toBeResource();
+    expect($proc)
+        ->toBeResource();
     if ($proc === false) {
         throw new RuntimeException('proc_open failed');
     }
@@ -233,8 +236,10 @@ test('registerIfActive returns before touching pcov when the extension is not lo
     fclose($pipes[2]);
     $exit = proc_close($proc);
 
-    expect($exit)->toBe(0, 'CoverageCollector -n subprocess failed: ' . ($stderr === false ? '(no stderr)' : $stderr));
-    expect(trim((string) $stdout))->toBe('returned-without-pcov');
+    expect($exit)
+        ->toBe(0, 'CoverageCollector -n subprocess failed: ' . ($stderr === false ? '(no stderr)' : $stderr));
+    expect(trim((string) $stdout))
+        ->toBe('returned-without-pcov');
 });
 
 /**
@@ -264,7 +269,8 @@ test('registerIfActive returns before touching pcov when the extension is not lo
  */
 test('the real deferred shutdown handler writes a genuine per-request pcov dump when the process ends naturally', function (): void {
     $autoloadPath = dirname(__DIR__, 3) . '/vendor/autoload.php';
-    expect(is_file($autoloadPath))->toBeTrue();
+    expect(is_file($autoloadPath))
+        ->toBeTrue();
 
     $tmpRoot = sys_get_temp_dir() . '/piwigo-coverage-collector-' . bin2hex(random_bytes(8)) . '/';
 
@@ -275,8 +281,8 @@ test('the real deferred shutdown handler writes a genuine per-request pcov dump 
         . '$paths = \Piwigo\Core\Paths::fromRoot(' . var_export($tmpRoot, true) . ');'
         . '\Piwigo\Core\CoverageCollector::registerIfActive($paths);'
         . 'echo "registered\n";';
-        // No exit()/die() after this -- the script falling off the end here
-        // is the whole point (see docblock above).
+    // No exit()/die() after this -- the script falling off the end here
+    // is the whole point (see docblock above).
 
     $cmd = [PHP_BINARY, '-r', $script];
     $descriptors = [
@@ -285,7 +291,8 @@ test('the real deferred shutdown handler writes a genuine per-request pcov dump 
         2 => ['pipe', 'w'],
     ];
     $proc = proc_open($cmd, $descriptors, $pipes);
-    expect($proc)->toBeResource();
+    expect($proc)
+        ->toBeResource();
     if ($proc === false) {
         throw new RuntimeException('proc_open failed');
     }
@@ -298,34 +305,41 @@ test('the real deferred shutdown handler writes a genuine per-request pcov dump 
 
     try {
         expect($exit)->toBe(0, 'CoverageCollector dump subprocess failed: ' . ($stderr === false ? '(no stderr)' : $stderr));
-        expect(trim((string) $stdout))->toBe('registered');
+        expect(trim((string) $stdout))
+            ->toBe('registered');
 
         $dumpDir = $tmpRoot . '_data/coverage-raw/web/';
-        expect(is_dir($dumpDir))->toBeTrue();
+        expect(is_dir($dumpDir))
+            ->toBeTrue();
 
         $files = glob($dumpDir . '*.raw');
         $files = $files !== false ? $files : [];
-        expect($files)->toHaveCount(1);
+        expect($files)
+            ->toHaveCount(1);
 
         $dumpFile = $files[0];
         // rename()'d from a .tmp sibling at line 85 -- its mere existence
         // under the final .raw name (not .tmp) proves the rename() itself
         // ran, on top of everything unserialize() below proves.
-        expect(str_ends_with($dumpFile, '.raw'))->toBeTrue();
+        expect(str_ends_with($dumpFile, '.raw'))
+            ->toBeTrue();
 
         $raw = unserialize((string) file_get_contents($dumpFile));
-        expect($raw)->toBeArray();
+        expect($raw)
+            ->toBeArray();
         assert(is_array($raw));
 
         // Same shape tools/coverage-merge.php's own normalizeRawLineCoverage()
         // requires before trusting a .raw file: array<string, array<int, int>>.
         foreach ($raw as $file => $lines) {
             expect($file)->toBeString();
-            expect($lines)->toBeArray();
+            expect($lines)
+                ->toBeArray();
             assert(is_array($lines));
             foreach ($lines as $line => $status) {
                 expect($line)->toBeInt();
-                expect($status)->toBeInt();
+                expect($status)
+                    ->toBeInt();
             }
         }
 
@@ -353,9 +367,11 @@ test('the real deferred shutdown handler writes a genuine per-request pcov dump 
         // the same real absolute path -- a hardcoded path baked in one
         // worktree breaks under any other.
         $collectorFile = (new ReflectionClass(CoverageCollector::class))->getFileName();
-        expect($collectorFile)->toBeString();
+        expect($collectorFile)
+            ->toBeString();
         assert(is_string($collectorFile));
-        expect($raw)->toHaveKey($collectorFile);
+        expect($raw)
+            ->toHaveKey($collectorFile);
         expect($raw[$collectorFile][71] ?? null)->toBe(1);
         expect($raw[$collectorFile][72] ?? null)->toBe(1);
     } finally {
@@ -377,7 +393,8 @@ test('the real deferred shutdown handler writes a genuine per-request pcov dump 
  */
 test('registerIfActive writes no dump file when test mode is genuinely not active, even with pcov loaded and the coverage header set', function (): void {
     $autoloadPath = dirname(__DIR__, 3) . '/vendor/autoload.php';
-    expect(is_file($autoloadPath))->toBeTrue();
+    expect(is_file($autoloadPath))
+        ->toBeTrue();
 
     $tmpRoot = sys_get_temp_dir() . '/piwigo-coverage-collector-inactive-' . bin2hex(random_bytes(8)) . '/';
 
@@ -397,7 +414,8 @@ test('registerIfActive writes no dump file when test mode is genuinely not activ
         2 => ['pipe', 'w'],
     ];
     $proc = proc_open($cmd, $descriptors, $pipes);
-    expect($proc)->toBeResource();
+    expect($proc)
+        ->toBeResource();
     if ($proc === false) {
         throw new RuntimeException('proc_open failed');
     }
@@ -410,7 +428,8 @@ test('registerIfActive writes no dump file when test mode is genuinely not activ
 
     try {
         expect($exit)->toBe(0, 'CoverageCollector inactive subprocess failed: ' . ($stderr === false ? '(no stderr)' : $stderr));
-        expect(trim((string) $stdout))->toBe('registered');
+        expect(trim((string) $stdout))
+            ->toBe('registered');
 
         $dumpDir = $tmpRoot . '_data/coverage-raw/web/';
         $files = is_dir($dumpDir) ? glob($dumpDir . '*.raw') : [];
@@ -430,7 +449,8 @@ test('registerIfActive writes no dump file when test mode is genuinely not activ
  */
 test('registerIfActive writes no dump file when the coverage header is absent, even with test mode active and pcov loaded', function (): void {
     $autoloadPath = dirname(__DIR__, 3) . '/vendor/autoload.php';
-    expect(is_file($autoloadPath))->toBeTrue();
+    expect(is_file($autoloadPath))
+        ->toBeTrue();
 
     $tmpRoot = sys_get_temp_dir() . '/piwigo-coverage-collector-noheader-' . bin2hex(random_bytes(8)) . '/';
 
@@ -449,7 +469,8 @@ test('registerIfActive writes no dump file when the coverage header is absent, e
         2 => ['pipe', 'w'],
     ];
     $proc = proc_open($cmd, $descriptors, $pipes);
-    expect($proc)->toBeResource();
+    expect($proc)
+        ->toBeResource();
     if ($proc === false) {
         throw new RuntimeException('proc_open failed');
     }
@@ -462,7 +483,8 @@ test('registerIfActive writes no dump file when the coverage header is absent, e
 
     try {
         expect($exit)->toBe(0, 'CoverageCollector no-header subprocess failed: ' . ($stderr === false ? '(no stderr)' : $stderr));
-        expect(trim((string) $stdout))->toBe('registered');
+        expect(trim((string) $stdout))
+            ->toBe('registered');
 
         $dumpDir = $tmpRoot . '_data/coverage-raw/web/';
         $files = is_dir($dumpDir) ? glob($dumpDir . '*.raw') : [];

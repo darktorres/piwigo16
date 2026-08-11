@@ -6,10 +6,10 @@ namespace Piwigo\Tests\Integration;
 
 use Override;
 use Piwigo\Bootstrap\RequestBootstrap;
-use Piwigo\Tests\Support\CurrentPathsTestFactory;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Paths;
 use Piwigo\Http\ResponseReadyException;
+use Piwigo\Tests\Support\CurrentPathsTestFactory;
 
 /**
  * Piwigo\Bootstrap\RequestBootstrap::configure() is the first step of the
@@ -38,7 +38,7 @@ final class RequestBootstrapConfigureTest extends IntegrationTestCase
         parent::tearDown();
     }
 
-    public function test_configure_addslashes_a_non_empty_string_path_info(): void
+    public function testConfigureAddslashesANonEmptyStringPathInfo(): void
     {
         $_SERVER['PATH_INFO'] = "O'Brien's/path";
 
@@ -54,7 +54,7 @@ final class RequestBootstrapConfigureTest extends IntegrationTestCase
         self::assertSame(dirname(__DIR__, 2) . '/', CurrentPathsTestFactory::get()->root);
     }
 
-    public function test_configure_redirect_response_has_a_302_status_and_installphp_location(): void
+    public function testConfigureRedirectResponseHasA302StatusAndInstallphpLocation(): void
     {
         // parent::setUp()'s own conditional default boot (real repo root)
         // would otherwise collide with this test's own configure() call

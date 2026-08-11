@@ -19,8 +19,10 @@ function fullTagBriefRow(): array
 test('fromRow narrows every column to its real type', function (): void {
     $tag = TagBrief::fromRow(fullTagBriefRow());
 
-    expect($tag->id)->toEqual(TagId::from(7))
-        ->and($tag->name)->toBe('Sunset');
+    expect($tag->id)
+        ->toEqual(TagId::from(7))
+        ->and($tag->name)
+        ->toBe('Sunset');
 });
 
 test('fromRow defaults name to empty string when absent, given a valid id', function (): void {
@@ -29,8 +31,10 @@ test('fromRow defaults name to empty string when absent, given a valid id', func
 
     $tag = TagBrief::fromRow($row);
 
-    expect($tag->id)->toEqual(TagId::from(7))
-        ->and($tag->name)->toBe('');
+    expect($tag->id)
+        ->toEqual(TagId::from(7))
+        ->and($tag->name)
+        ->toBe('');
 });
 
 test('fromRow throws when id is missing', function (): void {
@@ -57,8 +61,9 @@ test('fromRow throws with the real debug type of a non-null but invalid id', fun
 test('toArray round-trips the exact same DB column shape fromRow narrowed', function (): void {
     $roundTripped = TagBrief::fromRow(fullTagBriefRow())->toArray();
 
-    expect($roundTripped)->toBe([
-        'id' => 7,
-        'name' => 'Sunset',
-    ]);
+    expect($roundTripped)
+        ->toBe([
+            'id' => 7,
+            'name' => 'Sunset',
+        ]);
 });

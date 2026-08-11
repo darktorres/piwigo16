@@ -33,7 +33,8 @@ test('toArray flattens every fixed property, and omits EMAIL/SUBSCRIBE_BASE_URL/
 
     $result = $context->toArray();
 
-    expect($result)->not->toHaveKeys(['EMAIL', 'SUBSCRIBE_BASE_URL', 'OLD_NEWSLETTERS_URL'])
+    expect($result)
+        ->not->toHaveKeys(['EMAIL', 'SUBSCRIBE_BASE_URL', 'OLD_NEWSLETTERS_URL'])
         ->and($result['NB_PHOTOS'])->toBe(10)
         ->and($result['NB_VIEWS'])->toBe('1.2K')
         ->and($result['STORAGE_TOTAL'])->toBe(123.4);

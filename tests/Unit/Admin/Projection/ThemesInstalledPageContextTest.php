@@ -10,20 +10,25 @@ test('toArray flattens every property to its real Smarty template variable name,
         deactivateBaseUrl: '/admin.php?page=themes&action=deactivate&theme=',
         setDefaultBaseUrl: '/admin.php?page=themes&action=set_default&theme=',
         deleteBaseUrl: '/admin.php?page=themes&action=delete&theme=',
-        tplThemes: [['ID' => 'roboticfarm']],
+        tplThemes: [[
+            'ID' => 'roboticfarm',
+        ]],
         isWebmaster: true,
         adminPageTitle: 'Themes',
         enableExtensionsInstall: false,
     );
 
-    expect($context->toArray())->toBe([
-        'activate_baseurl' => '/admin.php?page=themes&action=activate&theme=',
-        'deactivate_baseurl' => '/admin.php?page=themes&action=deactivate&theme=',
-        'set_default_baseurl' => '/admin.php?page=themes&action=set_default&theme=',
-        'delete_baseurl' => '/admin.php?page=themes&action=delete&theme=',
-        'tpl_themes' => [['ID' => 'roboticfarm']],
-        'isWebmaster' => 1,
-        'ADMIN_PAGE_TITLE' => 'Themes',
-        'CONF_ENABLE_EXTENSIONS_INSTALL' => false,
-    ]);
+    expect($context->toArray())
+        ->toBe([
+            'activate_baseurl' => '/admin.php?page=themes&action=activate&theme=',
+            'deactivate_baseurl' => '/admin.php?page=themes&action=deactivate&theme=',
+            'set_default_baseurl' => '/admin.php?page=themes&action=set_default&theme=',
+            'delete_baseurl' => '/admin.php?page=themes&action=delete&theme=',
+            'tpl_themes' => [[
+                'ID' => 'roboticfarm',
+            ]],
+            'isWebmaster' => 1,
+            'ADMIN_PAGE_TITLE' => 'Themes',
+            'CONF_ENABLE_EXTENSIONS_INSTALL' => false,
+        ]);
 });

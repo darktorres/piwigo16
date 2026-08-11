@@ -106,10 +106,13 @@ test('addElements() inserts new rows and returns the count', function (): void {
     $conn = DbConnection::build();
 
     try {
-        $added = caddieTestRepo()->addElements(1, [1, 2, 3]);
+        $added = caddieTestRepo()
+            ->addElements(1, [1, 2, 3]);
 
-        expect($added)->toBe(3)
-            ->and(caddieTestFetchElementIds($conn, 1))->toBe([1, 2, 3]);
+        expect($added)
+            ->toBe(3)
+            ->and(caddieTestFetchElementIds($conn, 1))
+            ->toBe([1, 2, 3]);
     } finally {
         caddieTestClear($conn, 1);
     }
@@ -138,10 +141,13 @@ test('addElements() returns zero for an empty list', function (): void {
 test('addElements() silently skips a nonexistent image id', function (): void {
     $conn = DbConnection::build();
 
-    $added = caddieTestRepo()->addElements(1, [999999]);
+    $added = caddieTestRepo()
+        ->addElements(1, [999999]);
 
-    expect($added)->toBe(0)
-        ->and(caddieTestFetchElementIds($conn, 1))->toBe([]);
+    expect($added)
+        ->toBe(0)
+        ->and(caddieTestFetchElementIds($conn, 1))
+        ->toBe([]);
 });
 
 test('addElements() scopes to the given user', function (): void {
@@ -169,7 +175,8 @@ test('removeElementsForUser() deletes only the given elements', function (): voi
 
         $repo->removeElementsForUser(1, [2]);
 
-        expect(caddieTestFetchElementIds($conn, 1))->toBe([1, 3]);
+        expect(caddieTestFetchElementIds($conn, 1))
+            ->toBe([1, 3]);
     } finally {
         caddieTestClear($conn, 1);
     }
@@ -187,7 +194,8 @@ test('removeElementsForUser() is a no-op for an empty list', function (): void {
         // Guards against building "DELETE ... WHERE element_id IN ()" for
         // an empty list -- the real rows just inserted above must survive
         // untouched.
-        expect(caddieTestFetchElementIds($conn, 1))->toBe([1, 2]);
+        expect(caddieTestFetchElementIds($conn, 1))
+            ->toBe([1, 2]);
     } finally {
         caddieTestClear($conn, 1);
     }
@@ -222,7 +230,8 @@ test('replaceForUser() empties the existing caddie then inserts the new elements
 
         $repo->replaceForUser(1, [4, 5]);
 
-        expect(caddieTestFetchElementIds($conn, 1))->toBe([4, 5]);
+        expect(caddieTestFetchElementIds($conn, 1))
+            ->toBe([4, 5]);
     } finally {
         caddieTestClear($conn, 1);
     }
@@ -237,7 +246,8 @@ test('replaceForUser() empties the caddie for an empty replacement list', functi
 
         $repo->replaceForUser(1, []);
 
-        expect(caddieTestFetchElementIds($conn, 1))->toBe([]);
+        expect(caddieTestFetchElementIds($conn, 1))
+            ->toBe([]);
     } finally {
         caddieTestClear($conn, 1);
     }
@@ -254,12 +264,19 @@ test('replaceForUser() clears the EntityManager identity map, so a later find() 
         // bypasses that map entirely, so without its em->clear() call, a
         // later find() for the same key would return this already-loaded
         // (now stale) object instead of null.
-        $tracked = $em->find(CaddieEntity::class, ['userId' => UserId::from(1), 'elementId' => ImageId::from(1)]);
-        expect($tracked)->not->toBeNull();
+        $tracked = $em->find(CaddieEntity::class, [
+            'userId' => UserId::from(1),
+            'elementId' => ImageId::from(1),
+        ]);
+        expect($tracked)
+            ->not->toBeNull();
 
         $repo->replaceForUser(1, [2]);
 
-        expect($em->find(CaddieEntity::class, ['userId' => UserId::from(1), 'elementId' => ImageId::from(1)]))->toBeNull();
+        expect($em->find(CaddieEntity::class, [
+            'userId' => UserId::from(1),
+            'elementId' => ImageId::from(1),
+        ]))->toBeNull();
     } finally {
         caddieTestClear($conn, 1);
     }
@@ -271,12 +288,19 @@ test('removeElementsForUser() clears the EntityManager identity map, so a later 
     try {
         [$repo, $em] = caddieTestRepoWithEm();
         $repo->addElements(1, [1]);
-        $tracked = $em->find(CaddieEntity::class, ['userId' => UserId::from(1), 'elementId' => ImageId::from(1)]);
-        expect($tracked)->not->toBeNull();
+        $tracked = $em->find(CaddieEntity::class, [
+            'userId' => UserId::from(1),
+            'elementId' => ImageId::from(1),
+        ]);
+        expect($tracked)
+            ->not->toBeNull();
 
         $repo->removeElementsForUser(1, [1]);
 
-        expect($em->find(CaddieEntity::class, ['userId' => UserId::from(1), 'elementId' => ImageId::from(1)]))->toBeNull();
+        expect($em->find(CaddieEntity::class, [
+            'userId' => UserId::from(1),
+            'elementId' => ImageId::from(1),
+        ]))->toBeNull();
     } finally {
         caddieTestClear($conn, 1);
     }

@@ -12,19 +12,24 @@ test('toArray flattens every property to its real Smarty template variable name'
         catOptionsFalseLabel: 'Forbidden',
         formAction: '/admin.php?page=group_perm&group_id=3',
         pwgToken: 'token123',
-        categoryOptionTrue: new CategorySelectOptions(options: [1 => 'Holidays'], selected: []),
+        categoryOptionTrue: new CategorySelectOptions(options: [
+            1 => 'Holidays',
+        ], selected: []),
         categoryOptionFalse: new CategorySelectOptions(options: [], selected: []),
     );
 
-    expect($context->toArray())->toBe([
-        'TITLE' => 'Manage permissions for group "Family"',
-        'L_CAT_OPTIONS_TRUE' => 'Authorized',
-        'L_CAT_OPTIONS_FALSE' => 'Forbidden',
-        'F_ACTION' => '/admin.php?page=group_perm&group_id=3',
-        'PWG_TOKEN' => 'token123',
-        'category_option_true' => [1 => 'Holidays'],
-        'category_option_true_selected' => [],
-        'category_option_false' => [],
-        'category_option_false_selected' => [],
-    ]);
+    expect($context->toArray())
+        ->toBe([
+            'TITLE' => 'Manage permissions for group "Family"',
+            'L_CAT_OPTIONS_TRUE' => 'Authorized',
+            'L_CAT_OPTIONS_FALSE' => 'Forbidden',
+            'F_ACTION' => '/admin.php?page=group_perm&group_id=3',
+            'PWG_TOKEN' => 'token123',
+            'category_option_true' => [
+                1 => 'Holidays',
+            ],
+            'category_option_true_selected' => [],
+            'category_option_false' => [],
+            'category_option_false_selected' => [],
+        ]);
 });

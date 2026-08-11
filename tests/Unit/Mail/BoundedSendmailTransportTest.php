@@ -75,12 +75,18 @@ test('doSend invokes sendmail with -f<sender>, recipients after --, and strips -
 
     cleanupFakeSendmail([$script, $argvFile, $stdinFile]);
 
-    expect($lines)->not->toContain('-t')
-        ->and($lines)->toContain('-i')
-        ->and($lines)->toContain('-f')
-        ->and($lines)->toContain('sender@example.test')
-        ->and($lines)->toContain('--')
-        ->and($lines)->toContain('bob@example.test');
+    expect($lines)
+        ->not->toContain('-t')
+        ->and($lines)
+        ->toContain('-i')
+        ->and($lines)
+        ->toContain('-f')
+        ->and($lines)
+        ->toContain('sender@example.test')
+        ->and($lines)
+        ->toContain('--')
+        ->and($lines)
+        ->toContain('bob@example.test');
 });
 
 test('doSend trims leading/trailing whitespace from the configured sendmail_path before splitting it into binary + flags', function (): void {
@@ -102,7 +108,8 @@ test('doSend trims leading/trailing whitespace from the configured sendmail_path
 
     cleanupFakeSendmail([$script, $argvFile, $stdinFile]);
 
-    expect($lines)->toBe(['-i', '-f', 'sender@example.test', '--', 'bob@example.test']);
+    expect($lines)
+        ->toBe(['-i', '-f', 'sender@example.test', '--', 'bob@example.test']);
 });
 
 test('doSend slices off only the sendmail binary itself (index 0) when deriving the flags list, keeping every configured flag in order', function (): void {
@@ -123,7 +130,8 @@ test('doSend slices off only the sendmail binary itself (index 0) when deriving 
 
     cleanupFakeSendmail([$script, $argvFile, $stdinFile]);
 
-    expect($lines)->toBe(['-x', '-i', '-f', 'sender@example.test', '--', 'bob@example.test']);
+    expect($lines)
+        ->toBe(['-x', '-i', '-f', 'sender@example.test', '--', 'bob@example.test']);
 });
 
 /**
@@ -143,7 +151,6 @@ test('doSend slices off only the sendmail binary itself (index 0) when deriving 
  * array_values() call) and rerunning this whole file leaves every test
  * passing unchanged, including the two argv-exact-match tests above.
  */
-
 test('doSend pipes the full MIME message (headers + body) to sendmail\'s stdin', function (): void {
     [$script, $argvFile, $stdinFile] = fakeSendmailCapturing();
 
@@ -154,9 +161,12 @@ test('doSend pipes the full MIME message (headers + body) to sendmail\'s stdin',
 
     cleanupFakeSendmail([$script, $argvFile, $stdinFile]);
 
-    expect($stdin)->toContain('Subject: Hello Sendmail')
-        ->and($stdin)->toContain('line one')
-        ->and($stdin)->toContain('line two');
+    expect($stdin)
+        ->toContain('Subject: Hello Sendmail')
+        ->and($stdin)
+        ->toContain('line one')
+        ->and($stdin)
+        ->toContain('line two');
 });
 
 test('doSend doubles a leading dot on its own line when -i/-oi is absent (dot-stuffing)', function (): void {
@@ -174,7 +184,8 @@ test('doSend doubles a leading dot on its own line when -i/-oi is absent (dot-st
 
     cleanupFakeSendmail([$script, $argvFile, $stdinFile]);
 
-    expect($stdin)->toContain("before\n..\nafter");
+    expect($stdin)
+        ->toContain("before\n..\nafter");
 });
 
 test('doSend leaves a leading dot alone when -i is present (no dot-stuffing)', function (): void {
@@ -191,8 +202,10 @@ test('doSend leaves a leading dot alone when -i is present (no dot-stuffing)', f
 
     cleanupFakeSendmail([$script, $argvFile, $stdinFile]);
 
-    expect($stdin)->toContain("before\n.\nafter")
-        ->and($stdin)->not->toContain("before\n..\nafter");
+    expect($stdin)
+        ->toContain("before\n.\nafter")
+        ->and($stdin)
+        ->not->toContain("before\n..\nafter");
 });
 
 test('doSend throws a TransportException (not an unbounded hang) when sendmail exceeds the configured timeout', function (): void {
@@ -208,7 +221,8 @@ test('doSend throws a TransportException (not an unbounded hang) when sendmail e
 
     // The whole point of this class: bounded by ~$timeoutSeconds, never
     // anywhere near the fake sendmail's real 5-second sleep.
-    expect($elapsedSeconds)->toBeLessThan(4.0);
+    expect($elapsedSeconds)
+        ->toBeLessThan(4.0);
 });
 
 test('doSend\'s timeout exception message concatenates the prefix, the configured timeout, "s: ", and the wrapped exception\'s own message in that exact order, and preserves exit code 0', function (): void {
@@ -234,14 +248,18 @@ test('doSend\'s timeout exception message concatenates the prefix, the configure
         // a regression here (e.g. the previous exception silently stops
         // being passed) fails loudly instead of the nullsafe fallback
         // below quietly turning it into a passing empty-suffix comparison.
-        expect($e->getPrevious())->toBeInstanceOf(ProcessTimedOutException::class);
-        expect($e->getMessage())->toBe('Sendmail process timed out after ' . $timeoutSeconds . 's: ' . ($e->getPrevious()?->getMessage() ?? ''));
-        expect($e->getCode())->toBe(0);
+        expect($e->getPrevious())
+            ->toBeInstanceOf(ProcessTimedOutException::class);
+        expect($e->getMessage())
+            ->toBe('Sendmail process timed out after ' . $timeoutSeconds . 's: ' . ($e->getPrevious()?->getMessage() ?? ''));
+        expect($e->getCode())
+            ->toBe(0);
     }
 
     cleanupFakeSendmail([$script]);
 
-    expect($threw)->toBeTrue();
+    expect($threw)
+        ->toBeTrue();
 });
 
 test('doSend throws a TransportException (via the non-timeout ProcessExceptionInterface branch) when sendmail is killed by a signal instead of exiting normally', function (): void {
@@ -281,14 +299,18 @@ test('doSend\'s "could not be started" exception message concatenates the prefix
         $transport->send(testEmail());
     } catch (TransportException $e) {
         $threw = true;
-        expect($e->getPrevious())->toBeInstanceOf(ProcessSignaledException::class);
-        expect($e->getMessage())->toBe('Sendmail process could not be started: ' . ($e->getPrevious()?->getMessage() ?? ''));
-        expect($e->getCode())->toBe(0);
+        expect($e->getPrevious())
+            ->toBeInstanceOf(ProcessSignaledException::class);
+        expect($e->getMessage())
+            ->toBe('Sendmail process could not be started: ' . ($e->getPrevious()?->getMessage() ?? ''));
+        expect($e->getCode())
+            ->toBe(0);
     }
 
     cleanupFakeSendmail([$script]);
 
-    expect($threw)->toBeTrue();
+    expect($threw)
+        ->toBeTrue();
 });
 
 test('doSend throws a TransportException when sendmail exits non-zero', function (): void {
@@ -320,12 +342,14 @@ test('doSend\'s "process failed" exception message concatenates the exact exit c
         $transport->send(testEmail());
     } catch (TransportException $e) {
         $threw = true;
-        expect($e->getMessage())->toBe('Sendmail process failed with exit code 7: boom disk full');
+        expect($e->getMessage())
+            ->toBe('Sendmail process failed with exit code 7: boom disk full');
     }
 
     cleanupFakeSendmail([$script]);
 
-    expect($threw)->toBeTrue();
+    expect($threw)
+        ->toBeTrue();
 });
 
 test('doSend throws a TransportException for an empty sendmail_path instead of silently doing nothing', function (): void {
@@ -376,9 +400,9 @@ test('doSend\'s "sendmail_path is empty or invalid" exception message concatenat
  * whole file (including the new trim()-whitespace and exact-message tests
  * above) leaves every test passing unchanged.
  */
-
 test('__toString identifies this as the bounded native transport', function (): void {
     $transport = new BoundedSendmailTransport('/bin/true', 5.0);
 
-    expect((string) $transport)->toBe('native://default (bounded)');
+    expect((string) $transport)
+        ->toBe('native://default (bounded)');
 });

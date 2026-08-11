@@ -5,9 +5,9 @@ declare(strict_types=1);
 use Piwigo\Cache\PersistentFileCache;
 use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\AppInfo;
-use Piwigo\Tests\Support\CurrentPathsTestFactory;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Paths;
+use Piwigo\Tests\Support\CurrentPathsTestFactory;
 
 /**
  * PersistentFileCache is the only concrete subclass of the abstract
@@ -91,15 +91,22 @@ test('make_key hashes a scalar array key joined by & plus the instance key', fun
 
     $key = $cache->make_key(['category', 12, 'thumbnails']);
 
-    expect($key)->toBe(md5('category&12&thumbnails' . AppInfo::VERSION));
+    expect($key)
+        ->toBe(md5('category&12&thumbnails' . AppInfo::VERSION));
 });
 
 test('make_key falls back to serialize() for a non-scalar array part', function (): void {
     $cache = new PersistentFileCache(persistentFileCacheTestNewCurrentConfig(), CurrentPathsTestFactory::get());
 
-    $key = $cache->make_key(['category', ['nested' => true]]);
+    $key = $cache->make_key([
+        'category', [
+            'nested' => true,
+        ]]);
 
-    expect($key)->toBe(md5('category&' . serialize(['nested' => true]) . AppInfo::VERSION));
+    expect($key)
+        ->toBe(md5('category&' . serialize([
+            'nested' => true,
+        ]) . AppInfo::VERSION));
 });
 
 test('make_key hashes a bare string key plus the instance key, with no & joining', function (): void {
@@ -107,7 +114,8 @@ test('make_key hashes a bare string key plus the instance key, with no & joining
 
     $key = $cache->make_key('plain_string_key');
 
-    expect($key)->toBe(md5('plain_string_key' . AppInfo::VERSION));
+    expect($key)
+        ->toBe(md5('plain_string_key' . AppInfo::VERSION));
 });
 
 test('make_key on an empty array key still hashes just the instance key', function (): void {
@@ -115,7 +123,8 @@ test('make_key on an empty array key still hashes just the instance key', functi
 
     $key = $cache->make_key([]);
 
-    expect($key)->toBe(md5(AppInfo::VERSION));
+    expect($key)
+        ->toBe(md5(AppInfo::VERSION));
 });
 
 test('get returns false and leaves $value untouched for a never-cached key', function (): void {
@@ -124,23 +133,34 @@ test('get returns false and leaves $value untouched for a never-cached key', fun
 
     $found = $cache->get($cache->make_key('missing'), $value);
 
-    expect($found)->toBeFalse()
-        ->and($value)->toBe('sentinel-untouched');
+    expect($found)
+        ->toBeFalse()
+        ->and($value)
+        ->toBe('sentinel-untouched');
 });
 
 test('set then get round-trips the exact cached value', function (): void {
     $cache = new PersistentFileCache(persistentFileCacheTestNewCurrentConfig(), CurrentPathsTestFactory::get());
     $key = $cache->make_key(['round_trip']);
 
-    $written = $cache->set($key, ['section' => 'best_rated', 'count' => 5]);
+    $written = $cache->set($key, [
+        'section' => 'best_rated',
+        'count' => 5,
+    ]);
 
-    expect($written)->toBeTrue();
+    expect($written)
+        ->toBeTrue();
 
     $value = null;
     $found = $cache->get($key, $value);
 
-    expect($found)->toBeTrue()
-        ->and($value)->toBe(['section' => 'best_rated', 'count' => 5]);
+    expect($found)
+        ->toBeTrue()
+        ->and($value)
+        ->toBe([
+            'section' => 'best_rated',
+            'count' => 5,
+        ]);
 });
 
 test('set self-heals by creating the missing cache dir when the first write attempt fails, then succeeds', function (): void {
@@ -160,12 +180,16 @@ test('set self-heals by creating the missing cache dir when the first write atte
         restore_error_handler();
     }
 
-    expect($written)->toBeTrue()
-        ->and(is_dir($dir))->toBeTrue();
+    expect($written)
+        ->toBeTrue()
+        ->and(is_dir($dir))
+        ->toBeTrue();
 
     $value = null;
-    expect($cache->get($key, $value))->toBeTrue()
-        ->and($value)->toBe('healed-value');
+    expect($cache->get($key, $value))
+        ->toBeTrue()
+        ->and($value)
+        ->toBe('healed-value');
 });
 
 test('set returns false when both the initial write and the mkgetdir-then-retry attempt fail', function (): void {
@@ -191,7 +215,8 @@ test('set returns false when both the initial write and the mkgetdir-then-retry 
         chmod($dataRoot, 0o755);
     }
 
-    expect($written)->toBeFalse();
+    expect($written)
+        ->toBeFalse();
 });
 
 test('get returns false at the exact expiry boundary (expire === now), not just strictly past it', function (): void {
@@ -203,13 +228,18 @@ test('get returns false at the exact expiry boundary (expire === now), not just 
     $cache = new PersistentFileCache(persistentFileCacheTestNewCurrentConfig(), CurrentPathsTestFactory::get());
     $key = $cache->make_key(['exact-boundary-expiry']);
     $dir = CurrentPathsTestFactory::get()->root . persistentFileCacheTestNewCurrentConfig()->dataLocation . 'cache/';
-    file_put_contents($dir . $key . '.cache', serialize(['expire' => time(), 'data' => 'boundary-value']));
+    file_put_contents($dir . $key . '.cache', serialize([
+        'expire' => time(),
+        'data' => 'boundary-value',
+    ]));
 
     $value = 'sentinel-untouched';
     $found = $cache->get($key, $value);
 
-    expect($found)->toBeFalse()
-        ->and($value)->toBe('sentinel-untouched');
+    expect($found)
+        ->toBeFalse()
+        ->and($value)
+        ->toBe('sentinel-untouched');
 });
 
 test('get returns false for a value whose lifetime already expired', function (): void {
@@ -221,8 +251,10 @@ test('get returns false for a value whose lifetime already expired', function ()
     $value = null;
     $found = $cache->get($key, $value);
 
-    expect($found)->toBeFalse()
-        ->and($value)->toBeNull();
+    expect($found)
+        ->toBeFalse()
+        ->and($value)
+        ->toBeNull();
 });
 
 test('purge(true) deletes every cache file regardless of age', function (): void {
@@ -236,8 +268,10 @@ test('purge(true) deletes every cache file regardless of age', function (): void
 
     $freshValue = null;
     $oldValue = null;
-    expect($cache->get($freshKey, $freshValue))->toBeFalse()
-        ->and($cache->get($oldKey, $oldValue))->toBeFalse();
+    expect($cache->get($freshKey, $freshValue))
+        ->toBeFalse()
+        ->and($cache->get($oldKey, $oldValue))
+        ->toBeFalse();
 });
 
 test('purge(false) deletes only files older than default_lifetime, keeping fresh ones', function (): void {
@@ -257,9 +291,12 @@ test('purge(false) deletes only files older than default_lifetime, keeping fresh
 
     $freshValue = null;
     $oldValue = null;
-    expect($cache->get($freshKey, $freshValue))->toBeTrue()
-        ->and($freshValue)->toBe('fresh-value')
-        ->and($cache->get($oldKey, $oldValue))->toBeFalse();
+    expect($cache->get($freshKey, $freshValue))
+        ->toBeTrue()
+        ->and($freshValue)
+        ->toBe('fresh-value')
+        ->and($cache->get($oldKey, $oldValue))
+        ->toBeFalse();
 });
 
 test('purge is a no-op on a directory with no .cache files at all (glob() returns an empty array)', function (): void {
@@ -290,7 +327,8 @@ test('get returns false when the file is unreadable despite existing (a Unix dom
     if (! $socket instanceof Socket) {
         throw new RuntimeException('socket_create failed');
     }
-    expect(socket_bind($socket, $path))->toBeTrue();
+    expect(socket_bind($socket, $path))
+        ->toBeTrue();
 
     try {
         $value = 'sentinel-untouched';
@@ -306,8 +344,10 @@ test('get returns false when the file is unreadable despite existing (a Unix dom
             restore_error_handler();
         }
 
-        expect($found)->toBeFalse()
-            ->and($value)->toBe('sentinel-untouched');
+        expect($found)
+            ->toBeFalse()
+            ->and($value)
+            ->toBe('sentinel-untouched');
     } finally {
         socket_close($socket);
     }
@@ -322,34 +362,45 @@ test('get returns false for a cache file whose payload is not an array at all', 
     $value = 'sentinel-untouched';
     $found = $cache->get($key, $value);
 
-    expect($found)->toBeFalse()
-        ->and($value)->toBe('sentinel-untouched');
+    expect($found)
+        ->toBeFalse()
+        ->and($value)
+        ->toBe('sentinel-untouched');
 });
 
 test('get returns false for a cache file whose payload array is missing the data key', function (): void {
     $cache = new PersistentFileCache(persistentFileCacheTestNewCurrentConfig(), CurrentPathsTestFactory::get());
     $key = $cache->make_key(['missing-data-key']);
     $dir = CurrentPathsTestFactory::get()->root . persistentFileCacheTestNewCurrentConfig()->dataLocation . 'cache/';
-    file_put_contents($dir . $key . '.cache', serialize(['expire' => time() + 3600]));
+    file_put_contents($dir . $key . '.cache', serialize([
+        'expire' => time() + 3600,
+    ]));
 
     $value = 'sentinel-untouched';
     $found = $cache->get($key, $value);
 
-    expect($found)->toBeFalse()
-        ->and($value)->toBe('sentinel-untouched');
+    expect($found)
+        ->toBeFalse()
+        ->and($value)
+        ->toBe('sentinel-untouched');
 });
 
 test('get returns false when the stored expire value is not an int', function (): void {
     $cache = new PersistentFileCache(persistentFileCacheTestNewCurrentConfig(), CurrentPathsTestFactory::get());
     $key = $cache->make_key(['non-int-expire']);
     $dir = CurrentPathsTestFactory::get()->root . persistentFileCacheTestNewCurrentConfig()->dataLocation . 'cache/';
-    file_put_contents($dir . $key . '.cache', serialize(['expire' => 'not-an-int', 'data' => 'some-value']));
+    file_put_contents($dir . $key . '.cache', serialize([
+        'expire' => 'not-an-int',
+        'data' => 'some-value',
+    ]));
 
     $value = 'sentinel-untouched';
     $found = $cache->get($key, $value);
 
-    expect($found)->toBeFalse()
-        ->and($value)->toBe('sentinel-untouched');
+    expect($found)
+        ->toBeFalse()
+        ->and($value)
+        ->toBe('sentinel-untouched');
 });
 
 test('set fires the opportunistic purge(false), not purge(true), on the exact 1-in-97 mt_rand() draw', function (): void {
@@ -372,14 +423,17 @@ test('set fires the opportunistic purge(false), not purge(true), on the exact 1-
     mt_srand(115);
     $written = $cache->set($cache->make_key(['exact-seed-trigger']), 'trigger-value');
 
-    expect($written)->toBeTrue()
+    expect($written)
+        ->toBeTrue()
         ->and(is_file($dir . $staleKey . '.cache'))->toBeFalse();
     // purge(false), not purge(true): the still-fresh sibling written just
     // before the triggering set() call must survive -- a mutated
     // `purge(true)` would delete it too, unconditionally.
     $freshValue = null;
-    expect($cache->get($freshKey, $freshValue))->toBeTrue()
-        ->and($freshValue)->toBe('fresh-value');
+    expect($cache->get($freshKey, $freshValue))
+        ->toBeTrue()
+        ->and($freshValue)
+        ->toBe('fresh-value');
 });
 
 test('set does not fire the opportunistic purge on an mt_rand() draw one past the trigger value', function (): void {
@@ -437,7 +491,8 @@ test('purge is a no-op when glob() itself fails (an overlong pattern returns fal
         Kernel::boot(Paths::fromRoot($originalRoot));
     }
 
-    expect($unexpectedWarning)->toBeNull();
+    expect($unexpectedWarning)
+        ->toBeNull();
 });
 
 test('purge(false) keeps a file exactly at the age cutoff boundary, not just strictly newer than it', function (): void {

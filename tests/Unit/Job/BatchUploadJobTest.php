@@ -23,23 +23,35 @@ function baseBatchUploadJobArgs(): array
 test('constructs with distinct values for every property', function (): void {
     $job = new BatchUploadJob(...baseBatchUploadJobArgs());
 
-    expect($job->sourceFilepath)->toBe('/tmp/piwigo-uploads/staged-photo.jpg')
-        ->and($job->originalFilename)->toBe('family-picnic.jpg')
-        ->and($job->categories)->toBe([12, 45, 7])
-        ->and($job->level)->toBe(4)
-        ->and($job->imageId)->toEqual(ImageId::from(231))
-        ->and($job->originalMd5sum)->toBe('9e107d9d372bb6826bd81d3542a419d6');
+    expect($job->sourceFilepath)
+        ->toBe('/tmp/piwigo-uploads/staged-photo.jpg')
+        ->and($job->originalFilename)
+        ->toBe('family-picnic.jpg')
+        ->and($job->categories)
+        ->toBe([12, 45, 7])
+        ->and($job->level)
+        ->toBe(4)
+        ->and($job->imageId)
+        ->toEqual(ImageId::from(231))
+        ->and($job->originalMd5sum)
+        ->toBe('9e107d9d372bb6826bd81d3542a419d6');
 });
 
 test('constructs with only the required sourceFilepath, every optional param defaulting to null', function (): void {
     $job = new BatchUploadJob('/tmp/piwigo-uploads/only-required.jpg');
 
-    expect($job->sourceFilepath)->toBe('/tmp/piwigo-uploads/only-required.jpg')
-        ->and($job->originalFilename)->toBeNull()
-        ->and($job->categories)->toBeNull()
-        ->and($job->level)->toBeNull()
-        ->and($job->imageId)->toBeNull()
-        ->and($job->originalMd5sum)->toBeNull();
+    expect($job->sourceFilepath)
+        ->toBe('/tmp/piwigo-uploads/only-required.jpg')
+        ->and($job->originalFilename)
+        ->toBeNull()
+        ->and($job->categories)
+        ->toBeNull()
+        ->and($job->level)
+        ->toBeNull()
+        ->and($job->imageId)
+        ->toBeNull()
+        ->and($job->originalMd5sum)
+        ->toBeNull();
 });
 
 test('constructs with originalFilename null', function (): void {
@@ -48,7 +60,8 @@ test('constructs with originalFilename null', function (): void {
 
     $job = new BatchUploadJob(...$args);
 
-    expect($job->originalFilename)->toBeNull();
+    expect($job->originalFilename)
+        ->toBeNull();
 });
 
 test('constructs with categories null', function (): void {
@@ -57,7 +70,8 @@ test('constructs with categories null', function (): void {
 
     $job = new BatchUploadJob(...$args);
 
-    expect($job->categories)->toBeNull();
+    expect($job->categories)
+        ->toBeNull();
 });
 
 test('constructs with an empty categories list, distinct from null', function (): void {
@@ -66,7 +80,8 @@ test('constructs with an empty categories list, distinct from null', function ()
 
     $job = new BatchUploadJob(...$args);
 
-    expect($job->categories)->toBe([]);
+    expect($job->categories)
+        ->toBe([]);
 });
 
 test('constructs with level null', function (): void {
@@ -75,7 +90,8 @@ test('constructs with level null', function (): void {
 
     $job = new BatchUploadJob(...$args);
 
-    expect($job->level)->toBeNull();
+    expect($job->level)
+        ->toBeNull();
 });
 
 test('constructs with imageId null', function (): void {
@@ -84,7 +100,8 @@ test('constructs with imageId null', function (): void {
 
     $job = new BatchUploadJob(...$args);
 
-    expect($job->imageId)->toBeNull();
+    expect($job->imageId)
+        ->toBeNull();
 });
 
 test('constructs with originalMd5sum null', function (): void {
@@ -93,5 +110,6 @@ test('constructs with originalMd5sum null', function (): void {
 
     $job = new BatchUploadJob(...$args);
 
-    expect($job->originalMd5sum)->toBeNull();
+    expect($job->originalMd5sum)
+        ->toBeNull();
 });

@@ -2,8 +2,8 @@
 
 declare(strict_types=1);
 
-use Psr\Cache\CacheItemPoolInterface;
 use Piwigo\Cache\CachePools;
+use Psr\Cache\CacheItemPoolInterface;
 use Symfony\Component\Cache\Adapter\AbstractAdapter;
 
 /**
@@ -57,13 +57,17 @@ test('each named pool is isolated from the others', function (): void {
 
 test('a value saved in one pool is retrievable from a fresh call to the same method', function (): void {
     $item = CachePools::categoryTree()->getItem('tree_key');
-    $item->set(['album_1' => 42]);
+    $item->set([
+        'album_1' => 42,
+    ]);
     CachePools::categoryTree()->save($item);
 
     // A fresh CachePools::categoryTree() call builds a new adapter instance
     // pointed at the same namespace/backend -- proves pool identity is
     // namespace-derived, not tied to holding onto one object.
-    expect(CachePools::categoryTree()->getItem('tree_key')->get())->toBe(['album_1' => 42]);
+    expect(CachePools::categoryTree()->getItem('tree_key')->get())->toBe([
+        'album_1' => 42,
+    ]);
 });
 
 test('permissions/effectivePermissions/categoryTree/tagCloud pools carry their own documented TTL, not a neighboring value', function (): void {

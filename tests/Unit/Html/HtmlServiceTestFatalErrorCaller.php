@@ -66,7 +66,8 @@ final class HtmlServiceTestFatalErrorCaller
     public function call(HtmlService $service, string $msg, ?string $title, bool $showTrace): string
     {
         $this->capturedErrorMessage = null;
-        $this->errorCollector()->drain();
+        $this->errorCollector()
+            ->drain();
         // fatalError() is `never`-typed and always throws
         // ResponseReadyException -- no fallback return needed after the
         // try/catch (matches HtmlServiceTest.php's own established
@@ -75,11 +76,14 @@ final class HtmlServiceTestFatalErrorCaller
             $this->preCallDepth = count(debug_backtrace());
             $service->fatalError($msg, $title, $showTrace);
         } catch (ResponseReadyException $e) {
-            $collected = $this->errorCollector()->drain();
+            $collected = $this->errorCollector()
+                ->drain();
             $this->capturedErrorMessage = $collected === [] ? null : preg_replace('/^\[ERROR\] /', '', $collected[0]);
-            $this->capturedStatusCode = $e->response()->getStatusCode();
+            $this->capturedStatusCode = $e->response()
+                ->getStatusCode();
 
-            return (string) $e->response()->getBody();
+            return (string) $e->response()
+                ->getBody();
         }
     }
 }

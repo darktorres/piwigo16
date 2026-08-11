@@ -4,21 +4,21 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Browser\Helpers;
 
-use mysqli;
-use PgSql\Connection;
-use RuntimeException;
-use mysqli_result;
-use InvalidArgumentException;
 use CURLFile;
+use InvalidArgumentException;
+use mysqli;
+use mysqli_result;
 use Pest\Browser\Api\AwaitableWebpage;
 use Pest\Browser\Api\PendingAwaitablePage;
 use Pest\Browser\Api\Webpage;
 use Pest\Browser\Playwright\Page;
 use Pest\Browser\Support\GuessLocator;
+use PgSql\Connection;
 use PHPUnit\Framework\ExpectationFailedException;
 use Piwigo\Cache\CachePools;
 use ReflectionMethod;
 use ReflectionProperty;
+use RuntimeException;
 
 /**
  * pest-plugin-browser resolves a visited/interacted-with page to one of
@@ -71,15 +71,15 @@ final class BrowserTestHelpers
     private static function serverErrorPatterns(): array
     {
         return [
-            'Fatal error'            => '/Fatal error/i',
-            'Parse error'            => '/Parse error/i',
-            'Warning:'               => '/\bWarning:\s/',
-            'Notice:'                => '/\bNotice:\s/',
-            'Deprecated:'            => '/\bDeprecated:\s/',
-            'Strict Standards:'      => '/\bStrict Standards:\s/',
-            'Stack trace:'           => '/Stack trace:/',
-            'Uncaught'               => '/\bUncaught\s/',
-            'Internal Server Error'  => '/Internal Server Error/',
+            'Fatal error' => '/Fatal error/i',
+            'Parse error' => '/Parse error/i',
+            'Warning:' => '/\bWarning:\s/',
+            'Notice:' => '/\bNotice:\s/',
+            'Deprecated:' => '/\bDeprecated:\s/',
+            'Strict Standards:' => '/\bStrict Standards:\s/',
+            'Stack trace:' => '/Stack trace:/',
+            'Uncaught' => '/\bUncaught\s/',
+            'Internal Server Error' => '/Internal Server Error/',
         ];
     }
 
@@ -90,14 +90,22 @@ final class BrowserTestHelpers
         return $url !== false ? rtrim($url, '/') : '';
     }
 
-    /** @return array<string, mixed> */
+    /**
+     * @return array<string, mixed>
+     */
     public static function testModeOptions(): array
     {
         $headers = [
-            ['name' => 'X-Piwigo-Env', 'value' => 'test'],
+            [
+                'name' => 'X-Piwigo-Env',
+                'value' => 'test',
+            ],
         ];
         if (getenv('PIWIGO_COVERAGE') === '1') {
-            $headers[] = ['name' => 'X-Piwigo-Coverage', 'value' => '1'];
+            $headers[] = [
+                'name' => 'X-Piwigo-Coverage',
+                'value' => '1',
+            ];
         }
 
         return [
@@ -144,9 +152,9 @@ final class BrowserTestHelpers
         $result = $test->visit(self::baseUrl() . $path, self::testModeOptions());
 
         if (
-            !$result instanceof Webpage
-            && !$result instanceof PendingAwaitablePage
-            && !$result instanceof AwaitableWebpage
+            ! $result instanceof Webpage
+            && ! $result instanceof PendingAwaitablePage
+            && ! $result instanceof AwaitableWebpage
         ) {
             throw new ExpectationFailedException(
                 'visit() did not return a Webpage/PendingAwaitablePage/AwaitableWebpage — '
@@ -243,7 +251,9 @@ final class BrowserTestHelpers
         );
     }
 
-    /** Visits a path and asserts the response has no server-error markers. */
+    /**
+     * Visits a path and asserts the response has no server-error markers.
+     */
     public static function gotoOk(object $test, string $path): Webpage|PendingAwaitablePage|AwaitableWebpage
     {
         $page = self::visitPwg($test, $path);
@@ -359,7 +369,7 @@ final class BrowserTestHelpers
             $property = new ReflectionProperty(Webpage::class, 'page');
 
             // @phpstan-ignore instanceof.internalClass
-            if (!($rawPage = $property->getValue($page)) instanceof Page) {
+            if (! ($rawPage = $property->getValue($page)) instanceof Page) {
                 throw new ExpectationFailedException(
                     'Could not extract the underlying Page from Webpage — '
                     . 'pest-plugin-browser may have renamed/retyped its internal property.'
@@ -373,11 +383,11 @@ final class BrowserTestHelpers
             $pendingProperty = new ReflectionProperty(PendingAwaitablePage::class, 'waitablePage');
             $waitablePage = $pendingProperty->getValue($page);
 
-            if (!$waitablePage instanceof AwaitableWebpage) {
+            if (! $waitablePage instanceof AwaitableWebpage) {
                 $createMethod = new ReflectionMethod(PendingAwaitablePage::class, 'createAwaitablePage');
                 $waitablePage = $createMethod->invoke($page);
 
-                if (!$waitablePage instanceof AwaitableWebpage) {
+                if (! $waitablePage instanceof AwaitableWebpage) {
                     throw new ExpectationFailedException(
                         'PendingAwaitablePage::createAwaitablePage() did not return an AwaitableWebpage — '
                         . 'pest-plugin-browser may have changed its internal implementation.'
@@ -394,7 +404,7 @@ final class BrowserTestHelpers
         $rawPage = $property->getValue($page);
 
         // @phpstan-ignore instanceof.internalClass
-        if (!$rawPage instanceof Page) {
+        if (! $rawPage instanceof Page) {
             throw new ExpectationFailedException(
                 'Could not extract the underlying Page from AwaitableWebpage — '
                 . 'pest-plugin-browser may have renamed/retyped its internal property.'
@@ -429,7 +439,9 @@ final class BrowserTestHelpers
         // @phpstan-ignore new.internalClass, method.internalClass
         (new GuessLocator(self::nativePage($page)))
             ->for($text)
-            ->click(['timeout' => $timeoutMs]);
+            ->click([
+                'timeout' => $timeoutMs,
+            ]);
     }
 
     /**
@@ -551,7 +563,9 @@ final class BrowserTestHelpers
         return (bool) $value;
     }
 
-    /** @return array<string, float|int|string|null>|null */
+    /**
+     * @return array<string, float|int|string|null>|null
+     */
     public static function dbFetchAssoc(mysqli|Connection $db, string $sql): ?array
     {
         if ($db instanceof mysqli) {
@@ -573,7 +587,9 @@ final class BrowserTestHelpers
         return $row === false ? null : self::stringKeyed($row);
     }
 
-    /** @return list<array<string, float|int|string|null>> */
+    /**
+     * @return list<array<string, float|int|string|null>>
+     */
     public static function dbFetchAll(mysqli|Connection $db, string $sql): array
     {
         if ($db instanceof mysqli) {
@@ -674,7 +690,9 @@ final class BrowserTestHelpers
         return $page;
     }
 
-    /** @var list<array{name: string, value: string, domain: string, path: string, httpOnly: bool, secure: bool}>|null */
+    /**
+     * @var list<array{name: string, value: string, domain: string, path: string, httpOnly: bool, secure: bool}>|null
+     */
     private static ?array $adminSessionCookies = null;
 
     /**
@@ -699,7 +717,7 @@ final class BrowserTestHelpers
         $cookies = [];
         foreach ($lines as $line) {
             $httpOnly = str_starts_with($line, '#HttpOnly_');
-            if ($line === '' || ($line[0] === '#' && !$httpOnly)) {
+            if ($line === '' || ($line[0] === '#' && ! $httpOnly)) {
                 continue;
             }
 
@@ -711,12 +729,12 @@ final class BrowserTestHelpers
             [$domain, , $path, $secure, , $name, $value] = $fields;
 
             $cookies[] = [
-                'name'     => $name,
-                'value'    => $value,
-                'domain'   => $domain,
-                'path'     => $path,
+                'name' => $name,
+                'value' => $value,
+                'domain' => $domain,
+                'path' => $path,
                 'httpOnly' => $httpOnly,
-                'secure'   => $secure === 'TRUE',
+                'secure' => $secure === 'TRUE',
             ];
         }
 
@@ -751,7 +769,7 @@ final class BrowserTestHelpers
         }
 
         self::curlWs($cookieJar, [
-            'method'   => 'pwg.session.login',
+            'method' => 'pwg.session.login',
             'username' => self::ADMIN_USER,
             'password' => self::ADMIN_PASS,
         ]);
@@ -802,9 +820,9 @@ final class BrowserTestHelpers
         $result = $test->visit(self::baseUrl() . $path, $options);
 
         if (
-            !$result instanceof Webpage
-            && !$result instanceof PendingAwaitablePage
-            && !$result instanceof AwaitableWebpage
+            ! $result instanceof Webpage
+            && ! $result instanceof PendingAwaitablePage
+            && ! $result instanceof AwaitableWebpage
         ) {
             throw new ExpectationFailedException(
                 'visit() did not return a Webpage/PendingAwaitablePage/AwaitableWebpage — '
@@ -830,7 +848,9 @@ final class BrowserTestHelpers
      */
     public static function wsCall(Webpage|PendingAwaitablePage|AwaitableWebpage $page, string $method, array $params = []): array
     {
-        $body = http_build_query(array_merge(['method' => $method], $params));
+        $body = http_build_query(array_merge([
+            'method' => $method,
+        ], $params));
         $url = self::baseUrl() . '/ws.php?format=json';
         $js = <<<JS
         fetch('{$url}', {
@@ -841,14 +861,14 @@ final class BrowserTestHelpers
         JS;
 
         $result = $page->script($js);
-        if (!is_string($result)) {
+        if (! is_string($result)) {
             throw new ExpectationFailedException(
                 "WS call to {$method} did not return a string result: " . var_export($result, true)
             );
         }
 
         $decoded = json_decode($result, true);
-        if (!is_array($decoded)) {
+        if (! is_array($decoded)) {
             throw new ExpectationFailedException(
                 "WS call to {$method} did not return valid JSON: " . var_export($result, true)
             );
@@ -891,20 +911,23 @@ final class BrowserTestHelpers
         JS;
 
         $result = $page->script($js);
-        if (!is_string($result)) {
+        if (! is_string($result)) {
             throw new ExpectationFailedException(
                 "adminPost to {$path} did not return a string result: " . var_export($result, true)
             );
         }
 
         $decoded = json_decode($result, true);
-        if (!is_array($decoded) || !is_int($decoded['status'] ?? null) || !is_string($decoded['body'] ?? null)) {
+        if (! is_array($decoded) || ! is_int($decoded['status'] ?? null) || ! is_string($decoded['body'] ?? null)) {
             throw new ExpectationFailedException(
                 "adminPost to {$path} did not return the expected {status, body} shape: " . var_export($result, true)
             );
         }
 
-        return ['status' => $decoded['status'], 'body' => $decoded['body']];
+        return [
+            'status' => $decoded['status'],
+            'body' => $decoded['body'],
+        ];
     }
 
     /**
@@ -936,20 +959,23 @@ final class BrowserTestHelpers
         JS;
 
         $result = $page->script($js);
-        if (!is_string($result)) {
+        if (! is_string($result)) {
             throw new ExpectationFailedException(
                 "rawGet to {$path} did not return a string result: " . var_export($result, true)
             );
         }
 
         $decoded = json_decode($result, true);
-        if (!is_array($decoded) || !is_int($decoded['status'] ?? null) || !is_string($decoded['body'] ?? null)) {
+        if (! is_array($decoded) || ! is_int($decoded['status'] ?? null) || ! is_string($decoded['body'] ?? null)) {
             throw new ExpectationFailedException(
                 "rawGet to {$path} did not return the expected {status, body} shape: " . var_export($result, true)
             );
         }
 
-        return ['status' => $decoded['status'], 'body' => $decoded['body']];
+        return [
+            'status' => $decoded['status'],
+            'body' => $decoded['body'],
+        ];
     }
 
     /**
@@ -1045,13 +1071,15 @@ final class BrowserTestHelpers
         self::dbClose($db);
     }
 
-    /** Returns the pwg_token for the current session (must be logged in). */
+    /**
+     * Returns the pwg_token for the current session (must be logged in).
+     */
     public static function pwgToken(Webpage|PendingAwaitablePage|AwaitableWebpage $page): string
     {
         $status = self::wsCall($page, 'pwg.session.getStatus');
 
         $result = $status['result'] ?? null;
-        if (!is_array($result)) {
+        if (! is_array($result)) {
             return '';
         }
 
@@ -1159,7 +1187,9 @@ final class BrowserTestHelpers
         return $snapshot;
     }
 
-    /** @param array<string, ?string> $snapshot */
+    /**
+     * @param array<string, ?string> $snapshot
+     */
     public static function restoreConfig(array $snapshot): void
     {
         foreach ($snapshot as $param => $value) {
@@ -1187,7 +1217,10 @@ final class BrowserTestHelpers
 
         self::dbClose($db);
 
-        return ['settings' => $settings, 'sizes' => $sizes];
+        return [
+            'settings' => $settings,
+            'sizes' => $sizes,
+        ];
     }
 
     /**
@@ -1230,7 +1263,9 @@ final class BrowserTestHelpers
         $db = self::connect();
 
         self::dbQuery($db, 'DELETE FROM derivative_settings');
-        self::insertRow($db, 'derivative_settings', ['id' => 1] + $row);
+        self::insertRow($db, 'derivative_settings', [
+            'id' => 1,
+        ] + $row);
         self::dbClose($db);
     }
 
@@ -1407,7 +1442,9 @@ final class BrowserTestHelpers
         }
     }
 
-    /** Reverts setCustomLogo() -- deletes the file and the 2 config keys it set (leaves use_standard_pages, already true by default). */
+    /**
+     * Reverts setCustomLogo() -- deletes the file and the 2 config keys it set (leaves use_standard_pages, already true by default).
+     */
     public static function clearCustomLogo(string $relativePath): void
     {
         // Real file_exists() guard, not a bare @unlink() -- @ only
@@ -1428,7 +1465,9 @@ final class BrowserTestHelpers
         CachePools::config()->clear();
     }
 
-    /** Generates a tiny solid-color PNG (via GD), returned as raw binary content -- for CustomLogoController tests. */
+    /**
+     * Generates a tiny solid-color PNG (via GD), returned as raw binary content -- for CustomLogoController tests.
+     */
     public static function makeTestPng(): string
     {
         $img = imagecreatetruecolor(16, 16);
@@ -1501,36 +1540,38 @@ final class BrowserTestHelpers
         }
 
         self::curlWs($cookieJar, [
-            'method'   => 'pwg.session.login',
+            'method' => 'pwg.session.login',
             'username' => self::ADMIN_USER,
             'password' => self::ADMIN_PASS,
         ]);
 
         $body = self::curlWs($cookieJar, [
-            'method'   => 'pwg.images.addSimple',
+            'method' => 'pwg.images.addSimple',
             'category' => (string) $albumId,
-            'name'     => $name,
-            'image'    => new CURLFile($imagePath, 'image/jpeg', basename($imagePath)),
+            'name' => $name,
+            'image' => new CURLFile($imagePath, 'image/jpeg', basename($imagePath)),
         ]);
 
         $decoded = json_decode($body, true);
-        if (!is_array($decoded) || ($decoded['stat'] ?? null) !== 'ok') {
+        if (! is_array($decoded) || ($decoded['stat'] ?? null) !== 'ok') {
             @unlink($cookieJar);
             throw new ExpectationFailedException('Photo upload failed: ' . var_export($body, true));
         }
 
         // Empties the upload "lounge" so the just-uploaded photo is visible
         // immediately, reusing the same authenticated cookie jar.
-        self::curlWs($cookieJar, ['method' => 'pwg.images.emptyLounge']);
+        self::curlWs($cookieJar, [
+            'method' => 'pwg.images.emptyLounge',
+        ]);
         @unlink($cookieJar);
 
         $result = $decoded['result'] ?? null;
-        if (!is_array($result)) {
+        if (! is_array($result)) {
             throw new ExpectationFailedException('Photo upload response missing result: ' . var_export($body, true));
         }
 
         $imageId = $result['image_id'] ?? null;
-        if (!is_numeric($imageId)) {
+        if (! is_numeric($imageId)) {
             throw new ExpectationFailedException('Photo upload response missing image_id: ' . var_export($body, true));
         }
 
@@ -1605,7 +1646,9 @@ final class BrowserTestHelpers
         return $row;
     }
 
-    /** @param array<string, mixed> $fields */
+    /**
+     * @param array<string, mixed> $fields
+     */
     private static function curlWs(string $cookieJar, array $fields): string
     {
         // the only caller passes tempnam()'s result, always a real path

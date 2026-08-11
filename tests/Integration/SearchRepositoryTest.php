@@ -4,16 +4,16 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Integration;
 
-use Override;
-use Piwigo\Core\Kernel;
-use LogicException;
-use Piwigo\Db\EntityManagerFactory;
 use Doctrine\DBAL\ArrayParameterType;
 use Doctrine\DBAL\Connection;
-use Piwigo\Config\CurrentConfig;
-use Piwigo\Config\ConfigLoader;
-use Piwigo\Db\DbConnection;
+use LogicException;
+use Override;
 use Piwigo\Common\ValueObject\CategoryId;
+use Piwigo\Config\ConfigLoader;
+use Piwigo\Config\CurrentConfig;
+use Piwigo\Core\Kernel;
+use Piwigo\Db\DbConnection;
+use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Permission\SqlCondition;
 use Piwigo\Search\Projection\CategoryIdUppercats;
 use Piwigo\Search\SearchRepository;
@@ -62,14 +62,16 @@ final class SearchRepositoryTest extends IntegrationTestCase
         $this->repo = new SearchRepository(EntityManagerFactory::build($this->conn));
     }
 
-    public function test_find_saved_search_by_uuid_returns_null_for_no_match(): void
+    public function testFindSavedSearchByUuidReturnsNullForNoMatch(): void
     {
         self::assertNull($this->repo->findSavedSearchByUuid('no-such-uuid'));
     }
 
-    public function test_find_saved_search_by_uuid_returns_the_matching_row(): void
+    public function testFindSavedSearchByUuidReturnsTheMatchingRow(): void
     {
-        $this->repo->insertSavedSearch(['q' => 'nature'], '2026-07-12 00:00:00', 1, 'psk-20260712-abcdefghij', null);
+        $this->repo->insertSavedSearch([
+            'q' => 'nature',
+        ], '2026-07-12 00:00:00', 1, 'psk-20260712-abcdefghij', null);
 
         $row = $this->repo->findSavedSearchByUuid('psk-20260712-abcdefghij');
 
@@ -77,20 +79,20 @@ final class SearchRepositoryTest extends IntegrationTestCase
         self::assertSame('psk-20260712-abcdefghij', $row->searchUuid);
     }
 
-    public function test_find_ids_by_clause_returns_a_list_of_ints(): void
+    public function testFindIdsByClauseReturnsAListOfInts(): void
     {
-        $ids = $this->repo->findIdsByClause('id', 'images' . ' i', 'id > ?', [0]);
+        $ids = $this->repo->findIdsByClause('id', 'images i', 'id > ?', [0]);
         sort($ids);
 
         self::assertSame([1, 2, 3, 4, 5], $ids);
     }
 
-    public function test_find_ids_by_clause_returns_empty_for_no_match(): void
+    public function testFindIdsByClauseReturnsEmptyForNoMatch(): void
     {
-        self::assertSame([], $this->repo->findIdsByClause('id', 'images' . ' i', 'id > ?', [99999]));
+        self::assertSame([], $this->repo->findIdsByClause('id', 'images i', 'id > ?', [99999]));
     }
 
-    public function test_find_rows_by_clause_returns_full_rows(): void
+    public function testFindRowsByClauseReturnsFullRows(): void
     {
         $rows = $this->repo->findRowsByClause('tags', 'name = ?', ['nature']);
 
@@ -99,39 +101,44 @@ final class SearchRepositoryTest extends IntegrationTestCase
         self::assertSame('nature', $rows[0]['name']);
     }
 
-    public function test_find_rows_by_clause_returns_empty_for_no_match(): void
+    public function testFindRowsByClauseReturnsEmptyForNoMatch(): void
     {
         self::assertSame([], $this->repo->findRowsByClause('tags', 'name = ?', ['no-such-tag']));
     }
 
-    public function test_quote_escapes_a_value_for_safe_inline_embedding(): void
+    public function testQuoteEscapesAValueForSafeInlineEmbedding(): void
     {
         // [SEC-18] real driver escaping (Connection::quote()), not
         // addslashes() -- the quoted value must round-trip safely when
         // embedded directly into a WHERE fragment (not bound via ?).
         $quoted = $this->repo->quote("o'brien\" --");
 
-        $row = $this->conn->executeQuery("SELECT {$quoted} AS val")->fetchAssociative();
+        $row = $this->conn->executeQuery("SELECT {$quoted} AS val")
+            ->fetchAssociative();
 
         self::assertIsArray($row);
         self::assertSame("o'brien\" --", $row['val']);
     }
 
-    public function test_count_saved_search_by_uuid_returns_zero_for_unknown_uuid(): void
+    public function testCountSavedSearchByUuidReturnsZeroForUnknownUuid(): void
     {
         self::assertSame(0, $this->repo->countSavedSearchByUuid('no-such-uuid'));
     }
 
-    public function test_count_saved_search_by_uuid_returns_one_after_insert(): void
+    public function testCountSavedSearchByUuidReturnsOneAfterInsert(): void
     {
-        $this->repo->insertSavedSearch(['q' => 'travel'], '2026-07-12 00:00:00', 1, 'psk-20260712-klmnopqrst', null);
+        $this->repo->insertSavedSearch([
+            'q' => 'travel',
+        ], '2026-07-12 00:00:00', 1, 'psk-20260712-klmnopqrst', null);
 
         self::assertSame(1, $this->repo->countSavedSearchByUuid('psk-20260712-klmnopqrst'));
     }
 
-    public function test_insert_saved_search_returns_the_new_autoincrement_id(): void
+    public function testInsertSavedSearchReturnsTheNewAutoincrementId(): void
     {
-        $id = $this->repo->insertSavedSearch(['q' => 'family'], '2026-07-12 00:00:00', null, 'psk-20260712-uvwxyzabcd', null);
+        $id = $this->repo->insertSavedSearch([
+            'q' => 'family',
+        ], '2026-07-12 00:00:00', null, 'psk-20260712-uvwxyzabcd', null);
 
         self::assertGreaterThan(0, $id);
 
@@ -141,45 +148,67 @@ final class SearchRepositoryTest extends IntegrationTestCase
         self::assertNull($row->forkedFrom);
     }
 
-    public function test_insert_saved_search_stores_forked_from(): void
+    public function testInsertSavedSearchStoresForkedFrom(): void
     {
-        $parentId = $this->repo->insertSavedSearch(['q' => 'parent'], '2026-07-12 00:00:00', 1, 'psk-20260712-parentuuid', null);
-        $childId = $this->repo->insertSavedSearch(['q' => 'child'], '2026-07-12 00:00:00', 1, 'psk-20260712-childuuidx', $parentId);
+        $parentId = $this->repo->insertSavedSearch([
+            'q' => 'parent',
+        ], '2026-07-12 00:00:00', 1, 'psk-20260712-parentuuid', null);
+        $childId = $this->repo->insertSavedSearch([
+            'q' => 'child',
+        ], '2026-07-12 00:00:00', 1, 'psk-20260712-childuuidx', $parentId);
 
         $row = $this->repo->findSavedSearchById($childId);
         self::assertNotNull($row);
         self::assertSame($parentId, $row->forkedFrom);
     }
 
-    public function test_find_saved_search_rules_by_ids_returns_decoded_rules_keyed_by_id(): void
+    public function testFindSavedSearchRulesByIdsReturnsDecodedRulesKeyedById(): void
     {
-        $firstId = $this->repo->insertSavedSearch(['q' => 'nature'], '2026-07-12 00:00:00', 1, 'psk-20260712-bulklook01', null);
-        $secondId = $this->repo->insertSavedSearch(['q' => 'travel', 'fields' => ['allwords' => ['words' => ['travel']]]], '2026-07-12 00:00:00', 1, 'psk-20260712-bulklook02', null);
+        $firstId = $this->repo->insertSavedSearch([
+            'q' => 'nature',
+        ], '2026-07-12 00:00:00', 1, 'psk-20260712-bulklook01', null);
+        $secondId = $this->repo->insertSavedSearch([
+            'q' => 'travel',
+            'fields' => [
+                'allwords' => [
+                    'words' => ['travel'],
+                ],
+            ],
+        ], '2026-07-12 00:00:00', 1, 'psk-20260712-bulklook02', null);
 
         $rules = $this->repo->findSavedSearchRulesByIds([$firstId, $secondId]);
 
-        self::assertSame(['q' => 'nature'], $rules[$firstId]);
-        self::assertSame(['q' => 'travel', 'fields' => ['allwords' => ['words' => ['travel']]]], $rules[$secondId]);
+        self::assertSame([
+            'q' => 'nature',
+        ], $rules[$firstId]);
+        self::assertSame([
+            'q' => 'travel',
+            'fields' => [
+                'allwords' => [
+                    'words' => ['travel'],
+                ],
+            ],
+        ], $rules[$secondId]);
     }
 
-    public function test_find_saved_search_rules_by_ids_returns_empty_array_for_an_empty_id_list(): void
+    public function testFindSavedSearchRulesByIdsReturnsEmptyArrayForAnEmptyIdList(): void
     {
         self::assertSame([], $this->repo->findSavedSearchRulesByIds([]));
     }
 
-    public function test_find_saved_search_rules_by_ids_omits_ids_with_no_matching_row(): void
+    public function testFindSavedSearchRulesByIdsOmitsIdsWithNoMatchingRow(): void
     {
         self::assertSame([], $this->repo->findSavedSearchRulesByIds([999999]));
     }
 
-    public function test_find_saved_search_rules_by_ids_decodes_a_null_rules_column_to_null(): void
+    public function testFindSavedSearchRulesByIdsDecodesANullRulesColumnToNull(): void
     {
         // insertSavedSearch() always writes a real array via persist()
         // (never a literal SQL NULL) -- the only way to exercise the
         // `rules` column's real NULLable-JSON shape (schema: `rules json
         // DEFAULT NULL`) is a raw insert bypassing that method.
         $this->conn->executeStatement(
-            'INSERT INTO ' . 'search' . ' (rules, created_on, created_by, search_uuid, forked_from) VALUES (NULL, ?, ?, ?, NULL)',
+            'INSERT INTO search (rules, created_on, created_by, search_uuid, forked_from) VALUES (NULL, ?, ?, ?, NULL)',
             ['2026-07-12 00:00:00', 1, 'psk-20260712-nullrules1']
         );
         $id = (int) $this->conn->lastInsertId();
@@ -189,7 +218,7 @@ final class SearchRepositoryTest extends IntegrationTestCase
         self::assertNull($rules[$id]);
     }
 
-    public function test_get_db_version_returns_a_non_empty_version_string(): void
+    public function testGetDbVersionReturnsANonEmptyVersionString(): void
     {
         $version = $this->repo->getDbVersion();
 
@@ -200,44 +229,57 @@ final class SearchRepositoryTest extends IntegrationTestCase
      * `SearchFilterRenderer`'s own filter-sidebar blocks are the only
      * real callers of the 4 typed DQL methods below.
      */
-    public function test_count_images_grouped_by_returns_counts_ordered_desc(): void
+    public function testCountImagesGroupedByReturnsCountsOrderedDesc(): void
     {
-        $this->conn->executeStatement('UPDATE ' . 'images' . " SET author = 'Ansel Adams' WHERE id IN (1, 2)");
-        $this->conn->executeStatement('UPDATE ' . 'images' . " SET author = 'Dorothea Lange' WHERE id = 3");
+        $this->conn->executeStatement('UPDATE images' . " SET author = 'Ansel Adams' WHERE id IN (1, 2)");
+        $this->conn->executeStatement('UPDATE images' . " SET author = 'Dorothea Lange' WHERE id = 3");
 
         try {
             $rows = $this->repo->countImagesGroupedBy('i.author', 'author', new SqlCondition('i.author IS NOT NULL'), true);
 
             self::assertSame([
-                ['author' => 'Ansel Adams', 'counter' => 2],
-                ['author' => 'Dorothea Lange', 'counter' => 1],
+                [
+                    'author' => 'Ansel Adams',
+                    'counter' => 2,
+                ],
+                [
+                    'author' => 'Dorothea Lange',
+                    'counter' => 1,
+                ],
             ], $rows);
         } finally {
-            $this->conn->executeStatement('UPDATE ' . 'images' . ' SET author = NULL WHERE id IN (1, 2, 3)');
+            $this->conn->executeStatement('UPDATE images SET author = NULL WHERE id IN (1, 2, 3)');
         }
     }
 
-    public function test_count_images_grouped_by_returns_empty_for_no_match(): void
+    public function testCountImagesGroupedByReturnsEmptyForNoMatch(): void
     {
         self::assertSame([], $this->repo->countImagesGroupedBy('i.author', 'author', new SqlCondition('i.author IS NOT NULL')));
     }
 
-    public function test_find_distinct_image_rows_returns_the_requested_extra_columns(): void
+    public function testFindDistinctImageRowsReturnsTheRequestedExtraColumns(): void
     {
         $rows = $this->repo->findDistinctImageRows(
             ['i.ratingScore AS rating_score'],
-            new SqlCondition('i.id = :id', ['id' => 1]),
+            new SqlCondition('i.id = :id', [
+                'id' => 1,
+            ]),
         );
 
-        self::assertSame([['id' => 1, 'rating_score' => 4.5]], $rows);
+        self::assertSame([[
+            'id' => 1,
+            'rating_score' => 4.5,
+        ]], $rows);
     }
 
-    public function test_find_distinct_image_rows_returns_empty_for_no_match(): void
+    public function testFindDistinctImageRowsReturnsEmptyForNoMatch(): void
     {
-        self::assertSame([], $this->repo->findDistinctImageRows(['i.ratingScore AS rating_score'], new SqlCondition('i.id = :id', ['id' => 99999])));
+        self::assertSame([], $this->repo->findDistinctImageRows(['i.ratingScore AS rating_score'], new SqlCondition('i.id = :id', [
+            'id' => 99999,
+        ])));
     }
 
-    public function test_find_distinct_image_column_values_returns_grouped_ordered_values(): void
+    public function testFindDistinctImageColumnValuesReturnsGroupedOrderedValues(): void
     {
         // every fixture image shares height 150 -- collapses to one row via
         // this method's own GROUP BY.
@@ -246,10 +288,14 @@ final class SearchRepositoryTest extends IntegrationTestCase
         self::assertSame(['150'], $values);
     }
 
-    public function test_find_category_ids_and_uppercats_returns_matching_rows(): void
+    public function testFindCategoryIdsAndUppercatsReturnsMatchingRows(): void
     {
         $rows = $this->repo->findCategoryIdsAndUppercats(
-            new SqlCondition('c.id IN (:ids)', ['ids' => [1, 2]], ['ids' => ArrayParameterType::INTEGER]),
+            new SqlCondition('c.id IN (:ids)', [
+                'ids' => [1, 2],
+            ], [
+                'ids' => ArrayParameterType::INTEGER,
+            ]),
         );
 
         usort($rows, static fn (CategoryIdUppercats $a, CategoryIdUppercats $b): int => $a->id->value <=> $b->id->value);
@@ -260,8 +306,10 @@ final class SearchRepositoryTest extends IntegrationTestCase
         ], $rows);
     }
 
-    public function test_find_category_ids_and_uppercats_returns_empty_for_no_match(): void
+    public function testFindCategoryIdsAndUppercatsReturnsEmptyForNoMatch(): void
     {
-        self::assertSame([], $this->repo->findCategoryIdsAndUppercats(new SqlCondition('c.id = :id', ['id' => 99999])));
+        self::assertSame([], $this->repo->findCategoryIdsAndUppercats(new SqlCondition('c.id = :id', [
+            'id' => 99999,
+        ])));
     }
 }

@@ -4,19 +4,23 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Contract;
 
+use Doctrine\DBAL\Connection;
 use Override;
 use Piwigo\Cache\CachePools;
-use Doctrine\DBAL\Connection;
 use Piwigo\Db\DbConnection;
 
 final class WsCategoriesTest extends ContractTestCase
 {
     private Connection $conn;
 
-    /** @var list<int> */
+    /**
+     * @var list<int>
+     */
     private array $categoryIdsToDelete = [];
 
-    /** @var list<int> */
+    /**
+     * @var list<int>
+     */
     private array $imageIdsToDelete = [];
 
     #[Override]
@@ -30,26 +34,30 @@ final class WsCategoriesTest extends ContractTestCase
     protected function tearDown(): void
     {
         foreach ($this->imageIdsToDelete as $imageId) {
-            $this->conn->executeStatement('DELETE FROM ' . 'image_category' . ' WHERE image_id = ?', [$imageId]);
-            $this->conn->executeStatement('DELETE FROM ' . 'images' . ' WHERE id = ?', [$imageId]);
+            $this->conn->executeStatement('DELETE FROM image_category WHERE image_id = ?', [$imageId]);
+            $this->conn->executeStatement('DELETE FROM images WHERE id = ?', [$imageId]);
         }
         foreach (array_reverse($this->categoryIdsToDelete) as $categoryId) {
-            $this->conn->executeStatement('DELETE FROM ' . 'image_category' . ' WHERE category_id = ?', [$categoryId]);
-            $this->conn->executeStatement('DELETE FROM ' . 'categories' . ' WHERE id = ?', [$categoryId]);
+            $this->conn->executeStatement('DELETE FROM image_category WHERE category_id = ?', [$categoryId]);
+            $this->conn->executeStatement('DELETE FROM categories WHERE id = ?', [$categoryId]);
         }
         // A test may have overridden category 1's image_order via raw SQL --
         // restore it so later tests (in this file or any other Contract
         // test file sharing the same per-process fixture) see the fixture's
         // original NULL.
-        $this->conn->executeStatement('UPDATE ' . 'categories' . ' SET image_order = NULL WHERE id = 1');
+        $this->conn->executeStatement('UPDATE categories SET image_order = NULL WHERE id = 1');
 
         parent::tearDown();
     }
 
-    /** Creates a virtual category via the WS API and marks it for cleanup in tearDown(). */
+    /**
+     * Creates a virtual category via the WS API and marks it for cleanup in tearDown().
+     */
     private function createCategory(string $name, ?int $parentId = null): int
     {
-        $params = ['name' => $name];
+        $params = [
+            'name' => $name,
+        ];
         if ($parentId !== null) {
             $params['parent'] = $parentId;
         }
@@ -88,7 +96,7 @@ final class WsCategoriesTest extends ContractTestCase
         // CategoriesCache's "feature 1053" zero-image exclusion) even
         // though the image is really associated.
         $this->conn->executeStatement(
-            'INSERT INTO ' . 'images' . ' (file, path, md5sum, level, date_available) VALUES (?, ?, ?, ?, ?)',
+            'INSERT INTO images (file, path, md5sum, level, date_available) VALUES (?, ?, ?, ?, ?)',
             [$filename, 'upload/2026/08/01/' . $filename, md5($filename), $level, '2026-08-01 00:00:00']
         );
         $id = (int) $this->conn->lastInsertId();
@@ -97,33 +105,37 @@ final class WsCategoriesTest extends ContractTestCase
         return $id;
     }
 
-    public function test_getList_response_matches_schema(): void
+    public function testGetListResponseMatchesSchema(): void
     {
-        $response = $this->wsAdmin('pwg.categories.getList', ['recursive' => 1]);
+        $response = $this->wsAdmin('pwg.categories.getList', [
+            'recursive' => 1,
+        ]);
 
         self::assertSame('ok', $response['stat']);
         self::assertMatchesSchema('categories.getList', $response);
     }
 
-    public function test_getList_returns_array_of_categories(): void
+    public function testGetListReturnsArrayOfCategories(): void
     {
-        $response = $this->wsAdmin('pwg.categories.getList', ['recursive' => 1]);
+        $response = $this->wsAdmin('pwg.categories.getList', [
+            'recursive' => 1,
+        ]);
 
         $result = $response['result'] ?? null;
-        if (!is_array($result)) {
+        if (! is_array($result)) {
             $encoded = json_encode($response);
             self::fail('WS response result is not an array: ' . ($encoded === false ? 'null' : $encoded));
         }
 
         $categories = $result['categories'] ?? null;
-        if (!is_array($categories)) {
+        if (! is_array($categories)) {
             $encoded = json_encode($response);
             self::fail('WS response result.categories is not an array: ' . ($encoded === false ? 'null' : $encoded));
         }
         self::assertNotEmpty($categories, 'Fixture must contain at least one album');
 
         $first = $categories[0] ?? null;
-        if (!is_array($first)) {
+        if (! is_array($first)) {
             $encoded = json_encode($response);
             self::fail('First category is not an array: ' . ($encoded === false ? 'null' : $encoded));
         }
@@ -133,15 +145,17 @@ final class WsCategoriesTest extends ContractTestCase
         self::assertIsString($first['url'] ?? null);
     }
 
-    public function test_getAdminList_response_matches_schema(): void
+    public function testGetAdminListResponseMatchesSchema(): void
     {
-        $response = $this->wsAdmin('pwg.categories.getAdminList', ['recursive' => 1]);
+        $response = $this->wsAdmin('pwg.categories.getAdminList', [
+            'recursive' => 1,
+        ]);
 
         self::assertSame('ok', $response['stat']);
         self::assertMatchesSchema('categories.getAdminList', $response);
     }
 
-    public function test_getAdminList_is_forbidden_for_guest(): void
+    public function testGetAdminListIsForbiddenForGuest(): void
     {
         $response = $this->ws('pwg.categories.getAdminList');
 
@@ -149,21 +163,25 @@ final class WsCategoriesTest extends ContractTestCase
         self::assertArrayHasKey('err', $response);
     }
 
-    public function test_getImages_response_matches_schema(): void
+    public function testGetImagesResponseMatchesSchema(): void
     {
         // cat_id=1 is the first album seeded in the fixture
-        $response = $this->wsAdmin('pwg.categories.getImages', ['cat_id' => 1]);
+        $response = $this->wsAdmin('pwg.categories.getImages', [
+            'cat_id' => 1,
+        ]);
 
         self::assertSame('ok', $response['stat']);
         self::assertMatchesSchema('pwg.categories.getImages', $response);
     }
 
-    public function test_getImages_returns_paging_and_image_array(): void
+    public function testGetImagesReturnsPagingAndImageArray(): void
     {
-        $response = $this->wsAdmin('pwg.categories.getImages', ['cat_id' => 1]);
+        $response = $this->wsAdmin('pwg.categories.getImages', [
+            'cat_id' => 1,
+        ]);
 
         $result = $response['result'] ?? null;
-        if (!is_array($result)) {
+        if (! is_array($result)) {
             $encoded = json_encode($response);
             self::fail('WS response result is not an array: ' . ($encoded === false ? 'null' : $encoded));
         }
@@ -179,7 +197,7 @@ final class WsCategoriesTest extends ContractTestCase
      * as admin, since `public: true` intentionally asks "what would an
      * anonymous visitor see."
      */
-    public function test_getList_public_true_excludes_a_private_album(): void
+    public function testGetListPublicTrueExcludesAPrivateAlbum(): void
     {
         $created = $this->wsAdmin('pwg.categories.add', [
             'name' => 'Stage 4h Private Album',
@@ -192,7 +210,10 @@ final class WsCategoriesTest extends ContractTestCase
         self::assertIsInt($catId);
         $this->categoryIdsToDelete[] = $catId;
 
-        $response = $this->wsAdmin('pwg.categories.getList', ['recursive' => 1, 'public' => true]);
+        $response = $this->wsAdmin('pwg.categories.getList', [
+            'recursive' => 1,
+            'public' => true,
+        ]);
         self::assertSame('ok', $response['stat']);
 
         $result = $response['result'] ?? null;
@@ -210,7 +231,7 @@ final class WsCategoriesTest extends ContractTestCase
      * explicit grant on the private album created above, so it must
      * stay hidden.
      */
-    public function test_getList_as_regular_user_excludes_a_private_album_without_access(): void
+    public function testGetListAsRegularUserExcludesAPrivateAlbumWithoutAccess(): void
     {
         $created = $this->wsAdmin('pwg.categories.add', [
             'name' => 'Stage 4h Private Album For Regular User',
@@ -229,7 +250,9 @@ final class WsCategoriesTest extends ContractTestCase
         ]);
         self::assertSame('ok', $login['stat']);
 
-        $response = $this->callWs('pwg.categories.getList', ['recursive' => 1]);
+        $response = $this->callWs('pwg.categories.getList', [
+            'recursive' => 1,
+        ]);
         self::assertSame('ok', $response['stat']);
 
         $result = $response['result'] ?? null;
@@ -243,22 +266,27 @@ final class WsCategoriesTest extends ContractTestCase
 
     // ------------------------------------------------------------ getImages
 
-    public function test_getImages_missing_cat_id_returns_404(): void
+    public function testGetImagesMissingCatIdReturns404(): void
     {
-        $response = $this->wsAdmin('pwg.categories.getImages', ['cat_id' => [999999]]);
+        $response = $this->wsAdmin('pwg.categories.getImages', [
+            'cat_id' => [999999],
+        ]);
 
         self::assertSame('fail', $response['stat']);
         self::assertSame(404, $response['err']);
         self::assertSame('cat_id {999999} not found', $response['message']);
     }
 
-    public function test_getImages_recursive_true_includes_subcategory_images(): void
+    public function testGetImagesRecursiveTrueIncludesSubcategoryImages(): void
     {
         // cat_id=1 (Sample Album) has category 2 (Nested Sub Album) as a
         // real fixture child, holding images 4/5 -- recursive=true must
         // pull those in via the uppercats regex where-clause, not just
         // category 1's own images (1,2,3).
-        $response = $this->wsAdmin('pwg.categories.getImages', ['cat_id' => [1], 'recursive' => true]);
+        $response = $this->wsAdmin('pwg.categories.getImages', [
+            'cat_id' => [1],
+            'recursive' => true,
+        ]);
 
         self::assertSame('ok', $response['stat']);
         $result = $response['result'];
@@ -271,14 +299,16 @@ final class WsCategoriesTest extends ContractTestCase
         self::assertContains(4, $ids, 'recursive=true must include subcategory 2\'s images');
     }
 
-    public function test_getImages_single_cat_id_uses_its_own_image_order(): void
+    public function testGetImagesSingleCatIdUsesItsOwnImageOrder(): void
     {
         $this->conn->executeStatement(
-            'UPDATE ' . 'categories' . ' SET image_order = ? WHERE id = 1',
+            'UPDATE categories SET image_order = ? WHERE id = 1',
             ['file DESC']
         );
 
-        $response = $this->wsAdmin('pwg.categories.getImages', ['cat_id' => [1]]);
+        $response = $this->wsAdmin('pwg.categories.getImages', [
+            'cat_id' => [1],
+        ]);
 
         self::assertSame('ok', $response['stat']);
         $result = $response['result'];
@@ -321,25 +351,30 @@ final class WsCategoriesTest extends ContractTestCase
 
     // -------------------------------------------------------------- getList
 
-    public function test_getList_invalid_thumbnail_size_returns_error(): void
+    public function testGetListInvalidThumbnailSizeReturnsError(): void
     {
-        $response = $this->wsAdmin('pwg.categories.getList', ['thumbnail_size' => 'not-a-real-size']);
+        $response = $this->wsAdmin('pwg.categories.getList', [
+            'thumbnail_size' => 'not-a-real-size',
+        ]);
 
         self::assertSame('fail', $response['stat']);
         self::assertSame(1003, $response['err']);
         self::assertSame('Invalid thumbnail_size', $response['message']);
     }
 
-    public function test_getList_recursive_and_limit_together_returns_error(): void
+    public function testGetListRecursiveAndLimitTogetherReturnsError(): void
     {
-        $response = $this->wsAdmin('pwg.categories.getList', ['recursive' => true, 'limit' => 5]);
+        $response = $this->wsAdmin('pwg.categories.getList', [
+            'recursive' => true,
+            'limit' => 5,
+        ]);
 
         self::assertSame('fail', $response['stat']);
         self::assertSame(1003, $response['err']);
         self::assertSame('Cannot use both recursive and limit parameters at the same time', $response['message']);
     }
 
-    public function test_getList_non_recursive_returns_only_root_categories(): void
+    public function testGetListNonRecursiveReturnsOnlyRootCategories(): void
     {
         $response = $this->wsAdmin('pwg.categories.getList');
 
@@ -354,9 +389,11 @@ final class WsCategoriesTest extends ContractTestCase
         self::assertNotContains(2, $ids, 'non-recursive default (cat_id=0) must return only root categories');
     }
 
-    public function test_getList_non_recursive_with_cat_id_includes_the_category_and_its_children(): void
+    public function testGetListNonRecursiveWithCatIdIncludesTheCategoryAndItsChildren(): void
     {
-        $response = $this->wsAdmin('pwg.categories.getList', ['cat_id' => 1]);
+        $response = $this->wsAdmin('pwg.categories.getList', [
+            'cat_id' => 1,
+        ]);
 
         self::assertSame('ok', $response['stat']);
         $result = $response['result'];
@@ -369,9 +406,12 @@ final class WsCategoriesTest extends ContractTestCase
         self::assertContains(2, $ids);
     }
 
-    public function test_getList_recursive_with_cat_id_filters_by_uppercats(): void
+    public function testGetListRecursiveWithCatIdFiltersByUppercats(): void
     {
-        $response = $this->wsAdmin('pwg.categories.getList', ['cat_id' => 1, 'recursive' => true]);
+        $response = $this->wsAdmin('pwg.categories.getList', [
+            'cat_id' => 1,
+            'recursive' => true,
+        ]);
 
         self::assertSame('ok', $response['stat']);
         $result = $response['result'];
@@ -384,12 +424,15 @@ final class WsCategoriesTest extends ContractTestCase
         self::assertContains(2, $ids);
     }
 
-    public function test_getList_search_filters_by_name(): void
+    public function testGetListSearchFiltersByName(): void
     {
         $unique = 'UniqueSearchable' . uniqid();
         $this->createCategory($unique);
 
-        $response = $this->wsAdmin('pwg.categories.getList', ['recursive' => true, 'search' => $unique]);
+        $response = $this->wsAdmin('pwg.categories.getList', [
+            'recursive' => true,
+            'search' => $unique,
+        ]);
 
         self::assertSame('ok', $response['stat']);
         $result = $response['result'];
@@ -403,9 +446,11 @@ final class WsCategoriesTest extends ContractTestCase
         self::assertSame($unique, $first['name_raw'] ?? null);
     }
 
-    public function test_getList_limit_returns_metadata_reflecting_added_root_categories(): void
+    public function testGetListLimitReturnsMetadataReflectingAddedRootCategories(): void
     {
-        $before = $this->wsAdmin('pwg.categories.getList', ['limit' => 100000]);
+        $before = $this->wsAdmin('pwg.categories.getList', [
+            'limit' => 100000,
+        ]);
         self::assertSame('ok', $before['stat']);
         $beforeResult = $before['result'];
         self::assertIsArray($beforeResult);
@@ -417,7 +462,9 @@ final class WsCategoriesTest extends ContractTestCase
         $this->createCategory('ct_root_a_' . uniqid());
         $this->createCategory('ct_root_b_' . uniqid());
 
-        $after = $this->wsAdmin('pwg.categories.getList', ['limit' => 100000]);
+        $after = $this->wsAdmin('pwg.categories.getList', [
+            'limit' => 100000,
+        ]);
         self::assertSame('ok', $after['stat']);
         $afterResult = $after['result'];
         self::assertIsArray($afterResult);
@@ -429,14 +476,17 @@ final class WsCategoriesTest extends ContractTestCase
         self::assertSame(0, $afterLimit['remaining_cats']);
     }
 
-    public function test_getList_limit_with_cat_id_counts_only_the_subtree_excluding_self(): void
+    public function testGetListLimitWithCatIdCountsOnlyTheSubtreeExcludingSelf(): void
     {
         $parentId = $this->createCategory('ct_limit_parent_' . uniqid());
         $this->createCategory('ct_limit_child_1_' . uniqid(), $parentId);
         $this->createCategory('ct_limit_child_2_' . uniqid(), $parentId);
         $this->createCategory('ct_limit_child_3_' . uniqid(), $parentId);
 
-        $response = $this->wsAdmin('pwg.categories.getList', ['cat_id' => $parentId, 'limit' => 1]);
+        $response = $this->wsAdmin('pwg.categories.getList', [
+            'cat_id' => $parentId,
+            'limit' => 1,
+        ]);
 
         self::assertSame('ok', $response['stat']);
         $result = $response['result'];
@@ -449,14 +499,18 @@ final class WsCategoriesTest extends ContractTestCase
         self::assertSame(2, $limit['remaining_cats']);
     }
 
-    public function test_getList_fullname_true_uses_display_name_cache(): void
+    public function testGetListFullnameTrueUsesDisplayNameCache(): void
     {
         $parentName = 'FullnameParent' . uniqid();
         $childName = 'FullnameChild' . uniqid();
         $parentId = $this->createCategory($parentName);
         $childId = $this->createCategory($childName, $parentId);
 
-        $response = $this->wsAdmin('pwg.categories.getList', ['cat_id' => $parentId, 'recursive' => true, 'fullname' => true]);
+        $response = $this->wsAdmin('pwg.categories.getList', [
+            'cat_id' => $parentId,
+            'recursive' => true,
+            'fullname' => true,
+        ]);
 
         self::assertSame('ok', $response['stat']);
         $result = $response['result'];
@@ -482,7 +536,7 @@ final class WsCategoriesTest extends ContractTestCase
      * getList() falls back to searching sub-categories for a representative
      * picture instead.
      */
-    public function test_getList_finds_representative_from_subcategory_when_none_set_directly(): void
+    public function testGetListFindsRepresentativeFromSubcategoryWhenNoneSetDirectly(): void
     {
         $parentId = $this->createCategory('ct_subrep_parent_' . uniqid());
         $childId = $this->createCategory('ct_subrep_child_' . uniqid(), $parentId);
@@ -495,7 +549,10 @@ final class WsCategoriesTest extends ContractTestCase
         ]);
         self::assertSame('ok', $assoc['stat']);
 
-        $response = $this->wsAdmin('pwg.categories.getList', ['cat_id' => $parentId, 'recursive' => false]);
+        $response = $this->wsAdmin('pwg.categories.getList', [
+            'cat_id' => $parentId,
+            'recursive' => false,
+        ]);
 
         self::assertSame('ok', $response['stat']);
         $result = $response['result'];
@@ -521,7 +578,7 @@ final class WsCategoriesTest extends ContractTestCase
      * (CategoryService::getRandomImageInCategory()), a distinct branch
      * from the "fall back to a subcategory" one above.
      */
-    public function test_getList_picks_a_random_representative_when_enabled_and_none_is_set(): void
+    public function testGetListPicksARandomRepresentativeWhenEnabledAndNoneIsSet(): void
     {
         $this->upsertConfig('allow_random_representative', 'true');
         CachePools::config()->clear();
@@ -536,7 +593,10 @@ final class WsCategoriesTest extends ContractTestCase
             ]);
             self::assertSame('ok', $assoc['stat']);
 
-            $response = $this->wsAdmin('pwg.categories.getList', ['cat_id' => $catId, 'recursive' => false]);
+            $response = $this->wsAdmin('pwg.categories.getList', [
+                'cat_id' => $catId,
+                'recursive' => false,
+            ]);
 
             self::assertSame('ok', $response['stat']);
             $result = $response['result'];
@@ -547,7 +607,7 @@ final class WsCategoriesTest extends ContractTestCase
             self::assertIsArray($entry);
             self::assertSame(1, $entry['representative_picture_id'], 'only image in the category, so the random pick is deterministic');
         } finally {
-            $this->conn->executeStatement("DELETE FROM " . 'config' . " WHERE param = 'allow_random_representative'");
+            $this->conn->executeStatement('DELETE FROM config' . " WHERE param = 'allow_random_representative'");
             CachePools::config()->clear();
         }
     }
@@ -558,14 +618,14 @@ final class WsCategoriesTest extends ContractTestCase
      * substitutes a random lower-level image from the same category
      * instead (management-of-album-thumbnail block).
      */
-    public function test_getList_substitutes_representative_above_viewer_privacy_level(): void
+    public function testGetListSubstitutesRepresentativeAboveViewerPrivacyLevel(): void
     {
         $categoryId = $this->createCategory('ct_privacy_' . uniqid());
         $highLevelImageId = $this->insertThrowawayImage(level: 5);
         $lowLevelImageId = $this->insertThrowawayImage(level: 0);
 
         $this->conn->executeStatement(
-            'UPDATE ' . 'categories' . ' SET representative_picture_id = ? WHERE id = ?',
+            'UPDATE categories SET representative_picture_id = ? WHERE id = ?',
             [$highLevelImageId, $categoryId]
         );
         $token = $this->getPwgToken();
@@ -590,7 +650,10 @@ final class WsCategoriesTest extends ContractTestCase
         ]);
         self::assertSame('ok', $login['stat']);
 
-        $response = $this->callWs('pwg.categories.getList', ['cat_id' => $categoryId, 'recursive' => false]);
+        $response = $this->callWs('pwg.categories.getList', [
+            'cat_id' => $categoryId,
+            'recursive' => false,
+        ]);
 
         self::assertSame('ok', $response['stat']);
         $result = $response['result'];
@@ -622,7 +685,7 @@ final class WsCategoriesTest extends ContractTestCase
      */
     private function imageFilePath(int $imageId): string
     {
-        $path = $this->conn->fetchOne('SELECT path FROM ' . 'images' . ' WHERE id = ?', [$imageId]);
+        $path = $this->conn->fetchOne('SELECT path FROM images WHERE id = ?', [$imageId]);
         self::assertIsString($path);
 
         return pathinfo($path, PATHINFO_FILENAME);
@@ -630,9 +693,11 @@ final class WsCategoriesTest extends ContractTestCase
 
     // --------------------------------------------------------- getAdminList
 
-    public function test_getAdminList_non_recursive_returns_only_root_categories(): void
+    public function testGetAdminListNonRecursiveReturnsOnlyRootCategories(): void
     {
-        $response = $this->wsAdmin('pwg.categories.getAdminList', ['recursive' => false]);
+        $response = $this->wsAdmin('pwg.categories.getAdminList', [
+            'recursive' => false,
+        ]);
 
         self::assertSame('ok', $response['stat']);
         $result = $response['result'];
@@ -645,9 +710,12 @@ final class WsCategoriesTest extends ContractTestCase
         self::assertNotContains(2, $ids);
     }
 
-    public function test_getAdminList_non_recursive_with_cat_id_includes_the_category_and_its_children(): void
+    public function testGetAdminListNonRecursiveWithCatIdIncludesTheCategoryAndItsChildren(): void
     {
-        $response = $this->wsAdmin('pwg.categories.getAdminList', ['recursive' => false, 'cat_id' => 1]);
+        $response = $this->wsAdmin('pwg.categories.getAdminList', [
+            'recursive' => false,
+            'cat_id' => 1,
+        ]);
 
         self::assertSame('ok', $response['stat']);
         $result = $response['result'];
@@ -660,9 +728,12 @@ final class WsCategoriesTest extends ContractTestCase
         self::assertContains(2, $ids);
     }
 
-    public function test_getAdminList_recursive_with_cat_id_filters_by_uppercats(): void
+    public function testGetAdminListRecursiveWithCatIdFiltersByUppercats(): void
     {
-        $response = $this->wsAdmin('pwg.categories.getAdminList', ['recursive' => true, 'cat_id' => 1]);
+        $response = $this->wsAdmin('pwg.categories.getAdminList', [
+            'recursive' => true,
+            'cat_id' => 1,
+        ]);
 
         self::assertSame('ok', $response['stat']);
         $result = $response['result'];
@@ -675,12 +746,15 @@ final class WsCategoriesTest extends ContractTestCase
         self::assertContains(2, $ids);
     }
 
-    public function test_getAdminList_search_filters_by_name(): void
+    public function testGetAdminListSearchFiltersByName(): void
     {
         $unique = 'AdminUniqueSearchable' . uniqid();
         $this->createCategory($unique);
 
-        $response = $this->wsAdmin('pwg.categories.getAdminList', ['recursive' => true, 'search' => $unique]);
+        $response = $this->wsAdmin('pwg.categories.getAdminList', [
+            'recursive' => true,
+            'search' => $unique,
+        ]);
 
         self::assertSame('ok', $response['stat']);
         $result = $response['result'];
@@ -694,9 +768,12 @@ final class WsCategoriesTest extends ContractTestCase
         self::assertSame($unique, $first['name_raw'] ?? null);
     }
 
-    public function test_getAdminList_additional_output_full_name_with_admin_links(): void
+    public function testGetAdminListAdditionalOutputFullNameWithAdminLinks(): void
     {
-        $response = $this->wsAdmin('pwg.categories.getAdminList', ['recursive' => true, 'additional_output' => 'full_name_with_admin_links']);
+        $response = $this->wsAdmin('pwg.categories.getAdminList', [
+            'recursive' => true,
+            'additional_output' => 'full_name_with_admin_links',
+        ]);
 
         self::assertSame('ok', $response['stat']);
         $result = $response['result'];

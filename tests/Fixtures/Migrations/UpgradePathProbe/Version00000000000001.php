@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Piwigo\Migrations\UpgradePathProbe;
 
-use Override;
 use Doctrine\DBAL\Schema\Schema;
 use Doctrine\Migrations\AbstractMigration;
+use Override;
 
 /**
  * Test-only fixture for tests/Integration/MigrationUpgradePathTest.php --

@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 use Piwigo\Bootstrap\RequestBootstrap;
 use Piwigo\Config\CurrentConfig;
-use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Core\AppInfo;
 use Piwigo\Core\Kernel;
+use Piwigo\Tests\Support\CurrentConfigTestFactory;
 
 /**
  * pemUrl() reads through self::currentConfig(), which resolves

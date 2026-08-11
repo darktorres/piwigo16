@@ -21,10 +21,14 @@ function fullTagRow(): array
 test('fromRow narrows every column to its real type', function (): void {
     $tag = Tag::fromRow(fullTagRow());
 
-    expect($tag->id)->toEqual(TagId::from(4))
-        ->and($tag->name)->toBe('Landscape')
-        ->and($tag->urlName)->toBe('landscape')
-        ->and($tag->lastmodified)->toBe('2026-07-24 10:00:00');
+    expect($tag->id)
+        ->toEqual(TagId::from(4))
+        ->and($tag->name)
+        ->toBe('Landscape')
+        ->and($tag->urlName)
+        ->toBe('landscape')
+        ->and($tag->lastmodified)
+        ->toBe('2026-07-24 10:00:00');
 });
 
 test('fromRow defaults name/url_name/lastmodified to their zero value when absent, given a valid id', function (): void {
@@ -35,10 +39,14 @@ test('fromRow defaults name/url_name/lastmodified to their zero value when absen
 
     $tag = Tag::fromRow($row);
 
-    expect($tag->id)->toEqual(TagId::from(4))
-        ->and($tag->name)->toBe('')
-        ->and($tag->urlName)->toBe('')
-        ->and($tag->lastmodified)->toBe('');
+    expect($tag->id)
+        ->toEqual(TagId::from(4))
+        ->and($tag->name)
+        ->toBe('')
+        ->and($tag->urlName)
+        ->toBe('')
+        ->and($tag->lastmodified)
+        ->toBe('');
 });
 
 test('fromRow throws when id is missing', function (): void {
@@ -74,17 +82,20 @@ test('fromRow tolerates an extra counter key without reading it', function (): v
 
     $tag = Tag::fromRow($row);
 
-    expect($tag->id)->toEqual(TagId::from(4))
-        ->and($tag->name)->toBe('Landscape');
+    expect($tag->id)
+        ->toEqual(TagId::from(4))
+        ->and($tag->name)
+        ->toBe('Landscape');
 });
 
 test('toArray round-trips the exact same DB column shape fromRow narrowed', function (): void {
     $roundTripped = Tag::fromRow(fullTagRow())->toArray();
 
-    expect($roundTripped)->toBe([
-        'id' => 4,
-        'name' => 'Landscape',
-        'url_name' => 'landscape',
-        'lastmodified' => '2026-07-24 10:00:00',
-    ]);
+    expect($roundTripped)
+        ->toBe([
+            'id' => 4,
+            'name' => 'Landscape',
+            'url_name' => 'landscape',
+            'lastmodified' => '2026-07-24 10:00:00',
+        ]);
 });

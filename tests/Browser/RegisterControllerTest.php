@@ -97,10 +97,15 @@ function registerCurl(string $cookieJar, string $path, array $fields = [], ?int 
     $status = curl_getinfo($ch, CURLINFO_RESPONSE_CODE);
     unset($ch);
 
-    return ['status' => $status, 'body' => is_string($body) ? $body : ''];
+    return [
+        'status' => $status,
+        'body' => is_string($body) ? $body : '',
+    ];
 }
 
-/** Extracts register.tpl's hidden F_KEY value from a GET /register.php response body. */
+/**
+ * Extracts register.tpl's hidden F_KEY value from a GET /register.php response body.
+ */
 function registerExtractKey(string $html): string
 {
     if (preg_match('/name="key" value="([^"]+)"/', $html, $matches) !== 1) {
@@ -124,7 +129,9 @@ function registerUserExists(string $username): bool
     return registerUserCount($username) > 0;
 }
 
-/** @return string a fresh cookie-jar path */
+/**
+ * @return string a fresh cookie-jar path
+ */
 function registerFreshCookieJar(): string
 {
     $jar = tempnam(sys_get_temp_dir(), 'pwg_register_test_');
@@ -158,7 +165,10 @@ function registerCurlWithRawCookie(string $path, string $rawCookieHeader): array
     $status = curl_getinfo($ch, CURLINFO_RESPONSE_CODE);
     unset($ch);
 
-    return ['status' => $status, 'body' => is_string($body) ? $body : ''];
+    return [
+        'status' => $status,
+        'body' => is_string($body) ? $body : '',
+    ];
 }
 
 /**
@@ -183,7 +193,9 @@ function registerAddLanguage(string $code, string $name): void
     H::dbClose($db);
 }
 
-/** Reverts registerAddLanguage(). */
+/**
+ * Reverts registerAddLanguage().
+ */
 function registerRemoveLanguage(string $code): void
 {
     $db = H::connect();
@@ -201,7 +213,8 @@ it('registers a brand-new user, auto-logs them in, and creates the real DB row',
     $email = $username . '@example.test';
     $password = 'S3cure!Pass_' . uniqid();
 
-    expect(registerUserExists($username))->toBeFalse();
+    expect(registerUserExists($username))
+        ->toBeFalse();
 
     // send_password_by_mail omitted here -- this test isn't about mail,
     // see the dedicated regression test below for that checked-by-default
@@ -221,7 +234,8 @@ it('registers a brand-new user, auto-logs them in, and creates the real DB row',
     // checks for.
     expect($result['status'])->toBe(200);
     expect($result['body'])->toContain('act=logout');
-    expect(registerUserExists($username))->toBeTrue();
+    expect(registerUserExists($username))
+        ->toBeTrue();
 
     @unlink($jar);
 });
@@ -243,7 +257,8 @@ it('registers successfully within a bounded time even with send_password_by_mail
     $email = $username . '@example.test';
     $password = 'S3cure!Pass_' . uniqid();
 
-    expect(registerUserExists($username))->toBeFalse();
+    expect(registerUserExists($username))
+        ->toBeFalse();
 
     $start = hrtime(true);
     $result = registerCurl($jar, '/register.php', [
@@ -259,8 +274,10 @@ it('registers successfully within a bounded time even with send_password_by_mail
 
     expect($result['status'])->toBe(200);
     expect($result['body'])->toContain('act=logout');
-    expect(registerUserExists($username))->toBeTrue();
-    expect($elapsedSeconds)->toBeLessThan(20.0);
+    expect(registerUserExists($username))
+        ->toBeTrue();
+    expect($elapsedSeconds)
+        ->toBeLessThan(20.0);
 
     @unlink($jar);
 });
@@ -281,7 +298,8 @@ it('shows "passwords do not match" and does not create an account', function ():
 
     $username = 'browser_reg_mismatch_' . uniqid();
 
-    expect(registerUserExists($username))->toBeFalse();
+    expect(registerUserExists($username))
+        ->toBeFalse();
 
     $result = registerCurl($jar, '/register.php', [
         'login' => $username,
@@ -294,7 +312,8 @@ it('shows "passwords do not match" and does not create an account', function ():
 
     expect($result['status'])->toBe(200);
     expect($result['body'])->toContain('The passwords do not match');
-    expect(registerUserExists($username))->toBeFalse();
+    expect(registerUserExists($username))
+        ->toBeFalse();
 
     @unlink($jar);
 });
@@ -393,7 +412,8 @@ it('rejects an invalid/expired form key with a real 403 and does not attempt reg
 
     $username = 'browser_reg_badkey_' . uniqid();
 
-    expect(registerUserExists($username))->toBeFalse();
+    expect(registerUserExists($username))
+        ->toBeFalse();
 
     $result = registerCurl($jar, '/register.php', [
         'login' => $username,
@@ -406,7 +426,8 @@ it('rejects an invalid/expired form key with a real 403 and does not attempt reg
 
     expect($result['status'])->toBe(403);
     expect($result['body'])->toContain('Invalid/expired form key');
-    expect(registerUserExists($username))->toBeFalse();
+    expect(registerUserExists($username))
+        ->toBeFalse();
 
     @unlink($jar);
 });
@@ -419,7 +440,8 @@ it('shows "password is missing" and does not create an account when the password
 
     $username = 'browser_reg_emptypw_' . uniqid();
 
-    expect(registerUserExists($username))->toBeFalse();
+    expect(registerUserExists($username))
+        ->toBeFalse();
 
     $result = registerCurl($jar, '/register.php', [
         'login' => $username,
@@ -432,7 +454,8 @@ it('shows "password is missing" and does not create an account when the password
 
     expect($result['status'])->toBe(200);
     expect($result['body'])->toContain('Password is missing. Please enter the password.');
-    expect(registerUserExists($username))->toBeFalse();
+    expect(registerUserExists($username))
+        ->toBeFalse();
 
     @unlink($jar);
 });
@@ -445,7 +468,8 @@ it('shows "password confirmation is missing" and does not create an account when
 
     $username = 'browser_reg_emptypwconf_' . uniqid();
 
-    expect(registerUserExists($username))->toBeFalse();
+    expect(registerUserExists($username))
+        ->toBeFalse();
 
     $result = registerCurl($jar, '/register.php', [
         'login' => $username,
@@ -461,7 +485,8 @@ it('shows "password confirmation is missing" and does not create an account when
 
     expect($result['status'])->toBe(200);
     expect($result['body'])->toContain('Password confirmation is missing. Please confirm the chosen password.');
-    expect(registerUserExists($username))->toBeFalse();
+    expect(registerUserExists($username))
+        ->toBeFalse();
 
     @unlink($jar);
 });
@@ -479,7 +504,8 @@ it("surfaces registerUser()'s own validation errors (invalid email format) and d
 
     $username = 'browser_reg_bademail_' . uniqid();
 
-    expect(registerUserExists($username))->toBeFalse();
+    expect(registerUserExists($username))
+        ->toBeFalse();
 
     $result = registerCurl($jar, '/register.php', [
         'login' => $username,
@@ -492,7 +518,8 @@ it("surfaces registerUser()'s own validation errors (invalid email format) and d
 
     expect($result['status'])->toBe(200);
     expect($result['body'])->toContain('mail address must be like');
-    expect(registerUserExists($username))->toBeFalse();
+    expect(registerUserExists($username))
+        ->toBeFalse();
 
     @unlink($jar);
 });

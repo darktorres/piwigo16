@@ -33,48 +33,90 @@ test('fromRow narrows a real DB row into typed properties, decoding JSON prefere
         'last_visit' => '2024-03-01 00:00:00',
         'last_visit_from_history' => 1,
         'lastmodified' => '2024-04-01 00:00:00',
-        'preferences' => json_encode(['theme' => 'dark', 'lang' => 'fr']),
+        'preferences' => json_encode([
+            'theme' => 'dark',
+            'lang' => 'fr',
+        ]),
     ]);
 
-    expect($info->userId->value)->toBe(5);
-    expect($info->nbImagePage)->toBe(20);
-    expect($info->status)->toBe('normal');
-    expect($info->language)->toEqual(LangCode::from('en_UK'));
-    expect($info->expand)->toBeTrue();
-    expect($info->showNbComments)->toBeFalse();
-    expect($info->showNbHits)->toBeTrue();
-    expect($info->recentPeriod)->toBe(7);
-    expect($info->theme)->toEqual(ThemeId::from('default'));
-    expect($info->registrationDate)->toBe('2024-01-01 00:00:00');
-    expect($info->enabledHigh)->toBeTrue();
-    expect($info->level)->toBe(2);
-    expect($info->activationKey)->toBe('abc123');
-    expect($info->activationKeyExpire)->toBe('2024-02-01 00:00:00');
-    expect($info->lastVisit)->toBe('2024-03-01 00:00:00');
-    expect($info->lastVisitFromHistory)->toBeTrue();
-    expect($info->lastmodified)->toBe('2024-04-01 00:00:00');
-    expect($info->preferences)->toBe(['theme' => 'dark', 'lang' => 'fr']);
+    expect($info->userId->value)
+        ->toBe(5);
+    expect($info->nbImagePage)
+        ->toBe(20);
+    expect($info->status)
+        ->toBe('normal');
+    expect($info->language)
+        ->toEqual(LangCode::from('en_UK'));
+    expect($info->expand)
+        ->toBeTrue();
+    expect($info->showNbComments)
+        ->toBeFalse();
+    expect($info->showNbHits)
+        ->toBeTrue();
+    expect($info->recentPeriod)
+        ->toBe(7);
+    expect($info->theme)
+        ->toEqual(ThemeId::from('default'));
+    expect($info->registrationDate)
+        ->toBe('2024-01-01 00:00:00');
+    expect($info->enabledHigh)
+        ->toBeTrue();
+    expect($info->level)
+        ->toBe(2);
+    expect($info->activationKey)
+        ->toBe('abc123');
+    expect($info->activationKeyExpire)
+        ->toBe('2024-02-01 00:00:00');
+    expect($info->lastVisit)
+        ->toBe('2024-03-01 00:00:00');
+    expect($info->lastVisitFromHistory)
+        ->toBeTrue();
+    expect($info->lastmodified)
+        ->toBe('2024-04-01 00:00:00');
+    expect($info->preferences)
+        ->toBe([
+            'theme' => 'dark',
+            'lang' => 'fr',
+        ]);
 });
 
 test('fromRow falls back to safe defaults for every field except user_id', function (): void {
-    $info = UserInfo::fromRow(['user_id' => 7]);
+    $info = UserInfo::fromRow([
+        'user_id' => 7,
+    ]);
 
-    expect($info->userId->value)->toBe(7);
-    expect($info->nbImagePage)->toBe(0);
-    expect($info->status)->toBe('guest');
-    expect($info->language)->toEqual(LangCode::from(AppInfo::DEFAULT_LANGUAGE));
-    expect($info->expand)->toBeFalse();
-    expect($info->showNbComments)->toBeFalse();
-    expect($info->showNbHits)->toBeFalse();
-    expect($info->recentPeriod)->toBe(0);
-    expect($info->theme)->toEqual(ThemeId::from(AppInfo::DEFAULT_TEMPLATE));
-    expect($info->registrationDate)->toBeNull();
-    expect($info->enabledHigh)->toBeFalse();
-    expect($info->level)->toBe(0);
-    expect($info->activationKey)->toBeNull();
-    expect($info->lastVisitFromHistory)->toBeFalse();
-    expect($info->lastmodified)->toBe('');
-    expect($info->preferences)->toBeNull();
+    expect($info->userId->value)
+        ->toBe(7);
+    expect($info->nbImagePage)
+        ->toBe(0);
+    expect($info->status)
+        ->toBe('guest');
+    expect($info->language)
+        ->toEqual(LangCode::from(AppInfo::DEFAULT_LANGUAGE));
+    expect($info->expand)
+        ->toBeFalse();
+    expect($info->showNbComments)
+        ->toBeFalse();
+    expect($info->showNbHits)
+        ->toBeFalse();
+    expect($info->recentPeriod)
+        ->toBe(0);
+    expect($info->theme)
+        ->toEqual(ThemeId::from(AppInfo::DEFAULT_TEMPLATE));
+    expect($info->registrationDate)
+        ->toBeNull();
+    expect($info->enabledHigh)
+        ->toBeFalse();
+    expect($info->level)
+        ->toBe(0);
+    expect($info->activationKey)
+        ->toBeNull();
+    expect($info->lastVisitFromHistory)
+        ->toBeFalse();
+    expect($info->lastmodified)
+        ->toBe('');
+    expect($info->preferences)
+        ->toBeNull();
 });
 
 test('fromRow passes a real LangCode instance for language straight through', function (): void {
@@ -92,7 +134,8 @@ test('fromRow passes a real LangCode instance for language straight through', fu
         'language' => LangCode::from('fr_FR'),
     ]);
 
-    expect($info->language)->toEqual(LangCode::from('fr_FR'));
+    expect($info->language)
+        ->toEqual(LangCode::from('fr_FR'));
 });
 
 test('fromRow passes a real ThemeId instance for theme straight through', function (): void {
@@ -103,13 +146,18 @@ test('fromRow passes a real ThemeId instance for theme straight through', functi
         'theme' => ThemeId::from('modus'),
     ]);
 
-    expect($info->theme)->toEqual(ThemeId::from('modus'));
+    expect($info->theme)
+        ->toEqual(ThemeId::from('modus'));
 });
 
 test('fromRow falls back to the default theme for an invalid raw string', function (): void {
-    $info = UserInfo::fromRow(['user_id' => 1, 'theme' => 'not a valid theme id!']);
+    $info = UserInfo::fromRow([
+        'user_id' => 1,
+        'theme' => 'not a valid theme id!',
+    ]);
 
-    expect($info->theme)->toEqual(ThemeId::from(AppInfo::DEFAULT_TEMPLATE));
+    expect($info->theme)
+        ->toEqual(ThemeId::from(AppInfo::DEFAULT_TEMPLATE));
 });
 
 test('fromRow reads a truthy show_nb_comments value, not just the coalesce fallback', function (): void {
@@ -117,37 +165,57 @@ test('fromRow reads a truthy show_nb_comments value, not just the coalesce fallb
     // value (0) or leaves it absent, both of which happen to equal the
     // `?? false` fallback -- this pins the case where the raw column value
     // must actually be read, not just its "was this key ever set" branch.
-    $info = UserInfo::fromRow(['user_id' => 1, 'show_nb_comments' => 1]);
+    $info = UserInfo::fromRow([
+        'user_id' => 1,
+        'show_nb_comments' => 1,
+    ]);
 
-    expect($info->showNbComments)->toBeTrue();
+    expect($info->showNbComments)
+        ->toBeTrue();
 });
 
 test('fromRow drops non-string preference keys after decoding JSON', function (): void {
     $info = UserInfo::fromRow([
         'user_id' => 1,
-        'preferences' => json_encode(['valid_key' => 'v', 0 => 'dropped']),
+        'preferences' => json_encode([
+            'valid_key' => 'v',
+            0 => 'dropped',
+        ]),
     ]);
 
-    expect($info->preferences)->toBe(['valid_key' => 'v']);
+    expect($info->preferences)
+        ->toBe([
+            'valid_key' => 'v',
+        ]);
 });
 
 test('fromRow keeps an already-hydrated LangCode instance as-is', function (): void {
     // Covers the getArrayResult() Gotcha #1 shape: a real Doctrine array
     // hydration would already have converted `language` via LangCodeType,
     // not left it as a raw string.
-    $info = UserInfo::fromRow(['user_id' => 1, 'language' => LangCode::from('fr_FR')]);
+    $info = UserInfo::fromRow([
+        'user_id' => 1,
+        'language' => LangCode::from('fr_FR'),
+    ]);
 
-    expect($info->language)->toEqual(LangCode::from('fr_FR'));
+    expect($info->language)
+        ->toEqual(LangCode::from('fr_FR'));
 });
 
 test('fromRow falls back to the default language for an invalid raw string', function (): void {
-    $info = UserInfo::fromRow(['user_id' => 1, 'language' => 'not-a-lang-code']);
+    $info = UserInfo::fromRow([
+        'user_id' => 1,
+        'language' => 'not-a-lang-code',
+    ]);
 
-    expect($info->language)->toEqual(LangCode::from(AppInfo::DEFAULT_LANGUAGE));
+    expect($info->language)
+        ->toEqual(LangCode::from(AppInfo::DEFAULT_LANGUAGE));
 });
 
 test('fromRow throws for a missing or invalid user_id', function (): void {
-    expect(fn () => UserInfo::fromRow(['user_id' => 'not-a-number']))
+    expect(fn () => UserInfo::fromRow([
+        'user_id' => 'not-a-number',
+    ]))
         ->toThrow(InvalidArgumentException::class, 'UserInfo::fromRow(): missing or invalid user_id');
 
     expect(fn () => UserInfo::fromRow([]))
@@ -173,27 +241,32 @@ test('toArray round-trips every typed property back into its raw DB-shaped key',
         'last_visit' => '2024-03-01 00:00:00',
         'last_visit_from_history' => true,
         'lastmodified' => '2024-04-01 00:00:00',
-        'preferences' => json_encode(['theme' => 'dark']),
+        'preferences' => json_encode([
+            'theme' => 'dark',
+        ]),
     ]);
 
-    expect($info->toArray())->toBe([
-        'user_id' => 5,
-        'nb_image_page' => 20,
-        'status' => 'normal',
-        'language' => 'en_UK',
-        'expand' => true,
-        'show_nb_comments' => false,
-        'show_nb_hits' => true,
-        'recent_period' => 7,
-        'theme' => 'default',
-        'registration_date' => '2024-01-01 00:00:00',
-        'enabled_high' => true,
-        'level' => 2,
-        'activation_key' => 'abc123',
-        'activation_key_expire' => '2024-02-01 00:00:00',
-        'last_visit' => '2024-03-01 00:00:00',
-        'last_visit_from_history' => true,
-        'lastmodified' => '2024-04-01 00:00:00',
-        'preferences' => ['theme' => 'dark'],
-    ]);
+    expect($info->toArray())
+        ->toBe([
+            'user_id' => 5,
+            'nb_image_page' => 20,
+            'status' => 'normal',
+            'language' => 'en_UK',
+            'expand' => true,
+            'show_nb_comments' => false,
+            'show_nb_hits' => true,
+            'recent_period' => 7,
+            'theme' => 'default',
+            'registration_date' => '2024-01-01 00:00:00',
+            'enabled_high' => true,
+            'level' => 2,
+            'activation_key' => 'abc123',
+            'activation_key_expire' => '2024-02-01 00:00:00',
+            'last_visit' => '2024-03-01 00:00:00',
+            'last_visit_from_history' => true,
+            'lastmodified' => '2024-04-01 00:00:00',
+            'preferences' => [
+                'theme' => 'dark',
+            ],
+        ]);
 });

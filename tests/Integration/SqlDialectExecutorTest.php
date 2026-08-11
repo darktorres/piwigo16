@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Integration;
 
-use Override;
 use DateTimeImmutable;
 use Doctrine\DBAL\Connection;
+use Override;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\SqlDialectExecutor;
 
@@ -38,14 +38,14 @@ final class SqlDialectExecutorTest extends IntegrationTestCase
         $this->executor = new SqlDialectExecutor($this->conn);
     }
 
-    public function test_fetch_recent_cutoff_date_returns_a_real_computed_date_string(): void
+    public function testFetchRecentCutoffDateReturnsARealComputedDateString(): void
     {
         $result = $this->executor->fetchRecentCutoffDate(7);
 
         self::assertMatchesRegularExpression('/^\d{4}-\d{2}-\d{2}/', $result);
     }
 
-    public function test_fetch_tomorrow_returns_now_plus_one_day(): void
+    public function testFetchTomorrowReturnsNowPlusOneDay(): void
     {
         // Computed against the DB server's own NOW(), not PHP's local
         // clock -- the two processes aren't guaranteed to share a
@@ -61,7 +61,7 @@ final class SqlDialectExecutorTest extends IntegrationTestCase
         self::assertSame($expected->format('Y-m-d'), substr($result, 0, 10));
     }
 
-    public function test_fetch_future_dates_for_returns_now_plus_n_days_keyed_by_day_count(): void
+    public function testFetchFutureDatesForReturnsNowPlusNDaysKeyedByDayCount(): void
     {
         $dbNow = $this->conn->fetchOne('SELECT NOW()');
         self::assertIsString($dbNow);
@@ -77,7 +77,7 @@ final class SqlDialectExecutorTest extends IntegrationTestCase
         }
     }
 
-    public function test_fetch_future_dates_for_returns_empty_for_an_empty_input_without_querying(): void
+    public function testFetchFutureDatesForReturnsEmptyForAnEmptyInputWithoutQuerying(): void
     {
         self::assertSame([], $this->executor->fetchFutureDatesFor([]));
     }

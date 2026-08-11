@@ -10,7 +10,7 @@ use Piwigo\Tests\Support\DqlPlatformQueryTestFactory;
 
 function regexpDql(): string
 {
-    return "SELECT t.id FROM " . TagEntity::class . " t WHERE REGEXP(t.name, 'foo') = TRUE";
+    return 'SELECT t.id FROM ' . TagEntity::class . " t WHERE REGEXP(t.name, 'foo') = TRUE";
 }
 
 test('compiles to a real, correctly-ordered RLIKE infix expression (column RLIKE pattern) on MySQL/MariaDB', function (): void {
@@ -26,6 +26,8 @@ test('compiles to a real, correctly-ordered REGEXP infix expression (column REGE
 test('compiles to a real, correctly-ordered POSIX ~ infix expression (column ~ pattern) on PostgreSQL, not SIMILAR TO (a genuinely different pattern dialect)', function (): void {
     $sql = DqlPlatformQueryTestFactory::generatedSql(new PostgreSQLPlatform(), regexpDql());
 
-    expect($sql)->toContain("t0_.name ~ 'foo'")
-        ->and($sql)->not->toContain('SIMILAR TO');
+    expect($sql)
+        ->toContain("t0_.name ~ 'foo'")
+        ->and($sql)
+        ->not->toContain('SIMILAR TO');
 });

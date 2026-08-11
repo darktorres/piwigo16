@@ -2,19 +2,19 @@
 
 declare(strict_types=1);
 
-use Piwigo\Core\AppInfo;
-use Piwigo\Config\CurrentConfig;
-use Piwigo\Tests\Support\HtmlServiceTestFactory;
 use Gettext\Headers;
+use Piwigo\Config\CurrentConfig;
+use Piwigo\Core\AppInfo;
 use Piwigo\Core\DefaultLanguageProviderInterface;
 use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\InstallationFlag;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Lang;
-use Piwigo\Tests\Support\LangTestFactory;
 use Piwigo\Core\Paths;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Lang\Translator;
+use Piwigo\Tests\Support\HtmlServiceTestFactory;
+use Piwigo\Tests\Support\LangTestFactory;
 
 function langTestRrmdir(string $dir): void
 {
@@ -112,9 +112,9 @@ function langTestLoad(Lang $lang, string $filename, string $dirname, mixed $opti
 function langTestMakeFatalRenderer(stdClass $capture): HtmlRenderingInterface
 {
     return new class($capture) implements HtmlRenderingInterface {
-        public function __construct(private readonly stdClass $capture)
-        {
-        }
+        public function __construct(
+            private readonly stdClass $capture
+        ) {}
 
         public function getCatDisplayName(array $catInformations, ?string $url = ''): string
         {
@@ -173,9 +173,7 @@ function langTestMakeFatalRenderer(stdClass $capture): HtmlRenderingInterface
             return '';
         }
 
-        public function setStatusHeader(int $code, string $text = ''): void
-        {
-        }
+        public function setStatusHeader(int $code, string $text = ''): void {}
 
         public function renderElementName(array $info): string
         {
@@ -200,8 +198,7 @@ function langTestMakeProvider(?string $defaultLanguage = null, ?string $currentL
         public function __construct(
             private readonly ?string $defaultLanguage,
             private readonly ?string $currentLanguage,
-        ) {
-        }
+        ) {}
 
         public function getDefaultLanguage(): string
         {
@@ -281,74 +278,96 @@ afterEach(function (): void {
 test('t returns the key itself when nothing is loaded', function (): void {
     $lang = langTestMake();
 
-    expect($lang->t('Some_Untranslated_Key'))->toBe('Some_Untranslated_Key');
+    expect($lang->t('Some_Untranslated_Key'))
+        ->toBe('Some_Untranslated_Key');
 });
 
 test('t formats sprintf-style args', function (): void {
     $lang = langTestMake();
-    $lang->loadArray(['Hello %s' => 'Bonjour %s']);
+    $lang->loadArray([
+        'Hello %s' => 'Bonjour %s',
+    ]);
 
-    expect($lang->t('Hello %s', 'World'))->toBe('Bonjour World');
+    expect($lang->t('Hello %s', 'World'))
+        ->toBe('Bonjour World');
 });
 
 test('plural delegates to the injected Translator, selecting the singular form for n=1', function (): void {
     $lang = langTestMake();
 
-    expect($lang->plural('%d item', '%d items', 1))->toBe('1 item');
+    expect($lang->plural('%d item', '%d items', 1))
+        ->toBe('1 item');
 });
 
 test('plural delegates to the injected Translator, selecting the plural form for n=0', function (): void {
     $lang = langTestMake();
 
-    expect($lang->plural('%d item', '%d items', 0))->toBe('0 items');
+    expect($lang->plural('%d item', '%d items', 0))
+        ->toBe('0 items');
 });
 
 test('plural coerces a numeric-string decimal to int rather than passing it through raw', function (): void {
     $lang = langTestMake();
 
-    expect($lang->plural('%d item', '%d items', '0'))->toBe('0 items');
+    expect($lang->plural('%d item', '%d items', '0'))
+        ->toBe('0 items');
 });
 
 test('plural coerces a non-numeric decimal to 0 rather than passing it through raw', function (): void {
     $lang = langTestMake();
 
-    expect($lang->plural('%d item', '%d items', 'not-a-number'))->toBe('0 items');
+    expect($lang->plural('%d item', '%d items', 'not-a-number'))
+        ->toBe('0 items');
 });
 
 test('has reflects the loaded data set', function (): void {
     $lang = langTestMake();
-    $lang->loadArray(['known' => 'value']);
+    $lang->loadArray([
+        'known' => 'value',
+    ]);
 
-    expect($lang->has('known'))->toBeTrue()
-        ->and($lang->has('unknown'))->toBeFalse();
+    expect($lang->has('known'))
+        ->toBeTrue()
+        ->and($lang->has('unknown'))
+        ->toBeFalse();
 });
 
 test('attachGlobals seeds from Translator\'s already-mirrored strings', function (): void {
     $translator = new Translator(new CurrentConfig());
-    $translator->loadArray(['greeting' => 'hi']);
+    $translator->loadArray([
+        'greeting' => 'hi',
+    ]);
     $lang = langTestMake(translator: $translator);
 
     $lang->attachGlobals();
 
-    expect($lang->has('greeting'))->toBeTrue();
+    expect($lang->has('greeting'))
+        ->toBeTrue();
 });
 
 test('attachGlobals takes a one-time snapshot -- a later Translator mirror change is not retroactively visible', function (): void {
     $translator = new Translator(new CurrentConfig());
-    $translator->loadArray(['greeting' => 'hi']);
+    $translator->loadArray([
+        'greeting' => 'hi',
+    ]);
     $lang = langTestMake(translator: $translator);
     $lang->attachGlobals();
 
-    $translator->loadArray(['greeting' => 'hi', 'legacy_key' => 'legacy value']);
+    $translator->loadArray([
+        'greeting' => 'hi',
+        'legacy_key' => 'legacy value',
+    ]);
 
-    expect($lang->has('legacy_key'))->toBeFalse();
+    expect($lang->has('legacy_key'))
+        ->toBeFalse();
 });
 
 test('currentUserLanguage returns the installed provider\'s real value, not just null', function (): void {
     $lang = langTestMake();
     $lang->setDefaultLanguageProvider(langTestMakeProvider(currentLanguage: 'de_DE'));
 
-    expect($lang->currentUserLanguage())->toBe('de_DE');
+    expect($lang->currentUserLanguage())
+        ->toBe('de_DE');
 });
 
 test('setDefaultLanguageProvider mutates the instance, flipping currentUserLanguage() from null to the provider\'s own value', function (): void {
@@ -356,88 +375,146 @@ test('setDefaultLanguageProvider mutates the instance, flipping currentUserLangu
     // observable behavior actually changes as a direct result of calling
     // the setter, not just that a pre-wired provider is readable.
     $lang = langTestMake();
-    expect($lang->currentUserLanguage())->toBeNull();
+    expect($lang->currentUserLanguage())
+        ->toBeNull();
 
     $lang->setDefaultLanguageProvider(langTestMakeProvider(currentLanguage: 'de_DE'));
 
-    expect($lang->currentUserLanguage())->toBe('de_DE');
+    expect($lang->currentUserLanguage())
+        ->toBe('de_DE');
 });
 
 test('setLangInfo flips isLangInfoInitialized to true', function (): void {
     $lang = langTestMake();
-    expect($lang->isLangInfoInitialized())->toBeFalse();
+    expect($lang->isLangInfoInitialized())
+        ->toBeFalse();
 
-    $lang->setLangInfo(['parent' => 'pt_PT']);
+    $lang->setLangInfo([
+        'parent' => 'pt_PT',
+    ]);
 
-    expect($lang->isLangInfoInitialized())->toBeTrue();
+    expect($lang->isLangInfoInitialized())
+        ->toBeTrue();
 });
 
 test('day returns the day name at the given index', function (): void {
     $lang = langTestMake();
-    $lang->loadArray(['day' => [0 => 'Sunday', 1 => 'Monday']]);
+    $lang->loadArray([
+        'day' => [
+            0 => 'Sunday',
+            1 => 'Monday',
+        ],
+    ]);
 
-    expect($lang->day(1))->toBe('Monday')
-        ->and($lang->day(9))->toBe('');
+    expect($lang->day(1))
+        ->toBe('Monday')
+        ->and($lang->day(9))
+        ->toBe('');
 });
 
 test('month returns the month name at the given index', function (): void {
     $lang = langTestMake();
-    $lang->loadArray(['month' => [1 => 'January']]);
+    $lang->loadArray([
+        'month' => [
+            1 => 'January',
+        ],
+    ]);
 
-    expect($lang->month(1))->toBe('January')
-        ->and($lang->month(13))->toBe('');
+    expect($lang->month(1))
+        ->toBe('January')
+        ->and($lang->month(13))
+        ->toBe('');
 });
 
 test('days returns every day name keyed by day-of-week index', function (): void {
     $lang = langTestMake();
-    $lang->loadArray(['day' => [0 => 'Sunday', 1 => 'Monday', 2 => 'Tuesday']]);
+    $lang->loadArray([
+        'day' => [
+            0 => 'Sunday',
+            1 => 'Monday',
+            2 => 'Tuesday',
+        ],
+    ]);
 
-    expect($lang->days())->toBe([0 => 'Sunday', 1 => 'Monday', 2 => 'Tuesday']);
+    expect($lang->days())
+        ->toBe([
+            0 => 'Sunday',
+            1 => 'Monday',
+            2 => 'Tuesday',
+        ]);
 });
 
 test('days returns an empty array when nothing is loaded', function (): void {
-    expect(langTestMake()->days())->toBe([]);
+    expect(langTestMake()->days())
+        ->toBe([]);
 });
 
 test('months returns every month name keyed by month number', function (): void {
     $lang = langTestMake();
-    $lang->loadArray(['month' => [1 => 'January', 2 => 'February']]);
+    $lang->loadArray([
+        'month' => [
+            1 => 'January',
+            2 => 'February',
+        ],
+    ]);
 
-    expect($lang->months())->toBe([1 => 'January', 2 => 'February']);
+    expect($lang->months())
+        ->toBe([
+            1 => 'January',
+            2 => 'February',
+        ]);
 });
 
 test('months returns an empty array when nothing is loaded', function (): void {
-    expect(langTestMake()->months())->toBe([]);
+    expect(langTestMake()->months())
+        ->toBe([]);
 });
 
 test('snapshot returns the currently active translation table, and restore replaces it wholesale', function (): void {
     $lang = langTestMake();
-    $lang->loadArray(['greeting' => 'hi']);
+    $lang->loadArray([
+        'greeting' => 'hi',
+    ]);
 
     $snapshot = $lang->snapshot();
-    expect($snapshot)->toBe(['greeting' => 'hi']);
+    expect($snapshot)
+        ->toBe([
+            'greeting' => 'hi',
+        ]);
 
     // Overwriting the live table must not retroactively mutate the
     // already-taken snapshot array (plain PHP array value semantics --
     // proven here, not assumed).
-    $lang->loadArray(['other' => 'value']);
-    expect($lang->has('greeting'))->toBeFalse()
-        ->and($snapshot)->toBe(['greeting' => 'hi']);
+    $lang->loadArray([
+        'other' => 'value',
+    ]);
+    expect($lang->has('greeting'))
+        ->toBeFalse()
+        ->and($snapshot)
+        ->toBe([
+            'greeting' => 'hi',
+        ]);
 
     $lang->restore($snapshot);
 
-    expect($lang->has('greeting'))->toBeTrue()
-        ->and($lang->has('other'))->toBeFalse();
+    expect($lang->has('greeting'))
+        ->toBeTrue()
+        ->and($lang->has('other'))
+        ->toBeFalse();
 });
 
 test('restore resets the translation table to empty when given null', function (): void {
     $lang = langTestMake();
-    $lang->loadArray(['greeting' => 'hi']);
+    $lang->loadArray([
+        'greeting' => 'hi',
+    ]);
 
     $lang->restore(null);
 
-    expect($lang->has('greeting'))->toBeFalse()
-        ->and($lang->snapshot())->toBe([]);
+    expect($lang->has('greeting'))
+        ->toBeFalse()
+        ->and($lang->snapshot())
+        ->toBe([]);
 });
 
 test('attachGlobals silently drops a mirrored key that PHP auto-casts to an int (a purely numeric msgid)', function (): void {
@@ -451,13 +528,19 @@ test('attachGlobals silently drops a mirrored key that PHP auto-casts to an int 
     // $mirror is seeded directly via reflection here instead of going
     // through that type-checked method.
     $translator = new Translator(new CurrentConfig());
-    $mirror = ['42' => 'forty-two', 'greeting' => 'hi'];
+    $mirror = [
+        '42' => 'forty-two',
+        'greeting' => 'hi',
+    ];
     new ReflectionProperty(Translator::class, 'mirror')->setValue($translator, $mirror);
     $lang = langTestMake(translator: $translator);
 
     $lang->attachGlobals();
 
-    expect($lang->snapshot())->toBe(['greeting' => 'hi']);
+    expect($lang->snapshot())
+        ->toBe([
+            'greeting' => 'hi',
+        ]);
 });
 
 test('buildArgs merges an array of positional args after the key', function (): void {
@@ -467,7 +550,10 @@ test('buildArgs merges an array of positional args after the key', function (): 
 });
 
 test('buildArgs re-indexes a string-keyed args array into a plain positional list', function (): void {
-    expect(langTestMake()->buildArgs('%s scored %d points', ['name' => 'Bob', 'score' => 7]))->toBe([
+    expect(langTestMake()->buildArgs('%s scored %d points', [
+        'name' => 'Bob',
+        'score' => 7,
+    ]))->toBe([
         'key_args' => ['%s scored %d points', 'Bob', 7],
     ]);
 });
@@ -484,31 +570,42 @@ test('args delegates the fatal error to the installed HtmlRenderingInterface', f
     expect(fn () => $lang->args('not-an-array'))
         ->toThrow(RuntimeException::class, 'renderer-fatal:Lang::args: Invalid arguments');
 
-    expect($capture->lastMessage)->toBe('Lang::args: Invalid arguments');
+    expect($capture->lastMessage)
+        ->toBe('Lang::args: Invalid arguments');
 });
 
 test('args skips a key_args entry whose value is not itself an array', function (): void {
     $lang = langTestMake();
-    $lang->loadArray(['Hello %s' => 'Bonjour %s']);
+    $lang->loadArray([
+        'Hello %s' => 'Bonjour %s',
+    ]);
 
     $result = $lang->args([
         'key_args' => 'not-an-array-either',
-        ['key_args' => ['Hello %s', 'World']],
+        [
+            'key_args' => ['Hello %s', 'World'],
+        ],
     ]);
 
-    expect($result)->toBe("\nBonjour World");
+    expect($result)
+        ->toBe("\nBonjour World");
 });
 
 test('args skips a key_args entry whose shifted translation key is not a string', function (): void {
     $lang = langTestMake();
-    $lang->loadArray(['Hello %s' => 'Bonjour %s']);
+    $lang->loadArray([
+        'Hello %s' => 'Bonjour %s',
+    ]);
 
     $result = $lang->args([
         'key_args' => [42, 'ignored'],
-        ['key_args' => ['Hello %s', 'World']],
+        [
+            'key_args' => ['Hello %s', 'World'],
+        ],
     ]);
 
-    expect($result)->toBe("\nBonjour World");
+    expect($result)
+        ->toBe("\nBonjour World");
 });
 
 test('args concatenates the separator onto an already-non-empty result, not replacing it', function (): void {
@@ -521,39 +618,57 @@ test('args concatenates the separator onto an already-non-empty result, not repl
     // output is the only way to prove `.=` is load-bearing on either
     // line, not just cosmetically identical to `=`.
     $lang = langTestMake();
-    $lang->loadArray(['Hello %s' => 'Bonjour %s', 'Bye %s' => 'Au revoir %s']);
+    $lang->loadArray([
+        'Hello %s' => 'Bonjour %s',
+        'Bye %s' => 'Au revoir %s',
+    ]);
 
     $result = $lang->args([
-        ['key_args' => ['Hello %s', 'X']],
+        [
+            'key_args' => ['Hello %s', 'X'],
+        ],
         'key_args' => ['Bye %s', 'Y'],
     ], ' | ');
 
-    expect($result)->toBe('Bonjour X | Au revoir Y');
+    expect($result)
+        ->toBe('Bonjour X | Au revoir Y');
 });
 
 test('load tracks every plugin/theme language file it is asked for, keyed by dirname then filename, even when the file is never found', function (): void {
     $lang = langTestMake();
 
-    $result = $lang->load('missing.lang', 'my-plugin/', ['language' => 'xx_XX']);
+    $result = $lang->load('missing.lang', 'my-plugin/', [
+        'language' => 'xx_XX',
+    ]);
 
-    expect($result)->toBeFalse()
-        ->and($lang->languageFiles())->toBe([
+    expect($result)
+        ->toBeFalse()
+        ->and($lang->languageFiles())
+        ->toBe([
             'my-plugin/' => [
-                'missing.lang' => ['language' => 'xx_XX'],
+                'missing.lang' => [
+                    'language' => 'xx_XX',
+                ],
             ],
         ]);
 });
 
 test('load resolves the file through the parent language recorded in langInfo when nothing else is asked for', function (): void {
     $lang = langTestMake();
-    $lang->setLangInfo(['parent' => 'pt_PT']);
+    $lang->setLangInfo([
+        'parent' => 'pt_PT',
+    ]);
     $dirname = $this->langRoot . '/plugins/parent-only/';
     langTestWritePo($dirname . 'language/pt_PT/menu.po', 'pt_PT', 'Ola Mundo');
 
-    $result = $lang->load('menu.lang', $dirname, ['no_fallback' => true]);
+    $result = $lang->load('menu.lang', $dirname, [
+        'no_fallback' => true,
+    ]);
 
-    expect($result)->toBeTrue()
-        ->and($lang->t('Hello'))->toBe('Ola Mundo');
+    expect($result)
+        ->toBeTrue()
+        ->and($lang->t('Hello'))
+        ->toBe('Ola Mundo');
 });
 
 test('load converts a force_fallback of true into the application default language', function (): void {
@@ -561,10 +676,15 @@ test('load converts a force_fallback of true into the application default langua
     $dirname = $this->langRoot . '/plugins/default-fallback/';
     langTestWritePo($dirname . 'language/en_UK/greeting.po', 'en_UK', 'Hi (default language fixture)');
 
-    $result = $lang->load('greeting.lang', $dirname, ['force_fallback' => true, 'no_fallback' => true]);
+    $result = $lang->load('greeting.lang', $dirname, [
+        'force_fallback' => true,
+        'no_fallback' => true,
+    ]);
 
-    expect($result)->toBeTrue()
-        ->and($lang->t('Hello'))->toBe('Hi (default language fixture)');
+    expect($result)
+        ->toBeTrue()
+        ->and($lang->t('Hello'))
+        ->toBe('Hi (default language fixture)');
 });
 
 test('load returns false when the matched file\'s .po sibling is not readable', function (): void {
@@ -574,9 +694,13 @@ test('load returns false when the matched file\'s .po sibling is not readable', 
     @mkdir(dirname($rawFile), 0o777, true);
     file_put_contents($rawFile, '<?php // legacy stub with no .po sibling');
 
-    $result = $lang->load('orphan.lang', $dirname, ['language' => 'it_IT', 'no_fallback' => true]);
+    $result = $lang->load('orphan.lang', $dirname, [
+        'language' => 'it_IT',
+        'no_fallback' => true,
+    ]);
 
-    expect($result)->toBeFalse();
+    expect($result)
+        ->toBeFalse();
 });
 
 test('load also loads an explicit force_fallback language distinct from the selected one', function (): void {
@@ -591,7 +715,8 @@ test('load also loads an explicit force_fallback language distinct from the sele
         'no_fallback' => true,
     ]);
 
-    expect($result)->toBeTrue()
+    expect($result)
+        ->toBeTrue()
         // Unlike the X-Piwigo-Parent branch below (which deliberately
         // re-loads the child last so it wins), this force_fallback block
         // has no such compensating re-load: es_ES is loaded strictly
@@ -600,7 +725,8 @@ test('load also loads an explicit force_fallback language distinct from the sele
         // win for any shared key -- confirmed live, not assumed. The
         // fallback's own translation is what proves both loads actually
         // ran, not fr_FR's.
-        ->and($lang->t('Hello'))->toBe('Hola Mundo');
+        ->and($lang->t('Hello'))
+        ->toBe('Hola Mundo');
 });
 
 /**
@@ -630,10 +756,15 @@ test('load chases a parent language recorded in the loaded .po file\'s own X-Piw
     langTestWritePo($dirname . 'language/de_DE/common.po', 'de_DE', 'Hallo Welt', parent: 'fr_FR');
     langTestWritePo($dirname . 'language/fr_FR/common.po', 'fr_FR', 'Bonjour le monde');
 
-    $result = $lang->load('common.lang', $dirname, ['language' => 'de_DE', 'no_fallback' => true]);
+    $result = $lang->load('common.lang', $dirname, [
+        'language' => 'de_DE',
+        'no_fallback' => true,
+    ]);
 
-    expect($result)->toBeTrue()
-        ->and($lang->t('Hello'))->toBe('Hallo Welt');
+    expect($result)
+        ->toBeTrue()
+        ->and($lang->t('Hello'))
+        ->toBe('Hallo Welt');
 });
 
 test('load treats an empty dirname as "use the site root", both for the file lookup and for NOT tracking it as a language file', function (): void {
@@ -650,41 +781,62 @@ test('load treats an empty dirname as "use the site root", both for the file loo
     langTestWritePo($root . 'language/en_UK/greeting.po', 'en_UK', 'Hi (site root)');
     $lang = langTestMake(root: $root);
 
-    $result = $lang->load('greeting.lang', '', ['language' => 'en_UK', 'no_fallback' => true]);
+    $result = $lang->load('greeting.lang', '', [
+        'language' => 'en_UK',
+        'no_fallback' => true,
+    ]);
 
-    expect($result)->toBeTrue()
-        ->and($lang->t('Hello'))->toBe('Hi (site root)')
-        ->and($lang->languageFiles())->toBe([]);
+    expect($result)
+        ->toBeTrue()
+        ->and($lang->t('Hello'))
+        ->toBe('Hi (site root)')
+        ->and($lang->languageFiles())
+        ->toBe([]);
 });
 
 test('load never tracks a call with an empty filename', function (): void {
     $lang = langTestMake();
 
-    $result = $lang->load('', 'my-plugin/', ['language' => 'xx_XX']);
+    $result = $lang->load('', 'my-plugin/', [
+        'language' => 'xx_XX',
+    ]);
 
-    expect($result)->toBeFalse()
-        ->and($lang->languageFiles())->toBe([]);
+    expect($result)
+        ->toBeFalse()
+        ->and($lang->languageFiles())
+        ->toBe([]);
 });
 
 test('load never tracks a call whose options request raw return content', function (): void {
     $lang = langTestMake();
 
-    $result = $lang->load('missing.txt', 'my-plugin/', ['return' => true]);
+    $result = $lang->load('missing.txt', 'my-plugin/', [
+        'return' => true,
+    ]);
 
-    expect($result)->toBeFalse()
-        ->and($lang->languageFiles())->toBe([]);
+    expect($result)
+        ->toBeFalse()
+        ->and($lang->languageFiles())
+        ->toBe([]);
 });
 
 test('load does not re-track (overwrite) a dirname/filename pair it has already tracked', function (): void {
     $lang = langTestMake();
-    $lang->load('menu.lang', 'my-plugin/', ['language' => 'aa_AA']);
-    $lang->load('menu.lang', 'my-plugin/', ['language' => 'bb_BB']);
-
-    expect($lang->languageFiles())->toBe([
-        'my-plugin/' => [
-            'menu.lang' => ['language' => 'aa_AA'],
-        ],
+    $lang->load('menu.lang', 'my-plugin/', [
+        'language' => 'aa_AA',
     ]);
+    $lang->load('menu.lang', 'my-plugin/', [
+        'language' => 'bb_BB',
+    ]);
+
+    expect($lang->languageFiles())
+        ->toBe([
+            'my-plugin/' => [
+                'menu.lang' => [
+                    'language' => 'aa_AA',
+                ],
+            ],
+        ]);
 });
 
 test('load uses the default-language provider\'s own value, not the app default, once InstallationFlag is active', function (): void {
@@ -695,10 +847,15 @@ test('load uses the default-language provider\'s own value, not the app default,
     $dirname = $this->langRoot . '/plugins/installed-default/';
     langTestWritePo($dirname . 'language/zz_ZZ/greeting.po', 'zz_ZZ', 'Hi (provider default)');
 
-    $result = $lang->load('greeting.lang', $dirname, ['force_fallback' => true, 'no_fallback' => true]);
+    $result = $lang->load('greeting.lang', $dirname, [
+        'force_fallback' => true,
+        'no_fallback' => true,
+    ]);
 
-    expect($result)->toBeTrue()
-        ->and($lang->t('Hello'))->toBe('Hi (provider default)');
+    expect($result)
+        ->toBeTrue()
+        ->and($lang->t('Hello'))
+        ->toBe('Hi (provider default)');
 });
 
 test('load falls back to the app default language, not a fatal error, when InstallationFlag is active but no provider was ever set', function (): void {
@@ -714,10 +871,15 @@ test('load falls back to the app default language, not a fatal error, when Insta
     $dirname = $this->langRoot . '/plugins/installed-no-provider/';
     langTestWritePo($dirname . 'language/en_UK/greeting.po', 'en_UK', 'Hi (app default, no provider)');
 
-    $result = $lang->load('greeting.lang', $dirname, ['force_fallback' => true, 'no_fallback' => true]);
+    $result = $lang->load('greeting.lang', $dirname, [
+        'force_fallback' => true,
+        'no_fallback' => true,
+    ]);
 
-    expect($result)->toBeTrue()
-        ->and($lang->t('Hello'))->toBe('Hi (app default, no provider)');
+    expect($result)
+        ->toBeTrue()
+        ->and($lang->t('Hello'))
+        ->toBe('Hi (app default, no provider)');
 });
 
 test('load excludes every sentinel value from the sentinel list, not treating it as a real explicit language', function (): void {
@@ -743,10 +905,14 @@ test('load excludes every sentinel value from the sentinel list, not treating it
         // "RIGHT" fixture) must stay a real candidate for this test to
         // distinguish "correctly excluded, falls to default" from
         // "wrongly included, finds the wrong fixture first".
-        $result = langTestLoad($lang, 'greeting.lang', $dirname, ['language' => $sentinel]);
+        $result = langTestLoad($lang, 'greeting.lang', $dirname, [
+            'language' => $sentinel,
+        ]);
 
-        expect($result)->toBeTrue()
-            ->and($lang->t('Hello'))->toBe('RIGHT (real default)');
+        expect($result)
+            ->toBeTrue()
+            ->and($lang->t('Hello'))
+            ->toBe('RIGHT (real default)');
     }
 });
 
@@ -758,10 +924,14 @@ test('load includes a real current-user language from the provider as a candidat
     $dirname = $this->langRoot . '/plugins/current-user-lang/';
     langTestWritePo($dirname . 'language/de_DE/greeting.po', 'de_DE', 'Hallo (current user)');
 
-    $result = $lang->load('greeting.lang', $dirname, ['no_fallback' => true]);
+    $result = $lang->load('greeting.lang', $dirname, [
+        'no_fallback' => true,
+    ]);
 
-    expect($result)->toBeTrue()
-        ->and($lang->t('Hello'))->toBe('Hallo (current user)');
+    expect($result)
+        ->toBeTrue()
+        ->and($lang->t('Hello'))
+        ->toBe('Hallo (current user)');
 });
 
 test('load excludes a null or empty-string current-user language the same as "no preference"', function (): void {
@@ -780,8 +950,10 @@ test('load excludes a null or empty-string current-user language the same as "no
 
         $result = $lang->load('greeting.lang', $dirname, []);
 
-        expect($result)->toBeTrue()
-            ->and($lang->t('Hello'))->toBe('RIGHT');
+        expect($result)
+            ->toBeTrue()
+            ->and($lang->t('Hello'))
+            ->toBe('RIGHT');
     }
 });
 
@@ -793,9 +965,12 @@ test('load excludes the default language entirely when no_fallback is true, even
     $dirname = $this->langRoot . '/plugins/default-excluded/';
     langTestWritePo($dirname . 'language/en_UK/greeting.po', 'en_UK', 'Hi (default, should not be reached)');
 
-    $result = $lang->load('greeting.lang', $dirname, ['no_fallback' => true]);
+    $result = $lang->load('greeting.lang', $dirname, [
+        'no_fallback' => true,
+    ]);
 
-    expect($result)->toBeFalse();
+    expect($result)
+        ->toBeFalse();
 });
 
 test('load uses the flat, no-subdirectory local naming convention when local is true', function (): void {
@@ -807,10 +982,16 @@ test('load uses the flat, no-subdirectory local naming convention when local is 
         "msgid \"\"\nmsgstr \"\"\n\"Content-Type: text/plain; charset=UTF-8\\n\"\n\"Language: en_UK\\n\"\n\nmsgid \"Hello\"\nmsgstr \"Hi (local)\"\n",
     );
 
-    $result = $lang->load('greeting.lang', $dirname, ['local' => true, 'language' => 'en_UK', 'no_fallback' => true]);
+    $result = $lang->load('greeting.lang', $dirname, [
+        'local' => true,
+        'language' => 'en_UK',
+        'no_fallback' => true,
+    ]);
 
-    expect($result)->toBeTrue()
-        ->and($lang->t('Hello'))->toBe('Hi (local)');
+    expect($result)
+        ->toBeTrue()
+        ->and($lang->t('Hello'))
+        ->toBe('Hi (local)');
 });
 
 test('load correctly rejects a candidate whose file genuinely does not exist, trying the next one instead', function (): void {
@@ -830,10 +1011,14 @@ test('load correctly rejects a candidate whose file genuinely does not exist, tr
     $dirname = $this->langRoot . '/plugins/bogus-first-candidate/';
     langTestWritePo($dirname . 'language/en_UK/greeting.po', 'en_UK', 'Hi (default, the real match)');
 
-    $result = $lang->load('greeting.lang', $dirname, ['language' => 'xx_XX']);
+    $result = $lang->load('greeting.lang', $dirname, [
+        'language' => 'xx_XX',
+    ]);
 
-    expect($result)->toBeTrue()
-        ->and($lang->t('Hello'))->toBe('Hi (default, the real match)');
+    expect($result)
+        ->toBeTrue()
+        ->and($lang->t('Hello'))
+        ->toBe('Hi (default, the real match)');
 });
 
 test('load stops at the FIRST matching candidate, not a later one that also matches', function (): void {
@@ -843,10 +1028,15 @@ test('load stops at the FIRST matching candidate, not a later one that also matc
     langTestWritePo($dirname . 'language/aa_AA/greeting.po', 'aa_AA', 'First match');
     langTestWritePo($dirname . 'language/bb_BB/greeting.po', 'bb_BB', 'Second match');
 
-    $result = $lang->load('greeting.lang', $dirname, ['language' => 'aa_AA', 'no_fallback' => true]);
+    $result = $lang->load('greeting.lang', $dirname, [
+        'language' => 'aa_AA',
+        'no_fallback' => true,
+    ]);
 
-    expect($result)->toBeTrue()
-        ->and($lang->t('Hello'))->toBe('First match');
+    expect($result)
+        ->toBeTrue()
+        ->and($lang->t('Hello'))
+        ->toBe('First match');
 });
 
 test('load populates langInfo from the just-loaded po file\'s own headers, not an empty array', function (): void {
@@ -865,9 +1055,13 @@ test('load populates langInfo from the just-loaded po file\'s own headers, not a
     $dirname = $this->langRoot . '/plugins/langinfo-populated/';
     langTestWritePo($dirname . 'language/en_UK/greeting.po', 'en_UK', 'Hi');
 
-    $lang->load('greeting.lang', $dirname, ['language' => 'en_UK', 'no_fallback' => true]);
+    $lang->load('greeting.lang', $dirname, [
+        'language' => 'en_UK',
+        'no_fallback' => true,
+    ]);
 
-    expect($lang->langInfo())->toHaveKey('zero_plural');
+    expect($lang->langInfo())
+        ->toHaveKey('zero_plural');
 });
 
 test('load actually loads translations from the po-header-recorded parent, not just resolving its name', function (): void {
@@ -893,14 +1087,25 @@ test('load actually loads translations from the po-header-recorded parent, not j
     // chased further.
     $lang = langTestMake();
     $dirname = $this->langRoot . '/plugins/po-parent-unique-key/';
-    langTestWritePoMulti($dirname . 'language/de_DE/common.po', 'de_DE', ['Hello' => 'Hallo Welt'], parent: 'fr_FR');
-    langTestWritePoMulti($dirname . 'language/fr_FR/common.po', 'fr_FR', ['Hello' => 'Bonjour le monde', 'Parent Only' => 'Seulement parent']);
+    langTestWritePoMulti($dirname . 'language/de_DE/common.po', 'de_DE', [
+        'Hello' => 'Hallo Welt',
+    ], parent: 'fr_FR');
+    langTestWritePoMulti($dirname . 'language/fr_FR/common.po', 'fr_FR', [
+        'Hello' => 'Bonjour le monde',
+        'Parent Only' => 'Seulement parent',
+    ]);
 
-    $result = $lang->load('common.lang', $dirname, ['language' => 'de_DE', 'no_fallback' => true]);
+    $result = $lang->load('common.lang', $dirname, [
+        'language' => 'de_DE',
+        'no_fallback' => true,
+    ]);
 
-    expect($result)->toBeTrue()
-        ->and($lang->t('Hello'))->toBe('Hallo Welt')
-        ->and($lang->t('Parent Only'))->toBe('Seulement parent');
+    expect($result)
+        ->toBeTrue()
+        ->and($lang->t('Hello'))
+        ->toBe('Hallo Welt')
+        ->and($lang->t('Parent Only'))
+        ->toBe('Seulement parent');
 });
 
 test('load falls back to the pre-existing langInfo\'s own recorded parent when the just-loaded po has none of its own', function (): void {
@@ -911,16 +1116,29 @@ test('load falls back to the pre-existing langInfo\'s own recorded parent when t
     // pre-existing $langInfo['parent'] (lang_info_parent) still
     // triggers the chase.
     $lang = langTestMake();
-    $lang->setLangInfo(['parent' => 'pt_PT']);
+    $lang->setLangInfo([
+        'parent' => 'pt_PT',
+    ]);
     $dirname = $this->langRoot . '/plugins/langinfo-parent-fallback/';
-    langTestWritePoMulti($dirname . 'language/de_DE/common.po', 'de_DE', ['Hello' => 'Hallo Welt']);
-    langTestWritePoMulti($dirname . 'language/pt_PT/common.po', 'pt_PT', ['Hello' => 'Ola Mundo', 'Parent Only' => 'So o pai']);
+    langTestWritePoMulti($dirname . 'language/de_DE/common.po', 'de_DE', [
+        'Hello' => 'Hallo Welt',
+    ]);
+    langTestWritePoMulti($dirname . 'language/pt_PT/common.po', 'pt_PT', [
+        'Hello' => 'Ola Mundo',
+        'Parent Only' => 'So o pai',
+    ]);
 
-    $result = $lang->load('common.lang', $dirname, ['language' => 'de_DE', 'no_fallback' => true]);
+    $result = $lang->load('common.lang', $dirname, [
+        'language' => 'de_DE',
+        'no_fallback' => true,
+    ]);
 
-    expect($result)->toBeTrue()
-        ->and($lang->t('Hello'))->toBe('Hallo Welt')
-        ->and($lang->t('Parent Only'))->toBe('So o pai');
+    expect($result)
+        ->toBeTrue()
+        ->and($lang->t('Hello'))
+        ->toBe('Hallo Welt')
+        ->and($lang->t('Parent Only'))
+        ->toBe('So o pai');
 });
 
 test('load never chases a "parent" when none is recorded anywhere, not even a null-derived bogus path', function (): void {
@@ -932,10 +1150,15 @@ test('load never chases a "parent" when none is recorded anywhere, not even a nu
     // if this ever gets loaded, its own translation would leak in.
     langTestWritePo($dirname . 'language/greeting.po', '', 'TRAP (should never load)');
 
-    $result = $lang->load('greeting.lang', $dirname, ['language' => 'en_UK', 'no_fallback' => true]);
+    $result = $lang->load('greeting.lang', $dirname, [
+        'language' => 'en_UK',
+        'no_fallback' => true,
+    ]);
 
-    expect($result)->toBeTrue()
-        ->and($lang->t('Hello'))->toBe('Hi (child, no parent)');
+    expect($result)
+        ->toBeTrue()
+        ->and($lang->t('Hello'))
+        ->toBe('Hi (child, no parent)');
 });
 
 test('load merges the newly-parsed lang_info into the pre-existing langInfo, not just discarding it', function (): void {
@@ -943,24 +1166,34 @@ test('load merges the newly-parsed lang_info into the pre-existing langInfo, not
     // either would leave langInfo() showing only the pre-existing
     // ['country' => ...] value, missing 'zero_plural' entirely.
     $lang = langTestMake();
-    $lang->setLangInfo(['country' => 'preexisting-gb']);
+    $lang->setLangInfo([
+        'country' => 'preexisting-gb',
+    ]);
     $dirname = $this->langRoot . '/plugins/langinfo-merge/';
     langTestWritePo($dirname . 'language/en_UK/greeting.po', 'en_UK', 'Hi');
 
-    $lang->load('greeting.lang', $dirname, ['language' => 'en_UK', 'no_fallback' => true]);
+    $lang->load('greeting.lang', $dirname, [
+        'language' => 'en_UK',
+        'no_fallback' => true,
+    ]);
 
     expect($lang->langInfo()['country'] ?? null)->toBe('preexisting-gb')
-        ->and($lang->langInfo())->toHaveKey('zero_plural');
+        ->and($lang->langInfo())
+        ->toHaveKey('zero_plural');
 });
 
 test('reset clears isLangInfoInitialized back to false, not leaving it true', function (): void {
     $lang = langTestMake();
-    $lang->setLangInfo(['parent' => 'pt_PT']);
-    expect($lang->isLangInfoInitialized())->toBeTrue();
+    $lang->setLangInfo([
+        'parent' => 'pt_PT',
+    ]);
+    expect($lang->isLangInfoInitialized())
+        ->toBeTrue();
 
     $lang->reset();
 
-    expect($lang->isLangInfoInitialized())->toBeFalse();
+    expect($lang->isLangInfoInitialized())
+        ->toBeFalse();
 });
 
 test('getParentLanguage(with an explicit lang_id) reads the X-Piwigo-Parent header from that language\'s own common.po', function (): void {
@@ -971,7 +1204,8 @@ test('getParentLanguage(with an explicit lang_id) reads the X-Piwigo-Parent head
     $method = new ReflectionMethod(Lang::class, 'getParentLanguage');
     $result = $method->invoke($lang, 'de_DE');
 
-    expect($result)->toBe('fr_FR');
+    expect($result)
+        ->toBe('fr_FR');
 });
 
 test('getParentLanguage(with an explicit lang_id) returns null when that language has no common.po at all', function (): void {
@@ -982,7 +1216,8 @@ test('getParentLanguage(with an explicit lang_id) returns null when that languag
     $method = new ReflectionMethod(Lang::class, 'getParentLanguage');
     $result = $method->invoke($lang, 'xx_XX');
 
-    expect($result)->toBeNull();
+    expect($result)
+        ->toBeNull();
 });
 
 test('getParentLanguage(with an explicit empty string) reads from langInfo, same as the null default', function (): void {
@@ -990,35 +1225,44 @@ test('getParentLanguage(with an explicit empty string) reads from langInfo, same
     // the exact same "read $langInfo" branch as an omitted argument, not
     // fall through to the file-based lookup with an empty lang_id segment.
     $lang = langTestMake();
-    $lang->setLangInfo(['parent' => 'pt_PT']);
+    $lang->setLangInfo([
+        'parent' => 'pt_PT',
+    ]);
 
     $method = new ReflectionMethod(Lang::class, 'getParentLanguage');
     $result = $method->invoke($lang, '');
 
-    expect($result)->toBe('pt_PT');
+    expect($result)
+        ->toBe('pt_PT');
 });
 
 test('getParentLanguage(no argument) returns null for a non-string langInfo parent, not the raw value', function (): void {
     // Kills line 536's BooleanAndToBooleanOr: langInfo's own declared
     // type (string|bool) allows a real bool value here.
     $lang = langTestMake();
-    $lang->setLangInfo(['parent' => true]);
+    $lang->setLangInfo([
+        'parent' => true,
+    ]);
 
     $method = new ReflectionMethod(Lang::class, 'getParentLanguage');
     $result = $method->invoke($lang);
 
-    expect($result)->toBeNull();
+    expect($result)
+        ->toBeNull();
 });
 
 test('getParentLanguage(no argument) returns null for an explicitly empty-string langInfo parent', function (): void {
     // Kills line 536's EmptyStringToNotEmpty.
     $lang = langTestMake();
-    $lang->setLangInfo(['parent' => '']);
+    $lang->setLangInfo([
+        'parent' => '',
+    ]);
 
     $method = new ReflectionMethod(Lang::class, 'getParentLanguage');
     $result = $method->invoke($lang);
 
-    expect($result)->toBeNull();
+    expect($result)
+        ->toBeNull();
 });
 
 test('getParentLanguage(with an explicit lang_id) returns null when the common.po\'s own X-Piwigo-Parent header is explicitly empty', function (): void {
@@ -1033,7 +1277,8 @@ test('getParentLanguage(with an explicit lang_id) returns null when the common.p
     $method = new ReflectionMethod(Lang::class, 'getParentLanguage');
     $result = $method->invoke($lang, 'de_DE');
 
-    expect($result)->toBeNull();
+    expect($result)
+        ->toBeNull();
 });
 
 test('poHeadersToLangInfo maps every X-Piwigo-* header to its own langInfo key', function (): void {
@@ -1051,16 +1296,17 @@ test('poHeadersToLangInfo maps every X-Piwigo-* header to its own langInfo key',
         'X-Piwigo-Zero-Plural' => 'true',
     ]);
 
-    expect($result)->toBe([
-        'language_name' => 'English (UK)',
-        'country' => 'gb',
-        'direction' => 'ltr',
-        'code' => 'en_UK',
-        'parent' => 'en_US',
-        'jquery_code' => 'en',
-        'plupload_code' => 'en',
-        'zero_plural' => true,
-    ]);
+    expect($result)
+        ->toBe([
+            'language_name' => 'English (UK)',
+            'country' => 'gb',
+            'direction' => 'ltr',
+            'code' => 'en_UK',
+            'parent' => 'en_US',
+            'jquery_code' => 'en',
+            'plupload_code' => 'en',
+            'zero_plural' => true,
+        ]);
 });
 
 test('poHeadersToLangInfo omits keys whose header is absent or explicitly empty', function (): void {
@@ -1075,10 +1321,11 @@ test('poHeadersToLangInfo omits keys whose header is absent or explicitly empty'
         'X-Piwigo-Code' => 'en_UK',
     ]);
 
-    expect($result)->toBe([
-        'code' => 'en_UK',
-        'zero_plural' => false,
-    ]);
+    expect($result)
+        ->toBe([
+            'code' => 'en_UK',
+            'zero_plural' => false,
+        ]);
 });
 
 test('current() resolves the real container-shared instance once Kernel::boot() has run', function (): void {

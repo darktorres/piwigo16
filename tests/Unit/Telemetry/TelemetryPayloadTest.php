@@ -21,16 +21,18 @@ function buildTestPayload(): TelemetryPayload
 }
 
 test('toArray exposes exactly the expected top-level shape', function (): void {
-    $array = buildTestPayload()->toArray();
+    $array = buildTestPayload()
+        ->toArray();
 
-    expect(array_keys($array))->toBe([
-        'install_id',
-        'generated_at',
-        'environment',
-        'database',
-        'gallery',
-        'extensions',
-    ]);
+    expect(array_keys($array))
+        ->toBe([
+            'install_id',
+            'generated_at',
+            'environment',
+            'database',
+            'gallery',
+            'extensions',
+        ]);
 });
 
 test('toArray never leaks a site url, email, ip, or raw identifier field', function (): void {
@@ -42,7 +44,8 @@ test('toArray never leaks a site url, email, ip, or raw identifier field', funct
 });
 
 test('environment sub-shape carries only version strings', function (): void {
-    $array = buildTestPayload()->toArray();
+    $array = buildTestPayload()
+        ->toArray();
 
     expect($array['environment'])->toBe([
         'piwigo_version' => '16.3.0',
@@ -52,7 +55,8 @@ test('environment sub-shape carries only version strings', function (): void {
 });
 
 test('database sub-shape carries driver and server version', function (): void {
-    $array = buildTestPayload()->toArray();
+    $array = buildTestPayload()
+        ->toArray();
 
     expect($array['database'])->toBe([
         'driver' => 'mysql',
@@ -61,7 +65,8 @@ test('database sub-shape carries driver and server version', function (): void {
 });
 
 test('gallery sub-shape carries only aggregate counts', function (): void {
-    $array = buildTestPayload()->toArray();
+    $array = buildTestPayload()
+        ->toArray();
 
     expect($array['gallery'])->toBe([
         'image_count' => 10,
@@ -72,7 +77,8 @@ test('gallery sub-shape carries only aggregate counts', function (): void {
 });
 
 test('extensions sub-shape carries only aggregate counts', function (): void {
-    $array = buildTestPayload()->toArray();
+    $array = buildTestPayload()
+        ->toArray();
 
     expect($array['extensions'])->toBe([
         'plugin_count' => 0,
@@ -82,7 +88,8 @@ test('extensions sub-shape carries only aggregate counts', function (): void {
 });
 
 test('generated_at is formatted as an ATOM timestamp string', function (): void {
-    $array = buildTestPayload()->toArray();
+    $array = buildTestPayload()
+        ->toArray();
 
     expect($array['generated_at'])->toBe('2026-07-12T00:00:00+00:00');
 });

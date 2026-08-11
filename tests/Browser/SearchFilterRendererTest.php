@@ -16,10 +16,11 @@ use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
  * (renderTagsFound()/renderAlbumsFound()), which a bare text query never
  * touches.
  */
-
 it('renders search results filtered by a single tag', function (): void {
     $page = H::loginAsAdmin($this);
-    $album = H::wsCall($page, 'pwg.categories.add', ['name' => 'Search Tag Album ' . uniqid()]);
+    $album = H::wsCall($page, 'pwg.categories.add', [
+        'name' => 'Search Tag Album ' . uniqid(),
+    ]);
     $albumResult = $album['result'] ?? null;
     if (! is_array($albumResult) || ! is_numeric($albumResult['id'] ?? null)) {
         throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($album, true));
@@ -30,7 +31,10 @@ it('renders search results filtered by a single tag', function (): void {
     @unlink($image);
     // Fixture tag 1 ('nature') -- see this suite's own fixture-shape
     // memory notes.
-    H::wsCall($page, 'pwg.images.setInfo', ['image_id' => $imageId, 'tag_ids' => '1']);
+    H::wsCall($page, 'pwg.images.setInfo', [
+        'image_id' => $imageId,
+        'tag_ids' => '1',
+    ]);
 
     $page = H::navigateOk($page, '/search.php?tag_id=1');
     $page->assertNoJavaScriptErrors();
@@ -39,7 +43,9 @@ it('renders search results filtered by a single tag', function (): void {
 
 it('renders search results filtered by a single album', function (): void {
     $page = H::loginAsAdmin($this);
-    $album = H::wsCall($page, 'pwg.categories.add', ['name' => 'Search Cat Album ' . uniqid()]);
+    $album = H::wsCall($page, 'pwg.categories.add', [
+        'name' => 'Search Cat Album ' . uniqid(),
+    ]);
     $albumResult = $album['result'] ?? null;
     if (! is_array($albumResult) || ! is_numeric($albumResult['id'] ?? null)) {
         throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($album, true));
@@ -56,7 +62,9 @@ it('renders search results filtered by a single album', function (): void {
 
 it('renders an empty search-results page for a freshly created tag with no matching photos', function (): void {
     $page = H::loginAsAdmin($this);
-    $tag = H::wsCall($page, 'pwg.tags.add', ['name' => 'Empty Search Tag ' . uniqid()]);
+    $tag = H::wsCall($page, 'pwg.tags.add', [
+        'name' => 'Empty Search Tag ' . uniqid(),
+    ]);
     $tagResult = $tag['result'] ?? null;
     if (! is_array($tagResult) || ! is_numeric($tagResult['id'] ?? null)) {
         throw new RuntimeException('pwg.tags.add did not return a numeric id: ' . var_export($tag, true));
@@ -75,7 +83,9 @@ it('renders search results for a plain text query, exercising the allwords filte
     // SearchFilterRenderer::render()'s own matching
     // `isset($searchFields['allwords'])` branch downstream.
     $page = H::loginAsAdmin($this);
-    $album = H::wsCall($page, 'pwg.categories.add', ['name' => 'Search Text Album ' . uniqid()]);
+    $album = H::wsCall($page, 'pwg.categories.add', [
+        'name' => 'Search Text Album ' . uniqid(),
+    ]);
     $albumResult = $album['result'] ?? null;
     if (! is_array($albumResult) || ! is_numeric($albumResult['id'] ?? null)) {
         throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($album, true));
@@ -85,7 +95,8 @@ it('renders search results for a plain text query, exercising the allwords filte
     $image = H::makeTestImage(uniqid());
     $imageId = H::uploadPhotoViaApi($image, $albumId, 'Photo ' . $uniqueWord);
     @unlink($image);
-    expect($imageId)->toBeGreaterThan(0);
+    expect($imageId)
+        ->toBeGreaterThan(0);
 
     $page = H::navigateOk($page, '/search.php?q=' . $uniqueWord);
     $page->assertNoJavaScriptErrors();

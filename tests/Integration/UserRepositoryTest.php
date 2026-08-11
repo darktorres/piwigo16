@@ -4,21 +4,21 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Integration;
 
-use Override;
-use Piwigo\Core\Kernel;
+use Doctrine\DBAL\Connection;
+use InvalidArgumentException;
 use LogicException;
-use Piwigo\Db\EntityManagerFactory;
-use Piwigo\Tests\Support\EventDispatcherTestFactory;
+use Override;
+use Piwigo\Common\ValueObject\Email;
 use Piwigo\Common\ValueObject\SqlDateTime;
 use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Common\ValueObject\Username;
-use Piwigo\Common\ValueObject\Email;
-use InvalidArgumentException;
-use Piwigo\Permission\PermissionCriteria;
-use Doctrine\DBAL\Connection;
-use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\ConfigLoader;
+use Piwigo\Config\CurrentConfig;
+use Piwigo\Core\Kernel;
 use Piwigo\Db\DbConnection;
+use Piwigo\Db\EntityManagerFactory;
+use Piwigo\Permission\PermissionCriteria;
+use Piwigo\Tests\Support\EventDispatcherTestFactory;
 use Piwigo\Users\UserListCriteria;
 use Piwigo\Users\UserRepository;
 
@@ -54,34 +54,34 @@ final class UserRepositoryTest extends IntegrationTestCase
         $this->repo = new UserRepository(EntityManagerFactory::build($this->conn), EventDispatcherTestFactory::get(), $currentConfig);
     }
 
-    public function test_find_id_by_username_returns_a_fixture_user(): void
+    public function testFindIdByUsernameReturnsAFixtureUser(): void
     {
         self::assertEquals(UserId::from(1), $this->repo->findIdByUsername(Username::from('fixture_admin')));
         self::assertNull($this->repo->findIdByUsername(Username::from('does-not-exist')));
     }
 
-    public function test_find_username_by_id_returns_a_fixture_user(): void
+    public function testFindUsernameByIdReturnsAFixtureUser(): void
     {
         self::assertEquals(Username::from('fixture_admin'), $this->repo->findUsernameById(UserId::from(1)));
     }
 
-    public function test_find_username_by_id_returns_null_for_a_nonexistent_user(): void
+    public function testFindUsernameByIdReturnsNullForANonexistentUser(): void
     {
         self::assertNull($this->repo->findUsernameById(UserId::from(999999)));
     }
 
-    public function test_find_id_by_email_returns_a_fixture_user(): void
+    public function testFindIdByEmailReturnsAFixtureUser(): void
     {
         self::assertEquals(UserId::from(1), $this->repo->findIdByEmail(Email::from('fixture_admin@example.test')));
         self::assertNull($this->repo->findIdByEmail(Email::from('nobody@example.test')));
     }
 
-    public function test_find_id_by_email_is_case_insensitive(): void
+    public function testFindIdByEmailIsCaseInsensitive(): void
     {
         self::assertEquals(UserId::from(1), $this->repo->findIdByEmail(Email::from('FIXTURE_ADMIN@EXAMPLE.TEST')));
     }
 
-    public function test_find_by_username_case_insensitive_matches_regardless_of_case(): void
+    public function testFindByUsernameCaseInsensitiveMatchesRegardlessOfCase(): void
     {
         $found = $this->repo->findByUsernameCaseInsensitive('FIXTURE_ADMIN');
 
@@ -91,30 +91,30 @@ final class UserRepositoryTest extends IntegrationTestCase
         self::assertSame('fixture_admin@example.test', $found->email);
     }
 
-    public function test_find_by_username_case_insensitive_returns_null_when_missing(): void
+    public function testFindByUsernameCaseInsensitiveReturnsNullWhenMissing(): void
     {
         self::assertNull($this->repo->findByUsernameCaseInsensitive('nope'));
     }
 
-    public function test_username_exists_case_insensitive(): void
+    public function testUsernameExistsCaseInsensitive(): void
     {
         self::assertTrue($this->repo->usernameExistsCaseInsensitive(Username::from('FIXTURE_ADMIN')));
         self::assertFalse($this->repo->usernameExistsCaseInsensitive(Username::from('nope')));
     }
 
-    public function test_email_exists(): void
+    public function testEmailExists(): void
     {
         self::assertTrue($this->repo->emailExists(Email::from('fixture_admin@example.test'), null));
         self::assertFalse($this->repo->emailExists(Email::from('nobody@example.test'), null));
     }
 
-    public function test_email_exists_excludes_the_given_user_id(): void
+    public function testEmailExistsExcludesTheGivenUserId(): void
     {
         self::assertFalse($this->repo->emailExists(Email::from('fixture_admin@example.test'), UserId::from(1)));
         self::assertTrue($this->repo->emailExists(Email::from('fixture_admin@example.test'), UserId::from(2)));
     }
 
-    public function test_find_all_usernames_includes_fixture_users(): void
+    public function testFindAllUsernamesIncludesFixtureUsers(): void
     {
         $names = $this->repo->findAllUsernames();
 
@@ -122,7 +122,7 @@ final class UserRepositoryTest extends IntegrationTestCase
         self::assertContains('guest', $names);
     }
 
-    public function test_insert_user_then_find_id_by_username_round_trips(): void
+    public function testInsertUserThenFindIdByUsernameRoundTrips(): void
     {
         $username = 'p18-test-' . bin2hex(random_bytes(4));
 
@@ -130,10 +130,10 @@ final class UserRepositoryTest extends IntegrationTestCase
 
         self::assertEquals($id, $this->repo->findIdByUsername(Username::from($username)));
 
-        $this->conn->executeStatement('DELETE FROM ' . 'users' . ' WHERE id = ' . $id->value);
+        $this->conn->executeStatement('DELETE FROM users WHERE id = ' . $id->value);
     }
 
-    public function test_insert_user_infos_then_find_default_user_info_row_round_trips(): void
+    public function testInsertUserInfosThenFindDefaultUserInfoRowRoundTrips(): void
     {
         $username = 'p18-test-' . bin2hex(random_bytes(4));
         $id = $this->repo->insertUser(Username::from($username), 'irrelevant-hash', null);
@@ -149,10 +149,10 @@ final class UserRepositoryTest extends IntegrationTestCase
         self::assertNotNull($row);
         self::assertSame('normal', $row->status);
 
-        $this->conn->executeStatement('DELETE FROM ' . 'users' . ' WHERE id = ' . $id->value);
+        $this->conn->executeStatement('DELETE FROM users WHERE id = ' . $id->value);
     }
 
-    public function test_insert_user_infos_accepts_real_bool_for_the_tinyint_columns(): void
+    public function testInsertUserInfosAcceptsRealBoolForTheTinyintColumns(): void
     {
         // expand/show_nb_comments/show_nb_hits/
         // enabled_high/last_visit_from_history are real tinyint(1)
@@ -190,10 +190,10 @@ final class UserRepositoryTest extends IntegrationTestCase
         self::assertTrue($row->enabledHigh);
         self::assertFalse($row->lastVisitFromHistory);
 
-        $this->conn->executeStatement('DELETE FROM ' . 'users' . ' WHERE id = ' . $id->value);
+        $this->conn->executeStatement('DELETE FROM users WHERE id = ' . $id->value);
     }
 
-    public function test_insert_user_infos_with_no_ids_is_a_noop(): void
+    public function testInsertUserInfosWithNoIdsIsANoop(): void
     {
         $countBefore = $this->conn->createQueryBuilder()
             ->select('COUNT(*)')
@@ -201,7 +201,9 @@ final class UserRepositoryTest extends IntegrationTestCase
             ->executeQuery()
             ->fetchOne();
 
-        $this->repo->insertUserInfos([], ['status' => 'normal']);
+        $this->repo->insertUserInfos([], [
+            'status' => 'normal',
+        ]);
 
         $countAfter = $this->conn->createQueryBuilder()
             ->select('COUNT(*)')
@@ -212,9 +214,11 @@ final class UserRepositoryTest extends IntegrationTestCase
         self::assertSame($countBefore, $countAfter);
     }
 
-    public function test_save_preferences_persists_the_json_encoded_value(): void
+    public function testSavePreferencesPersistsTheJsonEncodedValue(): void
     {
-        $this->repo->savePreferences(UserId::from(1), ['theme' => 'dark']);
+        $this->repo->savePreferences(UserId::from(1), [
+            'theme' => 'dark',
+        ]);
 
         $value = $this->conn->createQueryBuilder()
             ->select('preferences')
@@ -224,16 +228,20 @@ final class UserRepositoryTest extends IntegrationTestCase
             ->fetchOne();
 
         self::assertIsString($value);
-        self::assertSame(['theme' => 'dark'], json_decode($value, true));
+        self::assertSame([
+            'theme' => 'dark',
+        ], json_decode($value, true));
 
-        $this->conn->executeStatement('UPDATE ' . 'user_infos' . " SET preferences = NULL WHERE user_id = 1");
+        $this->conn->executeStatement('UPDATE user_infos SET preferences = NULL WHERE user_id = 1');
     }
 
-    public function test_save_preferences_is_a_noop_for_a_nonexistent_user(): void
+    public function testSavePreferencesIsANoopForANonexistentUser(): void
     {
         // No user_infos row exists for this id -- find() returns null and
         // the method returns early rather than persisting a fresh entity.
-        $this->repo->savePreferences(UserId::from(999999), ['theme' => 'dark']);
+        $this->repo->savePreferences(UserId::from(999999), [
+            'theme' => 'dark',
+        ]);
 
         $count = $this->conn->createQueryBuilder()
             ->select('COUNT(*)')
@@ -245,7 +253,7 @@ final class UserRepositoryTest extends IntegrationTestCase
         self::assertSame('0', is_scalar($count) ? (string) $count : '');
     }
 
-    public function test_delete_users_from_table_with_no_ids_is_a_noop(): void
+    public function testDeleteUsersFromTableWithNoIdsIsANoop(): void
     {
         $countBefore = $this->conn->createQueryBuilder()
             ->select('COUNT(*)')
@@ -264,7 +272,7 @@ final class UserRepositoryTest extends IntegrationTestCase
         self::assertSame($countBefore, $countAfter);
     }
 
-    public function test_delete_favorites_for_images_with_no_image_ids_is_a_noop(): void
+    public function testDeleteFavoritesForImagesWithNoImageIdsIsANoop(): void
     {
         // A marker row distinct from the fixture's own (1,1)/(1,3)/(1,5)
         // favorites rows, so this assertion doesn't depend on what other
@@ -273,7 +281,7 @@ final class UserRepositoryTest extends IntegrationTestCase
         // image_id has a real FK constraint onto images.id) -- image 2
         // exists in the fixture and isn't one of user 1's own favorited
         // images above.
-        $this->conn->executeStatement('INSERT INTO ' . 'favorites' . ' (user_id, image_id) VALUES (1, 2)');
+        $this->conn->executeStatement('INSERT INTO favorites (user_id, image_id) VALUES (1, 2)');
 
         $this->repo->deleteFavoritesForImages(UserId::from(1), []);
 
@@ -286,10 +294,10 @@ final class UserRepositoryTest extends IntegrationTestCase
 
         self::assertSame(1, $count);
 
-        $this->conn->executeStatement('DELETE FROM ' . 'favorites' . ' WHERE user_id = 1 AND image_id = 2');
+        $this->conn->executeStatement('DELETE FROM favorites WHERE user_id = 1 AND image_id = 2');
     }
 
-    public function test_update_status_for_users_with_no_ids_is_a_noop(): void
+    public function testUpdateStatusForUsersWithNoIdsIsANoop(): void
     {
         $before = $this->conn->createQueryBuilder()
             ->select('status')
@@ -310,7 +318,7 @@ final class UserRepositoryTest extends IntegrationTestCase
         self::assertSame($before, $after);
     }
 
-    public function test_update_infos_for_users_with_no_ids_is_a_noop(): void
+    public function testUpdateInfosForUsersWithNoIdsIsANoop(): void
     {
         $before = $this->conn->createQueryBuilder()
             ->select('nb_image_page')
@@ -319,7 +327,9 @@ final class UserRepositoryTest extends IntegrationTestCase
             ->executeQuery()
             ->fetchOne();
 
-        $this->repo->updateInfosForUsers([], ['nb_image_page' => 999]);
+        $this->repo->updateInfosForUsers([], [
+            'nb_image_page' => 999,
+        ]);
 
         $after = $this->conn->createQueryBuilder()
             ->select('nb_image_page')
@@ -331,7 +341,7 @@ final class UserRepositoryTest extends IntegrationTestCase
         self::assertSame($before, $after);
     }
 
-    public function test_update_infos_for_users_with_no_updates_is_a_noop(): void
+    public function testUpdateInfosForUsersWithNoUpdatesIsANoop(): void
     {
         $before = $this->conn->createQueryBuilder()
             ->select('nb_image_page')
@@ -352,7 +362,7 @@ final class UserRepositoryTest extends IntegrationTestCase
         self::assertSame($before, $after);
     }
 
-    public function test_update_infos_for_users_persists_a_non_boolean_and_a_boolean_field_together(): void
+    public function testUpdateInfosForUsersPersistsANonBooleanAndABooleanFieldTogether(): void
     {
         // Covers a persist against UserInfoEntity exercising two
         // genuinely different code paths together: nb_image_page (plain
@@ -360,7 +370,9 @@ final class UserRepositoryTest extends IntegrationTestCase
         // UserInfoField::dqlPropertyAndIsBoolean().
         $username = 'p18-test-' . bin2hex(random_bytes(4));
         $id = $this->repo->insertUser(Username::from($username), 'irrelevant-hash', null);
-        $this->repo->insertUserInfos([$id], ['status' => 'normal']);
+        $this->repo->insertUserInfos([$id], [
+            'status' => 'normal',
+        ]);
 
         try {
             $this->repo->updateInfosForUsers([$id], [
@@ -379,20 +391,22 @@ final class UserRepositoryTest extends IntegrationTestCase
             self::assertSame(27, is_numeric($row['nb_image_page']) ? (int) $row['nb_image_page'] : null);
             self::assertSame(1, is_bool($row['expand']) || is_numeric($row['expand']) ? (int) (bool) $row['expand'] : null);
         } finally {
-            $this->conn->executeStatement('DELETE FROM ' . 'user_infos' . ' WHERE user_id = ' . $id->value);
-            $this->conn->executeStatement('DELETE FROM ' . 'users' . ' WHERE id = ' . $id->value);
+            $this->conn->executeStatement('DELETE FROM user_infos WHERE user_id = ' . $id->value);
+            $this->conn->executeStatement('DELETE FROM users WHERE id = ' . $id->value);
         }
     }
 
-    public function test_update_infos_for_users_rejects_an_unknown_field(): void
+    public function testUpdateInfosForUsersRejectsAnUnknownField(): void
     {
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessageIsOrContains('Unknown user_infos field: not_a_real_field');
 
-        $this->repo->updateInfosForUsers([UserId::from(1)], ['not_a_real_field' => 'x']);
+        $this->repo->updateInfosForUsers([UserId::from(1)], [
+            'not_a_real_field' => 'x',
+        ]);
     }
 
-    public function test_find_theme_usage_counts_includes_a_freshly_inserted_user(): void
+    public function testFindThemeUsageCountsIncludesAFreshlyInsertedUser(): void
     {
         $username = 'p18-test-' . bin2hex(random_bytes(4));
         $theme = 'p18-test-theme-' . bin2hex(random_bytes(4));
@@ -408,11 +422,11 @@ final class UserRepositoryTest extends IntegrationTestCase
         self::assertArrayHasKey($theme, $counts);
         self::assertSame(1, $counts[$theme]);
 
-        $this->conn->executeStatement('DELETE FROM ' . 'user_infos' . ' WHERE user_id = ' . $id->value);
-        $this->conn->executeStatement('DELETE FROM ' . 'users' . ' WHERE id = ' . $id->value);
+        $this->conn->executeStatement('DELETE FROM user_infos WHERE user_id = ' . $id->value);
+        $this->conn->executeStatement('DELETE FROM users WHERE id = ' . $id->value);
     }
 
-    public function test_find_language_usage_counts_includes_a_freshly_inserted_user(): void
+    public function testFindLanguageUsageCountsIncludesAFreshlyInsertedUser(): void
     {
         // user_infos.language is LangCode-typed (strict `ll_RR` shape) --
         // a random-but-shape-valid code avoids colliding with real
@@ -432,22 +446,22 @@ final class UserRepositoryTest extends IntegrationTestCase
             self::assertArrayHasKey($language, $counts);
             self::assertSame(1, $counts[$language]);
         } finally {
-            $this->conn->executeStatement('DELETE FROM ' . 'user_infos' . ' WHERE user_id = ' . $id->value);
-            $this->conn->executeStatement('DELETE FROM ' . 'users' . ' WHERE id = ' . $id->value);
+            $this->conn->executeStatement('DELETE FROM user_infos WHERE user_id = ' . $id->value);
+            $this->conn->executeStatement('DELETE FROM users WHERE id = ' . $id->value);
         }
     }
 
-    public function test_find_notification_recipients_by_ids_with_no_ids_returns_empty(): void
+    public function testFindNotificationRecipientsByIdsWithNoIdsReturnsEmpty(): void
     {
         self::assertSame([], $this->repo->findNotificationRecipientsByIds([]));
     }
 
-    public function test_find_usernames_by_ids_with_no_ids_returns_empty(): void
+    public function testFindUsernamesByIdsWithNoIdsReturnsEmpty(): void
     {
         self::assertSame([], $this->repo->findUsernamesByIds([]));
     }
 
-    public function test_find_all_usernames_by_id_returns_every_fixture_user(): void
+    public function testFindAllUsernamesByIdReturnsEveryFixtureUser(): void
     {
         $byId = $this->repo->findAllUsernamesById();
 
@@ -465,7 +479,7 @@ final class UserRepositoryTest extends IntegrationTestCase
         ], $normalized);
     }
 
-    public function test_find_distinct_registration_year_months_returns_formatted_periods(): void
+    public function testFindDistinctRegistrationYearMonthsReturnsFormattedPeriods(): void
     {
         // Every fixture user_infos row shares the same registration_date
         // (2026-08-01), so this only has one distinct period to prove the
@@ -474,7 +488,7 @@ final class UserRepositoryTest extends IntegrationTestCase
         self::assertSame(['2026-08'], $this->repo->findDistinctRegistrationYearMonths());
     }
 
-    public function test_find_distinct_registration_year_months_groups_and_orders_across_periods(): void
+    public function testFindDistinctRegistrationYearMonthsGroupsAndOrdersAcrossPeriods(): void
     {
         // Real regression coverage for the DISTINCT + ORDER BY shape
         // itself, not just the per-row formatting -- give user 1 an
@@ -483,19 +497,19 @@ final class UserRepositoryTest extends IntegrationTestCase
         // back deduplicated and chronologically ordered regardless of the
         // rows' own id order.
         try {
-            $this->conn->executeStatement('UPDATE ' . 'user_infos' . " SET registration_date = '2024-01-15 10:00:00' WHERE user_id = 1");
-            $this->conn->executeStatement('UPDATE ' . 'user_infos' . " SET registration_date = '2027-03-20 10:00:00' WHERE user_id = 2");
+            $this->conn->executeStatement('UPDATE user_infos' . " SET registration_date = '2024-01-15 10:00:00' WHERE user_id = 1");
+            $this->conn->executeStatement('UPDATE user_infos' . " SET registration_date = '2027-03-20 10:00:00' WHERE user_id = 2");
 
             self::assertSame(
                 ['2024-01', '2026-08', '2027-03'],
                 $this->repo->findDistinctRegistrationYearMonths()
             );
         } finally {
-            $this->conn->executeStatement('UPDATE ' . 'user_infos' . " SET registration_date = '2026-08-01 00:00:00' WHERE user_id IN (1, 2)");
+            $this->conn->executeStatement('UPDATE user_infos' . " SET registration_date = '2026-08-01 00:00:00' WHERE user_id IN (1, 2)");
         }
     }
 
-    public function test_find_user_counts_by_status_excludes_the_given_user_and_groups_by_status(): void
+    public function testFindUserCountsByStatusExcludesTheGivenUserAndGroupsByStatus(): void
     {
         // Excluding user 2 (guest) leaves user 1 (webmaster) and users 3/4
         // (both normal). No ORDER BY on the underlying GROUP BY query (its
@@ -513,7 +527,7 @@ final class UserRepositoryTest extends IntegrationTestCase
         ], $counts);
     }
 
-    public function test_find_user_counts_by_level_excludes_the_given_user_and_groups_by_level(): void
+    public function testFindUserCountsByLevelExcludesTheGivenUserAndGroupsByLevel(): void
     {
         // Excluding user 2 (guest) leaves user 1 at level 8 and users 3/4
         // both at level 0.
@@ -523,7 +537,7 @@ final class UserRepositoryTest extends IntegrationTestCase
         ], $this->repo->findUserCountsByLevel(2));
     }
 
-    public function test_find_user_ids_excluding_status_omits_matching_rows(): void
+    public function testFindUserIdsExcludingStatusOmitsMatchingRows(): void
     {
         $ids = $this->repo->findUserIdsExcludingStatus('guest');
 
@@ -531,14 +545,14 @@ final class UserRepositoryTest extends IntegrationTestCase
         self::assertSame(['1', '3', '4'], $ids);
     }
 
-    public function test_is_favorite_reflects_real_favorites_rows(): void
+    public function testIsFavoriteReflectsRealFavoritesRows(): void
     {
         self::assertTrue($this->repo->isFavorite(UserId::from(1), 1));
         self::assertFalse($this->repo->isFavorite(UserId::from(1), 2));
         self::assertFalse($this->repo->isFavorite(UserId::from(3), 1));
     }
 
-    public function test_add_favorite_inserts_a_row_that_is_favorite_then_reports(): void
+    public function testAddFavoriteInsertsARowThatIsFavoriteThenReports(): void
     {
         // User 3 / image 2: a combination distinct from the fixture's own
         // user-1 favorites, so this doesn't collide with other tests.
@@ -558,10 +572,10 @@ final class UserRepositoryTest extends IntegrationTestCase
             ->fetchOne();
         self::assertSame(1, $count);
 
-        $this->conn->executeStatement('DELETE FROM ' . 'favorites' . ' WHERE user_id = 3 AND image_id = 2');
+        $this->conn->executeStatement('DELETE FROM favorites WHERE user_id = 3 AND image_id = 2');
     }
 
-    public function test_find_registration_date_by_id_returns_null_for_a_nonexistent_user(): void
+    public function testFindRegistrationDateByIdReturnsNullForANonexistentUser(): void
     {
         // No user_infos row exists at all for this id (not even one with a
         // NULL registration_date) -- fetchAllAssociative() returns [],
@@ -570,7 +584,7 @@ final class UserRepositoryTest extends IntegrationTestCase
         self::assertNull($this->repo->findRegistrationDateById(999999));
     }
 
-    public function test_find_status_by_ids_with_no_ids_returns_empty(): void
+    public function testFindStatusByIdsWithNoIdsReturnsEmpty(): void
     {
         self::assertSame([], $this->repo->findStatusByIds([]));
     }
@@ -618,7 +632,9 @@ final class UserRepositoryTest extends IntegrationTestCase
      */
     private function findListForWsIds(UserListCriteria $criteria): array
     {
-        $result = $this->repo->findListForWs(['u.id' => 'id'], false, $criteria, 'u.id ASC', false, null, 0);
+        $result = $this->repo->findListForWs([
+            'u.id' => 'id',
+        ], false, $criteria, 'u.id ASC', false, null, 0);
 
         return array_map(
             static fn (array $row): int => is_numeric($row['id']) ? (int) $row['id'] : 0,
@@ -631,27 +647,27 @@ final class UserRepositoryTest extends IntegrationTestCase
     // normal, level 0, groups 1 and 2), user 4 (power_user, status normal,
     // level 0, group 3). All 4 share registration_date 2026-08-01 00:00:00.
 
-    public function test_find_list_for_ws_returns_every_user_for_an_empty_criteria(): void
+    public function testFindListForWsReturnsEveryUserForAnEmptyCriteria(): void
     {
         self::assertSame([1, 2, 3, 4], $this->findListForWsIds(new UserListCriteria()));
     }
 
-    public function test_find_list_for_ws_filters_by_user_id(): void
+    public function testFindListForWsFiltersByUserId(): void
     {
         self::assertSame([1, 3], $this->findListForWsIds(new UserListCriteria(userId: [UserId::from(1), UserId::from(3)])));
     }
 
-    public function test_find_list_for_ws_filters_by_username(): void
+    public function testFindListForWsFiltersByUsername(): void
     {
         self::assertSame([1], $this->findListForWsIds(new UserListCriteria(username: 'fixture_admin')));
     }
 
-    public function test_find_list_for_ws_filter_matches_username_directly(): void
+    public function testFindListForWsFilterMatchesUsernameDirectly(): void
     {
         self::assertSame([3], $this->findListForWsIds(new UserListCriteria(filter: 'regular')));
     }
 
-    public function test_find_list_for_ws_filter_falls_back_to_the_resolved_group_ids(): void
+    public function testFindListForWsFilterFallsBackToTheResolvedGroupIds(): void
     {
         // filteredGroupIds is the caller-resolved GroupService::getIdsByNameLike()
         // output -- the raw $filter text itself matches no username/email
@@ -661,60 +677,62 @@ final class UserRepositoryTest extends IntegrationTestCase
         self::assertSame([4], $ids);
     }
 
-    public function test_find_list_for_ws_filters_by_min_register(): void
+    public function testFindListForWsFiltersByMinRegister(): void
     {
         self::assertSame([], $this->findListForWsIds(new UserListCriteria(minRegister: SqlDateTime::from('2026-08-02 00:00:00'))));
     }
 
-    public function test_find_list_for_ws_filters_by_max_register(): void
+    public function testFindListForWsFiltersByMaxRegister(): void
     {
         self::assertSame([], $this->findListForWsIds(new UserListCriteria(maxRegister: SqlDateTime::from('2026-07-31 23:59:59'))));
     }
 
-    public function test_find_list_for_ws_filters_by_status(): void
+    public function testFindListForWsFiltersByStatus(): void
     {
         self::assertSame([1], $this->findListForWsIds(new UserListCriteria(status: ['webmaster'])));
     }
 
-    public function test_find_list_for_ws_filters_by_min_level(): void
+    public function testFindListForWsFiltersByMinLevel(): void
     {
         self::assertSame([1], $this->findListForWsIds(new UserListCriteria(minLevel: 5)));
     }
 
-    public function test_find_list_for_ws_filters_by_max_level(): void
+    public function testFindListForWsFiltersByMaxLevel(): void
     {
         self::assertSame([2, 3, 4], $this->findListForWsIds(new UserListCriteria(maxLevel: 0)));
     }
 
-    public function test_find_list_for_ws_filters_by_group_id(): void
+    public function testFindListForWsFiltersByGroupId(): void
     {
         self::assertSame([4], $this->findListForWsIds(new UserListCriteria(groupId: [3])));
     }
 
-    public function test_find_list_for_ws_filters_by_exclude(): void
+    public function testFindListForWsFiltersByExclude(): void
     {
         self::assertSame([1, 3, 4], $this->findListForWsIds(new UserListCriteria(exclude: [2])));
     }
 
-    public function test_find_list_for_ws_applies_the_limit_and_reports_the_total(): void
+    public function testFindListForWsAppliesTheLimitAndReportsTheTotal(): void
     {
-        $result = $this->repo->findListForWs(['u.id' => 'id'], false, new UserListCriteria(), 'u.id ASC', true, 2, 0);
+        $result = $this->repo->findListForWs([
+            'u.id' => 'id',
+        ], false, new UserListCriteria(), 'u.id ASC', true, 2, 0);
 
         self::assertCount(2, $result->rows);
         self::assertSame(4, $result->total);
     }
 
-    public function test_count_user_infos_rows_is_one_for_a_real_user(): void
+    public function testCountUserInfosRowsIsOneForARealUser(): void
     {
         self::assertSame(1, $this->repo->countUserInfosRows(UserId::from(1)));
     }
 
-    public function test_count_user_infos_rows_is_zero_for_a_nonexistent_user(): void
+    public function testCountUserInfosRowsIsZeroForANonexistentUser(): void
     {
         self::assertSame(0, $this->repo->countUserInfosRows(UserId::from(999999)));
     }
 
-    public function test_find_favorite_image_ids_returns_the_real_ids(): void
+    public function testFindFavoriteImageIdsReturnsTheRealIds(): void
     {
         // Fixture: user 1 has favorites [1, 3, 5].
         $ids = $this->repo->findFavoriteImageIds(UserId::from(1));
@@ -722,12 +740,12 @@ final class UserRepositoryTest extends IntegrationTestCase
         self::assertSame([1, 3, 5], $ids);
     }
 
-    public function test_find_favorite_image_ids_returns_empty_for_a_user_with_no_favorites(): void
+    public function testFindFavoriteImageIdsReturnsEmptyForAUserWithNoFavorites(): void
     {
         self::assertSame([], $this->repo->findFavoriteImageIds(UserId::from(2)));
     }
 
-    public function test_delete_all_favorites_removes_every_row_for_the_user(): void
+    public function testDeleteAllFavoritesRemovesEveryRowForTheUser(): void
     {
         $this->conn->beginTransaction();
 
@@ -740,7 +758,7 @@ final class UserRepositoryTest extends IntegrationTestCase
         }
     }
 
-    public function test_find_visible_favorite_image_ids_returns_the_real_ids(): void
+    public function testFindVisibleFavoriteImageIdsReturnsTheRealIds(): void
     {
         // Fixture: user 1 has favorites [1, 3, 5].
         $ids = $this->repo->findVisibleFavoriteImageIds(
@@ -752,7 +770,7 @@ final class UserRepositoryTest extends IntegrationTestCase
         self::assertSame(['1', '3', '5'], $ids);
     }
 
-    public function test_find_visible_favorite_image_ids_orders_by_the_given_fragment(): void
+    public function testFindVisibleFavoriteImageIdsOrdersByTheGivenFragment(): void
     {
         $ids = $this->repo->findVisibleFavoriteImageIds(
             UserId::from(1),
@@ -763,7 +781,7 @@ final class UserRepositoryTest extends IntegrationTestCase
         self::assertSame(['5', '3', '1'], $ids);
     }
 
-    public function test_find_visible_favorite_image_ids_falls_back_to_raw_dbal_for_unparseable_order_by(): void
+    public function testFindVisibleFavoriteImageIdsFallsBackToRawDbalForUnparseableOrderBy(): void
     {
         $ids = $this->repo->findVisibleFavoriteImageIds(
             UserId::from(1),
@@ -775,7 +793,7 @@ final class UserRepositoryTest extends IntegrationTestCase
         self::assertSame(['1', '3', '5'], $ids);
     }
 
-    public function test_find_visible_favorite_image_ids_returns_empty_for_a_user_with_no_favorites(): void
+    public function testFindVisibleFavoriteImageIdsReturnsEmptyForAUserWithNoFavorites(): void
     {
         self::assertSame(
             [],
@@ -800,40 +818,40 @@ final class UserRepositoryTest extends IntegrationTestCase
      * real throwaway user, never touching the shared fixture users other
      * tests in this class depend on.
      */
-    public function test_delete_user_removes_every_row_across_every_related_table(): void
+    public function testDeleteUserRemovesEveryRowAcrossEveryRelatedTable(): void
     {
         $this->conn->executeStatement(
-            'INSERT INTO ' . 'users' . " (username, password, mail_address) VALUES ('delete_user_test', NULL, NULL)"
+            'INSERT INTO users' . " (username, password, mail_address) VALUES ('delete_user_test', NULL, NULL)"
         );
         $newUserId = (int) $this->conn->lastInsertId();
         $userId = UserId::from($newUserId);
 
         $this->conn->executeStatement(
-            'INSERT INTO ' . 'user_infos' . ' (user_id, status, language, theme) VALUES (?, ?, ?, ?)',
+            'INSERT INTO user_infos (user_id, status, language, theme) VALUES (?, ?, ?, ?)',
             [$newUserId, 'normal', 'en_UK', 'default']
         );
         $this->conn->executeStatement(
-            'INSERT INTO ' . 'user_access' . ' (user_id, cat_id) VALUES (?, 1)',
+            'INSERT INTO user_access (user_id, cat_id) VALUES (?, 1)',
             [$newUserId]
         );
         $this->conn->executeStatement(
-            'INSERT INTO ' . 'user_group' . ' (user_id, group_id) VALUES (?, 1)',
+            'INSERT INTO user_group (user_id, group_id) VALUES (?, 1)',
             [$newUserId]
         );
         $this->conn->executeStatement(
-            'INSERT INTO ' . 'favorites' . ' (user_id, image_id) VALUES (?, 1)',
+            'INSERT INTO favorites (user_id, image_id) VALUES (?, 1)',
             [$newUserId]
         );
         $this->conn->executeStatement(
-            'INSERT INTO ' . 'user_mail_notification' . ' (user_id, check_key, enabled) VALUES (?, ?, ?)',
+            'INSERT INTO user_mail_notification (user_id, check_key, enabled) VALUES (?, ?, ?)',
             [$newUserId, 'delusrtestkey01', 0]
         );
         $this->conn->executeStatement(
-            'INSERT INTO ' . 'user_feed' . " (id, user_id) VALUES ('delusrtestfeed01', ?)",
+            'INSERT INTO user_feed' . " (id, user_id) VALUES ('delusrtestfeed01', ?)",
             [$newUserId]
         );
         $this->conn->executeStatement(
-            'INSERT INTO ' . 'caddie' . ' (user_id, element_id) VALUES (?, 1)',
+            'INSERT INTO caddie (user_id, element_id) VALUES (?, 1)',
             [$newUserId]
         );
 

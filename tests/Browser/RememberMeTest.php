@@ -2,8 +2,8 @@
 
 declare(strict_types=1);
 
-use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
 use PHPUnit\Framework\ExpectationFailedException;
+use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
 
 /**
  * Verifies identify + remember-me flow indirectly: logging in with
@@ -39,7 +39,7 @@ it('logout clears the session and returns to an anonymous view', function (): vo
 
     $status = H::wsCall($page, 'pwg.session.getStatus');
     $result = $status['result'] ?? null;
-    if (!is_array($result)) {
+    if (! is_array($result)) {
         throw new ExpectationFailedException(
             'pwg.session.getStatus did not return a result array: ' . var_export($status, true)
         );

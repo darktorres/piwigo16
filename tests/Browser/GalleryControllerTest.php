@@ -5,7 +5,6 @@ declare(strict_types=1);
 use PgSql\Connection;
 use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
 
-
 function galDbConnect(): mysqli|Connection
 {
     return H::connect();
@@ -50,7 +49,9 @@ function galSetNbImagePage(int $userId, int $value): void
 function galInsertQuickSearch(string $q): int
 {
     $db = galDbConnect();
-    $rulesJson = json_encode(['q' => $q], JSON_THROW_ON_ERROR);
+    $rulesJson = json_encode([
+        'q' => $q,
+    ], JSON_THROW_ON_ERROR);
     H::dbQuery($db, sprintf("INSERT INTO search (search_uuid, created_on, created_by, forked_from, rules) VALUES (NULL, NOW(), 1, NULL, '%s')", H::dbEscape($db, $rulesJson)));
     $searchId = H::dbInsertId($db);
     H::dbClose($db);

@@ -14,12 +14,13 @@ test('toArray flattens every fixed property, and omits the 2 optional keys when 
         toggleMobileThemeUrl: null,
     );
 
-    expect($context->toArray())->toBe([
-        'VERSION' => '16.3.0',
-        'PHPWG_URL' => 'https://piwigo.example',
-        'VITALS_SCRIPT_URL' => '/dist/vitals.js',
-        'debug' => [],
-    ]);
+    expect($context->toArray())
+        ->toBe([
+            'VERSION' => '16.3.0',
+            'PHPWG_URL' => 'https://piwigo.example',
+            'VITALS_SCRIPT_URL' => '/dist/vitals.js',
+            'debug' => [],
+        ]);
 });
 
 test('toArray includes CONTACT_MAIL/TOGGLE_MOBILE_THEME_URL when set, and passes through the debug bag as-is', function (): void {
@@ -28,16 +29,25 @@ test('toArray includes CONTACT_MAIL/TOGGLE_MOBILE_THEME_URL when set, and passes
         phpwgUrl: 'https://piwigo.example',
         vitalsScriptUrl: '/dist/vitals.js',
         contactMail: 'webmaster@example.test',
-        debug: ['TIME' => '0.123 s', 'NB_QUERIES' => 5, 'SQL_TIME' => '0.045 s'],
+        debug: [
+            'TIME' => '0.123 s',
+            'NB_QUERIES' => 5,
+            'SQL_TIME' => '0.045 s',
+        ],
         toggleMobileThemeUrl: '/index.php?mobile=true',
     );
 
-    expect($context->toArray())->toBe([
-        'VERSION' => '16.3.0',
-        'PHPWG_URL' => 'https://piwigo.example',
-        'VITALS_SCRIPT_URL' => '/dist/vitals.js',
-        'debug' => ['TIME' => '0.123 s', 'NB_QUERIES' => 5, 'SQL_TIME' => '0.045 s'],
-        'CONTACT_MAIL' => 'webmaster@example.test',
-        'TOGGLE_MOBILE_THEME_URL' => '/index.php?mobile=true',
-    ]);
+    expect($context->toArray())
+        ->toBe([
+            'VERSION' => '16.3.0',
+            'PHPWG_URL' => 'https://piwigo.example',
+            'VITALS_SCRIPT_URL' => '/dist/vitals.js',
+            'debug' => [
+                'TIME' => '0.123 s',
+                'NB_QUERIES' => 5,
+                'SQL_TIME' => '0.045 s',
+            ],
+            'CONTACT_MAIL' => 'webmaster@example.test',
+            'TOGGLE_MOBILE_THEME_URL' => '/index.php?mobile=true',
+        ]);
 });

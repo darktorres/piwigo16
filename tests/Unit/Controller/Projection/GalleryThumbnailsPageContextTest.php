@@ -50,19 +50,40 @@ function makeGalleryThumbnailsPageContextForTest(
 }
 
 test('toArray omits every optional key when null, but always includes tag_search_results/image_derivatives', function (): void {
-    $result = makeGalleryThumbnailsPageContextForTest()->toArray();
+    $result = makeGalleryThumbnailsPageContextForTest()
+        ->toArray();
 
-    expect($result)->toBe(['tag_search_results' => [], 'image_derivatives' => []]);
+    expect($result)
+        ->toBe([
+            'tag_search_results' => [],
+            'image_derivatives' => [],
+        ]);
 });
 
 test('toArray includes real tag_search_results/image_derivatives when set', function (): void {
     $result = makeGalleryThumbnailsPageContextForTest(
-        tagSearchResults: [['id' => 1, 'name' => 'sunset', 'URL' => '/index.php?/tags/1']],
-        imageDerivatives: [['DISPLAY' => 'Small', 'URL' => '/index.php?display=SM', 'SELECTED' => true]],
+        tagSearchResults: [[
+            'id' => 1,
+            'name' => 'sunset',
+            'URL' => '/index.php?/tags/1',
+        ]],
+        imageDerivatives: [[
+            'DISPLAY' => 'Small',
+            'URL' => '/index.php?display=SM',
+            'SELECTED' => true,
+        ]],
     )->toArray();
 
-    expect($result['tag_search_results'])->toBe([['id' => 1, 'name' => 'sunset', 'URL' => '/index.php?/tags/1']])
-        ->and($result['image_derivatives'])->toBe([['DISPLAY' => 'Small', 'URL' => '/index.php?display=SM', 'SELECTED' => true]]);
+    expect($result['tag_search_results'])->toBe([[
+        'id' => 1,
+        'name' => 'sunset',
+        'URL' => '/index.php?/tags/1',
+    ]])
+        ->and($result['image_derivatives'])->toBe([[
+            'DISPLAY' => 'Small',
+            'URL' => '/index.php?display=SM',
+            'SELECTED' => true,
+        ]]);
 });
 
 test('toArray includes the search-in-set-for-tags quartet together', function (): void {
@@ -70,13 +91,19 @@ test('toArray includes the search-in-set-for-tags quartet together', function ()
         searchInSetButton: true,
         searchInSetAction: 'action.php',
         searchInSetUrl: '/search.php?tag_id=1,2',
-        combinableTags: [['id' => 1, 'name' => 'sunset']],
+        combinableTags: [[
+            'id' => 1,
+            'name' => 'sunset',
+        ]],
     )->toArray();
 
     expect($result['SEARCH_IN_SET_BUTTON'])->toBeTrue()
         ->and($result['SEARCH_IN_SET_ACTION'])->toBe('action.php')
         ->and($result['SEARCH_IN_SET_URL'])->toBe('/search.php?tag_id=1,2')
-        ->and($result['COMBINABLE_TAGS'])->toBe([['id' => 1, 'name' => 'sunset']]);
+        ->and($result['COMBINABLE_TAGS'])->toBe([[
+            'id' => 1,
+            'name' => 'sunset',
+        ]]);
 });
 
 test('toArray includes every other optional key when set', function (): void {
@@ -85,7 +112,13 @@ test('toArray includes every other optional key when set', function (): void {
         uCaddie: '/index.php?caddie=1',
         categorySearchResults: ['Holidays'],
         noSearchResults: ['balloon'],
-        imageOrders: [0 => ['DISPLAY' => 'Default', 'URL' => '/index.php?image_order=0', 'SELECTED' => true]],
+        imageOrders: [
+            0 => [
+                'DISPLAY' => 'Default',
+                'URL' => '/index.php?image_order=0',
+                'SELECTED' => true,
+            ],
+        ],
         contentDescription: 'A gallery of holidays',
         uSlideshow: '/index.php?slideshow',
     )->toArray();
@@ -94,7 +127,13 @@ test('toArray includes every other optional key when set', function (): void {
         ->and($result['U_CADDIE'])->toBe('/index.php?caddie=1')
         ->and($result['category_search_results'])->toBe(['Holidays'])
         ->and($result['no_search_results'])->toBe(['balloon'])
-        ->and($result['image_orders'])->toBe([0 => ['DISPLAY' => 'Default', 'URL' => '/index.php?image_order=0', 'SELECTED' => true]])
+        ->and($result['image_orders'])->toBe([
+            0 => [
+                'DISPLAY' => 'Default',
+                'URL' => '/index.php?image_order=0',
+                'SELECTED' => true,
+            ],
+        ])
         ->and($result['CONTENT_DESCRIPTION'])->toBe('A gallery of holidays')
         ->and($result['U_SLIDESHOW'])->toBe('/index.php?slideshow');
 });

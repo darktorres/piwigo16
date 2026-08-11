@@ -24,7 +24,9 @@ use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
  */
 function tagsPageAddTag(Webpage|PendingAwaitablePage|AwaitableWebpage $page, string $name): int
 {
-    $result = H::wsCall($page, 'pwg.tags.add', ['name' => $name]);
+    $result = H::wsCall($page, 'pwg.tags.add', [
+        'name' => $name,
+    ]);
     $tagResult = $result['result'] ?? null;
     $tagId = is_array($tagResult) ? ($tagResult['id'] ?? null) : null;
     if (! is_numeric($tagId)) {
@@ -33,7 +35,6 @@ function tagsPageAddTag(Webpage|PendingAwaitablePage|AwaitableWebpage $page, str
 
     return (int) $tagId;
 }
-
 
 // TagRepository::findOrphanTags() only considers a tag orphaned once its
 // lastmodified is >1 day old (a grace period against deleting a tag the
@@ -78,7 +79,9 @@ function tagsPageDeleteTag(int $tagId): void
 
 it('renders the tag list including a real tagged photo\'s counter', function (): void {
     $page = H::loginAsAdmin($this);
-    $album = H::wsCall($page, 'pwg.categories.add', ['name' => 'Tags Page Album ' . uniqid()]);
+    $album = H::wsCall($page, 'pwg.categories.add', [
+        'name' => 'Tags Page Album ' . uniqid(),
+    ]);
     $albumResult = $album['result'] ?? null;
     if (! is_array($albumResult) || ! is_numeric($albumResult['id'] ?? null)) {
         throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($album, true));

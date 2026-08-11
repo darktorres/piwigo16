@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Contract;
 
+use Doctrine\DBAL\Connection;
 use Override;
 use Piwigo\Cache\CachePools;
-use Doctrine\DBAL\Connection;
 use Piwigo\Db\DbConnection;
 
 final class WsUsersMutationTest extends ContractTestCase
@@ -15,10 +15,14 @@ final class WsUsersMutationTest extends ContractTestCase
 
     private Connection $conn;
 
-    /** @var list<int> */
+    /**
+     * @var list<int>
+     */
     private array $extraUserIdsToDelete = [];
 
-    /** @var list<int> */
+    /**
+     * @var list<int>
+     */
     private array $imageIdsToDelete = [];
 
     #[Override]
@@ -36,7 +40,7 @@ final class WsUsersMutationTest extends ContractTestCase
 
         if ($this->userId !== null) {
             $this->callWs('pwg.users.delete', [
-                'user_id'   => [$this->userId],
+                'user_id' => [$this->userId],
                 'pwg_token' => $token,
             ]);
             $this->userId = null;
@@ -51,14 +55,16 @@ final class WsUsersMutationTest extends ContractTestCase
         }
 
         foreach ($this->imageIdsToDelete as $imageId) {
-            $this->conn->executeStatement('DELETE FROM ' . 'favorites' . ' WHERE image_id = ?', [$imageId]);
-            $this->conn->executeStatement('DELETE FROM ' . 'images' . ' WHERE id = ?', [$imageId]);
+            $this->conn->executeStatement('DELETE FROM favorites WHERE image_id = ?', [$imageId]);
+            $this->conn->executeStatement('DELETE FROM images WHERE id = ?', [$imageId]);
         }
 
         parent::tearDown();
     }
 
-    /** Creates a real user via the WS API and marks it for cleanup in tearDown(). */
+    /**
+     * Creates a real user via the WS API and marks it for cleanup in tearDown().
+     */
     private function createUser(string $username, string $password = 'Test1234!', ?string $email = null): int
     {
         $token = $this->getPwgToken();
@@ -91,7 +97,7 @@ final class WsUsersMutationTest extends ContractTestCase
      */
     private function guestId(): int
     {
-        $raw = $this->conn->fetchOne("SELECT value FROM " . 'config' . " WHERE param = 'guest_id'");
+        $raw = $this->conn->fetchOne('SELECT value FROM config' . " WHERE param = 'guest_id'");
         if (! is_string($raw)) {
             return 2;
         }
@@ -114,7 +120,7 @@ final class WsUsersMutationTest extends ContractTestCase
         ));
 
         $this->conn->executeStatement(
-            'INSERT INTO ' . 'images' . ' (file, path, md5sum, date_available) VALUES (?, ?, ?, ?)',
+            'INSERT INTO images (file, path, md5sum, date_available) VALUES (?, ?, ?, ?)',
             [$filename, 'upload/2026/08/01/' . $filename, md5($filename), '2026-08-01 00:00:00']
         );
         $id = (int) $this->conn->lastInsertId();
@@ -150,15 +156,15 @@ final class WsUsersMutationTest extends ContractTestCase
         return (int) $id;
     }
 
-    public function test_add_returns_user_list_shape(): void
+    public function testAddReturnsUserListShape(): void
     {
-        $token    = $this->getPwgToken();
+        $token = $this->getPwgToken();
         $username = 'ct_user_' . uniqid();
         $response = $this->callWs('pwg.users.add', [
-            'username'   => $username,
-            'password'   => 'Test1234!',
-            'email'      => $username . '@test.local',
-            'pwg_token'  => $token,
+            'username' => $username,
+            'password' => 'Test1234!',
+            'email' => $username . '@test.local',
+            'pwg_token' => $token,
         ]);
 
         self::assertSame('ok', $response['stat']);
@@ -167,20 +173,20 @@ final class WsUsersMutationTest extends ContractTestCase
         $this->userId = self::firstUserId($response);
     }
 
-    public function test_setInfo_returns_user_list_shape(): void
+    public function testSetInfoReturnsUserListShape(): void
     {
-        $token    = $this->getPwgToken();
+        $token = $this->getPwgToken();
         $username = 'ct_user_' . uniqid();
-        $add      = $this->callWs('pwg.users.add', [
-            'username'  => $username,
-            'password'  => 'Test1234!',
+        $add = $this->callWs('pwg.users.add', [
+            'username' => $username,
+            'password' => 'Test1234!',
             'pwg_token' => $token,
         ]);
         $this->userId = self::firstUserId($add);
 
         $response = $this->callWs('pwg.users.setInfo', [
-            'user_id'   => $this->userId,
-            'status'    => 'normal',
+            'user_id' => $this->userId,
+            'status' => 'normal',
             'pwg_token' => $token,
         ]);
 
@@ -188,18 +194,18 @@ final class WsUsersMutationTest extends ContractTestCase
         self::assertMatchesSchema('users.getList', $response);
     }
 
-    public function test_setMyInfo_returns_ok(): void
+    public function testSetMyInfoReturnsOk(): void
     {
-        $token    = $this->getPwgToken();
+        $token = $this->getPwgToken();
         $response = $this->callWs('pwg.users.setMyInfo', [
             'nb_image_page' => 24,
-            'pwg_token'     => $token,
+            'pwg_token' => $token,
         ]);
 
         self::assertSame('ok', $response['stat']);
     }
 
-    public function test_preferences_set_returns_ok(): void
+    public function testPreferencesSetReturnsOk(): void
     {
         $response = $this->callWs('pwg.users.preferences.set', [
             'param' => 'nb_image_page',
@@ -209,19 +215,19 @@ final class WsUsersMutationTest extends ContractTestCase
         self::assertSame('ok', $response['stat']);
     }
 
-    public function test_delete_returns_ok(): void
+    public function testDeleteReturnsOk(): void
     {
-        $token    = $this->getPwgToken();
+        $token = $this->getPwgToken();
         $username = 'ct_user_' . uniqid();
-        $add      = $this->callWs('pwg.users.add', [
-            'username'  => $username,
-            'password'  => 'Test1234!',
+        $add = $this->callWs('pwg.users.add', [
+            'username' => $username,
+            'password' => 'Test1234!',
             'pwg_token' => $token,
         ]);
         $id = self::firstUserId($add);
 
         $response = $this->callWs('pwg.users.delete', [
-            'user_id'   => [$id],
+            'user_id' => [$id],
             'pwg_token' => $token,
         ]);
 
@@ -230,7 +236,7 @@ final class WsUsersMutationTest extends ContractTestCase
 
     // ------------------------------------------------------------------ add
 
-    public function test_add_invalid_token_returns_error(): void
+    public function testAddInvalidTokenReturnsError(): void
     {
         $response = $this->callWsAllowingServerError('pwg.users.add', [
             'username' => 'ct_user_' . uniqid(),
@@ -242,7 +248,7 @@ final class WsUsersMutationTest extends ContractTestCase
         self::assertSame(403, $response['err']);
     }
 
-    public function test_add_empty_username_returns_error(): void
+    public function testAddEmptyUsernameReturnsError(): void
     {
         $token = $this->getPwgToken();
 
@@ -257,7 +263,7 @@ final class WsUsersMutationTest extends ContractTestCase
         self::assertSame('Name field must not be empty', $response['message']);
     }
 
-    public function test_add_missing_password_returns_error(): void
+    public function testAddMissingPasswordReturnsError(): void
     {
         $token = $this->getPwgToken();
 
@@ -275,7 +281,7 @@ final class WsUsersMutationTest extends ContractTestCase
      * static default) -- must be explicitly enabled for add()'s
      * password/password_confirm comparison to run at all.
      */
-    public function test_add_password_confirmation_mismatch_returns_error(): void
+    public function testAddPasswordConfirmationMismatchReturnsError(): void
     {
         $this->upsertConfig('double_password_type_in_admin', 'true');
         CachePools::config()->clear();
@@ -294,12 +300,12 @@ final class WsUsersMutationTest extends ContractTestCase
             self::assertSame(1003, $response['err']);
             self::assertSame('The passwords do not match', $response['message']);
         } finally {
-            $this->conn->executeStatement("DELETE FROM " . 'config' . " WHERE param = 'double_password_type_in_admin'");
+            $this->conn->executeStatement('DELETE FROM config' . " WHERE param = 'double_password_type_in_admin'");
             CachePools::config()->clear();
         }
     }
 
-    public function test_add_auto_password_generates_one(): void
+    public function testAddAutoPasswordGeneratesOne(): void
     {
         $token = $this->getPwgToken();
         $username = 'ct_user_' . uniqid();
@@ -314,12 +320,12 @@ final class WsUsersMutationTest extends ContractTestCase
         $id = self::firstUserId($response);
         $this->extraUserIdsToDelete[] = $id;
 
-        $password = $this->conn->fetchOne('SELECT password FROM ' . 'users' . ' WHERE id = ?', [$id]);
+        $password = $this->conn->fetchOne('SELECT password FROM users WHERE id = ?', [$id]);
         self::assertIsString($password);
         self::assertNotSame('', $password, 'auto_password must generate a real, non-empty hash');
     }
 
-    public function test_add_duplicate_username_returns_error(): void
+    public function testAddDuplicateUsernameReturnsError(): void
     {
         $token = $this->getPwgToken();
 
@@ -336,7 +342,7 @@ final class WsUsersMutationTest extends ContractTestCase
 
     // ------------------------------------------------------------ getAuthKey
 
-    public function test_getAuthKey_invalid_token_returns_error(): void
+    public function testGetAuthKeyInvalidTokenReturnsError(): void
     {
         $userId = $this->createUser('ct_user_' . uniqid());
 
@@ -349,7 +355,7 @@ final class WsUsersMutationTest extends ContractTestCase
         self::assertSame(403, $response['err']);
     }
 
-    public function test_getAuthKey_unknown_user_returns_error(): void
+    public function testGetAuthKeyUnknownUserReturnsError(): void
     {
         $token = $this->getPwgToken();
 
@@ -363,7 +369,7 @@ final class WsUsersMutationTest extends ContractTestCase
         self::assertSame('invalid user_id', $response['message']);
     }
 
-    public function test_getAuthKey_returns_key_shape(): void
+    public function testGetAuthKeyReturnsKeyShape(): void
     {
         $userId = $this->createUser('ct_user_' . uniqid());
         $token = $this->getPwgToken();
@@ -382,7 +388,7 @@ final class WsUsersMutationTest extends ContractTestCase
 
     // ---------------------------------------------------------------- delete
 
-    public function test_delete_invalid_token_returns_error(): void
+    public function testDeleteInvalidTokenReturnsError(): void
     {
         $userId = $this->createUser('ct_user_' . uniqid());
 
@@ -395,10 +401,10 @@ final class WsUsersMutationTest extends ContractTestCase
         self::assertSame(403, $response['err']);
     }
 
-    public function test_delete_protects_the_current_user_from_self_deletion(): void
+    public function testDeleteProtectsTheCurrentUserFromSelfDeletion(): void
     {
         $token = $this->getPwgToken();
-        $selfId = $this->conn->fetchOne('SELECT id FROM ' . 'users' . ' WHERE username = ?', ['fixture_admin']);
+        $selfId = $this->conn->fetchOne('SELECT id FROM users WHERE username = ?', ['fixture_admin']);
 
         $response = $this->callWs('pwg.users.delete', [
             'user_id' => [$selfId],
@@ -408,11 +414,11 @@ final class WsUsersMutationTest extends ContractTestCase
         self::assertSame('ok', $response['stat']);
         self::assertSame('0 users deleted', $response['result']);
 
-        $stillExists = $this->conn->fetchOne('SELECT COUNT(*) FROM ' . 'users' . ' WHERE id = ?', [$selfId]);
+        $stillExists = $this->conn->fetchOne('SELECT COUNT(*) FROM users WHERE id = ?', [$selfId]);
         self::assertSame(1, $stillExists);
     }
 
-    public function test_delete_protects_the_guest_id(): void
+    public function testDeleteProtectsTheGuestId(): void
     {
         $token = $this->getPwgToken();
         $guestId = $this->guestId();
@@ -434,10 +440,10 @@ final class WsUsersMutationTest extends ContractTestCase
      * (protected unconditionally either way), so this needs a throwaway
      * user promoted to plain 'admin' to actually exercise the extra query.
      */
-    public function test_delete_as_a_non_webmaster_admin_also_protects_other_admins(): void
+    public function testDeleteAsANonWebmasterAdminAlsoProtectsOtherAdmins(): void
     {
         $adminToken = $this->getPwgToken();
-        $selfId = $this->conn->fetchOne('SELECT id FROM ' . 'users' . ' WHERE username = ?', ['fixture_admin']);
+        $selfId = $this->conn->fetchOne('SELECT id FROM users WHERE username = ?', ['fixture_admin']);
         self::assertIsNumeric($selfId);
 
         $username = 'ct_nonwm_admin_' . uniqid();
@@ -449,7 +455,10 @@ final class WsUsersMutationTest extends ContractTestCase
             'pwg_token' => $adminToken,
         ]);
 
-        $login = $this->callWs('pwg.session.login', ['username' => $username, 'password' => $password]);
+        $login = $this->callWs('pwg.session.login', [
+            'username' => $username,
+            'password' => $password,
+        ]);
         self::assertSame('ok', $login['stat']);
         $nonWebmasterToken = $this->getPwgToken();
 
@@ -460,7 +469,7 @@ final class WsUsersMutationTest extends ContractTestCase
 
         self::assertSame('ok', $response['stat']);
         self::assertSame('0 users deleted', $response['result']);
-        $stillExists = $this->conn->fetchOne('SELECT COUNT(*) FROM ' . 'users' . ' WHERE id = ?', [$selfId]);
+        $stillExists = $this->conn->fetchOne('SELECT COUNT(*) FROM users WHERE id = ?', [$selfId]);
         self::assertSame(1, $stillExists);
 
         $this->loginAsAdmin();
@@ -468,7 +477,7 @@ final class WsUsersMutationTest extends ContractTestCase
 
     // -------------------------------------------------------------- setInfo
 
-    public function test_setInfo_invalid_token_returns_error(): void
+    public function testSetInfoInvalidTokenReturnsError(): void
     {
         $userId = $this->createUser('ct_user_' . uniqid());
 
@@ -482,7 +491,7 @@ final class WsUsersMutationTest extends ContractTestCase
         self::assertSame(403, $response['err']);
     }
 
-    public function test_setInfo_duplicate_username_returns_error(): void
+    public function testSetInfoDuplicateUsernameReturnsError(): void
     {
         $token = $this->getPwgToken();
         $otherUsername = 'ct_user_' . uniqid();
@@ -502,7 +511,7 @@ final class WsUsersMutationTest extends ContractTestCase
 
     // ------------------------------------------------------------ setMyInfo
 
-    public function test_setMyInfo_invalid_token_returns_error(): void
+    public function testSetMyInfoInvalidTokenReturnsError(): void
     {
         $response = $this->callWsAllowingServerError('pwg.users.setMyInfo', [
             'nb_image_page' => 24,
@@ -513,7 +522,7 @@ final class WsUsersMutationTest extends ContractTestCase
         self::assertSame(403, $response['err']);
     }
 
-    public function test_setMyInfo_guest_forbidden(): void
+    public function testSetMyInfoGuestForbidden(): void
     {
         // This class's own setUp() already WS-authenticates the shared
         // cookie jar as admin, so a genuinely anonymous call needs a
@@ -540,7 +549,7 @@ final class WsUsersMutationTest extends ContractTestCase
         self::assertSame('Access Denied', $response['message']);
     }
 
-    public function test_setMyInfo_wrong_current_password_returns_error(): void
+    public function testSetMyInfoWrongCurrentPasswordReturnsError(): void
     {
         $token = $this->getPwgToken();
 
@@ -556,7 +565,7 @@ final class WsUsersMutationTest extends ContractTestCase
         self::assertSame('Current password is wrong', $response['message']);
     }
 
-    public function test_setMyInfo_new_password_confirmation_mismatch_returns_error(): void
+    public function testSetMyInfoNewPasswordConfirmationMismatchReturnsError(): void
     {
         $token = $this->getPwgToken();
 
@@ -572,14 +581,14 @@ final class WsUsersMutationTest extends ContractTestCase
         self::assertSame('The passwords do not match', $response['message']);
     }
 
-    public function test_setMyInfo_changes_password_successfully(): void
+    public function testSetMyInfoChangesPasswordSuccessfully(): void
     {
         $userId = $this->createUser('ct_pwchange_' . uniqid(), 'OldPass123!');
         $token = $this->getPwgToken();
         // switch the session onto the throwaway user before changing their
         // own password
         $login = $this->callWs('pwg.session.login', [
-            'username' => $this->conn->fetchOne('SELECT username FROM ' . 'users' . ' WHERE id = ?', [$userId]),
+            'username' => $this->conn->fetchOne('SELECT username FROM users WHERE id = ?', [$userId]),
             'password' => 'OldPass123!',
         ]);
         self::assertSame('ok', $login['stat']);
@@ -598,7 +607,7 @@ final class WsUsersMutationTest extends ContractTestCase
         // log back in as admin so tearDown()'s own delete calls are authorized
         $this->loginAsAdmin();
         $reLogin = $this->callWs('pwg.session.login', [
-            'username' => $this->conn->fetchOne('SELECT username FROM ' . 'users' . ' WHERE id = ?', [$userId]),
+            'username' => $this->conn->fetchOne('SELECT username FROM users WHERE id = ?', [$userId]),
             'password' => 'NewPass456!',
         ]);
         self::assertSame('ok', $reLogin['stat'], 'the new password must actually authenticate');
@@ -610,14 +619,14 @@ final class WsUsersMutationTest extends ContractTestCase
      * before checkAndSaveUserInfos() runs -- a requested theme change is
      * silently ignored rather than erroring.
      */
-    public function test_setMyInfo_ignores_theme_when_user_customization_is_disabled(): void
+    public function testSetMyInfoIgnoresThemeWhenUserCustomizationIsDisabled(): void
     {
         $this->upsertConfig('allow_user_customization', 'false');
         CachePools::config()->clear();
 
         try {
             $token = $this->getPwgToken();
-            $before = $this->conn->fetchOne('SELECT theme FROM ' . 'user_infos' . ' WHERE user_id = 1');
+            $before = $this->conn->fetchOne('SELECT theme FROM user_infos WHERE user_id = 1');
 
             $response = $this->callWs('pwg.users.setMyInfo', [
                 'theme' => 'a_theme_that_should_be_ignored',
@@ -625,10 +634,10 @@ final class WsUsersMutationTest extends ContractTestCase
             ]);
 
             self::assertSame('ok', $response['stat']);
-            $after = $this->conn->fetchOne('SELECT theme FROM ' . 'user_infos' . ' WHERE user_id = 1');
+            $after = $this->conn->fetchOne('SELECT theme FROM user_infos WHERE user_id = 1');
             self::assertSame($before, $after);
         } finally {
-            $this->conn->executeStatement("DELETE FROM " . 'config' . " WHERE param = 'allow_user_customization'");
+            $this->conn->executeStatement('DELETE FROM config' . " WHERE param = 'allow_user_customization'");
             CachePools::config()->clear();
         }
     }
@@ -641,16 +650,16 @@ final class WsUsersMutationTest extends ContractTestCase
      * the fixture's own user_infos row), so requesting `true` here
      * would be a real, detectable change if it weren't dropped.
      */
-    public function test_setMyInfo_ignores_show_nb_comments_when_comments_are_disabled(): void
+    public function testSetMyInfoIgnoresShowNbCommentsWhenCommentsAreDisabled(): void
     {
         $this->conn->executeStatement(
-            "UPDATE " . 'config' . " SET value = 'false' WHERE param = 'activate_comments'"
+            'UPDATE config' . " SET value = 'false' WHERE param = 'activate_comments'"
         );
         CachePools::config()->clear();
 
         try {
             $token = $this->getPwgToken();
-            $before = $this->conn->fetchOne('SELECT show_nb_comments FROM ' . 'user_infos' . ' WHERE user_id = 1');
+            $before = $this->conn->fetchOne('SELECT show_nb_comments FROM user_infos WHERE user_id = 1');
 
             $response = $this->callWs('pwg.users.setMyInfo', [
                 'show_nb_comments' => true,
@@ -658,10 +667,10 @@ final class WsUsersMutationTest extends ContractTestCase
             ]);
 
             self::assertSame('ok', $response['stat']);
-            $after = $this->conn->fetchOne('SELECT show_nb_comments FROM ' . 'user_infos' . ' WHERE user_id = 1');
+            $after = $this->conn->fetchOne('SELECT show_nb_comments FROM user_infos WHERE user_id = 1');
             self::assertSame($before, $after, 'show_nb_comments must be silently dropped, not applied, while comments are disabled gallery-wide');
         } finally {
-            $this->conn->executeStatement("UPDATE " . 'config' . " SET value = 'true' WHERE param = 'activate_comments'");
+            $this->conn->executeStatement('UPDATE config' . " SET value = 'true' WHERE param = 'activate_comments'");
             CachePools::config()->clear();
         }
     }
@@ -675,25 +684,28 @@ final class WsUsersMutationTest extends ContractTestCase
      * throwaway user can hit it by pointing default_user_id at their own
      * id without ever being treated as a guest.
      */
-    public function test_setMyInfo_special_user_branch_drops_password_theme_and_language(): void
+    public function testSetMyInfoSpecialUserBranchDropsPasswordThemeAndLanguage(): void
     {
         $username = 'ct_special_' . uniqid();
         $password = 'Test1234!';
         $userId = $this->createUser($username, $password);
 
-        $originalDefaultUserId = $this->conn->fetchOne("SELECT value FROM " . 'config' . " WHERE param = 'default_user_id'");
+        $originalDefaultUserId = $this->conn->fetchOne('SELECT value FROM config' . " WHERE param = 'default_user_id'");
 
         $this->upsertConfig('default_user_id', (string) $userId);
         CachePools::config()->clear();
 
         try {
             $before = $this->conn->fetchAssociative(
-                'SELECT theme, language FROM ' . 'user_infos' . ' WHERE user_id = ?',
+                'SELECT theme, language FROM user_infos WHERE user_id = ?',
                 [$userId]
             );
             self::assertIsArray($before);
 
-            $login = $this->callWs('pwg.session.login', ['username' => $username, 'password' => $password]);
+            $login = $this->callWs('pwg.session.login', [
+                'username' => $username,
+                'password' => $password,
+            ]);
             self::assertSame('ok', $login['stat']);
             $token = $this->getPwgToken();
 
@@ -710,21 +722,24 @@ final class WsUsersMutationTest extends ContractTestCase
             self::assertSame('Your changes have been applied.', $response['result']);
 
             $after = $this->conn->fetchAssociative(
-                'SELECT theme, language FROM ' . 'user_infos' . ' WHERE user_id = ?',
+                'SELECT theme, language FROM user_infos WHERE user_id = ?',
                 [$userId]
             );
             self::assertSame($before, $after, 'theme/language must be unchanged -- SPECIAL_USER must have dropped them');
 
             $this->loginAsAdmin();
-            $reLogin = $this->callWs('pwg.session.login', ['username' => $username, 'password' => $password]);
+            $reLogin = $this->callWs('pwg.session.login', [
+                'username' => $username,
+                'password' => $password,
+            ]);
             self::assertSame('ok', $reLogin['stat'], 'password must be unchanged -- SPECIAL_USER must have dropped it too');
         } finally {
             $this->loginAsAdmin();
             if ($originalDefaultUserId === false) {
-                $this->conn->executeStatement("DELETE FROM " . 'config' . " WHERE param = 'default_user_id'");
+                $this->conn->executeStatement('DELETE FROM config' . " WHERE param = 'default_user_id'");
             } else {
                 $this->conn->executeStatement(
-                    "UPDATE " . 'config' . " SET value = ? WHERE param = 'default_user_id'",
+                    'UPDATE config' . " SET value = ? WHERE param = 'default_user_id'",
                     [$originalDefaultUserId]
                 );
             }
@@ -740,7 +755,7 @@ final class WsUsersMutationTest extends ContractTestCase
      * group_id/enabled_high are always unset by setMyInfo() itself before
      * that call).
      */
-    public function test_setMyInfo_invalid_email_format_returns_error(): void
+    public function testSetMyInfoInvalidEmailFormatReturnsError(): void
     {
         $token = $this->getPwgToken();
 
@@ -756,7 +771,7 @@ final class WsUsersMutationTest extends ContractTestCase
 
     // -------------------------------------------------------- preferencesSet
 
-    public function test_preferencesSet_invalid_param_name_returns_error(): void
+    public function testPreferencesSetInvalidParamNameReturnsError(): void
     {
         $response = $this->callWs('pwg.users.preferences.set', [
             'param' => 'not a valid name!',
@@ -767,11 +782,14 @@ final class WsUsersMutationTest extends ContractTestCase
         self::assertSame(1003, $response['err']);
     }
 
-    public function test_preferencesSet_stores_a_json_value(): void
+    public function testPreferencesSetStoresAJsonValue(): void
     {
         $response = $this->callWs('pwg.users.preferences.set', [
             'param' => 'ct_pref_' . uniqid(),
-            'value' => json_encode(['a' => 1, 'b' => 2]),
+            'value' => json_encode([
+                'a' => 1,
+                'b' => 2,
+            ]),
             'is_json' => true,
         ]);
 
@@ -782,66 +800,78 @@ final class WsUsersMutationTest extends ContractTestCase
 
     // ------------------------------------------------------------ favorites
 
-    public function test_favoritesAdd_guest_forbidden(): void
+    public function testFavoritesAddGuestForbidden(): void
     {
         $jar = tempnam(sys_get_temp_dir(), 'pwg_ct_guest_');
         self::assertNotFalse($jar);
 
-        $response = $this->wsWithCookieJar($jar, 'pwg.users.favorites.add', ['image_id' => 1]);
+        $response = $this->wsWithCookieJar($jar, 'pwg.users.favorites.add', [
+            'image_id' => 1,
+        ]);
 
         self::assertSame('fail', $response['stat']);
         self::assertSame(403, $response['err']);
         self::assertSame('User must be logged in.', $response['message']);
     }
 
-    public function test_favoritesAdd_unknown_image_returns_404(): void
+    public function testFavoritesAddUnknownImageReturns404(): void
     {
-        $response = $this->callWsAllowingServerError('pwg.users.favorites.add', ['image_id' => 999999]);
+        $response = $this->callWsAllowingServerError('pwg.users.favorites.add', [
+            'image_id' => 999999,
+        ]);
 
         self::assertSame('fail', $response['stat']);
         self::assertSame(404, $response['err']);
         self::assertSame('image_id not found', $response['message']);
     }
 
-    public function test_favoritesAdd_and_remove_roundtrip(): void
+    public function testFavoritesAddAndRemoveRoundtrip(): void
     {
         $imageId = $this->insertThrowawayImage();
-        $selfId = $this->conn->fetchOne('SELECT id FROM ' . 'users' . ' WHERE username = ?', ['fixture_admin']);
+        $selfId = $this->conn->fetchOne('SELECT id FROM users WHERE username = ?', ['fixture_admin']);
 
-        $add = $this->callWs('pwg.users.favorites.add', ['image_id' => $imageId]);
+        $add = $this->callWs('pwg.users.favorites.add', [
+            'image_id' => $imageId,
+        ]);
         self::assertSame('ok', $add['stat']);
 
         $count = $this->conn->fetchOne(
-            'SELECT COUNT(*) FROM ' . 'favorites' . ' WHERE user_id = ? AND image_id = ?',
+            'SELECT COUNT(*) FROM favorites WHERE user_id = ? AND image_id = ?',
             [$selfId, $imageId]
         );
         self::assertSame(1, $count);
 
-        $remove = $this->callWs('pwg.users.favorites.remove', ['image_id' => $imageId]);
+        $remove = $this->callWs('pwg.users.favorites.remove', [
+            'image_id' => $imageId,
+        ]);
         self::assertSame('ok', $remove['stat']);
 
         $countAfter = $this->conn->fetchOne(
-            'SELECT COUNT(*) FROM ' . 'favorites' . ' WHERE user_id = ? AND image_id = ?',
+            'SELECT COUNT(*) FROM favorites WHERE user_id = ? AND image_id = ?',
             [$selfId, $imageId]
         );
         self::assertSame(0, $countAfter);
     }
 
-    public function test_favoritesRemove_guest_forbidden(): void
+    public function testFavoritesRemoveGuestForbidden(): void
     {
         $jar = tempnam(sys_get_temp_dir(), 'pwg_ct_guest_');
         self::assertNotFalse($jar);
 
-        $response = $this->wsWithCookieJar($jar, 'pwg.users.favorites.remove', ['image_id' => 1]);
+        $response = $this->wsWithCookieJar($jar, 'pwg.users.favorites.remove', [
+            'image_id' => 1,
+        ]);
 
         self::assertSame('fail', $response['stat']);
         self::assertSame(403, $response['err']);
         self::assertSame('User must be logged in.', $response['message']);
     }
 
-    public function test_favoritesRemove_unknown_image_returns_404(): void
+    public function testFavoritesRemoveUnknownImageReturns404(): void
     {
-        $response = $this->callWsAllowingServerError('pwg.users.favorites.remove', ['image_id' => 999999]);
+        $response = $this->callWsAllowingServerError('pwg.users.favorites.remove', [
+            'image_id' => 999999,
+        ]);
 
         self::assertSame('fail', $response['stat']);
         self::assertSame(404, $response['err']);
@@ -850,7 +880,7 @@ final class WsUsersMutationTest extends ContractTestCase
 
     // ---------------------------------------------------- generatePasswordLink
 
-    public function test_generatePasswordLink_invalid_token_returns_error(): void
+    public function testGeneratePasswordLinkInvalidTokenReturnsError(): void
     {
         $userId = $this->createUser('ct_user_' . uniqid());
 
@@ -863,7 +893,7 @@ final class WsUsersMutationTest extends ContractTestCase
         self::assertSame(403, $response['err']);
     }
 
-    public function test_generatePasswordLink_unknown_user_returns_error(): void
+    public function testGeneratePasswordLinkUnknownUserReturnsError(): void
     {
         $token = $this->getPwgToken();
 
@@ -877,7 +907,7 @@ final class WsUsersMutationTest extends ContractTestCase
         self::assertSame('This user does not exist.', $response['message']);
     }
 
-    public function test_generatePasswordLink_guest_target_returns_error(): void
+    public function testGeneratePasswordLinkGuestTargetReturnsError(): void
     {
         $token = $this->getPwgToken();
         $guestId = $this->guestId();
@@ -892,7 +922,7 @@ final class WsUsersMutationTest extends ContractTestCase
         self::assertSame('Password reset is not allowed for this user', $response['message']);
     }
 
-    public function test_generatePasswordLink_returns_link_for_regular_user(): void
+    public function testGeneratePasswordLinkReturnsLinkForRegularUser(): void
     {
         $token = $this->getPwgToken();
         $userId = $this->createUser('ct_user_' . uniqid());
@@ -916,10 +946,10 @@ final class WsUsersMutationTest extends ContractTestCase
      * only a non-webmaster 'admin' session exercises generatePasswordLink()'s
      * own "only webmaster can reset another webmaster's password" guard.
      */
-    public function test_generatePasswordLink_admin_cannot_target_a_webmaster(): void
+    public function testGeneratePasswordLinkAdminCannotTargetAWebmaster(): void
     {
         $adminToken = $this->getPwgToken();
-        $selfId = $this->conn->fetchOne('SELECT id FROM ' . 'users' . ' WHERE username = ?', ['fixture_admin']);
+        $selfId = $this->conn->fetchOne('SELECT id FROM users WHERE username = ?', ['fixture_admin']);
         self::assertIsNumeric($selfId);
 
         $username = 'ct_nonwm_admin_' . uniqid();
@@ -931,7 +961,10 @@ final class WsUsersMutationTest extends ContractTestCase
             'pwg_token' => $adminToken,
         ]);
 
-        $login = $this->callWs('pwg.session.login', ['username' => $username, 'password' => $password]);
+        $login = $this->callWs('pwg.session.login', [
+            'username' => $username,
+            'password' => $password,
+        ]);
         self::assertSame('ok', $login['stat']);
         $nonWebmasterToken = $this->getPwgToken();
 
@@ -976,7 +1009,7 @@ final class WsUsersMutationTest extends ContractTestCase
      * genuinely untested; called out explicitly in this task's own
      * coverage-closure report rather than silently skipped.
      */
-    public function test_generatePasswordLink_send_by_mail_covers_both_first_login_and_returning_user(): void
+    public function testGeneratePasswordLinkSendByMailCoversBothFirstLoginAndReturningUser(): void
     {
         $token = $this->getPwgToken();
         $username = 'ct_pwdlink_' . uniqid();
@@ -984,7 +1017,7 @@ final class WsUsersMutationTest extends ContractTestCase
         $email = $username . '@example.test';
         $userId = $this->createUser($username, $password, $email);
 
-        $originalSmtpHost = $this->conn->fetchOne("SELECT value FROM " . 'config' . " WHERE param = 'smtp_host'");
+        $originalSmtpHost = $this->conn->fetchOne('SELECT value FROM config' . " WHERE param = 'smtp_host'");
         $this->upsertConfig('smtp_host', '"127.0.0.1:1"');
         CachePools::config()->clear();
 
@@ -1000,7 +1033,10 @@ final class WsUsersMutationTest extends ContractTestCase
             self::assertArrayHasKey('send_by_mail', $firstResult);
             self::assertFalse($firstResult['send_by_mail']);
 
-            $login = $this->callWs('pwg.session.login', ['username' => $username, 'password' => $password]);
+            $login = $this->callWs('pwg.session.login', [
+                'username' => $username,
+                'password' => $password,
+            ]);
             self::assertSame('ok', $login['stat']);
             $this->loginAsAdmin();
             $token = $this->getPwgToken();
@@ -1018,10 +1054,10 @@ final class WsUsersMutationTest extends ContractTestCase
         } finally {
             $this->loginAsAdmin();
             if ($originalSmtpHost === false) {
-                $this->conn->executeStatement("DELETE FROM " . 'config' . " WHERE param = 'smtp_host'");
+                $this->conn->executeStatement('DELETE FROM config' . " WHERE param = 'smtp_host'");
             } else {
                 $this->conn->executeStatement(
-                    "UPDATE " . 'config' . " SET value = ? WHERE param = 'smtp_host'",
+                    'UPDATE config' . " SET value = ? WHERE param = 'smtp_host'",
                     [$originalSmtpHost]
                 );
             }
@@ -1031,7 +1067,7 @@ final class WsUsersMutationTest extends ContractTestCase
 
     // --------------------------------------------------------- setMainUser
 
-    public function test_setMainUser_invalid_token_returns_error(): void
+    public function testSetMainUserInvalidTokenReturnsError(): void
     {
         $response = $this->callWsAllowingServerError('pwg.users.setMainUser', [
             'user_id' => 1,
@@ -1050,7 +1086,7 @@ final class WsUsersMutationTest extends ContractTestCase
      * for free. A real, logged-in non-webmaster 'admin' session is needed
      * to exercise this guard itself.
      */
-    public function test_setMainUser_forbidden_for_a_non_webmaster(): void
+    public function testSetMainUserForbiddenForANonWebmaster(): void
     {
         $adminToken = $this->getPwgToken();
         $username = 'ct_nonwm_' . uniqid();
@@ -1062,7 +1098,10 @@ final class WsUsersMutationTest extends ContractTestCase
             'pwg_token' => $adminToken,
         ]);
 
-        $login = $this->callWs('pwg.session.login', ['username' => $username, 'password' => $password]);
+        $login = $this->callWs('pwg.session.login', [
+            'username' => $username,
+            'password' => $password,
+        ]);
         self::assertSame('ok', $login['stat']);
         $nonWebmasterToken = $this->getPwgToken();
 
@@ -1078,7 +1117,7 @@ final class WsUsersMutationTest extends ContractTestCase
         $this->loginAsAdmin();
     }
 
-    public function test_setMainUser_unknown_user_returns_error(): void
+    public function testSetMainUserUnknownUserReturnsError(): void
     {
         $token = $this->getPwgToken();
 
@@ -1092,7 +1131,7 @@ final class WsUsersMutationTest extends ContractTestCase
         self::assertSame('This user does not exist.', $response['message']);
     }
 
-    public function test_setMainUser_non_webmaster_target_returns_error(): void
+    public function testSetMainUserNonWebmasterTargetReturnsError(): void
     {
         $token = $this->getPwgToken();
         $userId = $this->createUser('ct_user_' . uniqid());
@@ -1107,9 +1146,9 @@ final class WsUsersMutationTest extends ContractTestCase
         self::assertSame('This user cannot become a main user because he is not a webmaster.', $response['message']);
     }
 
-    public function test_setMainUser_promotes_a_webmaster(): void
+    public function testSetMainUserPromotesAWebmaster(): void
     {
-        $originalWebmasterId = $this->conn->fetchOne("SELECT value FROM " . 'config' . " WHERE param = 'webmaster_id'");
+        $originalWebmasterId = $this->conn->fetchOne('SELECT value FROM config' . " WHERE param = 'webmaster_id'");
         self::assertIsString($originalWebmasterId);
 
         $token = $this->getPwgToken();
@@ -1130,11 +1169,11 @@ final class WsUsersMutationTest extends ContractTestCase
             self::assertSame('ok', $response['stat']);
             self::assertSame('The main user has been changed.', $response['result']);
 
-            $stored = $this->conn->fetchOne("SELECT value FROM " . 'config' . " WHERE param = 'webmaster_id'");
+            $stored = $this->conn->fetchOne('SELECT value FROM config' . " WHERE param = 'webmaster_id'");
             self::assertSame((string) $userId, $stored);
         } finally {
             $this->conn->executeStatement(
-                "UPDATE " . 'config' . " SET value = ? WHERE param = 'webmaster_id'",
+                'UPDATE config' . " SET value = ? WHERE param = 'webmaster_id'",
                 [$originalWebmasterId]
             );
             CachePools::config()->clear();
@@ -1198,7 +1237,10 @@ final class WsUsersMutationTest extends ContractTestCase
         $token = $statusResult['pwg_token'] ?? null;
         self::assertIsString($token);
 
-        return ['jar' => $cookieJar, 'token' => $token];
+        return [
+            'jar' => $cookieJar,
+            'token' => $token,
+        ];
     }
 
     /**
@@ -1213,7 +1255,9 @@ final class WsUsersMutationTest extends ContractTestCase
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
         curl_setopt($ch, CURLOPT_POST, true);
         curl_setopt($ch, CURLOPT_USERAGENT, self::USER_AGENT);
-        curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query(array_merge(['method' => $method], $params)));
+        curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query(array_merge([
+            'method' => $method,
+        ], $params)));
         curl_setopt($ch, CURLOPT_COOKIEJAR, $cookieJar);
         curl_setopt($ch, CURLOPT_COOKIEFILE, $cookieJar);
         curl_setopt($ch, CURLOPT_HTTPHEADER, $this->testHeader());
@@ -1228,7 +1272,7 @@ final class WsUsersMutationTest extends ContractTestCase
         return $decoded;
     }
 
-    public function test_createApiKey_invalid_token_returns_error(): void
+    public function testCreateApiKeyInvalidTokenReturnsError(): void
     {
         ['jar' => $jar] = $this->apiKeySession();
 
@@ -1242,7 +1286,7 @@ final class WsUsersMutationTest extends ContractTestCase
         self::assertSame(403, $response['err']);
     }
 
-    public function test_createApiKey_invalid_duration_returns_error(): void
+    public function testCreateApiKeyInvalidDurationReturnsError(): void
     {
         ['jar' => $jar, 'token' => $token] = $this->apiKeySession();
 
@@ -1257,7 +1301,7 @@ final class WsUsersMutationTest extends ContractTestCase
         self::assertSame('Invalid duration max days is 999999', $response['message']);
     }
 
-    public function test_createApiKey_key_name_too_long_returns_error(): void
+    public function testCreateApiKeyKeyNameTooLongReturnsError(): void
     {
         ['jar' => $jar, 'token' => $token] = $this->apiKeySession();
 
@@ -1272,7 +1316,9 @@ final class WsUsersMutationTest extends ContractTestCase
         self::assertSame('Key name is too long', $response['message']);
     }
 
-    /** @return array{jar: string, pkid: string, token: string} */
+    /**
+     * @return array{jar: string, pkid: string, token: string}
+     */
     private function createRealApiKey(): array
     {
         ['jar' => $jar, 'token' => $token] = $this->apiKeySession();
@@ -1287,10 +1333,14 @@ final class WsUsersMutationTest extends ContractTestCase
         $pkid = $result['auth_key'] ?? null;
         self::assertIsString($pkid);
 
-        return ['jar' => $jar, 'pkid' => $pkid, 'token' => $token];
+        return [
+            'jar' => $jar,
+            'pkid' => $pkid,
+            'token' => $token,
+        ];
     }
 
-    public function test_editApiKey_invalid_pkid_format_returns_error(): void
+    public function testEditApiKeyInvalidPkidFormatReturnsError(): void
     {
         ['jar' => $jar, 'token' => $token] = $this->apiKeySession();
 
@@ -1313,7 +1363,7 @@ final class WsUsersMutationTest extends ContractTestCase
      * identification.php), so isAGuest() is false but connectedWithPwgUi()
      * is still false too, isolating that second guard on its own line.
      */
-    public function test_editApiKey_forbidden_when_not_connected_via_pwg_ui(): void
+    public function testEditApiKeyForbiddenWhenNotConnectedViaPwgUi(): void
     {
         $token = $this->getPwgToken();
 
@@ -1328,7 +1378,7 @@ final class WsUsersMutationTest extends ContractTestCase
         self::assertSame('Acces Denied', $response['message']);
     }
 
-    public function test_editApiKey_edits_the_name(): void
+    public function testEditApiKeyEditsTheName(): void
     {
         ['jar' => $jar, 'pkid' => $pkid, 'token' => $token] = $this->createRealApiKey();
 
@@ -1342,7 +1392,7 @@ final class WsUsersMutationTest extends ContractTestCase
         self::assertSame('API Key has been successfully edited.', $response['result']);
     }
 
-    public function test_revokeApiKey_invalid_pkid_format_returns_error(): void
+    public function testRevokeApiKeyInvalidPkidFormatReturnsError(): void
     {
         ['jar' => $jar, 'token' => $token] = $this->apiKeySession();
 
@@ -1355,7 +1405,7 @@ final class WsUsersMutationTest extends ContractTestCase
         self::assertSame(403, $response['err']);
     }
 
-    public function test_revokeApiKey_revokes_the_key(): void
+    public function testRevokeApiKeyRevokesTheKey(): void
     {
         ['jar' => $jar, 'pkid' => $pkid, 'token' => $token] = $this->createRealApiKey();
 
@@ -1368,20 +1418,24 @@ final class WsUsersMutationTest extends ContractTestCase
         self::assertSame('API Key has been successfully revoked.', $response['result']);
     }
 
-    public function test_getApiKey_guest_forbidden(): void
+    public function testGetApiKeyGuestForbidden(): void
     {
-        $response = $this->callWsAllowingServerError('pwg.users.api_key.get', ['pwg_token' => 'wrong']);
+        $response = $this->callWsAllowingServerError('pwg.users.api_key.get', [
+            'pwg_token' => 'wrong',
+        ]);
 
         self::assertSame('fail', $response['stat']);
         self::assertSame(401, $response['err']);
         self::assertSame('Acces Denied', $response['message']);
     }
 
-    public function test_getApiKey_returns_the_list(): void
+    public function testGetApiKeyReturnsTheList(): void
     {
         ['jar' => $jar, 'token' => $token] = $this->createRealApiKey();
 
-        $response = $this->wsWithCookieJar($jar, 'pwg.users.api_key.get', ['pwg_token' => $token]);
+        $response = $this->wsWithCookieJar($jar, 'pwg.users.api_key.get', [
+            'pwg_token' => $token,
+        ]);
 
         self::assertSame('ok', $response['stat']);
         self::assertIsArray($response['result']);

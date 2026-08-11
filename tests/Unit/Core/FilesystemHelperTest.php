@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-use Piwigo\Core\RedirectServiceInterface;
-use Piwigo\Core\Paths;
-use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Core\FilesystemHelper;
 use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\Lang;
+use Piwigo\Core\Paths;
+use Piwigo\Core\RedirectServiceInterface;
+use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Tests\Support\KernelContainerOverride;
 
 /**
@@ -63,9 +63,9 @@ function filesystemHelperTestRrmdir(string $dir): void
 function filesystemHelperTestMakeFatalRenderer(stdClass $capture): HtmlRenderingInterface
 {
     return new class($capture) implements HtmlRenderingInterface {
-        public function __construct(private readonly stdClass $capture)
-        {
-        }
+        public function __construct(
+            private readonly stdClass $capture
+        ) {}
 
         public function getCatDisplayName(array $catInformations, ?string $url = ''): string
         {
@@ -124,9 +124,7 @@ function filesystemHelperTestMakeFatalRenderer(stdClass $capture): HtmlRendering
             return '';
         }
 
-        public function setStatusHeader(int $code, string $text = ''): void
-        {
-        }
+        public function setStatusHeader(int $code, string $text = ''): void {}
 
         public function renderElementName(array $info): string
         {
@@ -166,7 +164,8 @@ test('mkgetdir applies the requested mode exactly, via a real umask(0) during cr
 
     FilesystemHelper::mkgetdir($dir, CurrentConfigTestFactory::get());
 
-    expect(fileperms($dir) & 0o777)->toBe(0o777);
+    expect(fileperms($dir) & 0o777)
+        ->toBe(0o777);
 });
 
 test('mkgetdir restores the process umask after creating a directory, not leaving it at 0', function (): void {
@@ -186,7 +185,8 @@ test('mkgetdir restores the process umask after creating a directory, not leavin
     try {
         FilesystemHelper::mkgetdir($dir, CurrentConfigTestFactory::get());
 
-        expect(umask())->toBe(0o022);
+        expect(umask())
+            ->toBe(0o022);
     } finally {
         umask($originalUmask);
     }
@@ -208,8 +208,10 @@ test('mkgetdir does not create a missing parent when the recursive flag is unset
         restore_error_handler();
     }
 
-    expect($result)->toBeFalse()
-        ->and(is_dir($dir))->toBeFalse();
+    expect($result)
+        ->toBeFalse()
+        ->and(is_dir($dir))
+        ->toBeFalse();
 });
 
 test('mkgetdir creates a new directory and protects it with index.htm under the default flags', function (): void {
@@ -217,7 +219,8 @@ test('mkgetdir creates a new directory and protects it with index.htm under the 
 
     expect(FilesystemHelper::mkgetdir($dir, CurrentConfigTestFactory::get()))->toBeTrue();
 
-    expect(is_dir($dir))->toBeTrue()
+    expect(is_dir($dir))
+        ->toBeTrue()
         ->and(file_get_contents($dir . '/index.htm'))->toBe('Not allowed!')
         ->and(file_exists($dir . '/.htaccess'))->toBeFalse();
 });
@@ -231,8 +234,10 @@ test('mkgetdir with MKGETDIR_PROTECT_HTACCESS writes a deny-from-all .htaccess i
         FilesystemHelper::MKGETDIR_RECURSIVE | FilesystemHelper::MKGETDIR_PROTECT_HTACCESS,
     );
 
-    expect($result)->toBeTrue()
-        ->and(is_dir($dir))->toBeTrue()
+    expect($result)
+        ->toBeTrue()
+        ->and(is_dir($dir))
+        ->toBeTrue()
         ->and(file_get_contents($dir . '/.htaccess'))->toBe('deny from all')
         ->and(file_exists($dir . '/index.htm'))->toBeFalse();
 });
@@ -244,7 +249,8 @@ test('mkgetdir returns false without throwing when the target cannot be created 
     $dir = $parent . '/child';
 
     expect(FilesystemHelper::mkgetdir($dir, CurrentConfigTestFactory::get(), FilesystemHelper::MKGETDIR_NONE))->toBeFalse();
-    expect(is_dir($dir))->toBeFalse();
+    expect(is_dir($dir))
+        ->toBeFalse();
 });
 
 test('mkgetdir throws a RuntimeException carrying the untranslated message when creation fails and MKGETDIR_DIE_ON_ERROR is set with no html renderer installed', function (): void {
@@ -283,7 +289,8 @@ test('mkgetdir delegates the fatal message to the installed HtmlRenderingInterfa
         }
     );
 
-    expect($capture->lastMessage)->toBe($dir . ' no write access');
+    expect($capture->lastMessage)
+        ->toBe($dir . ' no write access');
 });
 
 test('fatalError falls through to the plain RuntimeException when the container returns a value that is not an HtmlRenderingInterface', function (): void {
@@ -311,7 +318,9 @@ test('fatalError falls through to the plain RuntimeException when the container 
     $fatalErrorMethod = new ReflectionMethod(FilesystemHelper::class, 'fatalError');
 
     KernelContainerOverride::with(
-        [HtmlRenderingInterface::class => new stdClass()],
+        [
+            HtmlRenderingInterface::class => new stdClass(),
+        ],
         function () use ($fatalErrorMethod, $dir): void {
             expect(static fn (): mixed => $fatalErrorMethod->invoke(null, $dir . ' no write access'))
                 ->toThrow(RuntimeException::class, $dir . ' no write access');
@@ -346,9 +355,12 @@ test('mkgetdir returns false when a freshly-created directory ends up non-writab
 
     $result = FilesystemHelper::mkgetdir($dir, CurrentConfigTestFactory::get(), FilesystemHelper::MKGETDIR_RECURSIVE);
 
-    expect(is_dir($dir))->toBeTrue()
-        ->and(is_writable($dir))->toBeFalse()
-        ->and($result)->toBeFalse();
+    expect(is_dir($dir))
+        ->toBeTrue()
+        ->and(is_writable($dir))
+        ->toBeFalse()
+        ->and($result)
+        ->toBeFalse();
 });
 
 test('mkgetdir throws when an already-existing directory has lost its write permission and MKGETDIR_DIE_ON_ERROR is set', function (): void {
@@ -401,7 +413,8 @@ test('nearestExistingAncestor walks up to the dirname()-fixed-point root and sto
     // still real, deterministic proof of the branch's behavior.
     $projectRoot = dirname(__DIR__, 3);
     $autoloadPath = $projectRoot . '/vendor/autoload.php';
-    expect(is_file($autoloadPath))->toBeTrue();
+    expect(is_file($autoloadPath))
+        ->toBeTrue();
 
     $targetOutsideOpenBasedir = '/etc/definitely-not-a-real-piwigo-path/deep/nested/dir';
     $script = 'require ' . var_export($autoloadPath, true) . ';'
@@ -421,7 +434,8 @@ test('nearestExistingAncestor walks up to the dirname()-fixed-point root and sto
         2 => ['pipe', 'w'],
     ];
     $proc = proc_open($cmd, $descriptors, $pipes);
-    expect($proc)->toBeResource();
+    expect($proc)
+        ->toBeResource();
     if ($proc === false) {
         throw new RuntimeException('proc_open failed');
     }
@@ -432,8 +446,12 @@ test('nearestExistingAncestor walks up to the dirname()-fixed-point root and sto
     fclose($pipes[2]);
     $exit = proc_close($proc);
 
-    expect($exit)->toBe(0, 'nearestExistingAncestor subprocess failed: ' . ($stderr === '' ? '(no stderr)' : $stderr));
-    expect(json_decode($stdout, true))->toBe(['result' => '/']);
+    expect($exit)
+        ->toBe(0, 'nearestExistingAncestor subprocess failed: ' . ($stderr === '' ? '(no stderr)' : $stderr));
+    expect(json_decode($stdout, true))
+        ->toBe([
+            'result' => '/',
+        ]);
 });
 
 test('deltree returns true when rmdir succeeds directly, with no trash_path needed', function (): void {
@@ -441,7 +459,8 @@ test('deltree returns true when rmdir succeeds directly, with no trash_path need
     mkdir($victim);
 
     expect(FilesystemHelper::deltree($victim))->toBeTrue()
-        ->and(is_dir($victim))->toBeFalse();
+        ->and(is_dir($victim))
+        ->toBeFalse();
 });
 
 test('deltree does not crash when opendir fails on a directory it cannot list', function (): void {
@@ -471,7 +490,8 @@ test('deltree does not crash when opendir fails on a directory it cannot list', 
         }
     }
 
-    expect($result)->toBeTrue();
+    expect($result)
+        ->toBeTrue();
 });
 
 test('deltree treats an empty-string trash_path the same as no trash_path at all', function (): void {
@@ -485,7 +505,8 @@ test('deltree treats an empty-string trash_path the same as no trash_path at all
     $result = FilesystemHelper::deltree($victim, '');
 
     chmod($parent, 0o755);
-    expect($result)->toBeFalse();
+    expect($result)
+        ->toBeFalse();
 });
 
 test('deltree creates a genuinely nested trash_path, proving the recursive flag survives the flags computation', function (): void {
@@ -506,8 +527,10 @@ test('deltree creates a genuinely nested trash_path, proving the recursive flag 
     $result = FilesystemHelper::deltree($victim, $trash);
 
     chmod($parent, 0o755);
-    expect($result)->toBeNull()
-        ->and(is_dir($trash))->toBeTrue();
+    expect($result)
+        ->toBeNull()
+        ->and(is_dir($trash))
+        ->toBeTrue();
 });
 
 test('deltree returns null immediately for a path that is not a directory', function (): void {
@@ -553,13 +576,17 @@ test('deltree takes the trash_path branch and returns null when rmdir fails, eve
 
     chmod($parent, 0o755);
 
-    expect($result)->toBeNull()
-        ->and(is_dir($trash))->toBeTrue()
-        ->and(is_dir($victim))->toBeTrue()
+    expect($result)
+        ->toBeNull()
+        ->and(is_dir($trash))
+        ->toBeTrue()
+        ->and(is_dir($victim))
+        ->toBeTrue()
         ->and(file_exists($victim . '/leaf.txt'))->toBeFalse();
 
     $trashEntries = array_values(array_diff(scandir($trash) !== false ? scandir($trash) : [], ['.', '..']));
-    expect($trashEntries)->toBe(['.htaccess']);
+    expect($trashEntries)
+        ->toBe(['.htaccess']);
 });
 
 test('deltree actually renames an undeletable directory into the trash path when its own parent stays writable', function (): void {
@@ -584,11 +611,14 @@ test('deltree actually renames an undeletable directory into the trash path when
         restore_error_handler();
     }
 
-    expect($result)->toBeNull()
-        ->and(is_dir($victim))->toBeFalse();
+    expect($result)
+        ->toBeNull()
+        ->and(is_dir($victim))
+        ->toBeFalse();
 
     $trashEntries = array_values(array_diff(scandir($trash) !== false ? scandir($trash) : [], ['.', '..', '.htaccess']));
-    expect($trashEntries)->toHaveCount(1);
+    expect($trashEntries)
+        ->toHaveCount(1);
     // Kills line 251's UnwrapMd5: an md5() hash is always exactly 32
     // lowercase hex characters, unlike uniqid()'s own raw (timestamp +
     // entropy) format -- proves the hashing actually ran, not just that
@@ -631,11 +661,12 @@ test('getCacheSizeDerivatives sums file sizes per two-character derivative code 
     // Key order depends on scandir()'s real filesystem-dependent directory
     // listing order, not the files' creation order -- compare by content,
     // not key order.
-    expect($sizes)->toEqualCanonicalizing([
-        'sq' => 130,
-        'th' => 250,
-        'me' => 900,
-    ]);
+    expect($sizes)
+        ->toEqualCanonicalizing([
+            'sq' => 130,
+            'th' => 250,
+            'me' => 900,
+        ]);
 });
 
 test('getCacheSizeDerivatives returns an empty array for a directory with no matching content and skips dot entries', function (): void {
@@ -662,7 +693,9 @@ test('getCacheSizeDerivatives accumulates multiple files sharing the same size c
     file_put_contents($root . '/photo1-sq.jpg', str_repeat('a', 50));
     file_put_contents($root . '/photo2-sq.jpg', str_repeat('b', 70));
 
-    expect(FilesystemHelper::getCacheSizeDerivatives($root))->toBe(['sq' => 120]);
+    expect(FilesystemHelper::getCacheSizeDerivatives($root))->toBe([
+        'sq' => 120,
+    ]);
 });
 
 /**

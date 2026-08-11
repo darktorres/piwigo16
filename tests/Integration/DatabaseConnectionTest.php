@@ -23,14 +23,14 @@ final class DatabaseConnectionTest extends IntegrationTestCase
         parent::setUp();
         $this->setUpConnectionFromEnv();
 
-        if (!self::$fixtureReady) {
+        if (! self::$fixtureReady) {
             $this->resetDatabase();
             $this->loadFixture(dirname(__DIR__, 2) . '/tests/Fixtures/piwigo-17.0.sql');
             self::$fixtureReady = true;
         }
     }
 
-    public function test_it_connects_to_the_test_database(): void
+    public function testItConnectsToTheTestDatabase(): void
     {
         self::assertNotSame('', $this->dbName, 'PIWIGO_DB_BASE must be set in .env.test');
 
@@ -48,13 +48,13 @@ final class DatabaseConnectionTest extends IntegrationTestCase
         $db->close();
     }
 
-    public function test_it_reads_the_loaded_fixture(): void
+    public function testItReadsTheLoadedFixture(): void
     {
         $count = $this->queryScalar('SELECT COUNT(*) FROM images');
         self::assertGreaterThan(0, (int) $count, 'Expected the committed fixture to seed at least one image row');
     }
 
-    public function test_it_reports_the_active_test_env_header(): void
+    public function testItReportsTheActiveTestEnvHeader(): void
     {
         self::assertSame(['X-Piwigo-Env: test'], $this->testHeader());
     }

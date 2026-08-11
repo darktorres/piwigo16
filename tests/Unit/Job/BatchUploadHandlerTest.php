@@ -2,27 +2,27 @@
 
 declare(strict_types=1);
 
-use Piwigo\Config\ConfigService;
-use Piwigo\Activity\ActivityService;
-use Piwigo\Metadata\MetadataService;
-use Piwigo\Image\ImageService;
-use Piwigo\Core\WsContext;
-use Piwigo\Users\CurrentUser;
-use Piwigo\Tests\Support\LangTestFactory;
-use Piwigo\Tests\Support\UrlServiceTestFactory;
-use Piwigo\Tests\Support\EventDispatcherTestFactory;
 use Doctrine\ORM\EntityManagerInterface;
+use Piwigo\Activity\ActivityService;
+use Piwigo\Config\ConfigService;
 use Piwigo\Config\CurrentConfig;
-use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Core\CurrentLogger;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Logger;
-use Piwigo\Tests\Support\CurrentPathsTestFactory;
-use Piwigo\Tests\Support\DbCredentialsTestFactory;
 use Piwigo\Core\Paths;
+use Piwigo\Core\WsContext;
+use Piwigo\Image\ImageService;
 use Piwigo\Job\BatchUploadJob;
 use Piwigo\Job\Handler\BatchUploadHandler;
+use Piwigo\Metadata\MetadataService;
 use Piwigo\Storage\StorageRegistry;
+use Piwigo\Tests\Support\CurrentConfigTestFactory;
+use Piwigo\Tests\Support\CurrentPathsTestFactory;
+use Piwigo\Tests\Support\DbCredentialsTestFactory;
+use Piwigo\Tests\Support\EventDispatcherTestFactory;
+use Piwigo\Tests\Support\LangTestFactory;
+use Piwigo\Tests\Support\UrlServiceTestFactory;
+use Piwigo\Users\CurrentUser;
 
 /**
  * BatchUploadHandler::__invoke() is a 1-line delegate to
@@ -160,8 +160,12 @@ beforeEach(function (): void {
     // requires() config/storage.php -- that file unconditionally calls
     // CurrentPathsTestFactory::get().
     Kernel::boot(Paths::fromRoot(sys_get_temp_dir()));
-    batch_upload_handler_test_current_logger()->set(new Logger(['severity' => Logger::OFF]));
-    batch_upload_handler_test_current_config()->loungeActive = true;
+    batch_upload_handler_test_current_logger()
+        ->set(new Logger([
+            'severity' => Logger::OFF,
+        ]));
+    batch_upload_handler_test_current_config()
+        ->loungeActive = true;
 });
 
 afterEach(function (): void {
@@ -176,7 +180,10 @@ test('__invoke returns the existing image id and deletes the newly uploaded file
     // UploadServiceTest's own container-touching cases.
     Kernel::reset();
     Kernel::boot(Paths::fromRoot(sys_get_temp_dir()));
-    batch_upload_handler_test_current_logger()->set(new Logger(['severity' => Logger::OFF]));
+    batch_upload_handler_test_current_logger()
+        ->set(new Logger([
+            'severity' => Logger::OFF,
+        ]));
     try {
         $sourceFilepath = sys_get_temp_dir() . '/piwigo-batch-upload-handler-test-' . bin2hex(random_bytes(8)) . '.jpg';
         file_put_contents($sourceFilepath, 'duplicate-upload-bytes');
@@ -196,8 +203,10 @@ test('__invoke returns the existing image id and deletes the newly uploaded file
             originalMd5sum: '2e7ee450c4a4cffe42945205029782b9',
         ));
 
-        expect($imageId)->toBe(1)
-            ->and(file_exists($sourceFilepath))->toBeFalse();
+        expect($imageId)
+            ->toBe(1)
+            ->and(file_exists($sourceFilepath))
+            ->toBeFalse();
     } finally {
         Kernel::reset();
     }

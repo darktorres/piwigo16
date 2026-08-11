@@ -52,17 +52,28 @@ function fullAuthKeyDetailsRow(): array
 test('fromRow narrows every column to its real type', function (): void {
     $key = AuthKeyDetails::fromRow(fullAuthKeyDetailsRow());
 
-    expect($key->authKeyId)->toBe('5')
-        ->and($key->userId)->toBe('1')
-        ->and($key->authKey)->toBe(str_repeat('a', 30))
-        ->and($key->expiredOn)->toBe('2026-08-01 00:00:00')
-        ->and($key->revokedOn)->toBe('2026-07-25 08:00:00')
-        ->and($key->lastUsedOn)->toBe('2026-07-20 12:00:00')
-        ->and($key->lastNotifiedOn)->toBe('2026-07-22 09:00:00')
-        ->and($key->apikeySecret)->toBe('fixture-secret')
-        ->and($key->status)->toBe('normal')
-        ->and($key->username)->toBe('fixture_admin')
-        ->and($key->email)->toBe('fixture_admin@example.test');
+    expect($key->authKeyId)
+        ->toBe('5')
+        ->and($key->userId)
+        ->toBe('1')
+        ->and($key->authKey)
+        ->toBe(str_repeat('a', 30))
+        ->and($key->expiredOn)
+        ->toBe('2026-08-01 00:00:00')
+        ->and($key->revokedOn)
+        ->toBe('2026-07-25 08:00:00')
+        ->and($key->lastUsedOn)
+        ->toBe('2026-07-20 12:00:00')
+        ->and($key->lastNotifiedOn)
+        ->toBe('2026-07-22 09:00:00')
+        ->and($key->apikeySecret)
+        ->toBe('fixture-secret')
+        ->and($key->status)
+        ->toBe('normal')
+        ->and($key->username)
+        ->toBe('fixture_admin')
+        ->and($key->email)
+        ->toBe('fixture_admin@example.test');
 });
 
 test('fromRow casts a non-string scalar (e.g. a real DBAL int/float) to string for every string-typed column', function (): void {
@@ -88,14 +99,22 @@ test('fromRow casts a non-string scalar (e.g. a real DBAL int/float) to string f
 
     $key = AuthKeyDetails::fromRow($row);
 
-    expect($key->authKeyId)->toBe('5')
-        ->and($key->userId)->toBe('1')
-        ->and($key->authKey)->toBe('999888777')
-        ->and($key->expiredOn)->toBe('20260801')
-        ->and($key->revokedOn)->toBe('20260701')
-        ->and($key->lastUsedOn)->toBe('3.5')
-        ->and($key->lastNotifiedOn)->toBe('42')
-        ->and($key->apikeySecret)->toBe('7');
+    expect($key->authKeyId)
+        ->toBe('5')
+        ->and($key->userId)
+        ->toBe('1')
+        ->and($key->authKey)
+        ->toBe('999888777')
+        ->and($key->expiredOn)
+        ->toBe('20260801')
+        ->and($key->revokedOn)
+        ->toBe('20260701')
+        ->and($key->lastUsedOn)
+        ->toBe('3.5')
+        ->and($key->lastNotifiedOn)
+        ->toBe('42')
+        ->and($key->apikeySecret)
+        ->toBe('7');
 });
 
 test('fromRow casts a raw expired_on string when hydration did not apply the custom Type', function (): void {
@@ -112,13 +131,20 @@ test('fromRow defaults every NOT NULL column to an empty string when absent', fu
     // nullable columns' absence is covered below.
     $key = AuthKeyDetails::fromRow([]);
 
-    expect($key->authKeyId)->toBe('')
-        ->and($key->userId)->toBe('')
-        ->and($key->authKey)->toBe('')
-        ->and($key->expiredOn)->toBe('')
-        ->and($key->status)->toBe('')
-        ->and($key->username)->toBe('')
-        ->and($key->email)->toBe('');
+    expect($key->authKeyId)
+        ->toBe('')
+        ->and($key->userId)
+        ->toBe('')
+        ->and($key->authKey)
+        ->toBe('')
+        ->and($key->expiredOn)
+        ->toBe('')
+        ->and($key->status)
+        ->toBe('')
+        ->and($key->username)
+        ->toBe('')
+        ->and($key->email)
+        ->toBe('');
 });
 
 test('fromRow defaults every nullable column to null when absent', function (): void {
@@ -129,10 +155,14 @@ test('fromRow defaults every nullable column to null when absent', function (): 
 
     $key = AuthKeyDetails::fromRow($row);
 
-    expect($key->revokedOn)->toBeNull()
-        ->and($key->lastUsedOn)->toBeNull()
-        ->and($key->lastNotifiedOn)->toBeNull()
-        ->and($key->apikeySecret)->toBeNull();
+    expect($key->revokedOn)
+        ->toBeNull()
+        ->and($key->lastUsedOn)
+        ->toBeNull()
+        ->and($key->lastNotifiedOn)
+        ->toBeNull()
+        ->and($key->apikeySecret)
+        ->toBeNull();
     // The NOT NULL columns (auth_key_id/user_id/auth_key/expired_on/status/
     // username/email) fall back to their type's zero value instead --
     // never actually null for a real fetched row.
@@ -141,17 +171,18 @@ test('fromRow defaults every nullable column to null when absent', function (): 
 test('toArray round-trips the exact same DB column shape fromRow narrowed', function (): void {
     $roundTripped = AuthKeyDetails::fromRow(fullAuthKeyDetailsRow())->toArray();
 
-    expect($roundTripped)->toBe([
-        'auth_key_id' => '5',
-        'user_id' => '1',
-        'auth_key' => str_repeat('a', 30),
-        'expired_on' => '2026-08-01 00:00:00',
-        'revoked_on' => '2026-07-25 08:00:00',
-        'last_used_on' => '2026-07-20 12:00:00',
-        'last_notified_on' => '2026-07-22 09:00:00',
-        'apikey_secret' => 'fixture-secret',
-        'status' => 'normal',
-        'username' => 'fixture_admin',
-        'email' => 'fixture_admin@example.test',
-    ]);
+    expect($roundTripped)
+        ->toBe([
+            'auth_key_id' => '5',
+            'user_id' => '1',
+            'auth_key' => str_repeat('a', 30),
+            'expired_on' => '2026-08-01 00:00:00',
+            'revoked_on' => '2026-07-25 08:00:00',
+            'last_used_on' => '2026-07-20 12:00:00',
+            'last_notified_on' => '2026-07-22 09:00:00',
+            'apikey_secret' => 'fixture-secret',
+            'status' => 'normal',
+            'username' => 'fixture_admin',
+            'email' => 'fixture_admin@example.test',
+        ]);
 });

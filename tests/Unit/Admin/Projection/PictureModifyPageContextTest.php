@@ -7,7 +7,12 @@ use Piwigo\Admin\Projection\PictureModifyPageContext;
 test('toArray flattens every fixed property, and omits save_success/U_COI/STORAGE_CATEGORY/U_JUMPTO when null', function (): void {
     $context = new PictureModifyPageContext(
         saveSuccess: null,
-        tagSelection: [1 => ['name' => 'sunset', 'id' => '1']],
+        tagSelection: [
+            1 => [
+                'name' => 'sunset',
+                'id' => '1',
+            ],
+        ],
         uDownload: '/action.php?id=5&part=e&pwg_token=abc',
         uSync: '/admin.php?page=photo-5-properties&sync_metadata=1&pwg_token=abc',
         uDelete: '/admin.php?page=photo-5-properties&delete=1&pwg_token=abc',
@@ -26,24 +31,37 @@ test('toArray flattens every fixed property, and omits save_success/U_COI/STORAG
         dateCreation: '2026-08-08',
         description: 'A nice sunset',
         fAction: '/admin.php',
-        introVars: ['file' => 'sunset.jpg'],
+        introVars: [
+            'file' => 'sunset.jpg',
+        ],
         uCoi: null,
-        levelOptions: [0 => 'Everybody'],
+        levelOptions: [
+            0 => 'Everybody',
+        ],
         levelOptionsSelected: [0],
         storageCategory: null,
-        relatedCategories: ['5' => ['name' => 'Holidays', 'unlinkable' => true]],
+        relatedCategories: [
+            '5' => [
+                'name' => 'Holidays',
+                'unlinkable' => true,
+            ],
+        ],
         relatedCategoriesIds: ['5'],
         uJumpto: null,
         associatedAlbums: [5],
         representedAlbums: [5],
         storageAlbum: '5',
-        cacheKeys: ['tags' => 'x', 'categories' => 'y'],
+        cacheKeys: [
+            'tags' => 'x',
+            'categories' => 'y',
+        ],
         pwgToken: 'abc123',
     );
 
     $result = $context->toArray();
 
-    expect($result)->not->toHaveKeys(['save_success', 'U_COI', 'STORAGE_CATEGORY', 'U_JUMPTO'])
+    expect($result)
+        ->not->toHaveKeys(['save_success', 'U_COI', 'STORAGE_CATEGORY', 'U_JUMPTO'])
         ->and($result['NAME'])->toBe('Sunset')
         ->and($result['PATH'])->toBe('galleries/sunset.jpg')
         ->and($result['DATE_CREATION'])->toBe('2026-08-08')

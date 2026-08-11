@@ -123,8 +123,10 @@ it('renders more than one year of history summary data and a real day-level mont
         // year-only row -- both seeded years must survive verbatim into
         // the rendered data-years JSON (stats.tpl's
         // `data-years='{json_encode($lastYears)}'`).
-        expect($body)->toContain('"2019":42');
-        expect($body)->toContain('"2020":7');
+        expect($body)
+            ->toContain('"2019":42');
+        expect($body)
+            ->toContain('"2020":7');
 
         // getMonthStats()'s own foreach ($historyService->
         // getDailyRowsForMonths(...) as $value) loop body (getDateObject()
@@ -133,7 +135,8 @@ it('renders more than one year of history summary data and a real day-level mont
         // -- the seeded last-month bucket forces it, and its own
         // setMissingValues('day', ...) overlay carries the seeded value
         // through to data-month-stats.
-        expect($body)->toContain(sprintf('"%04d-%02d-10":99', $lastMonthYear, $lastMonthMonth));
+        expect($body)
+            ->toContain(sprintf('"%04d-%02d-10":99', $lastMonthYear, $lastMonthMonth));
     } finally {
         $deleteSeeds();
         H::dbClose($db);

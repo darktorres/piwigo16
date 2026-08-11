@@ -4,15 +4,17 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Contract;
 
-use Override;
 use CURLFile;
-use Piwigo\Cache\CachePools;
 use Doctrine\DBAL\Connection;
+use Override;
+use Piwigo\Cache\CachePools;
 use Piwigo\Db\DbConnection;
 
 final class WsUploadTest extends ContractTestCase
 {
-    /** 1×1 white PNG, base64-decoded at runtime to avoid binary in source. */
+    /**
+     * 1×1 white PNG, base64-decoded at runtime to avoid binary in source.
+     */
     private const string TINY_PNG_B64 = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwADhQGAWjR9awAAAABJRU5ErkJggg==';
 
     private ?int $uploadedImageId = null;
@@ -33,7 +35,7 @@ final class WsUploadTest extends ContractTestCase
         if ($this->uploadedImageId !== null) {
             $token = $this->getPwgToken();
             $this->callWs('pwg.images.delete', [
-                'image_id'  => $this->uploadedImageId,
+                'image_id' => $this->uploadedImageId,
                 'pwg_token' => $token,
             ]);
             $this->uploadedImageId = null;
@@ -65,7 +67,7 @@ final class WsUploadTest extends ContractTestCase
 
         try {
             $url = $this->baseUrl . '/ws.php?format=json';
-            $ch  = curl_init($url);
+            $ch = curl_init($url);
             self::assertNotFalse($ch);
 
             $cookieJar = $this->cookieJar();
@@ -73,7 +75,10 @@ final class WsUploadTest extends ContractTestCase
             curl_setopt($ch, CURLOPT_POST, true);
             curl_setopt($ch, CURLOPT_USERAGENT, self::USER_AGENT);
             curl_setopt($ch, CURLOPT_POSTFIELDS, array_merge(
-                ['method' => 'pwg.images.upload', 'file' => new CURLFile($tmpFile, 'image/png', 'upload.png')],
+                [
+                    'method' => 'pwg.images.upload',
+                    'file' => new CURLFile($tmpFile, 'image/png', 'upload.png'),
+                ],
                 $fields
             ));
             curl_setopt($ch, CURLOPT_COOKIEJAR, $cookieJar);
@@ -93,7 +98,7 @@ final class WsUploadTest extends ContractTestCase
         return $decoded;
     }
 
-    public function test_addSimple_uploads_image_and_returns_image_id(): void
+    public function testAddSimpleUploadsImageAndReturnsImageId(): void
     {
         // Write the tiny PNG to a temp file
         $tmpName = tempnam(sys_get_temp_dir(), 'pwg_ct_png_');
@@ -105,7 +110,7 @@ final class WsUploadTest extends ContractTestCase
 
         try {
             $url = $this->baseUrl . '/ws.php?format=json';
-            $ch  = curl_init($url);
+            $ch = curl_init($url);
             self::assertNotFalse($ch, 'curl_init failed');
 
             $userAgent = self::USER_AGENT;
@@ -114,16 +119,16 @@ final class WsUploadTest extends ContractTestCase
             curl_setopt($ch, CURLOPT_POST, true);
             curl_setopt($ch, CURLOPT_USERAGENT, $userAgent);
             curl_setopt($ch, CURLOPT_POSTFIELDS, [
-                'method'   => 'pwg.images.addSimple',
+                'method' => 'pwg.images.addSimple',
                 'category' => 1,
-                'name'     => 'Contract Test Upload ' . uniqid(),
-                'image'    => new CURLFile($tmpFile, 'image/png', 'ct_upload.png'),
+                'name' => 'Contract Test Upload ' . uniqid(),
+                'image' => new CURLFile($tmpFile, 'image/png', 'ct_upload.png'),
             ]);
             curl_setopt($ch, CURLOPT_COOKIEJAR, $cookieJar);
             curl_setopt($ch, CURLOPT_COOKIEFILE, $cookieJar);
             curl_setopt($ch, CURLOPT_HTTPHEADER, $this->testHeader());
 
-            $body   = curl_exec($ch);
+            $body = curl_exec($ch);
             $status = curl_getinfo($ch, CURLINFO_HTTP_CODE);
             unset($ch);
         } finally {
@@ -174,7 +179,7 @@ final class WsUploadTest extends ContractTestCase
 
         try {
             $url = $this->baseUrl . '/ws.php?format=json';
-            $ch  = curl_init($url);
+            $ch = curl_init($url);
             self::assertNotFalse($ch);
 
             $cookieJar = $this->cookieJar();
@@ -201,17 +206,22 @@ final class WsUploadTest extends ContractTestCase
         return $decoded;
     }
 
-    public function test_addSimple_missing_file_returns_error(): void
+    public function testAddSimpleMissingFileReturnsError(): void
     {
-        $response = $this->addSimpleMultipart(['category' => 1], withFile: false);
+        $response = $this->addSimpleMultipart([
+            'category' => 1,
+        ], withFile: false);
 
         self::assertSame('fail', $response['stat']);
         self::assertSame(405, $response['err']);
     }
 
-    public function test_addSimple_with_unknown_image_id_returns_404(): void
+    public function testAddSimpleWithUnknownImageIdReturns404(): void
     {
-        $response = $this->addSimpleMultipart(['category' => 1, 'image_id' => 999999]);
+        $response = $this->addSimpleMultipart([
+            'category' => 1,
+            'image_id' => 999999,
+        ]);
 
         self::assertSame('fail', $response['stat']);
         self::assertSame(404, $response['err']);
@@ -237,7 +247,7 @@ final class WsUploadTest extends ContractTestCase
         $body .= '--' . $boundary . "--\r\n";
 
         $url = $this->baseUrl . '/ws.php?format=json';
-        $ch  = curl_init($url);
+        $ch = curl_init($url);
         self::assertNotFalse($ch);
 
         $cookieJar = $this->cookieJar();
@@ -278,19 +288,21 @@ final class WsUploadTest extends ContractTestCase
      *   - the `default` arm requires an $_FILES['error'] PHP itself never
      *     sets (0-4, 6-8 are the only real values) -- also not chased.
      */
-    public function test_addSimple_upload_exceeding_ini_size_limit_returns_error(): void
+    public function testAddSimpleUploadExceedingIniSizeLimitReturnsError(): void
     {
         // php.ini's upload_max_filesize is 2M in this environment (confirmed
         // live) -- comfortably smaller than post_max_size (8M), so the POST
         // itself isn't rejected outright, only this one file field.
-        $response = $this->addSimpleMultipart(['category' => 1], fileContents: random_bytes(2_200_000));
+        $response = $this->addSimpleMultipart([
+            'category' => 1,
+        ], fileContents: random_bytes(2_200_000));
 
         self::assertSame('fail', $response['stat']);
         self::assertSame(500, $response['err']);
         self::assertSame('The uploaded file exceeds the upload_max_filesize directive in php.ini.', $response['message']);
     }
 
-    public function test_addSimple_upload_exceeding_declared_max_file_size_returns_error(): void
+    public function testAddSimpleUploadExceedingDeclaredMaxFileSizeReturnsError(): void
     {
         // A "MAX_FILE_SIZE" field *before* the file field in the multipart
         // body is a real, PHP-enforced convention (rfc1867) -- PHP itself
@@ -312,7 +324,7 @@ final class WsUploadTest extends ContractTestCase
         );
     }
 
-    public function test_addSimple_empty_file_selection_returns_no_file_was_uploaded_error(): void
+    public function testAddSimpleEmptyFileSelectionReturnsNoFileWasUploadedError(): void
     {
         // A file part with an empty filename -- the exact shape a browser
         // sends for a <input type=file> submitted with nothing chosen --
@@ -332,7 +344,7 @@ final class WsUploadTest extends ContractTestCase
         self::assertSame('No file was uploaded.', $response['message']);
     }
 
-    public function test_addSimple_array_style_file_field_has_no_temp_name(): void
+    public function testAddSimpleArrayStyleFileFieldHasNoTempName(): void
     {
         // image[]=@... makes PHP populate $_FILES['image']['error']/
         // ['tmp_name'] as *arrays* (multi-file bracket syntax), not scalars
@@ -347,7 +359,7 @@ final class WsUploadTest extends ContractTestCase
 
         try {
             $url = $this->baseUrl . '/ws.php?format=json';
-            $ch  = curl_init($url);
+            $ch = curl_init($url);
             self::assertNotFalse($ch);
             $cookieJar = $this->cookieJar();
             curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
@@ -385,7 +397,7 @@ final class WsUploadTest extends ContractTestCase
      * pcre.recursion_limit tuned down on the *server* process -- not
      * reachable from a black-box HTTP request.
      */
-    public function test_addSimple_tags_as_an_array_are_resolved_and_associated(): void
+    public function testAddSimpleTagsAsAnArrayAreResolvedAndAssociated(): void
     {
         // Real bug, found live: curl_setopt(CURLOPT_POSTFIELDS, $array)
         // does NOT bracket-encode a nested-array field value for a
@@ -413,8 +425,8 @@ final class WsUploadTest extends ContractTestCase
         $this->uploadedImageId = (int) $imageId;
 
         $tagNames = $this->conn->fetchFirstColumn(
-            'SELECT t.name FROM ' . 'tags' . ' t
-             INNER JOIN ' . 'image_tag' . ' it ON it.tag_id = t.id
+            'SELECT t.name FROM tags' . ' t
+             INNER JOIN image_tag' . ' it ON it.tag_id = t.id
              WHERE it.image_id = ?',
             [(int) $imageId]
         );
@@ -422,7 +434,7 @@ final class WsUploadTest extends ContractTestCase
         self::assertContains('addsimple-array-tag-two', $tagNames);
     }
 
-    public function test_addSimple_sets_info_columns_and_tags_and_returns_the_category_url(): void
+    public function testAddSimpleSetsInfoColumnsAndTagsAndReturnsTheCategoryUrl(): void
     {
         $uniqueName = 'Contract Test addSimple ' . uniqid();
         $response = $this->addSimpleMultipart([
@@ -444,7 +456,7 @@ final class WsUploadTest extends ContractTestCase
         self::assertStringContainsString('category', $result['url']);
 
         $row = $this->conn->fetchAssociative(
-            'SELECT name, author, comment FROM ' . 'images' . ' WHERE id = ?',
+            'SELECT name, author, comment FROM images WHERE id = ?',
             [(int) $imageId]
         );
         self::assertIsArray($row);
@@ -453,8 +465,8 @@ final class WsUploadTest extends ContractTestCase
         self::assertSame('addSimple Comment', $row['comment']);
 
         $tagNames = $this->conn->fetchFirstColumn(
-            'SELECT t.name FROM ' . 'tags' . ' t
-             INNER JOIN ' . 'image_tag' . ' it ON it.tag_id = t.id
+            'SELECT t.name FROM tags' . ' t
+             INNER JOIN image_tag' . ' it ON it.tag_id = t.id
              WHERE it.image_id = ?',
             [(int) $imageId]
         );
@@ -462,7 +474,7 @@ final class WsUploadTest extends ContractTestCase
         self::assertContains('addsimple-tag-two', $tagNames);
     }
 
-    public function test_addSimple_without_a_category_omits_the_category_from_the_url(): void
+    public function testAddSimpleWithoutACategoryOmitsTheCategoryFromTheUrl(): void
     {
         $response = $this->addSimpleMultipart([
             'name' => 'Contract Test addSimple No Category ' . uniqid(),
@@ -486,7 +498,7 @@ final class WsUploadTest extends ContractTestCase
      * rest (PwgRestEncoder's XML output; 'xml' itself isn't a recognized
      * format= value, see WsInitializer's switch).
      */
-    public function test_upload_missing_file_field_returns_a_properly_encoded_error(): void
+    public function testUploadMissingFileFieldReturnsAProperlyEncodedError(): void
     {
         $token = $this->getPwgToken();
 
@@ -497,7 +509,7 @@ final class WsUploadTest extends ContractTestCase
         try {
             foreach (['json', 'rest'] as $format) {
                 $url = $this->baseUrl . '/ws.php?format=' . $format;
-                $ch  = curl_init($url);
+                $ch = curl_init($url);
                 self::assertNotFalse($ch, 'curl_init failed');
 
                 $cookieJar = $this->cookieJar();
@@ -505,9 +517,9 @@ final class WsUploadTest extends ContractTestCase
                 curl_setopt($ch, CURLOPT_POST, true);
                 curl_setopt($ch, CURLOPT_USERAGENT, self::USER_AGENT);
                 curl_setopt($ch, CURLOPT_POSTFIELDS, [
-                    'method'    => 'pwg.images.upload',
+                    'method' => 'pwg.images.upload',
                     'pwg_token' => $token,
-                    'name'      => 'wrong-field.png',
+                    'name' => 'wrong-field.png',
                     // Deliberately NOT named 'file' -- $_FILES is non-empty
                     // but $_FILES['file'] doesn't exist, the exact
                     // condition the former die() guarded.
@@ -517,7 +529,7 @@ final class WsUploadTest extends ContractTestCase
                 curl_setopt($ch, CURLOPT_COOKIEFILE, $cookieJar);
                 curl_setopt($ch, CURLOPT_HTTPHEADER, $this->testHeader());
 
-                $body   = curl_exec($ch);
+                $body = curl_exec($ch);
                 $status = curl_getinfo($ch, CURLINFO_HTTP_CODE);
                 unset($ch);
 
@@ -540,7 +552,7 @@ final class WsUploadTest extends ContractTestCase
         }
     }
 
-    public function test_upload_invalid_token_returns_error(): void
+    public function testUploadInvalidTokenReturnsError(): void
     {
         $response = $this->uploadMultipart([
             'pwg_token' => 'wrong',
@@ -551,7 +563,7 @@ final class WsUploadTest extends ContractTestCase
         self::assertSame(403, $response['err']);
     }
 
-    public function test_upload_creates_a_new_photo_in_the_category(): void
+    public function testUploadCreatesANewPhotoInTheCategory(): void
     {
         $response = $this->uploadMultipart([
             'pwg_token' => $this->getPwgToken(),
@@ -591,7 +603,7 @@ final class WsUploadTest extends ContractTestCase
      * fake it, which would just encode a synthetic condition as expected
      * behavior.
      */
-    public function test_upload_update_mode_replaces_an_existing_photo_by_filename_in_category(): void
+    public function testUploadUpdateModeReplacesAnExistingPhotoByFilenameInCategory(): void
     {
         // Real bug, found live: update_mode's own match
         // (Ws\PwgImages::getIdsByFilenameInCategory()'s `WHERE i.file =
@@ -621,8 +633,8 @@ final class WsUploadTest extends ContractTestCase
         // undoing the override above. Pinning the threshold absurdly high
         // for the test's duration keeps that legitimate feature from firing
         // without disabling or working around it.
-        $originalLoungeActive = $this->conn->fetchOne("SELECT value FROM " . 'config' . " WHERE param = 'lounge_active'");
-        $originalLoungeThreshold = $this->conn->fetchOne("SELECT value FROM " . 'config' . " WHERE param = 'lounge_activate_threshold'");
+        $originalLoungeActive = $this->conn->fetchOne('SELECT value FROM config' . " WHERE param = 'lounge_active'");
+        $originalLoungeThreshold = $this->conn->fetchOne('SELECT value FROM config' . " WHERE param = 'lounge_activate_threshold'");
         $this->upsertConfig('lounge_active', 'false');
         $this->upsertConfig('lounge_activate_threshold', '999999999');
         CachePools::config()->clear();
@@ -639,8 +651,8 @@ final class WsUploadTest extends ContractTestCase
         try {
             $created = $this->uploadMultipart([
                 'pwg_token' => $this->getPwgToken(),
-                'category'  => 1,
-                'name'      => $name,
+                'category' => 1,
+                'name' => $name,
             ]);
             self::assertSame('ok', $created['stat'], (string) json_encode($created));
             $createdResult = $created['result'];
@@ -650,27 +662,27 @@ final class WsUploadTest extends ContractTestCase
             $this->uploadedImageId = (int) $originalImageId;
 
             $response = $this->uploadMultipart([
-                'pwg_token'   => $this->getPwgToken(),
-                'category'    => 1,
-                'name'        => $name,
+                'pwg_token' => $this->getPwgToken(),
+                'category' => 1,
+                'name' => $name,
                 'update_mode' => true,
             ]);
         } finally {
             if (is_string($originalLoungeActive)) {
                 $this->conn->executeStatement(
-                    "UPDATE " . 'config' . " SET value = ? WHERE param = 'lounge_active'",
+                    'UPDATE config' . " SET value = ? WHERE param = 'lounge_active'",
                     [$originalLoungeActive]
                 );
             } else {
-                $this->conn->executeStatement("DELETE FROM " . 'config' . " WHERE param = 'lounge_active'");
+                $this->conn->executeStatement('DELETE FROM config' . " WHERE param = 'lounge_active'");
             }
             if (is_string($originalLoungeThreshold)) {
                 $this->conn->executeStatement(
-                    "UPDATE " . 'config' . " SET value = ? WHERE param = 'lounge_activate_threshold'",
+                    'UPDATE config' . " SET value = ? WHERE param = 'lounge_activate_threshold'",
                     [$originalLoungeThreshold]
                 );
             } else {
-                $this->conn->executeStatement("DELETE FROM " . 'config' . " WHERE param = 'lounge_activate_threshold'");
+                $this->conn->executeStatement('DELETE FROM config' . " WHERE param = 'lounge_activate_threshold'");
             }
             CachePools::config()->clear();
         }
@@ -684,7 +696,7 @@ final class WsUploadTest extends ContractTestCase
         self::assertSame((int) $originalImageId, (int) $updatedImageId);
     }
 
-    public function test_upload_format_of_disabled_returns_error(): void
+    public function testUploadFormatOfDisabledReturnsError(): void
     {
         // CurrentConfig::isFormatsEnabled()'s default (false, no 'enable_formats'
         // row in the fixture) is what's in effect for this WS request.
@@ -698,7 +710,7 @@ final class WsUploadTest extends ContractTestCase
         self::assertSame('formats are disabled', $response['message']);
     }
 
-    public function test_upload_format_of_with_an_unauthorized_extension_returns_error(): void
+    public function testUploadFormatOfWithAnUnauthorizedExtensionReturnsError(): void
     {
         $this->upsertConfig('enable_formats', 'true');
         CachePools::config()->clear();
@@ -716,12 +728,12 @@ final class WsUploadTest extends ContractTestCase
             self::assertSame('fail', $response['stat']);
             self::assertSame(401, $response['err']);
         } finally {
-            $this->conn->executeStatement("DELETE FROM " . 'config' . " WHERE param = 'enable_formats'");
+            $this->conn->executeStatement('DELETE FROM config' . " WHERE param = 'enable_formats'");
             CachePools::config()->clear();
         }
     }
 
-    public function test_upload_format_of_adds_a_format_to_an_existing_photo(): void
+    public function testUploadFormatOfAddsAFormatToAnExistingPhoto(): void
     {
         $this->upsertConfig('enable_formats', 'true');
         CachePools::config()->clear();
@@ -741,7 +753,7 @@ final class WsUploadTest extends ContractTestCase
             self::assertSame('add', $result['add_status']);
 
             $formatId = $this->conn->fetchOne(
-                'SELECT format_id FROM ' . 'image_format' . ' WHERE image_id = 1 AND ext = ?',
+                'SELECT format_id FROM image_format WHERE image_id = 1 AND ext = ?',
                 ['tif']
             );
             self::assertIsNumeric($formatId);
@@ -756,7 +768,7 @@ final class WsUploadTest extends ContractTestCase
                     'pwg_token' => $this->getPwgToken(),
                 ]);
             }
-            $this->conn->executeStatement("DELETE FROM " . 'config' . " WHERE param = 'enable_formats'");
+            $this->conn->executeStatement('DELETE FROM config' . " WHERE param = 'enable_formats'");
             CachePools::config()->clear();
         }
     }

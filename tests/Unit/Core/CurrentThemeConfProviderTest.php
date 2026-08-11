@@ -27,7 +27,7 @@ test('current() falls back to a memoized instance when Kernel is not booted', fu
     // earlier call.
     expect(Kernel::isBooted())->toBeFalse();
 
-    $provider = new class implements ThemeConfProviderInterface {
+    $provider = new class() implements ThemeConfProviderInterface {
         public function themeConf(string $key): string
         {
             return '';
@@ -39,8 +39,10 @@ test('current() falls back to a memoized instance when Kernel is not booted', fu
 
     $second = CurrentThemeConfProvider::current();
 
-    expect($second)->toBe($first)
-        ->and($second->get())->toBe($provider);
+    expect($second)
+        ->toBe($first)
+        ->and($second->get())
+        ->toBe($provider);
 });
 
 test('current() resolves the container-shared instance once Kernel is booted', function (): void {

@@ -4,14 +4,14 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Integration;
 
-use Override;
-use Piwigo\Core\Kernel;
-use LogicException;
 use DateTimeImmutable;
 use Doctrine\DBAL\ParameterType;
 use Doctrine\DBAL\Types\Types;
-use Piwigo\Config\CurrentConfig;
+use LogicException;
+use Override;
 use Piwigo\Config\ConfigLoader;
+use Piwigo\Config\CurrentConfig;
+use Piwigo\Core\Kernel;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Session\SessionEntity;
@@ -46,7 +46,7 @@ final class SessionRepositoryTest extends IntegrationTestCase
         $this->repo = EntityManagerFactory::build(DbConnection::build())->getRepository(SessionEntity::class);
     }
 
-    public function test_write_then_read_round_trips_real_data(): void
+    public function testWriteThenReadRoundTripsRealData(): void
     {
         $id = 'test-session-' . bin2hex(random_bytes(8));
 
@@ -57,7 +57,7 @@ final class SessionRepositoryTest extends IntegrationTestCase
         $this->repo->destroy($id);
     }
 
-    public function test_write_replaces_an_existing_row_for_the_same_id(): void
+    public function testWriteReplacesAnExistingRowForTheSameId(): void
     {
         $id = 'test-session-' . bin2hex(random_bytes(8));
 
@@ -69,12 +69,12 @@ final class SessionRepositoryTest extends IntegrationTestCase
         $this->repo->destroy($id);
     }
 
-    public function test_read_returns_empty_string_for_a_missing_id(): void
+    public function testReadReturnsEmptyStringForAMissingId(): void
     {
         self::assertSame('', $this->repo->read('does-not-exist-' . bin2hex(random_bytes(8))));
     }
 
-    public function test_destroy_removes_the_row(): void
+    public function testDestroyRemovesTheRow(): void
     {
         $id = 'test-session-' . bin2hex(random_bytes(8));
         $this->repo->write($id, 'payload');
@@ -84,7 +84,7 @@ final class SessionRepositoryTest extends IntegrationTestCase
         self::assertSame('', $this->repo->read($id));
     }
 
-    public function test_gc_deletes_only_sessions_older_than_the_cutoff_and_returns_the_count(): void
+    public function testGcDeletesOnlySessionsOlderThanTheCutoffAndReturnsTheCount(): void
     {
         $oldId = 'gc-old-' . bin2hex(random_bytes(8));
         $freshId = 'gc-fresh-' . bin2hex(random_bytes(8));
@@ -103,7 +103,7 @@ final class SessionRepositoryTest extends IntegrationTestCase
             ? 'ON CONFLICT (id) DO UPDATE SET data = EXCLUDED.data, expiration = EXCLUDED.expiration'
             : 'ON DUPLICATE KEY UPDATE data = VALUES(data), expiration = VALUES(expiration)';
         $conn->executeStatement(
-            'INSERT INTO ' . 'sessions' . " (id, data, expiration) VALUES (?, ?, ?) {$onConflict}",
+            'INSERT INTO sessions' . " (id, data, expiration) VALUES (?, ?, ?) {$onConflict}",
             [$oldId, 'stale', new DateTimeImmutable('-1 year')],
             [ParameterType::STRING, ParameterType::STRING, Types::DATETIME_IMMUTABLE],
         );
@@ -118,7 +118,7 @@ final class SessionRepositoryTest extends IntegrationTestCase
         $this->repo->destroy($freshId);
     }
 
-    public function test_delete_by_user_id_removes_matching_serialized_sessions(): void
+    public function testDeleteByUserIdRemovesMatchingSerializedSessions(): void
     {
         $id = 'test-session-' . bin2hex(random_bytes(8));
         // PHP's native session-serialize format (the "php" session.serialize_handler,

@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Contract;
 
-use Override;
 use CURLFile;
 use Doctrine\DBAL\Connection;
+use Override;
 use Piwigo\Db\DbConnection;
 
 /**
@@ -33,12 +33,16 @@ use Piwigo\Db\DbConnection;
  */
 final class WsImagesChunkedUploadTest extends ContractTestCase
 {
-    /** 1x1 white PNG, base64-decoded at runtime to avoid binary in source. */
+    /**
+     * 1x1 white PNG, base64-decoded at runtime to avoid binary in source.
+     */
     private const string TINY_PNG_B64 = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwADhQGAWjR9awAAAABJRU5ErkJggg==';
 
     private Connection $conn;
 
-    /** @var list<int> image ids created by a test, deleted in tearDown if not already removed. */
+    /**
+     * @var list<int> image ids created by a test, deleted in tearDown if not already removed.
+     */
     private array $createdImageIds = [];
 
     #[Override]
@@ -53,7 +57,7 @@ final class WsImagesChunkedUploadTest extends ContractTestCase
     protected function tearDown(): void
     {
         foreach ($this->createdImageIds as $id) {
-            $this->conn->executeStatement('DELETE FROM ' . 'images' . ' WHERE id = ?', [$id]);
+            $this->conn->executeStatement('DELETE FROM images WHERE id = ?', [$id]);
         }
         parent::tearDown();
     }
@@ -66,7 +70,7 @@ final class WsImagesChunkedUploadTest extends ContractTestCase
         return $bytes;
     }
 
-    public function test_addChunk_writes_a_buffer_file(): void
+    public function testAddChunkWritesABufferFile(): void
     {
         $sum = md5($this->pngBytes() . uniqid());
 
@@ -87,7 +91,7 @@ final class WsImagesChunkedUploadTest extends ContractTestCase
         unlink($bufferPath);
     }
 
-    public function test_addChunk_with_invalid_base64_returns_error(): void
+    public function testAddChunkWithInvalidBase64ReturnsError(): void
     {
         $sum = md5(uniqid());
 
@@ -102,7 +106,7 @@ final class WsImagesChunkedUploadTest extends ContractTestCase
         self::assertSame(500, $response['err']);
     }
 
-    public function test_add_rejects_a_duplicate_md5sum_before_touching_any_chunk(): void
+    public function testAddRejectsADuplicateMd5sumBeforeTouchingAnyChunk(): void
     {
         // Fixture image 1's real md5sum -- check_uniqueness (default true)
         // rejects this before addChunk is even needed.
@@ -115,7 +119,7 @@ final class WsImagesChunkedUploadTest extends ContractTestCase
         self::assertSame('file already exists', $response['message']);
     }
 
-    public function test_add_creates_a_photo_from_a_single_chunk_with_category_and_tags(): void
+    public function testAddCreatesAPhotoFromASingleChunkWithCategoryAndTags(): void
     {
         $sum = md5($this->pngBytes() . uniqid());
 
@@ -145,11 +149,11 @@ final class WsImagesChunkedUploadTest extends ContractTestCase
         $this->createdImageIds[] = $imageId;
         self::assertIsString($result['url']);
 
-        $name = $this->conn->fetchOne('SELECT name FROM ' . 'images' . ' WHERE id = ?', [$imageId]);
+        $name = $this->conn->fetchOne('SELECT name FROM images WHERE id = ?', [$imageId]);
         self::assertSame('Chunked upload test photo', $name);
 
         $categoryId = $this->conn->fetchOne(
-            'SELECT category_id FROM ' . 'image_category' . ' WHERE image_id = ?',
+            'SELECT category_id FROM image_category WHERE image_id = ?',
             [$imageId]
         );
         self::assertSame(1, $categoryId);
@@ -171,7 +175,7 @@ final class WsImagesChunkedUploadTest extends ContractTestCase
 
         try {
             $url = $this->baseUrl . '/ws.php?format=json';
-            $ch  = curl_init($url);
+            $ch = curl_init($url);
             self::assertNotFalse($ch);
 
             $cookieJar = $this->cookieJar();
@@ -179,7 +183,10 @@ final class WsImagesChunkedUploadTest extends ContractTestCase
             curl_setopt($ch, CURLOPT_POST, true);
             curl_setopt($ch, CURLOPT_USERAGENT, self::USER_AGENT);
             curl_setopt($ch, CURLOPT_POSTFIELDS, array_merge(
-                ['method' => 'pwg.images.uploadAsync', 'file' => new CURLFile($tmpFile, 'image/png', 'chunk.png')],
+                [
+                    'method' => 'pwg.images.uploadAsync',
+                    'file' => new CURLFile($tmpFile, 'image/png', 'chunk.png'),
+                ],
                 $fields
             ));
             curl_setopt($ch, CURLOPT_COOKIEJAR, $cookieJar);
@@ -199,7 +206,7 @@ final class WsImagesChunkedUploadTest extends ContractTestCase
         return $decoded;
     }
 
-    public function test_uploadAsync_rejects_a_malformed_original_sum(): void
+    public function testUploadAsyncRejectsAMalformedOriginalSum(): void
     {
         $response = $this->uploadAsyncMultipart([
             'original_sum' => 'not-32-hex-chars',
@@ -214,7 +221,7 @@ final class WsImagesChunkedUploadTest extends ContractTestCase
         self::assertSame('Invalid original_sum', $response['message']);
     }
 
-    public function test_uploadAsync_rejects_a_chunk_sum_mismatch(): void
+    public function testUploadAsyncRejectsAChunkSumMismatch(): void
     {
         $bytes = $this->pngBytes() . uniqid();
         $originalSum = md5($bytes);
@@ -232,7 +239,7 @@ final class WsImagesChunkedUploadTest extends ContractTestCase
         self::assertSame('MD5 checksum chunk file mismatched', $response['message']);
     }
 
-    public function test_uploadAsync_creates_a_photo_from_a_single_chunk(): void
+    public function testUploadAsyncCreatesAPhotoFromASingleChunk(): void
     {
         $bytes = $this->pngBytes() . uniqid();
         $originalSum = md5($bytes);
@@ -255,11 +262,11 @@ final class WsImagesChunkedUploadTest extends ContractTestCase
         $imageId = (int) $imageId;
         $this->createdImageIds[] = $imageId;
 
-        $name = $this->conn->fetchOne('SELECT name FROM ' . 'images' . ' WHERE id = ?', [$imageId]);
+        $name = $this->conn->fetchOne('SELECT name FROM images WHERE id = ?', [$imageId]);
         self::assertSame('Async upload test photo', $name);
     }
 
-    public function test_uploadAsync_nonexistent_image_id_returns_error(): void
+    public function testUploadAsyncNonexistentImageIdReturnsError(): void
     {
         $bytes = $this->pngBytes() . uniqid();
 
@@ -284,7 +291,7 @@ final class WsImagesChunkedUploadTest extends ContractTestCase
         // filesize (bytes) comfortably bigger than the 70-byte TINY_PNG_B64
         // fixture used to build a "smaller replacement" merged file below.
         $this->conn->executeStatement(
-            'INSERT INTO ' . 'images' . ' (file, path, md5sum, width, height, filesize) VALUES (?, ?, ?, ?, ?, ?)',
+            'INSERT INTO images (file, path, md5sum, width, height, filesize) VALUES (?, ?, ?, ?, ?, ?)',
             [$filename, 'upload/2026/08/01/' . $filename, $md5sum, 200, 150, 1000]
         );
         $id = (int) $this->conn->lastInsertId();
@@ -293,7 +300,7 @@ final class WsImagesChunkedUploadTest extends ContractTestCase
         return $id;
     }
 
-    public function test_addFile_missing_image_id_returns_404(): void
+    public function testAddFileMissingImageIdReturns404(): void
     {
         $response = $this->callWsAllowingServerError('pwg.images.addFile', [
             'image_id' => 999999,
@@ -305,7 +312,7 @@ final class WsImagesChunkedUploadTest extends ContractTestCase
         self::assertSame(404, $response['err']);
     }
 
-    public function test_addFile_on_a_photo_without_md5sum_returns_error(): void
+    public function testAddFileOnAPhotoWithoutMd5sumReturnsError(): void
     {
         $imageId = $this->insertThrowawayImage(null);
 
@@ -320,7 +327,7 @@ final class WsImagesChunkedUploadTest extends ContractTestCase
         self::assertSame('[ws_images_addFile] image_id ' . $imageId . ' has no md5sum', $response['message']);
     }
 
-    public function test_addFile_thumb_type_is_a_no_op_success(): void
+    public function testAddFileThumbTypeIsANoOpSuccess(): void
     {
         // Since Piwigo 2.4, thumbnails are always server-generated -- the
         // 'thumb' branch just discards any buffered chunks for this md5sum
@@ -337,7 +344,7 @@ final class WsImagesChunkedUploadTest extends ContractTestCase
         self::assertTrue($response['result']);
     }
 
-    public function test_addFile_with_a_smaller_replacement_keeps_the_original(): void
+    public function testAddFileWithASmallerReplacementKeepsTheOriginal(): void
     {
         // fixture-sized throwaway (200x150, 50 bytes) vs. the tiny 1x1 test
         // PNG -- none of width/height/filesize is bigger, so addFile()'s
@@ -399,7 +406,7 @@ final class WsImagesChunkedUploadTest extends ContractTestCase
 
     // ----------------------------------------------------------- mergeChunks
 
-    public function test_add_with_a_stray_directory_shaped_like_a_chunk_skips_the_unlink_and_still_succeeds(): void
+    public function testAddWithAStrayDirectoryShapedLikeAChunkSkipsTheUnlinkAndStillSucceeds(): void
     {
         // mergeChunks()'s own `file_get_contents($chunk) === false` write-
         // failure guard: its return value is never checked by either real
@@ -412,7 +419,10 @@ final class WsImagesChunkedUploadTest extends ContractTestCase
         $sum = md5($this->pngBytes() . uniqid());
 
         $chunk = $this->callWs('pwg.images.addChunk', [
-            'data' => self::TINY_PNG_B64, 'original_sum' => $sum, 'type' => 'file', 'position' => 0,
+            'data' => self::TINY_PNG_B64,
+            'original_sum' => $sum,
+            'type' => 'file',
+            'position' => 0,
         ]);
         self::assertSame('ok', $chunk['stat']);
 
@@ -456,7 +466,7 @@ final class WsImagesChunkedUploadTest extends ContractTestCase
 
     // -------------------------------------------------------------- addChunk
 
-    public function test_addChunk_buffer_directory_creation_failure_returns_error(): void
+    public function testAddChunkBufferDirectoryCreationFailureReturnsError(): void
     {
         // FilesystemHelper::mkgetdir() only ever calls mkdir() when the
         // target doesn't already exist as a directory -- upload/buffer is
@@ -490,7 +500,7 @@ final class WsImagesChunkedUploadTest extends ContractTestCase
 
     // ---------------------------------------------------- addFile (continued)
 
-    public function test_addFile_high_type_always_replaces_the_original(): void
+    public function testAddFileHighTypeAlwaysReplacesTheOriginal(): void
     {
         // Unlike 'file', the 'high' type never runs the do_update
         // width/height/filesize comparison at all -- it unconditionally
@@ -522,7 +532,7 @@ final class WsImagesChunkedUploadTest extends ContractTestCase
         self::assertNull($response['result']);
     }
 
-    public function test_addFile_with_a_bigger_replacement_updates_the_original(): void
+    public function testAddFileWithABiggerReplacementUpdatesTheOriginal(): void
     {
         // Mirrors test_addFile_with_a_smaller_replacement_keeps_the_original
         // above, but the replacement now wins the comparison -- do_update
@@ -536,7 +546,7 @@ final class WsImagesChunkedUploadTest extends ContractTestCase
         // even a modest real replacement clears it (do_update only needs
         // *one* of width/height/filesize to grow).
         $this->conn->executeStatement(
-            'UPDATE ' . 'images' . ' SET filesize = 0 WHERE id = ?',
+            'UPDATE images SET filesize = 0 WHERE id = ?',
             [$imageId]
         );
 

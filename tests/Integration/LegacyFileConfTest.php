@@ -95,7 +95,7 @@ final class LegacyFileConfTest extends IntegrationTestCase
         );
     }
 
-    public function test_read_returns_exactly_the_config_defaults_when_the_override_file_sets_nothing(): void
+    public function testReadReturnsExactlyTheConfigDefaultsWhenTheOverrideFileSetsNothing(): void
     {
         $paths = $this->pathsWithSameLocalAndSiteLocal();
         Kernel::boot($paths);
@@ -130,7 +130,7 @@ final class LegacyFileConfTest extends IntegrationTestCase
         );
     }
 
-    public function test_read_applies_a_local_config_override_onto_the_defaults(): void
+    public function testReadAppliesALocalConfigOverrideOntoTheDefaults(): void
     {
         $paths = $this->pathsWithSameLocalAndSiteLocal();
         Kernel::boot($paths);
@@ -158,7 +158,7 @@ final class LegacyFileConfTest extends IntegrationTestCase
         );
     }
 
-    public function test_read_does_not_load_the_site_local_file_when_local_dir_site_is_not_set(): void
+    public function testReadDoesNotLoadTheSiteLocalFileWhenLocalDirSiteIsNotSet(): void
     {
         $paths = $this->pathsWithDistinctSiteLocal();
         Kernel::boot($paths);
@@ -180,7 +180,7 @@ final class LegacyFileConfTest extends IntegrationTestCase
         self::assertArrayNotHasKey('local_dir_site', $result);
     }
 
-    public function test_read_lets_a_site_local_override_win_when_local_dir_site_is_set(): void
+    public function testReadLetsASiteLocalOverrideWinWhenLocalDirSiteIsSet(): void
     {
         $paths = $this->pathsWithDistinctSiteLocal();
         Kernel::boot($paths);

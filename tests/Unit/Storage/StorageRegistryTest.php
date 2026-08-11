@@ -14,7 +14,6 @@ use Piwigo\Storage\StorageRegistry;
  * `new StorageRegistry([...])`/`fromConfig()`, so no reset() is needed
  * for the instance API.
  */
-
 test('get round-trips a write and read on a real local disk', function (): void {
     $dir = sys_get_temp_dir() . '/piwigo-storage-registry-test-' . bin2hex(random_bytes(4));
     mkdir($dir);
@@ -23,11 +22,14 @@ test('get round-trips a write and read on a real local disk', function (): void 
         'scratch' => static fn (): Filesystem => new Filesystem(new LocalFilesystemAdapter($dir)),
     ]);
 
-    $registry->get('scratch')->write('hello.txt', 'world');
+    $registry->get('scratch')
+        ->write('hello.txt', 'world');
 
-    expect($registry->get('scratch')->read('hello.txt'))->toBe('world');
+    expect($registry->get('scratch')->read('hello.txt'))
+        ->toBe('world');
 
-    $registry->get('scratch')->delete('hello.txt');
+    $registry->get('scratch')
+        ->delete('hello.txt');
     rmdir($dir);
 });
 
@@ -47,8 +49,10 @@ test('get lazily initializes a disk only once, reusing the same instance', funct
     $first = $registry->get('scratch');
     $second = $registry->get('scratch');
 
-    expect($first)->toBe($second)
-        ->and($callCount)->toBe(1);
+    expect($first)
+        ->toBe($second)
+        ->and($callCount)
+        ->toBe(1);
 
     rmdir($dir);
 });
@@ -97,7 +101,8 @@ test('fromConfig loads factories from the exact given path, not a hardcoded one'
 
     $registry = StorageRegistry::fromConfig($dir . '/storage.php', Paths::fromRoot(sys_get_temp_dir()), new CurrentConfig());
 
-    expect($registry->get('mutation-canary'))->toBeInstanceOf(Filesystem::class);
+    expect($registry->get('mutation-canary'))
+        ->toBeInstanceOf(Filesystem::class);
 
     unlink($dir . '/storage.php');
     rmdir($dir);

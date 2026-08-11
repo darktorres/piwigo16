@@ -25,10 +25,15 @@ use Piwigo\Permalink\Projection\OldPermalink;
  * coverage tool doesn't attribute a line to.
  */
 test('UserGroupPair::fromRow narrows a full real row', function (): void {
-    $pair = UserGroupPair::fromRow(['user_id' => '3', 'group_id' => '7']);
+    $pair = UserGroupPair::fromRow([
+        'user_id' => '3',
+        'group_id' => '7',
+    ]);
 
-    expect($pair->userId)->toEqual(UserId::from(3));
-    expect($pair->groupId)->toEqual(GroupId::from(7));
+    expect($pair->userId)
+        ->toEqual(UserId::from(3));
+    expect($pair->groupId)
+        ->toEqual(GroupId::from(7));
 });
 
 test('UserGroupPair::fromRow throws for a missing/malformed row', function (): void {
@@ -46,30 +51,40 @@ test('UserGroupPair::fromRow throws with the exact invalid value when user_id is
     // all, letting the whole call succeed instead) -- confirmed live,
     // same technique as GroupTest.php's own "throws when id is null"
     // test for the identical fallback shape.
-    UserGroupPair::fromRow(['group_id' => 5]);
+    UserGroupPair::fromRow([
+        'group_id' => 5,
+    ]);
 })->throws(InvalidArgumentException::class, 'UserId must be a positive integer, got 0');
 
 test('UserGroupPair::fromRow throws with the exact invalid value when group_id is missing, not masked by user_id', function (): void {
     // Mirror of the test above, isolating the groupId fallback: kills
     // the same DecrementInteger/IncrementInteger pair on the groupId
     // side.
-    UserGroupPair::fromRow(['user_id' => 5]);
+    UserGroupPair::fromRow([
+        'user_id' => 5,
+    ]);
 })->throws(InvalidArgumentException::class, 'GroupId must be a positive integer, got 0');
 
 test('CreateCategoryResult::failure carries the error message with no category id', function (): void {
     $result = CreateCategoryResult::failure('This name already exists');
 
-    expect($result->success)->toBeFalse();
-    expect($result->message)->toBe('This name already exists');
-    expect($result->categoryId)->toBeNull();
+    expect($result->success)
+        ->toBeFalse();
+    expect($result->message)
+        ->toBe('This name already exists');
+    expect($result->categoryId)
+        ->toBeNull();
 });
 
 test('CreateCategoryResult::success carries the info message and the new category id', function (): void {
     $result = CreateCategoryResult::success('Album created', CategoryId::from(42));
 
-    expect($result->success)->toBeTrue();
-    expect($result->message)->toBe('Album created');
-    expect($result->categoryId)->toEqual(CategoryId::from(42));
+    expect($result->success)
+        ->toBeTrue();
+    expect($result->message)
+        ->toBe('Album created');
+    expect($result->categoryId)
+        ->toEqual(CategoryId::from(42));
 });
 
 test('OldPermalink::fromEntity copies every field straight through', function (): void {
@@ -81,11 +96,16 @@ test('OldPermalink::fromEntity copies every field straight through', function ()
         hit: 12,
     ));
 
-    expect($permalink->catId)->toEqual(CategoryId::from(4));
-    expect($permalink->permalink)->toEqual(Permalink::from('old-album-name'));
-    expect($permalink->dateDeleted)->toBe('2026-07-01 00:00:00');
-    expect($permalink->lastHit)->toBe('2026-07-15 12:00:00');
-    expect($permalink->hit)->toBe(12);
+    expect($permalink->catId)
+        ->toEqual(CategoryId::from(4));
+    expect($permalink->permalink)
+        ->toEqual(Permalink::from('old-album-name'));
+    expect($permalink->dateDeleted)
+        ->toBe('2026-07-01 00:00:00');
+    expect($permalink->lastHit)
+        ->toBe('2026-07-15 12:00:00');
+    expect($permalink->hit)
+        ->toBe(12);
 });
 
 test('OldPermalink::fromEntity leaves null dateDeleted/lastHit as null', function (): void {
@@ -97,8 +117,10 @@ test('OldPermalink::fromEntity leaves null dateDeleted/lastHit as null', functio
         hit: 0,
     ));
 
-    expect($permalink->dateDeleted)->toBeNull();
-    expect($permalink->lastHit)->toBeNull();
+    expect($permalink->dateDeleted)
+        ->toBeNull();
+    expect($permalink->lastHit)
+        ->toBeNull();
 });
 
 test('OldPermalink::toArray round-trips every field', function (): void {
@@ -110,25 +132,30 @@ test('OldPermalink::toArray round-trips every field', function (): void {
         hit: 0,
     );
 
-    expect($permalink->toArray())->toBe([
-        'cat_id' => 1,
-        'permalink' => 'my-album',
-        'date_deleted' => null,
-        'last_hit' => null,
-        'hit' => 0,
-    ]);
+    expect($permalink->toArray())
+        ->toBe([
+            'cat_id' => 1,
+            'permalink' => 'my-album',
+            'date_deleted' => null,
+            'last_hit' => null,
+            'hit' => 0,
+        ]);
 });
 
 test('PaginatedResult carries its rows and a known total', function (): void {
     $result = new PaginatedResult(['photo-a', 'photo-b', 'photo-c'], 42);
 
-    expect($result->rows)->toBe(['photo-a', 'photo-b', 'photo-c']);
-    expect($result->total)->toBe(42);
+    expect($result->rows)
+        ->toBe(['photo-a', 'photo-b', 'photo-c']);
+    expect($result->total)
+        ->toBe(42);
 });
 
 test('PaginatedResult accepts a null total when SQL_CALC_FOUND_ROWS was skipped', function (): void {
     $result = new PaginatedResult([], null);
 
-    expect($result->rows)->toBe([]);
-    expect($result->total)->toBeNull();
+    expect($result->rows)
+        ->toBe([]);
+    expect($result->total)
+        ->toBeNull();
 });

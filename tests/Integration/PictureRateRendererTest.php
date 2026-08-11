@@ -4,31 +4,31 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Integration;
 
-use Override;
-use Piwigo\Core\Kernel;
+use Doctrine\DBAL\Connection;
 use LogicException;
-use Piwigo\Db\EntityManagerFactory;
-use Piwigo\PluginConfig\EventDispatcher;
-use Piwigo\Tests\Support\TemplateTestFactory;
+use Override;
 use Piwigo\Auth\AccessControl;
-use Piwigo\Tests\Support\UrlServiceTestFactory;
 use Piwigo\Common\ValueObject\LangCode;
+use Piwigo\Common\ValueObject\ThemeId;
 use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Common\ValueObject\Username;
-use Doctrine\DBAL\Connection;
-use Piwigo\Config\CurrentConfig;
-use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Config\ConfigLoader;
 use Piwigo\Config\ConfigService;
-use Piwigo\Tests\Support\CurrentConfigServiceTestFactory;
+use Piwigo\Config\CurrentConfig;
+use Piwigo\Core\Kernel;
 use Piwigo\Db\DbConnection;
+use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Picture\PictureRateRenderer;
+use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Rate\RateEntity;
 use Piwigo\Rate\RateRepository;
 use Piwigo\Template\CurrentTemplate;
-use Piwigo\Url\UrlService;
+use Piwigo\Tests\Support\CurrentConfigServiceTestFactory;
+use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Tests\Support\CurrentUserTestFactory;
-use Piwigo\Common\ValueObject\ThemeId;
+use Piwigo\Tests\Support\TemplateTestFactory;
+use Piwigo\Tests\Support\UrlServiceTestFactory;
+use Piwigo\Url\UrlService;
 use Piwigo\Users\User;
 use Piwigo\Users\UserStatus;
 
@@ -82,7 +82,7 @@ final class PictureRateRendererTest extends IntegrationTestCase
         // when this test runs before any other test's tearDown() has
         // cleared them. Clearing here first makes every test deterministic
         // regardless of run order.
-        $this->conn->executeStatement('DELETE FROM ' . 'rate' . ' WHERE element_id = 1');
+        $this->conn->executeStatement('DELETE FROM rate WHERE element_id = 1');
 
         $accessControl = Kernel::container()->get(AccessControl::class);
         if (! $accessControl instanceof AccessControl) {
@@ -96,7 +96,7 @@ final class PictureRateRendererTest extends IntegrationTestCase
     {
         CurrentTemplate::current()->reset();
         CurrentUserTestFactory::get()->reset();
-        $this->conn->executeStatement('DELETE FROM ' . 'rate' . ' WHERE element_id = 1');
+        $this->conn->executeStatement('DELETE FROM rate WHERE element_id = 1');
         parent::tearDown();
     }
 
@@ -118,10 +118,10 @@ final class PictureRateRendererTest extends IntegrationTestCase
         return UrlServiceTestFactory::build();
     }
 
-    public function test_render_computes_the_rate_summary_and_the_current_classic_users_own_rate(): void
+    public function testRenderComputesTheRateSummaryAndTheCurrentClassicUsersOwnRate(): void
     {
         // 3 real votes (5, 3, 4) on image 1 -- count=3, average=4.0.
-        $this->conn->executeStatement("INSERT INTO " . 'rate' . " (user_id, element_id, anonymous_id, rate) VALUES (1, 1, '', 5), (3, 1, '', 3), (4, 1, '', 4)");
+        $this->conn->executeStatement('INSERT INTO rate' . " (user_id, element_id, anonymous_id, rate) VALUES (1, 1, '', 5), (3, 1, '', 3), (4, 1, '', 4)");
 
         CurrentUserTestFactory::get()->set(new User(
             id: UserId::from(3),
@@ -136,7 +136,11 @@ final class PictureRateRendererTest extends IntegrationTestCase
         $this->renderer->render(1, $this->urlService(), $this->picture(1, 87.5), '/picture.php?/1');
 
         $rateSummary = CurrentTemplate::current()->get()->get_template_vars('rate_summary');
-        self::assertSame(['count' => 3, 'score' => 87.5, 'average' => 4.0], $rateSummary);
+        self::assertSame([
+            'count' => 3,
+            'score' => 87.5,
+            'average' => 4.0,
+        ], $rateSummary);
 
         $rating = CurrentTemplate::current()->get()->get_template_vars('rating');
         self::assertIsArray($rating);
@@ -146,7 +150,7 @@ final class PictureRateRendererTest extends IntegrationTestCase
         self::assertSame(3, $rating['USER_RATE']);
     }
 
-    public function test_render_computes_the_current_anonymous_guests_own_rate_from_the_trimmed_ip(): void
+    public function testRenderComputesTheCurrentAnonymousGuestsOwnRateFromTheTrimmedIp(): void
     {
         $currentConfig = Kernel::container()->get(CurrentConfig::class);
         if (! $currentConfig instanceof CurrentConfig) {
@@ -158,7 +162,7 @@ final class PictureRateRendererTest extends IntegrationTestCase
 
         // guestId (2) voted 5, keyed by the trimmed (3-octet) IP prefix --
         // the exact anonymous_id shape render() itself computes.
-        $this->conn->executeStatement("INSERT INTO " . 'rate' . " (user_id, element_id, anonymous_id, rate) VALUES (2, 1, '203.0.113', 5)");
+        $this->conn->executeStatement('INSERT INTO rate' . " (user_id, element_id, anonymous_id, rate) VALUES (2, 1, '203.0.113', 5)");
 
         CurrentUserTestFactory::get()->set(new User(
             id: UserId::from(2),
@@ -181,7 +185,7 @@ final class PictureRateRendererTest extends IntegrationTestCase
         }
     }
 
-    public function test_render_leaves_user_rate_null_when_the_summary_has_no_votes_yet(): void
+    public function testRenderLeavesUserRateNullWhenTheSummaryHasNoVotesYet(): void
     {
         $currentConfig = Kernel::container()->get(CurrentConfig::class);
         if (! $currentConfig instanceof CurrentConfig) {
@@ -197,7 +201,11 @@ final class PictureRateRendererTest extends IntegrationTestCase
         $this->renderer->render(1, $this->urlService(), $this->picture(1, 0.0), '/picture.php?/1');
 
         $rateSummary = CurrentTemplate::current()->get()->get_template_vars('rate_summary');
-        self::assertSame(['count' => 0, 'score' => 0.0, 'average' => null], $rateSummary);
+        self::assertSame([
+            'count' => 0,
+            'score' => 0.0,
+            'average' => null,
+        ], $rateSummary);
 
         $rating = CurrentTemplate::current()->get()->get_template_vars('rating');
         self::assertIsArray($rating);

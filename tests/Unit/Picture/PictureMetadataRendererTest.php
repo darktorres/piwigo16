@@ -2,20 +2,20 @@
 
 declare(strict_types=1);
 
-use Piwigo\Tests\Support\TemplateTestFactory;
-use Piwigo\Tests\Support\LangTestFactory;
-use Piwigo\PluginConfig\EventDispatcher;
-use Piwigo\Tests\Support\CurrentUserTestFactory;
-use Piwigo\Tests\Support\SessionServiceTestFactory;
-use Piwigo\Core\FilterState;
 use Piwigo\Config\CurrentConfig;
-use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Core\CurrentLogger;
-use Piwigo\Tests\Support\CurrentPathsTestFactory;
+use Piwigo\Core\FilterState;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Paths;
 use Piwigo\Picture\PictureMetadataRenderer;
+use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Template\CurrentTemplate;
+use Piwigo\Tests\Support\CurrentConfigTestFactory;
+use Piwigo\Tests\Support\CurrentPathsTestFactory;
+use Piwigo\Tests\Support\CurrentUserTestFactory;
+use Piwigo\Tests\Support\LangTestFactory;
+use Piwigo\Tests\Support\SessionServiceTestFactory;
+use Piwigo\Tests\Support\TemplateTestFactory;
 
 /**
  * Same "point CurrentPaths at a fresh temp root" Template setup as
@@ -65,8 +65,10 @@ beforeEach(function (): void {
     // test's own fixture root.
     $this->root = $root;
     Kernel::boot(Paths::fromRoot($root));
-    picture_metadata_test_current_config()->dataLocation = 'data/';
-    picture_metadata_test_current_config()->dataDirChecked = '1';
+    picture_metadata_test_current_config()
+        ->dataLocation = 'data/';
+    picture_metadata_test_current_config()
+        ->dataDirChecked = '1';
     CurrentTemplate::current()->set(TemplateTestFactory::build());
 });
 
@@ -79,7 +81,8 @@ afterEach(function (): void {
 
 test('render appends nothing when both show_exif and show_iptc are disabled', function (): void {
     picture_metadata_test_current_config()->showExif = false;
-    picture_metadata_test_current_config()->showIptc = false;
+    picture_metadata_test_current_config()
+        ->showIptc = false;
     $renderer = new PictureMetadataRenderer();
 
     $renderer->render(LangTestFactory::get(), [], new CurrentLogger(), new EventDispatcher(), CurrentTemplate::current(), CurrentConfigTestFactory::get(), CurrentUserTestFactory::get(), SessionServiceTestFactory::get(), new FilterState(), CurrentPathsTestFactory::get());

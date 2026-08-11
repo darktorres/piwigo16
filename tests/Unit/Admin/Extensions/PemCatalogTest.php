@@ -2,15 +2,15 @@
 
 declare(strict_types=1);
 
-use Piwigo\Core\CurrentLogger;
-use Piwigo\Users\CurrentUser;
-use Piwigo\Config\CurrentConfig;
 use Piwigo\Admin\Extensions\ExtensionType;
 use Piwigo\Admin\Extensions\PemCatalog;
 use Piwigo\Admin\Extensions\ZipExtractor;
-use Piwigo\Core\Logger;
+use Piwigo\Config\CurrentConfig;
+use Piwigo\Core\CurrentLogger;
 use Piwigo\Core\Kernel;
+use Piwigo\Core\Logger;
 use Piwigo\Core\Paths;
+use Piwigo\Users\CurrentUser;
 
 // PemCatalog's own methods that actually talk to the remote PEM server
 // (getVersionsToCheck()/getServerExtensions()/getIncompatibleExtensions()/
@@ -74,7 +74,7 @@ use Piwigo\Core\Paths;
 
 function pem_catalog_test_marker(): string
 {
-    /** @var string|null $marker */
+    /** @var string|null */
     static $marker = null;
 
     return $marker ??= sys_get_temp_dir() . '/piwigo-pem-catalog-test-' . bin2hex(random_bytes(8));
@@ -99,8 +99,12 @@ afterEach(function (): void {
 });
 
 test('compareByRevisionDate sorts descending, newest first', function (): void {
-    $older = ['revision_date' => '2026-01-01'];
-    $newer = ['revision_date' => '2026-06-01'];
+    $older = [
+        'revision_date' => '2026-01-01',
+    ];
+    $newer = [
+        'revision_date' => '2026-06-01',
+    ];
 
     expect(PemCatalog::compareByRevisionDate($newer, $older))->toBe(-1);
     expect(PemCatalog::compareByRevisionDate($older, $newer))->toBe(1);
@@ -111,14 +115,20 @@ test('compareByRevisionDate treats an identical date as a tie, not "$a is later"
     // takes the `< ? 1 : -1` path once, via the `-1` (a is not-later)
     // arm -- a `<` -> `<=` mutation flips this specific case's result to
     // 1 without breaking either directional assertion above.
-    $same = ['revision_date' => '2026-06-01'];
+    $same = [
+        'revision_date' => '2026-06-01',
+    ];
 
     expect(PemCatalog::compareByRevisionDate($same, $same))->toBe(-1);
 });
 
 test('compareByName sorts case-insensitively by extension_name', function (): void {
-    $a = ['extension_name' => 'zebra'];
-    $b = ['extension_name' => 'Apple'];
+    $a = [
+        'extension_name' => 'zebra',
+    ];
+    $b = [
+        'extension_name' => 'Apple',
+    ];
 
     expect(PemCatalog::compareByName($a, $b))->toBeGreaterThan(0);
     expect(PemCatalog::compareByName($b, $a))->toBeLessThan(0);
@@ -126,64 +136,126 @@ test('compareByName sorts case-insensitively by extension_name', function (): vo
     // real strtolower() from a removed one on the *second* argument alone,
     // since 'same' is already lowercase -- both sides need real uppercase
     // to force each of the two strtolower() calls to matter independently.
-    expect(PemCatalog::compareByName(['extension_name' => 'SAME'], ['extension_name' => 'same']))->toBe(0);
-    expect(PemCatalog::compareByName(['extension_name' => 'same'], ['extension_name' => 'SAME']))->toBe(0);
+    expect(PemCatalog::compareByName([
+        'extension_name' => 'SAME',
+    ], [
+        'extension_name' => 'same',
+    ]))->toBe(0);
+    expect(PemCatalog::compareByName([
+        'extension_name' => 'same',
+    ], [
+        'extension_name' => 'SAME',
+    ]))->toBe(0);
 });
 
 test('compareByName falls back to an empty name for a non-scalar extension_name', function (): void {
-    expect(PemCatalog::compareByName(['extension_name' => ['not', 'scalar']], ['extension_name' => 'apple']))->toBeLessThan(0);
-    expect(PemCatalog::compareByName(['extension_name' => 'apple'], ['extension_name' => null]))->toBeGreaterThan(0);
+    expect(PemCatalog::compareByName([
+        'extension_name' => ['not', 'scalar'],
+    ], [
+        'extension_name' => 'apple',
+    ]))->toBeLessThan(0);
+    expect(PemCatalog::compareByName([
+        'extension_name' => 'apple',
+    ], [
+        'extension_name' => null,
+    ]))->toBeGreaterThan(0);
 });
 
 test('compareByName string-casts a real scalar extension_name instead of comparing it raw', function (): void {
     // Real gap, found via mutation testing: removing the (string) cast on
     // an already-string value is invisible -- an int forces it to matter
     // (strtolower()/strcmp() both require a real string argument).
-    expect(PemCatalog::compareByName(['extension_name' => 20], ['extension_name' => '3']))->toBeLessThan(0);
+    expect(PemCatalog::compareByName([
+        'extension_name' => 20,
+    ], [
+        'extension_name' => '3',
+    ]))->toBeLessThan(0);
     // Real gap, found via mutation testing: the case above only forces
     // $a's own (string) cast (a separate line/mutation from $b's) --
     // this file declares strict_types=1, so a removed cast on $b leaves
     // a real int flowing into strtolower(), which throws a TypeError
     // rather than silently comparing wrong. $a stays a plain string here
     // to isolate $b's own cast.
-    expect(PemCatalog::compareByName(['extension_name' => 'apple'], ['extension_name' => 20]))->toBeGreaterThan(0);
+    expect(PemCatalog::compareByName([
+        'extension_name' => 'apple',
+    ], [
+        'extension_name' => 20,
+    ]))->toBeGreaterThan(0);
 });
 
 test('compareByAuthor sorts case-insensitively by author_name, falling back to compareByName on a tie', function (): void {
-    $a = ['author_name' => 'Alice', 'extension_name' => 'zebra'];
-    $b = ['author_name' => 'Bob', 'extension_name' => 'apple'];
+    $a = [
+        'author_name' => 'Alice',
+        'extension_name' => 'zebra',
+    ];
+    $b = [
+        'author_name' => 'Bob',
+        'extension_name' => 'apple',
+    ];
     expect(PemCatalog::compareByAuthor($a, $b))->toBeLessThan(0);
 
-    $tieA = ['author_name' => 'same author', 'extension_name' => 'zebra'];
-    $tieB = ['author_name' => 'Same Author', 'extension_name' => 'apple'];
+    $tieA = [
+        'author_name' => 'same author',
+        'extension_name' => 'zebra',
+    ];
+    $tieB = [
+        'author_name' => 'Same Author',
+        'extension_name' => 'apple',
+    ];
     expect(PemCatalog::compareByAuthor($tieA, $tieB))->toBeGreaterThan(0);
 });
 
 test('compareByAuthor falls back to an empty author for a non-scalar author_name', function (): void {
-    expect(PemCatalog::compareByAuthor(['author_name' => ['not', 'scalar']], ['author_name' => 'bob']))->toBeLessThan(0);
-    expect(PemCatalog::compareByAuthor(['author_name' => 'bob'], ['author_name' => null]))->toBeGreaterThan(0);
+    expect(PemCatalog::compareByAuthor([
+        'author_name' => ['not', 'scalar'],
+    ], [
+        'author_name' => 'bob',
+    ]))->toBeLessThan(0);
+    expect(PemCatalog::compareByAuthor([
+        'author_name' => 'bob',
+    ], [
+        'author_name' => null,
+    ]))->toBeGreaterThan(0);
 });
 
 test('compareByAuthor string-casts a real scalar author_name instead of comparing it raw', function (): void {
-    expect(PemCatalog::compareByAuthor(['author_name' => 20, 'extension_name' => 'x'], ['author_name' => '3', 'extension_name' => 'x']))->toBeLessThan(0);
+    expect(PemCatalog::compareByAuthor([
+        'author_name' => 20,
+        'extension_name' => 'x',
+    ], [
+        'author_name' => '3',
+        'extension_name' => 'x',
+    ]))->toBeLessThan(0);
     // Real gap, found via mutation testing: same "$a's cast alone can't
     // prove $b's separate cast line" reasoning as compareByName above --
     // $a stays a plain string here so only $b's removed (string) cast
     // can be what forces strcasecmp()'s real int-vs-string TypeError
     // under strict_types=1.
-    expect(PemCatalog::compareByAuthor(['author_name' => 'apple', 'extension_name' => 'x'], ['author_name' => 20, 'extension_name' => 'x']))->toBeGreaterThan(0);
+    expect(PemCatalog::compareByAuthor([
+        'author_name' => 'apple',
+        'extension_name' => 'x',
+    ], [
+        'author_name' => 20,
+        'extension_name' => 'x',
+    ]))->toBeGreaterThan(0);
 });
 
 test('compareByDownloads sorts descending, most downloaded first', function (): void {
-    $popular = ['extension_nb_downloads' => 500];
-    $unpopular = ['extension_nb_downloads' => 3];
+    $popular = [
+        'extension_nb_downloads' => 500,
+    ];
+    $unpopular = [
+        'extension_nb_downloads' => 3,
+    ];
 
     expect(PemCatalog::compareByDownloads($popular, $unpopular))->toBe(-1);
     expect(PemCatalog::compareByDownloads($unpopular, $popular))->toBe(1);
 });
 
 test('compareByDownloads treats an identical count as a tie, not "$a has fewer"', function (): void {
-    $same = ['extension_nb_downloads' => 500];
+    $same = [
+        'extension_nb_downloads' => 500,
+    ];
 
     expect(PemCatalog::compareByDownloads($same, $same))->toBe(-1);
 });
@@ -195,7 +267,8 @@ test('getLocallyMergedExtensions parses the real install/obsolete_extensions.lis
     // install/obsolete_extensions.list is a committed, static asset --
     // asserting a couple of its real, known entries plus the exact total
     // count.
-    expect($merged)->toHaveCount(13);
+    expect($merged)
+        ->toHaveCount(13);
     expect($merged[411])->toBe('pwg_images_addSimple');
     expect($merged[286])->toBe('admin_multi_view');
 });
@@ -214,7 +287,10 @@ test('getLocallyMergedExtensions reads the paths->root-prefixed file, not a bare
 
     $catalog = new PemCatalog(new ZipExtractor(), new CurrentLogger(), new CurrentUser(new CurrentConfig()), Paths::fromRoot($root), new CurrentConfig());
 
-    expect($catalog->getLocallyMergedExtensions())->toBe([999 => 'fixture_only_extension']);
+    expect($catalog->getLocallyMergedExtensions())
+        ->toBe([
+            999 => 'fixture_only_extension',
+        ]);
 });
 
 test('getLocallyMergedExtensions returns an empty array, not a crash, when the list file cannot be read', function (): void {
@@ -247,7 +323,9 @@ function pem_catalog_delete_obsolete_files(ExtensionType $type, string $extractP
 {
     $catalog = new PemCatalog(new ZipExtractor(), new CurrentLogger(), new CurrentUser(new CurrentConfig()), Paths::fromRoot(dirname(__DIR__, 4)), new CurrentConfig());
     $method = new ReflectionMethod($catalog, 'deleteObsoleteFiles');
-    $method->invoke($catalog, $type, $extractPath, new Logger(['severity' => Logger::OFF]));
+    $method->invoke($catalog, $type, $extractPath, new Logger([
+        'severity' => Logger::OFF,
+    ]));
 }
 
 /**
@@ -350,7 +428,8 @@ test('deleteObsoleteFiles refuses to delete a path traversal entry outside the e
 
     pem_catalog_delete_obsolete_files(ExtensionType::Plugin, $extractPath);
 
-    expect(file_exists($canary))->toBeTrue();
+    expect(file_exists($canary))
+        ->toBeTrue();
 });
 
 test('deleteObsoleteFiles trims whitespace/slashes and skips a blank line, then still processes a later real entry', function (): void {
@@ -375,7 +454,8 @@ test('deleteObsoleteFiles trims whitespace/slashes and skips a blank line, then 
     // making the assertion above pass even under the mutation. Only
     // checking that the extract directory itself is still standing
     // actually catches it.
-    expect(is_dir($extractPath))->toBeTrue();
+    expect(is_dir($extractPath))
+        ->toBeTrue();
 });
 
 test('deleteObsoleteFiles skips a listed entry that does not actually exist on disk', function (): void {

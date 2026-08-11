@@ -2,13 +2,13 @@
 
 declare(strict_types=1);
 
-use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Event\BlockManager\BlockManagerPrepareDisplay;
 use Piwigo\Menu\BlockManager;
 use Piwigo\Menu\DisplayBlock;
 use Piwigo\Menu\RegisteredBlock;
-use Piwigo\Tests\Support\EventDispatcherTestFactory;
 use Piwigo\Template\CurrentTemplate;
+use Piwigo\Tests\Support\CurrentConfigTestFactory;
+use Piwigo\Tests\Support\EventDispatcherTestFactory;
 
 /**
  * Piwigo\Menu\BlockManager/DisplayBlock/RegisteredBlock are reachable
@@ -27,42 +27,54 @@ afterEach(function (): void {
 test('RegisteredBlock exposes its id/name/owner', function (): void {
     $block = new RegisteredBlock('cat', 'Categories', 'core');
 
-    expect($block->get_id())->toBe('cat');
-    expect($block->get_name())->toBe('Categories');
-    expect($block->get_owner())->toBe('core');
+    expect($block->get_id())
+        ->toBe('cat');
+    expect($block->get_name())
+        ->toBe('Categories');
+    expect($block->get_owner())
+        ->toBe('core');
 });
 
 test('DisplayBlock falls back to the registered block\'s name until a title is explicitly set', function (): void {
     $registered = new RegisteredBlock('cat', 'Categories', 'core');
     $display = new DisplayBlock($registered);
 
-    expect($display->get_title())->toBe('Categories');
+    expect($display->get_title())
+        ->toBe('Categories');
 
     $display->set_title('Custom Title');
-    expect($display->get_title())->toBe('Custom Title');
+    expect($display->get_title())
+        ->toBe('Custom Title');
 });
 
 test('DisplayBlock get_position/set_position round-trip', function (): void {
     $display = new DisplayBlock(new RegisteredBlock('cat', 'Categories', 'core'));
     $display->set_position(42);
 
-    expect($display->get_position())->toBe(42);
+    expect($display->get_position())
+        ->toBe(42);
 });
 
 test('DisplayBlock get_block returns the exact registered block it was constructed with', function (): void {
     $registered = new RegisteredBlock('tags', 'Tags', 'core');
     $display = new DisplayBlock($registered);
 
-    expect($display->get_block())->toBe($registered);
+    expect($display->get_block())
+        ->toBe($registered);
 });
 
 test('register_block accepts the first registration and rejects a duplicate id', function (): void {
     $manager = new BlockManager('menubar', EventDispatcherTestFactory::get(), CurrentTemplate::current(), CurrentConfigTestFactory::get());
     $block = new RegisteredBlock('cat', 'Categories', 'core');
 
-    expect($manager->register_block($block))->toBeTrue();
-    expect($manager->register_block(new RegisteredBlock('cat', 'Duplicate', 'plugin')))->toBeFalse();
-    expect($manager->get_registered_blocks())->toBe(['cat' => $block]);
+    expect($manager->register_block($block))
+        ->toBeTrue();
+    expect($manager->register_block(new RegisteredBlock('cat', 'Duplicate', 'plugin')))
+        ->toBeFalse();
+    expect($manager->get_registered_blocks())
+        ->toBe([
+            'cat' => $block,
+        ]);
 });
 
 test('prepare_display assigns positions in registration order (idx*50) with no config override', function (): void {
@@ -72,19 +84,24 @@ test('prepare_display assigns positions in registration order (idx*50) with no c
 
     $manager->prepare_display();
 
-    expect($manager->is_hidden('first'))->toBeFalse();
+    expect($manager->is_hidden('first'))
+        ->toBeFalse();
     $first = $manager->get_block('first');
     $second = $manager->get_block('second');
     if ($first === null || $second === null) {
         throw new RuntimeException('Expected both blocks to be visible after prepare_display()');
     }
-    expect($first->get_position())->toBe(50);
-    expect($second->get_position())->toBe(100);
+    expect($first->get_position())
+        ->toBe(50);
+    expect($second->get_position())
+        ->toBe(100);
 });
 
 test('prepare_display honors an explicit position from blk_menubar config', function (): void {
     $currentConfig = CurrentConfigTestFactory::get();
-    $currentConfig->blkMenubar = ['cat' => 5];
+    $currentConfig->blkMenubar = [
+        'cat' => 5,
+    ];
 
     $manager = new BlockManager('menubar', EventDispatcherTestFactory::get(), CurrentTemplate::current(), $currentConfig);
     $manager->register_block(new RegisteredBlock('cat', 'Categories', 'core'));
@@ -94,26 +111,36 @@ test('prepare_display honors an explicit position from blk_menubar config', func
     if ($cat === null) {
         throw new RuntimeException('Expected the cat block to be visible after prepare_display()');
     }
-    expect($cat->get_position())->toBe(5);
+    expect($cat->get_position())
+        ->toBe(5);
 });
 
 test('prepare_display hides a block whose configured position is 0 or negative', function (): void {
     $currentConfig = CurrentConfigTestFactory::get();
-    $currentConfig->blkMenubar = ['cat' => 0, 'tags' => -10];
+    $currentConfig->blkMenubar = [
+        'cat' => 0,
+        'tags' => -10,
+    ];
 
     $manager = new BlockManager('menubar', EventDispatcherTestFactory::get(), CurrentTemplate::current(), $currentConfig);
     $manager->register_block(new RegisteredBlock('cat', 'Categories', 'core'));
     $manager->register_block(new RegisteredBlock('tags', 'Tags', 'core'));
     $manager->prepare_display();
 
-    expect($manager->is_hidden('cat'))->toBeTrue();
-    expect($manager->is_hidden('tags'))->toBeTrue();
-    expect($manager->get_block('cat'))->toBeNull();
+    expect($manager->is_hidden('cat'))
+        ->toBeTrue();
+    expect($manager->is_hidden('tags'))
+        ->toBeTrue();
+    expect($manager->get_block('cat'))
+        ->toBeNull();
 });
 
 test('prepare_display sorts display blocks by resolved position, independent of registration order', function (): void {
     $currentConfig = CurrentConfigTestFactory::get();
-    $currentConfig->blkMenubar = ['second' => 10, 'first' => 20];
+    $currentConfig->blkMenubar = [
+        'second' => 10,
+        'first' => 20,
+    ];
 
     $manager = new BlockManager('menubar', EventDispatcherTestFactory::get(), CurrentTemplate::current(), $currentConfig);
     $manager->register_block(new RegisteredBlock('first', 'First', 'core'));
@@ -130,7 +157,8 @@ test('prepare_display sorts display blocks by resolved position, independent of 
         $ids[] = $id;
     }
 
-    expect($ids)->toBe(['second', 'first']);
+    expect($ids)
+        ->toBe(['second', 'first']);
 });
 
 test('prepare_display falls back to idx*50 positioning when a block\'s config value is non-numeric', function (): void {
@@ -139,7 +167,9 @@ test('prepare_display falls back to idx*50 positioning when a block\'s config va
     // "$idx * 50" fallback (distinct from the one on the line above that
     // only fires when the key is entirely absent from $mb_conf).
     $currentConfig = CurrentConfigTestFactory::get();
-    $currentConfig->blkMenubar = ['first' => 'not-a-number'];
+    $currentConfig->blkMenubar = [
+        'first' => 'not-a-number',
+    ];
 
     $manager = new BlockManager('menubar', EventDispatcherTestFactory::get(), CurrentTemplate::current(), $currentConfig);
     $manager->register_block(new RegisteredBlock('first', 'First', 'core'));
@@ -152,8 +182,10 @@ test('prepare_display falls back to idx*50 positioning when a block\'s config va
     if ($first === null || $second === null) {
         throw new RuntimeException('Expected both blocks to be visible after prepare_display()');
     }
-    expect($first->get_position())->toBe(50);
-    expect($second->get_position())->toBe(100);
+    expect($first->get_position())
+        ->toBe(50);
+    expect($second->get_position())
+        ->toBe(100);
 });
 
 test('prepare_display casts a numeric-string config position to a real int', function (): void {
@@ -162,7 +194,9 @@ test('prepare_display casts a numeric-string config position to a real int', fun
     // (untyped param) would happily store the string "5" instead of the
     // int 5, which the strict toBe(5) below would catch.
     $currentConfig = CurrentConfigTestFactory::get();
-    $currentConfig->blkMenubar = ['cat' => '5'];
+    $currentConfig->blkMenubar = [
+        'cat' => '5',
+    ];
 
     $manager = new BlockManager('menubar', EventDispatcherTestFactory::get(), CurrentTemplate::current(), $currentConfig);
     $manager->register_block(new RegisteredBlock('cat', 'Categories', 'core'));
@@ -172,7 +206,8 @@ test('prepare_display casts a numeric-string config position to a real int', fun
     if ($cat === null) {
         throw new RuntimeException('Expected the cat block to remain visible after prepare_display()');
     }
-    expect($cat->get_position())->toBe(5);
+    expect($cat->get_position())
+        ->toBe(5);
 });
 
 test('prepare_display treats a resolved position of exactly 1 as visible', function (): void {
@@ -181,23 +216,30 @@ test('prepare_display treats a resolved position of exactly 1 as visible', funct
     // reject 0 identically) -- 1 is the smallest position that must remain
     // visible under "> 0" while a "> 1" mutant would wrongly hide it.
     $currentConfig = CurrentConfigTestFactory::get();
-    $currentConfig->blkMenubar = ['cat' => 1];
+    $currentConfig->blkMenubar = [
+        'cat' => 1,
+    ];
 
     $manager = new BlockManager('menubar', EventDispatcherTestFactory::get(), CurrentTemplate::current(), $currentConfig);
     $manager->register_block(new RegisteredBlock('cat', 'Categories', 'core'));
     $manager->prepare_display();
 
-    expect($manager->is_hidden('cat'))->toBeFalse();
+    expect($manager->is_hidden('cat'))
+        ->toBeFalse();
     $cat = $manager->get_block('cat');
     if ($cat === null) {
         throw new RuntimeException('Expected the cat block to be visible after prepare_display()');
     }
-    expect($cat->get_position())->toBe(1);
+    expect($cat->get_position())
+        ->toBe(1);
 });
 
 test('prepare_display sorts display blocks before firing blockmanager_prepare_display, so handlers observe already-sorted order', function (): void {
     $currentConfig = CurrentConfigTestFactory::get();
-    $currentConfig->blkMenubar = ['second' => 10, 'first' => 20];
+    $currentConfig->blkMenubar = [
+        'second' => 10,
+        'first' => 20,
+    ];
 
     $manager = new BlockManager('menubar', EventDispatcherTestFactory::get(), CurrentTemplate::current(), $currentConfig);
     $manager->register_block(new RegisteredBlock('first', 'First', 'core'));
@@ -233,7 +275,8 @@ test('prepare_display sorts display blocks before firing blockmanager_prepare_di
     // Also proves the event actually fires with $this as the payload
     // (an empty-array payload, or a call that never fires at all, would
     // leave $observedIds null instead).
-    expect($observedIds)->toBe(['second', 'first']);
+    expect($observedIds)
+        ->toBe(['second', 'first']);
 });
 
 test('prepare_display re-sorts after blockmanager_prepare_display handlers change block positions', function (): void {
@@ -273,7 +316,8 @@ test('prepare_display re-sorts after blockmanager_prepare_display handlers chang
         $ids[] = $id;
     }
 
-    expect($ids)->toBe(['second', 'first']);
+    expect($ids)
+        ->toBe(['second', 'first']);
 });
 
 test('hide_block removes a previously visible block', function (): void {
@@ -281,9 +325,11 @@ test('hide_block removes a previously visible block', function (): void {
     $manager->register_block(new RegisteredBlock('cat', 'Categories', 'core'));
     $manager->prepare_display();
 
-    expect($manager->is_hidden('cat'))->toBeFalse();
+    expect($manager->is_hidden('cat'))
+        ->toBeFalse();
     $manager->hide_block('cat');
-    expect($manager->is_hidden('cat'))->toBeTrue();
+    expect($manager->is_hidden('cat'))
+        ->toBeTrue();
 });
 
 test('set_block_position updates the position of a visible block, and is a no-op for an unknown/hidden one', function (): void {
@@ -296,7 +342,8 @@ test('set_block_position updates the position of a visible block, and is a no-op
     if ($cat === null) {
         throw new RuntimeException('Expected the cat block to remain visible after set_block_position()');
     }
-    expect($cat->get_position())->toBe(999);
+    expect($cat->get_position())
+        ->toBe(999);
 
     // no exception, no-op for a block that was never registered
     $manager->set_block_position('does-not-exist', 1);
@@ -305,5 +352,6 @@ test('set_block_position updates the position of a visible block, and is a no-op
 test('get_id returns the manager\'s own id', function (): void {
     $manager = new BlockManager('menubar', EventDispatcherTestFactory::get(), CurrentTemplate::current(), CurrentConfigTestFactory::get());
 
-    expect($manager->get_id())->toBe('menubar');
+    expect($manager->get_id())
+        ->toBe('menubar');
 });

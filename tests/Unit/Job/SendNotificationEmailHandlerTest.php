@@ -3,7 +3,6 @@
 declare(strict_types=1);
 
 use Piwigo\Config\CurrentConfig;
-use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Config\DeploymentPolicy;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Lang;
@@ -16,8 +15,9 @@ use Piwigo\Job\SendNotificationEmailJob;
 use Piwigo\Lang\Translator;
 use Piwigo\Mail\MailService;
 use Piwigo\PluginConfig\EventDispatcher;
-use Piwigo\Tests\Support\EventDispatcherTestFactory;
 use Piwigo\Session\SessionService;
+use Piwigo\Tests\Support\CurrentConfigTestFactory;
+use Piwigo\Tests\Support\EventDispatcherTestFactory;
 use Piwigo\Users\CurrentUser;
 
 // MailService reaches the webmaster address through its optional
@@ -122,9 +122,12 @@ test('__invoke actually reaches MailService::mail() with the job\'s exact to/arg
     try {
         $handler = new SendNotificationEmailHandler(send_notification_email_handler_test_mail_service());
 
-        $handler(new SendNotificationEmailJob(to: 'someone@example.test', args: ['subject' => 'Test Subject']));
+        $handler(new SendNotificationEmailJob(to: 'someone@example.test', args: [
+            'subject' => 'Test Subject',
+        ]));
 
-        expect($capturedTo)->toBe('someone@example.test');
+        expect($capturedTo)
+            ->toBe('someone@example.test');
         if ($capturedArgs === null) {
             throw new RuntimeException('expected the before_send_mail handler to have captured real args');
         }

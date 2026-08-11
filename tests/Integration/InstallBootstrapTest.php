@@ -4,15 +4,15 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Integration;
 
-use Override;
 use LogicException;
+use Override;
 use Piwigo\Bootstrap\InstallBootstrap;
 use Piwigo\Config\ConfigService;
-use Piwigo\Tests\Support\CurrentConfigServiceTestFactory;
-use Piwigo\Tests\Support\CurrentPathsTestFactory;
 use Piwigo\Core\ErrorCollector;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Paths;
+use Piwigo\Tests\Support\CurrentConfigServiceTestFactory;
+use Piwigo\Tests\Support\CurrentPathsTestFactory;
 use Piwigo\Tests\Support\KernelContainerOverride;
 
 /**
@@ -104,7 +104,7 @@ final class InstallBootstrapTest extends IntegrationTestCase
         file_put_contents($this->tempRoot . 'local/config/config.php', "<?php\n" . $body . "\n");
     }
 
-    public function test_boot_publishes_the_given_paths_as_the_process_wide_current_paths(): void
+    public function testBootPublishesTheGivenPathsAsTheProcessWideCurrentPaths(): void
     {
         $paths = Paths::fromRoot($this->tempRoot);
 
@@ -122,7 +122,7 @@ final class InstallBootstrapTest extends IntegrationTestCase
         restore_error_handler();
     }
 
-    public function test_boot_is_idempotent_when_recalled_with_the_same_paths_root_by_value(): void
+    public function testBootIsIdempotentWhenRecalledWithTheSamePathsRootByValue(): void
     {
         $first = Paths::fromRoot($this->tempRoot);
         $second = Paths::fromRoot($this->tempRoot);
@@ -138,7 +138,7 @@ final class InstallBootstrapTest extends IntegrationTestCase
         restore_error_handler();
     }
 
-    public function test_boot_throws_instead_of_silently_keeping_a_stale_paths_binding_when_recalled_with_a_different_root(): void
+    public function testBootThrowsInsteadOfSilentlyKeepingAStalePathsBindingWhenRecalledWithADifferentRoot(): void
     {
         $first = Paths::fromRoot($this->tempRoot);
         $secondRoot = sys_get_temp_dir() . '/piwigo-installbootstrap-2nd-' . bin2hex(random_bytes(6)) . '/';
@@ -169,7 +169,7 @@ final class InstallBootstrapTest extends IntegrationTestCase
         $this->removeDirectory($secondRoot);
     }
 
-    public function test_boot_installs_the_error_collector_when_deployment_policy_allows_frontend_errors(): void
+    public function testBootInstallsTheErrorCollectorWhenDeploymentPolicyAllowsFrontendErrors(): void
     {
         // No local/config/config.php at all -> DeploymentPolicy::load()
         // falls back to all-defaults, whose showPhpErrorsOnFrontend is true.
@@ -185,9 +185,9 @@ final class InstallBootstrapTest extends IntegrationTestCase
         restore_error_handler();
     }
 
-    public function test_boot_does_not_install_the_error_collector_when_deployment_policy_disables_frontend_errors(): void
+    public function testBootDoesNotInstallTheErrorCollectorWhenDeploymentPolicyDisablesFrontendErrors(): void
     {
-        $this->writePolicy("return new \\Piwigo\\Config\\DeploymentPolicy(showPhpErrorsOnFrontend: false);");
+        $this->writePolicy('return new \\Piwigo\\Config\\DeploymentPolicy(showPhpErrorsOnFrontend: false);');
         $paths = Paths::fromRoot($this->tempRoot);
 
         InstallBootstrap::boot($paths);
@@ -195,9 +195,9 @@ final class InstallBootstrapTest extends IntegrationTestCase
         self::assertFalse($this->errorCollector()->isActive());
     }
 
-    public function test_boot_skips_the_error_reporting_ini_change_when_deployment_policy_has_show_php_errors_disabled(): void
+    public function testBootSkipsTheErrorReportingIniChangeWhenDeploymentPolicyHasShowPhpErrorsDisabled(): void
     {
-        $this->writePolicy("return new \\Piwigo\\Config\\DeploymentPolicy(showPhpErrors: 0);");
+        $this->writePolicy('return new \\Piwigo\\Config\\DeploymentPolicy(showPhpErrors: 0);');
         $paths = Paths::fromRoot($this->tempRoot);
         $sentinelLevel = E_ALL & ~E_DEPRECATED;
         $previous = ini_set('error_reporting', (string) $sentinelLevel);
@@ -215,7 +215,7 @@ final class InstallBootstrapTest extends IntegrationTestCase
         ini_set('error_reporting', $previous);
     }
 
-    public function test_activateConfigService_wires_the_containers_configservice_onto_currentconfigservice(): void
+    public function testActivateConfigServiceWiresTheContainersConfigserviceOntoCurrentconfigservice(): void
     {
         $paths = Paths::fromRoot($this->tempRoot);
         InstallBootstrap::boot($paths);
@@ -231,7 +231,7 @@ final class InstallBootstrapTest extends IntegrationTestCase
         restore_error_handler();
     }
 
-    public function test_activateConfigService_throws_when_the_kernel_was_never_booted(): void
+    public function testActivateConfigServiceThrowsWhenTheKernelWasNeverBooted(): void
     {
         Kernel::reset();
 
@@ -241,7 +241,7 @@ final class InstallBootstrapTest extends IntegrationTestCase
         InstallBootstrap::activateConfigService();
     }
 
-    public function test_activateConfigService_throws_when_the_container_returns_an_unexpected_type(): void
+    public function testActivateConfigServiceThrowsWhenTheContainerReturnsAnUnexpectedType(): void
     {
         $this->expectException(LogicException::class);
         $this->expectExceptionMessageIsOrContains('Container returned an unexpected type for ' . ConfigService::class);

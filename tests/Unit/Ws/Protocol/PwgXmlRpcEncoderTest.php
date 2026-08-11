@@ -59,7 +59,8 @@ test('encodeResponse renders a PwgError as a methodResponse/fault', function ():
     </methodResponse>
     EOD;
 
-    expect($result)->toBe($expected);
+    expect($result)
+        ->toBe($expected);
 });
 
 test('encodeResponse renders a struct response mixing every scalar type plus a nested list', function (): void {
@@ -99,7 +100,8 @@ test('encodeResponse renders a struct response mixing every scalar type plus a n
     </methodResponse>
     EOD;
 
-    expect($result)->toBe($expected);
+    expect($result)
+        ->toBe($expected);
 });
 
 test('encodeResponse renders an empty array response as an empty struct, not an empty list', function (): void {
@@ -124,7 +126,8 @@ test('encodeResponse renders an empty array response as an empty struct, not an 
     </methodResponse>
     EOD;
 
-    expect($result)->toBe($expected);
+    expect($result)
+        ->toBe($expected);
 });
 
 test('encodeResponse renders a raw stdClass object via the object branch of the type switch', function (): void {
@@ -159,7 +162,8 @@ test('encodeResponse renders a raw stdClass object via the object branch of the 
     </methodResponse>
     EOD;
 
-    expect($result)->toBe($expected);
+    expect($result)
+        ->toBe($expected);
 });
 
 test('encodeResponse renders a null field as an empty value tag via the switch fallthrough', function (): void {
@@ -171,7 +175,9 @@ test('encodeResponse renders a null field as an empty value tag via the switch f
     // behavior for a genuinely nullable WS response field, e.g.
     // pwg.session.getStatus's own 'connected_with' before any login).
     $encoder = new PwgXmlRpcEncoder();
-    $response = ['connected_with' => null];
+    $response = [
+        'connected_with' => null,
+    ];
 
     $result = $encoder->encodeResponse($response);
 
@@ -191,7 +197,8 @@ test('encodeResponse renders a null field as an empty value tag via the switch f
     </methodResponse>
     EOD;
 
-    expect($result)->toBe($expected);
+    expect($result)
+        ->toBe($expected);
 });
 
 test('encodeResponse actually flattens a PwgNamedArray wrapper before encoding', function (): void {
@@ -227,7 +234,8 @@ test('encodeResponse actually flattens a PwgNamedArray wrapper before encoding',
     </methodResponse>
     EOD;
 
-    expect($result)->toBe($expected);
+    expect($result)
+        ->toBe($expected);
 });
 
 test('encodeResponse casts a non-string (integer) struct key to string before escaping', function (): void {
@@ -240,7 +248,9 @@ test('encodeResponse casts a non-string (integer) struct key to string before es
     // array_keys([3 => 'three']) is [3], which never equals
     // range(0, 0) = [0].
     $encoder = new PwgXmlRpcEncoder();
-    $response = [3 => 'three'];
+    $response = [
+        3 => 'three',
+    ];
 
     $result = $encoder->encodeResponse($response);
 
@@ -260,7 +270,8 @@ test('encodeResponse casts a non-string (integer) struct key to string before es
     </methodResponse>
     EOD;
 
-    expect($result)->toBe($expected);
+    expect($result)
+        ->toBe($expected);
 });
 
 test('encodeResponse escapes HTML-special characters in a struct member name', function (): void {
@@ -289,9 +300,11 @@ test('encodeResponse escapes HTML-special characters in a struct member name', f
     </methodResponse>
     EOD;
 
-    expect($result)->toBe($expected);
+    expect($result)
+        ->toBe($expected);
 });
 
 test('getContentType returns text/xml', function (): void {
-    expect(new PwgXmlRpcEncoder()->getContentType())->toBe('text/xml');
+    expect(new PwgXmlRpcEncoder()->getContentType())
+        ->toBe('text/xml');
 });

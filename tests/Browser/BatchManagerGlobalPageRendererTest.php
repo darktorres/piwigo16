@@ -44,7 +44,9 @@ it('reports "select at least one photo" when submitting an action with nothing s
 
 it('reports "select at least one tag" for add_tags with no tags chosen', function (): void {
     $page = H::loginAsAdmin($this);
-    $album = H::wsCall($page, 'pwg.categories.add', ['name' => 'Batch Global Empty AddTags ' . uniqid()]);
+    $album = H::wsCall($page, 'pwg.categories.add', [
+        'name' => 'Batch Global Empty AddTags ' . uniqid(),
+    ]);
     $albumResult = $album['result'] ?? null;
     if (! is_array($albumResult) || ! is_numeric($albumResult['id'] ?? null)) {
         throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($album, true));
@@ -66,7 +68,9 @@ it('reports "select at least one tag" for add_tags with no tags chosen', functio
 
 it('reports "select at least one tag" for del_tags with no tags chosen', function (): void {
     $page = H::loginAsAdmin($this);
-    $album = H::wsCall($page, 'pwg.categories.add', ['name' => 'Batch Global Empty DelTags ' . uniqid()]);
+    $album = H::wsCall($page, 'pwg.categories.add', [
+        'name' => 'Batch Global Empty DelTags ' . uniqid(),
+    ]);
     $albumResult = $album['result'] ?? null;
     if (! is_array($albumResult) || ! is_numeric($albumResult['id'] ?? null)) {
         throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($album, true));
@@ -88,7 +92,9 @@ it('reports "select at least one tag" for del_tags with no tags chosen', functio
 
 it('reports "select at least one album" for associate with no album chosen', function (): void {
     $page = H::loginAsAdmin($this);
-    $album = H::wsCall($page, 'pwg.categories.add', ['name' => 'Batch Global Empty Associate ' . uniqid()]);
+    $album = H::wsCall($page, 'pwg.categories.add', [
+        'name' => 'Batch Global Empty Associate ' . uniqid(),
+    ]);
     $albumResult = $album['result'] ?? null;
     if (! is_array($albumResult) || ! is_numeric($albumResult['id'] ?? null)) {
         throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($album, true));
@@ -110,7 +116,9 @@ it('reports "select at least one album" for associate with no album chosen', fun
 
 it('clears the title/date_creation via their own "remove" checkboxes instead of an empty string', function (): void {
     $page = H::loginAsAdmin($this);
-    $album = H::wsCall($page, 'pwg.categories.add', ['name' => 'Batch Global Remove Fields ' . uniqid()]);
+    $album = H::wsCall($page, 'pwg.categories.add', [
+        'name' => 'Batch Global Remove Fields ' . uniqid(),
+    ]);
     $albumResult = $album['result'] ?? null;
     if (! is_array($albumResult) || ! is_numeric($albumResult['id'] ?? null)) {
         throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($album, true));
@@ -172,7 +180,9 @@ it('reports "no photo can be deleted" when confirm_deletion is sent with an empt
 
 it('deletes cached derivatives of the chosen type for a real selection via delete_derivatives', function (): void {
     $page = H::loginAsAdmin($this);
-    $album = H::wsCall($page, 'pwg.categories.add', ['name' => 'Batch Global Del Derivatives ' . uniqid()]);
+    $album = H::wsCall($page, 'pwg.categories.add', [
+        'name' => 'Batch Global Del Derivatives ' . uniqid(),
+    ]);
     $albumResult = $album['result'] ?? null;
     if (! is_array($albumResult) || ! is_numeric($albumResult['id'] ?? null)) {
         throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($album, true));
@@ -205,7 +215,9 @@ it('honors display=all and a numeric display= to override the per-page thumbnail
 
 it('redirects after add_tags when the active filter is the "no_tag" prefilter', function (): void {
     $page = H::loginAsAdmin($this);
-    $album = H::wsCall($page, 'pwg.categories.add', ['name' => 'Batch Global NoTag Redirect ' . uniqid()]);
+    $album = H::wsCall($page, 'pwg.categories.add', [
+        'name' => 'Batch Global NoTag Redirect ' . uniqid(),
+    ]);
     $albumResult = $album['result'] ?? null;
     if (! is_array($albumResult) || ! is_numeric($albumResult['id'] ?? null)) {
         throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($album, true));
@@ -240,7 +252,9 @@ it('redirects after add_tags when the active filter is the "no_tag" prefilter', 
 
 it("redirects after del_tags when the removed tags overlap the active filter's tags", function (): void {
     $page = H::loginAsAdmin($this);
-    $album = H::wsCall($page, 'pwg.categories.add', ['name' => 'Batch Global DelTags Redirect ' . uniqid()]);
+    $album = H::wsCall($page, 'pwg.categories.add', [
+        'name' => 'Batch Global DelTags Redirect ' . uniqid(),
+    ]);
     $albumResult = $album['result'] ?? null;
     if (! is_array($albumResult) || ! is_numeric($albumResult['id'] ?? null)) {
         throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($album, true));
@@ -282,12 +296,16 @@ it("redirects after del_tags when the removed tags overlap the active filter's t
 
 it('redirects after associate when the active filter is the "no_album" prefilter', function (): void {
     $page = H::loginAsAdmin($this);
-    $sourceAlbum = H::wsCall($page, 'pwg.categories.add', ['name' => 'Batch Global Associate NoAlbum Source ' . uniqid()]);
+    $sourceAlbum = H::wsCall($page, 'pwg.categories.add', [
+        'name' => 'Batch Global Associate NoAlbum Source ' . uniqid(),
+    ]);
     $sourceResult = $sourceAlbum['result'] ?? null;
     if (! is_array($sourceResult) || ! is_numeric($sourceResult['id'] ?? null)) {
         throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($sourceAlbum, true));
     }
-    $targetAlbum = H::wsCall($page, 'pwg.categories.add', ['name' => 'Batch Global Associate NoAlbum Target ' . uniqid()]);
+    $targetAlbum = H::wsCall($page, 'pwg.categories.add', [
+        'name' => 'Batch Global Associate NoAlbum Target ' . uniqid(),
+    ]);
     $targetResult = $targetAlbum['result'] ?? null;
     if (! is_array($targetResult) || ! is_numeric($targetResult['id'] ?? null)) {
         throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($targetAlbum, true));
@@ -315,7 +333,9 @@ it('redirects after associate when the active filter is the "no_album" prefilter
 
 it('redirects after associate when the active filter is "no_virtual_album" and the target album is virtual', function (): void {
     $page = H::loginAsAdmin($this);
-    $sourceAlbum = H::wsCall($page, 'pwg.categories.add', ['name' => 'Batch Global Associate NoVirtual Source ' . uniqid()]);
+    $sourceAlbum = H::wsCall($page, 'pwg.categories.add', [
+        'name' => 'Batch Global Associate NoVirtual Source ' . uniqid(),
+    ]);
     $sourceResult = $sourceAlbum['result'] ?? null;
     if (! is_array($sourceResult) || ! is_numeric($sourceResult['id'] ?? null)) {
         throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($sourceAlbum, true));
@@ -324,7 +344,9 @@ it('redirects after associate when the active filter is "no_virtual_album" and t
     // column (confirmed live -- only filesystem-synchronized albums get a
     // real directory), so this is a genuine "no_virtual_album" match, not
     // a DB fixture hack.
-    $targetAlbum = H::wsCall($page, 'pwg.categories.add', ['name' => 'Batch Global Associate NoVirtual Target ' . uniqid()]);
+    $targetAlbum = H::wsCall($page, 'pwg.categories.add', [
+        'name' => 'Batch Global Associate NoVirtual Target ' . uniqid(),
+    ]);
     $targetResult = $targetAlbum['result'] ?? null;
     if (! is_array($targetResult) || ! is_numeric($targetResult['id'] ?? null)) {
         throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($targetAlbum, true));
@@ -352,12 +374,16 @@ it('redirects after associate when the active filter is "no_virtual_album" and t
 
 it('redirects after move when the active filter is the "no_album" prefilter', function (): void {
     $page = H::loginAsAdmin($this);
-    $sourceAlbum = H::wsCall($page, 'pwg.categories.add', ['name' => 'Batch Global Move NoAlbum Source ' . uniqid()]);
+    $sourceAlbum = H::wsCall($page, 'pwg.categories.add', [
+        'name' => 'Batch Global Move NoAlbum Source ' . uniqid(),
+    ]);
     $sourceResult = $sourceAlbum['result'] ?? null;
     if (! is_array($sourceResult) || ! is_numeric($sourceResult['id'] ?? null)) {
         throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($sourceAlbum, true));
     }
-    $targetAlbum = H::wsCall($page, 'pwg.categories.add', ['name' => 'Batch Global Move NoAlbum Target ' . uniqid()]);
+    $targetAlbum = H::wsCall($page, 'pwg.categories.add', [
+        'name' => 'Batch Global Move NoAlbum Target ' . uniqid(),
+    ]);
     $targetResult = $targetAlbum['result'] ?? null;
     if (! is_array($targetResult) || ! is_numeric($targetResult['id'] ?? null)) {
         throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($targetAlbum, true));
@@ -385,12 +411,16 @@ it('redirects after move when the active filter is the "no_album" prefilter', fu
 
 it('redirects after move when the active filter is "no_virtual_album" and the move target is virtual', function (): void {
     $page = H::loginAsAdmin($this);
-    $sourceAlbum = H::wsCall($page, 'pwg.categories.add', ['name' => 'Batch Global Move NoVirtual Source ' . uniqid()]);
+    $sourceAlbum = H::wsCall($page, 'pwg.categories.add', [
+        'name' => 'Batch Global Move NoVirtual Source ' . uniqid(),
+    ]);
     $sourceResult = $sourceAlbum['result'] ?? null;
     if (! is_array($sourceResult) || ! is_numeric($sourceResult['id'] ?? null)) {
         throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($sourceAlbum, true));
     }
-    $targetAlbum = H::wsCall($page, 'pwg.categories.add', ['name' => 'Batch Global Move NoVirtual Target ' . uniqid()]);
+    $targetAlbum = H::wsCall($page, 'pwg.categories.add', [
+        'name' => 'Batch Global Move NoVirtual Target ' . uniqid(),
+    ]);
     $targetResult = $targetAlbum['result'] ?? null;
     if (! is_array($targetResult) || ! is_numeric($targetResult['id'] ?? null)) {
         throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($targetAlbum, true));
@@ -418,17 +448,23 @@ it('redirects after move when the active filter is "no_virtual_album" and the mo
 
 it('redirects after move when the active category filter no longer matches the move target', function (): void {
     $page = H::loginAsAdmin($this);
-    $sourceAlbum = H::wsCall($page, 'pwg.categories.add', ['name' => 'Batch Global Move CatMismatch Source ' . uniqid()]);
+    $sourceAlbum = H::wsCall($page, 'pwg.categories.add', [
+        'name' => 'Batch Global Move CatMismatch Source ' . uniqid(),
+    ]);
     $sourceResult = $sourceAlbum['result'] ?? null;
     if (! is_array($sourceResult) || ! is_numeric($sourceResult['id'] ?? null)) {
         throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($sourceAlbum, true));
     }
-    $filterAlbum = H::wsCall($page, 'pwg.categories.add', ['name' => 'Batch Global Move CatMismatch Filter ' . uniqid()]);
+    $filterAlbum = H::wsCall($page, 'pwg.categories.add', [
+        'name' => 'Batch Global Move CatMismatch Filter ' . uniqid(),
+    ]);
     $filterResultAlbum = $filterAlbum['result'] ?? null;
     if (! is_array($filterResultAlbum) || ! is_numeric($filterResultAlbum['id'] ?? null)) {
         throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($filterAlbum, true));
     }
-    $targetAlbum = H::wsCall($page, 'pwg.categories.add', ['name' => 'Batch Global Move CatMismatch Target ' . uniqid()]);
+    $targetAlbum = H::wsCall($page, 'pwg.categories.add', [
+        'name' => 'Batch Global Move CatMismatch Target ' . uniqid(),
+    ]);
     $targetResult = $targetAlbum['result'] ?? null;
     if (! is_array($targetResult) || ! is_numeric($targetResult['id'] ?? null)) {
         throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($targetAlbum, true));
@@ -460,7 +496,9 @@ it('redirects after move when the active category filter no longer matches the m
 
 it('redirects after a level change when the new level is lower than the active level filter', function (): void {
     $page = H::loginAsAdmin($this);
-    $album = H::wsCall($page, 'pwg.categories.add', ['name' => 'Batch Global Level Redirect ' . uniqid()]);
+    $album = H::wsCall($page, 'pwg.categories.add', [
+        'name' => 'Batch Global Level Redirect ' . uniqid(),
+    ]);
     $albumResult = $album['result'] ?? null;
     if (! is_array($albumResult) || ! is_numeric($albumResult['id'] ?? null)) {
         throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($album, true));
@@ -494,7 +532,9 @@ it('redirects after a level change when the new level is lower than the active l
 
 it('passes representative_ext through to the derivative-deletion payload when the image has one', function (): void {
     $page = H::loginAsAdmin($this);
-    $album = H::wsCall($page, 'pwg.categories.add', ['name' => 'Batch Global Del Deriv RepExt ' . uniqid()]);
+    $album = H::wsCall($page, 'pwg.categories.add', [
+        'name' => 'Batch Global Del Deriv RepExt ' . uniqid(),
+    ]);
     $albumResult = $album['result'] ?? null;
     if (! is_array($albumResult) || ! is_numeric($albumResult['id'] ?? null)) {
         throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($album, true));
@@ -534,7 +574,9 @@ it('falls back to the hardcoded 20-per-page default when the configured page siz
 
     try {
         $page = H::loginAsAdmin($this);
-        $album = H::wsCall($page, 'pwg.categories.add', ['name' => 'Batch Global BadPageSize ' . uniqid()]);
+        $album = H::wsCall($page, 'pwg.categories.add', [
+            'name' => 'Batch Global BadPageSize ' . uniqid(),
+        ]);
         $albumResult = $album['result'] ?? null;
         if (! is_array($albumResult) || ! is_numeric($albumResult['id'] ?? null)) {
             throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($album, true));
@@ -601,7 +643,9 @@ function bmMakeNamedTestImage(string $basename): string
 
 it('orders thumbnails by the duplicate-detection fields when the active filter is "duplicates"', function (): void {
     $page = H::loginAsAdmin($this);
-    $album = H::wsCall($page, 'pwg.categories.add', ['name' => 'Batch Global Duplicates ' . uniqid()]);
+    $album = H::wsCall($page, 'pwg.categories.add', [
+        'name' => 'Batch Global Duplicates ' . uniqid(),
+    ]);
     $albumResult = $album['result'] ?? null;
     if (! is_array($albumResult) || ! is_numeric($albumResult['id'] ?? null)) {
         throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($album, true));

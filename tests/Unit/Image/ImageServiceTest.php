@@ -4,53 +4,51 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Unit\Image;
 
+use Doctrine\DBAL\Connection;
+use LogicException;
 use PHPUnit\Framework\Assert;
+use Piwigo\Activity\ActivityEntity;
+use Piwigo\Activity\ActivityService;
 use Piwigo\Common\ValueObject\CategoryId;
 use Piwigo\Common\ValueObject\ImageId;
-use Piwigo\Db\EntityManagerFactory;
-use Piwigo\Image\ImageEntity;
-use Piwigo\Image\Projection\AddMethodBreakdown;
-use Piwigo\Image\Projection\SlideshowParams;
-use Piwigo\Activity\ActivityService;
-use Piwigo\Activity\ActivityEntity;
-use Piwigo\Tests\Support\SessionServiceTestFactory;
-use Piwigo\PluginConfig\EventDispatcher;
-use Piwigo\Tests\Support\EventDispatcherTestFactory;
-use Piwigo\Lang\Translator;
-use Piwigo\Tests\Support\TranslatorTestFactory;
-use Piwigo\Core\Lang;
-use Piwigo\Tests\Support\LangTestFactory;
-use Piwigo\Core\Kernel;
-use Psr\Container\ContainerExceptionInterface;
-use Piwigo\Tests\Support\HtmlServiceTestFactory;
-use Piwigo\Core\Paths;
-use Piwigo\Core\InstallationFlag;
-use Doctrine\DBAL\Connection;
-use Piwigo\Activity\ActivityRepository;
-use Piwigo\Core\Logger;
-use Piwigo\Core\CurrentLogger;
-use LogicException;
 use Piwigo\Config\ConfigEntry;
 use Piwigo\Config\ConfigRepository;
-use Piwigo\Tests\Support\CurrentConfigServiceTestFactory;
 use Piwigo\Config\ConfigService;
 use Piwigo\Config\CurrentConfig;
-use Piwigo\Tests\Support\CurrentConfigTestFactory;
+use Piwigo\Config\CurrentConfigService;
+use Piwigo\Core\CurrentLogger;
+use Piwigo\Core\FilterState;
+use Piwigo\Core\InstallationFlag;
+use Piwigo\Core\Kernel;
+use Piwigo\Core\Lang;
+use Piwigo\Core\Logger;
+use Piwigo\Core\Paths;
 use Piwigo\Db\AdvisorySessionLock;
 use Piwigo\Db\DbConnection;
+use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Db\SqlDialect;
 use Piwigo\Event\Album\EmptyLounge;
 use Piwigo\Event\Picture\BeginDeleteElements;
 use Piwigo\Event\Picture\DeleteElements;
+use Piwigo\Image\ImageEntity;
 use Piwigo\Image\ImageRepository;
 use Piwigo\Permission\PermissionCriteria;
 use Piwigo\Image\ImageService;
-use RuntimeException;
-use Piwigo\Users\CurrentUser;
-use Piwigo\Core\FilterState;
-use Piwigo\Config\CurrentConfigService;
-use ReflectionMethod;
+use Piwigo\Image\Projection\SlideshowParams;
+use Piwigo\Lang\Translator;
+use Piwigo\PluginConfig\EventDispatcher;
+use Piwigo\Tests\Support\CurrentConfigServiceTestFactory;
+use Piwigo\Tests\Support\CurrentConfigTestFactory;
+use Piwigo\Tests\Support\EventDispatcherTestFactory;
+use Piwigo\Tests\Support\HtmlServiceTestFactory;
 use Piwigo\Tests\Support\KernelContainerOverride;
+use Piwigo\Tests\Support\LangTestFactory;
+use Piwigo\Tests\Support\SessionServiceTestFactory;
+use Piwigo\Tests\Support\TranslatorTestFactory;
+use Piwigo\Users\CurrentUser;
+use Psr\Container\ContainerExceptionInterface;
+use ReflectionMethod;
+use RuntimeException;
 
 // ---------------------------------------------------------------------
 // Mutation-testing gap closure (G1, when-i-run-the-mutable-cookie.md):
@@ -183,8 +181,8 @@ test('currentUser() throws when the container returns an unexpected type for Cur
             $service->associateImagesToCategories([$imageId], [1]);
         });
     } finally {
-        $conn->executeStatement('DELETE FROM ' . 'image_category' . ' WHERE image_id = ?', [$imageId]);
-        $conn->executeStatement('DELETE FROM ' . 'images' . ' WHERE id = ?', [$imageId]);
+        $conn->executeStatement('DELETE FROM image_category WHERE image_id = ?', [$imageId]);
+        $conn->executeStatement('DELETE FROM images WHERE id = ?', [$imageId]);
     }
 })->throws(LogicException::class, 'Container returned an unexpected type for ' . CurrentUser::class);
 
@@ -207,8 +205,10 @@ test('currentUser() returns the container-shared instance once Kernel is booted,
         $resolved = $method->invoke($service);
         $containerInstance = Kernel::container()->get(CurrentUser::class);
 
-        expect($containerInstance)->toBeInstanceOf(CurrentUser::class);
-        expect($resolved)->toBe($containerInstance);
+        expect($containerInstance)
+            ->toBeInstanceOf(CurrentUser::class);
+        expect($resolved)
+            ->toBe($containerInstance);
     } finally {
         Kernel::reset();
         imageServiceTestRrmdir($root);
@@ -231,8 +231,8 @@ test('filterState() throws when the container returns an unexpected type for Fil
             $service->associateImagesToCategories([$imageId], [1]);
         });
     } finally {
-        $conn->executeStatement('DELETE FROM ' . 'image_category' . ' WHERE image_id = ?', [$imageId]);
-        $conn->executeStatement('DELETE FROM ' . 'images' . ' WHERE id = ?', [$imageId]);
+        $conn->executeStatement('DELETE FROM image_category WHERE image_id = ?', [$imageId]);
+        $conn->executeStatement('DELETE FROM images WHERE id = ?', [$imageId]);
     }
 })->throws(LogicException::class, 'Container returned an unexpected type for ' . FilterState::class);
 
@@ -250,8 +250,10 @@ test('filterState() returns the container-shared instance once Kernel is booted,
         $resolved = $method->invoke($service);
         $containerInstance = Kernel::container()->get(FilterState::class);
 
-        expect($containerInstance)->toBeInstanceOf(FilterState::class);
-        expect($resolved)->toBe($containerInstance);
+        expect($containerInstance)
+            ->toBeInstanceOf(FilterState::class);
+        expect($resolved)
+            ->toBe($containerInstance);
     } finally {
         Kernel::reset();
         imageServiceTestRrmdir($root);
@@ -366,23 +368,30 @@ test('getRowWithCondition returns the real image row when one genuinely matches,
 test('getDefaultSlideshowParams reads conf', function (): void {
     $params = new ImageService(imageServiceTestLang(), EntityManagerFactory::build(DbConnection::build())->getRepository(ImageEntity::class), new ActivityService(EntityManagerFactory::build(DbConnection::build())->getRepository(ActivityEntity::class)), SessionServiceTestFactory::get(), EventDispatcherTestFactory::get(), CurrentConfigTestFactory::get(), TranslatorTestFactory::get(), Paths::fromRoot(sys_get_temp_dir()))->getDefaultSlideshowParams();
 
-    expect($params)->toEqual(new SlideshowParams(period: 4, repeat: true, play: true));
+    expect($params)
+        ->toEqual(new SlideshowParams(period: 4, repeat: true, play: true));
 });
 
 test('correctSlideshowParams clamps below the minimum', function (): void {
-    $corrected = new ImageService(imageServiceTestLang(), EntityManagerFactory::build(DbConnection::build())->getRepository(ImageEntity::class), new ActivityService(EntityManagerFactory::build(DbConnection::build())->getRepository(ActivityEntity::class)), SessionServiceTestFactory::get(), EventDispatcherTestFactory::get(), CurrentConfigTestFactory::get(), TranslatorTestFactory::get(), Paths::fromRoot(sys_get_temp_dir()))->correctSlideshowParams(['period' => 0]);
+    $corrected = new ImageService(imageServiceTestLang(), EntityManagerFactory::build(DbConnection::build())->getRepository(ImageEntity::class), new ActivityService(EntityManagerFactory::build(DbConnection::build())->getRepository(ActivityEntity::class)), SessionServiceTestFactory::get(), EventDispatcherTestFactory::get(), CurrentConfigTestFactory::get(), TranslatorTestFactory::get(), Paths::fromRoot(sys_get_temp_dir()))->correctSlideshowParams([
+        'period' => 0,
+    ]);
 
     expect($corrected['period'])->toBe(1);
 });
 
 test('correctSlideshowParams clamps above the maximum', function (): void {
-    $corrected = new ImageService(imageServiceTestLang(), EntityManagerFactory::build(DbConnection::build())->getRepository(ImageEntity::class), new ActivityService(EntityManagerFactory::build(DbConnection::build())->getRepository(ActivityEntity::class)), SessionServiceTestFactory::get(), EventDispatcherTestFactory::get(), CurrentConfigTestFactory::get(), TranslatorTestFactory::get(), Paths::fromRoot(sys_get_temp_dir()))->correctSlideshowParams(['period' => 99]);
+    $corrected = new ImageService(imageServiceTestLang(), EntityManagerFactory::build(DbConnection::build())->getRepository(ImageEntity::class), new ActivityService(EntityManagerFactory::build(DbConnection::build())->getRepository(ActivityEntity::class)), SessionServiceTestFactory::get(), EventDispatcherTestFactory::get(), CurrentConfigTestFactory::get(), TranslatorTestFactory::get(), Paths::fromRoot(sys_get_temp_dir()))->correctSlideshowParams([
+        'period' => 99,
+    ]);
 
     expect($corrected['period'])->toBe(10);
 });
 
 test('correctSlideshowParams leaves an in-range value untouched', function (): void {
-    $corrected = new ImageService(imageServiceTestLang(), EntityManagerFactory::build(DbConnection::build())->getRepository(ImageEntity::class), new ActivityService(EntityManagerFactory::build(DbConnection::build())->getRepository(ActivityEntity::class)), SessionServiceTestFactory::get(), EventDispatcherTestFactory::get(), CurrentConfigTestFactory::get(), TranslatorTestFactory::get(), Paths::fromRoot(sys_get_temp_dir()))->correctSlideshowParams(['period' => 5]);
+    $corrected = new ImageService(imageServiceTestLang(), EntityManagerFactory::build(DbConnection::build())->getRepository(ImageEntity::class), new ActivityService(EntityManagerFactory::build(DbConnection::build())->getRepository(ActivityEntity::class)), SessionServiceTestFactory::get(), EventDispatcherTestFactory::get(), CurrentConfigTestFactory::get(), TranslatorTestFactory::get(), Paths::fromRoot(sys_get_temp_dir()))->correctSlideshowParams([
+        'period' => 5,
+    ]);
 
     expect($corrected['period'])->toBe(5);
 });
@@ -416,9 +425,14 @@ test('decodeSlideshowParams clamps an out-of-range period', function (): void {
 
 test('encodeSlideshowParams round-trips a non-default period', function (): void {
     $service = new ImageService(imageServiceTestLang(), EntityManagerFactory::build(DbConnection::build())->getRepository(ImageEntity::class), new ActivityService(EntityManagerFactory::build(DbConnection::build())->getRepository(ActivityEntity::class)), SessionServiceTestFactory::get(), EventDispatcherTestFactory::get(), CurrentConfigTestFactory::get(), TranslatorTestFactory::get(), Paths::fromRoot(sys_get_temp_dir()));
-    $encoded = $service->encodeSlideshowParams(['period' => 6, 'repeat' => true, 'play' => true]);
+    $encoded = $service->encodeSlideshowParams([
+        'period' => 6,
+        'repeat' => true,
+        'play' => true,
+    ]);
 
-    expect($encoded)->toBe('+period-6');
+    expect($encoded)
+        ->toBe('+period-6');
 
     $decoded = $service->decodeSlideshowParams($encoded);
     expect($decoded['period'])->toBe('6');
@@ -427,13 +441,19 @@ test('encodeSlideshowParams round-trips a non-default period', function (): void
 test('encodeSlideshowParams omits default values', function (): void {
     $service = new ImageService(imageServiceTestLang(), EntityManagerFactory::build(DbConnection::build())->getRepository(ImageEntity::class), new ActivityService(EntityManagerFactory::build(DbConnection::build())->getRepository(ActivityEntity::class)), SessionServiceTestFactory::get(), EventDispatcherTestFactory::get(), CurrentConfigTestFactory::get(), TranslatorTestFactory::get(), Paths::fromRoot(sys_get_temp_dir()));
 
-    expect($service->encodeSlideshowParams($service->getDefaultSlideshowParams()->toArray()))->toBe('');
+    expect($service->encodeSlideshowParams($service->getDefaultSlideshowParams()->toArray()))
+        ->toBe('');
 });
 
 test('encodeSlideshowParams encodes a changed boolean', function (): void {
-    $encoded = new ImageService(imageServiceTestLang(), EntityManagerFactory::build(DbConnection::build())->getRepository(ImageEntity::class), new ActivityService(EntityManagerFactory::build(DbConnection::build())->getRepository(ActivityEntity::class)), SessionServiceTestFactory::get(), EventDispatcherTestFactory::get(), CurrentConfigTestFactory::get(), TranslatorTestFactory::get(), Paths::fromRoot(sys_get_temp_dir()))->encodeSlideshowParams(['period' => 4, 'repeat' => false, 'play' => true]);
+    $encoded = new ImageService(imageServiceTestLang(), EntityManagerFactory::build(DbConnection::build())->getRepository(ImageEntity::class), new ActivityService(EntityManagerFactory::build(DbConnection::build())->getRepository(ActivityEntity::class)), SessionServiceTestFactory::get(), EventDispatcherTestFactory::get(), CurrentConfigTestFactory::get(), TranslatorTestFactory::get(), Paths::fromRoot(sys_get_temp_dir()))->encodeSlideshowParams([
+        'period' => 4,
+        'repeat' => false,
+        'play' => true,
+    ]);
 
-    expect($encoded)->toBe('+repeat-false');
+    expect($encoded)
+        ->toBe('+repeat-false');
 });
 
 test('correctSlideshowParams defaults an absent period to 0, not 1, before clamping to the configured minimum', function (): void {
@@ -445,9 +465,11 @@ test('correctSlideshowParams defaults an absent period to 0, not 1, before clamp
     // absent from the returned array entirely, not just numerically
     // different.
     [$conn, $repo] = imageServiceTestConnAndRepo();
-    $corrected = imageServiceTestNewService($repo, $conn)->correctSlideshowParams([]);
+    $corrected = imageServiceTestNewService($repo, $conn)
+        ->correctSlideshowParams([]);
 
-    expect($corrected)->toHaveKey('period');
+    expect($corrected)
+        ->toHaveKey('period');
     expect($corrected['period'])->toBe(1);
 });
 
@@ -461,9 +483,11 @@ test('correctSlideshowParams defaults an absent period to 0, not -1, before clam
     // 0, a real, observable key the real code never adds here.
     CurrentConfigTestFactory::get()->slideshowPeriodMin = 0;
     [$conn, $repo] = imageServiceTestConnAndRepo();
-    $corrected = imageServiceTestNewService($repo, $conn)->correctSlideshowParams([]);
+    $corrected = imageServiceTestNewService($repo, $conn)
+        ->correctSlideshowParams([]);
 
-    expect($corrected)->not->toHaveKey('period');
+    expect($corrected)
+        ->not->toHaveKey('period');
 });
 
 test('correctSlideshowParams treats a period exactly equal to the minimum as already in range, not clamped', function (): void {
@@ -477,7 +501,10 @@ test('correctSlideshowParams treats a period exactly equal to the minimum as alr
     // both operators agree on the boolean *value* here, so only the
     // resulting type tells them apart).
     [$conn, $repo] = imageServiceTestConnAndRepo();
-    $corrected = imageServiceTestNewService($repo, $conn)->correctSlideshowParams(['period' => '1']);
+    $corrected = imageServiceTestNewService($repo, $conn)
+        ->correctSlideshowParams([
+            'period' => '1',
+        ]);
 
     expect($corrected['period'])->toBe('1');
 });
@@ -486,7 +513,10 @@ test('correctSlideshowParams treats a period exactly equal to the maximum as alr
     // Kills line 97's GreaterToGreaterOrEqual, same type-preservation
     // technique as the sibling test above.
     [$conn, $repo] = imageServiceTestConnAndRepo();
-    $corrected = imageServiceTestNewService($repo, $conn)->correctSlideshowParams(['period' => '10']);
+    $corrected = imageServiceTestNewService($repo, $conn)
+        ->correctSlideshowParams([
+            'period' => '10',
+        ]);
 
     expect($corrected['period'])->toBe('10');
 });
@@ -531,9 +561,15 @@ test('encodeSlideshowParams accumulates every changed param into one string, not
     // `.=` (real) keeps both; `=` (mutant) overwrites the first with
     // the second.
     [$conn, $repo] = imageServiceTestConnAndRepo();
-    $encoded = imageServiceTestNewService($repo, $conn)->encodeSlideshowParams(['period' => 7, 'repeat' => false, 'play' => true]);
+    $encoded = imageServiceTestNewService($repo, $conn)
+        ->encodeSlideshowParams([
+            'period' => 7,
+            'repeat' => false,
+            'play' => true,
+        ]);
 
-    expect($encoded)->toBe('+period-7+repeat-false');
+    expect($encoded)
+        ->toBe('+period-7+repeat-false');
 });
 
 /**
@@ -569,9 +605,16 @@ test('encodeSlideshowParams accumulates every changed param into one string, not
  */
 test('encodeSlideshowParams treats a non-scalar caller-supplied value as unrepresentable and skips it, rather than encoding it', function (): void {
     [$conn, $repo] = imageServiceTestConnAndRepo();
-    $encoded = imageServiceTestNewService($repo, $conn)->encodeSlideshowParams(['period' => 4, 'repeat' => true, 'play' => true, 'extra' => ['nested']]);
+    $encoded = imageServiceTestNewService($repo, $conn)
+        ->encodeSlideshowParams([
+            'period' => 4,
+            'repeat' => true,
+            'play' => true,
+            'extra' => ['nested'],
+        ]);
 
-    expect($encoded)->toBe('');
+    expect($encoded)
+        ->toBe('');
 });
 
 test('encodeSlideshowParams filters out a non-scalar value under a key shared with the real defaults, avoiding a real array-to-string warning', function (): void {
@@ -612,7 +655,8 @@ test('encodeSlideshowParams filters out a non-scalar value under a key shared wi
 
 test('countPdfPages counts page markers', function (): void {
     $tmp = tempnam(sys_get_temp_dir(), 'pwg-pdf-test');
-    expect($tmp)->toBeString();
+    expect($tmp)
+        ->toBeString();
     if ($tmp === false) {
         return;
     }
@@ -645,7 +689,8 @@ test('countPdfPages returns false when the path is readable but reading it produ
     $service = new ImageService(imageServiceTestLang(), EntityManagerFactory::build(DbConnection::build())->getRepository(ImageEntity::class), new ActivityService(EntityManagerFactory::build(DbConnection::build())->getRepository(ActivityEntity::class)), SessionServiceTestFactory::get(), EventDispatcherTestFactory::get(), CurrentConfigTestFactory::get(), TranslatorTestFactory::get(), Paths::fromRoot(sys_get_temp_dir()));
 
     try {
-        expect($service->countPdfPages($sockPath))->toBeFalse();
+        expect($service->countPdfPages($sockPath))
+            ->toBeFalse();
     } finally {
         socket_close($socket);
         @unlink($sockPath);
@@ -765,7 +810,10 @@ test('deleteElementFiles deletes the original, its representative, and its forma
     file_put_contents($root . '/upload/2026/07/pwg_format/withformat.webp', 'x');
     $conn->createQueryBuilder()
         ->insert('image_format')
-        ->values(['image_id' => ':imageId', 'ext' => ':ext'])
+        ->values([
+            'image_id' => ':imageId',
+            'ext' => ':ext',
+        ])
         ->setParameter('imageId', $formatId)
         ->setParameter('ext', 'webp')
         ->executeStatement();
@@ -789,15 +837,16 @@ test('deleteElementFiles deletes the original, its representative, and its forma
         sort($sortedResult);
         $expectedIds = [$plainId, $repId, $formatId];
         sort($expectedIds);
-        expect($sortedResult)->toBe($expectedIds);
+        expect($sortedResult)
+            ->toBe($expectedIds);
         expect(file_exists($root . '/upload/2026/07/plain.jpg'))->toBeFalse();
         expect(file_exists($root . '/upload/2026/07/doc.pdf'))->toBeFalse();
         expect(file_exists($root . '/upload/2026/07/pwg_representative/doc.jpg'))->toBeFalse();
         expect(file_exists($root . '/upload/2026/07/withformat.jpg'))->toBeFalse();
         expect(file_exists($root . '/upload/2026/07/pwg_format/withformat.webp'))->toBeFalse();
     } finally {
-        $conn->executeStatement('DELETE FROM ' . 'images' . ' WHERE id IN (?, ?, ?, ?)', [$plainId, $repId, $formatId, $remoteId]);
-        $conn->executeStatement('DELETE FROM ' . 'image_format' . ' WHERE image_id = ?', [$formatId]);
+        $conn->executeStatement('DELETE FROM images WHERE id IN (?, ?, ?, ?)', [$plainId, $repId, $formatId, $remoteId]);
+        $conn->executeStatement('DELETE FROM image_format WHERE image_id = ?', [$formatId]);
         imageServiceTestRrmdir($root);
         Kernel::reset();
         CurrentConfigTestFactory::get()->reset();
@@ -822,11 +871,21 @@ test('deleteElementFiles accumulates every registered format for an id, not just
     file_put_contents($root . '/upload/2026/07/multiformat.jpg', 'x');
     file_put_contents($root . '/upload/2026/07/pwg_format/multiformat.webp', 'x');
     file_put_contents($root . '/upload/2026/07/pwg_format/multiformat.avif', 'x');
-    $conn->createQueryBuilder()->insert('image_format')
-        ->values(['image_id' => ':i', 'ext' => ':e'])->setParameter('i', $imageId)->setParameter('e', 'webp')
+    $conn->createQueryBuilder()
+        ->insert('image_format')
+        ->values([
+            'image_id' => ':i',
+            'ext' => ':e',
+        ])->setParameter('i', $imageId)
+        ->setParameter('e', 'webp')
         ->executeStatement();
-    $conn->createQueryBuilder()->insert('image_format')
-        ->values(['image_id' => ':i', 'ext' => ':e'])->setParameter('i', $imageId)->setParameter('e', 'avif')
+    $conn->createQueryBuilder()
+        ->insert('image_format')
+        ->values([
+            'image_id' => ':i',
+            'ext' => ':e',
+        ])->setParameter('i', $imageId)
+        ->setParameter('e', 'avif')
         ->executeStatement();
 
     try {
@@ -835,12 +894,13 @@ test('deleteElementFiles accumulates every registered format for an id, not just
 
         $result = $service->deleteElementFiles([$imageId], $urlService);
 
-        expect($result)->toBe([$imageId]);
+        expect($result)
+            ->toBe([$imageId]);
         expect(file_exists($root . '/upload/2026/07/pwg_format/multiformat.webp'))->toBeFalse();
         expect(file_exists($root . '/upload/2026/07/pwg_format/multiformat.avif'))->toBeFalse();
     } finally {
-        $conn->executeStatement('DELETE FROM ' . 'images' . ' WHERE id = ?', [$imageId]);
-        $conn->executeStatement('DELETE FROM ' . 'image_format' . ' WHERE image_id = ?', [$imageId]);
+        $conn->executeStatement('DELETE FROM images WHERE id = ?', [$imageId]);
+        $conn->executeStatement('DELETE FROM image_format WHERE image_id = ?', [$imageId]);
         imageServiceTestRrmdir($root);
         Kernel::reset();
         CurrentConfigTestFactory::get()->reset();
@@ -863,9 +923,9 @@ test('deleteElementFiles skips a remote row with `continue`, not `break` -- a lo
     mkdir($root . '/upload/2026/07', 0o777, true);
     file_put_contents($root . '/upload/2026/07/afterremote.jpg', 'x');
 
-    $conn->executeStatement('DELETE FROM ' . 'images' . ' WHERE id IN (760001, 760002)');
-    $conn->executeStatement('INSERT INTO ' . 'images' . ' (id, file, path) VALUES (760001, ?, ?)', ['remote.jpg', 'https://remote.example.test/remote.jpg']);
-    $conn->executeStatement('INSERT INTO ' . 'images' . ' (id, file, path) VALUES (760002, ?, ?)', ['afterremote.jpg', 'upload/2026/07/afterremote.jpg']);
+    $conn->executeStatement('DELETE FROM images WHERE id IN (760001, 760002)');
+    $conn->executeStatement('INSERT INTO images (id, file, path) VALUES (760001, ?, ?)', ['remote.jpg', 'https://remote.example.test/remote.jpg']);
+    $conn->executeStatement('INSERT INTO images (id, file, path) VALUES (760002, ?, ?)', ['afterremote.jpg', 'upload/2026/07/afterremote.jpg']);
 
     try {
         $service = imageServiceTestNewService($repo, $conn, Paths::fromRoot($root));
@@ -873,10 +933,11 @@ test('deleteElementFiles skips a remote row with `continue`, not `break` -- a lo
 
         $result = $service->deleteElementFiles([760001, 760002], $urlService);
 
-        expect($result)->toBe([760002]);
+        expect($result)
+            ->toBe([760002]);
         expect(file_exists($root . '/upload/2026/07/afterremote.jpg'))->toBeFalse();
     } finally {
-        $conn->executeStatement('DELETE FROM ' . 'images' . ' WHERE id IN (760001, 760002)');
+        $conn->executeStatement('DELETE FROM images WHERE id IN (760001, 760002)');
         imageServiceTestRrmdir($root);
         Kernel::reset();
         CurrentConfigTestFactory::get()->reset();
@@ -911,11 +972,13 @@ test('deleteElementFiles treats an explicitly-empty-string representative_ext th
 
         $result = $service->deleteElementFiles([$imageId], $urlService);
 
-        expect($result)->toBe([$imageId]);
+        expect($result)
+            ->toBe([$imageId]);
         expect(file_exists($root . '/upload/2026/07/emptyrepext.jpg'))->toBeFalse();
-        expect(file_exists($decoyPath))->toBeTrue();
+        expect(file_exists($decoyPath))
+            ->toBeTrue();
     } finally {
-        $conn->executeStatement('DELETE FROM ' . 'images' . ' WHERE id = ?', [$imageId]);
+        $conn->executeStatement('DELETE FROM images WHERE id = ?', [$imageId]);
         imageServiceTestRrmdir($root);
         Kernel::reset();
         CurrentConfigTestFactory::get()->reset();
@@ -958,15 +1021,20 @@ test('deleteElementFiles stops removing a row\'s remaining files (`break`, not `
 
         $result = $service->deleteElementFiles([$imageId], $urlService);
 
-        expect($result)->toBe([]);
-        expect($capturedLevel)->toBe(E_USER_WARNING);
-        expect($capturedMessage)->toBe('"' . $originalPath . '" cannot be removed');
-        expect(file_exists($originalPath))->toBeTrue();
-        expect(file_exists($representativePath))->toBeTrue();
+        expect($result)
+            ->toBe([]);
+        expect($capturedLevel)
+            ->toBe(E_USER_WARNING);
+        expect($capturedMessage)
+            ->toBe('"' . $originalPath . '" cannot be removed');
+        expect(file_exists($originalPath))
+            ->toBeTrue();
+        expect(file_exists($representativePath))
+            ->toBeTrue();
     } finally {
         restore_error_handler();
         chmod($root . '/upload/2026/07/lockedwithrep', 0o755);
-        $conn->executeStatement('DELETE FROM ' . 'images' . ' WHERE id = ?', [$imageId]);
+        $conn->executeStatement('DELETE FROM images WHERE id = ?', [$imageId]);
         imageServiceTestRrmdir($root);
         Kernel::reset();
         CurrentConfigTestFactory::get()->reset();
@@ -1006,11 +1074,14 @@ test('deleteElementFiles adds representative_ext to the derivative-cache lookup 
 
         $result = $service->deleteElementFiles([$imageId], $urlService);
 
-        expect($result)->toBe([$imageId]);
-        expect(file_exists($representativePatternDecoy))->toBeFalse();
-        expect(file_exists($originalPatternDecoy))->toBeTrue();
+        expect($result)
+            ->toBe([$imageId]);
+        expect(file_exists($representativePatternDecoy))
+            ->toBeFalse();
+        expect(file_exists($originalPatternDecoy))
+            ->toBeTrue();
     } finally {
-        $conn->executeStatement('DELETE FROM ' . 'images' . ' WHERE id = ?', [$imageId]);
+        $conn->executeStatement('DELETE FROM images WHERE id = ?', [$imageId]);
         imageServiceTestRrmdir($root);
         Kernel::reset();
         CurrentConfigTestFactory::get()->reset();
@@ -1048,7 +1119,8 @@ test('deleteElementFiles stops at the first file it cannot remove and does not r
             restore_error_handler();
         }
 
-        expect($result)->toBe([]);
+        expect($result)
+            ->toBe([]);
         expect(file_exists($root . '/upload/2026/07/locked/blocked.jpg'))->toBeTrue();
         // Never reached: build() breaks out of the loop entirely once
         // $blockedId fails, so $afterId's own (perfectly deletable) file
@@ -1056,7 +1128,7 @@ test('deleteElementFiles stops at the first file it cannot remove and does not r
         expect(file_exists($root . '/upload/2026/07/after.jpg'))->toBeTrue();
     } finally {
         chmod($root . '/upload/2026/07/locked', 0o755);
-        $conn->executeStatement('DELETE FROM ' . 'images' . ' WHERE id IN (?, ?)', [$blockedId, $afterId]);
+        $conn->executeStatement('DELETE FROM images WHERE id IN (?, ?)', [$blockedId, $afterId]);
         imageServiceTestRrmdir($root);
         Kernel::reset();
         CurrentConfigTestFactory::get()->reset();
@@ -1085,12 +1157,14 @@ test('deleteElements() returns 0 without touching the database when physical del
             restore_error_handler();
         }
 
-        expect($result)->toBe(0);
-        $stillThere = $conn->fetchOne('SELECT COUNT(*) FROM ' . 'images' . ' WHERE id = ' . $blockedId);
-        expect($stillThere)->toBe(1);
+        expect($result)
+            ->toBe(0);
+        $stillThere = $conn->fetchOne('SELECT COUNT(*) FROM images WHERE id = ' . $blockedId);
+        expect($stillThere)
+            ->toBe(1);
     } finally {
         chmod($root . '/upload/2026/07/locked', 0o755);
-        $conn->executeStatement('DELETE FROM ' . 'images' . ' WHERE id = ?', [$blockedId]);
+        $conn->executeStatement('DELETE FROM images WHERE id = ?', [$blockedId]);
         imageServiceTestRrmdir($root);
         Kernel::reset();
         CurrentConfigTestFactory::get()->reset();
@@ -1141,13 +1215,16 @@ test('deleteElements() with physical deletion removing zero files never fires de
             restore_error_handler();
         }
 
-        expect($result)->toBe(0);
-        expect($deleteFired)->toBeFalse();
-        expect($activityService->getOccuredOnForObject($blockedId, 'photo', 'delete'))->toBeNull();
+        expect($result)
+            ->toBe(0);
+        expect($deleteFired)
+            ->toBeFalse();
+        expect($activityService->getOccuredOnForObject($blockedId, 'photo', 'delete'))
+            ->toBeNull();
     } finally {
         EventDispatcherTestFactory::get()->removeEventHandler(DeleteElements::class, $deleteHandler);
         chmod($root . '/upload/2026/07/locked3', 0o755);
-        $conn->executeStatement('DELETE FROM ' . 'images' . ' WHERE id = ?', [$blockedId]);
+        $conn->executeStatement('DELETE FROM images WHERE id = ?', [$blockedId]);
         imageServiceTestRrmdir($root);
         Kernel::reset();
         CurrentConfigTestFactory::get()->reset();
@@ -1183,12 +1260,17 @@ test('deleteElements() fires begin_delete_elements and delete_elements with the 
 
         $count = $service->deleteElements([$imageId], $urlService, physicalDeletion: false);
 
-        expect($count)->toBe(1);
-        expect($capturedBeginIds)->toBe([$imageId]);
-        expect($capturedDeleteIds)->toBe([$imageId]);
-        $imagesRemaining = $conn->fetchOne('SELECT COUNT(*) FROM ' . 'images' . ' WHERE id = ' . $imageId);
-        expect($imagesRemaining)->toBe(0);
-        expect($activityService->getOccuredOnForObject($imageId, 'photo', 'delete'))->not->toBeNull();
+        expect($count)
+            ->toBe(1);
+        expect($capturedBeginIds)
+            ->toBe([$imageId]);
+        expect($capturedDeleteIds)
+            ->toBe([$imageId]);
+        $imagesRemaining = $conn->fetchOne('SELECT COUNT(*) FROM images WHERE id = ' . $imageId);
+        expect($imagesRemaining)
+            ->toBe(0);
+        expect($activityService->getOccuredOnForObject($imageId, 'photo', 'delete'))
+            ->not->toBeNull();
     } finally {
         EventDispatcherTestFactory::get()->removeEventHandler(BeginDeleteElements::class, $beginHandler);
         EventDispatcherTestFactory::get()->removeEventHandler(DeleteElements::class, $deleteHandler);
@@ -1209,7 +1291,8 @@ test('deleteElements() with an empty id list never fires begin_delete_elements a
         $service = imageServiceTestNewService($repo, $conn);
 
         expect($service->deleteElements([], $urlService))->toBe(0);
-        expect($fired)->toBeFalse();
+        expect($fired)
+            ->toBeFalse();
     } finally {
         EventDispatcherTestFactory::get()->removeEventHandler(BeginDeleteElements::class, $handler);
     }
@@ -1264,10 +1347,15 @@ test('associateImagesToCategories() treats a numeric-string image id as already 
     // turning this test into an uncaught exception under the mutation.
     [$conn, $repo] = imageServiceTestConnAndRepo();
     $imageId = imageServiceTestInsertImage($conn, 'upload/2026/07/existingassoc.jpg');
-    $rankColumn = $conn->getDatabasePlatform()->quoteSingleIdentifier('rank');
+    $rankColumn = $conn->getDatabasePlatform()
+        ->quoteSingleIdentifier('rank');
     $conn->createQueryBuilder()
         ->insert('image_category')
-        ->values(['image_id' => ':imageId', 'category_id' => ':categoryId', $rankColumn => ':rank'])
+        ->values([
+            'image_id' => ':imageId',
+            'category_id' => ':categoryId',
+            $rankColumn => ':rank',
+        ])
         ->setParameter('imageId', $imageId)
         ->setParameter('categoryId', 1)
         ->setParameter('rank', 1)
@@ -1278,12 +1366,13 @@ test('associateImagesToCategories() treats a numeric-string image id as already 
 
         expect($service->associateImagesToCategories([(string) $imageId], [1]))->toBeNull();
 
-        $rows = $conn->fetchAllAssociative('SELECT ' . $rankColumn . ' FROM ' . 'image_category' . ' WHERE image_id = ' . $imageId . ' AND category_id = 1');
-        expect($rows)->toHaveCount(1);
+        $rows = $conn->fetchAllAssociative('SELECT ' . $rankColumn . ' FROM image_category WHERE image_id = ' . $imageId . ' AND category_id = 1');
+        expect($rows)
+            ->toHaveCount(1);
         expect($rows[0]['rank'])->toBe(1);
     } finally {
-        $conn->executeStatement('DELETE FROM ' . 'image_category' . ' WHERE image_id = ?', [$imageId]);
-        $conn->executeStatement('DELETE FROM ' . 'images' . ' WHERE id = ?', [$imageId]);
+        $conn->executeStatement('DELETE FROM image_category WHERE image_id = ?', [$imageId]);
+        $conn->executeStatement('DELETE FROM images WHERE id = ?', [$imageId]);
     }
 });
 
@@ -1292,7 +1381,12 @@ test('moveImagesToCategories() returns false for an empty image list, and treats
     $imageId = imageServiceTestInsertImage($conn, 'upload/2026/07/mover.jpg');
     $conn->createQueryBuilder()
         ->insert('image_category')
-        ->values(['image_id' => ':imageId', 'category_id' => ':categoryId', $conn->getDatabasePlatform()->quoteSingleIdentifier('rank') => ':rank'])
+        ->values([
+            'image_id' => ':imageId',
+            'category_id' => ':categoryId',
+            $conn->getDatabasePlatform()
+                ->quoteSingleIdentifier('rank') => ':rank',
+        ])
         ->setParameter('imageId', $imageId)
         ->setParameter('categoryId', 1)
         ->setParameter('rank', 1)
@@ -1308,11 +1402,12 @@ test('moveImagesToCategories() returns false for an empty image list, and treats
         // associateImagesToCategories() is never called since categories
         // stays empty.
         expect($service->moveImagesToCategories([$imageId], 'not-an-array'))->toBeNull();
-        $remaining = $conn->fetchOne('SELECT COUNT(*) FROM ' . 'image_category' . ' WHERE image_id = ' . $imageId);
-        expect($remaining)->toBe(0);
+        $remaining = $conn->fetchOne('SELECT COUNT(*) FROM image_category WHERE image_id = ' . $imageId);
+        expect($remaining)
+            ->toBe(0);
     } finally {
-        $conn->executeStatement('DELETE FROM ' . 'image_category' . ' WHERE image_id = ?', [$imageId]);
-        $conn->executeStatement('DELETE FROM ' . 'images' . ' WHERE id = ?', [$imageId]);
+        $conn->executeStatement('DELETE FROM image_category WHERE image_id = ?', [$imageId]);
+        $conn->executeStatement('DELETE FROM images WHERE id = ?', [$imageId]);
     }
 });
 
@@ -1336,7 +1431,7 @@ test('associateImagesToCategories() initializes a brand new category\'s starting
     // categoryService()->updateCategory() resolves -- proving line 445
     // genuinely ran.
     [$conn, $repo] = imageServiceTestConnAndRepo();
-    $conn->executeStatement("INSERT INTO " . 'categories' . " (name) VALUES ('mutation-sweep-fresh-category')");
+    $conn->executeStatement('INSERT INTO categories' . " (name) VALUES ('mutation-sweep-fresh-category')");
     $categoryId = (int) $conn->lastInsertId();
     $imageId = imageServiceTestInsertImage($conn, 'upload/2026/07/freshcategoryrank.jpg');
 
@@ -1352,16 +1447,19 @@ test('associateImagesToCategories() initializes a brand new category\'s starting
 
         expect($service->associateImagesToCategories([$imageId], [$categoryId]))->toBeNull();
 
-        expect($capturedWarnings)->toBe([]);
-        $rank = $conn->fetchOne('SELECT ' . $conn->getDatabasePlatform()->quoteSingleIdentifier('rank') . ' FROM ' . 'image_category' . ' WHERE image_id = ' . $imageId . ' AND category_id = ' . $categoryId);
-        expect($rank)->toBe(1);
-        $representative = $conn->fetchOne('SELECT representative_picture_id FROM ' . 'categories' . ' WHERE id = ' . $categoryId);
-        expect($representative)->toBe($imageId);
+        expect($capturedWarnings)
+            ->toBe([]);
+        $rank = $conn->fetchOne('SELECT ' . $conn->getDatabasePlatform()->quoteSingleIdentifier('rank') . ' FROM image_category WHERE image_id = ' . $imageId . ' AND category_id = ' . $categoryId);
+        expect($rank)
+            ->toBe(1);
+        $representative = $conn->fetchOne('SELECT representative_picture_id FROM categories WHERE id = ' . $categoryId);
+        expect($representative)
+            ->toBe($imageId);
     } finally {
         restore_error_handler();
-        $conn->executeStatement('DELETE FROM ' . 'image_category' . ' WHERE image_id = ?', [$imageId]);
-        $conn->executeStatement('DELETE FROM ' . 'images' . ' WHERE id = ?', [$imageId]);
-        $conn->executeStatement('DELETE FROM ' . 'categories' . ' WHERE id = ?', [$categoryId]);
+        $conn->executeStatement('DELETE FROM image_category WHERE image_id = ?', [$imageId]);
+        $conn->executeStatement('DELETE FROM images WHERE id = ?', [$imageId]);
+        $conn->executeStatement('DELETE FROM categories WHERE id = ?', [$categoryId]);
     }
 });
 
@@ -1378,11 +1476,14 @@ test('moveImagesToCategories() actually associates images to a real, non-empty c
 
         expect($service->moveImagesToCategories([$imageId], [2]))->toBeNull();
 
-        $rows = $conn->fetchAllAssociative('SELECT category_id FROM ' . 'image_category' . ' WHERE image_id = ' . $imageId);
-        expect($rows)->toBe([['category_id' => 2]]);
+        $rows = $conn->fetchAllAssociative('SELECT category_id FROM image_category WHERE image_id = ' . $imageId);
+        expect($rows)
+            ->toBe([[
+                'category_id' => 2,
+            ]]);
     } finally {
-        $conn->executeStatement('DELETE FROM ' . 'image_category' . ' WHERE image_id = ?', [$imageId]);
-        $conn->executeStatement('DELETE FROM ' . 'images' . ' WHERE id = ?', [$imageId]);
+        $conn->executeStatement('DELETE FROM image_category WHERE image_id = ?', [$imageId]);
+        $conn->executeStatement('DELETE FROM images WHERE id = ?', [$imageId]);
     }
 });
 
@@ -1406,11 +1507,13 @@ test('addMd5sum() computes and persists a real md5sum for a readable file, prefi
 
         $count = $service->addMd5sum([$imageId]);
 
-        expect($count)->toBe(1);
-        $md5sum = $conn->fetchOne('SELECT md5sum FROM ' . 'images' . ' WHERE id = ' . $imageId);
-        expect($md5sum)->toBe(md5_file($root . '/upload/2026/07/hashme.jpg'));
+        expect($count)
+            ->toBe(1);
+        $md5sum = $conn->fetchOne('SELECT md5sum FROM images WHERE id = ' . $imageId);
+        expect($md5sum)
+            ->toBe(md5_file($root . '/upload/2026/07/hashme.jpg'));
     } finally {
-        $conn->executeStatement('DELETE FROM ' . 'images' . ' WHERE id = ?', [$imageId]);
+        $conn->executeStatement('DELETE FROM images WHERE id = ?', [$imageId]);
         imageServiceTestRrmdir($root);
         Kernel::reset();
     }
@@ -1427,19 +1530,20 @@ test('addMd5sum() does not stop at the first unhashable id -- a later id in the 
     mkdir($root . '/upload/2026/07', 0o777, true);
     file_put_contents($root . '/upload/2026/07/readable.jpg', 'hashable content');
 
-    $conn->executeStatement('DELETE FROM ' . 'images' . ' WHERE id IN (750001, 750002)');
-    $conn->executeStatement('INSERT INTO ' . 'images' . ' (id, file, path) VALUES (750001, ?, ?)', ['unreadable.jpg', 'upload/2026/07/does-not-exist-on-disk.jpg']);
-    $conn->executeStatement('INSERT INTO ' . 'images' . ' (id, file, path) VALUES (750002, ?, ?)', ['readable.jpg', 'upload/2026/07/readable.jpg']);
+    $conn->executeStatement('DELETE FROM images WHERE id IN (750001, 750002)');
+    $conn->executeStatement('INSERT INTO images (id, file, path) VALUES (750001, ?, ?)', ['unreadable.jpg', 'upload/2026/07/does-not-exist-on-disk.jpg']);
+    $conn->executeStatement('INSERT INTO images (id, file, path) VALUES (750002, ?, ?)', ['readable.jpg', 'upload/2026/07/readable.jpg']);
 
     try {
         $service = imageServiceTestNewService($repo, $conn, Paths::fromRoot($root));
 
         $service->addMd5sum([750001, 750002]);
 
-        $md5sum = $conn->fetchOne('SELECT md5sum FROM ' . 'images' . ' WHERE id = 750002');
-        expect($md5sum)->toBe(md5_file($root . '/upload/2026/07/readable.jpg'));
+        $md5sum = $conn->fetchOne('SELECT md5sum FROM images WHERE id = 750002');
+        expect($md5sum)
+            ->toBe(md5_file($root . '/upload/2026/07/readable.jpg'));
     } finally {
-        $conn->executeStatement('DELETE FROM ' . 'images' . ' WHERE id IN (750001, 750002)');
+        $conn->executeStatement('DELETE FROM images WHERE id IN (750001, 750002)');
         imageServiceTestRrmdir($root);
         Kernel::reset();
     }
@@ -1465,15 +1569,18 @@ test('addMd5sum() skips ids whose file cannot be hashed and still counts them am
         // process/DB) -- this only needs to confirm the repo's query
         // finds this test's own disposable row, not that it finds
         // nothing else.
-        expect($service->getPhotosNoMd5sum())->toContain($missingId);
+        expect($service->getPhotosNoMd5sum())
+            ->toContain($missingId);
 
         $updatedCount = $service->addMd5sum([$missingId]);
 
-        expect($updatedCount)->toBe(1);
-        $md5sum = $conn->fetchOne('SELECT md5sum FROM ' . 'images' . ' WHERE id = ' . $missingId);
-        expect($md5sum)->toBeNull();
+        expect($updatedCount)
+            ->toBe(1);
+        $md5sum = $conn->fetchOne('SELECT md5sum FROM images WHERE id = ' . $missingId);
+        expect($md5sum)
+            ->toBeNull();
     } finally {
-        $conn->executeStatement('DELETE FROM ' . 'images' . ' WHERE id = ?', [$missingId]);
+        $conn->executeStatement('DELETE FROM images WHERE id = ?', [$missingId]);
         imageServiceTestRrmdir($root);
         Kernel::reset();
     }
@@ -1484,8 +1591,10 @@ test('getImageInfos() delegates a fatal error to HtmlRenderingInterface for a no
     $service = imageServiceTestNewService($repo, $conn);
     $renderer = new ImageServiceTestFakeHtmlRenderer();
 
-    expect(fn () => $service->getImageInfos('not-a-number', $renderer))->toThrow(ImageServiceTestFatalSignal::class);
-    expect($renderer->lastMessage)->toBe('[getImageInfos] invalid image identifier not-a-number');
+    expect(fn () => $service->getImageInfos('not-a-number', $renderer))
+        ->toThrow(ImageServiceTestFatalSignal::class);
+    expect($renderer->lastMessage)
+        ->toBe('[getImageInfos] invalid image identifier not-a-number');
 });
 
 test('getImageInfos() html-escapes special characters in an invalid, non-numeric image id before reporting it', function (): void {
@@ -1497,8 +1606,10 @@ test('getImageInfos() html-escapes special characters in an invalid, non-numeric
     $service = imageServiceTestNewService($repo, $conn);
     $renderer = new ImageServiceTestFakeHtmlRenderer();
 
-    expect(fn () => $service->getImageInfos('<script>&"\'', $renderer))->toThrow(ImageServiceTestFatalSignal::class);
-    expect($renderer->lastMessage)->toBe('[getImageInfos] invalid image identifier ' . htmlentities('<script>&"\''));
+    expect(fn () => $service->getImageInfos('<script>&"\'', $renderer))
+        ->toThrow(ImageServiceTestFatalSignal::class);
+    expect($renderer->lastMessage)
+        ->toBe('[getImageInfos] invalid image identifier ' . htmlentities('<script>&"\''));
 });
 
 test('getImageInfos() delegates a fatal error to HtmlRenderingInterface when dieOnMissing is true and the image does not exist', function (): void {
@@ -1506,8 +1617,10 @@ test('getImageInfos() delegates a fatal error to HtmlRenderingInterface when die
     $service = imageServiceTestNewService($repo, $conn);
     $renderer = new ImageServiceTestFakeHtmlRenderer();
 
-    expect(fn () => $service->getImageInfos(999_999, $renderer, dieOnMissing: true))->toThrow(ImageServiceTestFatalSignal::class);
-    expect($renderer->lastMessage)->toBe('photo 999999 does not exist');
+    expect(fn () => $service->getImageInfos(999_999, $renderer, dieOnMissing: true))
+        ->toThrow(ImageServiceTestFatalSignal::class);
+    expect($renderer->lastMessage)
+        ->toBe('photo 999999 does not exist');
 });
 
 test('getImageInfos() returns the real row for an existing image id, not null', function (): void {
@@ -1537,7 +1650,7 @@ test('getImageInfos() returns the real row for an existing image id, not null', 
         Assert::assertIsArray($info);
         expect($info['id'])->toBe($imageId);
     } finally {
-        $conn->executeStatement('DELETE FROM ' . 'images' . ' WHERE id = ?', [$imageId]);
+        $conn->executeStatement('DELETE FROM images WHERE id = ?', [$imageId]);
     }
 });
 
@@ -1654,11 +1767,15 @@ test('emptyLounge() clears a stale lock, logs the API-suffixed begin/win/end mes
     try {
         $logDir = sys_get_temp_dir() . '/piwigo-imageservice-test-' . bin2hex(random_bytes(8));
         mkdir($logDir, 0o777, true);
-        imageServiceTestSeedCurrentLogger(new Logger(['severity' => Logger::DEBUG, 'directory' => $logDir, 'filename' => 'emptylounge.log']));
+        imageServiceTestSeedCurrentLogger(new Logger([
+            'severity' => Logger::DEBUG,
+            'directory' => $logDir,
+            'filename' => 'emptylounge.log',
+        ]));
         // Both params, not just 'empty_lounge_running' -- the raw INSERT
         // below needs 'count_orphans' gone too, or a leftover row from a
         // previous run throws a unique-key violation here.
-        $conn->executeStatement("DELETE FROM " . 'config' . " WHERE param IN ('empty_lounge_running', 'count_orphans')");
+        $conn->executeStatement('DELETE FROM config' . " WHERE param IN ('empty_lounge_running', 'count_orphans')");
         // Single hyphen, matching the real "$execId-$startTime" shape
         // tryAcquireLoungeLock() itself always constructs (SessionService::
         // generateKey()'s base64 alphabet, minus '+'/'/', never contains a
@@ -1676,7 +1793,7 @@ test('emptyLounge() clears a stale lock, logs the API-suffixed begin/win/end mes
         // findRawValue() (below) only ever returns string|false, matching
         // insertIgnoreRawValue()'s own string-only contract.
         $conn->executeStatement(
-            "INSERT INTO " . 'config' . " (param, value) VALUES ('count_orphans', ?)",
+            'INSERT INTO config' . " (param, value) VALUES ('count_orphans', ?)",
             [json_encode('3')]
         );
 
@@ -1686,11 +1803,21 @@ test('emptyLounge() clears a stale lock, logs the API-suffixed begin/win/end mes
         // to work with, not just $maxImageId's own untouched 0 default.
         $imageA = imageServiceTestInsertImage($conn, 'upload/2026/07/lounge-a.jpg');
         $imageB = imageServiceTestInsertImage($conn, 'upload/2026/07/lounge-b.jpg');
-        $conn->createQueryBuilder()->insert('lounge')
-            ->values(['image_id' => ':i', 'category_id' => ':c'])->setParameter('i', $imageA)->setParameter('c', 1)
+        $conn->createQueryBuilder()
+            ->insert('lounge')
+            ->values([
+                'image_id' => ':i',
+                'category_id' => ':c',
+            ])->setParameter('i', $imageA)
+            ->setParameter('c', 1)
             ->executeStatement();
-        $conn->createQueryBuilder()->insert('lounge')
-            ->values(['image_id' => ':i', 'category_id' => ':c'])->setParameter('i', $imageB)->setParameter('c', 2)
+        $conn->createQueryBuilder()
+            ->insert('lounge')
+            ->values([
+                'image_id' => ':i',
+                'category_id' => ':c',
+            ])->setParameter('i', $imageB)
+            ->setParameter('c', 2)
             ->executeStatement();
 
         $originalRequest = $_REQUEST;
@@ -1709,11 +1836,19 @@ test('emptyLounge() clears a stale lock, logs the API-suffixed begin/win/end mes
 
             // Kills line 391's RemoveMethodCall -- dispatchNotify(new EmptyLounge($rows))
             // fires with the exact same rows this call itself returns.
-            expect($capturedEventRows)->toBe($result);
-            expect($result)->toBe([
-                ['image_id' => $imageA, 'category_id' => 1],
-                ['image_id' => $imageB, 'category_id' => 2],
-            ]);
+            expect($capturedEventRows)
+                ->toBe($result);
+            expect($result)
+                ->toBe([
+                    [
+                        'image_id' => $imageA,
+                        'category_id' => 1,
+                    ],
+                    [
+                        'image_id' => $imageB,
+                        'category_id' => 2,
+                    ],
+                ]);
 
             // Kills line 235's (unrelated file) sibling pattern here too:
             // line 235-ish Concat* mutations on the log lines themselves --
@@ -1725,7 +1860,8 @@ test('emptyLounge() clears a stale lock, logs the API-suffixed begin/win/end mes
             // once: any dropped/reordered/switched-sides fragment would
             // break at least one of these.
             $messages = imageServiceTestReadLogMessages($logDir . '/emptylounge.log');
-            expect($messages)->toHaveCount(4);
+            expect($messages)
+                ->toHaveCount(4);
             expect($messages[0])->toBe('emptyLounge, exec=staleexecid, timeout stopped by another call to the function');
             // The {4} quantifier (not a bare +) kills line 341's
             // DecrementInteger/IncrementInteger on generateKey(4)'s own
@@ -1737,13 +1873,21 @@ test('emptyLounge() clears a stale lock, logs the API-suffixed begin/win/end mes
             expect($messages[2])->toBe("emptyLounge, exec={$execId} wins the race and gets the token!");
             expect($messages[3])->toBe("emptyLounge, exec={$execId}, ends");
 
-            $remainingLounge = $conn->fetchOne('SELECT COUNT(*) FROM ' . 'lounge' . ' WHERE image_id IN (' . $imageA . ',' . $imageB . ')');
-            expect($remainingLounge)->toBe(0);
-            $categoryLinks = $conn->fetchAllAssociative('SELECT image_id, category_id FROM ' . 'image_category' . ' WHERE image_id IN (' . $imageA . ',' . $imageB . ') ORDER BY image_id');
-            expect($categoryLinks)->toBe([
-                ['image_id' => $imageA, 'category_id' => 1],
-                ['image_id' => $imageB, 'category_id' => 2],
-            ]);
+            $remainingLounge = $conn->fetchOne('SELECT COUNT(*) FROM lounge WHERE image_id IN (' . $imageA . ',' . $imageB . ')');
+            expect($remainingLounge)
+                ->toBe(0);
+            $categoryLinks = $conn->fetchAllAssociative('SELECT image_id, category_id FROM image_category WHERE image_id IN (' . $imageA . ',' . $imageB . ') ORDER BY image_id');
+            expect($categoryLinks)
+                ->toBe([
+                    [
+                        'image_id' => $imageA,
+                        'category_id' => 1,
+                    ],
+                    [
+                        'image_id' => $imageB,
+                        'category_id' => 2,
+                    ],
+                ]);
             // Kills line 387's RemoveMethodCall -- the lock this run itself
             // acquired at line 347 is released again once the run
             // completes, distinct from line 337's own mid-function delete
@@ -1762,10 +1906,10 @@ test('emptyLounge() clears a stale lock, logs the API-suffixed begin/win/end mes
         } finally {
             EventDispatcherTestFactory::get()->removeEventHandler(EmptyLounge::class, $handler);
             $_REQUEST = $originalRequest;
-            $conn->executeStatement('DELETE FROM ' . 'image_category' . ' WHERE image_id IN (?, ?)', [$imageA, $imageB]);
-            $conn->executeStatement('DELETE FROM ' . 'lounge' . ' WHERE image_id IN (?, ?)', [$imageA, $imageB]);
-            $conn->executeStatement('DELETE FROM ' . 'images' . ' WHERE id IN (?, ?)', [$imageA, $imageB]);
-            $conn->executeStatement("DELETE FROM " . 'config' . " WHERE param IN ('empty_lounge_running', 'count_orphans')");
+            $conn->executeStatement('DELETE FROM image_category WHERE image_id IN (?, ?)', [$imageA, $imageB]);
+            $conn->executeStatement('DELETE FROM lounge WHERE image_id IN (?, ?)', [$imageA, $imageB]);
+            $conn->executeStatement('DELETE FROM images WHERE id IN (?, ?)', [$imageA, $imageB]);
+            $conn->executeStatement('DELETE FROM config' . " WHERE param IN ('empty_lounge_running', 'count_orphans')");
             CurrentConfigServiceTestFactory::get()->reset();
             Kernel::reset();
             CurrentConfigTestFactory::get()->reset();
@@ -1790,12 +1934,14 @@ test('emptyLounge() invalidates the permission cache (and its orphan-count cache
     imageServiceTestAcquireEmptyLoungeDbLock($conn);
 
     try {
-        imageServiceTestSeedCurrentLogger(new Logger(['severity' => Logger::OFF]));
-        $conn->executeStatement("DELETE FROM " . 'config' . " WHERE param IN ('empty_lounge_running', 'count_orphans')");
+        imageServiceTestSeedCurrentLogger(new Logger([
+            'severity' => Logger::OFF,
+        ]));
+        $conn->executeStatement('DELETE FROM config' . " WHERE param IN ('empty_lounge_running', 'count_orphans')");
         $configRepo = EntityManagerFactory::build($conn)->getRepository(ConfigEntry::class);
         CurrentConfigServiceTestFactory::get()->set(new ConfigService($configRepo, new EventDispatcher(), CurrentConfigTestFactory::get()));
         $conn->executeStatement(
-            "INSERT INTO " . 'config' . " (param, value) VALUES ('count_orphans', ?)",
+            'INSERT INTO config' . " (param, value) VALUES ('count_orphans', ?)",
             [json_encode(3)]
         );
 
@@ -1806,7 +1952,7 @@ test('emptyLounge() invalidates the permission cache (and its orphan-count cache
 
             expect(CurrentConfigServiceTestFactory::get()->get()->findRawValue('count_orphans'))->toBeFalse();
         } finally {
-            $conn->executeStatement("DELETE FROM " . 'config' . " WHERE param IN ('empty_lounge_running', 'count_orphans')");
+            $conn->executeStatement('DELETE FROM config' . " WHERE param IN ('empty_lounge_running', 'count_orphans')");
             CurrentConfigServiceTestFactory::get()->reset();
             Kernel::reset();
             CurrentConfigTestFactory::get()->reset();
@@ -1832,11 +1978,13 @@ test('emptyLounge() actually clears a stale lock\'s real database row, letting t
     imageServiceTestAcquireEmptyLoungeDbLock($conn);
 
     try {
-        imageServiceTestSeedCurrentLogger(new Logger(['severity' => Logger::OFF]));
-        $conn->executeStatement("DELETE FROM " . 'config' . " WHERE param = 'empty_lounge_running'");
+        imageServiceTestSeedCurrentLogger(new Logger([
+            'severity' => Logger::OFF,
+        ]));
+        $conn->executeStatement('DELETE FROM config' . " WHERE param = 'empty_lounge_running'");
         $staleValue = 'reallystale-' . (time() - 100);
         $conn->executeStatement(
-            "INSERT INTO " . 'config' . " (param, value) VALUES ('empty_lounge_running', ?)",
+            'INSERT INTO config' . " (param, value) VALUES ('empty_lounge_running', ?)",
             [json_encode($staleValue)]
         );
         CurrentConfigTestFactory::get()->emptyLoungeRunning = $staleValue;
@@ -1848,9 +1996,10 @@ test('emptyLounge() actually clears a stale lock\'s real database row, letting t
 
             $result = $service->emptyLounge(invalidateUserCache: false);
 
-            expect($result)->toBeArray();
+            expect($result)
+                ->toBeArray();
         } finally {
-            $conn->executeStatement("DELETE FROM " . 'config' . " WHERE param = 'empty_lounge_running'");
+            $conn->executeStatement('DELETE FROM config' . " WHERE param = 'empty_lounge_running'");
             CurrentConfigServiceTestFactory::get()->reset();
             Kernel::reset();
             CurrentConfigTestFactory::get()->reset();
@@ -1882,14 +2031,18 @@ test('emptyLounge() does not touch a lock that is not actually stale, and logs t
     try {
         $logDir = sys_get_temp_dir() . '/piwigo-imageservice-test-' . bin2hex(random_bytes(8));
         mkdir($logDir, 0o777, true);
-        imageServiceTestSeedCurrentLogger(new Logger(['severity' => Logger::DEBUG, 'directory' => $logDir, 'filename' => 'emptylounge2.log']));
-        $conn->executeStatement("DELETE FROM " . 'config' . " WHERE param = 'empty_lounge_running'");
+        imageServiceTestSeedCurrentLogger(new Logger([
+            'severity' => Logger::DEBUG,
+            'directory' => $logDir,
+            'filename' => 'emptylounge2.log',
+        ]));
+        $conn->executeStatement('DELETE FROM config' . " WHERE param = 'empty_lounge_running'");
         $freshLockValue = 'freshexecid-' . (time() - 30);
         // A real row, not just CurrentConfig's static cache below -- this is
         // what tryAcquireLoungeLock()'s own real INSERT IGNORE actually
         // contends against.
         $conn->executeStatement(
-            "INSERT INTO " . 'config' . " (param, value) VALUES ('empty_lounge_running', ?)",
+            'INSERT INTO config' . " (param, value) VALUES ('empty_lounge_running', ?)",
             [json_encode($freshLockValue)]
         );
         CurrentConfigTestFactory::get()->emptyLoungeRunning = $freshLockValue;
@@ -1908,10 +2061,12 @@ test('emptyLounge() does not touch a lock that is not actually stale, and logs t
             // so this run itself never becomes the lock holder.
             $result = $service->emptyLounge(invalidateUserCache: false);
 
-            expect($result)->toBeNull();
+            expect($result)
+                ->toBeNull();
 
             $messages = imageServiceTestReadLogMessages($logDir . '/emptylounge2.log');
-            expect($messages)->toHaveCount(2);
+            expect($messages)
+                ->toHaveCount(2);
             if (preg_match('/^emptyLounge, exec=([A-Za-z0-9]+), begins$/', $messages[0], $beginMatch) !== 1) {
                 throw new RuntimeException('begins message did not match the expected (no-API-suffix) shape: ' . $messages[0]);
             }
@@ -1924,7 +2079,7 @@ test('emptyLounge() does not touch a lock that is not actually stale, and logs t
             expect(CurrentConfigServiceTestFactory::get()->get()->findRawValue('empty_lounge_running'))->toBe($freshLockValue);
         } finally {
             $_REQUEST = $originalRequest;
-            $conn->executeStatement("DELETE FROM " . 'config' . " WHERE param = 'empty_lounge_running'");
+            $conn->executeStatement('DELETE FROM config' . " WHERE param = 'empty_lounge_running'");
             CurrentConfigServiceTestFactory::get()->reset();
             Kernel::reset();
             CurrentConfigTestFactory::get()->reset();
@@ -1993,12 +2148,16 @@ test('emptyLounge() treats a lock that is exactly 60 seconds old as still fresh,
     try {
         $logDir = sys_get_temp_dir() . '/piwigo-imageservice-test-' . bin2hex(random_bytes(8));
         mkdir($logDir, 0o777, true);
-        imageServiceTestSeedCurrentLogger(new Logger(['severity' => Logger::DEBUG, 'directory' => $logDir, 'filename' => 'emptylounge3.log']));
-        $conn->executeStatement("DELETE FROM " . 'config' . " WHERE param = 'empty_lounge_running'");
+        imageServiceTestSeedCurrentLogger(new Logger([
+            'severity' => Logger::DEBUG,
+            'directory' => $logDir,
+            'filename' => 'emptylounge3.log',
+        ]));
+        $conn->executeStatement('DELETE FROM config' . " WHERE param = 'empty_lounge_running'");
         $t0 = time();
         $lockValue = 'boundaryexecid-' . ($t0 - 60);
         $conn->executeStatement(
-            "INSERT INTO " . 'config' . " (param, value) VALUES ('empty_lounge_running', ?)",
+            'INSERT INTO config' . " (param, value) VALUES ('empty_lounge_running', ?)",
             [json_encode($lockValue)]
         );
         CurrentConfigTestFactory::get()->emptyLoungeRunning = $lockValue;
@@ -2010,12 +2169,14 @@ test('emptyLounge() treats a lock that is exactly 60 seconds old as still fresh,
 
             $result = $service->emptyLounge(invalidateUserCache: false);
 
-            expect($result)->toBeNull();
+            expect($result)
+                ->toBeNull();
 
             $messages = imageServiceTestReadLogMessages($logDir . '/emptylounge3.log');
             // Real code: not stale, so the "timeout stopped..." message
             // (line 336) is never logged at all -- just begins + skip.
-            expect($messages)->toHaveCount(2);
+            expect($messages)
+                ->toHaveCount(2);
             expect($messages[1])->toEndWith(', skip');
 
             // The boundary lock this test seeded is still there, untouched
@@ -2025,7 +2186,7 @@ test('emptyLounge() treats a lock that is exactly 60 seconds old as still fresh,
             // encoded (see ConfigRepository::findRawValue()'s own docblock).
             expect(CurrentConfigServiceTestFactory::get()->get()->findRawValue('empty_lounge_running'))->toBe($lockValue);
         } finally {
-            $conn->executeStatement("DELETE FROM " . 'config' . " WHERE param = 'empty_lounge_running'");
+            $conn->executeStatement('DELETE FROM config' . " WHERE param = 'empty_lounge_running'");
             CurrentConfigServiceTestFactory::get()->reset();
             Kernel::reset();
             CurrentConfigTestFactory::get()->reset();
@@ -2051,11 +2212,13 @@ test('emptyLounge() treats a lock that is exactly 61 seconds old as genuinely st
     imageServiceTestAcquireEmptyLoungeDbLock($conn);
 
     try {
-        imageServiceTestSeedCurrentLogger(new Logger(['severity' => Logger::OFF]));
-        $conn->executeStatement("DELETE FROM " . 'config' . " WHERE param = 'empty_lounge_running'");
+        imageServiceTestSeedCurrentLogger(new Logger([
+            'severity' => Logger::OFF,
+        ]));
+        $conn->executeStatement('DELETE FROM config' . " WHERE param = 'empty_lounge_running'");
         $staleValue = 'boundary61execid-' . (time() - 61);
         $conn->executeStatement(
-            "INSERT INTO " . 'config' . " (param, value) VALUES ('empty_lounge_running', ?)",
+            'INSERT INTO config' . " (param, value) VALUES ('empty_lounge_running', ?)",
             [json_encode($staleValue)]
         );
         CurrentConfigTestFactory::get()->emptyLoungeRunning = $staleValue;
@@ -2067,9 +2230,10 @@ test('emptyLounge() treats a lock that is exactly 61 seconds old as genuinely st
 
             $result = $service->emptyLounge(invalidateUserCache: false);
 
-            expect($result)->toBeArray();
+            expect($result)
+                ->toBeArray();
         } finally {
-            $conn->executeStatement("DELETE FROM " . 'config' . " WHERE param = 'empty_lounge_running'");
+            $conn->executeStatement('DELETE FROM config' . " WHERE param = 'empty_lounge_running'");
             CurrentConfigServiceTestFactory::get()->reset();
             Kernel::reset();
             CurrentConfigTestFactory::get()->reset();
@@ -2084,10 +2248,12 @@ test('emptyLounge() returns null when a different, still-fresh execution already
     imageServiceTestAcquireEmptyLoungeDbLock($conn);
 
     try {
-        imageServiceTestSeedCurrentLogger(new Logger(['severity' => Logger::OFF]));
-        $conn->executeStatement("DELETE FROM " . 'config' . " WHERE param = 'empty_lounge_running'");
+        imageServiceTestSeedCurrentLogger(new Logger([
+            'severity' => Logger::OFF,
+        ]));
+        $conn->executeStatement('DELETE FROM config' . " WHERE param = 'empty_lounge_running'");
         $conn->executeStatement(
-            "INSERT INTO " . 'config' . " (param, value) VALUES ('empty_lounge_running', ?)",
+            'INSERT INTO config' . " (param, value) VALUES ('empty_lounge_running', ?)",
             [json_encode('foreignexec-' . time())]
         );
         // Not stale (CurrentConfig::emptyLoungeRunning() defaults to null),
@@ -2098,9 +2264,10 @@ test('emptyLounge() returns null when a different, still-fresh execution already
         try {
             $service = imageServiceTestNewService($repo, $conn);
 
-            expect($service->emptyLounge())->toBeNull();
+            expect($service->emptyLounge())
+                ->toBeNull();
         } finally {
-            $conn->executeStatement("DELETE FROM " . 'config' . " WHERE param = 'empty_lounge_running'");
+            $conn->executeStatement('DELETE FROM config' . " WHERE param = 'empty_lounge_running'");
             CurrentConfigTestFactory::get()->reset();
             Kernel::reset();
         }
@@ -2136,7 +2303,8 @@ test('countPdfPages() returns false when the path passes is_file()/is_readable()
             restore_error_handler();
         }
 
-        expect($result)->toBeFalse();
+        expect($result)
+            ->toBeFalse();
     } finally {
         stream_wrapper_unregister($scheme);
     }
@@ -2152,11 +2320,12 @@ test('updateFormatFilesize() delegates straight through to the repository', func
 
         $service->updateFormatFilesize($formatId, 12345);
 
-        $filesize = $conn->fetchOne('SELECT filesize FROM ' . 'image_format' . ' WHERE format_id = ' . $formatId);
-        expect(is_numeric($filesize) ? $filesize : null)->toBe(12345);
+        $filesize = $conn->fetchOne('SELECT filesize FROM image_format WHERE format_id = ' . $formatId);
+        expect(is_numeric($filesize) ? $filesize : null)
+            ->toBe(12345);
     } finally {
-        $conn->executeStatement('DELETE FROM ' . 'image_format' . ' WHERE format_id = ?', [$formatId]);
-        $conn->executeStatement('DELETE FROM ' . 'images' . ' WHERE id = ?', [$imageId]);
+        $conn->executeStatement('DELETE FROM image_format WHERE format_id = ?', [$formatId]);
+        $conn->executeStatement('DELETE FROM images WHERE id = ?', [$imageId]);
     }
 });
 
@@ -2165,7 +2334,12 @@ test('getIdsByFilenameInCategory() delegates straight through to the repository'
     $imageId = imageServiceTestInsertImage($conn, 'upload/2026/07/filenameincat.jpg');
     $conn->createQueryBuilder()
         ->insert('image_category')
-        ->values(['image_id' => ':imageId', 'category_id' => ':categoryId', $conn->getDatabasePlatform()->quoteSingleIdentifier('rank') => ':rank'])
+        ->values([
+            'image_id' => ':imageId',
+            'category_id' => ':categoryId',
+            $conn->getDatabasePlatform()
+                ->quoteSingleIdentifier('rank') => ':rank',
+        ])
         ->setParameter('imageId', $imageId)
         ->setParameter('categoryId', 1)
         ->setParameter('rank', 1)
@@ -2177,18 +2351,23 @@ test('getIdsByFilenameInCategory() delegates straight through to the repository'
         expect($service->getIdsByFilenameInCategory('filenameincat.jpg', CategoryId::from(1)))->toBe([$imageId]);
         expect($service->getIdsByFilenameInCategory('no-such-file.jpg', CategoryId::from(1)))->toBe([]);
     } finally {
-        $conn->executeStatement('DELETE FROM ' . 'image_category' . ' WHERE image_id = ?', [$imageId]);
-        $conn->executeStatement('DELETE FROM ' . 'images' . ' WHERE id = ?', [$imageId]);
+        $conn->executeStatement('DELETE FROM image_category WHERE image_id = ?', [$imageId]);
+        $conn->executeStatement('DELETE FROM images WHERE id = ?', [$imageId]);
     }
 });
 
 test('getIdsVisibleInCategoriesRecentlyAvailable() delegates straight through to the repository', function (): void {
     [$conn, $repo] = imageServiceTestConnAndRepo();
     $imageId = imageServiceTestInsertImage($conn, 'upload/2026/07/recentlyavailable.jpg');
-    $conn->executeStatement('UPDATE ' . 'images' . ' SET date_available = NOW() WHERE id = ?', [$imageId]);
+    $conn->executeStatement('UPDATE images SET date_available = NOW() WHERE id = ?', [$imageId]);
     $conn->createQueryBuilder()
         ->insert('image_category')
-        ->values(['image_id' => ':imageId', 'category_id' => ':categoryId', $conn->getDatabasePlatform()->quoteSingleIdentifier('rank') => ':rank'])
+        ->values([
+            'image_id' => ':imageId',
+            'category_id' => ':categoryId',
+            $conn->getDatabasePlatform()
+                ->quoteSingleIdentifier('rank') => ':rank',
+        ])
         ->setParameter('imageId', $imageId)
         ->setParameter('categoryId', 1)
         ->setParameter('rank', 1)
@@ -2199,10 +2378,11 @@ test('getIdsVisibleInCategoriesRecentlyAvailable() delegates straight through to
 
         $result = $service->getIdsVisibleInCategoriesRecentlyAvailable('1', SqlDialect::getRecentPeriodExpression(1));
 
-        expect($result)->toContain($imageId);
+        expect($result)
+            ->toContain($imageId);
     } finally {
-        $conn->executeStatement('DELETE FROM ' . 'image_category' . ' WHERE image_id = ?', [$imageId]);
-        $conn->executeStatement('DELETE FROM ' . 'images' . ' WHERE id = ?', [$imageId]);
+        $conn->executeStatement('DELETE FROM image_category WHERE image_id = ?', [$imageId]);
+        $conn->executeStatement('DELETE FROM images WHERE id = ?', [$imageId]);
     }
 });
 
@@ -2216,7 +2396,8 @@ test('getAddMethodBreakdown() delegates straight through to the repository, grou
     // (ids 1-5) always give the real repository at least one add_method
     // group to report, so an unconditional `return [];` is observably
     // wrong, not merely untested.
-    expect($result)->not->toBeEmpty();
+    expect($result)
+        ->not->toBeEmpty();
     foreach ($result as $row) {
         expect(in_array($row->addMethod, ['api', 'sync'], true))->toBeTrue();
     }

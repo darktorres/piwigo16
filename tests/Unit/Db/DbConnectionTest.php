@@ -48,7 +48,8 @@ test('params() reads host/user/password/dbname from DbCredentials', function ():
 
     $params = DbConnection::params();
 
-    expect($params)->toHaveKey('host', 'db.example.test')
+    expect($params)
+        ->toHaveKey('host', 'db.example.test')
         ->and($params['user'])->toBe('piwigo_app')
         ->and($params['password'])->toBe('secret')
         ->and($params['dbname'])->toBe('piwigo_prod')
@@ -67,8 +68,12 @@ test('params() sets utf8mb4 charset and native int/float driverOptions for the m
 
     $params = DbConnection::params();
 
-    expect($params)->toHaveKey('charset', 'utf8mb4')
-        ->and($params)->toHaveKey('driverOptions', [MYSQLI_OPT_INT_AND_FLOAT_NATIVE => true]);
+    expect($params)
+        ->toHaveKey('charset', 'utf8mb4')
+        ->and($params)
+        ->toHaveKey('driverOptions', [
+            MYSQLI_OPT_INT_AND_FLOAT_NATIVE => true,
+        ]);
 });
 
 test('params() treats a host starting with / as a unix socket path', function (): void {
@@ -79,8 +84,10 @@ test('params() treats a host starting with / as a unix socket path', function ()
 
     $params = DbConnection::params();
 
-    expect($params)->toHaveKey('unix_socket', '/var/run/mysqld/mysqld.sock')
-        ->and($params)->not->toHaveKey('host');
+    expect($params)
+        ->toHaveKey('unix_socket', '/var/run/mysqld/mysqld.sock')
+        ->and($params)
+        ->not->toHaveKey('host');
 });
 
 test('params() switches to the native pgsql driver when db_driver is pgsql', function (): void {
@@ -93,17 +100,24 @@ test('params() switches to the native pgsql driver when db_driver is pgsql', fun
     $params = DbConnection::params();
 
     expect($params['driver'])->toBe('pgsql')
-        ->and($params)->toHaveKey('host', 'pg.example.test')
+        ->and($params)
+        ->toHaveKey('host', 'pg.example.test')
         // Kills lines 63/64/65's RemoveArrayItem (dropping 'user',
         // 'password', or 'dbname' from the pgsql params array) --
         // the mysqli-branch test above covers these keys for mysqli,
         // but nothing else here asserts them for the pgsql branch.
-        ->and($params)->toHaveKey('user', 'piwigo_app')
-        ->and($params)->toHaveKey('password', 'secret')
-        ->and($params)->toHaveKey('dbname', 'piwigo_prod')
-        ->and($params)->not->toHaveKey('charset')
-        ->and($params)->not->toHaveKey('driverOptions')
-        ->and($params)->not->toHaveKey('unix_socket');
+        ->and($params)
+        ->toHaveKey('user', 'piwigo_app')
+        ->and($params)
+        ->toHaveKey('password', 'secret')
+        ->and($params)
+        ->toHaveKey('dbname', 'piwigo_prod')
+        ->and($params)
+        ->not->toHaveKey('charset')
+        ->and($params)
+        ->not->toHaveKey('driverOptions')
+        ->and($params)
+        ->not->toHaveKey('unix_socket');
 });
 
 test('params() defaults to mysqli when db_driver is unset', function (): void {
@@ -124,8 +138,10 @@ test('params() carries an explicit port through for the mysqli driver with a TCP
 
     $params = DbConnection::params();
 
-    expect($params)->toHaveKey('port', 3307)
-        ->and($params)->toHaveKey('host', 'db.example.test');
+    expect($params)
+        ->toHaveKey('port', 3307)
+        ->and($params)
+        ->toHaveKey('host', 'db.example.test');
 });
 
 test('params() carries an explicit port through for the pgsql driver', function (): void {
@@ -139,6 +155,8 @@ test('params() carries an explicit port through for the pgsql driver', function 
     $params = DbConnection::params();
 
     expect($params['driver'])->toBe('pgsql')
-        ->and($params)->toHaveKey('port', 6432)
-        ->and($params)->toHaveKey('host', 'pg.example.test');
+        ->and($params)
+        ->toHaveKey('port', 6432)
+        ->and($params)
+        ->toHaveKey('host', 'pg.example.test');
 });

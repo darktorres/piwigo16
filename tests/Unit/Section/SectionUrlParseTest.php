@@ -12,16 +12,33 @@ test('constructor assigns every property as given', function (): void {
         nextToken: 1,
         imageId: null,
         imageFile: null,
-        parsed: ['section' => 'categories', 'category' => ['id' => 12]],
+        parsed: [
+            'section' => 'categories',
+            'category' => [
+                'id' => 12,
+            ],
+        ],
     );
 
-    expect($parse->rootPath)->toBe('../../')
-        ->and($parse->sectionUrl)->toBe('/category/12-foo/start-24')
-        ->and($parse->tokens)->toBe(['category', '12-foo', 'start-24'])
-        ->and($parse->nextToken)->toBe(1)
-        ->and($parse->imageId)->toBeNull()
-        ->and($parse->imageFile)->toBeNull()
-        ->and($parse->parsed)->toBe(['section' => 'categories', 'category' => ['id' => 12]]);
+    expect($parse->rootPath)
+        ->toBe('../../')
+        ->and($parse->sectionUrl)
+        ->toBe('/category/12-foo/start-24')
+        ->and($parse->tokens)
+        ->toBe(['category', '12-foo', 'start-24'])
+        ->and($parse->nextToken)
+        ->toBe(1)
+        ->and($parse->imageId)
+        ->toBeNull()
+        ->and($parse->imageFile)
+        ->toBeNull()
+        ->and($parse->parsed)
+        ->toBe([
+            'section' => 'categories',
+            'category' => [
+                'id' => 12,
+            ],
+        ]);
 });
 
 test('constructor accepts a picture page image id and file slug', function (): void {
@@ -35,6 +52,8 @@ test('constructor accepts a picture page image id and file slug', function (): v
         parsed: [],
     );
 
-    expect($parse->imageId)->toBe('42')
-        ->and($parse->imageFile)->toBe('my-photo');
+    expect($parse->imageId)
+        ->toBe('42')
+        ->and($parse->imageFile)
+        ->toBe('my-photo');
 });

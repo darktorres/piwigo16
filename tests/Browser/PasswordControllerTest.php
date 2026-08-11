@@ -16,7 +16,6 @@ use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
  * [SEC-31]-style rationale), the wrong-code/lockout path, the guarded
  * direct-to-"reset" redirect, and the invalid-reset-key rejection.
  */
-
 it('shows the "forgot your password" form to a guest', function (): void {
     $page = H::gotoOk($this, '/password.php');
 
@@ -28,7 +27,8 @@ it('rejects an empty username_or_email, then enumeration-safely accepts an unkno
     $page = H::gotoOk($this, '/password.php');
 
     // 1. Empty input -> real validation error, form stays on the 'lost' step.
-    $page = $page->fill('username_or_email', '')->click('submit');
+    $page = $page->fill('username_or_email', '')
+        ->click('submit');
     $page->assertSee('Invalid username or email');
     $page->assertPresent('input[name="username_or_email"]');
 
@@ -36,17 +36,20 @@ it('rejects an empty username_or_email, then enumeration-safely accepts an unkno
     // enumeration-safety means this must look identical to a real account's
     // response: same info message, same transition to the code-entry step.
     $unknownEmail = 'no-such-account-' . uniqid() . '@example.test';
-    $page = $page->fill('username_or_email', $unknownEmail)->click('submit');
+    $page = $page->fill('username_or_email', $unknownEmail)
+        ->click('submit');
     $page->assertSee('If your account exists, a verification code has been sent to your email address.');
     $page->assertPresent('input[name="user_code"]');
 
     // 3. Wrong 6-digit code, 3 times in a row -> the first 2 each report a
     // per-attempt error; the 3rd crosses processPasswordRequest()'s own
     // `$attempts >= 3` threshold and locks the whole flow out.
-    $page = $page->fill('user_code', '000000')->click('submit');
+    $page = $page->fill('user_code', '000000')
+        ->click('submit');
     $page->assertSee('Invalid verification code');
 
-    $page = $page->fill('user_code', '111111')->click('submit');
+    $page = $page->fill('user_code', '111111')
+        ->click('submit');
     $page->assertSee('Invalid verification code');
 
     // The lockout branch redirects to identification.php (matching
@@ -55,9 +58,11 @@ it('rejects an empty username_or_email, then enumeration-safely accepts an unkno
     // message through $_SESSION['page_errors'] so it survives the redirect
     // instead of being discarded with the rest of this request's local
     // $this->errors.
-    $page = $page->fill('user_code', '222222')->click('submit');
+    $page = $page->fill('user_code', '222222')
+        ->click('submit');
     $currentUrl = H::rawWebpage($page)->url();
-    expect($currentUrl)->toContain('identification.php');
+    expect($currentUrl)
+        ->toContain('identification.php');
     $page->assertSee('Too many attempts, please try later..');
     H::assertNoServerErrors($page, 'password lockout redirect target');
 });
@@ -73,7 +78,8 @@ it('redirects straight to the gallery home when hitting action=reset with no key
     // gallery_url/mount configuration resolves that to exactly the site
     // root, not a looser "somewhere else" check.
     $currentUrl = H::rawWebpage($page)->url();
-    expect($currentUrl)->toBe(H::baseUrl() . '/');
+    expect($currentUrl)
+        ->toBe(H::baseUrl() . '/');
 });
 
 it('shows "Invalid key" and hides the form for a malformed reset key', function (): void {
@@ -119,9 +125,13 @@ function passwordInsertResetUser(string $status = 'normal'): array
     $db = passwordDbConnect();
     $username = 'pwreset_' . uniqid();
     $plainKey = substr(bin2hex(random_bytes(16)), 0, 20);
-    $hashedKey = password_hash($plainKey, PASSWORD_BCRYPT, ['cost' => 4]);
+    $hashedKey = password_hash($plainKey, PASSWORD_BCRYPT, [
+        'cost' => 4,
+    ]);
 
-    H::dbQuery($db, sprintf("INSERT INTO users (username, password, mail_address) VALUES ('%s', '%s', NULL)", H::dbEscape($db, $username), H::dbEscape($db, password_hash('original-password', PASSWORD_BCRYPT, ['cost' => 4]))));
+    H::dbQuery($db, sprintf("INSERT INTO users (username, password, mail_address) VALUES ('%s', '%s', NULL)", H::dbEscape($db, $username), H::dbEscape($db, password_hash('original-password', PASSWORD_BCRYPT, [
+        'cost' => 4,
+    ]))));
     $userId = H::dbInsertId($db);
 
     // DATE_ADD() is MySQL-only -- Postgres's own date arithmetic is
@@ -130,7 +140,10 @@ function passwordInsertResetUser(string $status = 'normal'): array
     H::dbQuery($db, sprintf("INSERT INTO user_infos (user_id, status, activation_key, activation_key_expire) VALUES (%d, '%s', '%s', {$expiryExpr})", $userId, H::dbEscape($db, $status), H::dbEscape($db, $hashedKey)));
     H::dbClose($db);
 
-    return ['userId' => $userId, 'plainKey' => $plainKey];
+    return [
+        'userId' => $userId,
+        'plainKey' => $plainKey,
+    ];
 }
 
 /**
@@ -151,7 +164,9 @@ function passwordInsertEmptyActivationKeyUser(): int
     $db = passwordDbConnect();
     $username = 'pwnoise_' . uniqid();
 
-    H::dbQuery($db, sprintf("INSERT INTO users (username, password, mail_address) VALUES ('%s', '%s', NULL)", H::dbEscape($db, $username), H::dbEscape($db, password_hash('original-password', PASSWORD_BCRYPT, ['cost' => 4]))));
+    H::dbQuery($db, sprintf("INSERT INTO users (username, password, mail_address) VALUES ('%s', '%s', NULL)", H::dbEscape($db, $username), H::dbEscape($db, password_hash('original-password', PASSWORD_BCRYPT, [
+        'cost' => 4,
+    ]))));
     $userId = H::dbInsertId($db);
 
     $expiryExpr = $db instanceof mysqli ? 'DATE_ADD(NOW(), INTERVAL 1 HOUR)' : "NOW() + INTERVAL '1 hour'";
@@ -178,13 +193,18 @@ function passwordInsertNormalUserNoEmail(): array
     $db = passwordDbConnect();
     $username = 'pwnoemail_' . uniqid();
 
-    H::dbQuery($db, sprintf("INSERT INTO users (username, password, mail_address) VALUES ('%s', '%s', NULL)", H::dbEscape($db, $username), H::dbEscape($db, password_hash('original-password', PASSWORD_BCRYPT, ['cost' => 4]))));
+    H::dbQuery($db, sprintf("INSERT INTO users (username, password, mail_address) VALUES ('%s', '%s', NULL)", H::dbEscape($db, $username), H::dbEscape($db, password_hash('original-password', PASSWORD_BCRYPT, [
+        'cost' => 4,
+    ]))));
     $userId = H::dbInsertId($db);
 
     H::dbQuery($db, sprintf("INSERT INTO user_infos (user_id, status, language) VALUES (%d, 'normal', 'en_UK')", $userId));
     H::dbClose($db);
 
-    return ['userId' => $userId, 'username' => $username];
+    return [
+        'userId' => $userId,
+        'username' => $username,
+    ];
 }
 
 /**
@@ -241,10 +261,16 @@ function passwordCurlSession(string $cookieJar, string $path, array $fields = []
         throw new RuntimeException('curl_exec failed');
     }
 
-    return ['status' => $status, 'body' => $body, 'url' => $url];
+    return [
+        'status' => $status,
+        'body' => $body,
+        'url' => $url,
+    ];
 }
 
-/** Extracts password.tpl's hidden pwg_token value from a response body. */
+/**
+ * Extracts password.tpl's hidden pwg_token value from a response body.
+ */
 function passwordExtractToken(string $html): string
 {
     if (preg_match('/name="pwg_token" value="([^"]+)"/', $html, $matches) !== 1) {
@@ -330,17 +356,23 @@ function passwordComputeValidCode(string $secret): string
     return PwgTOTP::generateCode($secret, min($duration, 900));
 }
 
-/** @return array{password: string}|null */
+/**
+ * @return array{password: string}|null
+ */
 function passwordUserRow(int $userId): ?array
 {
     $db = passwordDbConnect();
     $row = H::dbFetchAssoc($db, sprintf('SELECT password FROM users WHERE id = %d', $userId));
     H::dbClose($db);
 
-    return is_array($row) ? ['password' => (string) $row['password']] : null;
+    return is_array($row) ? [
+        'password' => (string) $row['password'],
+    ] : null;
 }
 
-/** @return array{activation_key: string|null}|null */
+/**
+ * @return array{activation_key: string|null}|null
+ */
 function passwordUserInfosRow(int $userId): ?array
 {
     $db = passwordDbConnect();
@@ -353,7 +385,9 @@ function passwordUserInfosRow(int $userId): ?array
 
     $activationKey = $row['activation_key'] ?? null;
 
-    return ['activation_key' => is_string($activationKey) ? $activationKey : null];
+    return [
+        'activation_key' => is_string($activationKey) ? $activationKey : null,
+    ];
 }
 
 function passwordDeleteUser(int $userId): void
@@ -385,8 +419,10 @@ it('completes a full reset-key password reset for a never-logged-in user, welcom
         $page->assertSee('Login');
 
         $newHash = passwordUserRow($userId)['password'] ?? null;
-        expect($newHash)->not->toBeNull();
-        expect($newHash)->not->toBe($originalHash);
+        expect($newHash)
+            ->not->toBeNull();
+        expect($newHash)
+            ->not->toBe($originalHash);
 
         // resetPasswordKey() deactivates the reset key as soon as it's
         // consumed, regardless of whether the password-confirmation match
@@ -442,7 +478,10 @@ function passwordCurlGet(string $path, array $extraHeaders = []): array
         throw new RuntimeException('curl_exec failed');
     }
 
-    return ['status' => $status, 'body' => $body];
+    return [
+        'status' => $status,
+        'body' => $body,
+    ];
 }
 
 /**
@@ -453,16 +492,22 @@ function passwordInsertNormalUserWithEmail(string $email): array
     $db = passwordDbConnect();
     $username = 'pwlost_' . uniqid();
 
-    H::dbQuery($db, sprintf("INSERT INTO users (username, password, mail_address) VALUES ('%s', '%s', '%s')", H::dbEscape($db, $username), H::dbEscape($db, password_hash('original-password', PASSWORD_BCRYPT, ['cost' => 4])), H::dbEscape($db, $email)));
+    H::dbQuery($db, sprintf("INSERT INTO users (username, password, mail_address) VALUES ('%s', '%s', '%s')", H::dbEscape($db, $username), H::dbEscape($db, password_hash('original-password', PASSWORD_BCRYPT, [
+        'cost' => 4,
+    ])), H::dbEscape($db, $email)));
     $userId = H::dbInsertId($db);
 
     H::dbQuery($db, sprintf("INSERT INTO user_infos (user_id, status, language) VALUES (%d, 'normal', 'en_UK')", $userId));
     H::dbClose($db);
 
-    return ['userId' => $userId];
+    return [
+        'userId' => $userId,
+    ];
 }
 
-/** @return array{reset_password_forbidden_until: int|null}|null */
+/**
+ * @return array{reset_password_forbidden_until: int|null}|null
+ */
 function passwordUserPreferences(int $userId): ?array
 {
     $db = passwordDbConnect();
@@ -477,7 +522,9 @@ function passwordUserPreferences(int $userId): ?array
     $decoded = is_string($raw) ? json_decode($raw, true) : null;
     $forbiddenUntil = is_array($decoded) ? ($decoded['reset_password_forbidden_until'] ?? null) : null;
 
-    return ['reset_password_forbidden_until' => is_numeric($forbiddenUntil) ? (int) $forbiddenUntil : null];
+    return [
+        'reset_password_forbidden_until' => is_numeric($forbiddenUntil) ? (int) $forbiddenUntil : null,
+    ];
 }
 
 it('nulls a reset key for an already-logged-in (non-guest) user and redirects the default "lost" action home', function (): void {
@@ -490,13 +537,15 @@ it('nulls a reset key for an already-logged-in (non-guest) user and redirects th
     // away from the "forgot password" form entirely.
     $page = H::navigateOk($page, '/password.php?key=aaaaaaaaaaaaaaaaaaaa');
     $currentUrl = H::rawWebpage($page)->url();
-    expect($currentUrl)->toBe(H::baseUrl() . '/');
+    expect($currentUrl)
+        ->toBe(H::baseUrl() . '/');
 });
 
 it('re-shows the code-entry step on a plain revisit while a reset code is still pending', function (): void {
     $page = H::gotoOk($this, '/password.php');
     $unknownEmail = 'no-such-account-' . uniqid() . '@example.test';
-    $page = $page->fill('username_or_email', $unknownEmail)->click('submit');
+    $page = $page->fill('username_or_email', $unknownEmail)
+        ->click('submit');
     $page->assertPresent('input[name="user_code"]');
 
     // A plain GET back to password.php, with no ?action= at all -- the
@@ -511,7 +560,8 @@ it('re-shows the code-entry step on a plain revisit while a reset code is still 
 it('re-submitting the "lost" step while a code is already pending short-circuits to the same success message', function (): void {
     $page = H::gotoOk($this, '/password.php');
     $email = 'no-such-account-' . uniqid() . '@example.test';
-    $page = $page->fill('username_or_email', $email)->click('submit');
+    $page = $page->fill('username_or_email', $email)
+        ->click('submit');
     $page->assertSee('If your account exists, a verification code has been sent to your email address.');
 
     // Re-submit the very same "lost" step -- processVerificationCode()'s
@@ -545,7 +595,8 @@ it('rejects a "lost" submission for the guest account with a real (non-enumerati
     // the enumeration-safety guarantee entirely, so this shows the real
     // "not allowed" error immediately instead of the generic success
     // message every unknown-account test above sees.
-    $page = $page->fill('username_or_email', 'guest')->click('submit');
+    $page = $page->fill('username_or_email', 'guest')
+        ->click('submit');
     $page->assertSee('Password reset is not allowed for this user');
     $page->assertPresent('input[name="username_or_email"]');
 });
@@ -593,11 +644,13 @@ it('locks a real user out of password reset after 3 wrong codes, then rejects a 
         $page = $page->fill('user_code', '222222');
         H::clickWithTimeout($page, 'submit');
         $currentUrl = H::rawWebpage($page)->url();
-        expect($currentUrl)->toContain('identification.php');
+        expect($currentUrl)
+            ->toContain('identification.php');
         $page->assertSee('Too many attempts, please try later..');
 
         $preferences = passwordUserPreferences($userId);
-        expect($preferences)->not->toBeNull();
+        expect($preferences)
+            ->not->toBeNull();
         assert(is_array($preferences));
         expect($preferences['reset_password_forbidden_until'])->not->toBeNull();
         assert(is_int($preferences['reset_password_forbidden_until']));
@@ -654,7 +707,8 @@ it('expires a pending reset code once its configured duration has elapsed', func
 
         $page = H::gotoOk($this, '/password.php');
         $unknownEmail = 'no-such-account-' . uniqid() . '@example.test';
-        $page = $page->fill('username_or_email', $unknownEmail)->click('submit');
+        $page = $page->fill('username_or_email', $unknownEmail)
+            ->click('submit');
         $page->assertPresent('input[name="user_code"]');
 
         sleep(2);
@@ -665,7 +719,8 @@ it('expires a pending reset code once its configured duration has elapsed', func
         // exactly this case (a real password_form_error is queued), so
         // this stays on password.php instead of bouncing to
         // identification.php with the message discarded.
-        $page = $page->fill('user_code', '000000')->click('submit');
+        $page = $page->fill('user_code', '000000')
+            ->click('submit');
         $page->assertSee('Code expired');
         H::assertNoServerErrors($page, 'password expired-code inline error');
     } finally {
@@ -735,7 +790,6 @@ it('switches to a valid, different lang cookie and shows the French translation'
  * undeliverable test email (see this file's own top-of-file docblock for
  * why mail delivery isn't observable in this environment either).
  */
-
 it('completes a full verification-code password reset: session round-trip, success email, and api-key lookup', function (): void {
     $email = 'ct-pwcode-' . uniqid() . '@example.test';
     $fixture = passwordInsertNormalUserWithEmail($email);
@@ -765,7 +819,8 @@ it('completes a full verification-code password reset: session round-trip, succe
 
         $sessionId = passwordCookieJarSessionId($jar);
         $secret = passwordSessionResetCodeSecret($sessionId);
-        expect($secret)->not->toBeNull();
+        expect($secret)
+            ->not->toBeNull();
         assert(is_string($secret));
         $code = passwordComputeValidCode($secret);
 
@@ -785,7 +840,8 @@ it('completes a full verification-code password reset: session round-trip, succe
         expect($verify['body'])->toContain('name="use_new_pwd"');
 
         $sessionDataAfterVerify = passwordSessionData($sessionId);
-        expect($sessionDataAfterVerify)->toContain('valid_reset_password_code');
+        expect($sessionDataAfterVerify)
+            ->toContain('valid_reset_password_code');
 
         // Session round-trip: a FRESH request (still the same cookie jar,
         // i.e. a real separate HTTP round trip, not just in-memory state
@@ -815,8 +871,10 @@ it('completes a full verification-code password reset: session round-trip, succe
         expect($reset['body'])->toContain('Your password has been reset');
 
         $newHash = passwordUserRow($userId)['password'] ?? null;
-        expect($newHash)->not->toBeNull();
-        expect($newHash)->not->toBe($originalHash);
+        expect($newHash)
+            ->not->toBeNull();
+        expect($newHash)
+            ->not->toBe($originalHash);
     } finally {
         passwordDeleteUser($userId);
         @unlink($jar);
@@ -873,7 +931,8 @@ it('rejects a correct verification code for an unresolvable (unknown) account wi
 
         $sessionId = passwordCookieJarSessionId($jar);
         $secret = passwordSessionResetCodeSecret($sessionId);
-        expect($secret)->not->toBeNull();
+        expect($secret)
+            ->not->toBeNull();
         assert(is_string($secret));
         $code = passwordComputeValidCode($secret);
 
@@ -920,7 +979,8 @@ it('rejects a correct verification code for a resolvable user with no email addr
 
         $sessionId = passwordCookieJarSessionId($jar);
         $secret = passwordSessionResetCodeSecret($sessionId);
-        expect($secret)->not->toBeNull();
+        expect($secret)
+            ->not->toBeNull();
         assert(is_string($secret));
         $code = passwordComputeValidCode($secret);
 

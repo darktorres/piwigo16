@@ -32,23 +32,31 @@ function callGuessMimeType(string $ext): string
 }
 
 test('guessMimeType maps every jpeg-family extension to image/jpeg', function (): void {
-    expect(callGuessMimeType('jpe'))->toBe('image/jpeg')
-        ->and(callGuessMimeType('jpeg'))->toBe('image/jpeg')
-        ->and(callGuessMimeType('jpg'))->toBe('image/jpeg');
+    expect(callGuessMimeType('jpe'))
+        ->toBe('image/jpeg')
+        ->and(callGuessMimeType('jpeg'))
+        ->toBe('image/jpeg')
+        ->and(callGuessMimeType('jpg'))
+        ->toBe('image/jpeg');
 });
 
 test('guessMimeType maps both tiff-family extensions to image/tiff', function (): void {
-    expect(callGuessMimeType('tiff'))->toBe('image/tiff')
-        ->and(callGuessMimeType('tif'))->toBe('image/tiff');
+    expect(callGuessMimeType('tiff'))
+        ->toBe('image/tiff')
+        ->and(callGuessMimeType('tif'))
+        ->toBe('image/tiff');
 });
 
 test('guessMimeType maps both html-family extensions to text/html', function (): void {
-    expect(callGuessMimeType('html'))->toBe('text/html')
-        ->and(callGuessMimeType('htm'))->toBe('text/html');
+    expect(callGuessMimeType('html'))
+        ->toBe('text/html')
+        ->and(callGuessMimeType('htm'))
+        ->toBe('text/html');
 });
 
 test('guessMimeType matches case-insensitively', function (): void {
     // Every case above passes a pre-lowercased extension, which can't
     // tell the real strtolower() call apart from a mutated no-op.
-    expect(callGuessMimeType('JPG'))->toBe('image/jpeg');
+    expect(callGuessMimeType('JPG'))
+        ->toBe('image/jpeg');
 });

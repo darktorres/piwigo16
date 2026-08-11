@@ -2,8 +2,8 @@
 
 declare(strict_types=1);
 
-use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Core\PageFilterHelper;
+use Piwigo\Tests\Support\CurrentConfigTestFactory;
 
 /**
  * No prior PageFilterHelperTest.php existed. scriptBasename()'s
@@ -138,8 +138,12 @@ test('getFilterPageValue returns null when neither the page nor the default entr
     unset($_SERVER['SCRIPT_FILENAME'], $_SERVER['PHP_SELF']);
 
     CurrentConfigTestFactory::get()->filterPages = [
-        'picture' => ['show_thumbnail_caption' => true],
-        'default' => ['hide_menu' => false],
+        'picture' => [
+            'show_thumbnail_caption' => true,
+        ],
+        'default' => [
+            'hide_menu' => false,
+        ],
     ];
 
     try {
@@ -161,8 +165,12 @@ test('getFilterPageValue returns the page-specific value when configured, fallin
     unset($_SERVER['SCRIPT_FILENAME'], $_SERVER['PHP_SELF']);
 
     CurrentConfigTestFactory::get()->filterPages = [
-        'picture' => ['show_thumbnail_caption' => true],
-        'default' => ['hide_menu' => false],
+        'picture' => [
+            'show_thumbnail_caption' => true,
+        ],
+        'default' => [
+            'hide_menu' => false,
+        ],
     ];
 
     try {

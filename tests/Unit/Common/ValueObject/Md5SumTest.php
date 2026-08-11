@@ -9,7 +9,9 @@ use Piwigo\Common\ValueObject\Md5Sum;
 use Piwigo\Common\ValueObject\Username;
 use Piwigo\Tests\Unit\Common\ValueObject\Contract\StringVoContract;
 
-/** @extends StringVoContract<Md5Sum> */
+/**
+ * @extends StringVoContract<Md5Sum>
+ */
 final class Md5SumTest extends StringVoContract
 {
     #[Override]
@@ -31,17 +33,19 @@ final class Md5SumTest extends StringVoContract
         return Username::class;
     }
 
-    /** @return iterable<string, array{string}> */
+    /**
+     * @return iterable<string, array{string}>
+     */
     #[Override]
     public static function invalidSamples(): iterable
     {
-        yield 'empty'              => [''];
-        yield 'too short (31)'     => [str_repeat('a', 31)];
-        yield 'too long (33)'      => [str_repeat('a', 33)];
-        yield 'uppercase hex'      => ['5EB63BBBE01EEED093CB22BB8F5ACDC3'];
-        yield 'mixed case'         => ['5Eb63bbbe01eeed093cb22bb8f5acdc3'];
-        yield 'non hex char'       => ['5eb63bbbe01eeed093cb22bb8f5acdcG'];
-        yield 'with whitespace'    => [' 5eb63bbbe01eeed093cb22bb8f5acdc3'];
+        yield 'empty' => [''];
+        yield 'too short (31)' => [str_repeat('a', 31)];
+        yield 'too long (33)' => [str_repeat('a', 33)];
+        yield 'uppercase hex' => ['5EB63BBBE01EEED093CB22BB8F5ACDC3'];
+        yield 'mixed case' => ['5Eb63bbbe01eeed093cb22bb8f5acdc3'];
+        yield 'non hex char' => ['5eb63bbbe01eeed093cb22bb8f5acdcG'];
+        yield 'with whitespace' => [' 5eb63bbbe01eeed093cb22bb8f5acdc3'];
     }
 
     public function testProducedByMd5IsAccepted(): void

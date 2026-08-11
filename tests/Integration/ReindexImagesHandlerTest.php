@@ -4,25 +4,25 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Integration;
 
-use Piwigo\Tests\Support\CurrentPathsTestFactory;
-use Override;
-use Piwigo\Core\Kernel;
-use LogicException;
-use Piwigo\Tests\Support\LangTestFactory;
-use Piwigo\Db\EntityManagerFactory;
-use Piwigo\PluginConfig\EventDispatcher;
-use Piwigo\Tests\Support\CurrentUserTestFactory;
-use Piwigo\Tests\Support\SessionServiceTestFactory;
-use Piwigo\Core\FilterState;
 use Doctrine\DBAL\Connection;
-use Piwigo\Config\CurrentConfig;
+use LogicException;
+use Override;
 use Piwigo\Config\ConfigLoader;
+use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\CurrentLogger;
+use Piwigo\Core\FilterState;
+use Piwigo\Core\Kernel;
 use Piwigo\Db\DbConnection;
+use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Job\Handler\ReindexImagesHandler;
 use Piwigo\Job\ReindexImagesJob;
 use Piwigo\Metadata\MetadataRepository;
 use Piwigo\Metadata\MetadataService;
+use Piwigo\PluginConfig\EventDispatcher;
+use Piwigo\Tests\Support\CurrentPathsTestFactory;
+use Piwigo\Tests\Support\CurrentUserTestFactory;
+use Piwigo\Tests\Support\LangTestFactory;
+use Piwigo\Tests\Support\SessionServiceTestFactory;
 
 /**
  * Only exercises the empty-$imageIds path -- MetadataRepository::
@@ -73,7 +73,7 @@ final class ReindexImagesHandlerTest extends IntegrationTestCase
         parent::tearDown();
     }
 
-    public function test_invoke_delegates_to_metadata_service_sync_metadata(): void
+    public function testInvokeDelegatesToMetadataServiceSyncMetadata(): void
     {
         $handler = new ReindexImagesHandler(new MetadataService(LangTestFactory::get(), new MetadataRepository(EntityManagerFactory::build($this->conn)), new CurrentLogger(), new EventDispatcher(), new CurrentConfig(), CurrentUserTestFactory::get(), SessionServiceTestFactory::get(), new FilterState(), CurrentPathsTestFactory::get()));
 

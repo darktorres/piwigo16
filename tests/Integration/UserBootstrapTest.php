@@ -4,44 +4,44 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Integration;
 
-use Override;
-use Piwigo\Common\ValueObject\Username;
-use Piwigo\Tests\Support\CurrentConfigTestFactory;
-use Piwigo\Users\UserService;
-use LogicException;
-use Piwigo\Auth\AccessLevelChecker;
-use Piwigo\Tests\Support\LangTestFactory;
-use Piwigo\Tests\Support\UrlServiceTestFactory;
-use Piwigo\Tests\Support\HtmlServiceTestFactory;
-use Piwigo\Auth\UserFailedLoginEntity;
-use Piwigo\Tests\Support\PageStateTestFactory;
 use Doctrine\DBAL\Connection;
+use LogicException;
+use Override;
 use Piwigo\Activity\ActivityEntity;
 use Piwigo\Activity\ActivityService;
+use Piwigo\Auth\AccessLevelChecker;
 use Piwigo\Auth\AuthRepository;
 use Piwigo\Auth\AuthService;
 use Piwigo\Auth\CookieService;
 use Piwigo\Auth\PasswordRepository;
 use Piwigo\Auth\PasswordService;
+use Piwigo\Auth\UserFailedLoginEntity;
 use Piwigo\Bootstrap\RedirectService;
 use Piwigo\Bootstrap\UserBootstrap;
+use Piwigo\Common\ValueObject\Username;
 use Piwigo\Config\ConfigLoader;
 use Piwigo\Config\ConfigService;
-use Piwigo\Tests\Support\CurrentConfigServiceTestFactory;
 use Piwigo\Config\DeploymentPolicy;
 use Piwigo\Core\ApiKeyRequestFlag;
 use Piwigo\Core\CurrentLogger;
-use Piwigo\Tests\Support\CurrentPathsTestFactory;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\WsContext;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Event\User\TryLogUser;
 use Piwigo\PluginConfig\EventDispatcher;
-use Piwigo\Tests\Support\EventDispatcherTestFactory;
 use Piwigo\Session\SessionEntity;
 use Piwigo\Session\SessionService;
+use Piwigo\Tests\Support\CurrentConfigServiceTestFactory;
+use Piwigo\Tests\Support\CurrentConfigTestFactory;
+use Piwigo\Tests\Support\CurrentPathsTestFactory;
 use Piwigo\Tests\Support\CurrentUserTestFactory;
+use Piwigo\Tests\Support\EventDispatcherTestFactory;
+use Piwigo\Tests\Support\HtmlServiceTestFactory;
+use Piwigo\Tests\Support\LangTestFactory;
+use Piwigo\Tests\Support\PageStateTestFactory;
+use Piwigo\Tests\Support\UrlServiceTestFactory;
+use Piwigo\Users\UserService;
 
 /**
  * Piwigo\Bootstrap\UserBootstrap::initialize() -- most of this method is
@@ -79,16 +79,24 @@ final class UserBootstrapTest extends IntegrationTestCase
 
     private Connection $conn;
 
-    /** @var array<array-key, mixed> */
+    /**
+     * @var array<array-key, mixed>
+     */
     private array $serverSnapshot = [];
 
-    /** @var array<array-key, mixed> */
+    /**
+     * @var array<array-key, mixed>
+     */
     private array $getSnapshot = [];
 
-    /** @var array<array-key, mixed> */
+    /**
+     * @var array<array-key, mixed>
+     */
     private array $postSnapshot = [];
 
-    /** @var array<array-key, mixed> */
+    /**
+     * @var array<array-key, mixed>
+     */
     private array $requestSnapshot = [];
 
     #[Override]
@@ -158,7 +166,7 @@ final class UserBootstrapTest extends IntegrationTestCase
         return new UserBootstrap(new AccessLevelChecker(CurrentUserTestFactory::get(), CurrentConfigTestFactory::get()), new RedirectService(LangTestFactory::get(), $this->userService(), EventDispatcherTestFactory::get(), PageStateTestFactory::get()), UrlServiceTestFactory::build(), new ApiKeyRequestFlag(), new CurrentLogger(), $wsContext ?? new WsContext(), $deploymentPolicy ?? new DeploymentPolicy());
     }
 
-    public function test_initialize_auto_registers_a_new_local_account_for_an_unknown_apache_remote_user(): void
+    public function testInitializeAutoRegistersANewLocalAccountForAnUnknownApacheRemoteUser(): void
     {
         $remoteUser = 'apache_new_user_' . bin2hex(random_bytes(4));
         $_SERVER['REMOTE_USER'] = $remoteUser;
@@ -167,7 +175,8 @@ final class UserBootstrapTest extends IntegrationTestCase
         $_REQUEST = [];
 
         try {
-            $this->bootstrap(deploymentPolicy: new DeploymentPolicy(apacheAuthentication: true))->initialize();
+            $this->bootstrap(deploymentPolicy: new DeploymentPolicy(apacheAuthentication: true))
+                ->initialize();
 
             self::assertEquals(Username::from($remoteUser), CurrentUserTestFactory::get()->get()->username);
             $row = $this->conn->fetchAssociative(
@@ -181,14 +190,15 @@ final class UserBootstrapTest extends IntegrationTestCase
         }
     }
 
-    public function test_initialize_reuses_the_existing_account_for_a_known_apache_remote_user(): void
+    public function testInitializeReusesTheExistingAccountForAKnownApacheRemoteUser(): void
     {
         $_SERVER['REMOTE_USER'] = 'regular_user';
         $_GET = [];
         $_POST = [];
         $_REQUEST = [];
 
-        $this->bootstrap(deploymentPolicy: new DeploymentPolicy(apacheAuthentication: true))->initialize();
+        $this->bootstrap(deploymentPolicy: new DeploymentPolicy(apacheAuthentication: true))
+            ->initialize();
 
         self::assertEquals(Username::from('regular_user'), CurrentUserTestFactory::get()->get()->username);
         // No 2nd row was created for an account that already exists.
@@ -199,7 +209,7 @@ final class UserBootstrapTest extends IntegrationTestCase
         self::assertSame(1, $count);
     }
 
-    public function test_initialize_calls_authKeyLogin_when_the_auth_query_parameter_is_present(): void
+    public function testInitializeCallsAuthKeyLoginWhenTheAuthQueryParameterIsPresent(): void
     {
         $_GET['auth'] = 'not-a-real-auth-key';
         $_POST = [];
@@ -210,12 +220,13 @@ final class UserBootstrapTest extends IntegrationTestCase
         // key it accepts/rejects -- this only proves initialize() reaches
         // the call site at all and stays on the guest fallback since the
         // key never resolves to a real user.
-        $this->bootstrap()->initialize();
+        $this->bootstrap()
+            ->initialize();
 
         self::assertSame(CurrentConfigTestFactory::get()->guestId, CurrentUserTestFactory::get()->get()->id->value);
     }
 
-    public function test_initialize_logs_in_via_ws_uploadAsync_and_marks_the_session_connected_with(): void
+    public function testInitializeLogsInViaWsUploadAsyncAndMarksTheSessionConnectedWith(): void
     {
         $plainPassword = 'upload-async-pass-' . bin2hex(random_bytes(4));
         $hash = (new PasswordService(new PasswordRepository(EntityManagerFactory::build($this->conn)), new DeploymentPolicy()))->hash($plainPassword);
@@ -237,7 +248,7 @@ final class UserBootstrapTest extends IntegrationTestCase
             new PasswordService(new PasswordRepository(EntityManagerFactory::build($this->conn)), new DeploymentPolicy()),
             new CookieService(),
             EntityManagerFactory::build($this->conn)->getRepository(UserFailedLoginEntity::class),
-            new SessionService(EntityManagerFactory::build($this->conn)->getRepository(SessionEntity::class),CurrentConfigTestFactory::get()),
+            new SessionService(EntityManagerFactory::build($this->conn)->getRepository(SessionEntity::class), CurrentConfigTestFactory::get()),
             EventDispatcherTestFactory::get(),
             PageStateTestFactory::get(),
             CurrentUserTestFactory::get(),
@@ -247,11 +258,19 @@ final class UserBootstrapTest extends IntegrationTestCase
 
         $_SERVER = [];
         $_GET = [];
-        $_POST = ['username' => $username, 'password' => $plainPassword];
-        $_REQUEST = ['method' => 'pwg.images.uploadAsync', 'username' => $username, 'password' => $plainPassword];
+        $_POST = [
+            'username' => $username,
+            'password' => $plainPassword,
+        ];
+        $_REQUEST = [
+            'method' => 'pwg.images.uploadAsync',
+            'username' => $username,
+            'password' => $plainPassword,
+        ];
 
         try {
-            $this->bootstrap(new WsContext(true))->initialize();
+            $this->bootstrap(new WsContext(true))
+                ->initialize();
 
             self::assertSame('pwg.images.uploadAsync', $_SESSION['connected_with'] ?? null);
         } finally {

@@ -23,21 +23,28 @@ test('toArray flattens every fixed property, and omits every optional key when n
         selectedCategoryName: null,
         selectedCategory: [],
         nbAlbums: 3,
-        levelOptions: [0 => 'Everybody'],
+        levelOptions: [
+            0 => 'Everybody',
+        ],
         levelOptionsSelected: [0],
         setupErrors: [],
-        cacheKeys: ['categories' => '123_4'],
+        cacheKeys: [
+            'categories' => '123_4',
+        ],
         setupWarnings: null,
         hideWarningsLink: null,
     );
 
     $result = $context->toArray();
 
-    expect($result)->not->toHaveKeys(['max_upload_width', 'max_upload_height', 'max_upload_resolution', 'original_resize_maxwidth', 'original_resize_maxheight', 'ADD_TO_ALBUM', 'selected_category_name', 'setup_warnings', 'hide_warnings_link'])
+    expect($result)
+        ->not->toHaveKeys(['max_upload_width', 'max_upload_height', 'max_upload_resolution', 'original_resize_maxwidth', 'original_resize_maxheight', 'ADD_TO_ALBUM', 'selected_category_name', 'setup_warnings', 'hide_warnings_link'])
         ->and($result['F_ADD_ACTION'])->toBe('/admin.php?page=photos_add')
         ->and($result['chunk_size'])->toBe(500000)
         ->and($result['NB_ALBUMS'])->toBe(3)
-        ->and($result['CACHE_KEYS'])->toBe(['categories' => '123_4']);
+        ->and($result['CACHE_KEYS'])->toBe([
+            'categories' => '123_4',
+        ]);
 });
 
 test('toArray includes every optional key when set', function (): void {
@@ -59,10 +66,14 @@ test('toArray includes every optional key when set', function (): void {
         selectedCategoryName: null,
         selectedCategory: [5],
         nbAlbums: 3,
-        levelOptions: [0 => 'Everybody'],
+        levelOptions: [
+            0 => 'Everybody',
+        ],
         levelOptionsSelected: [0],
         setupErrors: ['upload dir is not writable'],
-        cacheKeys: ['categories' => '123_4'],
+        cacheKeys: [
+            'categories' => '123_4',
+        ],
         setupWarnings: ['Exif extension not available, admin should disable exif use'],
         hideWarningsLink: '/admin.php?page=photos_add&amp;hide_warnings=1',
     );
@@ -75,7 +86,8 @@ test('toArray includes every optional key when set', function (): void {
         ->and($result['original_resize_maxwidth'])->toBe(2000)
         ->and($result['original_resize_maxheight'])->toBe(1500)
         ->and($result['ADD_TO_ALBUM'])->toBe('Holidays')
-        ->and($result)->not->toHaveKey('selected_category_name')
+        ->and($result)
+        ->not->toHaveKey('selected_category_name')
         ->and($result['setup_warnings'])->toBe(['Exif extension not available, admin should disable exif use'])
         ->and($result['hide_warnings_link'])->toBe('/admin.php?page=photos_add&amp;hide_warnings=1');
 });
@@ -99,7 +111,9 @@ test('toArray includes selected_category_name when set instead of ADD_TO_ALBUM',
         selectedCategoryName: 'Holidays',
         selectedCategory: [5],
         nbAlbums: 3,
-        levelOptions: [0 => 'Everybody'],
+        levelOptions: [
+            0 => 'Everybody',
+        ],
         levelOptionsSelected: [0],
         setupErrors: [],
         cacheKeys: [],
@@ -110,5 +124,6 @@ test('toArray includes selected_category_name when set instead of ADD_TO_ALBUM',
     $result = $context->toArray();
 
     expect($result['selected_category_name'])->toBe('Holidays')
-        ->and($result)->not->toHaveKey('ADD_TO_ALBUM');
+        ->and($result)
+        ->not->toHaveKey('ADD_TO_ALBUM');
 });

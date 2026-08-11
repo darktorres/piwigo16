@@ -16,13 +16,20 @@ use Piwigo\Ws\PwgNamedArray;
 test('constructor flips xmlAttributes into a name => position map, not the original list', function (): void {
     $array = new PwgNamedArray([10, 20, 30], 'item', ['width', 'height']);
 
-    expect($array->_xmlAttributes)->toBe(['width' => 0, 'height' => 1])
-        ->and($array->_content)->toBe([10, 20, 30])
-        ->and($array->_itemName)->toBe('item');
+    expect($array->_xmlAttributes)
+        ->toBe([
+            'width' => 0,
+            'height' => 1,
+        ])
+        ->and($array->_content)
+        ->toBe([10, 20, 30])
+        ->and($array->_itemName)
+        ->toBe('item');
 });
 
 test('constructor defaults xmlAttributes to an empty flipped array when omitted', function (): void {
     $array = new PwgNamedArray([1, 2], 'item');
 
-    expect($array->_xmlAttributes)->toBe([]);
+    expect($array->_xmlAttributes)
+        ->toBe([]);
 });

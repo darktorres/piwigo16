@@ -2,13 +2,13 @@
 
 declare(strict_types=1);
 
-use Piwigo\Common\ValueObject\LangCode;
-use Piwigo\Common\ValueObject\UserId;
-use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Auth\AccessLevelChecker;
-use Piwigo\Section\RandomIndexRedirectResolver;
-use Piwigo\Tests\Support\CurrentUserTestFactory;
+use Piwigo\Common\ValueObject\LangCode;
 use Piwigo\Common\ValueObject\ThemeId;
+use Piwigo\Common\ValueObject\UserId;
+use Piwigo\Section\RandomIndexRedirectResolver;
+use Piwigo\Tests\Support\CurrentConfigTestFactory;
+use Piwigo\Tests\Support\CurrentUserTestFactory;
 use Piwigo\Users\User;
 use Piwigo\Users\UserStatus;
 
@@ -50,30 +50,40 @@ afterEach(function (): void {
 test('resolveCandidates matches an empty-string condition', function (): void {
     $resolver = new RandomIndexRedirectResolver();
 
-    expect($resolver->resolveCandidates(randomIndexRedirectResolverTestAccessLevelChecker(), ['index.php' => '']))->toBe(['index.php']);
+    expect($resolver->resolveCandidates(randomIndexRedirectResolverTestAccessLevelChecker(), [
+        'index.php' => '',
+    ]))->toBe(['index.php']);
 });
 
 test('resolveCandidates matches a literal "return true;" condition', function (): void {
     $resolver = new RandomIndexRedirectResolver();
 
-    expect($resolver->resolveCandidates(randomIndexRedirectResolverTestAccessLevelChecker(), ['index.php' => 'return true;']))->toBe(['index.php']);
+    expect($resolver->resolveCandidates(randomIndexRedirectResolverTestAccessLevelChecker(), [
+        'index.php' => 'return true;',
+    ]))->toBe(['index.php']);
 });
 
 test('resolveCandidates matches "return is_a_guest();" only for a real guest', function (): void {
     $resolver = new RandomIndexRedirectResolver();
-    $candidates = ['guest.php' => 'return is_a_guest();'];
+    $candidates = [
+        'guest.php' => 'return is_a_guest();',
+    ];
 
     seedCurrentUserStatus(UserStatus::Guest);
-    expect($resolver->resolveCandidates(randomIndexRedirectResolverTestAccessLevelChecker(), $candidates))->toBe(['guest.php']);
+    expect($resolver->resolveCandidates(randomIndexRedirectResolverTestAccessLevelChecker(), $candidates))
+        ->toBe(['guest.php']);
 
     seedCurrentUserStatus(UserStatus::Normal);
-    expect($resolver->resolveCandidates(randomIndexRedirectResolverTestAccessLevelChecker(), $candidates))->toBe([]);
+    expect($resolver->resolveCandidates(randomIndexRedirectResolverTestAccessLevelChecker(), $candidates))
+        ->toBe([]);
 });
 
 test('resolveCandidates never matches an arbitrary PHP condition string', function (): void {
     $resolver = new RandomIndexRedirectResolver();
 
-    expect($resolver->resolveCandidates(randomIndexRedirectResolverTestAccessLevelChecker(), ['evil.php' => 'system("id");']))->toBe([]);
+    expect($resolver->resolveCandidates(randomIndexRedirectResolverTestAccessLevelChecker(), [
+        'evil.php' => 'system("id");',
+    ]))->toBe([]);
 });
 
 test('resolveCandidates skips non-string keys and preserves match order', function (): void {
@@ -85,5 +95,6 @@ test('resolveCandidates skips non-string keys and preserves match order', functi
         'second.php' => 'return true;',
     ]);
 
-    expect($result)->toBe(['first.php', 'second.php']);
+    expect($result)
+        ->toBe(['first.php', 'second.php']);
 });

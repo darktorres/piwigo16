@@ -7,45 +7,73 @@ use Piwigo\Bootstrap\Request\UserBootstrapRequest;
 test('fromArrays returns defaults for an empty GET/POST/REQUEST', function (): void {
     $request = UserBootstrapRequest::fromArrays([], [], []);
 
-    expect($request->logoutRequested)->toBeFalse()
-        ->and($request->authKeyPresent)->toBeFalse()
-        ->and($request->authKey)->toBeNull()
-        ->and($request->wsMethod)->toBeNull()
-        ->and($request->username)->toBeNull()
-        ->and($request->password)->toBeNull();
+    expect($request->logoutRequested)
+        ->toBeFalse()
+        ->and($request->authKeyPresent)
+        ->toBeFalse()
+        ->and($request->authKey)
+        ->toBeNull()
+        ->and($request->wsMethod)
+        ->toBeNull()
+        ->and($request->username)
+        ->toBeNull()
+        ->and($request->password)
+        ->toBeNull();
 });
 
 test('fromArrays reports logoutRequested only for the exact act value', function (): void {
-    $logout = UserBootstrapRequest::fromArrays(['act' => 'logout'], [], []);
-    $other = UserBootstrapRequest::fromArrays(['act' => 'something'], [], []);
+    $logout = UserBootstrapRequest::fromArrays([
+        'act' => 'logout',
+    ], [], []);
+    $other = UserBootstrapRequest::fromArrays([
+        'act' => 'something',
+    ], [], []);
 
-    expect($logout->logoutRequested)->toBeTrue()
-        ->and($other->logoutRequested)->toBeFalse();
+    expect($logout->logoutRequested)
+        ->toBeTrue()
+        ->and($other->logoutRequested)
+        ->toBeFalse();
 });
 
 test('fromArrays marks authKeyPresent even for a non-string auth value', function (): void {
-    $request = UserBootstrapRequest::fromArrays(['auth' => ['nested']], [], []);
+    $request = UserBootstrapRequest::fromArrays([
+        'auth' => ['nested'],
+    ], [], []);
 
-    expect($request->authKeyPresent)->toBeTrue()
-        ->and($request->authKey)->toBeNull();
+    expect($request->authKeyPresent)
+        ->toBeTrue()
+        ->and($request->authKey)
+        ->toBeNull();
 });
 
 test('fromArrays reads a string auth key', function (): void {
-    $request = UserBootstrapRequest::fromArrays(['auth' => 'abc123'], [], []);
+    $request = UserBootstrapRequest::fromArrays([
+        'auth' => 'abc123',
+    ], [], []);
 
-    expect($request->authKeyPresent)->toBeTrue()
-        ->and($request->authKey)->toBe('abc123');
+    expect($request->authKeyPresent)
+        ->toBeTrue()
+        ->and($request->authKey)
+        ->toBe('abc123');
 });
 
 test('fromArrays reads the ws method from REQUEST', function (): void {
-    $request = UserBootstrapRequest::fromArrays([], [], ['method' => 'pwg.images.uploadAsync']);
+    $request = UserBootstrapRequest::fromArrays([], [], [
+        'method' => 'pwg.images.uploadAsync',
+    ]);
 
-    expect($request->wsMethod)->toBe('pwg.images.uploadAsync');
+    expect($request->wsMethod)
+        ->toBe('pwg.images.uploadAsync');
 });
 
 test('fromArrays reads username/password from POST', function (): void {
-    $request = UserBootstrapRequest::fromArrays([], ['username' => 'alice', 'password' => 'secret'], []);
+    $request = UserBootstrapRequest::fromArrays([], [
+        'username' => 'alice',
+        'password' => 'secret',
+    ], []);
 
-    expect($request->username)->toBe('alice')
-        ->and($request->password)->toBe('secret');
+    expect($request->username)
+        ->toBe('alice')
+        ->and($request->password)
+        ->toBe('secret');
 });

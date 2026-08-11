@@ -4,17 +4,17 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Integration;
 
-use Override;
-use Piwigo\Core\Kernel;
-use LogicException;
-use Piwigo\Image\ImageFilterCriteria;
 use Doctrine\DBAL\Connection;
+use LogicException;
+use Override;
 use Piwigo\Common\ValueObject\ImageId;
 use Piwigo\Common\ValueObject\TagId;
-use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\ConfigLoader;
+use Piwigo\Config\CurrentConfig;
+use Piwigo\Core\Kernel;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
+use Piwigo\Image\ImageFilterCriteria;
 use Piwigo\Permission\PermissionCriteria;
 use Piwigo\Tag\Projection\ImageTagLink;
 use Piwigo\Tag\TagEntity;
@@ -52,7 +52,7 @@ final class TagRepositoryTest extends IntegrationTestCase
         $this->repo = EntityManagerFactory::build($this->conn)->getRepository(TagEntity::class);
     }
 
-    public function test_find_all_returns_every_fixture_tag(): void
+    public function testFindAllReturnsEveryFixtureTag(): void
     {
         $names = array_column($this->repo->findAllTags(), 'name');
         sort($names);
@@ -60,12 +60,12 @@ final class TagRepositoryTest extends IntegrationTestCase
         self::assertSame(['family', 'nature', 'travel'], $names);
     }
 
-    public function test_find_by_ids_url_names_or_names_returns_empty_for_no_criteria(): void
+    public function testFindByIdsUrlNamesOrNamesReturnsEmptyForNoCriteria(): void
     {
         self::assertSame([], $this->repo->findByIdsUrlNamesOrNames([], [], []));
     }
 
-    public function test_find_by_ids_matches_by_id(): void
+    public function testFindByIdsMatchesById(): void
     {
         $rows = $this->repo->findByIdsUrlNamesOrNames([1], [], []);
 
@@ -73,7 +73,7 @@ final class TagRepositoryTest extends IntegrationTestCase
         self::assertSame('nature', $rows[0]->name);
     }
 
-    public function test_find_by_ids_matches_by_url_name(): void
+    public function testFindByIdsMatchesByUrlName(): void
     {
         $rows = $this->repo->findByIdsUrlNamesOrNames([], ['travel'], []);
 
@@ -81,7 +81,7 @@ final class TagRepositoryTest extends IntegrationTestCase
         self::assertSame('travel', $rows[0]->name);
     }
 
-    public function test_find_by_ids_matches_by_name(): void
+    public function testFindByIdsMatchesByName(): void
     {
         $rows = $this->repo->findByIdsUrlNamesOrNames([], [], ['family']);
 
@@ -89,7 +89,7 @@ final class TagRepositoryTest extends IntegrationTestCase
         self::assertSame('family', $rows[0]->name);
     }
 
-    public function test_find_by_ids_combines_criteria_with_or(): void
+    public function testFindByIdsCombinesCriteriaWithOr(): void
     {
         $rows = $this->repo->findByIdsUrlNamesOrNames([1], ['travel'], []);
 
@@ -98,7 +98,7 @@ final class TagRepositoryTest extends IntegrationTestCase
         self::assertSame(['nature', 'travel'], $names);
     }
 
-    public function test_find_by_ids_accepts_numeric_string_ids(): void
+    public function testFindByIdsAcceptsNumericStringIds(): void
     {
         $rows = $this->repo->findByIdsUrlNamesOrNames(['2'], [], []);
 
@@ -106,7 +106,7 @@ final class TagRepositoryTest extends IntegrationTestCase
         self::assertSame('travel', $rows[0]->name);
     }
 
-    public function test_find_tag_ids_by_image_ids_returns_empty_for_no_ids(): void
+    public function testFindTagIdsByImageIdsReturnsEmptyForNoIds(): void
     {
         self::assertSame([], $this->repo->findTagIdsByImageIds([]));
     }
@@ -115,7 +115,7 @@ final class TagRepositoryTest extends IntegrationTestCase
      * fixture image_tag rows (tests/Fixtures/piwigo-17.0.sql): image 1 has
      * tags 1 (nature), 2 (travel), 3 (family); image 2 has only tag 1.
      */
-    public function test_find_tag_ids_by_image_ids_matches_the_fixture(): void
+    public function testFindTagIdsByImageIdsMatchesTheFixture(): void
     {
         $rows = $this->repo->findTagIdsByImageIds([1, 2]);
 
@@ -128,12 +128,12 @@ final class TagRepositoryTest extends IntegrationTestCase
         self::assertSame(['1:1', '1:2', '1:3', '2:1'], $pairs);
     }
 
-    public function test_find_image_ids_for_tag_ids_returns_empty_for_no_ids(): void
+    public function testFindImageIdsForTagIdsReturnsEmptyForNoIds(): void
     {
         self::assertSame([], $this->repo->findImageIdsForTagIds([]));
     }
 
-    public function test_find_image_ids_for_tag_ids_matches_the_fixture(): void
+    public function testFindImageIdsForTagIdsMatchesTheFixture(): void
     {
         $ids = $this->repo->findImageIdsForTagIds([TagId::from(1)]);
         sort($ids);
@@ -141,9 +141,12 @@ final class TagRepositoryTest extends IntegrationTestCase
         self::assertSame([1, 2, 3], $ids);
     }
 
-    public function test_delete_image_tag_by_tag_ids_is_a_no_op_for_no_ids(): void
+    public function testDeleteImageTagByTagIdsIsANoOpForNoIds(): void
     {
-        $this->conn->insert('image_tag', ['image_id' => 4, 'tag_id' => 3]);
+        $this->conn->insert('image_tag', [
+            'image_id' => 4,
+            'tag_id' => 3,
+        ]);
 
         try {
             $this->repo->deleteImageTagByTagIds([]);
@@ -152,14 +155,23 @@ final class TagRepositoryTest extends IntegrationTestCase
             // both links survive this no-op call.
             self::assertSame([1, 4], $this->repo->findImageIdsForTagIds([TagId::from(3)]));
         } finally {
-            $this->conn->delete('image_tag', ['image_id' => 4, 'tag_id' => 3]);
+            $this->conn->delete('image_tag', [
+                'image_id' => 4,
+                'tag_id' => 3,
+            ]);
         }
     }
 
-    public function test_delete_image_tag_by_tag_ids_removes_every_link_to_that_tag(): void
+    public function testDeleteImageTagByTagIdsRemovesEveryLinkToThatTag(): void
     {
-        $this->conn->insert('image_tag', ['image_id' => 4, 'tag_id' => 3]);
-        $this->conn->insert('image_tag', ['image_id' => 5, 'tag_id' => 3]);
+        $this->conn->insert('image_tag', [
+            'image_id' => 4,
+            'tag_id' => 3,
+        ]);
+        $this->conn->insert('image_tag', [
+            'image_id' => 5,
+            'tag_id' => 3,
+        ]);
 
         try {
             $this->repo->deleteImageTagByTagIds([TagId::from(3)]);
@@ -170,13 +182,19 @@ final class TagRepositoryTest extends IntegrationTestCase
             self::assertSame([], $this->repo->findImageIdsForTagIds([TagId::from(3)]));
         } finally {
             // restore the fixture's own image1<->tag3 link for later tests/classes
-            $this->conn->insert('image_tag', ['image_id' => 1, 'tag_id' => 3]);
+            $this->conn->insert('image_tag', [
+                'image_id' => 1,
+                'tag_id' => 3,
+            ]);
         }
     }
 
-    public function test_delete_image_tag_by_image_ids_is_a_no_op_for_no_ids(): void
+    public function testDeleteImageTagByImageIdsIsANoOpForNoIds(): void
     {
-        $this->conn->insert('image_tag', ['image_id' => 5, 'tag_id' => 2]);
+        $this->conn->insert('image_tag', [
+            'image_id' => 5,
+            'tag_id' => 2,
+        ]);
 
         try {
             $this->repo->deleteImageTagByImageIds([]);
@@ -185,23 +203,35 @@ final class TagRepositoryTest extends IntegrationTestCase
             // survive this no-op call.
             self::assertSame([1, 5], $this->repo->findImageIdsForTagIds([TagId::from(2)]));
         } finally {
-            $this->conn->delete('image_tag', ['image_id' => 5, 'tag_id' => 2]);
+            $this->conn->delete('image_tag', [
+                'image_id' => 5,
+                'tag_id' => 2,
+            ]);
         }
     }
 
-    public function test_delete_image_tag_by_image_ids_removes_every_link_from_that_image(): void
+    public function testDeleteImageTagByImageIdsRemovesEveryLinkFromThatImage(): void
     {
-        $this->conn->insert('image_tag', ['image_id' => 5, 'tag_id' => 2]);
-        $this->conn->insert('image_tag', ['image_id' => 5, 'tag_id' => 3]);
+        $this->conn->insert('image_tag', [
+            'image_id' => 5,
+            'tag_id' => 2,
+        ]);
+        $this->conn->insert('image_tag', [
+            'image_id' => 5,
+            'tag_id' => 3,
+        ]);
 
         $this->repo->deleteImageTagByImageIds([5]);
 
         self::assertSame([], $this->repo->findTagIdsByImageIds([5]));
     }
 
-    public function test_delete_image_tag_by_image_and_tag_ids_is_a_no_op_for_empty_image_ids(): void
+    public function testDeleteImageTagByImageAndTagIdsIsANoOpForEmptyImageIds(): void
     {
-        $this->conn->insert('image_tag', ['image_id' => 4, 'tag_id' => 3]);
+        $this->conn->insert('image_tag', [
+            'image_id' => 4,
+            'tag_id' => 3,
+        ]);
 
         try {
             $this->repo->deleteImageTagByImageAndTagIds([], [TagId::from(3)]);
@@ -210,13 +240,19 @@ final class TagRepositoryTest extends IntegrationTestCase
             // both links survive this no-op call.
             self::assertSame([1, 4], $this->repo->findImageIdsForTagIds([TagId::from(3)]));
         } finally {
-            $this->conn->delete('image_tag', ['image_id' => 4, 'tag_id' => 3]);
+            $this->conn->delete('image_tag', [
+                'image_id' => 4,
+                'tag_id' => 3,
+            ]);
         }
     }
 
-    public function test_delete_image_tag_by_image_and_tag_ids_is_a_no_op_for_empty_tag_ids(): void
+    public function testDeleteImageTagByImageAndTagIdsIsANoOpForEmptyTagIds(): void
     {
-        $this->conn->insert('image_tag', ['image_id' => 4, 'tag_id' => 3]);
+        $this->conn->insert('image_tag', [
+            'image_id' => 4,
+            'tag_id' => 3,
+        ]);
 
         try {
             $this->repo->deleteImageTagByImageAndTagIds([4], []);
@@ -225,17 +261,26 @@ final class TagRepositoryTest extends IntegrationTestCase
             // both links survive this no-op call.
             self::assertSame([1, 4], $this->repo->findImageIdsForTagIds([TagId::from(3)]));
         } finally {
-            $this->conn->delete('image_tag', ['image_id' => 4, 'tag_id' => 3]);
+            $this->conn->delete('image_tag', [
+                'image_id' => 4,
+                'tag_id' => 3,
+            ]);
         }
     }
 
-    public function test_delete_image_tag_by_image_and_tag_ids_removes_only_the_intersection(): void
+    public function testDeleteImageTagByImageAndTagIdsRemovesOnlyTheIntersection(): void
     {
         // image 4 linked to both tag 2 and tag 3, but only (image 4, tag 3)
         // (the requested image/tag intersection) should be removed -- the
         // (image 4, tag 2) link must survive untouched.
-        $this->conn->insert('image_tag', ['image_id' => 4, 'tag_id' => 2]);
-        $this->conn->insert('image_tag', ['image_id' => 4, 'tag_id' => 3]);
+        $this->conn->insert('image_tag', [
+            'image_id' => 4,
+            'tag_id' => 2,
+        ]);
+        $this->conn->insert('image_tag', [
+            'image_id' => 4,
+            'tag_id' => 3,
+        ]);
 
         try {
             $this->repo->deleteImageTagByImageAndTagIds([4], [TagId::from(3)]);
@@ -248,18 +293,21 @@ final class TagRepositoryTest extends IntegrationTestCase
             self::assertCount(1, $remaining);
             self::assertSame(2, $remaining[0]->tagId->value);
         } finally {
-            $this->conn->delete('image_tag', ['image_id' => 4, 'tag_id' => 2]);
+            $this->conn->delete('image_tag', [
+                'image_id' => 4,
+                'tag_id' => 2,
+            ]);
         }
     }
 
-    public function test_delete_by_ids_is_a_no_op_for_no_ids(): void
+    public function testDeleteByIdsIsANoOpForNoIds(): void
     {
         $this->repo->deleteByIds([]);
 
         self::assertNotNull($this->repo->findIdByName('nature'));
     }
 
-    public function test_delete_by_ids_removes_the_disposable_tag(): void
+    public function testDeleteByIdsRemovesTheDisposableTag(): void
     {
         $id = $this->repo->insert('disposable-tag', 'disposable-tag');
 
@@ -268,7 +316,7 @@ final class TagRepositoryTest extends IntegrationTestCase
         self::assertNull($this->repo->findIdByName('disposable-tag'));
     }
 
-    public function test_find_id_by_name_like_any_pattern_matches_an_exact_pattern(): void
+    public function testFindIdByNameLikeAnyPatternMatchesAnExactPattern(): void
     {
         $id = $this->repo->findIdByNameLikeAnyPattern(['nature']);
 
@@ -276,7 +324,7 @@ final class TagRepositoryTest extends IntegrationTestCase
         self::assertSame(1, $id->value);
     }
 
-    public function test_find_id_by_name_like_any_pattern_matches_a_wildcard_pattern(): void
+    public function testFindIdByNameLikeAnyPatternMatchesAWildcardPattern(): void
     {
         $id = $this->repo->findIdByNameLikeAnyPattern(['nat%']);
 
@@ -284,7 +332,7 @@ final class TagRepositoryTest extends IntegrationTestCase
         self::assertSame(1, $id->value);
     }
 
-    public function test_find_id_by_name_like_any_pattern_tries_every_pattern_until_one_matches(): void
+    public function testFindIdByNameLikeAnyPatternTriesEveryPatternUntilOneMatches(): void
     {
         $id = $this->repo->findIdByNameLikeAnyPattern(['no-such-tag', 'trav%']);
 
@@ -292,12 +340,12 @@ final class TagRepositoryTest extends IntegrationTestCase
         self::assertSame(2, $id->value);
     }
 
-    public function test_find_id_by_name_like_any_pattern_returns_null_for_no_match(): void
+    public function testFindIdByNameLikeAnyPatternReturnsNullForNoMatch(): void
     {
         self::assertNull($this->repo->findIdByNameLikeAnyPattern(['no-such-tag']));
     }
 
-    public function test_find_id_by_name_like_any_pattern_returns_null_for_an_empty_pattern_list(): void
+    public function testFindIdByNameLikeAnyPatternReturnsNullForAnEmptyPatternList(): void
     {
         self::assertNull($this->repo->findIdByNameLikeAnyPattern([]));
     }
@@ -309,12 +357,12 @@ final class TagRepositoryTest extends IntegrationTestCase
      * (no tag name actually contains this text) rather than injecting a
      * tautology.
      */
-    public function test_find_id_by_name_like_any_pattern_treats_sql_syntax_as_a_literal_value(): void
+    public function testFindIdByNameLikeAnyPatternTreatsSqlSyntaxAsALiteralValue(): void
     {
         self::assertNull($this->repo->findIdByNameLikeAnyPattern(["nature' OR '1'='1"]));
     }
 
-    public function test_update_name_and_url_name_renames_an_existing_tag(): void
+    public function testUpdateNameAndUrlNameRenamesAnExistingTag(): void
     {
         $id = $this->repo->insert('p18-test-' . bin2hex(random_bytes(4)), 'p18-test-' . bin2hex(random_bytes(4)));
 
@@ -327,14 +375,14 @@ final class TagRepositoryTest extends IntegrationTestCase
         $this->repo->deleteByIds([$id]);
     }
 
-    public function test_update_name_and_url_name_is_a_silent_noop_for_a_nonexistent_id(): void
+    public function testUpdateNameAndUrlNameIsASilentNoopForANonexistentId(): void
     {
         $this->repo->updateNameAndUrlName(TagId::from(999_999), 'p18-test-should-not-exist', 'p18-test-should-not-exist');
 
         self::assertNull($this->repo->findIdByName('p18-test-should-not-exist'));
     }
 
-    public function test_count_images_per_tag_unrestricted_counts_every_image_tag_link_regardless_of_permissions(): void
+    public function testCountImagesPerTagUnrestrictedCountsEveryImageTagLinkRegardlessOfPermissions(): void
     {
         // A disposable tag, not one of the fixture's own shared 1/2/3 --
         // this whole DB is shared across every Integration suite in one
@@ -346,8 +394,14 @@ final class TagRepositoryTest extends IntegrationTestCase
         // brand-new tag id to them gives an exact, collision-proof count.
         $tagId = $this->repo->insert('p18-test-' . bin2hex(random_bytes(4)), 'p18-test-' . bin2hex(random_bytes(4)));
         $this->repo->massInsertImageTags([
-            ['image_id' => 4, 'tag_id' => $tagId->value],
-            ['image_id' => 5, 'tag_id' => $tagId->value],
+            [
+                'image_id' => 4,
+                'tag_id' => $tagId->value,
+            ],
+            [
+                'image_id' => 5,
+                'tag_id' => $tagId->value,
+            ],
         ]);
 
         try {
@@ -355,7 +409,7 @@ final class TagRepositoryTest extends IntegrationTestCase
 
             self::assertSame(2, $counters[$tagId->value] ?? null);
         } finally {
-            $this->conn->executeStatement('DELETE FROM ' . 'image_tag' . ' WHERE tag_id = ?', [$tagId->value]);
+            $this->conn->executeStatement('DELETE FROM image_tag WHERE tag_id = ?', [$tagId->value]);
             $this->repo->deleteByIds([$tagId]);
         }
     }
@@ -368,7 +422,7 @@ final class TagRepositoryTest extends IntegrationTestCase
     // documented "id is a native-int NOT NULL [primary/foreign] key"
     // residuals (see SearchRepositoryTest's own).
 
-    public function test_find_comma_joined_tag_ids_by_image_ids_groups_by_image(): void
+    public function testFindCommaJoinedTagIdsByImageIdsGroupsByImage(): void
     {
         $byImageId = $this->repo->findCommaJoinedTagIdsByImageIds([1, 2, 3], [1, 2, 3]);
 
@@ -379,12 +433,12 @@ final class TagRepositoryTest extends IntegrationTestCase
         self::assertSame('1', $byImageId[3] ?? null);
     }
 
-    public function test_find_comma_joined_tag_ids_by_image_ids_returns_empty_for_empty_tag_ids(): void
+    public function testFindCommaJoinedTagIdsByImageIdsReturnsEmptyForEmptyTagIds(): void
     {
         self::assertSame([], $this->repo->findCommaJoinedTagIdsByImageIds([], [1, 2, 3]));
     }
 
-    public function test_find_comma_joined_tag_ids_by_image_ids_returns_empty_for_empty_image_ids(): void
+    public function testFindCommaJoinedTagIdsByImageIdsReturnsEmptyForEmptyImageIds(): void
     {
         self::assertSame([], $this->repo->findCommaJoinedTagIdsByImageIds([1, 2, 3], []));
     }
@@ -395,12 +449,12 @@ final class TagRepositoryTest extends IntegrationTestCase
     // guard just above (`image_tag.image_id` is the other half of that
     // same composite primary key).
 
-    public function test_count_existing_ids_counts_only_the_ids_that_exist(): void
+    public function testCountExistingIdsCountsOnlyTheIdsThatExist(): void
     {
         self::assertSame(2, $this->repo->countExistingIds([1, 2, 999_999]));
     }
 
-    public function test_count_existing_ids_returns_zero_for_an_empty_input(): void
+    public function testCountExistingIdsReturnsZeroForAnEmptyInput(): void
     {
         self::assertSame(0, $this->repo->countExistingIds([]));
     }
@@ -410,7 +464,7 @@ final class TagRepositoryTest extends IntegrationTestCase
      * 1 has tags 1/2/3, images 2/3 have only tag 1, all three sit in
      * category 1 (image_category).
      */
-    public function test_count_images_per_tag_counts_distinct_images_per_tag(): void
+    public function testCountImagesPerTagCountsDistinctImagesPerTag(): void
     {
         $counters = $this->repo->countImagesPerTag([], self::noPermissionRestriction());
 
@@ -419,12 +473,14 @@ final class TagRepositoryTest extends IntegrationTestCase
         self::assertSame(1, $counters[3] ?? null);
     }
 
-    public function test_count_images_per_tag_filters_by_the_given_tag_ids(): void
+    public function testCountImagesPerTagFiltersByTheGivenTagIds(): void
     {
-        self::assertSame([1 => 3], $this->repo->countImagesPerTag([1], self::noPermissionRestriction()));
+        self::assertSame([
+            1 => 3,
+        ], $this->repo->countImagesPerTag([1], self::noPermissionRestriction()));
     }
 
-    public function test_count_images_per_tag_applies_the_given_condition(): void
+    public function testCountImagesPerTagAppliesTheGivenCondition(): void
     {
         self::assertSame([], $this->repo->countImagesPerTag([], new PermissionCriteria(null, [999_999], null, null, null, null)));
     }
@@ -434,7 +490,7 @@ final class TagRepositoryTest extends IntegrationTestCase
      * spliced into the SQL. Same fixture shape as countImagesPerTag()'s own
      * tests just above.
      */
-    public function test_find_common_tags_returns_tags_used_by_the_given_images_with_counts(): void
+    public function testFindCommonTagsReturnsTagsUsedByTheGivenImagesWithCounts(): void
     {
         $rows = $this->repo->findCommonTags([1, 2, 3], 10, []);
 
@@ -444,7 +500,7 @@ final class TagRepositoryTest extends IntegrationTestCase
         self::assertSame(1, $byId[3] ?? null);
     }
 
-    public function test_find_common_tags_orders_by_counter_descending_and_respects_max_tags(): void
+    public function testFindCommonTagsOrdersByCounterDescendingAndRespectsMaxTags(): void
     {
         $rows = $this->repo->findCommonTags([1, 2, 3], 1, []);
 
@@ -453,7 +509,7 @@ final class TagRepositoryTest extends IntegrationTestCase
         self::assertSame(3, $rows[0]['counter']);
     }
 
-    public function test_find_common_tags_excludes_the_given_tag_ids(): void
+    public function testFindCommonTagsExcludesTheGivenTagIds(): void
     {
         $ids = array_column($this->repo->findCommonTags([1, 2, 3], 10, [1]), 'id');
         sort($ids);
@@ -461,7 +517,7 @@ final class TagRepositoryTest extends IntegrationTestCase
         self::assertSame([2, 3], $ids);
     }
 
-    public function test_find_common_tags_returns_empty_for_no_matching_images(): void
+    public function testFindCommonTagsReturnsEmptyForNoMatchingImages(): void
     {
         self::assertSame([], $this->repo->findCommonTags([999_999], 10, []));
     }
@@ -471,7 +527,7 @@ final class TagRepositoryTest extends IntegrationTestCase
      * TagServiceTest's own getImageIdsForTags() tests -- this is the
      * first direct test of its own typed params.
      */
-    public function test_find_image_ids_for_tags_binds_named_parameters(): void
+    public function testFindImageIdsForTagsBindsNamedParameters(): void
     {
         $ids = $this->repo->findImageIdsForTags([1], 'AND', false, self::noPermissionRestriction());
         sort($ids);
@@ -479,7 +535,7 @@ final class TagRepositoryTest extends IntegrationTestCase
         self::assertSame([1, 2, 3], $ids);
     }
 
-    public function test_find_image_ids_for_tags_applies_an_image_filter_criteria(): void
+    public function testFindImageIdsForTagsAppliesAnImageFilterCriteria(): void
     {
         // Proves $filterCriteria (the one legitimate caller-supplied
         // fragment this method still accepts, see its own docblock)
@@ -498,17 +554,17 @@ final class TagRepositoryTest extends IntegrationTestCase
         self::assertSame([1, 3], $ids);
     }
 
-    public function test_exists_by_id_is_true_for_a_real_tag(): void
+    public function testExistsByIdIsTrueForARealTag(): void
     {
         self::assertTrue($this->repo->existsById(1));
     }
 
-    public function test_exists_by_id_is_false_for_an_unknown_id(): void
+    public function testExistsByIdIsFalseForAnUnknownId(): void
     {
         self::assertFalse($this->repo->existsById(999_999));
     }
 
-    public function test_find_tags_for_image_returns_every_tag_linked_to_that_image(): void
+    public function testFindTagsForImageReturnsEveryTagLinkedToThatImage(): void
     {
         // Fixture image_tag: image 1 has tags 1 (nature), 2 (travel), 3 (family).
         $names = array_column($this->repo->findTagsForImage(ImageId::from(1)), 'name');
@@ -517,17 +573,17 @@ final class TagRepositoryTest extends IntegrationTestCase
         self::assertSame(['family', 'nature', 'travel'], $names);
     }
 
-    public function test_find_tags_for_image_returns_empty_for_an_image_with_no_tags(): void
+    public function testFindTagsForImageReturnsEmptyForAnImageWithNoTags(): void
     {
         self::assertSame([], $this->repo->findTagsForImage(ImageId::from(999_999)));
     }
 
-    public function test_find_tags_by_ids_returns_empty_for_no_ids(): void
+    public function testFindTagsByIdsReturnsEmptyForNoIds(): void
     {
         self::assertSame([], $this->repo->findTagsByIds([]));
     }
 
-    public function test_find_tags_by_ids_matches_the_given_ids(): void
+    public function testFindTagsByIdsMatchesTheGivenIds(): void
     {
         $rows = $this->repo->findTagsByIds([1, 2]);
 
@@ -536,27 +592,27 @@ final class TagRepositoryTest extends IntegrationTestCase
         self::assertSame(['nature', 'travel'], $names);
     }
 
-    public function test_find_ids_by_name_like_matches_a_wildcard_pattern(): void
+    public function testFindIdsByNameLikeMatchesAWildcardPattern(): void
     {
         self::assertSame([1], $this->repo->findIdsByNameLike('%nat%'));
     }
 
-    public function test_find_ids_by_name_like_returns_empty_for_no_match(): void
+    public function testFindIdsByNameLikeReturnsEmptyForNoMatch(): void
     {
         self::assertSame([], $this->repo->findIdsByNameLike('%no-such-tag%'));
     }
 
-    public function test_exists_by_name_is_true_for_a_real_tag(): void
+    public function testExistsByNameIsTrueForARealTag(): void
     {
         self::assertTrue($this->repo->existsByName('nature'));
     }
 
-    public function test_exists_by_name_is_false_for_an_unknown_name(): void
+    public function testExistsByNameIsFalseForAnUnknownName(): void
     {
         self::assertFalse($this->repo->existsByName('no-such-tag'));
     }
 
-    public function test_find_other_names_excludes_the_given_id(): void
+    public function testFindOtherNamesExcludesTheGivenId(): void
     {
         $names = $this->repo->findOtherNames(1);
         sort($names);
@@ -564,7 +620,7 @@ final class TagRepositoryTest extends IntegrationTestCase
         self::assertSame(['family', 'travel'], $names);
     }
 
-    public function test_count_all_reflects_a_freshly_inserted_tag(): void
+    public function testCountAllReflectsAFreshlyInsertedTag(): void
     {
         $before = $this->repo->countAll();
 
@@ -577,16 +633,22 @@ final class TagRepositoryTest extends IntegrationTestCase
         }
     }
 
-    public function test_count_all_image_tag_links_reflects_a_freshly_inserted_link(): void
+    public function testCountAllImageTagLinksReflectsAFreshlyInsertedLink(): void
     {
         $before = $this->repo->countAllImageTagLinks();
 
-        $this->conn->insert('image_tag', ['image_id' => 5, 'tag_id' => 2]);
+        $this->conn->insert('image_tag', [
+            'image_id' => 5,
+            'tag_id' => 2,
+        ]);
 
         try {
             self::assertSame($before + 1, $this->repo->countAllImageTagLinks());
         } finally {
-            $this->conn->delete('image_tag', ['image_id' => 5, 'tag_id' => 2]);
+            $this->conn->delete('image_tag', [
+                'image_id' => 5,
+                'tag_id' => 2,
+            ]);
         }
     }
 

@@ -2,36 +2,36 @@
 
 declare(strict_types=1);
 
-use Piwigo\Activity\ActivityService;
 use Piwigo\Activity\ActivityEntity;
-use Piwigo\Users\UserService;
-use Piwigo\Users\UserRepository;
-use Piwigo\PluginConfig\EventDispatcher;
-use Piwigo\Config\CurrentConfig;
-use Piwigo\Tests\Support\CurrentConfigTestFactory;
-use Piwigo\Group\GroupEntity;
-use Piwigo\Tests\Support\HtmlServiceTestFactory;
-use Piwigo\Session\SessionService;
-use Piwigo\Session\SessionEntity;
-use Piwigo\Config\DeploymentPolicy;
-use Piwigo\Users\CurrentUser;
-use Piwigo\Core\ProcessCache;
-use Piwigo\Mail\MailService;
-use Piwigo\Core\PageState;
-use Piwigo\Tests\Support\PageStateTestFactory;
-use Piwigo\Tests\Support\UrlServiceTestFactory;
-use Piwigo\Template\CurrentTemplate;
+use Piwigo\Activity\ActivityService;
 use Piwigo\Admin\Extensions\CoreUpdateService;
 use Piwigo\Admin\Extensions\ZipExtractor;
 use Piwigo\Bootstrap\RedirectService;
 use Piwigo\Config\ConfigEntry;
 use Piwigo\Config\ConfigService;
+use Piwigo\Config\CurrentConfig;
+use Piwigo\Config\DeploymentPolicy;
 use Piwigo\Core\InstallationFlag;
 use Piwigo\Core\Lang;
+use Piwigo\Core\PageState;
 use Piwigo\Core\Paths;
+use Piwigo\Core\ProcessCache;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
+use Piwigo\Group\GroupEntity;
 use Piwigo\Lang\Translator;
+use Piwigo\Mail\MailService;
+use Piwigo\PluginConfig\EventDispatcher;
+use Piwigo\Session\SessionEntity;
+use Piwigo\Session\SessionService;
+use Piwigo\Template\CurrentTemplate;
+use Piwigo\Tests\Support\CurrentConfigTestFactory;
+use Piwigo\Tests\Support\HtmlServiceTestFactory;
+use Piwigo\Tests\Support\PageStateTestFactory;
+use Piwigo\Tests\Support\UrlServiceTestFactory;
+use Piwigo\Users\CurrentUser;
+use Piwigo\Users\UserRepository;
+use Piwigo\Users\UserService;
 
 // Only containerVersionCompare() is covered here -- checkPiwigoUpgrade()/
 // getPiwigoNewVersions()/notifyPiwigoNewVersions()/upgradeTo() all talk to
@@ -114,26 +114,32 @@ function core_update_service(): CoreUpdateService
 }
 
 test('containerVersionCompare orders by semantic version first', function (): void {
-    expect(core_update_service()->containerVersionCompare('16.1.0a', '16.2.0a'))->toBeLessThan(0)
-        ->and(core_update_service()->containerVersionCompare('16.2.0a', '16.1.0a'))->toBeGreaterThan(0);
+    expect(core_update_service()->containerVersionCompare('16.1.0a', '16.2.0a'))
+        ->toBeLessThan(0)
+        ->and(core_update_service()->containerVersionCompare('16.2.0a', '16.1.0a'))
+        ->toBeGreaterThan(0);
 });
 
 test('containerVersionCompare falls back to the container letter suffix on a semantic tie', function (): void {
-    expect(core_update_service()->containerVersionCompare('16.2.0a', '16.2.0b'))->toBeTrue()
-        ->and(core_update_service()->containerVersionCompare('16.2.0b', '16.2.0a'))->toBeFalse();
+    expect(core_update_service()->containerVersionCompare('16.2.0a', '16.2.0b'))
+        ->toBeTrue()
+        ->and(core_update_service()->containerVersionCompare('16.2.0b', '16.2.0a'))
+        ->toBeFalse();
 });
 
 test('containerVersionCompare treats an identical version as no earlier suffix', function (): void {
-    expect(core_update_service()->containerVersionCompare('16.2.0a', '16.2.0a'))->toBeFalse();
+    expect(core_update_service()->containerVersionCompare('16.2.0a', '16.2.0a'))
+        ->toBeFalse();
 });
 
 test('containerVersionCompare treats a null v1 as always earlier', function (): void {
-    expect(core_update_service()->containerVersionCompare(null, '16.2.0a'))->toBeLessThan(0);
+    expect(core_update_service()->containerVersionCompare(null, '16.2.0a'))
+        ->toBeLessThan(0);
 });
 
 function core_update_service_test_marker(): string
 {
-    /** @var string|null $marker */
+    /** @var string|null */
     static $marker = null;
 
     return $marker ??= sys_get_temp_dir() . '/piwigo-core-update-service-test-' . bin2hex(random_bytes(8));
@@ -171,10 +177,14 @@ function core_update_service_step_is(int|string $step, int $target): bool
 }
 
 test('stepIs matches both the int and numeric-string form of the same step', function (): void {
-    expect(core_update_service_step_is(2, 2))->toBeTrue();
-    expect(core_update_service_step_is('2', 2))->toBeTrue();
-    expect(core_update_service_step_is(3, 2))->toBeFalse();
-    expect(core_update_service_step_is('3', 2))->toBeFalse();
+    expect(core_update_service_step_is(2, 2))
+        ->toBeTrue();
+    expect(core_update_service_step_is('2', 2))
+        ->toBeTrue();
+    expect(core_update_service_step_is(3, 2))
+        ->toBeFalse();
+    expect(core_update_service_step_is('3', 2))
+        ->toBeFalse();
 });
 
 function core_update_service_process_obsolete_list(CoreUpdateService $service, string $file): void
@@ -258,7 +268,8 @@ test('processObsoleteList returns cleanly when file() itself fails despite file_
         chmod($root . 'obsolete.list', 0o644);
     }
 
-    expect($warnings)->toHaveCount(1);
+    expect($warnings)
+        ->toHaveCount(1);
     expect(file_exists($root . 'keep.php'))->toBeTrue();
     expect(file_exists($root . 'obsolete.list'))->toBeTrue();
 });

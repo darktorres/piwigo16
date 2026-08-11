@@ -4,15 +4,15 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Browser;
 
-use Override;
-use mysqli;
-use PgSql\Connection;
-use RuntimeException;
 use CURLFile;
+use mysqli;
+use Override;
+use PgSql\Connection;
 use PHPUnit\Framework\Attributes\Group;
 use Piwigo\Core\Env;
 use Piwigo\Tests\Browser\Helpers\FixturePhotoGenerator;
 use Piwigo\Tests\Integration\IntegrationTestCase;
+use RuntimeException;
 
 /**
  * Regenerates tests/Fixtures/piwigo-17.0.sql (or, on Postgres,
@@ -45,7 +45,9 @@ final class RegenerateFixtureTest extends IntegrationTestCase
 
     private const string ADMIN_PASS = 'fixture_admin';
 
-    /** Real HTTP clients always send one; some legacy code paths assume it. */
+    /**
+     * Real HTTP clients always send one; some legacy code paths assume it.
+     */
     private const string USER_AGENT = 'PiwigoFixtureRegen/1.0';
 
     private string $cookieJar = '';
@@ -71,7 +73,9 @@ final class RegenerateFixtureTest extends IntegrationTestCase
         parent::tearDown();
     }
 
-    /** Returns the path to the per-test cookie jar (for raw curl calls). */
+    /**
+     * Returns the path to the per-test cookie jar (for raw curl calls).
+     */
     private function cookieJar(): string
     {
         // setUp() always populates this from tempnam() before any test body
@@ -113,7 +117,7 @@ final class RegenerateFixtureTest extends IntegrationTestCase
         }
     }
 
-    public function test_regenerate_fixture(): void
+    public function testRegenerateFixture(): void
     {
         if ($this->dbName === '' || $this->dbName === 'piwigo') {
             self::fail(sprintf(
@@ -149,16 +153,16 @@ final class RegenerateFixtureTest extends IntegrationTestCase
         // targeted (this->dbDriver already reflects the real .env.test
         // PIWIGO_DB_DRIVER, via setUpConnectionFromEnv()).
         $installBody = $this->postForm('install.php', [
-            'install'       => '1',
-            'dbhost'        => $this->dbHost,
-            'dbuser'        => $this->dbUser,
-            'dbpasswd'      => $this->dbPass,
-            'dbname'        => $this->dbName,
-            'dbdriver'      => $this->dbDriver,
-            'admin_name'    => self::ADMIN_USER,
-            'admin_pass1'   => self::ADMIN_PASS,
-            'admin_pass2'   => self::ADMIN_PASS,
-            'admin_mail'    => 'fixture_admin@example.test',
+            'install' => '1',
+            'dbhost' => $this->dbHost,
+            'dbuser' => $this->dbUser,
+            'dbpasswd' => $this->dbPass,
+            'dbname' => $this->dbName,
+            'dbdriver' => $this->dbDriver,
+            'admin_name' => self::ADMIN_USER,
+            'admin_pass1' => self::ADMIN_PASS,
+            'admin_pass2' => self::ADMIN_PASS,
+            'admin_mail' => 'fixture_admin@example.test',
         ]);
         self::assertStringContainsString('Congratulations', $installBody, 'install.php must report success');
 
@@ -176,11 +180,13 @@ final class RegenerateFixtureTest extends IntegrationTestCase
         $pwgToken = $pwgTokenValue;
 
         // 4. Two albums: one root, one nested sub-album.
-        $rootAlbumResult = $this->callWs('pwg.categories.add', ['name' => 'Sample Album'])['result'];
+        $rootAlbumResult = $this->callWs('pwg.categories.add', [
+            'name' => 'Sample Album',
+        ])['result'];
         self::assertIsArray($rootAlbumResult, 'pwg.categories.add result must be an array');
         $rootAlbumId = self::idFromWsValue($rootAlbumResult['id'], 'pwg.categories.add');
-        $subAlbum    = $this->callWs('pwg.categories.add', [
-            'name'   => 'Nested Sub Album',
+        $subAlbum = $this->callWs('pwg.categories.add', [
+            'name' => 'Nested Sub Album',
             'parent' => (string) $rootAlbumId,
         ]);
         self::assertSame('ok', $subAlbum['stat']);
@@ -198,7 +204,7 @@ final class RegenerateFixtureTest extends IntegrationTestCase
                 $filePath = $tmpDir . '/fixture-photo-' . $i . '.jpg';
                 FixturePhotoGenerator::write($i, $filePath);
 
-                $albumId  = $i <= 3 ? $rootAlbumId : $subAlbumId;
+                $albumId = $i <= 3 ? $rootAlbumId : $subAlbumId;
                 $photoIds[] = $this->uploadPhoto($filePath, $albumId, 'Photo ' . $i);
             }
         } finally {
@@ -213,8 +219,11 @@ final class RegenerateFixtureTest extends IntegrationTestCase
         // (the WS only returns tags actually used by >=1 image).
         $tagIds = [];
         foreach (['nature', 'travel', 'family'] as $name) {
-            $res = $this->callWs('pwg.tags.add', ['name' => $name, 'pwg_token' => $pwgToken]);
-            self::assertSame('ok', $res['stat'], "tag $name should be created");
+            $res = $this->callWs('pwg.tags.add', [
+                'name' => $name,
+                'pwg_token' => $pwgToken,
+            ]);
+            self::assertSame('ok', $res['stat'], "tag {$name} should be created");
             $tagAddResult = $res['result'];
             self::assertIsArray($tagAddResult, 'pwg.tags.add result must be an array');
             $tagIds[] = self::idFromWsValue($tagAddResult['id'], 'pwg.tags.add');
@@ -222,22 +231,27 @@ final class RegenerateFixtureTest extends IntegrationTestCase
         $db = $this->dbDriver === 'pgsql' ? $this->newPgsqlConnection($this->dbName) : $this->newMysqli($this->dbName);
         $this->dbQuery($db, sprintf(
             'INSERT INTO image_tag (image_id, tag_id) VALUES (%d,%d),(%d,%d),(%d,%d),(%d,%d),(%d,%d)',
-            $photoIds[0], $tagIds[0],
-            $photoIds[0], $tagIds[1],
-            $photoIds[0], $tagIds[2],
-            $photoIds[1], $tagIds[0],
-            $photoIds[2], $tagIds[0]
+            $photoIds[0],
+            $tagIds[0],
+            $photoIds[0],
+            $tagIds[1],
+            $photoIds[0],
+            $tagIds[2],
+            $photoIds[1],
+            $tagIds[0],
+            $photoIds[2],
+            $tagIds[0]
         ));
 
         // 7. Two additional users with different permission levels.
         $userIds = [];
         foreach (['regular_user', 'power_user'] as $username) {
             $res = $this->callWs('pwg.users.add', [
-                'username'  => $username,
-                'password'  => $username . '_pass',
+                'username' => $username,
+                'password' => $username . '_pass',
                 'pwg_token' => $pwgToken,
             ]);
-            self::assertSame('ok', $res['stat'], "user $username should be created");
+            self::assertSame('ok', $res['stat'], "user {$username} should be created");
             $userAddResult = $res['result'];
             self::assertIsArray($userAddResult, 'pwg.users.add result must be an array');
             $addedUsers = $userAddResult['users'];
@@ -258,24 +272,39 @@ final class RegenerateFixtureTest extends IntegrationTestCase
         // a fresh, non-reproducible timestamp in the committed fixture.
         $now = Env::now()->format('Y-m-d H:i:s');
         $this->dbQuery($db, sprintf(
-            "INSERT INTO comments (image_id, date, author, anonymous_id, author_id, content, validated, validation_date) VALUES "
+            'INSERT INTO comments (image_id, date, author, anonymous_id, author_id, content, validated, validation_date) VALUES '
             . "(%d, '%s', 'fixture_admin', '127.0.0.1', 1, 'Fixture comment for integration tests.', {$sqlTrue}, '%s'), "
             . "(%d, '%s', 'regular_user', '127.0.0.2', %d, 'Another perspective on this photo.', {$sqlTrue}, '%s'), "
             . "(%d, '%s', 'power_user', '127.0.0.3', %d, 'Great composition and colors!', {$sqlTrue}, '%s'), "
             . "(%d, '%s', 'power_user', '127.0.0.3', %d, 'I keep coming back to this one.', {$sqlTrue}, '%s'), "
             . "(%d, '%s', 'fixture_admin', '127.0.0.1', 1, 'Pending comment for moderation.', {$sqlFalse}, NULL)",
-            $photoIds[0], $now, $now,
-            $photoIds[1], $now, $userIds['regular_user'], $now,
-            $photoIds[2], $now, $userIds['power_user'], $now,
-            $photoIds[0], $now, $userIds['power_user'], $now,
-            $photoIds[3], $now
+            $photoIds[0],
+            $now,
+            $now,
+            $photoIds[1],
+            $now,
+            $userIds['regular_user'],
+            $now,
+            $photoIds[2],
+            $now,
+            $userIds['power_user'],
+            $now,
+            $photoIds[0],
+            $now,
+            $userIds['power_user'],
+            $now,
+            $photoIds[3],
+            $now
         ));
 
         // 9. Three groups with user memberships.
         $groupIds = [];
         foreach (['Editors', 'Reviewers', 'Guests'] as $name) {
-            $res = $this->callWs('pwg.groups.add', ['name' => $name, 'pwg_token' => $pwgToken]);
-            self::assertSame('ok', $res['stat'], "group $name should be created");
+            $res = $this->callWs('pwg.groups.add', [
+                'name' => $name,
+                'pwg_token' => $pwgToken,
+            ]);
+            self::assertSame('ok', $res['stat'], "group {$name} should be created");
             $groupAddResult = $res['result'];
             self::assertIsArray($groupAddResult, 'pwg.groups.add result must be an array');
             $addedGroups = $groupAddResult['groups'];
@@ -287,29 +316,44 @@ final class RegenerateFixtureTest extends IntegrationTestCase
         $this->dbQuery($db, sprintf(
             'INSERT INTO user_group (user_id, group_id) VALUES (1,%d),(%d,%d),(%d,%d),(%d,%d)',
             $groupIds[0],
-            $userIds['regular_user'], $groupIds[0],
-            $userIds['regular_user'], $groupIds[1],
-            $userIds['power_user'], $groupIds[2]
+            $userIds['regular_user'],
+            $groupIds[0],
+            $userIds['regular_user'],
+            $groupIds[1],
+            $userIds['power_user'],
+            $groupIds[2]
         ));
         $this->dbQuery($db, sprintf(
             'INSERT INTO group_access (group_id, cat_id) VALUES (%d,%d),(%d,%d),(%d,%d),(%d,%d)',
-            $groupIds[0], $rootAlbumId,
-            $groupIds[0], $subAlbumId,
-            $groupIds[1], $rootAlbumId,
-            $groupIds[2], $rootAlbumId
+            $groupIds[0],
+            $rootAlbumId,
+            $groupIds[0],
+            $subAlbumId,
+            $groupIds[1],
+            $rootAlbumId,
+            $groupIds[2],
+            $rootAlbumId
         ));
 
         // 10. Five ratings across users/photos.
         $today = Env::now()->format('Y-m-d');
         $this->dbQuery($db, sprintf(
-            "INSERT INTO rate (user_id, element_id, anonymous_id, rate, date) VALUES "
+            'INSERT INTO rate (user_id, element_id, anonymous_id, rate, date) VALUES '
             . "(1,%d,'',5,'%s'), (%d,%d,'',4,'%s'), (%d,%d,'',3,'%s'), "
             . "(1,%d,'',5,'%s'), (%d,%d,'',2,'%s')",
-            $photoIds[0], $today,
-            $userIds['regular_user'], $photoIds[0], $today,
-            $userIds['power_user'], $photoIds[1], $today,
-            $photoIds[2], $today,
-            $userIds['regular_user'], $photoIds[3], $today
+            $photoIds[0],
+            $today,
+            $userIds['regular_user'],
+            $photoIds[0],
+            $today,
+            $userIds['power_user'],
+            $photoIds[1],
+            $today,
+            $photoIds[2],
+            $today,
+            $userIds['regular_user'],
+            $photoIds[3],
+            $today
         ));
         $this->dbQuery($db, sprintf(
             'UPDATE images SET rating_score = 4.50 WHERE id = %d',
@@ -338,7 +382,7 @@ final class RegenerateFixtureTest extends IntegrationTestCase
 
         // 12. Two mail notification entries.
         $this->dbQuery($db, sprintf(
-            "INSERT INTO user_mail_notification (user_id, check_key, enabled, last_send) VALUES "
+            'INSERT INTO user_mail_notification (user_id, check_key, enabled, last_send) VALUES '
             . "(1, 'abcdef1234567890', {$sqlTrue}, '%s'), (%d, 'ghijkl9876543210', {$sqlFalse}, NULL)",
             $now,
             $userIds['regular_user']
@@ -346,7 +390,7 @@ final class RegenerateFixtureTest extends IntegrationTestCase
 
         // 13. One old permalink.
         $this->dbQuery($db, sprintf(
-            "INSERT INTO old_permalinks (cat_id, permalink, date_deleted, last_hit, hit) VALUES "
+            'INSERT INTO old_permalinks (cat_id, permalink, date_deleted, last_hit, hit) VALUES '
             . "(%d, 'old-sample-album', '%s', '%s', 42)",
             $rootAlbumId,
             $now,
@@ -371,13 +415,13 @@ final class RegenerateFixtureTest extends IntegrationTestCase
         // nothing to do with test-mode's frozen clock and must never fire
         // from a test run.
         $configEntries = [
-            'gallery_title'                => 'Fixture Gallery',
-            'activate_comments'            => true,
-            'comments_validation'          => true,
-            'nb_categories_page'           => 12,
-            'rate'                         => true,
-            'show_piwigo_latest_news'      => false,
-            'dashboard_check_for_updates'  => false,
+            'gallery_title' => 'Fixture Gallery',
+            'activate_comments' => true,
+            'comments_validation' => true,
+            'nb_categories_page' => 12,
+            'rate' => true,
+            'show_piwigo_latest_news' => false,
+            'dashboard_check_for_updates' => false,
         ];
         // ON DUPLICATE KEY UPDATE has no Postgres equivalent -- ON CONFLICT
         // (param) DO UPDATE SET is the real one (config.param is the
@@ -435,7 +479,9 @@ final class RegenerateFixtureTest extends IntegrationTestCase
             $cmd[] = '--if-exists';
             $cmd[] = '--exclude-table=migration_versions';
             $cmd[] = $this->dbName;
-            $env = $this->dbPass !== '' ? array_merge(getenv(), ['PGPASSWORD' => $this->dbPass]) : null;
+            $env = $this->dbPass !== '' ? array_merge(getenv(), [
+                'PGPASSWORD' => $this->dbPass,
+            ]) : null;
         } else {
             $cmd = ['mysqldump', '-u' . $this->dbUser];
             if ($this->dbPass !== '') {
@@ -450,10 +496,13 @@ final class RegenerateFixtureTest extends IntegrationTestCase
             $env = null;
         }
 
-        $descriptors = [1 => ['pipe', 'w'], 2 => ['pipe', 'w']];
+        $descriptors = [
+            1 => ['pipe', 'w'],
+            2 => ['pipe', 'w'],
+        ];
         $proc = proc_open($cmd, $descriptors, $pipes, null, $env);
         self::assertIsResource($proc, 'proc_open failed for ' . $cmd[0]);
-        $dump   = stream_get_contents($pipes[1]);
+        $dump = stream_get_contents($pipes[1]);
         $stderr = stream_get_contents($pipes[2]);
         fclose($pipes[1]);
         fclose($pipes[2]);
@@ -506,7 +555,7 @@ final class RegenerateFixtureTest extends IntegrationTestCase
     private function postForm(string $scriptName, array $fields): string
     {
         $url = $this->baseUrl . '/' . $scriptName;
-        $ch  = curl_init($url);
+        $ch = curl_init($url);
         self::assertNotFalse($ch);
         $userAgent = self::USER_AGENT;
         $cookieJar = $this->cookieJar();
@@ -528,7 +577,7 @@ final class RegenerateFixtureTest extends IntegrationTestCase
     private function uploadPhoto(string $imagePath, int $albumId, string $name): int
     {
         $url = $this->baseUrl . '/ws.php?format=json';
-        $ch  = curl_init($url);
+        $ch = curl_init($url);
         self::assertNotFalse($ch);
         $userAgent = self::USER_AGENT;
         $cookieJar = $this->cookieJar();
@@ -537,10 +586,10 @@ final class RegenerateFixtureTest extends IntegrationTestCase
         curl_setopt($ch, CURLOPT_POST, true);
         curl_setopt($ch, CURLOPT_USERAGENT, $userAgent);
         curl_setopt($ch, CURLOPT_POSTFIELDS, [
-            'method'   => 'pwg.images.addSimple',
+            'method' => 'pwg.images.addSimple',
             'category' => (string) $albumId,
-            'name'     => $name,
-            'image'    => new CURLFile($imagePath, 'image/jpeg', basename($imagePath)),
+            'name' => $name,
+            'image' => new CURLFile($imagePath, 'image/jpeg', basename($imagePath)),
         ]);
         curl_setopt($ch, CURLOPT_COOKIEJAR, $cookieJar);
         curl_setopt($ch, CURLOPT_COOKIEFILE, $cookieJar);
@@ -600,7 +649,7 @@ final class RegenerateFixtureTest extends IntegrationTestCase
     private function callWs(string $method, array $params): array
     {
         $url = $this->baseUrl . '/ws.php?format=json';
-        $ch  = curl_init($url);
+        $ch = curl_init($url);
         self::assertNotFalse($ch);
         $userAgent = self::USER_AGENT;
         $cookieJar = $this->cookieJar();
@@ -608,15 +657,17 @@ final class RegenerateFixtureTest extends IntegrationTestCase
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
         curl_setopt($ch, CURLOPT_POST, true);
         curl_setopt($ch, CURLOPT_USERAGENT, $userAgent);
-        curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query(array_merge(['method' => $method], $params)));
+        curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query(array_merge([
+            'method' => $method,
+        ], $params)));
         curl_setopt($ch, CURLOPT_COOKIEJAR, $cookieJar);
         curl_setopt($ch, CURLOPT_COOKIEFILE, $cookieJar);
         curl_setopt($ch, CURLOPT_HTTPHEADER, $this->testHeader());
         $body = curl_exec($ch);
         unset($ch);
-        self::assertIsString($body, "WS call to $method returned no body");
+        self::assertIsString($body, "WS call to {$method} returned no body");
         $decoded = json_decode($body, true);
-        self::assertIsArray($decoded, "WS $method response is not valid JSON: $body");
+        self::assertIsArray($decoded, "WS {$method} response is not valid JSON: {$body}");
 
         // ws.php's JSON envelope is always a JSON object (stat/result/err
         // keys), never a JSON array, so the decoded top level is always

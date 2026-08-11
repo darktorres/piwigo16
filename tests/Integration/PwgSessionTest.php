@@ -4,16 +4,15 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Integration;
 
-use Override;
-use Piwigo\Core\Kernel;
-use Piwigo\Config\CurrentConfig;
 use LogicException;
+use Override;
+use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\CurrentLogger;
+use Piwigo\Core\Kernel;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Session\PwgSession;
 use Piwigo\Session\SessionEntity;
-use Piwigo\Session\SessionRepository;
 use Piwigo\Session\SessionService;
 
 /**
@@ -87,18 +86,18 @@ final class PwgSessionTest extends IntegrationTestCase
         parent::tearDown();
     }
 
-    public function test_open_and_close_always_return_true(): void
+    public function testOpenAndCloseAlwaysReturnTrue(): void
     {
         self::assertTrue($this->pwgSession->open('/tmp', 'pwg'));
         self::assertTrue($this->pwgSession->close());
     }
 
-    public function test_read_returns_an_empty_string_for_an_unknown_session_id(): void
+    public function testReadReturnsAnEmptyStringForAnUnknownSessionId(): void
     {
         self::assertSame('', $this->pwgSession->read('ct-unknown-' . bin2hex(random_bytes(4))));
     }
 
-    public function test_write_then_read_round_trips_the_same_data(): void
+    public function testWriteThenReadRoundTripsTheSameData(): void
     {
         $sessionId = 'ct-session-' . bin2hex(random_bytes(4));
         $data = 'pwg_uid|i:1;pwg_status|s:6:"normal";';
@@ -111,7 +110,7 @@ final class PwgSessionTest extends IntegrationTestCase
         }
     }
 
-    public function test_write_when_the_underlying_write_fails_catches_the_error_and_returns_false(): void
+    public function testWriteWhenTheUnderlyingWriteFailsCatchesTheErrorAndReturnsFalse(): void
     {
         // Composite session id (remote-addr hash prefix + this id)
         // exceeds the sessions table's real VARCHAR(50) primary key -- a
@@ -119,7 +118,7 @@ final class PwgSessionTest extends IntegrationTestCase
         self::assertFalse($this->pwgSession->write(str_repeat('x', 60), 'data'));
     }
 
-    public function test_write_when_the_underlying_write_fails_and_current_logger_is_not_initialised_still_returns_false_instead_of_throwing(): void
+    public function testWriteWhenTheUnderlyingWriteFailsAndCurrentLoggerIsNotInitialisedStillReturnsFalseInsteadOfThrowing(): void
     {
         // Real bug found live via a full composer test:integration run:
         // write()'s own fallback logging used to call
@@ -136,7 +135,7 @@ final class PwgSessionTest extends IntegrationTestCase
         self::assertFalse($this->pwgSession->write(str_repeat('x', 60), 'data'));
     }
 
-    public function test_write_then_destroy_removes_the_session_row(): void
+    public function testWriteThenDestroyRemovesTheSessionRow(): void
     {
         $sessionId = 'ct-session-destroy-' . bin2hex(random_bytes(4));
         $this->pwgSession->write($sessionId, 'some-data');
@@ -147,12 +146,12 @@ final class PwgSessionTest extends IntegrationTestCase
         self::assertSame('', $this->pwgSession->read($sessionId));
     }
 
-    public function test_destroy_is_a_safe_no_op_for_an_unknown_session_id(): void
+    public function testDestroyIsASafeNoOpForAnUnknownSessionId(): void
     {
         self::assertTrue($this->pwgSession->destroy('ct-does-not-exist-' . bin2hex(random_bytes(4))));
     }
 
-    public function test_gc_returns_a_real_integer_and_leaves_a_fresh_session_untouched(): void
+    public function testGcReturnsARealIntegerAndLeavesAFreshSessionUntouched(): void
     {
         $sessionId = 'ct-session-gc-' . bin2hex(random_bytes(4));
 

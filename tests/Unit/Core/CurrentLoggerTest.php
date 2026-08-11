@@ -20,33 +20,44 @@ use Piwigo\Tests\Support\CurrentLoggerTestFactory;
 test('get throws when no Logger has been set yet', function (): void {
     $currentLogger = new CurrentLogger();
 
-    expect($currentLogger->isInitialized())->toBeFalse();
+    expect($currentLogger->isInitialized())
+        ->toBeFalse();
 
-    expect(fn () => $currentLogger->get())->toThrow(
-        LogicException::class,
-        'CurrentLogger not initialised -- call Piwigo\Bootstrap\RequestBootstrap::connect() or Piwigo\Controller\ImageDerivativeController::__invoke() first.',
-    );
+    expect(fn () => $currentLogger->get())
+        ->toThrow(
+            LogicException::class,
+            'CurrentLogger not initialised -- call Piwigo\Bootstrap\RequestBootstrap::connect() or Piwigo\Controller\ImageDerivativeController::__invoke() first.',
+        );
 });
 
 test('set installs the instance that get returns, and isInitialized reflects it', function (): void {
     $currentLogger = new CurrentLogger();
-    $logger = new Logger(['severity' => Logger::OFF]);
+    $logger = new Logger([
+        'severity' => Logger::OFF,
+    ]);
 
     $currentLogger->set($logger);
 
-    expect($currentLogger->isInitialized())->toBeTrue()
-        ->and($currentLogger->get())->toBe($logger);
+    expect($currentLogger->isInitialized())
+        ->toBeTrue()
+        ->and($currentLogger->get())
+        ->toBe($logger);
 });
 
 test('reset clears the instance back to uninitialized', function (): void {
     $currentLogger = new CurrentLogger();
-    $currentLogger->set(new Logger(['severity' => Logger::OFF]));
-    expect($currentLogger->isInitialized())->toBeTrue();
+    $currentLogger->set(new Logger([
+        'severity' => Logger::OFF,
+    ]));
+    expect($currentLogger->isInitialized())
+        ->toBeTrue();
 
     $currentLogger->reset();
 
-    expect($currentLogger->isInitialized())->toBeFalse();
-    expect(fn () => $currentLogger->get())->toThrow(LogicException::class);
+    expect($currentLogger->isInitialized())
+        ->toBeFalse();
+    expect(fn () => $currentLogger->get())
+        ->toThrow(LogicException::class);
 });
 
 test('CurrentLoggerTestFactory::getStatic falls back to a no-op OFF Logger when Kernel has not booted', function (): void {
@@ -54,7 +65,8 @@ test('CurrentLoggerTestFactory::getStatic falls back to a no-op OFF Logger when 
 
     $logger = CurrentLoggerTestFactory::getStatic();
 
-    expect($logger->severity())->toBe(Logger::OFF);
+    expect($logger->severity())
+        ->toBe(Logger::OFF);
 });
 
 test('CurrentLoggerTestFactory::getStatic delegates to the container-shared instance once Kernel has booted', function (): void {
@@ -63,7 +75,9 @@ test('CurrentLoggerTestFactory::getStatic delegates to the container-shared inst
     if (! $currentLogger instanceof CurrentLogger) {
         throw new LogicException('Container returned an unexpected type for ' . CurrentLogger::class);
     }
-    $logger = new Logger(['severity' => Logger::OFF]);
+    $logger = new Logger([
+        'severity' => Logger::OFF,
+    ]);
     $currentLogger->set($logger);
 
     expect(CurrentLoggerTestFactory::getStatic())->toBe($logger);

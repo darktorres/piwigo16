@@ -26,25 +26,29 @@ final class WsImagesFilteredSearchDateCreatedTest extends ContractTestCase
 {
     private const string METHOD = 'pwg.images.filteredSearch.create';
 
-    public function test_date_created_preset_custom_without_custom_values_returns_error(): void
+    public function testDateCreatedPresetCustomWithoutCustomValuesReturnsError(): void
     {
-        $response = $this->wsAdmin(self::METHOD, ['date_created_preset' => 'custom']);
+        $response = $this->wsAdmin(self::METHOD, [
+            'date_created_preset' => 'custom',
+        ]);
 
         self::assertSame('fail', $response['stat']);
         self::assertSame(1003, $response['err']);
         self::assertSame('date_created_custom is missing', $response['message']);
     }
 
-    public function test_date_created_custom_without_preset_custom_returns_error(): void
+    public function testDateCreatedCustomWithoutPresetCustomReturnsError(): void
     {
-        $response = $this->wsAdmin(self::METHOD, ['date_created_custom' => ['y2026']]);
+        $response = $this->wsAdmin(self::METHOD, [
+            'date_created_custom' => ['y2026'],
+        ]);
 
         self::assertSame('fail', $response['stat']);
         self::assertSame(1003, $response['err']);
         self::assertSame('date_created_custom provided date_created_preset is not custom', $response['message']);
     }
 
-    public function test_date_created_custom_accepts_year_and_month_formats(): void
+    public function testDateCreatedCustomAcceptsYearAndMonthFormats(): void
     {
         $response = $this->wsAdmin(self::METHOD, [
             'date_created_preset' => 'custom',
@@ -57,7 +61,7 @@ final class WsImagesFilteredSearchDateCreatedTest extends ContractTestCase
         self::assertIsString($result['search_id']);
     }
 
-    public function test_date_created_custom_rejects_invalid_month(): void
+    public function testDateCreatedCustomRejectsInvalidMonth(): void
     {
         $response = $this->wsAdmin(self::METHOD, [
             'date_created_preset' => 'custom',
@@ -69,7 +73,7 @@ final class WsImagesFilteredSearchDateCreatedTest extends ContractTestCase
         self::assertSame('date_created_custom, invalid option m2026-13', $response['message']);
     }
 
-    public function test_date_created_custom_rejects_unrecognized_prefix(): void
+    public function testDateCreatedCustomRejectsUnrecognizedPrefix(): void
     {
         $response = $this->wsAdmin(self::METHOD, [
             'date_created_preset' => 'custom',

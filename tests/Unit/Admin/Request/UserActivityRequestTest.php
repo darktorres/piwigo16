@@ -6,46 +6,69 @@ use Piwigo\Admin\Request\UserActivityRequest;
 use Piwigo\Validation\InputValidator;
 
 test('fromArray recognizes the download_logs type', function (): void {
-    $request = UserActivityRequest::fromArray(['type' => 'download_logs'], new InputValidator());
+    $request = UserActivityRequest::fromArray([
+        'type' => 'download_logs',
+    ], new InputValidator());
 
-    expect($request->isDownloadLogs)->toBeTrue();
+    expect($request->isDownloadLogs)
+        ->toBeTrue();
 });
 
 test('fromArray treats any other type as not download_logs', function (): void {
-    $request = UserActivityRequest::fromArray(['type' => 'something_else'], new InputValidator());
+    $request = UserActivityRequest::fromArray([
+        'type' => 'something_else',
+    ], new InputValidator());
 
-    expect($request->isDownloadLogs)->toBeFalse();
+    expect($request->isDownloadLogs)
+        ->toBeFalse();
 });
 
 test('fromArray exposes filter presence and values for photo/album/group', function (): void {
-    $request = UserActivityRequest::fromArray(['photo' => '42'], new InputValidator());
+    $request = UserActivityRequest::fromArray([
+        'photo' => '42',
+    ], new InputValidator());
 
-    expect($request->hasFilter('photo'))->toBeTrue()
-        ->and($request->filterValue('photo'))->toBe('42')
-        ->and($request->hasFilter('album'))->toBeFalse()
-        ->and($request->filterValue('album'))->toBeNull();
+    expect($request->hasFilter('photo'))
+        ->toBeTrue()
+        ->and($request->filterValue('photo'))
+        ->toBe('42')
+        ->and($request->hasFilter('album'))
+        ->toBeFalse()
+        ->and($request->filterValue('album'))
+        ->toBeNull();
 });
 
 test('fromArray accepts a valid scalar album/group filter without throwing', function (): void {
     // album/group are validated as scalars (is_scalar, not is_array) --
     // a valid digit value must NOT throw.
-    $request = UserActivityRequest::fromArray(['album' => '7', 'group' => '3'], new InputValidator());
+    $request = UserActivityRequest::fromArray([
+        'album' => '7',
+        'group' => '3',
+    ], new InputValidator());
 
-    expect($request->filterValue('album'))->toBe('7')
-        ->and($request->filterValue('group'))->toBe('3');
+    expect($request->filterValue('album'))
+        ->toBe('7')
+        ->and($request->filterValue('group'))
+        ->toBe('3');
 });
 
 test('fromArray rejects a non-digit photo filter', function (): void {
-    expect(fn (): UserActivityRequest => UserActivityRequest::fromArray(['photo' => '1; DROP TABLE'], new InputValidator()))
+    expect(fn (): UserActivityRequest => UserActivityRequest::fromArray([
+        'photo' => '1; DROP TABLE',
+    ], new InputValidator()))
         ->toThrow(RuntimeException::class);
 });
 
 test('fromArray rejects a non-digit album filter', function (): void {
-    expect(fn (): UserActivityRequest => UserActivityRequest::fromArray(['album' => '../../etc'], new InputValidator()))
+    expect(fn (): UserActivityRequest => UserActivityRequest::fromArray([
+        'album' => '../../etc',
+    ], new InputValidator()))
         ->toThrow(RuntimeException::class);
 });
 
 test('fromArray rejects a non-digit group filter', function (): void {
-    expect(fn (): UserActivityRequest => UserActivityRequest::fromArray(['group' => 'abc'], new InputValidator()))
+    expect(fn (): UserActivityRequest => UserActivityRequest::fromArray([
+        'group' => 'abc',
+    ], new InputValidator()))
         ->toThrow(RuntimeException::class);
 });

@@ -3,11 +3,11 @@
 declare(strict_types=1);
 
 use Doctrine\DBAL\DriverManager;
-use Piwigo\PluginConfig\EventDispatcher;
-use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Config\ConfigEntry;
 use Piwigo\Config\ConfigService;
 use Piwigo\Db\EntityManagerFactory;
+use Piwigo\PluginConfig\EventDispatcher;
+use Piwigo\Tests\Support\CurrentConfigTestFactory;
 
 // confGetParam() for a property-backed key reads via reflection on
 // CurrentConfig's own getter and never touches $repo at all -- constructing
@@ -63,11 +63,16 @@ afterEach(function (): void {
 });
 
 test('confGetParam reads a property-backed key via its own typed getter', function (): void {
-    CurrentConfigTestFactory::get()->blkMenubar = ['menu' => 50];
+    CurrentConfigTestFactory::get()->blkMenubar = [
+        'menu' => 50,
+    ];
 
     $service = unconnectedConfigService();
 
-    expect($service->confGetParam('blk_menubar'))->toBe(['menu' => 50]);
+    expect($service->confGetParam('blk_menubar'))
+        ->toBe([
+            'menu' => 50,
+        ]);
 });
 
 // confGetParam()'s fallback behavior for a genuinely dynamic (no-property)

@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-use Piwigo\History\HistoryService;
 use Piwigo\Admin\StatsPageRenderer;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Paths;
 use Piwigo\Db\DbConnection;
+use Piwigo\History\HistoryService;
 
 /**
  * StatsPageRenderer::getMonthOfLastYears()'s own `$last === 'all'` branches
@@ -73,11 +73,11 @@ beforeEach(function (): void {
     // branching can only be pinned deterministically by starting from a
     // genuinely empty slate, same reasoning as HistoryServiceTest's own
     // tearDown() and HistoryRepositoryTest's own clearSummary().
-    DbConnection::build()->executeStatement('DELETE FROM ' . 'history_summary');
+    DbConnection::build()->executeStatement('DELETE FROM history_summary');
 });
 
 afterEach(function (): void {
-    DbConnection::build()->executeStatement('DELETE FROM ' . 'history_summary');
+    DbConnection::build()->executeStatement('DELETE FROM history_summary');
     Kernel::reset();
 });
 
@@ -90,11 +90,14 @@ test('getMonthOfLastYears(\'all\') takes the <= 1 row fallback branch, zero-fill
     $today = new DateTime();
     $oneYearAgo = (new DateTime())->sub(new DateInterval('P1Y'));
 
-    expect(array_key_first($result))->toBe($oneYearAgo->format('Y-m'));
-    expect(array_key_last($result))->toBe($today->format('Y-m'));
+    expect(array_key_first($result))
+        ->toBe($oneYearAgo->format('Y-m'));
+    expect(array_key_last($result))
+        ->toBe($today->format('Y-m'));
     // Every bucket is the zero-fill from setMissingValues()'s own first
     // loop -- there is no real row anywhere in $allRows to overlay.
-    expect(array_sum($result))->toBe(0);
+    expect(array_sum($result))
+        ->toBe(0);
 });
 
 test('getMonthOfLastYears(\'all\') takes the count > 1 branch, spanning exactly the real month-level rows\' own oldest-to-newest range', function (): void {
@@ -113,9 +116,10 @@ test('getMonthOfLastYears(\'all\') takes the count > 1 branch, spanning exactly 
     // month (2019-04) in between.
     $result = statsGetMonthOfLastYearsInvoke();
 
-    expect($result)->toBe([
-        '2019-03' => 11,
-        '2019-04' => 0,
-        '2019-05' => 4,
-    ]);
+    expect($result)
+        ->toBe([
+            '2019-03' => 11,
+            '2019-04' => 0,
+            '2019-05' => 4,
+        ]);
 });

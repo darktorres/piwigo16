@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-use Piwigo\Routing\RouteMatchStatus;
 use Nyholm\Psr7\Response;
 use Nyholm\Psr7\ServerRequest;
 use Piwigo\Http\ControllerInterface;
 use Piwigo\Http\Middleware\ControllerInvokerMiddleware;
 use Piwigo\Http\ResponseReadyException;
+use Piwigo\Routing\RouteMatchStatus;
 use Piwigo\Routing\RouteResult;
 use Psr\Container\ContainerInterface;
 use Psr\Http\Message\ResponseInterface;
@@ -16,10 +16,10 @@ use Psr\Http\Server\RequestHandlerInterface;
 
 function containerInvokerFakeContainer(mixed $value): ContainerInterface
 {
-    return new readonly class ($value) implements ContainerInterface {
-        public function __construct(private mixed $value)
-        {
-        }
+    return new readonly class($value) implements ContainerInterface {
+        public function __construct(
+            private mixed $value
+        ) {}
 
         #[Override]
         public function get(string $id)
@@ -37,7 +37,7 @@ function containerInvokerFakeContainer(mixed $value): ContainerInterface
 
 function containerInvokerNoopHandler(): RequestHandlerInterface
 {
-    return new class implements RequestHandlerInterface {
+    return new class() implements RequestHandlerInterface {
         #[Override]
         public function handle(ServerRequestInterface $request): ResponseInterface
         {
@@ -48,13 +48,13 @@ function containerInvokerNoopHandler(): RequestHandlerInterface
 
 test('invokes the resolved handler for a found route and passes route args', function (): void {
     $captured = new ArrayObject();
-    $controller = new readonly class ($captured) implements ControllerInterface {
+    $controller = new readonly class($captured) implements ControllerInterface {
         /**
          * @param ArrayObject<string, mixed> $captured
          */
-        public function __construct(private ArrayObject $captured)
-        {
-        }
+        public function __construct(
+            private ArrayObject $captured
+        ) {}
 
         #[Override]
         public function __invoke(ServerRequestInterface $request): ResponseInterface
@@ -66,12 +66,18 @@ test('invokes the resolved handler for a found route and passes route args', fun
     };
 
     $middleware = new ControllerInvokerMiddleware(containerInvokerFakeContainer($controller));
-    $request = new ServerRequest('GET', '/')->withAttribute(RouteResult::class, RouteResult::found('X', ['id' => '5']));
+    $request = new ServerRequest('GET', '/')
+        ->withAttribute(RouteResult::class, RouteResult::found('X', [
+            'id' => '5',
+        ]));
 
     $response = $middleware->process($request, containerInvokerNoopHandler());
 
-    expect((string) $response->getBody())->toBe('invoked');
-    expect($captured['args'])->toBe(['id' => '5']);
+    expect((string) $response->getBody())
+        ->toBe('invoked');
+    expect($captured['args'])->toBe([
+        'id' => '5',
+    ]);
 });
 
 test('catches ResponseReadyException from the controller and returns its response normally', function (): void {
@@ -82,30 +88,37 @@ test('catches ResponseReadyException from the controller and returns its respons
     // returning its response like any other Response means the caller
     // (RequestPipeline's own middleware stack) sees a completely normal
     // return -- no different from a controller that never throws at all.
-    $controller = new readonly class () implements ControllerInterface {
+    $controller = new readonly class() implements ControllerInterface {
         #[Override]
         public function __invoke(ServerRequestInterface $request): ResponseInterface
         {
-            throw new ResponseReadyException(new Response(302, ['Location' => '/elsewhere']));
+            throw new ResponseReadyException(new Response(302, [
+                'Location' => '/elsewhere',
+            ]));
         }
     };
 
     $middleware = new ControllerInvokerMiddleware(containerInvokerFakeContainer($controller));
-    $request = new ServerRequest('GET', '/')->withAttribute(RouteResult::class, RouteResult::found('X', []));
+    $request = new ServerRequest('GET', '/')
+        ->withAttribute(RouteResult::class, RouteResult::found('X', []));
 
     $response = $middleware->process($request, containerInvokerNoopHandler());
 
-    expect($response->getStatusCode())->toBe(302);
-    expect($response->getHeaderLine('Location'))->toBe('/elsewhere');
+    expect($response->getStatusCode())
+        ->toBe(302);
+    expect($response->getHeaderLine('Location'))
+        ->toBe('/elsewhere');
 });
 
 test('returns 404 when the route was not found', function (): void {
     $middleware = new ControllerInvokerMiddleware(containerInvokerFakeContainer(null));
-    $request = new ServerRequest('GET', '/')->withAttribute(RouteResult::class, RouteResult::notFound());
+    $request = new ServerRequest('GET', '/')
+        ->withAttribute(RouteResult::class, RouteResult::notFound());
 
     $response = $middleware->process($request, containerInvokerNoopHandler());
 
-    expect($response->getStatusCode())->toBe(404);
+    expect($response->getStatusCode())
+        ->toBe(404);
 });
 
 test('returns 404 when the route matched but somehow has no handler', function (): void {
@@ -121,25 +134,32 @@ test('returns 404 when the route matched but somehow has no handler', function (
     // TypeError instead.
     $ref = new ReflectionClass(RouteResult::class);
     $result = $ref->newInstanceWithoutConstructor();
-    $ref->getProperty('status')->setValue($result, RouteMatchStatus::Found);
-    $ref->getProperty('handler')->setValue($result, null);
-    $ref->getProperty('args')->setValue($result, []);
+    $ref->getProperty('status')
+        ->setValue($result, RouteMatchStatus::Found);
+    $ref->getProperty('handler')
+        ->setValue($result, null);
+    $ref->getProperty('args')
+        ->setValue($result, []);
 
     $middleware = new ControllerInvokerMiddleware(containerInvokerFakeContainer(null));
-    $request = new ServerRequest('GET', '/')->withAttribute(RouteResult::class, $result);
+    $request = new ServerRequest('GET', '/')
+        ->withAttribute(RouteResult::class, $result);
 
     $response = $middleware->process($request, containerInvokerNoopHandler());
 
-    expect($response->getStatusCode())->toBe(404);
+    expect($response->getStatusCode())
+        ->toBe(404);
 });
 
 test('returns 404 when the method is not allowed', function (): void {
     $middleware = new ControllerInvokerMiddleware(containerInvokerFakeContainer(null));
-    $request = new ServerRequest('GET', '/')->withAttribute(RouteResult::class, RouteResult::methodNotAllowed());
+    $request = new ServerRequest('GET', '/')
+        ->withAttribute(RouteResult::class, RouteResult::methodNotAllowed());
 
     $response = $middleware->process($request, containerInvokerNoopHandler());
 
-    expect($response->getStatusCode())->toBe(404);
+    expect($response->getStatusCode())
+        ->toBe(404);
 });
 
 test('throws when no RouteResult attribute is present', function (): void {
@@ -150,7 +170,8 @@ test('throws when no RouteResult attribute is present', function (): void {
 
 test('throws when the resolved service does not implement ControllerInterface', function (): void {
     $middleware = new ControllerInvokerMiddleware(containerInvokerFakeContainer(new stdClass()));
-    $request = new ServerRequest('GET', '/')->withAttribute(RouteResult::class, RouteResult::found('X', []));
+    $request = new ServerRequest('GET', '/')
+        ->withAttribute(RouteResult::class, RouteResult::found('X', []));
 
     $middleware->process($request, containerInvokerNoopHandler());
 })->throws(LogicException::class);

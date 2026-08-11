@@ -4,35 +4,35 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Integration;
 
-use Override;
-use LogicException;
-use Piwigo\Auth\AccessLevelChecker;
-use RuntimeException;
-use Piwigo\Core\FilterState;
-use Piwigo\Db\EntityManagerFactory;
-use Piwigo\Group\GroupEntity;
-use Piwigo\Tests\Support\CurrentUserTestFactory;
-use Piwigo\Tests\Support\LangTestFactory;
-use Piwigo\Tests\Support\PageStateTestFactory;
-use Piwigo\PluginConfig\EventDispatcher;
-use Piwigo\Tests\Support\EventDispatcherTestFactory;
-use Piwigo\Tests\Support\TranslatorTestFactory;
-use Piwigo\Tests\Support\HtmlServiceTestFactory;
-use Piwigo\Users\UserService;
 use Doctrine\DBAL\Connection;
+use LogicException;
+use Override;
 use Piwigo\Admin\Category\CategoryAdminService;
+use Piwigo\Auth\AccessLevelChecker;
 use Piwigo\Bootstrap\RedirectService;
 use Piwigo\Category\CategoryRepository;
 use Piwigo\Category\CategoryService;
-use Piwigo\Config\CurrentConfig;
-use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Config\ConfigLoader;
+use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\ActivityLoggerInterface;
+use Piwigo\Core\FilterState;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Db\DbConnection;
+use Piwigo\Db\EntityManagerFactory;
+use Piwigo\Group\GroupEntity;
 use Piwigo\Permission\PermissionRepository;
 use Piwigo\Permission\PermissionService;
+use Piwigo\PluginConfig\EventDispatcher;
+use Piwigo\Tests\Support\CurrentConfigTestFactory;
+use Piwigo\Tests\Support\CurrentUserTestFactory;
+use Piwigo\Tests\Support\EventDispatcherTestFactory;
+use Piwigo\Tests\Support\HtmlServiceTestFactory;
+use Piwigo\Tests\Support\LangTestFactory;
+use Piwigo\Tests\Support\PageStateTestFactory;
+use Piwigo\Tests\Support\TranslatorTestFactory;
+use Piwigo\Users\UserService;
+use RuntimeException;
 
 /**
  * Real fake for setCategoryOption()'s per-method ActivityLoggerInterface
@@ -42,7 +42,9 @@ use Piwigo\Permission\PermissionService;
  */
 final class CategoryAdminServiceFakeActivityLogger implements ActivityLoggerInterface
 {
-    /** @var list<array{object: string, objectId: int|string|array<int, int|string>, action: string, details: array<string, mixed>}> */
+    /**
+     * @var list<array{object: string, objectId: int|string|array<int, int|string>, action: string, details: array<string, mixed>}>
+     */
     public array $calls = [];
 
     #[Override]
@@ -188,10 +190,10 @@ final class CategoryAdminServiceTest extends IntegrationTestCase
         // literals in the SQL text (unlike a bound parameter, which the
         // driver coerces implicitly) are rejected outright by Postgres.
         $boolLiteral = $this->dbDriver === 'pgsql' ? 'true' : '1';
-        $this->conn->executeStatement('UPDATE ' . 'categories' . " SET commentable = {$boolLiteral}, visible = {$boolLiteral}, status = 'public', representative_picture_id = NULL, image_order = NULL");
-        $this->conn->executeStatement('DELETE FROM ' . 'user_access');
-        $this->conn->executeStatement('DELETE FROM ' . 'group_access');
-        $this->conn->executeStatement('INSERT INTO ' . 'group_access' . ' (group_id, cat_id) VALUES (1, 1), (1, 2), (2, 1), (3, 1)');
+        $this->conn->executeStatement('UPDATE categories' . " SET commentable = {$boolLiteral}, visible = {$boolLiteral}, status = 'public', representative_picture_id = NULL, image_order = NULL");
+        $this->conn->executeStatement('DELETE FROM user_access');
+        $this->conn->executeStatement('DELETE FROM group_access');
+        $this->conn->executeStatement('INSERT INTO group_access (group_id, cat_id) VALUES (1, 1), (1, 2), (2, 1), (3, 1)');
         Kernel::reset();
         parent::tearDown();
     }
@@ -201,7 +203,7 @@ final class CategoryAdminServiceTest extends IntegrationTestCase
      */
     private function fetchCategory(int $catId): ?array
     {
-        $row = $this->conn->executeQuery('SELECT * FROM ' . 'categories' . ' WHERE id = ' . $catId)
+        $row = $this->conn->executeQuery('SELECT * FROM categories WHERE id = ' . $catId)
             ->fetchAssociative();
 
         return $row === false ? null : $row;
@@ -241,7 +243,7 @@ final class CategoryAdminServiceTest extends IntegrationTestCase
         );
     }
 
-    public function test_set_category_option_comments_false_updates_the_row_and_logs_activity(): void
+    public function testSetCategoryOptionCommentsFalseUpdatesTheRowAndLogsActivity(): void
     {
         $logger = new CategoryAdminServiceFakeActivityLogger();
         $this->service->setCategoryOption([1], 'comments', false, $logger);
@@ -256,10 +258,13 @@ final class CategoryAdminServiceTest extends IntegrationTestCase
         self::assertSame('album', $logger->calls[0]['object']);
         self::assertSame([1], $logger->calls[0]['objectId']);
         self::assertSame('edit', $logger->calls[0]['action']);
-        self::assertSame(['section' => 'comments', 'action' => 'falsify'], $logger->calls[0]['details']);
+        self::assertSame([
+            'section' => 'comments',
+            'action' => 'falsify',
+        ], $logger->calls[0]['details']);
     }
 
-    public function test_set_category_option_visible_true_updates_the_row(): void
+    public function testSetCategoryOptionVisibleTrueUpdatesTheRow(): void
     {
         $this->service->setCategoryOption([2], 'visible', true, new CategoryAdminServiceFakeActivityLogger());
 
@@ -270,7 +275,7 @@ final class CategoryAdminServiceTest extends IntegrationTestCase
         self::assertSame(1, (int) (bool) $category['visible']);
     }
 
-    public function test_set_category_option_status_false_sets_private(): void
+    public function testSetCategoryOptionStatusFalseSetsPrivate(): void
     {
         $this->service->setCategoryOption([2], 'status', false, new CategoryAdminServiceFakeActivityLogger());
 
@@ -279,7 +284,7 @@ final class CategoryAdminServiceTest extends IntegrationTestCase
         self::assertSame('private', $category['status']);
     }
 
-    public function test_set_category_option_representative_true_picks_a_real_image(): void
+    public function testSetCategoryOptionRepresentativeTruePicksARealImage(): void
     {
         $this->service->setCategoryOption([1], 'representative', true, new CategoryAdminServiceFakeActivityLogger());
 
@@ -291,9 +296,9 @@ final class CategoryAdminServiceTest extends IntegrationTestCase
         self::assertContains($category['representative_picture_id'], ['1', '2', '3', 1, 2, 3]);
     }
 
-    public function test_set_category_option_representative_false_clears_the_row(): void
+    public function testSetCategoryOptionRepresentativeFalseClearsTheRow(): void
     {
-        $this->conn->executeStatement('UPDATE ' . 'categories' . ' SET representative_picture_id = 1 WHERE id = 1');
+        $this->conn->executeStatement('UPDATE categories SET representative_picture_id = 1 WHERE id = 1');
 
         $this->service->setCategoryOption([1], 'representative', false, new CategoryAdminServiceFakeActivityLogger());
 
@@ -302,7 +307,7 @@ final class CategoryAdminServiceTest extends IntegrationTestCase
         self::assertNull($category['representative_picture_id']);
     }
 
-    public function test_set_category_option_with_an_empty_id_list_does_nothing(): void
+    public function testSetCategoryOptionWithAnEmptyIdListDoesNothing(): void
     {
         $before = $this->fetchCategory(1);
         $logger = new CategoryAdminServiceFakeActivityLogger();
@@ -314,7 +319,7 @@ final class CategoryAdminServiceTest extends IntegrationTestCase
         self::assertSame([], $logger->calls);
     }
 
-    public function test_set_category_option_with_an_unrecognized_section_changes_nothing_but_still_logs_activity(): void
+    public function testSetCategoryOptionWithAnUnrecognizedSectionChangesNothingButStillLogsActivity(): void
     {
         // The match statement's `default => null` arm (every real section
         // name is one of the 4 explicit cases) -- the activity-log call
@@ -329,12 +334,15 @@ final class CategoryAdminServiceTest extends IntegrationTestCase
         self::assertSame($before, $after);
         self::assertCount(1, $logger->calls);
         self::assertSame(
-            ['section' => 'not_a_real_section', 'action' => 'trueify'],
+            [
+                'section' => 'not_a_real_section',
+                'action' => 'trueify',
+            ],
             $logger->calls[0]['details']
         );
     }
 
-    public function test_save_image_order_updates_the_category_row_only_when_subcats_is_false(): void
+    public function testSaveImageOrderUpdatesTheCategoryRowOnlyWhenSubcatsIsFalse(): void
     {
         $this->service->saveImageOrder(2, '`rank` ASC', false, new RedirectService(LangTestFactory::get(), $this->userService(), EventDispatcherTestFactory::get(), PageStateTestFactory::get()));
 
@@ -346,7 +354,7 @@ final class CategoryAdminServiceTest extends IntegrationTestCase
         self::assertSame('`rank` ASC', $cat2['image_order']);
     }
 
-    public function test_save_image_order_with_subcats_cascades_to_the_uppercats_chain(): void
+    public function testSaveImageOrderWithSubcatsCascadesToTheUppercatsChain(): void
     {
         // Category 2's own uppercats ('1,2') includes category 1 --
         // saving on category 1 with $applySubcats=true matches every row
@@ -361,7 +369,7 @@ final class CategoryAdminServiceTest extends IntegrationTestCase
         self::assertSame('id ASC', $cat2['image_order']);
     }
 
-    public function test_get_categories_ref_date_returns_the_shared_fixture_date(): void
+    public function testGetCategoriesRefDateReturnsTheSharedFixtureDate(): void
     {
         $result = $this->service->getCategoriesRefDate([1, 2]);
 
@@ -372,14 +380,16 @@ final class CategoryAdminServiceTest extends IntegrationTestCase
         self::assertSame('2026-08-01 00:00:00', $result[2]);
     }
 
-    public function test_get_categories_ref_date_returns_null_for_an_unknown_category(): void
+    public function testGetCategoriesRefDateReturnsNullForAnUnknownCategory(): void
     {
         $result = $this->service->getCategoriesRefDate([999999]);
 
-        self::assertSame([999999 => null], $result);
+        self::assertSame([
+            999999 => null,
+        ], $result);
     }
 
-    public function test_create_virtual_category_rejects_a_blank_name(): void
+    public function testCreateVirtualCategoryRejectsABlankName(): void
     {
         $result = $this->service->createVirtualCategory('   ', new CategoryAdminServiceFakeActivityLogger(), CurrentUserTestFactory::get());
 
@@ -388,7 +398,7 @@ final class CategoryAdminServiceTest extends IntegrationTestCase
         self::assertNull($result->categoryId);
     }
 
-    public function test_create_virtual_category_creates_a_real_row(): void
+    public function testCreateVirtualCategoryCreatesARealRow(): void
     {
         $result = $this->service->createVirtualCategory('Integration Test Album', new CategoryAdminServiceFakeActivityLogger(), CurrentUserTestFactory::get());
 
@@ -399,10 +409,10 @@ final class CategoryAdminServiceTest extends IntegrationTestCase
         self::assertNotNull($created);
         self::assertSame('Integration Test Album', $created['name']);
 
-        $this->conn->executeStatement('DELETE FROM ' . 'categories' . ' WHERE id = ' . $result->categoryId);
+        $this->conn->executeStatement('DELETE FROM categories WHERE id = ' . $result->categoryId);
     }
 
-    public function test_set_category_permissions_denies_a_group_no_longer_in_the_grant_list(): void
+    public function testSetCategoryPermissionsDeniesAGroupNoLongerInTheGrantList(): void
     {
         // Fixture: cat 1 grants groups 1 (Editors), 2 (Reviewers), 3
         // (Guests). Keeping only [1, 2] must revoke group 3.
@@ -411,14 +421,14 @@ final class CategoryAdminServiceTest extends IntegrationTestCase
         self::assertSame([1, 2], $this->groupAccessFor(1));
     }
 
-    public function test_set_category_permissions_denies_every_group_when_none_are_kept(): void
+    public function testSetCategoryPermissionsDeniesEveryGroupWhenNoneAreKept(): void
     {
         $this->service->setCategoryPermissions(1, 'private', 'private', false, [], []);
 
         self::assertSame([], $this->groupAccessFor(1));
     }
 
-    public function test_set_category_permissions_grants_a_new_group_to_the_now_private_category(): void
+    public function testSetCategoryPermissionsGrantsANewGroupToTheNowPrivateCategory(): void
     {
         // Cat 2 starts public with only group 1 granted; switching it to
         // private and keeping group 1 while adding group 2 must insert a
@@ -431,7 +441,7 @@ final class CategoryAdminServiceTest extends IntegrationTestCase
         self::assertSame([1, 2], $this->groupAccessFor(2));
     }
 
-    public function test_set_category_permissions_grant_does_not_reach_a_still_public_ancestor(): void
+    public function testSetCategoryPermissionsGrantDoesNotReachAStillPublicAncestor(): void
     {
         // Cat 2's own uppercats chain includes cat 1, but cat 1 stays
         // public here -- the private-only grant filter must exclude it
@@ -446,7 +456,7 @@ final class CategoryAdminServiceTest extends IntegrationTestCase
         self::assertSame([2], $this->groupAccessFor(2));
     }
 
-    public function test_set_category_permissions_apply_on_sub_cascades_status_and_grants(): void
+    public function testSetCategoryPermissionsApplyOnSubCascadesStatusAndGrants(): void
     {
         // Cat 1 -> private with subcats applied must also flip cat 2 (its
         // only child) to private. The deny step forbids groups 1/3 from
@@ -464,9 +474,9 @@ final class CategoryAdminServiceTest extends IntegrationTestCase
         self::assertSame([2], $this->groupAccessFor(2));
     }
 
-    public function test_set_category_permissions_denies_a_user_no_longer_in_the_grant_list(): void
+    public function testSetCategoryPermissionsDeniesAUserNoLongerInTheGrantList(): void
     {
-        $this->conn->executeStatement('INSERT INTO ' . 'user_access' . ' (user_id, cat_id) VALUES (2, 1), (3, 1)');
+        $this->conn->executeStatement('INSERT INTO user_access (user_id, cat_id) VALUES (2, 1), (3, 1)');
 
         // Real public -> private transition (not private -> private):
         // addPermissionOnCategory()'s own grant only ever inserts rows
@@ -478,16 +488,16 @@ final class CategoryAdminServiceTest extends IntegrationTestCase
         self::assertSame([3], $this->userAccessFor(1));
     }
 
-    public function test_set_category_permissions_grants_a_new_user_to_a_private_category(): void
+    public function testSetCategoryPermissionsGrantsANewUserToAPrivateCategory(): void
     {
         $this->service->setCategoryPermissions(1, 'public', 'private', false, [], [2]);
 
         self::assertSame([2], $this->userAccessFor(1));
     }
 
-    public function test_set_category_permissions_switches_status_without_touching_permission_tables_when_new_status_is_not_private(): void
+    public function testSetCategoryPermissionsSwitchesStatusWithoutTouchingPermissionTablesWhenNewStatusIsNotPrivate(): void
     {
-        $this->conn->executeStatement("UPDATE " . 'categories' . " SET status = 'private' WHERE id = 2");
+        $this->conn->executeStatement('UPDATE categories' . " SET status = 'private' WHERE id = 2");
         $groupsBefore = $this->groupAccessFor(2);
         self::assertNotSame([], $groupsBefore, 'fixture precondition: cat 2 must already have a real group grant');
 
@@ -504,7 +514,7 @@ final class CategoryAdminServiceTest extends IntegrationTestCase
         self::assertSame($groupsBefore, $this->groupAccessFor(2));
     }
 
-    public function test_save_image_order_calls_page_not_found_for_a_nonexistent_category_when_applying_to_subcats(): void
+    public function testSaveImageOrderCallsPageNotFoundForANonexistentCategoryWhenApplyingToSubcats(): void
     {
         $redirectService = new CategoryAdminServiceFakeCapturingRedirectService();
 

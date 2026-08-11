@@ -33,7 +33,9 @@ use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
  */
 it('downloads a photo\'s original file via part=e', function (): void {
     $page = H::loginAsAdmin($this);
-    $album = H::wsCall($page, 'pwg.categories.add', ['name' => 'Action Controller Album ' . uniqid()]);
+    $album = H::wsCall($page, 'pwg.categories.add', [
+        'name' => 'Action Controller Album ' . uniqid(),
+    ]);
     $albumResult = $album['result'] ?? null;
     if (! is_array($albumResult) || ! is_numeric($albumResult['id'] ?? null)) {
         throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($album, true));
@@ -85,7 +87,9 @@ it('returns 404 for a nonexistent image id', function (): void {
 
 it('returns 404 for part=r when the photo has no representative file', function (): void {
     $page = H::loginAsAdmin($this);
-    $album = H::wsCall($page, 'pwg.categories.add', ['name' => 'Action Controller No Rep Album ' . uniqid()]);
+    $album = H::wsCall($page, 'pwg.categories.add', [
+        'name' => 'Action Controller No Rep Album ' . uniqid(),
+    ]);
     $albumResult = $album['result'] ?? null;
     if (! is_array($albumResult) || ! is_numeric($albumResult['id'] ?? null)) {
         throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($album, true));
@@ -114,7 +118,9 @@ it('returns 400 for part=f when the extensions-format system is disabled', funct
     H::setConfigValue('enable_formats', 'false');
 
     $page = H::loginAsAdmin($this);
-    $album = H::wsCall($page, 'pwg.categories.add', ['name' => 'Action Controller Format Off Album ' . uniqid()]);
+    $album = H::wsCall($page, 'pwg.categories.add', [
+        'name' => 'Action Controller Format Off Album ' . uniqid(),
+    ]);
     $albumResult = $album['result'] ?? null;
     if (! is_array($albumResult) || ! is_numeric($albumResult['id'] ?? null)) {
         throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($album, true));
@@ -159,7 +165,9 @@ it('returns 400 for a nonexistent format id when formats are enabled', function 
 
 it('sends a Content-Disposition attachment header when download is requested', function (): void {
     $page = H::loginAsAdmin($this);
-    $album = H::wsCall($page, 'pwg.categories.add', ['name' => 'Action Controller Download Album ' . uniqid()]);
+    $album = H::wsCall($page, 'pwg.categories.add', [
+        'name' => 'Action Controller Download Album ' . uniqid(),
+    ]);
     $albumResult = $album['result'] ?? null;
     if (! is_array($albumResult) || ! is_numeric($albumResult['id'] ?? null)) {
         throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($album, true));
@@ -201,7 +209,6 @@ function actionSetEnabledHigh(int $userId, bool $enabled): void
     H::dbClose($db);
 }
 
-
 function actionImagePath(int $imageId): string
 {
     $db = actionDbConnect();
@@ -232,7 +239,9 @@ function actionImagePath(int $imageId): string
  */
 it('serves a remote-storage photo through the guessMimeType() fallback when mime_content_type() is never consulted', function (): void {
     $page = H::loginAsAdmin($this);
-    $album = H::wsCall($page, 'pwg.categories.add', ['name' => 'Action Controller Remote Album ' . uniqid()]);
+    $album = H::wsCall($page, 'pwg.categories.add', [
+        'name' => 'Action Controller Remote Album ' . uniqid(),
+    ]);
     $albumResult = $album['result'] ?? null;
     if (! is_array($albumResult) || ! is_numeric($albumResult['id'] ?? null)) {
         throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($album, true));
@@ -276,7 +285,9 @@ it('serves a photo through a real registered format id, logging a "high" visit',
     H::setConfigValue('enable_formats', 'true');
 
     $page = H::loginAsAdmin($this);
-    $album = H::wsCall($page, 'pwg.categories.add', ['name' => 'Action Controller Format Album ' . uniqid()]);
+    $album = H::wsCall($page, 'pwg.categories.add', [
+        'name' => 'Action Controller Format Album ' . uniqid(),
+    ]);
     $albumResult = $album['result'] ?? null;
     if (! is_array($albumResult) || ! is_numeric($albumResult['id'] ?? null)) {
         throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($album, true));
@@ -329,7 +340,9 @@ it('serves a photo through a real registered format id, logging a "high" visit',
 
 it('serves a photo\'s representative file via part=r when one is registered', function (): void {
     $page = H::loginAsAdmin($this);
-    $album = H::wsCall($page, 'pwg.categories.add', ['name' => 'Action Controller Rep Album ' . uniqid()]);
+    $album = H::wsCall($page, 'pwg.categories.add', [
+        'name' => 'Action Controller Rep Album ' . uniqid(),
+    ]);
     $albumResult = $album['result'] ?? null;
     if (! is_array($albumResult) || ! is_numeric($albumResult['id'] ?? null)) {
         throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($album, true));
@@ -401,12 +414,18 @@ function actionCurlGet(string $path, array $extraHeaders = []): array
         }
     }
 
-    return ['status' => $status, 'headers' => $headers, 'body' => $body];
+    return [
+        'status' => $status,
+        'headers' => $headers,
+        'body' => $body,
+    ];
 }
 
 it('sends 304 Not Modified for part=e when If-Modified-Since matches the file\'s own mtime', function (): void {
     $page = H::loginAsAdmin($this);
-    $album = H::wsCall($page, 'pwg.categories.add', ['name' => 'Action Controller 304 Album ' . uniqid()]);
+    $album = H::wsCall($page, 'pwg.categories.add', [
+        'name' => 'Action Controller 304 Album ' . uniqid(),
+    ]);
     $albumResult = $album['result'] ?? null;
     if (! is_array($albumResult) || ! is_numeric($albumResult['id'] ?? null)) {
         throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($album, true));
@@ -420,7 +439,8 @@ it('sends 304 Not Modified for part=e when If-Modified-Since matches the file\'s
         $first = actionCurlGet('/action.php?id=' . $imageId . '&part=e');
         expect($first['status'])->toBe(200);
         $lastModified = $first['headers']['last-modified'] ?? null;
-        expect($lastModified)->not->toBeNull();
+        expect($lastModified)
+            ->not->toBeNull();
 
         $second = actionCurlGet('/action.php?id=' . $imageId . '&part=e', ['If-Modified-Since: ' . $lastModified]);
         expect($second['status'])->toBe(304);
@@ -436,7 +456,9 @@ it('sends 304 Not Modified for part=e when If-Modified-Since matches the file\'s
 
 it('denies HD download of an oversized original to a guest with no HD access', function (): void {
     $page = H::loginAsAdmin($this);
-    $album = H::wsCall($page, 'pwg.categories.add', ['name' => 'Action Controller Oversized Album ' . uniqid()]);
+    $album = H::wsCall($page, 'pwg.categories.add', [
+        'name' => 'Action Controller Oversized Album ' . uniqid(),
+    ]);
     $albumResult = $album['result'] ?? null;
     if (! is_array($albumResult) || ! is_numeric($albumResult['id'] ?? null)) {
         throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($album, true));
@@ -539,7 +561,9 @@ it('returns 400 for an empty format value when formats are enabled', function ()
 
 it('returns 400 for part=f requested directly on a real photo, without a format id', function (): void {
     $page = H::loginAsAdmin($this);
-    $album = H::wsCall($page, 'pwg.categories.add', ['name' => 'Action Controller Direct Part F Album ' . uniqid()]);
+    $album = H::wsCall($page, 'pwg.categories.add', [
+        'name' => 'Action Controller Direct Part F Album ' . uniqid(),
+    ]);
     $albumResult = $album['result'] ?? null;
     if (! is_array($albumResult) || ! is_numeric($albumResult['id'] ?? null)) {
         throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($album, true));
@@ -569,7 +593,9 @@ it('returns 400 for part=f requested directly on a real photo, without a format 
 
 it('returns 404 naming the resolved path when the original file is missing from disk', function (): void {
     $page = H::loginAsAdmin($this);
-    $album = H::wsCall($page, 'pwg.categories.add', ['name' => 'Action Controller Missing File Album ' . uniqid()]);
+    $album = H::wsCall($page, 'pwg.categories.add', [
+        'name' => 'Action Controller Missing File Album ' . uniqid(),
+    ]);
     $albumResult = $album['result'] ?? null;
     if (! is_array($albumResult) || ! is_numeric($albumResult['id'] ?? null)) {
         throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($album, true));
@@ -609,7 +635,9 @@ it('returns 404 naming the resolved path when the original file is missing from 
 
 it('bypasses the no-HD-access restriction for an admin download carrying a valid pwg_token', function (): void {
     $page = H::loginAsAdmin($this);
-    $album = H::wsCall($page, 'pwg.categories.add', ['name' => 'Action Controller Admin Download Album ' . uniqid()]);
+    $album = H::wsCall($page, 'pwg.categories.add', [
+        'name' => 'Action Controller Admin Download Album ' . uniqid(),
+    ]);
     $albumResult = $album['result'] ?? null;
     if (! is_array($albumResult) || ! is_numeric($albumResult['id'] ?? null)) {
         throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($album, true));

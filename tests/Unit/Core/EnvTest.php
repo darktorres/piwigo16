@@ -104,8 +104,10 @@ test('now falls back to a real clock when PIWIGO_TEST_NOW is unset', function ()
         $result = Env::now();
         $after = new DateTime();
 
-        expect($result->getTimestamp())->toBeGreaterThanOrEqual($before->getTimestamp())
-            ->and($result->getTimestamp())->toBeLessThanOrEqual($after->getTimestamp());
+        expect($result->getTimestamp())
+            ->toBeGreaterThanOrEqual($before->getTimestamp())
+            ->and($result->getTimestamp())
+            ->toBeLessThanOrEqual($after->getTimestamp());
     } finally {
         putenv($original === false ? 'PIWIGO_TEST_NOW' : 'PIWIGO_TEST_NOW=' . $original);
     }
@@ -129,8 +131,10 @@ test('now falls back to a real clock when PIWIGO_TEST_NOW is explicitly empty', 
         $result = Env::now();
         $after = new DateTime();
 
-        expect($result->getTimestamp())->toBeGreaterThanOrEqual($before->getTimestamp())
-            ->and($result->getTimestamp())->toBeLessThanOrEqual($after->getTimestamp());
+        expect($result->getTimestamp())
+            ->toBeGreaterThanOrEqual($before->getTimestamp())
+            ->and($result->getTimestamp())
+            ->toBeLessThanOrEqual($after->getTimestamp());
     } finally {
         putenv($original === false ? 'PIWIGO_TEST_NOW' : 'PIWIGO_TEST_NOW=' . $original);
     }
@@ -162,7 +166,8 @@ test('loadEnvFile actually loads the resolved env file into the process environm
 
     $loaded = getenv('ENV_TEST_LOAD_CHECK');
     putenv('ENV_TEST_LOAD_CHECK'); // don't leak into later tests
-    expect($loaded)->toBe('loaded');
+    expect($loaded)
+        ->toBe('loaded');
 });
 
 test('mergeIntoEnvFile replaces matching keys while preserving every other existing line untouched', function (): void {
@@ -174,8 +179,10 @@ test('mergeIntoEnvFile replaces matching keys while preserving every other exist
         'DB_USER' => 'admin',
     ]);
 
-    expect($result)->toBeTrue()
-        ->and(file_get_contents($envFile))->toBe(
+    expect($result)
+        ->toBeTrue()
+        ->and(file_get_contents($envFile))
+        ->toBe(
             "DB_NAME=piwigo_new\nDB_USER=admin\nDB_HOST=localhost\nUNRELATED_VAR=keepme\n"
         );
 });
@@ -187,8 +194,10 @@ test('mergeIntoEnvFile strips newlines and null bytes from values before writing
         'INJECTED' => "value\nEVIL_KEY=evil\r\0value",
     ]);
 
-    expect($result)->toBeTrue()
-        ->and(file_get_contents($envFile))->toBe("INJECTED=valueEVIL_KEY=evilvalue\n");
+    expect($result)
+        ->toBeTrue()
+        ->and(file_get_contents($envFile))
+        ->toBe("INJECTED=valueEVIL_KEY=evilvalue\n");
 });
 
 test('mergeIntoEnvFile returns false when the target directory cannot be written to', function (): void {
@@ -199,14 +208,18 @@ test('mergeIntoEnvFile returns false when the target directory cannot be written
 
     set_error_handler(static fn (): bool => true);
     try {
-        $result = Env::mergeIntoEnvFile($envFile, ['KEY' => 'value']);
+        $result = Env::mergeIntoEnvFile($envFile, [
+            'KEY' => 'value',
+        ]);
     } finally {
         restore_error_handler();
         chmod($dir, 0o755);
     }
 
-    expect($result)->toBeFalse()
-        ->and(file_exists($envFile))->toBeFalse();
+    expect($result)
+        ->toBeFalse()
+        ->and(file_exists($envFile))
+        ->toBeFalse();
 });
 
 test('mergeIntoEnvFile treats an unreadable existing file as having no prior lines, not crashing', function (): void {
@@ -255,16 +268,21 @@ test('mergeIntoEnvFile treats an unreadable existing file as having no prior lin
         return true;
     });
     try {
-        $result = Env::mergeIntoEnvFile($envFile, ['NEW_KEY' => 'value']);
+        $result = Env::mergeIntoEnvFile($envFile, [
+            'NEW_KEY' => 'value',
+        ]);
     } finally {
         restore_error_handler();
         chmod($envFile, 0o644);
     }
 
-    expect($unexpectedWarnings)->toBe([]);
+    expect($unexpectedWarnings)
+        ->toBe([]);
 
-    expect($result)->toBeTrue()
-        ->and(file_get_contents($envFile))->toBe("NEW_KEY=value\n");
+    expect($result)
+        ->toBeTrue()
+        ->and(file_get_contents($envFile))
+        ->toBe("NEW_KEY=value\n");
 });
 
 test('mergeIntoEnvFile drops an existing line whose key extraction genuinely fails', function (): void {
@@ -280,9 +298,12 @@ test('mergeIntoEnvFile drops an existing line whose key extraction genuinely fai
     $envFile = $this->root . '/.env.bare-equals';
     file_put_contents($envFile, "GOOD_KEY=value\n=\n");
 
-    Env::mergeIntoEnvFile($envFile, ['NEW_KEY' => 'new']);
+    Env::mergeIntoEnvFile($envFile, [
+        'NEW_KEY' => 'new',
+    ]);
 
-    expect(file_get_contents($envFile))->toBe("NEW_KEY=new\nGOOD_KEY=value\n");
+    expect(file_get_contents($envFile))
+        ->toBe("NEW_KEY=new\nGOOD_KEY=value\n");
 });
 
 /**

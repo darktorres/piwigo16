@@ -11,6 +11,4 @@ namespace Piwigo\Tests\Unit\Search;
  * scenario that guard defends against (a 3rd-party language pack shipping
  * a broken Inflector_xx.php for its own 2-letter code).
  */
-final class SearchServiceTestNotAnInflector
-{
-}
+final class SearchServiceTestNotAnInflector {}

@@ -4,44 +4,44 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Integration {
 
-    use Override;
-    use Piwigo\Auth\AccessLevelChecker;
-    use Piwigo\Common\ValueObject\Username;
-    use Piwigo\Core\Kernel;
-    use LogicException;
-    use Piwigo\Core\CurrentLogger;
-    use Piwigo\Core\FilterState;
-    use Piwigo\Tests\Support\LangTestFactory;
-    use Piwigo\Db\EntityManagerFactory;
-    use Piwigo\Tag\TagEntity;
-    use Piwigo\Group\GroupEntity;
-    use Piwigo\Activity\ActivityEntity;
-    use Piwigo\Session\SessionService;
-    use Piwigo\Session\SessionEntity;
-    use Piwigo\Tests\Support\HtmlServiceTestFactory;
-    use Piwigo\Common\ValueObject\ImageId;
-    use Piwigo\Common\ValueObject\LangCode;
-    use Piwigo\Common\ValueObject\UserId;
-    use Piwigo\Tag\Projection\TagBrief;
-    use Error;
     use Doctrine\DBAL\Connection;
+    use Error;
+    use LogicException;
+    use Override;
+    use Piwigo\Activity\ActivityEntity;
     use Piwigo\Activity\ActivityService;
+    use Piwigo\Auth\AccessLevelChecker;
     use Piwigo\Cache\CachePools;
     use Piwigo\Category\CategoryRepository;
+    use Piwigo\Common\ValueObject\ImageId;
+    use Piwigo\Common\ValueObject\LangCode;
     use Piwigo\Common\ValueObject\TagId;
-    use Piwigo\Config\CurrentConfig;
-    use Piwigo\Tests\Support\CurrentConfigTestFactory;
+    use Piwigo\Common\ValueObject\ThemeId;
+    use Piwigo\Common\ValueObject\UserId;
+    use Piwigo\Common\ValueObject\Username;
     use Piwigo\Config\ConfigLoader;
+    use Piwigo\Config\CurrentConfig;
+    use Piwigo\Core\CurrentLogger;
+    use Piwigo\Core\FilterState;
+    use Piwigo\Core\Kernel;
     use Piwigo\Db\DbConnection;
+    use Piwigo\Db\EntityManagerFactory;
     use Piwigo\Event\Tag\GetTagAltNames;
     use Piwigo\Event\Tag\GetTagNameLikeWhere;
     use Piwigo\Event\Tag\RenderTagUrl;
+    use Piwigo\Group\GroupEntity;
     use Piwigo\Permission\PermissionRepository;
     use Piwigo\Permission\PermissionService;
-    use Piwigo\Tests\Support\EventDispatcherTestFactory;
+    use Piwigo\Session\SessionEntity;
+    use Piwigo\Session\SessionService;
+    use Piwigo\Tag\Projection\TagBrief;
+    use Piwigo\Tag\TagEntity;
     use Piwigo\Tag\TagService;
+    use Piwigo\Tests\Support\CurrentConfigTestFactory;
     use Piwigo\Tests\Support\CurrentUserTestFactory;
-    use Piwigo\Common\ValueObject\ThemeId;
+    use Piwigo\Tests\Support\EventDispatcherTestFactory;
+    use Piwigo\Tests\Support\HtmlServiceTestFactory;
+    use Piwigo\Tests\Support\LangTestFactory;
     use Piwigo\Users\User;
     use Piwigo\Users\UserStatus;
 
@@ -97,21 +97,21 @@ namespace Piwigo\Tests\Integration {
             parent::tearDown();
         }
 
-        public function test_get_all_tags_returns_every_fixture_tag_alphabetically(): void
+        public function testGetAllTagsReturnsEveryFixtureTagAlphabetically(): void
         {
             $names = array_column($this->service->getAllTags(HtmlServiceTestFactory::build()), 'name');
 
             self::assertSame(['family', 'nature', 'travel'], $names);
         }
 
-        public function test_get_all_tags_sets_name_raw(): void
+        public function testGetAllTagsSetsNameRaw(): void
         {
             $tags = $this->service->getAllTags(HtmlServiceTestFactory::build());
 
             self::assertSame($tags[0]['name'], $tags[0]['name_raw']);
         }
 
-        public function test_find_tags_delegates_to_the_repository(): void
+        public function testFindTagsDelegatesToTheRepository(): void
         {
             $tags = $this->service->findTags([1]);
 
@@ -119,16 +119,22 @@ namespace Piwigo\Tests\Integration {
             self::assertSame('nature', $tags[0]['name']);
         }
 
-        public function test_add_level_to_tags_returns_empty_for_empty_input(): void
+        public function testAddLevelToTagsReturnsEmptyForEmptyInput(): void
         {
             self::assertSame([], $this->service->addLevelToTags([]));
         }
 
-        public function test_add_level_to_tags_assigns_higher_level_to_higher_counter(): void
+        public function testAddLevelToTagsAssignsHigherLevelToHigherCounter(): void
         {
             $tags = [
-                ['id' => 1, 'counter' => 1],
-                ['id' => 2, 'counter' => 100],
+                [
+                    'id' => 1,
+                    'counter' => 1,
+                ],
+                [
+                    'id' => 2,
+                    'counter' => 100,
+                ],
             ];
 
             $withLevels = $this->service->addLevelToTags($tags);
@@ -136,12 +142,21 @@ namespace Piwigo\Tests\Integration {
             self::assertGreaterThan($withLevels[0]['level'], $withLevels[1]['level']);
         }
 
-        public function test_add_level_to_tags_gives_the_middle_level_to_the_average(): void
+        public function testAddLevelToTagsGivesTheMiddleLevelToTheAverage(): void
         {
             $tags = [
-                ['id' => 1, 'counter' => 10],
-                ['id' => 2, 'counter' => 10],
-                ['id' => 3, 'counter' => 10],
+                [
+                    'id' => 1,
+                    'counter' => 10,
+                ],
+                [
+                    'id' => 2,
+                    'counter' => 10,
+                ],
+                [
+                    'id' => 3,
+                    'counter' => 10,
+                ],
             ];
 
             $withLevels = $this->service->addLevelToTags($tags);
@@ -151,23 +166,49 @@ namespace Piwigo\Tests\Integration {
             }
         }
 
-        public function test_tags_id_compare_orders_by_id_ascending(): void
+        public function testTagsIdCompareOrdersByIdAscending(): void
         {
-            self::assertSame(-1, $this->service->tagsIdCompare(['id' => 1], ['id' => 2]));
-            self::assertSame(1, $this->service->tagsIdCompare(['id' => 2], ['id' => 1]));
+            self::assertSame(-1, $this->service->tagsIdCompare([
+                'id' => 1,
+            ], [
+                'id' => 2,
+            ]));
+            self::assertSame(1, $this->service->tagsIdCompare([
+                'id' => 2,
+            ], [
+                'id' => 1,
+            ]));
         }
 
-        public function test_tags_counter_compare_orders_by_counter_descending(): void
+        public function testTagsCounterCompareOrdersByCounterDescending(): void
         {
-            self::assertSame(1, $this->service->tagsCounterCompare(['id' => 1, 'counter' => 1], ['id' => 2, 'counter' => 5]));
-            self::assertSame(-1, $this->service->tagsCounterCompare(['id' => 1, 'counter' => 5], ['id' => 2, 'counter' => 1]));
+            self::assertSame(1, $this->service->tagsCounterCompare([
+                'id' => 1,
+                'counter' => 1,
+            ], [
+                'id' => 2,
+                'counter' => 5,
+            ]));
+            self::assertSame(-1, $this->service->tagsCounterCompare([
+                'id' => 1,
+                'counter' => 5,
+            ], [
+                'id' => 2,
+                'counter' => 1,
+            ]));
         }
 
-        public function test_tags_counter_compare_breaks_ties_by_id(): void
+        public function testTagsCounterCompareBreaksTiesById(): void
         {
             self::assertSame(
                 -1,
-                $this->service->tagsCounterCompare(['id' => 1, 'counter' => 5], ['id' => 2, 'counter' => 5])
+                $this->service->tagsCounterCompare([
+                    'id' => 1,
+                    'counter' => 5,
+                ], [
+                    'id' => 2,
+                    'counter' => 5,
+                ])
             );
         }
 
@@ -181,7 +222,7 @@ namespace Piwigo\Tests\Integration {
          * stale result while an explicitly-filtered call (which always
          * bypasses this cache) reflects the change.
          */
-        public function test_get_available_tags_with_no_filter_caches_the_result_via_cache_pools_tag_cloud(): void
+        public function testGetAvailableTagsWithNoFilterCachesTheResultViaCachePoolsTagCloud(): void
         {
             CurrentUserTestFactory::get()->set(new User(
                 id: UserId::from(2),
@@ -200,7 +241,7 @@ namespace Piwigo\Tests\Integration {
             $imageId = $this->conn->createQueryBuilder()
                 ->select('ic.image_id')
                 ->from('image_category', 'ic')
-                ->where('ic.image_id NOT IN (SELECT image_id FROM ' . 'image_tag' . ' WHERE tag_id = 1)')
+                ->where('ic.image_id NOT IN (SELECT image_id FROM image_tag WHERE tag_id = 1)')
                 ->setMaxResults(1)
                 ->executeQuery()
                 ->fetchOne();
@@ -209,7 +250,7 @@ namespace Piwigo\Tests\Integration {
             $before = array_column($this->service->getAvailableTags(), 'id');
 
             $this->conn->executeStatement(
-                'INSERT INTO ' . 'image_tag' . ' (image_id, tag_id) VALUES (?, 1)',
+                'INSERT INTO image_tag (image_id, tag_id) VALUES (?, 1)',
                 [$imageId]
             );
 
@@ -221,7 +262,7 @@ namespace Piwigo\Tests\Integration {
                 self::assertContains(1, $bypassed, 'an explicit tag_id filter always bypasses this cache');
             } finally {
                 $this->conn->executeStatement(
-                    'DELETE FROM ' . 'image_tag' . ' WHERE image_id = ? AND tag_id = 1',
+                    'DELETE FROM image_tag WHERE image_id = ? AND tag_id = 1',
                     [$imageId]
                 );
             }
@@ -229,12 +270,12 @@ namespace Piwigo\Tests\Integration {
 
         // --- tagIdFromTagName() -------------------------------------------
 
-        public function test_tag_id_from_tag_name_returns_the_existing_id_for_a_known_name(): void
+        public function testTagIdFromTagNameReturnsTheExistingIdForAKnownName(): void
         {
             self::assertEquals(TagId::from(1), $this->service->tagIdFromTagName('nature'));
         }
 
-        public function test_tag_id_from_tag_name_creates_a_new_tag_for_an_unknown_name(): void
+        public function testTagIdFromTagNameCreatesANewTagForAnUnknownName(): void
         {
             $name = 'brand-new-tag-' . uniqid();
 
@@ -252,26 +293,30 @@ namespace Piwigo\Tests\Integration {
                         ->fetchOne()
                 );
             } finally {
-                $this->conn->executeStatement('DELETE FROM ' . 'tags' . ' WHERE name = ?', [$name]);
+                $this->conn->executeStatement('DELETE FROM tags WHERE name = ?', [$name]);
             }
         }
 
         // --- setTagsOf()/getImageTagIds() ----------------------------------
 
-        public function test_set_tags_of_creates_then_overwrites_image_tag_associations(): void
+        public function testSetTagsOfCreatesThenOverwritesImageTagAssociations(): void
         {
             // fixture image 4 has no image_tag rows at all (see fixture's
             // own comment above this class), so it's safe to freely
             // set/overwrite here without disturbing any other test.
             try {
-                $this->service->setTagsOf([4 => [TagId::from(1), TagId::from(2)]]);
+                $this->service->setTagsOf([
+                    4 => [TagId::from(1), TagId::from(2)],
+                ]);
                 self::assertEqualsCanonicalizing([TagId::from(1), TagId::from(2)], $this->service->getImageTagIds([4])[4]);
 
                 // Overwrites, not appends -- tag 3 replaces 1+2 entirely.
-                $this->service->setTagsOf([4 => [TagId::from(3)]]);
+                $this->service->setTagsOf([
+                    4 => [TagId::from(3)],
+                ]);
                 self::assertEqualsCanonicalizing([TagId::from(3)], $this->service->getImageTagIds([4])[4]);
             } finally {
-                $this->conn->executeStatement('DELETE FROM ' . 'image_tag' . ' WHERE image_id = 4');
+                $this->conn->executeStatement('DELETE FROM image_tag WHERE image_id = 4');
             }
         }
 
@@ -283,34 +328,42 @@ namespace Piwigo\Tests\Integration {
          * so this would have wrongly reported every image as changed on
          * every call, even when the tag list genuinely didn't change.
          */
-        public function test_compare_image_tag_lists_reports_no_change_when_tags_are_set_to_the_same_values(): void
+        public function testCompareImageTagListsReportsNoChangeWhenTagsAreSetToTheSameValues(): void
         {
             try {
-                $this->service->setTagsOf([4 => [TagId::from(1), TagId::from(2)]]);
+                $this->service->setTagsOf([
+                    4 => [TagId::from(1), TagId::from(2)],
+                ]);
                 $before = $this->service->getImageTagIds([4]);
 
                 // Re-set the exact same tags -- a genuine no-op from the
                 // caller's perspective.
-                $this->service->setTagsOf([4 => [TagId::from(1), TagId::from(2)]]);
+                $this->service->setTagsOf([
+                    4 => [TagId::from(1), TagId::from(2)],
+                ]);
                 $after = $this->service->getImageTagIds([4]);
 
                 self::assertSame([], $this->service->compareImageTagLists($before, $after));
             } finally {
-                $this->conn->executeStatement('DELETE FROM ' . 'image_tag' . ' WHERE image_id = 4');
+                $this->conn->executeStatement('DELETE FROM image_tag WHERE image_id = 4');
             }
         }
 
-        public function test_compare_image_tag_lists_reports_the_image_when_tags_genuinely_change(): void
+        public function testCompareImageTagListsReportsTheImageWhenTagsGenuinelyChange(): void
         {
-            $before = [4 => [TagId::from(1)]];
-            $after = [4 => [TagId::from(1), TagId::from(2)]];
+            $before = [
+                4 => [TagId::from(1)],
+            ];
+            $after = [
+                4 => [TagId::from(1), TagId::from(2)],
+            ];
 
             self::assertSame([4], $this->service->compareImageTagLists($before, $after));
         }
 
         // --- getOrphanTags()/deleteOrphanTags() -----------------------------
 
-        public function test_get_orphan_tags_finds_a_tag_with_no_images_past_the_grace_period(): void
+        public function testGetOrphanTagsFindsATagWithNoImagesPastTheGracePeriod(): void
         {
             $name = 'orphan-tag-' . uniqid();
             $this->conn->insert('tags', [
@@ -327,11 +380,11 @@ namespace Piwigo\Tests\Integration {
 
                 self::assertContains($id, $orphanIds);
             } finally {
-                $this->conn->executeStatement('DELETE FROM ' . 'tags' . ' WHERE id = ?', [$id]);
+                $this->conn->executeStatement('DELETE FROM tags WHERE id = ?', [$id]);
             }
         }
 
-        public function test_delete_orphan_tags_removes_a_genuinely_orphaned_tag(): void
+        public function testDeleteOrphanTagsRemovesAGenuinelyOrphanedTag(): void
         {
             $name = 'orphan-tag-' . uniqid();
             $this->conn->insert('tags', [
@@ -356,7 +409,7 @@ namespace Piwigo\Tests\Integration {
 
         // --- getAvailableTags() with an explicit filter ---------------------
 
-        public function test_get_available_tags_returns_empty_when_the_filter_matches_no_images(): void
+        public function testGetAvailableTagsReturnsEmptyWhenTheFilterMatchesNoImages(): void
         {
             self::assertSame([], $this->service->getAvailableTags([999999]));
         }
@@ -376,7 +429,7 @@ namespace Piwigo\Tests\Integration {
          * keys), plus one more disposable tag with zero image links at all
          * (present in the tags table, absent from $tagCounters).
          */
-        public function test_get_available_tags_skips_a_tag_absent_from_the_counters_once_past_the_1000_id_threshold(): void
+        public function testGetAvailableTagsSkipsATagAbsentFromTheCountersOncePastThe1000IdThreshold(): void
         {
             CurrentUserTestFactory::get()->set(new User(
                 id: UserId::from(2),
@@ -433,7 +486,7 @@ namespace Piwigo\Tests\Integration {
 
         // --- getImageIdsForTags() -------------------------------------------
 
-        public function test_get_image_ids_for_tags_returns_empty_for_no_tag_ids(): void
+        public function testGetImageIdsForTagsReturnsEmptyForNoTagIds(): void
         {
             self::assertSame([], $this->service->getImageIdsForTags([]));
         }
@@ -444,12 +497,12 @@ namespace Piwigo\Tests\Integration {
          * match image 1 (the one image with BOTH), while OR-mode with the
          * same 2 tags matches every image that has either one.
          */
-        public function test_get_image_ids_for_tags_and_mode_requires_every_tag(): void
+        public function testGetImageIdsForTagsAndModeRequiresEveryTag(): void
         {
             self::assertSame([1], $this->service->getImageIdsForTags([TagId::from(1), TagId::from(2)], 'AND'));
         }
 
-        public function test_get_image_ids_for_tags_or_mode_matches_any_tag(): void
+        public function testGetImageIdsForTagsOrModeMatchesAnyTag(): void
         {
             $ids = $this->service->getImageIdsForTags([TagId::from(1), TagId::from(2)], 'OR');
             sort($ids);
@@ -459,14 +512,14 @@ namespace Piwigo\Tests\Integration {
 
         // --- getCommonTags() -------------------------------------------------
 
-        public function test_get_common_tags_returns_empty_for_no_items(): void
+        public function testGetCommonTagsReturnsEmptyForNoItems(): void
         {
             self::assertSame([], $this->service->getCommonTags([], 10, HtmlServiceTestFactory::build()));
         }
 
         // --- addTags() ---------------------------------------------------------
 
-        public function test_add_tags_is_a_no_op_for_empty_tags_or_images(): void
+        public function testAddTagsIsANoOpForEmptyTagsOrImages(): void
         {
             $this->service->addTags([], [5]);
             $this->service->addTags([TagId::from(1)], []);
@@ -484,29 +537,35 @@ namespace Piwigo\Tests\Integration {
          * findIdByName() (returns null, row is gone) and create a brand
          * new tag with a different id instead.
          */
-        public function test_tag_id_from_tag_name_returns_the_cached_id_without_touching_the_db(): void
+        public function testTagIdFromTagNameReturnsTheCachedIdWithoutTouchingTheDb(): void
         {
             $name = 'cache-hit-tag-' . uniqid();
 
             $firstId = $this->service->tagIdFromTagName($name);
-            $this->conn->executeStatement('DELETE FROM ' . 'tags' . ' WHERE id = ?', [$firstId->value]);
+            $this->conn->executeStatement('DELETE FROM tags WHERE id = ?', [$firstId->value]);
 
             try {
                 $secondId = $this->service->tagIdFromTagName($name);
 
                 self::assertEquals($firstId, $secondId);
-                $tagCount = $this->conn->createQueryBuilder()->select('COUNT(*)')->from('tags')->where('name = :name')->setParameter('name', $name)->executeQuery()->fetchOne();
+                $tagCount = $this->conn->createQueryBuilder()
+                    ->select('COUNT(*)')
+                    ->from('tags')
+                    ->where('name = :name')
+                    ->setParameter('name', $name)
+                    ->executeQuery()
+                    ->fetchOne();
                 self::assertSame(
                     0,
                     is_numeric($tagCount) ? (int) $tagCount : -1,
                     'the cache hit must never re-insert the deleted row'
                 );
             } finally {
-                $this->conn->executeStatement('DELETE FROM ' . 'tags' . ' WHERE name = ?', [$name]);
+                $this->conn->executeStatement('DELETE FROM tags WHERE name = ?', [$name]);
             }
         }
 
-        public function test_tag_id_from_tag_name_throws_when_the_render_tag_url_handler_returns_something_other_than_a_render_tag_url_instance(): void
+        public function testTagIdFromTagNameThrowsWhenTheRenderTagUrlHandlerReturnsSomethingOtherThanARenderTagUrlInstance(): void
         {
             // addEventHandler(), not addTypedHandler() -- a real plugin
             // handler is untyped from PHPStan's perspective, and this test
@@ -522,7 +581,7 @@ namespace Piwigo\Tests\Integration {
                 $this->service->tagIdFromTagName($name);
             } finally {
                 EventDispatcherTestFactory::get()->reset();
-                $this->conn->executeStatement('DELETE FROM ' . 'tags' . ' WHERE name = ?', [$name]);
+                $this->conn->executeStatement('DELETE FROM tags WHERE name = ?', [$name]);
             }
         }
 
@@ -538,7 +597,7 @@ namespace Piwigo\Tests\Integration {
          * for why (a real injection in the ExtendedDescription plugin's
          * actual handler, which built raw SQL from an unescaped tag name).
          */
-        public function test_tag_id_from_tag_name_matches_via_a_plugin_supplied_like_pattern(): void
+        public function testTagIdFromTagNameMatchesViaAPluginSuppliedLikePattern(): void
         {
             EventDispatcherTestFactory::get()->addTypedHandler(
                 GetTagNameLikeWhere::class,
@@ -560,7 +619,7 @@ namespace Piwigo\Tests\Integration {
          * gets created, instead of injecting a tautology that would have
          * resolved to an arbitrary existing tag.
          */
-        public function test_tag_id_from_tag_name_treats_a_plugin_supplied_sql_injection_attempt_as_a_literal_value(): void
+        public function testTagIdFromTagNameTreatsAPluginSuppliedSqlInjectionAttemptAsALiteralValue(): void
         {
             EventDispatcherTestFactory::get()->addTypedHandler(
                 GetTagNameLikeWhere::class,
@@ -585,20 +644,20 @@ namespace Piwigo\Tests\Integration {
                 );
             } finally {
                 EventDispatcherTestFactory::get()->reset();
-                $this->conn->executeStatement('DELETE FROM ' . 'tags' . ' WHERE name = ?', [$tagName]);
+                $this->conn->executeStatement('DELETE FROM tags WHERE name = ?', [$tagName]);
             }
         }
 
         // --- getImageTagIds() --------------------------------------------------
 
-        public function test_get_image_tag_ids_returns_empty_for_no_image_ids(): void
+        public function testGetImageTagIdsReturnsEmptyForNoImageIds(): void
         {
             self::assertSame([], $this->service->getImageTagIds([]));
         }
 
         // --- createTag() ---------------------------------------------------------
 
-        public function test_create_tag_returns_an_error_for_an_existing_name(): void
+        public function testCreateTagReturnsAnErrorForAnExistingName(): void
         {
             self::assertSame('Tag "nature" already exists', $this->service->createTag('nature')->error);
         }
@@ -610,29 +669,36 @@ namespace Piwigo\Tests\Integration {
          * (family) -- each rendered as a '~~id~~'-marked, alphabetically
          * sorted entry (see getTagIds()'s own docblock for the marker format).
          */
-        public function test_get_tag_list_for_image_returns_the_images_tags_sorted_alphabetically(): void
+        public function testGetTagListForImageReturnsTheImagesTagsSortedAlphabetically(): void
         {
             $result = $this->service->getTagListForImage(ImageId::from(1), HtmlServiceTestFactory::build());
 
             self::assertSame(
-                ['~~3~~' => 'family', '~~1~~' => 'nature', '~~2~~' => 'travel'],
+                [
+                    '~~3~~' => 'family',
+                    '~~1~~' => 'nature',
+                    '~~2~~' => 'travel',
+                ],
                 array_combine(array_column($result, 'id'), array_column($result, 'name'))
             );
         }
 
-        public function test_get_tag_list_for_image_returns_empty_for_an_image_with_no_tags(): void
+        public function testGetTagListForImageReturnsEmptyForAnImageWithNoTags(): void
         {
             self::assertSame([], $this->service->getTagListForImage(ImageId::from(999_999), HtmlServiceTestFactory::build()));
         }
 
         // --- getTagListByIds() -----------------------------------------------------
 
-        public function test_get_tag_list_by_ids_returns_the_matching_tags_sorted_alphabetically(): void
+        public function testGetTagListByIdsReturnsTheMatchingTagsSortedAlphabetically(): void
         {
             $result = $this->service->getTagListByIds([1, 2], HtmlServiceTestFactory::build());
 
             self::assertSame(
-                ['~~1~~' => 'nature', '~~2~~' => 'travel'],
+                [
+                    '~~1~~' => 'nature',
+                    '~~2~~' => 'travel',
+                ],
                 array_combine(array_column($result, 'id'), array_column($result, 'name'))
             );
         }
@@ -644,7 +710,7 @@ namespace Piwigo\Tests\Integration {
          * against $nameForDiff) -- both the original and surviving alt
          * entries share the same '~~id~~' marker.
          */
-        public function test_get_tag_list_by_ids_includes_surviving_alt_names_when_not_restricted_to_user_language(): void
+        public function testGetTagListByIdsIncludesSurvivingAltNamesWhenNotRestrictedToUserLanguage(): void
         {
             EventDispatcherTestFactory::get()->addTypedHandler(
                 GetTagAltNames::class,
@@ -668,7 +734,7 @@ namespace Piwigo\Tests\Integration {
 
         // --- getTagIds() ---------------------------------------------------------
 
-        public function test_get_tag_ids_parses_existing_tag_id_markers(): void
+        public function testGetTagIdsParsesExistingTagIdMarkers(): void
         {
             self::assertEquals(
                 [TagId::from(1), TagId::from(2)],
@@ -676,7 +742,7 @@ namespace Piwigo\Tests\Integration {
             );
         }
 
-        public function test_get_tag_ids_creates_a_new_tag_for_a_plain_name_when_allowed(): void
+        public function testGetTagIdsCreatesANewTagForAPlainNameWhenAllowed(): void
         {
             $name = 'freeform-tag-' . uniqid();
 
@@ -686,14 +752,18 @@ namespace Piwigo\Tests\Integration {
                 self::assertCount(1, $ids);
                 self::assertSame(
                     $name,
-                    $this->conn->createQueryBuilder()->select('name')->from('tags')->where('id = :id')->setParameter('id', $ids[0]->value)->executeQuery()->fetchOne()
+                    $this->conn->createQueryBuilder()
+                        ->select('name')
+                        ->from('tags')
+                        ->where('id = :id')
+                        ->setParameter('id', $ids[0]->value)->executeQuery()->fetchOne()
                 );
             } finally {
-                $this->conn->executeStatement('DELETE FROM ' . 'tags' . ' WHERE name = ?', [$name]);
+                $this->conn->executeStatement('DELETE FROM tags WHERE name = ?', [$name]);
             }
         }
 
-        public function test_get_tag_ids_skips_a_plain_name_when_creation_is_disallowed(): void
+        public function testGetTagIdsSkipsAPlainNameWhenCreationIsDisallowed(): void
         {
             self::assertSame([], $this->service->getTagIds(['brand-new-name-' . uniqid()], false));
         }

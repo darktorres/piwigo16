@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Config\ConfigLoader;
 use Piwigo\Config\MissingRequiredConfigException;
+use Piwigo\Tests\Support\CurrentConfigTestFactory;
 
 beforeEach(function (): void {
     CurrentConfigTestFactory::get()->reset();

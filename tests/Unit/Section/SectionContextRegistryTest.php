@@ -13,7 +13,8 @@ use Piwigo\Section\SectionContextRegistry;
 test('current returns null before anything is set', function (): void {
     $registry = new SectionContextRegistry();
 
-    expect($registry->current())->toBeNull();
+    expect($registry->current())
+        ->toBeNull();
 });
 
 test('set stores the context and current returns the same instance', function (): void {
@@ -22,7 +23,8 @@ test('set stores the context and current returns the same instance', function ()
 
     $registry->set($context);
 
-    expect($registry->current())->toBe($context);
+    expect($registry->current())
+        ->toBe($context);
 });
 
 test('set overwrites a previously stored context', function (): void {
@@ -33,7 +35,8 @@ test('set overwrites a previously stored context', function (): void {
     $registry->set($first);
     $registry->set($second);
 
-    expect($registry->current())->toBe($second);
+    expect($registry->current())
+        ->toBe($second);
 });
 
 test('reset clears the stored context', function (): void {
@@ -42,5 +45,6 @@ test('reset clears the stored context', function (): void {
 
     $registry->reset();
 
-    expect($registry->current())->toBeNull();
+    expect($registry->current())
+        ->toBeNull();
 });

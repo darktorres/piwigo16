@@ -29,7 +29,7 @@ final class DbInfoTest extends IntegrationTestCase
         $this->dbInfo = new DbInfo(DbConnection::build());
     }
 
-    public function test_version_returns_a_real_non_empty_mysql_version_string(): void
+    public function testVersionReturnsARealNonEmptyMysqlVersionString(): void
     {
         $version = $this->dbInfo->version();
 
@@ -49,10 +49,10 @@ final class DbInfoTest extends IntegrationTestCase
      * Postgres, not just that a fingerprint string of the right shape
      * comes back.
      */
-    public function test_get_table_fingerprint_matches_the_real_epoch_and_row_count(): void
+    public function testGetTableFingerprintMatchesTheRealEpochAndRowCount(): void
     {
         $conn = DbConnection::build();
-        $expectedCount = $conn->fetchOne('SELECT COUNT(*) FROM ' . 'categories');
+        $expectedCount = $conn->fetchOne('SELECT COUNT(*) FROM categories');
 
         $fingerprint = $this->dbInfo->getTableFingerprint('categories');
 

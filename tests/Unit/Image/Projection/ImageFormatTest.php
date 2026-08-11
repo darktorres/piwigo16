@@ -23,10 +23,14 @@ test('fromRow narrows a full real row', function (): void {
         'filesize' => '2048',
     ]);
 
-    expect($format->formatId)->toBe(3);
-    expect($format->imageId)->toEqual(ImageId::from(10));
-    expect($format->ext)->toBe('raw');
-    expect($format->filesize)->toBe(2048);
+    expect($format->formatId)
+        ->toBe(3);
+    expect($format->imageId)
+        ->toEqual(ImageId::from(10));
+    expect($format->ext)
+        ->toBe('raw');
+    expect($format->filesize)
+        ->toBe(2048);
 });
 
 /**
@@ -59,8 +63,10 @@ test('fromRow defaults format_id to 0 and ext to an empty string when the row om
         'image_id' => '4',
     ]);
 
-    expect($format->formatId)->toBe(0);
-    expect($format->ext)->toBe('');
+    expect($format->formatId)
+        ->toBe(0);
+    expect($format->ext)
+        ->toBe('');
 });
 
 test('fromEntity copies every field from a real ImageFormatEntity', function (): void {
@@ -73,10 +79,14 @@ test('fromEntity copies every field from a real ImageFormatEntity', function ():
 
     $format = ImageFormat::fromEntity($entity);
 
-    expect($format->formatId)->toBe(7);
-    expect($format->imageId)->toEqual(ImageId::from(5));
-    expect($format->ext)->toBe('jpg');
-    expect($format->filesize)->toBe(1024);
+    expect($format->formatId)
+        ->toBe(7);
+    expect($format->imageId)
+        ->toEqual(ImageId::from(5));
+    expect($format->ext)
+        ->toBe('jpg');
+    expect($format->filesize)
+        ->toBe(1024);
 });
 
 test('fromEntity defaults formatId to 0 when the entity has none yet', function (): void {
@@ -98,10 +108,11 @@ test('toArray round-trips every field', function (): void {
         filesize: 512,
     );
 
-    expect($format->toArray())->toBe([
-        'format_id' => 1,
-        'image_id' => 2,
-        'ext' => 'webp',
-        'filesize' => 512,
-    ]);
+    expect($format->toArray())
+        ->toBe([
+            'format_id' => 1,
+            'image_id' => 2,
+            'ext' => 'webp',
+            'filesize' => 512,
+        ]);
 });

@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Contract;
 
+use Doctrine\DBAL\Connection;
 use Override;
 use Piwigo\Db\AdvisorySessionLock;
-use Doctrine\DBAL\Connection;
 use Piwigo\Db\DbConnection;
 
 /**
@@ -22,15 +22,21 @@ use Piwigo\Db\DbConnection;
  */
 final class WsImagesUploadConcurrencyTest extends ContractTestCase
 {
-    /** 1x1 white PNG, base64-decoded at runtime to avoid binary in source. */
+    /**
+     * 1x1 white PNG, base64-decoded at runtime to avoid binary in source.
+     */
     private const string TINY_PNG_B64 = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwADhQGAWjR9awAAAABJRU5ErkJggg==';
 
     private Connection $conn;
 
-    /** @var list<int> image ids created by a test, deleted in tearDown. */
+    /**
+     * @var list<int> image ids created by a test, deleted in tearDown.
+     */
     private array $createdImageIds = [];
 
-    /** @var array<1|2, resource>|null */
+    /**
+     * @var array<1|2, resource>|null
+     */
     private ?array $lockHolderPipes = null;
 
     #[Override]
@@ -45,7 +51,7 @@ final class WsImagesUploadConcurrencyTest extends ContractTestCase
     protected function tearDown(): void
     {
         foreach ($this->createdImageIds as $id) {
-            $this->conn->executeStatement('DELETE FROM ' . 'images' . ' WHERE id = ?', [$id]);
+            $this->conn->executeStatement('DELETE FROM images WHERE id = ?', [$id]);
         }
         parent::tearDown();
     }
@@ -133,7 +139,9 @@ final class WsImagesUploadConcurrencyTest extends ContractTestCase
             $cmd = $this->psqlCliCommand();
             $cmd[] = '-c';
             $cmd[] = $sql;
-            $env = $this->dbPass !== '' ? array_merge(getenv(), ['PGPASSWORD' => $this->dbPass]) : null;
+            $env = $this->dbPass !== '' ? array_merge(getenv(), [
+                'PGPASSWORD' => $this->dbPass,
+            ]) : null;
         } else {
             $sql = sprintf(
                 "SELECT GET_LOCK('%s', 5); SELECT SLEEP(0.3); INSERT INTO %s (file, path, md5sum) VALUES ('%s', 'upload/%s', '%s'); SELECT RELEASE_LOCK('%s');",
@@ -150,7 +158,10 @@ final class WsImagesUploadConcurrencyTest extends ContractTestCase
             $env = null;
         }
 
-        $descriptors = [1 => ['pipe', 'w'], 2 => ['pipe', 'w']];
+        $descriptors = [
+            1 => ['pipe', 'w'],
+            2 => ['pipe', 'w'],
+        ];
         $proc = proc_open($cmd, $descriptors, $pipes, null, $env);
         self::assertIsResource($proc, 'proc_open failed for the background lock-holder process');
         $this->lockHolderPipes = $pipes;
@@ -167,7 +178,7 @@ final class WsImagesUploadConcurrencyTest extends ContractTestCase
      * duplicate error rather than racing past the check and inserting a
      * second row for the same file.
      */
-    public function test_add_with_check_uniqueness_blocks_until_a_concurrent_same_value_upload_finishes_then_correctly_detects_the_duplicate(): void
+    public function testAddWithCheckUniquenessBlocksUntilAConcurrentSameValueUploadFinishesThenCorrectlyDetectsTheDuplicate(): void
     {
         $md5sum = md5($this->pngBytes() . uniqid('', true));
         $lockName = $this->uploadUniquenessLockName($md5sum);
@@ -204,7 +215,7 @@ final class WsImagesUploadConcurrencyTest extends ContractTestCase
             $stderr = $this->lockHolderPipes !== null ? stream_get_contents($this->lockHolderPipes[2]) : '';
             $exit = proc_close($proc);
             self::assertSame(0, $exit, "background lock-holder process failed. stdout=[{$stdout}] stderr=[{$stderr}]");
-            $this->conn->executeStatement('DELETE FROM ' . 'images' . ' WHERE md5sum = ?', [$md5sum]);
+            $this->conn->executeStatement('DELETE FROM images WHERE md5sum = ?', [$md5sum]);
         }
     }
 
@@ -214,7 +225,7 @@ final class WsImagesUploadConcurrencyTest extends ContractTestCase
      * (via the hashed lock name), not a single global serialization point
      * that would otherwise turn every upload into a queue.
      */
-    public function test_add_with_check_uniqueness_for_a_different_value_is_never_blocked_by_an_unrelated_held_lock(): void
+    public function testAddWithCheckUniquenessForADifferentValueIsNeverBlockedByAnUnrelatedHeldLock(): void
     {
         $heldMd5sum = md5(uniqid('', true));
         $heldLockName = $this->uploadUniquenessLockName($heldMd5sum);
@@ -260,7 +271,7 @@ final class WsImagesUploadConcurrencyTest extends ContractTestCase
      * same value -- this is a deliberate, intentional escape hatch, not a
      * gap the lock should close.
      */
-    public function test_add_with_check_uniqueness_false_is_never_blocked_even_when_the_same_value_is_locked(): void
+    public function testAddWithCheckUniquenessFalseIsNeverBlockedEvenWhenTheSameValueIsLocked(): void
     {
         $sum = md5($this->pngBytes() . uniqid('', true));
         $lockName = $this->uploadUniquenessLockName($sum);

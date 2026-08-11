@@ -22,10 +22,11 @@ use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
  * concurrently-running Browser tests (including this very batch's own
  * group-related PageRenderer tests) may create groups at any time.
  */
-
 it('sends an album notification email to selected users and reports how many were sent', function (): void {
     $page = H::loginAsAdmin($this);
-    $album = H::wsCall($page, 'pwg.categories.add', ['name' => 'Notification Test Album ' . uniqid()]);
+    $album = H::wsCall($page, 'pwg.categories.add', [
+        'name' => 'Notification Test Album ' . uniqid(),
+    ]);
     $albumResult = $album['result'] ?? null;
     if (! is_array($albumResult) || ! is_numeric($albumResult['id'] ?? null)) {
         throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($album, true));
@@ -57,7 +58,9 @@ it('sends an album notification email to selected users and reports how many wer
 
 it('resolves the representative-photo image query and injects an auth_key URL param for a normal-status recipient', function (): void {
     $page = H::loginAsAdmin($this);
-    $album = H::wsCall($page, 'pwg.categories.add', ['name' => 'Notification Repr Album ' . uniqid()]);
+    $album = H::wsCall($page, 'pwg.categories.add', [
+        'name' => 'Notification Repr Album ' . uniqid(),
+    ]);
     $albumResult = $album['result'] ?? null;
     if (! is_array($albumResult) || ! is_numeric($albumResult['id'] ?? null)) {
         throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($album, true));
@@ -109,7 +112,9 @@ it('resolves the representative-photo image query and injects an auth_key URL pa
 
 it('populates the private-album permission_url and direct/indirect notified-user queries when at least one group exists', function (): void {
     $page = H::loginAsAdmin($this);
-    $album = H::wsCall($page, 'pwg.categories.add', ['name' => 'Notification Private Album ' . uniqid()]);
+    $album = H::wsCall($page, 'pwg.categories.add', [
+        'name' => 'Notification Private Album ' . uniqid(),
+    ]);
     $albumResult = $album['result'] ?? null;
     if (! is_array($albumResult) || ! is_numeric($albumResult['id'] ?? null)) {
         throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($album, true));
@@ -117,7 +122,9 @@ it('populates the private-album permission_url and direct/indirect notified-user
     $albumId = (int) $albumResult['id'];
 
     $groupName = 'Notification Private Group ' . uniqid();
-    $group = H::wsCall($page, 'pwg.groups.add', ['name' => $groupName]);
+    $group = H::wsCall($page, 'pwg.groups.add', [
+        'name' => $groupName,
+    ]);
     $groupResult = $group['result'] ?? null;
     $groups = is_array($groupResult) ? ($groupResult['groups'] ?? null) : null;
     $firstGroup = is_array($groups) ? ($groups[0] ?? null) : null;
@@ -187,7 +194,9 @@ it('populates the private-album permission_url and direct/indirect notified-user
 
 it('sends an album notification email to a group and reports the group name', function (): void {
     $page = H::loginAsAdmin($this);
-    $album = H::wsCall($page, 'pwg.categories.add', ['name' => 'Notification Group Album ' . uniqid()]);
+    $album = H::wsCall($page, 'pwg.categories.add', [
+        'name' => 'Notification Group Album ' . uniqid(),
+    ]);
     $albumResult = $album['result'] ?? null;
     if (! is_array($albumResult) || ! is_numeric($albumResult['id'] ?? null)) {
         throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($album, true));
@@ -197,7 +206,9 @@ it('sends an album notification email to a group and reports the group name', fu
     // pwg.groups.add's own response nests the created group under
     // result.groups[0], not a bare result.id (confirmed live -- unlike
     // pwg.categories.add's flat result.id shape).
-    $group = H::wsCall($page, 'pwg.groups.add', ['name' => 'Notification Test Group ' . uniqid()]);
+    $group = H::wsCall($page, 'pwg.groups.add', [
+        'name' => 'Notification Test Group ' . uniqid(),
+    ]);
     $groupResult = $group['result'] ?? null;
     $groups = is_array($groupResult) ? ($groupResult['groups'] ?? null) : null;
     $firstGroup = is_array($groups) ? ($groups[0] ?? null) : null;

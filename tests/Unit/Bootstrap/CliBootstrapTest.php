@@ -2,16 +2,16 @@
 
 declare(strict_types=1);
 
-use Piwigo\Core\ShutdownHandler;
-use Piwigo\Tests\Support\CurrentUserTestFactory;
-use Piwigo\Users\UserStatus;
-use Piwigo\Tests\Support\CurrentConfigServiceTestFactory;
 use Piwigo\Bootstrap\CliBootstrap;
 use Piwigo\Config\ConfigService;
 use Piwigo\Config\CurrentConfigService;
 use Piwigo\Core\Kernel;
+use Piwigo\Core\ShutdownHandler;
+use Piwigo\Tests\Support\CurrentConfigServiceTestFactory;
+use Piwigo\Tests\Support\CurrentUserTestFactory;
 use Piwigo\Tests\Support\KernelContainerOverride;
 use Piwigo\Users\CurrentUser;
+use Piwigo\Users\UserStatus;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
 
@@ -45,21 +45,26 @@ test('config/commands.php entries resolve to registered command names', function
 
     /** @var list<class-string<Command>> $commandClasses */
     $commandClasses = require dirname(__DIR__, 3) . '/config/commands.php';
-    expect($commandClasses)->not->toBe([]);
+    expect($commandClasses)
+        ->not->toBe([]);
 
     foreach ($commandClasses as $commandClass) {
         expect(is_subclass_of($commandClass, Command::class))->toBeTrue();
 
-        $attribute = new ReflectionClass($commandClass)->getAttributes(AsCommand::class)[0]->newInstance();
-        expect($application->has($attribute->name))->toBeTrue();
+        $attribute = new ReflectionClass($commandClass)
+            ->getAttributes(AsCommand::class)[0]->newInstance();
+        expect($application->has($attribute->name))
+            ->toBeTrue();
     }
 });
 
 test('the built Application also exposes the Console built-in commands', function (): void {
     $application = CliBootstrap::buildApplication();
 
-    expect($application->has('list'))->toBeTrue()
-        ->and($application->has('help'))->toBeTrue();
+    expect($application->has('list'))
+        ->toBeTrue()
+        ->and($application->has('help'))
+        ->toBeTrue();
 });
 
 test('buildApplication attaches a real CurrentUser (guest) globally', function (): void {
@@ -91,14 +96,16 @@ test('run() installs the shutdown handler, builds the Application and executes t
 
     $exitCode = CliBootstrap::run(['piwigo', 'list', '--quiet']);
 
-    expect(pcntl_signal_get_handler(SIGTERM))->not->toBe(SIG_DFL);
+    expect(pcntl_signal_get_handler(SIGTERM))
+        ->not->toBe(SIG_DFL);
 
     // Symfony Console's own Command::SUCCESS -- 'list' just enumerates
     // the registered commands, so a real, side-effect-free way to prove
     // run() actually dispatched into a working Application rather than
     // merely constructing one (buildApplication() alone, as covered by
     // every other test in this file, never calls ->run() at all).
-    expect($exitCode)->toBe(0);
+    expect($exitCode)
+        ->toBe(0);
 });
 
 test('buildApplication throws when the container returns an unexpected type for ConfigService', function (): void {

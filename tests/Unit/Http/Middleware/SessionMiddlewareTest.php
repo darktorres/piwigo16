@@ -24,12 +24,13 @@ use Psr\Http\Server\RequestHandlerInterface;
 
 function sessionMiddlewareCapturingHandler(): RequestHandlerInterface
 {
-    return new class implements RequestHandlerInterface {
+    return new class() implements RequestHandlerInterface {
         #[Override]
         public function handle(ServerRequestInterface $request): ResponseInterface
         {
             $session = $request->getAttribute(Session::class);
-            expect($session)->toBeInstanceOf(Session::class);
+            expect($session)
+                ->toBeInstanceOf(Session::class);
 
             return new Response(200, [], 'ok');
         }
@@ -37,10 +38,13 @@ function sessionMiddlewareCapturingHandler(): RequestHandlerInterface
 }
 
 test('attaches a Session VO as a request attribute and passes the response through', function (): void {
-    $response = new SessionMiddleware()->process(new ServerRequest('GET', '/'), sessionMiddlewareCapturingHandler());
+    $response = new SessionMiddleware()
+        ->process(new ServerRequest('GET', '/'), sessionMiddlewareCapturingHandler());
 
-    expect($response->getStatusCode())->toBe(200);
-    expect((string) $response->getBody())->toBe('ok');
+    expect($response->getStatusCode())
+        ->toBe(200);
+    expect((string) $response->getBody())
+        ->toBe('ok');
 });
 
 test('does not error when a session is already reported active', function (): void {
@@ -51,8 +55,10 @@ test('does not error when a session is already reported active', function (): vo
     $response = $middleware->process(new ServerRequest('GET', '/'), sessionMiddlewareCapturingHandler());
     $response2 = $middleware->process(new ServerRequest('GET', '/'), sessionMiddlewareCapturingHandler());
 
-    expect($response->getStatusCode())->toBe(200);
-    expect($response2->getStatusCode())->toBe(200);
+    expect($response->getStatusCode())
+        ->toBe(200);
+    expect($response2->getStatusCode())
+        ->toBe(200);
 });
 
 test('activates a session when none is active yet', function (): void {
@@ -65,9 +71,11 @@ test('activates a session when none is active yet', function (): void {
         session_write_close();
     }
 
-    new SessionMiddleware()->process(new ServerRequest('GET', '/'), sessionMiddlewareCapturingHandler());
+    new SessionMiddleware()
+        ->process(new ServerRequest('GET', '/'), sessionMiddlewareCapturingHandler());
 
-    expect(session_status())->toBe(PHP_SESSION_ACTIVE);
+    expect(session_status())
+        ->toBe(PHP_SESSION_ACTIVE);
 });
 
 test('does not wipe pre-existing $_SESSION data when a session is already active', function (): void {
@@ -81,9 +89,12 @@ test('does not wipe pre-existing $_SESSION data when a session is already active
     if (session_status() !== PHP_SESSION_ACTIVE) {
         session_start();
     }
-    $_SESSION = ['marker' => 'preexisting-value'];
+    $_SESSION = [
+        'marker' => 'preexisting-value',
+    ];
 
-    new SessionMiddleware()->process(new ServerRequest('GET', '/'), sessionMiddlewareCapturingHandler());
+    new SessionMiddleware()
+        ->process(new ServerRequest('GET', '/'), sessionMiddlewareCapturingHandler());
 
     expect($_SESSION['marker'])->toBe('preexisting-value');
 });

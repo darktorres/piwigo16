@@ -6,9 +6,9 @@ namespace Piwigo\Tests\Integration;
 
 use Override;
 use Piwigo\Config\ConfigLoader;
-use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\SchemaDumpService;
+use Piwigo\Tests\Support\CurrentConfigTestFactory;
 
 /**
  * Covers whichever platform `.env.test`'s PIWIGO_DB_DRIVER points this
@@ -65,7 +65,7 @@ final class SchemaDumpServiceTest extends IntegrationTestCase
         parent::tearDown();
     }
 
-    public function test_dump_detects_mysql_and_writes_a_deterministic_schema_file(): void
+    public function testDumpDetectsMysqlAndWritesADeterministicSchemaFile(): void
     {
         $service = new SchemaDumpService(DbConnection::build());
 

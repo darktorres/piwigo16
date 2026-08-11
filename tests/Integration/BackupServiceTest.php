@@ -4,17 +4,17 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Integration;
 
-use Override;
-use RuntimeException;
-use PharData;
-use ReflectionMethod;
-use ReflectionProperty;
 use InvalidArgumentException;
+use Override;
 use Phar;
-use Throwable;
+use PharData;
 use Piwigo\Backup\BackupService;
 use Piwigo\Core\ShutdownHandler;
 use Piwigo\Db\DbCredentials;
+use ReflectionMethod;
+use ReflectionProperty;
+use RuntimeException;
+use Throwable;
 
 /**
  * Real command-level proof for `bin/piwigo backup:create`/`backup:restore`,
@@ -46,7 +46,7 @@ final class BackupServiceTest extends IntegrationTestCase
         parent::setUp();
         $this->setUpConnectionFromEnv();
 
-        if (!self::$fixtureReady) {
+        if (! self::$fixtureReady) {
             $this->resetDatabase();
             $this->loadFixture(dirname(__DIR__, 2) . '/tests/Fixtures/piwigo-17.0.sql');
             self::$fixtureReady = true;
@@ -77,7 +77,7 @@ final class BackupServiceTest extends IntegrationTestCase
         parent::tearDown();
     }
 
-    public function test_constructor_computes_repo_root_and_backups_dir_from_the_real_source_location(): void
+    public function testConstructorComputesRepoRootAndBackupsDirFromTheRealSourceLocation(): void
     {
         // Neither value is otherwise observable through the public API in
         // a way that pins its EXACT value (create()/restore() both still
@@ -105,7 +105,7 @@ final class BackupServiceTest extends IntegrationTestCase
         self::assertSame($repoRoot . '/_data/backups', $backupsDir);
     }
 
-    public function test_create_then_restore_round_trips_real_data(): void
+    public function testCreateThenRestoreRoundTripsRealData(): void
     {
         $service = new BackupService();
 
@@ -140,7 +140,7 @@ final class BackupServiceTest extends IntegrationTestCase
         );
     }
 
-    public function test_restore_rejects_a_corrupt_archive(): void
+    public function testRestoreRejectsACorruptArchive(): void
     {
         $badArchive = tempnam(sys_get_temp_dir(), 'piwigo-bad-backup-');
         self::assertIsString($badArchive);
@@ -156,7 +156,7 @@ final class BackupServiceTest extends IntegrationTestCase
         }
     }
 
-    public function test_run_process_failure_message_includes_the_description_and_the_real_error_output(): void
+    public function testRunProcessFailureMessageIncludesTheDescriptionAndTheRealErrorOutput(): void
     {
         // Distinct from test_restore_rejects_a_corrupt_archive above
         // (which only asserts the exception TYPE): this pins the exact
@@ -186,7 +186,7 @@ final class BackupServiceTest extends IntegrationTestCase
         self::assertGreaterThan(strlen('extract backup archive failed: '), strlen($threw->getMessage()));
     }
 
-    public function test_create_recreates_the_backups_directory_when_it_is_missing(): void
+    public function testCreateRecreatesTheBackupsDirectoryWhenItIsMissing(): void
     {
         $backupsDir = dirname(__DIR__, 2) . '/_data/backups';
         self::assertDirectoryExists($backupsDir, 'Precondition: repo checkout should already have this dir');
@@ -200,7 +200,7 @@ final class BackupServiceTest extends IntegrationTestCase
         self::assertFileExists($this->archivePath);
     }
 
-    public function test_create_includes_a_present_local_config_file_in_the_archive(): void
+    public function testCreateIncludesAPresentLocalConfigFileInTheArchive(): void
     {
         // Confirmed empirically (see this class' own docblock/BackupService's
         // class docblock): this dev checkout has no local/config/config.inc.php
@@ -224,7 +224,8 @@ final class BackupServiceTest extends IntegrationTestCase
         mkdir($extractDir);
 
         try {
-            new PharData($this->archivePath)->extractTo($extractDir);
+            new PharData($this->archivePath)
+                ->extractTo($extractDir);
 
             self::assertFileExists($extractDir . '/config.inc.php');
             self::assertSame(
@@ -251,7 +252,7 @@ final class BackupServiceTest extends IntegrationTestCase
         }
     }
 
-    public function test_create_writes_a_real_database_dump_using_the_expected_mysqldump_invocation(): void
+    public function testCreateWritesARealDatabaseDumpUsingTheExpectedMysqldumpInvocation(): void
     {
         // Distinct from test_create_then_restore_round_trips_real_data
         // above (which only proves the round trip as a whole works): this
@@ -278,7 +279,8 @@ final class BackupServiceTest extends IntegrationTestCase
         mkdir($extractDir);
 
         try {
-            new PharData($this->archivePath)->extractTo($extractDir);
+            new PharData($this->archivePath)
+                ->extractTo($extractDir);
 
             self::assertFileExists($extractDir . '/db.sql');
             $dump = (string) file_get_contents($extractDir . '/db.sql');
@@ -301,7 +303,7 @@ final class BackupServiceTest extends IntegrationTestCase
         }
     }
 
-    public function test_create_registers_a_shutdown_cleanup_closure(): void
+    public function testCreateRegistersAShutdownCleanupClosure(): void
     {
         // Distinct from test_creates_shutdown_cleanup_closure_is_a_no_op_
         // after_normal_completion() below, which only proves running an
@@ -321,7 +323,7 @@ final class BackupServiceTest extends IntegrationTestCase
         self::assertCount(1, $callbackValues);
     }
 
-    public function test_create_removes_its_own_work_dir_after_a_successful_run(): void
+    public function testCreateRemovesItsOwnWorkDirAfterASuccessfulRun(): void
     {
         // create()'s own workDir is always named with the
         // 'piwigo-backup-create-' prefix (see makeTempDir()'s own call
@@ -343,7 +345,7 @@ final class BackupServiceTest extends IntegrationTestCase
         self::assertSame($before, $after, 'create() should remove its own temp work dir on success');
     }
 
-    public function test_creates_shutdown_cleanup_closure_is_a_no_op_after_normal_completion(): void
+    public function testCreatesShutdownCleanupClosureIsANoOpAfterNormalCompletion(): void
     {
         // create()'s own `finally` block already removes its workDir by
         // the time create() returns -- but it also registers a
@@ -367,7 +369,7 @@ final class BackupServiceTest extends IntegrationTestCase
         self::assertFileExists($this->archivePath);
     }
 
-    public function test_restore_registers_a_shutdown_cleanup_closure(): void
+    public function testRestoreRegistersAShutdownCleanupClosure(): void
     {
         // Same reasoning as test_create_registers_a_shutdown_cleanup_
         // closure() above, for restore()'s own registration call --
@@ -398,7 +400,7 @@ final class BackupServiceTest extends IntegrationTestCase
         self::assertCount(1, $callbackValues);
     }
 
-    public function test_restore_removes_its_own_work_dir_after_a_successful_run(): void
+    public function testRestoreRemovesItsOwnWorkDirAfterASuccessfulRun(): void
     {
         // Same reasoning as test_create_removes_its_own_work_dir_after_a_
         // successful_run() above, for restore()'s own
@@ -430,7 +432,7 @@ final class BackupServiceTest extends IntegrationTestCase
         self::assertSame($before, $after, 'restore() should remove its own temp work dir on success');
     }
 
-    public function test_restores_shutdown_cleanup_closure_is_a_no_op_after_normal_completion(): void
+    public function testRestoresShutdownCleanupClosureIsANoOpAfterNormalCompletion(): void
     {
         // Same reasoning as the create() variant above, but for restore()'s
         // own registered closure -- deliberately triggered here via a
@@ -471,7 +473,7 @@ final class BackupServiceTest extends IntegrationTestCase
         // already removed the same workDir moments earlier.
     }
 
-    public function test_restore_rejects_a_nonexistent_archive_path(): void
+    public function testRestoreRejectsANonexistentArchivePath(): void
     {
         $missingPath = sys_get_temp_dir() . '/piwigo-does-not-exist-' . bin2hex(random_bytes(8)) . '.tar.gz';
         self::assertFileDoesNotExist($missingPath);
@@ -496,7 +498,7 @@ final class BackupServiceTest extends IntegrationTestCase
         self::assertSame("Backup archive not found: {$missingPath}", $threw->getMessage());
     }
 
-    public function test_restore_extracts_the_archive_using_the_expected_tar_invocation(): void
+    public function testRestoreExtractsTheArchiveUsingTheExpectedTarInvocation(): void
     {
         // Uses a minimal hand-built archive (same makeTestArchive() helper
         // as the malformed-manifest tests below) instead of the full DB
@@ -540,7 +542,7 @@ final class BackupServiceTest extends IntegrationTestCase
         self::assertSame('1', $this->queryScalarFromDatabase($this->scratchDb, 'SELECT 1'));
     }
 
-    public function test_restore_rejects_an_archive_missing_db_sql(): void
+    public function testRestoreRejectsAnArchiveMissingDbSql(): void
     {
         // A structurally valid archive (real gzip, real manifest.json
         // passing every readManifest() check) that simply never included
@@ -568,7 +570,7 @@ final class BackupServiceTest extends IntegrationTestCase
         self::assertSame("Invalid backup archive: missing db.sql in {$archivePath}", $threw->getMessage());
     }
 
-    public function test_restore_rejects_an_archive_missing_manifest_json(): void
+    public function testRestoreRejectsAnArchiveMissingManifestJson(): void
     {
         $archivePath = $this->makeTestArchive([
             'db.sql' => 'SELECT 1;',
@@ -589,12 +591,14 @@ final class BackupServiceTest extends IntegrationTestCase
         self::assertSame("Invalid backup archive: missing manifest.json in {$archivePath}", $threw->getMessage());
     }
 
-    public function test_restore_rejects_an_archive_with_a_malformed_manifest(): void
+    public function testRestoreRejectsAnArchiveWithAMalformedManifest(): void
     {
         $archivePath = $this->makeTestArchive([
             // Valid JSON, but missing every key readManifest() requires --
             // distinct from the missing-manifest.json-entirely case above.
-            'manifest.json' => json_encode(['unrelated' => 'shape'], JSON_THROW_ON_ERROR),
+            'manifest.json' => json_encode([
+                'unrelated' => 'shape',
+            ], JSON_THROW_ON_ERROR),
             'db.sql' => 'SELECT 1;',
         ]);
 
@@ -613,7 +617,7 @@ final class BackupServiceTest extends IntegrationTestCase
         self::assertSame("Invalid backup archive: malformed manifest.json in {$archivePath}", $threw->getMessage());
     }
 
-    public function test_restore_database_throws_when_the_dump_file_cannot_be_opened_for_reading(): void
+    public function testRestoreDatabaseThrowsWhenTheDumpFileCannotBeOpenedForReading(): void
     {
         // restoreDatabase() is private, reached via reflection directly
         // (same technique as TelemetryServiceTest's detectDriverLabel()
@@ -653,7 +657,7 @@ final class BackupServiceTest extends IntegrationTestCase
         self::assertSame("Unable to open dump file for reading: {$dumpPath}", $threw->getMessage());
     }
 
-    public function test_restore_database_throws_when_the_mysql_process_itself_fails(): void
+    public function testRestoreDatabaseThrowsWhenTheMysqlProcessItselfFails(): void
     {
         // Distinct from the fopen() failure above -- here the dump file
         // opens fine, but the real mysql/psql CLI process fails (confirmed
@@ -690,7 +694,7 @@ final class BackupServiceTest extends IntegrationTestCase
         );
     }
 
-    public function test_make_temp_dir_builds_its_path_under_the_system_temp_dir_with_extra_entropy(): void
+    public function testMakeTempDirBuildsItsPathUnderTheSystemTempDirWithExtraEntropy(): void
     {
         // uniqid($prefix, true) (more_entropy=true) appends a '.' plus 8
         // extra random digits after the 13-hex-character timestamp
@@ -714,7 +718,7 @@ final class BackupServiceTest extends IntegrationTestCase
         }
     }
 
-    public function test_make_temp_dir_creates_a_real_directory_with_exactly_0775_permissions(): void
+    public function testMakeTempDirCreatesARealDirectoryWithExactly0775Permissions(): void
     {
         // umask(0) around the call (same established technique as
         // tests/Unit/Core/FilesystemHelperTest.php's own umask tests)
@@ -743,7 +747,7 @@ final class BackupServiceTest extends IntegrationTestCase
         }
     }
 
-    public function test_remove_dir_is_a_no_op_when_the_directory_does_not_exist(): void
+    public function testRemoveDirIsANoOpWhenTheDirectoryDoesNotExist(): void
     {
         // Distinct from the shutdown-cleanup-closure tests above (which
         // also exercise this same guard indirectly, but can't tell an
@@ -764,7 +768,7 @@ final class BackupServiceTest extends IntegrationTestCase
         self::assertDirectoryDoesNotExist($missingDir);
     }
 
-    public function test_remove_dir_returns_early_when_scandir_fails_on_an_empty_directory(): void
+    public function testRemoveDirReturnsEarlyWhenScandirFailsOnAnEmptyDirectory(): void
     {
         // Distinct from test_remove_dir_returns_early_when_scandir_fails
         // below (which uses a NON-empty directory, so its own two
@@ -799,7 +803,7 @@ final class BackupServiceTest extends IntegrationTestCase
         rmdir($dir);
     }
 
-    public function test_remove_dir_unlinks_a_directory_symlink_without_following_it(): void
+    public function testRemoveDirUnlinksADirectorySymlinkWithoutFollowingIt(): void
     {
         // Distinct from test_remove_dir_recurses_into_subdirectories
         // below: that test only proves recursion happens for a REAL
@@ -834,7 +838,7 @@ final class BackupServiceTest extends IntegrationTestCase
         rmdir($target);
     }
 
-    public function test_remove_dir_recurses_into_subdirectories(): void
+    public function testRemoveDirRecursesIntoSubdirectories(): void
     {
         // Neither create() nor restore() ever populates their own workDir
         // with a real subdirectory (every entry either method writes/
@@ -856,7 +860,7 @@ final class BackupServiceTest extends IntegrationTestCase
         self::assertDirectoryDoesNotExist($root);
     }
 
-    public function test_remove_dir_returns_early_when_scandir_fails(): void
+    public function testRemoveDirReturnsEarlyWhenScandirFails(): void
     {
         // removeDir() is private, reached via reflection directly with a
         // directory that genuinely exists (is_dir() true) but can't be

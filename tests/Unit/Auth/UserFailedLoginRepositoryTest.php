@@ -50,11 +50,12 @@ test('recordFailure() persists a real user_id and ip', function (): void {
             ->setParameter('ip', $ip)
             ->fetchAssociative();
 
-        expect($row)->toBe([
-            'user_id' => 1,
-            'ip' => $ip,
-            'attempted_at' => '2026-08-01 12:00:00',
-        ]);
+        expect($row)
+            ->toBe([
+                'user_id' => 1,
+                'ip' => $ip,
+                'attempted_at' => '2026-08-01 12:00:00',
+            ]);
     } finally {
         userFailedLoginTestPurgeIp($conn, $ip);
     }
@@ -74,7 +75,8 @@ test('recordFailure() accepts a null user_id for an unknown-username attempt', f
             ->setParameter('ip', $ip)
             ->fetchOne();
 
-        expect($userId)->toBeNull();
+        expect($userId)
+            ->toBeNull();
     } finally {
         userFailedLoginTestPurgeIp($conn, $ip);
     }
@@ -97,7 +99,8 @@ test('recordFailure() gracefully stores an empty-string ip (REMOTE_ADDR unavaila
             ->setParameter('at', $marker)
             ->fetchOne();
 
-        expect($ip)->toBe('');
+        expect($ip)
+            ->toBe('');
     } finally {
         $conn->createQueryBuilder()
             ->delete('user_failed_logins')
@@ -125,9 +128,12 @@ test('countRecentByUserId() counts only attempts for that user at or after the t
         $repo->recordFailure(1, $ip, '2026-08-01 11:00:00');
         $repo->recordFailure(3, $ip, '2026-08-01 11:00:00');
 
-        expect($repo->countRecentByUserId(1, '2026-08-01 10:30:00'))->toBe(1)
-            ->and($repo->countRecentByUserId(1, '2026-08-01 00:00:00'))->toBe(2)
-            ->and($repo->countRecentByUserId(3, '2026-08-01 00:00:00'))->toBe(1);
+        expect($repo->countRecentByUserId(1, '2026-08-01 10:30:00'))
+            ->toBe(1)
+            ->and($repo->countRecentByUserId(1, '2026-08-01 00:00:00'))
+            ->toBe(2)
+            ->and($repo->countRecentByUserId(3, '2026-08-01 00:00:00'))
+            ->toBe(1);
     } finally {
         userFailedLoginTestPurgeIp($conn, $ip);
     }
@@ -143,9 +149,12 @@ test('countRecentByIp() counts only attempts from that ip at or after the thresh
         $repo->recordFailure(1, $ip, '2026-08-01 10:00:00');
         $repo->recordFailure(1, $otherIp, '2026-08-01 10:00:00');
 
-        expect($repo->countRecentByIp($ip, '2026-08-01 00:00:00'))->toBe(1)
-            ->and($repo->countRecentByIp($otherIp, '2026-08-01 00:00:00'))->toBe(1)
-            ->and($repo->countRecentByIp($ip, '2026-08-01 10:30:00'))->toBe(0);
+        expect($repo->countRecentByIp($ip, '2026-08-01 00:00:00'))
+            ->toBe(1)
+            ->and($repo->countRecentByIp($otherIp, '2026-08-01 00:00:00'))
+            ->toBe(1)
+            ->and($repo->countRecentByIp($ip, '2026-08-01 10:30:00'))
+            ->toBe(0);
     } finally {
         userFailedLoginTestPurgeIp($conn, $ip);
         userFailedLoginTestPurgeIp($conn, $otherIp);
@@ -163,7 +172,8 @@ test('countRecentByIp() returns 0 for an unparseable ip without querying (defens
     // method's observable result for any input.
     $repo = userFailedLoginTestRepo();
 
-    expect($repo->countRecentByIp('not-an-ip', '2026-08-01 00:00:00'))->toBe(0);
+    expect($repo->countRecentByIp('not-an-ip', '2026-08-01 00:00:00'))
+        ->toBe(0);
 });
 
 test('purgeOlderThan() deletes rows attempted before the threshold, keeps rows at or after it, and returns the deleted count', function (): void {
@@ -182,9 +192,12 @@ test('purgeOlderThan() deletes rows attempted before the threshold, keeps rows a
         // Global purge (no ip filter) -- >=2 rather than ===2 so this
         // doesn't depend on no other old-dated row existing anywhere else
         // in the shared test DB at the same time.
-        expect($deleted)->toBeGreaterThanOrEqual(2)
-            ->and($repo->countRecentByIp($oldIp, '1970-01-01 00:00:00'))->toBe(0)
-            ->and($repo->countRecentByIp($recentIp, '1970-01-01 00:00:00'))->toBe(1);
+        expect($deleted)
+            ->toBeGreaterThanOrEqual(2)
+            ->and($repo->countRecentByIp($oldIp, '1970-01-01 00:00:00'))
+            ->toBe(0)
+            ->and($repo->countRecentByIp($recentIp, '1970-01-01 00:00:00'))
+            ->toBe(1);
     } finally {
         userFailedLoginTestPurgeIp($conn, $oldIp);
         userFailedLoginTestPurgeIp($conn, $recentIp);

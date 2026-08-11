@@ -17,11 +17,12 @@ test('toArray flattens every fixed property, and omits the 6 optional keys when 
         userOptions: null,
     );
 
-    expect($context->toArray())->toBe([
-        'CATEGORIES_NAV' => 'Home / Holidays',
-        'F_ACTION' => '/admin.php?page=album-5-notification',
-        'PWG_TOKEN' => 'abc123',
-    ]);
+    expect($context->toArray())
+        ->toBe([
+            'CATEGORIES_NAV' => 'Home / Holidays',
+            'F_ACTION' => '/admin.php?page=album-5-notification',
+            'PWG_TOKEN' => 'abc123',
+        ]);
 });
 
 test('toArray includes every optional key when set', function (): void {
@@ -33,19 +34,28 @@ test('toArray includes every optional key when set', function (): void {
         authKeyDuration: '2 hours',
         noGroupInGallery: true,
         permissionUrl: '/admin.php?page=album-5-permissions',
-        groupMailOptions: [1 => 'Family'],
-        userOptions: [2 => 'jane'],
+        groupMailOptions: [
+            1 => 'Family',
+        ],
+        userOptions: [
+            2 => 'jane',
+        ],
     );
 
-    expect($context->toArray())->toBe([
-        'CATEGORIES_NAV' => 'Home / Holidays',
-        'F_ACTION' => '/admin.php?page=album-5-notification',
-        'PWG_TOKEN' => 'abc123',
-        'save_success' => '1 mail was sent. (jane)',
-        'auth_key_duration' => '2 hours',
-        'no_group_in_gallery' => true,
-        'permission_url' => '/admin.php?page=album-5-permissions',
-        'group_mail_options' => [1 => 'Family'],
-        'user_options' => [2 => 'jane'],
-    ]);
+    expect($context->toArray())
+        ->toBe([
+            'CATEGORIES_NAV' => 'Home / Holidays',
+            'F_ACTION' => '/admin.php?page=album-5-notification',
+            'PWG_TOKEN' => 'abc123',
+            'save_success' => '1 mail was sent. (jane)',
+            'auth_key_duration' => '2 hours',
+            'no_group_in_gallery' => true,
+            'permission_url' => '/admin.php?page=album-5-permissions',
+            'group_mail_options' => [
+                1 => 'Family',
+            ],
+            'user_options' => [
+                2 => 'jane',
+            ],
+        ]);
 });

@@ -11,5 +11,8 @@ namespace Piwigo\Tests\Fixtures\PluginConfig;
  */
 final class TestChangeEvent
 {
-    public function __construct(public string $value, public readonly string $context = '') {}
+    public function __construct(
+        public string $value,
+        public readonly string $context = ''
+    ) {}
 }

@@ -4,15 +4,15 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Integration;
 
-use Override;
-use Piwigo\Core\Kernel;
 use LogicException;
-use Piwigo\Db\EntityManagerFactory;
+use Override;
 use Piwigo\Admin\Maintenance\DbMaintenanceRepository;
 use Piwigo\Command\MaintenancePurgeSessionsCommand;
-use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\ConfigLoader;
+use Piwigo\Config\CurrentConfig;
+use Piwigo\Core\Kernel;
 use Piwigo\Db\DbConnection;
+use Piwigo\Db\EntityManagerFactory;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Tester\CommandTester;
 
@@ -41,12 +41,16 @@ final class MaintenancePurgeSessionsCommandTest extends IntegrationTestCase
         ConfigLoader::applyEnvOverrides();
     }
 
-    public function test_purges_a_session_belonging_to_a_deleted_user(): void
+    public function testPurgesASessionBelongingToADeletedUser(): void
     {
         $conn = DbConnection::build();
         $conn->createQueryBuilder()
             ->insert('sessions')
-            ->values(['id' => ':id', 'data' => ':data', 'expiration' => ':expiration'])
+            ->values([
+                'id' => ':id',
+                'data' => ':data',
+                'expiration' => ':expiration',
+            ])
             ->setParameter('id', 'cli-orphan-session')
             ->setParameter('data', 'pwg_uid|i:999999;')
             ->setParameter('expiration', '2030-01-01 00:00:00')

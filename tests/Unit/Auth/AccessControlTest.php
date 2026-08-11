@@ -4,20 +4,20 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Unit\Auth;
 
-use Piwigo\Common\ValueObject\LangCode;
-use Piwigo\Common\ValueObject\UserId;
-use Piwigo\Core\AccessLevel;
-use Throwable;
 use Piwigo\Auth\AccessControl;
 use Piwigo\Auth\AccessLevelChecker;
+use Piwigo\Common\ValueObject\LangCode;
+use Piwigo\Common\ValueObject\ThemeId;
+use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Config\CurrentConfig;
+use Piwigo\Core\AccessLevel;
 use Piwigo\Core\HtmlRenderingInterface;
 use Piwigo\Core\RedirectServiceInterface;
 use Piwigo\Users\CurrentUser;
-use Piwigo\Common\ValueObject\ThemeId;
 use Piwigo\Users\User;
 use Piwigo\Users\UserStatus;
 use RuntimeException;
+use Throwable;
 
 /**
  * Every method here is a pure read of CurrentUser/CurrentConfig, with no
@@ -75,30 +75,44 @@ function accessControlTestMake(
 test('getUserStatus falls back to the current user when no explicit status is given', function (): void {
     $accessControl = accessControlTestMake(UserStatus::Admin);
 
-    expect($accessControl->getUserStatus())->toBe('admin')
-        ->and($accessControl->getUserStatus('webmaster'))->toBe('webmaster');
+    expect($accessControl->getUserStatus())
+        ->toBe('admin')
+        ->and($accessControl->getUserStatus('webmaster'))
+        ->toBe('webmaster');
 });
 
 test('isAGuest/isClassicUser/isAdmin/isWebmaster read the current user status', function (): void {
     $guest = accessControlTestMake(UserStatus::Guest);
-    expect($guest->isAGuest())->toBeTrue()
-        ->and($guest->isClassicUser())->toBeFalse()
-        ->and($guest->isAdmin())->toBeFalse()
-        ->and($guest->isWebmaster())->toBeFalse();
+    expect($guest->isAGuest())
+        ->toBeTrue()
+        ->and($guest->isClassicUser())
+        ->toBeFalse()
+        ->and($guest->isAdmin())
+        ->toBeFalse()
+        ->and($guest->isWebmaster())
+        ->toBeFalse();
 
     $normal = accessControlTestMake(UserStatus::Normal);
-    expect($normal->isAGuest())->toBeFalse()
-        ->and($normal->isClassicUser())->toBeTrue()
-        ->and($normal->isAdmin())->toBeFalse();
+    expect($normal->isAGuest())
+        ->toBeFalse()
+        ->and($normal->isClassicUser())
+        ->toBeTrue()
+        ->and($normal->isAdmin())
+        ->toBeFalse();
 
     $admin = accessControlTestMake(UserStatus::Admin);
-    expect($admin->isClassicUser())->toBeTrue()
-        ->and($admin->isAdmin())->toBeTrue()
-        ->and($admin->isWebmaster())->toBeFalse();
+    expect($admin->isClassicUser())
+        ->toBeTrue()
+        ->and($admin->isAdmin())
+        ->toBeTrue()
+        ->and($admin->isWebmaster())
+        ->toBeFalse();
 
     $webmaster = accessControlTestMake(UserStatus::Webmaster);
-    expect($webmaster->isAdmin())->toBeTrue()
-        ->and($webmaster->isWebmaster())->toBeTrue();
+    expect($webmaster->isAdmin())
+        ->toBeTrue()
+        ->and($webmaster->isWebmaster())
+        ->toBeTrue();
 });
 
 test('isGeneric is true only for the generic status', function (): void {
@@ -142,16 +156,21 @@ test('checkStatus calls the installed HtmlRenderingInterface accessDenied() befo
     // accessDenied() is `never`-typed and the fake throws RuntimeException
     // itself -- the marker message proves accessDenied() produced this
     // exception, not some other path.
-    expect($thrown)->toBeInstanceOf(RuntimeException::class)
-        ->and($thrown?->getMessage())->toBe('ACCESS_CONTROL_ACCESS_DENIED_MARKER')
-        ->and($renderer->accessDeniedWasCalled)->toBeTrue();
+    expect($thrown)
+        ->toBeInstanceOf(RuntimeException::class)
+        ->and($thrown?->getMessage())
+        ->toBe('ACCESS_CONTROL_ACCESS_DENIED_MARKER')
+        ->and($renderer->accessDeniedWasCalled)
+        ->toBeTrue();
 });
 
 test('canManageComment denies a guest regardless of action or authorship', function (): void {
     $accessControl = accessControlTestMake(UserStatus::Guest, id: 5);
 
-    expect($accessControl->canManageComment('edit', 5))->toBeFalse()
-        ->and($accessControl->canManageComment('delete', 5))->toBeFalse();
+    expect($accessControl->canManageComment('edit', 5))
+        ->toBeFalse()
+        ->and($accessControl->canManageComment('delete', 5))
+        ->toBeFalse();
 });
 
 test('canManageComment denies a guest even when they own the comment and editing is enabled', function (): void {
@@ -163,7 +182,8 @@ test('canManageComment denies a guest even when they own the comment and editing
     $accessControl = accessControlTestMake(UserStatus::Guest, id: 5, currentConfig: $currentConfig);
     $currentConfig->userCanEditComment = true;
 
-    expect($accessControl->canManageComment('edit', 5))->toBeFalse();
+    expect($accessControl->canManageComment('edit', 5))
+        ->toBeFalse();
 });
 
 test('canManageComment denies an action outside delete/edit/validate', function (): void {
@@ -173,9 +193,12 @@ test('canManageComment denies an action outside delete/edit/validate', function 
 test('canManageComment grants an admin every real action regardless of authorship', function (): void {
     $accessControl = accessControlTestMake(UserStatus::Admin, id: 1);
 
-    expect($accessControl->canManageComment('delete', 999))->toBeTrue()
-        ->and($accessControl->canManageComment('edit', 999))->toBeTrue()
-        ->and($accessControl->canManageComment('validate', 999))->toBeTrue();
+    expect($accessControl->canManageComment('delete', 999))
+        ->toBeTrue()
+        ->and($accessControl->canManageComment('edit', 999))
+        ->toBeTrue()
+        ->and($accessControl->canManageComment('validate', 999))
+        ->toBeTrue();
 });
 
 test('canManageComment lets a normal user edit their own comment only when user_can_edit_comment is enabled', function (): void {
@@ -183,11 +206,14 @@ test('canManageComment lets a normal user edit their own comment only when user_
     $accessControl = accessControlTestMake(UserStatus::Normal, id: 7, currentConfig: $currentConfig);
 
     $currentConfig->userCanEditComment = false;
-    expect($accessControl->canManageComment('edit', 7))->toBeFalse();
+    expect($accessControl->canManageComment('edit', 7))
+        ->toBeFalse();
 
     $currentConfig->userCanEditComment = true;
-    expect($accessControl->canManageComment('edit', 7))->toBeTrue()
-        ->and($accessControl->canManageComment('edit', 8))->toBeFalse();
+    expect($accessControl->canManageComment('edit', 7))
+        ->toBeTrue()
+        ->and($accessControl->canManageComment('edit', 8))
+        ->toBeFalse();
 });
 
 test('canManageComment lets a normal user delete their own comment only when user_can_delete_comment is enabled', function (): void {
@@ -195,11 +221,14 @@ test('canManageComment lets a normal user delete their own comment only when use
     $accessControl = accessControlTestMake(UserStatus::Normal, id: 7, currentConfig: $currentConfig);
 
     $currentConfig->userCanDeleteComment = false;
-    expect($accessControl->canManageComment('delete', 7))->toBeFalse();
+    expect($accessControl->canManageComment('delete', 7))
+        ->toBeFalse();
 
     $currentConfig->userCanDeleteComment = true;
-    expect($accessControl->canManageComment('delete', 7))->toBeTrue()
-        ->and($accessControl->canManageComment('delete', 8))->toBeFalse();
+    expect($accessControl->canManageComment('delete', 7))
+        ->toBeTrue()
+        ->and($accessControl->canManageComment('delete', 8))
+        ->toBeFalse();
 });
 
 test('canManageComment never lets a normal user validate a comment', function (): void {
@@ -208,7 +237,8 @@ test('canManageComment never lets a normal user validate a comment', function ()
     $currentConfig->userCanEditComment = true;
     $currentConfig->userCanDeleteComment = true;
 
-    expect($accessControl->canManageComment('validate', 7))->toBeFalse();
+    expect($accessControl->canManageComment('validate', 7))
+        ->toBeFalse();
 });
 
 test('canManageComment compares the string-typed author id numerically', function (): void {
@@ -216,7 +246,8 @@ test('canManageComment compares the string-typed author id numerically', functio
     $accessControl = accessControlTestMake(UserStatus::Normal, id: 7, currentConfig: $currentConfig);
     $currentConfig->userCanEditComment = true;
 
-    expect($accessControl->canManageComment('edit', '7'))->toBeTrue();
+    expect($accessControl->canManageComment('edit', '7'))
+        ->toBeTrue();
 });
 
 test('canManageComment compares a string-typed author id numerically for delete too', function (): void {
@@ -224,7 +255,8 @@ test('canManageComment compares a string-typed author id numerically for delete 
     $accessControl = accessControlTestMake(UserStatus::Normal, id: 7, currentConfig: $currentConfig);
     $currentConfig->userCanDeleteComment = true;
 
-    expect($accessControl->canManageComment('delete', '7'))->toBeTrue();
+    expect($accessControl->canManageComment('delete', '7'))
+        ->toBeTrue();
 });
 
 test('canManageComment denies a normal user on a null (anonymous) author id without throwing', function (): void {
@@ -233,9 +265,12 @@ test('canManageComment denies a normal user on a null (anonymous) author id with
     $currentConfig->userCanEditComment = true;
     $currentConfig->userCanDeleteComment = true;
 
-    expect($accessControl->canManageComment('edit', null))->toBeFalse()
-        ->and($accessControl->canManageComment('delete', null))->toBeFalse()
-        ->and($accessControl->canManageComment('validate', null))->toBeFalse();
+    expect($accessControl->canManageComment('edit', null))
+        ->toBeFalse()
+        ->and($accessControl->canManageComment('delete', null))
+        ->toBeFalse()
+        ->and($accessControl->canManageComment('validate', null))
+        ->toBeFalse();
 });
 
 test('canManageComment lets an admin manage a comment with a null (anonymous) author id', function (): void {

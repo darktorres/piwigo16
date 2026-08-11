@@ -10,8 +10,10 @@ test('fromArray recognizes correction mode with a valid selection', function ():
         'c13y_selection' => ['abc123', 'def456'],
     ]);
 
-    expect($request->mode)->toBe('correction')
-        ->and($request->selection)->toBe(['abc123', 'def456']);
+    expect($request->mode)
+        ->toBe('correction')
+        ->and($request->selection)
+        ->toBe(['abc123', 'def456']);
 });
 
 test('fromArray recognizes ignore mode with a valid selection', function (): void {
@@ -20,8 +22,10 @@ test('fromArray recognizes ignore mode with a valid selection', function (): voi
         'c13y_selection' => ['abc123'],
     ]);
 
-    expect($request->mode)->toBe('ignore')
-        ->and($request->selection)->toBe(['abc123']);
+    expect($request->mode)
+        ->toBe('ignore')
+        ->and($request->selection)
+        ->toBe(['abc123']);
 });
 
 test('fromArray returns null mode when neither submit key has a valid array selection', function (): void {
@@ -31,14 +35,19 @@ test('fromArray returns null mode when neither submit key has a valid array sele
         'c13y_selection' => 'not-an-array',
     ]);
 
-    expect($request->mode)->toBeNull();
+    expect($request->mode)
+        ->toBeNull();
 });
 
 test('fromArray returns null mode when neither submit key is present', function (): void {
-    $request = C13yTreatmentRequest::fromArray(['c13y_selection' => ['abc123']]);
+    $request = C13yTreatmentRequest::fromArray([
+        'c13y_selection' => ['abc123'],
+    ]);
 
-    expect($request->mode)->toBeNull()
-        ->and($request->selection)->toBe(['abc123']);
+    expect($request->mode)
+        ->toBeNull()
+        ->and($request->selection)
+        ->toBe(['abc123']);
 });
 
 test('fromArray returns an empty selection when c13y_selection is not an array', function (): void {
@@ -47,7 +56,8 @@ test('fromArray returns an empty selection when c13y_selection is not an array',
         'c13y_selection' => 'oops',
     ]);
 
-    expect($request->selection)->toBe([]);
+    expect($request->selection)
+        ->toBe([]);
 });
 
 test('fromArray coerces non-string selection elements to strings', function (): void {
@@ -56,7 +66,8 @@ test('fromArray coerces non-string selection elements to strings', function (): 
         'c13y_selection' => ['ok', ['nested']],
     ]);
 
-    expect($request->selection)->toBe(['ok', '']);
+    expect($request->selection)
+        ->toBe(['ok', '']);
 });
 
 test('fromArray re-indexes a non-sequential selection into a plain 0-based list', function (): void {
@@ -67,8 +78,12 @@ test('fromArray re-indexes a non-sequential selection into a plain 0-based list'
     // contract on $selection.
     $request = C13yTreatmentRequest::fromArray([
         'c13y_submit_correction' => '1',
-        'c13y_selection' => [3 => 'abc123', 7 => 'def456'],
+        'c13y_selection' => [
+            3 => 'abc123',
+            7 => 'def456',
+        ],
     ]);
 
-    expect($request->selection)->toBe(['abc123', 'def456']);
+    expect($request->selection)
+        ->toBe(['abc123', 'def456']);
 });

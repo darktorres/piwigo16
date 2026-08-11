@@ -4,22 +4,22 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Integration;
 
-use Override;
 use LogicException;
-use Piwigo\PluginConfig\EventDispatcher;
-use Piwigo\Tests\Support\TemplateTestFactory;
+use Override;
 use Piwigo\Config\ConfigLoader;
 use Piwigo\Config\ConfigService;
 use Piwigo\Config\CurrentConfig;
-use Piwigo\Tests\Support\CurrentConfigTestFactory;
-use Piwigo\Tests\Support\CurrentConfigServiceTestFactory;
-use Piwigo\Tests\Support\CurrentPathsTestFactory;
-use Piwigo\Tests\Support\LangTestFactory;
-use Piwigo\Tests\Support\PageStateTestFactory;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Paths;
 use Piwigo\Page\PageHeaderRenderer;
+use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Template\CurrentTemplate;
+use Piwigo\Tests\Support\CurrentConfigServiceTestFactory;
+use Piwigo\Tests\Support\CurrentConfigTestFactory;
+use Piwigo\Tests\Support\CurrentPathsTestFactory;
+use Piwigo\Tests\Support\LangTestFactory;
+use Piwigo\Tests\Support\PageStateTestFactory;
+use Piwigo\Tests\Support\TemplateTestFactory;
 
 /**
  * Only the 2 branches every other real page-render Integration/Browser
@@ -68,7 +68,10 @@ final class PageHeaderRendererTest extends IntegrationTestCase
         // Lang::langInfo() -- unset by default, real RequestBootstrap-only
         // wiring this test never boots (same reasoning as SectionInitializerTest/
         // RedirectServiceTest/SectionPopulatorTest's own identical setUp).
-        LangTestFactory::get()->setLangInfo(['code' => 'en_UK', 'direction' => 'ltr']);
+        LangTestFactory::get()->setLangInfo([
+            'code' => 'en_UK',
+            'direction' => 'ltr',
+        ]);
         CurrentTemplate::current()->set(TemplateTestFactory::build(CurrentPathsTestFactory::get()->root . 'themes', 'default'));
 
         $this->renderer = new PageHeaderRenderer();
@@ -82,7 +85,7 @@ final class PageHeaderRendererTest extends IntegrationTestCase
         parent::tearDown();
     }
 
-    public function test_render_includes_the_header_notes_when_page_state_has_any(): void
+    public function testRenderIncludesTheHeaderNotesWhenPageStateHasAny(): void
     {
         PageStateTestFactory::get()->addHeaderNote('Photos posted within the last 3 days.');
 
@@ -92,7 +95,7 @@ final class PageHeaderRendererTest extends IntegrationTestCase
         self::assertStringContainsString('Photos posted within the last 3 days.', $output);
     }
 
-    public function test_render_omits_the_header_notes_container_when_page_state_has_none(): void
+    public function testRenderOmitsTheHeaderNotesContainerWhenPageStateHasNone(): void
     {
         $this->renderer->render('No Header Notes Test', new EventDispatcher(), PageStateTestFactory::get(), CurrentTemplate::current(), CurrentConfigTestFactory::get());
 
@@ -100,7 +103,7 @@ final class PageHeaderRendererTest extends IntegrationTestCase
         self::assertStringNotContainsString('Photos posted within the last', $output);
     }
 
-    public function test_render_sets_noindex_and_nofollow_meta_robots_when_meta_ref_is_disabled(): void
+    public function testRenderSetsNoindexAndNofollowMetaRobotsWhenMetaRefIsDisabled(): void
     {
         $currentConfig = Kernel::container()->get(CurrentConfig::class);
         if (! $currentConfig instanceof CurrentConfig) {
@@ -110,13 +113,16 @@ final class PageHeaderRendererTest extends IntegrationTestCase
 
         $this->renderer->render('Meta Robots Test', new EventDispatcher(), PageStateTestFactory::get(), CurrentTemplate::current(), CurrentConfigTestFactory::get());
 
-        self::assertSame(['noindex' => 1, 'nofollow' => 1], PageStateTestFactory::get()->metaRobots);
+        self::assertSame([
+            'noindex' => 1,
+            'nofollow' => 1,
+        ], PageStateTestFactory::get()->metaRobots);
 
         $output = CurrentTemplate::current()->get()->fetchOutput();
         self::assertStringContainsString('<meta name="robots" content="noindex,nofollow">', $output);
     }
 
-    public function test_render_does_not_set_meta_robots_when_meta_ref_is_enabled(): void
+    public function testRenderDoesNotSetMetaRobotsWhenMetaRefIsEnabled(): void
     {
         $currentConfig = Kernel::container()->get(CurrentConfig::class);
         if (! $currentConfig instanceof CurrentConfig) {

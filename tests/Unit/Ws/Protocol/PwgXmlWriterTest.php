@@ -20,7 +20,8 @@ test('an element with no content self-closes', function (): void {
     $writer->start_element('foo');
     $writer->end_element('foo');
 
-    expect($writer->getOutput())->toBe('<foo />');
+    expect($writer->getOutput())
+        ->toBe('<foo />');
 });
 
 test('an element with text content gets an explicit closing tag', function (): void {
@@ -30,7 +31,8 @@ test('an element with text content gets an explicit closing tag', function (): v
     $writer->write_content('bar');
     $writer->end_element('foo');
 
-    expect($writer->getOutput())->toBe('<foo>bar</foo>');
+    expect($writer->getOutput())
+        ->toBe('<foo>bar</foo>');
 });
 
 test('a tag name starting with a digit is prefixed with an underscore', function (): void {
@@ -39,7 +41,8 @@ test('a tag name starting with a digit is prefixed with an underscore', function
     $writer->start_element('123');
     $writer->end_element('123');
 
-    expect($writer->getOutput())->toBe('<_123 />');
+    expect($writer->getOutput())
+        ->toBe('<_123 />');
 });
 
 test('nested elements are indented with one tab per depth level, going in only', function (): void {
@@ -53,7 +56,8 @@ test('nested elements are indented with one tab per depth level, going in only',
     $writer->end_element('b');
     $writer->end_element('a');
 
-    expect($writer->getOutput())->toBe("<a>\n\t<b>\n\t\t<c>x</c></b></a>");
+    expect($writer->getOutput())
+        ->toBe("<a>\n\t<b>\n\t\t<c>x</c></b></a>");
 });
 
 test('write_attribute htmlspecialchars-escapes the value and stays inside the opening tag', function (): void {
@@ -64,7 +68,8 @@ test('write_attribute htmlspecialchars-escapes the value and stays inside the op
     $writer->write_attribute('alt', 'a"b<c>d&e');
     $writer->end_element('img');
 
-    expect($writer->getOutput())->toBe('<img id="42" alt="a&quot;b&lt;c&gt;d&amp;e" />');
+    expect($writer->getOutput())
+        ->toBe('<img id="42" alt="a&quot;b&lt;c&gt;d&amp;e" />');
 });
 
 test('write_cdata escapes an embedded ]]> terminator sequence', function (): void {
@@ -74,7 +79,8 @@ test('write_cdata escapes an embedded ]]> terminator sequence', function (): voi
     $writer->write_cdata('a]]>b');
     $writer->end_element('data');
 
-    expect($writer->getOutput())->toBe('<data><![CDATA[a]]&gt;b]]></data>');
+    expect($writer->getOutput())
+        ->toBe('<data><![CDATA[a]]&gt;b]]></data>');
 });
 
 test('write_content coerces a non-scalar value to empty content instead of erroring', function (): void {
@@ -84,7 +90,8 @@ test('write_content coerces a non-scalar value to empty content instead of error
     $writer->write_content(['not', 'scalar']);
     $writer->end_element('x');
 
-    expect($writer->getOutput())->toBe('<x></x>');
+    expect($writer->getOutput())
+        ->toBe('<x></x>');
 });
 
 test('a tag name starting with any digit 0-9 is prefixed with an underscore', function (string $digit): void {
@@ -97,7 +104,8 @@ test('a tag name starting with any digit 0-9 is prefixed with an underscore', fu
     $writer->start_element($digit . 'x');
     $writer->end_element($digit . 'x');
 
-    expect($writer->getOutput())->toBe('<_' . $digit . 'x />');
+    expect($writer->getOutput())
+        ->toBe('<_' . $digit . 'x />');
 })->with(['0', '1', '2', '3', '4', '5', '6', '7', '8', '9']);
 
 test('a tag name starting with the character just below the digit range is not prefixed', function (): void {
@@ -108,7 +116,8 @@ test('a tag name starting with the character just below the digit range is not p
     $writer->start_element('/foo');
     $writer->end_element('/foo');
 
-    expect($writer->getOutput())->toBe('</foo />');
+    expect($writer->getOutput())
+        ->toBe('</foo />');
 });
 
 test('a tag name starting with the character just above the digit range is not prefixed', function (): void {
@@ -119,7 +128,8 @@ test('a tag name starting with the character just above the digit range is not p
     $writer->start_element(':foo');
     $writer->end_element(':foo');
 
-    expect($writer->getOutput())->toBe('<:foo />');
+    expect($writer->getOutput())
+        ->toBe('<:foo />');
 });
 
 test('a tag name is prefixed based on its first character, not its last', function (): void {
@@ -132,7 +142,8 @@ test('a tag name is prefixed based on its first character, not its last', functi
     $writer->start_element('x9');
     $writer->end_element('x9');
 
-    expect($writer->getOutput())->toBe('<x9 />');
+    expect($writer->getOutput())
+        ->toBe('<x9 />');
 });
 
 test('end_element still emits indent whitespace before the closing tag when the indent level runs ahead of the element stack', function (): void {
@@ -151,7 +162,8 @@ test('end_element still emits indent whitespace before the closing tag when the 
 
     $writer->end_element('c');
 
-    expect($writer->getOutput())->toBe("\t\t</c>");
+    expect($writer->getOutput())
+        ->toBe("\t\t</c>");
 });
 
 test('write_content casts a non-string scalar to a string before escaping it', function (): void {
@@ -161,7 +173,8 @@ test('write_content casts a non-string scalar to a string before escaping it', f
     $writer->write_content(42);
     $writer->end_element('n');
 
-    expect($writer->getOutput())->toBe('<n>42</n>');
+    expect($writer->getOutput())
+        ->toBe('<n>42</n>');
 });
 
 test('write_content escapes HTML-special characters in the value', function (): void {
@@ -171,7 +184,8 @@ test('write_content escapes HTML-special characters in the value', function (): 
     $writer->write_content('<a>&"\'</a>');
     $writer->end_element('n');
 
-    expect($writer->getOutput())->toBe('<n>&lt;a&gt;&amp;&quot;&#039;&lt;/a&gt;</n>');
+    expect($writer->getOutput())
+        ->toBe('<n>&lt;a&gt;&amp;&quot;&#039;&lt;/a&gt;</n>');
 });
 
 test('write_cdata casts a non-string scalar to a string before writing it', function (): void {
@@ -181,7 +195,8 @@ test('write_cdata casts a non-string scalar to a string before writing it', func
     $writer->write_cdata(42);
     $writer->end_element('n');
 
-    expect($writer->getOutput())->toBe('<n><![CDATA[42]]></n>');
+    expect($writer->getOutput())
+        ->toBe('<n><![CDATA[42]]></n>');
 });
 
 test('write_cdata coerces a non-scalar value to empty CDATA content instead of erroring', function (): void {
@@ -191,7 +206,8 @@ test('write_cdata coerces a non-scalar value to empty CDATA content instead of e
     $writer->write_cdata(['not', 'scalar']);
     $writer->end_element('n');
 
-    expect($writer->getOutput())->toBe('<n><![CDATA[]]></n>');
+    expect($writer->getOutput())
+        ->toBe('<n><![CDATA[]]></n>');
 });
 
 test('write_attribute coerces a non-scalar value to an empty attribute value instead of erroring', function (): void {
@@ -201,7 +217,8 @@ test('write_attribute coerces a non-scalar value to an empty attribute value ins
     $writer->write_attribute('data', ['not', 'scalar']);
     $writer->end_element('n');
 
-    expect($writer->getOutput())->toBe('<n data="" />');
+    expect($writer->getOutput())
+        ->toBe('<n data="" />');
 });
 
 test('a self-closing element correctly decrements the indent level for its parent\'s later explicit close tag', function (): void {
@@ -221,7 +238,8 @@ test('a self-closing element correctly decrements the indent level for its paren
     $writer->end_element('b');
     $writer->end_element('a');
 
-    expect($writer->getOutput())->toBe("<a>\n\t<b>\n\t\t<c /></b></a>");
+    expect($writer->getOutput())
+        ->toBe("<a>\n\t<b>\n\t\t<c /></b></a>");
 });
 
 test('end_element ignores its own argument and always closes the innermost stacked tag', function (): void {
@@ -238,5 +256,6 @@ test('end_element ignores its own argument and always closes the innermost stack
     $writer->end_element('totally-wrong-name');
     $writer->end_element('another-wrong-name');
 
-    expect($writer->getOutput())->toBe("<a>\n\t<b /></a>");
+    expect($writer->getOutput())
+        ->toBe("<a>\n\t<b /></a>");
 });

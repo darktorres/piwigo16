@@ -13,7 +13,8 @@ test('toArray omits every key when all fields are null', function (): void {
         sizes: null,
     );
 
-    expect($context->toArray())->toBe([]);
+    expect($context->toArray())
+        ->toBe([]);
 });
 
 test('toArray includes save_success alone on the success branch', function (): void {
@@ -25,27 +26,45 @@ test('toArray includes save_success alone on the success branch', function (): v
         sizes: null,
     );
 
-    expect($context->toArray())->toBe([
-        'save_success' => 'Your configuration settings are saved',
-    ]);
+    expect($context->toArray())
+        ->toBe([
+            'save_success' => 'Your configuration settings are saved',
+        ]);
 });
 
 test('toArray includes derivatives, ferrors, resize_quality and sizes together on the error branch', function (): void {
     $context = new ConfigurationSizesPageContext(
         saveSuccess: null,
-        derivatives: ['square' => ['w' => '100']],
-        ferrors: ['resize_quality' => '[50..98]'],
+        derivatives: [
+            'square' => [
+                'w' => '100',
+            ],
+        ],
+        ferrors: [
+            'resize_quality' => '[50..98]',
+        ],
         resizeQuality: '150',
-        sizes: ['original_resize_maxwidth' => '2000'],
+        sizes: [
+            'original_resize_maxwidth' => '2000',
+        ],
     );
 
     $result = $context->toArray();
 
-    expect($result)->not->toHaveKey('save_success')
-        ->and($result['derivatives'])->toBe(['square' => ['w' => '100']])
-        ->and($result['ferrors'])->toBe(['resize_quality' => '[50..98]'])
+    expect($result)
+        ->not->toHaveKey('save_success')
+        ->and($result['derivatives'])->toBe([
+            'square' => [
+                'w' => '100',
+            ],
+        ])
+        ->and($result['ferrors'])->toBe([
+            'resize_quality' => '[50..98]',
+        ])
         ->and($result['resize_quality'])->toBe('150')
-        ->and($result['sizes'])->toBe(['original_resize_maxwidth' => '2000']);
+        ->and($result['sizes'])->toBe([
+            'original_resize_maxwidth' => '2000',
+        ]);
 });
 
 test('toArray omits sizes when null even while derivatives is set', function (): void {
@@ -57,5 +76,6 @@ test('toArray omits sizes when null even while derivatives is set', function ():
         sizes: null,
     );
 
-    expect($context->toArray())->not->toHaveKey('sizes');
+    expect($context->toArray())
+        ->not->toHaveKey('sizes');
 });

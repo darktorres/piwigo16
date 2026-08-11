@@ -2,8 +2,8 @@
 
 declare(strict_types=1);
 
-use Piwigo\Category\CategoryService;
 use Piwigo\Admin\CatModifyPageRenderer;
+use Piwigo\Category\CategoryService;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Paths;
 

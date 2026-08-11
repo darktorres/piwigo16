@@ -4,33 +4,33 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Integration;
 
-use Override;
 use LogicException;
-use Piwigo\PluginConfig\EventDispatcher;
-use Piwigo\Tests\Support\EventDispatcherTestFactory;
-use Piwigo\Tests\Support\TemplateTestFactory;
-use Piwigo\Users\UserService;
-use Piwigo\Auth\AccessControl;
-use Piwigo\Tests\Support\UrlServiceTestFactory;
-use Piwigo\Tests\Support\PageStateTestFactory;
-use Piwigo\Tests\Support\HtmlServiceTestFactory;
-use Piwigo\Tests\Support\CurrentUserTestFactory;
-use RuntimeException;
-use Piwigo\Db\DbConnection;
+use Override;
 use Piwigo\Admin\ThemesStandardPagesPageRenderer;
+use Piwigo\Auth\AccessControl;
 use Piwigo\Bootstrap\RedirectService;
 use Piwigo\Config\ConfigLoader;
 use Piwigo\Config\ConfigService;
 use Piwigo\Config\CurrentConfig;
-use Piwigo\Tests\Support\CurrentConfigTestFactory;
-use Piwigo\Tests\Support\CurrentConfigServiceTestFactory;
-use Piwigo\Tests\Support\CurrentPathsTestFactory;
 use Piwigo\Core\FilesystemHelper;
-use Piwigo\Tests\Support\LangTestFactory;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Paths;
+use Piwigo\Db\DbConnection;
+use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Storage\StorageRegistry;
 use Piwigo\Template\CurrentTemplate;
+use Piwigo\Tests\Support\CurrentConfigServiceTestFactory;
+use Piwigo\Tests\Support\CurrentConfigTestFactory;
+use Piwigo\Tests\Support\CurrentPathsTestFactory;
+use Piwigo\Tests\Support\CurrentUserTestFactory;
+use Piwigo\Tests\Support\EventDispatcherTestFactory;
+use Piwigo\Tests\Support\HtmlServiceTestFactory;
+use Piwigo\Tests\Support\LangTestFactory;
+use Piwigo\Tests\Support\PageStateTestFactory;
+use Piwigo\Tests\Support\TemplateTestFactory;
+use Piwigo\Tests\Support\UrlServiceTestFactory;
+use Piwigo\Users\UserService;
+use RuntimeException;
 
 /**
  * See ThemesStandardPagesPageRendererTest's own docblock below for why
@@ -101,7 +101,10 @@ final class ThemesStandardPagesLogoStreamWrapper
      */
     public function stream_stat(): array
     {
-        return ['size' => strlen($this->buffer), 'mode' => 0100644];
+        return [
+            'size' => strlen($this->buffer),
+            'mode' => 0100644,
+        ];
     }
 
     /**
@@ -109,7 +112,10 @@ final class ThemesStandardPagesLogoStreamWrapper
      */
     public function url_stat(string $path, int $flags): array
     {
-        return ['mode' => 0100644, 'size' => strlen(self::$pngBytes)];
+        return [
+            'mode' => 0100644,
+            'size' => strlen(self::$pngBytes),
+        ];
     }
 
     public function stream_cast(int $cast_as): bool
@@ -370,7 +376,7 @@ final class ThemesStandardPagesPageRendererTest extends IntegrationTestCase
         return ob_get_clean();
     }
 
-    public function test_mkgetdir_failure_assigns_the_add_write_access_sprintf_message(): void
+    public function testMkgetdirFailureAssignsTheAddWriteAccessSprintfMessage(): void
     {
         $fixtureRoot = sys_get_temp_dir() . '/piwigo-std-pages-mkgetdir-' . bin2hex(random_bytes(6)) . '/';
         mkdir($fixtureRoot, 0o777, true);
@@ -391,7 +397,10 @@ final class ThemesStandardPagesPageRendererTest extends IntegrationTestCase
         file_put_contents($realPng, $this->realPngBytes());
 
         try {
-            $_FILES['std_pgs_logo'] = ['tmp_name' => $realPng, 'name' => 'a-logo.png'];
+            $_FILES['std_pgs_logo'] = [
+                'tmp_name' => $realPng,
+                'name' => 'a-logo.png',
+            ];
 
             $this->renderer->render();
 
@@ -405,7 +414,7 @@ final class ThemesStandardPagesPageRendererTest extends IntegrationTestCase
         }
     }
 
-    public function test_fopen_failure_on_the_source_tmp_file_assigns_the_plain_no_write_access_message(): void
+    public function testFopenFailureOnTheSourceTmpFileAssignsThePlainNoWriteAccessMessage(): void
     {
         $fixtureRoot = sys_get_temp_dir() . '/piwigo-std-pages-fopen-' . bin2hex(random_bytes(6)) . '/';
         // logo/ already exists and is writable -- mkgetdir() succeeds
@@ -421,7 +430,10 @@ final class ThemesStandardPagesPageRendererTest extends IntegrationTestCase
         self::assertTrue(stream_wrapper_register($scheme, ThemesStandardPagesLogoStreamWrapper::class));
 
         try {
-            $_FILES['std_pgs_logo'] = ['tmp_name' => $scheme . '://fake-logo', 'name' => 'stdpageslogo.png'];
+            $_FILES['std_pgs_logo'] = [
+                'tmp_name' => $scheme . '://fake-logo',
+                'name' => 'stdpageslogo.png',
+            ];
 
             // The renderer's own fopen() call (2nd open) genuinely fails
             // and raises a real E_WARNING -- this project's phpunit.xml.dist
@@ -462,7 +474,7 @@ final class ThemesStandardPagesPageRendererTest extends IntegrationTestCase
     private function rawConfigValue(string $param): ?string
     {
         $value = DbConnection::build()->fetchOne(
-            'SELECT value FROM ' . 'config' . " WHERE param = '{$param}'"
+            'SELECT value FROM config' . " WHERE param = '{$param}'"
         );
         if ($value === false) {
             return null;
@@ -472,7 +484,7 @@ final class ThemesStandardPagesPageRendererTest extends IntegrationTestCase
         return $value;
     }
 
-    public function test_standard_pages_used_by_accumulates_only_the_real_theme_that_declares_the_flag(): void
+    public function testStandardPagesUsedByAccumulatesOnlyTheRealThemeThatDeclaresTheFlag(): void
     {
         $themesFixtureRoot = sys_get_temp_dir() . '/piwigo-std-pages-themes-' . bin2hex(random_bytes(6)) . '/';
         mkdir($themesFixtureRoot . 'themes', 0o777, true);

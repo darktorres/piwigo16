@@ -7,7 +7,9 @@ use Piwigo\Admin\Install\Projection\InstallRenderPageContext;
 test('toArray flattens every fixed property, and omits language_selection/install/errors/infos when null', function (): void {
     $context = new InstallRenderPageContext(
         languageSelection: null,
-        languageOptions: ['en_UK' => 'English'],
+        languageOptions: [
+            'en_UK' => 'English',
+        ],
         tContentEncoding: 'utf-8',
         release: '16.3.0',
         fAction: 'install.php?language=en_UK',
@@ -26,28 +28,33 @@ test('toArray flattens every fixed property, and omits language_selection/instal
         infos: null,
     );
 
-    expect($context->toArray())->toBe([
-        'language_options' => ['en_UK' => 'English'],
-        'T_CONTENT_ENCODING' => 'utf-8',
-        'RELEASE' => '16.3.0',
-        'F_ACTION' => 'install.php?language=en_UK',
-        'F_DB_HOST' => 'localhost',
-        'F_DB_USER' => 'root',
-        'F_DB_NAME' => 'piwigo',
-        'F_DB_DRIVER' => 'mysqli',
-        'F_DB_PORT' => null,
-        'F_ADMIN' => 'admin',
-        'F_ADMIN_EMAIL' => 'admin@example.test',
-        'EMAIL' => '<span class="adminEmail">admin@example.test</span>',
-        'F_NEWSLETTER_SUBSCRIBE' => true,
-        'L_INSTALL_HELP' => 'Need help ?',
-    ]);
+    expect($context->toArray())
+        ->toBe([
+            'language_options' => [
+                'en_UK' => 'English',
+            ],
+            'T_CONTENT_ENCODING' => 'utf-8',
+            'RELEASE' => '16.3.0',
+            'F_ACTION' => 'install.php?language=en_UK',
+            'F_DB_HOST' => 'localhost',
+            'F_DB_USER' => 'root',
+            'F_DB_NAME' => 'piwigo',
+            'F_DB_DRIVER' => 'mysqli',
+            'F_DB_PORT' => null,
+            'F_ADMIN' => 'admin',
+            'F_ADMIN_EMAIL' => 'admin@example.test',
+            'EMAIL' => '<span class="adminEmail">admin@example.test</span>',
+            'F_NEWSLETTER_SUBSCRIBE' => true,
+            'L_INSTALL_HELP' => 'Need help ?',
+        ]);
 });
 
 test('toArray includes language_selection/install/errors/infos when set', function (): void {
     $context = new InstallRenderPageContext(
         languageSelection: 'en_UK',
-        languageOptions: ['en_UK' => 'English'],
+        languageOptions: [
+            'en_UK' => 'English',
+        ],
         tContentEncoding: 'utf-8',
         release: '16.3.0',
         fAction: 'install.php?language=en_UK',

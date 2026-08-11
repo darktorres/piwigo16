@@ -12,11 +12,21 @@ use Piwigo\Core\ArrayHelper;
  * unused in production today, tested anyway for completeness).
  */
 test('safeUnserialize unserializes a real serialized string', function (): void {
-    expect(ArrayHelper::safeUnserialize(serialize(['a' => 1, 'b' => 2])))->toBe(['a' => 1, 'b' => 2]);
+    expect(ArrayHelper::safeUnserialize(serialize([
+        'a' => 1,
+        'b' => 2,
+    ])))->toBe([
+        'a' => 1,
+        'b' => 2,
+    ]);
 });
 
 test('safeUnserialize passes a non-string array through unchanged', function (): void {
-    expect(ArrayHelper::safeUnserialize(['a' => 1]))->toBe(['a' => 1]);
+    expect(ArrayHelper::safeUnserialize([
+        'a' => 1,
+    ]))->toBe([
+        'a' => 1,
+    ]);
 });
 
 test('safeUnserialize returns false for a malformed serialized string', function (): void {
@@ -36,11 +46,17 @@ test('safeUnserialize returns false for a malformed serialized string', function
 });
 
 test('safeJsonDecode decodes a real JSON object string', function (): void {
-    expect(ArrayHelper::safeJsonDecode('{"a":1}'))->toBe(['a' => 1]);
+    expect(ArrayHelper::safeJsonDecode('{"a":1}'))->toBe([
+        'a' => 1,
+    ]);
 });
 
 test('safeJsonDecode passes a non-string array through unchanged', function (): void {
-    expect(ArrayHelper::safeJsonDecode(['a' => 1]))->toBe(['a' => 1]);
+    expect(ArrayHelper::safeJsonDecode([
+        'a' => 1,
+    ]))->toBe([
+        'a' => 1,
+    ]);
 });
 
 test('safeJsonDecode returns an empty array for malformed JSON or a JSON scalar', function (): void {
@@ -60,11 +76,19 @@ test('safeJsonDecode returns an empty array for malformed JSON or a JSON scalar'
  */
 test('prependAppendArrayItems wraps every scalar value, preserving keys', function (): void {
     expect(ArrayHelper::prependAppendArrayItems(['a', 'b', 3], '[', ']'))->toBe(['[a]', '[b]', '[3]']);
-    expect(ArrayHelper::prependAppendArrayItems(['x' => 'y'], '<', '>'))->toBe(['x' => '<y>']);
+    expect(ArrayHelper::prependAppendArrayItems([
+        'x' => 'y',
+    ], '<', '>'))->toBe([
+        'x' => '<y>',
+    ]);
 });
 
 test('prependAppendArrayItems reduces a non-scalar value to just the prepend/append strings', function (): void {
-    expect(ArrayHelper::prependAppendArrayItems(['x' => [1, 2]], '[', ']'))->toBe(['x' => '[]']);
+    expect(ArrayHelper::prependAppendArrayItems([
+        'x' => [1, 2],
+    ], '[', ']'))->toBe([
+        'x' => '[]',
+    ]);
 });
 
 test('prependAppendArrayItems returns an empty array unchanged', function (): void {

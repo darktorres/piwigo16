@@ -4,26 +4,11 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Integration {
 
-    use Override;
-    use LogicException;
-    use Piwigo\Db\EntityManagerFactory;
-    use Piwigo\Core\CurrentLogger;
-    use Piwigo\Core\Logger;
-    use Piwigo\Activity\ActivityService;
-    use Piwigo\Users\UserService;
-    use Piwigo\Core\WsContext;
-    use Piwigo\Auth\AccessControl;
-    use Piwigo\Tests\Support\LangTestFactory;
-    use Piwigo\Tests\Support\UrlServiceTestFactory;
-    use Piwigo\PluginConfig\EventDispatcher;
-    use Piwigo\Tests\Support\CurrentPathsTestFactory;
-    use mysqli;
-    use Piwigo\Http\ResponseReadyException;
-    use Piwigo\Admin\PluginLoader;
-    use ReflectionMethod;
-    use Piwigo\Admin\PluginMaintain;
-    use Piwigo\Admin\ThemeMaintain;
     use Doctrine\DBAL\Connection;
+    use LogicException;
+    use mysqli;
+    use Override;
+    use Piwigo\Activity\ActivityService;
     use Piwigo\Admin\Extensions\ExtensionLifecycle;
     use Piwigo\Admin\Extensions\ExtensionRepository;
     use Piwigo\Admin\Extensions\ExtensionType;
@@ -31,16 +16,31 @@ namespace Piwigo\Tests\Integration {
     use Piwigo\Admin\Extensions\PluginMigrationEntity;
     use Piwigo\Admin\Extensions\PluginMigrationRepository;
     use Piwigo\Admin\Extensions\ZipExtractor;
-    use Piwigo\Config\CurrentConfig;
-    use Piwigo\Tests\Support\CurrentConfigTestFactory;
+    use Piwigo\Admin\PluginLoader;
+    use Piwigo\Admin\PluginMaintain;
+    use Piwigo\Admin\ThemeMaintain;
+    use Piwigo\Auth\AccessControl;
     use Piwigo\Config\ConfigLoader;
     use Piwigo\Config\ConfigService;
+    use Piwigo\Config\CurrentConfig;
+    use Piwigo\Core\CurrentLogger;
     use Piwigo\Core\Kernel;
+    use Piwigo\Core\Logger;
+    use Piwigo\Core\WsContext;
     use Piwigo\Db\DbConnection;
+    use Piwigo\Db\EntityManagerFactory;
     use Piwigo\Html\HtmlService;
-    use Piwigo\Users\CurrentUser;
+    use Piwigo\Http\ResponseReadyException;
+    use Piwigo\PluginConfig\EventDispatcher;
+    use Piwigo\Tests\Support\CurrentConfigTestFactory;
+    use Piwigo\Tests\Support\CurrentPathsTestFactory;
     use Piwigo\Tests\Support\CurrentUserTestFactory;
+    use Piwigo\Tests\Support\LangTestFactory;
+    use Piwigo\Tests\Support\UrlServiceTestFactory;
+    use Piwigo\Users\CurrentUser;
     use Piwigo\Users\User;
+    use Piwigo\Users\UserService;
+    use ReflectionMethod;
 
     /**
      * Adversarial coverage for ExtensionLifecycle's real state-machine
@@ -98,7 +98,9 @@ namespace Piwigo\Tests\Integration {
             $pluginMigrationRepo = EntityManagerFactory::build($this->conn)->getRepository(PluginMigrationEntity::class);
             $this->pluginMigrationRepo = $pluginMigrationRepo;
             $currentLogger = new CurrentLogger();
-            $currentLogger->set(new Logger(['severity' => Logger::OFF]));
+            $currentLogger->set(new Logger([
+                'severity' => Logger::OFF,
+            ]));
             $activityService = Kernel::container()->get(ActivityService::class);
             self::assertInstanceOf(ActivityService::class, $activityService);
             $userService = Kernel::container()->get(UserService::class);
@@ -120,7 +122,9 @@ namespace Piwigo\Tests\Integration {
             // value so the real filesystem check runs against the real
             // themes/ dir.
             $currentConfig->themesDir = CurrentPathsTestFactory::get()->root . 'themes';
-            CurrentUserTestFactory::get()->set(User::fromUserArray(['id' => 1]));
+            CurrentUserTestFactory::get()->set(User::fromUserArray([
+                'id' => 1,
+            ]));
             CurrentUserTestFactory::get()->markRealUserResolved();
             unset($_REQUEST['method'], $_REQUEST['action']);
             $_SERVER['SCRIPT_NAME'] = '/admin.php';
@@ -129,12 +133,12 @@ namespace Piwigo\Tests\Integration {
         #[Override]
         protected function tearDown(): void
         {
-            $this->conn->executeStatement('DELETE FROM ' . 'plugins');
-            $this->conn->executeStatement('DELETE FROM ' . 'themes');
-            $this->conn->executeStatement('DELETE FROM ' . 'languages' . " WHERE id != 'en_UK'");
-            $this->conn->executeStatement('UPDATE ' . 'user_infos' . " SET theme = 'default' WHERE user_id IN (1, 2)");
-            $this->conn->executeStatement('DELETE FROM ' . 'activity');
-            $this->conn->executeStatement('DELETE FROM ' . 'plugin_migrations');
+            $this->conn->executeStatement('DELETE FROM plugins');
+            $this->conn->executeStatement('DELETE FROM themes');
+            $this->conn->executeStatement('DELETE FROM languages' . " WHERE id != 'en_UK'");
+            $this->conn->executeStatement('UPDATE user_infos' . " SET theme = 'default' WHERE user_id IN (1, 2)");
+            $this->conn->executeStatement('DELETE FROM activity');
+            $this->conn->executeStatement('DELETE FROM plugin_migrations');
             Kernel::reset();
             parent::tearDown();
         }
@@ -156,10 +160,12 @@ namespace Piwigo\Tests\Integration {
 
         // ---------------------------------------------------------- plugin
 
-        public function test_plugin_install_creates_an_inactive_row(): void
+        public function testPluginInstallCreatesAnInactiveRow(): void
         {
             $id = $this->pluginId();
-            $errors = $this->lifecycle->performAction(ExtensionType::Plugin, 'install', $id, ['version' => '1.0']);
+            $errors = $this->lifecycle->performAction(ExtensionType::Plugin, 'install', $id, [
+                'version' => '1.0',
+            ]);
 
             self::assertSame([], $errors);
             $row = $this->repo->find(ExtensionType::Plugin, $id);
@@ -169,12 +175,16 @@ namespace Piwigo\Tests\Integration {
             self::assertSame(['1.0'], $this->findMigrationVersions($id), 'a successful install must record a plugin_migrations row');
         }
 
-        public function test_plugin_install_when_already_installed_is_a_noop(): void
+        public function testPluginInstallWhenAlreadyInstalledIsANoop(): void
         {
             $id = $this->pluginId();
-            $this->lifecycle->performAction(ExtensionType::Plugin, 'install', $id, ['version' => '1.0']);
+            $this->lifecycle->performAction(ExtensionType::Plugin, 'install', $id, [
+                'version' => '1.0',
+            ]);
 
-            $errors = $this->lifecycle->performAction(ExtensionType::Plugin, 'install', $id, ['version' => '2.0']);
+            $errors = $this->lifecycle->performAction(ExtensionType::Plugin, 'install', $id, [
+                'version' => '2.0',
+            ]);
 
             self::assertSame([], $errors);
             $row = $this->repo->find(ExtensionType::Plugin, $id);
@@ -184,11 +194,13 @@ namespace Piwigo\Tests\Integration {
             self::assertSame('1.0', $row['version']);
         }
 
-        public function test_plugin_activate_when_not_installed_implicitly_installs_first(): void
+        public function testPluginActivateWhenNotInstalledImplicitlyInstallsFirst(): void
         {
             $id = $this->pluginId();
 
-            $errors = $this->lifecycle->performAction(ExtensionType::Plugin, 'activate', $id, ['version' => '1.0']);
+            $errors = $this->lifecycle->performAction(ExtensionType::Plugin, 'activate', $id, [
+                'version' => '1.0',
+            ]);
 
             self::assertSame([], $errors);
             $row = $this->repo->find(ExtensionType::Plugin, $id);
@@ -196,22 +208,30 @@ namespace Piwigo\Tests\Integration {
             self::assertSame('active', $row['state']);
         }
 
-        public function test_plugin_activate_when_already_active_is_a_noop(): void
+        public function testPluginActivateWhenAlreadyActiveIsANoop(): void
         {
             $id = $this->pluginId();
-            $this->lifecycle->performAction(ExtensionType::Plugin, 'activate', $id, ['version' => '1.0']);
+            $this->lifecycle->performAction(ExtensionType::Plugin, 'activate', $id, [
+                'version' => '1.0',
+            ]);
 
-            $errors = $this->lifecycle->performAction(ExtensionType::Plugin, 'activate', $id, ['version' => '1.0']);
+            $errors = $this->lifecycle->performAction(ExtensionType::Plugin, 'activate', $id, [
+                'version' => '1.0',
+            ]);
 
             self::assertSame([], $errors);
         }
 
-        public function test_plugin_deactivate_flips_state_back_to_inactive(): void
+        public function testPluginDeactivateFlipsStateBackToInactive(): void
         {
             $id = $this->pluginId();
-            $this->lifecycle->performAction(ExtensionType::Plugin, 'activate', $id, ['version' => '1.0']);
+            $this->lifecycle->performAction(ExtensionType::Plugin, 'activate', $id, [
+                'version' => '1.0',
+            ]);
 
-            $errors = $this->lifecycle->performAction(ExtensionType::Plugin, 'deactivate', $id, ['version' => '1.0']);
+            $errors = $this->lifecycle->performAction(ExtensionType::Plugin, 'deactivate', $id, [
+                'version' => '1.0',
+            ]);
 
             self::assertSame([], $errors);
             $row = $this->repo->find(ExtensionType::Plugin, $id);
@@ -219,7 +239,7 @@ namespace Piwigo\Tests\Integration {
             self::assertSame('inactive', $row['state']);
         }
 
-        public function test_plugin_deactivate_when_not_installed_returns_no_errors_despite_failing(): void
+        public function testPluginDeactivateWhenNotInstalledReturnsNoErrorsDespiteFailing(): void
         {
             // Matches plugins.class.php::perform_action()'s exact quirk:
             // the 'deactivate' case never pushes to $errors itself (only
@@ -230,25 +250,29 @@ namespace Piwigo\Tests\Integration {
             self::assertSame([], $errors);
         }
 
-        public function test_plugin_uninstall_removes_the_row(): void
+        public function testPluginUninstallRemovesTheRow(): void
         {
             $id = $this->pluginId();
-            $this->lifecycle->performAction(ExtensionType::Plugin, 'activate', $id, ['version' => '1.0']);
+            $this->lifecycle->performAction(ExtensionType::Plugin, 'activate', $id, [
+                'version' => '1.0',
+            ]);
 
-            $errors = $this->lifecycle->performAction(ExtensionType::Plugin, 'uninstall', $id, ['version' => '1.0']);
+            $errors = $this->lifecycle->performAction(ExtensionType::Plugin, 'uninstall', $id, [
+                'version' => '1.0',
+            ]);
 
             self::assertSame([], $errors);
             self::assertNull($this->repo->find(ExtensionType::Plugin, $id));
         }
 
-        public function test_plugin_uninstall_when_not_installed_returns_no_errors(): void
+        public function testPluginUninstallWhenNotInstalledReturnsNoErrors(): void
         {
             $errors = $this->lifecycle->performAction(ExtensionType::Plugin, 'uninstall', $this->pluginId(), null);
 
             self::assertSame([], $errors);
         }
 
-        public function test_plugin_restore_uninstalls_then_reactivates(): void
+        public function testPluginRestoreUninstallsThenReactivates(): void
         {
             // Adversarially-motivated: 'restore' runs 'uninstall' (deletes
             // the plugins row) then 'activate', which -- since dbRow is now
@@ -257,9 +281,13 @@ namespace Piwigo\Tests\Integration {
             // composite (plugin_id, version) PK -- must upsert cleanly, not
             // throw a duplicate-key error.
             $id = $this->pluginId();
-            $this->lifecycle->performAction(ExtensionType::Plugin, 'activate', $id, ['version' => '1.0']);
+            $this->lifecycle->performAction(ExtensionType::Plugin, 'activate', $id, [
+                'version' => '1.0',
+            ]);
 
-            $errors = $this->lifecycle->performAction(ExtensionType::Plugin, 'restore', $id, ['version' => '1.0']);
+            $errors = $this->lifecycle->performAction(ExtensionType::Plugin, 'restore', $id, [
+                'version' => '1.0',
+            ]);
 
             self::assertSame([], $errors);
             $row = $this->repo->find(ExtensionType::Plugin, $id);
@@ -268,10 +296,12 @@ namespace Piwigo\Tests\Integration {
             self::assertSame(['1.0'], $this->findMigrationVersions($id), 'restoring at the same version must upsert the ledger row, not duplicate or fail');
         }
 
-        public function test_plugin_delete_with_no_filesystem_entry_only_uninstalls(): void
+        public function testPluginDeleteWithNoFilesystemEntryOnlyUninstalls(): void
         {
             $id = $this->pluginId();
-            $this->lifecycle->performAction(ExtensionType::Plugin, 'activate', $id, ['version' => '1.0']);
+            $this->lifecycle->performAction(ExtensionType::Plugin, 'activate', $id, [
+                'version' => '1.0',
+            ]);
 
             $errors = $this->lifecycle->performAction(ExtensionType::Plugin, 'delete', $id, null);
 
@@ -279,7 +309,7 @@ namespace Piwigo\Tests\Integration {
             self::assertNull($this->repo->find(ExtensionType::Plugin, $id));
         }
 
-        public function test_plugin_delete_with_a_filesystem_entry_also_removes_the_plugin_directory(): void
+        public function testPluginDeleteWithAFilesystemEntryAlsoRemovesThePluginDirectory(): void
         {
             // Unlike the sibling test above, $fsEntry is non-null here, so
             // this reaches the real fs_version bookkeeping AND the
@@ -288,15 +318,19 @@ namespace Piwigo\Tests\Integration {
             // on-disk id (see this class's own docblock), so deltree()'s
             // own `if (is_dir($path))` guard makes this a real, safe no-op.
             $id = $this->pluginId();
-            $this->lifecycle->performAction(ExtensionType::Plugin, 'activate', $id, ['version' => '1.0']);
+            $this->lifecycle->performAction(ExtensionType::Plugin, 'activate', $id, [
+                'version' => '1.0',
+            ]);
 
-            $errors = $this->lifecycle->performAction(ExtensionType::Plugin, 'delete', $id, ['version' => '1.0']);
+            $errors = $this->lifecycle->performAction(ExtensionType::Plugin, 'delete', $id, [
+                'version' => '1.0',
+            ]);
 
             self::assertSame([], $errors);
             self::assertNull($this->repo->find(ExtensionType::Plugin, $id));
         }
 
-        public function test_delete_when_extensions_install_is_disabled_fatally_errors(): void
+        public function testDeleteWhenExtensionsInstallIsDisabledFatallyErrors(): void
         {
             // performAction()'s own top-level guard (only 'delete' is
             // checked here -- matches plugins.class.php::perform_action()'s
@@ -332,15 +366,18 @@ namespace Piwigo\Tests\Integration {
 
         // ----------------------------------------------------------- theme
 
-        public function test_theme_activate_default_is_a_silent_noop(): void
+        public function testThemeActivateDefaultIsASilentNoop(): void
         {
-            $errors = $this->lifecycle->performAction(ExtensionType::Theme, 'activate', 'default', ['version' => '1.0', 'name' => 'Default']);
+            $errors = $this->lifecycle->performAction(ExtensionType::Theme, 'activate', 'default', [
+                'version' => '1.0',
+                'name' => 'Default',
+            ]);
 
             self::assertSame([], $errors);
             self::assertNull($this->repo->find(ExtensionType::Theme, 'default'));
         }
 
-        public function test_theme_activate_rejects_a_missing_parent_theme(): void
+        public function testThemeActivateRejectsAMissingParentTheme(): void
         {
             $id = $this->themeId();
 
@@ -355,7 +392,7 @@ namespace Piwigo\Tests\Integration {
             self::assertNull($this->repo->find(ExtensionType::Theme, $id));
         }
 
-        public function test_theme_activate_allows_default_as_parent(): void
+        public function testThemeActivateAllowsDefaultAsParent(): void
         {
             $id = $this->themeId();
 
@@ -369,7 +406,7 @@ namespace Piwigo\Tests\Integration {
             self::assertNotNull($this->repo->find(ExtensionType::Theme, $id));
         }
 
-        public function test_theme_activate_rejects_a_second_mobile_theme(): void
+        public function testThemeActivateRejectsASecondMobileTheme(): void
         {
             // ConfigService::confUpdateParam('mobile_theme', $id) (called by
             // a successful mobile-theme activate) is deliberately called
@@ -403,47 +440,71 @@ namespace Piwigo\Tests\Integration {
             self::assertNull($this->repo->find(ExtensionType::Theme, $second));
         }
 
-        public function test_theme_deactivate_refuses_to_remove_the_last_theme(): void
+        public function testThemeDeactivateRefusesToRemoveTheLastTheme(): void
         {
             $id = $this->themeId();
-            $this->lifecycle->performAction(ExtensionType::Theme, 'activate', $id, ['version' => '1.0', 'name' => 'Only Theme']);
+            $this->lifecycle->performAction(ExtensionType::Theme, 'activate', $id, [
+                'version' => '1.0',
+                'name' => 'Only Theme',
+            ]);
 
-            $errors = $this->lifecycle->performAction(ExtensionType::Theme, 'deactivate', $id, ['version' => '1.0', 'name' => 'Only Theme']);
+            $errors = $this->lifecycle->performAction(ExtensionType::Theme, 'deactivate', $id, [
+                'version' => '1.0',
+                'name' => 'Only Theme',
+            ]);
 
             self::assertNotSame([], $errors);
             self::assertNotNull($this->repo->find(ExtensionType::Theme, $id));
         }
 
-        public function test_theme_deactivate_of_a_non_default_theme_succeeds_when_another_theme_exists(): void
+        public function testThemeDeactivateOfANonDefaultThemeSucceedsWhenAnotherThemeExists(): void
         {
             $keep = $this->themeId();
-            $this->lifecycle->performAction(ExtensionType::Theme, 'activate', $keep, ['version' => '1.0', 'name' => 'Keep']);
+            $this->lifecycle->performAction(ExtensionType::Theme, 'activate', $keep, [
+                'version' => '1.0',
+                'name' => 'Keep',
+            ]);
             $remove = $this->themeId();
-            $this->lifecycle->performAction(ExtensionType::Theme, 'activate', $remove, ['version' => '1.0', 'name' => 'Remove']);
+            $this->lifecycle->performAction(ExtensionType::Theme, 'activate', $remove, [
+                'version' => '1.0',
+                'name' => 'Remove',
+            ]);
 
-            $errors = $this->lifecycle->performAction(ExtensionType::Theme, 'deactivate', $remove, ['version' => '1.0', 'name' => 'Remove']);
+            $errors = $this->lifecycle->performAction(ExtensionType::Theme, 'deactivate', $remove, [
+                'version' => '1.0',
+                'name' => 'Remove',
+            ]);
 
             self::assertSame([], $errors);
             self::assertNull($this->repo->find(ExtensionType::Theme, $remove));
             self::assertNotNull($this->repo->find(ExtensionType::Theme, $keep));
         }
 
-        public function test_theme_delete_is_blocked_while_installed(): void
+        public function testThemeDeleteIsBlockedWhileInstalled(): void
         {
             $id = $this->themeId();
-            $this->lifecycle->performAction(ExtensionType::Theme, 'activate', $id, ['version' => '1.0', 'name' => 'Installed']);
+            $this->lifecycle->performAction(ExtensionType::Theme, 'activate', $id, [
+                'version' => '1.0',
+                'name' => 'Installed',
+            ]);
 
-            $errors = $this->lifecycle->performAction(ExtensionType::Theme, 'delete', $id, ['version' => '1.0', 'name' => 'Installed']);
+            $errors = $this->lifecycle->performAction(ExtensionType::Theme, 'delete', $id, [
+                'version' => '1.0',
+                'name' => 'Installed',
+            ]);
 
             self::assertSame(['CANNOT DELETE - THEME IS INSTALLED'], $errors);
         }
 
         // -------------------------------------------------------- language
 
-        public function test_language_activate_creates_a_row(): void
+        public function testLanguageActivateCreatesARow(): void
         {
             $id = 'xx_YY';
-            $errors = $this->lifecycle->performAction(ExtensionType::Language, 'activate', $id, ['version' => '1.0', 'name' => 'Test Lang']);
+            $errors = $this->lifecycle->performAction(ExtensionType::Language, 'activate', $id, [
+                'version' => '1.0',
+                'name' => 'Test Lang',
+            ]);
 
             self::assertSame([], $errors);
             self::assertNotNull($this->repo->find(ExtensionType::Language, $id));
@@ -451,14 +512,17 @@ namespace Piwigo\Tests\Integration {
             $this->repo->delete(ExtensionType::Language, $id);
         }
 
-        public function test_language_activate_when_already_active_returns_the_exact_legacy_message(): void
+        public function testLanguageActivateWhenAlreadyActiveReturnsTheExactLegacyMessage(): void
         {
-            $errors = $this->lifecycle->performAction(ExtensionType::Language, 'activate', 'en_UK', ['version' => 'auto', 'name' => 'English [UK]']);
+            $errors = $this->lifecycle->performAction(ExtensionType::Language, 'activate', 'en_UK', [
+                'version' => 'auto',
+                'name' => 'English [UK]',
+            ]);
 
             self::assertSame(['CANNOT ACTIVATE - LANGUAGE IS ALREADY ACTIVATED'], $errors);
         }
 
-        public function test_language_deactivate_of_the_default_language_is_rejected(): void
+        public function testLanguageDeactivateOfTheDefaultLanguageIsRejected(): void
         {
             // Piwigo\Users\UserService::getDefaultLanguage() reads the
             // real fixture default user's language column ('en_UK', the
@@ -472,42 +536,50 @@ namespace Piwigo\Tests\Integration {
             self::assertNotNull($this->repo->find(ExtensionType::Language, 'en_UK'));
         }
 
-        public function test_language_deactivate_when_not_active_returns_the_exact_legacy_message(): void
+        public function testLanguageDeactivateWhenNotActiveReturnsTheExactLegacyMessage(): void
         {
             $errors = $this->lifecycle->performAction(ExtensionType::Language, 'deactivate', 'never-activated-xyz', null);
 
             self::assertSame(['CANNOT DEACTIVATE - LANGUAGE IS ALREADY DEACTIVATED'], $errors);
         }
 
-        public function test_language_delete_while_active_is_rejected(): void
+        public function testLanguageDeleteWhileActiveIsRejected(): void
         {
-            $errors = $this->lifecycle->performAction(ExtensionType::Language, 'delete', 'en_UK', ['version' => 'auto', 'name' => 'English [UK]']);
+            $errors = $this->lifecycle->performAction(ExtensionType::Language, 'delete', 'en_UK', [
+                'version' => 'auto',
+                'name' => 'English [UK]',
+            ]);
 
             self::assertSame(['CANNOT DELETE - LANGUAGE IS ACTIVATED'], $errors);
         }
 
-        public function test_language_delete_of_a_nonexistent_language_is_rejected(): void
+        public function testLanguageDeleteOfANonexistentLanguageIsRejected(): void
         {
             $errors = $this->lifecycle->performAction(ExtensionType::Language, 'delete', 'never-existed-xyz', null);
 
             self::assertSame(['CANNOT DELETE - LANGUAGE DOES NOT EXIST'], $errors);
         }
 
-        public function test_language_actions_never_log_activity(): void
+        public function testLanguageActionsNeverLogActivity(): void
         {
             $before = $this->countActivityRows();
 
-            $this->lifecycle->performAction(ExtensionType::Language, 'activate', 'xx_ZZ', ['version' => '1.0', 'name' => 'Test']);
+            $this->lifecycle->performAction(ExtensionType::Language, 'activate', 'xx_ZZ', [
+                'version' => '1.0',
+                'name' => 'Test',
+            ]);
             $this->lifecycle->performAction(ExtensionType::Language, 'deactivate', 'xx_ZZ', null);
 
             self::assertSame($before, $this->countActivityRows());
         }
 
-        public function test_plugin_actions_do_log_activity(): void
+        public function testPluginActionsDoLogActivity(): void
         {
             $before = $this->countActivityRows();
 
-            $this->lifecycle->performAction(ExtensionType::Plugin, 'install', $this->pluginId(), ['version' => '1.0']);
+            $this->lifecycle->performAction(ExtensionType::Plugin, 'install', $this->pluginId(), [
+                'version' => '1.0',
+            ]);
 
             self::assertGreaterThan($before, $this->countActivityRows());
         }
@@ -534,7 +606,7 @@ namespace Piwigo\Tests\Integration {
         private function findMigrationVersions(string $pluginId): array
         {
             $rows = $this->conn->fetchAllAssociative(
-                'SELECT version FROM ' . 'plugin_migrations' . ' WHERE plugin_id = ?',
+                'SELECT version FROM plugin_migrations WHERE plugin_id = ?',
                 [$pluginId]
             );
 
@@ -656,15 +728,17 @@ namespace Piwigo\Tests\Integration {
 
         // --------------------------------------------- plugin update/errors
 
-        public function test_plugin_update_without_a_revision_option_throws(): void
+        public function testPluginUpdateWithoutARevisionOptionThrows(): void
         {
             $this->expectException(LogicException::class);
             $this->expectExceptionMessageIsOrContains("performPluginAction('update'): missing 'revision' option");
 
-            $this->lifecycle->performAction(ExtensionType::Plugin, 'update', $this->pluginId(), ['version' => '1.0'], []);
+            $this->lifecycle->performAction(ExtensionType::Plugin, 'update', $this->pluginId(), [
+                'version' => '1.0',
+            ], []);
         }
 
-        public function test_plugin_update_with_an_unreachable_pem_server_marks_activity_as_error(): void
+        public function testPluginUpdateWithAnUnreachablePemServerMarksActivityAsError(): void
         {
             // The 'update' action's real extraction-succeeds branch
             // (ExtensionLifecycle.php's own 'update' case: rescanning the
@@ -708,7 +782,11 @@ namespace Piwigo\Tests\Integration {
             $currentConfig->alternativePemUrl = 'https://127.0.0.1/pem-unreachable';
 
             try {
-                $errors = $this->lifecycle->performAction(ExtensionType::Plugin, 'update', $this->pluginId(), ['version' => '1.0'], ['revision' => '42']);
+                $errors = $this->lifecycle->performAction(ExtensionType::Plugin, 'update', $this->pluginId(), [
+                    'version' => '1.0',
+                ], [
+                    'revision' => '42',
+                ]);
 
                 self::assertSame(['dl_archive_error'], $errors);
             } finally {
@@ -721,7 +799,7 @@ namespace Piwigo\Tests\Integration {
             }
         }
 
-        public function test_plugin_install_failure_marks_activity_as_error_and_does_not_insert_a_row(): void
+        public function testPluginInstallFailureMarksActivityAsErrorAndDoesNotInsertARow(): void
         {
             $id = $this->pluginId();
             $this->writePluginMaintainFile($id, 'class.php', extendsBase: true, body: <<<'PHP'
@@ -732,7 +810,9 @@ namespace Piwigo\Tests\Integration {
 PHP);
 
             try {
-                $errors = $this->lifecycle->performAction(ExtensionType::Plugin, 'install', $id, ['version' => '1.0']);
+                $errors = $this->lifecycle->performAction(ExtensionType::Plugin, 'install', $id, [
+                    'version' => '1.0',
+                ]);
 
                 self::assertSame(['forced install failure'], $errors);
                 self::assertNull($this->repo->find(ExtensionType::Plugin, $id));
@@ -741,7 +821,7 @@ PHP);
             }
         }
 
-        public function test_plugin_activate_failure_marks_activity_as_error_after_a_successful_implicit_install(): void
+        public function testPluginActivateFailureMarksActivityAsErrorAfterASuccessfulImplicitInstall(): void
         {
             $id = $this->pluginId();
             $this->writePluginMaintainFile($id, 'class.php', extendsBase: true, body: <<<'PHP'
@@ -756,7 +836,9 @@ PHP);
 PHP);
 
             try {
-                $errors = $this->lifecycle->performAction(ExtensionType::Plugin, 'activate', $id, ['version' => '1.0']);
+                $errors = $this->lifecycle->performAction(ExtensionType::Plugin, 'activate', $id, [
+                    'version' => '1.0',
+                ]);
 
                 self::assertSame(['forced activate failure'], $errors);
                 // The implicit install() (called first, no errors) DID
@@ -773,7 +855,7 @@ PHP);
 
         // ------------------------------------------- buildPluginMaintain()
 
-        public function test_build_plugin_maintain_loads_a_real_class_php_file(): void
+        public function testBuildPluginMaintainLoadsARealClassPhpFile(): void
         {
             $id = $this->pluginId();
             $this->writePluginMaintainFile($id, 'class.php', extendsBase: true);
@@ -788,7 +870,7 @@ PHP);
             }
         }
 
-        public function test_build_plugin_maintain_throws_when_the_class_php_class_does_not_extend_plugin_maintain(): void
+        public function testBuildPluginMaintainThrowsWhenTheClassPhpClassDoesNotExtendPluginMaintain(): void
         {
             $id = $this->pluginId();
             $this->writePluginMaintainFile($id, 'class.php', extendsBase: false);
@@ -806,7 +888,7 @@ PHP);
             }
         }
 
-        public function test_build_plugin_maintain_loads_a_real_inc_php_file(): void
+        public function testBuildPluginMaintainLoadsARealIncPhpFile(): void
         {
             $id = $this->pluginId();
             $this->writePluginMaintainFile($id, 'inc.php', extendsBase: true);
@@ -821,7 +903,7 @@ PHP);
             }
         }
 
-        public function test_build_plugin_maintain_throws_when_the_inc_php_class_does_not_extend_plugin_maintain(): void
+        public function testBuildPluginMaintainThrowsWhenTheIncPhpClassDoesNotExtendPluginMaintain(): void
         {
             $id = $this->pluginId();
             $this->writePluginMaintainFile($id, 'inc.php', extendsBase: false);
@@ -841,7 +923,7 @@ PHP);
 
         // -------------------------------------------- buildThemeMaintain()
 
-        public function test_build_theme_maintain_loads_a_real_maintain_inc_php_file(): void
+        public function testBuildThemeMaintainLoadsARealMaintainIncPhpFile(): void
         {
             $id = $this->themeIdNoHyphens();
             $this->writeThemeMaintainFile($id, extendsBase: true);
@@ -856,7 +938,7 @@ PHP);
             }
         }
 
-        public function test_build_theme_maintain_throws_when_the_class_does_not_extend_theme_maintain(): void
+        public function testBuildThemeMaintainThrowsWhenTheClassDoesNotExtendThemeMaintain(): void
         {
             $id = $this->themeIdNoHyphens();
             $this->writeThemeMaintainFile($id, extendsBase: false);
@@ -875,25 +957,28 @@ PHP);
 
         // ------------------------------------------------- theme, more
 
-        public function test_theme_deactivate_of_a_never_installed_theme_is_a_silent_noop(): void
+        public function testThemeDeactivateOfANeverInstalledThemeIsASilentNoop(): void
         {
             $errors = $this->lifecycle->performAction(ExtensionType::Theme, 'deactivate', $this->themeId(), null);
 
             self::assertSame([], $errors);
         }
 
-        public function test_theme_delete_of_a_theme_neither_installed_nor_on_disk_is_a_silent_noop(): void
+        public function testThemeDeleteOfAThemeNeitherInstalledNorOnDiskIsASilentNoop(): void
         {
             $errors = $this->lifecycle->performAction(ExtensionType::Theme, 'delete', $this->themeId(), null);
 
             self::assertSame([], $errors);
         }
 
-        public function test_theme_delete_is_blocked_by_a_real_child_theme_depending_on_it(): void
+        public function testThemeDeleteIsBlockedByARealChildThemeDependingOnIt(): void
         {
             $parent = $this->themeIdNoHyphens();
             $child = $this->themeIdNoHyphens();
-            $this->writeThemeConf($child, ['name' => 'Child Theme', 'parent' => $parent]);
+            $this->writeThemeConf($child, [
+                'name' => 'Child Theme',
+                'parent' => $parent,
+            ]);
 
             try {
                 self::assertSame(['Child Theme'], $this->lifecycle->getChildrenThemes($parent));
@@ -902,7 +987,10 @@ PHP);
                     ExtensionType::Theme,
                     'delete',
                     $parent,
-                    ['version' => '1.0', 'name' => 'Parent Theme'],
+                    [
+                        'version' => '1.0',
+                        'name' => 'Parent Theme',
+                    ],
                 );
 
                 self::assertCount(1, $errors);
@@ -913,7 +1001,7 @@ PHP);
             }
         }
 
-        public function test_theme_delete_of_a_theme_not_installed_but_on_disk_succeeds(): void
+        public function testThemeDeleteOfAThemeNotInstalledButOnDiskSucceeds(): void
         {
             // dbRow === null (never activated via performAction()) AND
             // fsEntry !== null AND no child theme depends on it -- the one
@@ -924,14 +1012,19 @@ PHP);
             // FilesystemHelper::deltree() call against the real on-disk
             // theme directory writeThemeConf() below just created.
             $id = $this->themeIdNoHyphens();
-            $this->writeThemeConf($id, ['name' => 'On Disk Theme']);
+            $this->writeThemeConf($id, [
+                'name' => 'On Disk Theme',
+            ]);
 
             try {
                 $errors = $this->lifecycle->performAction(
                     ExtensionType::Theme,
                     'delete',
                     $id,
-                    ['version' => '1.0', 'name' => 'On Disk Theme'],
+                    [
+                        'version' => '1.0',
+                        'name' => 'On Disk Theme',
+                    ],
                 );
 
                 self::assertSame([], $errors);
@@ -945,7 +1038,7 @@ PHP);
             }
         }
 
-        public function test_theme_set_default_via_the_public_action_reassigns_users(): void
+        public function testThemeSetDefaultViaThePublicActionReassignsUsers(): void
         {
             // Same real behavior as test_set_default_theme_reassigns_every_
             // user_on_the_fallback_default_theme below, but through the
@@ -954,30 +1047,35 @@ PHP);
             // 'set_default' case (a 1-line delegation to the private
             // setDefaultTheme(), otherwise only ever exercised directly).
             $new = $this->themeId();
-            $before = $this->conn->fetchAllAssociative("SELECT user_id, theme FROM " . 'user_infos' . " WHERE theme = 'default'");
+            $before = $this->conn->fetchAllAssociative('SELECT user_id, theme FROM user_infos' . " WHERE theme = 'default'");
 
             try {
                 $errors = $this->lifecycle->performAction(ExtensionType::Theme, 'set_default', $new, null);
 
                 self::assertSame([], $errors);
                 foreach ($before as $row) {
-                    $current = $this->conn->fetchOne('SELECT theme FROM ' . 'user_infos' . ' WHERE user_id = ?', [$row['user_id']]);
+                    $current = $this->conn->fetchOne('SELECT theme FROM user_infos WHERE user_id = ?', [$row['user_id']]);
                     self::assertSame($new, $current);
                 }
             } finally {
                 foreach ($before as $row) {
-                    $this->conn->executeStatement('UPDATE ' . 'user_infos' . ' SET theme = ? WHERE user_id = ?', [$row['theme'], $row['user_id']]);
+                    $this->conn->executeStatement('UPDATE user_infos SET theme = ? WHERE user_id = ?', [$row['theme'], $row['user_id']]);
                 }
             }
         }
 
-        public function test_missing_parent_theme_recurses_through_a_real_intermediate_theme(): void
+        public function testMissingParentThemeRecursesThroughARealIntermediateTheme(): void
         {
             $middle = $this->themeIdNoHyphens();
-            $this->writeThemeConf($middle, ['name' => 'Middle Theme', 'parent' => 'totally-missing-ancestor-xyz']);
+            $this->writeThemeConf($middle, [
+                'name' => 'Middle Theme',
+                'parent' => 'totally-missing-ancestor-xyz',
+            ]);
 
             try {
-                $result = $this->lifecycle->missingParentTheme('leaf-theme-never-on-disk', ['parent' => $middle]);
+                $result = $this->lifecycle->missingParentTheme('leaf-theme-never-on-disk', [
+                    'parent' => $middle,
+                ]);
 
                 self::assertSame('totally-missing-ancestor-xyz', $result);
             } finally {
@@ -985,28 +1083,39 @@ PHP);
             }
         }
 
-        public function test_theme_deactivate_resets_mobile_theme_config_when_deactivating_the_mobile_theme(): void
+        public function testThemeDeactivateResetsMobileThemeConfigWhenDeactivatingTheMobileTheme(): void
         {
             $mobile = $this->themeId();
             $other = $this->themeId();
-            $this->lifecycle->performAction(ExtensionType::Theme, 'activate', $mobile, ['version' => '1.0', 'name' => 'Mobile', 'mobile' => true]);
+            $this->lifecycle->performAction(ExtensionType::Theme, 'activate', $mobile, [
+                'version' => '1.0',
+                'name' => 'Mobile',
+                'mobile' => true,
+            ]);
             $currentConfig = CurrentConfigTestFactory::get();
             $currentConfig->enableExtensionsInstall = true;
             $currentConfig->phpExtensionInUrls = false;
             $currentConfig->mobileTheme = $mobile;
-            $this->lifecycle->performAction(ExtensionType::Theme, 'activate', $other, ['version' => '1.0', 'name' => 'Other']);
+            $this->lifecycle->performAction(ExtensionType::Theme, 'activate', $other, [
+                'version' => '1.0',
+                'name' => 'Other',
+            ]);
 
-            $errors = $this->lifecycle->performAction(ExtensionType::Theme, 'deactivate', $mobile, ['version' => '1.0', 'name' => 'Mobile', 'mobile' => true]);
+            $errors = $this->lifecycle->performAction(ExtensionType::Theme, 'deactivate', $mobile, [
+                'version' => '1.0',
+                'name' => 'Mobile',
+                'mobile' => true,
+            ]);
 
             self::assertSame([], $errors);
-            $raw = $this->conn->fetchOne("SELECT value FROM " . 'config' . " WHERE param = 'mobile_theme'");
+            $raw = $this->conn->fetchOne('SELECT value FROM config' . " WHERE param = 'mobile_theme'");
             self::assertIsString($raw);
             self::assertSame('', json_decode($raw));
 
-            $this->conn->executeStatement("DELETE FROM " . 'config' . " WHERE param = 'mobile_theme'");
+            $this->conn->executeStatement('DELETE FROM config' . " WHERE param = 'mobile_theme'");
         }
 
-        public function test_theme_deactivate_of_the_real_default_theme_reassigns_a_replacement_default(): void
+        public function testThemeDeactivateOfTheRealDefaultThemeReassignsAReplacementDefault(): void
         {
             // performThemeAction()'s own `$id === getDefaultTheme()` gate
             // (guarding the pickReplacementDefaultTheme()/setDefaultTheme()
@@ -1041,23 +1150,34 @@ PHP);
 
             $default = $this->themeId();
             $other = $this->themeId();
-            $this->writeThemeConf($default, ['name' => 'Real Default']);
-            $this->lifecycle->performAction(ExtensionType::Theme, 'activate', $default, ['version' => '1.0', 'name' => 'Real Default']);
-            $this->lifecycle->performAction(ExtensionType::Theme, 'activate', $other, ['version' => '1.0', 'name' => 'Other']);
+            $this->writeThemeConf($default, [
+                'name' => 'Real Default',
+            ]);
+            $this->lifecycle->performAction(ExtensionType::Theme, 'activate', $default, [
+                'version' => '1.0',
+                'name' => 'Real Default',
+            ]);
+            $this->lifecycle->performAction(ExtensionType::Theme, 'activate', $other, [
+                'version' => '1.0',
+                'name' => 'Other',
+            ]);
 
             $defaultUserId = $currentConfig->defaultUserId;
-            $before = $this->conn->fetchOne('SELECT theme FROM ' . 'user_infos' . ' WHERE user_id = ?', [$defaultUserId]);
-            $this->conn->executeStatement('UPDATE ' . 'user_infos' . ' SET theme = ? WHERE user_id = ?', [$default, $defaultUserId]);
+            $before = $this->conn->fetchOne('SELECT theme FROM user_infos WHERE user_id = ?', [$defaultUserId]);
+            $this->conn->executeStatement('UPDATE user_infos SET theme = ? WHERE user_id = ?', [$default, $defaultUserId]);
 
             try {
-                $errors = $this->lifecycle->performAction(ExtensionType::Theme, 'deactivate', $default, ['version' => '1.0', 'name' => 'Real Default']);
+                $errors = $this->lifecycle->performAction(ExtensionType::Theme, 'deactivate', $default, [
+                    'version' => '1.0',
+                    'name' => 'Real Default',
+                ]);
 
                 self::assertSame([], $errors);
                 self::assertNull($this->repo->find(ExtensionType::Theme, $default));
-                $reassigned = $this->conn->fetchOne('SELECT theme FROM ' . 'user_infos' . ' WHERE user_id = ?', [$defaultUserId]);
+                $reassigned = $this->conn->fetchOne('SELECT theme FROM user_infos WHERE user_id = ?', [$defaultUserId]);
                 self::assertSame($other, $reassigned, 'deactivating the real default theme must pick the remaining installed theme as the new default');
             } finally {
-                $this->conn->executeStatement('UPDATE ' . 'user_infos' . ' SET theme = ? WHERE user_id = ?', [$before, $defaultUserId]);
+                $this->conn->executeStatement('UPDATE user_infos SET theme = ? WHERE user_id = ?', [$before, $defaultUserId]);
                 $this->removeThemeDir($default);
             }
         }
@@ -1073,12 +1193,18 @@ PHP);
          * themesDir()-override the call-site test above needs -- same
          * tactic as buildPluginMaintain()/buildThemeMaintain() above.
          */
-        public function test_pick_replacement_default_theme_returns_any_other_installed_theme(): void
+        public function testPickReplacementDefaultThemeReturnsAnyOtherInstalledTheme(): void
         {
             $keep = $this->themeId();
             $exclude = $this->themeId();
-            $this->lifecycle->performAction(ExtensionType::Theme, 'activate', $keep, ['version' => '1.0', 'name' => 'Keep']);
-            $this->lifecycle->performAction(ExtensionType::Theme, 'activate', $exclude, ['version' => '1.0', 'name' => 'Exclude']);
+            $this->lifecycle->performAction(ExtensionType::Theme, 'activate', $keep, [
+                'version' => '1.0',
+                'name' => 'Keep',
+            ]);
+            $this->lifecycle->performAction(ExtensionType::Theme, 'activate', $exclude, [
+                'version' => '1.0',
+                'name' => 'Exclude',
+            ]);
 
             $method = new ReflectionMethod($this->lifecycle, 'pickReplacementDefaultTheme');
             $result = $method->invoke($this->lifecycle, $exclude);
@@ -1086,7 +1212,7 @@ PHP);
             self::assertSame($keep, $result);
         }
 
-        public function test_pick_replacement_default_theme_falls_back_to_default_when_none_other_exists(): void
+        public function testPickReplacementDefaultThemeFallsBackToDefaultWhenNoneOtherExists(): void
         {
             $method = new ReflectionMethod($this->lifecycle, 'pickReplacementDefaultTheme');
             $result = $method->invoke($this->lifecycle, 'a-theme-id-that-is-not-installed-xyz');
@@ -1094,7 +1220,7 @@ PHP);
             self::assertSame('default', $result);
         }
 
-        public function test_set_default_theme_reassigns_every_user_on_the_fallback_default_theme(): void
+        public function testSetDefaultThemeReassignsEveryUserOnTheFallbackDefaultTheme(): void
         {
             $new = $this->themeId();
 
@@ -1104,14 +1230,14 @@ PHP);
             // always looks up whoever currently has theme = 'default' --
             // snapshot them all so this test can restore the exact prior
             // state no matter how many rows that is.
-            $before = $this->conn->fetchAllAssociative("SELECT user_id, theme FROM " . 'user_infos' . " WHERE theme = 'default'");
+            $before = $this->conn->fetchAllAssociative('SELECT user_id, theme FROM user_infos' . " WHERE theme = 'default'");
 
             try {
                 $method = new ReflectionMethod($this->lifecycle, 'setDefaultTheme');
                 $method->invoke($this->lifecycle, $new);
 
                 foreach ($before as $row) {
-                    $current = $this->conn->fetchOne('SELECT theme FROM ' . 'user_infos' . ' WHERE user_id = ?', [$row['user_id']]);
+                    $current = $this->conn->fetchOne('SELECT theme FROM user_infos WHERE user_id = ?', [$row['user_id']]);
                     self::assertSame($new, $current);
                 }
                 // defaultUserId()/guestId() (both user_id 2 in this
@@ -1120,39 +1246,42 @@ PHP);
                 // 'default' (already asserted above for user 2), so this
                 // only adds real signal when user 2 *wasn't* already in
                 // $before; assert it regardless for a stable, exact check.
-                $guestTheme = $this->conn->fetchOne('SELECT theme FROM ' . 'user_infos' . ' WHERE user_id = 2');
+                $guestTheme = $this->conn->fetchOne('SELECT theme FROM user_infos WHERE user_id = 2');
                 self::assertSame($new, $guestTheme);
             } finally {
                 foreach ($before as $row) {
-                    $this->conn->executeStatement('UPDATE ' . 'user_infos' . ' SET theme = ? WHERE user_id = ?', [$row['theme'], $row['user_id']]);
+                    $this->conn->executeStatement('UPDATE user_infos SET theme = ? WHERE user_id = ?', [$row['theme'], $row['user_id']]);
                 }
             }
         }
 
         // ---------------------------------------------------- language, more
 
-        public function test_language_delete_of_a_never_activated_but_on_disk_language_succeeds(): void
+        public function testLanguageDeleteOfANeverActivatedButOnDiskLanguageSucceeds(): void
         {
             $errors = $this->lifecycle->performAction(
                 ExtensionType::Language,
                 'delete',
                 'never-activated-on-disk-xyz',
-                ['version' => '1.0', 'name' => 'On Disk Lang'],
+                [
+                    'version' => '1.0',
+                    'name' => 'On Disk Lang',
+                ],
             );
 
             self::assertSame([], $errors);
         }
 
-        public function test_language_set_default_reassigns_the_default_and_guest_users(): void
+        public function testLanguageSetDefaultReassignsTheDefaultAndGuestUsers(): void
         {
             $errors = $this->lifecycle->performAction(ExtensionType::Language, 'set_default', 'xx_ZZ', null);
 
             self::assertSame([], $errors);
-            $row = $this->conn->fetchAssociative('SELECT language FROM ' . 'user_infos' . ' WHERE user_id = 2');
+            $row = $this->conn->fetchAssociative('SELECT language FROM user_infos WHERE user_id = 2');
             self::assertIsArray($row);
             self::assertSame('xx_ZZ', $row['language']);
 
-            $this->conn->executeStatement("UPDATE " . 'user_infos' . " SET language = 'en_UK' WHERE user_id = 2");
+            $this->conn->executeStatement('UPDATE user_infos' . " SET language = 'en_UK' WHERE user_id = 2");
         }
     }
 }

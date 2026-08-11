@@ -22,7 +22,9 @@ use Piwigo\Tests\Support\KernelContainerOverride;
  */
 test('PluginMaintain\'s base install/activate/deactivate/uninstall/update are all no-ops returning null', function (): void {
     KernelContainerOverride::with(
-        [Paths::class => Paths::fromRoot(sys_get_temp_dir())],
+        [
+            Paths::class => Paths::fromRoot(sys_get_temp_dir()),
+        ],
         static function (): void {
             $wsContext = Kernel::container()->get(WsContext::class);
             $accessControl = Kernel::container()->get(AccessControl::class);
@@ -33,12 +35,17 @@ test('PluginMaintain\'s base install/activate/deactivate/uninstall/update are al
             $errors = [];
             $maintain = new PluginMaintain('some-plugin', $wsContext, $accessControl);
 
-            expect($maintain->install('1.0', $errors))->toBeNull();
-            expect($maintain->activate('1.0', $errors))->toBeNull();
-            expect($maintain->deactivate())->toBeNull();
-            expect($maintain->uninstall())->toBeNull();
+            expect($maintain->install('1.0', $errors))
+                ->toBeNull();
+            expect($maintain->activate('1.0', $errors))
+                ->toBeNull();
+            expect($maintain->deactivate())
+                ->toBeNull();
+            expect($maintain->uninstall())
+                ->toBeNull();
             $maintain->update('1.0', '2.0', $errors);
-            expect($errors)->toBe([]);
+            expect($errors)
+                ->toBe([]);
         }
     );
 });
@@ -47,8 +54,12 @@ test('ThemeMaintain\'s base activate/deactivate/delete are all no-ops returning 
     $errors = [];
     $maintain = new ThemeMaintain('some-theme');
 
-    expect($maintain->activate('1.0', $errors))->toBeNull();
-    expect($maintain->deactivate())->toBeNull();
-    expect($maintain->delete())->toBeNull();
-    expect($errors)->toBe([]);
+    expect($maintain->activate('1.0', $errors))
+        ->toBeNull();
+    expect($maintain->deactivate())
+        ->toBeNull();
+    expect($maintain->delete())
+        ->toBeNull();
+    expect($errors)
+        ->toBe([]);
 });

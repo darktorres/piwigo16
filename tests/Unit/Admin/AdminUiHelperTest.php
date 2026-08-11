@@ -28,12 +28,13 @@ test('getExtents finds every .tpl file under the real template-extension directo
     $result = AdminUiHelper::getExtents(Paths::fromRoot(dirname(__DIR__, 3)));
 
     sort($result);
-    expect($result)->toBe([
-        'distributed/samples/my-picture.tpl',
-        'distributed/samples/my-thumbnails.tpl',
-        'distributed/samples/my-thumbnails2.tpl',
-        'distributed/samples/titling_categories.tpl',
-    ]);
+    expect($result)
+        ->toBe([
+            'distributed/samples/my-picture.tpl',
+            'distributed/samples/my-thumbnails.tpl',
+            'distributed/samples/my-thumbnails2.tpl',
+            'distributed/samples/titling_categories.tpl',
+        ]);
 });
 
 test('getExtents returns an empty array when the directory does not exist', function (): void {
@@ -71,7 +72,8 @@ test('getExtents skips symlinked .tpl files and non-.tpl files', function (): vo
         $result = AdminUiHelper::getExtents(Paths::fromRoot(dirname(__DIR__, 3)), $dir);
         sort($result);
 
-        expect($result)->toBe(['link-target.tpl', 'real.tpl']);
+        expect($result)
+            ->toBe(['link-target.tpl', 'real.tpl']);
     } finally {
         unlink($dir . '/symlinked.tpl');
         unlink($dir . '/link-target.tpl');
@@ -92,7 +94,8 @@ test('getExtents recurses into subdirectories', function (): void {
 
         $result = AdminUiHelper::getExtents(Paths::fromRoot(dirname(__DIR__, 3)), $dir);
 
-        expect($result)->toHaveCount(3);
+        expect($result)
+            ->toHaveCount(3);
     } finally {
         unlink($dir . '/nested/deeper/bottom.tpl');
         unlink($dir . '/nested/mid.tpl');
@@ -121,11 +124,37 @@ test('getNewsletterSubscribeBaseUrl and getOldNewslettersBaseUrl return their fi
 
 test('getActiveMenu maps every known admin page to its menu section, and an unknown page to -1', function (): void {
     $expectations = [
-        'photo' => 0, 'photos_add' => 0, 'rating' => 0, 'tags' => 0, 'batch_manager' => 0,
-        'album' => 1, 'cat_list' => 1, 'albums' => 1, 'cat_options' => 1, 'cat_search' => 1, 'permalinks' => 1,
-        'user_list' => 2, 'user_perm' => 2, 'group_list' => 2, 'group_perm' => 2, 'notification_by_mail' => 2, 'user_activity' => 2,
-        'site_manager' => 3, 'site_update' => 3, 'stats' => 3, 'history' => 3, 'maintenance' => 3, 'comments' => 3, 'updates' => 3,
-        'configuration' => 4, 'derivatives' => 4, 'extend_for_templates' => 4, 'menubar' => 4, 'themes' => 4, 'theme' => 4, 'languages' => 4,
+        'photo' => 0,
+        'photos_add' => 0,
+        'rating' => 0,
+        'tags' => 0,
+        'batch_manager' => 0,
+        'album' => 1,
+        'cat_list' => 1,
+        'albums' => 1,
+        'cat_options' => 1,
+        'cat_search' => 1,
+        'permalinks' => 1,
+        'user_list' => 2,
+        'user_perm' => 2,
+        'group_list' => 2,
+        'group_perm' => 2,
+        'notification_by_mail' => 2,
+        'user_activity' => 2,
+        'site_manager' => 3,
+        'site_update' => 3,
+        'stats' => 3,
+        'history' => 3,
+        'maintenance' => 3,
+        'comments' => 3,
+        'updates' => 3,
+        'configuration' => 4,
+        'derivatives' => 4,
+        'extend_for_templates' => 4,
+        'menubar' => 4,
+        'themes' => 4,
+        'theme' => 4,
+        'languages' => 4,
         'not-a-real-page' => -1,
     ];
 

@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Contract;
 
+use Doctrine\DBAL\Connection;
 use Override;
 use Piwigo\Cache\CachePools;
 use Piwigo\Core\Env;
-use Doctrine\DBAL\Connection;
 use Piwigo\Db\DbConnection;
 
 /**
@@ -27,7 +27,9 @@ final class WsExtensionsTest extends ContractTestCase
 {
     private Connection $conn;
 
-    /** @var list<int> */
+    /**
+     * @var list<int>
+     */
     private array $extraUserIdsToDelete = [];
 
     #[Override]
@@ -42,7 +44,7 @@ final class WsExtensionsTest extends ContractTestCase
     protected function tearDown(): void
     {
         $this->setConfigBool('enable_extensions_install', true);
-        $this->conn->executeStatement('DELETE FROM ' . 'extension_ignored_updates');
+        $this->conn->executeStatement('DELETE FROM extension_ignored_updates');
 
         if ($this->extraUserIdsToDelete !== []) {
             $this->loginAsAdmin();
@@ -110,7 +112,7 @@ final class WsExtensionsTest extends ContractTestCase
 
     // -------------------------------------------------------- pluginsPerformAction
 
-    public function test_pluginsPerformAction_invalid_token_returns_error(): void
+    public function testPluginsPerformActionInvalidTokenReturnsError(): void
     {
         $response = $this->callWs('pwg.plugins.performAction', [
             'action' => 'install',
@@ -123,7 +125,7 @@ final class WsExtensionsTest extends ContractTestCase
         self::assertSame('Invalid security token', $response['message']);
     }
 
-    public function test_pluginsPerformAction_non_webmaster_returns_error(): void
+    public function testPluginsPerformActionNonWebmasterReturnsError(): void
     {
         $token = $this->loginAsNonWebmasterAdmin();
 
@@ -138,7 +140,7 @@ final class WsExtensionsTest extends ContractTestCase
         self::assertSame('Webmaster status is required.', $response['message']);
     }
 
-    public function test_pluginsPerformAction_delete_with_install_disabled_returns_error(): void
+    public function testPluginsPerformActionDeleteWithInstallDisabledReturnsError(): void
     {
         $this->setConfigBool('enable_extensions_install', false);
         $token = $this->getPwgToken();
@@ -154,7 +156,7 @@ final class WsExtensionsTest extends ContractTestCase
         self::assertSame('Piwigo extensions install/update/delete system is disabled', $response['message']);
     }
 
-    public function test_pluginsPerformAction_install_on_a_nonexistent_plugin_is_a_safe_noop(): void
+    public function testPluginsPerformActionInstallOnANonexistentPluginIsASafeNoop(): void
     {
         // fsEntry is null for a plugin id with no matching directory --
         // performPluginAction('install', ...) breaks out immediately with
@@ -172,7 +174,7 @@ final class WsExtensionsTest extends ContractTestCase
         self::assertTrue($response['result']);
     }
 
-    public function test_pluginsPerformAction_activate_on_a_nonexistent_plugin_is_a_safe_noop_and_clears_the_template_cache(): void
+    public function testPluginsPerformActionActivateOnANonexistentPluginIsASafeNoopAndClearsTheTemplateCache(): void
     {
         // dbRow is null and fsEntry is null (no matching plugins/ directory)
         // -- performPluginAction('activate', ...) delegates to
@@ -196,7 +198,7 @@ final class WsExtensionsTest extends ContractTestCase
 
     // --------------------------------------------------------- themesPerformAction
 
-    public function test_themesPerformAction_invalid_token_returns_error(): void
+    public function testThemesPerformActionInvalidTokenReturnsError(): void
     {
         $response = $this->callWs('pwg.themes.performAction', [
             'action' => 'activate',
@@ -209,7 +211,7 @@ final class WsExtensionsTest extends ContractTestCase
         self::assertSame('Invalid security token', $response['message']);
     }
 
-    public function test_themesPerformAction_delete_with_install_disabled_returns_error(): void
+    public function testThemesPerformActionDeleteWithInstallDisabledReturnsError(): void
     {
         $this->setConfigBool('enable_extensions_install', false);
         $token = $this->getPwgToken();
@@ -234,12 +236,12 @@ final class WsExtensionsTest extends ContractTestCase
      * instead, same as the "never installed" test below), so this test
      * seeds the single row itself and removes it afterward.
      */
-    public function test_themesPerformAction_deactivate_the_only_registered_theme_returns_error(): void
+    public function testThemesPerformActionDeactivateTheOnlyRegisteredThemeReturnsError(): void
     {
         $token = $this->getPwgToken();
 
         $this->conn->executeStatement(
-            'INSERT INTO ' . 'themes' . ' (id, version, name) VALUES (?, ?, ?)',
+            'INSERT INTO themes (id, version, name) VALUES (?, ?, ?)',
             ['default', '1.0.0', 'default']
         );
 
@@ -257,11 +259,11 @@ final class WsExtensionsTest extends ContractTestCase
             self::assertSame(500, $response['err']);
             self::assertSame('Impossible to deactivate this theme, you need at least one theme.', $response['message']);
         } finally {
-            $this->conn->executeStatement('DELETE FROM ' . 'themes' . ' WHERE id = ?', ['default']);
+            $this->conn->executeStatement('DELETE FROM themes WHERE id = ?', ['default']);
         }
     }
 
-    public function test_themesPerformAction_deactivate_on_a_never_installed_theme_is_a_safe_noop(): void
+    public function testThemesPerformActionDeactivateOnANeverInstalledThemeIsASafeNoop(): void
     {
         // performThemeAction('deactivate', ...) with no matching DB row
         // records an 'error' activity detail internally but never appends
@@ -282,7 +284,7 @@ final class WsExtensionsTest extends ContractTestCase
 
     // ------------------------------------------------------------------- update
 
-    public function test_update_install_disabled_returns_error(): void
+    public function testUpdateInstallDisabledReturnsError(): void
     {
         $this->setConfigBool('enable_extensions_install', false);
         $token = $this->getPwgToken();
@@ -299,7 +301,7 @@ final class WsExtensionsTest extends ContractTestCase
         self::assertSame('Piwigo extensions install/update system is disabled', $response['message']);
     }
 
-    public function test_update_non_webmaster_returns_error(): void
+    public function testUpdateNonWebmasterReturnsError(): void
     {
         $token = $this->loginAsNonWebmasterAdmin();
 
@@ -315,7 +317,7 @@ final class WsExtensionsTest extends ContractTestCase
         self::assertSame('Webmaster status is required.', $response['message']);
     }
 
-    public function test_update_invalid_token_returns_error(): void
+    public function testUpdateInvalidTokenReturnsError(): void
     {
         $response = $this->callWs('pwg.extensions.update', [
             'type' => 'plugins',
@@ -329,7 +331,7 @@ final class WsExtensionsTest extends ContractTestCase
         self::assertSame('Invalid security token', $response['message']);
     }
 
-    public function test_update_invalid_type_returns_error(): void
+    public function testUpdateInvalidTypeReturnsError(): void
     {
         $token = $this->getPwgToken();
 
@@ -347,7 +349,7 @@ final class WsExtensionsTest extends ContractTestCase
 
     // ------------------------------------------------------------- ignoreUpdate
 
-    public function test_ignoreUpdate_non_webmaster_returns_error(): void
+    public function testIgnoreUpdateNonWebmasterReturnsError(): void
     {
         $token = $this->loginAsNonWebmasterAdmin();
 
@@ -362,7 +364,7 @@ final class WsExtensionsTest extends ContractTestCase
         self::assertSame('Access denied', $response['message']);
     }
 
-    public function test_ignoreUpdate_invalid_token_returns_error(): void
+    public function testIgnoreUpdateInvalidTokenReturnsError(): void
     {
         $response = $this->callWs('pwg.extensions.ignoreUpdate', [
             'type' => 'plugins',
@@ -375,7 +377,7 @@ final class WsExtensionsTest extends ContractTestCase
         self::assertSame('Invalid security token', $response['message']);
     }
 
-    public function test_ignoreUpdate_missing_id_returns_error(): void
+    public function testIgnoreUpdateMissingIdReturnsError(): void
     {
         $token = $this->getPwgToken();
 
@@ -389,7 +391,7 @@ final class WsExtensionsTest extends ContractTestCase
         self::assertSame('Invalid parameters', $response['message']);
     }
 
-    public function test_ignoreUpdate_invalid_type_returns_error(): void
+    public function testIgnoreUpdateInvalidTypeReturnsError(): void
     {
         $token = $this->getPwgToken();
 
@@ -404,7 +406,7 @@ final class WsExtensionsTest extends ContractTestCase
         self::assertSame('Invalid parameters', $response['message']);
     }
 
-    public function test_ignoreUpdate_adds_extension_to_the_ignore_list(): void
+    public function testIgnoreUpdateAddsExtensionToTheIgnoreList(): void
     {
         $token = $this->getPwgToken();
         $pluginId = 'ct_fake_plugin_' . uniqid();
@@ -422,13 +424,13 @@ final class WsExtensionsTest extends ContractTestCase
         // not the plural wire-format 'plugins' the WS param itself uses --
         // see ExtensionIgnoredUpdateEntity's own docblock.
         $rows = $this->conn->fetchAllAssociative(
-            'SELECT extension_id FROM ' . 'extension_ignored_updates' . " WHERE extension_type = 'plugin'"
+            'SELECT extension_id FROM extension_ignored_updates' . " WHERE extension_type = 'plugin'"
         );
         self::assertCount(1, $rows);
         self::assertSame($pluginId, $rows[0]['extension_id']);
     }
 
-    public function test_ignoreUpdate_ignoring_the_same_extension_twice_does_not_error(): void
+    public function testIgnoreUpdateIgnoringTheSameExtensionTwiceDoesNotError(): void
     {
         // Adversarially-motivated: extension_ignored_updates has a
         // composite (extension_type, extension_id) PK -- a set-membership
@@ -451,13 +453,13 @@ final class WsExtensionsTest extends ContractTestCase
         self::assertSame('ok', $second['stat']);
 
         $rows = $this->conn->fetchAllAssociative(
-            'SELECT extension_id FROM ' . 'extension_ignored_updates' . " WHERE extension_type = 'plugin' AND extension_id = ?",
+            'SELECT extension_id FROM extension_ignored_updates' . " WHERE extension_type = 'plugin' AND extension_id = ?",
             [$pluginId]
         );
         self::assertCount(1, $rows, 'ignoring the same extension twice must not create a duplicate row');
     }
 
-    public function test_ignoreUpdate_reset_with_type_clears_only_that_type(): void
+    public function testIgnoreUpdateResetWithTypeClearsOnlyThatType(): void
     {
         $token = $this->getPwgToken();
         $pluginId = 'ct_fake_plugin_' . uniqid();
@@ -482,23 +484,35 @@ final class WsExtensionsTest extends ContractTestCase
         self::assertSame('ok', $response['stat']);
 
         $pluginRows = $this->conn->fetchAllAssociative(
-            'SELECT extension_id FROM ' . 'extension_ignored_updates' . " WHERE extension_type = 'plugin'"
+            'SELECT extension_id FROM extension_ignored_updates' . " WHERE extension_type = 'plugin'"
         );
         self::assertSame([], $pluginRows);
 
         $themeRows = $this->conn->fetchAllAssociative(
-            'SELECT extension_id FROM ' . 'extension_ignored_updates' . " WHERE extension_type = 'theme'"
+            'SELECT extension_id FROM extension_ignored_updates' . " WHERE extension_type = 'theme'"
         );
         self::assertSame(['some_theme'], array_column($themeRows, 'extension_id'), 'reset with a specific type must not touch other types');
     }
 
-    public function test_ignoreUpdate_reset_without_type_clears_everything(): void
+    public function testIgnoreUpdateResetWithoutTypeClearsEverything(): void
     {
         $token = $this->getPwgToken();
         $now = Env::now()->format('Y-m-d H:i:s');
-        $this->conn->insert('extension_ignored_updates', ['extension_type' => 'plugin', 'extension_id' => 'a', 'ignored_at' => $now]);
-        $this->conn->insert('extension_ignored_updates', ['extension_type' => 'theme', 'extension_id' => 'b', 'ignored_at' => $now]);
-        $this->conn->insert('extension_ignored_updates', ['extension_type' => 'language', 'extension_id' => 'c', 'ignored_at' => $now]);
+        $this->conn->insert('extension_ignored_updates', [
+            'extension_type' => 'plugin',
+            'extension_id' => 'a',
+            'ignored_at' => $now,
+        ]);
+        $this->conn->insert('extension_ignored_updates', [
+            'extension_type' => 'theme',
+            'extension_id' => 'b',
+            'ignored_at' => $now,
+        ]);
+        $this->conn->insert('extension_ignored_updates', [
+            'extension_type' => 'language',
+            'extension_id' => 'c',
+            'ignored_at' => $now,
+        ]);
 
         $response = $this->callWs('pwg.extensions.ignoreUpdate', [
             'reset' => true,
@@ -507,7 +521,7 @@ final class WsExtensionsTest extends ContractTestCase
 
         self::assertSame('ok', $response['stat']);
 
-        $remaining = $this->conn->fetchOne('SELECT COUNT(*) FROM ' . 'extension_ignored_updates');
+        $remaining = $this->conn->fetchOne('SELECT COUNT(*) FROM extension_ignored_updates');
         self::assertSame(0, $remaining);
     }
 }

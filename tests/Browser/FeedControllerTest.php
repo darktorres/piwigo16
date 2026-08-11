@@ -32,7 +32,9 @@ use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
  * contain.
  */
 
-/** @return array<int, array{id: string, date_available: ?string}> */
+/**
+ * @return array<int, array{id: string, date_available: ?string}>
+ */
 function feedAllImageDates(mysqli|Connection $db): array
 {
     $fetchedRows = H::dbFetchAll($db, 'SELECT id, date_available FROM images');
@@ -40,7 +42,10 @@ function feedAllImageDates(mysqli|Connection $db): array
     $rows = [];
     foreach ($fetchedRows as $row) {
         $dateAvailable = $row['date_available'];
-        $rows[] = ['id' => (string) $row['id'], 'date_available' => is_string($dateAvailable) ? $dateAvailable : null];
+        $rows[] = [
+            'id' => (string) $row['id'],
+            'date_available' => is_string($dateAvailable) ? $dateAvailable : null,
+        ];
     }
 
     return $rows;
@@ -51,7 +56,9 @@ function feedDbConnect(): mysqli|Connection
     return H::connect();
 }
 
-/** @return array{status: int, headers: string, body: string} */
+/**
+ * @return array{status: int, headers: string, body: string}
+ */
 function feedRawGet(string $query = ''): array
 {
     $ch = curl_init(H::baseUrl() . '/feed.php' . $query);
@@ -71,10 +78,16 @@ function feedRawGet(string $query = ''): array
 
     [$headers, $body] = explode("\r\n\r\n", $response, 2) + ['', ''];
 
-    return ['status' => $status, 'headers' => strtolower($headers), 'body' => $body];
+    return [
+        'status' => $status,
+        'headers' => strtolower($headers),
+        'body' => $body,
+    ];
 }
 
-/** Extracts the 50-char feed id from the U_FEED href notification.tpl renders. */
+/**
+ * Extracts the 50-char feed id from the U_FEED href notification.tpl renders.
+ */
 function feedExtractFeedId(string $html): string
 {
     if (preg_match('/feed\.php\?feed=([0-9A-Za-z]{50})/', $html, $matches) !== 1) {
@@ -84,7 +97,9 @@ function feedExtractFeedId(string $html): string
     return $matches[1];
 }
 
-/** @return array{lastCheck: ?string}|null */
+/**
+ * @return array{lastCheck: ?string}|null
+ */
 function feedUserFeedRow(string $feedId): ?array
 {
     $db = feedDbConnect();
@@ -97,7 +112,9 @@ function feedUserFeedRow(string $feedId): ?array
 
     $lastCheck = $row['last_check'];
 
-    return ['lastCheck' => is_string($lastCheck) ? $lastCheck : null];
+    return [
+        'lastCheck' => is_string($lastCheck) ? $lastCheck : null,
+    ];
 }
 
 /**
@@ -162,7 +179,11 @@ function feedRawGetWithCookies(string $cookieJar, string $query = ''): array
 
     [$headers, $body] = explode("\r\n\r\n", $response, 2) + ['', ''];
 
-    return ['status' => $status, 'headers' => strtolower($headers), 'body' => $body];
+    return [
+        'status' => $status,
+        'headers' => strtolower($headers),
+        'body' => $body,
+    ];
 }
 
 const FEED_FIXED_DATE = '2020-06-15 12:00:00';
@@ -171,7 +192,9 @@ it('serves a well-formed RSS2 XML feed with the real Content-Type header and exa
     // 1. Guarantee at least one real, visible image exists, regardless of
     // ambient DB state.
     $page = H::loginAsAdmin($this);
-    $album = H::wsCall($page, 'pwg.categories.add', ['name' => 'Feed Test Album ' . uniqid()]);
+    $album = H::wsCall($page, 'pwg.categories.add', [
+        'name' => 'Feed Test Album ' . uniqid(),
+    ]);
     $albumResult = $album['result'] ?? null;
     if (! is_array($albumResult) || ! is_numeric($albumResult['id'] ?? null)) {
         throw new RuntimeException('pwg.categories.add did not return a numeric id: ' . var_export($album, true));
@@ -186,7 +209,8 @@ it('serves a well-formed RSS2 XML feed with the real Content-Type header and exa
     // saving the original values to restore afterward.
     $db = feedDbConnect();
     $originalDates = feedAllImageDates($db);
-    expect($originalDates)->not->toBe([]);
+    expect($originalDates)
+        ->not->toBe([]);
     H::dbQuery($db, sprintf("UPDATE images SET date_available = '%s'", FEED_FIXED_DATE));
     H::dbClose($db);
     CachePools::notifications()->clear();
@@ -204,39 +228,47 @@ it('serves a well-formed RSS2 XML feed with the real Content-Type header and exa
             throw new RuntimeException('feed body is not well-formed XML: ' . $result['body']);
         }
 
-        expect($xml->getName())->toBe('rss');
+        expect($xml->getName())
+            ->toBe('rss');
         expect((string) $xml['version'])->toBe('2.0');
 
         $channel = $xml->channel;
-        expect($channel)->not->toBeNull();
+        expect($channel)
+            ->not->toBeNull();
         // Anonymous, non-personalized feed.php always switches identity to
         // guest (FeedController::__invoke()) -- the title always reflects
         // that, regardless of the configurable gallery_title.
-        expect((string) $channel->title)->toContain(' (as guest)');
+        expect((string) $channel->title)
+            ->toContain(' (as guest)');
 
         $items = $channel->item;
-        expect(count($items))->toBe(1);
+        expect(count($items))
+            ->toBe(1);
 
         $item = $items[0];
         // guid is 'pics-' . the literal date_available string
         // (FeedController's own rss_items construction), htmlspecialchars()'d
         // -- a space/colon aren't special chars, so this is an exact match.
-        expect((string) $item->guid)->toBe('pics-' . FEED_FIXED_DATE);
+        expect((string) $item->guid)
+            ->toBe('pics-' . FEED_FIXED_DATE);
         expect((string) $item->guid['isPermaLink'])->toBe('false');
 
         // getTitleRecentPostDate(): "%d new photo(s) (<Month> <day>)" --
         // FEED_FIXED_DATE's day-of-month is 15.
-        expect((string) $item->title)->toMatch('/^\d+ new photos? \(\S+ 15\)$/');
+        expect((string) $item->title)
+            ->toMatch('/^\d+ new photos? \(\S+ 15\)$/');
 
         // getHtmlDescriptionRecentPostDate()'s own real text.
-        expect((string) $item->description)->toContain('Recent photos');
+        expect((string) $item->description)
+            ->toContain('Recent photos');
 
         // the recent-post-date link always chronologically filters on
         // "posted" (FeedController's own chronology_field=posted param) --
         // rendered as a pretty/rewritten URL segment
         // ('posted-monthly-calendar-<date>'), not a literal
         // chronology_field=posted query string.
-        expect((string) $item->link)->toContain('posted-monthly-calendar-' . substr(FEED_FIXED_DATE, 0, 10));
+        expect((string) $item->link)
+            ->toContain('posted-monthly-calendar-' . substr(FEED_FIXED_DATE, 0, 10));
     } finally {
         // 3. Restore every image's original date_available.
         $db = feedDbConnect();
@@ -287,7 +319,8 @@ it('switches the current user to a personal feed\'s real owner when fetched anon
     }
     // rss_title's " (as <username>)" suffix reflects the feed OWNER
     // (fixture_admin), not the anonymous requester's own guest identity.
-    expect((string) $xml->channel->title)->toContain(' (as ' . H::ADMIN_USER . ')');
+    expect((string) $xml->channel->title)
+        ->toContain(' (as ' . H::ADMIN_USER . ')');
 });
 
 /**
@@ -315,7 +348,8 @@ it('resets an authenticated session back to guest identity for the generic (toke
         // asserts -- proving the admin session got reset for this
         // request, not just that an anonymous request happens to already
         // be guest.
-        expect((string) $xml->channel->title)->toContain(' (as guest)');
+        expect((string) $xml->channel->title)
+            ->toContain(' (as guest)');
     } finally {
         @unlink($cookieJar);
     }

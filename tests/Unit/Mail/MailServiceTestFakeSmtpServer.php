@@ -21,7 +21,6 @@ declare(strict_types=1);
  * connection total: a probe connection would itself consume that one
  * accept() and starve the real client that follows.
  */
-
 $argv = $_SERVER['argv'] ?? [];
 if (! is_array($argv)) {
     fwrite(STDERR, "no argv\n");

@@ -28,7 +28,9 @@ it('shows the webmaster-required warning for a plain "admin"-status user', funct
 
     try {
         $adminPage = H::visitPwg($this, '/identification.php');
-        $adminPage = $adminPage->fill('username', $username)->fill('password', $password)->click('login');
+        $adminPage = $adminPage->fill('username', $username)
+            ->fill('password', $password)
+            ->click('login');
         H::assertNoServerErrors($adminPage, 'plain-admin post-login page');
 
         $adminPage = H::navigateOk($adminPage, '/admin.php?page=menubar');

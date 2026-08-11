@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
+use Doctrine\DBAL\Platforms\Exception\NotSupported;
 use Doctrine\DBAL\Platforms\MySQLPlatform;
 use Doctrine\DBAL\Platforms\OraclePlatform;
 use Doctrine\DBAL\Platforms\PostgreSQLPlatform;
 use Doctrine\DBAL\Platforms\SQLitePlatform;
-use Doctrine\DBAL\Platforms\Exception\NotSupported;
 use Piwigo\Tag\TagEntity;
 use Piwigo\Tests\Support\DqlPlatformQueryTestFactory;
 
@@ -17,7 +17,7 @@ function dateFormatMonthDayDql(): string
 
 test('generates a real DATE_FORMAT(..., %m%d) call on MySQL/MariaDB', function (): void {
     expect(DqlPlatformQueryTestFactory::generatedSql(new MySQLPlatform(), dateFormatMonthDayDql()))
-        ->toContain("DATE_FORMAT(")
+        ->toContain('DATE_FORMAT(')
         ->toContain("'%m%d')");
 });
 

@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
+use Doctrine\DBAL\Platforms\Exception\NotSupported;
 use Doctrine\DBAL\Platforms\MySQLPlatform;
 use Doctrine\DBAL\Platforms\PostgreSQLPlatform;
 use Doctrine\DBAL\Platforms\SQLitePlatform;
-use Doctrine\DBAL\Platforms\Exception\NotSupported;
 use Piwigo\Tag\TagEntity;
 use Piwigo\Tests\Support\DqlPlatformQueryTestFactory;
 
@@ -16,7 +16,7 @@ function substringIndexDql(int $count): string
 
 test('generates a real SUBSTRING_INDEX() call on MySQL/MariaDB for a negative count', function (): void {
     expect(DqlPlatformQueryTestFactory::generatedSql(new MySQLPlatform(), substringIndexDql(-1)))
-        ->toContain("SUBSTRING_INDEX(");
+        ->toContain('SUBSTRING_INDEX(');
 });
 
 test('generates a real SUBSTRING_INDEX() call on MySQL/MariaDB for a non-negative count too', function (): void {

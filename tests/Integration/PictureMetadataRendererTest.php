@@ -4,26 +4,26 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Integration;
 
-use Override;
 use LogicException;
-use Piwigo\PluginConfig\EventDispatcher;
-use Piwigo\Tests\Support\TemplateTestFactory;
-use Piwigo\Tests\Support\CurrentUserTestFactory;
-use Piwigo\Tests\Support\SessionServiceTestFactory;
-use Piwigo\Core\FilterState;
+use Override;
 use Piwigo\Config\ConfigLoader;
 use Piwigo\Config\ConfigService;
 use Piwigo\Config\CurrentConfig;
-use Piwigo\Tests\Support\CurrentConfigTestFactory;
-use Piwigo\Tests\Support\CurrentConfigServiceTestFactory;
 use Piwigo\Core\CurrentLogger;
-use Piwigo\Tests\Support\LangTestFactory;
-use Piwigo\Core\Logger;
+use Piwigo\Core\FilterState;
 use Piwigo\Core\Kernel;
+use Piwigo\Core\Logger;
 use Piwigo\Core\Paths;
 use Piwigo\Image\SrcImage;
 use Piwigo\Picture\PictureMetadataRenderer;
+use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Template\CurrentTemplate;
+use Piwigo\Tests\Support\CurrentConfigServiceTestFactory;
+use Piwigo\Tests\Support\CurrentConfigTestFactory;
+use Piwigo\Tests\Support\CurrentUserTestFactory;
+use Piwigo\Tests\Support\LangTestFactory;
+use Piwigo\Tests\Support\SessionServiceTestFactory;
+use Piwigo\Tests\Support\TemplateTestFactory;
 
 /**
  * The Unit sibling (tests/Unit/Picture/PictureMetadataRendererTest.php)
@@ -66,7 +66,9 @@ final class PictureMetadataRendererTest extends IntegrationTestCase
 
         $this->renderer = new PictureMetadataRenderer();
         $this->currentLogger = new CurrentLogger();
-        $this->currentLogger->set(new Logger(['severity' => Logger::OFF]));
+        $this->currentLogger->set(new Logger([
+            'severity' => Logger::OFF,
+        ]));
     }
 
     #[Override]
@@ -168,12 +170,18 @@ final class PictureMetadataRendererTest extends IntegrationTestCase
     {
         return [
             'current' => [
-                'src_image' => new SrcImage(['id' => 1, 'path' => $relativePath, 'file' => basename($relativePath), 'width' => 6, 'height' => 6]),
+                'src_image' => new SrcImage([
+                    'id' => 1,
+                    'path' => $relativePath,
+                    'file' => basename($relativePath),
+                    'width' => 6,
+                    'height' => 6,
+                ]),
             ],
         ];
     }
 
-    public function test_render_appends_exif_metadata_with_direct_and_nested_field_tokens(): void
+    public function testRenderAppendsExifMetadataWithDirectAndNestedFieldTokens(): void
     {
         $currentConfig = CurrentConfigTestFactory::get();
         $currentConfig->showExif = true;
@@ -188,12 +196,17 @@ final class PictureMetadataRendererTest extends IntegrationTestCase
         // separate Translator singleton, which only loadArray() seeds --
         // confirmed live, restore() alone (which only updates Lang::has()'s
         // own table) leaves Lang::t() returning the untranslated key.
-        LangTestFactory::get()->loadArray(['exif_field_Artist' => 'Translated Artist']);
+        LangTestFactory::get()->loadArray([
+            'exif_field_Artist' => 'Translated Artist',
+        ]);
 
         $relativePath = '_data/picture-metadata-renderer-test-scratch/exif-fields.jpg';
         file_put_contents(
             dirname(__DIR__, 2) . '/' . $relativePath,
-            $this->makeJpegWithSegments($this->buildApp1ExifSegment(['Artist' => 'Jane Photographer', 'ImageDescription' => 'A test photo']))
+            $this->makeJpegWithSegments($this->buildApp1ExifSegment([
+                'Artist' => 'Jane Photographer',
+                'ImageDescription' => 'A test photo',
+            ]))
         );
 
         $this->renderer->render(LangTestFactory::get(), $this->makePicture($relativePath), $this->currentLogger, new EventDispatcher(), CurrentTemplate::current(), $currentConfig, CurrentUserTestFactory::get(), SessionServiceTestFactory::get(), new FilterState(), Paths::fromRoot(dirname(__DIR__, 2)));
@@ -214,7 +227,7 @@ final class PictureMetadataRendererTest extends IntegrationTestCase
         ], $metadata[0]['lines']);
     }
 
-    public function test_render_translates_a_composite_exif_field_when_a_translation_exists_for_its_second_token(): void
+    public function testRenderTranslatesACompositeExifFieldWhenATranslationExistsForItsSecondToken(): void
     {
         $currentConfig = CurrentConfigTestFactory::get();
         $currentConfig->showExif = true;
@@ -229,7 +242,9 @@ final class PictureMetadataRendererTest extends IntegrationTestCase
         // Lang::has()-true sub-branch (distinct from the direct-field
         // Lang::has()/Lang::t() pair a few lines above it in the source).
         $currentConfig->showExifFields = ['COMPUTED;Height'];
-        LangTestFactory::get()->loadArray(['exif_field_Height' => 'Hauteur']);
+        LangTestFactory::get()->loadArray([
+            'exif_field_Height' => 'Hauteur',
+        ]);
 
         $relativePath = '_data/picture-metadata-renderer-test-scratch/exif-composite-translated.jpg';
         file_put_contents(
@@ -244,10 +259,12 @@ final class PictureMetadataRendererTest extends IntegrationTestCase
         self::assertCount(1, $metadata);
         self::assertIsArray($metadata[0]);
         self::assertSame('EXIF Metadata', $metadata[0]['TITLE']);
-        self::assertSame(['Hauteur' => '6'], $metadata[0]['lines']);
+        self::assertSame([
+            'Hauteur' => '6',
+        ], $metadata[0]['lines']);
     }
 
-    public function test_render_appends_nothing_for_exif_when_no_configured_field_matches(): void
+    public function testRenderAppendsNothingForExifWhenNoConfiguredFieldMatches(): void
     {
         $currentConfig = CurrentConfigTestFactory::get();
         $currentConfig->showExif = true;
@@ -255,19 +272,24 @@ final class PictureMetadataRendererTest extends IntegrationTestCase
         $currentConfig->showExifFields = ['ThisFieldDoesNotExistAnywhere'];
 
         $relativePath = '_data/picture-metadata-renderer-test-scratch/exif-empty.jpg';
-        file_put_contents(dirname(__DIR__, 2) . '/' . $relativePath, $this->makeJpegWithSegments($this->buildApp1ExifSegment(['Artist' => 'Jane'])));
+        file_put_contents(dirname(__DIR__, 2) . '/' . $relativePath, $this->makeJpegWithSegments($this->buildApp1ExifSegment([
+            'Artist' => 'Jane',
+        ])));
 
         $this->renderer->render(LangTestFactory::get(), $this->makePicture($relativePath), $this->currentLogger, new EventDispatcher(), CurrentTemplate::current(), $currentConfig, CurrentUserTestFactory::get(), SessionServiceTestFactory::get(), new FilterState(), Paths::fromRoot(dirname(__DIR__, 2)));
 
         self::assertNull(CurrentTemplate::current()->get()->get_template_vars('metadata'));
     }
 
-    public function test_render_appends_iptc_metadata_translating_known_fields(): void
+    public function testRenderAppendsIptcMetadataTranslatingKnownFields(): void
     {
         $currentConfig = CurrentConfigTestFactory::get();
         $currentConfig->showExif = false;
         $currentConfig->showIptc = true;
-        $currentConfig->showIptcMapping = ['title' => '2#005', 'author' => '2#080'];
+        $currentConfig->showIptcMapping = [
+            'title' => '2#005',
+            'author' => '2#080',
+        ];
         // getIptcData()'s own result is keyed by the *pwg* side of the
         // mapping ('title'/'author'), not the raw IPTC code -- confirmed
         // live, the renderer's own Lang::has($field)/Lang::t($field) calls
@@ -278,7 +300,9 @@ final class PictureMetadataRendererTest extends IntegrationTestCase
         // singleton, which only loadArray() seeds -- confirmed live,
         // restore() alone (which only updates Lang::has()'s own table)
         // leaves Lang::t() returning the untranslated key.
-        LangTestFactory::get()->loadArray(['author' => 'By-line']);
+        LangTestFactory::get()->loadArray([
+            'author' => 'By-line',
+        ]);
 
         $relativePath = '_data/picture-metadata-renderer-test-scratch/iptc-fields.jpg';
         file_put_contents(
@@ -299,19 +323,23 @@ final class PictureMetadataRendererTest extends IntegrationTestCase
         ], $metadata[0]['lines']);
     }
 
-    public function test_render_appends_both_exif_and_iptc_metadata_as_2_separate_entries(): void
+    public function testRenderAppendsBothExifAndIptcMetadataAs2SeparateEntries(): void
     {
         $currentConfig = CurrentConfigTestFactory::get();
         $currentConfig->showExif = true;
         $currentConfig->showIptc = true;
         $currentConfig->showExifFields = ['Artist'];
-        $currentConfig->showIptcMapping = ['title' => '2#005'];
+        $currentConfig->showIptcMapping = [
+            'title' => '2#005',
+        ];
 
         $relativePath = '_data/picture-metadata-renderer-test-scratch/both-fields.jpg';
         // Both marker segments spliced onto the same real file -- proves
         // both branches genuinely operate on the same source image.
         $combined = $this->makeJpegWithSegments(
-            $this->buildApp1ExifSegment(['Artist' => 'Jane Photographer']),
+            $this->buildApp1ExifSegment([
+                'Artist' => 'Jane Photographer',
+            ]),
             $this->buildApp13IptcSegment([[5, 'Sunset']])
         );
         file_put_contents(dirname(__DIR__, 2) . '/' . $relativePath, $combined);

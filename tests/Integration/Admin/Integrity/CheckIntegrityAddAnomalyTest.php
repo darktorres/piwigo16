@@ -2,21 +2,21 @@
 
 declare(strict_types=1);
 
-use Piwigo\Config\CurrentConfig;
-use Piwigo\Tests\Support\CurrentConfigTestFactory;
-use Piwigo\Tests\Support\HtmlServiceTestFactory;
-use Piwigo\Tests\Support\EventDispatcherTestFactory;
-use Piwigo\Tests\Support\PageStateTestFactory;
-use Piwigo\Template\CurrentTemplate;
-use Piwigo\Core\AppInfo;
 use Piwigo\Admin\Integrity\CheckIntegrity;
 use Piwigo\Admin\Integrity\IntegrityIgnoredAnomalyEntity;
+use Piwigo\Config\CurrentConfig;
+use Piwigo\Core\AppInfo;
 use Piwigo\Core\InstallationFlag;
 use Piwigo\Core\Lang;
 use Piwigo\Core\Paths;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Lang\Translator;
+use Piwigo\Template\CurrentTemplate;
+use Piwigo\Tests\Support\CurrentConfigTestFactory;
+use Piwigo\Tests\Support\EventDispatcherTestFactory;
+use Piwigo\Tests\Support\HtmlServiceTestFactory;
+use Piwigo\Tests\Support\PageStateTestFactory;
 
 // add_anomaly()/get_htlm_links_more_info() are CheckIntegrity's own pure
 // data-structure logic -- no event/template dependency at all -- but
@@ -43,16 +43,23 @@ function checkIntegrityAddAnomalyNew(): CheckIntegrity
 test('add_anomaly records a new anomaly with is_callable computed from a real function name', function (): void {
     $c13y = checkIntegrityAddAnomalyNew();
 
-    $c13y->add_anomaly('Something is wrong', 'strlen', ['arg' => 'x'], 'fix it');
+    $c13y->add_anomaly('Something is wrong', 'strlen', [
+        'arg' => 'x',
+    ], 'fix it');
 
-    expect($c13y->retrieve_list)->toHaveCount(1);
+    expect($c13y->retrieve_list)
+        ->toHaveCount(1);
     $entry = $c13y->retrieve_list[0];
     expect($entry['anomaly'])->toBe('Something is wrong');
     expect($entry['correction_fct'])->toBe('strlen');
-    expect($entry['correction_fct_args'])->toBe(['arg' => 'x']);
+    expect($entry['correction_fct_args'])->toBe([
+        'arg' => 'x',
+    ]);
     expect($entry['correction_msg'])->toBe('fix it');
     expect($entry['is_callable'])->toBeTrue();
-    expect($entry['id'])->toBe(md5('Something is wrong' . 'strlen' . serialize(['arg' => 'x']) . 'fix it'));
+    expect($entry['id'])->toBe(md5('Something is wrongstrlen' . serialize([
+        'arg' => 'x',
+    ]) . 'fix it'));
 });
 
 test('add_anomaly marks is_callable false for a non-existent function name', function (): void {
@@ -76,22 +83,29 @@ test('add_anomaly with no correction function is never callable and carries a nu
 
 test('add_anomaly routes an already-ignored id into build_ignore_list instead of retrieve_list', function (): void {
     $c13y = checkIntegrityAddAnomalyNew();
-    $anomalyId = md5('Ignored anomaly' . '' . serialize(null) . '');
+    $anomalyId = md5('Ignored anomaly' . serialize(null) . '');
     $c13y->ignore_list = [$anomalyId];
 
     $c13y->add_anomaly('Ignored anomaly');
 
-    expect($c13y->retrieve_list)->toBe([]);
-    expect($c13y->build_ignore_list)->toBe([$anomalyId]);
+    expect($c13y->retrieve_list)
+        ->toBe([]);
+    expect($c13y->build_ignore_list)
+        ->toBe([$anomalyId]);
 });
 
 test('add_anomaly generates distinct ids for anomalies that differ only by correction_fct_args', function (): void {
     $c13y = checkIntegrityAddAnomalyNew();
 
-    $c13y->add_anomaly('Same message', 'strlen', ['a' => 1]);
-    $c13y->add_anomaly('Same message', 'strlen', ['a' => 2]);
+    $c13y->add_anomaly('Same message', 'strlen', [
+        'a' => 1,
+    ]);
+    $c13y->add_anomaly('Same message', 'strlen', [
+        'a' => 2,
+    ]);
 
-    expect($c13y->retrieve_list)->toHaveCount(2);
+    expect($c13y->retrieve_list)
+        ->toHaveCount(2);
     expect($c13y->retrieve_list[0]['id'])->not->toBe($c13y->retrieve_list[1]['id']);
 });
 
@@ -104,9 +118,10 @@ test('get_htlm_links_more_info formats a forum + wiki link pair from the fixed p
 
     $result = $c13y->get_htlm_links_more_info();
 
-    expect($result)->toBe(sprintf(
-        'Go to %s or %s for more informations',
-        '<a href="' . AppInfo::URL . '/forum" onclick="window.open(this.href, \'\'); return false;">the forum</a>',
-        '<a href="' . AppInfo::URL . '/doc" onclick="window.open(this.href, \'\'); return false;">the wiki</a>'
-    ));
+    expect($result)
+        ->toBe(sprintf(
+            'Go to %s or %s for more informations',
+            '<a href="' . AppInfo::URL . '/forum" onclick="window.open(this.href, \'\'); return false;">the forum</a>',
+            '<a href="' . AppInfo::URL . '/doc" onclick="window.open(this.href, \'\'); return false;">the wiki</a>'
+        ));
 });

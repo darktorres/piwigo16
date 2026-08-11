@@ -37,7 +37,9 @@ it('protects other admin/webmaster users from deletion for a plain "admin"-statu
 
     try {
         $adminPage = H::visitPwg($this, '/identification.php');
-        $adminPage = $adminPage->fill('username', $username)->fill('password', $password)->click('login');
+        $adminPage = $adminPage->fill('username', $username)
+            ->fill('password', $password)
+            ->click('login');
         H::assertNoServerErrors($adminPage, 'plain-admin post-login page');
 
         // Only reached (render()'s own `CurrentUser::get()->status ===
@@ -76,7 +78,9 @@ it('protects other admin/webmaster users from deletion for a plain "admin"-statu
 
 it('echoes a group filter, a user_id search, and show_add_user into the form', function (): void {
     $page = H::loginAsAdmin($this);
-    $group = H::wsCall($page, 'pwg.groups.add', ['name' => 'User List Filter Group ' . uniqid()]);
+    $group = H::wsCall($page, 'pwg.groups.add', [
+        'name' => 'User List Filter Group ' . uniqid(),
+    ]);
     $groupResult = $group['result'] ?? null;
     $groups = is_array($groupResult) ? ($groupResult['groups'] ?? null) : null;
     $firstGroup = is_array($groups) ? ($groups[0] ?? null) : null;
@@ -115,7 +119,8 @@ it('shows the local-webmaster_id deprecation warning only when config.inc.php se
 // real 2nd include of a real path, not a no-op).
 it('shows the local-webmaster_id deprecation warning when config.inc.php really sets it locally', function (): void {
     $configPath = dirname(__DIR__, 2) . '/local/config/config.inc.php';
-    expect(file_exists($configPath))->toBeFalse();
+    expect(file_exists($configPath))
+        ->toBeFalse();
 
     file_put_contents($configPath, "<?php\n\$conf['webmaster_id'] = 999;\n\$conf['local_dir_site'] = true;\n");
     chmod($configPath, 0o666);

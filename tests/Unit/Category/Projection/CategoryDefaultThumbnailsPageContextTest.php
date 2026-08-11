@@ -12,13 +12,18 @@ test('toArray flattens every property to its real Smarty template variable name'
         derivativeParams: $derivativeParams,
         maxRequests: 4,
         showThumbnailCaption: true,
-        thumbnails: [['TN_ALT' => 'photo1']],
+        thumbnails: [[
+            'TN_ALT' => 'photo1',
+        ]],
     );
 
-    expect($context->toArray())->toBe([
-        'derivative_params' => $derivativeParams,
-        'maxRequests' => 4,
-        'SHOW_THUMBNAIL_CAPTION' => true,
-        'thumbnails' => [['TN_ALT' => 'photo1']],
-    ]);
+    expect($context->toArray())
+        ->toBe([
+            'derivative_params' => $derivativeParams,
+            'maxRequests' => 4,
+            'SHOW_THUMBNAIL_CAPTION' => true,
+            'thumbnails' => [[
+                'TN_ALT' => 'photo1',
+            ]],
+        ]);
 });

@@ -4,15 +4,15 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Integration;
 
-use Override;
-use Piwigo\Core\Kernel;
 use LogicException;
-use Piwigo\PluginConfig\EventDispatcher;
-use RuntimeException;
-use Piwigo\Config\CurrentConfig;
-use Piwigo\Tests\Support\CurrentConfigTestFactory;
+use Override;
 use Piwigo\Config\ConfigLoader;
 use Piwigo\Config\ConfigService;
+use Piwigo\Config\CurrentConfig;
+use Piwigo\Core\Kernel;
+use Piwigo\PluginConfig\EventDispatcher;
+use Piwigo\Tests\Support\CurrentConfigTestFactory;
+use RuntimeException;
 
 /**
  * hydrate()'s own `match ($paramTypeName) { ... default => $decoded }` arm
@@ -54,7 +54,7 @@ final class ConfigServiceTest extends IntegrationTestCase
         $this->service = new ConfigService($this->buildConfigRepository(), new EventDispatcher(), $currentConfig);
     }
 
-    public function test_loadConfFromDb_merges_every_row_with_json_decoding(): void
+    public function testLoadConfFromDbMergesEveryRowWithJsonDecoding(): void
     {
         $this->service->loadConfFromDb();
 
@@ -67,7 +67,7 @@ final class ConfigServiceTest extends IntegrationTestCase
         self::assertSame('Fixture Gallery', $currentConfig->galleryTitle);
     }
 
-    public function test_loadConfFromDb_with_a_param_loads_only_that_row(): void
+    public function testLoadConfFromDbWithAParamLoadsOnlyThatRow(): void
     {
         // setUp() already calls ConfigLoader::applyDefaults(), which seeds
         // every non-nullable property (including gallery_title) with its
@@ -81,13 +81,13 @@ final class ConfigServiceTest extends IntegrationTestCase
         self::assertSame('Piwigo', $currentConfig->galleryTitle);
     }
 
-    public function test_loadConfFromDb_throws_when_param_not_found_and_dieIfNotFound_is_true(): void
+    public function testLoadConfFromDbThrowsWhenParamNotFoundAndDieIfNotFoundIsTrue(): void
     {
         $this->expectException(RuntimeException::class);
         $this->service->loadConfFromDb('this_param_does_not_exist_anywhere');
     }
 
-    public function test_loadConfFromDb_returns_quietly_when_param_not_found_and_dieIfNotFound_is_false(): void
+    public function testLoadConfFromDbReturnsQuietlyWhenParamNotFoundAndDieIfNotFoundIsFalse(): void
     {
         $missingKey = 'this_param_does_not_exist_anywhere';
         $this->service->loadConfFromDb($missingKey, false);
@@ -95,7 +95,7 @@ final class ConfigServiceTest extends IntegrationTestCase
         self::assertNull($this->service->confGetParam($missingKey));
     }
 
-    public function test_confGetParam_falls_back_to_the_given_default_for_a_genuinely_dynamic_unset_key(): void
+    public function testConfGetParamFallsBackToTheGivenDefaultForAGenuinelyDynamicUnsetKey(): void
     {
         $missingKey = 'this_param_does_not_exist_anywhere';
 
@@ -112,7 +112,7 @@ final class ConfigServiceTest extends IntegrationTestCase
      * call site) leaves the cache stale until a real ConfigService write
      * clears it.
      */
-    public function test_loadConfFromDb_caches_the_bulk_load_until_a_write_invalidates_it(): void
+    public function testLoadConfFromDbCachesTheBulkLoadUntilAWriteInvalidatesIt(): void
     {
         $repo = $this->buildConfigRepository();
 
@@ -159,7 +159,7 @@ final class ConfigServiceTest extends IntegrationTestCase
         $this->service->confUpdateParam('gallery_title', 'Fixture Gallery');
     }
 
-    public function test_confUpdateParam_then_confDeleteParam_round_trips(): void
+    public function testConfUpdateParamThenConfDeleteParamRoundTrips(): void
     {
         $param = 'p14_service_test_' . bin2hex(random_bytes(4));
 
@@ -170,7 +170,7 @@ final class ConfigServiceTest extends IntegrationTestCase
         self::assertNull($this->service->confGetParam($param));
     }
 
-    public function test_confDeleteParam_resets_the_backing_property_to_its_declared_default(): void
+    public function testConfDeleteParamResetsTheBackingPropertyToItsDeclaredDefault(): void
     {
         // Every existing confDeleteParam() call site in this file (the
         // round-trip test above included) uses a genuinely dynamic,
@@ -201,7 +201,7 @@ final class ConfigServiceTest extends IntegrationTestCase
      * mechanism as test_loadConfFromDb_caches_the_bulk_load_until_a_write_invalidates_it(),
      * but for the delete path instead of a write.
      */
-    public function test_confDeleteParam_invalidates_the_bulk_load_cache(): void
+    public function testConfDeleteParamInvalidatesTheBulkLoadCache(): void
     {
         $currentConfig = CurrentConfigTestFactory::get();
 
@@ -223,7 +223,7 @@ final class ConfigServiceTest extends IntegrationTestCase
         self::assertSame(3600, $currentConfig->sessionLength);
     }
 
-    public function test_confUpdateParam_encodes_arrays_via_json(): void
+    public function testConfUpdateParamEncodesArraysViaJson(): void
     {
         $param = 'p14_service_array_' . bin2hex(random_bytes(4));
 
@@ -242,7 +242,7 @@ final class ConfigServiceTest extends IntegrationTestCase
         $repo->deleteByParam($param);
     }
 
-    public function test_confUpdateParam_encodes_bools_as_bare_json_literals(): void
+    public function testConfUpdateParamEncodesBoolsAsBareJsonLiterals(): void
     {
         $param = 'p14_service_bool_' . bin2hex(random_bytes(4));
 
@@ -256,7 +256,7 @@ final class ConfigServiceTest extends IntegrationTestCase
         $repo->deleteByParam($param);
     }
 
-    public function test_confUpdateParam_encodes_strings_as_json_quoted_text(): void
+    public function testConfUpdateParamEncodesStringsAsJsonQuotedText(): void
     {
         $param = 'p14_service_string_' . bin2hex(random_bytes(4));
 
@@ -270,7 +270,7 @@ final class ConfigServiceTest extends IntegrationTestCase
         $repo->deleteByParam($param);
     }
 
-    public function test_gallery_locked_round_trips_as_a_real_bool_through_load_conf_from_db(): void
+    public function testGalleryLockedRoundTripsAsARealBoolThroughLoadConfFromDb(): void
     {
         // hydrate()'s 'bool' match arm only accepts a real is_bool()
         // decode -- a string 'true'/'false' doesn't satisfy it and would
@@ -292,7 +292,7 @@ final class ConfigServiceTest extends IntegrationTestCase
         }
     }
 
-    public function test_data_dir_checked_round_trips_as_a_real_string_through_load_conf_from_db(): void
+    public function testDataDirCheckedRoundTripsAsARealStringThroughLoadConfFromDb(): void
     {
         // json_encode(1) produces a bare JSON number, and hydrate()'s
         // 'string' match arm only accepts a real is_string() decode -- an
@@ -307,7 +307,7 @@ final class ConfigServiceTest extends IntegrationTestCase
         }
     }
 
-    public function test_pwgIsDbconfWriteable_returns_true_against_a_real_writable_db(): void
+    public function testPwgIsDbconfWriteableReturnsTrueAgainstARealWritableDb(): void
     {
         self::assertTrue($this->service->pwgIsDbconfWriteable());
     }
@@ -318,7 +318,7 @@ final class ConfigServiceTest extends IntegrationTestCase
      * must load without error and without touching any CurrentConfig
      * property.
      */
-    public function test_loadConfFromDb_silently_skips_a_row_with_no_matching_property(): void
+    public function testLoadConfFromDbSilentlySkipsARowWithNoMatchingProperty(): void
     {
         $param = 'upload_user_access';
         $this->service->confUpdateParam($param, 'admins');
@@ -332,7 +332,7 @@ final class ConfigServiceTest extends IntegrationTestCase
         }
     }
 
-    public function test_conf_update_param_encodes_null_as_a_literal_null_db_value(): void
+    public function testConfUpdateParamEncodesNullAsALiteralNullDbValue(): void
     {
         $param = 'a_genuinely_dynamic_nullable_test_param';
         $this->service->confUpdateParam($param, 'first');

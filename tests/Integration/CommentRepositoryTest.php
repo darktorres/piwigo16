@@ -4,22 +4,22 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Integration;
 
-use Doctrine\DBAL\Connection;
-use Override;
-use Piwigo\Core\Kernel;
-use LogicException;
-use Piwigo\Db\EntityManagerFactory;
-use Piwigo\Comment\CommentEntity;
 use Doctrine\DBAL\ArrayParameterType;
+use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\ParameterType;
+use LogicException;
+use Override;
 use Piwigo\Comment\CommentApiCriteria;
+use Piwigo\Comment\CommentEntity;
 use Piwigo\Comment\CommentRepository;
 use Piwigo\Common\ValueObject\CommentId;
 use Piwigo\Common\ValueObject\ImageId;
 use Piwigo\Common\ValueObject\UserId;
-use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\ConfigLoader;
+use Piwigo\Config\CurrentConfig;
+use Piwigo\Core\Kernel;
 use Piwigo\Db\DbConnection;
+use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Permission\SqlCondition;
 
 final class CommentRepositoryTest extends IntegrationTestCase
@@ -54,7 +54,7 @@ final class CommentRepositoryTest extends IntegrationTestCase
         $this->repo = EntityManagerFactory::build($this->conn)->getRepository(CommentEntity::class);
     }
 
-    public function test_insert_creates_a_new_comment_and_returns_its_id(): void
+    public function testInsertCreatesANewCommentAndReturnsItsId(): void
     {
         $id = $this->repo->insert([
             'author' => 'new_author',
@@ -71,9 +71,11 @@ final class CommentRepositoryTest extends IntegrationTestCase
         self::assertSame('A brand new comment.', $this->fetchContent($id));
     }
 
-    public function test_delete_removes_comments_regardless_of_author_when_author_id_is_null(): void
+    public function testDeleteRemovesCommentsRegardlessOfAuthorWhenAuthorIdIsNull(): void
     {
-        $id = $this->insertFixtureComment(['authorId' => 1]);
+        $id = $this->insertFixtureComment([
+            'authorId' => 1,
+        ]);
 
         $deleted = $this->repo->delete([$id], null);
 
@@ -81,9 +83,11 @@ final class CommentRepositoryTest extends IntegrationTestCase
         self::assertNull($this->fetchContent($id));
     }
 
-    public function test_delete_restricted_to_author_id_does_nothing_for_a_different_author(): void
+    public function testDeleteRestrictedToAuthorIdDoesNothingForADifferentAuthor(): void
     {
-        $id = $this->insertFixtureComment(['authorId' => 3]);
+        $id = $this->insertFixtureComment([
+            'authorId' => 3,
+        ]);
 
         $deleted = $this->repo->delete([$id], 999);
 
@@ -91,27 +95,33 @@ final class CommentRepositoryTest extends IntegrationTestCase
         self::assertNotNull($this->fetchContent($id));
     }
 
-    public function test_delete_restricted_to_author_id_removes_a_matching_comment(): void
+    public function testDeleteRestrictedToAuthorIdRemovesAMatchingComment(): void
     {
-        $id = $this->insertFixtureComment(['authorId' => 3]);
+        $id = $this->insertFixtureComment([
+            'authorId' => 3,
+        ]);
 
         $deleted = $this->repo->delete([$id], 3);
 
         self::assertSame(1, $deleted);
     }
 
-    public function test_delete_returns_zero_for_empty_ids(): void
+    public function testDeleteReturnsZeroForEmptyIds(): void
     {
         self::assertSame(0, $this->repo->delete([], null));
     }
 
-    public function test_update_changes_content_and_website_url(): void
+    public function testUpdateChangesContentAndWebsiteUrl(): void
     {
         $id = $this->insertFixtureComment();
 
         $updated = $this->repo->update(
             $id,
-            ['content' => 'Edited content.', 'websiteUrl' => 'http://edited.test', 'validated' => true],
+            [
+                'content' => 'Edited content.',
+                'websiteUrl' => 'http://edited.test',
+                'validated' => true,
+            ],
             null
         );
 
@@ -119,13 +129,19 @@ final class CommentRepositoryTest extends IntegrationTestCase
         self::assertSame('Edited content.', $this->fetchContent($id));
     }
 
-    public function test_update_restricted_to_author_id_does_nothing_for_a_different_author(): void
+    public function testUpdateRestrictedToAuthorIdDoesNothingForADifferentAuthor(): void
     {
-        $id = $this->insertFixtureComment(['authorId' => 3]);
+        $id = $this->insertFixtureComment([
+            'authorId' => 3,
+        ]);
 
         $updated = $this->repo->update(
             $id,
-            ['content' => 'Should not apply.', 'websiteUrl' => null, 'validated' => true],
+            [
+                'content' => 'Should not apply.',
+                'websiteUrl' => null,
+                'validated' => true,
+            ],
             999
         );
 
@@ -133,28 +149,32 @@ final class CommentRepositoryTest extends IntegrationTestCase
         self::assertNotSame('Should not apply.', $this->fetchContent($id));
     }
 
-    public function test_find_author_id_returns_false_for_a_missing_comment(): void
+    public function testFindAuthorIdReturnsFalseForAMissingComment(): void
     {
         self::assertFalse($this->repo->findAuthorId(CommentId::from(999999)));
     }
 
-    public function test_find_author_id_returns_the_numeric_author_id_as_string(): void
+    public function testFindAuthorIdReturnsTheNumericAuthorIdAsString(): void
     {
         self::assertSame('1', $this->repo->findAuthorId(CommentId::from(1)));
     }
 
-    public function test_validate_marks_the_given_comments_validated(): void
+    public function testValidateMarksTheGivenCommentsValidated(): void
     {
-        $id = $this->insertFixtureComment(['validated' => false]);
+        $id = $this->insertFixtureComment([
+            'validated' => false,
+        ]);
 
         $this->repo->validate([$id]);
 
         self::assertSame(1, $this->fetchValidated($id));
     }
 
-    public function test_validate_is_a_no_op_for_empty_ids(): void
+    public function testValidateIsANoOpForEmptyIds(): void
     {
-        $id = $this->insertFixtureComment(['validated' => false]);
+        $id = $this->insertFixtureComment([
+            'validated' => false,
+        ]);
 
         $before = $this->fetchValidated($id);
         $this->repo->validate([]);
@@ -162,7 +182,7 @@ final class CommentRepositoryTest extends IntegrationTestCase
         self::assertSame($before, $this->fetchValidated($id));
     }
 
-    public function test_count_recent_comments_counts_within_the_flood_window(): void
+    public function testCountRecentCommentsCountsWithinTheFloodWindow(): void
     {
         // author_id has an FK onto users, so a real fixture user id
         // is needed -- 4 (power_user), not reused by insertFixtureComment()
@@ -173,7 +193,7 @@ final class CommentRepositoryTest extends IntegrationTestCase
         // into the past here, scoped to this test only, so only the fresh
         // insert below counts as "recent".
         $this->conn->executeStatement(
-            "UPDATE " . 'comments' . " SET date = '2026-01-01 00:00:00' WHERE author_id = 4"
+            'UPDATE comments' . " SET date = '2026-01-01 00:00:00' WHERE author_id = 4"
         );
 
         $this->repo->insert([
@@ -191,7 +211,7 @@ final class CommentRepositoryTest extends IntegrationTestCase
         self::assertSame(0, $this->repo->countRecentComments(4, null, 0));
     }
 
-    public function test_count_recent_comments_restricts_to_the_anonymous_id_prefix(): void
+    public function testCountRecentCommentsRestrictsToTheAnonymousIdPrefix(): void
     {
         // anonymous_id stores the full, untrimmed IP (matches
         // CommentService::insertComment()'s own real usage); the prefix
@@ -212,7 +232,7 @@ final class CommentRepositoryTest extends IntegrationTestCase
         self::assertSame(0, $this->repo->countRecentComments(2, '10.0.99', 3600));
     }
 
-    public function test_username_exists_matches_an_existing_username(): void
+    public function testUsernameExistsMatchesAnExistingUsername(): void
     {
         self::assertTrue($this->repo->usernameExists('fixture_admin'));
         // users.username is a case-sensitive (utf8mb4_bin) column, unlike
@@ -222,7 +242,7 @@ final class CommentRepositoryTest extends IntegrationTestCase
         self::assertFalse($this->repo->usernameExists('does-not-exist'));
     }
 
-    public function test_count_for_image_counts_only_validated_by_default(): void
+    public function testCountForImageCountsOnlyValidatedByDefault(): void
     {
         // fixture: image 2 has comment 2 (validated); image 4 has only
         // comment 5 (validated='false', pending moderation). Neither image
@@ -235,12 +255,12 @@ final class CommentRepositoryTest extends IntegrationTestCase
         self::assertSame(1, $this->repo->countForImage(ImageId::from(4), false));
     }
 
-    public function test_count_for_image_returns_zero_for_an_image_with_no_comments(): void
+    public function testCountForImageReturnsZeroForAnImageWithNoComments(): void
     {
         self::assertSame(0, $this->repo->countForImage(ImageId::from(999999), false));
     }
 
-    public function test_find_summaries_for_image_returns_the_matching_summary(): void
+    public function testFindSummariesForImageReturnsTheMatchingSummary(): void
     {
         // fixture: image 2 has comment 2 (validated), untouched by
         // insertFixtureComment() (hardcoded to image_id 1) -- deterministic
@@ -253,23 +273,41 @@ final class CommentRepositoryTest extends IntegrationTestCase
         self::assertSame('Another perspective on this photo.', $summaries[0]->content);
     }
 
-    public function test_find_summaries_for_image_excludes_unvalidated_when_restricted(): void
+    public function testFindSummariesForImageExcludesUnvalidatedWhenRestricted(): void
     {
         // fixture: image 4 has only comment 5, unvalidated.
         self::assertSame([], $this->repo->findSummariesForImage(ImageId::from(4), true, 10, 0));
         self::assertCount(1, $this->repo->findSummariesForImage(ImageId::from(4), false, 10, 0));
     }
 
-    public function test_find_summaries_for_image_respects_the_limit(): void
+    public function testFindSummariesForImageRespectsTheLimit(): void
     {
-        $this->repo->insert(['author' => 'fsfi_a', 'authorId' => 1, 'anonymousId' => '10.30.0.30', 'content' => 'fsfi content A', 'validated' => true, 'imageId' => 5, 'websiteUrl' => null, 'email' => null]);
-        $this->repo->insert(['author' => 'fsfi_b', 'authorId' => 1, 'anonymousId' => '10.30.0.31', 'content' => 'fsfi content B', 'validated' => true, 'imageId' => 5, 'websiteUrl' => null, 'email' => null]);
+        $this->repo->insert([
+            'author' => 'fsfi_a',
+            'authorId' => 1,
+            'anonymousId' => '10.30.0.30',
+            'content' => 'fsfi content A',
+            'validated' => true,
+            'imageId' => 5,
+            'websiteUrl' => null,
+            'email' => null,
+        ]);
+        $this->repo->insert([
+            'author' => 'fsfi_b',
+            'authorId' => 1,
+            'anonymousId' => '10.30.0.31',
+            'content' => 'fsfi content B',
+            'validated' => true,
+            'imageId' => 5,
+            'websiteUrl' => null,
+            'email' => null,
+        ]);
 
         self::assertCount(2, $this->repo->findSummariesForImage(ImageId::from(5), false, 10, 0));
         self::assertCount(1, $this->repo->findSummariesForImage(ImageId::from(5), false, 1, 0));
     }
 
-    public function test_find_for_image_returns_matching_rows_joined_with_user_email(): void
+    public function testFindForImageReturnsMatchingRowsJoinedWithUserEmail(): void
     {
         // fixture: image 2 has comment 2, authored by regular_user, whose
         // own mail_address is NULL -- this exercises the LEFT JOIN's own
@@ -283,13 +321,13 @@ final class CommentRepositoryTest extends IntegrationTestCase
         self::assertNull($rows[0]->userEmail);
     }
 
-    public function test_find_for_image_excludes_unvalidated_when_restricted(): void
+    public function testFindForImageExcludesUnvalidatedWhenRestricted(): void
     {
         // fixture: image 4 has only comment 5, which is unvalidated.
         self::assertSame([], $this->repo->findForImage(ImageId::from(4), true, 'ASC', 10, 0));
     }
 
-    public function test_find_for_image_includes_unvalidated_when_not_restricted(): void
+    public function testFindForImageIncludesUnvalidatedWhenNotRestricted(): void
     {
         $rows = $this->repo->findForImage(ImageId::from(4), false, 'ASC', 10, 0);
 
@@ -297,15 +335,33 @@ final class CommentRepositoryTest extends IntegrationTestCase
         self::assertEquals(CommentId::from(5), $rows[0]->id);
     }
 
-    public function test_find_for_image_respects_limit_and_offset(): void
+    public function testFindForImageRespectsLimitAndOffset(): void
     {
         // fixture: image 3 has comment 3; two more validated comments
         // added here so pagination has 3 total rows to split across pages.
         // All 3 may share the same PIWIGO_TEST_NOW-derived date, so this
         // only asserts page sizes and total distinct coverage, not a
         // specific row per page (no tiebreaker column to rely on).
-        $this->repo->insert(['author' => 'pager_a', 'authorId' => 1, 'anonymousId' => '10.20.0.1', 'content' => 'Page test A', 'validated' => true, 'imageId' => 3, 'websiteUrl' => null, 'email' => null]);
-        $this->repo->insert(['author' => 'pager_b', 'authorId' => 1, 'anonymousId' => '10.20.0.2', 'content' => 'Page test B', 'validated' => true, 'imageId' => 3, 'websiteUrl' => null, 'email' => null]);
+        $this->repo->insert([
+            'author' => 'pager_a',
+            'authorId' => 1,
+            'anonymousId' => '10.20.0.1',
+            'content' => 'Page test A',
+            'validated' => true,
+            'imageId' => 3,
+            'websiteUrl' => null,
+            'email' => null,
+        ]);
+        $this->repo->insert([
+            'author' => 'pager_b',
+            'authorId' => 1,
+            'anonymousId' => '10.20.0.2',
+            'content' => 'Page test B',
+            'validated' => true,
+            'imageId' => 3,
+            'websiteUrl' => null,
+            'email' => null,
+        ]);
 
         self::assertSame(3, $this->repo->countForImage(ImageId::from(3), true));
 
@@ -321,12 +377,12 @@ final class CommentRepositoryTest extends IntegrationTestCase
         self::assertCount(3, array_unique($allIds));
     }
 
-    public function test_find_for_image_returns_empty_for_an_image_with_no_comments(): void
+    public function testFindForImageReturnsEmptyForAnImageWithNoComments(): void
     {
         self::assertSame([], $this->repo->findForImage(ImageId::from(999999), false, 'ASC', 10, 0));
     }
 
-    public function test_count_validated_by_image_ids_short_circuits_on_an_empty_list(): void
+    public function testCountValidatedByImageIdsShortCircuitsOnAnEmptyList(): void
     {
         self::assertSame([], $this->repo->countValidatedByImageIds([]));
     }
@@ -340,13 +396,17 @@ final class CommentRepositoryTest extends IntegrationTestCase
      * reflected, keyed by the string image id, with a requested-but-empty
      * image id absent entirely (not present with a zero count).
      */
-    public function test_count_validated_by_image_ids_keys_the_result_by_image_id(): void
+    public function testCountValidatedByImageIdsKeysTheResultByImageId(): void
     {
         $beforeCounts = $this->repo->countValidatedByImageIds([1]);
         $before = $beforeCounts === [] ? 0 : array_values($beforeCounts)[0];
 
-        $this->insertFixtureComment(['validated' => true]);
-        $this->insertFixtureComment(['validated' => false]);
+        $this->insertFixtureComment([
+            'validated' => true,
+        ]);
+        $this->insertFixtureComment([
+            'validated' => false,
+        ]);
 
         $counts = $this->repo->countValidatedByImageIds([1, 999999]);
 
@@ -362,39 +422,77 @@ final class CommentRepositoryTest extends IntegrationTestCase
      * fragments, not raw trusted-SQL strings (see CommentRepository.php's
      * own docblock).
      */
-    public function test_count_available_with_conditions_counts_matching_rows_across_the_join(): void
+    public function testCountAvailableWithConditionsCountsMatchingRowsAcrossTheJoin(): void
     {
-        $id = $this->insertFixtureComment(['validated' => true]);
+        $id = $this->insertFixtureComment([
+            'validated' => true,
+        ]);
 
         $matchingCount = $this->repo->countAvailableWithConditions([
-            new SqlCondition('com.id = :id', ['id' => $id->value], ['id' => ParameterType::INTEGER]),
+            new SqlCondition('com.id = :id', [
+                'id' => $id->value,
+            ], [
+                'id' => ParameterType::INTEGER,
+            ]),
         ]);
         $nonMatchingCount = $this->repo->countAvailableWithConditions([
-            new SqlCondition('com.id = :id', ['id' => 999999], ['id' => ParameterType::INTEGER]),
+            new SqlCondition('com.id = :id', [
+                'id' => 999999,
+            ], [
+                'id' => ParameterType::INTEGER,
+            ]),
         ]);
 
         self::assertSame(1, $matchingCount);
         self::assertSame(0, $nonMatchingCount);
     }
 
-    public function test_count_available_with_conditions_combines_multiple_fragments_with_and(): void
+    public function testCountAvailableWithConditionsCombinesMultipleFragmentsWithAnd(): void
     {
-        $id = $this->insertFixtureComment(['validated' => true]);
+        $id = $this->insertFixtureComment([
+            'validated' => true,
+        ]);
 
         $count = $this->repo->countAvailableWithConditions([
-            new SqlCondition('com.id = :id', ['id' => $id->value], ['id' => ParameterType::INTEGER]),
+            new SqlCondition('com.id = :id', [
+                'id' => $id->value,
+            ], [
+                'id' => ParameterType::INTEGER,
+            ]),
             new SqlCondition('com.validated = false'),
         ]);
 
         self::assertSame(0, $count);
     }
 
-    public function test_find_all_with_conditions_paginates_and_reports_the_real_total_via_found_rows(): void
+    public function testFindAllWithConditionsPaginatesAndReportsTheRealTotalViaFoundRows(): void
     {
-        $first = $this->repo->insert(['author' => 'fawc_a', 'authorId' => 1, 'anonymousId' => '10.30.0.1', 'content' => 'fawc content A', 'validated' => true, 'imageId' => 1, 'websiteUrl' => null, 'email' => null]);
-        $second = $this->repo->insert(['author' => 'fawc_b', 'authorId' => 1, 'anonymousId' => '10.30.0.2', 'content' => 'fawc content B', 'validated' => true, 'imageId' => 1, 'websiteUrl' => null, 'email' => null]);
+        $first = $this->repo->insert([
+            'author' => 'fawc_a',
+            'authorId' => 1,
+            'anonymousId' => '10.30.0.1',
+            'content' => 'fawc content A',
+            'validated' => true,
+            'imageId' => 1,
+            'websiteUrl' => null,
+            'email' => null,
+        ]);
+        $second = $this->repo->insert([
+            'author' => 'fawc_b',
+            'authorId' => 1,
+            'anonymousId' => '10.30.0.2',
+            'content' => 'fawc content B',
+            'validated' => true,
+            'imageId' => 1,
+            'websiteUrl' => null,
+            'email' => null,
+        ]);
 
-        $condition = new SqlCondition('com.id IN (:ids)', ['ids' => [$first->value, $second->value]], ['ids' => ArrayParameterType::INTEGER]);
+        $condition = new SqlCondition('com.id IN (:ids)', [
+            'ids' => [$first->value, $second->value],
+        ], [
+            'ids' => ArrayParameterType::INTEGER,
+        ]);
 
         $firstPage = $this->repo->findAllWithConditions([$condition], 'com.id', 'ASC', 1, 0);
         $secondPage = $this->repo->findAllWithConditions([$condition], 'com.id', 'ASC', 1, 1);
@@ -417,15 +515,30 @@ final class CommentRepositoryTest extends IntegrationTestCase
      * no SQL error) rather than widening the WHERE clause to match
      * everything.
      */
-    public function test_find_all_with_conditions_treats_an_injection_payload_as_an_inert_literal_value(): void
+    public function testFindAllWithConditionsTreatsAnInjectionPayloadAsAnInertLiteralValue(): void
     {
-        $this->repo->insert(['author' => 'real_author', 'authorId' => 1, 'anonymousId' => '10.30.0.3', 'content' => 'injection guard content', 'validated' => true, 'imageId' => 1, 'websiteUrl' => null, 'email' => null]);
+        $this->repo->insert([
+            'author' => 'real_author',
+            'authorId' => 1,
+            'anonymousId' => '10.30.0.3',
+            'content' => 'injection guard content',
+            'validated' => true,
+            'imageId' => 1,
+            'websiteUrl' => null,
+            'email' => null,
+        ]);
 
         $payload = "nonexistent' OR '1'='1";
         $maliciousCondition = new SqlCondition(
             '(u.username = :authorA OR author = :authorB)',
-            ['authorA' => $payload, 'authorB' => $payload],
-            ['authorA' => ParameterType::STRING, 'authorB' => ParameterType::STRING],
+            [
+                'authorA' => $payload,
+                'authorB' => $payload,
+            ],
+            [
+                'authorA' => ParameterType::STRING,
+                'authorB' => ParameterType::STRING,
+            ],
         );
 
         $result = $this->repo->findAllWithConditions([$maliciousCondition], 'com.id', 'ASC', 'all', 0);
@@ -437,14 +550,32 @@ final class CommentRepositoryTest extends IntegrationTestCase
         self::assertSame(0, $result->total);
     }
 
-    public function test_find_summary_counts_reports_validated_and_pending_split(): void
+    public function testFindSummaryCountsReportsValidatedAndPendingSplit(): void
     {
         // A unique `search` marker scopes findSummaryCounts() to exactly
         // these 2 rows (search resets every other filter -- see
         // CommentRepository::buildApiConditions()'s own docblock).
         $marker = 'fsc-marker-' . uniqid();
-        $this->repo->insert(['author' => 'fsc_author', 'authorId' => 1, 'anonymousId' => '10.30.0.6', 'content' => $marker . ' validated', 'validated' => true, 'imageId' => 1, 'websiteUrl' => null, 'email' => null]);
-        $this->repo->insert(['author' => 'fsc_author', 'authorId' => 1, 'anonymousId' => '10.30.0.7', 'content' => $marker . ' pending', 'validated' => false, 'imageId' => 1, 'websiteUrl' => null, 'email' => null]);
+        $this->repo->insert([
+            'author' => 'fsc_author',
+            'authorId' => 1,
+            'anonymousId' => '10.30.0.6',
+            'content' => $marker . ' validated',
+            'validated' => true,
+            'imageId' => 1,
+            'websiteUrl' => null,
+            'email' => null,
+        ]);
+        $this->repo->insert([
+            'author' => 'fsc_author',
+            'authorId' => 1,
+            'anonymousId' => '10.30.0.7',
+            'content' => $marker . ' pending',
+            'validated' => false,
+            'imageId' => 1,
+            'websiteUrl' => null,
+            'email' => null,
+        ]);
 
         $summary = $this->repo->findSummaryCounts(new CommentApiCriteria(search: $marker));
 
@@ -454,7 +585,7 @@ final class CommentRepositoryTest extends IntegrationTestCase
         self::assertSame(1, $summary->pending);
     }
 
-    public function test_find_summary_counts_ignores_status_and_always_reports_the_full_split(): void
+    public function testFindSummaryCountsIgnoresStatusAndAlwaysReportsTheFullSplit(): void
     {
         // Deliberate: findSummaryCounts() computes all/validated/pending
         // itself via SUM(), so $criteria->status must NOT narrow the
@@ -462,8 +593,26 @@ final class CommentRepositoryTest extends IntegrationTestCase
         // below -- otherwise a 'validated'-status criteria would report
         // pending=0 unconditionally, defeating the summary's own purpose.
         $marker = 'fscs-marker-' . uniqid();
-        $this->repo->insert(['author' => 'fscs_author', 'authorId' => 1, 'anonymousId' => '10.30.0.20', 'content' => $marker . ' validated', 'validated' => true, 'imageId' => 1, 'websiteUrl' => null, 'email' => null]);
-        $this->repo->insert(['author' => 'fscs_author', 'authorId' => 1, 'anonymousId' => '10.30.0.21', 'content' => $marker . ' pending', 'validated' => false, 'imageId' => 1, 'websiteUrl' => null, 'email' => null]);
+        $this->repo->insert([
+            'author' => 'fscs_author',
+            'authorId' => 1,
+            'anonymousId' => '10.30.0.20',
+            'content' => $marker . ' validated',
+            'validated' => true,
+            'imageId' => 1,
+            'websiteUrl' => null,
+            'email' => null,
+        ]);
+        $this->repo->insert([
+            'author' => 'fscs_author',
+            'authorId' => 1,
+            'anonymousId' => '10.30.0.21',
+            'content' => $marker . ' pending',
+            'validated' => false,
+            'imageId' => 1,
+            'websiteUrl' => null,
+            'email' => null,
+        ]);
 
         $summary = $this->repo->findSummaryCounts(new CommentApiCriteria(search: $marker, status: 'validated'));
 
@@ -473,10 +622,19 @@ final class CommentRepositoryTest extends IntegrationTestCase
         self::assertSame(1, $summary->pending);
     }
 
-    public function test_find_list_for_admin_ws_returns_joined_rows_with_username_and_status(): void
+    public function testFindListForAdminWsReturnsJoinedRowsWithUsernameAndStatus(): void
     {
         $marker = 'flfaw-marker-' . uniqid();
-        $id = $this->repo->insert(['author' => 'flfaw_author', 'authorId' => 1, 'anonymousId' => '10.30.0.8', 'content' => $marker, 'validated' => true, 'imageId' => 1, 'websiteUrl' => null, 'email' => null]);
+        $id = $this->repo->insert([
+            'author' => 'flfaw_author',
+            'authorId' => 1,
+            'anonymousId' => '10.30.0.8',
+            'content' => $marker,
+            'validated' => true,
+            'imageId' => 1,
+            'websiteUrl' => null,
+            'email' => null,
+        ]);
 
         $rows = $this->repo->findListForAdminWs(new CommentApiCriteria(search: $marker), 0, 10);
 
@@ -486,11 +644,29 @@ final class CommentRepositoryTest extends IntegrationTestCase
         self::assertArrayHasKey('status', $rows[0]);
     }
 
-    public function test_find_list_for_admin_ws_applies_the_status_filter(): void
+    public function testFindListForAdminWsAppliesTheStatusFilter(): void
     {
         $marker = 'flfaws-marker-' . uniqid();
-        $this->repo->insert(['author' => 'flfaws_author', 'authorId' => 1, 'anonymousId' => '10.30.0.22', 'content' => $marker . ' validated', 'validated' => true, 'imageId' => 1, 'websiteUrl' => null, 'email' => null]);
-        $pendingId = $this->repo->insert(['author' => 'flfaws_author', 'authorId' => 1, 'anonymousId' => '10.30.0.23', 'content' => $marker . ' pending', 'validated' => false, 'imageId' => 1, 'websiteUrl' => null, 'email' => null]);
+        $this->repo->insert([
+            'author' => 'flfaws_author',
+            'authorId' => 1,
+            'anonymousId' => '10.30.0.22',
+            'content' => $marker . ' validated',
+            'validated' => true,
+            'imageId' => 1,
+            'websiteUrl' => null,
+            'email' => null,
+        ]);
+        $pendingId = $this->repo->insert([
+            'author' => 'flfaws_author',
+            'authorId' => 1,
+            'anonymousId' => '10.30.0.23',
+            'content' => $marker . ' pending',
+            'validated' => false,
+            'imageId' => 1,
+            'websiteUrl' => null,
+            'email' => null,
+        ]);
 
         $rows = $this->repo->findListForAdminWs(new CommentApiCriteria(search: $marker, status: 'pending'), 0, 10);
 
@@ -498,10 +674,19 @@ final class CommentRepositoryTest extends IntegrationTestCase
         self::assertSame($pendingId->value, is_numeric($rows[0]['id']) ? (int) $rows[0]['id'] : null);
     }
 
-    public function test_find_date_range_returns_min_and_max_matching_dates(): void
+    public function testFindDateRangeReturnsMinAndMaxMatchingDates(): void
     {
         $marker = 'fdr-marker-' . uniqid();
-        $this->repo->insert(['author' => 'fdr_author', 'authorId' => 1, 'anonymousId' => '10.30.0.9', 'content' => $marker, 'validated' => true, 'imageId' => 1, 'websiteUrl' => null, 'email' => null]);
+        $this->repo->insert([
+            'author' => 'fdr_author',
+            'authorId' => 1,
+            'anonymousId' => '10.30.0.9',
+            'content' => $marker,
+            'validated' => true,
+            'imageId' => 1,
+            'websiteUrl' => null,
+            'email' => null,
+        ]);
 
         $range = $this->repo->findDateRange(new CommentApiCriteria(search: $marker));
 
@@ -510,11 +695,29 @@ final class CommentRepositoryTest extends IntegrationTestCase
         self::assertSame($range->startedAt, $range->endedAt);
     }
 
-    public function test_find_author_counts_groups_by_author_id(): void
+    public function testFindAuthorCountsGroupsByAuthorId(): void
     {
         $marker = 'fac-marker-' . uniqid();
-        $this->repo->insert(['author' => 'fac_author', 'authorId' => 1, 'anonymousId' => '10.30.0.4', 'content' => $marker . ' A', 'validated' => true, 'imageId' => 1, 'websiteUrl' => null, 'email' => null]);
-        $this->repo->insert(['author' => 'fac_author', 'authorId' => 1, 'anonymousId' => '10.30.0.5', 'content' => $marker . ' B', 'validated' => true, 'imageId' => 1, 'websiteUrl' => null, 'email' => null]);
+        $this->repo->insert([
+            'author' => 'fac_author',
+            'authorId' => 1,
+            'anonymousId' => '10.30.0.4',
+            'content' => $marker . ' A',
+            'validated' => true,
+            'imageId' => 1,
+            'websiteUrl' => null,
+            'email' => null,
+        ]);
+        $this->repo->insert([
+            'author' => 'fac_author',
+            'authorId' => 1,
+            'anonymousId' => '10.30.0.5',
+            'content' => $marker . ' B',
+            'validated' => true,
+            'imageId' => 1,
+            'websiteUrl' => null,
+            'email' => null,
+        ]);
 
         $rows = $this->repo->findAuthorCounts(new CommentApiCriteria(search: $marker));
 
@@ -523,7 +726,7 @@ final class CommentRepositoryTest extends IntegrationTestCase
         self::assertSame(2, is_numeric($rows[0]['nb_authors']) ? (int) $rows[0]['nb_authors'] : null);
     }
 
-    public function test_find_author_counts_ignores_the_author_id_filter(): void
+    public function testFindAuthorCountsIgnoresTheAuthorIdFilter(): void
     {
         // CommentRepository::findAuthorCounts()'s own documented behavior:
         // $criteria->authorId must NOT narrow the author breakdown down to
@@ -537,8 +740,26 @@ final class CommentRepositoryTest extends IntegrationTestCase
         // pass even if findAuthorCounts() DID honor authorId. imageId
         // doesn't trigger that reset, so authorId's own inclusion/exclusion
         // is what's actually under test here.
-        $this->repo->insert(['author' => 'faci_author_one', 'authorId' => 1, 'anonymousId' => '10.30.0.24', 'content' => 'faci content one', 'validated' => true, 'imageId' => 5, 'websiteUrl' => null, 'email' => null]);
-        $this->repo->insert(['author' => 'faci_author_three', 'authorId' => 3, 'anonymousId' => '10.30.0.25', 'content' => 'faci content three', 'validated' => true, 'imageId' => 5, 'websiteUrl' => null, 'email' => null]);
+        $this->repo->insert([
+            'author' => 'faci_author_one',
+            'authorId' => 1,
+            'anonymousId' => '10.30.0.24',
+            'content' => 'faci content one',
+            'validated' => true,
+            'imageId' => 5,
+            'websiteUrl' => null,
+            'email' => null,
+        ]);
+        $this->repo->insert([
+            'author' => 'faci_author_three',
+            'authorId' => 3,
+            'anonymousId' => '10.30.0.25',
+            'content' => 'faci content three',
+            'validated' => true,
+            'imageId' => 5,
+            'websiteUrl' => null,
+            'email' => null,
+        ]);
 
         // authorId: 1 would, if honored, exclude author_id=3's row --
         // findAuthorCounts() must still report both.
@@ -552,12 +773,14 @@ final class CommentRepositoryTest extends IntegrationTestCase
         self::assertSame([1, 3], $authorIds);
     }
 
-    public function test_count_all_and_count_unvalidated_reflect_a_freshly_inserted_pending_comment(): void
+    public function testCountAllAndCountUnvalidatedReflectAFreshlyInsertedPendingComment(): void
     {
         $before_all = $this->repo->countAll();
         $before_unvalidated = $this->repo->countUnvalidated();
 
-        $this->insertFixtureComment(['validated' => false]);
+        $this->insertFixtureComment([
+            'validated' => false,
+        ]);
 
         self::assertSame($before_all + 1, $this->repo->countAll());
         self::assertSame($before_unvalidated + 1, $this->repo->countUnvalidated());

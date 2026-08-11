@@ -4,11 +4,6 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Integration;
 
-use Override;
-use Piwigo\Core\Kernel;
-use LogicException;
-use Piwigo\Db\EntityManagerFactory;
-use ReflectionMethod;
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\Platforms\MariaDBPlatform;
 use Doctrine\DBAL\Platforms\PostgreSQLPlatform;
@@ -16,12 +11,17 @@ use Doctrine\DBAL\Platforms\SQLitePlatform;
 use Doctrine\ORM\EntityManager;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\ORMSetup;
-use Piwigo\Config\CurrentConfig;
+use LogicException;
+use Override;
 use Piwigo\Config\ConfigEntry;
 use Piwigo\Config\ConfigLoader;
 use Piwigo\Config\ConfigRepository;
+use Piwigo\Config\CurrentConfig;
+use Piwigo\Core\Kernel;
 use Piwigo\Db\DbConnection;
+use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Telemetry\TelemetryService;
+use ReflectionMethod;
 
 final class TelemetryServiceTest extends IntegrationTestCase
 {
@@ -65,7 +65,7 @@ final class TelemetryServiceTest extends IntegrationTestCase
         parent::tearDown();
     }
 
-    public function test_resolve_install_id_generates_and_persists_a_new_value(): void
+    public function testResolveInstallIdGeneratesAndPersistsANewValue(): void
     {
         self::assertNull($this->configRepo->find('telemetry_install_id'));
 
@@ -84,7 +84,7 @@ final class TelemetryServiceTest extends IntegrationTestCase
         self::assertSame(json_encode($installId), $entry->value);
     }
 
-    public function test_resolve_install_id_is_stable_across_calls(): void
+    public function testResolveInstallIdIsStableAcrossCalls(): void
     {
         $first = $this->service->resolveInstallId();
         $second = $this->service->resolveInstallId();
@@ -92,7 +92,7 @@ final class TelemetryServiceTest extends IntegrationTestCase
         self::assertSame($first, $second);
     }
 
-    public function test_resolve_install_id_reuses_an_existing_row_instead_of_regenerating(): void
+    public function testResolveInstallIdReusesAnExistingRowInsteadOfRegenerating(): void
     {
         // upsert() expects an already JSON-encoded value (real `value`
         // column type), matching what resolveInstallId() itself writes.
@@ -105,7 +105,7 @@ final class TelemetryServiceTest extends IntegrationTestCase
         self::assertSame('deadbeefdeadbeefdeadbeefdeadbeef', $service->resolveInstallId());
     }
 
-    public function test_build_payload_reports_real_fixture_counts(): void
+    public function testBuildPayloadReportsRealFixtureCounts(): void
     {
         $imageCount = $this->scalarCount('images');
         $categoryCount = $this->scalarCount('categories');
@@ -120,7 +120,7 @@ final class TelemetryServiceTest extends IntegrationTestCase
         self::assertSame($commentCount, $payload->gallery->commentCount);
     }
 
-    public function test_build_payload_reports_a_real_mysql_server_version(): void
+    public function testBuildPayloadReportsARealMysqlServerVersion(): void
     {
         $payload = $this->service->buildPayload();
 
@@ -128,14 +128,14 @@ final class TelemetryServiceTest extends IntegrationTestCase
         self::assertNotSame('', $payload->database->serverVersion);
     }
 
-    public function test_build_payload_reports_the_real_running_php_version(): void
+    public function testBuildPayloadReportsTheRealRunningPhpVersion(): void
     {
         $payload = $this->service->buildPayload();
 
         self::assertSame(PHP_VERSION, $payload->environment->phpVersion);
     }
 
-    public function test_build_payload_never_leaks_a_site_url_or_admin_email(): void
+    public function testBuildPayloadNeverLeaksASiteUrlOrAdminEmail(): void
     {
         $payload = $this->service->buildPayload();
 
@@ -161,12 +161,14 @@ final class TelemetryServiceTest extends IntegrationTestCase
      * `$this->em->getConnection()` -- the stub Connection is wrapped in a
      * stub EntityManagerInterface whose only expectation is returning it.
      */
-    public function test_detect_driver_label_recognizes_mariadb(): void
+    public function testDetectDriverLabelRecognizesMariadb(): void
     {
         $conn = self::createStub(Connection::class);
-        $conn->method('getDatabasePlatform')->willReturn(new MariaDBPlatform());
+        $conn->method('getDatabasePlatform')
+            ->willReturn(new MariaDBPlatform());
         $em = self::createStub(EntityManagerInterface::class);
-        $em->method('getConnection')->willReturn($conn);
+        $em->method('getConnection')
+            ->willReturn($conn);
 
         $service = new TelemetryService($em, $this->configRepo);
         $method = new ReflectionMethod(TelemetryService::class, 'detectDriverLabel');
@@ -174,12 +176,14 @@ final class TelemetryServiceTest extends IntegrationTestCase
         self::assertSame('mariadb', $method->invoke($service));
     }
 
-    public function test_detect_driver_label_recognizes_postgresql(): void
+    public function testDetectDriverLabelRecognizesPostgresql(): void
     {
         $conn = self::createStub(Connection::class);
-        $conn->method('getDatabasePlatform')->willReturn(new PostgreSQLPlatform());
+        $conn->method('getDatabasePlatform')
+            ->willReturn(new PostgreSQLPlatform());
         $em = self::createStub(EntityManagerInterface::class);
-        $em->method('getConnection')->willReturn($conn);
+        $em->method('getConnection')
+            ->willReturn($conn);
 
         $service = new TelemetryService($em, $this->configRepo);
         $method = new ReflectionMethod(TelemetryService::class, 'detectDriverLabel');
@@ -187,12 +191,14 @@ final class TelemetryServiceTest extends IntegrationTestCase
         self::assertSame('pgsql', $method->invoke($service));
     }
 
-    public function test_detect_driver_label_falls_back_to_unknown_for_an_unrecognized_platform(): void
+    public function testDetectDriverLabelFallsBackToUnknownForAnUnrecognizedPlatform(): void
     {
         $conn = self::createStub(Connection::class);
-        $conn->method('getDatabasePlatform')->willReturn(new SQLitePlatform());
+        $conn->method('getDatabasePlatform')
+            ->willReturn(new SQLitePlatform());
         $em = self::createStub(EntityManagerInterface::class);
-        $em->method('getConnection')->willReturn($conn);
+        $em->method('getConnection')
+            ->willReturn($conn);
 
         $service = new TelemetryService($em, $this->configRepo);
         $method = new ReflectionMethod(TelemetryService::class, 'detectDriverLabel');

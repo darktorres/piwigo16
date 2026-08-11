@@ -4,12 +4,10 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Integration;
 
-use Override;
-use Piwigo\Core\Kernel;
-use LogicException;
-use Piwigo\Db\EntityManagerFactory;
-use Piwigo\Activity\ActivityEntity;
 use Doctrine\DBAL\Connection;
+use LogicException;
+use Override;
+use Piwigo\Activity\ActivityEntity;
 use Piwigo\Activity\ActivityListCriteria;
 use Piwigo\Activity\ActivityRepository;
 use Piwigo\Activity\Projection\PaginatedActivityRow;
@@ -19,10 +17,12 @@ use Piwigo\Activity\Projection\UserAgentBreakdown;
 use Piwigo\Common\ValueObject\IpAddress;
 use Piwigo\Common\ValueObject\SqlDateTime;
 use Piwigo\Common\ValueObject\UserId;
-use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\ConfigLoader;
+use Piwigo\Config\CurrentConfig;
 use Piwigo\Core\ActivitySystem;
+use Piwigo\Core\Kernel;
 use Piwigo\Db\DbConnection;
+use Piwigo\Db\EntityManagerFactory;
 
 /**
  * Fixture: 19 activity rows (activity_id 1-19). Row 1 is object='system',
@@ -71,7 +71,7 @@ final class ActivityRepositoryTest extends IntegrationTestCase
         $this->repo = EntityManagerFactory::build($this->conn)->getRepository(ActivityEntity::class);
     }
 
-    public function test_insert_many_inserts_every_row(): void
+    public function testInsertManyInsertsEveryRow(): void
     {
         try {
             $this->repo->insertMany([
@@ -113,22 +113,22 @@ final class ActivityRepositoryTest extends IntegrationTestCase
             self::assertSame(999, $rows[1]['object_id']);
             self::assertSame('10.0.0.1', $rows[1]['ip_address']);
         } finally {
-            $this->conn->executeStatement("DELETE FROM " . 'activity' . " WHERE object = 'disposable'");
+            $this->conn->executeStatement('DELETE FROM activity' . " WHERE object = 'disposable'");
         }
     }
 
-    public function test_insert_many_with_an_empty_array_is_a_no_op(): void
+    public function testInsertManyWithAnEmptyArrayIsANoOp(): void
     {
-        $countBefore = $this->conn->fetchOne('SELECT COUNT(*) FROM ' . 'activity');
+        $countBefore = $this->conn->fetchOne('SELECT COUNT(*) FROM activity');
 
         $this->repo->insertMany([]);
 
-        $countAfter = $this->conn->fetchOne('SELECT COUNT(*) FROM ' . 'activity');
+        $countAfter = $this->conn->fetchOne('SELECT COUNT(*) FROM activity');
 
         self::assertSame($countBefore, $countAfter);
     }
 
-    public function test_insert_many_casts_a_numeric_string_object_id_to_int(): void
+    public function testInsertManyCastsANumericStringObjectIdToInt(): void
     {
         try {
             $this->repo->insertMany([[
@@ -152,11 +152,11 @@ final class ActivityRepositoryTest extends IntegrationTestCase
 
             self::assertSame(777, $objectId);
         } finally {
-            $this->conn->executeStatement("DELETE FROM " . 'activity' . " WHERE object = 'disposable'");
+            $this->conn->executeStatement('DELETE FROM activity' . " WHERE object = 'disposable'");
         }
     }
 
-    public function test_insert_many_defaults_a_non_numeric_object_id_to_zero(): void
+    public function testInsertManyDefaultsANonNumericObjectIdToZero(): void
     {
         try {
             $this->repo->insertMany([[
@@ -180,11 +180,11 @@ final class ActivityRepositoryTest extends IntegrationTestCase
 
             self::assertSame(0, $objectId);
         } finally {
-            $this->conn->executeStatement("DELETE FROM " . 'activity' . " WHERE object = 'disposable'");
+            $this->conn->executeStatement('DELETE FROM activity' . " WHERE object = 'disposable'");
         }
     }
 
-    public function test_insert_many_stores_a_non_null_performed_by_as_the_user_id(): void
+    public function testInsertManyStoresANonNullPerformedByAsTheUserId(): void
     {
         try {
             $this->repo->insertMany([[
@@ -208,18 +208,18 @@ final class ActivityRepositoryTest extends IntegrationTestCase
 
             self::assertSame(1, $performedBy);
         } finally {
-            $this->conn->executeStatement("DELETE FROM " . 'activity' . " WHERE object = 'disposable'");
+            $this->conn->executeStatement('DELETE FROM activity' . " WHERE object = 'disposable'");
         }
     }
 
-    public function test_count_by_user_matches_the_fixture(): void
+    public function testCountByUserMatchesTheFixture(): void
     {
         $counts = $this->repo->countByUser();
 
         self::assertSame(17, $counts[1]);
     }
 
-    public function test_count_by_user_excludes_system_object(): void
+    public function testCountByUserExcludesSystemObject(): void
     {
         $this->repo->insertMany([[
             'object' => 'system',
@@ -242,11 +242,11 @@ final class ActivityRepositoryTest extends IntegrationTestCase
             // besides 'install' (activateCoreThemes()'s own 'activate'
             // entry, see InstallService's docblock), which a broader
             // `action != 'install'` filter would incorrectly delete too.
-            $this->conn->executeStatement("DELETE FROM " . 'activity' . " WHERE object = 'system' AND action = 'test'");
+            $this->conn->executeStatement('DELETE FROM activity' . " WHERE object = 'system' AND action = 'test'");
         }
     }
 
-    public function test_count_by_user_skips_a_row_with_a_null_performed_by(): void
+    public function testCountByUserSkipsARowWithANullPerformedBy(): void
     {
         // A non-'system' row whose acting user was since deleted (ON
         // DELETE SET NULL on activity.performed_by, see this method's own
@@ -273,17 +273,17 @@ final class ActivityRepositoryTest extends IntegrationTestCase
             self::assertCount(1, $counts, 'the NULL-performed_by row must not add its own bucket');
             self::assertSame(17, $counts[1]);
         } finally {
-            $this->conn->executeStatement("DELETE FROM " . 'activity' . " WHERE object = 'disposable'");
+            $this->conn->executeStatement('DELETE FROM activity' . " WHERE object = 'disposable'");
         }
     }
 
-    public function test_find_min_and_max_occured_on_match_the_fixture(): void
+    public function testFindMinAndMaxOccuredOnMatchTheFixture(): void
     {
         // Every fixture row shares the same timestamp -- push activity_id
         // 1 (the earliest-inserted row) genuinely earlier, scoped to this
         // test only, so min/max are actually distinguishable.
         $this->conn->executeStatement(
-            "UPDATE " . 'activity' . " SET occured_on = '2026-07-07 00:00:00' WHERE activity_id = 1"
+            'UPDATE activity' . " SET occured_on = '2026-07-07 00:00:00' WHERE activity_id = 1"
         );
 
         self::assertLessThan($this->repo->findMaxOccuredOn(), $this->repo->findMinOccuredOn());
@@ -291,7 +291,7 @@ final class ActivityRepositoryTest extends IntegrationTestCase
         self::assertStringStartsWith('2026-08-01', $this->repo->findMaxOccuredOn() ?? '');
     }
 
-    public function test_find_occured_on_for_object_matches_by_object_id_object_and_action(): void
+    public function testFindOccuredOnForObjectMatchesByObjectIdObjectAndAction(): void
     {
         $this->repo->insertMany([[
             'object' => 'disposable',
@@ -322,11 +322,11 @@ final class ActivityRepositoryTest extends IntegrationTestCase
             self::assertNull($this->repo->findOccuredOnForObject(4242, 'other-object', 'find-test'), 'a non-matching object must not match');
             self::assertNull($this->repo->findOccuredOnForObject(4242, 'disposable', 'other-action'), 'a non-matching action must not match');
         } finally {
-            $this->conn->executeStatement("DELETE FROM " . 'activity' . " WHERE object = 'disposable' AND action = 'find-test'");
+            $this->conn->executeStatement('DELETE FROM activity' . " WHERE object = 'disposable' AND action = 'find-test'");
         }
     }
 
-    public function test_find_action_counts_without_a_filter(): void
+    public function testFindActionCountsWithoutAFilter(): void
     {
         $counts = $this->repo->findActionCounts(null);
 
@@ -343,7 +343,7 @@ final class ActivityRepositoryTest extends IntegrationTestCase
         self::assertSame(2, $byObject['album']);
     }
 
-    public function test_find_action_counts_with_a_filter(): void
+    public function testFindActionCountsWithAFilter(): void
     {
         $counts = $this->repo->findActionCounts('tag');
 
@@ -353,7 +353,7 @@ final class ActivityRepositoryTest extends IntegrationTestCase
         self::assertSame(3, $counts[0]->counter);
     }
 
-    public function test_find_user_object_log_with_usernames(): void
+    public function testFindUserObjectLogWithUsernames(): void
     {
         $rows = $this->repo->findUserObjectLogWithUsernames();
 
@@ -384,10 +384,12 @@ final class ActivityRepositoryTest extends IntegrationTestCase
         self::assertNotNull($loginRow->ipAddress);
         self::assertSame('::1', $loginRow->ipAddress->value);
         self::assertIsString($loginRow->details);
-        self::assertSame(['method' => 'pwg.session.login'], json_decode($loginRow->details, true));
+        self::assertSame([
+            'method' => 'pwg.session.login',
+        ], json_decode($loginRow->details, true));
     }
 
-    public function test_find_system_object_log_with_usernames_uses_the_real_username_when_performed_by_is_a_real_user(): void
+    public function testFindSystemObjectLogWithUsernamesUsesTheRealUsernameWhenPerformedByIsARealUser(): void
     {
         $this->repo->insertMany([[
             'object' => 'system',
@@ -415,11 +417,11 @@ final class ActivityRepositoryTest extends IntegrationTestCase
             // Scoped to this test's own inserted row (action = 'maintenance')
             // -- see test_count_by_user_excludes_system_object's own comment
             // for why a broader `action != 'install'` filter is wrong now.
-            $this->conn->executeStatement("DELETE FROM " . 'activity' . " WHERE object = 'system' AND action = 'maintenance'");
+            $this->conn->executeStatement('DELETE FROM activity' . " WHERE object = 'system' AND action = 'maintenance'");
         }
     }
 
-    public function test_find_system_object_log_with_usernames_renders_a_null_performed_by_as_system(): void
+    public function testFindSystemObjectLogWithUsernamesRendersANullPerformedByAsSystem(): void
     {
         // activity.performed_by has an ON DELETE SET NULL foreign key to
         // users.id, and 0 is not a valid user id -- writing it throws a
@@ -455,11 +457,11 @@ final class ActivityRepositoryTest extends IntegrationTestCase
             // Scoped to this test's own inserted row (action = 'update') --
             // see test_count_by_user_excludes_system_object's own comment
             // for why a broader `action != 'install'` filter is wrong now.
-            $this->conn->executeStatement("DELETE FROM " . 'activity' . " WHERE object = 'system' AND action = 'update'");
+            $this->conn->executeStatement('DELETE FROM activity' . " WHERE object = 'system' AND action = 'update'");
         }
     }
 
-    public function test_find_core_update_history_returns_core_update_and_autoupdate_rows_oldest_first(): void
+    public function testFindCoreUpdateHistoryReturnsCoreUpdateAndAutoupdateRowsOldestFirst(): void
     {
         // The fixture's own row 2 (object='system', object_id=1=Core,
         // action='install') deliberately doesn't match the action IN
@@ -475,7 +477,10 @@ final class ActivityRepositoryTest extends IntegrationTestCase
                 'sessionIdx' => 'sess-1',
                 'ipAddress' => null,
                 'occuredOn' => SqlDateTime::from('2026-07-10 00:00:00'),
-                'details' => ['from_version' => '16.0.0', 'to_version' => '17.0.0'],
+                'details' => [
+                    'from_version' => '16.0.0',
+                    'to_version' => '17.0.0',
+                ],
                 'userAgent' => null,
             ],
             [
@@ -486,7 +491,10 @@ final class ActivityRepositoryTest extends IntegrationTestCase
                 'sessionIdx' => 'sess-1',
                 'ipAddress' => null,
                 'occuredOn' => SqlDateTime::from('2026-07-11 00:00:00'),
-                'details' => ['from_version' => '17.0.0', 'to_version' => '17.0.1'],
+                'details' => [
+                    'from_version' => '17.0.0',
+                    'to_version' => '17.0.1',
+                ],
                 'userAgent' => null,
             ],
         ]);
@@ -504,7 +512,10 @@ final class ActivityRepositoryTest extends IntegrationTestCase
             // insertion order -- ksort() both sides, matching this
             // codebase's own established convention for this gotcha (see
             // tests/Contract/WsImagesFilteredSearchTest.php's docblock).
-            $expectedDetails = ['from_version' => '16.0.0', 'to_version' => '17.0.0'];
+            $expectedDetails = [
+                'from_version' => '16.0.0',
+                'to_version' => '17.0.0',
+            ];
             $actualDetails = json_decode($rows[0]->details, true);
             ksort($expectedDetails);
             self::assertIsArray($actualDetails);
@@ -516,12 +527,12 @@ final class ActivityRepositoryTest extends IntegrationTestCase
             self::assertSame('2026-07-11 00:00:00', $rows[1]->occuredOn);
         } finally {
             $this->conn->executeStatement(
-                "DELETE FROM " . 'activity' . " WHERE object = 'system' AND action IN ('update', 'autoupdate') AND object_id = " . ActivitySystem::Core
+                'DELETE FROM activity' . " WHERE object = 'system' AND action IN ('update', 'autoupdate') AND object_id = " . ActivitySystem::Core
             );
         }
     }
 
-    public function test_find_system_action_counts_by_object_id_groups_by_object_id_and_action(): void
+    public function testFindSystemActionCountsByObjectIdGroupsByObjectIdAndAction(): void
     {
         // The fixture's own row 2 is object='system', object_id=1=Core,
         // action='install' -- object_id=Plugin here is chosen specifically
@@ -564,12 +575,12 @@ final class ActivityRepositoryTest extends IntegrationTestCase
             self::assertSame(2, $matching[0]->counter);
         } finally {
             $this->conn->executeStatement(
-                "DELETE FROM " . 'activity' . " WHERE object = 'system' AND action = 'install' AND object_id = " . ActivitySystem::Plugin
+                'DELETE FROM activity' . " WHERE object = 'system' AND action = 'install' AND object_id = " . ActivitySystem::Plugin
             );
         }
     }
 
-    public function test_find_user_agent_breakdown_excludes_browser_traffic_and_aggregates_by_user_agent(): void
+    public function testFindUserAgentBreakdownExcludesBrowserTrafficAndAggregatesByUserAgent(): void
     {
         $this->repo->insertMany([
             [
@@ -623,7 +634,7 @@ final class ActivityRepositoryTest extends IntegrationTestCase
             self::assertSame('2026-07-10 00:00:00', $matching[0]->firstEncounter);
             self::assertSame('2026-07-11 00:00:00', $matching[0]->lastEncounter);
         } finally {
-            $this->conn->executeStatement("DELETE FROM " . 'activity' . " WHERE object = 'disposable'");
+            $this->conn->executeStatement('DELETE FROM activity' . " WHERE object = 'disposable'");
         }
     }
 
@@ -632,7 +643,7 @@ final class ActivityRepositoryTest extends IntegrationTestCase
      * connectionsMode branches: 'admins_only' compiles to a nested
      * NOT(x AND y) DQL expression via Criteria::expr()->not()/andX().
      */
-    public function test_find_paginated_filters_by_object(): void
+    public function testFindPaginatedFiltersByObject(): void
     {
         $rows = $this->repo->findPaginated(new ActivityListCriteria(object: 'tag'), 100, 0);
 
@@ -642,7 +653,7 @@ final class ActivityRepositoryTest extends IntegrationTestCase
         }
     }
 
-    public function test_find_paginated_excludes_system_object_unconditionally(): void
+    public function testFindPaginatedExcludesSystemObjectUnconditionally(): void
     {
         $rows = $this->repo->findPaginated(new ActivityListCriteria(), 100, 0);
 
@@ -652,7 +663,7 @@ final class ActivityRepositoryTest extends IntegrationTestCase
         }
     }
 
-    public function test_find_paginated_filters_by_date_range(): void
+    public function testFindPaginatedFiltersByDateRange(): void
     {
         // Every fixture row shares the same 2026-08-01 03:00:00 timestamp
         // (see this class's own docblock) -- a range excluding it must
@@ -664,7 +675,7 @@ final class ActivityRepositoryTest extends IntegrationTestCase
         self::assertCount(17, $including);
     }
 
-    public function test_find_paginated_connections_mode_none_excludes_every_login(): void
+    public function testFindPaginatedConnectionsModeNoneExcludesEveryLogin(): void
     {
         $rows = $this->repo->findPaginated(new ActivityListCriteria(connectionsMode: 'none'), 100, 0);
 
@@ -674,7 +685,7 @@ final class ActivityRepositoryTest extends IntegrationTestCase
         }
     }
 
-    public function test_find_paginated_connections_mode_admins_only_keeps_an_admin_login(): void
+    public function testFindPaginatedConnectionsModeAdminsOnlyKeepsAnAdminLogin(): void
     {
         // activity_id 3/4 are 'login' rows with object_id=1 (fixture_admin's
         // own id) -- adminIds: [1] must keep them, unlike 'none'.
@@ -685,7 +696,7 @@ final class ActivityRepositoryTest extends IntegrationTestCase
         self::assertCount(2, $logins);
     }
 
-    public function test_find_paginated_connections_mode_admins_only_excludes_a_non_admin_login(): void
+    public function testFindPaginatedConnectionsModeAdminsOnlyExcludesANonAdminLogin(): void
     {
         // Same 2 login rows (object_id=1), but adminIds: [999] doesn't
         // match -- NOT (action IN (login,logout) AND objectId NOT IN

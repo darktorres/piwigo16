@@ -40,7 +40,9 @@ it('shows the webmaster-required warning for a plain "admin"-status user', funct
 
     try {
         $adminPage = H::visitPwg($this, '/identification.php');
-        $adminPage = $adminPage->fill('username', $username)->fill('password', $password)->click('login');
+        $adminPage = $adminPage->fill('username', $username)
+            ->fill('password', $password)
+            ->click('login');
         H::assertNoServerErrors($adminPage, 'plain-admin post-login page');
 
         $adminPage = H::navigateOk($adminPage, '/admin.php?page=themes_standard_pages');
@@ -86,9 +88,12 @@ it('persists the selected logo option and skin across a later plain visit', func
         expect(H::configValue('use_standard_pages'))->toBe('true');
 
         $page = H::navigateOk($page, '/admin.php?page=themes_standard_pages');
-        expect($page->attribute('input[name=std_pgs_display_logo][value=gallery_title]', 'checked'))->not->toBeNull();
-        expect($page->attribute('input[name=std_pgs_selected_skin]', 'value'))->toBe('cobalt');
-        expect($page->attribute('input[name=use_standard_pages]', 'checked'))->not->toBeNull();
+        expect($page->attribute('input[name=std_pgs_display_logo][value=gallery_title]', 'checked'))
+            ->not->toBeNull();
+        expect($page->attribute('input[name=std_pgs_selected_skin]', 'value'))
+            ->toBe('cobalt');
+        expect($page->attribute('input[name=use_standard_pages]', 'checked'))
+            ->not->toBeNull();
     } finally {
         H::restoreConfig($snapshot);
     }
@@ -146,7 +151,10 @@ it('rejects a non-image logo upload with the generic invalid-image save_error, a
         $status = curl_getinfo($ch, CURLINFO_RESPONSE_CODE);
         unset($ch);
 
-        return ['status' => $status, 'body' => is_string($body) ? $body : ''];
+        return [
+            'status' => $status,
+            'body' => is_string($body) ? $body : '',
+        ];
     };
 
     $baseUrl = H::baseUrl();
@@ -157,12 +165,15 @@ it('rejects a non-image logo upload with the generic invalid-image save_error, a
         'login' => 'Login',
     ]);
 
-    $statusResult = $curl($baseUrl . '/ws.php?format=json', ['method' => 'pwg.session.getStatus']);
+    $statusResult = $curl($baseUrl . '/ws.php?format=json', [
+        'method' => 'pwg.session.getStatus',
+    ]);
     $decodedStatus = json_decode($statusResult['body'], true);
     $statusResultData = is_array($decodedStatus) ? ($decodedStatus['result'] ?? null) : null;
     $pwgTokenRaw = is_array($statusResultData) ? ($statusResultData['pwg_token'] ?? null) : null;
     $pwgToken = is_string($pwgTokenRaw) || is_int($pwgTokenRaw) ? (string) $pwgTokenRaw : '';
-    expect($pwgToken)->not->toBe('');
+    expect($pwgToken)
+        ->not->toBe('');
 
     $stdPagesUrl = $baseUrl . '/admin.php?page=themes_standard_pages';
     $baseFields = [
@@ -214,10 +225,12 @@ it('rejects a non-image logo upload with the generic invalid-image save_error, a
         // drops the backslash; the raw column value read back here is
         // MySQL's canonical form, not PHP's literal encode() output.
         $storedPath = H::configValue('standard_pages_selected_logo_path');
-        expect($storedPath)->toBe('"logo/my_custom_logo.png"');
+        expect($storedPath)
+            ->toBe('"logo/my_custom_logo.png"');
 
         $uploadedPath = dirname(__DIR__, 2) . '/local/logo/my_custom_logo.png';
-        expect(file_exists($uploadedPath))->toBeTrue();
+        expect(file_exists($uploadedPath))
+            ->toBeTrue();
 
         // std_pgs_selected_logo_path resolves to a root-relative logo.php
         // URL (CustomLogoController's own fixed, parameter-less route,

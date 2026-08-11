@@ -34,7 +34,6 @@ use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
  * "Connection to server unavailable." is therefore a real, deterministic,
  * always-reachable branch in this environment, not flaky network coverage.
  */
-
 it('help page shows the default Add Photos section and its real translated content', function (): void {
     $page = H::loginAsAdmin($this);
     $page = H::navigateOk($page, '/admin.php?page=help');
@@ -69,7 +68,8 @@ it('plugins add-new tab shows no plugins available without a false connection er
     // (which call getServerExtensions() unconditionally), plugins_new only
     // calls it when versions_to_check isn't already empty, so this page
     // must never show the same error banner those two do.
-    expect($page->content())->not->toContain('Connection to server unavailable.');
+    expect($page->content())
+        ->not->toContain('Connection to server unavailable.');
 });
 
 it('themes add-new tab reports the PEM server as unreachable', function (): void {
@@ -85,7 +85,8 @@ it('theme page rejects a theme id that ExtensionScanner never found on disk', fu
     $page = H::loginAsAdmin($this);
     $page = H::navigateOk($page, '/admin.php?page=theme&theme=zzz_nonexistent_theme');
 
-    expect($page->content())->toContain('Invalid theme');
+    expect($page->content())
+        ->toContain('Invalid theme');
 });
 
 it('theme page reports a missing admin.inc.php for a real, scanned theme', function (): void {
@@ -99,8 +100,10 @@ it('theme page reports a missing admin.inc.php for a real, scanned theme', funct
     $page = H::loginAsAdmin($this);
     $page = H::navigateOk($page, '/admin.php?page=theme&theme=default');
 
-    expect($page->content())->toContain('Missing file')
-        ->and($page->content())->toContain('default/admin/admin.inc.php');
+    expect($page->content())
+        ->toContain('Missing file')
+        ->and($page->content())
+        ->toContain('default/admin/admin.inc.php');
 });
 
 /**
@@ -192,7 +195,8 @@ it('plugins update tab restricts the shared updates-ext renderer to the plugin t
     // ("Plugins", not "Updates").
     $page->assertSee('Check for updates');
     $page->assertSee('Connection to server unavailable.');
-    expect($page->content())->toContain('<h1>Plugins');
+    expect($page->content())
+        ->toContain('<h1>Plugins');
 });
 
 it('maintenance env tab renders real server, database and version info', function (): void {
@@ -217,9 +221,12 @@ it('maintenance sys ajax endpoint returns real activity log JSON instead of the 
     $page = H::navigateOk($page, '/admin.php?page=maintenance&tab=sys&method=pwg.activity_sys.getList');
 
     $content = $page->content();
-    expect($content)->toContain('"object":"Core"')
-        ->and($content)->toContain('"action":"Install"')
-        ->and($content)->toContain('"data":[');
+    expect($content)
+        ->toContain('"object":"Core"')
+        ->and($content)
+        ->toContain('"action":"Install"')
+        ->and($content)
+        ->toContain('"data":[');
 });
 
 it('batch manager unit mode shows the caddie prefilter active by default with an empty caddie', function (): void {
@@ -240,7 +247,8 @@ it('batch manager unit mode shows the caddie prefilter active by default with an
     $page = H::loginAsAdmin($this);
     $page = H::navigateOk($page, '/admin.php?page=batch_manager&mode=unit');
 
-    expect($page->content())->toContain('<h1>Batch Manager');
+    expect($page->content())
+        ->toContain('<h1>Batch Manager');
     $page->assertSee('Empty caddie');
 });
 
@@ -260,12 +268,16 @@ it('batch manager unit mode renders the real per-photo edit grid for a category 
     $page = H::navigateOk($page, '/admin.php?page=batch_manager&mode=unit&filter=cat-1');
 
     $content = $page->content();
-    expect($content)->toContain('fixture-photo-1.jpg')
-        ->and($content)->toContain('fixture-photo-2.jpg')
-        ->and($content)->toContain('fixture-photo-3.jpg')
+    expect($content)
+        ->toContain('fixture-photo-1.jpg')
+        ->and($content)
+        ->toContain('fixture-photo-2.jpg')
+        ->and($content)
+        ->toContain('fixture-photo-3.jpg')
         // Proves the related-categories JOIN (getCatDisplayNameCache())
         // ran for a real row, not just that 3 filenames happened to print.
-        ->and($content)->toContain('Sample Album');
+        ->and($content)
+        ->toContain('Sample Album');
 });
 
 it('admin popuphelp renders real help content inside the popup page chrome', function (): void {
@@ -286,7 +298,8 @@ it('admin popuphelp renders real help content inside the popup page chrome', fun
     // same URL, which returns this exact heading in the raw HTML. A
     // content() check verifies the real, intended thing (the correct
     // help topic loaded) without depending on this unrelated theme quirk.
-    expect($page->content())->toContain('<h2>Album options</h2>');
+    expect($page->content())
+        ->toContain('<h2>Album options</h2>');
 });
 
 it('admin popuphelp content_only output returns the bare help fragment with no page chrome', function (): void {
@@ -294,7 +307,8 @@ it('admin popuphelp content_only output returns the bare help fragment with no p
     $page = H::navigateOk($page, '/admin/popuphelp.php?page=cat_options&output=content_only');
 
     $content = $page->content();
-    expect($content)->toContain('<h2>Album options</h2>')
+    expect($content)
+        ->toContain('<h2>Album options</h2>')
         // Not ->not->toContain('<body'): Playwright's content() serializes
         // the browser's PARSED DOM, not the raw HTTP response bytes --
         // Chromium always normalizes ANY top-level navigation (even to a
@@ -309,16 +323,17 @@ it('admin popuphelp content_only output returns the bare help fragment with no p
         // ahead of the full PageHeaderRenderer/PageTail chrome -- on the
         // non-content_only branch, so its absence here proves the "no
         // page chrome" claim this test is actually named for.
-        ->and($content)->not->toContain('thePopuphelpPage');
+        ->and($content)
+        ->not->toContain('thePopuphelpPage');
 });
 
 it('admin popuphelp rejects a page parameter with invalid characters', function (): void {
     $page = H::loginAsAdmin($this);
     $page = H::navigateOk($page, '/admin/popuphelp.php?page=INVALID');
 
-    expect($page->content())->toContain('Hacking attempt!');
+    expect($page->content())
+        ->toContain('Hacking attempt!');
 });
-
 
 function pluginSubDb(): mysqli|Connection
 {
@@ -410,8 +425,10 @@ it('plugin page fatal-errors on a missing section file for a real active plugin'
         // ct_missing.php is deliberately never written to disk.
         $page = H::navigateOk($page, '/admin.php?page=plugin&section=' . $pluginId . '/ct_missing.php');
 
-        expect($page->content())->toContain('Missing file')
-            ->and($page->content())->toContain($pluginId . '/ct_missing.php');
+        expect($page->content())
+            ->toContain('Missing file')
+            ->and($page->content())
+            ->toContain($pluginId . '/ct_missing.php');
     } finally {
         $db = pluginSubDb();
         H::dbQuery($db, sprintf("DELETE FROM plugins WHERE id = '%s'", H::dbEscape($db, $pluginId)));

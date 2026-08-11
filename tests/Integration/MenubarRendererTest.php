@@ -4,33 +4,33 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Integration;
 
-use Override;
 use LogicException;
-use Piwigo\Tests\Support\HtmlServiceTestFactory;
-use Piwigo\Tests\Support\UrlServiceTestFactory;
-use Piwigo\Tests\Support\TemplateTestFactory;
-use Piwigo\Tests\Support\LangTestFactory;
+use Override;
 use Piwigo\Auth\AccessLevelChecker;
-use Piwigo\Config\DeploymentPolicy;
-use Piwigo\Tests\Support\TranslatorTestFactory;
-use Piwigo\Core\CurrentLogger;
+use Piwigo\Common\Enum\Section;
 use Piwigo\Config\ConfigLoader;
 use Piwigo\Config\CurrentConfig;
-use Piwigo\Tests\Support\CurrentConfigTestFactory;
-use Piwigo\Tests\Support\CurrentPathsTestFactory;
+use Piwigo\Config\DeploymentPolicy;
+use Piwigo\Core\CurrentLogger;
 use Piwigo\Core\FilterState;
 use Piwigo\Core\Kernel;
 use Piwigo\Menu\Event\BlockManagerRegisterBlocks;
 use Piwigo\Menu\MenubarRenderer;
-use Piwigo\Tests\Support\EventDispatcherTestFactory;
-use Piwigo\Common\Enum\Section;
 use Piwigo\Section\SectionContext;
 use Piwigo\Section\SectionContextRegistry;
 use Piwigo\Session\SessionService;
 use Piwigo\Template\CurrentTemplate;
 use Piwigo\Template\Template;
-use Piwigo\Url\UrlService;
+use Piwigo\Tests\Support\CurrentConfigTestFactory;
+use Piwigo\Tests\Support\CurrentPathsTestFactory;
 use Piwigo\Tests\Support\CurrentUserTestFactory;
+use Piwigo\Tests\Support\EventDispatcherTestFactory;
+use Piwigo\Tests\Support\HtmlServiceTestFactory;
+use Piwigo\Tests\Support\LangTestFactory;
+use Piwigo\Tests\Support\TemplateTestFactory;
+use Piwigo\Tests\Support\TranslatorTestFactory;
+use Piwigo\Tests\Support\UrlServiceTestFactory;
+use Piwigo\Url\UrlService;
 use Piwigo\Users\User;
 
 /**
@@ -156,11 +156,13 @@ final class MenubarRendererTest extends IntegrationTestCase
         parent::tearDown();
     }
 
-    public function test_render_escapes_the_query_search_value_for_a_search_section(): void
+    public function testRenderEscapesTheQuerySearchValueForASearchSection(): void
     {
         $this->sectionContextRegistry->set(new SectionContext(
             section: Section::Search,
-            qsearchDetails: ['q' => '<script>alert(1)</script>'],
+            qsearchDetails: [
+                'q' => '<script>alert(1)</script>',
+            ],
         ));
 
         $this->renderer->render(LangTestFactory::get(), new AccessLevelChecker(CurrentUserTestFactory::get(), CurrentConfigTestFactory::get()), $this->urlService, $this->filterState, $this->sectionContextRegistry, $this->sessionService, new DeploymentPolicy(), CurrentUserTestFactory::get(), CurrentTemplate::current(), CurrentConfigTestFactory::get(), EventDispatcherTestFactory::get(), TranslatorTestFactory::get(), new CurrentLogger());
@@ -168,7 +170,7 @@ final class MenubarRendererTest extends IntegrationTestCase
         self::assertSame('&lt;script&gt;alert(1)&lt;/script&gt;', $this->template->get_template_vars('QUERY_SEARCH'));
     }
 
-    public function test_render_does_not_assign_query_search_outside_a_search_section(): void
+    public function testRenderDoesNotAssignQuerySearchOutsideASearchSection(): void
     {
         $this->sectionContextRegistry->set(new SectionContext(section: Section::Categories));
 
@@ -177,29 +179,41 @@ final class MenubarRendererTest extends IntegrationTestCase
         self::assertNull($this->template->get_template_vars('QUERY_SEARCH'));
     }
 
-    public function test_render_assigns_a_stop_filter_link_when_the_recent_filter_is_active(): void
+    public function testRenderAssignsAStopFilterLinkWhenTheRecentFilterIsActive(): void
     {
         CurrentConfigTestFactory::get()->menubarFilterIcon = true;
-        CurrentConfigTestFactory::get()->filterPages = ['default' => ['used' => true]];
+        CurrentConfigTestFactory::get()->filterPages = [
+            'default' => [
+                'used' => true,
+            ],
+        ];
         $this->filterState->set(true, '', '', []);
 
         $this->renderer->render(LangTestFactory::get(), new AccessLevelChecker(CurrentUserTestFactory::get(), CurrentConfigTestFactory::get()), $this->urlService, $this->filterState, $this->sectionContextRegistry, $this->sessionService, new DeploymentPolicy(), CurrentUserTestFactory::get(), CurrentTemplate::current(), CurrentConfigTestFactory::get(), EventDispatcherTestFactory::get(), TranslatorTestFactory::get(), new CurrentLogger());
 
-        $expected = $this->urlService->addUrlParams($this->urlService->makeIndexUrl([]), ['filter' => 'stop']);
+        $expected = $this->urlService->addUrlParams($this->urlService->makeIndexUrl([]), [
+            'filter' => 'stop',
+        ]);
         self::assertSame($expected, $this->template->get_template_vars('U_STOP_FILTER'));
         self::assertNull($this->template->get_template_vars('U_START_FILTER'));
     }
 
-    public function test_render_assigns_a_start_filter_link_with_the_users_recent_period_when_the_filter_is_inactive(): void
+    public function testRenderAssignsAStartFilterLinkWithTheUsersRecentPeriodWhenTheFilterIsInactive(): void
     {
         CurrentConfigTestFactory::get()->menubarFilterIcon = true;
-        CurrentConfigTestFactory::get()->filterPages = ['default' => ['used' => true]];
+        CurrentConfigTestFactory::get()->filterPages = [
+            'default' => [
+                'used' => true,
+            ],
+        ];
         $this->filterState->set(false, '', '', []);
         CurrentUserTestFactory::get()->set(CurrentUserTestFactory::get()->get()->withRawAttribute('recent_period', 7));
 
         $this->renderer->render(LangTestFactory::get(), new AccessLevelChecker(CurrentUserTestFactory::get(), CurrentConfigTestFactory::get()), $this->urlService, $this->filterState, $this->sectionContextRegistry, $this->sessionService, new DeploymentPolicy(), CurrentUserTestFactory::get(), CurrentTemplate::current(), CurrentConfigTestFactory::get(), EventDispatcherTestFactory::get(), TranslatorTestFactory::get(), new CurrentLogger());
 
-        $expected = $this->urlService->addUrlParams($this->urlService->makeIndexUrl([]), ['filter' => 'start-recent-7']);
+        $expected = $this->urlService->addUrlParams($this->urlService->makeIndexUrl([]), [
+            'filter' => 'start-recent-7',
+        ]);
         self::assertSame($expected, $this->template->get_template_vars('U_START_FILTER'));
         self::assertNull($this->template->get_template_vars('U_STOP_FILTER'));
     }
@@ -214,12 +228,16 @@ final class MenubarRendererTest extends IntegrationTestCase
      * with no combined_categories there's nothing else to exclude, so
      * category 2's name surfaces in the rendered related-albums markup.
      */
-    public function test_render_related_categories_shows_a_common_category_not_excluded(): void
+    public function testRenderRelatedCategoriesShowsACommonCategoryNotExcluded(): void
     {
         $this->sectionContextRegistry->set(new SectionContext(
             section: Section::Categories,
             items: [1, 4],
-            category: ['id' => 1, 'name' => 'Sample Album', 'permalink' => null],
+            category: [
+                'id' => 1,
+                'name' => 'Sample Album',
+                'permalink' => null,
+            ],
             combinedCategories: null,
         ));
 
@@ -240,13 +258,21 @@ final class MenubarRendererTest extends IntegrationTestCase
      * hidden DisplayBlock contributes nothing to the compiled menubar.tpl
      * output at all, not just an empty list).
      */
-    public function test_render_related_categories_excludes_ids_from_combined_categories(): void
+    public function testRenderRelatedCategoriesExcludesIdsFromCombinedCategories(): void
     {
         $this->sectionContextRegistry->set(new SectionContext(
             section: Section::Categories,
             items: [1, 4],
-            category: ['id' => 1, 'name' => 'Sample Album', 'permalink' => null],
-            combinedCategories: [['id' => 2, 'name' => 'Nested Sub Album', 'permalink' => null]],
+            category: [
+                'id' => 1,
+                'name' => 'Sample Album',
+                'permalink' => null,
+            ],
+            combinedCategories: [[
+                'id' => 2,
+                'name' => 'Nested Sub Album',
+                'permalink' => null,
+            ]],
         ));
 
         $this->renderer->render(LangTestFactory::get(), new AccessLevelChecker(CurrentUserTestFactory::get(), CurrentConfigTestFactory::get()), $this->urlService, $this->filterState, $this->sectionContextRegistry, $this->sessionService, new DeploymentPolicy(), CurrentUserTestFactory::get(), CurrentTemplate::current(), CurrentConfigTestFactory::get(), EventDispatcherTestFactory::get(), TranslatorTestFactory::get(), new CurrentLogger());

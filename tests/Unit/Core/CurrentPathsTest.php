@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-use Piwigo\Tests\Support\CurrentPathsTestFactory;
 use Piwigo\Core\Kernel;
 use Piwigo\Core\Paths;
+use Piwigo\Tests\Support\CurrentPathsTestFactory;
 
 /**
  * CurrentPathsTestFactory reproduces CurrentPaths::get()/isSet() behavior

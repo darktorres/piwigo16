@@ -5,7 +5,6 @@ declare(strict_types=1);
 use PgSql\Connection;
 use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
 
-
 it('toggles show_details on via the URL param and persists it across a later plain visit', function (): void {
     $page = H::loginAsAdmin($this);
 

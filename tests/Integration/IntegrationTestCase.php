@@ -4,32 +4,32 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Integration;
 
+use Doctrine\DBAL\Connection;
+use Doctrine\ORM\EntityManager;
 use Doctrine\ORM\EntityManagerInterface;
-use Override;
-use Piwigo\Core\Kernel;
-use Piwigo\Core\ProcessCache;
-use Piwigo\Users\CurrentUser;
-use Piwigo\Core\CurrentLogger;
-use Piwigo\Core\Logger;
-use Piwigo\Core\FilterState;
-use Piwigo\Cache\CachePools;
-use Piwigo\Tests\Support\CurrentConfigTestFactory;
-use Piwigo\Tests\Support\CurrentConfigServiceTestFactory;
-use Piwigo\Core\PageState;
-use Piwigo\Core\InstallationFlag;
-use Piwigo\Core\Env;
+use Doctrine\ORM\ORMSetup;
 use mysqli;
 use mysqli_result;
 use mysqli_sql_exception;
-use Doctrine\DBAL\Connection;
-use Doctrine\ORM\EntityManager;
-use Doctrine\ORM\ORMSetup;
+use Override;
 use PHPUnit\Framework\TestCase;
+use Piwigo\Cache\CachePools;
 use Piwigo\Config\ConfigEntry;
 use Piwigo\Config\ConfigRepository;
+use Piwigo\Core\CurrentLogger;
+use Piwigo\Core\Env;
 use Piwigo\Core\FilesystemHelper;
+use Piwigo\Core\FilterState;
+use Piwigo\Core\InstallationFlag;
+use Piwigo\Core\Kernel;
+use Piwigo\Core\Logger;
+use Piwigo\Core\PageState;
 use Piwigo\Core\Paths;
+use Piwigo\Core\ProcessCache;
 use Piwigo\Db\DbConnection;
+use Piwigo\Tests\Support\CurrentConfigServiceTestFactory;
+use Piwigo\Tests\Support\CurrentConfigTestFactory;
+use Piwigo\Users\CurrentUser;
 
 /**
  * Shared infrastructure for integration tests.
@@ -148,7 +148,9 @@ abstract class IntegrationTestCase extends TestCase
         // filesystem.
         $currentLogger = Kernel::container()->get(CurrentLogger::class);
         if ($currentLogger instanceof CurrentLogger) {
-            $currentLogger->set(new Logger(['severity' => Logger::OFF]));
+            $currentLogger->set(new Logger([
+                'severity' => Logger::OFF,
+            ]));
         }
         // Piwigo\Core\FilterState is a container-shared instance -- a
         // disabled-filter baseline here means a subclass resolving its
@@ -272,19 +274,19 @@ abstract class IntegrationTestCase extends TestCase
 
     protected function setUpConnectionFromEnv(): void
     {
-        $dbHost   = getenv('PIWIGO_DB_HOST');
-        $dbUser   = getenv('PIWIGO_DB_USER');
-        $dbPass   = getenv('PIWIGO_DB_PASSWORD');
-        $dbName   = getenv('PIWIGO_DB_BASE');
+        $dbHost = getenv('PIWIGO_DB_HOST');
+        $dbUser = getenv('PIWIGO_DB_USER');
+        $dbPass = getenv('PIWIGO_DB_PASSWORD');
+        $dbName = getenv('PIWIGO_DB_BASE');
         $dbDriver = getenv('PIWIGO_DB_DRIVER');
-        $baseUrl  = getenv('PIWIGO_BASE_URL');
+        $baseUrl = getenv('PIWIGO_BASE_URL');
 
-        $this->dbHost   = $dbHost !== false ? $dbHost : '127.0.0.1';
-        $this->dbUser   = $dbUser !== false ? $dbUser : '';
-        $this->dbPass   = $dbPass !== false ? $dbPass : '';
-        $this->dbName   = $dbName !== false ? $dbName : '';
+        $this->dbHost = $dbHost !== false ? $dbHost : '127.0.0.1';
+        $this->dbUser = $dbUser !== false ? $dbUser : '';
+        $this->dbPass = $dbPass !== false ? $dbPass : '';
+        $this->dbName = $dbName !== false ? $dbName : '';
         $this->dbDriver = $dbDriver === 'pgsql' ? 'pgsql' : 'mysqli';
-        $this->baseUrl  = rtrim($baseUrl !== false ? $baseUrl : '', '/');
+        $this->baseUrl = rtrim($baseUrl !== false ? $baseUrl : '', '/');
     }
 
     protected function requireBaseUrl(): void
@@ -453,7 +455,7 @@ abstract class IntegrationTestCase extends TestCase
         // the identical "this checkout's real root" value -- self-contained,
         // no initialization-order dependency.
         DbConnection::build()->executeStatement(
-            'UPDATE ' . 'sites' . ' SET galleries_url = ? WHERE id = 1',
+            'UPDATE sites SET galleries_url = ? WHERE id = 1',
             [dirname(__DIR__, 2) . '/galleries/']
         );
 
@@ -535,7 +537,9 @@ abstract class IntegrationTestCase extends TestCase
         // array-valued entries too (e.g. 'argv'), confirmed live to throw
         // "Array to string conversion" partway through proc_open()'s own
         // internal env-var marshalling otherwise.
-        $env = $this->dbPass !== '' ? array_merge(getenv(), ['PGPASSWORD' => $this->dbPass]) : null;
+        $env = $this->dbPass !== '' ? array_merge(getenv(), [
+            'PGPASSWORD' => $this->dbPass,
+        ]) : null;
         $proc = proc_open($cmd, $descriptors, $pipes, null, $env);
         self::assertIsResource($proc, 'proc_open failed for psql fixture load');
         fclose($pipes[0]);
@@ -653,7 +657,7 @@ abstract class IntegrationTestCase extends TestCase
         // as the webserver user (e.g. www-data) — only the file's existence
         // matters (common.inc.php gates on file_exists(), not mtime), so
         // don't touch() an existing file the CLI user may not own.
-        if (!file_exists($stamp)) {
+        if (! file_exists($stamp)) {
             touch($stamp);
         }
     }

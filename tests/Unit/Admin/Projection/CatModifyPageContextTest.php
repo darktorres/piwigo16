@@ -34,7 +34,9 @@ test('toArray flattens every fixed property, and omits every optional key when n
         infoSubcats: '2 in whole branch',
         nbSubcats: 2,
         uManageRanks: '/admin.php?page=element_set_ranks&cat_id=5',
-        cacheKeys: ['categories' => 'abc'],
+        cacheKeys: [
+            'categories' => 'abc',
+        ],
         catFullDir: null,
         catDirName: null,
         catMinDir: null,
@@ -46,7 +48,8 @@ test('toArray flattens every fixed property, and omits every optional key when n
 
     $result = $context->toArray();
 
-    expect($result)->not->toHaveKeys(['CAT_COMMENTABLE', 'U_MANAGE_ELEMENTS', 'INFO_CREATION_SINCE', 'INFO_CREATION', 'CAT_FULL_DIR', 'CAT_DIR_NAME', 'CAT_MIN_DIR', 'U_SYNC', 'representant', 'parent_category'])
+    expect($result)
+        ->not->toHaveKeys(['CAT_COMMENTABLE', 'U_MANAGE_ELEMENTS', 'INFO_CREATION_SINCE', 'INFO_CREATION', 'CAT_FULL_DIR', 'CAT_DIR_NAME', 'CAT_MIN_DIR', 'U_SYNC', 'representant', 'parent_category'])
         ->and($result['CAT_ID'])->toBe(5)
         ->and($result['CAT_NAME'])->toBe('Holidays')
         ->and($result['PWG_TOKEN'])->toBe('abc123');
@@ -87,7 +90,9 @@ test('toArray includes every optional key when set', function (): void {
         catDirName: 'holidays',
         catMinDir: 'galleries/holidays',
         uSync: '/admin.php?page=site_update&site=1&cat_id=5',
-        representant: ['ALLOW_SET_RANDOM' => true],
+        representant: [
+            'ALLOW_SET_RANDOM' => true,
+        ],
         parentCategory: [3],
         pwgToken: 'abc123',
     );
@@ -97,6 +102,8 @@ test('toArray includes every optional key when set', function (): void {
     expect($result['CAT_COMMENTABLE'])->toBe('true')
         ->and($result['U_MANAGE_ELEMENTS'])->toBe('/admin.php?page=batch_manager&filter=album-5')
         ->and($result['CAT_FULL_DIR'])->toBe('galleries/holidays')
-        ->and($result['representant'])->toBe(['ALLOW_SET_RANDOM' => true])
+        ->and($result['representant'])->toBe([
+            'ALLOW_SET_RANDOM' => true,
+        ])
         ->and($result['parent_category'])->toBe([3]);
 });

@@ -4,14 +4,14 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Integration;
 
-use Override;
-use Piwigo\Core\Kernel;
-use LogicException;
-use Piwigo\Db\EntityManagerFactory;
 use Doctrine\DBAL\Connection;
-use Piwigo\Config\CurrentConfig;
+use LogicException;
+use Override;
 use Piwigo\Config\ConfigLoader;
+use Piwigo\Config\CurrentConfig;
+use Piwigo\Core\Kernel;
 use Piwigo\Db\DbConnection;
+use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Mail\MailRecipientRepository;
 use Piwigo\Mail\Projection\MailRecipient;
 
@@ -66,12 +66,12 @@ final class MailRecipientRepositoryTest extends IntegrationTestCase
     #[Override]
     protected function tearDown(): void
     {
-        $this->conn->executeStatement("UPDATE " . 'users' . " SET mail_address = NULL WHERE id IN (3, 4)");
-        $this->conn->executeStatement("UPDATE " . 'user_infos' . " SET status = 'normal', language = 'en_UK' WHERE user_id IN (3, 4)");
+        $this->conn->executeStatement('UPDATE users SET mail_address = NULL WHERE id IN (3, 4)');
+        $this->conn->executeStatement('UPDATE user_infos' . " SET status = 'normal', language = 'en_UK' WHERE user_id IN (3, 4)");
         parent::tearDown();
     }
 
-    public function test_find_admins_and_webmasters_returns_only_the_webmaster_when_no_admin_status_exists(): void
+    public function testFindAdminsAndWebmastersReturnsOnlyTheWebmasterWhenNoAdminStatusExists(): void
     {
         $recipients = $this->repo->findAdminsAndWebmasters(['webmaster'], null, null);
 
@@ -82,10 +82,10 @@ final class MailRecipientRepositoryTest extends IntegrationTestCase
         );
     }
 
-    public function test_find_admins_and_webmasters_includes_a_real_admin_status_user_with_a_real_email(): void
+    public function testFindAdminsAndWebmastersIncludesARealAdminStatusUserWithARealEmail(): void
     {
-        $this->conn->executeStatement("UPDATE " . 'users' . " SET mail_address = 'power.user@example.test' WHERE id = 4");
-        $this->conn->executeStatement("UPDATE " . 'user_infos' . " SET status = 'admin' WHERE user_id = 4");
+        $this->conn->executeStatement('UPDATE users' . " SET mail_address = 'power.user@example.test' WHERE id = 4");
+        $this->conn->executeStatement('UPDATE user_infos' . " SET status = 'admin' WHERE user_id = 4");
 
         $recipients = $this->repo->findAdminsAndWebmasters(['webmaster', 'admin'], null, null);
 
@@ -95,14 +95,14 @@ final class MailRecipientRepositoryTest extends IntegrationTestCase
         self::assertSame('power.user@example.test', $byId[4]->email);
     }
 
-    public function test_find_admins_and_webmasters_excludes_the_given_user_id(): void
+    public function testFindAdminsAndWebmastersExcludesTheGivenUserId(): void
     {
         $recipients = $this->repo->findAdminsAndWebmasters(['webmaster'], null, 1);
 
         self::assertSame([], $recipients);
     }
 
-    public function test_find_admins_and_webmasters_filters_by_group(): void
+    public function testFindAdminsAndWebmastersFiltersByGroup(): void
     {
         // user 1 (webmaster) is a member of group 1 only.
         $inGroup = $this->repo->findAdminsAndWebmasters(['webmaster'], 1, null);
@@ -113,15 +113,15 @@ final class MailRecipientRepositoryTest extends IntegrationTestCase
         self::assertSame([], $notInGroup);
     }
 
-    public function test_find_admins_and_webmasters_returns_empty_for_a_status_nobody_has(): void
+    public function testFindAdminsAndWebmastersReturnsEmptyForAStatusNobodyHas(): void
     {
         self::assertSame([], $this->repo->findAdminsAndWebmasters(['guest'], null, null));
     }
 
-    public function test_find_distinct_languages_in_group_returns_only_eligible_members_languages(): void
+    public function testFindDistinctLanguagesInGroupReturnsOnlyEligibleMembersLanguages(): void
     {
-        $this->conn->executeStatement("UPDATE " . 'users' . " SET mail_address = 'regular.user@example.test' WHERE id = 3");
-        $this->conn->executeStatement("UPDATE " . 'user_infos' . " SET language = 'fr_FR' WHERE user_id = 3");
+        $this->conn->executeStatement('UPDATE users' . " SET mail_address = 'regular.user@example.test' WHERE id = 3");
+        $this->conn->executeStatement('UPDATE user_infos' . " SET language = 'fr_FR' WHERE user_id = 3");
 
         // group 1 has users 1 (en_UK, real email) and 3 (fr_FR, now a real email).
         $languages = $this->repo->findDistinctLanguagesInGroup(1, null);
@@ -130,23 +130,23 @@ final class MailRecipientRepositoryTest extends IntegrationTestCase
         self::assertSame(['en_UK', 'fr_FR'], $languages);
     }
 
-    public function test_find_distinct_languages_in_group_honors_the_language_filter(): void
+    public function testFindDistinctLanguagesInGroupHonorsTheLanguageFilter(): void
     {
-        $this->conn->executeStatement("UPDATE " . 'users' . " SET mail_address = 'regular.user@example.test' WHERE id = 3");
-        $this->conn->executeStatement("UPDATE " . 'user_infos' . " SET language = 'fr_FR' WHERE user_id = 3");
+        $this->conn->executeStatement('UPDATE users' . " SET mail_address = 'regular.user@example.test' WHERE id = 3");
+        $this->conn->executeStatement('UPDATE user_infos' . " SET language = 'fr_FR' WHERE user_id = 3");
 
         $languages = $this->repo->findDistinctLanguagesInGroup(1, 'fr_FR');
 
         self::assertSame(['fr_FR'], $languages);
     }
 
-    public function test_find_distinct_languages_in_group_returns_empty_when_the_only_member_has_no_email(): void
+    public function testFindDistinctLanguagesInGroupReturnsEmptyWhenTheOnlyMemberHasNoEmail(): void
     {
         // group 3's only member is user 4, whose mail_address is still NULL.
         self::assertSame([], $this->repo->findDistinctLanguagesInGroup(3, null));
     }
 
-    public function test_find_by_group_and_language_returns_the_matching_recipient_with_its_status(): void
+    public function testFindByGroupAndLanguageReturnsTheMatchingRecipientWithItsStatus(): void
     {
         $recipients = $this->repo->findByGroupAndLanguage(1, 'en_UK');
 
@@ -157,15 +157,15 @@ final class MailRecipientRepositoryTest extends IntegrationTestCase
         );
     }
 
-    public function test_find_by_group_and_language_returns_empty_for_a_language_nobody_in_the_group_has(): void
+    public function testFindByGroupAndLanguageReturnsEmptyForALanguageNobodyInTheGroupHas(): void
     {
         self::assertSame([], $this->repo->findByGroupAndLanguage(1, 'de_DE'));
     }
 
-    public function test_find_by_group_and_language_scopes_correctly_across_two_languages_in_the_same_group(): void
+    public function testFindByGroupAndLanguageScopesCorrectlyAcrossTwoLanguagesInTheSameGroup(): void
     {
-        $this->conn->executeStatement("UPDATE " . 'users' . " SET mail_address = 'regular.user@example.test' WHERE id = 3");
-        $this->conn->executeStatement("UPDATE " . 'user_infos' . " SET language = 'fr_FR' WHERE user_id = 3");
+        $this->conn->executeStatement('UPDATE users' . " SET mail_address = 'regular.user@example.test' WHERE id = 3");
+        $this->conn->executeStatement('UPDATE user_infos' . " SET language = 'fr_FR' WHERE user_id = 3");
 
         $frenchRecipients = $this->repo->findByGroupAndLanguage(1, 'fr_FR');
         $englishRecipients = $this->repo->findByGroupAndLanguage(1, 'en_UK');

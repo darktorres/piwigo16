@@ -13,7 +13,6 @@ use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
  * en_UK/about.html file in this fixture since no_fallback isn't set and
  * en_US itself ships no about.html).
  */
-
 it('renders the real About credits content for a guest visitor', function (): void {
     $page = H::gotoOk($this, '/about.php');
 

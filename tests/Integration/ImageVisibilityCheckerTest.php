@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Integration;
 
-use Override;
 use Doctrine\DBAL\Connection;
+use Override;
 use Piwigo\Common\ValueObject\ImageId;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
@@ -63,7 +63,7 @@ final class ImageVisibilityCheckerTest extends IntegrationTestCase
         ]));
     }
 
-    public function test_is_visible_to_user_returns_true_when_nothing_is_forbidden(): void
+    public function testIsVisibleToUserReturnsTrueWhenNothingIsForbidden(): void
     {
         self::setCurrentUserForbiddenCategories('0');
 
@@ -71,7 +71,7 @@ final class ImageVisibilityCheckerTest extends IntegrationTestCase
         self::assertTrue($this->checker->isVisibleToUser(ImageId::from(4)));
     }
 
-    public function test_is_visible_to_user_returns_false_for_an_image_in_a_forbidden_category(): void
+    public function testIsVisibleToUserReturnsFalseForAnImageInAForbiddenCategory(): void
     {
         self::setCurrentUserForbiddenCategories('2');
 
@@ -79,7 +79,7 @@ final class ImageVisibilityCheckerTest extends IntegrationTestCase
         self::assertFalse($this->checker->isVisibleToUser(ImageId::from(5)));
     }
 
-    public function test_is_visible_to_user_returns_true_for_an_image_not_in_a_forbidden_category(): void
+    public function testIsVisibleToUserReturnsTrueForAnImageNotInAForbiddenCategory(): void
     {
         self::setCurrentUserForbiddenCategories('2');
 
@@ -92,7 +92,7 @@ final class ImageVisibilityCheckerTest extends IntegrationTestCase
      * an admin action) must be reflected immediately, not served from a
      * frozen prior value.
      */
-    public function test_is_visible_to_user_reflects_a_revocation_on_the_same_connection(): void
+    public function testIsVisibleToUserReflectsARevocationOnTheSameConnection(): void
     {
         self::setCurrentUserForbiddenCategories('0');
         self::assertTrue($this->checker->isVisibleToUser(ImageId::from(4)));

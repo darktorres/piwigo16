@@ -4,14 +4,14 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Unit\Auth;
 
-use LogicException;
 use InvalidArgumentException;
+use LogicException;
 use Piwigo\Auth\PwgTOTP;
 use Piwigo\Common\ValueObject\LangCode;
+use Piwigo\Common\ValueObject\ThemeId;
 use Piwigo\Common\ValueObject\UserId;
 use Piwigo\Common\ValueObject\Username;
 use Piwigo\Tests\Support\CurrentUserTestFactory;
-use Piwigo\Common\ValueObject\ThemeId;
 use Piwigo\Users\User;
 use Piwigo\Users\UserStatus;
 use ReflectionMethod;
@@ -72,21 +72,24 @@ test('generateCodeFromTimestamp matches the RFC 6238 vector for T=59 (counter 1)
     // T=59 with this secret; this class truncates to 6 digits via
     // $number % 1_000_000, which is exactly the last 6 digits of that
     // same $number, i.e. the tail of the published 8-digit value.
-    expect(invokeGenerateCodeFromTimestamp(RFC6238_SHA1_SECRET_BASE32, 1.0))->toBe('287082');
+    expect(invokeGenerateCodeFromTimestamp(RFC6238_SHA1_SECRET_BASE32, 1.0))
+        ->toBe('287082');
 });
 
 test('generateCodeFromTimestamp matches the RFC 6238 vector for T=1111111109 (counter 37037036)', function (): void {
     // Published 8-digit code is '07081804' for this T; confirms the
     // counter (not just the secret) actually drives the HMAC input,
     // ruling out a stuck/hardcoded implementation.
-    expect(invokeGenerateCodeFromTimestamp(RFC6238_SHA1_SECRET_BASE32, 37037036.0))->toBe('081804');
+    expect(invokeGenerateCodeFromTimestamp(RFC6238_SHA1_SECRET_BASE32, 37037036.0))
+        ->toBe('081804');
 });
 
 test('generateCodeFromTimestamp still produces a code when PwgBase32::decode() returns a non-string', function (): void {
     // PwgBase32::decode('') returns null, not a string -- the (string)
     // cast on $key is what turns that into hash_hmac()'s required
     // empty-string key rather than a TypeError under strict_types=1.
-    expect(invokeGenerateCodeFromTimestamp('', 1.0))->toBe('812658');
+    expect(invokeGenerateCodeFromTimestamp('', 1.0))
+        ->toBe('812658');
 });
 
 test('generateCodeFromTimestamp masks unpacked[1] with 0x7FFFFFFF, not a value with a cleared low bit', function (): void {
@@ -96,14 +99,17 @@ test('generateCodeFromTimestamp masks unpacked[1] with 0x7FFFFFFF, not a value w
     // Counter 3 for this same secret has a raw unpacked[1] whose low bit
     // is genuinely 1 (found by brute-force search, not RFC-published),
     // so clearing it would shift $number by 1 and change the final code.
-    expect(invokeGenerateCodeFromTimestamp(RFC6238_SHA1_SECRET_BASE32, 3.0))->toBe('969429');
+    expect(invokeGenerateCodeFromTimestamp(RFC6238_SHA1_SECRET_BASE32, 3.0))
+        ->toBe('969429');
 });
 
 test('generateSecret produces a 32-character, unpadded base32 alphabet string by default', function (): void {
     $secret = PwgTOTP::generateSecret();
 
-    expect($secret)->toHaveLength(32)
-        ->and($secret)->toMatch('/^[A-Z2-7]{32}$/');
+    expect($secret)
+        ->toHaveLength(32)
+        ->and($secret)
+        ->toMatch('/^[A-Z2-7]{32}$/');
 });
 
 test('generateSecret honours an explicit byte length', function (): void {
@@ -111,7 +117,8 @@ test('generateSecret honours an explicit byte length', function (): void {
     // either, since encode() is always called with padding=false here).
     $secret = PwgTOTP::generateSecret(10);
 
-    expect($secret)->toHaveLength(16);
+    expect($secret)
+        ->toHaveLength(16);
 });
 
 test('generateSecret rejects a length below 1', function (): void {
@@ -135,15 +142,18 @@ test('generateSecret never pads, even for a byte length whose bits do not land o
     // appends '=' when there's a nonzero remainder either way.
     $secret = PwgTOTP::generateSecret(9);
 
-    expect($secret)->toHaveLength(15)
-        ->and($secret)->not->toContain('=');
+    expect($secret)
+        ->toHaveLength(15)
+        ->and($secret)
+        ->not->toContain('=');
 });
 
 test('generateCode/verifyCode round-trip for a freshly generated secret', function (): void {
     $secret = PwgTOTP::generateSecret();
     $code = PwgTOTP::generateCode($secret);
 
-    expect($code)->toHaveLength(6);
+    expect($code)
+        ->toHaveLength(6);
     expect(PwgTOTP::verifyCode($code, $secret))->toBeTrue();
 
     // Guaranteed different from the real code, regardless of what it
@@ -166,7 +176,8 @@ test('generateCode floors the raw time()/$timestamp ratio rather than rounding o
 
     $code = PwgTOTP::generateCode($secret, $period);
 
-    expect($code)->toBe(invokeGenerateCodeFromTimestamp($secret, 0.0));
+    expect($code)
+        ->toBe(invokeGenerateCodeFromTimestamp($secret, 0.0));
 });
 
 test('verifyCode floors the raw time()/$timestamp ratio rather than rounding or ceiling it', function (): void {
@@ -212,9 +223,10 @@ test('getOtpAuthUrl builds an otpauth:// url from the current user and a scheme-
     try {
         $url = PwgTOTP::getOtpAuthUrl('JBSWY3DPEHPK3PXP', new PwgTOTPTestFakeUrlService(), CurrentUserTestFactory::get());
 
-        expect($url)->toBe(
-            'otpauth://totp/totp_user:https://gallery.example.test/piwigo?secret=JBSWY3DPEHPK3PXP&issuer=Piwigo&algorithm=sha1&digits=6&period=30'
-        );
+        expect($url)
+            ->toBe(
+                'otpauth://totp/totp_user:https://gallery.example.test/piwigo?secret=JBSWY3DPEHPK3PXP&issuer=Piwigo&algorithm=sha1&digits=6&period=30'
+            );
     } finally {
         CurrentUserTestFactory::get()->reset();
     }
@@ -234,7 +246,8 @@ test('getQrCode returns a base64 PNG data uri encoding the same otpauth url as g
     try {
         $dataUri = PwgTOTP::getQrCode('JBSWY3DPEHPK3PXP', new PwgTOTPTestFakeUrlService(), CurrentUserTestFactory::get());
 
-        expect($dataUri)->toStartWith('data:image/png;base64,');
+        expect($dataUri)
+            ->toStartWith('data:image/png;base64,');
     } finally {
         CurrentUserTestFactory::get()->reset();
     }

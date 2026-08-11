@@ -11,5 +11,7 @@ namespace Piwigo\Tests\Fixtures\PluginConfig;
  */
 final readonly class TestNotifyEvent
 {
-    public function __construct(public string $value) {}
+    public function __construct(
+        public string $value
+    ) {}
 }

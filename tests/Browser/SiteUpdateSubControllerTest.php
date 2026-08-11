@@ -2,12 +2,11 @@
 
 declare(strict_types=1);
 
-use PgSql\Connection;
 use Pest\Browser\Api\AwaitableWebpage;
 use Pest\Browser\Api\PendingAwaitablePage;
 use Pest\Browser\Api\Webpage;
+use PgSql\Connection;
 use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
-
 
 function suConnect(): mysqli|Connection
 {
@@ -286,7 +285,9 @@ function suMakeJpegWithIptcKeywords(array $keywords): string
  */
 function suPath(array $query = []): string
 {
-    return '/admin.php?page=site_update&' . http_build_query(array_merge(['site' => '1'], $query));
+    return '/admin.php?page=site_update&' . http_build_query(array_merge([
+        'site' => '1',
+    ], $query));
 }
 
 /**
@@ -325,7 +326,9 @@ it('renders the introduction with default settings and category options', functi
 
 it('renders with a preselected cat_id, defaulting sync to files', function (): void {
     $page = H::loginAsAdmin($this);
-    $page = H::navigateOk($page, suPath(['cat_id' => '1']));
+    $page = H::navigateOk($page, suPath([
+        'cat_id' => '1',
+    ]));
     $page->assertNoJavaScriptErrors();
 });
 
@@ -357,7 +360,9 @@ it('fatal-errors when the site param is missing', function (): void {
 it('fatal-errors when the site param is not numeric', function (): void {
     $page = H::loginAsAdmin($this);
 
-    $result = H::adminPost($page, suPath(['site' => 'abc']), []);
+    $result = H::adminPost($page, suPath([
+        'site' => 'abc',
+    ]), []);
 
     expect($result['status'])->toBe(500);
     expect($result['body'])->toContain('site param missing or invalid');
@@ -366,7 +371,9 @@ it('fatal-errors when the site param is not numeric', function (): void {
 it('fatal-errors when the site does not exist', function (): void {
     $page = H::loginAsAdmin($this);
 
-    $result = H::adminPost($page, suPath(['site' => '999999']), []);
+    $result = H::adminPost($page, suPath([
+        'site' => '999999',
+    ]), []);
 
     expect($result['status'])->toBe(500);
     expect($result['body'])->toContain('site 999999 does not exist');
@@ -377,7 +384,9 @@ it('fatal-errors for a remote site', function (): void {
     $remoteSiteId = suInsertRemoteSite('http://ct-remote-' . uniqid() . '.example.invalid/');
 
     try {
-        $result = H::adminPost($page, suPath(['site' => (string) $remoteSiteId]), []);
+        $result = H::adminPost($page, suPath([
+            'site' => (string) $remoteSiteId,
+        ]), []);
 
         expect($result['status'])->toBe(500);
         expect($result['body'])->toContain('remote sites not supported');
@@ -403,7 +412,9 @@ it('reports all-zero counts when the site directory cannot be opened', function 
         // controller reads the target site from the URL query string,
         // not $_POST, so the override has to go there too (same shape as
         // the existing "fatal-errors for a remote site" test above).
-        $result = H::adminPost($page, suPath(['site' => (string) $unreadableSiteId]), [
+        $result = H::adminPost($page, suPath([
+            'site' => (string) $unreadableSiteId,
+        ]), [
             'submit' => '1',
             'pwg_token' => $token,
             'sync' => 'files',
@@ -427,7 +438,10 @@ it('reports all-zero counts when the site directory cannot be opened', function 
 it('rejects a submission with a missing CSRF token', function (): void {
     $page = H::loginAsAdmin($this);
 
-    $result = H::adminPost($page, suPath(), ['submit' => '1', 'sync' => 'files']);
+    $result = H::adminPost($page, suPath(), [
+        'submit' => '1',
+        'sync' => 'files',
+    ]);
 
     expect($result['status'])->toBe(400);
 });
@@ -447,7 +461,9 @@ it('rejects a submission with a wrong CSRF token', function (): void {
 it('quick_sync requires a CSRF token too', function (): void {
     $page = H::loginAsAdmin($this);
 
-    $result = H::adminPost($page, suPath(['quick_sync' => '1']), []);
+    $result = H::adminPost($page, suPath([
+        'quick_sync' => '1',
+    ]), []);
 
     expect($result['status'])->toBe(400);
 });
@@ -473,9 +489,11 @@ it('synchronizes a new directory/photo and detects its deletion on resync', func
         expect($created['body'])->toContain('0 errors during synchronization');
 
         $categoryId = suCategoryIdByDir(1, $dir);
-        expect($categoryId)->not->toBeNull();
+        expect($categoryId)
+            ->not->toBeNull();
         $imageId = suImageIdByFile($file);
-        expect($imageId)->not->toBeNull();
+        expect($imageId)
+            ->not->toBeNull();
 
         suRemoveDirRecursive($tempDir);
 
@@ -485,8 +503,10 @@ it('synchronizes a new directory/photo and detects its deletion on resync', func
         expect($deleted['body'])->toContain('0 albums added in the database');
         expect($deleted['body'])->toContain('1 albums deleted in the database');
 
-        expect(suCategoryIdByDir(1, $dir))->toBeNull();
-        expect(suImageIdByFile($file))->toBeNull();
+        expect(suCategoryIdByDir(1, $dir))
+            ->toBeNull();
+        expect(suImageIdByFile($file))
+            ->toBeNull();
     } finally {
         suRemoveDirRecursive($tempDir);
     }
@@ -504,15 +524,19 @@ it('simulate mode reports counts without writing to the database', function (): 
     $token = H::pwgToken($page);
 
     try {
-        $result = suSync($page, $token, ['simulate' => '1']);
+        $result = suSync($page, $token, [
+            'simulate' => '1',
+        ]);
 
         expect($result['status'])->toBe(200);
         expect($result['body'])->toContain('Simulation');
         expect($result['body'])->toContain('1 albums added in the database');
         expect($result['body'])->toContain('1 photos added in the database');
 
-        expect(suCategoryIdByDir(1, $dir))->toBeNull();
-        expect(suImageIdByFile($file))->toBeNull();
+        expect(suCategoryIdByDir(1, $dir))
+            ->toBeNull();
+        expect(suImageIdByFile($file))
+            ->toBeNull();
     } finally {
         suRemoveDirRecursive($tempDir);
     }
@@ -526,14 +550,17 @@ it('rejects a directory whose name fails the sync-chars regex', function (): voi
     $token = H::pwgToken($page);
 
     try {
-        $result = suSync($page, $token, ['sync' => 'dirs']);
+        $result = suSync($page, $token, [
+            'sync' => 'dirs',
+        ]);
 
         expect($result['status'])->toBe(200);
         expect($result['body'])->toContain('PWG-UPDATE-1');
         expect($result['body'])->toContain('wrong filename');
         expect($result['body'])->toContain($dir);
         expect($result['body'])->toContain('1 errors during synchronization');
-        expect(suCategoryIdByDir(1, $dir))->toBeNull();
+        expect(suCategoryIdByDir(1, $dir))
+            ->toBeNull();
     } finally {
         suRemoveDirRecursive($tempDir);
     }
@@ -554,16 +581,22 @@ it('synchronizes metadata for a registered photo', function (): void {
         suSync($page, $token);
 
         $imageId = suImageIdByFile($file);
-        expect($imageId)->not->toBeNull();
+        expect($imageId)
+            ->not->toBeNull();
         assert($imageId !== null);
-        expect(suImageDateMetadataUpdate($imageId))->toBeNull();
+        expect(suImageDateMetadataUpdate($imageId))
+            ->toBeNull();
 
-        $result = suSync($page, $token, ['sync_meta' => '1', 'meta_all' => '1']);
+        $result = suSync($page, $token, [
+            'sync_meta' => '1',
+            'meta_all' => '1',
+        ]);
 
         expect($result['status'])->toBe(200);
         expect($result['body'])->toContain("1 photos' information synchronized with files metadata");
         expect($result['body'])->toContain('1 photos candidates for metadata synchronization');
-        expect(suImageDateMetadataUpdate($imageId))->not->toBeNull();
+        expect(suImageDateMetadataUpdate($imageId))
+            ->not->toBeNull();
     } finally {
         suRemoveDirRecursive($tempDir);
         H::adminPost($page, suPath(), [
@@ -592,7 +625,8 @@ it('scopes a submit to a single category via cat, honoring subcats-included and 
         $created = suSync($page, $token);
         expect($created['status'])->toBe(200);
         $parentId = suCategoryIdByDir(1, $parentDir);
-        expect($parentId)->not->toBeNull();
+        expect($parentId)
+            ->not->toBeNull();
         assert($parentId !== null);
 
         // A brand new sub-directory under the parent: cat-scoped +
@@ -603,12 +637,16 @@ it('scopes a submit to a single category via cat, honoring subcats-included and 
         $childDir = $parentDir . '/ct_child_' . uniqid();
         mkdir(suGalleriesRoot() . $childDir, 0777, true);
 
-        $scoped = suSync($page, $token, ['cat' => (string) $parentId, 'subcats-included' => '1']);
+        $scoped = suSync($page, $token, [
+            'cat' => (string) $parentId,
+            'subcats-included' => '1',
+        ]);
         expect($scoped['status'])->toBe(200);
         expect($scoped['body'])->toContain('1 albums added in the database');
 
         $childId = suCategoryIdByDir(1, basename($childDir));
-        expect($childId)->not->toBeNull();
+        expect($childId)
+            ->not->toBeNull();
 
         // A second new sub-directory, this time submitted with
         // subcats-included NOT '1': the query restricts to `id =
@@ -618,10 +656,14 @@ it('scopes a submit to a single category via cat, honoring subcats-included and 
         $secondChildDir = $parentDir . '/ct_child2_' . uniqid();
         mkdir(suGalleriesRoot() . $secondChildDir, 0777, true);
 
-        $notScoped = suSync($page, $token, ['cat' => (string) $parentId, 'subcats-included' => '0']);
+        $notScoped = suSync($page, $token, [
+            'cat' => (string) $parentId,
+            'subcats-included' => '0',
+        ]);
         expect($notScoped['status'])->toBe(200);
         expect($notScoped['body'])->toContain('0 albums added in the database');
-        expect(suCategoryIdByDir(1, basename($secondChildDir)))->toBeNull();
+        expect(suCategoryIdByDir(1, basename($secondChildDir)))
+            ->toBeNull();
     } finally {
         suRemoveDirRecursive($parentTemp);
         H::adminPost($page, suPath(), [
@@ -653,7 +695,8 @@ it('propagates directly-granted group/user permissions onto newly-synced private
         $created = suSync($page, $token);
         expect($created['status'])->toBe(200);
         $parentId = suCategoryIdByDir(1, $parentDir);
-        expect($parentId)->not->toBeNull();
+        expect($parentId)
+            ->not->toBeNull();
         assert($parentId !== null);
 
         // Directly grant group 1 ("Editors") and user 4 access on the
@@ -679,21 +722,25 @@ it('propagates directly-granted group/user permissions onto newly-synced private
         expect($result['body'])->toContain('3 albums added in the database');
 
         $childBId = suCategoryIdByDir(1, basename($childBDir));
-        expect($childBId)->not->toBeNull();
+        expect($childBId)
+            ->not->toBeNull();
         assert($childBId !== null);
 
         $db = suConnect();
-        $grandchildRow = H::dbFetchAssoc($db, sprintf("SELECT id FROM categories WHERE site_id = 1 AND id_uppercat = %d", $childBId));
+        $grandchildRow = H::dbFetchAssoc($db, sprintf('SELECT id FROM categories WHERE site_id = 1 AND id_uppercat = %d', $childBId));
         H::dbClose($db);
-        expect($grandchildRow)->not->toBeNull();
+        expect($grandchildRow)
+            ->not->toBeNull();
         assert(is_array($grandchildRow));
         $grandchildId = (int) $grandchildRow['id'];
 
         // All three new categories inherited private status from the
         // parent, and all three received the parent's own direct grants.
         foreach ([$childBId, $grandchildId] as $newCatId) {
-            expect(suHasGroupAccess(1, $newCatId))->toBeTrue();
-            expect(suHasUserAccess(4, $newCatId))->toBeTrue();
+            expect(suHasGroupAccess(1, $newCatId))
+                ->toBeTrue();
+            expect(suHasUserAccess(4, $newCatId))
+                ->toBeTrue();
         }
     } finally {
         H::restoreConfig($snapshot);
@@ -736,7 +783,9 @@ it('assigns a non-zero privacy level, mass-inserts/removes per-image formats, an
     try {
         H::setConfigValue('enable_formats', 'true');
 
-        $created = suSync($page, $token, ['privacy_level' => '4']);
+        $created = suSync($page, $token, [
+            'privacy_level' => '4',
+        ]);
         expect($created['status'])->toBe(200);
         expect($created['body'])->toContain('3 photos added in the database');
         expect($created['body'])->toContain('1 errors during synchronization');
@@ -746,16 +795,22 @@ it('assigns a non-zero privacy level, mass-inserts/removes per-image formats, an
         $photo1Id = suImageIdByFile('photo1.jpg');
         $photo2Id = suImageIdByFile('photo2.jpg');
         $photo3Id = suImageIdByFile('photo3.jpg');
-        expect($photo1Id)->not->toBeNull();
-        expect($photo2Id)->not->toBeNull();
-        expect($photo3Id)->not->toBeNull();
+        expect($photo1Id)
+            ->not->toBeNull();
+        expect($photo2Id)
+            ->not->toBeNull();
+        expect($photo3Id)
+            ->not->toBeNull();
         assert($photo1Id !== null && $photo2Id !== null && $photo3Id !== null);
 
         // privacy_level (non-'0') is stamped onto every newly-created
         // element, not just the first.
-        expect(suImageLevel($photo1Id))->toBe(4);
-        expect(suImageLevel($photo2Id))->toBe(4);
-        expect(suImageFormatFilesize($photo1Id, 'cr2'))->toBe(2);
+        expect(suImageLevel($photo1Id))
+            ->toBe(4);
+        expect(suImageLevel($photo2Id))
+            ->toBe(4);
+        expect(suImageFormatFilesize($photo1Id, 'cr2'))
+            ->toBe(2);
 
         // A new format sibling added for an *already-registered* photo:
         // the "new formats on existing photos" diff branch.
@@ -765,7 +820,8 @@ it('assigns a non-zero privacy level, mass-inserts/removes per-image formats, an
         expect($addedFormat['status'])->toBe(200);
         expect($addedFormat['body'])->toContain('0 photos added in the database');
         expect($addedFormat['body'])->toContain('format cr2 added');
-        expect(suImageFormatFilesize($photo2Id, 'cr2'))->toBe(4);
+        expect(suImageFormatFilesize($photo2Id, 'cr2'))
+            ->toBe(4);
 
         // Remove photo1's format sibling (format-removal diff branch +
         // mass-delete) and delete photo3's main file entirely (element
@@ -777,8 +833,10 @@ it('assigns a non-zero privacy level, mass-inserts/removes per-image formats, an
         expect($removedFormat['status'])->toBe(200);
         expect($removedFormat['body'])->toContain('format cr2 removed');
         expect($removedFormat['body'])->toContain('1 photos deleted from the database');
-        expect(suImageFormatFilesize($photo1Id, 'cr2'))->toBeNull();
-        expect(suImageIdByFile('photo3.jpg'))->toBeNull();
+        expect(suImageFormatFilesize($photo1Id, 'cr2'))
+            ->toBeNull();
+        expect(suImageIdByFile('photo3.jpg'))
+            ->toBeNull();
     } finally {
         H::restoreConfig($snapshot);
         suRemoveDirRecursive($tempDir);
@@ -807,7 +865,8 @@ it('reports a PWG-ERROR-NO-FS error when a registered photo is deleted before it
     try {
         suSync($page, $token);
         $imageId = suImageIdByFile($file);
-        expect($imageId)->not->toBeNull();
+        expect($imageId)
+            ->not->toBeNull();
 
         // Delete the physical file but leave the directory (and the DB
         // image row) untouched, then request metadata sync alone (sync
@@ -856,7 +915,9 @@ it('quick_sync performs a real full local synchronization via the GET shortcut',
     $token = H::pwgToken($page);
 
     try {
-        $result = H::adminPost($page, suPath(['quick_sync' => '1']), [
+        $result = H::adminPost($page, suPath([
+            'quick_sync' => '1',
+        ]), [
             'pwg_token' => $token,
         ]);
 
@@ -864,8 +925,10 @@ it('quick_sync performs a real full local synchronization via the GET shortcut',
         expect($result['body'])->toContain('1 albums added in the database');
         expect($result['body'])->toContain('1 photos added in the database');
 
-        expect(suCategoryIdByDir(1, $dir))->not->toBeNull();
-        expect(suImageIdByFile($file))->not->toBeNull();
+        expect(suCategoryIdByDir(1, $dir))
+            ->not->toBeNull();
+        expect(suImageIdByFile($file))
+            ->not->toBeNull();
     } finally {
         suRemoveDirRecursive($tempDir);
         H::adminPost($page, suPath(), [
@@ -890,7 +953,8 @@ it('creates a new sub-category successfully when its parent has a null global_ra
         $created = suSync($page, $token);
         expect($created['status'])->toBe(200);
         $parentId = suCategoryIdByDir(1, $parentDir);
-        expect($parentId)->not->toBeNull();
+        expect($parentId)
+            ->not->toBeNull();
         assert($parentId !== null);
 
         // Force a genuinely null global_rank on the parent -- the column
@@ -916,12 +980,16 @@ it('creates a new sub-category successfully when its parent has a null global_ra
         // persisted value left to assert on afterwards -- a successful,
         // uncrashed creation off a real null-global_rank parent is the
         // real, observable proof this branch was taken.
-        $scoped = suSync($page, $token, ['cat' => (string) $parentId, 'subcats-included' => '1']);
+        $scoped = suSync($page, $token, [
+            'cat' => (string) $parentId,
+            'subcats-included' => '1',
+        ]);
 
         expect($scoped['status'])->toBe(200);
         expect($scoped['body'])->not->toContain('Fatal error');
         expect($scoped['body'])->toContain('1 albums added in the database');
-        expect(suCategoryIdByDir(1, basename($childDir)))->not->toBeNull();
+        expect(suCategoryIdByDir(1, basename($childDir)))
+            ->not->toBeNull();
     } finally {
         suRemoveDirRecursive($parentTemp);
         H::adminPost($page, suPath(), [
@@ -946,7 +1014,8 @@ it('forces a new sub-category invisible when its parent category is not visible'
         $created = suSync($page, $token);
         expect($created['status'])->toBe(200);
         $parentId = suCategoryIdByDir(1, $parentDir);
-        expect($parentId)->not->toBeNull();
+        expect($parentId)
+            ->not->toBeNull();
         assert($parentId !== null);
 
         // newcat_default_visible defaults to true -- flipping this one,
@@ -959,19 +1028,24 @@ it('forces a new sub-category invisible when its parent category is not visible'
         $childDir = $parentDir . '/ct_child_invis_' . uniqid();
         mkdir(suGalleriesRoot() . $childDir, 0777, true);
 
-        $scoped = suSync($page, $token, ['cat' => (string) $parentId, 'subcats-included' => '1']);
+        $scoped = suSync($page, $token, [
+            'cat' => (string) $parentId,
+            'subcats-included' => '1',
+        ]);
         expect($scoped['status'])->toBe(200);
         expect($scoped['body'])->toContain('1 albums added in the database');
 
         $childId = suCategoryIdByDir(1, basename($childDir));
-        expect($childId)->not->toBeNull();
+        expect($childId)
+            ->not->toBeNull();
         assert($childId !== null);
 
         // Unlike global_rank, `visible` is never touched by the
         // updateCategory()/updateGlobalRank() recompute at the end of the
         // request -- the inherited-invisible value set at insert time is
         // exactly what's still in the database afterwards.
-        expect(suCategoryVisible($childId))->toBeFalse();
+        expect(suCategoryVisible($childId))
+            ->toBeFalse();
     } finally {
         suRemoveDirRecursive($parentTemp);
         H::adminPost($page, suPath(), [
@@ -999,7 +1073,8 @@ it('clears a deleted category\'s cached derivative directory when one exists on 
     try {
         $created = suSync($page, $token);
         expect($created['status'])->toBe(200);
-        expect(suCategoryIdByDir(1, $dir))->not->toBeNull();
+        expect(suCategoryIdByDir(1, $dir))
+            ->not->toBeNull();
 
         // A real on-disk derivative-cache directory for this category,
         // mirroring what real thumbnail/derivative generation would have
@@ -1011,7 +1086,8 @@ it('clears a deleted category\'s cached derivative directory when one exists on 
         mkdir($derivDir, 0777, true);
         umask($previousUmask);
         file_put_contents($derivDir . '/thumb.jpg', 'fake-cached-derivative-bytes');
-        expect(is_dir($derivDir))->toBeTrue();
+        expect(is_dir($derivDir))
+            ->toBeTrue();
 
         suRemoveDirRecursive($tempDir);
 
@@ -1022,7 +1098,8 @@ it('clears a deleted category\'s cached derivative directory when one exists on 
         // DerivativeCacheService::clearDerivativeCacheRecursive() removed
         // every file it found (pattern '#.+#' matches anything) and, since
         // nothing was left over, rmdir()'d the now-empty directory itself.
-        expect(is_dir($derivDir))->toBeFalse();
+        expect(is_dir($derivDir))
+            ->toBeFalse();
     } finally {
         suRemoveDirRecursive($tempDir);
         suRemoveDirRecursive($derivDir);
@@ -1057,8 +1134,10 @@ it('silently skips a photo whose containing directory has no matching category',
         expect($result['body'])->toContain('1 photos added in the database');
         expect($result['body'])->toContain('0 errors during synchronization');
 
-        expect(suImageIdByFile($file))->not->toBeNull();
-        expect(suImageIdByFile($orphanFile))->toBeNull();
+        expect(suImageIdByFile($file))
+            ->not->toBeNull();
+        expect(suImageIdByFile($orphanFile))
+            ->toBeNull();
     } finally {
         suRemoveDirRecursive($tempDir);
         @unlink(suGalleriesRoot() . $orphanFile);
@@ -1088,13 +1167,16 @@ it('scopes metadata synchronization to a single category via cat, honoring subca
         $created = suSync($page, $token);
         expect($created['status'])->toBe(200);
         $catId = suCategoryIdByDir(1, $dir);
-        expect($catId)->not->toBeNull();
+        expect($catId)
+            ->not->toBeNull();
         assert($catId !== null);
 
         $imageId = suImageIdByFile($file);
-        expect($imageId)->not->toBeNull();
+        expect($imageId)
+            ->not->toBeNull();
         assert($imageId !== null);
-        expect(suImageDateMetadataUpdate($imageId))->toBeNull();
+        expect(suImageDateMetadataUpdate($imageId))
+            ->toBeNull();
 
         // cat-scoped with subcats-included NOT '1': $opts['recursive']
         // becomes false, restricting getFilelist() to this category alone
@@ -1111,7 +1193,8 @@ it('scopes metadata synchronization to a single category via cat, honoring subca
         expect($scoped['status'])->toBe(200);
         expect($scoped['body'])->toContain("1 photos' information synchronized with files metadata");
         expect($scoped['body'])->toContain('1 photos candidates for metadata synchronization');
-        expect(suImageDateMetadataUpdate($imageId))->not->toBeNull();
+        expect(suImageDateMetadataUpdate($imageId))
+            ->not->toBeNull();
     } finally {
         suRemoveDirRecursive($tempDir);
         H::adminPost($page, suPath(), [
@@ -1151,18 +1234,24 @@ it('assigns tags from IPTC keywords during metadata synchronization', function (
         $created = suSync($page, $token);
         expect($created['status'])->toBe(200);
         $imageId = suImageIdByFile($file);
-        expect($imageId)->not->toBeNull();
+        expect($imageId)
+            ->not->toBeNull();
         assert($imageId !== null);
-        expect(suImageTagNames($imageId))->toBe([]);
+        expect(suImageTagNames($imageId))
+            ->toBe([]);
 
-        $result = suSync($page, $token, ['sync_meta' => '1', 'meta_all' => '1']);
+        $result = suSync($page, $token, [
+            'sync_meta' => '1',
+            'meta_all' => '1',
+        ]);
 
         expect($result['status'])->toBe(200);
         expect($result['body'])->toContain("1 photos' information synchronized with files metadata");
 
         $expectedNames = [$keyword1, $keyword2];
         sort($expectedNames);
-        expect(suImageTagNames($imageId))->toBe($expectedNames);
+        expect(suImageTagNames($imageId))
+            ->toBe($expectedNames);
     } finally {
         H::restoreConfig($snapshot);
         suRemoveDirRecursive($tempDir);

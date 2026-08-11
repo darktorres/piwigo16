@@ -23,17 +23,23 @@ use Piwigo\Image\SizingParams;
 test('classic builds a plain ideal_size with max_crop 0 and null min_size', function (): void {
     $params = SizingParams::classic(100, 200);
 
-    expect($params->ideal_size)->toBe([100, 200]);
-    expect($params->max_crop)->toBe(0);
-    expect($params->min_size)->toBeNull();
+    expect($params->ideal_size)
+        ->toBe([100, 200]);
+    expect($params->max_crop)
+        ->toBe(0);
+    expect($params->min_size)
+        ->toBeNull();
 });
 
 test('square builds an equal ideal/min size with max_crop 1', function (): void {
     $params = SizingParams::square(120);
 
-    expect($params->ideal_size)->toBe([120, 120]);
-    expect($params->max_crop)->toBe(1);
-    expect($params->min_size)->toBe([120, 120]);
+    expect($params->ideal_size)
+        ->toBe([120, 120]);
+    expect($params->max_crop)
+        ->toBe(1);
+    expect($params->min_size)
+        ->toBe([120, 120]);
 });
 
 test('add_url_tokens takes the fast "s" single-token path only for an explicit float 0.0 max_crop', function (): void {
@@ -41,7 +47,8 @@ test('add_url_tokens takes the fast "s" single-token path only for an explicit f
     $tokens = [];
     $params->add_url_tokens($tokens);
 
-    expect($tokens)->toBe(['s100x200']);
+    expect($tokens)
+        ->toBe(['s100x200']);
 });
 
 test('add_url_tokens takes the fast "e" single-token path only for an explicit float 1.0 max_crop with matching min_size', function (): void {
@@ -49,7 +56,8 @@ test('add_url_tokens takes the fast "e" single-token path only for an explicit f
     $tokens = [];
     $params->add_url_tokens($tokens);
 
-    expect($tokens)->toBe(['e120']);
+    expect($tokens)
+        ->toBe(['e120']);
 });
 
 test('add_url_tokens falls through to the general 2-token form for classic()\'s own int max_crop default', function (): void {
@@ -59,7 +67,8 @@ test('add_url_tokens falls through to the general 2-token form for classic()\'s 
 
     // sizeToUrl + fractionToChar(0) -- NOT the 's100x200' fast form, per
     // this file's own class docblock finding above.
-    expect($tokens)->toBe(['100x200', 'a']);
+    expect($tokens)
+        ->toBe(['100x200', 'a']);
 });
 
 test('add_url_tokens falls through to the general 3-token form for square()\'s own int max_crop literal', function (): void {
@@ -67,19 +76,22 @@ test('add_url_tokens falls through to the general 3-token form for square()\'s o
     $tokens = [];
     $params->add_url_tokens($tokens);
 
-    expect($tokens)->toBe([120, 'z', 120]);
+    expect($tokens)
+        ->toBe([120, 'z', 120]);
 });
 
 test('add_url_tokens includes a 3rd min_size token only when min_size is set', function (): void {
     $withMinSize = new SizingParams([100, 100], 0.5, [50, 50]);
     $tokensWith = [];
     $withMinSize->add_url_tokens($tokensWith);
-    expect($tokensWith)->toBe([100, 'n', 50]);
+    expect($tokensWith)
+        ->toBe([100, 'n', 50]);
 
     $withoutMinSize = new SizingParams([100, 100], 0.5, null);
     $tokensWithout = [];
     $withoutMinSize->add_url_tokens($tokensWithout);
-    expect($tokensWithout)->toBe([100, 'n']);
+    expect($tokensWithout)
+        ->toBe([100, 'n']);
 });
 
 test('compute throws when max_crop > 0 but min_size is null', function (): void {
@@ -100,8 +112,10 @@ test('compute with max_crop 0 pure-scales down without cropping', function (): v
     $scaleSize = null;
     $params->compute([300, 300], null, $cropRect, $scaleSize);
 
-    expect($cropRect)->toBeNull();
-    expect($scaleSize)->toBe([100, 100]);
+    expect($cropRect)
+        ->toBeNull();
+    expect($scaleSize)
+        ->toBe([100, 100]);
 });
 
 test('compute is a no-op (no crop, no scale) when the input is already smaller than the ideal size', function (): void {
@@ -112,8 +126,10 @@ test('compute is a no-op (no crop, no scale) when the input is already smaller t
     $scaleSize = null;
     $params->compute([100, 100], null, $cropRect, $scaleSize);
 
-    expect($cropRect)->toBeNull();
-    expect($scaleSize)->toBeNull();
+    expect($cropRect)
+        ->toBeNull();
+    expect($scaleSize)
+        ->toBeNull();
 });
 
 test('compute crops horizontally when the width ratio exceeds the height ratio', function (): void {
@@ -126,11 +142,16 @@ test('compute crops horizontally when the width ratio exceeds the height ratio',
     if ($cropRect === null) {
         throw new RuntimeException('Expected compute() to produce a crop rect');
     }
-    expect($cropRect->l)->toBe(56.0);
-    expect($cropRect->t)->toBe(0);
-    expect($cropRect->r)->toBe(243.0);
-    expect($cropRect->b)->toBe(300);
-    expect($scaleSize)->toBe([100, 160]);
+    expect($cropRect->l)
+        ->toBe(56.0);
+    expect($cropRect->t)
+        ->toBe(0);
+    expect($cropRect->r)
+        ->toBe(243.0);
+    expect($cropRect->b)
+        ->toBe(300);
+    expect($scaleSize)
+        ->toBe([100, 160]);
 });
 
 test('compute crops vertically when the height ratio exceeds the width ratio', function (): void {
@@ -143,11 +164,16 @@ test('compute crops vertically when the height ratio exceeds the width ratio', f
     if ($cropRect === null) {
         throw new RuntimeException('Expected compute() to produce a crop rect');
     }
-    expect($cropRect->l)->toBe(0);
-    expect($cropRect->t)->toBe(50.0);
-    expect($cropRect->r)->toBe(300);
-    expect($cropRect->b)->toBe(250.0);
-    expect($scaleSize)->toBe([150, 100]);
+    expect($cropRect->l)
+        ->toBe(0);
+    expect($cropRect->t)
+        ->toBe(50.0);
+    expect($cropRect->r)
+        ->toBe(300);
+    expect($cropRect->b)
+        ->toBe(250.0);
+    expect($scaleSize)
+        ->toBe([150, 100]);
 });
 
 /**
@@ -189,8 +215,10 @@ test('compute enters the crop-eligibility block only once width ratio reaches ex
     $scaleSize = null;
     $params->compute([100, 50], null, $cropRect, $scaleSize);
 
-    expect($cropRect)->toBeNull();
-    expect($scaleSize)->toBeNull();
+    expect($cropRect)
+        ->toBeNull();
+    expect($scaleSize)
+        ->toBeNull();
 });
 
 test('compute enters the crop-eligibility block only once height ratio reaches exactly 1, not before', function (): void {
@@ -202,8 +230,10 @@ test('compute enters the crop-eligibility block only once height ratio reaches e
     $scaleSize = null;
     $params->compute([50, 100], null, $cropRect, $scaleSize);
 
-    expect($cropRect)->toBeNull();
-    expect($scaleSize)->toBeNull();
+    expect($cropRect)
+        ->toBeNull();
+    expect($scaleSize)
+        ->toBeNull();
 });
 
 test('compute enters the crop-eligibility block from width ratio alone, not requiring both ratios over the boundary', function (): void {
@@ -220,8 +250,10 @@ test('compute enters the crop-eligibility block from width ratio alone, not requ
     if ($cropRect === null) {
         throw new RuntimeException('Expected compute() to produce a crop rect');
     }
-    expect($cropRect->l)->toBe(50.0);
-    expect($cropRect->r)->toBe(150.0);
+    expect($cropRect->l)
+        ->toBe(50.0);
+    expect($cropRect->r)
+        ->toBe(150.0);
 });
 
 test('compute enters the crop-eligibility block from height ratio alone, not requiring both ratios over the boundary', function (): void {
@@ -236,8 +268,10 @@ test('compute enters the crop-eligibility block from height ratio alone, not req
     if ($cropRect === null) {
         throw new RuntimeException('Expected compute() to produce a crop rect');
     }
-    expect($cropRect->t)->toBe(50.0);
-    expect($cropRect->b)->toBe(150.0);
+    expect($cropRect->t)
+        ->toBe(50.0);
+    expect($cropRect->b)
+        ->toBe(150.0);
 });
 
 test('compute picks the vertical crop branch, not the horizontal one, when width and height ratios are exactly tied', function (): void {
@@ -255,8 +289,10 @@ test('compute picks the vertical crop branch, not the horizontal one, when width
     $scaleSize = null;
     $params->compute([200, 200], null, $cropRect, $scaleSize);
 
-    expect($cropRect)->toBeNull();
-    expect($scaleSize)->toBe([100, 100]);
+    expect($cropRect)
+        ->toBeNull();
+    expect($scaleSize)
+        ->toBe([100, 100]);
 });
 
 /**
@@ -282,8 +318,10 @@ test('compute\'s horizontal crop is a true no-op once available height reaches e
     $scaleSize = null;
     $params->compute([300, 300], null, $cropRect, $scaleSize);
 
-    expect($cropRect)->toBeNull();
-    expect($scaleSize)->toBe([100, 100]);
+    expect($cropRect)
+        ->toBeNull();
+    expect($scaleSize)
+        ->toBe([100, 100]);
 });
 
 test('compute\'s vertical crop is a true no-op once available width reaches exactly min_size, not just close to it', function (): void {
@@ -293,8 +331,10 @@ test('compute\'s vertical crop is a true no-op once available width reaches exac
     $scaleSize = null;
     $params->compute([300, 300], null, $cropRect, $scaleSize);
 
-    expect($cropRect)->toBeNull();
-    expect($scaleSize)->toBe([100, 100]);
+    expect($cropRect)
+        ->toBeNull();
+    expect($scaleSize)
+        ->toBe([100, 100]);
 });
 
 test('compute\'s vertical max-crop-pixels floors the fractional ideal-crop distance, not rounds it', function (): void {
@@ -314,8 +354,10 @@ test('compute\'s vertical max-crop-pixels floors the fractional ideal-crop dista
     if ($cropRect === null) {
         throw new RuntimeException('Expected compute() to produce a crop rect');
     }
-    expect($cropRect->t)->toBe(56.0);
-    expect($cropRect->b)->toBe(243.0);
+    expect($cropRect->t)
+        ->toBe(56.0);
+    expect($cropRect->b)
+        ->toBe(243.0);
 });
 
 test('compute\'s horizontal max-crop-pixels uses real rounding, not floor or ceil, at a .3 fraction', function (): void {
@@ -330,8 +372,10 @@ test('compute\'s horizontal max-crop-pixels uses real rounding, not floor or cei
     if ($cropRect === null) {
         throw new RuntimeException('Expected compute() to produce a crop rect');
     }
-    expect($cropRect->l)->toBe(25.0);
-    expect($cropRect->r)->toBe(75.0);
+    expect($cropRect->l)
+        ->toBe(25.0);
+    expect($cropRect->r)
+        ->toBe(75.0);
 });
 
 test('compute\'s horizontal max-crop-pixels uses real rounding, not floor or ceil, at a .7 fraction', function (): void {
@@ -348,8 +392,10 @@ test('compute\'s horizontal max-crop-pixels uses real rounding, not floor or cei
     if ($cropRect === null) {
         throw new RuntimeException('Expected compute() to produce a crop rect');
     }
-    expect($cropRect->l)->toBe(25.0);
-    expect($cropRect->r)->toBe(74.0);
+    expect($cropRect->l)
+        ->toBe(25.0);
+    expect($cropRect->r)
+        ->toBe(74.0);
 });
 
 test('compute\'s vertical max-crop-pixels uses real rounding, not floor or ceil, at a .3 fraction', function (): void {
@@ -363,8 +409,10 @@ test('compute\'s vertical max-crop-pixels uses real rounding, not floor or ceil,
     if ($cropRect === null) {
         throw new RuntimeException('Expected compute() to produce a crop rect');
     }
-    expect($cropRect->t)->toBe(25.0);
-    expect($cropRect->b)->toBe(75.0);
+    expect($cropRect->t)
+        ->toBe(25.0);
+    expect($cropRect->b)
+        ->toBe(75.0);
 });
 
 test('compute\'s vertical max-crop-pixels uses real rounding, not floor or ceil, at a .7 fraction', function (): void {
@@ -378,8 +426,10 @@ test('compute\'s vertical max-crop-pixels uses real rounding, not floor or ceil,
     if ($cropRect === null) {
         throw new RuntimeException('Expected compute() to produce a crop rect');
     }
-    expect($cropRect->t)->toBe(25.0);
-    expect($cropRect->b)->toBe(74.0);
+    expect($cropRect->t)
+        ->toBe(25.0);
+    expect($cropRect->b)
+        ->toBe(74.0);
 });
 
 test('compute\'s own scale-size ratio check enters at exactly width ratio 1, not before', function (): void {
@@ -392,7 +442,8 @@ test('compute\'s own scale-size ratio check enters at exactly width ratio 1, not
     $scaleSize = null;
     $params->compute([100, 50], null, $cropRect, $scaleSize);
 
-    expect($scaleSize)->toBeNull();
+    expect($scaleSize)
+        ->toBeNull();
 });
 
 test('compute\'s own scale-size ratio check enters at exactly height ratio 1, not before', function (): void {
@@ -404,7 +455,8 @@ test('compute\'s own scale-size ratio check enters at exactly height ratio 1, no
     $scaleSize = null;
     $params->compute([50, 100], null, $cropRect, $scaleSize);
 
-    expect($scaleSize)->toBeNull();
+    expect($scaleSize)
+        ->toBeNull();
 });
 
 test('compute\'s own scale-size ratio check enters from width ratio alone, not requiring both ratios over the boundary', function (): void {
@@ -416,7 +468,8 @@ test('compute\'s own scale-size ratio check enters from width ratio alone, not r
     $scaleSize = null;
     $params->compute([200, 150], null, $cropRect, $scaleSize);
 
-    expect($scaleSize)->toBe([100, 75]);
+    expect($scaleSize)
+        ->toBe([100, 75]);
 });
 
 test('compute\'s own scale-size ratio check enters from height ratio alone, not requiring both ratios over the boundary', function (): void {
@@ -428,7 +481,8 @@ test('compute\'s own scale-size ratio check enters from height ratio alone, not 
     $scaleSize = null;
     $params->compute([150, 200], null, $cropRect, $scaleSize);
 
-    expect($scaleSize)->toBe([75, 100]);
+    expect($scaleSize)
+        ->toBe([75, 100]);
 });
 
 test('compute\'s horizontal scale-size branch floors the scaled height, not rounds it', function (): void {
@@ -440,7 +494,8 @@ test('compute\'s horizontal scale-size branch floors the scaled height, not roun
     $scaleSize = null;
     $params->compute([100, 157], null, $cropRect, $scaleSize);
 
-    expect($scaleSize)->toBe([40, 62]);
+    expect($scaleSize)
+        ->toBe([40, 62]);
 });
 
 test('compute\'s vertical scale-size branch floors the scaled width, not rounds it', function (): void {
@@ -451,7 +506,8 @@ test('compute\'s vertical scale-size branch floors the scaled width, not rounds 
     $scaleSize = null;
     $params->compute([157, 100], null, $cropRect, $scaleSize);
 
-    expect($scaleSize)->toBe([62, 40]);
+    expect($scaleSize)
+        ->toBe([62, 40]);
 });
 
 test('compute leaves crop_rect null when the (unmodified) crop dimensions still exactly match the real input, without comparing the wrong axis', function (): void {
@@ -468,6 +524,8 @@ test('compute leaves crop_rect null when the (unmodified) crop dimensions still 
     $scaleSize = null;
     $params->compute([300, 200], null, $cropRect, $scaleSize);
 
-    expect($cropRect)->toBeNull();
-    expect($scaleSize)->toBeNull();
+    expect($cropRect)
+        ->toBeNull();
+    expect($scaleSize)
+        ->toBeNull();
 });

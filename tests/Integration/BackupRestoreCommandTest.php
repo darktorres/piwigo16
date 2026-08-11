@@ -56,9 +56,10 @@ final class BackupRestoreCommandTest extends IntegrationTestCase
         parent::tearDown();
     }
 
-    public function test_execute_reports_success_and_really_restores_into_the_named_database(): void
+    public function testExecuteReportsSuccessAndReallyRestoresIntoTheNamedDatabase(): void
     {
-        $this->archivePath = new BackupService()->create();
+        $this->archivePath = new BackupService()
+            ->create();
         self::assertFileExists($this->archivePath);
 
         // BackupService::restore()'s own mysql/psql import needs the
@@ -89,14 +90,15 @@ final class BackupRestoreCommandTest extends IntegrationTestCase
         self::assertGreaterThanOrEqual(1, $imageCount);
     }
 
-    public function test_execute_restores_into_piwigo_db_base_when_no_database_option_is_given(): void
+    public function testExecuteRestoresIntoPiwigoDbBaseWhenNoDatabaseOptionIsGiven(): void
     {
         // Exercises the `$targetDatabase = ... DbCredentials::fromEnv()->database`
         // fallback branch specifically -- still redirected onto the scratch
         // DB, but via PIWIGO_DB_BASE rather than --database, so the real
         // production default-target codepath gets covered too, not just
         // the explicit-option one above.
-        $this->archivePath = new BackupService()->create();
+        $this->archivePath = new BackupService()
+            ->create();
 
         // See the previous test's own comment: the target database must
         // already exist before BackupService::restore()'s import.

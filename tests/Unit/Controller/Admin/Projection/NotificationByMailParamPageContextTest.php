@@ -13,13 +13,14 @@ test('toArray nests every property under the literal param key', function (): vo
         sendRecentPostDates: true,
     );
 
-    expect($context->toArray())->toBe([
-        'param' => [
-            'SEND_HTML_MAIL' => true,
-            'SEND_MAIL_AS' => 'My Gallery',
-            'SEND_DETAILED_CONTENT' => false,
-            'COMPLEMENTARY_MAIL_CONTENT' => 'Enjoy!',
-            'SEND_RECENT_POST_DATES' => true,
-        ],
-    ]);
+    expect($context->toArray())
+        ->toBe([
+            'param' => [
+                'SEND_HTML_MAIL' => true,
+                'SEND_MAIL_AS' => 'My Gallery',
+                'SEND_DETAILED_CONTENT' => false,
+                'COMPLEMENTARY_MAIL_CONTENT' => 'Enjoy!',
+                'SEND_RECENT_POST_DATES' => true,
+            ],
+        ]);
 });

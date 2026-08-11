@@ -19,7 +19,9 @@ test('toArray flattens every fixed property, and omits the 5 optional keys when 
         maintSearch: '/admin.php?page=maintenance&action=search',
         maintCompiledTemplates: '/admin.php?page=maintenance&action=compiled-templates',
         maintDerivatives: '/admin.php?page=maintenance&action=derivatives',
-        purgeDerivatives: ['All' => '/admin.php?page=maintenance&action=derivatives&type=all'],
+        purgeDerivatives: [
+            'All' => '/admin.php?page=maintenance&action=derivatives&type=all',
+        ],
         helpUrl: '/admin/popuphelp.php?page=maintenance',
         phpwgUrl: 'https://piwigo.example',
         pwgVersion: '16.3.0',
@@ -44,9 +46,12 @@ test('toArray flattens every fixed property, and omits the 5 optional keys when 
 
     $result = $context->toArray();
 
-    expect($result)->not->toHaveKeys(['GRAPHICS_LIBRARY', 'U_MAINT_UNLOCK_GALLERY', 'U_MAINT_LOCK_GALLERY', 'INSTALLED_ON', 'INSTALLED_SINCE'])
+    expect($result)
+        ->not->toHaveKeys(['GRAPHICS_LIBRARY', 'U_MAINT_UNLOCK_GALLERY', 'U_MAINT_LOCK_GALLERY', 'INSTALLED_ON', 'INSTALLED_SINCE'])
         ->and($result['U_MAINT_CATEGORIES'])->toBe('/admin.php?page=maintenance&action=categories')
-        ->and($result['purge_derivatives'])->toBe(['All' => '/admin.php?page=maintenance&action=derivatives&type=all'])
+        ->and($result['purge_derivatives'])->toBe([
+            'All' => '/admin.php?page=maintenance&action=derivatives&type=all',
+        ])
         ->and($result['DB_DATATIME'])->toBe('2026-08-08 00:00:00')
         ->and($result['cache_sizes'])->toBeNull()
         ->and($result['advanced_features'])->toBe([]);
@@ -67,7 +72,9 @@ test('toArray includes GRAPHICS_LIBRARY/U_MAINT_UNLOCK_GALLERY/INSTALLED_ON/INST
         maintSearch: '/admin.php?page=maintenance&action=search',
         maintCompiledTemplates: '/admin.php?page=maintenance&action=compiled-templates',
         maintDerivatives: '/admin.php?page=maintenance&action=derivatives',
-        purgeDerivatives: ['All' => '/admin.php?page=maintenance&action=derivatives&type=all'],
+        purgeDerivatives: [
+            'All' => '/admin.php?page=maintenance&action=derivatives&type=all',
+        ],
         helpUrl: '/admin/popuphelp.php?page=maintenance',
         phpwgUrl: 'https://piwigo.example',
         pwgVersion: '16.3.0',
@@ -94,7 +101,8 @@ test('toArray includes GRAPHICS_LIBRARY/U_MAINT_UNLOCK_GALLERY/INSTALLED_ON/INST
 
     expect($result['GRAPHICS_LIBRARY'])->toBe('ImageMagick')
         ->and($result['U_MAINT_UNLOCK_GALLERY'])->toBe('/admin.php?page=maintenance&action=unlock_gallery')
-        ->and($result)->not->toHaveKey('U_MAINT_LOCK_GALLERY')
+        ->and($result)
+        ->not->toHaveKey('U_MAINT_LOCK_GALLERY')
         ->and($result['INSTALLED_ON'])->toBe('August 8, 2026')
         ->and($result['INSTALLED_SINCE'])->toBe('0 day');
 });

@@ -105,7 +105,10 @@ function identCurl(string $cookieJar, array $fields = []): array
     $status = curl_getinfo($ch, CURLINFO_RESPONSE_CODE);
     unset($ch);
 
-    return ['status' => $status, 'body' => is_string($body) ? $body : ''];
+    return [
+        'status' => $status,
+        'body' => is_string($body) ? $body : '',
+    ];
 }
 
 /**
@@ -136,10 +139,15 @@ function identCurlNoCookies(array $fields): array
     $status = curl_getinfo($ch, CURLINFO_RESPONSE_CODE);
     unset($ch);
 
-    return ['status' => $status, 'body' => is_string($body) ? $body : ''];
+    return [
+        'status' => $status,
+        'body' => is_string($body) ? $body : '',
+    ];
 }
 
-/** @return string a fresh cookie-jar path */
+/**
+ * @return string a fresh cookie-jar path
+ */
 function identFreshCookieJar(): string
 {
     $jar = tempnam(sys_get_temp_dir(), 'pwg_ident_test_');
@@ -173,7 +181,10 @@ function identCurlWithRawCookie(string $rawCookieHeader): array
     $status = curl_getinfo($ch, CURLINFO_RESPONSE_CODE);
     unset($ch);
 
-    return ['status' => $status, 'body' => is_string($body) ? $body : ''];
+    return [
+        'status' => $status,
+        'body' => is_string($body) ? $body : '',
+    ];
 }
 
 /**
@@ -197,7 +208,9 @@ function identAddLanguage(string $code, string $name): void
     H::dbClose($db);
 }
 
-/** Reverts identAddLanguage(). */
+/**
+ * Reverts identAddLanguage().
+ */
 function identRemoveLanguage(string $code): void
 {
     $db = H::connect();

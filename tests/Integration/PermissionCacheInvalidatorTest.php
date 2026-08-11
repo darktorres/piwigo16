@@ -51,7 +51,7 @@ final class PermissionCacheInvalidatorTest extends IntegrationTestCase
         CurrentConfigServiceTestFactory::get()->set($this->configService);
     }
 
-    public function test_invalidate_clears_the_permissions_pool(): void
+    public function testInvalidateClearsThePermissionsPool(): void
     {
         $item = CachePools::permissions()->getItem('p14_invalidator_test_permissions');
         $item->set('cached_value');
@@ -62,7 +62,7 @@ final class PermissionCacheInvalidatorTest extends IntegrationTestCase
         self::assertFalse(CachePools::permissions()->getItem('p14_invalidator_test_permissions')->isHit());
     }
 
-    public function test_invalidate_clears_the_effective_permissions_pool(): void
+    public function testInvalidateClearsTheEffectivePermissionsPool(): void
     {
         $item = CachePools::effectivePermissions()->getItem('p14_invalidator_test_effective');
         $item->set('cached_value');
@@ -73,7 +73,7 @@ final class PermissionCacheInvalidatorTest extends IntegrationTestCase
         self::assertFalse(CachePools::effectivePermissions()->getItem('p14_invalidator_test_effective')->isHit());
     }
 
-    public function test_invalidate_deletes_the_count_orphans_config_param(): void
+    public function testInvalidateDeletesTheCountOrphansConfigParam(): void
     {
         try {
             // 'count_orphans' is property-backed (KEY_TO_PROPERTY maps it to
@@ -97,7 +97,7 @@ final class PermissionCacheInvalidatorTest extends IntegrationTestCase
         }
     }
 
-    public function test_invalidate_throws_when_the_container_returns_an_unexpected_type_for_current_config_service(): void
+    public function testInvalidateThrowsWhenTheContainerReturnsAnUnexpectedTypeForCurrentConfigService(): void
     {
         $this->expectException(LogicException::class);
         $this->expectExceptionMessageIsOrContains('Container returned an unexpected type for ' . CurrentConfigService::class);

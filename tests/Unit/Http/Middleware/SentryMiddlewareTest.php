@@ -2,7 +2,6 @@
 
 declare(strict_types=1);
 
-use function Sentry\init;
 use Nyholm\Psr7\Response;
 use Nyholm\Psr7\ServerRequest;
 use Piwigo\Http\Middleware\SentryMiddleware;
@@ -14,10 +13,11 @@ use Sentry\SentrySdk;
 use Sentry\Transport\Result;
 use Sentry\Transport\ResultStatus;
 use Sentry\Transport\TransportInterface;
+use function Sentry\init;
 
 function sentryMiddlewarePassthroughHandler(): RequestHandlerInterface
 {
-    return new class implements RequestHandlerInterface {
+    return new class() implements RequestHandlerInterface {
         #[Override]
         public function handle(ServerRequestInterface $request): ResponseInterface
         {
@@ -35,10 +35,13 @@ afterEach(function (): void {
 });
 
 test('passes through unchanged when the SDK is not initialized', function (): void {
-    $response = new SentryMiddleware()->process(new ServerRequest('GET', '/'), sentryMiddlewarePassthroughHandler());
+    $response = new SentryMiddleware()
+        ->process(new ServerRequest('GET', '/'), sentryMiddlewarePassthroughHandler());
 
-    expect($response->getStatusCode())->toBe(200);
-    expect((string) $response->getBody())->toBe('ok');
+    expect($response->getStatusCode())
+        ->toBe(200);
+    expect((string) $response->getBody())
+        ->toBe('ok');
 });
 
 test('never opens a transaction when the SDK is not initialized', function (): void {
@@ -52,7 +55,8 @@ test('never opens a transaction when the SDK is not initialized', function (): v
     // observable without needing a real client.
     expect(SentrySdk::getCurrentHub()->getSpan())->toBeNull();
 
-    new SentryMiddleware()->process(new ServerRequest('GET', '/'), sentryMiddlewarePassthroughHandler());
+    new SentryMiddleware()
+        ->process(new ServerRequest('GET', '/'), sentryMiddlewarePassthroughHandler());
 
     expect(SentrySdk::getCurrentHub()->getSpan())->toBeNull();
 });
@@ -65,12 +69,18 @@ test('wraps the request in a transaction without altering the response when the 
     // default_integrations across a multi-file suite proved sensitive to
     // PHPUnit's own risky-test handler-stack tracking; this sidesteps it
     // rather than chasing exact restore-call parity across files.
-    init(['dsn' => 'https://fake@fake.ingest.sentry.io/1', 'default_integrations' => false]);
+    init([
+        'dsn' => 'https://fake@fake.ingest.sentry.io/1',
+        'default_integrations' => false,
+    ]);
 
-    $response = new SentryMiddleware()->process(new ServerRequest('GET', '/'), sentryMiddlewarePassthroughHandler());
+    $response = new SentryMiddleware()
+        ->process(new ServerRequest('GET', '/'), sentryMiddlewarePassthroughHandler());
 
-    expect($response->getStatusCode())->toBe(200);
-    expect((string) $response->getBody())->toBe('ok');
+    expect($response->getStatusCode())
+        ->toBe(200);
+    expect((string) $response->getBody())
+        ->toBe('ok');
 });
 
 test('sends exactly one correctly-named, correctly-tagged transaction event when the SDK is initialized', function (): void {
@@ -86,8 +96,10 @@ test('sends exactly one correctly-named, correctly-tagged transaction event when
     // mechanism as ExceptionHandlerMiddlewareTest's own precedent, plus
     // a real traces_sample_rate so the transaction is actually sampled
     // and sent) directly observes all of these at once.
-    $spyTransport = new class implements TransportInterface {
-        /** @var list<Event> */
+    $spyTransport = new class() implements TransportInterface {
+        /**
+         * @var list<Event>
+         */
         public array $captured = [];
 
         #[Override]
@@ -111,11 +123,14 @@ test('sends exactly one correctly-named, correctly-tagged transaction event when
         'transport' => $spyTransport,
     ]);
 
-    new SentryMiddleware()->process(new ServerRequest('GET', '/some/path'), sentryMiddlewarePassthroughHandler());
+    new SentryMiddleware()
+        ->process(new ServerRequest('GET', '/some/path'), sentryMiddlewarePassthroughHandler());
 
-    expect($spyTransport->captured)->toHaveCount(1);
+    expect($spyTransport->captured)
+        ->toHaveCount(1);
     $event = $spyTransport->captured[0];
-    expect($event->getTransaction())->toBe('GET /some/path')
+    expect($event->getTransaction())
+        ->toBe('GET /some/path')
         ->and($event->getContexts()['trace']['op'] ?? null)->toBe('http.server');
 });
 
@@ -125,9 +140,13 @@ test('makes the transaction the active span visible to the downstream handler', 
     // just the inner $scope->setSpan($transaction) call, leaving an
     // empty closure). Both leave the current scope's span null while the
     // downstream handler runs, instead of the real transaction.
-    init(['dsn' => 'https://fake@fake.ingest.sentry.io/1', 'default_integrations' => false, 'traces_sample_rate' => 1.0]);
+    init([
+        'dsn' => 'https://fake@fake.ingest.sentry.io/1',
+        'default_integrations' => false,
+        'traces_sample_rate' => 1.0,
+    ]);
 
-    $handler = new class implements RequestHandlerInterface {
+    $handler = new class() implements RequestHandlerInterface {
         public mixed $capturedSpan = 'not-set';
 
         #[Override]
@@ -139,7 +158,9 @@ test('makes the transaction the active span visible to the downstream handler', 
         }
     };
 
-    new SentryMiddleware()->process(new ServerRequest('GET', '/'), $handler);
+    new SentryMiddleware()
+        ->process(new ServerRequest('GET', '/'), $handler);
 
-    expect($handler->capturedSpan)->not->toBeNull();
+    expect($handler->capturedSpan)
+        ->not->toBeNull();
 });

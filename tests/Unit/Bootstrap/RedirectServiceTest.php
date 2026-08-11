@@ -2,19 +2,16 @@
 
 declare(strict_types=1);
 
-use Piwigo\Config\CurrentConfig;
-use Piwigo\Tests\Support\HtmlServiceTestFactory;
-use Piwigo\Core\PageState;
-use Piwigo\Tests\Support\UrlServiceTestFactory;
-use Piwigo\Users\UserRepository;
-use Piwigo\Core\ProcessCache;
 use Piwigo\Activity\ActivityEntity;
 use Piwigo\Activity\ActivityService;
 use Piwigo\Bootstrap\RedirectService;
+use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\DeploymentPolicy;
 use Piwigo\Core\InstallationFlag;
 use Piwigo\Core\Lang;
+use Piwigo\Core\PageState;
 use Piwigo\Core\Paths;
+use Piwigo\Core\ProcessCache;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Group\GroupEntity;
@@ -24,7 +21,10 @@ use Piwigo\Mail\MailService;
 use Piwigo\PluginConfig\EventDispatcher;
 use Piwigo\Session\SessionEntity;
 use Piwigo\Session\SessionService;
+use Piwigo\Tests\Support\HtmlServiceTestFactory;
+use Piwigo\Tests\Support\UrlServiceTestFactory;
 use Piwigo\Users\CurrentUser;
+use Piwigo\Users\UserRepository;
 use Piwigo\Users\UserService;
 
 // redirectHttp() throws ResponseReadyException instead of calling
@@ -88,7 +88,7 @@ function redirect_service_test_user_service(): UserService
         new ActivityService(EntityManagerFactory::build($conn)->getRepository(ActivityEntity::class)),
         HtmlServiceTestFactory::build(),
         $conn,
-        new SessionService(EntityManagerFactory::build($conn)->getRepository(SessionEntity::class),new CurrentConfig()),
+        new SessionService(EntityManagerFactory::build($conn)->getRepository(SessionEntity::class), new CurrentConfig()),
         new EventDispatcher(),
         new DeploymentPolicy(),
         new CurrentUser(new CurrentConfig()),
@@ -109,8 +109,10 @@ test('redirectHttp throws ResponseReadyException with a 302 redirect to the give
     }
 
     $response = $exception->response();
-    expect($response->getStatusCode())->toBe(302);
-    expect($response->getHeaderLine('Location'))->toBe('http://example.test/target.php');
+    expect($response->getStatusCode())
+        ->toBe(302);
+    expect($response->getHeaderLine('Location'))
+        ->toBe('http://example.test/target.php');
 });
 
 test('redirectHttp html_entity_decode()s the URL before redirecting', function (): void {
@@ -122,5 +124,6 @@ test('redirectHttp html_entity_decode()s the URL before redirecting', function (
         $exception = $e;
     }
 
-    expect($exception->response()->getHeaderLine('Location'))->toBe('http://example.test/target.php?a=1&b=2');
+    expect($exception->response()->getHeaderLine('Location'))
+        ->toBe('http://example.test/target.php?a=1&b=2');
 });

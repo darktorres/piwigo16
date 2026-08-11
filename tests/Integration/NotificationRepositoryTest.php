@@ -4,17 +4,16 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Integration;
 
-use Override;
-use Piwigo\Core\Kernel;
-use LogicException;
-use Piwigo\Db\EntityManagerFactory;
-use InvalidArgumentException;
 use Doctrine\DBAL\Connection;
-use Piwigo\Config\CurrentConfig;
+use InvalidArgumentException;
+use LogicException;
+use Override;
 use Piwigo\Config\ConfigLoader;
+use Piwigo\Config\CurrentConfig;
+use Piwigo\Core\Kernel;
 use Piwigo\Db\DbConnection;
+use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Notification\NotificationRepository;
-use Piwigo\Notification\Projection\RecentCategoryForDate;
 use Piwigo\Permission\SqlCondition;
 
 /**
@@ -72,23 +71,23 @@ final class NotificationRepositoryTest extends IntegrationTestCase
             // in the SQL text (unlike a bound parameter, which the driver
             // coerces implicitly) is rejected outright by Postgres.
             $validatedLiteral = $this->dbDriver === 'pgsql' ? 'true' : '1';
-            $this->conn->executeStatement('UPDATE ' . 'comments' . " SET validation_date = '2026-07-07 05:02:38' WHERE validated = {$validatedLiteral}");
-            $this->conn->executeStatement('UPDATE ' . 'images' . " SET date_available = '2026-07-07 05:02:36' WHERE id IN (1, 2)");
-            $this->conn->executeStatement('UPDATE ' . 'images' . " SET date_available = '2026-07-07 05:02:37' WHERE id IN (3, 4)");
-            $this->conn->executeStatement('UPDATE ' . 'images' . " SET date_available = '2026-07-07 05:02:38' WHERE id = 5");
-            $this->conn->executeStatement('UPDATE ' . 'user_infos' . " SET registration_date = '2026-07-07 05:02:35' WHERE user_id IN (1, 2)");
-            $this->conn->executeStatement('UPDATE ' . 'user_infos' . " SET registration_date = '2026-07-07 05:02:38' WHERE user_id IN (3, 4)");
+            $this->conn->executeStatement('UPDATE comments' . " SET validation_date = '2026-07-07 05:02:38' WHERE validated = {$validatedLiteral}");
+            $this->conn->executeStatement('UPDATE images' . " SET date_available = '2026-07-07 05:02:36' WHERE id IN (1, 2)");
+            $this->conn->executeStatement('UPDATE images' . " SET date_available = '2026-07-07 05:02:37' WHERE id IN (3, 4)");
+            $this->conn->executeStatement('UPDATE images' . " SET date_available = '2026-07-07 05:02:38' WHERE id = 5");
+            $this->conn->executeStatement('UPDATE user_infos' . " SET registration_date = '2026-07-07 05:02:35' WHERE user_id IN (1, 2)");
+            $this->conn->executeStatement('UPDATE user_infos' . " SET registration_date = '2026-07-07 05:02:38' WHERE user_id IN (3, 4)");
         }
     }
 
-    public function test_count_by_type_counts_new_comments_in_range(): void
+    public function testCountByTypeCountsNewCommentsInRange(): void
     {
         $count = $this->repo->countByType('new_comments', '2026-07-07 05:02:37', '2026-07-07 05:02:39', new SqlCondition(''));
 
         self::assertSame(4, $count);
     }
 
-    public function test_find_ids_by_type_returns_new_comment_ids(): void
+    public function testFindIdsByTypeReturnsNewCommentIds(): void
     {
         $ids = $this->repo->findIdsByType('new_comments', '2026-07-07 05:02:37', '2026-07-07 05:02:39', new SqlCondition(''));
 
@@ -96,20 +95,20 @@ final class NotificationRepositoryTest extends IntegrationTestCase
         self::assertSame([1, 2, 3, 4], $ids);
     }
 
-    public function test_count_by_type_excludes_comments_outside_the_range(): void
+    public function testCountByTypeExcludesCommentsOutsideTheRange(): void
     {
         $count = $this->repo->countByType('new_comments', '2026-07-07 05:02:39', '2026-07-07 05:02:40', new SqlCondition(''));
 
         self::assertSame(0, $count);
     }
 
-    public function test_count_by_type_counts_unvalidated_comments(): void
+    public function testCountByTypeCountsUnvalidatedComments(): void
     {
         // Fixture comment 5 is already unvalidated (validated=0) on its
         // own -- this insert adds a second, proving the filter counts
         // every matching row, not just one.
         $this->conn->executeStatement(
-            'INSERT INTO ' . 'comments' . ' (image_id, date, author, anonymous_id, content, validated) VALUES (1, NOW(), ?, ?, ?, ?)',
+            'INSERT INTO comments (image_id, date, author, anonymous_id, content, validated) VALUES (1, NOW(), ?, ?, ?, ?)',
             ['test author', '127.0.0.9', 'pending test comment', 0]
         );
 
@@ -117,17 +116,17 @@ final class NotificationRepositoryTest extends IntegrationTestCase
 
         self::assertSame(2, $count);
 
-        $this->conn->executeStatement("DELETE FROM " . 'comments' . " WHERE author = 'test author'");
+        $this->conn->executeStatement('DELETE FROM comments' . " WHERE author = 'test author'");
     }
 
-    public function test_count_by_type_counts_new_elements_in_range(): void
+    public function testCountByTypeCountsNewElementsInRange(): void
     {
         $count = $this->repo->countByType('new_elements', '2026-07-07 05:02:36', '2026-07-07 05:02:38', new SqlCondition(''));
 
         self::assertSame(3, $count);
     }
 
-    public function test_find_ids_by_type_returns_new_element_ids(): void
+    public function testFindIdsByTypeReturnsNewElementIds(): void
     {
         $ids = $this->repo->findIdsByType('new_elements', '2026-07-07 05:02:36', '2026-07-07 05:02:38', new SqlCondition(''));
 
@@ -135,7 +134,7 @@ final class NotificationRepositoryTest extends IntegrationTestCase
         self::assertSame([3, 4, 5], $ids);
     }
 
-    public function test_count_by_type_counts_updated_categories_in_range(): void
+    public function testCountByTypeCountsUpdatedCategoriesInRange(): void
     {
         // updated_categories shares new_elements' image_category-driven
         // query shape, just aliased to category_id instead of image_id.
@@ -144,14 +143,14 @@ final class NotificationRepositoryTest extends IntegrationTestCase
         self::assertSame(2, $count);
     }
 
-    public function test_count_by_type_counts_new_users_in_range(): void
+    public function testCountByTypeCountsNewUsersInRange(): void
     {
         $count = $this->repo->countByType('new_users', '2026-07-07 05:02:35', '2026-07-07 05:02:39', new SqlCondition(''));
 
         self::assertSame(2, $count);
     }
 
-    public function test_find_ids_by_type_returns_new_user_ids(): void
+    public function testFindIdsByTypeReturnsNewUserIds(): void
     {
         $ids = $this->repo->findIdsByType('new_users', '2026-07-07 05:02:35', '2026-07-07 05:02:39', new SqlCondition(''));
 
@@ -159,7 +158,7 @@ final class NotificationRepositoryTest extends IntegrationTestCase
         self::assertSame([3, 4], $ids);
     }
 
-    public function test_count_by_type_applies_the_restrict_sql_fragment(): void
+    public function testCountByTypeAppliesTheRestrictSqlFragment(): void
     {
         // A restrict fragment that excludes every image_category row --
         // proves it's actually appended to the query, not ignored. DQL
@@ -170,14 +169,14 @@ final class NotificationRepositoryTest extends IntegrationTestCase
         self::assertSame(0, $count);
     }
 
-    public function test_count_by_type_rejects_an_unknown_type(): void
+    public function testCountByTypeRejectsAnUnknownType(): void
     {
         $this->expectException(InvalidArgumentException::class);
 
         $this->repo->countByType('bogus_type', null, null, new SqlCondition(''));
     }
 
-    public function test_find_recent_post_dates_groups_by_date(): void
+    public function testFindRecentPostDatesGroupsByDate(): void
     {
         $dates = $this->repo->findRecentPostDates(new SqlCondition('1 = 1'), 10);
 
@@ -194,7 +193,7 @@ final class NotificationRepositoryTest extends IntegrationTestCase
         self::assertSame(1, $byDate['2026-07-07 05:02:38']->nbElements);
     }
 
-    public function test_find_recent_elements_for_date_returns_matching_rows(): void
+    public function testFindRecentElementsForDateReturnsMatchingRows(): void
     {
         $rows = $this->repo->findRecentElementsForDate(new SqlCondition('1 = 1'), '2026-07-07 05:02:36', 10);
 
@@ -235,7 +234,7 @@ final class NotificationRepositoryTest extends IntegrationTestCase
         );
     }
 
-    public function test_find_recent_categories_for_date_returns_matching_rows(): void
+    public function testFindRecentCategoriesForDateReturnsMatchingRows(): void
     {
         $rows = $this->repo->findRecentCategoriesForDate(new SqlCondition('1 = 1'), '2026-07-07 05:02:36', 10);
 

@@ -4,15 +4,15 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Integration;
 
-use Override;
-use Piwigo\Core\Kernel;
+use DateTimeImmutable;
 use LogicException;
+use Override;
+use Piwigo\Config\ConfigLoader;
+use Piwigo\Config\CurrentConfig;
+use Piwigo\Core\Kernel;
+use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
 use Piwigo\Feed\FeedEntity;
-use DateTimeImmutable;
-use Piwigo\Config\CurrentConfig;
-use Piwigo\Config\ConfigLoader;
-use Piwigo\Db\DbConnection;
 use Piwigo\Feed\FeedRepository;
 
 final class FeedRepositoryTest extends IntegrationTestCase
@@ -54,12 +54,12 @@ final class FeedRepositoryTest extends IntegrationTestCase
         parent::tearDown();
     }
 
-    public function test_exists_by_id_returns_false_when_unused(): void
+    public function testExistsByIdReturnsFalseWhenUnused(): void
     {
         self::assertFalse($this->repo->existsById('p17-test-' . bin2hex(random_bytes(20))));
     }
 
-    public function test_insert_then_exists_by_id_round_trips(): void
+    public function testInsertThenExistsByIdRoundTrips(): void
     {
         $id = 'p17-test-' . bin2hex(random_bytes(20));
 
@@ -68,7 +68,7 @@ final class FeedRepositoryTest extends IntegrationTestCase
         self::assertTrue($this->repo->existsById($id));
     }
 
-    public function test_find_by_id_returns_the_user_id_with_a_null_last_check_right_after_insert(): void
+    public function testFindByIdReturnsTheUserIdWithANullLastCheckRightAfterInsert(): void
     {
         $id = 'p17-test-' . bin2hex(random_bytes(20));
         $this->repo->insert($id, 1);
@@ -80,12 +80,12 @@ final class FeedRepositoryTest extends IntegrationTestCase
         self::assertNull($row->lastCheck);
     }
 
-    public function test_find_by_id_returns_null_when_unused(): void
+    public function testFindByIdReturnsNullWhenUnused(): void
     {
         self::assertNull($this->repo->findById('p17-test-' . bin2hex(random_bytes(20))));
     }
 
-    public function test_update_last_check_then_find_by_id_round_trips(): void
+    public function testUpdateLastCheckThenFindByIdRoundTrips(): void
     {
         $id = 'p17-test-' . bin2hex(random_bytes(20));
         $this->repo->insert($id, 1);
@@ -99,7 +99,7 @@ final class FeedRepositoryTest extends IntegrationTestCase
         self::assertSame($lastCheck->format('Y-m-d H:i:s'), $row->lastCheck->format('Y-m-d H:i:s'));
     }
 
-    public function test_update_last_check_on_an_unknown_id_is_a_silent_no_op(): void
+    public function testUpdateLastCheckOnAnUnknownIdIsASilentNoOp(): void
     {
         $unknownId = 'p17-test-' . bin2hex(random_bytes(20));
 

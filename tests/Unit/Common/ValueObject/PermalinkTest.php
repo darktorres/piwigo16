@@ -4,13 +4,15 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Unit\Common\ValueObject;
 
-use Override;
 use InvalidArgumentException;
+use Override;
 use Piwigo\Common\ValueObject\Permalink;
 use Piwigo\Common\ValueObject\Username;
 use Piwigo\Tests\Unit\Common\ValueObject\Contract\StringVoContract;
 
-/** @extends StringVoContract<Permalink> */
+/**
+ * @extends StringVoContract<Permalink>
+ */
 final class PermalinkTest extends StringVoContract
 {
     #[Override]
@@ -31,19 +33,21 @@ final class PermalinkTest extends StringVoContract
         return Username::class;
     }
 
-    /** @return iterable<string, array{string}> */
+    /**
+     * @return iterable<string, array{string}>
+     */
     #[Override]
     public static function invalidSamples(): iterable
     {
-        yield 'empty'                => [''];
-        yield 'leading slash'        => ['/events'];
-        yield 'trailing slash'       => ['events/'];
-        yield 'consecutive slashes'  => ['events//summer'];
-        yield 'space'                => ['summer events'];
-        yield 'unicode'              => ['été'];
-        yield 'purely numeric'       => ['1234'];
-        yield 'digit-dash prefix'    => ['1234-summer'];
-        yield 'over 64 chars'        => [str_repeat('a', 65)];
+        yield 'empty' => [''];
+        yield 'leading slash' => ['/events'];
+        yield 'trailing slash' => ['events/'];
+        yield 'consecutive slashes' => ['events//summer'];
+        yield 'space' => ['summer events'];
+        yield 'unicode' => ['été'];
+        yield 'purely numeric' => ['1234'];
+        yield 'digit-dash prefix' => ['1234-summer'];
+        yield 'over 64 chars' => [str_repeat('a', 65)];
     }
 
     public function testAcceptsHierarchicalAndSimpleSlugs(): void

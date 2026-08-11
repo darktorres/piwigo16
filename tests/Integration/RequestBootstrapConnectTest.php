@@ -4,13 +4,12 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Integration;
 
+use Doctrine\DBAL\Connection;
 use Override;
 use Piwigo\Bootstrap\InfrastructureAccessor;
-use Doctrine\DBAL\Connection;
 use Piwigo\Bootstrap\RequestBootstrap;
 use Piwigo\Config\ConfigLoader;
 use Piwigo\Config\ConfigService;
-use Piwigo\Tests\Support\CurrentConfigTestFactory;
 use Piwigo\Core\ActivitySystem;
 use Piwigo\Core\AppInfo;
 use Piwigo\Core\CurrentLogger;
@@ -19,9 +18,10 @@ use Piwigo\Core\ErrorCollector;
 use Piwigo\Core\InstallationFlag;
 use Piwigo\Core\Kernel;
 use Piwigo\Db\DbConnection;
-use Piwigo\Tests\Support\DbCredentialsTestFactory;
 use Piwigo\Http\ResponseReadyException;
 use Piwigo\PluginConfig\EventDispatcher;
+use Piwigo\Tests\Support\CurrentConfigTestFactory;
+use Piwigo\Tests\Support\DbCredentialsTestFactory;
 use Piwigo\Tests\Support\EventDispatcherTestFactory;
 
 /**
@@ -145,7 +145,7 @@ final class RequestBootstrapConnectTest extends IntegrationTestCase
 
     // ------------------------------------------------------------ DB failure
 
-    public function test_connect_shows_a_fatal_error_page_when_the_database_is_unreachable(): void
+    public function testConnectShowsAFatalErrorPageWhenTheDatabaseIsUnreachable(): void
     {
         // A wrong password fails fast (a real driver auth-failure reply)
         // instead of blocking on a real ~60s connect-timeout the way an
@@ -179,7 +179,7 @@ final class RequestBootstrapConnectTest extends IntegrationTestCase
 
     // ------------------------------------------------- deferred first-run work
 
-    public function test_connect_stamps_a_fresh_installed_version_and_last_major_update_applies_the_custom_order_and_empties_the_lounge(): void
+    public function testConnectStampsAFreshInstalledVersionAndLastMajorUpdateAppliesTheCustomOrderAndEmptiesTheLounge(): void
     {
         // Fresh-install state: neither row has ever been written.
         $this->configService->confDeleteParam('piwigo_installed_version');
@@ -197,14 +197,14 @@ final class RequestBootstrapConnectTest extends IntegrationTestCase
         // findOldestLoungeAgeInfo() compute lounge-photo age against
         // Env::now(), so this test's own frozen PIWIGO_TEST_NOW must stay
         // close to real wall-clock time for the two clock sources to agree.
-        $dateAvailable = $this->conn->fetchOne('SELECT date_available FROM ' . 'images' . ' WHERE id = 1');
+        $dateAvailable = $this->conn->fetchOne('SELECT date_available FROM images WHERE id = 1');
         self::assertIsString($dateAvailable);
-        $this->conn->executeStatement('DELETE FROM ' . 'lounge');
+        $this->conn->executeStatement('DELETE FROM lounge');
         $this->conn->executeStatement(
-            'UPDATE ' . 'images' . ' SET date_available = ? WHERE id = 1',
+            'UPDATE images SET date_available = ? WHERE id = 1',
             [Env::now()->modify('-1 hour')->format('Y-m-d H:i:s')]
         );
-        $this->conn->executeStatement('INSERT INTO ' . 'lounge' . ' (image_id, category_id) VALUES (1, 1)');
+        $this->conn->executeStatement('INSERT INTO lounge (image_id, category_id) VALUES (1, 1)');
 
         try {
             RequestBootstrap::connect();
@@ -219,7 +219,7 @@ final class RequestBootstrapConnectTest extends IntegrationTestCase
             // row itself (not the property) is the real proof this branch
             // ran.
             $storedVersion = $this->conn->fetchOne(
-                'SELECT value FROM ' . 'config' . ' WHERE param = ?',
+                'SELECT value FROM config WHERE param = ?',
                 ['piwigo_installed_version']
             );
             self::assertIsString($storedVersion);
@@ -229,12 +229,12 @@ final class RequestBootstrapConnectTest extends IntegrationTestCase
             // The real, definitive proof LoungeMaintenance::needsEmptying()
             // -> ImageService::emptyLounge() actually ran: the lounge row
             // deleteLoungeUpTo() removes is gone.
-            $loungeCount = $this->conn->fetchOne('SELECT COUNT(*) FROM ' . 'lounge');
+            $loungeCount = $this->conn->fetchOne('SELECT COUNT(*) FROM lounge');
             self::assertSame('0', (string) $loungeCount);
         } finally {
-            $this->conn->executeStatement('DELETE FROM ' . 'lounge');
+            $this->conn->executeStatement('DELETE FROM lounge');
             $this->conn->executeStatement(
-                'UPDATE ' . 'images' . ' SET date_available = ? WHERE id = 1',
+                'UPDATE images SET date_available = ? WHERE id = 1',
                 [$dateAvailable]
             );
             $this->configService->confUpdateParam('piwigo_installed_version', AppInfo::VERSION);
@@ -245,7 +245,7 @@ final class RequestBootstrapConnectTest extends IntegrationTestCase
         }
     }
 
-    public function test_connect_records_an_autoupdate_activity_and_restamps_the_version_when_it_differs_from_appinfo(): void
+    public function testConnectRecordsAnAutoupdateActivityAndRestampsTheVersionWhenItDiffersFromAppinfo(): void
     {
         $this->configService->confUpdateParam('piwigo_installed_version', '16.0.0');
         // connect() resolves its own ConfigService through the DI
@@ -268,14 +268,14 @@ final class RequestBootstrapConnectTest extends IntegrationTestCase
             // row -- not CurrentConfig::piwigoInstalledVersion() -- is what
             // proves the re-stamp really happened.
             $storedVersion = $this->conn->fetchOne(
-                'SELECT value FROM ' . 'config' . ' WHERE param = ?',
+                'SELECT value FROM config WHERE param = ?',
                 ['piwigo_installed_version']
             );
             self::assertIsString($storedVersion);
             self::assertSame(AppInfo::VERSION, json_decode($storedVersion, true));
 
             $details = $this->conn->fetchOne(
-                'SELECT details FROM ' . 'activity' . ' WHERE object = ? AND object_id = ? AND action = ? ORDER BY activity_id DESC LIMIT 1',
+                'SELECT details FROM activity WHERE object = ? AND object_id = ? AND action = ? ORDER BY activity_id DESC LIMIT 1',
                 ['system', ActivitySystem::Core, 'autoupdate']
             );
             self::assertIsString($details);
@@ -290,7 +290,7 @@ final class RequestBootstrapConnectTest extends IntegrationTestCase
             // unknown") -- needs an explicit ::text cast there.
             $detailsColumn = $this->dbDriver === 'pgsql' ? 'details::text' : 'details';
             $this->conn->executeStatement(
-                'DELETE FROM ' . 'activity' . ' WHERE object = ? AND object_id = ? AND action = ? AND ' . $detailsColumn . ' LIKE ?',
+                'DELETE FROM activity WHERE object = ? AND object_id = ? AND action = ? AND ' . $detailsColumn . ' LIKE ?',
                 ['system', ActivitySystem::Core, 'autoupdate', '%16.0.0%']
             );
             $this->configService->confUpdateParam('piwigo_installed_version', '16.3.0');

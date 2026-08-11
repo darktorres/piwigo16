@@ -23,7 +23,9 @@ use Piwigo\Tests\Browser\Helpers\BrowserTestHelpers as H;
  * afterward.
  */
 
-/** Reads the `enabled` column for a given check_key, or null if no such row exists. */
+/**
+ * Reads the `enabled` column for a given check_key, or null if no such row exists.
+ */
 function nbmEnabledForKey(string $checkKey): ?int
 {
     $db = H::connect();
@@ -42,15 +44,18 @@ it('subscribes then unsubscribes a real check_key, flipping `enabled` both ways'
     // Self-contained round trip (matches TagCrudTest's own full-lifecycle
     // style) rather than 2 order-dependent tests -- restores the fixture's
     // seeded enabled=0 state by the end either way.
-    expect(nbmEnabledForKey(NBM_REGULAR_USER_KEY))->toBe(0);
+    expect(nbmEnabledForKey(NBM_REGULAR_USER_KEY))
+        ->toBe(0);
 
     $page = H::gotoOk($this, '/nbm.php?subscribe=' . NBM_REGULAR_USER_KEY);
     $page->assertNoJavaScriptErrors();
-    expect(nbmEnabledForKey(NBM_REGULAR_USER_KEY))->toBe(1);
+    expect(nbmEnabledForKey(NBM_REGULAR_USER_KEY))
+        ->toBe(1);
 
     $page = H::navigateOk($page, '/nbm.php?unsubscribe=' . NBM_REGULAR_USER_KEY);
     $page->assertNoJavaScriptErrors();
-    expect(nbmEnabledForKey(NBM_REGULAR_USER_KEY))->toBe(0);
+    expect(nbmEnabledForKey(NBM_REGULAR_USER_KEY))
+        ->toBe(0);
 });
 
 it('shows "Unknown identifier" and leaves the DB untouched for a malformed identifier', function (): void {
@@ -61,7 +66,8 @@ it('shows "Unknown identifier" and leaves the DB untouched for a malformed ident
     $page = H::gotoOk($this, '/nbm.php?subscribe=not-a-valid-key!!!!');
     $page->assertSee('Unknown identifier');
 
-    expect(nbmEnabledForKey(NBM_REGULAR_USER_KEY))->toBe($before);
+    expect(nbmEnabledForKey(NBM_REGULAR_USER_KEY))
+        ->toBe($before);
 });
 
 it('shows "Unknown identifier" when neither subscribe nor unsubscribe is present', function (): void {

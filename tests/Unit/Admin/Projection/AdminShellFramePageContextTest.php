@@ -49,13 +49,16 @@ test('toArray flattens every fixed property, and omits U_UPDATES/U_COMMENTS/NB_P
         showWhatsNew: false,
         whatsNewMajorVersion: '16',
         releaseNoteUrl: 'https://piwigo.example/releases/16.0.0',
-        whatsNewImgs: ['1' => 'a.png'],
+        whatsNewImgs: [
+            '1' => 'a.png',
+        ],
         displayBell: false,
     );
 
     $result = $context->toArray();
 
-    expect($result)->not->toHaveKeys(['U_UPDATES', 'U_COMMENTS', 'NB_PENDING_COMMENTS'])
+    expect($result)
+        ->not->toHaveKeys(['U_UPDATES', 'U_COMMENTS', 'NB_PENDING_COMMENTS'])
         ->and($result['USERNAME'])->toBe('admin')
         ->and($result['NB_PHOTOS_IN_CADDIE'])->toBe(0)
         ->and($result['U_CADDIE'])->toBe('');
@@ -106,7 +109,9 @@ test('toArray includes U_UPDATES/U_COMMENTS/NB_PENDING_COMMENTS when set', funct
         showWhatsNew: true,
         whatsNewMajorVersion: '16',
         releaseNoteUrl: 'https://piwigo.example/releases/16.0.0',
-        whatsNewImgs: ['1' => 'a.png'],
+        whatsNewImgs: [
+            '1' => 'a.png',
+        ],
         displayBell: true,
     );
 

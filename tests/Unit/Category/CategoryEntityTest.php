@@ -34,22 +34,38 @@ function baseCategoryArgs(): array
 test('constructs with distinct values for every property', function (): void {
     $category = new CategoryEntity(...baseCategoryArgs());
 
-    expect($category->id)->toBeNull()
-        ->and($category->name)->toBe('Summer Vacation 2026')
-        ->and($category->idUppercat)->toBe(12)
-        ->and($category->comment)->toBe('Photos from our trip to the coast')
-        ->and($category->dir)->toBe('summer-vacation-2026')
-        ->and($category->rank)->toBe(3)
-        ->and($category->status)->toBe(CategoryStatus::Public)
-        ->and($category->siteId)->toBe(1)
-        ->and($category->visible)->toBeTrue()
-        ->and($category->representativePictureId)->toBe(458)
-        ->and($category->uppercats)->toBe('1,12,27')
-        ->and($category->commentable)->toBeFalse()
-        ->and($category->globalRank)->toBe('000012000027')
-        ->and($category->imageOrder)->toBe('date_creation DESC')
-        ->and($category->permalink)->toEqual(Permalink::from('summer-2026'))
-        ->and($category->lastmodified)->toEqual(SqlDateTime::from('2026-07-26 14:30:00'));
+    expect($category->id)
+        ->toBeNull()
+        ->and($category->name)
+        ->toBe('Summer Vacation 2026')
+        ->and($category->idUppercat)
+        ->toBe(12)
+        ->and($category->comment)
+        ->toBe('Photos from our trip to the coast')
+        ->and($category->dir)
+        ->toBe('summer-vacation-2026')
+        ->and($category->rank)
+        ->toBe(3)
+        ->and($category->status)
+        ->toBe(CategoryStatus::Public)
+        ->and($category->siteId)
+        ->toBe(1)
+        ->and($category->visible)
+        ->toBeTrue()
+        ->and($category->representativePictureId)
+        ->toBe(458)
+        ->and($category->uppercats)
+        ->toBe('1,12,27')
+        ->and($category->commentable)
+        ->toBeFalse()
+        ->and($category->globalRank)
+        ->toBe('000012000027')
+        ->and($category->imageOrder)
+        ->toBe('date_creation DESC')
+        ->and($category->permalink)
+        ->toEqual(Permalink::from('summer-2026'))
+        ->and($category->lastmodified)
+        ->toEqual(SqlDateTime::from('2026-07-26 14:30:00'));
 });
 
 test('id is never assignable through the constructor, always starts null', function (): void {
@@ -57,7 +73,8 @@ test('id is never assignable through the constructor, always starts null', funct
 
     // $id is declared outside the constructor (Doctrine's GeneratedValue PK) --
     // only the ORM's reflection-based hydration ever fills it in.
-    expect($category->id)->toBeNull();
+    expect($category->id)
+        ->toBeNull();
 });
 
 test('constructs with idUppercat null', function (): void {
@@ -66,7 +83,8 @@ test('constructs with idUppercat null', function (): void {
 
     $category = new CategoryEntity(...$args);
 
-    expect($category->idUppercat)->toBeNull();
+    expect($category->idUppercat)
+        ->toBeNull();
 });
 
 test('constructs with comment null', function (): void {
@@ -75,7 +93,8 @@ test('constructs with comment null', function (): void {
 
     $category = new CategoryEntity(...$args);
 
-    expect($category->comment)->toBeNull();
+    expect($category->comment)
+        ->toBeNull();
 });
 
 test('constructs with dir null', function (): void {
@@ -84,7 +103,8 @@ test('constructs with dir null', function (): void {
 
     $category = new CategoryEntity(...$args);
 
-    expect($category->dir)->toBeNull();
+    expect($category->dir)
+        ->toBeNull();
 });
 
 test('constructs with rank null', function (): void {
@@ -93,7 +113,8 @@ test('constructs with rank null', function (): void {
 
     $category = new CategoryEntity(...$args);
 
-    expect($category->rank)->toBeNull();
+    expect($category->rank)
+        ->toBeNull();
 });
 
 test('constructs with siteId null', function (): void {
@@ -102,7 +123,8 @@ test('constructs with siteId null', function (): void {
 
     $category = new CategoryEntity(...$args);
 
-    expect($category->siteId)->toBeNull();
+    expect($category->siteId)
+        ->toBeNull();
 });
 
 test('constructs with representativePictureId null', function (): void {
@@ -111,7 +133,8 @@ test('constructs with representativePictureId null', function (): void {
 
     $category = new CategoryEntity(...$args);
 
-    expect($category->representativePictureId)->toBeNull();
+    expect($category->representativePictureId)
+        ->toBeNull();
 });
 
 test('constructs with globalRank null', function (): void {
@@ -120,7 +143,8 @@ test('constructs with globalRank null', function (): void {
 
     $category = new CategoryEntity(...$args);
 
-    expect($category->globalRank)->toBeNull();
+    expect($category->globalRank)
+        ->toBeNull();
 });
 
 test('constructs with imageOrder null', function (): void {
@@ -129,7 +153,8 @@ test('constructs with imageOrder null', function (): void {
 
     $category = new CategoryEntity(...$args);
 
-    expect($category->imageOrder)->toBeNull();
+    expect($category->imageOrder)
+        ->toBeNull();
 });
 
 test('constructs with permalink null', function (): void {
@@ -138,5 +163,6 @@ test('constructs with permalink null', function (): void {
 
     $category = new CategoryEntity(...$args);
 
-    expect($category->permalink)->toBeNull();
+    expect($category->permalink)
+        ->toBeNull();
 });

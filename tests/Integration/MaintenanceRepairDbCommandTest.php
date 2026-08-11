@@ -4,15 +4,15 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Integration;
 
-use Override;
-use Piwigo\Core\Kernel;
 use LogicException;
-use Piwigo\Db\EntityManagerFactory;
+use Override;
 use Piwigo\Admin\Maintenance\DbMaintenanceRepository;
 use Piwigo\Command\MaintenanceRepairDbCommand;
-use Piwigo\Config\CurrentConfig;
 use Piwigo\Config\ConfigLoader;
+use Piwigo\Config\CurrentConfig;
+use Piwigo\Core\Kernel;
 use Piwigo\Db\DbConnection;
+use Piwigo\Db\EntityManagerFactory;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Tester\CommandTester;
 
@@ -41,12 +41,12 @@ final class MaintenanceRepairDbCommandTest extends IntegrationTestCase
         ConfigLoader::applyEnvOverrides();
     }
 
-    public function test_repairs_and_optimizes_all_tables(): void
+    public function testRepairsAndOptimizesAllTables(): void
     {
         $conn = DbConnection::build();
 
         $command = new MaintenanceRepairDbCommand(new DbMaintenanceRepository(EntityManagerFactory::build($conn)));
-        $tester  = new CommandTester($command);
+        $tester = new CommandTester($command);
 
         $exitCode = $tester->execute([]);
 

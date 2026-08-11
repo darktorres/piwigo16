@@ -4,15 +4,15 @@ declare(strict_types=1);
 
 namespace Piwigo\Tests\Integration;
 
-use Override;
-use Piwigo\Core\Kernel;
-use LogicException;
 use Doctrine\DBAL\Connection;
+use LogicException;
+use Override;
 use Piwigo\Admin\Extensions\ExtensionIgnoredUpdateEntity;
 use Piwigo\Admin\Extensions\ExtensionIgnoredUpdateRepository;
 use Piwigo\Admin\Extensions\ExtensionType;
 use Piwigo\Config\ConfigLoader;
 use Piwigo\Config\CurrentConfig;
+use Piwigo\Core\Kernel;
 use Piwigo\Db\DbConnection;
 use Piwigo\Db\EntityManagerFactory;
 
@@ -62,7 +62,7 @@ final class ExtensionIgnoredUpdateRepositoryTest extends IntegrationTestCase
         $this->repo = EntityManagerFactory::build($this->conn)->getRepository(ExtensionIgnoredUpdateEntity::class);
     }
 
-    public function test_find_ignored_ids_by_type_returns_only_rows_for_the_requested_type(): void
+    public function testFindIgnoredIdsByTypeReturnsOnlyRowsForTheRequestedType(): void
     {
         $now = '2026-07-30 00:00:00';
         $this->repo->ignore(ExtensionType::Plugin, 'test-plugin-a', $now);
@@ -76,13 +76,13 @@ final class ExtensionIgnoredUpdateRepositoryTest extends IntegrationTestCase
             self::assertSame(['test-plugin-a', 'test-plugin-b'], $ids, 'the Theme row must not leak into the Plugin result');
         } finally {
             $this->conn->executeStatement(
-                'DELETE FROM ' . 'extension_ignored_updates'
+                'DELETE FROM extension_ignored_updates'
                 . " WHERE extension_id IN ('test-plugin-a', 'test-plugin-b', 'test-theme-a')"
             );
         }
     }
 
-    public function test_find_ignored_ids_by_type_returns_an_empty_list_when_none_are_ignored(): void
+    public function testFindIgnoredIdsByTypeReturnsAnEmptyListWhenNoneAreIgnored(): void
     {
         // Exercises array_map()'s own empty-input branch: findBy() returns
         // [] for a type with no ignored rows, and array_map(fn, []) must
@@ -93,7 +93,7 @@ final class ExtensionIgnoredUpdateRepositoryTest extends IntegrationTestCase
         self::assertSame([], $this->repo->findIgnoredIdsByType(ExtensionType::Language));
     }
 
-    public function test_unignore_removes_an_existing_ignored_row(): void
+    public function testUnignoreRemovesAnExistingIgnoredRow(): void
     {
         $this->repo->ignore(ExtensionType::Plugin, 'test-plugin-unignore', '2026-07-30 00:00:00');
         self::assertTrue($this->repo->isIgnored(ExtensionType::Plugin, 'test-plugin-unignore'), 'setup: the row must exist before unignore() runs');
@@ -106,22 +106,22 @@ final class ExtensionIgnoredUpdateRepositoryTest extends IntegrationTestCase
         // from Doctrine's identity map) -- a raw query bypassing the
         // EntityManager entirely.
         $count = $this->conn->fetchOne(
-            'SELECT COUNT(*) FROM ' . 'extension_ignored_updates' . " WHERE extension_id = 'test-plugin-unignore'"
+            'SELECT COUNT(*) FROM extension_ignored_updates' . " WHERE extension_id = 'test-plugin-unignore'"
         );
         self::assertSame(0, $count);
     }
 
-    public function test_unignore_is_a_no_op_when_the_row_was_never_ignored(): void
+    public function testUnignoreIsANoOpWhenTheRowWasNeverIgnored(): void
     {
         // The $entity === null branch: 'no-such-extension' was never
         // ignore()'d by this or any other test in this file, so find()
         // genuinely returns null and unignore() must return before ever
         // calling getEntityManager()/remove()/flush().
-        $countBefore = $this->conn->fetchOne('SELECT COUNT(*) FROM ' . 'extension_ignored_updates');
+        $countBefore = $this->conn->fetchOne('SELECT COUNT(*) FROM extension_ignored_updates');
 
         $this->repo->unignore(ExtensionType::Plugin, 'no-such-extension');
 
-        $countAfter = $this->conn->fetchOne('SELECT COUNT(*) FROM ' . 'extension_ignored_updates');
+        $countAfter = $this->conn->fetchOne('SELECT COUNT(*) FROM extension_ignored_updates');
         self::assertSame($countBefore, $countAfter);
     }
 }

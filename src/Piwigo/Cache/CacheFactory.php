@@ -16,7 +16,7 @@ use Symfony\Component\Cache\Adapter\RedisAdapter;
  *
  * Adapter choice via PIWIGO_CACHE_ADAPTER (apcu|redis|filesystem). When
  * unset, auto-detects: APCu if available, else filesystem; ext-apcu isn't
- * installed in every environment (confirmed absent in this one). An
+ * installed in every environment. An
  * *explicit* request for an unavailable adapter (PIWIGO_CACHE_ADAPTER=apcu
  * with no ext-apcu) fails loudly instead of silently falling back -- that's
  * a real misconfiguration worth surfacing, unlike the auto-detect default

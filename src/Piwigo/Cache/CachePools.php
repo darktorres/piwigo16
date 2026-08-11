@@ -100,9 +100,9 @@ final class CachePools
      * own mtime, so an edited file busts its own entry automatically), not
      * time-based expiry. Real consumer: Piwigo\Lang\Translator::load(),
      * caching PoLoader's parsed-and-derived result -- raw PO parsing plus
-     * two full passes over every translation entry, confirmed via a real
-     * Xdebug profile to be ~18-19% of a bootstrap request's server-side
-     * time with no caching at all.
+     * two full passes over every translation entry cost ~18-19% of a
+     * bootstrap request's server-side time with no caching at all, per a
+     * real Xdebug profile.
      */
     public static function translations(): CacheItemPoolInterface
     {
@@ -117,7 +117,7 @@ final class CachePools
      * needing a manual clear -- same "trust file mtimes" model OPcache
      * itself already uses for these same files. Real consumer:
      * EntityManagerFactory::build()'s Doctrine ORM metadata cache --
-     * confirmed via the same Xdebug profile to be ~17-18% of bootstrap time
+     * the same Xdebug profile put this at ~17-18% of bootstrap time
      * with isDevMode:true's throwaway in-memory-only cache.
      */
     public static function doctrineMetadata(string $mtimeHash): CacheItemPoolInterface

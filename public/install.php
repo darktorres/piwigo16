@@ -9,8 +9,10 @@ declare(strict_types=1);
 // | file that was distributed with this source code.                      |
 // +-----------------------------------------------------------------------+
 // Thin bootstrap shell (matching admin.php's shape). Orchestration lives
-// in Piwigo\Admin\Install\InstallWizard; this file keeps only what's
-// forbidden inside src/Piwigo by Arch rule SEC-60 (every define()).
+// in Piwigo\Admin\Install\InstallWizard; kept as a separate entry point for
+// the same reason every other public/*.php file is: autoload bootstrap
+// (requiring vendor/autoload.php) has to happen before any Piwigo\ class,
+// including Paths::fromRoot() below, can be referenced.
 use Piwigo\Admin\Install\InstallWizard;
 use Piwigo\Bootstrap\InstallBootstrap;
 use Piwigo\Bootstrap\RequestBootstrap;
@@ -73,14 +75,11 @@ try {
         $wizard->analyzeForm();
 
         if (! $wizard->hasErrors()) {
-            // SEC-60 keeps these define()s out of src/Piwigo: performInstall()
-            // (and everything it reaches, e.g. the themes class needing
-            // PWG_CHARSET to build fs_themes) relies on them being defined at
-            // this point of the flow.
-            defined('PHPWG_INSTALLED') or define('PHPWG_INSTALLED', true);
-            defined('PWG_CHARSET') or define('PWG_CHARSET', 'utf-8');
-            defined('DB_CHARSET') or define('DB_CHARSET', 'utf8');
-            defined('DB_COLLATE') or define('DB_COLLATE', '');
+            // Marks the container-shared InstallationFlag active for the
+            // rest of this request -- performInstall() (and everything it
+            // reaches) relies on isActive() being true from this point on,
+            // the same point the former raw PHPWG_INSTALLED define() sat.
+            RequestBootstrap::installationFlag()->mark();
 
             $wizard->performInstall();
         }

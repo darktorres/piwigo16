@@ -795,9 +795,11 @@ final class RequestBootstrap
      * Resolves the container-shared instance (not `new InstallationFlag()`)
      * so that this method's own `mark()` call is visible to every other
      * consumer holding the same shared instance -- see that class's own
-     * docblock.
+     * docblock. Public: `public/install.php` calls this directly (its
+     * `InstallBootstrap::boot()` already runs `Kernel::boot()` first, so the
+     * container is up), the same shape as every other public accessor here.
      */
-    private static function installationFlag(): InstallationFlag
+    public static function installationFlag(): InstallationFlag
     {
         $flag = Kernel::container()->get(InstallationFlag::class);
         if (! $flag instanceof InstallationFlag) {

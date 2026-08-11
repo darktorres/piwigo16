@@ -7,7 +7,7 @@ namespace Piwigo\Category\Projection;
 /**
  * A raw table/column pair -- {@see
  * \Piwigo\Category\CategoryOrphanTarget::tableAndColumn()}'s own fixed
- * 2-value result, previously a bare `[string, string]` tuple.
+ * 2-value result.
  */
 final readonly class TableColumnTarget
 {

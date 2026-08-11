@@ -6,7 +6,7 @@ namespace Piwigo\Metadata\Projection;
 
 /**
  * {@see \Piwigo\Metadata\MetadataService::parseSvgDimensions()}'s own
- * fixed 2-value result, previously a bare `[int, int]` tuple.
+ * fixed 2-value result.
  */
 final readonly class SvgDimensions
 {

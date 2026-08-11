@@ -6,9 +6,9 @@ namespace Piwigo\Category\Projection;
 
 /**
  * {@see \Piwigo\Category\CategoryRepository::findPhotoCountAndDateRange()}'s
- * own return shape (previously a positional `[count, min, max]` tuple) --
- * {@see \Piwigo\Admin\CatModifyPageRenderer}'s own "this album contains N
- * photos, added between X and Y" summary, its real (and only) consumer.
+ * own return shape -- {@see \Piwigo\Admin\CatModifyPageRenderer}'s own
+ * "this album contains N photos, added between X and Y" summary, its real
+ * (and only) consumer.
  */
 final readonly class PhotoCountDateRange
 {

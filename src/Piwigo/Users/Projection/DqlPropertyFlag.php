@@ -7,7 +7,7 @@ namespace Piwigo\Users\Projection;
 /**
  * A DQL property path paired with whether its column is boolean-typed --
  * {@see \Piwigo\Users\UserInfoField::dqlPropertyAndIsBoolean()}'s own
- * fixed 2-value result, previously a bare `[string, bool]` tuple.
+ * fixed 2-value result.
  */
 final readonly class DqlPropertyFlag
 {

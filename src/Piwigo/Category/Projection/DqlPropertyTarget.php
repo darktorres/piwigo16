@@ -8,8 +8,7 @@ namespace Piwigo\Category\Projection;
  * An entity class paired with one of its DQL property paths --
  * {@see \Piwigo\Category\CategoryAccessTarget::entityClassAndFieldProperty()}
  * and {@see \Piwigo\Category\CategoryOrphanTarget::entityClassAndProperty()}'s
- * own fixed 2-value result, previously a bare `[class-string, string]`
- * tuple.
+ * own fixed 2-value result.
  */
 final readonly class DqlPropertyTarget
 {

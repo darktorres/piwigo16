@@ -6,8 +6,7 @@ namespace Piwigo\Core\Projection;
 
 /**
  * {@see \Piwigo\Core\ContainerDetector::detect()}'s own fixed 2-value
- * result, previously a bare `[string, ?string]` tuple destructured at
- * every one of its 4 real callers.
+ * result, destructured at every one of its 4 real callers.
  */
 final readonly class ContainerInfo
 {
